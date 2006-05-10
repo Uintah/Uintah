@@ -26,58 +26,22 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef Builder_h
-#define Builder_h
+#ifndef CCA_Components_Builder_Builder_h
+#define CCA_Components_Builder_Builder_h
 
-#include <wx/app.h>
-#include <wx/wxprec.h>
-#ifndef WX_PRECOMP
- #include <wx/wx.h>
-#endif
-
+#include <CCA/Components/Builder/wxSCIRunApp.h>
 #include <Core/CCA/spec/cca_sidl.h>
-//#include <Core/Thread/Mutex.h>
-#include <CCA/Components/Builder/BuilderWindow.h>
+#include <Core/Thread/Mutex.h>
+#include <wx/gdicmn.h>
 
 #include <string>
 #include <map>
 
 // check \#if wxUSE_STATUSBAR, wxUSE_MENUS, wxUSE_THREADS, wxUSE_STREAMS, wxUSE_STD_IOSTREAM...
 
-class SCIRun::Semaphore;
-class SCIRun::Mutex;
-
-class wxColor;
-
-typedef std::map<std::string, sci::cca::ConnectionID::pointer> ConnectionMap;
-typedef std::map<std::string, wxColor> PortColorMap;
-
 namespace GUIBuilder {
 
-// wxApp is a singleton class, has private copy ctor, assgn. op. (see wx/app.h, wx/def.h)
-class wxSCIRunApp : public wxApp {
-public:
-  virtual bool OnInit();
-  // virtual int OnExit() { return wxApp::OnExit(); }
-  void AddTopWindow(const sci::cca::BuilderComponent::pointer& bc);
-  BuilderWindow* GetTopBuilderWindow() const;
-
-  static void SetTopBuilder(const sci::cca::BuilderComponent::pointer& bc) { topBuilder = bc; }
-
-  static void semDown() { sem.down(); }
-  static void semUp() { sem.up(); }
-
-private:
-  static SCIRun::Mutex appLock;
-  static SCIRun::Semaphore sem;
-  // keep track of inital Builder component (instantiated from main)
-  static sci::cca::BuilderComponent::pointer topBuilder;
-  //static std::vector<sci::cca::BuilderComponent> activeBuilders;
-};
-
-DECLARE_APP(wxSCIRunApp)
-
-class Builder : public sci::cca::BuilderComponent {
+class Builder : public sci::cca::GUIBuilder {
 public:
   enum PortType { Uses = 0, Provides };
 
@@ -88,6 +52,8 @@ public:
   virtual std::string getFrameworkURL() { return frameworkURL; }
   virtual void getPortInfo(const sci::cca::ComponentID::pointer& cid, const std::string& portName, std::string& model, std::string& type);
 
+  virtual void getComponentClassDescriptions(SSIDL::array1<sci::cca::ComponentClassDescription::pointer>& descArray);
+
   virtual sci::cca::ComponentID::pointer createInstance(const std::string& className, const sci::cca::TypeMap::pointer& properties);
   virtual void destroyInstance(const sci::cca::ComponentID::pointer& cid, float timeout);
   virtual int destroyInstances(const SSIDL::array1<sci::cca::ComponentID::pointer>& cidArray, float timeout);
@@ -96,7 +62,6 @@ public:
 				SSIDL::array1<std::string>& nameArray);
   virtual void getProvidedPortNames(const sci::cca::ComponentID::pointer& cid,
 				    SSIDL::array1<std::string>& nameArray);
-  virtual void getComponentClassDescriptions(SSIDL::array1<sci::cca::ComponentClassDescription::pointer>& descArray);
 
   virtual void getCompatiblePortList(const sci::cca::ComponentID::pointer& user,
 				     const std::string& usesPortName,
@@ -110,14 +75,16 @@ public:
   virtual void
   disconnect(const sci::cca::ConnectionID::pointer &connID, float timeout);
 
-  virtual bool
-  registerGoPort(const std::string& usesName, const sci::cca::ComponentID::pointer &cid,
-                 bool isSciPort, std::string& usesPortName);
-  virtual void unregisterGoPort(const std::string& goPortName);
+  virtual bool connectGoPort(const std::string& usesName, const std::string& providesPortName,
+                             const sci::cca::ComponentID::pointer &cid, std::string& usesPortName);
+  virtual void disconnectGoPort(const std::string& goPortName);
   virtual int go(const std::string& goPortName);
 
-  virtual void connectionActivity(const sci::cca::ports::ConnectionEvent::pointer &e);
-  virtual void componentActivity(const sci::cca::ports::ComponentEvent::pointer &e);
+  virtual bool connectUIPort(const std::string& usesName, const std::string& providesPortName,
+                             const sci::cca::ComponentID::pointer &cid, std::string& usesPortName);
+  virtual void disconnectUIPort(const std::string& uiPortName);
+  virtual int ui(const std::string& uiPortName);
+
 
   // Note: make both setPortColor functions static when support for static functions is available
 
@@ -135,14 +102,23 @@ public:
   //void Builder::getPortColor(const std::string& portName, char& red, char& green, char& blue);
   void* Builder::getPortColor(const std::string& portName);
 
+  virtual void connectionActivity(const sci::cca::ports::ConnectionEvent::pointer &e);
+  virtual void componentActivity(const sci::cca::ports::ComponentEvent::pointer &e);
+
   static void setApp(wxSCIRunApp& a) { app = &a; }
 
 private:
   Builder(const Builder &);
   Builder& operator=(const Builder &);
 
+  typedef std::map<std::string, sci::cca::ConnectionID::pointer> ConnectionMap;
+  typedef std::map<std::string, wxColor> PortColorMap;
+
   // Note: make setDefaultPortColors static when support for static methods is available
   void setDefaultPortColors();
+  bool connectPort(const std::string& providesPortName, const std::string& usesPortName,
+                   const std::string& portType, const sci::cca::ComponentID::pointer &cid);
+  void disconnectPort(const std::string& usesPortName);
 
   sci::cca::Services::pointer services;
   std::string frameworkURL;

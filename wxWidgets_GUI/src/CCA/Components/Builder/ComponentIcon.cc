@@ -45,7 +45,7 @@
 #include <string>
 
 #ifndef DEBUG
-#  define DEBUG 0
+#  define DEBUG 1
 #endif
 
 namespace GUIBuilder {
@@ -63,8 +63,9 @@ END_EVENT_TABLE()
 
 IMPLEMENT_DYNAMIC_CLASS(ComponentIcon, wxPanel)
 
-ComponentIcon::ComponentIcon(const sci::cca::BuilderComponent::pointer& bc, wxWindowID winid, NetworkCanvas* parent, const sci::cca::ComponentID::pointer& compID, int x, int y)
-  : /* dragMode(TEST_DRAG_NONE), */ canvas(parent), hasUIPort(false), hasGoPort(false), isSciPort(false), isMoving(false), cid(compID), builder(bc)
+ComponentIcon::ComponentIcon(const sci::cca::GUIBuilder::pointer& bc, wxWindowID winid,
+                             NetworkCanvas* parent, const sci::cca::ComponentID::pointer& compID, int x, int y)
+  : canvas(parent), hasUIPort(false), hasGoPort(false), /* isSciPort(false), */ isMoving(false), cid(compID), builder(bc)
 {
 
   Init();
@@ -74,7 +75,11 @@ ComponentIcon::ComponentIcon(const sci::cca::BuilderComponent::pointer& bc, wxWi
 ComponentIcon::~ComponentIcon()
 {
   if (hasGoPort) {
-    builder->unregisterGoPort(goPortName);
+    builder->disconnectGoPort(goPortName);
+  }
+
+  if (hasUIPort) {
+    builder->disconnectUIPort(uiPortName);
   }
 
   PortList::iterator iter;
@@ -133,7 +138,7 @@ void ComponentIcon::OnMouseMove(wxMouseEvent& event)
 {
   if (event.LeftIsDown() && event.Dragging() && isMoving) {
     CaptureMouse();
-    Show(false);
+    //Show(false);
     wxPoint p;
     canvas->GetUnscrolledPosition(event.GetPosition(), p);
     wxPoint mp;
@@ -221,7 +226,7 @@ void ComponentIcon::OnMouseMove(wxMouseEvent& event)
 //     std::cerr << "\tmove to scrolled (" << np.x << ", " << np.y << ") or unscrolled (" << newX << ", " << newY << ")" << std::endl;
     //Move(np.x, np.y);
     Move(newX, newY);
-    Show(true);
+    //Show(true);
     ReleaseMouse();
     canvas->Refresh();
 
@@ -343,21 +348,30 @@ void ComponentIcon::SetPortIcons()
                       wxDefaultSpan, wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, PORT_BORDER_SIZE);
   } else {
     for (unsigned int i = 0, j = 0; i < providedPorts.size(); i++) {
-      if (providedPorts[i] == "ui") {
-	hasUIPort = true;
-      } else if (providedPorts[i] == "sci.ui") {
-	hasUIPort = true;
-	isSciPort = true;
-      } else if (providedPorts[i] == "go") {
-	hasGoPort = true;
-	if (builder->registerGoPort(cid->getInstanceName(), cid, false, goPortName)) {
-	  popupMenu->Append(ID_MENU_GO, wxT("&Go"), wxT("CCA go port"));
+//       if (providedPorts[i] == "ui") {
+// 	hasUIPort = true;
+//       } else if (providedPorts[i] == "sci.ui") {
+// 	hasUIPort = true;
+// 	isSciPort = true;
+//       } else if (providedPorts[i] == "go") {
+// 	hasGoPort = true;
+// 	if (builder->registerGoPort(cid->getInstanceName(), cid, false, goPortName)) {
+// 	  popupMenu->Append(ID_MENU_GO, wxT("&Go"), wxT("CCA go port"));
+// 	}
+//       } else if (providedPorts[i] == "sci.go") {
+// 	hasGoPort = true;
+// 	isSciPort = true;
+// 	if (builder->registerGoPort(cid->getInstanceName(), cid, true, goPortName)) {
+// 	  popupMenu->Append(ID_MENU_GO, wxT("&Go"), wxT("SCIRun2 interface for SCIRun execute"));
+// 	}
+      if (providedPorts[i].rfind("ui") != std::string::npos) {
+	if (builder->connectUIPort(cid->getInstanceName(), providedPorts[i], cid, uiPortName)) {
+	  hasUIPort = true;
 	}
-      } else if (providedPorts[i] == "sci.go") {
-	hasGoPort = true;
-	isSciPort = true;
-	if (builder->registerGoPort(cid->getInstanceName(), cid, true, goPortName)) {
-	  popupMenu->Append(ID_MENU_GO, wxT("&Go"), wxT("SCIRun2 interface for SCIRun execute"));
+      } else if (providedPorts[i].rfind("go") != std::string::npos) {
+	if (builder->connectGoPort(cid->getInstanceName(), providedPorts[i], cid, goPortName)) {
+	  hasGoPort = true;
+	  popupMenu->Append(ID_MENU_GO, wxT("&Go"), wxT("CCA go port"));
 	}
       } else {
 	PortIcon *pi = new PortIcon(builder, this, wxID_ANY, Builder::Provides, providedPorts[i]);

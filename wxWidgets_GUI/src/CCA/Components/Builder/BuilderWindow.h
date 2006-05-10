@@ -105,7 +105,7 @@ public:
     ID_BUILDERWINDOW_HIGHEST = ID_MENU_ADDINFO + 1,
   };
 
-  BuilderWindow(const sci::cca::BuilderComponent::pointer& bc, wxWindow *parent);
+  BuilderWindow(const sci::cca::GUIBuilder::pointer& bc, wxWindow *parent);
   virtual ~BuilderWindow();
 
   // two-step creation
@@ -117,7 +117,7 @@ public:
               const wxString& name = wxString(wxT("SCIRun2")));
 
   // set builder only if builder is null
-  bool SetBuilder(const sci::cca::BuilderComponent::pointer& bc);
+  bool SetBuilder(const sci::cca::GUIBuilder::pointer& bc);
 
   // Event handlers
   void OnQuit(wxCommandEvent& event);
@@ -179,7 +179,7 @@ private:
   static const int TEXT_WIDTH = 650;
   static int IdCounter;
 
-  sci::cca::BuilderComponent::pointer builder;
+  sci::cca::GUIBuilder::pointer builder;
   std::string url;
 
   void buildPackageMenus();

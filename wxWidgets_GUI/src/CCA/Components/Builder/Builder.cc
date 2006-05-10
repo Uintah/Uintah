@@ -26,13 +26,12 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <wx/splash.h>
 #include <wx/bitmap.h>
 #include <wx/image.h>
 #include <wx/string.h>
-#include <wx/gdicmn.h>
 
 #include <CCA/Components/Builder/Builder.h>
+#include <CCA/Components/Builder/BuilderWindow.h>
 
 #include <sci_metacomponents.h>
 #include <SCIRun/SCIRunFramework.h>
@@ -41,7 +40,6 @@
 #include <SCIRun/Vtk/VtkPortInstance.h>
 #endif
 
-#include <Core/Util/Environment.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Runnable.h>
@@ -58,45 +56,36 @@ namespace GUIBuilder {
 
 using namespace SCIRun;
 
-extern "C" sci::cca::Component::pointer make_SCIRun_Builder()
+extern "C" sci::cca::Component::pointer make_SCIRun_GUIBuilder()
 {
   return sci::cca::Component::pointer(new Builder());
 }
-
-Mutex wxSCIRunApp::appLock("GUI application lock");
-Semaphore wxSCIRunApp::sem("wxWidgets GUI Thread startup wait", 0);
-sci::cca::BuilderComponent::pointer wxSCIRunApp::topBuilder(0);
 
 const std::string Builder::guiThreadName("wxWidgets GUI Builder");
 Mutex Builder::builderLock("Builder class lock");
 wxSCIRunApp* Builder::app = 0;
 
-// Don't automatically create main function (see wx/app.h).
-// Initializes global application object.
-IMPLEMENT_APP_NO_MAIN(wxSCIRunApp)
-
-
 class wxGUIThread : public Runnable {
 public:
-    wxGUIThread(const sci::cca::BuilderComponent::pointer &bc) : builder(bc) {}
+    wxGUIThread(const sci::cca::GUIBuilder::pointer &bc) : builder(bc) {}
     virtual ~wxGUIThread() {}
     virtual void run();
-    sci::cca::BuilderComponent::pointer getBuilder() { return builder; }
+    sci::cca::GUIBuilder::pointer getBuilder() { return builder; }
 
 private:
    // store builder handle
-    sci::cca::BuilderComponent::pointer builder;
+    sci::cca::GUIBuilder::pointer builder;
 };
 
 class DestroyInstancesThread : public Runnable {
 public:
-    DestroyInstancesThread(const sci::cca::BuilderComponent::pointer &bc) : builder(bc) {}
+    DestroyInstancesThread(const sci::cca::GUIBuilder::pointer &bc) : builder(bc) {}
     virtual ~DestroyInstancesThread() {}
     virtual void run();
-    sci::cca::BuilderComponent::pointer getBuilder() { return builder; }
+    sci::cca::GUIBuilder::pointer getBuilder() { return builder; }
 
 private:
-    sci::cca::BuilderComponent::pointer builder;
+    sci::cca::GUIBuilder::pointer builder;
 };
 
 void
@@ -116,61 +105,6 @@ void
 DestroyInstancesThread::run()
 {
   // implement
-}
-
-bool
-wxSCIRunApp::OnInit()
-{
-  wxApp::OnInit(); // for command line processing (if any)
-
-  Guard g(&appLock);
-  Builder::setApp(*this);
-  semUp();
-
-  // TODO: get splash screen working
-  // only show if this is the first Builder in this address space
-
-//     wxInitAllImageHandlers();
-
-//     std::string path(sci_getenv("SCIRUN_SRCDIR"));
-//     path += "/CCA/Components/GUIPrototypes/scirun2-splash.png";
-//     wxBitmap bitmap(wxT(path), wxBITMAP_TYPE_PNG);
-//     if (bitmap.Ok()) {
-//         wxSplashScreen splash(bitmap,  wxSPLASH_TIMEOUT|wxSPLASH_CENTRE_ON_SCREEN, 6000, 0, -1, wxDefaultPosition, wxDefaultSize, wxFRAME_NO_TASKBAR|wxSTAY_ON_TOP);
-//         splash.Show(true);
-//     } else {
-//       std::cerr << "bitmap not loaded" << std::endl;
-//     }
-//     wxYield();
-
-  BuilderWindow *window = new BuilderWindow(topBuilder, 0);
-  window->Show(true);
-  SetTopWindow(window);
-
-  return true;
-}
-
-void
-wxSCIRunApp::AddTopWindow(const sci::cca::BuilderComponent::pointer& bc)
-{
-  Guard g(&appLock);
-#if DEBUG
-  std::cerr << "wxSCIRunApp::AddTopWindow(): from thread " << Thread::self()->getThreadName() << std::endl;
-#endif
-
-  // set the "main" top level window as parent
-  wxWindow *top = GetTopWindow();
-  BuilderWindow *window = new BuilderWindow(bc, top);
-  window->Show(true);
-}
-
-BuilderWindow*
-wxSCIRunApp::GetTopBuilderWindow() const
-{
-  Guard g(&appLock);
-  wxWindow *top = GetTopWindow();
-  BuilderWindow *bw = dynamic_cast<BuilderWindow*>(top);
-  return bw;
 }
 
 Builder::Builder()
@@ -195,14 +129,16 @@ Builder::~Builder()
 void
 Builder::setServices(const sci::cca::Services::pointer &svc)
 {
-  //Guard g(&builderLock);
 #if DEBUG
   std::cerr << "Builder::setServices(..) from thread " << Thread::self()->getThreadName() << std::endl;
 #endif
+  builderLock.lock();
   services = svc;
+  builderLock.unlock();
 
   // What framework do we belong to?
   try {
+    Guard g(&builderLock);
     sci::cca::ports::FrameworkProperties::pointer fwkProperties =
       pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(services->getPort("cca.FrameworkProperties"));
     sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
@@ -214,7 +150,7 @@ Builder::setServices(const sci::cca::Services::pointer &svc)
   }
 
   if (! wxTheApp) {
-    Thread *t = new Thread(new wxGUIThread(sci::cca::BuilderComponent::pointer(this)), guiThreadName.c_str(), 0, Thread::NotActivated);
+    Thread *t = new Thread(new wxGUIThread(sci::cca::GUIBuilder::pointer(this)), guiThreadName.c_str(), 0, Thread::NotActivated);
     t->setStackSize(8*256*1024);
     t->activate(false);
     t->detach();
@@ -224,7 +160,7 @@ Builder::setServices(const sci::cca::Services::pointer &svc)
     std::cerr << "Builder::setServices(..) try to add top window." << std::endl;
 #endif
     if (Thread::self()->getThreadName() == guiThreadName) {
-      app->AddTopWindow(sci::cca::BuilderComponent::pointer(this));
+      app->AddTopWindow(sci::cca::GUIBuilder::pointer(this));
     //} else {
     // add to event queue???
     }
@@ -232,11 +168,34 @@ Builder::setServices(const sci::cca::Services::pointer &svc)
   setDefaultPortColors();
 }
 
+//////////////////////////////////////////////////////////////////////////
+// Mediator between wxWidgets GUI classes and cca.ComponentRepository.
+
+void
+Builder::getComponentClassDescriptions(SSIDL::array1<sci::cca::ComponentClassDescription::pointer>& descArray)
+{
+  try {
+    sci::cca::ports::ComponentRepository::pointer rep =
+      pidl_cast<sci::cca::ports::ComponentRepository::pointer>(services->getPort("cca.ComponentRepository"));
+
+    descArray = rep->getAvailableComponentClasses();
+
+    services->releasePort("cca.ComponentRepository");
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    if (bw) {
+      bw->DisplayErrorMessage("Error: Could not get component descriptions from component repository; " + e->getNote());
+    }
+  }
+}
+
+//////////////////////////////////////////////////////////////////////////
+// Mediator between wxWidgets GUI classes and cca.BuilderService.
+
 void
 Builder::getPortInfo(const sci::cca::ComponentID::pointer& cid, const std::string& portName, std::string& model, std::string& type)
 {
-  Guard g(&builderLock);
-
   sci::cca::TypeMap::pointer props;
   try {
     sci::cca::ports::BuilderService::pointer bs =
@@ -252,11 +211,9 @@ Builder::getPortInfo(const sci::cca::ComponentID::pointer& cid, const std::strin
   type = props->getString(PortInstance::TYPE, "");
 }
 
-
 sci::cca::ComponentID::pointer
 Builder::createInstance(const std::string& className, const sci::cca::TypeMap::pointer& properties)
 {
-  Guard g(&builderLock);
   sci::cca::TypeMap::pointer tm = services->createTypeMap();
   sci::cca::ComponentID::pointer cid;
   try {
@@ -277,7 +234,6 @@ Builder::createInstance(const std::string& className, const sci::cca::TypeMap::p
 void
 Builder::destroyInstance(const sci::cca::ComponentID::pointer& cid, float timeout)
 {
-  Guard g(&builderLock);
   std::string className = cid->getInstanceName();
   try {
     sci::cca::ports::BuilderService::pointer bs =
@@ -293,7 +249,7 @@ Builder::destroyInstance(const sci::cca::ComponentID::pointer& cid, float timeou
 int
 Builder::destroyInstances(const SSIDL::array1<sci::cca::ComponentID::pointer>& cidArray, float timeout)
 {
-  Guard g(&builderLock);
+  //Guard g(&builderLock);
   // do this in a new thread?
   std::string className;
   int destroyedCount = 0;
@@ -331,7 +287,6 @@ Builder::getUsedPortNames(const sci::cca::ComponentID::pointer& cid, SSIDL::arra
 void
 Builder::getProvidedPortNames(const sci::cca::ComponentID::pointer& cid, SSIDL::array1<std::string>& nameArray)
 {
-  Guard g(&builderLock);
   try {
     sci::cca::ports::BuilderService::pointer bs =
       pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
@@ -348,32 +303,11 @@ Builder::getProvidedPortNames(const sci::cca::ComponentID::pointer& cid, SSIDL::
 }
 
 void
-Builder::getComponentClassDescriptions(SSIDL::array1<sci::cca::ComponentClassDescription::pointer>& descArray)
-{
-  Guard g(&builderLock);
-  try {
-    sci::cca::ports::ComponentRepository::pointer rep =
-      pidl_cast<sci::cca::ports::ComponentRepository::pointer>(services->getPort("cca.ComponentRepository"));
-
-    descArray = rep->getAvailableComponentClasses();
-
-    services->releasePort("cca.ComponentRepository");
-  }
-  catch (const sci::cca::CCAException::pointer &e) {
-    BuilderWindow *bw = app->GetTopBuilderWindow();
-    if (bw) {
-      bw->DisplayErrorMessage("Error: Could not get component descriptions from component repository; " + e->getNote());
-    }
-  }
-}
-
-void
 Builder::getCompatiblePortList(const sci::cca::ComponentID::pointer &user,
 			       const std::string& usesPortName,
 			       const sci::cca::ComponentID::pointer &provider,
 			       SSIDL::array1<std::string>& portArray)
 {
-  Guard g(&builderLock);
   try {
     sci::cca::ports::BuilderService::pointer bs =
       pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
@@ -393,7 +327,6 @@ sci::cca::ConnectionID::pointer
 Builder::connect(const sci::cca::ComponentID::pointer &usesCID, const std::string &usesPortName,
                  const sci::cca::ComponentID::pointer &providesCID, const ::std::string &providesPortName)
 {
-  Guard g(&builderLock);
   sci::cca::ConnectionID::pointer connID;
   try {
     sci::cca::ports::BuilderService::pointer bs =
@@ -413,7 +346,6 @@ Builder::connect(const sci::cca::ComponentID::pointer &usesCID, const std::strin
 
 void Builder::disconnect(const sci::cca::ConnectionID::pointer &connID, float timeout)
 {
-  Guard g(&builderLock);
   try {
     sci::cca::ports::BuilderService::pointer bs =
       pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
@@ -428,52 +360,37 @@ void Builder::disconnect(const sci::cca::ConnectionID::pointer &connID, float ti
   }
 }
 
-bool Builder::registerGoPort(const std::string& usesName, const sci::cca::ComponentID::pointer &cid, bool isSciPort, std::string& usesPortName)
+//////////////////////////////////////////////////////////////////////////
+// sci.cca.ports.GoPort support
+//
+// GUI may offer a 'go' menu item for a component icon corresponding to
+// a GoPort provided by the component instance represented by the icon.
+// To execute GoPorts's go function, the GUIBuilder component needs
+// to use and connect the port.
+// Modifies usesPortName: constructs unique (in scope of this GUIBuilder)
+// uses port name for caller to store
+
+bool Builder::connectGoPort(const std::string& usesName, const std::string& providesPortName,
+                            const sci::cca::ComponentID::pointer &cid, std::string& usesPortName)
 {
   usesPortName = usesName + "." + "goPort";
-  try {
-    // have dialog to pack typemap? use XML file? set a preference?
-    sci::cca::TypeMap::pointer tm = services->createTypeMap();
-    services->registerUsesPort(usesPortName, "sci.cca.ports.GoPort", tm);
-  } catch (const sci::cca::CCAException::pointer &e) {
-    BuilderWindow *bw = app->GetTopBuilderWindow();
-    if (bw) {
-      bw->DisplayErrorMessage("Error: Could not register go port " + usesPortName + "; " +  e->getNote());
-    }
-    return false;
-  }
-
-  sci::cca::ConnectionID::pointer connID =
-    connect(services->getComponentID(), usesPortName, cid, isSciPort ? "sci.go" : "go");
-  if (connID.isNull()) {
-    BuilderWindow *bw = app->GetTopBuilderWindow();
-    if (bw) {
-      bw->DisplayErrorMessage("Error: Could not connect go port " + usesPortName + ".");
-    }
-    return false;
-  }
-
-  connectionMap[usesPortName] = connID;
-  return true;
+#if DEBUG
+  std::cerr << "Builder::connectGoPort(..): uses port name=" << usesPortName
+            << ", provides port name=" << providesPortName
+            << ", component instance=" << cid->getInstanceName() << std::endl;
+#endif
+  // do we really need to look for SCIRun ports (ie. sci.go?)
+  return connectPort(providesPortName, usesPortName, "sci.cca.ports.GoPort", cid);
 }
 
-void Builder::unregisterGoPort(const std::string& goPortName)
+void Builder::disconnectGoPort(const std::string& goPortName)
 {
-  //disconnect
-  ConnectionMap::iterator iter = connectionMap.find(goPortName);
-  if (iter != connectionMap.end()) {
-    disconnect(iter->second, 0);
-    connectionMap.erase(iter);
-  }
-
-  try {
-    services->unregisterUsesPort(goPortName);
-  } catch (const sci::cca::CCAException::pointer &e) {
-    BuilderWindow *bw = app->GetTopBuilderWindow();
-    if (bw) {
-      bw->DisplayErrorMessage("Error: Could not unregister go port " + goPortName + "; " +  e->getNote());
-    }
-  }
+#if DEBUG
+  std::cerr << "Builder::disconnectGoPort(..): uses port name=" << usesPortName
+            << ", provides port name=" << providesPortName
+            << ", component instance=" << cid->getInstanceName() << std::endl;
+#endif
+  disconnectPort(goPortName);
 }
 
 int Builder::go(const std::string& goPortName)
@@ -497,18 +414,50 @@ int Builder::go(const std::string& goPortName)
   return status;
 }
 
-void Builder::connectionActivity(const sci::cca::ports::ConnectionEvent::pointer& e)
+//////////////////////////////////////////////////////////////////////////
+// sci.cca.ports.UIPort support
+
+
+bool Builder::connectUIPort(const std::string& usesName, const std::string& providesPortName, const sci::cca::ComponentID::pointer &cid, std::string& usesPortName)
 {
+  usesPortName = usesName + "." + "uiPort";
 #if DEBUG
-  std::cerr << "Builder::connectionActivity(..)" << std::endl;
+  std::cerr << "Builder::connectUIPort(..): uses port name=" << usesPortName
+            << ", provides port name=" << providesPortName
+            << ", component instance=" << cid->getInstanceName() << std::endl;
 #endif
+  // do we really need to look for SCIRun ports (ie. sci.ui?)
+  return connectPort(providesPortName, usesPortName, "sci.cca.ports.UIPort", cid);
 }
 
-void Builder::componentActivity(const sci::cca::ports::ComponentEvent::pointer& e)
+void Builder::disconnectUIPort(const std::string& uiPortName)
 {
 #if DEBUG
-  std::cerr << "Builder::componentActivity: got event for component " << e->getComponentID()->getInstanceName() << std::endl;
+  std::cerr << "Builder::disconnectUIPort(..): uses port name=" << usesPortName
+            << ", provides port name=" << providesPortName
+            << ", component instance=" << cid->getInstanceName() << std::endl;
 #endif
+  disconnectPort(uiPortName);
+}
+
+int Builder::ui(const std::string& uiPortName)
+{
+  Guard g(&builderLock);
+  sci::cca::ports::UIPort::pointer uiPort;
+  try {
+    sci::cca::Port::pointer p = services->getPort(uiPortName);
+    uiPort = pidl_cast<sci::cca::ports::UIPort::pointer>(p);
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    if (bw) {
+      bw->DisplayErrorMessage("Error: Could not access ui port; " +  e->getNote());
+    }
+    return -1;
+  }
+  int status = uiPort->ui();
+  services->releasePort(uiPortName);
+  return status;
 }
 
 bool Builder::setPortColor(const std::string& portType, const std::string& colorName)
@@ -567,12 +516,33 @@ void* Builder::getPortColor(const std::string& portType)
   return (void*) c;
 }
 
+//////////////////////////////////////////////////////////////////////////
+// CCA Event services
+//
+// These should be replaced by new event services currently under proposal.
+
+void Builder::connectionActivity(const sci::cca::ports::ConnectionEvent::pointer& e)
+{
+#if DEBUG
+  std::cerr << "Builder::connectionActivity(..)" << std::endl;
+#endif
+}
+
+void Builder::componentActivity(const sci::cca::ports::ComponentEvent::pointer& e)
+{
+#if DEBUG
+  std::cerr << "Builder::componentActivity: got event for component " << e->getComponentID()->getInstanceName() << std::endl;
+#endif
+}
+
 ///////////////////////////////////////////////////////////////////////////
 // private member functions
 
 void Builder::setDefaultPortColors()
 {
-  // sci.cca.ports in SCIRun2Ports.sidl
+  Guard g(&builderLock);
+
+  // sci.cca.ports from SCIRun2Ports.sidl
   portColors[std::string("default")] = wxTheColourDatabase->Find(wxT("GOLD"));
   portColors[std::string("sci.cca.ports.StringPort")] = wxTheColourDatabase->Find(wxT("PINK"));
   portColors[std::string("sci.cca.ports.ZListPort")] = wxTheColourDatabase->Find(wxT("FIREBRICK"));
@@ -587,6 +557,53 @@ void Builder::setDefaultPortColors()
   portColors[VtkPortInstance::VTK_OUT_PORT] = wxTheColourDatabase->Find(wxT("SPRING GREEN"));
   portColors[VtkPortInstance::VTK_IN_PORT] = wxTheColourDatabase->Find(wxT("MEDIUM VIOLET RED"));
 #endif
+}
+
+bool Builder::connectPort(const std::string& providesPortName, const std::string& usesPortName, const std::string& portType, const sci::cca::ComponentID::pointer &cid)
+{
+  try {
+    // have dialog to pack typemap? use XML file? set a preference?
+    sci::cca::TypeMap::pointer tm = services->createTypeMap();
+    services->registerUsesPort(usesPortName, portType, tm);
+  } catch (const sci::cca::CCAException::pointer &e) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    if (bw) {
+      bw->DisplayErrorMessage("Error: Could not register port " + usesPortName + "; " +  e->getNote());
+    }
+    return false;
+  }
+
+  sci::cca::ConnectionID::pointer connID =
+    connect(services->getComponentID(), usesPortName, cid, providesPortName);
+  if (connID.isNull()) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    if (bw) {
+      bw->DisplayErrorMessage("Error: Could not connect port " + usesPortName + ".");
+    }
+    return false;
+  }
+
+  connectionMap[usesPortName] = connID;
+  return true;
+}
+
+void Builder::disconnectPort(const std::string& usesPortName)
+{
+  //disconnect
+  ConnectionMap::iterator iter = connectionMap.find(usesPortName);
+  if (iter != connectionMap.end()) {
+    disconnect(iter->second, 0);
+    connectionMap.erase(iter);
+  }
+
+  try {
+    services->unregisterUsesPort(usesPortName);
+  } catch (const sci::cca::CCAException::pointer &e) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    if (bw) {
+      bw->DisplayErrorMessage("Error: Could not unregister port " + usesPortName + "; " +  e->getNote());
+    }
+  }
 }
 
 }

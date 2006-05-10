@@ -63,7 +63,7 @@ public:
     ID_MENU_COMPONENTS,
   };
 
-  NetworkCanvas(const sci::cca::BuilderComponent::pointer& bc, BuilderWindow* bw, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size);
+  NetworkCanvas(const sci::cca::GUIBuilder::pointer& bc, BuilderWindow* bw, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size);
   virtual ~NetworkCanvas();
 
   bool Create(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style = wxHSCROLL|wxVSCROLL|wxSUNKEN_BORDER|wxRETAINED /*|wxCLIP_CHILDREN*/);
@@ -131,7 +131,7 @@ protected:
   wxMenuItem* deleteConnection;
 
 private:
-  sci::cca::BuilderComponent::pointer builder;
+  sci::cca::GUIBuilder::pointer builder;
   ComponentMap components;
   ConnectionMap connections;
   ConnectionMap possibleConnections;
