@@ -99,9 +99,7 @@ bool PortIcon::Create(wxWindow *parent, wxWindowID id, const wxString &name)
 
 void PortIcon::OnLeftDown(wxMouseEvent& event)
 {
-std::cerr << "PortIcon::OnLeftDown(wxMouseEvent& event)" << std::endl;
   if (portType == GUIBuilder::Uses) {
-std::cerr << "PortIcon::OnLeftDown(wxMouseEvent& event): Uses port!" << std::endl;
     connecting = parent->GetCanvas()->ShowPossibleConnections(this);
   }
 }

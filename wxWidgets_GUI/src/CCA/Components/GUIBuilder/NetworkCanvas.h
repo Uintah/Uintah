@@ -81,6 +81,7 @@ public:
   void OnLeftUp(wxMouseEvent& event);
   void OnMouseMove(wxMouseEvent& event);
   void OnRightClick(wxMouseEvent& event);
+  void OnMiddleClick(wxMouseEvent& event);
   void OnScroll(wxScrollWinEvent& event);
   void OnClear(wxCommandEvent& event);
   void OnDisconnect(wxCommandEvent& event);
@@ -117,6 +118,7 @@ protected:
   NetworkCanvas();
   void Init();
   void SetMenus();
+  void Disconnect(const ConnectionMap::iterator& iter);
 
   // Only call this from a paint event handler or event handler helper function!
   wxRect GetClientRect();
