@@ -65,7 +65,6 @@ itcl_class Uintah_Visualization_ParticleVis {
     }
 
     method add_partgeom_tab { dof } {
-	puts "in add_partgeom_tab"
 	set n "$this-c needexecute"
 
  	set f1 [$dof.tabs add -label "Geometry"]
@@ -98,7 +97,6 @@ itcl_class Uintah_Visualization_ParticleVis {
     }
 
     method add_vectcontrol_tab { dof } {
-	puts "in add_vectcontrol_tab"
 	set n "$this-c needexecute"
 
 	set f2 [$dof.tabs add -label "Vectors"]
