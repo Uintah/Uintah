@@ -270,9 +270,12 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
   int timestep = sharedState->getCurrentTopLevelTimeStep();
   int numMatls  = sharedState->getNumICEMatls();
   
-  if (timestep > 0 ) {
-    numMatls += sharedState->getNumMPMMatls();
-  }
+//  This doesn't work with AMR.  The refine/setBC_fineLevel task only refines ICE matls so we don't
+//  have access to sp_vol_mpm.
+//
+//  if (timestep > 0 ) {
+//    numMatls += sharedState->getNumMPMMatls();
+//  }
       
   for (int m = 0; m < numMatls; m++) {
     new_dw->allocateTemporary(rho_micro[m],  patch);
