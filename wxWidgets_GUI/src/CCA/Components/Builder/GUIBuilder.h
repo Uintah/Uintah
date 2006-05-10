@@ -26,8 +26,8 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef CCA_Components_Builder_Builder_h
-#define CCA_Components_Builder_Builder_h
+#ifndef CCA_Components_GUIBuilder_GUIBuilder_h
+#define CCA_Components_GUIBuilder_GUIBuilder_h
 
 #include <CCA/Components/Builder/wxSCIRunApp.h>
 #include <Core/CCA/spec/cca_sidl.h>
@@ -41,12 +41,12 @@
 
 namespace GUIBuilder {
 
-class Builder : public sci::cca::GUIBuilder {
+class GUIBuilder : public sci::cca::GUIBuilder {
 public:
   enum PortType { Uses = 0, Provides };
 
-  Builder();
-  virtual ~Builder();
+  GUIBuilder();
+  virtual ~GUIBuilder();
 
   virtual void setServices(const sci::cca::Services::pointer &svc);
   virtual std::string getFrameworkURL() { return frameworkURL; }
@@ -99,8 +99,8 @@ public:
   //virtual bool setPortColor(const std::string& portName, void* color);
 
   // Get stored port colour, if it doesn't exist then return a default.
-  //void Builder::getPortColor(const std::string& portName, char& red, char& green, char& blue);
-  void* Builder::getPortColor(const std::string& portName);
+  //void getPortColor(const std::string& portName, char& red, char& green, char& blue);
+  void* getPortColor(const std::string& portName);
 
   virtual void connectionActivity(const sci::cca::ports::ConnectionEvent::pointer &e);
   virtual void componentActivity(const sci::cca::ports::ComponentEvent::pointer &e);
@@ -108,8 +108,8 @@ public:
   static void setApp(wxSCIRunApp& a) { app = &a; }
 
 private:
-  Builder(const Builder &);
-  Builder& operator=(const Builder &);
+  GUIBuilder(const GUIBuilder &);
+  GUIBuilder& operator=(const GUIBuilder &);
 
   typedef std::map<std::string, sci::cca::ConnectionID::pointer> ConnectionMap;
   typedef std::map<std::string, wxColor> PortColorMap;
@@ -125,7 +125,7 @@ private:
   // Uses port names will be unique since they are generated from unique component instance names.
   ConnectionMap connectionMap;
 
-  // Set of port colours: the Builder will set up standard SCIRun2 ports (see SCIRun2Ports.sidl),
+  // Set of port colours: the GUIBuilder will set up standard SCIRun2 ports (see SCIRun2Ports.sidl),
   // or component authors can add their own.
   // Note: make this map static when support for static functions is available
   // Note: implement using wxColorDatabase instead?

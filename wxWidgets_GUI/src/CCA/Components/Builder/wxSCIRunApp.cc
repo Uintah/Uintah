@@ -26,9 +26,9 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <CCA/Components/Builder/wxSCIRunApp.h>
-#include <CCA/Components/Builder/GUIBuilder.h>
-#include <CCA/Components/Builder/BuilderWindow.h>
+#include <CCA/Components/GUIBuilder/wxSCIRunApp.h>
+#include <CCA/Components/GUIBuilder/GUIBuilder.h>
+#include <CCA/Components/GUIBuilder/BuilderWindow.h>
 #include <Core/Thread/Guard.h>
 #include <Core/Util/Environment.h>
 
@@ -58,11 +58,11 @@ wxSCIRunApp::OnInit()
   Guard g(&appLock);
   wxApp::OnInit(); // for command line processing (if any)
 
-  // only show if this is the first Builder in this address space
+  // only show if this is the first GUIBuilder in this address space
   wxInitAllImageHandlers();
 
   std::string path(sci_getenv("SCIRUN_SRCDIR"));
-  path += "/CCA/Components/Builder/scirun2-splash.png";
+  path += "/CCA/Components/GUIBuilder/scirun2-splash.png";
   wxBitmap bitmap(wxT(path), wxBITMAP_TYPE_PNG);
   if (bitmap.Ok()) {
     wxSplashScreen splash(bitmap, wxSPLASH_TIMEOUT|wxSPLASH_CENTRE_ON_SCREEN, SPLASH_TIMEOUT, 0, wxID_ANY);

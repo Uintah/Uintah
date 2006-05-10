@@ -39,10 +39,10 @@
 #include <wx/dcbuffer.h>
 #include <wx/gdicmn.h>
 
-#include <CCA/Components/Builder/PortIcon.h>
-#include <CCA/Components/Builder/BuilderWindow.h>
-#include <CCA/Components/Builder/ComponentIcon.h>
-#include <CCA/Components/Builder/NetworkCanvas.h>
+#include <CCA/Components/GUIBuilder/PortIcon.h>
+#include <CCA/Components/GUIBuilder/BuilderWindow.h>
+#include <CCA/Components/GUIBuilder/ComponentIcon.h>
+#include <CCA/Components/GUIBuilder/NetworkCanvas.h>
 
 #include <string>
 
@@ -62,7 +62,7 @@ END_EVENT_TABLE()
 IMPLEMENT_DYNAMIC_CLASS(PortIcon, wxWindow)
 
 PortIcon::PortIcon(const sci::cca::GUIBuilder::pointer& bc, ComponentIcon* parent,
-                   wxWindowID id, Builder::PortType pt, const std::string& name)
+                   wxWindowID id, GUIBuilder::PortType pt, const std::string& name)
   : builder(bc), parent(parent), portType(pt), name(name), connecting(false),
     ID_MENU_POPUP(BuilderWindow::GetNextID())
 {
@@ -86,7 +86,7 @@ bool PortIcon::Create(wxWindow *parent, wxWindowID id, const wxString &name)
   pColor = wxColor(*((wxColor*) c));
 
   //need database of port types/colours
-  if (portType == Builder::Uses) {
+  if (portType == GUIBuilder::Uses) {
     hColor = wxTheColourDatabase->Find("GREEN");
   } else {
     hColor = wxTheColourDatabase->Find("RED");
@@ -99,7 +99,9 @@ bool PortIcon::Create(wxWindow *parent, wxWindowID id, const wxString &name)
 
 void PortIcon::OnLeftDown(wxMouseEvent& event)
 {
-  if (portType == Builder::Uses) {
+std::cerr << "PortIcon::OnLeftDown(wxMouseEvent& event)" << std::endl;
+  if (portType == GUIBuilder::Uses) {
+std::cerr << "PortIcon::OnLeftDown(wxMouseEvent& event): Uses port!" << std::endl;
     connecting = parent->GetCanvas()->ShowPossibleConnections(this);
   }
 }
@@ -145,7 +147,7 @@ void PortIcon::OnPaint(wxPaintEvent& event)
     dc.DrawRectangle(windowRect);
   }
   wxRect hRect;
-  if (portType == Builder::Uses) {
+  if (portType == GUIBuilder::Uses) {
     hRect = wxRect(0, 0, HIGHLIGHT_WIDTH, PORT_HEIGHT);
   } else {
     hRect = wxRect(PORT_WIDTH - HIGHLIGHT_WIDTH, 0, HIGHLIGHT_WIDTH, PORT_HEIGHT);

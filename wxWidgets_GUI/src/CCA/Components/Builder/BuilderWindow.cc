@@ -44,11 +44,11 @@
 #include <SCIRun/TypeMap.h>
 #include <SCIRun/CCA/CCAException.h>
 
-#include <CCA/Components/Builder/BuilderWindow.h>
-#include <CCA/Components/Builder/MiniCanvas.h>
-#include <CCA/Components/Builder/NetworkCanvas.h>
-#include <CCA/Components/Builder/ComponentIcon.h>
-#include <CCA/Components/Builder/ComponentWizardDialog.h>
+#include <CCA/Components/GUIBuilder/BuilderWindow.h>
+#include <CCA/Components/GUIBuilder/MiniCanvas.h>
+#include <CCA/Components/GUIBuilder/NetworkCanvas.h>
+#include <CCA/Components/GUIBuilder/ComponentIcon.h>
+#include <CCA/Components/GUIBuilder/ComponentWizardDialog.h>
 
 #ifndef DEBUG
 #  define DEBUG 0
@@ -388,7 +388,7 @@ void BuilderWindow::InstantiateComponent(const sci::cca::ComponentClassDescripti
     tm->putString("LOADER NAME", cd->getLoaderName());
 
     sci::cca::ComponentID::pointer cid = builder->createInstance(cd->getComponentClassName(), sci::cca::TypeMap::pointer(tm));
-    // Assumes that the GUI builder component class will be named "SCIRun.Builder".
+    // Assumes that the GUI builder component class will be named "SCIRun.GUIBuilder".
     // Is there a better way to check if this is a GUI builder?
     if (! cid.isNull() && cd->getComponentClassName() != "SCIRun.GUIBuilder") {
 #if DEBUG

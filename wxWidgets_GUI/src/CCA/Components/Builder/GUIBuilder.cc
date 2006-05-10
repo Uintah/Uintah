@@ -30,7 +30,7 @@
 #include <wx/image.h>
 #include <wx/string.h>
 
-#include <CCA/Components/Builder/Builder.h>
+#include <CCA/Components/Builder/GUIBuilder.h>
 #include <CCA/Components/Builder/BuilderWindow.h>
 
 #include <sci_metacomponents.h>
@@ -58,12 +58,12 @@ using namespace SCIRun;
 
 extern "C" sci::cca::Component::pointer make_SCIRun_GUIBuilder()
 {
-  return sci::cca::Component::pointer(new Builder());
+  return sci::cca::Component::pointer(new GUIBuilder());
 }
 
-const std::string Builder::guiThreadName("wxWidgets GUI Builder");
-Mutex Builder::builderLock("Builder class lock");
-wxSCIRunApp* Builder::app = 0;
+const std::string GUIBuilder::guiThreadName("wxWidgets GUI Builder");
+Mutex GUIBuilder::builderLock("GUIBuilder class lock");
+wxSCIRunApp* GUIBuilder::app = 0;
 
 class wxGUIThread : public Runnable {
 public:
@@ -107,30 +107,30 @@ DestroyInstancesThread::run()
   // implement
 }
 
-Builder::Builder()
+GUIBuilder::GUIBuilder()
 {
 #if DEBUG
-  std::cerr << "Builder::Builder(): from thread " << Thread::self()->getThreadName() << std::endl;
+  std::cerr << "GUIBuilder::GUIBuilder(): from thread " << Thread::self()->getThreadName() << std::endl;
 #endif
 }
 
-Builder::~Builder()
+GUIBuilder::~GUIBuilder()
 {
 #if DEBUG
-  std::cerr << "Builder::~Builder(): from thread " << Thread::self()->getThreadName() << std::endl;
+  std::cerr << "GUIBuilder::~GUIBuilder(): from thread " << Thread::self()->getThreadName() << std::endl;
 #endif
 }
 
-// The first Builder to be instantiated (when wxTheApp is null) gets setServices
+// The first GUIBuilder to be instantiated (when wxTheApp is null) gets setServices
 // run from the "main" thread.
 // Subsequent Builders should only run in the GUI thread.
 // wxSCIRunApp functions should only run in the GUI thread.
 // (is is possible to defend against instantiating in the wrong thread?)
 void
-Builder::setServices(const sci::cca::Services::pointer &svc)
+GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
 {
 #if DEBUG
-  std::cerr << "Builder::setServices(..) from thread " << Thread::self()->getThreadName() << std::endl;
+  std::cerr << "GUIBuilder::setServices(..) from thread " << Thread::self()->getThreadName() << std::endl;
 #endif
   builderLock.lock();
   services = svc;
@@ -157,7 +157,7 @@ Builder::setServices(const sci::cca::Services::pointer &svc)
     wxSCIRunApp::semDown();
   } else {
 #if DEBUG
-    std::cerr << "Builder::setServices(..) try to add top window." << std::endl;
+    std::cerr << "GUIBuilder::setServices(..) try to add top window." << std::endl;
 #endif
     if (Thread::self()->getThreadName() == guiThreadName) {
       app->AddTopWindow(sci::cca::GUIBuilder::pointer(this));
@@ -172,7 +172,7 @@ Builder::setServices(const sci::cca::Services::pointer &svc)
 // Mediator between wxWidgets GUI classes and cca.ComponentRepository.
 
 void
-Builder::getComponentClassDescriptions(SSIDL::array1<sci::cca::ComponentClassDescription::pointer>& descArray)
+GUIBuilder::getComponentClassDescriptions(SSIDL::array1<sci::cca::ComponentClassDescription::pointer>& descArray)
 {
   try {
     sci::cca::ports::ComponentRepository::pointer rep =
@@ -194,7 +194,7 @@ Builder::getComponentClassDescriptions(SSIDL::array1<sci::cca::ComponentClassDes
 // Mediator between wxWidgets GUI classes and cca.BuilderService.
 
 void
-Builder::getPortInfo(const sci::cca::ComponentID::pointer& cid, const std::string& portName, std::string& model, std::string& type)
+GUIBuilder::getPortInfo(const sci::cca::ComponentID::pointer& cid, const std::string& portName, std::string& model, std::string& type)
 {
   sci::cca::TypeMap::pointer props;
   try {
@@ -212,7 +212,7 @@ Builder::getPortInfo(const sci::cca::ComponentID::pointer& cid, const std::strin
 }
 
 sci::cca::ComponentID::pointer
-Builder::createInstance(const std::string& className, const sci::cca::TypeMap::pointer& properties)
+GUIBuilder::createInstance(const std::string& className, const sci::cca::TypeMap::pointer& properties)
 {
   sci::cca::TypeMap::pointer tm = services->createTypeMap();
   sci::cca::ComponentID::pointer cid;
@@ -232,7 +232,7 @@ Builder::createInstance(const std::string& className, const sci::cca::TypeMap::p
 }
 
 void
-Builder::destroyInstance(const sci::cca::ComponentID::pointer& cid, float timeout)
+GUIBuilder::destroyInstance(const sci::cca::ComponentID::pointer& cid, float timeout)
 {
   std::string className = cid->getInstanceName();
   try {
@@ -247,7 +247,7 @@ Builder::destroyInstance(const sci::cca::ComponentID::pointer& cid, float timeou
 }
 
 int
-Builder::destroyInstances(const SSIDL::array1<sci::cca::ComponentID::pointer>& cidArray, float timeout)
+GUIBuilder::destroyInstances(const SSIDL::array1<sci::cca::ComponentID::pointer>& cidArray, float timeout)
 {
   //Guard g(&builderLock);
   // do this in a new thread?
@@ -271,7 +271,7 @@ Builder::destroyInstances(const SSIDL::array1<sci::cca::ComponentID::pointer>& c
 }
 
 void
-Builder::getUsedPortNames(const sci::cca::ComponentID::pointer& cid, SSIDL::array1<std::string>& nameArray)
+GUIBuilder::getUsedPortNames(const sci::cca::ComponentID::pointer& cid, SSIDL::array1<std::string>& nameArray)
 {
   try {
     sci::cca::ports::BuilderService::pointer bs =
@@ -285,7 +285,7 @@ Builder::getUsedPortNames(const sci::cca::ComponentID::pointer& cid, SSIDL::arra
 }
 
 void
-Builder::getProvidedPortNames(const sci::cca::ComponentID::pointer& cid, SSIDL::array1<std::string>& nameArray)
+GUIBuilder::getProvidedPortNames(const sci::cca::ComponentID::pointer& cid, SSIDL::array1<std::string>& nameArray)
 {
   try {
     sci::cca::ports::BuilderService::pointer bs =
@@ -303,7 +303,7 @@ Builder::getProvidedPortNames(const sci::cca::ComponentID::pointer& cid, SSIDL::
 }
 
 void
-Builder::getCompatiblePortList(const sci::cca::ComponentID::pointer &user,
+GUIBuilder::getCompatiblePortList(const sci::cca::ComponentID::pointer &user,
 			       const std::string& usesPortName,
 			       const sci::cca::ComponentID::pointer &provider,
 			       SSIDL::array1<std::string>& portArray)
@@ -324,7 +324,7 @@ Builder::getCompatiblePortList(const sci::cca::ComponentID::pointer &user,
 }
 
 sci::cca::ConnectionID::pointer
-Builder::connect(const sci::cca::ComponentID::pointer &usesCID, const std::string &usesPortName,
+GUIBuilder::connect(const sci::cca::ComponentID::pointer &usesCID, const std::string &usesPortName,
                  const sci::cca::ComponentID::pointer &providesCID, const ::std::string &providesPortName)
 {
   sci::cca::ConnectionID::pointer connID;
@@ -344,7 +344,7 @@ Builder::connect(const sci::cca::ComponentID::pointer &usesCID, const std::strin
   return connID;
 }
 
-void Builder::disconnect(const sci::cca::ConnectionID::pointer &connID, float timeout)
+void GUIBuilder::disconnect(const sci::cca::ConnectionID::pointer &connID, float timeout)
 {
   try {
     sci::cca::ports::BuilderService::pointer bs =
@@ -370,12 +370,12 @@ void Builder::disconnect(const sci::cca::ConnectionID::pointer &connID, float ti
 // Modifies usesPortName: constructs unique (in scope of this GUIBuilder)
 // uses port name for caller to store
 
-bool Builder::connectGoPort(const std::string& usesName, const std::string& providesPortName,
+bool GUIBuilder::connectGoPort(const std::string& usesName, const std::string& providesPortName,
                             const sci::cca::ComponentID::pointer &cid, std::string& usesPortName)
 {
   usesPortName = usesName + "." + "goPort";
 #if DEBUG
-  std::cerr << "Builder::connectGoPort(..): uses port name=" << usesPortName
+  std::cerr << "GUIBuilder::connectGoPort(..): uses port name=" << usesPortName
             << ", provides port name=" << providesPortName
             << ", component instance=" << cid->getInstanceName() << std::endl;
 #endif
@@ -383,17 +383,17 @@ bool Builder::connectGoPort(const std::string& usesName, const std::string& prov
   return connectPort(providesPortName, usesPortName, "sci.cca.ports.GoPort", cid);
 }
 
-void Builder::disconnectGoPort(const std::string& goPortName)
+void GUIBuilder::disconnectGoPort(const std::string& goPortName)
 {
 #if DEBUG
-  std::cerr << "Builder::disconnectGoPort(..): uses port name=" << usesPortName
+  std::cerr << "GUIBuilder::disconnectGoPort(..): uses port name=" << usesPortName
             << ", provides port name=" << providesPortName
             << ", component instance=" << cid->getInstanceName() << std::endl;
 #endif
   disconnectPort(goPortName);
 }
 
-int Builder::go(const std::string& goPortName)
+int GUIBuilder::go(const std::string& goPortName)
 {
   Guard g(&builderLock);
   sci::cca::ports::GoPort::pointer goPort;
@@ -418,11 +418,11 @@ int Builder::go(const std::string& goPortName)
 // sci.cca.ports.UIPort support
 
 
-bool Builder::connectUIPort(const std::string& usesName, const std::string& providesPortName, const sci::cca::ComponentID::pointer &cid, std::string& usesPortName)
+bool GUIBuilder::connectUIPort(const std::string& usesName, const std::string& providesPortName, const sci::cca::ComponentID::pointer &cid, std::string& usesPortName)
 {
   usesPortName = usesName + "." + "uiPort";
 #if DEBUG
-  std::cerr << "Builder::connectUIPort(..): uses port name=" << usesPortName
+  std::cerr << "GUIBuilder::connectUIPort(..): uses port name=" << usesPortName
             << ", provides port name=" << providesPortName
             << ", component instance=" << cid->getInstanceName() << std::endl;
 #endif
@@ -430,17 +430,17 @@ bool Builder::connectUIPort(const std::string& usesName, const std::string& prov
   return connectPort(providesPortName, usesPortName, "sci.cca.ports.UIPort", cid);
 }
 
-void Builder::disconnectUIPort(const std::string& uiPortName)
+void GUIBuilder::disconnectUIPort(const std::string& uiPortName)
 {
 #if DEBUG
-  std::cerr << "Builder::disconnectUIPort(..): uses port name=" << usesPortName
+  std::cerr << "GUIBuilder::disconnectUIPort(..): uses port name=" << usesPortName
             << ", provides port name=" << providesPortName
             << ", component instance=" << cid->getInstanceName() << std::endl;
 #endif
   disconnectPort(uiPortName);
 }
 
-int Builder::ui(const std::string& uiPortName)
+int GUIBuilder::ui(const std::string& uiPortName)
 {
   Guard g(&builderLock);
   sci::cca::ports::UIPort::pointer uiPort;
@@ -460,7 +460,7 @@ int Builder::ui(const std::string& uiPortName)
   return status;
 }
 
-bool Builder::setPortColor(const std::string& portType, const std::string& colorName)
+bool GUIBuilder::setPortColor(const std::string& portType, const std::string& colorName)
 {
   Guard g(&builderLock);
   wxColor c = wxTheColourDatabase->Find(wxT(colorName));
@@ -481,9 +481,9 @@ bool Builder::setPortColor(const std::string& portType, const std::string& color
 
 #if 0
 // see Bugzilla bug #2834:
-// void Builder::setPortColor(const std::string& portType, void* color)
+// void GUIBuilder::setPortColor(const std::string& portType, void* color)
 // {
-//   std::cerr << "Builder::setPortColor(..): portType=" << portType << std::endl;
+//   std::cerr << "GUIBuilder::setPortColor(..): portType=" << portType << std::endl;
 //   Guard g(&builderLock);
 //   wxColor c(*((wxColor*) color));
 //   if (! c.Ok()) {
@@ -502,7 +502,7 @@ bool Builder::setPortColor(const std::string& portType, const std::string& color
 // }
 #endif
 
-void* Builder::getPortColor(const std::string& portType)
+void* GUIBuilder::getPortColor(const std::string& portType)
 {
   Guard g(&builderLock);
   PortColorMap::iterator iter = portColors.find(portType);
@@ -521,24 +521,24 @@ void* Builder::getPortColor(const std::string& portType)
 //
 // These should be replaced by new event services currently under proposal.
 
-void Builder::connectionActivity(const sci::cca::ports::ConnectionEvent::pointer& e)
+void GUIBuilder::connectionActivity(const sci::cca::ports::ConnectionEvent::pointer& e)
 {
 #if DEBUG
-  std::cerr << "Builder::connectionActivity(..)" << std::endl;
+  std::cerr << "GUIBuilder::connectionActivity(..)" << std::endl;
 #endif
 }
 
-void Builder::componentActivity(const sci::cca::ports::ComponentEvent::pointer& e)
+void GUIBuilder::componentActivity(const sci::cca::ports::ComponentEvent::pointer& e)
 {
 #if DEBUG
-  std::cerr << "Builder::componentActivity: got event for component " << e->getComponentID()->getInstanceName() << std::endl;
+  std::cerr << "GUIBuilder::componentActivity: got event for component " << e->getComponentID()->getInstanceName() << std::endl;
 #endif
 }
 
 ///////////////////////////////////////////////////////////////////////////
 // private member functions
 
-void Builder::setDefaultPortColors()
+void GUIBuilder::setDefaultPortColors()
 {
   Guard g(&builderLock);
 
@@ -559,7 +559,7 @@ void Builder::setDefaultPortColors()
 #endif
 }
 
-bool Builder::connectPort(const std::string& providesPortName, const std::string& usesPortName, const std::string& portType, const sci::cca::ComponentID::pointer &cid)
+bool GUIBuilder::connectPort(const std::string& providesPortName, const std::string& usesPortName, const std::string& portType, const sci::cca::ComponentID::pointer &cid)
 {
   try {
     // have dialog to pack typemap? use XML file? set a preference?
@@ -587,7 +587,7 @@ bool Builder::connectPort(const std::string& providesPortName, const std::string
   return true;
 }
 
-void Builder::disconnectPort(const std::string& usesPortName)
+void GUIBuilder::disconnectPort(const std::string& usesPortName)
 {
   //disconnect
   ConnectionMap::iterator iter = connectionMap.find(usesPortName);

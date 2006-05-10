@@ -59,13 +59,14 @@ BEGIN_EVENT_TABLE(ComponentIcon, wxPanel)
   EVT_MOTION(ComponentIcon::OnMouseMove)
   EVT_MENU(ID_MENU_GO, ComponentIcon::OnGo)
   EVT_MENU(ID_MENU_DELETE, ComponentIcon::OnDelete)
+  EVT_BUTTON(ID_BUTTON_UI, ComponentIcon::OnUI)
 END_EVENT_TABLE()
 
 IMPLEMENT_DYNAMIC_CLASS(ComponentIcon, wxPanel)
 
 ComponentIcon::ComponentIcon(const sci::cca::GUIBuilder::pointer& bc, wxWindowID winid,
                              NetworkCanvas* parent, const sci::cca::ComponentID::pointer& compID, int x, int y)
-  : canvas(parent), hasUIPort(false), hasGoPort(false), /* isSciPort(false), */ isMoving(false), cid(compID), builder(bc)
+  : canvas(parent), hasUIPort(false), hasGoPort(false), isMoving(false), cid(compID), builder(bc)
 {
 
   Init();
@@ -264,6 +265,11 @@ void ComponentIcon::OnDelete(wxCommandEvent& event)
   canvas->DeleteIcon(cid->getInstanceName());
 }
 
+void ComponentIcon::OnUI(wxCommandEvent& event)
+{
+  builder->ui(uiPortName);
+}
+
 void ComponentIcon::GetCanvasPosition(wxPoint& p)
 {
   canvas->GetUnscrolledPosition(this->GetPosition(), p);
@@ -348,22 +354,6 @@ void ComponentIcon::SetPortIcons()
                       wxDefaultSpan, wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, PORT_BORDER_SIZE);
   } else {
     for (unsigned int i = 0, j = 0; i < providedPorts.size(); i++) {
-//       if (providedPorts[i] == "ui") {
-// 	hasUIPort = true;
-//       } else if (providedPorts[i] == "sci.ui") {
-// 	hasUIPort = true;
-// 	isSciPort = true;
-//       } else if (providedPorts[i] == "go") {
-// 	hasGoPort = true;
-// 	if (builder->registerGoPort(cid->getInstanceName(), cid, false, goPortName)) {
-// 	  popupMenu->Append(ID_MENU_GO, wxT("&Go"), wxT("CCA go port"));
-// 	}
-//       } else if (providedPorts[i] == "sci.go") {
-// 	hasGoPort = true;
-// 	isSciPort = true;
-// 	if (builder->registerGoPort(cid->getInstanceName(), cid, true, goPortName)) {
-// 	  popupMenu->Append(ID_MENU_GO, wxT("&Go"), wxT("SCIRun2 interface for SCIRun execute"));
-// 	}
       if (providedPorts[i].rfind("ui") != std::string::npos) {
 	if (builder->connectUIPort(cid->getInstanceName(), providedPorts[i], cid, uiPortName)) {
 	  hasUIPort = true;
@@ -374,7 +364,7 @@ void ComponentIcon::SetPortIcons()
 	  popupMenu->Append(ID_MENU_GO, wxT("&Go"), wxT("CCA go port"));
 	}
       } else {
-	PortIcon *pi = new PortIcon(builder, this, wxID_ANY, Builder::Provides, providedPorts[i]);
+	PortIcon *pi = new PortIcon(builder, this, wxID_ANY, GUIBuilder::Provides, providedPorts[i]);
 	//ports[providedPorts[i]] = pi;
 	providesPorts.push_back(pi);
 	gridBagSizer->Add(pi, wxGBPosition(j++, 0), wxDefaultSpan,
@@ -392,7 +382,7 @@ void ComponentIcon::SetPortIcons()
                       wxDefaultSpan, wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, PORT_BORDER_SIZE);
   } else {
     for (unsigned int i = 0; i < usedPorts.size(); i++) {
-      PortIcon *pi = new PortIcon(builder, this, wxID_ANY, Builder::Uses, usedPorts[i]);
+      PortIcon *pi = new PortIcon(builder, this, wxID_ANY, GUIBuilder::Uses, usedPorts[i]);
       //ports[usedPorts[i]] = pi;
       usesPorts.push_back(pi);
       gridBagSizer->Add(pi, wxGBPosition(i, USES_PORT_COL),
