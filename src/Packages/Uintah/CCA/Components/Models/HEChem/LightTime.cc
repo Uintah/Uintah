@@ -175,7 +175,6 @@ void LightTime::scheduleComputeModelSources(SchedulerP& sched,
   t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,    react_matl, gn);
   t->requires(Task::OldDW, Ilb->vel_CCLabel,       react_matl, gn);
   t->requires(Task::OldDW, Ilb->temp_CCLabel,      react_matl, gn);
-  t->requires(Task::OldDW, reactedFractionLabel,   react_matl, gn);
   t->requires(Task::NewDW, Ilb->rho_CCLabel,       react_matl, gn);
   t->requires(Task::NewDW, Ilb->specific_heatLabel,react_matl, gn);
 
@@ -225,7 +224,7 @@ void LightTime::computeModelSources(const ProcessorGroup*,
     new_dw->getModifiable(sp_vol_src_1,  mi->sp_vol_source_CCLabel,   m1,patch);
 
     constCCVariable<double> vol_frac_rct, vol_frac_prd;
-    constCCVariable<double> cv_reactant,Fr_old;
+    constCCVariable<double> cv_reactant;
     constCCVariable<double> rctTemp,rctRho,rctSpvol,prodRho;
     constCCVariable<Vector> rctvel_CC;
     CCVariable<double> Fr;
@@ -239,7 +238,6 @@ void LightTime::computeModelSources(const ProcessorGroup*,
     // Reactant data
     old_dw->get(rctTemp,       Ilb->temp_CCLabel,      m0,patch,gn, 0);
     old_dw->get(rctvel_CC,     Ilb->vel_CCLabel,       m0,patch,gn, 0);
-    old_dw->get(Fr_old,        reactedFractionLabel,   m0,patch,gn, 0);
     new_dw->get(rctRho,        Ilb->rho_CCLabel,       m0,patch,gn, 0);
     new_dw->get(rctSpvol,      Ilb->sp_vol_CCLabel,    m0,patch,gn, 0);
     new_dw->get(vol_frac_rct,  Ilb->vol_frac_CCLabel,  m0,patch,gn, 0);
@@ -288,7 +286,8 @@ void LightTime::computeModelSources(const ProcessorGroup*,
         if (time >= t_b && rctRho[c] > d_TINY_RHO){
           Fr[c] = (time - t_b)/delta_L;
           if(Fr[c] > .96) Fr[c] = 1.0;
-          delF[c] = Fr[c] - Fr_old[c];
+          double Fr_old = prodRho[c]/(rctRho[c]+prodRho[c]);
+          delF[c] = Fr[c] - Fr_old;
 
           //__________________________________
           // Insert Burn Model Here
