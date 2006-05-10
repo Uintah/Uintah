@@ -1,11 +1,11 @@
 #
 #  For more information, please see: http://software.sci.utah.edu
-# 
+#
 #  The MIT License
-# 
+#
 #  Copyright (c) 2004 Scientific Computing and Imaging Institute,
 #  University of Utah.
-# 
+#
 #  License for the specific language governing rights and limitations under
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -13,10 +13,10 @@
 #  the rights to use, copy, modify, merge, publish, distribute, sublicense,
 #  and/or sell copies of the Software, and to permit persons to whom the
 #  Software is furnished to do so, subject to the following conditions:
-# 
+#
 #  The above copyright notice and this permission notice shall be included
 #  in all copies or substantial portions of the Software.
-# 
+#
 #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 #  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 #  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -29,55 +29,26 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := CCA/Components
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-#ifeq ($(HAVE_QT),yes)
-#  SUBDIRS := \
-#             $(SRCDIR)/TxtBuilder \
-#             $(SRCDIR)/Hello  \
-#             $(SRCDIR)/ListPlotter \
-#             $(SRCDIR)/ZList \
-#             $(SRCDIR)/ZListWriter \
-#             $(SRCDIR)/Viewer \
-#             $(SRCDIR)/LinSolver \
-#             $(SRCDIR)/FileReader \
-#             $(SRCDIR)/FEM \
-#             $(SRCDIR)/Tri \
-#             $(SRCDIR)/TableTennis \
-#             $(SRCDIR)/TTClient \
-#             $(SRCDIR)/World \
-#             $(SRCDIR)/PDEdriver
-#else
-# SUBDIRS := \
-#            $(SRCDIR)/TxtBuilder \
-#            $(SRCDIR)/Hello \
-#            $(SRCDIR)/World
-#endif
+SRCDIR := CCA/Components/GUIBuilder
 
-SUBDIRS := \
-            $(SRCDIR)/Hello \
-            $(SRCDIR)/World \
-	    $(SRCDIR)/PDEdriver
+SRCS += \
+         $(SRCDIR)/wxSCIRunApp.cc \
+         $(SRCDIR)/GUIBuilder.cc \
+         $(SRCDIR)/BuilderWindow.cc \
+         $(SRCDIR)/NetworkCanvas.cc \
+         $(SRCDIR)/MiniCanvas.cc \
+         $(SRCDIR)/Connection.cc \
+         $(SRCDIR)/ComponentIcon.cc \
+         $(SRCDIR)/PortIcon.cc \
+	 $(SRCDIR)/ComponentWizardDialog.cc \
+         $(SRCDIR)/ComponentSkeletonWriter.cc
 
-ifeq ($(HAVE_WX),yes)
-  SUBDIRS += $(SRCDIR)/GUIBuilder
-endif
+PSELIBS := Core/CCA/spec Core/CCA/PIDL Core/Thread Core/Exceptions SCIRun
 
-ifeq ($(HAVE_TAO),yes)
-  SUBDIRS += $(SRCDIR)/TAO
-endif
+CFLAGS += $(WX_CXXFLAGS)
+CXXFLAGS += $(WX_CXXFLAGS)
+LIBS := $(WX_LIBRARY)
 
-ifeq ($(HAVE_MPI),yes)
-  SUBDIRS += $(SRCDIR)/PWorld $(SRCDIR)/PHello
-# $(SRCDIR)/PLinSolver
-endif
-
-ifeq ($(HAVE_BABEL),yes)
- SUBDIRS += $(SRCDIR)/BabelTest
-endif
-
-ifeq ($(HAVE_VTK),yes)
- SUBDIRS += $(SRCDIR)/VTK
-endif
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
