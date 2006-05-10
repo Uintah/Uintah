@@ -82,7 +82,7 @@ Mutex ParticleFieldExtractor::module_lock("PFEMutex");
     onMaterials(get_ctx()->subVar("onMaterials")),
     pNMaterials(get_ctx()->subVar("pNMaterials")),
     positionName(""), particleIDs(""), archiveH(0),
-    num_materials(0)
+    num_materials(0), num_selected_materials(0)
 { 
 
 } 
@@ -129,17 +129,67 @@ bool ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
   int levels = grid->numLevels();
   int guilevel = level_.get();
   LevelP level = grid->getLevel( (guilevel == levels ? 0 : guilevel) );
+  
   Patch* r = *(level->patchesBegin());
+  
   // get the number of materials for the particle Variables
+  ConsecutiveRangeSet matls;
   int nm = 0;
   for( int i = 0; i < (int)names.size(); i++ ){
-    ConsecutiveRangeSet matls =
-      archive->queryMaterials(names[i], r, times[timestep]);
-    nm = ( (int)matls.size() > nm ? (int)matls.size() : nm );
+    for(int j = 0; j < levels; j++){
+      level = grid->getLevel( j );
+      for (Level::patchIterator iter = level->patchesBegin();
+           (iter != level->patchesEnd()); ++iter){
+        matls = archive->queryMaterials(names[i], *iter, times[timestep]);
+//         cerr<<"name: "<<names[i]<<", patch: "<<&(*iter)<<", matl_size: "<<matls.size()<<"\n";
+        nm = ( (int)matls.size() > nm ? (int)matls.size() : nm );
+      }
+//       cerr<<"\n";
+    }
   }
-  if( !archive_dirty && nm == num_materials ){
+
+  if( !archive_dirty && nm == num_materials){
     return true;
   } else {
+    // currently particles can only exist on one level.  Figure out which
+    // level and build the interface for it. 
+    // NOTE: this is not a general solution!
+    bool found_particles = false;
+    for( int j = 0; j < (int)names.size(); j++ ){
+      if( names[j] == "p.x" ){
+        for(int i = 0; i < levels; i++){
+          level = grid->getLevel( i );
+          for (Level::patchIterator iter = level->patchesBegin();
+               (iter != level->patchesEnd()); ++iter){
+            ParticleVariable<Point> var;
+            matls = archive->queryMaterials(names[j], *iter, times[timestep]);
+            ConsecutiveRangeSet::iterator it = matls.begin();
+            while( it != matls.end() ){
+              archive->query( var, names[j], *it, *iter, times[timestep]); 
+              if(var.getParticleSet()->numParticles() > 0){
+                found_particles = true; //we have found particles on this level
+                level_.set( i );
+                r = *(level->patchesBegin());
+                break;                  // break out
+              }
+              ++it;
+            }
+            if( found_particles ) { 
+              break;
+            }
+          }
+          if( found_particles ){ // break out of the level loop
+            break;
+          }
+        }
+        if( found_particles ){
+          break;
+        }
+      }
+    }
+
+
+
     //string type_list("");
     //string name_list("");
     scalarVars.clear();
@@ -156,7 +206,7 @@ bool ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
     //   ptVar.set("");
 
     ostringstream os;
-    os << levels;
+    os << level_.get();  // was levels
 
     string psNames("");
     string pvNames("");
@@ -174,8 +224,8 @@ bool ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
       td = types[i];
       if(td->getType() ==  TypeDescription::ParticleVariable){
 	const TypeDescription* subtype = td->getSubType();
-	ConsecutiveRangeSet matls = archive->queryMaterials(names[i], r,
-                                                            times[timestep]);
+	matls = archive->queryMaterials(names[i], r, times[timestep]);
+        if(matls.size() == 0) continue;
 	switch ( subtype->getType() ) {
 	case TypeDescription::double_type:
 	case TypeDescription::float_type:
@@ -257,7 +307,8 @@ bool ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
     if( visible == "1"){
       get_gui()->execute(get_id() + " destroyFrames");
       get_gui()->execute(get_id() + " build");
-      get_gui()->execute(get_id() + " buildLevels "+ os.str());
+//       get_gui()->execute(get_id() + " buildLevels "+ os.str());
+       get_gui()->execute(get_id() + " buildLevel "+ os.str());
       //      get_gui()->execute(get_id() + " setParticleScalars " + psNames.c_str());
       //      get_gui()->execute(get_id() + " setParticleVectors " + pvNames.c_str());
       //      get_gui()->execute(get_id() + " setParticleTensors " + ptNames.c_str());
@@ -280,6 +331,7 @@ bool ParticleFieldExtractor::showVarsForMatls()
 	continue;
      onMaterials.addInOrder(matl);
   }
+  
 
   bool needToUpdate = false;
   string spNames = getVarsForMaterials(scalarVars, onMaterials, needToUpdate);
@@ -449,7 +501,6 @@ void ParticleFieldExtractor::graph(string idx, string var)
 //----------------------------------------------------------------
 void ParticleFieldExtractor::execute() 
 { 
-  printf("ParticleFieldExtractor::execute()\n");
   //  const char* old_tag1 = AllocatorSetDefaultTag("ParticleFieldExtractor::execute");
   tcl_status.set("Calling ParticleFieldExtractor!"); 
   //  bool newarchive; RNJ - Not used???
@@ -790,7 +841,7 @@ void ParticleFieldExtractor::tcl_command(GuiArgs& args, void* userdata) {
 //     cerr << endl;
 //     cerr << "Graphing " << varname << " with materials: " << vector_to_string(mat_list) << endl;
     extract_data(displaymode,varname,mat_list,type_list,particleID);
-  }
+  } 
   else {
     Module::tcl_command(args, userdata);
   }
