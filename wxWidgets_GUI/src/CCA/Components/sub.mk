@@ -57,17 +57,18 @@ SRCDIR   := CCA/Components
 SUBDIRS := \
             $(SRCDIR)/Hello \
             $(SRCDIR)/World \
-	    $(SRCDIR)/PDEdriver \
+	    $(SRCDIR)/PDEdriver
 
-## until configure support for wxWidgets:
-SUBDIRS += $(SRCDIR)/Builder
+ifeq ($(HAVE_WX),yes)
+  SUBDIRS += $(SRCDIR)/Builder
+endif
 
 ifeq ($(HAVE_TAO),yes)
   SUBDIRS += $(SRCDIR)/TAO
 endif
 
 ifeq ($(HAVE_MPI),yes)
-  SUBDIRS += $(SRCDIR)/PWorld $(SRCDIR)/PHello 
+  SUBDIRS += $(SRCDIR)/PWorld $(SRCDIR)/PHello
 # $(SRCDIR)/PLinSolver
 endif
 
