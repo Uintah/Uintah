@@ -62,6 +62,8 @@ namespace SCIRun {
     //Handler function type
     typedef void (*HPF)(Message* ); 
 
+    virtual ~EpChannel() {}
+
     //Initializing methods used to establish the
     //connection. These are called from the PIDL.
     virtual void openConnection() = 0;
