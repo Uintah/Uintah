@@ -73,6 +73,8 @@ template <class T> //! for compilation consistency
   class NoDataBasis : public BasisSimple<T>, public NoDataUnitElement
 {
 public:
+  typedef T value_type;
+
   NoDataBasis() {}
   virtual ~NoDataBasis() {}
   
