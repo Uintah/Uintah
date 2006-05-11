@@ -49,6 +49,7 @@
 #include <CCA/Components/GUIBuilder/NetworkCanvas.h>
 #include <CCA/Components/GUIBuilder/ComponentIcon.h>
 #include <CCA/Components/GUIBuilder/ComponentWizardDialog.h>
+#include <CCA/Components/GUIBuilder/XMLPathDialog.h>
 
 #ifndef DEBUG
 #  define DEBUG 0
@@ -162,10 +163,13 @@ const wxColor BuilderWindow::BACKGROUND_COLOUR(0, 51, 102);
 BEGIN_EVENT_TABLE(BuilderWindow, wxFrame)
   EVT_MENU(wxID_ABOUT, BuilderWindow::OnAbout)
   EVT_MENU(wxID_EXIT, BuilderWindow::OnQuit)
-  EVT_MENU(ID_MENU_TEST, BuilderWindow::OnTest)
+#if GUI_TEST
+  EVT_MENU(ID_MENU_TEST, BuilderWindow::OnTest)  // test GUI, components etc.
+#endif
   EVT_MENU(ID_MENU_CLEAR, BuilderWindow::OnClear)
   EVT_MENU(ID_MENU_CLEAR_MESSAGES, BuilderWindow::OnClearMessages)
-  EVT_MENU(ID_MENU_COMPONENT_WIZARD,BuilderWindow::OnCompWizard)
+  EVT_MENU(ID_MENU_COMPONENT_WIZARD, BuilderWindow::OnCompWizard)
+  EVT_MENU(ID_MENU_ADD_SIDLXML, BuilderWindow::OnSidlXML)
   EVT_SIZE(BuilderWindow::OnSize)
   EVT_SASH_DRAGGED_RANGE(ID_WINDOW_LEFT, ID_WINDOW_BOTTOM, BuilderWindow::OnSashDrag)
 END_EVENT_TABLE()
@@ -187,6 +191,7 @@ BuilderWindow::BuilderWindow(const sci::cca::GUIBuilder::pointer& bc, wxWindow *
 bool BuilderWindow::Create(wxWindow* parent, wxWindowID id, const wxString& title, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
 {
   if (!wxFrame::Create(parent, id, title, pos, size, style, name)) {
+    // error message?
     return false;
   }
   url = builder->getFrameworkURL();
@@ -220,6 +225,50 @@ BuilderWindow::~BuilderWindow()
   // framework shutdown instead!!!
   Thread::exitAll(0);
 }
+
+///////////////////////////////////////////////////////////////////////////
+// manage child windows
+
+void BuilderWindow::RedrawMiniCanvas()
+{
+  miniCanvas->Refresh();
+}
+
+void BuilderWindow::DisplayMessage(const std::string& line)
+{
+  // Used to (temporarily - local scope) redirect all output sent to a C++ ostream object to a wxTextCtrl.
+  wxStreamToTextRedirector redirect(textCtrl);
+  std::cout << line << std::endl;
+}
+
+void BuilderWindow::DisplayErrorMessage(const std::string& line)
+{
+  textCtrl->SetDefaultStyle(wxTextAttr(*wxRED));
+  // Used to (temporarily - local scope) redirect all output sent to a C++ ostream object to a wxTextCtrl.
+  wxStreamToTextRedirector redirect(textCtrl);
+  std::cout << line << std::endl;
+  textCtrl->SetDefaultStyle(wxTextAttr(*wxBLACK));
+}
+
+void BuilderWindow::DisplayMessages(const std::vector<std::string>& lines)
+{
+  wxStreamToTextRedirector redirect(textCtrl);
+
+  for (std::vector<std::string>::const_iterator iter = lines.begin(); iter != lines.end(); iter++) {
+    std::cout << *iter << std::endl;
+  }
+}
+
+
+void BuilderWindow::DisplayErrorMessages(const std::vector<std::string>& lines)
+{
+  textCtrl->SetDefaultStyle(wxTextAttr(*wxRED));
+  DisplayMessages(lines);
+  textCtrl->SetDefaultStyle(wxTextAttr(*wxBLACK));
+}
+
+///////////////////////////////////////////////////////////////////////////
+// event handlers
 
 void BuilderWindow::OnAbout(wxCommandEvent &event)
 {
@@ -274,50 +323,7 @@ void BuilderWindow::OnSize(wxSizeEvent& WXUNUSED(event))
   Refresh();
 }
 
-///////////////////////////////////////////////////////////////////////////
-// manage child windows
-
-void BuilderWindow::RedrawMiniCanvas()
-{
-  miniCanvas->Refresh();
-}
-
-void BuilderWindow::DisplayMessage(const std::string& line)
-{
-  // Used to (temporarily - local scope) redirect all output sent to a C++ ostream object to a wxTextCtrl.
-  wxStreamToTextRedirector redirect(textCtrl);
-  std::cout << line << std::endl;
-}
-
-void BuilderWindow::DisplayErrorMessage(const std::string& line)
-{
-  textCtrl->SetDefaultStyle(wxTextAttr(*wxRED));
-  // Used to (temporarily - local scope) redirect all output sent to a C++ ostream object to a wxTextCtrl.
-  wxStreamToTextRedirector redirect(textCtrl);
-  std::cout << line << std::endl;
-  textCtrl->SetDefaultStyle(wxTextAttr(*wxBLACK));
-}
-
-void BuilderWindow::DisplayMessages(const std::vector<std::string>& lines)
-{
-  wxStreamToTextRedirector redirect(textCtrl);
-
-  for (std::vector<std::string>::const_iterator iter = lines.begin(); iter != lines.end(); iter++) {
-    std::cout << *iter << std::endl;
-  }
-}
-
-
-void BuilderWindow::DisplayErrorMessages(const std::vector<std::string>& lines)
-{
-  textCtrl->SetDefaultStyle(wxTextAttr(*wxRED));
-  DisplayMessages(lines);
-  textCtrl->SetDefaultStyle(wxTextAttr(*wxBLACK));
-}
-
-///////////////////////////////////////////////////////////////////////////
-// event handlers
-
+#if GUI_TEST
 void BuilderWindow::OnTest(wxCommandEvent&/* event */)
 {
   statusBar->SetStatusText("Build components", 0);
@@ -351,7 +357,7 @@ void BuilderWindow::OnTest(wxCommandEvent&/* event */)
   }
   statusBar->SetStatusText("Components built", 0);
 }
-
+#endif
 
 void BuilderWindow::OnCompWizard(wxCommandEvent& event)
 {
@@ -359,6 +365,12 @@ void BuilderWindow::OnCompWizard(wxCommandEvent& event)
   cwDialog.ShowModal();
 }
 
+void BuilderWindow::OnSidlXML(wxCommandEvent& event)
+{
+std::cerr << "BuilderWindow::OnSidlXML(..)" << std::endl;
+  XMLPathDialog pathDialog(this, wxID_ANY);
+  pathDialog.ShowModal();
+}
 
 void BuilderWindow::OnClearMessages(wxCommandEvent& event)
 {
@@ -431,8 +443,10 @@ void BuilderWindow::SetMenus()
   compWizardMenu->Append(ID_MENU_COMPONENT_WIZARD, wxT("Component Wizard"), wxT("Create component skeleton"));
 
   wxMenu* fileMenu = new wxMenu();
+#if GUI_TEST
   fileMenu->Append(ID_MENU_TEST, wxT("&Test\tAlt-T"), wxT("Test component build"));
   fileMenu->AppendSeparator();
+#endif
   fileMenu->Append(ID_MENU_LOAD, wxT("&Load\tAlt-L"), wxT("Load network file"));
   fileMenu->Append(ID_MENU_INSERT, wxT("&Insert\tAlt-L"), wxT("Insert network file"));
   fileMenu->Append(wxID_SAVE, wxT("&Save\tAlt-S"), wxT("Save network to file"));
@@ -449,7 +463,7 @@ void BuilderWindow::SetMenus()
   fileMenu->AppendSeparator();
   //fileMenu->Append(ID_MENU_ADDINFO, wxT("&Add Info\tAlt-A"), wxT("Add information to?"));
   //fileMenu->AppendSeparator();
-  fileMenu->Append(ID_MENU_ADD_SIDLXML, wxT("&Add SIDL XML Path\tAlt-A"), wxT("Add a new component XML description file."));
+  fileMenu->Append(ID_MENU_ADD_SIDLXML, wxT("&Add Components from XML\tAlt-A"), wxT("Add a new component XML description file."));
   fileMenu->AppendSeparator();
   fileMenu->Append(wxID_EXIT, wxT("E&xit\tAlt-X"), wxT("Quit this program"));
 
