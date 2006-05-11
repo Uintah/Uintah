@@ -1419,6 +1419,7 @@ RenderField<Fld, Loc>::render_faces_linear(Fld *sfld,
   
   if ((sfld->basis_order() == 0) && (mesh->dimensionality() == 3))
   {
+    mesh->synchronize(Mesh::FACES_E);
     typename Fld::mesh_type::Face::iterator face_iter; mesh->begin(face_iter); 
     typename Fld::mesh_type::Face::iterator face_iter_end; mesh->end(face_iter_end); 
     typename Fld::mesh_type::Elem::array_type cells;
