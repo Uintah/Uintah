@@ -35,6 +35,8 @@
 #define MeshQuality_h
 
 #include <verdict.h>
+#include <Core/Datatypes/GenericField.h>
+#include <Core/Basis/Constant.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
@@ -113,6 +115,14 @@ FieldHandle MeshQualityAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandl
   mesh->begin(bi); mesh->end(ei);
 
   mesh->synchronize( Mesh::ALL_ELEMENTS_E );
+  
+  typedef GenericField<typename FIELD::mesh_type, ConstantBasis<double>, vector<double> > out_fld;
+  out_fld *ofield = scinew out_fld( field->get_typed_mesh() );
+  FieldHandle output = dynamic_cast<Field*>(ofield);
+  if (output.get_rep() == 0)
+  {
+    return (fieldh); 
+  }
 
   int total_elements = 0;
   double aspect_high = 0, aspect_low = 0, aspect_ave = 0;
@@ -245,6 +255,7 @@ FieldHandle MeshQualityAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandl
       cout << "WARNING: Tet " << elem_id << " has negative volume!" << endl;
     }
     
+    ofield->set_value(scaled_jacobian,*(bi));
     total_elements++;
     ++bi;
   }
@@ -275,6 +286,7 @@ FieldHandle MeshQualityAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandl
   if( inversions != 0 )
       cout << " (" << inversions << " Tets have negative jacobians!)";
   cout << endl << "Euler characteristics for this mesh indicate " << holes << " holes in this block of elements." << endl << "    (Assumes a single contiguous block of elements.)" << endl;
+  cout << "Element counts: Tets: " << tets << " Faces: " << faces << " Edges: " << edges << " Nodes: " << nodes << endl;
   cout << "Aspect Ratio: Low = " << aspect_low << ", Average = " << aspect_ave << ", High = " << aspect_high << endl;
   cout << "Aspect Ratio (gamma): Low = " << aspect_gamma_low << ", Average = " << aspect_gamma_ave << ", High = " << aspect_gamma_high << endl;
   cout << "Volume: Low = " << volume_low << ", Average = " << volume_ave << ", High = " << volume_high << endl;
@@ -285,7 +297,7 @@ FieldHandle MeshQualityAlgoTet<FIELD>::execute(ProgressReporter *mod, FieldHandl
   cout << "Shape_Size: Low = " << shape_size_low << ", Average = " << shape_size_ave << ", High = " << shape_size_high << endl;
   cout << "Distortion: Low = " << distortion_low << ", Average = " << distortion_ave << ", High = " << distortion_high << endl;
  
-  return field;
+  return output;
 }
 
 
@@ -342,6 +354,14 @@ FieldHandle MeshQualityAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandl
     //perform Euler checks for topology errors...
     // 2-2g = -#hexes+#faces-#edges+#nodes
   mesh->synchronize( Mesh::ALL_ELEMENTS_E );
+
+  typedef GenericField<typename FIELD::mesh_type, ConstantBasis<double>, vector<double> > out_fld;  
+  out_fld *ofield = scinew out_fld( field->get_typed_mesh() );
+  FieldHandle output = dynamic_cast<Field*>(ofield);
+  if (output.get_rep() == 0)
+  {
+    return (fieldh); 
+  }
 
   int total_elements = 0;
   double aspect_high = 0, aspect_low = 0, aspect_ave = 0;
@@ -534,6 +554,7 @@ FieldHandle MeshQualityAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandl
       cout << "WARNING: Hex " << elem_id << " has negative volume!" << endl;
     }
 
+    ofield->set_value(scaled_jacobian,*(bi));
     total_elements++;
     ++bi;
   }
@@ -585,7 +606,7 @@ FieldHandle MeshQualityAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandl
   cout << "Shape_Size: Low = " << shape_size_low << ", Average = " << shape_size_ave << ", High = " << shape_size_high << endl;
   cout << "Distortion: Low = " << distortion_low << ", Average = " << distortion_ave << ", High = " << distortion_high << endl;
  
-  return field;
+  return output;
 }
 
 
@@ -632,6 +653,14 @@ FieldHandle MeshQualityAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandl
   mesh->begin(bi); mesh->end(ei);
 
   mesh->synchronize( Mesh::EDGES_E );
+
+  typedef GenericField<typename FIELD::mesh_type, ConstantBasis<double>, vector<double> > out_fld;  
+  out_fld *ofield = scinew out_fld( field->get_typed_mesh() );
+  FieldHandle output = dynamic_cast<Field*>(ofield);
+  if (output.get_rep() == 0)
+  {
+    return (fieldh); 
+  }
 
   int total_elements = 0;
   double area_high = 0, area_low = 0, area_ave = 0;
@@ -779,6 +808,7 @@ FieldHandle MeshQualityAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandl
       cout << "WARNING: Tri " << elem_id << " has negative area!" << endl;
     }
 
+    ofield->set_value(scaled_jacobian,*(bi));
     total_elements++;
     ++bi;
   }
@@ -800,12 +830,13 @@ FieldHandle MeshQualityAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandl
   mesh->size( edges );
   mesh->size( faces );
   int holes = (faces-edges+nodes-2)/2;
-//  cout << " Tris: " << faces << " Edges: " << edges << " Nodes: " << nodes << endl;
+//  
 
   cout << endl << "Number of Tri elements checked = " << total_elements;
   if( inversions != 0 )
       cout << " (" << inversions << " Tris have negative jacobians!)";
   cout << endl << "Euler characteristics for this mesh indicate " << holes << " holes in this block of elements." << endl << "    (Assumes a single contiguous block of elements.)" << endl;
+  cout << " Tris: " << faces << " Edges: " << edges << " Nodes: " << nodes << endl;
   cout << "Area: Low = " << area_low << ", Average = " << area_ave << ", High = " << area_high << endl;
   cout << "Minimum_Angle: Low = " << minimum_angle_low << ", Average = " << minimum_angle_ave << ", High = " << minimum_angle_high << endl;
   cout << "Maximum_Angle: Low = " << maximum_angle_low << ", Average = " << maximum_angle_ave << ", High = " << maximum_angle_high << endl;
@@ -816,7 +847,7 @@ FieldHandle MeshQualityAlgoTri<FIELD>::execute(ProgressReporter *mod, FieldHandl
   cout << "Shape_Size: Low = " << shape_size_low << ", Average = " << shape_size_ave << ", High = " << shape_size_high << endl;
   cout << "Distortion: Low = " << distortion_low << ", Average = " << distortion_ave << ", High = " << distortion_high << endl;
 
-   return field;
+   return output;
 }
 
 
@@ -873,6 +904,14 @@ FieldHandle MeshQualityAlgoQuad<FIELD>::execute(ProgressReporter *mod, FieldHand
   mesh->begin(bi); mesh->end(ei);
 
   mesh->synchronize( Mesh::EDGES_E );
+  
+   typedef GenericField<typename FIELD::mesh_type, ConstantBasis<double>, vector<double> > out_fld;  
+  out_fld *ofield = scinew out_fld( field->get_typed_mesh() );
+  FieldHandle output = dynamic_cast<Field*>(ofield);
+  if (output.get_rep() == 0)
+  {
+    return (fieldh); 
+  }
 
   int total_elements = 0;
   double aspect_high = 0, aspect_low = 0, aspect_ave = 0;
@@ -1076,6 +1115,7 @@ FieldHandle MeshQualityAlgoQuad<FIELD>::execute(ProgressReporter *mod, FieldHand
       cout << "WARNING: Quad " << elem_id << " has negative area!" << endl;
     }
 
+    ofield->set_value(scaled_jacobian,*(bi));
     total_elements++;
     ++bi;
   }
@@ -1110,6 +1150,7 @@ FieldHandle MeshQualityAlgoQuad<FIELD>::execute(ProgressReporter *mod, FieldHand
   if( inversions != 0 )
       cout << " (" << inversions << " Quads have negative jacobians!)";
   cout << endl << "Euler characteristics for this mesh indicate " << holes << " holes in this block of elements." << endl << "    (Assumes a single contiguous block of elements.)" << endl;
+  cout << "Quads: " << faces << " Edges: " << edges << " Nodes: " << nodes << endl;
   cout << "Aspect Ratio: Low = " << aspect_low << ", Average = " << aspect_ave << ", High = " << aspect_high << endl;
   cout << "Skew: Low = " << skew_low << ", Average = " << skew_ave << ", High = " << skew_high << endl;
   cout << "Taper: Low = " << taper_low << ", Average = " << taper_ave << ", High = " << taper_high << endl;
@@ -1127,7 +1168,7 @@ FieldHandle MeshQualityAlgoQuad<FIELD>::execute(ProgressReporter *mod, FieldHand
   cout << "Shape_Size: Low = " << shape_size_low << ", Average = " << shape_size_ave << ", High = " << shape_size_high << endl;
   cout << "Distortion: Low = " << distortion_low << ", Average = " << distortion_ave << ", High = " << distortion_high << endl;
 
-   return field;
+   return output;
 }
 
 
