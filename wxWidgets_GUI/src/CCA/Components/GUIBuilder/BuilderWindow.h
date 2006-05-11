@@ -26,8 +26,14 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef BuilderWindow_h
-#define BuilderWindow_h
+#ifndef CCA_Components_GUIBuilder_BuilderWindow_h
+#define CCA_Components_GUIBuilder_BuilderWindow_h
+
+
+// turn off for release
+#ifndef GUI_TEST
+#  define GUI_TEST 1
+#endif
 
 
 #include <wx/wxprec.h>
@@ -62,7 +68,10 @@ public:
   MenuTree(BuilderWindow* bw, const std::string &url);
   virtual ~MenuTree();
 
-  void add(const std::vector<std::string>& name, int nameindex, const sci::cca::ComponentClassDescription::pointer& desc, const std::string& fullname);
+  void add(const std::vector<std::string>& name,
+           int nameindex,
+           const sci::cca::ComponentClassDescription::pointer& desc,
+           const std::string& fullname);
   void coalesce();
   void populateMenu(wxMenu* menu);
   void clear();
@@ -78,7 +87,7 @@ private:
   int id;
 };
 
-class BuilderWindow : public wxFrame /*, public sci::cca::ports::ComponentEventListener */ {
+class BuilderWindow : public wxFrame {
 public:
   //typedef std::map<std::string, int> IntMap;
   typedef std::map<std::string, MenuTree*> MenuTreeMap;
@@ -92,7 +101,9 @@ public:
     ID_NET_WINDOW,
     ID_MINI_WINDOW,
     ID_TEXT_WINDOW,
-    ID_MENU_TEST, // temporary
+#if GUI_TEST
+    ID_MENU_TEST,
+#endif
     ID_MENU_LOAD,
     ID_MENU_INSERT,
     ID_MENU_CLEAR,
@@ -124,9 +135,12 @@ public:
   void OnAbout(wxCommandEvent& event);
   void OnSize(wxSizeEvent& event);
   void OnSashDrag(wxSashEvent& event);
+#if GUI_TEST
   void OnTest(wxCommandEvent& event);
+#endif
   void OnClear(wxCommandEvent& event);
   void OnCompWizard(wxCommandEvent& event);
+  void OnSidlXML(wxCommandEvent& event);
   void OnClearMessages(wxCommandEvent& event);
 
   void InstantiateComponent(const sci::cca::ComponentClassDescription::pointer& cd);
