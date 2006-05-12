@@ -2277,22 +2277,17 @@ TriSurfMesh<Basis>::find_closest_elem(Point &result,
   // test all the faces, but with the grid overhead and triangle
   // duplication as well).
   ASSERTMSG(synchronized_ & LOCATE_E,
-            "TriSurfMesh::find_closest_elem requires synchronize(LOCATE_E).");
-  
-  cout << "point = " << p << "\n";
-    
+            "TriSurfMesh::find_closest_elem requires synchronize(LOCATE_E).")
+
   // Convert to grid coordinates.
   int oi, oj, ok;
   grid_->unsafe_locate(oi, oj, ok, p);
-
-  cout << " originl gcoords = " << oi << " " << oj << " " << ok << "\n";
 
   // Clamp to closest point on the grid.
   oi = Max(Min(oi, grid_->get_ni()-1), 0);
   oj = Max(Min(oj, grid_->get_nj()-1), 0);
   ok = Max(Min(ok, grid_->get_nk()-1), 0);
 
-  cout << " clamped gcoords = " << oi << " " << oj << " " << ok << "\n";
   int bi, ei, bj, ej, bk, ek;
   bi = ei = oi;
   bj = ej = oj;
@@ -2316,9 +2311,7 @@ TriSurfMesh<Basis>::find_closest_elem(Point &result,
         {
           if (i == bi || i == ei || j == bj || j == ej || k == bk || k == ek)
           {
-            const double tmp2 = grid_->min_distance_squared(p, i, j, k);
-            cout << "  checking " << i << " " << j << " " << k << ", " << tmp2 << "(" << dmin << ")\n";
-            if (tmp2 < dmin)
+            if (grid_->min_distance_squared(p, i, j, k) < dmin)
             {
               found = true;
               const list<unsigned int> *candidates;
@@ -2334,7 +2327,6 @@ TriSurfMesh<Basis>::find_closest_elem(Point &result,
                                      points_[faces_[idx+1]],
                                      points_[faces_[idx+2]]);
                 const double dtmp = (p - rtmp).length2();
-                cout << "  candidate " << *iter << ", dist = " << dtmp << "\n";
                 if (dtmp < dmin)
                 {
                   result = rtmp;
@@ -2353,7 +2345,7 @@ TriSurfMesh<Basis>::find_closest_elem(Point &result,
     bk--;ek++;
   } while (found) ;
 
-#if 1
+#if 0
   // The old code, useful for debugging purposes.  Note that the old
   // and new code don't necessarily return the same face because if
   // you hit an edge or corner any of the edge or corner faces are
@@ -2378,13 +2370,8 @@ TriSurfMesh<Basis>::find_closest_elem(Point &result,
   }
   if (face != face2)
   {
-    cout << "difference detected, ";
-    cout << "face " << face << " " << face2 << ", ";
-    cout << "dmin " << dmin << " " << dmin2 << "\n";
-    
-    //face = face2;
-    //dmin = dmin2;
-    //result = result2;
+    cout << "face != face2 (" << face << " " << face2 << "\n";
+    cout << "dmin = " << dmin << ", dmin2 = " << dmin2 << "\n";
   }
 #endif
 
