@@ -382,6 +382,7 @@ FieldHandle MeshQualityAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandl
   
   int inversions = 0;
   int first_time_thru = 1;
+  bool inverted_element_detected = false;
   
   while (bi != ei)
   {
@@ -550,15 +551,20 @@ FieldHandle MeshQualityAlgoHex<FIELD>::execute(ProgressReporter *mod, FieldHandl
 //        cout << "WARNING: Hex " << elem_id << " has negative volume!" << endl;
     if( scaled_jacobian <= 0.0 )
     {
+      if( inverted_element_detected == false )
+      {
+        cout << "WARNING: The following hexes have negative volume: ";
+        inverted_element_detected = true;
+      }
       inversions++;
-      cout << "WARNING: Hex " << elem_id << " has negative volume!" << endl;
+      cout << elem_id << " ";
     }
-
+    
     ofield->set_value(scaled_jacobian,*(bi));
     total_elements++;
     ++bi;
   }
-  
+
   aspect_ave /= total_elements;
   skew_ave /= total_elements;
   taper_ave /= total_elements;
