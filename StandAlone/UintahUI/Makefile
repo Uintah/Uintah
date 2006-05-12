@@ -12,9 +12,12 @@ SOURCE_FILES = \
 	DisplayParticleLocPanel.java \
 	GeneralInputsPanel.java \
 	HelpAboutFrame.java \
+	ICEInputsPanel.java \
+	ICEMaterialsPanel.java \
 	InputPartDistPanel.java \
 	LightWeightCanvas.java \
 	MPMInputsPanel.java \
+	MPMMaterialsPanel.java \
 	Packing.java \
 	ParticleGeneratePanel.java \
 	Particle.java \
@@ -38,9 +41,12 @@ all: UintahGui \
 	DisplayParticleLocPanel\
 	GeneralInputsPanel\
 	HelpAboutFrame\
+	ICEInputsPanel \
+	ICEMaterialsPanel \
 	InputPartDistPanel\
 	LightWeightCanvas\
 	MPMInputsPanel\
+	MPMMaterialsPanel \
 	Packing\
 	ParticleGeneratePanel\
 	Particle\
@@ -74,6 +80,12 @@ GeneralInputsPanel:
 HelpAboutFrame:
 	${JAVAC} ${srcdir}/HelpAboutFrame.java 
 
+ICEInputsPanel:
+	${JAVAC} ${srcdir}/ICEInputsPanel.java 
+
+ICEMaterialsPanel:
+	${JAVAC} ${srcdir}/ICEMaterialsPanel.java 
+
 InputPartDistPanel:
 	${JAVAC} ${srcdir}/InputPartDistPanel.java 
 
@@ -82,6 +94,9 @@ LightWeightCanvas:
 
 MPMInputsPanel:
 	${JAVAC} ${srcdir}/MPMInputsPanel.java 
+
+MPMMaterialsPanel:
+	${JAVAC} ${srcdir}/MPMMaterialsPanel.java 
 
 Packing:
 	${JAVAC} ${srcdir}/Packing.java 

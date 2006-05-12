@@ -35,10 +35,10 @@ public class UintahInputPanel extends JPanel {
     // Create the panels to be added to the tabbed pane
     GeneralInputsPanel generalInpPanel = new GeneralInputsPanel(this);
     MPMInputsPanel mpmInpPanel = new MPMInputsPanel(this); 
+    MPMMaterialsPanel mpmMatPanel = new MPMMaterialsPanel(this); 
+    ICEInputsPanel iceInpPanel = new ICEInputsPanel(this); 
+    ICEMaterialsPanel iceMatPanel = new ICEMaterialsPanel(this); 
     /*
-    GeneralMPMDataPanel generalMPMDataPanel = new GeneralMPMDataPanel();
-    GeneralICEDataPanel generalICEDataPanel = new GeneralICEDataPanel();
-    MaterialPropMPMPanel matPropMPMPanel = new MaterialPropMPMPanel(); 
     MaterialPropICEPanel matPropICEPanel = new MaterialPropICEPanel(); 
     GridBCPanel gridBCPanel = new GridBCPanel(); 
     */
@@ -48,13 +48,13 @@ public class UintahInputPanel extends JPanel {
                           generalInpPanel, null);
     uintahTabbedPane.addTab("MPM Parameters", null,
                           mpmInpPanel, null);
+    uintahTabbedPane.addTab("MPM Materials", null,
+                          mpmMatPanel, null);
+    uintahTabbedPane.addTab("ICE Parameters", null,
+                          iceInpPanel, null);
+    uintahTabbedPane.addTab("ICE Materials", null,
+                          iceMatPanel, null);
     /*
-    uintahTabbedPane.addTab("General ICE Inputs", null,
-                          generalICEDataPanel, null);
-    uintahTabbedPane.addTab("MPM Material Properties", null,
-                          matPropMPMPanel, null);
-    uintahTabbedPane.addTab("ICE Material Properties", null,
-                          matPropICEPanel, null);
     uintahTabbedPane.addTab("Grid and BC Inputs", null,
                           gridBCPanel, null);
     uintahTabbedPane.setSelectedIndex(0);
