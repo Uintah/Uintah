@@ -78,7 +78,7 @@ class ConnectionEvent;
 class BuilderService : public sci::cca::ports::BuilderService,
 		       public InternalFrameworkServiceInstance
 {
-  public:
+public:
   virtual ~BuilderService();
 
   /** Factory method for creating an instance of a BuilderService class.
@@ -213,20 +213,20 @@ class BuilderService : public sci::cca::ports::BuilderService,
   // Bridge methods
   /** */
   virtual SSIDL::array1<std::string>
-  getBridgablePortList(const sci::cca::ComponentID::pointer &c1,
-		       const std::string &port1,
-		       const sci::cca::ComponentID::pointer &c2);
+  getBridgeablePortList(const sci::cca::ComponentID::pointer &c1,
+                        const std::string &port1,
+                        const sci::cca::ComponentID::pointer &c2);
 
   /** */
   virtual std::string
   generateBridge(const sci::cca::ComponentID::pointer &c1,
-		 const std::string &port1,
-		 const sci::cca::ComponentID::pointer &c2,
-		 const std::string &port2);
+                 const std::string &port1,
+                 const sci::cca::ComponentID::pointer &c2,
+                 const std::string &port2);
   // END Bridge methods
 
   /** */
-  sci::cca::Port::pointer getService(const std::string &);
+  virtual sci::cca::Port::pointer getService(const std::string &);
 
   /** */
   int addComponentClasses(const std::string &loaderName);
@@ -234,7 +234,7 @@ class BuilderService : public sci::cca::ports::BuilderService,
   /** */
   int removeComponentClasses(const std::string &loaderName);
 
-  private:
+private:
     friend class ConnectionEventService;
     BuilderService(SCIRunFramework* fwk);
     /** Returns the URL of this BuilderService component's framework. */

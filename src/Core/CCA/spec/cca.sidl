@@ -1083,14 +1083,14 @@ package cca {
 
         //Bridge methods:
         /**
-         * TODO: document getBridgablePortList
+         * TODO: document getBridgeablePortList
          * @param 
          * @param 
          * @param 
          */
-        array<string> getBridgablePortList(in sci.cca.ComponentID c1,
-                                           in string port1,
-                                           in sci.cca.ComponentID c2);
+        array<string> getBridgeablePortList(in sci.cca.ComponentID c1,
+                                            in string port1,
+                                            in sci.cca.ComponentID c2);
 
         string generateBridge(in cca.ComponentID user, 
                               in string usingPortName,   
