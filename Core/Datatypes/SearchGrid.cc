@@ -208,16 +208,21 @@ SearchGridConstructor::min_distance_squared(const Point &p,
   Point r;
   transform_.unproject(p, r);
 
-  // Determine closest corner.
-  if (Round(r.x()) >= i+1) i++;
-  if (Round(r.y()) >= j+1) j++;
-  if (Round(r.z()) >= k+1) k++;
-
-  // Project that corner back to world space.
-  Point c(i, j, k), q;
-  transform_.project(c, q);
+  Point c;
   
-  // Return distance from point to projected closest corner.
+  // Splat the point onto the cell.
+  if (r.x() < i) { r.x(i); }
+  else if (r.x() > i+1) { r.x(i+1); }
+  if (r.y() < j) { r.y(j); }
+  else if (r.y() > j+1) { r.y(j+1); }
+  if (r.z() < k) { r.z(k); }
+  else if (r.z() > k+1) { r.z(k+1); }
+  
+  // Project the cell intersection back to world space.
+  Point q;
+  transform_.project(r, q);
+  
+  // Return distance from point to projected cell point.
   return (p - q).length2();
 }
 
