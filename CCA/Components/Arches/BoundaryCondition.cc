@@ -107,6 +107,8 @@ BoundaryCondition::~BoundaryCondition()
   delete d_wallBdry;
   delete d_pressureBC;
   delete d_outletBC;
+  for (int ii = 0; ii < d_numInlets; ii++)
+    delete d_flowInlets[ii];
 }
 
 //****************************************************************************
@@ -129,14 +131,14 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
     d_inletBoundary = true;
     for (ProblemSpecP inlet_db = db->findBlock("FlowInlet");
          inlet_db != 0; inlet_db = inlet_db->findNextBlock("FlowInlet")) {
-      d_flowInlets.push_back(FlowInlet(numMixingScalars, total_cellTypes));
-      d_flowInlets[d_numInlets].problemSetup(inlet_db);
+      d_flowInlets.push_back(scinew FlowInlet(numMixingScalars, total_cellTypes));
+      d_flowInlets[d_numInlets]->problemSetup(inlet_db);
       // compute density and other dependent properties
-      d_flowInlets[d_numInlets].streamMixturefraction.d_initEnthalpy=true;
-      d_flowInlets[d_numInlets].streamMixturefraction.d_scalarDisp=0.0;
+      d_flowInlets[d_numInlets]->streamMixturefraction.d_initEnthalpy=true;
+      d_flowInlets[d_numInlets]->streamMixturefraction.d_scalarDisp=0.0;
       d_props->computeInletProperties(
-                        d_flowInlets[d_numInlets].streamMixturefraction,
-		        d_flowInlets[d_numInlets].calcStream);
+                        d_flowInlets[d_numInlets]->streamMixturefraction,
+		        d_flowInlets[d_numInlets]->calcStream);
       ++total_cellTypes;
       ++d_numInlets;
     }
@@ -322,9 +324,9 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
     {
       if (d_inletBoundary) {
         for (int ii = 0; ii < d_numInlets; ii++) {
-          int nofGeomPieces = (int)d_flowInlets[ii].d_geomPiece.size();
+          int nofGeomPieces = (int)d_flowInlets[ii]->d_geomPiece.size();
           for (int jj = 0; jj < nofGeomPieces; jj++) {
-	    GeometryPieceP  piece = d_flowInlets[ii].d_geomPiece[jj];
+	    GeometryPieceP  piece = d_flowInlets[ii]->d_geomPiece[jj];
 	    Box geomBox = piece->getBoundingBox();
 	    Box b = geomBox.intersect(patchBox);
 	    // check for another geometry
@@ -343,7 +345,7 @@ BoundaryCondition::cellTypeInit(const ProcessorGroup*,
 	         !iter.done(); iter++) {
 	      Point p = patch->cellPosition(*iter);
 	      if (piece->inside(p)) 
-	        cellType[*iter] = d_flowInlets[ii].d_cellTypeID;
+	        cellType[*iter] = d_flowInlets[ii]->d_cellTypeID;
 	    }
           }
         }
@@ -688,16 +690,16 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
     for (int ii = 0; ii < d_numInlets; ii++) {
       
       // Loop thru the number of geometry pieces in each inlet
-      int nofGeomPieces = (int)d_flowInlets[ii].d_geomPiece.size();
+      int nofGeomPieces = (int)d_flowInlets[ii]->d_geomPiece.size();
       for (int jj = 0; jj < nofGeomPieces; jj++) {
 	
 	// Intersect the geometry piece with the patch box
-	GeometryPieceP  piece = d_flowInlets[ii].d_geomPiece[jj];
+	GeometryPieceP  piece = d_flowInlets[ii]->d_geomPiece[jj];
 	Box geomBox = piece->getBoundingBox();
 	Box b = geomBox.intersect(patchBox);
 	// check for another geometry
 	if (b.degenerate()){
-	  new_dw->put(sum_vartype(0),d_flowInlets[ii].d_area_label);
+	  new_dw->put(sum_vartype(0),d_flowInlets[ii]->d_area_label);
 	  continue; // continue the loop for other inlets
 	}
 	
@@ -709,7 +711,7 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
 	
 	// Calculate the inlet area
 	double inlet_area;
-	int cellid = d_flowInlets[ii].d_cellTypeID;
+	int cellid = d_flowInlets[ii]->d_cellTypeID;
 	
 	bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
 	bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
@@ -724,7 +726,7 @@ BoundaryCondition::computeInletFlowArea(const ProcessorGroup*,
 		    xminus, xplus, yminus, yplus, zminus, zplus);
 	
 	// Write the inlet area to the old_dw
-	new_dw->put(sum_vartype(inlet_area),d_flowInlets[ii].d_area_label);
+	new_dw->put(sum_vartype(inlet_area),d_flowInlets[ii]->d_area_label);
       }
     }
   }
@@ -747,7 +749,7 @@ BoundaryCondition::sched_calculateArea(SchedulerP& sched, const PatchSet* patche
   // ***warning checkpointing
   //      tsk->computes(old_dw, d_lab->d_cellInfoLabel, matlIndex, patch);
   for (int ii = 0; ii < d_numInlets; ii++) 
-    tsk->computes(d_flowInlets[ii].d_area_label);
+    tsk->computes(d_flowInlets[ii]->d_area_label);
 
   sched->addTask(tsk, patches, matls);
 #if 0
@@ -791,7 +793,7 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched, const PatchSet* patches,
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   for (int ii = 0; ii < d_numInlets; ii++) {
-    tsk->requires(Task::NewDW, d_flowInlets[ii].d_area_label);
+    tsk->requires(Task::NewDW, d_flowInlets[ii]->d_area_label);
   }
   if (d_enthalpySolve) {
     tsk->modifies(d_lab->d_enthalpySPLabel);
@@ -813,7 +815,7 @@ BoundaryCondition::sched_setProfile(SchedulerP& sched, const PatchSet* patches,
     tsk->modifies(d_lab->d_scalarSPLabel);
 
   for (int ii = 0; ii < d_numInlets; ii++) 
-    tsk->computes(d_flowInlets[ii].d_flowRate_label);
+    tsk->computes(d_flowInlets[ii]->d_flowRate_label);
 
   sched->addTask(tsk, patches, matls);
 }
@@ -880,31 +882,31 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
       double time = 0.0; 
       for (int indx = 0; indx < d_numInlets; indx++) {
         sum_vartype area_var;
-        new_dw->get(area_var, d_flowInlets[indx].d_area_label);
+        new_dw->get(area_var, d_flowInlets[indx]->d_area_label);
         double area = area_var;
 	double actual_flow_rate;
       
         // Get a copy of the current flow inlet
         // check if given patch intersects with the inlet boundary of type index
-        FlowInlet fi = d_flowInlets[indx];
+        FlowInlet* fi = d_flowInlets[indx];
         //cerr << " inlet area" << area << " flowrate" << fi.flowRate << endl;
         //cerr << "density=" << fi.calcStream.d_density << endl;
         fort_profv(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
-		   cellType, area, fi.d_cellTypeID, fi.flowRate, fi.inletVel,
-		   fi.calcStream.d_density,
+		   cellType, area, fi->d_cellTypeID, fi->flowRate, fi->inletVel,
+		   fi->calcStream.d_density,
 		   xminus, xplus, yminus, yplus, zminus, zplus, time,
 		   d_ramping_inlet_flowrate, actual_flow_rate);
 
-	d_flowInlets[indx].flowRate = actual_flow_rate;
+	d_flowInlets[indx]->flowRate = actual_flow_rate;
 	new_dw->put(delt_vartype(actual_flow_rate),
-		    d_flowInlets[indx].d_flowRate_label);
+		    d_flowInlets[indx]->d_flowRate_label);
 
         fort_profscalar(idxLo, idxHi, density, cellType,
-		        fi.calcStream.d_density, fi.d_cellTypeID,
+		        fi->calcStream.d_density, fi->d_cellTypeID,
 		        xminus, xplus, yminus, yplus, zminus, zplus);
         if (d_enthalpySolve)
         fort_profscalar(idxLo, idxHi, enthalpy, cellType,
-		        fi.calcStream.d_enthalpy, fi.d_cellTypeID,
+		        fi->calcStream.d_enthalpy, fi->d_cellTypeID,
 		        xminus, xplus, yminus, yplus, zminus, zplus);
 
       }
@@ -938,9 +940,9 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
       if (d_inletBoundary) {
         for (int ii = 0; ii < d_numInlets; ii++) {
 	  double scalarValue = 
-		 d_flowInlets[ii].streamMixturefraction.d_mixVars[indx];
+		 d_flowInlets[ii]->streamMixturefraction.d_mixVars[indx];
 	  fort_profscalar(idxLo, idxHi, scalar[indx], cellType,
-			  scalarValue, d_flowInlets[ii].d_cellTypeID,
+			  scalarValue, d_flowInlets[ii]->d_cellTypeID,
 			  xminus, xplus, yminus, yplus, zminus, zplus);
 	}
       }
@@ -1226,7 +1228,7 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
 	       vars->pressCoeff[Arches::AT], vars->pressCoeff[Arches::AB],
 	       vars->pressNonlinearSrc, vars->pressLinearSrc,
 	       constvars->cellType, wall_celltypeval, 
-	       d_flowInlets[ii].d_cellTypeID,
+	       d_flowInlets[ii]->d_cellTypeID,
 	       neumann_bc,
 	       xminus, xplus, yminus, yplus, zminus, zplus);
   }
@@ -1282,7 +1284,7 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
 		constvars->vVelocity, constvars->wVelocity,cellinfo->sew,
 		cellinfo->sns, cellinfo->stb, constvars->cellType,
 		wall_celltypeval, symmetry_celltypeval,
-		d_flowInlets[0].d_cellTypeID, pressure_celltypeval, ffield,
+		d_flowInlets[0]->d_cellTypeID, pressure_celltypeval, ffield,
 		sfield, outlet_celltypeval,
 		xminus, xplus, yminus, yplus, zminus, zplus);
 }
@@ -1334,7 +1336,7 @@ BoundaryCondition::enthalpyBC(const ProcessorGroup*,
 		  constvars->vVelocity,
 		  constvars->wVelocity, cellinfo->sew, cellinfo->sns,
 		  cellinfo->stb, constvars->cellType, wall_celltypeval,
-		  symmetry_celltypeval, d_flowInlets[0].d_cellTypeID,
+		  symmetry_celltypeval, d_flowInlets[0]->d_cellTypeID,
 		  pressure_celltypeval, ffield, sfield, outlet_celltypeval,
 		  xminus, xplus, yminus, yplus, zminus, zplus);
 
@@ -2946,7 +2948,7 @@ BoundaryCondition::velRhoHatInletBC(const ProcessorGroup* ,
   // stores cell type info for the patch with the ghost cell type
   for (int indx = 0; indx < d_numInlets; indx++) {
     // Get a copy of the current flow inlet
-    FlowInlet fi = d_flowInlets[indx];
+    FlowInlet* fi = d_flowInlets[indx];
     
     // assign flowType the value that corresponds to flow
     //CellTypeInfo flowType = FLOW;
@@ -2958,7 +2960,7 @@ BoundaryCondition::velRhoHatInletBC(const ProcessorGroup* ,
     bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
     fort_inlbcs(vars->uVelRhoHat, vars->vVelRhoHat, vars->wVelRhoHat,
       	  idxLo, idxHi, constvars->new_density, constvars->cellType, 
-      	  fi.d_cellTypeID, current_time,
+      	  fi->d_cellTypeID, current_time,
       	  xminus, xplus, yminus, yplus, zminus, zplus,
 	  d_ramping_inlet_flowrate);
     
@@ -4012,10 +4014,10 @@ BoundaryCondition::getFlowINOUT(const ProcessorGroup*,
 	// Get a copy of the current flow inlet
 	// assign flowType the value that corresponds to flow
 	//CellTypeInfo flowType = FLOW;
-	FlowInlet fi = d_flowInlets[indx];
+	FlowInlet* fi = d_flowInlets[indx];
 	double fout = 0.0;
 	fort_inlpresbcinout(uVelocity, vVelocity, wVelocity, idxLo, idxHi,
-			   density, cellType, fi.d_cellTypeID,
+			   density, cellType, fi->d_cellTypeID,
 			   flowIN, fout, cellinfo->sew, cellinfo->sns,
 			   cellinfo->stb, xminus, xplus, yminus, yplus,
 			   zminus, zplus, doing_balance,
@@ -4332,11 +4334,11 @@ BoundaryCondition::initInletBC(const ProcessorGroup* /*pc*/,
       double current_time = 0.0; 
       for (int indx = 0; indx < d_numInlets; indx++) {
         // Get a copy of the current flow inlet
-        FlowInlet fi = d_flowInlets[indx];
+        FlowInlet* fi = d_flowInlets[indx];
     
         fort_inlbcs(uVelocity, vVelocity, wVelocity,
       	                 idxLo, idxHi, density, cellType, 
-      	                 fi.d_cellTypeID, current_time,
+      	                 fi->d_cellTypeID, current_time,
       	                 xminus, xplus, yminus, yplus, zminus, zplus,
 	                 d_ramping_inlet_flowrate);
       }
@@ -4789,8 +4791,8 @@ void BoundaryCondition::sched_getScalarEfficiency(SchedulerP& sched,
 			  &BoundaryCondition::getScalarEfficiency);
   
   for (int ii = 0; ii < d_numInlets; ii++) {
-    tsk->requires(Task::OldDW, d_flowInlets[ii].d_flowRate_label);
-    tsk->computes(d_flowInlets[ii].d_flowRate_label);
+    tsk->requires(Task::OldDW, d_flowInlets[ii]->d_flowRate_label);
+    tsk->computes(d_flowInlets[ii]->d_flowRate_label);
   }
 
   tsk->requires(Task::NewDW, d_lab->d_scalarFlowRateLabel);
@@ -4848,18 +4850,18 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
       totalRadSrc = sum_totalRadSrc;
     }
     for (int indx = 0; indx < d_numInlets; indx++) {
-      FlowInlet fi = d_flowInlets[indx];
-      old_dw->get(flowRate, d_flowInlets[indx].d_flowRate_label);
-      d_flowInlets[indx].flowRate = flowRate;
-      fi.flowRate = flowRate;
-      new_dw->put(flowRate, d_flowInlets[indx].d_flowRate_label);
-      double scalarValue = fi.streamMixturefraction.d_mixVars[0];
+      FlowInlet* fi = d_flowInlets[indx];
+      old_dw->get(flowRate, d_flowInlets[indx]->d_flowRate_label);
+      d_flowInlets[indx]->flowRate = flowRate;
+      fi->flowRate = flowRate;
+      new_dw->put(flowRate, d_flowInlets[indx]->d_flowRate_label);
+      double scalarValue = fi->streamMixturefraction.d_mixVars[0];
       if (scalarValue > 0.0)
-	  totalFlowRate += fi.flowRate;
+	  totalFlowRate += fi->flowRate;
       if ((d_carbon_balance)&&(scalarValue > 0.0))
-	    totalCarbonFlowRate += fi.flowRate * fi.fcr;
+	    totalCarbonFlowRate += fi->flowRate * fi->fcr;
       if ((d_enthalpySolve)&&(scalarValue > 0.0))
-	    totalEnthalpyFlowRate += fi.flowRate * fi.calcStream.getEnthalpy();
+	    totalEnthalpyFlowRate += fi->flowRate * fi->calcStream.getEnthalpy();
     }
     if (totalFlowRate > 0.0)
       scalarEfficiency = scalarFlowRate / totalFlowRate;
@@ -4881,7 +4883,8 @@ BoundaryCondition::getScalarEfficiency(const ProcessorGroup* pc,
 	enthalpyEfficiency -= normTotalRadSrc;
       }
       else 
-	throw InvalidValue("No enthalpy in the domain", __FILE__, __LINE__);
+	//throw InvalidValue("No enthalpy in the domain", __FILE__, __LINE__);
+	cout << "No enthalpy in the domain"<<endl;
       new_dw->put(delt_vartype(enthalpyEfficiency), d_lab->d_enthalpyEfficiencyLabel);
       new_dw->put(delt_vartype(normTotalRadSrc), d_lab->d_normTotalRadSrcLabel);
     }
@@ -4919,13 +4922,13 @@ BoundaryCondition::getVariableFlowRate(const ProcessorGroup*,
 	// Get a copy of the current flow inlet
 	// assign flowType the value that corresponds to flow
 	//CellTypeInfo flowType = FLOW;
-	FlowInlet fi = d_flowInlets[indx];
+	FlowInlet* fi = d_flowInlets[indx];
 	double varIN_inlet = 0.0;
 	double varOUT_inlet = 0.0;
 	fort_inlpresbcinout(constvars->uVelocity, constvars->vVelocity,
 			   constvars->wVelocity, idxLo, idxHi,
 			   constvars->density, constvars->cellType,
-			   fi.d_cellTypeID,
+			   fi->d_cellTypeID,
 			   flowIN, flowOUT, cellinfo->sew, cellinfo->sns,
 			   cellinfo->stb, xminus, xplus, yminus, yplus,
 			   zminus, zplus, doing_balance,
@@ -4935,7 +4938,7 @@ BoundaryCondition::getVariableFlowRate(const ProcessorGroup*,
 		throw InvalidValue("Balance variable comming out of inlet", __FILE__, __LINE__);
 
 	// Count balance variable comming through the air inlet
-	double scalarValue = fi.streamMixturefraction.d_mixVars[0];
+	double scalarValue = fi->streamMixturefraction.d_mixVars[0];
 	if (scalarValue == 0.0)
 	  *varIN += varIN_inlet;
       } 
@@ -4985,8 +4988,8 @@ void BoundaryCondition::sched_setInletFlowRates(SchedulerP& sched,
 			  &BoundaryCondition::setInletFlowRates);
   
   for (int ii = 0; ii < d_numInlets; ii++) {
-    tsk->requires(Task::OldDW, d_flowInlets[ii].d_flowRate_label);
-    tsk->computes(d_flowInlets[ii].d_flowRate_label);
+    tsk->requires(Task::OldDW, d_flowInlets[ii]->d_flowRate_label);
+    tsk->computes(d_flowInlets[ii]->d_flowRate_label);
   }
 
   sched->addTask(tsk, patches, matls);
@@ -5004,10 +5007,10 @@ BoundaryCondition::setInletFlowRates(const ProcessorGroup* pc,
 {
   delt_vartype flowRate;
   for (int indx = 0; indx < d_numInlets; indx++) {
-    FlowInlet fi = d_flowInlets[indx];
-    old_dw->get(flowRate, d_flowInlets[indx].d_flowRate_label);
-    d_flowInlets[indx].flowRate = flowRate;
-    fi.flowRate = flowRate;
-    new_dw->put(flowRate, d_flowInlets[indx].d_flowRate_label);
+    FlowInlet* fi = d_flowInlets[indx];
+    old_dw->get(flowRate, d_flowInlets[indx]->d_flowRate_label);
+    d_flowInlets[indx]->flowRate = flowRate;
+    fi->flowRate = flowRate;
+    new_dw->put(flowRate, d_flowInlets[indx]->d_flowRate_label);
   }
 }

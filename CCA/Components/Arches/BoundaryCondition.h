@@ -138,7 +138,7 @@ public:
       inline int inletCellType(int index) const {
 	int inlet_celltypeval = -10;
 	if ((d_inletBoundary)&&(index < d_numInlets))
-	   inlet_celltypeval = d_flowInlets[index].d_cellTypeID;
+	   inlet_celltypeval = d_flowInlets[index]->d_cellTypeID;
 	return inlet_celltypeval;
       }
 
@@ -782,7 +782,7 @@ private:
       int d_numInlets;
       int d_numMixingScalars;
       int d_nofScalars;
-      std::vector<FlowInlet> d_flowInlets;
+      std::vector<FlowInlet* > d_flowInlets;
 
       bool d_pressureBoundary;
       PressureInlet* d_pressureBC;
