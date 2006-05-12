@@ -94,6 +94,7 @@ SRCS     += \
 	$(SRCDIR)/SampleStructHex.cc\
 	$(SRCDIR)/ScalarFieldStats.cc\
 	$(SRCDIR)/ScaleFieldData.cc\
+	$(SRCDIR)/SearchGridInfo.cc\
 	$(SRCDIR)/SeedPoints.cc\
 	$(SRCDIR)/SelectField.cc\
 	$(SRCDIR)/SetProperty.cc\
