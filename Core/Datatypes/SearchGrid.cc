@@ -118,10 +118,6 @@ SearchGridBase::unsafe_locate(int &i, int &j,
   Point r;
   transform_.unproject(p, r);
   
-  r.x(floor(r.x()));
-  r.y(floor(r.y()));
-  r.z(floor(r.z()));
-
   i = (int)r.x();
   j = (int)r.y();
   k = (int)r.z();
