@@ -46,6 +46,7 @@ namespace GUIBuilder {
 
 class AddPortDialog;
 
+//To generate the Component Wizard Dialog layout
 class ComponentWizardDialog: public wxDialog
 {
 public:
@@ -71,6 +72,7 @@ private:
   wxButton *AddUsesPort;
   wxString GetText();
 
+  //To store the list of ports added by the user
   std::vector <PortDescriptor*> pp;
   std::vector <PortDescriptor*> up;
 
@@ -78,6 +80,7 @@ private:
 
 };
 
+//To generate the AddPorts Dialog Layout
 class AddPortDialog: public wxDialog
 {
 public:
@@ -96,8 +99,6 @@ private:
   wxStaticText *ldesc;
   wxButton *ok;
   wxButton *cancel;
-
-  // DECLARE_EVENT_TABLE()
 };
 
 

@@ -75,7 +75,7 @@ ComponentWizardDialog::ComponentWizardDialog(wxWindow *parent, wxWindowID id, co
   topSizer->AddSpacer(10);
 
   wxBoxSizer *okCancelSizer = new wxBoxSizer( wxHORIZONTAL );
-  okCancelSizer->Add( new wxButton( this, wxID_OK, wxT("OK") ), 1, leftFlags, 4 );
+  okCancelSizer->Add( new wxButton( this, wxID_OK, wxT("Generate") ), 1, leftFlags, 4 );
   okCancelSizer->Add( new wxButton( this, wxID_CANCEL, wxT("Cancel") ), 1, rightFlags, 4 );
   topSizer->Add( okCancelSizer, 1, wxALIGN_CENTER, 0 );
   topSizer->AddSpacer(10);
@@ -117,6 +117,7 @@ void ComponentWizardDialog::OnOk(wxCommandEvent& event)
 
 }
 
+  //Returns the name of the Component
 wxString ComponentWizardDialog::GetText()
 {
   return componentName->GetValue();
@@ -226,10 +227,10 @@ AddPortDialog::AddPortDialog(wxWindow *parent,wxWindowID id, const wxString &tit
   int rightFlags = wxALIGN_RIGHT|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
 
   wxBoxSizer *nameSizer = new wxBoxSizer( wxHORIZONTAL );
-  lname = new wxStaticText(this, wxID_ANY, wxT("Name"));
+  lname = new wxStaticText(this, wxID_ANY, wxT("Port Class"));
   nameSizer->Add(lname, 1, leftFlags, 2);
   pname = new wxTextCtrl(this,  wxID_ANY, wxT(""), wxDefaultPosition, wxSize(150, wxDefaultSize.GetHeight()));
-  pname->SetToolTip(wxT("The name of this Port.Usually has the name of the component as a prefix.\nExample: HelloUIPort,WorldGoPort..etc"));
+  pname->SetToolTip(wxT("The name of the class that this Port belongs to.Usually has the name of the component as a prefix.\nExample: HelloUIPort,WorldGoPort..etc"));
   nameSizer->Add(pname, 1, rightFlags, 2);
   topSizer->Add( nameSizer, 1, wxALIGN_CENTER, 2 );
   topSizer->AddSpacer(10);
@@ -268,15 +269,19 @@ AddPortDialog::AddPortDialog(wxWindow *parent,wxWindowID id, const wxString &tit
   topSizer->SetSizeHints( this );   // set size hints to honour mininum size
 }
 
+  //Returns the Port Class name
 std::string AddPortDialog::GetPortNameText() const
 {
   return std::string(pname->GetValue().c_str());
 }
 
+  //Return the Port Type
 std::string AddPortDialog::GetDataTypeText() const
 {
   return std::string(dtype->GetValue().c_str());
 }
+
+  //Returns the unique name for the Port
 std::string AddPortDialog::GetDescriptionText() const
 {
   return std::string(desc->GetValue().c_str());

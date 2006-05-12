@@ -58,7 +58,6 @@ SUBDIRS := \
             $(SRCDIR)/Hello \
             $(SRCDIR)/World \
 	    $(SRCDIR)/PDEdriver
-
 ifeq ($(HAVE_WX),yes)
   SUBDIRS += $(SRCDIR)/GUIBuilder
 endif
