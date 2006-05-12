@@ -257,14 +257,14 @@ throw (
   ::gov::cca::CCAException
 ){
   // DO-NOT-DELETE splicer.begin(framework.Services.registerUsesPort)
-  map<string, PortInstance*>::iterator iter = ports.find(portName);
-  if(iter != ports.end()){
-    BabelPortInstance *pr=dynamic_cast<BabelPortInstance*> (iter->second);
-    if(pr->porttype == BabelPortInstance::Provides)
-      cerr<<"name conflict between uses and provides ports"<<endl;
+  std::map<std::string, PortInstance*>::iterator iter = ports.find(portName);
+  if (iter != ports.end()) {
+    BabelPortInstance *pr = dynamic_cast<BabelPortInstance*>(iter->second);
+    if (pr->porttype == BabelPortInstance::Provides) {
+      std::cerr << "name conflict between uses and provides ports" << std::endl;
       //throw CCAException("portName conflict between uses and provides ports");
-    else {
-      cerr << "registerUsesPort called twice portName = " << portName << ", portType = " << type << '\n';
+    } else {
+      std::cerr << "registerUsesPort called twice for Babel port " << portName << " of type " << type << std::endl;
       //throw CCAException("registerUsesPort called twice");
     }
   }
