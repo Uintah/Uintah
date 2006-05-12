@@ -49,7 +49,7 @@
 #include <Core/CCA/PIDL/pidl_cast.h>
 
 #ifndef DEBUG
-#  define DEBUG 0
+#  define DEBUG 1
 #endif
 
 namespace GUIBuilder {
@@ -323,6 +323,27 @@ GUIBuilder::getCompatiblePortList(const sci::cca::ComponentID::pointer &user,
   }
 }
 
+void
+GUIBuilder::getBridgeablePortList(const sci::cca::ComponentID::pointer &user,
+                                  const std::string& usesPortName,
+                                  const sci::cca::ComponentID::pointer &provider,
+                                  SSIDL::array1<std::string>& portArray)
+{
+  try {
+    sci::cca::ports::BuilderService::pointer bs =
+      pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+    portArray = bs->getBridgeablePortList(user, usesPortName, provider);
+    services->releasePort("cca.BuilderService");
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    if (bw) {
+      bw->DisplayErrorMessage("Error: Could not get compatible port list for " +
+                              usesPortName + "; " +  e->getNote());
+    }
+  }
+}
+
 sci::cca::ConnectionID::pointer
 GUIBuilder::connect(const sci::cca::ComponentID::pointer &usesCID, const std::string &usesPortName,
                  const sci::cca::ComponentID::pointer &providesCID, const ::std::string &providesPortName)
@@ -360,6 +381,11 @@ void GUIBuilder::disconnect(const sci::cca::ConnectionID::pointer &connID, float
   }
 }
 
+// add component class described in XML file to the ComponentRepository at runtime
+// void GUIBuilder::addComponentFromXML()
+// {
+// }
+
 //////////////////////////////////////////////////////////////////////////
 // sci.cca.ports.GoPort support
 //
@@ -380,15 +406,13 @@ bool GUIBuilder::connectGoPort(const std::string& usesName, const std::string& p
             << ", component instance=" << cid->getInstanceName() << std::endl;
 #endif
   // do we really need to look for SCIRun ports (ie. sci.go?)
-  return connectPort(providesPortName, usesPortName, "sci.cca.ports.GoPort", cid);
+  return connectPort(usesPortName, providesPortName, "sci.cca.ports.GoPort", cid);
 }
 
 void GUIBuilder::disconnectGoPort(const std::string& goPortName)
 {
 #if DEBUG
-  std::cerr << "GUIBuilder::disconnectGoPort(..): uses port name=" << usesPortName
-            << ", provides port name=" << providesPortName
-            << ", component instance=" << cid->getInstanceName() << std::endl;
+  std::cerr << "GUIBuilder::disconnectGoPort(..): go port name=" << goPortName << std::endl;
 #endif
   disconnectPort(goPortName);
 }
@@ -427,15 +451,13 @@ bool GUIBuilder::connectUIPort(const std::string& usesName, const std::string& p
             << ", component instance=" << cid->getInstanceName() << std::endl;
 #endif
   // do we really need to look for SCIRun ports (ie. sci.ui?)
-  return connectPort(providesPortName, usesPortName, "sci.cca.ports.UIPort", cid);
+  return connectPort(usesPortName, providesPortName, "sci.cca.ports.UIPort", cid);
 }
 
 void GUIBuilder::disconnectUIPort(const std::string& uiPortName)
 {
 #if DEBUG
-  std::cerr << "GUIBuilder::disconnectUIPort(..): uses port name=" << usesPortName
-            << ", provides port name=" << providesPortName
-            << ", component instance=" << cid->getInstanceName() << std::endl;
+  std::cerr << "GUIBuilder::disconnectUIPort(..): ui port name=" << uiPortName << std::endl;
 #endif
   disconnectPort(uiPortName);
 }
@@ -557,9 +579,10 @@ void GUIBuilder::setDefaultPortColors()
   portColors[VtkPortInstance::VTK_OUT_PORT] = wxTheColourDatabase->Find(wxT("SPRING GREEN"));
   portColors[VtkPortInstance::VTK_IN_PORT] = wxTheColourDatabase->Find(wxT("MEDIUM VIOLET RED"));
 #endif
+  // Babel ports?
 }
 
-bool GUIBuilder::connectPort(const std::string& providesPortName, const std::string& usesPortName, const std::string& portType, const sci::cca::ComponentID::pointer &cid)
+bool GUIBuilder::connectPort(const std::string& usesPortName, const std::string& providesPortName, const std::string& portType, const sci::cca::ComponentID::pointer &cid)
 {
   try {
     // have dialog to pack typemap? use XML file? set a preference?

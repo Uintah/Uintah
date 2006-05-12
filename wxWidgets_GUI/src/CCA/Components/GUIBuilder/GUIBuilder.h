@@ -59,14 +59,18 @@ public:
   virtual int destroyInstances(const SSIDL::array1<sci::cca::ComponentID::pointer>& cidArray, float timeout);
 
   virtual void getUsedPortNames(const sci::cca::ComponentID::pointer& cid,
-				SSIDL::array1<std::string>& nameArray);
+                                SSIDL::array1<std::string>& nameArray);
   virtual void getProvidedPortNames(const sci::cca::ComponentID::pointer& cid,
-				    SSIDL::array1<std::string>& nameArray);
+                                    SSIDL::array1<std::string>& nameArray);
 
   virtual void getCompatiblePortList(const sci::cca::ComponentID::pointer& user,
-				     const std::string& usesPortName,
-				     const sci::cca::ComponentID::pointer& provider,
-				     SSIDL::array1<std::string>& portArray);
+                                     const std::string& usesPortName,
+                                     const sci::cca::ComponentID::pointer& provider,
+                                     SSIDL::array1<std::string>& portArray);
+  virtual void getBridgeablePortList(const sci::cca::ComponentID::pointer &user,
+                                     const std::string& usesPortName,
+                                     const sci::cca::ComponentID::pointer &provider,
+                                     SSIDL::array1<std::string>& portArray);
 
 
   virtual sci::cca::ConnectionID::pointer
@@ -116,7 +120,7 @@ private:
 
   // Note: make setDefaultPortColors static when support for static methods is available
   void setDefaultPortColors();
-  bool connectPort(const std::string& providesPortName, const std::string& usesPortName,
+  bool connectPort(const std::string& usesPortName, const std::string& providesPortName,
                    const std::string& portType, const sci::cca::ComponentID::pointer &cid);
   void disconnectPort(const std::string& usesPortName);
 
