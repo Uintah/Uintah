@@ -84,7 +84,10 @@ class GUIBuilder implements-all sci.cca.Component,
   void getUsedPortNames(in cca.ComponentID cid, out array<string>);
   void getProvidedPortNames(in cca.ComponentID cid, out array<string>);
 
-  void getCompatiblePortList(in sci.cca.ComponentID c1, in string port1, in sci.cca.ComponentID c2, out array<string>);
+  void getCompatiblePortList(in sci.cca.ComponentID c1, in string port1,
+                             in sci.cca.ComponentID c2, out array<string>);
+  void getBridgeablePortList(in sci.cca.ComponentID c1, in string port1,
+                             in sci.cca.ComponentID c2, out array<string>);
 
   // manage connections
   ConnectionID connect(in cca.ComponentID usesCID, in string usesPortName, in cca.ComponentID providesCID, in string providesPortName);
