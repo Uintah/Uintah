@@ -105,6 +105,7 @@ void ComponentSkeletonWriter::ComponentSourceFileCode()
 //////////////////////////////////////////////////////////////////////////
 // private member functions
 
+//License for the Header
 void ComponentSkeletonWriter::writeHeaderLicense()
 {
   
@@ -172,7 +173,7 @@ void ComponentSkeletonWriter::writePortClassDefinitionCode()
   componentHeaderFile << std::endl;
   componentHeaderFile << "#endif" << std::endl;
 }
-
+  //License for the Source File
 void ComponentSkeletonWriter::writeSourceLicense()
 {
 
@@ -216,14 +217,14 @@ void ComponentSkeletonWriter::writeSourceClassImpl()
 
 void ComponentSkeletonWriter::writeConstructorandDestructorCode()
 {
+  //Constructor code
   componentSourceFile << std::endl << compName << "::" <<compName << "()" << std::endl
                       << "{" << std::endl
                       << "}" << std::endl;
+  //Destructor code
   componentSourceFile << std::endl << compName << "::~" <<compName << "()" << std::endl
                       << "{" << std::endl;
-
-  //Destructor code
-  for (unsigned int i = 0; i < providesPortsList.size(); i++) {
+    for (unsigned int i = 0; i < providesPortsList.size(); i++) {
     componentSourceFile << SP << "services->removeProvidesPort("
                         << QT << providesPortsList[i]->GetName() <<  QT << ");" << std::endl;
   }
@@ -259,12 +260,7 @@ void ComponentSkeletonWriter::writeSetServicesCode()
     }
 
     tempPortInstance = "provides" + tempPortInstance;
-    // char tmp=portType.at(0);
-    // tempPortCategory=portType.substr(1,portType.length());
-
-    //tempPortCategory="provides"+tempPortCategory.insert(0,1,(char)tolower(tmp));
     tempPortCategory = (std::string) providesPortsList[i]->GetDesc();
-    //tempPortPtr=tempPortCategory+"Ptr";
     tempPortPtr = portName + "::pointer(" + tempPortInstance + ")";
 
     componentSourceFile << SP << portName << " *" << tempPortInstance
@@ -302,6 +298,7 @@ void ComponentSkeletonWriter::writeSetServicesCode()
   componentSourceFile << "}" << std::endl;
 }
 
+  //go() and ui() functions - if thers is a GoPort or UIPort among Provides ports 
 void ComponentSkeletonWriter::writeGoAndUiFunctionsCode()
 {
 
@@ -312,7 +309,6 @@ void ComponentSkeletonWriter::writeGoAndUiFunctionsCode()
 #if DEBUG
    std::cout << "\nhere in ckw " << porttype.c_str() << "\n";
 #endif
-   // if(strcmp(porttype.c_str(),"UIPort")==0);
    if (porttype.compare(string("UIPort")) == 0) {
      componentSourceFile << std::endl <<"int " << providesPortsList[i]->GetName() << "::ui()"
                          << std::endl

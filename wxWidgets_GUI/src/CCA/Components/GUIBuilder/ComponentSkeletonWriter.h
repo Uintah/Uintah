@@ -57,7 +57,6 @@ public:
   void ComponentClassDefinitionCode();
   void ComponentSourceFileCode();
   void ComponentMakeFileCode();
-  
   //void PortClassDefinitionCode();
   void GenerateCode();
 
@@ -66,8 +65,8 @@ private:
   
   void writeHeaderLicense();
   void writeSourceLicense();
+
   // generate header file
-  
   void writeHeaderInit();
   void writeComponentDefinitionCode();
   void writePortClassDefinitionCode();
@@ -95,11 +94,14 @@ private:
   const std::string TYPEMAP_POINTER;
   const std::string LICENCE;
 
-
+  //Name of the component
   std::string compName;
 
+  //List of Ports added
   std::vector<PortDescriptor*> providesPortsList;
   std::vector<PortDescriptor*> usesPortsList;
+  
+  //File Handles
   std::ofstream componentSourceFile;
   std::ofstream componentHeaderFile;
   std::ofstream componentMakeFile;
