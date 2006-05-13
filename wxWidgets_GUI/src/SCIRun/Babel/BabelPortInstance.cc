@@ -176,4 +176,9 @@ bool BabelPortInstance::decrementUseCount()
   return true;
 }
 
+bool BabelPortInstance::portInUse()
+{
+    return useCount > 0;
+}
+
 } // end namespace SCIRun
