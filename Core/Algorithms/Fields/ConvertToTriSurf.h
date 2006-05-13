@@ -94,6 +94,7 @@ bool ConvertQuadSurfToTriSurfAlgoT<FSRC, FDST>::ConvertToTriSurf(ProgressReporte
 
   typename FSRC::mesh_type::Node::iterator nbi, nei;
   typename FSRC::mesh_type::Elem::iterator ebi, eei;
+  typename FDST::mesh_type::Elem::iterator obi, oei;
   typename FDST::mesh_type::Node::iterator dbi, dei;
     
   imesh->begin(nbi); 
@@ -106,7 +107,7 @@ bool ConvertQuadSurfToTriSurfAlgoT<FSRC, FDST>::ConvertToTriSurf(ProgressReporte
     ++nbi;
   }
 
-  imesh->synchronize(Mesh::NODE_NEIGHBORS_E);
+  imesh->synchronize(Mesh::EDGE_NEIGHBORS_E|Mesh::EDGES_E);
   omesh->elem_reserve(static_cast<unsigned int>(numelems*2));
 
   vector<typename FDST::mesh_type::Elem::index_type> elemmap(numelems);
@@ -120,8 +121,8 @@ bool ConvertQuadSurfToTriSurfAlgoT<FSRC, FDST>::ConvertToTriSurf(ProgressReporte
   vector<typename FSRC::mesh_type::Elem::index_type> buffer;
   buffer.reserve(surfsize);
   
-  imesh->synchronize(Mesh::EDGES_E);
-
+  typename FDST::mesh_type::Node::array_type nnodes(3);
+  
   while (bi != ei)
   {
     // if list of elements to process is empty ad the next one
@@ -143,7 +144,7 @@ bool ConvertQuadSurfToTriSurfAlgoT<FSRC, FDST>::ConvertToTriSurf(ProgressReporte
       {
         if (visited[static_cast<unsigned int>(buffer[i])] > 0) { continue; }
         
-        typename FSRC::mesh_type::Cell::array_type neighbors;
+        typename FSRC::mesh_type::Elem::array_type neighbors;
         imesh->get_neighbors(neighbors, buffer[i]);
  
         typename FSRC::mesh_type::Node::array_type qsnodes;
@@ -169,28 +170,34 @@ bool ConvertQuadSurfToTriSurfAlgoT<FSRC, FDST>::ConvertToTriSurf(ProgressReporte
         {
             nodeisdiagonal[static_cast<unsigned int>(qsnodes[0])] = true;
             nodeisdiagonal[static_cast<unsigned int>(qsnodes[2])] = true;
-            elemmap[static_cast<unsigned int>(buffer[i])] =
-            omesh->add_triangle((typename FDST::mesh_type::Node::index_type)(qsnodes[0]),
-                                (typename FDST::mesh_type::Node::index_type)(qsnodes[1]),
-                                (typename FDST::mesh_type::Node::index_type)(qsnodes[2]));
+            
+            nnodes[0] = static_cast<typename FDST::mesh_type::Node::index_type>(qsnodes[0]);
+            nnodes[1] = static_cast<typename FDST::mesh_type::Node::index_type>(qsnodes[1]);
+            nnodes[2] = static_cast<typename FDST::mesh_type::Node::index_type>(qsnodes[2]);
+            elemmap[static_cast<unsigned int>(buffer[i])] = omesh->add_elem(nnodes);
 
-            omesh->add_triangle((typename FDST::mesh_type::Node::index_type)(qsnodes[0]),
-                                (typename FDST::mesh_type::Node::index_type)(qsnodes[2]),
-                                (typename FDST::mesh_type::Node::index_type)(qsnodes[3]));
+            nnodes[0] = static_cast<typename FDST::mesh_type::Node::index_type>(qsnodes[0]);
+            nnodes[1] = static_cast<typename FDST::mesh_type::Node::index_type>(qsnodes[2]);
+            nnodes[2] = static_cast<typename FDST::mesh_type::Node::index_type>(qsnodes[3]);
+            omesh->add_elem(nnodes);
+
             visited[static_cast<unsigned int>(buffer[i])] = 1; 
         }
         else
         {
             nodeisdiagonal[static_cast<unsigned int>(qsnodes[1])] = true;
             nodeisdiagonal[static_cast<unsigned int>(qsnodes[3])] = true;
-            elemmap[static_cast<unsigned int>(buffer[i])] =
-            omesh->add_triangle((typename FDST::mesh_type::Node::index_type)(qsnodes[0]),
-                                (typename FDST::mesh_type::Node::index_type)(qsnodes[1]),
-                                (typename FDST::mesh_type::Node::index_type)(qsnodes[3]));
 
-            omesh->add_triangle((typename FDST::mesh_type::Node::index_type)(qsnodes[1]),
-                                (typename FDST::mesh_type::Node::index_type)(qsnodes[2]),
-                                (typename FDST::mesh_type::Node::index_type)(qsnodes[3]));        
+            nnodes[0] = static_cast<typename FDST::mesh_type::Node::index_type>(qsnodes[0]);
+            nnodes[1] = static_cast<typename FDST::mesh_type::Node::index_type>(qsnodes[1]);
+            nnodes[2] = static_cast<typename FDST::mesh_type::Node::index_type>(qsnodes[3]);
+            elemmap[static_cast<unsigned int>(buffer[i])] = omesh->add_elem(nnodes);
+
+            nnodes[0] = static_cast<typename FDST::mesh_type::Node::index_type>(qsnodes[1]);
+            nnodes[1] = static_cast<typename FDST::mesh_type::Node::index_type>(qsnodes[2]);
+            nnodes[2] = static_cast<typename FDST::mesh_type::Node::index_type>(qsnodes[3]);
+            omesh->add_elem(nnodes);
+
             visited[static_cast<unsigned int>(buffer[i])] = 2; 
         }
       }
@@ -221,7 +228,7 @@ bool ConvertQuadSurfToTriSurfAlgoT<FSRC, FDST>::ConvertToTriSurf(ProgressReporte
       idx = elemmap[static_cast<unsigned int>(*ebi)];
       ifield->value(val, *ebi);
       ofield->set_value(val, idx);
-      ofield->set_value(val, idx+1);
+      ofield->set_value(val, static_cast<typename FDST::mesh_type::Elem::index_type>(idx+1));
       ++ebi;
     }
   }

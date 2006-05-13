@@ -154,12 +154,19 @@ bool FieldsAlgo::FieldDataElemToNode(FieldHandle input, FieldHandle& output, std
 }
 
 
-bool FieldsAlgo::DomainBoundary(FieldHandle input,FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
+bool FieldsAlgo::DomainBoundary(FieldHandle input,FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool disconnect)
 {
-  DomainBoundaryAlgo algo;
-  return(algo.DomainBoundary(pr_,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
+  if (disconnect)
+  {
+    DomainBoundary2Algo algo;
+    return(algo.DomainBoundary(pr_,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));  
+  }
+  else
+  {
+    DomainBoundaryAlgo algo;
+    return(algo.DomainBoundary(pr_,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
+  }
 }
-
 
 bool FieldsAlgo::ConvertToTetVol(FieldHandle input, FieldHandle& output)
 {
