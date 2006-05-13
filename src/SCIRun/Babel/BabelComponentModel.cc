@@ -259,7 +259,10 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string &name, 
 bool BabelComponentModel::destroyInstance(ComponentInstance *ci)
 {
   NOT_FINISHED("bool BabelComponentModel::destroyInstance(ComponentInstance *ci)");
-  //make sure why ci->addReference() is called in createInstance();
+  // make sure why ci->addReference() is called in createInstance(); -- removed (AK)
+
+  // not sure if deleteReference() is appropriate here
+  // TODO: need to support release component callback
   delete ci;
   return false;
 }

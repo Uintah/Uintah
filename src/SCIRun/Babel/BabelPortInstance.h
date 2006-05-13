@@ -81,6 +81,7 @@ public:
   std::string getName();
   void incrementUseCount();
   bool decrementUseCount();
+  bool portInUse();
 
 public:
   PortType porttype;

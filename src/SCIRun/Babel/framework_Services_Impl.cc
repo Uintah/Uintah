@@ -261,10 +261,10 @@ throw (
   if (iter != ports.end()) {
     BabelPortInstance *pr = dynamic_cast<BabelPortInstance*>(iter->second);
     if (pr->porttype == BabelPortInstance::Provides) {
-      std::cerr << "name conflict between uses and provides ports" << std::endl;
+      std::cerr << "framework::Services_impl::registerUsesPort name conflict between uses and provides ports" << std::endl;
       //throw CCAException("portName conflict between uses and provides ports");
     } else {
-      std::cerr << "registerUsesPort called twice for Babel port " << portName << " of type " << type << std::endl;
+      std::cerr << "framework::Services_impl::registerUsesPort called twice for Babel port " << portName << " of type " << type << std::endl;
       //throw CCAException("registerUsesPort called twice");
     }
   }
@@ -290,7 +290,21 @@ throw (
   ::gov::cca::CCAException
 ){
   // DO-NOT-DELETE splicer.begin(framework.Services.unregisterUsesPort)
-   cerr << "unregisterUsesPort not done, portName=" << portName << '\n';
+  std::map<std::string, PortInstance*>::iterator iter = ports.find(portName);
+  if (iter != ports.end()) {
+    BabelPortInstance *pr = dynamic_cast<BabelPortInstance*>(iter->second);
+    if (pr->porttype == BabelPortInstance::Provides) {
+      std::cerr << "framework::Services_impl::registerUsesPort name conflict between uses and provides ports" << std::endl;
+    } else {
+      if (pr->portInUse()) {
+        std::cerr << "framework::Services_impl::registerUsesPort uses port " << portName << " has not been released" << std::endl;
+      }
+      ports.erase(iter);
+      delete pr;
+    }
+  } else {
+    std::cerr << "framework::Services_impl::registerUsesPort port name " << portName << " cannot be found" << std::endl;
+  }
   // DO-NOT-DELETE splicer.end(framework.Services.unregisterUsesPort)
 }
 
