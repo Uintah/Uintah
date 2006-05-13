@@ -48,11 +48,16 @@
 
 #include <iostream>
 
+#ifndef DEBUG
+#  define DEBUG 0
+#endif
+
+
 namespace SCIRun {
 
 BabelCCAGoPort::BabelCCAGoPort(const gov::cca::ports::GoPort& port)
 {
-  this->port=port;
+  this->port = port;
 }
 
 int BabelCCAGoPort::go()
@@ -62,7 +67,7 @@ int BabelCCAGoPort::go()
 
 BabelCCAUIPort::BabelCCAUIPort(const gov::cca::ports::UIPort& port)
 {
-  this->port=port;
+  this->port = port;
 }
 
 int BabelCCAUIPort::ui()
@@ -80,46 +85,58 @@ BabelComponentInstance::BabelComponentInstance(SCIRunFramework* framework,
   : ComponentInstance(framework, instanceName, typeName, sci::cca::TypeMap::pointer(0))
 {
   // Babel component properties are ignored for now.
-  this->component=component;
-  this->svc=svc;
-  BabelPortInstance *go=dynamic_cast<BabelPortInstance*> (getPortInstance("go"));
-  if(go!=0) {
-    std::map<std::string, PortInstance*> *pports=
-      (std::map<std::string, PortInstance*>* ) (this->svc.getData());
+  this->component = component;
+  this->svc = svc;
 
+  // locate a GoPort provided by the Babel component instance
+  BabelPortInstance *go = dynamic_cast<BabelPortInstance*>(getPortInstance("go"));
+  if (go != 0) {
+    std::map<std::string, PortInstance*> *pports = (std::map<std::string, PortInstance*>* ) (this->svc.getData());
+
+    // If there is a GoPort, create a corresponding CCAPortInstance
     sci::cca::ports::GoPort::pointer goPort(new BabelCCAGoPort(go->port));
-    CCAPortInstance *piGo=new CCAPortInstance("sci.go","sci.cca.ports.GoPort",
-					      sci::cca::TypeMap::pointer(0),
-					      goPort,
-					      CCAPortInstance::Provides);
+    CCAPortInstance *piGo = new CCAPortInstance("go",
+                                                "sci.cca.ports.GoPort",
+                                                sci::cca::TypeMap::pointer(0),
+                                                goPort,
+                                                CCAPortInstance::Provides);
 
-    pports->insert(std::make_pair("sci.go", piGo));
+    // Override the original gov.cca.GoPort in the pports map
+    // (the original port is stored in a BabelCCAGoPort) instantiated above.
+    // This is needed to connect GoPorts with CCA UI components such as the GUIBuilder.
+    (*pports)["go"] = (PortInstance*) piGo;
   }
 
-  BabelPortInstance *ui=dynamic_cast<BabelPortInstance*> (getPortInstance("ui"));
-  if(ui!=0) {
-    std::map<std::string, PortInstance*> *pports=
-      (std::map<std::string, PortInstance*>* ) (this->svc.getData());
+  // locate a UIPort provided by the Babel component instance
+  BabelPortInstance *ui = dynamic_cast<BabelPortInstance*>(getPortInstance("ui"));
+  if (ui != 0) {
+    std::map<std::string, PortInstance*> *pports = (std::map<std::string, PortInstance*>* ) (this->svc.getData());
 
+    // If there is a UIPort, create a corresponding CCAPortInstance
     sci::cca::ports::UIPort::pointer uiPort(new BabelCCAUIPort(ui->port));
-    CCAPortInstance *piUI=new CCAPortInstance("sci.ui","sci.cca.ports.UIPort",
-					      sci::cca::TypeMap::pointer(0),
-					      uiPort,
-					      CCAPortInstance::Provides);
-    pports->insert(std::make_pair("sci.ui", piUI));
+    CCAPortInstance *piUI = new CCAPortInstance("ui",
+                                                "sci.cca.ports.UIPort",
+                                                sci::cca::TypeMap::pointer(0),
+                                                uiPort,
+                                                CCAPortInstance::Provides);
+    // Override the original gov.cca.UIPort in the pports map
+    // (the original port is stored in a BabelCCAUIPort) instantiated above.
+    // This is needed to connect UIPorts with CCA UI components such as the GUIBuilder.
+    (*pports)["ui"] = (PortInstance*) piUI;
   }
 }
 
 BabelComponentInstance::~BabelComponentInstance()
 {
+#if DEBUG
   std::cerr << "BabelComponentInstance destroyed..." << std::endl;
+#endif
 }
 
 PortInstance*
 BabelComponentInstance::getPortInstance(const std::string& portname)
 {
-  std::map<std::string, PortInstance*> *pports=
-    (std::map<std::string, PortInstance*>*)svc.getData();
+  std::map<std::string, PortInstance*> *pports= (std::map<std::string, PortInstance*>*)svc.getData();
 
   std::map<std::string, PortInstance*>::iterator iter = pports->find(portname);
   if (iter == pports->end()) {
