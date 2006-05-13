@@ -31,7 +31,6 @@
 #define CORE_ALGORITHMS_FIELDS_UNSTRUCTURE_H 1
 
 #include <Core/Algorithms/Util/DynamicAlgo.h>
-#include <sci_hash_map.h>
 
 namespace SCIRunAlgo {
 
@@ -76,20 +75,11 @@ bool UnstructureAlgoT<FSRC, FDST>::Unstructure(ProgressReporter *pr, FieldHandle
     return (false);
   }
 
-#ifdef HAVE_HASH_MAP
-  typedef hash_map<unsigned int,unsigned int> hash_map_type;
-#else
-  typedef map<unsigned int,unsigned int> hash_map_type;
-#endif
-  
   imesh->synchronize(Mesh::NODES_E);
   if (imesh->dimensionality() == 1) imesh->synchronize(Mesh::EDGES_E);
   if (imesh->dimensionality() == 2) imesh->synchronize(Mesh::FACES_E);
   if (imesh->dimensionality() == 3) imesh->synchronize(Mesh::CELLS_E);
   
-  hash_map_type nodemap;
-  hash_map_type elemmap;
-
   // Copy all points.
   typename FSRC::mesh_type::Node::iterator bn, en;
   typename FSRC::mesh_type::Node::size_type numnodes;
@@ -102,7 +92,7 @@ bool UnstructureAlgoT<FSRC, FDST>::Unstructure(ProgressReporter *pr, FieldHandle
   {
     Point np;
     imesh->get_center(np, *bn);
-    nodemap[static_cast<unsigned int>(*bn)] = static_cast<unsigned int>(omesh->add_point(np));
+    omesh->add_point(np);
     ++bn;
   }
 
@@ -123,11 +113,10 @@ bool UnstructureAlgoT<FSRC, FDST>::Unstructure(ProgressReporter *pr, FieldHandle
 
     for (unsigned int i=0; i<onodes.size(); i++) 
     {
-      nnodes[i] = static_cast<typename FDST::mesh_type::Node::index_type>
-              (nodemap[static_cast<unsigned int>(onodes[i])]);
+      nnodes[i] = static_cast<typename FDST::mesh_type::Node::index_type>(onodes[i]);
     }
 
-    elemmap[static_cast<unsigned int>(*bi)] = static_cast<unsigned int>(omesh->add_elem(nnodes));
+    omesh->add_elem(nnodes);
     ++bi;
   }
 
@@ -144,8 +133,7 @@ bool UnstructureAlgoT<FSRC, FDST>::Unstructure(ProgressReporter *pr, FieldHandle
     {
       typename FSRC::value_type val;
       ifield->value(val, (*bn));
-      ofield->set_value(val, static_cast<typename FDST::mesh_type::Node::index_type>
-              (nodemap[static_cast<unsigned int>(*bn)]));
+      ofield->set_value(val, static_cast<typename FDST::mesh_type::Node::index_type>(*bn));
       ++bn;
     }
   }
@@ -159,8 +147,7 @@ bool UnstructureAlgoT<FSRC, FDST>::Unstructure(ProgressReporter *pr, FieldHandle
     {
       typename FSRC::value_type val;
       ifield->value(val, (*bi));
-      ofield->set_value(val, static_cast<typename FDST::mesh_type::Elem::index_type>
-              (elemmap[static_cast<unsigned int>(*bi)]));
+      ofield->set_value(val, static_cast<typename FDST::mesh_type::Elem::index_type>(*bi));
       ++bi;
     }
   } 

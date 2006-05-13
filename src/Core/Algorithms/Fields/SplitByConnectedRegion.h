@@ -94,8 +94,11 @@ bool SplitByConnectedRegionAlgoT<FSRC>::SplitByConnectedRegion(ProgressReporter 
   vector<unsigned int> elemmap(numelems, 0);
   vector<unsigned int> nodemap(numnodes, 0);
   vector<unsigned int> renumber(numnodes,0);
-  vector<char> visited(numelems, 0);
-  
+  vector<short> visited(numelems, 0);
+
+  typename FSRC::mesh_type::Node::array_type nnodes;
+  typename FSRC::mesh_type::Elem::array_type neighbors;
+
   while (bi != ei)
   {
     // if list of elements to process is empty ad the next one
@@ -108,12 +111,10 @@ bool SplitByConnectedRegionAlgoT<FSRC>::SplitByConnectedRegion(ProgressReporter 
     {
       for (unsigned int i=0; i< buffer.size(); i++)
       {
-        if (visited[static_cast<unsigned int>(buffer[i])] > 0) { continue; }
-        visited[static_cast<unsigned int>(buffer[i])] = 1;
+        int j = static_cast<unsigned int>(buffer[i]);
+        if (visited[j] > 0) { continue; }
+        visited[j] = 1;
         
-        typename FSRC::mesh_type::Node::array_type nnodes;
-        typename FSRC::mesh_type::Elem::array_type neighbors;
- 
         imesh->get_nodes(nnodes,buffer[i]);
         for (unsigned int q=0; q<nnodes.size(); q++)
         {
@@ -127,17 +128,14 @@ bool SplitByConnectedRegionAlgoT<FSRC>::SplitByConnectedRegion(ProgressReporter 
             }
           }
         }
- 
-        typename FSRC::mesh_type::Node::array_type elemnodes;
-        imesh->get_nodes(elemnodes, buffer[i]);
+         
+        if (j >= elemmap.size()) elemmap.resize(j+1);
         
-        if (static_cast<unsigned int>(buffer[i]) >= elemmap.size()) elemmap.resize(static_cast<unsigned int>(buffer[i]));
-        
-        elemmap[static_cast<unsigned int>(buffer[i])] = k;
-        for (int p=0;p<elemnodes.size();p++)
+        elemmap[j] = k;
+        for (int p=0;p<nnodes.size();p++)
         {
-          if (static_cast<unsigned int>(elemnodes[p]) >= nodemap.size()) nodemap.resize(static_cast<unsigned int>(elemnodes[p]));      
-          nodemap[static_cast<unsigned int>(elemnodes[p])] = k;
+          if (static_cast<unsigned int>(nnodes[p]) >= nodemap.size()) nodemap.resize(static_cast<unsigned int>(nnodes[p])+1);      
+          nodemap[static_cast<unsigned int>(nnodes[p])] = k;
         }
       }
       buffer.clear();

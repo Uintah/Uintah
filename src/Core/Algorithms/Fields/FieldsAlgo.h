@@ -100,7 +100,7 @@ class SCISHARE FieldsAlgo : public AlgoLibrary {
     // DomainLink: addition to make opposite boundaries link together. In this case elements
     //    at opposite boundaries can still have a linking boundary and hence they may show
     //    up as internal boundaries 
-    bool DomainBoundary(FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+    bool DomainBoundary(FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool disconnect = true);
     
     // FieldDataNodeToElem and FieldDataElemToNode:
     // Change where the data is located the algorithms now employ summing, median, maximum and minimum
