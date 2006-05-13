@@ -11,13 +11,15 @@ itcl_class ModelCreation_FieldsCreate_DomainBoundary {
         global $this-maxrange
         global $this-includeouterboundary
         global $this-innerboundaryonly
-
+        global $this-disconnect
+  
         set $this-userange 0
         set $this-minrange 0.0
         set $this-maxrange 255.0
         set $this-includeouterboundary 1
         set $this-innerboundaryonly 0
-
+        set $this-disconnect 1
+        
     }
 
     method ui {} {
@@ -35,6 +37,8 @@ itcl_class ModelCreation_FieldsCreate_DomainBoundary {
         entry $w.f.maxrange  -textvariable  $this-maxrange
         checkbutton $w.f.includeouterboundary -text "Include outer boundary" -variable $this-includeouterboundary
         checkbutton $w.f.innerboundaryonly -text "Include inner boundary only" -variable $this-innerboundaryonly
+        checkbutton $w.f.disconnect -text "Disconnect boundaries between different element types" -variable $this-disconnect
+
 
         grid $w.f.userange -column 0 -row 0 -columnspan 4 -sticky w
         grid $w.f.minrangelabel -column 0 -row 1 -sticky news
@@ -43,6 +47,7 @@ itcl_class ModelCreation_FieldsCreate_DomainBoundary {
         grid $w.f.maxrange -column 3 -row 1 -sticky news
         grid $w.f.includeouterboundary -column 0 -row 2 -columnspan 4 -sticky w
         grid $w.f.innerboundaryonly -column 0 -row 3 -columnspan 4 -sticky w
+        grid $w.f.disconnect -column 0 -row 4 -columnspan 4 -sticky w
 
         pack $w.f -fill x
         makeSciButtonPanel $w $w $this

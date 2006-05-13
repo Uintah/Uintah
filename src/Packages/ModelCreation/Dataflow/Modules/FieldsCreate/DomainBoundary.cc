@@ -48,6 +48,7 @@ private:
   GuiDouble guimaxrange_;
   GuiInt    guiincludeouterboundary_;
   GuiInt    guiinnerboundaryonly_;
+  GuiInt    guidisconnect_;
   
   
 };
@@ -60,7 +61,8 @@ DomainBoundary::DomainBoundary(GuiContext* ctx)
     guiminrange_(get_ctx()->subVar("minrange")),
     guimaxrange_(get_ctx()->subVar("maxrange")),
     guiincludeouterboundary_(get_ctx()->subVar("includeouterboundary")),
-    guiinnerboundaryonly_(get_ctx()->subVar("innerboundaryonly"))    
+    guiinnerboundaryonly_(get_ctx()->subVar("innerboundaryonly")),    
+    guidisconnect_(get_ctx()->subVar("disconnect"))    
 {
 }
 
@@ -76,14 +78,16 @@ void DomainBoundary::execute()
   double minrange, maxrange;
   bool   userange, includeouterboundary;
   bool   innerboundaryonly;
+  bool   disconnect;
 
   minrange = guiminrange_.get();
   maxrange = guimaxrange_.get();
   userange = static_cast<bool>(guiuserange_.get());
   includeouterboundary = static_cast<bool>(guiincludeouterboundary_.get());
   innerboundaryonly = static_cast<bool>(guiinnerboundaryonly_.get());
-
-  if(!(algo.DomainBoundary(ifield,ofield,ElemLink,minrange,maxrange,userange,includeouterboundary,innerboundaryonly))) return;
+  disconnect = static_cast<bool>(guidisconnect_.get());
+  
+  if(!(algo.DomainBoundary(ifield,ofield,ElemLink,minrange,maxrange,userange,includeouterboundary,innerboundaryonly,disconnect))) return;
   
   send_output_handle("Field",ofield,true);
 }
