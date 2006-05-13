@@ -28,7 +28,7 @@
 
 
 /*
- *  BabelComponentInstance.h: 
+ *  BabelComponentInstance.h:
  *
  *  Written by:
  *   Keming Zhang
@@ -53,20 +53,21 @@ namespace SCIRun {
 
 /** \class BabelCCAGoPort
  *
- *
+ * Intermediary between a Babel component model GoPort and a CCA component model GoPort.
  */
 class BabelCCAGoPort : public virtual sci::cca::ports::GoPort
 {
 public:
   BabelCCAGoPort(const gov::cca::ports::GoPort &port);
   virtual int go();
+
 private:
   gov::cca::ports::GoPort port;
 };
 
 /** \class BabelCCAUIPort
  *
- *
+ * Intermediary between a Babel component model UIPort and a CCA component model UIPort.
  */
 class BabelCCAUIPort : public virtual sci::cca::ports::UIPort
 {
