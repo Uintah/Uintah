@@ -27,18 +27,26 @@ Advector* AdvectionFactory::create(ProblemSpecP& ps,
     throw ProblemSetupException("No type for advection", __FILE__, __LINE__);
   }  
 
-
+  
   //__________________________________
   //  check for compatible fluxes tag
-  d_useCompatibleFluxes = false;
+  bool found = false;
   if(advect_options.count("useCompatibleFluxes") || 
-     advect_options.count("compatibleFluxes")    ||
-     advect_options.count("compatible") ){
-     d_useCompatibleFluxes = true; 
-  } // bulletproofing
-  if (advect_options.size() > 1 && d_useCompatibleFluxes == false){
+     advect_options.count("compatibleFluxes")  ){
+     found = true;
+     
+     if(advect_options["useCompatibleFluxes"] == "false" ||
+        advect_options["compatibleFluxes"]    == "false"){
+        d_useCompatibleFluxes = false;
+        cout << "\n--------ICE::Warning:  You've turned off compatible fluxes.\n"<< endl;
+     }
+  } 
+  
+  
+  // bulletproofing
+  if (advect_options.size() > 1 && found == false){
         string warn="\n\n ERROR: Advection operator flags: "
-                    " Did you misspell compatibleFluxes = 'true' in the input file\n";
+                    " Did you misspell compatibleFluxes = 'true/false' in the input file?\n";
     throw ProblemSetupException(warn, __FILE__, __LINE__);
   }
   

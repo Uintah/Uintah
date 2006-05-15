@@ -292,9 +292,7 @@
     <CFD>
       <cfl>0.3</cfl>
       <ICE>
-        <max_iteration_equilibration> 50 </max_iteration_equilibration>
-        <advection type = "SecondOrder" useCompatibleFluxes = "true"/>
-        <solution technique = "EqForm"/>
+        <advection type = "SecondOrder"/>
                
         <TimeStepControl>
           <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>

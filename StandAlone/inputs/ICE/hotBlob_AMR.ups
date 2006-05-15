@@ -186,9 +186,7 @@
     <CFD>
          <cfl>0.25</cfl>
        <ICE>
-        <max_iteration_equilibration> 50 </max_iteration_equilibration>
         <advection type = "FirstOrder" />
-        <solution technique = "EqForm" />
         <AMR>
           <orderOfInterpolation>1  </orderOfInterpolation>
           <do_Refluxing>  true     </do_Refluxing>

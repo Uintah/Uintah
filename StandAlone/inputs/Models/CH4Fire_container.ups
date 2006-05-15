@@ -306,9 +306,7 @@
        <cfl>0.2</cfl>  <!-- IMPLICIT CFL = 0.5, EXPLICIT CFL = 0.2ISH -->
        
        <ICE>
-        <max_iteration_equilibration> 1000 </max_iteration_equilibration>
         <advection type = "FirstOrder" />
-        <solution technique = "EqForm" />
 
 
 <!-- (A)  DELETE THIS TO RUN EXPLICIT  -->
