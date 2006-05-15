@@ -1,7 +1,7 @@
-itcl_class CardioWave_ContinuousBiDomain_CBDAddBlockStimulus {
+itcl_class CardioWave_DiscreteMultiDomain_DMDAddStimulus {
     inherit Module
     constructor {config} {
-        set name CBDAddBlockStimulus
+        set name DMDAddStimulus
         set_defaults
     }
 
@@ -13,7 +13,7 @@ itcl_class CardioWave_ContinuousBiDomain_CBDAddBlockStimulus {
       global $this-stim-is-current-density
       global $this-stim-uselements
       
-      set $this-stim-domain "ExtraCellular"
+      set $this-stim-domain 0
       set $this-stim-current 1.0
       set $this-stim-start 0.400
       set $this-stim-end 0.800
@@ -36,12 +36,12 @@ itcl_class CardioWave_ContinuousBiDomain_CBDAddBlockStimulus {
       set stim [$w.m childsite]
       pack $w.m -fill both -expand yes
 
-      label $stim.lab1 -text "Stimulus Domain"
+      label $stim.lab1 -text "Stimulus Domain (Element type)"
       label $stim.lab2 -text "Stimulus Current (mA)"
       label $stim.lab3 -text "Stimulus Start (ms)"
       label $stim.lab4 -text "Stimulus End (ms)"
 
-      labelcombo $stim.en1 {"ExtraCellular" "IntraCellular"} $this-stim-domain
+      entry $stim.en1 -textvariable $this-stim-domain
       entry $stim.en2 -textvariable $this-stim-current
       entry $stim.en3 -textvariable $this-stim-start
       entry $stim.en4 -textvariable $this-stim-end
@@ -63,57 +63,6 @@ itcl_class CardioWave_ContinuousBiDomain_CBDAddBlockStimulus {
       makeSciButtonPanel $w $w $this
       moveToCursor $w
     }
-
-
-  method labelcombo { win arglist var} {
-      frame $win 
-      pack $win -side top -padx 5
-      iwidgets::optionmenu $win.c -foreground darkred \
-        -command " $this comboget $win.c $var;"
-
-      set i 0
-      set found 0
-      set length [llength $arglist]
-      for {set elem [lindex $arglist $i]} {$i<$length} \
-        {incr i 1; set elem [lindex $arglist $i]} {
-        if {"$elem"=="[set $var]"} {
-          set found 1
-        }
-        $win.c insert end $elem
-      }
-
-      if {!$found} {
-        $win.c insert end [set $var]
-      }
-
-      $win.c select [set $var]
-  
-      pack $win.c -side left	
-    }
-
-  method comboget { win var } {
-      if {![winfo exists $win]} {
-          return
-      }
-      if { "$var"!="[$win get]" } {
-          set $var [$win get]
-      }
-    }
-
-  method set_combobox { win var name1 name2 op } {
-      set w .ui[modname]
-      set menu $w.$win
-      if {[winfo exists $menu]} {
-          $menu select $var
-      }
-    }
-    
-
-
-
-
-
-
 
 }
 

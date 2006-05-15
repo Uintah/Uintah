@@ -29,13 +29,14 @@ SRCDIR := Packages/CardioWave/Dataflow/GUI
 SRCS := \
 	$(SRCDIR)/TimeDataReader.tcl\
 	$(SRCDIR)/DMDAddMembrane.tcl\
-	$(SRCDIR)/DMDAddBlockStimulus.tcl\
+	$(SRCDIR)/DMDAddStimulus.tcl\
+	$(SRCDIR)/DMDAddStimulusSeries.tcl\
 	$(SRCDIR)/DMDAddReference.tcl\
 	$(SRCDIR)/DMDCreateSimulation.tcl\
 	$(SRCDIR)/DMDBuildSimulation.tcl\
 	$(SRCDIR)/DMDConductionVelocity.tcl\
   $(SRCDIR)/CBDAddMembrane.tcl\
-	$(SRCDIR)/CBDAddBlockStimulus.tcl\
+	$(SRCDIR)/CBDAddStimulus.tcl\
 	$(SRCDIR)/CBDAddReference.tcl\
 	$(SRCDIR)/CBDCreateSimulation.tcl\
 	$(SRCDIR)/CBDBuildSimulation.tcl\
