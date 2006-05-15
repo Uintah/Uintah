@@ -386,6 +386,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   std::vector<double>      stimuluscurrent;
   std::vector<double>      stimulusstart;
   std::vector<double>      stimulusend;
+  std::vector<double>      stimulusduration;
   std::vector<bool>        stimulusiscurrentdensity;
 
   size_t num_membranes = 0;
@@ -468,6 +469,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
       MatrixHandle Current = StimulusBundle->getMatrix("Current");
       MatrixHandle Start = StimulusBundle->getMatrix("Start");
       MatrixHandle End = StimulusBundle->getMatrix("End");
+      MatrixHandle Duration = StimulusBundle->getMatrix("Duration");
       MatrixHandle CurrentDensity = StimulusBundle->getMatrix("CurrentDensity");
 
       // Check whether we have all the information needed
@@ -477,15 +479,20 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
         double start;
         double end;
         double current;
+        double duration = -1.0;
 
         Stimulus.push_back(Geometry);
         converteralgo.MatrixToDouble(Domain,domain);
         converteralgo.MatrixToDouble(Start,start);
         converteralgo.MatrixToDouble(End,end);
-
+        if (Duration.get_rep())
+        {
+          converteralgo.MatrixToDouble(Duration,duration);
+        }
         stimulusdomain.push_back(domain);
         stimulusstart.push_back(end);     
         stimulusend.push_back(start);
+        stimulusduration.push_back(duration);
         num_stimulus++;
 
         if (Current.get_rep())
@@ -824,7 +831,14 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     {
       for (int q=0; q< stimulustable[p].size(); q++)
       { 
-        stimfile << stimulustable[p][q].node <<  " " << stimuluscurrent[p]*stimulustable[p][q].weight << ", " << stimulusstart[p] << ", " << stimulusend[p] << ", I\n";
+        if (stimulusduration[p] == -1.0)
+        { 
+          stimfile << stimulustable[p][q].node <<  " " << stimuluscurrent[p]*stimulustable[p][q].weight << ", " << stimulusstart[p] << ", " << stimulusend[p] << ", I\n";
+        }
+        else
+        {
+          stimfile << stimulustable[p][q].node <<  " " << stimuluscurrent[p]*stimulustable[p][q].weight << ", " << stimulusstart[p] << ", " << stimulusend[p] << ", " << stimulusduration[p] << ", I\n";        
+        }
       }
     }
   }

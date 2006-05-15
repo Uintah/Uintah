@@ -51,9 +51,9 @@ namespace CardioWave {
 
 using namespace SCIRun;
 
-class CBDAddBlockStimulus : public Module {
+class CBDAddStimulus : public Module {
 public:
-  CBDAddBlockStimulus(GuiContext*);
+  CBDAddStimulus(GuiContext*);
   virtual void execute();
 
 private:  
@@ -68,10 +68,10 @@ private:
 };
 
 
-DECLARE_MAKER(CBDAddBlockStimulus)
+DECLARE_MAKER(CBDAddStimulus)
 
-CBDAddBlockStimulus::CBDAddBlockStimulus(GuiContext* ctx)
-  : Module("CBDAddBlockStimulus", ctx, Source, "ContinuousBiDomain", "CardioWave"),
+CBDAddStimulus::CBDAddStimulus(GuiContext* ctx)
+  : Module("CBDAddStimulus", ctx, Source, "ContinuousBiDomain", "CardioWave"),
     guidomain_(get_ctx()->subVar("stim-domain")),
     guicurrent_(get_ctx()->subVar("stim-current")),
     guistart_(get_ctx()->subVar("stim-start")),
@@ -81,7 +81,7 @@ CBDAddBlockStimulus::CBDAddBlockStimulus(GuiContext* ctx)
 {
 }
 
-void CBDAddBlockStimulus::execute()
+void CBDAddStimulus::execute()
 {
   BundleHandle StimulusBundle;
   FieldHandle Geometry;
@@ -145,6 +145,28 @@ void CBDAddBlockStimulus::execute()
     }
   }
 
+  if (stimulus_num > 0)
+  {
+    std::string oldsourcefile;    
+    BundleHandle OldStimulus;
+    StringHandle OldSourceFile;
+    
+    if (StimulusBundle->isBundle("Stimulus_0"))
+    {
+      OldStimulus = StimulusBundle->getBundle("Stimulus_0");
+      OldSourceFile = OldStimulus->getString("SourceFile");
+      if (OldSourceFile.get_rep())
+      {
+        oldsourcefile = OldSourceFile->get();
+        if (oldsourcefile != "StimFile.c ")
+        {
+          error("CardioWave does not allow for different stimulus models to be mixed together");
+          return;
+        }
+      }  
+    }
+  }
+
   BundleHandle Stimulus;
   Stimulus = scinew Bundle();
   if (Stimulus.get_rep() == 0)
@@ -181,7 +203,7 @@ void CBDAddBlockStimulus::execute()
   Stimulus->setMatrix("FieldDensity",FieldDensity);
   Stimulus->setMatrix("UseElements",UseElements);
 
-  StringHandle SourceFile = scinew String("StimFile.cc ");
+  StringHandle SourceFile = scinew String("StimFile.c ");
   Stimulus->setString("SourceFile",SourceFile);
 
   StringHandle Parameters = scinew String("");

@@ -14,7 +14,7 @@ SRCDIR   := Packages/CardioWave/Dataflow/Modules/ContinuousBiDomain
 
 SRCS     += \
 	$(SRCDIR)/CBDAddMembrane.cc\
-	$(SRCDIR)/CBDAddBlockStimulus.cc\
+	$(SRCDIR)/CBDAddStimulus.cc\
 	$(SRCDIR)/CBDAddReference.cc\
 	$(SRCDIR)/CBDCreateDomain.cc\
 	$(SRCDIR)/CBDCreateSimulation.cc\
