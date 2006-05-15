@@ -48,7 +48,6 @@
     <MaterialProperties>
 	<MPM>
 	    <material>
-		<burn type = "null" />
 		<fracture type = "normal">
 		  <constraint> 0 </constraint>
 		</fracture>

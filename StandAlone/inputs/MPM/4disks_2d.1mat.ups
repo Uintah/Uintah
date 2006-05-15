@@ -54,7 +54,6 @@
     <MaterialProperties>
 	<MPM>
             <material name = "HMX">
-                <burn type = "null"/>
                 <density>1.9</density>
 		<constitutive_model type = "comp_neo_hook"> 
 		   <shear_modulus>7.2e11</shear_modulus>

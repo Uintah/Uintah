@@ -79,7 +79,6 @@
     <MaterialProperties>
 	<MPM>
 	    <material>
-                <burn type = "null" />
 		<density>9000.0</density>
 		<constitutive_model type="comp_mooney_rivlin"> 
 		   <he_constant_1>1000.0</he_constant_1>

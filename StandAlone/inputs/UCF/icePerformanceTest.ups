@@ -160,7 +160,6 @@
     <MaterialProperties>
        <ICE>
          <material>
-            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>  15.3e-6                 </dynamic_viscosity>
            <thermal_conductivity>0.0                </thermal_conductivity>
@@ -193,7 +192,6 @@
          </material>
 
          <material>
-            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>  15.3e-6                 </dynamic_viscosity>
            <thermal_conductivity>0.0                </thermal_conductivity>
@@ -211,7 +209,6 @@
          </material>
          
          <material>
-            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>  15.3e-6                 </dynamic_viscosity>
            <thermal_conductivity>0.0                </thermal_conductivity>

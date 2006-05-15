@@ -51,7 +51,6 @@
     <MaterialProperties>
         <MPM>
             <material name="Piston">
-                <burn type="null"></burn>
                 <density>1.9e8</density>
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
@@ -70,7 +69,6 @@
                 </geom_object>
             </material>
             <material name="HMX">
-                <burn type="null"></burn>
                 <density>1.9e6</density>
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
@@ -92,7 +90,6 @@
                 </geom_object>
             </material>
             <material name="Dirty Binder">
-                <burn type="null"></burn>
                 <density>1.73e6</density> 
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>

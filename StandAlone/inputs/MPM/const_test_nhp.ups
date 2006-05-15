@@ -50,7 +50,6 @@
     <MaterialProperties>
 	<MPM>
 	    <material>
-                <burn type = "null" />
 		<density>1.e9</density>
 		<constitutive_model type="hypo_elastic">
 		   <G>12.e6</G>
@@ -70,7 +69,6 @@
 	    </material>
 
 	    <material>
-                <burn type = "null" />
 		<density>1.e3</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>2000.0</bulk_modulus>

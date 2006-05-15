@@ -43,7 +43,6 @@
     <MaterialProperties>
 	<MPM>
 	    <material>
-                <burn type = "null" />
 		<density>10.0</density>
                 <constitutive_model type="comp_neo_hook">
                     <bulk_modulus> 60000000.0</bulk_modulus>
@@ -63,7 +62,6 @@
 	    </material>
 
 	    <material>
-                <burn type = "null" />
 		<density>10.0</density>
                 <constitutive_model type="comp_neo_hook">
                     <bulk_modulus> 60000000.0</bulk_modulus>

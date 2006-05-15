@@ -47,7 +47,6 @@
     <MaterialProperties>
 	<MPM>
 	    <material>
-                <burn type = "null" />
                 <density>1.0</density>
  		<constitutive_model type="trans_iso_hyper">
 		    <bulk_modulus>100.e5</bulk_modulus>
@@ -77,7 +76,6 @@
 	    </material>
 
 	    <material>
-                <burn type = "null" />
                 <density>1.0</density>
                 <constitutive_model type="trans_iso_hyper">
 		    <bulk_modulus>100.e5</bulk_modulus>

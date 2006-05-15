@@ -176,7 +176,6 @@
     <MaterialProperties>
        <ICE>
          <material>
-           <burn type = "null" />
            <EOS type = "JWLC">
              <A>2.9867e11</A>
              <B>4.11706e9</B>

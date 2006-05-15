@@ -51,7 +51,6 @@
     <MaterialProperties>
 	<MPM>
 	    <material>
-                <burn type = "null" />
 		<density>1.e9</density>
 		<constitutive_model type="hypo_elastic">
 		   <G>12.e12</G>
@@ -70,7 +69,6 @@
  		</geom_object>
 	    </material>
 	    <material>
-                <burn type = "null" />
                 <include href="../MaterialData/MaterialConst4340Steel.xml"/>
 		<constitutive_model type="hyperelastic_plastic">
                    <tolerance>1.0e-10</tolerance>

@@ -320,7 +320,6 @@
     <MaterialProperties>
        <ICE>
          <material name = "BackgroundGas">
-           <burn type = "null"/>
            <EOS type = "ideal_gas">                     </EOS>
            <isSurroundingMatl>          true            </isSurroundingMatl>
            <dynamic_viscosity>          0.00002         </dynamic_viscosity>
