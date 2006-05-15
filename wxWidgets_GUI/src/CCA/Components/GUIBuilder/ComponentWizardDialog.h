@@ -26,8 +26,8 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef ComponentWizardDialog_h
-#define ComponentWizardDialog_h
+#ifndef CCA_Components_GUIBuilder_ComponentWizardDialog_h
+#define CCA_Components_GUIBuilder_ComponentWizardDialog_h
 
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
@@ -51,14 +51,19 @@ class ComponentWizardDialog: public wxDialog
 {
 public:
   enum {
-    ID_AddProvidesPort=1,
+    ID_AddProvidesPort=wxID_HIGHEST,
     ID_AddUsesPort,
   };
 
-  ComponentWizardDialog(wxWindow *parent, wxWindowID id, const wxString &title, const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxDEFAULT_DIALOG_STYLE, const wxString& name = "ComponentWizardDialogBox");
+  ComponentWizardDialog(wxWindow *parent, wxWindowID id,
+			const wxString &title,
+			const wxPoint& pos = wxDefaultPosition,
+			const wxSize& size = wxDefaultSize,
+			long style = wxDEFAULT_DIALOG_STYLE,
+			const wxString& name = "ComponentWizardDialogBox");
 
   ~ComponentWizardDialog();
-   
+
   void OnOk( wxCommandEvent &event );
   void OnAddProvidesPort( wxCommandEvent &event );
   void OnAddUsesPort( wxCommandEvent &event );
@@ -97,8 +102,6 @@ private:
   wxStaticText *lname;
   wxStaticText *ldtype;
   wxStaticText *ldesc;
-  wxButton *ok;
-  wxButton *cancel;
 };
 
 
