@@ -52,7 +52,6 @@
 	<MPM>
 
 	    <material>
-                <burn type = "null" />
 		<density>7833e2</density>
 		<constitutive_model type="hypo_elastic"> 
 		   <G>81.395e11 </G>
@@ -72,7 +71,6 @@
 	    </material>
 
             <material>
-                <burn type = "friction" />
                 <mu>0.</mu>
                 <density>2700</density>
                 <constitutive_model type="hypo_elastic">

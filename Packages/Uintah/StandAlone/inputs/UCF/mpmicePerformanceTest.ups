@@ -159,7 +159,6 @@
     <MaterialProperties>
        <MPM>
          <material name = "PISTON">
-                <burn type = "null" />
                 <density>              1.901e8         </density>
                 <gamma>                1.4             </gamma>
                 <constitutive_model type="comp_neo_hook_plastic">
@@ -182,7 +181,6 @@
                 </geom_object>
          </material>
         <material name = "HMX BLOCK">
-                <burn type = "null" />
                 <density>              1.901e6         </density>
                 <gamma>                1.4             </gamma>
                 <constitutive_model type="comp_neo_hook_plastic">
@@ -219,7 +217,6 @@
       </MPM>
        <ICE>
          <material name = "Surrounding Gas">
-           <burn type = "null" />       
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>          15.3e-6         </dynamic_viscosity>
            <thermal_conductivity>       26.3e-3         </thermal_conductivity>

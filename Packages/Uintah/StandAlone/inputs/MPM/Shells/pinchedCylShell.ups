@@ -76,7 +76,6 @@
 
        <!-- Solid pistons - 4340 steel -->
        <material>
-         <burn type = "null"/>
          <include href="../MaterialData/MaterialConst4340Steel.xml"/>
          <constitutive_model type="comp_neo_hook">
            <include href="../MaterialData/IsotropicElastic4340Steel.xml"/>
@@ -105,7 +104,6 @@
 
        <!-- Cylindrical shell - Annealed Copper -->
        <material>
-         <burn type = "null"/>
          <include href="../MaterialData/MaterialConstAnnCopper.xml"/>
          <constitutive_model type="shell_CNH">
            <include href="../MaterialData/IsotropicElasticAnnCopper.xml"/>

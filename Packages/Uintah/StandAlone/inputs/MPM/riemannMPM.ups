@@ -98,7 +98,6 @@
     <MaterialProperties>
        <MPM>
          <material>
-              <burn type = "null" />
               <density>   11.768292682926831   </density>
               <constitutive_model type="ideal_gas">
                   <gamma>          1.4          </gamma>
@@ -120,7 +119,6 @@
               </geom_object>
          </material>
          <material>
-              <burn type = "null" />
               <density>   1.1768292682926831   </density>
               <constitutive_model type="ideal_gas">
                   <gamma>          1.4          </gamma>

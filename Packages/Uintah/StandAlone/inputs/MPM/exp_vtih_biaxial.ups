@@ -53,7 +53,6 @@
     <MaterialProperties>
 	<MPM>
 	    <material>
-                <burn type = "null" />
 		<density>1.e9</density>
 		<constitutive_model type="hypo_elastic">
 		   <G>12.e2</G>
@@ -92,7 +91,6 @@
             </material>
 
             <material>
-                <burn type = "null" />
 		<density>1.e3</density>
                 <constitutive_model type="visco_trans_iso_hyper">
 		    <bulk_modulus>1.e4</bulk_modulus>

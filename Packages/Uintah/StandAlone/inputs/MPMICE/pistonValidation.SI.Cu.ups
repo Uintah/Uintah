@@ -164,7 +164,6 @@
     <MaterialProperties>
        <MPM>
          <material name = " Piston">
-                <burn type = "null"/>
                 <EOS type = "ideal_gas">                </EOS>
                 <density>                  8900.        </density>
                 <constitutive_model type = "comp_neo_hook">
@@ -216,7 +215,6 @@
          </material>
          
          <material name = "Air Above piston">
-            <burn type = "null"/>
             <EOS type = "ideal_gas">                    </EOS>
            <dynamic_viscosity>          0.0             </dynamic_viscosity>
            <thermal_conductivity>       0.0             </thermal_conductivity>

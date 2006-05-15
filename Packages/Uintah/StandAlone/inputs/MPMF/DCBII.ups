@@ -51,7 +51,6 @@
     <MaterialProperties>
 	<MPM>
 	    <material>
-                <burn type = "null" />
 		<density>1500</density>
 		<constitutive_model type="hypo_elastic"> 
 		   <G>37.594e6</G>

@@ -112,7 +112,6 @@
      <MPM>
        <!-- Spherical shell - Membrane Material -->
        <material>
-         <burn type = "null"/>
          <density>              10.0  </density>
          <thermal_conductivity> 1.0   </thermal_conductivity>
          <specific_heat>        5     </specific_heat>
@@ -141,7 +140,6 @@
      </MPM>
      <ICE>
        <material>
-         <burn type = "null"/>
          <EOS type = "ideal_gas">
          </EOS>
          <!--
@@ -171,7 +169,6 @@
          </geom_object>
        </material>
        <material>
-         <burn type = "null"/>
          <EOS type = "ideal_gas">
          </EOS>
          <!--

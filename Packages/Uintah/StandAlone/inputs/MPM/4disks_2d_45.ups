@@ -42,7 +42,6 @@
     <MaterialProperties>
 	<MPM>
             <material name = "Piston">
-                <burn type = "null"/>
                 <density>1.9e10</density>
 		<constitutive_model type = "hypo_elastic"> 
 		   <G>7.2e4</G>
@@ -62,7 +61,6 @@
 	    </material>
 
             <material name = "HMX">
-                <burn type = "null"/>
                 <density>1.9e6</density>
 		<constitutive_model type = "hypo_elastic"> 
 		   <G>7.2e5</G>
@@ -107,7 +105,6 @@
 	    </material>
 
             <material name = "HMX">
-                <burn type = "null"/>
                 <density>1.9e6</density>
 		<constitutive_model type = "hypo_elastic"> 
 		   <G>7.2e5</G>

@@ -44,7 +44,6 @@
     <MaterialProperties>
 	<MPM>
 	    <material>
-                <burn type = "null" />
 		<density>1.e9</density>
 		<constitutive_model type="hypo_elastic">
 		   <G>12.e6</G>
@@ -73,7 +72,6 @@
 	    </material>
 	    
 	    <material>
-		<burn type = "null" />
 		<density>1.0e3</density>
 		<constitutive_model type = "mw_visco_elastic">
 		   <e_shear_modulus>6.e3</e_shear_modulus>

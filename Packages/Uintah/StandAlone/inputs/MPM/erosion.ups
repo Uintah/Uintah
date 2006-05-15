@@ -58,7 +58,6 @@
    <MaterialProperties>
      <MPM>
        <material>
-         <burn type = "null"/>
          <EOS type = "ideal_gas">
            <gas_constant>      287               </gas_constant>
          </EOS>
@@ -98,7 +97,6 @@
          </material>
 
 	 <material>
-         <burn type = "null"/>
          <EOS type = "ideal_gas">
            <gas_constant>      287               </gas_constant>
          </EOS>

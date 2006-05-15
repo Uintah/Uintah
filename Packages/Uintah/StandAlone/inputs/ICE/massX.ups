@@ -181,7 +181,6 @@
     <MaterialProperties>
        <ICE>
          <material Rx = "product" >
-            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>   0.0                    </dynamic_viscosity>
            <thermal_conductivity>0.0                    </thermal_conductivity>
@@ -207,7 +206,6 @@
            </geom_object>
          </material>
          <material Rx = "reactant" >
-            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>   0.0                    </dynamic_viscosity>
            <thermal_conductivity>0.0                   </thermal_conductivity>

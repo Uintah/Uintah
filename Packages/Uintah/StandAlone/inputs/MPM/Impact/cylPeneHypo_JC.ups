@@ -62,7 +62,6 @@
   <MaterialProperties>
     <MPM>
       <material name="Iron Target">
-        <burn type = "null" />
         <include href="../MaterialData/MaterialConstArmcoIron.xml"/>
         <constitutive_model type="hypoelastic_plastic">
           <tolerance>5.0e-10</tolerance>
@@ -89,7 +88,6 @@
       </material>
       <!--
       <material name = "Copper Coating">
-        <burn type = "null" />
         <include href="../MaterialData/MaterialConstAnnCopper.xml"/>
         <constitutive_model type="hypoelastic_plastic">
           <tolerance>5.0e-10</tolerance>
@@ -136,7 +134,6 @@
       </material>
       -->
       <material name="Hard Steel Core">
-        <burn type = "null" />
         <include href="../MaterialData/MaterialConstS7ToolSteel.xml"/>
         <constitutive_model type="hypoelastic_plastic">
           <tolerance>5.0e-10</tolerance>

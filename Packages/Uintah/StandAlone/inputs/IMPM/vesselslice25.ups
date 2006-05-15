@@ -53,7 +53,6 @@
     <MaterialProperties>
 	<MPM>
 	    <material>
-                <burn type = "null" />
                 <density>1.01</density>
                 <thermal_conductivity>237.0</thermal_conductivity>
                 <specific_heat>903</specific_heat>
@@ -72,7 +71,6 @@
  		</geom_object>
 	    </material>
 	    <material>
-                <burn type = "null" />
                 <density>1.0</density>
                 <thermal_conductivity>237.0</thermal_conductivity>
                 <specific_heat>903</specific_heat>
@@ -91,7 +89,6 @@
  		</geom_object>
 	    </material>
 	    <material>
-                <burn type = "null" />
                 <density>1.02</density>
                 <thermal_conductivity>237.0</thermal_conductivity>
                 <specific_heat>903</specific_heat>

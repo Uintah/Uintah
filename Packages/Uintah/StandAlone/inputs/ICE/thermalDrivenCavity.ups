@@ -214,7 +214,6 @@
        <ICE>
          <material>
            <isSurroundingMatl> true                     </isSurroundingMatl> 
-           <burn type = "null"/>
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>  15.6e-6                 </dynamic_viscosity>
            <thermal_conductivity>100                    </thermal_conductivity>

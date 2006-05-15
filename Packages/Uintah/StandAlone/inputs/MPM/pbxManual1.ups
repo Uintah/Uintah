@@ -47,7 +47,6 @@
     <MaterialProperties>
 	<MPM>
 	    <material name = "Binder">
-                <burn type = "null" />
 		<density>1900.0</density>
                 <constitutive_model type="hypo_elastic">
                    <G>0.23e6</G>
@@ -635,7 +634,6 @@
  		</geom_object>
 	    </material>
 	    <material name = "HMX">
-                <burn type = "null" />
 		<density>1190.0</density>
                 <constitutive_model type="hypo_elastic">
                    <G>5.8e9</G>

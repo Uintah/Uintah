@@ -49,7 +49,6 @@
     <MaterialProperties>
 	<MPM>
 	    <material>
-                <burn type = "null" />
                 <density>8900.0</density>
                 <thermal_conductivity>400.0</thermal_conductivity>
                 <specific_heat>386</specific_heat>
@@ -69,7 +68,6 @@
 	    </material>
 
 	    <material>
-                <burn type = "null" />
                 <density>8900.0</density>
                 <thermal_conductivity>400.0</thermal_conductivity>
                 <specific_heat>386</specific_heat>
