@@ -33,6 +33,7 @@ LOG
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>
 #include <Core/Datatypes/LatVolMesh.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Core/Datatypes/MultiLevelField.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
