@@ -74,13 +74,11 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
   string conv_scheme;
   db->getWithDefault("convection_scheme",conv_scheme,"l2up");
     if (conv_scheme == "l2up") d_conv_scheme = 0;
-    else if (conv_scheme == "eno") d_conv_scheme = 1;
-         else if (conv_scheme == "weno") d_conv_scheme = 2;
-              else if (conv_scheme == "flux_limited") d_conv_scheme = 3;
-	           else throw InvalidValue("Convection scheme "
-		                           "not supported: " + conv_scheme, __FILE__, __LINE__);
+      else if (conv_scheme == "flux_limited") d_conv_scheme = 1;
+	else throw InvalidValue("Convection scheme not supported: " + conv_scheme, __FILE__, __LINE__);
+
   string limiter_type;
-  if (d_conv_scheme == 3) {
+  if (d_conv_scheme == 1) {
     db->getWithDefault("limiter_type",limiter_type,"superbee");
     if (limiter_type == "superbee") d_limiter_type = 0;
       else if (limiter_type == "vanLeer") d_limiter_type = 1;
@@ -213,19 +211,6 @@ ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
 
-  if ((d_conv_scheme > 0)&&(d_conv_scheme < 3)) {
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      tsk->requires(Task::OldDW, timelabels->maxabsu_in);
-      tsk->requires(Task::OldDW, timelabels->maxabsv_in);
-      tsk->requires(Task::OldDW, timelabels->maxabsw_in);
-    }
-    else {
-      tsk->requires(Task::NewDW, timelabels->maxabsu_in);
-      tsk->requires(Task::NewDW, timelabels->maxabsv_in);
-      tsk->requires(Task::NewDW, timelabels->maxabsw_in);
-    }
-  }
-
       // added one more argument of index to specify scalar component
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_scalCoefSBLMLabel, d_lab->d_stencilMatl,
@@ -272,28 +257,6 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
   parent_old_dw->get(delT, d_lab->d_sharedState->get_delt_label() );
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
-
-  double maxAbsU = 0.0;
-  double maxAbsV = 0.0;
-  double maxAbsW = 0.0;
-  if ((d_conv_scheme > 0)&&(d_conv_scheme < 3)) {
-    max_vartype mxAbsU;
-    max_vartype mxAbsV;
-    max_vartype mxAbsW;
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      old_dw->get(mxAbsU, timelabels->maxabsu_in);
-      old_dw->get(mxAbsV, timelabels->maxabsv_in);
-      old_dw->get(mxAbsW, timelabels->maxabsw_in);
-    }
-    else {
-      new_dw->get(mxAbsU, timelabels->maxabsu_in);
-      new_dw->get(mxAbsV, timelabels->maxabsv_in);
-      new_dw->get(mxAbsW, timelabels->maxabsw_in);
-    }
-    maxAbsU = mxAbsU;
-    maxAbsV = mxAbsV;
-    maxAbsW = mxAbsW;
-  }
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
@@ -411,18 +374,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				    &scalarVars, &constScalarVars);
     if (d_conv_scheme > 0) {
       int wall_celltypeval = d_boundaryCondition->wallCellType();
-      if (d_conv_scheme == 2)
-        d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
-					        maxAbsU, maxAbsV, maxAbsW, 
-				  	        &scalarVars, &constScalarVars,
-						wall_celltypeval);
-      else if (d_conv_scheme == 1)
-        d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo,
-					       maxAbsU, maxAbsV, maxAbsW, 
-				  	       &scalarVars, &constScalarVars,
-					       wall_celltypeval); 
-      else
-        d_discretize->calculateScalarFluxLimitedConvection
+      d_discretize->calculateScalarFluxLimitedConvection
 		                                  (pc, patch,  index, cellinfo,
 				  	          &scalarVars, &constScalarVars,
 					          wall_celltypeval, 

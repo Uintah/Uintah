@@ -152,40 +152,21 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     tsk->modifies(d_lab->d_uVelocitySPBCLabel);
 
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      tsk->requires(Task::OldDW, timelabels->maxuxplus_in);
-    }
-    else {
-      tsk->requires(Task::NewDW, timelabels->maxuxplus_in);
-    }
-
-    tsk->computes(timelabels->maxabsu_out);
-    tsk->computes(timelabels->maxuxplus_out);
-    tsk->computes(timelabels->avuxplus_out);
-
     break;
 
   case Arches::YDIR:
 
-    // use new uvelocity for v coef calculation
-    
     tsk->requires(Task::NewDW, d_lab->d_vVelRhoHatLabel, 
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     tsk->modifies(d_lab->d_vVelocitySPBCLabel);
-
-    tsk->computes(timelabels->maxabsv_out);
 
     break;
 
   case Arches::ZDIR:
 
-    // use new uvelocity for v coef calculation
-
     tsk->requires(Task::NewDW, d_lab->d_wVelRhoHatLabel, 
 		  Ghost::AroundFaces, Arches::ONEGHOSTCELL);
     tsk->modifies(d_lab->d_wVelocitySPBCLabel);
-
-    tsk->computes(timelabels->maxabsw_out);
 
     break;
 
@@ -323,108 +304,6 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     d_boundaryCondition->velocityPressureBC(pc, patch, index,
 					    &velocityVars, &constVelocityVars);
 
-    double maxUxplus;
-    max_vartype mxUxp;
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      old_dw->get(mxUxp, timelabels->maxuxplus_in);
-    }
-    else {
-      new_dw->get(mxUxp, timelabels->maxuxplus_in);
-    }
-    maxUxplus = mxUxp;
-
-    double maxAbsU = 0.0;
-    double maxAbsV = 0.0;
-    double maxAbsW = 0.0;
-    IntVector ixLow;
-    IntVector ixHigh;
-    //double maxUxplus = -10000000000.0;
-    bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-    double avUxplus = 0.0;
-    const Level* level = patch->getLevel();
-    IntVector low, high;
-    level->findCellIndexRange(low, high);
-    IntVector range = high-low;
-    double num_elem = range.y()*range.z();
-    
-    switch (index) {
-    case Arches::XDIR:
-
-      ixLow = patch->getSFCXFORTLowIndex();
-      ixHigh = patch->getSFCXFORTHighIndex();
-    
-      for (int colZ = ixLow.z(); colZ <= ixHigh.z(); colZ ++) {
-        for (int colY = ixLow.y(); colY <= ixHigh.y(); colY ++) {
-          for (int colX = ixLow.x(); colX <= ixHigh.x(); colX ++) {
-
-              IntVector currCell(colX, colY, colZ);
-
-	      maxAbsU = Max(Abs(velocityVars.uVelRhoHat[currCell]), maxAbsU);
-          }
-        }
-      }
-      new_dw->put(max_vartype(maxAbsU), timelabels->maxabsu_out); 
-
-      if ((d_boundaryCondition->getOutletBC())&&(xplus)) {
-        int outlet_celltypeval = d_boundaryCondition->outletCellType();
-        int colX = ixHigh.x();
-        for (int colZ = ixLow.z(); colZ <= ixHigh.z(); colZ ++) {
-          for (int colY = ixLow.y(); colY <= ixHigh.y(); colY ++) {
-
-              IntVector currCell(colX, colY, colZ);
-              IntVector xplusCell(colX+1, colY, colZ);
-
-	      if (constVelocityVars.cellType[xplusCell] == outlet_celltypeval) {
-	        maxUxplus = Max(velocityVars.uVelRhoHat[currCell], maxUxplus);
-		avUxplus += velocityVars.uVelRhoHat[currCell];
-	      }
-          }
-        }
-      }
-      new_dw->put(max_vartype(maxUxplus), timelabels->maxuxplus_out); 
-      avUxplus /= num_elem;
-      new_dw->put(sum_vartype(avUxplus), timelabels->avuxplus_out);
-
-      break;
-    case Arches::YDIR:
-
-      ixLow = patch->getSFCYFORTLowIndex();
-      ixHigh = patch->getSFCYFORTHighIndex();
-    
-      for (int colZ = ixLow.z(); colZ <= ixHigh.z(); colZ ++) {
-        for (int colY = ixLow.y(); colY <= ixHigh.y(); colY ++) {
-          for (int colX = ixLow.x(); colX <= ixHigh.x(); colX ++) {
-
-              IntVector currCell(colX, colY, colZ);
-
-	      maxAbsV = Max(Abs(velocityVars.vVelRhoHat[currCell]), maxAbsV);
-          }
-        }
-      }
-      new_dw->put(max_vartype(maxAbsV), timelabels->maxabsv_out); 
-
-      break;
-    case Arches::ZDIR:
-
-      ixLow = patch->getSFCZFORTLowIndex();
-      ixHigh = patch->getSFCZFORTHighIndex();
-    
-      for (int colZ = ixLow.z(); colZ <= ixHigh.z(); colZ ++) {
-        for (int colY = ixLow.y(); colY <= ixHigh.y(); colY ++) {
-          for (int colX = ixLow.x(); colX <= ixHigh.x(); colX ++) {
-
-              IntVector currCell(colX, colY, colZ);
-
-	      maxAbsW = Max(Abs(velocityVars.wVelRhoHat[currCell]), maxAbsW);
-          }
-        }
-      }
-      new_dw->put(max_vartype(maxAbsW), timelabels->maxabsw_out); 
-
-      break;
-    default:
-      throw InvalidValue("Invalid index in max abs velocity calculation", __FILE__, __LINE__);
-    }
   }
 }
 

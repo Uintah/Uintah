@@ -1832,13 +1832,6 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->computes(d_lab->d_CO2FlowRateLabel);
   tsk->computes(d_lab->d_scalarFlowRateLabel);
 
-  tsk->requires(Task::OldDW, d_lab->d_maxAbsU_label);
-  tsk->requires(Task::OldDW, d_lab->d_maxAbsV_label);
-  tsk->requires(Task::OldDW, d_lab->d_maxAbsW_label);
-
-  tsk->requires(Task::OldDW, d_lab->d_maxUxplus_label);
-  tsk->requires(Task::OldDW, d_lab->d_avUxplus_label);
-
   tsk->requires(Task::OldDW, d_lab->d_divConstraintLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->computes(d_lab->d_divConstraintLabel);
@@ -1850,13 +1843,6 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
     }
   }
   */
-
-  tsk->computes(d_lab->d_maxAbsU_label);
-  tsk->computes(d_lab->d_maxAbsV_label);
-  tsk->computes(d_lab->d_maxAbsW_label);
-
-  tsk->computes(d_lab->d_maxUxplus_label);
-  tsk->computes(d_lab->d_avUxplus_label);
 
   sched->addTask(tsk, patches, matls);  
   
@@ -1873,23 +1859,6 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw)
 {
-  max_vartype mxAbsU;
-  max_vartype mxAbsV;
-  max_vartype mxAbsW;
-  max_vartype mxUxplus;
-  sum_vartype avUxplus;
-  old_dw->get(mxAbsU, d_lab->d_maxAbsU_label);
-  old_dw->get(mxAbsV, d_lab->d_maxAbsV_label);
-  old_dw->get(mxAbsW, d_lab->d_maxAbsW_label);
-  old_dw->get(mxUxplus, d_lab->d_maxUxplus_label);
-  old_dw->get(avUxplus, d_lab->d_avUxplus_label);
-
-  new_dw->put(mxAbsU, d_lab->d_maxAbsU_label);
-  new_dw->put(mxAbsV, d_lab->d_maxAbsV_label);
-  new_dw->put(mxAbsW, d_lab->d_maxAbsW_label);
-  new_dw->put(mxUxplus, d_lab->d_maxUxplus_label);
-  new_dw->put(avUxplus, d_lab->d_avUxplus_label);
-
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material

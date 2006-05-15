@@ -4272,11 +4272,6 @@ BoundaryCondition::sched_initInletBC(SchedulerP& sched, const PatchSet* patches,
   tsk->modifies(d_lab->d_wVelRhoHatLabel);
 
   tsk->computes(d_lab->d_densityOldOldLabel);
-  tsk->computes(d_lab->d_maxAbsU_label);
-  tsk->computes(d_lab->d_maxAbsV_label);
-  tsk->computes(d_lab->d_maxAbsW_label);
-  tsk->computes(d_lab->d_maxUxplus_label);
-  tsk->computes(d_lab->d_avUxplus_label);
 
 //#ifdef divergenceconstraint
     tsk->computes(d_lab->d_divConstraintLabel);
@@ -4356,84 +4351,6 @@ BoundaryCondition::initInletBC(const ProcessorGroup* /*pc*/,
     divergence.initialize(0.0);
 //#endif
 
-    double maxAbsU = 0.0;
-    double maxAbsV = 0.0;
-    double maxAbsW = 0.0;
-    IntVector indexLow;
-    IntVector indexHigh;
-    double maxUxplus = -10000000000.0;
-    double avUxplus = 0.0;
-    const Level* level = patch->getLevel();
-    IntVector low, high;
-    level->findCellIndexRange(low, high);
-    IntVector range = high-low;
-    double num_elem = range.y()*range.z();
-    
-      indexLow = patch->getSFCXFORTLowIndex();
-      indexHigh = patch->getSFCXFORTHighIndex();
-    
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-
-              IntVector currCell(colX, colY, colZ);
-
-	      maxAbsU = Max(Abs(uVelocity[currCell]), maxAbsU);
-          }
-        }
-      }
-      new_dw->put(max_vartype(maxAbsU), d_lab->d_maxAbsU_label); 
-
-      if ((d_outletBoundary)&&(xplus)) {
-        int outlet_celltypeval = outletCellType();
-        int colX = indexHigh.x();
-        for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-          for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-
-              IntVector currCell(colX, colY, colZ);
-              IntVector xplusCell(colX+1, colY, colZ);
-
-	      if (cellType[xplusCell] == outlet_celltypeval) {
-	        maxUxplus = Max(uVelocity[currCell], maxUxplus);
-		avUxplus += uVelocity[currCell];
-	      }
-          }
-        }
-      }
-      new_dw->put(max_vartype(maxUxplus), d_lab->d_maxUxplus_label);
-      avUxplus /= num_elem;
-      new_dw->put(sum_vartype(avUxplus), d_lab->d_avUxplus_label);
-
-      indexLow = patch->getSFCYFORTLowIndex();
-      indexHigh = patch->getSFCYFORTHighIndex();
-    
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-
-              IntVector currCell(colX, colY, colZ);
-
-	      maxAbsV = Max(Abs(vVelocity[currCell]), maxAbsV);
-          }
-        }
-      }
-      new_dw->put(max_vartype(maxAbsV), d_lab->d_maxAbsV_label); 
-
-      indexLow = patch->getSFCZFORTLowIndex();
-      indexHigh = patch->getSFCZFORTHighIndex();
-    
-      for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-        for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-          for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-
-              IntVector currCell(colX, colY, colZ);
-
-	      maxAbsW = Max(Abs(wVelocity[currCell]), maxAbsW);
-          }
-        }
-      }
-      new_dw->put(max_vartype(maxAbsW), d_lab->d_maxAbsW_label); 
-    
   }
 }
 //****************************************************************************

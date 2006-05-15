@@ -75,15 +75,10 @@ ThermalNOxSolver::problemSetup(const ProblemSpecP& params)
 
   string conv_scheme;
   db->getWithDefault("convection_scheme",conv_scheme,"l2up");
-//  if (db->findBlock("convection_scheme")) {
-//    db->require("convection_scheme",conv_scheme);
     if (conv_scheme == "l2up") d_conv_scheme = 0;
-    else if (conv_scheme == "eno") d_conv_scheme = 1;
-         else if (conv_scheme == "weno") d_conv_scheme = 2;
 	      else throw InvalidValue("Convection scheme "
 		       "not supported: " + conv_scheme, __FILE__, __LINE__);
-//  } else
-//    d_conv_scheme = 0;
+
   // make source and boundary_condition objects
   d_source = scinew Source(d_turbModel, d_physicalConsts);
 
@@ -170,19 +165,6 @@ ThermalNOxSolver::sched_buildLinearMatrix(SchedulerP& sched,
     tsk->requires(Task::NewDW, d_lab->d_thermalnoxSRCINLabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  if (d_conv_scheme > 0) {
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      tsk->requires(Task::OldDW, timelabels->maxabsu_in);
-      tsk->requires(Task::OldDW, timelabels->maxabsv_in);
-      tsk->requires(Task::OldDW, timelabels->maxabsw_in);
-    }
-    else {
-      tsk->requires(Task::NewDW, timelabels->maxabsu_in);
-      tsk->requires(Task::NewDW, timelabels->maxabsv_in);
-      tsk->requires(Task::NewDW, timelabels->maxabsw_in);
-    }
-  }
-
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
     tsk->computes(d_lab->d_thermalnoxCoefSBLMLabel, d_lab->d_stencilMatl,
 		  Task::OutOfDomain);
@@ -222,28 +204,6 @@ void ThermalNOxSolver::buildLinearMatrix(const ProcessorGroup* pc,
   double delta_t = delT;
   delta_t *= timelabels->time_multiplier;
   
-  double maxAbsU = 0.0;
-  double maxAbsV = 0.0;
-  double maxAbsW = 0.0;
-  if (d_conv_scheme > 0) {
-    max_vartype mxAbsU;
-    max_vartype mxAbsV;
-    max_vartype mxAbsW;
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
-      old_dw->get(mxAbsU, timelabels->maxabsu_in);
-      old_dw->get(mxAbsV, timelabels->maxabsv_in);
-      old_dw->get(mxAbsW, timelabels->maxabsw_in);
-    }
-    else {
-      new_dw->get(mxAbsU, timelabels->maxabsu_in);
-      new_dw->get(mxAbsV, timelabels->maxabsv_in);
-      new_dw->get(mxAbsW, timelabels->maxabsw_in);
-    }
-    maxAbsU = mxAbsU;
-    maxAbsV = mxAbsV;
-    maxAbsW = mxAbsW;
-  }
-
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
     int archIndex = 0; // only one arches material
@@ -358,16 +318,6 @@ void ThermalNOxSolver::buildLinearMatrix(const ProcessorGroup* pc,
 
     if (d_conv_scheme > 0) {
       int wall_celltypeval = d_boundaryCondition->wallCellType();
-      if (d_conv_scheme == 2)
-        d_discretize->calculateScalarWENOscheme(pc, patch,  index, cellinfo,
-					        maxAbsU, maxAbsV, maxAbsW, 
-				  	        &thermalnoxVars,
-						&constthermalnoxVars, wall_celltypeval);
-      else
-        d_discretize->calculateScalarENOscheme(pc, patch,  index, cellinfo,
-					       maxAbsU, maxAbsV, maxAbsW, 
-				  	       &thermalnoxVars,
-					       &constthermalnoxVars, wall_celltypeval);
     }
     // Calculate the scalar boundary conditions
     // inputs : thermalnoxSP, thermalnoxCoefSBLM
