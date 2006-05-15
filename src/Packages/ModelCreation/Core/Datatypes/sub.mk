@@ -14,6 +14,7 @@ SRCDIR   := Packages/ModelCreation/Core/Datatypes
 
 SRCS     += $(SRCDIR)/Startup.cc\
             $(SRCDIR)/SimpleTextFile.cc\
+            $(SRCDIR)/NrrdToMatrix_Plugin.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS :=  Core/ImportExport\
@@ -24,7 +25,7 @@ PSELIBS :=  Core/ImportExport\
             Core/Algorithms/Fields \
             Core/Algorithms/Math \
             
-LIBS :=
+LIBS := $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
