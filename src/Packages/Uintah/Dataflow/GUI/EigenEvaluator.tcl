@@ -27,8 +27,9 @@ itcl_class Uintah_Operators_EigenEvaluator {
 		$this-eigenSelect {{"Largest" 0} {"Middle" 1} {"Smallest" 2}}
 	pack $w.m.r
 
-	button $w.b -text Close -command "destroy $w"
-	pack $w.b -side bottom -expand yes -fill x -padx 2 -pady 2
+	makeSciButtonPanel $w $w $this
+#	button $w.b -text Close -command "destroy $w"
+#	pack $w.b -side bottom -expand yes -fill x -padx 2 -pady 2
     }
 }
 

@@ -155,8 +155,9 @@ itcl_class Uintah_Visualization_NodeHedgehog {
 		-showvalue true -resolution 0.001 \
 		-variable $this-shaft_rad -command $n
 	pack $w.f5.shaft_scale -side left -fill x -pady 2
-	
-	button $w.close -text "Close" -command "wm withdraw $w"
-	pack $w.close -side bottom -expand yes -fill x
+
+	makeSciButtonPanel $w $w $this	
+#	button $w.close -text "Close" -command "wm withdraw $w"
+#	pack $w.close -side bottom -expand yes -fill x
     }
 }

@@ -20,8 +20,8 @@ itcl_class Uintah_Operators_ScalarFieldBinaryOperator {
 	}
  	toplevel $w
 
-	button $w.b -text Close -command "destroy $w"
-	pack $w.b -side bottom -expand yes -fill x -padx 2 -pady 2
+#	button $w.b -text Close -command "destroy $w"
+#	pack $w.b -side bottom -expand yes -fill x -padx 2 -pady 2
 
 	frame $w.calc -relief raised -bd 1
 
@@ -46,8 +46,9 @@ itcl_class Uintah_Operators_ScalarFieldBinaryOperator {
 
 	pack $w.calc.l $w.calc.add $w.calc.sub $w.calc.mul $w.calc.div \
 	    $w.calc.ave -anchor w 
-	pack $w.calc -side left -padx 2 -pady 2 -fill y
+	pack $w.calc -side top -padx 2 -pady 2 -fill y
 
+	makeSciButtonPanel $w $w $this
     }
 
 }

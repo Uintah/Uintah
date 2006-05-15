@@ -31,8 +31,8 @@ itcl_class Uintah_Operators_ScalarOperator {
 	}
  	toplevel $w
 
-	button $w.b -text Close -command "destroy $w"
-	pack $w.b -side bottom -expand yes -fill x -padx 2 -pady 2
+#	button $w.b -text Close -command "destroy $w"
+#	pack $w.b -side bottom -expand yes -fill x -padx 2 -pady 2
 
 	frame $w.calc -relief raised -bd 1
 
@@ -49,8 +49,9 @@ itcl_class Uintah_Operators_ScalarOperator {
 		-variable $this-operation -value 20 \
 		-command "$this-c needexecute"
 	pack $w.calc.l $w.calc.log $w.calc.e $w.calc.no -anchor w 
-	pack $w.calc -side left -padx 2 -pady 2 -fill y
+	pack $w.calc -side top -padx 2 -pady 2 -fill y
 
+	makeSciButtonPanel $w $w $this
     }
 
 }
