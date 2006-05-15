@@ -193,9 +193,7 @@
           <knob_for_speedSound>  0.0            </knob_for_speedSound>
         </TimeStepControl>
        <ICE>
-        <max_iteration_equilibration> 50 </max_iteration_equilibration>
-        <advection type = "SecondOrder" useCompatibleFluxes = "true"/>
-        <solution technique = "EqForm"/>
+        <advection type = "SecondOrder"/>
      
         <ImplicitSolver>
            <max_outer_iterations>      20    </max_outer_iterations>

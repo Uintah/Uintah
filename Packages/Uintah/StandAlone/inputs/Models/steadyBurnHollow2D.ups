@@ -160,9 +160,7 @@
        </ImplicitSolver>
 -->
 
-        <max_iteration_equilibration> 1000 </max_iteration_equilibration>
-        <advection type = "SecondOrder" useCompatibleFluxes = "true"/>
-        <solution technique = "EqForm"/>
+        <advection type = "SecondOrder"/>
        </ICE>        
     </CFD>
 

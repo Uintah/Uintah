@@ -82,9 +82,7 @@
    <CFD>
      <cfl>0.25</cfl>
      <ICE>
-       <max_iteration_equilibration> 1000 </max_iteration_equilibration>
        <advection type = "SecondOrder"/>
-       <solution technique = "EqForm"/>
        <ADD_HEAT>
          <add_heat_matls>   [2]      </add_heat_matls>
          <add_heat_coeff>   [8.0e10] </add_heat_coeff>

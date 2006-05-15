@@ -182,9 +182,7 @@
     <CFD>
          <cfl>0.5</cfl>
        <ICE>
-        <max_iteration_equilibration> 50 </max_iteration_equilibration>
         <advection type = "FirstOrder" />
-        <solution technique = "EqForm" />
       </ICE>        
     </CFD>
     <MPM>
