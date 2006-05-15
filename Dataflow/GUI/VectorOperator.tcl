@@ -40,8 +40,9 @@ itcl_class Uintah_Operators_VectorOperator {
 	}
  	toplevel $w
 
-	button $w.b -text Close -command "destroy $w"
-	pack $w.b -side bottom -expand yes -fill x -padx 2 -pady 2
+
+#	button $w.b -text Close -command "destroy $w"
+#	pack $w.b -side bottom -expand yes -fill x -padx 2 -pady 2
 
 	frame $w.calc -relief raised -bd 1
 	label $w.calc.l -text "Select Operation"
@@ -62,8 +63,9 @@ itcl_class Uintah_Operators_VectorOperator {
 		-command "$this-c needexecute"
 	pack $w.calc.l $w.calc.u $w.calc.v \
 	    $w.calc.w $w.calc.length $w.calc.vort -anchor w
-	pack $w.calc -side left -padx 2 -pady 2 -fill y
+	pack $w.calc -side top -padx 2 -pady 2 -fill y
 
+	makeSciButtonPanel $w $w $this
     }
 
 }

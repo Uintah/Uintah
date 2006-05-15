@@ -59,8 +59,9 @@ itcl_class Uintah_Visualization_RescaleColorMapForParticles {
 	bind $w.f3.e1 <Return> "$this-c needexecute"
 	bind $w.f3.e2 <Return> "$this-c needexecute"
 
-	button $w.close -text Close -command "destroy $w"
-	pack $w.close -side bottom -expand yes -fill x
+	makeSciButtonPanel $w $w $this
+#	button $w.close -text Close -command "destroy $w"
+#	pack $w.close -side bottom -expand yes -fill x
 
 	$this [set $this-scaleMode]Scale
 

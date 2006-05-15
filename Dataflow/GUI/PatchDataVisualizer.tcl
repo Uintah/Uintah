@@ -94,9 +94,10 @@ itcl_class Uintah_Visualization_PatchDataVisualizer {
 	    -from 8 -to 400 -tickinterval 392
 	pack $w.sphere.polygons -side top -fill x
 
+	makeSciButtonPanel $w $w $this
 	# close button
-	button $w.close -text "Close" -command "wm withdraw $w"
-	pack $w.close -side bottom -expand yes -fill x
+#	button $w.close -text "Close" -command "wm withdraw $w"
+#	pack $w.close -side bottom -expand yes -fill x
     }
 }	
 	

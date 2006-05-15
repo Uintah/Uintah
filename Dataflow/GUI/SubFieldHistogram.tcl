@@ -73,11 +73,12 @@ itcl_class Uintah_Visualization_SubFieldHistogram {
         bind $w.f3.e2 <Return> $n
 
 
-	button $w.exec -text "Execute" -command $n
-	pack $w.exec -side top -fill x
+#	button $w.exec -text "Execute" -command $n
+#	pack $w.exec -side top -fill x
 
-	button $w.close -text "Close" -command "wm withdraw $w"
-	pack $w.close -side top -fill x
+	makeSciButtonPanel $w $w $this
+#	button $w.close -text "Close" -command "wm withdraw $w"
+#	pack $w.close -side top -fill x
 
        if { [set $this-is_fixed_] } {
             $w.f2.b select
