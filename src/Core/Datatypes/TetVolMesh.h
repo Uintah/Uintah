@@ -2404,7 +2404,7 @@ TetVolMesh<Basis>::insert_node_in_edge(typename Cell::array_type &tets,
                                        typename Cell::index_type ci,
                                        typename Edge::index_type ei)
 {
-  // these 2 are not in the edge
+  // These 2 are not in the edge.
   typename Node::index_type nie[2];
   PEdge e = edges_[ei];
   int off = ci * 4;
@@ -2418,12 +2418,47 @@ TetVolMesh<Basis>::insert_node_in_edge(typename Cell::array_type &tets,
 
   delete_cell_syncinfo(ci);
 
+  const Point &o0 = point(cells_[ci*4+0]);
+  const Point &o1 = point(cells_[ci*4+1]);
+  const Point &o2 = point(cells_[ci*4+2]);
+  const Point &o3 = point(cells_[ci*4+3]);
+
+  const double vol = Dot(Cross(o1-o0,o2-o0),o3-o0);
+
+  const Point &p0 = point(nie[0]);
+  const Point &p1a = point(e.nodes_[0]);
+  const Point &p1b = point(e.nodes_[1]);
+  const Point &p2 = point(nie[1]);
+  const Point &p3 = point(pi);
+
+  const double vola = Dot(Cross(p1a-p0,p2-p0),p3-p0);
+  const double volb = Dot(Cross(p1b-p0,p2-p0),p3-p0);
+
+
   tets.push_back(ci);
-  tets.push_back(add_tet(nie[0], e.nodes_[0], nie[1], pi));
-  cells_[off]   = nie[0];
-  cells_[off+1] = e.nodes_[1];
-  cells_[off+2] = nie[1];
-  cells_[off+3] = pi;
+
+  if (vola * vol < 0.0)
+  {
+    tets.push_back(add_tet(e.nodes_[0], nie[0], nie[1], pi));
+  }
+  else
+  {
+    tets.push_back(add_tet(nie[0], e.nodes_[0], nie[1], pi));
+  }
+  if (volb * vol < 0.0)
+  {
+    cells_[off]   = e.nodes_[1];
+    cells_[off+1] = nie[0];
+    cells_[off+2] = nie[1];
+    cells_[off+3] = pi;
+  }
+  else
+  {
+    cells_[off]   = nie[0];
+    cells_[off+1] = e.nodes_[1];
+    cells_[off+2] = nie[1];
+    cells_[off+3] = pi;
+  }
   
   create_cell_syncinfo(ci);
 }
@@ -2456,16 +2491,17 @@ TetVolMesh<Basis>::insert_node_in_elem(typename Elem::array_type &tets,
   const Point &p3 = points_[cells_[ci*4 + 3]];
 
   // Compute all the new tet areas.
+  const double aerr = fabs(Dot(Cross(p1 - p0, p2 - p0), p3 - p0)) * 0.01;
   const double a0 = fabs(Dot(Cross(p1 - p, p2 - p), p3 - p));
   const double a1 = fabs(Dot(Cross(p - p0, p2 - p0), p3 - p0));
   const double a2 = fabs(Dot(Cross(p1 - p0, p - p0), p3 - p0));
   const double a3 = fabs(Dot(Cross(p1 - p0, p2 - p0), p - p0));
 
   unsigned int mask = 0;
-  if (a0 >= MIN_ELEMENT_VAL) { mask |= 1; }
-  if (a1 >= MIN_ELEMENT_VAL) { mask |= 2; }
-  if (a2 >= MIN_ELEMENT_VAL) { mask |= 4; }
-  if (a3 >= MIN_ELEMENT_VAL) { mask |= 8; }
+  if (a0 >= aerr && a0 >= MIN_ELEMENT_VAL) { mask |= 1; }
+  if (a1 >= aerr && a1 >= MIN_ELEMENT_VAL) { mask |= 2; }
+  if (a2 >= aerr && a2 >= MIN_ELEMENT_VAL) { mask |= 4; }
+  if (a3 >= aerr && a3 >= MIN_ELEMENT_VAL) { mask |= 8; }
 
   // If we're completely inside then we do a normal 4 tet insert.
   // Test this first because it's most common.
