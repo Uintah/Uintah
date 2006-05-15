@@ -28,8 +28,8 @@
 
 
 
-#ifndef ComponentSkeletonWriter_h
-#define ComponentSkeletonWriter_h
+#ifndef CCA_Components_GUIBuilder_ComponentSkeletonWriter_h
+#define CCA_Components_GUIBuilder_ComponentSkeletonWriter_h
 
 #include <vector>
 #include <string>
@@ -39,32 +39,32 @@ namespace GUIBuilder {
 
 class PortDescriptor {
 public:
-  PortDescriptor(const std::string& name, const std::string& type, const std::string& desc) : name(name), type(type) , desc(desc) {}
-  const std::string& GetName() const { return name; }
+  PortDescriptor(const std::string& cName, const std::string& type, const std::string& uName)
+    : cName(cName), type(type) , uName(uName) {}
+  const std::string& GetClassName() const { return cName; }
   const std::string& GetType() const { return type; }
-  const std::string& GetDesc() const { return desc; }
+  const std::string& GetUniqueName() const { return uName; }
 
 private:
-  std::string name;
-  std::string type;
-  std::string desc;
+  std::string cName; // name of the concrete port class to be provided or used by the component
+                     // (inherits from SIDL port type)
+  std::string type; // SIDL port type
+  std::string uName; // port name (must be unique in component class)
 };
 
 class ComponentSkeletonWriter {
 public:
-  ComponentSkeletonWriter(const std::string &cname, const std::vector<PortDescriptor*> pp,const std::vector<PortDescriptor*> up);
+  ComponentSkeletonWriter(const std::string &cname, const std::vector<PortDescriptor*> pp, const std::vector<PortDescriptor*> up);
 
   void ComponentClassDefinitionCode();
   void ComponentSourceFileCode();
-  void ComponentMakeFileCode();
+  void ComponentMakefileCode();
   //void PortClassDefinitionCode();
   void GenerateCode();
 
 private:
-
-  
-  void writeHeaderLicense();
-  void writeSourceLicense();
+  void writeLicense(std::ofstream& fileStream);
+  void writeMakefileLicense(std::ofstream& fileStream);
 
   // generate header file
   void writeHeaderInit();
@@ -78,13 +78,17 @@ private:
   void writeSourceFileHeaderCode();
   void writeConstructorandDestructorCode();
   void writeSetServicesCode();
-  void writeGoAndUiFunctionsCode();
+  void writeGoAndUIFunctionsCode();
 
 
   // frequently used string tokens
   const static std::string SP;
   const static std::string QT;
   const static std::string DIR_SEP;
+  const static std::string OPEN_C_COMMENT;
+  const static std::string CLOSE_C_COMMENT;
+  const static std::string UNIX_SHELL_COMMENT;
+  const static std::string NEWLINE;
 
   const static std::string DEFAULT_NAMESPACE;
   const static std::string DEFAULT_SIDL_NAMESPACE;
@@ -94,17 +98,17 @@ private:
   const std::string TYPEMAP_POINTER;
   const std::string LICENCE;
 
-  //Name of the component
+  // Component name
   std::string compName;
 
-  //List of Ports added
+  // List of Ports added
   std::vector<PortDescriptor*> providesPortsList;
   std::vector<PortDescriptor*> usesPortsList;
-  
-  //File Handles
+
+  // File Handles
   std::ofstream componentSourceFile;
   std::ofstream componentHeaderFile;
-  std::ofstream componentMakeFile;
+  std::ofstream componentMakefile;
 };
 
 }
