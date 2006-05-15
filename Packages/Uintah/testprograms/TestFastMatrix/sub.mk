@@ -8,7 +8,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Math
 PROGRAM := $(SRCDIR)/testfastmatrix
 
-LIBS := $(M_LIBRARY) $(MPI_LIBRARY)
+LIBS := $(M_LIBRARY) $(MPI_LIBRARY)  $(F_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -18,6 +18,6 @@ PSELIBS := \
 	Packages/Uintah/Core/Math Core/Thread
 PROGRAM := $(SRCDIR)/perffastmatrix
 
-LIBS := $(M_LIBRARY) $(MPI_LIBRARY)
+LIBS := $(M_LIBRARY) $(MPI_LIBRARY) $(F_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/program.mk

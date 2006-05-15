@@ -1,5 +1,5 @@
 /*
- *  puda.cc: Print out a uintah data archive
+ *  lineextract.cc: Print out a uintah data archive
  *
  *  Written by:
  *   Jim Guilkey
@@ -14,23 +14,23 @@
  *  Copyright (C) 2004 U of U
  */
 
+#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
+#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/Core/Math/Matrix3.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
-#include <Packages/Uintah/Core/Math/Matrix3.h>
-#include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Geometry/Point.h>
-#include <Packages/Uintah/Core/Grid/Box.h>
-#include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
-#include <Core/Geometry/Vector.h>
-#include <Core/OS/Dir.h>
-
 #include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
+
+#include <Core/Math/MinMax.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
+#include <Core/OS/Dir.h>
 
 #include <iostream>
 #include <fstream>
@@ -50,7 +50,8 @@ bool verbose = false;
 bool quiet = false;
 bool d_printCell_coords = false;
   
-void usage(const std::string& badarg, const std::string& progname)
+void
+usage(const std::string& badarg, const std::string& progname)
 {
     if(badarg != "")
         cerr << "Error parsing argument: " << badarg << endl;
