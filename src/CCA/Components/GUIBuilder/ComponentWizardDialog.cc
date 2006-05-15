@@ -57,9 +57,9 @@ ComponentWizardDialog::ComponentWizardDialog(wxWindow *parent, wxWindowID id, co
 
   topSizer->AddSpacer(10);
   wxBoxSizer *componentSizer = new wxBoxSizer( wxHORIZONTAL );
-  int centerFlags = wxALIGN_CENTER|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
-  int leftFlags = wxALIGN_LEFT|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
-  int rightFlags = wxALIGN_RIGHT|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
+  const int centerFlags = wxALIGN_CENTER|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
+  const int leftFlags = wxALIGN_LEFT|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
+  const int rightFlags = wxALIGN_RIGHT|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
 
   componentSizer->Add(new wxStaticText(this, wxID_ANY, wxT("Component Name")), 0, centerFlags, 2);
   componentName = new wxTextCtrl( this, wxID_ANY, wxT(""), wxDefaultPosition, wxSize(150, wxDefaultSize.GetHeight()));
@@ -75,8 +75,8 @@ ComponentWizardDialog::ComponentWizardDialog(wxWindow *parent, wxWindowID id, co
   topSizer->AddSpacer(10);
 
   wxBoxSizer *okCancelSizer = new wxBoxSizer( wxHORIZONTAL );
-  okCancelSizer->Add( new wxButton( this, wxID_OK, wxT("Generate") ), 1, leftFlags, 4 );
-  okCancelSizer->Add( new wxButton( this, wxID_CANCEL, wxT("Cancel") ), 1, rightFlags, 4 );
+  okCancelSizer->Add( new wxButton( this, wxID_OK, wxT("&Generate") ), 1, leftFlags, 4 );
+  okCancelSizer->Add( new wxButton( this, wxID_CANCEL, wxT("&Cancel") ), 1, rightFlags, 4 );
   topSizer->Add( okCancelSizer, 1, wxALIGN_CENTER, 0 );
   topSizer->AddSpacer(10);
 
@@ -99,7 +99,6 @@ ComponentWizardDialog::~ComponentWizardDialog()
 
 void ComponentWizardDialog::OnOk(wxCommandEvent& event)
 {
- 
      if ((componentName->GetValue()).empty()) {
 #if DEBUG
        std::cout<<"\nComponent Name is Empty\n";
@@ -165,7 +164,7 @@ void ComponentWizardDialog::OnAddProvidesPort(wxCommandEvent& event)
       PortDescriptor p(addpport.GetPortNameText(), addpport.GetDataTypeText(),addpport.GetDescriptionText());
 
 #if DEBUG
-      std::cout << p.GetName() << "\t" << p.GetType() << "\t" << p.GetDesc() << std::endl;
+      std::cout << p.GetClassName() << "\t" << p.GetType() << "\t" << p.GetUniqueName() << std::endl;
 #endif
       pp.push_back(new PortDescriptor(addpport.GetPortNameText(), addpport.GetDataTypeText(),addpport.GetDescriptionText()));
     }
@@ -205,7 +204,7 @@ void ComponentWizardDialog::OnAddUsesPort(wxCommandEvent& event)
     } else {
       PortDescriptor p(addpport.GetPortNameText(), addpport.GetDataTypeText(),addpport.GetDescriptionText());
 #if DEBUG
-      std::cout << p.GetName() << "\t" << p.GetType() << "\t" << p.GetDesc() << std::endl;
+      std::cout << p.GetClassName() << "\t" << p.GetType() << "\t" << p.GetUniqueName() << std::endl;
 #endif
       up.push_back(new PortDescriptor(addpport.GetPortNameText(), addpport.GetDataTypeText(), addpport.GetDescriptionText()));
 
@@ -223,8 +222,8 @@ AddPortDialog::AddPortDialog(wxWindow *parent,wxWindowID id, const wxString &tit
 {
   wxBoxSizer *topSizer = new wxBoxSizer( wxVERTICAL );
   topSizer->AddSpacer(10);
-  int leftFlags = wxALIGN_LEFT|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
-  int rightFlags = wxALIGN_RIGHT|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
+  const int leftFlags = wxALIGN_LEFT|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
+  const int rightFlags = wxALIGN_RIGHT|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
 
   wxBoxSizer *nameSizer = new wxBoxSizer( wxHORIZONTAL );
   lname = new wxStaticText(this, wxID_ANY, wxT("Port Class"));
@@ -238,7 +237,7 @@ AddPortDialog::AddPortDialog(wxWindow *parent,wxWindowID id, const wxString &tit
   wxBoxSizer *datatypeSizer = new wxBoxSizer( wxHORIZONTAL );
   ldtype = new wxStaticText(this, wxID_ANY, "Datatype");
   datatypeSizer->Add(ldtype, 1, leftFlags, 2);
-  dtype= new wxTextCtrl(this, wxID_ANY, wxT(""), wxDefaultPosition, wxSize(150, wxDefaultSize.GetHeight()));
+  dtype = new wxTextCtrl(this, wxID_ANY, wxT(""), wxDefaultPosition, wxSize(150, wxDefaultSize.GetHeight()));
   dtype->SetToolTip(wxT("A SIDL type that derives from cca.Port.\nExample: StringPort,GoPort..etc"));
   datatypeSizer->Add(dtype, 1, rightFlags, 2);
   topSizer->Add( datatypeSizer, 1, wxALIGN_CENTER, 2 );
@@ -253,8 +252,8 @@ AddPortDialog::AddPortDialog(wxWindow *parent,wxWindowID id, const wxString &tit
   topSizer->Add( descSizer, 1, wxALIGN_CENTER, 2 );
   topSizer->AddSpacer(30);
 
-  wxButton *okbutton = new wxButton(this, wxID_OK, wxT("OK"));
-  wxButton *cancelbutton = new wxButton(this, wxID_CANCEL, wxT("Cancel"));
+  wxButton *okbutton = new wxButton(this, wxID_OK, wxT("&OK"));
+  wxButton *cancelbutton = new wxButton(this, wxID_CANCEL, wxT("&Cancel"));
 
   wxBoxSizer *okCancelSizer = new wxBoxSizer( wxHORIZONTAL );
   okCancelSizer->Add(okbutton, 1, leftFlags, 2);
