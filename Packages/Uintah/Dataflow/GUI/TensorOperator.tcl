@@ -54,34 +54,36 @@ itcl_class Uintah_Operators_TensorOperator {
 	}
  	toplevel $w
 
-	button $w.b -text Close -command "destroy $w"
-	pack $w.b -side bottom -expand yes -fill x -padx 2 -pady 2
+#	button $w.b -text Close -command "destroy $w"
+#	pack $w.b -side bottom -expand yes -fill x -padx 2 -pady 2
 
-	frame $w.calc -relief raised -bd 1
-	label $w.calc.l -text "Select Operation"
-	radiobutton $w.calc.elem -text "Extract Element" \
+	frame $w.top
+	frame $w.top.calc -relief raised -bd 1
+	label $w.top.calc.l -text "Select Operation"
+	radiobutton $w.top.calc.elem -text "Extract Element" \
 		-variable $this-operation -value 0 \
 		-command "$this select_element_extractor"
 	#radiobutton $w.calc.eigen -text "Eigen-value/vector" \
 	#	-variable $this-operation -value 1 \
 	#	-command "$this select_eigen_evaluator"
-	radiobutton $w.calc.eigen2D -text "2D Eigenvalues" \
+	radiobutton $w.top.calc.eigen2D -text "2D Eigenvalues" \
 		-variable $this-operation -value 1 \
 		-command "$this select_eigen2D"
-	radiobutton $w.calc.pressure -text "Pressure" \
+	radiobutton $w.top.calc.pressure -text "Pressure" \
 		-variable $this-operation -value 2 \
 		-command "$this select_pressure"
-	radiobutton $w.calc.eqivstress -text "Equivalent Stress" \
+	radiobutton $w.top.calc.eqivstress -text "Equivalent Stress" \
 		-variable $this-operation -value 3 \
 		-command "$this select_equivalent_stress"
-	radiobutton $w.calc.octshearstress -text "Octahedral Shear Stress" \
+	radiobutton $w.top.calc.octshearstress -text "Octahedral Shear Stress" \
 		-variable $this-operation -value 4 \
 		-command "$this select_oct_shear_stress"
-	radiobutton $w.calc.nst -text "n . sigma. t" \
+	radiobutton $w.top.calc.nst -text "n . sigma. t" \
 		-variable $this-operation -value 5 \
 		-command "$this select_nst"
-	pack $w.calc.l $w.calc.elem $w.calc.eigen2D $w.calc.pressure $w.calc.eqivstress $w.calc.octshearstress $w.calc.nst -anchor w
-	pack $w.calc -side left -padx 2 -pady 2 -fill y
+	pack $w.top.calc.l $w.top.calc.elem $w.top.calc.eigen2D $w.top.calc.pressure $w.top.calc.eqivstress $w.top.calc.octshearstress $w.top.calc.nst -anchor w
+	pack $w.top.calc -side left -padx 2 -pady 2 -fill y
+	
 
 	if { [set $this-operation] == 0} {
 	    select_element_extractor
@@ -96,14 +98,19 @@ itcl_class Uintah_Operators_TensorOperator {
 	} elseif { [set $this-operation] == 5} {
 	    select_nst
 	}
+	
     }
 
     method select_element_extractor {} {
 	set w .ui[modname]
-	destroy $w.opts
-	frame $w.opts -relief sunken -bd 1
-	element_extractor_ui $w.opts
-	pack $w.opts -padx 2 -pady 2 -fill y -expand yes
+	destroy $w.top.opts
+	frame $w.top.opts -relief sunken -bd 1
+	element_extractor_ui $w.top.opts
+	pack $w.top.opts -padx 2 -pady 2 -fill y -expand yes
+	
+	pack $w.top -side top
+	
+	makeSciButtonPanel $w $w $this
 	$this-c needexecute
     }
     #method select_eigen_evaluator {} {

@@ -28,8 +28,8 @@ itcl_class Uintah_Operators_ScalarFieldAverage {
 	}
  	toplevel $w
 
-	button $w.b -text Close -command "destroy $w"
-	pack $w.b -side bottom -expand yes -fill x -padx 2 -pady 2
+#	button $w.b -text Close -command "destroy $w"
+#	pack $w.b -side bottom -expand yes -fill x -padx 2 -pady 2
 
 	frame $w.t -relief raised -bd 2
 	label $w.t.0 -text "Begin Time: "
@@ -44,5 +44,7 @@ itcl_class Uintah_Operators_ScalarFieldAverage {
 	pack $w.t.0  $w.t.e0 $w.t.1 $w.t.e1 $w.t.2 $w.t.e2 -side left
 
 	pack $w.t -side top -expand yes -fill x
+	
+	makeSciButtonPanel $w $w $this
     }
 }
