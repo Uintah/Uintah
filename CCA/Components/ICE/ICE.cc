@@ -4162,7 +4162,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
          }
          if(massGain > 0.0){
           cout << "Mass gained by the models this timestep = " 
-               << massGain << endl;
+               << massGain << "\t L-" <<level->getIndex()<<endl;
          }
        }  //  if (models.size() > 0)
 
