@@ -48,7 +48,6 @@
     <MaterialProperties>
 	<MPM>
             <material name = "Soft Plastic" >
-                <burn type = "null" />
                 <density>1000.0</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>6.e6</bulk_modulus>
@@ -71,7 +70,6 @@
 	    </material>
 
             <material name = "Hard Plastic" >
-                <burn type = "null" />
                 <density>10000.0</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>60.e6</bulk_modulus>

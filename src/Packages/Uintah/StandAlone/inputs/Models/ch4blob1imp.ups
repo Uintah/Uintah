@@ -236,7 +236,6 @@
     <MaterialProperties>
        <ICE>
          <material name = "BackgroundGas">
-            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
            <isSurroundingMatl>      true                </isSurroundingMatl>
            

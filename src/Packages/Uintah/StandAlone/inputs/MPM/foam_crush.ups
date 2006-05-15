@@ -48,7 +48,6 @@
     <MaterialProperties>
 	<MPM>
             <material name = "Piston">
-                <burn type = "null"/>
                 <density>1.9e8</density>
                 <constitutive_model type = "comp_neo_hook">
                     <bulk_modulus>10.2e6</bulk_modulus>
@@ -68,7 +67,6 @@
 	    </material>
 
 	    <material name = "HMX">
-                <burn type = "null"/>
                 <density>1.9e6</density>
                 <constitutive_model type = "comp_neo_hook">
                     <bulk_modulus>10.2e4</bulk_modulus>

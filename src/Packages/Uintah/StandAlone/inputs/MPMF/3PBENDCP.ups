@@ -51,7 +51,6 @@
     <MaterialProperties>
 	<MPM>
             <material>
-                <burn type = "null" />
                 <density>63.125e6</density>
                 <constitutive_model type="hypo_elastic">
                    <G>1.1308e12</G>
@@ -71,7 +70,6 @@
             </material>
 
 	    <material>
-                <burn type = "null" />
 		<density>1190</density>
 		<constitutive_model type="hypo_elastic"> 
 		   <G>1.1308e9 </G>

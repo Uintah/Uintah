@@ -46,7 +46,6 @@
     <MaterialProperties>
 	<MPM>
 	    <material>
-                <burn type = "null" />
 		<density>1.e9</density>
 		<constitutive_model type="hypo_elastic"> 
 		   <G>12.e6</G>
@@ -66,7 +65,6 @@
 	    </material>
 
 	    <material>
-                <burn type = "null" />
                 <include href="MaterialData/MaterialConstPBX9501Binder.xml"/>
                 <constitutive_model type="visco_scram_binder">
                     <include href="MaterialData/ViscoPBX9501Binder.xml"/>

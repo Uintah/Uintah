@@ -51,7 +51,6 @@
     <MaterialProperties>
 	<MPM>
             <material name = "piston">
-                <burn type = "null"/>
                 <density>1.9</density>
                 <constitutive_model type = "comp_neo_hook">
                    <shear_modulus>7.2e11</shear_modulus>
@@ -72,7 +71,6 @@
             </material>
 
             <material name = "disk">
-                <burn type = "null"/>
                 <density>1.9</density>
                 <constitutive_model type = "comp_neo_hook">
                    <shear_modulus>7.2e11</shear_modulus>

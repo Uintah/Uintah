@@ -133,7 +133,6 @@
     <MaterialProperties>
        <ICE>
          <material>
-           <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
@@ -155,7 +154,6 @@
       </ICE>       
        <MPM>
          <material>
-              <burn type = "null" />
               <density>   1.1768292682926831   </density>
               <constitutive_model type="ideal_gas">
                   <gamma>          1.4          </gamma>
@@ -175,7 +173,6 @@
               </geom_object>
          </material>
          <material>
-              <burn type = "null" />
               <density>   1.05914634146         </density>
               <constitutive_model type="ideal_gas">
                   <gamma>          1.4          </gamma>

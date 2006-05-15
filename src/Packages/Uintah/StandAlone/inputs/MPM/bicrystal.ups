@@ -38,7 +38,6 @@
     <MaterialProperties>
 	<MPM>
             <material name = "top crystal">
-                <burn type = "null"/>
                 <density>1.9e6</density>
 		<constitutive_model type = "hypo_elastic"> 
 		   <G>7.2e5</G>
@@ -61,7 +60,6 @@
 	    </material>
 
             <material name = "bottom crystal">
-                <burn type = "null"/>
                 <density>1.9e6</density>
 		<constitutive_model type = "hypo_elastic"> 
 		   <G>7.2e5</G>

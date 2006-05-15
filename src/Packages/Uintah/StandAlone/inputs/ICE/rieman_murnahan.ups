@@ -180,7 +180,6 @@
     <MaterialProperties>
        <ICE>
          <material>
-           <burn type = "null" />
            <EOS type = "Murnahan">
              <n>7.4</n>
              <K>39.0e-11</K>

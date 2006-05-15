@@ -180,7 +180,6 @@
     <MaterialProperties>
        <ICE>
          <material>
-           <burn type = "null" />
            <EOS type = "Gruneisen">
              <A>1.3338e9</A>
              <B>7.027e5</B>

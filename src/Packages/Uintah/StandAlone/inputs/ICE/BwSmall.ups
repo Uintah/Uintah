@@ -175,7 +175,6 @@
     <MaterialProperties>
        <ICE>
          <material>
-            <burn type = "null" />
            <EOS type = "ideal_gas">                     </EOS>
            
            
