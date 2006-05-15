@@ -36,6 +36,7 @@
 #include <Core/Containers/LockingHandle.h>
 
 #include <Core/Datatypes/share.h>
+#include <set>
 
 namespace SCIRun {
 
@@ -137,6 +138,39 @@ bool elem_locate(typename Msh::Elem::index_type &elem,
   }
   return false;
 }
+
+template <class Msh>
+void get_faces( Msh *mesh, typename Msh::Face::array_type &faces, typename Msh::Edge::index_type edge)
+{
+  typename Msh::Elem::array_type elems;
+  mesh->get_elems(elems, edge);
+
+  set<typename Msh::Face::index_type> unique;
+
+  for (unsigned int i = 0; i < elems.size(); i++)
+  {
+    typename Msh::Face::array_type efaces;
+    mesh->get_faces(efaces, elems[i]);
+   
+    for (unsigned int j = 0; j < efaces.size(); j++)
+    {
+      typename Msh::Edge::array_type fedges;
+      mesh->get_edges(fedges, efaces[j]);
+
+      for (unsigned int k = 0; k < fedges.size(); k++)
+      {
+        if (fedges[k] == edge)
+        {
+          unique.insert(efaces[j]);
+        }
+      }
+    }
+  }
+
+  faces.resize(unique.size());
+  copy(unique.begin(), unique.end(), faces.begin());
+}
+
 
 } // end namespace SCIRun
 
