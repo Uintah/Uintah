@@ -49,8 +49,10 @@ extern "C" void * ModelCreationInit(void *param)
 namespace SCIRun {
   extern MatrixHandle SimpleTextFileMatrix_reader(ProgressReporter *pr, const char *filename);
   extern bool SimpleTextFileMatrix_writer(ProgressReporter *pr, MatrixHandle matrix, const char *filename);
+  extern MatrixHandle NrrdToMatrix_reader(ProgressReporter *pr, const char *filename);
 
   static MatrixIEPlugin SimpleTextFileMatrix_plugin("TextFile","", "",SimpleTextFileMatrix_reader,SimpleTextFileMatrix_writer);
+  static MatrixIEPlugin NrrdToMatrix_plugin("NrrdFile","{.nhdr} {.nrrd}", "",NrrdToMatrix_reader,0);
 
 }
 
