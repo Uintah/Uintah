@@ -74,10 +74,12 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR)
   d_doRefluxing         = false;
   d_add_heat            = false;
   d_impICE              = false;
-  d_useCompatibleFluxes = false;
-  d_delT_knob         = 1.0;
-  d_delT_scheme       = "aggressive";
-  d_surroundingMatl_indx = -9;
+  d_useCompatibleFluxes = true;
+  
+  d_max_iter_equilibration  = 100;
+  d_delT_knob               = 1.0;
+  d_delT_scheme             = "aggressive";
+  d_surroundingMatl_indx    = -9;
   d_dbgVar1   = 0;     //inputs for debugging                               
   d_dbgVar2   = 0;
   d_EVIL_NUM  = -9.99e30;                                                    
@@ -216,26 +218,14 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   cfd_ps->get("CanAddICEMaterial",d_canAddICEMaterial);
   ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE"); 
   
-  cfd_ice_ps->require("max_iteration_equilibration",d_max_iter_equilibration);
+  cfd_ice_ps->get("max_iteration_equilibration",d_max_iter_equilibration);
 
   // Min/Max for AMR and semi-AMR problems
   cfd_ice_ps->getWithDefault("min_grid_level", d_minGridLevel, 0);
   cfd_ice_ps->getWithDefault("max_grid_level", d_maxGridLevel, 1000);
   
   d_advector = AdvectionFactory::create(cfd_ice_ps, d_useCompatibleFluxes);
-  cout_norm << " d_use_compatibleFluxes:  " << d_useCompatibleFluxes<<endl;
-  
-  // Grab the solution technique
-  ProblemSpecP child = cfd_ice_ps->findBlock("solution");
-  if(!child){
-    throw ProblemSetupException("Cannot find Solution Technique tag for ICE", __FILE__, __LINE__);
-  }
-  string solution_technique;
-  if(!child->getAttribute("technique",solution_technique)){
-    throw ProblemSetupException("Nothing specified for solution technique", __FILE__, __LINE__);
-  }
-
-    
+  cout_norm << " d_use_compatibleFluxes:  " << d_useCompatibleFluxes<<endl;   
   cout_norm << "cfl = " << d_CFL << endl;
   cout_norm << "max_iteration_equilibration "<<d_max_iter_equilibration<<endl;
   cout_norm << "Pulled out CFD-ICE block of the input file" << endl;

@@ -120,9 +120,7 @@
        <cfl>0.5</cfl>
        <CanAddICEMaterial>true</CanAddICEMaterial>
        <ICE>
-        <max_iteration_equilibration> 1000 </max_iteration_equilibration>
         <advection type = "SecondOrder"/>
-        <solution technique = "EqForm"/>
       </ICE>        
     </CFD>
 

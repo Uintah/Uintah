@@ -122,9 +122,7 @@
     <CFD>
          <cfl>0.5</cfl>
        <ICE>
-        <max_iteration_equilibration> 250 </max_iteration_equilibration>
         <advection type = "FirstOrder" />
-        <solution technique = "EqForm" />
         <TimeStepControl>
           <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
           <knob_for_speedSound>  1.0            </knob_for_speedSound>
