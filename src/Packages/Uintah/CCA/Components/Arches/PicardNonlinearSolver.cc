@@ -198,11 +198,6 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   tsk->hasSubScheduler();
   
   tsk->requires(Task::OldDW, d_lab->d_sharedState->get_delt_label());
-  tsk->requires(Task::OldDW, d_lab->d_maxAbsU_label);
-  tsk->requires(Task::OldDW, d_lab->d_maxAbsV_label);
-  tsk->requires(Task::OldDW, d_lab->d_maxAbsW_label);
-  tsk->requires(Task::OldDW, d_lab->d_maxUxplus_label);
-  tsk->requires(Task::OldDW, d_lab->d_avUxplus_label);
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
     tsk->requires(Task::OldDW, d_lab->d_scalarFluxCompLabel,
 		  d_lab->d_vectorMatl, Task::OutOfDomain,
@@ -391,11 +386,6 @@ int PicardNonlinearSolver::nonlinearSolve(const LevelP& level,
   tsk->computes(d_lab->d_newCCUVelocityLabel);
   tsk->computes(d_lab->d_newCCVVelocityLabel);
   tsk->computes(d_lab->d_newCCWVelocityLabel);
-  tsk->computes(d_lab->d_maxAbsU_label);
-  tsk->computes(d_lab->d_maxAbsV_label);
-  tsk->computes(d_lab->d_maxAbsW_label);
-  tsk->computes(d_lab->d_maxUxplus_label);
-  tsk->computes(d_lab->d_avUxplus_label);
   tsk->computes(d_lab->d_oldDeltaTLabel);
   tsk->computes(d_lab->d_densityOldOldLabel);
   if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
@@ -594,24 +584,7 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     double norm;
     double init_norm;
     subsched->advanceDataWarehouse(grid);
-    max_vartype mxAbsU;
-    max_vartype mxAbsV;
-    max_vartype mxAbsW;
-    max_vartype mxUxplus;
-    old_dw->get(mxAbsU, d_lab->d_maxAbsU_label);
-    old_dw->get(mxAbsV, d_lab->d_maxAbsV_label);
-    old_dw->get(mxAbsW, d_lab->d_maxAbsW_label);
-    old_dw->get(mxUxplus, d_lab->d_maxUxplus_label);
-    subsched->get_dw(3)->put(mxAbsU, d_lab->d_maxAbsU_label);
-    subsched->get_dw(3)->put(mxAbsV, d_lab->d_maxAbsV_label);
-    subsched->get_dw(3)->put(mxAbsW, d_lab->d_maxAbsW_label);
-    subsched->get_dw(3)->put(mxUxplus, d_lab->d_maxUxplus_label);
     int num_procs = d_myworld->size();
-    sum_vartype avUxplus;
-    old_dw->get(avUxplus, d_lab->d_avUxplus_label);
-    double avuxp = avUxplus;
-    avuxp /= num_procs;
-    subsched->get_dw(3)->put(sum_vartype(avuxp), d_lab->d_avUxplus_label);
     if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
     subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_scalarFluxCompLabel, patches, matls); 
     subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_stressTensorCompLabel, patches, matls); 
@@ -835,18 +808,6 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     subsched->get_dw(3)->get(old_delta_t, d_lab->d_oldDeltaTLabel);
     new_dw->put(old_delta_t, d_lab->d_oldDeltaTLabel);
     new_dw->transferFrom(subsched->get_dw(3), d_lab->d_densityOldOldLabel, patches, matls); 
-    subsched->get_dw(3)->get(mxAbsU, d_lab->d_maxAbsU_label);
-    subsched->get_dw(3)->get(mxAbsV, d_lab->d_maxAbsV_label);
-    subsched->get_dw(3)->get(mxAbsW, d_lab->d_maxAbsW_label);
-    subsched->get_dw(3)->get(mxUxplus, d_lab->d_maxUxplus_label);
-    new_dw->put(mxAbsU, d_lab->d_maxAbsU_label);
-    new_dw->put(mxAbsV, d_lab->d_maxAbsV_label);
-    new_dw->put(mxAbsW, d_lab->d_maxAbsW_label);
-    new_dw->put(mxUxplus, d_lab->d_maxUxplus_label);
-    subsched->get_dw(3)->get(avUxplus, d_lab->d_avUxplus_label);
-    avuxp = avUxplus;
-    avuxp /= num_procs;
-    new_dw->put(sum_vartype(avuxp), d_lab->d_avUxplus_label);
     if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel))  {
     new_dw->transferFrom(subsched->get_dw(3), d_lab->d_scalarFluxCompLabel, patches, matls); 
     new_dw->transferFrom(subsched->get_dw(3), d_lab->d_stressTensorCompLabel, patches, matls); 
@@ -1054,19 +1015,11 @@ PicardNonlinearSolver::sched_dummySolve(SchedulerP& sched,
   tsk->computes(d_lab->d_scalarEfficiencyLabel);
   tsk->computes(d_lab->d_carbonEfficiencyLabel);
 
-  tsk->requires(Task::OldDW, d_lab->d_maxAbsU_label);
-  tsk->requires(Task::OldDW, d_lab->d_maxAbsV_label);
-  tsk->requires(Task::OldDW, d_lab->d_maxAbsW_label);
-
   if (nofScalarVars > 0) {
     for (int ii = 0; ii < nofScalarVars; ii++) {
       tsk->computes(d_lab->d_scalarVarSPLabel);
     }
   }
-
-  tsk->computes(d_lab->d_maxAbsU_label);
-  tsk->computes(d_lab->d_maxAbsV_label);
-  tsk->computes(d_lab->d_maxAbsW_label);
 
   sched->addTask(tsk, patches, matls);  
   
@@ -2163,15 +2116,6 @@ PicardNonlinearSolver::dummySolve(const ProcessorGroup* ,
 				  DataWarehouse* old_dw,
 				  DataWarehouse* new_dw)
 {
-  max_vartype mxAbsU;
-  max_vartype mxAbsV;
-  max_vartype mxAbsW;
-  old_dw->get(mxAbsU, d_lab->d_maxAbsU_label);
-  old_dw->get(mxAbsV, d_lab->d_maxAbsV_label);
-  old_dw->get(mxAbsW, d_lab->d_maxAbsW_label);
-  new_dw->put(mxAbsU, d_lab->d_maxAbsU_label);
-  new_dw->put(mxAbsV, d_lab->d_maxAbsV_label);
-  new_dw->put(mxAbsW, d_lab->d_maxAbsW_label);
 
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);

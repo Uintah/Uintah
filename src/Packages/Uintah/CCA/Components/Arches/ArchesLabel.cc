@@ -438,21 +438,6 @@ ArchesLabel::ArchesLabel()
 			       CCVariable<double>::getTypeDescription() );
   // required for odt model label
 //   d_odtDataLabel = VarLabel::create("odtDataLabel",CCVariable<odtData>::getTypeDescription());
-  d_sumUUULabel = VarLabel::create("sumUUU",sum_vartype::getTypeDescription());
-  d_sumDllLabel = VarLabel::create("sumDll",sum_vartype::getTypeDescription());
-  d_sumSijSijLabel = VarLabel::create("sumSijSij",sum_vartype::getTypeDescription());
-  d_sumDllMinusLabel = VarLabel::create("sumDllMinus",sum_vartype::getTypeDescription());
-  d_sumPointsLabel = VarLabel::create("sumPoints",sum_vartype::getTypeDescription());
-  d_sumUUUPredLabel = VarLabel::create("sumUUUPred",sum_vartype::getTypeDescription());
-  d_sumDllPredLabel = VarLabel::create("sumDllPred",sum_vartype::getTypeDescription());
-  d_sumSijSijPredLabel = VarLabel::create("sumSijSijPred",sum_vartype::getTypeDescription());
-  d_sumDllMinusPredLabel = VarLabel::create("sumDllMinusPred",sum_vartype::getTypeDescription());
-  d_sumPointsPredLabel = VarLabel::create("sumPointsPred",sum_vartype::getTypeDescription());
-  d_sumUUUIntermLabel = VarLabel::create("sumUUUInterm",sum_vartype::getTypeDescription());
-  d_sumDllIntermLabel = VarLabel::create("sumDllInterm",sum_vartype::getTypeDescription());
-  d_sumSijSijIntermLabel = VarLabel::create("sumSijSijInterm",sum_vartype::getTypeDescription());
-  d_sumDllMinusIntermLabel = VarLabel::create("sumDllMinusInterm",sum_vartype::getTypeDescription());
-  d_sumPointsIntermLabel = VarLabel::create("sumPointsInterm",sum_vartype::getTypeDescription());
 
   // Runge-Kutta 3d order properties labels
   d_refDensityInterm_label = VarLabel::create("refDensityIntermLabel",
@@ -493,37 +478,6 @@ ArchesLabel::ArchesLabel()
   d_wVelNormLabel = VarLabel::create("wVelNorm",
 				       sum_vartype::getTypeDescription() );
   d_rhoNormLabel = VarLabel::create("rhoNorm",
-				       sum_vartype::getTypeDescription() );
-// labels for max(abs(velocity)) for Lax-Friedrichs flux
-  d_maxAbsU_label = VarLabel::create("maxAbsU",
-				       max_vartype::getTypeDescription() );
-  d_maxAbsV_label = VarLabel::create("maxAbsV",
-				       max_vartype::getTypeDescription() );
-  d_maxAbsW_label = VarLabel::create("maxAbsW",
-				       max_vartype::getTypeDescription() );
-  d_maxAbsUPred_label = VarLabel::create("maxAbsUPred",
-				       max_vartype::getTypeDescription() );
-  d_maxAbsVPred_label = VarLabel::create("maxAbsVPred",
-				       max_vartype::getTypeDescription() );
-  d_maxAbsWPred_label = VarLabel::create("maxAbsWPred",
-				       max_vartype::getTypeDescription() );
-  d_maxAbsUInterm_label = VarLabel::create("maxAbsUInterm",
-				       max_vartype::getTypeDescription() );
-  d_maxAbsVInterm_label = VarLabel::create("maxAbsVInterm",
-				       max_vartype::getTypeDescription() );
-  d_maxAbsWInterm_label = VarLabel::create("maxAbsWInterm",
-				       max_vartype::getTypeDescription() );
-  d_maxUxplus_label = VarLabel::create("maxUxplus",
-				       max_vartype::getTypeDescription() );
-  d_maxUxplusPred_label = VarLabel::create("maxUxplusPred",
-				       max_vartype::getTypeDescription() );
-  d_maxUxplusInterm_label = VarLabel::create("maxUxplusInterm",
-				       max_vartype::getTypeDescription() );
-  d_avUxplus_label = VarLabel::create("avUxplus",
-				       sum_vartype::getTypeDescription() );
-  d_avUxplusPred_label = VarLabel::create("avUxplusPred",
-				       sum_vartype::getTypeDescription() );
-  d_avUxplusInterm_label = VarLabel::create("avUxplusInterm",
 				       sum_vartype::getTypeDescription() );
   d_negativeDensityGuess_label = VarLabel::create("negativeDensityGuess",
 				       sum_vartype::getTypeDescription() );
@@ -664,21 +618,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_alphaalphaLabel);
   VarLabel::destroy(d_CsLabel);
   VarLabel::destroy(d_deltaCsLabel);
-  VarLabel::destroy(d_sumUUULabel);
-  VarLabel::destroy(d_sumDllLabel);
-  VarLabel::destroy(d_sumSijSijLabel);
-  VarLabel::destroy(d_sumDllMinusLabel);
-  VarLabel::destroy(d_sumPointsLabel);
-  VarLabel::destroy(d_sumUUUPredLabel);
-  VarLabel::destroy(d_sumDllPredLabel);
-  VarLabel::destroy(d_sumSijSijPredLabel);
-  VarLabel::destroy(d_sumDllMinusPredLabel);
-  VarLabel::destroy(d_sumPointsPredLabel);
-  VarLabel::destroy(d_sumUUUIntermLabel);
-  VarLabel::destroy(d_sumDllIntermLabel);
-  VarLabel::destroy(d_sumSijSijIntermLabel);
-  VarLabel::destroy(d_sumDllMinusIntermLabel);
-  VarLabel::destroy(d_sumPointsIntermLabel);
   VarLabel::destroy(d_cellInfoLabel);
   VarLabel::destroy(d_cellTypeLabel);
   VarLabel::destroy(d_totalflowINLabel);
@@ -823,22 +762,6 @@ ArchesLabel::~ArchesLabel()
 // label for odt model
   //VarLabel::destroy(d_odtDataLabel);
 
-// labels for max(abs(velocity)) for Lax-Friedrichs flux
-  VarLabel::destroy(d_maxAbsU_label);
-  VarLabel::destroy(d_maxAbsV_label);
-  VarLabel::destroy(d_maxAbsW_label);
-  VarLabel::destroy(d_maxAbsUPred_label);
-  VarLabel::destroy(d_maxAbsVPred_label);
-  VarLabel::destroy(d_maxAbsWPred_label);
-  VarLabel::destroy(d_maxAbsUInterm_label);
-  VarLabel::destroy(d_maxAbsVInterm_label);
-  VarLabel::destroy(d_maxAbsWInterm_label);
-  VarLabel::destroy(d_maxUxplus_label);
-  VarLabel::destroy(d_maxUxplusPred_label);
-  VarLabel::destroy(d_maxUxplusInterm_label);
-  VarLabel::destroy(d_avUxplus_label);
-  VarLabel::destroy(d_avUxplusPred_label);
-  VarLabel::destroy(d_avUxplusInterm_label);
   VarLabel::destroy(d_negativeDensityGuess_label);
   VarLabel::destroy(d_negativeDensityGuessPred_label);
   VarLabel::destroy(d_negativeDensityGuessInterm_label);

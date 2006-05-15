@@ -226,21 +226,6 @@ namespace Uintah {
       const VarLabel* d_alphaalphaLabel;
       const VarLabel* d_CsLabel;
       const VarLabel* d_deltaCsLabel;
-      const VarLabel* d_sumUUULabel;
-      const VarLabel* d_sumDllLabel;
-      const VarLabel* d_sumSijSijLabel;
-      const VarLabel* d_sumDllMinusLabel;
-      const VarLabel* d_sumPointsLabel;
-      const VarLabel* d_sumUUUPredLabel;
-      const VarLabel* d_sumDllPredLabel;
-      const VarLabel* d_sumSijSijPredLabel;
-      const VarLabel* d_sumDllMinusPredLabel;
-      const VarLabel* d_sumPointsPredLabel;
-      const VarLabel* d_sumUUUIntermLabel;
-      const VarLabel* d_sumDllIntermLabel;
-      const VarLabel* d_sumSijSijIntermLabel;
-      const VarLabel* d_sumDllMinusIntermLabel;
-      const VarLabel* d_sumPointsIntermLabel;
       //label for odt model
       const VarLabel* d_odtDataLabel;
 
@@ -379,22 +364,6 @@ namespace Uintah {
       const VarLabel* d_vVelNormLabel;
       const VarLabel* d_wVelNormLabel;
       const VarLabel* d_rhoNormLabel;
-// labels for max(abs(velocity)) for Lax-Friedrichs flux
-      const VarLabel* d_maxAbsU_label;
-      const VarLabel* d_maxAbsV_label;
-      const VarLabel* d_maxAbsW_label;
-      const VarLabel* d_maxAbsUPred_label;
-      const VarLabel* d_maxAbsVPred_label;
-      const VarLabel* d_maxAbsWPred_label;
-      const VarLabel* d_maxAbsUInterm_label;
-      const VarLabel* d_maxAbsVInterm_label;
-      const VarLabel* d_maxAbsWInterm_label;
-      const VarLabel* d_maxUxplus_label;
-      const VarLabel* d_maxUxplusPred_label;
-      const VarLabel* d_maxUxplusInterm_label;
-      const VarLabel* d_avUxplus_label;
-      const VarLabel* d_avUxplusPred_label;
-      const VarLabel* d_avUxplusInterm_label;
       const VarLabel* d_negativeDensityGuess_label;
       const VarLabel* d_negativeDensityGuessPred_label;
       const VarLabel* d_negativeDensityGuessInterm_label;

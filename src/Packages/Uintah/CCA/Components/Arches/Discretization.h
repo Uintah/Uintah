@@ -145,28 +145,6 @@ public:
 				   int Index, ArchesVariables* vars);
       ////////////////////////////////////////////////////////////////////////
       // Documentation here
-      void calculateScalarENOscheme(const ProcessorGroup*,
-				   const Patch* patch,
-				   int Index,
-				   CellInformation* cellinfo,
-				   const double maxAbsU, const double maxAbsV,
-				   const double maxAbsW,
-				   ArchesVariables* vars,
-				   ArchesConstVariables* constvars,
-				   const int wall_celltypeval);
-
-
-      void calculateScalarWENOscheme(const ProcessorGroup*,
-				   const Patch* patch,
-				   int Index,
-				   CellInformation* cellinfo,
-				   const double maxAbsU, const double maxAbsV,
-				   const double maxAbsW,
-				   ArchesVariables* vars,
-				   ArchesConstVariables* constvars,
-				   const int wall_celltypeval);
-
-
       void calculateScalarFluxLimitedConvection(const ProcessorGroup*,
 				   const Patch* patch,
 				   int Index,
