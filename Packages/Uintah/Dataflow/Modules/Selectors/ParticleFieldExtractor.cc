@@ -309,7 +309,7 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
       get_gui()->execute(get_id() + " destroyFrames");
       get_gui()->execute(get_id() + " build");
 //       get_gui()->execute(get_id() + " buildLevels "+ os.str());
-      get_gui()->execute(get_id() + " buildLevels "+ os.str());
+      get_gui()->execute(get_id() + " buildLevel "+ os.str());
       //      get_gui()->execute(get_id() + " setParticleScalars " + psNames.c_str());
       //      get_gui()->execute(get_id() + " setParticleVectors " + pvNames.c_str());
       //      get_gui()->execute(get_id() + " setParticleTensors " + ptNames.c_str());
