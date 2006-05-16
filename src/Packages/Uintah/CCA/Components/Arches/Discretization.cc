@@ -31,7 +31,6 @@ using namespace SCIRun;
 
 #include <Packages/Uintah/CCA/Components/Arches/fortran/apcal_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/apcal_vel_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_vel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_modify_prescoef_fort.h>
 #ifdef divergenceconstraint
 #include <Packages/Uintah/CCA/Components/Arches/fortran/prescoef_var_fort.h>
@@ -177,54 +176,6 @@ Discretization::calculateVelocityCoeff(const ProcessorGroup*,
 		  cellinfo->wfac, cellinfo->enfac, cellinfo->sfac,
 		  idxLoW, idxHiW);
   }
-
-#ifdef MAY_BE_USEFUL_LATER  
-  // int ioff = 1;
-  // int joff = 0;
-  // int koff = 0;
-
-  // 3-d array for volume - fortran uses it for temporary storage
-  // Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
-  // FORT_VELCOEF(domLoU.get_pointer(), domHiU.get_pointer(),
-  //       idxLoU.get_pointer(), idxHiU.get_pointer(),
-  //       uVelocity.getPointer(),
-  //       domLoV.get_pointer(), domHiV.get_pointer(),
-  //       idxLoV.get_pointer(), idxHiV.get_pointer(),
-  //       vVelocity.getPointer(),
-  //       domLoW.get_pointer(), domHiW.get_pointer(),
-  //       idxLoW.get_pointer(), idxHiW.get_pointer(),
-  //       wVelocity.getPointer(),
-  //       domLo.get_pointer(), domHi.get_pointer(),
-  //       idxLo.get_pointer(), idxHi.get_pointer(),
-  //       density.getPointer(),
-  //       viscosity.getPointer(),
-  //       uVelocityConvectCoeff[Arches::AP].getPointer(), 
-  //       uVelocityConvectCoeff[Arches::AE].getPointer(), 
-  //       uVelocityConvectCoeff[Arches::AW].getPointer(), 
-  //       uVelocityConvectCoeff[Arches::AN].getPointer(), 
-  //       uVelocityConvectCoeff[Arches::AS].getPointer(), 
-  //       uVelocityConvectCoeff[Arches::AT].getPointer(), 
-  //       uVelocityConvectCoeff[Arches::AB].getPointer(), 
-  //       uVelocityCoeff[Arches::AP].getPointer(), 
-  //       uVelocityCoeff[Arches::AE].getPointer(), 
-  //       uVelocityCoeff[Arches::AW].getPointer(), 
-  //       uVelocityCoeff[Arches::AN].getPointer(), 
-  //       uVelocityCoeff[Arches::AS].getPointer(), 
-  //       uVelocityCoeff[Arches::AT].getPointer(), 
-  //       uVelocityCoeff[Arches::AB].getPointer(), 
-  //       delta_t,
-  //       ioff, joff, koff, 
-  //       cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
-  //       cellinfo->cnn, cellinfo->csn, cellinfo->css,
-  //       cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
-  //       cellinfo->sewu, cellinfo->sns, cellinfo->stb,
-  //       cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
-  //       cellinfo->dxpw, cellinfo->fac1u, cellinfo->fac2u,
-  //       cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
-  //       cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
-  //       cellinfo->tfac, cellinfo->bfac, volume);
-#endif
-
 }
 
 void 

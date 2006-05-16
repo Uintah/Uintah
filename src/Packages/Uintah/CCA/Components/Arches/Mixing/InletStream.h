@@ -45,8 +45,6 @@ namespace Uintah {
       std::vector<double> d_mixVarVariance;
       double d_enthalpy;
       bool d_initEnthalpy;
-      //Flag to calculate thermalNOx
-      bool d_calcthermalNOx;
       std::vector<double> d_rxnVars;
       int d_axialLoc;
       double d_scalarDisp;
