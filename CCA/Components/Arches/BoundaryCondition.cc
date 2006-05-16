@@ -62,7 +62,6 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/bcpress_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/profv_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/bcenthalpy_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradwallbc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/intrusion_computevel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcenthalpy_energyex_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcvelocity_momex_fort.h>
@@ -1343,38 +1342,6 @@ BoundaryCondition::enthalpyBC(const ProcessorGroup*,
 }
 
 
-void 
-BoundaryCondition::enthalpyRadWallBC(const ProcessorGroup*,
-				     const Patch* patch,
-				     CellInformation*,
-				     ArchesVariables* vars)
-{
-
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
-
-  // Get the wall boundary and flow field codes
-  int wall_celltypeval = wallCellType();
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-  //fortran call
-  fort_enthalpyradwallbc(idxLo, idxHi, vars->qfluxe, vars->qfluxw,
-			 vars->qfluxn, vars->qfluxs, vars->qfluxt,
-			 vars->qfluxb, vars->temperature, vars->cellType,
-			 wall_celltypeval, xminus, xplus, yminus, yplus,
-			 zminus, zplus);
-}
-
-
-
-
-
-
 void
 BoundaryCondition::intrusionTemperatureBC(const ProcessorGroup*,
 					  const Patch* patch,
@@ -2495,9 +2462,6 @@ BoundaryCondition::calculateVelRhoHat_mm(const ProcessorGroup* ,
 			 delta_t, ioff, joff, koff,
 			 constvars->cellType,
 			 d_mmWallID);
-
-    vars->residWVel = 1.0E-7;
-    vars->truncWVel = 1.0;
 
     break;
   default:

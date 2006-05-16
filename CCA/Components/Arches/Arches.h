@@ -256,7 +256,6 @@ private:
       bool d_variableTimeStep;
       bool d_calcScalar;
       bool d_calcReactingScalar;
-      bool d_calcThermalNOx;
       bool d_calcEnthalpy;
       bool d_mixedModel;
       bool d_doMMS;

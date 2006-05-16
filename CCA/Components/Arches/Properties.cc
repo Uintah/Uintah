@@ -43,10 +43,10 @@ using namespace Uintah;
 //****************************************************************************
 Properties::Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
                        PhysicalConstants* phys_const,
-		       bool calcEnthalpy, bool thermalNOx):
+		       bool calcEnthalpy):
                        d_lab(label), d_MAlab(MAlb), 
                        d_physicalConsts(phys_const), 
-                       d_calcEnthalpy(calcEnthalpy), d_thermalNOx(thermalNOx)
+                       d_calcEnthalpy(calcEnthalpy)
 {
   d_DORadiationCalc = false;
   d_bc = 0;
@@ -168,11 +168,6 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
     tsk->requires(Task::NewDW, d_lab->d_reactscalarSPLabel,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
 
-   // Added for Thermal NOx :Needed to compute the phi
-  if(d_thermalNOx)
-    tsk->requires(Task::NewDW, d_lab->d_thermalnoxSPLabel,
-              Ghost::None, Arches::ZEROGHOSTCELLS);
-
   if (d_calcEnthalpy)
     tsk->modifies(d_lab->d_enthalpySPLabel);
 
@@ -215,8 +210,6 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->computes(d_lab->d_enthalpyRXNLabel);
       if (d_mixingModel->getNumRxnVars())
         tsk->computes(d_lab->d_reactscalarSRCINLabel);
-      if (d_thermalNOx)
-        tsk->computes(d_lab->d_thermalnoxSRCINLabel);
     }
 
     if (d_co_output) 
@@ -246,8 +239,6 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->modifies(d_lab->d_enthalpyRXNLabel);
       if (d_mixingModel->getNumRxnVars())
         tsk->modifies(d_lab->d_reactscalarSRCINLabel);
-      if (d_thermalNOx)
-        tsk->modifies(d_lab->d_thermalnoxSRCINLabel);
     }
 
     if (d_co_output) 
@@ -342,9 +333,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     CCVariable<double> c2h2;
     CCVariable<double> ch4;
 
-    CCVariable<double> thermalnoxSRC;
-    constCCVariable<double> thermalnox;
-
 
     if (d_MAlab && initialize) {
 #ifdef ExactMPMArchesInitialize
@@ -385,10 +373,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 			  matlIndex, patch);
     new_density.initialize(0.0);
 
-    if (d_thermalNOx)
-       new_dw->get(thermalnox, d_lab->d_thermalnoxSPLabel,
-                   matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
-
     if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
       new_dw->allocateAndPut(drhodf, d_lab->d_drhodfCPLabel, matlIndex, patch);
 
@@ -403,9 +387,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         if (d_mixingModel->getNumRxnVars())
 	  new_dw->allocateAndPut(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
 			         matlIndex, patch);
-        if (d_thermalNOx)
-          new_dw->allocateAndPut(thermalnoxSRC, d_lab->d_thermalnoxSRCINLabel,
-                                 matlIndex, patch);
       }
 
       if (d_co_output)
@@ -446,9 +427,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         if (d_mixingModel->getNumRxnVars())
 	  new_dw->getModifiable(reactscalarSRC, d_lab->d_reactscalarSRCINLabel,
 			         matlIndex, patch);
-        if (d_thermalNOx)
-          new_dw->getModifiable(thermalnoxSRC, d_lab->d_thermalnoxSRCINLabel,
-                                 matlIndex, patch);
       }
 
       if (d_co_output)
@@ -486,8 +464,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       enthalpyRXN.initialize(0.0);
         if (d_mixingModel->getNumRxnVars())
 	  reactscalarSRC.initialize(0.0);
-        if (d_thermalNOx)
-          thermalnoxSRC.initialize(0.0);
     }    
 
     if (d_co_output)
@@ -565,10 +541,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	      inStream.d_rxnVars[ii] = (reactScalar[ii])[currCell];
 	  }
 
-	  // This will set the flag to compute thermal NOx
-	  if (d_thermalNOx) {
-	      inStream.d_calcthermalNOx = true;
-	  }
 
           if (d_calcEnthalpy)
 	      //	      &&(cellType[currCell] != d_bc->getIntrusionID()))
@@ -614,8 +586,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    enthalpyRXN[currCell] -= enthalpy[currCell];
 	    if (d_mixingModel->getNumRxnVars())
 	      reactscalarSRC[currCell] = outStream.getRxnSource();
-            if (d_thermalNOx)
-              thermalnoxSRC[currCell] = outStream.getnoxRxnSource();
 	  }
 	  
 
@@ -646,17 +616,6 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    absorption[currCell] = 0.01+ Min(0.5,(4.0/d_opl)*log(1.0+350.0*
 				   sootFV[currCell]*temperature[currCell]*d_opl));
 	  }
-	  // check if the density is greater than air...implement a better way
-          /*if (d_DORadiationCalc) {
-	    double cutoff_air_density = 1.1845;
-	    double cutoff_temperature = 298.0;
-	    if ((scalar[0])[currCell] < 0.4) {
-	      if (local_den > cutoff_air_density) {
-	        local_den = cutoff_air_density;
-	        temperature[currCell] = cutoff_temperature;
-	      }
-	    }
-	  }*/
 
 	  if (d_MAlab) {
 	    denMicro[currCell] = local_den;
