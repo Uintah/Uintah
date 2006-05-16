@@ -28,6 +28,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Containers/StaticArray.h>
 #include <Core/Math/MinMax.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -72,18 +73,9 @@ Properties::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("Properties");
   db->getWithDefault("filter_drhodt",d_filter_drhodt,false);
-  db->getWithDefault("first_order_drhodt",d_first_order_drhodt,false);
+  db->getWithDefault("first_order_drhodt",d_first_order_drhodt,true);
   db->getWithDefault("inverse_density_average",d_inverse_density_average,false);
   d_denRef = d_physicalConsts->getRefPoint();
-  db->require("radiation",d_radiationCalc);
-  if (d_radiationCalc) {
-    db->getWithDefault("discrete_ordinates",d_DORadiationCalc,true);
-//    db->getWithDefault("opl",d_opl,3.0); too sensitive to have default
-    db->require("opl",d_opl);
-    db->getWithDefault("empirical_soot",d_empirical_soot,true);
-    if (d_empirical_soot)
-      db->getWithDefault("SootFactor",d_sootFactor,0.01);
-  }
   d_reactingFlow = true;
   // read type of mixing model
   string mixModel;
@@ -106,6 +98,7 @@ Properties::problemSetup(const ProblemSpecP& params)
   d_mixingModel->problemSetup(db);
   if (d_calcEnthalpy)
     d_H_air = d_mixingModel->getAdiabaticAirEnthalpy();
+
   // Read the mixing variable streams, total is noofStreams 0 
   d_numMixingVars = d_mixingModel->getNumMixVars();
   d_numMixStatVars = d_mixingModel->getNumMixStatVars();
@@ -115,6 +108,32 @@ Properties::problemSetup(const ProblemSpecP& params)
   d_soot_precursors = d_mixingModel->getSootPrecursors();
 
   cout << "d_co_output "<< d_co_output << endl;
+
+  if (d_calcEnthalpy) {
+    ProblemSpecP params_non_constant = params;
+    const ProblemSpecP params_root = params_non_constant->getRootNode();
+    ProblemSpecP db_enthalpy_solver=params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
+  
+    if (!db_enthalpy_solver)
+      db_enthalpy_solver=params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("PicardSolver")->findBlock("EnthalpySolver");
+    if (!db_enthalpy_solver) {
+      ostringstream exception;
+      exception << "Radiation information needed by Properties " <<
+                   "is not found in EnthalpySolver block " <<
+                   "for PicardSolver or ExplicitSolver" << endl;
+      throw ProblemSetupException(exception.str(), __FILE__, __LINE__);
+    }
+
+    db_enthalpy_solver->require("radiation",d_radiationCalc);
+    if (d_radiationCalc) {
+      db_enthalpy_solver->getWithDefault("discrete_ordinates",d_DORadiationCalc,true);
+      if (!d_DORadiationCalc)
+        db->require("optically_thin_model_opl",d_opl);
+      db->getWithDefault("empirical_soot",d_empirical_soot,true);
+      if (d_empirical_soot)
+        db->getWithDefault("SootFactor",d_sootFactor,0.01);
+    }
+  }
 }
 
 //****************************************************************************
