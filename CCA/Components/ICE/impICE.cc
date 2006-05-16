@@ -833,6 +833,7 @@ void ICE::updatePressure(const ProcessorGroup*,
     delete_CustomBCs(d_customBC_var_basket);
     
     set_imp_DelP_BC(imp_delP, patch, lb->imp_delPLabel, new_dw);
+    set_imp_DelP_BC(sum_imp_delP, patch, lb->sum_imp_delPLabel, new_dw);
      
     //---- P R I N T   D A T A ------  
     if (switchDebug_updatePressure) {
@@ -908,7 +909,7 @@ void ICE::computeDel_P(const ProcessorGroup*,
     }
     //__________________________________
     // backout delP_Dilatate and delP_MassX
-    for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) { 
+    for(CellIterator iter = patch->getExtraCellIterator(); !iter.done(); iter++) { 
       IntVector c = *iter;
       delP_MassX[c]    = massExchTerm[c]/sumKappa[c];
       delP_Dilatate[c] = sum_imp_delP[c] - delP_MassX[c];
