@@ -127,6 +127,7 @@ Properties::problemSetup(const ProblemSpecP& params)
     db_enthalpy_solver->require("radiation",d_radiationCalc);
     if (d_radiationCalc) {
       db_enthalpy_solver->getWithDefault("discrete_ordinates",d_DORadiationCalc,true);
+      d_opl = 0.0;
       if (!d_DORadiationCalc)
         db->require("optically_thin_model_opl",d_opl);
       db->getWithDefault("empirical_soot",d_empirical_soot,true);
