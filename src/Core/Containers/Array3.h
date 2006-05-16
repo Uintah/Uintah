@@ -135,15 +135,6 @@ public:
     ASSERTL3(d3>=0 && d3<dm3);
     return objs[d1][d2][d3];
   }
-  
-  //lookup returning 0 if out of bounds. Only works for scalar datatypes.
-  inline T lookup_safe(int d1, int d2, int d3) const
-  {
-    if (d1>=0 && d1<dm1 && d2>=0 && d2<dm2 && d3>=0 && d3<dm3)
-      return objs[d1][d2][d3];
-    else
-      return 0;
-  }
     
   //////////
   //Array2 Copy Method
