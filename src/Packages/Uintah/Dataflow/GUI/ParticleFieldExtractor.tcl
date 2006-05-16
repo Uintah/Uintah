@@ -84,6 +84,7 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	set $this-ptVar ""
 	set $this-pName ""
 	set $this-level 0
+        set $this-button_push 0
 
 	# selection stuff
 	set num_m_type [llength $matrix_types]
@@ -215,7 +216,23 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 # 	puts "ptVarList is now $ptVarList";
     }    
  
-    method buildLevels { levels } {
+    method buildLevel { level } {
+	set w $pf
+	set buttontype radiobutton
+	set c "$this-c needexecute"
+	frame $w.lf -relief flat -borderwidth 2
+	pack $w.lf -side top
+	label $w.lf.l -text Level
+	pack $w.lf.l -side top
+	frame $w.lf.bf -relief flat
+	pack $w.lf.bf -side top -expand yes -fill both
+        
+        $buttontype $w.lf.bf.b$level -text $level \
+            -variable $this-level  -value $level -command $c
+        pack $w.lf.bf.b$level -side left
+    }
+        
+    method buildLevels { level } {
 	set w $pf
 	set buttontype radiobutton
 	set c "$this-c needexecute"
@@ -230,11 +247,13 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
                 -variable $this-level  -value $j -command $c
             pack $w.lf.bf.b$j -side left
         }
-# 	if {$levels > 1} {
-# 	    $buttontype $w.lf.bf.b$levels -text all \
-# 		-variable $this-level -value $levels -command $c
-# 	    pack $w.lf.bf.b$levels -side left
-# 	}
+
+
+	if {$levels > 1} {
+	    $buttontype $w.lf.bf.b$levels -text all \
+		-variable $this-level -value $levels -command $c
+	    pack $w.lf.bf.b$levels -side left
+	}
 	
 	if { [set $this-level] > $levels } {
 	    set $this-level [expr $levels -1]
