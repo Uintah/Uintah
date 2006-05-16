@@ -97,10 +97,6 @@ namespace Uintah {
       constSFCYVariable<double> mmvVelSp;
       constSFCZVariable<double> mmwVelSu;
       constSFCZVariable<double> mmwVelSp;
-     // Thermal NOx constant variables
-
-      constCCVariable<double> thermalnox;
-      constCCVariable<double> thermalnoxSRC;
 
     }; // End class ArchesConstVariables
 } // End namespace Uintah

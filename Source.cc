@@ -29,12 +29,7 @@ using namespace SCIRun;
 #else
 #include <Packages/Uintah/CCA/Components/Arches/fortran/pressrcpred_fort.h>
 #endif
-#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradflux_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradsrc_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradthinsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/add_mm_enth_src_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradflux_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/enthalpyradthinsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmmomsrc_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/scalsrc_fort.h>
@@ -110,11 +105,6 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   
   //get index component of gravity
   double gravity = d_physicalConsts->getGravity(index);
-  // get iref, jref, kref and ref density by broadcasting from a patch that contains
-  // iref, jref and kref
-
-  //  double den_ref = vars->density[IntVector(3,3,3)]; // change it!!! use ipref, jpref and kpref
-  //  double den_ref = 1.184344; // change it!!! use ipref, jpref and kpref
   // Get the patch and variable indices
   IntVector idxLoU = patch->getSFCXFORTLowIndex();
   IntVector idxHiU = patch->getSFCXFORTHighIndex();
@@ -202,53 +192,6 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   }
 
 
-#ifdef MAY_BE_USEFUL_LATER  
-  int ioff = 1;
-  int joff = 0;
-  int koff = 0;
-  // 3-d array for volume - fortran uses it for temporary storage
-  Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
-  // computes remaining diffusion term and also computes 
-  // source due to gravity...need to pass ipref, jpref and kpref
-  FORT_VELSOURCE(domLoU.get_pointer(), domHiU.get_pointer(),
-		 idxLoU.get_pointer(), idxHiU.get_pointer(),
-		 uVelLinearSrc.getPointer(), 
-		 uVelNonlinearSrc.getPointer(), 
-		 uVelocity.getPointer(), 
-		 domLoV.get_pointer(), domHiV.get_pointer(),
-		 idxLoV.get_pointer(), idxHiV.get_pointer(),
-		 vVelLinearSrc.getPointer(), 
-		 vVelNonlinearSrc.getPointer(), 
-		 vVelocity.getPointer(), 
-		 domLoW.get_pointer(), domHiW.get_pointer(),
-		 idxLoW.get_pointer(), idxHiW.get_pointer(),
-		 wVelLinearSrc.getPointer(), 
-		 wVelNonlinearSrc.getPointer(), 
-		 wVelocity.getPointer(), 
-		 domLo.get_pointer(), domHi.get_pointer(),
-		 idxLo.get_pointer(), idxHi.get_pointer(),
-		 density.getPointer(),
-		 viscosity.getPointer(), 
-		 &gravity, 
-		 ioff, joff, koff, 
-		 cellinfo->ceeu, cellinfo->cweu, cellinfo->cwwu,
-		 cellinfo->cnn, cellinfo->csn, cellinfo->css,
-		 cellinfo->ctt, cellinfo->cbt, cellinfo->cbb,
-		 cellinfo->sewu, cellinfo->sns, cellinfo->stb,
-		 cellinfo->dxepu, cellinfo->dynp, cellinfo->dztp,
-		 cellinfo->dxpw, cellinfo->fac1u, cellinfo->fac2u,
-		 cellinfo->fac3u, cellinfo->fac4u,cellinfo->iesdu,
-		 cellinfo->iwsdu, cellinfo->enfac, cellinfo->sfac,
-		 cellinfo->tfac, cellinfo->bfac, volume);
-#endif
-
-  // pass the pointer to turbulence model object and make 
-  // it a data memeber of Source class
-  // it computes the source in momentum eqn due to the turbulence
-  // model used.
-  // inputs : 
-  // outputs : 
-  //  d_turbModel->calcVelocitySource(pc, patch, old_dw, new_dw, index);
 }
 
 //****************************************************************************
@@ -284,25 +227,6 @@ Source::calculatePressureSourcePred(const ProcessorGroup* ,
       }
     }
   }
-  
-
-#if 0
-  // correct uvel hat at the boundary
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  if (xplus) {
-    int ii = idxHi.x();
-    for (int kk = idxLo.z(); kk <= idxHi.z(); kk++) {
-      for (int jj = idxLo.y(); jj <= idxHi.y(); jj++) {
-	IntVector currcell(ii,jj,kk);
-	IntVector nextcell(ii+1,jj,kk);
-	double avgden = (vars->density[currcell]+vars->density[nextcell])/0.5;
-	double area = cellinfo->sns[jj]*cellinfo->stb[kk]/cellinfo->sew[ii];
-	vars->pressNonlinearSrc[currcell] -= 2.0*delta_t*area*
-	                                     vars->pressure[currcell];
-      }
-    }
-  }
-#endif
 #endif
 }
 
@@ -365,40 +289,6 @@ Source::addReactiveScalarSource(const ProcessorGroup*,
 }
 
 //****************************************************************************
-// Thermal NOx source calculation
-// Added by Padmabhushana Desam
-//****************************************************************************
-void Source::thermalNOxSource(const ProcessorGroup*,
-                                const Patch* patch,
-                                double,
-                                int,
-                                CellInformation* cellinfo,
-                                ArchesVariables* vars,
-                                ArchesConstVariables* constvars)
-{
-  //double tot_noxsource=0.0; // This varible is for monitoring the total NOx production
-  // Get the patch and variable indices
-  IntVector indexLow = patch->getCellFORTLowIndex();
-  IntVector indexHigh = patch->getCellFORTHighIndex();
-  for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
-    for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
-      for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
-        IntVector currCell(colX, colY, colZ);
-        double vol = cellinfo->sew[colX]*cellinfo->sns[colY]*cellinfo->stb[colZ];
-       // There is a multiplication with volume on the left side. So the right hand side als has to be multiplied       // with volume
-        vars->scalarNonlinearSrc[currCell] += vol*
-                                        constvars->thermalnoxSRC[currCell];
-        //tot_noxsource+=vol*constvars->thermalnoxSRC[currCell];
-      }
-    }
-  }
-  //cout<<"Total NOx production is:"<<tot_noxsource<<endl;
-}
-
-
-
-
-//****************************************************************************
 // Scalar source calculation
 //****************************************************************************
 void 
@@ -428,70 +318,6 @@ Source::calculateEnthalpySource(const ProcessorGroup*,
 //****************************************************************************
 // Scalar source calculation
 //****************************************************************************
-void 
-Source::computeEnthalpyRadFluxes(const ProcessorGroup*,
-				 const Patch* patch,
-				 CellInformation* cellinfo,
-				 ArchesVariables* vars) 
-{
-
-  // Get the patch and variable indices
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
-  //  cerr << "temperature before rad flux calculation:" << endl;
-  //  vars->temperature.print(cerr);
-  // 3-d array for volume - fortran uses it for temporary storage
-  // Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
-  // computes remaining diffusion term and also computes 
-  // source due to gravity...need to pass ipref, jpref and kpref
-  fort_enthalpyradflux(idxLo, idxHi, vars->qfluxe, vars->qfluxw, vars->qfluxn,
-		       vars->qfluxs, vars->qfluxt, vars->qfluxb,
-		       vars->temperature, vars->absorption,
-		       cellinfo->dxep, cellinfo->dxpw, cellinfo->dynp,
-		       cellinfo->dyps, cellinfo->dztp, cellinfo->dzpb);
-#if 0
-  cerr << "radiation flux information:" << endl;
-  vars->qfluxe.print(cerr);
-  cerr << endl << endl;
-  vars->qfluxw.print(cerr);
-  cerr << endl << endl;
-  vars->qfluxn.print(cerr);
-  cerr << endl << endl;
-  vars->qfluxs.print(cerr);
-  cerr << endl << endl;
-  vars->qfluxt.print(cerr);
-  cerr << endl << endl;
-  vars->qfluxb.print(cerr);
-  cerr << endl << endl;
-#endif
-}
-
-void 
-Source::computeEnthalpyRadSrc(const ProcessorGroup*,
-			      const Patch* patch,
-			      CellInformation* cellinfo,
-			      ArchesVariables* vars) 
-{
-
-  // Get the patch and variable indices
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
-
-  // 3-d array for volume - fortran uses it for temporary storage
-  // Array3<double> volume(patch->getLowIndex(), patch->getHighIndex());
-  // computes remaining diffusion term and also computes 
-  // source due to gravity...need to pass ipref, jpref and kpref
-  fort_enthalpyradsrc(idxLo, idxHi, vars->scalarNonlinearSrc,
-		      vars->qfluxe, vars->qfluxw, vars->qfluxn, vars->qfluxs,
-		      vars->qfluxt, vars->qfluxb,
-		      cellinfo->sew, cellinfo->sns, cellinfo->stb);
-#if 0
-  cerr << "radiation source after calculation:" << endl;
-  vars->scalarNonlinearSrc.print(cerr);
-#endif
-
-}
-
 void 
 Source::computeEnthalpyRadThinSrc(const ProcessorGroup*,
 				  const Patch* patch,

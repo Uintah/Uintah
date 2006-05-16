@@ -295,11 +295,6 @@ public:
 		      ArchesVariables* vars,
 		      ArchesConstVariables* constvars);
 
-      void enthalpyRadWallBC(const ProcessorGroup* pc,
-			     const Patch* patch,
-			     CellInformation* cellinfo,
-			     ArchesVariables* vars);
-
       ////////////////////////////////////////////////////////////////////////
       // Initialize multi-material wall celltyping and void fraction 
       // calculation

@@ -22,7 +22,6 @@ SRCS     += $(SRCDIR)/Arches.cc \
         $(SRCDIR)/PressureSolver.cc \
         $(SRCDIR)/Properties.cc \
         $(SRCDIR)/ReactiveScalarSolver.cc \
-        $(SRCDIR)/ThermalNOxSolver.cc \
         $(SRCDIR)/RHSSolver.cc \
         $(SRCDIR)/ScalarSolver.cc \
         $(SRCDIR)/SmagorinskyModel.cc \
@@ -88,7 +87,6 @@ $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcuvel_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcvvel_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/bcwvel_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/celltypeInit_fort.h
-$(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/enthalpyradwallbc_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/inlbcs_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/intrusion_computevel_fort.h
 $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/mm_computevel_fort.h
@@ -108,7 +106,6 @@ $(SRCDIR)/BoundaryCondition.o: $(SRCDIR)/fortran/profv_fort.h
 $(SRCDIR)/CellInformation.o: $(SRCDIR)/fortran/cellg_fort.h
 $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/apcal_fort.h
 $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/apcal_vel_fort.h
-$(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/explicit_vel_fort.h
 $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/mm_modify_prescoef_fort.h
 $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/prescoef_fort.h
 $(SRCDIR)/Discretization.o: $(SRCDIR)/fortran/prescoef_var_fort.h
@@ -135,8 +132,6 @@ $(SRCDIR)/SmagorinskyModel.o: $(SRCDIR)/fortran/scalarvarmodel_fort.h
 $(SRCDIR)/SmagorinskyModel.o: $(SRCDIR)/fortran/smagmodel_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/add_mm_enth_src_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/computeVel_fort.h
-$(SRCDIR)/Source.o: $(SRCDIR)/fortran/enthalpyradflux_fort.h
-$(SRCDIR)/Source.o: $(SRCDIR)/fortran/enthalpyradsrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/enthalpyradthinsrc_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/mascal_fort.h
 $(SRCDIR)/Source.o: $(SRCDIR)/fortran/mascal_scalar_fort.h

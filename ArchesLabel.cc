@@ -161,44 +161,6 @@ ArchesLabel::ArchesLabel()
   d_reactscalNonLinSrcSBLMLabel = VarLabel::create("reactscalNonLinSrcSBLM",
 				   CCVariable<double>::getTypeDescription() );
 
-  //thermal NOx labels 
-
-  d_thermalnoxSPLabel = VarLabel::create("thermalnoxSP",
-                                   CCVariable<double>::getTypeDescription() );
-
-  d_thermalnoxTempLabel = VarLabel::create("thermalnoxTemp",
-                                   CCVariable<double>::getTypeDescription() );
-
-  // thermal NOx Coef
-  d_thermalnoxCoefSBLMLabel = VarLabel::create("thermalnoxCoefSBLM",
-                                   CCVariable<double>::getTypeDescription() );
-  // thermal NOx Non Linear Src
-  d_thermalnoxNonLinSrcSBLMLabel = VarLabel::create("thermalnoxNonLinSrcSBLM",
-                                   CCVariable<double>::getTypeDescription() );
-
-  d_thermalnoxDiffCoefLabel = VarLabel::create("thermalnoxDiffCoef",
-                                   CCVariable<double>::getTypeDescription() );
-
-  d_thermalnoxSRCINLabel = VarLabel::create("thermalnoxSRCIN",
-                                    CCVariable<double>::getTypeDescription() );
-  // End of thermal NOx labels
-
-
-
-  // Unsure stuff
-  // Unsure stuff
-  d_DUPBLMLabel = VarLabel::create("DUPBLM",
-				SFCXVariable<double>::getTypeDescription() );
-  d_DVPBLMLabel = VarLabel::create("DVPBLM",
-				SFCYVariable<double>::getTypeDescription() );
-  d_DWPBLMLabel = VarLabel::create("DWPBLM",
-				SFCZVariable<double>::getTypeDescription() );
-  d_DUMBLMLabel = VarLabel::create("DUMBLM",
-				SFCXVariable<double>::getTypeDescription() );
-  d_DVMBLMLabel = VarLabel::create("DVMBLM",
-				SFCYVariable<double>::getTypeDescription() );
-  d_DWMBLMLabel = VarLabel::create("DWMBLM",
-				SFCZVariable<double>::getTypeDescription() );
 
   // Labels that access the velocity stored as a cell centered vector
   // after interpolation (for use in visualization)
@@ -216,14 +178,6 @@ ArchesLabel::ArchesLabel()
   d_newCCWVelocityLabel = VarLabel::create("newCCWVelocity",
 				CCVariable<double>::getTypeDescription() );
 
-  // for pressure grad term in momentum
-
-  d_pressGradUSuLabel = VarLabel::create("pressGradUSu",
-					SFCXVariable<double>::getTypeDescription() );
-  d_pressGradVSuLabel = VarLabel::create("pressGradVSu",
-					SFCYVariable<double>::getTypeDescription() );
-  d_pressGradWSuLabel = VarLabel::create("pressGradWSu",
-					SFCZVariable<double>::getTypeDescription() );
   // multimaterial labels
 
   // multimaterial wall/intrusion cells
@@ -657,21 +611,12 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_refDensity_label);
   VarLabel::destroy(d_refDensityPred_label);
   VarLabel::destroy(d_refPressure_label);
-  VarLabel::destroy(d_DUPBLMLabel);
-  VarLabel::destroy(d_DVPBLMLabel);
-  VarLabel::destroy(d_DWPBLMLabel);
-  VarLabel::destroy(d_DUMBLMLabel);
-  VarLabel::destroy(d_DVMBLMLabel);
-  VarLabel::destroy(d_DWMBLMLabel);
   VarLabel::destroy(d_oldCCVelocityLabel);
   VarLabel::destroy(d_newCCVelocityLabel);
   VarLabel::destroy(d_newCCVelMagLabel);
   VarLabel::destroy(d_newCCUVelocityLabel);
   VarLabel::destroy(d_newCCVVelocityLabel);
   VarLabel::destroy(d_newCCWVelocityLabel);
-  VarLabel::destroy(d_pressGradUSuLabel);
-  VarLabel::destroy(d_pressGradVSuLabel);
-  VarLabel::destroy(d_pressGradWSuLabel);
   VarLabel::destroy(d_mmcellTypeLabel);
   VarLabel::destroy(d_mmgasVolFracLabel);
   VarLabel::destroy(d_tempINLabel);
@@ -787,13 +732,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_totalAreaOUTIntermLabel);
       	       
   VarLabel::destroy(d_oldDeltaTLabel);
-  // Thermal NOx destructor
-  VarLabel::destroy(d_thermalnoxSPLabel);
-  VarLabel::destroy(d_thermalnoxTempLabel);
-  VarLabel::destroy(d_thermalnoxCoefSBLMLabel);
-  VarLabel::destroy(d_thermalnoxNonLinSrcSBLMLabel);
-  VarLabel::destroy(d_thermalnoxSRCINLabel);
-  VarLabel::destroy(d_thermalnoxDiffCoefLabel);
 
 // test filtered terms for variable density dynamic Smagorinsky model
   VarLabel::destroy(d_filterRhoULabel);
