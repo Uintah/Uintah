@@ -112,10 +112,10 @@ Properties::problemSetup(const ProblemSpecP& params)
   if (d_calcEnthalpy) {
     ProblemSpecP params_non_constant = params;
     const ProblemSpecP params_root = params_non_constant->getRootNode();
-    ProblemSpecP db_enthalpy_solver=params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver")->findBlock("EnthalpySolver");
+    ProblemSpecP db_enthalpy_solver=params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("ExplicitSolver");
   
     if (!db_enthalpy_solver)
-      db_enthalpy_solver=params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("PicardSolver")->findBlock("EnthalpySolver");
+      db_enthalpy_solver=params_root->findBlock("CFD")->findBlock("ARCHES")->findBlock("PicardSolver");
     if (!db_enthalpy_solver) {
       ostringstream exception;
       exception << "Radiation information needed by Properties " <<
@@ -123,6 +123,7 @@ Properties::problemSetup(const ProblemSpecP& params)
                    "for PicardSolver or ExplicitSolver" << endl;
       throw ProblemSetupException(exception.str(), __FILE__, __LINE__);
     }
+    db_enthalpy_solver = db_enthalpy_solver->findBlock("EnthalpySolver");
 
     db_enthalpy_solver->require("radiation",d_radiationCalc);
     if (d_radiationCalc) {
