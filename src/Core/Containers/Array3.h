@@ -55,6 +55,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include <SCIRun/Core/Util/Assert.h>
 
 #ifndef SCI_NOPERSISTENT
 #include <Core/Persistent/Persistent.h>
@@ -68,7 +69,7 @@ class RigorousTest;
 template<class T> class Array3;
 #ifndef SCI_NOPERSISTENT
 template<class T> void Pio(Piostream& stream, Array3<T>& array);
-template<class T> void Pio(Piostream& stream, Array3<T>& array, const string&);
+template<class T> void Pio(Piostream& stream, Array3<T>& array, const std::string&);
 template<class T> void Pio(Piostream& stream, Array3<T>*& array);
 #endif // #ifndef SCI_NOPERSISTENT
 
@@ -134,6 +135,15 @@ public:
     ASSERTL3(d3>=0 && d3<dm3);
     return objs[d1][d2][d3];
   }
+  
+  //lookup returning 0 if out of bounds. Only works for scalar datatypes.
+  inline T lookup_safe(int d1, int d2, int d3) const
+  {
+    if (d1>=0 && d1<dm1 && d2>=0 && d2<dm2 && d3>=0 && d3<dm3)
+      return objs[d1][d2][d3];
+    else
+      return 0;
+  }
     
   //////////
   //Array2 Copy Method
@@ -148,6 +158,8 @@ public:
   //////////
   //Returns the number of spaces in dim3
   inline int dim3() const {return dm3;}
+  
+  inline long get_datasize() const { return dm1*dm2*dm3*long(sizeof(T)); }
     
   //////////
   //Re-size the Array
@@ -164,8 +176,8 @@ public:
 
   //////////
   //read/write from a separate raw file
-  int input( const string& );
-  int output( const string&);
+  int input( const std::string& );
+  int output( const std::string&);
 
 #ifndef SCI_NOPERSISTENT
 #if defined(_AIX)
@@ -173,13 +185,13 @@ public:
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<type>&);
   template <typename type>
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<type>&,
-					     const string &);
+					     const std::string &);
   template <typename type>
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<type>*&);
 #else
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<T>&);
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<T>&, 
-					     const string &);
+					     const std::string &);
   friend void TEMPLATE_TAG Pio TEMPLATE_BOX (Piostream&, Array3<T>*&);
 #endif
 #endif // #ifndef SCI_NOPERSISTENT
@@ -340,7 +352,7 @@ void Pio(Piostream& stream, Array3<T>*& data) {
 
 template<class T>
 void Pio(Piostream& stream, Array3<T>& data, 
-         const string& filename)
+         const std::string& filename)
 {
 #ifdef __GNUG__
 #else
@@ -368,7 +380,7 @@ void Pio(Piostream& stream, Array3<T>& data,
 
 template<class T>
 int
-Array3<T>::input( const string &filename ) 
+Array3<T>::input( const std::string &filename ) 
 {
   std::cerr << "Array3: Split input\n";
 
@@ -402,7 +414,7 @@ Array3<T>::input( const string &filename )
 
 template<class T>
 int
-Array3<T>::output( const string &filename ) 
+Array3<T>::output( const std::string &filename ) 
 {
   std::cerr << "Array3 output to " << filename << std::endl;
   // get raw data
