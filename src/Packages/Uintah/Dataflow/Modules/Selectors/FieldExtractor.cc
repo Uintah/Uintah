@@ -470,6 +470,7 @@ bool FieldExtractor::update_mesh_handle( LevelP& level,
     }
   case TypeDescription::SFCXVariable:
     {
+     cout << range << endl;
       if( mesh_handle.get_rep() == 0 ){
         mesh_handle = scinew LVMesh(range.x(), range.y() - 1,
                                         range.z() - 1, box.min(),
