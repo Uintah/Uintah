@@ -124,7 +124,7 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   int numMixingScalars = d_props->getNumMixVars();
   
 // flow ramping is on or off, it is the same for all inlets  
-  db->getWithDefault("ramping_inlet_flowrate", d_ramping_inlet_flowrate, true);
+  db->getWithDefault("ramping_inlet_flowrate", d_ramping_inlet_flowrate, false);
   db->getWithDefault("carbon_balance", d_carbon_balance, false);
   if (ProblemSpecP inlet_db = db->findBlock("FlowInlet")) {
     d_inletBoundary = true;
