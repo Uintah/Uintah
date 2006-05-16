@@ -47,6 +47,7 @@
 #include <sci_defs/template_defs.h>
 #include <Core/Persistent/Persistent.h>
 #endif // #ifndef SCI_NOPERSISTENT
+#include <Core/Util/Assert.h>
 
 namespace SCIRun {
 
