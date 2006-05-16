@@ -65,7 +65,7 @@ public:
 
       Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
                  PhysicalConstants* phys_const,
-		 bool calcEnthalpy, bool thermalNOx);
+		 bool calcEnthalpy);
 
       // GROUP: Destructors :
       ///////////////////////////////////////////////////////////////////////
@@ -243,7 +243,6 @@ private:
       bool d_calcEnthalpy;
       bool d_radiationCalc;
       bool d_DORadiationCalc;
-      bool d_thermalNOx;
 
       bool d_co_output;
       bool d_sulfur_chem;

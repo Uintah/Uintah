@@ -178,29 +178,6 @@ namespace Uintah {
 
       const VarLabel* d_reactscalNonLinSrcSBLMLabel;
 
-       // Labels for Thermal NOx
-
-      const VarLabel* d_thermalnoxSPLabel;
-      const VarLabel* d_thermalnoxTempLabel;
-
-      // thermal NOx Coef
-
-      const VarLabel* d_thermalnoxCoefSBLMLabel;
-
-      // thermal NOx Diffusion Coef
-
-      const VarLabel* d_thermalnoxDiffCoefLabel;
-
-      // thermal NOx NonLinear Src
-
-      const VarLabel* d_thermalnoxNonLinSrcSBLMLabel;
-
-      // thermal NOx source term from properties
-      const VarLabel* d_thermalnoxSRCINLabel;
-
-      // End of Thermal NOx labels
-
-
       // labels for scalesimilaritymodels
 
       const VarLabel* d_stressTensorCompLabel;
@@ -239,15 +216,6 @@ namespace Uintah {
 
 
 
-      // Not sure what these labels are for
-
-      const VarLabel* d_DUPBLMLabel;
-      const VarLabel* d_DVPBLMLabel;
-      const VarLabel* d_DWPBLMLabel;
-      const VarLabel* d_DUMBLMLabel;
-      const VarLabel* d_DVMBLMLabel;
-      const VarLabel* d_DWMBLMLabel;
-
       // For storing the interpolated CC Velocity Variables
 
       const VarLabel* d_oldCCVelocityLabel;
@@ -256,12 +224,6 @@ namespace Uintah {
       const VarLabel* d_newCCUVelocityLabel;
       const VarLabel* d_newCCVVelocityLabel;
       const VarLabel* d_newCCWVelocityLabel;
-
-      // for pressure grad term in momentum
-
-      const VarLabel* d_pressGradUSuLabel;
-      const VarLabel* d_pressGradVSuLabel;
-      const VarLabel* d_pressGradWSuLabel;
 
       // for multimaterial
 

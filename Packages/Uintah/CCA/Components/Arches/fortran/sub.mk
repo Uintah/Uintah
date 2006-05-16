@@ -21,10 +21,7 @@ SRCS += \
 	$(SRCDIR)/cellg.F \
 	$(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/computeVel.F \
-	$(SRCDIR)/enthalpyradflux.F \
-	$(SRCDIR)/enthalpyradsrc.F \
 	$(SRCDIR)/enthalpyradthinsrc.F \
-	$(SRCDIR)/enthalpyradwallbc.F \
 	$(SRCDIR)/explicit.F \
 	$(SRCDIR)/explicit_vel.F \
 	$(SRCDIR)/fixval.F \
@@ -100,10 +97,7 @@ $(SRCDIR)/bcwvel.o: $(SRCDIR)/bcwvel_fort.h
 $(SRCDIR)/cellg.o: $(SRCDIR)/cellg_fort.h
 $(SRCDIR)/celltypeInit.o: $(SRCDIR)/celltypeInit_fort.h
 $(SRCDIR)/computeVel.o: $(SRCDIR)/computeVel_fort.h
-$(SRCDIR)/enthalpyradflux.o: $(SRCDIR)/enthalpyradflux_fort.h
-$(SRCDIR)/enthalpyradsrc.o: $(SRCDIR)/enthalpyradsrc_fort.h
 $(SRCDIR)/enthalpyradthinsrc.o: $(SRCDIR)/enthalpyradthinsrc_fort.h
-$(SRCDIR)/enthalpyradwallbc.o: $(SRCDIR)/enthalpyradwallbc_fort.h
 $(SRCDIR)/explicit.o: $(SRCDIR)/explicit_fort.h
 $(SRCDIR)/explicit_vel.o: $(SRCDIR)/explicit_vel_fort.h
 $(SRCDIR)/inlbcs.o: $(SRCDIR)/inlbcs_fort.h $(SRCDIR)/ramping.h

@@ -53,9 +53,6 @@ namespace Uintah {
       SFCXVariable<double> uVelocity;
       SFCYVariable<double> vVelocity;
       SFCZVariable<double> wVelocity;
-      SFCXVariable<double> variableCalledDU; //used for pc calculation
-      SFCYVariable<double> variableCalledDV; //used for pc calculation
-      SFCZVariable<double> variableCalledDW; //used for pc calculation
       CCVariable<double> pressure;
       CCVariable<double> pressureNew;
       CCVariable<double> pressureCorr;
@@ -99,28 +96,6 @@ namespace Uintah {
       // for refdensity and refpressure
       double den_Ref;
       double press_ref;
-      // for residual calculations
-      double residPress;
-      double truncPress;
-      double residUVel;
-      double truncUVel;
-      double residVVel;
-      double truncVVel;
-      double residWVel;
-      double truncWVel;
-      double residScalar;
-      double truncScalar;
-      CCVariable<double> residualPressure;
-      SFCXVariable<double> residualUVelocity;
-      SFCYVariable<double> residualVVelocity;
-      SFCZVariable<double> residualWVelocity;
-      CCVariable<double> residualScalar;      
-      CCVariable<double> residualReactivescalar;      
-      CCVariable<double> residualEnthalpy;      
-      // pressure gradient vars added to momentum source terms
-      SFCXVariable<double> pressGradUSu;
-      SFCYVariable<double> pressGradVSu;
-      SFCZVariable<double> pressGradWSu;
       // added velocity hat vars
       SFCXVariable<double> uVelRhoHat;
       SFCYVariable<double> vVelRhoHat;
@@ -162,12 +137,6 @@ namespace Uintah {
     StencilMatrix<SFCXVariable<double> > filteredRhoUjU; //SFCX 3 element vector
     StencilMatrix<SFCYVariable<double> > filteredRhoUjV; //SFCY 3 element vector
     StencilMatrix<SFCZVariable<double> > filteredRhoUjW; //SFCZ 3 element vector
-
-// Variables for Thermal NOx
-      CCVariable<double> thermalnox;
-      // NOx source term
-      CCVariable<double> thermalnoxSRC;
-      CCVariable<double> residualthermalnox;      
 
     }; // End class ArchesVariables
    
