@@ -79,17 +79,11 @@
             <transport_enthalpy>true</transport_enthalpy>	
 	    <transport_reacting_scalar>false</transport_reacting_scalar>
 	    <Turbulence>
-		<cf>0.17</cf>
-		<fac_mesh>1.0</fac_mesh>
-		<filterl>0.000001</filterl>
 	        <var_const>0.1</var_const>
 	        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
 	    </Turbulence>
 
 	    <Properties>
-		<first_order_drhodt>true</first_order_drhodt>
-	        <radiation>true</radiation>
-	        <opl>3.0</opl>
 	        <mixing_model>NewStaticMixingTable</mixing_model>
 	        <NewStaticMixingTable>
                   <adiabatic>false</adiabatic>
@@ -102,7 +96,6 @@
 	    </Properties>
 
 	    <BoundaryConditions>
-	    <ramping_inlet_flowrate>false</ramping_inlet_flowrate>
 		<FlowInlet>
 		    <Flow_rate>0.04527</Flow_rate>
 		    <MixtureFraction>
@@ -198,9 +191,9 @@
 
 		<EnthalpySolver>
                     <radiation>true</radiation>
-                    <discrete_ordinates>true</discrete_ordinates>
                     <radiationCalcFreq>5</radiationCalcFreq>
 		    <radCalcForAllRKSteps>false</radCalcForAllRKSteps>
+                    <discrete_ordinates>true</discrete_ordinates>
                     <DORadiationModel>
 	            <opl>3.0</opl>
 		    <linear_solver>hypre</linear_solver>
