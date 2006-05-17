@@ -157,7 +157,6 @@
     <MaterialProperties>
        <MPM>
          <material name = "Steel Ring">
-               <gamma>                  1.4            </gamma>           
        
   <density>7830.0</density>
   <thermal_conductivity>38</thermal_conductivity>
@@ -265,7 +264,6 @@
                     <Gamma>1.0</Gamma>
                     <DCp_DTemperature>3.30773</DCp_DTemperature>
                 </constitutive_model>
-               <gamma>                  1.4            </gamma>           
                 <thermal_conductivity>  .452            </thermal_conductivity>
                 <specific_heat>        996.0            </specific_heat>
                 <geom_object>

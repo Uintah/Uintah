@@ -177,7 +177,6 @@
                 </constitutive_model>
                 <thermal_conductivity>  300.0           </thermal_conductivity>
                 <specific_heat>         716.0           </specific_heat>
-               <gamma>                  1.4             </gamma>           
                 <geom_object>
                 <difference>
                    <cylinder label = "outer cylinder">
