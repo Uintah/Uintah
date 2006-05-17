@@ -200,6 +200,7 @@ public class ComputeParticleLocPanel extends JPanel {
     d_rvePartSizeDist.copy(d_partSizeDist);
     d_rveSize = (double) rveSizeEntry.getValue();
     d_parent.setRVESize(d_rveSize);
+    d_partList.setRVESize(d_rveSize);
 
     int nofSizes = d_partSizeDist.nofSizesCalc;
     double[] dia = new double[nofSizes];

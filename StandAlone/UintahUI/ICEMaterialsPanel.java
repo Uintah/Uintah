@@ -27,6 +27,7 @@ public class ICEMaterialsPanel extends JPanel {
 
   // Data
   private int d_numMat = 0;
+  private Vector d_iceMat = null;
   private UintahInputPanel d_parent = null;
 
   // Local components
@@ -39,10 +40,12 @@ public class ICEMaterialsPanel extends JPanel {
   //-----------------------------------------------------------------------
   // Constructor
   //-----------------------------------------------------------------------
-  public ICEMaterialsPanel(UintahInputPanel parent) {
+  public ICEMaterialsPanel(Vector iceMat,
+                           UintahInputPanel parent) {
 
     // Initialize local variables
-    d_numMat = 2;
+    d_numMat = 1;
+    d_iceMat = iceMat;
     d_parent = parent;
 
     // Create a gridbaglayout and constraints
