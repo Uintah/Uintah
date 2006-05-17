@@ -58,7 +58,6 @@
 		   <G>12.e2</G>
 		   <K>32.e2</K>
 	        </constitutive_model>
-		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
 		<geom_object>
@@ -117,7 +116,6 @@
                     <t5>1.e+2</t5>
                     <t6>0.0</t6>
                 </constitutive_model>
-		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
 		<geom_object>

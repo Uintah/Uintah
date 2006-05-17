@@ -177,7 +177,6 @@
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
            <specific_heat>          717.5               </specific_heat>
-           <speed_of_sound>         374.17              </speed_of_sound>
            <gamma>                  1.4                  </gamma>
            <geom_object>
              <difference>

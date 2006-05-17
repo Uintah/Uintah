@@ -206,7 +206,6 @@
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
            <specific_heat>          1515.31             </specific_heat>
-           <speed_of_sound>         374.17              </speed_of_sound>
            <gamma>                  1.4                 </gamma>
            <geom_object>
                <cylinder label = "stick"> </cylinder>
@@ -231,7 +230,6 @@
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
            <specific_heat>          544.96               </specific_heat>
-           <speed_of_sound>         374.17              </speed_of_sound>
            <gamma>                  1.4                 </gamma>
            <geom_object>
                 <box label="out_of_domain">
@@ -250,7 +248,6 @@
            <dynamic_viscosity>      0.0                 </dynamic_viscosity>
            <thermal_conductivity>   0.0                 </thermal_conductivity>
            <specific_heat>        716.0                 </specific_heat>
-           <speed_of_sound>       376.0                 </speed_of_sound>
            <gamma>                  1.4                 </gamma>
            <geom_object>
              <difference>

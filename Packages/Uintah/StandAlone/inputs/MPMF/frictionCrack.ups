@@ -55,7 +55,6 @@
 		   <G>37594.e6</G>
 		   <K>98039.e6</K>
 	        </constitutive_model>
-		<toughness>10.e6</toughness>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>5</specific_heat>
 		<geom_object>
