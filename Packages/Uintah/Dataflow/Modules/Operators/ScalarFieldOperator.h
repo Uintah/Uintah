@@ -99,20 +99,20 @@ ScalarFieldOperatorAlgo::set_properties( T1* sf1, T2* sf2, int op)
 {
   for(size_t i = 0; i < sf1->nproperties(); i++){
     string prop_name(sf1->get_property_name( i ));
-    if(prop_name == "varname"){
+    if(prop_name == "name"){
       string prop_component;
       sf1->get_property( prop_name, prop_component);
       switch(op) {
       case 0: // extract element 1
-        sf2->set_property("varname",
+        sf2->set_property("name",
                           string(prop_component +":ln"), true);
         break;
       case 1: // extract element 2
-        sf2->set_property("varname", 
+        sf2->set_property("name", 
                           string(prop_component +":e"), true);
         break;
       default:
-        sf2->set_property("varname",
+        sf2->set_property("name",
                           string(prop_component.c_str()), true);
       }
     } else if( prop_name == "generation") {
@@ -136,7 +136,7 @@ ScalarFieldOperatorAlgo::set_properties( T1* sf1, T2* sf2, int op)
       sf1->get_property( prop_name, vartype);
       sf2->set_property(prop_name.c_str(), vartype , true);
     } else {
-      cerr<<"Unknown field property, not transferred.\n";
+      cerr<<"Unknown field property: "<<prop_name<<", not transferred.\n";
     }
   }
 }
