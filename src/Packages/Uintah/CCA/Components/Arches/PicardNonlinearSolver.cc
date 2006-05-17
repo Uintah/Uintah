@@ -142,6 +142,8 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
 					     d_physicalConsts);
     d_reactingScalarSolver->problemSetup(db);
   }
+  d_radiationCalc = false;
+  d_DORadiationCalc = false;
   if (d_enthalpySolve) {
     d_enthalpySolver = scinew EnthalpySolver(d_lab, d_MAlab,
 					     d_turbModel, d_boundaryCondition,
@@ -430,6 +432,8 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
   subsched->mapDataWarehouse(Task::NewDW, 3);
 
   GridP grid = level->getGrid();
+  subsched->advanceDataWarehouse(grid);
+
   const PatchSet* local_patches = level->eachPatch();
   const MaterialSet* local_matls = d_lab->d_sharedState->allArchesMaterials();
   IntVector periodic_vector = level->getPeriodicBoundaries();
@@ -583,7 +587,6 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     double reactscalar_clipped = 0.0;
     double norm;
     double init_norm;
-    subsched->advanceDataWarehouse(grid);
     int num_procs = d_myworld->size();
     if (dynamic_cast<const ScaleSimilarityModel*>(d_turbModel)) {
     subsched->get_dw(3)->transferFrom(old_dw, d_lab->d_scalarFluxCompLabel, patches, matls); 
@@ -715,7 +718,11 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     }
     if (d_enthalpySolve) {
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_enthalpySPLabel, patches, matls); 
-      new_dw->transferFrom(subsched->get_dw(3), d_lab->d_totalRadSrcLabel, patches, matls); 
+      sum_vartype totalradsrc;
+      subsched->get_dw(3)->get(totalradsrc, d_lab->d_totalRadSrcLabel);
+      double trs = totalradsrc;
+      trs /= num_procs;
+      new_dw->put(sum_vartype(trs), d_lab->d_totalRadSrcLabel);
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_tempINLabel, patches, matls); 
       new_dw->transferFrom(subsched->get_dw(3), d_lab->d_cpINLabel, patches, matls); 
     if (d_radiationCalc) {
