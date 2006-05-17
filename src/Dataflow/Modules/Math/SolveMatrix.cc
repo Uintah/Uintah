@@ -180,6 +180,9 @@ class SolveMatrix : public Module {
 		     int& last_update, const vector<int>& targetidx,
 		     const vector<double>& targetlist,
 		     int& last_errupdate);
+
+  void set_compute_time_stats(PStats *stats, double time, int nprocs);
+
 public:
   void parallel_conjugate_gradient(int proc);
   void parallel_bi_conjugate_gradient(int proc);
@@ -212,24 +215,24 @@ public:
 
 DECLARE_MAKER(SolveMatrix)
 
-  SolveMatrix::SolveMatrix(GuiContext* ctx)
-    : Module("SolveMatrix", ctx, Filter, "Math", "SCIRun"),
-      target_error(get_ctx()->subVar("target_error"), 0.001),
-      flops(get_ctx()->subVar("flops"), 0.0),
-      floprate(get_ctx()->subVar("floprate"), 0.0),
-      memrefs(get_ctx()->subVar("memrefs"), 0.0),
-      memrate(get_ctx()->subVar("memrate"), 0.0),
-      orig_error(get_ctx()->subVar("orig_error"), 0.0),
-      current_error(get_ctx()->subVar("current_error"), ""),
-      method(get_ctx()->subVar("method"), "Conjugate Gradient & Precond. (SCI)"),
-      precond(get_ctx()->subVar("precond"), "jacobi"),
-      iteration(get_ctx()->subVar("iteration"), 0),
-      maxiter(get_ctx()->subVar("maxiter"), 200),
-      use_previous_soln(get_ctx()->subVar("use_previous_soln"), 1),
-      emit_partial(get_ctx()->subVar("emit_partial"), 1),
-      emit_iter(get_ctx()->subVar("emit_iter"), 50),
-      status(get_ctx()->subVar("status"), ""),
-      tcl_np(get_ctx()->subVar("np"), 4)
+SolveMatrix::SolveMatrix(GuiContext* ctx)
+  : Module("SolveMatrix", ctx, Filter, "Math", "SCIRun"),
+    target_error(get_ctx()->subVar("target_error"), 0.001),
+    flops(get_ctx()->subVar("flops"), 0.0),
+    floprate(get_ctx()->subVar("floprate"), 0.0),
+    memrefs(get_ctx()->subVar("memrefs"), 0.0),
+    memrate(get_ctx()->subVar("memrate"), 0.0),
+    orig_error(get_ctx()->subVar("orig_error"), 0.0),
+    current_error(get_ctx()->subVar("current_error"), ""),
+    method(get_ctx()->subVar("method"), "Conjugate Gradient & Precond. (SCI)"),
+    precond(get_ctx()->subVar("precond"), "jacobi"),
+    iteration(get_ctx()->subVar("iteration"), 0),
+    maxiter(get_ctx()->subVar("maxiter"), 200),
+    use_previous_soln(get_ctx()->subVar("use_previous_soln"), 1),
+    emit_partial(get_ctx()->subVar("emit_partial"), 1),
+    emit_iter(get_ctx()->subVar("emit_iter"), 50),
+    status(get_ctx()->subVar("status"), ""),
+    tcl_np(get_ctx()->subVar("np"), 4)
 {
 }
 
@@ -254,6 +257,17 @@ SolveMatrix::tcl_command(GuiArgs& args, void*userdata)
   {
     Module::tcl_command(args, userdata);
   }
+}
+
+
+void
+SolveMatrix::set_compute_time_stats(PStats *stats, double time, int nprocs)
+{
+  time = Max(time, 0.000001);
+  flops.set(nprocs * stats->gflop * 1.e9 + stats->flop);
+  floprate.set(nprocs * (stats->gflop * 1.e3 + stats->flop * 1.e-6) / time);
+  memrefs.set(nprocs * stats->grefs * 1.e9 + stats->memref);
+  memrate.set(nprocs * (stats->grefs * 1.e3 + stats->memref * 1.e-6) / time);
 }
 
 
@@ -321,12 +335,12 @@ SolveMatrix::execute()
 
   bool intermediate = false;
 
-  if (meth == "Conjugate Gradient & Precond. (SCI)"){
+  if (meth == "Conjugate Gradient & Precond. (SCI)") {
     conjugate_gradient_sci(mat, *solp, *rhsp);
-  } else if (meth == "BiConjugate Gradient & Precond. (SCI)"){
+  } else if (meth == "BiConjugate Gradient & Precond. (SCI)") {
     bi_conjugate_gradient_sci(mat, *solp, *rhsp);
     intermediate = true;
-  } else if (meth == "Jacoby & Precond. (SCI)"){
+  } else if (meth == "Jacobi & Precond. (SCI)") {
     jacobi_sci(mat, *solp, *rhsp);
 #ifdef PETSC_UNI
   } else if (meth == "KSPRICHARDSON (PETSc)") {
@@ -576,15 +590,14 @@ SolveMatrix::jacobi_sci(Matrix* matrix, ColumnMatrix& lhs, ColumnMatrix& rhs)
 {
   const int size = matrix->nrows();
 
-  int flop = 0;
-  int memref = 0;
-  int gflop = 0;
-  int grefs = 0;
-  flops.set(flop);
-  floprate.set(0);
-  memrefs.set(memref);
-  memrate.set(0);
+  PStats stats_struct;
+  PStats *stats = &stats_struct;
 
+  stats->flop = 0;
+  stats->memref = 0;
+  stats->gflop = 0;
+  stats->grefs = 0;
+  set_compute_time_stats(stats, 0.0, 0);
   iteration.set(0);
 
   ColumnMatrix invdiag(size);
@@ -597,17 +610,16 @@ SolveMatrix::jacobi_sci(Matrix* matrix, ColumnMatrix& lhs, ColumnMatrix& rhs)
     else
       invdiag[i] = 1.0;
   }
-  flop += size;
-  memref = 2*size*(int)sizeof(double);
+  stats->flop += size;
+  stats->memref = 2*size*(int)sizeof(double);
 
   ColumnMatrix Z(size);
-  matrix->mult(lhs, Z, flop, memref);
+  matrix->mult(lhs, Z, stats->flop, stats->memref);
 
-  Sub(Z, Z, rhs, flop, memref);
-  const double bnorm = rhs.vector_norm(flop, memref);
-  double err = Z.vector_norm(flop, memref)/bnorm;
-
-  if (!(err < 10000000)) err=1000000;
+  Sub(Z, Z, rhs, stats->flop, stats->memref);
+  const double bnorm = rhs.vector_norm(stats->flop, stats->memref);
+  double err = Z.vector_norm(stats->flop, stats->memref) / bnorm;
+  if (err >= 10000000) err = 1000000;
 
   orig_error.set(err);
   current_error.set(to_string(err));
@@ -617,17 +629,13 @@ SolveMatrix::jacobi_sci(Matrix* matrix, ColumnMatrix& lhs, ColumnMatrix& rhs)
   if (toomany == 0) { toomany = 2*size; }
   double max_error = target_error.get();
 
-  const double time = Max(timer_.time(), 0.000001);
-  flops.set(gflop*1.e9+flop);
-  floprate.set((gflop*1.e3+flop*1.e-6)/time);
-  memrefs.set(grefs*1.e9+memref);
-  memrate.set((grefs*1.e3+memref*1.e-6)/time);
-  gflop += flop / 1000000000;
-  flop = flop % 1000000000;
-  grefs += memref / 1000000000;
-  memref = memref % 1000000000;
+  stats->gflop += stats->flop / 1000000000;
+  stats->flop = stats->flop % 1000000000;
+  stats->grefs += stats->memref / 1000000000;
+  stats->memref = stats->memref % 1000000000;
+  set_compute_time_stats(stats, timer_.time(), 1);
 
-  get_gui()->execute(get_id()+" reset_graph");
+  get_gui()->execute(get_id() + " reset_graph");
   vector<double> errlist;
   errlist.push_back(err);
   int last_update = 0;
@@ -643,6 +651,7 @@ SolveMatrix::jacobi_sci(Matrix* matrix, ColumnMatrix& lhs, ColumnMatrix& rhs)
 
   const double log_orig = log(err);
   const double log_targ = log(max_error);
+
   while (niter < toomany)
   {
     niter++;
@@ -665,38 +674,34 @@ SolveMatrix::jacobi_sci(Matrix* matrix, ColumnMatrix& lhs, ColumnMatrix& rhs)
       break;
     }
 
-    Mult(Z, invdiag, Z, flop, memref);
-    ScMult_Add(lhs, 1, lhs, Z, flop, memref);
-    //	S10ub(lhs, lhs, Z, flop, memref);
+    Mult(Z, invdiag, Z, stats->flop, stats->memref);
+    ScMult_Add(lhs, 1, lhs, Z, stats->flop, stats->memref);
 
-    matrix->mult(lhs, Z, flop, memref);
-    Sub(Z, rhs, Z, flop, memref);
-    err = Z.vector_norm(flop, memref)/bnorm;
+    matrix->mult(lhs, Z, stats->flop, stats->memref);
+    Sub(Z, rhs, Z, stats->flop, stats->memref);
+    err = Z.vector_norm(stats->flop, stats->memref) / bnorm;
 
     if (err >= 10000000) { err = 1000000; }
 
     errlist.push_back(err);
 
-    gflop += flop / 1000000000;
-    flop = flop % 1000000000;
-    grefs += memref / 1000000000;
-    memref = memref % 1000000000;
+    stats->gflop += stats->flop / 1000000000;
+    stats->flop = stats->flop % 1000000000;
+    stats->grefs += stats->memref / 1000000000;
+    stats->memref = stats->memref % 1000000000;
 
     if (niter == 1 || niter == 5 || niter%10 == 0)
     {
       iteration.set(niter);
       current_error.set(to_string(err));
-      const double time = Max(timer_.time(), 0.000001);
-      flops.set(gflop*1.e9+flop);
-      floprate.set((gflop*1.e3+flop*1.e-6)/time);
-      memrefs.set(grefs*1.e9+memref);
-      memrate.set((grefs*1.e3+memref*1.e-6)/time);
+      set_compute_time_stats(stats, timer_.time(), 1);
 
       append_values(niter, errlist, last_update, targetidx,
                     targetlist, last_errupdate);
 
-      double progress=(log_orig-log(err))/(log_orig-log_targ);
+      const double progress = (log_orig-log(err))/(log_orig-log_targ);
       update_progress(progress);
+
       if (ep && niter%epcount == 0)
         solport->send_intermediate(rhs.clone());
     }
@@ -704,11 +709,7 @@ SolveMatrix::jacobi_sci(Matrix* matrix, ColumnMatrix& lhs, ColumnMatrix& rhs)
   iteration.set(niter);
   current_error.set(to_string(err));
 
-  const double time2 = Max(timer_.time(), 0.000001);
-  flops.set(gflop*1.e9+flop);
-  floprate.set((gflop*1.e3+flop*1.e-6)/time2);
-  memrefs.set(grefs*1.e9+memref);
-  memrate.set((grefs*1.e3+memref*1.e-6)/time2);
+  set_compute_time_stats(stats, timer_.time(), 1);
 
   get_gui()->execute(get_id()+" finish_graph");
   append_values(niter, errlist, last_update, targetidx,
@@ -726,24 +727,22 @@ void
 SolveMatrix::conjugate_gradient_sci(Matrix* matrix,
                                     ColumnMatrix& lhs, ColumnMatrix& rhs)
 {
-  //CPUTimer timer;
-  timer_.start();
   const int np = tcl_np.get();
 
-  data.module=this;
-  data.np=np;
-  data.rhs=&rhs;
-  data.lhs=&lhs;
-  data.mat=matrix;
-  data.timer=new WallClockTimer;
-  data.stats=new PStats[data.np];
+  data.module = this;
+  data.np = np;
+  data.rhs = &rhs;
+  data.lhs = &lhs;
+  data.mat = matrix;
+  data.timer = new WallClockTimer;
+  data.stats = new PStats[data.np];
 
   Thread::parallel(this, &SolveMatrix::parallel_conjugate_gradient, data.np);
 
+  remark("cg done in " + to_string(data.timer->time()) + " seconds");
+
   delete data.timer;
   delete data.stats;
-
-  timer_.stop();
 }
 
 
@@ -772,13 +771,11 @@ SolveMatrix::parallel_conjugate_gradient(int processor)
   {
     data.timer->clear();
     data.timer->start();
-    flops.set(0);
-    floprate.set(0);
-    memrefs.set(0);
-    memrate.set(0);
+    set_compute_time_stats(stats, 0.0, 0);
     iteration.set(0);
-    data.niter=0;
-    data.toomany=maxiter.get();
+
+    data.niter = 0;
+    data.toomany = maxiter.get();
     if (data.toomany == 0) { data.toomany = 2*size; }
 
     if (data.rhs->vector_norm(stats->flop, stats->memref) < 0.0000001)
@@ -789,36 +786,35 @@ SolveMatrix::parallel_conjugate_gradient(int processor)
       return;
     }
 
-    data.diag = new ColumnMatrix(size);
-
     // We should try to do a better job at preconditioning.
+    data.diag = new ColumnMatrix(size);
+    ColumnMatrix& diag = *data.diag;
     for (int i=0; i<size; i++)
     {
-      ColumnMatrix& diag=*data.diag;
-      if (Abs(matrix->get(i,i)>0.000001))
-	diag[i]=1./matrix->get(i,i);
+      if (Abs(matrix->get(i,i) > 0.000001))
+	diag[i] = 1.0 / matrix->get(i,i);
       else
-	diag[i]=1;
+	diag[i] = 1.0;
     }
     stats->flop += size;
     stats->memref += 2*size*sizeof(double);
+
     data.R = new ColumnMatrix(size);
     ColumnMatrix& R = *data.R;
     ColumnMatrix& lhs = *data.lhs;
-
     matrix->mult(lhs, R, stats->flop, stats->memref);
 
     ColumnMatrix& rhs = *data.rhs;
     Sub(R, rhs, R, stats->flop, stats->memref);
-    data.bnorm=rhs.vector_norm(stats->flop, stats->memref);
+    data.bnorm = rhs.vector_norm(stats->flop, stats->memref);
 
     data.Z = new ColumnMatrix(size);
     ColumnMatrix& Z = *data.Z;
     matrix->mult(R, Z, stats->flop, stats->memref);
 
     data.P = new ColumnMatrix(size);
-    data.err=R.vector_norm(stats->flop, stats->memref)/data.bnorm;
 
+    data.err = R.vector_norm(stats->flop, stats->memref) / data.bnorm;
     if (data.err == 0)
     {
       lhs = rhs;
@@ -834,20 +830,15 @@ SolveMatrix::parallel_conjugate_gradient(int processor)
 
     data.max_error = target_error.get();
 
-    stats->gflop += stats->flop/1000000000;
-    stats->flop = stats->flop%1000000000;
-    stats->grefs += stats->memref/1000000000;
-    stats->memref = stats->memref%1000000000;
+    stats->gflop += stats->flop / 1000000000;
+    stats->flop = stats->flop % 1000000000;
+    stats->grefs += stats->memref / 1000000000;
+    stats->memref = stats->memref % 1000000000;
     orig_error.set(data.err);
     current_error.set(to_string(data.err));
+    set_compute_time_stats(stats, data.timer->time(), 1);
 
-    const double time = Max(data.timer->time(), 0.000001);
-    flops.set(stats->gflop*1.e9+stats->flop);
-    floprate.set((stats->gflop*1.e3+stats->flop*1.e-6)/time);
-    memrefs.set(stats->grefs*1.e9+stats->memref);
-    memrate.set((stats->grefs*1.e3+stats->memref*1.e-6)/time);
-
-    get_gui()->execute(get_id()+" reset_graph");
+    get_gui()->execute(get_id() + " reset_graph");
     errlist.push_back(data.err);
     targetidx.push_back(0);
     targetlist.push_back(data.max_error);
@@ -857,13 +848,15 @@ SolveMatrix::parallel_conjugate_gradient(int processor)
   }
   const double log_orig = log(data.err);
   const double log_targ = log(data.max_error);
+
   data.reducer.wait(data.np);
+
   double err = data.err;
   double bkden = 0;
   while (data.niter < data.toomany)
   {
-    ColumnMatrix& Z=*data.Z;
-    ColumnMatrix& P=*data.P;
+    ColumnMatrix& Z = *data.Z;
+    ColumnMatrix& P = *data.P;
     if (processor == 0)
     {
       target_error.reset();
@@ -872,19 +865,21 @@ SolveMatrix::parallel_conjugate_gradient(int processor)
       {
 	targetidx.push_back(data.niter+1);
 	targetlist.push_back(data.max_error);
-	data.max_error=new_error;
+	data.max_error = new_error;
       }
       targetidx.push_back(data.niter);
       targetlist.push_back(data.max_error);
     }
+
     data.reducer.wait(data.np);
+
     if (err < 1.e-15 || err < data.max_error)
       break;
 
     if (processor == 0)
       data.niter++;
 
-    // Simple Preconditioning...
+    // Simple Preconditioning.
     ColumnMatrix& diag = *data.diag;
     ColumnMatrix& R = *data.R;
     Mult(Z, R, diag, stats->flop, stats->memref, beg, end);
@@ -907,6 +902,7 @@ SolveMatrix::parallel_conjugate_gradient(int processor)
     // Calculate coefficient ak, new iterate x and new residuals r and rr
     matrix->mult(P, Z, stats->flop, stats->memref, beg, end);
     bkden = bknum;
+
     const double my_akden = Dot(Z, P, stats->flop, stats->memref, beg, end);
     const double akden = data.reducer.sum(processor, data.np, my_akden);
     const double ak = bknum / akden;
@@ -939,17 +935,13 @@ SolveMatrix::parallel_conjugate_gradient(int processor)
         {
 	  iteration.set(data.niter);
 	  current_error.set(to_string(err));
-	  const double time = Max(timer_.time(), 0.000001);
-	  flops.set(14*stats->gflop*1.e9+stats->flop);
-	  floprate.set(14*(stats->gflop*1.e3+stats->flop*1.e-6)/time);
-          memrefs.set(14*stats->grefs*1.e9+stats->memref);
-	  memrate.set(14*(stats->grefs*1.e3+stats->memref*1.e-6)/time);
+          set_compute_time_stats(stats, data.timer->time(), data.np);
 	  append_values(data.niter, errlist, last_update, targetidx,
 			targetlist, last_errupdate);
 	
 	  if (err > 0)
           {
-	    double progress = (log_orig-log(err))/(log_orig-log_targ);
+	    const double progress = (log_orig-log(err))/(log_orig-log_targ);
 	    update_progress(progress);
 	  }
 	}
@@ -959,6 +951,9 @@ SolveMatrix::parallel_conjugate_gradient(int processor)
       }
     }
   }
+
+  data.reducer.wait(data.np);
+
   if (processor == 0)
   {
     data.niter++;
@@ -966,16 +961,13 @@ SolveMatrix::parallel_conjugate_gradient(int processor)
     iteration.set(data.niter);
     current_error.set(to_string(err));
     data.timer->stop();
-    const double time = Max(data.timer->time(), 0.000001);
-    flops.set(14*stats->gflop*1.e9+stats->flop);
-    floprate.set(14*(stats->gflop*1.e3+stats->flop*1.e-6)/time);
-    memrefs.set(14*stats->grefs*1.e9+stats->memref);
-    memrate.set(14*(stats->grefs*1.e3+stats->memref*1.e-6)/time);
+    const double time = data.timer->time();
+    set_compute_time_stats(stats, time, data.np);
+    remark("Done in " + to_string(time) + " seconds.");
 
     get_gui()->execute(get_id()+" finish_graph");
     append_values(data.niter, errlist, last_update, targetidx, targetlist,
 		  last_errupdate);
-
   }
 }
 
@@ -984,10 +976,7 @@ void
 SolveMatrix::bi_conjugate_gradient_sci(Matrix* matrix,
 				       ColumnMatrix& lhs, ColumnMatrix& rhs)
 {
-  //CPUTimer timer;
-  timer_.start();
-  int np = tcl_np.get();
-  Matrix *trans = matrix->transpose();
+  const int np = tcl_np.get();
 
   data.module = this;
   data.np = np;
@@ -996,16 +985,15 @@ SolveMatrix::bi_conjugate_gradient_sci(Matrix* matrix,
   data.mat = matrix;
   data.timer = new WallClockTimer;
   data.stats = new PStats[data.np];
-  data.trans = trans;
+  data.trans = matrix->transpose();
 
   Thread::parallel(this, &SolveMatrix::parallel_bi_conjugate_gradient,
                    data.np);
 
+  remark("bi_cg done in " + to_string(data.timer->time()) + " seconds");
+
   delete data.timer;
   delete data.stats;
-
-  timer_.stop();
-  remark("bi_cg done in " + to_string(timer_.time()) + " seconds");
 }
 
 
@@ -1034,25 +1022,22 @@ SolveMatrix::parallel_bi_conjugate_gradient(int processor)
   {
     data.timer->clear();
     data.timer->start();
-    flops.set(0);
-    floprate.set(0);
-    memrefs.set(0);
-    memrate.set(0);
+    set_compute_time_stats(stats, 0.0, 0);
     iteration.set(0);
 
-    data.diag = new ColumnMatrix(size);
-
     // We should try to do a better job at preconditioning.
-    ColumnMatrix& diag=*data.diag;
+    data.diag = new ColumnMatrix(size);
+    ColumnMatrix& diag = *data.diag;
     for (int i=0; i<size; i++)
     {
       if (Abs(matrix->get(i,i) > 0.000001))
 	diag[i] = 1.0 / matrix->get(i,i);
       else
-	diag[i] = 1;
+	diag[i] = 1.0;
     }
     stats->flop += size;
     stats->memref += 2*size*sizeof(double);
+
     data.R = new ColumnMatrix(size);
     ColumnMatrix& R = *data.R;
     ColumnMatrix& lhs = *data.lhs;
@@ -1068,22 +1053,16 @@ SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     Copy(R1, R, stats->flop, stats->memref, 0, size);
 
     data.Z = new ColumnMatrix(size);
-    //         ColumnMatrix& Z=*data.Z;
-    //         matrix->mult(R, Z, stats->flop, stats->memref);
 
     // BiCG ??
     data.Z1 = new ColumnMatrix(size);
-    //         ColumnMatrix& Z1=*data.Z1;
-    //         matrix->mult(R, Z, stats->flop, stats->memref);
 
     data.P = new ColumnMatrix(size);
-    //         ColumnMatrix& P=*data.P;
 
     // BiCG
     data.P1 = new ColumnMatrix(size);
-    //         ColumnMatrix& P1=*data.P1;
 
-    data.err = R.vector_norm(stats->flop, stats->memref)/data.bnorm;
+    data.err = R.vector_norm(stats->flop, stats->memref) / data.bnorm;
     if (data.err == 0)
     {
       lhs = rhs;
@@ -1110,11 +1089,7 @@ SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     orig_error.set(data.err);
     current_error.set(to_string(data.err));
 
-    const double time = Max(data.timer->time(), 0.000001);
-    flops.set(stats->gflop*1.e9+stats->flop);
-    floprate.set((stats->gflop*1.e3+stats->flop*1.e-6)/time);
-    memrefs.set(stats->grefs*1.e9+stats->memref);
-    memrate.set((stats->grefs*1.e3+stats->memref*1.e-6)/time);
+    set_compute_time_stats(stats, data.timer->time(), 1);
 
     get_gui()->execute(get_id()+" reset_graph");
     errlist.push_back(data.err);
@@ -1126,10 +1101,11 @@ SolveMatrix::parallel_bi_conjugate_gradient(int processor)
   }
   const double log_orig = log(data.err);
   const double log_targ = log(data.max_error);
+
   data.reducer.wait(data.np);
+
   double err = data.err;
   double bkden = 0;
-
   while (data.niter < data.toomany)
   {
     ColumnMatrix& Z = *data.Z;
@@ -1151,6 +1127,7 @@ SolveMatrix::parallel_bi_conjugate_gradient(int processor)
       targetidx.push_back(data.niter);
       targetlist.push_back(data.max_error);
     }
+
     data.reducer.wait(data.np);
 
     if (err < data.max_error)
@@ -1159,10 +1136,11 @@ SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     if ( processor == 0 )
       data.niter++;
 
-    // Simple Preconditioning...
+    // Simple Preconditioning.
     ColumnMatrix& diag = *data.diag;
     ColumnMatrix& R = *data.R;
     Mult(Z, R, diag, stats->flop, stats->memref, beg, end);
+
     // BiCG
     ColumnMatrix& R1 = *data.R1;
     Mult(Z1, R1, diag, stats->flop, stats->memref, beg, end);
@@ -1174,9 +1152,6 @@ SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 
     // BiCG
     if ( bknum == 0 ) {
-      //tol =
-      // max_iter =
-      // return 2
       break;
     }
 
@@ -1201,16 +1176,14 @@ SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     bkden = bknum;
 
     // BiCG
-    //     matrix->mult_transpose(P1, Z1, stats->flop, stats->memref, beg, end);
     data.trans->mult(P1, Z1, stats->flop, stats->memref, beg, end);
 
     // BiCG = change P -> P1
     const double my_akden = Dot(Z, P1, stats->flop, stats->memref, beg, end);
     const double akden = data.reducer.sum(processor, data.np, my_akden);
     const double ak = bknum / akden;
-    ColumnMatrix& lhs=*data.lhs;
+    ColumnMatrix& lhs = *data.lhs;
     ScMult_Add(lhs, ak, P, lhs, stats->flop, stats->memref, beg, end);
-    //        ColumnMatrix& rhs=*data.rhs;
     ScMult_Add(R, -ak, Z, R, stats->flop, stats->memref, beg, end);
     // BiCG
     ScMult_Add(R1, -ak, Z1, R1, stats->flop, stats->memref, beg, end);
@@ -1218,7 +1191,6 @@ SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     const double my_err = R.vector_norm(stats->flop, stats->memref,
                                         beg, end) / data.bnorm;
     err = data.reducer.sum(processor, data.np, my_err);
-
     if (err >= 1000000) { err = 1000000; }
 
     stats->gflop += stats->flop/1000000000;
@@ -1241,17 +1213,13 @@ SolveMatrix::parallel_bi_conjugate_gradient(int processor)
         {
 	  iteration.set(data.niter);
 	  current_error.set(to_string(err));
-	  const double time = Max(timer_.time(), 0.000001);
-	  flops.set(14*stats->gflop*1.e9+stats->flop);
-	  floprate.set(14*(stats->gflop*1.e3+stats->flop*1.e-6)/time);                    memrefs.set(14*stats->grefs*1.e9+stats->memref);
-	  memrate.set(14*(stats->grefs*1.e3+stats->memref*1.e-6)/time);
+          set_compute_time_stats(stats, data.timer->time(), data.np);
 	  append_values(data.niter, errlist, last_update, targetidx,
 			targetlist, last_errupdate);
 	
 	  if (err > 0)
           {
 	    const double progress = (log_orig-log(err)) / (log_orig-log_targ);
-	    warning("err=" + to_string(err));
 	    update_progress(progress);
 	  }
 	}
@@ -1265,6 +1233,8 @@ SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     }
   }
 
+  data.reducer.wait(data.np);
+
   if (processor == 0)
   {
     data.niter++;
@@ -1272,19 +1242,14 @@ SolveMatrix::parallel_bi_conjugate_gradient(int processor)
     iteration.set(data.niter);
     current_error.set(to_string(err));
     data.timer->stop();
-    const double time = Max(data.timer->time(), 0.000001);
-    flops.set(14*stats->gflop*1.e9+stats->flop);
-    floprate.set(14*(stats->gflop*1.e3+stats->flop*1.e-6)/time);
-    memrefs.set(14*stats->grefs*1.e9+stats->memref);
-    memrate.set(14*(stats->grefs*1.e3+stats->memref*1.e-6)/time);
+    const double time = data.timer->time();
+    set_compute_time_stats(stats, data.timer->time(), data.np);
     remark("Done in " + to_string(time) + " seconds.");
 
     get_gui()->execute(get_id()+" finish_graph");
     append_values(data.niter, errlist, last_update, targetidx, targetlist,
 		  last_errupdate);
-
   }
-  data.reducer.wait(data.np);
 }
 
 
