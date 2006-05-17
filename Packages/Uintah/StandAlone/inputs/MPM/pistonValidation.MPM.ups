@@ -190,13 +190,11 @@
          <material>
               <density>   1.1768292682926831   </density>
               <constitutive_model type="ideal_gas">
-                  <gamma>          1.4          </gamma>
                   <specific_heat>  717.5        </specific_heat>
                   <UseArtificialViscosity>false</UseArtificialViscosity>
               </constitutive_model>
               <thermal_conductivity> 1000.0           </thermal_conductivity>
               <specific_heat>         717.5           </specific_heat>
-              <gamma>                 1.4             </gamma>
               <geom_object>
                 <box label = "">                       
                  <min>   [-0.1, -0.5, -0.1]        </min>      

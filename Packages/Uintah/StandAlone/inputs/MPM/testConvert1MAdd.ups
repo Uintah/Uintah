@@ -61,7 +61,6 @@
    <MaterialProperties>
      <MPM>
         <material>
-          <gamma> 1.4 </gamma>           
           <include href="inputs/MPM/MaterialData/MaterialConst4340Steel.xml"/>
           <constitutive_model type="hypoelastic_plastic">
             <tolerance>1.0e-15</tolerance>
@@ -110,7 +109,6 @@
     <AddMaterialProperties>
       <MPM>
         <material>
-          <gamma> 1.4 </gamma>           
           <include href="inputs/MPM/MaterialData/MaterialConst4340Steel.xml"/>
           <constitutive_model type="hypoelastic_plastic">
             <tolerance>1.0e-15</tolerance>

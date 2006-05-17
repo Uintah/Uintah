@@ -196,7 +196,6 @@
     <MaterialProperties>
        <MPM>
          <material name = "Steel Ring">
-               <gamma>                 1.4         </gamma>           
                <density>               7830.0      </density>
                <thermal_conductivity>  44.5        </thermal_conductivity>
                <specific_heat>         477         </specific_heat>
@@ -313,7 +312,6 @@
          </material>
 
          <material name = "reactant">
-           <gamma>                 1.4      </gamma>           
            <density>               1828.0   </density>
            <thermal_conductivity>  0.452    </thermal_conductivity>
            <specific_heat>         1200.0   </specific_heat>

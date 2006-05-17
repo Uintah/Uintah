@@ -155,12 +155,10 @@
          <material>
               <density>   1.1768292682926831   </density>
               <constitutive_model type="ideal_gas">
-                  <gamma>          1.4          </gamma>
                   <specific_heat>  716.0        </specific_heat>
               </constitutive_model>
               <thermal_conductivity>    0.0           </thermal_conductivity>
               <specific_heat>         716.0           </specific_heat>
-              <gamma>                 1.4             </gamma>
               <geom_object>
                <box label="leftpartition">
                     <min>           [-1.0, -1.0, -1.0 ]   </min>
@@ -174,12 +172,10 @@
          <material>
               <density>   1.05914634146         </density>
               <constitutive_model type="ideal_gas">
-                  <gamma>          1.4          </gamma>
                   <specific_heat>  716.0        </specific_heat>
               </constitutive_model>
               <thermal_conductivity>    0.0           </thermal_conductivity>
               <specific_heat>         716.0           </specific_heat>
-              <gamma>                 1.4             </gamma>
               <geom_object>
                <box label="leftpartition">
                     <min>           [ 1.0, -1.0, -1.0 ]   </min>

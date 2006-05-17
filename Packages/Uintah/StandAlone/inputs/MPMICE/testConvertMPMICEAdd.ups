@@ -77,7 +77,6 @@
    <MaterialProperties>
      <MPM>
         <material>
-          <gamma> 1.4 </gamma>           
           <include href="inputs/MPM/MaterialData/MaterialConst4340Steel.xml"/>
           <constitutive_model type="hypoelastic_plastic">
             <useModifiedEOS> true </useModifiedEOS>
@@ -160,7 +159,6 @@
     <AddMaterialProperties>
       <MPM>
         <material>
-          <gamma> 1.4 </gamma>           
           <include href="inputs/MPM/MaterialData/MaterialConst4340Steel.xml"/>
           <constitutive_model type="hypoelastic_plastic">
             <useModifiedEOS> true </useModifiedEOS>
