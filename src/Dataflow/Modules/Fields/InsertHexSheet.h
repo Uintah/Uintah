@@ -410,6 +410,26 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
     typename FIELD::mesh_type::Node::index_type,
     less<unsigned int> > hash_type;
 #endif
+#ifdef HAVE_HASH_MAP
+  typedef hash_map<unsigned int,
+    typename FIELD::mesh_type::Edge::index_type,
+    hash<unsigned int>,
+    equal_to<unsigned int> > hash_type2;
+#else
+  typedef map<unsigned int,
+    typename FIELD::mesh_type::Edge::index_type,
+    less<unsigned int> > hash_type2;
+#endif
+#ifdef HAVE_HASH_MAP
+  typedef hash_map<unsigned int,
+    typename FIELD::mesh_type::Face::index_type,
+    hash<unsigned int>,
+    equal_to<unsigned int> > hash_type3;
+#else
+  typedef map<unsigned int,
+    typename FIELD::mesh_type::Face::index_type,
+    less<unsigned int> > hash_type3;
+#endif
 
   vector<int> crosses(hexmesh.hexes.size(), -1);
   vector<int> hexes(hexmesh.hexes.size());
@@ -637,8 +657,9 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
     }
 
     tri_mesh->synchronize( Mesh::LOCATE_E );
-    map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type> new_map1;
-    map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type> new_map2;
+//    map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type> new_map1;
+//    map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type> new_map2;
+    hash_type new_map1, new_map2;
     unsigned int i; 
 
     for( i = 0; i < oi_node_list.size(); i++ )
@@ -667,9 +688,27 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
       typename FIELD::mesh_type::Node::index_type this_index2 = side2_mesh->add_point( new_point );
     
         //create a map for the new node to a node on the boundary of the clipped mesh...
-      new_map1[side1_nodemap[this_node]] = this_index1;
-      new_map2[side2_nodemap[this_node]] = this_index2;
-
+      typename hash_type::iterator node_iter; 
+      node_iter = new_map1.find( side1_nodemap[this_node] );
+      if( node_iter == new_map1.end() )
+      {
+        new_map1[side1_nodemap[this_node]] = this_index1;
+      }
+      else
+      {
+        cout << "ERROR\n";
+      }
+      
+      node_iter = new_map2.find( side2_nodemap[this_node] );
+      if( node_iter == new_map2.end() )
+      {
+        new_map2[side2_nodemap[this_node]] = this_index2;
+      }
+      else
+      {
+        cout << "ERROR2\n";
+      }
+      
       if( add_to_side1 )
       {  
         Point p;
@@ -693,89 +732,220 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
     }
     cout << "\nFound " << count << " nodes along the shared boundary...\n";
 
-    side1_mesh->synchronize( Mesh::NODE_NEIGHBORS_E | Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E ); 
-    side2_mesh->synchronize( Mesh::NODE_NEIGHBORS_E | Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E );
+    side1_mesh->synchronize( Mesh::NODE_NEIGHBORS_E | Mesh::EDGES_E | Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E );
+    side2_mesh->synchronize( Mesh::NODE_NEIGHBORS_E | Mesh::EDGES_E | Mesh::FACE_NEIGHBORS_E | Mesh::FACES_E );
   
     typename HexVolMesh<HexTrilinearLgn<Point> >::Elem::size_type clipped1_size;
     typename HexVolMesh<HexTrilinearLgn<Point> >::Elem::size_type clipped2_size;
     side1_mesh->size( clipped1_size );
     side2_mesh->size( clipped2_size );
 
-    if( clipped1_size < clipped2_size )
-    {
-        //Walk all the cells in the smallest clipped mesh to find the boundary faces...
-      typename FIELD::mesh_type::Cell::iterator citer; side1_mesh->begin(citer);
-      typename FIELD::mesh_type::Cell::iterator citere; side1_mesh->end(citere);
+//     if( clipped1_size < clipped2_size )
+//     {
+//         //Walk all the cells in the smallest clipped mesh to find the boundary faces...
+//       typename FIELD::mesh_type::Cell::iterator citer; side1_mesh->begin(citer);
+//       typename FIELD::mesh_type::Cell::iterator citere; side1_mesh->end(citere);
+//       hash_type3 face_list;
+//       hash_type2 edgemap1, edgemap2, edgemap3;
       
-      while( citer != citere )
-      {
-        typename FIELD::mesh_type::Cell::index_type ci = *citer;
-        ++citer;
+//       while( citer != citere )
+//       {
+//         typename FIELD::mesh_type::Cell::index_type ci = *citer;
+//         ++citer;
         
-          // Get all the faces in the cell.
-        typename FIELD::mesh_type::Face::array_type faces;
-        side1_mesh->get_faces( faces, ci );
+//           // Get all the faces in the cell.
+//         typename FIELD::mesh_type::Face::array_type faces;
+//         side1_mesh->get_faces( faces, ci );
         
-          // Check each face for neighbors.
-        typename FIELD::mesh_type::Face::array_type::iterator fiter = faces.begin();
+//           // Check each face for neighbors.
+//         typename FIELD::mesh_type::Face::array_type::iterator fiter = faces.begin();
         
-        while( fiter != faces.end() )
-        {
-          typename FIELD::mesh_type::Cell::index_type nci;
-          typename FIELD::mesh_type::Face::index_type fi = *fiter;
-          ++fiter;
+//         while( fiter != faces.end() )
+//         {
+//           typename FIELD::mesh_type::Cell::index_type nci;
+//           typename FIELD::mesh_type::Face::index_type fi = *fiter;
+//           ++fiter;
           
-          if( !side1_mesh->get_neighbor( nci, ci, fi ) )
-          {
-              // Faces with no neighbors are on the boundary...
-              //    make sure that this face isn't on the original boundary
-            typename FIELD::mesh_type::Face::index_type old_face;
+//           if( !side1_mesh->get_neighbor( nci, ci, fi ) )
+//           {
+//               // Faces with no neighbors are on the boundary...
+//               //    make sure that this face isn't on the original boundary
             
-            typename FIELD::mesh_type::Node::array_type face_nodes;
-            side1_mesh->get_nodes( face_nodes, fi );
-            typename hash_type::iterator search1, search2, search3, search4, search_end; 
-            search_end = shared_vertex_map.end();
-            search1 = shared_vertex_map.find( side1_reverse_map[face_nodes[0]] );
-            search2 = shared_vertex_map.find( side1_reverse_map[face_nodes[1]] );
-            search3 = shared_vertex_map.find( side1_reverse_map[face_nodes[2]] );
-            search4 = shared_vertex_map.find( side1_reverse_map[face_nodes[3]] );
-            if( search1 != search_end && search2 != search_end &&
-                search3 != search_end && search4 != search_end )
-            {
-              typename FIELD::mesh_type::Node::array_type nnodes1(8);
-              typename FIELD::mesh_type::Node::array_type nnodes2(8);
-//NOTE TO JS:NEED to find a way to ensure the ordering is always correct...
+//             typename FIELD::mesh_type::Node::array_type face_nodes;
+//             side1_mesh->get_nodes( face_nodes, fi );
+//             typename hash_type::iterator search1, search2, search3, search4, search_end; 
+//             search_end = shared_vertex_map.end();
+//             search1 = shared_vertex_map.find( side1_reverse_map[face_nodes[0]] );
+//             search2 = shared_vertex_map.find( side1_reverse_map[face_nodes[1]] );
+//             search3 = shared_vertex_map.find( side1_reverse_map[face_nodes[2]] );
+//             search4 = shared_vertex_map.find( side1_reverse_map[face_nodes[3]] );
+//             if( search1 != search_end && search2 != search_end &&
+//                 search3 != search_end && search4 != search_end )
+//             {
+//               bool ok_to_add_face = true;
+//               typename FIELD::mesh_type::Face::index_type old_face;
+//               if( !original_mesh->get_face( old_face, side1_reverse_map[face_nodes[0]], 
+//                                            side1_reverse_map[face_nodes[1]],
+//                                            side1_reverse_map[face_nodes[2]], 
+//                                            side1_reverse_map[face_nodes[3]] ) )
+//               {
+//                 cout << "ERROR3" << endl;
+//                 ok_to_add_face = false;
+//               }
+                
+//                 //check for non-manifold edges... 
+//               typename FIELD::mesh_type::Edge::array_type face_edges;
+//               side1_mesh->get_edges( face_edges, fi );
+//               typename hash_type2::iterator esearch;
+//               for( i = 0; i < face_edges.size(); i++ )
+//               {
+//                 esearch = edgemap1.find( face_edges[i] );
+//                 if( esearch == edgemap1.end() )
+//                 {
+//                   edgemap1[face_edges[i]] = face_edges[i];
+//                 }
+//                 else
+//                 {
+//                   esearch = edgemap2.find( face_edges[i] );
+//                   if( esearch == edgemap2.end() )
+//                   {
+//                     edgemap2[face_edges[i]] = face_edges[i];
+//                   }
+//                   else
+//                   {
+//                     ok_to_add_face = false;
+//                     esearch = edgemap3.find( face_edges[i] );
+//                     if( esearch == edgemap3.end() )
+//                     {
+//                       edgemap3[face_edges[i]] = face_edges[i];
+//                     }
+//                   }
+//                 }
+//               }
 
-              nnodes1[0] = face_nodes[3];
-              nnodes1[1] = face_nodes[2];
-              nnodes1[2] = face_nodes[1];
-              nnodes1[3] = face_nodes[0];
-              nnodes1[4] = new_map1[face_nodes[3]];
-              nnodes1[5] = new_map1[face_nodes[2]];
-              nnodes1[6] = new_map1[face_nodes[1]];
-              nnodes1[7] = new_map1[face_nodes[0]];              
-              side1_mesh->add_elem( nnodes1 );
+//               if( ok_to_add_face )
+//               { 
+//                 typename hash_type3::iterator test_iter = face_list.find( fi );
+//                 if( test_iter == face_list.end() )
+//                 {
+//                   face_list[fi] = fi;
+//                 }
+//               }
+//             }
+//           }
+//         }
+//       }
+      
+//         //special casing for projecting faces connected to non-manifold edges...
+//       if( edgemap3.size() != 0 )
+//       {
+//         cout << "WARNING: Clipped mesh contains " << edgemap3.size() << " non-manifold edges.\n    Ids are:";
+//         typename hash_type2::iterator nm_search = edgemap3.begin();
+//         typename hash_type2::iterator nm_search_end = edgemap3.end();
+//         while( nm_search != nm_search_end )
+//         {
+//           typename FIELD::mesh_type::Edge::index_type this_edge = (*nm_search).first;
+//           cout << " " << this_edge;
+
+//           typename FIELD::mesh_type::Face::array_type edges_faces;
+//           get_faces( side1_mesh, edges_faces, this_edge );
+//           vector<typename FIELD::mesh_type::Face::index_type> face_list2;
+//           for( i = 0; i < edges_faces.size(); i++ )
+//           {
+//             typename FIELD::mesh_type::Elem::array_type faces_hexes;
+//             side1_mesh->get_elems( faces_hexes, edges_faces[i] );
+//             if( faces_hexes.size() == 1 )
+//             {
+//               face_list2.push_back( edges_faces[i] );
+//             }
+//           }
+
+//           for( i = 0; i < face_list2.size(); i++ )
+//           {
+//             typename hash_type3::iterator face_iter;
+//             face_iter = face_list.find( face_list2[i] );
+//             if( face_iter != face_list.end() )
+//             {
+//               face_list.erase( face_iter );
+//             }
+//           }
+
+//           bool multiproject_node1 = false, multiproject_node2 = false;
+//           typename FIELD::mesh_type::Node::array_type problem_nodes;
+//           side1_mesh->get_nodes( problem_nodes, this_edge );
+//           typename FIELD::mesh_type::Node::index_type node1 = problem_nodes[0], 
+//               node2 = problem_nodes[1];
+//           typename FIELD::mesh_type::Elem::array_type edges_hexes, node1_hexes, node2_hexes;
+//           side1_mesh->get_elems( edges_hexes, this_edge );
+//           side1_mesh->get_elems( node1_hexes, node1 );
+//           side1_mesh->get_elems( node2_hexes, node2 );
+//           if( node1_hexes.size() == edges_hexes.size() )
+//           {
+//             cout << " Don't need to multiproject node1 (" << node1 << ")\n";
+//           }
+//           else
+//           {
+//             cout << " Need to multiproject node1 (" << node1 << ")\n";
+//             multiproject_node1 = true;
+//           }
+//           if( node2_hexes.size() == edges_hexes.size() )
+//           {
+//             cout << " Don't need to multiproject node2 (" << node2 << ")\n";
+//           }
+//           else
+//           {
+//             cout << " Need to multiproject node2 (" << node2 << ")\n";
+//             multiproject_node2 = true;
+//           }
+          
+          
+//           ++nm_search;
+//         }
+//         cout << endl;
+//       }
+      
+//       cout << "adding to Clipped1\n";
+//       typename hash_type3::iterator fiter = face_list.begin();
+//       typename hash_type3::iterator fiter_end = face_list.end();
+//       while( fiter != fiter_end )
+//       {
+//         typename FIELD::mesh_type::Node::array_type face_nodes;
+//         typename FIELD::mesh_type::Face::index_type face_id = (*fiter).first;
+//         side1_mesh->get_nodes( face_nodes, face_id );
+        
+//         typename FIELD::mesh_type::Node::array_type nnodes1(8);
+//         typename FIELD::mesh_type::Node::array_type nnodes2(8);
+
+//         nnodes1[0] = face_nodes[3];
+//         nnodes1[1] = face_nodes[2];
+//         nnodes1[2] = face_nodes[1];
+//         nnodes1[3] = face_nodes[0];
+//         nnodes1[4] = new_map1[face_nodes[3]];
+//         nnodes1[5] = new_map1[face_nodes[2]];
+//         nnodes1[6] = new_map1[face_nodes[1]];
+//         nnodes1[7] = new_map1[face_nodes[0]];              
+//         side1_mesh->add_elem( nnodes1 );
               
-              nnodes2[0] = side2_nodemap[side1_reverse_map[face_nodes[0]]];
-              nnodes2[1] = side2_nodemap[side1_reverse_map[face_nodes[1]]];
-              nnodes2[2] = side2_nodemap[side1_reverse_map[face_nodes[2]]];
-              nnodes2[3] = side2_nodemap[side1_reverse_map[face_nodes[3]]];
-              nnodes2[4] = new_map2[side2_nodemap[side1_reverse_map[face_nodes[0]]]];
-              nnodes2[5] = new_map2[side2_nodemap[side1_reverse_map[face_nodes[1]]]];
-              nnodes2[6] = new_map2[side2_nodemap[side1_reverse_map[face_nodes[2]]]];
-              nnodes2[7] = new_map2[side2_nodemap[side1_reverse_map[face_nodes[3]]]];
-              side2_mesh->add_elem( nnodes2 );
-            }
-          }
-        }
-      }
-    }
-    else
-    {
+//         nnodes2[0] = side2_nodemap[side1_reverse_map[face_nodes[0]]];
+//         nnodes2[1] = side2_nodemap[side1_reverse_map[face_nodes[1]]];
+//         nnodes2[2] = side2_nodemap[side1_reverse_map[face_nodes[2]]];
+//         nnodes2[3] = side2_nodemap[side1_reverse_map[face_nodes[3]]];
+//         nnodes2[4] = new_map2[side2_nodemap[side1_reverse_map[face_nodes[0]]]];
+//         nnodes2[5] = new_map2[side2_nodemap[side1_reverse_map[face_nodes[1]]]];
+//         nnodes2[6] = new_map2[side2_nodemap[side1_reverse_map[face_nodes[2]]]];
+//         nnodes2[7] = new_map2[side2_nodemap[side1_reverse_map[face_nodes[3]]]];
+//         side2_mesh->add_elem( nnodes2 );
+//         ++fiter;
+//       }
+//     }
+//     else
+//     {
         //Walk all the cells in the smallest clipped mesh to find the boundary faces...
       typename FIELD::mesh_type::Cell::iterator citer; side2_mesh->begin(citer);
       typename FIELD::mesh_type::Cell::iterator citere; side2_mesh->end(citere);
-      
+      hash_type3 face_list;
+      hash_type2 edgemap1, edgemap2, edgemap3;
+
       while( citer != citere )
       {
         typename FIELD::mesh_type::Cell::index_type ci = *citer;
@@ -798,7 +968,6 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
           {
               // Faces with no neighbors are on the boundary...
               //    make sure that this face isn't on the original boundary
-            typename FIELD::mesh_type::Face::index_type old_face;
             
             typename FIELD::mesh_type::Node::array_type face_nodes;
             side2_mesh->get_nodes( face_nodes, fi );
@@ -810,49 +979,163 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
             search4 = shared_vertex_map.find( side2_reverse_map[face_nodes[3]] );
             if( search1 != search_end && search2 != search_end &&
                 search3 != search_end && search4 != search_end )
-            {
-              typename FIELD::mesh_type::Node::array_type nnodes1(8);
-              typename FIELD::mesh_type::Node::array_type nnodes2(8);
-//NOTE TO JS:NEED to find a way to ensure the ordering is always correct...           
-//               if( add_to_side1 )
-//               {
-//                 nnodes2[0] = face_nodes[0];
-//                 nnodes2[1] = face_nodes[1];
-//                 nnodes2[2] = face_nodes[2];
-//                 nnodes2[3] = face_nodes[3];
-//                 nnodes2[4] = new_map2[face_nodes[0]];
-//                 nnodes2[5] = new_map2[face_nodes[1]];
-//                 nnodes2[6] = new_map2[face_nodes[2]];
-//                 nnodes2[7] = new_map2[face_nodes[3]];
-//                 side2_mesh->add_elem( nnodes2 );
-//               }
-//               else
-//               {
-                nnodes2[0] = face_nodes[3];
-                nnodes2[1] = face_nodes[2];
-                nnodes2[2] = face_nodes[1];
-                nnodes2[3] = face_nodes[0];
-                nnodes2[4] = new_map2[face_nodes[3]];
-                nnodes2[5] = new_map2[face_nodes[2]];
-                nnodes2[6] = new_map2[face_nodes[1]];
-                nnodes2[7] = new_map2[face_nodes[0]];              
-                side2_mesh->add_elem( nnodes2 );
-//               }
-              
-              nnodes1[0] = side1_nodemap[side2_reverse_map[face_nodes[0]]];
-              nnodes1[1] = side1_nodemap[side2_reverse_map[face_nodes[1]]];
-              nnodes1[2] = side1_nodemap[side2_reverse_map[face_nodes[2]]];
-              nnodes1[3] = side1_nodemap[side2_reverse_map[face_nodes[3]]];
-              nnodes1[4] = new_map1[side1_nodemap[side2_reverse_map[face_nodes[0]]]];
-              nnodes1[5] = new_map1[side1_nodemap[side2_reverse_map[face_nodes[1]]]];
-              nnodes1[6] = new_map1[side1_nodemap[side2_reverse_map[face_nodes[2]]]];
-              nnodes1[7] = new_map1[side1_nodemap[side2_reverse_map[face_nodes[3]]]];
-              side1_mesh->add_elem( nnodes1 );
+            { 
+              bool ok_to_add_face = true;
+              typename FIELD::mesh_type::Face::index_type old_face;
+              if( !original_mesh->get_face( old_face, side2_reverse_map[face_nodes[0]], 
+                                            side2_reverse_map[face_nodes[1]],
+                                            side2_reverse_map[face_nodes[2]], 
+                                            side2_reverse_map[face_nodes[3]] ) )
+              {
+                cout << "ERROR4" << endl;
+                ok_to_add_face = false;
+              }
+
+                //check for non-manifold edges... 
+              typename FIELD::mesh_type::Edge::array_type face_edges;
+              side2_mesh->get_edges( face_edges, fi );
+              typename hash_type2::iterator esearch;
+              for( i = 0; i < face_edges.size(); i++ )
+              {
+                esearch = edgemap1.find( face_edges[i] );
+                if( esearch == edgemap1.end() )
+                {
+                  edgemap1[face_edges[i]] = face_edges[i];
+                }
+                else
+                {
+                  esearch = edgemap2.find( face_edges[i] );
+                  if( esearch == edgemap2.end() )
+                  {
+                    edgemap2[face_edges[i]] = face_edges[i];
+                  }
+                  else
+                  {
+                    ok_to_add_face = false;
+                    esearch = edgemap3.find( face_edges[i] );
+                    if( esearch == edgemap3.end() )
+                    {
+                      edgemap3[face_edges[i]] = face_edges[i];
+                    }
+                  }
+                }
+              }
+
+              if( ok_to_add_face )
+              {
+                typename hash_type3::iterator test_iter = face_list.find( fi );
+                if( test_iter == face_list.end() )
+                {
+                  face_list[fi] = fi;
+                }
+              }
             }
           }
         }
       }
-    }
+       
+        //special casing for projecting faces connected to non-manifold edges...
+      if( edgemap3.size() != 0 )
+      {
+        cout << "WARNING: Clipped mesh contains " << edgemap3.size() << " non-manifold edges.\n    Ids are:";
+        typename hash_type2::iterator nm_search = edgemap3.begin();
+        typename hash_type2::iterator nm_search_end = edgemap3.end();
+        while( nm_search != nm_search_end )
+        {
+          typename FIELD::mesh_type::Edge::index_type this_edge = (*nm_search).first;
+          cout << " " << this_edge;
+
+          typename FIELD::mesh_type::Face::array_type edges_faces;
+          get_faces( side2_mesh, edges_faces, this_edge );
+          cout << "edges_faces.size() == " << edges_faces.size() << endl;
+          vector<typename FIELD::mesh_type::Face::index_type> face_list2;
+          for( i = 0; i < edges_faces.size(); i++ )
+          {
+            typename FIELD::mesh_type::Elem::array_type faces_hexes;
+            side2_mesh->get_elems( faces_hexes, edges_faces[i] );
+            if( faces_hexes.size() == 1 )
+            {
+              face_list2.push_back( edges_faces[i] );
+            }
+          }
+
+          for( i = 0; i < face_list2.size(); i++ )
+          {
+            typename hash_type3::iterator face_iter;
+            face_iter = face_list.find( face_list2[i] );
+            if( face_iter != face_list.end() )
+            {
+              face_list.erase( face_iter );
+            }
+          }
+
+          bool multiproject_node1 = false, multiproject_node2 = false;
+          typename FIELD::mesh_type::Node::array_type problem_nodes;
+          side2_mesh->get_nodes( problem_nodes, this_edge );
+          typename FIELD::mesh_type::Node::index_type node1 = problem_nodes[0], 
+              node2 = problem_nodes[1];
+          typename FIELD::mesh_type::Elem::array_type edges_hexes, node1_hexes, node2_hexes;
+          side2_mesh->get_elems( edges_hexes, this_edge );
+          side2_mesh->get_elems( node1_hexes, node1 );
+          side2_mesh->get_elems( node2_hexes, node2 );
+          if( node1_hexes.size() == edges_hexes.size() )
+          {
+            cout << " Don't need to multiproject node1 (" << node1 << ")\n";
+          }
+          else
+          {
+            cout << " Need to multiproject node1 (" << node1 << ")\n";
+            multiproject_node1 = true;
+          }
+          if( node2_hexes.size() == edges_hexes.size() )
+          {
+            cout << " Don't need to multiproject node2 (" << node2 << ")\n";
+          }
+          else
+          {
+            cout << " Need to multiproject node2 (" << node2 << ")\n";
+            multiproject_node2 = true;
+          }
+          
+          ++nm_search;
+        }
+        cout << endl;
+      }
+
+      cout << "adding to Clipped2\n";
+      typename hash_type3::iterator fiter = face_list.begin();
+      typename hash_type3::iterator fiter_end = face_list.end();
+      while( fiter != fiter_end )
+      { 
+        typename FIELD::mesh_type::Node::array_type face_nodes;
+        typename FIELD::mesh_type::Face::index_type face_id = (*fiter).first;
+        side2_mesh->get_nodes( face_nodes, face_id );
+        
+        typename FIELD::mesh_type::Node::array_type nnodes1(8);
+        typename FIELD::mesh_type::Node::array_type nnodes2(8);
+
+        nnodes2[0] = face_nodes[3];
+        nnodes2[1] = face_nodes[2];
+        nnodes2[2] = face_nodes[1];
+        nnodes2[3] = face_nodes[0];
+        nnodes2[4] = new_map2[face_nodes[3]];
+        nnodes2[5] = new_map2[face_nodes[2]];
+        nnodes2[6] = new_map2[face_nodes[1]];
+        nnodes2[7] = new_map2[face_nodes[0]];              
+        side2_mesh->add_elem( nnodes2 );
+              
+        nnodes1[0] = side1_nodemap[side2_reverse_map[face_nodes[0]]];
+        nnodes1[1] = side1_nodemap[side2_reverse_map[face_nodes[1]]];
+        nnodes1[2] = side1_nodemap[side2_reverse_map[face_nodes[2]]];
+        nnodes1[3] = side1_nodemap[side2_reverse_map[face_nodes[3]]];
+        nnodes1[4] = new_map1[side1_nodemap[side2_reverse_map[face_nodes[0]]]];
+        nnodes1[5] = new_map1[side1_nodemap[side2_reverse_map[face_nodes[1]]]];
+        nnodes1[6] = new_map1[side1_nodemap[side2_reverse_map[face_nodes[2]]]];
+        nnodes1[7] = new_map1[side1_nodemap[side2_reverse_map[face_nodes[3]]]];
+        side1_mesh->add_elem( nnodes1 );
+        ++fiter;
+      }
+//    }
   }
   cout << "Finished\n";
 
@@ -860,14 +1143,11 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
   side1_mesh->unsynchronize();
   side2_mesh->unsynchronize();
   
-//  typename HexVolMesh<HexTrilinearLgn<Point> >::Elem::size_type original_size;
   typename HexVolMesh<HexTrilinearLgn<Point> >::Elem::size_type side1_size;
   typename HexVolMesh<HexTrilinearLgn<Point> >::Elem::size_type side2_size;
   side1_mesh->size( side1_size );
   side2_mesh->size( side2_size );
-//  original_mesh->size( original_size );
-  
-//  cout << "Hexmesh has " << original_size << " hexes." << endl;
+
   cout << "Side1 has " << side1_size << " hexes." << endl;
   cout << "Side2 has " << side2_size << " hexes." << endl << endl;
   mod->update_progress( 0.99 );
