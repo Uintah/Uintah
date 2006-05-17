@@ -23,7 +23,11 @@
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
+#include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/CCVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCXVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
+#include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Box.h>
@@ -919,10 +923,17 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
     return getParticleSubset(matlIndex, patch);
   }
 
+  return getParticleSubset(matlIndex, lowIndex, highIndex, patch->getLevel(), patch, pos_var);
+}
+
+ParticleSubset*
+OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntVector highIndex, 
+                                         const Level* level, const Patch* relPatch, const VarLabel* pos_var)
+{
+  // relPatch can be NULL if trying to get a particle subset for an arbitrary spot on the level
   Patch::selectType neighbors;
-  patch->getLevel()->selectPatches(lowIndex, highIndex, neighbors);
-  
-  Box box = patch->getLevel()->getBox(lowIndex, highIndex);
+  level->selectPatches(lowIndex, highIndex, neighbors);
+  Box box = level->getBox(lowIndex, highIndex);
   
   particleIndex totalParticles = 0;
   vector<ParticleVariableBase*> neighborvars;
@@ -949,8 +960,8 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
       }
       ParticleSubset* pset;
 
-      if (patch != neighbor) {
-        patch->cullIntersection(Patch::CellBased, IntVector(0,0,0), neighbor, newLow, newHigh);
+      if (relPatch && relPatch != neighbor) {
+        relPatch->cullIntersection(Patch::CellBased, IntVector(0,0,0), neighbor, newLow, newHigh);
         if (newLow == newHigh) {
           continue;
         }
@@ -961,7 +972,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
 
       get(pos, pos_var, pset);
 
-      particleIndex sizeHint = realNeighbor == patch? pset->numParticles():0;
+      particleIndex sizeHint = (relPatch && realNeighbor == relPatch) ? pset->numParticles():0;
       ParticleSubset* subset = 
         scinew ParticleSubset(pset->getParticleSet(), false, -1, 0, sizeHint);
       for(ParticleSubset::iterator iter = pset->begin();
@@ -979,7 +990,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, const Patch* patch,
   }
   ParticleSet* newset = scinew ParticleSet(totalParticles);
   ParticleSubset* newsubset = scinew ParticleSubset(newset, true,
-                                                    matlIndex, patch,
+                                                    matlIndex, relPatch,
                                                     lowIndex, highIndex,
                                                     vneighbors, subsets);
 
@@ -2022,7 +2033,7 @@ allocateAndPutGridVar(GridVariable& var, const VarLabel* label, int matlIndex, c
                                       gtype, numGhostCells,
                                       requiredSuperLow, requiredSuperHigh,
                                       superLowIndex, superHighIndex);
- 
+
   ASSERT(superPatchGroup != 0);
 
 #ifdef WAYNE_DEBUG
@@ -2035,6 +2046,135 @@ allocateAndPutGridVar(GridVariable& var, const VarLabel* label, int matlIndex, c
 #endif
   
   var.allocate(superLowIndex, superHighIndex);
+
+#if SCI_ASSERTION_LEVEL >= 3
+
+
+  // check for dead portions of a variable (variable space that isn't covered by any patch).  
+  // This will happen with L-shaped patch configs and ngc > extra cells.  
+  // find all dead space and mark it with a bogus value.
+  IntVector extraCells = patch->getLevel()->getExtraCells();
+
+  // use the max extra cells for now
+  int ec = Max(Max(extraCells[0], extraCells[1]), extraCells[2]);
+  if (1) { // numGhostCells > ec) { (numGhostCells is 0, query it from the superLowIndex...
+    deque<Box> b1, b2, difference;
+    b1.push_back(Box(Point(superLowIndex(0), superLowIndex(1), superLowIndex(2)), 
+                     Point(superHighIndex(0), superHighIndex(1), superHighIndex(2))));
+    for (unsigned i = 0; i < (*superPatchGroup).size(); i++) {
+      const Patch* p = (*superPatchGroup)[i];
+      IntVector low = p->getLowIndex(basis, label->getBoundaryLayer());
+      IntVector high = p->getHighIndex(basis, label->getBoundaryLayer());
+      b2.push_back(Box(Point(low(0), low(1), low(2)), Point(high(0), high(1), high(2))));
+    }
+    difference = Box::difference(b1, b2);
+
+#if 0
+    if (difference.size() > 0) {
+      cout << "Box difference: " << superLowIndex << " " << superHighIndex << " with patches " << endl;
+      for (unsigned i = 0; i < (*superPatchGroup).size(); i++) {
+        const Patch* p = (*superPatchGroup)[i];
+        cout << p->getLowIndex(basis, label->getBoundaryLayer()) << " " << p->getHighIndex(basis, label->getBoundaryLayer()) << endl;
+      }
+
+      for (unsigned i = 0; i < difference.size(); i++) {
+        cout << difference[i].lower() << " " << difference[i].upper() << endl;
+      }
+    }
+#endif
+    // get more efficient way of doing this...
+    if (NCVariable<double>* typedVar = dynamic_cast<NCVariable<double>*>(&var)) {
+      for (unsigned i = 0; i < difference.size(); i++) {
+        Box b = difference[i];
+        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
+        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+        for (CellIterator iter(low, high); !iter.done(); iter++)
+          (*typedVar)[*iter] = -5.855145e256;
+      }
+    }
+    else if (NCVariable<Vector>* typedVar = dynamic_cast<NCVariable<Vector>*>(&var)) {
+      for (unsigned i = 0; i < difference.size(); i++) {
+        Box b = difference[i];
+        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
+        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+        for (CellIterator iter(low, high); !iter.done(); iter++)
+          (*typedVar)[*iter] = -5.855145e256;
+      }
+    }
+    else if (CCVariable<double>* typedVar = dynamic_cast<CCVariable<double>*>(&var)) {
+      for (unsigned i = 0; i < difference.size(); i++) {
+        Box b = difference[i];
+        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
+        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+        for (CellIterator iter(low, high); !iter.done(); iter++)
+          (*typedVar)[*iter] = -5.855145e256;
+      }
+    }
+    else if (CCVariable<Vector>* typedVar = dynamic_cast<CCVariable<Vector>*>(&var)) {
+      for (unsigned i = 0; i < difference.size(); i++) {
+        Box b = difference[i];
+        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
+        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+        for (CellIterator iter(low, high); !iter.done(); iter++)
+          (*typedVar)[*iter] = -5.855145e256;
+      }
+    }
+    else if (SFCXVariable<double>* typedVar = dynamic_cast<SFCXVariable<double>*>(&var)) {
+      for (unsigned i = 0; i < difference.size(); i++) {
+        Box b = difference[i];
+        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
+        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+        for (CellIterator iter(low, high); !iter.done(); iter++)
+          (*typedVar)[*iter] = -5.855145e256;
+      }
+    }
+    else if (SFCXVariable<Vector>* typedVar = dynamic_cast<SFCXVariable<Vector>*>(&var)) {
+      for (unsigned i = 0; i < difference.size(); i++) {
+        Box b = difference[i];
+        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
+        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+        for (CellIterator iter(low, high); !iter.done(); iter++)
+          (*typedVar)[*iter] = -5.855145e256;
+      }
+    }
+    else if (SFCYVariable<double>* typedVar = dynamic_cast<SFCYVariable<double>*>(&var)) {
+      for (unsigned i = 0; i < difference.size(); i++) {
+        Box b = difference[i];
+        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
+        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+        for (CellIterator iter(low, high); !iter.done(); iter++)
+          (*typedVar)[*iter] = -5.855145e256;
+      }
+    }
+    else if (SFCYVariable<Vector>* typedVar = dynamic_cast<SFCYVariable<Vector>*>(&var)) {
+      for (unsigned i = 0; i < difference.size(); i++) {
+        Box b = difference[i];
+        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
+        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+        for (CellIterator iter(low, high); !iter.done(); iter++)
+          (*typedVar)[*iter] = -5.855145e256;
+      }
+    }
+    else if (SFCZVariable<double>* typedVar = dynamic_cast<SFCZVariable<double>*>(&var)) {
+      for (unsigned i = 0; i < difference.size(); i++) {
+        Box b = difference[i];
+        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
+        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+        for (CellIterator iter(low, high); !iter.done(); iter++)
+          (*typedVar)[*iter] = -5.855145e256;
+      }
+    }
+    else if (SFCZVariable<Vector>* typedVar = dynamic_cast<SFCZVariable<Vector>*>(&var)) {
+      for (unsigned i = 0; i < difference.size(); i++) {
+        Box b = difference[i];
+        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
+        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+        for (CellIterator iter(low, high); !iter.done(); iter++)
+          (*typedVar)[*iter] = -5.855145e256;
+      }
+    }
+  }
+#endif 
 
   Patch::selectType encompassedPatches;
   if (requiredSuperLow == lowIndex && requiredSuperHigh == highIndex) {
