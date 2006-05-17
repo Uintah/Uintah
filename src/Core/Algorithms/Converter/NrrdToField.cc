@@ -61,7 +61,7 @@ bool NrrdToFieldAlgoT::NrrdToField(ProgressReporter* pr,NrrdDataHandle input, Fi
     return (false);      
   }
 
-  int dim = nrrd->dim;
+  size_t dim = nrrd->dim;
   std::vector<double> min(dim), max(dim);
   std::vector<int> size(dim);
   
