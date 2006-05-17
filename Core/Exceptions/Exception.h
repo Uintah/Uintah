@@ -48,28 +48,31 @@
 #define SCI_THROW(exc) throw exc
 #endif
 
+#include <string>
+
 #include <sci_defs/error_defs.h>
 #include <Core/Exceptions/share.h>
 
 namespace SCIRun {
-      class SCISHARE Exception {
-      public:
-	 Exception();
-	 virtual ~Exception();
-	 virtual const char* message() const=0;
-	 virtual const char* type() const=0;
-	 const char* stackTrace() const {
-	    return stacktrace_;
-	 }
+  class SCISHARE Exception {
+  public:
+    Exception();
+    virtual ~Exception();
+    virtual const char* message() const=0;
+    virtual const char* type() const=0;
+    const char* stackTrace() const {
+      return stacktrace_;
+    }
 
-	 static void sci_throw(const Exception& exc);
-	 static bool alwaysFalse();
-      protected:
-         const char* stacktrace_;
-      private:
-	 Exception& operator=(const Exception&);
+    static void sci_throw(const Exception& exc);
+    static bool alwaysFalse();
+  protected:
+    const char* stacktrace_;
+  private:
+    Exception& operator=(const Exception&);
+  };
 
-      };
+  SCISHARE std::string getStackTrace();
 } // End namespace SCIRun
 
 #endif

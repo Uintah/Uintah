@@ -36,8 +36,6 @@
 #include <unistd.h>
 #include <dirent.h>
 #else
-// use POSIX version
-#include <Core/OS/dirent.h>
 #include <io.h>
 typedef unsigned short mode_t;
 #define MAXPATHLEN 256
@@ -46,6 +44,7 @@ typedef unsigned short mode_t;
 #include <Core/Util/FileUtils.h>
 #include <Core/OS/Dir.h>
 namespace SCIRun {
+
 
 /* Normally, I would just use sed via system() to edit a file,
    but for some reason system() calls never work from Dataflow 

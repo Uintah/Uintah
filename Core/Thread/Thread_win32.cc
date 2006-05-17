@@ -720,7 +720,7 @@ Thread::print_threads()
     }
 }
 
-static LONG __stdcall exception_handler(EXCEPTION_POINTERS* ptr)
+LONG WINAPI exception_handler(LPEXCEPTION_POINTERS ptr)
 {
   Thread* self=Thread::self();
   const char* tname=self?self->getThreadName():"idle or main";
@@ -747,7 +747,7 @@ install_signal_handlers()
     signal(SIGINT, handle_abort_signals);
 
     // NT doesn't generate SIGILL, SIGTERM, or SIGSEGV, so this should catch them
-    //SetUnhandledExceptionFilter(exception_handler);
+    SetUnhandledExceptionFilter(exception_handler);
 }
 
 #if 0
