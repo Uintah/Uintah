@@ -80,32 +80,32 @@ VectorFieldOperatorAlgoT<VectorField>::execute(FieldHandle vectorfh, int op)
 
   for(unsigned int i = 0; i < vectorField->nproperties(); i++){
     string prop_name(vectorField->get_property_name( i ));
-    if(prop_name == "varname"){
+    if(prop_name == "name"){
       string prop_component;
       vectorField->get_property( prop_name, prop_component);
       switch(op) {
       case 0: // extract element 1
-        scalarField->set_property("varname",
+        scalarField->set_property("name",
                                   string(prop_component +":1"), true);
         break;
       case 1: // extract element 2
-        scalarField->set_property("varname", 
+        scalarField->set_property("name", 
                                   string(prop_component +":2"), true);
         break;
       case 2: // extract element 3
-        scalarField->set_property("varname", 
+        scalarField->set_property("name", 
                                   string(prop_component +":3"), true);
         break;
       case 3: // Vector length
-        scalarField->set_property("varname", 
+        scalarField->set_property("name", 
                                   string(prop_component +":length"), true);
         break;
       case 4: // Vector curvature
-        scalarField->set_property("varname",
+        scalarField->set_property("name",
                                   string(prop_component +":vorticity"), true);
         break;
       default:
-        scalarField->set_property("varname",
+        scalarField->set_property("name",
                                   string(prop_component.c_str()), true);
       }
     } else if( prop_name == "generation") {
@@ -133,7 +133,7 @@ VectorFieldOperatorAlgoT<VectorField>::execute(FieldHandle vectorfh, int op)
       vectorField->get_property( prop_name, current_time);
       scalarField->set_property(prop_name.c_str(), current_time , true);
     } else {
-      cerr<<"Unknown field property, not transferred.\n";
+      cerr<<"Unknown field property: "<<prop_name<<", not transferred.\n";
     }
   }
   return scalarField;
