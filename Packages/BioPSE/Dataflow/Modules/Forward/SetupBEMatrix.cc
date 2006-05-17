@@ -145,7 +145,7 @@ SetupBEMatrix::execute()
     error("Unable to compute a valid nesting for this set of surfaces.");
   }
   
-  if (nesting[input] == nesting.size())
+  if (nesting[input] == (int)nesting.size())
 	conductivities[output] = 0; // for ESI problem: the outermost surface is the input
   else
 	conductivities[input] = 0; // does not matter, set to 0 only for the program to work right
