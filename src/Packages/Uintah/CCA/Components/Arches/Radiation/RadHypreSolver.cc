@@ -107,7 +107,6 @@ RadHypreSolver::problemSetup(const ProblemSpecP& params)
 	}
 
   db->getWithDefault("max_iter", d_maxSweeps, 75);
-  db->getWithDefault("underrelax", d_underrelax, 1.0);
   db->getWithDefault("res_tol", d_residual, 1.0e-8);
 }
 // ****************************************************************************

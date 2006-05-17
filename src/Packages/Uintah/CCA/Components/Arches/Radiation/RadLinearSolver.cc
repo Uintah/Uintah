@@ -68,11 +68,6 @@ RadLinearSolver::problemSetup(const ProblemSpecP& params)
       else
 	d_shsolver = false;
       */
-      if (db->findBlock("underelax"))
-	db->require("underrelax", d_underrelax);
-      else
-	d_underrelax = 1.0;
-      
       if (db->findBlock("max_iter"))
 	db->require("max_iter", d_maxSweeps);
       else
@@ -95,7 +90,6 @@ RadLinearSolver::problemSetup(const ProblemSpecP& params)
 	db->require("fill",d_fill);
     }
     else {
-      d_underrelax = 1.0;
       d_maxSweeps = 75;
       d_kspType = "gmres";
       d_pcType = "blockjacobi";
@@ -103,7 +97,6 @@ RadLinearSolver::problemSetup(const ProblemSpecP& params)
     }
   }
   else  {
-    d_underrelax = 1.0;
     d_maxSweeps = 75;
     d_kspType = "gmres";
     d_pcType = "blockjacobi";
