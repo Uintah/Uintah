@@ -60,7 +60,6 @@
          <EOS type = "ideal_gas">
            <gas_constant>      287               </gas_constant>
          </EOS>
-         <gamma>1.4</gamma>           
          <include href="MaterialData/MaterialConst4340Steel.xml"/>
          <constitutive_model type="hypoelastic_plastic">
            <tolerance>1.0e-10</tolerance>

@@ -267,7 +267,6 @@
 		    <alpha>0.1</alpha>
 		    <beta>0.3</beta>
 		    <tau>0.82</tau>
-		    <gamma>0.75</gamma>
 		    <max_equiv_strain>0.001</max_equiv_strain>
 		</visco_elastic_damage>
 		<thermal_conductivity>1.0</thermal_conductivity>

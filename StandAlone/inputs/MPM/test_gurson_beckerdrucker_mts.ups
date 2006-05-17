@@ -93,7 +93,6 @@
         <EOS type = "ideal_gas">
           <gas_constant> 287 </gas_constant>
         </EOS>
-        <gamma> 1.4 </gamma>       
         <include href="inputs/MPM/MaterialData/MatConstHY100Steel.xml"/>
         <constitutive_model type="hypoelastic_plastic">
           <useModifiedEOS> true </useModifiedEOS>

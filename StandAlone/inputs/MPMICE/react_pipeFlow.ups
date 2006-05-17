@@ -216,7 +216,6 @@
          </constitutive_model>
          <thermal_conductivity>  1.0                     </thermal_conductivity>
          <specific_heat>         652.9                   </specific_heat>
-         <gamma>                 1.289                   </gamma>
 
          <geom_object>
          <box label="gpmpm">
