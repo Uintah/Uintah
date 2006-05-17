@@ -10,36 +10,56 @@
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.event.*;
+import java.util.Vector;
+import java.io.PrintWriter;
 
 //**************************************************************************
-// Class   : UintahInputPanel
+// Class:  UintahInputPanel
 // Purpose : Creates a panel for entering Uintah input data
 //**************************************************************************
 public class UintahInputPanel extends JPanel {
 
   // Data
-  private ParticleList d_particleList;
+  private ParticleList d_partList;
+  private UintahGui d_parent;
+  private Vector d_mpmMat;
+  private Vector d_iceMat;
+  private Vector d_geomObj;
 
   // Data that may be needed later
-  JTabbedPane uintahTabbedPane = null;
+  private JTabbedPane uintahTabbedPane = null;
+  private GeneralInputsPanel generalInpPanel = null;
+  private MPMInputsPanel mpmInpPanel = null;
+  private MPMMaterialsPanel mpmMatPanel = null;
+  private ICEInputsPanel iceInpPanel = null;
+  private ICEMaterialsPanel iceMatPanel = null;
+  private GeometryPanel geomPanel = null;
 
   // Constructor
-  public UintahInputPanel(ParticleList particleList) {
+  public UintahInputPanel(ParticleList particleList,
+                          UintahGui parent) {
+
+    // Initialize
+    d_mpmMat = new Vector();
+    d_iceMat = new Vector();
+    d_geomObj = new Vector();
 
     // Copy the arguments
-    d_particleList = particleList;
+    d_partList = particleList;
+    d_parent = parent;
 
     // Create a tabbed pane
     uintahTabbedPane = new JTabbedPane();
 
     // Create the panels to be added to the tabbed pane
-    GeneralInputsPanel generalInpPanel = new GeneralInputsPanel(this);
-    MPMInputsPanel mpmInpPanel = new MPMInputsPanel(this); 
-    MPMMaterialsPanel mpmMatPanel = new MPMMaterialsPanel(this); 
-    ICEInputsPanel iceInpPanel = new ICEInputsPanel(this); 
-    ICEMaterialsPanel iceMatPanel = new ICEMaterialsPanel(this); 
+    generalInpPanel = new GeneralInputsPanel(this);
+    mpmInpPanel = new MPMInputsPanel(this); 
+    mpmMatPanel = new MPMMaterialsPanel(d_mpmMat, this); 
+    iceInpPanel = new ICEInputsPanel(this); 
+    iceMatPanel = new ICEMaterialsPanel(d_iceMat, this); 
+    geomPanel = new GeometryPanel(d_partList, d_geomObj, d_mpmMat, d_iceMat, 
+                                  this); 
     /*
-    MaterialPropICEPanel matPropICEPanel = new MaterialPropICEPanel(); 
     GridBCPanel gridBCPanel = new GridBCPanel(); 
     */
 
@@ -54,11 +74,13 @@ public class UintahInputPanel extends JPanel {
                           iceInpPanel, null);
     uintahTabbedPane.addTab("ICE Materials", null,
                           iceMatPanel, null);
+    uintahTabbedPane.addTab("Geometry", null,
+                          geomPanel, null);
     /*
     uintahTabbedPane.addTab("Grid and BC Inputs", null,
                           gridBCPanel, null);
-    uintahTabbedPane.setSelectedIndex(0);
     */
+    uintahTabbedPane.setSelectedIndex(0);
 
     // Create a grid bag
     GridBagLayout gb = new GridBagLayout();
@@ -76,14 +98,64 @@ public class UintahInputPanel extends JPanel {
     uintahTabbedPane.addChangeListener(tabListener);
   }
 
-  // Methods for getting the canvases
-  public ParticleList getParticleList() {
-    return d_particleList;
-  }
-
   // Tab listener
-  class TabListener implements ChangeListener {
+  private class TabListener implements ChangeListener {
     public void stateChanged(ChangeEvent e) {
     }
+  }
+
+  // Update Panels
+  public void updatePanels() {
+    validate();
+    d_parent.updatePanels();
+  }
+
+  // Write in Uintah format
+  public void writeUintah(PrintWriter pw) {
+
+    if (pw == null) return;
+
+    String tab = new String("  ");
+    String tab1 = new String(tab+"  ");
+    String tab2 = new String(tab1+"  ");
+
+    pw.println("<?xml version=\"1.0\" encoding=\"UTF-8\"?>");
+    pw.println("<!-- <!DOCTYPE Uintah_specification SYSTEM \"input.dtd\"> -->");
+    pw.println("<Uintah_specification>");
+    pw.println(tab);
+
+    generalInpPanel.writeUintah(pw, tab);
+    mpmInpPanel.writeUintah(pw, tab);
+    iceInpPanel.writeUintah(pw,tab);
+
+    pw.println(tab+"<MaterialProperties>");
+    pw.println(tab);
+    
+    pw.println(tab1+"<MPM>");
+    int numMPMMat = d_mpmMat.size();
+    for (int ii = 0; ii < numMPMMat; ++ii) {
+      mpmMatPanel.writeUintah(pw, tab2, ii);
+    }
+    pw.println(tab1+"</MPM>");
+    pw.println(tab);
+
+    pw.println(tab1+"<ICE>");
+    int numICEMat = d_iceMat.size();
+    for (int ii = 0; ii < numICEMat; ++ii) {
+    //iceMatPanel = new ICEMaterialsPanel(d_iceMat, this); 
+    }
+    pw.println(tab1+"</ICE>");
+    pw.println(tab);
+
+    pw.println(tab+"</MaterialProperties>");
+    pw.println(tab);
+
+    pw.println(tab+"<PhysicalBC>");
+    pw.println(tab1+"<MPM>");
+    pw.println(tab1+"</MPM>");
+    pw.println(tab+"</PhysicalBC>");
+    pw.println(tab);
+
+    pw.println("</Uintah_specification>");
   }
 }

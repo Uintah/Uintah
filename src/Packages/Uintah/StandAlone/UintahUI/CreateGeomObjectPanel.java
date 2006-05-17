@@ -1,0 +1,133 @@
+//**************************************************************************
+// Class   : CreateGeomObjectPanel
+// Purpose : Panel to add and modify geometry objects
+// Author  : Biswajit Banerjee
+// Date    : 05/12/2006
+// Mods    :
+//**************************************************************************
+
+//************ IMPORTS **************
+import java.awt.*;
+import java.awt.event.*;
+import java.util.Random;
+import java.util.Vector;
+import java.io.*;
+import javax.swing.*;
+
+public class CreateGeomObjectPanel extends JPanel 
+                                   implements ActionListener {
+
+  // Data
+  private boolean d_usePartDist = false;
+  private ParticleList d_partList = null;
+  private Vector d_mpmMat = null;
+  private Vector d_iceMat = null;
+  private Vector d_geomObj = null;
+  private Vector d_geomPiece = null;
+  private InputGeometryPanel d_parent = null;
+
+  // Components
+  private JButton addButton = null;
+  private JButton delButton = null;
+  private JTabbedPane geomObjectTabPane = null;
+
+  //-------------------------------------------------------------------------
+  // Constructor
+  //-------------------------------------------------------------------------
+  public CreateGeomObjectPanel(boolean usePartDist,
+                               ParticleList partList,
+                               Vector mpmMat,
+                               Vector iceMat,
+                               Vector geomObj,
+                               Vector geomPiece,
+                               InputGeometryPanel parent) {
+
+    // Initialize
+    d_usePartDist = false;
+    d_partList = partList;
+    d_mpmMat = mpmMat;
+    d_iceMat = iceMat;
+    d_geomObj = geomObj;
+    d_geomPiece = geomPiece;
+
+    // Save the arguments
+    d_parent = parent;
+
+    // Create a gridbaglayout and constraints
+    GridBagLayout gb = new GridBagLayout();
+    GridBagConstraints gbc = new GridBagConstraints();
+    setLayout(gb);
+
+    // Create a panel for the buttons and the buttons
+    JPanel panel = new JPanel(new GridLayout(1,0));
+
+    addButton = new JButton("Create Geom Object");
+    addButton.setActionCommand("add");
+    addButton.addActionListener(this);
+    panel.add(addButton);
+      
+    delButton = new JButton("Delete Geom Object");
+    delButton.setActionCommand("del");
+    delButton.addActionListener(this);
+    panel.add(delButton);
+
+    UintahGui.setConstraints(gbc, GridBagConstraints.NONE,
+			     1.0, 1.0, 0, 0, 1, 1, 5);
+    gb.setConstraints(panel, gbc);
+    add(panel);
+
+    // Create a tabbed pane for the geometrypieces
+    geomObjectTabPane = new JTabbedPane();
+
+    UintahGui.setConstraints(gbc, GridBagConstraints.BOTH,
+			     1.0, 1.0, 0, 1, 1, 1, 5);
+    gb.setConstraints(geomObjectTabPane, gbc);
+    add(geomObjectTabPane);
+  }
+
+  //---------------------------------------------------------------------
+  // Update the usePartDist flag
+  //---------------------------------------------------------------------
+  public void usePartDist(boolean flag) {
+    d_usePartDist = flag;
+  }
+
+  //-------------------------------------------------------------------------
+  // Actions performed when a button is pressed
+  //-------------------------------------------------------------------------
+  public void actionPerformed(ActionEvent e) {
+
+    if (e.getActionCommand() == "add") {
+      String tabName = new String("Object");
+      GeomObjectPanel geomObjectPanel = 
+        new GeomObjectPanel(d_usePartDist, d_partList, d_mpmMat, d_iceMat, 
+                            d_geomObj, d_geomPiece, this);
+      geomObjectTabPane.addTab(tabName, geomObjectPanel);
+      validate();
+      updatePanels();
+    } else if (e.getActionCommand() == "del") {
+      int index = geomObjectTabPane.getSelectedIndex();
+      geomObjectTabPane.removeTabAt(index);
+      d_geomObj.removeElementAt(index);
+      validate();
+      updatePanels();
+    }
+  }
+
+  //-------------------------------------------------------------------------
+  // Update the components
+  //-------------------------------------------------------------------------
+  public void updatePanels() {
+    d_parent.updatePanels();
+  }
+
+  //-------------------------------------------------------------------------
+  // Write in Uintah format
+  //-------------------------------------------------------------------------
+  public void writeUintah(PrintWriter pw, String tab) {
+  }
+  public void print(PrintWriter pw, String tab) {
+  }
+
+
+}

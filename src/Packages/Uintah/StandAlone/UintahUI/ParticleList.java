@@ -17,12 +17,14 @@ import java.util.*;
 public class ParticleList extends Object {
 
   // Data
+  private double d_rveSize = 0.0;
   private Vector d_particleList = null;
   private Vector d_triangleList = null;
   private Vector d_voronoiList = null;
 
   // Constructor
   public ParticleList() {
+    d_rveSize = 100.0;
     d_particleList = new Vector();
     d_triangleList = new Vector();
     d_voronoiList = new Vector();
@@ -36,53 +38,9 @@ public class ParticleList extends Object {
     d_voronoiList = new Vector();
   }
 
-  // Read the particle data from file
-  public void readFromFile(File particleFile) {
-    d_particleList.clear();
-    d_triangleList.clear();
-    d_voronoiList.clear();
-    try {
-      FileReader fr = new FileReader(particleFile);
-      StreamTokenizer st = new StreamTokenizer(fr);
-      st.parseNumbers();
-      int count = 0;
-      double radius = 0.0;
-      double length = 0.0;
-      double xx = 0.0;
-      double yy = 0.0;
-      double zz = 0.0;
-      int matCode = 0;
-      int ttval = 0;
-      while((ttval = st.nextToken()) != StreamTokenizer.TT_NUMBER) {};
-      while((ttval = st.nextToken()) != StreamTokenizer.TT_EOF) {
-	if (ttval == StreamTokenizer.TT_NUMBER) {
-	  count++;
-	  double ii = st.nval;
-	  switch (count) {
-	  case 2: radius = ii; break;
-	  case 3: length = ii; break;
-	  case 4: xx = ii; break;
-	  case 5: yy = ii; break;
-	  case 6: zz = ii; break;
-	  case 7: matCode = (int) ii; break;
-	  default: break;
-	  }
-	  if (count == 7) {
-	    Point center = new Point(xx, yy, zz);
-	    Particle particle = new Particle(radius, length, center, matCode);
-	    this.addParticle(particle);
-	    count = 0;
-	  }
-	}
-      }
-    } catch (Exception e) {
-      System.out.println("Could not read from "+particleFile.getName());
-    }
-  }
-
   // Read the particle data from file (for the new format - circles, squares,
   // spheres, cubes
-  public void readFromFile(File particleFile, int flag) {
+  public void readFromFile(File particleFile) {
     d_particleList.clear();
     d_triangleList.clear();
     d_voronoiList.clear();
@@ -92,6 +50,8 @@ public class ParticleList extends Object {
       st.commentChar('#');
       st.parseNumbers();
       st.eolIsSignificant(true);
+      double rveSize = 0.0;
+      boolean first = true;
       int count = 0;
       int type = Particle.CIRCLE;
       double radius = 0.0;
@@ -104,86 +64,59 @@ public class ParticleList extends Object {
       boolean rangeFlag = false;
       double range = 1.0;
       while((ttval = st.nextToken()) != StreamTokenizer.TT_EOF) {
-	if (ttval == StreamTokenizer.TT_NUMBER) {
-	  ++count;
-	  double ii = st.nval;
-	  switch (count) {
-	  case 1: type = (int) ii; break;
-	  case 2: radius = ii; break;
-	  case 3: rotation = ii; break;
-	  case 4: xx = ii; break;
-	  case 5: yy = ii; break;
-	  case 6: zz = ii; break;
-	  case 7: matCode = (int) ii; break;
-	  default: break;
-	  }
-	}
-	if (ttval == StreamTokenizer.TT_EOL && count != 0) {
-	  //System.out.println(type+" "+radius+" "+rotation+" "+xx+" "+yy+
-		//	     " "+zz+" "+matCode);
-	  // The range is either 0 to 1 or 0 to 100
-          if (!rangeFlag) {
-	    if (radius > 1.0) range = 100.0;
-	    rangeFlag = true; 
+        if (first) {
+          if (ttval == StreamTokenizer.TT_NUMBER) {
+            d_rveSize = st.nval;
+            first = false;
           }
-	  Point center = new Point(xx/range, yy/range, zz/range);
-	  Particle particle = new Particle(type, radius/range, rotation, 
-					   center, matCode);
-	  this.addParticle(particle);
-	  count = 0;
-	}
+        } else {
+          if (ttval == StreamTokenizer.TT_NUMBER) {
+            ++count;
+            double ii = st.nval;
+            switch (count) {
+              case 1: type = (int) ii; break;
+              case 2: radius = ii; break;
+              case 3: rotation = ii; break;
+              case 4: xx = ii; break;
+              case 5: yy = ii; break;
+              case 6: zz = ii; break;
+              case 7: matCode = (int) ii; break;
+              default: break;
+            }
+          }
+          if (ttval == StreamTokenizer.TT_EOL && count != 0) {
+            //System.out.println(type+" "+radius+" "+rotation+" "+xx+" "+yy+
+                  //           " "+zz+" "+matCode);
+            // The range is either 0 to 1 or 0 to 100
+            if (!rangeFlag) {
+              if (radius > 1.0) range = 100.0;
+              rangeFlag = true; 
+            }
+            Point center = new Point(xx/range, yy/range, zz/range);
+            Particle particle = new Particle(type, radius/range, rotation, 
+                                             center, matCode);
+            this.addParticle(particle);
+            count = 0;
+          }
+        }
       }
     } catch (Exception e) {
       System.out.println("Could not read from "+particleFile.getName());
     }
   }
 
-  // Write the particle data in ANSYS format
-  public void writeANSYS2D(File partFile) {
-    // Create a file with extension partans
-    File name = new File(new String(partFile.getPath()+"ans"));
-
-    // Create a filewriter and the associated printwriter
-    try {
-      FileWriter fw = new FileWriter(name);
-      PrintWriter pw = new PrintWriter(fw);
-      int nofParts = size();
-      for (int ii = 0; ii < nofParts; ii++) {
-	Particle part = getParticle(ii);
-	double rad = part.getRadius();
-	double x = part.getCenter().getX();
-	double y = part.getCenter().getY();
-        pw.println("cyl4,"+x*1000.0+","+y*1000.0+","+rad*1000.0);
-      }
-      pw.close();
-      fw.close();
-    } catch (Exception e) {
-      System.out.println("Could not write to file"+name);
-    }
-  }
-
   // Write the particle data in Uintah XML format
-  public void writeUintah(File partFile) {
+  public void writeUintah(PrintWriter pw) {
 
-    // Create a file with extension partans
-    File name = new File(new String(partFile.getPath()+"ups"));
+    if (pw == null) return;
 
-    // Create a filewriter and the associated printwriter
-    try {
-      FileWriter fw = new FileWriter(name);
-      PrintWriter pw = new PrintWriter(fw);
-      int nofParts = size();
-      for (int ii = 0; ii < nofParts; ii++) {
-	Particle part = getParticle(ii);
-	double rad = part.getRadius();
-	double x = part.getCenter().getX();
-	double y = part.getCenter().getY();
-        pw.println("cyl4,"+x*1000.0+","+y*1000.0+","+rad*1000.0);
-      }
-      pw.close();
-      fw.close();
-    } catch (Exception e) {
-      System.out.println("Could not write to file"+name);
+    int nofParts = size();
+    for (int ii = 0; ii < nofParts; ii++) {
+      Particle part = getParticle(ii);
+      double rad = part.getRadius();
+      double x = part.getCenter().getX();
+      double y = part.getCenter().getY();
+      pw.println("cyl4,"+x*1000.0+","+y*1000.0+","+rad*1000.0);
     }
   }
 
@@ -197,20 +130,22 @@ public class ParticleList extends Object {
       PrintWriter pw = new PrintWriter(fw);
 
       // Write the data
+      pw.println("# RVE Size");
+      pw.println(d_rveSize);
       pw.println("# Particle List");
       pw.println("# type  radius  rotation  xCent  yCent  zCent  matCode");
       int nofParts = size();
       for (int ii = 0; ii < nofParts; ii++) {
-	Particle part = getParticle(ii);
-	double radius = part.getRadius();
-	double rotation = part.getRotation();
-	double xCent = part.getCenter().getX();
-	double yCent = part.getCenter().getY();
-	double zCent = part.getCenter().getZ();
-	int matCode = part.getMatCode();
-	pw.println("# Particle "+ii);
-	pw.println(partType+" "+radius+" "+rotation+" "+xCent+" "+yCent+
-		 " "+zCent+" "+matCode);
+        Particle part = getParticle(ii);
+        double radius = part.getRadius();
+        double rotation = part.getRotation();
+        double xCent = part.getCenter().getX();
+        double yCent = part.getCenter().getY();
+        double zCent = part.getCenter().getZ();
+        int matCode = part.getMatCode();
+        pw.println("# Particle "+ii);
+        pw.println(partType+" "+radius+" "+rotation+" "+xCent+" "+yCent+
+                 " "+zCent+" "+matCode);
       }
       pw.close();
       fw.close();
@@ -218,6 +153,10 @@ public class ParticleList extends Object {
       System.out.println("Could not write to "+particleFile.getName());
     }
   }
+
+  // Set and get the rve size
+  public void setRVESize(double rveSize) {d_rveSize = rveSize;}
+  public double getRVESize() {return d_rveSize;}
 
   // Get particleList data
   public int size() {return d_particleList.size();}
@@ -285,16 +224,4 @@ public class ParticleList extends Object {
     return d_voronoiList;
   }
 
-  /**
-   *  Calculate the location of the weighted Voronoi vertices
-   *  (weighting is based on particle size)
-   */
-  public void locateWeightedVoronoiVertices() {
-  }
-
 }
-// $Log: ParticleList.java,v $
-// Revision 1.2  2000/02/03 05:36:58  bbanerje
-// Just a few changes in all the java files .. and some changes in
-// GenerateParticleFrame and Particle and ParticleList
-//

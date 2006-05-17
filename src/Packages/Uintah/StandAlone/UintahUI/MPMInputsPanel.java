@@ -100,6 +100,16 @@ public class MPMInputsPanel extends JPanel {
     saveButton.addActionListener(buttonListener);
   }
 
+  //------------------------------------------------------------------~~~~~
+  // Write out in Uintah format
+  //------------------------------------------------------------------~~~~~
+  public void writeUintah(PrintWriter pw, String tab) {
+   
+    if (pw == null) return;
+    mpmFlagInputPanel.writeUintah(pw, tab);
+
+  }
+
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Respond to button pressed (inner class button listener)
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -113,7 +123,7 @@ public class MPMInputsPanel extends JPanel {
           FileWriter fw = new FileWriter(outputFile);
           PrintWriter pw = new PrintWriter(fw);
 
-          mpmFlagInputPanel.writeUintah(pw);
+          mpmFlagInputPanel.writeUintah(pw, "  ");
 
           pw.close();
           fw.close();
@@ -694,66 +704,68 @@ public class MPMInputsPanel extends JPanel {
     //--------------------------------------------------------------------
     /** Write the contents out in Uintah format */
     //--------------------------------------------------------------------
-    public void writeUintah(PrintWriter pw) {
+    public void writeUintah(PrintWriter pw, String tab) {
       
       if (pw == null) return;
 
+      String tab1 = new String(tab+"  ");
+
       // Write the data
-      pw.println("  <MPM>");
-      pw.println("    <time_integrator>"+d_integrator+"</time_integrator>");
-      pw.println("    <nodes8or27>"+d_mpmAlgo+"</nodes8or27>");
-      pw.println("    <minimum_particle_mass>"+minMassEntry.getValue()+
-                   "</minimum_particle_mass>");
-      pw.println("    <maximum_particle_velocity>"+maxVelEntry.getValue()+
-                   "</maximum_particle_velocity>");
-      pw.println("    <do_grid_reset>"+d_gridReset+"</do_grid_reset>");
-      pw.println("    <accumulate_strain_energy>"+d_accStrain+
-                   "</accumulate_strain_energy>");
-      pw.println("    <use_load_curves>"+d_loadCurve+"</use_load_curves>");
-      pw.println("    <turn_on_adiabatic_heating>"+d_adiabatic+
-                   "</turn_on_adiabatic_heating>");
-      pw.println("    <do_contact_friction_heating>"+d_fricHeat+
-                   "</do_contact_friction_heating>");
-      pw.println("    <artificial_damping_coeff>"+d_damping+
-                   "</artificial_damping_coeff>");
-      pw.println("    <artificial_viscosity>"+d_viscosity+
-                   "</artificial_viscosity>");
-      pw.println("    <artificial_viscosity_coeff1>"+
+      pw.println(tab+"<MPM>");
+      pw.println(tab1+"<time_integrator> "+d_integrator+" </time_integrator>");
+      pw.println(tab1+"<nodes8or27> "+d_mpmAlgo+" </nodes8or27>");
+      pw.println(tab1+"<minimum_particle_mass> "+minMassEntry.getValue()+
+                   " </minimum_particle_mass>");
+      pw.println(tab1+"<maximum_particle_velocity> "+maxVelEntry.getValue()+
+                   " </maximum_particle_velocity>");
+      pw.println(tab1+"<do_grid_reset> "+d_gridReset+" </do_grid_reset>");
+      pw.println(tab1+"<accumulate_strain_energy> "+d_accStrain+
+                   " </accumulate_strain_energy>");
+      pw.println(tab1+"<use_load_curves> "+d_loadCurve+" </use_load_curves>");
+      pw.println(tab1+"<turn_on_adiabatic_heating> "+d_adiabatic+
+                   " </turn_on_adiabatic_heating>");
+      pw.println(tab1+"<do_contact_friction_heating> "+d_fricHeat+
+                   " </do_contact_friction_heating>");
+      pw.println(tab1+"<artificial_damping_coeff> "+d_damping+
+                   " </artificial_damping_coeff>");
+      pw.println(tab1+"<artificial_viscosity> "+d_viscosity+
+                   " </artificial_viscosity>");
+      pw.println(tab1+"<artificial_viscosity_coeff1> "+
                    viscCoeff1Entry.getValue()+
-                   "</artificial_viscosity_coeff1>");
-      pw.println("    <artificial_viscosity_coeff2>"+
+                   " </artificial_viscosity_coeff1>");
+      pw.println(tab1+"<artificial_viscosity_coeff2> "+
                    viscCoeff2Entry.getValue()+
-                   "</artificial_viscosity_coeff2>");
-      pw.println("    <erosion algorithm = \""+d_failAlgo+"\"/>");
-      pw.println("    <create_new_particles>"+d_convert+
-                   "</create_new_particles>");
+                   " </artificial_viscosity_coeff2>");
+      pw.println(tab1+"<erosion algorithm = \""+d_failAlgo+"\"/>");
+      pw.println(tab1+"<create_new_particles> "+d_convert+
+                   " </create_new_particles>");
       if (d_integrator == "implicit") {
-        pw.println("    <dynamic>"+d_impDynamic+"</dynamic>");
-        pw.println("    <solver>"+d_solver+"</solver>");
-        pw.println("    <DoImplicitHeatConduction>"+d_impHeat+
-                     "</DoImplicitHeatConduction>");
-        pw.println("    <convergence_criteria_disp>"+
+        pw.println(tab1+"<dynamic> "+d_impDynamic+" </dynamic>");
+        pw.println(tab1+"<solver> "+d_solver+" </solver>");
+        pw.println(tab1+"<DoImplicitHeatConduction> "+d_impHeat+
+                     " </DoImplicitHeatConduction>");
+        pw.println(tab1+"<convergence_criteria_disp> "+
                      convDispEntry.getValue()+
-                     "</convergence_criteria_disp>");
-        pw.println("    <convergence_criteria_energy>"+
+                     " </convergence_criteria_disp>");
+        pw.println(tab1+"<convergence_criteria_energy> "+
                      convEnergyEntry.getValue()+
-                     "</convergence_criteria_energy>");
-        pw.println("    <num_iters_to_decrease_delT>"+
+                     " </convergence_criteria_energy>");
+        pw.println(tab1+"<num_iters_to_decrease_delT> "+
                      maxItersDecDeltEntry.getValue()+
-                     "</num_iters_to_decrease_delT>");
-        pw.println("    <delT_decrease_factor>"+
-                     delTDecFacEntry.getValue()+"</delT_decrease_factor>");
-        pw.println("    <num_iters_to_increase_delT>"+
+                     " </num_iters_to_decrease_delT>");
+        pw.println(tab1+"<delT_decrease_factor> "+
+                     delTDecFacEntry.getValue()+" </delT_decrease_factor>");
+        pw.println(tab1+"<num_iters_to_increase_delT> "+
                      minItersIncDeltEntry.getValue()+
-                     "</num_iters_to_increase_delT>");
-        pw.println("    <delT_increase_factor>"+
-                     delTIncFacEntry.getValue()+"</delT_increase_factor>");
-        pw.println("    <iters_before_timestep_restart>"+
+                     " </num_iters_to_increase_delT>");
+        pw.println(tab1+"<delT_increase_factor> "+
+                     delTIncFacEntry.getValue()+" </delT_increase_factor>");
+        pw.println(tab1+"<iters_before_timestep_restart> "+
                      maxItersRestartEntry.getValue()+
-                     "</iters_before_timestep_restart>");
+                     " </iters_before_timestep_restart>");
       }
-      pw.println("  </MPM>");
-      pw.println(" ");
+      pw.println(tab+"</MPM>");
+      pw.println(tab);
     }
   }
 
