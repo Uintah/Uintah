@@ -21,10 +21,38 @@ public class UintahGui extends JApplet {
 
   // Data
   private boolean inAnApplet = true;
-  public ParticleSize partSizeDist = null;
-  public ParticleList partList = null;
+  private ParticleSize partSizeDist = null;
+  private ParticleList partList = null;
+  private UintahInputPanel uintahInputPanel = null;
+
   public HelpAboutFrame helpAboutFrame = null;
   public File oldFile = null;
+  public static JFrame mainFrame = null;
+
+  public static int OPEN = 1;
+  public static int SAVE = 2;
+
+  // If the applet is called as an application
+  public static void main(String[] args) {
+    
+    // Create the frame
+    mainFrame = new JFrame("Uintah User Interface");
+
+    // Add a window listener
+    mainFrame.addWindowListener(new WindowAdapter() {
+      public void windowClosing(WindowEvent e) {System.exit(0);}
+    });
+
+    // instantiate
+    UintahGui uintahGui = new UintahGui();
+    uintahGui.init();
+
+    // Add the stuff to the frame
+    mainFrame.setLocation(20,50);
+    mainFrame.setContentPane(uintahGui);
+    mainFrame.pack();
+    mainFrame.setVisible(true);
+  }
 
   // Constructor
   public UintahGui() {
@@ -34,7 +62,7 @@ public class UintahGui extends JApplet {
     this.inAnApplet = inAnApplet;
     if (inAnApplet) {
       getRootPane().putClientProperty("defeatSystemEventQueueCheck", 
-				    Boolean.TRUE);
+                                    Boolean.TRUE);
       getRootPane().setLocation(20,50);
     }
 
@@ -69,7 +97,7 @@ public class UintahGui extends JApplet {
 
     // Create the menuitems
     JMenuItem menuItem;
-    menuItem = new JMenuItem("Read Bubble Size Data");
+    menuItem = new JMenuItem("Read Particle Size Data");
     fileMenu.add(menuItem);
     menuItem.addActionListener(menuListener);
 
@@ -85,13 +113,14 @@ public class UintahGui extends JApplet {
     JTabbedPane mainTabbedPane = new JTabbedPane();
 
     // Create the panels to be added to the tabbed pane
-    UintahInputPanel uintahInputPanel = new UintahInputPanel(partList);
-    ParticleGeneratePanel particleGenPanel = new ParticleGeneratePanel(partList);
+    uintahInputPanel = new UintahInputPanel(partList, this);
+    ParticleGeneratePanel particleGenPanel = 
+      new ParticleGeneratePanel(partList);
 
     // Add the tabs
     mainTabbedPane.addTab("Uintah Inputs", null,
                           uintahInputPanel, null);
-    mainTabbedPane.addTab("Generate Bubble Locations", null,
+    mainTabbedPane.addTab("Generate Particle Locations", null,
                           particleGenPanel, null);
     mainTabbedPane.setSelectedIndex(0);
     getContentPane().add(mainTabbedPane);
@@ -110,26 +139,9 @@ public class UintahGui extends JApplet {
     helpAboutFrame.pack();
   }
 
-  // If the applet is called as an application
-  public static void main(String[] args) {
-    
-    // Create the frame
-    JFrame frame = new JFrame("Uintah User Interface");
-
-    // Add a window listener
-    frame.addWindowListener(new WindowAdapter() {
-      public void windowClosing(WindowEvent e) {System.exit(0);}
-    });
-
-    // instantiate
-    UintahGui uintahGui = new UintahGui();
-    uintahGui.init();
-
-    // Add the stuff to the frame
-    frame.setLocation(20,50);
-    frame.setContentPane(uintahGui);
-    frame.pack();
-    frame.setVisible(true);
+  // Update panels
+  public void updatePanels() {
+    mainFrame.pack();
   }
 
   // For setting the gridbagconstraints for this application
@@ -146,40 +158,90 @@ public class UintahGui extends JApplet {
     c.insets = insets;
   }
 
-  class MenuListener implements ActionListener {
+  // For setting the gridbagconstraints for this application
+  public static void setConstraints(GridBagConstraints c, int col, int row) {
+    c.fill = GridBagConstraints.NONE;
+    c.weightx = 1.0;
+    c.weighty = 1.0;
+    c.gridx = col;
+    c.gridy = row;
+    c.gridwidth = 1;
+    c.gridheight = 1;
+    Insets insets = new Insets(5, 5, 5, 5);
+    c.insets = insets;
+  }
+
+  // For setting the gridbagconstraints for this application
+  public static void setConstraints(GridBagConstraints c, int fill,
+                                    int col, int row) {
+    c.fill = fill;
+    c.weightx = 1.0;
+    c.weighty = 1.0;
+    c.gridx = col;
+    c.gridy = row;
+    c.gridwidth = 1;
+    c.gridheight = 1;
+    Insets insets = new Insets(5, 5, 5, 5);
+    c.insets = insets;
+  }
+
+  private class MenuListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
       JMenuItem source = (JMenuItem)(e.getSource());
       String text = source.getText();
       if (text.equals("Exit")) {
-	System.exit(0);
-      } else if (text.equals("Read Bubble Size Data")) {
-	File particleFile = null;
-	if ((particleFile = getParticleFile()) != null) {
-	  //System.out.println("File = "+particleFile.getName());
-	  partList.readFromFile(particleFile);
-	}
+        System.exit(0);
+      } else if (text.equals("Read Particle Location Data")) {
+        File particleFile = null;
+        if ((particleFile = getFileName(UintahGui.OPEN)) != null) {
+          //System.out.println("File = "+particleFile.getName());
+          partList.readFromFile(particleFile);
+        }
       } else if (text.equals("Save Uintah Input File")) {
-	File particleFile = null;
-	if ((particleFile = getParticleFile()) != null) {
-	  partList.readFromFile(particleFile, 1);
-	  partList.writeUintah(particleFile);
-	}
+        File uintahFile = null;
+        if ((uintahFile = getFileName(UintahGui.SAVE)) != null) {
+          writeUintah(uintahFile);
+        }
       } else if (text.equals("About")) {
-	helpAboutFrame.setVisible(true);
+        helpAboutFrame.setVisible(true);
       }
     }
   }
 
-  // Get the name of the file containing the particle co-ordinates
-  private File getParticleFile() {
+  // Get the name of the file 
+  private File getFileName(int option) {
     JFileChooser fc = new JFileChooser(new File(".."));
     if (oldFile != null) fc.setSelectedFile(oldFile);
-    int returnVal = fc.showOpenDialog(UintahGui.this);
+    int returnVal = 0; 
+    if (option == UintahGui.OPEN) {
+      returnVal = fc.showOpenDialog(UintahGui.this);
+    } else {
+      returnVal = fc.showSaveDialog(UintahGui.this);
+    }
     if (returnVal == JFileChooser.APPROVE_OPTION) {
       File file = fc.getSelectedFile();
       oldFile = file;
       return file;
     } else return null;
   }
+
+  // Write the output in Uintah format
+  private void writeUintah(File outputFile) {
+    
+    // Create filewriter and printwriter
+    try {
+      FileWriter fw = new FileWriter(outputFile);
+      PrintWriter pw = new PrintWriter(fw);
+
+      uintahInputPanel.writeUintah(pw);
+
+      pw.close();
+      fw.close();
+
+    } catch (Exception event) {
+      System.out.println("Could not write to file "+outputFile.getName());
+    }
+  }
+
 
 }

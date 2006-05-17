@@ -68,6 +68,16 @@ public class ICEInputsPanel extends JPanel {
     saveButton.addActionListener(buttonListener);
   }
 
+  //------------------------------------------------------------------~~~~~
+  // Write out in Uintah format
+  //------------------------------------------------------------------~~~~~
+  public void writeUintah(PrintWriter pw, String tab) {
+   
+    if (pw == null) return;
+    iceParamInputPanel.writeUintah(pw, tab);
+
+  }
+
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Respond to button pressed (inner class button listener)
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
