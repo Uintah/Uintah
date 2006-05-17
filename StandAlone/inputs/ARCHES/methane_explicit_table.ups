@@ -172,24 +172,23 @@
 		        <res_tol>1.0e-9</res_tol>
 			<ksptype>cg</ksptype>
 			<pctype>jacobi</pctype>
-			<fill>1</fill>		!---for ilu preconditioner
-			<overlap>1</overlap>	!---for asm preconditioner
 			<max_iter>75</max_iter>
-		        <underrelax>1.0</underrelax>
 		    </LinearSolver>
 		</PressureSolver>
 
 		<MomentumSolver>
-                <!-- Set central to true here to get 2nd order 
+                <!-- Set convection_scheme to central here to get 2nd order 
                  central differencing for velocity. It is disabled here
                  since it doesn't work well for 10^3 tester problem -->
-                  <central>false</central>
+                    <convection_scheme>upwind</convection_scheme>
 		</MomentumSolver>
 
 		<MixtureFractionSolver>
+                    <convection_scheme>central-upwind</convection_scheme>
 		</MixtureFractionSolver>
 
 		<EnthalpySolver>
+                    <convection_scheme>central-upwind</convection_scheme>
                     <radiation>true</radiation>
                     <radiationCalcFreq>5</radiationCalcFreq>
 		    <radCalcForAllRKSteps>false</radCalcForAllRKSteps>
@@ -199,10 +198,13 @@
 		    <linear_solver>hypre</linear_solver>
 		    <LinearSolver>
 			<res_tol>1.0e-10</res_tol>
+		        <ksptype>gmres</ksptype>
+                        <pctype>jacobi</pctype>
 			<max_iter>75</max_iter>
 		    </LinearSolver>
                     </DORadiationModel>
 		</EnthalpySolver>
+
 	    </ExplicitSolver>
 
         </ARCHES>

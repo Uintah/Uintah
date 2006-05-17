@@ -159,16 +159,17 @@
                         <ksptype>cg</ksptype>
 			<pctype>pfmg</pctype>
 			<max_iter>75</max_iter>
-		        <underrelax>1.00</underrelax>
 		    </LinearSolver>
 		</PressureSolver>
 
 		<MomentumSolver>
-                    <central>true</central>
+                    <convection_scheme>central</convection_scheme>
 		</MomentumSolver>
 
 		<MixtureFractionSolver>
+                    <convection_scheme>central-upwind</convection_scheme>
 		</MixtureFractionSolver>
+
 	    </ExplicitSolver>
 
         </ARCHES>
