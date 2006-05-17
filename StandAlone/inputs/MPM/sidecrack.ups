@@ -71,9 +71,6 @@
 		    <res>[2,2,2]</res>
 		    <velocity>[0.,0.,0.]</velocity>
 		    <temperature>300.</temperature>
-                    <toughness_min>  2000.0 </toughness_min>
-		    <toughness_max>  2000.0 </toughness_max>
-		    <toughness_variation>1</toughness_variation>
  		</geom_object>
 
 	    </material>

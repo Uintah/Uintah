@@ -42,7 +42,6 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps): Material(ps)
    ps->require("thermal_conductivity",d_thermalConductivity);
    ps->require("specific_heat",d_specificHeat);
    ps->require("dynamic_viscosity",d_viscosity);
-   ps->require("speed_of_sound",d_speed_of_sound);
    ps->require("gamma",d_gamma);
    
    d_isSurroundingMatl = false;
@@ -98,7 +97,6 @@ ProblemSpecP ICEMaterial::outputProblemSpec(ProblemSpecP& ps)
   ice_ps->appendElement("thermal_conductivity",d_thermalConductivity);
   ice_ps->appendElement("specific_heat",d_specificHeat);
   ice_ps->appendElement("dynamic_viscosity",d_viscosity);
-  ice_ps->appendElement("speed_of_sound",d_speed_of_sound);
   ice_ps->appendElement("gamma",d_gamma);
   ice_ps->appendElement("isSurroundingMatl",d_isSurroundingMatl);
   ice_ps->appendElement("includeFlowWork",d_includeFlowWork);
@@ -128,10 +126,6 @@ double ICEMaterial::getViscosity() const
   return d_viscosity;
 }
 
-double ICEMaterial::getSpeedOfSound() const
-{
-  return d_speed_of_sound;
-}
 bool ICEMaterial::isSurroundingMatl() const
 {
   return d_isSurroundingMatl;
@@ -210,7 +204,6 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           rho_micro[*iter]  = d_geom_objs[obj]->getInitialData("density");
           rho_CC[*iter]     = rho_micro[*iter] + d_TINY_RHO*rho_micro[*iter];
           temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
-          speedSound[*iter] = d_speed_of_sound;
           IveBeenHere[*iter]= 1;
         }
       }   
@@ -224,7 +217,6 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
                             d_TINY_RHO*rho_micro[*iter];
           temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
-          speedSound[*iter] = d_speed_of_sound;
           IveBeenHere[*iter]= obj; 
         }
         if(IveBeenHere[*iter] != -9 && count > 0){
@@ -237,7 +229,6 @@ void ICEMaterial::initializeCells(CCVariable<double>& rho_micro,
           rho_CC[*iter]     = rho_micro[*iter] * vol_frac_CC[*iter] +
                             d_TINY_RHO*rho_micro[*iter];
           temp[*iter]       = d_geom_objs[obj]->getInitialData("temperature");
-          speedSound[*iter] = d_speed_of_sound;
           IveBeenHere[*iter]= obj; 
         }
         if(IveBeenHere[*iter] != -9 && count == 0){

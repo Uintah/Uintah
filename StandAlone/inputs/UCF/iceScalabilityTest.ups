@@ -164,7 +164,6 @@
            <dynamic_viscosity>  15.3e-6                 </dynamic_viscosity>
            <thermal_conductivity>0.0                </thermal_conductivity>
            <specific_heat>      652.9                   </specific_heat>
-           <speed_of_sound>     270.28699999999998      </speed_of_sound>
            <gamma>              1.289                   </gamma>           
            <geom_object>
              <difference>
@@ -196,7 +195,6 @@
            <dynamic_viscosity>  15.3e-6                 </dynamic_viscosity>
            <thermal_conductivity>0.0                </thermal_conductivity>
            <specific_heat>      652.9                   </specific_heat>
-           <speed_of_sound>     270.28699999999998      </speed_of_sound>
            <gamma>              1.289                   </gamma>
            <geom_object>
                 <box label="blob1">                     </box>
@@ -213,7 +211,6 @@
            <dynamic_viscosity>  15.3e-6                 </dynamic_viscosity>
            <thermal_conductivity>0.0                </thermal_conductivity>
            <specific_heat>      652.9                   </specific_heat>
-           <speed_of_sound>     270.28699999999998      </speed_of_sound>
            <gamma>              1.289                   </gamma>
            <geom_object>
                 <box label="blob2">                     </box>
