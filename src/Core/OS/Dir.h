@@ -121,6 +121,23 @@ namespace SCIRun {
 #  define MKDIR(dir, perm) mkdir(dir)
 // windows doesn't have lstat
 #  define LSTAT(file, buf) stat(file, buf)
+
+// windows doesn't have dirent... make them here
+struct dirent
+{
+    char *d_name;
+};
+
+struct DIR;
+
+SCISHARE DIR *opendir(const char *);
+SCISHARE int closedir(DIR *);
+SCISHARE dirent *readdir(DIR *);
+
+// not implemented yet...
+SCISHARE void rewinddir(DIR *);
+
+
 #else
 #  define MKDIR(dir, perm) mkdir(dir, perm)
 #  define LSTAT(file, buf) lstat(file, buf)

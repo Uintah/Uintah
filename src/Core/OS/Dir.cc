@@ -39,8 +39,7 @@
 #include <unistd.h>
 #include <dirent.h>
 #else
-// supply a POSIX version
-#include <Core/OS/dirent.h>
+#include <Core/Malloc/Allocator.h>
 #endif
 
 using namespace std;
@@ -175,6 +174,7 @@ void Dir::getFilenamesBySuffix(const std::string& suffix,
     if ((strlen(file->d_name)>=strlen(ext)) && 
 	(strcmp(file->d_name+strlen(file->d_name)-strlen(ext),ext)==0)) {
       filenames.push_back(file->d_name);
+      cout << "  Found " << file->d_name << endl;
     }
   }
 }
@@ -188,3 +188,74 @@ bool Dir::exists()
     return true;
   return false;
 }
+
+#ifdef _WIN32
+struct DIR
+{
+  long file_handle;
+  _finddata_t finddata;
+  _finddata_t nextfinddata;
+  bool done;
+  dirent return_on_read;
+};
+
+DIR *opendir(const char *name)
+{
+  // grab the first file in the directory by ending name with "/*"
+  DIR *dir = 0;
+  if (name != NULL) {
+    unsigned length = strlen(name);
+    if (length > 0) {
+      dir = scinew DIR;
+      dir->done = false;
+
+      // create the file search path with the wildcard
+      string search_path = name; 
+      if (name[length-1] == '/' || name[length-1] == '\\')
+        search_path += "*";
+      else
+        search_path += "/*";
+
+      if ((dir->file_handle = (long) _findfirst(search_path.c_str(), &dir->nextfinddata)) == -1) {
+        delete dir;
+        dir = 0;
+      }
+      return dir;
+    }
+  }
+  errno = EINVAL;
+  return 0;
+}
+
+int closedir(DIR *dir)
+{
+  int result = -1;
+  if (dir) {
+    result = _findclose(dir->file_handle);
+    delete dir;
+  }
+  if (result == -1) errno = EBADF;
+  return result;
+}
+
+dirent *readdir(DIR *dir)
+{
+  if (dir->done) 
+    return 0;
+  if (dir) {
+    dir->finddata = dir->nextfinddata;
+    if (_findnext(dir->file_handle, &dir->nextfinddata) == -1)
+      dir->done = true;
+    dir->return_on_read.d_name = dir->finddata.name;
+    return &dir->return_on_read;
+  }
+  else {
+    errno = EBADF;
+  }
+  return 0;
+}
+
+void rewinddir(DIR *dir)
+{
+}
+#endif

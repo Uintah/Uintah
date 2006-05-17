@@ -51,6 +51,7 @@
 #define strcasecmp stricmp
 #include <io.h>
 #include <process.h>
+#include "StackWalker.h"
 #endif
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
@@ -77,42 +78,7 @@ using namespace std;
 
 Exception::Exception()
 {
-  ostringstream stacktrace;
-  static const int MAXSTACK = 100;
-
-#ifdef HAVE_EXC
-  // Use -lexc to print out a stack trace
-  static const int MAXNAMELEN = 1000;
-  __uint64_t addrs[MAXSTACK];
-  char* cnames_str = new char[MAXSTACK*MAXNAMELEN];
-  char* names[MAXSTACK];
-  for(int i=0;i<MAXSTACK;i++)
-    names[i]=cnames_str+i*MAXNAMELEN;
-  int nframes = trace_back_stack(0, addrs, names, MAXSTACK, MAXNAMELEN);
-  if(nframes == 0){
-    stacktrace << "Backtrace not available!\n";
-  } else {
-    stacktrace << "Backtrace:\n";
-    stacktrace.flags(ios::hex);
-    // Skip the first procedure (us)
-    for(int i=1;i<nframes;i++)
-      stacktrace << "0x" << (void*)addrs[i] << ": " << names[i] << '\n';
-  }
-#elif defined(__GNUC__) && defined(__linux)
-  static void *addresses[MAXSTACK];
-  int n = backtrace( addresses, MAXSTACK );
-  if (n < 2){
-    stacktrace << "Backtrace not available!\n";
-  } else {
-    stacktrace << "Backtrace:\n";
-    stacktrace.flags(ios::hex);
-    char **names = backtrace_symbols( addresses, n );
-    for ( int i = 2; i < n; i++ )
-      stacktrace << names[i] << '\n';
-    free(names);
-  }
-#endif
-  stacktrace_ = strdup(stacktrace.str().c_str());
+  stacktrace_ = strdup(getStackTrace().c_str());
 }
 
 Exception::~Exception()
@@ -228,6 +194,49 @@ void Exception::sci_throw(const Exception& exc)
       abort();
     }
   }
+}
+
+string getStackTrace()
+{
+  ostringstream stacktrace;
+  static const int MAXSTACK = 100;
+
+#ifdef HAVE_EXC
+  // Use -lexc to print out a stack trace
+  static const int MAXNAMELEN = 1000;
+  __uint64_t addrs[MAXSTACK];
+  char* cnames_str = new char[MAXSTACK*MAXNAMELEN];
+  char* names[MAXSTACK];
+  for(int i=0;i<MAXSTACK;i++)
+    names[i]=cnames_str+i*MAXNAMELEN;
+  int nframes = trace_back_stack(0, addrs, names, MAXSTACK, MAXNAMELEN);
+  if(nframes == 0){
+    stacktrace << "Backtrace not available!\n";
+  } else {
+    stacktrace << "Backtrace:\n";
+    stacktrace.flags(ios::hex);
+    // Skip the first procedure (us)
+    for(int i=1;i<nframes;i++)
+      stacktrace << "0x" << (void*)addrs[i] << ": " << names[i] << '\n';
+  }
+#elif defined(__GNUC__) && defined(__linux)
+  static void *addresses[MAXSTACK];
+  int n = backtrace( addresses, MAXSTACK );
+  if (n < 2){
+    stacktrace << "Backtrace not available!\n";
+  } else {
+    stacktrace << "Backtrace:\n";
+    stacktrace.flags(ios::hex);
+    char **names = backtrace_symbols( addresses, n );
+    for ( int i = 2; i < n; i++ )
+      stacktrace << names[i] << '\n';
+    free(names);
+  }
+#elif defined(_WIN32)
+  StackWalker sw;
+  stacktrace << sw.GetCallstack();
+#endif
+  return stacktrace.str();
 }
 
 } // End namespace SCIRun

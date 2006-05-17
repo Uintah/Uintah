@@ -42,6 +42,11 @@ SRCS     += $(SRCDIR)/ArrayIndexOutOfBounds.cc \
 	    $(SRCDIR)/InvalidState.cc \
 	    $(SRCDIR)/InternalError.cc
 
+
+ifeq ($(IS_WIN),yes)
+  SRCS +=$(SRCDIR)/StackWalker.cc
+endif
+
 PSELIBS := 
 LIBS := $(TRACEBACK_LIB)
 

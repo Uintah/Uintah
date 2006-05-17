@@ -65,7 +65,7 @@
 
 // Standard includes
 #ifdef _WIN32
-#include <Core/OS/dirent.h>
+#include <Core/OS/Dir.h>
 #else
 #include <dirent.h>
 #endif

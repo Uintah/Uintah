@@ -40,9 +40,6 @@
 #ifndef _WIN32
 #include <unistd.h>
 #include <dirent.h>
-#else
-#include <Core/OS/dirent.h>
-#include <io.h>
 #endif
 
 namespace CardioWave {

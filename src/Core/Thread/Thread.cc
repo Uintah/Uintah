@@ -66,7 +66,10 @@
 #include <io.h>
 #include <process.h>
 #include <imagehlp.h>
-#include <tlhelp32.h>
+#include <psapi.h>
+#define SCI_OK_TO_INCLUDE_SCI_ENVIRONMENT_DEFS_H
+#include <sci_defs/environment_defs.h> // for SCIRUN_OBJDIR. can't use sci_getenv lest we create a circular dependency
+#undef SCI_OK_TO_INCLUDE_SCI_ENVIRONMENT_DEFS_H
 #define strcasecmp stricmp //native windows doesn't have strcasecmp
 #define SCISHARE __declspec(dllexport)
 #else
@@ -279,106 +282,7 @@ Thread::parallel(ParallelBase& helper, int nthreads,
 void
 Thread::niceAbort(void* Context /* = 0 */)
 {
-#ifdef HAVE_EXC
-  static const int MAXSTACK = 100;
-  // Use -lexc to print out a stack trace
-  static const int MAXNAMELEN = 1000;
-  __uint64_t addrs[MAXSTACK];
-  char* cnames_str = new char[MAXSTACK*MAXNAMELEN];
-  char* names[MAXSTACK];
-  for(int i=0;i<MAXSTACK;i++)
-    names[i]=cnames_str+i*MAXNAMELEN;
-  int nframes = trace_back_stack(0, addrs, names, MAXSTACK, MAXNAMELEN);
-  if(nframes == 0){
-    fprintf(stderr, "Backtrace not available!\n");
-  } else {
-    fprintf(stderr, "Backtrace:\n");
-    for(int i=0;i<nframes;i++)
-      fprintf(stderr, "0x%p: %s\n", (void*)addrs[i], names[i]);
-  }
-#elif defined(__GNUC__) && defined(__linux)
-  static const int MAXSTACK = 100;
-  static void *addresses[MAXSTACK];
-  int n = backtrace( addresses, MAXSTACK );
-  if (n == 0){
-    fprintf(stderr, "Backtrace not available!\n");
-  } else {
-    fprintf(stderr, "Backtrace:\n");
-    char **names = backtrace_symbols( addresses, n );
-    for ( int i = 0; i < n; i++ )
-    {
-      fprintf (stderr, "%s\n", names[i]);
-    } 
-    free(names);
-  } 
-#elif defined(_WIN32)
-  // fix for IA64, and AMD64 later
-  // inits of sf.* and 1st param to stackwalk64 are for i386 currently
-  // use ImageNtHeader, look in PE header
-
-
-  // setup initial structs
-  int i = 0;
-  static const int MAXNAMELEN = 1000;
-  static const int IMGSYMLEN = sizeof(IMAGEHLP_SYMBOL);
-  static IMAGEHLP_SYMBOL* image_sym = 0;
-  char name[MAXNAMELEN]; // undecorated name
-
-  // this is where the symbol info will be stored
-  if (image_sym == 0) {
-    image_sym = (IMAGEHLP_SYMBOL *) malloc( IMGSYMLEN + MAXNAMELEN );
-  }
-  memset( image_sym, 0, IMGSYMLEN + MAXNAMELEN );
-  image_sym->SizeOfStruct = IMGSYMLEN;
-  image_sym->MaxNameLength = MAXNAMELEN;
-
-  // thread context and stack frame
-  CONTEXT context;
-  if (Context == 0) {
-    memset(&context, 0, sizeof(CONTEXT));
-    context.ContextFlags = CONTEXT_FULL;
-
-    GetThreadContext(GetCurrentThread(), &context); 
-  }
-  else {
-    context = *(CONTEXT*)Context;
-  }
-  STACKFRAME sf;
-  memset(&sf, 0, sizeof(STACKFRAME));
-  sf.AddrPC.Offset = context.Eip; // for X86
-  sf.AddrPC.Mode = AddrModeFlat;
-  sf.AddrFrame.Offset = context.Ebp; // for X86
-  sf.AddrFrame.Mode = AddrModeFlat;
-  HANDLE hProc = GetCurrentProcess();
-
-  static bool first = true;
-
-  if (first) {
-    SymInitialize(hProc, 0, true);
-    first = false;
-  }
-
-  bool success = StackWalk(IMAGE_FILE_MACHINE_I386, hProc, GetCurrentThread(), &sf, 0, 0, SymFunctionTableAccess, SymGetModuleBase, 0) && sf.AddrPC.Offset != 0;
-
-  while (success) {
-    DWORD offset = 0;
-    if (SymGetSymFromAddr(hProc, sf.AddrPC.Offset, &offset, image_sym)) {
-      UnDecorateSymbolName(image_sym->Name, name, MAXNAMELEN, UNDNAME_COMPLETE);
-      fprintf(stderr, "#%d %s\n", i, name);
-    }
-    else {
-      fprintf(stderr, "#%d ???\n", i);
-      static int bad = 0;
-      bad++;
-      if (bad > 25)
-        break;
-    }  
-    i++;
-    success = StackWalk(IMAGE_FILE_MACHINE_I386, hProc, GetCurrentThread(), &sf, 0, 0, SymFunctionTableAccess, SymGetModuleBase, 0) && sf.AddrPC.Offset != 0;
-  }
-  fflush(stderr);
-#endif
-
+  fprintf(stderr, getStackTrace().c_str());
   char* smode = getenv("SCI_SIGNALMODE");
   if (!smode)
     smode = "ask"; //"e"; 

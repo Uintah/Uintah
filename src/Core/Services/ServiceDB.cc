@@ -93,7 +93,12 @@ ServiceDB::findlib(string lib)
   while (temppaths!="") 
     {
       string dir;
-      const size_t firstcolon = temppaths.find(':');
+#ifdef _WIN32
+          // don't find the drive letter name's ':'...
+          const size_t firstcolon = temppaths.find(':',2);
+#else
+          const size_t firstcolon = temppaths.find(':');
+#endif
       if(firstcolon < temppaths.size()) 
         {
           dir=temppaths.substr(0,firstcolon);
@@ -206,7 +211,12 @@ ServiceDB::loadpackages()
               tmppath = "found";
               break;
             }
+#ifdef _WIN32
+          // don't find the drive letter name's ':'...
+          const size_t firstcolon = tmppath.find(':',2);
+#else
           const size_t firstcolon = tmppath.find(':');
+#endif
           if(firstcolon < tmppath.size()) 
             {
               pathelt=tmppath.substr(0,firstcolon);
