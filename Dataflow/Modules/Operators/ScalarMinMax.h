@@ -185,7 +185,7 @@ ScalarMinMax::get_info( Reporter * reporter, FieldHandle f)
 		max_val, max_idx, n_max_vals);
 
   string field_name = "Not Specified";
-  f->get_property("varname",field_name);
+  f->get_property("name",field_name);
 
   gui_field_name_.set( field_name );
   gui_min_data_.set( to_string( min_val ) );
