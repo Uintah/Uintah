@@ -55,7 +55,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <SCIRun/Core/Util/Assert.h>
+#include <Core/Util/Assert.h>
 
 #ifndef SCI_NOPERSISTENT
 #include <Core/Persistent/Persistent.h>
