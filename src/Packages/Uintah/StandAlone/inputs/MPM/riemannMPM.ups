@@ -104,7 +104,6 @@
                   <specific_heat>  717.5        </specific_heat>
                   <UseArtificialViscosity>true</UseArtificialViscosity>
               </constitutive_model>
-              <toughness>             10.e6           </toughness>
               <thermal_conductivity>  1000.0          </thermal_conductivity>
               <specific_heat>         716.0           </specific_heat>
               <gamma>                 1.4             </gamma>
@@ -125,7 +124,6 @@
                   <specific_heat>  717.5        </specific_heat>
                   <UseArtificialViscosity>true</UseArtificialViscosity>
               </constitutive_model>
-              <toughness>             10.e6           </toughness>
               <thermal_conductivity>  1000.0          </thermal_conductivity>
               <specific_heat>         716.0           </specific_heat>
               <gamma>                 1.4             </gamma>

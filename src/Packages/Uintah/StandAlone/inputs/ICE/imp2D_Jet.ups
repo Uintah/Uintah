@@ -220,7 +220,6 @@
            <dynamic_viscosity>          15.89e-6        </dynamic_viscosity>
            <thermal_conductivity>       23.6e-3         </thermal_conductivity>
            <specific_heat>              716.0           </specific_heat>
-           <speed_of_sound>             376             </speed_of_sound>
            <gamma>                      1.4             </gamma>           
            <geom_object>
                   <box label="domain">

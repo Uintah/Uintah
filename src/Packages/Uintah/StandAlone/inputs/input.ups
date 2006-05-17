@@ -41,7 +41,6 @@
 	        <viscosity>1.0</viscosity>
 		<thermal_conductivity>1.0</thermal_conductivity>
 		<specific_heat>1.0</specific_heat>
-		<speed_of_sound>1.0</speed_of_sound>
 	    </material_properties>
          </ICE>
 
@@ -132,7 +131,6 @@
 	    <viscosity>1.0</viscosity>
 	    <thermal_conductivity>1.0</thermal_conductivity>
 	    <specific_heat>1.0</specific_heat>
-	    <speed_of_sound>1.0</speed_of_sound>
 	</ICE>
 
 	<ARCHES>
