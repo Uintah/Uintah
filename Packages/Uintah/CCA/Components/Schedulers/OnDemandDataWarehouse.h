@@ -128,6 +128,8 @@ public:
 					     const Patch*, Ghost::GhostType, 
 					     int numGhostCells,
 					     const VarLabel* posvar);
+   ParticleSubset* getParticleSubset(int matlIndex, IntVector low, IntVector high, const Level* level, const Patch* relPatch,
+                                     const VarLabel* posvar);
    virtual void allocateTemporary(ParticleVariableBase&, ParticleSubset*);
    virtual void allocateAndPut(ParticleVariableBase&, const VarLabel*,
 			       ParticleSubset*);

@@ -4,11 +4,13 @@
 
 #include <Core/Geometry/Point.h>
 #include <sgi_stl_warnings_off.h>
+#include <deque>
 #include   <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 
+using std::deque;
 using namespace SCIRun;
 
 /**************************************
@@ -80,6 +82,9 @@ using namespace SCIRun;
       bool degenerate() const {
 	 return d_lower.x() >= d_upper.x() || d_lower.y() >= d_upper.y() || d_lower.z() >= d_upper.z();
       }
+
+      static deque<Box> difference(const Box& b1, const Box& b2);
+      static deque<Box> difference(deque<Box>& boxSet1, deque<Box>& boxSet2);
 
       friend std::ostream& operator<<(std::ostream& out, const Box& b);
 

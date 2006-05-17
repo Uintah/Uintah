@@ -103,8 +103,8 @@ LocallyComputedPatchVarMap::addComputedPatchSet(const PatchSubset* patches)
   }
 #endif
 
-  if (sets_.size() == 0)
-    sets_.resize(level->getGrid()->numLevels());
+  if (sets_.size() <= level->getIndex())
+    sets_.resize(level->getIndex()+1);
 
   LocallyComputedPatchSet* lcpatches = sets_[level->getIndex()];
   if(lcpatches == 0){
@@ -129,8 +129,9 @@ LocallyComputedPatchVarMap::getSuperPatches(const Level* level) const
 {
   ASSERT(groupsMade);
   int l = level->getIndex();
-  if (sets_.size() == 0 || sets_[l] != 0)
+  if (sets_.size() == 0 || sets_[l] == 0) {
     return 0;
+  }
   return sets_[l]->getSuperPatches();
 }
 
