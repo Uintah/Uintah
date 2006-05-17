@@ -75,7 +75,11 @@ MomentumSolver::problemSetup(const ProblemSpecP& params)
 
   d_discretize = scinew Discretization();
 
-  db->getWithDefault("central",d_central,false);
+  string conv_scheme;
+  db->getWithDefault("convection_scheme",conv_scheme,"upwind");
+    if (conv_scheme == "upwind") d_central = false;
+      else if (conv_scheme == "central") d_central = true;
+	else throw InvalidValue("Convection scheme not supported: " + conv_scheme, __FILE__, __LINE__);
   db->getWithDefault("pressure_correction",d_pressure_correction,false);
   db->getWithDefault("filter_divergence_constraint",d_filter_divergence_constraint,false);
 

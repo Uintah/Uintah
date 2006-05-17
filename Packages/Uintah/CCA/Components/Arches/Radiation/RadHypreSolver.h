@@ -113,7 +113,6 @@ private:
   int *d_stencilIndices;
   int d_A_num_ghost[6];
   double d_convgTol; // convergence tolerence
-  double d_underrelax;
   double d_initResid;
   double d_residual;
   double init_norm;

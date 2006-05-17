@@ -110,8 +110,8 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
   d_discretize = scinew Discretization();
 
   string conv_scheme;
-  db->getWithDefault("convection_scheme",conv_scheme,"l2up");
-    if (conv_scheme == "l2up") d_conv_scheme = 0;
+  db->getWithDefault("convection_scheme",conv_scheme,"central-upwind");
+    if (conv_scheme == "central-upwind") d_conv_scheme = 0;
       else if (conv_scheme == "flux_limited") d_conv_scheme = 1;
 	else throw InvalidValue("Convection scheme not supported: " + conv_scheme, __FILE__, __LINE__);
   string limiter_type;
@@ -124,20 +124,20 @@ EnthalpySolver::problemSetup(const ProblemSpecP& params)
 	  cout << "WARNING! Running central scheme for scalar," << endl;
 	  cout << "which can be unstable." << endl;
 	}
-          else if (limiter_type == "l2up") d_limiter_type = 3;
+          else if (limiter_type == "central-upwind") d_limiter_type = 3;
             else if (limiter_type == "upwind") d_limiter_type = 4;
 	      else throw InvalidValue("Flux limiter type "
 		                           "not supported: " + limiter_type, __FILE__, __LINE__);
   string boundary_limiter_type;
   d_boundary_limiter_type = 3;
   if (d_limiter_type < 3) {
-    db->getWithDefault("boundary_limiter_type",boundary_limiter_type,"l2up");
+    db->getWithDefault("boundary_limiter_type",boundary_limiter_type,"central-upwind");
     if (boundary_limiter_type == "none") {
 	  d_boundary_limiter_type = 2;
 	  cout << "WARNING! Running central scheme for scalar on the boundaries," << endl;
 	  cout << "which can be unstable." << endl;
     }
-      else if (boundary_limiter_type == "l2up") d_boundary_limiter_type = 3;
+      else if (boundary_limiter_type == "central-upwind") d_boundary_limiter_type = 3;
         else if (boundary_limiter_type == "upwind") d_boundary_limiter_type = 4;
 	  else throw InvalidValue("Flux limiter type on the boundary"
 		                  "not supported: " + boundary_limiter_type, __FILE__, __LINE__);

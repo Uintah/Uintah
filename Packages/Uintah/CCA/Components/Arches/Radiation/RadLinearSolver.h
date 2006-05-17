@@ -111,7 +111,6 @@ private:
       int d_maxSweeps;
       bool d_shsolver;
       double d_tolerance; // convergence tolerence
-      double d_underrelax;
       double d_initResid;
       double d_residual;
    const ProcessorGroup* d_myworld;
