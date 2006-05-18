@@ -862,66 +862,67 @@ Module::tcl_command(GuiArgs& args, void*)
 void
 Module::set_pid(int pid)
 {
-  pid_=pid;
+  pid_ = pid;
 }
 
 // Error conditions
 void
 Module::error(const string& str)
 {
+  const string newstr = "ERROR: " + str + "\n";
   if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
-    cout << id_ << ":ERROR: " << str << "\n";
+    cout << id_ + ":" + newstr;
+    cout.flush();
   }
   msg_stream_flush();
-  msg_stream_ << "ERROR: " << str << '\n';
-  gui_->execute(id_ + " append_log_msg {" + msg_stream_.str() + "} red");
-  msg_stream_.str("");
+  gui_->execute(id_ + " append_log_msg {" + newstr + "} red");
   update_msg_state(Error); 
 }
 
 void
 Module::warning(const string& str)
 {
+  const string newstr = "WARNING: " + str + "\n";
   if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
-    cout << id_ << ":WARNING: " << str << "\n";
+    cout << id_ + ":" + newstr;
+    cout.flush();
   }
   msg_stream_flush();
-  msg_stream_ << "WARNING: " << str << '\n';
-  gui_->execute(id_ + " append_log_msg {" + msg_stream_.str() + "} yellow");
-  msg_stream_.str("");
+  gui_->execute(id_ + " append_log_msg {" + newstr + "} yellow");
   update_msg_state(Warning); 
 }
 
 void
 Module::remark(const string& str)
 {
+  const string newstr = "REMARK: " + str + "\n";
   if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
-    cout << id_ << ":REMARK: " << str << "\n";
+    cout << id_ + ":" + newstr;
+    cout.flush();
   }
   msg_stream_flush();
-  msg_stream_ << "REMARK: " << str << '\n';
-  gui_->execute(id_ + " append_log_msg {" + msg_stream_.str() + "} blue");
-  msg_stream_.str("");
+  gui_->execute(id_ + " append_log_msg {" + newstr + "} blue");
   update_msg_state(Remark); 
 }
 
-void Module::compile_error(const string& filename)
+void
+Module::compile_error(const string& filename)
 {
+  const string newstr = "COMPILE ERROR IN FILE: " + filename + "cc\n";
   if (sci_getenv_p("SCI_REGRESSION_TESTING"))
   {
-    cout << id_ << ":COMPILE ERROR IN FILE: " << filename << "cc" << "\n";
+    cout << id_ + ":" + newstr;
+    cout.flush();
   }
 
   msg_stream_flush();
-  msg_stream_ << "COMPILE ERROR IN FILE: " << filename << "cc\n";
-  gui_->execute(id_ + " append_log_msg {" + msg_stream_.str() + "} OrangeRed");
-  msg_stream_.str("");
+  gui_->execute(id_ + " append_log_msg {" + newstr + "} OrangeRed");
   update_msg_state(Error); 
   
-  gui_->eval(get_id() + " compile_error "+filename);
+  gui_->eval(get_id() + " compile_error " + filename);
 }
 
 void
