@@ -25,6 +25,7 @@ SUBDIRS := \
 	$(SRCDIR)/Converter\
 	$(SRCDIR)/Math\
 	$(SRCDIR)/DataStreaming\
+	$(SRCDIR)/Time\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

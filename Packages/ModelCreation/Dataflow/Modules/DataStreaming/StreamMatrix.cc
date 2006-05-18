@@ -151,7 +151,7 @@ void StreamMatrix::execute()
   bool senddata = true;
 
   // Check whether we are running from input or from GUI
-  if ((Indices.get_rep() == 0)||(Weights.get_rep() == 0))
+  if ((Indices.get_rep() == 0)&&(Weights.get_rep() == 0))
   {
     get_ctx()->reset();
     int start = range_min_.get();
@@ -313,8 +313,8 @@ void StreamMatrix::execute()
     }  
   }
 
-  send_output_handle("Vector",Output,true);
-  send_output_handle("Selected Index",Indices,true);
+  send_output_handle("DataVector",Output,true);
+  send_output_handle("Index",Indices,true);
   send_output_handle("Scaled Index",ScaledIndices,true);
   send_output_handle("Filename",FileName,true);
 }
