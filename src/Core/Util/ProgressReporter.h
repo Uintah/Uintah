@@ -65,7 +65,6 @@ public:
   virtual void          error(const std::string& msg);
   virtual void          warning(const std::string& msg);
   virtual void          remark(const std::string& msg);
-  virtual void          post_message(const std::string &msg);
   virtual void          compile_error(const std::string &filename);
 
   virtual std::ostream &msg_stream();

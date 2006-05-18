@@ -552,8 +552,8 @@ Module::get_input_port(const string &name)
 OPort*
 Module::get_output_port(const string &name)
 {
-  if (oports_[name].first==oports_[name].second) {
-    //post_message("Unable to initialize "+name+"'s oports\n");
+  if (oports_[name].first == oports_[name].second)
+  {
     return 0;
   }
   return get_output_port(oports_[name].first->second);
@@ -938,16 +938,6 @@ bool
 Module::in_power_app()
 {
   return (gui_->eval("in_power_app") == "1");
-}
-
-void
-Module::post_message(const string& str)
-{
-  if (sci_getenv_p("SCI_REGRESSION_TESTING"))
-  {
-    cout << id_ << ":post_message: " << str << "\n";
-  }
-  gui_->post_message(module_name_ + ": " + str, false);
 }
 
 void

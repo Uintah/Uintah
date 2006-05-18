@@ -111,37 +111,37 @@ SubFieldHistogram::execute(void)
   ogeom = (GeometryOPort *)get_oport("Geometry");
 
   if (!infield) {
-    post_message("Unable to initialize " + module_name_ + "'s iport\n");
+    error("Unable to initialize " + module_name_ + "'s iport.");
     return;
   }
   
   if (!in_subfield) {
-    post_message("Unable to initialize " + module_name_ + "'s iport\n");
+    error("Unable to initialize " + module_name_ + "'s iport.");
     return;
   }
   
   if (!incolormap) {
-    post_message("Unable to initialize " + module_name_ + "'s iport\n");
+    error("Unable to initialize " + module_name_ + "'s iport.");
     return;
   }
   if (!ogeom) {
-    post_message("Unable to initialize " + module_name_ + "'s oport\n");
+    error("Unable to initialize " + module_name_ + "'s oport.");
     return;
   }
 
   if (!infield->get(field)) {
-    post_message("No incoming scalar field in  " + module_name_ + "'s iport\n");
+    error("No incoming scalar field in " + module_name_ + "'s iport.");
     return;
   } else if (!field.get_rep()) {
-    post_message("No rep  in  " + module_name_ + "'s incoming scalar field\n");
+    error("No rep in " + module_name_ + "'s incoming scalar field.");
     return;
   }
 
   if (!in_subfield->get(sub_field) ) {
-    post_message("No incoming scalar sub_field in  " + module_name_ + "'s iport\n");
+    error("No incoming scalar sub_field in " + module_name_ + "'s iport.");
     return;
   } else if (!sub_field.get_rep()) {
-    post_message("No rep  in  " + module_name_ + "'s incoming scalar sub_field\n");
+    error("No rep in " + module_name_ + "'s incoming scalar sub_field.");
     return;
   }
   
@@ -153,8 +153,9 @@ SubFieldHistogram::execute(void)
   const TypeDescription *td = field->get_type_description();
   const TypeDescription *std = sub_field->get_type_description();
   if( td->get_name().find("double") != string::npos &&
-      std->get_name().find("int") != string::npos){
-    post_message("Field type mismatch in "+ module_name_ + ", cannot make histogram\n");
+      std->get_name().find("int") != string::npos)
+  {
+    error("Field type mismatch in "+ module_name_ +", cannot make histogram.");
     return;
   }
 

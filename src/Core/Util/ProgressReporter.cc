@@ -82,12 +82,6 @@ ProgressReporter::compile_error(const std::string &filename)
   std::cerr << "Dynamic Compiler failure in file: " << filename << "cc" << std::endl;
 }
 
-void
-ProgressReporter::post_message(const std::string&msg)
-{
-  std::cerr << "Message: " << msg << std::endl;
-}
-
 
 std::ostream &
 ProgressReporter::msg_stream()
