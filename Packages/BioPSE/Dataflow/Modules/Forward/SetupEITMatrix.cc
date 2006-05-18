@@ -352,8 +352,8 @@ void SetupEITMatrix::build_Zoi(const vector<TSMesh::handle_type> &meshes,
   // GG Begin
   vector<double>   avInn_;
   int hs;
-  for (i=0; i<nesting.size(); i++) 
-	if (nesting[i] == nesting.size()) hs = i;
+  for (i=0; i<(int)nesting.size(); i++) 
+	if (nesting[i] == (int)nesting.size()) hs = i;
   int given_currents_surface_index = hs; // This is the surface whose currents are given
   BuildBEMatrix::pre_calc_tri_areas(meshes[given_currents_surface_index], avInn_);
 

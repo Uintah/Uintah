@@ -87,28 +87,27 @@ UnuAxdelete::execute()
   Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
-  unsigned int axis = axis_.get();
-  unsigned int a = axis;
-  if (axis == -1) {
+  const int axis = axis_.get();
+  if (axis < 0)
+  {
     Nrrd *ntmp = nrrdNew();
-    if (nrrdCopy(nout, nin)) {
+    if (nrrdCopy(nout, nin))
+    {
       char *err = biffGetDone(NRRD);
       error(string("Error copying axis: ") + err);
       free(err);
     }
-    for (a=0;
-	 a<nout->dim && nout->axis[a].size > 1;
-	 a++);
-    while (a<nout->dim) {
-      if (nrrdAxesDelete(ntmp, nout, a)
-	  || nrrdCopy(nout, ntmp)) {
+    unsigned int a;
+    for (a=0; a<nout->dim && nout->axis[a].size > 1; a++);
+    while (a < nout->dim)
+    {
+      if (nrrdAxesDelete(ntmp, nout, a) || nrrdCopy(nout, ntmp))
+      {
 	char *err = biffGetDone(NRRD);
 	error(string("Error Copying deleting axis: ") + err);
 	free(err);
       }
-      for (a=0;
-	   a<nout->dim && nout->axis[a].size > 1;
-	   a++);
+      for (a=0; a<nout->dim && nout->axis[a].size > 1; a++);
     }
     NrrdDataHandle out(scinew NrrdData(nout));
     
@@ -116,9 +115,11 @@ UnuAxdelete::execute()
     out->copy_properties(nrrd_handle.get_rep());
     
     onrrd_->send_and_dereference(out);
-  } else {
-
-    if (nrrdAxesDelete(nout, nin, axis)) {
+  }
+  else
+  {
+    if (nrrdAxesDelete(nout, nin, axis))
+    {
       char *err = biffGetDone(NRRD);
       error(string("Error Axdeleting nrrd: ") + err);
       free(err);
@@ -132,12 +133,16 @@ UnuAxdelete::execute()
     // set kind
     // Copy the axis kinds
     int offset = 0;
-
-    for (unsigned int i=0; i<nin->dim; i++) {
-      if (i == axis) {
+    for (unsigned int i=0; i<nin->dim; i++)
+    {
+      if (i == (unsigned int)axis)
+      {
 	offset = 1;
-      } else 
+      }
+      else
+      {
 	nout->axis[i-offset].kind = nin->axis[i].kind;
+      }
     }
 
     onrrd_->send_and_dereference(out);
