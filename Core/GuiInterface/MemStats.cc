@@ -40,6 +40,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
+#include <sci_defs/bits_defs.h>
 #include <Core/GuiInterface/MemStats.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/StringUtil.h>
@@ -142,11 +143,19 @@ void MemStats::tcl_command(GuiArgs& args, void*)
 	    return;
 	}
 	char buf[100];
+#ifndef SCI_64BITS
 	sprintf(buf, "%d|%d|%d|%7d-%7d : %9d%9d %7d%7d",
 		lines[bin], old_inlist[bin], old_reqd[bin]-old_deld[bin],
 		old_ssize[bin], old_lsize[bin],
 		old_reqd[bin], old_deld[bin], old_inlist[bin],
 		old_reqd[bin]-old_deld[bin]);
+#else
+	sprintf(buf, "%d|%ld|%ld|%7ld-%7ld : %9ld%9ld %7ld%7ld",
+		lines[bin], old_inlist[bin], old_reqd[bin]-old_deld[bin],
+		old_ssize[bin], old_lsize[bin],
+		old_reqd[bin], old_deld[bin], old_inlist[bin],
+		old_reqd[bin]-old_deld[bin]);
+#endif
 	args.result(buf);
     } else if(args[1] == "globalstats"){
 	size_t nalloc, sizealloc, nfree, sizefree, nmmap, sizemmap;
@@ -192,12 +201,12 @@ void MemStats::tcl_command(GuiArgs& args, void*)
 		    "Returned to system: %ld (%ld bytes)\n"
 		    "System highwater mark: %ld bytes\n"
 		    "\nBreakdown:\n"
-		    "Inuse: %d bytes (%.2f%%)\n"
-		    "Free: %d bytes (%.2f%%)\n"
-		    "Overhead: %d bytes (%.2f%%)\n"
-		    "Fragmentation: %d bytes (%.2f%%)\n"
-		    "Left in hunks: %d bytes (%.2f%%)\n"
-		    "Total: %d bytes (%.2f%%)\n"
+		    "Inuse: %ld bytes (%.2f%%)\n"
+		    "Free: %ld bytes (%.2f%%)\n"
+		    "Overhead: %ld bytes (%.2f%%)\n"
+		    "Fragmentation: %ld bytes (%.2f%%)\n"
+		    "Left in hunks: %ld bytes (%.2f%%)\n"
+		    "Total: %ld bytes (%.2f%%)\n"
 		    "\n  ssize   lsize        reqd     deld  inlist  inuse",
 		    (long)nalloc, (long)sizealloc,
 		    (long)nfree, (long)sizefree,
@@ -207,11 +216,11 @@ void MemStats::tcl_command(GuiArgs& args, void*)
 		    (long)nmmap, (long)sizemmap,
 		    (long)nmunmap, (long)sizemunmap,
 		    (long)highwater_mmap,
-		    bytes_inuse, 100.*(double)bytes_inuse/(double)total,
-		    bytes_free, 100.*(double)bytes_free/(double)total,
-		    bytes_overhead, 100.*(double)bytes_overhead/(double)total,
-		    bytes_fragmented, 100.*(double)bytes_fragmented/(double)total,
-		    bytes_inhunks, 100.*(double)bytes_inhunks/(double)total,
+		    (long)bytes_inuse, 100.*(double)bytes_inuse/(double)total,
+		    (long)bytes_free, 100.*(double)bytes_free/(double)total,
+		    (long)bytes_overhead, 100.*(double)bytes_overhead/(double)total,
+		    (long)bytes_fragmented, 100.*(double)bytes_fragmented/(double)total,
+		    (long)bytes_inhunks, 100.*(double)bytes_inhunks/(double)total,
 		    total, 100.);
 	    args.result(buf);
 	} else {
