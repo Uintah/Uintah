@@ -57,7 +57,6 @@ bool LinkToCompGridAlgo::LinkToCompGrid(ProgressReporter* pr, MatrixHandle NodeL
   int m = spr->ncols();
   int *rows = spr->rows;
   int *cols = spr->columns;
-  double *vals = spr->a;
   
   int *rr = scinew int[m+1];
   int *cc = scinew int[m];

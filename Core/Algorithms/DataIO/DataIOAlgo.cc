@@ -310,6 +310,7 @@ bool DataIOAlgo::WriteField(std::string filename, FieldHandle& field, std::strin
     }
     return (false);
   }
+  return (true);
 }
 
 
@@ -363,6 +364,7 @@ bool DataIOAlgo::WriteMatrix(std::string filename, MatrixHandle& matrix, std::st
     }
     return (false);
   }
+  return (true);
 }
 
 
@@ -405,6 +407,7 @@ bool DataIOAlgo::WriteBundle(std::string filename, BundleHandle& bundle, std::st
     error("No exporters are supported for bundles");
     return (false);
   }
+  return (true);
 }
 
 
@@ -448,6 +451,7 @@ bool DataIOAlgo::WriteNrrd(std::string filename, NrrdDataHandle& nrrd, std::stri
     error("No exporters are supported for nrrds");
     return (false);
   }
+  return (true);
 }
 
 
@@ -490,6 +494,7 @@ bool DataIOAlgo::WriteColorMap(std::string filename, ColorMapHandle& colormap, s
     error("No exporters are supported for colormaps");
     return (false);
   }
+  return (true);
 }
 
 bool DataIOAlgo::WriteColorMap2(std::string filename, ColorMap2Handle& colormap, std::string exporter)
@@ -531,6 +536,7 @@ bool DataIOAlgo::WriteColorMap2(std::string filename, ColorMap2Handle& colormap,
     error("No exporters are supported for colormaps");
     return (false);
   }
+  return (true);
 }
 
 bool DataIOAlgo::WritePath(std::string filename, PathHandle& path, std::string exporter)
@@ -572,6 +578,7 @@ bool DataIOAlgo::WritePath(std::string filename, PathHandle& path, std::string e
     error("No exporters are supported for paths");
     return (false);
   }
+  return (true);
 }
 
 } // end namespace SCIRunAlgo

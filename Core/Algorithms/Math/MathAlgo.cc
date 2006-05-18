@@ -76,7 +76,6 @@ bool MathAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int
     int* row = input->get_row();
     int* col = input->get_col();
     int sm = input->nrows();
-    int sn = input->ncols();
     int nnz = input->get_data_size();
  
   
@@ -177,7 +176,7 @@ bool MathAlgo::CreateSparseMatrix(SparseElementVector& input, MatrixHandle& outp
     else
     {
       nnz++;
-      q=p;
+      q = p;
     }
   }
   
@@ -557,9 +556,7 @@ bool MathAlgo::CuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle& mappi
     }    
   }
 
-  int t;
-  
-  // finish mapping matrix and inverse mapping matrix
+  // Finish mapping matrix and inverse mapping matrix.
   if (calcmapping)
   {
     for (int p=0;p<(m+1);p++) { mrr[p] = p; }
@@ -618,7 +615,6 @@ bool MathAlgo::ApplyRowOperation(MatrixHandle input, MatrixHandle& output, std::
   if (input->is_sparse())
   {
     int *rows = input->sparse()->rows;
-    int *cols = input->sparse()->columns;
     double *vals = input->sparse()->a;
     
     if (method == "Sum")

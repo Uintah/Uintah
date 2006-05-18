@@ -39,7 +39,7 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-
+#include <sci_defs/bits_defs.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/GuiInterface/GuiVar.h>
@@ -123,7 +123,11 @@ UnuResample::getint(const char *str, size_t *n, int *none)
   } else if (str[0] == '=') {
     *none = 1;
   } else {
+#ifndef SCI_64BITS
     if (sscanf(str, "%d", n) != 1) return 1;
+#else
+    if (sscanf(str, "%ld", n) != 1) return 1;
+#endif
   }
   if (*n < 2 && !none) {
     error("Invalid # of samples (" + to_string(*n) + ").");

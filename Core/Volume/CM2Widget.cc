@@ -1490,8 +1490,8 @@ ImageCM2Widget::rasterize(Array3<float>& array)
   if(array.dim3() != 4) return;
 
   Nrrd *nout = 0;
-  if (array.dim2() != pixels_->nrrd_->axis[1].size || 
-      array.dim1() != pixels_->nrrd_->axis[2].size) 
+  if ((size_t)array.dim2() != pixels_->nrrd_->axis[1].size || 
+      (size_t)array.dim1() != pixels_->nrrd_->axis[2].size) 
   {
     nout = resize(array.dim2(), array.dim1());
   }
