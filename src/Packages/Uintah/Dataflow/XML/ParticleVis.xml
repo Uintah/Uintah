@@ -6,9 +6,53 @@
     <authors>
       <author>Packages/Kurt Zimmerman</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Visualize Particles</summary>
     <description>
       <p>Version Date: </p><p>Version: 1.0</p>
+      <p>Visualize Uintah Particle Variables.</p>
+      <p>Note that there are 6 input ports.  This module requires that
+      the first ScalarParticle Port be connected, otherwise no
+      visualization objects will be output.</p>
+      <p>The interface has two tabs:  Geometry and Vectors.  In the
+      geometry interface the user can choose to display the particles as
+      points or spheres.  The "auto radius" button attempts to guess
+      at a reasonable sphere radius based on the size of the domain.
+      By deselecting auto radius, the user can fine tune the sphere
+      size with the radius slider.  The polygon slider controls the
+      number of polygons used for each sphere, the more particles the
+      smoother the sphere.  the "Show Nth Particle" slider allows the
+      user to pare down the number of spheres by showing every nth
+      particle (ie. if the value is 5 show every 5th particle).</p>
+
+      <p>The vector interface allows the user to turn vectors on and
+      off via the "Show Vectors" button.  "Auto length scale" like
+      "auto radius" attempts to guess at an appropriate vector length
+      for visualization.  This of course, requires that a vector
+      particle field be attached to input port 3.</p>
+
+      <p>If a second scalar particle field is attached to port 2.
+      This particle field can be used to scale the particle sizes.
+      The Particle Scale Control at the bottom of the interface can be
+      used to set min and max scale values,  all particles with a scale
+      value less than min, get scaled to zero, and all particles with
+      a scale value greater than max get scaled to max.  This is
+      useful if you want to visualize temperature data, but you want
+      particles to disappear if their mass gets below a certian value,
+      a particle mass field can be used as the scaling field.</p>
+
+      <p>If a tensor particle field is attached and "Spheres" is
+      selected in the geometry tab, then the particles with be
+      displayed as elipsoids oriented along the eigenvectors of the
+      tensor matrix.</p>
+
+      <p>The last two ports are for a Colormap and a Translation
+      Matrix respectively.  The colormap uses the scalar values from
+      the port 1 scalar particle field to map color to value.  The
+      translation matrix allows the user to move the particles for a
+      particular variable.  If, for example, one wants to view two
+      particle variables from same simulation data, a transltion
+      matrix can be input into the matrix port, then the particles can
+      be viewed side by side.</p>
     </description>
   </overview>
   <io>

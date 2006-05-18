@@ -11,6 +11,9 @@
     <summary>Performs an operation on two scalar fields.</summary>
     <description>
       <p>Version Date: April 2002</p><p>Version: 1.0</p>
+      <p> Takes two scalar fields as input.  Outputs a scalar field
+      that is a value wise addition, subtraction, muliplication,
+      division or average of the two input fields.</p>
     </description>
   </overview>
   <io>

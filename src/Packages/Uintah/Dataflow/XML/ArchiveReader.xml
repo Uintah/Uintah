@@ -8,9 +8,11 @@
     <authors>
       <author>Packages/KurtZimmerman</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Select a Uintah Data Archive for reading.</summary>
     <description>
       <p>Version Date: June 2000</p><p>Version: 1.0</p>
+      <p> Select a Uintah Data Archive directory containing simulation
+      data.</p> 
     </description>
   </overview>
   <io>

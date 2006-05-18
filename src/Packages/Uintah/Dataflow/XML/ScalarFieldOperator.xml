@@ -8,9 +8,11 @@
     <authors>
       <author>Wayne Witzel</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Apply the exponential or log function to a scalar field.</summary>
     <description>
       <p>Version Date: November 2000</p><p>Version: 1.0</p>
+      <p>Apply exponential or log functions to each value in the
+      scalar field.  No-op = no operation is provided for convenience.</p>
     </description>
   </overview>
   <io>

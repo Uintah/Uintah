@@ -9,9 +9,27 @@
       <author>James Bigler</author>
       <author>Kurt Zimmerman</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Specify a time slice of Uintah Data Archive
+    data.</summary> 
     <description>
       <p>Version Date: </p><p>Version: 1.0</p>
+      <p>Uintah data is organized by timesteps of output.  This module
+      allows the user to select  a timestep for viewing.</p>
+      <p>To create an animation of data over time, build your
+      visualization net, then select "animate" and "execute".  The
+      time slices of data will be loaded in successive order and the
+      output can be viewed as an animation.</p>
+      <p>The "time step increment" entry can be change to allow
+      skipping of timesteps during animation. (ie. a value of 5 shows
+      every 5th timeslice)</p>
+      <p>A text time value and a simulation clock are output for
+      display in the view window.  The font size for text is
+      selectable and the position in the view is editable via the red
+      ball in the "Time Step Position" square.  The clock can be
+      located using the red ball in the "Clock Position" square. The
+      clock display can be further
+      edited via the entry boxes on the lower right of the interface.</p>
+      <p></p>
     </description>
   </overview>
   <io>
