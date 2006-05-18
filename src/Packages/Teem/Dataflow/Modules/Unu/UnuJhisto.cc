@@ -148,7 +148,7 @@ UnuJhisto::execute()
     NrrdIPort *inrrd = (NrrdIPort *)get_iport(pi->second);
     NrrdDataHandle nrrd;
     if (inrrd->get(nrrd) && nrrd.get_rep()) {
-      if (nrrd->nrrd_->dim > max_dim)
+      if ((int)nrrd->nrrd_->dim > max_dim)
 	max_dim = nrrd->nrrd_->dim;
       
       nrrds.push_back(nrrd);

@@ -86,7 +86,7 @@ UnuFlip::execute()
   Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
   
-  if (axis_.get() >= nin->dim) {
+  if (axis_.get() >= (int)nin->dim) {
     error("Axis " + to_string(axis_.get()) + " out of bounds [0," + to_string(nin->dim-1));
     return;
   }
