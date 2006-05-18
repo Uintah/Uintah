@@ -8,9 +8,12 @@
     <authors>
       <author>Wayne Witzel</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Create an eigenvalue and eigenvector fields from a tensor
+    field.</summary>
     <description>
       <p>Version Date: August 2000</p><p>Version: 1.0</p>
+      <p> Compute a scalar field of eigenvalues and a vector field of
+      eigenvectors from tensorfield input. </p>
     </description>
   </overview>
   <io>

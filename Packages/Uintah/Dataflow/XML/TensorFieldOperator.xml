@@ -8,9 +8,13 @@
     <authors>
       <author>Wayne Witzel</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Create a scalar field from a tensor field</summary>
     <description>
       <p>Version Date: November 2000</p><p>Version: 1.0</p>
+      <p>This module creates a scalar field from a tensor field via a
+      value wise operation. A
+      tensor element can be selected, or an operation can be
+      performed on the tensor values to create a scalar field.</p>
     </description>
   </overview>
   <io>

@@ -8,9 +8,35 @@
     <authors>
       <author>James Bigler</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Visualize Grid Data</summary>
     <description>
-      <p>Version Date: Mon Jun  5 14:15:55 MDT 2000</p><p>Version: 1.0</p>
+      <p>Version Date: Mon Jun  5 14:15:55 MDT 2000</p><p>Version:
+      1.0</p>
+      <p>Visualize the data grid.</p>
+      <p>The Node/Cell Centered buttons show the location of data in
+      the grid.  A list of Node variables, if they exist, will appear
+      at the bottom of the interface when "Node Centered" is
+      selected.  Cell centered variables will appear if "Cell
+      Centered" is selected.  </p>
+
+      <p>By default the data points are visualized as single pixel
+      points.  To represent them as spheres select the "Show grid
+      points" button (bad label choice).  To show only a single axis
+      aligned plane of points select the "Show a plane of grid points"
+      button.  The "Show selecte point" button highlights the value
+      that corresponds to the index entries in the upper right.  To
+      select a new value the user can either type in a new index or
+      depress the shift key while selecting a point in the Viewer
+      window. For interactive selection "Show grid points" needs to be
+      selected.  Sphere rendering is controlled with the "Radius" and
+      "Polygons" controls</p>
+
+      <p>Graphs of the selected index over time can be created using
+      the controls that appear at the bottom of the interface.  First
+      choose a Material for a particular named variable, then select
+      graph or table to create a pop-up graph or table of data.
+      Export allow you to export the table to a text file.</p>
+      
     </description>
   </overview>
   <io>

@@ -8,9 +8,17 @@
     <authors>
       <author>Kurt Zimmerman</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Create an averaged scalar field over time.</summary>
     <description>
       <p>Version Date: August 2001</p><p>Version: 1.0</p>
+      <p>This module, in cooperation with TimeStepSelector and
+      ScalarFieldExtractor, outputs the average of multiple scalar
+      fields over time.  To use, connect the TimeStepSelector to the
+      ScalarFieldExtractor and the latter to this module. Increment
+      the timestep.  As the 
+      timestep increases the field produced will be averaged with the
+      previous fields.  If the
+      timestep decreases, the averaging begins anew. </p>
     </description>
   </overview>
   <io>
