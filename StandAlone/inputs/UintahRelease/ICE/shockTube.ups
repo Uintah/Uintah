@@ -75,8 +75,8 @@
     </BoundaryConditions>
        <Level>
            <Box label="1">
-              <lower>        [0,0,0]    </lower>
-              <upper>        [1,1,1]    </upper>
+              <lower>        [0,0,0]          </lower>
+              <upper>        [1,0.01,0.01]    </upper>
               <extraCells>   [1,1,1]    </extraCells>
               <patches>      [1,1,1]    </patches>
               <resolution>   [1000,1,1]  </resolution>
