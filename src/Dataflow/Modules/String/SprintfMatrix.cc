@@ -87,7 +87,7 @@ void SprintfMatrix::execute()
   StringHandle  stringH;
   
   MatrixHandle currentmatrix = 0;
-  unsigned int inputport = 1;
+  int inputport = 1;
   unsigned int matrixindex = 0;
   double       datavalue = 0;
   double*      dataptr = NULL;
