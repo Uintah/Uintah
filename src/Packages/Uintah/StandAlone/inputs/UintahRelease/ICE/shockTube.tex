@@ -2,7 +2,7 @@
 \usepackage{amsmath}
 \usepackage[dvips]{graphicx}
 \bibliographystyle{plain}
-%__________________________________
+%__________________________________SHOCKTUBE 1 level
 \begin{document}
 
 \section*{\center Shock Tube}
@@ -43,6 +43,44 @@ Figure \ref{results} shows a comparison of the exact versus simulated results at
 \label{results}
 \end{figure}
 \newpage
+
+%__________________________________SHOCKTUBE AMR
+
+\section*{\center Shock Tube with AMR}
+ 
+\subsection*{\underline{Simulation Specifics}}
+\begin{description} 
+\item [Component used:] \hfill ICE
+\item [Input file name:] \hfill shocktube\_AMR.ups
+\item [Command used to run input file:]\hfill sus shocktube\_AMR.ups
+\item [Postprocessing command:]\hfill \\
+inputs/UintahRelease/ICE/plot\_shockTube\_AMR shockTube\_AMR.uda
+
+\item [Simulation Domain:]\hfill    1 x .01 x .01 m
+\item [Cell Spacing:]\hfill \\ 
+0.1 x 10 x 10 mm (Level 0)
+0.025 x 10 x10 mm (Level 1)
+0.00625 x10 x10 mm (Level 2)
+
+
+\item [Example Runtimes:] \hfill \\
+ 2ish minutes   (1 processor, 2.4 GHz Xeon)
+
+\item [Physical time simulated:] \hfill 0.005 sec.
+
+\end{description}
+
+\section*{\underline{Results}}
+Figure \ref{results} shows a comparison of the exact versus simulated results at time $t = 5msec$.
+\begin{figure}
+\includegraphics[scale=.85]{figures/shockTube_AMR.ps}
+\caption{Shock tube results at time $t = 5msec$}
+\label{results}
+\end{figure}
+\newpage
+
+
+
 \bibliography{../references}
 
 \end{document}
