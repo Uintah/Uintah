@@ -577,7 +577,7 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
       {
         pr->error(errmsg);
       }
-      pr->msg_stream() << SOError() << endl;
+      pr->add_raw_message(SOError() + string("\n"));
       // Remove the null ref for this lib from the map.
       map_lock_.lock();
       algo_map_.erase(info.filename_);
@@ -595,7 +595,7 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
   {
     pr->error("DYNAMIC LIB ERROR: " + full_so +
               " no maker function!!");
-    pr->msg_stream() << SOError() << endl;
+    pr->add_raw_message(string(SOError()) + "\n");
     // Remove the null ref for this lib from the map.
     map_lock_.lock();
     algo_map_.erase(info.filename_);
@@ -623,7 +623,7 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
   string command = ("cd " + otf_dir() + "; " + MAKE_COMMAND + " " +
 		    info.filename_ + ext);
 
-  pr->msg_stream() << "DynamicLoader - Executing: " << command << endl;
+  pr->add_raw_message("DynamicLoader - Executing: " + command + "\n");
 
   FILE *pipe = 0;
   bool result = true;
@@ -719,8 +719,7 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
   char buffer[256];
   while (pipe && fgets(buffer, 256, pipe) != NULL)
   {
-    pr->msg_stream() << buffer;
-    pr->msg_stream_flush();
+    pr->add_raw_message(buffer);
   }
 
 #ifdef __sgi
@@ -731,8 +730,8 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
 
   if (result)
   {
-    pr->msg_stream() << "DynamicLoader - Successfully compiled " <<
-      info.filename_ << ext << endl;
+    pr->add_raw_message("DynamicLoader - Successfully compiled " +
+                        info.filename_ + ext + "\n");
   }
   return result;
 }
@@ -772,7 +771,7 @@ DynamicLoader::create_cc(const CompileInfo &info, bool empty,
                          ProgressReporter *pr)
 {
   // Try to open the file for writing.
-  string full = otf_dir() + "/" + info.filename_ + "cc";
+  const string full = otf_dir() + "/" + info.filename_ + "cc";
   ofstream fstr(full.c_str());
 
   if (!fstr)
@@ -785,7 +784,7 @@ DynamicLoader::create_cc(const CompileInfo &info, bool empty,
 
   info.create_cc(fstr, empty);
 
-  pr->msg_stream() << "DynamicLoader - Successfully created " << full << endl;
+  pr->add_raw_message("DynamicLoader - Successfully created " + full + "\n");
   return true;
 }
 

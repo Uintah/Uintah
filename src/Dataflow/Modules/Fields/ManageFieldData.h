@@ -39,6 +39,7 @@
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Util/ProgressReporter.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Geometry/Tensor.h>
 
 
@@ -380,8 +381,10 @@ ManageFieldDataAlgoMeshT<FOUT>::execute(ProgressReporter *reporter,
   }
 
   reporter->warning("Matrix datasize does not match field geometry.");
-  reporter->msg_stream() << "Matrix size : " << rows << " " << columns << '\n';
-  reporter->msg_stream() << "Field size : " << nsize << " " << csize << '\n';
+  reporter->remark("Matrix size : " + to_string(rows) +
+                   " " + to_string(columns));
+  reporter->remark("Field size : " + to_string(nsize) +
+                   " " + to_string(csize));
   return 0;
 }
 

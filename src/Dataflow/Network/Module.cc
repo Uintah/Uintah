@@ -908,6 +908,20 @@ Module::remark(const string& str)
   update_msg_state(Remark); 
 }
 
+
+void
+Module::add_raw_message(const string& str)
+{
+  if (sci_getenv_p("SCI_REGRESSION_TESTING"))
+  {
+    cout << str;
+    cout.flush();
+  }
+  msg_stream_flush();
+  gui_->execute(id_ + " append_log_msg {" + str + "} black");
+}
+
+
 void
 Module::compile_error(const string& filename)
 {
