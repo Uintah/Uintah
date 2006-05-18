@@ -125,7 +125,7 @@
     <CFD>
          <cfl>0.5</cfl>
        <ICE>
-        <advection type = "SecondOrder"/>
+        <advection type = "SecondOrder" useCompatibleFluxes = "false"/>
       </ICE>        
     </CFD>
 
