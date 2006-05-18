@@ -198,15 +198,18 @@ public:
   void delete_warn();
   bool show_stats() { return show_stats_; }
   void set_show_stats(bool v) {show_stats_ = v;}
+
   //! ProgressReporter function
   virtual void error(const std::string&);
   virtual void warning(const std::string&);
   virtual void remark(const std::string&);
   virtual void compile_error(const std::string&);
-  
-  //virtual void post_message(const std::string&);
+  virtual void add_raw_message(const std::string&);
+  // This one isn't as thread safe as the other ProgressReporter functions.
+  // Use add_raw_message or one of the others instead if possible.
   virtual std::ostream &msg_stream() { return msg_stream_; }
   virtual void msg_stream_flush();
+
   virtual bool in_power_app();
 
   //! Compilation progress.  Should probably have different name.

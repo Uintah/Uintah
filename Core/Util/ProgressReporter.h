@@ -66,7 +66,10 @@ public:
   virtual void          warning(const std::string& msg);
   virtual void          remark(const std::string& msg);
   virtual void          compile_error(const std::string &filename);
+  virtual void          add_raw_message(const std::string &msg);
 
+  // This one isn't as thread safe as the other ProgressReporter functions.
+  // Use add_raw_message or one of the others instead if possible.
   virtual std::ostream &msg_stream();
   virtual void          msg_stream_flush();
 
