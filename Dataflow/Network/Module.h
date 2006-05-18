@@ -204,7 +204,7 @@ public:
   virtual void remark(const std::string&);
   virtual void compile_error(const std::string&);
   
-  virtual void post_message(const std::string&);
+  //virtual void post_message(const std::string&);
   virtual std::ostream &msg_stream() { return msg_stream_; }
   virtual void msg_stream_flush();
   virtual bool in_power_app();
