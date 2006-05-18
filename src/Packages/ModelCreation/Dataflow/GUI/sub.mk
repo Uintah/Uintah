@@ -66,6 +66,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ApplyColumnOperation.tcl\
 	$(SRCDIR)/CollectFields.tcl\
 	$(SRCDIR)/SetFieldData.tcl\
+  $(SRCDIR)/TimeToWeights.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/ModelCreation/Dataflow/GUI
