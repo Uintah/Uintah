@@ -64,6 +64,7 @@ public:
 		     	    bool calcScalar,
 		     	    bool calcReactscalar,
 			    bool calcEnthalpy,
+			    bool calcVariance,
 			    const ProcessorGroup* myworld);
 
       // GROUP: Destructors:
@@ -315,6 +316,7 @@ private:
       bool d_calScalar;
       bool d_reactingScalarSolve;
       bool d_enthalpySolve;
+      bool d_calcVariance;
       bool d_radiationCalc;
       bool d_DORadiationCalc;
       vector<IntVector> d_probePoints;

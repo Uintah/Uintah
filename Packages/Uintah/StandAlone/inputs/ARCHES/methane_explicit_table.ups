@@ -32,13 +32,13 @@
         <save label = "newCCWVelocity"/>	
         <save label = "newCCVelocity"/>
 	<save label = "scalarSP"/>
+	<save label = "scalarVarSP"/>
 	<save label = "densityCP"/>
 	<save label = "viscosityCTS"/>
 	<save label = "tempIN"/>
         <save label = "co2IN"/>
         <save label = "enthalpySP"/>
-        <save label="absorpIN"/>
-        <save label="sootFVIN"/>
+        <save label = "sootFVIN"/>
         <save label = "radiationSRCIN"/>
         <save label = "velocityDivergence"/>
         <save label = "continuityResidual"/>
@@ -51,6 +51,7 @@
         <save label = "radiationFluxTIN"/>
         <save label = "radiationFluxBIN"/>
 	<checkpoint cycle = "2" interval = "0.2"/>
+        <outputDoubleAsFloat/>
         <compression>gzip</compression>
    </DataArchiver>
 
@@ -75,20 +76,17 @@
 	    <variable_dt>true</variable_dt>
    	    <nonlinear_solver>explicit</nonlinear_solver>
     	    <turbulence_model>compdynamicprocedure</turbulence_model>
-            <transport_scalar>true</transport_scalar>
+            <transport_mixture_fraction>true</transport_mixture_fraction>
             <transport_enthalpy>true</transport_enthalpy>	
-	    <transport_reacting_scalar>false</transport_reacting_scalar>
+	    <model_mixture_fraction_variance>true</model_mixture_fraction_variance>
 	    <Turbulence>
-	        <var_const>0.1</var_const>
+	        <variance_coefficient>0.1</variance_coefficient>
 	        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
 	    </Turbulence>
 
 	    <Properties>
 	        <mixing_model>NewStaticMixingTable</mixing_model>
 	        <NewStaticMixingTable>
-                  <adiabatic>false</adiabatic>
-                  <mixstatvars>1</mixstatvars>
-                  <rxnvars>0</rxnvars>
                   <inputfile>inputs/ARCHES/NewStaticMixingTables/methane/CH4_equil_clipped.mxn</inputfile>
                   <h_fuel>-465039.0</h_fuel>
                   <h_air>-112.327</h_air>
@@ -98,9 +96,7 @@
 	    <BoundaryConditions>
 		<FlowInlet>
 		    <Flow_rate>0.04527</Flow_rate>
-		    <MixtureFraction>
-			<Mixfrac>1.0</Mixfrac>
-	            </MixtureFraction>
+		    <mixture_fraction>1.0</mixture_fraction>
 		    <geom_object>
 		      <cylinder label = "inlet">
 			<bottom>[-5,1.5,1.5]</bottom>
@@ -120,9 +116,7 @@
 		</WallBC>
 
 		<PressureBC>
-		    <MixtureFraction>
-			<Mixfrac>0.0</Mixfrac>
-	            </MixtureFraction>
+		    <mixture_fraction>0.0</mixture_fraction>
 		    <geom_object>
 		      <box label = "posY_xzWall">
 			<min>[0,3,-1]</min>
@@ -143,17 +137,15 @@
 		    </geom_object>
 		</PressureBC>
 
-		<outletBC>
-		    <MixtureFraction>
-			<Mixfrac>0.0</Mixfrac>
-	            </MixtureFraction>
+		<OutletBC>
+		    <mixture_fraction>0.0</mixture_fraction>
 		    <geom_object>
 		      <box label = "topWall">
 			<min>[3,-1,-1]</min>
 			<max>[4,4,4]</max>
 		      </box>
 		    </geom_object>
-		</outletBC>
+		</OutletBC>
 	    </BoundaryConditions>
 
 	    <PhysicalConstants>

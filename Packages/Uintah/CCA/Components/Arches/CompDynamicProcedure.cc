@@ -90,7 +90,8 @@ void
 CompDynamicProcedure::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("Turbulence");
-  db->require("var_const",d_CFVar); // const reqd by variance eqn
+  if (d_calcVariance)
+    db->require("variance_coefficient",d_CFVar); // const reqd by variance eqn
   // actually, Shmidt number, not Prandtl number
   db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
   d_lower_limit = d_turbPrNo;

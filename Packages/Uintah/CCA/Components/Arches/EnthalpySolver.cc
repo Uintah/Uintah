@@ -252,8 +252,9 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
     tsk->requires(Task::OldDW, d_lab->d_cpINLabel,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     if (d_radiationCalc) {
-      tsk->requires(Task::OldDW, d_lab->d_absorpINLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      if (!d_DORadiationCalc)
+        tsk->requires(Task::OldDW, d_lab->d_absorpINLabel,
+		      Ghost::None, Arches::ZEROGHOSTCELLS);
       if (d_DORadiationCalc) {
         tsk->requires(Task::OldDW, d_lab->d_co2INLabel,
 		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -290,8 +291,9 @@ EnthalpySolver::sched_buildLinearMatrix(const LevelP& level,
     tsk->requires(Task::NewDW, d_lab->d_cpINLabel,
 		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
     if (d_radiationCalc) {
-      tsk->requires(Task::NewDW, d_lab->d_absorpINLabel,
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      if (!d_DORadiationCalc)
+        tsk->requires(Task::NewDW, d_lab->d_absorpINLabel,
+		      Ghost::None, Arches::ZEROGHOSTCELLS);
       if (d_DORadiationCalc) {
         tsk->requires(Task::NewDW, d_lab->d_co2INLabel,
 		      Ghost::AroundCells, Arches::ONEGHOSTCELL);
@@ -516,12 +518,14 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     enthalpyVars.scalarLinearSrc.initialize(0.0);
 
     if (d_radiationCalc) {
-      if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
-        old_dw->get(constEnthalpyVars.absorption, d_lab->d_absorpINLabel, 
-		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      if (!d_DORadiationCalc) {
+        if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+          old_dw->get(constEnthalpyVars.absorption, d_lab->d_absorpINLabel, 
+		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
       else
-        new_dw->get(constEnthalpyVars.absorption, d_lab->d_absorpINLabel, 
-		    matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+          new_dw->get(constEnthalpyVars.absorption, d_lab->d_absorpINLabel, 
+		      matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
+      }
       if (d_DORadiationCalc) {
         if (timelabels->integrator_step_number ==
 			TimeIntegratorStepNumber::First)
