@@ -78,6 +78,7 @@ public:
 					    string ext);
 };
 
+
 template <class FIELD>
 class InsertHexSheetAlgoHex : public InsertHexSheetAlgo
 {
@@ -131,8 +132,10 @@ private:
   HexMesh hexmesh;
 };
 
+
 template <class FIELD>
-void InsertHexSheetAlgoHex<FIELD>::execute(
+void
+InsertHexSheetAlgoHex<FIELD>::execute(
     ProgressReporter *mod, FieldHandle hexfieldh, FieldHandle trifieldh,
     FieldHandle& side1field, FieldHandle& side2field,
     bool add_to_side1, bool add_layer )
@@ -165,11 +168,11 @@ void InsertHexSheetAlgoHex<FIELD>::execute(
   side2field->copy_properties( hexfieldh.get_rep() );
 }
     
+
 template <class FIELD>
-void InsertHexSheetAlgoHex<FIELD>::load_tri_mesh( TriSurfMesh<TriLinearLgn<Point> > *sci_tri_mesh )
+void
+InsertHexSheetAlgoHex<FIELD>::load_tri_mesh( TriSurfMesh<TriLinearLgn<Point> > *sci_tri_mesh )
 { 
-//  TriSurfMesh<TriLinearLgn<Point> > *sci_tri_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(trifieldh->mesh().get_rep());
-  
   typename TriSurfMesh<TriLinearLgn<Point> >::Node::size_type num_nodes;
   typename TriSurfMesh<TriLinearLgn<Point> >::Elem::size_type num_tris;
   sci_tri_mesh->size( num_nodes );
@@ -206,15 +209,17 @@ void InsertHexSheetAlgoHex<FIELD>::load_tri_mesh( TriSurfMesh<TriLinearLgn<Point
     ++bi;
   }
   
-    // we've read all the data - build the actual structures now
- 	std::vector<int> facemap, vertmap;
- 	trimesh.IdentityMap(facemap, num_tris);
- 	trimesh.IdentityMap(vertmap, num_nodes);
+    // We've read all the data - build the actual structures now.
+  std::vector<int> facemap, vertmap;
+  trimesh.IdentityMap(facemap, num_tris);
+  trimesh.IdentityMap(vertmap, num_nodes);
   trimesh.build_structures(facemap, vertmap);
 }
 
+
 template <class FIELD>
-void InsertHexSheetAlgoHex<FIELD>::load_hex_mesh( FieldHandle hexfieldh )
+void
+InsertHexSheetAlgoHex<FIELD>::load_hex_mesh( FieldHandle hexfieldh )
 {
   typename FIELD::mesh_type *hex_mesh =
     dynamic_cast<typename FIELD::mesh_type *>(hexfieldh->mesh().get_rep());
@@ -263,27 +268,29 @@ void InsertHexSheetAlgoHex<FIELD>::load_hex_mesh( FieldHandle hexfieldh )
   }
 }
 
-//! \brief projects points on the axis, tests overlap
+
+//! \Brief projects points on the axis, tests overlap.
 template <class FIELD>
-bool InsertHexSheetAlgoHex<FIELD>::interferes(
-    const vector<Vector3> &p, const Vector3 &axis, int split )
+bool
+InsertHexSheetAlgoHex<FIELD>::interferes(const vector<Vector3> &p,
+                                         const Vector3 &axis, int split )
 {
   vector<Vector3> v(p.size());
   vector<float> d(p.size());
   for (unsigned i=0; i<p.size(); ++i)
   {
-      // Project each point on axis by projected(d) = v.v^T.e
+    // Project each point on axis by projected(d) = v.v^T.e
     v[i] = axis * axis.dot(p[i]);
-      // Get the signed distance to points from null space of v
+    // Get the signed distance to points from null space of v
     d[i] = (float)v[i].dot(axis);
   }
   
-  float
+  const float
       mnh = *min_element(d.begin(), d.begin()+split),
       mxh = *max_element(d.begin(), d.begin()+split),
       mnt = *min_element(d.begin()+split, d.end()),
       mxt = *max_element(d.begin()+split, d.end());
-  bool 
+  const bool
       mntmxh = mnt <= mxh,
       mxhmxt = mxh <= mxt,
       mnhmnt = mnh <= mnt,
@@ -294,10 +301,13 @@ bool InsertHexSheetAlgoHex<FIELD>::interferes(
       (mnhmxt && mxtmxh) || (mntmnh && mnhmxt);
 }
 
+
 template <class FIELD>
-bool InsertHexSheetAlgoHex<FIELD>::intersects(
-    const HexMesh &hexmesh, int hex_index, 
-    const TriangleMesh &trimesh, int face_index)
+bool
+InsertHexSheetAlgoHex<FIELD>::intersects(const HexMesh &hexmesh,
+                                         int hex_index,
+                                         const TriangleMesh &trimesh,
+                                         int face_index)
 {
   const TriangleMeshFace &face = trimesh.faces[face_index];
   const Hex &hex = hexmesh.hexes[hex_index];
@@ -339,60 +349,64 @@ bool InsertHexSheetAlgoHex<FIELD>::intersects(
   }
 
   for (int i=0; i<6; ++i)
-      if (!interferes(ps, hex_edges[hex_normal_edges[i][0]].
-                      cross(hex_edges[hex_normal_edges[i][1]]), 8))
-          return false;
+    if (!interferes(ps, hex_edges[hex_normal_edges[i][0]].
+                    cross(hex_edges[hex_normal_edges[i][1]]), 8))
+      return false;
   return interferes(ps, triangle_edges[1].cross(triangle_edges[0]), 8);
 }
 
+
 template <class FIELD>
-void InsertHexSheetAlgoHex<FIELD>::compute_intersections_KDTree(
+void
+InsertHexSheetAlgoHex<FIELD>::compute_intersections_KDTree(
     ProgressReporter *mod, vector<int> &crosses, 
     const TriangleMesh& trimesh, const HexMesh& hexmesh )
 {
-	vector<int> kdfi;
-	for (unsigned i=0; i<trimesh.faces.size(); i++) 
+  vector<int> kdfi;
+  for (unsigned i=0; i<trimesh.faces.size(); i++) 
   {
-		kdfi.push_back(i);
-	}
-	TriangleMeshFaceTree kdtreebbox(trimesh);
-	gtb::BoxKDTree<int, TriangleMeshFaceTree> kdtree(kdfi, kdtreebbox);
+    kdfi.push_back(i);
+  }
+  TriangleMeshFaceTree kdtreebbox(trimesh);
+  gtb::BoxKDTree<int, TriangleMeshFaceTree> kdtree(kdfi, kdtreebbox);
   
   int total_hexes = (int)hexmesh.hexes.size();
   
-	for (int h=0; h<(int)hexmesh.hexes.size(); h++) 
+  for (int h=0; h<(int)hexmesh.hexes.size(); h++) 
   {  
-		Box3 hbbox = Box3::bounding_box(hexmesh.points[hexmesh.hexes[h].verts[0]],
+    Box3 hbbox = Box3::bounding_box(hexmesh.points[hexmesh.hexes[h].verts[0]],
                                     hexmesh.points[hexmesh.hexes[h].verts[1]],
                                     hexmesh.points[hexmesh.hexes[h].verts[2]]);
-		hbbox.update(hexmesh.points[hexmesh.hexes[h].verts[3]]);
-		hbbox.update(hexmesh.points[hexmesh.hexes[h].verts[4]]);
-		hbbox.update(hexmesh.points[hexmesh.hexes[h].verts[5]]);
-		hbbox.update(hexmesh.points[hexmesh.hexes[h].verts[6]]);
-		hbbox.update(hexmesh.points[hexmesh.hexes[h].verts[7]]);
+    hbbox.update(hexmesh.points[hexmesh.hexes[h].verts[3]]);
+    hbbox.update(hexmesh.points[hexmesh.hexes[h].verts[4]]);
+    hbbox.update(hexmesh.points[hexmesh.hexes[h].verts[5]]);
+    hbbox.update(hexmesh.points[hexmesh.hexes[h].verts[6]]);
+    hbbox.update(hexmesh.points[hexmesh.hexes[h].verts[7]]);
     
-		vector<int> possible;
-		kdtree.GetIntersectedBoxes(kdtreebbox, hbbox, possible);
+    vector<int> possible;
+    kdtree.GetIntersectedBoxes(kdtreebbox, hbbox, possible);
     
-		for (int i=0; i<(int)possible.size(); i++) 
+    for (int i=0; i<(int)possible.size(); i++) 
     {  
-			if (intersects(hexmesh, h, trimesh, possible[i])) 
+      if (intersects(hexmesh, h, trimesh, possible[i])) 
       {
-				crosses[h] = 0;
-				break;
-			}
-		}
+        crosses[h] = 0;
+        break;
+      }
+    }
 
     if( h%100 == 0 )
     {
       double temp = 0.15 + 0.5*h/total_hexes;
       mod->update_progress( temp );
     }
-	}
+  }
 }
 
+
 template <class FIELD>
-void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
+void
+InsertHexSheetAlgoHex<FIELD>::compute_intersections(
     ProgressReporter* mod,
     HexVolMesh<HexTrilinearLgn<Point> >* original_mesh,
     TriSurfMesh<TriLinearLgn<Point> > *tri_mesh,
@@ -438,39 +452,39 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
   vector<int> faces(trimesh.faces.size());
   
   for (unsigned i=0; i<trimesh.faces.size(); ++i)
-      faces[i] = i;
+    faces[i] = i;
 
-	compute_intersections_KDTree( mod, crosses, trimesh, hexmesh);
+  compute_intersections_KDTree( mod, crosses, trimesh, hexmesh);
   
-    //flood the two sides
+  // Flood the two sides.
   mod->update_progress( 0.65 );
   
-	for (int side=0; side<2; side++) 
+  for (int side=0; side<2; side++) 
   {
-		int start = -1;
-		for (unsigned i=0; i<crosses.size(); i++) 
+    int start = -1;
+    for (unsigned i=0; i<crosses.size(); i++) 
     {
-			if (crosses[i] < 0) 
+      if (crosses[i] < 0) 
       {
-				start=(int)i;
-				break;
-			}
-		}
+        start=(int)i;
+        break;
+      }
+    }
     
-		if (start==-1) 
+    if (start==-1) 
     {
-			cerr<<"couldn't find hex to start flood from!"<<endl;
-			break;
-		}
+      cerr<<"couldn't find hex to start flood from!"<<endl;
+      break;
+    }
     
-		vector<int> toprocess;
-		toprocess.push_back(start);
-		crosses[start] = side+1;
+    vector<int> toprocess;
+    toprocess.push_back(start);
+    crosses[start] = side+1;
     
-		while (toprocess.size()) 
+    while (toprocess.size()) 
     {
-			int h = toprocess.back();
-			toprocess.resize(toprocess.size()-1);
+      int h = toprocess.back();
+      toprocess.resize(toprocess.size()-1);
 
       typename FIELD::mesh_type::Cell::array_type neighbors;
       original_mesh->get_neighbors( neighbors, h );
@@ -478,23 +492,23 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
       unsigned int i;
       
       if( neighbors.size() > 6 )
-          cerr << "ERROR: More than six neighbors reported..." << h << endl;
+        cerr << "ERROR: More than six neighbors reported..." << h << endl;
 
       for( i = 0; i < neighbors.size(); i++ )
       {
         int hnbr = neighbors[i];
-				if (crosses[hnbr] < 0) 
+        if (crosses[hnbr] < 0) 
         {
-					crosses[hnbr] = side+1;
-					toprocess.push_back(hnbr);
-				}
-			}
-		}
-	}
+          crosses[hnbr] = side+1;
+          toprocess.push_back(hnbr);
+        }
+      }
+    }
+  }
 
   mod->update_progress( 0.70 );
 
-//need to add elements from the three sets of elements...
+  // Need to add elements from the three sets of elements.
   hash_type side1_nodemap, side2_nodemap, side1_reverse_map, side2_reverse_map;
   for( unsigned int k = 0; k < crosses.size(); ++k )
   {
@@ -546,7 +560,7 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
       }
       else
       {
-          //add to side2_mesh
+        // Add to side2_mesh.
         for (unsigned int i = 0; i < onodes.size(); i++)
         {
           if( side2_nodemap.find((unsigned int)onodes[i]) == side2_nodemap.end())
@@ -569,7 +583,7 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
     }
     else if( crosses[k] == 1 )
     {
-        //add to side1_mesh  
+      // Add to side1_mesh.
       for (unsigned int i = 0; i < onodes.size(); i++)
       {
         if( side1_nodemap.find((unsigned int)onodes[i]) == side1_nodemap.end())
@@ -591,7 +605,7 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
     }
     else
     {
-        //add to side2_mesh
+      // Add to side2_mesh.
       for (unsigned int i = 0; i < onodes.size(); i++)
       {
         if( side2_nodemap.find((unsigned int)onodes[i]) == side2_nodemap.end())
@@ -632,7 +646,7 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
         node_iter = side2_nodemap.find( (*hitr).first );
         if( node_iter != side2_nodemap.end() )
         {
-            //want this one...
+          // Want this one.
           oi_node_list.push_back( (*hitr).first );
           count++;
         }
@@ -647,7 +661,7 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
         node_iter = side1_nodemap.find( (*hitr).first );
         if( node_iter != side1_nodemap.end() )
         {
-            //want this one...
+          // Want this one.
           oi_node_list.push_back( (*hitr).first );
           shared_vertex_map[(*hitr).first] = (*hitr).first;
           count++;
@@ -657,8 +671,6 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
     }
 
     tri_mesh->synchronize( Mesh::LOCATE_E );
-//    map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type> new_map1;
-//    map<typename FIELD::mesh_type::Node::index_type, typename FIELD::mesh_type::Node::index_type> new_map2;
     hash_type new_map1, new_map2;
     unsigned int i; 
 
@@ -673,21 +685,22 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
       tri_mesh->find_closest_elem( new_result, face_id, n_p );
       Vector dist_vect = 1.5*( new_result - n_p );
     
-        //since finding the closest face can be slow, update the progress meter 
-        // to let the user know that we are performing calculations and the 
-        // process has not hung...
+      // Finding the closest face can be slow.  Update the progress meter
+      // to let the user know that we are performing calculations and the 
+      // process has not hung.
       if( i%50 == 0 )
       {
         double temp = 0.75 + 0.25*( (double)i/(double)oi_node_list.size() );
         mod->update_progress( temp );
       }
     
-        //add the new node to the clipped mesh
+      // Add the new node to the clipped mesh.
       Point new_point( new_result );
       typename FIELD::mesh_type::Node::index_type this_index1 = side1_mesh->add_point( new_point ); 
       typename FIELD::mesh_type::Node::index_type this_index2 = side2_mesh->add_point( new_point );
     
-        //create a map for the new node to a node on the boundary of the clipped mesh...
+      // Create a map for the new node to a node on the boundary of
+      // the clipped mesh.
       typename hash_type::iterator node_iter; 
       node_iter = new_map1.find( side1_nodemap[this_node] );
       if( node_iter == new_map1.end() )
@@ -940,7 +953,7 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
 //     }
 //     else
 //     {
-        //Walk all the cells in the smallest clipped mesh to find the boundary faces...
+      // Walk all the cells in the smallest clipped mesh to find the boundary faces.
       typename FIELD::mesh_type::Cell::iterator citer; side2_mesh->begin(citer);
       typename FIELD::mesh_type::Cell::iterator citere; side2_mesh->end(citere);
       hash_type3 face_list;
@@ -966,9 +979,8 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
           
           if( !side2_mesh->get_neighbor( nci, ci, fi ) )
           {
-              // Faces with no neighbors are on the boundary...
-              //    make sure that this face isn't on the original boundary
-            
+            // Faces with no neighbors are on the boundary.
+            // Make sure that this face isn't on the original boundary.
             typename FIELD::mesh_type::Node::array_type face_nodes;
             side2_mesh->get_nodes( face_nodes, fi );
             typename hash_type::iterator search1, search2, search3, search4, search_end; 
@@ -1034,7 +1046,7 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
         }
       }
        
-        //special casing for projecting faces connected to non-manifold edges...
+      // Special casing for projecting faces connected to non-manifold edges.
       if( edgemap3.size() != 0 )
       {
         cout << "WARNING: Clipped mesh contains " << edgemap3.size() << " non-manifold edges.\n    Ids are:";
@@ -1139,7 +1151,7 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
   }
   cout << "Finished\n";
 
-    //force all the synch data to be rebuilt on next synch call.
+  // Force all the synch data to be rebuilt on next synch call.
   side1_mesh->unsynchronize();
   side2_mesh->unsynchronize();
   
@@ -1152,6 +1164,7 @@ void InsertHexSheetAlgoHex<FIELD>::compute_intersections(
   cout << "Side2 has " << side2_size << " hexes." << endl << endl;
   mod->update_progress( 0.99 );
 }
+
 
 } // end namespace SCIRun
 #endif // InsertHexSheet_h
