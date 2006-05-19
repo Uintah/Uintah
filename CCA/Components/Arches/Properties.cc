@@ -246,7 +246,8 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
     }
 
     if (d_radiationCalc) {
-      tsk->computes(d_lab->d_absorpINLabel);
+      if (!d_DORadiationCalc)
+        tsk->computes(d_lab->d_absorpINLabel);
       tsk->computes(d_lab->d_sootFVINLabel);
     }
   }
@@ -275,7 +276,8 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
     }
 
     if (d_radiationCalc) {
-      tsk->modifies(d_lab->d_absorpINLabel);
+      if (!d_DORadiationCalc)
+        tsk->modifies(d_lab->d_absorpINLabel);
       tsk->modifies(d_lab->d_sootFVINLabel);
     }
   }
@@ -429,8 +431,9 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       }
 
       if (d_radiationCalc) {
-        new_dw->allocateAndPut(absorption, d_lab->d_absorpINLabel,
-			       matlIndex, patch);
+        if (!d_DORadiationCalc)
+          new_dw->allocateAndPut(absorption, d_lab->d_absorpINLabel,
+			         matlIndex, patch);
         new_dw->allocateAndPut(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
       }
     }
@@ -469,8 +472,9 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       }
 
       if (d_radiationCalc) {
-        new_dw->getModifiable(absorption, d_lab->d_absorpINLabel,
-			       matlIndex, patch);
+        if (!d_DORadiationCalc)
+          new_dw->getModifiable(absorption, d_lab->d_absorpINLabel,
+			        matlIndex, patch);
         new_dw->getModifiable(sootFV, d_lab->d_sootFVINLabel, matlIndex,patch);
       }
 
@@ -500,7 +504,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     }
 
     if (d_radiationCalc) {
-      absorption.initialize(0.0);
+      if (!d_DORadiationCalc)
+        absorption.initialize(0.0);
       sootFV.initialize(0.0);
     }
 
@@ -634,8 +639,9 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	      }
 	      else sootFV[currCell] = 0.0;
 	    }  
-	    absorption[currCell] = 0.01+ Min(0.5,(4.0/d_opl)*log(1.0+350.0*
-				   sootFV[currCell]*temperature[currCell]*d_opl));
+            if (!d_DORadiationCalc)
+	      absorption[currCell] = 0.01+ Min(0.5,(4.0/d_opl)*log(1.0+350.0*
+				     sootFV[currCell]*temperature[currCell]*d_opl));
 	  }
 
 	  if (d_MAlab) {
