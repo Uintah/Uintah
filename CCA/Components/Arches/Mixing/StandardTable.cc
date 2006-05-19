@@ -18,9 +18,14 @@ using namespace SCIRun;
 //****************************************************************************
 // Default constructor for StandardTable
 //****************************************************************************
-StandardTable::StandardTable():MixingModel()
+StandardTable::StandardTable(bool calcReactingScalar,
+                             bool calcEnthalpy,
+                             bool calcVariance):
+                             MixingModel(),
+                             d_calcReactingScalar(calcReactingScalar),
+                             d_calcEnthalpy(calcEnthalpy),
+                             d_calcVariance(calcVariance)
 {
-	//srand ( time(NULL) );
 }
 
 //****************************************************************************
@@ -36,10 +41,10 @@ StandardTable::~StandardTable()
 void 
 StandardTable::problemSetup(const ProblemSpecP& params)
 {
+  if (d_calcReactingScalar) 
+    throw InvalidValue("Reacting scalar is unsupported parameter",
+                         __FILE__, __LINE__);
   ProblemSpecP db = params->findBlock("StandardTable");
-  db->require("adiabatic",d_adiabatic);
-  db->require("rxnvars",d_numRxnVars);
-  db->require("mixstatvars",d_numMixStatVars);
   if ((db->findBlock("h_fuel"))&&(db->findBlock("h_air"))) {
     db->require("h_fuel",d_H_fuel);
     db->require("h_air",d_H_air);
@@ -47,15 +52,14 @@ StandardTable::problemSetup(const ProblemSpecP& params)
   }
   else
     d_adiab_enth_inputs = false;
-  d_numMixingVars = 1; // Always one scalar (so far)
   
   string tablename = "testtable";
   table = TableFactory::readTable(db, tablename);
-  table->addIndependentVariable("F");
-  if (!(d_adiabatic))
-    table->addIndependentVariable("Hl");
-  if (d_numMixStatVars > 0)
-    table->addIndependentVariable("Fvar");
+  table->addIndependentVariable("mixture_fraction");
+  if (d_calcEnthalpy)
+    table->addIndependentVariable("heat_loss");
+  if (d_calcVariance)
+    table->addIndependentVariable("mixture_fraction_variance");
 
   Rho_index = -1;
   T_index = -1;
@@ -71,13 +75,13 @@ StandardTable::problemSetup(const ProblemSpecP& params)
     tv->index = table->addDependentVariable(tv->name);
     if(tv->name == "density")
 	    Rho_index = tv->index;
-    else if(tv->name == "Temp")
+    else if(tv->name == "temperature")
 	    T_index = tv->index;
-    else if(tv->name == "heat_capac")
+    else if(tv->name == "heat_capacity")
 	    Cp_index = tv->index;
-    else if(tv->name == "Entalpy")
+    else if(tv->name == "entalpy")
 	    Enthalpy_index = tv->index;
-    else if(tv->name == "sensible_h")
+    else if(tv->name == "sensible_heat")
 	    Hs_index = tv->index;
     else if(tv->name == "CO2")
 	    co2_index = tv->index;
@@ -90,8 +94,8 @@ StandardTable::problemSetup(const ProblemSpecP& params)
   if (!d_adiab_enth_inputs) {
     vector<double> ind_vars;
     ind_vars.push_back(0.0);
-    if(!d_adiabatic) ind_vars.push_back(0.0);
-    if (d_numMixStatVars > 0) ind_vars.push_back(0.0);
+    if(d_calcEnthalpy) ind_vars.push_back(0.0);
+    if (d_calcVariance) ind_vars.push_back(0.0);
     if (!(Enthalpy_index == -1))
       d_H_air=table->interpolate(Enthalpy_index, ind_vars);  
     else {
@@ -114,7 +118,7 @@ StandardTable::computeProps(const InletStream& inStream,
   // Extracting the independent variables from the in stream 
   double mixFrac = inStream.d_mixVars[0];
   double mixFracVars = 0.0;
-  if (inStream.d_mixVarVariance.size() != 0)
+  if (d_calcVariance)
     mixFracVars = inStream.d_mixVarVariance[0];
   if(mixFrac > 1.0)
 	mixFrac=1.0;
@@ -151,17 +155,17 @@ StandardTable::computeProps(const InletStream& inStream,
   vector<double> ind_vars_zero_heat_loss;
   vector<double> ind_vars_zero_heat_loss_zero_variance;
 
-  if(!d_adiabatic){
+  if(d_calcEnthalpy){
         ind_vars_zero_heat_loss.push_back(mixFrac);
         ind_vars_zero_heat_loss.push_back(zero_heat_loss);
-        if (d_numMixStatVars > 0)
+        if (d_calcVariance)
           ind_vars_zero_heat_loss.push_back(mixFracVars);
 	sensible_enthalpy=table->interpolate(Hs_index, ind_vars_zero_heat_loss);
 	enthalpy=inStream.d_enthalpy;
 	if (!(Enthalpy_index == -1)) {
           ind_vars_zero_heat_loss_zero_variance.push_back(mixFrac);
           ind_vars_zero_heat_loss_zero_variance.push_back(zero_heat_loss);
-          if (d_numMixStatVars > 0)
+          if (d_calcVariance)
             ind_vars_zero_heat_loss_zero_variance.push_back(zero_mixFracVars);
           adiab_enthalpy=table->interpolate(Enthalpy_index, ind_vars_zero_heat_loss_zero_variance);
 	}
@@ -196,7 +200,7 @@ StandardTable::computeProps(const InletStream& inStream,
 
         ind_vars.push_back(current_heat_loss);
   }
-  if (d_numMixStatVars > 0)
+  if (d_calcVariance)
     ind_vars.push_back(mixFracVars);
 
   // Looking for the properties corresponding to the heat loss

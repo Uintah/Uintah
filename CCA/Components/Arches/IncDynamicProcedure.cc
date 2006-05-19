@@ -83,7 +83,8 @@ void
 IncDynamicProcedure::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("Turbulence");
-  db->require("var_const",d_CFVar); // const reqd by variance eqn
+  if (d_calcVariance)
+    db->require("variance_coefficient",d_CFVar); // const reqd by variance eqn
   db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
   db->getWithDefault("filter_cs_squared",d_filter_cs_squared,false);
 

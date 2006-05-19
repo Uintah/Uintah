@@ -54,7 +54,9 @@ public:
       //
       // Constructs an instance of NewStaticMixingTable
       //
-      NewStaticMixingTable();
+      NewStaticMixingTable(bool calcReactingScalar,
+                           bool calcEnthalpy,
+                           bool calcVariance);
 
       // GROUP: Destructors :
       ///////////////////////////////////////////////////////////////////////
@@ -78,38 +80,10 @@ public:
       virtual void computeProps(const InletStream& inStream,
 				Stream& outStream);
 
-      /////////////////////////////////////////////////////////////////////////
-      // speciesStateSpace returns the state space (dependent) variables,
-      // including species composition, given a set of mixture fractions. The 
-      // species composition of each stream must be known.
-      // The state space variables returned are: density, temperature, heat 
-      // capacity, molecular weight, enthalpy, mass fractions 
-      // All variables are in SI units with pressure in Pascals.
-      // Parameters:
-      // [in] mixVar is an array of independent variables
-      virtual Stream speciesStateSpace(const std::vector<double>& mixVar) {
-	Stream noStream;
-	return noStream;
-      }
 
       // GROUP: Get Methods :
       ///////////////////////////////////////////////////////////////////////
       //
-      // Get the number of mixing variables
-      //
-      inline bool isAdiabatic() const{ 
-	return d_adiabatic; 
-      }
-      inline int getNumMixVars() const{ 
-	return d_numMixingVars; 
-      }
-      inline int getNumMixStatVars() const{
-	return d_numMixStatVars;
-      }
-      inline int getNumRxnVars() const{
-	return d_numRxnVars;
-      }
-
       inline bool getCOOutput() const{
 	return d_co_output;
       }
@@ -119,16 +93,6 @@ public:
 
       inline bool getSootPrecursors() const{
 	      return d_soot_precursors;
-      }
-      inline int getTableDimension() const{
-	return 0;
-      }
-      inline std::string getMixTableType() const{
-	return 0;
-      }
-      //***warning** compute totalvars from number of species and dependent vars
-      inline int getTotalVars() const {
-	return 0;
       }
       inline double getAdiabaticAirEnthalpy() const{
 	return d_H_air;
@@ -160,13 +124,9 @@ private:
       // does not exist and table is dynamic, it calls integrator to compute
       // entry before returning it. If table is static and entry is non-existent,
       // it exits program.
+      bool d_calcReactingScalar, d_calcEnthalpy, d_calcVariance;
       double tableLookUp(double mixfrac, double mixfracVars, double heat_loss, int var_index); 
       void readMixingTable(std::string inputfile);
-      int d_numMixingVars;
-      int d_numMixStatVars;
-      int d_numRxnVars;
-      int d_depStateSpaceVars;
-      bool d_adiabatic;
       int d_tableDimension;
       std::vector <std::vector <double> > table;
       int d_heatlosscount, d_mixfraccount, d_mixvarcount, d_varscount;

@@ -64,8 +64,8 @@ public:
       //   [in] 
 
       Properties(const ArchesLabel* label, const MPMArchesLabel* MAlb,
-                 PhysicalConstants* phys_const,
-		 bool calcEnthalpy);
+                 PhysicalConstants* phys_const, bool calcReactingScalar,
+		 bool calcEnthalpy, bool calcVariance);
 
       // GROUP: Destructors :
       ///////////////////////////////////////////////////////////////////////
@@ -129,13 +129,6 @@ public:
 
       inline int getNumMixVars() const{ 
 	return d_numMixingVars; 
-      }
-
-      ///////////////////////////////////////////////////////////////////////
-      // Get the number of mixing variables
-
-      inline int getNumMixStatVars() const{ 
-	return d_numMixStatVars; 
       }
 
       // GROUP: Set Methods :
@@ -240,7 +233,9 @@ private:
 
       bool d_reactingFlow;
       PhysicalConstants* d_physicalConsts;
+      bool d_calcReactingScalar;
       bool d_calcEnthalpy;
+      bool d_calcVariance;
       bool d_radiationCalc;
       bool d_DORadiationCalc;
 
@@ -251,7 +246,6 @@ private:
       bool d_filter_drhodt;
       bool d_first_order_drhodt;
       int d_numMixingVars;
-      int d_numMixStatVars;
       double d_opl;
       IntVector d_denRef;
       MixingModel* d_mixingModel;

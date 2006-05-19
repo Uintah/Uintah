@@ -125,13 +125,14 @@ Arches::problemSetup(const ProblemSpecP& params,
   // not sure, do we need to reduce and put in datawarehouse
   db->require("grow_dt", d_deltaT);
   db->require("variable_dt", d_variableTimeStep);
-  db->require("transport_scalar", d_calcScalar);
+  db->require("transport_mixture_fraction", d_calcScalar);
   db->getWithDefault("set_initial_condition",d_set_initial_condition,false);
   if (d_set_initial_condition)
     db->require("init_cond_input_file", d_init_inputfile);
   if (d_calcScalar) {
-    db->require("transport_reacting_scalar", d_calcReactingScalar);
+    db->getWithDefault("transport_reacting_scalar", d_calcReactingScalar,false);
     db->require("transport_enthalpy", d_calcEnthalpy);
+    db->require("model_mixture_fraction_variance", d_calcVariance);
   }
   db->getWithDefault("turnonMixedModel",d_mixedModel,false);
   db->getWithDefault("recompileTaskgraph",d_recompile,false);
@@ -174,11 +175,10 @@ Arches::problemSetup(const ProblemSpecP& params,
   d_physicalConsts->problemSetup(db);
   // read properties
   // d_MAlab = multimaterial arches common labels
-  d_props = scinew Properties(d_lab, d_MAlab, d_physicalConsts, 
-                              d_calcEnthalpy);
+  d_props = scinew Properties(d_lab, d_MAlab, d_physicalConsts,
+                              d_calcReactingScalar, 
+                              d_calcEnthalpy, d_calcVariance);
   d_props->problemSetup(db);
-  d_nofScalars = d_props->getNumMixVars();
-  d_nofScalarStats = d_props->getNumMixStatVars();
 
   // read turbulence mode
   // read turbulence model
@@ -186,7 +186,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   // read boundary
   d_boundaryCondition = scinew BoundaryCondition(d_lab, d_MAlab, d_physicalConsts,
 						 d_props, d_calcReactingScalar,
-						 d_calcEnthalpy);
+						 d_calcEnthalpy, d_calcVariance);
   // send params, boundary type defined at the level of Grid
   d_boundaryCondition->problemSetup(db);
   db->require("turbulence_model", turbModel);
@@ -206,6 +206,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   else 
     throw InvalidValue("Turbulence Model not supported" + turbModel, __FILE__, __LINE__);
 //  if (d_turbModel)
+  d_turbModel->modelVariance(d_calcVariance);
   d_turbModel->problemSetup(db);
   d_dynScalarModel = d_turbModel->getDynScalarModel();
   if (d_dynScalarModel)
@@ -241,6 +242,7 @@ Arches::problemSetup(const ProblemSpecP& params,
                                               d_calcScalar,
 					      d_calcReactingScalar,
 					      d_calcEnthalpy,
+                                              d_calcVariance,
 					      d_myworld);
   }
   else if (nlSolver == "explicit") {
@@ -251,6 +253,7 @@ Arches::problemSetup(const ProblemSpecP& params,
 					   d_calcScalar,
 					   d_calcReactingScalar,
 					   d_calcEnthalpy,
+                                           d_calcVariance,
 					   d_myworld);
   }
   else
@@ -403,12 +406,11 @@ Arches::sched_paramInit(const LevelP& level,
     if (d_timeIntegratorType == "RK3SSP")
       tsk->computes(d_lab->d_pressureIntermLabel);
 
-    for (int ii = 0; ii < d_nofScalars; ii++) 
+    if (d_calcScalar) 
       tsk->computes(d_lab->d_scalarSPLabel); // only work for 1 scalar
-    if (d_nofScalarStats > 0) {
-      for (int ii = 0; ii < d_nofScalarStats; ii++)
-        tsk->computes(d_lab->d_scalarVarSPLabel); // only work for 1 scalarStat
-      tsk->computes(d_lab->d_scalarDissSPLabel); // only work for 1 scalarStat
+    if (d_calcVariance) {
+      tsk->computes(d_lab->d_scalarVarSPLabel); // only work for 1 scalarVar
+      tsk->computes(d_lab->d_scalarDissSPLabel); // only work for 1 scalarVar
     }
     if (d_calcReactingScalar)
       tsk->computes(d_lab->d_reactscalarSPLabel);
@@ -474,8 +476,8 @@ Arches::paramInit(const ProcessorGroup* ,
     CCVariable<double> pressure;
     CCVariable<double> pressurePred;
     CCVariable<double> pressureInterm;
-    StaticArray< CCVariable<double> > scalar(d_nofScalars);
-    StaticArray< CCVariable<double> > scalarVar_new(d_nofScalarStats);
+    CCVariable<double> scalar;
+    CCVariable<double> scalarVar_new;
     CCVariable<double> scalarDiss_new;
     CCVariable<double> enthalpy;
     CCVariable<double> density;
@@ -519,15 +521,11 @@ Arches::paramInit(const ProcessorGroup* ,
       new_dw->allocateAndPut(mmgasVolFrac, d_lab->d_mmgasVolFracLabel, matlIndex, patch);
       mmgasVolFrac.initialize(1.0);
     }
-    // will only work for one scalar
-    for (int ii = 0; ii < d_nofScalars; ii++) {
-      new_dw->allocateAndPut(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch);
-    }
-    if (d_nofScalarStats > 0) {
-      for (int ii = 0; ii < d_nofScalarStats; ii++) {
-        new_dw->allocateAndPut(scalarVar_new[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch);
-        scalarVar_new[ii].initialize(0.0);
-      }
+    
+    new_dw->allocateAndPut(scalar, d_lab->d_scalarSPLabel, matlIndex, patch);
+    if (d_calcVariance) {
+      new_dw->allocateAndPut(scalarVar_new, d_lab->d_scalarVarSPLabel, matlIndex, patch);
+      scalarVar_new.initialize(0.0);
       new_dw->allocateAndPut(scalarDiss_new, d_lab->d_scalarDissSPLabel, matlIndex, patch);
       scalarDiss_new.initialize(0.0);  
     }
@@ -605,9 +603,7 @@ Arches::paramInit(const ProcessorGroup* ,
       if (d_calcReactingScalar)
         reactScalarDiffusivity.initialize(visVal/0.4);
     }
-    for (int ii = 0; ii < d_nofScalars; ii++) {
-      scalar[ii].initialize(0.0);
-    }
+    scalar.initialize(0.0);
   }
 }
 

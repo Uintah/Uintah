@@ -78,34 +78,16 @@ public:
       virtual void computeProps(const InletStream& inStream,
 				Stream& outStream) = 0;
 
-      /////////////////////////////////////////////////////////////////////////
-      // speciesStateSpace returns the state space (dependent) variables,
-      // including species composition, given a set of mixture fractions. The 
-      // species composition of each stream must be known.
-      // The state space variables returned are: density, temperature, heat 
-      // capacity, molecular weight, enthalpy, mass fractions 
-      // All variables are in SI units with pressure in Pascals.
-      // Parameters:
-      // [in] mixVar is an array of independent variables
-      virtual Stream speciesStateSpace(const std::vector<double>& mixVar) = 0;
 
       // GROUP: Get Methods :
       ///////////////////////////////////////////////////////////////////////
       //
       //
-      virtual bool isAdiabatic() const = 0;
-      virtual int getNumMixVars() const = 0; // Get number of mixing variables
-      virtual int getNumMixStatVars() const = 0;
-      virtual int getNumRxnVars() const = 0;
       virtual double getAdiabaticAirEnthalpy() const = 0;
-
       virtual bool getCOOutput() const = 0;
       virtual bool getSulfurChem() const = 0;
       virtual bool getSootPrecursors() const = 0;
 
-      virtual int getTableDimension() const = 0;
-      virtual std::string getMixTableType() const = 0;
-      virtual int getTotalVars() const = 0;
 
 
 protected :

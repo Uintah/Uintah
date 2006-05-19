@@ -23,9 +23,14 @@ using namespace SCIRun;
 //****************************************************************************
 // Default constructor for NewStaticMixingTable
 //****************************************************************************
-NewStaticMixingTable::NewStaticMixingTable():MixingModel()
+NewStaticMixingTable::NewStaticMixingTable(bool calcReactingScalar,
+                                           bool calcEnthalpy,
+                                           bool calcVariance):
+                                  MixingModel(),
+                                  d_calcReactingScalar(calcReactingScalar),
+                                  d_calcEnthalpy(calcEnthalpy),
+                                  d_calcVariance(calcVariance)
 {
-	//srand ( time(NULL) );
 }
 
 //****************************************************************************
@@ -41,11 +46,11 @@ NewStaticMixingTable::~NewStaticMixingTable()
 void 
 NewStaticMixingTable::problemSetup(const ProblemSpecP& params)
 {
+  if (d_calcReactingScalar) 
+    throw InvalidValue("Reacting scalar is unsupported parameter",
+                         __FILE__, __LINE__);
   std::string d_inputfile;
   ProblemSpecP db = params->findBlock("NewStaticMixingTable");
-  db->require("adiabatic",d_adiabatic);
-  db->require("rxnvars",d_numRxnVars);
-  db->require("mixstatvars",d_numMixStatVars);
 
   db->getWithDefault("co_output",d_co_output,false);
   db->getWithDefault("sulfur_chem",d_sulfur_chem,false);
@@ -59,8 +64,7 @@ NewStaticMixingTable::problemSetup(const ProblemSpecP& params)
   }
   else
     d_adiab_enth_inputs = false;
-  // Set up for MixingModel table
-  d_numMixingVars = 1;
+
   // Define mixing table, which includes call reaction model constructor
   readMixingTable(d_inputfile);
   if (!d_adiab_enth_inputs) {
@@ -86,7 +90,7 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
   // Extracting the independent variables from the in stream 
   double mixFrac = inStream.d_mixVars[0];
   double mixFracVars = 0.0;
-  if (inStream.d_mixVarVariance.size() != 0)
+  if (d_calcVariance)
     mixFracVars = inStream.d_mixVarVariance[0];
   if(mixFrac > 1.0)
 	mixFrac=1.0;
@@ -110,7 +114,7 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
     interp_adiab_enthalpy = d_H_fuel*mixFrac+d_H_air*(1.0-mixFrac);
   // Sensible enthalpy
   double sensible_enthalpy=0.0;
-  if(!d_adiabatic){
+  if(d_calcEnthalpy){
 	sensible_enthalpy=tableLookUp(mixFrac, mixFracVars, zero_heat_loss, Hs_index);
 	enthalpy=inStream.d_enthalpy;
 	if (!(Enthalpy_index == -1))
@@ -403,11 +407,11 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
     throw InvalidValue("No mixture fraction or density found in table"
                        + inputfile, __FILE__, __LINE__);
 
-  if (((Hs_index == -1)||(Hl_index == -1))&&(!(d_adiabatic))) 
+  if (((Hs_index == -1)||(Hl_index == -1))&&(d_calcEnthalpy)) 
     throw InvalidValue("No sensible heat or heat loss found in table"
                        + inputfile, __FILE__, __LINE__);
 
-  if ((Fvar_index == -1)&&(d_numMixStatVars > 0)) 
+  if ((Fvar_index == -1)&&(d_calcVariance)) 
     throw InvalidValue("No variance found in table" + inputfile,
                        __FILE__, __LINE__);
 
@@ -442,25 +446,16 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
     fd >> vars_units[ii];
   }
   
-  // Intitializing the mixture fraction table meanMix
-  meanMix = vector < vector<double> >(d_varscount);
-  for(int ii=0; ii<d_varscount; ii++)
-	meanMix[ii]=vector<double>(d_mixfraccount);
-
   // Enthalpy loss vector
   heatLoss=vector<double>(d_heatlosscount);
-  
-  // Allocating the table space 
-  int size = d_heatlosscount*d_mixfraccount*d_mixvarcount;
-  table = vector <vector <double> > (d_varscount);
-  for (int ii = 0; ii < d_varscount; ii++)
-    table[ii] = vector <double> (size);
-
   // Reading heat loss values
-  for (int mm=0; mm< d_heatlosscount; mm++){
+  if (Hl_index != -1) {
+   for (int mm=0; mm< d_heatlosscount; mm++){
 	fd >> heatLoss[mm];
 	//cout << heatLoss[mm] << endl;
+   }
   }
+
   // Non-dimensionalized variance values normalized by maximum mixture fraction: f_mean*(1.0-f_mean)
   variance=vector<double>(d_mixvarcount);
   // Reading variance values
@@ -471,6 +466,17 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
    }
   }
 
+  // Intitializing the mixture fraction table meanMix
+  meanMix = vector < vector<double> >(d_varscount);
+  for(int ii=0; ii<d_varscount; ii++)
+	meanMix[ii]=vector<double>(d_mixfraccount);
+
+  // Allocating the table space 
+  int size = d_heatlosscount*d_mixfraccount*d_mixvarcount;
+  table = vector <vector <double> > (d_varscount);
+  for (int ii = 0; ii < d_varscount; ii++)
+    table[ii] = vector <double> (size);
+
   //Reading the data
   // Variables loop 
   for (int kk=0; kk< d_varscount; kk++){
@@ -479,7 +485,7 @@ void NewStaticMixingTable::readMixingTable(std::string inputfile)
       fd >> meanMix[kk][ii];
       //cout << meanMix[kk][ii] << "      ";
     }
-    // Enthaply loss loop
+    // Enthalpy loss loop
     for (int mm=0; mm< d_heatlosscount; mm++){
       // Variance loop
       for (int jj=0;jj<d_mixvarcount; jj++){
