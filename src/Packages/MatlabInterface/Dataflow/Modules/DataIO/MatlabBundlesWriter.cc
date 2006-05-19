@@ -261,7 +261,19 @@ void MatlabBundlesWriter::execute()
       // Convert the SCIRun matrixobject to a matlab object
       
 
-      translate.converttostructmatrix();
+      if (matrixformat[p] == "struct array")
+      {   
+        // translate the matrix into a matlab structured array, which
+        // can also store some data from the property manager
+        translate.converttostructmatrix();
+      }
+
+      if (matrixformat[p] == "numeric array")
+      {
+        // only store the numeric parts of the data
+        translate.converttonumericmatrix();
+      }
+
       translate.sciBundleTOmlArray(matrixhandle[p],ma);
               
       if (ma.isempty())

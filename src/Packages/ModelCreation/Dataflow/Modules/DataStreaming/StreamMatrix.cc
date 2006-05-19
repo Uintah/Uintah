@@ -135,7 +135,7 @@ void StreamMatrix::execute()
   bool use_row = (row_or_col_.get() == "row");
   
   // Update the sliders
-  if (use_row_)
+  if (use_row)
   {
     slider_min_.set(0);
     slider_max_.set(datafile_.get_numrows()-1);  
@@ -272,7 +272,7 @@ void StreamMatrix::execute()
   MatrixHandle Output;
   MatrixHandle ScaledIndices;
   
-  if (use_row_)
+  if (use_row)
   {
     if (Indices.get_rep())
     {

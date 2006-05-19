@@ -138,18 +138,18 @@ itcl_class MatlabInterface_DataIO_MatlabBundlesWriter {
 		#	if [expr $dataformatindex > 0] { $childframe.port-$x.f2.dataformat select $dataformatindex }
 			
 			iwidgets::optionmenu $childframe.port-$x.f2.matrixformat
-		#	foreach dformat {{numeric array} {struct array}} {
-		#		$childframe.port-$x.f2.matrixformat insert end $dformat
-		#	}
+			foreach dformat {{numeric array} {struct array}} {
+				$childframe.port-$x.f2.matrixformat insert end $dformat
+			}
 
-		#	set matrixformatindex [lsearch {{numeric array} {struct array}} $matrixformat]
-		#	if [expr $matrixformatindex > 0] { $childframe.port-$x.f2.matrixformat select $matrixformatindex }
+    	set matrixformatindex [lsearch {{numeric array} {struct array}} $matrixformat]
+			if [expr $matrixformatindex > 0] { $childframe.port-$x.f2.matrixformat select $matrixformatindex }
 			
 			pack $childframe.port-$x -fill x -expand yes -pady 5 
 			pack $childframe.port-$x.f1 $childframe.port-$x.f2 -fill x -expand yes -pady 1p
 			pack $childframe.port-$x.f1.label -side left -padx 2p -anchor w
 			pack $childframe.port-$x.f1.matrixname -side right -fill x -expand yes -anchor n
-		#	pack $childframe.port-$x.f2.dataformat $childframe.port-$x.f2.matrixformat -side right -padx 2p -anchor s
+			pack $childframe.port-$x.f2.matrixformat -side right -padx 2p -anchor s
 		}
 		
 		makeSciButtonPanel $w $w $this
