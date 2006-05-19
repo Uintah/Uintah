@@ -81,7 +81,7 @@ public:
       // BoundaryCondition constructor used in  PSE
       BoundaryCondition(const ArchesLabel* label, const MPMArchesLabel* MAlb,
 			PhysicalConstants* phys_const, Properties* props,
-			bool calcReactScalar, bool calcEnthalpy);
+			bool calcReactScalar, bool calcEnthalpy, bool calcVariance);
 
       // GROUP: Destructors:
       ////////////////////////////////////////////////////////////////////////
@@ -671,7 +671,7 @@ private:
       public:
 	FlowInlet();
 	FlowInlet(const FlowInlet& copy);
-	FlowInlet(int numMix, int cellID);
+	FlowInlet(int cellID);
 	~FlowInlet();
 	FlowInlet& operator=(const FlowInlet& copy);
 	int d_cellTypeID;          // define enum for cell type
@@ -679,7 +679,7 @@ private:
 	double flowRate;           
 	double inletVel;           
 	double fcr;
-        InletStream streamMixturefraction; // array [numMixingVars-1]
+        InletStream streamMixturefraction;
 	// calculated values
 	Stream calcStream;
 	// stores the geometry information, read from problem specs
@@ -694,12 +694,12 @@ private:
       // PressureInlet
       struct PressureInlet {
 	int d_cellTypeID;
-	InletStream streamMixturefraction; // array [numMixingVars-1]
+	InletStream streamMixturefraction;
 	Stream calcStream;
 	double area;
 	// stores the geometry information, read from problem specs
 	std::vector<GeometryPieceP> d_geomPiece;
-	PressureInlet(int numMix, int cellID);
+	PressureInlet(int cellID);
 	~PressureInlet() {}
 	void problemSetup(ProblemSpecP& params);
       };
@@ -708,12 +708,12 @@ private:
       // FlowOutlet
       struct FlowOutlet {
 	int d_cellTypeID;
-	InletStream streamMixturefraction; // array [numMixingVars-1]
+	InletStream streamMixturefraction;
 	Stream calcStream;
 	double area;
 	// stores the geometry information, read from problem specs
 	std::vector<GeometryPieceP> d_geomPiece;
-	FlowOutlet(int numMix, int cellID);
+	FlowOutlet(int cellID);
 	~FlowOutlet() {}
 	void problemSetup(ProblemSpecP& params);
       };
@@ -767,6 +767,7 @@ private:
       bool d_reactingScalarSolve;
       // for enthalpy solve 
       bool d_enthalpySolve;
+      bool d_calcVariance;
       // variable labels
       int d_flowfieldCellTypeVal;
 
@@ -775,8 +776,6 @@ private:
       
       bool d_inletBoundary;
       int d_numInlets;
-      int d_numMixingScalars;
-      int d_nofScalars;
       std::vector<FlowInlet* > d_flowInlets;
 
       bool d_pressureBoundary;

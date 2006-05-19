@@ -87,7 +87,7 @@ ScalarSolver::problemSetup(const ProblemSpecP& params)
 	  cout << "WARNING! Running central scheme for scalar," << endl;
 	  cout << "which can be unstable." << endl;
 	}
-          else if (limiter_type == "cental-upwind") d_limiter_type = 3;
+          else if (limiter_type == "central-upwind") d_limiter_type = 3;
             else if (limiter_type == "upwind") d_limiter_type = 4;
 	      else throw InvalidValue("Flux limiter type "
 		                           "not supported: " + limiter_type, __FILE__, __LINE__);

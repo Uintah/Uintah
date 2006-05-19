@@ -99,6 +99,9 @@ public:
 	d_calcEnthalpy = calcEnthalpy;
 	d_calcReactingScalar = calcReactingScalar;
       }
+      inline void modelVariance(bool calcVariance) {
+	d_calcVariance = calcVariance;
+      }
       inline void setMixedModel(bool mixedModel) {
 	d_mixedModel = mixedModel;
       }
@@ -134,6 +137,7 @@ public:
       Filter* d_filter;
 #endif
       bool d_calcScalar, d_calcEnthalpy, d_calcReactingScalar;
+      bool d_calcVariance;
 private:
 bool d_mixedModel;
 #ifdef PetscFilter

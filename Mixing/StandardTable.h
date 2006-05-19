@@ -58,7 +58,9 @@ public:
       //
       // Constructs an instance of StandardTable
       //
-      StandardTable();
+      StandardTable(bool calcReactingScalar,
+                    bool calcEnthalpy,
+                    bool calcVariance);
 
       // GROUP: Destructors :
       ///////////////////////////////////////////////////////////////////////
@@ -82,35 +84,9 @@ public:
       virtual void computeProps(const InletStream& inStream,
 				Stream& outStream);
 
-      /////////////////////////////////////////////////////////////////////////
-      // speciesStateSpace returns the state space (dependent) variables,
-      // including species composition, given a set of mixture fractions. The 
-      // species composition of each stream must be known.
-      // The state space variables returned are: density, temperature, heat 
-      // capacity, molecular weight, enthalpy, mass fractions 
-      // All variables are in SI units with pressure in Pascals.
-      // Parameters:
-      // [in] mixVar is an array of independent variables
-      virtual Stream speciesStateSpace(const std::vector<double>& ) {
-	Stream noStream;
-	return noStream;
-      }
-
       // GROUP: Get Methods :
       ///////////////////////////////////////////////////////////////////////
       //
-      // Get the number of mixing variables
-      //
-      inline bool isAdiabatic() const{ 
-	return d_adiabatic; 
-      }
-      inline int getNumMixVars() const{ 
-	return d_numMixingVars; 
-      }
-      inline int getNumMixStatVars() const{
-	return d_numMixStatVars;
-      }
-
       inline bool getCOOutput() const{
 	return 0;
       }
@@ -120,20 +96,6 @@ public:
       inline bool getSootPrecursors() const{
 	              return 0;
 		            }
-      inline int getNumRxnVars() const{
-	return d_numRxnVars;
-      }
-      inline int getTableDimension() const{
-	return 0;
-      }
-      inline std::string getMixTableType() const{
-	return 0;
-      }
-      //***warning** compute totalvars from number of species and dependent vars
-      inline int getTotalVars() const {
-	return 0;
-      }
-
       inline double getAdiabaticAirEnthalpy() const{
 	return d_H_air;
       }
@@ -160,10 +122,7 @@ private:
       StandardTable& operator=(const StandardTable&);
 
 private:
-      int d_numMixingVars;
-      int d_numMixStatVars;
-      int d_numRxnVars;
-      bool d_adiabatic;
+      bool d_calcReactingScalar, d_calcEnthalpy, d_calcVariance;
       int co2_index, h2o_index;
       int T_index, Rho_index, Cp_index, Enthalpy_index, Hs_index;
       double d_H_fuel, d_H_air;
