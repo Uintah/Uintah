@@ -800,6 +800,12 @@ bool StreamMatrixAlgo::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::Mat
   
   SCIRun::SparseRowMatrix *spr_weights = weights->sparse();
   SCIRun::MatrixHandle sprhandle = dynamic_cast<Matrix *>(spr_weights); 
+
+  if (spr_weights == 0)
+  {
+    pr_->error("StreamMatrixAlgo: Could not convert Weights to sparse matrix");
+    return (false);
+  }
   
   // Copy the indices into a more accessible vector
   // Get the number of elements (sparse or dense it does not matter)
@@ -809,7 +815,23 @@ bool StreamMatrixAlgo::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::Mat
   int    nrows = spr_weights->nrows();
   int    ncols = spr_weights->ncols();
   int    nnz  = spr_weights->get_data_size(); 
+ 
+  if ((rows == 0)||(cols==0)||(vals==0))
+  {
+    pr_->error("StreamMatrixAlgo: Weights is an invalid sparse matrix");
+    return (false);
+  }
       
+  for (int p =0; p<nnz; p++)
+  {
+    if (cols[p] >= sizes_[1]) 
+    {
+      pr_->error("StreamMatrixAlgo: The weights vector is larger than the number of columns in the matrix");
+      return (false);    
+    }
+  }
+      
+                
   // Create the output matrix
   SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(nnz,sizes_[0]);
   if (mat == 0)
@@ -1276,15 +1298,37 @@ bool StreamMatrixAlgo::getrowmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::Mat
   SCIRun::SparseRowMatrix *spr_weights = weights->sparse();
   SCIRun::MatrixHandle sprhandle = dynamic_cast<Matrix *>(spr_weights); 
   
+  if (spr_weights == 0)
+  {
+    pr_->error("StreamMatrixAlgo: Could not convert weights to sparse matrix");
+    return (false);
+  }
+  
   // Copy the indices into a more accessible vector
   // Get the number of elements (sparse or dense it does not matter)
   int    *rows = spr_weights->rows;
-  int    *cols  = spr_weights->columns;
+  int    *cols = spr_weights->columns;
   double *vals = spr_weights->a;
   int    nrows = spr_weights->nrows();
   int    ncols = spr_weights->ncols();
-  int    nnz  = spr_weights->get_data_size(); 
+  int    nnz   = spr_weights->get_data_size(); 
+  
+  if ((rows == 0)||(cols==0)||(vals==0))
+  {
+    pr_->error("StreamMatrixAlgo: Weights is an invalid sparse matrix");
+    return (false);
+  }
       
+  for (int p =0; p<nnz; p++)
+  {
+    if (cols[p] >= sizes_[0]) 
+    {
+      pr_->error("StreamMatrixAlgo: The weights vector is larger than the number of rows in the matrix");
+      return (false);    
+    }
+  }
+        
+                  
   // Create the output matrix
   SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(nnz,sizes_[1]);
   if (mat == 0)
@@ -1525,8 +1569,6 @@ bool StreamMatrixAlgo::getrowmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::Mat
       for (int q = 0; q < sizes_[1]; q++) dataptr[p*nrows+q] += vals[r]*dbuffer[s++];
     }
   }
-
-  mh = handle;
   
   return (true);
 }
