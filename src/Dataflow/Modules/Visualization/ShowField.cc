@@ -638,8 +638,7 @@ ShowField::execute()
 	error_ = true;
 	return;
       } else {
-	warning("The input fields do not have the same mesh,");
-	warning("but appear to be the same otherwise.");
+	warning("The input fields do not have the same mesh but appear to be the same otherwise.");
       }
     }
   }
@@ -652,7 +651,7 @@ ShowField::execute()
   else
   {
     vfld_handle = 0;
-    warning( "No Scalar, Vector, no Tensor data found." );
+    warning("No Scalar, Vector, or Tensor data found, drawing mesh geometry only.");
   }
 
   update_state(Completed);
@@ -759,13 +758,13 @@ ShowField::execute()
   bool edges_on = edges_on_.get();
   if (edges_on && dim < 1)
   {
-    warning("Field type contains no edges, not drawing them.");
+    remark("Field type contains no edges, not drawing them.");
     edges_on = false;
   }
   bool faces_on = faces_on_.get();
   if (faces_on && dim < 2)
   {
-    warning("Field type contains no faces, not drawing them.");
+    remark("Field type contains no faces, not drawing them.");
     faces_on = false;
   }
 
