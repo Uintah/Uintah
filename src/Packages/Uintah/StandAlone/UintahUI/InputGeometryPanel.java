@@ -20,19 +20,16 @@ public class InputGeometryPanel extends JPanel
 
   // Local data
   private double d_domainSize = 0.0;
-  private boolean d_usePartDist = false;
+  private boolean d_usePartList = false;
 
   private ParticleList d_partList = null;
   private GeometryPanel d_parent = null;
  
-  private Vector d_mpmMat = null;
-  private Vector d_iceMat = null;
   private Vector d_geomObj = null;
   private Vector d_geomPiece = null;
   
   // Local components
-  private JCheckBox usePartDistCB = null;
-  private JButton saveButton = null;
+  private JCheckBox usePartListCB = null;
   private CreateGeomObjectPanel createGeomObjectPanel = null;
   private CreateGeomPiecePanel createGeomPiecePanel = null;
 
@@ -40,20 +37,16 @@ public class InputGeometryPanel extends JPanel
   // Construct an input panel for the geometry
   //-------------------------------------------------------------------------
   public InputGeometryPanel(ParticleList partList,
-                            Vector mpmMat,
-                            Vector iceMat,
                             Vector geomObj,
                             Vector geomPiece,
                             GeometryPanel parent) {
 
     // Initialize
     d_domainSize = 100.0;
-    d_usePartDist = false;
+    d_usePartList = false;
 
     // Save the input arguments
     d_partList = partList;
-    d_mpmMat = mpmMat;
-    d_iceMat = iceMat;
     d_geomObj = geomObj;
     d_geomPiece = geomPiece;
     d_parent = parent;
@@ -64,17 +57,18 @@ public class InputGeometryPanel extends JPanel
     setLayout(gb);
 
     // Create check box
-    usePartDistCB = new JCheckBox("Use Computed Particle Distribution");
-    usePartDistCB.setSelected(false);
-    usePartDistCB.addItemListener(this);
+    usePartListCB = new JCheckBox("Use Computed Particle Distribution");
+    usePartListCB.setSelected(false);
+    usePartListCB.addItemListener(this);
     UintahGui.setConstraints(gbc, GridBagConstraints.NONE,
                              1.0, 1.0, 0, 0, 1, 1, 5);
-    gb.setConstraints(usePartDistCB, gbc);
-    add(usePartDistCB);
+    gb.setConstraints(usePartListCB, gbc);
+    add(usePartListCB);
 
     // Create a panel for creating geometry pieces
     createGeomPiecePanel = 
-      new CreateGeomPiecePanel(d_usePartDist, d_partList, d_geomPiece, this);
+      new CreateGeomPiecePanel(d_usePartList, d_partList, 
+                               d_geomPiece, this);
     UintahGui.setConstraints(gbc, GridBagConstraints.NONE,
                              1.0, 1.0, 0, 1, 1, 1, 5);
     gb.setConstraints(createGeomPiecePanel, gbc);
@@ -82,22 +76,26 @@ public class InputGeometryPanel extends JPanel
 
     // Create a panel for creating geometry objects
     createGeomObjectPanel = 
-      new CreateGeomObjectPanel(d_usePartDist, d_partList, d_mpmMat, d_iceMat,
+      new CreateGeomObjectPanel(d_usePartList, d_partList, 
                                 d_geomObj, d_geomPiece, this);
     UintahGui.setConstraints(gbc, GridBagConstraints.NONE,
                              1.0, 1.0, 0, 2, 1, 1, 5);
     gb.setConstraints(createGeomObjectPanel, gbc);
     add(createGeomObjectPanel);
+  }
 
-    // Create save button
-    saveButton = new JButton("Save Calculated Data");
-    saveButton.setActionCommand("save");
-    saveButton.addActionListener(this);
-    UintahGui.setConstraints(gbc, GridBagConstraints.NONE,
-                             1.0, 1.0, 0, 3, 1, 1, 5);
-    gb.setConstraints(saveButton, gbc);
-    add(saveButton);
+  //-----------------------------------------------------------------------
+  // Refresh
+  //-----------------------------------------------------------------------
+  public void refresh() {
 
+    if (d_partList == null) return;
+
+    if (d_partList.size() > 0) {
+      d_usePartList = true;
+      d_domainSize = d_partList.getRVESize();
+      updatePanels();
+    }
   }
 
   //-------------------------------------------------------------------------
@@ -105,6 +103,28 @@ public class InputGeometryPanel extends JPanel
   //-------------------------------------------------------------------------
   public void updatePanels() {
     d_parent.updatePanels();
+  }
+
+  //-------------------------------------------------------------------------
+  // Update geometry objects
+  //-------------------------------------------------------------------------
+  public void createPartListGeomObjects() {
+    d_usePartList = true;
+
+    // Don't allow the creation of any more geometry pieces
+    createGeomPiecePanel.usePartList(d_usePartList);
+    createGeomPiecePanel.setEnabled(false);
+
+    // Set up the geometry object panel
+    createGeomObjectPanel.usePartList(d_usePartList);
+    createGeomObjectPanel.disableCreate();
+    createGeomObjectPanel.disableDelete();
+    if (d_partList != null) {
+      d_domainSize = d_partList.getRVESize();
+      createGeomPiecePanel.createPartListGeomPiece();
+      createGeomObjectPanel.addPartListGeomObjectPanel();
+      refreshDisplay();
+    }
   }
 
   //-------------------------------------------------------------------------
@@ -118,23 +138,23 @@ public class InputGeometryPanel extends JPanel
     // Get the item that has been selected
     String item = String.valueOf(e.getItem());
 
-    if (source == usePartDistCB) {
+    if (source == usePartListCB) {
       if (e.getStateChange() == ItemEvent.SELECTED) {
-        d_usePartDist = true;
-        createGeomObjectPanel.usePartDist(d_usePartDist);
-        createGeomPiecePanel.usePartDist(d_usePartDist);
+        d_usePartList = true;
+        createGeomObjectPanel.usePartList(d_usePartList);
+        createGeomPiecePanel.usePartList(d_usePartList);
         createGeomPiecePanel.setVisible(false);
 
         if (d_partList != null) {
           d_domainSize = d_partList.getRVESize();
-          createGeomPiecePanel.createPartDistGeomPiece();
+          createGeomPiecePanel.createPartListGeomPiece();
           refreshDisplay();
         }
 
       } else {
-        d_usePartDist = false;
-        createGeomObjectPanel.usePartDist(d_usePartDist);
-        createGeomPiecePanel.usePartDist(d_usePartDist);
+        d_usePartList = false;
+        createGeomObjectPanel.usePartList(d_usePartList);
+        createGeomPiecePanel.usePartList(d_usePartList);
         createGeomPiecePanel.setVisible(true);
       }
     }
@@ -145,23 +165,6 @@ public class InputGeometryPanel extends JPanel
   //-------------------------------------------------------------------------
   public void actionPerformed(ActionEvent e) {
 
-    if (e.getActionCommand() == "save") {
-
-      // Create filewriter and printwriter
-      File outputFile = new File("test.ups");
-      try {
-        FileWriter fw = new FileWriter(outputFile);
-        PrintWriter pw = new PrintWriter(fw);
-
-        String tab = new String("    ");
-        writeUintah(pw, tab);
-
-        pw.close();
-        fw.close();
-      } catch (Exception event) {
-        System.out.println("Could not write to file "+outputFile.getName());
-      }
-    }
   }
 
   //-------------------------------------------------------------------------
@@ -171,15 +174,5 @@ public class InputGeometryPanel extends JPanel
     d_parent.setDomainSize(d_domainSize);
     d_parent.refreshDisplayGeometryPanel();
   }
-
-  //-------------------------------------------------------------------------
-  // Write in Uintah format
-  //-------------------------------------------------------------------------
-  public void writeUintah(PrintWriter pw, String tab) {
-  }
-  public void print() {
-  }
-
-
 
 }

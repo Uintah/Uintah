@@ -18,10 +18,11 @@ public class CreateGeomPiecePanel extends JPanel
                                   implements ActionListener {
 
   // Data
-  private boolean d_usePartDist = false;
+  private boolean d_usePartList = false;
   private InputGeometryPanel d_parent = null;
   private Vector d_geomPiece = null;
   private ParticleList d_partList = null;
+  private boolean d_partGeomPieceExists = false;
 
   // Components
   private JButton addButton = null;
@@ -31,15 +32,16 @@ public class CreateGeomPiecePanel extends JPanel
   //-------------------------------------------------------------------------
   // Constructor
   //-------------------------------------------------------------------------
-  public CreateGeomPiecePanel(boolean usePartDist,
+  public CreateGeomPiecePanel(boolean usePartList,
                               ParticleList partList,
                               Vector geomPiece,
                               InputGeometryPanel parent) {
 
     // Initialize
-    d_usePartDist = usePartDist;
+    d_usePartList = usePartList;
     d_geomPiece = geomPiece;
     d_partList = partList;
+    d_partGeomPieceExists = false;
 
     // Save the arguments
     d_parent = parent;
@@ -77,10 +79,10 @@ public class CreateGeomPiecePanel extends JPanel
   }
 
   //---------------------------------------------------------------------
-  // Update the usePartDist flag
+  // Update the usePartList flag
   //---------------------------------------------------------------------
-  public void usePartDist(boolean flag) {
-    d_usePartDist = flag;
+  public void usePartList(boolean flag) {
+    d_usePartList = flag;
   }
 
   //-------------------------------------------------------------------------
@@ -126,13 +128,15 @@ public class CreateGeomPiecePanel extends JPanel
   //-------------------------------------------------------------------------
   // Create the geometry pieces from the input particle distribution 
   //-------------------------------------------------------------------------
-  public void createPartDistGeomPiece() {
+  public void createPartListGeomPiece() {
 
     if (d_partList == null) return;
 
     int numPart = d_partList.size();
     if (!(numPart > 0)) return;
     
+    if (d_partGeomPieceExists) return;
+
     int partType = ((Particle) d_partList.getParticle(0)).getType();
 
     if (partType == Particle.CIRCLE) {
@@ -175,6 +179,9 @@ public class CreateGeomPiecePanel extends JPanel
          box, union);
       d_geomPiece.addElement(diff);
     }
+
+    // Set the exists flag to true
+    d_partGeomPieceExists = true;
   }
 
 

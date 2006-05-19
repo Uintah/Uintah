@@ -22,6 +22,10 @@ public class DifferenceGeomPiece extends GeomPiece {
     d_geomPiece2 = geomPiece2;
   }
   
+  public String getName() {
+   return d_name;
+  }
+  
   // Print
   public void writeUintah(PrintWriter pw, String tab) {
 

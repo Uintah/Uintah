@@ -79,6 +79,13 @@ public class DisplayGeometryPanel extends JPanel {
   // Refresh the plots
   //-------------------------------------------------------------------------
   public void refresh() {
+
+    if (d_partList != null) {
+      if (d_partList.size() > 0) {
+        d_domainSize = d_partList.getRVESize();
+      }
+    }
+
     topCanvas.refresh();
     sideCanvas.refresh();
     frontCanvas.refresh();
@@ -391,8 +398,6 @@ public class DisplayGeometryPanel extends JPanel {
       double distYPlus = d_domainSize - (yCent+rad);
       double distXMinus = xCent-rad;
       double distYMinus = yCent-rad;
-      System.out.println("distXPlus = "+distXPlus+" distXMinus="+distXMinus+
-                         "distYPlus = "+distXPlus+" distYMinus="+distXMinus);
       if (distXPlus >= 0.0 && distYPlus >= 0 && distXMinus >= 0.0 &&
           distYMinus >= 0.0) return true;
       return false;

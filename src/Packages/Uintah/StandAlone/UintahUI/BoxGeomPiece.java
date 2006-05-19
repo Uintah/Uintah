@@ -29,6 +29,10 @@ public class BoxGeomPiece extends GeomPiece {
     d_min = min;
     d_max = max;
   }
+
+  public String getName() {
+   return d_name;
+  }
   
   // Print
   public void writeUintah(PrintWriter pw, String tab) {
