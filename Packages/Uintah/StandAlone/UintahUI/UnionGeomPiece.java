@@ -57,6 +57,10 @@ public class UnionGeomPiece extends GeomPiece {
     d_geomPiece.addElement(geomPiece);
   }
   
+  public String getName() {
+   return d_name;
+  }
+  
   // Print
   public void writeUintah(PrintWriter pw, String tab) {
 

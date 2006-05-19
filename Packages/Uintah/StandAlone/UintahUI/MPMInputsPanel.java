@@ -100,6 +100,13 @@ public class MPMInputsPanel extends JPanel {
     saveButton.addActionListener(buttonListener);
   }
 
+  //-----------------------------------------------------------------------
+  // Refresh
+  //-----------------------------------------------------------------------
+  public void refresh() {
+    mpmFlagInputPanel.refresh();
+  }
+
   //------------------------------------------------------------------~~~~~
   // Write out in Uintah format
   //------------------------------------------------------------------~~~~~
@@ -521,6 +528,12 @@ public class MPMInputsPanel extends JPanel {
       convertCB.addItemListener(cbListener);
       impHeatCB.addItemListener(cbListener);
      
+    }
+
+    //-----------------------------------------------------------------------
+    // Refresh
+    //-----------------------------------------------------------------------
+    public void refresh() {
     }
 
     //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

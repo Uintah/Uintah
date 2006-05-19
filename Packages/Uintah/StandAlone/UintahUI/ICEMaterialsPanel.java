@@ -27,6 +27,7 @@ public class ICEMaterialsPanel extends JPanel {
 
   // Data
   private int d_numMat = 0;
+  private Vector d_geomObj = null;
   private Vector d_iceMat = null;
   private UintahInputPanel d_parent = null;
 
@@ -40,11 +41,13 @@ public class ICEMaterialsPanel extends JPanel {
   //-----------------------------------------------------------------------
   // Constructor
   //-----------------------------------------------------------------------
-  public ICEMaterialsPanel(Vector iceMat,
+  public ICEMaterialsPanel(Vector geomObj,
+                           Vector iceMat,  
                            UintahInputPanel parent) {
 
     // Initialize local variables
     d_numMat = 1;
+    d_geomObj = geomObj;
     d_iceMat = iceMat;
     d_parent = parent;
 
@@ -96,6 +99,12 @@ public class ICEMaterialsPanel extends JPanel {
     // Add listener
     ButtonListener buttonListener = new ButtonListener();
     saveButton.addActionListener(buttonListener);
+  }
+
+  //-----------------------------------------------------------------------
+  // Refresh
+  //-----------------------------------------------------------------------
+  public void refresh() {
   }
 
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~

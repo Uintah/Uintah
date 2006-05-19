@@ -42,6 +42,10 @@ public class SmoothCylGeomPiece extends GeomPiece {
     d_top = new Point(center.getX(), center.getY(), center.getZ()+length);
   }
   
+  public String getName() {
+   return d_name;
+  }
+  
   // Common Methods
   public void writeUintah(PrintWriter pw, String tab){
 

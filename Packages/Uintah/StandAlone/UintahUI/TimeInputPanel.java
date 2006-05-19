@@ -16,7 +16,8 @@ import javax.swing.event.*;
 import java.text.DecimalFormat;
 import java.util.Vector;
 
-public class TimeInputPanel extends JPanel {
+public class TimeInputPanel extends JPanel 
+                            implements ItemListener {
 
   // Data and components
   private JTextField titleEntry = null;
@@ -40,11 +41,14 @@ public class TimeInputPanel extends JPanel {
   private WholeNumberField checkPointTimestepIntervalEntry = null;
 
   private String d_simType = null;
+  private GeneralInputsPanel d_parent = null;
 
-  public TimeInputPanel() {
+  public TimeInputPanel(String simType,
+                        GeneralInputsPanel parent) {
 
     // Init data
-    d_simType = new String("mpm");
+    d_simType = simType;
+    d_parent = parent;
 
     // Create the panels
     JPanel panel1 = new JPanel(new GridLayout(2,0));
@@ -155,34 +159,37 @@ public class TimeInputPanel extends JPanel {
     add(panel4);
 
     // Create and add the listeners
-    ComboBoxListener comboBoxListener = new ComboBoxListener();
-    simCompCB.addItemListener(comboBoxListener);
+    simCompCB.addItemListener(this);
   }
 
-  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  // Class   : ComboBoxListener
+  //-----------------------------------------------------------------------
+  // Refresh
+  //-----------------------------------------------------------------------
+  public void refresh() {
+  }
+
+  //-----------------------------------------------------------------------
   // Purpose : Listens for item picked in combo box and takes action as
   //           required.
-  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  private class ComboBoxListener implements ItemListener {
-    public void itemStateChanged(ItemEvent e) {
+  //-----------------------------------------------------------------------
+  public void itemStateChanged(ItemEvent e) {
 
-      // Get the item that has been selected
-      String item = String.valueOf(e.getItem());
-      if (item == "MPM") {
+    // Get the item that has been selected
+    String item = String.valueOf(e.getItem());
+    if (item.equals(new String("MPM"))) {
         d_simType = "mpm";
-      } else if (item == "ICE") {
+    } else if (item.equals(new String("ICE"))) {
         d_simType = "ice";
-      } else if (item == "MPMICE") {
+    } else if (item.equals(new String("MPMICE"))) {
         d_simType = "mpmice";
-      } else if (item == "RMPMICE") {
+    } else if (item.equals(new String("RMPMICE"))) {
         d_simType = "rmpmice";
-      } else if (item == "SMPM") {
+    } else if (item.equals(new String("SMPM"))) {
         d_simType = "smpm";
-      } else if (item == "SMPMICE") {
+    } else if (item.equals(new String("SMPMICE"))) {
         d_simType = "smpmice";
-      }
     }
+    d_parent.updateTabs(d_simType);
   }
 
   //--------------------------------------------------------------------

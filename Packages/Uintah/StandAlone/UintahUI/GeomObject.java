@@ -23,7 +23,6 @@ public class GeomObject extends Object {
   private double d_density;
   private double d_pressure;
   private Vector d_geomPieceVector;
-  private int d_materialID;
   
   // Constructor
   public GeomObject() {
@@ -34,10 +33,13 @@ public class GeomObject extends Object {
     d_density = 0.0;
     d_pressure = 0.0;
     d_geomPieceVector = new Vector();
-    d_materialID = 0;
   }
 
-  // Set the data
+  // Get/Set the data
+  public String getName() {
+    return d_name;
+  }
+
   public void setName(String name) {
     d_name = name;
   }
@@ -60,10 +62,6 @@ public class GeomObject extends Object {
 
   public void setDensity(double density) {
     d_density = density;
-  }
-
-  public void setMaterialID(int matID) {
-    d_materialID = matID;
   }
 
   public void addGeomPiece(GeomPiece geomPiece) {
