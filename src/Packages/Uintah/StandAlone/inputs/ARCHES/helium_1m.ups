@@ -55,11 +55,10 @@
 	    <variable_dt>true</variable_dt>
    	    <nonlinear_solver>explicit</nonlinear_solver>
     	    <turbulence_model>compdynamicprocedure</turbulence_model>
-            <transport_scalar>true</transport_scalar>
+            <transport_mixture_fraction>true</transport_mixture_fraction>
             <transport_enthalpy>false</transport_enthalpy>	
-	    <transport_reacting_scalar>false</transport_reacting_scalar>
+	    <model_mixture_fraction_variance>false</model_mixture_fraction_variance>
 	    <Turbulence>
-	        <var_const>0.1</var_const>
 	        <turbulentPrandtlNumber>0.4</turbulentPrandtlNumber>
 	    </Turbulence>
 
@@ -80,9 +79,7 @@
 	    <BoundaryConditions>
 		<FlowInlet>
 		    <InletVelocity>0.01</InletVelocity>
-		    <MixtureFraction>
-			<Mixfrac>0.0</Mixfrac>
-	            </MixtureFraction>
+		    <mixture_fraction>0.0</mixture_fraction>
 		    <geom_object>
 		      <box label = "botwall">
 			<min>[-1,-1,-1]</min>
@@ -93,9 +90,7 @@
 
 		<FlowInlet>
 		    <InletVelocity>0.351</InletVelocity>
-		    <MixtureFraction>
-			<Mixfrac>1.0</Mixfrac>
-	            </MixtureFraction>
+		    <mixture_fraction>1.0</mixture_fraction>
 		    <geom_object>
 		      <cylinder label = "inlet">
 			<bottom>[-5,1.5,1.5]</bottom>
@@ -106,9 +101,7 @@
 		</FlowInlet>
 
 		<PressureBC>
-		    <MixtureFraction>
-			<Mixfrac>0.0</Mixfrac>
-	            </MixtureFraction>
+		    <mixture_fraction>0.0</mixture_fraction>
 		    <geom_object>
 		      <box label = "posY_xzWall">
 			<min>[0,3,-1]</min>
@@ -129,17 +122,15 @@
 		    </geom_object>
 		</PressureBC>
 
-		<outletBC>
-		    <MixtureFraction>
-			<Mixfrac>0.0</Mixfrac>
-	            </MixtureFraction>
+		<OutletBC>
+		    <mixture_fraction>0.0</mixture_fraction>
 		    <geom_object>
 		      <box label = "topWall">
 			<min>[3,-1,-1]</min>
 			<max>[4,4,4]</max>
 		      </box>
 		    </geom_object>
-		</outletBC>
+		</OutletBC>
 	    </BoundaryConditions>
 
 	    <PhysicalConstants>

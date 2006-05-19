@@ -12,7 +12,13 @@ using namespace SCIRun;
 //****************************************************************************
 // Default constructor for ColdflowMixingModel
 //****************************************************************************
-ColdflowMixingModel::ColdflowMixingModel():MixingModel()
+ColdflowMixingModel::ColdflowMixingModel(bool calcReactingScalar,
+                                         bool calcEnthalpy,
+                                         bool calcVariance):
+                                  MixingModel(),
+                                  d_calcReactingScalar(calcReactingScalar),
+                                  d_calcEnthalpy(calcEnthalpy),
+                                  d_calcVariance(calcVariance)
 {
 }
 
@@ -29,6 +35,9 @@ ColdflowMixingModel::~ColdflowMixingModel()
 void 
 ColdflowMixingModel::problemSetup(const ProblemSpecP& params)
 {
+  if (d_calcReactingScalar||d_calcEnthalpy||d_calcVariance)
+    throw InvalidValue("ColdflowMixingModel can only be a function of mixture fraction",
+                       __FILE__, __LINE__ );
   ProblemSpecP db = params->findBlock("ColdflowMixingModel");
 
   // Read the mixing variable streams, total is noofStreams 0 
@@ -52,8 +61,6 @@ void
 ColdflowMixingModel::computeProps(const InletStream& inStream,
 				  Stream& outStream)
 {
-  // for combustion calculations mixingmodel will be called
-  // this is similar to prcf.f
   double local_den = 0.0;
   double mixFracSum = 0.0;
   double localTemp = 0.0;
@@ -75,27 +82,4 @@ ColdflowMixingModel::computeProps(const InletStream& inStream,
   else
     outStream.d_density = (1.0/local_den);
 }
-
-//
-// $Log$
-// Revision 1.5  2002/05/20 18:14:13  sparker
-// Fix gcc 3.1 problems and warnings
-//
-// Revision 1.4  2002/02/28 03:05:46  rawat
-// Added divergence constraint and modified pressure/outlet boundary condition.
-//
-// Revision 1.3  2001/07/27 20:51:40  sparker
-// Include file cleanup
-// Fix uninitialized array element
-//
-// Revision 1.2  2001/07/16 21:15:38  rawat
-// added enthalpy solver and Jennifer's changes in Mixing and Reaction model required for ILDM and non-adiabatic cases
-//
-// Revision 1.1  2001/01/31 16:35:30  rawat
-// Implemented mixing and reaction models for fire.
-//
-// Revision 1.1  2001/01/15 23:38:21  rawat
-// added some more classes for implementing mixing model
-//
-//
 

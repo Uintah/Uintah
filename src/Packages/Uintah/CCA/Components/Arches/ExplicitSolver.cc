@@ -55,6 +55,7 @@ ExplicitSolver(const ArchesLabel* label,
 	       bool calc_Scalar,
 	       bool calc_reactingScalar,
 	       bool calc_enthalpy,
+	       bool calc_variance,
 	       const ProcessorGroup* myworld): 
                NonlinearSolver(myworld),
 	       d_lab(label), d_MAlab(MAlb), d_props(props), 
@@ -63,6 +64,7 @@ ExplicitSolver(const ArchesLabel* label,
 	       d_calScalar(calc_Scalar),
 	       d_reactingScalarSolve(calc_reactingScalar),
 	       d_enthalpySolve(calc_enthalpy),
+	       d_calcVariance(calc_variance),
 	       d_physicalConsts(physConst)
 {
   d_pressSolver = 0;
@@ -233,9 +235,6 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 
   // Start the iterations
 
-  int nofScalars = d_props->getNumMixVars();
-  int nofScalarVars = d_props->getNumMixStatVars();
-
   // check if filter is defined...
 #ifdef PetscFilter
   if (d_turbModel->getFilter()) {
@@ -257,12 +256,8 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     sched_checkDensityGuess(sched, patches, matls,
 			   	      d_timeIntegratorLabels[curr_level]);
 
-    for (int index = 0;index < nofScalars; index ++) {
-    // in this case we're only solving for one scalar...but
-    // the same subroutine can be used to solve multiple scalars
-      d_scalarSolver->solve(sched, patches, matls, 
-			    d_timeIntegratorLabels[curr_level], index);
-    }
+    d_scalarSolver->solve(sched, patches, matls, 
+		          d_timeIntegratorLabels[curr_level], 0);
 
     if (d_reactingScalarSolve) {
       int index = 0;
@@ -276,14 +271,10 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
       d_enthalpySolver->solve(level, sched, patches, matls,
 			      d_timeIntegratorLabels[curr_level]);
 
-    if (nofScalarVars > 0) {
-      for (int index = 0;index < nofScalarVars; index ++) {
-        // in this case we're only solving for one scalarVar...but
-        // the same subroutine can be used to solve multiple scalarVars
-        d_turbModel->sched_computeScalarVariance(sched, patches, matls,
+    if (d_calcVariance) {
+      d_turbModel->sched_computeScalarVariance(sched, patches, matls,
 					   d_timeIntegratorLabels[curr_level]);
-      }
-    d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
+      d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
 					   d_timeIntegratorLabels[curr_level]);
     }
 
@@ -317,13 +308,9 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 			   	    d_timeIntegratorLabels[curr_level]);
       d_props->sched_saveTempDensity(sched, patches, matls,
 			   	     d_timeIntegratorLabels[curr_level]);
-      if (nofScalarVars > 0) {
-        for (int index = 0;index < nofScalarVars; index ++) {
-        // in this case we're only solving for one scalarVar...but
-        // the same subroutine can be used to solve multiple scalarVars
-          d_turbModel->sched_computeScalarVariance(sched, patches, matls,
+      if (d_calcVariance) {
+        d_turbModel->sched_computeScalarVariance(sched, patches, matls,
 					    d_timeIntegratorLabels[curr_level]);
-        }
         d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
 					    d_timeIntegratorLabels[curr_level]);
       }
@@ -497,12 +484,9 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   if (d_MAlab)
     tsk->requires(Task::OldDW, d_lab->d_densityMicroLabel, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
-  int nofScalars = d_props->getNumMixVars();
-  // warning **only works for one scalar
-  for (int ii = 0; ii < nofScalars; ii++) {
-    tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-  }
+
+  tsk->requires(Task::OldDW, d_lab->d_scalarSPLabel, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
   if (d_reactingScalarSolve) {
     tsk->requires(Task::OldDW, d_lab->d_reactscalarSPLabel, 
@@ -535,11 +519,9 @@ ExplicitSolver::sched_setInitialGuess(SchedulerP& sched,
   tsk->computes(d_lab->d_vVelRhoHatLabel);
   tsk->computes(d_lab->d_wVelRhoHatLabel);
 
-  for (int ii = 0; ii < nofScalars; ii++) {
-    tsk->computes(d_lab->d_scalarSPLabel);
-    if (d_timeIntegratorLabels[0]->multiple_steps)
-      tsk->computes(d_lab->d_scalarTempLabel);
-  }
+  tsk->computes(d_lab->d_scalarSPLabel);
+  if (d_timeIntegratorLabels[0]->multiple_steps)
+    tsk->computes(d_lab->d_scalarTempLabel);
 
   if (d_reactingScalarSolve) {
     tsk->computes(d_lab->d_reactscalarSPLabel);
@@ -1386,8 +1368,7 @@ ExplicitSolver::sched_probeData(SchedulerP& sched, const PatchSet* patches,
   tsk->requires(Task::NewDW, d_lab->d_kineticEnergyLabel,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  int nofScalarVars = d_props->getNumMixStatVars();
-  if (nofScalarVars > 0) {
+  if (d_calcVariance) {
     tsk->requires(Task::NewDW, d_lab->d_scalarVarSPLabel, 
     		  Ghost::None, Arches::ZEROGHOSTCELLS);
   }
@@ -1478,7 +1459,7 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
     
     constCCVariable<double> mixFracVariance;
-    if (d_props->getNumMixStatVars() > 0) {
+    if (d_calcVariance) {
       new_dw->get(mixFracVariance, d_lab->d_scalarVarSPLabel, matlIndex, patch, 
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
     }
@@ -1541,7 +1522,7 @@ ExplicitSolver::probeData(const ProcessorGroup* ,
 	cerr << "CCVVelocity: " << newintVVel[*iter] << endl;
 	cerr << "CCWVelocity: " << newintWVel[*iter] << endl;
 	cerr << "KineticEnergy: " << kineticEnergy[*iter] << endl;
-	if (d_props->getNumMixStatVars() > 0) {
+	if (d_calcVariance) {
 	  cerr << "MixFracVariance: " << mixFracVariance[*iter] << endl;
 	}
 	if (d_MAlab) {
@@ -1605,12 +1586,9 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     old_dw->get(wVelocity, d_lab->d_wVelocitySPBCLabel, matlIndex, patch, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    int nofScalars = d_props->getNumMixVars();
-    StaticArray< constCCVariable<double> > scalar (nofScalars);
-    for (int ii = 0; ii < nofScalars; ii++) {
-      old_dw->get(scalar[ii], d_lab->d_scalarSPLabel, matlIndex, patch, 
-		  Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
+    constCCVariable<double> scalar;
+    old_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
 
     constCCVariable<double> enthalpy;
     if (d_enthalpySolve)
@@ -1677,15 +1655,13 @@ ExplicitSolver::setInitialGuess(const ProcessorGroup* ,
     new_dw->allocateAndPut(wVelRhoHat_new, d_lab->d_wVelRhoHatLabel, matlIndex, patch);
     wVelRhoHat_new.initialize(0.0); // copy old into new
 
-    StaticArray<CCVariable<double> > scalar_new(nofScalars);
-    StaticArray<CCVariable<double> > scalar_temp(nofScalars);
-    for (int ii = 0; ii < nofScalars; ii++) {
-      new_dw->allocateAndPut(scalar_new[ii], d_lab->d_scalarSPLabel, matlIndex, patch);
-      scalar_new[ii].copyData(scalar[ii]); // copy old into new
-      if (d_timeIntegratorLabels[0]->multiple_steps) {
-      new_dw->allocateAndPut(scalar_temp[ii], d_lab->d_scalarTempLabel, matlIndex, patch);
-      scalar_temp[ii].copyData(scalar[ii]); // copy old into new
-      }
+    CCVariable<double> scalar_new;
+    CCVariable<double> scalar_temp;
+    new_dw->allocateAndPut(scalar_new, d_lab->d_scalarSPLabel, matlIndex, patch);
+    scalar_new.copyData(scalar); // copy old into new
+    if (d_timeIntegratorLabels[0]->multiple_steps) {
+      new_dw->allocateAndPut(scalar_temp, d_lab->d_scalarTempLabel, matlIndex, patch);
+      scalar_temp.copyData(scalar); // copy old into new
     }
 
     constCCVariable<double> reactscalar;
@@ -1766,15 +1742,6 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
   tsk->requires(Task::OldDW, d_lab->d_pressurePSLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
 
-  /*
-  int nofScalarVars = d_props->getNumMixStatVars();
-  if (nofScalarVars > 0) {
-    for (int ii = 0; ii < nofScalarVars; ii++) {
-      tsk->requires(Task::OldDW, d_lab->d_scalarVarSPLabel, 
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
-    }
-  }
-  */
 
   tsk->computes(d_lab->d_pressurePSLabel);
   tsk->computes(d_lab->d_presNonLinSrcPBLMLabel);
@@ -1796,13 +1763,6 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   tsk->computes(d_lab->d_divConstraintLabel);
 
-  /*
-  if (nofScalarVars > 0) {
-    for (int ii = 0; ii < nofScalarVars; ii++) {
-      tsk->computes(d_lab->d_scalarVarSPLabel);
-    }
-  }
-  */
 
   sched->addTask(tsk, patches, matls);  
   
@@ -1826,16 +1786,6 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
 
     // gets for old dw variables
 
-    /*
-    int nofScalarVars = d_props->getNumMixStatVars();
-    StaticArray< constCCVariable<double> > scalarVar (nofScalarVars);
-    if (nofScalarVars > 0) {
-      for (int ii = 0; ii < nofScalarVars; ii++) {
-	old_dw->get(scalarVar[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch, 
-		    Ghost::None, Arches::ZEROGHOSTCELLS);
-      }
-    }
-    */
 
     constCCVariable<double> div;
     old_dw->get(div, d_lab->d_divConstraintLabel, matlIndex, patch, 
@@ -1862,15 +1812,6 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
 			   matlIndex, patch);
     pressureNLSource.initialize(0.0);
 
-    /*
-    StaticArray<CCVariable<double> > scalarVar_new(nofScalarVars);
-    if (nofScalarVars > 0) {
-      for (int ii = 0; ii < nofScalarVars; ii++) {
-	new_dw->allocateAndPut(scalarVar_new[ii], d_lab->d_scalarVarSPLabel, matlIndex, patch);
-	scalarVar_new[ii].copyData(scalarVar[ii]); // copy old into new
-      }
-    }
-    */
 
 
     cout << "DOING DUMMY SOLVE " << endl;
