@@ -10,6 +10,7 @@ SOURCE_FILES = \
 	BoxGeomPiece.java \
 	BoxGeomPiecePanel.java \
 	ComputeParticleLocPanel.java\
+	CompNeoHookMaterialPanel.java\
 	CreateGeomObjectPanel.java\
 	CreateGeomPiecePanel.java\
 	CylinderGeomPiece.java \
@@ -26,11 +27,13 @@ SOURCE_FILES = \
 	GeomPiece.java \
 	GeomPiecePanel.java \
 	HelpAboutFrame.java \
+	HypoElasticMaterialPanel.java \
 	ICEInputsPanel.java \
 	ICEMaterialsPanel.java \
 	InputGeometryPanel.java \
 	InputPartDistPanel.java \
 	LightWeightCanvas.java \
+	MPMContactInputPanel.java \
 	MPMInputsPanel.java \
 	MPMMaterialsPanel.java \
 	MPMMaterialInputPanel.java \
@@ -61,6 +64,7 @@ all: UintahGui \
 	BoxGeomPiece \
 	BoxGeomPiecePanel \
 	ComputeParticleLocPanel\
+	CompNeoHookMaterialPanel \
 	CreateGeomObjectPanel\
 	CreateGeomPiecePanel\
 	CylinderGeomPiece \
@@ -77,11 +81,13 @@ all: UintahGui \
 	GeomPiece \
 	GeomPiecePanel \
 	HelpAboutFrame\
+	HypoElasticMaterialPanel \
 	ICEInputsPanel \
 	ICEMaterialsPanel \
 	InputGeometryPanel \
 	InputPartDistPanel\
 	LightWeightCanvas\
+	MPMContactInputPanel \
 	MPMInputsPanel\
 	MPMMaterialsPanel \
 	MPMMaterialInputPanel \
@@ -115,6 +121,9 @@ BoxGeomPiecePanel:
 
 ComputeParticleLocPanel:
 	${JAVAC} ${srcdir}/ComputeParticleLocPanel.java
+
+CompNeoHookMaterialPanel:
+	${JAVAC} ${srcdir}/CompNeoHookMaterialPanel.java
 
 CreateGeomObjectPanel:
 	${JAVAC} ${srcdir}/CreateGeomObjectPanel.java
@@ -164,6 +173,9 @@ GeomPiecePanel:
 HelpAboutFrame:
 	${JAVAC} ${srcdir}/HelpAboutFrame.java 
 
+HypoElasticMaterialPanel:
+	${JAVAC} ${srcdir}/HypoElasticMaterialPanel.java
+
 ICEInputsPanel:
 	${JAVAC} ${srcdir}/ICEInputsPanel.java 
 
@@ -178,6 +190,9 @@ InputPartDistPanel:
 
 LightWeightCanvas:
 	${JAVAC} ${srcdir}/LightWeightCanvas.java 
+
+MPMContactInputPanel:
+	${JAVAC} ${srcdir}/MPMContactInputPanel.java 
 
 MPMInputsPanel:
 	${JAVAC} ${srcdir}/MPMInputsPanel.java 

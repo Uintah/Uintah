@@ -97,7 +97,7 @@ public class UintahGui extends JApplet {
 
     // Create the menuitems
     JMenuItem menuItem;
-    menuItem = new JMenuItem("Read Particle Size Data");
+    menuItem = new JMenuItem("Read Particle Location Data");
     fileMenu.add(menuItem);
     menuItem.addActionListener(menuListener);
 
@@ -196,6 +196,7 @@ public class UintahGui extends JApplet {
         if ((particleFile = getFileName(UintahGui.OPEN)) != null) {
           //System.out.println("File = "+particleFile.getName());
           partList.readFromFile(particleFile);
+          uintahInputPanel.createPartListGeomObjects();
         }
       } else if (text.equals("Save Uintah Input File")) {
         File uintahFile = null;

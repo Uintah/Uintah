@@ -11,6 +11,7 @@ import java.awt.*;
 import java.awt.event.*;
 import javax.swing.*;
 import java.util.Vector;
+import java.io.PrintWriter;
 
 //**************************************************************************
 // Class   : GeometryPanel
@@ -24,8 +25,6 @@ public class GeometryPanel extends JPanel {
   private UintahInputPanel d_parentPanel = null;
   private ParticleList d_partList = null;
   private Vector d_geomObj = null;
-  private Vector d_mpmMat = null;
-  private Vector d_iceMat = null;
   private Vector d_geomPiece = null;
 
   private InputGeometryPanel inputPanel = null;
@@ -34,8 +33,6 @@ public class GeometryPanel extends JPanel {
   // Constructor
   public GeometryPanel(ParticleList partList, 
                        Vector geomObj,
-                       Vector mpmMat,
-                       Vector iceMat,
                        UintahInputPanel parentPanel) {
 
     // Copy the arguments
@@ -43,13 +40,10 @@ public class GeometryPanel extends JPanel {
     d_parentPanel = parentPanel;
     d_domainSize = 100.0;
     d_geomObj = geomObj;
-    d_mpmMat = mpmMat;
-    d_iceMat = iceMat;
     d_geomPiece = new Vector();
 
     // Create and add the relevant panels
-    inputPanel = new InputGeometryPanel(partList, d_mpmMat, d_iceMat,
-                                        d_geomObj, d_geomPiece, this);
+    inputPanel = new InputGeometryPanel(partList, d_geomObj, d_geomPiece, this);
     displayPanel = new DisplayGeometryPanel(partList, d_geomPiece, this);
  
     // Create a grid bag
@@ -67,6 +61,13 @@ public class GeometryPanel extends JPanel {
                              1.0, 1.0, 1,0, 1, 1, 5);
     gb.setConstraints(displayPanel,gbc);
     add(displayPanel);
+  }
+
+  //-----------------------------------------------------------------------
+  // Refresh
+  //-----------------------------------------------------------------------
+  public void refresh() {
+    inputPanel.refresh();
   }
 
   //-------------------------------------------------------------------------
@@ -95,4 +96,10 @@ public class GeometryPanel extends JPanel {
     return d_domainSize;
   }
 
+  //-------------------------------------------------------------------------
+  // Update geometry objects
+  //-------------------------------------------------------------------------
+  public void createPartListGeomObjects() {
+    inputPanel.createPartListGeomObjects();
+  }
 }

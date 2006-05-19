@@ -18,6 +18,7 @@ public abstract class GeomPiece extends Object {
   protected String d_name;
   
   // Common Methods
+  public abstract String getName();
   public abstract void writeUintah(PrintWriter pw, String tab);
   public abstract void print();
 

@@ -1,11 +1,11 @@
-/**************************************************************************
- // Class   : MPMMaterialInputPanel.java
- // Purpose : Create a panel that contains widgets to take inputs for
- //           MPM materials
- // Author  : Biswajit Banerjee
- // Date    : 05/04/2006
- // Mods    :
- //**************************************************************************/
+//**************************************************************************
+// Class   : MPMMaterialInputPanel.java
+// Purpose : Create a panel that contains widgets to take inputs for
+//           MPM materials
+// Author  : Biswajit Banerjee
+// Date    : 05/04/2006
+// Mods    :
+//**************************************************************************
 
 import java.awt.*;
 import java.awt.event.*;
@@ -13,10 +13,8 @@ import java.io.*;
 import javax.swing.*;
 import javax.swing.text.*;
 import javax.swing.event.*;
+import java.util.Vector;
 
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-// MPM material input panel
-//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 public class MPMMaterialInputPanel extends JPanel 
                                    implements ItemListener {
 
@@ -24,6 +22,7 @@ public class MPMMaterialInputPanel extends JPanel
   private boolean d_isRigid = false;
   private String d_burnModel = null;
   private String d_constModel = null;
+  private Vector d_geomObj = null;
 
   private JTextField matNameEntry = null;
   private DecimalField densityEntry = null;
@@ -38,15 +37,23 @@ public class MPMMaterialInputPanel extends JPanel
 
   private JPanel constModelPanel = null;
   private RigidMaterialPanel rigidPanel = null;
+  private HypoElasticMaterialPanel hypoElasticPanel = null;
+  private CompNeoHookMaterialPanel compNeoHookPanel = null;
   private ElasticPlasticMaterialPanel elasticPlasticPanel = null;
   private ViscoSCRAMMaterialPanel viscoSCRAMPanel = null;
 
-  public MPMMaterialInputPanel(int matIndex) {
+  private JList geomObjectList = null;
+  private DefaultListModel geomObjectListModel = null;
+  private JScrollPane geomObjectSP = null;
+
+  public MPMMaterialInputPanel(int matIndex,
+                               Vector geomObj) {
 
     // Initialize
     d_isRigid = false;
     d_constModel = new String("rigid");
     d_burnModel = new String("null");
+    d_geomObj = geomObj;
 
     // Create a gridbaglayout and constraints
     GridBagLayout gb = new GridBagLayout();
@@ -93,7 +100,7 @@ public class MPMMaterialInputPanel extends JPanel
     add(panel1); 
 
     // Add the second panel
-    JPanel panel2 = new JPanel(new GridLayout(6,2));
+    JPanel panel2 = new JPanel(new GridLayout(3,2));
 
     JLabel burnModelLabel = new JLabel("Burn Model");
     burnModelComB = new JComboBox();
@@ -122,17 +129,40 @@ public class MPMMaterialInputPanel extends JPanel
     gb.setConstraints(panel2, gbc);
     add(panel2); 
 
-    // Add the Third panel for the constituive models
+    // Add a panel for the geometry objects
+    JPanel geomObjectPanel = new JPanel(new GridLayout(1,0));
+    JLabel geomObjectLabel = new JLabel("Geometry Objects");
+    geomObjectPanel.add(geomObjectLabel);
+
+    geomObjectListModel = new DefaultListModel();
+    for (int ii = 0; ii < d_geomObj.size(); ++ii) {
+      GeomObject go = (GeomObject) d_geomObj.elementAt(ii);
+      geomObjectListModel.addElement(go.getName());
+    }
+    geomObjectList = new JList(geomObjectListModel);
+    geomObjectList.setVisibleRowCount(4);
+    geomObjectSP = new JScrollPane(geomObjectList);
+    geomObjectPanel.add(geomObjectSP);
+
+    UintahGui.setConstraints(gbc, 0, 2);
+    gb.setConstraints(geomObjectPanel, gbc);
+    add(geomObjectPanel);
+
+    // Add the panel for the constituive models
     constModelPanel = new JPanel();
     rigidPanel = new RigidMaterialPanel();
-    //hypoElasticPanel = new HypoElasticMaterialPanel();
-    //cnhElasticPanel = new CompNeoHookMaterialPanel();
+    hypoElasticPanel = new HypoElasticMaterialPanel();
+    compNeoHookPanel = new CompNeoHookMaterialPanel();
     elasticPlasticPanel = new ElasticPlasticMaterialPanel();
     viscoSCRAMPanel = new ViscoSCRAMMaterialPanel();
     constModelPanel.add(rigidPanel);
+    constModelPanel.add(hypoElasticPanel);
+    constModelPanel.add(compNeoHookPanel);
     constModelPanel.add(elasticPlasticPanel);
     constModelPanel.add(viscoSCRAMPanel);
     rigidPanel.setVisible(true);
+    hypoElasticPanel.setVisible(false);
+    compNeoHookPanel.setVisible(false);
     elasticPlasticPanel.setVisible(false);
     viscoSCRAMPanel.setVisible(false);
 
@@ -153,8 +183,20 @@ public class MPMMaterialInputPanel extends JPanel
   //-----------------------------------------------------------------------
   // Gets the name of the material
   //-----------------------------------------------------------------------
-  public String getName() {
+  public String getMatName() {
     return matNameEntry.getText();
+  }
+
+  //-----------------------------------------------------------------------
+  // Refresh
+  //-----------------------------------------------------------------------
+  public void refresh() {
+    geomObjectListModel.removeAllElements();
+    for (int ii = 0; ii < d_geomObj.size(); ++ii) {
+      GeomObject go = (GeomObject) d_geomObj.elementAt(ii);
+      geomObjectListModel.addElement(go.getName());
+    }
+    validate();
   }
 
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -179,49 +221,44 @@ public class MPMMaterialInputPanel extends JPanel
         d_burnModel = "IgnitionCombustion";
       }
     } else {
+
       d_isRigid = false;
+      rigidPanel.setVisible(false);
+      elasticPlasticPanel.setVisible(false);
+      viscoSCRAMPanel.setVisible(false);
+      isRigidCB.setSelected(false);
+      isRigidCB.setEnabled(true);
+
       if (item == "Rigid") {
+
         d_constModel = "rigid";
         rigidPanel.setVisible(true);
-        elasticPlasticPanel.setVisible(false);
-        viscoSCRAMPanel.setVisible(false);
         d_isRigid = true;
         isRigidCB.setSelected(true);
         isRigidCB.setEnabled(false);
-        validate();
+
       } else if (item == "Hypoelastic") {
+
         d_constModel = "hypoelastic";
-        rigidPanel.setVisible(false);
-        elasticPlasticPanel.setVisible(false);
-        viscoSCRAMPanel.setVisible(false);
-        isRigidCB.setSelected(false);
-        isRigidCB.setEnabled(true);
-        validate();
+        hypoElasticPanel.setVisible(true);
+
       } else if (item == "Compressible Neo-Hookean") {
+
         d_constModel = "comp_neo_hook";
-        rigidPanel.setVisible(false);
-        elasticPlasticPanel.setVisible(false);
-        viscoSCRAMPanel.setVisible(false);
-        isRigidCB.setSelected(false);
-        isRigidCB.setEnabled(true);
-        validate();
+        compNeoHookPanel.setVisible(true);
+
       } else if (item == "Elastic-Plastic") {
+
         d_constModel = "elastic_plastic";
-        rigidPanel.setVisible(false);
         elasticPlasticPanel.setVisible(true);
-        viscoSCRAMPanel.setVisible(false);
-        isRigidCB.setSelected(false);
-        isRigidCB.setEnabled(true);
-        validate();
+
       } else if (item == "ViscoSCRAM") {
+
         d_constModel = "visco_scram";
-        rigidPanel.setVisible(false);
-        elasticPlasticPanel.setVisible(false);
         viscoSCRAMPanel.setVisible(true);
-        isRigidCB.setSelected(false);
-        isRigidCB.setEnabled(true);
-        validate();
+
       }
+      validate();
     }
   }
 
@@ -272,6 +309,16 @@ public class MPMMaterialInputPanel extends JPanel
       elasticPlasticPanel.writeUintah(pw, tab2);
     }
     pw.println(tab1+"</constitutive_model>");
+
+    if (d_geomObj != null) {
+      int[] numGeomObj = geomObjectList.getSelectedIndices();
+      for (int ii = 0; ii < numGeomObj.length; ++ii) {
+        int index = numGeomObj[ii];
+        GeomObject geomObject = (GeomObject) d_geomObj.elementAt(index);        
+        geomObject.writeUintah(pw, tab1);
+      }
+    }
+
     pw.println(tab+"</material>");
     pw.println(tab);
 

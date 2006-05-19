@@ -61,8 +61,6 @@ public class ParticleList extends Object {
       double zz = 0.0;
       int matCode = 0;
       int ttval = 0;
-      boolean rangeFlag = false;
-      double range = 1.0;
       while((ttval = st.nextToken()) != StreamTokenizer.TT_EOF) {
         if (first) {
           if (ttval == StreamTokenizer.TT_NUMBER) {
@@ -87,13 +85,8 @@ public class ParticleList extends Object {
           if (ttval == StreamTokenizer.TT_EOL && count != 0) {
             //System.out.println(type+" "+radius+" "+rotation+" "+xx+" "+yy+
                   //           " "+zz+" "+matCode);
-            // The range is either 0 to 1 or 0 to 100
-            if (!rangeFlag) {
-              if (radius > 1.0) range = 100.0;
-              rangeFlag = true; 
-            }
-            Point center = new Point(xx/range, yy/range, zz/range);
-            Particle particle = new Particle(type, radius/range, rotation, 
+            Point center = new Point(xx, yy, zz);
+            Particle particle = new Particle(type, radius, rotation, 
                                              center, matCode);
             this.addParticle(particle);
             count = 0;

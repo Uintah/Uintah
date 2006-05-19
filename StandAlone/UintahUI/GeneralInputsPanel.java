@@ -31,6 +31,7 @@ public class GeneralInputsPanel extends JPanel {
   // Static variables
 
   // Data
+  private String d_simComponent = null;
   private UintahInputPanel d_parent = null;
 
   // Two panels for time inputs and variable save inputs
@@ -43,14 +44,16 @@ public class GeneralInputsPanel extends JPanel {
   //-----------------------------------------------------------------------
   // Constructor
   //-----------------------------------------------------------------------
-  public GeneralInputsPanel(UintahInputPanel parent) {
+  public GeneralInputsPanel(String simComponent,
+                            UintahInputPanel parent) {
 
     // Initialize local variables
+    d_simComponent = simComponent;
     d_parent = parent;
 
     // Create the panels
     constInputPanel = new PhysicalConstInputPanel();
-    timeInputPanel = new TimeInputPanel();
+    timeInputPanel = new TimeInputPanel(d_simComponent, this);
     saveInputPanel = new VariableSaveInputPanel();
 
     // Create a gridbaglayout and constraints
@@ -86,6 +89,23 @@ public class GeneralInputsPanel extends JPanel {
     // Add listener
     ButtonListener buttonListener = new ButtonListener();
     saveButton.addActionListener(buttonListener);
+  }
+
+  //-----------------------------------------------------------------------
+  // Update the tabs in the parent panel
+  //-----------------------------------------------------------------------
+  public void updateTabs(String simComponent) {
+    d_simComponent = simComponent;
+    d_parent.enableTabs(simComponent);
+  }
+
+  //-----------------------------------------------------------------------
+  // Refresh
+  //-----------------------------------------------------------------------
+  public void refresh() {
+    constInputPanel.refresh();
+    timeInputPanel.refresh();
+    saveInputPanel.refresh();
   }
 
   //-----------------------------------------------------------------------
@@ -188,6 +208,9 @@ public class GeneralInputsPanel extends JPanel {
       UintahGui.setConstraints(gbc, 6, 1);
       gb.setConstraints(zgravEntry, gbc);
       add(zgravEntry);
+    }
+
+    public void refresh() {
     }
 
     public void writeUintah(PrintWriter pw, String tab) {

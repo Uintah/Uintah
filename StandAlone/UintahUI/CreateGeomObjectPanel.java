@@ -18,10 +18,8 @@ public class CreateGeomObjectPanel extends JPanel
                                    implements ActionListener {
 
   // Data
-  private boolean d_usePartDist = false;
+  private boolean d_usePartList = false;
   private ParticleList d_partList = null;
-  private Vector d_mpmMat = null;
-  private Vector d_iceMat = null;
   private Vector d_geomObj = null;
   private Vector d_geomPiece = null;
   private InputGeometryPanel d_parent = null;
@@ -34,19 +32,15 @@ public class CreateGeomObjectPanel extends JPanel
   //-------------------------------------------------------------------------
   // Constructor
   //-------------------------------------------------------------------------
-  public CreateGeomObjectPanel(boolean usePartDist,
+  public CreateGeomObjectPanel(boolean usePartList,
                                ParticleList partList,
-                               Vector mpmMat,
-                               Vector iceMat,
                                Vector geomObj,
                                Vector geomPiece,
                                InputGeometryPanel parent) {
 
     // Initialize
-    d_usePartDist = false;
+    d_usePartList = false;
     d_partList = partList;
-    d_mpmMat = mpmMat;
-    d_iceMat = iceMat;
     d_geomObj = geomObj;
     d_geomPiece = geomPiece;
 
@@ -72,7 +66,7 @@ public class CreateGeomObjectPanel extends JPanel
     panel.add(delButton);
 
     UintahGui.setConstraints(gbc, GridBagConstraints.NONE,
-			     1.0, 1.0, 0, 0, 1, 1, 5);
+                             1.0, 1.0, 0, 0, 1, 1, 5);
     gb.setConstraints(panel, gbc);
     add(panel);
 
@@ -80,16 +74,72 @@ public class CreateGeomObjectPanel extends JPanel
     geomObjectTabPane = new JTabbedPane();
 
     UintahGui.setConstraints(gbc, GridBagConstraints.BOTH,
-			     1.0, 1.0, 0, 1, 1, 1, 5);
+                             1.0, 1.0, 0, 1, 1, 1, 5);
     gb.setConstraints(geomObjectTabPane, gbc);
     add(geomObjectTabPane);
   }
 
   //---------------------------------------------------------------------
-  // Update the usePartDist flag
+  // Update the usePartList flag
   //---------------------------------------------------------------------
-  public void usePartDist(boolean flag) {
-    d_usePartDist = flag;
+  public void usePartList(boolean flag) {
+    d_usePartList = flag;
+  }
+
+  //---------------------------------------------------------------------
+  // Disable the create and delete buttons
+  //---------------------------------------------------------------------
+  public void disableCreate() {
+    addButton.setEnabled(false);
+  }
+  public void disableDelete() {
+    delButton.setEnabled(false);
+  }
+
+  //---------------------------------------------------------------------
+  // Enable the create button
+  //---------------------------------------------------------------------
+  public void enableCreate() {
+    addButton.setEnabled(true);
+  }
+  public void enableDelete() {
+    delButton.setEnabled(true);
+  }
+
+  //---------------------------------------------------------------------
+  // Create geom object panels if a particle list is input
+  //---------------------------------------------------------------------
+  public void addPartListGeomObjectPanel() {
+
+    // Set the usePartList flag to true
+    d_usePartList = true;
+
+    // Add the particles
+    String particleTabName = new String("Particles");
+    GeomObjectPanel particleGeomObjectPanel = 
+      new GeomObjectPanel(d_usePartList, d_partList, 
+                          d_geomObj, d_geomPiece, this);
+    int numPart = d_partList.size();
+    for (int ii=0; ii < numPart; ++ii) {
+      GeomPiece gp = (GeomPiece) d_geomPiece.elementAt(ii);
+      particleGeomObjectPanel.addGeomPiece(gp);
+    }
+    particleGeomObjectPanel.selectAllGeomPiece();
+    geomObjectTabPane.addTab(particleTabName, particleGeomObjectPanel);
+
+    // Add the remainder
+    String remainderTabName = new String("Remainder");
+    GeomObjectPanel remainderGeomObjectPanel = 
+      new GeomObjectPanel(d_usePartList, d_partList, 
+                          d_geomObj, d_geomPiece, this);
+    GeomPiece gp = (GeomPiece) d_geomPiece.elementAt(numPart+1);
+    remainderGeomObjectPanel.addGeomPiece(gp);
+    remainderGeomObjectPanel.selectAllGeomPiece();
+    geomObjectTabPane.addTab(remainderTabName, remainderGeomObjectPanel);
+
+    // Update
+    validate();
+    updatePanels();
   }
 
   //-------------------------------------------------------------------------
@@ -100,7 +150,7 @@ public class CreateGeomObjectPanel extends JPanel
     if (e.getActionCommand() == "add") {
       String tabName = new String("Object");
       GeomObjectPanel geomObjectPanel = 
-        new GeomObjectPanel(d_usePartDist, d_partList, d_mpmMat, d_iceMat, 
+        new GeomObjectPanel(d_usePartList, d_partList, 
                             d_geomObj, d_geomPiece, this);
       geomObjectTabPane.addTab(tabName, geomObjectPanel);
       validate();
@@ -120,14 +170,5 @@ public class CreateGeomObjectPanel extends JPanel
   public void updatePanels() {
     d_parent.updatePanels();
   }
-
-  //-------------------------------------------------------------------------
-  // Write in Uintah format
-  //-------------------------------------------------------------------------
-  public void writeUintah(PrintWriter pw, String tab) {
-  }
-  public void print(PrintWriter pw, String tab) {
-  }
-
 
 }

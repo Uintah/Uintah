@@ -25,6 +25,7 @@ public class MPMMaterialsPanel extends JPanel {
   // Static variables
 
   // Data
+  private Vector d_geomObj = null;
   private Vector d_mpmMat = null;
   private UintahInputPanel d_parent = null;
 
@@ -35,13 +36,17 @@ public class MPMMaterialsPanel extends JPanel {
   private JButton delButton = null;
   private JButton saveButton = null;
 
+  private MPMContactInputPanel contactPanel = null;
+
   //-----------------------------------------------------------------------
   // Constructor
   //-----------------------------------------------------------------------
-  public MPMMaterialsPanel(Vector mpmMat, 
+  public MPMMaterialsPanel(Vector geomObj,
+                           Vector mpmMat, 
                            UintahInputPanel parent) {
 
     // Initialize local variables
+    d_geomObj = geomObj;
     d_mpmMat = mpmMat;
     d_parent = parent;
 
@@ -57,12 +62,15 @@ public class MPMMaterialsPanel extends JPanel {
     String matID = new String("Material "+String.valueOf(0));
     d_mpmMat.addElement(matID);
 
-    MPMMaterialInputPanel matPanel = new MPMMaterialInputPanel(0);
+    MPMMaterialInputPanel matPanel = new MPMMaterialInputPanel(0, d_geomObj);
     mpmMatInputPanel.addElement(matPanel);
+    
+    contactPanel = new MPMContactInputPanel(d_mpmMat);
 
     // Create the tabbed pane
     mpmMatTabbedPane = new JTabbedPane();
     mpmMatTabbedPane.addTab(matID, null, matPanel, null);
+    mpmMatTabbedPane.addTab("Contact", null, contactPanel, null);
     mpmMatTabbedPane.setSelectedIndex(0);
     UintahGui.setConstraints(gbc, GridBagConstraints.NONE, 
                              1.0, 1.0, 0, 0, 
@@ -101,6 +109,39 @@ public class MPMMaterialsPanel extends JPanel {
     saveButton.addActionListener(buttonListener);
   }
 
+  //-----------------------------------------------------------------------
+  // Refresh
+  //-----------------------------------------------------------------------
+  public void refresh() {
+    int numMat = d_mpmMat.size();
+    for (int ii = 0; ii < numMat; ++ii) {
+      MPMMaterialInputPanel matPanel = 
+        (MPMMaterialInputPanel) mpmMatInputPanel.elementAt(ii);
+      matPanel.refresh();
+    }
+  }
+
+  //-----------------------------------------------------------------------
+  // Create MPM materials for particle distribution
+  //-----------------------------------------------------------------------
+  public void createPartListMPMMaterial(String simType) {
+
+    if (simType.equals(new String("mpm"))) {
+      int numMat = d_mpmMat.size();
+      if (numMat < 2) {
+        String matID = new String("Material "+String.valueOf(numMat));
+        d_mpmMat.addElement(matID);
+
+        MPMMaterialInputPanel matPanel = 
+          new MPMMaterialInputPanel(numMat, d_geomObj);
+        mpmMatInputPanel.addElement(matPanel);
+        mpmMatTabbedPane.add(matPanel, numMat);
+        mpmMatTabbedPane.setTitleAt(numMat, matID);
+        mpmMatTabbedPane.setSelectedIndex(0);
+      }
+    }
+  }
+
   //---------------------------------------------------------------
   // Write out in Uintah format
   //---------------------------------------------------------------
@@ -127,9 +168,12 @@ public class MPMMaterialsPanel extends JPanel {
         String matID = new String("Material "+String.valueOf(ii));
         d_mpmMat.addElement(matID);
 
-        MPMMaterialInputPanel matPanel = new MPMMaterialInputPanel(ii);
+        MPMMaterialInputPanel matPanel = 
+          new MPMMaterialInputPanel(ii, d_geomObj);
         mpmMatInputPanel.addElement(matPanel);
-        mpmMatTabbedPane.addTab(matID, null, matPanel, null);
+        //mpmMatTabbedPane.addTab(matID, null, matPanel, null);
+        mpmMatTabbedPane.add(matPanel, ii);
+        mpmMatTabbedPane.setTitleAt(ii,matID);
         mpmMatTabbedPane.setSelectedIndex(ii);
 
       } else if (e.getActionCommand() == "delete") {

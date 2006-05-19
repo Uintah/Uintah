@@ -17,14 +17,16 @@ import java.io.PrintWriter;
 // Class:  UintahInputPanel
 // Purpose : Creates a panel for entering Uintah input data
 //**************************************************************************
-public class UintahInputPanel extends JPanel {
+public class UintahInputPanel extends JPanel 
+                              implements ChangeListener {
 
   // Data
-  private ParticleList d_partList;
-  private UintahGui d_parent;
-  private Vector d_mpmMat;
-  private Vector d_iceMat;
-  private Vector d_geomObj;
+  private ParticleList d_partList = null;
+  private UintahGui d_parent = null;
+  private Vector d_mpmMat = null;
+  private Vector d_iceMat = null;
+  private Vector d_geomObj = null;
+  private String d_simComponent = null;
 
   // Data that may be needed later
   private JTabbedPane uintahTabbedPane = null;
@@ -43,6 +45,7 @@ public class UintahInputPanel extends JPanel {
     d_mpmMat = new Vector();
     d_iceMat = new Vector();
     d_geomObj = new Vector();
+    d_simComponent = new String("mpm");
 
     // Copy the arguments
     d_partList = particleList;
@@ -52,13 +55,12 @@ public class UintahInputPanel extends JPanel {
     uintahTabbedPane = new JTabbedPane();
 
     // Create the panels to be added to the tabbed pane
-    generalInpPanel = new GeneralInputsPanel(this);
+    generalInpPanel = new GeneralInputsPanel(d_simComponent, this);
+    geomPanel = new GeometryPanel(d_partList, d_geomObj, this); 
     mpmInpPanel = new MPMInputsPanel(this); 
-    mpmMatPanel = new MPMMaterialsPanel(d_mpmMat, this); 
+    mpmMatPanel = new MPMMaterialsPanel(d_geomObj, d_mpmMat, this); 
     iceInpPanel = new ICEInputsPanel(this); 
-    iceMatPanel = new ICEMaterialsPanel(d_iceMat, this); 
-    geomPanel = new GeometryPanel(d_partList, d_geomObj, d_mpmMat, d_iceMat, 
-                                  this); 
+    iceMatPanel = new ICEMaterialsPanel(d_geomObj, d_iceMat, this); 
     /*
     GridBCPanel gridBCPanel = new GridBCPanel(); 
     */
@@ -66,6 +68,8 @@ public class UintahInputPanel extends JPanel {
     // Add the tabs
     uintahTabbedPane.addTab("General Inputs", null,
                           generalInpPanel, null);
+    uintahTabbedPane.addTab("Geometry", null,
+                          geomPanel, null);
     uintahTabbedPane.addTab("MPM Parameters", null,
                           mpmInpPanel, null);
     uintahTabbedPane.addTab("MPM Materials", null,
@@ -74,8 +78,6 @@ public class UintahInputPanel extends JPanel {
                           iceInpPanel, null);
     uintahTabbedPane.addTab("ICE Materials", null,
                           iceMatPanel, null);
-    uintahTabbedPane.addTab("Geometry", null,
-                          geomPanel, null);
     /*
     uintahTabbedPane.addTab("Grid and BC Inputs", null,
                           gridBCPanel, null);
@@ -94,20 +96,62 @@ public class UintahInputPanel extends JPanel {
     add(uintahTabbedPane);
     
     // Add tab listener
-    TabListener tabListener = new TabListener();
-    uintahTabbedPane.addChangeListener(tabListener);
+    uintahTabbedPane.addChangeListener(this);
+
+    // Set ice inputs as disabled.  The relevant tabs
+    // are enabled once the simulation component is known
+    uintahTabbedPane.setEnabledAt(4, false);
+    uintahTabbedPane.setEnabledAt(5, false);
   }
 
-  // Tab listener
-  private class TabListener implements ChangeListener {
-    public void stateChanged(ChangeEvent e) {
+  // Refresh when tabs are selected
+  public void stateChanged(ChangeEvent e) {
+
+    // When a tab is changed, create a MPM material if a particle list
+    // is being used
+    int numParticles = d_partList.size();
+    if (numParticles > 0) {
+      mpmMatPanel.createPartListMPMMaterial(d_simComponent);
+    }
+    generalInpPanel.refresh();
+    mpmInpPanel.refresh();
+    mpmMatPanel.refresh();
+    iceInpPanel.refresh();
+    iceMatPanel.refresh();
+    geomPanel.refresh();
+  }
+
+  // Enable the tabs depending on the chosen simulation component
+  public void enableTabs(String simComponent) {
+    
+    d_simComponent = simComponent;
+    if (d_simComponent.equals("mpm")) {
+      uintahTabbedPane.setEnabledAt(2, true);
+      uintahTabbedPane.setEnabledAt(3, true);
+      uintahTabbedPane.setEnabledAt(4, false);
+      uintahTabbedPane.setEnabledAt(5, false);
+    } else if (d_simComponent.equals("ice")) {
+      uintahTabbedPane.setEnabledAt(2, false);
+      uintahTabbedPane.setEnabledAt(3, false);
+      uintahTabbedPane.setEnabledAt(4, true);
+      uintahTabbedPane.setEnabledAt(5, true);
+    } else if (d_simComponent.equals("mpmice")) {
+      int numTabs = uintahTabbedPane.getTabCount();
+      for (int ii=2; ii < numTabs; ++ii) {
+        uintahTabbedPane.setEnabledAt(ii, true);
+      }
     }
   }
-
+  
   // Update Panels
   public void updatePanels() {
     validate();
     d_parent.updatePanels();
+  }
+
+  // Update geometry objects
+  public void createPartListGeomObjects() {
+    geomPanel.createPartListGeomObjects();
   }
 
   // Write in Uintah format
@@ -142,7 +186,7 @@ public class UintahInputPanel extends JPanel {
     pw.println(tab1+"<ICE>");
     int numICEMat = d_iceMat.size();
     for (int ii = 0; ii < numICEMat; ++ii) {
-    //iceMatPanel = new ICEMaterialsPanel(d_iceMat, this); 
+      //iceMatPanel.writeUintah(pw, tab2, ii);
     }
     pw.println(tab1+"</ICE>");
     pw.println(tab);
