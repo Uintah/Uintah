@@ -1771,9 +1771,7 @@ ______________________________________________________________________*/
 void AMRICE::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                           SchedulerP& sched)
 {
-#if 0
   scheduleErrorEstimate(coarseLevel, sched);
-#endif
 }
 
 /*_____________________________________________________________________
@@ -1788,18 +1786,38 @@ void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   cout_doing << d_myworld->myrank() 
              << " AMRICE::scheduleErrorEstimate \t\t\tL-" 
              << coarseLevel->getIndex() << '\n';
-
+  bool initial = false;             
+  if(d_sharedState->getCurrentTopLevelTimeStep() == 0){
+    initial = true;  // during initialization 
+  }
   Task* t = scinew Task("AMRICE::errorEstimate", 
-                  this, &AMRICE::errorEstimate, false);  
+                  this, &AMRICE::errorEstimate, initial);  
   
   Ghost::GhostType  gac  = Ghost::AroundCells; 
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.
   bool  fat = true;  // possibly (F)rom (A)nother (T)askgraph
+  
+
+  const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
+  const MaterialSet* all_matls = d_sharedState->allMaterials();  
+  
+  const MaterialSubset* matls_sub;
+  const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
+  const MaterialSubset* all_matls_sub = all_matls->getUnion();  
+  
+  // Only require ice_matls during initialization, we don't have *_CC variables for 
+  // mpm_matls at this point  
+  if(initial){
+    matls_sub = ice_matls_sub;
+  }else{
+    matls_sub = all_matls_sub;
+  }
+  
                   
-  t->requires(Task::NewDW, lb->rho_CCLabel,       gac, 1, fat);
-  t->requires(Task::NewDW, lb->temp_CCLabel,      gac, 1, fat);
-  t->requires(Task::NewDW, lb->vel_CCLabel,       gac, 1, fat);
-  t->requires(Task::NewDW, lb->vol_frac_CCLabel,  gac, 1, fat);
+  t->requires(Task::NewDW, lb->rho_CCLabel,      matls_sub,  gac, 1, fat);
+  t->requires(Task::NewDW, lb->temp_CCLabel,     matls_sub,  gac, 1, fat);
+  t->requires(Task::NewDW, lb->vel_CCLabel,      matls_sub,  gac, 1, fat);
+  t->requires(Task::NewDW, lb->vol_frac_CCLabel, matls_sub,  gac, 1, fat);
   t->requires(Task::NewDW, lb->press_CCLabel,    d_press_matl,oims,gac, 1, fat);
   
   t->computes(lb->mag_grad_rho_CCLabel);
@@ -1894,7 +1912,7 @@ AMRICE::errorEstimate(const ProcessorGroup*,
                       const MaterialSubset* /*matls*/,
                       DataWarehouse*,
                       DataWarehouse* new_dw,
-                      bool /*initial*/)
+                      bool initial)
 {
   const Level* level = getLevel(patches);
   cout_doing << d_myworld->myrank() 
@@ -1925,47 +1943,71 @@ AMRICE::errorEstimate(const ProcessorGroup*,
     mag_grad_press_CC.initialize(0.0);
     
     compute_Mag_gradient(press_CC, mag_grad_press_CC, patch);
-    
+
     //__________________________________
-    //  RHO, TEMP, VEL_CC, VOL_FRAC
-    int numMatls = d_sharedState->getNumMatls();
-    for(int m=0;m < numMatls;m++){
+    //  initialize mag_grad for all matls
+    int numAllMatls = d_sharedState->getNumMatls();
+    StaticArray<CCVariable<double> > mag_grad_rho_CC(numAllMatls);
+    StaticArray<CCVariable<double> > mag_grad_temp_CC(numAllMatls);
+    StaticArray<CCVariable<double> > mag_grad_vol_frac_CC(numAllMatls);
+    StaticArray<CCVariable<double> > mag_div_vel_CC(numAllMatls);
+          
+    for(int m=0;m < numAllMatls;m++){
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
-              
+      new_dw->allocateAndPut(mag_grad_rho_CC[indx],     
+                         lb->mag_grad_rho_CCLabel,     indx,patch);
+      new_dw->allocateAndPut(mag_grad_temp_CC[indx],    
+                         lb->mag_grad_temp_CCLabel,    indx,patch);
+      new_dw->allocateAndPut(mag_div_vel_CC[indx], 
+                         lb->mag_div_vel_CCLabel,      indx,patch);
+      new_dw->allocateAndPut(mag_grad_vol_frac_CC[indx],
+                         lb->mag_grad_vol_frac_CCLabel,indx,patch);
+                         
+      mag_grad_rho_CC[indx].initialize(0.0);
+      mag_grad_temp_CC[indx].initialize(0.0);
+      mag_div_vel_CC[indx].initialize(0.0);
+      mag_grad_vol_frac_CC[indx].initialize(0.0);
+    }  // matls
+
+
+    //__________________________________
+    //  RHO, TEMP, VEL_CC, VOL_FRAC
+    // During initialization only compute for ICE matls
+    int numMatls = 0;
+    if (initial){
+      numMatls = d_sharedState->getNumICEMatls();
+    }else{
+      numMatls = d_sharedState->getNumMatls();
+    }
+    
+    for(int m=0;m < numMatls;m++){
+      
+      Material* matl;
+      if(initial){
+        matl = d_sharedState->getICEMaterial( m );
+      }else{
+        matl = d_sharedState->getMaterial( m );
+      }
+      
+      int indx = matl->getDWIndex();        
       constCCVariable<double> rho_CC, temp_CC, vol_frac_CC;
       constCCVariable<Vector> vel_CC;
-      CCVariable<double> mag_grad_rho_CC, mag_grad_temp_CC, mag_grad_vol_frac_CC;
-      CCVariable<double> mag_div_vel_CC;
       
       new_dw->get(rho_CC,      lb->rho_CCLabel,      indx,patch,gac,1);
       new_dw->get(temp_CC,     lb->temp_CCLabel,     indx,patch,gac,1);
       new_dw->get(vel_CC,      lb->vel_CCLabel,      indx,patch,gac,1);
       new_dw->get(vol_frac_CC, lb->vol_frac_CCLabel, indx,patch,gac,1);
-
-      new_dw->allocateAndPut(mag_grad_rho_CC,     
-                         lb->mag_grad_rho_CCLabel,     indx,patch);
-      new_dw->allocateAndPut(mag_grad_temp_CC,    
-                         lb->mag_grad_temp_CCLabel,    indx,patch);
-      new_dw->allocateAndPut(mag_div_vel_CC, 
-                         lb->mag_div_vel_CCLabel,      indx,patch);
-      new_dw->allocateAndPut(mag_grad_vol_frac_CC,
-                         lb->mag_grad_vol_frac_CCLabel,indx,patch);
-                         
-      mag_grad_rho_CC.initialize(0.0);
-      mag_grad_temp_CC.initialize(0.0);
-      mag_div_vel_CC.initialize(0.0);
-      mag_grad_vol_frac_CC.initialize(0.0);
       
       //__________________________________
-      // compute the gradients for all the variables
-      compute_Mag_gradient(rho_CC,       mag_grad_rho_CC,      patch);
+      // compute the magnitude of the gradient/divergence
+      compute_Mag_gradient(rho_CC,       mag_grad_rho_CC[indx],      patch);
       
-      compute_Mag_gradient(temp_CC,      mag_grad_temp_CC,     patch); 
+      compute_Mag_gradient(temp_CC,      mag_grad_temp_CC[indx],     patch); 
       
-      compute_Mag_gradient(vol_frac_CC,  mag_grad_vol_frac_CC, patch);
+      compute_Mag_gradient(vol_frac_CC,  mag_grad_vol_frac_CC[indx], patch);
       
-      compute_Mag_Divergence(vel_CC,     mag_div_vel_CC,       patch);
+      compute_Mag_Divergence(vel_CC,     mag_div_vel_CC[indx],       patch);
     }  // matls
 
     //__________________________________
