@@ -16,12 +16,12 @@
     <!--   T  I  M  E     V  A  R  I  A  B  L  E  S                         -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            2.00e-6     </maxTime>
+       <maxTime>            8.00e-6     </maxTime>
        <initTime>           0.0         </initTime>
        <delt_min>           1.0e-12     </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          2.1e-8      </delt_init>
-       <max_iterations>     300         </max_iterations>
+       <max_Timesteps>      45         </max_Timesteps>
        <timestep_multiplier>0.5         </timestep_multiplier>
    </Time>    
     <!--____________________________________________________________________-->
@@ -125,7 +125,7 @@
     <CFD>
          <cfl>0.5</cfl>
        <ICE>
-        <advection type = "SecondOrder" useCompatibleFluxes = "false"/>
+        <advection type = "SecondOrder"/>
       </ICE>        
     </CFD>
 
