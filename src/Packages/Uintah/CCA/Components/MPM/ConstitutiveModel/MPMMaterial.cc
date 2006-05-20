@@ -33,7 +33,7 @@ using namespace Uintah;
 using namespace SCIRun;
 
 // Standard Constructor
-MPMMaterial::MPMMaterial(ProblemSpecP& ps)
+MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss)
   : Material(ps), d_cm(0),  d_particle_creator(0)
 {
   d_lb = scinew MPMLabel();
@@ -41,7 +41,8 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps)
   d_flag->readMPMFlags(ps);
   // The standard set of initializations needed
   standardInitialization(ps);
-
+  
+  d_cm->setSharedState(ss);
   // Check to see which ParticleCreator object we need
 
   d_particle_creator = ParticleCreatorFactory::create(ps,this,d_flag);

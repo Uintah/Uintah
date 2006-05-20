@@ -47,26 +47,31 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
              << " Doing problemSetup  \t\t\t AMRICE" << '\n';
              
   ICE::problemSetup(params, materials_ps,grid, sharedState);
-  ProblemSpecP cfd_ps = params->findBlock("CFD");
-  ProblemSpecP ice_ps = cfd_ps->findBlock("ICE");
-  ProblemSpecP amr_ps = ice_ps->findBlock("AMR");
-  if(!amr_ps){
+  ProblemSpecP ice_ps;
+  ProblemSpecP amr_ps = params->findBlock("AMR");
+  if (amr_ps)
+    ice_ps = amr_ps->findBlock("ICE");
+  if(!ice_ps){
     string warn;
-    warn ="\n INPUT FILE ERROR:\n <AMR>  block not found inside of <ICE> block \n";
+    warn ="\n INPUT FILE ERROR:\n <ICE>  block not found inside of <AMR> block \n";
     throw ProblemSetupException(warn, __FILE__, __LINE__);
     
   }
-  ProblemSpecP refine_ps = amr_ps->findBlock("Refinement_Criteria_Thresholds");
+  ProblemSpecP refine_ps = ice_ps->findBlock("Refinement_Criteria_Thresholds");
   if(!refine_ps ){
     string warn;
     warn ="\n INPUT FILE ERROR:\n <Refinement_Criteria_Thresholds> "
          " block not found inside of <ICE> block \n";
     throw ProblemSetupException(warn, __FILE__, __LINE__);
   }
-  amr_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
-  amr_ps->getWithDefault( "regridderTest", d_regridderTest,     false);
-  amr_ps->getWithDefault( "do_Refluxing",  d_doRefluxing,       true);
-  amr_ps->getWithDefault( "useLockStep",   d_useLockStep,       false);
+  ice_ps->require( "orderOfInterpolation", d_orderOfInterpolation);
+  ice_ps->getWithDefault( "regridderTest", d_regridderTest,     false);
+  ice_ps->getWithDefault( "do_Refluxing",  d_doRefluxing,       true);
+  ice_ps->getWithDefault( "useLockStep",   d_useLockStep,       false);
+
+  // Min/Max for AMR and semi-AMR problems
+  ice_ps->getWithDefault("min_grid_level", d_minGridLevel, 0);
+  ice_ps->getWithDefault("max_grid_level", d_maxGridLevel, 1000);
   
   //__________________________________
   // Pull out the refinement threshold criteria 
@@ -142,7 +147,7 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
   int maxLevel = grid->numLevels();
   
   for (int i=0; i< maxLevel; i++){
-     double trr = grid->getLevel(i)->timeRefinementRatio();
+     double trr = d_sharedState->timeRefinementRatio();
 
     if( d_useLockStep && trr != 1){
       string warn;

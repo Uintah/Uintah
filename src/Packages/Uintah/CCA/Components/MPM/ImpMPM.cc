@@ -213,7 +213,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    int numMatls=0;
    for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
-     MPMMaterial *mat = scinew MPMMaterial(ps);
+     MPMMaterial *mat = scinew MPMMaterial(ps, d_sharedState);
      //register as an MPM material
      sharedState->registerMPMMaterial(mat);
      numMatls++;
@@ -226,6 +226,19 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    d_solver = scinew SimpleSolver();
 #endif
    d_solver->initialize();
+
+   // setup sub scheduler
+   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
+   d_subsched = sched->createSubScheduler();
+   d_subsched->initialize(3,1);
+   d_subsched->clearMappings();
+   d_subsched->mapDataWarehouse(Task::ParentOldDW, 0);
+   d_subsched->mapDataWarehouse(Task::ParentNewDW, 1);
+   d_subsched->mapDataWarehouse(Task::OldDW, 2);
+   d_subsched->mapDataWarehouse(Task::NewDW, 3);
+   
+   d_recompileSubsched = true;
+
 
    heatConductionModel = scinew ImplicitHeatConduction(sharedState,lb,flags);
 
@@ -277,7 +290,6 @@ void ImpMPM::outputProblemSpec(ProblemSpecP& root_ps)
   contact_ps->appendElement("direction",d_contact_dirs);
   contact_ps->appendElement("stop_time",d_stop_time);
   contact_ps->appendElement("velocity_after_stop",d_vel_after_stop);
-
 }
 
 
@@ -840,7 +852,7 @@ void ImpMPM::scheduleCheckConvergence(SchedulerP& sched,
 void ImpMPM::scheduleIterate(SchedulerP& sched,const LevelP& level,
                              const PatchSet*, const MaterialSet*)
 {
-
+  d_recompileSubsched = true;
   Task* task = scinew Task("scheduleIterate", this, &ImpMPM::iterate,level,
                            sched.get_rep());
 
@@ -1010,42 +1022,38 @@ void ImpMPM::iterate(const ProcessorGroup*,
                      DataWarehouse* old_dw, DataWarehouse* new_dw,
                      LevelP level, Scheduler* sched)
 {
-  SchedulerP subsched = sched->createSubScheduler();
   DataWarehouse::ScrubMode old_dw_scrubmode =
                            old_dw->setScrubbing(DataWarehouse::ScrubNone);
   DataWarehouse::ScrubMode new_dw_scrubmode =
                            new_dw->setScrubbing(DataWarehouse::ScrubNone);
-  subsched->initialize(3, 1);
-  subsched->setParentDWs(old_dw, new_dw);
-  subsched->clearMappings();
-  subsched->mapDataWarehouse(Task::ParentOldDW, 0);
-  subsched->mapDataWarehouse(Task::ParentNewDW, 1);
-  subsched->mapDataWarehouse(Task::OldDW, 2);
-  subsched->mapDataWarehouse(Task::NewDW, 3);
-  
+
   GridP grid = level->getGrid();
-  subsched->advanceDataWarehouse(grid);
+  d_subsched->setParentDWs(old_dw, new_dw);
+  d_subsched->advanceDataWarehouse(grid);
   const MaterialSet* matls = d_sharedState->allMPMMaterials();
 
-  // Create the tasks
-
-  // This task only zeros out the stiffness matrix it doesn't free any memory.
-  scheduleDestroyMatrix(           subsched,level->eachPatch(),matls,true);
-
-  if (d_doMechanics) {
-    scheduleComputeStressTensor(     subsched,level->eachPatch(),matls,true);
-    scheduleFormStiffnessMatrix(     subsched,level->eachPatch(),matls);
-    scheduleComputeInternalForce(    subsched,level->eachPatch(),matls);
-    scheduleFormQ(                   subsched,level->eachPatch(),matls);
-    scheduleSolveForDuCG(            subsched,d_perproc_patches, matls);
+  if (d_recompileSubsched) {
+    d_subsched->initialize(3, 1);
+    // Create the tasks
+    
+    // This task only zeros out the stiffness matrix it doesn't free any memory.
+    scheduleDestroyMatrix(           d_subsched,level->eachPatch(),matls,true);
+    
+    if (d_doMechanics) {
+      scheduleComputeStressTensor(     d_subsched,level->eachPatch(),matls,true);
+      scheduleFormStiffnessMatrix(     d_subsched,level->eachPatch(),matls);
+      scheduleComputeInternalForce(    d_subsched,level->eachPatch(),matls);
+      scheduleFormQ(                   d_subsched,level->eachPatch(),matls);
+      scheduleSolveForDuCG(            d_subsched,d_perproc_patches, matls);
+    }
+    
+    scheduleGetDisplacementIncrement(d_subsched,level->eachPatch(),matls);
+    scheduleUpdateGridKinematics(    d_subsched,level->eachPatch(),matls);
+    scheduleCheckConvergence(d_subsched,level,  level->eachPatch(),matls);
+    
+    d_subsched->compile();
+    d_recompileSubsched = false;  
   }
-
-  scheduleGetDisplacementIncrement(subsched,level->eachPatch(),matls);
-  scheduleUpdateGridKinematics(    subsched,level->eachPatch(),matls);
-  scheduleCheckConvergence(subsched,level,  level->eachPatch(),matls);
-
-  subsched->compile();
-
   int count = 0;
   bool dispInc = false;
   bool dispIncQ = false;
@@ -1066,52 +1074,52 @@ void ImpMPM::iterate(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matl = mpm_matl->getDWIndex();
       ParticleSubset* pset = 
-        subsched->get_dw(0)->getParticleSubset(matl, patch);
+        d_subsched->get_dw(0)->getParticleSubset(matl, patch);
 
       delt_vartype dt;
       old_dw->get(dt,d_sharedState->get_delt_label(), patch->getLevel());
-      subsched->get_dw(3)->put(sum_vartype(0.0),lb->dispIncQNorm0);
-      subsched->get_dw(3)->put(sum_vartype(0.0),lb->dispIncNormMax);
+      d_subsched->get_dw(3)->put(sum_vartype(0.0),lb->dispIncQNorm0);
+      d_subsched->get_dw(3)->put(sum_vartype(0.0),lb->dispIncNormMax);
 
       // New data to be stored in the subscheduler
       NCVariable<Vector> dispNew,newdisp;
       new_dw->getModifiable(dispNew, lb->dispNewLabel,             matl,patch);
-      subsched->get_dw(3)->allocateAndPut(newdisp,lb->dispNewLabel,matl,patch);
+      d_subsched->get_dw(3)->allocateAndPut(newdisp,lb->dispNewLabel,matl,patch);
       newdisp.copyData(dispNew);
 
       if(!flags->d_doGridReset){
         NCVariable<Vector> TDisp, TDispNew;
         new_dw->getModifiable(TDisp,   lb->gDisplacementLabel, matl,patch);
-        subsched->get_dw(3)->allocateAndPut(TDispNew,lb->gDisplacementLabel,
+        d_subsched->get_dw(3)->allocateAndPut(TDispNew,lb->gDisplacementLabel,
                                                                matl,patch);
         TDispNew.copyData(TDisp);
       }
-      subsched->get_dw(3)->saveParticleSubset(pset, matl, patch);
+      d_subsched->get_dw(3)->saveParticleSubset(pset, matl, patch);
 
       // These variables are ultimately retrieved from the subschedulers
       // old datawarehouse after the advancement of the data warehouse.
       double new_dt;
       new_dt = dt;
-      subsched->get_dw(3)->put(delt_vartype(new_dt),
+      d_subsched->get_dw(3)->put(delt_vartype(new_dt),
                                   d_sharedState->get_delt_label());
     }
   }
 
-  subsched->get_dw(3)->finalize();
-  subsched->advanceDataWarehouse(grid);
+  d_subsched->get_dw(3)->finalize();
+  d_subsched->advanceDataWarehouse(grid);
 
   while(!(dispInc && dispIncQ)) {
     if(d_myworld->myrank() == 0){
      cerr << "Beginning Iteration = " << count << "\n";
     }
     count++;
-    subsched->get_dw(2)->setScrubbing(DataWarehouse::ScrubComplete);
-    subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
-    subsched->execute();  // THIS ACTUALLY GETS THE WORK DONE
-    subsched->get_dw(3)->get(dispIncNorm,   lb->dispIncNorm);
-    subsched->get_dw(3)->get(dispIncQNorm,  lb->dispIncQNorm); 
-    subsched->get_dw(3)->get(dispIncNormMax,lb->dispIncNormMax);
-    subsched->get_dw(3)->get(dispIncQNorm0, lb->dispIncQNorm0);
+    d_subsched->get_dw(2)->setScrubbing(DataWarehouse::ScrubComplete);
+    d_subsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
+    d_subsched->execute();  // THIS ACTUALLY GETS THE WORK DONE
+    d_subsched->get_dw(3)->get(dispIncNorm,   lb->dispIncNorm);
+    d_subsched->get_dw(3)->get(dispIncQNorm,  lb->dispIncQNorm); 
+    d_subsched->get_dw(3)->get(dispIncNormMax,lb->dispIncNormMax);
+    d_subsched->get_dw(3)->get(dispIncQNorm0, lb->dispIncQNorm0);
 
     if(d_myworld->myrank() == 0){
       cerr << "dispIncNorm/dispIncNormMax = "
@@ -1150,7 +1158,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
       return;
     }
 
-    subsched->advanceDataWarehouse(grid);
+    d_subsched->advanceDataWarehouse(grid);
   }
   d_numIterations = count;
 
@@ -1169,10 +1177,10 @@ void ImpMPM::iterate(const ProcessorGroup*,
 
       // Needed in computeAcceleration 
       constNCVariable<Vector> velocity, dispNew, internalForce;
-      subsched->get_dw(2)->get(velocity, lb->gVelocityLabel,matl,patch,gnone,0);
-      subsched->get_dw(2)->get(dispNew,  lb->dispNewLabel,  matl,patch,gnone,0);
+      d_subsched->get_dw(2)->get(velocity, lb->gVelocityLabel,matl,patch,gnone,0);
+      d_subsched->get_dw(2)->get(dispNew,  lb->dispNewLabel,  matl,patch,gnone,0);
       if (d_doMechanics) {
-        subsched->get_dw(2)->get(internalForce,
+        d_subsched->get_dw(2)->get(internalForce,
                                     lb->gInternalForceLabel,matl,patch,gnone,0);
       }
 
@@ -2885,7 +2893,7 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
    }
 
    if(d_numIterations==0){
-     new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(d_initialDt)), 
+     new_dw->put(delt_vartype(d_sharedState->adjustDelt(patch->getLevel(), d_initialDt)), 
                  lb->delTLabel);
    }
    else{
@@ -2923,7 +2931,7 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
       }
       delT_new = min(delT_new, old_dt);
 
-      new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
+      new_dw->put(delt_vartype(d_sharedState->adjustDelt(patch->getLevel(), delT_new)), 
                   lb->delTLabel);
     }
    }

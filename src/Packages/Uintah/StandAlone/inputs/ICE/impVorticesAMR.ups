@@ -11,7 +11,6 @@
    <SimulationComponent>
         <type> ice </type>
    </SimulationComponent>
-   <doAMR>true</doAMR>
    <Solver>
         <type> hypreamr </type>
    </Solver>
@@ -138,9 +137,6 @@
         </BCType>
       </Face>
     </BoundaryConditions>
-    
-       <time_refinement_ratio> 1 </time_refinement_ratio> 
-       
        <Level>
         <Box label = "L-0">
            <lower>        [-3.0,-3.0,-0.05]    </lower>
@@ -151,17 +147,6 @@
         <spacing>         [0.1,0.1,0.1]       </spacing>
        </Level>     
     </Grid> 
-    <!--____________________________________________________________________-->
-    <!--    A M R   G R I D                                                 -->
-    <!--____________________________________________________________________--> 
-    <Regridder>
-      <max_levels>2</max_levels>
-      <cell_refinement_ratio>    [[4,4,1]]  </cell_refinement_ratio>
-      <lattice_refinement_ratio> [[5,5,1][2,2,1]]  </lattice_refinement_ratio>
-      <cell_creation_dilation>   [2,2,0]   </cell_creation_dilation>   
-      <cell_deletion_dilation>   [1,1,0]   </cell_deletion_dilation>   
-      <min_boundary_cells>       [1,1,0]   </min_boundary_cells>
-    </Regridder>
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
     <!--____________________________________________________________________-->
@@ -265,19 +250,29 @@
            </Parameters>
         </ImplicitSolver>
         
-        
-        <!--A M R -->
-        <AMR>
-          <orderOfInterpolation>1  </orderOfInterpolation>
-          <useLockStep>       true </useLockStep>
-          <do_Refluxing>      true </do_Refluxing>
-          <Refinement_Criteria_Thresholds>
-            <Variable name = "press_CC"  value = "200" matl = "0" />
-          </Refinement_Criteria_Thresholds>
-        </AMR>
       </ICE>        
     </CFD>
 
+    <!--A M R -->
+    <AMR>
+      <ICE>
+        <orderOfInterpolation>1  </orderOfInterpolation>
+        <useLockStep>       true </useLockStep>
+        <do_Refluxing>      true </do_Refluxing>
+        <Refinement_Criteria_Thresholds>
+          <Variable name = "press_CC"  value = "200" matl = "0" />
+        </Refinement_Criteria_Thresholds>
+      </ICE>
+      <Regridder>
+        <max_levels>2</max_levels>
+        <cell_refinement_ratio>    [[4,4,1]]  </cell_refinement_ratio>
+        <lattice_refinement_ratio> [[5,5,1][2,2,1]]  </lattice_refinement_ratio>
+        <cell_creation_dilation>   [2,2,0]   </cell_creation_dilation>   
+        <cell_deletion_dilation>   [1,1,0]   </cell_deletion_dilation>   
+        <min_boundary_cells>       [1,1,0]   </min_boundary_cells>
+      </Regridder>
+      <time_refinement_ratio> 1 </time_refinement_ratio> 
+    </AMR>
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   

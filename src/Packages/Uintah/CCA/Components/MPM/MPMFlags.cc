@@ -89,8 +89,6 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
 
   mpm_flag_ps->get("turn_on_adiabatic_heating", d_adiabaticHeatingOn);
   if (d_adiabaticHeatingOn) d_adiabaticHeating = 0.0;
-  mpm_flag_ps->getWithDefault("min_grid_level", d_minGridLevel, 0);
-  mpm_flag_ps->getWithDefault("max_grid_level", d_maxGridLevel, 1000);
   mpm_flag_ps->get("ForceBC_force_increment_factor", d_forceIncrementFactor);
   mpm_flag_ps->get("create_new_particles", d_createNewParticles);
   mpm_flag_ps->get("manual_new_material", d_addNewMaterial);
@@ -121,6 +119,13 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   }
 
   mpm_flag_ps->get("extra_solver_flushes", d_extraSolverFlushes);
+
+  ProblemSpecP amr_ps = root->findBlock("AMR");
+  if (amr_ps) {
+    ProblemSpecP mpm_amr_ps = root->findBlock("MPM");
+    mpm_amr_ps->getWithDefault("min_grid_level", d_minGridLevel, 0);
+    mpm_amr_ps->getWithDefault("max_grid_level", d_maxGridLevel, 1000);
+  }
 
   if (dbg.active()) {
     dbg << "---------------------------------------------------------\n";

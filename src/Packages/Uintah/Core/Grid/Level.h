@@ -196,11 +196,7 @@ public:
   inline int getID() const {
     return d_id;
   }
-  inline int timeRefinementRatio() const {
-    return d_timeRefinementRatio;
-  }
-  void setTimeRefinementRatio(int trr);
-  
+
  //getIndex() returns the relative position of the level - 0 is coarsest, 1 is  
  //next and so forth.  
   inline int getIndex() const {
@@ -210,9 +206,6 @@ public:
     return d_refinementRatio;
   }
 
-  //! Use this when you're done setting the delt, and this function
-  //! will compensate for whichever level you're on
-  double adjustDelt(double delt) const;
 private:
   Level(const Level&);
   Level& operator=(const Level&);
@@ -237,10 +230,6 @@ private:
 
   int d_id;
   IntVector d_refinementRatio;
-
-      // should technically be a "grid" parameter, but here we have a way
-      // to check if it's been finalized.
-  int d_timeRefinementRatio;
 
   // vars for select_grid - don't ifdef them here, so if we change it
   // we don't have to compile everything

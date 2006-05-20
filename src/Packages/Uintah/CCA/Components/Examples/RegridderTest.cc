@@ -182,7 +182,7 @@ namespace Uintah
   {
     const Level* level = getLevel(patches);
     double delt = level->dCell().x();
-    delt = level->adjustDelt(delt);
+    delt = d_sharedState->adjustDelt(level, delt);
     new_dw->put(delt_vartype(delt), d_sharedState->get_delt_label());
   }
 

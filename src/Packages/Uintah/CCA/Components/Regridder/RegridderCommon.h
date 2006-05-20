@@ -99,17 +99,18 @@ WARNING
                                  const MaterialSubset* matls,
                                  DataWarehouse*, DataWarehouse* new_dw);
 
-    void Dilate2(const ProcessorGroup*,
-                 const PatchSubset* patches,
-                 const MaterialSubset* ,
-                 DataWarehouse* old_dw,
-                 DataWarehouse* new_dw, DilationType type, DataWarehouse* get_dw);
+    void Dilate(const ProcessorGroup*,
+                const PatchSubset* patches,
+                const MaterialSubset* ,
+                DataWarehouse* old_dw,
+                DataWarehouse* new_dw, DilationType type, DataWarehouse* get_dw);
 
   protected:
      SimulationStateP d_sharedState; ///< to keep track of timesteps
      bool d_isAdaptive; //!< if false, do not regrid (stick with what you got)
 
     // input parameters from ups file
+    SizeList  d_cellNum; 
     SizeList  d_cellRefinementRatio;
     IntVector d_cellCreationDilation;
     IntVector d_cellDeletionDilation;
@@ -124,21 +125,7 @@ WARNING
     CCVariable<int> d_deletionFilter;
     CCVariable<int> d_patchFilter;
 
-    //! ratio to divide each patch (inner vector is for x,y,z ratio, 
-    //! outer vector is a subsequent value per level)
-    vector<SCIRun::IntVector> d_latticeRefinementRatio;
     int d_maxLevels;
-
-    // these are structures derived from the code
-    SizeList d_cellNum;
-    SizeList d_patchNum;
-    SizeList d_patchSize;
-    SizeList d_maxPatchSize;
-    SizeList d_patchesToCombine;
-
-    vector< CCVariable<int>* > d_patchActive;
-    vector< CCVariable<int>* > d_patchCreated;
-    vector< CCVariable<int>* > d_patchDeleted;
 
     // var labels for interior task graph
     const VarLabel* d_dilatedCellsCreationLabel;
@@ -152,7 +139,6 @@ WARNING
     int d_maxTimestepsBetweenRegrids;
 
     bool flaggedCellsExist(constCCVariable<int>& flaggedCells, IntVector low, IntVector high);
-    SCIRun::IntVector calculateNumberOfPatches(SCIRun::IntVector& cell_num, SCIRun::IntVector& patch_size);
 
     IntVector Less    (const IntVector& a, const IntVector& b);
     IntVector Greater (const IntVector& a, const IntVector& b);
@@ -161,7 +147,6 @@ WARNING
     IntVector Ceil    (const Vector& a);
 
     void problemSetup_BulletProofing(const int k);
-    void Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& dilatedFlaggedCells, CCVariable<int>& filter, IntVector depth );
     void GetFlaggedCells ( const GridP& origGrid, int levelIdx, DataWarehouse* dw );
     void initFilter(CCVariable<int>& filter, FilterType ft, IntVector& depth);
   };

@@ -8,6 +8,9 @@
    <Meta>
        <title>Advection test</title>
    </Meta>    
+   <SimulationComponent>
+        <type> ice </type>
+   </SimulationComponent>
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -189,15 +192,6 @@
          <cfl>0.5</cfl>
        <ICE>
         <advection type = "FirstOrder" />
-        <AMR>
-          <orderOfInterpolation>1  </orderOfInterpolation>
-          <do_Refluxing>  false     </do_Refluxing>
-          <Refinement_Criteria_Thresholds>
-            <Variable name = "rho_CC"   value = "2e5"  matl = "all" />
-            <Variable name = "press_CC" value = "4e10" matl = "0" />
-          </Refinement_Criteria_Thresholds>
-        </AMR>
-        
         <TimeStepControl>
           <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
           <knob_for_speedSound>  1.0            </knob_for_speedSound>
@@ -205,14 +199,24 @@
       </ICE>        
     </CFD>
 
-    <Regridder>
-      <max_levels>2</max_levels>
-      <cell_refinement_ratio>    [[4,4,4]]  </cell_refinement_ratio>
-      <lattice_refinement_ratio> [[1,4,4],[1,2,2]] </lattice_refinement_ratio>
-      <cell_creation_dilation>   [2,2,2]   </cell_creation_dilation>
-      <cell_deletion_dilation>   [1,1,1]   </cell_deletion_dilation>
-      <min_boundary_cells>       [1,1,1]   </min_boundary_cells>
-    </Regridder>
+    <AMR>
+      <ICE>
+        <orderOfInterpolation>1  </orderOfInterpolation>
+        <do_Refluxing>  false     </do_Refluxing>
+        <Refinement_Criteria_Thresholds>
+          <Variable name = "rho_CC"   value = "2e5"  matl = "all" />
+          <Variable name = "press_CC" value = "4e10" matl = "0" />
+        </Refinement_Criteria_Thresholds>
+      </ICE>
+      <Regridder>
+        <max_levels>2</max_levels>
+        <cell_refinement_ratio>    [[4,4,4]]  </cell_refinement_ratio>
+        <lattice_refinement_ratio> [[1,4,4],[1,2,2]] </lattice_refinement_ratio>
+        <cell_creation_dilation>   [2,2,2]   </cell_creation_dilation>
+        <cell_deletion_dilation>   [1,1,1]   </cell_deletion_dilation>
+        <min_boundary_cells>       [1,1,1]   </min_boundary_cells>
+      </Regridder>
+    </AMR>
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   

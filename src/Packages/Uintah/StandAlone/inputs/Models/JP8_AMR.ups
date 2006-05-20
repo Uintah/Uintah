@@ -325,28 +325,27 @@
       <cfl>0.2</cfl>
       <ICE>
         <advection type = "SecondOrder"/>
-        <AMR>
-          <orderOfInterpolation>1 </orderOfInterpolation>
-          <do_Refluxing> false    </do_Refluxing>
-          <Refinement_Criteria_Thresholds>
-            <!-- none defined -->
-          </Refinement_Criteria_Thresholds>
-        </AMR>    
       </ICE>       
     </CFD>
-    <!--____________________________________________________________________-->
-    <!--    A M R   G R I D                                                 -->
-    <!--____________________________________________________________________--> 
+    <AMR>
+      <ICE>
+        <orderOfInterpolation>1 </orderOfInterpolation>
+        <do_Refluxing> false    </do_Refluxing>
+        <Refinement_Criteria_Thresholds>
+          <!-- none defined -->
+        </Refinement_Criteria_Thresholds>
+      </ICE>
 <!--
-    <Regridder>
-      <max_levels>3</max_levels>
-      <cell_refinement_ratio>    [[2,2,2]]         </cell_refinement_ratio>
-      <lattice_refinement_ratio> [[5,5,5][2,2,2]]  </lattice_refinement_ratio>
-      <cell_creation_dilation>   [2,2,2]           </cell_creation_dilation>   
-      <cell_deletion_dilation>   [1,1,1]           </cell_deletion_dilation>   
-      <min_boundary_cells>       [1,1,1]           </min_boundary_cells>
-    </Regridder>
+      <Regridder>
+        <max_levels>3</max_levels>
+        <cell_refinement_ratio>    [[2,2,2]]         </cell_refinement_ratio>
+        <lattice_refinement_ratio> [[5,5,5][2,2,2]]  </lattice_refinement_ratio>
+        <cell_creation_dilation>   [2,2,2]           </cell_creation_dilation>   
+        <cell_deletion_dilation>   [1,1,1]           </cell_deletion_dilation>   
+        <min_boundary_cells>       [1,1,1]           </min_boundary_cells>
+      </Regridder>
 -->
+    </AMR>    
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   

@@ -77,7 +77,7 @@ RigidMaterial::initializeCMData(const Patch* patch,
     initSharedDataForImplicit(patch, matl, new_dw);
   else {
     initSharedDataForExplicit(patch, matl, new_dw);
-    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.0e10)), 
+    new_dw->put(delt_vartype(d_sharedState->adjustDelt(patch->getLevel(), 1.0e10)), 
               lb->delTLabel);
   }
 }
@@ -145,7 +145,7 @@ RigidMaterial::carryForward(const PatchSubset* patches,
     // when using RigidMPM.
     // This method is defined in the ConstitutiveModel base class.
     carryForwardSharedData(pset, old_dw, new_dw, matl);
-    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.0)), 
+    new_dw->put(delt_vartype(d_sharedState->adjustDelt(patch->getLevel(), 1.0)), 
                 lb->delTLabel);
     new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
   }

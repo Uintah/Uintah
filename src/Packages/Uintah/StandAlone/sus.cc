@@ -354,9 +354,9 @@ main( int argc, char** argv )
     char * st = getenv( "INITIAL_SLEEP_TIME" );
     if( st != 0 ){
       int sleepTime = atoi( st );
-      cerr << "SLEEPING FOR " << sleepTime 
+      cout << "SLEEPING FOR " << sleepTime 
            << " SECONDS TO ALLOW DEBUGGER ATTACHMENT\n";
-      cerr << "PID is " << getpid() << "\n";
+      cout << "PID for rank " << Uintah::Parallel::getMPIRank() << " is " << getpid() << "\n";
       Time::waitFor( (double)sleepTime );
     }
 
@@ -366,7 +366,7 @@ main( int argc, char** argv )
 
     // grab AMR from the ups file if not specified on the command line
     if (!do_AMR)
-      ups->get("doAMR", do_AMR);
+      do_AMR = (bool) ups->findBlock("AMR");
 
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
     SimulationController* ctl = 

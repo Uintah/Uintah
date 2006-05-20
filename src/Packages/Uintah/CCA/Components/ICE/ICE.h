@@ -265,15 +265,13 @@ namespace Uintah {
                                          
       void scheduleZeroMatrix_UnderFinePatches(SchedulerP& sched, 
                                                const LevelP& coarseLevel,
-                                               const MaterialSubset* one_matl,
-                                               bool firstIter);
+                                               const MaterialSubset* one_matl);
 
       void zeroMatrix_UnderFinePatches(const ProcessorGroup*,
                                        const PatchSubset* coarsePatches,
                                        const MaterialSubset*,
                                        DataWarehouse*,
-                                       DataWarehouse* new_dw,
-                                       bool firstIter);
+                                       DataWarehouse* new_dw);
 
       void schedule_bogus_imp_delP(SchedulerP& sched,
                                    const PatchSet* perProcPatches,
@@ -654,7 +652,6 @@ namespace Uintah {
                                  DataWarehouse* old_dw,     
                                  DataWarehouse* new_dw,     
                                  GridP grid,     
-                                 Scheduler* sched,
                                  const MaterialSubset*,
                                  const MaterialSubset*);
                                  

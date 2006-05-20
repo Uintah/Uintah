@@ -9,6 +9,10 @@
        <title>Advect a scalar through a 2 level grid</title>
    </Meta>
    
+   <SimulationComponent>
+        <type> ice </type>
+   </SimulationComponent>
+
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -152,18 +156,6 @@
        </Level>
 -->
     </Grid> 
-    <!--____________________________________________________________________-->
-    <!--    A M R   G R I D                                                 -->
-    <!--____________________________________________________________________-->  
-     
-    <Regridder>
-      <max_levels>2</max_levels>
-      <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
-      <lattice_refinement_ratio> [[2,2,1]]  </lattice_refinement_ratio>
-      <cell_creation_dilation>   [2,1,1]   </cell_creation_dilation>   
-      <cell_deletion_dilation>   [1,1,1]   </cell_deletion_dilation>   
-      <min_boundary_cells>       [1,1,1]   </min_boundary_cells>
-    </Regridder>   
     
     <!--____________________________________________________________________-->
     <!--      O  U  P  U  T     V  A  R  I  A  B  L  E  S                   -->
@@ -214,13 +206,24 @@
          <cfl>0.5</cfl>
       <ICE>
         <advection type = "FirstOrder" />
-        <AMR>
-          <orderOfInterpolation>1 </orderOfInterpolation>
-          <Refinement_Criteria_Thresholds>
-          </Refinement_Criteria_Thresholds>
-        </AMR>
       </ICE>        
     </CFD>
+
+    <AMR>
+      <ICE>
+        <orderOfInterpolation>1 </orderOfInterpolation>
+        <Refinement_Criteria_Thresholds>
+        </Refinement_Criteria_Thresholds>
+      </ICE>
+      <Regridder>
+        <max_levels>2</max_levels>
+        <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
+        <lattice_refinement_ratio> [[2,2,1]]  </lattice_refinement_ratio>
+        <cell_creation_dilation>   [2,1,1]   </cell_creation_dilation>   
+        <cell_deletion_dilation>   [1,1,1]   </cell_deletion_dilation>   
+        <min_boundary_cells>       [1,1,1]   </min_boundary_cells>
+      </Regridder>   
+    </AMR>
 
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->

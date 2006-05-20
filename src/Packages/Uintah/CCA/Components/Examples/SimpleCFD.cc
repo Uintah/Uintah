@@ -567,7 +567,7 @@ void SimpleCFD::computeStableTimestep(const ProcessorGroup*,
   if(delt != DBL_MAX){
     delt *= delt_multiplier_;
     const Level* level = getLevel(patches);
-    new_dw->put(delt_vartype(level->adjustDelt(delt)), sharedState_->get_delt_label());
+    new_dw->put(delt_vartype(sharedState_->adjustDelt(level, delt)), sharedState_->get_delt_label());
   }
   else {
     // don't use adjustDelt here, as we have DBL_MAX value...

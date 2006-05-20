@@ -195,7 +195,7 @@ void SerialMPM::addMaterial(const ProblemSpecP& prob_spec,GridP&,
   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
     //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps);
+    MPMMaterial *mat = scinew MPMMaterial(ps, d_sharedState);
     sharedState->registerMPMMaterial(mat);
   }
 }

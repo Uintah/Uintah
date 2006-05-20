@@ -411,7 +411,7 @@ ShellMaterial::computeStableTimestep(const Patch* patch,
   Vector dx = patch->dCell();
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
-  new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
+  new_dw->put(delt_vartype(d_sharedState->adjustDelt(patch->getLevel(), delT_new)), 
               lb->delTLabel);
 }
 
@@ -855,7 +855,7 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
+    new_dw->put(delt_vartype(d_sharedState->adjustDelt(patch->getLevel(), delT_new)), 
                 lb->delTLabel);
     new_dw->put(sum_vartype(strainEnergy), lb->StrainEnergyLabel);
     delete interpolator;
