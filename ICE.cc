@@ -70,6 +70,8 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR)
   MIlb = scinew MPMICELabel();
 
   d_doAMR               = doAMR;
+  d_minGridLevel        = 0;
+  d_maxGridLevel        = 1000;
   d_useLockStep         = false; 
   d_doRefluxing         = false;
   d_add_heat            = false;
@@ -219,10 +221,6 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE"); 
   
   cfd_ice_ps->get("max_iteration_equilibration",d_max_iter_equilibration);
-
-  // Min/Max for AMR and semi-AMR problems
-  cfd_ice_ps->getWithDefault("min_grid_level", d_minGridLevel, 0);
-  cfd_ice_ps->getWithDefault("max_grid_level", d_maxGridLevel, 1000);
   
   d_advector = AdvectionFactory::create(cfd_ice_ps, d_useCompatibleFluxes);
   cout_norm << " d_use_compatibleFluxes:  " << d_useCompatibleFluxes<<endl;   
@@ -1949,7 +1947,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     const Level* level = getLevel(patches);
     GridP grid = level->getGrid();
     for(int i=1;i<=level->getIndex();i++) {     // REFINE
-      delt *= grid->getLevel(i)->timeRefinementRatio();
+      delt *= d_sharedState->timeRefinementRatio();
     }
     
   
@@ -4151,8 +4149,8 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
           
          }
          if(massGain > 0.0){
-          cout << "Mass gained by the models this timestep = " 
-               << massGain << "\t L-" <<level->getIndex()<<endl;
+           cout << "Mass gained by the models this timestep = " 
+                << massGain << "\t L-" <<level->getIndex()<<endl;
          }
        }  //  if (models.size() > 0)
 
