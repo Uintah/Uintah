@@ -9,6 +9,10 @@
        <title>Advection test</title>
    </Meta>
    
+   <SimulationComponent>
+        <type> ice </type>
+   </SimulationComponent>
+
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
@@ -208,7 +212,16 @@
        <debug label = "switchDebug_advance_advect"/> 
     -->
     </Debug>
-    
+
+    <AMR>
+       <ICE>
+        <AMR>
+            <orderOfInterpolation>1  </orderOfInterpolation>
+            <Refinement_Criteria_Thresholds>
+            </Refinement_Criteria_Thresholds>
+        </AMR>
+       </ICE>
+    </AMR>    
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
@@ -217,11 +230,6 @@
        <ICE>
         <advection type = "FirstOrder" />
         <!--if gradient is > knob then refine -->
-        <AMR>
-          <orderOfInterpolation>1  </orderOfInterpolation>
-          <Refinement_Criteria_Thresholds>
-          </Refinement_Criteria_Thresholds>
-        </AMR>
       </ICE>        
     </CFD>
 

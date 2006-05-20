@@ -65,7 +65,6 @@ Level::Level(Grid* grid, const Point& anchor, const Vector& dcell,
     d_id = (*ids)++;
   else if(d_id >= *ids)
     ids->set(d_id+1);
-  d_timeRefinementRatio = 2;
 }
 
 Level::~Level()
@@ -92,13 +91,6 @@ Level::~Level()
   //cout << "  Bryan's select cache stored " << queries_stored << " queries and " << patches_stored << " patches\n";
 #endif
 
-}
-
-void Level::setTimeRefinementRatio(int trr)
-{
-  if (d_finalized)
-    throw InvalidGrid("Level must not be finalized to set the time refinement ratio",__FILE__,__LINE__);
-  d_timeRefinementRatio = trr;
 }
 
 void Level::setPatchDistributionHint(const IntVector& hint)
@@ -859,15 +851,6 @@ IntVector Level::mapNodeToFiner(const IntVector& idx) const
 {
   return idx*grid->getLevel(d_index+1)->d_refinementRatio;
 }
-
-double Level::adjustDelt(double delt) const
-{
-  for(int i=1;i<=getIndex();i++) {     // REFINE
-    delt *= getGrid()->getLevel(i)->timeRefinementRatio();
-  }
-  return delt;
-}
-
 
 namespace Uintah {
   const Level* getLevel(const PatchSubset* subset)

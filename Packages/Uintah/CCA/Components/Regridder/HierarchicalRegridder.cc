@@ -45,8 +45,146 @@ HierarchicalRegridder::~HierarchicalRegridder()
   VarLabel::destroy(d_dilatedCellsDeletionLabel);
   VarLabel::destroy(d_activePatchesLabel);
 
+  for (int k = 0; k < d_maxLevels; k++) {
+    delete d_patchActive[k];
+    delete d_patchCreated[k];
+    delete d_patchDeleted[k];
+  }  
+
+  d_patchActive.clear();
+  d_patchCreated.clear();
+  d_patchDeleted.clear();
+
+
   rdbg << "HierarchicalRegridder::~HierarchicalRegridder() END" << endl;
 }
+
+void HierarchicalRegridder::problemSetup(const ProblemSpecP& params, 
+                                   const GridP& oldGrid,
+				   const SimulationStateP& state)
+
+{
+  rdbg << "HierarchicalRegridder::problemSetup() BGN" << endl;
+  RegridderCommon::problemSetup(params, oldGrid, state);
+  d_sharedState = state;
+
+  ProblemSpecP amr_spec = params->findBlock("AMR");
+  ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");
+
+  if (!regrid_spec) {
+    return; // already warned about it in RC::problemSetup
+  }
+  // get lattice refinement ratio, expand it to max levels
+  regrid_spec->require("lattice_refinement_ratio", d_latticeRefinementRatio);
+
+  int size = (int) d_latticeRefinementRatio.size();
+  IntVector lastRatio = d_latticeRefinementRatio[size - 1];
+  if (size < d_maxLevels) {
+    d_latticeRefinementRatio.resize(d_maxLevels);
+    for (int i = size; i < d_maxLevels; i++)
+      d_latticeRefinementRatio[i] = lastRatio;
+  }
+
+  // get lattice refinement ratio, expand it to max levels
+  regrid_spec->get("max_patches_to_combine", d_patchesToCombine);
+  size = (int) d_patchesToCombine.size();
+  if (size == 0) {
+    d_patchesToCombine.push_back(IntVector(1,1,1));
+    size = 1;
+  }
+  lastRatio = d_patchesToCombine[size - 1];
+  if (size < d_maxLevels) {
+    d_patchesToCombine.resize(d_maxLevels);
+    for (int i = size; i < d_maxLevels; i++)
+      d_patchesToCombine[i] = lastRatio;
+  }
+
+  d_patchNum.resize(d_maxLevels);
+  d_patchSize.resize(d_maxLevels);
+  d_maxPatchSize.resize(d_maxLevels);
+  d_patchActive.resize(d_maxLevels);
+  d_patchCreated.resize(d_maxLevels);
+  d_patchDeleted.resize(d_maxLevels);
+
+  const LevelP level0 = oldGrid->getLevel(0);
+  
+  // get level0 resolution
+  IntVector low, high;
+  level0->findCellIndexRange(low, high);
+  const Patch* patch = level0->selectPatchForCellIndex(IntVector(0,0,0));
+  d_patchSize[0] = patch->getInteriorCellHighIndex() - patch->getInteriorCellLowIndex();
+  d_maxPatchSize[0] = patch->getInteriorCellHighIndex() - patch->getInteriorCellLowIndex();
+  d_patchNum[0] = calculateNumberOfPatches(d_cellNum[0], d_patchSize[0]);
+  d_patchActive[0] = new CCVariable<int>;
+  d_patchCreated[0] = new CCVariable<int>;
+  d_patchDeleted[0] = new CCVariable<int>;
+  d_patchActive[0]->rewindow(IntVector(0,0,0), d_patchNum[0]);
+  d_patchCreated[0]->rewindow(IntVector(0,0,0), d_patchNum[0]);
+  d_patchDeleted[0]->rewindow(IntVector(0,0,0), d_patchNum[0]);
+  d_patchActive[0]->initialize(1);
+  d_patchCreated[0]->initialize(0);
+  d_patchDeleted[0]->initialize(0);
+  
+  problemSetup_BulletProofing(0);
+  
+  for (int k = 1; k < d_maxLevels; k++) {
+    d_patchSize[k] = d_patchSize[k-1] * d_cellRefinementRatio[k-1] /
+      d_latticeRefinementRatio[k-1];
+    d_maxPatchSize[k] = d_patchSize[k] * d_patchesToCombine[k-1]; 
+    d_latticeRefinementRatio[k-1];
+    d_patchNum[k] = calculateNumberOfPatches(d_cellNum[k], d_patchSize[k]);
+    d_patchActive[k] = new CCVariable<int>;
+    d_patchCreated[k] = new CCVariable<int>;
+    d_patchDeleted[k] = new CCVariable<int>;
+    d_patchActive[k]->rewindow(IntVector(0,0,0), d_patchNum[k]);
+    d_patchCreated[k]->rewindow(IntVector(0,0,0), d_patchNum[k]);
+    d_patchDeleted[k]->rewindow(IntVector(0,0,0), d_patchNum[k]);
+    d_patchActive[k]->initialize(0);
+    d_patchCreated[k]->initialize(0);
+    d_patchDeleted[k]->initialize(0);
+    if (k < (d_maxLevels-1)) {
+      problemSetup_BulletProofing(k);
+    }
+  }
+}
+
+//_________________________________________________________________
+void HierarchicalRegridder::problemSetup_BulletProofing(const int k)
+{
+  RegridderCommon::problemSetup_BulletProofing(k);
+
+  // For 2D problems the lattice refinement ratio 
+  // and the cell refinement ratio must be 1 in that plane
+  for(int dir = 0; dir <3; dir++){
+    if(d_cellNum[k][dir] == 1 && (d_latticeRefinementRatio[k][dir] != 1 || d_cellRefinementRatio[k][dir] != 1) ){
+      ostringstream msg;
+      msg << "Problem Setup: Regridder: The problem you're running is 2D. \n"
+          << " The lattice refinement ratio AND the cell refinement ration must be 1 in that direction. \n"
+          << "Grid Size: " << d_cellNum[k] 
+          << " lattice refinement ratio: " << d_latticeRefinementRatio[k] 
+          << " cell refinement ratio: " << d_cellRefinementRatio[k] << endl;
+      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+      
+    }
+
+    if(d_cellNum[k][dir] != 1 && d_patchSize[k][dir] < 4) {
+      ostringstream msg;
+      msg << "Problem Setup: Regridder: Patches need to be at least 4 cells in each dimension \n"
+          << "except for 1-cell-wide dimensions.\n"
+          << "  Patch size on level " << k << ": " << d_patchSize[k] << endl;
+      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+
+    }
+  }
+
+  if ( Mod( d_patchSize[k], d_latticeRefinementRatio[k] ) != IntVector(0,0,0) ) {
+    ostringstream msg;
+    msg << "Problem Setup: Regridder: you've specified a patch size (interiorCellHighIndex() - interiorCellLowIndex()) on a patch that is not divisible by the lattice ratio on level 0 \n"
+        << " patch size " <<  d_patchSize[k] << " lattice refinement ratio " << d_latticeRefinementRatio[k] << endl;
+    throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+  }
+}
+
 
 Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const ProblemSpecP& ups)
 {
@@ -105,9 +243,9 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
                        
                        
     // dilate flagged cells on this level
-    Task* dilate_task = scinew Task("RegridderCommon::Dilate2 Creation",
+    Task* dilate_task = scinew Task("RegridderCommon::Dilate Creation",
                                  dynamic_cast<RegridderCommon*>(this),
-                                 &RegridderCommon::Dilate2, 
+                                 &RegridderCommon::Dilate, 
                                  DILATE_CREATION, old_dw);
     ngc = Max(d_cellCreationDilation.x(), d_cellCreationDilation.y());
     ngc = Max(ngc, d_cellCreationDilation.z());
@@ -119,9 +257,9 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
 #if 0
     if (d_cellCreationDilation != d_cellDeletionDilation) {
       // dilate flagged cells (for deletion) on this level)
-      Task* dilate_delete_task = scinew Task("RegridderCommon::Dilate2 Deletion",
+      Task* dilate_delete_task = scinew Task("RegridderCommon::Dilate Deletion",
                                           dynamic_cast<RegridderCommon*>(this),
-                                          &RegridderCommon::Dilate2,
+                                          &RegridderCommon::Dilate,
                                           DILATE_DELETION, old_dw);
 
       ngc = Max(d_cellDeletionDilation.x(), d_cellDeletionDilation.y());
@@ -479,7 +617,6 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups)
     }
 
     LevelP newLevel = newGrid->addLevel(anchor, spacing);
-    newLevel->setTimeRefinementRatio(oldGrid->getLevel(0)->timeRefinementRatio());
     newLevel->setExtraCells(extraCells);
 
     rdbg << "HierarchicalRegridder::regrid(): Setting extra cells to be: " << extraCells << endl;
@@ -652,3 +789,21 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups)
   newGrid->performConsistencyCheck();
   return newGrid;
 }
+
+IntVector HierarchicalRegridder::calculateNumberOfPatches(IntVector& cellNum, IntVector& patchSize)
+{
+  IntVector patchNum = Ceil(Vector(cellNum.x(), cellNum.y(), cellNum.z()) / patchSize);
+  IntVector remainder = Mod(cellNum, patchSize);
+
+  if (remainder.x() || remainder.y() || remainder.z()) {
+    ostringstream msg;
+    msg << "  HierarchicalRegridder: The domain (" << cellNum[0] << "x" << cellNum[1] << "x" << cellNum[2] 
+        << " cells) is not divisible by the number of patches (" << patchSize[0] << "x" << patchSize[1] << "x" << patchSize[2] 
+        << " patches)\n";
+    throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+  }
+  
+  return patchNum;
+}
+
+

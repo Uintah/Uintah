@@ -83,7 +83,7 @@ ShellMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP mpm_mat_ps = mat_ps->findBlock("MPM");
   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
-    MPMMaterial *mat = scinew MPMMaterial(ps);
+    MPMMaterial *mat = scinew MPMMaterial(ps, sharedState);
 
     //register as an MPM material
     sharedState->registerMPMMaterial(mat);

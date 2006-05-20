@@ -200,6 +200,7 @@ namespace Uintah {
     if (d_myworld->myrank() == 0)
       grid->printStatistics();
     
+    //cout << *grid.get_rep() << endl;
     return grid;
   }
 
@@ -290,7 +291,7 @@ namespace Uintah {
       for(int i=0;i<grid->numLevels();i++){
         const Level* level = grid->getLevel(i).get_rep();
         if(i != 0)
-          delt_fine /= level->timeRefinementRatio();
+          delt_fine /= d_sharedState->timeRefinementRatio();
         d_scheduler->get_dw(1)->override(delt_vartype(delt_fine), d_sharedState->get_delt_label(),
                                          level);
       }

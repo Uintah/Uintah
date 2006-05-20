@@ -898,7 +898,6 @@ void
 TaskGraph::remapTaskDWs(int dwmap[])
 {
   int levelmin = 999;
-  int trr = 2;
   for (unsigned i = 0; i < d_tasks.size(); i++) {
     d_tasks[i]->setMapping(dwmap);
 
@@ -910,7 +909,6 @@ TaskGraph::remapTaskDWs(int dwmap[])
       if (!ps) continue;
       const Level* l = getLevel(ps);
       levelmin = Min(levelmin, l->getIndex());
-      trr = l->timeRefinementRatio();
     }
   }
   //cout << d_myworld->myrank() << " Basic mapping " << "Old " << dwmap[Task::OldDW] << " New " << dwmap[Task::NewDW] << " CO " << dwmap[Task::CoarseOldDW] << " CN " << dwmap[Task::CoarseNewDW] << " levelmin " << levelmin << endl;

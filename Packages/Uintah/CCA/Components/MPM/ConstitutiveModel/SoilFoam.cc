@@ -265,7 +265,7 @@ void SoilFoam::computeStableTimestep(const Patch* patch,
       // don't use adjustDelt here because of DBL_MAX
       new_dw->put(delt_vartype(DBL_MAX), lb->delTLabel);
     else
-      new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
+      new_dw->put(delt_vartype(d_sharedState->adjustDelt(patch->getLevel(), delT_new)), 
                   lb->delTLabel);
 }
 
@@ -470,7 +470,7 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
+    new_dw->put(delt_vartype(d_sharedState->adjustDelt(patch->getLevel(), delT_new)), 
                 lb->delTLabel);
     new_dw->put(sum_vartype(se),     lb->StrainEnergyLabel);
 
@@ -508,7 +508,7 @@ void SoilFoam::carryForward(const PatchSubset* patches,
       p_sv_min_new[idx] = p_sv_min[idx];
     }*/
 
-    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.e10)), 
+    new_dw->put(delt_vartype(d_sharedState->adjustDelt(patch->getLevel(), 1.e10)), 
                 lb->delTLabel);
     new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
   }

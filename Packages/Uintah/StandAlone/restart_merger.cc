@@ -38,16 +38,18 @@ void usage(const std::string& badarg, const std::string& progname)
 {
     if(badarg != "")
 	cerr << "Error parsing argument: " << badarg << '\n';
-    cerr << "Usage: " << progname << " [options] <uda dir 1> <uda dir 2> ...\n\n";
+    cerr << "Usage: " << progname << " [options] <uda dir 1> <uda dir 2> [<uda dir 3> ...]\n\n";
+    cerr << "There can be any number of udas on the command line.\n";
     cerr << "Options:\n";
     cerr << "\t-copy\t(Default) Copies timestep directories into the new uda directory\n"
 	 << "\t\twithout affecting the source uda directories.\n";
-    cerr << "\t-move\tMoves timestep directories from the source uda directories into\n"
-	 << "\t\tthe new uda directory and removes the source uda's.\n"
+    cerr << "\t-move\tMoves timestep directories from the source udas directories into\n"
+	 << "\t\tthe new uda directory and removes the source udas.\n"
 	 << "\t\tThis option can be faster if the source and destination are\n"
 	 << "\t\ton the same file system, but there may be data loss where the\n"
-	 << "\t\tuda's overlap.\n";
-    cerr << "\nAssuming <uda dir n> was created by restarting from <uda dir n-1> \n";
+	 << "\t\tudas overlap.\n\n";
+    cerr << "\t\t\t-move or -copy must be the first argument if specified.\n";
+    cerr << "\n\nAssuming <uda dir n> was created by restarting from <uda dir n-1> \n";
     cerr << "with the -nocopy option (which is default for sus), this will create a\n";
     cerr << "new uda directory that is a continuous version of these uda directories.\n\n"; 
     exit(1);

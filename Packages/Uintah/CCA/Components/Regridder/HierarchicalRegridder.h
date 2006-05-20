@@ -45,6 +45,10 @@ class VarLabel;
     HierarchicalRegridder(const ProcessorGroup* pg);
     virtual ~HierarchicalRegridder();
 
+    void problemSetup(const ProblemSpecP& params, const GridP& oldGrid,
+                      const SimulationStateP& state);
+
+      
     //! Create a new Grid
     virtual Grid* regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP& ups);
 
@@ -58,7 +62,23 @@ class VarLabel;
                       DataWarehouse* new_dw);
 
     inline IntVector StartCellToLattice ( SCIRun::IntVector startCell, int levelIdx );
+    SCIRun::IntVector calculateNumberOfPatches(SCIRun::IntVector& cell_num, SCIRun::IntVector& patch_size);
+    void problemSetup_BulletProofing(const int k);
     
+    //! ratio to divide each patch (inner vector is for x,y,z ratio, 
+    //! outer vector is a subsequent value per level)
+    vector<SCIRun::IntVector> d_latticeRefinementRatio;
+
+    // these are structures derived from the code
+    SizeList d_patchNum;
+    SizeList d_patchSize;
+    SizeList d_maxPatchSize;
+    SizeList d_patchesToCombine;
+
+    vector< CCVariable<int>* > d_patchActive;
+    vector< CCVariable<int>* > d_patchCreated;
+    vector< CCVariable<int>* > d_patchDeleted;
+
     // activePatches will not act as a normal variable.  It will only be as large as the number
     // patches a level can be divided into.
     const VarLabel* d_activePatchesLabel;

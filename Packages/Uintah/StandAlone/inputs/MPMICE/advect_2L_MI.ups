@@ -120,7 +120,6 @@
            </Box>
            <spacing>        [0.125,0.125,0.25]  </spacing>
        </Level>
-      <time_refinement_ratio>    1 </time_refinement_ratio>
 <!--
 -->
     </Grid>
@@ -175,37 +174,37 @@
          <cfl>0.5</cfl>
        <ICE>
         <advection type = "FirstOrder"/>
-        <AMR>
-          <do_Refluxing>        false    </do_Refluxing>
-          <orderOfInterpolation>1         </orderOfInterpolation>
-          
-          <Refinement_Criteria_Thresholds>
-          </Refinement_Criteria_Thresholds>
-        </AMR>
-        <min_grid_level>0</min_grid_level>
-        <max_grid_level>1</max_grid_level>
       </ICE>        
     </CFD>
+    <AMR>
+      <ICE>
+        <do_Refluxing>        false    </do_Refluxing>
+        <orderOfInterpolation>1         </orderOfInterpolation>
+        
+        <Refinement_Criteria_Thresholds>
+        </Refinement_Criteria_Thresholds>
+        <min_grid_level>0</min_grid_level>
+        <max_grid_level>1</max_grid_level>
+      <MPM>
+        <min_grid_level>1</min_grid_level>
+        <max_grid_level>1</max_grid_level>
+      </MPM>
+      </ICE>
+      <Regridder>
+        <max_levels>2</max_levels>
+        <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
+        <lattice_refinement_ratio> [[5,5,1][2,2,1]]  </lattice_refinement_ratio>
+        <cell_creation_dilation>   [2,2,0]   </cell_creation_dilation>   
+        <cell_deletion_dilation>   [1,1,0]   </cell_deletion_dilation>   
+        <min_boundary_cells>       [1,1,0]   </min_boundary_cells>
+      </Regridder>
+      <time_refinement_ratio>    1 </time_refinement_ratio>
+    </AMR>
     <MPM>
         <time_integrator>explicit</time_integrator>
         <nodes8or27>8</nodes8or27>
         <testForNegTemps_mpm>false</testForNegTemps_mpm>
-        <min_grid_level>1</min_grid_level>
-        <max_grid_level>1</max_grid_level>
     </MPM>
-
-    <!--____________________________________________________________________-->
-    <!--    A M R   G R I D                                                 -->
-    <!--____________________________________________________________________--> 
-
-    <Regridder>
-      <max_levels>2</max_levels>
-      <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
-      <lattice_refinement_ratio> [[5,5,1][2,2,1]]  </lattice_refinement_ratio>
-      <cell_creation_dilation>   [2,2,0]   </cell_creation_dilation>   
-      <cell_deletion_dilation>   [1,1,0]   </cell_deletion_dilation>   
-      <min_boundary_cells>       [1,1,0]   </min_boundary_cells>
-    </Regridder>
 
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->

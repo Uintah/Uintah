@@ -958,56 +958,15 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
                            ParentNewDW->setScrubbing(DataWarehouse::ScrubNone);
 
   GridP grid = level->getGrid();
+  d_subsched->setParentDWs(ParentOldDW, ParentNewDW);
+  d_subsched->advanceDataWarehouse(grid);
+
   bool recursion  = true;
   bool modifies_X = true;
   const VarLabel* whichInitialGuess = NULL;
   const PatchSet* patch_set = level->eachPatch();
   //const VarLabel* whichInitialGuess = lb->initialGuessLabel;
 
-  //__________________________________
-  // recompile the subscheduler
-  if (d_recompileSubsched) {
-    d_subsched->initialize(3, 1);
-    d_subsched->setParentDWs(ParentOldDW, ParentNewDW);
-    d_subsched->advanceDataWarehouse(grid);
-    //__________________________________
-    // schedule the tasks
-
-    scheduleSetupMatrix(    d_subsched, level,  patch_set,  one_matl, 
-                            all_matls);
-
-    solver->scheduleSolve(level, d_subsched, press_matlSet,
-                          lb->matrixLabel,   Task::NewDW,
-                          lb->imp_delPLabel, modifies_X,
-                          lb->rhsLabel,      Task::OldDW,
-                          whichInitialGuess, Task::OldDW,
-			  solver_parameters);
-
-    scheduleUpdatePressure( d_subsched,  level, patch_set,  ice_matls,
-                                                          mpm_matls, 
-                                                          d_press_matl,  
-                                                          all_matls);
-                                                          
-    scheduleRecomputeVel_FC(d_subsched,         patch_set,  ice_matls,
-                                                          mpm_matls, 
-                                                          d_press_matl, 
-                                                          all_matls,
-                                                          recursion);
-
-    scheduleSetupRHS(       d_subsched,         patch_set,  one_matl, 
-                                                          all_matls,
-                                                          recursion,
-                                                          "computes");
-                                                          
-    scheduleCompute_maxRHS( d_subsched,         level,       one_matl,
-                                                           all_matls);
-
-    d_subsched->compile();
-  }
-  else {
-    d_subsched->setParentDWs(ParentOldDW, ParentNewDW);
-    d_subsched->advanceDataWarehouse(grid);
-  }
   DataWarehouse* subOldDW = d_subsched->get_dw(2);
   DataWarehouse* subNewDW = d_subsched->get_dw(3);
 
@@ -1050,6 +1009,45 @@ void ICE::implicitPressureSolve(const ProcessorGroup* pg,
   solver_parameters->setResidualNormalizationFactor(vol);
   
   while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance) {
+  //__________________________________
+  // recompile the subscheduler
+    if (counter == 0 && d_recompileSubsched) {
+      d_subsched->initialize(3, 1);
+      //__________________________________
+      // schedule the tasks
+      
+      scheduleSetupMatrix(    d_subsched, level,  patch_set,  one_matl, 
+                              all_matls);
+      
+      solver->scheduleSolve(level, d_subsched, press_matlSet,
+                            lb->matrixLabel,   Task::NewDW,
+                            lb->imp_delPLabel, modifies_X,
+                            lb->rhsLabel,      Task::OldDW,
+                            whichInitialGuess, Task::OldDW,
+                            solver_parameters);
+      
+      scheduleUpdatePressure( d_subsched,  level, patch_set,  ice_matls,
+                              mpm_matls, 
+                              d_press_matl,  
+                              all_matls);
+      
+      scheduleRecomputeVel_FC(d_subsched,         patch_set,  ice_matls,
+                              mpm_matls, 
+                              d_press_matl, 
+                              all_matls,
+                              recursion);
+      
+      scheduleSetupRHS(       d_subsched,         patch_set,  one_matl, 
+                              all_matls,
+                              recursion,
+                              "computes");
+      
+      scheduleCompute_maxRHS( d_subsched,         level,       one_matl,
+                              all_matls);
+      
+      d_subsched->compile();
+      d_recompileSubsched = false;
+    }
     //__________________________________
     //  - move subNewDW to subOldDW
     //  - scrub the subScheduler

@@ -484,6 +484,10 @@ private:
   
   IntegratorType d_integrator;
 
+  // stuff for not having to recompile the iterative scheduler every timstep
+  SchedulerP d_subsched;
+  bool d_recompileSubsched;
+
 };
       
 } // end namespace Uintah
