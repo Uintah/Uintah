@@ -6,9 +6,12 @@
 #include <Packages/Uintah/Core/Grid/Variables/ReductionVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Grid/Material.h>
+#include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/SimpleMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/Arches/ArchesMaterial.h>
 #include <Packages/Uintah/Core/Grid/Variables/Reductions.h>
 #include <Core/Containers/StringUtil.h>
@@ -59,6 +62,13 @@ SimulationState::SimulationState(ProblemSpecP &ps)
                                   __FILE__, __LINE__);  
     }
   }
+
+  d_timeRefinementRatio = 2;
+  ProblemSpecP amr_ps = ps->findBlock("AMR");
+  if (amr_ps) {
+    amr_ps->get("time_refinement_ratio", d_timeRefinementRatio);
+  }
+
 
   all_mpm_matls = 0;
   all_ice_matls = 0;
@@ -313,4 +323,13 @@ Material* SimulationState::parseAndLookupMaterial(ProblemSpecP& params,
     result = matls[matlidx];
   }
   return result;
+}
+
+double SimulationState::adjustDelt(const Level* l, double delt) const
+{
+  for(int i=1;i<=l->getIndex();i++) {     // REFINE
+    delt *= d_timeRefinementRatio;
+  }
+  return delt;
+
 }

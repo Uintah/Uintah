@@ -255,7 +255,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     const LevelP& level = grid->getLevel(l);
 
     if (l > 0 && d_timeRefineWeight)
-      timeWeight *= level->timeRefinementRatio();
+      timeWeight *= d_sharedState->timeRefinementRatio();
 
 
     for (Level::const_patchIterator iter = level->patchesBegin(); 

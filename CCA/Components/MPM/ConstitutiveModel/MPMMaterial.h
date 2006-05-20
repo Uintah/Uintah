@@ -70,7 +70,7 @@ WARNING
    MPMMaterial();
 
    // Standard MPM Material Constructor
-   MPMMaterial(ProblemSpecP&);
+   MPMMaterial(ProblemSpecP&, SimulationStateP& ss);
          
    ~MPMMaterial();
 

@@ -156,7 +156,7 @@ void AMRSimulationController::run()
      // ratio for each level you increase
      int totalFine=1;
      for(int i=1;i<currentGrid->numLevels();i++) {
-       totalFine *= currentGrid->getLevel(i)->timeRefinementRatio();
+       totalFine *= d_sharedState->timeRefinementRatio();
      }
      
      if (iterations != 0) {
@@ -260,8 +260,8 @@ void AMRSimulationController::run()
      for(int i=0;i<currentGrid->numLevels();i++){
        const Level* level = currentGrid->getLevel(i).get_rep();
        if(d_doAMR && i != 0){
-	 delt_fine /= level->timeRefinementRatio();
-	 skip /= level->timeRefinementRatio();
+	 delt_fine /= d_sharedState->timeRefinementRatio();
+	 skip /= d_sharedState->timeRefinementRatio();
        }
        for(int idw=0;idw<totalFine;idw+=skip){
 	 DataWarehouse* dw = d_scheduler->get_dw(idw);
@@ -296,7 +296,7 @@ void AMRSimulationController::subCycleCompile(GridP& grid, int startDW, int dwSt
   LevelP fineLevel = grid->getLevel(numLevel);
   LevelP coarseLevel = grid->getLevel(numLevel-1);
 
-  int numSteps = fineLevel->timeRefinementRatio(); // Make this configurable - Steve
+  int numSteps = d_sharedState->timeRefinementRatio(); 
   int newDWStride = dwStride/numSteps;
 
   ASSERT((newDWStride > 0 && numLevel+1 < grid->numLevels()) || (newDWStride == 0 || numLevel+1 == grid->numLevels()));
@@ -376,7 +376,7 @@ void AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwSt
   if (levelNum == 0)
     numSteps = 1;
   else {
-    numSteps = grid->getLevel(levelNum)->timeRefinementRatio();
+    numSteps = d_sharedState->timeRefinementRatio();
   }
   
   int newDWStride = dwStride/numSteps;
@@ -592,11 +592,6 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
       }
     }
          
-    // Compute number of dataWarehouses
-    //int numDWs=1;
-    //for(int i=1;i<oldGrid->numLevels();i++)
-    //numDWs *= oldGrid->getLevel(i)->timeRefinementRatio();
-
     d_lb->possiblyDynamicallyReallocate(currentGrid, true); 
     double scheduleTime = Time::currentSeconds();
     d_scheduler->scheduleAndDoDataCopy(currentGrid, d_sim);
@@ -747,8 +742,8 @@ void AMRSimulationController::executeTimestep(double t, double& delt, GridP& cur
       for(int i=0;i<currentGrid->numLevels();i++){
         const Level* level = currentGrid->getLevel(i).get_rep();
         if(i != 0){
-          delt_fine /= level->timeRefinementRatio();
-          skip /= level->timeRefinementRatio();
+          delt_fine /= d_sharedState->timeRefinementRatio();
+          skip /= d_sharedState->timeRefinementRatio();
         }
         for(int idw=0;idw<totalFine;idw+=skip){
           DataWarehouse* dw = d_scheduler->get_dw(idw);

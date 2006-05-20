@@ -1161,9 +1161,6 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
 
       ProblemSpecP gridElem = rootElem->appendChild("Grid");
       gridElem->appendElement("numLevels", numLevels);
-      if (numLevels > 1) {
-        gridElem->appendElement("time_refinement_ratio", grid->getLevel(0)->timeRefinementRatio());
-      }
       for(int l = 0;l<numLevels;l++){
         LevelP level = grid->getLevel(l);
         ProblemSpecP levelElem = gridElem->appendChild("Level");
@@ -1974,7 +1971,7 @@ DataArchiver::makeVersionedDir()
       dirCreated = true;
     }
     else if( errno != EEXIST )  {
-      cerr << "makeVersionedDir: Error " << errno << " in mkdir\n";
+      cerr << "makeVersionedDir: Error making directory: " << name.str() << "\n";
       throw ErrnoException("DataArchiver.cc: mkdir failed for some "
                            "reason besides dir already exists", errno, __FILE__, __LINE__);
     }
@@ -1988,35 +1985,31 @@ DataArchiver::makeVersionedDir()
     dirName = name.str();
       
     int code = MKDIR( dirName.c_str(), 0777 );
-    if( code == 0 ) // Created the directory successfully
-      {
+    if( code == 0 ) {// Created the directory successfully
 #ifndef _WIN32
-        if (chown(dirName.c_str(),(uid_t) -1, (gid_t) csafe_gid) != 0){
-          cerr<<"  could not chgrp "<<dirName.c_str()<< " dir to gid "<<csafe_gid<<endl;
-          cerr<<strerror(errno)<<endl;
-        }
-        chmod(dirName.c_str(),0751|S_ISGID);
+      if (chown(dirName.c_str(),(uid_t) -1, (gid_t) csafe_gid) != 0){
+        cerr<<"  could not chgrp "<<dirName.c_str()<< " dir to gid "<<csafe_gid<<endl;
+        cerr<<strerror(errno)<<endl;
+      }
+      chmod(dirName.c_str(),0751|S_ISGID);
 #endif
-        dirMax = dirNum;
-        if (dirMax == dirMin)
-          dirCreated = true;
-        else
-          {
-            int code = rmdir( dirName.c_str() );
-            if (code != 0)
-              throw ErrnoException("DataArchiver.cc: rmdir failed", errno, __FILE__, __LINE__);
-          }
+      dirMax = dirNum;
+      if (dirMax == dirMin)
+        dirCreated = true;
+      else {
+        int code = rmdir( dirName.c_str() );
+        if (code != 0)
+          throw ErrnoException("DataArchiver.cc: rmdir failed", errno, __FILE__, __LINE__);
       }
-    else
-      {
-        if( errno != EEXIST )
-          {
-            cerr << "makeVersionedDir: Error " << errno << " in mkdir\n";
-            throw ErrnoException("DataArchiver.cc: mkdir failed for some "
-                                 "reason besides dir already exists", errno, __FILE__, __LINE__);
-          }
-        dirMin = dirNum + 1;
+    }
+    else {
+      if( errno != EEXIST ) {
+        cerr << "makeVersionedDir: Error making directory: " << name.str() << "\n";
+        throw ErrnoException("DataArchiver.cc: mkdir failed for some "
+                             "reason besides dir already exists", errno, __FILE__, __LINE__);
       }
+      dirMin = dirNum + 1;
+    }
 
     if (!dirCreated) {
       if (dirMax == 0) {

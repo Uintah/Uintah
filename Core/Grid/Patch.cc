@@ -1192,14 +1192,50 @@ void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* nei
   // in such conditions, we shall exclude that extra cell from MPI communication
   // Also disclude overlapping extra cells just to be safe
 
+#if 0
+  IntVector patch_int_low = Max(getLowIndex(basis, bl), neighbor->getLowIndex(basis, bl));
+  IntVector patch_int_high = Min(getHighIndex(basis, bl), neighbor->getHighIndex(basis, bl));
+
+  IntVector diff(patch_int_high - patch_int_low);
+  
+  // if there is no overlap, return
+  if (diff.x() * diff.y() * diff.z() == 0)
+    return;
+  
+  // use the cell-based interior to compare patch positions, but use the basis-specific one when culling the intersection
+  IntVector p_int_low(getInteriorLowIndex(Patch::CellBased)), p_int_high(getInteriorHighIndex(Patch::CellBased));
+  IntVector n_int_low(neighbor->getInteriorLowIndex(Patch::CellBased)), n_int_high(neighbor->getInteriorHighIndex(Patch::CellBased));
+
+  // go through each dimension, and determine where the neighor patch is relative to this
+  // if it is above or below, clamp it to the interior of the neighbor patch
+  // based on the current grid constraints, it is reasonable to assume that the patches
+  // line up at least in corners.
+  for (int dim = 0; dim < 3; dim++) {
+    // depending on the region, cull away the portion of the region that in 'this'
+    if (n_int_high[dim] == p_int_low[dim])
+      region_high[dim] = Min(region_high[dim], neighbor->getInteriorHighIndex(basis)[dim]);
+    else if (n_int_low[dim] == p_int_low[dim] && n_int_high[dim] == p_int_high[dim]) {
+      // DO NOTHING
+    }
+    else {
+      if (!(n_int_low[dim] == p_int_high[dim]))
+        cout << "    BAd patchon dim " << dim << ": " << p_int_low << " " << p_int_high << " neighor " << n_int_low << " " << n_int_high << endl;
+      ASSERT(n_int_low[dim] == p_int_high[dim]);
+      region_low[dim] = Max(region_low[dim], neighbor->getInteriorLowIndex(basis)[dim]);
+    }
+  }
+  diff = region_high - region_low;
+  if (diff.x() * diff.y() * diff.z() == 0)
+    region_low = region_high;  // caller will check for this case
+#else
   // region is the portion of neighbor that 'this' wants to receive.
   IntVector patch_low = getLowIndex(basis, bl);
   IntVector patch_high = getHighIndex(basis, bl);
-  
+
   // intersection of patch's interior with the other patch's send buffer
   IntVector int_low = Max(patch_low, region_low);
   IntVector int_high = Min(patch_high, region_high);
-  
+
   if (int_high.x() > int_low.x() && int_high.y() > int_low.y() && int_high.z() > int_low.z()) {
     // exclude the overlapped com by not sending this patch's extra cells.  Because of the nature
     // of the overlapping, an extra cell that would be sent is already an extra cell on the other patch
@@ -1239,7 +1275,7 @@ void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* nei
 
         if (two_diff) {
           return;
-          // if there are two different dimensions, then (I believe) we can safely assume that it 
+          // if there are two different dimensions, then (I believe) we can safely assume that it
           // is because on of the patches has extra cells in one direction that the other doesn't have,
           // and can be safely discaraded, since it can be acquired from another patch.
           int dimsize = region_high[dim] - region_low[dim];
@@ -1256,7 +1292,7 @@ void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* nei
             // do normal pruning now
           }
         }
-          
+
         if (int_low[dim] == region_low[dim] && int_high[dim] < region_high[dim]) {
           region_low[dim] = int_high[dim];
         }
@@ -1266,12 +1302,14 @@ void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* nei
         else {
           throw InternalError("Patches overlap, but not correctly", __FILE__, __LINE__);
         }
-        
+
         break;
       }
     }
-    ASSERT(dim != 3);    
+    ASSERT(dim != 3);
   }
+
+#endif
 }
 
 void Patch::getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,

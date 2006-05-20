@@ -31,17 +31,6 @@ RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), Uintah
 
 RegridderCommon::~RegridderCommon()
 {
-  rdbg << "RegridderCommon::~RegridderCommon() BGN" << endl;
-  for (int k = 0; k < d_maxLevels; k++) {
-    delete d_patchActive[k];
-    delete d_patchCreated[k];
-    delete d_patchDeleted[k];
-  }  
-
-  d_patchActive.clear();
-  d_patchCreated.clear();
-  d_patchDeleted.clear();
-  rdbg << "RegridderCommon::~RegridderCommon() END" << endl;
 }
 
 bool
@@ -123,7 +112,8 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   rdbg << "RegridderCommon::problemSetup() BGN" << endl;
   d_sharedState = state;
 
-  ProblemSpecP regrid_spec = params->findBlock("Regridder");
+  ProblemSpecP amr_spec = params->findBlock("AMR");
+  ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");
   if (!regrid_spec) {
     d_isAdaptive = false;
     if (d_myworld->myrank() == 0) {
@@ -166,33 +156,17 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
       d_cellRefinementRatio[i] = lastRatio;
   }
   
-  // Check for existence TODO
-
-  // get lattice refinement ratio, expand it to max levels
-  regrid_spec->require("lattice_refinement_ratio", d_latticeRefinementRatio);
-  size = (int) d_latticeRefinementRatio.size();
-  lastRatio = d_latticeRefinementRatio[size - 1];
-  if (size < d_maxLevels) {
-    d_latticeRefinementRatio.resize(d_maxLevels);
-    for (int i = size; i < d_maxLevels; i++)
-      d_latticeRefinementRatio[i] = lastRatio;
-  }
-
-  // get lattice refinement ratio, expand it to max levels
-  regrid_spec->get("max_patches_to_combine", d_patchesToCombine);
-  size = (int) d_patchesToCombine.size();
-  if (size == 0) {
-    d_patchesToCombine.push_back(IntVector(1,1,1));
-    size = 1;
-  }
-  lastRatio = d_patchesToCombine[size - 1];
-  if (size < d_maxLevels) {
-    d_patchesToCombine.resize(d_maxLevels);
-    for (int i = size; i < d_maxLevels; i++)
-      d_patchesToCombine[i] = lastRatio;
-  }
-
   // get other init parameters
+  d_cellNum.resize(d_maxLevels);
+
+  IntVector low, high;
+  oldGrid->getLevel(0)->findCellIndexRange(low, high);
+  d_cellNum[0] = high-low - oldGrid->getLevel(0)->getExtraCells()*IntVector(2,2,2);
+  for (int k = 1; k < d_maxLevels; k++) {
+    d_cellNum[k] = d_cellNum[k-1] * d_cellRefinementRatio[k-1];
+  }
+  
+
   d_cellCreationDilation = IntVector(1,1,1);
   d_cellDeletionDilation = IntVector(1,1,1);
   d_minBoundaryCells = IntVector(1,1,1);
@@ -202,56 +176,6 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   regrid_spec->get("cell_deletion_dilation", d_cellDeletionDilation);
   regrid_spec->get("min_boundary_cells", d_minBoundaryCells);
   regrid_spec->get("max_timestep_interval", d_maxTimestepsBetweenRegrids);
-
-  const LevelP level0 = oldGrid->getLevel(0);
-  d_cellNum.resize(d_maxLevels);
-  d_patchNum.resize(d_maxLevels);
-  d_patchSize.resize(d_maxLevels);
-  d_maxPatchSize.resize(d_maxLevels);
-  d_patchActive.resize(d_maxLevels);
-  d_patchCreated.resize(d_maxLevels);
-  d_patchDeleted.resize(d_maxLevels);
-  
-  // get level0 resolution
-  IntVector low, high;
-  level0->findCellIndexRange(low, high);
-  d_cellNum[0] = high-low - level0->getExtraCells()*IntVector(2,2,2);
-  const Patch* patch = level0->selectPatchForCellIndex(IntVector(0,0,0));
-  d_patchSize[0] = patch->getInteriorCellHighIndex() - patch->getInteriorCellLowIndex();
-  d_maxPatchSize[0] = patch->getInteriorCellHighIndex() - patch->getInteriorCellLowIndex();
-  d_patchNum[0] = calculateNumberOfPatches(d_cellNum[0], d_patchSize[0]);
-  d_patchActive[0] = new CCVariable<int>;
-  d_patchCreated[0] = new CCVariable<int>;
-  d_patchDeleted[0] = new CCVariable<int>;
-  d_patchActive[0]->rewindow(IntVector(0,0,0), d_patchNum[0]);
-  d_patchCreated[0]->rewindow(IntVector(0,0,0), d_patchNum[0]);
-  d_patchDeleted[0]->rewindow(IntVector(0,0,0), d_patchNum[0]);
-  d_patchActive[0]->initialize(1);
-  d_patchCreated[0]->initialize(0);
-  d_patchDeleted[0]->initialize(0);
-  
-  problemSetup_BulletProofing(0);
-  
-  for (int k = 1; k < d_maxLevels; k++) {
-    d_cellNum[k] = d_cellNum[k-1] * d_cellRefinementRatio[k-1];
-    d_patchSize[k] = d_patchSize[k-1] * d_cellRefinementRatio[k-1] /
-      d_latticeRefinementRatio[k-1];
-    d_maxPatchSize[k] = d_patchSize[k] * d_patchesToCombine[k-1]; 
-    d_latticeRefinementRatio[k-1];
-    d_patchNum[k] = calculateNumberOfPatches(d_cellNum[k], d_patchSize[k]);
-    d_patchActive[k] = new CCVariable<int>;
-    d_patchCreated[k] = new CCVariable<int>;
-    d_patchDeleted[k] = new CCVariable<int>;
-    d_patchActive[k]->rewindow(IntVector(0,0,0), d_patchNum[k]);
-    d_patchCreated[k]->rewindow(IntVector(0,0,0), d_patchNum[k]);
-    d_patchDeleted[k]->rewindow(IntVector(0,0,0), d_patchNum[k]);
-    d_patchActive[k]->initialize(0);
-    d_patchCreated[k]->initialize(0);
-    d_patchDeleted[k]->initialize(0);
-    if (k < (d_maxLevels-1)) {
-      problemSetup_BulletProofing(k);
-    }
-  }
 
   // set up filters
   dilate_dbg << "Initializing cell creation filter\n";
@@ -276,20 +200,6 @@ void RegridderCommon::problemSetup_BulletProofing(const int k){
     }
   }
 
-  // For 2D problems the lattice refinement ratio 
-  // and the cell refinement ratio must be 1 in that plane
-  for(int dir = 0; dir <3; dir++){
-    if(d_cellNum[k][dir] == 1 && (d_latticeRefinementRatio[k][dir] != 1 || d_cellRefinementRatio[k][dir] != 1) ){
-    ostringstream msg;
-    msg << "Problem Setup: Regridder: The problem you're running is 2D. \n"
-        << " The lattice refinement ratio AND the cell refinement ration must be 1 in that direction. \n"
-        << "Grid Size: " << d_cellNum[k] 
-        << " lattice refinement ratio: " << d_latticeRefinementRatio[k] 
-        << " cell refinement ratio: " << d_cellRefinementRatio[k] << endl;
-    throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
-
-    }
-  }
   // For 2D problems the cell Creation/dilation & minBoundaryCells must be 0 in that plane
   for(int dir = 0; dir <3; dir++){
     if(d_cellNum[k][dir] == 1 && 
@@ -304,13 +214,6 @@ void RegridderCommon::problemSetup_BulletProofing(const int k){
     throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
     
     }
-  }
-  
-  if ( Mod( d_patchSize[k], d_latticeRefinementRatio[k] ) != IntVector(0,0,0) ) {
-    ostringstream msg;
-    msg << "Problem Setup: Regridder: you've specified a patch size (interiorCellHighIndex() - interiorCellLowIndex()) on a patch that is not divisible by the lattice ratio on level 0 \n"
-        << " patch size " <<  d_patchSize[k] << " lattice refinement ratio " << d_latticeRefinementRatio[k] << endl;
-    throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
   }
 }
 //______________________________________________________________________
@@ -333,24 +236,6 @@ bool RegridderCommon::flaggedCellsExist(constCCVariable<int>& flaggedCells, IntV
   //  rdbg << "RegridderCommon::flaggedCellsExist( false ) END" << endl;
   return false;
 }
-
-IntVector RegridderCommon::calculateNumberOfPatches(IntVector& cellNum, IntVector& patchSize)
-{
-  rdbg << "RegridderCommon::calculateNumberOfPatches() BGN" << endl;
-
-  IntVector patchNum = Ceil(Vector(cellNum.x(), cellNum.y(), cellNum.z()) / patchSize);
-  IntVector remainder = Mod(cellNum, patchSize);
-  IntVector small = And(Less(remainder, patchSize / IntVector(2,2,2)), Greater(remainder,IntVector(0,0,0)));
-  
-  for ( int i = 0; i < 3; i++ ) {
-    if (small[i])
-      patchNum[small[i]]--;
-  }
-
-  rdbg << "RegridderCommon::calculateNumberOfPatches() END" << endl;
-  return patchNum;
-}
-
 
 IntVector RegridderCommon::Less    (const IntVector& a, const IntVector& b)
 {
@@ -480,77 +365,13 @@ void RegridderCommon::initFilter(CCVariable<int>& filter, FilterType ft, IntVect
   }
 }
 
-
-void RegridderCommon::Dilate( CCVariable<int>& flaggedCells, CCVariable<int>& dilatedFlaggedCells, CCVariable<int>& filter, IntVector depth )
-{
-  rdbg << "RegridderCommon::Dilate() BGN" << endl;
-
-  IntVector arraySize = flaggedCells.size();
-  IntVector dilatedArraySize = dilatedFlaggedCells.size();
-
-  if (arraySize != dilatedArraySize) {
-    throw InternalError("Original flagged cell array and dilated flagged cell array do not possess the same size!", __FILE__, __LINE__);
-  }
-
-  IntVector flagLow = flaggedCells.getLowIndex();
-  IntVector flagHigh = flaggedCells.getHighIndex();
-
-  IntVector low, high;
-
-  for(CellIterator iter(flagLow, flagHigh); !iter.done(); iter++) {
-    IntVector idx(*iter);
-
-    low = Max( flagLow, idx - depth );
-    high = Min( flagHigh - IntVector(1,1,1), idx + depth );
-    int temp = 0;
-    for(CellIterator local_iter(low, high + IntVector(1,1,1)); !local_iter.done(); local_iter++) {
-      IntVector local_idx(*local_iter);
-      temp += flaggedCells[local_idx]*filter[local_idx-idx+depth];
-    }
-    dilatedFlaggedCells[idx] = static_cast<int>(temp > 0);
-  }
-
-  if (dilate_dbg.active()) {
-    IntVector low  = flaggedCells.getLowIndex();
-    IntVector high = flaggedCells.getHighIndex();
-    dilate_dbg << "----------------------------------------------------------------" << endl;
-    dilate_dbg << "FLAGGED CELLS " << low << " " << high << endl;
-
-    
-    for (int z = high.z()-1; z >= low.z(); z--) {
-      for (int y = high.y()-1; y >= low.y(); y--) {
-        for (int x = low.x(); x < high.x(); x++) {
-          dilate_dbg << flaggedCells[IntVector(x,y,z)] << " ";
-        }
-        dilate_dbg << endl;
-      }
-      dilate_dbg << endl;
-    }
-    
-    dilate_dbg << "----------------------------------------------------------------" << endl;
-    dilate_dbg << "DILATED FLAGGED CELLS " << low << " " << high << endl;
-
-    for (int z = high.z()-1; z >= low.z(); z--) {
-      for (int y = high.y()-1; y >= low.y(); y--) {
-        for (int x = low.x(); x < high.x(); x++) {
-          dilate_dbg << dilatedFlaggedCells[IntVector(x,y,z)] << " ";
-        }
-        dilate_dbg << endl;
-      }
-      dilate_dbg << endl;
-    }
-  }
-
-  rdbg << "RegridderCommon::Dilate() END" << endl;
-}
-
-void RegridderCommon::Dilate2(const ProcessorGroup*,
+void RegridderCommon::Dilate(const ProcessorGroup*,
 			      const PatchSubset* patches,
 			      const MaterialSubset* ,
 			      DataWarehouse* /*old_dw*/,
 			      DataWarehouse* new_dw, DilationType type, DataWarehouse* get_dw)
 {
-  rdbg << "RegridderCommon::Dilate2() BGN" << endl;
+  rdbg << "RegridderCommon::Dilate() BGN" << endl;
 
   // change values based on which dilation it is
   const VarLabel* to_get = d_sharedState->get_refineFlag_label();
@@ -637,7 +458,7 @@ void RegridderCommon::Dilate2(const ProcessorGroup*,
       }
     }
   }
-  rdbg << "RegridderCommon::Dilate2() END" << endl;
+  rdbg << "RegridderCommon::Dilate() END" << endl;
 }
 
 void RegridderCommon::scheduleInitializeErrorEstimate(SchedulerP& sched, const LevelP& level)

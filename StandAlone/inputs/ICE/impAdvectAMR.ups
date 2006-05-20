@@ -11,7 +11,6 @@
    <SimulationComponent>
         <type> ice </type>
    </SimulationComponent>
-   <doAMR>true</doAMR>
    <Solver>
         <type> hypreamr </type>
    </Solver>
@@ -248,18 +247,20 @@
            </Parameters>
         </ImplicitSolver>
         
-        
-        <!--A M R -->
-        <AMR>
-          <orderOfInterpolation>1  </orderOfInterpolation>
-          <useLockStep>       true </useLockStep>
-          <do_Refluxing>      true </do_Refluxing>
-          <Refinement_Criteria_Thresholds>
-          </Refinement_Criteria_Thresholds>
-        </AMR>
       </ICE>        
     </CFD>
 
+        
+    <!--A M R -->
+    <AMR>
+      <ICE>
+        <orderOfInterpolation>1  </orderOfInterpolation>
+        <useLockStep>       true </useLockStep>
+        <do_Refluxing>      true </do_Refluxing>
+        <Refinement_Criteria_Thresholds>
+        </Refinement_Criteria_Thresholds>
+      </ICE>
+    </AMR>
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   

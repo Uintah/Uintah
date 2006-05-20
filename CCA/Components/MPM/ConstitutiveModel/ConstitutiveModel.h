@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/Short27.h>
 #include <Core/Containers/StaticArray.h>
+#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Grid/Variables/Array3.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
@@ -173,6 +174,11 @@ namespace Uintah {
     inline void setWorld(const ProcessorGroup* myworld)
       {
         d_world = myworld;
+      }
+
+    inline void setSharedState(SimulationStateP& sharedState)
+      {
+        d_sharedState = sharedState;
       }
 
     // Make a clone of the constitutive model
@@ -440,6 +446,7 @@ namespace Uintah {
     int NGP;
     int NGN;
     const ProcessorGroup* d_world;
+    SimulationStateP d_sharedState;
   };
 } // End namespace Uintah
       

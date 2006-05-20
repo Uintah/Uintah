@@ -2083,92 +2083,47 @@ allocateAndPutGridVar(GridVariable& var, const VarLabel* label, int matlIndex, c
     }
 #endif
     // get more efficient way of doing this...
-    if (NCVariable<double>* typedVar = dynamic_cast<NCVariable<double>*>(&var)) {
-      for (unsigned i = 0; i < difference.size(); i++) {
-        Box b = difference[i];
-        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
-        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+    for (unsigned i = 0; i < difference.size(); i++) {
+      Box b = difference[i];
+      IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
+      IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+      if (NCVariable<double>* typedVar = dynamic_cast<NCVariable<double>*>(&var)) {
         for (CellIterator iter(low, high); !iter.done(); iter++)
           (*typedVar)[*iter] = -5.555555e256;
       }
-    }
-    else if (NCVariable<Vector>* typedVar = dynamic_cast<NCVariable<Vector>*>(&var)) {
-      for (unsigned i = 0; i < difference.size(); i++) {
-        Box b = difference[i];
-        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
-        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+      else if (NCVariable<Vector>* typedVar = dynamic_cast<NCVariable<Vector>*>(&var)) {
         for (CellIterator iter(low, high); !iter.done(); iter++)
           (*typedVar)[*iter] = -5.555555e256;
       }
-    }
-    else if (CCVariable<double>* typedVar = dynamic_cast<CCVariable<double>*>(&var)) {
-      for (unsigned i = 0; i < difference.size(); i++) {
-        Box b = difference[i];
-        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
-        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+      else if (CCVariable<double>* typedVar = dynamic_cast<CCVariable<double>*>(&var)) {
         for (CellIterator iter(low, high); !iter.done(); iter++)
           (*typedVar)[*iter] = -5.555555e256;
       }
-    }
-    else if (CCVariable<Vector>* typedVar = dynamic_cast<CCVariable<Vector>*>(&var)) {
-      for (unsigned i = 0; i < difference.size(); i++) {
-        Box b = difference[i];
-        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
-        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+      else if (CCVariable<Vector>* typedVar = dynamic_cast<CCVariable<Vector>*>(&var)) {
         for (CellIterator iter(low, high); !iter.done(); iter++)
           (*typedVar)[*iter] = -5.555555e256;
       }
-    }
-    else if (SFCXVariable<double>* typedVar = dynamic_cast<SFCXVariable<double>*>(&var)) {
-      for (unsigned i = 0; i < difference.size(); i++) {
-        Box b = difference[i];
-        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
-        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+      else if (SFCXVariable<double>* typedVar = dynamic_cast<SFCXVariable<double>*>(&var)) {
         for (CellIterator iter(low, high); !iter.done(); iter++)
           (*typedVar)[*iter] = -5.555555e256;
       }
-    }
-    else if (SFCXVariable<Vector>* typedVar = dynamic_cast<SFCXVariable<Vector>*>(&var)) {
-      for (unsigned i = 0; i < difference.size(); i++) {
-        Box b = difference[i];
-        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
-        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+      else if (SFCXVariable<Vector>* typedVar = dynamic_cast<SFCXVariable<Vector>*>(&var)) {
         for (CellIterator iter(low, high); !iter.done(); iter++)
           (*typedVar)[*iter] = -5.555555e256;
       }
-    }
-    else if (SFCYVariable<double>* typedVar = dynamic_cast<SFCYVariable<double>*>(&var)) {
-      for (unsigned i = 0; i < difference.size(); i++) {
-        Box b = difference[i];
-        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
-        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+      else if (SFCYVariable<double>* typedVar = dynamic_cast<SFCYVariable<double>*>(&var)) {
         for (CellIterator iter(low, high); !iter.done(); iter++)
           (*typedVar)[*iter] = -5.555555e256;
       }
-    }
-    else if (SFCYVariable<Vector>* typedVar = dynamic_cast<SFCYVariable<Vector>*>(&var)) {
-      for (unsigned i = 0; i < difference.size(); i++) {
-        Box b = difference[i];
-        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
-        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+      else if (SFCYVariable<Vector>* typedVar = dynamic_cast<SFCYVariable<Vector>*>(&var)) {
         for (CellIterator iter(low, high); !iter.done(); iter++)
           (*typedVar)[*iter] = -5.555555e256;
       }
-    }
-    else if (SFCZVariable<double>* typedVar = dynamic_cast<SFCZVariable<double>*>(&var)) {
-      for (unsigned i = 0; i < difference.size(); i++) {
-        Box b = difference[i];
-        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
-        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+      else if (SFCZVariable<double>* typedVar = dynamic_cast<SFCZVariable<double>*>(&var)) {
         for (CellIterator iter(low, high); !iter.done(); iter++)
           (*typedVar)[*iter] = -5.555555e256;
       }
-    }
-    else if (SFCZVariable<Vector>* typedVar = dynamic_cast<SFCZVariable<Vector>*>(&var)) {
-      for (unsigned i = 0; i < difference.size(); i++) {
-        Box b = difference[i];
-        IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
-        IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+      else if (SFCZVariable<Vector>* typedVar = dynamic_cast<SFCZVariable<Vector>*>(&var)) {
         for (CellIterator iter(low, high); !iter.done(); iter++)
           (*typedVar)[*iter] = -5.555555e256;
       }
