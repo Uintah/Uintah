@@ -32,7 +32,7 @@ public class ICEMaterialsPanel extends JPanel {
   private UintahInputPanel d_parent = null;
 
   // Local components
-  private WholeNumberField numMatEntry = null;
+  private IntegerField numMatEntry = null;
   private JTabbedPane iceMatTabbedPane = null;
   private Vector iceMaterialInputPanel = null;
   
@@ -59,7 +59,7 @@ public class ICEMaterialsPanel extends JPanel {
     // Label and entry for number of materials
     JPanel numMatPanel = new JPanel(new GridLayout(1,0));
     JLabel numMatLabel = new JLabel("Number of ICE Materials");
-    numMatEntry = new WholeNumberField(d_numMat, 2);
+    numMatEntry = new IntegerField(d_numMat, 2);
     numMatPanel.add(numMatLabel);
     numMatPanel.add(numMatEntry);
     UintahGui.setConstraints(gbc, GridBagConstraints.NONE, 

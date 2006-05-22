@@ -26,7 +26,7 @@ public class GenerateParticlePanel extends JPanel {
 
   // Data that are stored for the life of the object
   private DecimalField nofPartEntry = null;
-  private WholeNumberField nofCells = null;
+  private IntegerField nofCells = null;
   private JComboBox partTypeCBox = null;
   private JComboBox roundOffCBox = null;
   private JButton distribButton = null;
@@ -104,7 +104,7 @@ public class GenerateParticlePanel extends JPanel {
 
     // Create the components
     JLabel label0 = new JLabel("No. of Grid Cells (in one direction) ");
-    nofCells = new WholeNumberField(1000,5);
+    nofCells = new IntegerField(1000,5);
     JLabel label1 = new JLabel("No. of particles (x 100)");
     nofPartEntry = new DecimalField(1.0,3);
     JLabel label2 = new JLabel("Type of particle ");

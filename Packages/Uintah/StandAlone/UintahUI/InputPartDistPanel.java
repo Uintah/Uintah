@@ -50,17 +50,17 @@ public class InputPartDistPanel extends JPanel {
   private JButton saveButton = null;
   public JTextField matNameEntry = null;
   public DecimalField volFracEntry = null;
-  public WholeNumberField size11Entry = null;
+  public IntegerField size11Entry = null;
   public DecimalField frac11Entry = null;
-  public WholeNumberField size12Entry = null;
+  public IntegerField size12Entry = null;
   public DecimalField frac12Entry = null;
-  public WholeNumberField size13Entry = null;
+  public IntegerField size13Entry = null;
   public DecimalField frac13Entry = null;
-  public WholeNumberField size14Entry = null;
+  public IntegerField size14Entry = null;
   public DecimalField frac14Entry = null;
-  public WholeNumberField size15Entry = null;
+  public IntegerField size15Entry = null;
   public DecimalField frac15Entry = null;
-  public WholeNumberField size16Entry = null;
+  public IntegerField size16Entry = null;
   public DecimalField frac16Entry = null;
   
   public InputPartDistPanel(ParticleSize partSizeDist,
@@ -110,18 +110,18 @@ public class InputPartDistPanel extends JPanel {
     JLabel label42 = new JLabel("of Particles");
     JLabel label43 = new JLabel("Size <=");
     JLabel label44 = new JLabel("Fraction (volume %)");
-    size11Entry = new WholeNumberField(d_partSizeDist.sizeInp[0],4);
+    size11Entry = new IntegerField(d_partSizeDist.sizeInp[0],4);
     frac11Entry = new DecimalField(d_partSizeDist.volFracInp[0], 5);
-    size12Entry = new WholeNumberField(d_partSizeDist.sizeInp[1],4);
+    size12Entry = new IntegerField(d_partSizeDist.sizeInp[1],4);
     frac12Entry = new DecimalField(d_partSizeDist.volFracInp[0]+
                                    d_partSizeDist.volFracInp[1], 5);
-    size13Entry = new WholeNumberField(0,4);
+    size13Entry = new IntegerField(0,4);
     frac13Entry = new DecimalField(0.0, 5);
-    size14Entry = new WholeNumberField(0,4);
+    size14Entry = new IntegerField(0,4);
     frac14Entry = new DecimalField(0.0, 5);
-    size15Entry = new WholeNumberField(0,4);
+    size15Entry = new IntegerField(0,4);
     frac15Entry = new DecimalField(0.0, 5);
-    size16Entry = new WholeNumberField(0,4);
+    size16Entry = new IntegerField(0,4);
     frac16Entry = new DecimalField(0.0, 5);
     panel4.add(label41);
     panel4.add(label42);

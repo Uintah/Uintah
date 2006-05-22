@@ -29,12 +29,8 @@ public class GeomObjectPanel extends JPanel
 
   // Components
   private JTextField nameEntry = null;
-  private WholeNumberField xresEntry = null;
-  private WholeNumberField yresEntry = null;
-  private WholeNumberField zresEntry = null;
-  private DecimalField xvelEntry = null;
-  private DecimalField yvelEntry = null;
-  private DecimalField zvelEntry = null;
+  private IntegerVectorField resEntry = null;
+  private DecimalVectorField velEntry = null;
   private DecimalField tempEntry = null;
   private DecimalField presEntry = null;
   private DecimalField rhoEntry = null;
@@ -45,13 +41,7 @@ public class GeomObjectPanel extends JPanel
 
   private JLabel nameLabel = null;
   private JLabel resLabel = null;
-  private JLabel xresLabel = null;
-  private JLabel yresLabel = null;
-  private JLabel zresLabel = null;
   private JLabel velLabel = null;
-  private JLabel xvelLabel = null;
-  private JLabel yvelLabel = null;
-  private JLabel zvelLabel = null;
   private JLabel tempLabel = null;
   private JLabel rhoLabel = null;
   private JLabel presLabel = null;
@@ -82,133 +72,86 @@ public class GeomObjectPanel extends JPanel
     GridBagLayout gb = new GridBagLayout();
     GridBagConstraints gbc = new GridBagConstraints();
     setLayout(gb);
+    int fill = GridBagConstraints.BOTH;
+    int xgap = 5;
+    int ygap = 0;
 
     // Geom object name
     nameLabel = new JLabel("Name");
-    UintahGui.setConstraints(gbc, 0, 0);
+    UintahGui.setConstraints(gbc, fill, xgap, ygap, 0, 0);
     gb.setConstraints(nameLabel, gbc);
     add(nameLabel);
   
     nameEntry = new JTextField("Box", 10);
-    UintahGui.setConstraints(gbc, 1, 0);
+    UintahGui.setConstraints(gbc, fill, xgap, ygap, 1, 0);
     gb.setConstraints(nameEntry, gbc);
     add(nameEntry);
 
     // Resolution
     resLabel = new JLabel("Resolution:");
-    UintahGui.setConstraints(gbc, 0, 1);
+    UintahGui.setConstraints(gbc, fill, xgap, ygap, 0, 1);
     gb.setConstraints(resLabel, gbc);
     add(resLabel);
 
-    xresLabel = new JLabel("x");         
-    UintahGui.setConstraints(gbc, 1, 1);
-    gb.setConstraints(xresLabel, gbc);
-    add(xresLabel); 
-
-    xresEntry = new WholeNumberField(2,5);
-    UintahGui.setConstraints(gbc, 2, 1);
-    gb.setConstraints(xresEntry, gbc);
-    add(xresEntry);
-
-    yresLabel = new JLabel("y");         
-    UintahGui.setConstraints(gbc, 3, 1);
-    gb.setConstraints(yresLabel, gbc);
-    add(yresLabel); 
-
-    yresEntry = new WholeNumberField(2,5);
-    UintahGui.setConstraints(gbc, 4, 1);
-    gb.setConstraints(yresEntry, gbc);
-    add(yresEntry);
-
-    zresLabel = new JLabel("z");         
-    UintahGui.setConstraints(gbc, 5, 1);
-    gb.setConstraints(zresLabel, gbc);
-    add(zresLabel); 
-
-    zresEntry = new WholeNumberField(2,5);
-    UintahGui.setConstraints(gbc, 6, 1);
-    gb.setConstraints(zresEntry, gbc);
-    add(zresEntry);
+    resEntry = new IntegerVectorField(2, 2, 2, 5);
+    UintahGui.setConstraints(gbc, fill, xgap, ygap, 1, 1);
+    gb.setConstraints(resEntry, gbc);
+    add(resEntry);
 
     // Velocity
     velLabel = new JLabel("Velocity:");
-    UintahGui.setConstraints(gbc, 0, 2);
+    UintahGui.setConstraints(gbc, fill, xgap, ygap, 0, 2);
     gb.setConstraints(velLabel, gbc);
     add(velLabel);
 
-    xvelLabel = new JLabel("x");         
-    UintahGui.setConstraints(gbc, 1, 2);
-    gb.setConstraints(xvelLabel, gbc);
-    add(xvelLabel); 
-
-    xvelEntry = new DecimalField(0.0,5);
-    UintahGui.setConstraints(gbc, 2, 2);
-    gb.setConstraints(xvelEntry, gbc);
-    add(xvelEntry);
-
-    yvelLabel = new JLabel("y");         
-    UintahGui.setConstraints(gbc, 3, 2);
-    gb.setConstraints(yvelLabel, gbc);
-    add(yvelLabel); 
-
-    yvelEntry = new DecimalField(0.0,5);
-    UintahGui.setConstraints(gbc, 4, 2);
-    gb.setConstraints(yvelEntry, gbc);
-    add(yvelEntry);
-
-    zvelLabel = new JLabel("z");         
-    UintahGui.setConstraints(gbc, 5, 2);
-    gb.setConstraints(zvelLabel, gbc);
-    add(zvelLabel); 
-
-    zvelEntry = new DecimalField(0.0,5);
-    UintahGui.setConstraints(gbc, 6, 2);
-    gb.setConstraints(zvelEntry, gbc);
-    add(zvelEntry);
+    velEntry = new DecimalVectorField(0.0, 0.0, 0.0, 5);
+    UintahGui.setConstraints(gbc, fill, xgap, ygap, 1, 2);
+    gb.setConstraints(velEntry, gbc);
+    add(velEntry);
 
     // Temperature
     tempLabel = new JLabel("Temperature");
-    UintahGui.setConstraints(gbc, 0, 3);
+    UintahGui.setConstraints(gbc, fill, xgap, ygap, 0, 3);
     gb.setConstraints(tempLabel, gbc);
     add(tempLabel);
 
     tempEntry = new DecimalField(300.0,5);
-    UintahGui.setConstraints(gbc, 1, 3);
+    UintahGui.setConstraints(gbc, fill, xgap, ygap, 1, 3);
     gb.setConstraints(tempEntry, gbc);
     add(tempEntry);
 
     // Density
     rhoLabel = new JLabel("Density");
-    UintahGui.setConstraints(gbc, 2, 3);
+    UintahGui.setConstraints(gbc, fill, xgap, ygap, 0, 4);
     gb.setConstraints(rhoLabel, gbc);
     add(rhoLabel);
 
     rhoEntry = new DecimalField(0.0,5);
-    UintahGui.setConstraints(gbc, 3, 3);
+    UintahGui.setConstraints(gbc, fill, xgap, ygap, 1, 4);
     gb.setConstraints(rhoEntry, gbc);
     add(rhoEntry);
 
     // Pressure
     presLabel = new JLabel("Pressure");
-    UintahGui.setConstraints(gbc, 4, 3);
+    UintahGui.setConstraints(gbc, fill, xgap, ygap, 0, 5);
     gb.setConstraints(presLabel, gbc);
     add(presLabel);
 
     presEntry = new DecimalField(0.0,5);
-    UintahGui.setConstraints(gbc, 5, 3);
+    UintahGui.setConstraints(gbc, fill, xgap, ygap, 1, 5);
     gb.setConstraints(presEntry, gbc);
     add(presEntry);
 
     // Geometry Piece
     geomPieceLabel = new JLabel("Geometry Pieces");
-    UintahGui.setConstraints(gbc, 0, 4);
+    UintahGui.setConstraints(gbc, fill, xgap, ygap, 0, 6);
     gb.setConstraints(geomPieceLabel, gbc);
     add(geomPieceLabel);
     geomPieceListModel = new DefaultListModel();
     geomPieceList = new JList(geomPieceListModel);
     geomPieceList.setVisibleRowCount(4);
     geomPieceSP = new JScrollPane(geomPieceList);
-    UintahGui.setConstraints(gbc, 1, 4);
+    UintahGui.setConstraints(gbc, fill, xgap, ygap, 1, 6);
     gb.setConstraints(geomPieceSP, gbc);
     add(geomPieceSP);
 
@@ -224,7 +167,7 @@ public class GeomObjectPanel extends JPanel
     acceptButton = new JButton("Accept");
     acceptButton.setActionCommand("accept");
     acceptButton.addActionListener(this);
-    UintahGui.setConstraints(gbc, 0, 5);
+    UintahGui.setConstraints(gbc, fill, xgap, ygap, 0, 7);
     gb.setConstraints(acceptButton, gbc);
     add(acceptButton);
   }
@@ -246,10 +189,8 @@ public class GeomObjectPanel extends JPanel
 
         GeomObject go = new GeomObject();
         go.setName(nameEntry.getText());
-        go.setResolution(xresEntry.getValue(), yresEntry.getValue(),
-                         zresEntry.getValue());
-        go.setVelocity(xvelEntry.getValue(), yvelEntry.getValue(),
-                       zvelEntry.getValue());
+        go.setResolution(resEntry.x(), resEntry.y(), resEntry.z());
+        go.setVelocity(velEntry.x(), velEntry.y(), velEntry.z());
         go.setTemperature(tempEntry.getValue());
         go.setDensity(rhoEntry.getValue());
         go.setPressure(presEntry.getValue());
@@ -274,10 +215,8 @@ public class GeomObjectPanel extends JPanel
         d_geomObj.removeElementAt(ii);
         GeomObject go = new GeomObject();
         go.setName((String) geomPieceListModel.elementAt(ii));
-        go.setResolution(xresEntry.getValue(), yresEntry.getValue(),
-                             zresEntry.getValue());
-        go.setVelocity(xvelEntry.getValue(), yvelEntry.getValue(),
-                         zvelEntry.getValue());
+        go.setResolution(resEntry.x(), resEntry.y(), resEntry.z());
+        go.setVelocity(velEntry.x(), velEntry.y(), velEntry.z());
         go.setTemperature(tempEntry.getValue());
         go.setDensity(rhoEntry.getValue());
         go.setPressure(presEntry.getValue());
@@ -290,10 +229,8 @@ public class GeomObjectPanel extends JPanel
       for (int ii = 0; ii < numGeomPiece; ++ii) {
         GeomObject go = new GeomObject();
         go.setName((String) geomPieceListModel.elementAt(ii));
-        go.setResolution(xresEntry.getValue(), yresEntry.getValue(),
-                             zresEntry.getValue());
-        go.setVelocity(xvelEntry.getValue(), yvelEntry.getValue(),
-                         zvelEntry.getValue());
+        go.setResolution(resEntry.x(), resEntry.y(), resEntry.z());
+        go.setVelocity(velEntry.x(), velEntry.y(), velEntry.z());
         go.setTemperature(tempEntry.getValue());
         go.setDensity(rhoEntry.getValue());
         go.setPressure(presEntry.getValue());

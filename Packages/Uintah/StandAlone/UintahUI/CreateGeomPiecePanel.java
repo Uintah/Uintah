@@ -152,13 +152,14 @@ public class CreateGeomPiecePanel extends JPanel
         Point center = part.getCenter();
         double radius = part.getRadius();
         double length = part.getLength();
+        double thickness = part.getThickness();
 
         // Create a name 
         String name = new String("cylinder_"+String.valueOf(ii));
 
         // Create a smooth cylinder geometry piece
         SmoothCylGeomPiece piece = 
-          new SmoothCylGeomPiece(name, center, radius, length); 
+          new SmoothCylGeomPiece(name, center, radius, thickness, length); 
         d_geomPiece.addElement(piece);
 
         // Create a cylinder geometry piece
