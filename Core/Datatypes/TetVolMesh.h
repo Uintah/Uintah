@@ -525,8 +525,6 @@ protected:
                                    typename Cell::index_type ci,
                                    typename Edge::index_type ei);
 
-  void         resync_cells(typename Cell::array_type &carray);
-
   // These should not be called outside of the synchronize_lock_.
   void                  compute_node_neighbors();
   void                  compute_edges();
@@ -2434,7 +2432,6 @@ TetVolMesh<Basis>::insert_node_in_edge(typename Cell::array_type &tets,
   const double vola = Dot(Cross(p1a-p0,p2-p0),p3-p0);
   const double volb = Dot(Cross(p1b-p0,p2-p0),p3-p0);
 
-
   tets.push_back(ci);
 
   if (vola * vol < 0.0)
@@ -2461,20 +2458,6 @@ TetVolMesh<Basis>::insert_node_in_edge(typename Cell::array_type &tets,
   }
   
   create_cell_syncinfo(ci);
-}
-
-
-template <class Basis>
-void
-TetVolMesh<Basis>::resync_cells(typename Cell::array_type &carray)
-{
-  for (unsigned int i = 0; i < carray.size(); i++)
-  {
-    // Need to delete prior to making changes.  This doesn't work here.
-    delete_cell_syncinfo(carray[i]);
-
-    create_cell_syncinfo(carray[i]);
-  }
 }
 
 
@@ -2626,7 +2609,6 @@ TetVolMesh<Basis>::insert_node_in_elem(typename Elem::array_type &tets,
     }
   }
 
-  resync_cells(tets);
   return true;
 }
 
