@@ -241,12 +241,13 @@ void ICE::scheduleMultiLevelPressureSolve(  SchedulerP& sched,
                                           const MaterialSubset* mpm_matls,
                                           const MaterialSet* all_matls)
 {
+  d_recompileSubsched = true;
   cout_doing << d_myworld->myrank() <<
                 " ICE::scheduleMultiLevelPressureSolve" << endl;
   
   Task* t = scinew Task("ICE::multiLevelPressureSolve", 
                    this, &ICE::multiLevelPressureSolve,
-                   grid, sched.get_rep(), ice_matls, mpm_matls);
+                   grid, ice_matls, mpm_matls);
 
   const MaterialSubset* all_matls_sub = all_matls->getUnion();
  
@@ -347,8 +348,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
                                   const MaterialSubset*,       
                                   DataWarehouse* ParentOldDW,    
                                   DataWarehouse* ParentNewDW,    
-                                  GridP grid,                 
-                                  Scheduler* sched,
+                                  GridP grid,
                                   const MaterialSubset* ice_matls,
                                   const MaterialSubset* mpm_matls)
 {
@@ -356,7 +356,6 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   // get the patches our processor is responsible for
 
   cout_doing << d_myworld->myrank() << " ICE::MultiLevelPressureSolve on patch " << *patches << endl;
-  SchedulerP schedulerP(sched);
   //__________________________________
   // define Matl sets and subsets
   const MaterialSet* all_matls = d_sharedState->allMaterials();
@@ -371,21 +370,11 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
                            ParentOldDW->setScrubbing(DataWarehouse::ScrubNone);
   DataWarehouse::ScrubMode ParentNewDW_scrubmode =
                            ParentNewDW->setScrubbing(DataWarehouse::ScrubNone);
-  //__________________________________
-  // create a new subscheduler
-  SchedulerP subsched = sched->createSubScheduler();
-  subsched->setRestartable(true); 
-  subsched->initialize(3, 1);
-  subsched->setParentDWs(ParentOldDW, ParentNewDW);
-  subsched->clearMappings();
-  subsched->mapDataWarehouse(Task::ParentOldDW, 0);
-  subsched->mapDataWarehouse(Task::ParentNewDW, 1);
-  subsched->mapDataWarehouse(Task::OldDW, 2);
-  subsched->mapDataWarehouse(Task::NewDW, 3);
-  
-  subsched->advanceDataWarehouse(grid);
-  DataWarehouse* subOldDW = subsched->get_dw(2);
-  DataWarehouse* subNewDW = subsched->get_dw(3);
+
+  d_subsched->setParentDWs(ParentOldDW, ParentNewDW);
+  d_subsched->advanceDataWarehouse(grid);
+  DataWarehouse* subOldDW = d_subsched->get_dw(2);
+  DataWarehouse* subNewDW = d_subsched->get_dw(3);
 
   int maxLevel = grid->numLevels();
 
@@ -393,7 +382,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   //  Move data from parentOldDW to subSchedNewDW.
   // on all the levels
   delt_vartype dt;
-  subNewDW = subsched->get_dw(3);
+  subNewDW = d_subsched->get_dw(3);
   ParentOldDW->get(dt, d_sharedState->get_delt_label());
   subNewDW->put(dt, d_sharedState->get_delt_label());
    
@@ -424,97 +413,99 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   int counter = 0;
   bool restart   = false;
   bool recursion = true;
-  bool firstIter = true;
+  //bool firstIter = true;
   bool modifies_X = true;
 
   while( counter < d_max_iter_implicit && max_RHS > d_outer_iter_tolerance) {
-    //__________________________________
-    // schedule the tasks
-    for(int L = 0; L<maxLevel; L++){
-      const LevelP level = grid->getLevel(L);
-      const PatchSet* patch_set = level->eachPatch();
-      scheduleSetupMatrix(    subsched, level,  patch_set,  one_matl, 
-                                                          all_matls);
-    }
-
-    for(int L = 0; L<maxLevel; L++){
-      const LevelP level = grid->getLevel(L);
-      schedule_matrixBC_CFI_coarsePatch(subsched, level, one_matl, all_matls);
-      scheduleZeroMatrix_UnderFinePatches( subsched,level,one_matl, firstIter);
-    }
+    if (counter == 0 && d_recompileSubsched) {
+      //__________________________________
+      // schedule the tasks
+      d_subsched->initialize(3, 1);
+      for(int L = 0; L<maxLevel; L++){
+        const LevelP level = grid->getLevel(L);
+        const PatchSet* patch_set = level->eachPatch();
+        scheduleSetupMatrix(    d_subsched, level,  patch_set,  one_matl, 
+                                all_matls);
+      }
+      
+      for(int L = 0; L<maxLevel; L++){
+        const LevelP level = grid->getLevel(L);
+        schedule_matrixBC_CFI_coarsePatch(d_subsched, level, one_matl, all_matls);
+        scheduleZeroMatrix_UnderFinePatches( d_subsched,level,one_matl);
+      }
 #if 1
-    // Level argument is not really used in this version of scheduleSolve(),
-    // so just pass in the coarsest level as it always exists.
-    const VarLabel* whichInitialGuess = NULL; 
-
-    solver->scheduleSolve(grid->getLevel(0), subsched, press_matlSet,
-                          lb->matrixLabel,   Task::NewDW,
-                          lb->imp_delPLabel, modifies_X,
-                          lb->rhsLabel,      Task::OldDW,
-                          whichInitialGuess, Task::NewDW,
-			     solver_parameters);
-
+      // Level argument is not really used in this version of scheduleSolve(),
+      // so just pass in the coarsest level as it always exists.
+      const VarLabel* whichInitialGuess = NULL; 
+      
+      solver->scheduleSolve(grid->getLevel(0), d_subsched, press_matlSet,
+                            lb->matrixLabel,   Task::NewDW,
+                            lb->imp_delPLabel, modifies_X,
+                            lb->rhsLabel,      Task::OldDW,
+                            whichInitialGuess, Task::NewDW,
+                            solver_parameters);
+      
 #else
-    const PatchSet* perProcPatches = 
+      const PatchSet* perProcPatches = 
       sched->getLoadBalancer()->getPerProcessorPatchSet(grid);
-    const VarLabel* whichInitialGuess = NULL;
-    schedule_bogus_imp_delP(subsched,  perProcPatches,        d_press_matl,
-                            all_matls);   
+      schedule_bogus_imp_delP(d_subsched,  perProcPatches,        d_press_matl,
+                              all_matls);   
 #endif
-
-    // add the patchSubset size as part of the criteria if it is an empty subset.
-    // ( we need the solver to work for hypre consistency), but don't do these so TG will compile
-    for(int L = maxLevel-1; L> 0; L--){
-      const LevelP coarseLevel = grid->getLevel(L-1);
-      scheduleCoarsen_delP(  subsched,  coarseLevel,  d_press_matl, lb->imp_delPLabel);
-    }
-
-    for(int L = 0; L<maxLevel; L++){
-      LevelP level = grid->getLevel(L);
-      const PatchSet* patch_set = level->eachPatch();
       
-      scheduleUpdatePressure( subsched,  level, patch_set,  ice_matls,
-                                                            mpm_matls,    
-                                                            d_press_matl, 
-                                                            all_matls);   
+      // add the patchSubset size as part of the criteria if it is an empty subset.
+      // ( we need the solver to work for hypre consistency), but don't do these so TG will compile
+      for(int L = maxLevel-1; L> 0; L--){
+        const LevelP coarseLevel = grid->getLevel(L-1);
+        scheduleCoarsen_delP(  d_subsched,  coarseLevel,  d_press_matl, lb->imp_delPLabel);
+      }
       
-      scheduleRecomputeVel_FC(subsched,         patch_set,  ice_matls,
-                                                            mpm_matls,    
-                                                            d_press_matl,  
-                                                            all_matls,    
-                                                            recursion);   
+      for(int L = 0; L<maxLevel; L++){
+        LevelP level = grid->getLevel(L);
+        const PatchSet* patch_set = level->eachPatch();
+        
+        scheduleUpdatePressure( d_subsched,  level, patch_set,  ice_matls,
+                                mpm_matls,    
+                                d_press_matl, 
+                                all_matls);   
+        
+        scheduleRecomputeVel_FC(d_subsched,         patch_set,  ice_matls,
+                                mpm_matls,    
+                                d_press_matl,  
+                                all_matls,    
+                                recursion);   
+        
+        scheduleSetupRHS(       d_subsched,         patch_set,  one_matl, 
+                                all_matls,
+                                recursion,
+                                "computes");
+      }
+      for(int L = 0; L<maxLevel; L++){
+        LevelP level = grid->getLevel(L);
+        scheduleAddReflux_RHS(  d_subsched,         level,      one_matl,
+                                all_matls,
+                                true);
+        scheduleCompute_maxRHS(  d_subsched,        level,      one_matl,
+                                 all_matls);
+      }
       
-      scheduleSetupRHS(       subsched,         patch_set,  one_matl, 
-                                                            all_matls,
-                                                            recursion,
-                                                            "computes");
+      d_subsched->compile();
+      d_recompileSubsched = false;
     }
-    for(int L = 0; L<maxLevel; L++){
-      LevelP level = grid->getLevel(L);
-      scheduleAddReflux_RHS(  subsched,         level,      one_matl,
-                                                            all_matls,
-                                                           true);
-      scheduleCompute_maxRHS(  subsched,        level,      one_matl,
-                                                            all_matls);
-    }
-
-    subsched->compile();
     //__________________________________
     //  - move subNewDW to subOldDW
     //  - scrub the subScheduler
     //  - execute the tasks
-    subsched->advanceDataWarehouse(grid); 
-    subOldDW = subsched->get_dw(2);
-    subNewDW = subsched->get_dw(3);
+    d_subsched->advanceDataWarehouse(grid); 
+    subOldDW = d_subsched->get_dw(2);
+    subNewDW = d_subsched->get_dw(3);
     subOldDW->setScrubbing(DataWarehouse::ScrubComplete);
     subNewDW->setScrubbing(DataWarehouse::ScrubNone);
     
-    subsched->execute();
+    d_subsched->execute();
     // Allow for re-scheduling (different) tasks on the next iteration...
     
     counter ++;
-    firstIter = false;
-    whichInitialGuess = NULL;
+    //firstIter = false;
     
     //__________________________________
     // diagnostics
@@ -536,7 +527,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
         cout <<"\nWARNING: max iterations befor timestep restart reached\n"<<endl;
     }
                                           //  solver has requested a restart
-    if (subsched->get_dw(3)->timestepRestarted() ) {
+    if (d_subsched->get_dw(3)->timestepRestarted() ) {
       if(pg->myrank() == 0)
         cout << "\nWARNING: Solver had requested a restart\n" <<endl;
       restart = true;
@@ -578,7 +569,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   //__________________________________
   // Move products of iteration (only) from sub_new_dw -> parent_new_dw
     
-  subNewDW  = subsched->get_dw(3);
+  subNewDW  = d_subsched->get_dw(3);
   bool replace = true;
   const MaterialSubset* all_matls_sub = all_matls->getUnion();
 
@@ -631,6 +622,11 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
   if(press_matlSet->removeReference()){
     delete press_matlSet;
   }
+
+  // free un-needed data
+  d_subsched->advanceDataWarehouse(grid);
+  d_subsched->advanceDataWarehouse(grid);
+
 } // end multiLevelPressureSolve()
 
 
@@ -922,15 +918,14 @@ void ICE::coarsen_delP(const ProcessorGroup*,
  _____________________________________________________________________*/
 void ICE::scheduleZeroMatrix_UnderFinePatches(SchedulerP& sched, 
                                               const LevelP& coarseLevel,
-                                              const MaterialSubset* one_matl,
-                                              bool firstIter)
+                                              const MaterialSubset* one_matl)
 { 
   cout_doing << d_myworld->myrank()
              << " ICE::scheduleZeroMatrix_RHS_UnderFinePatches\t\t\tL-" 
              << coarseLevel->getIndex() << endl;
   
   Task* t = scinew Task("ICE::zeroMatrix_UnderFinePatches",
-                  this, &ICE::zeroMatrix_UnderFinePatches, firstIter);
+                  this, &ICE::zeroMatrix_UnderFinePatches);
   
   Task::DomainSpec oims = Task::OutOfDomain;  //outside of ice matlSet.  
   if(coarseLevel->hasFinerLevel()){                                                                      
@@ -945,8 +940,7 @@ void ICE::zeroMatrix_UnderFinePatches(const ProcessorGroup*,
                                       const PatchSubset* coarsePatches,
                                       const MaterialSubset*,
                                       DataWarehouse* old_dw,
-                                      DataWarehouse* new_dw,
-                                      bool firstIter)
+                                      DataWarehouse* new_dw)
 { 
   const Level* coarseLevel = getLevel(coarsePatches);
   const Level* fineLevel = 0;
