@@ -94,7 +94,7 @@ public:
     );
 
   // added by BJW
-  string GetCallstack() { ShowCallstack(); return ostr.str(); }
+  string GetCallstack(void* context = 0) { ShowCallstack(GetCurrentThread(), (CONTEXT*)context); return ostr.str(); }
 
 #if _MSC_VER >= 1300
 // due to some reasons, the "STACKWALK_MAX_NAMELEN" must be declared as "public" 

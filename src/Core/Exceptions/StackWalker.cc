@@ -493,8 +493,11 @@ private:
     int cnt = 0;
     while (keepGoing)
     {
-      this->LoadModule(hProcess, me.szExePath, me.szModule, (DWORD64) me.modBaseAddr, me.modBaseSize);
-      cnt++;
+      // don't know why, but we get problems with this one...
+      if (string(me.szExePath).find("ProblemSpecification") == string::npos) {
+        this->LoadModule(hProcess, me.szExePath, me.szModule, (DWORD64) me.modBaseAddr, me.modBaseSize);
+        cnt++;
+      }
       keepGoing = !!pM32N( hSnap, &me );
     }
     CloseHandle(hSnap);

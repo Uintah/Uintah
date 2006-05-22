@@ -72,7 +72,7 @@ namespace SCIRun {
     Exception& operator=(const Exception&);
   };
 
-  SCISHARE std::string getStackTrace();
+  SCISHARE std::string getStackTrace(void* context = 0);
 } // End namespace SCIRun
 
 #endif
