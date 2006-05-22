@@ -53,6 +53,7 @@
 #include <Core/Util/DynamicLoader.h>
 #include <float.h> // for DBL_MAX
 
+#include <Core/Datatypes/share.h>
 
 namespace SCIRun {
 
@@ -81,7 +82,7 @@ private:
 };
 
 
-class ScalarFieldInterfaceMaker : public DynamicAlgoBase
+class SCISHARE ScalarFieldInterfaceMaker : public DynamicAlgoBase
 {
 public:
   virtual ScalarFieldInterfaceHandle make(FieldHandle field) = 0;
@@ -284,7 +285,7 @@ private:
 
 
 
-class VectorFieldInterfaceMaker : public DynamicAlgoBase
+class SCISHARE VectorFieldInterfaceMaker : public DynamicAlgoBase
 {
 public:
   virtual VectorFieldInterfaceHandle make(FieldHandle field) = 0;
@@ -549,7 +550,7 @@ private:
 
 
 
-class TensorFieldInterfaceMaker : public DynamicAlgoBase
+class SCISHARE TensorFieldInterfaceMaker : public DynamicAlgoBase
 {
 public:
   virtual TensorFieldInterfaceHandle make(FieldHandle field) = 0;

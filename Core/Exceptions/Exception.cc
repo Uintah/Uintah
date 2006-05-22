@@ -196,7 +196,7 @@ void Exception::sci_throw(const Exception& exc)
   }
 }
 
-string getStackTrace()
+string getStackTrace(void* context /*=0*/)
 {
   ostringstream stacktrace;
   static const int MAXSTACK = 100;
@@ -234,7 +234,7 @@ string getStackTrace()
   }
 #elif defined(_WIN32)
   StackWalker sw;
-  stacktrace << sw.GetCallstack();
+  stacktrace << sw.GetCallstack(context);
 #endif
   return stacktrace.str();
 }

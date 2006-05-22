@@ -61,6 +61,7 @@
 #define __REENTRANT
 #define _WINSOCK2API_
 #include <windows.h>
+#include <excpt.h>
 #include <signal.h>
 #include <string.h>
 #include <stdio.h>
@@ -833,7 +834,19 @@ void Thread::initialize()
 
 void Thread_run(Thread* t)
 {
+  // in the try-except functionality, we have access to the entire stack trace in the except () clause
+  // (it has access to the stack before executing the exception handler while it determines where to land
+  // the exception
+#ifdef _MSC_VER 
+  __try {
+#endif
     t->run_body();
+#ifdef _MSC_VER
+  } __except(Thread::niceAbort(((LPEXCEPTION_POINTERS)GetExceptionInformation())->ContextRecord), 
+      EXCEPTION_CONTINUE_SEARCH) {
+
+  }
+#endif
 }
 
 void Thread::migrate(int proc)

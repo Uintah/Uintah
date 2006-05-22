@@ -45,6 +45,7 @@
 
 #ifdef _WIN32
 #  pragma warning(disable:4786)
+#  define EXPERIMENTAL_TCL_THREAD
 #endif
 
 #include <Dataflow/Network/NetworkEditor.h>

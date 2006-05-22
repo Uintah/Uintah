@@ -156,9 +156,13 @@ Thread::run_body()
     } catch(const char *&e){
       fprintf(stderr, "Caught unhandled char exception:\n%s\n", e);
       Thread::niceAbort();
+#ifndef _MSC_VER 
+    // catch these differently with MS compiler, we can get the whole stack trace, but it must be done with
+    // an MS-specific exception handler in a different function
     } catch(...){
 	fprintf(stderr, "Caught unhandled exception of unknown type\n");
 	Thread::niceAbort();
+#endif
     }
 }
 
@@ -280,9 +284,9 @@ Thread::parallel(ParallelBase& helper, int nthreads,
 }
 
 void
-Thread::niceAbort(void* Context /* = 0 */)
+Thread::niceAbort(void* context /* = 0 */)
 {
-  fprintf(stderr, getStackTrace().c_str());
+  fprintf(stderr, getStackTrace(context).c_str());
   char* smode = getenv("SCI_SIGNALMODE");
   if (!smode)
     smode = "ask"; //"e"; 
