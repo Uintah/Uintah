@@ -66,8 +66,8 @@ TextureBrick::TextureBrick (int nx, int ny, int nz, int nc, int* nb,
 
   compute_edge_rays(bbox_, edge_);
   compute_edge_rays(tbox_, tex_edge_);
-
 }
+
 
 TextureBrick::~TextureBrick()
 {}
@@ -518,6 +518,7 @@ NrrdTextureBrick::NrrdTextureBrick(NrrdDataHandle n0, NrrdDataHandle n1,
 {
   data_[0] = n0;
   data_[1] = n1;
+  data_[2] = 0;
 }
 
 

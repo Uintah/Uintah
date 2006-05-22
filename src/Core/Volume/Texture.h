@@ -106,7 +106,7 @@ protected:
   Mutex brick_lock_;
   int nx_, ny_, nz_; // data size
   int nc_;
-  int nb_[2];
+  int nb_[TEXTURE_MAX_COMPONENTS];
   Transform transform_; // data tform
   double vmin_, vmax_, gmin_, gmax_; //
   BBox bbox_; // data bbox

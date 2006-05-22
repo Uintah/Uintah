@@ -50,6 +50,8 @@ namespace SCIRun {
 
 using std::vector;
 
+#define TEXTURE_MAX_COMPONENTS 2
+
 class SCISHARE TextureBrick
 {
 public:
@@ -112,8 +114,8 @@ public:
 protected:
   void compute_edge_rays(BBox &bbox, vector<Ray> &edges) const;
   int nx_, ny_, nz_; // axis sizes (pow2)
-  int nc_; // number of components (1 or 2)
-  int nb_[2]; // number of bytes per component
+  int nc_; // number of components (< TEXTURE_MAX_COMPONENTS)
+  int nb_[TEXTURE_MAX_COMPONENTS]; // number of bytes per component
   int ox_, oy_, oz_; // offset into volume texture
   int mx_, my_, mz_; // data axis sizes (not necessarily pow2)
   BBox bbox_, tbox_; // bounding box and texcoord box
@@ -154,7 +156,7 @@ public:
   get_type_description(tb_td_info_e td = FULL_TD_E) const;
 
 protected:
-  NrrdDataHandle data_[2];
+  NrrdDataHandle data_[TEXTURE_MAX_COMPONENTS];
 };
 
 
@@ -178,7 +180,7 @@ public:
   get_type_description(tb_td_info_e td = FULL_TD_E) const;
  
 protected:
-  T* data_[2];
+  T* data_[TEXTURE_MAX_COMPONENTS];
 };
 
 template <typename T>
@@ -188,20 +190,23 @@ TextureBrickT<T>::TextureBrickT(int nx, int ny, int nz, int nc, int* nb,
 				const BBox& bbox, const BBox& tbox)
   : TextureBrick(nx, ny, nz, nc, nb, ox, oy, oz, mx, my, mz, bbox, tbox)
 {
-  data_[0] = 0;
-  data_[1] = 0;
-  for (int c=0; c<nc; c++)
+  for (int i = 0; i < TEXTURE_MAX_COMPONENTS; i++)
   {
-    data_[c] = scinew T[nx_*ny_*nz_*nb_[c]];
+    data_[i] = 0;
+    if (i < nc) data_[i] = scinew T[nx_ * ny_ * nz_ * nb_[i]];
   }
 }
 
 template <typename T>
 TextureBrickT<T>::~TextureBrickT()
 {
-  for (int c=0; c<nc_; c++)
+  for (unsigned int i = 0; i < TEXTURE_MAX_COMPONENTS; i++)
   {
-    delete[] data_[c];
+    if (data_[i])
+    {
+      delete[] data_[i];
+      data_[i] = 0;
+    }
   }
 }
 

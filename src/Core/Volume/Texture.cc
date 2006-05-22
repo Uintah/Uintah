@@ -55,14 +55,16 @@ Texture::Texture()
   : brick_lock_("Texture Access Lock"), nx_(0), ny_(0), nz_(0),
     nc_(0), vmin_(0.0), vmax_(0.0), gmin_(0.0), gmax_(0.0)
 {
-  nb_[0] = 0;
-  nb_[1] = 0;
+  for (int i = 0; i < TEXTURE_MAX_COMPONENTS; i++) { nb_[i] = 0; }
   bricks_.resize(1);
   bricks_[0].resize(0);
 }
 
+
 Texture::~Texture()
-{}
+{
+}
+
 
 void
 Texture::get_sorted_bricks(vector<TextureBrickHandle> &bricks, const Ray& view,
@@ -112,8 +114,7 @@ Texture::clear()
   vmax_ = 0;
   gmin_ = 0;
   gmax_ = 0;
-  nb_[0] = 0;
-  nb_[1] = 0;
+  for (int i = 0; i < TEXTURE_MAX_COMPONENTS; i++) { nb_[i] = 0; }
   bricks_.resize(1);
   bricks_[0].resize(0);
 }
