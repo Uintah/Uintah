@@ -518,7 +518,6 @@ NrrdTextureBrick::NrrdTextureBrick(NrrdDataHandle n0, NrrdDataHandle n1,
 {
   data_[0] = n0;
   data_[1] = n1;
-  data_[2] = 0;
 }
 
 
@@ -569,13 +568,13 @@ NrrdTextureBrick::tex_type()
 void *
 NrrdTextureBrick::tex_data(int c)
 {
-  ASSERT(c == 0 || c == 1);
+  ASSERT(c >= 0 && c < TEXTURE_MAX_COMPONENTS && c < nc());
+  
   unsigned char *ptr = (unsigned char *)(data_[c]->nrrd_->data);
-
   const size_t offset = (oz() * sx() * sy() + oy() * sx() + ox()) * nb(c);
-
   return ptr + offset;
 }
+
 
 const string
 NrrdTextureBrick::type_name(int n)
