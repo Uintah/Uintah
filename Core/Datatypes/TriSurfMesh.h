@@ -663,8 +663,7 @@ TriSurfMesh<Basis>::TriSurfMesh(const TriSurfMesh &copy)
     node_neighbors_(0),
     grid_(0),
     synchronized_(NODES_E | FACES_E | CELLS_E),
-    synchronize_lock_("TriSurfMesh synchronize_lock_"),
-    elem_epsilon_(copy.elem_epsilon_)
+    synchronize_lock_("TriSurfMesh synchronize_lock_")
 {
   TriSurfMesh &lcopy = (TriSurfMesh &)copy;
 
@@ -691,6 +690,7 @@ TriSurfMesh<Basis>::TriSurfMesh(const TriSurfMesh &copy)
   if (copy.grid_.get_rep())
   {
     grid_ = scinew SearchGridConstructor(*(copy.grid_.get_rep()));
+    elem_epsilon_ = copy.elem_epsilon_;
   }
   synchronized_ |= copy.synchronized_ & LOCATE_E;
 

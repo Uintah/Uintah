@@ -882,8 +882,7 @@ TetVolMesh<Basis>::TetVolMesh(const TetVolMesh &copy):
   grid_(0),
   locate_cache_(0),
   synchronized_(copy.synchronized_),
-  synchronize_lock_("TetVolMesh synchronize() lock"),
-  cell_epsilon_(copy.cell_epsilon_)
+  synchronize_lock_("TetVolMesh synchronize() lock")
 {
   TetVolMesh &lcopy = (TetVolMesh &)copy;
   lcopy.synchronize_lock_.lock();
@@ -901,6 +900,7 @@ TetVolMesh<Basis>::TetVolMesh(const TetVolMesh &copy):
   if (copy.grid_.get_rep())
   {
     grid_ = scinew SearchGridConstructor(*(copy.grid_.get_rep()));
+    cell_epsilon_ = copy.cell_epsilon_;
   }
   synchronized_ |= copy.synchronized_ & LOCATE_E;
 
