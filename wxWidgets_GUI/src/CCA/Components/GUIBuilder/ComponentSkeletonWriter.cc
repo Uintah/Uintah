@@ -117,6 +117,7 @@ void ComponentSkeletonWriter::ComponentSourceFileCode()
 // TODO: The license text should be read from file.
 void ComponentSkeletonWriter::writeLicense(std::ofstream& fileStream)
 {
+
   fileStream << OPEN_C_COMMENT << std::endl
              << SP << "For more information, please see: http://software.sci.utah.edu" << std::endl
              << std::endl

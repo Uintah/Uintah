@@ -32,6 +32,7 @@
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
 #include <wx/wx.h>
+#include<wx/grid.h>
 #endif
 
 #include <CCA/Components/GUIBuilder/ComponentSkeletonWriter.h>
@@ -41,6 +42,7 @@ class wxWindow;
 class wxButton;
 class wxStaticText;
 class wxTextCtrl;
+class wxGrid;
 
 namespace GUIBuilder {
 
@@ -53,6 +55,7 @@ public:
   enum {
     ID_AddProvidesPort=wxID_HIGHEST,
     ID_AddUsesPort,
+    ID_RemovePort,
   };
 
   ComponentWizardDialog(wxWindow *parent, wxWindowID id,
@@ -67,7 +70,8 @@ public:
   void OnOk( wxCommandEvent &event );
   void OnAddProvidesPort( wxCommandEvent &event );
   void OnAddUsesPort( wxCommandEvent &event );
-
+  void OnRemovePort( wxCommandEvent &event );
+  
   virtual bool Validate();
 
 private:
@@ -75,7 +79,10 @@ private:
   wxStaticText *lcomponentName;
   wxButton *AddProvidesPort;
   wxButton *AddUsesPort;
+  wxGrid *listofPorts;
+  int count_table;
   wxString GetText();
+  
 
   //To store the list of ports added by the user
   std::vector <PortDescriptor*> pp;
