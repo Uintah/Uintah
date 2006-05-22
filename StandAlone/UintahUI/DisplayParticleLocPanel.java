@@ -21,6 +21,8 @@ import javax.swing.*;
 public class DisplayParticleLocPanel extends JPanel {
 
   // Essential data
+  private boolean d_isHollow = false;
+  private double d_thickness = 0.0;;
   private ParticleList d_partList = null;
   private ParticleLocGeneratePanel d_parent = null;
   
@@ -43,6 +45,8 @@ public class DisplayParticleLocPanel extends JPanel {
                                  ParticleLocGeneratePanel parent) {
 
     // Save the input arguments
+    d_isHollow = false;
+    d_thickness = 0.0;;
     d_partList = partList;
     d_parent = parent;
 
@@ -322,11 +326,18 @@ public class DisplayParticleLocPanel extends JPanel {
       Particle part = (Particle) d_partList.getParticle(0);
       int type = part.getType();
 
+      // Find whether the particle is hollow
+      d_thickness = part.getThickness();
+      if (d_thickness > 0.0) d_isHollow = true;
+
       // Draw the particles
       if (type == CIRCLE) 
         drawCircles(g, size);
       else if (type == SPHERE)
         drawSpheres(g, size);
+
+      // Draw the box
+      g.drawRect(xmin,ymin,xmax-xmin,ymax-ymin);
     }
 
     //-------------------------------------------------------------------------
@@ -362,6 +373,19 @@ public class DisplayParticleLocPanel extends JPanel {
         g.setColor(new Color(0,0,0));
         g.drawOval(xCentScreen-radXScreen,yCentScreen-radYScreen,
                    2*radXScreen, 2*radYScreen);
+
+        // If the circles are hollow then plot the inside in 
+        // background color
+        if (d_isHollow) {
+          radXScreen = getXScreenLength(radius-d_thickness);
+          radYScreen = getYScreenLength(radius-d_thickness);
+          g.setColor(getBackground());
+          g.fillOval(xCentScreen-radXScreen,yCentScreen-radYScreen,
+                     2*radXScreen, 2*radYScreen);
+          g.setColor(new Color(0,0,0));
+          g.drawOval(xCentScreen-radXScreen,yCentScreen-radYScreen,
+                     2*radXScreen, 2*radYScreen);
+        }
       }
     }
 
@@ -553,6 +577,10 @@ public class DisplayParticleLocPanel extends JPanel {
       Particle part = (Particle) d_partList.getParticle(0);
       int type = part.getType();
 
+      // Find whether the particle is hollow
+      d_thickness = part.getThickness();
+      if (d_thickness > 0.0) d_isHollow = true;
+
       // Draw the particles
       if (type == CIRCLE) 
         drawCylinders(g, size);
@@ -734,6 +762,10 @@ public class DisplayParticleLocPanel extends JPanel {
       // Find particle type
       Particle part = (Particle) d_partList.getParticle(0);
       int type = part.getType();
+
+      // Find whether the particle is hollow
+      d_thickness = part.getThickness();
+      if (d_thickness > 0.0) d_isHollow = true;
 
       // Draw the particles
       if (type == CIRCLE) 

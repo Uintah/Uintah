@@ -22,7 +22,9 @@ import javax.swing.*;
 // Purpose : Generate the locations of randomly distributed particles of a
 //           particular size distribution.
 //**************************************************************************
-public class ComputeParticleLocPanel extends JPanel {
+public class ComputeParticleLocPanel extends JPanel 
+                                     implements ItemListener,
+                                                ActionListener {
 
   // Essential data
   private ParticleList d_partList = null;
@@ -32,10 +34,13 @@ public class ComputeParticleLocPanel extends JPanel {
   // Local RVE particle size distribution
   private ParticleSize d_rvePartSizeDist = null;
   private int d_partTypeFlag = 0;
+  private boolean d_hollowFlag = false;
+  private double d_thickness = 0.0;
 
   // Data that are stored for the life of the object
   private DecimalField rveSizeEntry = null;
-  private DecimalField nofPartEntry = null;
+  private JLabel thicknessLabel = null;
+  private DecimalField thicknessEntry = null;
   private JComboBox partTypeCBox = null;
   private JButton randomButton = null;
   private JButton periodicButton = null;
@@ -65,106 +70,132 @@ public class ComputeParticleLocPanel extends JPanel {
 
     // Initialize flags
     d_partTypeFlag = CIRCLE;
+    d_hollowFlag = false;
+    d_thickness = 0.0;
     d_rveSize = 100.0;
     d_parent.setRVESize(d_rveSize);
-
-    // Create a panels to contain the components
-    JPanel panel1 = new JPanel(new GridLayout(4,0));
-    JPanel panel10 = new JPanel(new GridLayout(4,0));
-    JPanel panel3 = new JPanel(new GridLayout(1,0));
-
-    // Create the components
-    JLabel label0 = new JLabel("RVE Size (in one dimension) ");
-    rveSizeEntry = new DecimalField(1.0,5);
-    JLabel label1 = new JLabel("No. of particles");
-    nofPartEntry = new DecimalField(1.0,3);
-    JLabel label2 = new JLabel("Type of particle ");
-    partTypeCBox = new JComboBox();
-    partTypeCBox.addItem("2D-Circle");
-    partTypeCBox.addItem("3D-Sphere");
-
-    JLabel labelrun = new JLabel("Click on one of the following buttons");
-    randomButton = new JButton("Create Random Distribution");
-    randomButton.setActionCommand("dist");
-    periodicButton = new JButton("Create Periodic Distribution");
-    periodicButton.setActionCommand("periodic");
-
-    saveButton = new JButton("Save Calculated Data");
-    saveButton.setActionCommand("save");
-
-    // Add the components to the panels
-    panel1.add(label0);
-    panel1.add(rveSizeEntry);
-    panel1.add(label1);
-    panel1.add(nofPartEntry);
-    panel1.add(label2);
-    panel1.add(partTypeCBox);
-    panel10.add(labelrun);
-    panel10.add(randomButton);
-    panel10.add(periodicButton);
-
-    panel3.add(saveButton);
 
     // Create a gridbag and constraints
     GridBagLayout gb = new GridBagLayout();
     GridBagConstraints gbc = new GridBagConstraints();
     setLayout(gb);
 
-    // Grid bag layout
+    // Create the first panel and the components
+    JPanel panel1 = new JPanel(new GridLayout(4,0));
+    JLabel rveSizeLabel = new JLabel("RVE Size (in one dimension) ");
+    panel1.add(rveSizeLabel);
+
+
+    rveSizeEntry = new DecimalField(1.0,5);
+    panel1.add(rveSizeEntry);
+
+    JLabel partTypeLabel = new JLabel("Type of particle ");
+    panel1.add(partTypeLabel);
+
+    partTypeCBox = new JComboBox();
+    partTypeCBox.addItem("Solid Circle");
+    partTypeCBox.addItem("Hollow Circle");
+    partTypeCBox.addItem("Solid Sphere");
+    partTypeCBox.addItem("Hollow Sphere");
+    partTypeCBox.setSelectedIndex(0);
+    panel1.add(partTypeCBox);
+
+    thicknessLabel = new JLabel("Thickness");
+    panel1.add(thicknessLabel);
+
+    thicknessEntry = new DecimalField(0.0, 9, true);
+    panel1.add(thicknessEntry);
+
     UintahGui.setConstraints(gbc, GridBagConstraints.NONE, 
                                     1.0,1.0, 0,0, 1,1, 5);
     gb.setConstraints(panel1, gbc);
     add(panel1);
+
+    // Create the second panel and the components
+    JPanel panel10 = new JPanel(new GridLayout(4,0));
+
+    JLabel labelrun = new JLabel("Click on one of the following buttons");
+    panel10.add(labelrun);
+
+    randomButton = new JButton("Create Random Distribution");
+    randomButton.setActionCommand("dist");
+    panel10.add(randomButton);
+
+    periodicButton = new JButton("Create Periodic Distribution");
+    periodicButton.setActionCommand("periodic");
+    panel10.add(periodicButton);
+
     UintahGui.setConstraints(gbc, GridBagConstraints.NONE, 
                                     1.0,1.0, 0,1, 1,1, 5);
     gb.setConstraints(panel10, gbc);
     add(panel10);
+
+    // Create the third panel and the components
+    JPanel panel3 = new JPanel(new GridLayout(1,0));
+
+    saveButton = new JButton("Save Calculated Data");
+    saveButton.setActionCommand("save");
+    panel3.add(saveButton);
+
     UintahGui.setConstraints(gbc, GridBagConstraints.NONE, 
                                     1.0,1.0, 0,3, 1,1, 5);
     gb.setConstraints(panel3, gbc);
     add(panel3);
 
     // Create and add the listeners
-    ComboBoxListener comboBoxListener = new ComboBoxListener();
-    partTypeCBox.addItemListener(comboBoxListener);
-    ButtonListener buttonListener = new ButtonListener();
-    randomButton.addActionListener(buttonListener);
-    periodicButton.addActionListener(buttonListener);
-    saveButton.addActionListener(buttonListener);
+    partTypeCBox.addItemListener(this);
+    randomButton.addActionListener(this);
+    periodicButton.addActionListener(this);
+    saveButton.addActionListener(this);
+
+    // Disable the thickness label by default
+    thicknessLabel.setEnabled(false);
+    thicknessEntry.setEnabled(false);
   }
 
-  //**************************************************************************
-  // Class   : ComboBoxListener
-  // Purpose : Listens for item picked in combo box and takes action as
-  //           required.
-  //**************************************************************************
-  private class ComboBoxListener implements ItemListener {
-    public void itemStateChanged(ItemEvent e) {
+  //--------------------------------------------------------------------------
+  // Determine which combo box item was chosen
+  //--------------------------------------------------------------------------
+  public void itemStateChanged(ItemEvent e) {
 
-      // Get the item that has been selected
-      String item = String.valueOf(e.getItem());
-      if (item == "2D-Circle") {
-        d_partTypeFlag = CIRCLE;
-      } else if (item == "3D-Sphere") {
-        d_partTypeFlag = SPHERE;
-      } 
+    // Get the item that has been selected
+    String item = String.valueOf(e.getItem());
+    if (item.equals("Solid Circle")) {
+      d_partTypeFlag = CIRCLE;
+      d_hollowFlag = false;
+    } else if (item.equals("Hollow Circle")) {
+      d_partTypeFlag = CIRCLE;
+      d_hollowFlag = true;
+    } else if (item.equals("Solid Sphere")) {
+      d_partTypeFlag = SPHERE;
+      d_hollowFlag = false;
+    } else if (item.equals("Hollow Sphere")) {
+      d_partTypeFlag = SPHERE;
+      d_hollowFlag = true;
+    } 
+    thicknessLabel.setEnabled(d_hollowFlag);
+    thicknessEntry.setEnabled(d_hollowFlag);
+  }
+
+  //--------------------------------------------------------------------------
+  // Actions performed after a button press
+  //--------------------------------------------------------------------------
+  public void actionPerformed(ActionEvent e) {
+
+    // Set the thickness
+    if (d_hollowFlag) {
+      d_thickness = thicknessEntry.getValue();
+    } else {
+      d_thickness = 0.0;
     }
-  }
 
-  //**************************************************************************
-  // Class   : ButtonListener
-  // Purpose : Listens for action on the button picked and takes action
-  //           required.
-  //**************************************************************************
-  private class ButtonListener implements ActionListener {
-    public void actionPerformed(ActionEvent e) {
-
-      if (e.getActionCommand() == "dist") 
-        distributeParticles();
-      else if (e.getActionCommand() == "periodic") 
-        periodicParticleDist();
-      else if (e.getActionCommand() == "save") 
-        saveParticleDist();
+    // Perform the actions
+    if (e.getActionCommand() == "dist") {
+      distributeParticles();
+    } else if (e.getActionCommand() == "periodic")  {
+      periodicParticleDist();
+    } else if (e.getActionCommand() == "save")  {
+      saveParticleDist();
     }
   }
 
@@ -356,9 +387,11 @@ public class ComputeParticleLocPanel extends JPanel {
               if (circlesIntersect) fit = false;
               else {
 
+		
                 // Add a particle to the particle list
                 Particle newParticle = new Particle(0.5*partDia, d_rveSize,
-                                                    partCent, matCode);
+                                                    d_thickness, partCent, 
+                                                    matCode);
                 d_partList.addParticle(newParticle);
 
                 // Update the display
@@ -425,7 +458,8 @@ public class ComputeParticleLocPanel extends JPanel {
 
               // Add a particle to the particle list
               Particle newParticle = new Particle(0.5*partDia, d_rveSize,
-                                                  partCent, matCode);
+                                                  d_thickness, partCent, 
+                                                  matCode);
               d_partList.addParticle(newParticle);
                 
               // Update the display
@@ -568,9 +602,9 @@ public class ComputeParticleLocPanel extends JPanel {
               else {
 
                 // Add a particle to the particle list
-                Particle newParticle = new Particle(d_partTypeFlag,
-                                                    0.5*partDia, rotation, 
-                                                    partCent, matCode);
+                Particle newParticle = new Particle(d_partTypeFlag, 0.5*partDia,
+                                                    rotation, partCent, matCode,
+                                                    d_thickness);
                 d_partList.addParticle(newParticle);
                 newParticle.print();
 
@@ -651,9 +685,9 @@ public class ComputeParticleLocPanel extends JPanel {
             else {
 
               // Add a particle to the particle list
-              Particle newParticle = new Particle(d_partTypeFlag,
-                                                  0.5*partDia, rotation, 
-                                                  partCent, matCode);
+              Particle newParticle = new Particle(d_partTypeFlag, 0.5*partDia,
+                                                  rotation, partCent, matCode,
+                                                  d_thickness);
               d_partList.addParticle(newParticle);
               //newParticle.print();
 
@@ -802,7 +836,8 @@ public class ComputeParticleLocPanel extends JPanel {
 
               // Add a particle to the particle list
               Particle newParticle = new Particle(partRad, d_rveSize, 
-                                                  partCent, matCode);
+                                                  d_thickness, partCent, 
+                                                  matCode);
               d_partList.addParticle(newParticle);
               //newParticle.print();
 
@@ -839,23 +874,27 @@ public class ComputeParticleLocPanel extends JPanel {
 
                         // Add original particles to the particle list
                         Particle pOrig = new Particle(partRad, d_rveSize, 
-                                                      partCent, matCode);
+                                                      d_thickness, partCent, 
+                                                      matCode);
                         d_partList.addParticle(pOrig);
                         //pOrig.print();
 
                         // Add symmetry particles to the particle list
                         Particle p1 = new Particle(partRad, d_rveSize, 
-                                                   cent1, matCode);
+                                                   d_thickness, cent1, 
+                                                   matCode);
                         d_partList.addParticle(p1);
                         //p1.print();
 
                         Particle p2 = new Particle(partRad, d_rveSize, 
-                                                   cent2, matCode);
+                                                   d_thickness, cent2, 
+                                                   matCode);
                         d_partList.addParticle(p2);
                         //p2.print();
 
                         Particle p3 = new Particle(partRad, d_rveSize, 
-                                                   cent3, matCode);
+                                                   d_thickness, cent3,
+                                                   matCode);
                         d_partList.addParticle(p3);
                         //p3.print();
 
@@ -870,13 +909,15 @@ public class ComputeParticleLocPanel extends JPanel {
 
                     // Add original particles to the particle list
                     Particle pOrig = new Particle(partRad, d_rveSize, 
-                                                  partCent, matCode);
+                                                  d_thickness, partCent, 
+                                                  matCode);
                     d_partList.addParticle(pOrig);
                     //pOrig.print();
 
                     // Add symmetry particles to the particle list
                     Particle p1 = new Particle(partRad, d_rveSize, 
-                                               cent1, matCode);
+                                               d_thickness, cent1, 
+                                               matCode);
                     d_partList.addParticle(p1);
                     //p1.print();
 

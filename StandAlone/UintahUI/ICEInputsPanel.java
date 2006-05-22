@@ -127,11 +127,11 @@ public class ICEInputsPanel extends JPanel {
     private JCheckBox addHeatCB = null;
 
     private DecimalField cflEntry = null;
-    private WholeNumberField maxEqItEntry = null;
-    private WholeNumberField minLevelEntry = null;
-    private WholeNumberField maxLevelEntry = null;
+    private IntegerField maxEqItEntry = null;
+    private IntegerField minLevelEntry = null;
+    private IntegerField maxLevelEntry = null;
 
-    private WholeNumberField numAddHeatMatEntry = null;
+    private IntegerField numAddHeatMatEntry = null;
     private DecimalField addHeatStartTimeEntry = null;
     private DecimalField addHeatEndTimeEntry = null;
 
@@ -191,15 +191,15 @@ public class ICEInputsPanel extends JPanel {
       panel2.add(cflLabel); panel2.add(cflEntry);
 
       JLabel maxEqItLabel = new JLabel("Maximum Equilibrium Iterations");
-      maxEqItEntry = new WholeNumberField(1000, 5);
+      maxEqItEntry = new IntegerField(1000, 5);
       panel2.add(maxEqItLabel); panel2.add(maxEqItEntry);
 
       JLabel minLevelLabel = new JLabel("Minimum Grid Level");
-      minLevelEntry = new WholeNumberField(0, 5);
+      minLevelEntry = new IntegerField(0, 5);
       panel2.add(minLevelLabel); panel2.add(minLevelEntry);
 
       JLabel maxLevelLabel = new JLabel("Maximum Grid Level");
-      maxLevelEntry = new WholeNumberField(1000, 5);
+      maxLevelEntry = new IntegerField(1000, 5);
       panel2.add(maxLevelLabel); panel2.add(maxLevelEntry);
 
       UintahGui.setConstraints(gbc, GridBagConstraints.BOTH, 
@@ -211,7 +211,7 @@ public class ICEInputsPanel extends JPanel {
       JPanel panel3 = new JPanel(new GridLayout(3,0));
 
       JLabel numAddHeatMatLabel = new JLabel("Number of Add Heat Materials");
-      numAddHeatMatEntry = new WholeNumberField(1,3);
+      numAddHeatMatEntry = new IntegerField(1,3);
       panel3.add(numAddHeatMatLabel); panel3.add(numAddHeatMatEntry);
 
       JLabel addHeatStartTimeLabel = new JLabel("Add Heat Start Time");
@@ -234,7 +234,7 @@ public class ICEInputsPanel extends JPanel {
         // Create a panel
         JPanel tabPanel = new JPanel(new GridLayout(2,0));
         JLabel addHeatMatLabel = new JLabel("Material ID");
-        WholeNumberField addHeatMatEntry = new WholeNumberField(1,5);
+        IntegerField addHeatMatEntry = new IntegerField(1,5);
         addHeatMatls.addElement(addHeatMatEntry);
         tabPanel.add(addHeatMatLabel);
         tabPanel.add(addHeatMatEntry);
@@ -355,7 +355,7 @@ public class ICEInputsPanel extends JPanel {
                       " </add_heat_t_final>");
       pw.print(tab3+"<add_heat_matls> [");
       for (int ii = 0; ii < d_numAddHeatMat; ++ii) {      
-        pw.print(((WholeNumberField) addHeatMatls.elementAt(ii)).getValue());
+        pw.print(((IntegerField) addHeatMatls.elementAt(ii)).getValue());
         if (ii < d_numAddHeatMat-1) pw.print(", ");
       }
       pw.println("] </add_heat_matls>");

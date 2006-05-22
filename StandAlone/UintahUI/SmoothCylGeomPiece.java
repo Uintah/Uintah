@@ -30,10 +30,14 @@ public class SmoothCylGeomPiece extends GeomPiece {
   }
   
   public SmoothCylGeomPiece(String name, Point center, double radius, 
-                            double length) {
+                            double thickness, double length) {
     d_name = new String(name);
     d_radius = radius;
-    d_thickness = radius;
+    if (thickness == 0.0) {
+      d_thickness = radius;
+    } else {
+      d_thickness = thickness;
+    }
     d_numRadial = (int) (radius/0.0005);
     d_numAxial = (int) (length/0.0005);
     d_arcStartAngle = 0.0;
@@ -57,7 +61,6 @@ public class SmoothCylGeomPiece extends GeomPiece {
                d_top.getZ()+"] </top>");
     pw.println(tab1+"<radius> "+d_radius+" </radius>");
     pw.println(tab1+"<thickness> "+d_thickness+" </thickness>");
-    pw.println(tab1+"<thickness> "+d_thickness+" </thickness>");
     pw.println(tab1+"<num_radial> "+d_numRadial+" </num_radial>");
     pw.println(tab1+"<num_axial> "+d_numAxial+" </num_axial>");
     pw.println(tab1+"<arc_start_angle> "+d_arcStartAngle+
@@ -74,7 +77,6 @@ public class SmoothCylGeomPiece extends GeomPiece {
     System.out.println(tab1+"<top> ["+d_top.getX()+", "+
                d_top.getY()+", "+ d_top.getZ()+"] </top>");
     System.out.println(tab1+"<radius> "+d_radius+" </radius>");
-    System.out.println(tab1+"<thickness> "+d_thickness+" </thickness>");
     System.out.println(tab1+"<thickness> "+d_thickness+" </thickness>");
     System.out.println(tab1+"<num_radial> "+d_numRadial+" </num_radial>");
     System.out.println(tab1+"<num_axial> "+d_numAxial+" </num_axial>");
