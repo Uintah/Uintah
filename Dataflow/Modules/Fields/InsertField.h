@@ -146,6 +146,8 @@ InsertFieldAlgoTet<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
   imesh->begin(ibi);
   imesh->end(iei);
 
+  vector<Point> points;
+
   while (ibi != iei)
   {
     typename IFIELD::mesh_type::Node::array_type enodes;
@@ -161,7 +163,6 @@ InsertFieldAlgoTet<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
     imesh->get_center(e0, enodes[0]);
     imesh->get_center(e1, enodes[1]);
 
-
     // Find our first element.  If e0 isn't inside then try e1.  Need
     // to handle falling outside of mesh better.
     if (!tmesh->locate(elem, e0))
@@ -175,8 +176,6 @@ InsertFieldAlgoTet<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
 
     Vector dir = e1 - e0;
 
-
-    vector<Point> points;
     points.push_back(e0);
 
     unsigned int i;
@@ -214,21 +213,21 @@ InsertFieldAlgoTet<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
       elem = neighbor;
     }
     points.push_back(e1);
+  }
 
-    typename TFIELD::mesh_type::Node::index_type newnode;
-    typename TFIELD::mesh_type::Elem::array_type newelems;
-
-    for (i = 0; i < points.size(); i++)
+  typename TFIELD::mesh_type::Elem::index_type elem;
+  typename TFIELD::mesh_type::Node::index_type newnode;
+  typename TFIELD::mesh_type::Elem::array_type newelems;
+  for (unsigned int i = 0; i < points.size(); i++)
+  {
+    if (tmesh->locate(elem, points[i]))
     {
-      if (tmesh->locate(elem, points[i]))
-      {
-        tmesh->insert_node_in_elem(newelems, newnode, elem, points[i]);
+      tmesh->insert_node_in_elem(newelems, newnode, elem, points[i]);
 
-        new_nodes.push_back(newnode);
-        for (unsigned int i = 0; i < newelems.size(); i++)
-        {
-          new_elems.push_back(newelems[i]);
-        }
+      new_nodes.push_back(newnode);
+      for (unsigned int i = 0; i < newelems.size(); i++)
+      {
+        new_elems.push_back(newelems[i]);
       }
     }
   }
