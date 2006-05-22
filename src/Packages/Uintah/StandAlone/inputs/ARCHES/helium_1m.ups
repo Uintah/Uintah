@@ -19,18 +19,17 @@
 
    <DataArchiver>
         <filebase>helium_1m.uda</filebase>
-	<outputInterval>0.004</outputInterval>
+	<outputInterval>0.01</outputInterval>
 	<save label = "totalKineticEnergy"/>
 	<save label = "pressurePS"/>
         <save label = "newCCUVelocity"/>	
         <save label = "newCCVVelocity"/>	
         <save label = "newCCWVelocity"/>	
-        <save label = "newCCVelocity"/>
 	<save label = "scalarSP"/>
 	<save label = "densityCP"/>
 	<save label = "viscosityCTS"/>
 	<save label = "cellType"/>
-	<checkpoint cycle = "2" interval = "0.004"/>
+	<checkpoint cycle = "2" interval = "0.01"/>
         <outputDoubleAsFloat/>
         <compression>gzip</compression>
    </DataArchiver>
@@ -51,7 +50,7 @@
    <CFD>
 
 	<ARCHES>
-	    <grow_dt>0.01</grow_dt>
+	    <grow_dt>0.05</grow_dt>
 	    <variable_dt>true</variable_dt>
    	    <nonlinear_solver>explicit</nonlinear_solver>
     	    <turbulence_model>compdynamicprocedure</turbulence_model>
@@ -140,7 +139,7 @@
 	    </PhysicalConstants>
 
 	    <ExplicitSolver>
-		<timeIntegratorType>RK2SSP</timeIntegratorType>	
+		<timeIntegratorType>RK2SSP</timeIntegratorType>
 		<probe_data>false</probe_data>
 
 		<PressureSolver>
