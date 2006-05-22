@@ -66,7 +66,11 @@ public:
   inline int ny() { return ny_; }
   inline int nz() { return nz_; }
   inline int nc() { return nc_; }
-  inline int nb(int c) { return nb_[c]; }
+  inline int nb(int c)
+  {
+    ASSERT(c >= 0 && c < TEXTURE_MAX_COMPONENTS);
+    return nb_[c];
+  }
 
   inline int mx() { return mx_; }
   inline int my() { return my_; }
@@ -173,7 +177,11 @@ public:
   virtual GLenum tex_type() { return GLinfo<T>::type; }
   virtual void* tex_data(int c) { return data_[c]; }
   
-  T* data(int c) { return data_[c]; }
+  T* data(int c)
+  {
+    ASSERT(c >= 0 && c < TEXTURE_MAX_COMPONENTS && c < nc());
+    return data_[c];
+  }
 
   static const string type_name(int n = -1);
   virtual const TypeDescription* 

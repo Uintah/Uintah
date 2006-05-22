@@ -56,7 +56,11 @@ public:
   inline int nz() const { return nz_; }
 
   inline int nc() const { return nc_; }
-  inline int nb(int i) const { return nb_[i]; }
+  inline int nb(int i) const
+  {
+    ASSERT(i >= 0 && i < TEXTURE_MAX_COMPONENTS);
+    return nb_[i];
+  }
 
   inline void set_size(int nx, int ny, int nz, int nc, int* nb) {
     nx_ = nx; ny_ = ny; nz_ = nz; nc_ = nc;
