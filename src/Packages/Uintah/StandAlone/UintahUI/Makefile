@@ -15,6 +15,7 @@ SOURCE_FILES = \
 	CreateGeomPiecePanel.java\
 	CylinderGeomPiece.java \
 	DecimalField.java \
+	DecimalVectorField.java \
 	DifferenceGeomPiece.java \
 	DisplayGeometryPanel.java \
 	DisplayPartDistPanel.java \
@@ -32,6 +33,8 @@ SOURCE_FILES = \
 	ICEMaterialsPanel.java \
 	InputGeometryPanel.java \
 	InputPartDistPanel.java \
+	IntegerField.java \
+	IntegerVectorField.java \
 	LightWeightCanvas.java \
 	MPMContactInputPanel.java \
 	MPMInputsPanel.java \
@@ -55,8 +58,7 @@ SOURCE_FILES = \
 	VariableSaveInputPanel.java \
 	Vector3D.java \
 	ViscoSCRAMMaterialPanel.java \
-	Voronoi.java \
-	WholeNumberField.java
+	Voronoi.java 
 
 #------------------------------------------------------------------------------
 
@@ -69,6 +71,7 @@ all: UintahGui \
 	CreateGeomPiecePanel\
 	CylinderGeomPiece \
 	DecimalField\
+	DecimalVectorField\
 	DifferenceGeomPiece \
 	DisplayGeometryPanel \
 	DisplayPartDistPanel\
@@ -86,6 +89,8 @@ all: UintahGui \
 	ICEMaterialsPanel \
 	InputGeometryPanel \
 	InputPartDistPanel\
+	IntegerField \
+	IntegerVectorField \
 	LightWeightCanvas\
 	MPMContactInputPanel \
 	MPMInputsPanel\
@@ -108,8 +113,7 @@ all: UintahGui \
 	VariableSaveInputPanel \
 	Vector3D \
 	ViscoSCRAMMaterialPanel \
-	Voronoi\
-	WholeNumberField
+	Voronoi
 
 UI: UintahGui
 
@@ -136,6 +140,9 @@ CylinderGeomPiece:
 
 DecimalField:
 	${JAVAC} ${srcdir}/DecimalField.java 
+
+DecimalVectorField:
+	${JAVAC} ${srcdir}/DecimalVectorField.java 
 
 DifferenceGeomPiece:
 	${JAVAC} ${srcdir}/DifferenceGeomPiece.java
@@ -187,6 +194,12 @@ InputGeometryPanel:
 
 InputPartDistPanel:
 	${JAVAC} ${srcdir}/InputPartDistPanel.java 
+
+IntegerField:
+	${JAVAC} ${srcdir}/IntegerField.java
+
+IntegerVectorField:
+	${JAVAC} ${srcdir}/IntegerVectorField.java
 
 LightWeightCanvas:
 	${JAVAC} ${srcdir}/LightWeightCanvas.java 
@@ -259,9 +272,6 @@ ViscoSCRAMMaterialPanel:
 
 Voronoi:
 	${JAVAC} ${srcdir}/Voronoi.java 
-
-WholeNumberField:
-	${JAVAC} ${srcdir}/WholeNumberField.java
 
 clean: 
 	rm -f *.class

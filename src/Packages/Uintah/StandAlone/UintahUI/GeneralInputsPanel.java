@@ -52,29 +52,29 @@ public class GeneralInputsPanel extends JPanel {
     d_parent = parent;
 
     // Create the panels
-    constInputPanel = new PhysicalConstInputPanel();
     timeInputPanel = new TimeInputPanel(d_simComponent, this);
     saveInputPanel = new VariableSaveInputPanel();
+    constInputPanel = new PhysicalConstInputPanel();
+
+    // Create the save button
+    saveButton = new JButton("Save");
+    saveButton.setActionCommand("save");
 
     // Create a gridbaglayout and constraints
     GridBagLayout gb = new GridBagLayout();
     GridBagConstraints gbc = new GridBagConstraints();
     setLayout(gb);
 
-    // Create the save button
-    saveButton = new JButton("Save");
-    saveButton.setActionCommand("save");
-
     // Grid bag layout
     UintahGui.setConstraints(gbc, GridBagConstraints.NONE, 
                              1.0, 1.0, 0, 0, 1, 1, 5);
-    gb.setConstraints(constInputPanel, gbc);
-    add(constInputPanel);
+    gb.setConstraints(timeInputPanel, gbc);
+    add(timeInputPanel);
 
     UintahGui.setConstraints(gbc, GridBagConstraints.NONE, 
                              1.0, 1.0, 0, 1, 1, 1, 5);
-    gb.setConstraints(timeInputPanel, gbc);
-    add(timeInputPanel);
+    gb.setConstraints(constInputPanel, gbc);
+    add(constInputPanel);
 
     UintahGui.setConstraints(gbc, GridBagConstraints.NONE, 
                              1.0, 1.0, 0, 2, 1, 1, 5);
@@ -151,9 +151,7 @@ public class GeneralInputsPanel extends JPanel {
   private class PhysicalConstInputPanel extends JPanel {
 
     private DecimalField presEntry = null;
-    private DecimalField xgravEntry = null;
-    private DecimalField ygravEntry = null;
-    private DecimalField zgravEntry = null;
+    private DecimalVectorField gravEntry = null;
 
     public PhysicalConstInputPanel() {
 
@@ -161,53 +159,31 @@ public class GeneralInputsPanel extends JPanel {
       GridBagLayout gb = new GridBagLayout();
       GridBagConstraints gbc = new GridBagConstraints();
       setLayout(gb);
+      int fill = GridBagConstraints.BOTH;
+      int xgap = 5;
+      int ygap = 0;
 
       // Reference pressure
       JLabel presLabel = new JLabel("Ref. Pressure");
-      UintahGui.setConstraints(gbc, 0, 0);
+      UintahGui.setConstraints(gbc, fill, xgap, ygap, 0, 0);
       gb.setConstraints(presLabel, gbc);
       add(presLabel);
 
       presEntry = new DecimalField(101325.0,9);
-      UintahGui.setConstraints(gbc, 1, 0);
+      UintahGui.setConstraints(gbc, fill, xgap, ygap, 1, 0);
       gb.setConstraints(presEntry, gbc);
       add(presEntry);
 
       // Gravity
       JLabel gravLabel = new JLabel("Gravity:");
-      UintahGui.setConstraints(gbc, 0, 1);
+      UintahGui.setConstraints(gbc, fill, xgap, ygap, 0, 1);
       gb.setConstraints(gravLabel, gbc);
       add(gravLabel);
 
-      JLabel xgravLabel = new JLabel("x");
-      UintahGui.setConstraints(gbc, 1, 1);
-      gb.setConstraints(xgravLabel, gbc);
-      add(xgravLabel);
-
-      xgravEntry = new DecimalField(0,5);
-      UintahGui.setConstraints(gbc, 2, 1);
-      gb.setConstraints(xgravEntry, gbc);
-      add(xgravEntry);
-
-      JLabel ygravLabel = new JLabel("y");
-      UintahGui.setConstraints(gbc, 3, 1);
-      gb.setConstraints(ygravLabel, gbc);
-      add(ygravLabel);
-
-      ygravEntry = new DecimalField(0,5);
-      UintahGui.setConstraints(gbc, 4, 1);
-      gb.setConstraints(ygravEntry, gbc);
-      add(ygravEntry);
-
-      JLabel zgravLabel = new JLabel("z");
-      UintahGui.setConstraints(gbc, 5, 1);
-      gb.setConstraints(zgravLabel, gbc);
-      add(zgravLabel);
-
-      zgravEntry = new DecimalField(0,5);
-      UintahGui.setConstraints(gbc, 6, 1);
-      gb.setConstraints(zgravEntry, gbc);
-      add(zgravEntry);
+      gravEntry = new DecimalVectorField(0.0, 0.0, 0.0, 5);
+      UintahGui.setConstraints(gbc, fill, xgap, ygap, 1, 1);
+      gb.setConstraints(gravEntry, gbc);
+      add(gravEntry);
     }
 
     public void refresh() {
@@ -221,8 +197,8 @@ public class GeneralInputsPanel extends JPanel {
       pw.println(tab+"<PhysicalConstants>");
       pw.println(tab1+"<reference_pressure> "+presEntry.getValue()+
 		 " </reference_pressure>");
-      pw.println(tab1+"<gravity> ["+xgravEntry.getValue()+", "+
-                 ygravEntry.getValue()+", "+zgravEntry.getValue()+
+      pw.println(tab1+"<gravity> ["+gravEntry.x()+", "+
+                 gravEntry.y()+", "+gravEntry.z()+
 		 "] </gravity>");
       pw.println(tab+"</PhysicalConstants>");
       pw.println(tab);

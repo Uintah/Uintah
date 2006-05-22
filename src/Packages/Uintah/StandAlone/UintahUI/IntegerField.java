@@ -1,11 +1,10 @@
 //**************************************************************************
-// Program : WholeNumberField.java
-// Purpose : An extension of JTextField to take care of whole numbers
+// Program : IntegerField.java
+// Purpose : An extension of JTextField to take care of integers
 // Author  : Biswajit Banerjee
 // Date    : 12/7/1998
 // Mods    :
 //**************************************************************************
-// $Id: WholeNumberField.java,v 1.2 2000/02/03 05:36:59 bbanerje Exp $
 
 //************ IMPORTS **************
 import java.awt.*;
@@ -15,10 +14,10 @@ import javax.swing.*;
 import javax.swing.text.*;
 
 //**************************************************************************
-// Class   : WholeNumberField
-// Purpose : Creates a text field that validates whole numbers
+// Class   : IntegerField
+// Purpose : Creates a text field that validates integers
 //**************************************************************************
-public class WholeNumberField extends JTextField {
+public class IntegerField extends JTextField {
 
   // Data
   private Toolkit toolkit;
@@ -27,7 +26,7 @@ public class WholeNumberField extends JTextField {
   // Data that may be needed later
 
   // Constructor
-  public WholeNumberField(int value, int columns) {
+  public IntegerField(int value, int columns) {
     
     // Set the size of the component
     super(columns);
@@ -56,11 +55,11 @@ public class WholeNumberField extends JTextField {
 
   // Create the related document
   protected Document createDefaultModel() {
-    return new WholeNumberDocument();
+    return new IntegerDocument();
   }
 
-  // Inner class for whole number document
-  protected class WholeNumberDocument extends PlainDocument {
+  // Inner class for integer document
+  protected class IntegerDocument extends PlainDocument {
 
     // The insert string method
     public void insertString(int offs, String src, AttributeSet a)
@@ -77,8 +76,3 @@ public class WholeNumberField extends JTextField {
     }
   }
 }
-// $Log: WholeNumberField.java,v $
-// Revision 1.2  2000/02/03 05:36:59  bbanerje
-// Just a few changes in all the java files .. and some changes in
-// GenerateParticleFrame and Particle and ParticleList
-//

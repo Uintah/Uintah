@@ -5,7 +5,6 @@
 // Date    : 03/24/1999
 // Mods    :
 //**************************************************************************
-// $Id: ParticleList.java,v 1.2 2000/02/03 05:36:58 bbanerje Exp $
 
 import java.io.*;
 import java.util.*;
@@ -56,6 +55,7 @@ public class ParticleList extends Object {
       int type = Particle.CIRCLE;
       double radius = 0.0;
       double rotation = 0.0;
+      double thickness = 0.0;
       double xx = 0.0;
       double yy = 0.0;
       double zz = 0.0;
@@ -74,11 +74,12 @@ public class ParticleList extends Object {
             switch (count) {
               case 1: type = (int) ii; break;
               case 2: radius = ii; break;
-              case 3: rotation = ii; break;
-              case 4: xx = ii; break;
-              case 5: yy = ii; break;
-              case 6: zz = ii; break;
-              case 7: matCode = (int) ii; break;
+              case 3: thickness = ii; break;
+              case 4: rotation = ii; break;
+              case 5: xx = ii; break;
+              case 6: yy = ii; break;
+              case 7: zz = ii; break;
+              case 8: matCode = (int) ii; break;
               default: break;
             }
           }
@@ -86,7 +87,7 @@ public class ParticleList extends Object {
             //System.out.println(type+" "+radius+" "+rotation+" "+xx+" "+yy+
                   //           " "+zz+" "+matCode);
             Point center = new Point(xx, yy, zz);
-            Particle particle = new Particle(type, radius, rotation, 
+            Particle particle = new Particle(type, radius, thickness, rotation, 
                                              center, matCode);
             this.addParticle(particle);
             count = 0;
@@ -95,21 +96,6 @@ public class ParticleList extends Object {
       }
     } catch (Exception e) {
       System.out.println("Could not read from "+particleFile.getName());
-    }
-  }
-
-  // Write the particle data in Uintah XML format
-  public void writeUintah(PrintWriter pw) {
-
-    if (pw == null) return;
-
-    int nofParts = size();
-    for (int ii = 0; ii < nofParts; ii++) {
-      Particle part = getParticle(ii);
-      double rad = part.getRadius();
-      double x = part.getCenter().getX();
-      double y = part.getCenter().getY();
-      pw.println("cyl4,"+x*1000.0+","+y*1000.0+","+rad*1000.0);
     }
   }
 
@@ -126,19 +112,20 @@ public class ParticleList extends Object {
       pw.println("# RVE Size");
       pw.println(d_rveSize);
       pw.println("# Particle List");
-      pw.println("# type  radius  rotation  xCent  yCent  zCent  matCode");
+      pw.println("# type  radius  thickness rotation  xCent  yCent  zCent  matCode");
       int nofParts = size();
       for (int ii = 0; ii < nofParts; ii++) {
         Particle part = getParticle(ii);
         double radius = part.getRadius();
+        double thickness = part.getThickness();
         double rotation = part.getRotation();
         double xCent = part.getCenter().getX();
         double yCent = part.getCenter().getY();
         double zCent = part.getCenter().getZ();
         int matCode = part.getMatCode();
         pw.println("# Particle "+ii);
-        pw.println(partType+" "+radius+" "+rotation+" "+xCent+" "+yCent+
-                 " "+zCent+" "+matCode);
+        pw.println(partType+" "+radius+" "+thickness+" "+rotation+" "+
+                   xCent+" "+yCent+" "+zCent+" "+matCode);
       }
       pw.close();
       fw.close();

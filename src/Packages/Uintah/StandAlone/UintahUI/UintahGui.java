@@ -185,6 +185,21 @@ public class UintahGui extends JApplet {
     c.insets = insets;
   }
 
+  // For setting the gridbagconstraints for this application
+  public static void setConstraints(GridBagConstraints c, int fill,
+                                    int xinset, int yinset,
+                                    int col, int row) {
+    c.fill = fill;
+    c.weightx = 1.0;
+    c.weighty = 1.0;
+    c.gridx = col;
+    c.gridy = row;
+    c.gridwidth = 1;
+    c.gridheight = 1;
+    Insets insets = new Insets(yinset, xinset, yinset, xinset);
+    c.insets = insets;
+  }
+
   private class MenuListener implements ActionListener {
     public void actionPerformed(ActionEvent e) {
       JMenuItem source = (JMenuItem)(e.getSource());

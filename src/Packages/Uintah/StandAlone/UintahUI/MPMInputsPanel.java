@@ -169,11 +169,11 @@ public class MPMInputsPanel extends JPanel {
     private JCheckBox impHeatCB = null;
     private DecimalField convDispEntry = null;
     private DecimalField convEnergyEntry = null;
-    private WholeNumberField maxItersDecDeltEntry = null;
+    private IntegerField maxItersDecDeltEntry = null;
     private DecimalField delTDecFacEntry = null;
-    private WholeNumberField minItersIncDeltEntry = null;
+    private IntegerField minItersIncDeltEntry = null;
     private DecimalField delTIncFacEntry = null;
-    private WholeNumberField maxItersRestartEntry = null;
+    private IntegerField maxItersRestartEntry = null;
 
     private JLabel implicitAlgoLabel = null;
     private JLabel implicitSolverLabel = null;
@@ -420,7 +420,7 @@ public class MPMInputsPanel extends JPanel {
 
       maxItersDecDeltLabel = 
         new JLabel("Max. Iter. Before Timestep Decrease ");
-      maxItersDecDeltEntry = new WholeNumberField(12, 5);
+      maxItersDecDeltEntry = new IntegerField(12, 5);
       UintahGui.setConstraints(gbcPanel9, GridBagConstraints.BOTH, 
                                1.0, 1.0, 0, 1, 
                                1, 1, 5);
@@ -445,7 +445,7 @@ public class MPMInputsPanel extends JPanel {
 
       minItersIncDeltLabel = 
         new JLabel("Min. Iter. Before Timestep Increase ");
-      minItersIncDeltEntry = new WholeNumberField(4, 5);
+      minItersIncDeltEntry = new IntegerField(4, 5);
       UintahGui.setConstraints(gbcPanel9, GridBagConstraints.BOTH, 
                                1.0, 1.0, 0, 2, 
                                1, 1, 5);
@@ -470,7 +470,7 @@ public class MPMInputsPanel extends JPanel {
 
       maxItersRestartLabel = 
         new JLabel("Max. Iter. Before Timestep Restart ");
-      maxItersRestartEntry = new WholeNumberField(15, 5);
+      maxItersRestartEntry = new IntegerField(15, 5);
       UintahGui.setConstraints(gbcPanel9, GridBagConstraints.BOTH, 
                                1.0, 1.0, 0, 3, 
                                1, 1, 5);

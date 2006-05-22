@@ -25,7 +25,7 @@ public class TimeInputPanel extends JPanel
 
   private DecimalField initTimeEntry = null;
   private DecimalField maxTimeEntry = null;
-  private WholeNumberField maxNofStepsEntry = null;
+  private IntegerField maxNofStepsEntry = null;
 
   private DecimalField deltInitEntry = null;
   private DecimalField deltMinEntry = null;
@@ -35,10 +35,10 @@ public class TimeInputPanel extends JPanel
 
   private JTextField udaFilenameEntry = null;
   private DecimalField outputIntervalEntry = null;
-  private WholeNumberField outputTimestepIntervalEntry = null;
-  private WholeNumberField checkPointCycleEntry = null;
+  private IntegerField outputTimestepIntervalEntry = null;
+  private IntegerField checkPointCycleEntry = null;
   private DecimalField checkPointIntervalEntry = null;
-  private WholeNumberField checkPointTimestepIntervalEntry = null;
+  private IntegerField checkPointTimestepIntervalEntry = null;
 
   private String d_simType = null;
   private GeneralInputsPanel d_parent = null;
@@ -77,7 +77,7 @@ public class TimeInputPanel extends JPanel
     JLabel maxTimeLabel = new JLabel("Maximum Time");
     maxTimeEntry = new DecimalField(1.0,8,true);
     JLabel maxNofStepsLabel = new JLabel("Maximum Timesteps");
-    maxNofStepsEntry = new WholeNumberField(1000, 5);
+    maxNofStepsEntry = new IntegerField(1000, 5);
     panel2.add(initTimeLabel);
     panel2.add(initTimeEntry);
     panel2.add(maxTimeLabel);
@@ -111,14 +111,14 @@ public class TimeInputPanel extends JPanel
     JLabel outputIntervalLabel = new JLabel("Output Time Interval");
     outputIntervalEntry = new DecimalField(1.0e-6, 8, true);
     JLabel outputTimestepIntLabel = new JLabel("Output Timestep Interval");
-    outputTimestepIntervalEntry = new WholeNumberField(10, 4);
+    outputTimestepIntervalEntry = new IntegerField(10, 4);
     JLabel checkPointCycleLabel = new JLabel("Check Point Cycle");
-    checkPointCycleEntry = new WholeNumberField(2, 4);
+    checkPointCycleEntry = new IntegerField(2, 4);
     JLabel checkPointIntervalLabel = new JLabel("Checkpoint Time Interval");
     checkPointIntervalEntry = new DecimalField(5.0e-6, 8, true);
     JLabel checkPointTimestepIntLabel = 
       new JLabel("Checkpoint Timestep Interval");
-    checkPointTimestepIntervalEntry = new WholeNumberField(50, 4);
+    checkPointTimestepIntervalEntry = new IntegerField(50, 4);
     panel4.add(udaFilenameLabel);
     panel4.add(udaFilenameEntry);
     panel4.add(outputIntervalLabel);
