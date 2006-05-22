@@ -123,10 +123,10 @@ RTRT_PSELIBS := $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(GL_LIBRARY) $(
 RTRT_ULIBS = -lPackages_rtrt_Core -lPackages_Uintah_Core_DataArchive -lPackages_Uintah_Core_Grid -lCore_Persistent -lCore_Geometry -lCore_Containers -lCore_Exceptions -lDataflow_Comm -lCore_XMLUtil $(SCI_THIRDPARTY_LIBRARY) $(XML_LIBRARY) $(MPI_LIBRARY) -lCore_Malloc -lCore_Thread  $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(LAPACKMP_LIBRARY) $(M_LIBRARY)
 
 $(SRCDIR)/uintahparticle2.$(RSE): $(SRCDIR)/uintahparticle2.o
-	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.$(RSE),%.o,$(filter %.$(RSE),$@)) $(RTRT_ULIBS)
+	$(CXX) -o $@ $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(SOFLAGS) $(patsubst %.$(RSE),%.o,$(filter %.$(RSE),$@)) $(RTRT_ULIBS)
 
 $(SRCDIR)/uintahisosurface.$(RSE): $(SRCDIR)/uintahisosurface.o
-	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.$(RSE),%.o,$(filter %.$(RSE),$@)) $(RTRT_ULIBS)
+	$(CXX) -o $@ $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(SOFLAGS) $(patsubst %.$(RSE),%.o,$(filter %.$(RSE),$@)) $(RTRT_ULIBS)
 
 #######################################################################
 
@@ -134,7 +134,7 @@ $(SCENES): lib/libPackages_rtrt_Core.$(SO_OR_A_FILE) lib/libPackages_rtrt_Core_P
 %.$(RSE): %.o
 	echo "Building rtrt scenefile $@"
 	rm -f $@
-	$(CXX) -o $@ $(LDFLAGS) $(SOFLAGS) $(patsubst %.$(RSE),%.o,$(filter %.$(RSE),$@)) -lPackages_rtrt_Core -lPackages_rtrt_Core_PathTracer -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lCore_Exceptions -lCore_Math $(SCI_THIRDPARTY_LIBRARY) $(TEEM_LIBRARY) $(XML_LIBRARY) $(M_LIBRARY) $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(LAPACKMP_LIBRARY)
+	$(CXX) -o $@ $(LDFLAGS) $(LDRUN_PREFIX)$(LIBDIR_ABS) $(SOFLAGS) $(patsubst %.$(RSE),%.o,$(filter %.$(RSE),$@)) -lPackages_rtrt_Core -lPackages_rtrt_Core_PathTracer -lCore_Exceptions -lCore_Geometry -lCore_Persistent -lCore_Malloc -lCore_Thread -lCore_Exceptions -lCore_Math $(SCI_THIRDPARTY_LIBRARY) $(TEEM_LIBRARY) $(XML_LIBRARY) $(M_LIBRARY) $(OOGL_LIBRARY) $(GLUI_LIBRARY) $(GLUT_LIBRARY) $(LAPACKMP_LIBRARY)
 #	ln -fs `basename $@` $(patsubst %.$(RSE),%.mo,$(filter %.$(RSE),$@))
 
 CLEANPROGS := $(CLEANPROGS) $(SCENES) 
