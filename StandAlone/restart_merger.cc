@@ -111,6 +111,7 @@ int main(int argc, char** argv)
       }
       
       Dir restartFromDir(udafile[i]);
+      // the time argument doesn't matter.  Pass in 0 also to signify to not copy checkpoints
       out_uda.restartSetup(restartFromDir, prevTimestep, timestep, 0 /* this time doesn't matter for our purpose here */, false, move);
       prevTimestep = timestep;
     }
@@ -119,7 +120,8 @@ int main(int argc, char** argv)
     Dir restartFromDir(udafile[i]);
     out_uda.copySection(restartFromDir, "globals");
     out_uda.copySection(restartFromDir, "variables");
-    out_uda.restartSetup(restartFromDir, prevTimestep, -1, 0, false, move);
+    // pass in an arbitrary '1' for time, so it can copy the checkpoints.
+    out_uda.restartSetup(restartFromDir, prevTimestep, -1, 1, false, move);
 
     ups->releaseDocument();
   } catch (Exception& e) {
