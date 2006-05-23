@@ -460,10 +460,13 @@ DataArchiver::restartSetup(Dir& restartFromDir, int startTimestep,
                     removeOldDir);
       Dir checkpointsFromDir = restartFromDir.getSubdir("checkpoints");
       bool areCheckpoints = true;
-      copyTimesteps(checkpointsFromDir, d_checkpointsDir, startTimestep,
-                    timestep, removeOldDir, areCheckpoints);
-      copySection(checkpointsFromDir, d_checkpointsDir, "variables");
-      copySection(checkpointsFromDir, d_checkpointsDir, "globals");
+      if (time > 0) {
+        // the restart_merger doesn't need checkpoints, and calls this with time=0.
+        copyTimesteps(checkpointsFromDir, d_checkpointsDir, startTimestep,
+                      timestep, removeOldDir, areCheckpoints);
+        copySection(checkpointsFromDir, d_checkpointsDir, "variables");
+        copySection(checkpointsFromDir, d_checkpointsDir, "globals");
+      }
       if (removeOldDir)
          restartFromDir.forceRemove(false);
    }
