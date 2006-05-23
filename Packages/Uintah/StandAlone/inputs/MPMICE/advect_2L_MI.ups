@@ -185,11 +185,11 @@
         </Refinement_Criteria_Thresholds>
         <min_grid_level>0</min_grid_level>
         <max_grid_level>1</max_grid_level>
+      </ICE>
       <MPM>
         <min_grid_level>1</min_grid_level>
         <max_grid_level>1</max_grid_level>
       </MPM>
-      </ICE>
       <Regridder>
         <max_levels>2</max_levels>
         <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
