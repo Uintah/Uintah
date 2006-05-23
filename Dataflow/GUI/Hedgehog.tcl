@@ -108,8 +108,11 @@ itcl_class Uintah_Visualization_Hedgehog {
 		-variable $this-shaft_rad -command $n
 	pack $w.f2.shaft_scale -side left -fill x -pady 2
 
-	makeSciButtonPanel $w $w $this	
-#	button $w.close -text "Close" -command "wm withdraw $w"
-#	pack $w.close -side bottom -expand yes -fill x
+        # add frame for SCI Button Panel
+        frame $w.control -relief flat
+        pack $w.control -side top -expand yes -fill both
+	makeSciButtonPanel $w.control $w $this
+	moveToCursor $w
+
     }
 }

@@ -492,7 +492,7 @@ itcl_class Uintah_Visualization_VariablePlotter {
 
 #             $w.vars.canvas config -yscrollincrement $yincr
 #             $w.vars.canvas config -scrollregion "0 0 $width $height"
-            puts "width = $width, height = $height"
+#            puts "width = $width, height = $height"
             
             # Calculate the correct height to display up to 8 materials
             set max [llength $var_list]
@@ -542,7 +542,7 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	radiobutton $w.o.select.cell -variable $this-var_orientation \
 		-command $n -text "Cell Centered" -value 1
 	pack $w.o.select.cell -side top -anchor w -pady 2 -ipadx 3
-	puts "w is $w"
+#	puts "w is $w"
 	# node ID
 	make_entry $w.o.nodel "level index:" $this-index_l $pick
 	pack $w.o.nodel -side top -fill x -padx 2 -pady 2
@@ -553,27 +553,33 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	make_entry $w.o.nodez "z index:" $this-index_z $pick
 	pack $w.o.nodez -side top -fill x -padx 2 -pady 2
 
-	makeFrames $w
 
 #	button $w.ttest -text "Table test" -command "$this table_test"
 #	pack $w.ttest -side bottom -expand yes -fill x
 #	button $w.gtest -text "Graph test" -command "$this graph_test"
 #	pack $w.gtest -side bottom -expand yes -fill x
 
-	makeSciButtonPanel $w $w $this -force_bottom
-	moveToCursor $w 
+        # add frame for SCI Button Panel
+        frame $w.control -relief flat 
+        pack $w.control -side bottom -expand yes -fill both
+	makeSciButtonPanel $w.control $w $this
+	moveToCursor $w
+
+	makeFrames $w
+
+
     }
     method reset_var_val {} {
 	set var_val_list {}
     }
     method set_time { args } {
 	set time_list $args
-	puts "time_list =  $time_list"
+#	puts "time_list =  $time_list"
     }
     method set_var_val { args } {
 	set val_list $args
 	lappend var_val_list $val_list
-	puts "Args to set_var_val were $args"
+#	puts "Args to set_var_val were $args"
 #	puts "New var_val_list: $var_val_list"
     }
     method get_color { index } {

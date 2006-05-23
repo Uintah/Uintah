@@ -25,7 +25,7 @@ itcl_class Uintah_Visualization_PatchDataVisualizer {
 	global $this-polygons
 	set $this-polygons 8
 
-	puts "radius = [set $this-radius]"
+# 	puts "radius = [set $this-radius]"
     }
     # returns 1 if the window is visible, 0 otherwise
     method isVisible {} {
@@ -94,10 +94,12 @@ itcl_class Uintah_Visualization_PatchDataVisualizer {
 	    -from 8 -to 400 -tickinterval 392
 	pack $w.sphere.polygons -side top -fill x
 
-	makeSciButtonPanel $w $w $this
-	# close button
-#	button $w.close -text "Close" -command "wm withdraw $w"
-#	pack $w.close -side bottom -expand yes -fill x
+        # add frame for SCI Button Panel
+        frame $w.control -relief flat
+        pack $w.control -side top -expand yes -fill both
+	makeSciButtonPanel $w.control $w $this
+	moveToCursor $w
+
     }
 }	
 	

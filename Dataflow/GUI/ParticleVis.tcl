@@ -15,13 +15,13 @@ itcl_class Uintah_Visualization_ParticleVis {
     }
 
     destructor {
-	puts "destructor:  ParticleVis"
+# 	puts "destructor:  ParticleVis"
 	set w .ui[modname]
 	if {[winfo exists $w]} {
 	    ::delete object $r
        }
 	set r ""
-	puts "done"
+# 	puts "done"
     }
 
     method set_defaults {} {
@@ -215,7 +215,10 @@ itcl_class Uintah_Visualization_ParticleVis {
 	    -expand yes -fill x -padx 2 -pady 2
 
 
-        makeSciButtonPanel $w $w $this
+        # add frame for SCI Button Panel
+        frame $w.control -relief flat
+        pack $w.control -side top -expand yes -fill both
+	makeSciButtonPanel $w.control $w $this
 	moveToCursor $w
 
 	$this scalable 0
@@ -283,7 +286,7 @@ itcl_class Uintah_Visualization_ParticleVis {
     }
 
     method close {} {
-	puts "closing ParticleVis Ui"
+# 	puts "closing ParticleVis Ui"
 	set w .ui[modname]
 	
 	::delete object $t

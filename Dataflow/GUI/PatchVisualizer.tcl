@@ -230,10 +230,11 @@ itcl_class Uintah_Visualization_PatchVisualizer {
 	# add the level specific stuff
 	makeFrames $w
 
-	makeSciButtonPanel $w $w $this
-	# close button
-#	button $w.close -text "Close" -command "wm withdraw $w"
-#	pack $w.close -side bottom -expand yes -fill x
+        # add frame for SCI Button Panel
+        frame $w.control -relief flat
+        pack $w.control -side top -expand yes -fill both
+	makeSciButtonPanel $w.control $w $this
+	moveToCursor $w
     }
 }	
 	

@@ -55,8 +55,11 @@ itcl_class Uintah_Operators_ScalarMinMax {
 	pack $lf.l0 $lf.separator0 $lf.l1 $lf.l2 $lf.l3 $lf.separator1 $lf.l5 $lf.l6 $lf.l7 \
 	       -side top -expand y -fill x -padx 5
 
-	makeSciButtonPanel $w $w $this
-        moveToCursor $w
+      # add frame for SCI Button Panel
+        frame $w.control -relief flat
+        pack $w.control -side top -expand yes -fill both
+	makeSciButtonPanel $w.control $w $this
+	moveToCursor $w
     }
 
 }

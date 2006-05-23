@@ -94,9 +94,12 @@ itcl_class Uintah_Visualization_FaceCuttingPlane {
 	    -from 1 -to 4
 	pack $w.ls.s -side top -fill x -padx 2 -pady 2
 
-	makeSciButtonPanel $w $w $this
-#        button $w.b -text "Close" -command "wm withdraw $w"
-#        pack $w.b -side top -fill x -padx 2 -pady 2
+        # add frame for SCI Button Panel
+        frame $w.control -relief flat
+        pack $w.control -side top -expand yes -fill both
+	makeSciButtonPanel $w.control $w $this
+	moveToCursor $w
+
 
 	bind $w.ls.s <ButtonRelease> $n
 	$this update_control

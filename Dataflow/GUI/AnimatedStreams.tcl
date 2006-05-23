@@ -107,11 +107,10 @@ itcl_class Uintah_Visualization_AnimatedStreams {
 	pack $w.linewidth -side top -fill x
 	bind $w.linewidth <ButtonRelease> "$this-c update_linewidth"
 
-	makeSciButtonPanel $w $w $this "\" Reset Streams \" \"$this-c reset_streams\" \"Press to reset the stream lines.\""
-#	button $w.reset -text "Reset Streams" -command "$this-c reset_streams"
-#	pack $w.reset -side top -fill x
-
-#	button $w.close -text "Close" -command "wm withdraw $w"
-#	pack $w.close -side top -fill x
+      # add frame for SCI Button Panel
+        frame $w.control -relief flat
+        pack $w.control -side top -expand yes -fill both
+	makeSciButtonPanel $w.control $w $this "\" Reset Streams \" \"$this-c reset_streams\" \"Press to reset the stream lines.\""
+	moveToCursor $w
     }
 }
