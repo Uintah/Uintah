@@ -548,14 +548,6 @@ protected:
   void create_cell_syncinfo(typename Cell::index_type ci);
   void delete_cell_syncinfo(typename Cell::index_type ci);
 
-  typename Elem::index_type     mod_tet(typename Cell::index_type cell,
-                                typename Node::index_type a,
-                                typename Node::index_type b,
-                                typename Node::index_type c,
-                                typename Node::index_type d);
-
-
-
   //! all the vertices
   vector<Point>         points_;
 
@@ -2259,10 +2251,6 @@ TetVolMesh<Basis>::add_elem(typename Node::array_type a)
   for (unsigned int n = 0; n < a.size(); n++)
     cells_.push_back(a[n]);
 
-//  Synchronous element addition should be a separate function
-//  This slows down normal operation of the function considerably
-//  create_cell_syncinfo(tet);
-
   return tet;
 }
 
@@ -2617,47 +2605,19 @@ template <class Basis>
 void
 TetVolMesh<Basis>::orient(typename Cell::index_type ci)
 {
-  typename Node::array_type ra;
-  get_nodes(ra,ci);
-  const Point &p0 = point(ra[0]);
-  const Point &p1 = point(ra[1]);
-  const Point &p2 = point(ra[2]);
-  const Point &p3 = point(ra[3]);
+  const Point &p0 = point(cells_[ci*4+0]);
+  const Point &p1 = point(cells_[ci*4+1]);
+  const Point &p2 = point(cells_[ci*4+2]);
+  const Point &p3 = point(cells_[ci*4+3]);
 
   // Unsigned volumex6 of the tet.
-  double sgn=Dot(Cross(p1-p0,p2-p0),p3-p0);
-
-  if(sgn < 0.0) {
-    unsigned int base = ci * 4;
-    mod_tet(ci, cells_[base+1],  cells_[base], cells_[base+2], cells_[base+3]);
-    sgn=-sgn;
+  const double sgn = Dot(Cross(p1-p0,p2-p0),p3-p0);
+  if (sgn < 0.0)
+  {
+    typename Node::index_type tmp = cells_[ci*4+0];
+    cells_[ci*4+0] = cells_[ci*4+1];
+    cells_[ci*4+1] = tmp;
   }
-
-  if(sgn < MIN_ELEMENT_VAL){ // return 0; // Degenerate...
-    cerr << "Warning - small element, volume=" << sgn << std::endl;
-  }
-}
-
-
-
-template <class Basis>
-typename TetVolMesh<Basis>::Elem::index_type
-TetVolMesh<Basis>::mod_tet(typename Cell::index_type cell,
-                           typename Node::index_type a,
-                           typename Node::index_type b,
-                           typename Node::index_type c,
-                           typename Node::index_type d)
-{
-  delete_cell_syncinfo(cell);
-
-  cells_[cell*4+0] = a;
-  cells_[cell*4+1] = b;
-  cells_[cell*4+2] = c;
-  cells_[cell*4+3] = d;
-
-  create_cell_syncinfo(cell);
-
-  return cell;
 }
 
 
@@ -2678,13 +2638,17 @@ TetVolMesh<Basis>::io(Piostream &stream)
     SCIRun::Pio(stream, neighbors);
   }
 
-  // orient the tets..
-  typename Cell::iterator iter, endit;
-  begin(iter);
-  end(endit);
-  while(iter != endit) {
-    orient(*iter);
-    ++iter;
+  // Orient the tets.
+  if (stream.reading())
+  {
+    typename Cell::iterator iter, endit;
+    begin(iter);
+    end(endit);
+    while(iter != endit)
+    {
+      orient(*iter);
+      ++iter;
+    }
   }
   if (version >= 3) {
     basis_.io(stream);
