@@ -42,7 +42,7 @@ MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss)
   // The standard set of initializations needed
   standardInitialization(ps);
   
-  d_cm->setSharedState(ss);
+  d_cm->setSharedState(ss.get_rep());
   // Check to see which ParticleCreator object we need
 
   d_particle_creator = ParticleCreatorFactory::create(ps,this,d_flag);

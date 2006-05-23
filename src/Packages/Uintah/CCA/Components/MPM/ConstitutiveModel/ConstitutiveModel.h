@@ -176,7 +176,7 @@ namespace Uintah {
         d_world = myworld;
       }
 
-    inline void setSharedState(SimulationStateP& sharedState)
+    inline void setSharedState(SimulationState* sharedState)
       {
         d_sharedState = sharedState;
       }
@@ -446,7 +446,10 @@ namespace Uintah {
     int NGP;
     int NGN;
     const ProcessorGroup* d_world;
-    SimulationStateP d_sharedState;
+
+    // don't store SimulationStateP or it will add a reference 
+    // that will never be removed
+    SimulationState* d_sharedState;
   };
 } // End namespace Uintah
       
