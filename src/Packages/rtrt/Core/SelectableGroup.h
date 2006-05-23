@@ -25,6 +25,7 @@ class SelectableGroup : public Group {
 
   bool autoswitch; //should animate automatically switch showing child?
   bool no_skip; // This ignores autoswitch_secs and does the next object
+  bool frame_for_frame; // This will do a simple cycling
 
   int repeat_last; // Number of times to repeat the last timestep
                    // (defaults to 1).
@@ -74,6 +75,9 @@ public:
   inline int GetNoSkip() { if (no_skip) return 1; else return 0; }
   inline void toggleNoSkip() {no_skip = !no_skip;}
 
+  inline void SetFrameForFrame(bool b) { frame_for_frame = b; }
+  inline int GetFrameForFrame() { return frame_for_frame? 1: 0; }
+  inline void toggleFrameForFrame() { frame_for_frame = !frame_for_frame; }
   
   inline int GetChild() { return gui_child; }
   // Remember that setting child less than 0 will not select any child.

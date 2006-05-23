@@ -392,6 +392,7 @@ private:
   static void toggleMaterialsWindowCB( int id );
   static void SGAutoCycleCB( int id );
   static void SGNoSkipCB( int id );
+  static void SGFrameForFrameFB( int id );
   static void SGNextItemCB( int id );
   static void SGCurrentFrameCB( int id );
   static void SGMinChildCB( int id );

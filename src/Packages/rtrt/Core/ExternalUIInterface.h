@@ -6,6 +6,7 @@ namespace rtrt {
 class ExternalUIInterface {
 public:
   ExternalUIInterface() {}
+  virtual ~ExternalUIInterface() {}
   
   // This function in no way should block.
   virtual void stop() = 0;

@@ -102,18 +102,35 @@ SelectableGroup::animate(double t, bool& changed)
 
   // Automatic cycling of child based on the clock passed in with t
   if (autoswitch) {
-    int sec = (int)(t/autoswitch_secs);
-    int num_frames = max_child-min_child + repeat_last;
-    int new_internal_child = sec%num_frames + min_child;
-//     cerr << ", num_frames = "<<num_frames<<", new_internal_child = "<<new_internal_child;
-    if (new_internal_child != internal_child) {
-      changed = true;
-      // child has changed, force it to be the next child in need be.
-      if (no_skip) {
-        internal_child++;
-      } else {
-        internal_child = new_internal_child;
+    if (!frame_for_frame) {
+      int sec = (int)(t/autoswitch_secs);
+      int num_frames = max_child-min_child + repeat_last;
+      int new_internal_child = sec%num_frames + min_child;
+      //     cerr << ", num_frames = "<<num_frames<<", new_internal_child = "<<new_internal_child;
+      if (new_internal_child != internal_child) {
+        changed = true;
+        // child has changed, force it to be the next child in need be.
+        if (no_skip) {
+          internal_child++;
+        } else {
+          internal_child = new_internal_child;
+        }
+        // Now update gui_child and child
+        if (internal_child > max_child) {
+          // We are repeating, but should we loop yet
+          if (internal_child >= max_child+repeat_last) {
+            gui_child = child = internal_child = min_child;
+          } else {
+            gui_child = child = max_child;
+          }
+        } else {
+          // else do nothing, because we are fine.
+          gui_child = child = internal_child;
+        }
       }
+    } else {
+      internal_child++;
+      changed = true;
       // Now update gui_child and child
       if (internal_child > max_child) {
         // We are repeating, but should we loop yet
