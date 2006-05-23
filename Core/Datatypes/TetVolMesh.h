@@ -1447,7 +1447,7 @@ TetVolMesh<Basis>::get_nodes(typename Node::array_type &array,
   ASSERTMSG(synchronized_ & EDGES_E,
             "Must call synchronize EDGES_E on TetVolMesh first");
   array.clear();
-  PEdge e = edges_[idx];
+  const PEdge &e = edges_[idx];
   array.push_back(e.nodes_[0]);
   array.push_back(e.nodes_[1]);
 }
@@ -1613,7 +1613,7 @@ TetVolMesh<Basis>::get_face_opposite_node(typename Face::index_type &fi,
   typename Face::array_type faces;
   get_faces(faces, ci);
   for (int i = 0; i < 4; i++) {
-    PFace f = faces_[faces[i]];
+    const PFace &f = faces_[faces[i]];
     fi = faces[i];
     if (ni != f.nodes_[0] && ni != f.nodes_[1] && ni != f.nodes_[2]) {
       return true;
@@ -1632,8 +1632,8 @@ TetVolMesh<Basis>::get_node_opposite_face(typename Node::index_type &ni,
 {
   typename Node::array_type nodes;
   get_nodes(nodes, ci);
+  const PFace &f = faces_[fi];
   for (int i = 0; i < 4; i++) {
-    PFace f = faces_[fi];
     ni = nodes[i];
     if (ni != f.nodes_[0] && ni != f.nodes_[1] && ni != f.nodes_[2]) {
       return true;
