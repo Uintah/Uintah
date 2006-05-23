@@ -506,54 +506,6 @@ public:
   static Persistent* maker() { return scinew TetVolMesh(); }
 
 protected:
-  const Point &point(typename Node::index_type idx) const
-  { return points_[idx]; }
-
-  //! Always creates 4 tets, does not handle element boundaries properly.
-  bool         insert_node_in_cell(typename Cell::array_type &tets,
-                                   typename Cell::index_type ci,
-                                   typename Node::index_type &ni,
-                                   const Point &p);
-
-  void         insert_node_in_face(typename Cell::array_type &tets,
-                                   typename Node::index_type ni,
-                                   typename Cell::index_type ci,
-                                   typename Face::index_type fi);
-
-  void         insert_node_in_edge(typename Cell::array_type &tets,
-                                   typename Node::index_type ni,
-                                   typename Cell::index_type ci,
-                                   typename Edge::index_type ei);
-
-  // These should not be called outside of the synchronize_lock_.
-  void                  compute_node_neighbors();
-  void                  compute_edges();
-  void                  compute_faces();
-  void                  compute_grid();
-
-  void                  orient(typename Cell::index_type ci);
-  bool                  inside(typename Cell::index_type idx, const Point &p);
-
-  //! Used to recompute data for individual cells.  Don't use these, they
-  // are not synchronous.  Use create_cell_syncinfo instead.
-  void create_cell_edges(typename Cell::index_type);
-  void delete_cell_edges(typename Cell::index_type);
-  void create_cell_faces(typename Cell::index_type);
-  void delete_cell_faces(typename Cell::index_type);
-  void create_cell_node_neighbors(typename Cell::index_type);
-  void delete_cell_node_neighbors(typename Cell::index_type);
-  void insert_cell_into_grid(typename Cell::index_type ci);
-  void remove_cell_from_grid(typename Cell::index_type ci);
-
-  void create_cell_syncinfo(typename Cell::index_type ci);
-  void delete_cell_syncinfo(typename Cell::index_type ci);
-
-  //! all the vertices
-  vector<Point>         points_;
-
-  //! each 4 indecies make up a tet
-  vector<under_type>    cells_;
-
   //! Face information.
   struct PFace {
     // The order of nodes_ corresponds with cells_[0] for CW/CCW purposes.
@@ -720,6 +672,55 @@ protected:
   typedef map<PFace, typename Face::index_type, FaceHash> face_ht;
   typedef map<PEdge, typename Edge::index_type, EdgeHash> edge_ht;
 #endif
+
+  const Point &point(typename Node::index_type idx) const
+  { return points_[idx]; }
+
+  //! Always creates 4 tets, does not handle element boundaries properly.
+  bool         insert_node_in_cell(typename Cell::array_type &tets,
+                                   typename Cell::index_type ci,
+                                   typename Node::index_type &ni,
+                                   const Point &p);
+
+  void         insert_node_in_face(typename Cell::array_type &tets,
+                                   typename Node::index_type ni,
+                                   typename Cell::index_type ci,
+                                   const PFace &pf);
+
+  void         insert_node_in_edge(typename Cell::array_type &tets,
+                                   typename Node::index_type ni,
+                                   typename Cell::index_type ci,
+                                   typename Edge::index_type ei);
+
+  // These should not be called outside of the synchronize_lock_.
+  void                  compute_node_neighbors();
+  void                  compute_edges();
+  void                  compute_faces();
+  void                  compute_grid();
+
+  void                  orient(typename Cell::index_type ci);
+  bool                  inside(typename Cell::index_type idx, const Point &p);
+
+  //! Used to recompute data for individual cells.  Don't use these, they
+  // are not synchronous.  Use create_cell_syncinfo instead.
+  void create_cell_edges(typename Cell::index_type);
+  void delete_cell_edges(typename Cell::index_type);
+  void create_cell_faces(typename Cell::index_type);
+  void delete_cell_faces(typename Cell::index_type);
+  void create_cell_node_neighbors(typename Cell::index_type);
+  void delete_cell_node_neighbors(typename Cell::index_type);
+  void insert_cell_into_grid(typename Cell::index_type ci);
+  void remove_cell_from_grid(typename Cell::index_type ci);
+
+  void create_cell_syncinfo(typename Cell::index_type ci);
+  void delete_cell_syncinfo(typename Cell::index_type ci);
+
+  //! all the vertices
+  vector<Point>         points_;
+
+  //! each 4 indecies make up a tet
+  vector<under_type>    cells_;
+
   /*! container for face storage. Must be computed each time
     nodes or cells change. */
   vector<PFace>            faces_;
@@ -2346,37 +2347,47 @@ void
 TetVolMesh<Basis>::insert_node_in_face(typename Cell::array_type &tets,
                                        typename Node::index_type pi,
                                        typename Cell::index_type ci,
-                                       typename Face::index_type face)
+                                       const PFace &f)
 {
   // NOTE: This function assumes that the same operation has or will happen 
   // to any neighbor cell across the face.
-
-  typename Node::index_type opp;
-  get_node_opposite_face(opp, ci, face);
-
-  PFace f = faces_[face];
-
+  
+  int skip;
+  for (skip = 0; skip < 4; skip++)
+  {
+    typename Node::index_type ni = cells_[ci*4+skip];
+    if (ni != f.nodes_[0] && ni != f.nodes_[1] && ni != f.nodes_[2]) break;
+  }
+  
   delete_cell_syncinfo(ci);
   
-  if (f.cells_[0] == ci)
+  const unsigned int i = ci*4;
+  tets.push_back(ci);
+  if (skip == 0)
   {
-    tets.push_back(ci);
-    tets.push_back(add_tet(f.nodes_[1], f.nodes_[0], pi, opp));
-    tets.push_back(add_tet(f.nodes_[0], f.nodes_[2], pi, opp));
-    cells_[ci*4] =     f.nodes_[2];
-    cells_[ci*4 + 1] = f.nodes_[1];
-    cells_[ci*4 + 2] = pi;
-    cells_[ci*4 + 3] = opp;
+    tets.push_back(add_tet(cells_[i+0], cells_[i+3], cells_[i+1], pi));
+    tets.push_back(add_tet(cells_[i+0], cells_[i+2], cells_[i+3], pi));
+    cells_[i+3] = pi;
   }
-  else
+  else if (skip == 1)
   {
-    tets.push_back(ci);
-    tets.push_back(add_tet(f.nodes_[0], f.nodes_[1], pi, opp));
-    tets.push_back(add_tet(f.nodes_[2], f.nodes_[0], pi, opp));
-    cells_[ci*4] =     f.nodes_[1];
-    cells_[ci*4 + 1] = f.nodes_[2];
-    cells_[ci*4 + 2] = pi;
-    cells_[ci*4 + 3] = opp;
+    tets.push_back(add_tet(cells_[i+0], cells_[i+3], cells_[i+1], pi));
+    tets.push_back(add_tet(cells_[i+1], cells_[i+3], cells_[i+2], pi));
+    cells_[i+3] = pi;
+  }
+  else if (skip == 2)
+  {
+    tets.push_back(add_tet(cells_[i+1], cells_[i+3], cells_[i+2], pi));
+    tets.push_back(add_tet(cells_[i+0], cells_[i+2], cells_[i+3], pi));
+    cells_[i+3] = pi;
+  }
+  else if (skip == 3)
+  {
+    tets.push_back(add_tet(cells_[i+0], cells_[i+3], cells_[i+1], pi));
+    tets.push_back(add_tet(cells_[i+1], cells_[i+3], cells_[i+2], pi));
+    cells_[i+1] = cells_[i+2];
+    cells_[i+2] = cells_[i+3];
+    cells_[i+3] = pi;
   }
 
   create_cell_syncinfo(ci);
@@ -2560,43 +2571,34 @@ TetVolMesh<Basis>::insert_node_in_elem(typename Elem::array_type &tets,
     } while (nbrs.size());
   }
 
-
   // If we're on a face, we do a face insert.
   else if (mask == 7 || mask == 11 || mask == 13 || mask == 14)
   { 
-    unsigned int skip;
     typename Face::index_type fi;
-    PFace f;
-    if      (mask == 7)  {
+    PFace ftmp;
+    if        (mask == 7)  {
       /* on 0 1 2 face */
-      skip = 3; 
-      f = PFace(cells_[ci*4 + 0], cells_[ci*4 + 1], cells_[ci*4 + 2]);
+      ftmp = PFace(cells_[ci*4 + 0], cells_[ci*4 + 1], cells_[ci*4 + 2]);
     } else if (mask == 11) {
       /* on 0 1 3 face */
-      skip = 2; 
-      f = PFace(cells_[ci*4 + 0], cells_[ci*4 + 1], cells_[ci*4 + 3]);
+      ftmp = PFace(cells_[ci*4 + 0], cells_[ci*4 + 1], cells_[ci*4 + 3]);
     } else if (mask == 13) {
       /* on 0 2 3 face */
-      skip = 1; 
-      f = PFace(cells_[ci*4 + 0], cells_[ci*4 + 2], cells_[ci*4 + 3]);
+      ftmp = PFace(cells_[ci*4 + 0], cells_[ci*4 + 2], cells_[ci*4 + 3]);
     } else if (mask == 14) {
       /* on 1 2 3 face */
-      skip = 0; 
-      f = PFace(cells_[ci*4 + 1], cells_[ci*4 + 2], cells_[ci*4 + 3]);
+      ftmp = PFace(cells_[ci*4 + 1], cells_[ci*4 + 2], cells_[ci*4 + 3]);
     }
-   
-    typename Cell::index_type nbr_tet;
-    fi = (*face_table_.find(f)).second;
-    const bool have_neighbor = get_neighbor(nbr_tet, ci, fi);
-
+    const PFace &f = (*face_table_.find(ftmp)).first;
+    typename Cell::index_type nbr_tet =
+      (ci == f.cells_[0]) ? f.cells_[1] : f.cells_[0];
+    
     pi = add_point(p);
     tets.clear();
-    insert_node_in_face(tets, pi, ci, fi);
-    if (have_neighbor)
+    insert_node_in_face(tets, pi, ci, f);
+    if (nbr_tet != MESH_NO_NEIGHBOR)
     {
-      // refind the face, its location in the table changed.
-      fi = (*face_table_.find(f)).second;
-      insert_node_in_face(tets, pi, nbr_tet, fi);
+      insert_node_in_face(tets, pi, nbr_tet, f);
     }
   }
 
