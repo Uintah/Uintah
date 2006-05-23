@@ -1202,7 +1202,7 @@ main(int argc, char** argv)
 	cerr << "Grid at time " << time1 << " in " << filebase1
 	     << " has " << grid->numLevels() << " levels.\n";
 	cerr << "Grid at time " << time2 << " in " << filebase2
-	     << " has " << grid->numLevels() << " levels.\n";
+	     << " has " << grid2->numLevels() << " levels.\n";
 	abort_uncomparable();
       }
 
