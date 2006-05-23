@@ -1770,10 +1770,14 @@ GGT::createObjectWindow( GLUI * window )
                                         SGAutoCycleCB ))->
           set_int_val(sg->GetAutoswitch());
 
-        (window->add_checkbox_to_panel( panel, "Display Every Frame", NULL,
+        (window->add_checkbox_to_panel( panel, "No Skipping Timesteps", NULL,
                                         callback_info_id,
                                         SGNoSkipCB ))->
           set_int_val(sg->GetNoSkip());
+        (window->add_checkbox_to_panel( panel, "Frame for Frame", NULL,
+                                        callback_info_id,
+                                        SGFrameForFrameFB ))->
+          set_int_val(sg->GetFrameForFrame());
 
         GLUI_Spinner *sg_frame_rate =
           window->add_spinner_to_panel( panel, "Seconds Per Frame",
@@ -2083,6 +2087,11 @@ void GGT::SGAutoCycleCB( int id ) {
 void GGT::SGNoSkipCB( int id ) {
   SelectableGroup *sg = ((SGCallbackInfo*)callback_info_list[id])->sg;
   sg->toggleNoSkip();
+}
+
+void GGT::SGFrameForFrameFB( int id ) {
+  SelectableGroup *sg = ((SGCallbackInfo*)callback_info_list[id])->sg;
+  sg->toggleFrameForFrame();
 }
 
 void GGT::SGNextItemCB( int id )
