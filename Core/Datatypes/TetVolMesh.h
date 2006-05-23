@@ -410,6 +410,7 @@ public:
 
 
   virtual bool          synchronize(unsigned int tosync);
+  virtual void          unsynchronize();
 
   //! Persistent IO
   virtual void io(Piostream&);
@@ -690,7 +691,7 @@ protected:
   void         insert_node_in_edge(typename Cell::array_type &tets,
                                    typename Node::index_type ni,
                                    typename Cell::index_type ci,
-                                   typename Edge::index_type ei);
+                                   const PEdge &e);
 
   // These should not be called outside of the synchronize_lock_.
   void                  compute_node_neighbors();
@@ -714,6 +715,8 @@ protected:
 
   void create_cell_syncinfo(typename Cell::index_type ci);
   void delete_cell_syncinfo(typename Cell::index_type ci);
+  // Create the partial sync info needed by insert_node_in_elem
+  void create_cell_syncinfo_special(typename Cell::index_type ci);
 
   //! all the vertices
   vector<Point>         points_;
@@ -1156,6 +1159,36 @@ TetVolMesh<Basis>::synchronize(unsigned int tosync)
 
 template <class Basis>
 void
+TetVolMesh<Basis>::unsynchronize()
+{
+  synchronize_lock_.lock();
+
+  if (synchronized_ & NODE_NEIGHBORS_E)
+  {
+    node_neighbors_.clear();
+  }
+  if (synchronized_&EDGES_E || synchronized_&EDGE_NEIGHBORS_E)
+  {
+    edge_table_.clear();
+    edges_.clear();
+  }
+  if (synchronized_&FACES_E || synchronized_&FACE_NEIGHBORS_E)
+  {
+    face_table_.clear();
+    faces_.clear();
+  }
+  if (synchronized_ & LOCATE_E)
+  {
+    grid_ = 0;
+  }
+  synchronized_ = NODES_E | CELLS_E;
+
+  synchronize_lock_.unlock();
+}
+
+
+template <class Basis>
+void
 TetVolMesh<Basis>::begin(typename TetVolMesh::Node::iterator &itr) const
 {
   ASSERTMSG(synchronized_ & NODES_E, "NODES_E not synchronized.");
@@ -1401,6 +1434,22 @@ TetVolMesh<Basis>::delete_cell_node_neighbors(typename Cell::index_type c)
 
 template <class Basis>
 void
+TetVolMesh<Basis>::delete_cell_syncinfo(typename Cell::index_type ci)
+{
+  synchronize_lock_.lock();
+  if (synchronized_ & NODE_NEIGHBORS_E)
+    delete_cell_node_neighbors(ci);
+  if (synchronized_&EDGES_E || synchronized_&EDGE_NEIGHBORS_E)
+    delete_cell_edges(ci);
+  if (synchronized_&FACES_E || synchronized_&FACE_NEIGHBORS_E)
+    delete_cell_faces(ci);
+  if (synchronized_ & LOCATE_E)
+    remove_cell_from_grid(ci);
+  synchronize_lock_.unlock();
+}
+
+template <class Basis>
+void
 TetVolMesh<Basis>::create_cell_syncinfo(typename Cell::index_type ci)
 {
   synchronize_lock_.lock();
@@ -1415,19 +1464,36 @@ TetVolMesh<Basis>::create_cell_syncinfo(typename Cell::index_type ci)
   synchronize_lock_.unlock();
 }
 
+
 template <class Basis>
 void
-TetVolMesh<Basis>::delete_cell_syncinfo(typename Cell::index_type ci)
+TetVolMesh<Basis>::create_cell_syncinfo_special(typename Cell::index_type ci)
 {
   synchronize_lock_.lock();
   if (synchronized_ & NODE_NEIGHBORS_E)
-    delete_cell_node_neighbors(ci);
+    create_cell_node_neighbors(ci);
   if (synchronized_&EDGES_E || synchronized_&EDGE_NEIGHBORS_E)
-    delete_cell_edges(ci);
+  {
+    typename Node::array_type arr;
+    get_nodes(arr, ci);
+    hash_edge(arr[0], arr[1], ci, edge_table_);
+    hash_edge(arr[1], arr[2], ci, edge_table_);
+    hash_edge(arr[2], arr[0], ci, edge_table_);
+    hash_edge(arr[3], arr[0], ci, edge_table_);
+    hash_edge(arr[3], arr[1], ci, edge_table_);
+    hash_edge(arr[3], arr[2], ci, edge_table_);
+  }
   if (synchronized_&FACES_E || synchronized_&FACE_NEIGHBORS_E)
-    delete_cell_faces(ci);
+  {
+    typename Node::array_type arr;
+    get_nodes(arr, ci);
+    hash_face(arr[0], arr[2], arr[1], ci, face_table_);
+    hash_face(arr[1], arr[2], arr[3], ci, face_table_);
+    hash_face(arr[0], arr[1], arr[3], ci, face_table_);
+    hash_face(arr[0], arr[3], arr[2], ci, face_table_);
+  }
   if (synchronized_ & LOCATE_E)
-    remove_cell_from_grid(ci);
+    insert_cell_into_grid(ci);
   synchronize_lock_.unlock();
 }
 
@@ -2332,10 +2398,10 @@ TetVolMesh<Basis>::insert_node_in_cell(typename Cell::array_type &tets,
 
   cells_[index+3] = pi;
 
-  create_cell_syncinfo(ci);
-  create_cell_syncinfo(tets[1]);
-  create_cell_syncinfo(tets[2]);
-  create_cell_syncinfo(tets[3]);
+  create_cell_syncinfo_special(ci);
+  create_cell_syncinfo_special(tets[1]);
+  create_cell_syncinfo_special(tets[2]);
+  create_cell_syncinfo_special(tets[3]);
 
   return true;
 }
@@ -2390,9 +2456,9 @@ TetVolMesh<Basis>::insert_node_in_face(typename Cell::array_type &tets,
     cells_[i+3] = pi;
   }
 
-  create_cell_syncinfo(ci);
-  create_cell_syncinfo(tets[tets.size()-2]);
-  create_cell_syncinfo(tets[tets.size()-1]);
+  create_cell_syncinfo_special(ci);
+  create_cell_syncinfo_special(tets[tets.size()-2]);
+  create_cell_syncinfo_special(tets[tets.size()-1]);
 }
 
 
@@ -2401,65 +2467,71 @@ void
 TetVolMesh<Basis>::insert_node_in_edge(typename Cell::array_type &tets,
                                        typename Node::index_type pi,
                                        typename Cell::index_type ci,
-                                       typename Edge::index_type ei)
+                                       const PEdge &e)
 {
-  // These 2 are not in the edge.
-  typename Node::index_type nie[2];
-  PEdge e = edges_[ei];
-  int off = ci * 4;
-  int idx = 0;
-  for (int i = 0; i < 4; i++) {
-    if (cells_[off + i] != e.nodes_[0] && cells_[off + i] != e.nodes_[1]) {
-      nie[idx] = cells_[off + i];
-      idx++;
-    }  
+  int skip1, skip2;
+  skip1 = -1;
+  for (int i = 0; i < 4; i++)
+  {
+    typename Node::index_type ni = cells_[ci*4+i];
+    if (ni != e.nodes_[0] && ni != e.nodes_[1])
+    {
+      if (skip1 == -1) skip1 = i;
+      else skip2 = i;
+    }
   }
 
   delete_cell_syncinfo(ci);
 
-  const Point &o0 = point(cells_[ci*4+0]);
-  const Point &o1 = point(cells_[ci*4+1]);
-  const Point &o2 = point(cells_[ci*4+2]);
-  const Point &o3 = point(cells_[ci*4+3]);
-
-  const double vol = Dot(Cross(o1-o0,o2-o0),o3-o0);
-
-  const Point &p0 = point(nie[0]);
-  const Point &p1a = point(e.nodes_[0]);
-  const Point &p1b = point(e.nodes_[1]);
-  const Point &p2 = point(nie[1]);
-  const Point &p3 = point(pi);
-
-  const double vola = Dot(Cross(p1a-p0,p2-p0),p3-p0);
-  const double volb = Dot(Cross(p1b-p0,p2-p0),p3-p0);
-
+  bool pushed = false;
   tets.push_back(ci);
+  const unsigned int i = ci*4;
+  if (skip1 != 0 && skip2 != 0)
+  {
+    // add 1 3 2 pi
+    tets.push_back(add_tet(cells_[i+1], cells_[i+3], cells_[i+2], pi));
+    pushed = true;
+  }
+  if (skip1 != 1 && skip2 != 1)
+  {
+    // add 0 2 3 pi
+    if (pushed)
+    {
+      cells_[i+1] = cells_[i+2];
+      cells_[i+2] = cells_[i+3];
+      cells_[i+3] = pi;
+    }
+    else
+    {
+      tets.push_back(add_tet(cells_[i+0], cells_[i+2], cells_[i+3], pi));
+    }
+    pushed = true;
+  }
+  if (skip1 != 2 && skip2 != 2)
+  {
+    // add 0 3 1 pi
+    if (pushed)
+    {
+      cells_[i+2] = cells_[i+1];
+      cells_[i+1] = cells_[i+3];
+      cells_[i+3] = pi;
+    }
+    else
+    {
+      tets.push_back(add_tet(cells_[i+0], cells_[i+3], cells_[i+1], pi));
+    }
+    pushed = true;
+  }
+  if (skip1 != 3 && skip2 != 3)
+  {
+    // add 0 1 2 pi
+    ASSERTMSG(pushed,
+              "insert_node_in_cell_edge::skip1 or skip2 were invalid.");
+    cells_[i+3] = pi;
+  }
 
-  if (vola * vol < 0.0)
-  {
-    tets.push_back(add_tet(e.nodes_[0], nie[0], nie[1], pi));
-  }
-  else
-  {
-    tets.push_back(add_tet(nie[0], e.nodes_[0], nie[1], pi));
-  }
-  if (volb * vol < 0.0)
-  {
-    cells_[off]   = e.nodes_[1];
-    cells_[off+1] = nie[0];
-    cells_[off+2] = nie[1];
-    cells_[off+3] = pi;
-  }
-  else
-  {
-    cells_[off]   = nie[0];
-    cells_[off+1] = e.nodes_[1];
-    cells_[off+2] = nie[1];
-    cells_[off+3] = pi;
-  }
-  
-  create_cell_syncinfo(ci);
-  create_cell_syncinfo(tets[tets.size()-1]);
+  create_cell_syncinfo_special(ci);
+  create_cell_syncinfo_special(tets[tets.size()-1]);
 }
 
 
@@ -2535,40 +2607,34 @@ TetVolMesh<Basis>::insert_node_in_elem(typename Elem::array_type &tets,
   else if (mask == 3 || mask == 5 || mask == 6 ||
            mask == 9 || mask == 10 || mask == 12)
   {
-    PEdge e;
+    PEdge etmp;
     if      (mask == 3) { 
       /* 0-1 edge */ 
-      e = PEdge(cells_[ci*4 + 0], cells_[ci*4 + 1]);
+      etmp = PEdge(cells_[ci*4 + 0], cells_[ci*4 + 1]);
     } else if (mask == 5) { 
       /* 0-2 edge */
-      e = PEdge(cells_[ci*4 + 0], cells_[ci*4 + 2]);
+      etmp = PEdge(cells_[ci*4 + 0], cells_[ci*4 + 2]);
     } else if (mask == 6) { 
       /* 1-2 edge */
-      e = PEdge(cells_[ci*4 + 1], cells_[ci*4 + 2]);
+      etmp = PEdge(cells_[ci*4 + 1], cells_[ci*4 + 2]);
     } else if (mask == 9) { 
       /* 0-3 edge */
-      e = PEdge(cells_[ci*4 + 0], cells_[ci*4 + 3]);
+      etmp = PEdge(cells_[ci*4 + 0], cells_[ci*4 + 3]);
     } else if (mask == 10) { 
       /* 1-3 edge */
-      e = PEdge(cells_[ci*4 + 1], cells_[ci*4 + 3]);
+      etmp = PEdge(cells_[ci*4 + 1], cells_[ci*4 + 3]);
     } else if (mask == 12) { 
       /* 2-3 edge */
-      e = PEdge(cells_[ci*4 + 2], cells_[ci*4 + 3]);
+      etmp = PEdge(cells_[ci*4 + 2], cells_[ci*4 + 3]);
     } 
+    PEdge e = (*edge_table_.find(etmp)).first;
 
     pi = add_point(p);
     tets.clear();
-    typename Edge::index_type edge = (*edge_table_.find(e)).second;
-    typename Cell::array_type nbrs;
-    typename Cell::index_type cur_cell = ci;
-    do  {
-      insert_node_in_edge(tets, pi, cur_cell, edge);
-      typename edge_ht::iterator eiter = edge_table_.find(e);
-      if (eiter == edge_table_.end()) break;
-      edge = (*eiter).second;
-      get_cells(nbrs, edge);
-      cur_cell = nbrs[0];
-    } while (nbrs.size());
+    for (unsigned int i = 0; i < e.cells_.size(); i++)
+    {
+      insert_node_in_edge(tets, pi, e.cells_[i], e);
+    }
   }
 
   // If we're on a face, we do a face insert.
@@ -2589,7 +2655,7 @@ TetVolMesh<Basis>::insert_node_in_elem(typename Elem::array_type &tets,
       /* on 1 2 3 face */
       ftmp = PFace(cells_[ci*4 + 1], cells_[ci*4 + 2], cells_[ci*4 + 3]);
     }
-    const PFace &f = (*face_table_.find(ftmp)).first;
+    PFace f = (*face_table_.find(ftmp)).first;
     typename Cell::index_type nbr_tet =
       (ci == f.cells_[0]) ? f.cells_[1] : f.cells_[0];
     
