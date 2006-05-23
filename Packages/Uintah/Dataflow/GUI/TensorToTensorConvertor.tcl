@@ -76,8 +76,13 @@ itcl_class Uintah_Operators_TensorToTensorConvertor {
 
 	pack $w.update -side top -padx 2 -pady 2 -fill x
 
-	# This is the SCI standard button
-	makeSciButtonPanel $w $w $this
+      # add frame for SCI Button Panel
+        frame $w.control -relief flat
+        pack $w.control -side top -expand yes -fill both
+	makeSciButtonPanel $w.control $w $this
+	moveToCursor $w
+
+
     }
 }
 

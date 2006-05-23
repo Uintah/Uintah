@@ -110,7 +110,12 @@ itcl_class Uintah_Operators_TensorOperator {
 	
 	pack $w.top -side top
 	
-	makeSciButtonPanel $w $w $this
+      # add frame for SCI Button Panel
+        frame $w.control -relief flat
+        pack $w.control -side top -expand yes -fill both
+	makeSciButtonPanel $w.control $w $this
+	moveToCursor $w
+
 	$this-c needexecute
     }
     #method select_eigen_evaluator {} {

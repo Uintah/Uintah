@@ -44,8 +44,11 @@ itcl_class Uintah_Operators_CompareMMS {
         pack $w.f1.field_name $w.f1.field_time -padx 10
         pack $w.output_choice -padx 10
 
-	makeSciButtonPanel $w $w $this
-        moveToCursor $w
+        # add frame for SCI Button Panel
+        frame $w.control -relief flat
+        pack $w.control -side top -expand yes -fill both
+	makeSciButtonPanel $w.control $w $this
+	moveToCursor $w
     }
 
     method set_to_exact {} {

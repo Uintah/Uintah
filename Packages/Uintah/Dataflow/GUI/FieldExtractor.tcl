@@ -71,7 +71,10 @@ itcl_class Uintah_Selectors_FieldExtractor {
 
 	makeFrames $w.f
        
-	makeSciButtonPanel $w $w $this
+        # add frame for SCI Button Panel
+        frame $w.control -relief flat
+        pack $w.control -side top -expand yes -fill both
+	makeSciButtonPanel $w.control $w $this
 	moveToCursor $w
     }
 

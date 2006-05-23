@@ -65,7 +65,11 @@ itcl_class Uintah_Operators_VectorOperator {
 	    $w.calc.w $w.calc.length $w.calc.vort -anchor w
 	pack $w.calc -side top -padx 2 -pady 2 -fill y
 
-	makeSciButtonPanel $w $w $this
+      # add frame for SCI Button Panel
+        frame $w.control -relief flat
+        pack $w.control -side top -expand yes -fill both
+	makeSciButtonPanel $w.control $w $this
+	moveToCursor $w
     }
 
 }
