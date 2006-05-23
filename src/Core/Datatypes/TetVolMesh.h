@@ -2639,17 +2639,21 @@ TetVolMesh<Basis>::io(Piostream &stream)
   }
 
   // Orient the tets.
-  if (stream.reading())
+  // TODO: This is really broken.  It doesn't reorder the Field data
+  // associated with the tet nodes resulting in garbage there.  It's
+  // also slow.  And why would we reorder on a write after we've
+  // written the cells?  Why is this here? - MICHAEL
+#if 0
+  typename Cell::iterator iter, endit;
+  begin(iter);
+  end(endit);
+  while(iter != endit)
   {
-    typename Cell::iterator iter, endit;
-    begin(iter);
-    end(endit);
-    while(iter != endit)
-    {
-      orient(*iter);
-      ++iter;
-    }
+    orient(*iter);
+    ++iter;
   }
+#endif
+
   if (version >= 3) {
     basis_.io(stream);
   }
