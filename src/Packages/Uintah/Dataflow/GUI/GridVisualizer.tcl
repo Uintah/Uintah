@@ -20,7 +20,6 @@ itcl_class Uintah_Visualization_GridVisualizer {
     }
 
     method set_defaults {} {
-	puts "In GridVisualizer"
 	
 	#the grid colors
 	global $this-level1_grid_color
@@ -145,7 +144,7 @@ itcl_class Uintah_Visualization_GridVisualizer {
     
     method buildColorMenus {w} {
 	set n "$this-c needexecute"
-	puts "GridVisualizer.tcl::buildColorMenus:w = $w"
+# 	puts "GridVisualizer.tcl::buildColorMenus:w = $w"
 	if {[set $this-nl] > 0} {
 	    # color menu stuff
 	    frame $w.colormenus -borderwidth 3 -relief ridge

@@ -224,7 +224,11 @@ itcl_class Uintah_Selectors_TimestepSelector {
         pack $w.timeVis -side top -fill x
         ######    end timeVis section
 
-        makeSciButtonPanel $w $w $this
+        # add frame for SCI Button Panel
+        frame $w.control -relief flat
+        pack $w.control -side top -expand yes -fill both
+	makeSciButtonPanel $w.control $w $this
+	moveToCursor $w
  
         bind $f.tframe.time <ButtonRelease> $n
 

@@ -39,7 +39,10 @@ itcl_class Uintah_Operators_ScalarFieldNormalize {
       pack $w.f_y.dy_l $w.f_y.dy_e
       pack $w.f_z.dz_l $w.f_z.dz_e
 
-      makeSciButtonPanel $w $w $this
-      moveToCursor $w
+      # add frame for SCI Button Panel
+        frame $w.control -relief flat
+        pack $w.control -side top -expand yes -fill both
+	makeSciButtonPanel $w.control $w $this
+	moveToCursor $w
     }
 }

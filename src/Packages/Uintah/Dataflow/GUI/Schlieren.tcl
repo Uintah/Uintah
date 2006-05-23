@@ -42,7 +42,10 @@ itcl_class Uintah_Operators_Schlieren {
         pack $w.f_dy.dy_l $w.f_dy.dy_e
         pack $w.f_dz.dz_l $w.f_dz.dz_e
 
-	makeSciButtonPanel $w $w $this
+      # add frame for SCI Button Panel
+        frame $w.control -relief flat
+        pack $w.control -side top -expand yes -fill both
+	makeSciButtonPanel $w.control $w $this
 	moveToCursor $w
     }
 
