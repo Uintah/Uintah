@@ -2209,14 +2209,11 @@ TetVolMesh<Basis>::add_tet(typename Node::index_type a,
 			   typename Node::index_type c, 
 			   typename Node::index_type d)
 {
-  const int tet = cells_.size() / 4;
+  const unsigned int tet = cells_.size() / 4;
   cells_.push_back(a);
   cells_.push_back(b);
   cells_.push_back(c);
   cells_.push_back(d);
-
-  create_cell_syncinfo(tet);
-
   return tet;
 }
 
@@ -2335,6 +2332,9 @@ TetVolMesh<Basis>::insert_node_in_cell(typename Cell::array_type &tets,
   cells_[index+3] = pi;
 
   create_cell_syncinfo(ci);
+  create_cell_syncinfo(tets[1]);
+  create_cell_syncinfo(tets[2]);
+  create_cell_syncinfo(tets[3]);
 
   return true;
 }
@@ -2380,6 +2380,8 @@ TetVolMesh<Basis>::insert_node_in_face(typename Cell::array_type &tets,
   }
 
   create_cell_syncinfo(ci);
+  create_cell_syncinfo(tets[tets.size()-2]);
+  create_cell_syncinfo(tets[tets.size()-1]);
 }
 
 
@@ -2446,6 +2448,7 @@ TetVolMesh<Basis>::insert_node_in_edge(typename Cell::array_type &tets,
   }
   
   create_cell_syncinfo(ci);
+  create_cell_syncinfo(tets[tets.size()-1]);
 }
 
 
