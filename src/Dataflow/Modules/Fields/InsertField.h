@@ -123,6 +123,7 @@ InsertFieldAlgoTet<TFIELD, IFIELD>::execute_0(FieldHandle tet_h,
     ++ibi;
   }
 
+  tmesh->unsynchronize();
   tfield->resize_fdata();
 }
 
@@ -232,6 +233,7 @@ InsertFieldAlgoTet<TFIELD, IFIELD>::execute_1(FieldHandle tet_h,
     }
   }
 
+  tmesh->unsynchronize();
   tfield->resize_fdata();
 }
 
@@ -326,6 +328,7 @@ InsertFieldAlgoTet<TFIELD, IFIELD>::execute_2(FieldHandle tet_h,
     ++ibi;
   }
 
+  tmesh->unsynchronize();
   tfield->resize_fdata();
 }
 
