@@ -260,6 +260,8 @@ InsertFieldAlgoTet<TFIELD, IFIELD>::execute_2(FieldHandle tet_h,
   imesh->begin(ibi);
   imesh->end(iei);
 
+  vector<Point> points;
+    
   while (ibi != iei)
   {
     typename IFIELD::mesh_type::Node::array_type fnodes;
@@ -284,8 +286,6 @@ InsertFieldAlgoTet<TFIELD, IFIELD>::execute_2(FieldHandle tet_h,
       // TODO: We only need to test the edges that are 'close', not all
       // of them.  Augment the locate grid and use that to speed this up.
 
-      vector<Point> points;
-    
       typename TFIELD::mesh_type::Edge::iterator edge_iter, edge_iter_end;
       tmesh->begin(edge_iter);
       tmesh->end(edge_iter_end);
@@ -310,25 +310,25 @@ InsertFieldAlgoTet<TFIELD, IFIELD>::execute_2(FieldHandle tet_h,
 
         ++edge_iter;
       }
-
-      typename TFIELD::mesh_type::Elem::index_type elem;
-      typename TFIELD::mesh_type::Node::index_type newnode;
-      typename TFIELD::mesh_type::Elem::array_type newelems;
-      for (unsigned int j = 0; j < points.size(); j++)
-      {
-        if (tmesh->locate(elem, points[j]))
-        {
-          tmesh->insert_node_in_elem(newelems, newnode, elem, points[j]);
-
-          new_nodes.push_back(newnode);
-          for (unsigned int k = 0; k < newelems.size(); k++)
-          {
-            new_elems.push_back(newelems[k]);
-          }
-        }
-      }
     }
     ++ibi;
+  }
+
+  typename TFIELD::mesh_type::Elem::index_type elem;
+  typename TFIELD::mesh_type::Node::index_type newnode;
+  typename TFIELD::mesh_type::Elem::array_type newelems;
+  for (unsigned int j = 0; j < points.size(); j++)
+  {
+    if (tmesh->locate(elem, points[j]))
+    {
+      tmesh->insert_node_in_elem(newelems, newnode, elem, points[j]);
+      
+      new_nodes.push_back(newnode);
+      for (unsigned int k = 0; k < newelems.size(); k++)
+      {
+        new_elems.push_back(newelems[k]);
+      }
+    }
   }
 
   tmesh->unsynchronize();
@@ -576,7 +576,7 @@ InsertFieldExtractT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
   typename IFIELD::mesh_handle_type omesh =
     scinew typename IFIELD::mesh_type();
 
-  tfield->mesh()->synchronize(Mesh::EDGES_E);
+  tfield->mesh()->synchronize(Mesh::EDGES_E | Mesh::FACES_E);
 
   std::sort(new_nodes.begin(), new_nodes.end());
   vector<unsigned int>::iterator nodes_end, itr;
