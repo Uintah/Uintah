@@ -78,7 +78,7 @@
 	        <mixing_model>NewStaticMixingTable</mixing_model>
 	        <NewStaticMixingTable>
                   <inputfile>inputs/ARCHES/NewStaticMixingTables/methane/CH4_equil_clipped.mxn</inputfile>
-                  <h_fuel>-465039.0</h_fuel>
+                  <h_fuel>-4650390.0</h_fuel>
                   <h_air>-112.327</h_air>
                 </NewStaticMixingTable>
 	    </Properties>
