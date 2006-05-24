@@ -382,7 +382,7 @@ bool
 TCLInterface::get(const std::string& name, std::string& value)
 {
 #ifndef EXPERIMENTAL_TCL_THREAD
-  TCLTsk::lock();
+  TCLTask::lock();
   TCLCONST char* l=Tcl_GetVar(the_interp, ccast_unsafe(name),
 		     TCL_GLOBAL_ONLY);
   value = l?l:"";
