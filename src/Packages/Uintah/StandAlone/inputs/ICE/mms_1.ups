@@ -254,12 +254,6 @@
            </geom_object>
          </material>
       </ICE>       
-       <exchange_properties>
-         <exchange_coefficients>
-            <momentum>          []              </momentum>
-            <heat>              []              </heat>
-        </exchange_coefficients>
-       </exchange_properties>
     </MaterialProperties> 
     <!--____________________________________________________________________-->
     <!--  Use passiveScalar model to advect a scalar around                -->
