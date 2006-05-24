@@ -3,6 +3,8 @@
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Grid/SimulationState.h>
+#include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <vector>
 
 namespace Uintah {
@@ -11,8 +13,11 @@ namespace Uintah {
     ExchangeCoefficients();
     ~ExchangeCoefficients();
 
-    void problemSetup(ProblemSpecP& ps);
+    void problemSetup(ProblemSpecP& ps,
+                      SimulationStateP& sharedState);
     void outputProblemSpec(ProblemSpecP& ps);
+    
+    
     bool convective();
     int conv_fluid_matlindex();
     int conv_solid_matlindex();
