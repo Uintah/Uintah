@@ -61,26 +61,47 @@ namespace SCIRun {
     virtual ~EventMessage();
     void                wait_for_message_delivery();
     void                mark_message_delivered();
+    string &            result() { return result_; }
+    int &               code() { return return_code_; } 
+  protected:
+    string              result_;
+    int                 return_code_;
   private:
     Semaphore *         delivery_semaphore_;
   };
 
   class SCISHARE PauseEventMessage : public EventMessage {
   public:
-    PauseEventMessage(TCLInterface *);
+    PauseEventMessage(TCLInterface *ti) : tcl_interface_(ti) {}
     TCLInterface *      tcl_interface_;
   };
 
   class SCISHARE CommandEventMessage : public EventMessage {
   public:
-    CommandEventMessage(const string &command);
+    CommandEventMessage(const string &command) : command_(command) {} 
     string &            command() { return command_; }
-    string &            result() { return result_; }
-    int &               code() { return return_code_; } 
   private:
     string              command_;
-    string              result_;
-    int                 return_code_;
+  };
+
+  class SCISHARE GetEventMessage : public EventMessage {
+  public:
+    GetEventMessage(const string &var, const string& key = "") : var_(var), key_(key) {}
+    void execute();
+  private:
+    string              var_;
+    string              key_;
+  };
+
+  class SCISHARE SetEventMessage : public EventMessage {
+  public:
+    SetEventMessage(const string &var, const string& val, const string& key = "") 
+      : var_(var), val_(val), key_(key) {}
+    void execute();
+  private:
+    string              var_;
+    string              val_;
+    string              key_;
   };
 
 
