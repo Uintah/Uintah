@@ -199,12 +199,6 @@
          </material>
       </ICE>       
       
-       <exchange_properties>
-         <exchange_coefficients>
-              <momentum>              []           </momentum>
-              <heat>                  []           </heat>
-        </exchange_coefficients>
-       </exchange_properties>
     
     </MaterialProperties>
     <!--__________________________________-->

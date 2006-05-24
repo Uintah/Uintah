@@ -350,7 +350,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   cout_norm << "Pulled out InitialConditions block of the input file" << endl;
 
   // Exchange Coefficients
-  d_exchCoeff->problemSetup(mat_ps);
+  cout << "numMatls " << d_sharedState->getNumMatls() << endl;
+  d_exchCoeff->problemSetup(mat_ps, sharedState);
 
   cout_norm << "Pulled out exchange coefficients of the input file" << endl;
 
@@ -457,8 +458,9 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
  Function~  ICE::addMaterial--
  Purpose~   read in the exchange coefficients
  _____________________________________________________________________*/
-void ICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
-                      SimulationStateP&   sharedState)
+void ICE::addMaterial(const ProblemSpecP& prob_spec, 
+                      GridP& grid,
+                      SimulationStateP& sharedState)
 {
   d_recompile = true;
   ProblemSpecP mat_ps       =  prob_spec->findBlock("AddMaterialProperties");
@@ -466,12 +468,11 @@ void ICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
 
   for (ProblemSpecP ps = ice_mat_ps->findBlock("material"); ps != 0;
     ps = ps->findNextBlock("material") ) {
-    // Extract out the type of EOS and the associated parameters
     ICEMaterial *mat = scinew ICEMaterial(ps);
     sharedState->registerICEMaterial(mat);
   }
 
-  d_exchCoeff->problemSetup(mat_ps);
+  d_exchCoeff->problemSetup(mat_ps, sharedState);
 
   // problem setup for each model  
   for(vector<ModelInterface*>::iterator iter = d_models.begin();
@@ -486,15 +487,17 @@ void ICE::addMaterial(const ProblemSpecP& prob_spec, GridP& grid,
  _____________________________________________________________________*/
 void ICE::updateExchangeCoefficients(const ProblemSpecP& prob_spec, 
                                      GridP& /*grid*/,
-                                     SimulationStateP&   /*sharedState*/)
+                                     SimulationStateP&  sharedState)
 {
   cout << "Updating Ex Coefficients" << endl;
   ProblemSpecP mat_ps  =  prob_spec->findBlock("AddMaterialProperties");
   
-  d_exchCoeff->problemSetup(mat_ps);
-
+  d_exchCoeff->problemSetup(mat_ps, sharedState);
 }
-
+/*______________________________________________________________________
+ Function~  ICE::outputProblemSpec--
+ Purpose~   outputs material state
+ _____________________________________________________________________*/
 void ICE::outputProblemSpec(ProblemSpecP& root_ps)
 {
 
@@ -521,7 +524,6 @@ void ICE::outputProblemSpec(ProblemSpecP& root_ps)
   if (modelmaker) {
     modelmaker->outputProblemSpec(models_ps);
   }
-
 }
 
 /*______________________________________________________________________
