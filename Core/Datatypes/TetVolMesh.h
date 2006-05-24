@@ -717,6 +717,16 @@ protected:
   void delete_cell_syncinfo(typename Cell::index_type ci);
   // Create the partial sync info needed by insert_node_in_elem
   void create_cell_syncinfo_special(typename Cell::index_type ci);
+  // May reorient the tet to make the signed volume positive.
+  typename Elem::index_type add_tet_pos(typename Node::index_type a,
+                                        typename Node::index_type b,
+                                        typename Node::index_type c,
+                                        typename Node::index_type d);
+  void mod_tet_pos(typename Elem::index_type tet,
+                   typename Node::index_type a,
+                   typename Node::index_type b,
+                   typename Node::index_type c,
+                   typename Node::index_type d);
 
   //! all the vertices
   vector<Point>         points_;
@@ -2286,6 +2296,63 @@ TetVolMesh<Basis>::add_tet(typename Node::index_type a,
 
 
 template <class Basis>
+typename TetVolMesh<Basis>::Elem::index_type
+TetVolMesh<Basis>::add_tet_pos(typename Node::index_type a, 
+                               typename Node::index_type b,
+                               typename Node::index_type c, 
+                               typename Node::index_type d)
+{
+  const unsigned int tet = cells_.size() / 4;
+  const Point &p0 = point(a);
+  const Point &p1 = point(b);
+  const Point &p2 = point(c);
+  const Point &p3 = point(d);
+
+  if (Dot(Cross(p1-p0,p2-p0),p3-p0) >= 0.0)
+  {
+    cells_.push_back(a);
+    cells_.push_back(b);
+  }
+  else
+  {
+    cells_.push_back(b);
+    cells_.push_back(a);
+  }
+  cells_.push_back(c);
+  cells_.push_back(d);
+  return tet;
+}
+
+
+template <class Basis>
+void
+TetVolMesh<Basis>::mod_tet_pos(typename TetVolMesh<Basis>::Elem::index_type ci,
+                               typename Node::index_type a, 
+                               typename Node::index_type b,
+                               typename Node::index_type c, 
+                               typename Node::index_type d)
+{
+  const Point &p0 = point(a);
+  const Point &p1 = point(b);
+  const Point &p2 = point(c);
+  const Point &p3 = point(d);
+
+  if (Dot(Cross(p1-p0,p2-p0),p3-p0) >= 0.0)
+  {
+    cells_[ci*4+0] = a;
+    cells_[ci*4+1] = b;
+  }
+  else
+  {
+    cells_[ci*4+0] = b;
+    cells_[ci*4+1] = a;
+  }
+  cells_[ci*4+2] = c;
+  cells_[ci*4+3] = d;
+}
+
+
+template <class Basis>
 typename TetVolMesh<Basis>::Node::index_type
 TetVolMesh<Basis>::add_point(const Point &p)
 {
@@ -2392,11 +2459,11 @@ TetVolMesh<Basis>::insert_node_in_cell(typename Cell::array_type &tets,
 
   tets.resize(4, ci);
   const unsigned index = ci*4;
-  tets[1] = add_tet(cells_[index+0], cells_[index+3], cells_[index+1], pi);
-  tets[2] = add_tet(cells_[index+1], cells_[index+3], cells_[index+2], pi);
-  tets[3] = add_tet(cells_[index+0], cells_[index+2], cells_[index+3], pi);
+  tets[1] = add_tet_pos(cells_[index+0], cells_[index+3], cells_[index+1], pi);
+  tets[2] = add_tet_pos(cells_[index+1], cells_[index+3], cells_[index+2], pi);
+  tets[3] = add_tet_pos(cells_[index+0], cells_[index+2], cells_[index+3], pi);
 
-  cells_[index+3] = pi;
+  mod_tet_pos(ci, cells_[index+0], cells_[index+1], cells_[index+2], pi);
 
   create_cell_syncinfo_special(ci);
   create_cell_syncinfo_special(tets[1]);
@@ -2431,29 +2498,27 @@ TetVolMesh<Basis>::insert_node_in_face(typename Cell::array_type &tets,
   tets.push_back(ci);
   if (skip == 0)
   {
-    tets.push_back(add_tet(cells_[i+0], cells_[i+3], cells_[i+1], pi));
-    tets.push_back(add_tet(cells_[i+0], cells_[i+2], cells_[i+3], pi));
-    cells_[i+3] = pi;
+    tets.push_back(add_tet_pos(cells_[i+0], cells_[i+3], cells_[i+1], pi));
+    tets.push_back(add_tet_pos(cells_[i+0], cells_[i+2], cells_[i+3], pi));
+    mod_tet_pos(ci, cells_[i+0], cells_[i+1], cells_[i+2], pi);
   }
   else if (skip == 1)
   {
-    tets.push_back(add_tet(cells_[i+0], cells_[i+3], cells_[i+1], pi));
-    tets.push_back(add_tet(cells_[i+1], cells_[i+3], cells_[i+2], pi));
-    cells_[i+3] = pi;
+    tets.push_back(add_tet_pos(cells_[i+0], cells_[i+3], cells_[i+1], pi));
+    tets.push_back(add_tet_pos(cells_[i+1], cells_[i+3], cells_[i+2], pi));
+    mod_tet_pos(ci, cells_[i+0], cells_[i+1], cells_[i+2], pi);
   }
   else if (skip == 2)
   {
-    tets.push_back(add_tet(cells_[i+1], cells_[i+3], cells_[i+2], pi));
-    tets.push_back(add_tet(cells_[i+0], cells_[i+2], cells_[i+3], pi));
-    cells_[i+3] = pi;
+    tets.push_back(add_tet_pos(cells_[i+1], cells_[i+3], cells_[i+2], pi));
+    tets.push_back(add_tet_pos(cells_[i+0], cells_[i+2], cells_[i+3], pi));
+    mod_tet_pos(ci, cells_[i+0], cells_[i+1], cells_[i+2], pi);
   }
   else if (skip == 3)
   {
-    tets.push_back(add_tet(cells_[i+0], cells_[i+3], cells_[i+1], pi));
-    tets.push_back(add_tet(cells_[i+1], cells_[i+3], cells_[i+2], pi));
-    cells_[i+1] = cells_[i+2];
-    cells_[i+2] = cells_[i+3];
-    cells_[i+3] = pi;
+    tets.push_back(add_tet_pos(cells_[i+0], cells_[i+3], cells_[i+1], pi));
+    tets.push_back(add_tet_pos(cells_[i+1], cells_[i+3], cells_[i+2], pi));
+    mod_tet_pos(ci, cells_[i+0], cells_[i+2], cells_[i+3], pi);
   }
 
   create_cell_syncinfo_special(ci);
@@ -2489,7 +2554,7 @@ TetVolMesh<Basis>::insert_node_in_edge(typename Cell::array_type &tets,
   if (skip1 != 0 && skip2 != 0)
   {
     // add 1 3 2 pi
-    tets.push_back(add_tet(cells_[i+1], cells_[i+3], cells_[i+2], pi));
+    tets.push_back(add_tet_pos(cells_[i+1], cells_[i+3], cells_[i+2], pi));
     pushed = true;
   }
   if (skip1 != 1 && skip2 != 1)
@@ -2497,13 +2562,11 @@ TetVolMesh<Basis>::insert_node_in_edge(typename Cell::array_type &tets,
     // add 0 2 3 pi
     if (pushed)
     {
-      cells_[i+1] = cells_[i+2];
-      cells_[i+2] = cells_[i+3];
-      cells_[i+3] = pi;
+      mod_tet_pos(ci, cells_[i+0], cells_[i+2], cells_[i+3], pi);
     }
     else
     {
-      tets.push_back(add_tet(cells_[i+0], cells_[i+2], cells_[i+3], pi));
+      tets.push_back(add_tet_pos(cells_[i+0], cells_[i+2], cells_[i+3], pi));
     }
     pushed = true;
   }
@@ -2512,13 +2575,11 @@ TetVolMesh<Basis>::insert_node_in_edge(typename Cell::array_type &tets,
     // add 0 3 1 pi
     if (pushed)
     {
-      cells_[i+2] = cells_[i+1];
-      cells_[i+1] = cells_[i+3];
-      cells_[i+3] = pi;
+      mod_tet_pos(ci, cells_[i+0], cells_[i+3], cells_[i+1], pi);
     }
     else
     {
-      tets.push_back(add_tet(cells_[i+0], cells_[i+3], cells_[i+1], pi));
+      tets.push_back(add_tet_pos(cells_[i+0], cells_[i+3], cells_[i+1], pi));
     }
     pushed = true;
   }
@@ -2527,7 +2588,7 @@ TetVolMesh<Basis>::insert_node_in_edge(typename Cell::array_type &tets,
     // add 0 1 2 pi
     ASSERTMSG(pushed,
               "insert_node_in_cell_edge::skip1 or skip2 were invalid.");
-    cells_[i+3] = pi;
+    mod_tet_pos(ci, cells_[i+0], cells_[i+1], cells_[i+2], pi);
   }
 
   create_cell_syncinfo_special(ci);
