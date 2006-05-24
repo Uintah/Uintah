@@ -64,7 +64,7 @@ public:
 
   SearchGridBase(int x, int y, int z, const Transform &t);
 
-  virtual ~SearchGridBase() {}
+  virtual ~SearchGridBase();
   
   //! get the mesh statistics
   int get_ni() const { return ni_; }
@@ -102,6 +102,7 @@ class SCISHARE SearchGridConstructor : public Datatype, public SearchGridBase
 public:
   SearchGridConstructor(int x, int y, int z,
 			const Point &min, const Point &max);
+  virtual ~SearchGridConstructor();
 
   void insert(under_type val, const BBox &bbox);
   void remove(under_type val, const BBox &bbox);

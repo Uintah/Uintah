@@ -55,6 +55,11 @@ namespace SCIRun {
 using namespace std;
 
 
+SearchGridBase::~SearchGridBase()
+{
+}
+
+
 SearchGridBase::SearchGridBase(int x, int y, int z,
                                const Point &min, const Point &max)
   : ni_(x), nj_(y), nk_(z)
@@ -132,6 +137,11 @@ SearchGridConstructor::SearchGridConstructor(int x,
   : SearchGridBase(x, y, z, min, max), size_(0)
 {
   bin_.resize(x * y * z);
+}
+
+
+SearchGridConstructor::~SearchGridConstructor()
+{
 }
 
 
