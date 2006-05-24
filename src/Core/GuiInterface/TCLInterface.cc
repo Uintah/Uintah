@@ -228,13 +228,15 @@ int eventCallback(Tcl_Event* event, int flags)
 
      PauseEventMessage *pause = dynamic_cast<PauseEventMessage *>(em);
      CommandEventMessage *command = dynamic_cast<CommandEventMessage *>(em);
+     GetEventMessage *gm = dynamic_cast<GetEventMessage *>(em);
+     SetEventMessage *sm = dynamic_cast<SetEventMessage *>(em);
      if (pause) {
        TCLInterface *tcl_interface = pause->tcl_interface_;
        pause->mark_message_delivered();
        tcl_interface->real_pause();
      }
 
-     if (command) {
+     else if (command) {
        int code = Tcl_Eval(the_interp, ccast_unsafe(command->command()));
        if(code != TCL_OK){
          Tk_BackgroundError(the_interp);
@@ -243,6 +245,14 @@ int eventCallback(Tcl_Event* event, int flags)
        }
        command->code() = code;
        command->mark_message_delivered();
+     }
+     else if (gm) {
+       gm->execute();
+       gm->mark_message_delivered();
+     }
+     else if (sm) {
+       sm->execute();
+       sm->mark_message_delivered();
      }
    }
    return 1;
@@ -371,26 +381,43 @@ void TCLInterface::post_message(const string& errmsg, bool err)
 bool
 TCLInterface::get(const std::string& name, std::string& value)
 {
-  TCLTask::lock();
+#ifndef EXPERIMENTAL_TCL_THREAD
+  TCLTsk::lock();
   TCLCONST char* l=Tcl_GetVar(the_interp, ccast_unsafe(name),
 		     TCL_GLOBAL_ONLY);
-  if(!l){
-    value="";
-    TCLTask::unlock();
-    return false;
-  }
-  value=l;
+  value = l?l:"";
   TCLTask::unlock();
-  return true;
+  return l;
+#else
+  if (strcmp(Thread::self()->getThreadName(), "TCL main event loop") == 0 ) {
+    TCLCONST char* l=Tcl_GetVar(the_interp, ccast_unsafe(name),
+		       TCL_GLOBAL_ONLY);
+    value = l?l:"";
+    return l;
+  }
+  else {
+    return get_map(name, "", value); // this version will parse out the key
+  }
+#endif
 }
 
 void
 TCLInterface::set(const std::string& name, const std::string& value)
 {
+#ifndef EXPERIMENTAL_TCL_THREAD
   TCLTask::lock();
   Tcl_SetVar(the_interp, ccast_unsafe(name),
 	     ccast_unsafe(value), TCL_GLOBAL_ONLY);
   TCLTask::unlock();
+#else
+  if (strcmp(Thread::self()->getThreadName(), "TCL main event loop") == 0 ) {
+    Tcl_SetVar(the_interp, ccast_unsafe(name),
+	     ccast_unsafe(value), TCL_GLOBAL_ONLY);
+  }
+  else {
+    set_map(name, "", value);
+  }
+#endif
 }
 
 
@@ -400,6 +427,7 @@ TCLInterface::get_map(const std::string& name,
 		      const std::string& key, 
 		      std::string& value)
 {
+#ifndef EXPERIMENTAL_TCL_THREAD
   TCLTask::lock();
   const char* l=Tcl_GetVar2(the_interp, 
 			    ccast_unsafe(name),
@@ -408,6 +436,23 @@ TCLInterface::get_map(const std::string& name,
   value = l?l:"";
   TCLTask::unlock();
   return l;
+#else
+  if (strcmp(Thread::self()->getThreadName(), "TCL main event loop") == 0 ) {
+    const char* l=Tcl_GetVar2(the_interp, 
+			      ccast_unsafe(name),
+			      ccast_unsafe(key),
+			      TCL_GLOBAL_ONLY);
+    value = l?l:"";
+  }
+  else {
+    GetEventMessage em(name, key);
+    tclQueue.send(&em);
+    Tcl_ThreadAlert(tclThreadId);
+    em.wait_for_message_delivery();
+    value = em.result();
+  }
+  return value != "";
+#endif
 }
 		      
 bool
@@ -415,6 +460,7 @@ TCLInterface::set_map(const std::string& name,
 		      const std::string& key, 
 		      const std::string& value)
 {
+#ifndef EXPERIMENTAL_TCL_THREAD
   TCLTask::lock();
   const char *l = Tcl_SetVar2(the_interp, 
 			      ccast_unsafe(name),
@@ -423,6 +469,23 @@ TCLInterface::set_map(const std::string& name,
 			      TCL_GLOBAL_ONLY);
   TCLTask::unlock();
   return l;
+#else
+  if (strcmp(Thread::self()->getThreadName(), "TCL main event loop") == 0 ) {
+    const char *l = Tcl_SetVar2(the_interp, 
+			        ccast_unsafe(name),
+			        ccast_unsafe(key),
+			        ccast_unsafe(value), 
+			        TCL_GLOBAL_ONLY);
+    return l;
+  }
+  else {
+    SetEventMessage em(name, value, key);
+    tclQueue.send(&em);
+    Tcl_ThreadAlert(tclThreadId);
+    em.wait_for_message_delivery();
+    return em.code() == TCL_OK;
+  }
+#endif
 }
 
 
@@ -468,7 +531,8 @@ TCLInterface::complete_command(const string &command)
 
 
 EventMessage::EventMessage() :
-  delivery_semaphore_(new Semaphore("TCL EventMessage Delivery",0))
+  delivery_semaphore_(new Semaphore("TCL EventMessage Delivery",0)),
+  result_(), return_code_(0)
 {}
 
 EventMessage::~EventMessage()
@@ -488,18 +552,33 @@ EventMessage::mark_message_delivered()
   delivery_semaphore_->up();
 }
 
-PauseEventMessage::PauseEventMessage(TCLInterface *tcl_interface) 
-  : EventMessage(),
-    tcl_interface_(tcl_interface)
-  
+void GetEventMessage::execute()
 {
+  const char* l;
+  if (key_ == "") {
+    l = Tcl_GetVar(the_interp, ccast_unsafe(var_), TCL_GLOBAL_ONLY);
+  }
+  else {
+    l = Tcl_GetVar2(the_interp, ccast_unsafe(var_), ccast_unsafe(key_),
+			              TCL_GLOBAL_ONLY);
+  }
+  result_ = l?l:"";
+  this->return_code_ = TCL_OK;
 }
 
+void SetEventMessage::execute()
+{
+  if (key_ == "") {
+    Tcl_SetVar(the_interp, ccast_unsafe(var_), ccast_unsafe(val_), TCL_GLOBAL_ONLY);
+    return_code_ = TCL_OK;
+  }
+  else {
+    if (Tcl_SetVar2(the_interp, ccast_unsafe(var_), ccast_unsafe(key_),
+			              ccast_unsafe(val_), TCL_GLOBAL_ONLY))
+      return_code_ = TCL_OK;
+    else
+      return_code_ = !TCL_OK;
+  }
 
-CommandEventMessage::CommandEventMessage(const string &command) :
-  command_(command),
-  result_(),
-  return_code_(0)
-{}
-
+}
 }
