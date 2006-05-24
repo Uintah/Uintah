@@ -111,6 +111,15 @@ MeshSmootherAlgoShared<FIELD>::execute( ProgressReporter *reporter,
                                         bool boundary,
                                         string scheme )
 {
+  FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep() );
+  typename FIELD::mesh_type::Elem::size_type num_elems;
+  field->get_typed_mesh()->size( num_elems );
+  if( num_elems == 0 )
+  {
+    reporter->error( "No elements to smooth." );
+    return fieldh;
+  }
+  
   if ( boundary )
   {
     fieldh = compute_boundary( reporter, fieldh, scheme );
