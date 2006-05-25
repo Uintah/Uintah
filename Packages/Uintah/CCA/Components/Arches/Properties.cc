@@ -138,7 +138,7 @@ Properties::problemSetup(const ProblemSpecP& params)
         db->require("optically_thin_model_opl",d_opl);
       db->getWithDefault("empirical_soot",d_empirical_soot,true);
       if (d_empirical_soot)
-        db->getWithDefault("SootFactor",d_sootFactor,0.01);
+        db->getWithDefault("SootFactor",d_sootFactor,1.0);
     }
   }
 }
