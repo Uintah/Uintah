@@ -551,7 +551,7 @@ ShowDipoles::draw_lines()
     ogeom->delObj(gidx_); 
     gidx_=0; 
   }
-  if (showLinesGui_.get() && new_positions_.size()) 
+  if (showLinesGui_.get() && new_positions_.size() >= 2) 
   {
     GeomLines *g = new GeomLines;
     for (unsigned i = 0; i < new_positions_.size() - 1; i++) 
