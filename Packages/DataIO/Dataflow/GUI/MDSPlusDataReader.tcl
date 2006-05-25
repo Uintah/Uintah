@@ -41,9 +41,17 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
     }
 
     method set_defaults {} {
-	global power_app_command
-	set    power_app_command ""
+	global $this-power_app_command
+	set    $this-power_app_command ""
 
+	global $this-have_nodes
+	global $this-have_attributes
+	global $this-have_signals
+
+	set $this-have_nodes      0
+	set $this-have_attributes 0
+	set $this-have_signals    0
+ 
 	global $this-num-entries
 	set $this-num-entries 0
   
@@ -72,13 +80,13 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	set $this-mergeData 1
 	set $this-assumeSVT 1
 
-	global allow_selection
-	set allow_selection true
+	global $this-allow_selection
+	set $this-allow_selection true
     }
     
     method set_power_app_cmd { cmd } {
-	global power_app_command
-	set power_app_command $cmd
+	global $this-power_app_command
+	set $this-power_app_command $cmd
     }
 
     method ui {} {
@@ -104,8 +112,8 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 
         toplevel $w
 
-	global current_cursor
-	set current_cursor [$w cget -cursor]
+	global $this-current_cursor
+	set $this-current_cursor [$w cget -cursor]
 
 
 	iwidgets::labeledframe $w.loader -labeltext "MDS Tree Loader"
@@ -168,13 +176,13 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 #	option add *TreeView.Column.titleFont { Helvetica 12 bold }
 	option add *TreeView.Column.font { Courier 12 }
 
-	global tree
-	set tree [blt::tree create]    
+	global $this-tree
+	set $this-tree [blt::tree create]    
 
 	set treeview [Scrolled_Treeview $treeframe.tree \
 			  -width 600 -height 225 \
 			  -selectcommand [list $this SelectNotify] \
-			  -tree $tree]
+			  -tree [set $this-tree] ]
 	
 	#-selectmode multiple \
 
@@ -367,11 +375,11 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	pack $w.dm -fill x -expand yes -side top
 
 
-	global power_app_command
+	global $this-power_app_command
 
 	if { [in_power_app] } {
 	    makeSciButtonPanel $w $w $this -no_execute -no_close -no_find \
-		"\"Close\" \"wm withdraw $w; $power_app_command\" \"Hides this GUI\""
+		"\"Close\" \"wm withdraw $w; [set $this-power_app_command]\" \"Hides this GUI\""
 	} else {
 	    makeSciButtonPanel $w $w $this
 	}
@@ -562,14 +570,14 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	    set treeframe [$w.treeview childsite]
 	    set treeview $treeframe.tree.tree
 
-	    global tree
+	    global $this-tree
 
 	    if { $parent == "root" } {
-		$tree delete $parent
+		[set $this-tree] delete $parent
 	    }
 
 	    if {[catch {open $filename r} fileId]} {
-		global read_error
+		global $this-read_error
 
 		# the file may have been removed from the /tmp dir so
 		# try to recreate it.
@@ -588,7 +596,7 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 		}
 	    } elseif {[gets $fileId line] >= 0 &&
 		      [string first MDSPlus* $line] != 1 } {
-		    process_file $tree $parent $fileId $line
+		process_file [set $this-tree] $parent $fileId $line
 
 	    } else {
 		$this-c error "Not an MDSPlus file."
@@ -614,13 +622,13 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 
     method process_file { tree parent fileId input } {
 
-	global have_nodes
-	global have_attributes
-	global have_signals
+	global $this-have_nodes
+	global $this-have_attributes
+	global $this-have_signals
 
-	set have_nodes      0
-	set have_attributes 0
-	set have_signals    0
+	set $this-have_nodes      0
+	set $this-have_attributes 0
+	set $this-have_signals    0
  
 	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
 
@@ -653,8 +661,8 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	}
 
 
-	global have_nodes
-	set have_nodes 1
+	global $this-have_nodes
+	set $this-have_nodes 1
 
 	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
 
@@ -723,8 +731,8 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	    $tree insert $parent -tag "attribute" -label $aname \
 		-data [array get info]
 
-	    global have_attributes
-	    set have_attributes 1
+	    global $this-have_attributes
+	    set $this-have_attributes 1
 	}
     }
 
@@ -762,8 +770,8 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	set node [$tree insert $parent -tag "signal" -label $dsname \
 		      -data [array get info]]
   
-	global have_signals
-	set have_signals 1
+	global $this-have_signals
+	set $this-have_signals 1
 
 	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
 
@@ -811,11 +819,11 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 
     method SelectNotify { } {
 
-	global allow_selection
+	global $this-allow_selection
 
-	if { $allow_selection == "true" } {
+	if { [set $this-allow_selection] == "true" } {
 
-	    set allow_selection false
+	    set $this-allow_selection false
 
 	    set w .ui[modname]
 
@@ -830,16 +838,16 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 
 		if { $id != "" } {
 
-		    global have_nodes
-		    global have_attributes
+		    global $this-have_nodes
+		    global $this-have_attributes
 
-		    if { $have_nodes == 1 } {
+		    if { [set $this-have_nodes] == 1 } {
 			set nodes [$treeview tag nodes "node"]
 		    } else {
 			set nodes ""
 		    }
 
-		    if { $have_attributes == 1 } {
+		    if { [set $this-have_attributes] == 1 } {
 			set attributes [$treeview tag nodes "attribute"]
 		    } else {
 			set attributes ""
@@ -866,7 +874,7 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 		updateSelection
 	    }
 
-	    set allow_selection true
+	    set $this-allow_selection true
 	}
     }
 
@@ -988,8 +996,8 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 
 	if [ expr [winfo exists $w] ] {
 
-	    global allow_selection
-	    set allow_selection false
+	    global $this-allow_selection
+	    set $this-allow_selection false
 
 	    global $this-selectionString
 	    global $this-regexp
@@ -1020,7 +1028,7 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 		}
 	    }
 	    
-	    set allow_selection true
+	    set $this-allow_selection true
 
 	    SelectNotify
 	}
@@ -1149,7 +1157,7 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	set w .ui[modname]
 
 	if [ expr [winfo exists $w] ] {
-	    global current_cursor
+	    global $this-current_cursor
 	    $w config -cursor watch
 	    update idletasks
 	}
@@ -1159,8 +1167,8 @@ itcl_class DataIO_Readers_MDSPlusDataReader {
 	set w .ui[modname]
 
 	if [ expr [winfo exists $w] ] {
-	    global current_cursor
-	    $w config -cursor $current_cursor
+	    global $this-current_cursor
+	    $w config -cursor [set $this-current_cursor]
 	    update idletasks
 	}
     }

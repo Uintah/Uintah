@@ -43,19 +43,19 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
     method set_defaults {} {
 
-	global power_app_command
-	set    power_app_command ""
+	global $this-power_app_command
+	set    $this-power_app_command ""
 
 	global $this-animate_frame
 	set $this-animate_frame ""
 
-	global have_groups
-	global have_attributes
-	global have_datasets
+	global $this-have_groups
+	global $this-have_attributes
+	global $this-have_datasets
 
-	set have_groups     0
-	set have_attributes 0
-	set have_datasets   0
+	set $this-have_groups     0
+	set $this-have_attributes 0
+	set $this-have_datasets   0
  
 	global $this-animate_tab
 	global $this-basic_tab
@@ -113,8 +113,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set $this-animate-frame2 "0"
 	set $this-animate-nframes 1
 
-	global max_dims
-	set max_dims 6
+	global $this-max_dims
+	set $this-max_dims 6
 
 	global $this-filename
 	global $this-datasets
@@ -133,7 +133,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set $this-ports ""
 	set $this-ndims 0
 
-	for {set i 0} {$i < $max_dims} {incr i 1} {
+	for {set i 0} {$i < [set $this-max_dims]} {incr i 1} {
 	    global $this-$i-dim
 	    global $this-$i-start
 	    global $this-$i-start2
@@ -151,19 +151,19 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    set $this-$i-stride2  "1"
 	}
 
-	global allow_selection
-	set allow_selection true
+	global $this-allow_selection
+	set $this-allow_selection true
 
-	global read_error
-	set read_error 0
+	global $this-read_error
+	set $this-read_error 0
 
 	trace variable $this-update_type    w "$this update_type_callback"
 	trace variable $this-selectable_max w "$this update_range_callback"
     }
 
     method set_power_app_cmd { cmd } {
-	global power_app_command
-	set power_app_command $cmd
+	global $this-power_app_command
+	set $this-power_app_command $cmd
     }
 
     method make_file_open_box {} {
@@ -179,8 +179,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	toplevel $w -class TkFDialog
 
-	global current_cursor
-	$w config -cursor $current_cursor
+	global $this-current_cursor
+	$w config -cursor [set $this-current_cursor]
 
 	# place to put preferred data directory
 	# it's used if $this-filename is empty
@@ -201,8 +201,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	
 	######################################################
 	
-	global current_cursor	
-	$w config -cursor $current_cursor
+	global $this-current_cursor	
+	$w config -cursor [set $this-current_cursor]
 
 	makeOpenFilebox \
 	    -parent $w \
@@ -211,7 +211,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    -command "$w config -cursor watch; \
                       $this set_watch_cursor; \
                       $this-c update_file 0;
-                      $w config -cursor $current_cursor;\
+                      $w config -cursor [set $this-current_cursor];\
                       wm withdraw $w" \
 	    -cancel "wm withdraw $w" \
 	    -title $title \
@@ -220,7 +220,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    -defaultextension $defext
 
 
-	$w config -cursor $current_cursor
+	$w config -cursor [set $this-current_cursor]
 
 	moveToCursor $w
 	wm deiconify $w
@@ -243,7 +243,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
   	global $this-ports
   	global $this-ndims
-  	global max_dims
+  	global $this-max_dims
 
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -256,8 +256,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	toplevel $w
 
-	global current_cursor
-	set current_cursor [$w cget -cursor]
+	global $this-current_cursor
+	set $this-current_cursor [$w cget -cursor]
 
 	# read an HDF5 file
 	iwidgets::labeledframe $w.browser -labeltext "HDF5 File Browser"
@@ -276,7 +276,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    "$w config -cursor watch; \
              $this set_watch_cursor; \
              $this-c update_file 0;
-             $w config -cursor $current_cursor;"
+             $w config -cursor [set $this-current_cursor];"
 
 	frame $f.buttons
 
@@ -305,14 +305,14 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	set treeframe [$w.treeview childsite]
 
-	global tree
-	set tree [blt::tree create]    
+	global $this-tree
+	set $this-tree [blt::tree create]
 
 	set treeview [Scrolled_Treeview $treeframe.tree \
 			  -width 600 -height 225 \
 			  -selectmode multiple \
 			  -selectcommand [list $this SelectNotify] \
-			  -tree $tree]
+			  -tree [set $this-tree] ]
 
   	pack $treeframe.tree -side top -pady 10 -fill x -expand yes
 
@@ -478,7 +478,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	pack $sample.msg.text -side top
 
 
-	for {set i 0} {$i < $max_dims} {incr i 1} {
+	for {set i 0} {$i < [set $this-max_dims]} {incr i 1} {
 	    if       { $i == 0 } { set index i
 	    } elseif { $i == 1 } { set index j
 	    } elseif { $i == 2 } { set index k
@@ -544,8 +544,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	# When building the UI prevent the selection from taking place
 	# since it is not valid.
-	global allow_selection
-	set allow_selection false
+	global $this-allow_selection
+	set $this-allow_selection false
 
 	if { [string length [set $this-dumpname]] > 0 } {
 	    set_watch_cursor
@@ -591,18 +591,18 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	# Make sure the datasets are saved once everything is built.
 	set $this-datasets $datasets
- 	set allow_selection true
+ 	set $this-allow_selection true
 
 	global $this-ports
 	updateSelection [set $this-ports]
 
 	animate
 
-	global power_app_command
+	global $this-power_app_command
 
 	if { [in_power_app] } {
 	    makeSciButtonPanel $w $w $this -no_execute -no_close -no_find \
-		"\"Close\" \"wm withdraw $w; $power_app_command\" \"Hides this GUI\""
+		"\"Close\" \"wm withdraw $w; [set $this-power_app_command]\" \"Hides this GUI\""
 	} else {
 	    makeSciButtonPanel $w $w $this
 	}
@@ -652,8 +652,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    set listbox $sd.listbox
 	    $listbox.list delete 0 end
 	
-	    global tree
-	    $tree delete root
+	    global $this-tree
+	    [set $this-tree] delete root
 	}
 
 	global $this-filename
@@ -688,15 +688,15 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    set treeframe [$w.treeview childsite]
 	    set treeview $treeframe.tree.tree
 
-	    global tree
-	    $tree delete root
+	    global $this-tree
+	    [set $this-tree] delete root
 
 	    if {[catch {open $filename r} fileId]} {
-		global read_error
+		global $this-read_error
 
 		# the file may have been removed from the /tmp dir so
 		# try to recreate it.
-		if { $read_error == 0 } {
+		if { [set $this-read_error] == 0 } {
 		    set message "Can not find "
 		    append message $filename
 		    $this-c error $message
@@ -709,7 +709,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		}
 	    } elseif {[gets $fileId line] >= 0 &&
 		      [string first HDF5* $line] != 1 } {
-		process_file $tree root $fileId $line
+		process_file [set $this-tree] root $fileId $line
 	    } else {
 		$this-c error "Not an HDF5 file."
 		return
@@ -732,13 +732,13 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
     method process_file { tree parent fileId input } {
 
-	global have_groups
-	global have_attributes
-	global have_datasets
+	global $this-have_groups
+	global $this-have_attributes
+	global $this-have_datasets
 
-	set have_groups     0
-	set have_attributes 0
-	set have_datasets   0
+	set $this-have_groups     0
+	set $this-have_attributes 0
+	set $this-have_datasets   0
  
 	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
 
@@ -761,8 +761,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set node [$tree insert $parent -tag "group" -label $gname \
 		      -data [array get info]]
 
-	global have_groups
-	set have_groups 1
+	global $this-have_groups
+	set $this-have_groups 1
 
 	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
 
@@ -831,8 +831,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    $tree insert $parent -tag "attribute" -label $aname \
 		-data [array get info]
 
-	    global have_attributes
-	    set have_attributes 1
+	    global $this-have_attributes
+	    set $this-have_attributes 1
 	}
     }
 
@@ -870,8 +870,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set node [$tree insert $parent -tag "dataset" -label $dsname \
 		      -data [array get info]]
   
-	global have_datasets
-	set have_datasets 1
+	global $this-have_datasets
+	set $this-have_datasets 1
 
 	while {[gets $fileId line] >= 0 && [string first "\}" $line] == -1} {
 
@@ -914,11 +914,11 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	    set sample [$w.sample childsite]
 
-	    global max_dims
+	    global $this-max_dims
 
 	    pack forget $sample.msg
 
-	    for {set i 0} {$i < $max_dims} {incr i 1} {
+	    for {set i 0} {$i < [set $this-max_dims]} {incr i 1} {
 		pack forget $sample.$i
 	    }
 
@@ -996,11 +996,11 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
     method SelectNotify { } {
 
-	global allow_selection
+	global $this-allow_selection
 
-	if { $allow_selection == "true" } {
+	if { [set $this-allow_selection] == "true" } {
 
-	    set allow_selection false
+	    set $this-allow_selection false
 
 	    set w .ui[modname]
 
@@ -1015,16 +1015,16 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 		if { $ids != "" } {
 
-		    global have_groups
-		    global have_attributes
+		    global $this-have_groups
+		    global $this-have_attributes
 
-		    if { $have_groups == 1 } {
+		    if { [set $this-have_groups] == 1 } {
 			set groups [$treeview tag nodes "group"]
 		    } else {
 			set groups ""
 		    }
 
-		    if { $have_attributes == 1 } {
+		    if { [set $this-have_attributes] == 1 } {
 			set attributes [$treeview tag nodes "attribute"]
 		    } else {
 			set attributes ""
@@ -1055,7 +1055,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		updateSelection [set $this-ports]
 	    }
 
-	    set allow_selection true
+	    set $this-allow_selection true
 	}
     }
 
@@ -1067,16 +1067,16 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	    set treeframe [$w.treeview childsite]
 	    set treeview $treeframe.tree.tree
 
-	    global have_groups
-	    global have_datasets
+	    global $this-have_groups
+	    global $this-have_datasets
 
-	    if { $have_groups == 1 } {
+	    if { [set $this-have_groups] == 1 } {
 		set groups [$treeview tag nodes "group"]
 	    } else {
 		set groups ""
 	    }
 
-	    if { $have_datasets == 1 } {
+	    if { [set $this-have_datasets] == 1 } {
 		set datasets [$treeview tag nodes "dataset"]
 	    } else {
 		set datasets ""
@@ -1185,8 +1185,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	if [ expr [winfo exists $w] ] {
 
-	    global allow_selection
-	    set allow_selection false
+	    global $this-allow_selection
+	    set $this-allow_selection false
 
 	    global $this-selectionString
 	    global $this-regexp
@@ -1218,7 +1218,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 		}
 	    }
 	    
-	    set allow_selection true
+	    set $this-allow_selection true
 
 	    SelectNotify
 	}
@@ -1367,7 +1367,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
     method animate {} {
 	$this-c update_selection;
 
-	global power_app_command
+	global $this-power_app_command
 
 	if { ![in_power_app] } {
 	    set w .ui[modname]
@@ -1471,7 +1471,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	pack $vcr.rewind $vcr.stepb $vcr.pause \
 	    $vcr.play $vcr.stepf $vcr.fforward -side left -fill both -expand 1
-	global ToolTipText
+	global $this-ToolTipText
 	Tooltip $vcr.rewind   $ToolTipText(VCRrewind)
 	Tooltip $vcr.stepb    $ToolTipText(VCRstepback)
 	Tooltip $vcr.pause    $ToolTipText(VCRpause)
@@ -1588,7 +1588,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	# Create the sci button panel
 
-	global power_app_command
+	global $this-power_app_command
 
 	if { ![in_power_app] } {
 	    makeSciButtonPanel $w $w $this "-no_execute"
@@ -1613,7 +1613,6 @@ itcl_class DataIO_Readers_HDF5DataReader {
     }
 
     method set_update_type { w } {
-	global $w
 	global $this-continuous
 	global $this-update_type
 
@@ -1702,8 +1701,8 @@ itcl_class DataIO_Readers_HDF5DataReader {
 	set w .ui[modname]
 
 	if [ expr [winfo exists $w] ] {
-	    global current_cursor
-	    $w config -cursor $current_cursor
+	    global $this-current_cursor
+	    $w config -cursor [set $this-current_cursor]
 	    update idletasks
 	}
     }
