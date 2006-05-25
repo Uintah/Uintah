@@ -18,7 +18,7 @@
       thickness with the line slider at the bottom.  The "+" and "-"
       buttons move the slice one index value along the stated axis.
       The "Find" button relocate the slice in the center of the data
-      showing the labeled plane.
+      showing the labeled plane.</p>
     </description>
   </overview>
   <io>
