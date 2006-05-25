@@ -563,7 +563,7 @@ SCI_ARG_ENABLE(sci-malloc,
   AC_HELP_STRING(--enable-sci-malloc,
                  Use SCI memory allocation/deallocation checks),
   [enable_sci_malloc="$enableval"],
-  [enable_sci_malloc=${enable_sci_malloc='yes'}])
+  [enable_sci_malloc=${enable_sci_malloc='no'}])
 SCI_ARG_ENABLE(assertion-level,
   AC_HELP_STRING(--enable-assertion-level=N,
                  Use assertion level N (0-3)),
