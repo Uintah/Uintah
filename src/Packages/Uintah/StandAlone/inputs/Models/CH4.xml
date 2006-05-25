@@ -1,5 +1,5 @@
 <?xml version='1.0' encoding='ISO-8859-1' ?>
-<!--  
+
 <Uintah_Include>
   <defaultValue name="heat_loss">                  0.0    </defaultValue>
   <defaultValue name="mixture_fraction_variance">  0.0    </defaultValue>
@@ -15,22 +15,4 @@
   <derivedValue name="reference_heat_capac_Cv">[reference_heat_capac_Cp]-8314*[reference_mixture_molecular_weight]              </derivedValue>
   <derivedValue name="reference_gamma">        [reference_heat_capac_Cp]/[reference_heat_capac_Cv]                              </derivedValue>
   <filename>inputs/ARCHES/NewStaticMixingTables/methane/CH4_adia_equil.rxn</filename>
-</Uintah_Include>-->
-
-
-<Uintah_Include>
-  <defaultValue name="heat_loss">                 0.0       </defaultValue>
-  <defaultValue name="mixture_fraction_variance"> 0.0       </defaultValue>
-  <constantValue name="viscosity">                0.000020  </constantValue>
-  <constantValue name="thermal_conductivity">     0.1       </constantValue>
-  
-  <derivedValue name="heat_capac_Cv">[heat_capacity]-8314*[mixture_molecular_weight]</derivedValue>
-  <derivedValue name="gamma">[heat_capacity]/[heat_capac_Cv]                        </derivedValue>
-  
-  <derivedValue name="reference_Temp">300*(1-{mixture_fraction})+300*{mixture_fraction}                                    </derivedValue>
-  <derivedValue name="reference_heat_capac_Cp">1009.87*(1-{mixture_fraction}) + 2224.39*{mixture_fraction}                 </derivedValue>
-  <derivedValue name="reference_mixture_molecular_weight">0.034661600*(1-{mixture_fraction}) + 0.0623334*{mixture_fraction}</derivedValue>
-  <derivedValue name="reference_heat_capac_Cv">[reference_heat_capac_Cp]-8314*[reference_mixture_molecular_weight]          </derivedValue>
-  <derivedValue name="reference_gamma">[reference_heat_capac_Cp]/[reference_heat_capac_Cv]                                  </derivedValue>
-  <filename>inputs/Models/CH4_adia_equil.rxn</filename>
-</Uintah_Include> 
+</Uintah_Include>
