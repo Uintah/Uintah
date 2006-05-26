@@ -509,29 +509,33 @@ OpenGL::render_and_save_image( int x, int y,
   // type in which case we need to look at the extension and try to write
   // out a temporary png and then use convert if it is available to write
   // out the appropriate image.
-  if (ftype != "ppm" && ftype != "raw")
-    {
-      // determine the extension
-      string ext = fname.substr(fname.find(".", 0)+1, fname.length());
+  if (ftype == "png")
+  {
+    write_png = true;
+  }
+  else if (ftype != "ppm" && ftype != "raw")
+  {
+    // determine the extension
+    string ext = fname.substr(fname.find(".", 0)+1, fname.length());
 
-      // FIX ME convert ext to lower case
-      for(unsigned int i=0; i<ext.size(); i++) {
-	ext[i] = tolower(ext[i]);
-      }
-
-      if (ext != "png") {
-	if (system("convert -version") != 0) {
-          view_window_->setMovieMessage( string("Error - Unsupported extension ") + ext + 
-                                         ". Program \"convert\" not found in the path", true );
-	  return;
-	} else {
-	  use_convert = true;
-	  write_png = true;
-	}
-      } else {
-	write_png = true;
-      }
+    // FIX ME convert ext to lower case
+    for(unsigned int i=0; i<ext.size(); i++) {
+      ext[i] = tolower(ext[i]);
     }
+
+    if (ext != "png") {
+      if (system("convert -version") != 0) {
+        view_window_->setMovieMessage( string("Error - Unsupported extension ") + ext + 
+                                       ". Program \"convert\" not found in the path", true );
+        return;
+      } else {
+        use_convert = true;
+        write_png = true;
+      }
+    } else {
+      write_png = true;
+    }
+  }
 #endif
 
   cout << "Saving " + to_string(x) + "x" + to_string(y) +
