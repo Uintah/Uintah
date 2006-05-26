@@ -350,6 +350,7 @@ itcl_class BaseViewWindow {
 	    {{All Files}    {.*}}
 	    {{PPM File}     {.ppm}}
 	    {{Raw File}     {.raw}}
+            {{PNG File}     {.png}}
 	}
 	
 	makeSaveFilebox \
@@ -364,7 +365,7 @@ itcl_class BaseViewWindow {
 	    -initialdir $initdir \
 	    -defaultextension $defext \
 	    -formatvar $this-saveType \
-	    -formats {ppm raw "by_extension"} \
+	    -formats {ppm raw png "by_extension"} \
 	    -imgwidth $this-resx \
 	    -imgheight $this-resy
 	moveToCursor $w
