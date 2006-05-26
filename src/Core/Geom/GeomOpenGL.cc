@@ -2165,8 +2165,14 @@ GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
   if( line_width_ > 0.0 )
     glLineWidth(line_width_);
 
-  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
-  glEnableClientState(GL_VERTEX_ARRAY);
+  if (points_.size()) {
+    glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+    glEnableClientState(GL_VERTEX_ARRAY);
+  }
+  else
+  {
+    glDisableClientState(GL_VERTEX_ARRAY);
+  }
 
   if (colors_.size())
   {
@@ -2178,7 +2184,7 @@ GeomLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_COLOR_ARRAY);
   }
 
-  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3 && indices_.size())
   {
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -2275,8 +2281,13 @@ GeomTranspLines::draw(DrawInfoOpenGL* di, Material* matl, double)
   if( line_width_ > 0.0 )
     glLineWidth(line_width_);
 
-  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
-  glEnableClientState(GL_VERTEX_ARRAY);
+  if (points_.size()) {
+    glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+    glEnableClientState(GL_VERTEX_ARRAY);
+  }
+  else {
+    glDisableClientState(GL_VERTEX_ARRAY);
+  }
 
   if (colors_.size())
   {
@@ -2288,7 +2299,7 @@ GeomTranspLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_COLOR_ARRAY);
   }
 
-  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3 && indices_.size())
   {
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -2311,7 +2322,8 @@ GeomTranspLines::draw(DrawInfoOpenGL* di, Material* matl, double)
     reverse = !reverse;
   }
 
-  glDrawElements(GL_LINES, clist.size(), GL_UNSIGNED_INT, &(clist.front()));
+  if (clist.size())
+    glDrawElements(GL_LINES, clist.size(), GL_UNSIGNED_INT, &(clist.front()));
 
   glDisableClientState(GL_VERTEX_ARRAY);
   glDisableClientState(GL_COLOR_ARRAY);
@@ -2331,16 +2343,28 @@ GeomCLineStrips::draw(DrawInfoOpenGL* di, Material* matl, double)
   if (!pre_draw(di, matl, 0)) return;
 
   glLineWidth(line_width_);
-  glEnableClientState(GL_VERTEX_ARRAY);
-  glEnableClientState(GL_COLOR_ARRAY);
 
   const int n_strips = points_.size();
   for (int i = 0; i < n_strips; i++)
   {
     const int n_points = points_[i].size()/3;
     di->polycount_ += n_points-1;
-    glVertexPointer(3, GL_FLOAT, 0, &(points_[i].front()));
-    glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_[i].front()));
+    if (points_[i].size()) {
+      glVertexPointer(3, GL_FLOAT, 0, &(points_[i].front()));
+      glEnableClientState(GL_VERTEX_ARRAY);
+    }
+    else {
+      glDisableClientState(GL_VERTEX_ARRAY);
+    }
+    if (colors_[i].size())
+    {
+      glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_[i].front()));
+      glEnableClientState(GL_COLOR_ARRAY);
+    }
+    else
+    {
+      glDisableClientState(GL_COLOR_ARRAY);
+    }
 
     if (sci_getenv_p("SCIRUN_DRAWARRAYS_DISABLE"))
     {
@@ -2873,9 +2897,13 @@ GeomPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
   }
   else
   {
-    glVertexPointer(3, GL_FLOAT, 0, &(points_[0]));
-    glEnableClientState(GL_VERTEX_ARRAY);
-
+    if (points_.size()) {
+      glVertexPointer(3, GL_FLOAT, 0, &(points_[0]));
+      glEnableClientState(GL_VERTEX_ARRAY);
+    }
+    else {
+      glDisableClientState(GL_VERTEX_ARRAY);
+    }
     if (colors_.size())
     {
       glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(colors_[0]));
@@ -2886,7 +2914,7 @@ GeomPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
       glDisableClientState(GL_COLOR_ARRAY);
     }
 
-    if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
+    if (di->using_cmtexture_ && indices_.size() == points_.size() / 3 && indices_.size())
     {
       glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
       glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -2963,8 +2991,13 @@ GeomTranspPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
   bool &reverse =
     (di->axis_==0)?xreverse_:((di->axis_==1)?yreverse_:zreverse_);
 
-  glVertexPointer(3, GL_FLOAT, 0, &(points_[0]));
-  glEnableClientState(GL_VERTEX_ARRAY);
+  if (points_.size()) {
+    glVertexPointer(3, GL_FLOAT, 0, &(points_[0]));
+    glEnableClientState(GL_VERTEX_ARRAY);
+  }
+  else {
+    glDisableClientState(GL_VERTEX_ARRAY);
+  }
 
   if (colors_.size())
   {
@@ -2976,7 +3009,7 @@ GeomTranspPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_COLOR_ARRAY);
   }
 
-  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3 && indices_.size())
   {
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -3002,7 +3035,8 @@ GeomTranspPoints::draw(DrawInfoOpenGL* di, Material* matl, double)
     reverse = !reverse;
   }
 
-  glDrawElements(GL_POINTS, clist.size(), GL_UNSIGNED_INT, &(clist[0]));
+  if (clist.size())
+    glDrawElements(GL_POINTS, clist.size(), GL_UNSIGNED_INT, &(clist[0]));
 
   glDisable(GL_BLEND);
   glDisable(GL_TEXTURE_1D);
@@ -3316,26 +3350,43 @@ GeomSuperquadric::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   di->polycount_ += nu_ * nv_;
 
-  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
-  glEnableClientState(GL_VERTEX_ARRAY);
+  if (points_.size())
+  {
+    glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+    glEnableClientState(GL_VERTEX_ARRAY);
+  }
+  else
+  {
+    glDisableClientState(GL_VERTEX_ARRAY);
+  }
 
-  glNormalPointer(GL_FLOAT, 0, &(normals_.front()));
-  glEnableClientState(GL_NORMAL_ARRAY);
+  if (normals_.size())
+  {
+    glNormalPointer(GL_FLOAT, 0, &(normals_.front()));
+    glEnableClientState(GL_NORMAL_ARRAY);
+  }
+  else
+  {
+    glDisableClientState(GL_NORMAL_ARRAY);
+  }
 
   glDisableClientState(GL_COLOR_ARRAY);
 
-  glDrawElements(GL_TRIANGLE_FAN, nu_ + 2, GL_UNSIGNED_SHORT,
-                 &(tindices_[0]));
+  if (tindices_.size()) {
+    glDrawElements(GL_TRIANGLE_FAN, nu_ + 2, GL_UNSIGNED_SHORT,
+                   &(tindices_[0]));
 
-  glDrawElements(GL_TRIANGLE_FAN, nu_ + 2, GL_UNSIGNED_SHORT,
-                 &(tindices_[nu_+2]));
-
-  for (int pi = 0; pi < nv_-2; pi++)
-  {
-    glDrawElements(GL_QUAD_STRIP, (nu_+1)*2, GL_UNSIGNED_SHORT,
-                   &(qindices_[pi * (nu_+1) * 2]));
+    glDrawElements(GL_TRIANGLE_FAN, nu_ + 2, GL_UNSIGNED_SHORT,
+                   &(tindices_[nu_+2]));
   }
 
+  if (qindices_.size()) {
+    for (int pi = 0; pi < nv_-2; pi++)
+    {
+      glDrawElements(GL_QUAD_STRIP, (nu_+1)*2, GL_UNSIGNED_SHORT,
+                     &(qindices_[pi * (nu_+1) * 2]));
+    }
+  }
   post_draw(di);
 }
 
@@ -3915,7 +3966,7 @@ GeomFastTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   glShadeModel(GL_FLAT);
   glDisable(GL_NORMALIZE);
-  if (di->currently_lit_)
+  if (di->currently_lit_ && (normals_.size() || face_normals_.size()))
   {
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
@@ -3952,7 +4003,7 @@ GeomFastTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_COLOR_ARRAY);
   }
 
-  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3 && indices_.size())
   {
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -3968,8 +4019,13 @@ GeomFastTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
   }
 
-  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
-  glEnableClientState(GL_VERTEX_ARRAY);
+  if (points_.size()) {
+    glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+    glEnableClientState(GL_VERTEX_ARRAY);
+  }
+  else {
+    glDisableClientState(GL_VERTEX_ARRAY);
+  }
 
   if (sci_getenv_p("SCIRUN_DRAWARRAYS_DISABLE"))
   {
@@ -4002,7 +4058,7 @@ GeomFastTrianglesTwoSided::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   glShadeModel(GL_FLAT);
   glDisable(GL_NORMALIZE);
-  if (di->currently_lit_)
+  if (di->currently_lit_ && (normals_.size() || face_normals_.size()))
   {
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
@@ -4045,7 +4101,7 @@ GeomFastTrianglesTwoSided::draw(DrawInfoOpenGL* di, Material* matl, double)
   glCullFace(GL_BACK);
 
 
-  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3 && indices_.size())
   {
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -4061,8 +4117,13 @@ GeomFastTrianglesTwoSided::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
   }
 
-  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
-  glEnableClientState(GL_VERTEX_ARRAY);
+  if (points_.size()) {
+    glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+    glEnableClientState(GL_VERTEX_ARRAY);
+  }
+  else {
+    glDisableClientState(GL_VERTEX_ARRAY);
+  }
 
   if (sci_getenv_p("SCIRUN_DRAWARRAYS_DISABLE"))
   {
@@ -4091,7 +4152,7 @@ GeomFastTrianglesTwoSided::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_COLOR_ARRAY);
   }
 
-  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3  && indices2_.size())
   {
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices2_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -4173,7 +4234,7 @@ GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   glShadeModel(GL_FLAT);
   glDisable(GL_NORMALIZE);
-  if (di->currently_lit_)
+  if (di->currently_lit_ && (normals_.size() || face_normals_.size()))
   {
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
@@ -4210,7 +4271,7 @@ GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_COLOR_ARRAY);
   }
 
-  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3 && indices_.size())
   {
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -4226,8 +4287,13 @@ GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
   }
 
-  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
-  glEnableClientState(GL_VERTEX_ARRAY);
+  if (points_.size()) {
+    glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+    glEnableClientState(GL_VERTEX_ARRAY);
+  }
+  else {
+    glDisableClientState(GL_VERTEX_ARRAY);
+  }
 
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -4241,7 +4307,8 @@ GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   glFrontFace(reverse?GL_CW:GL_CCW);
 
-  glDrawElements(GL_TRIANGLES, clist.size(), GL_UNSIGNED_INT, &(clist[0]));
+  if (clist.size())
+    glDrawElements(GL_TRIANGLES, clist.size(), GL_UNSIGNED_INT, &(clist[0]));
 
   glFrontFace(GL_CCW);
 
@@ -4274,8 +4341,10 @@ GeomFastQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
 #else
     glDisable(GL_NORMALIZE);
 #endif
-    glNormalPointer(GL_FLOAT, 0, &(normals_.front()));
-    glEnableClientState(GL_NORMAL_ARRAY);
+    if (normals_.size()) {
+      glNormalPointer(GL_FLOAT, 0, &(normals_.front()));
+      glEnableClientState(GL_NORMAL_ARRAY);
+    }
   }
   else
   {
@@ -4295,7 +4364,7 @@ GeomFastQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_COLOR_ARRAY);
   }
 
-  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3 && indices_.size())
   {
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -4310,9 +4379,14 @@ GeomFastQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
   {
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
   }
-
-  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
-  glEnableClientState(GL_VERTEX_ARRAY);
+  
+  if (points_.size()) {
+    glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+    glEnableClientState(GL_VERTEX_ARRAY);
+  }
+  else {
+    glDisableClientState(GL_VERTEX_ARRAY);
+  }
 
 
   if (di->get_drawtype() == DrawInfoOpenGL::Flat)
@@ -4359,7 +4433,7 @@ GeomFastQuadsTwoSided::draw(DrawInfoOpenGL* di, Material* matl, double)
   if (!pre_draw(di, matl, 1)) return;
   di->polycount_ += size();
 
-  if (di->currently_lit_)
+  if (di->currently_lit_ && normals_.size())
   {
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
@@ -4386,7 +4460,7 @@ GeomFastQuadsTwoSided::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_COLOR_ARRAY);
   }
 
-  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3 && indices_.size())
   {
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -4402,9 +4476,13 @@ GeomFastQuadsTwoSided::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
   }
 
-  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
-  glEnableClientState(GL_VERTEX_ARRAY);
-
+  if (points_.size()) {
+    glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+    glEnableClientState(GL_VERTEX_ARRAY);
+  }
+  else {
+    glDisableClientState(GL_VERTEX_ARRAY);
+  }
 
   if (di->get_drawtype() == DrawInfoOpenGL::Flat)
   {
@@ -4449,7 +4527,7 @@ GeomFastQuadsTwoSided::draw(DrawInfoOpenGL* di, Material* matl, double)
   }
   
     
-  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3 && indices2_.size())
   {
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices2_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -4537,7 +4615,7 @@ GeomTranspQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
   bool &reverse =
     (di->axis_==0)?xreverse_:((di->axis_==1)?yreverse_:zreverse_);
 
-  if (di->currently_lit_)
+  if (di->currently_lit_ && normals_.size())
   {
 #ifdef SCI_NORM_OGL
     glEnable(GL_NORMALIZE);
@@ -4565,7 +4643,7 @@ GeomTranspQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_COLOR_ARRAY);
   }
 
-  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3)
+  if (di->using_cmtexture_ && indices_.size() == points_.size() / 3 && indices_.size())
   {
     glTexCoordPointer(1, GL_FLOAT, 0, &(indices_[0]));
     glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -4581,8 +4659,13 @@ GeomTranspQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
     glDisableClientState(GL_TEXTURE_COORD_ARRAY);
   }
 
-  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
-  glEnableClientState(GL_VERTEX_ARRAY);
+  if (points_.size()) {
+    glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+    glEnableClientState(GL_VERTEX_ARRAY);
+  }
+  else {
+    glDisableClientState(GL_VERTEX_ARRAY);
+  }
 
   if (di->get_drawtype() == DrawInfoOpenGL::Flat)
   {
@@ -4605,7 +4688,8 @@ GeomTranspQuads::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   glFrontFace(reverse?GL_CW:GL_CCW);
 
-  glDrawElements(GL_QUADS, clist.size(), GL_UNSIGNED_INT, &(clist.front()));
+  if (clist.size())
+    glDrawElements(GL_QUADS, clist.size(), GL_UNSIGNED_INT, &(clist.front()));
 
   glFrontFace(GL_CCW);
 
