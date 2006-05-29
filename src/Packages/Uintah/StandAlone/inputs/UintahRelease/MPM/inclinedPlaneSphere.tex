@@ -2,7 +2,7 @@
 \usepackage{amsmath}
 \usepackage[dvips]{graphicx}
 \bibliographystyle{plain}
-%__________________________________
+
 \begin{document}
 
 \section*{\center Sphere Rolling Down an Inclined Plane}
@@ -12,7 +12,7 @@ influence of gravity down a plane of a harder plastic.  Gravity is
 oriented such that the plane is effectively angled at 45 degrees to
 the horizontal.  This simulation demonstrates the effectiveness of
 the contact algorithm, described in~\cite{bard01}.  Frictional
-%contact, using a friction coefficient of $\mu = 0.495$ causes the ball
+contact, using a friction coefficient of $\mu = 0.495$ causes the ball
 to start rolling as it impacts the plane, after being dropped from
 barely above it.
  
@@ -31,24 +31,24 @@ barely above it.
 
 \item [Physical time simulated:] \hfill 2.2 seconds
 
-\item [Associate scirun network:] \hfill spherePlane.srn
+\item [Associate scirun network:] \hfill inclinedPlaneSphere.srn
 
 \end{description}
 
 \section*{\underline{Results}}
 
-Figure~\ref{figplane_sphere} shows a snapshot of the simulation, as
+Figure~\ref{figincplaneSphere} shows a snapshot of the simulation, as
 the sphere is about halfway down the plane.  Particles are colored according
 to velocity magnitude, note that the particles at the top of the sphere
 are moving most rapidly, and those near the surface of the plane are 
 basically stationary, as expected.
 \begin{figure}[b]
   \center
-%  \scalebox{0.2}{\includegraphics{sphere_plane.png}}
+%  \scalebox{0.2}{\includegraphics{inclinedPlaneSphere.png}}
   \caption{Sphere rolling down an ``inclined" plane.  The gravity vector
 is oriented at a 45 degree angle relative to the plane.  Particles are colored
 by velocity magnitude.}
-  \label{figplane_sphere}
+  \label{figincplaneSphere}
 \end{figure}
 
 \bibliography{../references}
