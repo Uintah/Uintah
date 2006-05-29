@@ -192,8 +192,7 @@ TextureBuilderAlgoT<VFIELD,
       }
     }
 
-    
-    if( tHandle->nlevels() > 1 ){
+    if(  mrvfld->nlevels() > 1 ){
       tHandle->lock_bricks();
       tHandle->clear();
       tHandle->unlock_bricks();
