@@ -87,7 +87,6 @@ public class UnionGeomPiece extends GeomPiece {
     int numGeomPiece = d_geomPiece.size();
     if (numGeomPiece > 0) {
 
-      String tab1 = new String("  ");
       System.out.println("<union label=\""+d_name+"\">");
 
       for (int ii = 0; ii < numGeomPiece; ++ii) {

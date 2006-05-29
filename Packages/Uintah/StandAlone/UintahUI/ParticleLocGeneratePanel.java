@@ -8,7 +8,6 @@
 
 //************ IMPORTS **************
 import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
 
 //**************************************************************************
@@ -19,11 +18,9 @@ public class ParticleLocGeneratePanel extends JPanel {
 
   // Data
   private ParticleGeneratePanel d_parentPanel = null;
-  private ParticleList d_partList = null;
-  private ParticleSize d_partSizeDist = null;
 
   private ComputeParticleLocPanel computePanel = null;
-  private DisplayParticleLocPanel displayPanel = null;
+  private DisplayParticleLocFrame displayFrame = null;
 
   private double d_rveSize = 100.0;
 
@@ -33,13 +30,13 @@ public class ParticleLocGeneratePanel extends JPanel {
 				  ParticleGeneratePanel parentPanel) {
 
     // Copy the arguments
-    d_partList = partList;
-    d_partSizeDist = partSizeDist;
     d_parentPanel = parentPanel;
 
     // Create and add the relevant panels
     computePanel = new ComputeParticleLocPanel(partList, partSizeDist, this);
-    displayPanel = new DisplayParticleLocPanel(partList, this);
+    displayFrame = new DisplayParticleLocFrame(partList, this);
+    displayFrame.pack();
+    displayFrame.setVisible(false);
  
     // Create a grid bag
     GridBagLayout gb = new GridBagLayout();
@@ -51,19 +48,18 @@ public class ParticleLocGeneratePanel extends JPanel {
 				    1.0,1.0, 0,0, 1,1,5);
     gb.setConstraints(computePanel,gbc);
     add(computePanel);
-
-    UintahGui.setConstraints(gbc, GridBagConstraints.CENTER,
-				    1.0,1.0, 1,0, 1,1,5);
-    gb.setConstraints(displayPanel,gbc);
-    add(displayPanel);
   }
 
   public ParticleGeneratePanel getSuper() {
     return d_parentPanel;
   }
 
-  public void refreshDisplayPartDistPanel() {
-    displayPanel.refresh();
+  public void refreshDisplayPartLocFrame() {
+    displayFrame.refresh();
+  }
+
+  public void setVisibleDisplayFrame(boolean visible) {
+    displayFrame.setVisible(visible);
   }
 
   public void setRVESize(double rveSize) {

@@ -49,7 +49,6 @@ public class ParticleList extends Object {
       st.commentChar('#');
       st.parseNumbers();
       st.eolIsSignificant(true);
-      double rveSize = 0.0;
       boolean first = true;
       int count = 0;
       int type = Particle.CIRCLE;
@@ -84,10 +83,10 @@ public class ParticleList extends Object {
             }
           }
           if (ttval == StreamTokenizer.TT_EOL && count != 0) {
-            //System.out.println(type+" "+radius+" "+rotation+" "+xx+" "+yy+
-                  //           " "+zz+" "+matCode);
+            System.out.println(type+" "+radius+" "+thickness+" "+
+                                 rotation+" "+xx+" "+yy+" "+zz+" "+matCode);
             Point center = new Point(xx, yy, zz);
-            Particle particle = new Particle(type, radius, thickness, rotation, 
+            Particle particle = new Particle(type, radius, rotation, thickness, 
                                              center, matCode);
             this.addParticle(particle);
             count = 0;

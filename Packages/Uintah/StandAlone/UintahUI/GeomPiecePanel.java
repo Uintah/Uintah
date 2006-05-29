@@ -9,9 +9,6 @@
 //************ IMPORTS **************
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Random;
-import java.util.Vector;
-import java.io.*;
 import javax.swing.*;
 
 public class GeomPiecePanel extends JPanel 
@@ -40,6 +37,9 @@ public class GeomPiecePanel extends JPanel
 
     // Create a combo box for choosing the geometry piece type
     JLabel geomLabel = new JLabel("Geometry Piece Type");
+    UintahGui.setConstraints(gbc, 0, 0);
+    gb.setConstraints(geomLabel, gbc);
+    add(geomLabel);
     geomComB = new JComboBox();
     geomComB.addItem("Box");
     geomComB.addItem("Cylinder");
@@ -48,7 +48,7 @@ public class GeomPiecePanel extends JPanel
     geomComB.addActionListener(this);
      
     UintahGui.setConstraints(gbc, GridBagConstraints.NONE,
-			     1.0, 1.0, 0, 0, 1, 1, 5);
+			     1.0, 1.0, 1, 0, 1, 1, 5);
     gb.setConstraints(geomComB, gbc);
     add(geomComB);
   }

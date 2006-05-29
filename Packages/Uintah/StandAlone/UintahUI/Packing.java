@@ -21,12 +21,9 @@
 // $Id: $
 
 //************ IMPORTS **************
-import java.awt.*;
 import java.util.Random;
 import java.util.Vector;
-import java.util.ArrayList;
 import java.io.*;
-import javax.swing.*;
 
 //**************************************************************************
 // Class   : Packing
@@ -104,7 +101,6 @@ public class Packing {
    *  and 3D, and the total volme in 2d and 3D
    */
   private void setInitialData() {
-    double vol = 0.0;
     for (int ii = 0; ii < d_nofSizeFrac; ii++) {
       double dia = d_partSizeDist.sizeCalc[ii];
       if (dia > d_maxRad) d_maxRad = dia;
@@ -244,7 +240,6 @@ public class Packing {
     // Setup the simulation
     int stepCount = 1; 
     double volFrac = 0.0;
-    double smallDist = 0.03*d_maxRad;
     double stepSize = 10.0;
 
 
@@ -372,7 +367,6 @@ public class Packing {
   //
   public double calculateScaleFactor() {
     double minScale = 1.0e10;
-    double halfBox = d_boxSize/2.0;
     double scale = 0.0;
 
     for (int ii = 0; ii < d_nofParticles-1; ii++) {

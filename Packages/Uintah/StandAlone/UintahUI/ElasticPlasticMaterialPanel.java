@@ -11,9 +11,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
-import javax.swing.text.*;
 import javax.swing.event.*;
-import java.util.Vector;
 import java.awt.Point;
 
 

@@ -11,18 +11,18 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
-import javax.swing.text.*;
-import javax.swing.event.*;
 import java.util.Vector;
 
 public class MPMMaterialInputPanel extends JPanel 
-                                   implements ItemListener {
+                                   implements ItemListener,
+                                              ActionListener {
 
   // Data and components
   private boolean d_isRigid = false;
   private String d_burnModel = null;
   private String d_constModel = null;
   private Vector d_geomObj = null;
+  private int[] d_selGeomObj = null;
 
   private JTextField matNameEntry = null;
   private DecimalField densityEntry = null;
@@ -45,6 +45,8 @@ public class MPMMaterialInputPanel extends JPanel
   private JList geomObjectList = null;
   private DefaultListModel geomObjectListModel = null;
   private JScrollPane geomObjectSP = null;
+
+  private JButton updateButton = null;
 
   public MPMMaterialInputPanel(int matIndex,
                                Vector geomObj) {
@@ -140,13 +142,19 @@ public class MPMMaterialInputPanel extends JPanel
       geomObjectListModel.addElement(go.getName());
     }
     geomObjectList = new JList(geomObjectListModel);
-    geomObjectList.setVisibleRowCount(4);
+    geomObjectList.setVisibleRowCount(7);
     geomObjectSP = new JScrollPane(geomObjectList);
     geomObjectPanel.add(geomObjectSP);
 
     UintahGui.setConstraints(gbc, 0, 2);
     gb.setConstraints(geomObjectPanel, gbc);
     add(geomObjectPanel);
+
+    // Add the update button
+    updateButton = new JButton("Update");
+    UintahGui.setConstraints(gbc, 0, 3);
+    gb.setConstraints(updateButton, gbc);
+    add(updateButton);
 
     // Add the panel for the constituive models
     constModelPanel = new JPanel();
@@ -175,6 +183,7 @@ public class MPMMaterialInputPanel extends JPanel
     // Create and add the listeners
     burnModelComB.addItemListener(this);
     constModelComB.addItemListener(this);
+    updateButton.addActionListener(this);
 
     CheckBoxListener checkBoxListener = new CheckBoxListener();
     isRigidCB.addItemListener(checkBoxListener);
@@ -187,6 +196,14 @@ public class MPMMaterialInputPanel extends JPanel
     return matNameEntry.getText();
   }
 
+  //--------------------------------------------------------------------
+  // Update action
+  //--------------------------------------------------------------------
+  public void actionPerformed(ActionEvent e) {
+    d_selGeomObj = geomObjectList.getSelectedIndices();
+    geomObjectList.setSelectedIndices(d_selGeomObj);
+  }
+
   //-----------------------------------------------------------------------
   // Refresh
   //-----------------------------------------------------------------------
@@ -196,12 +213,15 @@ public class MPMMaterialInputPanel extends JPanel
       GeomObject go = (GeomObject) d_geomObj.elementAt(ii);
       geomObjectListModel.addElement(go.getName());
     }
+    if (d_selGeomObj != null) {
+      geomObjectList.setSelectedIndices(d_selGeomObj);
+    }
     validate();
   }
 
-  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  //-----------------------------------------------------------------------
   // Listens for item picked in combo box and takes action as required.
-  //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  //-----------------------------------------------------------------------
   public void itemStateChanged(ItemEvent e) {
         
     // Get the object that has been selected
@@ -312,8 +332,10 @@ public class MPMMaterialInputPanel extends JPanel
 
     if (d_geomObj != null) {
       int[] numGeomObj = geomObjectList.getSelectedIndices();
+      System.out.println(numGeomObj.length);
       for (int ii = 0; ii < numGeomObj.length; ++ii) {
         int index = numGeomObj[ii];
+        System.out.println("geomObj index = "+index );
         GeomObject geomObject = (GeomObject) d_geomObj.elementAt(index);        
         geomObject.writeUintah(pw, tab1);
       }

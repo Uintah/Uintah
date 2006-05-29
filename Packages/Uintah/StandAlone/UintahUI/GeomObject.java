@@ -83,7 +83,7 @@ public class GeomObject extends Object {
        d_velocity.y()+", "+d_velocity.z()+"] </velocity>");
     pw.println(tab1+"<temperature> "+d_temperature+" </temperature>");
     pw.println(tab1+"<density> "+d_density+" </density>");
-    pw.println(tab1+"<pressure> "+d_density+" </pressure>");
+    pw.println(tab1+"<pressure> "+d_pressure+" </pressure>");
     
     for (int ii=0; ii < d_geomPieceVector.size(); ++ii) {
       GeomPiece geomPiece = (GeomPiece) d_geomPieceVector.elementAt(ii);

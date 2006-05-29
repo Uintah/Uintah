@@ -1,5 +1,5 @@
 /**************************************************************************
-// Program : MPMMaterialsPanel.java
+// Class   : MPMMaterialsPanel
 // Purpose : Create a panel that contains widgets to take inputs for
 //           MPM materials
 // Author  : Biswajit Banerjee
@@ -11,30 +11,23 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
-import javax.swing.text.*;
 import javax.swing.event.*;
-import java.text.DecimalFormat;
 import java.util.Vector;
-import java.awt.Point;
 
-//**************************************************************************
-// Class   : MPMMaterialsPanel
-//**************************************************************************
-public class MPMMaterialsPanel extends JPanel {
+public class MPMMaterialsPanel extends JPanel 
+                               implements ChangeListener {
 
   // Static variables
 
   // Data
   private Vector d_geomObj = null;
   private Vector d_mpmMat = null;
-  private UintahInputPanel d_parent = null;
 
   // Local components
   private JTabbedPane mpmMatTabbedPane = null;
   private Vector mpmMatInputPanel = null;
   private JButton addButton = null;
   private JButton delButton = null;
-  private JButton saveButton = null;
 
   private MPMContactInputPanel contactPanel = null;
 
@@ -48,7 +41,6 @@ public class MPMMaterialsPanel extends JPanel {
     // Initialize local variables
     d_geomObj = geomObj;
     d_mpmMat = mpmMat;
-    d_parent = parent;
 
     // Initialize the material input panel vector
     mpmMatInputPanel = new Vector();
@@ -58,8 +50,22 @@ public class MPMMaterialsPanel extends JPanel {
     GridBagConstraints gbc = new GridBagConstraints();
     setLayout(gb);
 
-    // Create the panels for each material
-    String matID = new String("Material "+String.valueOf(0));
+    // Create the add button
+    addButton = new JButton("Add Material");
+    addButton.setActionCommand("add");
+    UintahGui.setConstraints(gbc, 0, 0);
+    gb.setConstraints(addButton, gbc);
+    add(addButton);
+
+    // Create the delete button
+    delButton = new JButton("Remove Material");
+    delButton.setActionCommand("delete");
+    UintahGui.setConstraints(gbc, 1, 0);
+    gb.setConstraints(delButton, gbc);
+    add(delButton);
+
+    // Create a panel for the first material
+    String matID = new String("MPM Material "+String.valueOf(0));
     d_mpmMat.addElement(matID);
 
     MPMMaterialInputPanel matPanel = new MPMMaterialInputPanel(0, d_geomObj);
@@ -73,40 +79,29 @@ public class MPMMaterialsPanel extends JPanel {
     mpmMatTabbedPane.addTab("Contact", null, contactPanel, null);
     mpmMatTabbedPane.setSelectedIndex(0);
     UintahGui.setConstraints(gbc, GridBagConstraints.NONE, 
-                             1.0, 1.0, 0, 0, 
+                             1.0, 1.0, 0, 1, 
                              GridBagConstraints.REMAINDER, 1, 5);
     gb.setConstraints(mpmMatTabbedPane, gbc);
     add(mpmMatTabbedPane);
-
-    // Create the add button
-    addButton = new JButton("Add Material");
-    addButton.setActionCommand("add");
-    UintahGui.setConstraints(gbc, GridBagConstraints.NONE, 
-                             1.0, 1.0, 0, 1, 1, 1, 5);
-    gb.setConstraints(addButton, gbc);
-    add(addButton);
-
-    // Create the delete button
-    delButton = new JButton("Remove Material");
-    delButton.setActionCommand("delete");
-    UintahGui.setConstraints(gbc, GridBagConstraints.NONE, 
-                             1.0, 1.0, 1, 1, 1, 1, 5);
-    gb.setConstraints(delButton, gbc);
-    add(delButton);
-
-    // Create the save button
-    saveButton = new JButton("Save");
-    saveButton.setActionCommand("save");
-    UintahGui.setConstraints(gbc, GridBagConstraints.NONE, 
-                             1.0, 1.0, 2, 1, 1, 1, 5);
-    gb.setConstraints(saveButton, gbc);
-    add(saveButton);
+    mpmMatTabbedPane.addChangeListener(this);
 
     // Add listener
     ButtonListener buttonListener = new ButtonListener();
     addButton.addActionListener(buttonListener);
     delButton.addActionListener(buttonListener);
-    saveButton.addActionListener(buttonListener);
+  }
+
+  //-----------------------------------------------------------------------
+  // Actions when a tab is selected
+  //-----------------------------------------------------------------------
+  public void stateChanged(ChangeEvent e) {
+
+    // Get the number of tabs and the selected index
+    int numTab = mpmMatTabbedPane.getTabCount();
+    int tabIndex = mpmMatTabbedPane.getSelectedIndex();
+    if (tabIndex == numTab - 1) {
+      contactPanel.refresh();
+    }
   }
 
   //-----------------------------------------------------------------------
@@ -157,6 +152,13 @@ public class MPMMaterialsPanel extends JPanel {
     }
   }
 
+  public void writeUintahContact(PrintWriter pw, String tab) {
+
+    if (pw == null) return;
+
+    contactPanel.writeUintah(pw, tab);
+  }
+
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   // Respond to button pressed (inner class button listener)
   //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -171,7 +173,6 @@ public class MPMMaterialsPanel extends JPanel {
         MPMMaterialInputPanel matPanel = 
           new MPMMaterialInputPanel(ii, d_geomObj);
         mpmMatInputPanel.addElement(matPanel);
-        //mpmMatTabbedPane.addTab(matID, null, matPanel, null);
         mpmMatTabbedPane.add(matPanel, ii);
         mpmMatTabbedPane.setTitleAt(ii,matID);
         mpmMatTabbedPane.setSelectedIndex(ii);
@@ -185,26 +186,6 @@ public class MPMMaterialsPanel extends JPanel {
         mpmMatTabbedPane.remove(ii);
         mpmMatTabbedPane.setSelectedIndex(ii);
 
-      } else if (e.getActionCommand() == "save") {
-        
-        // Create filewriter and printwriter
-        File outputFile = new File("test.ups");
-        try {
-          FileWriter fw = new FileWriter(outputFile);
-          PrintWriter pw = new PrintWriter(fw);
-
-          String tab = new String("    ");
-          for (int ii = 0; ii < d_mpmMat.size(); ++ii) {
-            MPMMaterialInputPanel matPanel = 
-              (MPMMaterialInputPanel) mpmMatInputPanel.elementAt(ii);
-            matPanel.writeUintah(pw, tab);
-          }
-
-          pw.close();
-          fw.close();
-        } catch (Exception event) {
-          System.out.println("Could not write to file "+outputFile.getName());
-        }
       }
     }
   }

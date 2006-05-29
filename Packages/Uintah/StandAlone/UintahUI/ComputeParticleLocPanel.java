@@ -13,7 +13,6 @@
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Random;
-import java.util.Vector;
 import java.io.*;
 import javax.swing.*;
 
@@ -328,7 +327,6 @@ public class ComputeParticleLocPanel extends JPanel
       final int MAX_ITER = 1000;
 
       // Rotation and material code are zero
-      double rotation = 0.0;
       int matCode = 0;
 
       // Pick up each particle and place in the square ..  the largest 
@@ -338,7 +336,6 @@ public class ComputeParticleLocPanel extends JPanel
         int nofParts = d_rvePartSizeDist.freq2DCalc[ii];
 
         double partDia = d_rvePartSizeDist.sizeCalc[ii];
-        double partDiaCurr = partDia;
         double partDiaNext = 0.0;
         if (ii == 0)
           partDiaNext = 0.5*d_rvePartSizeDist.sizeCalc[0];
@@ -395,7 +392,7 @@ public class ComputeParticleLocPanel extends JPanel
                 d_partList.addParticle(newParticle);
 
                 // Update the display
-                d_parent.refreshDisplayPartDistPanel();
+                d_parent.refreshDisplayPartLocFrame();
 
                 // Set flag to true
                 fit = true;
@@ -463,7 +460,7 @@ public class ComputeParticleLocPanel extends JPanel
               d_partList.addParticle(newParticle);
                 
               // Update the display
-              d_parent.refreshDisplayPartDistPanel();
+              d_parent.refreshDisplayPartLocFrame();
                 
               fit = true;
             }
@@ -550,7 +547,6 @@ public class ComputeParticleLocPanel extends JPanel
         int nofParts = d_rvePartSizeDist.freq3DCalc[ii-1];
         double partDia = 0.0;
         double partDiaCurr = 0.0;
-        double partDiaNext = 0.0;
         boolean fit = false;
         System.out.println("Particle size fraction # = "+ii);
         for (int jj = 0; jj < nofParts; jj++) {
@@ -559,10 +555,6 @@ public class ComputeParticleLocPanel extends JPanel
           System.out.println("Particle # = "+jj);
           partDia = d_rvePartSizeDist.sizeCalc[ii-1];
           partDiaCurr = partDia;
-          if (ii == 1)
-            partDiaNext = 1.0;
-          else
-            partDiaNext = d_rvePartSizeDist.sizeCalc[ii-2]+1.0;
           
           // Iterate till the particle fits in the box
           fit = false;
@@ -609,7 +601,7 @@ public class ComputeParticleLocPanel extends JPanel
                 newParticle.print();
 
                 // Update the display
-                d_parent.refreshDisplayPartDistPanel();
+                d_parent.refreshDisplayPartLocFrame();
                 
                 // if the fit is not perfect fit the remaining volume
                 // again
@@ -618,7 +610,6 @@ public class ComputeParticleLocPanel extends JPanel
                     Math.pow(Math.pow(partDiaCurr,3)-Math.pow(partDia,3),
                             (1.0/3.0));
                   partDiaCurr = partDia;
-                  partDiaNext = 0.0;
                   nofIter = 0;
                   fit = false;
                 } else {
@@ -692,7 +683,7 @@ public class ComputeParticleLocPanel extends JPanel
               //newParticle.print();
 
               // Update the display
-              d_parent.refreshDisplayPartDistPanel();
+              d_parent.refreshDisplayPartLocFrame();
                 
               fit = true;
             }
@@ -842,7 +833,7 @@ public class ComputeParticleLocPanel extends JPanel
               //newParticle.print();
 
               // Update the display
-              d_parent.refreshDisplayPartDistPanel();
+              d_parent.refreshDisplayPartLocFrame();
                 
               fit = true;
             }
@@ -899,7 +890,7 @@ public class ComputeParticleLocPanel extends JPanel
                         //p3.print();
 
                         // Update the display
-                        d_parent.refreshDisplayPartDistPanel();
+                        d_parent.refreshDisplayPartLocFrame();
                       }
                     }
                   }
@@ -922,7 +913,7 @@ public class ComputeParticleLocPanel extends JPanel
                     //p1.print();
 
                     // Update the display
-                    d_parent.refreshDisplayPartDistPanel();
+                    d_parent.refreshDisplayPartLocFrame();
                   }
                 }
               }

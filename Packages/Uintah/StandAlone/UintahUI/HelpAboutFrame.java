@@ -5,7 +5,6 @@
 // Date    : 12/17/1998
 // Mods    :
 //**************************************************************************
-// $Id: HelpAboutFrame.java,v 1.2 2000/02/03 05:36:55 bbanerje Exp $
 
 //************ IMPORTS **************
 import java.awt.*;
@@ -35,7 +34,7 @@ public class HelpAboutFrame extends JFrame implements ActionListener {
 	// Text Area
 	UintahGui.setConstraints(c, GridBagConstraints.BOTH, 
 					1.0, 1.0, 0, 0, 1, 1,1);
-	String text = new String("Generalized Method of Cells");
+	String text = new String("Uintah User Interface");
 	textArea = 
 		new JTextArea(text,20,30);
 	textArea.setEditable(false);
@@ -67,8 +66,3 @@ public class HelpAboutFrame extends JFrame implements ActionListener {
 	textArea.append("University of Utah\n");
     }
 }
-// $Log: HelpAboutFrame.java,v $
-// Revision 1.2  2000/02/03 05:36:55  bbanerje
-// Just a few changes in all the java files .. and some changes in
-// GenerateParticleFrame and Particle and ParticleList
-//

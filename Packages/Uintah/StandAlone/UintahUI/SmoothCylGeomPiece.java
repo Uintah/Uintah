@@ -38,10 +38,28 @@ public class SmoothCylGeomPiece extends GeomPiece {
     } else {
       d_thickness = thickness;
     }
-    d_numRadial = (int) (radius/0.0005);
-    d_numAxial = (int) (length/0.0005);
+    d_numRadial = 0;
+    d_numAxial = 0;
     d_arcStartAngle = 0.0;
     d_arcAngle = 360.0;
+    d_bottom = new Point(center);
+    d_top = new Point(center.getX(), center.getY(), center.getZ()+length);
+  }
+  
+  public SmoothCylGeomPiece(String name, Point center, double radius, 
+                            double thickness, double length, int numRadial,
+                            int numAxial, double arcStart, double arcAngle ) {
+    d_name = new String(name);
+    d_radius = radius;
+    if (thickness == 0.0) {
+      d_thickness = radius;
+    } else {
+      d_thickness = thickness;
+    }
+    d_numRadial = numRadial;
+    d_numAxial = numAxial;
+    d_arcStartAngle = arcStart;
+    d_arcAngle = arcAngle;
     d_bottom = new Point(center);
     d_top = new Point(center.getX(), center.getY(), center.getZ()+length);
   }

@@ -8,15 +8,11 @@
 
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Random;
 import java.util.Vector;
-import java.io.PrintWriter;
-import java.io.*;
 import javax.swing.*;
 
 public class InputGeometryPanel extends JPanel 
-                                implements ItemListener,
-                                           ActionListener {
+                                implements ItemListener {
 
   // Local data
   private double d_domainSize = 0.0;
@@ -106,28 +102,6 @@ public class InputGeometryPanel extends JPanel
   }
 
   //-------------------------------------------------------------------------
-  // Update geometry objects
-  //-------------------------------------------------------------------------
-  public void createPartListGeomObjects() {
-    d_usePartList = true;
-
-    // Don't allow the creation of any more geometry pieces
-    createGeomPiecePanel.usePartList(d_usePartList);
-    createGeomPiecePanel.setEnabled(false);
-
-    // Set up the geometry object panel
-    createGeomObjectPanel.usePartList(d_usePartList);
-    createGeomObjectPanel.disableCreate();
-    createGeomObjectPanel.disableDelete();
-    if (d_partList != null) {
-      d_domainSize = d_partList.getRVESize();
-      createGeomPiecePanel.createPartListGeomPiece();
-      createGeomObjectPanel.addPartListGeomObjectPanel();
-      refreshDisplay();
-    }
-  }
-
-  //-------------------------------------------------------------------------
   // Actions performed when check box state changes
   //-------------------------------------------------------------------------
   public void itemStateChanged(ItemEvent e) {
@@ -135,36 +109,18 @@ public class InputGeometryPanel extends JPanel
     // Get the object that has changed
     Object source = e.getItemSelectable();
 
-    // Get the item that has been selected
-    String item = String.valueOf(e.getItem());
-
     if (source == usePartListCB) {
       if (e.getStateChange() == ItemEvent.SELECTED) {
-        d_usePartList = true;
-        createGeomObjectPanel.usePartList(d_usePartList);
-        createGeomPiecePanel.usePartList(d_usePartList);
-        createGeomPiecePanel.setVisible(false);
 
-        if (d_partList != null) {
-          d_domainSize = d_partList.getRVESize();
-          createGeomPiecePanel.createPartListGeomPiece();
-          refreshDisplay();
-        }
+        // Create a set of geometry objects from the particle list
+        createPartListGeomObjects();
 
       } else {
-        d_usePartList = false;
-        createGeomObjectPanel.usePartList(d_usePartList);
-        createGeomPiecePanel.usePartList(d_usePartList);
-        createGeomPiecePanel.setVisible(true);
+
+        // Delete existing geometry objects from the particle list
+        deletePartListGeomObjects();
       }
     }
-  }
-
-  //-------------------------------------------------------------------------
-  // Actions performed when a button is pressed
-  //-------------------------------------------------------------------------
-  public void actionPerformed(ActionEvent e) {
-
   }
 
   //-------------------------------------------------------------------------
@@ -172,7 +128,54 @@ public class InputGeometryPanel extends JPanel
   //-------------------------------------------------------------------------
   public void refreshDisplay() {
     d_parent.setDomainSize(d_domainSize);
-    d_parent.refreshDisplayGeometryPanel();
+    d_parent.refreshDisplayGeometryFrame();
+  }
+
+  //-------------------------------------------------------------------------
+  // Create geometry objects
+  //-------------------------------------------------------------------------
+  public void createPartListGeomObjects() {
+
+    d_usePartList = true;
+    String simComponent = d_parent.getSimComponent();
+
+    // Don't allow the creation of any more geometry pieces
+    createGeomPiecePanel.setEnabled(false);
+    createGeomPiecePanel.setVisible(false);
+
+    // Set up the geometry object panel
+    createGeomObjectPanel.usePartList(d_usePartList);
+    createGeomObjectPanel.disableCreate();
+    createGeomObjectPanel.disableDelete();
+    if (d_partList != null) {
+      d_domainSize = d_partList.getRVESize();
+      createGeomPiecePanel.createPartListGeomPiece(simComponent);
+      createGeomObjectPanel.addPartListGeomObjectPanel();
+      refreshDisplay();
+    }
+  }
+
+  //-------------------------------------------------------------------------
+  // Delete geometry objects
+  //-------------------------------------------------------------------------
+  public void deletePartListGeomObjects() {
+
+    // Don't allow the creation of any more geometry pieces
+    d_usePartList = false;
+    createGeomPiecePanel.setVisible(true);
+    createGeomPiecePanel.setEnabled(true);
+
+    // Set up the geometry object panel
+    createGeomObjectPanel.usePartList(d_usePartList);
+    createGeomObjectPanel.enableCreate();
+    createGeomObjectPanel.enableDelete();
+
+    if (d_partList != null) {
+      d_domainSize = 100.0;
+      createGeomPiecePanel.deletePartListGeomPiece();
+      createGeomObjectPanel.removePartListGeomObjectPanel();
+      refreshDisplay();
+    }
   }
 
 }
