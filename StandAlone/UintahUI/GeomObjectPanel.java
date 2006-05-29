@@ -9,9 +9,7 @@
 //************ IMPORTS **************
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Random;
 import java.util.Vector;
-import java.io.*;
 import javax.swing.*;
 
 public class GeomObjectPanel extends JPanel 
@@ -19,7 +17,6 @@ public class GeomObjectPanel extends JPanel
 
   // Data
   private boolean d_usePartList = false;
-  private ParticleList d_partList = null;
   private Vector d_geomObj = null;
   private Vector d_geomPiece = null;
   private CreateGeomObjectPanel d_parent = null;
@@ -58,7 +55,6 @@ public class GeomObjectPanel extends JPanel
 
     // Initialize
     d_usePartList = usePartList;
-    d_partList = partList;
     d_geomObj = geomObj;
     d_geomPiece = geomPiece;
     d_numLocalGeomObject = 0;

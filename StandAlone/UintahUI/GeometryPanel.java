@@ -8,10 +8,8 @@
 
 //************ IMPORTS **************
 import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
 import java.util.Vector;
-import java.io.PrintWriter;
 
 //**************************************************************************
 // Class   : GeometryPanel
@@ -23,12 +21,11 @@ public class GeometryPanel extends JPanel {
   private double d_domainSize;
 
   private UintahInputPanel d_parentPanel = null;
-  private ParticleList d_partList = null;
   private Vector d_geomObj = null;
   private Vector d_geomPiece = null;
 
   private InputGeometryPanel inputPanel = null;
-  private DisplayGeometryPanel displayPanel = null;
+  private DisplayGeometryFrame displayFrame = null;
 
   // Constructor
   public GeometryPanel(ParticleList partList, 
@@ -36,7 +33,6 @@ public class GeometryPanel extends JPanel {
                        UintahInputPanel parentPanel) {
 
     // Copy the arguments
-    d_partList = partList;
     d_parentPanel = parentPanel;
     d_domainSize = 100.0;
     d_geomObj = geomObj;
@@ -44,7 +40,9 @@ public class GeometryPanel extends JPanel {
 
     // Create and add the relevant panels
     inputPanel = new InputGeometryPanel(partList, d_geomObj, d_geomPiece, this);
-    displayPanel = new DisplayGeometryPanel(partList, d_geomPiece, this);
+    displayFrame = new DisplayGeometryFrame(partList, d_geomPiece, this);
+    displayFrame.setVisible(false);
+    displayFrame.pack();
  
     // Create a grid bag
     GridBagLayout gb = new GridBagLayout();
@@ -56,11 +54,6 @@ public class GeometryPanel extends JPanel {
                              1.0, 1.0, 0, 0, 1, 1, 5);
     gb.setConstraints(inputPanel,gbc);
     add(inputPanel);
-
-    UintahGui.setConstraints(gbc, GridBagConstraints.CENTER,
-                             1.0, 1.0, 1,0, 1, 1, 5);
-    gb.setConstraints(displayPanel,gbc);
-    add(displayPanel);
   }
 
   //-----------------------------------------------------------------------
@@ -76,7 +69,7 @@ public class GeometryPanel extends JPanel {
   public void updatePanels() {
     validate();
     inputPanel.validate();
-    displayPanel.validate();
+    displayFrame.validate();
     d_parentPanel.updatePanels();
   }
 
@@ -84,8 +77,16 @@ public class GeometryPanel extends JPanel {
     return d_parentPanel;
   }
 
-  public void refreshDisplayGeometryPanel() {
-    displayPanel.refresh();
+  public String getSimComponent() {
+    return d_parentPanel.getSimComponent();
+  }
+
+  public void refreshDisplayGeometryFrame() {
+    displayFrame.refresh();
+  }
+
+  public void setVisibleDisplayGeometryFrame(boolean visible) {
+    displayFrame.setVisible(visible);
   }
 
   public void setDomainSize(double domainSize) {

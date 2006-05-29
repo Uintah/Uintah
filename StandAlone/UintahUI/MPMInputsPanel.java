@@ -12,10 +12,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
-import javax.swing.text.*;
-import javax.swing.event.*;
-import java.text.DecimalFormat;
-import java.util.Vector;
 
 //**************************************************************************
 // Class   : MPMInputsPanel
@@ -40,8 +36,6 @@ public class MPMInputsPanel extends JPanel {
   private boolean d_viscosity = false;
   private boolean d_convert = false;
   private boolean d_impHeat = false;
-
-  private UintahInputPanel d_parent = null;
 
   // Two panels for time inputs and variable save inputs
   private MPMFlagInputPanel mpmFlagInputPanel = null;
@@ -70,7 +64,6 @@ public class MPMInputsPanel extends JPanel {
     d_convert = false;
     d_impHeat = false;
 
-    d_parent = parent;
 
     // Create the panels
     mpmFlagInputPanel = new MPMFlagInputPanel();
@@ -647,9 +640,6 @@ public class MPMInputsPanel extends JPanel {
         // Get the combo box that has been changed
         Object source = e.getItemSelectable();
 
-        // Get the item that has been selected
-        String item = String.valueOf(e.getItem());
-          
         if (source == gridResetCB) {
           if (e.getStateChange() == ItemEvent.SELECTED) {
             d_gridReset = true;

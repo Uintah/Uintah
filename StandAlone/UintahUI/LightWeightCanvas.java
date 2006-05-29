@@ -5,7 +5,6 @@
 // Date    : 12/7/1998
 // Mods    :
 //**************************************************************************
-// $Id: LightWeightCanvas.java,v 1.2 2000/02/03 05:36:57 bbanerje Exp $
 
 //************ IMPORTS **************
 import java.awt.*;
@@ -38,8 +37,3 @@ public class LightWeightCanvas extends JComponent {
     g.drawRect(0,0,d.width,d.height);
   }
 }
-// $Log: LightWeightCanvas.java,v $
-// Revision 1.2  2000/02/03 05:36:57  bbanerje
-// Just a few changes in all the java files .. and some changes in
-// GenerateParticleFrame and Particle and ParticleList
-//

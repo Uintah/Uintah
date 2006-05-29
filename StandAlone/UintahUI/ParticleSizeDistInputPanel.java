@@ -8,7 +8,6 @@
 
 //************ IMPORTS **************
 import java.awt.*;
-import java.awt.event.*;
 import javax.swing.*;
 
 //**************************************************************************
@@ -22,7 +21,7 @@ public class ParticleSizeDistInputPanel extends JPanel {
   private ParticleSize d_partSizeDist = null;
 
   private InputPartDistPanel inputPanel = null;
-  private DisplayPartDistPanel displayPanel = null;
+  private DisplayPartDistFrame displayFrame = null;
 
   // Constructor
   public ParticleSizeDistInputPanel(ParticleSize partSizeDist,
@@ -34,7 +33,9 @@ public class ParticleSizeDistInputPanel extends JPanel {
 
     // Create and add the relevant panels
     inputPanel = new InputPartDistPanel(d_partSizeDist, this);
-    displayPanel = new DisplayPartDistPanel(d_partSizeDist, this);
+    displayFrame = new DisplayPartDistFrame(d_partSizeDist, this);
+    displayFrame.pack();
+    displayFrame.setVisible(false);
 
     // Create a grid bag
     GridBagLayout gb = new GridBagLayout();
@@ -46,18 +47,18 @@ public class ParticleSizeDistInputPanel extends JPanel {
 				    1.0,1.0, 0,0, 1,1,5);
     gb.setConstraints(inputPanel,gbc);
     add(inputPanel);
-
-    UintahGui.setConstraints(gbc, GridBagConstraints.CENTER,
-				    1.0,1.0, 1,0, 1,1,5);
-    gb.setConstraints(displayPanel,gbc);
-    add(displayPanel);
   }
 
   public ParticleGeneratePanel getSuper() {
     return d_parentPanel;
   }
 
-  public void refreshDisplayPartDistPanel() {
-    displayPanel.refresh();
+  public void refreshDisplayPartDistFrame() {
+    displayFrame.refresh();
+  }
+
+  public void setVisibleDisplayFrame(boolean visible) {
+    System.out.println("part size dist set visible = "+visible);
+    displayFrame.setVisible(visible);
   }
 }

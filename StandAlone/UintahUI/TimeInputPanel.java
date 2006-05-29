@@ -11,10 +11,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
-import javax.swing.text.*;
-import javax.swing.event.*;
-import java.text.DecimalFormat;
-import java.util.Vector;
 
 public class TimeInputPanel extends JPanel 
                             implements ItemListener {
@@ -61,12 +57,10 @@ public class TimeInputPanel extends JPanel
     titleEntry = new JTextField("Test Simulation",20);
     JLabel simCompLabel = new JLabel("Simulation Component");
     simCompCB = new JComboBox();
+    simCompCB.addItem("Select one");
     simCompCB.addItem("MPM");
     simCompCB.addItem("ICE");
     simCompCB.addItem("MPMICE");
-    simCompCB.addItem("RMPMICE");
-    simCompCB.addItem("SMPM");
-    simCompCB.addItem("SMPMICE");
     panel1.add(titleLabel);
     panel1.add(titleEntry);
     panel1.add(simCompLabel);
