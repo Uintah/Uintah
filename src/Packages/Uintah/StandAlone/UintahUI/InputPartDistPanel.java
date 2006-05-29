@@ -17,7 +17,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
-import javax.swing.text.*;
 import javax.swing.event.*;
 import java.text.DecimalFormat;
 
@@ -41,7 +40,6 @@ public class InputPartDistPanel extends JPanel {
   private ParticleSize d_partSizeDist = null;
   private ParticleSizeDistInputPanel d_parent = null;
 
-  private boolean alreadySaved = false;
   private boolean alreadyCalculated = false;
 
   // Components that are realized
@@ -74,7 +72,6 @@ public class InputPartDistPanel extends JPanel {
     //setLocation(500,50);
 
     // Set the flags to be false
-    alreadySaved = false;
     alreadyCalculated = false;
 
     // There are six panels that contain various components
@@ -216,7 +213,6 @@ public class InputPartDistPanel extends JPanel {
       else if (e.getActionCommand() == "save") {
         if (!alreadyCalculated) calcParticleDist();
         saveToFile();
-        alreadySaved = true;
       }
       else if (e.getActionCommand() == "calc") {
         calcParticleDist();
@@ -244,9 +240,8 @@ public class InputPartDistPanel extends JPanel {
       // st.parseNumbers();
       st.commentChar('#');
       st.quoteChar('"');
-      int ttval = 0;
       int count = 0;
-      while ((ttval = st.nextToken()) != StreamTokenizer.TT_EOF) {
+      while ( st.nextToken() != StreamTokenizer.TT_EOF) {
         count++;
         switch (count) {
         case 1: 
@@ -302,7 +297,7 @@ public class InputPartDistPanel extends JPanel {
     updatePartSizeDistFromInput();
 
     // Update the histogram display
-    d_parent.refreshDisplayPartDistPanel();
+    d_parent.refreshDisplayPartDistFrame();
   }
 
   //  Update the d_partSizeDist data structure
@@ -426,7 +421,7 @@ public class InputPartDistPanel extends JPanel {
     }
 
     // Update the histogram display
-    d_parent.refreshDisplayPartDistPanel();
+    d_parent.refreshDisplayPartDistFrame();
   }
 
   // Calculate the particle distribution to be used in the generation
@@ -564,7 +559,7 @@ public class InputPartDistPanel extends JPanel {
     System.out.println(" Total:  2D = "+totBalls2D+ " 3D = "+totBalls3D);
 
     // Update the histogram display
-    d_parent.refreshDisplayPartDistPanel();
+    d_parent.refreshDisplayPartDistFrame();
   }
 
   // Get the particle size distribution data

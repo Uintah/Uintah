@@ -5,7 +5,6 @@
 
 import java.lang.System;
 import java.io.PrintWriter;
-import java.util.Vector;
 
 public class DifferenceGeomPiece extends GeomPiece {
 
@@ -42,7 +41,6 @@ public class DifferenceGeomPiece extends GeomPiece {
 
     if (d_geomPiece1 == null || d_geomPiece2 == null) return;
 
-    String tab1 = new String("  ");
     System.out.println("<difference label=\""+d_name+"\">");
     d_geomPiece1.print();
     d_geomPiece2.print();

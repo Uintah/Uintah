@@ -12,9 +12,6 @@ import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
 import javax.swing.*;
-import javax.swing.text.*;
-import javax.swing.event.*;
-import java.text.DecimalFormat;
 import java.util.Vector;
 
 //**************************************************************************
@@ -25,7 +22,6 @@ public class ICEInputsPanel extends JPanel {
   // Static variables
 
   // Data
-  private UintahInputPanel d_parent = null;
 
   // Actual Panel
   private ICEParamInputPanel iceParamInputPanel = null;
@@ -38,7 +34,6 @@ public class ICEInputsPanel extends JPanel {
   public ICEInputsPanel(UintahInputPanel parent) {
 
     // Initialize local variables
-    d_parent = parent;
 
     // Create the panels
     iceParamInputPanel = new ICEParamInputPanel();
@@ -305,9 +300,6 @@ public class ICEInputsPanel extends JPanel {
         // Get the combo box that has been changed
         Object source = e.getItemSelectable();
 
-        // Get the item that has been selected
-        String item = String.valueOf(e.getItem());
-          
         if (source == compatFluxCB) {
           if (e.getStateChange() == ItemEvent.SELECTED) {
             d_compatFlux = true;

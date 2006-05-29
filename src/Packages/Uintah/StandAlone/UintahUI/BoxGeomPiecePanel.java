@@ -9,9 +9,6 @@
 //************ IMPORTS **************
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Random;
-import java.util.Vector;
-import java.io.*;
 import javax.swing.*;
 
 public class BoxGeomPiecePanel extends JPanel 

@@ -17,9 +17,9 @@ SOURCE_FILES = \
 	DecimalField.java \
 	DecimalVectorField.java \
 	DifferenceGeomPiece.java \
-	DisplayGeometryPanel.java \
-	DisplayPartDistPanel.java \
-	DisplayParticleLocPanel.java \
+	DisplayGeometryFrame.java \
+	DisplayPartDistFrame.java \
+	DisplayParticleLocFrame.java \
 	ElasticPlasticMaterialPanel.java \
 	GeneralInputsPanel.java \
 	GeometryPanel.java \
@@ -31,6 +31,7 @@ SOURCE_FILES = \
 	HypoElasticMaterialPanel.java \
 	ICEInputsPanel.java \
 	ICEMaterialsPanel.java \
+	ICEMaterialInputPanel.java \
 	InputGeometryPanel.java \
 	InputPartDistPanel.java \
 	IntegerField.java \
@@ -40,6 +41,7 @@ SOURCE_FILES = \
 	MPMInputsPanel.java \
 	MPMMaterialsPanel.java \
 	MPMMaterialInputPanel.java \
+	MPMICEExchangePanel.java \
 	Packing.java \
 	ParticleGeneratePanel.java \
 	Particle.java \
@@ -73,9 +75,9 @@ all: UintahGui \
 	DecimalField\
 	DecimalVectorField\
 	DifferenceGeomPiece \
-	DisplayGeometryPanel \
-	DisplayPartDistPanel\
-	DisplayParticleLocPanel\
+	DisplayGeometryFrame \
+	DisplayPartDistFrame\
+	DisplayParticleLocFrame\
 	ElasticPlasticMaterialPanel \
 	GeneralInputsPanel\
 	GeometryPanel \
@@ -87,6 +89,7 @@ all: UintahGui \
 	HypoElasticMaterialPanel \
 	ICEInputsPanel \
 	ICEMaterialsPanel \
+	ICEMaterialInputPanel \
 	InputGeometryPanel \
 	InputPartDistPanel\
 	IntegerField \
@@ -96,6 +99,7 @@ all: UintahGui \
 	MPMInputsPanel\
 	MPMMaterialsPanel \
 	MPMMaterialInputPanel \
+	MPMICEExchangePanel \
 	Packing\
 	ParticleGeneratePanel\
 	Particle\
@@ -117,160 +121,166 @@ all: UintahGui \
 
 UI: UintahGui
 
-BoxGeomPiece:
+BoxGeomPiece: BoxGeomPiece.java
 	${JAVAC} ${srcdir}/BoxGeomPiece.java
 
-BoxGeomPiecePanel:
+BoxGeomPiecePanel: BoxGeomPiecePanel.java
 	${JAVAC} ${srcdir}/BoxGeomPiecePanel.java
 
-ComputeParticleLocPanel:
+ComputeParticleLocPanel: ComputeParticleLocPanel.java 
 	${JAVAC} ${srcdir}/ComputeParticleLocPanel.java
 
-CompNeoHookMaterialPanel:
+CompNeoHookMaterialPanel: CompNeoHookMaterialPanel.java
 	${JAVAC} ${srcdir}/CompNeoHookMaterialPanel.java
 
-CreateGeomObjectPanel:
+CreateGeomObjectPanel: CreateGeomObjectPanel.java
 	${JAVAC} ${srcdir}/CreateGeomObjectPanel.java
 
-CreateGeomPiecePanel:
+CreateGeomPiecePanel: CreateGeomPiecePanel.java
 	${JAVAC} ${srcdir}/CreateGeomPiecePanel.java
 
-CylinderGeomPiece:
+CylinderGeomPiece: CylinderGeomPiece.java
 	${JAVAC} ${srcdir}/CylinderGeomPiece.java
 
-DecimalField:
+DecimalField: DecimalField.java
 	${JAVAC} ${srcdir}/DecimalField.java 
 
-DecimalVectorField:
+DecimalVectorField: DecimalVectorField.java
 	${JAVAC} ${srcdir}/DecimalVectorField.java 
 
-DifferenceGeomPiece:
+DifferenceGeomPiece: DifferenceGeomPiece.java
 	${JAVAC} ${srcdir}/DifferenceGeomPiece.java
 
-DisplayGeometryPanel:
-	${JAVAC} ${srcdir}/DisplayGeometryPanel.java 
+DisplayGeometryFrame: DisplayGeometryFrame.java
+	${JAVAC} ${srcdir}/DisplayGeometryFrame.java 
 
-DisplayPartDistPanel:
-	${JAVAC} ${srcdir}/DisplayPartDistPanel.java 
+DisplayPartDistFrame: DisplayPartDistFrame.java
+	${JAVAC} ${srcdir}/DisplayPartDistFrame.java 
 
-DisplayParticleLocPanel:
-	${JAVAC} ${srcdir}/DisplayParticleLocPanel.java
+DisplayParticleLocFrame: DisplayParticleLocFrame.java
+	${JAVAC} ${srcdir}/DisplayParticleLocFrame.java
 
-ElasticPlasticMaterialPanel:
+ElasticPlasticMaterialPanel: ElasticPlasticMaterialPanel.java
 	${JAVAC} ${srcdir}/ElasticPlasticMaterialPanel.java
 
-GeneralInputsPanel:
+GeneralInputsPanel: GeneralInputsPanel.java
 	${JAVAC} ${srcdir}/GeneralInputsPanel.java 
 
-GeometryPanel:
+GeometryPanel: GeometryPanel.java
 	${JAVAC} ${srcdir}/GeometryPanel.java 
 
-GeomObject:
+GeomObject: GeomObject.java
 	${JAVAC} ${srcdir}/GeomObject.java 
 
-GeomObjectPanel:
+GeomObjectPanel: GeomObjectPanel.java
 	${JAVAC} ${srcdir}/GeomObjectPanel.java 
 
-GeomPiece:
+GeomPiece: GeomPiece.java
 	${JAVAC} ${srcdir}/GeomPiece.java 
 
-GeomPiecePanel:
+GeomPiecePanel: GeomPiecePanel.java
 	${JAVAC} ${srcdir}/GeomPiecePanel.java 
 
-HelpAboutFrame:
+HelpAboutFrame: HelpAboutFrame.java
 	${JAVAC} ${srcdir}/HelpAboutFrame.java 
 
-HypoElasticMaterialPanel:
+HypoElasticMaterialPanel: HypoElasticMaterialPanel.java
 	${JAVAC} ${srcdir}/HypoElasticMaterialPanel.java
 
-ICEInputsPanel:
+ICEInputsPanel: ICEInputsPanel.java
 	${JAVAC} ${srcdir}/ICEInputsPanel.java 
 
-ICEMaterialsPanel:
+ICEMaterialsPanel: ICEMaterialsPanel.java
 	${JAVAC} ${srcdir}/ICEMaterialsPanel.java 
 
-InputGeometryPanel:
+ICEMaterialInputPanel: ICEMaterialInputPanel.java
+	${JAVAC} ${srcdir}/ICEMaterialInputPanel.java 
+
+InputGeometryPanel: InputGeometryPanel.java
 	${JAVAC} ${srcdir}/InputGeometryPanel.java 
 
-InputPartDistPanel:
+InputPartDistPanel: InputPartDistPanel.java
 	${JAVAC} ${srcdir}/InputPartDistPanel.java 
 
-IntegerField:
+IntegerField: IntegerField.java
 	${JAVAC} ${srcdir}/IntegerField.java
 
-IntegerVectorField:
+IntegerVectorField: IntegerVectorField.java
 	${JAVAC} ${srcdir}/IntegerVectorField.java
 
-LightWeightCanvas:
+LightWeightCanvas: LightWeightCanvas.java
 	${JAVAC} ${srcdir}/LightWeightCanvas.java 
 
-MPMContactInputPanel:
+MPMContactInputPanel: MPMContactInputPanel.java
 	${JAVAC} ${srcdir}/MPMContactInputPanel.java 
 
-MPMInputsPanel:
+MPMInputsPanel: MPMInputsPanel.java
 	${JAVAC} ${srcdir}/MPMInputsPanel.java 
 
-MPMMaterialsPanel:
+MPMMaterialsPanel: MPMMaterialsPanel.java
 	${JAVAC} ${srcdir}/MPMMaterialsPanel.java 
 
-MPMMaterialInputPanel:
+MPMMaterialInputPanel: MPMMaterialInputPanel.java
 	${JAVAC} ${srcdir}/MPMMaterialInputPanel.java 
 
-Packing:
+MPMICEExchangePanel: MPMICEExchangePanel.java
+	${JAVAC} ${srcdir}/MPMICEExchangePanel.java
+
+Packing: Packing.java
 	${JAVAC} ${srcdir}/Packing.java 
 
-ParticleGeneratePanel:
+ParticleGeneratePanel: ParticleGeneratePanel.java
 	${JAVAC} ${srcdir}/ParticleGeneratePanel.java 
 
-Particle:
+Particle: Particle.java
 	${JAVAC} ${srcdir}/Particle.java 
 
-ParticleList:
+ParticleList: ParticleList.java
 	${JAVAC} ${srcdir}/ParticleList.java 
 
-ParticleLocGeneratePanel:
+ParticleLocGeneratePanel: ParticleLocGeneratePanel.java
 	${JAVAC} ${srcdir}/ParticleLocGeneratePanel.java 
 
-ParticleSizeDistInputPanel:
+ParticleSizeDistInputPanel: ParticleSizeDistInputPanel.java
 	${JAVAC} ${srcdir}/ParticleSizeDistInputPanel.java 
 
-ParticleSize:
+ParticleSize: ParticleSize.java
 	${JAVAC} ${srcdir}/ParticleSize.java 
 
-Point:
+Point: Point.java
 	${JAVAC} ${srcdir}/Point.java 
 
-PolygonDouble:
+PolygonDouble: PolygonDouble.java
 	${JAVAC} ${srcdir}/PolygonDouble.java 
 
-RigidMaterialPanel:
+RigidMaterialPanel: RigidMaterialPanel.java
 	${JAVAC} ${srcdir}/RigidMaterialPanel.java 
 
-SmoothCylGeomPiece:
+SmoothCylGeomPiece: SmoothCylGeomPiece.java
 	${JAVAC} ${srcdir}/SmoothCylGeomPiece.java
 
-TimeInputPanel:
+TimeInputPanel: TimeInputPanel.java
 	${JAVAC} ${srcdir}/TimeInputPanel.java
 
-UintahGui:
+UintahGui: UintahGui.java
 	${JAVAC} ${srcdir}/UintahGui.java 
 
-UintahInputPanel:
+UintahInputPanel: UintahInputPanel.java
 	${JAVAC} ${srcdir}/UintahInputPanel.java 
 
-UnionGeomPiece:
+UnionGeomPiece: UnionGeomPiece.java
 	${JAVAC} ${srcdir}/UnionGeomPiece.java
 
-VariableSaveInputPanel:
+VariableSaveInputPanel: VariableSaveInputPanel.java
 	${JAVAC} ${srcdir}/VariableSaveInputPanel.java
 
-Vector3D:
+Vector3D: Vector3D.java
 	${JAVAC} ${srcdir}/Vector3D.java 
 
-ViscoSCRAMMaterialPanel:
+ViscoSCRAMMaterialPanel: ViscoSCRAMMaterialPanel.java
 	${JAVAC} ${srcdir}/ViscoSCRAMMaterialPanel.java
 
-Voronoi:
+Voronoi: Voronoi.java
 	${JAVAC} ${srcdir}/Voronoi.java 
 
 clean: 

@@ -6,7 +6,6 @@
 // Mods    :
 //**************************************************************************
 
-//************ IMPORTS **************
 import java.awt.*;
 import javax.swing.*;
 import javax.swing.event.*;
@@ -31,11 +30,12 @@ public class UintahInputPanel extends JPanel
   // Data that may be needed later
   private JTabbedPane uintahTabbedPane = null;
   private GeneralInputsPanel generalInpPanel = null;
+  private GeometryPanel geomPanel = null;
   private MPMInputsPanel mpmInpPanel = null;
   private MPMMaterialsPanel mpmMatPanel = null;
   private ICEInputsPanel iceInpPanel = null;
   private ICEMaterialsPanel iceMatPanel = null;
-  private GeometryPanel geomPanel = null;
+  private MPMICEExchangePanel exchangePanel = null;
 
   // Constructor
   public UintahInputPanel(ParticleList particleList,
@@ -45,7 +45,7 @@ public class UintahInputPanel extends JPanel
     d_mpmMat = new Vector();
     d_iceMat = new Vector();
     d_geomObj = new Vector();
-    d_simComponent = new String("mpm");
+    d_simComponent = new String("none");
 
     // Copy the arguments
     d_partList = particleList;
@@ -61,6 +61,7 @@ public class UintahInputPanel extends JPanel
     mpmMatPanel = new MPMMaterialsPanel(d_geomObj, d_mpmMat, this); 
     iceInpPanel = new ICEInputsPanel(this); 
     iceMatPanel = new ICEMaterialsPanel(d_geomObj, d_iceMat, this); 
+    exchangePanel = new MPMICEExchangePanel(d_mpmMat, d_iceMat, this);
     /*
     GridBCPanel gridBCPanel = new GridBCPanel(); 
     */
@@ -78,6 +79,8 @@ public class UintahInputPanel extends JPanel
                           iceInpPanel, null);
     uintahTabbedPane.addTab("ICE Materials", null,
                           iceMatPanel, null);
+    uintahTabbedPane.addTab("Exchange", null,
+                          exchangePanel, null);
     /*
     uintahTabbedPane.addTab("Grid and BC Inputs", null,
                           gridBCPanel, null);
@@ -95,30 +98,56 @@ public class UintahInputPanel extends JPanel
     gb.setConstraints(uintahTabbedPane, gbc);
     add(uintahTabbedPane);
     
+    // Set all except general inputs as disabled.  The relevant tabs
+    // are enabled once the simulation component is known
+    int numTabs = uintahTabbedPane.getTabCount();
+    for (int ii=1; ii < numTabs; ++ii) {
+      uintahTabbedPane.setEnabledAt(ii, false);
+    }
+
     // Add tab listener
     uintahTabbedPane.addChangeListener(this);
 
-    // Set ice inputs as disabled.  The relevant tabs
-    // are enabled once the simulation component is known
-    uintahTabbedPane.setEnabledAt(4, false);
-    uintahTabbedPane.setEnabledAt(5, false);
   }
 
   // Refresh when tabs are selected
   public void stateChanged(ChangeEvent e) {
 
-    // When a tab is changed, create a MPM material if a particle list
-    // is being used
+    // If the selected tab is the geom panel then turn the display 
+    // frame visible
+    if (uintahTabbedPane.getSelectedIndex() == 1) {
+      geomPanel.setVisibleDisplayGeometryFrame(true);
+    } 
+    
+    // When a tab is changed, create MPM materials or MPM+ICE
+    // material if a particle list is being used
     int numParticles = d_partList.size();
     if (numParticles > 0) {
-      mpmMatPanel.createPartListMPMMaterial(d_simComponent);
+      if (d_simComponent.equals("mpm")) {
+        mpmMatPanel.createPartListMPMMaterial(d_simComponent);
+      } else if (d_simComponent.equals("mpmice")) {
+        iceMatPanel.createPartListICEMaterial(d_simComponent);
+      }
     }
     generalInpPanel.refresh();
+    geomPanel.refresh();
     mpmInpPanel.refresh();
     mpmMatPanel.refresh();
     iceInpPanel.refresh();
     iceMatPanel.refresh();
-    geomPanel.refresh();
+
+    // Update the materials in the exchange panel
+    exchangePanel.updateMaterials(d_mpmMat, d_iceMat);
+  }
+
+  // Make display frame visible
+  public void setVisibleDisplayFrame(boolean visible) {
+    geomPanel.setVisibleDisplayGeometryFrame(visible);
+  }
+
+  // Get the simulation component
+  public String getSimComponent() {
+    return d_simComponent;
   }
 
   // Enable the tabs depending on the chosen simulation component
@@ -126,19 +155,26 @@ public class UintahInputPanel extends JPanel
     
     d_simComponent = simComponent;
     if (d_simComponent.equals("mpm")) {
+      uintahTabbedPane.setEnabledAt(1, true);
       uintahTabbedPane.setEnabledAt(2, true);
       uintahTabbedPane.setEnabledAt(3, true);
       uintahTabbedPane.setEnabledAt(4, false);
       uintahTabbedPane.setEnabledAt(5, false);
     } else if (d_simComponent.equals("ice")) {
+      uintahTabbedPane.setEnabledAt(1, true);
       uintahTabbedPane.setEnabledAt(2, false);
       uintahTabbedPane.setEnabledAt(3, false);
       uintahTabbedPane.setEnabledAt(4, true);
       uintahTabbedPane.setEnabledAt(5, true);
     } else if (d_simComponent.equals("mpmice")) {
       int numTabs = uintahTabbedPane.getTabCount();
-      for (int ii=2; ii < numTabs; ++ii) {
+      for (int ii=1; ii < numTabs; ++ii) {
         uintahTabbedPane.setEnabledAt(ii, true);
+      }
+    } else {
+      int numTabs = uintahTabbedPane.getTabCount();
+      for (int ii=1; ii < numTabs; ++ii) {
+        uintahTabbedPane.setEnabledAt(ii, false);
       }
     }
   }
@@ -147,11 +183,6 @@ public class UintahInputPanel extends JPanel
   public void updatePanels() {
     validate();
     d_parent.updatePanels();
-  }
-
-  // Update geometry objects
-  public void createPartListGeomObjects() {
-    geomPanel.createPartListGeomObjects();
   }
 
   // Write in Uintah format
@@ -180,16 +211,21 @@ public class UintahInputPanel extends JPanel
     for (int ii = 0; ii < numMPMMat; ++ii) {
       mpmMatPanel.writeUintah(pw, tab2, ii);
     }
+    mpmMatPanel.writeUintahContact(pw, tab2);
     pw.println(tab1+"</MPM>");
     pw.println(tab);
 
     pw.println(tab1+"<ICE>");
     int numICEMat = d_iceMat.size();
     for (int ii = 0; ii < numICEMat; ++ii) {
-      //iceMatPanel.writeUintah(pw, tab2, ii);
+      iceMatPanel.writeUintah(pw, tab2, ii);
     }
     pw.println(tab1+"</ICE>");
     pw.println(tab);
+    
+    pw.println(tab1+"<exchange_properties>");
+    exchangePanel.writeUintah(pw, tab2);
+    pw.println(tab1+"</exchange_properties>");
 
     pw.println(tab+"</MaterialProperties>");
     pw.println(tab);

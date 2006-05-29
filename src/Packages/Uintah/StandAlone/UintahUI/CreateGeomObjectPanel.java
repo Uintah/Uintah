@@ -9,9 +9,7 @@
 //************ IMPORTS **************
 import java.awt.*;
 import java.awt.event.*;
-import java.util.Random;
 import java.util.Vector;
-import java.io.*;
 import javax.swing.*;
 
 public class CreateGeomObjectPanel extends JPanel 
@@ -128,14 +126,48 @@ public class CreateGeomObjectPanel extends JPanel
     geomObjectTabPane.addTab(particleTabName, particleGeomObjectPanel);
 
     // Add the remainder
-    String remainderTabName = new String("Remainder");
+    String remainderTabName = new String("Outside Particles");
     GeomObjectPanel remainderGeomObjectPanel = 
       new GeomObjectPanel(d_usePartList, d_partList, 
                           d_geomObj, d_geomPiece, this);
-    GeomPiece gp = (GeomPiece) d_geomPiece.elementAt(numPart+1);
-    remainderGeomObjectPanel.addGeomPiece(gp);
+    GeomPiece gpOuter = (GeomPiece) d_geomPiece.elementAt(numPart);
+    remainderGeomObjectPanel.addGeomPiece(gpOuter);
     remainderGeomObjectPanel.selectAllGeomPiece();
     geomObjectTabPane.addTab(remainderTabName, remainderGeomObjectPanel);
+
+    // Add the inner stuff
+    double partThick = ((Particle) d_partList.getParticle(0)).getThickness();
+    if (partThick > 0.0) {
+      String insideTabName = new String("Inside Particles");
+      GeomObjectPanel insideGeomObjectPanel = 
+        new GeomObjectPanel(d_usePartList, d_partList, 
+                            d_geomObj, d_geomPiece, this);
+      GeomPiece gpInner = (GeomPiece) d_geomPiece.elementAt(numPart+1);
+      insideGeomObjectPanel.addGeomPiece(gpInner);
+      insideGeomObjectPanel.selectAllGeomPiece();
+      geomObjectTabPane.addTab(insideTabName, insideGeomObjectPanel);
+    }
+
+    // Update
+    validate();
+    updatePanels();
+  }
+
+  //---------------------------------------------------------------------
+  // Remove geom object panels for a particle list
+  //---------------------------------------------------------------------
+  public void removePartListGeomObjectPanel() {
+
+    // Set the usePartList flag to true
+    d_usePartList = false;
+
+    // Remove any existing geom objects
+    if (d_geomObj.size() > 0) {
+      d_geomObj.removeAllElements();
+    }
+
+    // Remove any geom object panel tabs
+    geomObjectTabPane.removeAll(); 
 
     // Update
     validate();
@@ -158,7 +190,9 @@ public class CreateGeomObjectPanel extends JPanel
     } else if (e.getActionCommand() == "del") {
       int index = geomObjectTabPane.getSelectedIndex();
       geomObjectTabPane.removeTabAt(index);
-      d_geomObj.removeElementAt(index);
+      if (d_geomObj.size() > 0) {
+        d_geomObj.removeElementAt(index);
+      }
       validate();
       updatePanels();
     }

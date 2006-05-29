@@ -15,17 +15,22 @@ import javax.swing.event.*;
 // Class   : ParticleGeneratePanel
 // Purpose : Creates a panel for particle generation
 //**************************************************************************
-public class ParticleGeneratePanel extends JPanel {
+public class ParticleGeneratePanel extends JPanel 
+                                   implements ChangeListener{
 
   // Data
   private ParticleList d_particleList = null;
   private ParticleSize d_partSizeDist = null;
 
+  private ParticleSizeDistInputPanel particleSizeInputPanel = null;
+  private ParticleLocGeneratePanel particleLocGenPanel = null;
+
   // Data that may be needed later
-  JTabbedPane partTabbedPane= null;
+  private JTabbedPane partTabbedPane = null;
 
   // Constructor
-  public ParticleGeneratePanel(ParticleList particleList) {
+  public ParticleGeneratePanel(ParticleList particleList,
+                               UintahGui parent) {
 
     // Copy the arguments
     d_particleList = particleList;
@@ -37,9 +42,9 @@ public class ParticleGeneratePanel extends JPanel {
     partTabbedPane = new JTabbedPane();
 
     // Create the panels to be added to the tabbed pane
-    ParticleSizeDistInputPanel particleSizeInputPanel = 
+    particleSizeInputPanel = 
       new ParticleSizeDistInputPanel(d_partSizeDist, this);
-    ParticleLocGeneratePanel particleLocGenPanel = 
+    particleLocGenPanel = 
       new ParticleLocGeneratePanel(d_particleList, d_partSizeDist, this);
 
     // Add the tabs
@@ -59,10 +64,9 @@ public class ParticleGeneratePanel extends JPanel {
 				    1.0,1.0, 0,1, 1,1,5);
     gb.setConstraints(partTabbedPane, gbc);
     add(partTabbedPane);
-    
-    // Add tab listener
-    TabListener tabListener = new TabListener();
-    partTabbedPane.addChangeListener(tabListener);
+
+    // Add the change listener
+    partTabbedPane.addChangeListener(this);
   }
 
   public ParticleList getParticleList() {
@@ -70,8 +74,27 @@ public class ParticleGeneratePanel extends JPanel {
   }
 
   // Tab listener
-  class TabListener implements ChangeListener {
-    public void stateChanged(ChangeEvent e) {
+  public void stateChanged(ChangeEvent e) {
+
+    int curTab = partTabbedPane.getSelectedIndex();
+    if (curTab == 0) {
+      System.out.println("part gen state changed : display = true");
+      particleSizeInputPanel.setVisibleDisplayFrame(true);
+    } else {
+      System.out.println("part gen state changed : display = false");
+      particleLocGenPanel.setVisibleDisplayFrame(true);
+    }
+  }
+
+  // Set the display frame visible
+  public void setVisibleDisplayFrame(boolean visible) {
+    if (visible) {
+      System.out.println("part gen set visible: display = true");
+      particleSizeInputPanel.setVisibleDisplayFrame(true);
+    } else {
+      System.out.println("part gen set visible: display = false");
+      particleSizeInputPanel.setVisibleDisplayFrame(false);
+      particleLocGenPanel.setVisibleDisplayFrame(false);
     }
   }
 }

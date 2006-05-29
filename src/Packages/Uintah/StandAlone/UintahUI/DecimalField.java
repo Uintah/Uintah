@@ -7,10 +7,8 @@
 //**************************************************************************
 
 //************ IMPORTS **************
-import java.awt.*;
 import java.text.Format;
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.text.ParseException;
 import javax.swing.*;
 import javax.swing.text.*;

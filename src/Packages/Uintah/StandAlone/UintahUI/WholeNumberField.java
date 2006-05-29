@@ -1,22 +1,21 @@
 //**************************************************************************
-// Program : IntegerField.java
-// Purpose : An extension of JTextField to take care of integers
+// Program : WholeNumberField.java
+// Purpose : An extension of JTextField to take care of whole numbers
 // Author  : Biswajit Banerjee
 // Date    : 12/7/1998
 // Mods    :
 //**************************************************************************
 
-//************ IMPORTS **************
 import java.text.NumberFormat;
 import java.text.ParseException;
 import javax.swing.*;
 import javax.swing.text.*;
 
 //**************************************************************************
-// Class   : IntegerField
-// Purpose : Creates a text field that validates integers
+// Class   : WholeNumberField
+// Purpose : Creates a text field that validates whole numbers
 //**************************************************************************
-public class IntegerField extends JTextField {
+public class WholeNumberField extends JTextField {
 
   // Data
   private NumberFormat integerFormatter;
@@ -24,7 +23,7 @@ public class IntegerField extends JTextField {
   // Data that may be needed later
 
   // Constructor
-  public IntegerField(int value, int columns) {
+  public WholeNumberField(int value, int columns) {
     
     // Set the size of the component
     super(columns);
@@ -52,11 +51,11 @@ public class IntegerField extends JTextField {
 
   // Create the related document
   protected Document createDefaultModel() {
-    return new IntegerDocument();
+    return new WholeNumberDocument();
   }
 
-  // Inner class for integer document
-  protected class IntegerDocument extends PlainDocument {
+  // Inner class for whole number document
+  protected class WholeNumberDocument extends PlainDocument {
 
     // The insert string method
     public void insertString(int offs, String src, AttributeSet a)
