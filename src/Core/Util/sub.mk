@@ -41,6 +41,7 @@ SRCS     += \
 	$(SRCDIR)/Environment.cc        \
 	$(SRCDIR)/FileUtils.cc          \
 	$(SRCDIR)/ProgressReporter.cc   \
+	$(SRCDIR)/RegressionReporter.cc \
 	$(SRCDIR)/SimpleProfiler.cc     \
 	$(SRCDIR)/SizeTypeConvert.cc    \
 	$(SRCDIR)/RWS.cc                \
@@ -49,7 +50,7 @@ SRCS     += \
  	$(SRCDIR)/Signals.cc            \
 	$(SRCDIR)/Timer.cc              \
 	$(SRCDIR)/TypeDescription.cc    \
-  	$(SRCDIR)/ProgressiveWarning.cc
+  $(SRCDIR)/ProgressiveWarning.cc
 
 PSELIBS := Core/Containers Core/Exceptions Core/Thread
 

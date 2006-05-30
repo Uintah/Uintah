@@ -180,6 +180,7 @@ CompileInfo::CompileInfo(const string &fn, const string &bcn,
   template_arg_(tcdec),
   pre_include_extra_(""),
   post_include_extra_(""),
+  keep_library_(true),
   ref_cnt(0)
 {
 }
@@ -756,10 +757,16 @@ DynamicLoader::cleanup_failed_compile(CompileInfoHandle info)
   const string full_o = base + "o";
   unlink(full_o.c_str());
 
-  const string full_so = base + "so";
+  const string full_so = base + ext;
   unlink(full_so.c_str());
 }
 
+
+void
+DynamicLoader::cleanup_compile(CompileInfoHandle info)
+{
+ cleanup_failed_compile(info);
+}
 
 //! DynamicLoader::create_cc
 //!

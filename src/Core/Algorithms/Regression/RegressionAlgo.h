@@ -26,31 +26,38 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef CORE_ALGORITHMS_UTIL_DYNAMICALGO
-#define CORE_ALGORITHMS_UTIL_DYNAMICALGO 1
 
-// Define a set of useful includes which every dynamic algorithm can use
+#ifndef CORE_ALGORITHMS_REGRESSION_REGRESSIONALGO_H
+#define CORE_ALGORITHMS_REGRESSION_REGRESSIONALGO_H 1
 
-#include <sgi_stl_warnings_off.h>
-#include <string>
-#include <vector>
-#include <sgi_stl_warnings_on.h>
+#include <Core/Algorithms/Util/AlgoLibrary.h>
+#include <Core/Algorithms/Regression/share.h>
 
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
-#include <Core/Util/DynamicCompilation.h>
-#include <Core/Util/ProgressReporter.h>
-#include <Core/Util/RegressionReporter.h>
+namespace SCIRunAlgo {
 
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/Mesh.h>
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/String.h>
-#include <Core/Datatypes/NrrdData.h>
+using namespace SCIRun;
 
-#include <Core/Algorithms/Util/FieldInformation.h>
-#include <Core/Algorithms/Util/AlgoList.h>
+class RegressionAlgo : public AlgoLibrary {
+
+  public:
+    // Constructor
+    // If no error reporting is required, initialize with a zero pointer
+    RegressionAlgo(ProgressReporter* pr); 
+
+    // Regression Testing depends on comparing with known outputs
+    // The following functions are for comparing
+    
+    // The functions return an error if the compare function failed or if
+    // the fields/matrices/nrrds/strings/bundles are not equal.
+    
+    bool CompareFields(FieldHandle& field1, FieldHandle& field2);
+    bool CompareMatrices(MatrixHandle& matrix1, MatrixHandle& matrix2);
+    bool CompareNrrds(NrrdDataHandle& nrrd1, NrrdDataHandle& nrrd2);
+    bool CompareStrings(StringHandle& string1, StringHandle& string2);
+    bool CompareBundles(BundleHandle& bundle1, BundleHandle& bundle2);
+
+};
+
+} // SCIRunAlgo
 
 #endif

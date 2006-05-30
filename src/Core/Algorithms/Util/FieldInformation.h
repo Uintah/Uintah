@@ -39,6 +39,8 @@
 
 namespace SCIRun {
 
+class SCISHARE FieldInformation;
+
 class SCISHARE FieldInformation {
   
   public:
@@ -114,6 +116,8 @@ class SCISHARE FieldInformation {
     bool        make_float();
     bool        make_vector();
     bool        make_tensor();
+    
+    bool        operator==(const FieldInformation&) const;
     
   private:
     // type names

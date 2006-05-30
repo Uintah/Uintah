@@ -76,7 +76,9 @@ bool ApplyMappingMatrixAlgo::ApplyMappingMatrix(ProgressReporter *pr, FieldHandl
   fi_dst.fill_compile_info(ci);
   fi_out.fill_compile_info(ci);
   
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;
   // Handle dynamic compilation
+  
   SCIRun::Handle<ApplyMappingMatrixAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
@@ -85,7 +87,7 @@ bool ApplyMappingMatrixAlgo::ApplyMappingMatrix(ProgressReporter *pr, FieldHandl
     return(false);
   }
 
-  return(algo->ApplyMappingMatrix(pr,fsrc,fdst,output,mapping));
+  return(algo->ApplyMappingMatrix(pr,fsrc,fdst,output,mapping)); 
 }
 
 

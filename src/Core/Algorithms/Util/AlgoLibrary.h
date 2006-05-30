@@ -31,6 +31,7 @@
 #define CORE_ALGORITHMS_UTIL_ALGOLIBRARY_H 1
 
 #include <Core/Util/ProgressReporter.h>
+#include <Core/Util/RegressionReporter.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 
