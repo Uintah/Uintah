@@ -65,9 +65,9 @@ itcl_class Uintah_Visualization_Hedgehog {
 	pack $w.f.findxz -pady 2 -side top -ipadx 3 -anchor e
 
 	global $this-exhaustive_flag
-	checkbutton $w.f.exh -text "Exhaustive search?" -variable \
-		$this-exhaustive_flag
-	pack $w.f.exh -pady 2 -side top -ipadx 3 -anchor e
+# 	checkbutton $w.f.exh -text "Exhaustive search?" -variable \
+# 		$this-exhaustive_flag
+# 	pack $w.f.exh -pady 2 -side top -ipadx 3 -anchor e
 	
 	iwidgets::labeledframe $w.lf -labeltext "Vector Color" -labelpos nw
 	pack $w.lf -side top -fill x -expand yes
