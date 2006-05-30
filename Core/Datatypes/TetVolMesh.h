@@ -705,9 +705,9 @@ protected:
   //! Used to recompute data for individual cells.  Don't use these, they
   // are not synchronous.  Use create_cell_syncinfo instead.
   void create_cell_edges(typename Cell::index_type);
-  void delete_cell_edges(typename Cell::index_type);
+  void delete_cell_edges(typename Cell::index_type, bool table_only = false);
   void create_cell_faces(typename Cell::index_type);
-  void delete_cell_faces(typename Cell::index_type);
+  void delete_cell_faces(typename Cell::index_type, bool table_only = false);
   void create_cell_node_neighbors(typename Cell::index_type);
   void delete_cell_node_neighbors(typename Cell::index_type);
   void insert_cell_into_grid(typename Cell::index_type ci);
@@ -717,6 +717,7 @@ protected:
   void delete_cell_syncinfo(typename Cell::index_type ci);
   // Create the partial sync info needed by insert_node_in_elem
   void create_cell_syncinfo_special(typename Cell::index_type ci);
+  void delete_cell_syncinfo_special(typename Cell::index_type ci);
   // May reorient the tet to make the signed volume positive.
   typename Elem::index_type add_tet_pos(typename Node::index_type a,
                                         typename Node::index_type b,
@@ -750,7 +751,8 @@ protected:
   inline
   void remove_edge(typename Node::index_type n1,
 		   typename Node::index_type n2,
-		   typename Cell::index_type ci);
+		   typename Cell::index_type ci,
+                   bool table_only = false);
   inline
   void hash_edge(typename Node::index_type n1, typename Node::index_type n2,
 		 typename Cell::index_type ci);
@@ -763,7 +765,8 @@ protected:
   void remove_face(typename Node::index_type n1,
 		   typename Node::index_type n2,
 		   typename Node::index_type n3,
-		   typename Cell::index_type ci);
+		   typename Cell::index_type ci,
+                   bool table_only = false);
   inline
   void hash_face(typename Node::index_type n1, typename Node::index_type n2,
                  typename Node::index_type n3, 
@@ -976,7 +979,8 @@ void
 TetVolMesh<Basis>::remove_face(typename Node::index_type n1,
 			       typename Node::index_type n2,
 			       typename Node::index_type n3,
-			       typename Cell::index_type ci)
+			       typename Cell::index_type ci,
+                               bool table_only)
 {
   PFace e(n1, n2, n3);
   typename face_ht::iterator iter = face_table_.find(e);
@@ -1006,8 +1010,10 @@ TetVolMesh<Basis>::remove_face(typename Node::index_type n1,
   }
   //reinsert
   face_table_[found_face] = found_idx;
-  faces_[found_idx] = found_face;
-
+  if (!table_only)
+  {
+    faces_[found_idx] = found_face;
+  }
 }
 
 template <class Basis>
@@ -1337,7 +1343,8 @@ template <class Basis>
 void
 TetVolMesh<Basis>::remove_edge(typename Node::index_type n1,
 			       typename Node::index_type n2,
-			       typename Cell::index_type ci)
+			       typename Cell::index_type ci,
+                               bool table_only)
 {
   PEdge e(n1, n2);
   typename edge_ht::iterator iter = edge_table_.find(e);
@@ -1349,31 +1356,41 @@ TetVolMesh<Basis>::remove_edge(typename Node::index_type n1,
   unsigned found_idx = (*iter).second;
   edge_table_.erase(iter);
     
-  if (!found_edge.shared()) {
-    // this edge belongs to only one cell
-    edges_.erase(edges_.begin() + found_idx);
-  } else {
+  if (!found_edge.shared())
+  {
+    // This edge belongs to only one cell.
+    if (!table_only)
+    {
+      edges_.erase(edges_.begin() + found_idx);
+    }
+  }
+  else
+  {
     typename vector<typename Cell::index_type>::iterator citer;
     citer = std::find(found_edge.cells_.begin(), found_edge.cells_.end(), ci);
     found_edge.cells_.erase(citer);
-    //reinsert remaining partial edges.
+    //Reinsert remaining partial edges.
     edge_table_[found_edge] = found_idx;
-    edges_[found_idx] = found_edge;
+    if (!table_only)
+    {
+      edges_[found_idx] = found_edge;
+    }
   }
 }
  
 template <class Basis>
 void
-TetVolMesh<Basis>::delete_cell_edges(typename Cell::index_type c)
+TetVolMesh<Basis>::delete_cell_edges(typename Cell::index_type c,
+                                     bool table_only)
 {
   typename Node::array_type arr;
   get_nodes(arr, c);
-  remove_edge(arr[0], arr[1], c);
-  remove_edge(arr[1], arr[2], c);
-  remove_edge(arr[2], arr[0], c);
-  remove_edge(arr[3], arr[0], c);
-  remove_edge(arr[3], arr[1], c);
-  remove_edge(arr[3], arr[2], c);
+  remove_edge(arr[0], arr[1], c, table_only);
+  remove_edge(arr[1], arr[2], c, table_only);
+  remove_edge(arr[2], arr[0], c, table_only);
+  remove_edge(arr[3], arr[0], c, table_only);
+  remove_edge(arr[3], arr[1], c, table_only);
+  remove_edge(arr[3], arr[2], c, table_only);
 }
 
 template <class Basis>
@@ -1394,14 +1411,15 @@ TetVolMesh<Basis>::create_cell_faces(typename Cell::index_type c)
 
 template <class Basis>
 void
-TetVolMesh<Basis>::delete_cell_faces(typename Cell::index_type c)
+TetVolMesh<Basis>::delete_cell_faces(typename Cell::index_type c,
+                                     bool table_only)
 {
   typename Node::array_type arr;
   get_nodes(arr, c);
-  remove_face(arr[0], arr[2], arr[1], c);
-  remove_face(arr[1], arr[2], arr[3], c);
-  remove_face(arr[0], arr[1], arr[3], c);
-  remove_face(arr[0], arr[3], arr[2], c);
+  remove_face(arr[0], arr[2], arr[1], c, table_only);
+  remove_face(arr[1], arr[2], arr[3], c, table_only);
+  remove_face(arr[0], arr[1], arr[3], c, table_only);
+  remove_face(arr[0], arr[3], arr[2], c, table_only);
 }
 
 
@@ -1438,22 +1456,6 @@ TetVolMesh<Basis>::delete_cell_node_neighbors(typename Cell::index_type c)
 
 template <class Basis>
 void
-TetVolMesh<Basis>::delete_cell_syncinfo(typename Cell::index_type ci)
-{
-  synchronize_lock_.lock();
-  if (synchronized_ & NODE_NEIGHBORS_E)
-    delete_cell_node_neighbors(ci);
-  if (synchronized_&EDGES_E || synchronized_&EDGE_NEIGHBORS_E)
-    delete_cell_edges(ci);
-  if (synchronized_&FACES_E || synchronized_&FACE_NEIGHBORS_E)
-    delete_cell_faces(ci);
-  if (synchronized_ & LOCATE_E)
-    remove_cell_from_grid(ci);
-  synchronize_lock_.unlock();
-}
-
-template <class Basis>
-void
 TetVolMesh<Basis>::create_cell_syncinfo(typename Cell::index_type ci)
 {
   synchronize_lock_.lock();
@@ -1468,6 +1470,21 @@ TetVolMesh<Basis>::create_cell_syncinfo(typename Cell::index_type ci)
   synchronize_lock_.unlock();
 }
 
+template <class Basis>
+void
+TetVolMesh<Basis>::delete_cell_syncinfo(typename Cell::index_type ci)
+{
+  synchronize_lock_.lock();
+  if (synchronized_ & NODE_NEIGHBORS_E)
+    delete_cell_node_neighbors(ci);
+  if (synchronized_&EDGES_E || synchronized_&EDGE_NEIGHBORS_E)
+    delete_cell_edges(ci);
+  if (synchronized_&FACES_E || synchronized_&FACE_NEIGHBORS_E)
+    delete_cell_faces(ci);
+  if (synchronized_ & LOCATE_E)
+    remove_cell_from_grid(ci);
+  synchronize_lock_.unlock();
+}
 
 template <class Basis>
 void
@@ -1498,6 +1515,22 @@ TetVolMesh<Basis>::create_cell_syncinfo_special(typename Cell::index_type ci)
   }
   if (synchronized_ & LOCATE_E)
     insert_cell_into_grid(ci);
+  synchronize_lock_.unlock();
+}
+
+template <class Basis>
+void
+TetVolMesh<Basis>::delete_cell_syncinfo_special(typename Cell::index_type ci)
+{
+  synchronize_lock_.lock();
+  if (synchronized_ & NODE_NEIGHBORS_E)
+    delete_cell_node_neighbors(ci);
+  if (synchronized_&EDGES_E || synchronized_&EDGE_NEIGHBORS_E)
+    delete_cell_edges(ci, true);
+  if (synchronized_&FACES_E || synchronized_&FACE_NEIGHBORS_E)
+    delete_cell_faces(ci, true);
+  if (synchronized_ & LOCATE_E)
+    remove_cell_from_grid(ci);
   synchronize_lock_.unlock();
 }
 
@@ -2449,7 +2482,7 @@ TetVolMesh<Basis>::insert_node_in_cell(typename Cell::array_type &tets,
 
   pi = add_point(p);
 
-  delete_cell_syncinfo(ci);
+  delete_cell_syncinfo_special(ci);
 
   tets.resize(4, ci);
   const unsigned index = ci*4;
@@ -2486,7 +2519,7 @@ TetVolMesh<Basis>::insert_node_in_face(typename Cell::array_type &tets,
     if (ni != f.nodes_[0] && ni != f.nodes_[1] && ni != f.nodes_[2]) break;
   }
   
-  delete_cell_syncinfo(ci);
+  delete_cell_syncinfo_special(ci);
   
   const unsigned int i = ci*4;
   tets.push_back(ci);
@@ -2540,7 +2573,7 @@ TetVolMesh<Basis>::insert_node_in_edge(typename Cell::array_type &tets,
     }
   }
 
-  delete_cell_syncinfo(ci);
+  delete_cell_syncinfo_special(ci);
 
   bool pushed = false;
   tets.push_back(ci);
