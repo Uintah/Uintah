@@ -43,7 +43,7 @@ itcl_class Uintah_Operators_TensorOperator {
 	pack $w.l -side left -anchor w
 	entry $w.e -textvariable $v -width 8
 	bind $w.e <Return> $c
-	pack $w.e -side right -anchor e
+	pack $w.e -side right -anchor e 
     }
 
     method ui {} {
@@ -52,13 +52,21 @@ itcl_class Uintah_Operators_TensorOperator {
 	    raise $w
 	    return;
 	}
+        set n "$this-c needexecute"
  	toplevel $w
+        wm geometry $w ""
 
 #	button $w.b -text Close -command "destroy $w"
 #	pack $w.b -side bottom -expand yes -fill x -padx 2 -pady 2
 
 	frame $w.top
+	pack $w.top -side top -fill both -expand yes
+
 	frame $w.top.calc -relief raised -bd 1
+	pack $w.top.calc -side left -padx 2 -pady 2 -fill both  -expand yes
+        frame $w.top.opts -relief sunken -bd 2
+        pack $w.top.opts -side left -padx 2 -pady 2 -fill both  -expand yes
+
 	label $w.top.calc.l -text "Select Operation"
 	radiobutton $w.top.calc.elem -text "Extract Element" \
 		-variable $this-operation -value 0 \
@@ -68,21 +76,20 @@ itcl_class Uintah_Operators_TensorOperator {
 	#	-command "$this select_eigen_evaluator"
 	radiobutton $w.top.calc.eigen2D -text "2D Eigenvalues" \
 		-variable $this-operation -value 1 \
-		-command "$this select_eigen2D"
+            -command "$this select_eigen2D; $n"
 	radiobutton $w.top.calc.pressure -text "Pressure" \
 		-variable $this-operation -value 2 \
-		-command "$this select_pressure"
+            -command "$this select_pressure; $n"
 	radiobutton $w.top.calc.eqivstress -text "Equivalent Stress" \
 		-variable $this-operation -value 3 \
-		-command "$this select_equivalent_stress"
+            -command "$this select_equivalent_stress; $n"
 	radiobutton $w.top.calc.octshearstress -text "Octahedral Shear Stress" \
 		-variable $this-operation -value 4 \
-		-command "$this select_oct_shear_stress"
+            -command "$this select_oct_shear_stress; $n"
 	radiobutton $w.top.calc.nst -text "n . sigma. t" \
 		-variable $this-operation -value 5 \
-		-command "$this select_nst"
+            -command "$this select_nst; $n"
 	pack $w.top.calc.l $w.top.calc.elem $w.top.calc.eigen2D $w.top.calc.pressure $w.top.calc.eqivstress $w.top.calc.octshearstress $w.top.calc.nst -anchor w
-	pack $w.top.calc -side left -padx 2 -pady 2 -fill y
 	
 
 	if { [set $this-operation] == 0} {
@@ -99,6 +106,11 @@ itcl_class Uintah_Operators_TensorOperator {
 	    select_nst
 	}
 	
+      # add frame for SCI Button Panel
+        frame $w.control -relief flat
+        pack $w.control -side top -expand yes -fill both
+	makeSciButtonPanel $w.control $w $this
+	moveToCursor $w
     }
 
     method select_element_extractor {} {
@@ -106,17 +118,7 @@ itcl_class Uintah_Operators_TensorOperator {
 	destroy $w.top.opts
 	frame $w.top.opts -relief sunken -bd 1
 	element_extractor_ui $w.top.opts
-	pack $w.top.opts -padx 2 -pady 2 -fill y -expand yes
-	
-	pack $w.top -side top
-	
-      # add frame for SCI Button Panel
-        frame $w.control -relief flat
-        pack $w.control -side top -expand yes -fill both
-	makeSciButtonPanel $w.control $w $this
-	moveToCursor $w
-
-	$this-c needexecute
+	pack $w.top.opts -padx 2 -pady 2 -fill both -expand yes
     }
     #method select_eigen_evaluator {} {
 	#set w .ui[modname]
@@ -128,43 +130,38 @@ itcl_class Uintah_Operators_TensorOperator {
     #}
     method select_eigen2D {} {
 	set w .ui[modname]
-	destroy $w.opts
-	frame $w.opts -relief sunken -bd 1
-	eigen2D_ui $w.opts
-	pack $w.opts -padx 2 -pady 2 -fill y -expand yes
-	$this-c needexecute
+	destroy $w.top.opts
+	frame $w.top.opts -relief sunken -bd 1
+	eigen2D_ui $w.top.opts
+	pack $w.top.opts -padx 2 -pady 2 -fill both -expand yes
     }
     method select_pressure {} {
 	set w .ui[modname]
-	destroy $w.opts
-	frame $w.opts -relief sunken -bd 1
-	pressure_ui $w.opts
-	pack $w.opts -padx 2 -pady 2 -fill y -expand yes
-	$this-c needexecute
+	destroy $w.top.opts
+	frame $w.top.opts -relief sunken -bd 1
+	pressure_ui $w.top.opts
+	pack $w.top.opts -padx 2 -pady 2 -fill both -expand yes
     }
     method select_equivalent_stress {} {
 	set w .ui[modname]
-	destroy $w.opts
-	frame $w.opts -relief sunken -bd 1
-	equivalent_stress_ui $w.opts
-	pack $w.opts -padx 2 -pady 2 -fill y -expand yes
-	$this-c needexecute
+	destroy $w.top.opts
+	frame $w.top.opts -relief sunken -bd 1
+	equivalent_stress_ui $w.top.opts
+	pack $w.top.opts -padx 2 -pady 2 -fill both -expand yes
     }
     method select_oct_shear_stress {} {
 	set w .ui[modname]
-	destroy $w.opts
-	frame $w.opts -relief sunken -bd 1
-	oct_shear_stress_ui $w.opts
-	pack $w.opts -padx 2 -pady 2 -fill y -expand yes
-	$this-c needexecute
+	destroy $w.top.opts
+	frame $w.top.opts -relief sunken -bd 1
+	oct_shear_stress_ui $w.top.opts
+	pack $w.top.opts -padx 2 -pady 2 -fill both -expand yes
     }
     method select_nst {} {
 	set w .ui[modname]
-	destroy $w.opts
-	frame $w.opts -relief sunken -bd 1
-	nst_ui $w.opts
-	pack $w.opts -padx 2 -pady 2 -fill y -expand yes
-	$this-c needexecute
+	destroy $w.top.opts
+	frame $w.top.opts -relief sunken -bd 1
+	nst_ui $w.top.opts
+	pack $w.top.opts -padx 2 -pady 2 -fill both -expand yes
     }
 
     method element_extractor_ui {w} {
@@ -270,16 +267,16 @@ ____________________________________________
     method eigen2D_absDiffCalc {} {
 	set w .ui[modname]
 	set color "#505050"
-	$w.opts.delta.e configure -state disabled
-	$w.opts.delta.e configure -foreground $color
-	$w.opts.delta.l configure -foreground $color
+	$w.top.opts.delta.e configure -state disabled
+	$w.top.opts.delta.e configure -foreground $color
+	$w.top.opts.delta.l configure -foreground $color
 	$this-c needexecute
     }
     method eigen2D_cosDiffCalc {} {
 	set w .ui[modname]
-	$w.opts.delta.e configure -state normal
-	$w.opts.delta.e configure -foreground black
-	$w.opts.delta.l configure -foreground black
+	$w.top.opts.delta.e configure -state normal
+	$w.top.opts.delta.e configure -foreground black
+	$w.top.opts.delta.l configure -foreground black
 	$this-c needexecute
     }
 
