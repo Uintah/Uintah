@@ -2275,7 +2275,7 @@ HexVolMesh<Basis>::get_elems(typename Cell::array_type &array,
                              typename Edge::index_type idx) const
 {
   ASSERTMSG(synchronized_ & EDGES_E,
-            "Must call synchronize FACES_E on HexVolMesh first");
+            "Must call synchronize EDGES_E on HexVolMesh first");
   array = edges_[idx].cells_;
 }
 
