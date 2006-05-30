@@ -146,37 +146,37 @@ namespace Uintah {
     switch (solverType) {
     case SMG:
       {
-        return new HypreSolverSMG(driver,precond);
+        return scinew HypreSolverSMG(driver,precond);
       }
     case PFMG:
       {
-        return new HypreSolverPFMG(driver,precond);
+        return scinew HypreSolverPFMG(driver,precond);
       }
     case SparseMSG:
       {
-        return new HypreSolverSparseMSG(driver,precond);
+        return scinew HypreSolverSparseMSG(driver,precond);
       }
     case CG:
       {
         cout_dbg << "Doing new HypreSolverCG" << "\n";
-        return new HypreSolverCG(driver,precond);
+        return scinew HypreSolverCG(driver,precond);
       }
     case Hybrid: 
       {
-        return new HypreSolverHybrid(driver,precond);
+        return scinew HypreSolverHybrid(driver,precond);
       }
     case GMRES:
       {
-        return new HypreSolverGMRES(driver,precond);
+        return scinew HypreSolverGMRES(driver,precond);
       }
     case AMG:
       {
-        return new HypreSolverAMG(driver,precond);
+        return scinew HypreSolverAMG(driver,precond);
       }
     case FAC:
       {
 #if HAVE_HYPRE_1_9
-        return new HypreSolverFAC(driver,precond);
+        return scinew HypreSolverFAC(driver,precond);
 #endif // #if HAVE_HYPRE_1_9
       }
     default:

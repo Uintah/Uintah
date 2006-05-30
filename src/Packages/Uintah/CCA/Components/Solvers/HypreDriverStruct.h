@@ -83,6 +83,7 @@ namespace Uintah {
       HypreDriver(level,matlset,A,which_A_dw,x,modifies_x,
                   b,which_b_dw,guess,which_guess_dw,params, perProcPatches, interface) {}
     virtual ~HypreDriverStruct(void);
+    virtual void cleanup();
 
     // Data member modifyable access
     HYPRE_StructMatrix& getA(void) { return _HA; }  // LHS

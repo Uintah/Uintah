@@ -15,6 +15,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/LocallyComputedPatchVarMap.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Mutex.h>
+#include <Core/Malloc/Allocator.h>
 #include <mpi.h>
 
 using namespace Uintah;
@@ -115,9 +116,9 @@ void HierarchicalRegridder::problemSetup(const ProblemSpecP& params,
   d_patchSize[0] = patch->getInteriorCellHighIndex() - patch->getInteriorCellLowIndex();
   d_maxPatchSize[0] = patch->getInteriorCellHighIndex() - patch->getInteriorCellLowIndex();
   d_patchNum[0] = calculateNumberOfPatches(d_cellNum[0], d_patchSize[0]);
-  d_patchActive[0] = new CCVariable<int>;
-  d_patchCreated[0] = new CCVariable<int>;
-  d_patchDeleted[0] = new CCVariable<int>;
+  d_patchActive[0] = scinew CCVariable<int>;
+  d_patchCreated[0] = scinew CCVariable<int>;
+  d_patchDeleted[0] = scinew CCVariable<int>;
   d_patchActive[0]->rewindow(IntVector(0,0,0), d_patchNum[0]);
   d_patchCreated[0]->rewindow(IntVector(0,0,0), d_patchNum[0]);
   d_patchDeleted[0]->rewindow(IntVector(0,0,0), d_patchNum[0]);
@@ -133,9 +134,9 @@ void HierarchicalRegridder::problemSetup(const ProblemSpecP& params,
     d_maxPatchSize[k] = d_patchSize[k] * d_patchesToCombine[k-1]; 
     d_latticeRefinementRatio[k-1];
     d_patchNum[k] = calculateNumberOfPatches(d_cellNum[k], d_patchSize[k]);
-    d_patchActive[k] = new CCVariable<int>;
-    d_patchCreated[k] = new CCVariable<int>;
-    d_patchDeleted[k] = new CCVariable<int>;
+    d_patchActive[k] = scinew CCVariable<int>;
+    d_patchCreated[k] = scinew CCVariable<int>;
+    d_patchDeleted[k] = scinew CCVariable<int>;
     d_patchActive[k]->rewindow(IntVector(0,0,0), d_patchNum[k]);
     d_patchCreated[k]->rewindow(IntVector(0,0,0), d_patchNum[k]);
     d_patchDeleted[k]->rewindow(IntVector(0,0,0), d_patchNum[k]);
@@ -188,6 +189,7 @@ void HierarchicalRegridder::problemSetup_BulletProofing(const int k)
 
 Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const ProblemSpecP& ups)
 {
+  const char* blah = AllocatorSetDefaultTag("Regrid\n");
   rdbg << "HierarchicalRegridder::regrid() BGN" << endl;
 
   if (d_maxLevels <= 1)
@@ -290,7 +292,10 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
   tempsched->execute();
   parent_dw->setScrubbing(ParentNewDW_scrubmode);
   GatherSubPatches(oldGrid, tempsched);
-  return CreateGrid2(oldGrid, ups);  
+  
+  Grid* newGrid = CreateGrid2(oldGrid, ups);  
+  AllocatorSetDefaultTag(blah);
+  return newGrid;
 }
 
 
@@ -305,6 +310,7 @@ void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
                                          DataWarehouse*,
                                          DataWarehouse* new_dw)
 {
+  
   rdbg << "MarkPatches2 BGN\n";
   const Level* oldLevel = getLevel(patches);
   int levelIdx = oldLevel->getIndex();
