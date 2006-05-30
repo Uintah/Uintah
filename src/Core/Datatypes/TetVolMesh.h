@@ -750,11 +750,10 @@ protected:
   inline
   void remove_edge(typename Node::index_type n1,
 		   typename Node::index_type n2,
-		   typename Cell::index_type ci,
-		   edge_ht &table);
+		   typename Cell::index_type ci);
   inline
   void hash_edge(typename Node::index_type n1, typename Node::index_type n2,
-		 typename Cell::index_type ci, edge_ht &table) const;
+		 typename Cell::index_type ci);
   
 
   //! iterate over the face_table_ and store the vector of faces_
@@ -764,12 +763,11 @@ protected:
   void remove_face(typename Node::index_type n1,
 		   typename Node::index_type n2,
 		   typename Node::index_type n3,
-		   typename Cell::index_type ci,
-		   face_ht &table);
+		   typename Cell::index_type ci);
   inline
   void hash_face(typename Node::index_type n1, typename Node::index_type n2,
                  typename Node::index_type n3, 
-                 typename Cell::index_type ci, face_ht &table) const;
+                 typename Cell::index_type ci);
 
   typedef vector<vector<typename Cell::index_type> > NodeNeighborMap;
   NodeNeighborMap       node_neighbors_;
@@ -978,13 +976,12 @@ void
 TetVolMesh<Basis>::remove_face(typename Node::index_type n1,
 			       typename Node::index_type n2,
 			       typename Node::index_type n3,
-			       typename Cell::index_type ci,
-			       face_ht &table)
+			       typename Cell::index_type ci)
 {
   PFace e(n1, n2, n3);
-  typename face_ht::iterator iter = table.find(e);
+  typename face_ht::iterator iter = face_table_.find(e);
 
-  if (iter == table.end()) {
+  if (iter == face_table_.end()) {
     ASSERTFAIL("this face did not exist in the table");
   }
   PFace found_face = (*iter).first;
@@ -1018,15 +1015,14 @@ void
 TetVolMesh<Basis>::hash_face(typename Node::index_type n1,
                              typename Node::index_type n2,
                              typename Node::index_type n3,
-                             typename Cell::index_type ci,
-                             face_ht &table) const
+                             typename Cell::index_type ci)
 {
   PFace f(n1, n2, n3);
 
-  typename face_ht::iterator iter = table.find(f);
-  if (iter == table.end()) {
+  typename face_ht::iterator iter = face_table_.find(f);
+  if (iter == face_table_.end()) {
     f.cells_[0] = ci;
-    table[f] = 0; // insert for the first time
+    face_table_[f] = 0; // insert for the first time
   } else {
     PFace f = (*iter).first;
     if (f.cells_[1] != MESH_NO_NEIGHBOR) {
@@ -1039,8 +1035,8 @@ TetVolMesh<Basis>::hash_face(typename Node::index_type n1,
            << " are the same." << std::endl;
     } else {
       f.cells_[1] = ci; // add this cell
-      table.erase(iter);
-      table[f] = 0;
+      face_table_.erase(iter);
+      face_table_[f] = 0;
     }
   }
 }
@@ -1076,10 +1072,10 @@ TetVolMesh<Basis>::compute_faces()
   {
     get_nodes(arr, *ci);
     // 4 faces -- each is entered CCW from outside looking in
-    hash_face(arr[0], arr[2], arr[1], *ci, face_table_);
-    hash_face(arr[1], arr[2], arr[3], *ci, face_table_);
-    hash_face(arr[0], arr[1], arr[3], *ci, face_table_);
-    hash_face(arr[0], arr[3], arr[2], *ci, face_table_);
+    hash_face(arr[0], arr[2], arr[1], *ci);
+    hash_face(arr[1], arr[2], arr[3], *ci);
+    hash_face(arr[0], arr[1], arr[3], *ci);
+    hash_face(arr[0], arr[3], arr[2], *ci);
     ++ci;
   }
   build_face_vec();
@@ -1092,19 +1088,18 @@ template <class Basis>
 void
 TetVolMesh<Basis>::hash_edge(typename Node::index_type n1,
                              typename Node::index_type n2,
-                             typename Cell::index_type ci,
-                             edge_ht &table) const
+                             typename Cell::index_type ci)
 {
   PEdge e(n1, n2);
-  typename edge_ht::iterator iter = table.find(e);
-  if (iter == table.end()) {
+  typename edge_ht::iterator iter = edge_table_.find(e);
+  if (iter == edge_table_.end()) {
     e.cells_.push_back(ci); // add this cell
-    table[e] = 0; // insert for the first time
+    edge_table_[e] = 0; // insert for the first time
   } else {
     PEdge e = (*iter).first;
     e.cells_.push_back(ci); // add this cell
-    table.erase(iter);
-    table[e] = 0;
+    edge_table_.erase(iter);
+    edge_table_[e] = 0;
   }
 }
 
@@ -1118,12 +1113,12 @@ TetVolMesh<Basis>::compute_edges()
   while (ci != cie)
   {
     get_nodes(arr, *ci);
-    hash_edge(arr[0], arr[1], *ci, edge_table_);
-    hash_edge(arr[1], arr[2], *ci, edge_table_);
-    hash_edge(arr[2], arr[0], *ci, edge_table_);
-    hash_edge(arr[3], arr[0], *ci, edge_table_);
-    hash_edge(arr[3], arr[1], *ci, edge_table_);
-    hash_edge(arr[3], arr[2], *ci, edge_table_);
+    hash_edge(arr[0], arr[1], *ci);
+    hash_edge(arr[1], arr[2], *ci);
+    hash_edge(arr[2], arr[0], *ci);
+    hash_edge(arr[3], arr[0], *ci);
+    hash_edge(arr[3], arr[1], *ci);
+    hash_edge(arr[3], arr[2], *ci);
     ++ci;
   }
   build_edge_vec();
@@ -1327,12 +1322,12 @@ TetVolMesh<Basis>::create_cell_edges(typename Cell::index_type c)
 {
   typename Node::array_type arr;
   get_nodes(arr, c);
-  hash_edge(arr[0], arr[1], c, edge_table_);
-  hash_edge(arr[1], arr[2], c, edge_table_);
-  hash_edge(arr[2], arr[0], c, edge_table_);
-  hash_edge(arr[3], arr[0], c, edge_table_);
-  hash_edge(arr[3], arr[1], c, edge_table_);
-  hash_edge(arr[3], arr[2], c, edge_table_);
+  hash_edge(arr[0], arr[1], c);
+  hash_edge(arr[1], arr[2], c);
+  hash_edge(arr[2], arr[0], c);
+  hash_edge(arr[3], arr[0], c);
+  hash_edge(arr[3], arr[1], c);
+  hash_edge(arr[3], arr[2], c);
 
   // This is a bit heavy handed, should optimize this to a more local cleanup.
   build_edge_vec();
@@ -1342,13 +1337,12 @@ template <class Basis>
 void
 TetVolMesh<Basis>::remove_edge(typename Node::index_type n1,
 			       typename Node::index_type n2,
-			       typename Cell::index_type ci,
-			       edge_ht &table)
+			       typename Cell::index_type ci)
 {
   PEdge e(n1, n2);
-  typename edge_ht::iterator iter = table.find(e);
+  typename edge_ht::iterator iter = edge_table_.find(e);
 
-  if (iter == table.end()) {
+  if (iter == edge_table_.end()) {
     ASSERTFAIL("this edge did not exist in the table");
   }
   PEdge found_edge = (*iter).first;
@@ -1374,12 +1368,12 @@ TetVolMesh<Basis>::delete_cell_edges(typename Cell::index_type c)
 {
   typename Node::array_type arr;
   get_nodes(arr, c);
-  remove_edge(arr[0], arr[1], c, edge_table_);
-  remove_edge(arr[1], arr[2], c, edge_table_);
-  remove_edge(arr[2], arr[0], c, edge_table_);
-  remove_edge(arr[3], arr[0], c, edge_table_);
-  remove_edge(arr[3], arr[1], c, edge_table_);
-  remove_edge(arr[3], arr[2], c, edge_table_);
+  remove_edge(arr[0], arr[1], c);
+  remove_edge(arr[1], arr[2], c);
+  remove_edge(arr[2], arr[0], c);
+  remove_edge(arr[3], arr[0], c);
+  remove_edge(arr[3], arr[1], c);
+  remove_edge(arr[3], arr[2], c);
 }
 
 template <class Basis>
@@ -1388,10 +1382,10 @@ TetVolMesh<Basis>::create_cell_faces(typename Cell::index_type c)
 {
   typename Node::array_type arr;
   get_nodes(arr, c);
-  hash_face(arr[0], arr[2], arr[1], c, face_table_);
-  hash_face(arr[1], arr[2], arr[3], c, face_table_);
-  hash_face(arr[0], arr[1], arr[3], c, face_table_);
-  hash_face(arr[0], arr[3], arr[2], c, face_table_);
+  hash_face(arr[0], arr[2], arr[1], c);
+  hash_face(arr[1], arr[2], arr[3], c);
+  hash_face(arr[0], arr[1], arr[3], c);
+  hash_face(arr[0], arr[3], arr[2], c);
 
   // This is a bit heavy handed, should optimize this to a more local cleanup.
   build_face_vec();
@@ -1404,10 +1398,10 @@ TetVolMesh<Basis>::delete_cell_faces(typename Cell::index_type c)
 {
   typename Node::array_type arr;
   get_nodes(arr, c);
-  remove_face(arr[0], arr[2], arr[1], c, face_table_);
-  remove_face(arr[1], arr[2], arr[3], c, face_table_);
-  remove_face(arr[0], arr[1], arr[3], c, face_table_);
-  remove_face(arr[0], arr[3], arr[2], c, face_table_);
+  remove_face(arr[0], arr[2], arr[1], c);
+  remove_face(arr[1], arr[2], arr[3], c);
+  remove_face(arr[0], arr[1], arr[3], c);
+  remove_face(arr[0], arr[3], arr[2], c);
 }
 
 
@@ -1486,21 +1480,21 @@ TetVolMesh<Basis>::create_cell_syncinfo_special(typename Cell::index_type ci)
   {
     typename Node::array_type arr;
     get_nodes(arr, ci);
-    hash_edge(arr[0], arr[1], ci, edge_table_);
-    hash_edge(arr[1], arr[2], ci, edge_table_);
-    hash_edge(arr[2], arr[0], ci, edge_table_);
-    hash_edge(arr[3], arr[0], ci, edge_table_);
-    hash_edge(arr[3], arr[1], ci, edge_table_);
-    hash_edge(arr[3], arr[2], ci, edge_table_);
+    hash_edge(arr[0], arr[1], ci);
+    hash_edge(arr[1], arr[2], ci);
+    hash_edge(arr[2], arr[0], ci);
+    hash_edge(arr[3], arr[0], ci);
+    hash_edge(arr[3], arr[1], ci);
+    hash_edge(arr[3], arr[2], ci);
   }
   if (synchronized_&FACES_E || synchronized_&FACE_NEIGHBORS_E)
   {
     typename Node::array_type arr;
     get_nodes(arr, ci);
-    hash_face(arr[0], arr[2], arr[1], ci, face_table_);
-    hash_face(arr[1], arr[2], arr[3], ci, face_table_);
-    hash_face(arr[0], arr[1], arr[3], ci, face_table_);
-    hash_face(arr[0], arr[3], arr[2], ci, face_table_);
+    hash_face(arr[0], arr[2], arr[1], ci);
+    hash_face(arr[1], arr[2], arr[3], ci);
+    hash_face(arr[0], arr[1], arr[3], ci);
+    hash_face(arr[0], arr[3], arr[2], ci);
   }
   if (synchronized_ & LOCATE_E)
     insert_cell_into_grid(ci);
