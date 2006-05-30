@@ -240,7 +240,11 @@ MPIScheduler::runTask( DetailedTask         * task )
   vector<DataWarehouseP> plain_old_dws(dws.size());
   for(int i=0;i<(int)dws.size();i++)
     plain_old_dws[i] = dws[i].get_rep();
+  const char* tag = AllocatorSetDefaultTag(task->getTask()->getName());
+
   task->doit(d_myworld, dws, plain_old_dws);
+  AllocatorSetDefaultTag(tag);
+
 
   printTrackedVars(task, false);
 
@@ -565,6 +569,8 @@ MPIScheduler::processMPIRecvs( DetailedTask *, CommRecMPI& recvs,
 void
 MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 {
+  const char* tag = AllocatorSetDefaultTag("MPIScheduler::execute");
+
   TAU_PROFILE("MPIScheduler::execute()", " ", TAU_USER); 
   
   TAU_PROFILE_TIMER(reducetimer, "Reductions", "[MPIScheduler::execute()] " , TAU_USER); 
@@ -664,6 +670,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     numTasksDone++;
     taskdbg << me << " Initiating task: "; printTask(taskdbg, task); taskdbg << '\n';
 
+    const char* tag2 = AllocatorSetDefaultTag("MPIScheduler::Initiate");
     if (task->getTask()->getType() == Task::Reduction){
       if(!abort)
 	initiateReduction(task);
@@ -677,6 +684,8 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       abort_point = task->getTask()->getSortedOrder();
       dbg << "Aborting timestep after task: " << *task->getTask() << '\n';
     }
+    AllocatorSetDefaultTag(tag2);
+
   } // end while( numTasksDone < ntasks )
 
   // wait for all tasks to finish -- i.e. MixedScheduler
@@ -762,6 +771,8 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   }
 
   dbg << me << " MPIScheduler finished\n";
+  AllocatorSetDefaultTag(tag);
+
   //pg_ = 0;
 }
 

@@ -25,12 +25,12 @@ SolverInterface* SolverFactory::create(ProblemSpecP& ps,
 
   SolverInterface* solve = 0;
   if(solver == "CGSolver") {
-    solve = new CGSolver(world);
+    solve = scinew CGSolver(world);
   } else if (solver == "DirectSolve") {
-    solve = new DirectSolve(world);
+    solve = scinew DirectSolve(world);
   } else if (solver == "HypreSolver" || solver == "hypre") {
 #if HAVE_HYPRE
-    solve = new HypreSolver2(world);
+    solve = scinew HypreSolver2(world);
 #else
     ostringstream msg;
     msg << "Hypre solver not available, hypre not configured\n";
@@ -38,7 +38,7 @@ SolverInterface* SolverFactory::create(ProblemSpecP& ps,
 #endif
   } else if (solver == "AMRSolver" || solver == "hypreamr") {
 #if HAVE_HYPRE
-    solve = new AMRSolver(world);
+    solve = scinew AMRSolver(world);
 #else
     ostringstream msg;
     msg << "Hypre 1.9.0b solver not available, hypre not configured\n";
