@@ -8,9 +8,22 @@
     <authors>
       <author>Steven G. Parker</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Visualize a vector field with arrows.</summary>
     <description>
       <p>Version Date: June 1995</p><p>Version: 1.0</p>
+      <p>Visualize a vector field with arrows.</p>
+      <p>This module interpolates data values to create arrows that
+      represent the vector field. A frame widget with slider bars is
+      sent to the Viewer window and the sampling can be control by
+      sliding disks on the frame. </p>
+      <p>If "2D" is selected, a 2D slice of the vector field will be
+      created.  The "Find" buttons in the upper right allow the user
+      to select a centered axis aligned plane.  If "3D" is selected a
+      three-dimensional frame widget that surrounds the entire domain
+      will control the sampling.</p> 
+
+      <p>Vector colors can be adjusted so that they appear on various
+      backgrounds.  The arrow length and head sizes can also be adjusted.</p>
     </description>
   </overview>
   <io>
