@@ -92,7 +92,7 @@ namespace Uintah {
         }
       }
     virtual ~HypreDriverSStruct(void);
-
+    virtual void cleanup();
  
     //---------- Data member modifyable access ----------
     HYPRE_SStructMatrix& getA(void) { return _HA; }  // LHS

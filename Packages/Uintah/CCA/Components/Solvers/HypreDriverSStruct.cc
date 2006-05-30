@@ -76,15 +76,22 @@ HypreDriverSStruct::HyprePatch::~HyprePatch(void)
 // HypreDriverSStruct destructor
 //___________________________________________________________________
 HypreDriverSStruct::~HypreDriverSStruct(void)
-
 {
-  cout << Parallel::getMPIRank() <<" HypreDriverSStruct destructor" << "\n";
+  // do nothing - should have been cleaned up after solve
+}
+
+void HypreDriverSStruct::cleanup(void)
+{
+  cout << Parallel::getMPIRank() <<" HypreDriverSStruct cleanup\n";
   //printDataStatus();
   // Destroy matrix, RHS, solution objects
+#if 1
   if (_exists[SStructA] >= SStructAssembled) {
+    cout << " Destroying A\n";
     HYPRE_SStructMatrixDestroy(_HA);
     _exists[SStructA] = SStructDestroyed;
   }
+#endif
   if (_exists[SStructB] >= SStructAssembled) {
     HYPRE_SStructVectorDestroy(_HB);
     _exists[SStructB] = SStructDestroyed;
@@ -93,7 +100,6 @@ HypreDriverSStruct::~HypreDriverSStruct(void)
     HYPRE_SStructVectorDestroy(_HX);
     _exists[SStructX] = SStructDestroyed;
   }
-
   // Destroy graph objects
   if (_exists[SStructGraph] >= SStructAssembled) {
     HYPRE_SStructGraphDestroy(_graph);
@@ -105,12 +111,13 @@ HypreDriverSStruct::~HypreDriverSStruct(void)
     HYPRE_SStructStencilDestroy(_stencil);
     _exists[SStructStencil] = SStructDestroyed;
   }
-  if (_vars) {
-    delete _vars;
-  }
   if (_exists[SStructGrid] >= SStructAssembled) {
     HYPRE_SStructGridDestroy(_grid);
     _exists[SStructGrid] = SStructDestroyed;
+  }
+  if (_vars) {
+    delete _vars;
+    _vars = 0;
   }
 }
 //______________________________________________________________________
@@ -189,18 +196,16 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
 {
   cout << Parallel::getMPIRank() << "------------------------------ HypreDriverSStruct::makeLinearSystem_CC()" << "\n";
   ASSERTEQ(sizeof(Stencil7), 7*sizeof(double));
-  
   //__________________________________
   // Set up the grid
   cout << _pg->myrank() << " Setting up the grid" << "\n";
   // Create an empty grid in 3 dimensions with # parts = numLevels.
   const int numDims = 3;
   const int numLevels = _level->getGrid()->numLevels();
-  
   HYPRE_SStructGridCreate(_pg->getComm(), numDims, numLevels, &_grid);
 
   _exists[SStructGrid] = SStructCreated;
-  _vars = new HYPRE_SStructVariable[CC_NUM_VARS];
+  _vars = scinew HYPRE_SStructVariable[CC_NUM_VARS];
   _vars[CC_VAR] = HYPRE_SSTRUCT_VARIABLE_CELL; // We use only cell centered var
 
   // if my processor doesn't have patches on a given level, then we need to create
@@ -213,13 +218,15 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
     useBogusLevelData[_patches->get(p)->getLevel()->getIndex()] = false;
   }
   
-  
   for (int l = 0; l < numLevels; l++) {
     if (useBogusLevelData[l]) {
       HyprePatch_CC hpatch(l, matl);
       hpatch.addToGrid(_grid, _vars);
     }
   }
+
+  delete _vars;
+  _vars = 0;
 
   HYPRE_SStructGridAssemble(_grid);
   _exists[SStructGrid] = SStructAssembled;
@@ -256,7 +263,6 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
     }
   }
   _exists[SStructStencil] = SStructCreated;
-
   //==================================================================
   // Setup connection graph
   //================================================================== 
@@ -280,12 +286,10 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   for (int level = 0; level < numLevels; level++) {
     HYPRE_SStructGraphSetStencil(_graph, level, CC_VAR, _stencil);
   }
-
   // Add to graph the unstructured part of the stencil connecting the
   // coarse and fine levels at every C/F boundary   
   // Note: You need to do this "looking up" and "looking down'      
   for (int p = 0; p < _patches->size(); p++) {
-
     const Patch* patch = _patches->get(p);
     HyprePatch_CC hpatch(_patches->get(p),matl);
     int level = hpatch.getLevel();
@@ -299,7 +303,6 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
       hpatch.makeGraphConnections(_graph,DoingCoarseToFine);
     }
   } 
-
   cout << Parallel::getMPIRank()<< " Doing Assemble graph \t\t\tPatches"<< *_patches << endl;  
   HYPRE_SStructGraphAssemble(_graph);
   _exists[SStructGraph] = SStructAssembled;
@@ -348,7 +351,6 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
                                    _stencilSize, _params->symmetric);
     }
   }
-
   //__________________________________
   // added the unstructured entries at the C/F interfaces
   for (int p = 0; p < _patches->size(); p++) {
@@ -363,7 +365,6 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
   } 
   HYPRE_SStructMatrixAssemble(_HA);
   _exists[SStructA] = SStructAssembled;
-
 
   //==================================================================
   //  Create the rhs
@@ -394,7 +395,6 @@ HypreDriverSStruct::makeLinearSystem_CC(const int matl)
 
   HYPRE_SStructVectorAssemble(_HB);
   _exists[SStructB] = SStructAssembled;
-
   //==================================================================
   //  Create the solution
   //==================================================================
@@ -472,9 +472,11 @@ HypreDriverSStruct::HyprePatch_CC::addToGrid(HYPRE_SStructGrid& grid,
                                              HYPRE_SStructVariable* vars)
 
 {
+#if 0
   cout << Parallel::getMPIRank() << " Adding patch " << (_patch?_patch->getID():-1)
        << " from "<< _low << " to " << _high
        << " Level " << _level << "\n";
+#endif
   HYPRE_SStructGridSetExtents(grid, _level,
                               _low.get_pointer(),
                               _high.get_pointer());
@@ -492,10 +494,11 @@ HypreDriverSStruct::HyprePatch_CC::makeGraphConnections(HYPRE_SStructGraph& grap
 
 {
   int mpiRank = Parallel::getMPIRank();
+#if 0
   cout << mpiRank << " Doing makeGraphConnections \t\t\t\tL-"
                   << _level << " Patch " << _patch->getID()
                   << " viewpoint " << viewpoint << endl;
- 
+#endif
   //__________________________________
   // viewpoint LOGIC
   int fineIndex, coarseIndex;
@@ -538,7 +541,7 @@ HypreDriverSStruct::HyprePatch_CC::makeGraphConnections(HYPRE_SStructGraph& grap
       IntVector offset = finePatch->faceDirection(face);
       CellIterator f_iter = finePatch->getFaceCellIterator(face,"alongInteriorFaceCells");
 
-#if 1           // spew
+#if 0           // spew
       cout << mpiRank << "-----------------Face " << finePatch->getFaceName(face) 
            << " iter " << f_iter.begin() << " " << f_iter.end() 
            << " offset " << offset
@@ -596,9 +599,10 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorEquations(HYPRE_SStructMatrix& HA
                                                          const bool symmetric /* = false */)
 
 {
+#if 0
   cout << Parallel::getMPIRank() << " doing makeInteriorEquations \t\t\t\tL-" 
              << _level<< " Patch " << (_patch?_patch->getID():-1) << endl;
-             
+#endif        
   CCTypes::matrix_type A;
   if (_patch) {
     A_dw->get(A, A_label, _matl, _patch, Ghost::None, 0);
@@ -613,7 +617,7 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorEquations(HYPRE_SStructMatrix& HA
   }
   
   if (symmetric) {
-    double* values = new double[(_high.x()-_low.x()+1)*stencilSize];
+    double* values = scinew double[(_high.x()-_low.x()+1)*stencilSize];
     int stencil_indices[] = {0,1,2,3};
     for(int z = _low.z(); z <= _high.z(); z++) {
       for(int y = _low.y(); y <= _high.y(); y++) {
@@ -638,7 +642,7 @@ HypreDriverSStruct::HyprePatch_CC::makeInteriorEquations(HYPRE_SStructMatrix& HA
     }
     delete[] values;
   } else { // now symmetric = false
-    double* values = new double[(_high.x()-_low.x()+1)*stencilSize];
+    double* values = scinew double[(_high.x()-_low.x()+1)*stencilSize];
     int stencil_indices[] = {0,1,2,3,4,5,6};
     for(int z = _low.z(); z <= _high.z(); z++) {
       for(int y = _low.y(); y <= _high.y(); y++) {
@@ -739,9 +743,11 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
   const IntVector& refRat = fineLevel->getRefinementRatio();
   int mpiRank = Parallel::getMPIRank();
   
+#if 0
   cout << mpiRank << " Doing makeConnections \t\t\t\tL-" << _level
            << " Patch " << finePatch->getID() << endl;
-  
+#endif  
+
   const GridP grid = fineLevel->getGrid();
   const double ZERO = 0.0;
     
@@ -784,7 +790,7 @@ HypreDriverSStruct::HyprePatch_CC::makeConnections(HYPRE_SStructMatrix& HA,
     int stencilIndex_coarse[1] = {opposite};
     IntVector offset = finePatch->faceDirection(face);
 
-#if 1
+#if 0
     cout << "-----------------Face " << finePatch->getFaceName(face) 
          << " iter " << f_iter.begin() << " " << f_iter.end() 
          << " offset " << offset << " opposite " << opposite << endl;

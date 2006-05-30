@@ -42,11 +42,11 @@ namespace Uintah {
   {
     switch (precondType) {
     case PrecondNA:        return 0;  // no preconditioner
-    case PrecondSMG:       return new HyprePrecondSMG();
-    case PrecondPFMG:      return new HyprePrecondPFMG();
-    case PrecondSparseMSG: return new HyprePrecondSparseMSG();
-    case PrecondJacobi:    return new HyprePrecondJacobi();
-    case PrecondDiagonal:  return new HyprePrecondDiagonal();
+    case PrecondSMG:       return scinew HyprePrecondSMG();
+    case PrecondPFMG:      return scinew HyprePrecondPFMG();
+    case PrecondSparseMSG: return scinew HyprePrecondSparseMSG();
+    case PrecondJacobi:    return scinew HyprePrecondJacobi();
+    case PrecondDiagonal:  return scinew HyprePrecondDiagonal();
     case PrecondAMG:       break; // Not implemented yet
     case PrecondFAC:       break; // Not implemented yet
     default:

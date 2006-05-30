@@ -163,6 +163,7 @@ usage( const std::string & message,
 int
 main( int argc, char** argv )
 {
+  AllocatorSetDefaultTag("main");
 #ifdef USE_TAU_PROFILING
 
   // WARNING:
@@ -487,6 +488,7 @@ main( int argc, char** argv )
   if( Uintah::Parallel::getMPIRank() == 0 ) {
     cout << "Sus: going down successfully\n";
   }
+  AllocatorResetDefaultTag();
 }
 
 extern "C" {

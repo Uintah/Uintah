@@ -103,6 +103,7 @@ namespace Uintah {
       _perProcPatches(perProcPatches)
       {}    
     virtual ~HypreDriver(void) {}
+    virtual void cleanup() = 0;
 
     //---------- Data member modifyable access ----------
     // void setInterface(HypreInterface& interface) { _interface = interface; }
@@ -311,7 +312,6 @@ namespace Uintah {
         // Push the solution back into Uintah
         getSolution_CC(matl);
         printSolution("Solution");
-        
                 
         double dt = SCIRun::Time::currentSeconds()-tstart;
         if(pg->myrank() == 0){
@@ -327,6 +327,7 @@ namespace Uintah {
         delete precond;
       } // for m (matls loop)
       cout_doing << mpiRank<<" HypreDriver::solve() END" << "\n";
+      cleanup();
     } // end solve()
 } // end namespace Uintah
 

@@ -623,10 +623,6 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
     delete press_matlSet;
   }
 
-  // free un-needed data
-  d_subsched->advanceDataWarehouse(grid);
-  d_subsched->advanceDataWarehouse(grid);
-
 } // end multiLevelPressureSolve()
 
 
