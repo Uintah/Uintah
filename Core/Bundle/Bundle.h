@@ -67,7 +67,7 @@ class SCISHARE Bundle : public PropertyManager {
     //! SCIRun's way of copying
     virtual Bundle* clone();
 
-    //! For writning bundles to file
+    //! For writing bundles to file
     virtual void io(Piostream&);
     static PersistentTypeID type_id;
 

@@ -26,31 +26,90 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef CORE_ALGORITHMS_UTIL_DYNAMICALGO
-#define CORE_ALGORITHMS_UTIL_DYNAMICALGO 1
 
-// Define a set of useful includes which every dynamic algorithm can use
-
-#include <sgi_stl_warnings_off.h>
-#include <string>
-#include <vector>
-#include <sgi_stl_warnings_on.h>
-
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
-#include <Core/Util/DynamicCompilation.h>
-#include <Core/Util/ProgressReporter.h>
 #include <Core/Util/RegressionReporter.h>
 
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/Mesh.h>
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/String.h>
-#include <Core/Datatypes/NrrdData.h>
+namespace SCIRun {
 
-#include <Core/Algorithms/Util/FieldInformation.h>
-#include <Core/Algorithms/Util/AlgoList.h>
 
-#endif
+void
+RegressionReporter::error(const std::string& msg)
+{
+  std::cout << "REGRESSION TEST ERROR: " << msg << std::endl;
+}
+
+
+void
+RegressionReporter::warning(const std::string& msg)
+{
+}
+
+
+void
+RegressionReporter::remark(const std::string& msg)
+{
+}
+
+
+void 
+RegressionReporter::compile_error(const std::string &filename)
+{
+  std::cerr << "REGRESSION TEST DYNAMIC COMPILE FAILURE IN FILE: " << filename << "cc" << std::endl;
+}
+
+
+void
+RegressionReporter::add_raw_message(const std::string& msg)
+{
+}
+
+
+void
+RegressionReporter::regression_message(const std::string& msg)
+{
+  std::cout << msg << std::endl;
+}
+
+
+void
+RegressionReporter::regression_error(const std::string& msg)
+{
+  std::cout << "ERROR: " << msg << std::endl;
+}
+
+
+std::ostream &
+RegressionReporter::msg_stream()
+{
+}
+
+
+void
+RegressionReporter::msg_stream_flush()
+{
+}
+
+
+void
+RegressionReporter::report_progress( ProgressState )
+{
+}
+
+
+void
+RegressionReporter::update_progress(double)
+{
+}
+
+void
+RegressionReporter::update_progress(int current, int max)
+{
+}
+
+void
+RegressionReporter::increment_progress()
+{
+}
+
+
+} // End namespace SCIRun

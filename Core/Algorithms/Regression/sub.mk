@@ -28,17 +28,21 @@
 
 
 # Makefile fragment for this subdirectory
-SRCDIR := Core/Algorithms
 
-SUBDIRS := \
-  $(SRCDIR)/Converter    \
-  $(SRCDIR)/DataIO    \
-	$(SRCDIR)/Fields		\
-	$(SRCDIR)/Geometry		\
-	$(SRCDIR)/Math		  \
-	$(SRCDIR)/Regression		\
-	$(SRCDIR)/Util			\
-	$(SRCDIR)/Visualization		\
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+SRCDIR   := Core/Algorithms/Regression
+
+SRCS     += \
+            $(SRCDIR)/RegressionAlgo.cc \
+            $(SRCDIR)/CompareFields.cc \
+            
+
+PSELIBS := Core/Containers Core/Exceptions Core/Thread \
+	   Core/Datatypes Core/Basis Core/Geom Core/Util \
+     Core/Algorithms/Util Core/Bundle Core/Geometry
+
+LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

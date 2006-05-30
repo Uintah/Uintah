@@ -26,70 +26,55 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/Algorithms/Fields/Unstructure.h>
+#include <Core/Algorithms/Regression/CompareFields.h>
 
 namespace SCIRunAlgo {
 
 using namespace SCIRun;
 
-bool UnstructureAlgo::Unstructure(ProgressReporter *pr, FieldHandle input, FieldHandle& output)
+bool CompareFieldsAlgo::CompareFields(ProgressReporter *pr, FieldHandle field1, FieldHandle field2)
 {
-  if (input.get_rep() == 0)
+  if (field1.get_rep() == field2.get_rep()) return (true);
+
+  if (field1.get_rep() == 0)
   {
-    pr->error("Unstructure: No input field");
+    pr->remark("CompareFields: Field 1 is empty");
+    return (false);
+  }
+
+  if (field2.get_rep() == 0)
+  {
+    pr->remark("CompareFields: Field 2 is empty");
     return (false);
   }
 
   // no precompiled version available, so compile one
 
-  FieldInformation fi(input);
-  FieldInformation fo(input);
-  
-  if (fi.is_nonlinear())
-  {
-    pr->error("Unstructure: This function has not yet been defined for non-linear elements");
-    return (false);
-  }
-  
-  std::string mesh_type = fi.get_mesh_type();
-  if ((mesh_type == "LatVolMesh")||(mesh_type == "StructHexVolMesh"))
-  {
-    fo.set_mesh_type("HexVolMesh");
-  }
-  else if ((mesh_type == "ImageMesh")||(mesh_type == "StructQuadSurfMesh"))
-  {
-    fo.set_mesh_type("QuadSurfMesh");
-  }
-  else if ((mesh_type == "ScanlineMesh")||(mesh_type == "StructCurveMesh"))
-  {
-    fo.set_mesh_type("CurveMesh");
-  }
-  else
-  {
-    pr->error("No unstructure method available for mesh: " + mesh_type);
-    return (false);
-  }
+  FieldInformation fi1(field1);
+  FieldInformation fi2(field2);
 
+  if (!(fi1 == fi2))
+  {
+    pr->remark("CompareFields: Field types are not equal");
+    return (false);  
+  }
+  
   // Setup dynamic files
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "ALGOUnstructure."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
-    "UnstructureAlgo","UnstructureAlgoT",
-    fi.get_field_name() + "," + fo.get_field_name());
+    "ALGOCompareFields."+fi1.get_field_filename()+".",
+    "CompareFieldsAlgo","CompareFielsAlgoT",
+    fi1.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
-  ci->add_namespace("SCIRun");
   ci->add_namespace("SCIRunAlgo");
+  ci->add_namespace("SCIRun");
   
-  fi.fill_compile_info(ci);
-  fo.fill_compile_info(ci);
+  fi1.fill_compile_info(ci);
   
   if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;
   
-  ci->keep_library_ = false;
-  
-  // Handle dynamic compilation
-  SCIRun::Handle<UnstructureAlgo> algo;
+  SCIRun::Handle<CompareFieldsAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
     pr->compile_error(ci->filename_);
@@ -97,8 +82,9 @@ bool UnstructureAlgo::Unstructure(ProgressReporter *pr, FieldHandle input, Field
     return(false);
   }
 
-  return(algo->Unstructure(pr,input,output));
+  return(algo->CompareFields(pr,field1,field2)); 
 }
+
 
 } // End namespace SCIRunAlgo
 

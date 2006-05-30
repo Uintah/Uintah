@@ -442,7 +442,7 @@ void FEMBuilder<FIELD>::build_local_matrix(typename FIELD::mesh_type::Elem::inde
     // Compute the inverse Jacobian and the determinant, the latter is the volume
     // ratio between real element and the element in unit space
     double detJ = InverseMatrix3x3(J, Ji);
-      
+               
     // Volume elements can return negative determinants if the order of elements
     // is put in a different order
     // TODO: It seems to be that a negative determinant is not necessarily bad, 
@@ -721,12 +721,10 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
     for (int j = 0; j < (int)ca.size(); j++)
     {
       neib_dofs.clear();
-      int dofi = -1; //!< index of global dof in local dofs
       meshhandle_->get_nodes(na, ca[j]); //!< get neighboring nodes
       for(int k = 0; k < (int)na.size(); k++)
       {
         neib_dofs.push_back((int)(na[k])); // Must cast to (int) for SGI compiler :-(
-        if ((int)na[k] == i) dofi = neib_dofs.size()-1;
       }
       //! check for additional nodes at edges
       if (global_dimension_add_nodes)
@@ -735,14 +733,31 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
         for(int k = 0; k < (int)ea.size(); k++)
         {
           neib_dofs.push_back(global_dimension + ea[k]);
-          if ((int)na[k] == i)
-          dofi = neib_dofs.size() - 1;
         }
       }
-      ASSERT(dofi!=-1);
+      
       ASSERT((int)neib_dofs.size() == local_dimension);
-      build_local_matrix(ca[j], dofi, lsml, ni_points, ni_weights, ni_derivatives);
-      add_lcl_gbl(i, neib_dofs, lsml);
+      for(int k = 0; k < (int)na.size(); k++)
+      {
+        if ((int)na[k] == i) 
+        {
+          build_local_matrix(ca[j], k , lsml, ni_points, ni_weights, ni_derivatives);
+          add_lcl_gbl(i, neib_dofs, lsml);
+        }
+      }
+
+      if (global_dimension_add_nodes)
+      {
+        for(int k = 0; k < (int)ea.size(); k++)
+        {
+          if (global_dimension + ea[k] == i)
+          {
+            build_local_matrix(ca[j], k+(int)na.size() , lsml, ni_points, ni_weights, ni_derivatives);
+            add_lcl_gbl(i, neib_dofs, lsml);
+          }
+        }
+      }
+      
     }
   }
 

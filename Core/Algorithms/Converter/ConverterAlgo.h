@@ -30,12 +30,6 @@
 #ifndef CORE_ALGORITHMS_CONVERTER_CONVERTERALGO_H
 #define CORE_ALGORITHMS_CONVERTER_CONVERTERALGO_H 1
 
-#include <sgi_stl_warnings_off.h>
-#include <string>
-#include <sstream>
-#include <vector>
-#include <algorithm>
-#include <sgi_stl_warnings_on.h>
 
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -43,18 +37,16 @@
 
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Geometry/Transform.h>
-#include <Core/Basis/Constant.h>
-#include <Core/Datatypes/PointCloudMesh.h>
 
 #include <Core/Algorithms/Util/AlgoLibrary.h>
+#include <Core/Algorithms/Converter/share.h>
 
 namespace SCIRunAlgo {
 
 using namespace SCIRun;
 
-class ConverterAlgo : public AlgoLibrary {
+class SCISHARE ConverterAlgo : public AlgoLibrary {
 
   public:
     ConverterAlgo(ProgressReporter* pr); // normal case

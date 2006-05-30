@@ -28,6 +28,13 @@
 
 #include <Core/Algorithms/Converter/ConverterAlgo.h>
 
+#include <sgi_stl_warnings_off.h>
+#include <string>
+#include <sstream>
+#include <vector>
+#include <algorithm>
+#include <sgi_stl_warnings_on.h>
+
 #include <Core/Algorithms/Converter/NrrdToField.h>
 #include <Core/Algorithms/Converter/MatrixToField.h>
 #include <Core/Algorithms/Converter/MatricesToDipoleField.h>

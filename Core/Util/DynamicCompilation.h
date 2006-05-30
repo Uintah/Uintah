@@ -100,6 +100,7 @@ DynamicCompilation::compile(CompileInfoHandle cih, DC &result,
   const CompileInfo &ci = *(cih.get_rep());
   DynamicAlgoHandle algo_handle;
   bool status = false;
+  bool did_compile = false;
 
   reporter->report_progress( ProgressReporter::Starting );
   
@@ -110,6 +111,7 @@ DynamicCompilation::compile(CompileInfoHandle cih, DC &result,
     status =
       DynamicLoader::scirun_loader().compile_and_store(ci, ignore, reporter);
 
+    did_compile = true;
     reporter->report_progress( ProgressReporter::CompilationDone );
 
     if (! (status && DynamicLoader::scirun_loader().fetch(ci, algo_handle)))
@@ -134,6 +136,14 @@ DynamicCompilation::compile(CompileInfoHandle cih, DC &result,
   }
   else
   {
+    //! We have the maker, now destroy the library file if we do not
+    //! need it anymore.
+
+    if ((ci.keep_library_ == false) && (did_compile))
+    {
+      DynamicLoader::scirun_loader().cleanup_compile(cih);
+    }
+
     status = true;
   }
 

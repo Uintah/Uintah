@@ -823,5 +823,15 @@ FieldInformation::is_volume()
   return false;  
 }
 
+
+bool        
+FieldInformation::operator==(const FieldInformation& fi) const
+{
+  if ( (field_type == fi.field_type) && (mesh_type == fi.mesh_type) && (mesh_basis_type == fi.mesh_basis_type) &&
+       (point_type == fi.point_type) && (basis_type == fi.basis_type) && (data_type == fi.data_type) &&
+       (container_type == fi.container_type) ) return (true);
+  return (false);
+}
+
 } // end namespace
 

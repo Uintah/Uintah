@@ -86,6 +86,11 @@ public:
   string             pre_include_extra_;
   string             post_include_extra_;
 
+  //! For regression testing after the function has been compiled remove
+  //! library if it was not there, we are just testing the regression.
+  //! This prevents over crowding of the on the fly libs directory.
+  bool               keep_library_;
+
   int       ref_cnt;
 };
 
@@ -123,6 +128,7 @@ public:
   bool compile_and_store(const CompileInfo &info, bool maybe_compile,
 			 ProgressReporter *pr);
   void cleanup_failed_compile(CompileInfoHandle info);
+  void cleanup_compile(CompileInfoHandle info);
 
   //! All modules should use this function to get the loader.
   static DynamicLoader& scirun_loader();

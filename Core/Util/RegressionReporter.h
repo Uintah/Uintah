@@ -26,31 +26,45 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef CORE_ALGORITHMS_UTIL_DYNAMICALGO
-#define CORE_ALGORITHMS_UTIL_DYNAMICALGO 1
 
-// Define a set of useful includes which every dynamic algorithm can use
 
-#include <sgi_stl_warnings_off.h>
-#include <string>
-#include <vector>
-#include <sgi_stl_warnings_on.h>
 
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
-#include <Core/Util/DynamicCompilation.h>
+#ifndef SCIRun_Core_Util_RegressionReporter_h
+#define SCIRun_Core_Util_RegressionReporter_h
+
 #include <Core/Util/ProgressReporter.h>
-#include <Core/Util/RegressionReporter.h>
+#include <Core/Util/share.h>
 
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/Mesh.h>
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/String.h>
-#include <Core/Datatypes/NrrdData.h>
+namespace SCIRun {
 
-#include <Core/Algorithms/Util/FieldInformation.h>
-#include <Core/Algorithms/Util/AlgoList.h>
+class SCISHARE RegressionReporter : public ProgressReporter 
+{
+public:
+  virtual void          error(const std::string& msg);
+  virtual void          warning(const std::string& msg);
+  virtual void          remark(const std::string& msg);
+  virtual void          compile_error(const std::string &filename);
+  virtual void          add_raw_message(const std::string &msg);
+
+  virtual void          regression_message(const std::string& msg);
+  virtual void          regression_error(const std::string& msg);
+
+  // This one isn't as thread safe as the other ProgressReporter functions.
+  // Use add_raw_message or one of the others instead if possible.
+  virtual std::ostream &msg_stream();
+  virtual void          msg_stream_flush();
+
+  // Compilation progress.  Should probably have different name.
+  virtual void          report_progress( ProgressReporter::ProgressState );
+
+  // Execution time progress.
+  // Percent is number between 0.0-1.0
+  virtual void          update_progress(double percent);
+  virtual void          update_progress(int current, int max);
+  virtual void          increment_progress();
+};
+
+
+} // Namespace SCIRun
 
 #endif
