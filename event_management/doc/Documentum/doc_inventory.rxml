@@ -1,0 +1,511 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<!--% require("../Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+<!--% doc.insertDocType("article", {"sr"=>"SCIRun"}) %-->
+<!--% colspec = <<EOS
+<colspec colwidth=\"6*\"/> 
+<colspec colwidth=\"1*\" align=\"center\"/> 
+<colspec colwidth=\"1*\" align=\"center\"/> 
+<colspec colwidth=\"1*\" align=\"center\"/> 
+<colspec colwidth=\"1*\" align=\"center\"/>
+EOS
+%-->
+<!--% thead = <<EOS
+<thead>
+  <row>
+    <entry>Task</entry>
+    <entry>Priority</entry>
+    <entry>Status</entry>
+    <entry>Assigned</entry>
+    <entry>Comp Date</entry>
+  </row>
+</thead>
+EOS
+%-->
+
+<article class="techreport">
+  <title>&sr; Documentation Inventory (v. <!--%= doc.edition %-->)</title>
+
+  <para>This document inventories &sr; documentation.  This document's
+  purpose is to list tasks associated with existing and proposed
+  documents.</para>
+
+  <para>Each document is given its own section.  Each section is
+  organized as follows:</para>
+  <orderedlist>
+    <listitem><para>A paragraph summarizing the purpose of the
+    document.</para></listitem>
+    <listitem><para>A table listing tasks associated with the
+    document.  Each row of the table describes a task.  The task table
+    contains five columns:</para>
+    <variablelist>
+      <varlistentry>
+        <term>Task</term>
+        <listitem>
+          <para>A description of a task.  The description may be
+          fine-grained or the size of a bolder depending on the state
+          of the document and other factors.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Priority</term>
+        <listitem>
+          <para>This is one of <quote>Low</quote>,
+          <quote>Normal</quote>, <quote>High</quote>, or
+          <quote>Unknown</quote>.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>%</term>
+        <listitem>
+          <para>Percent compeleted.</para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Assigned</term>
+        <listitem>
+          <para>Task assignee(s) or <quote>Unknown</quote></para>
+        </listitem>
+      </varlistentry>
+      <varlistentry>
+        <term>Comp Date</term>
+        <listitem>
+          <para>Task completion date or <quote>Unknown</quote></para>
+        </listitem>
+      </varlistentry>
+    </variablelist>
+    </listitem>
+  </orderedlist>
+
+  <section>
+    <title>Developer Guide</title>
+    <para>A developer's guide to:</para>
+    <itemizedlist>
+      <listitem><para>SCIRun source code organization</para></listitem>
+      <listitem><para>Coding standards</para></listitem>
+      <listitem><para>SCIRun internals (memory management etc.)</para></listitem>
+      <listitem><para>Datatypes and datatype development</para></listitem>
+      <listitem><para>Module development</para></listitem>
+    </itemizedlist>
+    <table>
+      <title>Developer Guide Tasks</title>
+      <tgroup cols="5">
+        <!--%= colspec %-->
+        <!--%= thead %-->
+        <tbody>
+          <row>
+            <entry>Update</entry>
+            <entry>High</entry>
+            <entry>0</entry>
+            <entry>Unknown</entry>
+            <entry>September, 2004</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>User Guide</title> <para>A user's guide to the purpose and
+    use of the &sr; problem solving environment.  For users who are
+    building and executing &sr; networks</para>
+    <table>
+      <title>Tasks for <citetitle>User Guide</citetitle></title>
+      <tgroup cols="5">
+        <!--%= colspec %-->
+        <!--%= thead %-->
+        <tbody>
+          <row>
+            <entry>
+	      <para>Documentation of new DataIO stuff.  This is in the
+	      Import/Export section of the User's Guide.</para>
+	      <para>Import/Export section needs review after
+	      completion.  Send to Michael.</para>
+	    </entry>
+            <entry>High</entry>
+            <entry>75</entry>
+            <entry>Ted</entry>
+            <entry>June 22, 2004</entry>
+          </row>
+          <row>
+            <entry>Add Jenny's DICOM docs.  This info should
+            also/instead go in the BioTensor tutorial?</entry>
+            <entry>High</entry>
+            <entry>0</entry>
+            <entry>Ted</entry>
+            <entry>Unknown</entry>
+          </row>
+	  <row>
+	    <entry>Concepts section needs review.</entry>
+            <entry>Normal</entry>
+            <entry>0</entry>
+            <entry>Dav</entry>
+            <entry>Unknown</entry>
+	  </row>
+	  <row>
+	    <entry>Viewer section needs review.</entry>
+            <entry>Normal</entry>
+            <entry>0</entry>
+            <entry>Mckay</entry>
+            <entry>Unknown</entry>
+	  </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>Installation Guide</title>
+
+    <para>The Installation Guide provides instructions for installing
+    &sr;, its third party library distribution, other third party
+    libraries (e.g. ITK), sample data sets, and documentation.</para>
+    
+    <table>
+      <title>Tasks for Installation Guide</title>
+      <tgroup cols="5">
+        <!--%= colspec %-->
+        <!--%= thead %-->
+        <tbody>
+          <row>
+            <entry>Update system compatibility info. Dav has mostly
+            gathered this info.  Now needs to be inserted into
+            Guide. </entry>
+            <entry>Normal</entry>
+            <entry>0</entry>
+            <entry>Ted</entry>
+            <entry>June 22, 2004</entry>
+          </row>
+	  <row>
+	    <entry>Update petc, itk library compatibility info.</entry>
+            <entry>High</entry>
+            <entry>0</entry>
+            <entry>Ted</entry>
+            <entry>June 22, 2004</entry>
+	  </row>
+	  <row>
+	    <entry>Document patch needed for Matlab 13 on OSX.</entry>
+            <entry>High</entry>
+            <entry>0</entry>
+            <entry>Ted</entry>
+            <entry>June 22, 2004</entry>
+	  </row>
+	  <row>
+	    <entry>
+	      <para>Add Atlas library use info.</para>
+	      <para>McKay has provided this info.</para>
+	    </entry>
+            <entry>High</entry>
+            <entry>0</entry>
+            <entry>Ted</entry>
+            <entry>June 22, 2004</entry>
+	  </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>Module Reference Guide</title>
+    <para>Documentation for each distributed &sr; module.</para>
+    <table>
+      <title>Tasks for Module Reference Guide</title>
+      <tgroup cols="5">
+        <!--%= colspec %-->
+        <!--%= thead %-->
+        <tbody>
+	  <row>
+	    <entry>Update Reader/Writer modules specifications.</entry>
+	    <entry>Medium</entry>
+	    <entry>0</entry>
+	    <entry>Ted</entry>
+	    <entry>Unknown</entry>
+	  </row>
+	  <row>
+	    <entry>Update Matlab module description based on
+	    corresponding latex document.  Retire latex
+	    document.</entry>
+	    <entry>Medium</entry>
+	    <entry>75</entry>
+	    <entry>Ted</entry>
+	    <entry>June 22, 2004</entry>
+	  </row>
+	  <row>
+	    <entry>Edit SetupBEMatrix module description sent to us by
+	    Dana's group.</entry>
+	    <entry>Medium</entry>
+	    <entry>5</entry>
+	    <entry>Ted</entry>
+	    <entry>June 22, 2004</entry>
+	  </row>
+	  <row>
+	    <entry>Add indexing command to module-spec so that modules
+	    can be located by keywords and concepts.</entry>
+	    <entry>Low</entry>
+	    <entry>0</entry>
+	    <entry>Ted</entry>
+	    <entry>None</entry>
+	  </row>
+          <row>
+            <entry>Provide <emphasis>complete</emphasis> documentation
+            for each module.  No module is adequately documented and
+            this should be an ongoing process.  A module specification
+            is also the forum for minor net descriptions.</entry>
+            <entry>Low</entry>
+            <entry>50</entry>
+            <entry>Module Developers</entry>
+            <entry>None</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>Network Examples</title>
+    <para></para>
+    <table>
+      <title>Tasks for (Major) Network Examples</title>
+      <tgroup cols="5">
+        <!--%= colspec %-->
+        <!--%= thead %-->
+        <tbody>
+          <row>
+            <entry>How shall we proceed?</entry>
+            <entry>Unknown</entry>
+            <entry>0</entry>
+            <entry>Dav, DMW, and Ted</entry>
+            <entry>Unknown</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+    
+  </section>
+
+  <section>
+    <title>Module Specification Guide</title>
+    <para>A guide to writing module documentation.</para>
+    <table>
+      <title>Tasks for Module Specification Guide</title>
+      <tgroup cols="5">
+        <!--%= colspec %-->
+        <!--%= thead %-->
+        <tbody>
+          <row>
+            <entry>Complete the MSG.  Incomplete draft is finished.
+            See subsequent entries for specific tasks.</entry>
+            <entry>Low</entry>
+            <entry>0</entry>
+            <entry>Ted</entry>
+            <entry>8/1/04</entry>
+          </row>
+          <row>
+            <entry>Complete element references.  Element references
+            exist for 80% of all elements.  These are mostly
+            incomplete.  Remainder of element reference entries need
+            to be completed.</entry>
+            <entry>Low</entry>
+            <entry>0</entry>
+            <entry>Ted</entry>
+            <entry>8/1/04</entry>
+          </row>
+          <row>
+            <entry>Expand <citetitle>Content Models</citetitle>
+            section.  A Terse paragraph exists.</entry>
+            <entry>Low</entry>
+            <entry>0</entry>
+            <entry>Ted</entry>
+            <entry>8/1/04</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>Developer FAQ</title>
+    <para>Common questions ask by developers.</para>
+    <table>
+      <title>Tasks for Developer FAQ</title>
+      <tgroup cols="5">
+        <!--%= colspec %-->
+        <!--%= thead %-->
+        <tbody>
+          <row>
+            <entry>Review new FAQ entries and commit them to repository.</entry>
+            <entry>High</entry>
+            <entry>100</entry>
+            <entry>Ted</entry>
+            <entry>April 20, 2004</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>User FAQ</title>
+    <para>Common questions asked by users.</para>
+    <table>
+      <title>Tasks for User FAQ</title>
+      <tgroup cols="5">
+        <!--%= colspec %-->
+        <!--%= thead %-->
+        <tbody>
+          <row>
+            <entry>Review new FAQ entries and commit them to repository.</entry>
+            <entry>High</entry>
+            <entry>100</entry>
+            <entry>Ted</entry>
+            <entry>April 20, 2004</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>Installation FAQ</title>
+    <para>Common installation questions.</para>
+    <table>
+      <title>Tasks for Installation FAQ</title>
+      <tgroup cols="5">
+        <!--%= colspec %-->
+        <!--%= thead %-->
+        <tbody>
+          <row>
+            <entry>Review new FAQ entries and commit them to repository.</entry>
+            <entry>High</entry>
+            <entry>100</entry>
+            <entry>Ted</entry>
+            <entry>April 20, 2004</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>SCIRun Tutorial</title>
+    <para>An interactive tutorial demonstrating the use of &sr;</para>
+    <table>
+      <title>Tasks for SCIRun Tutorial</title>
+      <tgroup cols="5">
+        <!--%= colspec %-->
+        <!--%= thead %-->
+        <tbody>
+          <row>
+            <entry>None known</entry>
+            <entry>Normal</entry>
+            <entry>Complete</entry>
+            <entry>Unknown</entry>
+            <entry>Unknown</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </section>
+  
+  <section>
+    <title>BioFEM Tutorial</title>
+    <para>An interactive tutorial demonstrating the use of the BioFEM PowerApp</para>
+    <table>
+      <title>Tasks for BioFEM Tutorial</title>
+      <tgroup cols="5">
+        <!--%= colspec %-->
+        <!--%= thead %-->
+        <tbody>
+          <row>
+            <entry>None</entry>
+            <entry>Normal</entry>
+            <entry>Complete</entry>
+            <entry>None</entry>
+            <entry>None</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>BioTensor Tutorial</title>
+    <para>An interactive tutorial demonstrating the use of the BioTensor PowerApp</para>
+    <table>
+      <title>Tasks for BioTensor Tutorial</title>
+      <tgroup cols="5">
+        <!--%= colspec %-->
+        <!--%= thead %-->
+        <tbody>
+          <row>
+            <entry>Review and updates.  Latter third of document needs
+            to be made more tutorial-like.  Procedures for replicating
+            tutorial images need to be developed.</entry>
+            <entry>Low</entry>
+            <entry>0</entry>
+            <entry>None</entry>
+            <entry>None</entry>
+          </row>
+          <row>
+            <entry>Add Jenny's DICOM docs to Appendix.</entry>
+            <entry>High</entry>
+            <entry>0</entry>
+            <entry>Ted</entry>
+            <entry>May 1, 2004</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </section>
+
+  <section>
+    <title>Documentum</title>
+    <para>A guide to &sr; documentation and its production.</para>
+    <table>
+      <title>Tasks for Documentum</title>
+      <tgroup cols="5">
+        <!--%= colspec %-->
+        <!--%= thead %-->
+        <tbody>
+          <row>
+            <entry>Needs to be brought up to date.</entry>
+            <entry>Normal</entry>
+            <entry>0</entry>
+            <entry>None</entry>
+            <entry>None</entry>
+          </row>
+        </tbody>
+      </tgroup>
+    </table>
+  </section>
+</article>

@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<!--
+For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<section id="sec.hdf5_inst">
+  <title>HDF5 Installation</title>
+
+  <para>The <ulink url="http://hdf.ncsa.uiuc.edu/HDF5">Hierarchicial Data
+  Format (HDF)</ulink> project provides file formats and software for
+  scientific data management.  <acronym>HDF5</acronym> libraries
+  provide modules of SCIRun's DataIO package the ability to read
+  <acronym>HDF5</acronym> data.</para>
+  <para>HDF5 libraries must be built from their source code.  SCIRun
+  supports HDF5 versions 1.6.x.</para>
+  <note>
+    <itemizedlist>
+      <listitem os="linux">
+	<para>The SCIRun RPMs include support for HDF5 and the HDF5
+	libraries are distributed with the SCIRun RPMs.</para>
+      </listitem>
+      <listitem>
+	<para>HDF5 must be installed before building SCIRun</para>
+      </listitem>
+      <listitem>
+	<para>HDF5 must be built thread safe&#x2014;HDF5 binary
+	distributions that are not thread safe cannot be used with
+	SCIRun.</para>
+      </listitem>
+      <listitem>
+	<para>SCIRun must be configured to support HDF5.  See <xref
+	linkend="sec.sr_hdf5_config"/> for information on configuring
+	SCIRun to use HDF5.</para>
+      </listitem>
+    </itemizedlist>
+  </note>
+
+  <section id="sec.hdf5_download">
+    <title>Download and Unpack</title>
+    <para>
+      Download and unpack the HDF5 source code distribution:
+      <itemizedlist>
+	<listitem>
+	  <para>
+	    Web browser download:
+	    <literallayout>
+<!--%= 
+hdf5_src = "ftp://ftp.ncsa.uiuc.edu/HDF/HDF5/hdf5-1.6.4/src/hdf5-1.6.4.tar.gz"
+doc.doIfHTML {
+  %Q{<ulink url="#{hdf5_src}"/>}
+}
+%-->
+<!--%= 
+doc.doIfPrint {
+  hdf5_src
+}
+%-->
+	    </literallayout>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Unpack.  In a terminal window type:
+	    <literallayout>
+gunzip -c hdf5-1.6.4.tar.gz | tar xvf -	      
+	    </literallayout>
+	  </para>
+	</listitem>
+      </itemizedlist>
+    </para>
+  </section>
+
+  <section id="sec.sr_hdf5_build">
+    <title>Building</title>
+    <para>Follow the steps below to build HDF5.  See the <ulink
+    url="ftp://ftp.ncsa.uiuc.edu/HDF/HDF5/current/src/unpacked/release_docs/INSTALL">HDF5
+    installation home page</ulink> for complete installation
+    instructions.  To build HDF5:
+    <itemizedlist>
+      <listitem>
+	<para>
+	  Change the working directory to the HDF5 directory:
+	  <literallayout class="monospaced">
+cd <replaceable>path-to</replaceable>/hdf5-1.6.3
+	  </literallayout>
+	</para>
+      </listitem>
+      <listitem>
+	<para>Set compiler environment variables, for example,</para>
+	<para>
+	  For an sh-type shell:
+	  <literallayout class="monospaced">
+CC=gcc
+CXX=g++
+export CC CXX
+	  </literallayout>
+	</para>
+	<para>
+	  For an csh-type shell:
+	  <literallayout class="monospaced">
+setenv CC gcc
+setenv CXX g++
+	  </literallayout>
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  Configure HDF5:
+	  <literallayout class="monospaced">
+./configure --enable-threadsafe --with-pthread=/usr --prefix=/usr/local/hdf5
+	  </literallayout>
+	  This will install HDF5 binaries, libraries, header files,
+	  and tools in <filename>/usr/local/hdf5</filename>.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  Build HDF5:
+	  <literallayout class="monospaced">
+make all
+	  </literallayout>
+	  Become root user and install HDF5:
+	  <literallayout class="monospaced">
+su -
+make install	    
+	  </literallayout>
+	  Leave the root account by typing <command>exit</command>.
+	</para>
+      </listitem>
+    </itemizedlist>
+    </para>
+  </section>
+
+  <section id="sec.sr_hdf5_config">
+    <title>SCIRun HDF5 Configure Options</title>
+    <para>
+      The configure option below adds support for HDF5 in SCIRun.
+      Include this option in the SCIRun <command>configure</command>
+      command (<xref linkend="sec.build-sr"/>):
+      <literallayout class="monospaced">
+--with-hdf5=/usr/local/hdf5
+      </literallayout>
+    </para>
+  </section>
+
+</section>

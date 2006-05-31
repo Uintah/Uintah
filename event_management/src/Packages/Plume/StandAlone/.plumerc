@@ -1,0 +1,3 @@
+#default_builder = foo
+
+builder_types = (TxtBuilder, cca:SCIRun.TxtBuilder)

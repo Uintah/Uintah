@@ -1,0 +1,497 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+"http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta content="HTML Tidy for Mac OS X (vers 1st December 2002), see www.w3.org"
+	  name="generator" /><!--
+	  For more information, please see: http://software.sci.utah.edu
+
+	  The MIT License
+
+	  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+	  University of Utah.
+
+	  License for the specific language governing rights and limitations under
+	  Permission is hereby granted, free of charge, to any person obtaining a
+	  copy of this software and associated documentation files (the "Software"),
+	  to deal in the Software without restriction, including without limitation
+	  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+	  and/or sell copies of the Software, and to permit persons to whom the
+	  Software is furnished to do so, subject to the following conditions:
+
+	  The above copyright notice and this permission notice shall be included
+	  in all copies or substantial portions of the Software.
+
+	  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+	  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+	  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+	  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+	  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+	  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+	  DEALINGS IN THE SOFTWARE.
+	  -->
+    <meta http-equiv="content-type"
+	  content="text/html;charset=iso-8859-1" />
+    <meta name="generator" content="Adobe GoLive 4" />
+    <title>
+      Looking at the Data
+    </title>
+  </head>
+  <body bgcolor="#A9A9A9">
+    <a name="chapter-2" id="chapter-2"></a>
+    <table align="center" border="0" cellpadding="0" cellspacing="0"
+	   width="306" bgcolor="#CCCCCC">
+      <tr>
+	<td>
+	  <img height="92" width="600" src="images/sub-banner.jpg"
+	       border="0"
+	       usemap="#sub-banner8662a0c4" /><map name="sub-banner8662a0c4"
+	       id="sub-banner8662a0c4">
+	  <area coords="581,65,598,84" shape="rect" title=""
+		nohref="nohref" alt="" />
+	  <area href="chapter_7.html" coords="557,64,575,83"
+		shape="rect" title="Feedback" alt="" />
+	  <area href="chapter_6.html" coords="532,64,550,82"
+		shape="rect"
+		title="Putting Simulation and Visualization Together" alt="" />
+	  <area href="chapter_5.html" coords="508,64,527,83"
+		shape="rect" title="Bioelectric Field Simulation" alt="" />
+	  <area href="chapter_4.html" coords="483,64,502,83"
+		shape="rect" title="Multi-Vis" alt="" />
+	  <area href="chapter_3.html" coords="460,64,478,83"
+		shape="rect" title="Derived Fields" alt="" />
+	  <area href="chapter_2.html" coords="436,64,454,83"
+		shape="rect" title="Looking at the Data" alt="" />
+	  <area href="chapter_1.html" coords="412,64,430,81"
+		shape="rect" title="Geometry Visualization" alt="" />
+	  <area href="Intro.html" coords="354,64,406,84" shape="rect"
+		title="Introduction" alt="" />
+	  <area href="../../index.html" coords="205,63,343,83"
+		shape="rect" title="Documentation" alt="" />
+	  <area href="http://software.sci.utah.edu/"
+		coords="103,63,195,82" shape="rect" title="Software" alt="" />
+	  <area href="index.html" coords="1,65,92,81" shape="rect"
+		title="Tutorial Home" alt="" />
+	</map>
+	</td>
+      </tr>
+      <tr>
+	<td>
+	  <center>
+	    <table border="0" cellpadding="0" cellspacing="5"
+		   width="600">
+	      <tr>
+		<td>
+		  <center>
+		    <h1>
+		      <font face="Arial,Helvetica,Geneva,Swiss,SunSans-Regular"
+			    color="maroon">Chapter 2: Looking at the
+		      Data</font>
+		    </h1>
+		  </center>
+		  <h2>
+		    Chapter Sections
+		  </h2>
+		  <ul>
+		    <li>
+		      <a href="#section-0">Chapter Overview</a>
+		    </li>
+		    <li>
+		      <a href="#section-units">Bio-electric Field
+		      Units</a>
+		    </li>
+		    <li>
+		      <a href="#section-1">Color Maps</a>
+		    </li>
+		    <li>
+		      <a href="#section-2">Adding Color to Your Net</a>
+		    </li>
+		    <li>
+		      <a href="#section-3">GenStandardColorMaps GUI</a>
+		    </li>
+		    <li>
+		      <a href="#section-4">RescaleColorMap GUI</a>
+		    </li>
+		    <li>
+		      <a href="#summary">Summary</a>
+		    </li>
+		  </ul>
+		  <h2>
+		    <a name="section-0" id="section-0">Chapter
+		    Overview</a>
+		    </h2>Chapter 1 demonstrated the construction of a
+		    small network to visualize the geometry of a mesh.
+		    Chapter 2 demonstrates how to extend that net, adding
+		    tools to look at data values on the geometry.
+		    Specifically, how to visualize a scalar quantity
+		    (voltage) on a set of points in space (a PointCloud
+		    of electrodes). 
+		    <p>
+		      In the previous net, three modules were hooked
+		      together--FieldReader, ShowField, and Viewer. In
+		      the user interface of the ShowField module, the
+		      Default Color selector was used to render all
+		      geometry in blue.
+		    </p>
+		    <p>
+		      In this chapter, rather than mapping a single color
+		      to the geometry, colors will vary across the mesh
+		      based on the data's scalar values.
+		    </p>
+		    <h2>
+		      <a name="section-units"
+			 id="section-units">Bioelectric Field Units</a>
+		    </h2>
+		    <p>
+		      The quantities of interest in bioelectric field
+		      problems are conductivity, potentials, electric
+		      field, dipole source, current density, and current
+		      source density. These quantities and their
+		      associated units are listed in the following table:
+		    </p>
+		    <table border="1">
+		      <tr>
+			<th align="left">Quantity</th>
+			<th align="left">Unit</th>
+		      </tr>
+		      <tr>
+			<td>Conductivity</td>
+			<td>(amps / volts) / meter  or (siemens / meter)</td>
+		      </tr>
+		      <tr>
+			<td>Potential</td>
+			<td>volts</td>
+		      </tr>
+		      <tr>
+			<td>Electric Field</td>
+			<td>volts / meter</td>
+		      </tr>
+		      <tr>
+			<td>Dipole Source</td>
+			<td>amps / meter</td>
+		      </tr>
+		      <tr>
+			<td>Current Density</td>
+			<td>amps / meter<sup>2</sup></td>
+		      </tr>
+		      <tr>
+			<td>Current Source Density</td>
+			<td>amps / meter<sup>3</sup></td>
+		      </tr>
+		    </table>
+		    <p>
+		      SCIRun doesn't keep track of unit scale factors
+		      (e.g. centi-, milli-, etc).  SCIRun assumes a dipole
+		      source is in units of amps / meter, conductivities are in
+		      siemens / meter, model geometry is in meters; results
+		      are therefore in units of volts.  If this isn't
+		      true (e.g. you know that the model is in mm), then you have
+		      to carry those scale factors through your computation
+		      (e.g. know that the results you get out are in kv).
+		    </p>
+		    <p>
+		      The rule of thumb is that if we
+		      <em>increase</em> the conductivity, then we
+		      <em>decrease</em> the potentials by that same
+		      scale factor.  Conversely, if we
+		      <em>increase</em> the dipole source moment, then
+		      we <em>increase</em> the potentials by that same
+		      scale factor.  i.e. V = I / sigma.  Similarly, if we hold
+		      everything else constant, but <em>increase</em>
+		      the size of the domain, then we
+		      <em>decrease</em> the potentials by that same
+		      scale factor.
+		    </p>
+		    <p>
+		      For example, the SCIRun Utah Torso model has a length scale
+		      of centimeters (10<sup>-2</sup> meters) and conductivity units of
+		      (siemens / meter), so our output potentials are in
+		      hectovolts (10<sup>2</sup> volts).
+		    </p>
+		    <h2>
+		      <a name="section-1" id="section-1">Color Maps</a>
+		      </h2>A color map is an array of colors that, when
+		      used to color data based on the data's value, help
+		      the user interpret data more easily. A color map
+		      consists of a set of colors that evenly change in
+		      red, green, blue, and/or alpha (RGBA). These colors
+		      are mapped to a range of data values, as specified by
+		      the minimum and maximum data values of the data set
+		      in question. An infinite number of color maps can be
+		      created. SCIRun provides a large number of predefined
+		      color maps for convenience. <b>Figure 2.0</b> shows
+		      several example color maps. 
+		      <center>
+			<img height="200" width="450"
+			     src="images/figures/2_1.jpg" /><br />
+			<b>Figure 2.0: Example Color maps provided by
+			the<br />
+			GenStandardColorMaps module.</b>
+		      </center>
+		      <h2>
+			<a name="section-2" id="section-2">Adding Color To
+			Your Net</a>
+			</h2>The first step in this chapter is to map the
+			data value at each node of the mesh to a meaningful
+			color in order to differentiate one data value from
+			another. The GenStandardColorMaps module in SCIRun
+			provides this mapping. 
+			<p>
+			  The GenStandardColorMaps module generates color
+			  maps in SCIRun. This module contains a selection of
+			  default color maps. For each color map, the user
+			  controls the opacity (alpha) for each data value,
+			  then chooses the number of discrete entries in the
+			  color map table (the default is 256 colors).
+			</p>
+			<p>
+			  The color map determines which values in the data
+			  are assigned to each color. By default, the
+			  minimum/maximum range is -1 to 1.
+			</p>
+			<p>
+			  Using the RescaleColorMap module, set the min/max
+			  values by hand, or auto-scale them to correspond
+			  with the min/max data value range from a scalar
+			  field.
+			</p>
+			<p>
+			  Now, add a GenStandardColorMaps and a
+			  RescaleColorMap module to the net created in
+			  <a href="chapter_1.html#chapter1">Chapter 1</a>.
+			</p>
+			<ol>
+			  <li>
+			    First, open the SCIRun environment and load
+			    show-torso-mesh.net located in
+			    <b>../SCIRun/src/nets</b> (as saved in Chapter
+			    1).<br />
+			    <br />
+			  </li>
+			  <li>
+			    Now, add both modules: GenStandardColorMap and
+			    RescaleColorMap, located under the
+			    SCIRun-&gt;Visualization menu (see <b>Figure
+			    2.1</b>).<br />
+			    <br />
+			  </li>
+			  <li>
+			    Connect the output from GenStandardColorMaps to
+			    the input of RescaleColorMap.<br />
+			    <br />
+			  </li>
+			  <li>
+			    Connect the output from the FieldReader to the
+			    other input port of RescaleColorMap.<br />
+			    <br />
+			  </li>
+			  <li>
+			    Finally, connect the output from RescaleColorMap
+			    to the input of ShowField.<br />
+			    <br />
+			  </li>
+			  </ol>The network should be similar to <b>Figure
+			  2.1</b>. 
+			  <center>
+			    <img width="487" height="588"
+				 src="images/figures/2_2.gif" /><br />
+			    <b>Figure 2.1: Net With Color Map Modules.</b>
+			  </center>
+			  <p>
+			    The RescaleColorMap, similar to the Viewer module
+			    in Chapter 1, is an example of a module with
+			    dynamic input ports. If the user connects more than
+			    one field into RescaleColorMap, the min/max range
+			    for auto-scaling corresponds to the min/max range
+			    of data values from all input Fields.
+			  </p>
+			  <p>
+			    The second input port on the ShowField module
+			    accepts a color map that maps the data values in
+			    its input Field to a color in the input color map,
+			    and renders accordingly. If a color map is present
+			    in ShowField, the module ignores the Default Color,
+			    and uses the color map values instead. To force
+			    ShowField to use the Default Color when a color map
+			    is connected, select the "Use Default Color"
+			    checkbox for a specific tab.
+			  </p>
+			  <p>
+			    To complete this net, read in a Field.
+			    <a name="electrodes" id="electrodes"></a>
+			  </p>
+			  <ol>
+			    <li>
+			      Use the FieldReader User Interface (UI) to read
+			      in utahtorso-lowres-electrodes.pcd.fld (a point
+			      cloud of electrode positions, with voltages
+			      measured from a single instant in time). There
+			      may be a brief wait while several modules
+			      dynamically compile code.<br />
+			      <br />
+			    </li>
+			    <li>
+			      Select the Autoview option in the ViewWindow and
+			      rotate the image downward.<br />
+			      <br />
+			    </li>
+			    <li>
+			      In the ShowField UI, change the Node Scale to
+			      6.The Node Display Type should already be set to
+			      Spheres.<br />
+			      <br />
+			    </li>
+			    <li>
+			      An image similar to <b>Figure 2.2</b> should
+			      appear in the ViewWindow.<br />
+			      <br />
+			    </li>
+			  </ol>
+			  <center>
+			    <img width="550" height="474"
+				 src="images/figures/2_3.gif" /><br />
+			    <b>Figure 2.2: ViewWindow showing Utah Torso
+			    Electrodes.</b>
+			  </center>
+			  <h2>
+			    <a name="section-3"
+			       id="section-3">GenStandardColorMaps GUI</a>
+			    </h2>Now, explore the UIs for the
+			    GenStandardColorMaps and RescaleColorMap modules.
+			    Upon pressing the UI button on the
+			    GenStandardColorMaps module, the user interface shown
+			    in <b>Figure 2.3</b> will appear. 
+			    <center>
+			      <img width="315" height="473"
+				   src="images/figures/2_4.gif" /><br />
+			      <b>Figure 2.3: UI for GenStandardColorMaps.</b>
+			    </center>
+			    <p>
+			      Please note the following:
+			    </p>
+			    <ul>
+			      <li>
+				A selection of standard color maps appears on the
+				bottom half of the window.<br />
+				<br />
+			      </li>
+			      <li>
+				The selected color map appears at the top of the
+				window, and has a clickable interface for
+				changing the opacity of each color swatch in the
+				map. The red line in the middle of the color map
+				represents the opacity (alpha) of the color
+				map.<br />
+				<br />
+			      </li>
+			      <li>
+				To add additional control points, left click on
+				the color map. To remove additonal control
+				points, right click on a control point.
+			      </li>
+			      <li>
+				The <i>Shift</i> slider skews the color map to
+				the left or right.<br />
+				<br />
+			      </li>
+			      <li>
+				The <i>Resolution</i> slider sets the number of
+				distinct colors to be stored in the color
+				table.<br />
+				<br />
+			      </li>
+			      <li>
+				To generate <i>banded</i> colors, choose a low
+				resolution.<br />
+				<br />
+			      </li>
+			      <li>
+				For smoother color transitions, choose a higher
+				resolution (256 colors).<br />
+				<br />
+			      </li>
+			      </ul>In GenStandardColorMaps, change the color map
+			      from Inverse Rainbow to Inverse Darkhue. This changes
+			      the image in the ViewWindow from the image originally
+			      generated (<b>Figure 2.2</b>) to the one seen in
+			      <b>Figure 2.4</b>. 
+			      <center>
+				<img width="500" height="364"
+				     src="images/figures/2_6.gif" /><br />
+				<b>Figure 2.4: Image Using the Inverse Darkhue
+				Color Map.</b>
+			      </center>
+			      <h2>
+				<a name="section-4" id="section-4">RescaleColorMap
+				GUI</a>
+				</h2>The RescaleColorMap module is used to change the
+				way the color map is mapped onto data. This allows
+				the image to be easily interpreted by the user.
+				<b>Figure 2.5</b> shows the UI for the
+				RescaleColorMap module. 
+				<center>
+				  <img width="297" height="143"
+				       src="images/figures/2_5.gif" /><br />
+				  <b>Figure 2.5: RescaleColorMap UI.</b>
+				</center>
+				<ul>
+				  <li>
+				    The minimum/maximum range of the color map can be
+				    set manually or automatically.<br />
+				    <br />
+				  </li>
+				  <li>
+				    If the range is auto-scaled, it will correspond
+				    to the minimum and maximum data values from all
+				    input Fields connected to the module.<br />
+				    <br />
+				  </li>
+				  </ul>Change the color map range in the
+				  RescaleColorMap UI to a Fixed Scale of -30 to 30 and
+				  click Execute. <b>Figure 2.6</b> shows the image with
+				  the Fixed Scale. Notice that by using this range, the
+				  electrodes appear very homogeneous. 
+				  <center>
+				    <img width="563" height="484"
+					 src="images/figures/2_7.gif" /><br />
+				    <b>Figure 2.6: Image Using Auto Scaled Color
+				    Map.</b>
+				    </center> <a name="summary" id="summary"></a>
+				    <h2>
+				      <a name="summary" id="summary"><b>Summary</b></a>
+				      </h2>Chapter 2 demonstrated adding
+				      GenStandardColorMaps and RescaleColorMap modules.
+				      These modules look at data values and varying colors
+				      over the geometry, rather than mapping data to a
+				      single color. 
+				      <p>
+					Chapter 3 features more visualization techniques,
+					and explores inputing and outputing a Field.
+				      </p>
+				      <p>
+					<a href="#chapter-2">Return to Top</a>
+				      </p>
+				    </td>
+				  </tr>
+				</table>
+			      </center>
+			    </td>
+			  </tr>
+			  <tr>
+			    <td>
+			      <img height="35" width="600"
+				   src="images/sub-banner-bottom.jpg" border="0"
+				   usemap="#sub-banner-bottom8ac200bf" /><map name="sub-banner-bottom8ac200bf"
+				   id="sub-banner-bottom8ac200bf">
+			      <area href="chapter_3.html" coords="564,3,588,18"
+				    shape="rect" />
+			      <area href="chapter_1.html" coords="539,1,560,22"
+				    shape="rect" />
+			      <area href="http://www.sci.utah.edu" coords="6,6,68,30"
+				    shape="rect" title="SCI Institute" />
+			    </map>
+			    </td>
+			  </tr>
+			</table>
+		      </body>
+		    </html>
