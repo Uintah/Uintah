@@ -51,11 +51,15 @@ public:
   unsigned int       time() const { return time_; }
   void               set_time(unsigned t) { time_ = t; }
 
+  string                target() const { return target_; }
+  void                  set_target(const string &t) { target_ = t; }
+
   //! The ref_cnt var so that we can have handles to this type of object.
   int ref_cnt;
 private:
   //! The event timestamp
-  unsigned int             time_;
+  unsigned int          time_;
+  string                target_;
 };
 
 
@@ -163,6 +167,14 @@ public:
 private:
   unsigned int          w_state_;
 };
+
+class QuitEvent : public BaseEvent {
+public:
+  QuitEvent() {}
+  virtual ~QuitEvent() {}
+};
+
+
 
 typedef Handle<BaseEvent> event_handle_t;
 

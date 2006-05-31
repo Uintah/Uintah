@@ -37,7 +37,9 @@ namespace SCIRun {
     
 using namespace std;
 
-BaseEvent::BaseEvent()
+BaseEvent::BaseEvent() :
+    time_(0),
+    target_("")
 {
 }
 

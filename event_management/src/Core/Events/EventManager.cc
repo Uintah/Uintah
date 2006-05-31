@@ -80,21 +80,23 @@ EventManager::unregister_event_messages(string id)
 void
 EventManager::run() 
 {
-  for (;;) 
-  {
-    cerr << "checking mailbox" << endl;
-    event_handle_t es = mailbox_.receive();
-    if (es == 0) {
-      cerr << "got a NULL event, EventManager exiting." << endl;
+  event_handle_t event;
+  do {
+    event = tm_.propagate_event(mailbox_.receive());
+    cerr << "got an event, who was created at " << event->time() << endl;
+
+    // If the event has a specific target mailbox,
+    if (!event->target().empty()) {
+      mboxes_[event->target()]->send(event);
+    } else {
+      // If the event has no target mailbox, broadcast it to all mailboxes
       id_tm_map_t::iterator it = mboxes_.begin();
-      while (it != mboxes_.end()) {
-	event_mailbox_t* mbox = (*it).second;
-	mbox->send(es);
+      for (;it != mboxes_.end(); ++it) {
+        it->second->send(event);
       }
-      return;
     }
-    cerr << "got an event, who was created at " << es->time() << endl;
-  }
+    // If the event is a QuitEvent type, then shutdown the Event Manager
+  } while (dynamic_cast<QuitEvent*>(event.get_rep()) == 0);
 }
 
 } // namespace SCIRun
