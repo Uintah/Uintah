@@ -52,20 +52,13 @@
 #  include <X11/extensions/SGIStereo.h>
 #endif
 
-#include <sgi_stl_warnings_off.h>
-#include <string>
-#include <vector>
-#include <sgi_stl_warnings_on.h>
-
 #include <Core/Thread/Mutex.h>
+#include <Core/Geom/OpenGLContext.h>
 
-using std::string;
-using std::vector;
-
-#include <Core/Geom/share.h>
 namespace SCIRun {
 
-class SCISHARE TkOpenGLContext {
+class SCISHARE TkOpenGLContext : public OpenGLContext 
+{
 public:
   TkOpenGLContext(const string &, int visualid=0, 
 		  int width=640, int height = 480);
@@ -75,11 +68,11 @@ public:
   void                  make_win32_gl_context(const string &, int, int, int);
 
   static string		listvisuals();
-  bool			make_current();
-  void /*bool*/			release();
-  int			width();
-  int			height();
-  void			swap();
+  virtual bool			make_current();
+  virtual void			release();
+  virtual int			width();
+  virtual int			height();
+  virtual void			swap();
 
   #ifdef _WIN32
   const char*           ReportCapabilities();

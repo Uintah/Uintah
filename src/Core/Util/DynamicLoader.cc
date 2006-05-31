@@ -550,6 +550,20 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
   if (stat(full_so.c_str(), &buf) == 0)
   {
     so = GetLibraryHandle(full_so.c_str());
+    if (so == 0)
+    {
+      const string errmsg = "DYNAMIC LIB ERROR: " + full_so +
+        " does not load!";
+      pr->error(errmsg);
+      pr->msg_stream() << SOError() << endl;
+      // Remove the null ref for this lib from the map.
+      map_lock_.lock();
+      algo_map_.erase(info.filename_);
+      map_lock_.unlock();
+      // wake up all sleepers.
+      compilation_cond_.conditionBroadcast();
+      return false;
+    }
   }
   else
   {
@@ -565,18 +579,18 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
       compile_so(info, pr);
       so = GetLibraryHandle(full_so.c_str());
     }
-
+ 
     if (so == 0)
     { // does not compile
       const string errmsg = "DYNAMIC COMPILATION ERROR: " + full_so +
-        " does not compile!!";
+	" does not compile!!";
       if (maybe_compile_p)
       {
-        pr->remark(errmsg);
+	pr->remark(errmsg);
       }
       else
       {
-        pr->error(errmsg);
+	pr->error(errmsg);
       }
       pr->add_raw_message(SOError() + string("\n"));
       // Remove the null ref for this lib from the map.

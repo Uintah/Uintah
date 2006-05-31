@@ -34793,44 +34793,7 @@ else
   if test "$with_camal"; then
     # If --with-camal has a parameter, then use it
     _sci_lib="$with_camal"
-    _sci_inc="$with_camal/include"
-
-##
-## BASE_LIB_PATH:
-##
-## This macro takes the base path of a library and determines
-## if there is a lib32, lib64, or just plain lib that is
-## associated with it.  It sets the full path to the value of
-## the first argument.
-##
-## eg:  if arg 2 is /usr/sci/local, and the machine has a
-## /usr/sci/local/lib64, and configure is in 64 bit mode, then
-## /sur/sci/local/lib64 is set as the value of arg 1.
-##
-## arguments mean:
-## arg 1 : This argument will be written with the result
-## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
-##
-## This function assums the enable_64bit variable is in scope
-##
-
-  _new_lib_path=$_sci_lib/lib
-
-  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
-  if test "$enable_64bit" = "yes"; then
-    _new_lib_path=$_sci_lib/lib64
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
-    fi
-  else
-  ## We should look for lib32 (IRIX), then default to lib
-    _new_lib_path=$_sci_lib/lib32
-    if test ! -e $_new_lib_path; then
-      _new_lib_path=$_sci_lib/lib
-    fi
-  fi
-  eval _sci_lib='"$_new_lib_path"'
-
+    _sci_inc="$with_camal/../../include"
     _sci_optional=specific
   fi
 fi
@@ -34879,7 +34842,7 @@ if test "$IS_OSX" = "yes"; then
 ## arg 2 : CAMAL library
 ## arg 3 :
 ## arg 4 : $_sci_inc
-## arg 5 : CMLTet210 CMLUtl210
+## arg 5 : CMLTet CMLUtl
 ## arg 6 : $_sci_lib
 ## arg 7 : $F_LIB_DIR_FLAG $F_LIB_FLAG
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -34962,10 +34925,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "CMLTet210 CMLUtl210"; then
+if test -n "CMLTet CMLUtl"; then
 
    found_framework=no
-   for lib in "" CMLTet210 CMLUtl210; do
+   for lib in "" CMLTet CMLUtl; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -35306,7 +35269,7 @@ echo "$as_me: error: Specifically requested CAMAL include file '$_sci_inc/$i' wa
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" CMLTet210 CMLUtl210; do
+  for i in "" CMLTet CMLUtl; do
     if test -z "$i"; then
        continue
     fi
@@ -35378,9 +35341,9 @@ else
 ## arg 2 : CAMAL library
 ## arg 3 :
 ## arg 4 : $_sci_inc
-## arg 5 : CMLTet202
+## arg 5 : CMLTet300 CMLUtl300 CMLShr300
 ## arg 6 : $_sci_lib
-## arg 7 : $F_LIB_DIR_FLAG $F_LIB_FLAG
+## arg 7 : $F_LIB_DIR_FLAG $F_LIB_FLAG -ldl
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : $_sci_optional
 ##
@@ -35461,10 +35424,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "CMLTet202"; then
+if test -n "CMLTet300 CMLUtl300 CMLShr300"; then
 
    found_framework=no
-   for lib in "" CMLTet202; do
+   for lib in "" CMLTet300 CMLUtl300 CMLShr300; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -35618,7 +35581,7 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs $F_LIB_DIR_FLAG $F_LIB_FLAG $LIBS"
+LIBS="$_sci_libs $F_LIB_DIR_FLAG $F_LIB_FLAG -ldl $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -35805,7 +35768,7 @@ echo "$as_me: error: Specifically requested CAMAL include file '$_sci_inc/$i' wa
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" CMLTet202; do
+  for i in "" CMLTet300 CMLUtl300 CMLShr300; do
     if test -z "$i"; then
        continue
     fi

@@ -29,62 +29,25 @@
 
 # Makefile fragment for this subdirectory
 
-include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR := Core
+SRCDIR   := Core/Events
 
-SUBDIRS := \
-	$(SRCDIR)/Algorithms \
-	$(SRCDIR)/Basis \
-	$(SRCDIR)/Bundle \
-	$(SRCDIR)/Containers \
-	$(SRCDIR)/Datatypes \
-	$(SRCDIR)/Events \
-	$(SRCDIR)/Exceptions \
-	$(SRCDIR)/GUI \
-	$(SRCDIR)/Comm \
-	$(SRCDIR)/Geom \
-	$(SRCDIR)/GeomInterface \
-	$(SRCDIR)/Geometry \
-	$(SRCDIR)/GuiInterface \
-	$(SRCDIR)/ImportExport \
-	$(SRCDIR)/Init \
-	$(SRCDIR)/Malloc \
-	$(SRCDIR)/Math \
-	$(SRCDIR)/OS \
-	$(SRCDIR)/Persistent \
-	$(SRCDIR)/Services \
-	$(SRCDIR)/SystemCall \
-	$(SRCDIR)/Thread \
-	$(SRCDIR)/TkExtensions \
-	$(SRCDIR)/Util \
-	$(SRCDIR)/Volume \
-	$(SRCDIR)/ICom \
-	$(SRCDIR)/XMLUtil \
-#	$(SRCDIR)/2d \
-#	$(SRCDIR)/Util/Comm \
-#	$(SRCDIR)/Parts \
-#	$(SRCDIR)/PartsGui \
-#[INSERT NEW CATEGORY DIR HERE]
+SRCS     += \
+	$(SRCDIR)/BaseEvent.cc		\
+	$(SRCDIR)/EventManager.cc	\
+	$(SRCDIR)/OpenGLViewer.cc	\
 
-
-ifeq ($(BUILD_SCIRUN2),yes)
-SUBDIRS := \
-	$(SUBDIRS) \
-	$(SRCDIR)/CCA \
-	$(SRCDIR)/Babel 
-endif
-
-ifeq ($(HAVE_GLOBUS),yes)
-SUBDIRS+=$(SRCDIR)/globus_threads
-endif
-
+SUBDIRS := $(SRCDIR)/Tools
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
-PSELIBS := 
-LIBS := $(PLPLOT_LIBRARY) $(BLT_LIBRARY) $(ITCL_LIBRARY) $(TCL_LIBRARY) \
-	$(TK_LIBRARY) $(ITK_LIBRARY) $(GL_LIBRARY) $(THREAD_LIBRARY) \
-	$(Z_LIBRARY) $(M_LIBRARY) 
+PSELIBS := Core/Exceptions Core/Thread
 
-include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
+ifeq ($(IS_WIN),yes)
+  PSELIBS += Core_OS
+endif
+
+LIBS := $(THREAD_LIBRARY) $(MPEG_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

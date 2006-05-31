@@ -386,7 +386,9 @@ TkGLMakeWindow(Tk_Window tkwin, Window parent, ClientData data)
 
 
 TkOpenGLContext::TkOpenGLContext(const string &id, int visualid, 
-				 int width, int height) : mutex_("GL lock")
+				 int width, int height) : 
+  OpenGLContext(),
+  mutex_("GL lock")
 {
 #ifdef _WIN32
   make_win32_gl_context(id, visualid, width, height);

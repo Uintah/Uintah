@@ -123,6 +123,9 @@ DynamicCompilation::compile(CompileInfoHandle cih, DC &result,
     }
   }
 
+  cerr << typeid(DC).name() << endl;
+  cerr << typeid(typename DC::pointer_type).name() << endl;
+  cerr << typeid(algo_handle.get_rep()).name() << endl;
   result = dynamic_cast<typename DC::pointer_type>(algo_handle.get_rep());
   if (result.get_rep() == 0) 
   {

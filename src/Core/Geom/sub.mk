@@ -34,6 +34,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/Geom
 
 SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
+	$(SRCDIR)/CallbackOpenGLContext.cc              \
 	$(SRCDIR)/ColorMap.cc		                \
 	$(SRCDIR)/ColorMapTex.cc	                \
 	$(SRCDIR)/ColorMappedNrrdTextureObj.cc          \
@@ -92,6 +93,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/Material.cc		    		\
 	$(SRCDIR)/NrrdTextureObj.cc	    		\
 	$(SRCDIR)/OpenGLViewport.cc	    		\
+	$(SRCDIR)/OpenGLContext.cc	    		\
 	$(SRCDIR)/Path.cc		    		\
 	$(SRCDIR)/Pbuffer.cc		    		\
 	$(SRCDIR)/PointLight.cc		    		\

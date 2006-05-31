@@ -3114,8 +3114,7 @@ else
   if test "$with_camal"; then
     # If --with-camal has a parameter, then use it
     _sci_lib="$with_camal"
-    _sci_inc="$with_camal/include"
-    BASE_LIB_PATH(_sci_lib,$_sci_lib)
+    _sci_inc="$with_camal/../../include"
     _sci_optional=specific
   fi 
 fi
@@ -3125,12 +3124,12 @@ if test "$_sci_optional" != "optional" && test "$HAVE_F" != "yes"; then
 fi
 
 if test "$IS_OSX" = "yes"; then
-  SCI_TRY_LINK(CAMAL,CAMAL library,,$_sci_inc,CMLTet210 CMLUtl210,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,$_sci_optional)
+  SCI_TRY_LINK(CAMAL,CAMAL library,,$_sci_inc,CMLTet CMLUtl,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,$_sci_optional)
   if test "$HAVE_CAMAL" = "yes"; then
     CAMAL_LIB_DIR_FLAG="$CAMAL_LIB_DIR_FLAG -Wl,-read_only_relocs,warning -single_module"
   fi
 else
-  SCI_TRY_LINK(CAMAL,CAMAL library,,$_sci_inc,CMLTet202,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG,,$_sci_optional)
+  SCI_TRY_LINK(CAMAL,CAMAL library,,$_sci_inc,CMLTet300 CMLUtl300 CMLShr300,$_sci_lib,$F_LIB_DIR_FLAG $F_LIB_FLAG -ldl,,$_sci_optional)
 fi
 
 if test "$HAVE_CAMAL" = "yes"; then
