@@ -17,36 +17,35 @@ std::vector<MPMPhysicalBC*> MPMPhysicalBCFactory::mpmPhysicalBCs;
 void MPMPhysicalBCFactory::create(const ProblemSpecP& ps)
 {
   ProblemSpecP test = ps->findBlock("PhysicalBC");
-   if (!test)     // bullet proofing
-    throw ProblemSetupException("**ERROR** No<PhysicalBC> block in input file.",
-                                __FILE__, __LINE__);
+  if (test){
 
-   ProblemSpecP current_ps = ps->findBlock("PhysicalBC")->findBlock("MPM");
+    ProblemSpecP current_ps = ps->findBlock("PhysicalBC")->findBlock("MPM");
 
 
-   for(ProblemSpecP child = current_ps->findBlock("force"); child != 0;
-       child = child->findNextBlock("force") )
-   {
-      mpmPhysicalBCs.push_back(scinew ForceBC(child));
-   }
+    for(ProblemSpecP child = current_ps->findBlock("force"); child != 0;
+        child = child->findNextBlock("force") )
+    {
+       mpmPhysicalBCs.push_back(scinew ForceBC(child));
+    }
 
-   for(ProblemSpecP child = current_ps->findBlock("normal_force"); child != 0;
-       child = child->findNextBlock("normal_force") )
-   {
-      mpmPhysicalBCs.push_back(scinew NormalForceBC(child));
-   }
+    for(ProblemSpecP child = current_ps->findBlock("normal_force"); child != 0;
+        child = child->findNextBlock("normal_force") )
+    {
+       mpmPhysicalBCs.push_back(scinew NormalForceBC(child));
+    }
 
-   for(ProblemSpecP child = current_ps->findBlock("pressure"); child != 0;
-       child = child->findNextBlock("pressure") )
-   {
-      mpmPhysicalBCs.push_back(scinew PressureBC(child));
-   }
+    for(ProblemSpecP child = current_ps->findBlock("pressure"); child != 0;
+        child = child->findNextBlock("pressure") )
+    {
+       mpmPhysicalBCs.push_back(scinew PressureBC(child));
+    }
 
-   for(ProblemSpecP child = current_ps->findBlock("crack"); child != 0;
-       child = child->findNextBlock("crack") )
-   {
-      mpmPhysicalBCs.push_back(scinew CrackBC(child));
-   }
+    for(ProblemSpecP child = current_ps->findBlock("crack"); child != 0;
+        child = child->findNextBlock("crack") )
+    {
+       mpmPhysicalBCs.push_back(scinew CrackBC(child));
+    }
+  }
 }
 
 void MPMPhysicalBCFactory::clean()

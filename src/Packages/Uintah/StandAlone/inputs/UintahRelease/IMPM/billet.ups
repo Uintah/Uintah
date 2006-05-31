@@ -126,8 +126,5 @@
       </MPM>
     </MaterialProperties>
 
-    <PhysicalBC>
-        <MPM> </MPM>
-    </PhysicalBC>
     
 </Uintah_specification>

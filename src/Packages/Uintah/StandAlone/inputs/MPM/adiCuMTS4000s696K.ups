@@ -234,10 +234,6 @@
     </BoundaryConditions>
   </Grid>
 
-  <PhysicalBC>
-    <MPM>
-    </MPM>
-  </PhysicalBC>
     
 </Uintah_specification>
 
