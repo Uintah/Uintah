@@ -274,8 +274,4 @@
         <refPressure>      1        </refPressure>
       </Model>
     </Models>    
-    <PhysicalBC>
-       <MPM>
-      </MPM>
-    </PhysicalBC>
 </Uintah_specification>
