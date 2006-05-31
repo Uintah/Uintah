@@ -275,9 +275,5 @@
 	 <rate>         1000.0        </rate>
       </Model>
     </Models>            
-    <PhysicalBC>
-       <MPM>
-      </MPM>
-    </PhysicalBC>
        
 </Uintah_specification>

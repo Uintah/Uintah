@@ -139,10 +139,6 @@
      </MPM>
    </MaterialProperties>
 
-   <PhysicalBC>
-     <MPM>
-     </MPM>
-   </PhysicalBC>
 
    <Grid>
      <Level>

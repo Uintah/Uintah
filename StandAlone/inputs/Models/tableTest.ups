@@ -241,10 +241,6 @@
       </Model>
     </Models>
 
-    <PhysicalBC>
-       <MPM>
-      </MPM>
-    </PhysicalBC>
        
 </Uintah_specification>
 

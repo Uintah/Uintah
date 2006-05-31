@@ -157,9 +157,6 @@
     </BoundaryConditions>
     </Grid>
 
-    <PhysicalBC>
-	<MPM> </MPM>
-    </PhysicalBC>
     
     <InitialConditions>
 	<MPM> </MPM>
