@@ -239,7 +239,7 @@ run_test () {
     cd $results
     cp ../$INPUTS/$CASE/$n.ups ../$n.ups.rt
     input_file=../$n.ups.rt
-   
+
     num_proc
    
     if test $MPI_RUN == "yes";
@@ -386,8 +386,8 @@ impm_test () {
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<*filebase\>//g | sed s/\<// | awk '{print $1}'  `
 	compare_results
         run_restart
-        MPI=""
     done
+    MPI=""
 }
 
 smpm_test () {
@@ -548,7 +548,7 @@ if test $do_mpmice -eq 1; then
 fi
 if test $do_models -eq 1; then 
     CASE=Models
-    opts=-ice
+    opts="-mpi"
     model_test
 fi
 if test $do_smpm -eq 1; then
@@ -559,7 +559,8 @@ fi
 
 if test $do_impm -eq 1; then
     CASE=IMPM
-    opts=-impm
+    MPI="mpirun -np 1 "
+    opts="-impm"
     impm_test
 fi
 
