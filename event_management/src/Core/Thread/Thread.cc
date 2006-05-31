@@ -370,14 +370,20 @@ Thread::couldBlock(const char* why)
 {
   if(!initialized)
     Thread::initialize();
-  Thread_private* p=Thread::self()->priv_;
+  Thread *slf = Thread::self();
+  if (slf == 0) return 0;
+
+  Thread_private *p = slf->priv_;
   return push_bstack(p, BLOCK_ANY, why);
 }
 
 void
 Thread::couldBlockDone(int restore)
 {
-  Thread_private* p=Thread::self()->priv_;
+  Thread *slf = Thread::self();
+  if (slf == 0) return;
+
+  Thread_private *p = slf->priv_;
   pop_bstack(p, restore);
 }
 

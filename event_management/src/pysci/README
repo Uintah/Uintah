@@ -1,0 +1,5 @@
+export PYTHONPATH=/scratch/mjc/trunk/SCIRun/dbg/pysci/
+
+#The logic for setting this env var by default lives in TCL :( 
+#for now set this by hand.
+export SCIRUN_ON_THE_FLY_LIBS_DIR=/scratch/mjc/trunk/SCIRun/dbg/on-the-fly-libs/

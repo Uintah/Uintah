@@ -29,62 +29,13 @@
 
 # Makefile fragment for this subdirectory
 
-include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
+SRCDIR   := Core/Events/Tools
 
-SRCDIR := Core
+SRCS     += \
+	$(SRCDIR)/Ball.cc		\
+	$(SRCDIR)/BallAux.cc		\
+	$(SRCDIR)/BallMath.cc		\
+	$(SRCDIR)/BaseTool.cc		\
+	$(SRCDIR)/ToolManager.cc	\
 
-SUBDIRS := \
-	$(SRCDIR)/Algorithms \
-	$(SRCDIR)/Basis \
-	$(SRCDIR)/Bundle \
-	$(SRCDIR)/Containers \
-	$(SRCDIR)/Datatypes \
-	$(SRCDIR)/Events \
-	$(SRCDIR)/Exceptions \
-	$(SRCDIR)/GUI \
-	$(SRCDIR)/Comm \
-	$(SRCDIR)/Geom \
-	$(SRCDIR)/GeomInterface \
-	$(SRCDIR)/Geometry \
-	$(SRCDIR)/GuiInterface \
-	$(SRCDIR)/ImportExport \
-	$(SRCDIR)/Init \
-	$(SRCDIR)/Malloc \
-	$(SRCDIR)/Math \
-	$(SRCDIR)/OS \
-	$(SRCDIR)/Persistent \
-	$(SRCDIR)/Services \
-	$(SRCDIR)/SystemCall \
-	$(SRCDIR)/Thread \
-	$(SRCDIR)/TkExtensions \
-	$(SRCDIR)/Util \
-	$(SRCDIR)/Volume \
-	$(SRCDIR)/ICom \
-	$(SRCDIR)/XMLUtil \
-#	$(SRCDIR)/2d \
-#	$(SRCDIR)/Util/Comm \
-#	$(SRCDIR)/Parts \
-#	$(SRCDIR)/PartsGui \
-#[INSERT NEW CATEGORY DIR HERE]
-
-
-ifeq ($(BUILD_SCIRUN2),yes)
-SUBDIRS := \
-	$(SUBDIRS) \
-	$(SRCDIR)/CCA \
-	$(SRCDIR)/Babel 
-endif
-
-ifeq ($(HAVE_GLOBUS),yes)
-SUBDIRS+=$(SRCDIR)/globus_threads
-endif
-
-include $(SCIRUN_SCRIPTS)/recurse.mk
-
-PSELIBS := 
-LIBS := $(PLPLOT_LIBRARY) $(BLT_LIBRARY) $(ITCL_LIBRARY) $(TCL_LIBRARY) \
-	$(TK_LIBRARY) $(ITK_LIBRARY) $(GL_LIBRARY) $(THREAD_LIBRARY) \
-	$(Z_LIBRARY) $(M_LIBRARY) 
-
-include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
 
