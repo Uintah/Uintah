@@ -1878,11 +1878,7 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
                                     const MPMMaterial* matl,
                                     DataWarehouse* old_dw,
                                     DataWarehouse* new_dw,
-#ifdef HAVE_PETSC
-                                    MPMPetscSolver* solver,
-#else
-                                    SimpleSolver* solver,
-#endif
+                                    Solver* solver,
                                     const bool )
 {
   // Constants

@@ -6,6 +6,7 @@
 
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/Array3.h>
+#include <Packages/Uintah/CCA/Components/MPM/Solver.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <set>
@@ -31,29 +32,26 @@ namespace Uintah {
   class ProcessorGroup;
   class Patch;
 
-  class MPMPetscSolver {
-
+  class MPMPetscSolver : public Solver {
+    
   public:
     MPMPetscSolver();
     ~MPMPetscSolver();
-
+    
     void initialize();
-
+    
     void createLocalToGlobalMapping(const ProcessorGroup* pg,
                                     const PatchSet* perproc_patches,
                                     const PatchSubset* patches,
                                     const int DOFsPerNode);
-
+    
     void solve();
 
-    void createMatrix(const ProcessorGroup* pg,
-			      const map<int,int>& dof_diag);
+    void createMatrix(const ProcessorGroup* pg, const map<int,int>& dof_diag);
 
     void destroyMatrix(bool recursion);
 
-#ifdef HAVE_PETSC
-    inline void fillMatrix(int,int[],int,int j[],PetscScalar v[]);
-#endif
+    inline void fillMatrix(int,int[],int,int j[],double v[]);
 
     void fillVector(int, double);
 
@@ -77,7 +75,6 @@ namespace Uintah {
 
     void applyBCSToRHS();
 
-    set<int> d_DOF;
   private:
 
     // Needed for the local to global mappings
@@ -106,9 +103,14 @@ namespace Uintah {
 
 #ifdef HAVE_PETSC
 inline void MPMPetscSolver::fillMatrix(int numi,int i[],int numj,
-                                       int j[],PetscScalar value[])
+                                       int j[],double value[])
 {
-    MatSetValues(d_A,numi,i,numj,j,value,ADD_VALUES);
+  PetscScalar *val = new PetscScalar[numi * numj];
+  for (int count = 0; count < (numi*numj); count++)
+    val[count] = value[count];
+
+  MatSetValues(d_A,numi,i,numj,j,value,ADD_VALUES);
+  delete [] val;
 }
 #endif
 

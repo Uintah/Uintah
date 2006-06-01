@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/Array3.h>
 #include <Packages/Uintah/Core/Math/Sparse.h>
+#include <Packages/Uintah/CCA/Components/MPM/Solver.h>
 #include <sgi_stl_warnings_off.h>
 #include <map>
 #include <set>
@@ -19,7 +20,7 @@ namespace Uintah {
   class ProcessorGroup;
   class Patch;
 
-  class SimpleSolver {
+  class SimpleSolver : public Solver {
 
   public:
     SimpleSolver();
@@ -34,8 +35,7 @@ namespace Uintah {
 
     void solve();
 
-    void createMatrix(const ProcessorGroup* pg,
-			      const map<int,int>& diag);
+    void createMatrix(const ProcessorGroup* pg, const map<int,int>& diag);
 
     void destroyMatrix(bool recursion);
 
@@ -63,7 +63,6 @@ namespace Uintah {
 
     void applyBCSToRHS();
 
-    set<int> d_DOF;
   private:
 
     // Needed for the local to global mappings
