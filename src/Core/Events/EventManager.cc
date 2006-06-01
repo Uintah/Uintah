@@ -83,11 +83,11 @@ EventManager::run()
   event_handle_t event;
   do {
     event = tm_.propagate_event(mailbox_.receive());
-    cerr << "got an event, who was created at " << event->time() << endl;
+    cerr << "got an event, who was created at " << event->get_time() << endl;
 
     // If the event has a specific target mailbox,
-    if (!event->target().empty()) {
-      mboxes_[event->target()]->send(event);
+    if (!event->get_target().empty()) {
+      mboxes_[event->get_target()]->send(event);
     } else {
       // If the event has no target mailbox, broadcast it to all mailboxes
       id_tm_map_t::iterator it = mboxes_.begin();
