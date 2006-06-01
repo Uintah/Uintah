@@ -48,11 +48,15 @@ public:
   virtual ~BaseEvent();
 
   //! time the event took place
-  unsigned int       time() const { return time_; }
+  unsigned int       get_time() const { return time_; }
   void               set_time(unsigned t) { time_ = t; }
 
-  string                target() const { return target_; }
+  string                get_target() const { return target_; }
   void                  set_target(const string &t) { target_ = t; }
+
+  virtual bool is_pointer_event() { return false; }
+  virtual bool is_key_event() { return false; }
+  virtual bool is_window_event() { return false; }
 
   //! The ref_cnt var so that we can have handles to this type of object.
   int ref_cnt;
@@ -80,8 +84,10 @@ public:
   PointerEvent();
   virtual ~PointerEvent();
 
+  virtual bool is_pointer_event() { return true; }
+
   //! Accessors
-  unsigned int get_state() const { return p_state_; }
+  unsigned int get_pointer_state() const { return p_state_; }
   int get_x() const { return x_; }
   int get_y() const { return y_; }
 
@@ -95,7 +101,6 @@ private:
   //! The event's window x and y  coordinates
   int                      x_;
   int                      y_;
-
 };
 
 
@@ -122,6 +127,8 @@ public:
 
   KeyEvent();
   virtual ~KeyEvent();
+
+  virtual bool is_key_event() { return true; }
 
   //! Accessors
   unsigned int    get_key_state() const { return k_state_; }
@@ -157,6 +164,8 @@ public:
 
   WindowEvent();
   virtual ~WindowEvent();
+
+  virtual bool is_window_event() { return true; }
   
   //! Accessors
   unsigned int get_window_state() const { return w_state_; }

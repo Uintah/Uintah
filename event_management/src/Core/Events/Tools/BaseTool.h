@@ -49,8 +49,7 @@ public:
   
   string name() const { return name_; }
 
-  virtual void process_event(event_handle_t event);
-
+  virtual event_handle_t process_event(event_handle_t event) = 0;
 
   //! The ref_cnt var so that we can have handles to this type of object.
   int ref_cnt;
@@ -66,13 +65,50 @@ public:
   PointerTool(string name);
   virtual ~PointerTool();
   
-  virtual void mo(event_handle_t event);
-
-
-  //! The ref_cnt var so that we can have handles to this type of object.
-  int ref_cnt;
+  //! which == button number, x,y in window at event time 
+  //! return event is 0 if consumed, otherwise a valid PointerEvent.
+  virtual event_handle_t pointer_down(int which, 
+				      int x, int y, int time) = 0;
+  //! which == button number, x,y in window at event time 
+  //! return event is 0 if consumed, otherwise a valid PointerEvent.
+  virtual event_handle_t pointer_motion(int which, 
+					int x, int y, int time) = 0;
+  //! which == button number, x,y in window at event time 
+  //! return event is 0 if consumed, otherwise a valid PointerEvent.
+  virtual event_handle_t pointer_up(int which, 
+				    int x, int y, int time) = 0;
 private:
-  string name_;
+};
+
+class KeyTool : public BaseTool
+{
+public:
+  KeyTool(string name);
+  virtual ~KeyTool();
+  
+  virtual event_handle_t key_press(string key, int keyval, 
+				   unsigned int modifiers, 
+				   unsigned int time) = 0;
+  virtual event_handle_t key_release(string key, int keyval, 
+				     unsigned int modifiers, 
+				     unsigned int time) = 0;
+private:
+};
+
+class WindowTool : public BaseTool
+{
+public:
+  WindowTool(string name);
+  virtual ~WindowTool();
+  
+  virtual event_handle_t create_notify(unsigned int time) = 0;
+  virtual event_handle_t destroy_notify(unsigned int time) = 0;
+  virtual event_handle_t enter_notify(unsigned int time) = 0;
+  virtual event_handle_t leave_notify(unsigned int time) = 0;
+  virtual event_handle_t expose_notify(unsigned int time) = 0;
+  virtual event_handle_t configure_notify(unsigned int time) = 0;
+  virtual event_handle_t redraw_notify(unsigned int time) = 0;
+private:
 };
 
 

@@ -63,6 +63,9 @@ public:
   event_handle_t propagate_event(event_handle_t event);
   
 private:
+  event_handle_t send_pointer_event(PointerTool*, event_handle_t) const;
+  event_handle_t send_key_event(KeyTool*, event_handle_t) const;
+  event_handle_t send_window_event(WindowTool*, event_handle_t) const;
 
   typedef stack<tool_handle_t>                                      ts_stack_t;
   typedef map<unsigned, ts_stack_t, less<unsigned> >                ps_map_t;
@@ -70,7 +73,6 @@ private:
 
   ps_map_t            stacks_;
   nt_map_t            tools_;
-
   string              name_;
 };
 

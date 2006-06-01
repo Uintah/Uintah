@@ -47,12 +47,32 @@ BaseTool::~BaseTool()
 {
 }
 
-void
-BaseTool::process_event(event_handle_t event)
+PointerTool::PointerTool(string name) :
+  BaseTool(name)
 {
-  cerr << "BaseTool::process_event" << name() << endl;
 }
 
+PointerTool::~PointerTool()
+{
+}
+
+KeyTool::KeyTool(string name) :
+  BaseTool(name)
+{
+}
+
+KeyTool::~KeyTool()
+{
+}
+
+WindowTool::WindowTool(string name) :
+  BaseTool(name)
+{
+}
+
+WindowTool::~WindowTool()
+{
+}
 
 } // namespace SCIRun
 
