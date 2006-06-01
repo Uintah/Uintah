@@ -117,6 +117,8 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     for(itr=d_object_points[key].begin();itr!=d_object_points[key].end();++itr){
       IntVector cell_idx;
       if (!patch->findCell(*itr,cell_idx)) continue;
+
+      if (!patch->containsPointInRealCells(*itr)) continue;
       
       particleIndex pidx = start+count;      
       //cerr << "Point["<<pidx<<"]="<<*itr<<" Cell = "<<cell_idx<<endl;
@@ -499,22 +501,24 @@ ParticleCreator::countAndCreateParticles(const Patch* patch,
     for (int ii = 0; ii < numPts; ++ii) {
       p = points->at(ii);
       if (patch->findCell(p,cell_idx)) {
-        d_object_points[key].push_back(p);
-        if (!vols->empty()) {
-          double vol = vols->at(ii); 
-          d_object_vols[volkey].push_back(vol);
-        }
-        if (!temps->empty()) {
-          double temp = temps->at(ii); 
-          d_object_temps[volkey].push_back(temp);
-        }
-        if (!pforces->empty()) {
-          Vector pforce = pforces->at(ii); 
-          d_object_forces[forcekey].push_back(pforce);
-        }
-        if (!pfiberdirs->empty()) {
-          Vector pfiber = pfiberdirs->at(ii); 
-          d_object_fibers[fiberkey].push_back(pfiber);
+        if (patch->containsPointInRealCells(p)) {
+          d_object_points[key].push_back(p);
+          if (!vols->empty()) {
+            double vol = vols->at(ii); 
+            d_object_vols[volkey].push_back(vol);
+          }
+          if (!temps->empty()) {
+            double temp = temps->at(ii); 
+            d_object_temps[volkey].push_back(temp);
+          }
+          if (!pforces->empty()) {
+            Vector pforce = pforces->at(ii); 
+            d_object_forces[forcekey].push_back(pforce);
+          }
+          if (!pfiberdirs->empty()) {
+            Vector pfiber = pfiberdirs->at(ii); 
+            d_object_fibers[fiberkey].push_back(pfiber);
+          }
         }
       }
     }
