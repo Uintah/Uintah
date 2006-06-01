@@ -73,7 +73,7 @@
 <!--
            <include href="MaterialData/DefaultHypoEOS.xml"/>
 -->
-	 </constitutive_model>
+        </constitutive_model>
            <geom_object>
                <difference>
                   <cylinder label = "outer cylinder">
@@ -150,7 +150,7 @@
          <lower>        [0,0,0]    </lower>
          <upper>        [1.2,1.2,0.02]    </upper>
          <patches>      [2,2,1]     </patches>
-	 <extraCells>[0, 0, 0]</extraCells>
+        <extraCells>[0, 0, 0]</extraCells>
        </Box>
        <spacing>   [0.025,0.025,0.02]  </spacing>
      </Level>

@@ -74,7 +74,7 @@
           <include href="../MaterialData/IsotropicElasticAnnCopper.xml"/>
           <yield_stress>400.0e6</yield_stress>
           <hardening_modulus>100.0e6</hardening_modulus>
-		    <alpha> 0.0 </alpha>
+                  <alpha> 0.0 </alpha>
         </constitutive_model>
         <geom_object>
           <cylinder label = "Cylinder">
@@ -95,7 +95,7 @@
       </contact>
     </MPM>
   </MaterialProperties>
-	
+       
   <Grid>
     <Level>
       <Box label = "1">
@@ -129,7 +129,7 @@
         <BCType id = "all" var = "Dirichlet" label = "Velocity">
           <value> [0.0,0.0,0.0] </value>
         </BCType>
-      </Face>         	 
+      </Face>                 
     </BoundaryConditions>
   </Grid>
 

@@ -51,53 +51,53 @@
   <MaterialProperties>
     <MPM>
       <material name = "Piston">
-	<burn type = "null"/>
-	<density>1.9e6</density>
-	<constitutive_model type = "comp_neo_hook">
-	  <bulk_modulus>10.2e4</bulk_modulus>
-	  <shear_modulus>7.2e4</shear_modulus>
-	</constitutive_model>
-	<toughness>10.e6</toughness>
-	<thermal_conductivity>1.0</thermal_conductivity>
-	<specific_heat>1.004e-5</specific_heat>
-	<geom_object> 
-	   <box label = "Piston">
-	    <min>[0.0,0.0,0.2] </min>
-	    <max>[0.2,0.2,0.21]</max>
-	  </box>
-	  <res>[2,2,2]</res>
-	  <velocity>[0.0,0.0,-.05]</velocity>
-	  <temperature>0</temperature>
-	</geom_object>
+       <burn type = "null"/>
+       <density>1.9e6</density>
+       <constitutive_model type = "comp_neo_hook">
+         <bulk_modulus>10.2e4</bulk_modulus>
+         <shear_modulus>7.2e4</shear_modulus>
+       </constitutive_model>
+       <toughness>10.e6</toughness>
+       <thermal_conductivity>1.0</thermal_conductivity>
+       <specific_heat>1.004e-5</specific_heat>
+       <geom_object> 
+          <box label = "Piston">
+           <min>[0.0,0.0,0.2] </min>
+           <max>[0.2,0.2,0.21]</max>
+         </box>
+         <res>[2,2,2]</res>
+         <velocity>[0.0,0.0,-.05]</velocity>
+         <temperature>0</temperature>
+       </geom_object>
       </material>
 
       <material name = "HMX">
-	<burn type = "null"/>
-	<density>1.9e6</density>
-	<constitutive_model type = "comp_neo_hook">
-	  <bulk_modulus>10.2e4</bulk_modulus>
-	  <shear_modulus>7.2e4</shear_modulus>
-	</constitutive_model>
-	<toughness>10.e6</toughness>
-	<thermal_conductivity>1.0</thermal_conductivity>
-	<specific_heat>1.004e-5</specific_heat>
-	
-	<geom_object>
-	  <file>
-	    <name>foam.pts</name>
-	  </file>
-	  
-	  <res>[2,2,2]</res>
-	  <velocity>[0.0,0.0,0]</velocity>
-	  <temperature>0</temperature>
-	</geom_object>
+       <burn type = "null"/>
+       <density>1.9e6</density>
+       <constitutive_model type = "comp_neo_hook">
+         <bulk_modulus>10.2e4</bulk_modulus>
+         <shear_modulus>7.2e4</shear_modulus>
+       </constitutive_model>
+       <toughness>10.e6</toughness>
+       <thermal_conductivity>1.0</thermal_conductivity>
+       <specific_heat>1.004e-5</specific_heat>
+       
+       <geom_object>
+         <file>
+           <name>foam.pts</name>
+         </file>
+         
+         <res>[2,2,2]</res>
+         <velocity>[0.0,0.0,0]</velocity>
+         <temperature>0</temperature>
+       </geom_object>
       </material>
 
       <contact>
-	<type>rigid</type>
-	<vel_fields>[0,1,0]</vel_fields>
-	<stop_time>3.50 </stop_time>
-	<direction>[0, 0, 1]</direction>
+       <type>rigid</type>
+       <vel_fields>[0,1,0]</vel_fields>
+       <stop_time>3.50 </stop_time>
+       <direction>[0, 0, 1]</direction>
       </contact>
     </MPM>
 
@@ -106,34 +106,34 @@
   <Grid>
     <Level>
       <Box label = "1">
-	<lower>[0.0,0.0,0.0]</lower>
-	<upper>[0.2,0.2,0.2125]</upper>
-	<extraCells>[1,1,1]</extraCells>
-	<patches>[4,4,2]</patches>
-	<resolution>[102,102,85]</resolution>
+       <lower>[0.0,0.0,0.0]</lower>
+       <upper>[0.2,0.2,0.2125]</upper>
+       <extraCells>[1,1,1]</extraCells>
+       <patches>[4,4,2]</patches>
+       <resolution>[102,102,85]</resolution>
       </Box>
       <periodic>[0,0,0]</periodic>
     </Level>
     <BoundaryConditions>
       <Face side = "x-">
-	<BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+       <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>
       <Face side = "x+">
-	<BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+       <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>
       <Face side = "y-">
-	<BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+       <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>
       <Face side = "y+">
-	<BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+       <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>
       <Face side = "z-">
-	<BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
+       <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>
       </Face>
       <Face side = "z+">
-	<BCType id = "all" label = "Velocity" var = "Dirichlet">
-	  <value> [0.0,0.0,-.01] </value>
-	</BCType>
+       <BCType id = "all" label = "Velocity" var = "Dirichlet">
+         <value> [0.0,0.0,-.01] </value>
+       </BCType>
       </Face>
     </BoundaryConditions>
   </Grid>

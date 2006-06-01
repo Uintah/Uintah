@@ -648,7 +648,7 @@
         <!-- temperature and density                                       -->
         <table name="adiabatic" type="Arches">
           <include href="inputs/Models/JP8.xml"/>
-	 </table>
+        </table>
 
 
         <material>Atmosphere</material>
@@ -663,7 +663,7 @@
             </difference>
             <scalar>  0.0 </scalar>
           </geom_object>
-	</scalar>
+       </scalar>
       </Model>
      
     </Models>            

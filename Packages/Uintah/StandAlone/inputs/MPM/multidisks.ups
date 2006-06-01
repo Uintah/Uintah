@@ -4,7 +4,7 @@
 <Uintah_specification>
 
    <Meta>
-	<title>Colliding Disks</title>
+       <title>Colliding Disks</title>
    </Meta>
 
    <SimulationComponent>
