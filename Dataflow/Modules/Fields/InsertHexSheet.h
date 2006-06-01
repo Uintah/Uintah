@@ -112,6 +112,9 @@ public:
                                      const HexMesh& hexmesh);
 
 
+  // Return the connected boundary faces.  They will be adjacent to
+  // each other in the connected_faces vector, so (0,1) will be
+  // paired, (2, 3) will be paired, etc.
   void separate_non_man_faces( vector<unsigned int>& connected_faces,
                                const typename FIELD::mesh_type &mesh,
                                unsigned int non_man_edge_id,
