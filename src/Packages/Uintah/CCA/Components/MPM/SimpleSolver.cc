@@ -144,11 +144,11 @@ void SimpleSolver::destroyMatrix(bool recursion)
 }
 
 void SimpleSolver::fillMatrix(int numi,int i[],int numj,
-                                       int j[],double value[])
+                              int j[],double value[])
 {
    for(int ii=0;ii<numi;ii++){
      for(int jj=0;jj<numj;jj++){
-       KK[i[ii]][j[jj]] = KK[i[ii]][j[jj]] + value[24*ii+jj];
+       KK[i[ii]][j[jj]] = KK[i[ii]][j[jj]] + value[ii*jj + jj];
      }
    }
 }

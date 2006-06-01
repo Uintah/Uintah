@@ -128,11 +128,7 @@ ImplicitCM::computeStressTensor(const PatchSubset*,
                                        const MPMMaterial*,
                                        DataWarehouse*,
                                        DataWarehouse*,
-#ifdef HAVE_PETSC
-                                       MPMPetscSolver* ,
-#else
-                                       SimpleSolver* ,
-#endif
+                                       Solver* ,
                                        const bool)
 {
 }

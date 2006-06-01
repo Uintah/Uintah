@@ -9,8 +9,7 @@
 #include <Packages/Uintah/Core/Math/Short27.h>
 #include <Core/Containers/StaticArray.h>
 #include <Packages/Uintah/Core/Grid/Variables/Array3.h>
-#include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
-#include <Packages/Uintah/CCA/Components/MPM/SimpleSolver.h>
+#include <Packages/Uintah/CCA/Components/MPM/Solver.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -56,11 +55,7 @@ namespace Uintah {
                                      const MPMMaterial* matl,
                                      DataWarehouse* old_dw,
                                      DataWarehouse* new_dw,
-#ifdef HAVE_PETSC
-                                     MPMPetscSolver* solver,
-#else
-                                     SimpleSolver* solver,
-#endif
+                                     Solver* solver,
                                      const bool recursion);
          
 

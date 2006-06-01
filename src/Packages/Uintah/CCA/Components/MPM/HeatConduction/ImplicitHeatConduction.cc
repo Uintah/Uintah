@@ -59,23 +59,24 @@ ImplicitHeatConduction::~ImplicitHeatConduction()
  }
 }
 
-void ImplicitHeatConduction::problemSetup()
+void ImplicitHeatConduction::problemSetup(string solver_type)
 {
    int numMatls = d_sharedState->getNumMPMMatls();
 
-#ifdef HAVE_PETSC
-   d_HC_solver = vector<MPMPetscSolver*>(numMatls);
-   for(int m=0;m<numMatls;m++){
-      d_HC_solver[m]=scinew MPMPetscSolver();
-      d_HC_solver[m]->initialize();
+   if (solver_type == "petsc") {
+     d_HC_solver = vector<Solver*>(numMatls);
+     for(int m=0;m<numMatls;m++){
+       d_HC_solver[m]=scinew MPMPetscSolver();
+       d_HC_solver[m]->initialize();
+     }
    }
-#else
-   d_HC_solver = vector<SimpleSolver*>(numMatls);
-   for(int m=0;m<numMatls;m++){
-      d_HC_solver[m]=scinew SimpleSolver();
-      d_HC_solver[m]->initialize();
+   else {
+     d_HC_solver = vector<Solver*>(numMatls);
+     for(int m=0;m<numMatls;m++){
+       d_HC_solver[m]=scinew SimpleSolver();
+       d_HC_solver[m]->initialize();
+     }
    }
-#endif
 }
 
 void ImplicitHeatConduction::scheduleDestroyHCMatrix(SchedulerP& sched,
@@ -680,6 +681,7 @@ void ImplicitHeatConduction::getTemperatureIncrement(const ProcessorGroup*,
         IntVector n = *iter;
         int dof = l2g[n] - begin;
         TempImp[m][n] = x[dof];
+        //cout << "temp[" << n << "]=" << TempImp[m][n] << endl;
       }
     }
 
