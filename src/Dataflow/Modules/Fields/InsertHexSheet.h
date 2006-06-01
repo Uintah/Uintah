@@ -1241,7 +1241,8 @@ InsertHexSheetAlgoHex<FIELD>::separate_non_man_faces(
     const double q = acos(Dot(outvectors[0], outvectors[i]) / len);
     const double p = asin(Cross(outvectors[0], outvectors[i]).length() / len);
     const double angle = (p >= 0.0)? q : (2 * M_PI - q);
-    angles.push_back(angle, non_man_boundary_faces[i]);
+    angles.push_back(pair<double,unsigned int>(angle, 
+                                               non_man_boundary_faces[i]));
   }
   
   sort(angles.begin(), angles.end(), pair_less);
