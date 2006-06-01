@@ -1189,6 +1189,10 @@ InsertHexSheetAlgoHex<FIELD>::separate_non_man_faces(
                         unsigned int non_man_edge_id,
                         vector<unsigned int> non_man_boundary_faces )
 {
+  ASSERTMSG(non_man_boundary_faces.size(), "No faces to pair.");  
+  ASSERTMSG(non_man_boundary_faces.size() % 2 == 0,
+            "Can't pair odd number of faces.");
+
   typename FIELD::mesh_type::Node::array_type edge_nodes;
   mesh.get_nodes(edge_nodes, non_man_edge_id);
 
@@ -1229,14 +1233,14 @@ InsertHexSheetAlgoHex<FIELD>::separate_non_man_faces(
 
   vector<pair<double, unsigned int> > angles;
   angles.push_back(pair<double, unsigned int>(0.0, non_man_boundary_faces[0]));
-  //  Point ep0, ep1;
-  //  mesh.get_center(ep0, edge_nodes[0]);
-  //  mesh.get_center(ep1, edge_nodes[1]);
-  //  Vector edgev = ep1 - ep0;
+  const double length0 = outvectors[0].length();
+  // Compute the angle between outvectors[0] and outvectors[i];
   for (unsigned int i = 1; i < non_man_boundary_faces.size(); i++)
   {
-    double angle = 0.0;
-    // Magically compute the angle between outvectors[0] and outvectors[i];
+    const double len = length0 * outvectors[i].length();
+    const double q = acos(Dot(outvectors[0], outvectors[i]) / len);
+    const double p = asin(Cross(outvectors[0], outvectors[i]).length() / len);
+    const double angle = (p >= 0.0)? q : (2 * M_PI - q);
     angles.push_back(angle, non_man_boundary_faces[i]);
   }
   
@@ -1246,6 +1250,10 @@ InsertHexSheetAlgoHex<FIELD>::separate_non_man_faces(
   // Else our pairs are (0,1) (2,3), 4,5) etc.
   // Determine which case it is, return those in the connected faces.
   int offset = 0;
+  //  Point ep0, ep1;
+  //  mesh.get_center(ep0, edge_nodes[0]);
+  //  mesh.get_center(ep1, edge_nodes[1]);
+  //  Vector edgev = ep1 - ep0;
   
 
   // Fill in the results.
