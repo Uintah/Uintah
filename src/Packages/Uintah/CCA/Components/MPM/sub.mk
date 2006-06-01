@@ -19,11 +19,11 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 	$(SRCDIR)/SimpleSolver.cc \
 	$(SRCDIR)/Solver.cc \
 	$(SRCDIR)/MPMBoundCond.cc \
-	$(SRCDIR)/MPMFlags.cc \
+	$(SRCDIR)/MPMFlags.cc
+
 ifeq ($(HAVE_PETSC),yes)
   SRCS += $(SRCDIR)/PetscSolver.cc 
-
-
+endif
 
 SUBDIRS := \
 	$(SRCDIR)/ConstitutiveModel \
@@ -55,7 +55,7 @@ PSELIBS := \
 LIBS := $(XML2_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 ifeq ($(HAVE_PETSC),yes)
-LIBS := $(LIBS) $(PETSC_LIBRARY) 
+  LIBS := $(LIBS) $(PETSC_LIBRARY) 
 endif
 
 

@@ -27,6 +27,8 @@ MPMPetscSolver::MPMPetscSolver()
   d_diagonal = 0;
   d_x = 0;
   d_t = 0;
+#else
+  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::MPMPetscSolver()!", __FILE__, __LINE__ );
 #endif
 }
 
@@ -40,14 +42,14 @@ void MPMPetscSolver::initialize()
 #ifdef HAVE_PETSC
   // store in a vector so we can customize the settings easily
   vector<char*> args;
-#ifdef DEBUG_PETSC
+#  ifdef DEBUG_PETSC
   args.push_back("ImpMPM::problemSetup");
   args.push_back("-on_error_attach_debugger");
-#endif
-#ifdef LOG
+#  endif
+#  ifdef LOG
   args.push_back("-log_summary");
   args.push_back("-log_info");
-#if 0
+#    if 0
   args.push_back("-log_exclude_actions");
   args.push_back("-log_exclude_objects");
   args.push_back("-log_info");
@@ -55,8 +57,8 @@ void MPMPetscSolver::initialize()
   args.push_back("-trdump");
   args.push_back("-trmalloc_log");
   args.push_back("-log_summary");
-#endif
-#endif
+#    endif
+#  endif
 
   int argc = args.size();
   char** argv = 0;
@@ -69,6 +71,8 @@ void MPMPetscSolver::initialize()
     }
   }
   PetscInitialize(&argc,&argv, PETSC_NULL, PETSC_NULL);
+#else
+  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::initialize()!", __FILE__, __LINE__ );
 #endif
 }
 
@@ -154,12 +158,12 @@ void MPMPetscSolver::solve()
 #ifdef HAVE_PETSC
   PC          precond;           
   KSP         solver;
-#if 0
+#  if 0
   if(d_DOFsPerNode<3){
   PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_ASCII_DENSE);
   MatView(d_A,PETSC_VIEWER_STDOUT_WORLD);
   }
-#endif
+#  endif
   KSPCreate(PETSC_COMM_WORLD,&solver);
   KSPSetOperators(solver,d_A,d_A,DIFFERENT_NONZERO_PATTERN);
   KSPGetPC(solver,&precond);
@@ -168,17 +172,19 @@ void MPMPetscSolver::solve()
   KSPSetTolerances(solver,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
   
 
-#ifdef debug
+#  ifdef debug
   VecView(d_B,PETSC_VIEWER_STDOUT_WORLD);
-#endif
+#  endif
   KSPSolve(solver,d_B,d_x);
-#ifdef LOG
+#  ifdef LOG
   KSPView(solver,PETSC_VIEWER_STDOUT_WORLD);
   int its;
   KSPGetIterationNumber(solver,&its);
   PetscPrintf(PETSC_COMM_WORLD,"Iterations %d\n",its);
-#endif
+#  endif
   KSPDestroy(solver);
+#else
+  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::solve()!", __FILE__, __LINE__ );
 #endif
 }
 
@@ -263,6 +269,8 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
     VecDuplicate(d_B,&d_diagonal);
     VecDuplicate(d_B,&d_x);
     VecDuplicate(d_B,&d_t);
+#else
+  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::createMatrix(...)!", __FILE__, __LINE__ );
 #endif
 
   delete[] diag;
@@ -298,6 +306,8 @@ void MPMPetscSolver::destroyMatrix(bool recursion)
       VecDestroy(d_t);
     }
   }
+#else
+  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::destroyMatrix(...)!", __FILE__, __LINE__ );
 #endif
   if (recursion == false)
     d_DOF.clear();
@@ -308,6 +318,8 @@ void MPMPetscSolver::flushMatrix()
 #ifdef HAVE_PETSC
   MatAssemblyBegin(d_A,MAT_FLUSH_ASSEMBLY);
   MatAssemblyEnd(d_A,MAT_FLUSH_ASSEMBLY);
+#else
+  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::flushMatrix(...)!", __FILE__, __LINE__ );
 #endif
 }
 
@@ -316,6 +328,8 @@ void MPMPetscSolver::fillVector(int i,double v)
 #ifdef HAVE_PETSC
   PetscScalar value = v;
   VecSetValues(d_B,1,&i,&value,INSERT_VALUES);
+#else
+  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::fillVector(...)!", __FILE__, __LINE__ );
 #endif
 }
 
@@ -324,6 +338,8 @@ void MPMPetscSolver::fillTemporaryVector(int i,double v)
 #ifdef HAVE_PETSC
   PetscScalar value = v;
   VecSetValues(d_t,1,&i,&value,INSERT_VALUES);
+#else
+  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::fillTemporaryVector(...)!", __FILE__, __LINE__ );
 #endif
 }
 
@@ -332,6 +348,8 @@ void MPMPetscSolver::assembleVector()
 #ifdef HAVE_PETSC
   VecAssemblyBegin(d_B);
   VecAssemblyEnd(d_B);
+#else
+  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::assembleVector(...)!", __FILE__, __LINE__ );
 #endif
 }
 
@@ -340,6 +358,8 @@ void MPMPetscSolver::assembleTemporaryVector()
 #ifdef HAVE_PETSC
   VecAssemblyBegin(d_t);
   VecAssemblyEnd(d_t);
+#else
+  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::assembleTemporaryVector(...)!", __FILE__, __LINE__ );
 #endif
 }
 
@@ -347,6 +367,8 @@ void MPMPetscSolver::applyBCSToRHS()
 {
 #ifdef HAVE_PETSC
   MatMultAdd(d_A,d_t,d_B,d_B);
+#else
+  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::applyBCSToRHS(...)!", __FILE__, __LINE__ );
 #endif
 }
 
@@ -416,6 +438,8 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
   MatDiagonalSet(d_A,d_diagonal,INSERT_VALUES);
   MatAssemblyBegin(d_A,MAT_FINAL_ASSEMBLY);
   MatAssemblyEnd(d_A,MAT_FINAL_ASSEMBLY);
+#else
+  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::removeFixedDOF(...)!", __FILE__, __LINE__ );
 #endif
 }
 
@@ -442,6 +466,8 @@ int MPMPetscSolver::getSolution(vector<double>& xPetsc)
   }
   VecRestoreArray(d_x,&x);
   return begin;
+#else
+  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::getSolution(...)!", __FILE__, __LINE__ );
 #endif
 }
 
@@ -460,5 +486,7 @@ int MPMPetscSolver::getRHS(vector<double>& QPetsc)
   }
   VecRestoreArray(d_B,&q);
   return begin;
+#else
+  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::getRHS(...)!", __FILE__, __LINE__ );
 #endif
 }

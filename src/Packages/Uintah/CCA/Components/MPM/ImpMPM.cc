@@ -223,10 +223,15 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    string solver_type;
    mpm_soln_ps->get("solver",solver_type);
    
-   if (solver_type == "petsc")
+   if (solver_type == "petsc") {
+#   ifdef HAVE_PETSC
      d_solver = scinew MPMPetscSolver();
-   else
+#   else
+     throw InternalError( "Don't have PETSc so shouldn't be using a solver_type of 'petsc'!", __FILE__, __LINE__ );
+#   endif
+   } else {
      d_solver = scinew SimpleSolver();
+   }
 
    d_solver->initialize();
 
