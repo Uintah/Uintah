@@ -275,7 +275,7 @@
       <cfl>0.4</cfl>
       <ICE>
         <advection type = "SecondOrder"/>
-	
+       
         <!--______________turbulence models____________-->
 <!--     <turbulence model = "Germano">                 
           <filter_width>        1.0 </filter_width>
@@ -289,12 +289,12 @@
           <turb_Pr>             0.4 </turb_Pr>                          
         </turbulence> 
 --> 
-	
+       
         <TimeStepControl>
           <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
           <knob_for_speedSound>  0.00           </knob_for_speedSound>
         </TimeStepControl>
-	
+       
          
         <ImplicitSolver>
            <max_outer_iterations>      20    </max_outer_iterations>
@@ -304,13 +304,13 @@
               <tolerance>     1.e-8   </tolerance>
               <norm>     LInfinity    </norm>
               <criteria> Absolute     </criteria>
-	     <solver>         hybrid  </solver>
-	     <preconditioner> pfmg    </preconditioner>
-	     <maxiterations>  7500    </maxiterations>
-	     <npre>           1       </npre>
-	     <npost>          1       </npost>
-	     <skip>           0       </skip>
-	     <jump>           0       </jump>
+            <solver>         hybrid  </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           0       </skip>
+            <jump>           0       </jump>
            </Parameters>
         </ImplicitSolver>
       </ICE>       
@@ -356,12 +356,12 @@
     <Models>
        <Model type="AdiabaticTable">
         <table name="adiabatic" type="Arches">
-	  <defaultValue name="heat_loss">0.0</defaultValue>
+         <defaultValue name="heat_loss">0.0</defaultValue>
           <derivedValue name="reference_heat_capac_Cv">[heat_capac_Cv]</derivedValue>
           <derivedValue name="reference_gamma">[gamma]</derivedValue>
           <constantValue name="reference_Temp">298</constantValue>
-	  <filename>inputs/Models/he.rxn</filename>
-	</table>
+         <filename>inputs/Models/he.rxn</filename>
+       </table>
         <material>BackgroundGas</material>
         <scalar name="f">
         <test_conservation>  true  </test_conservation>
@@ -372,7 +372,7 @@
              <box label = "world">  </box>
              <scalar>    0.00       </scalar>
           </geom_object>
-	</scalar>
+       </scalar>
       </Model>
     </Models>
 

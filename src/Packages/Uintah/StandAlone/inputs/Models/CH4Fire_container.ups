@@ -558,11 +558,11 @@
         <!-- temperature to 298.0 and the co-flow density to 1.1798322     -->
        <Model type="AdiabaticTable">
         <table name="adiabatic" type="Arches">
-	  
+         
           <!--<include href="inputs/Models/CH4.xml"/> -->
           <filename>inputs/Models/ch4.rxn</filename> <!--Steve's table-->
           <!--<include href="inputs/Models/JP8.xml"/>-->
-	</table>
+       </table>
 
         <material>Atmosphere</material>
         <scalar name="f">
@@ -576,7 +576,7 @@
             </difference>
             <scalar>  0.0 </scalar>
           </geom_object>
-	</scalar>
+       </scalar>
       </Model>
      
     </Models>            

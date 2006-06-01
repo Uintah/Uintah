@@ -128,19 +128,19 @@
            <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
            <Parameters variable = "implicitPressure">
 
-	     <!-- CGSolver options -->
+            <!-- CGSolver options -->
               <norm>     LInfinity  </norm>
               <criteria> Absolute   </criteria>
 
-	     <!-- Hypre options -->
-	     <solver>         hybrid  </solver>
-	     <preconditioner> pfmg    </preconditioner>
-	     <tolerance>      1.e-10  </tolerance>
-	     <maxiterations>  7500    </maxiterations>
-	     <npre>           1       </npre>
-	     <npost>          1       </npost>
-	     <skip>           0       </skip>
-	     <jump>           0       </jump>
+            <!-- Hypre options -->
+            <solver>         hybrid  </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1.e-10  </tolerance>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           0       </skip>
+            <jump>           0       </jump>
            
             </Parameters>
         </ImplicitSolver>
@@ -190,8 +190,8 @@
               <type>        rigid           </type>
               <materials>  [1,0]         </materials>
               <stop_time>   0.8             </stop_time>
-	       <direction>   [0, 0, 1]       </direction>
-	       <velocity_after_stop>[0, 0, 0]</velocity_after_stop>
+              <direction>   [0, 0, 1]       </direction>
+              <velocity_after_stop>[0, 0, 0]</velocity_after_stop>
           </contact>
       </MPM>
       <!--__________________________________ -->   

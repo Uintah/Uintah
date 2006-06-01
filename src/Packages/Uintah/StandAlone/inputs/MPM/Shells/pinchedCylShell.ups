@@ -136,16 +136,16 @@
    <PhysicalBC>
      <MPM>
       <!--
-		<force>
-		  <lower>[-2.5e-2, 0.0, 2.5e-2]</lower>
-		  <upper>[-2.5e-2, 0.0, 2.5e-2]</upper>
-		  <force_density>[5.0e8,0,0]</force_density>
-		</force>
-		<force>
-		  <lower>[2.5e-2, 0.0, 2.5e-2]</lower>
-		  <upper>[2.5e-2, 0.0, 2.5e-2]</upper>
-		  <force_density>[-5.0e8,0,0]</force_density>
-		</force>
+              <force>
+                <lower>[-2.5e-2, 0.0, 2.5e-2]</lower>
+                <upper>[-2.5e-2, 0.0, 2.5e-2]</upper>
+                <force_density>[5.0e8,0,0]</force_density>
+              </force>
+              <force>
+                <lower>[2.5e-2, 0.0, 2.5e-2]</lower>
+                <upper>[2.5e-2, 0.0, 2.5e-2]</upper>
+                <force_density>[-5.0e8,0,0]</force_density>
+              </force>
       -->
      </MPM>
    </PhysicalBC>

@@ -4,38 +4,38 @@
 <Uintah_specification>
 
    <Meta>
-	<title>SIF calculation of a frictional contact crack</title>
+       <title>SIF calculation of a frictional contact crack</title>
    </Meta>
 
    <Time>
-	<maxTime>200.e-6</maxTime>
-	<initTime>0.0</initTime>
-	<delt_min>0.0</delt_min>
-	<delt_max>0.002</delt_max>
-	<timestep_multiplier>0.8</timestep_multiplier>
+       <maxTime>200.e-6</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.0</delt_min>
+       <delt_max>0.002</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>frictionCrack.uda</filebase>
-	<outputInterval>4e-6</outputInterval>
+       <outputInterval>4e-6</outputInterval>
         <save label = "p.x"/>
         <save label = "p.volume"/>
-	<!--<save label = "p.stress"/>
+       <!--<save label = "p.stress"/>
         <save label = "KineticEnergy"/>
-	<save label = "TotalMass"/>
-	<save label = "StrainEnergy"/>
-	<save label = "CenterOfMassPosition"/>
-	<save label = "CenterOfMassVelocity"/>
+       <save label = "TotalMass"/>
+       <save label = "StrainEnergy"/>
+       <save label = "CenterOfMassPosition"/>
+       <save label = "CenterOfMassVelocity"/>
         <save label = "p.particleID"/>
-	<save label = "g.mass"/>
-	<save label = "g.stressFS"/>-->
+       <save label = "g.mass"/>
+       <save label = "g.stressFS"/>-->
         <save_crack_geometry>true</save_crack_geometry>
 
-	<checkpoint cycle = "2" interval = "0.2"/>
+       <checkpoint cycle = "2" interval = "0.2"/>
    </DataArchiver>
 
     <MPM>
-	<time_integrator>fracture</time_integrator>
-	<nodes8or27>8</nodes8or27>
+       <time_integrator>fracture</time_integrator>
+       <nodes8or27>8</nodes8or27>
         <artificial_damping_coeff>0.005</artificial_damping_coeff>
         <calculate_fracture_parameters>true</calculate_fracture_parameters>
         <use_volume_integral>false</use_volume_integral>
@@ -44,29 +44,29 @@
     </MPM>
 
     <PhysicalConstants>
-	<gravity>[0,0,0]</gravity>
+       <gravity>[0,0,0]</gravity>
     </PhysicalConstants>
 
     <MaterialProperties>
-	<MPM>
-	    <material>
-		<density>1500</density>
-		<constitutive_model type="hypo_elastic"> 
-		   <G>37594.e6</G>
-		   <K>98039.e6</K>
-	        </constitutive_model>
-		<thermal_conductivity>1.0</thermal_conductivity>
-		<specific_heat>5</specific_heat>
-		<geom_object>
-		    <box label = "square">
-			<min>[-50.0e-3, -50.e-3,  -0.5e-3]</min>
-			<max>[ 50.0e-3,  50.0e-3,  0.5e-3]</max>
-		    </box>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>12</temperature>
- 		</geom_object>
-		<velocity_field>0</velocity_field>
+       <MPM>
+           <material>
+              <density>1500</density>
+              <constitutive_model type="hypo_elastic"> 
+                 <G>37594.e6</G>
+                 <K>98039.e6</K>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <box label = "square">
+                     <min>[-50.0e-3, -50.e-3,  -0.5e-3]</min>
+                     <max>[ 50.0e-3,  50.0e-3,  0.5e-3]</max>
+                  </box>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+              <velocity_field>0</velocity_field>
 
                 <crack>
                    <type>friction</type>
@@ -83,16 +83,16 @@
                       </quad>
                    </crack_segments>
                 </crack>
-	    </material>
+           </material>
 
-	    <contact>
-	      <type>null</type>
-	      <vel_fields>[0,0,0]</vel_fields>
-	    </contact>
-	</MPM>
+           <contact>
+             <type>null</type>
+             <vel_fields>[0,0,0]</vel_fields>
+           </contact>
+       </MPM>
 
     </MaterialProperties>
-	
+       
     <Grid>
         <Level>
             <Box label = "1">
@@ -133,7 +133,7 @@
     </Grid>
 
     <PhysicalBC>
-	<MPM>
+       <MPM>
            <force>
              <lower>[-50.0e-3, 49.5e-3, -0.5e-3]</lower>
              <upper>[ 50.0e-3, 50.0e-3,  0.5e-3]</upper>
@@ -154,7 +154,7 @@
              <upper>[50.0e-3,  50.0e-3,  0.5e-3]</upper>
              <force_density>[0.0, 0.1333333e9, 0.0]</force_density>
            </force>
-	</MPM>
+       </MPM>
     </PhysicalBC>
     
 </Uintah_specification>

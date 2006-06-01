@@ -29,18 +29,18 @@
     <Grid>
     <BoundaryConditions>
       <Face circle = "x-" origin = "0.0 0.0 0.0" radius = ".03683">
-	 <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
-			       <value> 4000000.0   </value>
-	 </BCType>
-	 <BCType id = "1" label = "Velocity"     var = "Dirichlet">
-			       <value> [209.,0.,0.] </value>
-	 </BCType>
-	 <BCType id = "1" label = "Temperature"  var = "Dirichlet">
-			       <value> 1000.0  </value>
-	 </BCType>
-	 <BCType id = "1" label = "Density"	   var = "Dirichlet">
-			       <value> 13.937 </value>
-	 </BCType>
+        <BCType id = "0"   label = "Pressure"     var = "Dirichlet">
+                            <value> 4000000.0   </value>
+        </BCType>
+        <BCType id = "1" label = "Velocity"     var = "Dirichlet">
+                            <value> [209.,0.,0.] </value>
+        </BCType>
+        <BCType id = "1" label = "Temperature"  var = "Dirichlet">
+                            <value> 1000.0  </value>
+        </BCType>
+        <BCType id = "1" label = "Density"          var = "Dirichlet">
+                            <value> 13.937 </value>
+        </BCType>
        </Face>
       <Face side = "x-">
         <BCType id = "0" label = "Pressure" var = "Neumann">
@@ -75,7 +75,7 @@
       <Face side = "y-">
         <BCType id = "all" label = "Symmetric" var = "symmetry">
         </BCType>
-	</Face>
+       </Face>
 <!--        <BCType id = "0" label = "Velocity" var = "Dirichlet">
                               <value> [0.,0.,0.] </value>
         </BCType>
