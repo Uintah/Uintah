@@ -1190,11 +1190,16 @@ InsertHexSheetAlgoHex<FIELD>::separate_non_man_faces(
                         vector<unsigned int> non_man_boundary_faces )
 {
   ASSERTMSG(non_man_boundary_faces.size(), "No faces to pair.");  
+  ASSERTMSG(non_man_boundary_faces.size() == 2, "Only two faces.");  
   ASSERTMSG(non_man_boundary_faces.size() % 2 == 0,
             "Can't pair odd number of faces.");
 
   typename FIELD::mesh_type::Node::array_type edge_nodes;
   mesh.get_nodes(edge_nodes, non_man_edge_id);
+  Point ep0, ep1;
+  mesh.get_center(ep0, edge_nodes[0]);
+  mesh.get_center(ep1, edge_nodes[1]);
+  Vector evec = ep1 - ep0;
 
   vector<Vector> outvectors;
   for (unsigned int i = 0 ; i < non_man_boundary_faces.size(); i++)
@@ -1231,18 +1236,58 @@ InsertHexSheetAlgoHex<FIELD>::separate_non_man_faces(
   ASSERTMSG(outvectors.size() == non_man_boundary_faces.size(),
             "A boundary face wasn't really on the non-manifold edge.");
 
+  // We'll be tricky and toss the center of the nearest element on,
+  // since it will be closer than the other side.
+  typename FIELD::mesh_type::Elem::array_type elems;
+  mesh.get_elems(elems, non_man_edge_id);
+  for (unsigned int i = 0; i < elems.size(); i++)
+  {
+    typename FIELD::mesh_type::Face::array_type faces;
+    mesh.get_faces(faces, elems[i]);
+    bool found = false;
+    for (unsigned int j = 0; j < faces.size(); j++)
+    {
+      if (faces[j] == non_man_boundary_faces[0])
+      {
+        found = true;
+      }
+    }
+    if (found)
+    {
+      Point p;
+      mesh.get_center(p, elems[i]);
+      outvectors.push_back(p - ep0);
+      break;
+    }
+  }
+
+  // Project all of these vectors to the edge plane.
+  const double elen = evec.length();
+  for (unsigned int i = 0; i < outvectors.size(); i++)
+  {
+    const Vector eproj = evec * (Dot(evec, outvectors[i]) / elen);
+    outvectors[i] = outvectors[i] - eproj;
+  }
+
   vector<pair<double, unsigned int> > angles;
   angles.push_back(pair<double, unsigned int>(0.0, non_man_boundary_faces[0]));
   const double length0 = outvectors[0].length();
   // Compute the angle between outvectors[0] and outvectors[i];
-  for (unsigned int i = 1; i < non_man_boundary_faces.size(); i++)
+  for (unsigned int i = 1; i < outvectors.size(); i++)
   {
     const double len = length0 * outvectors[i].length();
     const double q = acos(Dot(outvectors[0], outvectors[i]) / len);
     const double p = asin(Cross(outvectors[0], outvectors[i]).length() / len);
     const double angle = (p >= 0.0)? q : (2 * M_PI - q);
-    angles.push_back(pair<double,unsigned int>(angle, 
-                                               non_man_boundary_faces[i]));
+    if (i < non_man_boundary_faces.size())
+    {
+      angles.push_back(pair<double, unsigned int>(angle,
+                                                  non_man_boundary_faces[i]));
+    }
+    else
+    {
+      angles.push_back(pair<double, unsigned int>(angle, -1));
+    }
   }
   
   sort(angles.begin(), angles.end(), pair_less);
@@ -1251,11 +1296,17 @@ InsertHexSheetAlgoHex<FIELD>::separate_non_man_faces(
   // Else our pairs are (0,1) (2,3), 4,5) etc.
   // Determine which case it is, return those in the connected faces.
   int offset = 0;
-  //  Point ep0, ep1;
-  //  mesh.get_center(ep0, edge_nodes[0]);
-  //  mesh.get_center(ep1, edge_nodes[1]);
-  //  Vector edgev = ep1 - ep0;
-  
+  if (angles[1].second == -1)
+  {
+    offset = 1;
+    angles.erase(angles.begin()+1);
+  }
+  else
+  {
+    ASSERTMSG(angles[angles.size()-1].second == -1,
+              "Elem center wasn't adjacent to the face.");
+    angles.erase(angles.end()-1);
+  }
 
   // Fill in the results.
   connected_faces.resize(non_man_boundary_faces.size());
