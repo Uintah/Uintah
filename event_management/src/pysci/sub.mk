@@ -17,7 +17,7 @@ PSELIBS := 	Core/Util		\
 		Core/Exceptions		\
 		Dataflow/Modules/Fields	\
 
-LIBS := -lpython2.4 $(TCL_LIBRARY)
+LIBS := -lpython2.4
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

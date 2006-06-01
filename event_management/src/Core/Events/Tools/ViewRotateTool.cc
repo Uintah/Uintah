@@ -59,7 +59,7 @@ ViewRotateTool::~ViewRotateTool()
 {
 }
 
-event_handle_t
+BaseTool::return_state_e
 ViewRotateTool::pointer_down(int which, int x, int y, int time)
 {
   cerr << "ViewRotateTool::pointer_down" << endl;
@@ -74,7 +74,7 @@ ViewRotateTool::pointer_down(int which, int x, int y, int time)
   double znear, zfar;
   rotate_valid_p_ = false;
   if(!scene_interface_->compute_depth(tmpview, znear, zfar))
-    return event_handle_t(); // No objects...
+    return STOP_PROPAGATION_E;
 
   rot_view_ = tmpview;
   rotate_valid_p_ = true;
@@ -109,10 +109,10 @@ ViewRotateTool::pointer_down(int which, int x, int y, int time)
   ball_->Update();
   last_time_ = time;
   scene_interface_->need_redraw();
-  return event_handle_t();
+  return STOP_PROPAGATION_E;
 }
 
-event_handle_t
+BaseTool::return_state_e
 ViewRotateTool::pointer_motion(int which, int x, int y, int time)
 {
   cerr << "ViewRotateTool::pointer_motion" << endl;
@@ -120,7 +120,7 @@ ViewRotateTool::pointer_motion(int which, int x, int y, int time)
   int yres = scene_interface_->height();
 
   if(!rotate_valid_p_)
-    return event_handle_t();
+    return STOP_PROPAGATION_E;
 
   HVect mouse((2.0 * x) / xres - 1.0, 2.0 * (yres - y * 1.0) / yres - 1.0,
 	      0.0, 1.0);
@@ -161,10 +161,10 @@ ViewRotateTool::pointer_motion(int which, int x, int y, int time)
 
   last_time_ = time;
 
-  return event_handle_t();
+  return STOP_PROPAGATION_E;
 }
 
-event_handle_t
+BaseTool::return_state_e
 ViewRotateTool::pointer_up(int which, int x, int y, int time)
 {
   cerr << "ViewRotateTool::pointer_up" << endl;
@@ -230,7 +230,7 @@ ViewRotateTool::pointer_up(int which, int x, int y, int time)
   rotate_valid_p_ = false; // so we don't have to draw this...
   scene_interface_->need_redraw();     // always update this...
   scene_interface_->update_mode_string("");
-  return event_handle_t();
+  return STOP_PROPAGATION_E;
 }
 
 } // namespace SCIRun
