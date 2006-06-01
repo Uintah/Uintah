@@ -106,6 +106,7 @@ OpenGLViewer::OpenGLViewer(OpenGLContext *oglc) :
   bgcolor_(Color(.0, .0, .0)),
   homeview_(Point(2.1, 1.6, 11.5), Point(.0, .0, .0), Vector(0,1,0), 20),
   view_(homeview_),
+  do_stereo_(false),
   ambient_scale_(1.0),	     
   diffuse_scale_(1.0),	     
   specular_scale_(0.4),	     
@@ -266,13 +267,15 @@ OpenGLViewer::run()
     event_handle_t ev;
     while (events_ && events_->tryReceive(ev)) {
       // Tools will set up the appropriate rendering state.
-      if (ev == 0) {
+      QuitEvent *qe = dynamic_cast<QuitEvent*>(ev.get_rep());
+      if (qe) {
 	// this is the terminate signal, so return.
 	cerr << "Viewer exiting." << endl;
 	dead_ = true;
 	return;
       }
 
+      //if (dead_) return;
       tm_.propagate_event(ev);
     }
 

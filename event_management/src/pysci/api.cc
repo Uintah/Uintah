@@ -148,15 +148,19 @@ void add_key_event(unsigned time, unsigned keval,
 void terminate() 
 {
   // send a NULL event to terminate...
-  event_handle_t event; //= new EventState();
+  event_handle_t event = new QuitEvent();
   EventManager::add_event(event);
 }
 
 void run_viewer_thread(CallbackOpenGLContext *ogl) 
 {
-  OpenGLViewer *v = new OpenGLViewer(ogl);
-  v->run(); // runs until thread exits.
-  delete v;
+  CallbackOpenGLContext *c = new CallbackOpenGLContext();
+  *c = *ogl;
+  cerr << "starting viewer thread with: " << c << endl;
+  
+  OpenGLViewer *v = new OpenGLViewer(c);
+  Thread *vt = scinew Thread(v, "Viewer Thread");
+  vt->detach(); // runs until thread exits.
 }
 
 }
