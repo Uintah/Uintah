@@ -102,12 +102,17 @@ namespace Uintah {
   };
 
 #ifdef HAVE_PETSC
-inline void MPMPetscSolver::fillMatrix(int numi,int i[],int numj,
+  inline void MPMPetscSolver::fillMatrix(int numi,int i[],int numj,
                                        int j[],double value[])
-{
-  MatSetValues(d_A,numi,i,numj,j,value,ADD_VALUES);
-}
+  {
+    MatSetValues(d_A,numi,i,numj,j,value,ADD_VALUES);
+  }
+else
+  inline void MPMPetscSolver::fillMatrix(int /*numi*/,int /*i*/[],int /*numj*/,
+                                         int /*j*/[],double /*value*/[])
+  {
+    throw InternalError( "MPMPetscSolver::fillMatrix(...) is not implemented!", __FILE__, __LINE__ );
+  }
 #endif
-
 }
 #endif

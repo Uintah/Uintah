@@ -133,9 +133,10 @@ WARNING
   template<class T>
   Handle<T>::~Handle()
   {
-    if(d_rep){
-      if(d_rep->removeReference())
-      delete d_rep;
+    if(d_rep) {
+      if(d_rep->removeReference()) {
+        delete d_rep;
+      }
     }
   }
   
