@@ -1,12 +1,13 @@
-#include "TensorParticlesOperator.h"
-#include <math.h>
+#include <Uintah/Dataflow/Modules/Operators/TensorParticlesOperator.h>
+
 #include <Core/Malloc/Allocator.h>
+
 #include <Uintah/Core/Datatypes/TensorParticles.h>
 #include <Uintah/Core/Datatypes/ScalarParticles.h>
 #include <Uintah/Core/Grid/Variables/ParticleVariable.h>
 #include <Uintah/Core/Grid/Variables/ParticleSubset.h>
 
-//#include <SCICore/Math/Mat.h>
+#include <math.h>
 
 namespace Uintah {
 
@@ -31,7 +32,8 @@ TensorParticlesOperator::TensorParticlesOperator(GuiContext* ctx)
 {
 }
   
-void TensorParticlesOperator::execute(void) 
+void
+TensorParticlesOperator::execute(void) 
 {
   //  tcl_status.set("Calling InPlaneEigenEvaluator!"); 
  
@@ -42,6 +44,9 @@ void TensorParticlesOperator::execute(void)
   
   if(!in->get(hTF)){
     error("TensorParticlesOperator::execute(void) Didn't get a handle.");
+    return;
+  } else if ( !hTF.get_rep() ){
+    error("Input is empty.");
     return;
   }
 
