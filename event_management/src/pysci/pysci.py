@@ -207,3 +207,9 @@ run_viewer_thread = _pysci.run_viewer_thread
 
 add_key_event = _pysci.add_key_event
 
+add_motion_notify_event = _pysci.add_motion_notify_event
+
+add_pointer_down_event = _pysci.add_pointer_down_event
+
+add_pointer_up_event = _pysci.add_pointer_up_event
+

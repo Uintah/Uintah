@@ -75,15 +75,15 @@ ToolManager::send_pointer_event(PointerTool *pt, event_handle_t event) const
   event_handle_t revent = 0;
   if (s & PointerEvent::MOTION_E) {
     revent = pt->pointer_motion(which, pe->get_x(), 
-				  pe->get_y(), pe->get_time());
+				pe->get_y(), pe->get_time());
 
   } else if (s & PointerEvent::BUTTON_PRESS_E) {
-    revent = pt->pointer_motion(which, pe->get_x(), 
-				  pe->get_y(), pe->get_time());
+    revent = pt->pointer_down(which, pe->get_x(), 
+				pe->get_y(), pe->get_time());
 
   } else if (s & PointerEvent::BUTTON_RELEASE_E) {
-    revent = pt->pointer_motion(which, pe->get_x(), 
-				  pe->get_y(), pe->get_time());
+    revent = pt->pointer_up(which, pe->get_x(), 
+				pe->get_y(), pe->get_time());
   }
 
   return revent;
