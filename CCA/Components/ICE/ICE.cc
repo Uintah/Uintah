@@ -94,6 +94,7 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR)
   d_conservationTest = scinew conservationTest_flags();
   d_conservationTest->onOff = false;
   d_with_mpm=false;
+  d_clampSpecificVolume=false;
  
   d_exchCoeff = scinew ExchangeCoefficients();
 
@@ -221,6 +222,7 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   ProblemSpecP cfd_ice_ps = cfd_ps->findBlock("ICE"); 
   
   cfd_ice_ps->get("max_iteration_equilibration",d_max_iter_equilibration);
+  cfd_ice_ps->get("ClampSpecificVolume",d_clampSpecificVolume);
   
   d_advector = AdvectionFactory::create(cfd_ice_ps, d_useCompatibleFluxes);
   cout_norm << " d_use_compatibleFluxes:  " << d_useCompatibleFluxes<<endl;   
@@ -4319,12 +4321,17 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
         double src = term1 + if_mpm_matl_ignore[m] * term2;
         sp_vol_L[c]  += src;
         sp_vol_src[c] = src/(rho_CC[c] * vol);
+      }
 
+      if(d_clampSpecificVolume){
+        for(CellIterator iter=patch->getCellIterator();!iter.done();iter++){
+          IntVector c = *iter;
 /*`==========TESTING==========*/
 //    do we really want this?  -Todd        
-        sp_vol_L[c] = max(sp_vol_L[c], d_TINY_RHO * vol * sp_vol_CC[c]);
+          sp_vol_L[c] = max(sp_vol_L[c], d_TINY_RHO * vol * sp_vol_CC[c]);
 /*==========TESTING==========`*/
-     }
+        }
+      }
 
       //__________________________________
       // Apply boundary conditions
