@@ -14,7 +14,7 @@
        <delt_min>           0.0       </delt_min>
        <delt_max>           0.1     </delt_max>
        <delt_init>          1.0e-7    </delt_init>
-	<max_delt_increase>  0.5      </max_delt_increase>
+       <max_delt_increase>  0.5      </max_delt_increase>
        <!-- <max_iterations>    10        </max_iterations> -->
        <timestep_multiplier> 1        </timestep_multiplier>
    </Time>
@@ -391,21 +391,21 @@
        <Model type="AdiabaticTable">
         <table name="adiabatic" type="Arches">
           <include href="inputs/Models/JP8.xml"/>
-	 </table>
+        </table>
         <material>BackgroundGas</material>
        <scalar name="f">
         <constants>
-	   <diffusivity>                0    </diffusivity>
+          <diffusivity>                0    </diffusivity>
            <AMR_Refinement_Criteria>    1.6  </AMR_Refinement_Criteria> 
         </constants> 
           <geom_object>
              <box label = "world">  </box>
              <scalar>    0.00       </scalar>
           </geom_object>
-	</scalar>
+       </scalar>
       
-	<varianceScale>0</varianceScale>
-	<varianceMax>1</varianceMax>
+       <varianceScale>0</varianceScale>
+       <varianceMax>1</varianceMax>
       </Model>
     </Models>
 

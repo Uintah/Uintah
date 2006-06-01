@@ -252,12 +252,12 @@
       <ICE>
         <advection type = "FirstOrder"/>
 
-<!--	
+<!--       
         <TimeStepControl>
           <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
           <knob_for_speedSound>  0.00           </knob_for_speedSound>
         </TimeStepControl>
-	
+       
          
         <ImplicitSolver>
            <max_outer_iterations>      20    </max_outer_iterations>
@@ -267,13 +267,13 @@
               <tolerance>     1.e-8   </tolerance>
               <norm>     LInfinity    </norm>
               <criteria> Absolute     </criteria>
-	     <solver>         hybrid  </solver>
-	     <preconditioner> pfmg    </preconditioner>
-	     <maxiterations>  7500    </maxiterations>
-	     <npre>           1       </npre>
-	     <npost>          1       </npost>
-	     <skip>           0       </skip>
-	     <jump>           0       </jump>
+            <solver>         hybrid  </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           0       </skip>
+            <jump>           0       </jump>
            </Parameters>
         </ImplicitSolver>
 -->
@@ -337,7 +337,7 @@
     <Models>
        <Model type="PassiveScalar">
         <material>BackgroundGas</material>
-	 <scalar name="f">
+        <scalar name="f">
         <test_conservation> true </test_conservation>
         <constants>
           <diffusivity>              0.0    </diffusivity>                      
@@ -349,7 +349,7 @@
              <box label = "world">  </box>
              <scalar>    0.00       </scalar>
           </geom_object>
-	</scalar>
+       </scalar>
       </Model>
     </Models>
 

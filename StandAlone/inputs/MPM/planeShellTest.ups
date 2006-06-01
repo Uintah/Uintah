@@ -146,7 +146,7 @@
          <lower>      [-10.0e-2,-10.0e-2, 0]      </lower>
          <upper>      [ 10.0e-2, 10.0e-2, 4.0e-2] </upper>
          <patches>    [1,1,1]                     </patches>
-	 <extraCells> [0, 0, 0]                   </extraCells>
+        <extraCells> [0, 0, 0]                   </extraCells>
        </Box>
        <spacing> [0.25e-2,0.25e-2,0.25e-2] </spacing>
      </Level>

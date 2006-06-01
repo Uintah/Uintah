@@ -18,8 +18,8 @@
        <delt_min>           0.0        </delt_min>
        <delt_max>           1.e-2      </delt_max>
        <delt_init>          1.0e-5     </delt_init>
-	<max_delt_increase>  0.5        </max_delt_increase>	
-	<max_initial_delt>   1.e-4      </max_initial_delt>
+       <max_delt_increase>  0.5        </max_delt_increase>       
+       <max_initial_delt>   1.e-4      </max_initial_delt>
        <timestep_multiplier>0.8        </timestep_multiplier>
        <max_iterations>      50         </max_iterations>
    </Time>
@@ -254,8 +254,8 @@
     <Models>
       <Model type="Test">
         <fromMaterial> source     </fromMaterial>
-	 <toMaterial>   destination</toMaterial>
-	 <rate>         1000.0      </rate>
+        <toMaterial>   destination</toMaterial>
+        <rate>         1000.0      </rate>
       </Model>
     </Models>
             

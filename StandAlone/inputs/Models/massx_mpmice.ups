@@ -271,8 +271,8 @@
     <Models>
       <Model type="Test">
         <fromMaterial> source     </fromMaterial>
-	 <toMaterial>   destination</toMaterial>
-	 <rate>         1000.0        </rate>
+        <toMaterial>   destination</toMaterial>
+        <rate>         1000.0        </rate>
       </Model>
     </Models>            
        

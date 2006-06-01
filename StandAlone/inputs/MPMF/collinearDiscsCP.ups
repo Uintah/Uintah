@@ -4,19 +4,19 @@
 <Uintah_specification>
 
    <Meta>
-	<title>Crack propagation in collinear discs under impact</title>
+       <title>Crack propagation in collinear discs under impact</title>
    </Meta>
 
    <Time>
-	<maxTime>400.0e-6</maxTime>
-	<initTime>0.0</initTime>
-	<delt_min>0.0</delt_min>
-	<delt_max>4e-6</delt_max>
-	<timestep_multiplier>0.8</timestep_multiplier>
+       <maxTime>400.0e-6</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.0</delt_min>
+       <delt_max>4e-6</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>collinearDiscsCP.uda</filebase>
-	<!--outputInterval>4e-6</outputInterval>-->
+       <!--outputInterval>4e-6</outputInterval>-->
         <outputTimestepInterval>4</outputTimestepInterval>
         <save label = "p.x"/>
         <save label = "p.volume"/>
@@ -28,12 +28,12 @@
         <!--<save label = "p.externalforce"/>-->
         <save_crack_geometry>true</save_crack_geometry>
 
-	<checkpoint cycle = "2" interval = "40e-6"/>
+       <checkpoint cycle = "2" interval = "40e-6"/>
    </DataArchiver>
 
     <MPM>
-	<time_integrator>fracture</time_integrator>
-	<nodes8or27>8</nodes8or27>
+       <time_integrator>fracture</time_integrator>
+       <nodes8or27>8</nodes8or27>
         <calculate_fracture_parameters>true</calculate_fracture_parameters>
         <do_crack_propagation>true</do_crack_propagation>
         <smooth_crack_front>false</smooth_crack_front>
@@ -42,11 +42,11 @@
     </MPM>
 
     <PhysicalConstants>
-	<gravity>[0,0,0]</gravity>
+       <gravity>[0,0,0]</gravity>
     </PhysicalConstants>
 
     <MaterialProperties>
-	<MPM>
+       <MPM>
             <material>
                 <density>1900e3</density>
                 <constitutive_model type="hypo_elastic">
@@ -66,20 +66,20 @@
                 </geom_object>
             </material>
 
-	    <material>
-		<density>1200</density>
-		<constitutive_model type="hypo_elastic"> 
-		   <G>0.93985e+9</G>
-		   <K>2.45098e+9</K>
+           <material>
+              <density>1200</density>
+              <constitutive_model type="hypo_elastic"> 
+                 <G>0.93985e+9</G>
+                 <K>2.45098e+9</K>
                    <fracture_toughness_curve>
                      <point>
                        <Vc>0.</Vc>
                        <KIc>1.4e6</KIc>
                      </point>
                    </fracture_toughness_curve>
-	        </constitutive_model>
-		<thermal_conductivity>1.0</thermal_conductivity>
-		<specific_heat>5</specific_heat>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
                 <geom_object>
                      <cylinder label = "dis1">
                         <bottom> [0.0, 101.6e-3, -0.508e-3] </bottom>
@@ -143,18 +143,18 @@
                       </quad>
                    </crack_segments>
                 </crack>
-	    </material>
+           </material>
 
-	    <contact>
+           <contact>
               <type>rigid</type>
               <materials>[0,1]</materials>
               <stop_time>999999.9 </stop_time>
               <direction>[0,1,0]</direction>
-	    </contact>
-	</MPM>
+           </contact>
+       </MPM>
 
     </MaterialProperties>
-	
+       
     <Grid>
         <Level>
             <Box label = "1">

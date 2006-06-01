@@ -17,7 +17,7 @@
        <delt_min>           0.0         </delt_min>
        <delt_max>           1.0         </delt_max>
        <delt_init>          1.0e-9      </delt_init>
-	<max_delt_increase>  0.25      </max_delt_increase>
+       <max_delt_increase>  0.25      </max_delt_increase>
       <!-- <max_iterations>     1          </max_iterations> -->
        <timestep_multiplier>1.0         </timestep_multiplier>
    </Time>
@@ -200,21 +200,21 @@
            <outer_iteration_tolerance> 1e-6   </outer_iteration_tolerance>
            <iters_before_timestep_restart> 15 </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
-	     <!-- Common options -->
+            <!-- Common options -->
               <tolerance>1.e-8    </tolerance>
 
-	     <!-- Steve's CGSolver options -->
+            <!-- Steve's CGSolver options -->
               <norm>     LInfinity  </norm>
               <criteria> Absolute   </criteria>
 
-	     <!-- Hypre options -->
-	     <solver>         hybrid  </solver>
-	     <preconditioner> pfmg    </preconditioner>
-	     <maxiterations>  7500    </maxiterations>
-	     <npre>           1       </npre>
-	     <npost>          1       </npost>
-	     <skip>           0       </skip>
-	     <jump>           0       </jump>
+            <!-- Hypre options -->
+            <solver>         hybrid  </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           0       </skip>
+            <jump>           0       </jump>
            </Parameters>
         </ImplicitSolver>
       </ICE>        
@@ -263,8 +263,8 @@
     <Models>
        <Model type="AdiabaticTable">
         <table name="adiabatic" type="Arches">
-	   <filename>inputs/Models/ch4.rxn</filename>
-	</table>
+          <filename>inputs/Models/ch4.rxn</filename>
+       </table>
         <material>BackgroundGas</material>
         <scalar name="f">
         <constants>
@@ -287,7 +287,7 @@
               </sphere>
               <scalar>    0.00   </scalar>
         </geom_object>
-	</scalar>
+       </scalar>
       </Model>
     </Models>                
 

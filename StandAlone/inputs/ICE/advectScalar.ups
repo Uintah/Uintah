@@ -197,19 +197,19 @@
            <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
 
-	     <!-- CGSolver options -->
+            <!-- CGSolver options -->
               <norm>     LInfinity  </norm>
               <criteria> Absolute   </criteria>
 
-	     <!-- Hypre options -->
-	     <solver>         hybrid  </solver>
-	     <preconditioner> pfmg    </preconditioner>
-	     <tolerance>      1.e-10  </tolerance>
-	     <maxiterations>  7500    </maxiterations>
-	     <npre>           1       </npre>
-	     <npost>          1       </npost>
-	     <skip>           0       </skip>
-	     <jump>           0       </jump>
+            <!-- Hypre options -->
+            <solver>         hybrid  </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1.e-10  </tolerance>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           0       </skip>
+            <jump>           0       </jump>
            </Parameters>
         </ImplicitSolver> 
       </ICE>
@@ -253,7 +253,7 @@
     <Models>
        <Model type="PassiveScalar">
         <material>BackgroundGas</material>
-	 <scalar name="f">
+        <scalar name="f">
         <test_conservation>       true            </test_conservation>
         <constants>
           <diffusivity>              0.0           </diffusivity>
@@ -275,7 +275,7 @@
             </box>
             <scalar>    1.00   </scalar>
          </geom_object>
-	</scalar>
+       </scalar>
       </Model>
     </Models>      
 </Uintah_specification>

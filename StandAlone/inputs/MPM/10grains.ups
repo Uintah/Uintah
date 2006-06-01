@@ -21,12 +21,12 @@
         <save label = "KineticEnergy"/>
         <save label = "TotalMass"/>
         <save label = "StrainEnergy"/>
-	<save label = "p.x"/>
-	<save label = "p.mass"/>
-	<save label = "p.temperature"/>
+       <save label = "p.x"/>
+       <save label = "p.mass"/>
+       <save label = "p.temperature"/>
         <save label = "g.mass"/>
         <save label = "g.stressFS"/>
-	<checkpoint cycle = "2" interval = "0.02"/>
+       <checkpoint cycle = "2" interval = "0.02"/>
    </DataArchiver>
 
     <MPM>

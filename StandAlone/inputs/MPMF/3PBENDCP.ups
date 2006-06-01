@@ -4,15 +4,15 @@
 <Uintah_specification>
 
    <Meta>
-	<title>Crack propogation in a beam subjected to 3 point bending </title>
+       <title>Crack propogation in a beam subjected to 3 point bending </title>
    </Meta>
 
    <Time>
-	<maxTime>300e-6</maxTime>
-	<initTime>0.0</initTime>
-	<delt_min>0.0</delt_min>
-	<delt_max>2e-6</delt_max>
-	<timestep_multiplier>0.8</timestep_multiplier>
+       <maxTime>300e-6</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.0</delt_min>
+       <delt_max>2e-6</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>3PBENDCP.uda</filebase>
@@ -22,21 +22,21 @@
         <save label = "g.mass"/>
         <save label = "G.mass"/>
         <!--<save label = "p.stress"/>-->
-	<!--<save label = "KineticEnergy"/>-->
-	<!--<save label = "TotalMass"/>-->
-	<!--<save label = "StrainEnergy"/>-->
-	<!--<save label = "CenterOfMassPosition"/>-->
-	<!--<save label = "CenterOfMassVelocity"/>-->
+       <!--<save label = "KineticEnergy"/>-->
+       <!--<save label = "TotalMass"/>-->
+       <!--<save label = "StrainEnergy"/>-->
+       <!--<save label = "CenterOfMassPosition"/>-->
+       <!--<save label = "CenterOfMassVelocity"/>-->
         <!--<save label = "p.particleID"/>-->
-	<!--<save label = "g.stressFS"/>-->
+       <!--<save label = "g.stressFS"/>-->
         <save_crack_geometry>true</save_crack_geometry>
 
-	<checkpoint cycle = "2" interval = "50e-6"/>
+       <checkpoint cycle = "2" interval = "50e-6"/>
    </DataArchiver>
 
     <MPM>
-	<time_integrator>fracture</time_integrator>
-	<nodes8or27>8</nodes8or27>
+       <time_integrator>fracture</time_integrator>
+       <nodes8or27>8</nodes8or27>
         <calculate_fracture_parameters>true</calculate_fracture_parameters>
         <do_crack_propagation>true</do_crack_propagation>
         <use_volume_integral>false</use_volume_integral>
@@ -45,11 +45,11 @@
     </MPM>
 
     <PhysicalConstants>
-	<gravity>[0,0,0]</gravity>
+       <gravity>[0,0,0]</gravity>
     </PhysicalConstants>
 
     <MaterialProperties>
-	<MPM>
+       <MPM>
             <material>
                 <density>63.125e6</density>
                 <constitutive_model type="hypo_elastic">
@@ -69,11 +69,11 @@
                 </geom_object>
             </material>
 
-	    <material>
-		<density>1190</density>
-		<constitutive_model type="hypo_elastic"> 
-		   <G>1.1308e9 </G>
-		   <K>2.45e9</K>
+           <material>
+              <density>1190</density>
+              <constitutive_model type="hypo_elastic"> 
+                 <G>1.1308e9 </G>
+                 <K>2.45e9</K>
                    <fracture_toughness_curve>
                      <crack_propagation_criterion>max_hoop_stress</crack_propagation_criterion>
                      <point>
@@ -81,14 +81,14 @@
                        <KIc>1.0e6</KIc>
                      </point>
                    </fracture_toughness_curve>
-	        </constitutive_model>
-		<thermal_conductivity>1.0</thermal_conductivity>
-		<specific_heat>5</specific_heat>
-		<geom_object>
-		    <box label = "Specimen">
-			<min>[-215e-3,    0.0, 0.0]</min>
-			<max>[ 215e-3, 100e-3, 2.0e-3]</max>
-		    </box>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <box label = "Specimen">
+                     <min>[-215e-3,    0.0, 0.0]</min>
+                     <max>[ 215e-3, 100e-3, 2.0e-3]</max>
+                  </box>
                     <box label = "left_support">
                         <min>[-202e-3, -10e-3, 0.0]</min>
                         <max>[-198e-3,    0.0, 2.0e-3]</max>
@@ -97,10 +97,10 @@
                         <min>[198e-3, -10e-3, 0.0]</min>
                         <max>[202e-3,    0.0, 2.0e-3]</max>
                     </box>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>12</temperature>
- 		</geom_object>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
 
                 <crack>
                    <type>null</type>
@@ -117,7 +117,7 @@
                       </quad>
                    </crack_segments>
                 </crack>
-	    </material>
+           </material>
 
             <!--<contact>
               <type>single_velocity</type>
@@ -130,10 +130,10 @@
               <materials>[0,1]</materials>
               <stop_time>999999.9 </stop_time>
             </contact>
-	</MPM>
+       </MPM>
 
     </MaterialProperties>
-	
+       
     <Grid>
         <Level>
             <Box label = "1">
@@ -178,8 +178,8 @@
     </Grid>
 
     <PhysicalBC>
-	<MPM>
-	</MPM>
+       <MPM>
+       </MPM>
     </PhysicalBC>
     
 </Uintah_specification>
