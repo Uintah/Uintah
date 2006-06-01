@@ -105,12 +105,7 @@ namespace Uintah {
 inline void MPMPetscSolver::fillMatrix(int numi,int i[],int numj,
                                        int j[],double value[])
 {
-  PetscScalar *val = new PetscScalar[numi * numj];
-  for (int count = 0; count < (numi*numj); count++)
-    val[count] = value[count];
-
   MatSetValues(d_A,numi,i,numj,j,value,ADD_VALUES);
-  delete [] val;
 }
 #endif
 
