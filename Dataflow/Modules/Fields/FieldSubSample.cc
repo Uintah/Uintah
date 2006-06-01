@@ -179,7 +179,7 @@ FieldSubSample::execute()
   if( dims.size() >= 1 ) {
     //! Check to see if the gui dimensions are different than the field.
     if( gui_dim_i_.get() != (int) dims[0] ) {
-      gui_dim_i_.set( dims[1] );
+      gui_dim_i_.set( dims[0] );
       update_dims = true;
     }
   }
