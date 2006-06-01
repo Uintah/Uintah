@@ -598,7 +598,7 @@ private:
         else
           return (nodes_[0] < f.nodes_[0]);
       }
-      else if ((nodes_[1] < nodes_[2]) && (f.nodes_[1] > f.nodes_[2]))
+      else if ((nodes_[1] < nodes_[2]) && (f.nodes_[1] >= f.nodes_[2]))
       {
         if (nodes_[0] == f.nodes_[0])
           if (nodes_[1] == f.nodes_[3])
@@ -611,7 +611,7 @@ private:
         else
           return (nodes_[0] < f.nodes_[0]);      
       }
-      else if ((nodes_[1] > nodes_[2]) && (f.nodes_[1] < f.nodes_[2]))
+      else if ((nodes_[1] >= nodes_[2]) && (f.nodes_[1] < f.nodes_[2]))
       {
         if (nodes_[0] == f.nodes_[0])
           if (nodes_[3] == f.nodes_[1])
@@ -1068,7 +1068,7 @@ HexVolMesh<Basis>::order_face_nodes(typename Node::index_type& n1,
   else if (n3 == n4)
   {
     typename Node::index_type t;
-    // shift one positions to right
+    // shift one position to right
     t = n4; n4 = n3; n3 = n2; n2 = n1; n1 = t;    
     return (true);
   }
@@ -1595,7 +1595,7 @@ HexVolMesh<Basis>::get_faces(typename Face::array_type &array,
     PFace f(n1,n2,n3,n4);
     array.push_back((*(face_table_.find(f))).second);
   }
-  n1 = cells_[off + 4]; n2 = cells_[off + 5]; n3 = cells_[off + 6]; n4 = cells_[off + 7];
+  n1 = cells_[off + 7]; n2 = cells_[off + 6]; n3 = cells_[off + 5]; n4 = cells_[off + 4];
   if (order_face_nodes(n1,n2,n3,n4))
   {
     PFace f(n1,n2,n3,n4);
