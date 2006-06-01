@@ -60,13 +60,16 @@ public:
 
   //! propagate the event to each top() tool on all the stacks in 
   //! priority order, returning the possibly modified event.
-  event_handle_t propagate_event(event_handle_t event);
+  event_handle_t  propagate_event(event_handle_t event);
   
 private:
-  event_handle_t send_pointer_event(PointerTool*, event_handle_t) const;
-  event_handle_t send_key_event(KeyTool*, event_handle_t) const;
-  event_handle_t send_window_event(WindowTool*, event_handle_t) const;
-
+  BaseTool::return_state_e send_pointer_event(PointerTool*, 
+					      event_handle_t) const;
+  BaseTool::return_state_e send_key_event(KeyTool*, 
+					  event_handle_t) const;
+  BaseTool::return_state_e send_window_event(WindowTool*, 
+					     event_handle_t) const;
+  
   typedef stack<tool_handle_t>                                      ts_stack_t;
   typedef map<unsigned, ts_stack_t, less<unsigned> >                ps_map_t;
   typedef map<string, pair<tool_handle_t, unsigned>, less<string> > nt_map_t;

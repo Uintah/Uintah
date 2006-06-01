@@ -65,16 +65,13 @@ public:
   virtual ~ViewRotateTool();
 
   //! which == button number, x,y in window at event time 
-  //! return event is 0 if consumed, otherwise a valid PointerEvent.
-  virtual event_handle_t pointer_down(int which, 
+  virtual return_state_e pointer_down(int which, 
 				      int x, int y, int time);
   //! which == button number, x,y in window at event time 
-  //! return event is 0 if consumed, otherwise a valid PointerEvent.
-  virtual event_handle_t pointer_motion(int which, 
+  virtual return_state_e pointer_motion(int which, 
 					int x, int y, int time);
   //! which == button number, x,y in window at event time 
-  //! return event is 0 if consumed, otherwise a valid PointerEvent.
-  virtual event_handle_t pointer_up(int which, 
+  virtual return_state_e pointer_up(int which, 
 				    int x, int y, int time);
 
 private:
