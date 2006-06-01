@@ -105,6 +105,7 @@ struct HiRes {
   int resy;
 };
 
+
 class OpenGLViewer : public Runnable 
 {
 public:
@@ -154,6 +155,11 @@ public:
   bool                do_bbox_p()          { return false; }
 
   const Color&          bgcolor() { return bgcolor_; }
+
+  int                 width() const { return gl_context_->width(); }
+  int                 height() const { return gl_context_->height(); }
+  void                need_redraw() {}
+  void                update_mode_string(string) {}
 
 private:
   void                  redraw_frame();

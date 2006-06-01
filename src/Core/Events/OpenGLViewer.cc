@@ -9,6 +9,7 @@
 #include <sci_defs/image_defs.h>
 
 #include <Core/Events/OpenGLViewer.h>
+#include <Core/Events/Tools/ViewRotateTool.h>
 #include <Core/Geom/Pbuffer.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/TCLTask.h>
@@ -68,6 +69,25 @@ int CAPTURE_Z_DATA_HACK = 0;
 
 static const int pick_buffer_size = 512;
 static const double pick_window = 10.0;
+
+class MyViewToolInterface : public ViewToolInterface
+{
+public:
+  MyViewToolInterface(View &v, OpenGLViewer *ov) :
+    ViewToolInterface(v),
+    viewer_(ov)
+  {}
+  
+  virtual int width() const { return viewer_->width(); }
+  virtual int height() const { return viewer_->height(); }
+  virtual bool compute_depth(const View& view, double& near, double& far)
+  { return viewer_->compute_depth(view, near, far); }
+  virtual void update_mode_string(string s) const 
+  { viewer_->update_mode_string(s); }
+  virtual void need_redraw() const { viewer_->need_redraw(); }
+
+  OpenGLViewer *viewer_;
+};
 
 
 OpenGLViewer::OpenGLViewer(OpenGLContext *oglc) :
@@ -154,10 +174,9 @@ OpenGLViewer::OpenGLViewer(OpenGLContext *oglc) :
   default_material_ =
     scinew Material(Color(.1,.1,.1), Color(.6,0,0), Color(.7,.7,.7), 50);
 
-
-  //rot = new ViewRotateTool();
-  //tm_.add_tool(rot);
-
+  MyViewToolInterface* vti = new MyViewToolInterface(view_, this);
+  tool_handle_t rot = new ViewRotateTool("OpenGLViewer Rotate Tool", vti);
+  tm_.add_tool(rot, 1);
 }
 
 

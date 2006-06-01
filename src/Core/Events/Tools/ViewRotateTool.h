@@ -25,97 +25,72 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : BaseTool.h
+//    File   : ViewRotateTool.h
 //    Author : Martin Cole
-//    Date   : Thu May 25 21:03:56 2006
+//    Date   : Thu Jun  1 09:27:10 2006
 
 
-#if !defined(BaseTool_h)
-#define BaseTool_h
+#if !defined(ViewRotateTool_h)
+#define ViewRotateTool_h
 
-#include <Core/Containers/Handle.h>
-#include <Core/Events/BaseEvent.h>
-#include <string>
+#include <Core/Events/Tools/BaseTool.h>
+#include <Core/Geom/View.h>
+#include <Core/Events/Tools/Ball.h>
+#include <Core/Events/Tools/BallMath.h>
+#include <Core/Geometry/Transform.h>
 
 namespace SCIRun {
 
-using namespace std;
-
-class BaseTool
+//! functionality from the scene required for the ViewRotateTool,
+//! as well as the destination view object to modify.
+class ViewToolInterface
 {
 public:
-  BaseTool(string name);
-  virtual ~BaseTool();
-  
-  string name() const { return name_; }
+  ViewToolInterface(View &v);
+  virtual ~ViewToolInterface();
 
-  virtual event_handle_t process_event(event_handle_t event) 
-  { 
-    ASSERTFAIL("BaseTool process_event called");
-    return event_handle_t();
-  }
-
-  //! The ref_cnt var so that we can have handles to this type of object.
-  int ref_cnt;
-private:
-  string name_;
+  virtual int width() const = 0;
+  virtual int height() const = 0;
+  virtual bool compute_depth(const View& view, double& near, double& far) = 0;
+  virtual void update_mode_string(string) const = 0;
+  virtual void need_redraw() const = 0;
+  View &view_;
 };
 
-typedef Handle<BaseTool> tool_handle_t;
 
-class PointerTool : public BaseTool
+class ViewRotateTool : public PointerTool
 {
 public:
-  PointerTool(string name);
-  virtual ~PointerTool();
-  
+  ViewRotateTool(string name, ViewToolInterface* i);
+  virtual ~ViewRotateTool();
+
   //! which == button number, x,y in window at event time 
   //! return event is 0 if consumed, otherwise a valid PointerEvent.
   virtual event_handle_t pointer_down(int which, 
-				      int x, int y, int time) = 0;
+				      int x, int y, int time);
   //! which == button number, x,y in window at event time 
   //! return event is 0 if consumed, otherwise a valid PointerEvent.
   virtual event_handle_t pointer_motion(int which, 
-					int x, int y, int time) = 0;
+					int x, int y, int time);
   //! which == button number, x,y in window at event time 
   //! return event is 0 if consumed, otherwise a valid PointerEvent.
   virtual event_handle_t pointer_up(int which, 
-				    int x, int y, int time) = 0;
-private:
-};
+				    int x, int y, int time);
 
-class KeyTool : public BaseTool
-{
-public:
-  KeyTool(string name);
-  virtual ~KeyTool();
-  
-  virtual event_handle_t key_press(string key, int keyval, 
-				   unsigned int modifiers, 
-				   unsigned int time) = 0;
-  virtual event_handle_t key_release(string key, int keyval, 
-				     unsigned int modifiers, 
-				     unsigned int time) = 0;
 private:
+  ViewToolInterface                 *scene_interface_;
+  BallData                          *ball_;
+  View                               rot_view_;
+  int                                last_x_;
+  int                                last_y_;
+  bool                               rotate_valid_p_;
+  double                             eye_dist_;
+  Transform                          prev_trans_;
+  int			             prev_time_[3]; 
+  HVect			             prev_quat_[3];
+  int			             last_time_;
 };
-
-class WindowTool : public BaseTool
-{
-public:
-  WindowTool(string name);
-  virtual ~WindowTool();
-  
-  virtual event_handle_t create_notify(unsigned int time) = 0;
-  virtual event_handle_t destroy_notify(unsigned int time) = 0;
-  virtual event_handle_t enter_notify(unsigned int time) = 0;
-  virtual event_handle_t leave_notify(unsigned int time) = 0;
-  virtual event_handle_t expose_notify(unsigned int time) = 0;
-  virtual event_handle_t configure_notify(unsigned int time) = 0;
-  virtual event_handle_t redraw_notify(unsigned int time) = 0;
-private:
-};
-
 
 } // namespace SCIRun
 
-#endif // BaseTool_h
+#endif //ViewRotateTool_h

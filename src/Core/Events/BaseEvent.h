@@ -92,7 +92,7 @@ public:
   int get_y() const { return y_; }
 
   //! Mutators
-  void set_state(unsigned int s) { p_state_ = s; }
+  void set_pointer_state(unsigned int s) { p_state_ = s; }
   void set_x(int x) { x_ = x; }
   void set_y(int y) { y_ = y; }
 private:

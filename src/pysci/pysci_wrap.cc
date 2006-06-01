@@ -5444,6 +5444,123 @@ static PyObject *_wrap_add_key_event(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_add_motion_notify_event(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    unsigned int arg1 ;
+    int arg2 ;
+    int arg3 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOO:add_motion_notify_event",&obj0,&obj1,&obj2)) goto fail;
+    {
+        arg1 = (unsigned int)(SWIG_As_unsigned_SS_int(obj0)); 
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        arg2 = (int)(SWIG_As_int(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        arg3 = (int)(SWIG_As_int(obj2)); 
+        if (SWIG_arg_fail(3)) SWIG_fail;
+    }
+    {
+        Py_BEGIN_ALLOW_THREADS
+        SCIRun::add_motion_notify_event(arg1,arg2,arg3);
+        
+        Py_END_ALLOW_THREADS
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_add_pointer_down_event(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    unsigned int arg1 ;
+    int arg2 ;
+    int arg3 ;
+    int arg4 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    PyObject * obj3 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOOO:add_pointer_down_event",&obj0,&obj1,&obj2,&obj3)) goto fail;
+    {
+        arg1 = (unsigned int)(SWIG_As_unsigned_SS_int(obj0)); 
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        arg2 = (int)(SWIG_As_int(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        arg3 = (int)(SWIG_As_int(obj2)); 
+        if (SWIG_arg_fail(3)) SWIG_fail;
+    }
+    {
+        arg4 = (int)(SWIG_As_int(obj3)); 
+        if (SWIG_arg_fail(4)) SWIG_fail;
+    }
+    {
+        Py_BEGIN_ALLOW_THREADS
+        SCIRun::add_pointer_down_event(arg1,arg2,arg3,arg4);
+        
+        Py_END_ALLOW_THREADS
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_add_pointer_up_event(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    unsigned int arg1 ;
+    int arg2 ;
+    int arg3 ;
+    int arg4 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    PyObject * obj3 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOOO:add_pointer_up_event",&obj0,&obj1,&obj2,&obj3)) goto fail;
+    {
+        arg1 = (unsigned int)(SWIG_As_unsigned_SS_int(obj0)); 
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        arg2 = (int)(SWIG_As_int(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        arg3 = (int)(SWIG_As_int(obj2)); 
+        if (SWIG_arg_fail(3)) SWIG_fail;
+    }
+    {
+        arg4 = (int)(SWIG_As_int(obj3)); 
+        if (SWIG_arg_fail(4)) SWIG_fail;
+    }
+    {
+        Py_BEGIN_ALLOW_THREADS
+        SCIRun::add_pointer_up_event(arg1,arg2,arg3,arg4);
+        
+        Py_END_ALLOW_THREADS
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"delete_OpenGLContext", _wrap_delete_OpenGLContext, METH_VARARGS, NULL},
 	 { (char *)"OpenGLContext_make_current", _wrap_OpenGLContext_make_current, METH_VARARGS, NULL},
@@ -5528,6 +5645,9 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"tetgen_2surf", _wrap_tetgen_2surf, METH_VARARGS, NULL},
 	 { (char *)"run_viewer_thread", _wrap_run_viewer_thread, METH_VARARGS, NULL},
 	 { (char *)"add_key_event", _wrap_add_key_event, METH_VARARGS, NULL},
+	 { (char *)"add_motion_notify_event", _wrap_add_motion_notify_event, METH_VARARGS, NULL},
+	 { (char *)"add_pointer_down_event", _wrap_add_pointer_down_event, METH_VARARGS, NULL},
+	 { (char *)"add_pointer_up_event", _wrap_add_pointer_up_event, METH_VARARGS, NULL},
 	 { NULL, NULL, 0, NULL }
 };
 

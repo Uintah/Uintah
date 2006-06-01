@@ -37,5 +37,6 @@ SRCS     += \
 	$(SRCDIR)/BallMath.cc		\
 	$(SRCDIR)/BaseTool.cc		\
 	$(SRCDIR)/ToolManager.cc	\
+	$(SRCDIR)/ViewRotateTool.cc	\
 
 
