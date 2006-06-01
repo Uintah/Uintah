@@ -16,15 +16,14 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 	$(SRCDIR)/FractureMPM.cc \
 	$(SRCDIR)/ImpMPM.cc \
 	$(SRCDIR)/ShellMPM.cc \
-	$(SRCDIR)/PetscSolver.cc \
 	$(SRCDIR)/SimpleSolver.cc \
+	$(SRCDIR)/Solver.cc \
 	$(SRCDIR)/MPMBoundCond.cc \
 	$(SRCDIR)/MPMFlags.cc \
-#	$(SRCDIR)/ParticleInterpolatorFactory.cc \
-#	$(SRCDIR)/MPMAlgorithm.cc \
-#	$(SRCDIR)/MPMDriver.cc \
-#	$(SRCDIR)/Implicit.cc \
-#	$(SRCDIR)/Explicit.cc 
+ifeq ($(HAVE_PETSC),yes)
+  SRCS += $(SRCDIR)/PetscSolver.cc 
+
+
 
 SUBDIRS := \
 	$(SRCDIR)/ConstitutiveModel \

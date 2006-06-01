@@ -15,6 +15,7 @@
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMCommon.h>
+#include <Packages/Uintah/CCA/Components/MPM/Solver.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/CCA/Ports/SwitchingCriteria.h>
 
@@ -33,8 +34,6 @@ using namespace SCIRun;
  class ProcessorGroup;
  class VarLabel;
  class Task; 
- class MPMPetscSolver;
- class SimpleSolver;
  class ImplicitHeatConduction;
  class ThermalContact;
 
@@ -471,11 +470,7 @@ private:
 
   const PatchSet* d_perproc_patches;
 
-#ifdef HAVE_PETSC
-  MPMPetscSolver* d_solver;
-#else
-  SimpleSolver* d_solver;
-#endif
+  Solver* d_solver;
 
   bool d_dynamic;
   bool d_rigid_body;

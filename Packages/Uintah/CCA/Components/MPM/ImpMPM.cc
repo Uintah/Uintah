@@ -207,7 +207,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
     }
    }
 #if 1
-  materialProblemSetup(restart_mat_ps, d_sharedState,flags);
+   materialProblemSetup(restart_mat_ps, d_sharedState,flags);
 #endif
 #if 0
    int numMatls=0;
@@ -220,11 +220,14 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    }
 #endif
 
-#ifdef HAVE_PETSC
-   d_solver = scinew MPMPetscSolver();
-#else
-   d_solver = scinew SimpleSolver();
-#endif
+   string solver_type;
+   mpm_soln_ps->get("solver",solver_type);
+   
+   if (solver_type == "petsc")
+     d_solver = scinew MPMPetscSolver();
+   else
+     d_solver = scinew SimpleSolver();
+
    d_solver->initialize();
 
    // setup sub scheduler
@@ -242,7 +245,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
 
    heatConductionModel = scinew ImplicitHeatConduction(sharedState,lb,flags);
 
-   heatConductionModel->problemSetup();
+   heatConductionModel->problemSetup(solver_type);
 
    thermalContactModel =
      ThermalContactFactory::create(prob_spec, sharedState, lb,flags);
@@ -2007,11 +2010,7 @@ void ImpMPM::formStiffnessMatrix(const ProcessorGroup*,
         new_dw->getOtherDataWarehouse(Task::ParentOldDW);
       parent_old_dw->get(dt,d_sharedState->get_delt_label(), patch->getLevel());
 
-#ifdef HAVE_PETSC
-      PetscScalar v[1];
-#else
       double v[1];
-#endif
 
       for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         IntVector n = *iter;

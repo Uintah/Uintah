@@ -64,7 +64,7 @@ void MPMPetscSolver::initialize()
   // copy the vector to argv, as I think petsc wants to store it around -- bjw
   if (argc > 0) {
     argv = new char*[argc];
-    for (unsigned i = 0; i < argc; i++) {
+    for (int i = 0; i < argc; i++) {
       argv[i] = args[i];
     }
   }

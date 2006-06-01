@@ -85,11 +85,7 @@ namespace Uintah {
                                      const MPMMaterial* ,
                                      DataWarehouse* ,
                                      DataWarehouse* ,
-#ifdef HAVE_PETSC
-                                     MPMPetscSolver* ,
-#else
-                                     SimpleSolver* ,
-#endif
+                                     Solver* ,
                                      const bool );
 
     /*! carry forward CM data for RigidMPM */
