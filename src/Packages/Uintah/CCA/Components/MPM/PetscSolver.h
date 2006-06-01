@@ -107,7 +107,7 @@ namespace Uintah {
   {
     MatSetValues(d_A,numi,i,numj,j,value,ADD_VALUES);
   }
-else
+#else
   inline void MPMPetscSolver::fillMatrix(int /*numi*/,int /*i*/[],int /*numj*/,
                                          int /*j*/[],double /*value*/[])
   {
