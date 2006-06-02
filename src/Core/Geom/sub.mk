@@ -107,6 +107,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/TkOpenGLContext.cc	    		\
 	$(SRCDIR)/View.cc		    		\
 	$(SRCDIR)/X11Lock.cc		    		\
+	$(SRCDIR)/X11OpenGLContext.cc		        \
 	$(SRCDIR)/tGrid.cc		    		\
 	$(SRCDIR)/templates.cc
 
