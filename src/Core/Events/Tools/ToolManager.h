@@ -63,11 +63,11 @@ public:
   event_handle_t  propagate_event(event_handle_t event);
   
 private:
-  BaseTool::return_state_e send_pointer_event(PointerTool*, 
+  BaseTool::propagation_state_e send_pointer_event(PointerTool*, 
 					      event_handle_t) const;
-  BaseTool::return_state_e send_key_event(KeyTool*, 
+  BaseTool::propagation_state_e send_key_event(KeyTool*, 
 					  event_handle_t) const;
-  BaseTool::return_state_e send_window_event(WindowTool*, 
+  BaseTool::propagation_state_e send_window_event(WindowTool*, 
 					     event_handle_t) const;
   
   typedef stack<tool_handle_t>                                      ts_stack_t;

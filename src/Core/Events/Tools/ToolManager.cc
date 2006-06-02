@@ -57,7 +57,7 @@ ToolManager::add_tool(tool_handle_t t, unsigned priority)
   tools_[t->get_name()] = tp;
 }
 
-BaseTool::return_state_e
+BaseTool::propagation_state_e
 ToolManager::send_pointer_event(PointerTool *pt, event_handle_t event) const 
 {
   PointerEvent *pe = dynamic_cast<PointerEvent *>(event.get_rep());
@@ -72,7 +72,7 @@ ToolManager::send_pointer_event(PointerTool *pt, event_handle_t event) const
   if (s & PointerEvent::BUTTON_4_E) which = 4;
   if (s & PointerEvent::BUTTON_5_E) which = 5;
 
-  BaseTool::return_state_e rstate = BaseTool::CONTINUE_UNCHANGED_E;
+  BaseTool::propagation_state_e rstate = BaseTool::CONTINUE_E;
   if (s & PointerEvent::MOTION_E) {
     rstate = pt->pointer_motion(which, pe->get_x(), 
 				pe->get_y(), pe->get_time());
@@ -89,13 +89,13 @@ ToolManager::send_pointer_event(PointerTool *pt, event_handle_t event) const
   return rstate;
 }
 
-BaseTool::return_state_e
+BaseTool::propagation_state_e
 ToolManager::send_key_event(KeyTool *kt, event_handle_t event) const
 {
   KeyEvent *ke = dynamic_cast<KeyEvent *>(event.get_rep());
   ASSERT(ke); 
 
-  BaseTool::return_state_e rstate = BaseTool::CONTINUE_UNCHANGED_E;
+  BaseTool::propagation_state_e rstate = BaseTool::CONTINUE_E;
   unsigned int s = ke->get_key_state();
 
   if (s & KeyEvent::KEY_PRESS_E) {
@@ -112,13 +112,13 @@ ToolManager::send_key_event(KeyTool *kt, event_handle_t event) const
   return rstate;
 }
 
-BaseTool::return_state_e
+BaseTool::propagation_state_e
 ToolManager::send_window_event(WindowTool *wt, event_handle_t event) const
 {
   WindowEvent *we = dynamic_cast<WindowEvent *>(event.get_rep());
   ASSERT(we); 
 
-  BaseTool::return_state_e rstate = BaseTool::CONTINUE_UNCHANGED_E;
+  BaseTool::propagation_state_e rstate = BaseTool::CONTINUE_E;
   unsigned int s = we->get_window_state();
 
   if (s & WindowEvent::CREATE_E) {
@@ -159,7 +159,7 @@ ToolManager::propagate_event(event_handle_t event)
     ts_stack_t &s = (*iter).second; ++iter;
     tool_handle_t t = s.top();
 
-    BaseTool::return_state_e rstate = BaseTool::CONTINUE_UNCHANGED_E;
+    BaseTool::propagation_state_e rstate = BaseTool::CONTINUE_E;
 
     if (event->is_pointer_event()) {
       PointerTool* pt = dynamic_cast<PointerTool*>(t.get_rep());
@@ -184,8 +184,8 @@ ToolManager::propagate_event(event_handle_t event)
       rstate = t->process_event(event);
     }
     // if NULL return_event, then the event was consumed.
-    if (rstate == BaseTool::STOP_PROPAGATION_E) break;
-    if (rstate == BaseTool::MODIFIED_PENDING_E) {
+    if (rstate == BaseTool::STOP_E) break;
+    if (rstate == BaseTool::MODIFIED_E) {
       t->get_modified_event(event); //get the modified event from the tool.
     }
   }

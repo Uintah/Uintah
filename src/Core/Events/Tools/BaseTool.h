@@ -44,10 +44,10 @@ using namespace std;
 class BaseTool
 {
 public:
-  enum return_state_e {
-    STOP_PROPAGATION_E,
-    MODIFIED_PENDING_E,
-    CONTINUE_UNCHANGED_E
+  enum propagation_state_e {
+    STOP_E,
+    MODIFIED_E,
+    CONTINUE_E
   };
 
 
@@ -56,10 +56,10 @@ public:
   
   string get_name() const { return name_; }
 
-  virtual return_state_e process_event(event_handle_t event) 
+  virtual propagation_state_e process_event(event_handle_t event) 
   { 
     ASSERTFAIL("BaseTool process_event called");
-    return STOP_PROPAGATION_E;
+    return STOP_E;
   }
 
   virtual void get_modified_event(event_handle_t &event)
@@ -82,14 +82,14 @@ public:
   virtual ~PointerTool();
   
   //! which == button number, x,y in window at event time 
-  virtual return_state_e pointer_down(int which, 
-				      int x, int y, int time) = 0;
+  virtual propagation_state_e pointer_down(int which, 
+                                           int x, int y, int time) = 0;
   //! which == button number, x,y in window at event time 
-  virtual return_state_e pointer_motion(int which, 
-					int x, int y, int time) = 0;
+  virtual propagation_state_e pointer_motion(int which, 
+                                             int x, int y, int time) = 0;
   //! which == button number, x,y in window at event time 
-  virtual return_state_e pointer_up(int which, 
-				    int x, int y, int time) = 0;
+  virtual propagation_state_e pointer_up(int which, 
+                                         int x, int y, int time) = 0;
 private:
 };
 
@@ -99,12 +99,12 @@ public:
   KeyTool(string name);
   virtual ~KeyTool();
   
-  virtual return_state_e key_press(string key, int keyval, 
-				   unsigned int modifiers, 
-				   unsigned int time) = 0;
-  virtual return_state_e key_release(string key, int keyval, 
-				     unsigned int modifiers, 
-				     unsigned int time) = 0;
+  virtual propagation_state_e key_press(string key, int keyval, 
+                                        unsigned int modifiers, 
+                                        unsigned int time) = 0;
+  virtual propagation_state_e key_release(string key, int keyval, 
+                                          unsigned int modifiers, 
+                                          unsigned int time) = 0;
 private:
 };
 
@@ -114,13 +114,13 @@ public:
   WindowTool(string name);
   virtual ~WindowTool();
   
-  virtual return_state_e create_notify(unsigned int time) = 0;
-  virtual return_state_e destroy_notify(unsigned int time) = 0;
-  virtual return_state_e enter_notify(unsigned int time) = 0;
-  virtual return_state_e leave_notify(unsigned int time) = 0;
-  virtual return_state_e expose_notify(unsigned int time) = 0;
-  virtual return_state_e configure_notify(unsigned int time) = 0;
-  virtual return_state_e redraw_notify(unsigned int time) = 0;
+  virtual propagation_state_e create_notify(unsigned int time) = 0;
+  virtual propagation_state_e destroy_notify(unsigned int time) = 0;
+  virtual propagation_state_e enter_notify(unsigned int time) = 0;
+  virtual propagation_state_e leave_notify(unsigned int time) = 0;
+  virtual propagation_state_e expose_notify(unsigned int time) = 0;
+  virtual propagation_state_e configure_notify(unsigned int time) = 0;
+  virtual propagation_state_e redraw_notify(unsigned int time) = 0;
 private:
 };
 

@@ -44,6 +44,8 @@ namespace SCIRun {
 
 
   X11EventSpawner::X11EventSpawner(Display *display, Window window) :
+    Runnable(),
+    EventSpawner(),
     translate_event_(),
     display_(display),
     window_(window)
