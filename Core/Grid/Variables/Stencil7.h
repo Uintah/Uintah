@@ -2,12 +2,14 @@
 #ifndef Packages_Uintah_Core_Grid_Stencil7_h
 #define Packages_Uintah_Core_Grid_Stencil7_h
 
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 #include <Core/Util/FancyAssert.h>
 #include <iostream>
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
   class TypeDescription;
-  struct Stencil7 {
+  struct SCISHARE Stencil7 {
     // The order of this is designed to match the order of faces in Patch
     // Do not change it!
     //     -x +x -y +y -z +z
@@ -29,7 +31,7 @@ namespace Uintah {
 }
 
 namespace SCIRun {
-  void swapbytes( Uintah::Stencil7& );
+  SCISHARE void swapbytes( Uintah::Stencil7& );
 } // namespace SCIRun
 
 #endif

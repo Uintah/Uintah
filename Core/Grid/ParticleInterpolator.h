@@ -6,6 +6,7 @@
 #include <Core/Geometry/Vector.h>
 #include <vector>
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
 
   class Patch;
@@ -14,7 +15,7 @@ namespace Uintah {
   using SCIRun::Point;
   using std::vector;
 
-  class ParticleInterpolator {
+  class SCISHARE ParticleInterpolator {
     
   public:
     

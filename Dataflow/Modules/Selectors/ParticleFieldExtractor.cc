@@ -891,7 +891,14 @@ ParticleFieldExtractor::extract_data(string display_mode,
   get_gui()->execute(get_id() + " setTime_list " + vector_to_string(indices).c_str());
 
   string name_list("");
+#ifdef _WIN32
+  // try it this way, we don't have atoll
+  istringstream is(particleID);
+  long64 partID;
+  is >> partID;
+#else
   long64 partID = atoll(particleID.c_str());
+#endif
 //   cout << "partID = "<<partID<<endl;
 //   cerr << "mat_list.size() = "<<mat_list.size()<<endl;
   for(int m = 0; m < (int)mat_list.size(); m++) {

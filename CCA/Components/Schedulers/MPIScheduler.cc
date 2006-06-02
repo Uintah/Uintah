@@ -34,10 +34,15 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
+#ifdef _WIN32
+#define SCISHARE __declspec(dllimport)
+#else
+#define SCISHARE
+#endif
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
-extern Mutex cerrLock;
-extern DebugStream mixedDebug;
+extern SCISHARE SCIRun::Mutex       cerrLock;
+  extern DebugStream mixedDebug;
 
 static DebugStream dbg("MPIScheduler", false);
 static DebugStream timeout("MPIScheduler.timings", false);
@@ -569,7 +574,6 @@ MPIScheduler::processMPIRecvs( DetailedTask *, CommRecMPI& recvs,
 void
 MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 {
-  const char* tag = AllocatorSetDefaultTag("MPIScheduler::execute");
 
   TAU_PROFILE("MPIScheduler::execute()", " ", TAU_USER); 
   
@@ -670,7 +674,6 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     numTasksDone++;
     taskdbg << me << " Initiating task: "; printTask(taskdbg, task); taskdbg << '\n';
 
-    const char* tag2 = AllocatorSetDefaultTag("MPIScheduler::Initiate");
     if (task->getTask()->getType() == Task::Reduction){
       if(!abort)
 	initiateReduction(task);
@@ -684,7 +687,6 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       abort_point = task->getTask()->getSortedOrder();
       dbg << "Aborting timestep after task: " << *task->getTask() << '\n';
     }
-    AllocatorSetDefaultTag(tag2);
 
   } // end while( numTasksDone < ntasks )
 
@@ -771,7 +773,6 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   }
 
   dbg << me << " MPIScheduler finished\n";
-  AllocatorSetDefaultTag(tag);
 
   //pg_ = 0;
 }

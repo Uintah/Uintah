@@ -130,7 +130,7 @@ namespace Uintah {
     virtual void addComputesAndRequires(Task* task,
                                         const MPMMaterial* matl,
                                         const PatchSet* patches,
-                                        const bool recurse) const;
+                                        bool recurse) const;
 
 
     virtual void allocateCMDataAddRequires(Task* task, const MPMMaterial* matl,

@@ -1388,7 +1388,7 @@ void Patch::computeVariableExtents(VariableBasis basis,
   d_level->selectPatches(low, high, neighbors);
 }
 
-void Patch::computeVariableExtents(TypeDescription::Type basis,
+void Patch::computeVariableExtents(Uintah::TypeDescription::Type basis,
 				   const IntVector& boundaryLayer,
 				   Ghost::GhostType gtype, int numGhostCells,
 				   IntVector& low, IntVector& high) const
@@ -1398,7 +1398,7 @@ void Patch::computeVariableExtents(TypeDescription::Type basis,
 			 boundaryLayer, gtype, numGhostCells, low, high);
 }
 
-void Patch::computeVariableExtents(TypeDescription::Type basis,
+void Patch::computeVariableExtents(Uintah::TypeDescription::Type basis,
 				   const IntVector& boundaryLayer,
 				   Ghost::GhostType gtype, int numGhostCells,
 				   Patch::selectType& neighbors,
@@ -1494,7 +1494,7 @@ void Patch::getOtherLevelPatches(int levelOffset,
   }
 }
 
-Patch::VariableBasis Patch::translateTypeToBasis(TypeDescription::Type type,
+Patch::VariableBasis Patch::translateTypeToBasis(Uintah::TypeDescription::Type type,
 						 bool mustExist)
 {
   switch(type){

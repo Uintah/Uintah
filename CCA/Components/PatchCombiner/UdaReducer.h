@@ -9,6 +9,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 
+#include <Packages/Uintah/CCA/Components/PatchCombiner/share.h>
 namespace Uintah {
   class LoadBalancer;
   using namespace std;
@@ -42,7 +43,7 @@ WARNING
   
 ****************************************/
 
-   class UdaReducer : public SimulationInterface, public UintahParallelComponent {
+   class SCISHARE UdaReducer : public SimulationInterface, public UintahParallelComponent {
    public:
      UdaReducer(const ProcessorGroup* myworld, string udaDir);
      

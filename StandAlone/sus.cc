@@ -16,27 +16,6 @@
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 #include <Packages/Uintah/CCA/Components/SimulationController/AMRSimulationController.h>
-#include <Packages/Uintah/CCA/Components/MPM/SerialMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/FractureMPM.h> // for Fracture
-#include <Packages/Uintah/CCA/Components/MPM/RigidMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/ShellMPM.h>
-#include <Packages/Uintah/CCA/Components/MPM/ImpMPM.h>
-#include <Packages/Uintah/CCA/Components/Arches/Arches.h>
-#include <Packages/Uintah/CCA/Components/ICE/ICE.h>
-#include <Packages/Uintah/CCA/Components/ICE/AMRICE.h>
-#include <Packages/Uintah/CCA/Components/MPMICE/MPMICE.h>
-#include <Packages/Uintah/CCA/Components/MPMArches/MPMArches.h>
-#include <Packages/Uintah/CCA/Components/Examples/Poisson1.h>
-#include <Packages/Uintah/CCA/Components/Examples/Poisson2.h>
-#include <Packages/Uintah/CCA/Components/Examples/Burger.h>
-#include <Packages/Uintah/CCA/Components/Examples/Wave.h>
-#include <Packages/Uintah/CCA/Components/Examples/AMRWave.h>
-#include <Packages/Uintah/CCA/Components/Examples/ParticleTest1.h>
-#include <Packages/Uintah/CCA/Components/Examples/RegridderTest.h>
-#include <Packages/Uintah/CCA/Components/Examples/Poisson3.h>
-#include <Packages/Uintah/CCA/Components/Examples/SimpleCFD.h>
-#include <Packages/Uintah/CCA/Components/Examples/AMRSimpleCFD.h>
-#include <Packages/Uintah/CCA/Components/Examples/SolverTest1.h>
 #include <Packages/Uintah/CCA/Components/Models/ModelFactory.h>
 #include <Packages/Uintah/CCA/Components/Solvers/CGSolver.h>
 #include <Packages/Uintah/CCA/Components/Solvers/DirectSolve.h>
@@ -74,6 +53,10 @@
 #include <fenv.h>
 #endif
 
+#ifdef _WIN32
+#include <process.h>
+#endif
+
 #include <iostream>
 #include <stdio.h>
 #include <string>
@@ -90,9 +73,16 @@ using namespace std;
 // DebugStream mixedDebug( "MixedScheduler Debug Output Stream", false );
 // DebugStream fullDebug( "MixedScheduler Full Debug", false );
 
-extern Mutex cerrLock;
-extern DebugStream mixedDebug;
-extern DebugStream fullDebug;
+#undef SCISHARE
+#ifdef _WIN32
+#define SCISHARE __declspec(dllimport)
+#else
+#define SCISHARE
+#endif
+
+extern SCISHARE Mutex cerrLock;
+extern SCISHARE DebugStream mixedDebug;
+extern SCISHARE DebugStream fullDebug;
 static DebugStream stackDebug("ExceptionStack", true);
 //#define HAVE_MPICH
 
@@ -163,7 +153,6 @@ usage( const std::string & message,
 int
 main( int argc, char** argv )
 {
-  AllocatorSetDefaultTag("main");
 #ifdef USE_TAU_PROFILING
 
   // WARNING:
@@ -488,7 +477,6 @@ main( int argc, char** argv )
   if( Uintah::Parallel::getMPIRank() == 0 ) {
     cout << "Sus: going down successfully\n";
   }
-  AllocatorResetDefaultTag();
 }
 
 extern "C" {

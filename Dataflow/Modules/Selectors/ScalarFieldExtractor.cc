@@ -58,7 +58,7 @@ ScalarFieldExtractor::~ScalarFieldExtractor(){}
 //------------------------------------------------------------- 
 void
 ScalarFieldExtractor::get_vars(vector< string >& names,
-                               vector< const TypeDescription *>& types)
+                               vector< const Uintah::TypeDescription *>& types)
 {
   string command;
   // Set up data to build or rebuild GUI interface

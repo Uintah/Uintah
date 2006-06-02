@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/GridVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/constVariable.h>
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace SCIRun {
   class IntVector;
 }
@@ -49,7 +50,7 @@ WARNING
   class NCVariableBase;
   typedef constVariableBase<NCVariableBase> constNCVariableBase;
 
-   class NCVariableBase : public GridVariable {
+   class SCISHARE NCVariableBase : public GridVariable {
    public:
       
       virtual ~NCVariableBase();

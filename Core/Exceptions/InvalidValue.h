@@ -19,11 +19,12 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/Core/Exceptions/share.h>
 namespace Uintah {
 
    using namespace SCIRun;
 
-   class InvalidValue : public Exception {
+   class SCISHARE InvalidValue : public Exception {
    public:
       InvalidValue(const std::string&, const char* file, int line);
       InvalidValue(const InvalidValue&);

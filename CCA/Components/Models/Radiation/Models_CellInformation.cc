@@ -12,7 +12,9 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
+#ifndef _WIN32 // no fortran
 #include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_cellg_fort.h>
+#endif
 
 Models_CellInformation::Models_CellInformation(const Patch* patch)
 {
@@ -152,6 +154,7 @@ Models_CellInformation::Models_CellInformation(const Patch* patch)
   domHi = domHi - IntVector(1,1,1);
 
   // for computing geometry parameters
+#ifndef _WIN32
   fort_m_cellg(domLo, domHi, idxLo, idxHi, idxLoU, idxHiU, idxLoV, idxHiV,
              idxLoW, idxHiW,
              sew, sns, stb, sewu, snsv, stbw, dxep, dynp, dztp,
@@ -162,7 +165,7 @@ Models_CellInformation::Models_CellInformation(const Patch* patch)
              fac1u, fac2u, fac3u, fac4u, fac1v, fac2v, fac3v, fac4v,
              fac1w, fac2w, fac3w, fac4w, iesdu, iwsdu, jnsdv, jssdv, 
              ktsdw, kbsdw);
-
+#endif
 #ifdef ARCHES_GEOM_DEBUG
   cerr << " After CELLG : " << endl;
   cerr << " xx = " ;

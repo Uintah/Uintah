@@ -16,6 +16,14 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
+#ifdef _WIN32
+inline double remainder(double x,double y) 
+{
+  double z = x/y;
+  return x-y*((int)z+.5);
+}
+#endif
+
 
 Grid::Grid()
 {

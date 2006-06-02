@@ -23,6 +23,9 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
+#ifdef _WIN32
+#include <process.h>
+#endif
 
 using std::cerr;
 using namespace Uintah;

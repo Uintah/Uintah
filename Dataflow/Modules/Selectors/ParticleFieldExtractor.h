@@ -51,6 +51,7 @@ namespace SCIRun {
   class Mutex;
 }
 
+#include <Packages/Uintah/Dataflow/Modules/Selectors/share.h>
 namespace Uintah {
   class PFEThread;
 
@@ -61,7 +62,7 @@ class ParticleFieldExtractor;
 
 #define PARTICLE_FIELD_EXTRACTOR_BOGUS_PART_ID -1
   
-class ParticleFieldExtractor : public Module { 
+class SCISHARE ParticleFieldExtractor : public Module { 
   friend class PFEThread;
 public: 
 

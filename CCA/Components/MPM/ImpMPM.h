@@ -26,6 +26,7 @@
 #include <list>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/CCA/Components/MPM/share.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -66,9 +67,9 @@ WARNING
   
 ****************************************/
 
- class ImpMPM : public MPMCommon, public UintahParallelComponent, 
-   public SimulationInterface {
-   public:
+class SCISHARE ImpMPM : public MPMCommon, public UintahParallelComponent, 
+  public SimulationInterface {
+public:
   ImpMPM(const ProcessorGroup* myworld);
   virtual ~ImpMPM();
 
@@ -183,7 +184,7 @@ private:
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw,
-                                       const bool recursion);
+                                       bool recursion);
 
   void createMatrix(                   const ProcessorGroup*,
                                        const PatchSubset* patches,
@@ -215,7 +216,7 @@ private:
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw,
-                                       const bool recursion);
+                                       bool recursion);
 
   // No matrix calculations are performed.
   void computeStressTensor(            const ProcessorGroup*,
@@ -321,7 +322,7 @@ private:
 				       DataWarehouse* new_dw);
 
   void scheduleComputeStressTensor( SchedulerP&, const PatchSet*,
-                                    const MaterialSet*, const bool recursion);
+                                    const MaterialSet*, bool recursion);
 
   void scheduleFormStiffnessMatrix( SchedulerP&, const PatchSet*,
                                     const MaterialSet*);
@@ -365,7 +366,7 @@ private:
                                                const MaterialSet*);
 
   void scheduleDestroyMatrix(      SchedulerP&, const PatchSet*,
-                                   const MaterialSet*, const bool recursion);
+                                   const MaterialSet*, bool recursion);
 
   void scheduleDestroyHCMatrix(    SchedulerP&, const PatchSet*,
                                    const MaterialSet*);

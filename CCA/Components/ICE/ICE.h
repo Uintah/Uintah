@@ -38,6 +38,7 @@
 
 #define MAX_MATLS 16
 
+#include <Packages/Uintah/CCA/Components/ICE/share.h>
 namespace Uintah { 
   using namespace SCIRun;
   class ModelInfo; 
@@ -45,7 +46,7 @@ namespace Uintah {
   class Turbulence;
   class AnalysisModule;
     
-    class ICE : public UintahParallelComponent, public SimulationInterface {
+    class SCISHARE ICE : public UintahParallelComponent, public SimulationInterface {
     public:
       ICE(const ProcessorGroup* myworld, const bool doAMR = false);
       virtual ~ICE();
@@ -107,13 +108,13 @@ namespace Uintah {
                                       const MaterialSubset*,          
                                       const MaterialSubset*,          
                                       const MaterialSet*,
-                                      const bool);            
+                                      bool);            
       
       void scheduleAddExchangeContributionToFCVel(SchedulerP&, 
                                             const PatchSet*,
                                             const MaterialSubset*,
                                             const MaterialSet*, 
-                                            const bool);
+                                            bool);
       
       void scheduleComputeDelPressAndUpdatePressCC(SchedulerP&, 
                                              const PatchSet*,
@@ -203,7 +204,7 @@ namespace Uintah {
                               const PatchSet*, 
                               const MaterialSubset*,             
                               const MaterialSet*,
-                              const bool insideOuterIterLoop,
+                              bool insideOuterIterLoop,
                               const string& computes_or_modifies);
                                
       void scheduleCompute_maxRHS(SchedulerP& sched,
@@ -225,7 +226,7 @@ namespace Uintah {
                                    const MaterialSubset*,         
                                    const MaterialSubset*,        
                                    const MaterialSet*,           
-                                   const bool);  
+                                   bool);  
                                                   
      void scheduleComputeDel_P(  SchedulerP& sched,
                                  const LevelP& level,               
@@ -352,14 +353,14 @@ namespace Uintah {
                          const MaterialSubset*,                
                          DataWarehouse*,                             
                          DataWarehouse*,                   
-                         const bool);  
+                         bool);  
                          
       void updateVel_FC(const ProcessorGroup*, 
                         const PatchSubset*,                   
                         const MaterialSubset*,                
                         DataWarehouse*,                             
                         DataWarehouse*,                   
-                        const bool);                    
+                        bool);                    
 
       void computeTempFC(const ProcessorGroup*,  
                          const PatchSubset* patches,                    
@@ -409,7 +410,7 @@ namespace Uintah {
                                           const MaterialSubset* matls,
                                           DataWarehouse*, 
                                           DataWarehouse*,
-                                          const bool);
+                                          bool);
 
       void computeDelPressAndUpdatePressCC(const ProcessorGroup*,
                                            const PatchSubset* patches,
@@ -593,8 +594,8 @@ namespace Uintah {
                     const MaterialSubset* ,                          
                     DataWarehouse* old_dw,                           
                     DataWarehouse* new_dw,
-                    const bool insideOuterIterLoop,
-                    const string computes_or_modifies);
+                    bool insideOuterIterLoop,
+                    string computes_or_modifies);
                     
       void compute_maxRHS(const ProcessorGroup*,
                           const PatchSubset* patches,

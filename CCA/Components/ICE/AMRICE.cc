@@ -14,6 +14,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
+#include <Packages/Uintah/Core/Math/Rand48.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Util/DebugStream.h>
@@ -938,7 +939,6 @@ void AMRICE::iteratorTest(const Patch* finePatch,
     throw InvalidValue(warn.str(), __FILE__, __LINE__);
   }  
 }
-
 
 /*___________________________________________________________________
  Function~  AMRICE::scheduleCoarsen--  

@@ -14,8 +14,14 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-// From sus.cc:  Used for syncing cerr'ing so it is easier to read.
-extern Mutex cerrLock;
+#ifdef _WIN32
+#define SCISHARE __declspec(dllimport)
+#else
+#define SCISHARE
+#endif
+// Debug: Used to sync cerr so it is readable (when output by
+// multiple threads at the same time)  From sus.cc:
+extern SCISHARE SCIRun::Mutex       cerrLock;
 
 MessageLog::MessageLog(const ProcessorGroup* myworld, Output* oport)
    : d_enabled(false), d_myworld(myworld), d_oport(oport)

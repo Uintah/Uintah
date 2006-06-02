@@ -12,6 +12,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
+#include <Packages/Uintah/CCA/Components/SimulationController/share.h>
 namespace Uintah {
 
 class SimulationInterface;
@@ -53,7 +54,7 @@ class DataArchive;
 
    //! The main component that controls the execution of the 
    //! entire simulation. 
-   class SimulationController : public UintahParallelComponent {
+   class SCISHARE SimulationController : public UintahParallelComponent {
    public:
       SimulationController(const ProcessorGroup* myworld, bool doAMR);
       virtual ~SimulationController();

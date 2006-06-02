@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
 
 /**************************************
@@ -42,7 +43,7 @@ WARNING
 //using ::Interface::DataWarehouseP;
 
 
-   class Material {
+   class SCISHARE Material {
    public:
      Material(ProblemSpecP& ps);
      Material();

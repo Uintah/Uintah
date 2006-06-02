@@ -4,9 +4,10 @@
 #include <Core/Util/Assert.h>
 #include <Core/Thread/Mutex.h>
 
+#include <Packages/Uintah/Core/Parallel/share.h>
 using namespace Uintah;
 
-SCIRun::Mutex MPITypeLock( "MPITypeLock" );
+SCISHARE SCIRun::Mutex MPITypeLock( "MPITypeLock" );
 
 BufferInfo::BufferInfo()
 {

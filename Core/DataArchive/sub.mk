@@ -7,6 +7,7 @@ SRCDIR   := Packages/Uintah/Core/DataArchive
 SRCS += $(SRCDIR)/DataArchive.cc 
 
 PSELIBS := \
+	Packages/Uintah/CCA/Ports    \
 	Packages/Uintah/Core/Parallel    \
 	Packages/Uintah/Core/ProblemSpec \
 	Packages/Uintah/Core/Util \

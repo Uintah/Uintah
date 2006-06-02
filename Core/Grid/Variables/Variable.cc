@@ -22,6 +22,10 @@
 using namespace std;
 using namespace Uintah;
 
+#ifdef _WIN32
+#include <io.h>
+#endif
+
 Variable::Variable()
 {
    d_foreign = false;
@@ -115,7 +119,11 @@ void Variable::emit(OutputContext& oc, const IntVector& l,
 
   const char* writebuffer = (*writeoutString).c_str();
   unsigned long writebufferSize = (*writeoutString).size();
+#ifdef _WIN32
+  ssize_t s = ::_write(oc.fd, writebuffer, writebufferSize);
+#else
   ssize_t s = ::write(oc.fd, writebuffer, writebufferSize);
+#endif
 
   if(s != (long)writebufferSize) {
     cerr << "Variable::emit - write system call failed writing to " << oc.filename << " with errno " << errno << ": " << strerror(errno) <<  endl;
@@ -208,7 +216,11 @@ void Variable::read(InputContext& ic, long end, bool swapBytes, int nByteMode,
 
   data.resize(datasize);
   // casting from const char* -- use caution
+#ifdef _WIN32
+  ssize_t s = ::_read(ic.fd, const_cast<char*>(data.c_str()), datasize);
+#else
   ssize_t s = ::read(ic.fd, const_cast<char*>(data.c_str()), datasize);
+#endif
   if(s != datasize) {
     cerr << "Error reading file: " << ic.filename << ", errno=" << errno << '\n';
     SCI_THROW(ErrnoException("Variable::read (read call)", errno, __FILE__, __LINE__));

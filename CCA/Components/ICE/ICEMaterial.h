@@ -18,6 +18,7 @@ namespace SCIRun {
   class Vector;
 }
 
+#include <Packages/Uintah/CCA/Components/ICE/share.h>
 namespace Uintah {
   using namespace SCIRun;
   class ICELabel;
@@ -53,7 +54,7 @@ WARNING
 
 ****************************************/
  
- class ICEMaterial : public Material {
+ class SCISHARE ICEMaterial : public Material {
  public:
    ICEMaterial(ProblemSpecP&);
    

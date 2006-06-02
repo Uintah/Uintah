@@ -7,6 +7,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/CCA/Components/MPM/share.h>
 namespace Uintah {
 
   /////////////////////////////////////////////////////////////////////////////
@@ -21,7 +22,7 @@ namespace Uintah {
   /////////////////////////////////////////////////////////////////////////////
 
 
-  class MPMFlags {
+  class SCISHARE MPMFlags {
 
   public:
 

@@ -19,6 +19,7 @@
 #include   <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/Core/Datatypes/share.h>
 namespace Uintah {
 using std::vector;
 using namespace SCIRun;
@@ -54,7 +55,7 @@ WARNING
 class TensorParticles;
 typedef LockingHandle<TensorParticles> TensorParticlesHandle;
 
-class TensorParticles : public Datatype {
+class SCISHARE TensorParticles : public Datatype {
 
 public:
   // GROUP: Constructors:
