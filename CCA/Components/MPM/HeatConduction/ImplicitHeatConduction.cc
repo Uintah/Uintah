@@ -66,11 +66,7 @@ void ImplicitHeatConduction::problemSetup(string solver_type)
    if (solver_type == "petsc") {
      d_HC_solver = vector<Solver*>(numMatls);
      for(int m=0;m<numMatls;m++) {
-#ifdef HAVE_PETSC
        d_HC_solver[m] = scinew MPMPetscSolver();
-#else
-       throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver()!", __FILE__, __LINE__ );
-#endif
        d_HC_solver[m]->initialize();
      }
    }
@@ -452,12 +448,8 @@ void ImplicitHeatConduction::formHCStiffnessMatrix(const ProcessorGroup*,
       old_dw->get(px,             lb->pXLabel,                  pset);
       old_dw->get(pvolume,        lb->pVolumeLabel,             pset);
       old_dw->get(ptemperature,   lb->pTemperatureLabel,        pset);
-                                                                                
-#ifdef HAVE_PETSC
-      PetscScalar v[64];
-#else
+      
       double v[64];
-#endif
       double kHC[8][8];
       int dof[8];
       double K  = mpm_matl->getThermalConductivity();

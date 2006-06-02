@@ -23,6 +23,8 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 
 ifeq ($(HAVE_PETSC),yes)
   SRCS += $(SRCDIR)/PetscSolver.cc 
+else
+  SRCS += $(SRCDIR)/FakePetscSolver.cc
 endif
 
 SUBDIRS := \

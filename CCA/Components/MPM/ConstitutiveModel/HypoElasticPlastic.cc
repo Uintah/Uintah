@@ -1690,11 +1690,7 @@ HypoElasticPlastic::computeStressTensor(const PatchSubset* patches,
   double Bnl[3][24];
   double Kmatrix[24][24];
   int dof[24];
-#ifdef HAVE_PETSC
-  PetscScalar v[576];
-#else
   double v[576];
-#endif
 
   //CSTir << getpid() 
   //      << "ComputeStressTensorIteration: In : Matl = " << matl << " id = " 
