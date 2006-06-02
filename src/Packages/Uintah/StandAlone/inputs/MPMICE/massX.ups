@@ -193,7 +193,7 @@
          <cfl>0.5</cfl>
        <ICE>
         <advection type = "FirstOrder" />
-        <ClampSpecificVolume>false</ClampSpecificVolume>
+        <ClampSpecificVolume>true</ClampSpecificVolume>
       </ICE>        
     </CFD>
     <MPM>
