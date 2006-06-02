@@ -839,21 +839,13 @@ case $host in
     NUM_CPUS=4
     IS_AIX="yes"
     ;;
+  *-mingw*)
+    NUM_CPUS=2
+    IS_WIN="yes"
+    ;;
   *-pc*)
-    case $host in
-      *-mingw*)
-        NUM_CPUS=2
-        IS_WIN="yes"
-        ;;
-      *-cygwin*)
-        NUM_CPUS=2
-        IS_WIN="yes"
-        ;;
-      *)
-        echo
-        AC_MSG_ERROR(Currently Windows only configures from mingw or cygwin.  See install instructions)
-        ;;
-    esac
+    echo
+    AC_MSG_ERROR(Currently Windows only configures from mingw.  See install instructions)
     ;;
   *)
     echo
@@ -1035,7 +1027,7 @@ case $host in
         # later we will make .so's from them.
 	SO_OR_ARCHIVE_EXTENSION=a
 	;;
-     *-pc*)
+     *-pc-mingw*)
         SO_OR_ARCHIVE_EXTENSION=dll
         ;;
      *)
@@ -1367,7 +1359,7 @@ case $host in
     esac
     ;;
 
-  *-pc*)
+  *-pc-mingw*)
     case $CXX in
       *cl*)
           ac_objext=obj
@@ -1450,7 +1442,7 @@ case $host in
           ;;
         *gfortran*)
           FFLAGS="$FFLAGS $extra_cflags"   
-          FORTRAN_UNDERSCORE=end
+          FORTRAN_UNDERSCORE=linux
           ;;        
         *)
           FFLAGS="$FFLAGS $extra_cflags"
@@ -2023,7 +2015,7 @@ case $host in
       SCI_MSG_ERROR(unknown thread type for host $host: $threads. exiting.)
     fi
     ;;
-  *-pc*)
+  *-pc-mingw*)
     threads=win32
     if test $IS_VC = "yes"; then
       SOCKET_LIB_FLAG="ws2_32.lib"
@@ -2225,7 +2217,7 @@ else
       dlopen("bogus", 0);
     ],required)
     ;;
-  *-pc*)
+  *-pc-mingw*)
     echo "Using Windows dynamic loader"
     DL_LIB_FLAG=""
     DL_LIB_DIR_FLAG=""
@@ -2276,7 +2268,7 @@ case $host in
     SCI_TRY_LINK(STD_HDRS,SGI standard headers,unistd.h dirent.h sys/time.h sys/param.h ieeefp.h ulocks.h values.h malloc.h netdb.h sys/select.h sys/socket.h sys/mman.h sys/ioctl.h sys/resource.h sys/wait.h sys/utsname.h rpc/types.h netinet/in.h,,,,,,required)
     DEF_IEEEFP="#define HAVE_IEEEFP_H 1"
     ;;
-  *-pc*)
+  *-pc-mingw*)
     ;;
 
   *)
@@ -2940,11 +2932,9 @@ case $host in
       fi
     fi
     ;;
-  *-pc*)
-    if test "$IS_VC" = "no"; then
-      # Mingw or cygwin g77 and libg2c
-      SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
-    fi
+  *-pc-mingw*)
+    # Mingw g77 and libg2c
+    SCI_TRY_LINK(F,fortran libraries,,,g2c,$_sci_lib,,,$_sci_optional)
     ;;
   *)
     SCI_TRY_LINK(F,fortran libraries,,,F77,$_sci_lib,,,$_sci_optional)
@@ -3602,7 +3592,7 @@ case $host in
     	PETSC_ARCH=ppc
     fi
     ;;
-  *-pc*)
+  *-pc-mingw*)
     PETSC_ARCH=win
     ;;
   *)
