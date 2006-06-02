@@ -214,11 +214,7 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
     double B[6][24];
     double Bnl[3][24];
     int dof[24];
-#ifdef HAVE_PETSC
-    PetscScalar v[576];
-#else
     double v[576];
-#endif
 
     if(matl->getIsRigid()){
       for(ParticleSubset::iterator iter = pset->begin();

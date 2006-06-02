@@ -92,6 +92,7 @@ namespace Uintah {
     Vec d_x;
     Vec d_t;
 #endif
+
     inline bool compare(double num1, double num2)
       {
 	double EPSILON=1.e-16;
@@ -107,12 +108,7 @@ namespace Uintah {
   {
     MatSetValues(d_A,numi,i,numj,j,value,ADD_VALUES);
   }
-#else
-  inline void MPMPetscSolver::fillMatrix(int /*numi*/,int /*i*/[],int /*numj*/,
-                                         int /*j*/[],double /*value*/[])
-  {
-    throw InternalError( "MPMPetscSolver::fillMatrix(...) is not implemented!", __FILE__, __LINE__ );
-  }
 #endif
+
 }
 #endif
