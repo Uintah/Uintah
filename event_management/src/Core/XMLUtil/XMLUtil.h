@@ -75,6 +75,45 @@ SCISHARE bool get_attributes(vector<xmlNodePtr> &att, const xmlNodePtr p);
 // named "node".
       
 SCISHARE std::string get_serialized_children(xmlNode* node);
+
+
+
+  namespace XMLUtil {
+
+    inline const char* xmlChar_to_char(const xmlChar *xmlchar) {
+      return (const char *)xmlchar;
+    }
+
+    inline const xmlChar* char_to_xmlChar(const char *chrs) {
+      return (const xmlChar *)chrs;
+    }
+
+
+    inline string xmlChar_to_string(const xmlChar *xmlchar) {
+      if (xmlchar)
+        return string(xmlChar_to_char(xmlchar));
+      else
+        return string("");
+    }
+    
+    SCISHARE bool node_is_element(const xmlNodePtr p, const string &);
+    SCISHARE bool node_is_dtd(const xmlNodePtr p, const string &);
+    SCISHARE bool node_is_comment(const xmlNodePtr p);
+
+    SCISHARE bool maybe_get_att_as_int(const xmlNodePtr p, const string &, 
+                                       int &);
+    SCISHARE bool maybe_get_att_as_double(const xmlNodePtr p, const string &, 
+                                          double&);
+    SCISHARE bool maybe_get_att_as_string(const xmlNodePtr p, const string &, 
+                                          string&);
+
+
+    SCISHARE int node_att_as_int(const xmlNodePtr p, const string &);
+    SCISHARE double node_att_as_double(const xmlNodePtr p, const string &);
+    SCISHARE string node_att_as_string(const xmlNodePtr p, const string &);
+  }
+
+
 } // End namespace SCIRun
 
 #endif

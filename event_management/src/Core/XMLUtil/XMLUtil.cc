@@ -33,6 +33,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/IntVector.h>
+#include <Core/Containers/StringUtil.h>
 #include <iostream>
 #include <sstream>
 #include <iomanip>
@@ -646,5 +647,87 @@ string get_serialized_children(xmlNode* d)
 //   }
 //   return 0;
 // }
+
+
+namespace XMLUtil {
+
+bool node_is_element(const xmlNodePtr p, const string &name) {
+  return (p->type == XML_ELEMENT_NODE &&
+	  name == xmlChar_to_char(p->name));
+}
+
+bool node_is_dtd(const xmlNodePtr p, const string &name) {
+  return (p->type == XML_DTD_NODE &&
+	  name == xmlChar_to_char(p->name));
+}
+
+bool node_is_comment(const xmlNodePtr p)
+{
+  //  ASSERT(0);
+  return true;
+}
+
+bool maybe_get_att_as_int(const xmlNodePtr p, 
+      			     const string &name, 
+			     int &val)
+{
+  string str;
+  return (maybe_get_att_as_string(p, name, str) &&
+	  string_to_int(str, val));
+}
+
+
+bool
+maybe_get_att_as_double(const xmlNodePtr p, 
+			   const string &name, 
+			   double &val)
+{
+  string str;
+  return (maybe_get_att_as_string(p, name, str) &&
+	  string_to_double(str, val));
+}
+
+
+bool
+maybe_get_att_as_string(const xmlNodePtr p, 
+			   const string &name, 
+			   string &val)
+{
+  xmlAttrPtr attr = get_attribute_by_name(p, name.c_str());
+  if (!attr)
+    return false;
+  val = xmlChar_to_string(attr->children->content);
+  return true;
+}
+
+string node_att_as_string(const xmlNodePtr p, const string &name)
+{
+  xmlAttrPtr attr = get_attribute_by_name(p, name.c_str());
+  if (!attr)
+    throw "Attribute "+name+" does not exist!";
+  return xmlChar_to_string(attr->children->content);
+}
+
+int node_att_as_int(const xmlNodePtr p, const string &name)
+{
+  int val = 0;
+  string str = node_att_as_string(p, name);
+  if (!string_to_int(str, val))
+    throw "Attribute "+name+" value: "+str+" cannot convert to int";
+
+  return val;
+}
+
+double node_att_as_double(const xmlNodePtr p, const string &name)
+{
+  double val = 0;
+  string str = node_att_as_string(p, name);
+  if (!string_to_double(str, val))
+    throw "Attribute "+name+" value: "+str+" cannot convert to double";
+
+  return val;
+}
+
+} // end namespace XMLUtil
 
 } // End namespace SCIRun
