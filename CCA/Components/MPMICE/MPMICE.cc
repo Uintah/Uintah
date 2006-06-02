@@ -781,7 +781,6 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
       t->requires(Task::NewDW, Ilb->modelEng_srcLabel,    gn);
     }
 
-    t->modifies( Ilb->rho_CCLabel); 
     t->computes( Ilb->mass_L_CCLabel);
     t->computes( Ilb->mom_L_CCLabel);
     t->computes( Ilb->int_eng_L_CCLabel);
@@ -1345,7 +1344,6 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
     int numMatls = d_sharedState->getNumMPMMatls();
     Vector dx = patch->dCell();
     double cellVol = dx.x()*dx.y()*dx.z();
-    double inv_cellVol = 1.0/cellVol;
     double very_small_mass = d_TINY_RHO * cellVol; 
     Ghost::GhostType  gn = Ghost::None;
     Ghost::GhostType  gac = Ghost::AroundCells;         
@@ -1360,7 +1358,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       constNCVariable<double> gmass, gvolume,gtempstar;
       constNCVariable<Vector> gvelocity;
       CCVariable<Vector> cmomentum;
-      CCVariable<double> int_eng_L, rho_CC, mass_L;
+      CCVariable<double> int_eng_L, mass_L;
       constCCVariable<double> cmass, Temp_CC_sur, int_eng_src;
       constCCVariable<Vector> vel_CC_sur, mom_source;
       new_dw->get(gmass,       Mlb->gMassLabel,             indx,patch,gac,1);
@@ -1372,7 +1370,6 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       new_dw->get(mom_source,   Ilb->mom_source_CCLabel,    indx,patch,gn, 0);
       new_dw->get(int_eng_src,  Ilb->int_eng_source_CCLabel,indx,patch,gn, 0);
 
-      new_dw->getModifiable(rho_CC,     Ilb->rho_CCLabel,      indx,patch);
       new_dw->allocateAndPut(mass_L,    Ilb->mass_L_CCLabel,   indx,patch); 
       new_dw->allocateAndPut(cmomentum, Ilb->mom_L_CCLabel,    indx,patch);
       new_dw->allocateAndPut(int_eng_L, Ilb->int_eng_L_CCLabel,indx,patch);
@@ -1391,7 +1388,6 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
              <<  indx<<patch->getID();
         d_ice->printData(indx, patch,1,desc.str(), "cmass",    cmass);
         printData(     indx, patch,  1,desc.str(), "gmass",    gmass);
-        d_ice->printData(indx, patch,1,desc.str(), "rho_CC",   rho_CC);
         printData(     indx, patch,  1,desc.str(), "gtemStar", gtempstar);
         //printNCVector( indx, patch,  1,desc.str(), "gvelocityStar", 0,
         //                                                       gvelocity);
@@ -1431,7 +1427,6 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
                                                     iter++){ 
          IntVector c = *iter;
          mass_L[c]    = cmass[c];
-         rho_CC[c]    = mass_L[c] * inv_cellVol;
         }
       }
       //__________________________________
@@ -1458,8 +1453,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
           double min_mass = d_TINY_RHO * cellVol;
           double inv_cmass = 1.0/cmass[c];
           mass_L[c] = std::max( (cmass[c] + modelMass_src[c] ), min_mass);
-          rho_CC[c] = mass_L[c] * inv_cellVol;
-              
+
           //  must have a minimum momentum 
           for (int dir = 0; dir <3; dir++) {  //loop over all three directons
             double min_mom_L = min_mass * cmomentum[c][dir] * inv_cmass;
@@ -1486,14 +1480,12 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
        //  Set Boundary conditions
        setBC(cmomentum, "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
        setBC(int_eng_L, "set_if_sym_BC",patch, d_sharedState, indx, new_dw);
-       setBC(rho_CC,    "Density",      patch, d_sharedState, indx, new_dw);  
 
       //---- P R I N T   D A T A ------ 
       if(d_ice->switchDebug_LagrangianValues) {
         ostringstream desc;
         desc<<"BOT_MPMICE::computeLagrangianValuesMPM_mat_"<<indx<<"_patch_"
             <<  patch->getID();
-        d_ice->printData(  indx,patch, 1,desc.str(), "rho_CC",       rho_CC);
         d_ice->printData(  indx,patch, 1,desc.str(), "int_eng_L_CC", int_eng_L);
         d_ice->printVector(indx,patch, 1,desc.str(), "mom_L_CC", 0,  cmomentum);
       }
@@ -1509,13 +1501,6 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
                << neg_cell << " int_eng_L_CC " << int_eng_L[neg_cell] << "\n ";
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
-      }
-      if (!d_ice->areAllValuesPositive(rho_CC, neg_cell)) {
-        int L = getLevel(patches)->getIndex();
-        warn <<"ERROR MPMICE:("<< L<<"):computeLagrangianValuesMPM, mat "
-             <<indx<<" cell "
-             << neg_cell << " rho_CC " << rho_CC[neg_cell]<< "\n ";
-        throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
     }  //numMatls
   }  //patches
