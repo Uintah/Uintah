@@ -8,6 +8,7 @@ namespace SCIRun {
   class Point;
 }
 
+#include <Packages/Uintah/Core/GeometryPiece/share.h>
 namespace Uintah {
 
 /**************************************
@@ -50,7 +51,7 @@ WARNING
 ****************************************/
 
 
-      class BoxGeometryPiece : public GeometryPiece {
+      class SCISHARE BoxGeometryPiece : public GeometryPiece {
 	 
       public:
 	 //////////

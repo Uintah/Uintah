@@ -30,6 +30,7 @@ PSELIBS := \
 	Core/Geometry                    \
 	Core/Thread                      \
 	Core/Util                        \
+	Core/Geometry                    \
 	Packages/Uintah/CCA/Ports        \
 	Packages/Uintah/Core/Exceptions  \
 	Packages/Uintah/Core/Grid        \

@@ -44,6 +44,12 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Exceptions/ParameterNotFound.h>
 
+#ifdef _WIN32
+#include <process.h>
+#include <float.h>
+#define isnan _isnan
+#endif
+
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;

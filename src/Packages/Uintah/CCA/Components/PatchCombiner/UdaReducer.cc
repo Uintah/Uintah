@@ -171,8 +171,7 @@ void UdaReducer::readAndSetVars(const ProcessorGroup*,
   cout << "   Incrementing time " << timeIndex_ << " and time " << time << endl;
 
   //cerr << "deleted and recreated dw\n";
-  double delt;
-  dataArchive_->restartInitialize(timestep, oldGrid_, new_dw, lb, &time, &delt);
+  dataArchive_->restartInitialize(timestep, oldGrid_, new_dw, lb, &time);
   //cerr << "restartInitialize done\n";
 }
 

@@ -13,6 +13,7 @@
 #include   <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/Core/GeometryPiece/share.h>
 namespace Uintah {
 
 using std::vector;
@@ -55,7 +56,7 @@ WARNING
         
 ****************************************/
 
-      class TriGeometryPiece : public GeometryPiece {
+      class SCISHARE TriGeometryPiece : public GeometryPiece {
       public:
          //////////
          //  Constructor that takes a ProblemSpecP argument.   It reads the xml 

@@ -23,6 +23,7 @@
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
 
   using SCIRun::Vector;
@@ -66,7 +67,7 @@ WARNING
   
 ****************************************/
 
-class Level : public RefCounted {
+class SCISHARE Level : public RefCounted {
 public:
   Level(Grid* grid, const Point& anchor, const Vector& dcell, int index, 
         IntVector refinementRatio,
@@ -255,8 +256,8 @@ private:
   PatchRangeTree* d_rangeTree;
 };
 
-  const Level* getLevel(const PatchSubset* subset);
-  const Level* getLevel(const PatchSet* set);
+  SCISHARE const Level* getLevel(const PatchSubset* subset);
+  SCISHARE const Level* getLevel(const PatchSet* set);
 } // End namespace Uintah
 
 #endif

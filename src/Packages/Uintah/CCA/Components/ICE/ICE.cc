@@ -45,6 +45,12 @@
 
 #include <float.h>
 
+#ifdef _WIN32
+# undef max
+# undef min
+#define isnan _isnan
+#endif
+
 using std::vector;
 using std::max;
 using std::min;
@@ -1096,7 +1102,7 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
                                            const PatchSet* patches,
                                            const MaterialSubset* ice_matls,
                                            const MaterialSet* all_matls,
-                                           const bool recursion)
+                                           bool recursion)
 {
   int levelIndex = getLevel(patches)->getIndex();
   if(!doICEOnLevel(levelIndex, getLevel(patches)->getGrid()->numLevels()))
@@ -3201,7 +3207,7 @@ void ICE::addExchangeContributionToFCVel(const ProcessorGroup*,
                                          const MaterialSubset* /*matls*/,
                                          DataWarehouse* old_dw, 
                                          DataWarehouse* new_dw,
-                                         const bool recursion)
+                                         bool recursion)
 {
   const Level* level = getLevel(patches);
   for(int p=0;p<patches->size();p++){

@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 
+#include <Packages/Uintah/Core/GeometryPiece/share.h>
 namespace Uintah {
 
   /////////////////////////////////////////////////////////////////////////////
@@ -42,7 +43,7 @@ namespace Uintah {
   */
   /////////////////////////////////////////////////////////////////////////////
 
-  class GUVSphereShellPiece : public ShellGeometryPiece {
+  class SCISHARE GUVSphereShellPiece : public ShellGeometryPiece {
          
   public:
     //////////

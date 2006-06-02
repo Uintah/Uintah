@@ -3,11 +3,12 @@
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
+#include <Packages/Uintah/Core/GeometryPiece/share.h>
 namespace Uintah {
 
   class GeometryPiece;
 
-  class ShellGeometryFactory
+  class SCISHARE ShellGeometryFactory
   {
   public:
     // This function has a switch for all shell go_types It returns a

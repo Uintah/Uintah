@@ -38,9 +38,10 @@ namespace SCIRun {
   class Vector;
 }
 
+#include <Packages/Uintah/Core/Math/share.h>
 namespace Uintah {
   using namespace std;
-  class FastMatrix {
+  class SCISHARE FastMatrix {
   public:
     FastMatrix(int rows, int cols);
     ~FastMatrix();

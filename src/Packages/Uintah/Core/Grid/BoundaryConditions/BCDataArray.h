@@ -11,6 +11,7 @@
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
 
 /*!
@@ -35,7 +36,7 @@ namespace Uintah {
   using std::vector;
   using std::map;
 
-   class BCDataArray {
+   class SCISHARE BCDataArray {
    public:
 
      /// Constructor

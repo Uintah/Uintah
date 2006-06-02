@@ -20,6 +20,7 @@ namespace SCIRun {
   class Point;
 }
 
+#include <Packages/Uintah/Core/ProblemSpec/share.h>
 namespace Uintah {
 
 class TypeDescription;
@@ -68,7 +69,7 @@ WARNING
 
 /// A Problem Spec class.
 /// This really is a problem Spec class.
-   class ProblemSpec : public RefCounted {
+   class SCISHARE ProblemSpec : public RefCounted {
    public:
      
       enum NodeType {
@@ -82,7 +83,8 @@ WARNING
         d_write = doWrite; 
       }
 
-      virtual ~ProblemSpec();
+      // ProblemSpec allocates no memory...
+      inline virtual ~ProblemSpec() {}
 
       /****************
          Methods to find a particular Node

@@ -29,6 +29,8 @@ namespace SCIRun {
   class Vector;
 }
 
+#include <Packages/Uintah/CCA/Ports/share.h>
+
 namespace Uintah {
 
 class Level;
@@ -66,7 +68,7 @@ WARNING
 	
 ****************************************/
       
-class DataWarehouse : public RefCounted {
+class SCISHARE DataWarehouse : public RefCounted {
 
 public:
   virtual ~DataWarehouse();

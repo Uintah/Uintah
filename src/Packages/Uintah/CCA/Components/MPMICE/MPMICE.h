@@ -17,6 +17,7 @@
 #include <Packages/Uintah/CCA/Ports/SwitchingCriteria.h>
 #include <Core/Geometry/Vector.h>
 
+#include <Packages/Uintah/CCA/Components/MPMICE/share.h>
 namespace Uintah {
   class ICE;
   class ICELabel;
@@ -57,7 +58,7 @@ WARNING
 
 enum MPMType {STAND_MPMICE = 0, RIGID_MPMICE, SHELL_MPMICE, FRACTURE_MPMICE};
 
-class MPMICE : public SimulationInterface, public UintahParallelComponent {
+class SCISHARE MPMICE : public SimulationInterface, public UintahParallelComponent {
 
 public:
 //  MPMICE(const ProcessorGroup* myworld, const bool doAMR);
@@ -327,7 +328,7 @@ public:
                                    const VarLabel* variable,
                                    T defaultValue,
                                    bool modifies,
-                                   const string& coarsenMethod);
+                                   string coarsenMethod);
 
   template<typename T>
     void refineVariableCC(const ProcessorGroup*,
@@ -372,7 +373,7 @@ public:
                            const VarLabel* variable,
                            T defaultValue, 
                            bool modifies,
-                           const string coarsenMethod);
+                           string coarsenMethod);
 
   template<typename T>
     void coarsenVariableNC(const ProcessorGroup*,
@@ -383,7 +384,7 @@ public:
                            const VarLabel* variable,
                            T defaultValue,
                            bool modifies,
-                           const string coarsenMethod);
+                           string coarsenMethod);
 
     void refineCoarseFineInterface(const ProcessorGroup*,
                                    const PatchSubset* patches,

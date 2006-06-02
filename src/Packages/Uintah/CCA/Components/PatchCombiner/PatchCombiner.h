@@ -9,6 +9,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarLabel.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 
+#include <Packages/Uintah/CCA/Components/PatchCombiner/share.h>
 namespace Uintah {
 
   using namespace std;
@@ -44,7 +45,7 @@ WARNING
   
 ****************************************/
 
-   class PatchCombiner : public SimulationInterface, public UintahParallelComponent {
+   class SCISHARE PatchCombiner : public SimulationInterface, public UintahParallelComponent {
    public:
      PatchCombiner(const ProcessorGroup* myworld, string udaDir);
      

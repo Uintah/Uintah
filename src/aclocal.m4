@@ -1135,8 +1135,6 @@ case $1 in
   Uintah)
     sci_required_fortran=yes
     sci_required_mpi=yes
-    sci_required_blas=yes
-    sci_required_lapack=yes
     sci_required_perl=yes
     sci_required_tools=yes
   ;;

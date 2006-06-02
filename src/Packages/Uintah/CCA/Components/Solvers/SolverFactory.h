@@ -38,11 +38,12 @@ WARNING
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/SolverInterface.h>
 
+#include <Packages/Uintah/CCA/Components/Solvers/share.h>
 namespace Uintah {
 
   class ProcessorGroup;
 
-  class SolverFactory
+  class SCISHARE SolverFactory
     {
     public:
       // this function has a switch for all known solvers

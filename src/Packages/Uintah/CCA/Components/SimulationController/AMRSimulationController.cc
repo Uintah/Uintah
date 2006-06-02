@@ -36,8 +36,6 @@
 #include <iostream>
 #include <iomanip>
 
-#include <Core/Malloc/Allocator.h> // for memory leak tests...
-
 using std::cerr;
 using std::cout;
 
@@ -59,7 +57,6 @@ AMRSimulationController::~AMRSimulationController()
 
 void AMRSimulationController::run()
 {
-  const char* tag = AllocatorSetDefaultTag("SimCnt::run");
    loadUPS();
 
    bool log_dw_mem=false;
@@ -148,7 +145,6 @@ void AMRSimulationController::run()
      max_iterations = d_timeinfo->maxTimestep - d_sharedState->getCurrentTopLevelTimeStep();
    }
    while( t < d_timeinfo->maxTime && iterations < max_iterations) {
-     const char* tag2 = AllocatorSetDefaultTag("SimCnt while loop");
 
      if (d_doAMR && d_regridder->needsToReGrid() && !first) {
        doRegridding(currentGrid);
@@ -187,7 +183,9 @@ void AMRSimulationController::run()
        ostringstream fn;
        fn << "alloc." << setw(5) << setfill('0') << d_myworld->myrank() << ".out";
        string filename(fn.str());
+#ifndef _WIN32
        DumpAllocator(DefaultAllocator(), filename.c_str());
+#endif
      }
 
      // For material addition.  Once a material is added, need to
@@ -285,13 +283,9 @@ void AMRSimulationController::run()
 
      t += delt;
      TAU_DB_DUMP();
-     AllocatorSetDefaultTag(tag2);
-
    }
 
    d_ups->releaseDocument();
-   AllocatorSetDefaultTag(tag);
-
 }
 
 //______________________________________________________________________
@@ -459,7 +453,6 @@ AMRSimulationController::needRecompile(double time, double delt,
 				       const GridP& grid)
 {
   // Currently, d_output, d_sim, d_lb, d_regridder can request a recompile.  --bryan
-  const char* tag = AllocatorSetDefaultTag("SimCnt::needRecompile");
   bool recompile = false;
   
   // do it this way so everybody can have a chance to maintain their state
@@ -469,13 +462,11 @@ AMRSimulationController::needRecompile(double time, double delt,
   if (d_doAMR){
     recompile |= (d_regridder && d_regridder->needRecompile(time, delt, grid));
   }
-  AllocatorSetDefaultTag(tag);
   return recompile;
 }
 //______________________________________________________________________
 void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
 {
-  const char* tag = AllocatorSetDefaultTag("SimCnt::DoInitialTimestep");
   if(d_myworld->myrank() == 0){
     cout << "Compiling initialization taskgraph...\n";
   }
@@ -524,13 +515,10 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
 
   if(d_output)
     d_output->executedTimestep(0, grid);
-  AllocatorSetDefaultTag(tag);
-
 }
 //______________________________________________________________________
 bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
 {
-  const char* tag = AllocatorSetDefaultTag("SimCnt::DoInitialTimestepRegridding");
   double start = Time::currentSeconds();
   GridP oldGrid = currentGrid;      
  
@@ -579,13 +567,11 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
   if(d_myworld->myrank() == 0)
     cout << "done adding level (" << time << " seconds, regridding took " << regridTime << ")\n";
 
-  AllocatorSetDefaultTag(tag);
   return true;
 }
 //______________________________________________________________________
 void AMRSimulationController::doRegridding(GridP& currentGrid)
 {
-  const char* tag = AllocatorSetDefaultTag("SimCnt::doRegridding\n");
 
   double start = Time::currentSeconds();
   GridP oldGrid = currentGrid;
@@ -618,13 +604,11 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
            << ", scheduling and copying took " << scheduleTime << ")\n";
     }
   }
-  AllocatorSetDefaultTag(tag);
 }
 
 //______________________________________________________________________
 void AMRSimulationController::recompile(double t, double delt, GridP& currentGrid, int totalFine)
 {
-  const char* tag = AllocatorSetDefaultTag("SimCnt::recompile");
   if(d_myworld->myrank() == 0)
     cout << "Compiling taskgraph...\n";
   double start = Time::currentSeconds();
@@ -708,13 +692,10 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
     cout << "DONE TASKGRAPH RE-COMPILE (" << dt << " seconds)\n";
   
   d_sharedState->setNeedAddMaterial(0);
-  AllocatorSetDefaultTag(tag);
-
 }
 //______________________________________________________________________
 void AMRSimulationController::executeTimestep(double t, double& delt, GridP& currentGrid, int totalFine)
 {
-  const char* tag = AllocatorSetDefaultTag("SimCnt::execute");
   // If the timestep needs to be
   // restarted, this loop will execute multiple times.
   bool success = true;
@@ -780,6 +761,5 @@ void AMRSimulationController::executeTimestep(double t, double& delt, GridP& cur
       }
     }
   } while(!success);
-  AllocatorSetDefaultTag(tag);
 
 }

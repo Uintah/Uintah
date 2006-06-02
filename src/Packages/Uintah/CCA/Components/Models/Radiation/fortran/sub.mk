@@ -29,20 +29,20 @@ SRCS += \
         $(SRCDIR)/m_rshresults.F \
         $(SRCDIR)/m_soot.F
 
-$(SRCDIR)/m_cellg.o: $(SRCDIR)/m_cellg_fort.h
-$(SRCDIR)/m_radarray.o: $(SRCDIR)/m_radarray_fort.h
-$(SRCDIR)/m_radcal.o: $(SRCDIR)/m_radcal_fort.h
-$(SRCDIR)/m_radcoef.o: $(SRCDIR)/m_radcoef_fort.h
-$(SRCDIR)/m_radwsgg.o: $(SRCDIR)/m_radwsgg_fort.h
-$(SRCDIR)/m_rordr.o: $(SRCDIR)/m_rordr_fort.h
-$(SRCDIR)/m_rordrss.o: $(SRCDIR)/m_rordrss_fort.h
-$(SRCDIR)/m_rordrtn.o: $(SRCDIR)/m_rordrtn_fort.h
-$(SRCDIR)/m_rdombc.o: $(SRCDIR)/m_rdombc_fort.h
-$(SRCDIR)/m_rdombmcalc.o: $(SRCDIR)/m_rdombmcalc_fort.h
-$(SRCDIR)/m_rdomsolve.o: $(SRCDIR)/m_rdomsolve_fort.h
-$(SRCDIR)/m_rdomsrc.o: $(SRCDIR)/m_rdomsrc_fort.h
-$(SRCDIR)/m_rdomflux.o: $(SRCDIR)/m_rdomflux_fort.h
-$(SRCDIR)/m_rdomvolq.o: $(SRCDIR)/m_rdomvolq_fort.h
-$(SRCDIR)/m_rshsolve.o: $(SRCDIR)/m_rshsolve_fort.h
-$(SRCDIR)/m_rshresults.o: $(SRCDIR)/m_rshresults_fort.h
+$(SRCDIR)/m_cellg.$(OBJEXT): $(SRCDIR)/m_cellg_fort.h
+$(SRCDIR)/m_radarray.$(OBJEXT): $(SRCDIR)/m_radarray_fort.h
+$(SRCDIR)/m_radcal.$(OBJEXT): $(SRCDIR)/m_radcal_fort.h
+$(SRCDIR)/m_radcoef.$(OBJEXT): $(SRCDIR)/m_radcoef_fort.h
+$(SRCDIR)/m_radwsgg.$(OBJEXT): $(SRCDIR)/m_radwsgg_fort.h
+$(SRCDIR)/m_rordr.$(OBJEXT): $(SRCDIR)/m_rordr_fort.h
+$(SRCDIR)/m_rordrss.$(OBJEXT): $(SRCDIR)/m_rordrss_fort.h
+$(SRCDIR)/m_rordrtn.$(OBJEXT): $(SRCDIR)/m_rordrtn_fort.h
+$(SRCDIR)/m_rdombc.$(OBJEXT): $(SRCDIR)/m_rdombc_fort.h
+$(SRCDIR)/m_rdombmcalc.$(OBJEXT): $(SRCDIR)/m_rdombmcalc_fort.h
+$(SRCDIR)/m_rdomsolve.$(OBJEXT): $(SRCDIR)/m_rdomsolve_fort.h
+$(SRCDIR)/m_rdomsrc.$(OBJEXT): $(SRCDIR)/m_rdomsrc_fort.h
+$(SRCDIR)/m_rdomflux.$(OBJEXT): $(SRCDIR)/m_rdomflux_fort.h
+$(SRCDIR)/m_rdomvolq.$(OBJEXT): $(SRCDIR)/m_rdomvolq_fort.h
+$(SRCDIR)/m_rshsolve.$(OBJEXT): $(SRCDIR)/m_rshsolve_fort.h
+$(SRCDIR)/m_rshresults.$(OBJEXT): $(SRCDIR)/m_rshresults_fort.h
 

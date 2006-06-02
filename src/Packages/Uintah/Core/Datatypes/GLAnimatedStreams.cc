@@ -3,7 +3,7 @@
 #include <Core/Util/NotFinished.h>
 #include <Core/Geom/DrawInfoOpenGL.h>
 #include <Core/Malloc/Allocator.h>
-#include <GL/gl.h>
+#include <sci_gl.h>
 #include <math.h>
 #include <float.h>
 #include <iostream>

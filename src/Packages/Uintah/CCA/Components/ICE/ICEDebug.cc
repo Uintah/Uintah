@@ -15,7 +15,9 @@
 #include <fstream>
 #include <sys/stat.h>
 #include <sys/types.h>
+#ifndef _WIN32
 #include <dirent.h>
+#endif
 using std::ifstream;
 using std::cerr;
 using namespace SCIRun;

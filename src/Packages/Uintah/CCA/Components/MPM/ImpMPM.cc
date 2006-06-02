@@ -60,6 +60,12 @@
 #include <sgi_stl_warnings_on.h>
 #include <math.h>
 
+#ifdef _WIN32
+#include <process.h>
+#include <float.h>
+#define isnan _isnan
+#endif
+
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
@@ -595,7 +601,7 @@ void ImpMPM::scheduleComputeHeatExchange(SchedulerP& sched,
 void ImpMPM::scheduleDestroyMatrix(SchedulerP& sched,
                                    const PatchSet* patches,
                                    const MaterialSet* matls,
-                                   const bool recursion)
+                                   bool recursion)
 {
   Task* t = scinew Task("ImpMPM::destroyMatrix",this,&ImpMPM::destroyMatrix,
                          recursion);
@@ -693,7 +699,7 @@ void ImpMPM::scheduleFindFixedHCDOF(SchedulerP& sched,
 void ImpMPM::scheduleComputeStressTensor(SchedulerP& sched,
                                          const PatchSet* patches,
                                          const MaterialSet* matls,
-                                         const bool recursion)
+                                         bool recursion)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
   Task* t = scinew Task("ImpMPM::computeStressTensor",
@@ -1613,7 +1619,7 @@ void ImpMPM::destroyMatrix(const ProcessorGroup*,
                            const MaterialSubset* ,
                            DataWarehouse* /* old_dw */,
                            DataWarehouse* /* new_dw */,
-                           const bool recursion)
+                           bool recursion)
 {
   if (cout_doing.active())
     cout_doing <<"Doing destroyMatrix " <<"\t\t\t\t\t IMPM" << "\n" << "\n";
@@ -1957,7 +1963,7 @@ void ImpMPM::computeStressTensor(const ProcessorGroup*,
                                  const MaterialSubset* ,
                                  DataWarehouse* old_dw,
                                  DataWarehouse* new_dw,
-                                 const bool recursion)
+                                 bool recursion)
 {
   if (cout_doing.active())
     cout_doing <<"Doing computeStressTensor " <<"\t\t\t\t IMPM"<< "\n" << "\n";

@@ -44,6 +44,12 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
+#ifdef _WIN32
+#include <process.h>
+#include <float.h>
+#define isnan _isnan
+#endif
+
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;

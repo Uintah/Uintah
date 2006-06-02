@@ -4,6 +4,7 @@
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/TntJama/tnt.h>
 
+#include <Packages/Uintah/Core/Math/share.h>
 namespace Uintah {
 
   using SCIRun::Vector;
@@ -36,7 +37,7 @@ namespace Uintah {
     virtual inline ~SymmMatrix3();
 
     /*! Calculate eigenvalues */
-    void eigen(Vector& eval, Matrix3& evec);
+    SCISHARE void eigen(Vector& eval, Matrix3& evec);
 
     /*! Return a TNT Array2D */
     inline TNT::Array2D<double> toTNTArray2D() const;
@@ -53,22 +54,22 @@ namespace Uintah {
     inline double Trace() const;
 
     /*! Compute deviatoric part of the matrix */
-    SymmMatrix3 Deviatoric() const;
+    SCISHARE SymmMatrix3 Deviatoric() const;
 
     /*! Compute norm of a SymmMatrix3 */
-    double Norm() const;
+    SCISHARE double Norm() const;
 
     /*! Compute Dyadic Product of two SymmMatrix3s */
-    void Dyad(const SymmMatrix3& V, double dyad[6][6]) const;
+    SCISHARE void Dyad(const SymmMatrix3& V, double dyad[6][6]) const;
 
     /*! Compute Dot Product of two SymmMatrix3s */
-    Matrix3 Multiply(const SymmMatrix3& V) const; 
+    SCISHARE Matrix3 Multiply(const SymmMatrix3& V) const; 
 
     /*! Compute square of the matrix */
-    SymmMatrix3 Square() const;
+    SCISHARE SymmMatrix3 Square() const;
 
     /*! Compute Inner Product of two SymmMatrix3s */
-    double Contract(const SymmMatrix3& V) const; 
+    SCISHARE double Contract(const SymmMatrix3& V) const; 
 
   private:
     double mat3[6];

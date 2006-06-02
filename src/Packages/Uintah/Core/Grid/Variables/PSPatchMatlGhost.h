@@ -7,6 +7,7 @@
 
 using SCIRun::IntVector;
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
 
 
@@ -41,7 +42,7 @@ namespace Uintah {
       
       ****************************************/
 
-struct PSPatchMatlGhost {
+struct SCISHARE PSPatchMatlGhost {
   PSPatchMatlGhost(const Patch* patch, int matl, 
                    IntVector low, IntVector high, int dwid)
     : patch_(patch), matl_(matl), low_(low), high_(high), dwid_(dwid)

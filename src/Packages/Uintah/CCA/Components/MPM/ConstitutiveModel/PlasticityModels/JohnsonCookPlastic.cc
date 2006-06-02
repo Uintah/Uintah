@@ -8,6 +8,12 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/PlasticityModels/JohnsonCookPlastic.h>
 #include <math.h>
 
+#ifdef _WIN32
+#include <process.h>
+#include <float.h>
+#define isnan _isnan
+#endif
+
 using namespace Uintah;
 using namespace SCIRun;
 

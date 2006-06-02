@@ -4,6 +4,8 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Containers/TrivialAllocator.h>
 
+#include <Packages/Uintah/Core/Grid/share.h>
+
 namespace Uintah {
 
 using SCIRun::TrivialAllocator;
@@ -15,13 +17,13 @@ struct ScrubItem {
   int matl;
   const Patch* patch;
   int dw;
-  size_t hash;
+  unsigned int hash;
   int count;
   
   ScrubItem(const VarLabel* l, int m, const Patch* p, int dw) :
     label(l), matl(m), patch(p), dw(dw), count(0)
   {
-    size_t ptr = (size_t) l;
+    unsigned int ptr = (unsigned int) l;
 
     hash = ptr ^ (m << 3) ^ (p->getID() << 4) ^ (dw << 2);
   }
@@ -30,7 +32,7 @@ struct ScrubItem {
     return label == d.label && matl == d.matl && patch == d.patch && dw == d.dw;
   }
 
-  static TrivialAllocator scrub_alloc;
+  SCISHARE static TrivialAllocator scrub_alloc;
 
   void* operator new(size_t)
   {

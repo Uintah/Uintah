@@ -13,6 +13,7 @@
 #include <sstream>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
 
   using SCIRun::InternalError;
@@ -200,17 +201,17 @@ WARNING
     ComputeSet(const ComputeSet&);
     ComputeSet& operator=(const ComputeSet&);
 
-    friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
-    friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
-    friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
-    friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
+    SCISHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
+    SCISHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
+    SCISHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
+    SCISHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
 
   };  // end class ComputeSet
 
-  std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
-  std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
-  std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
-  std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
+  SCISHARE std::ostream& operator<<(std::ostream& out, const Uintah::PatchSet&);
+  SCISHARE std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSet&);
+  SCISHARE std::ostream& operator<<(std::ostream& out, const Uintah::PatchSubset&);
+  SCISHARE std::ostream& operator<<(std::ostream& out, const Uintah::MaterialSubset&);
 
   template<class T>
   ComputeSet<T>::ComputeSet()
@@ -309,7 +310,7 @@ WARNING
   // Note: sort is specialized in ComputeSet_special for const Patch*'s
   // to use Patch::Compare.
   template<>
-  void ComputeSubset<const Patch*>::sort();
+  SCISHARE void ComputeSubset<const Patch*>::sort();
 
   template<class T>
   void ComputeSubset<T>::sort() {
@@ -318,7 +319,7 @@ WARNING
 
   // specialized for patch in ComputeSet_special.cc
   template<>  
-  bool ComputeSubset<const Patch*>::compareElems(const Patch* e1,
+  SCISHARE bool ComputeSubset<const Patch*>::compareElems(const Patch* e1,
 						 const Patch* e2);
 
   template<class T>

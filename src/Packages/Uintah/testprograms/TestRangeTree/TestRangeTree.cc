@@ -2,7 +2,9 @@
 #include <Core/Containers/RangeTree.h>
 #include "Point.h"
 #include <stdlib.h>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include <math.h>
 #include <sys/time.h>
 #include <iostream>

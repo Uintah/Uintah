@@ -17,6 +17,8 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/CCA/Ports/share.h>
+
 namespace Uintah {
   using namespace std;
   class LoadBalancer;
@@ -51,7 +53,7 @@ WARNING
   
 ****************************************/
 
-  class Scheduler : public UintahParallelPort {
+  class SCISHARE Scheduler : public UintahParallelPort {
   public:
     Scheduler();
     virtual ~Scheduler();
