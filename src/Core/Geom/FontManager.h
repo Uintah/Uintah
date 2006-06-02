@@ -28,56 +28,52 @@
 
 
 /*
- *  TextureObj.h
+ *  FontManager.h
  *
  *  Written by:
  *   McKay Davis
  *   School of Computing
  *   University of Utah
- *   January, 2006
+ *   April, 2006
  *
  *  Copyright (C) 2006 SCI Group
  */
 
-#ifndef SCIRun_Dataflow_Modules_Render_TextureObj_h
-#define SCIRun_Dataflow_Modules_Render_TextureObj_h
+#ifndef SCIRun_Dataflow_Modules_Render_FontManager_h
+#define SCIRun_Dataflow_Modules_Render_FontManager_h
 
-#include <Core/Datatypes/NrrdData.h>
+#include <Core/Geom/FreeType.h>
+#include <Core/Geom/TextRenderer.h>
 #include <string>
+#include <map>
+#include <set>
 
+using namespace std;
+
+#include <Core/Geom/share.h>
 namespace SCIRun {
 
-using std::string;
-
-class TextureObj {
+class FontManager {
 public:
-  TextureObj(NrrdDataHandle &nrrd_handle);
-  TextureObj(int, int, int);
+  FontManager();
+  ~FontManager();
 
-  ~TextureObj();
-  //  void                  draw(int n, float *vertices, float *tex_coords);
-  void                  draw(int n, Point *vertices, float *tex_coords);
-  void                  set_nrrd(NrrdDataHandle &nrrd_handle);
-  void			set_color(float, float, float, float);
-  void			set_color(float rgba[4]);
-  int			width() { return width_; };
-  int		        height() { return height_; };
-  void                  set_dirty() { dirty_ = true; }
-  NrrdDataHandle	nrrd_handle_;
-  bool			bind();
-  unsigned int          tex_id() { return texture_id_; }
+  TextRenderer *        get_renderer(double, string filename = "scirun.ttf");
+  void                  release_renderer(double, string filename="scirun.ttf");
+  void                  release_renderer(TextRenderer *);
 private:
+  FreeTypeFace *        load_face(const string &filename);
+  FreeTypeLibrary *     freetype_lib_;
 
-  void			pad_to_power_of_2();
-  
-  int			width_;
-  int			height_;
-  float 		color_[4];
-  bool			dirty_;
-  unsigned int		texture_id_;
+  typedef               map<int, TextRenderer *> SizeRendererMap_t;
+  typedef               map<string, SizeRendererMap_t> NameSizeRendererMap_t;
+  typedef               map<TextRenderer *, FreeTypeFace*> RendererFaceMap_t;
+  NameSizeRendererMap_t renderers_;
+  RendererFaceMap_t     face_;
 };
 
+  static FontManager font_manager;  
 }
 
-  
+
 #endif

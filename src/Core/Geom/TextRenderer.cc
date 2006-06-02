@@ -338,6 +338,7 @@ TextRenderer::render(const string &text, float x, float y, int flags)
     glyph->texture_->draw(4, layout.vertices_, glyph->tex_coords_);
   }
   profiler("texture draw");
+  glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
   glMatrixMode(GL_PROJECTION);
   glPopMatrix();
