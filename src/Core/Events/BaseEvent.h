@@ -44,19 +44,23 @@ using namespace std;
 class BaseEvent 
 {
 public:
-  BaseEvent();
+  BaseEvent(const string &target = "", 
+            unsigned int time = 0);
+
   virtual ~BaseEvent();
 
+  //! Accessors 
   //! time the event took place
-  unsigned int       get_time() const { return time_; }
-  void               set_time(unsigned t) { time_ = t; }
-
+  unsigned int          get_time() const { return time_; }
   string                get_target() const { return target_; }
+
+  //! Mutators
+  void                  set_time(unsigned t) { time_ = t; }
   void                  set_target(const string &t) { target_ = t; }
 
-  virtual bool is_pointer_event() { return false; }
-  virtual bool is_key_event() { return false; }
-  virtual bool is_window_event() { return false; }
+  virtual bool          is_pointer_event() { return false; }
+  virtual bool          is_key_event() { return false; }
+  virtual bool          is_window_event() { return false; }
 
   //! The ref_cnt var so that we can have handles to this type of object.
   int ref_cnt;
@@ -81,26 +85,31 @@ public:
     BUTTON_5_E        = 1 << 8
   };
 
-  PointerEvent();
+  PointerEvent(unsigned int state = 0, 
+               int x = 0, 
+               int y = 0,
+               const string &target = "", 
+               unsigned int time = 0);
+
   virtual ~PointerEvent();
 
-  virtual bool is_pointer_event() { return true; }
+  virtual bool          is_pointer_event() { return true; }
 
   //! Accessors
-  unsigned int get_pointer_state() const { return p_state_; }
-  int get_x() const { return x_; }
-  int get_y() const { return y_; }
+  unsigned int          get_pointer_state() const { return p_state_; }
+  int                   get_x() const { return x_; }
+  int                   get_y() const { return y_; }
 
   //! Mutators
-  void set_pointer_state(unsigned int s) { p_state_ = s; }
-  void set_x(int x) { x_ = x; }
-  void set_y(int y) { y_ = y; }
+  void                  set_pointer_state(unsigned int s) { p_state_ = s; }
+  void                  set_x(int x) { x_ = x; }
+  void                  set_y(int y) { y_ = y; }
 private:
   unsigned int          p_state_;
   
   //! The event's window x and y  coordinates
-  int                      x_;
-  int                      y_;
+  int                   x_;
+  int                   y_;
 };
 
 
@@ -125,22 +134,27 @@ public:
     M4_E              = 1 << 7,
   };
 
-  KeyEvent();
+  KeyEvent(unsigned int key_state = 0,
+           unsigned int modifiers = 0,
+           int keyval = 0,
+           const string &key_string = "",
+           const string &target = "",
+           unsigned int time = 0);
   virtual ~KeyEvent();
 
-  virtual bool is_key_event() { return true; }
+  virtual bool          is_key_event() { return true; }
 
   //! Accessors
-  unsigned int    get_key_state() const { return k_state_; }
-  unsigned int    get_modifiers() const { return modifiers_; }
-  int             get_keyval() const { return keyval_; }
-  string          get_key_string() const { return key_str_; }
+  unsigned int          get_key_state() const { return k_state_; }
+  unsigned int          get_modifiers() const { return modifiers_; }
+  int                   get_keyval() const { return keyval_; }
+  string                get_key_string() const { return key_str_; }
 
   //! Mutators
-  void set_key_state(unsigned int s) { k_state_ = s; }
-  void set_modifiers(unsigned int m) { modifiers_ = m; }
-  void set_keyval(int kv) { keyval_ = kv; }
-  void set_key_string(string ks) { key_str_ = ks; }
+  void                  set_key_state(unsigned int s) { k_state_ = s; }
+  void                  set_modifiers(unsigned int m) { modifiers_ = m; }
+  void                  set_keyval(int kv) { keyval_ = kv; }
+  void                  set_key_string(string ks) { key_str_ = ks; }
 
 private:
   unsigned int         k_state_;
@@ -162,16 +176,18 @@ public:
     REDRAW_E          = 1 << 6
   };
 
-  WindowEvent();
+  WindowEvent(unsigned int state = 0, 
+              const string &target = "",
+              unsigned int time = 0);
   virtual ~WindowEvent();
 
-  virtual bool is_window_event() { return true; }
+  virtual bool          is_window_event() { return true; }
   
   //! Accessors
-  unsigned int get_window_state() const { return w_state_; }
+  unsigned int          get_window_state() const { return w_state_; }
 
   //! Mutators
-  void set_window_state(unsigned int ws) { w_state_ = ws; }
+  void                  set_window_state(unsigned int ws) { w_state_ = ws; }
 
 private:
   unsigned int          w_state_;
@@ -182,7 +198,6 @@ public:
   QuitEvent() {}
   virtual ~QuitEvent() {}
 };
-
 
 
 typedef Handle<BaseEvent> event_handle_t;

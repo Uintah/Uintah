@@ -25,78 +25,18 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : BaseEvent.h
-//    Author : McKay Davis, Martin Cole
-//    Date   : Wed May 24 07:58:40 2006
+//    File   : X11Lock.h
+//    Author : McKay Davis
+//    Date   : Thu Jun  1 19:28 MDT 2006
 
-
-#include <Core/Events/BaseEvent.h>
-#include <string>
+#include <Core/Thread/ThreadLock.h>
 
 namespace SCIRun {
-    
-using namespace std;
-
-static int count = 0;
-
-BaseEvent::BaseEvent(const string &target, 
-                     unsigned int time) :
-    time_(time ? time : count++),
-    target_(target)
-{
+  class X11Lock {
+  public:
+    static void         lock();
+    static void         unlock();
+  private:
+    static ThreadLock   lock_;
+  };
 }
-
-BaseEvent::~BaseEvent()
-{
-}
-
-PointerEvent::PointerEvent(unsigned int state,
-                           int x,
-                           int y,
-                           const string &target,
-                           unsigned int time) :
-  BaseEvent(target, time),
-  p_state_(state),
-  x_(x),
-  y_(y)
-{
-}
-
-PointerEvent::~PointerEvent()
-{
-}
-
-KeyEvent::KeyEvent(unsigned int key_state,
-                   unsigned int modifiers,
-                   int keyval,
-                   const string &key_string,
-                   const string &target,
-                   unsigned int time) :
-  BaseEvent(target, time),
-  k_state_(key_state),
-  modifiers_(modifiers),
-  keyval_(keyval),
-  key_str_(key_string)
-{
-}
-
-KeyEvent::~KeyEvent()
-{
-}
-
-WindowEvent::WindowEvent(unsigned int state,
-                         const string &target,
-                         unsigned int time) :
-  BaseEvent(target, time),
-  w_state_(state)
-{
-}
-
-WindowEvent::~WindowEvent()
-{
-}
-
-    
-
-} // namespace SCIRun
-

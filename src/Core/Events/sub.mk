@@ -37,6 +37,7 @@ SRCS     += \
 	$(SRCDIR)/BaseEvent.cc		\
 	$(SRCDIR)/EventManager.cc	\
 	$(SRCDIR)/OpenGLViewer.cc	\
+	$(SRCDIR)/X11EventSpawner.cc	\
 
 SUBDIRS := $(SRCDIR)/Tools
 include $(SCIRUN_SCRIPTS)/recurse.mk
