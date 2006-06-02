@@ -243,7 +243,8 @@ PersistentTypeID SearchGrid::type_id("SearchGrid", "Datatype", maker);
 
 SearchGrid::SearchGrid()
   : SearchGridBase(1, 1, 1, Point(0.0, 0.0, 0.0), Point(1.0, 1.0, 1.0)),
-    vals_(0)
+    vals_(0),
+    vals_size_(0)
 {
 }
 
@@ -252,7 +253,9 @@ SearchGrid::SearchGrid(const SearchGridConstructor &c)
   : SearchGridBase(c.ni_, c.nj_, c.nk_, c.transform_)
 {
   accum_.resize(ni_ * nj_ * nk_ + 1);
-  vals_ = new under_type[c.size_];
+  vals_size_ = c.size_;
+  vals_ = new under_type[vals_size_];
+  
 
   int counter = 0;
   accum_[0] = 0;
@@ -284,10 +287,22 @@ SearchGrid::SearchGrid(const SearchGridConstructor &c)
 }
 
 
+SearchGrid::SearchGrid(const SearchGrid &c)
+  : SearchGridBase(c.ni_, c.nj_, c.nk_, c.transform_),
+    accum_(c.accum_),
+    vals_size_(c.vals_size_)
+{
+  vals_ = new under_type[vals_size_];
+  for (unsigned int i = 0; i < vals_size_; i++)
+  {
+    vals_[i] = c.vals_[i];
+  }
+}
+
 
 SearchGrid::~SearchGrid()
 {
-  if (vals_) { delete vals_; } vals_ = 0;
+  if (vals_) { delete vals_; } vals_ = 0; vals_size_ = 0;
 }
 
 

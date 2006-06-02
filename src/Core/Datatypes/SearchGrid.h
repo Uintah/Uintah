@@ -124,6 +124,7 @@ class SCISHARE SearchGrid : public Datatype, public SearchGridBase
 {
 public:
   SearchGrid(const SearchGridConstructor &c);
+  SearchGrid(const SearchGrid &c);
   virtual ~SearchGrid();
 
   bool lookup(under_type **begin, under_type **end, const Point &p) const;
@@ -136,6 +137,7 @@ protected:
 
   std::vector<unsigned int> accum_;
   under_type *vals_;
+  unsigned int vals_size_;
 
   // Returns a SearchGrid
   static Persistent *maker() { return new SearchGrid(); }
