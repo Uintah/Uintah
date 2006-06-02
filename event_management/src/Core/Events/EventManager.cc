@@ -82,10 +82,7 @@ EventManager::run()
 {
   event_handle_t event;
   do {
-    Thread::yield();
     event = tm_.propagate_event(mailbox_.receive());
-
-    cerr << "got an event, who was created at " << event->get_time() << endl;
 
     // If the event has a specific target mailbox,
     if (!event->get_target().empty()) {

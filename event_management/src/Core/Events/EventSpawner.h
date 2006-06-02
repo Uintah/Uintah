@@ -25,41 +25,18 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : X11EventSpawner.h
+//    File   : EventSpawner.h
 //    Author : McKay Davis
-//    Date   : Thu Jun  1 19:28 MDT 2006
+//    Date   : Fri Jun  2 13:41:27 MDT 2006
 
-#ifndef CORE_EVENTS_X11EVENTSPAWNER_H
-#define CORE_EVENTS_X11EVENTSPAWNER_H
-
-#include <Core/Thread/Runnable.h>
-#include <Core/Events/BaseEvent.h>
-#include <Core/Events/EventSpawner.h>
-#include <X11/Xlib.h>
+#ifndef CORE_EVENTS_EVENTSPAWNER_H
+#define CORE_EVENTS_EVENTSPAWNER_H
 
 namespace SCIRun {
-   
-  class X11EventSpawner : public Runnable, public EventSpawner {
-  public:
-    X11EventSpawner(Display *, Window);
-    ~X11EventSpawner();
-    virtual void                run();
-  private:
-    typedef event_handle_t (translate_func_t)(XEvent *);
-    typedef map<unsigned int, translate_func_t *> translate_map_t;
-
-    static translate_func_t     do_KeyEvent;
-    static translate_func_t     do_ButtonEvent;
-    static translate_func_t     do_PointerMotion;
-    static translate_func_t     do_Expose;
-    static translate_func_t     do_Enter;
-    static translate_func_t     do_Leave;
-    static translate_func_t     do_Configure;
-
-    translate_map_t             translate_event_;
-    Display *                   display_;
-    Window                      window_;
-    long                        mask_;
+  class EventSpawner {
+  protected:
+    EventSpawner() {}
+    virtual ~EventSpawner() {}
   };
 }
 
