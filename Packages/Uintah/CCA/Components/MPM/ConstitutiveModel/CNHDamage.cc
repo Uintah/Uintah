@@ -677,11 +677,7 @@ CNHDamage::computeStressTensor(const PatchSubset* patches,
   double Bnl[3][24];
   double Kmatrix[24][24];
   int dof[24];
-#ifdef HAVE_PETSC
-  PetscScalar v[576];
-#else
   double v[576];
-#endif
 
   for(int pp=0;pp<patches->size();pp++){
     const Patch* patch = patches->get(pp);

@@ -21,15 +21,11 @@ using namespace std;
 
 MPMPetscSolver::MPMPetscSolver()
 {
-#ifdef HAVE_PETSC
   d_A = 0;
   d_B = 0;
   d_diagonal = 0;
   d_x = 0;
   d_t = 0;
-#else
-  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::MPMPetscSolver()!", __FILE__, __LINE__ );
-#endif
 }
 
 MPMPetscSolver::~MPMPetscSolver()
@@ -39,7 +35,6 @@ MPMPetscSolver::~MPMPetscSolver()
 
 void MPMPetscSolver::initialize()
 {
-#ifdef HAVE_PETSC
   // store in a vector so we can customize the settings easily
   vector<char*> args;
 #  ifdef DEBUG_PETSC
@@ -71,9 +66,6 @@ void MPMPetscSolver::initialize()
     }
   }
   PetscInitialize(&argc,&argv, PETSC_NULL, PETSC_NULL);
-#else
-  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::initialize()!", __FILE__, __LINE__ );
-#endif
 }
 
 void 
@@ -155,7 +147,6 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
 
 void MPMPetscSolver::solve()
 {
-#ifdef HAVE_PETSC
   PC          precond;           
   KSP         solver;
 #  if 0
@@ -183,9 +174,6 @@ void MPMPetscSolver::solve()
   PetscPrintf(PETSC_COMM_WORLD,"Iterations %d\n",its);
 #  endif
   KSPDestroy(solver);
-#else
-  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::solve()!", __FILE__, __LINE__ );
-#endif
 }
 
 void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
@@ -194,11 +182,10 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
   int me = d_myworld->myrank();
   int numlrows = d_numNodes[me];
 
-#ifdef HAVE_PETSC
   int numlcolumns = numlrows;
   int globalrows = (int)d_totalNodes;
   int globalcolumns = (int)d_totalNodes; 
-#endif
+
   int *diag, *onnz;
   diag = new int[numlrows];
   onnz = new int[numlrows];
@@ -220,7 +207,6 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
     cerr << "diag[" << i << "] = " << diag[i] << endl;
 #endif
 
-#ifdef HAVE_PETSC
   PetscTruth exists;
   PetscObjectExists((PetscObject)d_A,&exists);
 #if 0
@@ -269,9 +255,6 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
     VecDuplicate(d_B,&d_diagonal);
     VecDuplicate(d_B,&d_x);
     VecDuplicate(d_B,&d_t);
-#else
-  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::createMatrix(...)!", __FILE__, __LINE__ );
-#endif
 
   delete[] diag;
 }
@@ -279,7 +262,6 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 
 void MPMPetscSolver::destroyMatrix(bool recursion)
 {
-#ifdef HAVE_PETSC
   if (recursion) {
     MatZeroEntries(d_A);
     PetscScalar zero = 0.;
@@ -306,70 +288,44 @@ void MPMPetscSolver::destroyMatrix(bool recursion)
       VecDestroy(d_t);
     }
   }
-#else
-  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::destroyMatrix(...)!", __FILE__, __LINE__ );
-#endif
   if (recursion == false)
     d_DOF.clear();
 }
 
 void MPMPetscSolver::flushMatrix()
 {
-#ifdef HAVE_PETSC
   MatAssemblyBegin(d_A,MAT_FLUSH_ASSEMBLY);
   MatAssemblyEnd(d_A,MAT_FLUSH_ASSEMBLY);
-#else
-  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::flushMatrix(...)!", __FILE__, __LINE__ );
-#endif
 }
 
 void MPMPetscSolver::fillVector(int i,double v)
 {
-#ifdef HAVE_PETSC
   PetscScalar value = v;
   VecSetValues(d_B,1,&i,&value,INSERT_VALUES);
-#else
-  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::fillVector(...)!", __FILE__, __LINE__ );
-#endif
 }
 
 void MPMPetscSolver::fillTemporaryVector(int i,double v)
 {
-#ifdef HAVE_PETSC
   PetscScalar value = v;
   VecSetValues(d_t,1,&i,&value,INSERT_VALUES);
-#else
-  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::fillTemporaryVector(...)!", __FILE__, __LINE__ );
-#endif
 }
 
 void MPMPetscSolver::assembleVector()
 {
-#ifdef HAVE_PETSC
   VecAssemblyBegin(d_B);
   VecAssemblyEnd(d_B);
-#else
-  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::assembleVector(...)!", __FILE__, __LINE__ );
-#endif
 }
 
 void MPMPetscSolver::assembleTemporaryVector()
 {
-#ifdef HAVE_PETSC
   VecAssemblyBegin(d_t);
   VecAssemblyEnd(d_t);
-#else
-  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::assembleTemporaryVector(...)!", __FILE__, __LINE__ );
-#endif
 }
 
 void MPMPetscSolver::applyBCSToRHS()
 {
-#ifdef HAVE_PETSC
   MatMultAdd(d_A,d_t,d_B,d_B);
-#else
-  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::applyBCSToRHS(...)!", __FILE__, __LINE__ );
-#endif
+
 }
 
 void MPMPetscSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
@@ -379,7 +335,6 @@ void MPMPetscSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
 
 void MPMPetscSolver::removeFixedDOF(int num_nodes)
 {
-#ifdef HAVE_PETSC
   IS is;
   int* indices;
   int in = 0;
@@ -438,22 +393,16 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
   MatDiagonalSet(d_A,d_diagonal,INSERT_VALUES);
   MatAssemblyBegin(d_A,MAT_FINAL_ASSEMBLY);
   MatAssemblyEnd(d_A,MAT_FINAL_ASSEMBLY);
-#else
-  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::removeFixedDOF(...)!", __FILE__, __LINE__ );
-#endif
 }
 
 void MPMPetscSolver::finalizeMatrix()
 {
-#ifdef HAVE_PETSC
   MatAssemblyBegin(d_A,MAT_FINAL_ASSEMBLY);
   MatAssemblyEnd(d_A,MAT_FINAL_ASSEMBLY);
-#endif
 }
 
 int MPMPetscSolver::getSolution(vector<double>& xPetsc)
 {
-#ifdef HAVE_PETSC
   int nlocal,ierr,begin,end;
   double* x;
   VecGetLocalSize(d_x,&nlocal);
@@ -466,14 +415,10 @@ int MPMPetscSolver::getSolution(vector<double>& xPetsc)
   }
   VecRestoreArray(d_x,&x);
   return begin;
-#else
-  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::getSolution(...)!", __FILE__, __LINE__ );
-#endif
 }
 
 int MPMPetscSolver::getRHS(vector<double>& QPetsc)
 {
-#ifdef HAVE_PETSC
   int nlocal,ierr,begin,end;
   double* q;
   VecGetLocalSize(d_B,&nlocal);
@@ -486,7 +431,4 @@ int MPMPetscSolver::getRHS(vector<double>& QPetsc)
   }
   VecRestoreArray(d_B,&q);
   return begin;
-#else
-  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::getRHS(...)!", __FILE__, __LINE__ );
-#endif
 }
