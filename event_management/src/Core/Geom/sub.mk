@@ -100,11 +100,13 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/SpotLight.cc		    		\
 	$(SRCDIR)/ShaderProgramARB.cc                   \
 	$(SRCDIR)/TextRenderer.cc 	    		\
+	$(SRCDIR)/FontManager.cc 	    		\
 	$(SRCDIR)/TextureObj.cc 	    		\
 	$(SRCDIR)/TexSquare.cc		    		\
 	$(SRCDIR)/TimeGrid.cc		    		\
 	$(SRCDIR)/TkOpenGLContext.cc	    		\
 	$(SRCDIR)/View.cc		    		\
+	$(SRCDIR)/X11Lock.cc		    		\
 	$(SRCDIR)/tGrid.cc		    		\
 	$(SRCDIR)/templates.cc
 

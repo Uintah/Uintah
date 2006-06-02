@@ -86,8 +86,8 @@ TextureObj::set_color(float rgba[4])
 void
 TextureObj::pad_to_power_of_2()
 {
-  if (ShaderProgramARB::texture_non_power_of_two()) 
-    return;
+  //  if (ShaderProgramARB::texture_non_power_of_two()) 
+  //    return;
   if (!nrrd_handle_.get_rep() || !nrrd_handle_->nrrd_)
     return;
   if (IsPowerOf2(nrrd_handle_->nrrd_->axis[1].size) &&
@@ -99,8 +99,59 @@ TextureObj::pad_to_power_of_2()
 			Pow2(nrrd_handle_->nrrd_->axis[1].size)-1, 
 			Pow2(nrrd_handle_->nrrd_->axis[2].size)-1 };
 
-  if (nrrdPad_nva(nout_handle->nrrd_, nrrd_handle_->nrrd_,
-		  minp, maxp, nrrdBoundaryBleed, 1)) {
+  NrrdResampleInfo *info = nrrdResampleInfoNew();
+  double p[NRRD_KERNEL_PARMS_NUM];
+  memset(p, 0, NRRD_KERNEL_PARMS_NUM * sizeof(double));
+  p[0] = 1.0;
+  info->boundary = nrrdBoundaryBleed;
+  info->type = nrrd_handle_->nrrd_->type;
+  info->renormalize = AIR_FALSE;
+
+  info->kernel[0] = 0;
+  info->kernel[1] = nrrdKernelBox;
+  info->kernel[2] = nrrdKernelBox;
+  info->samples[0] = nrrd_handle_->nrrd_->axis[0].size;
+  info->samples[1] = width_ = Pow2(nrrd_handle_->nrrd_->axis[1].size);
+  info->samples[2] = height_ = Pow2(nrrd_handle_->nrrd_->axis[2].size);
+  memcpy(info->parm[0], p, NRRD_KERNEL_PARMS_NUM * sizeof(double));
+  memcpy(info->parm[1], p, NRRD_KERNEL_PARMS_NUM * sizeof(double));
+  memcpy(info->parm[2], p, NRRD_KERNEL_PARMS_NUM * sizeof(double));
+
+  Nrrd * nin = nrrd_handle_->nrrd_;
+
+  for (int a = 0; a < nin->dim; ++a) {
+    nrrdAxisInfoMinMaxSet(nin, a, nin->axis[a].center ? 
+                          nin->axis[a].center : nrrdDefaultCenter);
+    
+    info->min[a] = nin->axis[a].min;
+    info->max[a] = nin->axis[a].max;
+  }
+
+
+//   info->min[0] = 0;
+//   info->min[1] = 0;
+//   info->min[2] = 0;
+//   info->max[0] = nrrd_handle_->nrrd_->axis[0].size;
+//   info->max[1] = nrrd_handle_->nrrd_->axis[1].size;
+//   info->max[2] = nrrd_handle_->nrrd_->axis[2].size1;
+
+
+//   nrrd_handle_->nrrd_->axis[0].min = 0;
+//   nrrd_handle_->nrrd_->axis[0].max = nrrd_handle_->nrrd_->axis[0].size-1;
+
+//   nrrd_handle_->nrrd_->axis[1].min = 0;
+//   nrrd_handle_->nrrd_->axis[1].max = nrrd_handle_->nrrd_->axis[1].size-1;
+
+//   nrrd_handle_->nrrd_->axis[2].min = 0;
+//   nrrd_handle_->nrrd_->axis[2].max = nrrd_handle_->nrrd_->axis[2].size-1;
+
+
+
+  if (nrrdSpatialResample(nout_handle->nrrd_, nrrd_handle_->nrrd_, info)) {
+
+
+//   if (nrrdPad_nva(nout_handle->nrrd_, nrrd_handle_->nrrd_,
+// 		  minp, maxp, nrrdBoundaryBleed, 1)) {
     char *err = biffGetDone(NRRD);
     string error = string("Trouble resampling: ") + err;
     free (err);
@@ -154,6 +205,8 @@ TextureObj::bind()
   glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
   glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+  glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   CHECK_OPENGL_ERROR();
 
   glTexImage2D(GL_TEXTURE_2D, 0, pixtype,
@@ -188,7 +241,13 @@ TextureObj::draw(int n, Point *vertices, float *tex_coords)
   glEnable(GL_TEXTURE_2D);
   glColor4fv(color_);
             
-  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_REPLACE);
+  //  glColor4f(0.8, 0.0, 0.5, 1.0);//color_);
+  glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
+
+  //  glMatrixMode(GL_TEXTURE);
+  //  glPushMatrix();
+  //  glLoadIdentity();
+  //  glScaled(1.0, -1.0, 1.0);
 
   if (n == 4) {
     float x_scale = double(width_ )/float(nrrd_handle_->nrrd_->axis[1].size);
@@ -202,6 +261,8 @@ TextureObj::draw(int n, Point *vertices, float *tex_coords)
     }
     glEnd();
   }
+
+  //  glPopMatrix();
 
   glDisable(GL_TEXTURE_2D);
   CHECK_OPENGL_ERROR();
