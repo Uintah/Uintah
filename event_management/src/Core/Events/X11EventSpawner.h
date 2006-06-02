@@ -25,78 +25,41 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : BaseEvent.h
-//    Author : McKay Davis, Martin Cole
-//    Date   : Wed May 24 07:58:40 2006
+//    File   : X11EventSpawner.h
+//    Author : McKay Davis
+//    Date   : Thu Jun  1 19:28 MDT 2006
 
+#ifndef CORE_EVENTS_X11EVENTSPAWNER_H
+#define CORE_EVENTS_X11EVENTSPAWNER_H
 
+#include <Core/Thread/Runnable.h>
 #include <Core/Events/BaseEvent.h>
-#include <string>
+#include <X11/Xlib.h>
 
 namespace SCIRun {
-    
-using namespace std;
+   
+  class X11EventSpawner : public Runnable {
+  public:
+    X11EventSpawner(Display *, Window);
+    ~X11EventSpawner();
+    virtual void                run();
+  private:
+    typedef event_handle_t (translate_func_t)(XEvent *);
+    typedef map<unsigned int, translate_func_t *> translate_map_t;
 
-static int count = 0;
+    static translate_func_t     do_KeyEvent;
+    static translate_func_t     do_ButtonEvent;
+    static translate_func_t     do_PointerMotion;
+    static translate_func_t     do_Expose;
+    static translate_func_t     do_Enter;
+    static translate_func_t     do_Leave;
+    static translate_func_t     do_Configure;
 
-BaseEvent::BaseEvent(const string &target, 
-                     unsigned int time) :
-    time_(time ? time : count++),
-    target_(target)
-{
+    translate_map_t             translate_event_;
+    Display *                   display_;
+    Window                      window_;
+    long                        mask_;
+  };
 }
 
-BaseEvent::~BaseEvent()
-{
-}
-
-PointerEvent::PointerEvent(unsigned int state,
-                           int x,
-                           int y,
-                           const string &target,
-                           unsigned int time) :
-  BaseEvent(target, time),
-  p_state_(state),
-  x_(x),
-  y_(y)
-{
-}
-
-PointerEvent::~PointerEvent()
-{
-}
-
-KeyEvent::KeyEvent(unsigned int key_state,
-                   unsigned int modifiers,
-                   int keyval,
-                   const string &key_string,
-                   const string &target,
-                   unsigned int time) :
-  BaseEvent(target, time),
-  k_state_(key_state),
-  modifiers_(modifiers),
-  keyval_(keyval),
-  key_str_(key_string)
-{
-}
-
-KeyEvent::~KeyEvent()
-{
-}
-
-WindowEvent::WindowEvent(unsigned int state,
-                         const string &target,
-                         unsigned int time) :
-  BaseEvent(target, time),
-  w_state_(state)
-{
-}
-
-WindowEvent::~WindowEvent()
-{
-}
-
-    
-
-} // namespace SCIRun
-
+#endif
