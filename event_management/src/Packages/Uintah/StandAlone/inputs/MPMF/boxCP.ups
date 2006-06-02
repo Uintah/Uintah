@@ -4,56 +4,56 @@
 <Uintah_specification>
 
    <Meta>
-	<title>Crack propagation in a box with an inclined elliptic crack under tension</title>
+       <title>Crack propagation in a box with an inclined elliptic crack under tension</title>
    </Meta>
 
    <Time>
-	<maxTime>100.0e-6</maxTime>
-	<initTime>0.0</initTime>
-	<delt_min>0.0</delt_min>
-	<delt_max>1.5e-6</delt_max>
-	<timestep_multiplier>0.8</timestep_multiplier>
+       <maxTime>100.0e-6</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.0</delt_min>
+       <delt_max>1.5e-6</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>boxCP.uda</filebase>
-	<outputInterval>1.5e-6</outputInterval>
+       <outputInterval>1.5e-6</outputInterval>
         <save label = "p.x"/>
         <save label = "p.volume"/>
         <save label = "g.mass"/>
         <save label = "G.mass"/>
         <save_crack_geometry>true</save_crack_geometry>
 
-	<checkpoint cycle = "2" interval = "15e-6"/>
+       <checkpoint cycle = "2" interval = "15e-6"/>
    </DataArchiver>
 
     <MPM>
-	<time_integrator>fracture</time_integrator>
-	<nodes8or27>8</nodes8or27>
+       <time_integrator>fracture</time_integrator>
+       <nodes8or27>8</nodes8or27>
         <calculate_fracture_parameters>true</calculate_fracture_parameters>
         <do_crack_propagation>true</do_crack_propagation>
         <dadx>0.5</dadx>
     </MPM>
 
     <PhysicalConstants>
-	<gravity>[0,0,0]</gravity>
+       <gravity>[0,0,0]</gravity>
     </PhysicalConstants>
 
     <MaterialProperties>
-	<MPM>
-	    <material>
-		<density>7900</density>
-		<constitutive_model type="hypo_elastic"> 
-		   <G>77e+9</G>
-		   <K>165e+9</K>
+       <MPM>
+           <material>
+              <density>7900</density>
+              <constitutive_model type="hypo_elastic"> 
+                 <G>77e+9</G>
+                 <K>165e+9</K>
                    <fracture_toughness_curve>
                      <point>
                        <Vc>0.</Vc>
                        <KIc>20e6</KIc>
                      </point>
                    </fracture_toughness_curve>
-	        </constitutive_model>
-		<thermal_conductivity>1.0</thermal_conductivity>
-		<specific_heat>5</specific_heat>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
                 <geom_object>
                   <difference>
                      <box label = "outer box">
@@ -85,16 +85,16 @@
                       </quad>
                    </crack_segments>
                 </crack>
-	    </material>
+           </material>
 
-	    <contact>
-	      <type>null</type>
-	      <materials>[0]</materials>
-	    </contact>
-	</MPM>
+           <contact>
+             <type>null</type>
+             <materials>[0]</materials>
+           </contact>
+       </MPM>
 
     </MaterialProperties>
-	
+       
     <Grid>
         <Level>
             <Box label = "1">

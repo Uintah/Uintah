@@ -38,9 +38,11 @@ namespace Uintah {
 
     virtual void destroyMatrix(bool recursion) = 0;
     
-    virtual void fillMatrix(int, int, double) = 0;
+    virtual void fillMatrix(int, int[], int, int j[],double v[]) = 0;
     
     virtual void fillVector(int, double) = 0;
+
+    virtual void fillTemporaryVector(int, double) = 0;
     
     virtual void copyL2G(Array3<int>& l2g, const Patch* patch) = 0;
 
@@ -55,6 +57,10 @@ namespace Uintah {
     virtual int getRHS(vector<double>& QPetsc) = 0;
 
     virtual void assembleVector() = 0;
+
+    virtual void assembleTemporaryVector() = 0;
+
+    virtual void applyBCSToRHS() = 0;
 
     set<int> d_DOF;
   };

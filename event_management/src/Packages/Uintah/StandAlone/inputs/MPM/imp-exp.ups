@@ -62,36 +62,36 @@
        <Face side = "x-">
          <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
        </Face>
-	<Face side = "x+">
-	<BCType id = "all" var = "symmetry" label = "Symmetric">
-	</BCType>
-	</Face>
-	<Face side = "y-">
-	<BCType id = "all" var = "symmetry" label = "Symmetric">
-	</BCType>
-	</Face>
-	<Face side = "y+">
-	<BCType id = "all" var = "symmetry" label = "Symmetric">
-	</BCType>
-	</Face>
-	<Face side = "z-">
-	<BCType id = "all" var = "symmetry" label = "Symmetric">
-	</BCType>
-	</Face>
-	<Face side = "z+">
-	<BCType id = "all" var = "symmetry" label = "Symmetric">
-	</BCType>
-	</Face>
-	</BoundaryConditions>
+       <Face side = "x+">
+       <BCType id = "all" var = "symmetry" label = "Symmetric">
+       </BCType>
+       </Face>
+       <Face side = "y-">
+       <BCType id = "all" var = "symmetry" label = "Symmetric">
+       </BCType>
+       </Face>
+       <Face side = "y+">
+       <BCType id = "all" var = "symmetry" label = "Symmetric">
+       </BCType>
+       </Face>
+       <Face side = "z-">
+       <BCType id = "all" var = "symmetry" label = "Symmetric">
+       </BCType>
+       </Face>
+       <Face side = "z+">
+       <BCType id = "all" var = "symmetry" label = "Symmetric">
+       </BCType>
+       </Face>
+       </BoundaryConditions>
 
-	<Level>
-		<Box label = "1">
-		<lower>[-0.55, 0.00, -0.10]</lower>
-		<upper>[ 0.55, 0.05,  4.10]</upper>
-		<resolution>[22,1,84]</resolution>
-		<patches>[1,1,1]</patches>
-		</Box>
-	</Level>
+       <Level>
+              <Box label = "1">
+              <lower>[-0.55, 0.00, -0.10]</lower>
+              <upper>[ 0.55, 0.05,  4.10]</upper>
+              <resolution>[22,1,84]</resolution>
+              <patches>[1,1,1]</patches>
+              </Box>
+       </Level>
      </Grid>
 
 

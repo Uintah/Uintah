@@ -165,7 +165,7 @@
       <save label="TotalIntEng"/>
       <save label="TotalMass"/>
       <save label="CenterOfMassVelocity"/>
-	<outputInitTimestep/>
+       <outputInitTimestep/>
    </DataArchiver>
 
   <Debug>
@@ -208,14 +208,14 @@
               <norm>     LInfinity  </norm>
               <criteria> Absolute   </criteria>
 
-	     <solver>         hybrid  </solver>
-	     <preconditioner> pfmg    </preconditioner>
-	     <tolerance>      1.e-10  </tolerance>
-	     <maxiterations>  7500    </maxiterations>
-	     <npre>           1       </npre>
-	     <npost>          1       </npost>
-	     <skip>           0       </skip>
-	     <jump>           0       </jump>
+            <solver>         hybrid  </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <tolerance>      1.e-10  </tolerance>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           0       </skip>
+            <jump>           0       </jump>
            </Parameters>
         </ImplicitSolver> 
 
@@ -260,7 +260,7 @@
     <Models>
        <Model type="PassiveScalar">
         <material>BackgroundGas</material>
-	 <scalar name="f">
+        <scalar name="f">
         <test_conservation>       true            </test_conservation>
         <constants>
           <diffusivity>              0.0           </diffusivity>
@@ -285,7 +285,7 @@
             </box>
             <scalar>    1.00   </scalar>
          </geom_object>
-	</scalar>
+       </scalar>
       </Model>
     </Models>      
 </Uintah_specification>

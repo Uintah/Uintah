@@ -6,16 +6,16 @@
 <Uintah_specification>
 
    <Meta>
-	<title></title>
+       <title></title>
    </Meta>
 
    <Time>
-	<maxTime>10</maxTime>
-	<initTime>0.0</initTime>
-	<delt_min>0.05</delt_min>
-	<delt_max>0.8</delt_max>
-	<delt_init>0.2</delt_init>
-	<timestep_multiplier>1.0</timestep_multiplier>
+       <maxTime>10</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.05</delt_min>
+       <delt_max>0.8</delt_max>
+       <delt_init>0.2</delt_init>
+       <timestep_multiplier>1.0</timestep_multiplier>
    </Time>
 
    <DataArchiver>
@@ -47,67 +47,67 @@
 
 
     <PhysicalConstants>
-	<gravity>[0,0,0]</gravity>
+       <gravity>[0,0,0]</gravity>
     </PhysicalConstants>
 
     <MaterialProperties>
-	<MPM>
-	    <material>
+       <MPM>
+           <material>
                 <density>1.01</density>
                 <thermal_conductivity>237.0</thermal_conductivity>
                 <specific_heat>903</specific_heat>
                 <heat_transfer_coefficient>111</heat_transfer_coefficient>
-		<constitutive_model type="comp_neo_hook"> 
+              <constitutive_model type="comp_neo_hook"> 
                     <bulk_modulus>2083.2</bulk_modulus>
                     <shear_modulus>1041.6</shear_modulus>
-	        </constitutive_model>
-		<geom_object>
-		    <file>
-			<name>vesselslice25_512.pts</name>
-		    </file>
-		    <res>[8,8,1]</res>
-		    <velocity>[0.,0.,0.]</velocity>
-		    <temperature>250.</temperature>
- 		</geom_object>
-	    </material>
-	    <material>
+               </constitutive_model>
+              <geom_object>
+                  <file>
+                     <name>vesselslice25_512.pts</name>
+                  </file>
+                  <res>[8,8,1]</res>
+                  <velocity>[0.,0.,0.]</velocity>
+                  <temperature>250.</temperature>
+               </geom_object>
+           </material>
+           <material>
                 <density>1.0</density>
                 <thermal_conductivity>237.0</thermal_conductivity>
                 <specific_heat>903</specific_heat>
                 <heat_transfer_coefficient>111</heat_transfer_coefficient>
-		<constitutive_model type="comp_neo_hook"> 
+              <constitutive_model type="comp_neo_hook"> 
                     <bulk_modulus>1041.6</bulk_modulus>
                     <shear_modulus>520.8</shear_modulus>
-	        </constitutive_model>
-		<geom_object>
-		    <file>
-			<name>collagenslice25_512.pts</name>
-		    </file>
-		    <res>[8,8,1]</res>
-		    <velocity>[0.,0.,0.]</velocity>
-		    <temperature>350.</temperature>
- 		</geom_object>
-	    </material>
-	    <material>
+               </constitutive_model>
+              <geom_object>
+                  <file>
+                     <name>collagenslice25_512.pts</name>
+                  </file>
+                  <res>[8,8,1]</res>
+                  <velocity>[0.,0.,0.]</velocity>
+                  <temperature>350.</temperature>
+               </geom_object>
+           </material>
+           <material>
                 <density>1.02</density>
                 <thermal_conductivity>237.0</thermal_conductivity>
                 <specific_heat>903</specific_heat>
                 <heat_transfer_coefficient>111</heat_transfer_coefficient>
-		<constitutive_model type="comp_neo_hook"> 
+              <constitutive_model type="comp_neo_hook"> 
                     <bulk_modulus>1041.6</bulk_modulus>
                     <shear_modulus>520.8</shear_modulus>
-	        </constitutive_model>
+               </constitutive_model>
                 <is_rigid>true</is_rigid>
-		<geom_object>
+              <geom_object>
                     <box label="gp2">
                         <min>[  0.0,   537.6,   24]</min>
                         <max>[  537.6, 546.0 ,  25]</max>
                     </box>
-		    <res>[8,8,1]</res>
-		    <velocity>[0., 5.376, 0.]</velocity>
-		    <temperature>340.</temperature>
- 		</geom_object>
-	    </material>
+                  <res>[8,8,1]</res>
+                  <velocity>[0., 5.376, 0.]</velocity>
+                  <temperature>340.</temperature>
+               </geom_object>
+           </material>
 
             <contact>
                <type>rigid</type>
@@ -116,19 +116,19 @@
                <materials>[1,2,3]</materials>
             </contact>
 
-	</MPM>
+       </MPM>
 
     </MaterialProperties>
-	
+       
     <Grid>
-	<Level>
-	    <Box label="1">
-		<lower>[ -8.4,  0,       24]</lower>
-		<upper>[546.0,  621.6,   25]</upper>
-	        <resolution>[66, 74,  1]</resolution>
-		<patches>[1,1,1]</patches>
-	    </Box>
-	</Level>
+       <Level>
+           <Box label="1">
+              <lower>[ -8.4,  0,       24]</lower>
+              <upper>[546.0,  621.6,   25]</upper>
+               <resolution>[66, 74,  1]</resolution>
+              <patches>[1,1,1]</patches>
+           </Box>
+       </Level>
     <BoundaryConditions>
       <Face side = "x-">
         <BCType id = "all" var = "Dirichlet" label = "Velocity">
@@ -159,7 +159,7 @@
 
     
     <InitialConditions>
-	<MPM> </MPM>
+       <MPM> </MPM>
     </InitialConditions>
 
 </Uintah_specification>

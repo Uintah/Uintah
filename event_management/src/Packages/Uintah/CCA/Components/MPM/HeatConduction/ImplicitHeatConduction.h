@@ -8,6 +8,7 @@
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/Core/Grid/LevelP.h>
 #include <vector>
+#include <string>
 #include <math.h>
 
 namespace Uintah {
@@ -16,8 +17,7 @@ namespace Uintah {
   class MPMFlags;
   class DataWarehouse;
   class ProcessorGroup;
-  class MPMPetscSolver;
-  class SimpleSolver;
+  class Solver;
 
   
   class ImplicitHeatConduction {
@@ -26,7 +26,7 @@ namespace Uintah {
     ImplicitHeatConduction(SimulationStateP& ss,MPMLabel* lb, MPMFlags* mflags);
     ~ImplicitHeatConduction();
 
-    void problemSetup();
+    void problemSetup(std::string solver_type);
 
     void scheduleFormHCStiffnessMatrix( SchedulerP&, const PatchSet*,
                                         const MaterialSet*);
@@ -121,11 +121,8 @@ namespace Uintah {
     bool do_IHC;
     bool d_HC_transient;
     const PatchSet* d_perproc_patches;
-#ifdef HAVE_PETSC
-    vector<MPMPetscSolver*> d_HC_solver;
-#else
-    vector<SimpleSolver*> d_HC_solver;
-#endif
+
+    vector<Solver*> d_HC_solver;
 
     SimulationStateP d_sharedState;
     int NGP, NGN;

@@ -59,9 +59,9 @@ AMRSolver::readParameters(ProblemSpecP& params,
       param->getWithDefault("solver", p->solverTitle, "smg");
       param->getWithDefault("preconditioner", p->precondTitle, "diagonal");
       param->getWithDefault("tolerance", p->tolerance, 1.e-10);
-      param->getWithDefault("maxIterations", p->maxIterations, 75);
-      param->getWithDefault("nPre", p->nPre, 1);
-      param->getWithDefault("nPost", p->nPost, 1);
+      param->getWithDefault("maxiterations", p->maxIterations, 75);
+      param->getWithDefault("npre", p->nPre, 1);
+      param->getWithDefault("npost", p->nPost, 1);
       param->getWithDefault("skip", p->skip, 0);
       param->getWithDefault("jump", p->jump, 0);
       param->getWithDefault("logging", p->logging, 0);

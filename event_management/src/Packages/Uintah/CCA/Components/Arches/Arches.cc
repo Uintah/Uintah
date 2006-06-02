@@ -126,6 +126,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   db->require("grow_dt", d_deltaT);
   db->require("variable_dt", d_variableTimeStep);
   db->require("transport_mixture_fraction", d_calcScalar);
+  if (!d_calcScalar)
+    throw InvalidValue("Density being independent variable or equivalently mixture fraction transport disabled is not supported in current implementation. This option has been left available for input file uniformity.", __FILE__, __LINE__);
   db->getWithDefault("set_initial_condition",d_set_initial_condition,false);
   if (d_set_initial_condition)
     db->require("init_cond_input_file", d_init_inputfile);

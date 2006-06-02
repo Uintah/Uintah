@@ -178,7 +178,7 @@
       </contact>
     </MPM>
   </MaterialProperties>
-	
+       
   <Grid>
     <Level>
       <Box label = "1">
@@ -206,7 +206,7 @@
         <BCType id = "all" var = "Dirichlet" label = "Velocity">
           <value> [0.0,0.0,0.0] </value>
         </BCType>
-      </Face>         	 
+      </Face>                 
       <Face side = "z-">
         <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
       </Face>                  

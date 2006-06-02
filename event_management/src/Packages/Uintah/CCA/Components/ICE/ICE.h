@@ -978,6 +978,7 @@ namespace Uintah {
       
       Advector* d_advector;
       bool d_useCompatibleFluxes;
+      bool d_clampSpecificVolume;
       Turbulence* d_turbulence;
       AnalysisModule* d_analysisModule;
       

@@ -166,11 +166,7 @@ RigidMaterial::computeStressTensor(const PatchSubset* patches,
                                    const MPMMaterial* matl,
                                    DataWarehouse* ,
                                    DataWarehouse* new_dw,
-#ifdef HAVE_PETSC
-                                   MPMPetscSolver* ,
-#else
-                                   SimpleSolver* ,
-#endif
+                                   Solver* ,
                                    const bool )
 
 {

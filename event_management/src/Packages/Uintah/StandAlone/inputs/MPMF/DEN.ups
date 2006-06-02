@@ -4,38 +4,38 @@
 <Uintah_specification>
 
    <Meta>
-	<title>SIF calculation for double-edge-notched specimen under compression</title>
+       <title>SIF calculation for double-edge-notched specimen under compression</title>
    </Meta>
 
    <Time>
-	<maxTime>25e-6</maxTime>
-	<initTime>0.0</initTime>
-	<delt_min>0.0</delt_min>
-	<delt_max>0.5e-6</delt_max>
-	<timestep_multiplier>0.8</timestep_multiplier>
+       <maxTime>25e-6</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.0</delt_min>
+       <delt_max>0.5e-6</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>DEN.uda</filebase>
-	<outputInterval>.5e-6</outputInterval>
-	<save label = "KineticEnergy"/>
-	<save label = "TotalMass"/>
-	<save label = "StrainEnergy"/>
-	<save label = "CenterOfMassPosition"/>
-	<save label = "CenterOfMassVelocity"/>
-	<save label = "p.x"/>
-	<save label = "p.volume"/>
-	<save label = "p.stress"/>
+       <outputInterval>.5e-6</outputInterval>
+       <save label = "KineticEnergy"/>
+       <save label = "TotalMass"/>
+       <save label = "StrainEnergy"/>
+       <save label = "CenterOfMassPosition"/>
+       <save label = "CenterOfMassVelocity"/>
+       <save label = "p.x"/>
+       <save label = "p.volume"/>
+       <save label = "p.stress"/>
         <save label = "p.particleID"/>
-	<save label = "g.mass"/>
-	<save label = "g.stressFS"/>
+       <save label = "g.mass"/>
+       <save label = "g.stressFS"/>
         <save_crack_geometry>true</save_crack_geometry>
 
-	<checkpoint cycle = "2" interval = "5e-6"/>
+       <checkpoint cycle = "2" interval = "5e-6"/>
    </DataArchiver>
 
     <MPM>
-	<time_integrator>fracture</time_integrator>
-	<nodes8or27>8</nodes8or27>
+       <time_integrator>fracture</time_integrator>
+       <nodes8or27>8</nodes8or27>
         <calculate_fracture_parameters>true</calculate_fracture_parameters>
         <J_radius>24.0e-3</J_radius>  <!-- 12X12 cells --> 
         <use_volume_integral>true</use_volume_integral> <!-- use it in J-->
@@ -43,28 +43,28 @@
     </MPM>
 
     <PhysicalConstants>
-	<gravity>[0,0,0]</gravity>
+       <gravity>[0,0,0]</gravity>
     </PhysicalConstants>
 
     <MaterialProperties>
-	<MPM>
-	    <material>
-		<density>7833</density>
-		<constitutive_model type="hypo_elastic"> 
-		   <G>81.395e9 </G>
-		   <K>166.667e9</K>
-	        </constitutive_model>
-		<thermal_conductivity>1.0</thermal_conductivity>
-		<specific_heat>5</specific_heat>
-		<geom_object>
-		    <box label = "box">
-			<min>[     0.0,      0.0, -1.0e-3]</min>
-			<max>[100.0e-3, 100.0e-3,  1.0e-3]</max>
-		    </box>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>12</temperature>
- 		</geom_object>
+       <MPM>
+           <material>
+              <density>7833</density>
+              <constitutive_model type="hypo_elastic"> 
+                 <G>81.395e9 </G>
+                 <K>166.667e9</K>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <box label = "box">
+                     <min>[     0.0,      0.0, -1.0e-3]</min>
+                     <max>[100.0e-3, 100.0e-3,  1.0e-3]</max>
+                  </box>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
 
                 <crack>
                    <type>null</type>
@@ -81,16 +81,16 @@
                       </quad>
                    </crack_segments>
                 </crack>
-	    </material>
+           </material>
 
-	    <contact>
-	      <type>null</type>
-	      <materials>[0]</materials>
-	    </contact>
-	</MPM>
+           <contact>
+             <type>null</type>
+             <materials>[0]</materials>
+           </contact>
+       </MPM>
 
     </MaterialProperties>
-	
+       
     <Grid>
         <Level>
             <Box label = "1">
@@ -133,13 +133,13 @@
     </Grid>
 
     <PhysicalBC>
-	<MPM>
+       <MPM>
            <force>
              <lower>[   0.0,     0.0, -1.0e-3]</lower>
              <upper>[1.0e-3, 25.0e-3,  1.0e-3]</upper>
              <force_density>[25.533e6, 0.0, 0.0]</force_density>
            </force>
-	</MPM>
+       </MPM>
     </PhysicalBC>
     
 </Uintah_specification>

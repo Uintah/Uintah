@@ -65,7 +65,7 @@
       </Face>                  
       <Face side = "z+">
         <BCType id = "all" var = "Dirichlet" label = "Velocity">
- 		      <value> [0.0,0.0,0.0] </value>
+                     <value> [0.0,0.0,0.0] </value>
         </BCType>
       </Face>
     </BoundaryConditions>
@@ -73,11 +73,11 @@
            <Box label = "1">
               <lower>        [-4.5,-7.0,0.0]    </lower>
               <upper>        [15.5,7.0,1.0]    </upper>
-		<resolution>   [125,87,6]</resolution>
+              <resolution>   [125,87,6]</resolution>
               <extraCells>   [1,1,0]    </extraCells>
               <patches>      [2,3,1]    </patches>
            </Box>
-	    <periodic>       [0,0,1]                </periodic>
+           <periodic>       [0,0,1]                </periodic>
        </Level>
     </Grid>
    
@@ -106,11 +106,11 @@
          <cfl>0.5</cfl>
        <ICE>
         <advection type = "SecondOrder" />
-	 <turbulence model = "Smagorinsky">	    
-		<model_constant>0.1</model_constant>		
-		<filter_width>1.0</filter_width>
-		<turb_Pr>0.4</turb_Pr>				
-	 </turbulence>
+        <turbulence model = "Smagorinsky">           
+              <model_constant>0.1</model_constant>              
+              <filter_width>1.0</filter_width>
+              <turb_Pr>0.4</turb_Pr>                            
+        </turbulence>
       </ICE>        
     </CFD>
 

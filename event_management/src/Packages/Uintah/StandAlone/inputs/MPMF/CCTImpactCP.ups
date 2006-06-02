@@ -4,15 +4,15 @@
 <Uintah_specification>
 
    <Meta>
-	<title>Crack propogation in a CCT specimen under impact</title>
+       <title>Crack propogation in a CCT specimen under impact</title>
    </Meta>
 
    <Time>
-	<maxTime>500e-6</maxTime>
-	<initTime>0.0</initTime>
-	<delt_min>0.0</delt_min>
-	<delt_max>5e-6</delt_max>
-	<timestep_multiplier>0.8</timestep_multiplier>
+       <maxTime>500e-6</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.0</delt_min>
+       <delt_max>5e-6</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>CCTImpactCP.uda</filebase>
@@ -22,21 +22,21 @@
         <save label = "g.mass"/>
         <save label = "G.mass"/>
         <!--<save label = "p.stress"/>-->
-	<!--<save label = "KineticEnergy"/>-->
-	<!--<save label = "TotalMass"/>-->
-	<!--<save label = "StrainEnergy"/>-->
-	<!--<save label = "CenterOfMassPosition"/>-->
-	<!--<save label = "CenterOfMassVelocity"/>-->
+       <!--<save label = "KineticEnergy"/>-->
+       <!--<save label = "TotalMass"/>-->
+       <!--<save label = "StrainEnergy"/>-->
+       <!--<save label = "CenterOfMassPosition"/>-->
+       <!--<save label = "CenterOfMassVelocity"/>-->
         <!--<save label = "p.particleID"/>-->
-	<!--<save label = "g.stressFS"/>-->
+       <!--<save label = "g.stressFS"/>-->
         <save_crack_geometry>true</save_crack_geometry>
 
-	<checkpoint cycle = "2" interval = "50e-6"/>
+       <checkpoint cycle = "2" interval = "50e-6"/>
    </DataArchiver>
 
     <MPM>
-	<time_integrator>fracture</time_integrator>
-	<nodes8or27>8</nodes8or27>
+       <time_integrator>fracture</time_integrator>
+       <nodes8or27>8</nodes8or27>
         <calculate_fracture_parameters>false</calculate_fracture_parameters>
         <do_crack_propagation>true</do_crack_propagation>
         <use_volume_integral>false</use_volume_integral>
@@ -45,20 +45,20 @@
     </MPM>
 
     <PhysicalConstants>
-	<gravity>[0,0,0]</gravity>
+       <gravity>[0,0,0]</gravity>
     </PhysicalConstants>
 
     <MaterialProperties>
-	<MPM>
+       <MPM>
 
-	    <material>
-		<density>7833e2</density>
-		<constitutive_model type="hypo_elastic"> 
-		   <G>81.395e11 </G>
-		   <K>166.667e11</K>
-	        </constitutive_model>
-		<thermal_conductivity>1.0</thermal_conductivity>
-		<specific_heat>5</specific_heat>
+           <material>
+              <density>7833e2</density>
+              <constitutive_model type="hypo_elastic"> 
+                 <G>81.395e11 </G>
+                 <K>166.667e11</K>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
                 <geom_object>
                     <box label = "impactor">
                         <min>[-75.0e-3,  -60.0e-3, -1.0e-3]</min>
@@ -68,7 +68,7 @@
                     <velocity>[0.0,-10.0,0]</velocity>
                     <temperature>12</temperature>
                 </geom_object>
-	    </material>
+           </material>
 
             <material>
                 <mu>0.</mu>
@@ -116,10 +116,10 @@
               <type>single_velocity</type>
               <materials>[0,1]</materials>
             </contact>
-	</MPM>
+       </MPM>
 
     </MaterialProperties>
-	
+       
     <Grid>
         <Level>
             <Box label = "1">
@@ -162,8 +162,8 @@
     </Grid>
 
     <PhysicalBC>
-	<MPM>
-	</MPM>
+       <MPM>
+       </MPM>
     </PhysicalBC>
     
 </Uintah_specification>

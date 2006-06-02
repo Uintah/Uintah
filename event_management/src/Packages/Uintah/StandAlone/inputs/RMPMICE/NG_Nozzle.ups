@@ -28,33 +28,33 @@
       <!--________________Inside Nozzle_______________-->
       <!-- The Radius depends on resolution           -->
       <Face circle = "x-" origin = "0.0 0.0 0.0" radius = "0.0375">
-	 <BCType id = "0"   label = "Pressure"      var = "Custom">
-			       <value> 0.0   </value>
-	 </BCType>
-	 <BCType id = "1" label = "Velocity"         var = "Custom">
-			       <value> [0.0,0.,0.] </value>
-	 </BCType>
-	 <BCType id = "1" label = "Temperature"      var = "Custom">
-			       <value> 0.0  </value>
-	 </BCType>
-	 <BCType id = "1" label = "Density"	   var = "Custom">
-			       <value> 0.0 </value>
-	 </BCType>
+        <BCType id = "0"   label = "Pressure"      var = "Custom">
+                            <value> 0.0   </value>
+        </BCType>
+        <BCType id = "1" label = "Velocity"         var = "Custom">
+                            <value> [0.0,0.,0.] </value>
+        </BCType>
+        <BCType id = "1" label = "Temperature"      var = "Custom">
+                            <value> 0.0  </value>
+        </BCType>
+        <BCType id = "1" label = "Density"          var = "Custom">
+                            <value> 0.0 </value>
+        </BCType>
        </Face>
      <!--________________Above nozzle_______________-->
      <Face rectangle = "x-" lower = "0.0 0.1825 0.0" upper = "0.0 0.5 0.0">
-	 <BCType id = "0" label = "Pressure"       var = "Neumann">
-			       <value> 0.0   </value>
-	 </BCType>
-	 <BCType id = "1" label = "Velocity"       var = "Neumann">
-			       <value> [0.0,0.,0.] </value>
-	 </BCType>
-	 <BCType id = "1" label = "Temperature"    var = "Neumann">
-			       <value> 0.0  </value>
-	 </BCType>
-	 <BCType id = "1" label = "Density"         var = "Neumann">
-			       <value> 0.0 </value>
-	 </BCType>
+        <BCType id = "0" label = "Pressure"       var = "Neumann">
+                            <value> 0.0   </value>
+        </BCType>
+        <BCType id = "1" label = "Velocity"       var = "Neumann">
+                            <value> [0.0,0.,0.] </value>
+        </BCType>
+        <BCType id = "1" label = "Temperature"    var = "Neumann">
+                            <value> 0.0  </value>
+        </BCType>
+        <BCType id = "1" label = "Density"         var = "Neumann">
+                            <value> 0.0 </value>
+        </BCType>
        </Face>
       <!--________________Everything else_______________-->
       <Face side = "x-">
@@ -226,7 +226,7 @@
             </constitutive_model>
             <thermal_conductivity>    400.0         </thermal_conductivity>
             <specific_heat>           386.0         </specific_heat>
-	     <geom_object>
+            <geom_object>
                <tri label = "2ndStage">
                  <name>2ndStage</name>
                </tri>         

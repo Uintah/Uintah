@@ -30,33 +30,33 @@
       <!-- The Radius depends on resolution           -->
       <!-- 0.03863                                    -->
       <Face circle = "x-" origin = "0.0 0.0 0.0" radius = "0.039">
-	 <BCType id = "0"   label = "Pressure"      var = "Custom">
-			       <value> 0.0   </value>
-	 </BCType>
-	 <BCType id = "1" label = "Velocity"         var = "Custom">
-			       <value> [0.0,0.,0.] </value>
-	 </BCType>
-	 <BCType id = "1" label = "Temperature"      var = "Custom">
-			       <value> 0.0  </value>
-	 </BCType>
-	 <BCType id = "1" label = "Density"	    var = "Custom">
-			       <value> 0.0 </value>
-	 </BCType>
+        <BCType id = "0"   label = "Pressure"      var = "Custom">
+                            <value> 0.0   </value>
+        </BCType>
+        <BCType id = "1" label = "Velocity"         var = "Custom">
+                            <value> [0.0,0.,0.] </value>
+        </BCType>
+        <BCType id = "1" label = "Temperature"      var = "Custom">
+                            <value> 0.0  </value>
+        </BCType>
+        <BCType id = "1" label = "Density"           var = "Custom">
+                            <value> 0.0 </value>
+        </BCType>
        </Face>
      <!--________________Above nozzle_______________-->
      <Face rectangle = "x-" lower = "0.0 0.181 0.0" upper = "0.0 0.5 0.0">
-	 <BCType id = "0" label = "Pressure"       var = "Neumann">
-			       <value> 0.0   </value>
-	 </BCType>
-	 <BCType id = "1" label = "Velocity"       var = "Dirichlet">
-			       <value> [1350.0,0.,0.] </value>
-	 </BCType>
-	 <BCType id = "1" label = "Temperature"    var = "Dirichlet">
-			       <value> 224.0  </value>
-	 </BCType>
-	 <BCType id = "1" label = "Density"         var = "Dirichlet">
-			       <value> 0.02625 </value>
-	 </BCType>
+        <BCType id = "0" label = "Pressure"       var = "Neumann">
+                            <value> 0.0   </value>
+        </BCType>
+        <BCType id = "1" label = "Velocity"       var = "Dirichlet">
+                            <value> [1350.0,0.,0.] </value>
+        </BCType>
+        <BCType id = "1" label = "Temperature"    var = "Dirichlet">
+                            <value> 224.0  </value>
+        </BCType>
+        <BCType id = "1" label = "Density"         var = "Dirichlet">
+                            <value> 0.02625 </value>
+        </BCType>
       </Face>
       <!--________________Everything else_______________-->
       <Face side = "x-">
@@ -202,21 +202,21 @@
            <outer_iteration_tolerance> 1e-5 </outer_iteration_tolerance>
            <iters_before_timestep_restart> 8 </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
-	     <!-- Common options -->
+            <!-- Common options -->
               <tolerance>1.e-7    </tolerance>
 
-	     <!-- CGSolver options -->
+            <!-- CGSolver options -->
               <norm>     LInfinity  </norm>
               <criteria> Absolute   </criteria>
 
-	     <!-- Hypre options -->
-	     <solver>         hybrid  </solver>
-	     <preconditioner> pfmg    </preconditioner>
-	     <maxiterations>  7500    </maxiterations>
-	     <npre>           1       </npre>
-	     <npost>          1       </npost>
-	     <skip>           0       </skip>
-	     <jump>           0       </jump>
+            <!-- Hypre options -->
+            <solver>         hybrid  </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           0       </skip>
+            <jump>           0       </jump>
            </Parameters>
         </ImplicitSolver>
        </ICE>        
@@ -260,7 +260,7 @@
                <temperature>        224.23           </temperature>
              </geom_object>
 
-	     <geom_object>
+            <geom_object>
                <tri label = "1stStage">
                  <name>1stStage</name>
                </tri>         

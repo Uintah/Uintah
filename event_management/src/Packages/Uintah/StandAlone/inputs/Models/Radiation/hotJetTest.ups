@@ -14,7 +14,7 @@
        <delt_min>           0.0       </delt_min>
        <delt_max>           0.1     </delt_max>
        <delt_init>          1.0e-7    </delt_init>
-	<max_delt_increase>  0.5      </max_delt_increase>
+       <max_delt_increase>  0.5      </max_delt_increase>
        <timestep_multiplier> 1        </timestep_multiplier>
    </Time>
     <!--____________________________________________________________________-->
@@ -250,11 +250,11 @@
    </DataArchiver>
 
    <Debug>
-	<dbg_GnuPlot>false</dbg_GnuPlot>
-	<dbg_var1>  0     </dbg_var1>
-	<dbg_var2>  0     </dbg_var2>
-	<dbg_SigFigs>5    </dbg_SigFigs>
-	<dbg_Level>  0    </dbg_Level>
+       <dbg_GnuPlot>false</dbg_GnuPlot>
+       <dbg_var1>  0     </dbg_var1>
+       <dbg_var2>  0     </dbg_var2>
+       <dbg_SigFigs>5    </dbg_SigFigs>
+       <dbg_Level>  0    </dbg_Level>
     </Debug>
     <!--____________________________________________________________________-->
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
@@ -274,21 +274,21 @@
            <outer_iteration_tolerance> 1e-6   </outer_iteration_tolerance>
            <iters_before_timestep_restart> 15 </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
-	     <!-- Common options -->
+            <!-- Common options -->
               <tolerance>1.e-8    </tolerance>
 
-	     <!-- CGSolver options -->
+            <!-- CGSolver options -->
               <norm>     LInfinity  </norm>
               <criteria> Absolute   </criteria>
 
-	     <!-- Hypre options -->
-	     <solver>         hybrid  </solver>
-	     <preconditioner> pfmg    </preconditioner>
-	     <maxiterations>  7500    </maxiterations>
-	     <npre>           1       </npre>
-	     <npost>          1       </npost>
-	     <skip>           0       </skip>
-	     <jump>           0       </jump>
+            <!-- Hypre options -->
+            <solver>         hybrid  </solver>
+            <preconditioner> pfmg    </preconditioner>
+            <maxiterations>  7500    </maxiterations>
+            <npre>           1       </npre>
+            <npost>          1       </npost>
+            <skip>           0       </skip>
+            <jump>           0       </jump>
            </Parameters>
         </ImplicitSolver>
       </ICE>       
@@ -338,9 +338,9 @@
     <Models>
        <Model type="PassiveScalar">
         <material>BackgroundGas</material>
-	 <scalar name="f">
+        <scalar name="f">
         <constants>
-	   <diffusivity>0</diffusivity>
+          <diffusivity>0</diffusivity>
         </constants> 
           <geom_object>
              <box label = "world">
@@ -349,7 +349,7 @@
              </box>
              <scalar>    0.00   </scalar>
           </geom_object>
-	</scalar>
+       </scalar>
       </Model>
     <!--__________________________________   -->  
       <Model type = "Radiation">

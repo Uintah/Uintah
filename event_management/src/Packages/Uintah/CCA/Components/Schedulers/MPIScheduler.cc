@@ -240,10 +240,10 @@ MPIScheduler::runTask( DetailedTask         * task )
   vector<DataWarehouseP> plain_old_dws(dws.size());
   for(int i=0;i<(int)dws.size();i++)
     plain_old_dws[i] = dws[i].get_rep();
-  const char* tag = AllocatorSetDefaultTag(task->getTask()->getName());
+  //const char* tag = AllocatorSetDefaultTag(task->getTask()->getName());
 
   task->doit(d_myworld, dws, plain_old_dws);
-  AllocatorSetDefaultTag(tag);
+  //AllocatorSetDefaultTag(tag);
 
 
   printTrackedVars(task, false);

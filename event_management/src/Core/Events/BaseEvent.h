@@ -34,6 +34,7 @@
 #define BaseEvent_h
 
 #include <Core/Containers/Handle.h>
+#include <Core/Geom/GeomObj.h>
 #include <string>
 
 
@@ -199,6 +200,27 @@ public:
   virtual ~QuitEvent() {}
 };
 
+class SceneGraphEvent : public BaseEvent 
+{
+public:
+  SceneGraphEvent(GeomHandle o, string n, 
+		  const string &target = "",
+		  unsigned int time = 0);
+  virtual ~SceneGraphEvent();
+  
+  //! Accessors
+  GeomHandle          get_geom_obj() const { return obj_; }
+  string              get_geom_obj_name() const { return name_; }
+  int                 get_scene_graph_id() const { return sg_id_; }
+
+  //! Mutators
+  void                  set_geom_obj(GeomHandle obj) { obj_ = obj; } 
+  void                  set_geom_obj_name(GeomHandle obj) { obj_ = obj; } 
+private:
+  GeomHandle          obj_;
+  string              name_;
+  int                 sg_id_;
+};
 
 typedef Handle<BaseEvent> event_handle_t;
 

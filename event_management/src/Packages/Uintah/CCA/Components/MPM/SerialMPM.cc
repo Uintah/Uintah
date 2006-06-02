@@ -1596,17 +1596,19 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
         // Add each particles contribution to the local mass & velocity 
         // Must use the node indices
+        IntVector node;
         for(int k = 0; k < n8or27; k++) {
-          if(patch->containsNode(ni[k])) {
+          node = ni[k];
+          if(patch->containsNode(node)) {
             S[k] *= pErosion[idx];
-            gmass[ni[k]]          += pmass[idx]                     * S[k];
-            gvelocity[ni[k]]      += pmom                           * S[k];
-            gvolume[ni[k]]        += pvolume[idx]                   * S[k];
-            gexternalforce[ni[k]] += pexternalforce[idx]            * S[k];
-            gTemperature[ni[k]]   += pTemperature[idx] * pmass[idx] * S[k];
-            gSp_vol[ni[k]]        += pSp_vol           * pmass[idx] * S[k];
-            gnumnearparticles[ni[k]] += 1.0;
-            //  gexternalheatrate[ni[k]] += pexternalheatrate[idx]      * S[k];
+            gmass[node]          += pmass[idx]                     * S[k];
+            gvelocity[node]      += pmom                           * S[k];
+            gvolume[node]        += pvolume[idx]                   * S[k];
+            gexternalforce[node] += pexternalforce[idx]            * S[k];
+            gTemperature[node]   += pTemperature[idx] * pmass[idx] * S[k];
+            gSp_vol[node]        += pSp_vol           * pmass[idx] * S[k];
+            gnumnearparticles[node] += 1.0;
+            //  gexternalheatrate[node] += pexternalheatrate[idx]      * S[k];
           }
         }
       } // End of particle loop

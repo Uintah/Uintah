@@ -4,7 +4,7 @@
 <Uintah_specification>
 
    <Meta>
-	<title>Left Ventricle</title>
+       <title>Left Ventricle</title>
    </Meta>
 
    <Time>
@@ -17,33 +17,33 @@
    </Time>
    <DataArchiver>
         <filebase>lvcoarse_imp_inf.uda</filebase>
-	<outputInterval>.01</outputInterval>
+       <outputInterval>.01</outputInterval>
         <compression>gzip</compression>
 <!--
 -->
-	<save label = "p.x"/>
-	<save label = "p.stress"/>
-	<save label = "p.externalforce"/>
-	<save label = "p.velocity"/>
-	<save label = "p.stretch"/>
-	<save label = "g.stressFS"/>
-	<save label = "g.mass"/>
-	<checkpoint cycle = "2" interval = "0.01"/>
+       <save label = "p.x"/>
+       <save label = "p.stress"/>
+       <save label = "p.externalforce"/>
+       <save label = "p.velocity"/>
+       <save label = "p.stretch"/>
+       <save label = "g.stressFS"/>
+       <save label = "g.mass"/>
+       <checkpoint cycle = "2" interval = "0.01"/>
 <!--
-	<checkpoint cycle = "2" interval = "0.05"/>
-	<save label = "KineticEnergy"/>
-	<save label = "StrainEnergy"/>
-	<save label = "p.displacement"/>
-	<save label = "p.externalforce"/>
-	<save label = "g.stressFS"/>
-	<save label = "g.mass"/>
+       <checkpoint cycle = "2" interval = "0.05"/>
+       <save label = "KineticEnergy"/>
+       <save label = "StrainEnergy"/>
+       <save label = "p.displacement"/>
+       <save label = "p.externalforce"/>
+       <save label = "g.stressFS"/>
+       <save label = "g.mass"/>
 -->
    </DataArchiver>
 
     <MPM>
-	<time_integrator>implicit</time_integrator>
-	<nodes8or27>8</nodes8or27>
-	<use_load_curves>true</use_load_curves>
+       <time_integrator>implicit</time_integrator>
+       <nodes8or27>8</nodes8or27>
+       <use_load_curves>true</use_load_curves>
         <do_grid_reset>true</do_grid_reset>
         <convergence_criteria_disp>1.e-6</convergence_criteria_disp>
         <convergence_criteria_energy>4.e-6</convergence_criteria_energy>
@@ -55,13 +55,13 @@
     </MPM>
 
     <PhysicalConstants>
-	<gravity>[0,0,0]</gravity>
+       <gravity>[0,0,0]</gravity>
     </PhysicalConstants>
 
     <MaterialProperties>
-	<MPM>
-	    <material>
-		<density>1000.0</density>
+       <MPM>
+           <material>
+              <density>1000.0</density>
                 <constitutive_model type="trans_iso_hyper">
                     <bulk_modulus>100.e3</bulk_modulus>
                     <c1>2.1e3</c1>
@@ -75,31 +75,31 @@
                     <max_matrix_strain>2.0</max_matrix_strain>
                     <failure_option>0</failure_option>
                 </constitutive_model>
-		<thermal_conductivity>1.0</thermal_conductivity>
-		<specific_heat>5</specific_heat>
-		<geom_object>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
                     <file>
 <!-- <name>LVcoarse.sus.pts</name> -->
                         <name>LVcoarse.pts</name>
                         <var>p.externalforce</var>
                         <var>p.fiberdir</var>
                     </file>
-		    <res>[4,4,4]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>12</temperature>
- 		</geom_object>
-	    </material>
+                  <res>[4,4,4]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+           </material>
 
-	    <contact>
-	      <type>null</type>
-	      <materials>[0]</materials>
-	    </contact>
-	</MPM>
+           <contact>
+             <type>null</type>
+             <materials>[0]</materials>
+           </contact>
+       </MPM>
 
     </MaterialProperties>
-	
+       
     <Grid>
-	<BoundaryConditions>
+       <BoundaryConditions>
            <Face side = "x-">
              <BCType id = "all" label = "Velocity" var = "Neumann">
                <value> [0.,0.,0.] </value>
@@ -129,20 +129,20 @@
              <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
            </Face>
 
-	</BoundaryConditions>
-	<Level>
-	    <Box label = "1">
-		<lower>[-.02,-.02,-.02]</lower>
-		<upper>[0.10,0.10,0.10]</upper>
+       </BoundaryConditions>
+       <Level>
+           <Box label = "1">
+              <lower>[-.02,-.02,-.02]</lower>
+              <upper>[0.10,0.10,0.10]</upper>
                 <extraCells> [0,0,0]</extraCells>
-	        <resolution>[30,30,30]</resolution>
-		<patches>[1,1,1]</patches>
-	    </Box>
-	</Level>
+               <resolution>[30,30,30]</resolution>
+              <patches>[1,1,1]</patches>
+           </Box>
+       </Level>
     </Grid>
 
     <PhysicalBC>
-	<MPM>
+       <MPM>
 <!--
   This load curve is intended to represent the diastole phase of the
   cardiac cycle.  The time-pressure data (from Alex) is:
@@ -206,7 +206,7 @@ t=0, otherwise the normal would be zeroed out and disappear.
            </time_point>
          </load_curve>
        </normal_force>
-	</MPM>
+       </MPM>
     </PhysicalBC>
     
 </Uintah_specification>
