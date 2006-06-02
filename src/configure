@@ -900,18 +900,15 @@ Optional Features:
 --enable-verbosity      Turn on verbose configure output
 --enable-threads        Specify a thread implementation (pthreads or irix)
 --enable-debug          Turn on debugging (default is -g) or specify your
-                          own.
- example: --enable-debug='-O0 -g'
+                          own. example: --enable-debug='-O0 -g'
 --enable-optimize       Turn on optimize (default is -O2) or specify your
-                          own.
- example: --enable-optimize='-O3'
+                          own. example: --enable-optimize='-O3'
 --enable-64bit          Compile in 64 bit mode
 --enable-32bit          Compile in 32 bit mode
 --enable-output-avg-walltime
                           Output ellapsed wall-times
 --enable-perfex         Use perfex hardware counters (sgi only)
---enable-package=<list> Use the SCIRun packages specified by list.
- example:
+--enable-package=<list> Use the SCIRun packages specified by list. example:
                           --enable-package='BioPSE Teem'
 --disable-dataflow      Do not build Dataflow component model
 --disable-scirun        Do not require SCIRun components
@@ -3928,23 +3925,15 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
     NUM_CPUS=4
     IS_AIX="yes"
     ;;
+  *-mingw*)
+    NUM_CPUS=2
+    IS_WIN="yes"
+    ;;
   *-pc*)
-    case $host in
-      *-mingw*)
-        NUM_CPUS=2
-        IS_WIN="yes"
-        ;;
-      *-cygwin*)
-        NUM_CPUS=2
-        IS_WIN="yes"
-        ;;
-      *)
-        echo
-        { { echo "$as_me:$LINENO: error: Currently Windows only configures from mingw or cygwin.  See install instructions" >&5
-echo "$as_me: error: Currently Windows only configures from mingw or cygwin.  See install instructions" >&2;}
+    echo
+    { { echo "$as_me:$LINENO: error: Currently Windows only configures from mingw.  See install instructions" >&5
+echo "$as_me: error: Currently Windows only configures from mingw.  See install instructions" >&2;}
    { (exit 1); exit 1; }; }
-        ;;
-    esac
     ;;
   *)
     echo
@@ -6903,7 +6892,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6903:" \
+echo "$as_me:6895:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -7153,7 +7142,7 @@ echo "$as_me: WARNING: sci-malloc disabled" >&2;}
         # later we will make .so's from them.
 	SO_OR_ARCHIVE_EXTENSION=a
 	;;
-     *-pc*)
+     *-pc-mingw*)
         SO_OR_ARCHIVE_EXTENSION=dll
         ;;
      *)
@@ -8014,7 +8003,7 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
     esac
     ;;
 
-  *-pc*)
+  *-pc-mingw*)
     case $CXX in
       *cl*)
           ac_objext=obj
@@ -8833,7 +8822,7 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
           ;;
         *gfortran*)
           FFLAGS="$FFLAGS $extra_cflags"
-          FORTRAN_UNDERSCORE=end
+          FORTRAN_UNDERSCORE=linux
           ;;
         *)
           FFLAGS="$FFLAGS $extra_cflags"
@@ -12029,7 +12018,7 @@ echo "$as_me: error: unknown thread type for host $host: $threads. exiting." >&2
 
     fi
     ;;
-  *-pc*)
+  *-pc-mingw*)
     threads=win32
     if test $IS_VC = "yes"; then
       SOCKET_LIB_FLAG="ws2_32.lib"
@@ -15426,7 +15415,7 @@ _sci_includes=''
 
 
     ;;
-  *-pc*)
+  *-pc-mingw*)
     echo "Using Windows dynamic loader"
     DL_LIB_FLAG=""
     DL_LIB_DIR_FLAG=""
@@ -17752,7 +17741,7 @@ _sci_includes=''
 
     DEF_IEEEFP="#define HAVE_IEEEFP_H 1"
     ;;
-  *-pc*)
+  *-pc-mingw*)
     ;;
 
   *)
@@ -32535,9 +32524,8 @@ _sci_includes=''
       fi
     fi
     ;;
-  *-pc*)
-    if test "$IS_VC" = "no"; then
-      # Mingw or cygwin g77 and libg2c
+  *-pc-mingw*)
+    # Mingw g77 and libg2c
 
 ##
 ## SCI_TRY_LINK (F):  fortran libraries
@@ -32994,7 +32982,6 @@ _sci_includes=''
 ##
 
 
-    fi
     ;;
   *)
 
@@ -46977,7 +46964,7 @@ echo "$as_me: error: PETSC ARCH not set for Tru64.  Need to fix this." >&2;}
     	PETSC_ARCH=ppc
     fi
     ;;
-  *-pc*)
+  *-pc-mingw*)
     PETSC_ARCH=win
     ;;
   *)
@@ -64855,8 +64842,7 @@ fi
 
 
 
-                                                            ac_config_files="$ac_config_files configVars.mk Makefile on-the-fly-libs/Makefile 
- disjointPackageMakefile $sci_defs_files"
+                                                  ac_config_files="$ac_config_files configVars.mk Makefile on-the-fly-libs/Makefile disjointPackageMakefile $sci_defs_files"
 
 
 ##   Only do the following if configuring with Uintah
@@ -64965,10 +64951,9 @@ for ac_i in : $LIBOBJS; do test "x$ac_i" = x: && continue
   # 1. Remove the extension, and $U if already installed.
   ac_i=`echo "$ac_i" |
 	 sed 's/\$U\././;s/\.o$//;s/\.obj$//'`
-  # 2. Prepend LIBOBJDIR.  When used with automake>=1.10 LIBOBJDIR
-  #    will be set to the directory where LIBOBJS objects are built.
-  ac_libobjs="$ac_libobjs \${LIBOBJDIR}$ac_i\$U.$ac_objext"
-  ac_ltlibobjs="$ac_ltlibobjs \${LIBOBJDIR}$ac_i"'$U.lo'
+  # 2. Add them.
+  ac_libobjs="$ac_libobjs $ac_i\$U.$ac_objext"
+  ac_ltlibobjs="$ac_ltlibobjs $ac_i"'$U.lo'
 done
 LIBOBJS=$ac_libobjs
 
@@ -65414,9 +65399,6 @@ do
   "configVars.mk" ) CONFIG_FILES="$CONFIG_FILES configVars.mk" ;;
   "Makefile" ) CONFIG_FILES="$CONFIG_FILES Makefile" ;;
   "on-the-fly-libs/Makefile" ) CONFIG_FILES="$CONFIG_FILES on-the-fly-libs/Makefile" ;;
-  "
-" ) CONFIG_FILES="$CONFIG_FILES 
-" ;;
   "disjointPackageMakefile" ) CONFIG_FILES="$CONFIG_FILES disjointPackageMakefile" ;;
   "$sci_defs_files" ) CONFIG_FILES="$CONFIG_FILES $sci_defs_files" ;;
   "Packages/Uintah/tools/fspec.pl" ) CONFIG_FILES="$CONFIG_FILES Packages/Uintah/tools/fspec.pl" ;;
