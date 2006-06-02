@@ -147,11 +147,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 					 const MPMMaterial* matl,
 					 DataWarehouse* old_dw,
 					 DataWarehouse* new_dw,
-#ifdef HAVE_PETSC
-                                         MPMPetscSolver* solver,
-#else
-                                         SimpleSolver* solver,
-#endif
+                                         Solver* solver,
 					 const bool )
 
 {
@@ -211,11 +207,7 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 
     double B[6][24];
     double Bnl[3][24];
-#ifdef HAVE_PETSC
-    PetscScalar v[576];
-#else
     double v[576];
-#endif
 
     if(matl->getIsRigid()){
       for(ParticleSubset::iterator iter = pset->begin();

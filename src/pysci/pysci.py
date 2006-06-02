@@ -195,6 +195,10 @@ class vector_doublePtr(vector_double):
 _pysci.vector_double_swigregister(vector_doublePtr)
 
 
+load_field = _pysci.load_field
+
+show_field = _pysci.show_field
+
 init_pysci = _pysci.init_pysci
 
 terminate = _pysci.terminate

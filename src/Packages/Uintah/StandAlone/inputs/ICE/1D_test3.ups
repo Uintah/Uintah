@@ -137,8 +137,8 @@
        <dbg_Matls>          [0]       </dbg_Matls>
        <dbg_SigFigs>        10        </dbg_SigFigs>
 
-	<debug label = "switchDebug_advance_advect"/>
-	<debug label = "switchDebug_explicit_press"/>
+       <debug label = "switchDebug_advance_advect"/>
+       <debug label = "switchDebug_explicit_press"/>
        <debug label = "switchTestConservation"/>
    <!--<debug label = "switchDebug_Initialize"/>             
        <debug label = "switchDebug_equil_press"/>

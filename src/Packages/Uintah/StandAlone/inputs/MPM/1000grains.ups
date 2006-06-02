@@ -4,19 +4,19 @@
 <Uintah_specification>
 
    <Meta>
-	<title>Granular Compaction 1000 grains</title>
+       <title>Granular Compaction 1000 grains</title>
    </Meta>
 
    <Time>
-	<maxTime>.6</maxTime>
-	<initTime>0.0</initTime>
-	<delt_min>0.00006</delt_min>
-	<delt_max>0.006</delt_max>
-	<timestep_multiplier>.8</timestep_multiplier>
+       <maxTime>.6</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.00006</delt_min>
+       <delt_max>0.006</delt_max>
+       <timestep_multiplier>.8</timestep_multiplier>
    </Time>
 
     <MPM>
-	<time_integrator>explicit</time_integrator>
+       <time_integrator>explicit</time_integrator>
     </MPM>
 
     <DataArchiver>
@@ -25,17 +25,17 @@
         <save label="KineticEnergy"/>
         <save label="TotalMass"/>
         <save label="StrainEnergy"/>
-	<save label = "g.mass" material = "29"/>
-	<save label = "g.stressFS" material = "29"/>
-	<checkpoint cycle = "2" interval = "0.1"/>
+       <save label = "g.mass" material = "29"/>
+       <save label = "g.stressFS" material = "29"/>
+       <checkpoint cycle = "2" interval = "0.1"/>
     </DataArchiver>
 
     <PhysicalConstants>
-	<gravity>[0,0,0]</gravity>
+       <gravity>[0,0,0]</gravity>
     </PhysicalConstants>
 
     <MaterialProperties>
-	<MPM>
+       <MPM>
             <material name = "HMX">
                 <density>1.9e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
@@ -48,9 +48,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-	            <union>
+              <geom_object>
+              <intersection>
+                   <union>
 
         <sphere label="  1">
                   <origin>[0.0829,0.0486,0.0081  ]</origin>
@@ -462,19 +462,19 @@
                   <radius>0.0042 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1">
-				<min>[0.0,0.0,0.0]</min>
-				<max>[0.1,0.1,0.1]</max>
-			    </box>
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1">
+                            <min>[0.0,0.0,0.0]</min>
+                            <max>[0.1,0.1,0.1]</max>
+                         </box>
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.901e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -486,8 +486,8 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
+              <geom_object>
+              <intersection>
                     <union>
 
         <sphere label=" 14">
@@ -990,16 +990,16 @@
                   <radius>0.0038 </radius>
         </sphere>
  
-	       	    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                         </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.904e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -1011,9 +1011,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-    		    <union>
+              <geom_object>
+              <intersection>
+                      <union>
  
         <sphere label=" 79">
                   <origin>[0.0359,0.0499,0.0385  ]</origin>
@@ -1375,16 +1375,16 @@
                   <radius>0.0042 </radius>
         </sphere>
  
-	    	    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                      </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.905e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -1396,9 +1396,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
- 		    <union>
+              <geom_object>
+              <intersection>
+                   <union>
 
         <sphere label=" 82">
                   <origin>[0.0344,0.0556,0.0378  ]</origin>
@@ -1740,16 +1740,16 @@
                   <radius>0.0034 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.906e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -1761,9 +1761,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-  		    <union>
+              <geom_object>
+              <intersection>
+                    <union>
  
         <sphere label="130">
                   <origin>[0.0266,0.0552,0.0276  ]</origin>
@@ -2095,16 +2095,16 @@
                   <radius>0.0046 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.907e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -2116,9 +2116,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-   		    <union>
+              <geom_object>
+              <intersection>
+                     <union>
 
         <sphere label="227">
                   <origin>[0.0320,0.0676,0.0335  ]</origin>
@@ -2430,16 +2430,16 @@
                   <radius>0.0042 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.908e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -2451,9 +2451,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-    		    <union>
+              <geom_object>
+              <intersection>
+                      <union>
  
         <sphere label="268">
                   <origin>[0.0494,0.0018,0.0662  ]</origin>
@@ -2785,16 +2785,16 @@
                   <radius>0.0051 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.909e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -2806,9 +2806,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-		    <union>
+              <geom_object>
+              <intersection>
+                  <union>
 
         <sphere label="325">
                   <origin>[0.0390,0.0741,0.0420  ]</origin>
@@ -3140,16 +3140,16 @@
                   <radius>0.0046 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.91e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -3161,9 +3161,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-		    <union>
+              <geom_object>
+              <intersection>
+                  <union>
 
         <sphere label="328">
                   <origin>[0.0353,0.0779,0.0449  ]</origin>
@@ -3495,16 +3495,16 @@
                   <radius>0.0046 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.911e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -3516,9 +3516,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-   		    <union>
+              <geom_object>
+              <intersection>
+                     <union>
  
         <sphere label="385">
                   <origin>[0.0857,0.0870,0.0721  ]</origin>
@@ -3790,16 +3790,16 @@
                   <radius>0.0046 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.912e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -3811,9 +3811,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-   		    <union>
+              <geom_object>
+              <intersection>
+                     <union>
 
         <sphere label="407">
                   <origin>[0.0786,0.0897,0.0591  ]</origin>
@@ -4075,16 +4075,16 @@
                   <radius>0.0042 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.913e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -4096,9 +4096,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-    		    <union>
+              <geom_object>
+              <intersection>
+                      <union>
 
         <sphere label="478">
                   <origin>[0.0410,0.0791,0.0486  ]</origin>
@@ -4395,16 +4395,16 @@
                   <radius>0.0046 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.914e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -4416,9 +4416,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-		    <union>
+              <geom_object>
+              <intersection>
+                  <union>
 
         <sphere label="501">
                   <origin>[0.0874,0.0027,0.0171  ]</origin>
@@ -4715,16 +4715,16 @@
                   <radius>0.0046 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.915e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -4736,9 +4736,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-		    <union>
+              <geom_object>
+              <intersection>
+                  <union>
 
         <sphere label="517">
                   <origin>[0.0913,0.0974,0.0300  ]</origin>
@@ -4980,16 +4980,16 @@
                   <radius>0.0046 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.916e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -5001,9 +5001,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-		    <union>
+              <geom_object>
+              <intersection>
+                  <union>
 
         <sphere label="582">
                   <origin>[0.0938,0.0805,0.0704  ]</origin>
@@ -5195,16 +5195,16 @@
                   <radius>0.0046 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.917e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -5216,9 +5216,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-		    <union>
+              <geom_object>
+              <intersection>
+                  <union>
  
         <sphere label="589">
                   <origin>[0.0919,0.0748,0.0737  ]</origin>
@@ -5395,16 +5395,16 @@
                   <radius>0.0056 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.918e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -5416,9 +5416,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-		    <union>
+              <geom_object>
+              <intersection>
+                  <union>
 
         <sphere label="606">
                   <origin>[0.0943,0.0888,0.0679  ]</origin>
@@ -5560,16 +5560,16 @@
                   <radius>0.0046 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.919e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -5581,9 +5581,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-		    <union>
+              <geom_object>
+              <intersection>
+                  <union>
 
         <sphere label="733">
                   <origin>[0.0443,0.0563,0.0304  ]</origin>
@@ -5755,16 +5755,16 @@
                   <radius>0.0056 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.92e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -5776,9 +5776,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-		    <union>
+              <geom_object>
+              <intersection>
+                  <union>
 
         <sphere label="769">
                   <origin>[0.0399,0.0128,0.0761  ]</origin>
@@ -5890,16 +5890,16 @@
                   <radius>0.0062 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.921e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -5911,9 +5911,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-		    <union>
+              <geom_object>
+              <intersection>
+                  <union>
 
         <sphere label="876">
                   <origin>[0.0511,0.0118,0.0688  ]</origin>
@@ -6020,15 +6020,15 @@
                   <radius>0.0056 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
-	    <material name = "HMX">
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
+           <material name = "HMX">
                 <density>1.922e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -6040,9 +6040,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-		    <union>
+              <geom_object>
+              <intersection>
+                  <union>
 
         <sphere label="915">
                   <origin>[0.0038,0.0828,0.0769  ]</origin>
@@ -6094,15 +6094,15 @@
                   <radius>0.0056 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
-	    <material name = "HMX">
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
+           <material name = "HMX">
                 <density>1.923e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -6114,9 +6114,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-		    <union>
+              <geom_object>
+              <intersection>
+                  <union>
 
         <sphere label="922">
                   <origin>[0.0961,0.0754,0.0875  ]</origin>
@@ -6153,16 +6153,16 @@
                   <radius>0.0335 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.924e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -6174,9 +6174,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-		    <union>
+              <geom_object>
+              <intersection>
+                  <union>
 
         <sphere label="990">
                   <origin>[0.0993,0.0872,0.0013  ]</origin>
@@ -6198,16 +6198,16 @@
                   <radius>0.0056 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.925e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -6219,9 +6219,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-		    <union>
+              <geom_object>
+              <intersection>
+                  <union>
 
         <sphere label="996">
                   <origin>[0.0870,0.0178,0.0865  ]</origin>
@@ -6258,16 +6258,16 @@
                   <radius>0.0302 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.926e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -6279,9 +6279,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-		    <union>
+              <geom_object>
+              <intersection>
+                  <union>
 
         <sphere label="997">
                   <origin>[0.0900,0.0628,0.0393  ]</origin>
@@ -6293,16 +6293,16 @@
                   <radius>0.0318 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <material name = "HMX">
+           <material name = "HMX">
                 <density>1.927e6</density>
                 <constitutive_model type="comp_neo_hook_plastic">
                     <bulk_modulus>10.2e4</bulk_modulus>
@@ -6314,9 +6314,9 @@
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
 
-		<geom_object>
-		<intersection>
-		    <union>
+              <geom_object>
+              <intersection>
+                  <union>
 
         <sphere label="999">
                   <origin>[0.0416,0.0657,0.0867  ]</origin>
@@ -6338,14 +6338,14 @@
                   <radius>0.0352 </radius>
         </sphere>
  
-		    </union>
-			    <box label = "box1" />
-		</intersection>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+                  </union>
+                         <box label = "box1" />
+              </intersection>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
             <material name = "Piston" >
                 <density>1.9e8</density>
@@ -6358,35 +6358,35 @@
                 </constitutive_model>
                 <thermal_conductivity>0.42e-7</thermal_conductivity>
                 <specific_heat>1.004e-5</specific_heat>
-		<geom_object>
-		    <box label="Piston">
-			<min>[0.0,0.0,0.1]</min>
-			<max>[0.1,0.1,0.105]</max>
-		    </box>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,-.01]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
-	    </material>
+              <geom_object>
+                  <box label="Piston">
+                     <min>[0.0,0.0,0.1]</min>
+                     <max>[0.1,0.1,0.105]</max>
+                  </box>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,-.01]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
+           </material>
 
-	    <contact>
-	      <type>friction</type>
-	      <materials>[0,1]</materials>
-	      <mu> .5 </mu>
-	    </contact>
-	</MPM>
+           <contact>
+             <type>friction</type>
+             <materials>[0,1]</materials>
+             <mu> .5 </mu>
+           </contact>
+       </MPM>
 
     </MaterialProperties>
-	
+       
     <Grid>
-	<Level>
-	    <Box label = "box2">
-		<lower>[0.0,0.0,0.0]</lower>
-		<upper>[0.1,0.1,0.11]</upper>
-		<patches>[1,1,1]</patches>
-	    </Box>
-	    <spacing>[.0025,.0025,.0025]</spacing>
-	</Level>
+       <Level>
+           <Box label = "box2">
+              <lower>[0.0,0.0,0.0]</lower>
+              <upper>[0.1,0.1,0.11]</upper>
+              <patches>[1,1,1]</patches>
+           </Box>
+           <spacing>[.0025,.0025,.0025]</spacing>
+       </Level>
         <BoundaryConditions>
           <Face side = "x-">
              <BCType id = "all" label = "Symmetric" var = "symmetry"> </BCType>

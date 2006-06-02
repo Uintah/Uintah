@@ -2600,65 +2600,6 @@ static void std_vector_Sl_double_Sg__append(std::vector<double > *self,std::vect
 #include <limits.h>
 
 
-SWIGINTERNSHORT int
-  SWIG_CheckUnsignedLongInRange(unsigned long value,
-				unsigned long max_value,
-				const char *errmsg) 
-{
-  if (value > max_value) {
-    if (errmsg) {
-      PyErr_Format(PyExc_OverflowError,
-		   "value %lu is greater than '%s' minimum %lu",
-		   value, errmsg, max_value);
-    }
-    return 0;
-  }
-  return 1;
- }
-
-
-#if UINT_MAX != ULONG_MAX
-SWIGINTERN int
-  SWIG_AsVal_unsigned_SS_int(PyObject *obj, unsigned int *val)
-{ 
-  const char* errmsg = val ? "unsigned int" : (char*)0;
-  unsigned long v;
-  if (SWIG_AsVal_unsigned_SS_long(obj, &v)) {
-    if (SWIG_CheckUnsignedLongInRange(v, INT_MAX, errmsg)) {
-      if (val) *val = (unsigned int)(v);
-      return 1;
-    }
-  } else {
-    PyErr_Clear();
-  }
-  if (val) {
-    SWIG_type_error(errmsg, obj);
-  }
-  return 0;    
-}
-#else
-SWIGINTERNSHORT unsigned int
-  SWIG_AsVal_unsigned_SS_int(PyObject *obj, unsigned int *val)
-{
-  return SWIG_AsVal_unsigned_SS_long(obj,(unsigned long *)val);
-}
-#endif
-
-
-SWIGINTERNSHORT unsigned int
-SWIG_As_unsigned_SS_int(PyObject* obj)
-{
-  unsigned int v;
-  if (!SWIG_AsVal_unsigned_SS_int(obj, &v)) {
-    /*
-      this is needed to make valgrind/purify happier. 
-     */
-    memset((void*)&v, 0, sizeof(unsigned int));
-  }
-  return v;
-}
-
-
 SWIGINTERN int
   SWIG_CheckLongInRange(long value, long min_value, long max_value,
 			const char *errmsg)
@@ -2727,16 +2668,75 @@ SWIG_As_int(PyObject* obj)
 
   
 SWIGINTERNSHORT int
-SWIG_Check_unsigned_SS_int(PyObject* obj)
+SWIG_Check_int(PyObject* obj)
 {
-  return SWIG_AsVal_unsigned_SS_int(obj, (unsigned int*)0);
+  return SWIG_AsVal_int(obj, (int*)0);
+}
+
+
+SWIGINTERNSHORT int
+  SWIG_CheckUnsignedLongInRange(unsigned long value,
+				unsigned long max_value,
+				const char *errmsg) 
+{
+  if (value > max_value) {
+    if (errmsg) {
+      PyErr_Format(PyExc_OverflowError,
+		   "value %lu is greater than '%s' minimum %lu",
+		   value, errmsg, max_value);
+    }
+    return 0;
+  }
+  return 1;
+ }
+
+
+#if UINT_MAX != ULONG_MAX
+SWIGINTERN int
+  SWIG_AsVal_unsigned_SS_int(PyObject *obj, unsigned int *val)
+{ 
+  const char* errmsg = val ? "unsigned int" : (char*)0;
+  unsigned long v;
+  if (SWIG_AsVal_unsigned_SS_long(obj, &v)) {
+    if (SWIG_CheckUnsignedLongInRange(v, INT_MAX, errmsg)) {
+      if (val) *val = (unsigned int)(v);
+      return 1;
+    }
+  } else {
+    PyErr_Clear();
+  }
+  if (val) {
+    SWIG_type_error(errmsg, obj);
+  }
+  return 0;    
+}
+#else
+SWIGINTERNSHORT unsigned int
+  SWIG_AsVal_unsigned_SS_int(PyObject *obj, unsigned int *val)
+{
+  return SWIG_AsVal_unsigned_SS_long(obj,(unsigned long *)val);
+}
+#endif
+
+
+SWIGINTERNSHORT unsigned int
+SWIG_As_unsigned_SS_int(PyObject* obj)
+{
+  unsigned int v;
+  if (!SWIG_AsVal_unsigned_SS_int(obj, &v)) {
+    /*
+      this is needed to make valgrind/purify happier. 
+     */
+    memset((void*)&v, 0, sizeof(unsigned int));
+  }
+  return v;
 }
 
   
 SWIGINTERNSHORT int
-SWIG_Check_int(PyObject* obj)
+SWIG_Check_unsigned_SS_int(PyObject* obj)
 {
-  return SWIG_AsVal_int(obj, (int*)0);
+  return SWIG_AsVal_unsigned_SS_int(obj, (unsigned int*)0);
 }
 
 #ifdef __cplusplus
@@ -5182,6 +5182,67 @@ static PyObject * vector_double_swigregister(PyObject *, PyObject *args) {
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
+static PyObject *_wrap_load_field(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::string arg1 ;
+    int result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:load_field",&obj0)) goto fail;
+    {
+        std::string *ptr = (std::string *)0;
+        int res = SWIG_AsPtr_std_string(obj0, &ptr);
+        if (!res) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("SCIRun::string", obj0);
+        } else if (!ptr) {
+            SWIG_null_ref("SCIRun::string");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        arg1 = *ptr;
+        if (res == SWIG_NEWOBJ) delete ptr;
+    }
+    {
+        Py_BEGIN_ALLOW_THREADS
+        result = (int)SCIRun::load_field(arg1);
+        
+        Py_END_ALLOW_THREADS
+    }
+    {
+        resultobj = SWIG_From_int((int)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_show_field(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    int arg1 ;
+    bool result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:show_field",&obj0)) goto fail;
+    {
+        arg1 = (int)(SWIG_As_int(obj0)); 
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        Py_BEGIN_ALLOW_THREADS
+        result = (bool)SCIRun::show_field(arg1);
+        
+        Py_END_ALLOW_THREADS
+    }
+    {
+        resultobj = SWIG_From_bool((bool)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject *_wrap_init_pysci(PyObject *, PyObject *args) {
     PyObject *resultobj;
     char **arg1 = (char **) 0 ;
@@ -5639,6 +5700,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"vector_double_append", _wrap_vector_double_append, METH_VARARGS, NULL},
 	 { (char *)"delete_vector_double", _wrap_delete_vector_double, METH_VARARGS, NULL},
 	 { (char *)"vector_double_swigregister", vector_double_swigregister, METH_VARARGS, NULL},
+	 { (char *)"load_field", _wrap_load_field, METH_VARARGS, NULL},
+	 { (char *)"show_field", _wrap_show_field, METH_VARARGS, NULL},
 	 { (char *)"init_pysci", _wrap_init_pysci, METH_VARARGS, NULL},
 	 { (char *)"terminate", _wrap_terminate, METH_VARARGS, NULL},
 	 { (char *)"test_function", _wrap_test_function, METH_VARARGS, NULL},

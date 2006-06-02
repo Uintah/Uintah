@@ -96,6 +96,19 @@ WindowEvent::~WindowEvent()
 {
 }
 
+SceneGraphEvent::SceneGraphEvent(GeomHandle o, string n, 
+				 const string &target,
+				 unsigned int time) :
+  BaseEvent(target, time),
+  obj_(o),
+  name_(n),
+  sg_id_(-1)
+{
+}
+
+SceneGraphEvent::~SceneGraphEvent()
+{
+}
     
 
 } // namespace SCIRun

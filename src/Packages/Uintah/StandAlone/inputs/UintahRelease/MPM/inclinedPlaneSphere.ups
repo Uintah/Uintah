@@ -3,48 +3,48 @@
 <Uintah_specification>
 
    <Meta>
-	<title>Inclined Plane with Sphere</title>
+       <title>Inclined Plane with Sphere</title>
    </Meta>
 
    <SimulationComponent>
         <type> mpm </type>
    </SimulationComponent>
    <Time>
-	<maxTime>2.2</maxTime>
-	<initTime>0.0</initTime>
-	<delt_min>0.00004</delt_min>
-	<delt_max>0.004</delt_max>
-	<timestep_multiplier>0.8</timestep_multiplier>
+       <maxTime>2.2</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.00004</delt_min>
+       <delt_max>0.004</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
 
    <DataArchiver>
         <filebase>incplane.uda</filebase>
         <outputInterval>.1</outputInterval>
-	<save label = "KineticEnergy"/>
-	<save label = "TotalMass"/>
-	<save label = "StrainEnergy"/>
-	<save label = "CenterOfMassPosition"/>
-	<save label = "CenterOfMassVelocity"/>
-	<save label = "p.x"/>
-	<save label = "p.volume"/>
-	<save label = "p.velocity"/>
-	<save label = "p.stress"/>
-	<save label = "g.mass"/>
-	<checkpoint cycle = "2" interval = "0.1"/>
+       <save label = "KineticEnergy"/>
+       <save label = "TotalMass"/>
+       <save label = "StrainEnergy"/>
+       <save label = "CenterOfMassPosition"/>
+       <save label = "CenterOfMassVelocity"/>
+       <save label = "p.x"/>
+       <save label = "p.volume"/>
+       <save label = "p.velocity"/>
+       <save label = "p.stress"/>
+       <save label = "g.mass"/>
+       <checkpoint cycle = "2" interval = "0.1"/>
    </DataArchiver>
 
     <MPM>
-	<time_integrator>explicit</time_integrator>
+       <time_integrator>explicit</time_integrator>
         <nodes8or27>27</nodes8or27>
     </MPM>
 
 
     <PhysicalConstants>
-	<gravity>[7.071,0.0,-7.071]</gravity>
+       <gravity>[7.071,0.0,-7.071]</gravity>
     </PhysicalConstants>
 
     <MaterialProperties>
-	<MPM>
+       <MPM>
             <material name = "Soft Plastic" >
                 <density>1000.0</density>
                 <constitutive_model type="comp_neo_hook_plastic">
@@ -56,16 +56,16 @@
                 </constitutive_model>
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1</specific_heat>
-		<geom_object>
-		    <sphere label="sphere">
-			<origin>[2.,0.,2.]</origin>
-			<radius> 1.6 </radius>
-		    </sphere>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>10</temperature>
- 		</geom_object>
-	    </material>
+              <geom_object>
+                  <sphere label="sphere">
+                     <origin>[2.,0.,2.]</origin>
+                     <radius> 1.6 </radius>
+                  </sphere>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>10</temperature>
+               </geom_object>
+           </material>
 
             <material name = "Hard Plastic" >
                 <density>10000.0</density>
@@ -78,26 +78,26 @@
                 </constitutive_model>
                 <thermal_conductivity>1.0</thermal_conductivity>
                 <specific_heat>1</specific_heat>
-		<geom_object>
-		    <box label="plane">
-			<min>[0,-2,-.8]</min>
-			<max>[12,2,0]</max>
-		    </box>
-		    <res>[2,2,2]</res>
-		    <velocity>[0.0,0.0,0]</velocity>
-		    <temperature>10</temperature>
- 		</geom_object>
-	    </material>
+              <geom_object>
+                  <box label="plane">
+                     <min>[0,-2,-.8]</min>
+                     <max>[12,2,0]</max>
+                  </box>
+                  <res>[2,2,2]</res>
+                  <velocity>[0.0,0.0,0]</velocity>
+                  <temperature>10</temperature>
+               </geom_object>
+           </material>
 
-	    <contact>
-	      <type>friction</type>
-	      <materials>[0,1]</materials>
-	      <mu> .495 </mu>
-	    </contact>
-	</MPM>
+           <contact>
+             <type>friction</type>
+             <materials>[0,1]</materials>
+             <mu> .495 </mu>
+           </contact>
+       </MPM>
 
     </MaterialProperties>
-	
+       
     <Grid>
       <BoundaryConditions>
          <Face side = "x-">

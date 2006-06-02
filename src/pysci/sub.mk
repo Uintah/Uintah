@@ -15,6 +15,7 @@ PSELIBS := 	Core/Util		\
 		Core/Geom		\
 		Core/Geometry		\
 		Core/Exceptions		\
+		Core/Algorithms/Visualization		\
 		Dataflow/Modules/Fields	\
 
 LIBS := -lpython2.4

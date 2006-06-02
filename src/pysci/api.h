@@ -8,6 +8,8 @@ namespace SCIRun {
 class CallbackOpenGLContext;
 using std::string;
 
+int load_field(string fname);
+bool show_field(int fld_id);
 void init_pysci(char**environment);
 void terminate();
 void test_function(string f1, string f2, string f3);

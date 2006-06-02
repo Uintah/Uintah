@@ -4,62 +4,62 @@
 <Uintah_specification>
 
    <Meta>
-	<title>PBX Manual RVE #1</title>
+       <title>PBX Manual RVE #1</title>
    </Meta>
 
    <Time>
-	<maxTime>0.2</maxTime>
-	<initTime>0.0</initTime>
-	<delt_min>0.000001</delt_min>
-	<delt_max>0.01</delt_max>
-	<timestep_multiplier>0.8</timestep_multiplier>
+       <maxTime>0.2</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.000001</delt_min>
+       <delt_max>0.01</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>pbxManual1.uda</filebase>
-	<outputInterval>0.001</outputInterval>
-	<save label = "p.x"/>
-	<save label = "p.mass"/>
-	<save label = "p.volume"/>
-	<save label = "p.stress"/>
+       <outputInterval>0.001</outputInterval>
+       <save label = "p.x"/>
+       <save label = "p.mass"/>
+       <save label = "p.volume"/>
+       <save label = "p.stress"/>
         <save label = "p.deformationMeasure"/>
         <save label = "p.volumedeformed" />
         <save label = "p.externalforce" />
 <!--
-	<save label = "KineticEnergy"/>
-	<save label = "TotalMass"/>
-	<save label = "StrainEnergy"/>
-	<save label = "CenterOfMassPosition"/>
-	<save label = "CenterOfMassVelocity"/>
-	<save label = "g.mass"/>
-	<save label = "g.stressFS"/>
+       <save label = "KineticEnergy"/>
+       <save label = "TotalMass"/>
+       <save label = "StrainEnergy"/>
+       <save label = "CenterOfMassPosition"/>
+       <save label = "CenterOfMassVelocity"/>
+       <save label = "g.mass"/>
+       <save label = "g.stressFS"/>
 -->
-	<checkpoint cycle = "2" interval = "0.01"/>
+       <checkpoint cycle = "2" interval = "0.01"/>
    </DataArchiver>
 
     <MPM>
-	<time_integrator>explicit</time_integrator>
+       <time_integrator>explicit</time_integrator>
     </MPM>
 
     <PhysicalConstants>
-	<gravity>[0,0,0]</gravity>
+       <gravity>[0,0,0]</gravity>
     </PhysicalConstants>
 
     <MaterialProperties>
-	<MPM>
-	    <material name = "Binder">
-		<density>1900.0</density>
+       <MPM>
+           <material name = "Binder">
+              <density>1900.0</density>
                 <constitutive_model type="hypo_elastic">
                    <G>0.23e6</G>
                    <K>11.7e6</K>
                 </constitutive_model>
-		<thermal_conductivity>1.0</thermal_conductivity>
-		<specific_heat>5</specific_heat>
-		<geom_object>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
                    <difference>
-		    <box label = "matrix">
-			<min>[0.0,0.0,0.0]</min>
-			<max>[1.0,1.0,1.0]</max>
-		    </box>
+                  <box label = "matrix">
+                     <min>[0.0,0.0,0.0]</min>
+                     <max>[1.0,1.0,1.0]</max>
+                  </box>
                     <union>
                       <cylinder label="part1">
                         <bottom>[0.500000,0.500000,0.0]</bottom>
@@ -628,22 +628,22 @@
                       </cylinder>
                     </union>
                    </difference>
-		   <res>[2,2,1]</res>
-		   <velocity>[0.0,0.0,0]</velocity>
-		   <temperature>293</temperature>
- 		</geom_object>
-	    </material>
-	    <material name = "HMX">
-		<density>1190.0</density>
+                 <res>[2,2,1]</res>
+                 <velocity>[0.0,0.0,0]</velocity>
+                 <temperature>293</temperature>
+               </geom_object>
+           </material>
+           <material name = "HMX">
+              <density>1190.0</density>
                 <constitutive_model type="hypo_elastic">
                    <G>5.8e9</G>
                    <K>1.43e10</K>
                 </constitutive_model>
-		<thermal_conductivity>1.0</thermal_conductivity>
-		<specific_heat>5</specific_heat>
-		<geom_object>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
                    <intersection>
-		    <box label = "matrix"> </box>
+                  <box label = "matrix"> </box>
                     <union>
                       <cylinder label="part1"> </cylinder>
                       <cylinder label="part2"> </cylinder>
@@ -760,20 +760,20 @@
                       <cylinder label="part113"> </cylinder>
                     </union>
                    </intersection>
-		    <res>[2,2,1]</res>
-		    <velocity>[0.0,0.0,0.0]</velocity>
-		    <temperature>293</temperature>
- 		</geom_object>
-	    </material>
+                  <res>[2,2,1]</res>
+                  <velocity>[0.0,0.0,0.0]</velocity>
+                  <temperature>293</temperature>
+               </geom_object>
+           </material>
 
-	    <contact>
-	      <type>single_velocity</type>
-	      <materials>[0,1]</materials>
-	    </contact>
-	</MPM>
+           <contact>
+             <type>single_velocity</type>
+             <materials>[0,1]</materials>
+           </contact>
+       </MPM>
 
     </MaterialProperties>
-	
+       
 <!--
     Actual resolution of the RVE is 256 x 256.
     Added 14 grid cells in the X and Y directions to allow for
@@ -781,29 +781,29 @@
     of the applied force).
 -->
     <Grid>
-	<Level>
-	    <Box label = "1">
-		<lower>[-0.0546875,-0.0546875,0.0]</lower>
-		<upper>[1.0546875,1.0546875,1.0]</upper>
-	        <resolution>[270,270,4]</resolution>
-		<patches>[4,4,1]</patches>
-	    </Box>
-	</Level>
+       <Level>
+           <Box label = "1">
+              <lower>[-0.0546875,-0.0546875,0.0]</lower>
+              <upper>[1.0546875,1.0546875,1.0]</upper>
+               <resolution>[270,270,4]</resolution>
+              <patches>[4,4,1]</patches>
+           </Box>
+       </Level>
     </Grid>
 
     <PhysicalBC>
-	<MPM>
-	   <force>
-	      <lower>[0.0, 0.0, 0.0]</lower>
-	      <upper>[0.0, 1.0, 1.0]</upper>
-	      <force_density>[-10,0,0]</force_density>
-	   </force>
-	   <force>
-	      <lower>[1.0, 0.0, 0.0]</lower>
-	      <upper>[1.0, 1.0, 1.0]</upper>
-	      <force_density>[10,0,0]</force_density>
-	   </force>
-	</MPM>
+       <MPM>
+          <force>
+             <lower>[0.0, 0.0, 0.0]</lower>
+             <upper>[0.0, 1.0, 1.0]</upper>
+             <force_density>[-10,0,0]</force_density>
+          </force>
+          <force>
+             <lower>[1.0, 0.0, 0.0]</lower>
+             <upper>[1.0, 1.0, 1.0]</upper>
+             <force_density>[10,0,0]</force_density>
+          </force>
+       </MPM>
     </PhysicalBC>
     
 </Uintah_specification>

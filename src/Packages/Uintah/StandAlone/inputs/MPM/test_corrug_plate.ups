@@ -135,7 +135,7 @@
       </contact>
     </MPM>
   </MaterialProperties>
-	
+       
   <Grid>
     <Level>
       <Box label = "1">
@@ -170,7 +170,7 @@
       </Face>                  
       <Face side = "z+">
         <BCType id = "all" var = "symmetry" label = "Symmetric"> </BCType>
-      </Face>         	 
+      </Face>                 
     </BoundaryConditions>
   </Grid>
 

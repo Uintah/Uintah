@@ -6,38 +6,38 @@
 <Uintah_specification>
 
    <Meta>
-	<title>SIF calculation for polishing simulation</title>
+       <title>SIF calculation for polishing simulation</title>
    </Meta>
 
    <Time>
-	<maxTime>400.0e-3</maxTime>
-	<initTime>0.0</initTime>
-	<delt_min>0.0</delt_min>
-	<delt_max>8.0e-3</delt_max>
-	<timestep_multiplier>0.8</timestep_multiplier>
+       <maxTime>400.0e-3</maxTime>
+       <initTime>0.0</initTime>
+       <delt_min>0.0</delt_min>
+       <delt_max>8.0e-3</delt_max>
+       <timestep_multiplier>0.8</timestep_multiplier>
    </Time>
    <DataArchiver>
         <filebase>NF.uda</filebase>
-	<outputInterval>8.0e-3</outputInterval>
+       <outputInterval>8.0e-3</outputInterval>
         <save label = "p.x"/>
         <save label = "p.volume"/>
-	<!--<save label = "p.stress"/>
+       <!--<save label = "p.stress"/>
         <save label = "KineticEnergy"/>
-	<save label = "TotalMass"/>
-	<save label = "StrainEnergy"/>
-	<save label = "CenterOfMassPosition"/>
-	<save label = "CenterOfMassVelocity"/>
+       <save label = "TotalMass"/>
+       <save label = "StrainEnergy"/>
+       <save label = "CenterOfMassPosition"/>
+       <save label = "CenterOfMassVelocity"/>
         <save label = "p.particleID"/>
-	<save label = "g.mass"/>
-	<save label = "g.stressFS"/>-->
+       <save label = "g.mass"/>
+       <save label = "g.stressFS"/>-->
         <save_crack_geometry>true</save_crack_geometry>
 
-	<checkpoint cycle = "2" interval = "80.0e-3"/>
+       <checkpoint cycle = "2" interval = "80.0e-3"/>
    </DataArchiver>
 
     <MPM>
-	<time_integrator>fracture</time_integrator>
-	<nodes8or27>8</nodes8or27>
+       <time_integrator>fracture</time_integrator>
+       <nodes8or27>8</nodes8or27>
         <use_load_curves> true </use_load_curves>
         <calculate_fracture_parameters>true</calculate_fracture_parameters>
         <use_volume_integral>false</use_volume_integral>
@@ -45,29 +45,29 @@
     </MPM>
 
     <PhysicalConstants>
-	<gravity>[0,0,0]</gravity>
+       <gravity>[0,0,0]</gravity>
     </PhysicalConstants>
 
     <MaterialProperties>
-	<MPM>
-	    <material>
-		<density>3.5e-6</density>
-		<constitutive_model type="hypo_elastic"> 
-		   <G>385.417</G>
-		   <K>513.889</K>
-	        </constitutive_model>
-		<thermal_conductivity>1.0e-3</thermal_conductivity>
-		<specific_heat>5</specific_heat>
-		<geom_object>
-		    <cylinder label = "particle">
+       <MPM>
+           <material>
+              <density>3.5e-6</density>
+              <constitutive_model type="hypo_elastic"> 
+                 <G>385.417</G>
+                 <K>513.889</K>
+               </constitutive_model>
+              <thermal_conductivity>1.0e-3</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <cylinder label = "particle">
                         <bottom> [4.0, 24.0, 0.0]   </bottom>
                         <top>    [4.0, 24.0, 1.0]   </top>
                         <radius> 4.0 </radius>
-		    </cylinder>
-		    <res>[2,2,2]</res>
-		    <velocity>[100.0, 0.0, 0.0]</velocity>
-		    <temperature>0</temperature>
- 		</geom_object>
+                  </cylinder>
+                  <res>[2,2,2]</res>
+                  <velocity>[100.0, 0.0, 0.0]</velocity>
+                  <temperature>0</temperature>
+               </geom_object>
             </material>
 
             <material>
@@ -131,17 +131,17 @@
                       </curved_quad>
                    </crack_segments>
                 </crack>
-	    </material>
+           </material>
 
-	    <contact>
-	      <type>friction</type>
+           <contact>
+             <type>friction</type>
               <mu>0.1</mu>
-	      <materials>[0]</materials>
-	    </contact>
-	</MPM>
+             <materials>[0]</materials>
+           </contact>
+       </MPM>
 
     </MaterialProperties>
-	
+       
     <Grid>
         <Level>
             <Box label = "1">
@@ -182,7 +182,7 @@
     </Grid>
 
     <PhysicalBC>
-	<MPM>
+       <MPM>
        <pressure>
          <geom_object>
            <box label = "top">
@@ -249,7 +249,7 @@
            </time_point>
          </load_curve>
        </pressure>
-	</MPM>
+       </MPM>
     </PhysicalBC>
     
 </Uintah_specification>

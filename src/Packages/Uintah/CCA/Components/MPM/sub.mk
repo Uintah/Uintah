@@ -16,15 +16,16 @@ SRCS     += $(SRCDIR)/SerialMPM.cc \
 	$(SRCDIR)/FractureMPM.cc \
 	$(SRCDIR)/ImpMPM.cc \
 	$(SRCDIR)/ShellMPM.cc \
-	$(SRCDIR)/PetscSolver.cc \
 	$(SRCDIR)/SimpleSolver.cc \
+	$(SRCDIR)/Solver.cc \
 	$(SRCDIR)/MPMBoundCond.cc \
-	$(SRCDIR)/MPMFlags.cc \
-#	$(SRCDIR)/ParticleInterpolatorFactory.cc \
-#	$(SRCDIR)/MPMAlgorithm.cc \
-#	$(SRCDIR)/MPMDriver.cc \
-#	$(SRCDIR)/Implicit.cc \
-#	$(SRCDIR)/Explicit.cc 
+	$(SRCDIR)/MPMFlags.cc
+
+ifeq ($(HAVE_PETSC),yes)
+  SRCS += $(SRCDIR)/PetscSolver.cc 
+else
+  SRCS += $(SRCDIR)/FakePetscSolver.cc
+endif
 
 SUBDIRS := \
 	$(SRCDIR)/ConstitutiveModel \
@@ -56,7 +57,7 @@ PSELIBS := \
 LIBS := $(XML2_LIBRARY) $(VT_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 
 ifeq ($(HAVE_PETSC),yes)
-LIBS := $(LIBS) $(PETSC_LIBRARY) 
+  LIBS := $(LIBS) $(PETSC_LIBRARY) 
 endif
 
 

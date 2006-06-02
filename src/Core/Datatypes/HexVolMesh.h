@@ -551,13 +551,18 @@ private:
   //! Face information.
   struct PFace {
     typename Node::index_type         nodes_[4];   //! 4 nodes makes a face.
-    typename Cell::index_type         cells_[2];   //! 2 cells may have this face is in common.
- 
+    typename Cell::index_type         cells_[2];   //! 2 cells may have this face is in.
+    typename Node::index_type         snodes_[4];   //! sorted nodes, used for hashing
+
     PFace() {
       nodes_[0] = MESH_NO_NEIGHBOR;
       nodes_[1] = MESH_NO_NEIGHBOR;
       nodes_[2] = MESH_NO_NEIGHBOR;
       nodes_[3] = MESH_NO_NEIGHBOR;
+      snodes_[0] = MESH_NO_NEIGHBOR;
+      snodes_[1] = MESH_NO_NEIGHBOR;
+      snodes_[2] = MESH_NO_NEIGHBOR;
+      snodes_[3] = MESH_NO_NEIGHBOR;
       cells_[0] = MESH_NO_NEIGHBOR;
       cells_[1] = MESH_NO_NEIGHBOR;
     }
@@ -570,6 +575,20 @@ private:
       nodes_[1] = n2;
       nodes_[2] = n3;
       nodes_[3] = n4;
+      snodes_[0] = n1;
+      snodes_[1] = n2;
+      snodes_[2] = n3;
+      snodes_[3] = n4;
+      typename Node::index_type tmp;
+      // bubble sort the 4 node indices -- smallest one goes to nodes_[0]
+      int i,j;
+      for (i=0; i<3; i++) {
+        for (j=i+1; j<4; j++) {
+          if (snodes_[i] > snodes_[j]) {
+            tmp = snodes_[i]; snodes_[i] = snodes_[j]; snodes_[j] = tmp;
+          }
+        }
+      }
     }
 
     bool shared() const { return ((cells_[0] != MESH_NO_NEIGHBOR) &&
@@ -577,66 +596,23 @@ private:
 
     //! true if both have the same nodes (order does not matter)
     bool operator==(const PFace &f) const {
-      return (((nodes_[0] == f.nodes_[0])&&(nodes_[2] == f.nodes_[2])) &&
-              ( ((nodes_[1]==f.nodes_[1])&&(nodes_[3] == f.nodes_[3]))||
-                ((nodes_[1]==f.nodes_[3])&&(nodes_[3] == f.nodes_[1]))));
-              }
+      return ((snodes_[0] == f.snodes_[0]) && (snodes_[1] == f.snodes_[1]) &&
+              (snodes_[2] == f.snodes_[2]) && (snodes_[3] == f.snodes_[3]));
+    }
 
     //! Compares each node.  When a non equal node is found the <
     //! operator is applied.
     bool operator<(const PFace &f) const {
-      if ((nodes_[1] < nodes_[2]) && (f.nodes_[1] < f.nodes_[2]))
-      {
-        if (nodes_[0] == f.nodes_[0])
-          if (nodes_[1] == f.nodes_[1])
-            if (nodes_[2] == f.nodes_[2])
-              return (nodes_[3] < f.nodes_[3]);
-            else
-              return (nodes_[2] < f.nodes_[2]);
+      if (snodes_[0] == f.snodes_[0])
+        if (snodes_[1] == f.snodes_[1])
+          if (snodes_[2] == f.snodes_[2])
+            return (snodes_[3] < f.snodes_[3]);
           else
-            return (nodes_[1] < f.nodes_[1]);
+            return (snodes_[2] < f.snodes_[2]);
         else
-          return (nodes_[0] < f.nodes_[0]);
-      }
-      else if ((nodes_[1] < nodes_[2]) && (f.nodes_[1] > f.nodes_[2]))
-      {
-        if (nodes_[0] == f.nodes_[0])
-          if (nodes_[1] == f.nodes_[3])
-            if (nodes_[2] == f.nodes_[2])
-              return (nodes_[3] < f.nodes_[1]);
-            else
-              return (nodes_[2] < f.nodes_[2]);
-          else
-            return (nodes_[1] < f.nodes_[3]);
-        else
-          return (nodes_[0] < f.nodes_[0]);      
-      }
-      else if ((nodes_[1] > nodes_[2]) && (f.nodes_[1] < f.nodes_[2]))
-      {
-        if (nodes_[0] == f.nodes_[0])
-          if (nodes_[3] == f.nodes_[1])
-            if (nodes_[2] == f.nodes_[2])
-              return (nodes_[1] < f.nodes_[3]);
-            else
-              return (nodes_[2] < f.nodes_[2]);
-          else
-            return (nodes_[3] < f.nodes_[1]);
-        else
-          return (nodes_[0] < f.nodes_[0]);      
-      }
+          return (snodes_[1] < f.snodes_[1]);
       else
-      {
-        if (nodes_[0] == f.nodes_[0])
-          if (nodes_[3] == f.nodes_[3])
-            if (nodes_[2] == f.nodes_[2])
-              return (nodes_[1] < f.nodes_[1]);
-            else
-              return (nodes_[2] < f.nodes_[2]);
-          else
-            return (nodes_[3] < f.nodes_[3]);
-        else
-          return (nodes_[0] < f.nodes_[0]);      
-      }
+        return (snodes_[0] < f.snodes_[0]);
     }
   };
 
@@ -700,20 +676,10 @@ private:
 
     //! This is the hash function
     size_t operator()(const PFace &f) const {
-      if (f.nodes_[1] < f.nodes_[2] )
-      {
-        return ((f.nodes_[0] << sz_quarter_int << sz_quarter_int <<sz_quarter_int) |
-              (up4_mask & (f.nodes_[1] << sz_quarter_int << sz_quarter_int)) |
-              (mid4_mask & (f.nodes_[2] << sz_quarter_int)) |
-              (low4_mask & f.nodes_[3]));
-      }
-      else
-      {
-        return ((f.nodes_[0] << sz_quarter_int << sz_quarter_int <<sz_quarter_int) |
-              (up4_mask & (f.nodes_[3] << sz_quarter_int << sz_quarter_int)) |
-              (mid4_mask & (f.nodes_[2] << sz_quarter_int)) |
-              (low4_mask & f.nodes_[1]));
-      }
+      return ((f.snodes_[0] << sz_quarter_int << sz_quarter_int <<sz_quarter_int) |
+              (up4_mask & (f.snodes_[1] << sz_quarter_int << sz_quarter_int)) |
+              (mid4_mask & (f.snodes_[2] << sz_quarter_int)) |
+              (low4_mask & f.snodes_[3]));
     }
     //! This should return less than rather than equal to.
     bool operator()(const PFace &f1, const PFace& f2) const {
@@ -774,12 +740,7 @@ private:
   inline
   void hash_face(typename Node::index_type n1, typename Node::index_type n2,
                  typename Node::index_type n3, typename Node::index_type n4,
-                 typename Cell::index_type ci, unsigned int facenumber,
-                 face_ht &table) const;
-
-  inline bool order_face_nodes(typename Node::index_type& n1, typename Node::index_type& n2,
-                 typename Node::index_type& n3, typename Node::index_type& n4) const;
-
+                 typename Cell::index_type ci, face_ht &table) const;
 
   //! useful functors
   struct FillNodeNeighbors {
@@ -1035,79 +996,6 @@ HexVolMesh<Basis>::transform(const Transform &t)
   synchronize_lock_.unlock();
 }
 
-template <class Basis>
-bool
-HexVolMesh<Basis>::order_face_nodes(typename Node::index_type& n1,
-                                    typename Node::index_type& n2,
-                                    typename Node::index_type& n3,
-                                    typename Node::index_type& n4) const
-{
-  // Check for degenerate or misformed face
-  // Opposite faces cannot be equal
-  if ((n1 == n3)||(n2==n4)) return (false);
-
-  // Face must have three unique identifiers otherwise it was condition
-  // n1==n3 || n2==n4 would be met.
-  
-  if (n1==n2)
-  {
-    if (n3==n4) return (false); // this is a line not a face
-    typename Node::index_type t;
-    // shift one position to left
-    t = n1; n1 = n2; n2 = n3; n3 = n4; n4 = t; 
-    return (true);
-  }
-  else if (n2 == n3)
-  {
-    if (n1==n4) return (false); // this is a line not a face
-    typename Node::index_type t;
-    // shift two positions to left
-    t = n1; n1 = n3; n3 = t; t = n2; n2 = n4; n4 = t;
-    return (true);
-  }
-  else if (n3 == n4)
-  {
-    typename Node::index_type t;
-    // shift one positions to right
-    t = n4; n4 = n3; n3 = n2; n2 = n1; n1 = t;    
-    return (true);
-  }
-  else if (n4 == n1)
-  {
-    // proper order
-    return (true);
-  }
-  else
-  {
-    if ((n1 < n2)&&(n1 < n3)&&(n1 < n4))
-    {
-      // proper order
-      return (true);
-    }
-    else if ((n2 < n3)&&(n2 < n4))
-    {
-      typename Node::index_type t;
-      // shift one position to left
-      t = n1; n1 = n2; n2 = n3; n3 = n4; n4 = t; 
-      return (true);    
-    }
-    else if (n3 < n4)
-    {
-      typename Node::index_type t;
-      // shift two positions to left
-      t = n1; n1 = n3; n3 = t; t = n2; n2 = n4; n4 = t;
-      return (true);    
-    }
-    else
-    {
-      typename Node::index_type t;
-      // shift one positions to right
-      t = n4; n4 = n3; n3 = n2; n2 = n1; n1 = t;    
-      return (true);    
-    }
-  }
-}
-
 
 template <class Basis>
 void
@@ -1116,15 +1004,8 @@ HexVolMesh<Basis>::hash_face(typename Node::index_type n1,
                              typename Node::index_type n3,
                              typename Node::index_type n4,
                              typename Cell::index_type ci,
-                             unsigned int face_number, 
                              face_ht &table) const
 {
-  // Reorder nodes while maintaining CCW or CW orientation
-  // Check for degenerate faces, if faces has degeneracy it
-  // will be ignored (e.g. nodes on opposite corners are equal,
-  // or more then two nodes are equal)
-   
-  if (!(order_face_nodes(n1,n2,n3,n4))) return;
   PFace f(n1, n2, n3, n4);
 
   typename face_ht::iterator iter = table.find(f);
@@ -1137,10 +1018,12 @@ HexVolMesh<Basis>::hash_face(typename Node::index_type n1,
       cerr << "This Mesh has problems: Cells #"
            << f.cells_[0] << ", #" << f.cells_[1] << ", and #" << ci
            << " are illegally adjacent." << std::endl;
+      //     SCI_THROW(InternalError("Corrupt HexVolMesh"));
     } else if (f.cells_[0] == ci) {
       cerr << "This Mesh has problems: Cells #"
            << f.cells_[0] << " and #" << ci
            << " are the same." << std::endl;
+      //     SCI_THROW(InternalError("Corrupt HexVolMesh"));
     } else {
       f.cells_[1] = ci; // add this cell
       table.erase(iter);
@@ -1163,12 +1046,12 @@ HexVolMesh<Basis>::compute_faces()
   {
     get_nodes(arr, *ci);
     // 6 faces -- each is entered CCW from outside looking in
-    hash_face(arr[0], arr[1], arr[2], arr[3], *ci, 0, face_table_);
-    hash_face(arr[7], arr[6], arr[5], arr[4], *ci, 1, face_table_);
-    hash_face(arr[0], arr[4], arr[5], arr[1], *ci, 2, face_table_);
-    hash_face(arr[2], arr[6], arr[7], arr[3], *ci, 3, face_table_);
-    hash_face(arr[3], arr[7], arr[4], arr[0], *ci, 4, face_table_);
-    hash_face(arr[1], arr[5], arr[6], arr[2], *ci, 5, face_table_);
+    hash_face(arr[0], arr[1], arr[2], arr[3], *ci, face_table_);
+    hash_face(arr[7], arr[6], arr[5], arr[4], *ci, face_table_);
+    hash_face(arr[0], arr[4], arr[5], arr[1], *ci, face_table_);
+    hash_face(arr[2], arr[6], arr[7], arr[3], *ci, face_table_);
+    hash_face(arr[3], arr[7], arr[4], arr[0], *ci, face_table_);
+    hash_face(arr[1], arr[5], arr[6], arr[2], *ci, face_table_);
     ++ci;
   }
   // dump edges into the edges_ container.
@@ -1179,7 +1062,7 @@ HexVolMesh<Basis>::compute_faces()
   while (ht_iter != face_table_.end())
   {
     *f_iter = (*ht_iter).first;
-    (*ht_iter).second = i;  
+    (*ht_iter).second = i;
     ++f_iter; ++ht_iter; i++;
   }
 
@@ -1194,7 +1077,6 @@ HexVolMesh<Basis>::hash_edge(typename Node::index_type n1,
                              typename Cell::index_type ci,
                              edge_ht &table) const
 {
-  if (n1 == n2) return;
   PEdge e(n1, n2);
   typename edge_ht::iterator iter = table.find(e);
   if (iter == table.end()) {
@@ -1481,33 +1363,19 @@ HexVolMesh<Basis>::get_edges(typename Edge::array_type &array,
 {
   ASSERTMSG(synchronized_ & FACES_E,
             "Must call synchronize FACES_E on HexVolMesh first");
+  array.clear();
+  const PFace &f = faces_[idx];
+  PEdge e0(f.nodes_[0], f.nodes_[1]);
+  PEdge e1(f.nodes_[1], f.nodes_[2]);
+  PEdge e2(f.nodes_[2], f.nodes_[3]);
+  PEdge e3(f.nodes_[3], f.nodes_[0]);
+
   ASSERTMSG(synchronized_ & EDGES_E,
             "Must call synchronize EDGES_E on HexVolMesh first");
-
-  array.clear();
-  array.reserve(4);
-  const PFace &f = faces_[idx];
-  
-  if (f.nodes_[0] != f.nodes_[1])
-  {
-    PEdge e(f.nodes_[0], f.nodes_[1]);  
-    array.push_back((*(edge_table_.find(e))).second);
-  }
-  if (f.nodes_[1] != f.nodes_[2])
-  {
-    PEdge e(f.nodes_[1], f.nodes_[2]);  
-    array.push_back((*(edge_table_.find(e))).second);
-  }
-  if (f.nodes_[2] != f.nodes_[3])
-  {
-    PEdge e(f.nodes_[2], f.nodes_[3]);  
-    array.push_back((*(edge_table_.find(e))).second);
-  }
-  if (f.nodes_[3] != f.nodes_[0])
-  {
-    PEdge e(f.nodes_[3], f.nodes_[0]);  
-    array.push_back((*(edge_table_.find(e))).second);
-  }
+  array.push_back((*(edge_table_.find(e0))).second);
+  array.push_back((*(edge_table_.find(e1))).second);
+  array.push_back((*(edge_table_.find(e2))).second);
+  array.push_back((*(edge_table_.find(e3))).second);
 }
 
 
@@ -1517,39 +1385,34 @@ HexVolMesh<Basis>::get_edges(typename Edge::array_type &array,
                              typename Cell::index_type idx) const
 {
   array.clear();
-  array.reserve(12);
   const int off = idx * 8;
-  typename Node::index_type n1,n2;
+  PEdge e00(cells_[off + 0], cells_[off + 1]);
+  PEdge e01(cells_[off + 1], cells_[off + 2]);
+  PEdge e02(cells_[off + 2], cells_[off + 3]);
+  PEdge e03(cells_[off + 3], cells_[off + 0]);
+  PEdge e04(cells_[off + 4], cells_[off + 5]);
+  PEdge e05(cells_[off + 5], cells_[off + 6]);
+  PEdge e06(cells_[off + 6], cells_[off + 7]);
+  PEdge e07(cells_[off + 7], cells_[off + 4]);
+  PEdge e08(cells_[off + 0], cells_[off + 4]);
+  PEdge e09(cells_[off + 5], cells_[off + 1]);
+  PEdge e10(cells_[off + 2], cells_[off + 6]);
+  PEdge e11(cells_[off + 7], cells_[off + 3]);
 
   ASSERTMSG(synchronized_ & EDGES_E,
             "Must call synchronize EDGES_E on HexVolMesh first");
-  
-  n1 = cells_[off   ]; n2 = cells_[off + 1];
-  if (n1 != n2) { PEdge e(n1,n2); array.push_back((*(edge_table_.find(e))).second); }
-  n1 = cells_[off + 1]; n2 = cells_[off + 2];
-  if (n1 != n2) { PEdge e(n1,n2); array.push_back((*(edge_table_.find(e))).second); }
-  n1 = cells_[off + 2]; n2 = cells_[off + 3];
-  if (n1 != n2) { PEdge e(n1,n2); array.push_back((*(edge_table_.find(e))).second); }
-  n1 = cells_[off + 3]; n2 = cells_[off   ];
-  if (n1 != n2) { PEdge e(n1,n2); array.push_back((*(edge_table_.find(e))).second); }
-
-  n1 = cells_[off + 4]; n2 = cells_[off + 5];
-  if (n1 != n2) { PEdge e(n1,n2); array.push_back((*(edge_table_.find(e))).second); }
-  n1 = cells_[off + 5]; n2 = cells_[off + 6];
-  if (n1 != n2) { PEdge e(n1,n2); array.push_back((*(edge_table_.find(e))).second); }
-  n1 = cells_[off + 6]; n2 = cells_[off + 7];
-  if (n1 != n2) { PEdge e(n1,n2); array.push_back((*(edge_table_.find(e))).second); }
-  n1 = cells_[off + 7]; n2 = cells_[off + 4];
-  if (n1 != n2) { PEdge e(n1,n2); array.push_back((*(edge_table_.find(e))).second); }
-
-  n1 = cells_[off    ]; n2 = cells_[off + 4];
-  if (n1 != n2) { PEdge e(n1,n2); array.push_back((*(edge_table_.find(e))).second); }
-  n1 = cells_[off + 5]; n2 = cells_[off + 1];
-  if (n1 != n2) { PEdge e(n1,n2); array.push_back((*(edge_table_.find(e))).second); }
-  n1 = cells_[off + 2]; n2 = cells_[off + 6];
-  if (n1 != n2) { PEdge e(n1,n2); array.push_back((*(edge_table_.find(e))).second); }
-  n1 = cells_[off + 7]; n2 = cells_[off + 3];
-  if (n1 != n2) { PEdge e(n1,n2); array.push_back((*(edge_table_.find(e))).second); }
+  array.push_back((*(edge_table_.find(e00))).second);
+  array.push_back((*(edge_table_.find(e01))).second);
+  array.push_back((*(edge_table_.find(e02))).second);
+  array.push_back((*(edge_table_.find(e03))).second);
+  array.push_back((*(edge_table_.find(e04))).second);
+  array.push_back((*(edge_table_.find(e05))).second);
+  array.push_back((*(edge_table_.find(e06))).second);
+  array.push_back((*(edge_table_.find(e07))).second);
+  array.push_back((*(edge_table_.find(e08))).second);
+  array.push_back((*(edge_table_.find(e09))).second);
+  array.push_back((*(edge_table_.find(e10))).second);
+  array.push_back((*(edge_table_.find(e11))).second);
 }
 
 template <class Basis>
@@ -1562,7 +1425,6 @@ HexVolMesh<Basis>::get_face(typename Face::index_type &face,
 {
   ASSERTMSG(synchronized_ & FACES_E,
             "Must call synchronize FACES_E on HexVolMesh first");
-  if(!(order_face_nodes(n1,n2,n3,n4))) return (false);
   PFace f(n1, n2, n3, n4);
   typename face_ht::const_iterator fiter = face_table_.find(f);
   if (fiter == face_table_.end()) {
@@ -1578,53 +1440,23 @@ HexVolMesh<Basis>::get_faces(typename Face::array_type &array,
                              typename Cell::index_type idx) const
 {
   array.clear();
-  array.reserve(8);
+
+  const int off = idx * 8;
+  PFace f0(cells_[off + 0], cells_[off + 1], cells_[off + 2], cells_[off + 3]);
+  PFace f1(cells_[off + 4], cells_[off + 5], cells_[off + 6], cells_[off + 7]);
+  PFace f2(cells_[off + 0], cells_[off + 4], cells_[off + 5], cells_[off + 1]);
+  PFace f3(cells_[off + 2], cells_[off + 6], cells_[off + 7], cells_[off + 3]);
+  PFace f4(cells_[off + 3], cells_[off + 7], cells_[off + 4], cells_[off + 0]);
+  PFace f5(cells_[off + 1], cells_[off + 5], cells_[off + 6], cells_[off + 2]);
 
   ASSERTMSG(synchronized_ & FACES_E,
             "Must call synchronize FACES_E on HexVolMesh first");
-  
-  const int off = idx * 8;
-  typename Node::index_type n1,n2,n3,n4;
-  
-  // Put faces in node ordering from smallest node and then following CW or CCW
-  // ordering. Test for degenerate elements. Degenerate faces are only added if they
-  // are valid (only two neighboring nodes are equal)
-  n1 = cells_[off    ]; n2 = cells_[off + 1]; n3 = cells_[off + 2]; n4 = cells_[off + 3];
-  if (order_face_nodes(n1,n2,n3,n4))
-  {
-    PFace f(n1,n2,n3,n4);
-    array.push_back((*(face_table_.find(f))).second);
-  }
-  n1 = cells_[off + 4]; n2 = cells_[off + 5]; n3 = cells_[off + 6]; n4 = cells_[off + 7];
-  if (order_face_nodes(n1,n2,n3,n4))
-  {
-    PFace f(n1,n2,n3,n4);
-    array.push_back((*(face_table_.find(f))).second);
-  }
-  n1 = cells_[off    ]; n2 = cells_[off + 4]; n3 = cells_[off + 5]; n4 = cells_[off + 1];
-  if (order_face_nodes(n1,n2,n3,n4))
-  {
-    PFace f(n1,n2,n3,n4);
-    array.push_back((*(face_table_.find(f))).second);
-  }
-  n1 = cells_[off + 2]; n2 = cells_[off + 6]; n3 = cells_[off + 7]; n4 = cells_[off + 3];
-  if (order_face_nodes(n1,n2,n3,n4))
-  {
-    PFace f(n1,n2,n3,n4);
-    array.push_back((*(face_table_.find(f))).second);
-  }
-  n1 = cells_[off + 3]; n2 = cells_[off + 7]; n3 = cells_[off + 4]; n4 = cells_[off    ];
-  if (order_face_nodes(n1,n2,n3,n4))
-  {
-    PFace f(n1,n2,n3,n4);
-    array.push_back((*(face_table_.find(f))).second);
-  }
-  n1 = cells_[off + 1]; n2 = cells_[off + 5]; n3 = cells_[off + 6]; n4 = cells_[off + 2];
-  if (order_face_nodes(n1,n2,n3,n4))
-  {
-    PFace f(n1,n2,n3,n4);
-    array.push_back((*(face_table_.find(f))).second);
-  }
+  array.push_back((*(face_table_.find(f0))).second);
+  array.push_back((*(face_table_.find(f1))).second);
+  array.push_back((*(face_table_.find(f2))).second);
+  array.push_back((*(face_table_.find(f3))).second);
+  array.push_back((*(face_table_.find(f4))).second);
+  array.push_back((*(face_table_.find(f5))).second);
 }
 
 
