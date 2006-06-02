@@ -35,11 +35,6 @@ using namespace std;
 //std::ostream& operator<<(std::ostream& out, const xmlNode & toWrite);
 //std::ostream& operator<<(std::ostream& out, const DOMText & toWrite);
 
-ProblemSpec::~ProblemSpec()
-{
-  // the problem spec doesn't allocate any new memory.
-}
-
 ProblemSpecP
 ProblemSpec::findBlock() const
 {

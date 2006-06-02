@@ -189,7 +189,6 @@ void HierarchicalRegridder::problemSetup_BulletProofing(const int k)
 
 Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const ProblemSpecP& ups)
 {
-  const char* blah = AllocatorSetDefaultTag("Regrid\n");
   rdbg << "HierarchicalRegridder::regrid() BGN" << endl;
 
   if (d_maxLevels <= 1)
@@ -294,7 +293,6 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
   GatherSubPatches(oldGrid, tempsched);
   
   Grid* newGrid = CreateGrid2(oldGrid, ups);  
-  AllocatorSetDefaultTag(blah);
   return newGrid;
 }
 

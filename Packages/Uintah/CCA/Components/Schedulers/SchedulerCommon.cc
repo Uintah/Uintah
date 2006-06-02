@@ -37,13 +37,22 @@
 #include <vector>
 #include <stdlib.h>
 
+#ifdef _WIN32
+#include <time.h>
+#endif
+
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
+#ifdef _WIN32
+#define SCISHARE __declspec(dllimport)
+#else
+#define SCISHARE
+#endif
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
-extern Mutex cerrLock;
+extern SCISHARE SCIRun::Mutex       cerrLock;
 extern DebugStream mixedDebug;
 
 static DebugStream dbg("SchedulerCommon", false);
@@ -973,11 +982,15 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
   // set so the load balancer will make an adequate neighborhood, as the default
   // neighborhood isn't good enough for the copy data timestep
 
+#ifndef _WIN32
   const char* tag = AllocatorSetDefaultTag("DoDataCopy");
+#endif
   this->compile(); 
   this->execute();
+#ifndef _WIN32
   AllocatorSetDefaultTag(tag);
-  
+#endif
+
   d_sharedState->setCopyDataTimestep(false);
 
   vector<VarLabelMatl<Level> > levelVariableInfo;

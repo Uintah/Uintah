@@ -5,8 +5,9 @@
 #include <Packages/Uintah/CCA/Components/Examples/SimpleCFD.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 
+#include <Packages/Uintah/CCA/Components/Examples/share.h>
 namespace Uintah {
-  class AMRSimpleCFD : public SimpleCFD {
+  class SCISHARE AMRSimpleCFD : public SimpleCFD {
   public:
     AMRSimpleCFD(const ProcessorGroup* myworld);
     virtual ~AMRSimpleCFD();

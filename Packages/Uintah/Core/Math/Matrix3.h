@@ -9,6 +9,7 @@
 #define __MATRIX3_H__
 
 #include <Packages/Uintah/Core/Math/TntJama/tnt.h>
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h> // for get_funTD(Matrix3) prototype
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/Assert.h>
 
@@ -20,6 +21,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/Core/Math/share.h>
 namespace Uintah {
 
   using SCIRun::Vector;
@@ -57,7 +59,7 @@ namespace Uintah {
     inline void set(double val);
 
     // assign a value to components of the Matrix3
-    void set(int i, int j, double val);
+    SCISHARE void set(int i, int j, double val);
 
     // assignment operator
     inline void operator = (const Matrix3 &m3);
@@ -111,7 +113,7 @@ namespace Uintah {
     inline bool solveCramer(Vector& rhs, Vector& x) const;
 
     //Inverse
-    Matrix3 Inverse() const;
+    SCISHARE Matrix3 Inverse() const;
 
     //Trace
     inline double Trace() const;
@@ -137,7 +139,7 @@ namespace Uintah {
     // Get a left or right polar decomposition of a non-singular square matrix
     // Returns right stretch and rotation if rightFlag == true
     // Returns left stretch and rotation if rightFlag == false
-    void polarDecomposition(Matrix3& stretch,
+    SCISHARE void polarDecomposition(Matrix3& stretch,
                             Matrix3& rotation,
                             double tolerance,
                             bool rightFlag) const;
@@ -146,15 +148,15 @@ namespace Uintah {
     // back the values.  If it returns 1, the value is passed back
     // in e1.  If it returns 2, the values are passed back in e1
     // and e2 such that e1 > e2.  If 3, then e1 > e2 > e3.
-    int getEigenValues(double& e1, double& e2, double& e3) const;
+    SCISHARE int getEigenValues(double& e1, double& e2, double& e3) const;
 
     // Get the eigen values of the 2x2 sub-matrix specified by
     // the appropriate plane, returning the number of different real
     // values.  If there is only 1 (unique) eigenvalue, it is
     // passed back in e1.  If 2, then e1 > e2.
-    int getXYEigenValues(double& e1, double& e2) const;
-    int getYZEigenValues(double& e1, double& e2) const;
-    int getXZEigenValues(double& e1, double& e2) const;
+    SCISHARE int getXYEigenValues(double& e1, double& e2) const;
+    SCISHARE int getYZEigenValues(double& e1, double& e2) const;
+    SCISHARE int getXZEigenValues(double& e1, double& e2) const;
   
     // Returns an array of eigenvectors that form the basis
     // of eigenvectors corresponding to the given eigenvalue.
@@ -205,10 +207,10 @@ namespace Uintah {
                       std::vector<Vector>& xg_basis,
                       double relative_scale /* MaxAbsElem() suggested */) const;
     //! support dynamic compilation
-    static const string& get_h_file_path();
+    SCISHARE static const string& get_h_file_path();
 
     /*! Calculate eigenvalues */
-    void eigen(Vector& eval, Matrix3& evec);
+    SCISHARE void eigen(Vector& eval, Matrix3& evec);
 
     /*! Return a TNT Array2D */
     inline TNT::Array2D<double> toTNTArray2D() const;
@@ -224,17 +226,17 @@ namespace Uintah {
     // any row has zeroes in every other row and a one in that row.
     // If rhs == NULL, then the rhs is assumed to be
     // the zero vector and thus will not need to change.
-    static void triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows,
+    SCISHARE static void triangularReduce(Matrix3& A, Vector* rhs, int& num_zero_rows,
                                  double relative_scale);
 
     // solveHomogenous for a Matrix that has already by triangularReduced
-    std::vector<Vector> solveHomogenousReduced(int num_zero_rows) const;
+    SCISHARE std::vector<Vector> solveHomogenousReduced(int num_zero_rows) const;
 
     // solveHomogenous for a Matrix that has already by triangularReduced
-    bool solveParticularReduced(const Vector& rhs, Vector& xp,
+    SCISHARE bool solveParticularReduced(const Vector& rhs, Vector& xp,
                                 int num_zero_rows) const;
 
-    friend std::ostream & operator << (std::ostream &out_file, const Uintah::Matrix3 &m3);
+    SCISHARE friend std::ostream & operator << (std::ostream &out_file, const Uintah::Matrix3 &m3);
   }; // end class Matrix3
 
   inline double Matrix3::Trace() const
@@ -687,10 +689,10 @@ namespace SCIRun {
 
   using namespace Uintah;
 
-  void swapbytes( Uintah::Matrix3& m);
-  template<> const string find_type_name(Matrix3*);
-  const TypeDescription* get_type_description(Matrix3*);
-  void Pio( Piostream&, Uintah::Matrix3& );
+  SCISHARE void swapbytes( Uintah::Matrix3& m);
+  template<> SCISHARE const string find_type_name(Matrix3*);
+  SCISHARE const TypeDescription* get_type_description(Matrix3*);
+  SCISHARE void Pio( Piostream&, Uintah::Matrix3& );
 } // namespace SCIRun
 
 

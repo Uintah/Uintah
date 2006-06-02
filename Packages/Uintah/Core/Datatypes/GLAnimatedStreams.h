@@ -13,13 +13,10 @@
 #include <Core/Geom/ColorMap.h>
 #include <Core/Geom/GeomObj.h>
 
-#if defined(HAVE_GLEW)
-#include <GL/glew.h>
-#else
-#include <GL/gl.h>
-#include <GL/glu.h>
-#endif
+#include <sci_gl.h>
+#include <sci_glu.h>
 
+#include <Packages/Uintah/Core/Datatypes/share.h>
 namespace Uintah {
 
 using SCIRun::Point;
@@ -55,7 +52,7 @@ struct streamerNode {
 #define STREAM_LIGHT_WIRE 0
 #define STREAM_LIGHT_CURVE 1
   
-class GLAnimatedStreams : public GeomObj
+class SCISHARE GLAnimatedStreams : public GeomObj
 {
 public:
 

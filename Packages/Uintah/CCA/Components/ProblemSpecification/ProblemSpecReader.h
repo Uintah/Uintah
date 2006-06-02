@@ -8,9 +8,10 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/CCA/Components/ProblemSpecification/share.h>
 namespace Uintah {
       
-   class ProblemSpecReader : public ProblemSpecInterface {
+   class SCISHARE ProblemSpecReader : public ProblemSpecInterface {
    public:
       ProblemSpecReader(const std::string& filename);
       ~ProblemSpecReader();

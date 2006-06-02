@@ -25,6 +25,17 @@
        <save label = "pi4"/>
    </DataArchiver>
 
+   <AMR>
+      <Regridder>
+        <max_levels>2</max_levels>
+        <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>        
+        <lattice_refinement_ratio> [[2,2,1]]   </lattice_refinement_ratio>
+        <cell_creation_dilation>   [2,1,1]   </cell_creation_dilation>
+        <cell_deletion_dilation>   [1,1,1]   </cell_deletion_dilation>
+        <min_boundary_cells>       [1,1,1]   </min_boundary_cells>
+      </Regridder>            
+   </AMR>
+
     <Wave>
        <radius>.025</radius>
        <initial_condition>Chombo</initial_condition>
@@ -45,12 +56,4 @@
        </Level>
     </Grid>
 
-    <Regridder>
-      <max_levels>2</max_levels>
-      <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>        
-      <lattice_refinement_ratio> [[2,2,1]]   </lattice_refinement_ratio>
-      <cell_creation_dilation>   [2,1,1]   </cell_creation_dilation>
-      <cell_deletion_dilation>   [1,1,1]   </cell_deletion_dilation>
-      <min_boundary_cells>       [1,1,1]   </min_boundary_cells>
-    </Regridder>            
 </Uintah_specification>

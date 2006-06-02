@@ -181,6 +181,9 @@ TimestepSelector::execute()
   double hour, min, sec, microseconds;
 
   current_time =  times[idx];
+#ifdef _WIN32
+#define trunc (int)
+#endif
   hour = trunc( current_time/3600.0);
   min = trunc( current_time/60.0 - (hour * 60));
   sec = trunc( current_time - (hour * 3600) - (min * 60));

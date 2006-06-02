@@ -8,8 +8,9 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
 
+#include <Packages/Uintah/CCA/Components/ICE/share.h>
 namespace Uintah {
-  class AMRICE : public ICE{
+  class SCISHARE AMRICE : public ICE{
   public:
     AMRICE(const ProcessorGroup* myworld);
     virtual ~AMRICE();
@@ -111,7 +112,7 @@ namespace Uintah {
                               const VarLabel* varLabel,
                               const int indx,
                               DataWarehouse* new_dw,
-                              const double ratio,
+                              double ratio,
                               const Patch* finePatch,
                               const Level* fineLevel,
                               const Level* coarseLevel);

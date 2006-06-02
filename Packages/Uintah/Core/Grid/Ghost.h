@@ -5,6 +5,7 @@
 #include <Core/Geometry/IntVector.h>
 #undef None
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
    /**************************************
      
@@ -35,7 +36,7 @@ namespace Uintah {
       
      ****************************************/
 
-   class Ghost {
+   class SCISHARE Ghost {
    public:
       enum GhostType {
 	 None,

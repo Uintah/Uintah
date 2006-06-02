@@ -35,11 +35,11 @@ LIBS := $(XML2_LIBRARY) $(PETSC_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
-$(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/collect_drag_cc_fort.h
-$(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/collect_scalar_fctocc_fort.h
-$(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/energy_exchange_term_fort.h
-$(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/interp_centertoface_fort.h
-$(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/momentum_exchange_term_continuous_cc_fort.h
-$(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/pressure_force_fort.h
-$(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/read_complex_geometry_fort.h
-$(SRCDIR)/MPMArches.o: $(SRCDIR)/fortran/read_complex_geometry_walls_fort.h
+$(SRCDIR)/MPMArches.$(OBJEXT): $(SRCDIR)/fortran/collect_drag_cc_fort.h
+$(SRCDIR)/MPMArches.$(OBJEXT): $(SRCDIR)/fortran/collect_scalar_fctocc_fort.h
+$(SRCDIR)/MPMArches.$(OBJEXT): $(SRCDIR)/fortran/energy_exchange_term_fort.h
+$(SRCDIR)/MPMArches.$(OBJEXT): $(SRCDIR)/fortran/interp_centertoface_fort.h
+$(SRCDIR)/MPMArches.$(OBJEXT): $(SRCDIR)/fortran/momentum_exchange_term_continuous_cc_fort.h
+$(SRCDIR)/MPMArches.$(OBJEXT): $(SRCDIR)/fortran/pressure_force_fort.h
+$(SRCDIR)/MPMArches.$(OBJEXT): $(SRCDIR)/fortran/read_complex_geometry_fort.h
+$(SRCDIR)/MPMArches.$(OBJEXT): $(SRCDIR)/fortran/read_complex_geometry_walls_fort.h

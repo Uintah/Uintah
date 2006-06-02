@@ -73,7 +73,7 @@ void ICE::scheduleSetupRHS(  SchedulerP& sched,
                              const PatchSet* patches,
                              const MaterialSubset* one_matl,
                              const MaterialSet* all_matls,
-                             const bool insideOuterIterLoop,
+                             bool insideOuterIterLoop,
                              const string& computes_or_modifies)
 {
   Task* t;
@@ -203,7 +203,7 @@ void ICE::scheduleRecomputeVel_FC(SchedulerP& sched,
                                  const MaterialSubset* mpm_matls,          
                                  const MaterialSubset* press_matl,         
                                  const MaterialSet* all_matls, 
-                                 const bool recursion)
+                                 bool recursion)
 { 
   Task* t = 0;
   int levelIndex = getLevel(patches)->getIndex();
@@ -532,8 +532,8 @@ void ICE::setupRHS(const ProcessorGroup*,
                    const MaterialSubset* ,
                    DataWarehouse* old_dw,
                    DataWarehouse* new_dw,
-                   const bool insideOuterIterLoop,
-                   const string computes_or_modifies)
+                   bool insideOuterIterLoop,
+                   string computes_or_modifies)
 {
   const Level* level = getLevel(patches);
   Vector dx     = level->dCell();

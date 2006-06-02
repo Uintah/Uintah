@@ -38,18 +38,21 @@
 #include <stdio.h>
 #include <sstream>
 #include <vector>
-#include <sys/param.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <strings.h>
-#include <unistd.h>
 #include <math.h>
 #include <sgi_stl_warnings_on.h>
 
 #ifdef _WIN32
 #define MAXHOSTNAMELEN 256
 #include <winsock2.h>
+#include <process.h>
+#include <time.h>
+#else
+#include <sys/param.h>
+#include <strings.h>
+#include <unistd.h>
 #endif
 
 //TODO - BJW - if multilevel reduction doesn't work, fix all
@@ -1135,7 +1138,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
         timeVal << std::setprecision(17) << d_tempElapsedTime;
         newElem->setAttribute("time", timeVal.str());
         deltVal << std::setprecision(17) << delt;
-        newElem->setAttribute("delt", deltVal.str());
+        newElem->setAttribute("oldDelt", deltVal.str());
       }
       
       indexDoc->output(iname.c_str());
@@ -1154,7 +1157,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
       ProblemSpecP timeElem = rootElem->appendChild("Time");
       timeElem->appendElement("timestepNumber", timestep);
       timeElem->appendElement("currentTime", d_tempElapsedTime);
-      timeElem->appendElement("delt", delt);
+      timeElem->appendElement("oldDelt", delt);
       int numLevels = grid->numLevels();
       
       // in amr, we're not guaranteed that a proc do work on a given level
@@ -1625,6 +1628,13 @@ DataArchiver::output(const ProcessorGroup*,
   { // make sure doc's constructor is called after the lock.
     ProblemSpecP doc; 
 
+    // file-opening flags
+#ifdef _WIN32
+    int flags = O_WRONLY|O_CREAT|O_BINARY;
+#else
+    int flags = O_WRONLY|O_CREAT;
+#endif
+
 #ifdef PVFS_FIX
     if ( isReduction )
 #endif
@@ -1688,7 +1698,7 @@ DataArchiver::output(const ProcessorGroup*,
     {
       // Open the data file
       filename = (char*) dataFilename.c_str();
-      fd = open(filename, O_WRONLY|O_CREAT, 0666);
+      fd = open(filename, flags, 0666);
       if ( fd == -1 ) {
         cerr << "Cannot open dataFile: " << dataFilename << '\n';
         throw ErrnoException("DataArchiver::output (open call)", errno, __FILE__, __LINE__);
@@ -1716,7 +1726,7 @@ DataArchiver::output(const ProcessorGroup*,
 
       if ( currentDataFileHandle == currentDataFileHandleMap->end() ) {
         filename = (char*) dataFilename.c_str();
-        fd = open(filename, O_WRONLY|O_CREAT, 0666);
+        fd = open(filename, flags, 0666);
 
         if ( fd == -1 ) {
           cerr << "Cannot open dataFile: " << dataFilename << '\n';

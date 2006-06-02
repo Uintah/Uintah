@@ -18,6 +18,7 @@ namespace SCIRun {
   class Vector;
 }
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
 
   class ProcessorGroup;
@@ -52,7 +53,7 @@ WARNING
   
 ****************************************/
 
-  class Grid : public RefCounted {
+  class SCISHARE Grid : public RefCounted {
   public:
     Grid();
     virtual ~Grid();
@@ -95,7 +96,7 @@ WARNING
     // For comparing grids - level and patch structure must be equal
     bool operator==(const Grid& othergrid) const;
 
-    friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
+    SCISHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::Grid& grid);
 
   private:
     std::vector<LevelP> d_levels;

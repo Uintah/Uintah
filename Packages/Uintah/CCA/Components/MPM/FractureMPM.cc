@@ -45,6 +45,9 @@
 #include <fstream>
 #include <sgi_stl_warnings_on.h>
 
+#ifdef _WIN32
+#include <process.h>
+#endif
 #undef KUMAR
 //#define KUMAR
 

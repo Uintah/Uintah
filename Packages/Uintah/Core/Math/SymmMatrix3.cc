@@ -7,7 +7,7 @@ using namespace JAMA;
 using namespace SCIRun;
 
 void
-SymmMatrix3::eigen(Vector& eval, Matrix3& evec)
+SymmMatrix3::eigen(SCIRun::Vector& eval, Matrix3& evec)
 {
   // Convert the current matrix into a 2x2 TNT Array
   TNT::Array2D<double> A = toTNTArray2D();

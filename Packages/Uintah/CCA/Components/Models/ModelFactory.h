@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Parallel/UintahParallelComponent.h>
 #include <Packages/Uintah/CCA/Ports/ModelMaker.h>
 
+#include <Packages/Uintah/CCA/Components/Models/share.h>
 namespace Uintah {
 
 /**************************************
@@ -36,7 +37,7 @@ WARNING
   
 ****************************************/
 
-  class ModelFactory : public UintahParallelComponent, public ModelMaker {
+  class SCISHARE ModelFactory : public UintahParallelComponent, public ModelMaker {
   public:
     ModelFactory(const ProcessorGroup* myworld);
     virtual ~ModelFactory();

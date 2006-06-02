@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/Util/RefCounted.h>
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
    typedef int particleIndex;
    typedef int particleId;
@@ -37,7 +38,7 @@ WARNING
   
 ****************************************/
 
-   class ParticleSet : public RefCounted {
+   class SCISHARE ParticleSet : public RefCounted {
    public:
       ParticleSet();
       ParticleSet(particleIndex numParticles);

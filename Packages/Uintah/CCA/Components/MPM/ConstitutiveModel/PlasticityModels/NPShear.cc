@@ -14,6 +14,12 @@
 #include <sstream>
 #include <sgi_stl_warnings_on.h>
 
+#ifdef _WIN32
+#include <process.h>
+#include <float.h>
+#define finite _finite
+#endif
+
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;

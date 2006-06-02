@@ -5,13 +5,17 @@
 #include <Core/Util/FancyAssert.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 
-
 using namespace Uintah;
 using namespace SCIRun;
 
+#ifdef _WIN32
+#define SCISHARE __declspec(dllimport)
+#else
+#define SCISHARE
+#endif
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
-extern SCIRun::Mutex       cerrLock;
+extern SCISHARE SCIRun::Mutex       cerrLock;
 extern SCIRun::DebugStream mixedDebug;
 
 void CommRecMPI::add(MPI_Request id, int bytes, 

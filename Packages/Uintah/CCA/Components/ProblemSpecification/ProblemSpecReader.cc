@@ -52,9 +52,7 @@ ProblemSpecReader::readInputFile()
   if (doc == 0) {
     throw ProblemSetupException("Error reading file: "+d_filename, __FILE__, __LINE__);
   }
-  
-
-  
+    
   // you must free doc when you are done.
   // Add the parser contents to the ProblemSpecP
   prob_spec = scinew ProblemSpec(xmlDocGetRootElement(doc));

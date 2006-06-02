@@ -57,7 +57,7 @@ TensorFieldExtractor::~TensorFieldExtractor(){}
 //------------------------------------------------------------- 
 
 void TensorFieldExtractor::get_vars(vector< string >& names,
-				   vector< const TypeDescription *>& types)
+                                    vector< const Uintah::TypeDescription *>& types)
 {
   string command;
   //DataArchive& archive = *((*(archiveH.get_rep()))());

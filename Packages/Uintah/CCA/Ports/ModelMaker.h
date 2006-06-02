@@ -11,6 +11,8 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/CCA/Ports/share.h>
+
 namespace Uintah {
 /**************************************
 
@@ -42,7 +44,7 @@ WARNING
 ****************************************/
 
   class ModelInterface;
-   class ModelMaker : public UintahParallelPort {
+   class SCISHARE ModelMaker : public UintahParallelPort {
    public:
      ModelMaker();
      virtual ~ModelMaker();

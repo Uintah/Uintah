@@ -4,10 +4,13 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 #include <Packages/Uintah/CCA/Ports/Output.h>
+
+#include <Packages/Uintah/CCA/Components/OnTheFlyAnalysis/share.h>
+
 namespace Uintah {
   class AnalysisModule;
   
-  class AnalysisModuleFactory{
+  class SCISHARE AnalysisModuleFactory{
     public:
       AnalysisModuleFactory();
       ~AnalysisModuleFactory();

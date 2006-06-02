@@ -5,11 +5,18 @@
 using namespace SCIRun;
 using namespace Uintah;
 
+#undef SCISHARE
+#ifdef _WIN32
+#define SCISHARE __declspec(dllexport)
+#else
+#define SCISHARE
+#endif
+
 extern "C" {
-  IPort* make_ArchiveIPort(Module* module, const string& name) {
+  SCISHARE IPort* make_ArchiveIPort(Module* module, const string& name) {
     return scinew SimpleIPort<ArchiveHandle>(module,name);
   }
-  OPort* make_ArchiveOPort(Module* module, const string& name) {
+  SCISHARE OPort* make_ArchiveOPort(Module* module, const string& name) {
     return scinew SimpleOPort<ArchiveHandle>(module,name);
   }
 }

@@ -21,7 +21,9 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Time.h>
 
+#ifndef _WIN32
 #include <sys/param.h>
+#endif
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -269,10 +271,7 @@ namespace Uintah {
     Dir restartFromDir(d_fromDir);
     Dir checkpointRestartDir = restartFromDir.getSubdir("checkpoints");
     
-    double delt = 0;
-    
-    d_archive->restartInitialize(d_restartTimestep, grid, d_scheduler->get_dw(1), d_lb, 
-                              &t, &delt);
+    d_archive->restartInitialize(d_restartTimestep, grid, d_scheduler->get_dw(1), d_lb, &t);
     
     d_sharedState->setCurrentTopLevelTimeStep( d_restartTimestep );
     // Tell the scheduler the generation of the re-started simulation.

@@ -19,6 +19,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/Core/Datatypes/share.h>
 namespace Uintah {
   using std::vector;
   using namespace SCIRun;
@@ -54,7 +55,7 @@ WARNING
 class VectorParticles;
 typedef LockingHandle<VectorParticles> VectorParticlesHandle;
 
-class VectorParticles : public Datatype {
+class SCISHARE VectorParticles : public Datatype {
 
 public:
   // GROUP: Constructors:

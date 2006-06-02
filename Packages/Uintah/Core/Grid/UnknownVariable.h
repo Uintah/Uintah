@@ -19,6 +19,7 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
 
   using SCIRun::Exception;
@@ -26,7 +27,7 @@ namespace Uintah {
   class Level; 
   class Patch;
 
-  class UnknownVariable : public Exception {
+  class SCISHARE UnknownVariable : public Exception {
   public:
     UnknownVariable(const std::string& varname, int dwid, const Patch* patch,
 		    int matlIndex, const std::string& extramsg, 

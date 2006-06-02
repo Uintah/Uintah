@@ -14,6 +14,7 @@
 
 #include <sstream>
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
 
 /*___________________________________________________________________
@@ -467,21 +468,21 @@ template<class T>
 // find the range of values to get from the finePatch that coincides with coarsePatch
 // (we need the finePatch, as the fine level might not entirely overlap the coarse)
 // also get the coarse range to iterate over
-void getFineLevelRange(const Patch* coarsePatch, const Patch* finePatch,
-                       IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh);
+SCISHARE void getFineLevelRange(const Patch* coarsePatch, const Patch* finePatch,
+                             IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh);
 
 // As above, but do the same for nodes, and include ghost data requirements
-void getFineLevelRangeNodes(const Patch* coarsePatch, const Patch* finePatch,
+SCISHARE void getFineLevelRangeNodes(const Patch* coarsePatch, const Patch* finePatch,
                             IntVector& cl, IntVector& ch,
                             IntVector& fl, IntVector& fh, IntVector ghost);
 
 // find the range of values to get from the coarseLevel that coincides with coarsePatch
 // ngc is the number of ghost cells to get at the fine level
-void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel, 
-                         IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh, int ngc);
+SCISHARE void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel, 
+                               IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh, int ngc);
 
 // find the range of a coarse-fine interface along a certain face
-void getCoarseFineFaceRange(const Patch* finePatch, const Level* coarseLevel, Patch::FaceType face,
-                            int interOrder, IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh);
+SCISHARE void getCoarseFineFaceRange(const Patch* finePatch, const Level* coarseLevel, Patch::FaceType face,
+                                  int interOrder, IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh);
 } // end namespace Uintah
 #endif

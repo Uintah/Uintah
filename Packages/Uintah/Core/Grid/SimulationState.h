@@ -15,6 +15,7 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -57,7 +58,7 @@ class Level;
       
 ****************************************/
 
-class SimulationState : public RefCounted {
+class SCISHARE SimulationState : public RefCounted {
 public:
   SimulationState(ProblemSpecP &ps);
   ~SimulationState();

@@ -3,6 +3,7 @@
 #define UINTAH_HOMEBREW_NodeIterator_H
 
 #include <Core/Geometry/IntVector.h>
+#include <Packages/Uintah/Core/Grid/share.h>
 
 namespace Uintah {
 
@@ -37,7 +38,7 @@ WARNING
   
 ****************************************/
 
-  class NodeIterator {
+  class SCISHARE NodeIterator {
   public:
     inline ~NodeIterator() {}
     

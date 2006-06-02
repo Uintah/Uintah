@@ -18,9 +18,10 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/Core/Exceptions/share.h>
 namespace Uintah {
 
-   class TypeMismatchException : public SCIRun::Exception {
+   class SCISHARE TypeMismatchException : public SCIRun::Exception {
    public:
       TypeMismatchException(const std::string& msg, const char* file, int line);
       TypeMismatchException(const TypeMismatchException&);

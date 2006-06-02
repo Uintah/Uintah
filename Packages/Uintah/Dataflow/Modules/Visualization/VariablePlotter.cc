@@ -122,7 +122,7 @@ VariablePlotter::getGrid()
 
 // Returns 0 on sucess, 1 otherwise.
 int
-VariablePlotter::add_type(string &type_list,const TypeDescription *subtype)
+VariablePlotter::add_type(string &type_list,const Uintah::TypeDescription *subtype)
 {
   switch ( subtype->getType() ) {
   case TypeDescription::double_type:

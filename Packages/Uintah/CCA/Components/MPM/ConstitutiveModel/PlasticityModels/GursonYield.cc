@@ -5,6 +5,10 @@
 #include <sgi_stl_warnings_on.h>
 #include <math.h>
 
+#ifdef _WIN32
+#define copysign _copysign
+#endif
+
 using namespace std;
 using namespace Uintah;
 

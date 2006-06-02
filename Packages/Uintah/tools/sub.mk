@@ -6,10 +6,10 @@ FSPEC_ORIG := $(SRCDIR)/fspec.pl
 
 %_fort.h: %.fspec $(FSPEC)
 ifeq ($(SCI_MAKE_BE_QUIET),true)
-	@$(FSPEC) $< $@
+	@perl $(FSPEC) $< $@
 	@echo "FSpec:     $@"
 else
-	$(FSPEC) $< $@
+	perl $(FSPEC) $< $@
 endif
 
 $(FSPEC): $(SRCDIR)/stamp-fspec

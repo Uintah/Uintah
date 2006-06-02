@@ -1,4 +1,5 @@
 #if defined(_WIN32) && !defined(HAVE_DRAND48)
+#include <Packages/Uintah/Core/Math/Rand48.h>
 #include <Core/Thread/Time.h>
 #include <stdlib.h>
 static bool initialized = false;

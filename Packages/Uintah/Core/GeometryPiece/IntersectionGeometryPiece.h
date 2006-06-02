@@ -7,6 +7,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/Core/GeometryPiece/share.h>
 namespace Uintah {
 
 
@@ -56,7 +57,7 @@ WARNING
         
 ****************************************/
 
-      class IntersectionGeometryPiece : public GeometryPiece {
+      class SCISHARE IntersectionGeometryPiece : public GeometryPiece {
          
       public:
          //////////

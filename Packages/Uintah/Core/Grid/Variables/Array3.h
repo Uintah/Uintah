@@ -14,6 +14,10 @@
 #include <iosfwd>
 #include <sgi_stl_warnings_on.h>
 
+#ifdef _WIN32
+typedef long ssize_t;
+#endif
+
 namespace Uintah {
 
 using std::ostream;

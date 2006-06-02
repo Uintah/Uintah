@@ -10,6 +10,11 @@
 #include <math.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
+#ifdef _WIN32
+#include <float.h>
+#define isnan _isnan
+#endif
+
 using namespace Uintah;
 using namespace SCIRun;
 ////////////////////////////////////////////////////////////////////////////////
