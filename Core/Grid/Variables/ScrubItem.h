@@ -17,13 +17,13 @@ struct ScrubItem {
   int matl;
   const Patch* patch;
   int dw;
-  unsigned int hash;
+  size_t hash;
   int count;
   
   ScrubItem(const VarLabel* l, int m, const Patch* p, int dw) :
     label(l), matl(m), patch(p), dw(dw), count(0)
   {
-    unsigned int ptr = (unsigned int) l;
+    size_t ptr = (size_t) l;
 
     hash = ptr ^ (m << 3) ^ (p->getID() << 4) ^ (dw << 2);
   }
