@@ -252,17 +252,14 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
     SCIRun::Thread::parallel(phelper, bnp, true);
     delete work;
     
-    int bout_fd = -1;
 #if defined(__sgi) || defined(__APPLE__)
+    int bout_fd = -1;
     ///////////////////////////////////////////////////////////////
     // write the bricked data to a file, so that we don't have to rebrick it
     //    ofstream bout(buf);
     //    if (!bout) {
     bout_fd = open (buf, O_WRONLY | O_CREAT | O_TRUNC,
 		    S_IRUSR|S_IWUSR|S_IRGRP|S_IWGRP|S_IROTH|S_IWOTH);
-#else
-    //    ASSERTFAIL("Can only write bricked data on SGI.");
-#endif    
 
     if (bout_fd == -1 ) {
       cerr << "Error in opening file " << buf << " for writing.\n";
@@ -274,6 +271,7 @@ HVolume<T,A,B>::HVolume(Material* matl, VolumeDpy* dpy,
     dt=SCIRun::Time::currentSeconds()-start;
     cerr << "done (" << (double)(blockdata.get_datasize())/dt/1024/1024 << " MB/sec)\n";
     indata.resize(0,0,0);
+#endif    
   } else {
 #if !defined(__sgi) && !defined(__APPLE__)
     //    ASSERTFAIL("Can't do direct io on non-sgi machines.");
