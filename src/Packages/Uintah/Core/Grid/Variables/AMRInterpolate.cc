@@ -109,4 +109,57 @@ void getCoarseFineFaceRange(const Patch* finePatch, const Level* coarseLevel, Pa
   
   
 }
+
+/*___________________________________________________________________
+ Function~  normalizedDistance_CC
+ Compute the normalized distance between the fine and
+ coarse cell centers.
+           |       x   |
+           |     |---| |
+___________|___________|________ rratio = 2    rratio = 4     rratio = 8
+  |  |  |  | 3|  |  |  |         ----------    ----------     ----------
+__|__|__|__|__|__|__|__|         x(0) = 1 a    x(0) = 3 a     x(0) =  7a
+  |  |  |  | 2|  |  |  |         x(1) = x(0)   x(1) = 1 a     x(1) =  5a
+__|__*__|__|__|__*__|__|                       x(2) = x(1)    x(2) =  3a
+  |  |  |  | 1|  |  |  |                       x(3) = x(0)    x(3) =  1a
+__|__|__|__|__|__|__|__|                                      x(4) = x(3)
+  |  |  |  | 0| 1| 2| 3|                                      x(5) = x(2)
+__|__|__|__|__|__|__|__|________                              x(6) = x(1)
+           |           |                                      x(7) = x(0)
+           |           |                    
+           |           |                      
+* coarse cell centers   
+a = normalized_dx_fine_cell/2
+ ____________________________________________________________________*/
+void normalizedDistance_CC(const int refineRatio,
+                           vector<double>& norm_dist)
+{  
+  // initialize
+  for (int i = 0; i< refineRatio; i++){
+    norm_dist[i] =0.0;
+  }
+
+  if(refineRatio > 1){
+  
+    int half_refineRatio = refineRatio /2;
+    double normalized_dx_fineCell = 1.0/refineRatio;
+    double half_normalized_dx_fineCell = 0.5 * normalized_dx_fineCell;
+  
+    // only compute the distance for 1/2 of the cells
+    int count = refineRatio - 1;   // 7, 5, 3...
+    for (int i = 0; i< half_refineRatio; i++){
+      norm_dist[i] = count * half_normalized_dx_fineCell;
+      count -= 2;
+    }
+
+    // make a mirror copy of the data
+    count = half_refineRatio - 1;
+    for (int i = half_refineRatio; i< refineRatio; i++){
+      norm_dist[i] = norm_dist[count];
+      count -=1;
+    }
+  }
+}
+
+
 }
