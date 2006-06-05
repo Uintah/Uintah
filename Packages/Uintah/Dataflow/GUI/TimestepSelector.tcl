@@ -113,44 +113,48 @@ itcl_class Uintah_Selectors_TimestepSelector {
 
         frame $w.tframe
         set f $w.tframe
-        frame $f.tframe
-        frame $f.lframe
-        label $f.lframe.step -text "Time Step"
-        label $f.lframe.val -text "    Time      "
-        global $this-max_time
 
+		frame $f.stepframe
         set tickinterval [expr ([set $this-max_time] -1)/2.0]
-        scale $f.tframe.time -orient horizontal -from 0 \
+		label $f.stepframe.step -text "Time Step"
+        scale $f.stepframe.scale -orient horizontal -from 0 \
             -to [set $this-max_time]  \
             -resolution 1 -bd 2 -variable $this-time \
             -tickinterval $tickinterval
-        entry $f.tframe.tval -state disabled \
-             -textvariable $this-timeval -justify left
-        pack $f -side top -fill x -padx 2 -pady 2
-        pack $f.lframe -side top -expand yes -fill x
-        pack $f.tframe -side top -expand yes -fill x
-        pack $f.lframe.step -side left -anchor w
-        pack $f.lframe.val -side right -anchor e
-        pack $f.tframe.time -side left -expand yes \
-            -fill x -padx 2 -pady 2 -anchor w
-        pack $f.tframe.tval -side right  -padx 2 -pady 2 -anchor e \
-            -expand yes -fill x
+		pack $f.stepframe.step -side left 
+		pack $f.stepframe.scale -expand yes -fill x -anchor w -padx 10
+		pack $f.stepframe -expand yes -fill x
 
-        frame $w.aframe -relief groove -borderwidth 2
-        pack $w.aframe -side top -fill x -padx 2 -pady 2
-        checkbutton $w.aframe.abutton -text Animate \
+		frame $f.timeframe
+        global $this-max_time
+		label $f.timeframe.time -text "Time"
+        entry $f.timeframe.tval -state disabled \
+             -textvariable $this-timeval -justify left
+        label $f.timeframe.l -text "Increment"
+        entry $f.timeframe.e -textvariable $this-tinc -width 6
+        checkbutton $f.timeframe.abutton -text Animate \
             -variable $this-animate
-        entry $w.aframe.status  -width 40  -relief sunken -bd 2 \
+
+        pack $f.timeframe.time -side left
+        pack $f.timeframe.tval -side left -padx 10
+	    pack $f.timeframe.l -side left -padx 10
+        pack $f.timeframe.e -side left -padx 10
+        pack $f.timeframe.abutton -side left -padx 10
+        pack $f.timeframe
+		
+        pack $f -side top -fill x -padx 2 -pady 2
+
+
+#        frame $w.aframe -relief groove -borderwidth 2
+#        pack $w.aframe -side top -fill x -padx 2 -pady 2
+
+#        entry $w.aframe.status  -width 40  -relief sunken -bd 2 \
             -textvariable $this-tcl_status 
-        pack $w.aframe.abutton -side left
-        pack $w.aframe.status -side right  -padx 2 -pady 2
+#        pack $w.aframe.abutton -side left
+#        pack $w.aframe.status -side right  -padx 2 -pady 2
 
         frame $w.tincf 
         pack $w.tincf -side top -fill x -padx 2 -pady 2
-        label $w.tincf.l -text "Time step increment"
-        pack $w.tincf.l -side left
-        entry $w.tincf.e -textvariable $this-tinc
-        pack $w.tincf.e -side right
 
         #######  start timeVis section
         frame $w.timeVis -relief groove -borderwidth 2
@@ -173,8 +177,10 @@ itcl_class Uintah_Selectors_TimestepSelector {
         radiobutton $bf.b5 -text "15" -variable $this-font_size -value "15" \
             -command $n
 
-        pack $bf.fs $bf.b1 $bf.b2 $bf.b3 $bf.b4 $bf.b5 -side left
-        pack $w.timeVis.cs -side top -anchor w -fill x
+# Font sizes are not currently drawn.  New font handling will be added
+# to SCIRun in the next few months.  Until then, disable this option
+#        pack $bf.fs $bf.b1 $bf.b2 $bf.b3 $bf.b4 $bf.b5 -side left
+#        pack $w.timeVis.cs -side top -anchor w -fill x
 
         # This is the text position
         
@@ -209,6 +215,7 @@ itcl_class Uintah_Selectors_TimestepSelector {
             $this-long_hand_ticks "$this-c update_clock"
         make_entry $w.timeVis.clock_vals.cr "Clock Radius" \
             $this-clock_radius "$this-c update_clock"
+            
         pack $w.timeVis.clock_vals.shr $w.timeVis.clock_vals.lhr \
              $w.timeVis.clock_vals.sht $w.timeVis.clock_vals.lht \
              $w.timeVis.clock_vals.cr \
@@ -227,10 +234,10 @@ itcl_class Uintah_Selectors_TimestepSelector {
         # add frame for SCI Button Panel
         frame $w.control -relief flat
         pack $w.control -side top -expand yes -fill both
-	makeSciButtonPanel $w.control $w $this
-	moveToCursor $w
+		makeSciButtonPanel $w.control $w $this
+		moveToCursor $w
  
-        bind $f.tframe.time <ButtonRelease> $n
+        bind $f.stepframe.scale <ButtonRelease> $n
 
         # Bind the left and right arrow keys
         bind $w <KeyPress-Right> "$this incTime"
