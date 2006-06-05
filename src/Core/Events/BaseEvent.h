@@ -66,6 +66,7 @@ public:
 
   //! The ref_cnt var so that we can have handles to this type of object.
   int ref_cnt;
+  Mutex lock;
 private:
   //! The event timestamp
   unsigned int          time_;
@@ -226,7 +227,7 @@ private:
   int                 sg_id_;
 };
 
-typedef Handle<BaseEvent> event_handle_t;
+typedef LockingHandle<BaseEvent> event_handle_t;
 
 
 } // namespace SCIRun
