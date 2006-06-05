@@ -231,6 +231,7 @@ void add_key_event(unsigned time, unsigned keval,
   KeyEvent *k = new KeyEvent();
   k->set_key_state(KeyEvent::KEY_PRESS_E);
   k->set_time(time);
+  k->set_key_string(str);
   event_handle_t event = k;
   EventManager::add_event(event);
 }

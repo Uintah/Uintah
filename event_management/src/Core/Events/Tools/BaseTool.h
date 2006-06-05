@@ -58,8 +58,7 @@ public:
 
   virtual propagation_state_e process_event(event_handle_t event) 
   { 
-    ASSERTFAIL("BaseTool process_event called");
-    return STOP_E;
+    return CONTINUE_E;
   }
 
   virtual void get_modified_event(event_handle_t &event)

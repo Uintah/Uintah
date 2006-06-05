@@ -10,6 +10,7 @@
 
 #include <Core/Events/OpenGLViewer.h>
 #include <Core/Events/Tools/ViewRotateTool.h>
+#include <Core/Events/Tools/AutoviewTool.h>
 #include <Core/Geom/Pbuffer.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/TCLTask.h>
@@ -89,6 +90,54 @@ public:
   OpenGLViewer *viewer_;
 };
 
+class AVI : public AutoviewToolInterface
+{
+public:
+  AVI(View &v, OpenGLViewer *ov) :
+    AutoviewToolInterface(v),
+    viewer_(ov)
+  {}
+  
+  virtual bool get_bounds(BBox &b) const { 
+    viewer_->get_bounds(b); 
+    return b.valid();
+  }
+  virtual void need_redraw() const { viewer_->need_redraw(); }
+
+  OpenGLViewer *viewer_;
+};
+
+class SGTool : public BaseTool
+{
+public:
+  SGTool(string name, GeomIndexedGroup *sg, map<string, bool> &v) :
+    BaseTool(name),
+    ids_(0),
+    sg_(sg),
+    visible_(v)
+  {}
+
+  virtual 
+  propagation_state_e process_event(event_handle_t event) 
+  { 
+    SceneGraphEvent *ev = 0;
+    if ((ev = dynamic_cast<SceneGraphEvent*>(event.get_rep()))) {
+
+      GeomViewerItem* si = scinew GeomViewerItem(ev->get_geom_obj(), 
+						 ev->get_geom_obj_name(), 
+						 0);     
+      sg_->addObj(si, ids_);
+      visible_[ev->get_geom_obj_name()] = true;
+      //ev->set_scene_graph_id(ids_++);
+      return STOP_E;
+    } 
+    return CONTINUE_E;
+  }
+private:
+  int                    ids_;
+  GeomIndexedGroup      *sg_;
+  map<string, bool>	&visible_;
+};
 
 OpenGLViewer::OpenGLViewer(OpenGLContext *oglc) :
   xres_(0),
@@ -144,10 +193,11 @@ OpenGLViewer::OpenGLViewer(OpenGLContext *oglc) :
   fog_end_(0.714265),
   fog_visibleonly_(true),
   focus_sphere_(scinew GeomSphere),
-  scene_graph_(0),
+  scene_graph_(new GeomIndexedGroup()),
   visible_(),
   obj_tag_(),
-  draw_type_(GOURAUD_E)
+  draw_type_(GOURAUD_E),
+  need_redraw_(true)
 {
   fps_timer_.start();
 
@@ -177,6 +227,15 @@ OpenGLViewer::OpenGLViewer(OpenGLContext *oglc) :
   MyViewToolInterface* vti = new MyViewToolInterface(view_, this);
   tool_handle_t rot = new ViewRotateTool("OpenGLViewer Rotate Tool", vti);
   tm_.add_tool(rot, 1);
+  
+  SGTool *sgt = new SGTool("OpenGLViewer Scene Graph Tool", 
+			   scene_graph_, visible_);
+  tool_handle_t sgtool(sgt);
+  tm_.add_tool(sgtool, 2);
+
+  AVI* ati = new AVI(view_, this);
+  tool_handle_t av = new AutoviewTool("OpenGLViewer Autoview Tool", ati);
+  tm_.add_tool(av, 3);  
 }
 
 
@@ -249,6 +308,7 @@ OpenGLViewer::create_viewer_axes()
   return all;
 }
 
+
 void
 OpenGLViewer::redraw(double tbeg, double tend, int nframes, double framerate)
 {
@@ -267,13 +327,13 @@ OpenGLViewer::run()
   throttle.start();
   const double inc = 1. / 30; // the rate at which we refresh the monitor.
   double t = throttle.time();
-#if 1 //SHOW_FRAME_RATE
+#if SHOW_FRAME_RATE
   double tlast = t;
   int f = 0;
 #endif
   while (!dead_) {
     t = throttle.time();
-#if 1 //SHOW_FRAME_RATE
+#if SHOW_FRAME_RATE
     f++;
     if (t - tlast > 1.0) {
       cerr << f << std::endl;
@@ -293,7 +353,6 @@ OpenGLViewer::run()
 	dead_ = true;
 	return;
       }
-
       //if (dead_) return;
       tm_.propagate_event(ev);
     }
@@ -754,8 +813,12 @@ OpenGLViewer::redraw_frame()
       eyesep = u * eye_sep_dist * zmid;
     }
 
-    for (int t = 0; t < 1 /*animate_num_frames_*/; t++)
+    if (need_redraw_ && animate_num_frames_ < 1) {
+      animate_num_frames_ = 1;
+    }
+    for (int t = 0; t < animate_num_frames_; t++)
     {
+      need_redraw_ = false;
       int n = 1;
       if ( do_stereo_p() ) n = 2;
       for (int i = 0; i < n; i++)

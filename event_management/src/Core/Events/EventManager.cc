@@ -80,10 +80,13 @@ EventManager::unregister_event_messages(string id)
 void
 EventManager::run() 
 {
+  bool done = false;
   event_handle_t event;
   do {
     event = tm_.propagate_event(mailbox_.receive());
-
+    if (dynamic_cast<QuitEvent*>(event.get_rep()) != 0) {
+      done = true;
+    }
     // If the event has a specific target mailbox,
     if (!event->get_target().empty()) {
       mboxes_[event->get_target()]->send(event);
@@ -95,7 +98,7 @@ EventManager::run()
       }
     }
     // If the event is a QuitEvent type, then shutdown the Event Manager
-  } while (dynamic_cast<QuitEvent*>(event.get_rep()) == 0);
+  } while (! done);
 }
 
 } // namespace SCIRun

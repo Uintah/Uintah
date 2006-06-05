@@ -62,6 +62,7 @@ public:
   virtual bool          is_pointer_event() { return false; }
   virtual bool          is_key_event() { return false; }
   virtual bool          is_window_event() { return false; }
+  virtual bool          is_scene_graph_event() { return false; }
 
   //! The ref_cnt var so that we can have handles to this type of object.
   int ref_cnt;
@@ -208,6 +209,8 @@ public:
 		  unsigned int time = 0);
   virtual ~SceneGraphEvent();
   
+  virtual bool          is_scene_graph_event() { return true; }
+
   //! Accessors
   GeomHandle          get_geom_obj() const { return obj_; }
   string              get_geom_obj_name() const { return name_; }
@@ -216,6 +219,7 @@ public:
   //! Mutators
   void                  set_geom_obj(GeomHandle obj) { obj_ = obj; } 
   void                  set_geom_obj_name(GeomHandle obj) { obj_ = obj; } 
+  void                  set_scene_graph_id(int id) { sg_id_ = id; }
 private:
   GeomHandle          obj_;
   string              name_;
