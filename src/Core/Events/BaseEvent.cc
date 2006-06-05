@@ -41,8 +41,9 @@ static int count = 0;
 
 BaseEvent::BaseEvent(const string &target, 
                      unsigned int time) :
-    time_(time ? time : count++),
-    target_(target)
+  ref_cnt(0),
+  time_(time ? time : count++),
+  target_(target)
 {
 }
 

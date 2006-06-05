@@ -158,15 +158,16 @@ public:
 
   int                 width() const { return gl_context_->width(); }
   int                 height() const { return gl_context_->height(); }
-  void                need_redraw() {}
+  void                need_redraw() { need_redraw_ = true; }
   void                update_mode_string(string) {}
+  void                get_bounds(BBox &bbox, bool check_visible = true);
 
 private:
+
   void                  redraw_frame();
   GeomHandle            create_viewer_axes() ;
   void                  draw_visible_scene_graph();
   bool                  item_visible_p(GeomViewerItem* si);
-  void                  get_bounds(BBox &bbox, bool check_visible = true);
   void                  get_bounds_all(BBox &bbox) { get_bounds(bbox, false); }
   void                  set_state(DrawInfoOpenGL* drawinfo);
   void                  setFrustumToWindowPortion();
@@ -267,6 +268,7 @@ private:
   MaterialHandle         default_material_;
   draw_type_e            draw_type_;
   bool                   capture_z_data_;
+  bool                   need_redraw_;
 };
 
 } // End namespace SCIRun

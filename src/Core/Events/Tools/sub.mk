@@ -32,6 +32,7 @@
 SRCDIR   := Core/Events/Tools
 
 SRCS     += \
+	$(SRCDIR)/AutoviewTool.cc	\
 	$(SRCDIR)/Ball.cc		\
 	$(SRCDIR)/BallAux.cc		\
 	$(SRCDIR)/BallMath.cc		\
