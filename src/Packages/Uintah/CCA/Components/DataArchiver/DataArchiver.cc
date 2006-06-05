@@ -759,7 +759,9 @@ DataArchiver::createIndexXML(Dir& dir)
    // Chop the newline character off the time string so that the Date
    // field will appear properly in the XML
    string time_string(ctime(&t));
-   time_string.erase(--time_string.end());
+   string::iterator end = time_string.end();
+   --end;
+   time_string.erase(end);
    metaElem->appendElement("date", time_string.c_str());
    metaElem->appendElement("endianness", endianness().c_str());
    metaElem->appendElement("nBits", (int)sizeof(unsigned long) * 8 );
