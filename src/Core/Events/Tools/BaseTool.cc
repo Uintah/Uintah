@@ -39,6 +39,7 @@ namespace SCIRun {
 using namespace std;
 
 BaseTool::BaseTool(string name) :
+  ref_cnt(0),
   name_(name)
 {
 }
