@@ -164,7 +164,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 	iwidgets::labeledframe $isoslider.opt -labelpos nw -labeltext "Options"
 	set opt [$isoslider.opt childsite]
-	
+
 	iwidgets::optionmenu $opt.update -labeltext "Update:" \
 		-labelpos w -command "$this set_update_type $opt.update"
 	$opt.update insert end "On Release" Manual Auto
@@ -273,27 +273,27 @@ itcl_class SCIRun_Visualization_Isosurface {
 
 #  Options
 
-	iwidgets::labeledframe $w.f.opt -labelpos nw -labeltext "Options"
-	set opt [$w.f.opt childsite]
+	iwidgets::labeledframe $w.f.options -labelpos nw -labeltext "Options"
+	set opts [$w.f.options childsite]
 	
 	global $this-build_trisurf
-	checkbutton $opt.buildsurf -text "Build Output Field" \
+	checkbutton $opts.buildsurf -text "Build Output Field" \
 		-variable $this-build_trisurf
 
 	global $this-build_geom
-	checkbutton $opt.buildgeom -text "Build Output Geometry" \
+	checkbutton $opts.buildgeom -text "Build Output Geometry" \
 		-variable $this-build_geom
 
-	checkbutton $opt.aefnf -text "Auto Extract from New Field" \
+	checkbutton $opts.aefnf -text "Auto Extract from New Field" \
 		-relief flat -variable $this-extract-from-new-field 
 
 
-	pack $opt.aefnf $opt.buildsurf $opt.buildgeom \
+	pack $opts.aefnf $opts.buildsurf $opts.buildgeom \
 	    -side top -anchor w
 
-	addColorSelection $opt $this-color
+	addColorSelection $opts $this-color
 
-	pack $w.f.opt -side top -fill x -expand 1
+	pack $w.f.options -side top -fill x -expand 1
 
 	#  Methods
 	iwidgets::labeledframe $w.f.meth -labelpos nw \
@@ -328,6 +328,7 @@ itcl_class SCIRun_Visualization_Isosurface {
 	global $this-update
 
 	set type [[set $this-update] get]
+
 	if { $type == "On Release" } {
 	    eval "$this-c needexecute"
 	}
@@ -353,18 +354,19 @@ itcl_class SCIRun_Visualization_Isosurface {
     }
 
     method select-alg {} {
-	if { [set $this-update] != "Manual" } {
+	global $this-update
+
+	set type [[set $this-update] get]
+
+	if { $type != "Manual" } {
 	    eval "$this-c needexecute"
 	}
     }
 
     method update_type_callback { name1 name2 op } {
-        set tmp [set $this-update_type]
-        if { $tmp == "on release" } { set $this-update_type "On Release" }
 	set window .ui[modname]
 	if {[winfo exists $window]} {
-	    set opt [$window.f.opt childsite]
-	    $opt.update select [set $this-update_type]
+	    [set $this-update] select [set $this-update_type]
 	}
     }
 
