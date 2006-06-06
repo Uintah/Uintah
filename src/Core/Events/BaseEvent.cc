@@ -60,6 +60,16 @@ BaseEvent::operator=(const BaseEvent& rhs)
   return *this;
 }
 
+EventModifiers::EventModifiers() :
+  modifiers_(0)
+{
+}
+
+EventModifiers::~EventModifiers()
+{
+}
+
+
 PointerEvent::PointerEvent(unsigned int state,
                            int x,
                            int y,
@@ -84,7 +94,6 @@ KeyEvent::KeyEvent(unsigned int key_state,
                    unsigned int time) :
   BaseEvent(target, time),
   k_state_(key_state),
-  modifiers_(modifiers),
   keyval_(keyval),
   key_str_(key_string)
 {

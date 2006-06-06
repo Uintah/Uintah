@@ -164,12 +164,45 @@ class BaseEventPtr(BaseEvent):
         _swig_setattr(self, BaseEvent,self.__class__,BaseEvent)
 _pysci.BaseEvent_swigregister(BaseEventPtr)
 
-class PointerEvent(BaseEvent):
+class EventModifiers(_object):
     __swig_setmethods__ = {}
-    for _s in [BaseEvent]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, EventModifiers, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, EventModifiers, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ SCIRun::EventModifiers instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
+        _swig_setattr(self, EventModifiers, 'this', _pysci.new_EventModifiers(*args))
+        _swig_setattr(self, EventModifiers, 'thisown', 1)
+    def __del__(self, destroy=_pysci.delete_EventModifiers):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    SHIFT_E = _pysci.EventModifiers_SHIFT_E
+    CAPS_LOCK_E = _pysci.EventModifiers_CAPS_LOCK_E
+    CONTROL_E = _pysci.EventModifiers_CONTROL_E
+    ALT_E = _pysci.EventModifiers_ALT_E
+    M1_E = _pysci.EventModifiers_M1_E
+    M2_E = _pysci.EventModifiers_M2_E
+    M3_E = _pysci.EventModifiers_M3_E
+    M4_E = _pysci.EventModifiers_M4_E
+    def get_modifiers(*args): return _pysci.EventModifiers_get_modifiers(*args)
+    def set_modifiers(*args): return _pysci.EventModifiers_set_modifiers(*args)
+
+class EventModifiersPtr(EventModifiers):
+    def __init__(self, this):
+        _swig_setattr(self, EventModifiers, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, EventModifiers, 'thisown', 0)
+        _swig_setattr(self, EventModifiers,self.__class__,EventModifiers)
+_pysci.EventModifiers_swigregister(EventModifiersPtr)
+
+class PointerEvent(BaseEvent,EventModifiers):
+    __swig_setmethods__ = {}
+    for _s in [BaseEvent,EventModifiers]: __swig_setmethods__.update(_s.__swig_setmethods__)
     __setattr__ = lambda self, name, value: _swig_setattr(self, PointerEvent, name, value)
     __swig_getmethods__ = {}
-    for _s in [BaseEvent]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    for _s in [BaseEvent,EventModifiers]: __swig_getmethods__.update(_s.__swig_getmethods__)
     __getattr__ = lambda self, name: _swig_getattr(self, PointerEvent, name)
     def __repr__(self):
         return "<%s.%s; proxy of C++ SCIRun::PointerEvent instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
@@ -204,25 +237,17 @@ class PointerEventPtr(PointerEvent):
         _swig_setattr(self, PointerEvent,self.__class__,PointerEvent)
 _pysci.PointerEvent_swigregister(PointerEventPtr)
 
-class KeyEvent(BaseEvent):
+class KeyEvent(BaseEvent,EventModifiers):
     __swig_setmethods__ = {}
-    for _s in [BaseEvent]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    for _s in [BaseEvent,EventModifiers]: __swig_setmethods__.update(_s.__swig_setmethods__)
     __setattr__ = lambda self, name, value: _swig_setattr(self, KeyEvent, name, value)
     __swig_getmethods__ = {}
-    for _s in [BaseEvent]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    for _s in [BaseEvent,EventModifiers]: __swig_getmethods__.update(_s.__swig_getmethods__)
     __getattr__ = lambda self, name: _swig_getattr(self, KeyEvent, name)
     def __repr__(self):
         return "<%s.%s; proxy of C++ SCIRun::KeyEvent instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
     KEY_PRESS_E = _pysci.KeyEvent_KEY_PRESS_E
     KEY_RELEASE_E = _pysci.KeyEvent_KEY_RELEASE_E
-    SHIFT_E = _pysci.KeyEvent_SHIFT_E
-    CAPS_LOCK_E = _pysci.KeyEvent_CAPS_LOCK_E
-    CONTROL_E = _pysci.KeyEvent_CONTROL_E
-    ALT_E = _pysci.KeyEvent_ALT_E
-    M1_E = _pysci.KeyEvent_M1_E
-    M2_E = _pysci.KeyEvent_M2_E
-    M3_E = _pysci.KeyEvent_M3_E
-    M4_E = _pysci.KeyEvent_M4_E
     def __init__(self, *args):
         _swig_setattr(self, KeyEvent, 'this', _pysci.new_KeyEvent(*args))
         _swig_setattr(self, KeyEvent, 'thisown', 1)
@@ -233,11 +258,9 @@ class KeyEvent(BaseEvent):
 
     def is_key_event(*args): return _pysci.KeyEvent_is_key_event(*args)
     def get_key_state(*args): return _pysci.KeyEvent_get_key_state(*args)
-    def get_modifiers(*args): return _pysci.KeyEvent_get_modifiers(*args)
     def get_keyval(*args): return _pysci.KeyEvent_get_keyval(*args)
     def get_key_string(*args): return _pysci.KeyEvent_get_key_string(*args)
     def set_key_state(*args): return _pysci.KeyEvent_set_key_state(*args)
-    def set_modifiers(*args): return _pysci.KeyEvent_set_modifiers(*args)
     def set_keyval(*args): return _pysci.KeyEvent_set_keyval(*args)
     def set_key_string(*args): return _pysci.KeyEvent_set_key_string(*args)
 
@@ -415,11 +438,7 @@ tetgen_2surf = _pysci.tetgen_2surf
 
 run_viewer_thread = _pysci.run_viewer_thread
 
+add_pointer_event = _pysci.add_pointer_event
+
 add_key_event = _pysci.add_key_event
-
-add_motion_notify_event = _pysci.add_motion_notify_event
-
-add_pointer_down_event = _pysci.add_pointer_down_event
-
-add_pointer_up_event = _pysci.add_pointer_up_event
 

@@ -25,28 +25,25 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : ViewRotateTool.h
+//    File   : ViewScaleTool.h
 //    Author : Martin Cole
 //    Date   : Thu Jun  1 09:27:10 2006
 
 
-#if !defined(ViewRotateTool_h)
-#define ViewRotateTool_h
+#if !defined(ViewScaleTool_h)
+#define ViewScaleTool_h
 
 #include <Core/Events/Tools/ViewToolInterface.h>
 #include <Core/Events/Tools/BaseTool.h>
-#include <Core/Geom/View.h>
-#include <Core/Events/Tools/Ball.h>
-#include <Core/Events/Tools/BallMath.h>
 #include <Core/Geometry/Transform.h>
 
 namespace SCIRun {
 
-class ViewRotateTool : public PointerTool
+class ViewScaleTool : public PointerTool
 {
 public:
-  ViewRotateTool(string name, ViewToolInterface* i);
-  virtual ~ViewRotateTool();
+  ViewScaleTool(string name, ViewToolInterface* i);
+  virtual ~ViewScaleTool();
 
   //! which == button number, x,y in window at event time 
   virtual propagation_state_e pointer_down(int which, 
@@ -60,18 +57,11 @@ public:
 
 private:
   ViewToolInterface                 *scene_interface_;
-  BallData                          *ball_;
-  View                               rot_view_;
   int                                last_x_;
   int                                last_y_;
-  bool                               rotate_valid_p_;
-  double                             eye_dist_;
-  Transform                          prev_trans_;
-  int			             prev_time_[3]; 
-  HVect			             prev_quat_[3];
-  int			             last_time_;
+  double                             total_scale_;
 };
 
 } // namespace SCIRun
 
-#endif //ViewRotateTool_h
+#endif //ViewScaleTool_h

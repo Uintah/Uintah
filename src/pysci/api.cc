@@ -154,77 +154,13 @@ tetgen_2surf(string f1, string f2, string outfile)
 }
 
 
-void add_pointer_up_event(unsigned time, int x, int y, int which) 
+void add_pointer_event(PointerEvent *pe)
 {
   PointerEvent *p = new PointerEvent();
-  unsigned s = PointerEvent::BUTTON_RELEASE_E;
-  switch (which) {
-  case 1:
-    s |= PointerEvent::BUTTON_1_E;
-    break;
-  case 2:
-    s |= PointerEvent::BUTTON_2_E;
-    break;
-  case 3:
-    s |= PointerEvent::BUTTON_3_E;
-    break;
-  case 4:
-    s |= PointerEvent::BUTTON_4_E;
-    break;
-  case 5:
-    s |= PointerEvent::BUTTON_5_E;
-    break;
-  }
-  p->set_pointer_state(s);
-  p->set_x(x);
-  p->set_y(y);
-  p->set_time(time);
+  *p = *pe;
   event_handle_t event = p;
   EventManager::add_event(event);
 }
-
-
-void add_pointer_down_event(unsigned time, int x, int y, int which) 
-{
-  PointerEvent *p = new PointerEvent();
-  unsigned s = PointerEvent::BUTTON_PRESS_E;
-  switch (which) {
-  case 1:
-    s |= PointerEvent::BUTTON_1_E;
-    break;
-  case 2:
-    s |= PointerEvent::BUTTON_2_E;
-    break;
-  case 3:
-    s |= PointerEvent::BUTTON_3_E;
-    break;
-  case 4:
-    s |= PointerEvent::BUTTON_4_E;
-    break;
-  case 5:
-    s |= PointerEvent::BUTTON_5_E;
-    break;
-  }
-  p->set_pointer_state(s);
-  p->set_x(x);
-  p->set_y(y);
-  p->set_time(time);
-  event_handle_t event = p;
-  EventManager::add_event(event);
-}
-
-void add_motion_notify_event(unsigned time, int x, int y) 
-{
-  PointerEvent *p = new PointerEvent();
-  unsigned s = PointerEvent::MOTION_E;
-  p->set_pointer_state(s);
-  p->set_x(x);
-  p->set_y(y);
-  p->set_time(time);
-  event_handle_t event = p;
-  EventManager::add_event(event);
-}
-
 
 void add_key_event(KeyEvent *ke)
 {

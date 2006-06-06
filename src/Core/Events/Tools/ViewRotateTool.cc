@@ -62,6 +62,7 @@ ViewRotateTool::~ViewRotateTool()
 BaseTool::propagation_state_e
 ViewRotateTool::pointer_down(int which, int x, int y, int time)
 {
+  if (which != 2) return CONTINUE_E;
   scene_interface_->update_mode_string("rotate:");
   last_x_ = x;
   last_y_ = y;
@@ -114,6 +115,7 @@ ViewRotateTool::pointer_down(int which, int x, int y, int time)
 BaseTool::propagation_state_e
 ViewRotateTool::pointer_motion(int which, int x, int y, int time)
 {
+  if (which != 2) return CONTINUE_E;
   int xres = scene_interface_->width();
   int yres = scene_interface_->height();
 
@@ -165,6 +167,7 @@ ViewRotateTool::pointer_motion(int which, int x, int y, int time)
 BaseTool::propagation_state_e
 ViewRotateTool::pointer_up(int which, int x, int y, int time)
 {
+  if (which != 2) return CONTINUE_E;
   if(time - last_time_ < 20){
     // now setup the normalized quaternion
     View tmpview(rot_view_);

@@ -11,6 +11,7 @@
 #include <Core/Events/SceneGraphEvent.h>
 #include <Core/Events/OpenGLViewer.h>
 #include <Core/Events/Tools/ViewRotateTool.h>
+#include <Core/Events/Tools/ViewScaleTool.h>
 #include <Core/Events/Tools/AutoviewTool.h>
 #include <Core/Geom/Pbuffer.h>
 #include <Core/Containers/StringUtil.h>
@@ -140,6 +141,7 @@ private:
   map<string, bool>	&visible_;
 };
 
+
 OpenGLViewer::OpenGLViewer(OpenGLContext *oglc) :
   xres_(0),
   yres_(0),
@@ -228,15 +230,18 @@ OpenGLViewer::OpenGLViewer(OpenGLContext *oglc) :
   MyViewToolInterface* vti = new MyViewToolInterface(view_, this);
   tool_handle_t rot = new ViewRotateTool("OpenGLViewer Rotate Tool", vti);
   tm_.add_tool(rot, 1);
+
+  tool_handle_t scale = new ViewScaleTool("OpenGLViewer Scale Tool", vti);
+  tm_.add_tool(scale, 2);
   
   SGTool *sgt = new SGTool("OpenGLViewer Scene Graph Tool", 
 			   scene_graph_, visible_);
   tool_handle_t sgtool(sgt);
-  tm_.add_tool(sgtool, 2);
+  tm_.add_tool(sgtool, 10);
 
   AVI* ati = new AVI(view_, this);
   tool_handle_t av = new AutoviewTool("OpenGLViewer Autoview Tool", ati);
-  tm_.add_tool(av, 3);  
+  tm_.add_tool(av, 30);  
 }
 
 
@@ -750,9 +755,11 @@ OpenGLViewer::redraw_frame()
 
   // Setup the view...
   cached_view_ = view_;
+  double fovy  = view_.fov();
   const double aspect = double(xres_)/double(yres_);
-  // XXX - UNICam change-- should be '1.0/aspect' not 'aspect' below.
-  const double fovy = RtoD(2*Atan(1.0/aspect*Tan(DtoR(view_.fov()/2.))));
+  
+  if (aspect < 1)
+    fovy = RtoD(2*Atan(1.0/aspect*Tan(DtoR(view_.fov()/2.))));
 
   drawinfo_->reset();
 
