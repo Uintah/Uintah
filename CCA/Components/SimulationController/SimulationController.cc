@@ -228,7 +228,9 @@ namespace Uintah {
       ProblemSpecP timeSpec = spec->findBlock("Time");
       if (timeSpec) {
         d_sharedState->d_prev_delt = 0.0;
-        timeSpec->get("delt", d_sharedState->d_prev_delt);
+        if (!timeSpec->get("oldDelt", d_sharedState->d_prev_delt))
+          // the delt is deprecated since it is misleading, but older udas may have it...
+          timeSpec->get("delt", d_sharedState->d_prev_delt);
       }
 
       // eventually we will also probably query the material properties here.
