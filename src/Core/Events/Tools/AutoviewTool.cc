@@ -30,6 +30,7 @@
 //    Date   : Mon Jun  5 10:43:13 2006
 
 #include <Core/Events/Tools/AutoviewTool.h>
+#include <Core/Events/keysyms.h>
 #include <Core/Math/Trig.h>
 
 namespace SCIRun {
@@ -58,12 +59,13 @@ BaseTool::propagation_state_e
 AutoviewTool::key_press(string key, int keyval, unsigned int modifiers, 
 			unsigned int time)
 {
-    cerr << "key_press: " << key << endl;
-    if (key == "a" or key == "A") {
-      calc_view();
-      return STOP_E;
-    }
-    return CONTINUE_E;
+  // Cnt-v for autoview
+  if (keyval == SCIRun_v &&  (modifiers & KeyEvent::CONTROL_E))
+  {
+    calc_view();
+    return STOP_E;
+  }
+  return CONTINUE_E;
 }
 
 bool

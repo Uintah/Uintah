@@ -8,6 +8,7 @@
 #include <sci_defs/bits_defs.h>
 #include <sci_defs/image_defs.h>
 
+#include <Core/Events/SceneGraphEvent.h>
 #include <Core/Events/OpenGLViewer.h>
 #include <Core/Events/Tools/ViewRotateTool.h>
 #include <Core/Events/Tools/AutoviewTool.h>

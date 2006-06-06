@@ -30,11 +30,14 @@
 //    Date   : Wed May 24 07:58:40 2006
 
 
+// Note: this file gets swig'd into python, 
+// so please add new event types in separate files.
+
 #if !defined(BaseEvent_h)
 #define BaseEvent_h
 
-#include <Core/Containers/Handle.h>
-#include <Core/Geom/GeomObj.h>
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Thread/Mutex.h>
 #include <string>
 
 
@@ -49,6 +52,8 @@ public:
             unsigned int time = 0);
 
   virtual ~BaseEvent();
+
+  BaseEvent& operator=(const BaseEvent&);
 
   //! Accessors 
   //! time the event took place
@@ -200,31 +205,6 @@ class QuitEvent : public BaseEvent {
 public:
   QuitEvent() {}
   virtual ~QuitEvent() {}
-};
-
-class SceneGraphEvent : public BaseEvent 
-{
-public:
-  SceneGraphEvent(GeomHandle o, string n, 
-		  const string &target = "",
-		  unsigned int time = 0);
-  virtual ~SceneGraphEvent();
-  
-  virtual bool          is_scene_graph_event() { return true; }
-
-  //! Accessors
-  GeomHandle          get_geom_obj() const { return obj_; }
-  string              get_geom_obj_name() const { return name_; }
-  int                 get_scene_graph_id() const { return sg_id_; }
-
-  //! Mutators
-  void                  set_geom_obj(GeomHandle obj) { obj_ = obj; } 
-  void                  set_geom_obj_name(GeomHandle obj) { obj_ = obj; } 
-  void                  set_scene_graph_id(int id) { sg_id_ = id; }
-private:
-  GeomHandle          obj_;
-  string              name_;
-  int                 sg_id_;
 };
 
 typedef LockingHandle<BaseEvent> event_handle_t;

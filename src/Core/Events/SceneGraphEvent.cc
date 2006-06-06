@@ -25,86 +25,31 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : BaseEvent.h
-//    Author : McKay Davis, Martin Cole
-//    Date   : Wed May 24 07:58:40 2006
+//    File   : SceneGraphEvent.cc
+//    Author : Martin Cole
+//    Date   : Tue Jun  6 10:10:43 2006
 
-
-#include <Core/Events/BaseEvent.h>
+#include <Core/Events/SceneGraphEvent.h>
 #include <string>
 
 namespace SCIRun {
     
 using namespace std;
 
-static int count = 0;
-
-BaseEvent::BaseEvent(const string &target, 
-                     unsigned int time) :
-  ref_cnt(0),
-  lock("BaseEvent lock"),
-  time_(time ? time : count++),
-  target_(target)
-{
-}
-
-BaseEvent::~BaseEvent()
-{
-}
-
-BaseEvent& 
-BaseEvent::operator=(const BaseEvent& rhs)
-{
-  time_ = rhs.time_;
-  target_ = rhs.target_;
-  return *this;
-}
-
-PointerEvent::PointerEvent(unsigned int state,
-                           int x,
-                           int y,
-                           const string &target,
-                           unsigned int time) :
+SceneGraphEvent::SceneGraphEvent(GeomHandle o, string n, 
+				 const string &target,
+				 unsigned int time) :
   BaseEvent(target, time),
-  p_state_(state),
-  x_(x),
-  y_(y)
+  obj_(o),
+  name_(n),
+  sg_id_(-1)
 {
 }
 
-PointerEvent::~PointerEvent()
+SceneGraphEvent::~SceneGraphEvent()
 {
 }
-
-KeyEvent::KeyEvent(unsigned int key_state,
-                   unsigned int modifiers,
-                   int keyval,
-                   const string &key_string,
-                   const string &target,
-                   unsigned int time) :
-  BaseEvent(target, time),
-  k_state_(key_state),
-  modifiers_(modifiers),
-  keyval_(keyval),
-  key_str_(key_string)
-{
-}
-
-KeyEvent::~KeyEvent()
-{
-}
-
-WindowEvent::WindowEvent(unsigned int state,
-                         const string &target,
-                         unsigned int time) :
-  BaseEvent(target, time),
-  w_state_(state)
-{
-}
-
-WindowEvent::~WindowEvent()
-{
-}   
+    
 
 } // namespace SCIRun
 
