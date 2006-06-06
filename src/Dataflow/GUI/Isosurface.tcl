@@ -394,6 +394,11 @@ itcl_class SCIRun_Visualization_Isosurface {
 	set max [set $this-isoval-max]
 
 	if [ expr [winfo exists $w] ] {
+
+            if { $max == $min } {
+                set max [expr $min + 1]
+            }
+
 	    set lg [expr floor( log10($max-$min) ) ]
 	    set range [expr pow(10.0, $lg )]
 
@@ -422,6 +427,10 @@ itcl_class SCIRun_Visualization_Isosurface {
 	frame $win.l
 	frame $win.r
 	
+        if { $start == $stop } { 
+            set stop [expr $start + 1]
+        }
+
 	set lg [expr floor( log10($stop-$start) ) ]
 	set range [expr pow(10.0, $lg )]
 
