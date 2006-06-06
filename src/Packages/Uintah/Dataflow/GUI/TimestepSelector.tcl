@@ -106,15 +106,16 @@ itcl_class Uintah_Selectors_TimestepSelector {
         set w .ui[modname]
 
         toplevel $w 
-        
+        wm geometry $w ""
+
         set n "$this-c needexecute"
-        frame $w.f -relief flat
-        pack $w.f -side top -expand yes -fill both
+#         frame $w.f -relief flat
+#         pack $w.f -side top -expand yes -fill both
 
-        frame $w.tframe
-        set f $w.tframe
+         frame $w.tframe
+         set f $w.tframe
 
-		frame $f.stepframe
+        frame $f.stepframe  -relief groove -bd 2
         set tickinterval [expr ([set $this-max_time] -1)/2.0]
 		label $f.stepframe.step -text "Time Step"
         scale $f.stepframe.scale -orient horizontal -from 0 \
@@ -125,7 +126,7 @@ itcl_class Uintah_Selectors_TimestepSelector {
 		pack $f.stepframe.scale -expand yes -fill x -anchor w -padx 10
 		pack $f.stepframe -expand yes -fill x
 
-		frame $f.timeframe
+        frame $f.timeframe
         global $this-max_time
 		label $f.timeframe.time -text "Time"
         entry $f.timeframe.tval -state disabled \
@@ -140,21 +141,21 @@ itcl_class Uintah_Selectors_TimestepSelector {
 	    pack $f.timeframe.l -side left -padx 10
         pack $f.timeframe.e -side left -padx 10
         pack $f.timeframe.abutton -side left -padx 10
-        pack $f.timeframe
+        pack $f.timeframe -pady 4
 		
-        pack $f -side top -fill x -padx 2 -pady 2
+        pack $f -side top -fill both -padx 2 -pady 2 -expand yes
 
 
 #        frame $w.aframe -relief groove -borderwidth 2
 #        pack $w.aframe -side top -fill x -padx 2 -pady 2
 
 #        entry $w.aframe.status  -width 40  -relief sunken -bd 2 \
-            -textvariable $this-tcl_status 
+#            -textvariable $this-tcl_status 
 #        pack $w.aframe.abutton -side left
 #        pack $w.aframe.status -side right  -padx 2 -pady 2
 
-        frame $w.tincf 
-        pack $w.tincf -side top -fill x -padx 2 -pady 2
+#         frame $w.tincf 
+#         pack $w.tincf -side top -fill x -padx 2 -pady 2
 
         #######  start timeVis section
         frame $w.timeVis -relief groove -borderwidth 2
@@ -183,9 +184,10 @@ itcl_class Uintah_Selectors_TimestepSelector {
 #        pack $w.timeVis.cs -side top -anchor w -fill x
 
         # This is the text position
-        
+
         iwidgets::labeledframe $w.timeVis.position \
-            -labeltext "Time Step Position"
+            -labeltext "Time Step Position" -labelfont "Helvetica 8 bold"
+
         set location [$w.timeVis.position childsite]
 
         set can [makeStickyLocator $location.sl \
@@ -195,7 +197,7 @@ itcl_class Uintah_Selectors_TimestepSelector {
         pack $location.sl -fill x -expand yes -side left
 
         iwidgets::labeledframe $w.timeVis.clock_pos \
-            -labeltext "Clock Position"
+            -labeltext "Clock Position" -labelfont "Helvetica 8 bold"
         set location [$w.timeVis.clock_pos childsite]
 
         set can [makeStickyLocator $location.sl \
@@ -228,7 +230,7 @@ itcl_class Uintah_Selectors_TimestepSelector {
 #        frame $w.timeVis.clock -relief  -borderwidth 2
 #        pack $w.timeVis.clock -side left -fill x -expand yes
 
-        pack $w.timeVis -side top -fill x
+        pack $w.timeVis -side top -fill both -expand yes
         ######    end timeVis section
 
         # add frame for SCI Button Panel
