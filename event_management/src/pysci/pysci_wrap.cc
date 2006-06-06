@@ -1352,17 +1352,18 @@ SWIG_Python_GetTypeList() {
 #define  SWIGTYPE_p_char swig_types[11] 
 #define  SWIGTYPE_p_std__vectorTdouble_std__allocatorTdouble_t_t swig_types[12] 
 #define  SWIGTYPE_p_p_char swig_types[13] 
-#define  SWIGTYPE_p_SCIRun__BaseEvent swig_types[14] 
-#define  SWIGTYPE_p_difference_type swig_types[15] 
-#define  SWIGTYPE_p_value_type swig_types[16] 
-#define  SWIGTYPE_std__ptrdiff_t swig_types[17] 
-#define  SWIGTYPE_ptrdiff_t swig_types[18] 
-#define  SWIGTYPE_p_SCIRun__Mutex swig_types[19] 
-#define  SWIGTYPE_p_f_p_void__int swig_types[20] 
-#define  SWIGTYPE_p_SCIRun__WindowEvent swig_types[21] 
-#define  SWIGTYPE_p_LockingHandleTSCIRun__BaseEvent_t swig_types[22] 
-#define  SWIGTYPE_p_std__allocatorTstd__string_t swig_types[23] 
-static swig_type_info *swig_types[25];
+#define  SWIGTYPE_p_SCIRun__EventModifiers swig_types[14] 
+#define  SWIGTYPE_p_SCIRun__BaseEvent swig_types[15] 
+#define  SWIGTYPE_p_difference_type swig_types[16] 
+#define  SWIGTYPE_p_value_type swig_types[17] 
+#define  SWIGTYPE_std__ptrdiff_t swig_types[18] 
+#define  SWIGTYPE_ptrdiff_t swig_types[19] 
+#define  SWIGTYPE_p_SCIRun__Mutex swig_types[20] 
+#define  SWIGTYPE_p_f_p_void__int swig_types[21] 
+#define  SWIGTYPE_p_SCIRun__WindowEvent swig_types[22] 
+#define  SWIGTYPE_p_LockingHandleTSCIRun__BaseEvent_t swig_types[23] 
+#define  SWIGTYPE_p_std__allocatorTstd__string_t swig_types[24] 
+static swig_type_info *swig_types[26];
 
 /* -------- TYPES TABLE (END) -------- */
 
@@ -3765,6 +3766,87 @@ static PyObject * BaseEvent_swigregister(PyObject *, PyObject *args) {
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
+static PyObject *_wrap_new_EventModifiers(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::EventModifiers *result;
+    
+    if(!PyArg_ParseTuple(args,(char *)":new_EventModifiers")) goto fail;
+    result = (SCIRun::EventModifiers *)new SCIRun::EventModifiers();
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__EventModifiers, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_delete_EventModifiers(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::EventModifiers *arg1 = (SCIRun::EventModifiers *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:delete_EventModifiers",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__EventModifiers, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    delete arg1;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_EventModifiers_get_modifiers(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::EventModifiers *arg1 = (SCIRun::EventModifiers *) 0 ;
+    unsigned int result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:EventModifiers_get_modifiers",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__EventModifiers, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (unsigned int)((SCIRun::EventModifiers const *)arg1)->get_modifiers();
+    
+    {
+        resultobj = SWIG_From_unsigned_SS_int((unsigned int)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_EventModifiers_set_modifiers(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::EventModifiers *arg1 = (SCIRun::EventModifiers *) 0 ;
+    unsigned int arg2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:EventModifiers_set_modifiers",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__EventModifiers, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (unsigned int)(SWIG_As_unsigned_SS_int(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->set_modifiers(arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject * EventModifiers_swigregister(PyObject *, PyObject *args) {
+    PyObject *obj;
+    if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
+    SWIG_TypeClientData(SWIGTYPE_p_SCIRun__EventModifiers, obj);
+    Py_INCREF(obj);
+    return Py_BuildValue((char *)"");
+}
 static PyObject *_wrap_new_PointerEvent__SWIG_0(PyObject *, PyObject *args) {
     PyObject *resultobj;
     unsigned int arg1 ;
@@ -4658,26 +4740,6 @@ static PyObject *_wrap_KeyEvent_get_key_state(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_KeyEvent_get_modifiers(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    SCIRun::KeyEvent *arg1 = (SCIRun::KeyEvent *) 0 ;
-    unsigned int result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:KeyEvent_get_modifiers",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__KeyEvent, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    result = (unsigned int)((SCIRun::KeyEvent const *)arg1)->get_modifiers();
-    
-    {
-        resultobj = SWIG_From_unsigned_SS_int((unsigned int)(result)); 
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
 static PyObject *_wrap_KeyEvent_get_keyval(PyObject *, PyObject *args) {
     PyObject *resultobj;
     SCIRun::KeyEvent *arg1 = (SCIRun::KeyEvent *) 0 ;
@@ -4733,29 +4795,6 @@ static PyObject *_wrap_KeyEvent_set_key_state(PyObject *, PyObject *args) {
         if (SWIG_arg_fail(2)) SWIG_fail;
     }
     (arg1)->set_key_state(arg2);
-    
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_KeyEvent_set_modifiers(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    SCIRun::KeyEvent *arg1 = (SCIRun::KeyEvent *) 0 ;
-    unsigned int arg2 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:KeyEvent_set_modifiers",&obj0,&obj1)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__KeyEvent, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        arg2 = (unsigned int)(SWIG_As_unsigned_SS_int(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    (arg1)->set_modifiers(arg2);
     
     Py_INCREF(Py_None); resultobj = Py_None;
     return resultobj;
@@ -7316,6 +7355,27 @@ static PyObject *_wrap_run_viewer_thread(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_add_pointer_event(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::PointerEvent *arg1 = (SCIRun::PointerEvent *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:add_pointer_event",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__PointerEvent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        Py_BEGIN_ALLOW_THREADS
+        SCIRun::add_pointer_event(arg1);
+        
+        Py_END_ALLOW_THREADS
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject *_wrap_add_key_event(PyObject *, PyObject *args) {
     PyObject *resultobj;
     SCIRun::KeyEvent *arg1 = (SCIRun::KeyEvent *) 0 ;
@@ -7327,123 +7387,6 @@ static PyObject *_wrap_add_key_event(PyObject *, PyObject *args) {
     {
         Py_BEGIN_ALLOW_THREADS
         SCIRun::add_key_event(arg1);
-        
-        Py_END_ALLOW_THREADS
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_add_motion_notify_event(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    unsigned int arg1 ;
-    int arg2 ;
-    int arg3 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    PyObject * obj2 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OOO:add_motion_notify_event",&obj0,&obj1,&obj2)) goto fail;
-    {
-        arg1 = (unsigned int)(SWIG_As_unsigned_SS_int(obj0)); 
-        if (SWIG_arg_fail(1)) SWIG_fail;
-    }
-    {
-        arg2 = (int)(SWIG_As_int(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    {
-        arg3 = (int)(SWIG_As_int(obj2)); 
-        if (SWIG_arg_fail(3)) SWIG_fail;
-    }
-    {
-        Py_BEGIN_ALLOW_THREADS
-        SCIRun::add_motion_notify_event(arg1,arg2,arg3);
-        
-        Py_END_ALLOW_THREADS
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_add_pointer_down_event(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    unsigned int arg1 ;
-    int arg2 ;
-    int arg3 ;
-    int arg4 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    PyObject * obj2 = 0 ;
-    PyObject * obj3 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OOOO:add_pointer_down_event",&obj0,&obj1,&obj2,&obj3)) goto fail;
-    {
-        arg1 = (unsigned int)(SWIG_As_unsigned_SS_int(obj0)); 
-        if (SWIG_arg_fail(1)) SWIG_fail;
-    }
-    {
-        arg2 = (int)(SWIG_As_int(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    {
-        arg3 = (int)(SWIG_As_int(obj2)); 
-        if (SWIG_arg_fail(3)) SWIG_fail;
-    }
-    {
-        arg4 = (int)(SWIG_As_int(obj3)); 
-        if (SWIG_arg_fail(4)) SWIG_fail;
-    }
-    {
-        Py_BEGIN_ALLOW_THREADS
-        SCIRun::add_pointer_down_event(arg1,arg2,arg3,arg4);
-        
-        Py_END_ALLOW_THREADS
-    }
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_add_pointer_up_event(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    unsigned int arg1 ;
-    int arg2 ;
-    int arg3 ;
-    int arg4 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    PyObject * obj2 = 0 ;
-    PyObject * obj3 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OOOO:add_pointer_up_event",&obj0,&obj1,&obj2,&obj3)) goto fail;
-    {
-        arg1 = (unsigned int)(SWIG_As_unsigned_SS_int(obj0)); 
-        if (SWIG_arg_fail(1)) SWIG_fail;
-    }
-    {
-        arg2 = (int)(SWIG_As_int(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    {
-        arg3 = (int)(SWIG_As_int(obj2)); 
-        if (SWIG_arg_fail(3)) SWIG_fail;
-    }
-    {
-        arg4 = (int)(SWIG_As_int(obj3)); 
-        if (SWIG_arg_fail(4)) SWIG_fail;
-    }
-    {
-        Py_BEGIN_ALLOW_THREADS
-        SCIRun::add_pointer_up_event(arg1,arg2,arg3,arg4);
         
         Py_END_ALLOW_THREADS
     }
@@ -7500,6 +7443,11 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"BaseEvent_ref_cnt_get", _wrap_BaseEvent_ref_cnt_get, METH_VARARGS, NULL},
 	 { (char *)"BaseEvent_lock_get", _wrap_BaseEvent_lock_get, METH_VARARGS, NULL},
 	 { (char *)"BaseEvent_swigregister", BaseEvent_swigregister, METH_VARARGS, NULL},
+	 { (char *)"new_EventModifiers", _wrap_new_EventModifiers, METH_VARARGS, NULL},
+	 { (char *)"delete_EventModifiers", _wrap_delete_EventModifiers, METH_VARARGS, NULL},
+	 { (char *)"EventModifiers_get_modifiers", _wrap_EventModifiers_get_modifiers, METH_VARARGS, NULL},
+	 { (char *)"EventModifiers_set_modifiers", _wrap_EventModifiers_set_modifiers, METH_VARARGS, NULL},
+	 { (char *)"EventModifiers_swigregister", EventModifiers_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_PointerEvent", _wrap_new_PointerEvent, METH_VARARGS, NULL},
 	 { (char *)"delete_PointerEvent", _wrap_delete_PointerEvent, METH_VARARGS, NULL},
 	 { (char *)"PointerEvent_is_pointer_event", _wrap_PointerEvent_is_pointer_event, METH_VARARGS, NULL},
@@ -7514,11 +7462,9 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"delete_KeyEvent", _wrap_delete_KeyEvent, METH_VARARGS, NULL},
 	 { (char *)"KeyEvent_is_key_event", _wrap_KeyEvent_is_key_event, METH_VARARGS, NULL},
 	 { (char *)"KeyEvent_get_key_state", _wrap_KeyEvent_get_key_state, METH_VARARGS, NULL},
-	 { (char *)"KeyEvent_get_modifiers", _wrap_KeyEvent_get_modifiers, METH_VARARGS, NULL},
 	 { (char *)"KeyEvent_get_keyval", _wrap_KeyEvent_get_keyval, METH_VARARGS, NULL},
 	 { (char *)"KeyEvent_get_key_string", _wrap_KeyEvent_get_key_string, METH_VARARGS, NULL},
 	 { (char *)"KeyEvent_set_key_state", _wrap_KeyEvent_set_key_state, METH_VARARGS, NULL},
-	 { (char *)"KeyEvent_set_modifiers", _wrap_KeyEvent_set_modifiers, METH_VARARGS, NULL},
 	 { (char *)"KeyEvent_set_keyval", _wrap_KeyEvent_set_keyval, METH_VARARGS, NULL},
 	 { (char *)"KeyEvent_set_key_string", _wrap_KeyEvent_set_key_string, METH_VARARGS, NULL},
 	 { (char *)"KeyEvent_swigregister", KeyEvent_swigregister, METH_VARARGS, NULL},
@@ -7590,10 +7536,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"test_function", _wrap_test_function, METH_VARARGS, NULL},
 	 { (char *)"tetgen_2surf", _wrap_tetgen_2surf, METH_VARARGS, NULL},
 	 { (char *)"run_viewer_thread", _wrap_run_viewer_thread, METH_VARARGS, NULL},
+	 { (char *)"add_pointer_event", _wrap_add_pointer_event, METH_VARARGS, NULL},
 	 { (char *)"add_key_event", _wrap_add_key_event, METH_VARARGS, NULL},
-	 { (char *)"add_motion_notify_event", _wrap_add_motion_notify_event, METH_VARARGS, NULL},
-	 { (char *)"add_pointer_down_event", _wrap_add_pointer_down_event, METH_VARARGS, NULL},
-	 { (char *)"add_pointer_up_event", _wrap_add_pointer_up_event, METH_VARARGS, NULL},
 	 { NULL, NULL, 0, NULL }
 };
 
@@ -7602,6 +7546,12 @@ static PyMethodDef SwigMethods[] = {
 
 static void *_p_SCIRun__CallbackOpenGLContextTo_p_SCIRun__OpenGLContext(void *x) {
     return (void *)((SCIRun::OpenGLContext *)  ((SCIRun::CallbackOpenGLContext *) x));
+}
+static void *_p_SCIRun__PointerEventTo_p_SCIRun__EventModifiers(void *x) {
+    return (void *)((SCIRun::EventModifiers *)  ((SCIRun::PointerEvent *) x));
+}
+static void *_p_SCIRun__KeyEventTo_p_SCIRun__EventModifiers(void *x) {
+    return (void *)((SCIRun::EventModifiers *)  ((SCIRun::KeyEvent *) x));
 }
 static void *_p_SCIRun__WindowEventTo_p_SCIRun__BaseEvent(void *x) {
     return (void *)((SCIRun::BaseEvent *)  ((SCIRun::WindowEvent *) x));
@@ -7629,6 +7579,7 @@ static swig_type_info _swigt__p_size_type[] = {{"_p_size_type", 0, "size_type *"
 static swig_type_info _swigt__p_char[] = {{"_p_char", 0, "char *", 0, 0, 0, 0},{"_p_char", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_std__vectorTdouble_std__allocatorTdouble_t_t[] = {{"_p_std__vectorTdouble_std__allocatorTdouble_t_t", 0, "std::vector<double > *", 0, 0, 0, 0},{"_p_std__vectorTdouble_std__allocatorTdouble_t_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_p_char[] = {{"_p_p_char", 0, "char **", 0, 0, 0, 0},{"_p_p_char", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_SCIRun__EventModifiers[] = {{"_p_SCIRun__EventModifiers", 0, "SCIRun::EventModifiers *", 0, 0, 0, 0},{"_p_SCIRun__EventModifiers", 0, 0, 0, 0, 0, 0},{"_p_SCIRun__PointerEvent", _p_SCIRun__PointerEventTo_p_SCIRun__EventModifiers, 0, 0, 0, 0, 0},{"_p_SCIRun__KeyEvent", _p_SCIRun__KeyEventTo_p_SCIRun__EventModifiers, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_SCIRun__BaseEvent[] = {{"_p_SCIRun__BaseEvent", 0, "SCIRun::BaseEvent *", 0, 0, 0, 0},{"_p_SCIRun__BaseEvent", 0, 0, 0, 0, 0, 0},{"_p_SCIRun__WindowEvent", _p_SCIRun__WindowEventTo_p_SCIRun__BaseEvent, 0, 0, 0, 0, 0},{"_p_SCIRun__QuitEvent", _p_SCIRun__QuitEventTo_p_SCIRun__BaseEvent, 0, 0, 0, 0, 0},{"_p_SCIRun__PointerEvent", _p_SCIRun__PointerEventTo_p_SCIRun__BaseEvent, 0, 0, 0, 0, 0},{"_p_SCIRun__KeyEvent", _p_SCIRun__KeyEventTo_p_SCIRun__BaseEvent, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_difference_type[] = {{"_p_difference_type", 0, "difference_type *", 0, 0, 0, 0},{"_p_difference_type", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_value_type[] = {{"_p_value_type", 0, "value_type *", 0, 0, 0, 0},{"_p_value_type", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
@@ -7655,6 +7606,7 @@ _swigt__p_size_type,
 _swigt__p_char, 
 _swigt__p_std__vectorTdouble_std__allocatorTdouble_t_t, 
 _swigt__p_p_char, 
+_swigt__p_SCIRun__EventModifiers, 
 _swigt__p_SCIRun__BaseEvent, 
 _swigt__p_difference_type, 
 _swigt__p_value_type, 
@@ -8016,6 +7968,30 @@ SWIGEXPORT(void) SWIG_init(void) {
     SWIG_InstallConstants(d,swig_const_table);
     
     {
+        PyDict_SetItemString(d,"EventModifiers_SHIFT_E", SWIG_From_int((int)(SCIRun::EventModifiers::SHIFT_E))); 
+    }
+    {
+        PyDict_SetItemString(d,"EventModifiers_CAPS_LOCK_E", SWIG_From_int((int)(SCIRun::EventModifiers::CAPS_LOCK_E))); 
+    }
+    {
+        PyDict_SetItemString(d,"EventModifiers_CONTROL_E", SWIG_From_int((int)(SCIRun::EventModifiers::CONTROL_E))); 
+    }
+    {
+        PyDict_SetItemString(d,"EventModifiers_ALT_E", SWIG_From_int((int)(SCIRun::EventModifiers::ALT_E))); 
+    }
+    {
+        PyDict_SetItemString(d,"EventModifiers_M1_E", SWIG_From_int((int)(SCIRun::EventModifiers::M1_E))); 
+    }
+    {
+        PyDict_SetItemString(d,"EventModifiers_M2_E", SWIG_From_int((int)(SCIRun::EventModifiers::M2_E))); 
+    }
+    {
+        PyDict_SetItemString(d,"EventModifiers_M3_E", SWIG_From_int((int)(SCIRun::EventModifiers::M3_E))); 
+    }
+    {
+        PyDict_SetItemString(d,"EventModifiers_M4_E", SWIG_From_int((int)(SCIRun::EventModifiers::M4_E))); 
+    }
+    {
         PyDict_SetItemString(d,"PointerEvent_MOTION_E", SWIG_From_int((int)(SCIRun::PointerEvent::MOTION_E))); 
     }
     {
@@ -8044,30 +8020,6 @@ SWIGEXPORT(void) SWIG_init(void) {
     }
     {
         PyDict_SetItemString(d,"KeyEvent_KEY_RELEASE_E", SWIG_From_int((int)(SCIRun::KeyEvent::KEY_RELEASE_E))); 
-    }
-    {
-        PyDict_SetItemString(d,"KeyEvent_SHIFT_E", SWIG_From_int((int)(SCIRun::KeyEvent::SHIFT_E))); 
-    }
-    {
-        PyDict_SetItemString(d,"KeyEvent_CAPS_LOCK_E", SWIG_From_int((int)(SCIRun::KeyEvent::CAPS_LOCK_E))); 
-    }
-    {
-        PyDict_SetItemString(d,"KeyEvent_CONTROL_E", SWIG_From_int((int)(SCIRun::KeyEvent::CONTROL_E))); 
-    }
-    {
-        PyDict_SetItemString(d,"KeyEvent_ALT_E", SWIG_From_int((int)(SCIRun::KeyEvent::ALT_E))); 
-    }
-    {
-        PyDict_SetItemString(d,"KeyEvent_M1_E", SWIG_From_int((int)(SCIRun::KeyEvent::M1_E))); 
-    }
-    {
-        PyDict_SetItemString(d,"KeyEvent_M2_E", SWIG_From_int((int)(SCIRun::KeyEvent::M2_E))); 
-    }
-    {
-        PyDict_SetItemString(d,"KeyEvent_M3_E", SWIG_From_int((int)(SCIRun::KeyEvent::M3_E))); 
-    }
-    {
-        PyDict_SetItemString(d,"KeyEvent_M4_E", SWIG_From_int((int)(SCIRun::KeyEvent::M4_E))); 
     }
     {
         PyDict_SetItemString(d,"WindowEvent_CREATE_E", SWIG_From_int((int)(SCIRun::WindowEvent::CREATE_E))); 

@@ -39,5 +39,6 @@ SRCS     += \
 	$(SRCDIR)/BaseTool.cc		\
 	$(SRCDIR)/ToolManager.cc	\
 	$(SRCDIR)/ViewRotateTool.cc	\
+	$(SRCDIR)/ViewScaleTool.cc	\
 
 

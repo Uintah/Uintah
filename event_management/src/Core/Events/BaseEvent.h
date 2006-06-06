@@ -78,8 +78,34 @@ private:
   string                target_;
 };
 
+class EventModifiers 
+{
+public: 
+  EventModifiers();
+  virtual ~EventModifiers();
 
-class PointerEvent : public BaseEvent 
+  //! Modifiers
+  enum {
+    SHIFT_E           = 1 << 0,
+    CAPS_LOCK_E       = 1 << 1,
+    CONTROL_E         = 1 << 2,
+    ALT_E             = 1 << 3,
+    M1_E              = 1 << 4,
+    M2_E              = 1 << 5,
+    M3_E              = 1 << 6,
+    M4_E              = 1 << 7,
+  };
+
+  //! Accessors
+  unsigned int          get_modifiers() const { return modifiers_; }
+  //! Mutators
+  void                  set_modifiers(unsigned int m) { modifiers_ = m; }
+  
+protected:
+  unsigned int         modifiers_;
+};
+
+class PointerEvent : public BaseEvent, public EventModifiers
 {
 public:
   enum {
@@ -114,32 +140,20 @@ public:
   void                  set_y(int y) { y_ = y; }
 private:
   unsigned int          p_state_;
-  
+
   //! The event's window x and y  coordinates
   int                   x_;
   int                   y_;
 };
 
 
-class KeyEvent : public BaseEvent 
+class KeyEvent : public BaseEvent, public EventModifiers
 {
 public:
   //! Key state
   enum {
     KEY_PRESS_E       = 1 << 1,
     KEY_RELEASE_E     = 1 << 2,
-  };
-
-  //! Modifiers
-  enum {
-    SHIFT_E           = 1 << 0,
-    CAPS_LOCK_E       = 1 << 1,
-    CONTROL_E         = 1 << 2,
-    ALT_E             = 1 << 3,
-    M1_E              = 1 << 4,
-    M2_E              = 1 << 5,
-    M3_E              = 1 << 6,
-    M4_E              = 1 << 7,
   };
 
   KeyEvent(unsigned int key_state = 0,
@@ -154,19 +168,16 @@ public:
 
   //! Accessors
   unsigned int          get_key_state() const { return k_state_; }
-  unsigned int          get_modifiers() const { return modifiers_; }
   int                   get_keyval() const { return keyval_; }
   string                get_key_string() const { return key_str_; }
 
   //! Mutators
   void                  set_key_state(unsigned int s) { k_state_ = s; }
-  void                  set_modifiers(unsigned int m) { modifiers_ = m; }
   void                  set_keyval(int kv) { keyval_ = kv; }
   void                  set_key_string(string ks) { key_str_ = ks; }
 
 private:
   unsigned int         k_state_;
-  unsigned int         modifiers_;
   int                  keyval_;
   string               key_str_;
 };

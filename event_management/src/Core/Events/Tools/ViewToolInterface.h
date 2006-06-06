@@ -25,53 +25,34 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : ViewRotateTool.h
+//    File   : ViewToolInterface.h
 //    Author : Martin Cole
-//    Date   : Thu Jun  1 09:27:10 2006
+//    Date   : Tue Jun  6 12:28:44 2006
 
+#if !defined(ViewToolInterface_h)
+#define ViewToolInterface_h
 
-#if !defined(ViewRotateTool_h)
-#define ViewRotateTool_h
-
-#include <Core/Events/Tools/ViewToolInterface.h>
-#include <Core/Events/Tools/BaseTool.h>
 #include <Core/Geom/View.h>
-#include <Core/Events/Tools/Ball.h>
-#include <Core/Events/Tools/BallMath.h>
-#include <Core/Geometry/Transform.h>
 
 namespace SCIRun {
 
-class ViewRotateTool : public PointerTool
+//! functionality from the scene required for the View*Tool,
+//! as well as the destination view object to modify.
+class ViewToolInterface
 {
 public:
-  ViewRotateTool(string name, ViewToolInterface* i);
-  virtual ~ViewRotateTool();
+  ViewToolInterface(View &v);
+  virtual ~ViewToolInterface();
 
-  //! which == button number, x,y in window at event time 
-  virtual propagation_state_e pointer_down(int which, 
-				      int x, int y, int time);
-  //! which == button number, x,y in window at event time 
-  virtual propagation_state_e pointer_motion(int which, 
-					int x, int y, int time);
-  //! which == button number, x,y in window at event time 
-  virtual propagation_state_e pointer_up(int which, 
-				    int x, int y, int time);
-
-private:
-  ViewToolInterface                 *scene_interface_;
-  BallData                          *ball_;
-  View                               rot_view_;
-  int                                last_x_;
-  int                                last_y_;
-  bool                               rotate_valid_p_;
-  double                             eye_dist_;
-  Transform                          prev_trans_;
-  int			             prev_time_[3]; 
-  HVect			             prev_quat_[3];
-  int			             last_time_;
+  virtual int width() const = 0;
+  virtual int height() const = 0;
+  virtual bool compute_depth(const View& view, double& near, double& far) = 0;
+  virtual void update_mode_string(string) const = 0;
+  virtual void need_redraw() const = 0;
+  View &view_;
 };
+
 
 } // namespace SCIRun
 
-#endif //ViewRotateTool_h
+#endif //ViewScaleTool_h
