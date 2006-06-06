@@ -102,6 +102,212 @@ class CallbackOpenGLContextPtr(CallbackOpenGLContext):
         _swig_setattr(self, CallbackOpenGLContext,self.__class__,CallbackOpenGLContext)
 _pysci.CallbackOpenGLContext_swigregister(CallbackOpenGLContextPtr)
 
+class Mutex(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, Mutex, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, Mutex, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ SCIRun::Mutex instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
+        _swig_setattr(self, Mutex, 'this', _pysci.new_Mutex(*args))
+        _swig_setattr(self, Mutex, 'thisown', 1)
+    def __del__(self, destroy=_pysci.delete_Mutex):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    def lock(*args): return _pysci.Mutex_lock(*args)
+    def tryLock(*args): return _pysci.Mutex_tryLock(*args)
+    def unlock(*args): return _pysci.Mutex_unlock(*args)
+
+class MutexPtr(Mutex):
+    def __init__(self, this):
+        _swig_setattr(self, Mutex, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, Mutex, 'thisown', 0)
+        _swig_setattr(self, Mutex,self.__class__,Mutex)
+_pysci.Mutex_swigregister(MutexPtr)
+
+class BaseEvent(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, BaseEvent, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, BaseEvent, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ SCIRun::BaseEvent instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
+        _swig_setattr(self, BaseEvent, 'this', _pysci.new_BaseEvent(*args))
+        _swig_setattr(self, BaseEvent, 'thisown', 1)
+    def __del__(self, destroy=_pysci.delete_BaseEvent):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    def get_time(*args): return _pysci.BaseEvent_get_time(*args)
+    def get_target(*args): return _pysci.BaseEvent_get_target(*args)
+    def set_time(*args): return _pysci.BaseEvent_set_time(*args)
+    def set_target(*args): return _pysci.BaseEvent_set_target(*args)
+    def is_pointer_event(*args): return _pysci.BaseEvent_is_pointer_event(*args)
+    def is_key_event(*args): return _pysci.BaseEvent_is_key_event(*args)
+    def is_window_event(*args): return _pysci.BaseEvent_is_window_event(*args)
+    def is_scene_graph_event(*args): return _pysci.BaseEvent_is_scene_graph_event(*args)
+    __swig_setmethods__["ref_cnt"] = _pysci.BaseEvent_ref_cnt_set
+    __swig_getmethods__["ref_cnt"] = _pysci.BaseEvent_ref_cnt_get
+    if _newclass:ref_cnt = property(_pysci.BaseEvent_ref_cnt_get, _pysci.BaseEvent_ref_cnt_set)
+    __swig_getmethods__["lock"] = _pysci.BaseEvent_lock_get
+    if _newclass:lock = property(_pysci.BaseEvent_lock_get)
+
+class BaseEventPtr(BaseEvent):
+    def __init__(self, this):
+        _swig_setattr(self, BaseEvent, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, BaseEvent, 'thisown', 0)
+        _swig_setattr(self, BaseEvent,self.__class__,BaseEvent)
+_pysci.BaseEvent_swigregister(BaseEventPtr)
+
+class PointerEvent(BaseEvent):
+    __swig_setmethods__ = {}
+    for _s in [BaseEvent]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, PointerEvent, name, value)
+    __swig_getmethods__ = {}
+    for _s in [BaseEvent]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, PointerEvent, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ SCIRun::PointerEvent instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    MOTION_E = _pysci.PointerEvent_MOTION_E
+    BUTTON_PRESS_E = _pysci.PointerEvent_BUTTON_PRESS_E
+    BUTTON_RELEASE_E = _pysci.PointerEvent_BUTTON_RELEASE_E
+    BUTTON_1_E = _pysci.PointerEvent_BUTTON_1_E
+    BUTTON_2_E = _pysci.PointerEvent_BUTTON_2_E
+    BUTTON_3_E = _pysci.PointerEvent_BUTTON_3_E
+    BUTTON_4_E = _pysci.PointerEvent_BUTTON_4_E
+    BUTTON_5_E = _pysci.PointerEvent_BUTTON_5_E
+    def __init__(self, *args):
+        _swig_setattr(self, PointerEvent, 'this', _pysci.new_PointerEvent(*args))
+        _swig_setattr(self, PointerEvent, 'thisown', 1)
+    def __del__(self, destroy=_pysci.delete_PointerEvent):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    def is_pointer_event(*args): return _pysci.PointerEvent_is_pointer_event(*args)
+    def get_pointer_state(*args): return _pysci.PointerEvent_get_pointer_state(*args)
+    def get_x(*args): return _pysci.PointerEvent_get_x(*args)
+    def get_y(*args): return _pysci.PointerEvent_get_y(*args)
+    def set_pointer_state(*args): return _pysci.PointerEvent_set_pointer_state(*args)
+    def set_x(*args): return _pysci.PointerEvent_set_x(*args)
+    def set_y(*args): return _pysci.PointerEvent_set_y(*args)
+
+class PointerEventPtr(PointerEvent):
+    def __init__(self, this):
+        _swig_setattr(self, PointerEvent, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, PointerEvent, 'thisown', 0)
+        _swig_setattr(self, PointerEvent,self.__class__,PointerEvent)
+_pysci.PointerEvent_swigregister(PointerEventPtr)
+
+class KeyEvent(BaseEvent):
+    __swig_setmethods__ = {}
+    for _s in [BaseEvent]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, KeyEvent, name, value)
+    __swig_getmethods__ = {}
+    for _s in [BaseEvent]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, KeyEvent, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ SCIRun::KeyEvent instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    KEY_PRESS_E = _pysci.KeyEvent_KEY_PRESS_E
+    KEY_RELEASE_E = _pysci.KeyEvent_KEY_RELEASE_E
+    SHIFT_E = _pysci.KeyEvent_SHIFT_E
+    CAPS_LOCK_E = _pysci.KeyEvent_CAPS_LOCK_E
+    CONTROL_E = _pysci.KeyEvent_CONTROL_E
+    ALT_E = _pysci.KeyEvent_ALT_E
+    M1_E = _pysci.KeyEvent_M1_E
+    M2_E = _pysci.KeyEvent_M2_E
+    M3_E = _pysci.KeyEvent_M3_E
+    M4_E = _pysci.KeyEvent_M4_E
+    def __init__(self, *args):
+        _swig_setattr(self, KeyEvent, 'this', _pysci.new_KeyEvent(*args))
+        _swig_setattr(self, KeyEvent, 'thisown', 1)
+    def __del__(self, destroy=_pysci.delete_KeyEvent):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    def is_key_event(*args): return _pysci.KeyEvent_is_key_event(*args)
+    def get_key_state(*args): return _pysci.KeyEvent_get_key_state(*args)
+    def get_modifiers(*args): return _pysci.KeyEvent_get_modifiers(*args)
+    def get_keyval(*args): return _pysci.KeyEvent_get_keyval(*args)
+    def get_key_string(*args): return _pysci.KeyEvent_get_key_string(*args)
+    def set_key_state(*args): return _pysci.KeyEvent_set_key_state(*args)
+    def set_modifiers(*args): return _pysci.KeyEvent_set_modifiers(*args)
+    def set_keyval(*args): return _pysci.KeyEvent_set_keyval(*args)
+    def set_key_string(*args): return _pysci.KeyEvent_set_key_string(*args)
+
+class KeyEventPtr(KeyEvent):
+    def __init__(self, this):
+        _swig_setattr(self, KeyEvent, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, KeyEvent, 'thisown', 0)
+        _swig_setattr(self, KeyEvent,self.__class__,KeyEvent)
+_pysci.KeyEvent_swigregister(KeyEventPtr)
+
+class WindowEvent(BaseEvent):
+    __swig_setmethods__ = {}
+    for _s in [BaseEvent]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, WindowEvent, name, value)
+    __swig_getmethods__ = {}
+    for _s in [BaseEvent]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, WindowEvent, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ SCIRun::WindowEvent instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    CREATE_E = _pysci.WindowEvent_CREATE_E
+    DESTROY_E = _pysci.WindowEvent_DESTROY_E
+    ENTER_E = _pysci.WindowEvent_ENTER_E
+    LEAVE_E = _pysci.WindowEvent_LEAVE_E
+    EXPOSE_E = _pysci.WindowEvent_EXPOSE_E
+    CONFIGURE_E = _pysci.WindowEvent_CONFIGURE_E
+    REDRAW_E = _pysci.WindowEvent_REDRAW_E
+    def __init__(self, *args):
+        _swig_setattr(self, WindowEvent, 'this', _pysci.new_WindowEvent(*args))
+        _swig_setattr(self, WindowEvent, 'thisown', 1)
+    def __del__(self, destroy=_pysci.delete_WindowEvent):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    def is_window_event(*args): return _pysci.WindowEvent_is_window_event(*args)
+    def get_window_state(*args): return _pysci.WindowEvent_get_window_state(*args)
+    def set_window_state(*args): return _pysci.WindowEvent_set_window_state(*args)
+
+class WindowEventPtr(WindowEvent):
+    def __init__(self, this):
+        _swig_setattr(self, WindowEvent, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, WindowEvent, 'thisown', 0)
+        _swig_setattr(self, WindowEvent,self.__class__,WindowEvent)
+_pysci.WindowEvent_swigregister(WindowEventPtr)
+
+class QuitEvent(BaseEvent):
+    __swig_setmethods__ = {}
+    for _s in [BaseEvent]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, QuitEvent, name, value)
+    __swig_getmethods__ = {}
+    for _s in [BaseEvent]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, QuitEvent, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ SCIRun::QuitEvent instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
+        _swig_setattr(self, QuitEvent, 'this', _pysci.new_QuitEvent(*args))
+        _swig_setattr(self, QuitEvent, 'thisown', 1)
+    def __del__(self, destroy=_pysci.delete_QuitEvent):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+
+class QuitEventPtr(QuitEvent):
+    def __init__(self, this):
+        _swig_setattr(self, QuitEvent, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, QuitEvent, 'thisown', 0)
+        _swig_setattr(self, QuitEvent,self.__class__,QuitEvent)
+_pysci.QuitEvent_swigregister(QuitEventPtr)
+
 class vector_string(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, vector_string, name, value)

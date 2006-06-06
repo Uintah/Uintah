@@ -2,8 +2,8 @@
 %module pysci
 %{
 #include "api.h"
+#include "../Core/Thread/Mutex.h"
 #include "../Core/Events/BaseEvent.h"
-
 #include "../Core/Geom/OpenGLContext.h"
 #include "../Core/Geom/CallbackOpenGLContext.h"
 #include <iostream>
@@ -37,13 +37,15 @@ static int PythonCallBack(void *clientdata)
 
 
 %}
-%include "../Core/Geom/OpenGLContext.h"
-%include "../Core/Geom/CallbackOpenGLContext.h"
-
 %include std_vector.i
 %include std_string.i
 %include std_map.i
 %include std_deque.i
+
+%include "../Core/Geom/OpenGLContext.h"
+%include "../Core/Geom/CallbackOpenGLContext.h"
+%include "../Core/Thread/Mutex.h"
+%include "../Core/Events/BaseEvent.h"
 
 namespace std {
    %template(vector_string) vector<string>;

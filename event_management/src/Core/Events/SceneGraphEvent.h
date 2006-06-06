@@ -25,86 +25,48 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : BaseEvent.h
-//    Author : McKay Davis, Martin Cole
-//    Date   : Wed May 24 07:58:40 2006
+//    File   : SceneGraphEvent.h
+//    Author : Martin Cole
+//    Date   : Tue Jun  6 10:08:25 2006
 
+#if !defined(SceneGraphEvent_h)
+#define SceneGraphEvent_h
 
 #include <Core/Events/BaseEvent.h>
+#include <Core/Geom/GeomObj.h>
 #include <string>
 
+
 namespace SCIRun {
-    
+
 using namespace std;
 
-static int count = 0;
-
-BaseEvent::BaseEvent(const string &target, 
-                     unsigned int time) :
-  ref_cnt(0),
-  lock("BaseEvent lock"),
-  time_(time ? time : count++),
-  target_(target)
+class SceneGraphEvent : public BaseEvent 
 {
-}
+public:
+  SceneGraphEvent(GeomHandle o, string n, 
+		  const string &target = "",
+		  unsigned int time = 0);
+  virtual ~SceneGraphEvent();
+  
+  virtual bool          is_scene_graph_event() { return true; }
 
-BaseEvent::~BaseEvent()
-{
-}
+  //! Accessors
+  GeomHandle          get_geom_obj() const { return obj_; }
+  string              get_geom_obj_name() const { return name_; }
+  int                 get_scene_graph_id() const { return sg_id_; }
 
-BaseEvent& 
-BaseEvent::operator=(const BaseEvent& rhs)
-{
-  time_ = rhs.time_;
-  target_ = rhs.target_;
-  return *this;
-}
+  //! Mutators
+  void                  set_geom_obj(GeomHandle obj) { obj_ = obj; } 
+  void                  set_geom_obj_name(GeomHandle obj) { obj_ = obj; } 
+  void                  set_scene_graph_id(int id) { sg_id_ = id; }
+private:
+  GeomHandle          obj_;
+  string              name_;
+  int                 sg_id_;
+};
 
-PointerEvent::PointerEvent(unsigned int state,
-                           int x,
-                           int y,
-                           const string &target,
-                           unsigned int time) :
-  BaseEvent(target, time),
-  p_state_(state),
-  x_(x),
-  y_(y)
-{
-}
-
-PointerEvent::~PointerEvent()
-{
-}
-
-KeyEvent::KeyEvent(unsigned int key_state,
-                   unsigned int modifiers,
-                   int keyval,
-                   const string &key_string,
-                   const string &target,
-                   unsigned int time) :
-  BaseEvent(target, time),
-  k_state_(key_state),
-  modifiers_(modifiers),
-  keyval_(keyval),
-  key_str_(key_string)
-{
-}
-
-KeyEvent::~KeyEvent()
-{
-}
-
-WindowEvent::WindowEvent(unsigned int state,
-                         const string &target,
-                         unsigned int time) :
-  BaseEvent(target, time),
-  w_state_(state)
-{
-}
-
-WindowEvent::~WindowEvent()
-{
-}   
 
 } // namespace SCIRun
 
+#endif // SceneGraphEvent_h

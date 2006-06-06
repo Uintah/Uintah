@@ -37,6 +37,7 @@ SRCS     += \
 	$(SRCDIR)/BaseEvent.cc		\
 	$(SRCDIR)/EventManager.cc	\
 	$(SRCDIR)/OpenGLViewer.cc	\
+	$(SRCDIR)/SceneGraphEvent.cc	\
 	$(SRCDIR)/X11EventSpawner.cc	\
 
 SUBDIRS := $(SRCDIR)/Tools

@@ -8,6 +8,7 @@
 #include <Core/Geom/CallbackOpenGLContext.h>
 #include <Core/Events/EventManager.h>
 #include <Core/Events/BaseEvent.h>
+#include <Core/Events/SceneGraphEvent.h>
 #include <Core/Events/OpenGLViewer.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Basis/Constant.h>
@@ -225,13 +226,10 @@ void add_motion_notify_event(unsigned time, int x, int y)
 }
 
 
-void add_key_event(unsigned time, unsigned keval, 
-		   string str, int keycode) 
+void add_key_event(KeyEvent *ke)
 {
   KeyEvent *k = new KeyEvent();
-  k->set_key_state(KeyEvent::KEY_PRESS_E);
-  k->set_time(time);
-  k->set_key_string(str);
+  *k = *ke;
   event_handle_t event = k;
   EventManager::add_event(event);
 }
@@ -261,7 +259,7 @@ bool show_field(int fld_id)
   // fld_handle - the field to render
   bool do_nodes = true; // show nodes or not.
   bool do_edges = true; // show edges or not.
-  bool do_faces = true; // show faces or not.
+  bool do_faces = false; // show faces or not.
 
 //   ColorMap(const vector<Color>& rgb,
 // 	   const vector<float>& rgbT,
