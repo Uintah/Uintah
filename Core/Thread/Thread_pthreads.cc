@@ -1081,8 +1081,13 @@ RecursiveMutex::unlock()
 void
 RecursiveMutex::lock()
 {
-  Thread_private* p = Thread::self()->priv_;
-  int oldstate = Thread::push_bstack(p, Thread::BLOCK_ANY, name_);
+  Thread* self = Thread::self();
+  int oldstate;
+  Thread_private* p;
+  if (self) {
+    p = Thread::self()->priv_;
+    oldstate = Thread::push_bstack(p, Thread::BLOCK_ANY, name_);
+  }
   const int status = pthread_mutex_lock(&priv_->mutex);
   if (status)
   {
@@ -1101,7 +1106,7 @@ RecursiveMutex::lock()
     }
   }
 
-  Thread::pop_bstack(p, oldstate);
+  if (self) Thread::pop_bstack(p, oldstate);
 }
 
 
@@ -1311,18 +1316,29 @@ ConditionVariable::~ConditionVariable()
 void
 ConditionVariable::wait(Mutex& m)
 {
-  Thread_private* p = Thread::self()->priv_;
-  int oldstate = Thread::push_bstack(p, Thread::BLOCK_ANY, name_);
+  Thread* self = Thread::self();
+  int oldstate;
+  Thread_private* p;
+  if (self) {
+    p = Thread::self()->priv_;
+    oldstate = Thread::push_bstack(p, Thread::BLOCK_ANY, name_);
+  }
   pthread_cond_wait(&priv_->cond, &m.priv_->mutex);
-  Thread::pop_bstack(p, oldstate);
+  if (self)
+    Thread::pop_bstack(p, oldstate);
 }
 
 
 bool
 ConditionVariable::timedWait(Mutex& m, const struct timespec* abstime)
 {
-  Thread_private* p = Thread::self()->priv_;
-  int oldstate = Thread::push_bstack(p, Thread::BLOCK_ANY, name_);
+  Thread* self = Thread::self();
+  int oldstate;
+  Thread_private* p;
+  if (self) {
+    p = Thread::self()->priv_;
+    oldstate = Thread::push_bstack(p, Thread::BLOCK_ANY, name_);
+  }
   bool success;
   if (abstime){
     int err = pthread_cond_timedwait(&priv_->cond, &m.priv_->mutex, abstime);
@@ -1338,7 +1354,7 @@ ConditionVariable::timedWait(Mutex& m, const struct timespec* abstime)
     pthread_cond_wait(&priv_->cond, &m.priv_->mutex);
     success = true;
   }
-  Thread::pop_bstack(p, oldstate);
+  if (self) Thread::pop_bstack(p, oldstate);
   return success;
 }
 
@@ -1407,8 +1423,13 @@ Barrier::~Barrier()
 void
 Barrier::wait(int n)
 {
-  Thread_private* p = Thread::self()->priv_;
-  int oldstate = Thread::push_bstack(p, Thread::BLOCK_BARRIER, name_);
+  Thread* self = Thread::self();
+  int oldstate;
+  Thread_private* p;
+  if (self) {
+    p = Thread::self()->priv_;
+    oldstate = Thread::push_bstack(p, Thread::BLOCK_BARRIER, name_);
+  }
   int gen = priv_->flag;
   __int64 val = __sync_fetch_and_add_di(&(priv_->amo_val),1);
   if (val == n-1){
@@ -1417,7 +1438,7 @@ Barrier::wait(int n)
   }
   while(priv_->flag==gen)
     /* spin */ ;
-  Thread::pop_bstack(p, oldstate);
+  if (self) Thread::pop_bstack(p, oldstate);
 }
 
 
