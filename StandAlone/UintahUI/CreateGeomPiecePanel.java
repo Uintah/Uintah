@@ -166,11 +166,16 @@ public class CreateGeomPiecePanel extends JPanel
     int partType = ((Particle) d_partList.getParticle(0)).getType();
     if (partType == Particle.CIRCLE) {
 
+      // Get the number of particles and the particle size
+      int numPart = d_partList.size();
       double rveSize = d_partList.getRVESize();
-      double pointSpacing = rveSize/300.0;
+
+      // Get the smallest particle radius and have at least 10 particles
+      // in the radial direction
+      double minRad = ((Particle) d_partList.getParticle(numPart-1)).getRadius();
+      double pointSpacing = minRad/10.0;
 
       // First add the particles and also create a union of the cylinders
-      int numPart = d_partList.size();
       UnionGeomPiece union = new UnionGeomPiece("all_particles");
       for (int ii = 0; ii < numPart; ++ii) {
 
@@ -197,7 +202,7 @@ public class CreateGeomPiecePanel extends JPanel
         double arcAngle = arcPoints[1];
 
         // Create a name 
-        String name = new String("cylinder_"+String.valueOf(ii));
+        String name = new String("solid_cylinder_"+String.valueOf(ii));
 
         // Create a smooth cylinder geometry piece
         SmoothCylGeomPiece piece = 
@@ -206,8 +211,9 @@ public class CreateGeomPiecePanel extends JPanel
         d_geomPiece.addElement(piece);
 
         // Create a cylinder geometry piece
+        String solidName = new String("outer_cylinder_"+String.valueOf(ii));
         CylinderGeomPiece cylPiece = 
-          new CylinderGeomPiece(name, center, radius, length); 
+          new CylinderGeomPiece(solidName, center, radius, length); 
         union.addGeomPiece(cylPiece);
       }
 
@@ -231,11 +237,16 @@ public class CreateGeomPiecePanel extends JPanel
     int partType = ((Particle) d_partList.getParticle(0)).getType();
     if (partType == Particle.CIRCLE) {
 
+      // Get the number of particles and the particle size
+      int numPart = d_partList.size();
       double rveSize = d_partList.getRVESize();
-      double pointSpacing = rveSize/300.0;
+
+      // Get the smallest particle radius and have at least 10 particles
+      // in the radial direction
+      double minRad = ((Particle) d_partList.getParticle(numPart-1)).getRadius();
+      double pointSpacing = minRad/10.0;
 
       // First add the particles and also create a union of the cylinders
-      int numPart = d_partList.size();
       UnionGeomPiece unionOuter = new UnionGeomPiece("all_particles");
       UnionGeomPiece unionInner = new UnionGeomPiece("all_inside");
       for (int ii = 0; ii < numPart; ++ii) {
@@ -263,7 +274,7 @@ public class CreateGeomPiecePanel extends JPanel
         double arcAngle = arcPoints[1];
 
         // Create a name 
-        String name = new String("cylinder_"+String.valueOf(ii));
+        String name = new String("hollow_cylinder_"+String.valueOf(ii));
 
         // Create a smooth cylinder geometry piece
         SmoothCylGeomPiece piece = 
@@ -272,14 +283,16 @@ public class CreateGeomPiecePanel extends JPanel
         d_geomPiece.addElement(piece);
 
         // Create a cylinder geometry piece for the full cylinder
+        String solidName = new String("outer_cylinder_"+String.valueOf(ii));
         CylinderGeomPiece cylPieceSolid = 
-          new CylinderGeomPiece(name, center, radius, length); 
+          new CylinderGeomPiece(solidName, center, radius, length); 
         unionOuter.addGeomPiece(cylPieceSolid);
 
         // Create a cylinder geometry piece for the inner hollow region
         // of each cylinder
+        String hollowName = new String("inner_cylinder_"+String.valueOf(ii));
         CylinderGeomPiece cylPieceHollow = 
-          new CylinderGeomPiece(name, center, radius-thickness, length); 
+          new CylinderGeomPiece(hollowName, center, radius-thickness, length); 
         unionInner.addGeomPiece(cylPieceHollow);
       }
 

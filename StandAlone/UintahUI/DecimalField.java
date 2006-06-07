@@ -58,7 +58,8 @@ public class DecimalField extends JTextField {
   public double getValue() {
     double retVal = 0.0;
     try {
-      retVal = formatter.parse(getText()).doubleValue();
+      String input = getText().toUpperCase();
+      retVal = formatter.parse(input).doubleValue();
     } catch (ParseException e) {
     }
     return retVal;
@@ -72,6 +73,11 @@ public class DecimalField extends JTextField {
     } catch (IllegalArgumentException e) {
       System.out.println("Cannot format "+value);
     }
+  }
+
+  // set method
+  public void setValue(String value) {
+    setText(value);
   }
 
   // Create the related document

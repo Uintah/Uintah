@@ -33,7 +33,7 @@ public class ParticleSize {
   public String compositeName = null;
   public double volFracInComposite = 0.0;
   public int nofSizesInp = 0;
-  public int[] sizeInp;
+  public double[] sizeInp;
   public double[] volFracInp;
   public int nofSizesCalc = 0;
   public double[] sizeCalc;
@@ -48,7 +48,7 @@ public class ParticleSize {
     volFracInComposite = 100.0;
 
     nofSizesInp = 2;
-    sizeInp = new int[NOF_SIZES];
+    sizeInp = new double[NOF_SIZES];
     volFracInp = new double[NOF_SIZES];
 
     nofSizesCalc = 2;
@@ -59,7 +59,7 @@ public class ParticleSize {
     volFrac3DCalc = new double[NOF_SIZES];
 
     for (int ii = 0; ii < NOF_SIZES; ii++) {
-      sizeInp[ii] = 0;
+      sizeInp[ii] = 0.0;
       volFracInp[ii] = 0.0;
       sizeCalc[ii] = 0.0;
       freq2DCalc[ii] = 0;
@@ -68,7 +68,7 @@ public class ParticleSize {
       volFrac3DCalc[ii] = 0;
     }
 
-    sizeInp[0] = 100;
+    sizeInp[0] = 100.0;
     volFracInp[0] = 10.0;
     sizeCalc[0] = 100.0;
     freq2DCalc[0] = 10;
@@ -76,7 +76,7 @@ public class ParticleSize {
     volFrac2DCalc[0] = 0.001;
     volFrac3DCalc[0] = 0.001;
 
-    sizeInp[1] = 1000;
+    sizeInp[1] = 1000.0;
     volFracInp[1] = 90.0;
     sizeCalc[1] = 1000.0;
     freq2DCalc[1] = 90;
@@ -91,7 +91,7 @@ public class ParticleSize {
     volFracInComposite = partSizeDist.volFracInComposite;
 
     nofSizesInp = partSizeDist.nofSizesInp;;
-    sizeInp = new int[NOF_SIZES];
+    sizeInp = new double[NOF_SIZES];
     volFracInp = new double[NOF_SIZES];
 
     for (int ii = 0; ii < nofSizesInp; ii++) {
