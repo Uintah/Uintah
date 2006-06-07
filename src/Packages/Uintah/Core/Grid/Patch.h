@@ -20,6 +20,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
 
   using std::string;
@@ -67,10 +68,10 @@ WARNING
      
 ****************************************/
     
-   class Patch {
+   class SCISHARE Patch {
    public:
 
-     friend std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
+     SCISHARE friend std::ostream& operator<<(std::ostream& out, const Uintah::Patch & r);
 
      enum BCType {
        None,

@@ -22,11 +22,6 @@ using namespace SCIRun;
 using std::cerr;
 using std::find;
 
-// Debug: Used to sync cerr so it is readable (when output by
-// multiple threads at the same time)  From sus.cc:
-//extern Mutex cerrLock;
-//extern DebugStream mixedDebug;
-
 static Mutex send_data( "MPIScheduler::send_data" );
 
 #define DAV_DEBUG 0

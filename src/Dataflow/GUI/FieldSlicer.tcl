@@ -341,10 +341,9 @@ itcl_class SCIRun_FieldsCreate_FieldSlicer {
 
 
     method update_type_callback { name1 name2 op } {
-	set w .ui[modname]
-	if {[winfo exists $w]} {
-	    set opt [$w.opt childsite]
-	    $opt.update select [set $this-update_type]
+	set window .ui[modname]
+	if {[winfo exists $window]} {
+	    [set $this-update] select [set $this-update_type]
 	}
     }
 

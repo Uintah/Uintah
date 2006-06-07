@@ -3,15 +3,16 @@
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
-
 #include <string>
+
+#include <Packages/Uintah/CCA/Components/Parent/share.h>
 
 namespace Uintah {
 
   class ProcessorGroup;
   class UintahParallelComponent;
 
-  class ComponentFactory  {
+  class SCISHARE ComponentFactory  {
   
   public:
     // this function has a switch for all known components

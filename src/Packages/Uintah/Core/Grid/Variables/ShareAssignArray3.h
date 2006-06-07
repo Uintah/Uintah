@@ -3,7 +3,9 @@
 
 #include <Packages/Uintah/Core/Grid/Variables/Array3.h>
 
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include <errno.h>
 
 namespace Uintah {

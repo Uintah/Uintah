@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 
+#include <Packages/Uintah/CCA/Components/Examples/share.h>
 namespace Uintah {
   class SimpleMaterial;
   class ExamplesLabel;
@@ -40,7 +41,7 @@ WARNING
   
 ****************************************/
 
-  class ParticleTest1 : public UintahParallelComponent, public SimulationInterface {
+  class SCISHARE ParticleTest1 : public UintahParallelComponent, public SimulationInterface {
   public:
     ParticleTest1(const ProcessorGroup* myworld);
     virtual ~ParticleTest1();

@@ -6,6 +6,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 
+#include <Packages/Uintah/Core/GeometryPiece/share.h>
 namespace Uintah {
 
 /**************************************
@@ -52,7 +53,7 @@ WARNING
         
 ****************************************/
 
-  class ConeGeometryPiece : public CylinderGeometryPiece {
+  class SCISHARE ConeGeometryPiece : public CylinderGeometryPiece {
     
   public:
     //////////

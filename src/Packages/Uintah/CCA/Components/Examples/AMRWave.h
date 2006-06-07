@@ -4,6 +4,7 @@
 
 #include <Packages/Uintah/CCA/Components/Examples/Wave.h>
 
+#include <Packages/Uintah/CCA/Components/Examples/share.h>
 namespace Uintah {
   class SimpleMaterial;
   class ExamplesLabel;
@@ -37,7 +38,7 @@ WARNING
 ****************************************/
 
   class VarLabel;
-  class AMRWave : public Wave {
+  class SCISHARE AMRWave : public Wave {
   public:
     AMRWave(const ProcessorGroup* myworld);
     virtual ~AMRWave();

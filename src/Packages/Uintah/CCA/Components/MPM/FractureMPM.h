@@ -21,6 +21,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/ParticleSet.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleVariable.h>
 
+#include <Packages/Uintah/CCA/Components/MPM/share.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -58,7 +59,7 @@ WARNING
   
 ****************************************/
 
-class FractureMPM : public SerialMPM {
+class SCISHARE FractureMPM : public SerialMPM {
 public:
   FractureMPM(const ProcessorGroup* myworld);
    virtual ~FractureMPM();

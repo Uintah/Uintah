@@ -28,6 +28,7 @@
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
 
   inline int getVolume(const IntVector& low, const IntVector& high)
@@ -40,7 +41,7 @@ namespace Uintah {
     SCIRun::InternalAreaSuperBoxEvaluator<const Patch*, int> > SuperPatchSet;
   typedef SuperPatchSet::SuperBoxContainer SuperPatchContainer;
 
-  class LocallyComputedPatchVarMap {
+  class SCISHARE LocallyComputedPatchVarMap {
   public:
     LocallyComputedPatchVarMap();
     ~LocallyComputedPatchVarMap();

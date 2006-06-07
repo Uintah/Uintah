@@ -5,6 +5,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 
+#include <Packages/Uintah/CCA/Components/ICE/share.h>
 namespace Uintah { 
   class DataWarehouse;
   
@@ -20,7 +21,7 @@ namespace Uintah {
                        SFCYVariable<double>& q_Y_FC,               
                        SFCZVariable<double>& q_Z_FC);
 
-  void scalarDiffusionOperator(DataWarehouse* new_dw,
+  SCISHARE void scalarDiffusionOperator(DataWarehouse* new_dw,
                          const Patch* patch,
                          const bool use_vol_frac,
                          const CCVariable<double>& q_CC,

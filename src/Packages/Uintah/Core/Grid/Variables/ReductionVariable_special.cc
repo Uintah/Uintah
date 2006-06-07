@@ -3,6 +3,7 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Geometry/Vector.h>
 
+#include <Packages/Uintah/Core/Grid/share.h>
 using namespace Uintah;
 using namespace SCIRun;
 
@@ -11,7 +12,7 @@ namespace Uintah { // <- This is necessary for IBM SP AIX xlC Compiler
 #if !defined(__digital__) || defined(__GNUC__)
 template<>
 #endif
-void
+SCISHARE void
 ReductionVariable<double, Reductions::Min<double> >
    ::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
 {
@@ -24,7 +25,7 @@ ReductionVariable<double, Reductions::Min<double> >
 template<>
 #endif
 
-void
+SCISHARE void
 ReductionVariable<double, Reductions::Min<double> >
    ::getMPIData(vector<char>& data, int& index)
 {
@@ -38,7 +39,7 @@ ReductionVariable<double, Reductions::Min<double> >
 template<>
 #endif
 
-void
+SCISHARE void
 ReductionVariable<double, Reductions::Min<double> >
    ::putMPIData(vector<char>& data, int& index)
 {
@@ -52,7 +53,7 @@ ReductionVariable<double, Reductions::Min<double> >
 template<>
 #endif
 
-void
+SCISHARE void
 ReductionVariable<double, Reductions::Max<double> >
    ::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
 {
@@ -65,7 +66,7 @@ ReductionVariable<double, Reductions::Max<double> >
 template<>
 #endif
 
-void
+SCISHARE void
 ReductionVariable<double, Reductions::Max<double> >
    ::getMPIData(vector<char>& data, int& index)
 {
@@ -79,7 +80,7 @@ ReductionVariable<double, Reductions::Max<double> >
 template<>
 #endif
 
-void
+SCISHARE void
 ReductionVariable<double, Reductions::Max<double> >
    ::putMPIData(vector<char>& data, int& index)
 {
@@ -93,7 +94,7 @@ ReductionVariable<double, Reductions::Max<double> >
 template<>
 #endif
 
-void
+SCISHARE void
 ReductionVariable<double, Reductions::Sum<double> >
    ::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
 {
@@ -106,7 +107,7 @@ ReductionVariable<double, Reductions::Sum<double> >
 template<>
 #endif
 
-void
+SCISHARE void
 ReductionVariable<double, Reductions::Sum<double> >
    ::getMPIData(vector<char>& data, int& index)
 {
@@ -120,7 +121,7 @@ ReductionVariable<double, Reductions::Sum<double> >
 template<>
 #endif
 
-void
+SCISHARE void
 ReductionVariable<double, Reductions::Sum<double> >
    ::putMPIData(vector<char>& data, int& index)
 {
@@ -134,7 +135,7 @@ ReductionVariable<double, Reductions::Sum<double> >
 template<>
 #endif
 
-void
+SCISHARE void
 ReductionVariable<bool, Reductions::And<bool> >
    ::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
 {
@@ -147,7 +148,7 @@ ReductionVariable<bool, Reductions::And<bool> >
 template<>
 #endif
 
-void
+SCISHARE void
 ReductionVariable<bool, Reductions::And<bool> >
    ::getMPIData(vector<char>& data, int& index)
 {
@@ -161,7 +162,7 @@ ReductionVariable<bool, Reductions::And<bool> >
 template<>
 #endif
 
-void
+SCISHARE void
 ReductionVariable<bool, Reductions::And<bool> >
    ::putMPIData(vector<char>& data, int& index)
 {
@@ -177,7 +178,7 @@ ReductionVariable<bool, Reductions::And<bool> >
 template<>
 #endif
 
-void
+SCISHARE void
 ReductionVariable<long64, Reductions::Sum<long64> >
    ::getMPIInfo(int& count, MPI_Datatype& datatype, MPI_Op& op)
 {
@@ -190,7 +191,7 @@ ReductionVariable<long64, Reductions::Sum<long64> >
 template<>
 #endif
 
-void
+SCISHARE void
 ReductionVariable<long64, Reductions::Sum<long64> >
    ::getMPIData(vector<char>& data, int& index)
 {
@@ -204,7 +205,7 @@ ReductionVariable<long64, Reductions::Sum<long64> >
 template<>
 #endif
 
-void
+SCISHARE void
 ReductionVariable<long64, Reductions::Sum<long64> >
    ::putMPIData(vector<char>& data, int& index)
 {
@@ -218,7 +219,7 @@ ReductionVariable<long64, Reductions::Sum<long64> >
 template<>
 #endif
 
-void
+SCISHARE void
 ReductionVariable<Vector, Reductions::Sum<Vector> >
    ::getMPIInfo(int& count,
 		  MPI_Datatype& datatype, MPI_Op& op)
@@ -232,7 +233,7 @@ ReductionVariable<Vector, Reductions::Sum<Vector> >
 template<>
 #endif
 
-void
+SCISHARE void
 ReductionVariable<Vector, Reductions::Sum<Vector> >
    ::getMPIData(vector<char>& data, int& index)
 {	
@@ -247,7 +248,7 @@ ReductionVariable<Vector, Reductions::Sum<Vector> >
 template<>
 #endif
 
-void
+SCISHARE void
 ReductionVariable<Vector, Reductions::Sum<Vector> >
    ::putMPIData(vector<char>& data, int& index)
 {

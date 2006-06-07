@@ -17,7 +17,7 @@ static Mutex lock("VarLabel create/destroy lock");
 
 VarLabel*
 VarLabel::create(const string& name,
-                 const TypeDescription* td,
+                 const Uintah::TypeDescription* td,
                  const IntVector& boundaryLayer /*= IntVector(0,0,0) */,
                  VarType vartype /*= Normal*/)
 {
@@ -65,7 +65,7 @@ VarLabel::destroy(const VarLabel* label)
   return false;
 }
 
-VarLabel::VarLabel(const std::string& name, const TypeDescription* td,
+VarLabel::VarLabel(const std::string& name, const Uintah::TypeDescription* td,
 		   const IntVector& boundaryLayer, VarType vartype)
   : d_name(name), d_td(td), d_boundaryLayer(boundaryLayer),
     d_vartype(vartype), d_compressionMode("default"),

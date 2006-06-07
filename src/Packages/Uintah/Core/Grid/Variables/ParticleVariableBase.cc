@@ -11,7 +11,13 @@ using namespace Uintah;
 using namespace std;
 using namespace SCIRun;
 
-extern Mutex MPITypeLock;
+#ifdef _WIN32
+#define SCISHARE __declspec(dllimport)
+#else
+#define SCISHARE
+#endif
+
+extern SCISHARE Mutex MPITypeLock;
 
 ParticleVariableBase::~ParticleVariableBase()
 {	

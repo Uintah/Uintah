@@ -11,6 +11,7 @@
 #include <Packages/Uintah/CCA/Components/SimulationController/SimulationController.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 
+#include <Packages/Uintah/CCA/Components/SimulationController/share.h>
 namespace Uintah {
 
 class SimulationInterface;
@@ -47,7 +48,7 @@ class Regridder;
 ****************************************/
 
    //! Controls the execution of an AMR Simulation
-   class AMRSimulationController : public SimulationController {
+   class SCISHARE AMRSimulationController : public SimulationController {
    public:
       AMRSimulationController(const ProcessorGroup* myworld, bool doAMR);
       virtual ~AMRSimulationController();

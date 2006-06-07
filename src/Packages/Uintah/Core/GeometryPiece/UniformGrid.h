@@ -16,6 +16,7 @@
 using std::vector;
 using std::list;
 
+#include <Packages/Uintah/Core/GeometryPiece/share.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -66,7 +67,7 @@ WARNING
    Plane d_plane;
  };
  
- class UniformGrid {
+ class SCISHARE UniformGrid {
    
  public:
    UniformGrid(Box& bound_box);

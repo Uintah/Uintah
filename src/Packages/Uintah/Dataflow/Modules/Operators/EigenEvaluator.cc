@@ -86,7 +86,7 @@ void EigenEvaluator::execute(void) {
     return;
   }
 
-  const TypeDescription *td = hTF->get_type_description(Field::MESH_TD_E);
+  const SCIRun::TypeDescription *td = hTF->get_type_description(Field::MESH_TD_E);
   if ( td->get_name().find("Matrix3") == string::npos ){
     std::cerr<<"Input is not a Tensor field\n";
     return;

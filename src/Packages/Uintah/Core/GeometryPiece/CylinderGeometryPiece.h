@@ -9,6 +9,7 @@
 # define M_PI           3.14159265358979323846  /* pi */
 #endif
 
+#include <Packages/Uintah/Core/GeometryPiece/share.h>
 namespace Uintah {
 
 /**************************************
@@ -49,7 +50,7 @@ WARNING
 	
 ****************************************/
 
-  class CylinderGeometryPiece : public GeometryPiece {
+  class SCISHARE CylinderGeometryPiece : public GeometryPiece {
     
   public:
     //////////

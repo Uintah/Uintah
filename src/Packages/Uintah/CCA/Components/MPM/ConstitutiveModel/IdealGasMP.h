@@ -93,7 +93,7 @@ namespace Uintah {
 				     const MPMMaterial* matl);
 
     virtual void computePressEOSCM(double rho_m, double& press_eos,
-				   const double p_ref,
+				   double p_ref,
 				   double& dp_drho, double& ss_new,
 				   const MPMMaterial* matl);
 

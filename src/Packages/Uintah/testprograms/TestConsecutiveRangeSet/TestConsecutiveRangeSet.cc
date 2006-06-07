@@ -2,7 +2,9 @@
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <sstream>
 #include <stdlib.h>
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 #include <limits.h>
 
 using namespace SCIRun;

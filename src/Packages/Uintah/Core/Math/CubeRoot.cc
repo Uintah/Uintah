@@ -22,18 +22,15 @@
  *                  than once.
  */
 
+#include    <Packages/Uintah/Core/Math/CubeRoot.h>
 #include    <math.h>
 #include    <stdio.h>
+
 
 /* epsilon surrounding for near zero values */
 
 #define     EQN_EPS     1e-12
 #define	    IsZero(x)	((x) > -EQN_EPS && (x) < EQN_EPS)
-
-#ifdef NOCBRT
-#define     cbrt(x)     ((x) > 0.0 ? pow((double)(x), 1.0/3.0) : \
-                          ((x) < 0.0 ? -pow((double)-(x), 1.0/3.0) : 0.0))
-#endif
 
 int SolveLinear(double *c, double *s) {
     if (c[ 1 ] < 0.0000001 && c[ 1 ] > -0.0000001)

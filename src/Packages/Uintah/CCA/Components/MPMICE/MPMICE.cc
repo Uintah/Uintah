@@ -2573,7 +2573,7 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
   // to figure out the correct type of the function.
   void (MPMICE::*func)(const ProcessorGroup*, const PatchSubset*,
                        const MaterialSubset*, DataWarehouse*, DataWarehouse*, 
-                       const VarLabel*, T, bool, const string);
+                       const VarLabel*, T, bool, string);
   func = &MPMICE::coarsenVariableCC<T>;
   ostringstream taskName;
 
@@ -2609,14 +2609,14 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
                                           const VarLabel* variable,
                                           T defaultValue,
                                           bool modifies,
-                                          const string& coarsenMethod)
+                                          string coarsenMethod)
 {
   // The SGI compiler does't like accepting a templated function over
   // a function call for some reason...  We use this hack to force it
   // to figure out the correct type of the function.
   void (MPMICE::*func)(const ProcessorGroup*, const PatchSubset*,
                        const MaterialSubset*, DataWarehouse*, DataWarehouse*,
-                       const VarLabel*, T, bool, const string);
+                       const VarLabel*, T, bool, string);
   func = &MPMICE::coarsenVariableNC<T>;
   ostringstream taskName;
 
@@ -2908,7 +2908,7 @@ void MPMICE::coarsenVariableCC(const ProcessorGroup*,
                                const VarLabel* variable,
                                T defaultValue, 
                                bool modifies,
-                               const string coarsenMethod)
+                               string coarsenMethod)
 {
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
@@ -2999,7 +2999,7 @@ void MPMICE::coarsenVariableNC(const ProcessorGroup*,
                                const VarLabel* variable,
                                T defaultValue, 
                                bool modifies,
-                               const string coarsenMethod)
+                               string coarsenMethod)
 {
   const Level* coarseLevel = getLevel(patches);
   const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();

@@ -9,7 +9,6 @@ SRCS     += \
 	$(SRCDIR)/TypeUtils.cc
 
 PSELIBS := \
-	Core/Malloc     \
 	Core/Thread     \
 	Core/Exceptions \
 	Core/Util       \

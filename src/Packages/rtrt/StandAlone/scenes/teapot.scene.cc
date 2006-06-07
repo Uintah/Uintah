@@ -486,7 +486,9 @@ Material *brick = new Speckle(0.01, Color(0.5,0.5,0.5), Color(0.6, 0.62, 0.64) )
 	scene->add_light( rightHeadlight );
 	scene->add_light( leftHeadlight );
       } else {
-	scene->add_light(new Light(Point(200,400,1300), Color(.8,.8,.8), 0));
+        Light* light = new Light(Point(200,400,1300), Color(.8,.8,.8), 0);
+        light->name_ = "main";
+        scene->add_light(light);
       }
       return scene;
 }

@@ -7,6 +7,7 @@
 
 #include <Core/Geometry/Point.h>
 
+#include <Packages/Uintah/Core/GeometryPiece/share.h>
 namespace Uintah {
 
 /////////////////////////////////////////////////////////////////////////////
@@ -39,7 +40,7 @@ namespace Uintah {
 */
 /////////////////////////////////////////////////////////////////////////////
 
-  class SphereShellPiece : public ShellGeometryPiece {
+  class SCISHARE SphereShellPiece : public ShellGeometryPiece {
 	 
   public:
     //////////

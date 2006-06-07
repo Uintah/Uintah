@@ -17,6 +17,7 @@
 #include <sgi_stl_warnings_on.h>
 
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
 
   class Level;
@@ -52,8 +53,8 @@ WARNING
   
 ****************************************/
 
-  class Task {
-    class ActionBase {
+  class SCISHARE Task {
+    class SCISHARE ActionBase {
     public:
       virtual ~ActionBase();
       virtual void doit(const ProcessorGroup* pc,
@@ -557,7 +558,7 @@ WARNING
       Modifies, Computes, Requires
     };
     
-    struct Dependency {
+    struct SCISHARE Dependency {
       Dependency* next;
       DepType deptype;
       Task* task;
@@ -617,7 +618,7 @@ WARNING
     }; // end struct Dependency
     
     
-    struct Edge {
+    struct SCISHARE Edge {
       const Dependency* comp;
       Edge* compNext;
       const Dependency* req;
@@ -736,9 +737,9 @@ WARNING
     int dwmap[TotalDWs];
     int sortedOrder;
 
-    friend std::ostream & operator << ( std::ostream & out, const Uintah::Task & task );
-    friend std::ostream & operator << ( std::ostream & out, const Uintah::Task::TaskType & tt );
-    friend std::ostream & operator << ( std::ostream & out, const Uintah::Task::Dependency & dep );
+    SCISHARE friend std::ostream & operator << ( std::ostream & out, const Uintah::Task & task );
+    SCISHARE friend std::ostream & operator << ( std::ostream & out, const Uintah::Task::TaskType & tt );
+    SCISHARE friend std::ostream & operator << ( std::ostream & out, const Uintah::Task::Dependency & dep );
 
   }; // end class Task
   

@@ -15,6 +15,11 @@
 
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 
+#ifdef _WIN32
+#include <float.h>
+#define isnan _isnan
+#endif
+
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
