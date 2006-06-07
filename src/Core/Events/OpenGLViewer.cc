@@ -12,6 +12,7 @@
 #include <Core/Events/OpenGLViewer.h>
 #include <Core/Events/Tools/ViewRotateTool.h>
 #include <Core/Events/Tools/ViewScaleTool.h>
+#include <Core/Events/Tools/ViewTranslateTool.h>
 #include <Core/Events/Tools/AutoviewTool.h>
 #include <Core/Geom/Pbuffer.h>
 #include <Core/Containers/StringUtil.h>
@@ -233,6 +234,10 @@ OpenGLViewer::OpenGLViewer(OpenGLContext *oglc) :
 
   tool_handle_t scale = new ViewScaleTool("OpenGLViewer Scale Tool", vti);
   tm_.add_tool(scale, 2);
+
+  tool_handle_t trans = new ViewTranslateTool("OpenGLViewer Translate Tool", 
+					      vti);
+  tm_.add_tool(trans, 3);
   
   SGTool *sgt = new SGTool("OpenGLViewer Scene Graph Tool", 
 			   scene_graph_, visible_);
