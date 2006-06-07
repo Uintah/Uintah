@@ -270,13 +270,13 @@ itcl_class Uintah_Selectors_TimestepSelector {
     }
 
     method SetTimeRange { timesteps } {
-        set w .ui[modname].tframe.tframe
+        set w .ui[modname].tframe.stepframe
         set $this-max_time [expr $timesteps -1 ]
-        if { [winfo exists $w.time] } {
+        if { [winfo exists $w.scale] } {
             set interval [expr ([set $this-max_time] -1)/2.0]
-            $w.time configure -from 0
-            $w.time configure -to [set $this-max_time]
-            $w.time configure -tickinterval $interval
+            $w.scale configure -from 0
+            $w.scale configure -to [set $this-max_time]
+            $w.scale configure -tickinterval $interval
         }
     }
 
