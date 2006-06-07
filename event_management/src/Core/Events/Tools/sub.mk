@@ -40,5 +40,6 @@ SRCS     += \
 	$(SRCDIR)/ToolManager.cc	\
 	$(SRCDIR)/ViewRotateTool.cc	\
 	$(SRCDIR)/ViewScaleTool.cc	\
+	$(SRCDIR)/ViewTranslateTool.cc	\
 
 
