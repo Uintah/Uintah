@@ -578,7 +578,11 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
       {
         pr->error(errmsg);
       }
-      pr->add_raw_message(SOError() + string("\n"));
+      const char *soerr = SOError();
+      if (soerr)
+      {
+        pr->add_raw_message(soerr + string("\n"));
+      }
       // Remove the null ref for this lib from the map.
       map_lock_.lock();
       algo_map_.erase(info.filename_);
@@ -596,7 +600,11 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
   {
     pr->error("DYNAMIC LIB ERROR: " + full_so +
               " no maker function!!");
-    pr->add_raw_message(string(SOError()) + "\n");
+    const char *soerr = SOError();
+    if (soerr)
+    {
+      pr->add_raw_message(soerr + string("\n"));
+    }
     // Remove the null ref for this lib from the map.
     map_lock_.lock();
     algo_map_.erase(info.filename_);
@@ -696,7 +704,11 @@ DynamicLoader::compile_so(const CompileInfo &info, ProgressReporter *pr)
     CreateProcess(batch_filename.c_str(),0,0,0,0,CREATE_NO_WINDOW,0,0, &si_, &pi_);
   if (!retval)
   {
-    cerr << SOError() << "\n";
+    const char *soerr = SOError();
+    if (soerr)
+    {
+      cerr << soerr << "\n";
+    }
   }
   else
   {
