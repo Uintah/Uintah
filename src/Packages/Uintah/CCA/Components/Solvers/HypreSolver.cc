@@ -691,7 +691,7 @@ namespace Uintah {
   //______________________________________________________________________
   SolverParameters* HypreSolver2::readParameters(ProblemSpecP& params, const string& varname)
   {
-    HypreSolver2Params* p = scinew HypreSolver2Params();
+    HypreSolver2Params* p = new HypreSolver2Params();
     bool found=false;
     if(params){
       for(ProblemSpecP param = params->findBlock("Parameters"); param != 0;
