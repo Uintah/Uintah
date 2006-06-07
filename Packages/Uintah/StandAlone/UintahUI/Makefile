@@ -27,6 +27,7 @@ SOURCE_FILES = \
 	GeomObjectPanel.java \
 	GeomPiece.java \
 	GeomPiecePanel.java \
+	GridBCPanel.java \
 	HelpAboutFrame.java \
 	HypoElasticMaterialPanel.java \
 	ICEInputsPanel.java \
@@ -85,6 +86,7 @@ all: UintahGui \
 	GeomObjectPanel \
 	GeomPiece \
 	GeomPiecePanel \
+	GridBCPanel \
 	HelpAboutFrame\
 	HypoElasticMaterialPanel \
 	ICEInputsPanel \
@@ -180,6 +182,9 @@ GeomPiece: GeomPiece.java
 
 GeomPiecePanel: GeomPiecePanel.java
 	${JAVAC} ${srcdir}/GeomPiecePanel.java 
+
+GridBCPanel: GridBCPanel.java
+	${JAVAC} ${srcdir}/GridBCPanel.java 
 
 HelpAboutFrame: HelpAboutFrame.java
 	${JAVAC} ${srcdir}/HelpAboutFrame.java 

@@ -81,9 +81,9 @@ public class SmoothCylGeomPiece extends GeomPiece {
     pw.println(tab1+"<thickness> "+d_thickness+" </thickness>");
     pw.println(tab1+"<num_radial> "+d_numRadial+" </num_radial>");
     pw.println(tab1+"<num_axial> "+d_numAxial+" </num_axial>");
-    pw.println(tab1+"<arc_start_angle> "+d_arcStartAngle+
-                    " </arc_start_angle>");
-    pw.println(tab1+"<arc_angle> "+d_arcAngle+ " </arc_angle>");
+    //pw.println(tab1+"<arc_start_angle> "+d_arcStartAngle+
+    //                " </arc_start_angle>");
+    //pw.println(tab1+"<arc_angle> "+d_arcAngle+ " </arc_angle>");
     pw.println(tab+"</smoothcyl>");
   }
 

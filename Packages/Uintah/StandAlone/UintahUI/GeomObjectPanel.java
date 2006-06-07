@@ -11,6 +11,7 @@ import java.awt.*;
 import java.awt.event.*;
 import java.util.Vector;
 import javax.swing.*;
+import javax.swing.event.*;
 
 public class GeomObjectPanel extends JPanel 
                              implements ActionListener {
@@ -23,6 +24,9 @@ public class GeomObjectPanel extends JPanel
   private int d_numLocalGeomObject = 0;
   private int d_localGeomObjectStartIndex = 0;
   private Vector d_localGeomPiece = null;
+  private double d_T = 0.0;
+  private double d_p = 0.0;
+  private double d_rho = 0.0;
 
   // Components
   private JTextField nameEntry = null;
@@ -78,13 +82,13 @@ public class GeomObjectPanel extends JPanel
     gb.setConstraints(nameLabel, gbc);
     add(nameLabel);
   
-    nameEntry = new JTextField("Box", 10);
+    nameEntry = new JTextField("Geometry Object", 10);
     UintahGui.setConstraints(gbc, fill, xgap, ygap, 1, 0);
     gb.setConstraints(nameEntry, gbc);
     add(nameEntry);
 
     // Resolution
-    resLabel = new JLabel("Resolution:");
+    resLabel = new JLabel("Particles/Cell");
     UintahGui.setConstraints(gbc, fill, xgap, ygap, 0, 1);
     gb.setConstraints(resLabel, gbc);
     add(resLabel);
@@ -95,7 +99,7 @@ public class GeomObjectPanel extends JPanel
     add(resEntry);
 
     // Velocity
-    velLabel = new JLabel("Velocity:");
+    velLabel = new JLabel("Velocity (m/s)");
     UintahGui.setConstraints(gbc, fill, xgap, ygap, 0, 2);
     gb.setConstraints(velLabel, gbc);
     add(velLabel);
@@ -105,38 +109,48 @@ public class GeomObjectPanel extends JPanel
     gb.setConstraints(velEntry, gbc);
     add(velEntry);
 
+    // Set up the default values (SI units)
+    d_T = 300.0;
+    d_p = 101325.0;
+    double gamma = 1.4;
+    double cv = 716;
+    d_rho = d_p/((gamma-1.0)*cv*d_T);
+
     // Temperature
-    tempLabel = new JLabel("Temperature");
+    tempLabel = new JLabel("Temperature (K)");
     UintahGui.setConstraints(gbc, fill, xgap, ygap, 0, 3);
     gb.setConstraints(tempLabel, gbc);
     add(tempLabel);
 
-    tempEntry = new DecimalField(300.0,5);
+    tempEntry = new DecimalField(d_T, 5);
+    tempEntry.addActionListener(this);
     UintahGui.setConstraints(gbc, fill, xgap, ygap, 1, 3);
     gb.setConstraints(tempEntry, gbc);
     add(tempEntry);
 
-    // Density
-    rhoLabel = new JLabel("Density");
-    UintahGui.setConstraints(gbc, fill, xgap, ygap, 0, 4);
-    gb.setConstraints(rhoLabel, gbc);
-    add(rhoLabel);
-
-    rhoEntry = new DecimalField(0.0,5);
-    UintahGui.setConstraints(gbc, fill, xgap, ygap, 1, 4);
-    gb.setConstraints(rhoEntry, gbc);
-    add(rhoEntry);
-
     // Pressure
-    presLabel = new JLabel("Pressure");
-    UintahGui.setConstraints(gbc, fill, xgap, ygap, 0, 5);
+    presLabel = new JLabel("Pressure (Pa)");
+    UintahGui.setConstraints(gbc, fill, xgap, ygap, 0, 4);
     gb.setConstraints(presLabel, gbc);
     add(presLabel);
 
-    presEntry = new DecimalField(0.0,5);
-    UintahGui.setConstraints(gbc, fill, xgap, ygap, 1, 5);
+    presEntry = new DecimalField(d_p, 5);
+    presEntry.addActionListener(this);
+    UintahGui.setConstraints(gbc, fill, xgap, ygap, 1, 4);
     gb.setConstraints(presEntry, gbc);
     add(presEntry);
+
+    // Density
+    rhoLabel = new JLabel("Density (kg/m3)");
+    UintahGui.setConstraints(gbc, fill, xgap, ygap, 0, 5);
+    gb.setConstraints(rhoLabel, gbc);
+    add(rhoLabel);
+
+    rhoEntry = new DecimalField(d_rho, 5);
+    rhoEntry.addActionListener(this);
+    UintahGui.setConstraints(gbc, fill, xgap, ygap, 1, 5);
+    gb.setConstraints(rhoEntry, gbc);
+    add(rhoEntry);
 
     // Geometry Piece
     geomPieceLabel = new JLabel("Geometry Pieces");
@@ -173,29 +187,48 @@ public class GeomObjectPanel extends JPanel
   //---------------------------------------------------------------------
   public void actionPerformed(ActionEvent e) {
 
-    String command = e.getActionCommand();
-    if (command.equals(new String("accept"))) {
-
-      if (d_usePartList) {
-
-        // Create a geometry object for each of the particles
-        createPartListGeomObject();
-        
-      } else {
-
-        GeomObject go = new GeomObject();
-        go.setName(nameEntry.getText());
-        go.setResolution(resEntry.x(), resEntry.y(), resEntry.z());
-        go.setVelocity(velEntry.x(), velEntry.y(), velEntry.z());
-        go.setTemperature(tempEntry.getValue());
-        go.setDensity(rhoEntry.getValue());
-        go.setPressure(presEntry.getValue());
-        go.addGeomPiece((GeomPiece) d_geomPiece.elementAt(0));
-        d_geomObj.addElement(go);
-        d_numLocalGeomObject = 1;
-        d_localGeomObjectStartIndex = 0;
+    Object source = e.getSource();
+    if (source.equals(tempEntry)) {
+      double gamma = 1.4;
+      double cv = 716;
+      d_T = tempEntry.getValue();
+      d_p = presEntry.getValue();
+      d_rho = d_p/((gamma-1.0)*cv*d_T);
+      rhoEntry.setValue(d_rho);
+    } else if (source.equals(presEntry)) {
+      double gamma = 1.4;
+      double cv = 716;
+      d_T = tempEntry.getValue();
+      d_p = presEntry.getValue();
+      d_rho = d_p/((gamma-1.0)*cv*d_T);
+      rhoEntry.setValue(d_rho);
+    } else if (source.equals(rhoEntry)) {
+      double gamma = 1.4;
+      double cv = 716;
+      d_T = tempEntry.getValue();
+      d_rho = rhoEntry.getValue();
+      d_p = (gamma-1.0)*cv*d_T*d_rho;
+      presEntry.setValue(d_p);
+    } else {
+      String command = e.getActionCommand();
+      if (command.equals(new String("accept"))) {
+        if (d_usePartList) {
+          // Create a geometry object for each of the particles
+          createPartListGeomObject();
+        } else {
+          GeomObject go = new GeomObject();
+          go.setName(nameEntry.getText());
+          go.setResolution(resEntry.x(), resEntry.y(), resEntry.z());
+          go.setVelocity(velEntry.x(), velEntry.y(), velEntry.z());
+          go.setTemperature(tempEntry.getValue());
+          go.setDensity(rhoEntry.getValue());
+          go.setPressure(presEntry.getValue());
+          go.addGeomPiece((GeomPiece) d_geomPiece.elementAt(0));
+          d_geomObj.addElement(go);
+          d_numLocalGeomObject = 1;
+          d_localGeomObjectStartIndex = 0;
+        }
       }
-        
     }
 
   }

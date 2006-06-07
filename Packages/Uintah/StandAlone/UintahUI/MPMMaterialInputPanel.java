@@ -309,7 +309,9 @@ public class MPMMaterialInputPanel extends JPanel
     String tab1 = new String(tab+"  ");
     String tab2 = new String(tab1+"  ");
     pw.println(tab+"<material name = \""+matNameEntry.getText()+"\">");
-    pw.println(tab1+"<is_rigid> "+d_isRigid+" </is_rigid>");
+    if (d_isRigid) {
+      pw.println(tab1+"<is_rigid> "+d_isRigid+" </is_rigid>");
+    }
     pw.println(tab1+"<density> "+densityEntry.getValue()+
                " </density>");
     pw.println(tab1+"<thermal_conductivity> "+thermalCondEntry.getValue()+
@@ -325,6 +327,10 @@ public class MPMMaterialInputPanel extends JPanel
     pw.println(tab1+"<constitutive_model type=\""+d_constModel+"\">");
     if (d_constModel.equals(new String("rigid"))) {
       rigidPanel.writeUintah(pw, tab2);
+    } else if (d_constModel.equals(new String("hypoelastic"))) {
+      hypoElasticPanel.writeUintah(pw, tab2);
+    } else if (d_constModel.equals(new String("comp_neo_hook"))) {
+      compNeoHookPanel.writeUintah(pw, tab2);
     } else if (d_constModel.equals(new String("elastic_plastic"))) {
       elasticPlasticPanel.writeUintah(pw, tab2);
     }
