@@ -149,9 +149,9 @@ public class VariableSaveInputPanel extends JPanel
     p_deformationGradientCB = new JCheckBox("Def. Gradient");
     p_displacementCB = new JCheckBox("Displacement");
     p_velocityCB = new JCheckBox("Velocity");
-    p_strainRateCB = new JCheckBox("Strain Rate");
-    p_externalForceCB = new JCheckBox("External Force");
     p_stressCB = new JCheckBox("Stress");
+    p_externalForceCB = new JCheckBox("External Force");
+    p_strainRateCB = new JCheckBox("Strain Rate");
     p_localizedCB = new JCheckBox("Failed Particles");
     p_damageCB = new JCheckBox("Damage");
     p_porosityCB = new JCheckBox("Porosity");
@@ -174,12 +174,12 @@ public class VariableSaveInputPanel extends JPanel
     d_partVarStr.addElement(new String("p.displacement"));
     d_partVar.addElement(p_velocityCB);
     d_partVarStr.addElement(new String("p.velocity"));
-    d_partVar.addElement(p_strainRateCB);
-    d_partVarStr.addElement(new String("p.strainRate"));
-    d_partVar.addElement(p_externalForceCB);
-    d_partVarStr.addElement(new String("p.externalforce"));
     d_partVar.addElement(p_stressCB);
     d_partVarStr.addElement(new String("p.stress"));
+    d_partVar.addElement(p_externalForceCB);
+    d_partVarStr.addElement(new String("p.externalforce"));
+    d_partVar.addElement(p_strainRateCB);
+    d_partVarStr.addElement(new String("p.strainRate"));
     d_partVar.addElement(p_localizedCB);
     d_partVarStr.addElement(new String("p.localized"));
     d_partVar.addElement(p_damageCB);
@@ -199,6 +199,12 @@ public class VariableSaveInputPanel extends JPanel
       d_partVarState.addElement(new Boolean(true));
       panel2.add(checkBox);
     }
+    p_strainRateCB.setSelected(false);
+    p_localizedCB.setSelected(false);
+    p_damageCB.setSelected(false);
+    p_porosityCB.setSelected(false);
+    p_plasticStrainCB.setSelected(false);
+    p_plasticStrainRateCB.setSelected(false);
 
     JLabel label3 = new JLabel("Grid Variables");;
     panel3.add(label3);

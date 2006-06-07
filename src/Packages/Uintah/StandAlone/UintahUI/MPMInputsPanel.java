@@ -27,7 +27,7 @@ public class MPMInputsPanel extends JPanel {
   private boolean d_impDynamic = true;
   private String d_solver = null;
 
-  private boolean d_gridReset = false;
+  private boolean d_gridReset = true;
   private boolean d_accStrain = false;
   private boolean d_loadCurve = false;
   private boolean d_adiabatic = false;
@@ -54,7 +54,7 @@ public class MPMInputsPanel extends JPanel {
     d_impDynamic = true;
     d_solver = new String("petsc");
 
-    d_gridReset = false;
+    d_gridReset = true;
     d_accStrain = false;
     d_loadCurve = false;
     d_adiabatic = false;
@@ -721,7 +721,9 @@ public class MPMInputsPanel extends JPanel {
                    " </minimum_particle_mass>");
       pw.println(tab1+"<maximum_particle_velocity> "+maxVelEntry.getValue()+
                    " </maximum_particle_velocity>");
-      pw.println(tab1+"<do_grid_reset> "+d_gridReset+" </do_grid_reset>");
+      if (!d_gridReset) {
+        pw.println(tab1+"<do_grid_reset> "+d_gridReset+" </do_grid_reset>");
+      }
       pw.println(tab1+"<accumulate_strain_energy> "+d_accStrain+
                    " </accumulate_strain_energy>");
       pw.println(tab1+"<use_load_curves> "+d_loadCurve+" </use_load_curves>");
@@ -767,6 +769,8 @@ public class MPMInputsPanel extends JPanel {
                      maxItersRestartEntry.getValue()+
                      " </iters_before_timestep_restart>");
       }
+      pw.println(tab1+"<min_grid_level> 0 </min_grid_level>");
+      pw.println(tab1+"<max_grid_level> 1000 </max_grid_level>");
       pw.println(tab+"</MPM>");
       pw.println(tab);
     }

@@ -8,6 +8,7 @@
 
 import java.io.*;
 import java.util.*;
+import java.text.DecimalFormat;
 
 //**************************************************************************
 // Class   : ParticleList
@@ -113,6 +114,7 @@ public class ParticleList extends Object {
       pw.println("# Particle List");
       pw.println("# type  radius  thickness rotation  xCent  yCent  zCent  matCode");
       int nofParts = size();
+      DecimalFormat df = new DecimalFormat("####0.0######");
       for (int ii = 0; ii < nofParts; ii++) {
         Particle part = getParticle(ii);
         double radius = part.getRadius();
@@ -123,8 +125,13 @@ public class ParticleList extends Object {
         double zCent = part.getCenter().getZ();
         int matCode = part.getMatCode();
         pw.println("# Particle "+ii);
-        pw.println(partType+" "+radius+" "+thickness+" "+rotation+" "+
-                   xCent+" "+yCent+" "+zCent+" "+matCode);
+        pw.println(partType+" "+
+                   df.format(radius)+" "+
+                   df.format(thickness)+" "+
+                   df.format(rotation)+" "+
+                   df.format(xCent)+" "+
+                   df.format(yCent)+" "+
+                   df.format(zCent)+" "+matCode);
       }
       pw.close();
       fw.close();

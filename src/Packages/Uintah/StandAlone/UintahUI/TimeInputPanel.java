@@ -13,7 +13,8 @@ import java.io.*;
 import javax.swing.*;
 
 public class TimeInputPanel extends JPanel 
-                            implements ItemListener {
+                            implements ItemListener,
+                                       ActionListener {
 
   // Data and components
   private JTextField titleEntry = null;
@@ -38,6 +39,8 @@ public class TimeInputPanel extends JPanel
 
   private String d_simType = null;
   private GeneralInputsPanel d_parent = null;
+  private boolean d_outputStep = false;
+  private boolean d_checkStep = false;
 
   public TimeInputPanel(String simType,
                         GeneralInputsPanel parent) {
@@ -45,14 +48,11 @@ public class TimeInputPanel extends JPanel
     // Init data
     d_simType = simType;
     d_parent = parent;
+    d_outputStep = false;
+    d_checkStep = false;
 
-    // Create the panels
-    JPanel panel1 = new JPanel(new GridLayout(2,0));
-    JPanel panel2 = new JPanel(new GridLayout(3,0));
-    JPanel panel3 = new JPanel(new GridLayout(5,0));
-    JPanel panel4 = new JPanel(new GridLayout(6,0));
- 
-    // Create the components
+    // Header panel
+    JPanel panel1 = new JPanel(new GridLayout(3,0));
     JLabel titleLabel = new JLabel("Simulation Title");
     titleEntry = new JTextField("Test Simulation",20);
     JLabel simCompLabel = new JLabel("Simulation Component");
@@ -61,24 +61,23 @@ public class TimeInputPanel extends JPanel
     simCompCB.addItem("MPM");
     simCompCB.addItem("ICE");
     simCompCB.addItem("MPMICE");
+    JLabel udaFilenameLabel = new JLabel("Output UDA Filename");
+    udaFilenameEntry = new JTextField("test.uda",20);
     panel1.add(titleLabel);
     panel1.add(titleEntry);
     panel1.add(simCompLabel);
     panel1.add(simCompCB);
+    panel1.add(udaFilenameLabel);
+    panel1.add(udaFilenameEntry);
 
+    // Time inputs
+    JPanel panel2 = new JPanel(new GridLayout(8,0));
     JLabel initTimeLabel = new JLabel("Initial Time");
     initTimeEntry = new DecimalField(0.0,8,true);
     JLabel maxTimeLabel = new JLabel("Maximum Time");
     maxTimeEntry = new DecimalField(1.0,8,true);
     JLabel maxNofStepsLabel = new JLabel("Maximum Timesteps");
-    maxNofStepsEntry = new IntegerField(1000, 5);
-    panel2.add(initTimeLabel);
-    panel2.add(initTimeEntry);
-    panel2.add(maxTimeLabel);
-    panel2.add(maxTimeEntry);
-    panel2.add(maxNofStepsLabel);
-    panel2.add(maxNofStepsEntry);
-
+    maxNofStepsEntry = new IntegerField(0, 5);
     JLabel deltInitLabel = new JLabel("Initial Timestep Size");
     deltInitEntry = new DecimalField(1.0e-9, 8, true);
     JLabel deltMinLabel = new JLabel("Minimum Timestep Size");
@@ -89,41 +88,68 @@ public class TimeInputPanel extends JPanel
     maxDeltIncEntry = new DecimalField(1.0, 6);
     JLabel deltMultiplierLabel = new JLabel("Timestep Multiplier");
     deltMultiplierEntry = new DecimalField(0.5, 6);
-    panel3.add(deltInitLabel);
-    panel3.add(deltInitEntry);
-    panel3.add(deltMinLabel);
-    panel3.add(deltMinEntry);
-    panel3.add(deltMaxLabel);
-    panel3.add(deltMaxEntry);
-    panel3.add(maxDeltIncLabel);
-    panel3.add(maxDeltIncEntry);
-    panel3.add(deltMultiplierLabel);
-    panel3.add(deltMultiplierEntry);
+    panel2.add(initTimeLabel);
+    panel2.add(initTimeEntry);
+    panel2.add(maxTimeLabel);
+    panel2.add(maxTimeEntry);
+    panel2.add(maxNofStepsLabel);
+    panel2.add(maxNofStepsEntry);
+    panel2.add(deltInitLabel);
+    panel2.add(deltInitEntry);
+    panel2.add(deltMinLabel);
+    panel2.add(deltMinEntry);
+    panel2.add(deltMaxLabel);
+    panel2.add(deltMaxEntry);
+    panel2.add(maxDeltIncLabel);
+    panel2.add(maxDeltIncEntry);
+    panel2.add(deltMultiplierLabel);
+    panel2.add(deltMultiplierEntry);
 
-    JLabel udaFilenameLabel = new JLabel("Output UDA Filename");
-    udaFilenameEntry = new JTextField("test.uda",20);
-    JLabel outputIntervalLabel = new JLabel("Output Time Interval");
+    // Output intervals
+    JPanel panel4 = new JPanel(new GridLayout(6,0));
+
+    JRadioButton outputIntervalRB = 
+      new JRadioButton("Output Time Interval");
+    outputIntervalRB.setActionCommand("outputtime");
+    outputIntervalRB.setSelected(true);
     outputIntervalEntry = new DecimalField(1.0e-6, 8, true);
-    JLabel outputTimestepIntLabel = new JLabel("Output Timestep Interval");
+
+    JRadioButton outputTimestepIntervalRB = 
+      new JRadioButton("Output Timestep Interval");
+    outputTimestepIntervalRB.setActionCommand("outputstep");
     outputTimestepIntervalEntry = new IntegerField(10, 4);
+
+    ButtonGroup outputBG = new ButtonGroup();
+    outputBG.add(outputIntervalRB);
+    outputBG.add(outputTimestepIntervalRB);
+
     JLabel checkPointCycleLabel = new JLabel("Check Point Cycle");
     checkPointCycleEntry = new IntegerField(2, 4);
-    JLabel checkPointIntervalLabel = new JLabel("Checkpoint Time Interval");
+
+    JRadioButton checkPointIntervalRB = 
+      new JRadioButton("Checkpoint Time Interval");
+    checkPointIntervalRB.setActionCommand("checktime");
+    checkPointIntervalRB.setSelected(true);
     checkPointIntervalEntry = new DecimalField(5.0e-6, 8, true);
-    JLabel checkPointTimestepIntLabel = 
-      new JLabel("Checkpoint Timestep Interval");
+
+    JRadioButton checkPointTimestepIntervalRB = 
+      new JRadioButton("Checkpoint Timestep Interval");
+    checkPointTimestepIntervalRB.setActionCommand("checkstep");
     checkPointTimestepIntervalEntry = new IntegerField(50, 4);
-    panel4.add(udaFilenameLabel);
-    panel4.add(udaFilenameEntry);
-    panel4.add(outputIntervalLabel);
+
+    ButtonGroup checkPointBG = new ButtonGroup();
+    checkPointBG.add(checkPointIntervalRB);
+    checkPointBG.add(checkPointTimestepIntervalRB);
+
+    panel4.add(outputIntervalRB);
     panel4.add(outputIntervalEntry);
-    panel4.add(outputTimestepIntLabel);
+    panel4.add(outputTimestepIntervalRB);
     panel4.add(outputTimestepIntervalEntry);
     panel4.add(checkPointCycleLabel);
     panel4.add(checkPointCycleEntry);
-    panel4.add(checkPointIntervalLabel);
+    panel4.add(checkPointIntervalRB);
     panel4.add(checkPointIntervalEntry);
-    panel4.add(checkPointTimestepIntLabel);
+    panel4.add(checkPointTimestepIntervalRB);
     panel4.add(checkPointTimestepIntervalEntry);
 
     // Create a gridbaglayout and constraints
@@ -144,22 +170,27 @@ public class TimeInputPanel extends JPanel
 
     UintahGui.setConstraints(gbc, GridBagConstraints.NONE,
                              1.0, 1.0, 0,2, 1,1, 5);
-    gb.setConstraints(panel3, gbc);
-    add(panel3);
-
-    UintahGui.setConstraints(gbc, GridBagConstraints.NONE,
-                             1.0, 1.0, 0,3, 1,1, 5);
     gb.setConstraints(panel4, gbc);
     add(panel4);
 
     // Create and add the listeners
     simCompCB.addItemListener(this);
+    outputIntervalRB.addActionListener(this);
+    outputTimestepIntervalRB.addActionListener(this);
+    checkPointIntervalRB.addActionListener(this);
+    checkPointTimestepIntervalRB.addActionListener(this);
   }
 
-  //-----------------------------------------------------------------------
-  // Refresh
-  //-----------------------------------------------------------------------
-  public void refresh() {
+  public void actionPerformed(ActionEvent e) {
+    if ((e.getActionCommand()).equals("outputtime")) {
+      d_outputStep = false;
+    } else if ((e.getActionCommand()).equals("outputstep")) {
+      d_outputStep = true;
+    } else if ((e.getActionCommand()).equals("checktime")) {
+      d_checkStep = false;
+    } else if ((e.getActionCommand()).equals("checkstep")) {
+      d_checkStep = true;
+    }
   }
 
   //-----------------------------------------------------------------------
@@ -211,8 +242,10 @@ public class TimeInputPanel extends JPanel
                     " </initTime>");
     pw.println(tab1+"<maxTime> "+ maxTimeEntry.getValue()+
                     " </maxTime>");
-    pw.println(tab1+"<max_iterations> "+ maxNofStepsEntry.getValue()+
-                    " </max_iterations>");
+    if (maxNofStepsEntry.getValue() > 0) {
+      pw.println(tab1+"<max_iterations> "+ maxNofStepsEntry.getValue()+
+                      " </max_iterations>");
+    }
     pw.println(tab1+"<delt_init> "+ deltInitEntry.getValue()+ " </delt_init>");
     pw.println(tab1+"<delt_min> "+ deltMinEntry.getValue()+ " </delt_min>");
     pw.println(tab1+"<delt_max> "+ deltMaxEntry.getValue()+ " </delt_max>");
@@ -226,17 +259,30 @@ public class TimeInputPanel extends JPanel
     pw.println(tab+"<DataArchiver>");
     pw.println(tab1+"<filebase> "+ udaFilenameEntry.getText()+
                     " </filebase>");
-    pw.println(tab1+"<outputInterval> "+ outputIntervalEntry.getValue()+
-                    " </outputInterval>");
-    pw.println(tab1+"<outputTimestepInterval> "+
-               outputTimestepIntervalEntry.getValue()+
-               " <outputTimestepInterval>");
-    pw.println(tab1+"<checkpoint cycle=\""+ checkPointCycleEntry.getValue()+
-               "\" interval=\""+ checkPointIntervalEntry.getValue()+
-               "\"/>");
-    pw.println(tab1+"<checkpoint cycle=\""+ checkPointCycleEntry.getValue()+
-               "\" timestepInterval=\""+
-               checkPointTimestepIntervalEntry.getValue()+
-               "\"/>");
+    if (d_outputStep) {
+      pw.println(tab1+"<outputTimestepInterval> "+
+                 outputTimestepIntervalEntry.getValue()+
+                 " </outputTimestepInterval>");
+    } else {
+      pw.println(tab1+"<outputInterval> "+ outputIntervalEntry.getValue()+
+                      " </outputInterval>");
+    }
+    if (d_checkStep) {
+      pw.println(tab1+"<checkpoint cycle=\""+ checkPointCycleEntry.getValue()+
+                 "\" timestepInterval=\""+
+                 checkPointTimestepIntervalEntry.getValue()+
+                 "\"/>");
+    } else {
+      pw.println(tab1+"<checkpoint cycle=\""+ checkPointCycleEntry.getValue()+
+                 "\" interval=\""+ checkPointIntervalEntry.getValue()+
+                 "\"/>");
+    }
   }
+
+  //-----------------------------------------------------------------------
+  // Refresh
+  //-----------------------------------------------------------------------
+  public void refresh() {
+  }
+
 }

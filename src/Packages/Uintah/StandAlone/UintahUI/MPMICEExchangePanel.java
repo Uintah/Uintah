@@ -67,6 +67,8 @@ public class MPMICEExchangePanel extends JPanel
     initializeTable(momentumTable);
     momentumTable.setPreferredScrollableViewportSize(new Dimension(600,100));
     momentumTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+    momentumTable.setColumnSelectionAllowed(false);
+    momentumTable.setRowSelectionAllowed(false);
     momentumTable.doLayout();
     JScrollPane momentumSP = new JScrollPane(momentumTable);
     UintahGui.setConstraints(gbc, 0, 1);
@@ -84,6 +86,8 @@ public class MPMICEExchangePanel extends JPanel
     initializeTable(heatTable);
     heatTable.setPreferredScrollableViewportSize(new Dimension(600,100));
     heatTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+    heatTable.setColumnSelectionAllowed(false);
+    heatTable.setRowSelectionAllowed(false);
     heatTable.doLayout();
     JScrollPane heatSP = new JScrollPane(heatTable);
     UintahGui.setConstraints(gbc, 0, 3);
@@ -156,12 +160,12 @@ public class MPMICEExchangePanel extends JPanel
     
     String tab1 = new String(tab+"  ");
     pw.println(tab+"<exchange_coefficients>");
-    pw.println(tab1+"<momentum> [");
+    pw.print(tab1+"<momentum> [");
     momentumModel.writeUintah(pw, tab1);
-    pw.println(tab1+"] </momentum>");
-    pw.println(tab1+"<heat> [");
+    pw.println("] </momentum>");
+    pw.print(tab1+"<heat> [");
     heatModel.writeUintah(pw, tab1);
-    pw.println(tab1+"] </heat>");
+    pw.println("] </heat>");
     pw.println(tab+"</exchange_coefficients>");
 
   }
@@ -251,21 +255,22 @@ public class MPMICEExchangePanel extends JPanel
         actCol++;
         int index = (actRow-1)*NUMCOL - actRow*(actRow-1)/2 + actCol - 1;
         try {
-          double val = formatter.parse((String) value).doubleValue();
+          String input = ((String) value).toUpperCase();
+          double val = formatter.parse(input).doubleValue();
           d_exchangeCoeff[index] = val;
         } catch (ParseException e) {
           System.out.println("Could not update value");
         }
         fireTableCellUpdated(row, col);
+        fireTableCellUpdated(col, row);
       }
     }
 
     public boolean isCellEditable(int row, int col) {
-      if (col < 1) {
-        return false;
-      } else {
-        return true;
-      }
+      col--;
+      if (col < 0 || col > d_numMat-1) return false;
+      if (row >= col || row > d_numMat-1) return false;
+      return true;
     }
 
     public void initialize(Vector mpmMat, Vector iceMat, double value) {
@@ -307,19 +312,33 @@ public class MPMICEExchangePanel extends JPanel
       for (int ii = 0; ii < iceMat.size(); ++ii) {
         d_colNames[count++] = (String) iceMat.elementAt(ii);
       }
+
+      TableCellRenderer momTCR = 
+        momentumTable.getTableHeader().getDefaultRenderer();
+      TableCellRenderer heatTCR = 
+        heatTable.getTableHeader().getDefaultRenderer();
+      for (int col = 0; col < d_numMat; ++col) {
+        TableColumn column = momentumTable.getColumnModel().getColumn(col+1);
+        column.setHeaderValue(d_colNames[col]);
+        Component comp = 
+	  momTCR.getTableCellRendererComponent(null, d_colNames[col],
+                                               false, false, 0, 0);
+        column.setPreferredWidth(comp.getPreferredSize().width);
+        column = heatTable.getColumnModel().getColumn(col+1);
+        column.setHeaderValue(d_colNames[col]);
+        column.setPreferredWidth(comp.getPreferredSize().width);
+      }
     }
 
     public void writeUintah(PrintWriter pw, String tab) {
       if (d_exchangeCoeff.length > 0) {
-        int maxIndex = (d_numMat+1)*d_numMat/2-1;
-        pw.print(tab+tab);
-        for (int ii = 1; ii < d_numMat; ++ii) {
+        for (int ii = 0; ii < d_numMat-1; ++ii) {
           for (int jj = ii+1; jj < d_numMat; ++jj) {
-            int index = ii*NUMCOL + (ii-1)*(ii-2)/2 + jj-1;
+            int index = ii*NUMCOL + ii*(ii-1)/2 + jj;
             pw.print(d_exchangeCoeff[index]);
-            if (index < maxIndex) {
+            if (!(ii == d_numMat-2 && jj == d_numMat-1)) {
               pw.print(", ");
-            } 
+            }
           }
         }
       }
