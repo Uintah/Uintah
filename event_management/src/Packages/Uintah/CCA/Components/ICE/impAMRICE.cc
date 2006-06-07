@@ -447,7 +447,7 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
       
 #else
       const PatchSet* perProcPatches = 
-      sched->getLoadBalancer()->getPerProcessorPatchSet(grid);
+      d_subsched->getLoadBalancer()->getPerProcessorPatchSet(grid);
       schedule_bogus_imp_delP(d_subsched,  perProcPatches,        d_press_matl,
                               all_matls);   
 #endif
@@ -1250,7 +1250,7 @@ void ICE::bogus_imp_delP(const ProcessorGroup*,
                          DataWarehouse*,
                          DataWarehouse* new_dw)       
 { 
-  cout_doing<< d_myworld->myrank()<<" Doing bogus_imp_delP "
+  cout<< d_myworld->myrank()<<" Doing bogus_imp_delP "
             <<"\t\t\t\t\t ICE \tALL LEVELS" << endl;
   for(int p=0;p<patches->size();p++){  
     const Patch* patch = patches->get(p);

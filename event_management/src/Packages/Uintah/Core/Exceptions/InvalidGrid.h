@@ -18,9 +18,10 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/Core/Exceptions/share.h>
 namespace Uintah {
 
-   class InvalidGrid : public SCIRun::Exception {
+   class SCISHARE InvalidGrid : public SCIRun::Exception {
    public:
       InvalidGrid(const std::string& msg, const char* file, int line);
       InvalidGrid(const InvalidGrid&);

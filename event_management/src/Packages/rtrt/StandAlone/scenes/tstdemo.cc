@@ -688,6 +688,8 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
   char *cmap_type = "InvRainbow";
   char *gridconfig = 0;
   string *var_names = 0;
+  Point light_location(-500, 300, -300);
+  float light_intensity = 0.7;
 
   // This is number of times to repeat the last timestep
   int repeat_last_timestep = 0;
@@ -818,6 +820,14 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
         var_names[v] = string(argv[++i]);
     } else if (strcmp(argv[i], "-repeatlast") == 0) {
       repeat_last_timestep = atoi(argv[++i]);
+    } else if (strcmp(argv[i], "-light_location") == 0) {
+      float x,y,z;
+      x = atof(argv[++i]);
+      y = atof(argv[++i]);
+      z = atof(argv[++i]);
+      light_location = Point(x, y, z);
+    } else if (strcmp(argv[i], "-light_intensity") == 0) {
+      light_intensity = atof(argv[++i]);
     } else {
       cerr << "Unknown option: " << argv[i] << '\n';
       cerr << "Valid options for scene: " << argv[0] << '\n';
@@ -846,11 +856,13 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
       cerr << " -radius_index [int]\n";
       cerr << " -numvars [int]\n";
       cerr << " -colordata [int]\n";
-      cerr<<"  -cmap <filename>     defaults to inverse rainbow"<<endl;
-      cerr<<"  -cmaptype <type>     type of colormap\n";
+      cerr << "  -cmap <filename>     defaults to inverse rainbow"<<endl;
+      cerr << "  -cmaptype <type>     type of colormap\n";
       cerr << " -gridconfig <filename> use this file as the config file.\n";
       cerr << " -varnames [number] vname1 \"v name 2\"\n";
       cerr << " -repeatlast [number]  number of times to repeat the last timestep\n";
+      cerr << " -light_location x y z\n";
+      cerr << " -light_intensity <float [0..1]>\n";
       return 0;
     }
   }
@@ -1018,10 +1030,9 @@ Scene* make_scene(int argc, char* argv[], int nworkers)
 			 bgcolor, cdown, cup, groundplane, 
 			 ambient_scale);
 
-  Light *light0 = new Light(Point(-500,300,-300), Color(.8,.8,.8), 0);
+  Light *light0 = new Light(light_location, Color(.8,.8,.8), 0);
   light0->name_ = "light 0";
-  //  light0->turnOff();
-  light0->updateIntensity(0.7);
+  light0->updateIntensity(light_intensity);
   scene->add_light(light0);
   scene->attach_display(dpy);
   scene->attach_display(display);

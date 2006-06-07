@@ -16,6 +16,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/Core/Datatypes/share.h>
 namespace Uintah {
 using std::vector;
 using namespace SCIRun;
@@ -53,7 +54,7 @@ WARNING
 class PSet;
 typedef LockingHandle<PSet> PSetHandle;
 
-class PSet : public Datatype {
+class SCISHARE PSet : public Datatype {
  public:
 
   // GROUP: Constructors:

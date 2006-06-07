@@ -12,10 +12,11 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Core/Malloc/Allocator.h>
 
+#include <Packages/Uintah/Core/Parallel/share.h>
 namespace Uintah {
   using namespace std;
   
-  class PackedBuffer : public RefCounted
+  class SCISHARE PackedBuffer : public RefCounted
   {
   public:
     PackedBuffer(int bytes)
@@ -29,7 +30,7 @@ namespace Uintah {
     int bufsize;
   };
 
-  class PackBufferInfo : public BufferInfo {
+  class SCISHARE PackBufferInfo : public BufferInfo {
   public:
     PackBufferInfo();
     ~PackBufferInfo();

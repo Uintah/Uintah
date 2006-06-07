@@ -341,10 +341,10 @@ double IdealGasMP::computeRhoMicroCM(double press,
   return  press/((gamma - 1.0)*cv*Temp);
 }
 
-void IdealGasMP::computePressEOSCM(const double rhoM,double& pressure, 
-                                               const double Temp,
-                                               double& dp_drho, double& tmp,
-                                                const MPMMaterial*)
+void IdealGasMP::computePressEOSCM(double rhoM,double& pressure, 
+                                   double Temp,
+                                   double& dp_drho, double& tmp,
+                                   const MPMMaterial*)
 {
   double gamma = d_initialData.gamma;
   double cv    = d_initialData.cv;

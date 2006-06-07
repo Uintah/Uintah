@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 
+#include <Packages/Uintah/Core/GeometryPiece/share.h>
 namespace Uintah {
 
 /**************************************
@@ -52,7 +53,7 @@ WARNING
 	
 ****************************************/
 
-      class DifferenceGeometryPiece : public GeometryPiece {
+      class SCISHARE DifferenceGeometryPiece : public GeometryPiece {
 	 
       public:
 	 //////////

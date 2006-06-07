@@ -12,7 +12,7 @@
 
 #include <string>
 
-//#include <Packages/Uintah/CCA/Ports/share.h>
+#include <Packages/Uintah/CCA/Ports/share.h>
 
 namespace Uintah {
 

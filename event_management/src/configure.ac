@@ -759,7 +759,7 @@ for i in $package; do
    fi
 done
 
-if test "$sci_required_unipetsc" = "yes"; then
+if test "$sci_required_unipetsc" = "yes" -o "$sci_required_petsc" = "yes" -o "$sci_required_hypre" = "yes"; then
    sci_required_blas=yes
    sci_required_lapack=yes
 fi
@@ -2589,7 +2589,7 @@ fi
 if test "$IS_WIN" = "yes"; then
   # it's 'imagehlp' but call it EXC anyway so we don't have to change
   # other config parameters
-  SCI_TRY_LINK(EXC,WIN32 traceback library and headers,windows.h imagehlp.h,$_sci_inc,imagehlp,$_sci_lib,,,required)
+  SCI_TRY_LINK(EXC,WIN32 traceback library and headers,windows.h imagehlp.h,$_sci_inc,imagehlp psapi,$_sci_lib,,,required)
 else
   SCI_TRY_LINK(EXC,traceback library and headers,libexc.h,$_sci_inc,exc,$_sci_lib,,,$_sci_optional)
 fi

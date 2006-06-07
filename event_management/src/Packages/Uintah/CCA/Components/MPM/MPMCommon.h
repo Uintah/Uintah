@@ -6,11 +6,12 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 
+#include <Packages/Uintah/CCA/Components/MPM/share.h>
 namespace Uintah {
 
   using namespace SCIRun;
   
-  class MPMCommon {
+  class SCISHARE MPMCommon {
 
   public:
     MPMCommon();

@@ -15,15 +15,16 @@
 #include <Core/Thread/Time.h>
 #include <Core/Util/DebugStream.h>
 
-#include <sys/param.h>
 
 #include <iostream>
 #include <fstream>
 #include <fcntl.h>
-#include <unistd.h>
 
 #ifdef _WIN32
 #include <io.h>
+#else
+#include <sys/param.h>
+#include <unistd.h>
 #endif
 
 using namespace std;
@@ -146,16 +147,16 @@ DataArchive::queryTimesteps( std::vector<int>& index,
           string tsfile = attributes["href"];
           if(tsfile == "")
             throw InternalError("DataArchive::queryTimesteps:timestep href not found",
-                                __FILE__, __LINE__);
+                                  __FILE__, __LINE__);
           
 
           int timestepNumber;
           double currentTime;
           string ts = d_filebase + "/" + tsfile;
 
-          if(attributes["delt"] == "" || attributes["time"] == "") {
+          if(attributes["time"] == "") {
             // This block if for earlier versions of the index.xml file that do not
-            // contain delt and time information as attributes of the timestep field.
+            // contain time information as attributes of the timestep field.
 
             ProblemSpecReader psr(ts.c_str());
             
@@ -366,7 +367,7 @@ DataArchive::queryLifetime( double& /*min*/, double& /*max*/,
 
 void
 DataArchive::queryVariables( vector<string>& names,
-                             vector<const TypeDescription*>& types)
+                             vector<const Uintah::TypeDescription*>& types)
 {
   double start = Time::currentSeconds();
   d_lock.lock();
@@ -382,7 +383,7 @@ DataArchive::queryVariables( vector<string>& names,
 
 void
 DataArchive::queryGlobals( vector<string>& names,
-                           vector<const TypeDescription*>& types)
+                           vector<const Uintah::TypeDescription*>& types)
 {
   double start = Time::currentSeconds();
   d_lock.lock();
@@ -398,7 +399,7 @@ DataArchive::queryGlobals( vector<string>& names,
 
 void
 DataArchive::queryVariables(ProblemSpecP vars, vector<string>& names,
-                            vector<const TypeDescription*>& types)
+                            vector<const Uintah::TypeDescription*>& types)
 {
   for(ProblemSpecP n = vars->getFirstChild(); n != 0; n = n->getNextSibling()){
     if(n->getNodeName() == "variable") {
@@ -512,7 +513,11 @@ DataArchive::query( Variable& var, ProblemSpecP vnode, string url,
   // strip off the last blah.xml and append filename
   string dataurl = url.substr(0, url.find_last_of('/')+1) + filename;
 
+#ifdef _WIN32
+  int fd = open(dataurl.c_str(), O_RDONLY|O_BINARY);
+#else
   int fd = open(dataurl.c_str(), O_RDONLY);
+#endif
   if(fd == -1) {
     cerr << "Error opening file: " << dataurl.c_str() << ", errno=" << errno << '\n';
     throw ErrnoException("DataArchive::query (open call)", errno, __FILE__, __LINE__);
@@ -604,7 +609,7 @@ DataArchive::findPatchAndIndex(GridP grid, Patch*& patch, particleIndex& idx,
 
 void
 DataArchive::restartInitialize(int& timestep, const GridP& grid, DataWarehouse* dw,
-                               LoadBalancer* lb, double* pTime, double* pDelt)
+                               LoadBalancer* lb, double* pTime)
 {
   unsigned int i = 0;  
   vector<int> indices;
@@ -660,10 +665,6 @@ DataArchive::restartInitialize(int& timestep, const GridP& grid, DataWarehouse* 
 
   PatchHashMaps patchMap;
   patchMap.init(d_tsurl[i], getTimestepCache(i));
-
-  ProblemSpecP timeBlock = getTimestepCache(i)->findBlock("Time");
-  if (!timeBlock->get("delt", *pDelt))
-    *pDelt = 0;
   
   // iterate through all patch, initializing on each patch
   // (perhaps not the most efficient, but this is only initialization)
@@ -1127,7 +1128,7 @@ DataArchive::PatchHashMaps::findPatchData(const Patch* patch)
       // first attempt.  Future attemps could perhaps be smarter.
       int proc_guess = patchid;
       // Only look for it if we actually parse a new file, and if the file exists
-      if (!d_xmlParsed[proc_guess] && proc_guess >= 0 && proc_guess < (int)d_xmlUrls.size()) {
+      if (proc_guess >= 0 && proc_guess < (int)d_xmlUrls.size() && !d_xmlParsed[proc_guess]) {
         //        cerr << "proc_guess =  "<<proc_guess<<"\n";
         parseProc(proc_guess);
         // Look for it again

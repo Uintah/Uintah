@@ -14,6 +14,7 @@
 
 #include <sstream>
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
 
 /*___________________________________________________________________
@@ -32,6 +33,9 @@ template<class T>
     q_FineLevel[f_cell] = q_CL[c_cell];                       
   }
 }
+
+// find the normalized distance between the coarse and the fine cell cell-center  
+SCISHARE void normalizedDistance_CC(const int refineRatio,vector<double>& norm_dist);  
 
 /*___________________________________________________________________
  Function~ linearInterpolation--
@@ -82,21 +86,35 @@ template<class T>
   //int ncell = 0;  // needed by interpolation test
   //T error(0);
   
-  Vector c_dx = coarseLevel->dCell();
-  Vector inv_c_dx = Vector(1.0)/c_dx;
+  // compute the normalized distance between the fine and coarse cell centers
+  vector<double> norm_dist_x(refineRatio.x());
+  vector<double> norm_dist_y(refineRatio.y());
+  vector<double> norm_dist_z(refineRatio.z());
+  normalizedDistance_CC(refineRatio.x(),norm_dist_x);
+  normalizedDistance_CC(refineRatio.y(),norm_dist_y);
+  normalizedDistance_CC(refineRatio.z(),norm_dist_z);
   
   for(CellIterator iter(fl,fh); !iter.done(); iter++){
     IntVector f_cell = *iter;
     IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
+    //__________________________________ 
+    // compute the index of the fine cell, relative to the
+    // coarse cell center.  Find the distance the normalized distance between
+    // the coarse and fine cell-centers
+    
+    IntVector relativeIndx = f_cell - (c_cell * refineRatio);
+    
+    Vector dist;
+    dist.x(norm_dist_x[relativeIndx.x()]);
+    dist.y(norm_dist_y[relativeIndx.y()]);
+    dist.z(norm_dist_z[relativeIndx.z()]);
+    
     //__________________________________
     // Offset for coarse level surrounding cells:
+    // determine the direction to the surrounding interpolation cells
     Point coarse_cell_pos = coarseLevel->getCellPosition(c_cell);
     Point fine_cell_pos   = fineLevel->getCellPosition(f_cell);
-    Vector dist = (fine_cell_pos.asVector() - coarse_cell_pos.asVector()) * inv_c_dx;
-    dist = Abs(dist);
     Vector dir = (fine_cell_pos.asVector() - coarse_cell_pos.asVector()); 
-  
-    // determine the direction to the surrounding interpolation cells
     int i = SCIRun::Sign(dir.x());
     int j = SCIRun::Sign(dir.y());
     int k = SCIRun::Sign(dir.z());
@@ -104,21 +122,17 @@ template<class T>
     i *= SCIRun::RoundUp(dist.x());  // if dist.x,y,z() = 0 then set (i,j,k) = 0
     j *= SCIRun::RoundUp(dist.y());  // Only need surrounding coarse cell data if dist != 0
     k *= SCIRun::RoundUp(dist.z());  // This is especially true for 1D and 2D problems
-    
-    #if 0
-    if(f_cell == IntVector(30,39,0) ||true){
-    std::cout << " c_cell " << c_cell << " f_cell " << f_cell << " offset ["<<i<<","<<j<<","<<k<<"]  "
-              << " dist " << dist << " dir "<< dir
-              << " f_cell_pos " << fine_cell_pos.asVector()<< " c_cell_pos " << coarse_cell_pos.asVector() << "\n";
-    }
-    #endif
 
     //__________________________________
-    //  Find the weights      
-    double w0 = (1. - dist.x()) * (1. - dist.y());
-    double w1 = dist.x() * (1. - dist.y());
-    double w2 = dist.y() * (1. - dist.x());
-    double w3 = dist.x() * dist.y(); 
+    //  Find the weights
+    double one_minus_dx = 1.0 - dist.x();
+    double one_minus_dy = 1.0 - dist.y();
+    double one_minus_dz = 1.0 - dist.z();
+       
+    double w0 = one_minus_dx * one_minus_dy;
+    double w1 = dist.x() * one_minus_dy;
+    double w2 = dist.y() * one_minus_dx;
+    double w3 = dist.x() * dist.y();
       
     T q_XY_Plane_1   // X-Y plane closest to the fine level cell 
         = w0 * q_CL[c_cell] 
@@ -133,10 +147,28 @@ template<class T>
         + w3 * q_CL[c_cell + IntVector( i, j, k)]; 
 
     // interpolate the two X-Y planes in the k direction
-    q_FineLevel[f_cell] = (1.0 - dist.z()) * q_XY_Plane_1 
-                        + dist.z() * q_XY_Plane_2;                        
+    q_FineLevel[f_cell] = one_minus_dz * q_XY_Plane_1 
+                        + dist.z() * q_XY_Plane_2; 
+                         
+    //__________________________________
+    //  Debugging                        
+#if 0
+//    if (dist.x() != 0.25 || dist.y() != 0.25){
+      if (f_cell == IntVector(15,32,1) || f_cell == IntVector(15,33,1)){
+       cout.setf(ios::scientific,ios::floatfield);
+       cout.precision(16);
+       cout << " f_cell " << f_cell << " c_cell "<< c_cell << " offset ["<<i<<","<<j<<","<<k<<"]  " << endl;
+       cout << " relative indx " << relativeIndx  << endl;
+       cout << "                w0 " << w0 << " w1 " << w1 << " w2 " << w2 << " w3 " << w3<< endl;
+       cout << "                dist "<< dist << " dir " << dir <<  endl;
+       cout << "                f_pos " <<   fine_cell_pos.asVector() << " c_pos " <<   coarse_cell_pos.asVector() << endl;
+    }
+#endif                      
   }
 }
+
+
+
 
 /*___________________________________________________________________
  Function~  QuadraticInterpolation--
@@ -190,11 +222,19 @@ template<class T>
 {
   Vector c_dx = coarseLevel->dCell();
   Vector inv_c_dx = Vector(1.0)/c_dx;
-  GridP grid = coarseLevel->getGrid();
+
   IntVector gridLo, gridHi;
   coarseLevel->findCellIndexRange(gridLo,gridHi);
   
   gridHi -= IntVector(1,1,1);
+  
+  // compute the normalized distance between the fine and coarse cell centers
+  vector<double> norm_dist_x(refineRatio.x());
+  vector<double> norm_dist_y(refineRatio.y());
+  vector<double> norm_dist_z(refineRatio.z());
+  normalizedDistance_CC(refineRatio.x(),norm_dist_x);
+  normalizedDistance_CC(refineRatio.y(),norm_dist_y);
+  normalizedDistance_CC(refineRatio.z(),norm_dist_z);  
   
   for(CellIterator iter(fl,fh); !iter.done(); iter++){
     IntVector f_cell = *iter;
@@ -215,13 +255,18 @@ template<class T>
       }
     }    
     baseCell = c_cell + shift;
-   
-    //__________________________________
-    //  Find the distance from the baseCell to fineCell 
-    Point coarse_cell_pos = coarseLevel->getCellPosition(baseCell);
-    Point fine_cell_pos   = fineLevel->getCellPosition(f_cell);
-    Vector dist = (fine_cell_pos.asVector() - coarse_cell_pos.asVector()) * inv_c_dx; 
+
+    //__________________________________ 
+    // compute the index of the fine cell, relative to the
+    // coarse cell center.  Find the distance the normalized distance between
+    // the coarse and fine cell-centers
+    IntVector relativeIndx = f_cell - (baseCell * refineRatio);
     
+    Vector dist;
+    dist.x(norm_dist_x[relativeIndx.x()]);
+    dist.y(norm_dist_y[relativeIndx.y()]);
+    dist.z(norm_dist_z[relativeIndx.z()]);
+
     //__________________________________
     //  Find the weights 
     double x = dist.x();
@@ -274,7 +319,9 @@ template<class T>
     //__________________________________
     //  debugging
 #if 0
-    if(f_cell == IntVector(2, 5, 4)){
+    if(f_cell == IntVector(2, 5, 4)|| true){
+       cout.setf(ios::scientific,ios::floatfield);
+       cout.precision(16);
       for (k = -1; k< 2; k++){
         std::cout << " baseCell " << baseCell << " f_cell " << f_cell << " x " << x << " y " << y << " z " << z << "\n";
         std::cout << " q_CL[baseCell + IntVector( -1, -1, k)] " << q_CL[baseCell + IntVector( -1, -1, k)]<< " w(0,0) " << w(0,0) << "\n";
@@ -467,21 +514,21 @@ template<class T>
 // find the range of values to get from the finePatch that coincides with coarsePatch
 // (we need the finePatch, as the fine level might not entirely overlap the coarse)
 // also get the coarse range to iterate over
-void getFineLevelRange(const Patch* coarsePatch, const Patch* finePatch,
-                       IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh);
+SCISHARE void getFineLevelRange(const Patch* coarsePatch, const Patch* finePatch,
+                             IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh);
 
 // As above, but do the same for nodes, and include ghost data requirements
-void getFineLevelRangeNodes(const Patch* coarsePatch, const Patch* finePatch,
+SCISHARE void getFineLevelRangeNodes(const Patch* coarsePatch, const Patch* finePatch,
                             IntVector& cl, IntVector& ch,
                             IntVector& fl, IntVector& fh, IntVector ghost);
 
 // find the range of values to get from the coarseLevel that coincides with coarsePatch
 // ngc is the number of ghost cells to get at the fine level
-void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel, 
-                         IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh, int ngc);
+SCISHARE void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLevel, 
+                               IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh, int ngc);
 
 // find the range of a coarse-fine interface along a certain face
-void getCoarseFineFaceRange(const Patch* finePatch, const Level* coarseLevel, Patch::FaceType face,
-                            int interOrder, IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh);
+SCISHARE void getCoarseFineFaceRange(const Patch* finePatch, const Level* coarseLevel, Patch::FaceType face,
+                                  int interOrder, IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh);
 } // end namespace Uintah
 #endif

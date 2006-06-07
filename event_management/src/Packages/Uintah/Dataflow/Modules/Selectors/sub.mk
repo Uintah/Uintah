@@ -22,6 +22,7 @@ PSELIBS := \
 	Packages/Uintah/Core/Math          \
 	Packages/Uintah/Core/Disclosure    \
 	Packages/Uintah/Core/ProblemSpec   \
+	Packages/Uintah/Core/Parallel      \
 	Packages/Uintah/Core/Exceptions    \
 	Dataflow/Network  \
 	Core/Basis        \

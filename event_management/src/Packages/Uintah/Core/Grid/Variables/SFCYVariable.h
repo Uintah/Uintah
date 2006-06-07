@@ -14,7 +14,10 @@
 #include <Packages/Uintah/Core/Exceptions/TypeMismatchException.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Core/Malloc/Allocator.h>
+
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 
 namespace Uintah {
 

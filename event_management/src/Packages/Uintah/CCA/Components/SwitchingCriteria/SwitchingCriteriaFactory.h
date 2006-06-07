@@ -4,11 +4,12 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 #include <Packages/Uintah/CCA/Ports/SwitchingCriteria.h>
 
+#include <Packages/Uintah/CCA/Components/SwitchingCriteria/share.h>
 namespace Uintah {
 
   class ProcessorGroup;
 
-  class SwitchingCriteriaFactory
+  class SCISHARE SwitchingCriteriaFactory
     {
     public:
       // this function has a switch for all known SwitchingCriteria

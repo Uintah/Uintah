@@ -4,6 +4,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Core/Math/Short27.h> //for Fracture
+#include <Packages/Uintah/Core/Math/Rand48.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>

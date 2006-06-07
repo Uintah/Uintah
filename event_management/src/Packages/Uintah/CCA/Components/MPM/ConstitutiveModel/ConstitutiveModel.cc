@@ -11,6 +11,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Labels/MPMLabel.h>
 #include <Packages/Uintah/Core/Math/FastMatrix.h>
+#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Core/Malloc/Allocator.h>
 #include <math.h>
 #include <sgi_stl_warnings_off.h>
@@ -1125,6 +1126,17 @@ ConstitutiveModel::computeDeformationGradientFromDisplacement(
     // Update the deformation gradient tensor to its time n+1 value.
     // Compute the deformation gradient from the displacement gradient
     Fnew[idx] = Identity + dispGrad;
+
+    double J = Fnew[idx].Determinant();
+    if (!(J > 0)) {
+      ostringstream warn;
+      warn << "**ERROR** CompNeoHook: Negative or zero determinant of Jacobian."
+	     << " Particle has inverted." << endl;
+      warn << "     Particle = " << idx << " J = " << J << " position = " << endl;
+      warn << "          Disp Grad = " << dispGrad << endl; 
+      warn << "          F_new = " << Fnew[idx] << endl; 
+      throw InvalidValue(warn.str(), __FILE__, __LINE__);
+    }
   }
 }
 
@@ -1164,6 +1176,20 @@ ConstitutiveModel::computeDeformationGradientFromVelocity(
                                                                               
       // Update the deformation gradient tensor to its time n+1 value.
       Fnew[idx] = deformationGradientInc * Fold[idx];
+
+      double J = Fnew[idx].Determinant();
+      if (!(J > 0)) {
+        ostringstream warn;
+        warn << "**ERROR** CompNeoHook: Negative or zero determinant of Jacobian."
+	     << " Particle has inverted." << endl;
+        warn << "     Particle = " << idx << " J = " << J << " position = " << endl;
+	warn << "          Vel Grad = " << velGrad << endl; 
+	warn << "          F_inc = " << deformationGradientInc << endl; 
+	warn << "          F_old = " << Fold[idx] << endl; 
+	warn << "          F_new = " << Fnew[idx] << endl; 
+        throw InvalidValue(warn.str(), __FILE__, __LINE__);
+      }
+
     }
 }
 

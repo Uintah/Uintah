@@ -21,7 +21,9 @@
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Time.h>
 
+#ifndef _WIN32
 #include <sys/param.h>
+#endif
 #include <iostream>
 #include <iomanip>
 #include <fstream>
@@ -226,7 +228,9 @@ namespace Uintah {
       ProblemSpecP timeSpec = spec->findBlock("Time");
       if (timeSpec) {
         d_sharedState->d_prev_delt = 0.0;
-        timeSpec->get("delt", d_sharedState->d_prev_delt);
+        if (!timeSpec->get("oldDelt", d_sharedState->d_prev_delt))
+          // the delt is deprecated since it is misleading, but older udas may have it...
+          timeSpec->get("delt", d_sharedState->d_prev_delt);
       }
 
       // eventually we will also probably query the material properties here.
@@ -269,10 +273,7 @@ namespace Uintah {
     Dir restartFromDir(d_fromDir);
     Dir checkpointRestartDir = restartFromDir.getSubdir("checkpoints");
     
-    double delt = 0;
-    
-    d_archive->restartInitialize(d_restartTimestep, grid, d_scheduler->get_dw(1), d_lb, 
-                              &t, &delt);
+    d_archive->restartInitialize(d_restartTimestep, grid, d_scheduler->get_dw(1), d_lb, &t);
     
     d_sharedState->setCurrentTopLevelTimeStep( d_restartTimestep );
     // Tell the scheduler the generation of the re-started simulation.

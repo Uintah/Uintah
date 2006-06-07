@@ -25,7 +25,10 @@
 #include <iostream>
 #include <map>
 #include <sstream>
+
+#ifndef _WIN32
 #include <unistd.h>
+#endif
 
 using namespace Uintah;
 
@@ -35,9 +38,14 @@ using namespace std;
 static DebugStream dbg("TaskGraph", false);
 static DebugStream compdbg("FindComp", false);
 
+#ifdef _WIN32
+#define SCISHARE __declspec(dllimport)
+#else
+#define SCISHARE
+#endif
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
-extern Mutex cerrLock;
+extern SCISHARE SCIRun::Mutex       cerrLock;
 extern DebugStream mixedDebug;
 
 #define DAV_DEBUG 0

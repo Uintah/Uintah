@@ -399,7 +399,7 @@ bool FieldExtractor::update_mesh_handle( LevelP& level,
                                          IntVector& hi,
                                          IntVector& range,
                                          BBox& box,
-                                         TypeDescription::Type type,
+                                         Uintah::TypeDescription::Type type,
                                          LVMeshHandle& mesh_handle,
                                          int remove_boundary)
 {

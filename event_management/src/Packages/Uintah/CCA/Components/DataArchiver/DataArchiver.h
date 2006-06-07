@@ -10,6 +10,7 @@
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Thread/Mutex.h>
 
+#include <Packages/Uintah/CCA/Components/DataArchiver/share.h>
 namespace Uintah {
 
 using SCIRun::ConsecutiveRangeSet;
@@ -50,7 +51,7 @@ using std::pair;
      ****************************************/
     
    //! Handles outputting the data.
-   class DataArchiver : public Output, public UintahParallelComponent {
+   class SCISHARE DataArchiver : public Output, public UintahParallelComponent {
    public:
       DataArchiver(const ProcessorGroup* myworld, int udaSuffix = -1);
       virtual ~DataArchiver();

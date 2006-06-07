@@ -7,6 +7,7 @@
 
 #include <Core/Geometry/Vector.h>
 #include <Core/Util/Assert.h>
+#include <Packages/Uintah/Core/Disclosure/TypeUtils.h> // for get_funTD(Short27) prototype
 
 #include <math.h>
 #include <sgi_stl_warnings_off.h>
@@ -18,10 +19,12 @@ namespace SCIRun {
   class TypeDescription;
   class Piostream;
 }
+#include <Packages/Uintah/Core/Math/TntJama/tnt.h>
+#include <Packages/Uintah/Core/Math/share.h>
 namespace Uintah {
 using namespace SCIRun;
 
-class Short27 {
+class SCISHARE Short27 {
 
  private:
   short s[27];
@@ -69,10 +72,10 @@ inline short &Short27::operator [] (int i)
 #include <sgi_stl_warnings_on.h>
 namespace SCIRun {
   using namespace Uintah;
-void swapbytes( Uintah::Short27& s );
-template<> const string find_type_name(Short27*);
-const TypeDescription* get_type_description(Short27*);
-void Pio( Piostream&, Uintah::Short27& );
+SCISHARE void swapbytes( Uintah::Short27& s );
+template<> SCISHARE const string find_type_name(Short27*);
+SCISHARE const TypeDescription* get_type_description(Short27*);
+SCISHARE void Pio( Piostream&, Uintah::Short27& );
 
 } // namespace SCIRun
 

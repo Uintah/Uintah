@@ -20,9 +20,10 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/Core/Exceptions/share.h>
 namespace Uintah {
   using namespace std;
-  class MaxIteration : public SCIRun::Exception {
+  class SCISHARE MaxIteration : public SCIRun::Exception {
   public:
     MaxIteration(SCIRun::IntVector c,
                 const int count, 

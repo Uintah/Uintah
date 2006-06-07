@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
 
 /**************************************
@@ -34,7 +35,7 @@ namespace Uintah {
      
 ****************************************/
     
-class SimulationTime {
+class SCISHARE SimulationTime {
 public:
   SimulationTime(const ProblemSpecP& params);
 

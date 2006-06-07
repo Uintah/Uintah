@@ -10,9 +10,10 @@
 #include   <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Packages/Uintah/Core/GeometryPiece/GeometryPiece.h>
 namespace Uintah {
 
-  class GeometryPieceFactory
+  class SCISHARE GeometryPieceFactory
   {
   public:
     // this function has a switch for all known go_types

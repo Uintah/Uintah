@@ -4,6 +4,7 @@
 
 #include <Core/Geometry/IntVector.h>
 
+#include <Packages/Uintah/Core/Grid/share.h>
 namespace Uintah {
   using SCIRun::IntVector;
 
@@ -36,7 +37,7 @@ WARNING
   
 ****************************************/
 
-  class CellIterator {
+  class SCISHARE CellIterator {
   public:
     inline ~CellIterator() {}
     

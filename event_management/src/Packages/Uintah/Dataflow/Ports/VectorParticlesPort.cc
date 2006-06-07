@@ -5,12 +5,19 @@
 using namespace SCIRun;
 using namespace Uintah;
 
+#undef SCISHARE
+#ifdef _WIN32
+#define SCISHARE __declspec(dllexport)
+#else
+#define SCISHARE
+#endif
+
 extern "C" {
-  IPort* make_VectorParticlesIPort(Module* module,
+  SCISHARE IPort* make_VectorParticlesIPort(Module* module,
 					       const string& name) {
     return scinew SimpleIPort<VectorParticlesHandle>(module,name);
   }
-  OPort* make_VectorParticlesOPort(Module* module,
+  SCISHARE OPort* make_VectorParticlesOPort(Module* module,
 					       const string& name) {
     return scinew SimpleOPort<VectorParticlesHandle>(module,name);
   }

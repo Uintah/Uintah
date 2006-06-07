@@ -57,9 +57,14 @@ using namespace SCIRun;
 
 using namespace Uintah;
 
+#ifdef _WIN32
+#define SCISHARE __declspec(dllimport)
+#else
+#define SCISHARE
+#endif
 // Debug: Used to sync cerr so it is readable (when output by
 // multiple threads at the same time)  From sus.cc:
-extern Mutex cerrLock;
+extern SCISHARE SCIRun::Mutex       cerrLock;
 extern DebugStream mixedDebug;
 
 static DebugStream dbg( "OnDemandDataWarehouse", false );

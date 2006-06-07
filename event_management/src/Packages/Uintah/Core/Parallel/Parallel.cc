@@ -177,8 +177,9 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 #endif
 
      int status;
+#ifndef _WIN32
      const char* oldtag = AllocatorSetDefaultTagMalloc("MPI initialization");
-
+#endif
 #ifdef __sgi
      if(Thread::isInitialized()){
        cerr << "Thread library initialization occurs before MPI_Init.  This causes problems\nwith MPI exit.  Look for and remove global Thread primitives.\n";
@@ -212,8 +213,10 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
 
      if((status=MPI_Comm_rank(worldComm, &worldRank)) != MPI_SUCCESS)
        MpiError("MPI_Comm_rank", status);
+#ifndef _WIN32
      AllocatorSetDefaultTagMalloc(oldtag);
      AllocatorMallocStatsAppendNumber(worldRank);
+#endif
      rootContext = scinew ProcessorGroup(0, worldComm, true,
 					 worldRank,worldSize);
 

@@ -15,6 +15,7 @@ namespace SCIRun {
   class Vector;
 }
 
+#include <Packages/Uintah/Core/GeometryPiece/share.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -52,7 +53,7 @@ WARNING
 	
 ****************************************/
       
-class GeometryPiece : public RefCounted {
+class SCISHARE GeometryPiece : public RefCounted {
 	 
 public:
   //////////

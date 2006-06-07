@@ -305,6 +305,7 @@ protected:
   islandCheck( vector< pair< Point, double > > &bins,
 	       Vector centroidGlobal,
 	       unsigned int &startIndex,
+	       unsigned int &middleIndex,
 	       unsigned int &stopIndex );
 
   unsigned int
@@ -454,7 +455,7 @@ loadCurve( FieldHandle &field_h,
   else if( color == 2 )
     ofield->set_value( (double) (0*nbins+bin), n1);
   else if( color == 3 )
-    ofield->set_value( (double) color_value, n1);
+    ofield->set_value( (double) plane, n1);
   else if( color == 4 )
     ofield->set_value( (double) bin, n1);
   else if( color == 5 )
@@ -473,7 +474,7 @@ loadCurve( FieldHandle &field_h,
     else if( color == 2 )
       ofield->set_value( (double) (i*nbins+bin), n2);
     else if( color == 3 )
-      ofield->set_value( (double) color_value, n2);
+      ofield->set_value( (double) plane, n2);
     else if( color == 4 )
       ofield->set_value( (double) bin, n2);
     else if( color == 5 )
@@ -524,7 +525,7 @@ loadSurface( FieldHandle &field_h,
     else if( color == 2 )
       ofield->set_value( (double) (i*nbins+bin), n1);
     else if( color == 3 )
-      ofield->set_value( (double) color_value, n1);
+      ofield->set_value( (double) plane, n1);
     else if( color == 4 )
       ofield->set_value( (double) bin, n1);
     else if( color == 5 )
@@ -572,7 +573,7 @@ loadCurve( FieldHandle &field_h,
   else if( color == 2 )
     tangent *= (i*nbins+bin);
   else if( color == 3 )
-    tangent *= color_value;
+    tangent *= plane;
   else if( color == 4 )
     tangent *= bin;
   else if( color == 5 )
@@ -596,7 +597,7 @@ loadCurve( FieldHandle &field_h,
     else if( color == 2 )
       tangent *= (i*nbins+bin);
     else if( color == 3 )
-      tangent *= color_value;
+      tangent *= plane;
     else if( color == 4 )
       tangent *= bin;
     else if( color == 5 )
@@ -623,7 +624,7 @@ loadCurve( FieldHandle &field_h,
   else if( color == 2 )
     tangent *= (i*nbins+bin);
   else if( color == 3 )
-    tangent *= color_value;
+    tangent *= plane;
   else if( color == 4 )
     tangent *= bin;
   else if( color == 5 )
@@ -678,7 +679,7 @@ loadSurface( FieldHandle &field_h,
   else if( color == 2 )
     tangent *= (i*nbins+bin);
   else if( color == 3 )
-    tangent *= color_value;
+    tangent *= plane;
   else if( color == 4 )
     tangent *= bin;
   else if( color == 5 )
@@ -704,7 +705,7 @@ loadSurface( FieldHandle &field_h,
     else if( color == 2 )
       tangent *= (i*nbins+bin);
     else if( color == 3 )
-      tangent *= color_value;
+      tangent *= plane;
     else if( color == 4 )
       tangent *= bin;
     else if( color == 5 )
@@ -1885,7 +1886,7 @@ execute(FieldHandle& ifield_h,
       if( !ifield->get_property( str.str(), inodeNext ) )
 	inodeNext = *inodeEnd;
 
-//      cerr << "Starting new streamline binning " << c << endl;;
+//      cerr << "Starting new streamline binning " << c << endl;
 
       while (*inodeItr != inodeNext) {
 	
@@ -1997,10 +1998,11 @@ execute(FieldHandle& ifield_h,
       for( unsigned int i=0; i<winding; i++ ) {
 
 	unsigned int startIndex;
+	unsigned int middleIndex;
 	unsigned int stopIndex;
 	
 	unsigned int turns = islandCheck( bins[p][i], centroidGlobal,
-					  startIndex, stopIndex );
+					  startIndex, middleIndex, stopIndex );
 
 	if( turns < 3 )
 	  completeIslands = false;
@@ -2011,24 +2013,34 @@ execute(FieldHandle& ifield_h,
 	}
 
 	if( turns == 3 ) {
-// 	  unsigned int index0 = (middleIndex - startIndex ) / 2;
-// 	  unsigned int index1 = (  stopIndex - middleIndex) / 2;
+ 	  unsigned int index0 = (middleIndex - startIndex ) / 2;
+ 	  unsigned int index1 = (  stopIndex - middleIndex) / 2;
 
-// 	  cerr << "Indexes mid " <<  index0 << "  " << index1 << endl;
+	  unsigned int nodes = stopIndex - startIndex;
 
-// 	  localCentroids[i] =
-// 	    ( (Vector) bins[p][i][ startIndex + index0].first + 
-// 	      (Vector) bins[p][i][middleIndex - index0].first + 
-// 	      (Vector) bins[p][i][middleIndex + index1].first + 
-// 	      (Vector) bins[p][i][  stopIndex - index1].first ) / 4.0;
+ 	  cerr << "Indexes mid " << nodes
+	       << "  " << (startIndex + index0)%nodes 
+	       << "  " << (middleIndex - index0)%nodes
+	       << "  " << (middleIndex + index1)%nodes
+	       << "  " << (stopIndex - index1)%nodes << endl;
+
+ 	  localCentroids[i] =
+ 	    ( (Vector) bins[p][i][( startIndex + index0)%nodes].first + 
+ 	      (Vector) bins[p][i][(middleIndex - index0)%nodes].first +
+
+ 	      (Vector) bins[p][i][(middleIndex + index1)%nodes].first + 
+ 	      (Vector) bins[p][i][(  stopIndex - index1)%nodes].first ) / 4.0;
+
+	  cerr << i << "  " << localCentroids[i] << endl;
 	}
       }
     }
 
 
-    if( overlaps == 1 )
+    if( overlaps == 1 || overlaps == 3 )
       removeOverlap( bins[p], nnodes, winding, twist, skip, island );
-    else if( overlaps == 2 )
+    
+    if( overlaps == 2 )
       mergeOverlap( bins[p], nnodes, winding, twist, skip, island );
     else if( overlaps == 3 )
       smoothCurve( bins[p], nnodes, winding, twist, skip, island );
@@ -2073,8 +2085,6 @@ execute(FieldHandle& ifield_h,
 
     if( color == 1 )
       color_value = c;
-    else if( color == 3 )
-      color_value = (island == 0 ? 0 : c);
     else if( color == 6 )
       color_value = winding;
     else if( color == 7 )
@@ -2120,15 +2130,17 @@ execute(FieldHandle& ifield_h,
 	  baseCentroids[index].push_back( localCentroids[i] );	      
 	}
 
-      } else {
+      } else {  // Surface
 
 	typename PCFIELD::mesh_type::Node::index_type n;
 
 	for( unsigned int i=0; i<winding; i++ ) {
 	  // Centroids
+	  cerr << i << "               " << localCentroids[i] << endl;
+
 	  n = opccmesh->add_node((Point) localCentroids[i]);
 	  opccfield->resize_fdata();
-	  opccfield->set_value( winding, n);
+	  opccfield->set_value( i, n );
 
 	  // Separatrices
 	  unsigned int j = (i+skip) % winding;
@@ -2187,13 +2199,20 @@ execute(FieldHandle& ifield_h,
 // 	    cerr << " done";
 
 	  } else {
-	    cerr << "Loading surface " << p * winding + i
-		 << " plane " << planes.size() << " winding " << i;
+// 	    cerr << "Loading surface " << p * winding + i
+// 		 << " plane " << planes.size() << " winding " << i;
 
+	    if( p == planes.size()-1 ) {
+	      unsigned int j = (i-1 + winding) % winding;
 
-	    loadSurface( ofield_h, bins[p][i],
-			 planes.size()+1, winding, nnodes, p, i,
-			 color, color_value );
+	      loadSurface( ofield_h, bins[p][i],
+			   planes.size()+1, winding, nnodes, p, j,
+			   color, color_value );
+	    } else {
+	      loadSurface( ofield_h, bins[p][i],
+			   planes.size()+1, winding, nnodes, p, i,
+			   color, color_value );
+	    }
 
 // 	    cerr << " done";
 	  }
@@ -2204,8 +2223,8 @@ execute(FieldHandle& ifield_h,
 	}
       }
 
-      // For a surface add in the first set first so that the surface is
-      // complete.
+      // For a surface add in the first set again so that the surface
+      // is complete. However because the complete surface has
       if( !curveField ) {
 	for( unsigned int i=0; i<winding; i++ ) {
 	  lock.lock();
@@ -2333,6 +2352,7 @@ StreamlineAnalyzerAlgoT<IFIELD, OFIELD, PCFIELD>::
 islandCheck( vector< pair< Point, double > > &bins,
 	     Vector centroidGlobal,
 	     unsigned int &startIndex,
+	     unsigned int &middleIndex,
 	     unsigned int &stopIndex )
 {
   // Determine if islands exists. If an island exists there will be
@@ -2340,9 +2360,7 @@ islandCheck( vector< pair< Point, double > > &bins,
   // main centroid.
   unsigned int turns = 0;
 
-  unsigned int middleIndex = 0;
-
-  startIndex = stopIndex = 0;
+  startIndex = middleIndex = stopIndex = 0;
 
   Vector v0 = (Vector) bins[0].first - centroidGlobal;
   Vector v1 = (Vector) bins[1].first - centroidGlobal;
@@ -2412,9 +2430,9 @@ islandCheck( vector< pair< Point, double > > &bins,
 	if( Dot( (Vector) bins[j  ].first - (Vector) bins[0].first,
 		 (Vector) bins[j-1].first - (Vector) bins[0].first )
 	    < 0 ) {
-	  stopIndex = startIndex + (j-1);
+	  stopIndex = startIndex + (j-1) + 1; // Add one for the zeroth 
 	  turns = 3;
-	  cerr <<  "First point overlaps another section.\n";
+	  cerr <<  "First point overlaps another section after " << j-1 << endl;
 	  break;
 	}
       }
@@ -2425,9 +2443,9 @@ islandCheck( vector< pair< Point, double > > &bins,
 	  if( Dot( (Vector) bins[0].first - (Vector) bins[j].first,
 		   (Vector) bins[1].first - (Vector) bins[j].first )
 	      < 0 ) {
-	    stopIndex = startIndex + (j-1);
+	    stopIndex = startIndex + (j-1) + 1; // Add one for the zeroth 
 	    turns = 3;
-	    cerr << "See if a point overlaps the first section.\n";
+	    cerr << "A point overlaps the first section at " << j-1 << endl;
 	    break;
 	  }
 	}
@@ -2587,12 +2605,66 @@ removeOverlap( vector< vector < pair< Point, double > > > &bins,
     for( unsigned int i=0; i<winding; i++ ) {
 
       unsigned int startIndex;
+      unsigned int middleIndex;
       unsigned int stopIndex;
 
-      bool completeIsland = (islandCheck( bins[i], centroidGlobal,
-					  startIndex, stopIndex ) == 3);
+      unsigned int turns = islandCheck( bins[i], centroidGlobal,
+					startIndex, middleIndex, stopIndex );
 
-      unsigned int nodes = stopIndex - startIndex + 1;
+      unsigned int nodes = 0;
+      bool completeIsland = false;
+
+      if( turns <= 1 ) {
+	nodes = bins[i].size();
+
+      } else {
+	if( 2*startIndex == middleIndex + 1 ) {
+	  // First point is actually the start point.
+	  cerr << "First point is actually the start point.\n";
+
+	  nodes = middleIndex;
+	  completeIsland = true;
+
+	} else if( bins[i].size() < 2 * (middleIndex - startIndex) - 1 ) {
+	  // No possible over lap.
+	  cerr <<  "No possible over lap.\n";
+
+	  nodes = bins[i].size();
+
+	} else {
+	  // See if the first point overlaps another section.
+	  for( unsigned int  j=middleIndex+1; j<bins[i].size(); j++ ) {
+	    if( Dot( (Vector) bins[i][j  ].first - (Vector) bins[i][0].first,
+		     (Vector) bins[i][j-1].first - (Vector) bins[i][0].first )
+		< 0 ) {
+
+	      cerr <<  "First point overlaps another section after " << j-1 << endl;
+	      nodes = j;
+	      completeIsland = true;
+	      break;
+	    }
+	  }
+      
+	  // See if a point overlaps the first section.
+	  if( nodes == 0 )
+	    for( unsigned int j=middleIndex; j<bins[i].size(); j++ ) {
+	      if( Dot( (Vector) bins[i][0].first - (Vector) bins[i][j].first,
+		       (Vector) bins[i][1].first - (Vector) bins[i][j].first )
+		  < 0 ) {
+		cerr << "A point overlaps the first section at " << j-1 << endl;
+		nodes = j;
+		completeIsland = true;
+		break;
+	      }
+	    }
+
+	  // No overlap found
+	  if( nodes == 0 ) {
+	    nodes = bins[i].size();
+	    cerr << "No overlap found\n";
+	  }
+	}
+      }
 
       if( nodes * i != avennodes )
 	cerr << i << " nnodes mismatch ";
@@ -2603,11 +2675,14 @@ removeOverlap( vector< vector < pair< Point, double > > > &bins,
       bins[i].erase( bins[i].begin()+nodes, bins[i].end() );
 
       // Close the island if it is complete
-      if( completeIsland )
+      if( completeIsland ) {
 	bins[i].push_back( bins[i][0] );
+
+	avennodes += 1;
+      }
     }
 
-  } else {
+  } else {  // Surface
 
     surfaceCheck( bins, winding, skip, centroidGlobal, nnodes );
 
@@ -2656,38 +2731,16 @@ smoothCurve( vector< vector < pair< Point, double > > > &bins,
   unsigned int add = 2;
 
   if( island ) {
+
     for( unsigned int i=0; i<winding; i++ ) {
-
-      unsigned int startIndex;
-      unsigned int stopIndex;
-
-      bool completeIsland;
-      bool skip;
-
-      if( islandCheck( bins[i], centroidGlobal, startIndex, stopIndex ) == 3 ) {
-	completeIsland = true;
-	skip = 0;
-      } else {
-	completeIsland = false;
-	skip = 1;
-      }
-
-      nnodes = stopIndex - startIndex + 1;
-
-      if( nnodes < 3 )
-	continue;
-
-      // Erase all of the overlapping points.
-      bins[i].erase( bins[i].begin()+nnodes, bins[i].end() );
-
-      //for( unsigned int s=0; s<add; s++ )
+//      for( unsigned int s=0; s<add; s++ )
       {
 	pair< Point, double > newPts[add*nnodes];
 
 	for( unsigned int j=0; j<add*nnodes; j++ )
 	  newPts[j] = pair< Point, double > (Point(0,0,0), 0 );
 	
-	for( unsigned int j=skip; j<nnodes-skip; j++ ) {
+	for( unsigned int j=1; j<nnodes-1; j++ ) {
 
 	  unsigned int j_1 = (j-1+nnodes) % nnodes;
 	  unsigned int j1  = (j+1+nnodes) % nnodes;
@@ -2695,10 +2748,10 @@ smoothCurve( vector< vector < pair< Point, double > > > &bins,
 	  Vector v0 = (Vector) bins[i][j1].first - (Vector) bins[i][j  ].first;
 	  Vector v1 = (Vector) bins[i][j ].first - (Vector) bins[i][j_1].first;
 
-// 	  cerr << i << " smooth " << j_1 << " "  << j << " "  << j1 << "  "
-// 	       << ( v0.length() > v1.length() ?
-// 		    v0.length() / v1.length() :
-// 		    v1.length() / v0.length() ) << endl;
+ 	  cerr << i << " smooth " << j_1 << " "  << j << " "  << j1 << "  "
+ 	       << ( v0.length() > v1.length() ?
+ 		    v0.length() / v1.length() :
+ 		    v1.length() / v0.length() ) << endl;
 
 	  if( Dot( v0, v1 ) > 0 &&
 	      ( v0.length() > v1.length() ?
@@ -2770,26 +2823,17 @@ smoothCurve( vector< vector < pair< Point, double > > > &bins,
 	  }
 	}
       }
-
-      // Close the island if it is complete
-      if( completeIsland )
-	bins[i].push_back( bins[i][0] );
     }
 
   } else {
 
-    surfaceCheck( bins, winding, skip, centroidGlobal, nnodes );
-
     for( unsigned int i=0; i<winding; i++ ) {
-      unsigned int j = (i+skip) % winding;
-
-      unsigned int nodes = surfaceCheck( bins, i, j, nnodes );
 
       if( bins[i].size() < 2 )
 	continue;
 
-      // Erase all of the overlapping points.
-      bins[i].erase( bins[i].begin()+nodes, bins[i].end() );
+      // Index of the next winding group
+      unsigned int j = (i+skip)%winding;
 
       // Insert the first point from the next winding so the curve
       // is contiguous.
@@ -2797,14 +2841,14 @@ smoothCurve( vector< vector < pair< Point, double > > > &bins,
 
       //for( unsigned int s=0; s<add; s++ )
       {
-	unsigned int nNodes = bins[i].size();
+	unsigned int nodes = bins[i].size();
 
-	pair< Point, double > newPts[add*nNodes];
+	pair< Point, double > newPts[add*nodes];
 
-	for( unsigned int j=0; j<add*nNodes; j++ )
+	for( unsigned int j=0; j<add*nodes; j++ )
 	  newPts[j] = pair< Point, double > (Point(0,0,0), 0 );
 	
-	for( unsigned int j=1; j<nNodes-1; j++ ) {
+	for( unsigned int j=1; j<nodes-1; j++ ) {
 
 	  unsigned int j_1 = j - 1;
 	  unsigned int j1  = j + 1;
@@ -2856,7 +2900,7 @@ smoothCurve( vector< vector < pair< Point, double > > > &bins,
 	  }
 	}
 
-	for( int j=nNodes-1; j>=0; j-- ) {
+	for( int j=nodes-1; j>=0; j-- ) {
 
 	  for( unsigned int s=0; s<add; s++ ) {
 
@@ -2908,10 +2952,12 @@ mergeOverlap( vector< vector < pair< Point, double > > > &bins,
     for( unsigned int i=0; i<winding; i++ ) {
       
       unsigned int startIndex;
+      unsigned int middleIndex;
       unsigned int stopIndex;
 
       // Merge only if there are overlapping points.
-      if( islandCheck( bins[i], centroidGlobal, startIndex, stopIndex ) == 3 ) {
+      if( islandCheck( bins[i], centroidGlobal,
+		       startIndex, middleIndex, stopIndex ) == 3 ) {
 	nnodes = stopIndex - startIndex + 1;
 
 	if( nnodes == bins[i].size() )

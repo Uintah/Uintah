@@ -21,6 +21,7 @@ namespace SCIRun {
   class Vector;
 }
 
+#include <Packages/Uintah/CCA/Components/MPM/share.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -63,7 +64,7 @@ WARNING
 
 ****************************************/
 
- class MPMMaterial : public Material {
+ class SCISHARE MPMMaterial : public Material {
  public:
 
    // Default Constructor

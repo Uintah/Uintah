@@ -26,8 +26,12 @@
 #include <sgi_stl_warnings_on.h>
 
 #include <fcntl.h>
-#include <unistd.h>
 
+#ifndef _WIN32
+#include <unistd.h>
+#endif
+
+#include <Packages/Uintah/Core/DataArchive/share.h>
 namespace Uintah {
 
 using namespace SCIRun;
@@ -79,7 +83,7 @@ class LoadBalancer;
      ****************************************/
    
 //! Container to hold UCF data when read in from disk.
-class DataArchive {
+class SCISHARE DataArchive {
 private:
 
   /* Helper classes for storing hash maps of variable data. */
@@ -208,9 +212,7 @@ public:
   
   //! Set up data arachive for restarting a Uintah simulation   
   void restartInitialize(int& timestep, const GridP& grid, DataWarehouse* dw,
-                         LoadBalancer* lb,
-			 double* pTime /* passed back */,
-			 double* pDelt /* passed back */);
+                         LoadBalancer* lb, double* pTime /* passed back */);
 
   inline ProblemSpecP getRestartTimestepDoc() { return d_restartTimestepDoc; }
   inline string getRestartTimestepURL() { return d_restartTimestepURL; }

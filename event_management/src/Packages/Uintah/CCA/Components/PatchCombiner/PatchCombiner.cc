@@ -226,10 +226,9 @@ void PatchCombiner::readAndSetDelT(const ProcessorGroup*,
   d_subsched->advanceDataWarehouse(oldGrid_);
   //cerr << "deleted and recreated dw\n";
   double delt;
-  dataArchive_->restartInitialize(timestep, oldGrid_, d_subsched->get_dw(1), NULL, &time, &delt);
+  dataArchive_->restartInitialize(timestep, oldGrid_, d_subsched->get_dw(1), NULL, &time);
   //cerr << "restartInitialize done\n";
   
-  // don't use that delt -- jump to the next output timestep
   delt = times_[timeIndex_ + 1] - time;
   delt_vartype delt_var = delt;
   new_dw->put(delt_var, delt_label);

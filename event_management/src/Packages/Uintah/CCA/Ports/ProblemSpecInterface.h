@@ -5,6 +5,8 @@
 #include <Packages/Uintah/Core/Parallel/UintahParallelPort.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpecP.h>
 
+#include <Packages/Uintah/CCA/Ports/share.h>
+
 namespace Uintah {
 /**************************************
 
@@ -35,7 +37,7 @@ WARNING
   
 ****************************************/
 
-   class ProblemSpecInterface : public UintahParallelPort {
+   class SCISHARE ProblemSpecInterface : public UintahParallelPort {
    public:
       ProblemSpecInterface();
       virtual ~ProblemSpecInterface();

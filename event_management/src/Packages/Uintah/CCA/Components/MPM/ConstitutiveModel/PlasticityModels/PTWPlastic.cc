@@ -5,6 +5,11 @@
 #include <sgi_stl_warnings_on.h>
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 
+#ifdef _WIN32
+// FIX - windows doesn't have erf
+#define erf(x) 1
+#endif
+
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;

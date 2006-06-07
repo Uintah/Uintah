@@ -38,7 +38,7 @@ PSELIBS := \
        Packages/Uintah/Core/Math                       \
        Packages/Uintah/Core/Labels                     \
        Core/Exceptions Core/Geometry                   \
-       Core/Thread Core/Util
+       Core/Thread Core/Util Core/OS
 
 LIBS       := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 

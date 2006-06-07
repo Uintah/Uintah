@@ -31,6 +31,7 @@ PSELIBS := \
 	Packages/Uintah/CCA/Ports          \
 	Packages/Uintah/Core/Grid          \
 	Packages/Uintah/Core/Math          \
+	Packages/Uintah/Core/Parallel      \
 	Packages/Uintah/Core/Util          \
 	Packages/Uintah/Core/ProblemSpec   \
 	Packages/Uintah/Core/Exceptions    \
@@ -45,7 +46,6 @@ PSELIBS := \
 	Core/Geom          \
 	Core/Geometry      \
 	Core/GeomInterface \
-	Core/Malloc        \
 	Core/Util 
 
 LIBS := $(XML2_LIBRARY) $(M_LIBRARY) $(MPI_LIBRARY)

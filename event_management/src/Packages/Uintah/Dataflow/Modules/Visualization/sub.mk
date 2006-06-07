@@ -35,6 +35,7 @@ PSELIBS := \
         Core/GeomInterface             \
 	Core/Geometry                  \
 	Core/Util                      \
+	Core/Basis                     \
 	Packages/Uintah/Core/Grid          \
 	Packages/Uintah/Core/Math          \
 	Packages/Uintah/Core/Util          \

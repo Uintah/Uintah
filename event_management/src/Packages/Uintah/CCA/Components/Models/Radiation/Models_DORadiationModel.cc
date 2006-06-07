@@ -28,6 +28,7 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
+#ifndef _WIN32 //no fortran
 #include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rordr_fort.h>
 #include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rordrss_fort.h>
 #include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rordrtn_fort.h>
@@ -43,6 +44,7 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rdomvolq_fort.h>
 #include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rshsolve_fort.h>
 #include <Packages/Uintah/CCA/Components/Models/Radiation/fortran/m_rshresults_fort.h>
+#endif
 //****************************************************************************
 // Default constructor for Models_DORadiationModel
 //****************************************************************************
@@ -195,8 +197,9 @@ Models_DORadiationModel::computeOrdinatesOPL() {
   oxi.initialize(0.0);
   wt.initialize(0.0);
 
+#ifndef _WIN32
   fort_m_rordr(d_sn, oxi, omu, oeta, wt);
-
+#endif
   // The following are alternative ways of setting weights to the 
   // different ordinates ... I believe they should be options at the
   // problemSetup stage, but I have to talk with Gautham (SK, 04/08/05)
@@ -247,6 +250,7 @@ Models_DORadiationModel::computeRadiationProps(const ProcessorGroup*,
     }
   }
 
+#ifndef _WIN32
   int flowField = -1;
   fort_m_radcoef(idxLo, idxHi, 
                  vars->temperature, 
@@ -266,6 +270,7 @@ Models_DORadiationModel::computeRadiationProps(const ProcessorGroup*,
                  lambda, 
                  lradcal,
                  constvars->cellType,flowField);
+#endif
 }
 
 //***************************************************************************
@@ -307,6 +312,7 @@ Models_DORadiationModel::boundaryCondition(const ProcessorGroup*,
     // do now for fear of introducing new bugs.  In addition, cellType may
     // be a useful variable later.
 
+#ifndef _WIN32
     fort_m_rdombc(idxLo, idxHi, 
                   vars->temperature,
                   vars->ABSKG,
@@ -314,7 +320,7 @@ Models_DORadiationModel::boundaryCondition(const ProcessorGroup*,
                   xminus, xplus, yminus, yplus, zminus, zplus, 
                   test_problems,
                   lprobone, lprobtwo, lprobthree);
-
+#endif
 }
 //***************************************************************************
 // Solves for intensity in the D.O method
@@ -326,7 +332,7 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
                                         RadiationVariables* vars,
                                         RadiationConstVariables* constvars)
 {
-
+#ifndef _WIN32
   double solve_start = Time::currentSeconds();
   rgamma.resize(1,29);
   sd15.resize(1,481);
@@ -745,4 +751,5 @@ Models_DORadiationModel::intensitysolve(const ProcessorGroup* pg,
       cerr << "Total radiative source =" << srcsum << " watts\n";
     } 
   }
+#endif
 }

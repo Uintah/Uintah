@@ -22,8 +22,6 @@
 #include <Packages/Uintah/CCA/Components/Examples/SimpleCFD.h>
 #include <Packages/Uintah/CCA/Components/Examples/AMRSimpleCFD.h>
 #include <Packages/Uintah/CCA/Components/Examples/SolverTest1.h>
-#include <Packages/Uintah/CCA/Components/Examples/Test.h>
-#include <Packages/Uintah/CCA/Components/Examples/Test1.h>
 #include <Packages/Uintah/CCA/Components/PatchCombiner/PatchCombiner.h>
 #include <Packages/Uintah/CCA/Components/PatchCombiner/UdaReducer.h>
 #include <iosfwd>
@@ -66,10 +64,12 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
     return scinew MPMICE(world,RIGID_MPMICE, doAMR);
   } else if (sim_comp == "fmpmice" || sim_comp == "fracturempmice" || sim_comp == "FRACTUREMPMICE") {
     return scinew MPMICE(world,FRACTURE_MPMICE, doAMR);
+#ifndef _WIN32
   } else if (sim_comp == "arches" || sim_comp == "ARCHES") {
     return scinew Arches(world);
   } else if (sim_comp == "mpmarches" || sim_comp == "MPMARCHES") {
     return scinew MPMArches(world);
+#endif
   } else if (sim_comp == "burger" || sim_comp == "BURGER") {
     return scinew Burger(world);
   } else if (sim_comp == "wave" || sim_comp == "WAVE") {
@@ -94,10 +94,6 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
       return scinew AMRSimpleCFD(world);
     else
       return scinew SimpleCFD(world);
-  } else if (sim_comp == "test" || sim_comp == "TEST") {
-    return scinew Test(world);
-  } else if (sim_comp == "test1" || sim_comp == "TEST1") {
-    return scinew Test1(world);
   } else if (sim_comp == "switcher" || sim_comp == "SWITCHER") {
     return scinew Switcher(world, ps, doAMR);
   } else if (sim_comp == "combine_patches") {
