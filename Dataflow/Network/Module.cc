@@ -859,11 +859,26 @@ Module::tcl_command(GuiArgs& args, void*)
   }
 }
 
+
 void
 Module::set_pid(int pid)
 {
   pid_ = pid;
 }
+
+
+static string
+esc_brackets(const string &str)
+{
+  string result;
+  for (unsigned int i = 0; i < str.size(); i++)
+  {
+    if (str[i] == '{' || str[i] == '}') result.push_back('\\');
+    result.push_back(str[i]);
+  }
+  return result;
+}
+
 
 // Error conditions
 void
@@ -876,7 +891,7 @@ Module::error(const string& str)
     cout.flush();
   }
   msg_stream_flush();
-  gui_->execute(id_ + " append_log_msg {" + newstr + "} red");
+  gui_->execute(id_ + " append_log_msg {" + esc_brackets(newstr) + "} red");
   update_msg_state(Error); 
 }
 
@@ -890,7 +905,7 @@ Module::warning(const string& str)
     cout.flush();
   }
   msg_stream_flush();
-  gui_->execute(id_ + " append_log_msg {" + newstr + "} yellow");
+  gui_->execute(id_ + " append_log_msg {" + esc_brackets(newstr) + "} yellow");
   update_msg_state(Warning); 
 }
 
@@ -904,7 +919,7 @@ Module::remark(const string& str)
     cout.flush();
   }
   msg_stream_flush();
-  gui_->execute(id_ + " append_log_msg {" + newstr + "} blue");
+  gui_->execute(id_ + " append_log_msg {" + esc_brackets(newstr) + "} blue");
   update_msg_state(Remark); 
 }
 
@@ -918,7 +933,7 @@ Module::add_raw_message(const string& str)
     cout.flush();
   }
   msg_stream_flush();
-  gui_->execute(id_ + " append_log_msg {" + str + "} black");
+  gui_->execute(id_ + " append_log_msg {" + esc_brackets(str) + "} black");
 }
 
 
