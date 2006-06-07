@@ -902,9 +902,12 @@ proc biopseFDialog_Config {w type argList} {
             set data(selectPath) [glob $data(-initialdir)]
             # Convert the initialdir to an absolute path name. 
             set old [pwd]
-            cd $data(selectPath)
-            set data(selectPath) [pwd]
-            cd $old
+            if {[catch {cd $data(selectPath) } err ]} {
+              set data(selectPath) $data(-initialdir)
+            } else {
+              set data(selectPath) [pwd]
+              cd $old
+            }
         } else {
             set data(selectPath) $data(-initialdir)
         }
