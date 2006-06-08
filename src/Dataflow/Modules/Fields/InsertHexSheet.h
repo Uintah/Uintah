@@ -886,7 +886,6 @@ InsertHexSheetAlgoHex<FIELD>::compute_intersections(
           typename FIELD::mesh_type::Face::array_type edges_faces;
           get_faces( side1_mesh, edges_faces, this_edge );
           vector<typename FIELD::mesh_type::Face::index_type> face_list2;
-          vector<unsigned int> boundary_faces;
           for( i = 0; i < edges_faces.size(); i++ )
           {
             typename FIELD::mesh_type::Elem::array_type faces_hexes;
@@ -894,7 +893,6 @@ InsertHexSheetAlgoHex<FIELD>::compute_intersections(
             if( faces_hexes.size() == 1 )
             {
               face_list2.push_back( edges_faces[i] );
-              boundary_faces.push_back( (unsigned int)edges_faces[i] );
             }
           }
 
@@ -1095,9 +1093,8 @@ InsertHexSheetAlgoHex<FIELD>::compute_intersections(
 
           typename FIELD::mesh_type::Face::array_type edges_faces;
           get_faces( side2_mesh, edges_faces, this_edge );
-          cout << "edges_faces.size() == " << edges_faces.size() << endl;
+//          cout << " edges_faces.size() == " << edges_faces.size() << endl;
           vector<typename FIELD::mesh_type::Face::index_type> face_list2;
-          vector<unsigned int> boundary_faces;
           for( i = 0; i < edges_faces.size(); i++ )
           {
             typename FIELD::mesh_type::Elem::array_type faces_hexes;
@@ -1105,10 +1102,10 @@ InsertHexSheetAlgoHex<FIELD>::compute_intersections(
             if( faces_hexes.size() == 1 )
             {
               face_list2.push_back( edges_faces[i] );
-              boundary_faces.push_back( (unsigned int)edges_faces[i] );
             }
           }
-
+//          cout << endl << "face_list2.size() == " << face_list2.size() << endl;
+          
           for( i = 0; i < face_list2.size(); i++ )
           {
             typename hash_type3::iterator face_iter;
@@ -1225,9 +1222,8 @@ InsertHexSheetAlgoHex<FIELD>::separate_non_man_faces(
     typename FIELD::mesh_type::Face::array_type &non_man_boundary_faces )
 {
   ASSERTMSG(non_man_boundary_faces.size(), "No faces to pair.");  
-  ASSERTMSG(non_man_boundary_faces.size() == 2, "Only two faces.");  
-  ASSERTMSG(non_man_boundary_faces.size() % 2 == 0,
-            "Can't pair odd number of faces.");
+  ASSERTMSG((non_man_boundary_faces.size() % 2 == 0 && non_man_boundary_faces.size() != 2),
+            "Can't pair odd number of faces, or a set of only two faces.");
 
   typename FIELD::mesh_type::Node::array_type edge_nodes;
   mesh.get_nodes(edge_nodes, non_man_edge_id);
