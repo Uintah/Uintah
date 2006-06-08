@@ -48,11 +48,13 @@
 #include <Dataflow/Modules/Fields/IHSMeshStructures.h>
 #include <Dataflow/Modules/Fields/IHSKDTree.h>
 #include <vector>
+#include <set>
 
 namespace SCIRun {
 
 using std::copy;
 using std::vector;
+using std::set;    
 
 using namespace std;
 using namespace gtb;
@@ -940,17 +942,17 @@ InsertHexSheetAlgoHex<FIELD>::compute_intersections(
             multiproject_node2 = true;
           }
           
-          vector<unsigned int> connected_faces;
-          separate_non_man_faces( connected_faces, *side1_mesh, 
-                                  this_edge, face_list2 );
+//           vector<unsigned int> connected_faces;
+//           separate_non_man_faces( connected_faces, *side1_mesh, 
+//                                   this_edge, face_list2 );
           
-          cout << "Paired faces for edge " << this_edge << ":\n";
-          for( i = 0; i < connected_faces.size(); i++ )
-          {
-            cout << connected_faces[i] << " and ";
-            i++;
-            cout << connected_faces[i] << endl;
-          }
+//           cout << "Paired faces for edge " << this_edge << ":\n";
+//           for( i = 0; i < connected_faces.size(); i++ )
+//           {
+//             cout << connected_faces[i] << " and ";
+//             i++;
+//             cout << connected_faces[i] << endl;
+//           }
             
           ++nm_search;
         }
@@ -1099,7 +1101,6 @@ InsertHexSheetAlgoHex<FIELD>::compute_intersections(
 
           typename FIELD::mesh_type::Face::array_type edges_faces;
           get_faces( side2_mesh, edges_faces, this_edge );
-//          cout << " edges_faces.size() == " << edges_faces.size() << endl;
           vector<typename FIELD::mesh_type::Face::index_type> face_list2;
           for( i = 0; i < edges_faces.size(); i++ )
           {
@@ -1110,16 +1111,17 @@ InsertHexSheetAlgoHex<FIELD>::compute_intersections(
               face_list2.push_back( edges_faces[i] );
             }
           }
-//          cout << endl << "face_list2.size() == " << face_list2.size() << endl;
+                   
+          vector<unsigned int> connected_faces;
+          separate_non_man_faces( connected_faces, *side2_mesh, 
+                                  this_edge, face_list2 );
           
-          for( i = 0; i < face_list2.size(); i++ )
+          cout << "Paired faces for edge " << this_edge << ":\n";
+          for( i = 0; i < connected_faces.size(); i++ )
           {
-            typename hash_type3::iterator face_iter;
-            face_iter = face_list.find( face_list2[i] );
-            if( face_iter != face_list.end() )
-            {
-              face_list.erase( face_iter );
-            }
+            cout << connected_faces[i] << " and ";
+            i++;
+            cout << connected_faces[i] << endl;
           }
 
           bool multiproject_node1 = false, multiproject_node2 = false;
@@ -1149,19 +1151,57 @@ InsertHexSheetAlgoHex<FIELD>::compute_intersections(
             cout << " Need to multiproject node2 (" << node2 << ")\n";
             multiproject_node2 = true;
           }
-          
-          vector<unsigned int> connected_faces;
-          separate_non_man_faces( connected_faces, *side1_mesh, 
-                                  this_edge, face_list2 );
-          
-          cout << "Paired faces for edge " << this_edge << ":\n";
-          for( i = 0; i < connected_faces.size(); i++ )
+
+          set<typename FIELD::mesh_type::Face::index_type> special_projects;
+          if( multiproject_node1 )
           {
-            cout << connected_faces[i] << " and ";
-            i++;
-            cout << connected_faces[i] << endl;
+            set<typename FIELD::mesh_type::Face::index_type> nodes_faces1;
+            node_get_faces( side2_mesh, nodes_faces1, node1 );
+            typename set<typename FIELD::mesh_type::Face::index_type>::iterator nf_iter = nodes_faces1.begin();
+            typename set<typename FIELD::mesh_type::Face::index_type>::iterator nf_end = nodes_faces1.end();
+            while( nf_iter != nf_end )
+            {
+              typename FIELD::mesh_type::Elem::array_type faces_hexes;
+              side2_mesh->get_elems( faces_hexes, *nf_iter );
+              if( faces_hexes.size() == 1 )
+              {
+                special_projects.insert( *nf_iter );
+              }
+              ++nf_iter;
+            }
+          }
+          if( multiproject_node2 )
+          {
+            set<typename FIELD::mesh_type::Face::index_type> nodes_faces2;
+            node_get_faces( side2_mesh, nodes_faces2, node2 );
+            typename set<typename FIELD::mesh_type::Face::index_type>::iterator nf_iter = nodes_faces2.begin();
+            typename set<typename FIELD::mesh_type::Face::index_type>::iterator nf_end = nodes_faces2.end();
+            while( nf_iter != nf_end )
+            {
+              typename FIELD::mesh_type::Elem::array_type faces_hexes;
+              side2_mesh->get_elems( faces_hexes, *nf_iter );
+              if( faces_hexes.size() == 1 )
+              {
+                special_projects.insert( *nf_iter );
+              }
+              ++nf_iter;
+            }
           }
 
+          typename set<typename FIELD::mesh_type::Face::index_type>::iterator sp_iter = special_projects.begin();
+          typename set<typename FIELD::mesh_type::Face::index_type>::iterator sp_iter_e = special_projects.end();
+          while( sp_iter != sp_iter_e )
+          {
+            typename hash_type3::iterator face_iter;
+            face_iter = face_list.find( *sp_iter );
+            if( face_iter != face_list.end() )
+            {
+              face_list.erase( face_iter );
+              cout << "Removing a face from the face list...\n";    
+            }
+            ++sp_iter;
+          }
+          
           ++nm_search;
         }
         cout << endl;
@@ -1369,7 +1409,7 @@ InsertHexSheetAlgoHex<FIELD>::node_get_faces(typename FIELD::mesh_type *mesh,
   for (unsigned int i = 0; i < elems.size(); i++)
   {
     typename FIELD::mesh_type::Face::array_type faces;
-    mesh->get_faces(elems[i]);
+    mesh->get_faces( faces, elems[i] );
     for (unsigned int j = 0; j < faces.size(); j++)
     {
       typename FIELD::mesh_type::Node::array_type nodes;
