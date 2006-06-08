@@ -125,6 +125,11 @@ public:
     return a.first < b.first;
   }
 
+
+  void node_get_faces(typename FIELD::mesh_type *mesh,
+                      set<typename FIELD::mesh_type::Face::index_type> &result,
+                      typename FIELD::mesh_type::Node::index_type node);
+
   class TriangleMeshFaceTree 
   {
 public:
@@ -1346,6 +1351,42 @@ InsertHexSheetAlgoHex<FIELD>::separate_non_man_faces(
     connected_faces[i] = angles[(i+offset)%angles.size()].second;
   }
 }
+
+
+
+template <class FIELD>
+void
+InsertHexSheetAlgoHex<FIELD>::node_get_faces(typename FIELD::mesh_type *mesh,
+                      set<typename FIELD::mesh_type::Face::index_type> &result,
+                      typename FIELD::mesh_type::Node::index_type node)
+{
+  result.clear();
+
+  typename FIELD::mesh_type::Elem::array_type elems;
+  mesh->get_elems(elems, node);
+
+  for (unsigned int i = 0; i < elems.size(); i++)
+  {
+    typename FIELD::mesh_type::Face::array_type faces;
+    mesh->get_faces(elems[i]);
+    for (unsigned int j = 0; j < faces.size(); j++)
+    {
+      typename FIELD::mesh_type::Node::array_type nodes;
+      mesh->get_nodes(nodes, faces[j]);
+
+      for (unsigned int k = 0; k < nodes.size(); k++)
+      {
+        if (nodes[k] == node)
+        {
+          result.insert(faces[j]);
+          break;
+        }
+      }
+    }
+  }
+}
+
+
 
 
 } // end namespace SCIRun
