@@ -1,0 +1,69 @@
+
+using namespace somethingspc;
+using namespace SCIRun;
+using namespace <%= $inPackage%>;
+using namespace std;
+
+extern "C" BridgeComponent* make_Bridge_<%= $templateArgv[0]%>()
+{
+  return static_cast<BridgeComponent*>(new <%= rndBridgeName%>());
+}
+
+static BridgeServices* st_svcs;
+
+<%= rndBridgeName%>::<%= rndBridgeName%>(){
+}
+                                                                                                                                                 
+<%= rndBridgeName%>::~<%= rndBridgeName%>(){
+}
+
+<port> 
+ <method>  
+<%= babelType($inMethodType)%> skel_<%= $inPackage%>_<%= $inPortName%>_<%= $inMethodName%>( struct <%= $inPackage%>_<%= $inPortName%>__object* self <%= commaoutDefArgs(method(:babelType))%>)
+{
+  <%= ifNEQPrint(babelType($inMethodType),"void",$inMethodType+" _result;")%> 
+  <%= ifNEQPrint(babelType($inMethodType),"void",babelType($inMethodType)+" _bt_result;")%>
+  somethingspc::<%= $inPortName%>* _this = reinterpret_cast< somethingspc::<%= $inPortName%>*>(self->d_data);
+  <%= ifNEQPrint(babelType($inMethodType),"void","_result = ")%>_this-><%= $inMethodName%>(<%= outCallArgs%>);
+  <%= ifEQPrint($inMethodType,"string",'_bt_result = sidl_String_strdup(_result.c_str());')%>
+  <%= ifNEQPrint(babelType($inMethodType),"void","return _bt_result;")%>
+}
+ </method>
+
+void skel_<%= $inPackage%>_<%= $inPortName%>__ctor(struct <%= $inPackage%>_<%= $inPortName%>__object* self ) {
+  self->d_data = reinterpret_cast< void*>(new somethingspc::<%= $inPortName%>());
+}
+
+void skel_<%= $inPackage%>_<%= $inPortName%>__dtor(struct <%= $inPackage%>_<%= $inPortName%>__object* self ) {
+  delete ( reinterpret_cast< somethingspc::<%= $inPortName%>*>(self->d_data) );
+}
+</port>
+
+void <%= rndBridgeName%>::setServices(const BridgeServices* svc) {
+  services=const_cast<BridgeServices*>(svc);
+  st_svcs = const_cast<BridgeServices*>(svc);
+<port>   
+  <%= $inPackage%>::<%= $inPortName%> dp = <%= $inPackage%>::<%= $inPortName%>::_create();
+  dp._get_ior()-><% if($inPortName=="IDPort") then print 'd_gov_cca_ports_idport.' end%>d_epv->f_<%= $inMethodName%> = <% if($inPortName=="IDPort") then print "(char* (*)(void*))" end%>(skel_<%= $inPackage%>_<%= $inPortName%>_<%= $inMethodName%>);
+  dp._get_ior()->d_epv->f__ctor = (skel_<%= $inPackage%>_<%= $inPortName%>__ctor);
+  dp._get_ior()->d_epv->f__dtor = (skel_<%= $inPackage%>_<%= $inPortName%>__dtor);
+  services->addProvidesPort((void*)&dp,"pport","gov.cca.ports.<%= $inPortName%>",Babel);
+  services->registerUsesPort("uport","sci.cca.ports.<%= $outPortName%>",CCA);
+</port>
+}
+
+<port> 
+somethingspc::<%= $inPortName%>::<%= $inPortName%>(){
+}
+
+somethingspc::<%= $inPortName%>::~<%= $inPortName%>(){
+}
+
+<method> 
+<%= $inMethodType%> somethingspc::<%= $inPortName%>::<%= $inMethodName%>(<%= outDefArgs(method(:babelType))%>) {
+  sci::cca::Port::pointer pp = st_svcs->getCCAPort("uport");
+  sci::cca::ports::<%= $outPortName %>::pointer sp=pidl_cast<sci::cca::ports::<%= $outPortName%>::pointer>(pp);
+  return sp-><%= $outMethodName%>(<%= outCallArgs%>);
+}
+</method>
+</port>

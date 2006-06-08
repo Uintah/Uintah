@@ -1,0 +1,194 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<section os="linux;irix" id="sec.blas_lapack_inst">
+  <title id="title.blas_lapack_inst">
+    <acronym>BLAS</acronym> (or <acronym>ATLAS</acronym>), and
+    <acronym>LAPACK</acronym> Installation
+  </title>
+
+  <para>
+    <acronym>PETSc</acronym> requires <acronym>BLAS</acronym>, or its
+    equivalent <acronym>ATLAS</acronym>, and
+    <acronym>LAPACK</acronym>.
+    <acronym>BLAS</acronym>/<acronym>ATLAS</acronym> and
+    <acronym>LAPACK</acronym> must be installed before installing
+    <acronym>PETSc</acronym>.  A vendor version of
+    <acronym>BLAS</acronym>/<acronym>ATLAS</acronym> is recommended.
+    Skip this section if
+    <acronym>BLAS</acronym>/<acronym>ATLAS</acronym> and
+    <acronym>LAPACK</acronym> are installed.
+  </para>
+
+  <para>
+    <acronym>BLAS</acronym> and <acronym>LAPACK</acronym> are
+    installed from <link os="linux"
+    linkend="sec.blas_lapack_rpm"><acronym>RPM</acronym>'s</link>
+    <phrase os="irix">a combined <acronym>BLAS</acronym> and
+    <acronym>LAPACK</acronym> <link
+    linkend="sec.blas_lapack_source">source
+    distribution</link></phrase>.
+  </para>
+
+  <para>
+    <ulink
+    url="http://math-atlas.sourceforge.net/"><acronym>ATLAS</acronym></ulink>
+    is a portable <acronym>BLAS</acronym> implementation.
+    <acronym>ATLAS</acronym> can be installed in place of
+    <acronym>BLAS</acronym>.  <acronym>ATLAS</acronym> is
+    installed from its <link linkend="sec.atlas_source">source
+    code distribution</link>.
+  </para>
+
+  <section os="linux" id="sec.blas_lapack_rpm">
+    <title id="title.blas_lapack_rpm"><acronym>RPM</acronym>s</title>
+    <para>
+      Root privileges are needed to install the
+      <acronym>BLAS</acronym> and <acronym>LAPACK</acronym>
+      <acronym>RPM</acronym>s.
+    </para>
+    <para>
+      Use a browser to download <acronym>BLAS</acronym> and
+      <acronym>LAPACK</acronym> <acronym>RPM</acronym>s for Linux:
+      <literallayout class="monospaced">
+<ulink url="http://www.netlib.org/lapack/rpms/lapack-3_0-2_i386.rpm">http://www.netlib.org/lapack/rpms/lapack-3_0-2_i386.rpm</ulink> 
+      </literallayout>
+      and
+      <literallayout class="monospaced">
+<ulink url="http://www.netlib.org/lapack/rpms/blas-3_0-2_i386.rpm">http://www.netlib.org/lapack/rpms/blas-3_0-2_i386.rpm</ulink>
+      </literallayout>
+    </para>
+    <para>
+      Become root user:
+      <literallayout class="monospaced">
+su -
+      </literallayout>
+      and install the <acronym>BLAS</acronym> and <acronym>LAPACK</acronym>
+      <acronym>RPM</acronym>s:
+      <literallayout class="monospaced">
+rpm -ivh blas-3_0-2_i386.rpm
+rpm -ivh lapack-3_0-2_i386.rpm
+      </literallayout>
+      Type <command>exit</command> to leave the root account.
+    </para>
+  </section>
+
+  <section os="irix" id="sec.blas_lapack_source">
+    <title id="title.blas_lapack_source">Source Code</title>
+
+    <para>
+      Follow these steps to install <acronym>BLAS</acronym> and
+      <acronym>LAPACK</acronym> from the combined source distribution:
+      <orderedlist>
+	<listitem>
+	  <para>
+	    Download the source distribution:
+	    <literallayout class="monospaced">
+<ulink url="ftp://ftp.mcs.anl.gov/pub/petsc/fblaslapack.tar.gz">ftp://ftp.mcs.anl.gov/pub/petsc/fblaslapack.tar.gz</ulink>
+	    </literallayout>
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Unpack the <acronym>BLAS</acronym>/<acronym>LAPACK</acronym>
+	    distribution:
+	    <literallayout class="monospaced">
+gunzip -c fblaslapack.tar.gz | tar xvf -
+	    </literallayout>
+	    This creates the <filename>fblaslapack</filename> directory.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Build <acronym>BLAS</acronym>/<acronym>LAPACK</acronym>:
+	    <literallayout class="monospaced">
+cd fblaslapack
+make
+	    </literallayout>
+	    This creates libraries <filename>libfblas.a</filename> and
+	    <filename>liblapack.a</filename> in directory
+	    <filename>fblaslapack</filename>.
+	  </para>
+	</listitem>
+      </orderedlist>
+    </para>
+  </section>
+
+  <section id="sec.atlas_source">
+    <title id="title.atlas_source"><acronym>ATLAS</acronym></title>
+    <para>
+      Follow these steps to install <acronym>ATLAS</acronym>:
+      <orderedlist>
+	<listitem>
+	  <para>
+	    Download the source distribution:
+	    <literallayout class="monospaced">
+<ulink url="https://sourceforge.net/project/showfiles.php?group_id=23725">https://sourceforge.net/project/showfiles.php?group_id=23725</ulink>
+	    </literallayout>
+	    Choose from the list of files a stable, 
+	    platform-independent distribution,
+	    e.g. <filename>atlas3.6.0.tar.gz</filename>.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Unpack the <acronym>ATLAS</acronym> distribution:
+	    <literallayout class="monospaced">
+gunzip -c atlas<replaceable>x.x.x</replaceable>.tar.gz | tar xvf -
+	    </literallayout>
+	    This creates a directory named <filename>ATLAS</filename>.
+	  </para>
+	</listitem>
+	<listitem>
+	  <para>
+	    Build <acronym>ATLAS</acronym>.  Type:
+	    <literallayout class="monospaced">
+make config CC=<replaceable>path-to-c-compiler</replaceable>	      
+	    </literallayout>
+	    The above command will print an system architecture
+	    string.  Use the architecture string in the following
+	    command:
+	    <literallayout>
+make install arch=<replaceable>arch-string</replaceable>	      
+	    </literallayout>
+	    The above command will build <acronym>ATLAS</acronym>
+	    libraries in directory
+	    <filename>ATLAS/lib/<replaceable>arch-string</replaceable></filename>
+	    directory.
+	  </para>
+	</listitem>
+      </orderedlist>
+    </para>
+  </section>
+
+</section>

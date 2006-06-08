@@ -1,0 +1,8 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- Default high damage + gaussian distribution -->
+<Uintah_Include>
+  <initial_mean_scalar_damage>    0.1   </initial_mean_scalar_damage>
+  <initial_std_scalar_damage>     0.05  </initial_std_scalar_damage>
+  <critical_scalar_damage>        0.5   </critical_scalar_damage>
+  <initial_scalar_damage_distrib> gauss </initial_scalar_damage_distrib>
+</Uintah_Include>

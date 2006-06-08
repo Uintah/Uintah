@@ -1,0 +1,121 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<section id="sec.opt_inst">
+  <title>Building External Thirdparty Software</title>
+
+  <para>
+    SCIRun for &pf; provides support for
+    <acronym>BLAS</acronym>/<acronym>LAPACK</acronym>, <ulink
+    url="http://www-unix.mcs.anl.gov/petsc/petsc-2/"><acronym>PETSc</acronym></ulink>,
+    <phrase os="linux;osx"><ulink url="http://www.itk.org">Insight
+    (<acronym>ITK</acronym>)</ulink>,</phrase> <ulink
+    url="http://www.mdsplus.org"><acronym>MDSplus</acronym></ulink>,
+    and <ulink
+    url="http://hdf.ncsa.uiuc.edu/HDF5"><acronym>HDF5</acronym></ulink>
+    software.  External third party software provides SCIRun with
+    additional capabilities:
+
+    <itemizedlist>
+      <listitem>
+	<para><acronym>LAPACK</acronym> routines are used by SCIRun
+	modules to perform SVD, eigenvalue, and eigenvector
+	computations.  <acronym>BLAS</acronym> is used by SCIRun modules
+	for matrix multiplication.  <phrase os="linux;irix">SCIRun
+	modules will use less efficient algorithms if
+	<acronym>BLAS</acronym> and <acronym>LAPACK</acronym> are not
+	installed.</phrase> <phrase os="osx">&pf; contains
+	<acronym>BLAS</acronym>/<acronym>LAPACK</acronym> libraries.
+	There is no need to install
+	<acronym>BLAS</acronym>/<acronym>LAPACK</acronym> libraries on
+	a &pf; system.</phrase>
+	</para>
+	<para
+	os="linux;irix"><acronym>BLAS</acronym>/<acronym>LAPACK</acronym>
+	must be installed if <acronym>PETSc</acronym> support is
+	desired.</para>
+      </listitem>
+
+      <listitem>
+	<para>The <acronym>PETSC</acronym> library provides equation
+	solvers to SCIRun's SolveMatrix module.
+	<acronym>PETSC</acronym> support is only available by building
+	SCIRun from source code.
+	</para>
+      </listitem>
+
+      <listitem>
+	<para>SCIRun's Insight package encapsulates
+	<acronym>ITK</acronym> toolkit segmentation, registration, and
+	image processing filters in SCIRun modules.  The
+	<acronym>ITK</acronym> toolkit is required by SCIRun's
+	Insight package.</para>
+      </listitem>
+
+      <listitem>
+	<para><acronym>HDF5</acronym>
+	libraries gives modules of SCIRun's DataIO package the ability to read
+	<acronym>HDF5</acronym> data.</para>
+      </listitem>
+
+      <listitem>
+	<para><acronym>MDSplus</acronym> libraries gives modules of
+	SCIRun's DataIO package the ability to
+	read <acronym>MDSplus</acronym> data from an
+	<acronym>MDSplus</acronym> server.</para>
+      </listitem>
+    </itemizedlist>
+  </para>
+
+  <para>In external thirdparty software is desired, it must be
+        installed before building SCIRun.</para>
+
+  <para os="irix;linux"><xref linkend="sec.blas_lapack_inst"/>
+  provides installation instructions for <acronym>BLAS</acronym> and
+  <acronym>LAPACK</acronym>.</para>
+
+  <para><xref linkend="sec.petsc"/> provides installation
+  instructions for <acronym>PETSC</acronym>.</para>
+
+  <para os="linux;osx"><xref linkend="sec.itk_inst"/> provides installation
+  instructions for Insight.</para>
+
+  <para><xref linkend="sec.hdf5_inst"/> provides installation
+  instructions for the <acronym>HDF5</acronym> libraries.</para>
+
+  <para><xref linkend="sec.mdsplus_inst"/> provides installation
+  instructions for the <acronym>MDSplus</acronym> libraries.</para>
+
+  <para>Proceed to <xref linkend="sec.build-sr"/> after building
+  external third party software.</para>
+</section>

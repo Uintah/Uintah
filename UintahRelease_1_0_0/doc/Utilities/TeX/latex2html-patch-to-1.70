@@ -1,0 +1,100 @@
+*** /sw/bin/latex2html	Wed Jun 30 21:48:53 2004
+--- latex2html	Wed Aug 18 16:16:18 2004
+***************
+*** 117,122 ****
+--- 117,131 ----
+    $ENV{'PERL5LIB'} = $LATEX2HTMLDIR;
+  }
+  
++ # Initialize $start_body and $end_body global variables.  These are
++ # references to subroutines that generate start and end body tags and
++ # other desired code/text.  These assignments may be overridden in an
++ # init file.  If not defined in an init file, their values are set to
++ # point to subroutines start_body_default and end_body_default
++ # respectively.
++ $start_body = undef;
++ $end_body = undef;
++ 
+  # Local configuration, read at runtime
+  # Read the $CONFIG_FILE  (usually l2hconf.pm )
+  if($ENV{'L2HCONFIG'}) {
+***************
+*** 202,207 ****
+--- 211,219 ----
+      "Please check your $INIT_FILE_NAME file.\n"
+      if ($DESTDIR eq '.');
+  
++ $start_body = \&start_body_default if $start_body == undef;
++ $end_body = \&end_body_default if $end_body == undef;
++ 
+  # User home substitutions
+  $LATEX2HTMLSTYLES =~ s/~([$dd$dd$envkey]|$)/$HOME$1/go;
+  # the next line fails utterly on non-UNIX systems
+***************
+*** 601,606 ****
+--- 613,626 ----
+  
+  ############################ Subroutines ##################################
+  
++ sub start_body_default {
++     return "\n<BODY $_[0]>";
++ }
++ 
++ sub end_body_default {
++     return "\n</BODY></HTML>";
++ }
++ 
+  #check that $TMP is writable, if so create a subdirectory
+  sub make_tmp_dir {
+      &close_dbm_database if $DJGPP; # to save file-handles
+***************
+*** 7107,7113 ****
+  	, ($STYLESHEET ? "<LINK REL=\"STYLESHEET\" HREF=\"$STYLESHEET\">" : '' )
+  	, $more_links_mark
+  	, "</HEAD>" , ($before_body? $before_body : '')
+! 	, "<BODY $body>", '');
+  }
+  
+  
+--- 7127,7133 ----
+  	, ($STYLESHEET ? "<LINK REL=\"STYLESHEET\" HREF=\"$STYLESHEET\">" : '' )
+  	, $more_links_mark
+  	, "</HEAD>" , ($before_body? $before_body : '')
+! 	, &$start_body($body), '');
+  }
+  
+  
+***************
+*** 7206,7212 ****
+  
+  sub make_address { 
+      local($addr) = &make_real_address(@_);
+!     $addr .= "\n</BODY>\n</HTML>\n";
+      &lowercase_tags($addr) if $LOWER_CASE_TAGS;
+      $addr;
+  }
+--- 7226,7232 ----
+  
+  sub make_address { 
+      local($addr) = &make_real_address(@_);
+!     $addr .= &$end_body();
+      &lowercase_tags($addr) if $LOWER_CASE_TAGS;
+      $addr;
+  }
+***************
+*** 8556,8562 ****
+      $layout = $BODYTEXT unless $layout;
+      $_ = join('',&make_head_and_body($title,$layout), $_
+  	, (($filename =~ /^\Q$footfile\E$/) ? '' : &make_address )
+! 	, (($filename =~ /^\Q$footfile\E$/) ? "\n</BODY>\n</HTML>\n" : '')
+  	);
+      &replace_markers unless ($filename eq $footfile); 
+  
+--- 8576,8582 ----
+      $layout = $BODYTEXT unless $layout;
+      $_ = join('',&make_head_and_body($title,$layout), $_
+  	, (($filename =~ /^\Q$footfile\E$/) ? '' : &make_address )
+! 	, (($filename =~ /^\Q$footfile\E$/) ? &$end_body() : '')
+  	);
+      &replace_markers unless ($filename eq $footfile); 
+  

@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="BuildFEMatrix" category="FiniteElements" optional="false">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module builds the Finite Element Method stiffness matrix.
+    </summary>
+    <description>
+      <section>
+      <title> Module Description </title>
+      <p>
+      This module builds the Finite Element Stiffness matrix for a certain field.
+      It will assume the data on the field will describe the conductivity of the 
+      medium. Currently there are two ways of specifying a conductivity for a domain. 
+      One can use the values assigned to the field as scalar isotropic conductivities
+      or as tensor anisotropic ocnductivities. The second method is to attach a 
+      conductivity table to the module. In this case the values in the field are assumed
+      to be indices into the conductivity table. The conductivity table is a m by 6 matrix
+      or an m by 9 matrix depending on how many coefficients of the symmetric tensor are
+      given. Note that in case 9 are given, three values will not be used as they have
+      to be symmetric entries. The ordering for the table using 6 values is, xx, xy, xz,
+      yy, zy, and zz.
+      The module is also able use a different node ordering in the computational space.
+      For a different ordering in the computational space, one should add a GeomToComp 
+      mapping matrix (From Geometrical mesh to Computational grid). This mapping matrix 
+      describes how the geometrical space is mapped into the comptutational space. If no
+      mapping is given the node ordering in the input field is used. 
+      </p>
+      </section>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Field</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>ConductivityTable</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>GeomToComp</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>FEMatrix</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

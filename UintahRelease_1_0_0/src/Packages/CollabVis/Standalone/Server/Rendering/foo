@@ -1,0 +1,54 @@
+Unfreed objects:
+0x805b490: 4 bytes (../Network/NetDispatchManager.h:114)
+0x805b4c0: 5 bytes (Unknown - malloc)
+0x8056bb0: 12 bytes (Unknown - malloc)
+0x8056bf0: 18 bytes (Unknown - malloc)
+0x8056cf0: 12 bytes (Unknown - malloc)
+0x8056f70: 24 bytes (NetDispatchManager.cpp:67)
+0x8057030: 12 bytes (unknown - operator new)
+0x8057070: 12 bytes (unknown - operator new)
+0x80570f0: 12 bytes (unknown - operator new)
+0x8057130: 12 bytes (unknown - operator new)
+0x80571f0: 12 bytes (unknown - operator new)
+0x8057230: 12 bytes (unknown - operator new)
+0x80572f0: 12 bytes (unknown - operator new)
+0x8057330: 12 bytes (unknown - operator new)
+0x80573b0: 12 bytes (unknown - operator new)
+0x80573f0: 12 bytes (unknown - operator new)
+0x80574b0: 24 bytes (unknown - operator new)
+0x8059470: 28 bytes (unknown - operator new)
+0x80594c0: 40 bytes (unknown - operator new)
+0x8063380: 48 bytes (Unknown - malloc)
+0x80612b0: 64 bytes (Unknown - malloc)
+0x8061320: 64 bytes (Unknown - malloc)
+0x8061390: 64 bytes (Unknown - malloc)
+0x8065360: 80 bytes (Unknown - malloc)
+0x805d3e0: 104 bytes (unknown - operator new)
+0x805f360: 128 bytes (Unknown - malloc)
+0x80672c0: 160 bytes (Unknown - malloc)
+0x8053bd8: 176 bytes (Unknown - malloc)
+0x80544e0: 1320 bytes (Unknown - malloc)
+0x8054d08: 640 bytes (Unknown - malloc)
+0x40a62044: 1048576 bytes (ZTexRendererDriver.cpp:78)
+0x40a23044: 254068 bytes (Unknown - malloc)
+statistics:
+alloc:			67 calls
+alloc:			1306538 bytes
+free:			35 calls
+free:			759 bytes
+fillbin:		11 calls
+mmap:			4 calls
+mmap:			1837260 bytes
+munmap:			0 calls
+munmap:			0 bytes
+highwater alloc:	1306509 bytes
+highwater mmap:		1837260 bytes
+
+breakdown of total bytes:
+in use:			1305779 bytes
+free:			50056 bytes
+fragmentation:		10293 bytes
+left in mmap hunks:	436648
+per object overhead:	34484 bytes
+
+1305779 bytes missing (32 memory objects)

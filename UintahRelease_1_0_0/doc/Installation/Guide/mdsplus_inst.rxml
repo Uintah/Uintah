@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!--
+    For more information, please see: http://software.sci.utah.edu
+
+The MIT License
+
+Copyright (c) 2004 Scientific Computing and Imaging Institute,
+University of Utah.
+
+License for the specific language governing rights and limitations under
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the "Software"),
+to deal in the Software without restriction, including without limitation
+the rights to use, copy, modify, merge, publish, distribute, sublicense,
+and/or sell copies of the Software, and to permit persons to whom the
+Software is furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+DEALINGS IN THE SOFTWARE.
+-->
+
+<!--% require(ENV["TREETOP"] + "/doc/Utilities/Publish/srdoc.rb") %-->
+<!--% doc = Doc.create(Doc::DocBook) %-->
+
+<section id="sec.mdsplus_inst">
+  <title>MDSplus Installation</title>
+
+  <para><acronym>MDSplus</acronym> libraries gives modules of &sr;'s DataIO
+  package the ability to read <acronym>MDSplus</acronym> data from an
+  <acronym>MDSplus</acronym> server.  </para>
+
+  <para><acronym>MDSplus</acronym> software is installed from <phrase
+  os="linux">an RPM</phrase><phrase os="osx">a disk
+  image</phrase><phrase os="irix">its source code</phrase>.</para>
+  
+  <para os="irix">Building <acronym>MDSplus</acronym> to work properly
+  with &sr; is somewaht involved.  Contact Allen Sanderson
+  (<email>allen@sci.utah.edu</email>) at the SCI institute for more
+  information.</para>
+
+  <section os="linux;osx">
+    <title>Installation Recipe</title>
+
+    <para>Follow these instructions to install
+    <acronym>MDSplus</acronym>:</para>
+
+    <itemizedlist os="linux">
+      <listitem>
+	<para>Download the appropriate Linux RPM from the <ulink
+	url="http://www.mdsplus.org/software/download.php">MDSplus
+	web site.</ulink></para>
+      </listitem>
+      <listitem>
+	<para>
+	  Start a terminal application and become root user by
+	  typing the command <command>su -</command>.
+	</para>
+      </listitem>
+      <listitem>
+	<para>
+	  Install the RPM, for example:
+	  <literallayout>
+rpm -ivh mdsplus-redhat9.x-1.6-2.i386.rpm
+	  </literallayout>
+	  MDSplus is installed in
+	  <filename>/usr/local/mdsplus</filename>.
+	</para>
+      </listitem>
+      <listitem>
+	<para>Type <command>exit</command> to leave the root account.</para>
+      </listitem>
+    </itemizedlist>
+
+  </section>
+
+  <section>
+    <title>MDSplus Configure Options</title>
+    <para>For a source code build of &sr;, include the following
+    option to &sr;'s <command>configure</command> command to add
+    support for MDSplus:
+    <literallayout>
+--with-mdsplus=/usr/local/mdsplus
+    </literallayout>
+    </para>
+  </section>
+
+</section>

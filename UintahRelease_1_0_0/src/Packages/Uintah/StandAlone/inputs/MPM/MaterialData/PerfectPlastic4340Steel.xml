@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- 4340 Steel -->
+<Uintah_Include>
+  <yield_stress>      792.0e6 </yield_stress>
+  <hardening_modulus> 0.0     </hardening_modulus>
+  <alpha>             0.0     </alpha>
+</Uintah_Include>

@@ -1,0 +1,549 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
+<network version="v1.25.2" name="{Main}" bbox="{36 49 1363 1541}" creationDate="{Sun Apr 16 2006}" creationTime="{21:27:37}" geometry="{1005x823+536+22}">
+  <environment>
+    <var name="scisub_datadir" val="SCIRUN_SRCDIR"/>
+  </environment>
+  <note>{}</note>
+  <modules>
+    <module id="m1" package="MatlabInterface" category="DataIO" name="MatlabFieldsReader">
+      <position x="36" y="49"/>
+      <note position="{def}" color="{white}">{Cage Geometry file}</note>
+      <var name="filename" val="scisub_datadir/Packages/MatlabInterface/nets/data/cage_geometry.mat"/>
+      <var name="filename-set" val="scisub_datadir/Packages/MatlabInterface/nets/data/cage_geometry.mat"/>
+      <var name="matrixinfotexts" val="{{CAGE_GEOMETRY        [TriSurfMesh&lt;TriLinearLgn&gt; - NoData - 602 NODES 1200 ELEMENTS]} {none} }"/>
+      <var name="matrixnames" val="{{CAGE_GEOMETRY} {&lt;none&gt;} }"/>
+      <var name="matrixname" val="{{CAGE_GEOMETRY} {&lt;none&gt;} {&lt;none&gt;} {&lt;none&gt;} {&lt;none&gt;} {&lt;none&gt;} }"/>
+      <var name="ui_geometry" val="{541x495+20+42}"/>
+    </module>
+    <module id="m2" package="SCIRun" category="Visualization" name="ShowField" gui_visible="yes">
+      <position x="36" y="350"/>
+      <var name="edges-on" val="{0}"/>
+      <var name="faces-on" val="{0}"/>
+      <var name="def-color-r" val="{0.0}"/>
+      <var name="def-color-g" val="{1.0}"/>
+      <var name="def-color-b" val="{0.0}"/>
+      <var name="node_display_type" val="{Spheres}"/>
+      <var name="node_scale" val="{3.31}"/>
+      <var name="edge_scale" val="{0.015}"/>
+      <var name="field-name" val="{cage-15may02}"/>
+      <var name="ui_geometry" val="{366x660+266+120}"/>
+    </module>
+    <module id="m3" package="SCIRun" category="Render" name="Viewer">
+      <position x="136" y="553"/>
+      <gui_callback>
+        <callback>addViewer</callback>
+      </gui_callback>
+      <var name="ViewWindow_0-geometry" val="654x531+40+128"/>
+      <var name="ViewWindow_0-view-eyep-x" val="{-1582.78582056}"/>
+      <var name="ViewWindow_0-view-eyep-y" val="{-1723.28830547}"/>
+      <var name="ViewWindow_0-view-eyep-z" val="{1006.86791029}"/>
+      <var name="ViewWindow_0-view-lookat-x" val="{120.705084597}"/>
+      <var name="ViewWindow_0-view-lookat-y" val="{-66.8009768345}"/>
+      <var name="ViewWindow_0-view-lookat-z" val="{174.864498778}"/>
+      <var name="ViewWindow_0-view-up-x" val="{0.305259920409}"/>
+      <var name="ViewWindow_0-view-up-y" val="{0.157764474749}"/>
+      <var name="ViewWindow_0-view-up-z" val="{0.93910955246}"/>
+      <var name="ViewWindow_0-view-fov" val="{20.0}"/>
+      <var name="ViewWindow_0-sr" val="{1}"/>
+      <var name="ViewWindow_0-do_stereo" val="{0}"/>
+      <var name="ViewWindow_0-ortho-view" val="{0}"/>
+      <var name="ViewWindow_0-trackViewWindow0" val="{1}"/>
+      <var name="ViewWindow_0-raxes" val="{0}"/>
+      <var name="ViewWindow_0-ambient-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-diffuse-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-specular-scale" val="{0.4}"/>
+      <var name="ViewWindow_0-emission-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-shininess-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-polygon-offset-factor" val="{1.0}"/>
+      <var name="ViewWindow_0-polygon-offset-units" val="{0.0}"/>
+      <var name="ViewWindow_0-point-size" val="{1.0}"/>
+      <var name="ViewWindow_0-line-width" val="{1.0}"/>
+      <var name="ViewWindow_0-sbase" val="{0.4}"/>
+      <var name="ViewWindow_0-bgcolor-r" val="{0.0}"/>
+      <var name="ViewWindow_0-bgcolor-g" val="{0.0}"/>
+      <var name="ViewWindow_0-bgcolor-b" val="{0.0}"/>
+      <var name="ViewWindow_0-fogusebg" val="{1}"/>
+      <var name="ViewWindow_0-fogcolor-r" val="{0.0}"/>
+      <var name="ViewWindow_0-fogcolor-g" val="{0.0}"/>
+      <var name="ViewWindow_0-fogcolor-b" val="{1.0}"/>
+      <var name="ViewWindow_0-fog-start" val="{0.0}"/>
+      <var name="ViewWindow_0-fog-end" val="{0.714265}"/>
+      <var name="ViewWindow_0-fog-visibleonly" val="{1}"/>
+      <var name="ViewWindow_0-inertia_mag" val="{0.045867865292}"/>
+      <var name="ViewWindow_0-inertia_x" val="{0.0515099240032}"/>
+      <var name="ViewWindow_0-inertia_y" val="{-0.953691229952}"/>
+      <var name="ViewWindow_0-currentvisual" val="{0}"/>
+      <var name="ViewWindow_0-caxes" val="{0}"/>
+      <var name="ViewWindow_0-global-light0" val="{1}"/>
+      <var name="ViewWindow_0-global-light1" val="{0}"/>
+      <var name="ViewWindow_0-global-light2" val="{0}"/>
+      <var name="ViewWindow_0-global-light3" val="{0}"/>
+      <var name="ViewWindow_0-lightColors" val="{{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}"/>
+      <var name="ViewWindow_0-lightVectors" val="{{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}"/>
+      <var name="ViewWindow_0-global-light" val="{1}"/>
+      <var name="ViewWindow_0-global-fog" val="{0}"/>
+      <var name="ViewWindow_0-global-debug" val="{0}"/>
+      <var name="ViewWindow_0-global-clip" val="{1}"/>
+      <var name="ViewWindow_0-global-cull" val="{0}"/>
+      <var name="ViewWindow_0-global-dl" val="{0}"/>
+      <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
+      <var name="&quot;ViewWindow_0-cage-15may02 Nodes (1)&quot;" val="{1}"/>
+      <var name="&quot;ViewWindow_0-cage-15may02 Faces (5)&quot;" val="{1}"/>
+      <var name="&quot;ViewWindow_0-tank_exact_grid Edges (2)&quot;" val="{1}"/>
+      <var name="&quot;ViewWindow_0-tank_exact_grid Transparent Faces (2)&quot;" val="{1}"/>
+      <var name="&quot;ViewWindow_0-leadset1 Nodes (3)&quot;" val="{1}"/>
+      <var name="&quot;ViewWindow_0-Title Sticky (4)&quot;" val="{1}"/>
+    </module>
+    <module id="m4" package="MatlabInterface" category="DataIO" name="MatlabFieldsReader">
+      <position x="207" y="112"/>
+      <note position="{def}" color="{white}">{Tank Geometry file}</note>
+      <var name="filename" val="scisub_datadir/Packages/MatlabInterface/nets/data/tank_geometry.mat"/>
+      <var name="filename-set" val="scisub_datadir/Packages/MatlabInterface/nets/data/tank_geometry.mat"/>
+      <var name="matrixinfotexts" val="{{TANK_SURFACE         [TriSurfMesh&lt;TriLinearLgn&gt; - NoData - 771 NODES 1538 ELEMENTS]} {none} }"/>
+      <var name="matrixnames" val="{{TANK_SURFACE} {&lt;none&gt;} }"/>
+      <var name="matrixname" val="{TANK_SURFACE &lt;none&gt; &lt;none&gt; &lt;none&gt; &lt;none&gt; &lt;none&gt;}"/>
+      <var name="ui_geometry" val="{541x495+80+102}"/>
+    </module>
+    <module id="m5" package="SCIRun" category="Visualization" name="ShowField">
+      <position x="207" y="412"/>
+      <var name="nodes-on" val="{0}"/>
+      <var name="use-transparency" val="{1}"/>
+      <var name="def-color-a" val="{0.77}"/>
+      <var name="field-name" val="{tank_exact_grid}"/>
+      <var name="ui_geometry" val="{366x660+362+148}"/>
+    </module>
+    <module id="m6" package="MatlabInterface" category="DataIO" name="MatlabFieldsReader">
+      <position x="383" y="174"/>
+      <note position="{def}" color="{white}">{Electrode file}</note>
+      <var name="filename" val="scisub_datadir/Packages/MatlabInterface/nets/data/electrodes_geometry.mat"/>
+      <var name="filename-set" val="scisub_datadir//Packages/MatlabInterface/nets/data/electrodes_geometry.mat"/>
+      <var name="matrixinfotexts" val="{{LEADSET1_GEOMETRY    [TriSurfMesh&lt;TriLinearLgn&gt; - NoData - 192 NODES 352 ELEMENTS]} {none} }"/>
+      <var name="matrixnames" val="{{LEADSET1_GEOMETRY} {&lt;none&gt;} }"/>
+      <var name="matrixname" val="{LEADSET1_GEOMETRY &lt;none&gt; &lt;none&gt; &lt;none&gt; &lt;none&gt; &lt;none&gt;}"/>
+      <var name="ui_geometry" val="{541x495+20+42}"/>
+    </module>
+    <module id="m7" package="SCIRun" category="Visualization" name="ShowField" gui_visible="yes">
+      <position x="383" y="414"/>
+      <var name="nodes-usedefcolor" val="{1}"/>
+      <var name="edges-on" val="{0}"/>
+      <var name="faces-on" val="{0}"/>
+      <var name="def-color-r" val="{1.0}"/>
+      <var name="def-color-g" val="{0.04}"/>
+      <var name="def-color-b" val="{0.0}"/>
+      <var name="node_display_type" val="{Spheres}"/>
+      <var name="node_scale" val="{5.36}"/>
+      <var name="edge_scale" val="{0.015}"/>
+      <var name="field-name" val="{leadset1}"/>
+      <var name="ui_geometry" val="{366x660+266+120}"/>
+    </module>
+    <module id="m8" package="SCIRun" category="String" name="CreateString" gui_visible="yes">
+      <position x="561" y="330"/>
+      <var name="inputstring" val="{602 CAGE Electrodes (GREEN)&#10;192 BODY SURFACE Electrodes (RED)&#10;&#10;&#10;&#10;}"/>
+      <var name="ui_geometry" val="{566x408+266+120}"/>
+    </module>
+    <module id="m9" package="SCIRun" category="Visualization" name="ShowString" gui_visible="yes">
+      <position x="561" y="407"/>
+      <var name="bbox" val="{1}"/>
+      <var name="size" val="{2}"/>
+      <var name="location-x" val="{0.440051020408}"/>
+      <var name="location-y" val="{-0.775510204082}"/>
+      <var name="color-r" val="{1.0}"/>
+      <var name="color-g" val="{1.0}"/>
+      <var name="color-b" val="{1.0}"/>
+      <var name="ui_geometry" val="{314x228+266+120}"/>
+    </module>
+    <module id="m10" package="SCIRun" category="Visualization" name="ShowField" gui_visible="yes">
+      <position x="36" y="412"/>
+      <var name="nodes-on" val="{0}"/>
+      <var name="edges-on" val="{0}"/>
+      <var name="def-color-a" val="{0.81}"/>
+      <var name="active_tab" val="{Faces}"/>
+      <var name="node_scale" val="{0.03}"/>
+      <var name="edge_scale" val="{0.015}"/>
+      <var name="field-name" val="{cage-15may02}"/>
+      <var name="ui_geometry" val="{366x660+266+120}"/>
+    </module>
+    <module id="m11" package="MatlabInterface" category="DataIO" name="Matlab" gui_visible="yes">
+      <position x="352" y="820"/>
+      <note position="{def}" color="{#ffff0c}">{Boundary Element Implementation in MATLAB
+using analytically evaluated integrals.}</note>
+      <var name="input-matrix-name" val="{S i2 i3 i4 i5}"/>
+      <var name="input-field-name" val="{CAGE TANK field3}"/>
+      <var name="output-matrix-name" val="{BEMMATRIX o2 o3 o4 o5}"/>
+      <var name="matlab-code" val="{MODEL.surface{1} = TANK;&#10;MODEL.surface{2} = CAGE;&#10;&#10;MODEL.surface{1}.sigma = [0 1];&#10;MODEL.surface{2}.sigma = [1 0];&#10;&#10;BEMMATRIX = bemMatrixPP2(MODEL);&#10;&#10;&#10;}"/>
+      <var name="matlab-var" val="{::MatlabInterface_DataIO_Matlab_0-matlab-output}"/>
+      <var name="matlab-add-output" val="{::MatlabInterface_DataIO_Matlab_0 AddOutput}"/>
+      <var name="matlab-update-status" val="{::MatlabInterface_DataIO_Matlab_0 UpdateStatus}"/>
+      <var name="ui_geometry" val="{873x696+40+106}"/>
+    </module>
+    <module id="m12" package="MatlabInterface" category="DataIO" name="MatlabFieldsReader">
+      <position x="460" y="729"/>
+      <note position="{def}" color="{white}">{Tank Geometry}</note>
+      <var name="filename" val="scisub_datadir/Packages/MatlabInterface/nets/data/tank_geometry.mat"/>
+      <var name="filename-set" val="scisub_datadir/Packages/MatlabInterface/nets/data/tank_geometry.mat"/>
+      <var name="matrixinfotexts" val="{{TANK_SURFACE         [TriSurfMesh&lt;TriLinearLgn&gt; - NoData - 771 NODES 1538 ELEMENTS]} {none} }"/>
+      <var name="matrixnames" val="{{TANK_SURFACE} {&lt;none&gt;} }"/>
+      <var name="matrixname" val="{TANK_SURFACE &lt;none&gt; &lt;none&gt; &lt;none&gt; &lt;none&gt; &lt;none&gt;}"/>
+      <var name="ui_geometry" val="{541x495+80+102}"/>
+    </module>
+    <module id="m13" package="SCIRun" category="Math" name="CreateMatrix">
+      <position x="352" y="597"/>
+      <note position="{def}" color="{white}">{Conductivity of medium}</note>
+      <var name="rows" val="{1}"/>
+      <var name="cols" val="{1}"/>
+      <var name="data" val="{1}"/>
+      <var name="ui_geometry" val="{433x252+363+351}"/>
+    </module>
+    <module id="m14" package="MatlabInterface" category="DataIO" name="MatlabFieldsReader">
+      <position x="442" y="667"/>
+      <note position="{def}" color="{white}">{Cage geometry}</note>
+      <var name="filename" val="scisub_datadir/Packages/MatlabInterface/nets/data/cage_geometry.mat"/>
+      <var name="filename-set" val="scisub_datadir//Packages/MatlabInterface/nets/data/cage_geometry.mat"/>
+      <var name="matrixinfotexts" val="{{CAGE_GEOMETRY        [TriSurfMesh&lt;TriLinearLgn&gt; - NoData - 602 NODES 1200 ELEMENTS]} {none} }"/>
+      <var name="matrixnames" val="{{CAGE_GEOMETRY} {&lt;none&gt;} }"/>
+      <var name="matrixname" val="{{CAGE_GEOMETRY} {&lt;none&gt;} {&lt;none&gt;} {&lt;none&gt;} {&lt;none&gt;} {&lt;none&gt;} }"/>
+      <var name="ui_geometry" val="{541x495+20+42}"/>
+    </module>
+    <module id="m15" package="SCIRun" category="Math" name="LinAlgBinary">
+      <position x="643" y="994"/>
+      <var name="op" val="{Mult}"/>
+      <var name="function" val="{x+y}"/>
+    </module>
+    <module id="m16" package="MatlabInterface" category="DataIO" name="MatlabMatricesReader" gui_visible="yes">
+      <position x="738" y="744"/>
+      <note position="{def}" color="{white}">{Measured data.}</note>
+      <var name="filename" val="scisub_datadir/Packages/MatlabInterface/nets/data/cagedata.mat"/>
+      <var name="filename-set" val="scisub_datadir/Packages/MatlabInterface/nets/data/cagedata.mat"/>
+      <var name="matrixinfotexts" val="{{cage                                      [ 602x 540 DOUBLE ]} {none} }"/>
+      <var name="matrixnames" val="{{cage} {&lt;none&gt;} }"/>
+      <var name="matrixname" val="{{cage} {&lt;none&gt;} {&lt;none&gt;} {&lt;none&gt;} {&lt;none&gt;} {&lt;none&gt;} }"/>
+      <var name="ui_geometry" val="{541x523+20+86}"/>
+    </module>
+    <module id="m17" package="SCIRun" category="Math" name="MatrixSelectVector" gui_visible="yes">
+      <position x="739" y="886"/>
+      <var name="row_or_col" val="{col}"/>
+      <var name="selectable_max" val="{539.0}"/>
+      <var name="selectable_inc" val="{540}"/>
+      <var name="range_max" val="{539}"/>
+      <var name="current" val="{78}"/>
+      <var name="delay" val="{1000}"/>
+      <var name="ui_geometry" val="{242x645+54+65}"/>
+    </module>
+    <module id="m18" package="SCIRun" category="FieldsData" name="ManageFieldData">
+      <position x="443" y="1150"/>
+      <var name="preserve-scalar-type" val="{0}"/>
+    </module>
+    <module id="m19" package="SCIRun" category="FieldsData" name="ManageFieldData">
+      <position x="624" y="1150"/>
+      <var name="preserve-scalar-type" val="{0}"/>
+    </module>
+    <module id="m20" package="SCIRun" category="Visualization" name="ShowField">
+      <position x="442" y="1387"/>
+      <var name="nodes-on" val="{0}"/>
+      <var name="edges-on" val="{0}"/>
+      <var name="has_scalar_data" val="{1}"/>
+      <var name="active_tab" val="{Edges}"/>
+      <var name="scalars_scale" val="{0.3}"/>
+      <var name="field-name" val="{cage-15may02}"/>
+      <var name="ui_geometry" val="{366x660+242+148}"/>
+    </module>
+    <module id="m21" package="SCIRun" category="Visualization" name="ShowField">
+      <position x="624" y="1389"/>
+      <var name="nodes-on" val="{0}"/>
+      <var name="edges-on" val="{0}"/>
+      <var name="has_scalar_data" val="{1}"/>
+      <var name="active_tab" val="{Edges}"/>
+      <var name="scalars_scale" val="{0.3}"/>
+      <var name="field-name" val="{tank_exact_grid}"/>
+      <var name="ui_geometry" val="{366x660+419+148}"/>
+    </module>
+    <module id="m22" package="SCIRun" category="Render" name="Viewer">
+      <position x="493" y="1497"/>
+      <gui_callback>
+        <callback>addViewer</callback>
+      </gui_callback>
+      <var name="ViewWindow_0-geometry" val="959x532+257+204"/>
+      <var name="ViewWindow_0-view-eyep-x" val="{-2125.60974458}"/>
+      <var name="ViewWindow_0-view-eyep-y" val="{-1024.45015835}"/>
+      <var name="ViewWindow_0-view-eyep-z" val="{1909.33760305}"/>
+      <var name="ViewWindow_0-view-lookat-x" val="{71.5030271996}"/>
+      <var name="ViewWindow_0-view-lookat-y" val="{18.5703539734}"/>
+      <var name="ViewWindow_0-view-lookat-z" val="{180.668429214}"/>
+      <var name="ViewWindow_0-view-up-x" val="{0.540028713555}"/>
+      <var name="ViewWindow_0-view-up-y" val="{0.212262748094}"/>
+      <var name="ViewWindow_0-view-up-z" val="{0.814440614353}"/>
+      <var name="ViewWindow_0-view-fov" val="{20.0}"/>
+      <var name="ViewWindow_0-sr" val="{1}"/>
+      <var name="ViewWindow_0-do_stereo" val="{0}"/>
+      <var name="ViewWindow_0-ortho-view" val="{0}"/>
+      <var name="ViewWindow_0-trackViewWindow0" val="{1}"/>
+      <var name="ViewWindow_0-raxes" val="{0}"/>
+      <var name="ViewWindow_0-ambient-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-diffuse-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-specular-scale" val="{0.4}"/>
+      <var name="ViewWindow_0-emission-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-shininess-scale" val="{1.0}"/>
+      <var name="ViewWindow_0-polygon-offset-factor" val="{1.0}"/>
+      <var name="ViewWindow_0-polygon-offset-units" val="{0.0}"/>
+      <var name="ViewWindow_0-point-size" val="{1.0}"/>
+      <var name="ViewWindow_0-line-width" val="{1.0}"/>
+      <var name="ViewWindow_0-sbase" val="{0.4}"/>
+      <var name="ViewWindow_0-bgcolor-r" val="{0.0}"/>
+      <var name="ViewWindow_0-bgcolor-g" val="{0.0}"/>
+      <var name="ViewWindow_0-bgcolor-b" val="{0.0}"/>
+      <var name="ViewWindow_0-fogusebg" val="{1}"/>
+      <var name="ViewWindow_0-fogcolor-r" val="{0.0}"/>
+      <var name="ViewWindow_0-fogcolor-g" val="{0.0}"/>
+      <var name="ViewWindow_0-fogcolor-b" val="{1.0}"/>
+      <var name="ViewWindow_0-fog-start" val="{0.0}"/>
+      <var name="ViewWindow_0-fog-end" val="{0.714265}"/>
+      <var name="ViewWindow_0-fog-visibleonly" val="{1}"/>
+      <var name="ViewWindow_0-inertia_mag" val="{0.0754278301114}"/>
+      <var name="ViewWindow_0-inertia_x" val="{0.958500746541}"/>
+      <var name="ViewWindow_0-inertia_y" val="{-0.0440645447533}"/>
+      <var name="ViewWindow_0-currentvisual" val="{0}"/>
+      <var name="ViewWindow_0-caxes" val="{0}"/>
+      <var name="ViewWindow_0-clip-num" val="{6}"/>
+      <var name="ViewWindow_0-clip-visible" val="{1}"/>
+      <var name="ViewWindow_0-clip-selected" val="{1}"/>
+      <var name="ViewWindow_0-clip-visible-1" val="{1}"/>
+      <var name="ViewWindow_0-clip-normal-x-1" val="{1.0}"/>
+      <var name="ViewWindow_0-clip-normal-y-1" val="{0.0}"/>
+      <var name="ViewWindow_0-clip-normal-z-1" val="{0.0}"/>
+      <var name="ViewWindow_0-clip-normal-d-1" val="{37.963}"/>
+      <var name="ViewWindow_0-clip-visible-2" val="{0}"/>
+      <var name="ViewWindow_0-clip-normal-x-2" val="{1.0}"/>
+      <var name="ViewWindow_0-clip-normal-y-2" val="{0.0}"/>
+      <var name="ViewWindow_0-clip-normal-z-2" val="{0.0}"/>
+      <var name="ViewWindow_0-clip-normal-d-2" val="{0.0}"/>
+      <var name="ViewWindow_0-clip-visible-3" val="{0}"/>
+      <var name="ViewWindow_0-clip-normal-x-3" val="{1.0}"/>
+      <var name="ViewWindow_0-clip-normal-y-3" val="{0.0}"/>
+      <var name="ViewWindow_0-clip-normal-z-3" val="{0.0}"/>
+      <var name="ViewWindow_0-clip-normal-d-3" val="{0.0}"/>
+      <var name="ViewWindow_0-clip-visible-4" val="{0}"/>
+      <var name="ViewWindow_0-clip-normal-x-4" val="{1.0}"/>
+      <var name="ViewWindow_0-clip-normal-y-4" val="{0.0}"/>
+      <var name="ViewWindow_0-clip-normal-z-4" val="{0.0}"/>
+      <var name="ViewWindow_0-clip-normal-d-4" val="{0.0}"/>
+      <var name="ViewWindow_0-clip-visible-5" val="{0}"/>
+      <var name="ViewWindow_0-clip-normal-x-5" val="{1.0}"/>
+      <var name="ViewWindow_0-clip-normal-y-5" val="{0.0}"/>
+      <var name="ViewWindow_0-clip-normal-z-5" val="{0.0}"/>
+      <var name="ViewWindow_0-clip-normal-d-5" val="{0.0}"/>
+      <var name="ViewWindow_0-clip-visible-6" val="{0}"/>
+      <var name="ViewWindow_0-clip-normal-x-6" val="{1.0}"/>
+      <var name="ViewWindow_0-clip-normal-y-6" val="{0.0}"/>
+      <var name="ViewWindow_0-clip-normal-z-6" val="{0.0}"/>
+      <var name="ViewWindow_0-clip-normal-d-6" val="{0.0}"/>
+      <var name="ViewWindow_0-global-light0" val="{1}"/>
+      <var name="ViewWindow_0-global-light1" val="{0}"/>
+      <var name="ViewWindow_0-global-light2" val="{0}"/>
+      <var name="ViewWindow_0-global-light3" val="{0}"/>
+      <var name="ViewWindow_0-lightColors" val="{{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}"/>
+      <var name="ViewWindow_0-lightVectors" val="{{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}"/>
+      <var name="ViewWindow_0-global-light" val="{1}"/>
+      <var name="ViewWindow_0-global-fog" val="{1}"/>
+      <var name="ViewWindow_0-global-debug" val="{0}"/>
+      <var name="ViewWindow_0-global-clip" val="{1}"/>
+      <var name="ViewWindow_0-global-cull" val="{0}"/>
+      <var name="ViewWindow_0-global-dl" val="{0}"/>
+      <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
+      <var name="&quot;ViewWindow_0-ShowColorMap Sticky (4)&quot;" val="{1}"/>
+      <var name="&quot;ViewWindow_0-leadset1 Nodes (6)&quot;" val="{1}"/>
+      <var name="&quot;ViewWindow_0-tank_exact_grid Faces (2)&quot;" val="{1}"/>
+      <var name="&quot;ViewWindow_0-ShowColorMap Sticky (3)&quot;" val="{1}"/>
+      <var name="&quot;ViewWindow_0-cage-15may02 Faces (1)&quot;" val="{1}"/>
+      <var name="&quot;ViewWindow_0-leadset1 Scalars (6)&quot;" val="{1}"/>
+      <var name="&quot;ViewWindow_0-Title Sticky (5)&quot;" val="{1}"/>
+    </module>
+    <module id="m23" package="SCIRun" category="Visualization" name="GenStandardColorMaps" gui_visible="yes">
+      <position x="804" y="1152"/>
+      <var name="mapName" val="{Rainbow}"/>
+      <var name="gamma" val="{0.0}"/>
+      <var name="resolution" val="{20}"/>
+      <var name="reverse" val="{0}"/>
+      <var name="faux" val="{0}"/>
+      <var name="positionList" val="{}"/>
+      <var name="nodeList" val="{}"/>
+      <var name="width" val="{302}"/>
+      <var name="height" val="{40}"/>
+      <var name="ui_geometry" val="{314x484+266+120}"/>
+    </module>
+    <module id="m24" package="SCIRun" category="Visualization" name="RescaleColorMap">
+      <position x="463" y="1294"/>
+      <var name="main_frame" val="{.uiSCIRun_Visualization_RescaleColorMap_0}"/>
+      <var name="isFixed" val="{0}"/>
+      <var name="min" val="{-1.39929230568}"/>
+      <var name="max" val="{0.737848215347}"/>
+      <var name="makeSymmetric" val="{0}"/>
+      <var name="ui_geometry" val="{314x126+468+485}"/>
+    </module>
+    <module id="m25" package="SCIRun" category="Visualization" name="RescaleColorMap">
+      <position x="648" y="1295"/>
+      <var name="main_frame" val="{.uiSCIRun_Visualization_RescaleColorMap_1}"/>
+      <var name="isFixed" val="{0}"/>
+      <var name="min" val="{-0.367139792095}"/>
+      <var name="max" val="{0.322332719223}"/>
+      <var name="makeSymmetric" val="{0}"/>
+      <var name="ui_geometry" val="{314x126+749+473}"/>
+    </module>
+    <module id="m26" package="SCIRun" category="Visualization" name="ShowColorMap">
+      <position x="265" y="1393"/>
+      <var name="length" val="{half1}"/>
+      <var name="side" val="{left}"/>
+      <var name="numlabels" val="{5}"/>
+      <var name="scale" val="{1.0}"/>
+      <var name="numsigdigits" val="{3}"/>
+      <var name="units" val="{mV}"/>
+      <var name="text_color" val="{1}"/>
+      <var name="text-fontsize" val="{2}"/>
+      <var name="extra-padding" val="{0}"/>
+      <var name="ui_geometry" val="{314x340+56+464}"/>
+    </module>
+    <module id="m27" package="SCIRun" category="Visualization" name="ShowColorMap">
+      <position x="1018" y="1382"/>
+      <var name="length" val="{half2}"/>
+      <var name="side" val="{left}"/>
+      <var name="numlabels" val="{5}"/>
+      <var name="scale" val="{1.0}"/>
+      <var name="numsigdigits" val="{3}"/>
+      <var name="units" val="{mV}"/>
+      <var name="text_color" val="{1}"/>
+      <var name="text-fontsize" val="{2}"/>
+      <var name="extra-padding" val="{0}"/>
+      <var name="ui_geometry" val="{314x340+795+464}"/>
+    </module>
+    <module id="m28" package="SCIRun" category="FieldsData" name="ChangeFieldBasis">
+      <position x="442" y="1060"/>
+      <var name="output-basis" val="{Linear}"/>
+      <var name="ui_geometry" val="{276x170+246+469}"/>
+    </module>
+    <module id="m29" package="SCIRun" category="FieldsData" name="ChangeFieldBasis">
+      <position x="624" y="1065"/>
+      <var name="output-basis" val="{Linear}"/>
+    </module>
+    <module id="m30" package="SCIRun" category="String" name="CreateString" gui_visible="yes">
+      <position x="1198" y="1292"/>
+      <var name="inputstring" val="{CAGE: Actual recorded potentials (top scale)&#10;TANK: Calculated potentials (bottom scale)&#10;ELECTRODES: Measured potentials (bottom scale)&#10;}"/>
+      <var name="ui_geometry" val="{566x408+672+418}"/>
+    </module>
+    <module id="m31" package="SCIRun" category="Visualization" name="ShowString">
+      <position x="1198" y="1380"/>
+      <var name="bbox" val="{1}"/>
+      <var name="size" val="{2}"/>
+      <var name="location-x" val="{0.428571428571}"/>
+      <var name="location-y" val="{-0.857142857143}"/>
+      <var name="color-r" val="{1.0}"/>
+      <var name="color-g" val="{1.0}"/>
+      <var name="color-b" val="{1.0}"/>
+      <var name="ui_geometry" val="{314x228+620+485}"/>
+    </module>
+    <module id="m32" package="MatlabInterface" category="DataIO" name="MatlabMatricesReader" gui_visible="yes">
+      <position x="1028" y="793"/>
+      <note position="{def}" color="{white}">{Body surface data}</note>
+      <var name="filename" val="scisub_datadir/Packages/MatlabInterface/nets/data/tankdata.mat"/>
+      <var name="filename-set" val="scisub_datadir/Packages/MatlabInterface/nets/data/tankdata.mat"/>
+      <var name="matrixinfotexts" val="{{tank                                      [ 192x 540 DOUBLE ]} {none} }"/>
+      <var name="matrixnames" val="{{tank} {&lt;none&gt;} }"/>
+      <var name="matrixname" val="{{tank} {&lt;none&gt;} {&lt;none&gt;} {&lt;none&gt;} {&lt;none&gt;} {&lt;none&gt;} }"/>
+      <var name="ui_geometry" val="{541x523+120+186}"/>
+    </module>
+    <module id="m33" package="SCIRun" category="Math" name="MatrixSelectVector" gui_visible="yes">
+      <position x="1031" y="894"/>
+      <var name="row_or_col" val="{col}"/>
+      <var name="selectable_max" val="{539.0}"/>
+      <var name="selectable_inc" val="{540}"/>
+      <var name="range_max" val="{539}"/>
+      <var name="current" val="{78}"/>
+      <var name="ui_geometry" val="{242x232+129+207}"/>
+    </module>
+    <module id="m34" package="SCIRun" category="FieldsData" name="ChangeFieldBasis">
+      <position x="1013" y="1053"/>
+      <var name="output-basis" val="{Linear}"/>
+    </module>
+    <module id="m35" package="MatlabInterface" category="DataIO" name="MatlabFieldsReader">
+      <position x="1013" y="968"/>
+      <var name="filename" val="scisub_datadir/Packages/MatlabInterface/nets/data/electrodes_geometry.mat"/>
+      <var name="filename-set" val="scisub_datadir/Packages/MatlabInterface/nets/data/electrodes_geometry.mat"/>
+      <var name="matrixinfotexts" val="{{LEADSET1_GEOMETRY    [TriSurfMesh&lt;TriLinearLgn&gt; - NoData - 192 NODES 352 ELEMENTS]} {none} }"/>
+      <var name="matrixnames" val="{{LEADSET1_GEOMETRY} {&lt;none&gt;} }"/>
+      <var name="matrixname" val="{LEADSET1_GEOMETRY &lt;none&gt; &lt;none&gt; &lt;none&gt; &lt;none&gt; &lt;none&gt;}"/>
+      <var name="ui_geometry" val="{541x495+20+42}"/>
+    </module>
+    <module id="m36" package="SCIRun" category="FieldsData" name="ManageFieldData">
+      <position x="1013" y="1152"/>
+      <var name="preserve-scalar-type" val="{0}"/>
+    </module>
+    <module id="m37" package="SCIRun" category="Visualization" name="ShowField">
+      <position x="833" y="1388"/>
+      <var name="nodes-on" val="{0}"/>
+      <var name="edges-on" val="{0}"/>
+      <var name="faces-on" val="{0}"/>
+      <var name="scalars-on" val="{1}"/>
+      <var name="has_scalar_data" val="{1}"/>
+      <var name="node_display_type" val="{Spheres}"/>
+      <var name="scalar_display_type" val="{Spheres}"/>
+      <var name="active_tab" val="{Scalars}"/>
+      <var name="node_scale" val="{6.57}"/>
+      <var name="edge_scale" val="{0.015}"/>
+      <var name="scalars_scale" val="{5.0}"/>
+      <var name="field-name" val="{leadset1}"/>
+      <var name="ui_geometry" val="{366x660+604+148}"/>
+    </module>
+    <module id="m38" package="SCIRun" category="FieldsOther" name="FieldInfo" gui_visible="yes">
+      <position x="1013" y="1229"/>
+      <var name="ui_geometry" val="{452x254+834+531}"/>
+    </module>
+  </modules>
+  <connections>
+    <connection id="c1" from="m1" fromport="0" to="m2" toport="0"/>
+    <connection id="c2" from="m1" fromport="0" to="m10" toport="0"/>
+    <connection id="c3" from="m4" fromport="0" to="m5" toport="0"/>
+    <connection id="c4" from="m6" fromport="0" to="m7" toport="0"/>
+    <connection id="c5" from="m12" fromport="0" to="m29" toport="0"/>
+    <connection id="c6" from="m14" fromport="0" to="m28" toport="0"/>
+    <connection id="c7" from="m35" fromport="0" to="m34" toport="0"/>
+    <connection id="c8" from="m16" fromport="0" to="m17" toport="0"/>
+    <connection id="c9" from="m32" fromport="0" to="m33" toport="0"/>
+    <connection id="c10" from="m11" fromport="0" to="m15" toport="0"/>
+    <connection id="c11" from="m28" fromport="0" to="m18" toport="0"/>
+    <connection id="c12" from="m29" fromport="0" to="m19" toport="0"/>
+    <connection id="c13" from="m34" fromport="0" to="m36" toport="0"/>
+    <connection id="c14" from="m18" fromport="0" to="m20" toport="0"/>
+    <connection id="c15" from="m19" fromport="0" to="m21" toport="0"/>
+    <connection id="c16" from="m36" fromport="0" to="m38" toport="0"/>
+    <connection id="c17" from="m36" fromport="0" to="m37" toport="0"/>
+    <connection id="c18" from="m13" fromport="0" to="m11" toport="0"/>
+    <connection id="c19" from="m8" fromport="0" to="m9" toport="0"/>
+    <connection id="c20" from="m30" fromport="0" to="m31" toport="0"/>
+    <connection id="c21" from="m23" fromport="0" to="m24" toport="0"/>
+    <connection id="c22" from="m23" fromport="0" to="m25" toport="0"/>
+    <connection id="c23" from="m24" fromport="0" to="m26" toport="0"/>
+    <connection id="c24" from="m25" fromport="0" to="m27" toport="0"/>
+    <connection id="c25" from="m2" fromport="0" to="m3" toport="0"/>
+    <connection id="c26" from="m20" fromport="0" to="m22" toport="0"/>
+    <connection id="c27" from="m18" fromport="0" to="m24" toport="1"/>
+    <connection id="c28" from="m19" fromport="0" to="m25" toport="1"/>
+    <connection id="c29" from="m15" fromport="0" to="m19" toport="1"/>
+    <connection id="c30" from="m17" fromport="0" to="m18" toport="1"/>
+    <connection id="c31" from="m17" fromport="0" to="m15" toport="1"/>
+    <connection id="c32" from="m33" fromport="0" to="m36" toport="1"/>
+    <connection id="c33" from="m24" fromport="0" to="m20" toport="1"/>
+    <connection id="c34" from="m25" fromport="0" to="m21" toport="1"/>
+    <connection id="c35" from="m25" fromport="0" to="m37" toport="1"/>
+    <connection id="c36" from="m5" fromport="0" to="m3" toport="1"/>
+    <connection id="c37" from="m21" fromport="0" to="m22" toport="1"/>
+    <connection id="c38" from="m17" fromport="1" to="m33" toport="2"/>
+    <connection id="c39" from="m26" fromport="0" to="m22" toport="2"/>
+    <connection id="c40" from="m7" fromport="0" to="m3" toport="2"/>
+    <connection id="c41" from="m27" fromport="0" to="m22" toport="3"/>
+    <connection id="c42" from="m9" fromport="0" to="m3" toport="3"/>
+    <connection id="c43" from="m10" fromport="0" to="m3" toport="4"/>
+    <connection id="c44" from="m31" fromport="0" to="m22" toport="4"/>
+    <connection id="c45" from="m14" fromport="0" to="m11" toport="5"/>
+    <connection id="c46" from="m37" fromport="0" to="m22" toport="5"/>
+    <connection id="c47" from="m12" fromport="0" to="m11" toport="6"/>
+  </connections>
+</network>
