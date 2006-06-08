@@ -120,7 +120,8 @@ public:
                                typename FIELD::mesh_type::Edge::index_type non_man_edge_id,
                                typename FIELD::mesh_type::Face::array_type &non_man_boundary_faces );
 
-  static bool pair_less(const pair<int, float> &a, const pair<int, float> &b)
+  static bool pair_less(const pair<double, unsigned int> &a,
+                        const pair<double, unsigned int> &b)
   {
     return a.first < b.first;
   }
@@ -1322,7 +1323,7 @@ InsertHexSheetAlgoHex<FIELD>::separate_non_man_faces(
     }
     else
     {
-      angles.push_back(pair<double, unsigned int>(angle, -1));
+      angles.push_back(pair<double, unsigned int>(angle, (unsigned int)-1));
     }
   }
   
@@ -1332,14 +1333,14 @@ InsertHexSheetAlgoHex<FIELD>::separate_non_man_faces(
   // Else our pairs are (0,1) (2,3), 4,5) etc.
   // Determine which case it is, return those in the connected faces.
   int offset = 0;
-  if (angles[1].second == -1)
+  if (angles[1].second == (unsigned int)-1)
   {
     offset = 1;
     angles.erase(angles.begin()+1);
   }
   else
   {
-    ASSERTMSG(angles[angles.size()-1].second == -1,
+    ASSERTMSG(angles[angles.size()-1].second == (unsigned int)-1,
               "Elem center wasn't adjacent to the face.");
     angles.erase(angles.end()-1);
   }
