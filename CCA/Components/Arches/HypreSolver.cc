@@ -196,10 +196,13 @@ HypreSolver::gridSetup(const ProcessorGroup*,
  
   const Level* level = patch->getLevel();
   IntVector periodic_vector = level->getPeriodicBoundaries();
+  IntVector low, high;
+  level->findCellIndexRange(low, high);
+  IntVector range = high-low;
   int periodic[3];
-  periodic[0] = periodic_vector.x();
-  periodic[1] = periodic_vector.y();
-  periodic[2] = periodic_vector.z();
+  periodic[0] = periodic_vector.x() * range.x();
+  periodic[1] = periodic_vector.y() * range.y();
+  periodic[2] = periodic_vector.z() * range.z();
   HYPRE_StructGridSetPeriodic(d_grid, periodic);
   HYPRE_StructGridAssemble(d_grid);  
 
