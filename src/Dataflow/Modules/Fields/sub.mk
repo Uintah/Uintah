@@ -61,6 +61,7 @@ SRCS     += \
 	$(SRCDIR)/CreateMesh.cc\
 	$(SRCDIR)/CubitInterface.cc\
 	$(SRCDIR)/DirectMapping.cc\
+	$(SRCDIR)/ExtractHexSheet.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/FieldCage.cc\
 	$(SRCDIR)/FieldFrenet.cc\

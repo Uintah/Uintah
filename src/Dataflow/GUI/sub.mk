@@ -96,6 +96,7 @@ SRCS := \
         $(SRCDIR)/EditPath.tcl \
         $(SRCDIR)/EditColorMap2D.tcl \
         $(SRCDIR)/ErrorMetric.tcl \
+	$(SRCDIR)/ExtractHexSheet.tcl \
         $(SRCDIR)/FieldArbitrarySlicer.tcl\
         $(SRCDIR)/FieldCage.tcl\
         $(SRCDIR)/FieldFrenet.tcl\
