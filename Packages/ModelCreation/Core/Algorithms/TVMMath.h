@@ -1959,7 +1959,7 @@ inline Vector Tensor::operator*(const Vector& vec) const
  
 inline Tensor Tensor::operator*(const double d) const
 {
-  return(Tensor(d*d_[0],d*d_[1],d*d_[2],d*d_[3],d*d_[3],d*d_[5]));
+  return(Tensor(d*d_[0],d*d_[1],d*d_[2],d*d_[3],d*d_[4],d*d_[5]));
 }
 
 inline Tensor Tensor::operator*(const Tensor& ten) const

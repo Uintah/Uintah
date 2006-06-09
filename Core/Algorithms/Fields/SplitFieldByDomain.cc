@@ -70,6 +70,8 @@ bool SplitFieldByDomainAlgo::SplitFieldByDomain(ProgressReporter *pr, FieldHandl
   ci->add_namespace("SCIRun");
 
   fi.fill_compile_info(ci);
+
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;  
   
   // Handle dynamic compilation
   SCIRun::Handle<SplitFieldByDomainAlgo> algo;

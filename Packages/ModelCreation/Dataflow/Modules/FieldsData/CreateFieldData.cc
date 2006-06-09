@@ -235,10 +235,6 @@ void CreateFieldData::execute()
 
   // Create the engine to compute new data
   ArrayEngine engine(this);
-
-
-  
-
   
   get_gui()->lock();
   get_gui()->eval(get_id()+" update_text");

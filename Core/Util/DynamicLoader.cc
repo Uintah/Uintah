@@ -586,9 +586,10 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
       // Remove the null ref for this lib from the map.
       map_lock_.lock();
       algo_map_.erase(info.filename_);
+
+      compilation_cond_.conditionBroadcast();
       map_lock_.unlock();
       // wake up all sleepers.
-      compilation_cond_.conditionBroadcast();
       return false;
     }
   }
@@ -608,9 +609,9 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
     // Remove the null ref for this lib from the map.
     map_lock_.lock();
     algo_map_.erase(info.filename_);
+    compilation_cond_.conditionBroadcast();
     map_lock_.unlock();
     // wake up all sleepers.
-    compilation_cond_.conditionBroadcast();
     return false;
   }
   // store this so that we can get at it again.

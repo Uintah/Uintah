@@ -132,14 +132,14 @@ bool FieldBoundaryAlgoT<FSRC, FDST>::FieldBoundary(ProgressReporter *pr, FieldHa
           {
             imesh->get_center(point,a);
             onodes[q] = omesh->add_point(point);
-            node_map[a] = static_cast<unsigned int>(onodes[q]);            
+            node_map[static_cast<unsigned int>(a)] = static_cast<unsigned int>(onodes[q]);            
           }
           else
           {
-            onodes[q] = static_cast<typename FDST::mesh_type::Node::index_type>(node_map[a]);
+            onodes[q] = static_cast<typename FDST::mesh_type::Node::index_type>(node_map[static_cast<unsigned int>(a)]);
           }
         }
-        elem_map[static_cast<unsigned int>(ci)] = omesh->add_elem(onodes);
+        elem_map[static_cast<unsigned int>(omesh->add_elem(onodes))] = static_cast<unsigned int>(ci);
       }
     }
     ++be;
@@ -147,10 +147,13 @@ bool FieldBoundaryAlgoT<FSRC, FDST>::FieldBoundary(ProgressReporter *pr, FieldHa
   
   mapping = 0;
   
+  ofield->resize_fdata();
+  
   if (ifield->basis_order() == 0)
   {
     typename FSRC::mesh_type::Elem::size_type isize;
     typename FDST::mesh_type::Elem::size_type osize;
+    typename FDST::value_type val;
     imesh->size(isize);
     omesh->size(osize);
 
@@ -174,8 +177,16 @@ bool FieldBoundaryAlgoT<FSRC, FDST>::FieldBoundary(ProgressReporter *pr, FieldHa
     
     while (it != it_end)
     {
-      cc[(*it).second] = (*it).first;
-      d[(*it).second] += 1.0;
+      cc[(*it).first] = (*it).second;
+      d[(*it).first] += 1.0;
+      
+      typename FSRC::mesh_type::Elem::index_type idx1;
+      typename FDST::mesh_type::Elem::index_type idx2;
+      imesh->to_index(idx1,(*it).second);
+      omesh->to_index(idx2,(*it).first);
+      ifield->value(val,idx1);
+      ofield->set_value(val,idx2);
+      ++it;
     }
     
     mapping = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);
@@ -184,6 +195,7 @@ bool FieldBoundaryAlgoT<FSRC, FDST>::FieldBoundary(ProgressReporter *pr, FieldHa
   {
     typename FSRC::mesh_type::Node::size_type isize;
     typename FDST::mesh_type::Node::size_type osize;
+    typename FDST::value_type val;
     imesh->size(isize);
     omesh->size(osize);
 
@@ -209,6 +221,14 @@ bool FieldBoundaryAlgoT<FSRC, FDST>::FieldBoundary(ProgressReporter *pr, FieldHa
     {
       cc[(*it).second] = (*it).first;
       d[(*it).second] += 1.0;
+
+      typename FSRC::mesh_type::Node::index_type idx1;
+      typename FDST::mesh_type::Node::index_type idx2;
+      imesh->to_index(idx1,(*it).first);
+      omesh->to_index(idx2,(*it).second);
+      ifield->value(val,idx1);
+      ofield->set_value(val,idx2);
+      ++it;
     }
     
     mapping = scinew SparseRowMatrix(nrows, ncols, rr, cc, nrows, d);

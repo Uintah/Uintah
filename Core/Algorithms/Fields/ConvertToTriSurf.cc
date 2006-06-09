@@ -67,7 +67,7 @@ bool ConvertToTriSurfAlgo::ConvertToTriSurf(ProgressReporter *pr, FieldHandle in
   }
   else
   {
-    pr->error("No unstructure method available for mesh: " + mesh_type);
+    pr->error("No  method available for mesh: " + mesh_type);
     return (false);
   }
 
@@ -85,6 +85,8 @@ bool ConvertToTriSurfAlgo::ConvertToTriSurf(ProgressReporter *pr, FieldHandle in
   
   fi.fill_compile_info(ci);
   fo.fill_compile_info(ci);
+
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;
   
   // Handle dynamic compilation
   SCIRun::Handle<ConvertToTriSurfAlgo> algo;

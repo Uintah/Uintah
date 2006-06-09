@@ -27,12 +27,26 @@
 #
 
 
-#Makefile fragment for the SatndAlone directory
+# Makefile fragment for this subdirectory
 
-SRCDIR := StandAlone
-SUBDIRS := \
-	$(SRCDIR)/convert \
-	$(SRCDIR)/regression \
-	$(SRCDIR)/utils \
+SRCDIR := StandAlone/regression
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+ifeq ($(LARGESOS),yes)
+PSELIBS := Core
+else
+PSELIBS := \
+	Core/Datatypes Core/Util Core/Containers Core/Persistent \
+	Core/Exceptions Core/Thread Core/Geometry Core/Math Core/Geom \
+	Core/Init Core/Basis Core/Algorithms/Util \
+  Core/Algorithms/DataIO Core/Algorithms/Fields \
+  Core/Algorithms/Regression Core/Algorithms/Math
+
+endif
+
+LIBS := 
+
+PROGRAM := $(SRCDIR)/TEST_FieldsAlgo
+SRCS := $(SRCDIR)/TEST_FieldsAlgo.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+
