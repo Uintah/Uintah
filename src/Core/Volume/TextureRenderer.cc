@@ -439,12 +439,9 @@ TextureRenderer::load_brick(vector<TextureBrickHandle> &bricks, int bindex,
       if (ShaderProgramARB::shaders_supported())
       {
         unsigned int format = (nb == 1 ? GL_LUMINANCE : GL_RGBA);
-        if (ShaderProgramARB::texture_non_power_of_two())
-        {
-          glPixelStorei(GL_UNPACK_ROW_LENGTH, brick->sx());
-          glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, brick->sy());
-          glPixelStorei(GL_UNPACK_ALIGNMENT, (nb == 1)?1:4);
-        }
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, brick->sx());
+        glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, brick->sy());
+        glPixelStorei(GL_UNPACK_ALIGNMENT, (nb == 1)?1:4);
         if (reuse && glTexSubImage3D)
         {
           glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz, format,
@@ -458,12 +455,9 @@ TextureRenderer::load_brick(vector<TextureBrickHandle> &bricks, int bindex,
             glTexImage3D(GL_TEXTURE_3D, 0, format, nx, ny, nz, 0, format,
                          brick->tex_type(), brick->tex_data(c));
         }
-        if (ShaderProgramARB::texture_non_power_of_two())
-        {
-          glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-          glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
-          glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-        }
+        glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+        glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
+        glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
       }
       else
 #endif
