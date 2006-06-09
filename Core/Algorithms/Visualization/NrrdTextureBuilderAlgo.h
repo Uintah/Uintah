@@ -56,10 +56,13 @@ void texture_build_bricks(vector<TextureBrickHandle>& bricks,
 
 // Currently located in NrrdTextureBuilderAlgo.cc
 SCISHARE void nrrd_build_bricks(vector<TextureBrickHandle>& bricks,
-		       int nx, int ny, int nz,
-		       int nc, int* nb,
-		       const BBox& ignored, int card_mem);
+                                int nx, int ny, int nz,
+                                int nc, int* nb, int card_mem);
 
+// Currently located in NrrdTextureBuilderAlgo.cc
+SCISHARE void nrrd_build_bricks2(vector<TextureBrickHandle>& bricks,
+                                 int nx, int ny, int nz,
+                                 int nc, int* nb, int card_mem);
 
 class SCISHARE NrrdTextureBuilderAlgo : public SCIRun::DynamicAlgoBase
 {
