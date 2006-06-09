@@ -2341,4 +2341,3 @@ HexVolMesh<Basis>::get_elems(typename Elem::array_type &cells,
 
 
 #endif // SCI_project_HexVolMesh_h
- 

@@ -471,7 +471,7 @@ bool RegressionAlgo::CompareNrrds(NrrdDataHandle& nrrd1, NrrdDataHandle& nrrd2)
   { 
     char* data1 = reinterpret_cast<char*>(nrrd1->nrrd_->data); 
     char* data2 = reinterpret_cast<char*>(nrrd2->nrrd_->data); 
-    for (int p = 0; p < size*(nrrd1->nrrd_->blockSize); p++)
+    for (size_t p = 0; p < size*(nrrd1->nrrd_->blockSize); p++)
     {
       if (data1[p] == data2[p])
       {
@@ -699,7 +699,7 @@ bool RegressionAlgo::FindTestFields(std::vector<FieldHandle> fields, std::vector
   }
   
   
-  for (int p = 0; p < fields.size(); p++)
+  for (unsigned int p = 0; p < fields.size(); p++)
   {
     FieldInformation fi(fields[p]);
 
@@ -772,7 +772,7 @@ bool RegressionAlgo::FindTestFields(std::vector<FieldHandle> fields, std::vector
 
 bool RegressionAlgo::FindTestField(std::vector<FieldHandle> fields, FieldHandle& testfield, std::string name)
 {
-  for (int p =0; p< fields.size(); p++)
+  for (unsigned int p =0; p< fields.size(); p++)
   {
     if (fields[p]->get_name() == name)
     {

@@ -83,6 +83,7 @@ RegressionReporter::regression_error(const std::string& msg)
 std::ostream &
 RegressionReporter::msg_stream()
 {
+  return std::cout;
 }
 
 
