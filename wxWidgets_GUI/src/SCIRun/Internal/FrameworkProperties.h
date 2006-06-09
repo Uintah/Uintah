@@ -44,6 +44,7 @@
 #define SCIRun_FrameworkProperties_h
 
 #include <Core/CCA/spec/cca_sidl.h>
+#include <Core/OS/Dir.h>
 #include <SCIRun/TypeMap.h>
 #include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
 
@@ -61,58 +62,59 @@ class SCIRunFramework;
  *    network file           string         network file to be loaded by a builder
  */
 class FrameworkProperties : public ::sci::cca::ports::FrameworkProperties,
-			    public InternalFrameworkServiceInstance
+                            public InternalFrameworkServiceInstance
 {
 public:
-    virtual ~FrameworkProperties();
+  virtual ~FrameworkProperties();
 
-    /**
-      * Factory method used to create a FrameworkProperties instance.
-      * Returns a reference counted pointer to a newly-allocated FrameworkProperties
-      * port.  The \em framework parameter is a pointer to the relevent framework
-      * and the \em name parameter will become the unique name for the new port.
-      */
+  /**
+   * Factory method used to create a FrameworkProperties instance.
+   * Returns a reference counted pointer to a newly-allocated FrameworkProperties
+   * port.  The \em framework parameter is a pointer to the relevent framework
+   * and the \em name parameter will become the unique name for the new port.
+   */
   static InternalFrameworkServiceInstance* create(SCIRunFramework* framework);
 
-    virtual sci::cca::Port::pointer getService(const std::string& name);
+  virtual sci::cca::Port::pointer getService(const std::string& name);
 
-    /** Get a smart pointer to a TypeMap containing CCA framework properties. */
-    virtual sci::cca::TypeMap::pointer getProperties();
+  /** Get a smart pointer to a TypeMap containing CCA framework properties. */
+  virtual sci::cca::TypeMap::pointer getProperties();
 
-    /** Set CCA framework properties from a TypeMap. */
-    virtual void setProperties(const sci::cca::TypeMap::pointer& properties);
+  /** Set CCA framework properties from a TypeMap. */
+  virtual void setProperties(const sci::cca::TypeMap::pointer& properties);
 
-    static std::string CONFIG_DIR;
-    static std::string CONFIG_FILE;
-    static std::string CACHE_FILE;
+  static std::string CONFIG_DIR;
+  static std::string CONFIG_FILE;
+  static std::string CACHE_FILE;
 
 private:
-    FrameworkProperties(SCIRunFramework* framework);
+  FrameworkProperties(SCIRunFramework* framework);
 
-    /** Gets user logged in on the controlling terminal of the process
-        or a null pointer (see man getlogin(3)) */
-    void getLogin();
+  /** Gets user logged in on the controlling terminal of the process
+      or a null pointer (see man getlogin(3)) */
+  void getLogin();
 
-    /**
-     * Get SIDL file paths from (in order of processing):
-     * the user's environment, CONFIG_FILE, component model defaults.
-     *
-     * Framework properties:
-     * "sidl_xml_path": a ';' seperated list of directories where XML based
-     *                  descriptions of components can be found.
-     */
-    void initSidlPaths();
+  /**
+   * Get SIDL file paths from (in order of processing):
+   * the user's environment, CONFIG_FILE, component model defaults.
+   *
+   * Framework properties:
+   * "sidl_xml_path": a ';' seperated list of directories where XML based
+   *                  descriptions of components can be found.
+   */
+  void initSidlPaths();
 
-    void parseEnvVariable(std::string& input, const char token,
-                          SSIDL::array1<std::string>& stringArray);
+  void parseEnvVariable(std::string& input, const char token,
+                        SSIDL::array1<std::string>& stringArray);
 
-    /** Persistent framework properties from file. */
-    bool readPropertiesFromFile();
+  /** Persistent framework properties from file. */
+  bool readPropertiesFromFile();
 
-    /** Persistent framework properties from file. */
-    bool writePropertiesToFile();
+  /** Persistent framework properties from file. */
+  bool writePropertiesToFile();
 
-    sci::cca::TypeMap::pointer frameworkProperties;
+  Dir dir;
+  sci::cca::TypeMap::pointer frameworkProperties;
 };
 
 }
