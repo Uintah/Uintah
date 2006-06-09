@@ -1502,7 +1502,7 @@ QuadSurfMesh<Basis>::io(Piostream &stream)
   {
     if (stream.reading())
     {
-      for (int i=0; i < faces_.size(); i += 4)
+      for (unsigned int i=0; i < faces_.size(); i += 4)
        if(!( order_face_nodes(faces_[i],faces_[i+1],faces_[i+2],faces_[i+3])))
          std::cerr << "Detected an invalid quadrilateral face\n";
     }
