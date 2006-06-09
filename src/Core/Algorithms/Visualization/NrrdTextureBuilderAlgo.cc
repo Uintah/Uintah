@@ -59,9 +59,9 @@ nrrd_build_bricks(vector<TextureBrickHandle>& bricks,
   bsize[2] = Min(Pow2(nz), max_texture_size);
   if (force_pow2)
   {
-    if (Pow2(nx) > nx) bsize[0] = Min(Pow2(nx)/2, max_texture_size);
-    if (Pow2(ny) > ny) bsize[1] = Min(Pow2(ny)/2, max_texture_size);
-    if (Pow2(nz) > nz) bsize[2] = Min(Pow2(nz)/2, max_texture_size);
+    if (Pow2(nx) > (unsigned)nx) bsize[0] = Min(Pow2(nx)/2, max_texture_size);
+    if (Pow2(ny) > (unsigned)ny) bsize[1] = Min(Pow2(ny)/2, max_texture_size);
+    if (Pow2(nz) > (unsigned)nz) bsize[2] = Min(Pow2(nz)/2, max_texture_size);
   }
   
   // Determine brick size here.
