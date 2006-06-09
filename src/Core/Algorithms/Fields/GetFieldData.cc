@@ -57,6 +57,8 @@ bool GetFieldDataAlgo::GetFieldData(SCIRun::ProgressReporter *pr,SCIRun::FieldHa
   
   fi.fill_compile_info(ci);
 
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;  
+
   SCIRun::Handle<GetFieldDataAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {

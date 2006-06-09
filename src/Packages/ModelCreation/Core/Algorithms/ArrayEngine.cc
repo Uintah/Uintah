@@ -31,13 +31,20 @@
 
 namespace ModelCreation {
 
-ArrayEngine::ArrayEngine(SCIRun::Module *module) :
-  module_(module)
+ArrayEngine::ArrayEngine(SCIRun::ProgressReporter *pr) :
+  pr_(pr),
+  free_pr_(false)
 {
+  if (pr_ == 0)
+  {
+    pr_ = scinew SCIRun::ProgressReporter;
+    free_pr_ = true;
+  }
 }
 
 ArrayEngine::~ArrayEngine()
 {
+  if (free_pr_) delete pr_;
 }
 
 bool ArrayEngine::computesize(ArrayObjectList& Input, int& size)
@@ -85,7 +92,7 @@ bool ArrayEngine::engine(ArrayObjectList& Input, ArrayObjectList& Output, std::s
     { 
       std::ostringstream oss;
       oss << "Input object " << p+1 << " does not seem to be a valid object";
-      error(oss.str());
+      pr_->error(oss.str());
       return(false);     
     }
     
@@ -93,7 +100,7 @@ bool ArrayEngine::engine(ArrayObjectList& Input, ArrayObjectList& Output, std::s
     {
       std::ostringstream oss;
       oss << "Input object " << p+1 << " is empty";
-      error(oss.str());
+      pr_->error(oss.str());
       return(false);
     }
     
@@ -107,7 +114,7 @@ bool ArrayEngine::engine(ArrayObjectList& Input, ArrayObjectList& Output, std::s
       {
         std::ostringstream oss;
         oss << "The size of input object " << p+1 << " is not one or does not match the size of the other objects";
-        error(oss.str());
+        pr_->error(oss.str());
         return(false);
       }      
     }
@@ -115,7 +122,7 @@ bool ArrayEngine::engine(ArrayObjectList& Input, ArrayObjectList& Output, std::s
 
   if (Output.size() < 1)
   {
-    error("No output matrix/field is given");
+    pr_->error("No output matrix/field is given");
     return(false);
   }
 
@@ -125,14 +132,14 @@ bool ArrayEngine::engine(ArrayObjectList& Input, ArrayObjectList& Output, std::s
     {
         std::ostringstream oss;
         oss << "Output object " << p << " does not seem to be a valid object";
-        error(oss.str());
+        pr_->error(oss.str());
         return(false);     
     }
     if ((n != 1)&&(Output[p].size() != n))
     {
         std::ostringstream oss;
         oss << "The size of output object " << p << " is not equal to the number of elements in input";
-        error(oss.str());
+        pr_->error(oss.str());
         return(false);        
     }
   }
@@ -146,14 +153,9 @@ bool ArrayEngine::engine(ArrayObjectList& Input, ArrayObjectList& Output, std::s
   while (1) 
   {
     SCIRun::CompileInfoHandle ci = TensorVectorMath::ArrayEngineAlgo::get_compile_info(Input,Output,function,hoffset);
-    if (!SCIRun::DynamicCompilation::compile(ci, algo, false, module_)) 
+    if (!SCIRun::DynamicCompilation::compile(ci, algo, pr_)) 
     {
-      error("Function did not compile.");
-      if (module_)
-      {
-        SCIRun::GuiInterface* gui = module_->get_gui();
-        gui->eval(module_->get_id() + " compile_error "+ci->filename_);
-      }
+      pr_->compile_error(ci->filename_);
       SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
       return(false);
     }

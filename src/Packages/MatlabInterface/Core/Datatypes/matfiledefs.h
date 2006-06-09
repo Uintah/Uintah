@@ -56,9 +56,9 @@
 #ifdef _WIN32
 	typedef signed __int64 int64;
 	typedef unsigned __int64 uint64;
-        typedef unsigned int uint32_t;
-        typedef unsigned int u_int32_t;
-        typedef signed int int32_t;
+  typedef unsigned int uint32_t;
+  typedef unsigned int u_int32_t;
+  typedef signed int int32_t;
 #else
 	typedef signed long long int64;
 	typedef unsigned long long uint64;

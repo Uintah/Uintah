@@ -72,14 +72,14 @@ bool ConvertHexVolToTetVolAlgoT<FSRC, FDST>::ConvertToTetVol(ProgressReporter *p
   }
 
   typename FSRC::mesh_handle_type imesh = ifield->get_typed_mesh();
-  if (imesh == 0)
+  if (imesh.get_rep() == 0)
   {
     pr->error("ConvertToTetVol: No mesh associated with input field");
     return (false);
   }
 
   typename FDST::mesh_handle_type omesh = scinew typename FDST::mesh_type();
-  if (omesh == 0)
+  if (omesh.get_rep() == 0)
   {
     pr->error("ConvertToTetVol: Could not create output field");
     return (false);
@@ -128,15 +128,18 @@ bool ConvertHexVolToTetVolAlgoT<FSRC, FDST>::ConvertToTetVol(ProgressReporter *p
     {
       if(visited[static_cast<unsigned int>(*bi)] == 0) buffer.push_back(*bi);
     }
+
     
     if (buffer.size() > 0)
     {
+
       for (unsigned int i=0; i< buffer.size(); i++)
       {
         if (visited[static_cast<unsigned int>(buffer[i])] > 0) { continue; }
         typename FSRC::mesh_type::Cell::array_type neighbors;
- 
+
         int newtype = 0;
+ 
         imesh->get_neighbors(neighbors, buffer[i]);
         for (unsigned int p=0; p<neighbors.size(); p++)
         {
@@ -150,14 +153,14 @@ bool ConvertHexVolToTetVolAlgoT<FSRC, FDST>::ConvertToTetVol(ProgressReporter *p
                 return (false);
               }
             }
-            else if(visited[static_cast<unsigned int>(neighbors[p])] == 0)
+            else
             {
-              visited[static_cast<unsigned int>(neighbors[p])] = -1;
               newtype = visited[static_cast<unsigned int>(neighbors[p])];
             }
           }
-          else
+          else if(visited[static_cast<unsigned int>(neighbors[p])] == 0)
           {
+            visited[static_cast<unsigned int>(neighbors[p])] = -1;
             buffer.push_back(neighbors[p]);
           }
         }

@@ -79,6 +79,9 @@ public:
 
   bool ReadPath(std::string filename, PathHandle& matrix, std::string importer = "");
   bool WritePath(std::string filename, PathHandle& matrix, std::string exporter = "");
+
+  bool FileExists(std::string filename);
+  bool CreateDir(std::string dirname);
   
 };
 

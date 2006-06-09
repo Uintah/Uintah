@@ -124,6 +124,8 @@ bool GatherFieldsAlgo::GatherFields(SCIRun::ProgressReporter *pr,std::list<SCIRu
   
   fi.fill_compile_info(ci);
   
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;    
+  
   // Step 3: Build the dynamic algorithm 
   
   // Create an access point to the dynamically compiled algorithm

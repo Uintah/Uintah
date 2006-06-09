@@ -132,6 +132,9 @@ bool MergeFieldsAlgo::MergeFields(SCIRun::ProgressReporter *pr,std::vector<SCIRu
   
   fi.fill_compile_info(ci);
   
+  // If we are in regression mode, delete library after we created it
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;  
+  
   // Step 3: Build the dynamic algorithm 
   
   // Create an access point to the dynamically compiled algorithm

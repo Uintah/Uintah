@@ -48,6 +48,7 @@ RegressionReporter::warning(const std::string& msg)
 void
 RegressionReporter::remark(const std::string& msg)
 {
+  std::cout << msg << std::endl;
 }
 
 
@@ -61,6 +62,7 @@ RegressionReporter::compile_error(const std::string &filename)
 void
 RegressionReporter::add_raw_message(const std::string& msg)
 {
+//  std::cout << msg << std::endl;
 }
 
 

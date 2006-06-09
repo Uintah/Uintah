@@ -26,6 +26,18 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#ifndef _WIN32
+#include <unistd.h>
+#else
+#include <io.h>
+#endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h> 
+#include <Core/OS/Dir.h> // for LSTAT, MKDIR
+
 #include <Core/Algorithms/DataIO/DataIOAlgo.h>
 
 namespace SCIRunAlgo {
@@ -580,6 +592,32 @@ bool DataIOAlgo::WritePath(std::string filename, PathHandle& path, std::string e
   }
   return (true);
 }
+
+bool DataIOAlgo::FileExists(std::string filename)
+{
+  FILE* fp;
+  fp = ::fopen (filename.c_str(), "r");
+  if (!fp)
+  {
+    return (false);
+  }
+  ::fclose(fp);
+  
+  return (true);
+}
+
+
+bool DataIOAlgo::CreateDir(std::string dirname)
+{
+  struct stat buf;
+  if (::LSTAT(dirname.c_str(),&buf) < 0)
+  {
+    int exitcode = MKDIR(dirname.c_str(), 0777);
+    if (exitcode) return (false);
+  }        
+  return (true);
+}
+
 
 } // end namespace SCIRunAlgo
 

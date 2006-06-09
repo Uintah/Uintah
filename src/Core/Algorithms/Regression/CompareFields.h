@@ -71,7 +71,7 @@ bool CompareFieldsAlgoT<FIELD>::CompareFields(ProgressReporter *pr, FieldHandle 
   }
 
   typename FIELD::mesh_handle_type imesh1 = ifield1->get_typed_mesh();
-  if (imesh1 == 0)
+  if (imesh1.get_rep() == 0)
   {
     pr->remark("CompareFields: No mesh associated with input field 1");
     return (false);
@@ -79,7 +79,7 @@ bool CompareFieldsAlgoT<FIELD>::CompareFields(ProgressReporter *pr, FieldHandle 
 
 
   typename FIELD::mesh_handle_type imesh2 = ifield2->get_typed_mesh();
-  if (imesh2 == 0)
+  if (imesh2.get_rep() == 0)
   {
     pr->remark("CompareFields: No mesh associated with input field 2");
     return (false);
@@ -173,6 +173,7 @@ bool CompareFieldsAlgoT<FIELD>::CompareFields(ProgressReporter *pr, FieldHandle 
     
     while (ebi1 != eei1)
     {
+    
       ifield1->value(val1,*ebi1);
       ifield2->value(val2,*ebi2);
       
@@ -185,7 +186,7 @@ bool CompareFieldsAlgoT<FIELD>::CompareFields(ProgressReporter *pr, FieldHandle 
       ++ebi2;
     }
   }
-  
+
   if (ifield1->basis_order() == 1)
   {
     imesh1->begin(nbi1); 
@@ -197,9 +198,10 @@ bool CompareFieldsAlgoT<FIELD>::CompareFields(ProgressReporter *pr, FieldHandle 
     
     while (nbi1 != nei1)
     {
+
       ifield1->value(val1,*nbi1);
       ifield2->value(val2,*nbi2);
-      
+ 
       if (val1 != val2)
       {
         pr->remark("CompareFields: The values in the fields are not equal");

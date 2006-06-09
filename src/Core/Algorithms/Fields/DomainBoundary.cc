@@ -96,6 +96,8 @@ bool DomainBoundaryAlgo::DomainBoundary(ProgressReporter *pr, FieldHandle input,
   fi.fill_compile_info(ci);
   fo.fill_compile_info(ci);
   
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;
+    
   // Handle dynamic compilation
   SCIRun::Handle<DomainBoundaryAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
@@ -173,6 +175,8 @@ bool DomainBoundary2Algo::DomainBoundary(ProgressReporter *pr, FieldHandle input
   
   fi.fill_compile_info(ci);
   fo.fill_compile_info(ci);
+  
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;    
   
   // Handle dynamic compilation
   SCIRun::Handle<DomainBoundary2Algo> algo;

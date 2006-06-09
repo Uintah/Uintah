@@ -76,6 +76,8 @@ bool SplitByConnectedRegionAlgo::SplitByConnectedRegion(ProgressReporter *pr, Fi
 
   fi.fill_compile_info(ci);
   
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;    
+  
   // Handle dynamic compilation
   SCIRun::Handle<SplitByConnectedRegionAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
