@@ -230,8 +230,33 @@ protected:
   }
 };
 
- 
 
+//! Class with weights and coordinates for 1st order Gaussian integration
+template <class T>
+class HexGaussian1
+{
+public:
+  static int GaussianNum;
+  static T GaussianPoints[1][3];
+  static T GaussianWeights[1];
+};
+
+#ifdef _WIN32
+// force the instantiation of TetGaussian2<double>
+template class HexGaussian1<double>;
+#endif
+
+template <class T>
+int HexGaussian1<T>::GaussianNum = 1;
+  
+template <class T>
+T HexGaussian1<T>::GaussianPoints[1][3] = {
+  {0.5, 0.5, 0.5}};
+  
+template <class T>
+T HexGaussian1<T>::GaussianWeights[1] = 
+  {1.0};
+ 
 //! Class with weights and coordinates for 2nd order Gaussian integration
 template <class T>
 class HexGaussian2 

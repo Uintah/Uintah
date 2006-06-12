@@ -101,6 +101,11 @@ class SCISHARE FieldsAlgo : public AlgoLibrary {
     //    at opposite boundaries can still have a linking boundary and hence they may show
     //    up as internal boundaries 
     bool DomainBoundary(FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool disconnect = true);
+
+    // IndexedBoundary:
+    // Like the version above, but it adds a vector to each element, indicating the original face/curve index, and the
+    // two indices of the elements on both sides of the face/curve. These indices are put in a vector.
+    bool IndexedDomainBoundary(FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool disconnect = true);
     
     // FieldDataNodeToElem and FieldDataElemToNode:
     // Change where the data is located the algorithms now employ summing, median, maximum and minimum
