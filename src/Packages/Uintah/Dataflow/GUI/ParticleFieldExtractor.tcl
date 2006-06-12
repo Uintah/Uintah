@@ -112,6 +112,7 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
         } 
 	
         toplevel $w 
+        wm geometry $w ""
 #	wm withdraw $w
 	
 	set n "$this-c needexecute"
@@ -150,12 +151,15 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
     }
 
     method makeFrames { parent } {
+
 	frame $parent.f0 -relief groove -borderwidth 2 
 	label $parent.f0.label -text Particles
 	pack $parent.f0 -side left -expand yes -fill both -padx 2
 	pack $parent.f0.label -side top
+
 	frame $parent.f0.1 -relief flat -borderwidth 2
 	pack $parent.f0.1 -side top -expand yes -fill both -padx 2
+
 	buildControlFrame $parent.f0.1
 
 	set pf $parent.f0
@@ -164,24 +168,25 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 
     method buildControlFrame { name } {
 
-	if { [winfo exists $name.1] } {
-	    destroy $name.1
+	if { [winfo exists $name.f] } {
+	    destroy $name.f
 	}
-	if { [winfo exists $name.2] } {
-	    destroy $name.2
-	}
-	frame $name.1 -relief flat -borderwidth 2
-	label $name.1.s -text "Scalars"
-	pack $name.1 -side left  -expand yes -fill both -padx 2
-	pack $name.1.s -side top
-	frame $name.2 -relief flat -borderwidth 2
-	label $name.2.v -text "Vectors"
-	pack $name.2 -side left -expand yes -fill both -padx 2
-	pack $name.2.v -side top
-	frame $name.3 -relief flat -borderwidth 2
-	label $name.3.v -text "Tensors"
-	pack $name.3 -side left -expand yes -fill both -padx 2
-	pack $name.3.v -side top
+
+        frame $name.f -relief groove -borderwidth 2
+        pack $name.f -side top -expand yes -fill both -pady 2 -padx 2
+
+	frame $name.f.1 -relief flat -borderwidth 2
+	label $name.f.1.s -text "Scalars"
+	pack $name.f.1 -side left  -expand yes -fill both -padx 2
+	pack $name.f.1.s -side top
+	frame $name.f.2 -relief flat -borderwidth 2
+	label $name.f.2.v -text "Vectors"
+	pack $name.f.2 -side left -expand yes -fill both -padx 2
+	pack $name.f.2.v -side top
+	frame $name.f.3 -relief flat -borderwidth 2
+	label $name.f.3.v -text "Tensors"
+	pack $name.f.3 -side left -expand yes -fill both -padx 2
+	pack $name.f.3.v -side top
     }
 
     method destroyFrames {} {
@@ -198,12 +203,12 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	set w .ui[modname] 
 
 	set parent $w.f
-	destroy $parent.f0.1
+	destroy $parent.f0.1.f
 	set psVarList ""
 	set pvVarList ""
 	set ptVarList ""
-	frame $parent.f0.1 -relief flat -borderwidth 2
-	pack $parent.f0.1 -side top -expand yes -fill both -padx 2
+#	frame $parent.f0.1. -relief flat -borderwidth 2
+#	pack $parent.f0.1 -side top -expand yes -fill both -padx 2
 	buildControlFrame $parent.f0.1
     }
 
@@ -327,11 +332,11 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	    }
 	    set lvar [string tolower $newvar]
 	    regsub \\. $lvar _ lvar
-	    radiobutton $pf.1.1.$lvar -text $newvar \
+	    radiobutton $pf.1.f.1.$lvar -text $newvar \
 		-variable $this-psVar -command $c -value $newvar
-	    pack $pf.1.1.$lvar -side top -anchor w
+	    pack $pf.1.f.1.$lvar -side top -anchor w
 	    if { $newvar == [set $this-psVar] } {
-		$pf.1.1.$lvar invoke
+		$pf.1.f.1.$lvar invoke
 	    }
 	}
 	## set the Particle Vector Variables
@@ -343,11 +348,11 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	    }
 	    set lvar [string tolower $newvar]
 	    regsub \\. $lvar _ lvar
-	    radiobutton $pf.1.2.$lvar -text $newvar \
+	    radiobutton $pf.1.f.2.$lvar -text $newvar \
 		-variable $this-pvVar -command $c -value $newvar
-	    pack $pf.1.2.$lvar -side top -anchor w
+	    pack $pf.1.f.2.$lvar -side top -anchor w
 	    if { $newvar == [set $this-pvVar] } {
-		$pf.1.2.$lvar invoke
+		$pf.1.f.2.$lvar invoke
 	    }
 	}
 	for {set i 0} { $i < [llength $ptVarList] } { incr i } {
@@ -357,11 +362,11 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	    }
 	    set lvar [string tolower $newvar]
 	    regsub \\. $lvar _ lvar
-	    radiobutton $pf.1.3.$lvar -text $newvar \
+	    radiobutton $pf.1.f.3.$lvar -text $newvar \
 		-variable $this-ptVar -command $c -value $newvar
-	    pack $pf.1.3.$lvar -side top -anchor w
+	    pack $pf.1.f.3.$lvar -side top -anchor w
 	    if { $newvar == [set $this-ptVar] } {
-		$pf.1.3.$lvar invoke
+		$pf.1.f.3.$lvar invoke
 	    }
 	}
     }      
