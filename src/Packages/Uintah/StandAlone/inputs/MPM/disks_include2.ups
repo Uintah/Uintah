@@ -8,22 +8,7 @@
    </Meta>
 
    <SimulationComponent>
-       <type>switcher</type>
-       <subcomponent>
-           <SimulationComponent>
-               <type> mpm </type>
-           </SimulationComponent>
-           <input_file> inputs/MPM/disks_include1.ups</input_file>
-           <SwitchCriteria type = "Timestep">
-             <timestep> 5 </timestep>
-           </SwitchCriteria>
-       </subcomponent>
-       <subcomponent>
-           <SimulationComponent>
-               <type> mpm </type>
-           </SimulationComponent>
-           <input_file> inputs/MPM/disks_include2.ups</input_file>
-       </subcomponent>
+       <type> MPM </type>
    </SimulationComponent>
 
    <Time>
@@ -51,6 +36,66 @@
        <checkpoint cycle = "2" interval = "0.01"/>
    </DataArchiver>
 
+    <MPM>
+       <time_integrator>explicit</time_integrator>
+    </MPM>
+
+    <PhysicalConstants>
+       <gravity>[0,0,0]</gravity>
+    </PhysicalConstants>
+
+    <MaterialProperties>
+       <MPM>
+           <material>
+              <density>1000.0</density>
+              <constitutive_model type="comp_mooney_rivlin"> 
+                 <he_constant_1>100000.0</he_constant_1>
+                 <he_constant_2>20000.0</he_constant_2>
+                 <he_PR>.49</he_PR>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <cylinder label = "gp3">
+                     <bottom>[.25,.25,.05]</bottom>
+                     <top>[.25,.25,.1]</top>
+                     <radius> .2 </radius>
+                  </cylinder>
+                  <res>[2,2,2]</res>
+                  <velocity>[2.0,2.0,0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+           </material>
+
+           <material>
+              <density>1000.0</density>
+              <constitutive_model type="comp_mooney_rivlin"> 
+                 <he_constant_1>100000.0</he_constant_1>
+                 <he_constant_2>20000.0</he_constant_2>
+                 <he_PR>.49</he_PR>
+               </constitutive_model>
+              <thermal_conductivity>1.0</thermal_conductivity>
+              <specific_heat>5</specific_heat>
+              <geom_object>
+                  <cylinder label="gp4">
+                     <bottom>[.75,.75,.05]</bottom>
+                     <top>[.75,.75,.1]</top>
+                     <radius> .2 </radius>
+                  </cylinder>
+                  <res>[2,2,2]</res>
+                  <velocity>[-2.0,-2.0,0]</velocity>
+                  <temperature>12</temperature>
+               </geom_object>
+           </material>
+
+           <contact>
+             <type>single_velocity</type>
+             <materials>[0,1]</materials>
+           </contact>
+       </MPM>
+
+    </MaterialProperties>
+       
     <Grid>
        <BoundaryConditions>
          <Face side = "x-">
@@ -89,7 +134,7 @@
            </Box>
        </Level>
     </Grid>
-   
 
+    
 </Uintah_specification>
 
