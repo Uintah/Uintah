@@ -223,7 +223,12 @@ FieldExtractor::execute()
     warning("VariableExtractor::execute() - No data from input port.");
     return;
   }
-   
+
+  if( handle->timestep() < 0 ) {
+    error("Timestep is not set. Make sure this module is connected to the TimestepSelector.");
+      return;
+  }
+
   if (archiveH.get_rep() == 0 ){
     // first time through a frame must be built
     build_GUI_frame();
