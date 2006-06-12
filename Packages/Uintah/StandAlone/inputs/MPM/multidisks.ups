@@ -22,7 +22,7 @@
            <SimulationComponent>
                <type> mpm </type>
            </SimulationComponent>
-           <input_file> inputs/MPM/disks_include2.ups</input_file>
+           <input_file> inputs/MPM/disks_include1.ups</input_file>
        </subcomponent>
    </SimulationComponent>
 
