@@ -32,6 +32,7 @@
 #ifndef SCIRun_Core_Util_RegressionReporter_h
 #define SCIRun_Core_Util_RegressionReporter_h
 
+#include <Core/Util/LogFile.h>
 #include <Core/Util/ProgressReporter.h>
 #include <Core/Util/share.h>
 
@@ -40,6 +41,9 @@ namespace SCIRun {
 class SCISHARE RegressionReporter : public ProgressReporter 
 {
 public:
+  RegressionReporter();
+  RegressionReporter(std::string logfile);
+
   virtual void          error(const std::string& msg);
   virtual void          warning(const std::string& msg);
   virtual void          remark(const std::string& msg);
@@ -62,6 +66,9 @@ public:
   virtual void          update_progress(double percent);
   virtual void          update_progress(int current, int max);
   virtual void          increment_progress();
+
+private:
+  LogFile log_;
 };
 
 

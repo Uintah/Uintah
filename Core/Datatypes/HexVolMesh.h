@@ -381,7 +381,6 @@ public:
   { ASSERTFAIL("HexVolMesh::get_weights for faces isn't supported"); }
   int get_weights(const Point &p, typename Cell::array_type &l, double *w);
 
-
   void get_point(Point &result, typename Node::index_type index) const
     { result = points_[index]; }
   void set_point(const Point &point, typename Node::index_type index)
@@ -1165,7 +1164,7 @@ HexVolMesh<Basis>::compute_faces()
     get_nodes(arr, *ci);
     // 6 faces -- each is entered CCW from outside looking in
 
-    hash_face(arr[0], arr[1], arr[2], arr[3], *ci, 0, face_table_);
+    hash_face(arr[0], arr[1], arr[2 ], arr[3], *ci, 0, face_table_);
     hash_face(arr[7], arr[6], arr[5], arr[4], *ci, 1, face_table_);
     hash_face(arr[0], arr[4], arr[5], arr[1], *ci, 2, face_table_);
     hash_face(arr[2], arr[6], arr[7], arr[3], *ci, 3, face_table_);

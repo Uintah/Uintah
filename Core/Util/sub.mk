@@ -40,6 +40,7 @@ SRCS     += \
 	$(SRCDIR)/Endian.cc             \
 	$(SRCDIR)/Environment.cc        \
 	$(SRCDIR)/FileUtils.cc          \
+	$(SRCDIR)/LogFile.cc            \
 	$(SRCDIR)/ProgressReporter.cc   \
 	$(SRCDIR)/RegressionReporter.cc \
 	$(SRCDIR)/SimpleProfiler.cc     \
