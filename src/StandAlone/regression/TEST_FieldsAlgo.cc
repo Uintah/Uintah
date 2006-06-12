@@ -99,7 +99,7 @@ int main(int argc, char *argv[], char **environment)
 
   std::string testresult_dir = std::string(regressiondir) + "/test_fieldsalgo/";
   
-  RegressionReporter *rr = scinew RegressionReporter;
+  RegressionReporter *rr = scinew RegressionReporter("regression_fieldsalgo.log");
   
   SCIRunAlgo::RegressionAlgo ralgo(rr);
   SCIRunAlgo::FieldsAlgo     falgo(rr);
@@ -178,7 +178,10 @@ int main(int argc, char *argv[], char **environment)
           if (mode == "generate")
           {
             // Save the gold standard
-            if (!(dalgo.WriteField(field_outputname,output))) exit (1);
+            if (output.get_rep())
+            {
+              if (!(dalgo.WriteField(field_outputname,output))) exit (1);
+            }
           }
           else
           {
@@ -247,7 +250,10 @@ int main(int argc, char *argv[], char **environment)
           if (mode == "generate")
           {
             // Save the gold standard
-            if (!(dalgo.WriteField(field_outputname,output))) exit (1);
+            if (output.get_rep())
+            {
+              if (!(dalgo.WriteField(field_outputname,output))) exit (1);
+            }
           }
           else
           {
@@ -320,8 +326,11 @@ int main(int argc, char *argv[], char **environment)
           if (mode == "generate")
           {
             // Save the gold standard
-            if (!(dalgo.WriteField(field_outputname,output))) exit (1);
-            if (!(dalgo.WriteMatrix(matrix_outputname,mapping))) exit (1);
+            if (output.get_rep() && mapping.get_rep())
+            {
+              if (!(dalgo.WriteField(field_outputname,output))) exit (1);
+              if (!(dalgo.WriteMatrix(matrix_outputname,mapping))) exit (1);
+            }
           }
           else
           {
@@ -392,7 +401,10 @@ int main(int argc, char *argv[], char **environment)
           if (mode == "generate")
           {
             // Save the gold standard
-            if (!(dalgo.WriteField(field_outputname,output))) exit (1);
+            if (output.get_rep())
+            {
+              if (!(dalgo.WriteField(field_outputname,output))) exit (1);
+            }
           }
           else
           {
