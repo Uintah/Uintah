@@ -1302,8 +1302,7 @@ NrrdToFieldFieldAlgo::get_compile_info(const TypeDescription *mtd,
   
   CompileInfo *rval = 
     scinew CompileInfo(base_class_name + extension + "." +
-		       mtd->get_filename() + "." + 
-		       typeName + ".",
+		       to_filename(fname) + ".",
                        base_class_name,
                        base_class_name + extension, 
 		       fname + ", " + 
