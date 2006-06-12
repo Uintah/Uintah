@@ -455,7 +455,7 @@
 
       <contact>
         <type>approach</type>
-        <materials>              [0]         </materials>
+        <materials>              [0,1]         </materials>
         <mu> 0.0 </mu>
       </contact>
       <thermal_contact></thermal_contact>

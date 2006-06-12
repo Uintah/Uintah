@@ -434,12 +434,12 @@
         </constitutive_model>
         <geom_object>
           <difference>
-            <cylinder label = "outer cylinder">
+            <cylinder>
               <bottom>           [0.0,0.0,-.06985]   </bottom>
               <top>              [0.0,0.0, .06985]   </top>
               <radius>           0.05715             </radius>
             </cylinder>
-            <cylinder label = "inner cylinder">
+            <cylinder>
               <bottom>           [0.0,0.0,-.0508]   </bottom>
               <top>              [0.0,0.0, .0508]   </top>
               <radius>           0.0508             </radius>
@@ -511,7 +511,7 @@
           <useModifiedEOS>                true  </useModifiedEOS>
         </constitutive_model>
         <geom_object>
-          <cylinder label = "inner cylinder">
+          <cylinder>
             <bottom>           [0.0,0.0,-.0508]   </bottom>
             <top>              [0.0,0.0, .0508]   </top>
             <radius>           0.0508             </radius>
@@ -524,7 +524,7 @@
 
       <contact>
         <type>approach</type>
-        <materials>              [0]         </materials>
+        <materials>              [0,1]         </materials>
         <mu> 0.0 </mu>
       </contact>
       <thermal_contact></thermal_contact>
@@ -541,11 +541,11 @@
            <gamma>                      1.4             </gamma>           
            <geom_object>
                  <difference>
-                  <box label="domain">
+                  <box label>
                       <min>           [-1.1,-1.1,-1.1]    </min>
                       <max>           [ 1.1, 1.1, 1.1]    </max>
                   </box>
-                  <cylinder label = "container">
+                  <cylinder>
                      <bottom>       [0.0,0.0,-.06985]     </bottom>
                      <top>          [0.0,0.0, .06985]     </top>
                      <radius>       0.05715               </radius>
@@ -655,11 +655,11 @@
           </constants>
           <geom_object>
             <difference>
-             <box label="domain">
+             <box label>
                  <min>           [-1.1,-1.1,-1.1]    </min>
                  <max>           [ 1.1, 1.1, 1.1]    </max>
              </box>
-             <cylinder label = "container">
+             <cylinder>
                 <bottom>       [0.0,0.0,-.06985]     </bottom>
                 <top>          [0.0,0.0, .06985]     </top>
                 <radius>       0.05715               </radius>
