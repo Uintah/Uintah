@@ -56,7 +56,7 @@
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
               <geom_object>
-                  <cylinder label = "gp1">
+                  <cylinder >
                      <bottom>[.25,.25,.05]</bottom>
                      <top>[.25,.25,.1]</top>
                      <radius> .2 </radius>
@@ -77,7 +77,7 @@
               <thermal_conductivity>1.0</thermal_conductivity>
               <specific_heat>5</specific_heat>
               <geom_object>
-                  <cylinder label="gp2">
+                  <cylinder >
                      <bottom>[.75,.75,.05]</bottom>
                      <top>[.75,.75,.1]</top>
                      <radius> .2 </radius>
