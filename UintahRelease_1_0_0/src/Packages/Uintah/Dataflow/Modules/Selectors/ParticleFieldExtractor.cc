@@ -523,6 +523,11 @@ ParticleFieldExtractor::execute()
      return;
    }
    
+  if( handle->timestep() < 0 ) {
+    error("Timestep is not set. Make sure this module is connected to the TimestepSelector.");
+      return;
+  }
+
    DataArchiveHandle archive = handle->getDataArchive();
 
    int new_generation = handle->generation;

@@ -93,6 +93,13 @@ VariablePlotter::getGrid()
     return false;
   }
 
+  if( handle->timestep() < 0 ) {
+    error("Timestep is not set. Make sure this module is connected to the TimestepSelector.");
+    grid_ = NULL;
+    return false;
+  }
+
+
   // access the grid through the handle and dataArchive
   archive_ = handle->getDataArchive();
   int new_generation = handle->generation;
