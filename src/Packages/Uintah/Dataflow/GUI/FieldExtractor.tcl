@@ -63,6 +63,7 @@ itcl_class Uintah_Selectors_FieldExtractor {
         } 
 	
         toplevel $w 
+        wm geometry $w ""
 	wm withdraw $w
 	
 	set n "$this-c needexecute"
