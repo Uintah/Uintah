@@ -854,8 +854,13 @@ void ICE::coarsen_delP(const ProcessorGroup*,
     cout_doing << d_myworld->myrank()<< " Doing Coarsen_" << variable->getName()
                << " on patch " << coarsePatch->getID() 
                << "\t\t\t ICE \tL-" <<coarseLevel->getIndex()<< endl;
-    CCVariable<double> delP;                  
+    CCVariable<double> delP, delP_old, delP_correction;                  
     new_dw->getModifiable(delP, variable, 0, coarsePatch);
+    new_dw->allocateTemporary(delP_old, coarsePatch);
+    new_dw->allocateTemporary(delP_correction, coarsePatch);
+    
+    delP_old.copy(delP);
+    delP_correction.initialize(0.0);
    
     Level::selectType finePatches;
     coarsePatch->getFineLevelPatches(finePatches);
@@ -896,6 +901,8 @@ void ICE::coarsen_delP(const ProcessorGroup*,
           delP_tmp += fine_delP[fc] * fineCellVol;
         }
         delP[c] =delP_tmp / coarseCellVol; 
+        
+        delP_correction[c] = delP_old[c] - delP[c];
       }
     }
 
@@ -903,6 +910,8 @@ void ICE::coarsen_delP(const ProcessorGroup*,
       ostringstream desc;
       desc << "BOT_coarsen_delP" << coarsePatch->getID();
       printData( 0, coarsePatch, 0,desc.str(), "delP",delP);
+      printData( 0, coarsePatch, 0,desc.str(), "delP_old",delP_old);
+      printData( 0, coarsePatch, 0,desc.str(), "delP_correction",delP_correction);
     }  
 
   } // for patches
@@ -988,7 +997,7 @@ void ICE::zeroMatrix_UnderFinePatches(const ProcessorGroup*,
 #if 1
     if (switchDebug_setupMatrix) {    
       ostringstream desc;
-      desc << "BOT_zeroMatrix_RHS_UnderFinePatches_coarse_patch_" << coarsePatch->getID()
+      desc << "BOT_zeroMatrix_UnderFinePatches_coarse_patch_" << coarsePatch->getID()
            <<  " L-" <<coarseLevel->getIndex()<< endl;
       printStencil( 0, coarsePatch, 1, desc.str(), "A", A);
     }
