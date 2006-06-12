@@ -530,7 +530,7 @@
           <useModifiedEOS>                true  </useModifiedEOS>
         </constitutive_model>
         <geom_object>
-          <cylinder label = "inner cylinder">
+          <cylinder label = "reactant inner cylinder">
             <bottom>           [0.0,0.0,-.0508]   </bottom>
             <top>              [0.0,0.0, .0508]   </top>
             <radius>           0.0508             </radius>
@@ -559,11 +559,11 @@
            <gamma>                      1.4             </gamma>           
            <geom_object>
                  <difference>
-                  <box label="domain">
+                  <box label="atmosphere domain">
                       <min>           [-1.1,-1.1,-1.1]    </min>
                       <max>           [ 1.1, 1.1, 1.1]    </max>
                   </box>
-                  <cylinder label = "container">
+                  <cylinder label = "atmosphere container">
                      <bottom>       [0.0,0.0,-.06985]     </bottom>
                      <top>          [0.0,0.0, .06985]     </top>
                      <radius>       0.05715               </radius>
