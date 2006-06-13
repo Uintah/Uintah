@@ -825,8 +825,6 @@ int PicardNonlinearSolver::noSolve(const LevelP& level,
 
   sched_setInitialGuess(sched, patches, matls);
 
-  d_props->sched_computePropsFirst_mm(sched, patches, matls);
-
   // check if filter is defined...
 #ifdef PetscFilter
   if (d_turbModel->getFilter()) {
@@ -835,6 +833,15 @@ int PicardNonlinearSolver::noSolve(const LevelP& level,
       d_turbModel->sched_initFilterMatrix(level, sched, patches, matls);
   }
 #endif
+
+  if (d_calcVariance) {
+    d_turbModel->sched_computeScalarVariance(sched, patches, matls,
+					    nosolve_timelabels);
+    d_turbModel->sched_computeScalarDissipation(sched, patches, matls,
+					    nosolve_timelabels);
+  }
+
+  d_props->sched_computePropsFirst_mm(sched, patches, matls);
 
   d_props->sched_computeDrhodt(sched, patches, matls,
 				 nosolve_timelabels);
