@@ -889,7 +889,7 @@ void FEMBuilder<FIELD>::parallel(int proc_num)
   //! check point
   barrier_.wait(numprocessors_);
 
-  std:vector<std::vector<double> > precompute;
+  std::vector<std::vector<double> > precompute;
 
   int st = 0;
   if (proc_num == 0)
