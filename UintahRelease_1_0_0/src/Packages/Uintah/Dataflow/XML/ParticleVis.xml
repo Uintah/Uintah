@@ -19,7 +19,7 @@
       at a reasonable sphere radius based on the size of the domain.
       By deselecting auto radius, the user can fine tune the sphere
       size with the radius slider.  The polygon slider controls the
-      number of polygons used for each sphere, the more particles the
+      number of polygons used to draw each sphere, the more particles the
       smoother the sphere.  the "Show Nth Particle" slider allows the
       user to pare down the number of spheres by showing every nth
       particle (ie. if the value is 5 show every 5th particle).</p>
@@ -41,7 +41,7 @@
       a particle mass field can be used as the scaling field.</p>
 
       <p>If a tensor particle field is attached and "Spheres" is
-      selected in the geometry tab, then the particles with be
+      selected in the geometry tab, then the particles will be
       displayed as elipsoids oriented along the eigenvectors of the
       tensor matrix.</p>
 

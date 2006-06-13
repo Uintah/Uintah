@@ -23,7 +23,11 @@
       will control the sampling.</p> 
 
       <p>Vector colors can be adjusted so that they appear on various
-      backgrounds.  The arrow length and head sizes can also be adjusted.</p>
+      backgrounds.  The vectors can also  be colored according to a
+      scalar field, by attaching a scalar field to the second port
+      and a Colormap to the third port.</p> 
+      <p>  The arrow length and head sizes can also be
+      adjusted.</p>
     </description>
   </overview>
   <io>
