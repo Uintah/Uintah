@@ -1972,6 +1972,9 @@ ViewWindow::setState(DrawInfoOpenGL* drawinfo, const string& tclID)
   if (show_bbox.valid())
     drawinfo->show_bbox_ = show_bbox.get();
 
+  GuiInt movieUseTimestamp(ctx_->subVar(tclID+"-movieUseTimestamp", false));
+  if (movieUseTimestamp.valid())
+    renderer_->add_timestamp_to_movie_frame_name_ = movieUseTimestamp.get();
 
   GuiString movieName(ctx_->subVar(tclID+"-movieName", false));
   if (movieName.valid())

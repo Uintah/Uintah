@@ -72,7 +72,7 @@ PSELIBS := \
 	Core/Thread       \
 	Core/Util         
 
-LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) \
+LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) \
 	$(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
