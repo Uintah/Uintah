@@ -35,6 +35,7 @@
 #include <Core/OS/dirent.h>
 #include <Core/OS/Dir.h>
 #include <Core/Util/Environment.h>
+#include <SCIRun/Internal/FrameworkProperties.h>
 
 #ifndef DEBUG
 #  define DEBUG 0
@@ -75,36 +76,72 @@ void ComponentSkeletonWriter::GenerateCode()
   // Header file
   std::string sopf(srcDir + compsDir + compName + DIR_SEP + compName + ".h");
   componentHeaderFile.open(sopf.c_str());
-  ComponentClassDefinitionCode();
+  ComponentClassDefinitionCode(componentHeaderFile);
   componentHeaderFile.close();
 
   // Implementation file
   std::string sosf(srcDir + compsDir + compName + DIR_SEP + compName + ".cc");
   componentSourceFile.open(sosf.c_str());
-  ComponentSourceFileCode();
+  ComponentSourceFileCode(componentSourceFile);
   componentSourceFile.close();
 
   // Makefile fragment
   std::string somf(srcDir + compsDir + compName + DIR_SEP + "sub.mk");
   componentMakefile.open(somf.c_str());
-  ComponentMakefileCode();
+  ComponentMakefileCode(componentMakefile);
   componentMakefile.close();
 }
 
-void ComponentSkeletonWriter::ComponentClassDefinitionCode()
+void ComponentSkeletonWriter::GenerateTempCode()
 {
-  writeLicense(componentHeaderFile);
-  writeHeaderInit();
-  writeComponentDefinitionCode();
-  writePortClassDefinitionCode();
+
+  std::string srcDir(sci_getenv("SCIRUN_SRCDIR"));
+  std::string home(getenv("HOME"));
+  std::string compsDir("/CCA/Components/");
+  std::string tmp(FrameworkProperties::CONFIG_DIR);
+  std::string tmpDir = std::string(home + tmp + DIR_SEP + "ComponentGenerationWizard");
+  Dir d1 = Dir(tmpDir);
+  if (!d1.exists()) {
+    Dir::create(tmpDir);
+  }
+
+  // Header file
+  std::string sopf(tmpDir + DIR_SEP + "tempheader.txt");
+  std::ofstream tempcomponentHeaderFile;
+  tempcomponentHeaderFile.open(sopf.c_str());
+  ComponentClassDefinitionCode(tempcomponentHeaderFile);
+  tempcomponentHeaderFile.close();
+
+  // Implementation file
+  std::string sosf(tmpDir + DIR_SEP + "tempsource.txt");
+  std::ofstream tempcomponentSourceFile;
+  tempcomponentSourceFile.open(sosf.c_str());
+  ComponentSourceFileCode(tempcomponentSourceFile);
+  tempcomponentSourceFile.close();
+
+  // Makefile fragment
+  std::string somf(tmpDir + DIR_SEP + "tempsubmake.txt");
+  //std::string sopf(tmpDir + DIR_SEP + "tempsubmake.txt");
+  std::ofstream tempcomponentMakefile;
+  tempcomponentMakefile.open(somf.c_str());
+  ComponentMakefileCode(tempcomponentMakefile);
+  tempcomponentMakefile.close();
+
+}
+void ComponentSkeletonWriter::ComponentClassDefinitionCode(std::ofstream& fileStream)
+{
+  writeLicense(fileStream);
+  writeHeaderInit(fileStream);
+  writeComponentDefinitionCode(fileStream);
+  writePortClassDefinitionCode(fileStream);
 }
 
-void ComponentSkeletonWriter::ComponentSourceFileCode()
+void ComponentSkeletonWriter::ComponentSourceFileCode(std::ofstream& fileStream)
 {
-  writeLicense(componentSourceFile);
-  writeSourceInit();
-  writeLibraryHandle();
-  writeSourceClassImpl();
+  writeLicense(fileStream);
+  writeSourceInit(fileStream);
+  writeLibraryHandle(fileStream);
+  writeSourceClassImpl(fileStream);
 }
 
 
@@ -117,187 +154,178 @@ void ComponentSkeletonWriter::ComponentSourceFileCode()
 // TODO: The license text should be read from file.
 void ComponentSkeletonWriter::writeLicense(std::ofstream& fileStream)
 {
+  std::ifstream lt;
+  std::string srcDir(sci_getenv("SCIRUN_SRCDIR"));
+  std::string currPath=srcDir + "/CCA/Components/GUIBuilder/license.txt";
+    lt.open(currPath.c_str());
+  if(!lt)
+    {
+      #if DEBUG
+        std::cout << "unable to read file" << std::endl;
+      #endif
+    }
+    else
+    {
+      std::string line;
+       fileStream << OPEN_C_COMMENT << std::endl;
+       while(!lt.eof())
+	 {
+	   std::getline (lt,line);
+	   fileStream << SP << line << std::endl;
+	 }
+       fileStream << CLOSE_C_COMMENT << std::endl;
+       lt.close();
+    }
 
-  fileStream << OPEN_C_COMMENT << std::endl
-             << SP << "For more information, please see: http://software.sci.utah.edu" << std::endl
-             << std::endl
-             << SP << "The MIT License" << std::endl
-             << std::endl
-             << SP << "Copyright (c) 2004 Scientific Computing and Imaging Institute," << std::endl
-             << SP << "University of Utah." << std::endl
-             << SP << "License for the specific language governing rights and limitations under" << std::endl
-             << SP << "Permission is hereby granted, free of charge, to any person obtaining a" << std::endl
-             << SP << "copy of this software and associated documentation files (the \"Software\")," << std::endl
-             << SP << "to deal in the Software without restriction, including without limitation" << std::endl
-             << SP << "the rights to use, copy, modify, merge, publish, distribute, sublicense," << std::endl
-             << SP << "and/or sell copies of the Software, and to permit persons to whom the" << std::endl
-             << SP << "Software is furnished to do so, subject to the following conditions:" << std::endl
-             << std::endl
-             << SP << "The above copyright notice and this permission notice shall be included" << std::endl
-             << SP << "in all copies or substantial portions of the Software." << std::endl
-             << std::endl
-             << SP << "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS" << std::endl
-             << SP << "OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY," << std::endl
-             << SP << "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL" << std::endl
-             << SP << "THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER" << std::endl
-             << SP << "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING" << std::endl
-             << SP << "FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER" << std::endl
-             << SP << "DEALINGS IN THE SOFTWARE." << std::endl
-             << CLOSE_C_COMMENT << std::endl;
 }
 
 void ComponentSkeletonWriter::writeMakefileLicense(std::ofstream& fileStream)
 {
-  fileStream << UNIX_SHELL_COMMENT << SP << "For more information, please see: http://software.sci.utah.edu" << std::endl
-             << UNIX_SHELL_COMMENT << std::endl
-             << UNIX_SHELL_COMMENT << SP << "The MIT License" << std::endl
-             << UNIX_SHELL_COMMENT << std::endl
-             << UNIX_SHELL_COMMENT << SP << "Copyright (c) 2004 Scientific Computing and Imaging Institute," << std::endl
-             << UNIX_SHELL_COMMENT << SP << "University of Utah." << std::endl
-             << UNIX_SHELL_COMMENT << SP << "License for the specific language governing rights and limitations under" << std::endl
-             << UNIX_SHELL_COMMENT << SP << "Permission is hereby granted, free of charge, to any person obtaining a" << std::endl
-             << UNIX_SHELL_COMMENT << SP << "copy of this software and associated documentation files (the \"Software\")," << std::endl
-             << UNIX_SHELL_COMMENT << SP << "to deal in the Software without restriction, including without limitation" << std::endl
-             << UNIX_SHELL_COMMENT << SP << "the rights to use, copy, modify, merge, publish, distribute, sublicense," << std::endl
-             << UNIX_SHELL_COMMENT << SP << "and/or sell copies of the Software, and to permit persons to whom the" << std::endl
-             << UNIX_SHELL_COMMENT << SP << "Software is furnished to do so, subject to the following conditions:" << std::endl
-             << UNIX_SHELL_COMMENT << std::endl
-             << UNIX_SHELL_COMMENT << SP << "The above copyright notice and this permission notice shall be included" << std::endl
-             << UNIX_SHELL_COMMENT << SP << "in all copies or substantial portions of the Software." << std::endl
-             << UNIX_SHELL_COMMENT << std::endl
-             << UNIX_SHELL_COMMENT << SP << "THE SOFTWARE IS PROVIDED \"AS IS\", WITHOUT WARRANTY OF ANY KIND, EXPRESS" << std::endl
-             << UNIX_SHELL_COMMENT << SP << "OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY," << std::endl
-             << UNIX_SHELL_COMMENT << SP << "FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL" << std::endl
-             << UNIX_SHELL_COMMENT << SP << "THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER" << std::endl
-             << UNIX_SHELL_COMMENT << SP << "LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING" << std::endl
-             << UNIX_SHELL_COMMENT << SP << "FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER" << std::endl
-             << UNIX_SHELL_COMMENT << SP << "DEALINGS IN THE SOFTWARE." << std::endl
-             << std::endl;
+  std::ifstream lt;
+  std::string srcDir(sci_getenv("SCIRUN_SRCDIR"));
+  std::string currPath=srcDir + "/CCA/Components/GUIBuilder/license.txt";
+  lt.open(currPath.c_str());
+  if(!lt)
+    {
+      #if DEBUG
+        std::cout << "unable to read file" << std::endl;
+      #endif
+    }
+  else
+    {
+       std::string line;
+       while(!lt.eof())
+	 {
+	   std::getline (lt,line);
+	   fileStream << UNIX_SHELL_COMMENT << SP << line << std::endl;
+	 }
+       fileStream << std::endl;
+       lt.close();
+    }
 }
 
-void ComponentSkeletonWriter::writeHeaderInit()
+void ComponentSkeletonWriter::writeHeaderInit(std::ofstream& fileStream)
 {
-  componentHeaderFile << std::endl;
-  componentHeaderFile << std::endl;
-  componentHeaderFile << "#ifndef SCIRun_Framework_" << compName << "_h" << std::endl;
-  componentHeaderFile << "#define SCIRun_Framework_" << compName << "_h" << std::endl;
-  componentHeaderFile << std::endl << "#include <Core/CCA/spec/cca_sidl.h>" << std::endl;
+  fileStream << std::endl;
+  fileStream << std::endl;
+  fileStream << "#ifndef SCIRun_Framework_" << compName << "_h" << std::endl;
+  fileStream << "#define SCIRun_Framework_" << compName << "_h" << std::endl;
+  fileStream << std::endl << "#include <Core/CCA/spec/cca_sidl.h>" << std::endl;
 
-  componentHeaderFile << std::endl;
-  componentHeaderFile << "using namespace SCIRun;" << std::endl;
+  fileStream << std::endl;
+  fileStream << "using namespace SCIRun;" << std::endl;
 }
 
-void ComponentSkeletonWriter::writeComponentDefinitionCode()
+void ComponentSkeletonWriter::writeComponentDefinitionCode(std::ofstream& fileStream)
 {
-  componentHeaderFile << std::endl;
-  componentHeaderFile << "class " << compName << ": public " << DEFAULT_NAMESPACE << "Component {"
+  fileStream << std::endl;
+  fileStream << "class " << compName << ": public " << DEFAULT_NAMESPACE << "Component {"
           << std::endl;
   // public members
-  componentHeaderFile << "public:" << std::endl;
-  componentHeaderFile << SP << compName << "();" << std::endl;
-  componentHeaderFile << SP << "virtual ~"<< compName << "();" << std::endl;
-  componentHeaderFile << SP << "virtual void setServices(const " << SERVICES_POINTER << "& svc);" << std::endl;
+  fileStream << "public:" << std::endl;
+  fileStream << SP << compName << "();" << std::endl;
+  fileStream << SP << "virtual ~"<< compName << "();" << std::endl;
+  fileStream << SP << "virtual void setServices(const " << SERVICES_POINTER << "& svc);" << std::endl;
   // private members
-  componentHeaderFile << std::endl;
-  componentHeaderFile << "private:" << std::endl;
-  componentHeaderFile << SP << compName << "(const " << compName << "&);" << std::endl;
-  componentHeaderFile << SP << compName << "& operator=(const " << compName << "&);" << std::endl;
+  fileStream << std::endl;
+  fileStream << "private:" << std::endl;
+  fileStream << SP << compName << "(const " << compName << "&);" << std::endl;
+  fileStream << SP << compName << "& operator=(const " << compName << "&);" << std::endl;
   // services handle
-  componentHeaderFile << SP << SERVICES_POINTER << " services;" << std::endl;
-  componentHeaderFile << "};" << std::endl;
-  componentHeaderFile << std::endl;
+  fileStream << SP << SERVICES_POINTER << " services;" << std::endl;
+  fileStream << "};" << std::endl;
+  fileStream << std::endl;
 }
 
-void ComponentSkeletonWriter::writePortClassDefinitionCode()
+void ComponentSkeletonWriter::writePortClassDefinitionCode(std::ofstream& fileStream)
 {
   for (unsigned int i = 0; i < providesPortsList.size(); i++) {
 
-    componentHeaderFile << std::endl;
-    componentHeaderFile << "class " << (providesPortsList[i])->GetClassName() << " : public "
+    fileStream << std::endl;
+    fileStream << "class " << (providesPortsList[i])->GetClassName() << " : public "
                         << DEFAULT_PORT_NAMESPACE << (providesPortsList[i])->GetType() << " {"
                         << std::endl;
 
     //public  members
-    componentHeaderFile << "public:" << std::endl;
-    componentHeaderFile << SP << "virtual ~"<< (providesPortsList[i])->GetClassName() << "() {}" << std::endl;
-    componentHeaderFile << SP << "void setParent(" << compName << " *com)" << " { this->com = com; }";
+    fileStream << "public:" << std::endl;
+    fileStream << SP << "virtual ~"<< (providesPortsList[i])->GetClassName() << "() {}" << std::endl;
+    fileStream << SP << "void setParent(" << compName << " *com)" << " { this->com = com; }";
     if ((providesPortsList[i])->GetType() == "GoPort") {
-      componentHeaderFile <<std::endl<< SP << "virtual int go();";
+      fileStream <<std::endl<< SP << "virtual int go();";
     }
     if ((providesPortsList[i])->GetType() == "UIPort") {
-      componentHeaderFile <<std::endl << SP << "virtual int ui();";
+      fileStream <<std::endl << SP << "virtual int ui();";
     }
     // private  members
-    componentHeaderFile << std::endl;
-    componentHeaderFile << std::endl << "private:" << std::endl;
-    componentHeaderFile << SP << compName << " *com;" << std::endl;
-    componentHeaderFile << std::endl << "};" << std::endl;
+    fileStream << std::endl;
+    fileStream << std::endl << "private:" << std::endl;
+    fileStream << SP << compName << " *com;" << std::endl;
+    fileStream << std::endl << "};" << std::endl;
   }
-  componentHeaderFile << std::endl;
-  componentHeaderFile << "#endif" << std::endl;
+  fileStream << std::endl;
+  fileStream << "#endif" << std::endl;
 }
 
 
-void ComponentSkeletonWriter::writeSourceInit()
+  void ComponentSkeletonWriter::writeSourceInit(std::ofstream& fileStream)
 {
-  componentSourceFile << std::endl << std::endl;
+  fileStream << std::endl << std::endl;
 
   //Header files
-  componentSourceFile << "#include<CCA/Components" << DIR_SEP << compName << DIR_SEP << compName << ".h>" << std::endl;
-  componentSourceFile << "#include <SCIRun" << DIR_SEP << "TypeMap.h>" << std::endl;
-  componentSourceFile << std::endl;
-  componentSourceFile << "using namespace SCIRun;" << std::endl;
+  fileStream << "#include<CCA/Components" << DIR_SEP << compName << DIR_SEP << compName << ".h>" << std::endl;
+  fileStream << "#include <SCIRun" << DIR_SEP << "TypeMap.h>" << std::endl;
+  fileStream << std::endl;
+  fileStream << "using namespace SCIRun;" << std::endl;
 }
 
-void ComponentSkeletonWriter::writeLibraryHandle()
+void ComponentSkeletonWriter::writeLibraryHandle(std::ofstream& fileStream)
 {
-  componentSourceFile << std::endl;
-  componentSourceFile << "extern " << QT<< "C" << QT << " " << DEFAULT_NAMESPACE << "Component::pointer make_SCIRun_"
-                      << compName << "()" << std::endl;
-  componentSourceFile << "{" << std::endl;
-  componentSourceFile << SP << "return " << DEFAULT_NAMESPACE << "Component::pointer(new " << compName << "());" << std::endl;
-  componentSourceFile << "}" << std::endl;
-  componentSourceFile << std::endl;
+  fileStream << std::endl;
+  fileStream << "extern " << QT<< "C" << QT << " " << DEFAULT_NAMESPACE << "Component::pointer make_SCIRun_" << compName << "()" << std::endl;
+  fileStream << "{" << std::endl;
+  fileStream << SP << "return " << DEFAULT_NAMESPACE << "Component::pointer(new " << compName << "());" << std::endl;
+  fileStream << "}" << std::endl;
+  fileStream << std::endl;
 }
 
 
-void ComponentSkeletonWriter::writeSourceClassImpl()
+void ComponentSkeletonWriter::writeSourceClassImpl(std::ofstream& fileStream)
 {
-  writeConstructorandDestructorCode();
-  writeSetServicesCode();
-  writeGoAndUIFunctionsCode();
+  writeConstructorandDestructorCode(fileStream);
+  writeSetServicesCode(fileStream);
+  writeGoAndUIFunctionsCode(fileStream);
 }
 
 
-void ComponentSkeletonWriter::writeConstructorandDestructorCode()
+void ComponentSkeletonWriter::writeConstructorandDestructorCode(std::ofstream& fileStream)
 {
   //Constructor code
-  componentSourceFile << std::endl << compName << "::" << compName << "()" << std::endl
+  fileStream << std::endl << compName << "::" << compName << "()" << std::endl
                       << "{" << std::endl
                       << "}" << std::endl;
   //Destructor code
-  componentSourceFile << std::endl << compName << "::~" << compName << "()" << std::endl
+  fileStream << std::endl << compName << "::~" << compName << "()" << std::endl
                       << "{" << std::endl;
   for (unsigned int i = 0; i < providesPortsList.size(); i++) {
-    componentSourceFile << SP << "services->removeProvidesPort("
+    fileStream << SP << "services->removeProvidesPort("
                         << QT << providesPortsList[i]->GetUniqueName() <<  QT << ");" << std::endl;
   }
 
   for (unsigned int i = 0; i < usesPortsList.size(); i++) {
-    componentSourceFile << SP << "services->unregisterUsesPort("
+    fileStream << SP << "services->unregisterUsesPort("
                         << QT << usesPortsList[i]->GetUniqueName() << QT << ");" << std::endl;
   }
-  componentSourceFile << "}" << std::endl;
+  fileStream << "}" << std::endl;
 }
 
 
-void ComponentSkeletonWriter::writeSetServicesCode()
+void ComponentSkeletonWriter::writeSetServicesCode(std::ofstream& fileStream)
 {
-  componentSourceFile << std::endl
+  fileStream << std::endl
                       << "void " << compName << "::setServices(const " << SERVICES_POINTER << "& svc)"<< std::endl;
-  componentSourceFile << "{" << std::endl;
-  componentSourceFile << SP << "services = svc;" << std::endl;
-  //componentSourceFile << std::endl << SP << "svc->registerForRelease(sci::cca::ComponentRelease::pointer(this)); ";
+  fileStream << "{" << std::endl;
+  fileStream << SP << "services = svc;" << std::endl;
+  //fileStream << std::endl << SP << "svc->registerForRelease(sci::cca::ComponentRelease::pointer(this)); ";
 
   for (unsigned int i = 0; i < providesPortsList.size(); i++) {
     std::string portName(providesPortsList[i]->GetClassName());
@@ -317,19 +345,19 @@ void ComponentSkeletonWriter::writeSetServicesCode()
     tempPortCategory = (std::string) providesPortsList[i]->GetUniqueName();
     tempPortPtr = portName + "::pointer(" + tempPortInstance + ")";
 
-    componentSourceFile << SP << portName << " *" << tempPortInstance
+    fileStream << SP << portName << " *" << tempPortInstance
                         << " = new " << portName << "();" << std::endl;
-    componentSourceFile << SP << tempPortInstance << "->setParent(this);" << std::endl;
+    fileStream << SP << tempPortInstance << "->setParent(this);" << std::endl;
 
     std::string propertiesMap("pProps");
-    componentSourceFile << SP << TYPEMAP_POINTER << " " << propertiesMap << i << " = svc->createTypeMap();" << std::endl;
+    fileStream << SP << TYPEMAP_POINTER << " " << propertiesMap << i << " = svc->createTypeMap();" << std::endl;
 
-    componentSourceFile << SP << "svc->addProvidesPort(" << tempPortPtr
+    fileStream << SP << "svc->addProvidesPort(" << tempPortPtr
                         << ", " << QT << tempPortCategory << QT
                         << ", " << QT << DEFAULT_SIDL_PORT_NAMESPACE << portType << QT
                         << ", " << propertiesMap << i << ");" << std::endl;
 
-    componentSourceFile << std::endl;
+    fileStream << std::endl;
   }
 
   for (unsigned int i = 0; i < usesPortsList.size(); i++) {
@@ -342,18 +370,18 @@ void ComponentSkeletonWriter::writeSetServicesCode()
     tempPortCategory = "uses" + tempPortCategory.insert(0, 1, (char) tolower(tmp));
 
     std::string propertiesMap("uProps");
-    componentSourceFile << SP << TYPEMAP_POINTER << " " << propertiesMap << i << " = svc->createTypeMap();" << std::endl;
+    fileStream << SP << TYPEMAP_POINTER << " " << propertiesMap << i << " = svc->createTypeMap();" << std::endl;
 
-    componentSourceFile << SP << "svc->registerUsesPort(" << QT << tempPortCategory << QT
+    fileStream << SP << "svc->registerUsesPort(" << QT << tempPortCategory << QT
                         << ", " << QT << DEFAULT_SIDL_PORT_NAMESPACE << portType << QT
                         << ", " << propertiesMap << i << ");" << std::endl;
   }
 
-  componentSourceFile << "}" << std::endl;
+  fileStream << "}" << std::endl;
 }
 
 //go() and ui() functions - if thers is a GoPort or UIPort among Provides ports
-void ComponentSkeletonWriter::writeGoAndUIFunctionsCode()
+void ComponentSkeletonWriter::writeGoAndUIFunctionsCode(std::ofstream& fileStream)
 {
 
   for (unsigned int i = 0; i < providesPortsList.size(); i++) {
@@ -364,7 +392,7 @@ void ComponentSkeletonWriter::writeGoAndUIFunctionsCode()
     std::cout << "\nhere in ckw " << porttype.c_str() << "\n";
 #endif
     if (porttype.compare(string("UIPort")) == 0) {
-      componentSourceFile << std::endl <<"int " << providesPortsList[i]->GetClassName() << "::ui()"
+      fileStream << std::endl <<"int " << providesPortsList[i]->GetClassName() << "::ui()"
                           << std::endl
                           << "{"
                           << std::endl << SP << "return 0;"
@@ -372,7 +400,7 @@ void ComponentSkeletonWriter::writeGoAndUIFunctionsCode()
                           << "}" << std::endl;
     }
     if (porttype.compare(string("GoPort")) == 0) {
-      componentSourceFile << std::endl <<"int " << providesPortsList[i]->GetClassName() << "::go()"
+      fileStream << std::endl <<"int " << providesPortsList[i]->GetClassName() << "::go()"
                           << std::endl
                           << "{"
                           << std::endl << SP << "return 0;"
@@ -380,27 +408,28 @@ void ComponentSkeletonWriter::writeGoAndUIFunctionsCode()
                           << "}" << std::endl;
     }
   }
-  componentSourceFile << std::endl;
+  fileStream << std::endl;
 }
 
-void ComponentSkeletonWriter::ComponentMakefileCode()
+  void ComponentSkeletonWriter::ComponentMakefileCode(std::ofstream& fileStream)
 {
-  writeMakefileLicense(componentMakefile);
-  componentMakefile << "include $(SCIRUN_SCRIPTS)/smallso_prologue.mk" << std::endl;
-  componentMakefile << std::endl
+  writeMakefileLicense(fileStream);
+  fileStream << "include $(SCIRUN_SCRIPTS)/smallso_prologue.mk" << std::endl;
+  fileStream << std::endl
                     << "SRCDIR := CCA/Components/" << compName << std::endl;
-  componentMakefile << std::endl
+  fileStream << std::endl
                     << "SRCS += " << "$(SRCDIR)/" << compName << ".cc \\" << std::endl;
-  componentMakefile << std::endl
+  fileStream << std::endl
                     << "PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm \\" << std::endl;
-  componentMakefile << SP << "Core/CCA/spec Core/Thread Core/Containers Core/Exceptions" << std::endl;
-  componentMakefile << std::endl
+  fileStream << SP << "Core/CCA/spec Core/Thread Core/Containers Core/Exceptions" << std::endl;
+  fileStream << std::endl
                     << "CFLAGS += $(WX_CXXFLAGS)" << std::endl
                     << "CXXFLAGS += $(WX_CXXFLAGS)" << std::endl
                     << "LIBS := $(WX_LIBRARY)" << std::endl;
-  componentMakefile << std::endl << "include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk" << std::endl;
-  componentMakefile << std::endl << "$(SRCDIR)/" << compName << ".o: Core/CCA/spec/cca_sidl.h" << std::endl;
-  componentMakefile << std::endl;
+  fileStream << std::endl << "include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk" << std::endl;
+  fileStream << std::endl << "$(SRCDIR)/" << compName << ".o: Core/CCA/spec/cca_sidl.h" << std::endl;
+  fileStream << std::endl;
 }
 
+  
 }

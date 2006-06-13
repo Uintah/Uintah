@@ -28,6 +28,10 @@
 
 #include <CCA/Components/GUIBuilder/ComponentWizardDialog.h>
 #include <Core/Containers/StringUtil.h>
+#include <Core/Util/Environment.h>
+#include <Core/OS/Dir.h>
+#include <SCIRun/TypeMap.h>
+#include <SCIRun/Internal/FrameworkProperties.h>
 
 #include <wx/file.h>
 #include <wx/textfile.h>
@@ -42,16 +46,27 @@ namespace GUIBuilder {
 
 using namespace SCIRun;
 
+const std::string ComponentWizardDialog::DIR_SEP("/");
+
 BEGIN_EVENT_TABLE(ComponentWizardDialog, wxDialog)
   EVT_BUTTON( wxID_OK, ComponentWizardDialog::OnOk )
   EVT_BUTTON( ID_AddProvidesPort, ComponentWizardDialog::OnAddProvidesPort )
   EVT_BUTTON( ID_AddUsesPort, ComponentWizardDialog::OnAddUsesPort )
   EVT_BUTTON( ID_RemovePort, ComponentWizardDialog::OnRemovePort )
+  EVT_BUTTON( ID_PreviewCode, ComponentWizardDialog::OnPreviewCode )
+  EVT_SIZE  (                ComponentWizardDialog::OnSize)
 END_EVENT_TABLE()
 
-ComponentWizardDialog::ComponentWizardDialog(wxWindow *parent, wxWindowID id, const wxString &title,
-					     const wxPoint& pos, const wxSize& size,
-					     long style, const wxString& name)
+
+BEGIN_EVENT_TABLE(CodePreviewDialog, wxDialog)
+  EVT_BUTTON( ID_ViewSourceFileCode, CodePreviewDialog::OnViewSourceFileCode )
+  EVT_BUTTON( ID_ViewHeaderFileCode, CodePreviewDialog::OnViewHeaderFileCode )
+  EVT_BUTTON( ID_ViewMakeFileCode, CodePreviewDialog::OnViewMakeFileCode )
+END_EVENT_TABLE()
+
+
+
+ComponentWizardDialog::ComponentWizardDialog(wxWindow *parent, wxWindowID id, const wxString &title, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
     : wxDialog( parent, id, title, pos, size, style)
 {
   count_table=0;
@@ -64,39 +79,46 @@ ComponentWizardDialog::ComponentWizardDialog(wxWindow *parent, wxWindowID id, co
   const int leftFlags = wxALIGN_LEFT|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
   const int rightFlags = wxALIGN_RIGHT|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
 
-  componentSizer->Add(new wxStaticText(this, wxID_ANY, wxT("Component Name")), 0, centerFlags, 2);
+  componentSizer->Add(new wxStaticText(this, wxID_ANY, wxT("Component Name")), 1, centerFlags, 2);
   componentName = new wxTextCtrl( this, wxID_ANY, wxT(""), wxDefaultPosition, wxSize(150, wxDefaultSize.GetHeight()));
   componentName->SetToolTip(wxT("The Name of this component\nUsually begins with a capital letter\nExample: Hello,Linsolver..etc"));
-  componentSizer->Add(componentName, 0, rightFlags, 2);
-  topSizer->Add( componentSizer, 0, wxALIGN_CENTER, 0 );
+  componentSizer->Add(componentName, 1, rightFlags, 2);
+  topSizer->Add( componentSizer, 1, wxALIGN_CENTER, 0 );
   topSizer->AddSpacer(15);
 
   wxBoxSizer *portsSizer = new wxBoxSizer( wxHORIZONTAL );
   portsSizer->Add(new wxButton(this, ID_AddProvidesPort, wxT("Add &Provides Port")), 1, leftFlags, 4);
   portsSizer->Add(new wxButton(this, ID_AddUsesPort, wxT("Add &Uses Port")), 1, rightFlags, 4);
   portsSizer->Add(new wxButton(this, ID_RemovePort, wxT("&Remove Port")), 1, rightFlags, 4);
-  topSizer->Add( portsSizer, 0, wxALIGN_CENTER, 0 );
+  topSizer->Add( portsSizer, 1, wxALIGN_CENTER, 0 );
   topSizer->AddSpacer(20);
 
 
   wxBoxSizer *gridSizer = new wxBoxSizer( wxVERTICAL);
-  listofPorts = new wxGrid(this, wxID_ANY,wxDefaultPosition ,wxSize(420,150));
-  listofPorts->CreateGrid(4,4);
+  listofPorts = new wxGrid(this, wxID_ANY,wxDefaultPosition ,wxSize(500,140));
+  //listofPorts = new wxGrid(this, wxID_ANY,wxDefaultPosition ,wxDefaultSize);
+  listofPorts->CreateGrid(5,4);
+  for(int i=0;i<4;i++)
+    listofPorts->SetColSize(i,listofPorts->GetDefaultColSize()+20);
   listofPorts->SetColLabelValue(0,"Port Class");
   listofPorts->SetColLabelValue(1,"Data Type");
   listofPorts->SetColLabelValue(2,"Port Name");
   listofPorts->SetColLabelValue(3,"Port Type");
-  gridSizer->Add(new wxStaticText(this, wxID_ANY, wxT("List of Ports")), 0, leftFlags,2);
-  gridSizer->AddSpacer(10);
-  gridSizer->Add(listofPorts,0,centerFlags,0);
-  topSizer->Add( gridSizer, 0, wxALIGN_CENTER, 0 );
+  listofPorts->SetMargins(-10,-10);
+  
+   gridSizer->Add(new wxStaticText(this, wxID_ANY, wxT("List of Ports")), 0, centerFlags,2);
+   gridSizer->AddSpacer(10);
+   gridSizer->Add(listofPorts,1,wxEXPAND,0);
+  //topSizer->Add( gridSizer, 0, wxALIGN_CENTER, 0 );
+  topSizer->Add( gridSizer, 1, wxEXPAND, 0 );
   topSizer->AddSpacer(20);
 
   
   wxBoxSizer *okCancelSizer = new wxBoxSizer( wxHORIZONTAL );
+  okCancelSizer->Add( new wxButton( this, ID_PreviewCode, wxT("P&review") ), 1, leftFlags, 4 );
   okCancelSizer->Add( new wxButton( this, wxID_OK, wxT("&Generate") ), 1, leftFlags, 4 );
   okCancelSizer->Add( new wxButton( this, wxID_CANCEL, wxT("&Cancel") ), 1, rightFlags, 4 );
-  topSizer->Add( okCancelSizer, 3, wxALIGN_CENTER, 0 );
+  topSizer->Add( okCancelSizer, 1, wxALIGN_CENTER, 0 );
   topSizer->AddSpacer(5);
 
 
@@ -104,23 +126,65 @@ ComponentWizardDialog::ComponentWizardDialog(wxWindow *parent, wxWindowID id, co
   topSizer->AddGrowableRow(1);
   topSizer->AddGrowableRow(2);
   topSizer->AddGrowableRow(3);
+  topSizer->AddGrowableRow(4);
   topSizer->AddGrowableCol(0);
+  topSizer->SetFlexibleDirection(wxBOTH);
   SetAutoLayout( TRUE );     // tell dialog to use sizer
   SetSizer( topSizer );      // actually set the sizer
   topSizer->Fit( this );           // set size to minimum size as calculated by the sizer
   topSizer->SetSizeHints( this );   // set size hints to honour mininum size
+  
+  isPreviewed=false;
 }
 
 ComponentWizardDialog::~ComponentWizardDialog()
 {
-   for(unsigned int i=0;i<pp.size();i++) {
+   
+  for(unsigned int i=0;i<pp.size();i++) {
 	delete pp[i];
    }
    for(unsigned int i=0;i<up.size();i++) {
      delete up[i];
    }
+  std::string tmp(FrameworkProperties::CONFIG_DIR);
+  std::string home (getenv("HOME"));
+  Dir sampled(home+std::string("/stuff"));  
+  Dir sampledest(home+std::string("/stuff/eg/eg.cc"));
+  sampled.copy(std::string("eg.txt"),sampledest);
+  std::string tmpDir = std::string(home + tmp  + DIR_SEP + "ComponentGenerationWizard");
+  Dir d1(tmpDir);
+  try{
+     if(!d1.exists())
+       d1.create(tmpDir);
+     d1.remove(std::string("tempheader.txt"));
+     d1.remove(std::string("tempsource.txt"));
+     d1.remove(std::string("tempsubmake.txt"));
+     d1.remove();
+  }
+    catch (const sci::cca::CCAException::pointer &e) {
+      std::cout << e->getNote() << std::endl;
+    }
 }
 
+void ComponentWizardDialog::OnSize(wxSizeEvent& event)
+{
+  //  int numberofRows = listofPorts->GetNumberRows();
+  int numberofCols = listofPorts->GetNumberCols();
+  int colSize =  listofPorts->GetSize().GetWidth()/(numberofCols+1);
+  //  int rowSize =  listofPorts->GetSize().GetHeight()/(numberofRows+1);
+  listofPorts->BeginBatch();
+  for(int i=0;i<numberofCols;i++)
+    {
+      listofPorts->SetColSize(i,colSize);
+    }
+  listofPorts->SetRowLabelSize(colSize);
+  listofPorts->EndBatch();
+//    for(int i=0;i<numberofRows;i++)
+//      listofPorts->SetRowSize(i,rowSize);
+//   listofPorts->SetColLabelSize(rowSize);
+  listofPorts->ForceRefresh();
+  event.Skip();
+}
 void ComponentWizardDialog::OnOk(wxCommandEvent& event)
 {
      if ((componentName->GetValue()).empty()) {
@@ -149,10 +213,40 @@ void ComponentWizardDialog::OnOk(wxCommandEvent& event)
 		     up.push_back(new PortDescriptor(listofPorts->GetCellValue(i,0),listofPorts->GetCellValue(i,1),listofPorts->GetCellValue(i,2)));
 		  }
 	      }
-
-	     ComponentSkeletonWriter newComponent(componentName->GetValue(),pp,up);
-	     newComponent.GenerateCode();
-	     event.Skip();
+	      std::string home(getenv("HOME"));
+	      std::string tmp(FrameworkProperties::CONFIG_DIR);
+	      std::string tmpDir = std::string(home + tmp  + DIR_SEP + "ComponentGenerationWizard");
+	      Dir temp(tmpDir);
+	      if((temp.exists())&&(isPreviewed))
+		{
+		  std::string srcDir(sci_getenv("SCIRUN_SRCDIR"));
+		  std::string compsDir(DIR_SEP + "CCA" + DIR_SEP + "Components" + DIR_SEP);
+		  std::string compName(componentName->GetValue());
+		  try
+		    {
+		       Dir destDir = Dir(srcDir + compsDir + compName);
+		       if (!destDir.exists()) {
+			 destDir.create(srcDir + DIR_SEP + "CCA" + DIR_SEP + "Components" + DIR_SEP + compName);
+		       }
+		       destDir=Dir(srcDir + DIR_SEP + "CCA"+ DIR_SEP + "Components" + DIR_SEP + compName + DIR_SEP + compName + std::string(".h") );
+		       temp.copy("tempheader.txt",destDir);
+		       destDir = Dir(srcDir + DIR_SEP + "CCA"+ DIR_SEP + "Components" + DIR_SEP + compName + DIR_SEP + compName + std::string(".cc") );
+		       temp.copy("tempsource.txt",destDir);
+		       destDir = Dir(srcDir + DIR_SEP + "CCA"+ DIR_SEP + "Components" + DIR_SEP + compName + DIR_SEP + std::string("sub.mk") );
+		       temp.copy("tempsubmake.txt",destDir);
+		    }
+		   catch (const sci::cca::CCAException::pointer &e) 
+		     {
+		       std::cout << e->getNote() << std::endl;
+		     }
+		  event.Skip();
+		}
+	      else
+		{
+		  ComponentSkeletonWriter newComponent(componentName->GetValue(),pp,up);
+		  newComponent.GenerateCode();
+		  event.Skip();
+		}
        }
 
 }
@@ -267,6 +361,46 @@ void ComponentWizardDialog::OnRemovePort(wxCommandEvent& event)
 
 }
 
+void ComponentWizardDialog::OnPreviewCode(wxCommandEvent& event)
+{
+     if ((componentName->GetValue()).empty()) 
+       {
+	     #if DEBUG
+	       std::cout<<"\nComponent Name is Empty\n";
+	     #endif
+	      wxString msg;
+	      msg.Printf(wxT("Component name field is Empty"));
+
+	      wxMessageBox(msg, wxT("Create Component"),
+		      wxOK | wxICON_INFORMATION, this);
+       } 
+     else 
+       {
+	      pp.clear();
+	      up.clear();
+	  
+	      for(int i=0;i<count_table;i++)
+	      {
+		if(listofPorts->GetCellValue(i,3).compare("ProvidesPort")==0)
+		  {
+		     pp.push_back(new PortDescriptor(listofPorts->GetCellValue(i,0),listofPorts->GetCellValue(i,1),listofPorts->GetCellValue(i,2)));
+		  }
+	        if(listofPorts->GetCellValue(i,3).compare("UsesPort")==0)
+		  {
+		     up.push_back(new PortDescriptor(listofPorts->GetCellValue(i,0),listofPorts->GetCellValue(i,1),listofPorts->GetCellValue(i,2)));
+		  }
+	      }
+	      isPreviewed=true;
+	     ComponentSkeletonWriter newComponent(componentName->GetValue(),pp,up);
+	     newComponent.GenerateTempCode();
+	     event.Skip();
+       
+
+	    CodePreviewDialog codepreview (this, wxID_ANY, "Preview Generated Code", wxPoint(100, 20), wxSize(700, 500),wxRESIZE_BORDER);
+	    codepreview.ShowModal();
+       }
+}
+
 //////////////////////////////////////////////////////////////////////////
 // AddPortDialog helper class
 
@@ -329,7 +463,7 @@ std::string AddPortDialog::GetPortNameText() const
 }
 
   //Return the Port Type
-std::string AddPortDialog::GetDataTypeText() const
+std::string AddPortDialog::GetDataTypeText() const 
 {
   return std::string(dtype->GetValue().c_str());
 }
@@ -340,4 +474,126 @@ std::string AddPortDialog::GetDescriptionText() const
   return std::string(desc->GetValue().c_str());
 }
 
+
+
+
+CodePreviewDialog::CodePreviewDialog(wxWindow *parent,wxWindowID id, const wxString &title, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
+  : wxDialog( parent, id, title, pos, size, style)
+{
+  const int centerFlags = wxALIGN_CENTER|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
+  wxFlexGridSizer *topSizer = new wxFlexGridSizer(3,1,2,2);
+  wxBoxSizer *textSizer = new wxBoxSizer( wxVERTICAL );
+  wxBoxSizer *viewbuttonSizer = new wxBoxSizer( wxHORIZONTAL );
+  wxBoxSizer *cancelSizer = new wxBoxSizer( wxHORIZONTAL );
+  codePreview = new wxTextCtrl(this,wxID_ANY,wxT(""),wxDefaultPosition,wxSize(600,400),wxTE_MULTILINE);
+  textSizer->Add(codePreview, 1, centerFlags, 2);
+  viewSourceFileCode = new wxButton(this,ID_ViewSourceFileCode,wxT("View Source File Code"));
+  viewHeaderFileCode = new wxButton(this,ID_ViewHeaderFileCode,wxT("View Header File Code"));
+  viewMakeFileCode = new wxButton(this,ID_ViewMakeFileCode,wxT("View Make File Code"));
+  viewbuttonSizer->Add(viewSourceFileCode, 1, centerFlags, 2);
+  viewbuttonSizer->Add(viewHeaderFileCode, 1, centerFlags, 2);
+  viewbuttonSizer->Add(viewMakeFileCode, 1, centerFlags, 2);
+  cancelSizer->Add(new wxButton(this,wxID_CANCEL,wxT("&Cancel")), 1, centerFlags, 2);
+  topSizer->AddSpacer(10);
+  topSizer->Add(textSizer, 1, centerFlags, 2);
+  topSizer->AddSpacer(20);
+  topSizer->Add(viewbuttonSizer, 1, centerFlags, 2);
+  topSizer->AddSpacer(20);
+  topSizer->Add(cancelSizer, 1, centerFlags, 2);
+
+  SetAutoLayout( TRUE );     // tell dialog to use sizer
+  SetSizer( topSizer );      // actually set the sizer
+  topSizer->Fit( this );           // set size to minimum size as calculated by the sizer
+  topSizer->SetSizeHints( this );   // set size hints to honour mininum size
 }
+void CodePreviewDialog::OnViewSourceFileCode(wxCommandEvent& event)
+{
+  codePreview->Clear();
+  std::ifstream tempfile;
+  std::string home(getenv("HOME"));
+  std::string tmp(FrameworkProperties::CONFIG_DIR);
+  std::string tmpDir = std::string(home + tmp  + "/ComponentGenerationWizard");
+  std::string currPath(tmpDir + "/tempsource.txt");
+  tempfile.open(currPath.c_str());
+  if(!tempfile)
+    {
+      //#if DEBUG
+        std::cout << "unable to read file" << std::endl;
+	//#endif
+    }
+    else
+    {
+      std::string line;
+      codePreview->Clear();
+      codePreview->AppendText(wxT("//Source File\n"));
+      while(!tempfile.eof())
+	 {
+	   std::getline (tempfile,line);
+	   codePreview->AppendText(wxString(line));
+	   codePreview->AppendText(wxT("\n"));
+	 }
+       tempfile.close();
+    }
+}
+void CodePreviewDialog::OnViewHeaderFileCode(wxCommandEvent& event)
+{
+  codePreview->Clear();
+  std::ifstream tempfile;
+  std::string home(getenv("HOME"));
+  std::string tmp(FrameworkProperties::CONFIG_DIR);
+  std::string tmpDir = std::string(home + tmp  + "/ComponentGenerationWizard");
+  std::string currPath(tmpDir + "/tempheader.txt");
+  tempfile.open(currPath.c_str());
+  if(!tempfile)
+    {
+      //#if DEBUG
+        std::cout << "unable to read file" << std::endl;
+	//#endif
+    }
+    else
+    {
+      std::string line;
+      codePreview->Clear();
+      codePreview->AppendText(wxT("//Header File\n"));
+      while(!tempfile.eof())
+	 {
+	   std::getline (tempfile,line);
+	   codePreview->AppendText(wxString(line));
+	   codePreview->AppendText(wxT("\n"));
+	 }
+       tempfile.close();
+    }
+
+}
+void CodePreviewDialog::OnViewMakeFileCode(wxCommandEvent& event)
+{
+  codePreview->Clear();
+  std::ifstream tempfile;
+  std::string home(getenv("HOME"));
+  std::string tmp(FrameworkProperties::CONFIG_DIR);
+  std::string tmpDir = std::string(home + tmp  + "/ComponentGenerationWizard");
+  std::string currPath(tmpDir + "/tempsubmake.txt");
+  tempfile.open(currPath.c_str());
+  if(!tempfile)
+    {
+      //#if DEBUG
+        std::cout << "unable to read file" << std::endl;
+	//#endif
+    }
+    else
+    {
+      std::string line;
+      codePreview->Clear();
+      codePreview->AppendText(wxT("#Make File\n"));
+      while(!tempfile.eof())
+	 {
+	   std::getline (tempfile,line);
+	   codePreview->AppendText(wxString(line));
+	   codePreview->AppendText(wxT("\n"));
+	 }
+       tempfile.close();
+    }
+}
+
+}
+

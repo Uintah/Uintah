@@ -56,29 +56,29 @@ class ComponentSkeletonWriter {
 public:
   ComponentSkeletonWriter(const std::string &cname, const std::vector<PortDescriptor*> pp, const std::vector<PortDescriptor*> up);
 
-  void ComponentClassDefinitionCode();
-  void ComponentSourceFileCode();
-  void ComponentMakefileCode();
+  void ComponentClassDefinitionCode(std::ofstream& fileStream);
+  void ComponentSourceFileCode(std::ofstream& fileStream);
+  void ComponentMakefileCode(std::ofstream& fileStream);
   //void PortClassDefinitionCode();
   void GenerateCode();
-
+  void GenerateTempCode();
 private:
   void writeLicense(std::ofstream& fileStream);
   void writeMakefileLicense(std::ofstream& fileStream);
 
   // generate header file
-  void writeHeaderInit();
-  void writeComponentDefinitionCode();
-  void writePortClassDefinitionCode();
+  void writeHeaderInit(std::ofstream& fileStream);
+  void writeComponentDefinitionCode(std::ofstream& fileStream);
+  void writePortClassDefinitionCode(std::ofstream& fileStream);
 
   // generate implementation
-  void writeLibraryHandle();
-  void writeSourceInit();
-  void writeSourceClassImpl();
-  void writeSourceFileHeaderCode();
-  void writeConstructorandDestructorCode();
-  void writeSetServicesCode();
-  void writeGoAndUIFunctionsCode();
+  void writeLibraryHandle(std::ofstream& fileStream);
+  void writeSourceInit(std::ofstream& fileStream);
+  void writeSourceClassImpl(std::ofstream& fileStream);
+  void writeSourceFileHeaderCode(std::ofstream& fileStream);
+  void writeConstructorandDestructorCode(std::ofstream& fileStream);
+  void writeSetServicesCode(std::ofstream& fileStream);
+  void writeGoAndUIFunctionsCode(std::ofstream& fileStream);
 
 
   // frequently used string tokens

@@ -230,4 +230,19 @@ interface ComponentEventService extends Port {
    void moveComponent(in ComponentID component, in int x, in int y);
 }
 
+
+
+interface EventService extends cca.Port
+{
+	   int createTopic(in string topicName);
+	   int  destroyTopic(in string topicName);
+	   void processEvents();
+	   int sendEvent(in string topicName,in string eventBody);
+	   //void receiveEvent(in string eventName, out string eventBody);
+	   int registerEventListener(in string topicName, out IEventListener theListener);
+	   //void receiveEvent(in string topicName, out array<string> eventBody);
+}// end interface EventService
+
+
+
 // END proposed - sparker
