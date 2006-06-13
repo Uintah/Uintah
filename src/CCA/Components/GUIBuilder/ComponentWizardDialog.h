@@ -56,6 +56,7 @@ public:
     ID_AddProvidesPort=wxID_HIGHEST,
     ID_AddUsesPort,
     ID_RemovePort,
+    ID_PreviewCode,
   };
 
   ComponentWizardDialog(wxWindow *parent, wxWindowID id,
@@ -71,7 +72,8 @@ public:
   void OnAddProvidesPort( wxCommandEvent &event );
   void OnAddUsesPort( wxCommandEvent &event );
   void OnRemovePort( wxCommandEvent &event );
-  
+  void OnPreviewCode( wxCommandEvent &event );
+  void OnSize(wxSizeEvent &event);
   virtual bool Validate();
 
 private:
@@ -79,8 +81,12 @@ private:
   wxStaticText *lcomponentName;
   wxButton *AddProvidesPort;
   wxButton *AddUsesPort;
+  wxButton *Preview;
   wxGrid *listofPorts;
   int count_table;
+  bool isPreviewed;
+  const static std::string DIR_SEP;
+
   wxString GetText();
   
 
@@ -111,6 +117,29 @@ private:
   wxStaticText *ldesc;
 };
 
+class CodePreviewDialog : public wxDialog
+{
+  
+ public:
+  enum
+    {
+      ID_ViewSourceFileCode = wxID_HIGHEST,
+      ID_ViewHeaderFileCode,
+      ID_ViewMakeFileCode
+    };
+  CodePreviewDialog(wxWindow *parent,wxWindowID id,const wxString &title,const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxDEFAULT_DIALOG_STYLE, const wxString& name = "Code Preview Dialog Box");
+  
+ private:
+  wxTextCtrl *codePreview;
+  wxButton *viewSourceFileCode;
+  wxButton *viewHeaderFileCode;
+  wxButton *viewMakeFileCode;
+  
+  void OnViewSourceFileCode( wxCommandEvent &event );
+  void OnViewHeaderFileCode( wxCommandEvent &event );
+  void OnViewMakeFileCode( wxCommandEvent &event );
+  DECLARE_EVENT_TABLE()
+};
 
 }
 #endif

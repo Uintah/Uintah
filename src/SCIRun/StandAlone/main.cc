@@ -171,6 +171,14 @@ main(int argc, char *argv[]) {
       std::cerr << "Fatal Error: Cannot find builder service\n";
       Thread::exitAll(1);
     }
+    
+    sci::cca::ports::EventService::pointer event
+      = pidl_cast<sci::cca::ports::EventService::pointer>(
+			  main_services->getPort("cca.EventService"));
+    if(event.isNull()) {
+      std::cerr << "Fatal Error: Cannot find Event service\n";
+      Thread::exitAll(1);
+    }
 
     if (loadNet) {
 	sci::cca::TypeMap::pointer map = fwkProperties->getProperties();
