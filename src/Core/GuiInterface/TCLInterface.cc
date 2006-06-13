@@ -531,8 +531,9 @@ TCLInterface::complete_command(const string &command)
 
 
 EventMessage::EventMessage() :
-  delivery_semaphore_(new Semaphore("TCL EventMessage Delivery",0)),
-  result_(), return_code_(0)
+  result_(),
+  return_code_(0),
+  delivery_semaphore_(new Semaphore("TCL EventMessage Delivery",0))
 {}
 
 EventMessage::~EventMessage()
