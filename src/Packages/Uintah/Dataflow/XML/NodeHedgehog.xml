@@ -22,7 +22,10 @@
       plane. If "3D" is selected all of the vectors in the domain will
       be displayed.</p>
 
-      <p> Various controls exist to edit the look of the vectors</p>
+      <p> Various controls exist to edit the look of the vectors. The
+      vectors can also  be colored according to a
+      scalar field, by attaching a scalar field to the second port
+      and a Colormap to the third port.</p>
     </description>
   </overview>
   <io>

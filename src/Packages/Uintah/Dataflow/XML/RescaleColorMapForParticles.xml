@@ -8,9 +8,17 @@
     <authors>
       <author>Packages/Kurt Zimmerman</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Manipulate how scalar particle data is mapped to color.</summary>
     <description>
       <p>Version Date: unknown</p><p>Version: 1.0</p>
+      <p> This module allows to user to adjust the range of data over
+      which the colormap spans.  If the "Auto Scale" button is
+      selected then color is mapped to the entire data range.  If
+      "Fixed Scale" is selected, then color is mapped to the range
+      specified by the min and max entries.  If you have simulation
+      data that spans several timesteps, you will want to use fixed
+      with values that represent the data range for all of the data,
+      thus the colors will represent the same values across time steps.</p>
     </description>
   </overview>
   <io>

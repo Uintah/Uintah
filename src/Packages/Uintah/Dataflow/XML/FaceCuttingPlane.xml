@@ -12,8 +12,8 @@
     <description>
       <p>Version Date: 2002</p><p>Version: 1.0</p>
       <p>This module is specifically for use on face centered data.
-      A simple axis aligned slice through the data.  The face values
-      are then mapped to the color.  Each face is represented as a
+      It provides a simple axis aligned slice through the data.  The face values
+      are then mapped to a color.  Each face is represented as a
       line running along the data cell face.  You can control line
       thickness with the line slider at the bottom.  The "+" and "-"
       buttons move the slice one index value along the stated axis.
