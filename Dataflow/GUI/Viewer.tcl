@@ -244,6 +244,7 @@ itcl_class BaseViewWindow {
 	setGlobal $this-global-dl 0
 	setGlobal $this-global-movie 0
 	setGlobal $this-global-movieName "./movie.%04d"
+	setGlobal $this-global-movieUseTimestamp 0
 	setGlobal $this-global-movieFrame 0
 	setGlobal $this-global-resize 0
 	setGlobal $this-global-movieMessage "Waiting ..."
@@ -1533,27 +1534,28 @@ itcl_class ViewWindow {
 
         wm title $w "Record Movie"
 
-	label $w.l -text "Record Movie as:"
+        frame $w.movieType -relief groove -borderwidth 2
+	label $w.movieType.l -text "Record Movie as:"
 
-        radiobutton $w.none -text "Stop Recording" \
+        radiobutton $w.movieType.none -text "Stop Recording" \
             -variable $this-global-movie -value 0 -command "$this-c redraw"
-	radiobutton $w.raw -text "PPM Frames" \
+	radiobutton $w.movieType.raw -text "PPM Frames" \
             -variable $this-global-movie -value 1 -command "$this-c redraw"
-	radiobutton $w.png -text "PNG Frames" \
+	radiobutton $w.movieType.png -text "PNG Frames" \
             -variable $this-global-movie -value 3 -command "$this-c redraw"
-	radiobutton $w.mpeg -text "Mpeg" \
+	radiobutton $w.movieType.mpeg -text "Mpeg" \
 	    -variable $this-global-movie -value 2 -command "$this checkMPGlicense"
 	
-	Tooltip $w.none "Press to stop recording the movie."
-	Tooltip $w.raw \
+	Tooltip $w.movieType.none "Press to stop recording the movie."
+	Tooltip $w.movieType.raw \
            "When pressed, SCIRun will begin recording raw frames as they\n"\
            "are displayed.  The frames are stored in PPM format and can\n" \
            "be merged together into a movie using programs such as Quicktime."
-	Tooltip $w.mpeg \
+	Tooltip $w.movieType.mpeg \
            "When pressed, SCIRun will begin recording an MPEG'd movie."
 
 	if { ![$this-c have_mpeg] } {
-	    $w.mpeg configure -state disabled -disabledforeground ""
+	    $w.movieType.mpeg configure -state disabled -disabledforeground ""
 	} 
 
         checkbutton $w.sync -text "Sync with Execute" \
@@ -1565,9 +1567,8 @@ itcl_class ViewWindow {
             "not be recorded."
 
 	frame $w.moviebase
-	label $w.moviebase.label -text "Name:" -width 6
-        entry $w.moviebase.entry -relief sunken -width 15 \
-	    -textvariable "$this-global-movieName" 
+	label $w.moviebase.label -text "File Name:"
+        entry $w.moviebase.entry -relief sunken -width 15 -textvariable "$this-global-movieName" 
 
         TooltipMultiWidget "$w.moviebase.label $w.moviebase.entry" \
             "Name of the movie file.  The %%#d specifies number of digits\nto use in the frame number.  Eg: movie.%%04d will\nproduce names such as movie.0001.ppm"
@@ -1576,6 +1577,14 @@ itcl_class ViewWindow {
 	label $w.movieframe.label -text "Next Frame No:" -width 15
         entry $w.movieframe.entry -relief sunken -width 6 \
 	    -textvariable "$this-global-movieFrame" 
+
+        frame $w.movieUseTimestampFrame
+	label $w.movieUseTimestampFrame.label -text "Add timestamp to name:"
+        checkbutton $w.movieUseTimestampFrame.button -variable $this-global-movieUseTimestamp \
+            -offvalue 0 -onvalue 1
+
+        TooltipMultiWidget "$w.movieUseTimestampFrame.button $w.movieUseTimestampFrame.label" \
+            "Appends a timestamp to the name of each (PNG/PPM) frame. This can be useful\nwhen you are dumping frames from multiple different Viewer windows."
 
         TooltipMultiWidget "$w.movieframe.label $w.movieframe.entry" \
             "Frame number at which to start numbering generated frames."
@@ -1599,11 +1608,18 @@ itcl_class ViewWindow {
 	button $w.close -width 10 -text "Close" \
 	  -command "wm withdraw $w"
 
-        pack $w.l -padx 4 -anchor w
-        pack $w.none $w.raw $w.png $w.mpeg $w.sync -padx 4 -anchor w
+        pack $w.movieType -pady 4
+        pack $w.movieType.l -padx 4 -anchor w
+        pack $w.movieType.none $w.movieType.raw $w.movieType.png $w.movieType.mpeg -padx 4 -anchor w
+
+        puts "here: $w"
+        pack $w.sync 
 
         pack $w.moviebase.label $w.moviebase.entry -side left -padx 4
         pack $w.moviebase -pady 5 -padx 4 -anchor w
+
+        pack $w.movieUseTimestampFrame.label $w.movieUseTimestampFrame.button -side left -padx 4
+        pack $w.movieUseTimestampFrame -padx 4 -pady 4 -anchor w
 
         pack $w.movieframe.label $w.movieframe.entry -side left -padx 4
         pack $w.movieframe -pady 2 -padx 4 -anchor w

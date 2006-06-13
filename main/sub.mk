@@ -71,7 +71,7 @@ endif
 # Though SCIRun (main.o) doesn't explicitly use libxml2, we must link
 # against it (on the (perhaps only OSX 8.5) mac) so that the system
 # libxml2 (reference through the Foundation classes) doesn't get called.
-LIBS :=  $(XML_LIBRARY) $(XML2_LIBRARY)
+LIBS :=  $(XML_LIBRARY) $(XML2_LIBRARY) $(F_LIBRARY)
 
 ifeq ($(NEED_SONAME),yes)
   LIBS := $(LIBS) $(XML_LIBRARY) $(TK_LIBRARY) $(DL_LIBRARY) $(Z_LIBRARY) $(SCISOCK_LIBRARY)

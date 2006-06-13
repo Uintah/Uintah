@@ -171,6 +171,7 @@ public:
   bool                  make_MPEG_p_;
   string                movie_frame_extension_;  // Currently "png" or "ppm".
   int                   current_movie_frame_;
+  bool                  add_timestamp_to_movie_frame_name_;
   string                movie_name_;
   // True if we want only to dump a movie frame when a DO_SYNC_FRAME
   // message is received.
