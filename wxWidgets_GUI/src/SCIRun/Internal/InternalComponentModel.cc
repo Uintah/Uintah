@@ -50,7 +50,6 @@
 #include <SCIRun/Internal/FrameworkProperties.h>
 #include <SCIRun/Internal/FrameworkProxyService.h>
 #include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/Internal/EventService.h>
 
 #if BUILD_DATAFLOW
  #include <SCIRun/Dataflow/DataflowScheduler.h>
@@ -68,7 +67,6 @@ InternalComponentModel::InternalComponentModel(SCIRunFramework* framework)
     lock_frameworkServices("InternalComponentModel::frameworkServices lock")
 {
     addService(new InternalFrameworkServiceDescription(this, "cca.BuilderService", &BuilderService::create));
-    addService(new InternalFrameworkServiceDescription(this, "cca.EventService", &EventService::create));
     addService(new InternalFrameworkServiceDescription(this, "cca.ComponentRepository", &ComponentRegistry::create));
     addService(new InternalFrameworkServiceDescription(this, "cca.ComponentEventService", &ComponentEventService::create));
     addService(new InternalFrameworkServiceDescription(this, "cca.ConnectionEventService", &ConnectionEventService::create));

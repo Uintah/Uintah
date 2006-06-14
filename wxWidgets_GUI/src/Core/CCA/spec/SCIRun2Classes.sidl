@@ -109,9 +109,4 @@ class GUIBuilder implements-all sci.cca.Component,
   //bool setPortColor(in string portName, in opaque color);
   // opaque type is wxColor*
   opaque getPortColor(in string portName);
-
 }
-interface IEventListener
-{
-        void processEvent(in string topicName, in string eventBody);
-}//end interface IEventListener
