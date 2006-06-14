@@ -184,30 +184,22 @@ void SprintfMatrix::execute()
           if (currentmatrix.get_rep())
           {
             dataptr = currentmatrix->get_data_pointer();
-            if (matrixindex < (int)currentmatrix->get_data_size())
+            if (matrixindex < currentmatrix->get_data_size())
             {
-              dataptr = currentmatrix->get_data_pointer();
-              if (matrixindex < currentmatrix->get_data_size())
-              {
-                datavalue = dataptr[matrixindex++];
-              }
-              else
-              {
-                datavalue = 0.0;
-              }
-              if (matrixindex == currentmatrix->get_data_size()) 
-              { 
-                currentmatrix = 0; 
-                if (inputport == (num_input_ports()-1))
-                {
-                  lastdata = true;
-                  lastport = true;
-                }
-              }
+              datavalue = dataptr[matrixindex++];
             }
             else
             {
               datavalue = 0.0;
+            }
+            if (matrixindex == currentmatrix->get_data_size()) 
+            { 
+              currentmatrix = 0; 
+              if (inputport == (num_input_ports()-1))
+              {
+                lastdata = true;
+                lastport = true;
+              }
             }
           }
         }
