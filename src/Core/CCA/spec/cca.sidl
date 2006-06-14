@@ -1098,7 +1098,7 @@ package cca {
                               in string providingPortName);
         //>>>>>>>>>>>>>>>>>>>>>
       } // end interface BuilderService
-      
+
       /** 
        *  ComponentRepository is a Port implemented by a CCA compliant framework 
        *  or other component to expose in a standard way:<ol>

@@ -148,22 +148,19 @@ ComponentWizardDialog::~ComponentWizardDialog()
    }
   std::string tmp(FrameworkProperties::CONFIG_DIR);
   std::string home (getenv("HOME"));
-  Dir sampled(home+std::string("/stuff"));  
-  Dir sampledest(home+std::string("/stuff/eg/eg.cc"));
-  sampled.copy(std::string("eg.txt"),sampledest);
   std::string tmpDir = std::string(home + tmp  + DIR_SEP + "ComponentGenerationWizard");
   Dir d1(tmpDir);
-  try{
+  //try{
      if(!d1.exists())
        d1.create(tmpDir);
      d1.remove(std::string("tempheader.txt"));
      d1.remove(std::string("tempsource.txt"));
      d1.remove(std::string("tempsubmake.txt"));
      d1.remove();
-  }
-    catch (const sci::cca::CCAException::pointer &e) {
-      std::cout << e->getNote() << std::endl;
-    }
+//      }
+//     catch (const sci::cca::CCAException::pointer &e) {
+//       std::cout << e->getNote() << std::endl;
+//     }
 }
 
 void ComponentWizardDialog::OnSize(wxSizeEvent& event)

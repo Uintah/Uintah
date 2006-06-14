@@ -46,8 +46,7 @@ SRCS     += \
              $(SRCDIR)/InternalServiceInstance.cc \
              $(SRCDIR)/InternalFrameworkServiceInstance.cc \
              $(SRCDIR)/InternalServiceDescription.cc \
-             $(SRCDIR)/InternalFrameworkServiceDescription.cc \
-	     $(SRCDIR)/EventService.cc 
+             $(SRCDIR)/InternalFrameworkServiceDescription.cc
 
 $(SRCDIR)/ComponentRegistry.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/ComponentEvent.o: Core/CCA/spec/cca_sidl.h
@@ -63,4 +62,3 @@ $(SRCDIR)/InternalServiceInstance.o : Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/InternalFrameworkServiceInstance.o : Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/InternalServiceDescription.o : Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/InternalFrameworkServiceDescription.o : Core/CCA/spec/cca_sidl.h
-$(SRCDIR)/EventService.o: Core/CCA/spec/cca_sidl.h

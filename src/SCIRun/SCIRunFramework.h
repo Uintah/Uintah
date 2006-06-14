@@ -257,7 +257,6 @@ protected:
     friend class ComponentEventService;
     friend class FrameworkProxyService;
     friend class ServiceRegistry;
-    friend class EventService;
 
     /** Creates an instance of the component defined by the string ``type'',
 	which must uniquely define the type of the component.  The component
