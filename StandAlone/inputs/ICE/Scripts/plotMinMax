@@ -5,6 +5,12 @@
 #  It currently works on 2 levels
 #__________________________________
 
+
+if( $#argv != 2) then
+  echo " plotMinMax <variable name >  < uda directory>"
+  exit (1)
+endif 
+
 set var = $argv[1]      #variable name
 set f = $argv[2]        # uda directory
 
