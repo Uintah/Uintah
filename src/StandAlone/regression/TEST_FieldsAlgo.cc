@@ -145,7 +145,7 @@ int main(int argc, char *argv[], char **environment)
         }
         
         // Loop through all the fields and test the algorithm
-        for (int p=0; p < testfields.size(); p++)
+        for (unsigned int p=0; p < testfields.size(); p++)
         {
           FieldHandle input;
           FieldHandle  output, refoutput;
@@ -217,7 +217,7 @@ int main(int argc, char *argv[], char **environment)
         }
         
         // Loop through all the fields and test the algorithm
-        for (int p=0; p < testfields.size(); p++)
+        for (unsigned int p=0; p < testfields.size(); p++)
         {
           FieldHandle input;
           FieldHandle  output, refoutput;
@@ -291,7 +291,7 @@ int main(int argc, char *argv[], char **environment)
         }
         
         // Loop through all the fields and test the algorithm
-        for (int p=0; p < testfields.size(); p++)
+        for (unsigned int p=0; p < testfields.size(); p++)
         {
           FieldHandle input;
           FieldHandle  output, refoutput;
@@ -368,7 +368,7 @@ int main(int argc, char *argv[], char **environment)
         }
         
         // Loop through all the fields and test the algorithm
-        for (int p=0; p < testfields.size(); p++)
+        for (unsigned int p=0; p < testfields.size(); p++)
         {
           FieldHandle input;
           FieldHandle  output, refoutput;
