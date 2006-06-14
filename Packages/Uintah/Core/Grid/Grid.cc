@@ -20,7 +20,8 @@ using namespace std;
 inline double remainder(double x,double y) 
 {
   double z = x/y;
-  return x-y*((int)z+.5);
+  int mult = (int) z+.5;
+  return x-y*mult;
 }
 #endif
 
@@ -140,7 +141,7 @@ void Grid::performConsistencyCheck() const
            integerTest_distance > smallNum){
         ostringstream desc;
         desc << " The finer Level " << fineLevel->getIndex()
-             << " "<< F_box.min() << " "<< F_box.max()
+             << " "<< Fbox_min << " "<< Fbox_max
              << " upper or lower limits are not divisible by the cell spacing "
              << dx_fineLevel << " \n Remainder of level box/dx: lower" 
              << integerTest_min << " upper " << integerTest_max<< endl;
@@ -438,6 +439,11 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
             IntVector endcell = resolution*IntVector(i+1,j+1,k+1)/patches+lowCell;
             IntVector inStartCell(startcell);
             IntVector inEndCell(endcell);
+
+            // this algorithm for finding extra cells is not sufficient for AMR
+            // levels - it only finds extra cells on the domain boundary.  The only 
+            // way to find extra cells for them is to do neighbor queries, so we will
+            // potentially adjust extra cells in Patch::setBCType (called from Level::setBCTypes)
             startcell -= IntVector(startcell.x() == anchorCell.x() ? extraCells.x():0,
                                    startcell.y() == anchorCell.y() ? extraCells.y():0,
                                    startcell.z() == anchorCell.z() ? extraCells.z():0);
