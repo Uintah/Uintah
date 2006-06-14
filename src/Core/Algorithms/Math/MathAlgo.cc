@@ -44,11 +44,16 @@ MathAlgo::MathAlgo(ProgressReporter* pr) :
 {
 }
 
-bool MathAlgo::BuildFEMatrix(FieldHandle field, MatrixHandle& matrix, int num_proc, MatrixHandle ConductivityTable, MatrixHandle GeomToComp, MatrixHandle CompToGeom)
+
+bool
+MathAlgo::BuildFEMatrix(FieldHandle field, MatrixHandle& matrix, int num_proc,
+                        MatrixHandle conductivity_table,
+                        MatrixHandle GeomToComp, MatrixHandle CompToGeom)
 {
   BuildFEMatrixAlgo algo;
   
-  if(!(algo.BuildFEMatrix(pr_,field,matrix,ConductivityTable,num_proc))) return(false);
+  if(!(algo.BuildFEMatrix(pr_, field, matrix, conductivity_table, num_proc)))
+    return false;
   
   if ((GeomToComp.get_rep()==0)&&(CompToGeom.get_rep()==0))
   {
@@ -58,17 +63,18 @@ bool MathAlgo::BuildFEMatrix(FieldHandle field, MatrixHandle& matrix, int num_pr
       field->get_property("CompToGeom",CompToGeom);
       matrix = CompToGeom*matrix*GeomToComp;
     }  
-    return (true);
+    return true;
   }
   
   if (CompToGeom.get_rep() == 0) CompToGeom = GeomToComp->transpose();
   if (GeomToComp.get_rep() == 0) GeomToComp = CompToGeom->transpose();
   matrix = GeomToComp*matrix*CompToGeom;
-  return (true);
+  return true;
 }
 
 
-bool MathAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int n)
+bool
+MathAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int n)
 { 
   if (input->is_sparse())
   {
@@ -78,11 +84,16 @@ bool MathAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int
     int sm = input->nrows();
     int nnz = input->get_data_size();
  
-  
-	int newnnz=0;
+    int newnnz=0;
     for (int p=1; p<(m+1); p++)
     {
-      if (p <= sm) for (int q = row[p-1]; q < row[p]; q++) if (col[q] < n) newnnz++;
+      if (p <= sm)
+      {
+        for (int q = row[p-1]; q < row[p]; q++)
+        {
+          if (col[q] < n) newnnz++;
+        }
+      }
     }
  
     double* newval = scinew double[newnnz];  
@@ -95,7 +106,7 @@ bool MathAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int
       if (newval) delete newval;
       if (newcol) delete newcol;
       if (newrow) delete newrow;
-      return (false);
+      return false;
     }
     
     int k = 0;
@@ -111,29 +122,35 @@ bool MathAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int
     newrow[0] = 0;
     for (int p=1; p<(m+1); p++)
     {
-      if (p <= sm) for (int q = row[p-1]; q < row[p]; q++) if (col[q] < n) r++;
+      if (p <= sm)
+      {
+        for (int q = row[p-1]; q < row[p]; q++)
+        {
+          if (col[q] < n) r++;
+        }
+      }
       newrow[p] = r;
     }
     
-    output = dynamic_cast<Matrix *>(scinew SparseRowMatrix(m,n,newrow,newcol,newnnz,newval));
+    output = scinew SparseRowMatrix(m,n,newrow,newcol,newnnz,newval);
     if (output.get_rep() == 0)
     {
       error("ResizeMatrix: Could not allocate output matrix");
       if (newval) delete newval;
       if (newcol) delete newcol;
       if (newrow) delete newrow;
-      return (false);    
+      return false;    
     }
-    return (true);
+    return true;
   }
   else
   {
-    MatrixHandle mat = dynamic_cast<Matrix *>(input->dense());
-    output = dynamic_cast<Matrix *>(scinew DenseMatrix(m,n));
+    MatrixHandle mat = input->dense();
+    output = scinew DenseMatrix(m,n);
     if (output.get_rep() == 0)
     {
       error("ResizeMatrix: Could not allocate output matrix");
-      return (false);
+      return false;
     }
   
     int sm = input->nrows();
@@ -154,13 +171,16 @@ bool MathAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int
     for (;p<m;p++)
       for (q=0;q<n;q++) dst[q+p*n]= 0.0;
    
-    return (true);
+    return true;
   }
   
-  return (false);
+  return false;
 }
 
-bool MathAlgo::CreateSparseMatrix(SparseElementVector& input, MatrixHandle& output, int m, int n)
+
+bool
+MathAlgo::CreateSparseMatrix(SparseElementVector& input,
+                             MatrixHandle& output, int m, int n)
 {
   std::sort(input.begin(),input.end());
   
@@ -192,7 +212,7 @@ bool MathAlgo::CreateSparseMatrix(SparseElementVector& input, MatrixHandle& outp
     if (cols) delete[] cols;
     if (vals) delete[] vals;
     error("CreateSparseMatrix: Could not allocate memory for matrix");
-    return (false);
+    return false;
   }
   
   rows[0] = 0;
@@ -214,15 +234,16 @@ bool MathAlgo::CreateSparseMatrix(SparseElementVector& input, MatrixHandle& outp
     rows[p+1] = k;
   }   
   
-  output = dynamic_cast<Matrix *>(scinew SparseRowMatrix(m,n,rows,cols,nnz,vals));
-  if (output.get_rep()) return (true);
+  output = scinew SparseRowMatrix(m,n,rows,cols,nnz,vals);
+  if (output.get_rep()) return true;
   
-  return (false);
+  return false;
 }
 
 
-
-bool MathAlgo::ReverseCuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle& mapping,bool calcmapping)
+bool
+MathAlgo::ReverseCuthillmcKee(MatrixHandle im, MatrixHandle& om,
+                              MatrixHandle& mapping, bool calcmapping)
 {
   int *rr, *cc;
   double *d;
@@ -231,19 +252,19 @@ bool MathAlgo::ReverseCuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle
   if (im.get_rep() == 0)
   {
     error("ReverseCuthillmcKee: No input matrix was found");
-    return (false);
+    return false;
   }
   
   if (im->ncols() != im->nrows())
   {
     error("ReverseCuthillmcKee: Matrix is not square");
-    return (false);  
+    return false;  
   }
   
   if (im->is_sparse() == false) 
   {
     error("ReverseCuthillmcKee: Matrix is not sparse");
-    return (false);
+    return false;
   }
   SparseRowMatrix* sim = im->as_sparse();
   
@@ -251,7 +272,7 @@ bool MathAlgo::ReverseCuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle
   if (om.get_rep() == 0)
   {
     error("ReverseCuthillmcKee: Could not copy sparse matrix");
-    return (false);  
+    return false;  
   }
   
   m  = sim->nrows();
@@ -280,7 +301,7 @@ bool MathAlgo::ReverseCuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle
       if (md ) delete[] md;      
 
       error("ReverseCuthillmcKee: Could not reserve space for mapping matrix");    
-      return (false);
+      return false;
     }
     
     mapping = scinew SparseRowMatrix(m,m,mrr,mcc,m,md);
@@ -313,7 +334,7 @@ bool MathAlgo::ReverseCuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle
     if (S) delete[] S;
     if (R) delete[] R;
     error("ReverseCuthillmcKee: Could not allocate enough memory");
-    return (false);
+    return false;
   }
   
   for (int p=0;p<m;p++) Q[p] = 0;
@@ -403,11 +424,13 @@ bool MathAlgo::ReverseCuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle
   delete[] S;
   delete[] R;
 
-  return (true);
+  return true;
 } 
  
 
-bool MathAlgo::CuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle& mapping,bool calcmapping)
+bool
+MathAlgo::CuthillmcKee(MatrixHandle im, MatrixHandle& om,
+                       MatrixHandle& mapping, bool calcmapping)
 {
  int *rr, *cc;
   double *d;
@@ -416,19 +439,19 @@ bool MathAlgo::CuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle& mappi
   if (im.get_rep() == 0)
   {
     error("ReverseCuthillmcKee: No input matrix was found");
-    return (false);
+    return false;
   }
   
   if (im->ncols() != im->nrows())
   {
     error("ReverseCuthillmcKee: Matrix is not square");
-    return (false);  
+    return false;  
   }
   
   if (im->is_sparse() == false) 
   {
     error("CuthillmcKee: Matrix is not sparse");
-    return (false);
+    return false;
   }
   
   SparseRowMatrix* sim = im->as_sparse();
@@ -437,7 +460,7 @@ bool MathAlgo::CuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle& mappi
   if (om.get_rep() == 0)
   {
     error("CuthillmcKee: Could not copy sparse matrix");
-    return (false);  
+    return false;  
   }
   
   m  = sim->nrows();
@@ -468,7 +491,7 @@ bool MathAlgo::CuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle& mappi
       if (md ) delete[] md;      
 
       error("CuthillmcKee: Could not reserve space for mapping matrix");    
-      return (false);
+      return false;
     }    
     
     mapping = scinew SparseRowMatrix(m,m,mrr,mcc,m,md);
@@ -501,7 +524,7 @@ bool MathAlgo::CuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle& mappi
     if (S) delete[] S;
     if (R) delete[] R;
     error("CuthillmcKee: Could not allocate enough memory");
-    return (false);
+    return false;
   }
     
   for (int p=0;p<m;p++) Q[p] = 0;
@@ -588,25 +611,28 @@ bool MathAlgo::CuthillmcKee(MatrixHandle im,MatrixHandle& om,MatrixHandle& mappi
   delete[] R;
 
 
-  return (true);
+  return true;
 }
 
-bool MathAlgo::ApplyRowOperation(MatrixHandle input, MatrixHandle& output, std::string method)
+
+bool
+MathAlgo::ApplyRowOperation(MatrixHandle input, MatrixHandle& output,
+                            std::string method)
 {
   if (input.get_rep() == 0)
   {
     error("ApplyRowOperation: no input matrix found");
-    return (false);
+    return false;
   }
   
   int nrows = input->nrows();
   int ncols = input->ncols();
   
-  output = dynamic_cast<Matrix*>(scinew DenseMatrix(nrows,1));
+  output = scinew DenseMatrix(nrows, 1);
   if (output.get_rep() == 0)
   {
     error("ApplyRowOperation: could not create output matrix");
-    return (false);  
+    return false;  
   }
 
   double *dest = output->get_data_pointer();
@@ -713,7 +739,7 @@ bool MathAlgo::ApplyRowOperation(MatrixHandle input, MatrixHandle& output, std::
     else
     {
       error ("ApplyRowOperation: This method has not yet been implemented");
-      return (false);
+      return false;
     }
   }
   else
@@ -800,24 +826,27 @@ bool MathAlgo::ApplyRowOperation(MatrixHandle input, MatrixHandle& output, std::
     else
     {
       error("ApplyRowOperation: This method has not yet been implemented");
-      return (false);    
+      return false;    
     }
   }
   
-  return (true);
+  return true;
 }
 
-bool MathAlgo::ApplyColumnOperation(MatrixHandle input, MatrixHandle& output, std::string method)
+
+bool
+MathAlgo::ApplyColumnOperation(MatrixHandle input, MatrixHandle& output,
+                               std::string method)
 {
   if (input.get_rep() == 0)
   {
     error("ApplyRowOperation: no input matrix found");
-    return (false);
+    return false;
   }
-  MatrixHandle t = dynamic_cast<Matrix *>(input->transpose());
-  if(!(ApplyRowOperation(t,t,method))) return (false);
-  output = dynamic_cast<Matrix *>(t->transpose());
-  return (true);
+  MatrixHandle t = input->transpose();
+  if(!(ApplyRowOperation(t,t,method))) return false;
+  output = t->transpose();
+  return true;
 } 
 
 
