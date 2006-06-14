@@ -185,8 +185,8 @@ MathAlgo::CreateSparseMatrix(SparseElementVector& input,
   std::sort(input.begin(),input.end());
   
   int nnz = 1;
-  int q = 0;
-  for (int p=1; p < input.size(); p++)
+  unsigned int q = 0;
+  for (unsigned int p=1; p < input.size(); p++)
   {
     if (input[p] == input[q])
     {
@@ -221,7 +221,7 @@ MathAlgo::CreateSparseMatrix(SparseElementVector& input,
   int k = 0;
   for (int p=0; p < m; p++)
   {
-    while ((q < input.size())&&(input[q].row == p)) 
+    while ((q < input.size()) && (input[q].row == p)) 
 	{ 
 	  if (input[q].val)
 	  {
