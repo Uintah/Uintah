@@ -292,11 +292,6 @@ void
 Patch::setBCType(Patch::FaceType face, BCType newbc)
 {
    d_bctypes[face]=newbc;
-   d_nodeHighIndex = d_highIndex+
-	       IntVector(getBCType(xplus) == Neighbor?0:1,
-			   getBCType(yplus) == Neighbor?0:1,
-			   getBCType(zplus) == Neighbor?0:1);
-
 
    // If this face has a BCType of Patch::None, make sure
    // that it is in the list of d_BoundaryFaces, otherwise, make
@@ -333,6 +328,18 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
    }
 
    if (newbc == Patch::Coarse ) {
+     // assign patch's extra cells for the coarse-fine interface here (doesn't happen in 
+     // Grid::problemSetup and helps out the regridder
+     bool low = face == xminus || face == yminus || face == zminus;
+     int dim = face / 2;  // do this to not have to have 6 if/else statements
+     int ec = getLevel()->getExtraCells()[dim];
+     if (low) { 
+       this->d_lowIndex[dim] = this->d_inLowIndex[dim] - ec;
+     }
+     else {
+       this->d_highIndex[dim] = this->d_inHighIndex[dim] + ec;
+     }
+
      if(face_Idx == d_coarseFineInterfaceFaces.end()){  
        d_coarseFineInterfaceFaces.push_back(face);
        d_hasCoarsefineInterfaceFace = true;
@@ -343,6 +350,10 @@ Patch::setBCType(Patch::FaceType face, BCType newbc)
      }
    }  
         
+   d_nodeHighIndex = d_highIndex + IntVector(getBCType(xplus) == Neighbor?0:1,
+                                             getBCType(yplus) == Neighbor?0:1,
+                                             getBCType(zplus) == Neighbor?0:1);
+
 }
 
 void
