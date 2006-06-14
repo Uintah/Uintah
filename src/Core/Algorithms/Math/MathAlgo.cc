@@ -712,14 +712,16 @@ MathAlgo::ApplyRowOperation(MatrixHandle input, MatrixHandle& output,
         std::vector<double> dpos;
         std::vector<double> dneg;
         for (int r = rows[q]; r < rows[q+1]; r++) if (vals[r] < 0.0 ) dneg.push_back(vals[r]); else dpos.push_back(vals[r]);
-        if (dpos.size() >= ncols/2) std::sort(dpos.begin(),dpos.end());
-        if (dneg.size() >= ncols/2) std::sort(dneg.begin(),dneg.end());
-        if (2*(ncols/2) == ncols)
+        if (dpos.size() >= (unsigned int)ncols/2)
+          std::sort(dpos.begin(),dpos.end());
+        if (dneg.size() >= (unsigned int)ncols/2)
+          std::sort(dneg.begin(),dneg.end());
+        if (2*(ncols/2) == ncols && ncols)
         {
           double val1 = 0.0;
           double val2 = 0.0;
-          int q1 = (ncols/2)-1;
-          int q2 = ncols/2; 
+          unsigned int q1 = (ncols/2)-1;
+          unsigned int q2 = ncols/2; 
           if ( q1 < dneg.size()) val1 = dneg[q1];
           if ( q2 < dneg.size()) val2 = dneg[q2];
           if ( (ncols-1)-q1 < dpos.size()) val1 = dpos[dpos.size()-ncols+q1];
@@ -730,8 +732,9 @@ MathAlgo::ApplyRowOperation(MatrixHandle input, MatrixHandle& output,
         {
           double val1 = 0.0;
           int q1 = (ncols/2);
-          if ( q1 < dneg.size()) val1 = dneg[q1];
-          if ( (ncols-1)-q1 < dpos.size()) val1 = dpos[dpos.size()-ncols+q1];
+          if ( q1 < (int)dneg.size()) val1 = dneg[q1];
+          if ( (ncols-1)-q1 < (int)(dpos.size()))
+            val1 = dpos[dpos.size()-ncols+q1];
           dest[q] = val1;
         }       
       }                   
