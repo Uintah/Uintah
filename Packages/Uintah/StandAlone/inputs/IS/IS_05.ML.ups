@@ -319,7 +319,7 @@
               <criteria> Absolute   </criteria>
 
              <!-- Hypre options -->
-             <solver>         hybrid  </solver>
+             <solver>         cg      </solver>
              <preconditioner> pfmg    </preconditioner>
              <maxiterations>  500    </maxiterations>
              <npre>           1       </npre>
