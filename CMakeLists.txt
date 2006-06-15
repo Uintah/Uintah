@@ -168,6 +168,11 @@ MARK_AS_ADVANCED(THROW_LEVEL ASSERTION_LEVEL DEF_HASH TEMPLATE_TAG TEMPLATE_BOX)
 # DV Add with_exc stuff from configure.ac
 
 #-----------------------------------------------------------------------------
+# Thread library
+FIND_PACKAGE( Threads )
+SET(THREAD_LIBRARY ${CMAKE_THREAD_LIBS_INIT} CACHE INTERNAL "Thread library.")
+
+#-----------------------------------------------------------------------------
 # Z lib
 FIND_PACKAGE( ZLIB )
 SET(SCIRUN_INCLUDE_THIRDPARTY ${SCIRUN_INCLUDE_THIRDPARTY} ${ZLIB_INCLUDE_DIR})
