@@ -1006,66 +1006,7 @@ void ICE::zeroMatrix_UnderFinePatches(const ProcessorGroup*,
   } // for patches
 }
 
-/*___________________________________________________________________
- Function~  ICE::matrixCoarseLevelIterator--  
- Purpose:  returns the iterator  THIS IS COMPILCATED AND CONFUSING
-_____________________________________________________________________*/
-void ICE::matrixCoarseLevelIterator(Patch::FaceType patchFace,
-                                       const Patch* coarsePatch,
-                                       const Patch* finePatch,
-                                       const Level* fineLevel,
-                                       CellIterator& iter,
-                                       bool& isRight_CP_FP_pair)
-{
-  CellIterator f_iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
 
-  // find the intersection of the fine patch face iterator and underlying coarse patch
-  IntVector f_lo_face = f_iter.begin();                 // fineLevel face indices   
-  IntVector f_hi_face = f_iter.end();
-
-  f_lo_face = fineLevel->mapCellToCoarser(f_lo_face);     
-  f_hi_face = fineLevel->mapCellToCoarser(f_hi_face);
-
-  IntVector c_lo_patch = coarsePatch->getLowIndex(); 
-  IntVector c_hi_patch = coarsePatch->getHighIndex();
-
-  IntVector l = Max(f_lo_face, c_lo_patch);             // intersection
-  IntVector h = Min(f_hi_face, c_hi_patch);
-
-  //__________________________________
-  // Offset for the coarse level iterator
-  // shift l & h,   1 cell for x+, y+, z+ finePatchfaces
-  // shift l only, -1 cell for x-, y-, z- finePatchfaces
-
-  string name = finePatch->getFaceName(patchFace);
-  IntVector offset = finePatch->faceDirection(patchFace);
-
-  if(name == "xminus" || name == "yminus" || name == "zminus"){
-    l += offset;
-  }
-  if(name == "xplus" || name == "yplus" || name == "zplus"){
-    l += offset;
-    h += offset;
-  }
-
-  l = Max(l, coarsePatch->getLowIndex());
-  h = Min(h, coarsePatch->getHighIndex());
-  
-  iter=CellIterator(l,h);
-  isRight_CP_FP_pair = false;
-  if ( coarsePatch->containsCell(l) ){
-    isRight_CP_FP_pair = true;
-  }
-  
-  if (cout_dbg.active()) {
-    cout_dbg << "refluxCoarseLevelIterator: face "<< patchFace
-             << " finePatch " << finePatch->getID()
-             << " coarsePatch " << coarsePatch->getID()
-             << " [CellIterator at " << iter.begin() << " of " << iter.end() << "] "
-             << " does this coarse patch own the face centered variable "
-             << isRight_CP_FP_pair << endl; 
-  }
-}
 
 /*___________________________________________________________________
  Function~  ICE::schedule_matrixBC_CFI_coarsePatch--  
@@ -1164,7 +1105,7 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
           // determine the iterator on the coarse level.
           CellIterator c_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
           bool isRight_CP_FP_pair;
-          matrixCoarseLevelIterator( patchFace,coarsePatch, finePatch, fineLevel,
+          coarseLevel_CFI_Iterator( patchFace,coarsePatch, finePatch, fineLevel,
                                      c_iter ,isRight_CP_FP_pair);
 
           // eject if this is not the right coarse/fine patch pair
