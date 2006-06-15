@@ -24,6 +24,7 @@ SRCS     += \
 	$(SRCDIR)/UnknownVariable.cc \
 	$(SRCDIR)/SimpleMaterial.cc  \
 	$(SRCDIR)/LinearInterpolator.cc \
+       $(SRCDIR)/AMR.cc \
 	$(SRCDIR)/Node27Interpolator.cc 
 
 PSELIBS := \
