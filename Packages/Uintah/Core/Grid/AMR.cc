@@ -161,5 +161,57 @@ void normalizedDistance_CC(const int refineRatio,
   }
 }
 
+/*___________________________________________________________________
+ Function~  coarseLevel_CFI_Iterator--  
+ Purpose:  returns the coarse level iterator at the CFI
+_____________________________________________________________________*/
+void coarseLevel_CFI_Iterator(Patch::FaceType patchFace,
+                               const Patch* coarsePatch, 
+                               const Patch* finePatch,   
+                               const Level* fineLevel,   
+                               CellIterator& iter,       
+                               bool& isRight_CP_FP_pair) 
+{
+  CellIterator f_iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
+
+  // find the intersection of the fine patch face iterator and underlying coarse patch
+  IntVector f_lo_face = f_iter.begin();                 // fineLevel face indices   
+  IntVector f_hi_face = f_iter.end();
+
+  f_lo_face = fineLevel->mapCellToCoarser(f_lo_face);     
+  f_hi_face = fineLevel->mapCellToCoarser(f_hi_face);
+
+  IntVector c_lo_patch = coarsePatch->getLowIndex(); 
+  IntVector c_hi_patch = coarsePatch->getHighIndex();
+
+  IntVector l = Max(f_lo_face, c_lo_patch);             // intersection
+  IntVector h = Min(f_hi_face, c_hi_patch);
+
+  //__________________________________
+  // Offset for the coarse level iterator
+  // shift l & h,   1 cell for x+, y+, z+ finePatchfaces
+  // shift l only, -1 cell for x-, y-, z- finePatchfaces
+
+  string name = finePatch->getFaceName(patchFace);
+  IntVector offset = finePatch->faceDirection(patchFace);
+
+  if(name == "xminus" || name == "yminus" || name == "zminus"){
+    l += offset;
+  }
+  if(name == "xplus" || name == "yplus" || name == "zplus"){
+    l += offset;
+    h += offset;
+  }
+
+  l = Max(l, coarsePatch->getLowIndex());
+  h = Min(h, coarsePatch->getHighIndex());
+  
+  iter=CellIterator(l,h);
+  isRight_CP_FP_pair = false;
+  if ( coarsePatch->containsCell(l) ){
+    isRight_CP_FP_pair = true;
+  }
+}
+
 
 }
