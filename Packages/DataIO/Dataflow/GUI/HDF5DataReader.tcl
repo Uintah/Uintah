@@ -1471,7 +1471,7 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	pack $vcr.rewind $vcr.stepb $vcr.pause \
 	    $vcr.play $vcr.stepf $vcr.fforward -side left -fill both -expand 1
-	global $this-ToolTipText
+	global ToolTipText
 	Tooltip $vcr.rewind   $ToolTipText(VCRrewind)
 	Tooltip $vcr.stepb    $ToolTipText(VCRstepback)
 	Tooltip $vcr.pause    $ToolTipText(VCRpause)
