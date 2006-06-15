@@ -94,6 +94,7 @@ public:
 		       vector< double > &planes,
 		       unsigned int color,
 		       unsigned int showIslands,
+		       unsigned int islandCentroids,
 		       unsigned int overlaps,
 		       unsigned int maxWindings,
 		       unsigned int override,
@@ -123,6 +124,7 @@ public:
 		       vector< double > &planes,
 		       unsigned int color,
 		       unsigned int showIslands,
+		       unsigned int islandCentroids,
 		       unsigned int overlaps,
 		       unsigned int maxWindings,
 		       unsigned int override,
@@ -1269,6 +1271,7 @@ execute(FieldHandle& ifield_h,
 	vector< double > &planes,
 	unsigned int color,
 	unsigned int showIslands,
+	unsigned int islandCentroids,
 	unsigned int overlaps,
 	unsigned int maxWindings,
 	unsigned int override,
@@ -1290,11 +1293,13 @@ execute(FieldHandle& ifield_h,
 
   // Point Cloud Field of centroids.
   vector< vector < Vector > > baseCentroids;
+  vector < unsigned int > baseCentroidsWinding;
 
   if( ipccfield_h.get_rep() ) {
     PCFIELD *ipcfield = (PCFIELD *) ipccfield_h.get_rep();
     typename PCFIELD::mesh_handle_type ipcmesh = ipcfield->get_typed_mesh();
 
+    typename PCFIELD::fdata_type::iterator dataItr = ipcfield->fdata().begin();
     typename PCFIELD::mesh_type::Node::iterator inodeItr, inodeEnd;
 
     ipcmesh->begin( inodeItr );
@@ -1305,13 +1310,16 @@ execute(FieldHandle& ifield_h,
     while (inodeItr != inodeEnd) {
       ipcmesh->get_center(pt, *inodeItr);
 
+      // Store the base centroid for each point.
       vector < Vector > baseCentroid;
       baseCentroid.push_back( (Vector) pt );
       baseCentroids.push_back( baseCentroid );
+      baseCentroidsWinding.push_back( (unsigned int) *dataItr );
 
 //       cerr << "input " << pt << endl;
 
       ++inodeItr;
+      ++dataItr;
     }
   }
 
@@ -1322,11 +1330,13 @@ execute(FieldHandle& ifield_h,
 
   // Point Cloud Field of Separatrices.
   vector< vector < Vector > > baseSeparatrices;
+  vector < unsigned int > baseSeparatricesWinding;
 
   if( ipcsfield_h.get_rep() ) {
     PCFIELD *ipcfield = (PCFIELD *) ipcsfield_h.get_rep();
     typename PCFIELD::mesh_handle_type ipcmesh = ipcfield->get_typed_mesh();
 
+    typename PCFIELD::fdata_type::iterator dataItr = ipcfield->fdata().begin();
     typename PCFIELD::mesh_type::Node::iterator inodeItr, inodeEnd;
 
     ipcmesh->begin( inodeItr );
@@ -1340,10 +1350,12 @@ execute(FieldHandle& ifield_h,
       vector < Vector > baseSeparatrix;
       baseSeparatrix.push_back( (Vector) pt );
       baseSeparatrices.push_back( baseSeparatrix );
+      baseSeparatricesWinding.push_back( (unsigned int) *dataItr );
 
 //       cerr << "input " << pt << endl;
 
       ++inodeItr;
+      ++dataItr;
     }
   }
 
@@ -1354,7 +1366,7 @@ execute(FieldHandle& ifield_h,
 
 
   // Input iterators
-  typename IFIELD::fdata_type::iterator in = ifield->fdata().begin();
+  typename IFIELD::fdata_type::iterator dataItr = ifield->fdata().begin();
 
   typename IFIELD::mesh_type::Node::iterator inodeItr, inodeEnd;
   typename IFIELD::mesh_type::Node::index_type inodeNext;
@@ -1468,7 +1480,7 @@ execute(FieldHandle& ifield_h,
       if( override ) {
 	winding = override;
 
-	// Do this to get the values.
+	// Do this to get the basic values of the fieldline.
 	basicChecks( points, centroid,
 		     winding, twist, skip,
 		     island, groupCCW, windingNextBest );
@@ -1482,25 +1494,16 @@ execute(FieldHandle& ifield_h,
 
 	unsigned int desiredWinding = 0;
 
-	if( baseCentroids.size() ) {
+	// Iterative processing of the centroids so the desired
+	// winding value is from the base centroid data. 
 
-	  desiredWinding = (unsigned int) (*in);
+	if( baseCentroidsWinding.size() )
+	  desiredWinding = baseCentroidsWinding[windings.size()];
 
-	  in = ifield->fdata().begin();
-
-	  typename IFIELD::mesh_type::Node::iterator inodeTmp;
-	  imesh->begin( inodeTmp );
-
-	  while( *inodeTmp != inodeNext ) {
-	    ++inodeTmp;
-	    ++in;
-	  }
-	}
-
-	pair< unsigned int, double > AngleMin( 0, 1.0e12);
+	pair< unsigned int, double > AngleMin ( 0, 1.0e12);
 	pair< unsigned int, double > LengthMin( 0, 1.0e12);
       
-	pair< unsigned int, double > AngleMin2( 0, 1.0e12);
+	pair< unsigned int, double > AngleMin2 ( 0, 1.0e12);
 	pair< unsigned int, double > LengthMin2( 0, 1.0e12);
 
 	vector< unsigned int > windingList;
@@ -1754,8 +1757,8 @@ execute(FieldHandle& ifield_h,
 
 	  winding = windings[count];
 
-	cerr << "End of streamline B " << count
-	     << "  windings " << winding  << endl;
+	  cerr << "End of streamline B " << count
+	       << "  windings " << winding  << endl;
 	
 	  // Do this again to get the values back.
 	  basicChecks( points, centroid,
@@ -1765,9 +1768,8 @@ execute(FieldHandle& ifield_h,
 	  skips.push_back( skip );
 	  islands.push_back( island );
 
-	cerr << "End of streamline C " << count
-	     << "  windings " << winding  << endl;
-	
+	  cerr << "End of streamline C " << count
+	       << "  windings " << winding  << endl;	
 	}
 
 	cerr << " Length selection        "
@@ -1784,7 +1786,11 @@ execute(FieldHandle& ifield_h,
 	     << AngleMin2.second << "  "
 	     << endl;
 
-	// This is for island analysis.
+	// This is for island analysis - if the initial centroid
+	// locations are provided which have the winding value from
+	// the island then make sure the new analysis gives the same
+	// winding.
+
 	if( desiredWinding && windings[count] != desiredWinding )
 	  windings[count] = 0;
       }
@@ -1860,14 +1866,14 @@ execute(FieldHandle& ifield_h,
 //      cerr << "Plane " << p << " is " << plane << endl;
 
       // Ugly but it is necessary to start at the same place each time.
-      in = ifield->fdata().begin();
+      dataItr = ifield->fdata().begin();
       imesh->begin( inodeItr );
 
       // Skip all of the points between the beginning and the first
       // point found before (CCW) or after (CW) the zero plane.
       while( *inodeItr != inodeGlobalStart[c] ) {
 	++inodeItr;
-	++in;
+	++dataItr;
       }
 
       imesh->get_center(lastPt, *inodeItr);
@@ -1879,7 +1885,7 @@ execute(FieldHandle& ifield_h,
       if( nearPI && lastAng < 0 ) lastAng += 2 * M_PI;
 
       ++inodeItr;
-      ++in;
+      ++dataItr;
       
       ostringstream str;
       str << "Streamline " << c+1 << " Node Index";
@@ -1912,12 +1918,12 @@ execute(FieldHandle& ifield_h,
 	  if( bins[p].size() <= (unsigned int) bin ) {
 	    vector< pair<Point, double> > sub_bin;
 	  
-	    sub_bin.push_back( pair<Point, double>(point, *in) );
+	    sub_bin.push_back( pair<Point, double>(point, *dataItr) );
 
 	    bins[p].push_back( sub_bin );
 
 	  } else {
-	    bins[p][bin].push_back( pair<Point, double>(point, *in) );
+	    bins[p][bin].push_back( pair<Point, double>(point, *dataItr) );
 	  }
 
 	  bin = (bin + 1) % winding;
@@ -1927,7 +1933,7 @@ execute(FieldHandle& ifield_h,
 	lastAng = currAng;
     
 	++inodeItr;
-	++in;
+	++dataItr;
       }
     }
     
@@ -2095,76 +2101,76 @@ execute(FieldHandle& ifield_h,
 
     if( island ) {
 
-      if( baseCentroids.size() ) {
+      if( completeIslands ) {
 
-	unsigned int cc = 0;
+	if( baseCentroids.size() ) {
 
-	while( cc < windings.size() ) {
-	  if( cc <= c && c < cc+winding )
-	    break;
-	  else
-	    cc += winding;
-	}
+	  unsigned int cc = 0;
 
-	cerr << "Searching winding " << cc << endl;
-
-	for( unsigned int i=0; i<winding; i++ ) {
-	    
-	  unsigned int index;
-	  double mindist = 1.0e12;
-	    
-	  for( unsigned int j=cc; j<cc+winding; j++ ) {
-
-	    double dist =
-	      (localCentroids[i] - baseCentroids[j][0]).length();
-	      
-	    if( mindist > dist ) {
-	      mindist = dist;
-	      index = j;
-	    }
+	  // Find the bounds where the islands are for this winding.
+	  while( cc < windings.size() ) {
+	    if( cc <= c && c < cc+baseCentroidsWinding[cc] )
+	      break;
+	    else
+	      cc += baseCentroidsWinding[cc];
 	  }
 
-	  cerr << cc << "  " << i << "  "
-	       << index << " index " << localCentroids[i] << endl;
+	  cerr << "Searching winding " << baseCentroidsWinding[cc] << endl;
+
+	  for( unsigned int i=0; i<winding; i++ ) {
 	    
-	  baseCentroids[index].push_back( localCentroids[i] );	      
-	}
+	    unsigned int index;
+	    double mindist = 1.0e12;
+	    
+	    for( unsigned int j=cc; j<cc+winding; j++ ) {
 
-      } else {  // Surface
+	      double dist = (localCentroids[i] - baseCentroids[j][0]).length();
+	      
+	      if( mindist > dist ) {
+		mindist = dist;
+		index = j;
+	      }
+	    }
 
-	typename PCFIELD::mesh_type::Node::index_type n;
+	    cerr << cc << "  " << i << "  "
+		 << index << " index " << localCentroids[i] << endl;
+	    
+	    baseCentroids[index].push_back( localCentroids[i] );	      
+	  }
 
-	for( unsigned int i=0; i<winding; i++ ) {
-	  // Centroids
-	  cerr << i << "               " << localCentroids[i] << endl;
+	} else {
 
-	  n = opccmesh->add_node((Point) localCentroids[i]);
-	  opccfield->resize_fdata();
-	  opccfield->set_value( i, n );
+	  for( unsigned int i=0; i<winding; i++ ) {
+	    // Centroids
+	    cerr << i << "               " << localCentroids[i] << endl;
 
-	  // Separatrices
-	  unsigned int j = (i+skip) % winding;
+	    typename PCFIELD::mesh_type::Node::index_type n =
+	      opccmesh->add_node((Point) localCentroids[i]);
+	    opccfield->resize_fdata();
+	    opccfield->set_value( (double) winding, n );
 
-	  unsigned int ii, jj;
+	    // Separatrices
+	    unsigned int j = (i+skip) % winding;
 
-	  if( (localSeparatrices[0][i] - localSeparatrices[0][j]).length() <
-	      (localSeparatrices[0][i] - localSeparatrices[1][j]).length() )
-	    jj = 0;
-	  else
-	    jj = 1;
+	    unsigned int ii, jj;
 
-	  if( (localSeparatrices[0][i] - localSeparatrices[jj][j]).length() <
-	      (localSeparatrices[1][i] - localSeparatrices[jj][j]).length() )
-	    ii = 0;
-	  else
-	    ii = 1;
+	    if( (localSeparatrices[0][i] - localSeparatrices[0][j]).length() <
+		(localSeparatrices[0][i] - localSeparatrices[1][j]).length() )
+	      jj = 0;
+	    else
+	      jj = 1;
 
-	  n = opcsmesh->add_node((Point) ((localSeparatrices[ii][i] +
-					   localSeparatrices[jj][j])/2.0));
+	    if( (localSeparatrices[0][i] - localSeparatrices[jj][j]).length() <
+		(localSeparatrices[1][i] - localSeparatrices[jj][j]).length() )
+	      ii = 0;
+	    else
+	      ii = 1;
 
-	  opcsfield->resize_fdata();
-// 	    opcsfield->set_value( (double) winding, n);
-	  opcsfield->set_value( (double) n, n);
+	    n = opcsmesh->add_node((Point) ((localSeparatrices[ii][i] +
+					     localSeparatrices[jj][j])/2.0));
+
+	    opcsfield->resize_fdata();
+	    opcsfield->set_value( (double) winding, n);
 
 //  	    n = opcsmesh->add_node((Point) localSeparatrices[0][i]);
 // 	    opcsfield->resize_fdata();
@@ -2174,9 +2180,11 @@ execute(FieldHandle& ifield_h,
 // 	    opcsfield->resize_fdata();
 // 	    opcsfield->set_value(1, n);
 
-	  cerr << c << "  Separatrices " << i << "  " << j << endl;
+	    cerr << c << "  Separatrices " << i << "  " << j << endl;
+	  }
 	}
       }
+    } else { // Surface
     }
 
     if( !showIslands || ( showIslands && island ) ) {
@@ -2260,89 +2268,92 @@ execute(FieldHandle& ifield_h,
 
   if( baseCentroids.size() ) {
 
-    typename PCFIELD::mesh_type::Node::index_type n;
+    if( islandCentroids ) {
 
-    vector< Vector > newCentroid;
-    vector< double > newStdDev;
+      typename PCFIELD::mesh_type::Node::index_type n;
 
-    newCentroid.resize( baseCentroids.size() );
-    newStdDev.resize  ( baseCentroids.size() );
+      for( unsigned int i=0; i<baseCentroids.size(); i++ ) {
 
-    for( unsigned int i=0; i<baseCentroids.size(); i++ ) {
-
-      if( baseCentroids[i].size() ) {
-
-	newCentroid[i] = Vector(0,0,0);
-	for( unsigned int j=1; j<baseCentroids[i].size(); j++ )
-	  newCentroid[i] += baseCentroids[i][j];
+	if( baseCentroids[i].size() ) {
+	  Vector tmpCentroid(0,0,0);
 	
-	newCentroid[i] /= (double) (baseCentroids[i].size() - 1);
+	  for( unsigned int j=1; j<baseCentroids[i].size(); j++ )
+	    tmpCentroid += baseCentroids[i][j];
+	
+	  tmpCentroid /= (double) (baseCentroids[i].size() - 1);
+	
+	  // 	cerr << tmpCentroid << endl;
 
-	newStdDev[i] = 0.0;
-	for( unsigned int j=1; j<baseCentroids[i].size(); j++ ) {
-	  cerr << "length " << i << "  " << j << "  "
-	       << (baseCentroids[i][j]-newCentroid[i]).length2() << endl;
-	  newStdDev[i] += (baseCentroids[i][j]-newCentroid[i]).length2();
+	  n = opccmesh->add_node((Point) tmpCentroid);
+	} else {
+	  n = opccmesh->add_node((Point) baseCentroids[i][0]);
 	}
 
-	newStdDev[i] = sqrt( newStdDev[i] /
-			     (double) (baseCentroids[i].size() - 2) );
+	opccfield->resize_fdata();
+//	opccfield->set_value( (double) windings[index], n );
       }
-    }
+    } else { // Produce seed to show the NULL fieldline.
+      typename PCFIELD::mesh_type::Node::index_type n;
 
-    unsigned int cc = 0;
+      vector< Vector > newCentroid;
+      vector< double > newStdDev;
 
-    double minSD = 1.0e12;
-    unsigned int index;
+      newCentroid.resize( baseCentroids.size() );
+      newStdDev.resize  ( baseCentroids.size() );
 
-    while( cc < windings.size() ) {
-      cerr << "Searching winding " << cc << endl;
+      for( unsigned int i=0; i<baseCentroids.size(); i++ ) {
 
-      for( unsigned int i=cc; i<cc+windings[cc]; i++ ) {
+	if( baseCentroids[i].size() ) {
 
-	cerr << "Std dev. " << i << "  " << newStdDev[i] << endl;
+	  newCentroid[i] = Vector(0,0,0);
+	  for( unsigned int j=1; j<baseCentroids[i].size(); j++ )
+	    newCentroid[i] += baseCentroids[i][j];
+	
+	  newCentroid[i] /= (double) (baseCentroids[i].size() - 1);
 
-	if( minSD > newStdDev[i] ) {
-	  minSD = newStdDev[i];
-	  index = i;
+	  newStdDev[i] = 0.0;
+	  for( unsigned int j=1; j<baseCentroids[i].size(); j++ ) {
+	    cerr << "length " << i << "  " << j << "  "
+		 << (baseCentroids[i][j]-newCentroid[i]).length2() << endl;
+	    newStdDev[i] += (baseCentroids[i][j]-newCentroid[i]).length2();
+	  }
+
+	  newStdDev[i] = sqrt( newStdDev[i] /
+			       (double) (baseCentroids[i].size() - 2) );
 	}
       }
 
-      n = opccmesh->add_node((Point) newCentroid[index]);
-      
-      opccfield->resize_fdata();
+      unsigned int cc = 0;
 
-      cerr << "New centroid " << newCentroid[index]
-	   << " index " << index << endl;
+      double minSD = 1.0e12;
+      unsigned int index;
 
-      opccfield->set_value( windings[index], n );
+      while( cc < windings.size() ) {
+	cerr << "Searching winding " << cc << endl;
 
-      cc += windings[cc];
+	for( unsigned int i=cc; i<cc+windings[cc]; i++ ) {
 
-      minSD = 1.0e12;
+	  cerr << "Std dev. " << i << "  " << newStdDev[i] << endl;
+
+	  if( minSD > newStdDev[i] ) {
+	    minSD = newStdDev[i];
+	    index = i;
+	  }
+	}
+
+	cerr << "New centroid " << newCentroid[index]
+	     << " index " << index << endl;
+
+	typename PCFIELD::mesh_type::Node::index_type n =
+	  opccmesh->add_node((Point) newCentroid[index]);
+	opccfield->resize_fdata();
+	opccfield->set_value( (double) windings[index], n );
+
+	cc += windings[cc];
+
+	minSD = 1.0e12;
+      }
     }
-
-//     for( unsigned int i=0; i<baseCentroids.size(); i++ ) {
-
-//       if( baseCentroids[i].size() ) {
-// 	Vector tmpCentroid(0,0,0);
-	
-// 	for( unsigned int j=1; j<baseCentroids[i].size(); j++ )
-// 	  tmpCentroid += baseCentroids[i][j];
-	
-// 	tmpCentroid /= (double) (baseCentroids[i].size() - 1);
-	
-// // 	cerr << tmpCentroid << endl;
-
-// 	n = opcmesh->add_node((Point) tmpCentroid);
-//       } else {
-// 	n = opcmesh->add_node((Point) baseCentroids[i][0]);
-//       }
-
-//       opcfield->resize_fdata();
-
-//       opcfield->set_value( i, n );
-//     }
   }
 }
 
@@ -3051,7 +3062,7 @@ mergeOverlap( vector< vector < pair< Point, double > > > &bins,
 
 	  for( unsigned int j=0; j<tmp_bins[i].size(); j++ ) {
 
-	    vector< pair< Point, double > >::iterator inList =
+ 	    vector< pair< Point, double > >::iterator inList =
 	      find( bins[i].begin(), bins[i].end(), tmp_bins[i][j] );
 	      
 	    if( inList != bins[i].end() ) {

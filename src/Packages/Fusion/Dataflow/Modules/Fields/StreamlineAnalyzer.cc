@@ -69,6 +69,7 @@ protected:
   GuiInt gui_CurveMesh_;
   GuiInt gui_ScalarField_;
   GuiInt gui_ShowIslands_;
+  GuiInt gui_IslandCentroids_;
   GuiInt gui_Overlaps_;
 
   vector< double > planes_;
@@ -83,16 +84,17 @@ DECLARE_MAKER(StreamlineAnalyzer)
 
 StreamlineAnalyzer::StreamlineAnalyzer(GuiContext* context)
   : Module("StreamlineAnalyzer", context, Source, "Fields", "Fusion"),
-    gui_PlanesStr_(context->subVar("planes-list")),
-    gui_PlanesInt_(context->subVar("planes-quantity")),
-    gui_Color_(context->subVar("color")),
-    gui_MaxWindings_(context->subVar("maxWindings")),
-    gui_Override_(context->subVar("override")),
-    gui_Order_(context->subVar("order")),
-    gui_CurveMesh_(context->subVar("curve-mesh")),
-    gui_ScalarField_(context->subVar("scalar-field")),
-    gui_ShowIslands_(context->subVar("show-islands")),
-    gui_Overlaps_(context->subVar("overlaps")),
+    gui_PlanesStr_(context->subVar("planes-list"), "0.0"),
+    gui_PlanesInt_(context->subVar("planes-quantity"), 0),
+    gui_Color_(context->subVar("color"), 1),
+    gui_MaxWindings_(context->subVar("maxWindings"), 30),
+    gui_Override_(context->subVar("override"), 0),
+    gui_Order_(context->subVar("order"), 0),
+    gui_CurveMesh_(context->subVar("curve-mesh"), 1),
+    gui_ScalarField_(context->subVar("scalar-field"), 1),
+    gui_ShowIslands_(context->subVar("show-islands"), 0),
+    gui_IslandCentroids_(context->subVar("island-centroids"), 1),
+    gui_Overlaps_(context->subVar("overlaps"), 1),
     sl_field_output_handle_(0),
     pcc_field_output_handle_(0),
     pcs_field_output_handle_(0)
@@ -134,9 +136,10 @@ StreamlineAnalyzer::execute()
     string pc_type =
       pcc_field_input_handle->get_type_description(Field::FDATA_TD_E)->get_name();
 
-    if (pc_name.find( "PointCloudMesh") != string::npos &&
-	pc_type.find( "double")         != string::npos ) {
+    if (pc_name.find( "PointCloudMesh") == string::npos ||
+	pc_type.find( "double")         == string::npos ) {
       error("Only available for Point Cloud Meshes of type double.");
+      error("Found a mesh of " + pc_name + " and a type of " + pc_type );
       return;
     }
 
@@ -152,13 +155,14 @@ StreamlineAnalyzer::execute()
   if (get_input_handle( "Input Separatrices", pcs_field_input_handle, false ))
   {
     string pc_name =
-      pcc_field_input_handle->get_type_description(Field::MESH_TD_E)->get_name();
+      pcs_field_input_handle->get_type_description(Field::MESH_TD_E)->get_name();
     string pc_type =
-      pcc_field_input_handle->get_type_description(Field::FDATA_TD_E)->get_name();
+      pcs_field_input_handle->get_type_description(Field::FDATA_TD_E)->get_name();
 
-    if (pc_name.find( "PointCloudMesh") != string::npos &&
-	pc_type.find( "double")         != string::npos ) {
+    if (pc_name.find( "PointCloudMesh") == string::npos ||
+	pc_type.find( "double")         == string::npos ) {
       error("Only available for Point Cloud Meshes of type double.");
+      error("Found a mesh of " + pc_name + " and a type of " + pc_type );
       return;
     }
 
@@ -241,6 +245,7 @@ StreamlineAnalyzer::execute()
       gui_CurveMesh_.changed( true ) ||
       gui_ScalarField_.changed( true ) ||
       gui_ShowIslands_.changed( true ) ||
+      gui_IslandCentroids_.changed( true ) ||
       gui_Overlaps_.changed( true ) ) {
 
     update_state( Executing );
@@ -273,7 +278,9 @@ StreamlineAnalyzer::execute()
 		  pcc_field_input_handle, pcc_field_output_handle_,
 		  pcs_field_input_handle, pcs_field_output_handle_,
 		  planes_,
-		  gui_Color_.get(), gui_ShowIslands_.get(), gui_Overlaps_.get(),
+		  gui_Color_.get(),
+		  gui_ShowIslands_.get(), gui_IslandCentroids_.get(),
+		  gui_Overlaps_.get(),
 		  gui_MaxWindings_.get(), gui_Override_.get(), gui_Order_.get(),
 		  topology);
   }
