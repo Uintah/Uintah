@@ -15,7 +15,7 @@
 #include <Packages/Uintah/Core/Labels/MPMICELabel.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/ModelMaker.h>
-#include <Packages/Uintah/Core/Grid/Variables/AMRInterpolate.h>
+#include <Packages/Uintah/Core/Grid/AMR.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/NodeIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
