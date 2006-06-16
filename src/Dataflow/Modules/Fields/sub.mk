@@ -76,6 +76,7 @@ SRCS     += \
 	$(SRCDIR)/InsertField.cc\
 	$(SRCDIR)/InsertHexSheet.cc\
 	$(SRCDIR)/IsoClip.cc\
+	$(SRCDIR)/IsoRefine.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldMesh.cc\
 	$(SRCDIR)/MapDataToMeshCoord.cc\

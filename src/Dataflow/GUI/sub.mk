@@ -118,6 +118,7 @@ SRCS := \
 	$(SRCDIR)/InsertHexSheet.tcl \
         $(SRCDIR)/Isosurface.tcl \
         $(SRCDIR)/IsoClip.tcl \
+        $(SRCDIR)/IsoRefine.tcl \
         $(SRCDIR)/LightWidget.tcl \
         $(SRCDIR)/LinAlgBinary.tcl \
         $(SRCDIR)/LinAlgUnary.tcl \
