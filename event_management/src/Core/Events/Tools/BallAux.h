@@ -40,10 +40,10 @@ namespace SCIRun {
 enum QuatPart {X, Y, Z, W, QuatLen};
 typedef double HMatrix[QuatLen][QuatLen];
 
-class Quat {
+class BallQuaternion {
 public:
-  Quat() {}
-  Quat(double a,double b,double c, double d) {
+  BallQuaternion() {}
+  BallQuaternion(double a,double b,double c, double d) {
     x = a;
     y = b;
     z = c;
@@ -52,16 +52,16 @@ public:
 
   void ToMatrix(HMatrix& out);
   void FromMatrix(HMatrix&);
-  Quat operator * (Quat& q) {
-    Quat ret;
+  BallQuaternion operator * (BallQuaternion& q) {
+    BallQuaternion ret;
     ret.w = w*q.w - x*q.x - y*q.y - z*q.z;
     ret.x = w*q.x + x*q.w + y*q.z - z*q.y;
     ret.y = w*q.y + y*q.w + z*q.x - x*q.z;
     ret.z = w*q.z + z*q.w + x*q.y - y*q.x;
     return ret;
   }	
-  Quat Conj(void) { 
-    Quat qq;
+  BallQuaternion Conj(void) { 
+    BallQuaternion qq;
     qq.x = -x; qq.y = -y; qq.z = -z; qq.w = w;
     return (qq);
   }
@@ -69,9 +69,9 @@ public:
   double VecMag(void) { return sqrt(x*x + y*y + z*z); };
   double x, y, z, w;
 };
-typedef Quat HVect;
+typedef BallQuaternion HVect;
 
-extern Quat qOne;
+extern BallQuaternion qOne;
 HVect V3_(double x, double y, double z);
 double V3_Norm(HVect v);
 HVect V3_Unit(HVect v);

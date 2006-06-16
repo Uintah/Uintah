@@ -174,7 +174,7 @@ OpenGLViewer::OpenGLViewer(OpenGLContext *oglc) :
   ret_pick_obj_(0),
   ret_pick_pick_(0),
   tm_("OpenGLViewer tool manager"),
-  events_(EventManager::register_event_messages("OpenGLViewer")),
+  events_(0),
   pbuffer_(0),
   bgcolor_(Color(.0, .0, .0)),
   homeview_(Point(2.1, 1.6, 11.5), Point(.0, .0, .0), Vector(0,1,0), 20),
@@ -203,6 +203,10 @@ OpenGLViewer::OpenGLViewer(OpenGLContext *oglc) :
   draw_type_(GOURAUD_E),
   need_redraw_(true)
 {
+  if (gl_context_) {
+    events_ = EventManager::register_event_messages("OpenGLViewer");
+  }
+  
   fps_timer_.start();
 
   // Add a headlight
@@ -428,9 +432,11 @@ OpenGLViewer::render_and_save_image()
   cout << "Saving " + to_string(x) + "x" + to_string(y) +
     " image to '" + fname + "'.\n";
 
-  gl_context_->raise();
-  gl_context_->make_current();
-
+  if (gl_context_) {
+    gl_context_->raise();
+    gl_context_->make_current();
+  }
+    
   deriveFrustum();
 
   // Get Viewport dimensions
@@ -686,16 +692,19 @@ void
 OpenGLViewer::redraw_frame()
 {
   if (dead_) return;
-  if (!gl_context_) return;
 
-  // Make sure our GL context is current
-  gl_context_->make_current();
   // Get the window size
-  xres_ = gl_context_->width();
-  yres_ = gl_context_->height();
-  // Clear the screen.
-  glViewport(0, 0, xres_, yres_);
-  glClearColor(bgcolor().r(), bgcolor().g(), bgcolor().b(), 0);
+  xres_ = width();
+  yres_ = height();
+
+  if (gl_context_) {
+    // Make sure our GL context is current
+    gl_context_->make_current();
+    glViewport(0, 0, xres_, yres_);
+    // Clear the screen.
+    glClearColor(bgcolor().r(), bgcolor().g(), bgcolor().b(), 0);
+  }
+
   
   GLint data[1];
   glGetIntegerv(GL_MAX_LIGHTS, data);
@@ -752,7 +761,7 @@ OpenGLViewer::redraw_frame()
     pbuffer_->makeCurrent();
     glDrawBuffer(GL_FRONT);
   }
-  else
+  else if (gl_context_)
   {
     gl_context_->make_current();
   }
@@ -852,8 +861,10 @@ OpenGLViewer::redraw_frame()
             glDrawBuffer(GL_BACK);
           }
         }
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        glViewport(0, 0, xres_, yres_);
+        if (gl_context_) {
+          glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+          glViewport(0, 0, xres_, yres_);
+        }
 
         const double modeltime = t * dt + animate_time_begin_;
         //set_current_time(modeltime);
@@ -998,7 +1009,7 @@ OpenGLViewer::redraw_frame()
       //total_frames_.set(total_frames_+1);
 
       // Show the pretty picture.
-      if (!(pbuffer_ && dump_frame))
+      if (gl_context_ && !(pbuffer_ && dump_frame))
       {
         gl_context_->swap();
       }
@@ -1019,16 +1030,19 @@ OpenGLViewer::redraw_frame()
   {
     // Just show the cleared screen
     //set_current_time(animate_time_end_);
-        
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-    if (!(pbuffer_ && dump_frame))
-    {
-      gl_context_->swap();
+    if (gl_context_) {
+      glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      
+      if (!(pbuffer_ && dump_frame))
+        {
+          gl_context_->swap();
+        }
     }
   }
-  gl_context_->swap();
-  gl_context_->release();
+  if (gl_context_) {
+    gl_context_->swap();
+    gl_context_->release();
+  }
 
   //viewer_->geomlock_.readUnlock();
 
@@ -1472,7 +1486,9 @@ OpenGLViewer::dump_image(const string& fname, const string& ftype)
   // the screen size.
   if (pbuffer_ && pbuffer_->is_current())
   {
-    gl_context_->make_current();
+    if (gl_context_) {
+      gl_context_->make_current();
+    }
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -1490,7 +1506,9 @@ OpenGLViewer::dump_image(const string& fname, const string& ftype)
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
-    gl_context_->swap();
+    if (gl_context_) {
+      gl_context_->swap();
+    }
   }
 
 #if defined(HAVE_PNG) && HAVE_PNG
@@ -1879,7 +1897,9 @@ OpenGLViewer::AddMpegFrame()
   // the screen size.  Maybe these are always true for movie making?
   if (pbuffer_ && pbuffer_->is_current())
   {
-    gl_context_->make_current();
+    if (gl_context_) {
+      gl_context_->make_current();
+    }
     glMatrixMode(GL_PROJECTION);
     glPushMatrix();
     glLoadIdentity();
@@ -1897,7 +1917,9 @@ OpenGLViewer::AddMpegFrame()
     glPopMatrix();
     glMatrixMode(GL_PROJECTION);
     glPopMatrix();
-    gl_context_->swap();
+    if (gl_context_) {
+      gl_context_->swap();
+    }
   }
 
   const int r = 3 * width;
@@ -2126,7 +2148,8 @@ OpenGLViewer::render_rotation_axis(const View &view,
   glGetIntegerv(GL_VIEWPORT, viewport);
 
   const int xysize = Min(viewport[2], viewport[3]) / 4;
-  glViewport(viewport[2] - xysize, viewport[3] - xysize, xysize, xysize);
+  glViewport(viewport[0] + viewport[2] - xysize, 
+             viewport[1] + viewport[3] - xysize, xysize, xysize);
   const double aspect = 1.0;
 
   // fovy 16 eyedist 10 is approximately the default axis view.
@@ -2303,5 +2326,27 @@ OpenGLViewer::set_state(DrawInfoOpenGL* drawinfo)
   drawinfo->currently_lit_   = drawinfo->lighting_;
   drawinfo->init_lighting(drawinfo->lighting_);
 }
+
+
+void
+OpenGLViewer::need_redraw() {
+  need_redraw_ = true;
+}
+  
+
+int
+OpenGLViewer::width() const {
+  ASSERT(gl_context_);
+  return gl_context_->width();
+}
+
+int
+OpenGLViewer::height() const {
+  ASSERT(gl_context_);
+  return gl_context_->height();
+}
+
+
+ 
 
 } // End namespace SCIRun

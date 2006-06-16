@@ -38,25 +38,29 @@
 #include <X11/Xlib.h>
 
 namespace SCIRun {
-   
-  class X11EventSpawner : public Runnable, public EventSpawner {
+  
+  class X11EventSpawner : public EventSpawner {
   public:
-    X11EventSpawner(Display *, Window);
+    X11EventSpawner(const string &target, Display *, Window);
     ~X11EventSpawner();
-    virtual void                run();
+    virtual bool                iterate();
   private:
-    typedef event_handle_t (translate_func_t)(XEvent *);
-    typedef map<unsigned int, translate_func_t *> translate_map_t;
+    event_handle_t              xlat_KeyEvent(XEvent *);
+    event_handle_t              xlat_ButtonReleaseEvent(XEvent *);
+    event_handle_t              xlat_ButtonPressEvent(XEvent *);
+    event_handle_t              xlat_PointerMotion(XEvent *);
+    event_handle_t              xlat_Expose(XEvent *);
+    event_handle_t              xlat_Enter(XEvent *);
+    event_handle_t              xlat_Leave(XEvent *);
+    event_handle_t              xlat_Configure(XEvent *);
+    event_handle_t              xlat_Client(XEvent *);
+    event_handle_t              xlat_FocusIn(XEvent *);
+    event_handle_t              xlat_FocusOut(XEvent *);
+    event_handle_t              xlat_Visibilty(XEvent *);
+    event_handle_t              xlat_Map(XEvent *);
 
-    static translate_func_t     do_KeyEvent;
-    static translate_func_t     do_ButtonEvent;
-    static translate_func_t     do_PointerMotion;
-    static translate_func_t     do_Expose;
-    static translate_func_t     do_Enter;
-    static translate_func_t     do_Leave;
-    static translate_func_t     do_Configure;
+    unsigned int                xlat_ModifierState(unsigned int);
 
-    translate_map_t             translate_event_;
     Display *                   display_;
     Window                      window_;
     long                        mask_;

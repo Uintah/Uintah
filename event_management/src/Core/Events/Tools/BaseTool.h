@@ -47,7 +47,9 @@ public:
   enum propagation_state_e {
     STOP_E,
     MODIFIED_E,
-    CONTINUE_E
+    CONTINUE_E,
+    QUIT_AND_STOP_E,
+    QUIT_AND_CONTINUE_E,
   };
 
 
@@ -68,31 +70,36 @@ public:
 
   //! The ref_cnt var so that we can have handles to this type of object.
   int ref_cnt;
+protected:
+  BaseTool() : ref_cnt(0), name_("") {}
 private:
   string name_;
 };
 
 typedef Handle<BaseTool> tool_handle_t;
 
-class PointerTool : public BaseTool
+class PointerTool : public virtual BaseTool
 {
 public:
   PointerTool(string name);
   virtual ~PointerTool();
   
   //! which == button number, x,y in window at event time 
-  virtual propagation_state_e pointer_down(int which, 
-                                           int x, int y, int time) = 0;
+  virtual propagation_state_e pointer_down(int which, int x, int y, 
+                                           unsigned int modifiers,
+                                           int time) = 0;
   //! which == button number, x,y in window at event time 
-  virtual propagation_state_e pointer_motion(int which, 
-                                             int x, int y, int time) = 0;
+  virtual propagation_state_e pointer_motion(int which, int x, int y, 
+                                             unsigned int modifiers,
+                                             int time) = 0;
   //! which == button number, x,y in window at event time 
-  virtual propagation_state_e pointer_up(int which, 
-                                         int x, int y, int time) = 0;
+  virtual propagation_state_e pointer_up(int which, int x, int y, 
+                                         unsigned int modifiers,
+                                         int time) = 0;
 private:
 };
 
-class KeyTool : public BaseTool
+class KeyTool :  public virtual BaseTool
 {
 public:
   KeyTool(string name);
@@ -107,7 +114,7 @@ public:
 private:
 };
 
-class WindowTool : public BaseTool
+class WindowTool : public virtual BaseTool
 {
 public:
   WindowTool(string name);

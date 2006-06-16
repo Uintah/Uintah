@@ -61,7 +61,7 @@ public:
 
   HVect center;
   double radius;
-  Quat qNow, qDown, qDrag, qNorm;
+  BallQuaternion qNow, qDown, qDrag, qNorm;
   HVect vNow, vDown, vFrom, vTo, vrFrom, vrTo;
   HMatrix mNow, mDown;
   int showResult, dragging;

@@ -46,14 +46,17 @@ public:
   virtual ~ViewTranslateTool();
 
   //! which == button number, x,y in window at event time 
-  virtual propagation_state_e pointer_down(int which, 
-				      int x, int y, int time);
+  virtual propagation_state_e pointer_down(int which, int x, int y, 
+                                           unsigned int modifiers,
+                                           int time);
   //! which == button number, x,y in window at event time 
-  virtual propagation_state_e pointer_motion(int which, 
-					int x, int y, int time);
+  virtual propagation_state_e pointer_motion(int which, int x, int y,
+                                             unsigned int modifiers,
+                                             int time);
   //! which == button number, x,y in window at event time 
-  virtual propagation_state_e pointer_up(int which, 
-				    int x, int y, int time);
+  virtual propagation_state_e pointer_up(int which, int x, int y, 
+                                         unsigned int modifiers,
+                                         int time);
 
 private:
   ViewToolInterface                 *scene_interface_;

@@ -40,8 +40,8 @@ namespace SCIRun {
 HVect MouseOnSphere(HVect mouse, HVect ballCenter, double ballRadius);
 HVect ConstrainToAxis(HVect loose, HVect axis);
 int NearestConstraintAxis(HVect loose, HVect *axes, int nAxes);
-Quat Qt_FromBallPoints(HVect from, HVect to);
-void Qt_ToBallPoints(Quat q, HVect *arcFrom, HVect *arcTo);
+BallQuaternion Qt_FromBallPoints(HVect from, HVect to);
+void Qt_ToBallPoints(BallQuaternion q, HVect *arcFrom, HVect *arcTo);
 
 } // namespace SCIRun
 #endif

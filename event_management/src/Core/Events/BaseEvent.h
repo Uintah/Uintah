@@ -36,6 +36,7 @@
 #if !defined(BaseEvent_h)
 #define BaseEvent_h
 
+#include <Core/Datatypes/Datatype.h>
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Thread/Mutex.h>
 #include <string>
@@ -45,7 +46,7 @@ namespace SCIRun {
 
 using namespace std;
 
-class BaseEvent 
+class BaseEvent : public Datatype
 {
 public:
   BaseEvent(const string &target = "", 
@@ -54,7 +55,8 @@ public:
   virtual ~BaseEvent();
 
   BaseEvent& operator=(const BaseEvent&);
-
+  virtual BaseEvent *clone() = 0;
+  virtual void io(Piostream&) {};
   //! Accessors 
   //! time the event took place
   unsigned int          get_time() const { return time_; }
@@ -70,8 +72,8 @@ public:
   virtual bool          is_scene_graph_event() { return false; }
 
   //! The ref_cnt var so that we can have handles to this type of object.
-  int ref_cnt;
-  Mutex lock;
+  //  int ref_cnt;
+  //  Mutex lock;
 private:
   //! The event timestamp
   unsigned int          time_;
@@ -126,6 +128,7 @@ public:
                unsigned int time = 0);
 
   virtual ~PointerEvent();
+  virtual PointerEvent *clone() { return new PointerEvent(*this); }
 
   virtual bool          is_pointer_event() { return true; }
 
@@ -163,7 +166,7 @@ public:
            const string &target = "",
            unsigned int time = 0);
   virtual ~KeyEvent();
-
+  virtual KeyEvent *    clone() { return new KeyEvent(*this); }
   virtual bool          is_key_event() { return true; }
 
   //! Accessors
@@ -192,13 +195,16 @@ public:
     LEAVE_E           = 1 << 3,
     EXPOSE_E          = 1 << 4,
     CONFIGURE_E       = 1 << 5,
-    REDRAW_E          = 1 << 6
+    FOCUSIN_E         = 1 << 6,
+    FOCUSOUT_E        = 1 << 7,
+    REDRAW_E          = 1 << 8
   };
 
   WindowEvent(unsigned int state = 0, 
               const string &target = "",
               unsigned int time = 0);
   virtual ~WindowEvent();
+  virtual WindowEvent * clone() { return new WindowEvent(*this); }
 
   virtual bool          is_window_event() { return true; }
   
@@ -216,6 +222,15 @@ class QuitEvent : public BaseEvent {
 public:
   QuitEvent() {}
   virtual ~QuitEvent() {}
+  virtual QuitEvent * clone() { return new QuitEvent(*this); }
+};
+
+
+class RedrawEvent : public BaseEvent {
+public:
+  RedrawEvent() {}
+  virtual ~RedrawEvent() {}
+  virtual RedrawEvent * clone() { return new RedrawEvent(*this); }
 };
 
 typedef LockingHandle<BaseEvent> event_handle_t;

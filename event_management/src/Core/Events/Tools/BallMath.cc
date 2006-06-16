@@ -56,9 +56,9 @@ HVect MouseOnSphere(HVect mouse, HVect ballCenter, double ballRadius)
 }
 
 /* Construct a unit quaternion from two points on unit sphere */
-Quat Qt_FromBallPoints(HVect from, HVect to)
+BallQuaternion Qt_FromBallPoints(HVect from, HVect to)
 {
-  Quat qu;
+  BallQuaternion qu;
   qu.x = from.y*to.z - from.z*to.y;
   qu.y = from.z*to.x - from.x*to.z;
   qu.z = from.x*to.y - from.y*to.x;
@@ -67,7 +67,7 @@ Quat Qt_FromBallPoints(HVect from, HVect to)
 }
 
 /* Convert a unit quaternion to two points on unit sphere */
-void Qt_ToBallPoints(Quat q, HVect *arcFrom, HVect *arcTo)
+void Qt_ToBallPoints(BallQuaternion q, HVect *arcFrom, HVect *arcTo)
 {
   double s;
   s = sqrt(q.x*q.x + q.y*q.y);

@@ -31,6 +31,9 @@
 
 // Based on the gdk keysysm
 // http://www.gtk.org/
+// which was based on X11/keysymdef.h, which is:
+// Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts
+
 
 
 #ifndef __SCIRun_KEYSYMS_H__

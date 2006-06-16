@@ -43,13 +43,13 @@ SRCS     += \
 SUBDIRS := $(SRCDIR)/Tools
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
-PSELIBS := Core/Exceptions Core/Thread
+PSELIBS := Core/Exceptions Core/Thread Core/Math Core/Geom Core/Util Core/Geometry Core/Containers Core/Datatypes
 
 ifeq ($(IS_WIN),yes)
   PSELIBS += Core_OS
 endif
 
-LIBS := $(THREAD_LIBRARY) $(MPEG_LIBRARY)
+LIBS := $(THREAD_LIBRARY) $(MPEG_LIBRARY) $(GL_LIBRARY) $(GL_LIBRARY) $(PNG_LIBRARY) 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

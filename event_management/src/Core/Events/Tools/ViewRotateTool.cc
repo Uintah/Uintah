@@ -60,7 +60,7 @@ ViewRotateTool::~ViewRotateTool()
 }
 
 BaseTool::propagation_state_e
-ViewRotateTool::pointer_down(int which, int x, int y, int time)
+ViewRotateTool::pointer_down(int which, int x, int y, unsigned int, int time)
 {
   if (which != 2) return CONTINUE_E;
   scene_interface_->update_mode_string("rotate:");
@@ -113,7 +113,7 @@ ViewRotateTool::pointer_down(int which, int x, int y, int time)
 }
 
 BaseTool::propagation_state_e
-ViewRotateTool::pointer_motion(int which, int x, int y, int time)
+ViewRotateTool::pointer_motion(int which, int x, int y, unsigned int, int time)
 {
   if (which != 2) return CONTINUE_E;
   int xres = scene_interface_->width();
@@ -165,7 +165,7 @@ ViewRotateTool::pointer_motion(int which, int x, int y, int time)
 }
 
 BaseTool::propagation_state_e
-ViewRotateTool::pointer_up(int which, int x, int y, int time)
+ViewRotateTool::pointer_up(int which, int x, int y, unsigned int, int time)
 {
   if (which != 2) return CONTINUE_E;
   if(time - last_time_ < 20){

@@ -35,7 +35,7 @@
 
 namespace SCIRun {
 
-Quat qOne(0, 0, 0, 1);
+BallQuaternion qOne(0, 0, 0, 1);
 
 /* Construct rotation matrix from (possibly non-unit) quaternion.
  * Assumes matrix is used to multiply column vector on the left:
@@ -43,7 +43,7 @@ Quat qOne(0, 0, 0, 1);
  * and right-handed rotations. */
 
 
-void Quat::ToMatrix(HMatrix& out)
+void BallQuaternion::ToMatrix(HMatrix& out)
 {
   double Nq = x*x + y*y + z*z + w*w;
   double s = (Nq > 0.0) ? (2.0 / Nq) : 0.0;
@@ -64,14 +64,14 @@ void Quat::ToMatrix(HMatrix& out)
  * used to multiply column vector on the left: vnew = mat vold.	 Works
  * correctly for right-handed coordinate system and right-handed rotations.
  * Translation and perspective components ignored. */
-void Quat::FromMatrix(HMatrix& mat)
+void BallQuaternion::FromMatrix(HMatrix& mat)
 {
   /* This algorithm avoids near-zero divides by looking for a large component
    * - first w, then x, y, or z.  When the trace is greater than zero,
    * |w| is greater than 1/2, which is as small as a largest component can be.
    * Otherwise, the largest diagonal entry corresponds to the largest of |x|,
    * |y|, or |z|, one of which must be larger than |w|, and at least 1/2. */
-  //Quat qu;
+  //BallQuaternion qu;
   register double tr, s;
 
   tr = mat[X][X] + mat[Y][Y]+ mat[Z][Z];

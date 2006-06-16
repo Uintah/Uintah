@@ -25,28 +25,43 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : EventSpawner.h
+//    File   : QuitMainWindowTool.h
 //    Author : McKay Davis
-//    Date   : Fri Jun  2 13:41:27 MDT 2006
+//    Date   : Thu Jun  8 15:34:34 MDT 2006
 
-#ifndef CORE_EVENTS_EVENTSPAWNER_H
-#define CORE_EVENTS_EVENTSPAWNER_H
 
-#include <Core/Util/ThrottledRunnable.h>
-#include <string>
+
+#ifndef QuitMainWindowTool_h
+#define QuitMainWindowTool_h
+
+#include <Core/Events/Tools/BaseTool.h>
 
 namespace SCIRun {
-  class Semaphore;
-  class EventSpawner : public SCIRun::ThrottledRunnable {
-  public:
-    virtual bool        iterate() = 0;
-  protected:
-    EventSpawner(const std::string &target) : 
-      ThrottledRunnable(200.0), 
-      target_(target) {}
-    virtual ~EventSpawner() {}
-    std::string         target_;
-  };
-}
 
-#endif
+class QuitMainWindowTool : public BaseTool
+{
+public:
+  QuitMainWindowTool(const string &target) : 
+    BaseTool("Quit All on "+target+" quit"),
+    target_(target)
+  {};
+  virtual ~QuitMainWindowTool() {}
+
+  virtual propagation_state_e process_event(event_handle_t event) {
+    QuitEvent *quit = dynamic_cast<QuitEvent *>(event.get_rep());
+    if (quit && quit->get_target() == target_) {
+      return BaseTool::MODIFIED_E;
+    }
+    return BaseTool::CONTINUE_E;
+  }
+
+  virtual void get_modified_event(event_handle_t &event) {
+    event->set_target("");
+  }
+private:
+  string        target_;
+};
+
+} // namespace SCIRun
+
+#endif //ViewRotateTool_h
