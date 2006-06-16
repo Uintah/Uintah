@@ -215,11 +215,9 @@
 
     <AMR>
        <ICE>
-        <AMR>
-            <orderOfInterpolation>1  </orderOfInterpolation>
-            <Refinement_Criteria_Thresholds>
-            </Refinement_Criteria_Thresholds>
-        </AMR>
+         <orderOfInterpolation>1  </orderOfInterpolation>
+         <Refinement_Criteria_Thresholds>
+         </Refinement_Criteria_Thresholds>
        </ICE>
     </AMR>    
     <!--____________________________________________________________________-->
