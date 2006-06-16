@@ -208,6 +208,146 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
   return ofield;
 }
 
+
+
+template <class FIELD>
+class IsoRefineAlgoHex : public IsoRefineAlgo
+{
+public:
+  //! virtual interface. 
+  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle fieldh,
+			      double isoval, bool lte,
+			      MatrixHandle &interpolant);
+
+};
+
+
+template <class FIELD>
+FieldHandle
+IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
+                                 FieldHandle fieldh,
+                                 double isoval, bool lte,
+                                 MatrixHandle &interp)
+{
+  FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
+  typename FIELD::mesh_type *mesh =
+      dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
+  typename FIELD::mesh_type *refined = scinew typename FIELD::mesh_type();
+  refined->copy_properties(mesh);
+  
+  typename FIELD::mesh_type::Node::array_type onodes(8);
+  typename FIELD::mesh_type::Node::array_type nnodes(8);
+  typename FIELD::mesh_type::Node::array_type inodes(8);
+  typename FIELD::value_type v[8];
+  Point p[8];
+  
+  // Copy all of the nodes from mesh to refined.  They won't change,
+  // we only add nodes.
+  typename FIELD::mesh_type::Node::iterator bni, eni;
+  mesh->begin(bni); mesh->end(eni);
+  while (bni != eni)
+  {
+    mesh->get_point(p[0], *bni);
+    refined->add_point(p[0]);
+    ++bni;
+  }
+
+  typename FIELD::mesh_type::Elem::iterator bi, ei;
+  mesh->begin(bi); mesh->end(ei);
+  while (bi != ei)
+  {
+    mesh->get_nodes(onodes, *bi);
+    
+    // Get the values and compute an inside/outside mask.
+    unsigned int inside = 0;
+    for (unsigned int i = 0; i < onodes.size(); i++)
+    {
+      mesh->get_center(p[i], onodes[i]);
+      field->value(v[i], onodes[i]);
+      inside = inside << 1;
+      if (v[i] > isoval)
+      {
+        inside |= 1;
+      }
+    }
+    
+    // Invert the mask if we are doing less than.
+    if (lte) { inside = ~inside & 0xff; }
+    
+    if (inside == 0)
+    {
+      // Nodes are the same order, so just add the element.
+      refined->add_elem(onodes);
+    }
+    else
+    {
+      Point edgep[24];
+      static int eorder[12][2] = {
+        {0, 1},  // 0  1
+        {1, 2},  // 2  3
+        {2, 3},  // 4  5
+        {3, 0},  // 6  7
+        {4, 5},  // 8  9
+        {5, 6},  // 10 11
+        {6, 7},  // 12 13
+        {7, 4},  // 14 15
+        {0, 4},  // 16 17
+        {5, 1},  // 18 19
+        {2, 6},  // 20 21
+        {7, 3}}; // 22 23
+
+      for (unsigned int i = 0; i < 12; i++)
+      {
+        edgep[i*2+0] = Interpolate(p[eorder[i][0]], p[eorder[i][1]], 1.0/3.0);
+        edgep[i*2+1] = Interpolate(p[eorder[i][0]], p[eorder[i][1]], 2.0/3.0);
+      }
+      
+      Point facep[24];
+      static int forder[6][4][2] = {
+        {{0, 5}, {2, 7}, {4, 1}, {6, 3}},
+        {{8, 13}, {10, 15}, {12, 9}, {14, 11}},
+        {{16, 23}, {6, 14}, {22, 17}, {15, 7}},
+        {{20, 19}, {2, 10}, {18, 21}, {11, 3}},
+        {{1, 9}, {16, 19}, {8, 0}, {18, 17}},
+        {{5, 13}, {20, 23}, {12, 4}, {22, 21}}};
+      for (unsigned int i = 0; i < 6; i++)
+      {
+        for (unsigned int j = 0; j < 4; j++)
+        {
+          facep[i*4+j] = Interpolate(edgep[forder[i][j][0]],
+                                     edgep[forder[i][j][1]], 1.0/3.0);
+        }
+      }
+      
+      Point interiorp[8];
+      static int iorder[8][2] = {
+        {0*4+0, 1*4+0},
+        {3*4+1, 2*4+0},
+        {5*4+1, 4*4+0},
+        {0*4+3, 1*4+3},
+        {2*4+3, 3*4+2},
+        {4*4+3, 5*4+2},
+        {1*4+2, 0*4+2},
+        {2*4+2, 3*4+3}};
+      for (unsigned int i = 0; i < 8; i++)
+      {
+        interiorp[i] = Interpolate(facep[iorder[i][0]],
+                                   facep[iorder[i][1]], 1.0/3.0);
+        inodes[i] = refined->add_point(interiorp[i]);
+      }
+
+      refined->add_elem(inodes);
+
+    }
+    ++bi;
+  }
+
+  FIELD *ofield = scinew FIELD(refined);
+  ofield->copy_properties(fieldh.get_rep());
+  return ofield;
+}
+
+
 } // end namespace SCIRun
 
 #endif // ClipField_h
