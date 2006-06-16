@@ -1734,21 +1734,26 @@ void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
             //__________________________________
             // count the number of cells on the CFI
             int n_CFI_cells = 0;
-            for (CellIterator iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
-                 !iter.done();iter++){
+            
+            CellIterator f_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
+            fineLevel_CFI_Iterator(patchFace, coarsePatch, finePatch, f_iter);
+            
+            for(; !f_iter.done(); f_iter++) {
               n_CFI_cells +=1;
             }
 
-            // divide the number of cells 
+            // divide by the number of cells.
+            int n_ice_matls = d_sharedState->getNumICEMatls();
             IntVector rr= finePatch->getLevel()->getRefinementRatio();
             IntVector dir = finePatch->faceAxes(patchFace);
             int y = dir[1];
             int z = dir[2];
+           
             n_CFI_cells = n_CFI_cells/(rr[y] * rr[z]);
 
-            int n_touched_cells = finePatch->getFaceMark(patchFace);
+            int n_touched_cells = (finePatch->getFaceMark(patchFace) )/n_ice_matls;
             //__________________________________
-            //  If the number of "marked" cells != n_CFI_cells
+            //  If the number of "marked" cells/numICEMatls != n_CFI_cells
             if ( n_touched_cells != n_CFI_cells){
               ostringstream warn;
               warn << d_myworld->myrank() << " AMRICE:refluxing_" << description
