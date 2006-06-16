@@ -170,8 +170,31 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
       
       for (unsigned int i = 0; i < 4; i++)
       {
-        nnodes[0] = onodes[i];
-        nnodes[1] = onodes[(i+1)%4];
+        if (inside & (1 << (3-i)))
+        {
+          nnodes[0] = onodes[i];
+          nnodes[1] = refined->add_point(edgepa[i]);
+          nnodes[2] = inodes[i];
+          nnodes[3] = refined->add_point(edgepb[(i+3)%4]);
+          refined->add_elem(nnodes);
+        }
+
+        if (inside & (1 << (3-i)))
+        {
+          nnodes[0] = refined->add_point(edgepa[i]);
+        }
+        else
+        {
+          nnodes[0] = onodes[i];
+        }
+        if (inside & (1 << (3 - (i+1)%4)))
+        {
+          nnodes[1] = refined->add_point(edgepb[i]);
+        }
+        else
+        {
+          nnodes[1] = onodes[(i+1)%4];
+        }
         nnodes[2] = inodes[(i+1)%4];
         nnodes[3] = inodes[i];
         refined->add_elem(nnodes);
