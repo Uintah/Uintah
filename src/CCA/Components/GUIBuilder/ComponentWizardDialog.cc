@@ -32,6 +32,7 @@
 #include <Core/OS/Dir.h>
 #include <SCIRun/TypeMap.h>
 #include <SCIRun/Internal/FrameworkProperties.h>
+#include <CCA/Components/GUIBuilder/CodePreviewDialog.h>
 
 #include <wx/file.h>
 #include <wx/textfile.h>
@@ -58,11 +59,11 @@ BEGIN_EVENT_TABLE(ComponentWizardDialog, wxDialog)
 END_EVENT_TABLE()
 
 
-BEGIN_EVENT_TABLE(CodePreviewDialog, wxDialog)
-  EVT_BUTTON( ID_ViewSourceFileCode, CodePreviewDialog::OnViewSourceFileCode )
-  EVT_BUTTON( ID_ViewHeaderFileCode, CodePreviewDialog::OnViewHeaderFileCode )
-  EVT_BUTTON( ID_ViewMakeFileCode, CodePreviewDialog::OnViewMakeFileCode )
-END_EVENT_TABLE()
+// BEGIN_EVENT_TABLE(CodePreviewDialog, wxDialog)
+//   EVT_BUTTON( ID_ViewSourceFileCode, CodePreviewDialog::OnViewSourceFileCode )
+//   EVT_BUTTON( ID_ViewHeaderFileCode, CodePreviewDialog::OnViewHeaderFileCode )
+//   EVT_BUTTON( ID_ViewMakeFileCode, CodePreviewDialog::OnViewMakeFileCode )
+// END_EVENT_TABLE()
 
 
 
@@ -474,123 +475,123 @@ std::string AddPortDialog::GetDescriptionText() const
 
 
 
-CodePreviewDialog::CodePreviewDialog(wxWindow *parent,wxWindowID id, const wxString &title, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
-  : wxDialog( parent, id, title, pos, size, style)
-{
-  const int centerFlags = wxALIGN_CENTER|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
-  wxFlexGridSizer *topSizer = new wxFlexGridSizer(3,1,2,2);
-  wxBoxSizer *textSizer = new wxBoxSizer( wxVERTICAL );
-  wxBoxSizer *viewbuttonSizer = new wxBoxSizer( wxHORIZONTAL );
-  wxBoxSizer *cancelSizer = new wxBoxSizer( wxHORIZONTAL );
-  codePreview = new wxTextCtrl(this,wxID_ANY,wxT(""),wxDefaultPosition,wxSize(600,400),wxTE_MULTILINE);
-  textSizer->Add(codePreview, 1, centerFlags, 2);
-  viewSourceFileCode = new wxButton(this,ID_ViewSourceFileCode,wxT("View Source File Code"));
-  viewHeaderFileCode = new wxButton(this,ID_ViewHeaderFileCode,wxT("View Header File Code"));
-  viewMakeFileCode = new wxButton(this,ID_ViewMakeFileCode,wxT("View Make File Code"));
-  viewbuttonSizer->Add(viewSourceFileCode, 1, centerFlags, 2);
-  viewbuttonSizer->Add(viewHeaderFileCode, 1, centerFlags, 2);
-  viewbuttonSizer->Add(viewMakeFileCode, 1, centerFlags, 2);
-  cancelSizer->Add(new wxButton(this,wxID_CANCEL,wxT("&Cancel")), 1, centerFlags, 2);
-  topSizer->AddSpacer(10);
-  topSizer->Add(textSizer, 1, centerFlags, 2);
-  topSizer->AddSpacer(20);
-  topSizer->Add(viewbuttonSizer, 1, centerFlags, 2);
-  topSizer->AddSpacer(20);
-  topSizer->Add(cancelSizer, 1, centerFlags, 2);
+// CodePreviewDialog::CodePreviewDialog(wxWindow *parent,wxWindowID id, const wxString &title, const wxPoint& pos, const wxSize& size, long style, const wxString& name)
+//   : wxDialog( parent, id, title, pos, size, style)
+// {
+//   const int centerFlags = wxALIGN_CENTER|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
+//   wxFlexGridSizer *topSizer = new wxFlexGridSizer(3,1,2,2);
+//   wxBoxSizer *textSizer = new wxBoxSizer( wxVERTICAL );
+//   wxBoxSizer *viewbuttonSizer = new wxBoxSizer( wxHORIZONTAL );
+//   wxBoxSizer *cancelSizer = new wxBoxSizer( wxHORIZONTAL );
+//   codePreview = new wxTextCtrl(this,wxID_ANY,wxT(""),wxDefaultPosition,wxSize(600,400),wxTE_MULTILINE);
+//   textSizer->Add(codePreview, 1, centerFlags, 2);
+//   viewSourceFileCode = new wxButton(this,ID_ViewSourceFileCode,wxT("View Source File Code"));
+//   viewHeaderFileCode = new wxButton(this,ID_ViewHeaderFileCode,wxT("View Header File Code"));
+//   viewMakeFileCode = new wxButton(this,ID_ViewMakeFileCode,wxT("View Make File Code"));
+//   viewbuttonSizer->Add(viewSourceFileCode, 1, centerFlags, 2);
+//   viewbuttonSizer->Add(viewHeaderFileCode, 1, centerFlags, 2);
+//   viewbuttonSizer->Add(viewMakeFileCode, 1, centerFlags, 2);
+//   cancelSizer->Add(new wxButton(this,wxID_CANCEL,wxT("&Cancel")), 1, centerFlags, 2);
+//   topSizer->AddSpacer(10);
+//   topSizer->Add(textSizer, 1, centerFlags, 2);
+//   topSizer->AddSpacer(20);
+//   topSizer->Add(viewbuttonSizer, 1, centerFlags, 2);
+//   topSizer->AddSpacer(20);
+//   topSizer->Add(cancelSizer, 1, centerFlags, 2);
 
-  SetAutoLayout( TRUE );     // tell dialog to use sizer
-  SetSizer( topSizer );      // actually set the sizer
-  topSizer->Fit( this );           // set size to minimum size as calculated by the sizer
-  topSizer->SetSizeHints( this );   // set size hints to honour mininum size
-}
-void CodePreviewDialog::OnViewSourceFileCode(wxCommandEvent& event)
-{
-  codePreview->Clear();
-  std::ifstream tempfile;
-  std::string home(getenv("HOME"));
-  std::string tmp(FrameworkProperties::CONFIG_DIR);
-  std::string tmpDir = std::string(home + tmp  + "/ComponentGenerationWizard");
-  std::string currPath(tmpDir + "/tempsource.txt");
-  tempfile.open(currPath.c_str());
-  if(!tempfile)
-    {
-      //#if DEBUG
-        std::cout << "unable to read file" << std::endl;
-	//#endif
-    }
-    else
-    {
-      std::string line;
-      codePreview->Clear();
-      codePreview->AppendText(wxT("//Source File\n"));
-      while(!tempfile.eof())
-	 {
-	   std::getline (tempfile,line);
-	   codePreview->AppendText(wxString(line));
-	   codePreview->AppendText(wxT("\n"));
-	 }
-       tempfile.close();
-    }
-}
-void CodePreviewDialog::OnViewHeaderFileCode(wxCommandEvent& event)
-{
-  codePreview->Clear();
-  std::ifstream tempfile;
-  std::string home(getenv("HOME"));
-  std::string tmp(FrameworkProperties::CONFIG_DIR);
-  std::string tmpDir = std::string(home + tmp  + "/ComponentGenerationWizard");
-  std::string currPath(tmpDir + "/tempheader.txt");
-  tempfile.open(currPath.c_str());
-  if(!tempfile)
-    {
-      //#if DEBUG
-        std::cout << "unable to read file" << std::endl;
-	//#endif
-    }
-    else
-    {
-      std::string line;
-      codePreview->Clear();
-      codePreview->AppendText(wxT("//Header File\n"));
-      while(!tempfile.eof())
-	 {
-	   std::getline (tempfile,line);
-	   codePreview->AppendText(wxString(line));
-	   codePreview->AppendText(wxT("\n"));
-	 }
-       tempfile.close();
-    }
+//   SetAutoLayout( TRUE );     // tell dialog to use sizer
+//   SetSizer( topSizer );      // actually set the sizer
+//   topSizer->Fit( this );           // set size to minimum size as calculated by the sizer
+//   topSizer->SetSizeHints( this );   // set size hints to honour mininum size
+// }
+// void CodePreviewDialog::OnViewSourceFileCode(wxCommandEvent& event)
+// {
+//   codePreview->Clear();
+//   std::ifstream tempfile;
+//   std::string home(getenv("HOME"));
+//   std::string tmp(FrameworkProperties::CONFIG_DIR);
+//   std::string tmpDir = std::string(home + tmp  + "/ComponentGenerationWizard");
+//   std::string currPath(tmpDir + "/tempsource.txt");
+//   tempfile.open(currPath.c_str());
+//   if(!tempfile)
+//     {
+//       //#if DEBUG
+//         std::cout << "unable to read file" << std::endl;
+// 	//#endif
+//     }
+//     else
+//     {
+//       std::string line;
+//       codePreview->Clear();
+//       codePreview->AppendText(wxT("//Source File\n"));
+//       while(!tempfile.eof())
+// 	 {
+// 	   std::getline (tempfile,line);
+// 	   codePreview->AppendText(wxString(line));
+// 	   codePreview->AppendText(wxT("\n"));
+// 	 }
+//        tempfile.close();
+//     }
+// }
+// void CodePreviewDialog::OnViewHeaderFileCode(wxCommandEvent& event)
+// {
+//   codePreview->Clear();
+//   std::ifstream tempfile;
+//   std::string home(getenv("HOME"));
+//   std::string tmp(FrameworkProperties::CONFIG_DIR);
+//   std::string tmpDir = std::string(home + tmp  + "/ComponentGenerationWizard");
+//   std::string currPath(tmpDir + "/tempheader.txt");
+//   tempfile.open(currPath.c_str());
+//   if(!tempfile)
+//     {
+//       //#if DEBUG
+//         std::cout << "unable to read file" << std::endl;
+// 	//#endif
+//     }
+//     else
+//     {
+//       std::string line;
+//       codePreview->Clear();
+//       codePreview->AppendText(wxT("//Header File\n"));
+//       while(!tempfile.eof())
+// 	 {
+// 	   std::getline (tempfile,line);
+// 	   codePreview->AppendText(wxString(line));
+// 	   codePreview->AppendText(wxT("\n"));
+// 	 }
+//        tempfile.close();
+//     }
 
-}
-void CodePreviewDialog::OnViewMakeFileCode(wxCommandEvent& event)
-{
-  codePreview->Clear();
-  std::ifstream tempfile;
-  std::string home(getenv("HOME"));
-  std::string tmp(FrameworkProperties::CONFIG_DIR);
-  std::string tmpDir = std::string(home + tmp  + "/ComponentGenerationWizard");
-  std::string currPath(tmpDir + "/tempsubmake.txt");
-  tempfile.open(currPath.c_str());
-  if(!tempfile)
-    {
-      //#if DEBUG
-        std::cout << "unable to read file" << std::endl;
-	//#endif
-    }
-    else
-    {
-      std::string line;
-      codePreview->Clear();
-      codePreview->AppendText(wxT("#Make File\n"));
-      while(!tempfile.eof())
-	 {
-	   std::getline (tempfile,line);
-	   codePreview->AppendText(wxString(line));
-	   codePreview->AppendText(wxT("\n"));
-	 }
-       tempfile.close();
-    }
-}
+// }
+// void CodePreviewDialog::OnViewMakeFileCode(wxCommandEvent& event)
+// {
+//   codePreview->Clear();
+//   std::ifstream tempfile;
+//   std::string home(getenv("HOME"));
+//   std::string tmp(FrameworkProperties::CONFIG_DIR);
+//   std::string tmpDir = std::string(home + tmp  + "/ComponentGenerationWizard");
+//   std::string currPath(tmpDir + "/tempsubmake.txt");
+//   tempfile.open(currPath.c_str());
+//   if(!tempfile)
+//     {
+//       //#if DEBUG
+//         std::cout << "unable to read file" << std::endl;
+// 	//#endif
+//     }
+//     else
+//     {
+//       std::string line;
+//       codePreview->Clear();
+//       codePreview->AppendText(wxT("#Make File\n"));
+//       while(!tempfile.eof())
+// 	 {
+// 	   std::getline (tempfile,line);
+// 	   codePreview->AppendText(wxString(line));
+// 	   codePreview->AppendText(wxT("\n"));
+// 	 }
+//        tempfile.close();
+//     }
+// }
 
 }
 
