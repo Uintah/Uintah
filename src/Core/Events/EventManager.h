@@ -52,27 +52,30 @@ public:
 
   //! The calling object registers with a unique string id, and recieves 
   //! the mailbox that event messages come through.
-  static event_mailbox_t* register_event_messages(string);
+  static event_mailbox_t*               register_event_messages(string);
   //! Trigger the shared mailbox for the unique string id to be destroyed.
-  static void             unregister_event_messages(string);
-
-  static void add_event(event_handle_t e) 
+  static void                           unregister_event_messages(string);
+  static void                           unregister_mailbox(event_mailbox_t *);
+  static void                           add_event(event_handle_t e) 
   {
     mailbox_.send(e);
   }
   
-  virtual void run();
+  virtual void                          run();
+  ToolManager &                         tm() { return tm_; };
 private:
-  typedef map<string, event_mailbox_t*>    id_tm_map_t;
+  typedef multimap<string, event_mailbox_t*> id_tm_map_t;
 
   //! all of the threads who need to know about events.
-  static id_tm_map_t                   mboxes_;
+  static id_tm_map_t                    mboxes_;
+
+  static Mutex                          mboxes_lock_;
 
   //! the mailbox for adding events to the stream.
-  static event_mailbox_t               mailbox_;
+  static event_mailbox_t                mailbox_;
 
   //! for tools that process or modify events before being dispatched.
-  ToolManager                          tm_;
+  ToolManager                           tm_;
 };
 
 } // namespace SCIRun

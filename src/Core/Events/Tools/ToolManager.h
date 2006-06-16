@@ -63,19 +63,17 @@ public:
   event_handle_t  propagate_event(event_handle_t event);
   
 private:
-  BaseTool::propagation_state_e send_pointer_event(PointerTool*, 
-					      event_handle_t) const;
-  BaseTool::propagation_state_e send_key_event(KeyTool*, 
-					  event_handle_t) const;
-  BaseTool::propagation_state_e send_window_event(WindowTool*, 
-					     event_handle_t) const;
+  BaseTool::propagation_state_e send_pointer_event(tool_handle_t,
+                                                   event_handle_t) const;
+  BaseTool::propagation_state_e send_key_event(tool_handle_t,
+                                               event_handle_t) const;
+  BaseTool::propagation_state_e send_window_event(tool_handle_t,
+                                                  event_handle_t) const;
   
   typedef stack<tool_handle_t>                                      ts_stack_t;
   typedef map<unsigned, ts_stack_t, less<unsigned> >                ps_map_t;
-  typedef map<string, pair<tool_handle_t, unsigned>, less<string> > nt_map_t;
 
   ps_map_t            stacks_;
-  nt_map_t            tools_;
   string              name_;
 };
 

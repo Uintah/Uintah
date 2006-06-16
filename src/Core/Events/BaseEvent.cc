@@ -41,8 +41,9 @@ static int count = 0;
 
 BaseEvent::BaseEvent(const string &target, 
                      unsigned int time) :
-  ref_cnt(0),
-  lock("BaseEvent lock"),
+  Datatype(),
+  //  ref_cnt(0),
+  //  lock("BaseEvent lock"),
   time_(time ? time : count++),
   target_(target)
 {

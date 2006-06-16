@@ -51,6 +51,8 @@ public:
   
   virtual bool          is_scene_graph_event() { return true; }
 
+  SceneGraphEvent *     clone() { return new SceneGraphEvent(*this); }
+  
   //! Accessors
   GeomHandle          get_geom_obj() const { return obj_; }
   string              get_geom_obj_name() const { return name_; }

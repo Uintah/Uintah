@@ -156,13 +156,13 @@ public:
 
   const Color&          bgcolor() { return bgcolor_; }
 
-  int                 width() const { return gl_context_->width(); }
-  int                 height() const { return gl_context_->height(); }
-  void                need_redraw() { need_redraw_ = true; }
+  virtual int         width() const;
+  virtual int         height() const;
+  virtual void        need_redraw();
   void                update_mode_string(string) {}
   void                get_bounds(BBox &bbox, bool check_visible = true);
 
-private:
+protected:
 
   void                  redraw_frame();
   GeomHandle            create_viewer_axes() ;

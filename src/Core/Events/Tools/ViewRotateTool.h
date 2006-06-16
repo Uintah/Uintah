@@ -25,9 +25,10 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : ViewRotateTool.h
-//    Author : Martin Cole
-//    Date   : Thu Jun  1 09:27:10 2006
+//    File   : QuitMainWindow.h
+//    Author : McKay Davis
+//    Date   : Thu Jun  8 15:34:34 MDT 2006
+
 
 
 #if !defined(ViewRotateTool_h)
@@ -49,14 +50,17 @@ public:
   virtual ~ViewRotateTool();
 
   //! which == button number, x,y in window at event time 
-  virtual propagation_state_e pointer_down(int which, 
-				      int x, int y, int time);
+  virtual propagation_state_e pointer_down(int which, int x, int y, 
+                                           unsigned int modifiers,
+                                           int time);
   //! which == button number, x,y in window at event time 
-  virtual propagation_state_e pointer_motion(int which, 
-					int x, int y, int time);
+  virtual propagation_state_e pointer_motion(int which, int x, int y, 
+                                             unsigned int modifiers,
+                                             int time);
   //! which == button number, x,y in window at event time 
-  virtual propagation_state_e pointer_up(int which, 
-				    int x, int y, int time);
+  virtual propagation_state_e pointer_up(int which, int x, int y,
+                                         unsigned int modifiers,
+                                         int time);
 
 private:
   ViewToolInterface                 *scene_interface_;

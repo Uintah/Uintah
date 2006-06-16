@@ -50,7 +50,8 @@ ViewTranslateTool::~ViewTranslateTool()
 }
 
 BaseTool::propagation_state_e
-ViewTranslateTool::pointer_down(int which, int x, int y, int time)
+ViewTranslateTool::pointer_down(int which, int x, int y, 
+                                unsigned int, int time)
 {
   if (which != 1) return CONTINUE_E;
   last_x_ = x;
@@ -62,7 +63,8 @@ ViewTranslateTool::pointer_down(int which, int x, int y, int time)
 }
 
 BaseTool::propagation_state_e
-ViewTranslateTool::pointer_motion(int which, int x, int y, int time)
+ViewTranslateTool::pointer_motion(int which, int x, int y, 
+                                  unsigned int, int time)
 {
   if (which != 1) return CONTINUE_E;
   int xres = scene_interface_->width();
@@ -105,7 +107,8 @@ ViewTranslateTool::pointer_motion(int which, int x, int y, int time)
 }
 
 BaseTool::propagation_state_e
-ViewTranslateTool::pointer_up(int which, int x, int y, int time)
+ViewTranslateTool::pointer_up(int which, int x, int y, 
+                              unsigned int, int time)
 {
   if (which != 1) return CONTINUE_E;
   scene_interface_->update_mode_string("");

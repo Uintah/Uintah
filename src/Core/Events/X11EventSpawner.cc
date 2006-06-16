@@ -36,17 +36,22 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/Timer.h>
 #include <Core/Util/Assert.h>
+#include <Core/Util/Environment.h>
+#include <Core/Thread/Semaphore.h>
 #include <sci_glx.h>
 #include <iostream>
+
+#include <X11/keysym.h>
 
 
 namespace SCIRun {
 
 
-  X11EventSpawner::X11EventSpawner(Display *display, Window window) :
-    Runnable(),
-    EventSpawner(),
-    translate_event_(),
+
+  X11EventSpawner::X11EventSpawner(const string &target, 
+                                   Display *display, 
+                                   Window window) :
+    EventSpawner(target),
     display_(display),
     window_(window)
   {
@@ -58,19 +63,16 @@ namespace SCIRun {
              LeaveWindowMask |
              PointerMotionMask |
              ExposureMask |
-             StructureNotifyMask);
+             StructureNotifyMask |
+             VisibilityChangeMask | 
+             FocusChangeMask);
 
+    X11Lock::lock();
     XSelectInput (display_, window_, mask_);
-
-    translate_event_[KeyPress] = &X11EventSpawner::do_KeyEvent;
-    translate_event_[KeyRelease] = &X11EventSpawner::do_KeyEvent;
-    translate_event_[ButtonPress] = &X11EventSpawner::do_ButtonEvent;
-    translate_event_[ButtonRelease] = &X11EventSpawner::do_ButtonEvent;
-    translate_event_[MotionNotify] = &X11EventSpawner::do_PointerMotion;
-    translate_event_[Expose] = &X11EventSpawner::do_Expose;
-    translate_event_[EnterNotify] = &X11EventSpawner::do_Enter;
-    translate_event_[LeaveNotify] = &X11EventSpawner::do_Leave;
-    translate_event_[ConfigureRequest] = &X11EventSpawner::do_Configure;
+    Atom wm_client_delete = XInternAtom(display_,"WM_DELETE_WINDOW",False);
+    XSetWMProtocols(display_, window_, &wm_client_delete, 1);
+    XStoreName(display, window, target.c_str());
+    X11Lock::unlock();
 
   }
 
@@ -80,11 +82,11 @@ namespace SCIRun {
 
 
   event_handle_t
-  X11EventSpawner::do_KeyEvent(XEvent *xevent)
+  X11EventSpawner::xlat_KeyEvent(XEvent *xevent)
   {
-    XKeyEvent *xeventp = (XKeyEvent*)&xevent;
+    XKeyEvent *xeventp = &(xevent->xkey);
     KeyEvent *sci_event = new KeyEvent();
-
+    
     if (xevent->type == KeyPress)
       sci_event->set_key_state(KeyEvent::KEY_PRESS_E);
     else if (xevent->type == KeyRelease)
@@ -98,31 +100,65 @@ namespace SCIRun {
 
     sci_event->set_modifiers(state);
     sci_event->set_time(xeventp->time);
+    sci_event->set_keyval(XLookupKeysym(xeventp,0));
+    if (sci_getenv_p("SCI_DEBUG")) {
+      cerr << "Keyval: " << sci_event->get_keyval() << std::endl;
+    }
 
     return sci_event;
   }
 
+  unsigned int xlate_ModifierState(unsigned int xmod) {
+    unsigned int mods = 0;
+
+    if (xmod & ShiftMask)   mods |= EventModifiers::SHIFT_E;
+    if (xmod & LockMask)    mods |= EventModifiers::CAPS_LOCK_E;
+    if (xmod & ControlMask) mods |= EventModifiers::CONTROL_E;
+    if (xmod & Mod1Mask)    mods |= EventModifiers::ALT_E;
+    
+    return mods;
+  }
+
 
   event_handle_t
-  X11EventSpawner::do_ButtonEvent(XEvent *xevent)
+  X11EventSpawner::xlat_ButtonPressEvent(XEvent *xevent)
   {
-    XButtonEvent *xeventp = (XButtonEvent*)&xevent;
+    XButtonEvent *xeventp = &(xevent->xbutton);
     PointerEvent *sci_event = new PointerEvent();
-    unsigned int state = 0;
-    if (xeventp->type == ButtonPress)
-      state = PointerEvent::BUTTON_PRESS_E;
-    else if (xeventp->type == ButtonRelease)
-      state = PointerEvent::BUTTON_RELEASE_E;
+    unsigned int state = PointerEvent::BUTTON_PRESS_E;
+    ASSERT(xeventp->type == ButtonPress);
+
+    sci_event->set_modifiers(xlate_ModifierState(xeventp->state));
+
+    if (xeventp->button == 1) state |= PointerEvent::BUTTON_1_E;
+    if (xeventp->button == 2) state |= PointerEvent::BUTTON_2_E;
+    if (xeventp->button == 3) state |= PointerEvent::BUTTON_3_E;
+    if (xeventp->button == 4) state |= PointerEvent::BUTTON_4_E;
+    if (xeventp->button == 5) state |= PointerEvent::BUTTON_5_E;
+
+    sci_event->set_pointer_state(state);
+    sci_event->set_x(xeventp->x);
+    sci_event->set_y(xeventp->y);
+    sci_event->set_time(xeventp->time);
+    return sci_event;
+  }
+
+  event_handle_t
+  X11EventSpawner::xlat_ButtonReleaseEvent(XEvent *xevent)
+  {
+    XButtonEvent *xeventp = &(xevent->xbutton);
+    PointerEvent *sci_event = new PointerEvent();
+    unsigned int state = PointerEvent::BUTTON_RELEASE_E;
+    ASSERT(xeventp->type == ButtonRelease);
     
-    switch (xeventp->button) {
-    case 1 : state |= PointerEvent::BUTTON_1_E; break;
-    case 2 : state |= PointerEvent::BUTTON_2_E; break;
-    case 3 : state |= PointerEvent::BUTTON_3_E; break;
-    case 4 : state |= PointerEvent::BUTTON_4_E; break;
-    case 5 : state |= PointerEvent::BUTTON_5_E; break;
-    default: break;
-    }
-    
+    sci_event->set_modifiers(xlate_ModifierState(xeventp->state));
+
+    if (xeventp->state & Button1Mask) state |= PointerEvent::BUTTON_1_E;
+    if (xeventp->state & Button2Mask) state |= PointerEvent::BUTTON_2_E;
+    if (xeventp->state & Button3Mask) state |= PointerEvent::BUTTON_3_E;
+    if (xeventp->state & Button4Mask) state |= PointerEvent::BUTTON_4_E;
+    if (xeventp->state & Button5Mask) state |= PointerEvent::BUTTON_5_E;
+
     sci_event->set_pointer_state(state);
     sci_event->set_x(xeventp->x);
     sci_event->set_y(xeventp->y);
@@ -132,11 +168,13 @@ namespace SCIRun {
 
 
   event_handle_t
-  X11EventSpawner::do_PointerMotion(XEvent *xevent)
+  X11EventSpawner::xlat_PointerMotion(XEvent *xevent)
   {
-    XMotionEvent *xeventp = (XMotionEvent*)&xevent;
+    XMotionEvent *xeventp = &(xevent->xmotion);
     PointerEvent *sci_event = new PointerEvent();
     unsigned int state = PointerEvent::MOTION_E;
+
+    sci_event->set_modifiers(xlate_ModifierState(xeventp->state));
     
     if (xeventp->state & Button1Mask) state |= PointerEvent::BUTTON_1_E;
     if (xeventp->state & Button2Mask) state |= PointerEvent::BUTTON_2_E;
@@ -152,60 +190,130 @@ namespace SCIRun {
   }
 
   event_handle_t
-  X11EventSpawner::do_Expose(XEvent *)
+  X11EventSpawner::xlat_Expose(XEvent *)
   {
-    cerr << "Expose\n";
+    if (sci_getenv_p("SCI_DEBUG")) {
+      cerr << target_ << ": Expose\n";
+    }
     return new WindowEvent(WindowEvent::REDRAW_E);
   }
 
 
   event_handle_t
-  X11EventSpawner::do_Leave(XEvent *)
+  X11EventSpawner::xlat_Leave(XEvent *)
   {
-    cerr << "Leave\n";
+    if (sci_getenv_p("SCI_DEBUG")) {
+      cerr << target_ << ": Leave\n";
+    }
     return new WindowEvent(WindowEvent::LEAVE_E);
   }
 
   event_handle_t
-  X11EventSpawner::do_Enter(XEvent *)
+  X11EventSpawner::xlat_Enter(XEvent *)
   {
-    cerr << "Enter\n";
+    if (sci_getenv_p("SCI_DEBUG")) {
+      cerr << target_ << ": Enter\n";
+    }
     return new WindowEvent(WindowEvent::ENTER_E);
   }
 
   event_handle_t
-  X11EventSpawner::do_Configure(XEvent *)
+  X11EventSpawner::xlat_Configure(XEvent *)
   {
-    cerr << "Configure\n";
+    if (sci_getenv_p("SCI_DEBUG")) {
+      cerr << target_ << ": Configure\n";
+    }
+    return new WindowEvent(WindowEvent::CONFIGURE_E);
+  }
+
+  event_handle_t
+  X11EventSpawner::xlat_Client(XEvent *)
+  {
+    if (sci_getenv_p("SCI_DEBUG")) {
+      cerr << target_ << ": Aussimg Quit\n";
+    }
+    //    return new WindowEvent(WindowEvent::DESTROY_E);
+    return new QuitEvent();
+  }
+
+
+  event_handle_t
+  X11EventSpawner::xlat_FocusIn(XEvent *)
+  {
+    if (sci_getenv_p("SCI_DEBUG")) {
+      cerr << target_ << ": FocusIn\n";
+    }
+    return new WindowEvent(WindowEvent::FOCUSIN_E);
+  }
+
+  event_handle_t
+  X11EventSpawner::xlat_FocusOut(XEvent *)
+  {
+    if (sci_getenv_p("SCI_DEBUG")) {
+      cerr << target_ << ": FocusOut\n";
+    }
+    return new WindowEvent(WindowEvent::DESTROY_E);
+  }
+
+  event_handle_t
+  X11EventSpawner::xlat_Visibilty(XEvent *xevent)
+  {
+    if (sci_getenv_p("SCI_DEBUG")) {
+      cerr << target_ << ": Visibilty: " << xevent->xvisibility.state << std::endl;
+    }
     return new WindowEvent(WindowEvent::REDRAW_E);
   }
-  
-  void
-  X11EventSpawner::run()
+
+  event_handle_t
+  X11EventSpawner::xlat_Map(XEvent *xevent)
   {
-    TimeThrottle throttle;
-    throttle.start();
-
-    XEvent xevent;
-    for(;;)
-    {
-      double time = throttle.time();
-     
-      X11Lock::lock();
-      bool found = XCheckMaskEvent(display_, mask_, &xevent);
-      X11Lock::unlock();
-    
-      if (!found) {
-        throttle.wait_for_time(time + 1/200.0); // 200 Hz X11 event rate
-        continue;
-      }
-
-      translate_func_t *translator = translate_event_[xevent.type];
-      if (translator) {
-        event_handle_t sci_event = (*translator)(&xevent);
-        ASSERT(sci_event.get_rep());
-        EventManager::add_event(sci_event);
-      }
+    if (sci_getenv_p("SCI_DEBUG")) {
+      cerr << target_ << ": Map" << std::endl;
     }
+    return new WindowEvent(WindowEvent::CREATE_E);
+  }
+  
+  bool
+  X11EventSpawner::iterate()
+  {
+    XEvent *xevent = new XEvent;
+    event_handle_t event = 0;
+    X11Lock::lock();
+    int pending = XPending(display_);
+    X11Lock::unlock();
+    for (int i = 0; i < pending; ++i) {
+      X11Lock::lock();
+      XNextEvent(display_, xevent);
+      X11Lock::unlock();
+      switch (xevent->type) {
+      case KeyPress:		event = xlat_KeyEvent(xevent); break;
+      case KeyRelease:          event = xlat_KeyEvent(xevent); break;
+      case ButtonPress:         event = xlat_ButtonPressEvent(xevent); break;
+      case ButtonRelease:	event = xlat_ButtonReleaseEvent(xevent); break;
+      case MotionNotify:	event = xlat_PointerMotion(xevent); break;
+      case Expose:		event = xlat_Expose(xevent); break;
+      case EnterNotify:         event = xlat_Enter(xevent); break;
+      case LeaveNotify:         event = xlat_Leave(xevent); break;
+      case ConfigureNotify:	event = xlat_Configure(xevent); break;
+      case ClientMessage:	event = xlat_Client(xevent); break;
+      case FocusIn:             event = xlat_FocusIn(xevent); break;
+      case FocusOut:            event = xlat_FocusOut(xevent); break;
+      case VisibilityNotify:    event = xlat_Visibilty(xevent); break;
+      case MapNotify:           event = xlat_Map(xevent); break;
+
+      default:                  
+        if (sci_getenv_p("SCI_DEBUG")) 
+          cerr << target_ << ": Unknown X event type: " 
+               << xevent->type << "\n"; 
+        break;
+      }
+
+      if (event.get_rep()) {
+        event->set_target(target_);
+        EventManager::add_event(event);
+      }
+      event = 0;
+    }
+    return true;
   }
 }

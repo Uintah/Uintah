@@ -49,7 +49,7 @@ ViewScaleTool::~ViewScaleTool()
 }
 
 BaseTool::propagation_state_e
-ViewScaleTool::pointer_down(int which, int x, int y, int time)
+ViewScaleTool::pointer_down(int which, int x, int y, unsigned int, int time)
 {
   if (which != 3) return CONTINUE_E;
   scene_interface_->update_mode_string("scale: ");
@@ -60,7 +60,7 @@ ViewScaleTool::pointer_down(int which, int x, int y, int time)
 }
 
 BaseTool::propagation_state_e
-ViewScaleTool::pointer_motion(int which, int x, int y, int time)
+ViewScaleTool::pointer_motion(int which, int x, int y, unsigned int, int time)
 {
   if (which != 3) return CONTINUE_E;
   double scl;
@@ -93,7 +93,7 @@ ViewScaleTool::pointer_motion(int which, int x, int y, int time)
 }
 
 BaseTool::propagation_state_e
-ViewScaleTool::pointer_up(int which, int x, int y, int time)
+ViewScaleTool::pointer_up(int which, int x, int y, unsigned int, int time)
 {
   if (which != 3) return CONTINUE_E;
   scene_interface_->update_mode_string("");
