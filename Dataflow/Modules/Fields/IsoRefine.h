@@ -338,6 +338,65 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
 
       refined->add_elem(inodes);
 
+      nnodes[0] = onodes[0];
+      nnodes[1] = onodes[1];
+      nnodes[2] = onodes[2];
+      nnodes[3] = onodes[3];
+      nnodes[4] = inodes[0];
+      nnodes[5] = inodes[1];
+      nnodes[6] = inodes[2];
+      nnodes[7] = inodes[3];
+      refined->add_elem(nnodes);
+
+      nnodes[0] = onodes[5];
+      nnodes[1] = onodes[4];
+      nnodes[2] = onodes[7];
+      nnodes[3] = onodes[6];
+      nnodes[4] = inodes[5];
+      nnodes[5] = inodes[4];
+      nnodes[6] = inodes[7];
+      nnodes[7] = inodes[6];
+      refined->add_elem(nnodes);
+
+      nnodes[0] = onodes[0];
+      nnodes[1] = onodes[3];
+      nnodes[2] = onodes[7];
+      nnodes[3] = onodes[4];
+      nnodes[4] = inodes[0];
+      nnodes[5] = inodes[3];
+      nnodes[6] = inodes[7];
+      nnodes[7] = inodes[4];
+      refined->add_elem(nnodes);
+
+      nnodes[0] = onodes[2];
+      nnodes[1] = onodes[1];
+      nnodes[2] = onodes[5];
+      nnodes[3] = onodes[6];
+      nnodes[4] = inodes[2];
+      nnodes[5] = inodes[1];
+      nnodes[6] = inodes[5];
+      nnodes[7] = inodes[6];
+      refined->add_elem(nnodes);
+
+      nnodes[0] = onodes[1];
+      nnodes[1] = onodes[0];
+      nnodes[2] = onodes[4];
+      nnodes[3] = onodes[5];
+      nnodes[4] = inodes[1];
+      nnodes[5] = inodes[0];
+      nnodes[6] = inodes[4];
+      nnodes[7] = inodes[5];
+      refined->add_elem(nnodes);
+
+      nnodes[0] = onodes[3];
+      nnodes[1] = onodes[2];
+      nnodes[2] = onodes[6];
+      nnodes[3] = onodes[7];
+      nnodes[4] = inodes[3];
+      nnodes[5] = inodes[2];
+      nnodes[6] = inodes[6];
+      nnodes[7] = inodes[7];
+      refined->add_elem(nnodes);
     }
     ++bi;
   }
