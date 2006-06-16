@@ -117,29 +117,29 @@ private:
   wxStaticText *ldesc;
 };
 
-class CodePreviewDialog : public wxDialog
-{
+/* class CodePreviewDialog : public wxDialog */
+/* { */
   
- public:
-  enum
-    {
-      ID_ViewSourceFileCode = wxID_HIGHEST,
-      ID_ViewHeaderFileCode,
-      ID_ViewMakeFileCode
-    };
-  CodePreviewDialog(wxWindow *parent,wxWindowID id,const wxString &title,const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxDEFAULT_DIALOG_STYLE, const wxString& name = "Code Preview Dialog Box");
+/*  public: */
+/*   enum */
+/*     { */
+/*       ID_ViewSourceFileCode = wxID_HIGHEST, */
+/*       ID_ViewHeaderFileCode, */
+/*       ID_ViewMakeFileCode */
+/*     }; */
+/*   CodePreviewDialog(wxWindow *parent,wxWindowID id,const wxString &title,const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxDefaultSize, long style = wxDEFAULT_DIALOG_STYLE, const wxString& name = "Code Preview Dialog Box"); */
   
- private:
-  wxTextCtrl *codePreview;
-  wxButton *viewSourceFileCode;
-  wxButton *viewHeaderFileCode;
-  wxButton *viewMakeFileCode;
+/*  private: */
+/*   wxTextCtrl *codePreview; */
+/*   wxButton *viewSourceFileCode; */
+/*   wxButton *viewHeaderFileCode; */
+/*   wxButton *viewMakeFileCode; */
   
-  void OnViewSourceFileCode( wxCommandEvent &event );
-  void OnViewHeaderFileCode( wxCommandEvent &event );
-  void OnViewMakeFileCode( wxCommandEvent &event );
-  DECLARE_EVENT_TABLE()
-};
+/*   void OnViewSourceFileCode( wxCommandEvent &event ); */
+/*   void OnViewHeaderFileCode( wxCommandEvent &event ); */
+/*   void OnViewMakeFileCode( wxCommandEvent &event ); */
+/*   DECLARE_EVENT_TABLE() */
+/* }; */
 
 }
 #endif

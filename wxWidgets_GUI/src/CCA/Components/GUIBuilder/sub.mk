@@ -44,7 +44,8 @@ SRCS += \
          $(SRCDIR)/PortIcon.cc \
 	 $(SRCDIR)/ComponentWizardDialog.cc \
          $(SRCDIR)/ComponentSkeletonWriter.cc \
-         $(SRCDIR)/XMLPathDialog.cc
+         $(SRCDIR)/CodePreviewDialog.cc \
+	 $(SRCDIR)/XMLPathDialog.cc
 
 PSELIBS := Core/CCA/spec Core/CCA/PIDL Core/Thread Core/Exceptions SCIRun
 
