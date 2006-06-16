@@ -163,7 +163,7 @@ void normalizedDistance_CC(const int refineRatio,
 
 /*___________________________________________________________________
  Function~  coarseLevel_CFI_Iterator--  
- Purpose:  returns the coarse level iterator at the CFI
+ Purpose:  returns the coarse level iterator at the CFI looking up
 _____________________________________________________________________*/
 void coarseLevel_CFI_Iterator(Patch::FaceType patchFace,
                                const Patch* coarsePatch, 
@@ -211,6 +211,52 @@ void coarseLevel_CFI_Iterator(Patch::FaceType patchFace,
   if ( coarsePatch->containsCell(l) ){
     isRight_CP_FP_pair = true;
   }
+}
+
+/*___________________________________________________________________
+ Function~  fineLevel_CFI_Iterator--  
+ Purpose:  returns the fine level iterator at the CFI looking down
+_____________________________________________________________________*/
+void fineLevel_CFI_Iterator(Patch::FaceType patchFace,
+                               const Patch* coarsePatch, 
+                               const Patch* finePatch,   
+                               CellIterator& iter) 
+{
+  CellIterator f_iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
+
+  // find the intersection of the fine patch face iterator and underlying coarse patch
+  IntVector f_lo_face = f_iter.begin();                 // fineLevel face indices   
+  IntVector f_hi_face = f_iter.end();
+
+  IntVector c_lo_patch = coarsePatch->getLowIndex(); 
+  IntVector c_hi_patch = coarsePatch->getHighIndex();
+  
+  const Level* coarseLevel = coarsePatch->getLevel();
+  c_lo_patch = coarseLevel->mapCellToFiner(c_lo_patch);     
+  c_hi_patch = coarseLevel->mapCellToFiner(c_hi_patch); 
+
+  IntVector dir = finePatch->faceAxes(patchFace);        // face axes
+  int y = dir[1];  // tangential directions
+  int z = dir[2];
+
+  IntVector l = f_lo_face, h = f_hi_face;
+
+  l[y] = Max(f_lo_face[y], c_lo_patch[y]);             // intersection
+  l[z] = Max(f_lo_face[z], c_lo_patch[z]);
+  
+  h[y] = Min(f_hi_face[y], c_hi_patch[y]);
+  h[z] = Min(f_hi_face[z], c_hi_patch[z]);
+  
+  // debugging
+#if 0
+  if (l != f_lo_face || h != f_hi_face || true){
+    cout << "\nface " << finePatch->getFaceName(patchFace) << " l " << l << " h " << h << endl;
+    cout << "fine             " << f_lo_face << " " << f_hi_face 
+         << "\ncoarse          " << coarsePatch->getLowIndex() << " " << coarsePatch->getHighIndex()
+         << "\ncoarse remapped " << c_lo_patch << " " << c_hi_patch<< endl;
+  }
+#endif
+  iter=CellIterator(l,h);
 }
 
 
