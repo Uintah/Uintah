@@ -56,19 +56,28 @@ vector<int> X11OpenGLContext::valid_visuals_ = vector<int>();
 GLXContext X11OpenGLContext::first_context_ = NULL;
 
 X11OpenGLContext::X11OpenGLContext(int visual, 
-                                   int width, 
-                                   int height) : 
+                                   int x, 
+                                   int y,
+                                   unsigned int width, 
+                                   unsigned int height) : 
   OpenGLContext(),
   mutex_("GL lock")
 {
-  create_context(visual, width, height);
+  // Sepeate functions so we can set gdb breakpoints in constructor
+  create_context(visual, x, y, width, height);
 }
 
+
+
 void
-X11OpenGLContext::create_context(int visual, int width, int height)
+X11OpenGLContext::create_context(int visual, int x, int y,
+                                 unsigned int width, 
+                                 unsigned int height)
 {
-  display_ = XOpenDisplay((char *)0);
   X11Lock::lock();
+  display_ = XOpenDisplay((char *)0);
+  XSync(display_, False);
+
   screen_ = DefaultScreen(display_);
   root_window_ = DefaultRootWindow(display_);
 
@@ -84,20 +93,22 @@ X11OpenGLContext::create_context(int visual, int width, int height)
   XVisualInfo temp_vi;
   temp_vi.visualid = visualid_;
   vi_ = XGetVisualInfo(display_, VisualIDMask, &temp_vi, &n);
-  if(!vi_ || n != 1) 
-    throw InternalError("Cannot find Visual ID #"+to_string(visualid_), 
-                        __FILE__, __LINE__);
+  if(!vi_ || n != 1) {
+    throw ("Cannot find Visual ID #" + to_string(visualid_) + 
+           string(__FILE__)+to_string(__LINE__));
+    X11Lock::unlock();
+  }
+    
 
   attributes_.colormap = XCreateColormap(display_, root_window_, 
                                          vi_->visual, AllocNone);
   attributes_.override_redirect = false;
-  unsigned int valuemask = (CWX | CWY | CWWidth | CWHeight | 
-                            CWBorderWidth | CWSibling | CWStackMode);
+  //  unsigned int valuemask = (CWX | CWY | CWWidth | CWHeight | 
+  //                            CWBorderWidth | CWSibling | CWStackMode);
 
-  
   window_ = XCreateWindow(display_, 
                           root_window_,
-                          0, 0, 
+                          x, y, 
                           width, height,
                           0,
                           vi_->depth,
@@ -107,16 +118,23 @@ X11OpenGLContext::create_context(int visual, int width, int height)
                           CWColormap | CWOverrideRedirect,
                           &attributes_);
   
-  if (!window_) 
-    throw scinew InternalError("Cannot create X11 Window", __FILE__, __LINE__);
-
+  if (!window_) {
+    throw ("Cannot create X11 Window " + 
+           string(__FILE__)+to_string(__LINE__));
+    X11Lock::unlock();
+  }
 
   XMapRaised(display_, window_);
+  XMoveResizeWindow(display_, window_, x, y, width, height);
   XSync(display_, False);
 
   context_ = glXCreateContext(display_, vi_, first_context_, 1);
-  if (!context_) 
-    throw scinew InternalError("Cannot create GLX Context",__FILE__,__LINE__);
+  if (!context_) {
+    throw ("Cannot create GLX Context" + 
+           string(__FILE__)+to_string(__LINE__));
+    X11Lock::unlock();
+  }
+
 
   X11Lock::unlock();
 
@@ -133,10 +151,21 @@ X11OpenGLContext::create_context(int visual, int width, int height)
 X11OpenGLContext::~X11OpenGLContext()
 {
   release();
-  glXDestroyContext(display_, context_);
-  XDestroyWindow(display_,window_);
-  XCloseDisplay(display_);
+  X11Lock::lock();
   XSync(display_, False);
+
+  glXDestroyContext(display_, context_);
+
+  XSync(display_, False);
+
+  XDestroyWindow(display_,window_);
+
+  XSync(display_, False);
+
+  XCloseDisplay(display_);
+
+  X11Lock::unlock();
+
 }
 
 
@@ -145,7 +174,6 @@ X11OpenGLContext::make_current()
 {
   ASSERT(context_);
   bool result = true;
-  //  cerr << "Make current " << id_ << "\n";
   X11Lock::lock();
   result = glXMakeCurrent(display_, window_, context_);
   X11Lock::unlock();
@@ -170,6 +198,15 @@ X11OpenGLContext::release()
 int
 X11OpenGLContext::width()
 {
+  X11Lock::lock();
+
+  // TODO: optimize out to configure events
+  XWindowAttributes attr;
+  XGetWindowAttributes(display_, window_, &attr);
+  width_ = attr.width;
+  height_ = attr.height;
+  X11Lock::unlock();
+
   return width_;
 }
 

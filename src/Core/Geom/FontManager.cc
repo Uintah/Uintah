@@ -47,32 +47,27 @@
 #include <Core/Math/MiscMath.h>
 #include <iostream>
 
-
-SCIRun::FontManager font_manager();
+static int counter = 0;
 
 namespace SCIRun {  
 
 
-FontManager::FontManager() :
-  renderers_(),
-  face_()
-{
-  if (!freetype_lib_) {
-    try {
-      freetype_lib_ = new FreeTypeLibrary();
-    } catch (...) {
-      freetype_lib_ = 0;
-    }
-  }
+FreeTypeLibrary * FontManager::freetype_lib_ = 0;
 
-  if (!freetype_lib_) {
-    cerr << "Cannot Initialize FreeType Library in FontManager constructor.";
-    cerr << "Did you configure with --with-freetype= ?";
-    cerr << "SCIRun will not render text correctly.";
-  }
+FontManager::NameSizeRendererMap_t FontManager::renderers_;
+
+FontManager::RendererFaceMap_t FontManager::face_;
+
+FontManager::FontManager()
+{
 }
 
-FontManager::~FontManager() {
+FontManager::~FontManager()
+{
+}
+
+void
+FontManager::release_all() {
   for (NameSizeRendererMap_t::iterator riter = renderers_.begin();
        riter != renderers_.end(); ++riter) {
     for (SizeRendererMap_t::iterator siter = riter->second.begin();
@@ -83,7 +78,7 @@ FontManager::~FontManager() {
     }
   }
 }
-
+  
 FreeTypeFace *
 FontManager::load_face(const string &filename) {
   FreeTypeFace *face = 0;
@@ -113,6 +108,22 @@ FontManager::load_face(const string &filename) {
 
 TextRenderer *
 FontManager::get_renderer(double points, string name) {
+  if (!freetype_lib_) {
+    try {
+      freetype_lib_ = new FreeTypeLibrary();
+    } catch (...) {
+      freetype_lib_ = 0;
+    }
+  }
+
+  if (!freetype_lib_) {
+    cerr << "Cannot Initialize FreeType Library in FontManager constructor.";
+    cerr << "Did you configure with --with-freetype= ?";
+    cerr << "SCIRun will not render text correctly.";
+  }
+
+
+
   SizeRendererMap_t &named_renderers = renderers_[name];  
   int tenths = Round(points*10.0);
   if (named_renderers[tenths] == 0) {

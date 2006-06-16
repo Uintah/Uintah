@@ -54,12 +54,16 @@ class SCISHARE X11OpenGLContext : public OpenGLContext
 {
 public:
   X11OpenGLContext(int visualid=0, 
-                   int width=640, 
-                   int height = 480);
+                   int x = 0,
+                   int y = 0,
+                   unsigned int width = 640, 
+                   unsigned int height = 480);
 
   virtual ~X11OpenGLContext();
 private:  
-  void                  create_context(int id, int w, int h);
+  void                  create_context(int id, int w, int h, 
+                                       unsigned int width, 
+                                       unsigned int height);
 
   static void		listvisuals();
 

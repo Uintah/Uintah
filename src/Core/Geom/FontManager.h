@@ -58,21 +58,22 @@ public:
   FontManager();
   ~FontManager();
 
-  TextRenderer *        get_renderer(double, string filename = "scirun.ttf");
-  void                  release_renderer(double, string filename="scirun.ttf");
-  void                  release_renderer(TextRenderer *);
+  static TextRenderer * get_renderer(double, string filename = "scirun.ttf");
+  static void           release_renderer(double, string filename="scirun.ttf");
+  static void           release_renderer(TextRenderer *);
+  static void		release_all();
 private:
-  FreeTypeFace *        load_face(const string &filename);
-  FreeTypeLibrary *     freetype_lib_;
+  
+  static FreeTypeFace *         load_face(const string &filename);
+  static FreeTypeLibrary *      freetype_lib_;
 
   typedef               map<int, TextRenderer *> SizeRendererMap_t;
   typedef               map<string, SizeRendererMap_t> NameSizeRendererMap_t;
   typedef               map<TextRenderer *, FreeTypeFace*> RendererFaceMap_t;
-  NameSizeRendererMap_t renderers_;
-  RendererFaceMap_t     face_;
+  static NameSizeRendererMap_t  renderers_;
+  static RendererFaceMap_t      face_;
 };
 
-  static FontManager font_manager;  
 }
 
 

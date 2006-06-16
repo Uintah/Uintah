@@ -51,6 +51,9 @@
 #include <Core/Util/Environment.h>
 #include <Core/Util/SimpleProfiler.h>
 
+#ifdef HAVE_FREETYPE
+#include FT_MODULE_ERRORS_H
+#endif
 
 namespace SCIRun {  
 
@@ -194,8 +197,16 @@ TextRenderer::layout_text(const string &text,
                   shadow_offset_.first * left + 
                   shadow_offset_.second * up);
     for (unsigned int c = 0; c < text.size(); ++c) {
+      ASSERT(p*text.size()+c < layout_.size());
       LayoutInfo &layout = layout_[p*text.size()+c];
-      layout.glyph_info_ = glyphs_[text[c]];
+
+      if (!glyphs_[text[c]]) { 
+        layout.glyph_info_ = glyphs_[' '];
+      } else {
+        layout.glyph_info_ = glyphs_[text[c]];
+      }
+      ASSERT(layout.glyph_info_);
+
       if (flags & REVERSE) 
         layout.color_ = shadow ? color_ : shadow_color_;
       else
@@ -307,12 +318,15 @@ TextRenderer::render(const string &text, float x, float y, int flags)
   glLoadIdentity();
   glScaled(2.0, 2.0, 2.0);
   glTranslated(-.5, -.5, -.5);
+  glColor4d(1.0, 0.0, 0.0, 1.0);
+  
   profiler("gl1");
   GLint gl_viewport[4];
   glGetIntegerv(GL_VIEWPORT, gl_viewport);
-  float vw = gl_viewport[2] - gl_viewport[0];
-  float vh = gl_viewport[3] - gl_viewport[1];
+  float vw = gl_viewport[2];
+  float vh = gl_viewport[3];
   glScaled(1/vw, 1/vh, 1.0);
+
   profiler("gl2");
   glDisable(GL_CULL_FACE);
   glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
@@ -333,7 +347,8 @@ TextRenderer::render(const string &text, float x, float y, int flags)
   for (unsigned int c = 0; c < num; ++c) {
     LayoutInfo &layout = layout_[c];
     GlyphInfo *glyph = layout.glyph_info_;
-    if (!glyph) continue;
+    ASSERT(glyph);
+    //    if (!glyph) continue;
     glyph->texture_->set_color(layout.color_);
     glyph->texture_->draw(4, layout.vertices_, glyph->tex_coords_);
   }
@@ -364,23 +379,43 @@ TextRenderer::render_glyph_to_texture(const wchar_t &character) {
 #ifdef HAVE_FREETYPE
   string str = " ";
   str[0] = character;
-  GlyphInfo *glyph_info = scinew GlyphInfo();
-  //  glyph_info->glyph_ = scinew FreeTypeGlyph();
+  GlyphInfo *glyph_info = new GlyphInfo();
+  //  glyph_info->glyph_ = new FreeTypeGlyph();
   glyph_info->index_ = FT_Get_Char_Index(face_->ft_face_, character);
-  FT_Glyph glyph;
+  if (glyph_info->index_ == 0) {
+    cerr << "0 glyph, returning\n";
+    return 0;
+  }
 
-  if (FT_Load_Glyph(face_->ft_face_, glyph_info->index_, FT_LOAD_DEFAULT))
-    throw InternalError("FreeType Unable to Load Glyph: "+character, 
-                        __FILE__, __LINE__);
-  if (FT_Get_Glyph(face_->ft_face_->glyph, &glyph))
-    throw InternalError("FreeType Unable to Get Glyph: "+character, 
-                        __FILE__, __LINE__);
+
+  FT_Error err;
+  err = FT_Load_Glyph(face_->ft_face_, glyph_info->index_, FT_LOAD_DEFAULT);
+
+  if (err) {
+    cerr << "Freetype error: " << err << " \n";
+    cerr << "FreeType Unable to Load Glyph: ";
+    cerr << character;
+    cerr <<"  " << to_string(int(character));
+    cerr <<"  " <<  string(__FILE__) << to_string(__LINE__) << std::endl;
+    return 0;
+    //    throw ("FreeType Unable to Load Glyph: "+character+
+    //           string(__FILE__)+to_string(__LINE__));
+  }
+
+  FT_Glyph glyph;
+  err = FT_Get_Glyph(face_->ft_face_->glyph, &glyph);
+  if (err) {
+    throw ("FreeType Unable to Get Glyph: "+character+
+           string(__FILE__)+to_string(__LINE__));
+  }
 
   glyph_info->ft_metrics_ = face_->ft_face_->glyph->metrics;
-  if (FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, 0, 1)) {
+  err = FT_Glyph_To_Bitmap(&glyph, FT_RENDER_MODE_NORMAL, 0, 1);
+  if (err) {
     FT_Done_Glyph(glyph);
-    throw InternalError("FreeType Unable to Render Glyph: "+character, 
-                        __FILE__, __LINE__);
+    cerr << "Freetype error: " << err << std::endl;
+    //    throw "/n/nFreeType Unable to Render Glyph to Bitmap: "+to_string(int(character))+"\n\n";//string(__FILE__)+to_string(__LINE__)
+    return 0;
   }
 
   FT_BitmapGlyph bitmap_glyph = (FT_BitmapGlyph)(glyph);
@@ -398,7 +433,7 @@ TextRenderer::render_glyph_to_texture(const wchar_t &character) {
   }
 
   if (!texture_ || y_ + height > texture_->height()) {
-    texture_ = scinew TextureObj(1, 256, 256);
+    texture_ = new TextureObj(1, 256, 256);
     textures_.insert(texture_);
     y_ = 0;
     x_ = 0;
@@ -421,15 +456,25 @@ TextRenderer::render_glyph_to_texture(const wchar_t &character) {
   glyph_info->tex_coords_[v++] = x_/float(tex_width);
   glyph_info->tex_coords_[v++] = y_/float(tex_height);
 
-  unsigned char *data = (unsigned char *)texture_->nrrd_handle_->nrrd_->data;
+  Nrrd *nrrd = texture_->nrrd_handle_->nrrd_;
+  unsigned char *data = (unsigned char *)nrrd->data;
 
   // render glyph to texture data
+  int pos;
   for (int y = 0; y < height; ++y) {
     int Y = y_+y;
     if (Y < 0 || Y >= tex_height) continue;
     for (int x = 0; x < width; ++x) {
       int X = x_+x;
       if (X < 0 || X >= tex_width) continue;
+      if (!(X>=0 && X < nrrd->axis[1].size &&
+           Y>=0 && Y < nrrd->axis[2].size)) {
+        cerr << "X: " << X
+             << "Y: " << Y
+             << "A1: " << nrrd->axis[1].size 
+             << "A2: " << nrrd->axis[2].size;
+      }
+          
       data[Y*tex_width+X] =
         bitmap_glyph->bitmap.buffer[y*Abs(bitmap_glyph->bitmap.pitch)+x];
     }
