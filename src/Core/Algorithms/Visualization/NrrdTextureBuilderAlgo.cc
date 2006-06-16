@@ -163,6 +163,28 @@ nrrd_build_bricks(vector<TextureBrickHandle>& bricks,
 
 
 void
+NrrdTextureBuilderAlgo::build_static(TextureHandle tHandle,
+                                     NrrdDataHandle vHandle,
+                                     double vmin, double vmax,
+                                     NrrdDataHandle gHandle,
+                                     double gmin, double gmax,
+                                     int card_mem)
+{
+  build_aux(tHandle, vHandle, vmin, vmax, gHandle, gmin, gmax,
+            card_mem, true);
+
+  vector<TextureBrickHandle>& bricks = tHandle->bricks();
+  for (unsigned int i=0; i<bricks.size(); i++)
+  {
+    NrrdTextureBrick *nbrick = (NrrdTextureBrick *) bricks[i].get_rep();
+    nbrick->set_nrrds(vHandle, gHandle);
+    bricks[i]->set_dirty(true);
+  }
+  tHandle->unlock_bricks();
+}
+
+
+void
 NrrdTextureBuilderAlgo::build(TextureHandle tHandle,
                               NrrdDataHandle vHandle,
                               double vmin, double vmax,
@@ -170,6 +192,36 @@ NrrdTextureBuilderAlgo::build(TextureHandle tHandle,
                               double gmin, double gmax,
                               int card_mem,
                               int is_uchar)
+{
+  build_aux(tHandle, vHandle, vmin, vmax, gHandle, gmin, gmax,
+            card_mem, is_uchar);
+
+  Nrrd* nv_nrrd = vHandle->nrrd_;
+  size_t axis_size[4];
+  nrrdAxisInfoGet_nva(nv_nrrd, nrrdAxisInfoSize, axis_size);
+
+  const int nx = axis_size[nv_nrrd->dim-3];
+  const int ny = axis_size[nv_nrrd->dim-2];
+  const int nz = axis_size[nv_nrrd->dim-1];
+  vector<TextureBrickHandle>& bricks = tHandle->bricks();
+  for (unsigned int i=0; i<bricks.size(); i++)
+  {
+    fill_brick(bricks[i], vHandle, vmin, vmax, gHandle, gmin, gmax,
+	       nx, ny, nz);
+    bricks[i]->set_dirty(true);
+  }
+  tHandle->unlock_bricks();
+}
+
+
+void
+NrrdTextureBuilderAlgo::build_aux(TextureHandle tHandle,
+                                  NrrdDataHandle vHandle,
+                                  double vmin, double vmax,
+                                  NrrdDataHandle gHandle,
+                                  double gmin, double gmax,
+                                  int card_mem,
+                                  int is_uchar)
 {
   Nrrd* nv_nrrd = vHandle->nrrd_;
   Nrrd* gm_nrrd = (gHandle.get_rep() ? gHandle->nrrd_ : 0);
@@ -262,14 +314,8 @@ NrrdTextureBuilderAlgo::build(TextureHandle tHandle,
   tHandle->set_bbox(bbox);
   tHandle->set_minmax(vmin, vmax, gmin, gmax);
   tHandle->set_transform(tform);
-  for (unsigned int i=0; i<bricks.size(); i++)
-  {
-    fill_brick(bricks[i], vHandle, vmin, vmax, gHandle, gmin, gmax,
-	       nx, ny, nz);
 
-    bricks[i]->set_dirty(true);
-  }
-  tHandle->unlock_bricks();
+  // tHandle still locked at this point.
 }
 
 

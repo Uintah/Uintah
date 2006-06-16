@@ -62,6 +62,13 @@ SCISHARE void nrrd_build_bricks(vector<TextureBrickHandle>& bricks,
 class SCISHARE NrrdTextureBuilderAlgo : public SCIRun::DynamicAlgoBase
 {
 public:
+  // The min/max values are currently ignored.  tHandle/vHandle should be
+  // pre-scaled by this point.
+  static void build_static(TextureHandle tHandle,
+                           NrrdDataHandle vHandle, double vmin, double vmax,
+                           NrrdDataHandle gHandle, double gmin, double gmax,
+                           int card_mem);
+
   virtual void build(TextureHandle tHandle,
 		     NrrdDataHandle vHandle, double vmin, double vmax,
 		     NrrdDataHandle gHandle, double gmin, double gmax,
@@ -71,6 +78,11 @@ public:
   static CompileInfoHandle get_compile_info(const unsigned int vtype,
 					    const unsigned int gtype);
 protected:
+  static void build_aux(TextureHandle tHandle,
+                        NrrdDataHandle vHandle, double vmin, double vmax,
+                        NrrdDataHandle gHandle, double gmin, double gmax,
+                        int card_mem, int is_uchar);
+
   virtual void fill_brick(TextureBrickHandle &tHandle,
 			  NrrdDataHandle vHandle, double vmin, double vmax,
 			  NrrdDataHandle gHandle, double gmin, double gmax,
