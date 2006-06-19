@@ -30,6 +30,11 @@ CONFIGURE_FILE (
 )
 
 CONFIGURE_FILE (
+  "${PROJECT_SOURCE_DIR}/src/include/sci_defs/exe_testdefs.h.in"
+  "${PROJECT_BINARY_DIR}/include/sci_defs/exe_defs.h"
+)
+
+CONFIGURE_FILE (
   "${PROJECT_SOURCE_DIR}/src/include/sci_defs/hashmap_testdefs.h.in"
   "${PROJECT_BINARY_DIR}/include/sci_defs/hashmap_defs.h"
 )
