@@ -1679,7 +1679,7 @@ void AMRICE::reflux_BP_zero_CFI_cells(const ProcessorGroup*,
         for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
              iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
           Patch::FaceType patchFace = *iter;
-          finePatch->setFaceMark(patchFace, 0);
+          finePatch->setFaceMark(0, patchFace, 0);
         }
       }  // has CFI
     }  // finePatch loop
@@ -1751,7 +1751,7 @@ void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
            
             n_CFI_cells = n_CFI_cells/(rr[y] * rr[z]);
 
-            int n_touched_cells = (finePatch->getFaceMark(patchFace) )/n_ice_matls;
+            int n_touched_cells = (finePatch->getFaceMark(0, patchFace) )/n_ice_matls;
             //__________________________________
             //  If the number of "marked" cells/numICEMatls != n_CFI_cells
             if ( n_touched_cells != n_CFI_cells){
