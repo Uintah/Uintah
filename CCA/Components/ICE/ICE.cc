@@ -146,7 +146,7 @@ ICE::~ICE()
     VarLabel::destroy(tvar->var_Lagrangian);
     delete tvar;
   }
-  
+  cout_doing << d_myworld->myrank() << " Doing: destorying refluxing variables " << endl;
   // delete refluxing variables
   vector<AMR_refluxVariable*>::iterator iter;
   for( iter  = d_modelSetup->d_reflux_vars.begin();
@@ -158,12 +158,6 @@ ICE::~ICE()
   } 
   
   // delete models
-#if 0
-  for(vector<ModelInterface*>::iterator iter = d_models.begin();
-      iter != d_models.end(); iter++) {
-    delete *iter; 
-  }
-#endif
   if(d_modelInfo){
     delete d_modelInfo;
   }
@@ -171,6 +165,7 @@ ICE::~ICE()
     delete d_modelSetup;
   }
   releasePort("solver");
+  
 }
 
 bool ICE::restartableTimesteps()
