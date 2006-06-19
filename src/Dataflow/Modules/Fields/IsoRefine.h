@@ -347,6 +347,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       }
       refined->add_elem(inodes);
 
+      // Corner 0
       if (inside & 1<<(7-0))
       {
         nnodes[0] = onodes[0];
@@ -359,6 +360,8 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
         nnodes[7] = lookup(refined, facep[2*4+0]);
         refined->add_elem(nnodes);
       }
+      
+      // Corner 1
       if (inside & 1<<(7-1))
       {
         nnodes[0] = lookup(refined, edgep[1]);
@@ -371,6 +374,8 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
         nnodes[7] = inodes[1];
         refined->add_elem(nnodes);
       }
+      
+      // Corner 2
       if (inside & 1<<(7-2))
       {
         nnodes[0] = lookup(refined, facep[0*4+2]);
@@ -383,6 +388,8 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
         nnodes[7] = lookup(refined, facep[5*4+1]);
         refined->add_elem(nnodes);
       }
+      
+      // Corner 3
       if (inside & 1<<(7-3))
       {
         nnodes[0] = lookup(refined, edgep[6]);
@@ -395,6 +402,8 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
         nnodes[7] = lookup(refined, edgep[23]);
         refined->add_elem(nnodes);
       }
+      
+      // Corner 4
       if (inside & 1<<(7-4))
       {
         nnodes[0] = lookup(refined, edgep[8]);
@@ -407,6 +416,8 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
         nnodes[7] = inodes[4];
         refined->add_elem(nnodes);
       }
+      
+      // Corner 5
       if (inside & 1<<(7-5))
       {
         nnodes[0] = lookup(refined, edgep[9]);
@@ -419,6 +430,8 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
         nnodes[7] = inodes[5];
         refined->add_elem(nnodes);
       }
+      
+      // Corner 6
       if (inside & 1<<(7-6))
       {
         nnodes[0] = lookup(refined, facep[5*4+2]);
@@ -431,6 +444,8 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
         nnodes[7] = lookup(refined, facep[1*4+2]);
         refined->add_elem(nnodes);
       }
+      
+      // Corner 7
       if (inside & 1<<(7-7))
       {
         nnodes[0] = lookup(refined, edgep[22]);
@@ -466,7 +481,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[7] = inodes[3];
       refined->add_elem(nnodes);
       
-      // Face interior 1;
+      // Face interior 1
       if (inside & 1<<(7-4) || inside & 1<<(7-5) ||
           inside & 1<<(7-6) || inside & 1<<(7-7))
       {
@@ -488,7 +503,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[7] = inodes[6];
       refined->add_elem(nnodes);
 
-      // Face interior 2;
+      // Face interior 2
       if (inside & 1<<(7-4) || inside & 1<<(7-0) ||
           inside & 1<<(7-3) || inside & 1<<(7-7))
       {
@@ -510,7 +525,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[7] = inodes[4];
       refined->add_elem(nnodes);
 
-      // Face interior 3;
+      // Face interior 3
       if (inside & 1<<(7-1) || inside & 1<<(7-5) ||
           inside & 1<<(7-6) || inside & 1<<(7-2))
       {
@@ -532,7 +547,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[7] = inodes[6];
       refined->add_elem(nnodes);
 
-      // Face interior 4;
+      // Face interior 4
       if (inside & 1<<(7-0) || inside & 1<<(7-1) ||
           inside & 1<<(7-4) || inside & 1<<(7-5))
       {
@@ -554,7 +569,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[7] = inodes[5];
       refined->add_elem(nnodes);
 
-      // Face interior 5;
+      // Face interior 5
       if (inside & 1<<(7-3) || inside & 1<<(7-2) ||
           inside & 1<<(7-6) || inside & 1<<(7-7))
       {
