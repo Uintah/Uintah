@@ -544,7 +544,8 @@ SCISHARE void coarseLevel_CFI_Iterator(Patch::FaceType patchFace,
 SCISHARE void fineLevel_CFI_Iterator(Patch::FaceType patchFace,
                                        const Patch* coarsePatch,  
                                        const Patch* finePatch,    
-                                       CellIterator& iter);                                       
+                                       CellIterator& iter,
+                                       bool& isRight_CP_FP_pair);                                       
                                         
 } // end namespace Uintah
 #endif
