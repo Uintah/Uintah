@@ -282,11 +282,10 @@ SchedulerCommon::printTrackedVars(DetailedTask* dt, bool before)
     if (!label)
       continue;
 
-    // add one in case we want the extra cells/b.l.'s 
-    //Level::selectType patches;
-    //level->selectPatches(trackingStartIndex_ - IntVector(1,1,1), trackingEndIndex_ + IntVector(1,1,1), patches);
     const PatchSubset* patches = dt->getPatches();
-    if (!patches || getLevel(patches)->getIndex() != levelnum)
+    
+    // a once-per-proc task is liable to have multiple levels, and thus calls to getLevel(patches) will fail
+    if (dt->getTask()->getType() != Task::OncePerProc && (!patches || getLevel(patches)->getIndex() != levelnum))
       continue;
     for (int p = 0; patches && p < patches->size(); p++) {
 
@@ -742,7 +741,7 @@ void SchedulerCommon::compile()
   m_locallyComputedPatchVarMap->reset();
 
 #if 1
-  for (unsigned i = 0; i < grid->numLevels(); i++) {
+  for (int i = 0; i < grid->numLevels(); i++) {
     const PatchSubset* patches = getLoadBalancer()->getPerProcessorPatchSet(grid->getLevel(i))->getSubset(d_myworld->myrank());
     if (patches->size() > 0)
       m_locallyComputedPatchVarMap->addComputedPatchSet(patches);
@@ -809,6 +808,8 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
     TaskGraph* tg = graphs[t];
     for (int i = 0; i < tg->getNumTasks(); i++) {
       Task* task = tg->getTask(i);
+      if (task->getType() == Task::Output)
+        continue;  
       for(Task::Dependency* dep = task->getRequires(); dep != 0; dep=dep->next){
         bool copyThisVar = dep->whichdw == Task::OldDW;
         // two manual overrides - one to not copy one that would be copied...
@@ -830,7 +831,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
           int level = -1;
           if (dep->patches) // just in case the task is over multiple levels...
             level = getLevel(dep->patches)->getIndex();
-          else if (ps) 
+          else if (ps)
             level = getLevel(ps)->getIndex();
           
           // we don't want data with an invalid level, or requiring from a different level (remember, we are
