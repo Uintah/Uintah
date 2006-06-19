@@ -89,6 +89,11 @@ public:
 			      double isoval, bool lte,
 			      MatrixHandle &interpolant);
 
+  typename FIELD::mesh_type::Node::index_type
+  lookup(typename FIELD::mesh_type *mesh, const Point &p)
+  {
+    return mesh->add_point(p);
+  }
 };
 
 
@@ -219,6 +224,11 @@ public:
 			      double isoval, bool lte,
 			      MatrixHandle &interpolant);
 
+  typename FIELD::mesh_type::Node::index_type
+  lookup(typename FIELD::mesh_type *mesh, const Point &p)
+  {
+    return mesh->add_point(p);
+  }
 };
 
 
@@ -270,7 +280,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
         inside |= 1;
       }
     }
-    
+
     // Invert the mask if we are doing less than.
     if (lte) { inside = ~inside & 0xff; }
     
@@ -335,29 +345,139 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
                                    facep[iorder[i][1]], 1.0/3.0);
         inodes[i] = refined->add_point(interiorp[i]);
       }
-
       refined->add_elem(inodes);
 
-      nnodes[0] = onodes[0];
-      nnodes[1] = onodes[1];
-      nnodes[2] = onodes[2];
-      nnodes[3] = onodes[3];
-      nnodes[4] = inodes[0];
-      nnodes[5] = inodes[1];
-      nnodes[6] = inodes[2];
-      nnodes[7] = inodes[3];
-      refined->add_elem(nnodes);
+      if (inside & 1<<(7-0))
+      {
+        nnodes[0] = onodes[0];
+        nnodes[1] = lookup(refined, edgep[0]);
+        nnodes[2] = lookup(refined, facep[0*4+0]);
+        nnodes[3] = lookup(refined, edgep[7]);
+        nnodes[4] = lookup(refined, edgep[16]);
+        nnodes[5] = lookup(refined, facep[4*4+1]);
+        nnodes[6] = inodes[0];
+        nnodes[7] = lookup(refined, facep[2*4+0]);
+        refined->add_elem(nnodes);
+      }
+      if (inside & 1<<(7-1))
+      {
+        nnodes[0] = lookup(refined, edgep[1]);
+        nnodes[1] = onodes[1];
+        nnodes[2] = lookup(refined, edgep[2]);
+        nnodes[3] = lookup(refined, facep[0*4+1]);
+        nnodes[4] = lookup(refined, facep[4*4+0]);
+        nnodes[5] = lookup(refined, edgep[19]);
+        nnodes[6] = lookup(refined, facep[3*4+1]);
+        nnodes[7] = inodes[1];
+        refined->add_elem(nnodes);
+      }
+      if (inside & 1<<(7-2))
+      {
+        nnodes[0] = lookup(refined, facep[0*4+2]);
+        nnodes[1] = lookup(refined, edgep[3]);
+        nnodes[2] = onodes[2];
+        nnodes[3] = lookup(refined, edgep[4]);
+        nnodes[4] = inodes[2];
+        nnodes[5] = lookup(refined, facep[3*4+0]);
+        nnodes[6] = lookup(refined, edgep[20]);
+        nnodes[7] = lookup(refined, facep[5*4+1]);
+        refined->add_elem(nnodes);
+      }
+      if (inside & 1<<(7-3))
+      {
+        nnodes[0] = lookup(refined, edgep[6]);
+        nnodes[1] = lookup(refined, facep[0*4+3]);
+        nnodes[2] = lookup(refined, edgep[5]);
+        nnodes[3] = onodes[3];
+        nnodes[4] = lookup(refined, facep[2*4+1]);
+        nnodes[5] = inodes[3];
+        nnodes[6] = lookup(refined, facep[5*4+0]);
+        nnodes[7] = lookup(refined, edgep[23]);
+        refined->add_elem(nnodes);
+      }
+      if (inside & 1<<(7-4))
+      {
+        nnodes[0] = lookup(refined, edgep[8]);
+        nnodes[1] = onodes[4];
+        nnodes[2] = lookup(refined, edgep[15]);
+        nnodes[3] = lookup(refined, facep[1*4+0]);
+        nnodes[4] = lookup(refined, facep[4*4+2]);
+        nnodes[5] = lookup(refined, edgep[17]);
+        nnodes[6] = lookup(refined, facep[2*4+3]);
+        nnodes[7] = inodes[4];
+        refined->add_elem(nnodes);
+      }
+      if (inside & 1<<(7-5))
+      {
+        nnodes[0] = lookup(refined, edgep[9]);
+        nnodes[1] = onodes[5];
+        nnodes[2] = lookup(refined, edgep[18]);
+        nnodes[3] = lookup(refined, facep[4*4+3]);
+        nnodes[4] = lookup(refined, facep[1*4+1]);
+        nnodes[5] = lookup(refined, edgep[10]);
+        nnodes[6] = lookup(refined, facep[3*4+2]);
+        nnodes[7] = inodes[5];
+        refined->add_elem(nnodes);
+      }
+      if (inside & 1<<(7-6))
+      {
+        nnodes[0] = lookup(refined, facep[5*4+2]);
+        nnodes[1] = lookup(refined, edgep[21]);
+        nnodes[2] = onodes[6];
+        nnodes[3] = lookup(refined, edgep[12]);
+        nnodes[4] = inodes[6];
+        nnodes[5] = lookup(refined, facep[3*4+3]);
+        nnodes[6] = lookup(refined, edgep[11]);
+        nnodes[7] = lookup(refined, facep[1*4+2]);
+        refined->add_elem(nnodes);
+      }
+      if (inside & 1<<(7-7))
+      {
+        nnodes[0] = lookup(refined, edgep[22]);
+        nnodes[1] = lookup(refined, facep[5*4+3]);
+        nnodes[2] = lookup(refined, edgep[13]);
+        nnodes[3] = onodes[7];
+        nnodes[4] = lookup(refined, facep[2*4+2]);
+        nnodes[5] = inodes[7];
+        nnodes[6] = lookup(refined, facep[1*4+3]);
+        nnodes[7] = lookup(refined, edgep[14]);
+        refined->add_elem(nnodes);
+      }
 
-      nnodes[0] = onodes[5];
-      nnodes[1] = onodes[4];
-      nnodes[2] = onodes[7];
-      nnodes[3] = onodes[6];
-      nnodes[4] = inodes[5];
-      nnodes[5] = inodes[4];
-      nnodes[6] = inodes[7];
-      nnodes[7] = inodes[6];
-      refined->add_elem(nnodes);
+      // Face interior 0
+      if (!(inside & 1<<(7-0) || inside & 1<<(7-1) ||
+            inside & 1<<(7-2) || inside & 1<<(7-3)))
+      {
+        nnodes[0] = onodes[0];
+        nnodes[1] = onodes[1];
+        nnodes[2] = onodes[2];
+        nnodes[3] = onodes[3];
+        nnodes[4] = inodes[0];
+        nnodes[5] = inodes[1];
+        nnodes[6] = inodes[2];
+        nnodes[7] = inodes[3];
+        refined->add_elem(nnodes);
+      }
+      
+      // Face interior 1;
+      if (!(inside & 1<<(7-4) || inside & 1<<(7-5) ||
+            inside & 1<<(7-6) || inside & 1<<(7-7)))
+      {
+        nnodes[0] = onodes[5];
+        nnodes[1] = onodes[4];
+        nnodes[2] = onodes[7];
+        nnodes[3] = onodes[6];
+        nnodes[4] = inodes[5];
+        nnodes[5] = inodes[4];
+        nnodes[6] = inodes[7];
+        nnodes[7] = inodes[6];
+        refined->add_elem(nnodes);
+      }
 
+      // Face interior 2;
+      if (!(inside & 1<<(7-4) || inside & 1<<(7-0) ||
+            inside & 1<<(7-3) || inside & 1<<(7-7)))
+      {
       nnodes[0] = onodes[0];
       nnodes[1] = onodes[3];
       nnodes[2] = onodes[7];
@@ -367,7 +487,12 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[6] = inodes[7];
       nnodes[7] = inodes[4];
       refined->add_elem(nnodes);
+      }
 
+      // Face interior 3;
+      if (!(inside & 1<<(7-1) || inside & 1<<(7-5) ||
+            inside & 1<<(7-6) || inside & 1<<(7-2)))
+      {
       nnodes[0] = onodes[2];
       nnodes[1] = onodes[1];
       nnodes[2] = onodes[5];
@@ -377,7 +502,12 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[6] = inodes[5];
       nnodes[7] = inodes[6];
       refined->add_elem(nnodes);
+      }
 
+      // Face interior 4;
+      if (!(inside & 1<<(7-0) || inside & 1<<(7-1) ||
+            inside & 1<<(7-4) || inside & 1<<(7-5)))
+      {
       nnodes[0] = onodes[1];
       nnodes[1] = onodes[0];
       nnodes[2] = onodes[4];
@@ -387,7 +517,12 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[6] = inodes[4];
       nnodes[7] = inodes[5];
       refined->add_elem(nnodes);
+      }
 
+      // Face interior 5;
+      if (!(inside & 1<<(7-3) || inside & 1<<(7-2) ||
+            inside & 1<<(7-6) || inside & 1<<(7-7)))
+      {
       nnodes[0] = onodes[3];
       nnodes[1] = onodes[2];
       nnodes[2] = onodes[6];
@@ -397,6 +532,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[6] = inodes[6];
       nnodes[7] = inodes[7];
       refined->add_elem(nnodes);
+      }
     }
     ++bi;
   }
