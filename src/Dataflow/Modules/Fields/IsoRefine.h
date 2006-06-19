@@ -154,6 +154,71 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
       // Nodes are the same order, so just add the element.
       refined->add_elem(onodes);
     }
+    else if (inside == 1 || inside == 2 || inside == 4 || inside == 8)
+    {
+      int index;
+      if (inside == 1) index = 3;
+      else if (inside == 2) index = 2;
+      else if (inside == 4) index = 1;
+      else index = 0;
+
+      const Point edge0 = Interpolate(p[index], p[(index+1)%4], 1.0/3.0);
+      const Point edge1 = Interpolate(p[index], p[(index+3)%4], 1.0/3.0);
+      const Point interior = Interpolate(p[index], p[(index+2)%4], 1.0/3.0);
+      
+      nnodes[0] = onodes[index];
+      nnodes[1] = refined->add_point(edge0);
+      nnodes[2] = refined->add_point(interior);
+      nnodes[3] = refined->add_point(edge1);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = refined->add_point(edge0);
+      nnodes[1] = onodes[(index+1)%4];
+      nnodes[2] = onodes[(index+2)%4];
+      nnodes[3] = refined->add_point(interior);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = refined->add_point(edge1);
+      nnodes[1] = refined->add_point(interior);
+      nnodes[2] = onodes[(index+2)%4];
+      nnodes[3] = onodes[(index+3)%4];
+      refined->add_elem(nnodes);
+    }
+    else if (inside == 5 || inside == 10)
+    {
+      int index = 0;
+      if (inside == 5) index = 1;
+
+      const Point e0a = Interpolate(p[index], p[(index+1)%4], 1.0/3.0);
+      const Point e0b = Interpolate(p[index], p[(index+3)%4], 1.0/3.0);
+      const Point e1a = Interpolate(p[(index+2)%4], p[(index+1)%4], 1.0/3.0);
+      const Point e1b = Interpolate(p[(index+2)%4], p[(index+3)%4], 1.0/3.0);
+      const Point center = Interpolate(p[index], p[(index+2)%4], 1.0/2.0);
+
+      nnodes[0] = onodes[index];
+      nnodes[1] = refined->add_point(e0a);
+      nnodes[2] = refined->add_point(center);
+      nnodes[3] = refined->add_point(e0b);;
+      refined->add_elem(nnodes);
+
+      nnodes[0] = refined->add_point(e0a);
+      nnodes[1] = onodes[(index+1)%4];
+      nnodes[2] = refined->add_point(e1a);
+      nnodes[3] = refined->add_point(center);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = refined->add_point(center);
+      nnodes[1] = refined->add_point(e1a);
+      nnodes[2] = onodes[(index+2)%4];
+      nnodes[3] = refined->add_point(e1b);
+      refined->add_elem(nnodes);
+      
+      nnodes[0] = refined->add_point(e0b);
+      nnodes[1] = refined->add_point(center);
+      nnodes[2] = refined->add_point(e1b);
+      nnodes[3] = onodes[(index+3)%4];
+      refined->add_elem(nnodes);
+    }
     else
     {
       Point edgepa[4];
