@@ -220,7 +220,8 @@ _____________________________________________________________________*/
 void fineLevel_CFI_Iterator(Patch::FaceType patchFace,
                                const Patch* coarsePatch, 
                                const Patch* finePatch,   
-                               CellIterator& iter) 
+                               CellIterator& iter,
+                               bool& isRight_CP_FP_pair) 
 {
   CellIterator f_iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
 
@@ -247,16 +248,28 @@ void fineLevel_CFI_Iterator(Patch::FaceType patchFace,
   h[y] = Min(f_hi_face[y], c_hi_patch[y]);
   h[z] = Min(f_hi_face[z], c_hi_patch[z]);
   
-  // debugging
+  //__________________________________
+  // is this the right finepatch/coarse patch pair?
+  const Level* fineLevel = finePatch->getLevel();
+  IntVector f_l = fineLevel->mapCellToCoarser(l);     
+  IntVector f_h = fineLevel->mapCellToCoarser(h);
+    
+  isRight_CP_FP_pair = false;
+  
+  if ( coarsePatch->containsCell(f_l) && coarsePatch->containsCell(f_h) ){
+    isRight_CP_FP_pair = true;
+    iter=CellIterator(l,h);
+  }
+  
 #if 0
-  if (l != f_lo_face || h != f_hi_face || true){
+  // debugging
+  if (l != f_lo_face || h != f_hi_face || isRight_CP_FP_pair){
     cout << "\nface " << finePatch->getFaceName(patchFace) << " l " << l << " h " << h << endl;
     cout << "fine             " << f_lo_face << " " << f_hi_face 
          << "\ncoarse          " << coarsePatch->getLowIndex() << " " << coarsePatch->getHighIndex()
          << "\ncoarse remapped " << c_lo_patch << " " << c_hi_patch<< endl;
   }
 #endif
-  iter=CellIterator(l,h);
 }
 
 
