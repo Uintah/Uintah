@@ -10,9 +10,9 @@ SET(Core_Exceptions_SRCS
   InternalError.cc
 )
 
-IF(WIN32)
+IF(WIN32 AND NOT CYGWIN)
   SET(Core_Exceptions_SRCS ${Core_Exceptions_SRCS} StackWalker.cc)
-ENDIF(WIN32)
+ENDIF(WIN32 AND NOT CYGWIN)
 
 IF(NOT BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Core_Exceptions)

@@ -6,8 +6,8 @@ PROJECT(SCIRUN)
 #-----------------------------------------------------------------------------
 # SCIRUN version number.  Must reflect the value of SCIRUN_RCFILE_VERSION 
 # in src/scirunrc
-SET(SCIRUN_VERSION_MAJOR "2")
-SET(SCIRUN_VERSION_MINOR "5")
+SET(SCIRUN_VERSION_MAJOR "1")
+SET(SCIRUN_VERSION_MINOR "25")
 SET(SCIRUN_VERSION_PATCH "3")
 
 # Version string should not include patch level.  The major.minor is
@@ -44,12 +44,6 @@ IF(WIN32)
 ENDIF(WIN32)
 
 #-----------------------------------------------------------------------------
-# SCIRun Thirdparty location
-SET (SCI_THIRDPARTY_DIR "c:/work/Thirdparty/Thirdparty-win32-8.3-vc-13.10" CACHE PATH "Directory containing SCIRun's Thirdparty.")
-SET(SCIRUN_INCLUDE_THIRDPARTY${SCI_THIRDPARTY_DIR}/include)
-
-
-#-----------------------------------------------------------------------------
 # SCIRUN build configuration options.
 # OPTION(ENABLE_SCI_MALLOC "Use SCI memory allocation/deallocation checks." OFF)
 # SET(SCIRUN_ENABLE_SCI_MALLOC ${ENABLE_SCI_MALLOC})
@@ -59,21 +53,37 @@ SET(SCIRUN_INCLUDE_THIRDPARTY${SCI_THIRDPARTY_DIR}/include)
 # DV also maybe need to add binary flags here
 # Set NBITS (64 or 32) based on the size of a void pointer.
 IF(CMAKE_SIZEOF_VOID_P MATCHES  8)
-  SET(NBITS 64 CACHE STRING "64 or 32 bit build")
+  SET(NBITS 64 CACHE INTERNAL "64 or 32 bit build")
 ELSE(CMAKE_SIZEOF_VOID_P MATCHES 8)
-  SET(NBITS 32 CACHE STRING "64 or 32 bit build")
+  SET(NBITS 32 CACHE INTERNAL "64 or 32 bit build")
 ENDIF(CMAKE_SIZEOF_VOID_P MATCHES 8)
 SET (SCIRUN_ENABLE_64BIT 0 CACHE BOOL "Enable 64 bit build.")
 IF(${SCIRUN_ENABLE_64BIT})
-  SET(NBITS 64 CACHE STRING "64 bit build")
+  SET(NBITS 64 CACHE INTERNAL "64 bit build")
 ENDIF(${SCIRUN_ENABLE_64BIT})
+MARK_AS_ADVANCED(SCIRUN_ENABLE_64BIT)
+
+#-----------------------------------------------------------------------------
+# SCIRun Thirdparty location
+# DV Determine better guess at thirdparty path
+IF(UNIX)
+  EXEC_PROGRAM("uname -s" OUTPUT_VARIABLE SCI_TP_ARCH)
+ELSE(UNIX)
+  SET(SCI_TP_ARCH VC)
+ENDIF(UNIX)
+SET(SCI_COMPILER_VERSION gcc-3.4.4)
+
+SET (SCI_THIRDPARTY_DIR "/usr/sci/projects/SCIRun/Thirdparty/${SCIRUN_VERSION_MAJOR}.${SCIRUN_VERSION_MINOR}.${SCIRUN_VERSION_PATCH}/${SCI_TP_ARCH}/${SCI_COMPILER_VERSION}-${NBITS}bit" CACHE PATH "Directory containing SCIRun's Thirdparty.")
+SET(SCIRUN_INCLUDE_THIRDPARTY${SCI_THIRDPARTY_DIR}/include)
+
 
 # sci_defs/compile_defs.h
-IF(WIN32)
+# DV Not needed eventually?
+IF(WIN32 AND NOT CYGWIN)
   SET (PATH_TO_VC "c:/Program Files/Microsoft Visual Studio .NET 2003/Vc7" CACHE PATH "Path to Visual Studio")
   SET (PATH_TO_PSDK "c:/Program Files/Microsoft Visual Studio .NET 2003/Vc7/PlatformSDK" CACHE PATH "Path to PSDK")
   SET (PATH_TO_MSYS_BIN "c:/msys/1.0/bin" CACHE PATH "Path to Msys bin directory")
-ENDIF(WIN32)
+ENDIF(WIN32 AND NOT CYGWIN)
 
 #-----------------------------------------------------------------------------
 # SCIRun Packages to enable
@@ -81,8 +91,8 @@ ENDIF(WIN32)
 SET (PACKAGES "" CACHE STRING "SCIRun packages to enable (separated by white space).")
 
 # sci_defs/environment_defs.h
-SET(scirun_src_dir "${CMAKE_SOURCE_DIR}/src" CACHE PATH "Path to SCIRun's src directory")
-SET(scirun_obj_dir ${CMAKE_BINARY_DIR} CACHE PATH "Path to SCIRun's binary directory")
+SET(scirun_src_dir "${CMAKE_SOURCE_DIR}/src" CACHE INTERNAL "Path to SCIRun's src directory")
+SET(scirun_obj_dir ${CMAKE_BINARY_DIR} CACHE INTERNAL "Path to SCIRun's binary directory")
 # DV Fix iterating over packages in case no packages selected, there 
 # won't be dangling comma
 IF(PACKAGES)
@@ -93,7 +103,7 @@ IF(PACKAGES)
 ELSE(PACKAGES)
   SET(LOAD_PACKAGE "SCIRun" CACHE STRING "Just loading SCIRun")
 ENDIF(PACKAGES)
-SET(ITCL_WIDGETS ${SCI_THIRDPARTY_DIR}/iwidgets/scripts CACHE PATH "Path to iwidgets scripts")
+SET(ITCL_WIDGETS ${SCI_THIRDPARTY_DIR}/iwidgets/scripts CACHE INTERNAL "Path to iwidgets scripts")
 # DV maybe this shouldn't be alterable?
 MARK_AS_ADVANCED(LOAD_PACKAGE)
 SET(LIB_DIR_ITCL ${SCI_THIRDPARTY_DIR})
@@ -103,8 +113,8 @@ SET(THROW_LEVEL 0 CACHE STRING "Set throw level N(0-3)")
 SET(ASSERTION_LEVEL 3 CACHE STRING "Set assertion level N(0-3)")
 
 # sci_defs/lapack_defs.h
-# DV FIX hard coding
-SET(DEF_LAPACK "#define HAVE_LAPACK 0" CACHE STRING "Have Lapack")
+# DV FIX hard coding of lapack library
+SET(DEF_LAPACK "#define HAVE_LAPACK 0" CACHE INTERNAL "Have Lapack")
 
 # sci_defs/hashmap_defs.h
 SET(DEF_HASHMAP "None" CACHE STRING "Determining hash map")
@@ -167,14 +177,56 @@ SET(TEMPLATE_BOX "<>" CACHE STRING "NOT SURE")
 MARK_AS_ADVANCED(THROW_LEVEL ASSERTION_LEVEL DEF_HASH TEMPLATE_TAG TEMPLATE_BOX)
 # DV Add with_exc stuff from configure.ac
 
+INCLUDE (${CMAKE_ROOT}/Modules/CheckIncludeFile.cmake)
+IF(UNIX) #Avoid polluting Win32 cmakecache
+  CHECK_INCLUDE_FILE("inttypes.h"     HAVE_INTTYPES_H)
+ELSE(UNIX)
+  SET(HAVE_INTTYPES_H 0)
+ENDIF(UNIX)
+
 #-----------------------------------------------------------------------------
 # Thread library
 FIND_PACKAGE( Threads )
 SET(THREAD_LIBRARY ${CMAKE_THREAD_LIBS_INIT} CACHE INTERNAL "Thread library.")
+# DV Check for sempahore libs w/in thread library
+
+#-----------------------------------------------------------------------------
+# Search for SGI's or Win32's traceback library
+# traceback_lib exc_lib_dir_flag exc_lib_flag
+# DV Make required and look for it, also fix for SGI
+INCLUDE (${CMAKE_ROOT}/Modules/CheckIncludeFile.cmake)
+IF(WIN32)
+  CHECK_INCLUDE_FILE("windows.h"       HAVE_WINDOWS_H)
+  CHECK_INCLUDE_FILE("imagehlp"       HAVE_IMAGEHLP_H)
+  IF(HAVE_WINDOWS_H)
+      IF(HAVE_IMAGEHLP_H)
+        SET(TRACEBACK_LIB imagehlp psapi CACHE INTERNAL "Trace back library.")
+        SET(HAVE_EXC 1)
+        SET(DEF_EXC "#define HAVE_EXC 1")
+      ELSE(HAVE_IMAGEHELP_H)
+        MESSAGE(SEND_ERROR "Trace back library requires imagehlp.h for Windows.")
+      ENDIF(HAVE_IMAGEHLP_H)
+  ELSE(HAVE_WINDOWS_H)
+     MESSAGE(SEND_ERROR "Trace back library requires windows.h for Windows.")
+  ENDIF(HAVE_WINDOWS_H)
+ELSE(WIN32)
+  CHECK_INCLUDE_FILE("libexc.h"       HAVE_EXC_H)
+  IF(HAVE_EXC_H)
+    SET(TRACEBACK_LIB exc CACHE INTERNAL "Trace back library.")
+    SET(HAVE_EXC 1)
+    SET(DEF_EXC "#define HAVE_EXC 1")
+  ENDIF(HAVE_EXC_H)
+ENDIF(WIN32)
+
 
 #-----------------------------------------------------------------------------
 # Z lib
-FIND_PACKAGE( ZLIB )
+IF(WIN32 AND NOT CYGWIN)
+  SET(ZLIB_LIBRARY ${SCI_THIRDPARTY_DIR}/lib/z)	 
+  SET(ZLIB_INCLUDE ${SCI_THIRDPARTY_DIR}/include)	 
+ELSE(WIN32 AND NOT CYGWIN)
+  FIND_PACKAGE( ZLIB )
+ENDIF(WIN32 AND NOT CYGWIN)
 SET(SCIRUN_INCLUDE_THIRDPARTY ${SCIRUN_INCLUDE_THIRDPARTY} ${ZLIB_INCLUDE_DIR})
 
 #-----------------------------------------------------------------------------
