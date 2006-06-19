@@ -2780,7 +2780,7 @@ void OnDemandDataWarehouse::getVarLabelMatlLevelTriples( vector<VarLabelMatl<Lev
 
 void OnDemandDataWarehouse::print()
 {
-  cout << "  VARS in DW " << getID() << endl;
-  d_varDB.print(cout);
-  d_levelDB.print(cout);  
+  cout << d_myworld->myrank() << "  VARS in DW " << getID() << endl << d_myworld->myrank() << "var\tpatch\tmatl\n";
+  d_varDB.print(cout, d_myworld->myrank());
+  d_levelDB.print(cout, d_myworld->myrank());  
 }

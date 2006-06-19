@@ -70,7 +70,7 @@ using SCIRun::FastHashTable;
 	    Variable& var) const;
    inline Variable* get(const VarLabel* label, int matlindex,
 		const DomainType* dom) const;
-   void print(ostream&) const;
+   void print(ostream&, int rank) const;
    void cleanForeign();
 
    // Scrub counter manipulator functions -- when the scrub count goes to
@@ -294,12 +294,12 @@ DWDatabase<DomainType>::get( const VarLabel* label,
 }
 
 template<class DomainType>
-void DWDatabase<DomainType>::print(std::ostream& out) const
+void DWDatabase<DomainType>::print(std::ostream& out, int rank) const
 {
   for(typename varDBtype::const_iterator variter = vars.begin();
       variter != vars.end(); variter++){
     const VarLabelMatl<DomainType>& vlm = variter->first;
-    out << vlm.label_->getName() << "  " << (vlm.domain_?vlm.domain_->getID():0) << "  " << vlm.matlIndex_ << '\n';
+    out << rank << " " << vlm.label_->getName() << "  " << (vlm.domain_?vlm.domain_->getID():0) << "  " << vlm.matlIndex_ << '\n';
   }
 }
 
