@@ -2,7 +2,11 @@
 
 SRCDIR := Packages/Uintah/StandAlone/compare_mms
 
-SRCS := $(SRCDIR)/compare_mms.cc
+SRCS := $(SRCDIR)/compare_mms.cc \
+SRCS := $(SRCDIR)/MMS.cc \
+SRCS := $(SRCDIR)/ExpMMS.cc \
+SRCS := $(SRCDIR)/LinearMMS.cc \
+SRCS := $(SRCDIR)/SineMMS.cc 
 
 PROGRAM := Packages/Uintah/StandAlone/compare_mms/compare_mms
 
