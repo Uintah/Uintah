@@ -757,7 +757,6 @@ operator<<(ostream& out, const DetailedTask& task)
   out << task.getTask()->getName();
   const PatchSubset* patches = task.getPatches();
   if(patches){
-    const Level* level = getLevel(patches);
     out << ", on patch";
     if(patches->size() > 1)
       out << "es";
@@ -767,7 +766,11 @@ operator<<(ostream& out, const DetailedTask& task)
 	out << ",";
       out << patches->get(i)->getID();
     }
-    out << ", Level " << level->getIndex();
+    // a once-per-proc task is liable to have multiple levels, and thus calls to getLevel(patches) will fail
+    if (task.getTask()->getType() == Task::OncePerProc)
+      cout << ", on multiple levels";
+    else
+      out << ", Level " << getLevel(patches)->getIndex();
   }
   const MaterialSubset* matls = task.getMaterials();
   if(matls){
