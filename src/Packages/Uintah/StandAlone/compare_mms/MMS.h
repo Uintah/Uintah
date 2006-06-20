@@ -4,13 +4,12 @@
 class MMS {
 
 public:
-  virtual double pressure( int x, int y, double time ) = 0;
-  virtual double uVelocity( int x, int y, double time ) = 0;
-
-protected:
-  static double A_;
-  static double viscosity_;
-  static double p_ref_;
+  MMS::MMS();
+  virtual MMS::~MMS();
+  virtual double pressure( double x, double y, double z, double time ) = 0;
+  virtual double uVelocity( double x, double y, double z, double time ) = 0;
+  virtual double vVelocity( double x, double y, double z, double time ) = 0;
+  virtual double wVelocity( double x, double y, double z, double time ) = 0;
   
 };
 
