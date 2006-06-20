@@ -250,9 +250,10 @@ void fineLevel_CFI_Iterator(Patch::FaceType patchFace,
   
   //__________________________________
   // is this the right finepatch/coarse patch pair?
+  // does this iterator exceed the coarse level patch
   const Level* fineLevel = finePatch->getLevel();
   IntVector f_l = fineLevel->mapCellToCoarser(l);     
-  IntVector f_h = fineLevel->mapCellToCoarser(h);
+  IntVector f_h = fineLevel->mapCellToCoarser(h) - IntVector(1,1,1);
     
   isRight_CP_FP_pair = false;
   
