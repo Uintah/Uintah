@@ -344,6 +344,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
     
     // Get the values and compute an inside/outside mask.
     unsigned int inside = 0;
+    unsigned int inside_count = 0;
     for (unsigned int i = 0; i < onodes.size(); i++)
     {
       mesh->get_center(p[i], onodes[i]);
@@ -352,16 +353,88 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       if (v[i] > isoval)
       {
         inside |= 1;
+        inside_count++;
       }
     }
 
     // Invert the mask if we are doing less than.
-    if (lte) { inside = ~inside & 0xff; }
+    if (lte) { inside = ~inside & 0xff; inside_count = 8 - inside_count; }
     
     if (inside == 0)
     {
       // Nodes are the same order, so just add the element.
       refined->add_elem(onodes);
+    }
+    else if (inside_count == 1)
+    {
+      const int reorder_table[8][8] = {
+        {0, 1, 2, 3, 4, 5, 6, 7},
+        {1, 2, 3, 0, 5, 6, 7, 4},
+        {2, 3, 0, 1, 6, 7, 4, 5},
+        {3, 0, 1, 2, 7, 4, 5, 6},
+        {4, 7, 6, 5, 0, 3, 2, 1},
+        {5, 4, 7, 6, 1, 0, 3, 2},
+        {6, 5, 4, 7, 2, 1, 0, 3},
+        {7, 6, 5, 4, 3, 2, 1, 0}};
+      int which = 0;
+      if (inside == 1<<(7-1)) which = 1;
+      else if (inside == 1<<(7-2)) which = 2;
+      else if (inside == 1<<(7-3)) which = 3;
+      else if (inside == 1<<(7-4)) which = 4;
+      else if (inside == 1<<(7-5)) which = 5;
+      else if (inside == 1<<(7-6)) which = 6;
+      else if (inside == 1<<(7-7)) which = 7;
+      const int *ro = reorder_table[which];
+      
+      const Point e1 = Interpolate(p[ro[0]], p[ro[1]], 1.0/3.0);
+      const Point e3 = Interpolate(p[ro[0]], p[ro[3]], 1.0/3.0);
+      const Point e4 = Interpolate(p[ro[0]], p[ro[4]], 1.0/3.0);
+      const Point f2 = Interpolate(p[ro[0]], p[ro[2]], 1.0/3.0);
+      const Point f5 = Interpolate(p[ro[0]], p[ro[5]], 1.0/3.0);
+      const Point f7 = Interpolate(p[ro[0]], p[ro[7]], 1.0/3.0);
+      const Point in = Interpolate(p[ro[0]], p[ro[6]], 1.0/3.0);
+
+      // Add this corner.
+      nnodes[0] = onodes[ro[0]];
+      nnodes[1] = lookup(refined, e1);
+      nnodes[2] = lookup(refined, f2);
+      nnodes[3] = lookup(refined, e3);
+      nnodes[4] = lookup(refined, e4);
+      nnodes[5] = lookup(refined, f5);
+      nnodes[6] = lookup(refined, in);
+      nnodes[7] = lookup(refined, f7);
+      refined->add_elem(nnodes);
+
+      // Add the other three pieces.
+      nnodes[0] = lookup(refined, e1);
+      nnodes[1] = onodes[ro[1]];
+      nnodes[2] = onodes[ro[2]];
+      nnodes[3] = lookup(refined, f2);
+      nnodes[4] = lookup(refined, f5);
+      nnodes[5] = onodes[ro[5]];
+      nnodes[6] = onodes[ro[6]];
+      nnodes[7] = lookup(refined, in);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, e3);
+      nnodes[1] = lookup(refined, f2);
+      nnodes[2] = onodes[ro[2]];
+      nnodes[3] = onodes[ro[3]];
+      nnodes[4] = lookup(refined, f7);
+      nnodes[5] = lookup(refined, in);
+      nnodes[6] = onodes[ro[6]];
+      nnodes[7] = onodes[ro[7]];
+      refined->add_elem(nnodes);
+      
+      nnodes[0] = lookup(refined, e4);
+      nnodes[1] = lookup(refined, f5);
+      nnodes[2] = lookup(refined, in);
+      nnodes[3] = lookup(refined, f7);
+      nnodes[4] = onodes[ro[4]];
+      nnodes[5] = onodes[ro[5]];
+      nnodes[6] = onodes[ro[6]];
+      nnodes[7] = onodes[ro[7]];
+      refined->add_elem(nnodes);
     }
     else
     {
