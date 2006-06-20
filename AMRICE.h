@@ -159,7 +159,13 @@ namespace Uintah {
                                       const MaterialSubset*,
                                        DataWarehouse*,
                                        DataWarehouse*);
-                        
+                                       
+    void reflux_BP_count_CFI_cells(const ProcessorGroup*,
+                                   const PatchSubset* coarsePatches,
+                                   const MaterialSubset*,
+                                   DataWarehouse*,
+                                   DataWarehouse*);
+                                                           
     void reflux_BP_check_CFI_cells(const ProcessorGroup*,
                                    const PatchSubset* finePatches,
                                    const MaterialSubset*,
