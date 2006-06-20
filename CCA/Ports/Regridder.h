@@ -64,6 +64,9 @@ WARNING
     //! Schedules task to initialize the error flags to 0
     virtual void scheduleInitializeErrorEstimate(SchedulerP& sched, const LevelP& level) = 0;
 
+    //! Schedules task to dilate existing error flags
+    virtual void scheduleDilation(SchedulerP& sched, const LevelP& level) = 0;
+
     //! Asks if we are going to do regridding
     virtual bool flaggedCellsOnFinestLevel(const GridP& grid, SchedulerP& sched) = 0;
 
