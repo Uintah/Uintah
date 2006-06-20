@@ -71,6 +71,7 @@ IF(UNIX)
 ELSE(UNIX)
   SET(SCI_TP_ARCH VC)
 ENDIF(UNIX)
+#DV FIX HARD CODED VERSION
 SET(SCI_COMPILER_VERSION gcc-3.4.4)
 
 SET (SCI_THIRDPARTY_DIR "/usr/sci/projects/SCIRun/Thirdparty/${SCIRUN_VERSION_MAJOR}.${SCIRUN_VERSION_MINOR}.${SCIRUN_VERSION_PATCH}/${SCI_TP_ARCH}/${SCI_COMPILER_VERSION}-${NBITS}bit" CACHE PATH "Directory containing SCIRun's Thirdparty.")
@@ -178,11 +179,11 @@ MARK_AS_ADVANCED(THROW_LEVEL ASSERTION_LEVEL DEF_HASH TEMPLATE_TAG TEMPLATE_BOX)
 # DV Add with_exc stuff from configure.ac
 
 INCLUDE (${CMAKE_ROOT}/Modules/CheckIncludeFile.cmake)
-IF(UNIX) #Avoid polluting Win32 cmakecache
-  CHECK_INCLUDE_FILE("inttypes.h"     HAVE_INTTYPES_H)
-ELSE(UNIX)
-  SET(HAVE_INTTYPES_H 0)
-ENDIF(UNIX)
+#IF(UNIX) #Avoid polluting Win32 cmakecache
+#  CHECK_INCLUDE_FILE("inttypes.h"     HAVE_INTTYPES_H)
+#ELSE(UNIX)
+#  SET(HAVE_INTTYPES_H 0)
+#ENDIF(UNIX)
 
 #-----------------------------------------------------------------------------
 # Thread library
