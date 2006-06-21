@@ -75,8 +75,8 @@ public:
 					    string ext);
 
 protected:
-  static int tet_permute_table[15][4];
-  static int tri_permute_table[7][3];
+
+  static int hex_reorder_table[14][8];
 };
 
 
@@ -303,6 +303,68 @@ public:
   {
     return mesh->add_point(p);
   }
+
+  int pattern_table[256][2];
+
+  inline unsigned int iedge(unsigned int a, unsigned int b)
+  {
+    return (1<<(7-a)) | (1<<(7-b));
+  }
+
+  inline unsigned int iface(unsigned int a, unsigned int b,
+                     unsigned int c, unsigned int d)
+  {
+    return iedge(a, b) | iedge(c, d);
+  }
+
+  inline void set_table(int i, int pattern, int reorder)
+  {
+    pattern_table[i][0] = pattern;
+    pattern_table[i][1] = reorder;
+  }
+
+  void init_pattern_table()
+  {
+    for (int i = 0; i < 256; i++)
+    {
+      set_table(i, -1, 0);
+    }
+
+    set_table(0, 0, 0);
+
+    // Add corners
+    set_table(1, 1, 7);
+    set_table(2, 1, 6);
+    set_table(4, 1, 5);
+    set_table(8, 1, 4);
+    set_table(16, 1, 3);
+    set_table(32, 1, 2);
+    set_table(64, 1, 1);
+    set_table(128, 1, 0);
+
+    // Add edges
+    set_table(iedge(0, 1), 2, 0);
+    set_table(iedge(1, 2), 2, 1);
+    set_table(iedge(2, 3), 2, 2);
+    set_table(iedge(3, 0), 2, 3);
+    set_table(iedge(4, 5), 2, 5);
+    set_table(iedge(5, 6), 2, 6);
+    set_table(iedge(6, 7), 2, 7);
+    set_table(iedge(7, 4), 2, 4);
+    set_table(iedge(0, 4), 2, 8);
+    set_table(iedge(1, 5), 2, 9);
+    set_table(iedge(2, 6), 2, 10);
+    set_table(iedge(3, 7), 2, 11);
+
+    set_table(iface(0, 1, 2, 3), 4, 0);
+    set_table(iface(0, 1, 5, 4), 4, 12);
+    set_table(iface(1, 2, 6, 5), 4, 9);
+    set_table(iface(2, 3, 7, 6), 4, 13);
+    set_table(iface(3, 0, 4, 7), 4, 8);
+    set_table(iface(4, 5, 6, 7), 4, 7);
+
+    set_table(255, 8, 0);
+  }
 };
 
 
@@ -318,6 +380,8 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
   typename FIELD::mesh_type *refined = scinew typename FIELD::mesh_type();
   refined->copy_properties(mesh);
+
+  init_pattern_table();
   
   typename FIELD::mesh_type::Node::array_type onodes(8);
   typename FIELD::mesh_type::Node::array_type nnodes(8);
@@ -359,32 +423,18 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
 
     // Invert the mask if we are doing less than.
     if (lte) { inside = ~inside & 0xff; inside_count = 8 - inside_count; }
-    
-    if (inside == 0)
+
+    const int pattern = pattern_table[inside][0];
+    const int which = pattern_table[inside][1];
+
+    if (pattern == 0)
     {
       // Nodes are the same order, so just add the element.
       refined->add_elem(onodes);
     }
-    else if (inside_count == 1)
+    else if (pattern == 1)
     {
-      const int reorder_table[8][8] = {
-        {0, 1, 2, 3, 4, 5, 6, 7},
-        {1, 2, 3, 0, 5, 6, 7, 4},
-        {2, 3, 0, 1, 6, 7, 4, 5},
-        {3, 0, 1, 2, 7, 4, 5, 6},
-        {4, 7, 6, 5, 0, 3, 2, 1},
-        {5, 4, 7, 6, 1, 0, 3, 2},
-        {6, 5, 4, 7, 2, 1, 0, 3},
-        {7, 6, 5, 4, 3, 2, 1, 0}};
-      int which = 0;
-      if (inside == 1<<(7-1)) which = 1;
-      else if (inside == 1<<(7-2)) which = 2;
-      else if (inside == 1<<(7-3)) which = 3;
-      else if (inside == 1<<(7-4)) which = 4;
-      else if (inside == 1<<(7-5)) which = 5;
-      else if (inside == 1<<(7-6)) which = 6;
-      else if (inside == 1<<(7-7)) which = 7;
-      const int *ro = reorder_table[which];
+      const int *ro = hex_reorder_table[which];
       
       const Point e1 = Interpolate(p[ro[0]], p[ro[1]], 1.0/3.0);
       const Point e3 = Interpolate(p[ro[0]], p[ro[3]], 1.0/3.0);
@@ -436,19 +486,9 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[7] = onodes[ro[7]];
       refined->add_elem(nnodes);
     }
-    else if (inside == 128+64)
+    else if (pattern == 2)
     {
-      const int reorder_table[8][8] = {
-        {0, 1, 2, 3, 4, 5, 6, 7},
-        {1, 2, 3, 0, 5, 6, 7, 4},
-        {2, 3, 0, 1, 6, 7, 4, 5},
-        {3, 0, 1, 2, 7, 4, 5, 6},
-        {4, 7, 6, 5, 0, 3, 2, 1},
-        {5, 4, 7, 6, 1, 0, 3, 2},
-        {6, 5, 4, 7, 2, 1, 0, 3},
-        {7, 6, 5, 4, 3, 2, 1, 0}};
-      int which = 0;
-      const int *ro = reorder_table[which];
+      const int *ro = hex_reorder_table[which];
 
       const Point e01 = Interpolate(p[ro[0]], p[ro[1]], 1.0/3.0);
       const Point e10 = Interpolate(p[ro[1]], p[ro[0]], 1.0/3.0);
@@ -497,7 +537,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, e10);
-      nnodes[1] = onodes[1];
+      nnodes[1] = onodes[ro[1]];
       nnodes[2] = lookup(refined, e12);
       nnodes[3] = lookup(refined, f13);
       nnodes[4] = lookup(refined, f14);
@@ -510,11 +550,11 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[0] = lookup(refined, e03);
       nnodes[1] = lookup(refined, f02);
       nnodes[2] = lookup(refined, f31);
-      nnodes[3] = onodes[3];
+      nnodes[3] = onodes[ro[3]];
       nnodes[4] = lookup(refined, f07);
       nnodes[5] = lookup(refined, i06);
       nnodes[6] = lookup(refined, i71);
-      nnodes[7] = onodes[7];
+      nnodes[7] = onodes[ro[7]];
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, f02);
@@ -529,11 +569,11 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
 
       nnodes[0] = lookup(refined, f13);
       nnodes[1] = lookup(refined, e12);
-      nnodes[2] = onodes[2];
+      nnodes[2] = onodes[ro[2]];
       nnodes[3] = lookup(refined, f20);
       nnodes[4] = lookup(refined, i17);
       nnodes[5] = lookup(refined, f16);
-      nnodes[6] = onodes[6];
+      nnodes[6] = onodes[ro[6]];
       nnodes[7] = lookup(refined, i60);
       refined->add_elem(nnodes);
 
@@ -542,10 +582,10 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[1] = lookup(refined, f05);
       nnodes[2] = lookup(refined, i06);
       nnodes[3] = lookup(refined, f07);
-      nnodes[4] = onodes[4];
+      nnodes[4] = onodes[ro[4]];
       nnodes[5] = lookup(refined, f41);
       nnodes[6] = lookup(refined, i71);
-      nnodes[7] = onodes[7];
+      nnodes[7] = onodes[ro[7]];
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, f05);
@@ -563,45 +603,35 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[2] = lookup(refined, f16);
       nnodes[3] = lookup(refined, i17);
       nnodes[4] = lookup(refined, f50);
-      nnodes[5] = onodes[5];
-      nnodes[6] = onodes[6];
+      nnodes[5] = onodes[ro[5]];
+      nnodes[6] = onodes[ro[6]];
       nnodes[7] = lookup(refined, i60);
       refined->add_elem(nnodes);
 
       // Outside wedges
       nnodes[0] = lookup(refined, f31);
       nnodes[1] = lookup(refined, f20);
-      nnodes[2] = onodes[2];
-      nnodes[3] = onodes[3];
+      nnodes[2] = onodes[ro[2]];
+      nnodes[3] = onodes[ro[3]];
       nnodes[4] = lookup(refined, i71);
       nnodes[5] = lookup(refined, i60);
-      nnodes[6] = onodes[6];
-      nnodes[7] = onodes[7];
+      nnodes[6] = onodes[ro[6]];
+      nnodes[7] = onodes[ro[7]];
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, f41);
       nnodes[1] = lookup(refined, f50);
       nnodes[2] = lookup(refined, i60);
       nnodes[3] = lookup(refined, i71);
-      nnodes[4] = onodes[4];
-      nnodes[5] = onodes[5];
-      nnodes[6] = onodes[6];
-      nnodes[7] = onodes[7];
+      nnodes[4] = onodes[ro[4]];
+      nnodes[5] = onodes[ro[5]];
+      nnodes[6] = onodes[ro[6]];
+      nnodes[7] = onodes[ro[7]];
       refined->add_elem(nnodes);
     }
-    else if (inside == 128+64+32+16)
+    else if (pattern == 4)
     {
-      const int reorder_table[8][8] = {
-        {0, 1, 2, 3, 4, 5, 6, 7},
-        {1, 2, 3, 0, 5, 6, 7, 4},
-        {2, 3, 0, 1, 6, 7, 4, 5},
-        {3, 0, 1, 2, 7, 4, 5, 6},
-        {4, 7, 6, 5, 0, 3, 2, 1},
-        {5, 4, 7, 6, 1, 0, 3, 2},
-        {6, 5, 4, 7, 2, 1, 0, 3},
-        {7, 6, 5, 4, 3, 2, 1, 0}};
-      int which = 0;
-      const int *ro = reorder_table[which];
+      const int *ro = hex_reorder_table[which];
 
       // top edges
       const Point e01 = Interpolate(p[ro[0]], p[ro[1]], 1.0/3.0);
@@ -685,7 +715,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, e10);
-      nnodes[1] = onodes[1];
+      nnodes[1] = onodes[ro[1]];
       nnodes[2] = lookup(refined, e12);
       nnodes[3] = lookup(refined, f13);
       nnodes[4] = lookup(refined, f14);
@@ -729,7 +759,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[0] = lookup(refined, e30);
       nnodes[1] = lookup(refined, f31);
       nnodes[2] = lookup(refined, e32);
-      nnodes[3] = onodes[3];
+      nnodes[3] = onodes[ro[3]];
       nnodes[4] = lookup(refined, f34);
       nnodes[5] = lookup(refined, i35);
       nnodes[6] = lookup(refined, f36);
@@ -748,7 +778,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
 
       nnodes[0] = lookup(refined, f20);
       nnodes[1] = lookup(refined, e21);
-      nnodes[2] = onodes[2];
+      nnodes[2] = onodes[ro[2]];
       nnodes[3] = lookup(refined, e23);
       nnodes[4] = lookup(refined, i24);
       nnodes[5] = lookup(refined, f25);
@@ -761,7 +791,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[1] = lookup(refined, f05);
       nnodes[2] = lookup(refined, i06);
       nnodes[3] = lookup(refined, f07);
-      nnodes[4] = onodes[4];
+      nnodes[4] = onodes[ro[4]];
       nnodes[5] = lookup(refined, f41);
       nnodes[6] = lookup(refined, i42);
       nnodes[7] = lookup(refined, f43);
@@ -782,7 +812,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[2] = lookup(refined, f16);
       nnodes[3] = lookup(refined, i17);
       nnodes[4] = lookup(refined, f50);
-      nnodes[5] = onodes[5];
+      nnodes[5] = onodes[ro[5]];
       nnodes[6] = lookup(refined, f52);
       nnodes[7] = lookup(refined, i53);
       refined->add_elem(nnodes);
@@ -826,7 +856,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[4] = lookup(refined, f70);
       nnodes[5] = lookup(refined, i71);
       nnodes[6] = lookup(refined, f72);
-      nnodes[7] = onodes[7];
+      nnodes[7] = onodes[ro[7]];
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, i35);
@@ -845,7 +875,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[3] = lookup(refined, f27);
       nnodes[4] = lookup(refined, i60);
       nnodes[5] = lookup(refined, f61);
-      nnodes[6] = onodes[6];
+      nnodes[6] = onodes[ro[6]];
       nnodes[7] = lookup(refined, f63);
       refined->add_elem(nnodes);
 
@@ -854,10 +884,10 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[1] = lookup(refined, i42);
       nnodes[2] = lookup(refined, i71);
       nnodes[3] = lookup(refined, f70);
-      nnodes[4] = onodes[4];
+      nnodes[4] = onodes[ro[4]];
       nnodes[5] = lookup(refined, f41);
       nnodes[6] = lookup(refined, f72);
-      nnodes[7] = onodes[7];
+      nnodes[7] = onodes[ro[7]];
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, i42);
@@ -875,8 +905,8 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[2] = lookup(refined, f61);
       nnodes[3] = lookup(refined, i60);
       nnodes[4] = lookup(refined, f50);
-      nnodes[5] = onodes[5];
-      nnodes[6] = onodes[6];
+      nnodes[5] = onodes[ro[5]];
+      nnodes[6] = onodes[ro[6]];
       nnodes[7] = lookup(refined, f63);
       refined->add_elem(nnodes);
 
@@ -885,25 +915,15 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[1] = lookup(refined, f50);
       nnodes[2] = lookup(refined, f63);
       nnodes[3] = lookup(refined, f72);
-      nnodes[4] = onodes[4];
-      nnodes[5] = onodes[5];
-      nnodes[6] = onodes[6];
-      nnodes[7] = onodes[7];
+      nnodes[4] = onodes[ro[4]];
+      nnodes[5] = onodes[ro[5]];
+      nnodes[6] = onodes[ro[6]];
+      nnodes[7] = onodes[ro[7]];
       refined->add_elem(nnodes);
     }
-    else
+    else if (pattern == 8)
     {
-      const int reorder_table[8][8] = {
-        {0, 1, 2, 3, 4, 5, 6, 7},
-        {1, 2, 3, 0, 5, 6, 7, 4},
-        {2, 3, 0, 1, 6, 7, 4, 5},
-        {3, 0, 1, 2, 7, 4, 5, 6},
-        {4, 7, 6, 5, 0, 3, 2, 1},
-        {5, 4, 7, 6, 1, 0, 3, 2},
-        {6, 5, 4, 7, 2, 1, 0, 3},
-        {7, 6, 5, 4, 3, 2, 1, 0}};
-      int which = 0;
-      const int *ro = reorder_table[which];
+      const int *ro = hex_reorder_table[which];
 
       // top edges
       const Point e01 = Interpolate(p[ro[0]], p[ro[1]], 1.0/3.0);
@@ -1003,7 +1023,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, e10);
-      nnodes[1] = onodes[1];
+      nnodes[1] = onodes[ro[1]];
       nnodes[2] = lookup(refined, e12);
       nnodes[3] = lookup(refined, f13);
       nnodes[4] = lookup(refined, f14);
@@ -1047,7 +1067,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[0] = lookup(refined, e30);
       nnodes[1] = lookup(refined, f31);
       nnodes[2] = lookup(refined, e32);
-      nnodes[3] = onodes[3];
+      nnodes[3] = onodes[ro[3]];
       nnodes[4] = lookup(refined, f34);
       nnodes[5] = lookup(refined, i35);
       nnodes[6] = lookup(refined, f36);
@@ -1066,7 +1086,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
 
       nnodes[0] = lookup(refined, f20);
       nnodes[1] = lookup(refined, e21);
-      nnodes[2] = onodes[2];
+      nnodes[2] = onodes[ro[2]];
       nnodes[3] = lookup(refined, e23);
       nnodes[4] = lookup(refined, i24);
       nnodes[5] = lookup(refined, f25);
@@ -1172,7 +1192,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[1] = lookup(refined, f41);
       nnodes[2] = lookup(refined, i42);
       nnodes[3] = lookup(refined, f43);
-      nnodes[4] = onodes[4];
+      nnodes[4] = onodes[ro[4]];
       nnodes[5] = lookup(refined, e45);
       nnodes[6] = lookup(refined, f46);
       nnodes[7] = lookup(refined, e47);
@@ -1193,7 +1213,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[2] = lookup(refined, f52);
       nnodes[3] = lookup(refined, i53);
       nnodes[4] = lookup(refined, e54);
-      nnodes[5] = onodes[5];
+      nnodes[5] = onodes[ro[5]];
       nnodes[6] = lookup(refined, e56);
       nnodes[7] = lookup(refined, f57);
       refined->add_elem(nnodes);
@@ -1236,7 +1256,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[4] = lookup(refined, e74);
       nnodes[5] = lookup(refined, f75);
       nnodes[6] = lookup(refined, e76);
-      nnodes[7] = onodes[7];
+      nnodes[7] = onodes[ro[7]];
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, i71);
@@ -1255,9 +1275,14 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[3] = lookup(refined, f63);
       nnodes[4] = lookup(refined, f64);
       nnodes[5] = lookup(refined, e65);
-      nnodes[6] = onodes[6];
+      nnodes[6] = onodes[ro[6]];
       nnodes[7] = lookup(refined, e67);
       refined->add_elem(nnodes);
+    }
+    else
+    {
+      // non convex, emit error.
+      cout << "Element not convex, cannot replace.\n";
     }
     ++bi;
   }
