@@ -89,6 +89,101 @@ public:
 			      double isoval, bool lte,
 			      MatrixHandle &interpolant);
 
+  struct edgepair_t
+  {
+    unsigned int first;
+    unsigned int second;
+  };
+
+  struct edgepairequal
+  {
+    bool operator()(const edgepair_t &a, const edgepair_t &b) const
+    {
+      return a.first == b.first && a.second == b.second;
+    }
+  };
+
+  struct edgepairless
+  {
+    bool operator()(const edgepair_t &a, const edgepair_t &b)
+    {
+      return less(a, b);
+    }
+    static bool less(const edgepair_t &a, const edgepair_t &b)
+    {
+      return a.first < b.first || a.first == b.first && a.second < b.second;
+    }
+  };
+
+#ifdef HAVE_HASH_MAP
+  struct edgepairhash
+  {
+    unsigned int operator()(const edgepair_t &a) const
+    {
+#if defined(__ECC) || defined(_MSC_VER)
+      hash_compare<unsigned int> h;
+#else
+      hash<unsigned int> h;
+#endif
+      return h(a.first ^ a.second);
+    }
+#if defined(__ECC) || defined(_MSC_VER)
+
+      // These are particularly needed by ICC's hash stuff
+      static const size_t bucket_size = 4;
+      static const size_t min_buckets = 8;
+      
+      // This is a less than function.
+      bool operator()(const edgepair_t & a, const edgepair_t & b) const {
+        return edgepairless::less(a,b);
+      }
+#endif // endif ifdef __ICC
+  };
+#endif
+
+#ifdef HAVE_HASH_MAP
+#  if defined(__ECC) || defined(_MSC_VER)
+  typedef hash_map<edgepair_t,
+		   typename FIELD::mesh_type::Node::index_type,
+		   edgepairhash> edge_hash_type;
+#  else
+  typedef hash_map<edgepair_t,
+		   typename FIELD::mesh_type::Node::index_type,
+		   edgepairhash,
+		   edgepairequal> edge_hash_type;
+#  endif
+#else
+  typedef map<edgepair_t,
+	      typename FIELD::mesh_type::Node::index_type,
+	      edgepairless> edge_hash_type;
+#endif
+
+  typename FIELD::mesh_type::Node::index_type
+  lookup(typename FIELD::mesh_type *mesh,
+         edge_hash_type &edgemap,
+         typename FIELD::mesh_type::Node::index_type a,
+         typename FIELD::mesh_type::Node::index_type b)
+  {
+    edgepair_t ep;
+    ep.first = a; ep.second = b;
+    const typename edge_hash_type::iterator loc = edgemap.find(ep);
+    if (loc == edgemap.end())
+    {
+      Point pa, pb;
+      mesh->get_point(pa, a);
+      mesh->get_point(pb, b);
+      const Point inbetween = Interpolate(pa, pb, 1.0/3.0);
+      const typename FIELD::mesh_type::Node::index_type newnode =
+        mesh->add_point(inbetween);
+      edgemap[ep] = newnode;
+      return newnode;
+    }
+    else
+    {
+      return (*loc).second;
+    }
+  }
+
   typename FIELD::mesh_type::Node::index_type
   lookup(typename FIELD::mesh_type *mesh, const Point &p)
   {
@@ -109,7 +204,9 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
       dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
   typename FIELD::mesh_type *refined = scinew typename FIELD::mesh_type();
   refined->copy_properties(mesh);
-  
+
+  edge_hash_type edgemap;
+
   typename FIELD::mesh_type::Node::array_type onodes(4);
   typename FIELD::mesh_type::Node::array_type nnodes(4);
   typename FIELD::mesh_type::Node::array_type inodes(4);
@@ -165,29 +262,32 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
       else if (inside == 4) index = 1;
       else index = 0;
 
-      const Point edge0 = Interpolate(p[index], p[(index+1)%4], 1.0/3.0);
-      const Point edge1 = Interpolate(p[index], p[(index+3)%4], 1.0/3.0);
-      const Point interior = Interpolate(p[index], p[(index+2)%4], 1.0/3.0);
+      const int i0 = index;
+      const int i1 = (index+1)%4;
+      const int i2 = (index+2)%4;
+      const int i3 = (index+3)%4;
+
+      const Point interior = Interpolate(p[i0], p[i2], 1.0/3.0);
 
       const typename FIELD::mesh_type::Node::index_type interior_node =
         refined->add_point(interior);
 
-      nnodes[0] = onodes[index];
-      nnodes[1] = lookup(refined, edge0);
+      nnodes[0] = onodes[i0];
+      nnodes[1] = lookup(refined, edgemap, onodes[i0], onodes[i1]);
       nnodes[2] = interior_node;
-      nnodes[3] = lookup(refined, edge1);
+      nnodes[3] = lookup(refined, edgemap, onodes[i0], onodes[i3]);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, edge0);
-      nnodes[1] = onodes[(index+1)%4];
-      nnodes[2] = onodes[(index+2)%4];
+      nnodes[0] = lookup(refined, edgemap, onodes[i0], onodes[i1]);
+      nnodes[1] = onodes[i1];
+      nnodes[2] = onodes[i2];
       nnodes[3] = interior_node;
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, edge1);
+      nnodes[0] = lookup(refined, edgemap, onodes[i0], onodes[i3]);
       nnodes[1] = interior_node;
-      nnodes[2] = onodes[(index+2)%4];
-      nnodes[3] = onodes[(index+3)%4];
+      nnodes[2] = onodes[i2];
+      nnodes[3] = onodes[i3];
       refined->add_elem(nnodes);
     }
     else if (!refine_elem && (inside == 5 || inside == 10))
@@ -195,37 +295,37 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
       int index = 0;
       if (inside == 5) index = 1;
 
-      const Point e0a = Interpolate(p[index], p[(index+1)%4], 1.0/3.0);
-      const Point e0b = Interpolate(p[index], p[(index+3)%4], 1.0/3.0);
-      const Point e1a = Interpolate(p[(index+2)%4], p[(index+1)%4], 1.0/3.0);
-      const Point e1b = Interpolate(p[(index+2)%4], p[(index+3)%4], 1.0/3.0);
-      const Point center = Interpolate(p[index], p[(index+2)%4], 1.0/2.0);
+      const int i0 = index;
+      const int i1 = (index+1)%4;
+      const int i2 = (index+2)%4;
+      const int i3 = (index+3)%4;
 
+      const Point center = Interpolate(p[index], p[(index+2)%4], 1.0/2.0);
       const typename FIELD::mesh_type::Node::index_type center_node =
         refined->add_point(center);
 
-      nnodes[0] = onodes[index];
-      nnodes[1] = lookup(refined, e0a);
+      nnodes[0] = onodes[i0];
+      nnodes[1] = lookup(refined, edgemap, onodes[i0], onodes[i1]);
       nnodes[2] = center_node;
-      nnodes[3] = lookup(refined, e0b);;
+      nnodes[3] = lookup(refined, edgemap, onodes[i0], onodes[i3]);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, e0a);
-      nnodes[1] = onodes[(index+1)%4];
-      nnodes[2] = lookup(refined, e1a);
+      nnodes[0] = lookup(refined, edgemap, onodes[i0], onodes[i1]);
+      nnodes[1] = onodes[i1];
+      nnodes[2] = lookup(refined, edgemap, onodes[i2], onodes[i1]);
       nnodes[3] = center_node;
       refined->add_elem(nnodes);
 
       nnodes[0] = center_node;
-      nnodes[1] = lookup(refined, e1a);
-      nnodes[2] = onodes[(index+2)%4];
-      nnodes[3] = lookup(refined, e1b);
+      nnodes[1] = lookup(refined, edgemap, onodes[i2], onodes[i1]);
+      nnodes[2] = onodes[i2];
+      nnodes[3] = lookup(refined, edgemap, onodes[i2], onodes[i3]);
       refined->add_elem(nnodes);
       
-      nnodes[0] = lookup(refined, e0b);
+      nnodes[0] = lookup(refined, edgemap, onodes[i0], onodes[i3]);
       nnodes[1] = center_node;
-      nnodes[2] = lookup(refined, e1b);
-      nnodes[3] = onodes[(index+3)%4];
+      nnodes[2] = lookup(refined, edgemap, onodes[i2], onodes[i3]);
+      nnodes[3] = onodes[i3];
       refined->add_elem(nnodes);
     }
     else
