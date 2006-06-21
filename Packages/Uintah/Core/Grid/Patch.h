@@ -14,13 +14,14 @@
 #undef None
 
 #include <sgi_stl_warnings_off.h>
-#include <string>
-#include <map>
-#include <iosfwd>
-#include <vector>
+#include   <string>
+#include   <map>
+#include   <iosfwd>
+#include   <vector>
 #include <sgi_stl_warnings_on.h>
 
 #include <Packages/Uintah/Core/Grid/share.h>
+
 namespace Uintah {
 
   using std::string;
@@ -94,12 +95,12 @@ WARNING
      };
      
      enum VariableBasis {
-	NodeBased = Ghost::AroundNodes,
-	CellBased = Ghost::AroundCells,
-	XFaceBased = Ghost::AroundFacesX,
-	YFaceBased = Ghost::AroundFacesY,
-	ZFaceBased = Ghost::AroundFacesZ,
-	AllFaceBased = Ghost::AroundFaces
+        NodeBased = Ghost::AroundNodes,
+        CellBased = Ghost::AroundCells,
+        XFaceBased = Ghost::AroundFacesX,
+        YFaceBased = Ghost::AroundFacesY,
+        ZFaceBased = Ghost::AroundFacesZ,
+        AllFaceBased = Ghost::AroundFaces
      };
 
      //Below for Fracture *************************************************
@@ -132,7 +133,7 @@ WARNING
      void finalizePatch();
 
      static VariableBasis translateTypeToBasis(TypeDescription::Type type,
-					       bool mustExist);
+                                               bool mustExist);
      
 
      //////////
@@ -152,14 +153,14 @@ WARNING
      // given node index.
      //    --tan
      void findCellsFromNode( const IntVector& nodeIndex,
-			     IntVector cellIndex[8]) const;
+                             IntVector cellIndex[8]) const;
      
      //////////
      // Find the 8 neighboring node indexes according to a 
      // given cell index.
      //    --tan
      void findNodesFromCell( const IntVector& cellIndex,
-			     IntVector nodeIndex[8]) const;
+                             IntVector nodeIndex[8]) const;
      
 
      //////////
@@ -167,7 +168,7 @@ WARNING
      // Insert Documentation Here:  
      CellIterator getCellIterator(const IntVector gc = IntVector(0,0,0)) const;
      CellIterator getExtraCellIterator(const IntVector gc = 
-				       IntVector(0,0,0)) const;
+                                       IntVector(0,0,0)) const;
      
      // This function will return all cells that are intersected by
      // the box.  This is based on the fact that boundaries of cells
@@ -305,15 +306,15 @@ WARNING
      // schenario.  Note: you should subtract the lowOffset (the offsets
      // should be >= 0 in each dimension).
      static void getGhostOffsets(VariableBasis basis, Ghost::GhostType gtype,
-				 int numGhostCells,
-				 IntVector& lowOffset, IntVector& highOffset);
+                                 int numGhostCells,
+                                 IntVector& lowOffset, IntVector& highOffset);
      static void getGhostOffsets(TypeDescription::Type basis,
-				 Ghost::GhostType gtype, int numGhostCells,
-				 IntVector& l, IntVector& h)
+                                 Ghost::GhostType gtype, int numGhostCells,
+                                 IntVector& l, IntVector& h)
      {
        bool basisMustExist = (gtype != Ghost::None);
        getGhostOffsets(translateTypeToBasis(basis, basisMustExist),
-		       gtype, numGhostCells, l, h);
+                       gtype, numGhostCells, l, h);
      }
      
      Box getBox() const;
@@ -344,16 +345,16 @@ WARNING
      const BCDataArray* getBCDataArray(Patch::FaceType face) const;
 
      const BoundCondBase* getArrayBCValues(FaceType face,int mat_id,
-					   string type,
-					   vector<IntVector>& b,
-					   vector<IntVector>& nb,
-					   vector<IntVector>& sfx,
-					   vector<IntVector>& sfy,
-					   vector<IntVector>& sfz,
-					   int child) const ;
+                                           string type,
+                                           vector<IntVector>& b,
+                                           vector<IntVector>& nb,
+                                           vector<IntVector>& sfx,
+                                           vector<IntVector>& sfy,
+                                           vector<IntVector>& sfz,
+                                           int child) const ;
      
      bool haveBC(FaceType face,int mat_id,string bc_type,
-		 string bc_variable) const;
+                 string bc_variable) const;
 
      bool atEdge(FaceType face) const;
      static FaceType nextFace(FaceType face) {
@@ -374,7 +375,7 @@ WARNING
        IntVector l(getNodeLowIndex());
        IntVector h(getNodeHighIndex());
        return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
-	 && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+         && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
      }
      
      //////////
@@ -383,7 +384,7 @@ WARNING
        IntVector l(getCellLowIndex());
        IntVector h(getCellHighIndex());
        return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
-	 && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+         && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
      }
      
      //////////
@@ -392,7 +393,7 @@ WARNING
        IntVector l(getSFCXLowIndex());
        IntVector h(getSFCXHighIndex());
        return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
-	 && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+         && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
      }
      
      //////////
@@ -401,7 +402,7 @@ WARNING
        IntVector l(getSFCYLowIndex());
        IntVector h(getSFCYHighIndex());
        return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
-	 && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+         && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
      }
      
      //////////
@@ -410,7 +411,7 @@ WARNING
        IntVector l(getSFCZLowIndex());
        IntVector h(getSFCZHighIndex());
        return idx.x() >= l.x() && idx.y() >= l.y() && idx.z() >= l.z()
-	 && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
+         && idx.x() < h.x() && idx.y() < h.y() && idx.z() < h.z();
      }
      
      //////////
@@ -421,7 +422,7 @@ WARNING
 
 
      Box getGhostBox(const IntVector& lowOffset,
-		     const IntVector& highOffset) const;
+                     const IntVector& highOffset) const;
      
      string toString() const;
      
@@ -433,8 +434,8 @@ WARNING
        return d_level;
      }
      void getFace(FaceType face, const IntVector& insideOffset,
-		  const IntVector& outsideOffset,
-		  IntVector& l, IntVector& h) const;
+                  const IntVector& outsideOffset,
+                  IntVector& l, IntVector& h) const;
                 
      IntVector faceDirection(FaceType face) const;
      
@@ -442,13 +443,13 @@ WARNING
      static string getFaceName(FaceType face);
      
      void getFaceNodes(FaceType face, int offset, IntVector& l,
-		       IntVector& h) const;
+                       IntVector& h) const;
 
      void getFaceExtraNodes(FaceType face, int offset, IntVector& l,
-		            IntVector& h) const;
+                            IntVector& h) const;
 
      void getFaceCells(FaceType face, int offset, IntVector& l,
-		       IntVector& h) const;
+                       IntVector& h) const;
 
      const vector<FaceType>* getBoundaryFaces() const 
      { return &d_BoundaryFaces; }
@@ -473,33 +474,33 @@ WARNING
 
 
      void computeVariableExtents(VariableBasis basis,
-				 const IntVector& boundaryLayer,
-				 Ghost::GhostType gtype, int numGhostCells,
-				 selectType& neighbors,
-				 IntVector& low, IntVector& high) const;
+                                 const IntVector& boundaryLayer,
+                                 Ghost::GhostType gtype, int numGhostCells,
+                                 selectType& neighbors,
+                                 IntVector& low, IntVector& high) const;
      void computeVariableExtents(TypeDescription::Type basis,
-				 const IntVector& boundaryLayer,
-				 Ghost::GhostType gtype, int numGhostCells,
-				 selectType& neighbors,
-				 IntVector& low, IntVector& high) const;
+                                 const IntVector& boundaryLayer,
+                                 Ghost::GhostType gtype, int numGhostCells,
+                                 selectType& neighbors,
+                                 IntVector& low, IntVector& high) const;
 
      void computeVariableExtents(VariableBasis basis,
-				 const IntVector& boundaryLayer,
-				 Ghost::GhostType gtype, int numGhostCells,
-				 IntVector& low, IntVector& high) const;
+                                 const IntVector& boundaryLayer,
+                                 Ghost::GhostType gtype, int numGhostCells,
+                                 IntVector& low, IntVector& high) const;
      
      void computeVariableExtents(TypeDescription::Type basis,
-				 const IntVector& boundaryLayer,
-				 Ghost::GhostType gtype, int numGhostCells,
-				 IntVector& low, IntVector& high) const;
+                                 const IntVector& boundaryLayer,
+                                 Ghost::GhostType gtype, int numGhostCells,
+                                 IntVector& low, IntVector& high) const;
 
      // helper for computeVariableExtents but also used externally
      // (in GhostOffsetVarMap)
      void computeExtents(VariableBasis basis,
-			 const IntVector& boundaryLayer,
-			 const IntVector& lowOffset,
-			 const IntVector& highOffset,
-			 IntVector& low, IntVector& high) const;
+                         const IntVector& boundaryLayer,
+                         const IntVector& lowOffset,
+                         const IntVector& highOffset,
+                         IntVector& low, IntVector& high) const;
 
      /* Get overlapping patches on other levels. */
      
@@ -515,8 +516,8 @@ WARNING
      class Compare {
      public:
        inline bool operator()(const Patch* p1, const Patch* p2) const {
-	 return (p1 != 0 && p2 != 0) ? (p1->getID() < p2->getID()) :
-	   ((p2 != 0) ? true : false);
+         return (p1 != 0 && p2 != 0) ? (p1->getID() < p2->getID()) :
+           ((p2 != 0) ? true : false);
        }
      private:
      };
@@ -542,7 +543,7 @@ WARNING
 
      Vector getVirtualOffsetVector() const
      { return cellPosition(d_lowIndex) -
-	 cellPosition(getRealPatch()->d_lowIndex); }     
+         cellPosition(getRealPatch()->d_lowIndex); }     
 
      void setFaceMark(int markType, FaceType face, int mark) const { d_faceMarks[markType*numFaces + face] = mark; }
      int getFaceMark(int markType, FaceType face) const { return d_faceMarks[markType*numFaces + face]; }
@@ -569,25 +570,27 @@ WARNING
     {
       int area = 1;
       for (int i = 0; i < 3; i++)
-	if (i != side)
-	  area *= getHigh()[i] - getLow()[i];
+        if (i != side)
+          area *= getHigh()[i] - getLow()[i];
       return area;
     }
     
     static int getVolume(const IntVector& low, const IntVector& high)
-    { return (high.x() - low.x()) * (high.y() - low.y()) *
-	(high.z() - low.z()); }    
+    {
+      return (high.x() - low.x()) * (high.y() - low.y()) * (high.z() - low.z());
+    }
+
    protected:
      friend class Level;
      friend class NodeIterator;     
      //////////
      // Insert Documentation Here:
      Patch(const Level*,
-	   const IntVector& d_lowIndex,
-	   const IntVector& d_highIndex,
-	   const IntVector& d_inLowIndex,
-	   const IntVector& d_inHighIndex,
-	   int id=-1);
+           const IntVector& d_lowIndex,
+           const IntVector& d_highIndex,
+           const IntVector& d_inLowIndex,
+           const IntVector& d_inHighIndex,
+           int id=-1);
      ~Patch();
 
      Patch* createVirtualPatch(const IntVector& offset) const

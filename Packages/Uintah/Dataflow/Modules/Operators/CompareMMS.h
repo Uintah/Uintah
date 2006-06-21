@@ -25,8 +25,8 @@
 
 #include <Core/Basis/Constant.h>
 #include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Containers/FData.h>
+#include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Datatypes/Datatype.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/GenericField.h>
@@ -34,6 +34,7 @@
 #include <Core/Datatypes/Datatype.h>
 
 #include <Core/Geometry/IntVector.h>
+#include <Core/Geometry/Point.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/ProgressReporter.h>
@@ -42,12 +43,24 @@
 #include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS.h>
 #include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS1.h>
 
+#include <sgi_stl_warnings_off.h>
+#include   <string>
+#include   <vector>
+#include <sgi_stl_warnings_on.h>
+
 #include <sci_values.h>
 
 
 namespace Uintah {
 
-using namespace SCIRun;
+using std::vector;
+using std::string;
+
+using SCIRun::CompileInfoHandle;
+using SCIRun::DynamicAlgoBase;
+using SCIRun::FieldHandle;
+using SCIRun::Point;
+using SCIRun::Transform;
 
 class CompareMMSAlgo : public DynamicAlgoBase
 {
@@ -96,83 +109,83 @@ CompareMMSAlgoT<FIELD>::compare(FieldHandle fh,
 
   Point minb, maxb;
     
-    minb = Point(0,0,0);
-    maxb = Point(1, 1, 1);
+  minb = Point(0,0,0);
+  maxb = Point(1, 1, 1);
 
      
-    // grab the current field and mesh
-    LVField *field = (LVField *)fh.get_rep();
-    LVMesh *mesh = field->get_typed_mesh().get_rep(); 
+  // grab the current field and mesh
+  LVField *field = (LVField *)fh.get_rep();
+  LVMesh *mesh = field->get_typed_mesh().get_rep(); 
     
-    // Create blank mesh. 
-    LVMesh *outputMesh = scinew LVMesh(dimensions[0], 
-                                       dimensions[1], 
-                                       dimensions[2], 
-                                       minb, maxb);
+  // Create blank mesh. 
+  LVMesh *outputMesh = scinew LVMesh(dimensions[0], 
+                                     dimensions[1], 
+                                     dimensions[2], 
+                                     minb, maxb);
 
-    Transform temp;
+  Transform temp;
   
-    mesh->get_canonical_transform( temp );
-    outputMesh->transform( temp );
+  mesh->get_canonical_transform( temp );
+  outputMesh->transform( temp );
 
 
-    LVField *lvf = scinew LVField(outputMesh);
+  LVField *lvf = scinew LVField(outputMesh);
 
-    char field_info[128];
-    sprintf( field_info, "Exact %s - %lf", field_name.c_str(), field_time );
-    lvf->set_property( "varname", string(field_info), true );
+  char field_info[128];
+  sprintf( field_info, "Exact %s - %lf", field_name.c_str(), field_time );
+  lvf->set_property( "varname", string(field_info), true );
 
-    MMS * mms = new MMS1();
+  MMS * mms = new MMS1();
 
-    bool   showDif = (output_choice == 2);
+  bool   showDif = (output_choice == 2);
 
-    // Indexing in SCIRun fields apparently starts from 0, thus start
-    // from zero and subtract 1 from high index
-    for( unsigned int xx = 0; xx < dimensions[0]-1; xx++ ) {
-      for( unsigned int yy = 0; yy < dimensions[1]-1; yy++ ) {
-        for( unsigned int zz = 0; zz < dimensions[2]-1; zz++ ) {
-          typename LVMesh::Cell::index_type pos(outputMesh,xx,yy,zz);
+  // Indexing in SCIRun fields apparently starts from 0, thus start
+  // from zero and subtract 1 from high index
+  for( unsigned int xx = 0; xx < dimensions[0]-1; xx++ ) {
+    for( unsigned int yy = 0; yy < dimensions[1]-1; yy++ ) {
+      for( unsigned int zz = 0; zz < dimensions[2]-1; zz++ ) {
+        typename LVMesh::Cell::index_type pos(outputMesh,xx,yy,zz);
 
-//WARNING: "grid index to physical position" conversion has been hardcoded here!
-          double x_pos = -0.5 + (xx-0.5) * 1.0 / 50;
-          double y_pos = -0.5 + (yy-0.5) * 1.0 / 50;
+        //WARNING: "grid index to physical position" conversion has been hardcoded here!
+        double x_pos = -0.5 + (xx-0.5) * 1.0 / 50;
+        double y_pos = -0.5 + (yy-0.5) * 1.0 / 50;
 
-          double calculatedValue;
-          string msg;
+        double calculatedValue;
+        string msg;
 
-          switch( field_type ) {
-          case PRESSURE:
-            calculatedValue = mms->pressure( x_pos, y_pos, time );
-            break;
-          case UVEL:
-            calculatedValue = mms->uVelocity( x_pos, y_pos, time );
-            break;
-          case VVEL:
-            calculatedValue = mms->vVelocity( x_pos, y_pos, time );
-            break;
-          case INVALID:
-            msg = "We should not reach this point anyway, but you have selected a variable that is usupported by MMS";
-            printf("%s\n", msg.c_str());
-            break;
-          default:
-            printf( "ERROR: CompareMMS.cc - Bad field_type %d\n", field_type );
-            exit(1);
-          }
-          if( showDif ) {
-            double val;
-            typename LVMesh::Cell::index_type inputMeshPos(mesh,xx,yy,zz);
+        switch( field_type ) {
+        case PRESSURE:
+          calculatedValue = mms->pressure( x_pos, y_pos, time );
+          break;
+        case UVEL:
+          calculatedValue = mms->uVelocity( x_pos, y_pos, time );
+          break;
+        case VVEL:
+          calculatedValue = mms->vVelocity( x_pos, y_pos, time );
+          break;
+        case INVALID:
+          msg = "We should not reach this point anyway, but you have selected a variable that is usupported by MMS";
+          printf("%s\n", msg.c_str());
+          break;
+        default:
+          printf( "ERROR: CompareMMS.cc - Bad field_type %d\n", field_type );
+          exit(1);
+        }
+        if( showDif ) {
+          double val;
+          typename LVMesh::Cell::index_type inputMeshPos(mesh,xx,yy,zz);
 
-            field->value( val, inputMeshPos ); // Get the value at pos
+          field->value( val, inputMeshPos ); // Get the value at pos
 
-            lvf->set_value( calculatedValue - val, pos );
-          } else {
-            lvf->set_value( calculatedValue, pos );
-          }
+          lvf->set_value( calculatedValue - val, pos );
+        } else {
+          lvf->set_value( calculatedValue, pos );
         }
       }
-    } 
+    }
+  } 
     
-    return lvf;
+  return lvf;
 }
 
 } // end namespace Uintah
