@@ -5,6 +5,10 @@
 #include <map>
 #include <list>
 
+#ifdef _WIN32
+#define snprintf _snprintf
+#endif
+
 using namespace std;
 
 namespace Uintah {
@@ -185,8 +189,8 @@ namespace Uintah {
   };
   // --------------------------------------------------------------------------
   
-  typedef map<TypeDescription::Type, vector<VectorDiag *> >     VDiagMap;
-  typedef map<string, map<TypeDescription::Type, VectorDiag*> > PreVDiagMap;
+  typedef map<Uintah::TypeDescription::Type, vector<VectorDiag *> >     VDiagMap;
+  typedef map<string, map<Uintah::TypeDescription::Type, VectorDiag*> > PreVDiagMap;
   
   VDiagMap    _vdiagtable;
   PreVDiagMap _vprediagtable;
@@ -194,18 +198,18 @@ namespace Uintah {
   void createVectorDiags() {
     if(_vdiagtable.size()) return;
     
-    _vdiagtable[TypeDescription::Vector].push_back(new VectorValueDiag());
+    _vdiagtable[Uintah::TypeDescription::Vector].push_back(new VectorValueDiag());
     
-    // _vdiagtable[TypeDescription::Matrix3].push_back(new TensorCompDiag(0));
-    // _vdiagtable[TypeDescription::Matrix3].push_back(new TensorCompDiag(1));
-    // _vdiagtable[TypeDescription::Matrix3].push_back(new TensorCompDiag(2));
-    _vdiagtable[TypeDescription::Matrix3].push_back(new TensorMinEigenvectDiag());
-    _vdiagtable[TypeDescription::Matrix3].push_back(new TensorMidEigenvectDiag());
-    _vdiagtable[TypeDescription::Matrix3].push_back(new TensorMaxEigenvectDiag());
+    // _vdiagtable[Uintah::TypeDescription::Matrix3].push_back(new TensorCompDiag(0));
+    // _vdiagtable[Uintah::TypeDescription::Matrix3].push_back(new TensorCompDiag(1));
+    // _vdiagtable[Uintah::TypeDescription::Matrix3].push_back(new TensorCompDiag(2));
+    _vdiagtable[Uintah::TypeDescription::Matrix3].push_back(new TensorMinEigenvectDiag());
+    _vdiagtable[Uintah::TypeDescription::Matrix3].push_back(new TensorMidEigenvectDiag());
+    _vdiagtable[Uintah::TypeDescription::Matrix3].push_back(new TensorMaxEigenvectDiag());
   }
   
   void destroyVectorDiags() {
-    for(map<TypeDescription::Type, vector<VectorDiag *> >::iterator tit(_vdiagtable.begin());
+    for(map<Uintah::TypeDescription::Type, vector<VectorDiag *> >::iterator tit(_vdiagtable.begin());
         tit!=_vdiagtable.end();tit++) {
       for(vector<VectorDiag *>::iterator dit(tit->second.begin());dit!=tit->second.end();dit++) {
         delete *dit;
@@ -217,42 +221,42 @@ namespace Uintah {
   void describeVectorDiags(ostream & os)
   {
     createVectorDiags();
-    if(_vdiagtable[TypeDescription::Vector].size())
+    if(_vdiagtable[Uintah::TypeDescription::Vector].size())
       os << "  Vector -> Vector" << endl;
-    for(vector<VectorDiag *>::iterator dit(_vdiagtable[TypeDescription::Vector].begin());
-        dit!=_vdiagtable[TypeDescription::Vector].end();dit++) {
+    for(vector<VectorDiag *>::iterator dit(_vdiagtable[Uintah::TypeDescription::Vector].begin());
+        dit!=_vdiagtable[Uintah::TypeDescription::Vector].end();dit++) {
       os << "    " << (*dit)->name() << endl;
     }
-    if(_vdiagtable[TypeDescription::Matrix3].size())
+    if(_vdiagtable[Uintah::TypeDescription::Matrix3].size())
       os << "  Tensor -> Vector" << endl;
-    for(vector<VectorDiag *>::iterator dit(_vdiagtable[TypeDescription::Matrix3].begin());
-        dit!=_vdiagtable[TypeDescription::Matrix3].end();dit++) {
+    for(vector<VectorDiag *>::iterator dit(_vdiagtable[Uintah::TypeDescription::Matrix3].begin());
+        dit!=_vdiagtable[Uintah::TypeDescription::Matrix3].end();dit++) {
       os << "    " << (*dit)->name() << endl;
     }
   }
   
   // --------------------------------------------------------------------------
   
-  int numberOfVectorDiags(const TypeDescription * fldtype) {
+  int numberOfVectorDiags(const Uintah::TypeDescription * fldtype) {
     createVectorDiags();
     if(!_vdiagtable.count(fldtype->getSubType()->getType())) return 0;
     return _vdiagtable[fldtype->getSubType()->getType()].size();
   }
   
-  std::string vectorDiagName(const TypeDescription * fldtype, int idiag) {
+  std::string vectorDiagName(const Uintah::TypeDescription * fldtype, int idiag) {
     createVectorDiags();
     return _vdiagtable[fldtype->getSubType()->getType()][idiag]->name();
   }
   
-  VectorDiag const * createVectorDiag(const TypeDescription * fldtype, int idiag,
+  VectorDiag const * createVectorDiag(const Uintah::TypeDescription * fldtype, int idiag,
                                       const TensorDiag * tensorpreop)
   {
     createVectorDiags();
-    TypeDescription::Type srctype = fldtype->getSubType()->getType();
+    Uintah::TypeDescription::Type srctype = fldtype->getSubType()->getType();
     
     VectorDiag const * vdiag =  _vdiagtable[srctype][idiag];
     
-    if(tensorpreop != 0 && srctype == TypeDescription::Matrix3 ) {
+    if(tensorpreop != 0 && srctype == Uintah::TypeDescription::Matrix3 ) {
       if(!_vprediagtable[ tensorpreop->name() ].count(srctype) )
         _vprediagtable[tensorpreop->name()][srctype]= 
           new PreTensorToVectorDiag( tensorpreop, dynamic_cast<const TensorToVectorDiag *>(vdiag) );
@@ -263,10 +267,10 @@ namespace Uintah {
     }
   }
   
-  list<VectorDiag const *> 
-  createVectorDiags(const TypeDescription * fldtype, 
-                    const FieldSelection & fldselection,
-                    const TensorDiag * preop)
+  list<Uintah::VectorDiag const *> 
+  createVectorDiags(const Uintah::TypeDescription * fldtype, 
+                    const SCIRun::FieldSelection & fldselection,
+                    const Uintah::TensorDiag * preop)
   {
     list<VectorDiag const *>  res;
     int ndiags = numberOfVectorDiags(fldtype);
@@ -276,7 +280,6 @@ namespace Uintah {
           res.push_back(createVectorDiag(fldtype, idiag, preop));
         }
       }
-    
     return res;
   }
   
