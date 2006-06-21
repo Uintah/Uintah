@@ -6,9 +6,21 @@
     <authors>
       <author>James Bigler</author>
     </authors>
-    <summary>Summary not available yet.</summary>
+    <summary>Make a graph or table of a variable over time.</summary>
     <description>
-      <p>Version Date: Mon May 16 14:15:55 MDT 2001</p><p>Version: 1.0</p>
+      <p>Version Date: Mon May 16 14:15:55 MDT 2001</p><p>Version:
+      1.0</p>
+      <p>This module allows you to output a graph or table of values
+      for a particular variable, in a particular grid location over
+      time.  You must know the three-dimensional [x,y,z] index of the
+      variable and if the data is multi-level, you must know which
+      level the data is on. These values must be inserted in the upper
+      right.  By selecting either "Node Centered" or "Cell Centered" a
+      list of variables should appear, click on "Material" to select a
+      material, then choose "Graph", "Table", or "Export"</p>
+
+      <p>This same functionality is available
+      in the GridVisualizer, but here the visualization overhead is removed.</p>
     </description>
   </overview>
   <io>
