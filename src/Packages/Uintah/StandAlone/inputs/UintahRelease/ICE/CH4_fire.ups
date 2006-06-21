@@ -261,7 +261,7 @@
     <Models>
        <Model type="AdiabaticTable">
         <table name="adiabatic" type="Arches">
-          <include href="inputs/Models/CH4.xml"/> 
+          <include href="inputs/UintahRelease/MODELS/CH4.xml"/> 
        </table>
         <material>BackgroundGas</material>
        <scalar name="f">
