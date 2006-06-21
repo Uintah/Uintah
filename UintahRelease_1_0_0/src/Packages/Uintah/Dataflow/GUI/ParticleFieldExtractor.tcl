@@ -78,10 +78,12 @@ itcl_class Uintah_Selectors_ParticleFieldExtractor {
 	global $this-pvVar;
 	global $this-ptVar;
 	global $this-pNMaterials;
+        global $this-onMaterials
 	global $this-level
 	set $this-psVar ""
 	set $this-pvVar ""
 	set $this-ptVar ""
+        set $this-onMatierials ""
 	set $this-pName ""
 	set $this-level 0
         set $this-button_push 0

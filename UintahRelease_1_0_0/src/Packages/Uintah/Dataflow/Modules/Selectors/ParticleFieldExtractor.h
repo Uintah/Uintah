@@ -103,11 +103,11 @@ private:
   int material;
   int levelnum;
   GuiInt level_;
-  GuiString psVar;
-  GuiString pvVar;
-  GuiString ptVar;
-  GuiString onMaterials;
-  GuiInt pNMaterials;
+  GuiString psVar_;
+  GuiString pvVar_;
+  GuiString ptVar_;
+  GuiString onMaterials_;
+  GuiInt pNMaterials_;
 
 
   ArchiveIPort *in;

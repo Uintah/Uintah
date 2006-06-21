@@ -76,11 +76,11 @@ ParticleFieldExtractor::ParticleFieldExtractor(GuiContext* ctx) :
   tcl_status(get_ctx()->subVar("tcl_status")),
   generation(-1),  timestep(-1), material(-1), levelnum(0),
   level_(get_ctx()->subVar("level")),
-  psVar(get_ctx()->subVar("psVar")),
-  pvVar(get_ctx()->subVar("pvVar")),
-  ptVar(get_ctx()->subVar("ptVar")),
-  onMaterials(get_ctx()->subVar("onMaterials")),
-  pNMaterials(get_ctx()->subVar("pNMaterials")),
+  psVar_(get_ctx()->subVar("psVar")),
+  pvVar_(get_ctx()->subVar("pvVar")),
+  ptVar_(get_ctx()->subVar("ptVar")),
+  onMaterials_(get_ctx()->subVar("onMaterials")),
+  pNMaterials_(get_ctx()->subVar("pNMaterials")),
   positionName(""), particleIDs(""), archiveH(0),
   num_materials(0), num_selected_materials(0)
 { 
@@ -236,8 +236,8 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
           if( psNames.size() != 0 )
             psNames += " ";
           psNames += names[i];
-          if(psVar.get() == ""){ psVar.set(names[i].c_str()); }
-          if(psVar.get() == names[i].c_str()){
+          if(psVar_.get() == ""){ psVar_.set(names[i].c_str()); }
+          if(psVar_.get() == names[i].c_str()){
             psMatches = true;
           } else {
             if( psIndex == -1){ psIndex = i; }
@@ -249,8 +249,8 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
           if( pvNames.size() != 0 )
             pvNames += " ";
           pvNames += names[i];
-          if(pvVar.get() == ""){ pvVar.set(names[i].c_str()); }
-          if(pvVar.get() == names[i].c_str()){
+          if(pvVar_.get() == ""){ pvVar_.set(names[i].c_str()); }
+          if(pvVar_.get() == names[i].c_str()){
             pvMatches = true;
           } else {
             if( pvIndex == -1){ pvIndex = i; }
@@ -262,8 +262,8 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
           if( ptNames.size() != 0 )
             ptNames += " ";
           ptNames += names[i];
-          if(ptVar.get() == ""){ ptVar.set(names[i].c_str()); }
-          if(ptVar.get() == names[i].c_str()){
+          if(ptVar_.get() == ""){ ptVar_.set(names[i].c_str()); }
+          if(ptVar_.get() == names[i].c_str()){
             ptMatches = true;
           } else {
             if( ptIndex == -1){ ptIndex = i; }
@@ -285,13 +285,13 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
     }
   
     if( !psMatches && psIndex != -1 ) {
-      psVar.set(names[psIndex].c_str());
+      psVar_.set(names[psIndex].c_str());
     } 
     if( !pvMatches && pvIndex != -1 ) {
-      pvVar.set(names[pvIndex].c_str());
+      pvVar_.set(names[pvIndex].c_str());
     }
     if( !ptMatches && ptIndex != -1 ) {
-      ptVar.set(names[ptIndex].c_str());
+      ptVar_.set(names[ptIndex].c_str());
     }
 
     // get the number of materials for the NC & particle Variables
@@ -299,9 +299,9 @@ ParticleFieldExtractor::setVars(DataArchiveHandle& archive, int timestep,
 //   cerr << "Number of Materials " << num_materials << endl;
 
 //   cerr<<"selected variables in setVar() are "<<
-//     psVar.get()<<" (index "<<psIndex<<"), "<<
-//     pvVar.get()<<" (index "<<pvIndex<<"), "<<
-//     ptVar.get()<<" (index "<<ptIndex<<")\n";
+//     psVar_.get()<<" (index "<<psIndex<<"), "<<
+//     pvVar_.get()<<" (index "<<pvIndex<<"), "<<
+//     ptVar_.get()<<" (index "<<ptIndex<<")\n";
 
     string visible;
     get_gui()->eval(get_id() + " isVisible", visible);
@@ -326,14 +326,16 @@ bool
 ParticleFieldExtractor::showVarsForMatls()
 {
   ConsecutiveRangeSet onMaterials;
+  ostringstream os;
   for (int matl = 0; matl < num_materials; matl++) {
      string result;
      get_gui()->eval(get_id() + " isOn p" + to_string(matl), result);
      if ( result == "0")
         continue;
      onMaterials.addInOrder(matl);
+     os << matl <<" ";
   }
-  
+  onMaterials_.set( os.str() );
 
   bool needToUpdate = false;
   string spNames = getVarsForMaterials(scalarVars, onMaterials, needToUpdate);
@@ -341,9 +343,9 @@ ParticleFieldExtractor::showVarsForMatls()
   string tpNames = getVarsForMaterials(tensorVars, onMaterials, needToUpdate);
 
 //   cerr<<"selected variables in showVarsForMatls() are "<<
-//     psVar.get()<<" (psVarlist: "<<spNames<<"), "<<
-//     pvVar.get()<<" (pvVarlist: "<<vpNames<<"), "<<
-//     ptVar.get()<<" (ptVarlist: "<<tpNames<<")\n";
+//     psVar_.get()<<" (psVar_list: "<<spNames<<"), "<<
+//     pvVar_.get()<<" (pvVar_list: "<<vpNames<<"), "<<
+//     ptVar_.get()<<" (ptVar_list: "<<tpNames<<")\n";
   
   if (needToUpdate) {
     string visible;
@@ -602,7 +604,7 @@ ParticleFieldExtractor::buildData(DataArchiveHandle& archive, double time,
   int scalar_type = TypeDescription::Unknown;
 
   for(int i = 0; i < (int)names.size() ; i++) {
-    if (names[i] == psVar.get()) {
+    if (names[i] == psVar_.get()) {
       scalar_type = types[i]->getSubType()->getType();
     }
   }
@@ -672,19 +674,19 @@ PFEThread::run()
     gui->eval(pfe->get_id() + " isOn p" + to_string(matl), result);
     if ( result == "0")
       continue;
-    if (pfe->pvVar.get() != ""){
+    if (pfe->pvVar_.get() != ""){
       have_vp = true;
-      archive->query(pvv, pfe->pvVar.get(), matl, patch, pfe->time);    
+      archive->query(pvv, pfe->pvVar_.get(), matl, patch, pfe->time);    
       if( !have_subset){
         source_subset = pvv.getParticleSubset();
         have_subset = true;
       }
     }
-    if( pfe->psVar.get() != ""){
+    if( pfe->psVar_.get() != ""){
       have_sp = true;
       switch (scalar_type) {
       case TypeDescription::double_type:
-        archive->query(pvs, pfe->psVar.get(), matl, patch, pfe->time);
+        archive->query(pvs, pfe->psVar_.get(), matl, patch, pfe->time);
         if( !have_subset){
           source_subset = pvs.getParticleSubset();
           have_subset = true;
@@ -692,7 +694,7 @@ PFEThread::run()
         break;
       case TypeDescription::float_type:
         //cerr << "Getting data for ParticleVariable<float>\n";
-        archive->query(pvfloat, pfe->psVar.get(), matl, patch, pfe->time);
+        archive->query(pvfloat, pfe->psVar_.get(), matl, patch, pfe->time);
         if( !have_subset){
           source_subset = pvfloat.getParticleSubset();
           have_subset = true;
@@ -701,7 +703,7 @@ PFEThread::run()
         break;
       case TypeDescription::int_type:
         //cerr << "Getting data for ParticleVariable<int>\n";
-        archive->query(pvint, pfe->psVar.get(), matl, patch, pfe->time);
+        archive->query(pvint, pfe->psVar_.get(), matl, patch, pfe->time);
         if( !have_subset){
           source_subset = pvint.getParticleSubset();
           have_subset = true;
@@ -710,9 +712,9 @@ PFEThread::run()
         break;
       }
     }
-    if (pfe->ptVar.get() != ""){
+    if (pfe->ptVar_.get() != ""){
       have_tp = true;
-      archive->query(pvt, pfe->ptVar.get(), matl, patch, pfe->time);
+      archive->query(pvt, pfe->ptVar_.get(), matl, patch, pfe->time);
       if( !have_subset){
         source_subset = pvt.getParticleSubset();
         have_subset = true;
