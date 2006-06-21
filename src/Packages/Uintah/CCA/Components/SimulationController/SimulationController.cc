@@ -14,7 +14,6 @@
 #include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/OS/ProcessInfo.h>
 #include <Core/OS/Dir.h>
@@ -51,8 +50,8 @@ namespace Uintah {
     return sqrt((n*sum_of_x_squares - sum_of_x*sum_of_x)/(n*n));
   }
 
-  SimulationController::SimulationController(const ProcessorGroup* myworld, bool doAMR)
-    : UintahParallelComponent(myworld), d_doAMR(doAMR), d_doMultiTaskgraphing(false)
+  SimulationController::SimulationController(const ProcessorGroup* myworld, bool doAMR, ProblemSpecP pspec)
+    : UintahParallelComponent(myworld), d_doAMR(doAMR), d_ups(pspec)
   {
     d_n = 0;
     d_wallTime = 0;
@@ -64,7 +63,10 @@ namespace Uintah {
     d_restarting = false;
     d_combinePatches = false;
     d_reduceUda = false;
+    d_doMultiTaskgraphing = false;
     d_archive = NULL;
+
+    d_ups->writeMessages(d_myworld->myrank() == 0);
   }
 
   SimulationController::~SimulationController()
@@ -88,28 +90,6 @@ namespace Uintah {
     d_restartTimestep = timestep;
     d_restartFromScratch = fromScratch;
     d_restartRemoveOldDir = removeOldDir;
-  }
-
-  void SimulationController::loadUPS( void )
-  {
-    UintahParallelPort* pp = getPort("problem spec");
-    ProblemSpecInterface* psi = dynamic_cast<ProblemSpecInterface*>(pp);
-    
-    if( !psi ){
-      cout << "SimpleSimulationController::run() psi dynamic_cast failed...\n";
-      throw InternalError("psi dynamic_cast failed", __FILE__, __LINE__);
-    }
-
-    // Get the problem specification
-    d_ups = psi->readInputFile();
-    d_ups->writeMessages(d_myworld->myrank() == 0);
-    if(!d_ups)
-      throw ProblemSetupException("Cannot read problem specification", __FILE__, __LINE__);
-    
-    releasePort("problem spec");
-    
-    if(d_ups->getNodeName() != "Uintah_specification")
-      throw ProblemSetupException("Input file is not a Uintah specification", __FILE__, __LINE__);
   }
 
   void SimulationController::preGridSetup( void )

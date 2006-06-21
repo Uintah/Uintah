@@ -14,7 +14,7 @@
 #include "FieldSelection.h"
 
 namespace Uintah {
-  using namespace SCIRun;
+  //using namespace SCIRun;
   
   // produce scalar some field
   class ScalarDiag : public FieldDiag
@@ -41,14 +41,14 @@ namespace Uintah {
                             ParticleVariable<double>  & values) const = 0;
   };
   
-  int                numberOfScalarDiags(const TypeDescription * fldtype);
-  std::string        scalarDiagName     (const TypeDescription * fldtype, int idiag);
-  ScalarDiag const * createScalarDiag   (const TypeDescription * fldtype, int idiag,
+  int                numberOfScalarDiags(const Uintah::TypeDescription * fldtype);
+  std::string        scalarDiagName     (const Uintah::TypeDescription * fldtype, int idiag);
+  ScalarDiag const * createScalarDiag   (const Uintah::TypeDescription * fldtype, int idiag,
                                          const class TensorDiag * tensorpreop = 0);
   
   void describeScalarDiags(ostream & os);
   
-  list<ScalarDiag const *> createScalarDiags(const TypeDescription * fldtype, 
+  std::list<ScalarDiag const *> createScalarDiags(const Uintah::TypeDescription * fldtype, 
                                              const FieldSelection & fldselection,
                                              const class TensorDiag * tensorpreop = 0);
 }

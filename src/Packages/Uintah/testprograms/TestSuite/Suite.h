@@ -15,11 +15,13 @@
 #include <map>
 #include <list>
 
+#include <Packages/Uintah/testprograms/TestSuite/share.h>
+
 typedef map<string, Test*> testMap;
 typedef map<string, Test*>::iterator testMapIterator;
 typedef map<string, Test*>::value_type testMapPair;
 
-class Suite
+class SCISHARE Suite
 {
 public:
   // construct a Suite with the given name

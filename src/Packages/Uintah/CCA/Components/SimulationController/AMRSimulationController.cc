@@ -46,8 +46,8 @@ static DebugStream amrout("AMR", false);
 static DebugStream dbg("AMRSimulationController", false);
 
 AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
-                                                 bool doAMR) :
-  SimulationController(myworld, doAMR)
+                                                 bool doAMR, ProblemSpecP pspec) :
+  SimulationController(myworld, doAMR, pspec)
 {
 }
 
@@ -57,8 +57,6 @@ AMRSimulationController::~AMRSimulationController()
 
 void AMRSimulationController::run()
 {
-   loadUPS();
-
    bool log_dw_mem=false;
 #ifndef DISABLE_SCI_MALLOC
    ProblemSpecP debug = d_ups->findBlock("debug");

@@ -237,7 +237,7 @@ public:
   int getNumRanges()
   { return (int)rangeSet_.size(); }
 
-  static const ConsecutiveRangeSet empty;
+  SCISHARE static const ConsecutiveRangeSet empty;
   SCISHARE static const ConsecutiveRangeSet all;  
   friend class ConsecutiveRangeSet::iterator;
 private:
