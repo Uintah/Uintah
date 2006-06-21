@@ -298,16 +298,100 @@ public:
 			      double isoval, bool lte,
 			      MatrixHandle &interpolant);
 
+
+  struct edgepair_t
+  {
+    unsigned int first;
+    unsigned int second;
+  };
+
+  struct edgepairequal
+  {
+    bool operator()(const edgepair_t &a, const edgepair_t &b) const
+    {
+      return a.first == b.first && a.second == b.second;
+    }
+  };
+
+  struct edgepairless
+  {
+    bool operator()(const edgepair_t &a, const edgepair_t &b)
+    {
+      return less(a, b);
+    }
+    static bool less(const edgepair_t &a, const edgepair_t &b)
+    {
+      return a.first < b.first || a.first == b.first && a.second < b.second;
+    }
+  };
+
+#ifdef HAVE_HASH_MAP
+  struct edgepairhash
+  {
+    unsigned int operator()(const edgepair_t &a) const
+    {
+#if defined(__ECC) || defined(_MSC_VER)
+      hash_compare<unsigned int> h;
+#else
+      hash<unsigned int> h;
+#endif
+      return h(a.first ^ a.second);
+    }
+#if defined(__ECC) || defined(_MSC_VER)
+
+      // These are particularly needed by ICC's hash stuff
+      static const size_t bucket_size = 4;
+      static const size_t min_buckets = 8;
+      
+      // This is a less than function.
+      bool operator()(const edgepair_t & a, const edgepair_t & b) const {
+        return edgepairless::less(a,b);
+      }
+#endif // endif ifdef __ICC
+  };
+#endif
+
+#ifdef HAVE_HASH_MAP
+#  if defined(__ECC) || defined(_MSC_VER)
+  typedef hash_map<edgepair_t,
+		   typename FIELD::mesh_type::Node::index_type,
+		   edgepairhash> edge_hash_type;
+#  else
+  typedef hash_map<edgepair_t,
+		   typename FIELD::mesh_type::Node::index_type,
+		   edgepairhash,
+		   edgepairequal> edge_hash_type;
+#  endif
+#else
+  typedef map<edgepair_t,
+	      typename FIELD::mesh_type::Node::index_type,
+	      edgepairless> edge_hash_type;
+#endif
+
   typename FIELD::mesh_type::Node::index_type
   lookup(typename FIELD::mesh_type *mesh,
+         edge_hash_type &edgemap,
          typename FIELD::mesh_type::Node::index_type a,
          typename FIELD::mesh_type::Node::index_type b)
   {
-    Point pa, pb;
-    mesh->get_point(pa, a);
-    mesh->get_point(pb, b);
-    const Point inbetween = Interpolate(pa, pb, 1.0/3.0);
-    return mesh->add_point(inbetween);
+    edgepair_t ep;
+    ep.first = a; ep.second = b;
+    const typename edge_hash_type::iterator loc = edgemap.find(ep);
+    if (loc == edgemap.end())
+    {
+      Point pa, pb;
+      mesh->get_point(pa, a);
+      mesh->get_point(pb, b);
+      const Point inbetween = Interpolate(pa, pb, 1.0/3.0);
+      const typename FIELD::mesh_type::Node::index_type newnode =
+        mesh->add_point(inbetween);
+      edgemap[ep] = newnode;
+      return newnode;
+    }
+    else
+    {
+      return (*loc).second;
+    }
   }
 
   typename FIELD::mesh_type::Node::index_type
@@ -394,6 +478,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
   refined->copy_properties(mesh);
 
   init_pattern_table();
+  edge_hash_type edgemap;
   
   typename FIELD::mesh_type::Node::array_type onodes(8);
   typename FIELD::mesh_type::Node::array_type nnodes(8);
@@ -448,50 +533,44 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
     {
       const int *ro = hex_reorder_table[which];
       
-      const Point e01 = Interpolate(p[ro[0]], p[ro[1]], 1.0/3.0);
-      const Point e03 = Interpolate(p[ro[0]], p[ro[3]], 1.0/3.0);
-      const Point e04 = Interpolate(p[ro[0]], p[ro[4]], 1.0/3.0);
-      const Point f02 = Interpolate(p[ro[0]], p[ro[2]], 1.0/3.0);
-      const Point f05 = Interpolate(p[ro[0]], p[ro[5]], 1.0/3.0);
-      const Point f07 = Interpolate(p[ro[0]], p[ro[7]], 1.0/3.0);
       const Point i06 = Interpolate(p[ro[0]], p[ro[6]], 1.0/3.0);
 
       // Add this corner.
       nnodes[0] = onodes[ro[0]];
-      nnodes[1] = lookup(refined, e01);
-      nnodes[2] = lookup(refined, f02);
-      nnodes[3] = lookup(refined, e03);
-      nnodes[4] = lookup(refined, e04);
-      nnodes[5] = lookup(refined, f05);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[1]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[2]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[3]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[4]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[5]]);
       nnodes[6] = lookup(refined, i06);
-      nnodes[7] = lookup(refined, f07);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[7]]);
       refined->add_elem(nnodes);
 
       // Add the other three pieces.
-      nnodes[0] = lookup(refined, e01);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[1]]);
       nnodes[1] = onodes[ro[1]];
       nnodes[2] = onodes[ro[2]];
-      nnodes[3] = lookup(refined, f02);
-      nnodes[4] = lookup(refined, f05);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[2]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[5]]);
       nnodes[5] = onodes[ro[5]];
       nnodes[6] = onodes[ro[6]];
       nnodes[7] = lookup(refined, i06);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, e03);
-      nnodes[1] = lookup(refined, f02);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[3]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[2]]);
       nnodes[2] = onodes[ro[2]];
       nnodes[3] = onodes[ro[3]];
-      nnodes[4] = lookup(refined, f07);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[7]]);
       nnodes[5] = lookup(refined, i06);
       nnodes[6] = onodes[ro[6]];
       nnodes[7] = onodes[ro[7]];
       refined->add_elem(nnodes);
       
-      nnodes[0] = lookup(refined, e04);
-      nnodes[1] = lookup(refined, f05);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[4]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[5]]);
       nnodes[2] = lookup(refined, i06);
-      nnodes[3] = lookup(refined, f07);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[7]]);
       nnodes[4] = onodes[ro[4]];
       nnodes[5] = onodes[ro[5]];
       nnodes[6] = onodes[ro[6]];
@@ -502,26 +581,6 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
     {
       const int *ro = hex_reorder_table[which];
 
-      const Point e01 = Interpolate(p[ro[0]], p[ro[1]], 1.0/3.0);
-      const Point e10 = Interpolate(p[ro[1]], p[ro[0]], 1.0/3.0);
-      const Point e03 = Interpolate(p[ro[0]], p[ro[3]], 1.0/3.0);
-      const Point e12 = Interpolate(p[ro[1]], p[ro[2]], 1.0/3.0);
-      const Point e04 = Interpolate(p[ro[0]], p[ro[4]], 1.0/3.0);
-      const Point e15 = Interpolate(p[ro[1]], p[ro[5]], 1.0/3.0);
-
-      const Point f02 = Interpolate(p[ro[0]], p[ro[2]], 1.0/3.0);
-      const Point f20 = Interpolate(p[ro[2]], p[ro[0]], 1.0/3.0);
-      const Point f13 = Interpolate(p[ro[1]], p[ro[3]], 1.0/3.0);
-      const Point f31 = Interpolate(p[ro[3]], p[ro[1]], 1.0/3.0);
-
-      const Point f05 = Interpolate(p[ro[0]], p[ro[5]], 1.0/3.0);
-      const Point f50 = Interpolate(p[ro[5]], p[ro[0]], 1.0/3.0);
-      const Point f14 = Interpolate(p[ro[1]], p[ro[4]], 1.0/3.0);
-      const Point f41 = Interpolate(p[ro[4]], p[ro[1]], 1.0/3.0);
-
-      const Point f07 = Interpolate(p[ro[0]], p[ro[7]], 1.0/3.0);
-      const Point f16 = Interpolate(p[ro[1]], p[ro[6]], 1.0/3.0);
-
       const Point i06 = Interpolate(p[ro[0]], p[ro[6]], 1.0/3.0);
       const Point i17 = Interpolate(p[ro[1]], p[ro[7]], 1.0/3.0);
       const Point i60 = Interpolate(p[ro[6]], p[ro[0]], 1.0/3.0);
@@ -529,100 +588,100 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
 
       // Leading edge.
       nnodes[0] = onodes[ro[0]];
-      nnodes[1] = lookup(refined, e01);
-      nnodes[2] = lookup(refined, f02);
-      nnodes[3] = lookup(refined, e03);
-      nnodes[4] = lookup(refined, e04);
-      nnodes[5] = lookup(refined, f05);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[1]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[2]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[3]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[4]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[5]]);
       nnodes[6] = lookup(refined, i06);
-      nnodes[7] = lookup(refined, f07);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[7]]);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, e01);
-      nnodes[1] = lookup(refined, e10);
-      nnodes[2] = lookup(refined, f13);
-      nnodes[3] = lookup(refined, f02);
-      nnodes[4] = lookup(refined, f05);
-      nnodes[5] = lookup(refined, f14);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[1]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[0]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[3]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[2]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[5]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[4]]);
       nnodes[6] = lookup(refined, i17);
       nnodes[7] = lookup(refined, i06);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, e10);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[0]]);
       nnodes[1] = onodes[ro[1]];
-      nnodes[2] = lookup(refined, e12);
-      nnodes[3] = lookup(refined, f13);
-      nnodes[4] = lookup(refined, f14);
-      nnodes[5] = lookup(refined, e15);
-      nnodes[6] = lookup(refined, f16);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[2]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[3]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[4]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[5]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[6]]);
       nnodes[7] = lookup(refined, i17);
       refined->add_elem(nnodes);
 
       // Top center
-      nnodes[0] = lookup(refined, e03);
-      nnodes[1] = lookup(refined, f02);
-      nnodes[2] = lookup(refined, f31);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[3]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[2]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[1]]);
       nnodes[3] = onodes[ro[3]];
-      nnodes[4] = lookup(refined, f07);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[7]]);
       nnodes[5] = lookup(refined, i06);
       nnodes[6] = lookup(refined, i71);
       nnodes[7] = onodes[ro[7]];
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f02);
-      nnodes[1] = lookup(refined, f13);
-      nnodes[2] = lookup(refined, f20);
-      nnodes[3] = lookup(refined, f31);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[2]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[3]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[0]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[1]]);
       nnodes[4] = lookup(refined, i06);
       nnodes[5] = lookup(refined, i17);
       nnodes[6] = lookup(refined, i60);
       nnodes[7] = lookup(refined, i71);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f13);
-      nnodes[1] = lookup(refined, e12);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[3]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[2]]);
       nnodes[2] = onodes[ro[2]];
-      nnodes[3] = lookup(refined, f20);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[0]]);
       nnodes[4] = lookup(refined, i17);
-      nnodes[5] = lookup(refined, f16);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[6]]);
       nnodes[6] = onodes[ro[6]];
       nnodes[7] = lookup(refined, i60);
       refined->add_elem(nnodes);
 
       // Front Center
-      nnodes[0] = lookup(refined, e04);
-      nnodes[1] = lookup(refined, f05);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[4]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[5]]);
       nnodes[2] = lookup(refined, i06);
-      nnodes[3] = lookup(refined, f07);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[7]]);
       nnodes[4] = onodes[ro[4]];
-      nnodes[5] = lookup(refined, f41);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[1]]);
       nnodes[6] = lookup(refined, i71);
       nnodes[7] = onodes[ro[7]];
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f05);
-      nnodes[1] = lookup(refined, f14);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[5]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[4]]);
       nnodes[2] = lookup(refined, i17);
       nnodes[3] = lookup(refined, i06);
-      nnodes[4] = lookup(refined, f41);
-      nnodes[5] = lookup(refined, f50);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[1]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[0]]);
       nnodes[6] = lookup(refined, i60);
       nnodes[7] = lookup(refined, i71);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f14);
-      nnodes[1] = lookup(refined, e15);
-      nnodes[2] = lookup(refined, f16);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[4]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[5]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[6]]);
       nnodes[3] = lookup(refined, i17);
-      nnodes[4] = lookup(refined, f50);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[0]]);
       nnodes[5] = onodes[ro[5]];
       nnodes[6] = onodes[ro[6]];
       nnodes[7] = lookup(refined, i60);
       refined->add_elem(nnodes);
 
       // Outside wedges
-      nnodes[0] = lookup(refined, f31);
-      nnodes[1] = lookup(refined, f20);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[1]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[0]]);
       nnodes[2] = onodes[ro[2]];
       nnodes[3] = onodes[ro[3]];
       nnodes[4] = lookup(refined, i71);
@@ -631,8 +690,8 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[7] = onodes[ro[7]];
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f41);
-      nnodes[1] = lookup(refined, f50);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[1]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[0]]);
       nnodes[2] = lookup(refined, i60);
       nnodes[3] = lookup(refined, i71);
       nnodes[4] = onodes[ro[4]];
@@ -644,52 +703,6 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
     else if (pattern == 4)
     {
       const int *ro = hex_reorder_table[which];
-
-      // top edges
-      const Point e01 = Interpolate(p[ro[0]], p[ro[1]], 1.0/3.0);
-      const Point e10 = Interpolate(p[ro[1]], p[ro[0]], 1.0/3.0);
-      const Point e12 = Interpolate(p[ro[1]], p[ro[2]], 1.0/3.0);
-      const Point e21 = Interpolate(p[ro[2]], p[ro[1]], 1.0/3.0);
-      const Point e23 = Interpolate(p[ro[2]], p[ro[3]], 1.0/3.0);
-      const Point e32 = Interpolate(p[ro[3]], p[ro[2]], 1.0/3.0);
-      const Point e03 = Interpolate(p[ro[0]], p[ro[3]], 1.0/3.0);
-      const Point e30 = Interpolate(p[ro[3]], p[ro[0]], 1.0/3.0);
-
-      // side edges
-      const Point e04 = Interpolate(p[ro[0]], p[ro[4]], 1.0/3.0);
-      const Point e15 = Interpolate(p[ro[1]], p[ro[5]], 1.0/3.0);
-      const Point e26 = Interpolate(p[ro[2]], p[ro[6]], 1.0/3.0);
-      const Point e37 = Interpolate(p[ro[3]], p[ro[7]], 1.0/3.0);
-
-      // top face
-      const Point f02 = Interpolate(p[ro[0]], p[ro[2]], 1.0/3.0);
-      const Point f20 = Interpolate(p[ro[2]], p[ro[0]], 1.0/3.0);
-      const Point f13 = Interpolate(p[ro[1]], p[ro[3]], 1.0/3.0);
-      const Point f31 = Interpolate(p[ro[3]], p[ro[1]], 1.0/3.0);
-
-      // front face
-      const Point f05 = Interpolate(p[ro[0]], p[ro[5]], 1.0/3.0);
-      const Point f50 = Interpolate(p[ro[5]], p[ro[0]], 1.0/3.0);
-      const Point f14 = Interpolate(p[ro[1]], p[ro[4]], 1.0/3.0);
-      const Point f41 = Interpolate(p[ro[4]], p[ro[1]], 1.0/3.0);
-
-      // right face
-      const Point f16 = Interpolate(p[ro[1]], p[ro[6]], 1.0/3.0);
-      const Point f61 = Interpolate(p[ro[6]], p[ro[1]], 1.0/3.0);
-      const Point f25 = Interpolate(p[ro[2]], p[ro[5]], 1.0/3.0);
-      const Point f52 = Interpolate(p[ro[5]], p[ro[2]], 1.0/3.0);
-
-      // back face
-      const Point f27 = Interpolate(p[ro[2]], p[ro[7]], 1.0/3.0);
-      const Point f72 = Interpolate(p[ro[7]], p[ro[2]], 1.0/3.0);
-      const Point f36 = Interpolate(p[ro[3]], p[ro[6]], 1.0/3.0);
-      const Point f63 = Interpolate(p[ro[6]], p[ro[3]], 1.0/3.0);
-
-      // left face
-      const Point f07 = Interpolate(p[ro[0]], p[ro[7]], 1.0/3.0);
-      const Point f70 = Interpolate(p[ro[7]], p[ro[0]], 1.0/3.0);
-      const Point f34 = Interpolate(p[ro[3]], p[ro[4]], 1.0/3.0);
-      const Point f43 = Interpolate(p[ro[4]], p[ro[3]], 1.0/3.0);
 
       // Interior
       const Point i06 = Interpolate(p[ro[0]], p[ro[6]], 1.0/3.0);
@@ -707,137 +720,137 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
 
       // Top Front
       nnodes[0] = onodes[ro[0]];
-      nnodes[1] = lookup(refined, e01);
-      nnodes[2] = lookup(refined, f02);
-      nnodes[3] = lookup(refined, e03);
-      nnodes[4] = lookup(refined, e04);
-      nnodes[5] = lookup(refined, f05);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[1]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[2]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[3]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[4]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[5]]);
       nnodes[6] = lookup(refined, i06);
-      nnodes[7] = lookup(refined, f07);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[7]]);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, e01);
-      nnodes[1] = lookup(refined, e10);
-      nnodes[2] = lookup(refined, f13);
-      nnodes[3] = lookup(refined, f02);
-      nnodes[4] = lookup(refined, f05);
-      nnodes[5] = lookup(refined, f14);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[1]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[0]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[3]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[2]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[5]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[4]]);
       nnodes[6] = lookup(refined, i17);
       nnodes[7] = lookup(refined, i06);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, e10);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[0]]);
       nnodes[1] = onodes[ro[1]];
-      nnodes[2] = lookup(refined, e12);
-      nnodes[3] = lookup(refined, f13);
-      nnodes[4] = lookup(refined, f14);
-      nnodes[5] = lookup(refined, e15);
-      nnodes[6] = lookup(refined, f16);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[2]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[3]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[4]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[5]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[6]]);
       nnodes[7] = lookup(refined, i17);
       refined->add_elem(nnodes);
 
       // Top Center
-      nnodes[0] = lookup(refined, e03);
-      nnodes[1] = lookup(refined, f02);
-      nnodes[2] = lookup(refined, f31);
-      nnodes[3] = lookup(refined, e30);
-      nnodes[4] = lookup(refined, f07);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[3]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[2]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[1]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[0]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[7]]);
       nnodes[5] = lookup(refined, i06);
       nnodes[6] = lookup(refined, i35);
-      nnodes[7] = lookup(refined, f34);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[4]]);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f02);
-      nnodes[1] = lookup(refined, f13);
-      nnodes[2] = lookup(refined, f20);
-      nnodes[3] = lookup(refined, f31);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[2]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[3]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[0]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[1]]);
       nnodes[4] = lookup(refined, i06);
       nnodes[5] = lookup(refined, i17);
       nnodes[6] = lookup(refined, i24);
       nnodes[7] = lookup(refined, i35);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f13);
-      nnodes[1] = lookup(refined, e12);
-      nnodes[2] = lookup(refined, e21);
-      nnodes[3] = lookup(refined, f20);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[3]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[2]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[1]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[0]]);
       nnodes[4] = lookup(refined, i17);
-      nnodes[5] = lookup(refined, f16);
-      nnodes[6] = lookup(refined, f25);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[6]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[5]]);
       nnodes[7] = lookup(refined, i24);
       refined->add_elem(nnodes);
 
       // Top Back
-      nnodes[0] = lookup(refined, e30);
-      nnodes[1] = lookup(refined, f31);
-      nnodes[2] = lookup(refined, e32);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[0]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[1]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[2]]);
       nnodes[3] = onodes[ro[3]];
-      nnodes[4] = lookup(refined, f34);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[4]]);
       nnodes[5] = lookup(refined, i35);
-      nnodes[6] = lookup(refined, f36);
-      nnodes[7] = lookup(refined, e37);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[6]]);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[7]]);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f31);
-      nnodes[1] = lookup(refined, f20);
-      nnodes[2] = lookup(refined, e23);
-      nnodes[3] = lookup(refined, e32);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[1]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[0]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[3]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[2]]);
       nnodes[4] = lookup(refined, i35);
       nnodes[5] = lookup(refined, i24);
-      nnodes[6] = lookup(refined, f27);
-      nnodes[7] = lookup(refined, f36);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[7]]);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[6]]);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f20);
-      nnodes[1] = lookup(refined, e21);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[0]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[1]]);
       nnodes[2] = onodes[ro[2]];
-      nnodes[3] = lookup(refined, e23);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[3]]);
       nnodes[4] = lookup(refined, i24);
-      nnodes[5] = lookup(refined, f25);
-      nnodes[6] = lookup(refined, e26);
-      nnodes[7] = lookup(refined, f27);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[5]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[6]]);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[7]]);
       refined->add_elem(nnodes);
 
       // Front
-      nnodes[0] = lookup(refined, e04);
-      nnodes[1] = lookup(refined, f05);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[4]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[5]]);
       nnodes[2] = lookup(refined, i06);
-      nnodes[3] = lookup(refined, f07);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[7]]);
       nnodes[4] = onodes[ro[4]];
-      nnodes[5] = lookup(refined, f41);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[1]]);
       nnodes[6] = lookup(refined, i42);
-      nnodes[7] = lookup(refined, f43);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[3]]);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f05);
-      nnodes[1] = lookup(refined, f14);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[5]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[4]]);
       nnodes[2] = lookup(refined, i17);
       nnodes[3] = lookup(refined, i06);
-      nnodes[4] = lookup(refined, f41);
-      nnodes[5] = lookup(refined, f50);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[1]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[0]]);
       nnodes[6] = lookup(refined, i53);
       nnodes[7] = lookup(refined, i42);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f14);
-      nnodes[1] = lookup(refined, e15);
-      nnodes[2] = lookup(refined, f16);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[4]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[5]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[6]]);
       nnodes[3] = lookup(refined, i17);
-      nnodes[4] = lookup(refined, f50);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[0]]);
       nnodes[5] = onodes[ro[5]];
-      nnodes[6] = lookup(refined, f52);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[2]]);
       nnodes[7] = lookup(refined, i53);
       refined->add_elem(nnodes);
 
       // Center
-      nnodes[0] = lookup(refined, f07);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[7]]);
       nnodes[1] = lookup(refined, i06);
       nnodes[2] = lookup(refined, i35);
-      nnodes[3] = lookup(refined, f34);
-      nnodes[4] = lookup(refined, f43);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[4]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[3]]);
       nnodes[5] = lookup(refined, i42);
       nnodes[6] = lookup(refined, i71);
-      nnodes[7] = lookup(refined, f70);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[0]]);
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, i06);
@@ -851,54 +864,54 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, i17);
-      nnodes[1] = lookup(refined, f16);
-      nnodes[2] = lookup(refined, f25);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[6]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[5]]);
       nnodes[3] = lookup(refined, i24);
       nnodes[4] = lookup(refined, i53);
-      nnodes[5] = lookup(refined, f52);
-      nnodes[6] = lookup(refined, f61);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[2]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[1]]);
       nnodes[7] = lookup(refined, i60);
       refined->add_elem(nnodes);
 
       // Back
-      nnodes[0] = lookup(refined, f34);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[4]]);
       nnodes[1] = lookup(refined, i35);
-      nnodes[2] = lookup(refined, f36);
-      nnodes[3] = lookup(refined, e37);
-      nnodes[4] = lookup(refined, f70);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[6]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[7]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[0]]);
       nnodes[5] = lookup(refined, i71);
-      nnodes[6] = lookup(refined, f72);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[2]]);
       nnodes[7] = onodes[ro[7]];
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, i35);
       nnodes[1] = lookup(refined, i24);
-      nnodes[2] = lookup(refined, f27);
-      nnodes[3] = lookup(refined, f36);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[7]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[6]]);
       nnodes[4] = lookup(refined, i71);
       nnodes[5] = lookup(refined, i60);
-      nnodes[6] = lookup(refined, f63);
-      nnodes[7] = lookup(refined, f72);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[3]]);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[2]]);
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, i24);
-      nnodes[1] = lookup(refined, f25);
-      nnodes[2] = lookup(refined, e26);
-      nnodes[3] = lookup(refined, f27);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[5]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[6]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[7]]);
       nnodes[4] = lookup(refined, i60);
-      nnodes[5] = lookup(refined, f61);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[1]]);
       nnodes[6] = onodes[ro[6]];
-      nnodes[7] = lookup(refined, f63);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[3]]);
       refined->add_elem(nnodes);
 
       // Bottom Center
-      nnodes[0] = lookup(refined, f43);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[3]]);
       nnodes[1] = lookup(refined, i42);
       nnodes[2] = lookup(refined, i71);
-      nnodes[3] = lookup(refined, f70);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[0]]);
       nnodes[4] = onodes[ro[4]];
-      nnodes[5] = lookup(refined, f41);
-      nnodes[6] = lookup(refined, f72);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[1]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[2]]);
       nnodes[7] = onodes[ro[7]];
       refined->add_elem(nnodes);
 
@@ -906,27 +919,27 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[1] = lookup(refined, i53);
       nnodes[2] = lookup(refined, i60);
       nnodes[3] = lookup(refined, i71);
-      nnodes[4] = lookup(refined, f41);
-      nnodes[5] = lookup(refined, f50);
-      nnodes[6] = lookup(refined, f63);
-      nnodes[7] = lookup(refined, f72);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[1]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[0]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[3]]);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[2]]);
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, i53);
-      nnodes[1] = lookup(refined, f52);
-      nnodes[2] = lookup(refined, f61);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[2]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[1]]);
       nnodes[3] = lookup(refined, i60);
-      nnodes[4] = lookup(refined, f50);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[0]]);
       nnodes[5] = onodes[ro[5]];
       nnodes[6] = onodes[ro[6]];
-      nnodes[7] = lookup(refined, f63);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[3]]);
       refined->add_elem(nnodes);
 
       // Bottom
-      nnodes[0] = lookup(refined, f41);
-      nnodes[1] = lookup(refined, f50);
-      nnodes[2] = lookup(refined, f63);
-      nnodes[3] = lookup(refined, f72);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[1]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[0]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[3]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[2]]);
       nnodes[4] = onodes[ro[4]];
       nnodes[5] = onodes[ro[5]];
       nnodes[6] = onodes[ro[6]];
@@ -936,72 +949,6 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
     else if (pattern == 8)
     {
       const int *ro = hex_reorder_table[which];
-
-      // top edges
-      const Point e01 = Interpolate(p[ro[0]], p[ro[1]], 1.0/3.0);
-      const Point e10 = Interpolate(p[ro[1]], p[ro[0]], 1.0/3.0);
-      const Point e12 = Interpolate(p[ro[1]], p[ro[2]], 1.0/3.0);
-      const Point e21 = Interpolate(p[ro[2]], p[ro[1]], 1.0/3.0);
-      const Point e23 = Interpolate(p[ro[2]], p[ro[3]], 1.0/3.0);
-      const Point e32 = Interpolate(p[ro[3]], p[ro[2]], 1.0/3.0);
-      const Point e03 = Interpolate(p[ro[0]], p[ro[3]], 1.0/3.0);
-      const Point e30 = Interpolate(p[ro[3]], p[ro[0]], 1.0/3.0);
-
-      // side edges
-      const Point e04 = Interpolate(p[ro[0]], p[ro[4]], 1.0/3.0);
-      const Point e40 = Interpolate(p[ro[4]], p[ro[0]], 1.0/3.0);
-      const Point e15 = Interpolate(p[ro[1]], p[ro[5]], 1.0/3.0);
-      const Point e51 = Interpolate(p[ro[5]], p[ro[1]], 1.0/3.0);
-      const Point e26 = Interpolate(p[ro[2]], p[ro[6]], 1.0/3.0);
-      const Point e62 = Interpolate(p[ro[6]], p[ro[2]], 1.0/3.0);
-      const Point e37 = Interpolate(p[ro[3]], p[ro[7]], 1.0/3.0);
-      const Point e73 = Interpolate(p[ro[7]], p[ro[3]], 1.0/3.0);
-
-      // bottom edges
-      const Point e45 = Interpolate(p[ro[4]], p[ro[5]], 1.0/3.0);
-      const Point e54 = Interpolate(p[ro[5]], p[ro[4]], 1.0/3.0);
-      const Point e56 = Interpolate(p[ro[5]], p[ro[6]], 1.0/3.0);
-      const Point e65 = Interpolate(p[ro[6]], p[ro[5]], 1.0/3.0);
-      const Point e67 = Interpolate(p[ro[6]], p[ro[7]], 1.0/3.0);
-      const Point e76 = Interpolate(p[ro[7]], p[ro[6]], 1.0/3.0);
-      const Point e74 = Interpolate(p[ro[7]], p[ro[4]], 1.0/3.0);
-      const Point e47 = Interpolate(p[ro[4]], p[ro[7]], 1.0/3.0);
-      
-      // top face
-      const Point f02 = Interpolate(p[ro[0]], p[ro[2]], 1.0/3.0);
-      const Point f20 = Interpolate(p[ro[2]], p[ro[0]], 1.0/3.0);
-      const Point f13 = Interpolate(p[ro[1]], p[ro[3]], 1.0/3.0);
-      const Point f31 = Interpolate(p[ro[3]], p[ro[1]], 1.0/3.0);
-
-      // front face
-      const Point f05 = Interpolate(p[ro[0]], p[ro[5]], 1.0/3.0);
-      const Point f50 = Interpolate(p[ro[5]], p[ro[0]], 1.0/3.0);
-      const Point f14 = Interpolate(p[ro[1]], p[ro[4]], 1.0/3.0);
-      const Point f41 = Interpolate(p[ro[4]], p[ro[1]], 1.0/3.0);
-
-      // right face
-      const Point f16 = Interpolate(p[ro[1]], p[ro[6]], 1.0/3.0);
-      const Point f61 = Interpolate(p[ro[6]], p[ro[1]], 1.0/3.0);
-      const Point f25 = Interpolate(p[ro[2]], p[ro[5]], 1.0/3.0);
-      const Point f52 = Interpolate(p[ro[5]], p[ro[2]], 1.0/3.0);
-
-      // back face
-      const Point f27 = Interpolate(p[ro[2]], p[ro[7]], 1.0/3.0);
-      const Point f72 = Interpolate(p[ro[7]], p[ro[2]], 1.0/3.0);
-      const Point f36 = Interpolate(p[ro[3]], p[ro[6]], 1.0/3.0);
-      const Point f63 = Interpolate(p[ro[6]], p[ro[3]], 1.0/3.0);
-
-      // left face
-      const Point f07 = Interpolate(p[ro[0]], p[ro[7]], 1.0/3.0);
-      const Point f70 = Interpolate(p[ro[7]], p[ro[0]], 1.0/3.0);
-      const Point f34 = Interpolate(p[ro[3]], p[ro[4]], 1.0/3.0);
-      const Point f43 = Interpolate(p[ro[4]], p[ro[3]], 1.0/3.0);
-
-      // bottom face
-      const Point f46 = Interpolate(p[ro[4]], p[ro[6]], 1.0/3.0);
-      const Point f64 = Interpolate(p[ro[6]], p[ro[4]], 1.0/3.0);
-      const Point f57 = Interpolate(p[ro[5]], p[ro[7]], 1.0/3.0);
-      const Point f75 = Interpolate(p[ro[7]], p[ro[5]], 1.0/3.0);
 
       // Interior
       const Point i06 = Interpolate(p[ro[0]], p[ro[6]], 1.0/3.0);
@@ -1015,137 +962,137 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
 
       // Top Front
       nnodes[0] = onodes[ro[0]];
-      nnodes[1] = lookup(refined, e01);
-      nnodes[2] = lookup(refined, f02);
-      nnodes[3] = lookup(refined, e03);
-      nnodes[4] = lookup(refined, e04);
-      nnodes[5] = lookup(refined, f05);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[1]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[2]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[3]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[4]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[5]]);
       nnodes[6] = lookup(refined, i06);
-      nnodes[7] = lookup(refined, f07);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[7]]);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, e01);
-      nnodes[1] = lookup(refined, e10);
-      nnodes[2] = lookup(refined, f13);
-      nnodes[3] = lookup(refined, f02);
-      nnodes[4] = lookup(refined, f05);
-      nnodes[5] = lookup(refined, f14);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[1]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[0]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[3]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[2]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[5]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[4]]);
       nnodes[6] = lookup(refined, i17);
       nnodes[7] = lookup(refined, i06);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, e10);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[0]]);
       nnodes[1] = onodes[ro[1]];
-      nnodes[2] = lookup(refined, e12);
-      nnodes[3] = lookup(refined, f13);
-      nnodes[4] = lookup(refined, f14);
-      nnodes[5] = lookup(refined, e15);
-      nnodes[6] = lookup(refined, f16);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[2]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[3]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[4]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[5]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[6]]);
       nnodes[7] = lookup(refined, i17);
       refined->add_elem(nnodes);
 
       // Top Center
-      nnodes[0] = lookup(refined, e03);
-      nnodes[1] = lookup(refined, f02);
-      nnodes[2] = lookup(refined, f31);
-      nnodes[3] = lookup(refined, e30);
-      nnodes[4] = lookup(refined, f07);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[3]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[2]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[1]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[0]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[7]]);
       nnodes[5] = lookup(refined, i06);
       nnodes[6] = lookup(refined, i35);
-      nnodes[7] = lookup(refined, f34);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[4]]);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f02);
-      nnodes[1] = lookup(refined, f13);
-      nnodes[2] = lookup(refined, f20);
-      nnodes[3] = lookup(refined, f31);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[2]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[3]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[0]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[1]]);
       nnodes[4] = lookup(refined, i06);
       nnodes[5] = lookup(refined, i17);
       nnodes[6] = lookup(refined, i24);
       nnodes[7] = lookup(refined, i35);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f13);
-      nnodes[1] = lookup(refined, e12);
-      nnodes[2] = lookup(refined, e21);
-      nnodes[3] = lookup(refined, f20);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[3]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[2]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[1]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[0]]);
       nnodes[4] = lookup(refined, i17);
-      nnodes[5] = lookup(refined, f16);
-      nnodes[6] = lookup(refined, f25);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[6]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[5]]);
       nnodes[7] = lookup(refined, i24);
       refined->add_elem(nnodes);
 
       // Top Back
-      nnodes[0] = lookup(refined, e30);
-      nnodes[1] = lookup(refined, f31);
-      nnodes[2] = lookup(refined, e32);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[0]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[1]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[2]]);
       nnodes[3] = onodes[ro[3]];
-      nnodes[4] = lookup(refined, f34);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[4]]);
       nnodes[5] = lookup(refined, i35);
-      nnodes[6] = lookup(refined, f36);
-      nnodes[7] = lookup(refined, e37);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[6]]);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[7]]);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f31);
-      nnodes[1] = lookup(refined, f20);
-      nnodes[2] = lookup(refined, e23);
-      nnodes[3] = lookup(refined, e32);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[1]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[0]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[3]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[2]]);
       nnodes[4] = lookup(refined, i35);
       nnodes[5] = lookup(refined, i24);
-      nnodes[6] = lookup(refined, f27);
-      nnodes[7] = lookup(refined, f36);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[7]]);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[6]]);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f20);
-      nnodes[1] = lookup(refined, e21);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[0]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[1]]);
       nnodes[2] = onodes[ro[2]];
-      nnodes[3] = lookup(refined, e23);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[3]]);
       nnodes[4] = lookup(refined, i24);
-      nnodes[5] = lookup(refined, f25);
-      nnodes[6] = lookup(refined, e26);
-      nnodes[7] = lookup(refined, f27);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[5]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[6]]);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[7]]);
       refined->add_elem(nnodes);
 
       // Front
-      nnodes[0] = lookup(refined, e04);
-      nnodes[1] = lookup(refined, f05);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[4]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[5]]);
       nnodes[2] = lookup(refined, i06);
-      nnodes[3] = lookup(refined, f07);
-      nnodes[4] = lookup(refined, e40);
-      nnodes[5] = lookup(refined, f41);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[7]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[0]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[1]]);
       nnodes[6] = lookup(refined, i42);
-      nnodes[7] = lookup(refined, f43);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[3]]);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f05);
-      nnodes[1] = lookup(refined, f14);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[5]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[4]]);
       nnodes[2] = lookup(refined, i17);
       nnodes[3] = lookup(refined, i06);
-      nnodes[4] = lookup(refined, f41);
-      nnodes[5] = lookup(refined, f50);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[1]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[0]]);
       nnodes[6] = lookup(refined, i53);
       nnodes[7] = lookup(refined, i42);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f14);
-      nnodes[1] = lookup(refined, e15);
-      nnodes[2] = lookup(refined, f16);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[4]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[5]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[6]]);
       nnodes[3] = lookup(refined, i17);
-      nnodes[4] = lookup(refined, f50);
-      nnodes[5] = lookup(refined, e51);
-      nnodes[6] = lookup(refined, f52);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[0]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[1]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[2]]);
       nnodes[7] = lookup(refined, i53);
       refined->add_elem(nnodes);
 
       // Center
-      nnodes[0] = lookup(refined, f07);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[0]], onodes[ro[7]]);
       nnodes[1] = lookup(refined, i06);
       nnodes[2] = lookup(refined, i35);
-      nnodes[3] = lookup(refined, f34);
-      nnodes[4] = lookup(refined, f43);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[4]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[3]]);
       nnodes[5] = lookup(refined, i42);
       nnodes[6] = lookup(refined, i71);
-      nnodes[7] = lookup(refined, f70);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[0]]);
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, i06);
@@ -1159,136 +1106,136 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, i17);
-      nnodes[1] = lookup(refined, f16);
-      nnodes[2] = lookup(refined, f25);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[1]], onodes[ro[6]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[5]]);
       nnodes[3] = lookup(refined, i24);
       nnodes[4] = lookup(refined, i53);
-      nnodes[5] = lookup(refined, f52);
-      nnodes[6] = lookup(refined, f61);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[2]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[1]]);
       nnodes[7] = lookup(refined, i60);
       refined->add_elem(nnodes);
 
       // Back
-      nnodes[0] = lookup(refined, f34);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[4]]);
       nnodes[1] = lookup(refined, i35);
-      nnodes[2] = lookup(refined, f36);
-      nnodes[3] = lookup(refined, e37);
-      nnodes[4] = lookup(refined, f70);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[6]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[7]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[0]]);
       nnodes[5] = lookup(refined, i71);
-      nnodes[6] = lookup(refined, f72);
-      nnodes[7] = lookup(refined, e73);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[2]]);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[3]]);
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, i35);
       nnodes[1] = lookup(refined, i24);
-      nnodes[2] = lookup(refined, f27);
-      nnodes[3] = lookup(refined, f36);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[7]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[3]], onodes[ro[6]]);
       nnodes[4] = lookup(refined, i71);
       nnodes[5] = lookup(refined, i60);
-      nnodes[6] = lookup(refined, f63);
-      nnodes[7] = lookup(refined, f72);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[3]]);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[2]]);
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, i24);
-      nnodes[1] = lookup(refined, f25);
-      nnodes[2] = lookup(refined, e26);
-      nnodes[3] = lookup(refined, f27);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[5]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[6]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[2]], onodes[ro[7]]);
       nnodes[4] = lookup(refined, i60);
-      nnodes[5] = lookup(refined, f61);
-      nnodes[6] = lookup(refined, e62);
-      nnodes[7] = lookup(refined, f63);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[1]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[2]]);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[3]]);
       refined->add_elem(nnodes);
 
       // Bottom Front
-      nnodes[0] = lookup(refined, e40);
-      nnodes[1] = lookup(refined, f41);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[0]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[1]]);
       nnodes[2] = lookup(refined, i42);
-      nnodes[3] = lookup(refined, f43);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[3]]);
       nnodes[4] = onodes[ro[4]];
-      nnodes[5] = lookup(refined, e45);
-      nnodes[6] = lookup(refined, f46);
-      nnodes[7] = lookup(refined, e47);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[5]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[6]]);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[7]]);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f41);
-      nnodes[1] = lookup(refined, f50);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[1]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[0]]);
       nnodes[2] = lookup(refined, i53);
       nnodes[3] = lookup(refined, i42);
-      nnodes[4] = lookup(refined, e45);
-      nnodes[5] = lookup(refined, e54);
-      nnodes[6] = lookup(refined, f57);
-      nnodes[7] = lookup(refined, f46);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[5]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[4]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[7]]);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[6]]);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f50);
-      nnodes[1] = lookup(refined, e51);
-      nnodes[2] = lookup(refined, f52);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[0]]);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[1]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[2]]);
       nnodes[3] = lookup(refined, i53);
-      nnodes[4] = lookup(refined, e54);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[4]]);
       nnodes[5] = onodes[ro[5]];
-      nnodes[6] = lookup(refined, e56);
-      nnodes[7] = lookup(refined, f57);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[6]]);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[7]]);
       refined->add_elem(nnodes);
 
       // Bottom Center
-      nnodes[0] = lookup(refined, f43);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[3]]);
       nnodes[1] = lookup(refined, i42);
       nnodes[2] = lookup(refined, i71);
-      nnodes[3] = lookup(refined, f70);
-      nnodes[4] = lookup(refined, e47);
-      nnodes[5] = lookup(refined, f46);
-      nnodes[6] = lookup(refined, f75);
-      nnodes[7] = lookup(refined, e74);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[0]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[7]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[6]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[5]]);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[4]]);
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, i42);
       nnodes[1] = lookup(refined, i53);
       nnodes[2] = lookup(refined, i60);
       nnodes[3] = lookup(refined, i71);
-      nnodes[4] = lookup(refined, f46);
-      nnodes[5] = lookup(refined, f57);
-      nnodes[6] = lookup(refined, f64);
-      nnodes[7] = lookup(refined, f75);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[4]], onodes[ro[6]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[7]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[4]]);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[5]]);
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, i53);
-      nnodes[1] = lookup(refined, f52);
-      nnodes[2] = lookup(refined, f61);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[2]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[1]]);
       nnodes[3] = lookup(refined, i60);
-      nnodes[4] = lookup(refined, f57);
-      nnodes[5] = lookup(refined, e56);
-      nnodes[6] = lookup(refined, e65);
-      nnodes[7] = lookup(refined, f64);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[7]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[5]], onodes[ro[6]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[5]]);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[4]]);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, f70);
+      nnodes[0] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[0]]);
       nnodes[1] = lookup(refined, i71);
-      nnodes[2] = lookup(refined, f72);
-      nnodes[3] = lookup(refined, e73);
-      nnodes[4] = lookup(refined, e74);
-      nnodes[5] = lookup(refined, f75);
-      nnodes[6] = lookup(refined, e76);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[2]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[3]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[4]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[5]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[6]]);
       nnodes[7] = onodes[ro[7]];
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, i71);
       nnodes[1] = lookup(refined, i60);
-      nnodes[2] = lookup(refined, f63);
-      nnodes[3] = lookup(refined, f72);
-      nnodes[4] = lookup(refined, f75);
-      nnodes[5] = lookup(refined, f64);
-      nnodes[6] = lookup(refined, e67);
-      nnodes[7] = lookup(refined, e76);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[3]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[2]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[5]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[4]]);
+      nnodes[6] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[7]]);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[7]], onodes[ro[6]]);
       refined->add_elem(nnodes);
 
       nnodes[0] = lookup(refined, i60);
-      nnodes[1] = lookup(refined, f61);
-      nnodes[2] = lookup(refined, e62);
-      nnodes[3] = lookup(refined, f63);
-      nnodes[4] = lookup(refined, f64);
-      nnodes[5] = lookup(refined, e65);
+      nnodes[1] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[1]]);
+      nnodes[2] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[2]]);
+      nnodes[3] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[3]]);
+      nnodes[4] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[4]]);
+      nnodes[5] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[5]]);
       nnodes[6] = onodes[ro[6]];
-      nnodes[7] = lookup(refined, e67);
+      nnodes[7] = lookup(refined, edgemap, onodes[ro[6]], onodes[ro[7]]);
       refined->add_elem(nnodes);
     }
     else
