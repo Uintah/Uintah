@@ -11,6 +11,7 @@
     <summary>Display patch centers.</summary>
     <description>
       <p>Version Date: Mon Jan 17 14:15:55 MDT 2001</p><p>Version: 1.0</p>
+      <p> This module merely places a sphere at the center of each patch.</p>
     </description>
   </overview>
   <io>

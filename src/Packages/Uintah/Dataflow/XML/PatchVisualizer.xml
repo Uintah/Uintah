@@ -10,7 +10,10 @@
     </authors>
     <summary>Display the patch boundaries.</summary>
     <description>
-      <p>Version Date: Mon Jan 17 14:15:55 MDT 2001</p><p>Version: 1.0</p>
+      <p>Version Date: Mon Jan 17 14:15:55 MDT 2001</p><p>Version:
+      1.0</p>
+      <p>This module displays the patch boundaries.  If the data has
+      multiple levels a different color will be chosen for each level.</p>
     </description>
   </overview>
   <io>
