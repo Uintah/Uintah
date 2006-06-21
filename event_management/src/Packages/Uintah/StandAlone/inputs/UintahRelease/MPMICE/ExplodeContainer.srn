@@ -5,7 +5,7 @@
   <modules>
     <module id="m1" package="Uintah" category="DataIO" name="ArchiveReader">
       <position x="1" y="7"/>
-      <var name="filebase" val="{/home/guilkey/April24/SCIRun/opt/Packages/Uintah/StandAlone/ExplodeContainer.uda.002}"/>
+      <var name="filebase" val="{}"/>
       <var name="tcl_status" val="{Executing}"/>
       <var name="ui_geometry" val="{641x79+242+883}"/>
     </module>

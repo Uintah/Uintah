@@ -29,6 +29,23 @@
 #ifndef SCI_CONFIG_DEFS_H
 #define SCI_CONFIG_DEFS_H
 
+/* The following system variables are updated by configure, via this line:
+
+AC_CONFIG_HEADER(include/sci_defs/config_testdefs.h)
+
+(While we aren't certain exactly how, the AC_CONFIG_HEADER macro will
+parse the config_testdefs.h.in file [this file] and replace the
+'#define VARIABLE value' with the correct value by testing to see if
+the associated include header file exists/compiles on your system.
+This apparently only works for certain system defined variables.)
+
+If you are looking at this file on the src side (ie, it is named
+'config_testdefs.h.in'), you will see these variables set to '0'.  But
+if you are looking at the already configured file (config_defs.h on
+the binary side), they will have the correct '0' or '1' value.
+
+*/
+
 #define HAVE_LIMITS_H 0
 #define HAVE_SYS_SELECT_H 0
 #define HAVE_UNISTD_H 0

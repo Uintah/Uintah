@@ -11,7 +11,11 @@ SRCS    := $(SRCDIR)/Switcher.cc \
 # do not modify...
 #
 COMPONENTS = Packages/Uintah/CCA/Components
+ifneq ($(IS_WIN),yes)
+# disable ARCHES on windows for now, as we don't know what to do about fortran yet..
+# don't indent these, or fake* will probably fail
 ARCHES = $(COMPONENTS)/Arches $(COMPONENTS)/MPMArches
+endif
 ICE    = $(COMPONENTS)/ICE
 MPM    = $(COMPONENTS)/MPM
 MPMICE = $(COMPONENTS)/MPMICE

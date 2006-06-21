@@ -1,3 +1,4 @@
 #include "../TestSuite/SuiteTree.h"
+#include <Packages/Uintah/testprograms/TestConsecutiveRangeSet/share.h>
 
-SuiteTree* ConsecutiveRangeSetTestTree();
+SCISHARE SuiteTree* ConsecutiveRangeSetTestTree();

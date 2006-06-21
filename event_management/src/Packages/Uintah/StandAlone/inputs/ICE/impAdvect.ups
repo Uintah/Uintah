@@ -197,7 +197,7 @@
               <criteria> Absolute   </criteria>
 
             <!-- Hypre options -->
-            <solver>         hybrid  </solver>
+            <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
             <tolerance>      1.e-10  </tolerance>
             <maxiterations>  7500    </maxiterations>

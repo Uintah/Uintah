@@ -55,45 +55,19 @@ class ArrayEngine {
   
   public:
     // Constructor 
-    ArrayEngine(SCIRun::Module *module_ = 0);  
+    ArrayEngine(SCIRun::ProgressReporter *pr_ = 0);  
     
     // Destructor
-    virtual ~ArrayEngine();
+    ~ArrayEngine();
 
     // Do any arbitrary function with matrices
     bool computesize(ArrayObjectList& Input, int& size);
     bool engine(ArrayObjectList& Input, ArrayObjectList& Output, std::string function);      
 
   private:
-    SCIRun::Module *module_;
-    
-    inline void error(std::string error);
-    inline void warning(std::string warning);
+    SCIRun::ProgressReporter *pr_;
+    bool free_pr_;
 };
-
-inline void ArrayEngine::error(std::string error)
-{
-  if(module_) 
-  {
-    module_->error(error);
-  }
-  else
-  {
-    std::cerr << "ERROR: " << error << std::endl;
-  }
-}
-
-inline void ArrayEngine::warning(std::string warning)
-{
-  if(module_) 
-  {
-    module_->warning(warning);
-  }
-  else
-  {
-    std::cerr << "WARNING: " << warning << std::endl;
-  }
-}
 
 }
 

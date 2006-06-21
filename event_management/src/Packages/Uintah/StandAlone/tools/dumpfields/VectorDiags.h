@@ -12,7 +12,7 @@
 #include "TensorDiags.h"
 
 namespace Uintah {
-  using namespace SCIRun;
+  //using namespace SCIRun;
   
   // produce vector some field
   class VectorDiag : public FieldDiag
@@ -39,16 +39,16 @@ namespace Uintah {
                             ParticleVariable<Vector> & values) const = 0;
   };
   
-  int                numberOfVectorDiags(const TypeDescription * fldtype);
-  std::string        vectorDiagName     (const TypeDescription * fldtype, int idiag);
-  VectorDiag const * createVectorDiag   (const TypeDescription * fldtype, int idiag,
+  int                numberOfVectorDiags(const Uintah::TypeDescription * fldtype);
+  std::string        vectorDiagName     (const Uintah::TypeDescription * fldtype, int idiag);
+  VectorDiag const * createVectorDiag   (const Uintah::TypeDescription * fldtype, int idiag,
                                          const TensorDiag * preop = 0);
   
   void describeVectorDiags(ostream & os);
   
-  list<VectorDiag const *> createVectorDiags(const TypeDescription * fldtype, 
-                                             const FieldSelection & fldselection,
-                                             const TensorDiag * preop = 0);
+  std::list<Uintah::VectorDiag const *> createVectorDiags(const Uintah::TypeDescription * fldtype, 
+                                             const SCIRun::FieldSelection & fldselection,
+                                             const Uintah::TensorDiag * preop = 0);
 }
 
 #endif

@@ -30,6 +30,10 @@
 #include <math.h>
 #include <algorithm>
 
+#ifdef _WIN32
+#define strtoll _strtoi64
+#endif
+
 using namespace SCIRun;
 using namespace std;
 using namespace Uintah;

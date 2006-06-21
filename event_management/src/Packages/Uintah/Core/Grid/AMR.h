@@ -37,6 +37,7 @@ template<class T>
 // find the normalized distance between the coarse and the fine cell cell-center  
 SCISHARE void normalizedDistance_CC(const int refineRatio,vector<double>& norm_dist);  
 
+
 /*___________________________________________________________________
  Function~ linearInterpolation--
  
@@ -511,6 +512,8 @@ template<class T>
   }
 }
 
+
+
 // find the range of values to get from the finePatch that coincides with coarsePatch
 // (we need the finePatch, as the fine level might not entirely overlap the coarse)
 // also get the coarse range to iterate over
@@ -530,5 +533,19 @@ SCISHARE void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLev
 // find the range of a coarse-fine interface along a certain face
 SCISHARE void getCoarseFineFaceRange(const Patch* finePatch, const Level* coarseLevel, Patch::FaceType face,
                                   int interOrder, IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh);
+                                  
+SCISHARE void coarseLevel_CFI_Iterator(Patch::FaceType patchFace,
+                                       const Patch* coarsePatch,  
+                                       const Patch* finePatch,    
+                                       const Level* fineLevel,    
+                                       CellIterator& iter,        
+                                       bool& isRight_CP_FP_pair);
+                                       
+SCISHARE void fineLevel_CFI_Iterator(Patch::FaceType patchFace,
+                                       const Patch* coarsePatch,  
+                                       const Patch* finePatch,    
+                                       CellIterator& iter,
+                                       bool& isRight_CP_FP_pair);                                       
+                                        
 } // end namespace Uintah
 #endif

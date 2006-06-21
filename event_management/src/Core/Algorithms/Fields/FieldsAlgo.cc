@@ -168,6 +168,22 @@ bool FieldsAlgo::DomainBoundary(FieldHandle input,FieldHandle& output, MatrixHan
   }
 }
 
+
+bool FieldsAlgo::IndexedDomainBoundary(FieldHandle input,FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool disconnect)
+{
+  if (disconnect)
+  {
+    DomainBoundary4Algo algo;
+    return(algo.DomainBoundary(pr_,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));  
+  }
+  else
+  {
+    DomainBoundary3Algo algo;
+    return(algo.DomainBoundary(pr_,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
+  }
+}
+
+
 bool FieldsAlgo::ConvertToTetVol(FieldHandle input, FieldHandle& output)
 {
   ConvertToTetVolAlgo algo;

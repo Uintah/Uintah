@@ -660,6 +660,24 @@ FieldInformation::is_float()
 }
 
 bool
+FieldInformation::is_integer()
+{
+  return((data_type == "int")||(data_type == "signed int")||(data_type == "unsigned int"));
+}
+
+bool
+FieldInformation::is_short()
+{
+  return((data_type == "short")||(data_type == "signed short")||(data_type == "unsigned short"));
+}
+
+bool
+FieldInformation::is_char()
+{
+  return((data_type == "char")||(data_type == "signed char")||(data_type == "unsigned char"));
+}
+
+bool
 FieldInformation::is_dvt()
 {
   return(is_double()||is_vector()||is_tensor());
@@ -801,7 +819,99 @@ FieldInformation::is_pointcloud()
 }
 
 bool
+FieldInformation::is_scanline()
+{
+  if (mesh_type == "ScanlineMesh") return (true);
+  return false;
+}
+
+bool
+FieldInformation::is_image()
+{
+  if (mesh_type == "ImageMesh") return (true);
+  return false;
+}
+
+bool
+FieldInformation::is_latvol()
+{
+  if (mesh_type == "LatVolMesh") return (true);
+  return false;
+}
+
+bool
 FieldInformation::is_curve()
+{
+  if (mesh_type == "CurveMesh") return (true);
+  return false;
+}
+
+bool
+FieldInformation::is_trisurf()
+{
+  if (mesh_type == "TriSurfMesh") return (true);
+  return false;
+}
+
+bool
+FieldInformation::is_quadsurf()
+{
+  if (mesh_type == "QuadSurfMesh") return (true);
+  return false;
+}
+
+bool
+FieldInformation::is_tetvol()
+{
+  if (mesh_type == "TetVolMesh") return (true);
+  return false;
+}
+
+bool
+FieldInformation::is_prismvol()
+{
+  if (mesh_type == "PrismVolMesh") return (true);
+  return false;
+}
+
+bool
+FieldInformation::is_hexvol()
+{
+  if (mesh_type == "HexVolMesh") return (true);
+  return false;
+}
+
+bool
+FieldInformation::is_structcurve()
+{
+  if (mesh_type == "StructCurveMesh") return (true);
+  return false;
+}
+
+bool
+FieldInformation::is_structquadsurf()
+{
+  if (mesh_type == "StructQuadSurfMesh") return (true);
+  return false;
+}
+
+bool
+FieldInformation::is_structhexvol()
+{
+  if (mesh_type == "StructHexVolMesh") return (true);
+  return false;
+}
+
+
+bool
+FieldInformation::is_point()
+{
+  if (mesh_type == "PointCloudMesh") return (true);
+  return false;
+}
+
+bool
+FieldInformation::is_line()
 {
   if ((mesh_type == "CurveMesh")||(mesh_type == "ScanlineMesh")||(mesh_type == "StructCurveMesh")) return (true);
   return false;

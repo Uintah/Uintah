@@ -94,6 +94,9 @@ class SCISHARE FieldInformation {
     bool        is_scalar();
     bool        is_double();
     bool        is_float();
+    bool        is_integer();
+    bool        is_short();
+    bool        is_char();
     bool        is_dvt();
     
     bool        is_regularmesh();
@@ -101,7 +104,21 @@ class SCISHARE FieldInformation {
     bool        is_unstructuredmesh();
     
     bool        is_pointcloud();
+    bool        is_scanline();
+    bool        is_image();
+    bool        is_latvol();
     bool        is_curve();
+    bool        is_trisurf();
+    bool        is_quadsurf();
+    bool        is_tetvol();
+    bool        is_prismvol();
+    bool        is_hexvol();
+    bool        is_structcurve();    
+    bool        is_structquadsurf();    
+    bool        is_structhexvol();
+    
+    bool        is_point();
+    bool        is_line();
     bool        is_surface();
     bool        is_volume();
     

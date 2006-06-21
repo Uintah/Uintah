@@ -132,7 +132,7 @@ public:
 
   ////////////////
   // Set movie recording values.
-  //   - state of 0 means stop recording.
+  //   - stops recording a movie
   void                  setMovieStopped();
   //   - set the frame at which to start numbering output files
   void                  setMovieFrame( int movieframe );

@@ -146,7 +146,7 @@ ICE::~ICE()
     VarLabel::destroy(tvar->var_Lagrangian);
     delete tvar;
   }
-  
+  cout_doing << d_myworld->myrank() << " Doing: destorying refluxing variables " << endl;
   // delete refluxing variables
   vector<AMR_refluxVariable*>::iterator iter;
   for( iter  = d_modelSetup->d_reflux_vars.begin();
@@ -158,12 +158,6 @@ ICE::~ICE()
   } 
   
   // delete models
-#if 0
-  for(vector<ModelInterface*>::iterator iter = d_models.begin();
-      iter != d_models.end(); iter++) {
-    delete *iter; 
-  }
-#endif
   if(d_modelInfo){
     delete d_modelInfo;
   }
@@ -171,6 +165,7 @@ ICE::~ICE()
     delete d_modelSetup;
   }
   releasePort("solver");
+  
 }
 
 bool ICE::restartableTimesteps()
@@ -2000,6 +1995,21 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
 
   const Level* level = getLevel(patches);
   int L_indx = level->getIndex();
+  
+  
+  //__________________________________
+  // find max index of all the ICE matls
+  // you could have a 1 matl problem with a starting indx of 2
+  int max_indx = -100;
+  
+  int numICEMatls = d_sharedState->getNumICEMatls();
+  for (int m = 0; m < numICEMatls; m++ ){
+    ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
+    int indx= ice_matl->getDWIndex();
+    max_indx = max(max_indx, indx);
+  }
+  d_max_iceMatl_indx = max_indx;
+  max_indx +=1;   
 
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
@@ -2009,15 +2019,15 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     int numALLMatls = d_sharedState->getNumMatls();
     Vector grav     = d_sharedState->getGravity();
     StaticArray<constCCVariable<double> > placeHolder(0);
-    StaticArray<CCVariable<double>   > rho_micro(numMatls);
-    StaticArray<CCVariable<double>   > sp_vol_CC(numMatls);
-    StaticArray<CCVariable<double>   > rho_CC(numMatls); 
-    StaticArray<CCVariable<double>   > Temp_CC(numMatls);
-    StaticArray<CCVariable<double>   > speedSound(numMatls);
-    StaticArray<CCVariable<double>   > vol_frac_CC(numMatls);
-    StaticArray<CCVariable<Vector>   > vel_CC(numMatls);
-    StaticArray<CCVariable<double>   > cv(numMatls);
-    StaticArray<CCVariable<double>   > gamma(numMatls);
+    StaticArray<CCVariable<double>   > rho_micro(max_indx);
+    StaticArray<CCVariable<double>   > sp_vol_CC(max_indx);
+    StaticArray<CCVariable<double>   > rho_CC(max_indx); 
+    StaticArray<CCVariable<double>   > Temp_CC(max_indx);
+    StaticArray<CCVariable<double>   > speedSound(max_indx);
+    StaticArray<CCVariable<double>   > vol_frac_CC(max_indx);
+    StaticArray<CCVariable<Vector>   > vel_CC(max_indx);
+    StaticArray<CCVariable<double>   > cv(max_indx);
+    StaticArray<CCVariable<double>   > gamma(max_indx);
     CCVariable<double>    press_CC, imp_initialGuess;
     
     new_dw->allocateAndPut(press_CC,         lb->press_CCLabel,     0,patch);
@@ -2030,13 +2040,13 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx= ice_matl->getDWIndex();
       CCVariable<double> viscosity, thermalCond;
-      new_dw->allocateAndPut(viscosity,     lb->viscosityLabel,    indx,patch);
-      new_dw->allocateAndPut(thermalCond,   lb->thermalCondLabel,  indx,patch);
-      new_dw->allocateAndPut(cv[m],         lb->specific_heatLabel,indx,patch);
-      new_dw->allocateAndPut(gamma[m],      lb->gammaLabel,        indx,patch);
-      
-      gamma[m].initialize(    ice_matl->getGamma());
-      cv[m].initialize(       ice_matl->getSpecificHeat());    
+      new_dw->allocateAndPut(viscosity,    lb->viscosityLabel,    indx,patch);
+      new_dw->allocateAndPut(thermalCond,  lb->thermalCondLabel,  indx,patch);
+      new_dw->allocateAndPut(cv[indx],     lb->specific_heatLabel,indx,patch);
+      new_dw->allocateAndPut(gamma[indx],  lb->gammaLabel,        indx,patch);
+
+      gamma[indx].initialize( ice_matl->getGamma());
+      cv[indx].initialize(    ice_matl->getSpecificHeat());    
       viscosity.initialize  ( ice_matl->getViscosity());
       thermalCond.initialize( ice_matl->getThermalConductivity());
       
@@ -2057,13 +2067,13 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     for (int m = 0; m < numMatls; m++ ) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx= ice_matl->getDWIndex();
-      new_dw->allocateAndPut(rho_micro[m],  lb->rho_micro_CCLabel, indx,patch); 
-      new_dw->allocateAndPut(sp_vol_CC[m],  lb->sp_vol_CCLabel,    indx,patch); 
-      new_dw->allocateAndPut(rho_CC[m],     lb->rho_CCLabel,       indx,patch); 
-      new_dw->allocateAndPut(Temp_CC[m],    lb->temp_CCLabel,      indx,patch); 
-      new_dw->allocateAndPut(speedSound[m], lb->speedSound_CCLabel,indx,patch); 
-      new_dw->allocateAndPut(vol_frac_CC[m],lb->vol_frac_CCLabel,  indx,patch); 
-      new_dw->allocateAndPut(vel_CC[m],     lb->vel_CCLabel,       indx,patch);
+      new_dw->allocateAndPut(rho_micro[indx],  lb->rho_micro_CCLabel, indx,patch); 
+      new_dw->allocateAndPut(sp_vol_CC[indx],  lb->sp_vol_CCLabel,    indx,patch); 
+      new_dw->allocateAndPut(rho_CC[indx],     lb->rho_CCLabel,       indx,patch); 
+      new_dw->allocateAndPut(Temp_CC[indx],    lb->temp_CCLabel,      indx,patch); 
+      new_dw->allocateAndPut(speedSound[indx], lb->speedSound_CCLabel,indx,patch); 
+      new_dw->allocateAndPut(vol_frac_CC[indx],lb->vol_frac_CCLabel,  indx,patch); 
+      new_dw->allocateAndPut(vel_CC[indx],     lb->vel_CCLabel,       indx,patch);
     }
 
     
@@ -2072,28 +2082,28 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
     for (int m = 0; m < numMatls; m++ ) {
       ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
       int indx = ice_matl->getDWIndex();
-      ice_matl->initializeCells(rho_micro[m],  rho_CC[m],
-                                Temp_CC[m],    speedSound[m], 
-                                vol_frac_CC[m], vel_CC[m], 
+      ice_matl->initializeCells(rho_micro[indx],  rho_CC[indx],
+                                Temp_CC[indx],    speedSound[indx], 
+                                vol_frac_CC[indx], vel_CC[indx], 
                                 press_CC, numALLMatls, patch, new_dw);
       
       // if specified, overide the initialization             
-      customInitialization( patch,rho_CC[m], Temp_CC[m],vel_CC[m], press_CC,
+      customInitialization( patch,rho_CC[indx], Temp_CC[indx],vel_CC[indx], press_CC,
                             ice_matl, d_customInitialize_basket);
                                                     
-      setBC(rho_CC[m],     "Density",     patch, d_sharedState, indx, new_dw);
-      setBC(rho_micro[m],  "Density",     patch, d_sharedState, indx, new_dw);
-      setBC(Temp_CC[m],    "Temperature", patch, d_sharedState, indx, new_dw);
-      setBC(speedSound[m], "zeroNeumann", patch, d_sharedState, indx, new_dw); 
-      setBC(vel_CC[m],     "Velocity",    patch, d_sharedState, indx, new_dw); 
+      setBC(rho_CC[indx],     "Density",     patch, d_sharedState, indx, new_dw);
+      setBC(rho_micro[indx],  "Density",     patch, d_sharedState, indx, new_dw);
+      setBC(Temp_CC[indx],    "Temperature", patch, d_sharedState, indx, new_dw);
+      setBC(speedSound[indx], "zeroNeumann", patch, d_sharedState, indx, new_dw); 
+      setBC(vel_CC[indx],     "Velocity",    patch, d_sharedState, indx, new_dw); 
       setBC(press_CC, rho_micro, placeHolder, d_surroundingMatl_indx, 
             "rho_micro","Pressure", patch, d_sharedState, 0, new_dw);
             
       for (CellIterator iter = patch->getExtraCellIterator();
                                                         !iter.done();iter++){
         IntVector c = *iter;
-        sp_vol_CC[m][c] = 1.0/rho_micro[m][c];
-        vol_frac_CC[m][c] = rho_CC[m][c]*sp_vol_CC[m][c];  //needed for LODI BCs
+        sp_vol_CC[indx][c] = 1.0/rho_micro[indx][c];
+        vol_frac_CC[indx][c] = rho_CC[indx][c]*sp_vol_CC[indx][c];  //needed for LODI BCs
       }
       
       //____ B U L L E T   P R O O F I N G----
@@ -2105,15 +2115,15 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
         warn << base.str()<< neg_cell << " press_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
-      if( !areAllValuesPositive(rho_CC[m], neg_cell) ) {
+      if( !areAllValuesPositive(rho_CC[indx], neg_cell) ) {
         warn << base.str()<< neg_cell << " rho_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
-      if( !areAllValuesPositive(Temp_CC[m], neg_cell) ) {
+      if( !areAllValuesPositive(Temp_CC[indx], neg_cell) ) {
         warn << base.str()<< neg_cell << " Temp_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
-      if( !areAllValuesPositive(sp_vol_CC[m], neg_cell) ) {
+      if( !areAllValuesPositive(sp_vol_CC[indx], neg_cell) ) {
         warn << base.str()<< neg_cell << " sp_vol_CC is negative\n";
         throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
       }
@@ -2128,12 +2138,12 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
         int indx = ice_matl->getDWIndex();
         ostringstream desc;      
         desc << "Initialization_Mat_" << indx << "_patch_"<< patch->getID();
-        printData(indx, patch,   1, desc.str(), "rho_CC",      rho_CC[m]);
-        printData(indx, patch,   1, desc.str(), "rho_micro_CC",rho_micro[m]);
-        printData(indx, patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC[m]);
-        printData(indx, patch,   1, desc.str(), "Temp_CC",     Temp_CC[m]);
-        printData(indx, patch,   1, desc.str(), "vol_frac_CC", vol_frac_CC[m]);
-        printVector(indx, patch, 1, desc.str(), "vel_CC", 0,   vel_CC[m]);;
+        printData(indx, patch,   1, desc.str(), "rho_CC",      rho_CC[indx]);
+        printData(indx, patch,   1, desc.str(), "rho_micro_CC",rho_micro[indx]);
+        printData(indx, patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC[indx]);
+        printData(indx, patch,   1, desc.str(), "Temp_CC",     Temp_CC[indx]);
+        printData(indx, patch,   1, desc.str(), "vol_frac_CC", vol_frac_CC[indx]);
+        printVector(indx, patch, 1, desc.str(), "vel_CC", 0,   vel_CC[indx]);;
       }   
     }
   }  // patch loop 

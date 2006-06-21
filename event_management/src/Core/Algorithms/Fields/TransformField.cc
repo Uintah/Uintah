@@ -80,6 +80,8 @@ bool TransformFieldAlgo::TransformField(ProgressReporter *pr, FieldHandle input,
   
   fi.fill_compile_info(ci);
   
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;  
+  
   // Handle dynamic compilation
   SCIRun::Handle<TransformFieldAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))

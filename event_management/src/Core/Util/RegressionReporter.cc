@@ -31,23 +31,35 @@
 
 namespace SCIRun {
 
+RegressionReporter::RegressionReporter() :
+  log_("regression.log")
+{
+}
+
+RegressionReporter::RegressionReporter(std::string logname) :
+  log_(logname)
+{
+}
 
 void
 RegressionReporter::error(const std::string& msg)
 {
   std::cout << "REGRESSION TEST ERROR: " << msg << std::endl;
+  log_.putmsg(std::string("REGRESSION TEST ERROR: ") + msg);
 }
 
 
 void
 RegressionReporter::warning(const std::string& msg)
 {
+  log_.putmsg(std::string("REGRESSION TEST WARNING: ") + msg);
 }
 
 
 void
 RegressionReporter::remark(const std::string& msg)
 {
+  log_.putmsg(std::string("REGRESSION TEST REMARK: ") + msg);
 }
 
 
@@ -55,12 +67,14 @@ void
 RegressionReporter::compile_error(const std::string &filename)
 {
   std::cerr << "REGRESSION TEST DYNAMIC COMPILE FAILURE IN FILE: " << filename << "cc" << std::endl;
+  log_.putmsg(std::string("REGRESSION TEST DYNAMIC COMPILE FAILURE IN FILE: ") + filename + "cc");
 }
 
 
 void
 RegressionReporter::add_raw_message(const std::string& msg)
 {
+  log_.putmsg(msg);
 }
 
 
@@ -81,6 +95,7 @@ RegressionReporter::regression_error(const std::string& msg)
 std::ostream &
 RegressionReporter::msg_stream()
 {
+  return std::cout;
 }
 
 

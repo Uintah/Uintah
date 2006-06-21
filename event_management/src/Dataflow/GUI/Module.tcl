@@ -846,7 +846,8 @@ itcl_class Module {
 
 		if { [info exists ModuleSubstitutedVars($module)] && \
 			 [lsearch $ModuleSubstitutedVars($module) $var]!=-1} {
-		    netedit add-mod-var $prefix $varname [subDATADIRandDATASET $val]
+		    set newval [subDATADIRandDATASET $val]
+		    netedit add-mod-var $prefix $varname \{$newval\}
 		} else {
 		    if { ![string is integer $val] && [string is double $val]} {
 			set failed [catch "set num [format %.[string length $val]e $val]"]

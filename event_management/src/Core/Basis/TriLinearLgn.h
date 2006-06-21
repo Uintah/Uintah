@@ -275,6 +275,13 @@ template <class T>
 T TriGaussian3<T>::GaussianWeights[7] = 
   {0.1259391805, 0.1259391805, 0.1259391805, 0.1323941527, 0.1323941527, 0.1323941527, 0.225};
 
+#ifdef _WIN32
+// force the instantiation of TriGaussian3<double>
+template class TriGaussian1<double>;
+template class TriGaussian2<double>;
+template class TriGaussian3<double>;
+#endif
+
 
 //! Class for handling of element of type triangle with 
 //! linear lagrangian interpolation

@@ -4,9 +4,9 @@
 #include <stdlib.h>
 #ifndef _WIN32
 #include <unistd.h>
+#include <sys/time.h>
 #endif
 #include <math.h>
-#include <sys/time.h>
 #include <iostream>
 
 using namespace std;

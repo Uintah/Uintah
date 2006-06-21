@@ -37,7 +37,7 @@ namespace SCIRunAlgo {
 
 using namespace SCIRun;
 
-class RegressionAlgo : public AlgoLibrary {
+class SCISHARE RegressionAlgo : public AlgoLibrary {
 
   public:
     // Constructor
@@ -55,6 +55,12 @@ class RegressionAlgo : public AlgoLibrary {
     bool CompareNrrds(NrrdDataHandle& nrrd1, NrrdDataHandle& nrrd2);
     bool CompareStrings(StringHandle& string1, StringHandle& string2);
     bool CompareBundles(BundleHandle& bundle1, BundleHandle& bundle2);
+
+    // Functions for selecting fields of the proper type
+    
+    bool FindTestFields(std::vector<FieldHandle> fields, std::vector<FieldHandle>& testfields, std::string fieldtypes = "");
+    bool FindTestField(std::vector<FieldHandle> fields, FieldHandle& testfield, std::string name);
+    bool LoadTestFields(std::vector<FieldHandle>& fields);
 
 };
 

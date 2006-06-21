@@ -96,6 +96,7 @@ SRCS := \
         $(SRCDIR)/EditPath.tcl \
         $(SRCDIR)/EditColorMap2D.tcl \
         $(SRCDIR)/ErrorMetric.tcl \
+	$(SRCDIR)/ExtractHexSheet.tcl \
         $(SRCDIR)/FieldArbitrarySlicer.tcl\
         $(SRCDIR)/FieldCage.tcl\
         $(SRCDIR)/FieldFrenet.tcl\
@@ -117,6 +118,7 @@ SRCS := \
 	$(SRCDIR)/InsertHexSheet.tcl \
         $(SRCDIR)/Isosurface.tcl \
         $(SRCDIR)/IsoClip.tcl \
+        $(SRCDIR)/IsoRefine.tcl \
         $(SRCDIR)/LightWidget.tcl \
         $(SRCDIR)/LinAlgBinary.tcl \
         $(SRCDIR)/LinAlgUnary.tcl \

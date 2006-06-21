@@ -1,3 +1,4 @@
 #include "../TestSuite/SuiteTree.h"
 
-SuiteTree* matrix3TestTree();
+#include <Packages/Uintah/testprograms/TestMatrix3/share.h>
+SCISHARE SuiteTree* matrix3TestTree();

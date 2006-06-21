@@ -2,9 +2,9 @@
 #define Packages_Uintah_CCA_Components_ICE_AMRICE_h
 
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
+#include <Packages/Uintah/Core/Grid/AMR.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/AMRInterpolate.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
 
@@ -159,7 +159,13 @@ namespace Uintah {
                                       const MaterialSubset*,
                                        DataWarehouse*,
                                        DataWarehouse*);
-                        
+                                       
+    void reflux_BP_count_CFI_cells(const ProcessorGroup*,
+                                   const PatchSubset* coarsePatches,
+                                   const MaterialSubset*,
+                                   DataWarehouse*,
+                                   DataWarehouse*);
+                                                           
     void reflux_BP_check_CFI_cells(const ProcessorGroup*,
                                    const PatchSubset* finePatches,
                                    const MaterialSubset*,
@@ -273,7 +279,7 @@ void ICE::refluxOperator_applyCorrectionFluxes(
       // Add fine patch face fluxes correction to the coarse cells
       // c_CC:    coarse level cell center index
       // c_FC:    coarse level face center index
-      int count = finePatch->getFaceMark(patchFace);
+      int count = finePatch->getFaceMark(0, patchFace);
       
       if(patchFace == Patch::xminus || patchFace == Patch::xplus){
         for(; !c_iter.done(); c_iter++){
@@ -282,7 +288,7 @@ void ICE::refluxOperator_applyCorrectionFluxes(
           q_CC_coarse[c_CC] += Q_X_coarse_flux[c_FC];
                 
           count += one_zero;                       // keep track of how that face                        
-          finePatch->setFaceMark(patchFace,count); // has been touched
+          finePatch->setFaceMark(0,patchFace,count); // has been touched
         }
       }
       if(patchFace == Patch::yminus || patchFace == Patch::yplus){
@@ -292,7 +298,7 @@ void ICE::refluxOperator_applyCorrectionFluxes(
           q_CC_coarse[c_CC] += Q_Y_coarse_flux[c_FC];
           
           count += one_zero;                              
-          finePatch->setFaceMark(patchFace,count);
+          finePatch->setFaceMark(0,patchFace,count);
         }
       }
       if(patchFace == Patch::zminus || patchFace == Patch::zplus){
@@ -302,7 +308,7 @@ void ICE::refluxOperator_applyCorrectionFluxes(
           q_CC_coarse[c_CC] += Q_Z_coarse_flux[c_FC];
           
           count += one_zero;                              
-          finePatch->setFaceMark(patchFace,count);
+          finePatch->setFaceMark(0,patchFace,count);
         }
       }
     }  // is the right coarse/fine patch pair
@@ -738,7 +744,7 @@ void ICE::refluxOperator_computeCorrectionFluxes(
       // Add fine patch face fluxes to the coarse cells
       // c_CC f_CC:    coarse/fine level cell center index
       // c_FC f_FC:    coarse/fine level face center index
-      int count = finePatch->getFaceMark(patchFace);
+      int count = finePatch->getFaceMark(0, patchFace);
       if(patchFace == Patch::xminus || patchFace == Patch::xplus){    // X+ X-
         
         //__________________________________
@@ -768,7 +774,7 @@ void ICE::refluxOperator_computeCorrectionFluxes(
            Q_X_coarse_flux[c_FC] = ( c_FaceNormal*Q_X_coarse_flux_org[c_FC] + coeff* f_FaceNormal*sum_fineLevelFlux) /denominator;
 
            count += one_zero;                              
-           finePatch->setFaceMark(patchFace,count);
+           finePatch->setFaceMark(0,patchFace,count);
 /*`==========TESTING==========*/
 #if SPEW
         if (c_CC.y() == half.y() && c_CC.z() == half.z() ) {
@@ -810,7 +816,7 @@ void ICE::refluxOperator_computeCorrectionFluxes(
            Q_Y_coarse_flux[c_FC] = (c_FaceNormal*Q_Y_coarse_flux_org[c_FC] + coeff*f_FaceNormal*sum_fineLevelFlux) /denominator;
 
            count += one_zero;                       // keep track of how many times              
-           finePatch->setFaceMark(patchFace,count); // the face has been touched
+           finePatch->setFaceMark(0,patchFace,count); // the face has been touched
 /*`==========TESTING==========*/
 #if SPEW
         if (c_CC.x() == half.x() && c_CC.z() == half.z() ) {
@@ -851,7 +857,7 @@ void ICE::refluxOperator_computeCorrectionFluxes(
            Q_Z_coarse_flux[c_FC] = (c_FaceNormal*Q_Z_coarse_flux_org[c_FC] + coeff*f_FaceNormal*sum_fineLevelFlux) /denominator;
            
             count += one_zero;                              
-           finePatch->setFaceMark(patchFace,count);
+           finePatch->setFaceMark(0,patchFace,count);
 /*`==========TESTING==========*/
 #if SPEW
         if (c_CC.x() == half.x() && c_CC.y() == half.y() ) {

@@ -148,15 +148,15 @@ static Tk_ConfigSpec configSpecs[] = {
 Tk_ItemType TkBLineType = {
     "bline",				/* name */
     sizeof(BLineItem),			/* itemSize */
-    CreateBLine,				/* createProc */
+    (Tk_ItemCreateProc *)CreateBLine,   /* createProc */
     configSpecs,			/* configSpecs */
-    ConfigureBLine,			/* configureProc */
-    BLineCoords,				/* coordProc */
-    DeleteBLine,				/* deleteProc */
+    (Tk_ItemConfigureProc *)ConfigureBLine, /* configureProc */
+    (Tk_ItemCoordProc *)BLineCoords,	/* coordProc */
+    DeleteBLine,			/* deleteProc */
     DisplayBLine,			/* displayProc */
     0,					/* alwaysRedraw */
     BLineToPoint,			/* pointProc */
-    BLineToArea,				/* areaProc */
+    BLineToArea,			/* areaProc */
     BLineToPostscript,			/* postscriptProc */
     ScaleBLine,				/* scaleProc */
     TranslateBLine,			/* translateProc */

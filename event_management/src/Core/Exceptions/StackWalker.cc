@@ -494,7 +494,8 @@ private:
     while (keepGoing)
     {
       // don't know why, but we get problems with this one...
-      if (string(me.szExePath).find("ProblemSpecification") == string::npos) {
+      if (string(me.szExePath).find("ProblemSpecification") == string::npos && 
+          string(me.szExePath).find("SimulationController") == string::npos) {
         this->LoadModule(hProcess, me.szExePath, me.szModule, (DWORD64) me.modBaseAddr, me.modBaseSize);
         cnt++;
       }

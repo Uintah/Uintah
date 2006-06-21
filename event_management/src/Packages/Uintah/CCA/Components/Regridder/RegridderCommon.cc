@@ -26,6 +26,14 @@ RegridderCommon::RegridderCommon(const ProcessorGroup* pg) : Regridder(), Uintah
   rdbg << "RegridderCommon::RegridderCommon() BGN" << endl;
   d_filterType = FILTER_STAR;
   d_lastRegridTimestep = 0;
+  d_dilatedCellsCreationLabel  = VarLabel::create("DilatedCellsCreation",
+                             CCVariable<int>::getTypeDescription());
+#if 0
+  d_dilatedCellsCreationOldLabel  = VarLabel::create("DilatedCellsCreationOld",
+                             CCVariable<int>::getTypeDescription());
+#endif
+  d_dilatedCellsDeletionLabel = VarLabel::create("DilatedCellsDeletion",
+                             CCVariable<int>::getTypeDescription());
   rdbg << "RegridderCommon::RegridderCommon() END" << endl;
 }
 
@@ -365,11 +373,53 @@ void RegridderCommon::initFilter(CCVariable<int>& filter, FilterType ft, IntVect
   }
 }
 
+void RegridderCommon::scheduleDilation(SchedulerP& sched, const LevelP& level)
+{
+
+  if (level->getIndex() >= d_maxLevels)
+    return;
+  // dilate flagged cells on this level
+  Task* dilate_task = scinew Task("RegridderCommon::Dilate Creation", this,
+				  &RegridderCommon::Dilate, DILATE_CREATION);
+
+  int ngc = Max(d_cellCreationDilation.x(), d_cellCreationDilation.y());
+  ngc = Max(ngc, d_cellCreationDilation.z());
+  
+  dilate_task->requires(Task::NewDW, d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials(),
+			Ghost::AroundCells, ngc);
+
+  // we need this task on the init task, but will get bad if you require from old on the init task :)
+  if (sched->get_dw(0) != 0)
+    dilate_task->requires(Task::OldDW, d_dilatedCellsCreationLabel, Ghost::None, 0);
+  dilate_task->computes(d_dilatedCellsCreationLabel);
+  dilate_task->computes(d_dilatedCellsCreationOldLabel);
+  sched->addTask(dilate_task, level->eachPatch(), d_sharedState->allMaterials());
+#if 0
+  if (d_cellCreationDilation != d_cellDeletionDilation) {
+    // dilate flagged cells (for deletion) on this level)
+    Task* dilate_delete_task = scinew Task("RegridderCommon::Dilate Deletion",
+					   dynamic_cast<RegridderCommon*>(this),
+					   &RegridderCommon::Dilate,
+					   DILATE_DELETION, old_dw);
+    
+    ngc = Max(d_cellDeletionDilation.x(), d_cellDeletionDilation.y());
+    ngc = Max(ngc, d_cellDeletionDilation.z());
+    
+    dilate_delete_task->requires(Task::OldDW, d_sharedState->get_refineFlag_label(), 
+				 d_sharedState->refineFlagMaterials(), Ghost::AroundCells, ngc);
+    dilate_delete_task->computes(d_dilatedCellsDeletionLabel);
+    tempsched->addTask(dilate_delete_task, oldGrid->getLevel(levelIndex)->eachPatch(), 
+		       d_sharedState->allMaterials());
+  }
+#endif
+  
+}
+
 void RegridderCommon::Dilate(const ProcessorGroup*,
-			      const PatchSubset* patches,
-			      const MaterialSubset* ,
-			      DataWarehouse* /*old_dw*/,
-			      DataWarehouse* new_dw, DilationType type, DataWarehouse* get_dw)
+			     const PatchSubset* patches,
+			     const MaterialSubset* ,
+			     DataWarehouse* old_dw,
+			     DataWarehouse* new_dw, DilationType type)
 {
   rdbg << "RegridderCommon::Dilate() BGN" << endl;
 
@@ -405,7 +455,21 @@ void RegridderCommon::Dilate(const ProcessorGroup*,
     constCCVariable<int> flaggedCells;
     CCVariable<int> dilatedFlaggedCells;
 
-    get_dw->get(flaggedCells, to_get, 0, patch, Ghost::AroundCells, ngc);
+#if 0    
+    CCVariable<int> dilatedFlaggedOldCells;
+
+    if (old_dw && old_dw->exists(d_dilatedCellsCreationLabel, 0, patch)) {
+      constCCVariable<int> oldDilated;
+      old_dw->get(oldDilated, d_dilatedCellsCreationLabel, 0, patch, Ghost::None, 0);
+      dilatedFlaggedOldCells.copyPointer(oldDilated.castOffConst());
+      new_dw->put(dilatedFlaggedOldCells, d_dilatedCellsCreationOldLabel, 0, patch);
+    }
+    else {
+      new_dw->allocateAndPut(dilatedFlaggedOldCells, d_dilatedCellsCreationOldLabel, 0, patch);
+      dilatedFlaggedOldCells.initialize(0);
+    }
+#endif
+    new_dw->get(flaggedCells, to_get, 0, patch, Ghost::AroundCells, ngc);
     new_dw->allocateAndPut(dilatedFlaggedCells, to_put, 0, patch);
 
     IntVector flagLow = patch->getLowIndex();

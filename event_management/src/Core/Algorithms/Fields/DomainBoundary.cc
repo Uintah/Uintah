@@ -96,6 +96,8 @@ bool DomainBoundaryAlgo::DomainBoundary(ProgressReporter *pr, FieldHandle input,
   fi.fill_compile_info(ci);
   fo.fill_compile_info(ci);
   
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;
+    
   // Handle dynamic compilation
   SCIRun::Handle<DomainBoundaryAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
@@ -174,6 +176,8 @@ bool DomainBoundary2Algo::DomainBoundary(ProgressReporter *pr, FieldHandle input
   fi.fill_compile_info(ci);
   fo.fill_compile_info(ci);
   
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;    
+  
   // Handle dynamic compilation
   SCIRun::Handle<DomainBoundary2Algo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
@@ -185,6 +189,171 @@ bool DomainBoundary2Algo::DomainBoundary(ProgressReporter *pr, FieldHandle input
 
   return(algo->DomainBoundary(pr,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
 }
+
+
+bool DomainBoundary3Algo::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
+{
+  if (input.get_rep() == 0)
+  {
+    pr->error("DomainBoundary: No input field");
+    return (false);
+  }
+
+  FieldInformation fi(input);
+  FieldInformation fo(input);
+  
+  if (fi.is_nonlinear())
+  {
+    pr->error("DomainBoundary: This function has not yet been defined for non-linear elements");
+    return (false);
+  }
+  
+  if (!(fi.is_constantdata()))
+  {
+    pr->error("DomainBoundary: This function needs a compartment definition on the elements (constant element data)");
+    return (false);    
+  }
+  
+  if (!(fi.is_volume()||fi.is_surface()))
+  {
+    pr->error("DomainBoundary: THis function is only defined for surface and volume data");
+    return (false);
+  }
+
+  std::string mesh_type = fi.get_mesh_type();
+  if ((mesh_type == "LatVolMesh")||(mesh_type == "StructHexVolMesh")||(mesh_type == "HexVolMesh"))
+  {
+    fo.set_mesh_type("QuadSurfMesh");
+  }
+  else if ((mesh_type == "ImageMesh")||(mesh_type == "StructQuadSurfMesh")||(mesh_type == "QuadSurfMesh")||(mesh_type == "TriSurfMesh"))
+  {
+    fo.set_mesh_type("CurveMesh");
+  }
+  else if (mesh_type == "TetVolMesh")
+  {
+    fo.set_mesh_type("TriSurfMesh");
+  }
+  else
+  {
+    pr->error("No method available for mesh: " + mesh_type);
+    return (false);
+  }
+
+  fo.make_constantdata();
+  fo.make_vector();
+
+  // Setup dynamic files
+
+  SCIRun::CompileInfoHandle ci = scinew CompileInfo(
+    "ALGODomainBoundary3."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
+    "DomainBoundary3Algo","DomainBoundary3AlgoT",
+    fi.get_field_name() + "," + fo.get_field_name());
+
+  ci->add_include(TypeDescription::cc_to_h(__FILE__));
+  ci->add_namespace("SCIRunAlgo");
+  ci->add_namespace("SCIRun");
+  
+  fi.fill_compile_info(ci);
+  fo.fill_compile_info(ci);
+  
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;
+    
+  // Handle dynamic compilation
+  SCIRun::Handle<DomainBoundary3Algo> algo;
+  if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
+  {
+    pr->compile_error(ci->filename_);
+//    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+    return(false);
+  }
+
+  return(algo->DomainBoundary(pr,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
+}
+
+
+
+bool DomainBoundary4Algo::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
+{
+  if (input.get_rep() == 0)
+  {
+    pr->error("DomainBoundary: No input field");
+    return (false);
+  }
+
+  FieldInformation fi(input);
+  FieldInformation fo(input);
+  
+  if (fi.is_nonlinear())
+  {
+    pr->error("DomainBoundary: This function has not yet been defined for non-linear elements");
+    return (false);
+  }
+  
+  if (!(fi.is_constantdata()))
+  {
+    pr->error("DomainBoundary: This function needs a compartment definition on the elements (constant element data)");
+    return (false);    
+  }
+  
+  if (!(fi.is_volume()||fi.is_surface()))
+  {
+    pr->error("DomainBoundary: THis function is only defined for surface and volume data");
+    return (false);
+  }
+
+  std::string mesh_type = fi.get_mesh_type();
+  if ((mesh_type == "LatVolMesh")||(mesh_type == "StructHexVolMesh")||(mesh_type == "HexVolMesh"))
+  {
+    fo.set_mesh_type("QuadSurfMesh");
+  }
+  else if ((mesh_type == "ImageMesh")||(mesh_type == "StructQuadSurfMesh")||(mesh_type == "QuadSurfMesh")||(mesh_type == "TriSurfMesh"))
+  {
+    fo.set_mesh_type("CurveMesh");
+  }
+  else if (mesh_type == "TetVolMesh")
+  {
+    fo.set_mesh_type("TriSurfMesh");
+  }
+  else
+  {
+    pr->error("No method available for mesh: " + mesh_type);
+    return (false);
+  }
+
+  fo.make_constantdata();
+  fo.make_vector();
+
+  // Setup dynamic files
+
+  SCIRun::CompileInfoHandle ci = scinew CompileInfo(
+    "ALGODomainBoundary4."+fi.get_field_filename()+"."+fo.get_field_filename()+".",
+    "DomainBoundary4Algo","DomainBoundary4AlgoT",
+    fi.get_field_name() + "," + fo.get_field_name());
+
+  ci->add_include(TypeDescription::cc_to_h(__FILE__));
+  ci->add_namespace("SCIRunAlgo");
+  ci->add_namespace("SCIRun");
+  
+  fi.fill_compile_info(ci);
+  fo.fill_compile_info(ci);
+  
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;
+    
+  // Handle dynamic compilation
+  SCIRun::Handle<DomainBoundary4Algo> algo;
+  if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
+  {
+    pr->compile_error(ci->filename_);
+    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+    return(false);
+  }
+
+  return(algo->DomainBoundary(pr,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
+}
+
+
+
+
 
 
 } // End namespace SCIRunAlgo

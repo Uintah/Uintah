@@ -390,7 +390,7 @@ proc centerWindow { w1 { w2 "" } } {
 # Example use:
 #
 #  set temp 212
-#  label_pair "Temperature" tempature
+#  label_pair .w.temperatureFrame "Temperature" tempature
 #
 #  Creates a new 'frame' displaying:
 #
