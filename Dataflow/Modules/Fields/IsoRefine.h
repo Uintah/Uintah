@@ -183,12 +183,6 @@ public:
       return (*loc).second;
     }
   }
-
-  typename FIELD::mesh_type::Node::index_type
-  lookup(typename FIELD::mesh_type *mesh, const Point &p)
-  {
-    return mesh->add_point(p);
-  }
 };
 
 
@@ -209,7 +203,6 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
 
   typename FIELD::mesh_type::Node::array_type onodes(4);
   typename FIELD::mesh_type::Node::array_type nnodes(4);
-  typename FIELD::mesh_type::Node::array_type inodes(4);
   typename FIELD::value_type v[4];
   Point p[4];
   
@@ -330,19 +323,11 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
     }
     else
     {
-      Point edgepa[4];
-      Point edgepb[4];
       Point interiorp[4];
-
-      // Compute interior quad, assumes cw/ccw quad layout.
+      typename FIELD::mesh_type::Node::array_type inodes(4);
       for (unsigned int i = 0; i < 4; i++)
       {
-        edgepa[i] = Interpolate(p[i], p[(i+1)%4], 1.0/3.0);
-        edgepb[i] = Interpolate(p[i], p[(i+1)%4], 2.0/3.0);
-      }
-      for (unsigned int i = 0; i < 4; i++)
-      {
-        interiorp[i] = Interpolate(edgepa[i], edgepb[(i+2)%4], 1.0/3.0);
+        interiorp[i] = Interpolate(p[i], p[(i+2)%4], 1.0/3.0);
         inodes[i] = refined->add_point(interiorp[i]);
       }
       refined->add_elem(inodes);
@@ -352,15 +337,15 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
         if (inside & (1 << (3-i)))
         {
           nnodes[0] = onodes[i];
-          nnodes[1] = lookup(refined, edgepa[i]);
+          nnodes[1] = lookup(refined, edgemap, onodes[i], onodes[(i+1)%4]);
           nnodes[2] = inodes[i];
-          nnodes[3] = lookup(refined, edgepb[(i+3)%4]);
+          nnodes[3] = lookup(refined, edgemap, onodes[i], onodes[(i+3)%4]);
           refined->add_elem(nnodes);
         }
 
         if (inside & (1 << (3-i)))
         {
-          nnodes[0] = lookup(refined, edgepa[i]);
+          nnodes[0] = lookup(refined, edgemap, onodes[i], onodes[(i+1)%4]);
         }
         else
         {
@@ -368,7 +353,7 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
         }
         if (inside & (1 << (3 - (i+1)%4)))
         {
-          nnodes[1] = lookup(refined, edgepb[i]);
+          nnodes[1] = lookup(refined, edgemap, onodes[(i+1)%4], onodes[i]);
         }
         else
         {
