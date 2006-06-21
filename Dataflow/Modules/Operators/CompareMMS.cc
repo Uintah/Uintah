@@ -19,20 +19,12 @@
 //    Author : J. Davison de St. Germain
 //    Date   : Jan 2006
 
-#include <Core/Basis/Constant.h>
-#include <Core/Basis/HexTrilinearLgn.h>
-#include <Core/Containers/StringUtil.h>
-#include <Core/Datatypes/LatVolMesh.h>
-#include <Core/Containers/FData.h>
-#include <Core/Datatypes/Datatype.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/GenericField.h>
+#include <Packages/Uintah/Dataflow/Modules/Operators/CompareMMS.h>
+
 #include <Core/Datatypes/FieldInterface.h>
 
 #include <Core/Geometry/IntVector.h>
-#include <Core/Util/TypeDescription.h>
-#include <Core/Util/DynamicLoader.h>
-#include <Core/Util/ProgressReporter.h>
+#include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
@@ -44,8 +36,6 @@
 
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 
-#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS.h>
-#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS1.h>
 #include <Packages/Uintah/Core/Disclosure/TypeUtils.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -91,9 +81,9 @@ CompareMMS::~CompareMMS()
 void
 CompareMMS::execute()
 {
-  typedef ConstantBasis<double>                                     CBDBasis;
-  typedef LatVolMesh< HexTrilinearLgn<Point> >                      LVMesh;
-  typedef GenericField< LVMesh, CBDBasis, FData3d<double, LVMesh> > LVFieldCBD;
+//   typedef ConstantBasis<double>                                     CBDBasis;
+//   typedef LatVolMesh< HexTrilinearLgn<Point> >                      LVMesh;
+//   typedef GenericField< LVMesh, CBDBasis, FData3d<double, LVMesh> > LVFieldCBD;
 
 
 
@@ -121,6 +111,7 @@ CompareMMS::execute()
   }
 
   bool   found_properties;
+
   string field_name;
   double field_time;
 
@@ -142,15 +133,14 @@ CompareMMS::execute()
     cout << "This field did not include all the properties I expected...\n";
   }
 
-  enum field_type_e { PRESSURE, UVEL, VVEL, INVALID };
-  field_type_e field_type;
+  CompareMMSAlgo::compare_field_type field_type;
 
-  if      ( field_name == "press_CC" )  field_type = PRESSURE;
-  else if ( field_name == "vel_CC:1" ) field_type = UVEL;
-  else if ( field_name == "vel_CC:2" ) field_type = VVEL;
+  if      ( field_name == "press_CC" )  field_type = CompareMMSAlgo::PRESSURE;
+  else if ( field_name == "vel_CC:1" ) field_type = CompareMMSAlgo::UVEL;
+  else if ( field_name == "vel_CC:2" ) field_type = CompareMMSAlgo::VVEL;
   else {
     string msg = "MMS currently only knows how to compare pressure and uVelocity... you have: " + field_name;
-    field_type = INVALID;
+    field_type = CompareMMSAlgo::INVALID;
     error( msg );
     return;
   }
@@ -159,119 +149,86 @@ CompareMMS::execute()
   gui_field_time_.set( field_time );
 
   if( gui_output_choice_.get() == 0 ) { // Just pass original Field through
-
+    
     FieldOPort *ofp = (FieldOPort *)get_oport("Scalar Field");
     ofp->send_and_dereference( fh );
-
+    
   } else {
-
+    
+    const SCIRun::TypeDescription *td = fh->get_type_description();
+    CompileInfoHandle ci = CompareMMSAlgo::get_compile_info(td);
+    LockingHandle<CompareMMSAlgo> algo;
+    if(!module_dynamic_compile(ci, algo)) {
+      error("CompareMMS cannot work on this Field: dynamic compilation failed.");
+      return;
+    }
+    
     // handle showing the exact solution or the diff
-
+    
     vector<unsigned int> dimensions;
     bool result = fh->mesh()->get_dim( dimensions );
-
+    
     if( !result ) {
       error("dimensions not returned???\n");
       return;
     }
     
-    LVMesh* mesh = dynamic_cast<LVMesh*>(fh->mesh().get_rep());
-    if( !mesh ) {
-      printf("error here\n");
-      error( "failed to cast mesh" );
-      return;
-    }
-    LVFieldCBD* field = dynamic_cast<LVFieldCBD*>(fh.get_rep());
-    if( !field ) {
-      printf("ERROR HERE\n");
-      error( "failed to cast field" );
-      return;
-    }
     
-    Point minb, maxb;
-    
-    minb = Point(0,0,0);
-    maxb = Point(1, 1, 1);
-
-    // Create blank mesh.
-    LVMesh::handle_type outputMesh = scinew LVMesh(dimensions[0], dimensions[1], dimensions[2], minb, maxb);
-
-    Transform temp;
-  
-    mesh->get_canonical_transform( temp );
-    outputMesh->transform( temp );
-
-    FieldHandle ofh;
-
-    LVFieldCBD *lvf = scinew LVFieldCBD(outputMesh);
-
-    char field_info[128];
-    sprintf( field_info, "Exact %s - %lf", field_name.c_str(), field_time );
-    lvf->set_property( "varname", string(field_info), true );
-
-    MMS * mms = new MMS1();
-
-    bool   showDif = (gui_output_choice_.get() == 2);
-    double time = gui_field_time_.get();
-
-    // Indexing in SCIRun fields apparently starts from 0, thus start
-    // from zero and subtract 1 from high index
-    for( unsigned int xx = 0; xx < dimensions[0]-1; xx++ ) {
-      for( unsigned int yy = 0; yy < dimensions[1]-1; yy++ ) {
-        for( unsigned int zz = 0; zz < dimensions[2]-1; zz++ ) {
-          LVMesh::Cell::index_type pos(outputMesh.get_rep(),xx,yy,zz);
-
-//WARNING: "grid index to physical position" conversion has been hardcoded here!
-          double x_pos = -0.5 + (xx-0.5) * 1.0 / 50;
-          double y_pos = -0.5 + (yy-0.5) * 1.0 / 50;
-
-          double calculatedValue;
-          string msg;
-
-          switch( field_type ) {
-          case PRESSURE:
-            calculatedValue = mms->pressure( x_pos, y_pos, time );
-            break;
-          case UVEL:
-            calculatedValue = mms->uVelocity( x_pos, y_pos, time );
-            break;
-          case VVEL:
-            calculatedValue = mms->vVelocity( x_pos, y_pos, time );
-            break;
-          case INVALID:
-            msg = "We should not reach this point anyway, but you have selected a variable that is usupported by MMS";
-            error(msg);
-            break;
-          default:
-            printf( "ERROR: CompareMMS.cc - Bad field_type %d\n", field_type );
-            exit(1);
-          }
-          if( showDif ) {
-            double val;
-            LVMesh::Cell::index_type inputMeshPos(mesh,xx,yy,zz);
-
-            field->value( val, inputMeshPos ); // Get the value at pos
-
-            lvf->set_value( calculatedValue - val, pos );
-          } else {
-            lvf->set_value( calculatedValue, pos );
-          }
-        }
-      }
-    } 
-    ofh = lvf;
-
+    FieldHandle ofh = algo->compare(fh, dimensions,
+                                    field_type,
+                                    field_name, field_time,
+                                    gui_output_choice_.get(),
+                                    gui_field_time_.get());
+      
+      
     IntVector offset(0,0,0);        
     string property_name = "offset";
     fh->get_property( property_name, offset);
     ofh->set_property(property_name.c_str(), IntVector(offset) , true);
     string prefix = "Exact_";
-    if (showDif) prefix = "Diff_";
+    if ( gui_output_choice_.get() == 2) prefix = "Diff_";
     ofh->set_property("varname", string(prefix+field_name.c_str()), true);
     
     FieldOPort *ofp = (FieldOPort *)get_oport("Scalar Field");
     ofp->send_and_dereference(ofh);
   } // end if gui_output_choice_ == 0;
+}
+  
 
-} // end execute()
+CompileInfoHandle
+CompareMMSAlgo::get_compile_info(const SCIRun::TypeDescription *td)
+{
+  string subname;
+  string subinc;
+  string sname = td->get_name("", "");
+  
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(SCIRun::TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("CompareMMSAlgoT");
+  static const string base_class_name("CompareMMSAlgo");
+  
+  if(sname.find("LatVol") != string::npos ){
+    subname.append(td->get_name());
+    subinc.append(include_path);
+  } else {
+    cerr<<"Unsupported Geometry, needs to be of Lattice type.\n";
+    subname.append("Cannot compile this unupported type");
+  }
+  CompileInfo *rval =
+    scinew CompileInfo(template_class_name + "." +
+		       td->get_filename() + ".",
+                       base_class_name,
+                       template_class_name,
+                       td->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  rval->add_include(subinc);
+  rval->add_namespace("Uintah");
+  td->fill_compile_info(rval);
+  return rval;
+
+
+}
+
 
