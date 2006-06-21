@@ -7,8 +7,9 @@
 class ExpMMS : public MMS {
 
 public:
-  ExpMMS::ExpMMS();
-  ExpMMS::~ExpMMS();
+  ExpMMS();
+  ~ExpMMS();
+
   double pressure( double x, double y, double z, double time );
   double uVelocity( double x, double y, double z, double time );
   double vVelocity( double x, double y, double z, double time );
