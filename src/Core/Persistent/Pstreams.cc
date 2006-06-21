@@ -1470,6 +1470,7 @@ TextPiostream::io(double& data)
   else
   {
     ostream& out=*ostr;
+    out.precision(16);
     out << data << " ";
   }
 #endif
@@ -1533,6 +1534,7 @@ TextPiostream::io(float& data)
   else
   {
     ostream& out=*ostr;
+    out.precision(16);
     out << data << " ";
   }
 #endif

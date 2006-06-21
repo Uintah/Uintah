@@ -437,6 +437,9 @@ private:
   void                  compute_edge_neighbors();
   void                  compute_grid();
 
+  bool order_face_nodes(typename Node::index_type& n1,typename Node::index_type& n2,
+                        typename Node::index_type& n3,typename Node::index_type& n4) const;
+
   int next(int i) { return ((i%4)==3) ? (i-3) : (i+1); }
   int prev(int i) { return ((i%4)==0) ? (i+3) : (i-1); }
 
@@ -738,6 +741,7 @@ QuadSurfMesh<Basis>::get_nodes(typename Node::array_type &array,
   array.push_back(faces_[idx * 4 + 1]);
   array.push_back(faces_[idx * 4 + 2]);
   array.push_back(faces_[idx * 4 + 3]);
+  order_face_nodes(array[0],array[1],array[2],array[3]);
 }
 
 
@@ -1139,14 +1143,84 @@ QuadSurfMesh<Basis>::add_find_point(const Point &p, double err)
   }
   else
   {
-    synchronize_lock_.lock();
     points_.push_back(p);
-    if (synchronized_ & NORMALS_E) normals_.push_back(Vector());
-    synchronize_lock_.unlock();
     return static_cast<typename Node::index_type>((int)points_.size() - 1);
   }
 }
 
+
+template <class Basis>
+bool
+QuadSurfMesh<Basis>::order_face_nodes(typename Node::index_type& n1,
+                                    typename Node::index_type& n2,
+                                    typename Node::index_type& n3,
+                                    typename Node::index_type& n4) const
+{
+  // Check for degenerate or misformed face
+  // Opposite faces cannot be equal
+  if ((n1 == n3)||(n2==n4)) return (false);
+
+  // Face must have three unique identifiers otherwise it was condition
+  // n1==n3 || n2==n4 would be met.
+  
+  if (n1==n2)
+  {
+    if (n3==n4) return (false); // this is a line not a face
+    typename Node::index_type t;
+    // shift one position to left
+    t = n1; n1 = n2; n2 = n3; n3 = n4; n4 = t; 
+    return (true);
+  }
+  else if (n2 == n3)
+  {
+    if (n1==n4) return (false); // this is a line not a face
+    typename Node::index_type t;
+    // shift two positions to left
+    t = n1; n1 = n3; n3 = t; t = n2; n2 = n4; n4 = t;
+    return (true);
+  }
+  else if (n3 == n4)
+  {
+    typename Node::index_type t;
+    // shift one positions to right
+    t = n4; n4 = n3; n3 = n2; n2 = n1; n1 = t;    
+    return (true);
+  }
+  else if (n4 == n1)
+  {
+    // proper order
+    return (true);
+  }
+  else
+  {
+    if ((n1 < n2)&&(n1 < n3)&&(n1 < n4))
+    {
+      // proper order
+      return (true);
+    }
+    else if ((n2 < n3)&&(n2 < n4))
+    {
+      typename Node::index_type t;
+      // shift one position to left
+      t = n1; n1 = n2; n2 = n3; n3 = n4; n4 = t; 
+      return (true);    
+    }
+    else if (n3 < n4)
+    {
+      typename Node::index_type t;
+      // shift two positions to left
+      t = n1; n1 = n3; n3 = t; t = n2; n2 = n4; n4 = t;
+      return (true);    
+    }
+    else
+    {
+      typename Node::index_type t;
+      // shift one positions to right
+      t = n4; n4 = n3; n3 = n2; n2 = n1; n1 = t;    
+      return (true);    
+    }
+  }
+}
 
 template <class Basis>
 typename QuadSurfMesh<Basis>::Elem::index_type
@@ -1155,14 +1229,11 @@ QuadSurfMesh<Basis>::add_quad(typename Node::index_type a,
                               typename Node::index_type c,
                               typename Node::index_type d)
 {
-  synchronize_lock_.lock();
+  ASSERTMSG(order_face_nodes(a,b,c,d), "add_quad: element that is being added is invalid");
   faces_.push_back(a);
   faces_.push_back(b);
   faces_.push_back(c);
   faces_.push_back(d);
-  synchronized_ &= ~NORMALS_E;
-  synchronized_ &= ~EDGE_NEIGHBORS_E;
-  synchronize_lock_.unlock();
   return static_cast<typename Elem::index_type>(((int)faces_.size() - 1) >> 2);
 }
 
@@ -1172,14 +1243,12 @@ typename QuadSurfMesh<Basis>::Elem::index_type
 QuadSurfMesh<Basis>::add_elem(typename Node::array_type a)
 {
   ASSERTMSG(a.size() == 4, "Tried to add non-quad element.");
-  synchronize_lock_.lock();
+  ASSERTMSG(order_face_nodes(a[0],a[1],a[2],a[3]), "add_elem: element that is being added is invalid");
+
   faces_.push_back(a[0]);
   faces_.push_back(a[1]);
   faces_.push_back(a[2]);
   faces_.push_back(a[3]);
-  synchronized_ &= ~NORMALS_E;
-  synchronized_ &= ~EDGE_NEIGHBORS_E;
-  synchronize_lock_.unlock();
   return static_cast<typename Elem::index_type>(((int)faces_.size() - 1) >> 2);
 }
 
@@ -1260,8 +1329,11 @@ QuadSurfMesh<Basis>::compute_edges()
     int tmp;
     if (n0 > n1) { tmp = n0; n0 = n1; n1 = tmp; }
 
-    pair<int, int> nodes(n0, n1);
-    edge_map[nodes] = i;
+    if (n0 != n1)
+    {
+      pair<int, int> nodes(n0, n1);
+      edge_map[nodes] = i;
+    }
   }
 
   typename EdgeMapType::iterator itr;
@@ -1396,10 +1468,7 @@ template <class Basis>
 typename QuadSurfMesh<Basis>::Node::index_type
 QuadSurfMesh<Basis>::add_point(const Point &p)
 {
-  synchronize_lock_.lock();
   points_.push_back(p);
-  if (synchronized_ & NORMALS_E) normals_.push_back(Vector());
-  synchronize_lock_.unlock();
   return static_cast<typename Node::index_type>((int)points_.size() - 1);
 }
 
@@ -1425,6 +1494,20 @@ QuadSurfMesh<Basis>::io(Piostream &stream)
 
   Pio(stream, points_);
   Pio(stream, faces_);
+  
+  // In case the face is degenerate
+  // move the degerenaracy to the end
+  // this way the visualization works fine 
+  if (version != 1)
+  {
+    if (stream.reading())
+    {
+      for (unsigned int i=0; i < faces_.size(); i += 4)
+       if(!( order_face_nodes(faces_[i],faces_[i+1],faces_[i+2],faces_[i+3])))
+         std::cerr << "Detected an invalid quadrilateral face\n";
+    }
+  }
+  
   if (version == 1)
   {
     Pio(stream, edge_neighbors_);

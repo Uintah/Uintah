@@ -147,6 +147,8 @@ bool ToPointCloudAlgo::ToPointCloud(ProgressReporter *pr, FieldHandle input, Fie
   fi.fill_compile_info(ci);
   fo.fill_compile_info(ci);
   
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;    
+  
   // Step 3: Build the dynamic algorithm 
   
   // Create an access point to the dynamically compiled algorithm

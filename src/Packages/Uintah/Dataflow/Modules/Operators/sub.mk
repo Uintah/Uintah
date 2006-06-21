@@ -19,7 +19,7 @@ SRCS     += \
 	$(SRCDIR)/TensorToTensorConvertor.cc \
 	$(SRCDIR)/VectorFieldOperator.cc \
 	$(SRCDIR)/VectorParticlesOperator.cc \
-[INSERT NEW CODE FILE HERE]
+#[INSERT NEW CODE FILE HERE]
 
 SUBDIRS := $(SRCDIR)/MMS
 include $(SCIRUN_SCRIPTS)/recurse.mk          

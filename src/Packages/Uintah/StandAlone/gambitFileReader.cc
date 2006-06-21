@@ -10,6 +10,11 @@
 #define d_SMALL_NUM 1e-100;
 using namespace std;
 
+#ifdef _WIN32
+#include <float.h>
+#define finite _finite
+#endif
+
 int x, y;
 
 struct node_coord {

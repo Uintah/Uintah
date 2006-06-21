@@ -76,6 +76,9 @@ WARNING
     //! Schedules task to initialize the error flags to 0
     virtual void scheduleInitializeErrorEstimate(SchedulerP& sched, const LevelP& level);
 
+    //! Schedules task to dilate existing error flags
+    virtual void scheduleDilation(SchedulerP& sched, const LevelP& level);
+
     //! Asks if we are going to do regridding
     virtual bool flaggedCellsOnFinestLevel(const GridP& grid, SchedulerP& sched);
 
@@ -103,7 +106,7 @@ WARNING
                 const PatchSubset* patches,
                 const MaterialSubset* ,
                 DataWarehouse* old_dw,
-                DataWarehouse* new_dw, DilationType type, DataWarehouse* get_dw);
+                DataWarehouse* new_dw, DilationType type);
 
   protected:
      SimulationStateP d_sharedState; ///< to keep track of timesteps
@@ -129,6 +132,7 @@ WARNING
 
     // var labels for interior task graph
     const VarLabel* d_dilatedCellsCreationLabel;
+    const VarLabel* d_dilatedCellsCreationOldLabel;
     const VarLabel* d_dilatedCellsDeletionLabel;
 
     vector<int> d_numCreated;

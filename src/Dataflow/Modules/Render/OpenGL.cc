@@ -101,6 +101,7 @@ OpenGL::OpenGL(GuiInterface* gui, Viewer *viewer, ViewWindow *vw) :
   doing_movie_p_(false),
   make_MPEG_p_(false),
   current_movie_frame_(0),
+  add_timestamp_to_movie_frame_name_(false),
   movie_name_("./movie.%04d"),
   doing_sync_frame_(false),
   dump_sync_frame_(false),
@@ -1334,21 +1335,24 @@ OpenGL::redraw_frame()
         sprintf(fname, movie_name_.c_str(), current_movie_frame_);
 
 	ostringstream timestr;
+        if( add_timestamp_to_movie_frame_name_ ) {
+          // Only add the timestamp if the user has requested it via the GUI.
 #ifndef _WIN32
-	timeval tv;
-	gettimeofday(&tv, 0);
-	timestr << "." << tv.tv_sec << ".";
-	timestr.fill('0');
-	timestr.width(6);
-	timestr << tv.tv_usec;
+          timeval tv;
+          gettimeofday(&tv, 0);
+          timestr << "." << tv.tv_sec << ".";
+          timestr.fill('0');
+          timestr.width(6);
+          timestr << tv.tv_usec;
 #else
-        long m_sec = Time::currentSeconds();
-        timestr << "." << m_sec /1000 << ".";
-	timestr.fill('0');
-	timestr.width(3);
-        timestr << m_sec % 1000;
+          long m_sec = Time::currentSeconds();
+          timestr << "." << m_sec /1000 << ".";
+          timestr.fill('0');
+          timestr.width(3);
+          timestr << m_sec % 1000;
 #endif
-        string fullpath = string(fname) + "." + movie_frame_extension_;
+        }
+        string fullpath = string(fname) + timestr.str() + "." + movie_frame_extension_;
         
         string message = "Dumping " + fullpath;
         view_window_->setMovieMessage( message );

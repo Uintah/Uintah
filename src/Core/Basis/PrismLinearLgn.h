@@ -246,6 +246,31 @@ protected:
   } 
 };
 
+//! Class with weights and coordinates for 2nd order Gaussian integration
+template <class T>
+class PrismGaussian1 
+{
+public:
+  static int GaussianNum;
+  static T GaussianPoints[1][3];
+  static T GaussianWeights[1];
+};
+
+#ifdef _WIN32
+// force the instantiation of PrismGaussian1<double>
+template class PrismGaussian1<double>;
+#endif
+
+template <class T>
+int PrismGaussian1<T>::GaussianNum = 1;
+
+template <class T>
+T PrismGaussian1<T>::GaussianPoints[1][3] = {
+  {1./3.,1./3., 0.5}};
+
+template <class T>
+T PrismGaussian1<T>::GaussianWeights[1] = 
+  {1.0};
 
 //! Class with weights and coordinates for 2nd order Gaussian integration
 template <class T>

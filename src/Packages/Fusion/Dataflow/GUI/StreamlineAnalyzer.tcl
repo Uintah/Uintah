@@ -39,43 +39,6 @@ itcl_class Fusion_Fields_StreamlineAnalyzer {
     inherit Module
     constructor {config} {
         set name StreamlineAnalyzer
-        set_defaults
-    }
-
-    method set_defaults {} {
-
-	global $this-planes-list
-	set $this-planes-list "0.0"
-
-	global $this-planes-quantity
-	set $this-planes-quantity 0
-
-	global $this-color
-	set $this-color 1
-
-	global $this-maxWindings
-	set $this-maxWindings 30
-
-	global $this-order
-	set $this-order 0
-
-	global $this-override
-	set $this-override 0
-
-	global $this-curve-mesh
-	set $this-curve-mesh 1
-
-	global $this-island-centroids
-	set $this-island-centroids 0
-
-	global $this-scalar-field
-	set $this-scalar-field 1
-
-	global $this-show-islands
-	set $this-show-islands 0
-
-	global $this-overlaps
-	set $this-overlaps 0
     }
 
     method ui {} {
@@ -95,7 +58,7 @@ itcl_class Fusion_Fields_StreamlineAnalyzer {
 	bind $w.planes.list.e <Return> "$this-c needexecute"
 	pack $w.planes.list.l $w.planes.list.e -side left -expand 1
 
-	###### Save the plane-quantity since the iwidget resets it
+	###### Save the plane-quantity because the iwidget resets it
 	frame $w.planes.quant
 	global $this-planes-quantity
 	set quantity [set $this-planes-quantity]
@@ -201,19 +164,23 @@ itcl_class Fusion_Fields_StreamlineAnalyzer {
 
 
 	frame $w.mesh -relief groove -borderwidth 2
-	radiobutton $w.mesh.crv -text "Curve Mesh" \
+	radiobutton $w.mesh.crv -text "Curve Mesh   " \
 	    -variable $this-curve-mesh -value 1
 
-	radiobutton $w.mesh.srf -text "Surface Mesh" \
+	radiobutton $w.mesh.srf -text "Surface Mesh     " \
 	    -variable $this-curve-mesh -value 0
 
-	frame $w.mesh.cloud
-	checkbutton $w.mesh.cloud.check -variable $this-island-centroids
-	label $w.mesh.cloud.label -text "Output Island Centroids" \
-	    -width 24 -anchor w -just left
-	pack $w.mesh.cloud.check $w.mesh.cloud.label -side left
 
-	pack $w.mesh.crv $w.mesh.srf $w.mesh.cloud -side left -anchor w
+	frame $w.mesh.island
+	radiobutton $w.mesh.island.centroids -text "Island Centroids" \
+	    -variable $this-island-centroids -value 1
+
+	radiobutton $w.mesh.island.nulls -text "Island Nulls    " \
+	    -variable $this-island-centroids -value 0
+
+	pack $w.mesh.island.centroids $w.mesh.island.nulls -side left -anchor w
+
+	pack $w.mesh.crv $w.mesh.srf $w.mesh.island -side left -anchor w
 
 
 	frame $w.field -relief groove -borderwidth 2

@@ -5,9 +5,9 @@
 #include <list>
 
 using namespace std;
+using namespace SCIRun;
 
 namespace Uintah {
-  using namespace SCIRun;
   
   TensorDiag::~TensorDiag() {}
   
@@ -238,18 +238,18 @@ namespace Uintah {
   
   // --------------------------------------------------------------------------
   
-  int numberOfTensorDiags(const TypeDescription * fldtype) {
+  int numberOfTensorDiags(const Uintah::TypeDescription * fldtype) {
     createTensorDiags();
-    if(fldtype->getSubType()->getType()!=TypeDescription::Matrix3) return 0;
+    if(fldtype->getSubType()->getType()!=Uintah::TypeDescription::Matrix3) return 0;
     return _ttdiagtable.size();
   }
   
-  std::string tensorDiagName(const TypeDescription * fldtype, int idiag) {
+  std::string tensorDiagName(const Uintah::TypeDescription * fldtype, int idiag) {
     createTensorDiags();
     return _ttdiagtable[idiag]->name();
   }
   
-  TensorDiag const * createTensorDiag(const TypeDescription * fldtype, int idiag,
+  TensorDiag const * createTensorDiag(const Uintah::TypeDescription * fldtype, int idiag,
                                       const TensorDiag * tensorpreop)
   {
     createTensorDiags();
@@ -268,7 +268,7 @@ namespace Uintah {
     return res;
   }
   
-  TensorDiag const *
+  const TensorDiag*
   createTensorOp(const FieldSelection & fldselection)
   {
     createTensorDiags();
@@ -286,7 +286,7 @@ namespace Uintah {
   }
   
   list<TensorDiag const *> 
-  createTensorDiags(const TypeDescription * fldtype, 
+  createTensorDiags(const Uintah::TypeDescription * fldtype, 
                     const FieldSelection & fldselection,
                     const TensorDiag * preop)
   {
@@ -298,7 +298,6 @@ namespace Uintah {
           res.push_back( createTensorDiag(fldtype, idiag, preop) );
         }
       }
-    
     return res;
   }
   

@@ -56,7 +56,7 @@ class DataArchive;
    //! entire simulation. 
    class SCISHARE SimulationController : public UintahParallelComponent {
    public:
-      SimulationController(const ProcessorGroup* myworld, bool doAMR);
+      SimulationController(const ProcessorGroup* myworld, bool doAMR, ProblemSpecP pspec);
       virtual ~SimulationController();
 
       //! Notifies (before calling run) the SimulationController
@@ -83,7 +83,6 @@ class DataArchive;
       void   calcStartTime   ( void );
       void   setStartSimTime ( double t );
 
-      void loadUPS();
       void preGridSetup();
       GridP gridSetup();
       void restartSetup( GridP& grid, double& t);

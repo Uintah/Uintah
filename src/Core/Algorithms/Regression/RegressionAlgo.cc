@@ -26,8 +26,19 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#include <Core/Algorithms/DataIO/DataIOAlgo.h>
 #include <Core/Algorithms/Regression/RegressionAlgo.h>
 #include <Core/Algorithms/Regression/CompareFields.h> 
+#include <Core/Util/Environment.h>
+#include <Core/OS/Dir.h>
+
+#include <stdio.h>
+#include <stdlib.h>
+
+#ifndef _WIN32
+#include <unistd.h>
+#include <dirent.h>
+#endif
 
 namespace SCIRunAlgo {
 
@@ -460,7 +471,7 @@ bool RegressionAlgo::CompareNrrds(NrrdDataHandle& nrrd1, NrrdDataHandle& nrrd2)
   { 
     char* data1 = reinterpret_cast<char*>(nrrd1->nrrd_->data); 
     char* data2 = reinterpret_cast<char*>(nrrd2->nrrd_->data); 
-    for (int p = 0; p < size*(nrrd1->nrrd_->blockSize); p++)
+    for (size_t p = 0; p < size*(nrrd1->nrrd_->blockSize); p++)
     {
       if (data1[p] == data2[p])
       {
@@ -581,6 +592,245 @@ bool RegressionAlgo::CompareBundles(BundleHandle& bundle1, BundleHandle& bundle2
   return (true);
 }
 
+
+bool RegressionAlgo::FindTestFields(std::vector<FieldHandle> fields, std::vector<FieldHandle>& testfields, std::string fieldtypes)
+{
+
+  testfields.clear();
+  
+  bool meshtype = false;
+  bool regular = false;
+  bool structured = false;
+  bool unstructured = false;
+  
+  bool fieldbasis = false;
+  bool nodata = false;
+  bool constantdata = false;
+  bool lineardata = false;
+  bool nonlineardata = false;
+  
+  bool meshbasis = false;
+  bool linearmesh = false;
+  bool nonlinearmesh = false;
+  
+  bool meshdimension = false;
+  bool point = false;
+  bool line = false;
+  bool surface = false;
+  bool volume = false;
+  
+  bool datatype  = false;
+  bool ischar    = false;
+  bool isshort   = false;
+  bool isinteger = false;
+  bool isfloat   = false;
+  bool isdouble  = false;
+  bool isvector  = false;
+  bool istensor  = false;
+
+  bool linearonly = false;
+  bool isomorphic = false;
+
+  bool elementtype = false;
+  bool pointcloud = false;
+  bool scanline   = false;
+  bool image      = false;
+  bool latvol     = false;
+  bool curve      = false;
+  bool structcurve = false;
+  bool trisurf    = false;
+  bool quadsurf   = false;
+  bool structquadsurf = false;
+  bool tetvol     = false;
+  bool prismvol   = false;
+  bool hexvol     = false;
+  bool structhexvol = false;
+
+  fieldtypes += '|';
+  while (1)
+  {
+    size_t loc = fieldtypes.find('|');
+    if (loc > fieldtypes.size()) break;
+    std::string fieldtype = fieldtypes.substr(0,loc);
+    fieldtypes = fieldtypes.substr(loc+1);
+
+    if (fieldtype == "regular") { meshtype = true; regular = true; }
+    if (fieldtype == "structured") { meshtype = true; structured = true; }
+    if (fieldtype == "unstructured") { meshtype = true; unstructured = true; }
+
+    if (fieldtype == "nodata") { fieldbasis = true; nodata = true; }
+    if (fieldtype == "constantdata") { fieldbasis = true; constantdata = true; }
+    if (fieldtype == "lineardata") { fieldbasis = true; lineardata = true; }
+    if (fieldtype == "nonlineardata") { fieldbasis = true; nonlineardata = true; }
+    
+    if (fieldtype == "linearmesh") { meshbasis = true; linearmesh = true; }
+    if (fieldtype == "nonlinearmesh") { meshbasis = true; nonlinearmesh = true; }
+
+    if (fieldtype == "point") { meshdimension = true; point = true; }
+    if (fieldtype == "line") { meshdimension = true;  line = true; }
+    if (fieldtype == "surface") { meshdimension = true; surface = true; }
+    if (fieldtype == "volume") { meshdimension = true; volume = true; }
+        
+    if (fieldtype == "char") { datatype = true; ischar = true; }
+    if (fieldtype == "short") { datatype = true; isshort = true; }
+    if (fieldtype == "int") { datatype = true; isinteger = true; }
+    if (fieldtype == "double") { datatype = true; isdouble = true; }
+    if (fieldtype == "flaot") { datatype = true; isfloat = true; }
+    if (fieldtype == "vector") { datatype = true; isvector = true; }
+    if (fieldtype == "tensor") { datatype = true; istensor = true; }
+
+    if (fieldtype == "linear") linearonly = true;
+    if (fieldtype == "isomorphic") isomorphic = true;
+    
+    if (fieldtype == "pointcloud") { elementtype = true; pointcloud = true; }
+    if (fieldtype == "scanline") { elementtype = true; scanline = true; }
+    if (fieldtype == "image") { elementtype = true; image = true; }
+    if (fieldtype == "latvol") { elementtype = true; latvol = true; }
+    if (fieldtype == "curve") { elementtype = true; curve = true; }
+    if (fieldtype == "structcurve") { elementtype = true; structcurve = true; }
+    if (fieldtype == "trisurf") { elementtype = true; trisurf = true; }
+    if (fieldtype == "quadsurf") { elementtype = true; quadsurf = true; }
+    if (fieldtype == "structquadsurf") { elementtype = true; structquadsurf = true; }
+    if (fieldtype == "tetvol") { elementtype = true; tetvol = true; }
+    if (fieldtype == "prismvol") { elementtype = true; prismvol = true; }
+    if (fieldtype == "hexvol") { elementtype = true; hexvol = true; }
+    if (fieldtype == "structhexvol") { elementtype = true; structhexvol = true; }
+
+  }
+  
+  
+  for (unsigned int p = 0; p < fields.size(); p++)
+  {
+    FieldInformation fi(fields[p]);
+
+    if (elementtype)
+    {
+      if (fi.is_pointcloud() && !pointcloud) continue;
+      if (fi.is_scanline() && !scanline) continue;
+      if (fi.is_image() && !image) continue;
+      if (fi.is_latvol() && !latvol) continue;
+      if (fi.is_curve() && !curve) continue;
+      if (fi.is_structcurve() && !structcurve) continue;
+      if (fi.is_trisurf() && !trisurf) continue;
+      if (fi.is_quadsurf() && !quadsurf) continue;
+      if (fi.is_structquadsurf() && !structquadsurf) continue;
+      if (fi.is_tetvol() && !tetvol) continue;
+      if (fi.is_prismvol() && !prismvol) continue;
+      if (fi.is_hexvol() && !hexvol) continue;
+      if (fi.is_structhexvol() && !structhexvol) continue;
+    }
+    
+    if (linearonly && fi.is_nonlinear()) continue;
+    if (meshtype)
+    {
+      if (fi.is_regularmesh() && !regular) continue;
+      if (fi.is_structuredmesh() && !structured) continue;
+      if (fi.is_unstructuredmesh() && !unstructured) continue;
+    }
+    
+    if (fieldbasis)
+    {
+      if (fi.is_nodata() && !nodata) continue;
+      if (fi.is_constantdata() && !constantdata) continue;
+      if (fi.is_lineardata() && !lineardata) continue;
+      if (fi.is_nonlineardata() && !nonlineardata) continue;
+    }
+  
+    if (meshbasis)
+    {
+      if (fi.is_linearmesh() && !linearmesh) continue;
+      if (fi.is_nonlinearmesh() && !nonlinearmesh) continue;
+    }
+ 
+    if (meshdimension)
+    {
+      if (fi.is_point() && !point) continue;
+      if (fi.is_line() && !line) continue;
+      if (fi.is_surface() && !surface) continue;
+      if (fi.is_volume() && !volume) continue;
+    }
+  
+    if (datatype)
+    {
+      if (fi.is_char() && !ischar) continue;
+      if (fi.is_short() && !isshort) continue;
+      if (fi.is_integer() && !isinteger) continue;
+      if (fi.is_float() && !isfloat) continue;
+      if (fi.is_double() && !isdouble) continue;
+      if (fi.is_vector() && !isvector) continue;
+      if (fi.is_tensor() && !istensor) continue;
+    }
+  
+    if (isomorphic) if (!fi.is_isomorphic()) continue;
+  
+    testfields.push_back(fields[p]);
+  }
+
+  return (true);
+}
+
+
+bool RegressionAlgo::FindTestField(std::vector<FieldHandle> fields, FieldHandle& testfield, std::string name)
+{
+  for (unsigned int p =0; p< fields.size(); p++)
+  {
+    if (fields[p]->get_name() == name)
+    {
+      testfield = fields[p];
+      return (true);
+    }
+  }
+  return (false);
+}
+
+bool RegressionAlgo::LoadTestFields(std::vector<FieldHandle>& fields)
+{
+
+  const char *regdir = sci_getenv("SCIRUN_REGRESSION_DIR");
+
+  std::string flddir = std::string(regdir) + "/testfields";
+  std::vector<std::string> files;
+  std::vector<std::string> fieldnames;
+
+  DIR* dir = opendir(flddir.c_str());
+  if (dir)
+  {
+   dirent* file = readdir(dir);
+   while (file)
+   {
+     std::string filename(file->d_name);
+     if (filename.size() > 4)
+     {
+       if (filename.substr(filename.size()-4,4) == std::string(".fld"))
+       {
+        files.push_back(flddir + "/" + filename);
+        fieldnames.push_back(filename.substr(0,filename.size()-4));
+       }
+     }
+     file = readdir(dir);
+   }
+   closedir(dir);
+  }
+    
+  SCIRunAlgo::DataIOAlgo dalgo(pr_);
+              
+  for (size_t p = 0; p < files.size(); p++)
+  {
+    FieldHandle field;
+    if(dalgo.ReadField(files[p],field))
+    {
+      field->set_name(fieldnames[p]);
+      fields.push_back(field);
+    }
+    else
+    {
+      pr_->error("LoadTestFields: Could not read file '"+files[p] +"'");
+      return (false);
+    }
+  }
+  
+  return (true);
+}
 
 
 } // end namespace SCIRunAlgo

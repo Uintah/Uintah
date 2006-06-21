@@ -1,4 +1,5 @@
 #include <StandAlone/convert/GpVolHdr.h>
+#include <sci_defs/bits_defs.h>
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
@@ -57,7 +58,11 @@ int main(int argc, char **argv) {
 	  vol_hdr.zoffset+vol_hdr.zstep*(vol_hdr.zsize-1));
   fprintf(nhdr_file, "data file: %s\n", argv[1]);
   fprintf(nhdr_file, "encoding: raw\n");
+#ifdef SCI_64BITS
+  fprintf(nhdr_file, "byte skip: %ld\n", sizeof(GP_hdr)); 
+#else
   fprintf(nhdr_file, "byte skip: %d\n", sizeof(GP_hdr)); 
+#endif
   fclose(nhdr_file);
   return 1;
 }

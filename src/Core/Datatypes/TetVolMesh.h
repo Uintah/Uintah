@@ -998,7 +998,6 @@ TetVolMesh<Basis>::remove_face(typename Node::index_type n1,
     found_face.cells_[0] = MESH_NO_NEIGHBOR;
     found_face.cells_[1] = MESH_NO_NEIGHBOR;
   } else {
-    typename vector<typename Cell::index_type>::iterator citer;
     if (found_face.cells_[0] == ci) {
       found_face.cells_[0] = found_face.cells_[1];
       // Swap the order so that the face order remains consistent.

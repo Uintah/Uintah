@@ -5,14 +5,21 @@
 #include <iostream>
 #include <vector>
 #include <queue>
+#ifndef _WIN32
 #include <unistd.h>
+#include <sys/time.h>
+#endif
 #include <stdlib.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/ConditionVariable.h>
-#include <sys/time.h>
+
+#ifdef _WIN32
+#include <windows.h>
+#define usleep(x) Sleep(x/1000)
+#endif
 
 #define debug_main
 #define debug_main_thread
@@ -44,7 +51,7 @@ int main(int argc, char** argv){
   MPI_Comm_size(MPI_COMM_WORLD, &numprocs);
   MPI_Comm_rank(MPI_COMM_WORLD, &myid);
   
-  srandom(myid*10);
+  srand(myid*10);
 
   do_some_work(myid);
 
@@ -113,7 +120,7 @@ void do_some_work(int myid){
   const int sleep_time_constant = 5000000;
   //const int sleep_time_constant = 1000000;
   int sleep_time_total = 0;
-  sleep_time_total = sleep_time_constant + (random()%1000000);
+  sleep_time_total = sleep_time_constant + (rand()%1000000);
   cout<<myid<<" is sleeping for "<<sleep_time_total<<endl;
   usleep(sleep_time_total);
 }

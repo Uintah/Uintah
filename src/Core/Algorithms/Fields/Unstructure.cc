@@ -85,9 +85,7 @@ bool UnstructureAlgo::Unstructure(ProgressReporter *pr, FieldHandle input, Field
   fo.fill_compile_info(ci);
   
   if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;
-  
-  ci->keep_library_ = false;
-  
+
   // Handle dynamic compilation
   SCIRun::Handle<UnstructureAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))

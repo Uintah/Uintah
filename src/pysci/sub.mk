@@ -2,8 +2,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := pysci
 
-SRCS     += 	$(SRCDIR)/api.cc \
-		$(SRCDIR)/pysci_wrap.cc	
+SRCS     += \
+#	$(SRCDIR)/api.cc \
+#		$(SRCDIR)/pysci_wrap.cc	
 
 INCLUDES += -I/usr/include/python2.4
 

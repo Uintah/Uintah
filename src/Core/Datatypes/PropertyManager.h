@@ -233,6 +233,11 @@ public:
   void    io(Piostream &stream);
   static  PersistentTypeID type_id;
 
+  void set_name(std::string& name) 
+    { set_property(std::string("name"),name,false); }
+  std::string get_name()
+    {  std::string name; if (get_property("name",name)) return (name); else return(std::string("")); }
+
 private:
 
   typedef map<string, PropertyBase *> map_type;

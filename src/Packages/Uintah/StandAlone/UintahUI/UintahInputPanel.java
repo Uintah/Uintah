@@ -36,6 +36,7 @@ public class UintahInputPanel extends JPanel
   private ICEInputsPanel iceInpPanel = null;
   private ICEMaterialsPanel iceMatPanel = null;
   private MPMICEExchangePanel exchangePanel = null;
+  private GridBCPanel gridBCPanel = null;
 
   // Constructor
   public UintahInputPanel(ParticleList particleList,
@@ -59,12 +60,10 @@ public class UintahInputPanel extends JPanel
     geomPanel = new GeometryPanel(d_partList, d_geomObj, this); 
     mpmInpPanel = new MPMInputsPanel(this); 
     mpmMatPanel = new MPMMaterialsPanel(d_geomObj, d_mpmMat, this); 
-    iceInpPanel = new ICEInputsPanel(this); 
+    iceInpPanel = new ICEInputsPanel(d_mpmMat, d_iceMat, this); 
     iceMatPanel = new ICEMaterialsPanel(d_geomObj, d_iceMat, this); 
     exchangePanel = new MPMICEExchangePanel(d_mpmMat, d_iceMat, this);
-    /*
-    GridBCPanel gridBCPanel = new GridBCPanel(); 
-    */
+    gridBCPanel = new GridBCPanel(this); 
 
     // Add the tabs
     uintahTabbedPane.addTab("General Inputs", null,
@@ -81,10 +80,8 @@ public class UintahInputPanel extends JPanel
                           iceMatPanel, null);
     uintahTabbedPane.addTab("Exchange", null,
                           exchangePanel, null);
-    /*
-    uintahTabbedPane.addTab("Grid and BC Inputs", null,
+    uintahTabbedPane.addTab("Grid and BC", null,
                           gridBCPanel, null);
-    */
     uintahTabbedPane.setSelectedIndex(0);
 
     // Create a grid bag
@@ -160,12 +157,15 @@ public class UintahInputPanel extends JPanel
       uintahTabbedPane.setEnabledAt(3, true);
       uintahTabbedPane.setEnabledAt(4, false);
       uintahTabbedPane.setEnabledAt(5, false);
+      uintahTabbedPane.setEnabledAt(7, true);
     } else if (d_simComponent.equals("ice")) {
       uintahTabbedPane.setEnabledAt(1, true);
       uintahTabbedPane.setEnabledAt(2, false);
       uintahTabbedPane.setEnabledAt(3, false);
       uintahTabbedPane.setEnabledAt(4, true);
       uintahTabbedPane.setEnabledAt(5, true);
+      uintahTabbedPane.setEnabledAt(6, true);
+      uintahTabbedPane.setEnabledAt(7, true);
     } else if (d_simComponent.equals("mpmice")) {
       int numTabs = uintahTabbedPane.getTabCount();
       for (int ii=1; ii < numTabs; ++ii) {
@@ -229,6 +229,10 @@ public class UintahInputPanel extends JPanel
 
     pw.println(tab+"</MaterialProperties>");
     pw.println(tab);
+
+    pw.println(tab+"<Grid>");
+    gridBCPanel.writeUintah(pw, tab1);
+    pw.println(tab+"</Grid>");
 
     pw.println(tab+"<PhysicalBC>");
     pw.println(tab1+"<MPM>");

@@ -26,6 +26,18 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#ifndef _WIN32
+#include <unistd.h>
+#else
+#include <io.h>
+#endif
+#include <stdio.h>
+#include <stdlib.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h> 
+#include <Core/OS/Dir.h> // for LSTAT, MKDIR
+
 #include <Core/Algorithms/DataIO/DataIOAlgo.h>
 
 namespace SCIRunAlgo {
@@ -33,7 +45,7 @@ namespace SCIRunAlgo {
 using namespace SCIRun;
 
 bool DataIOAlgo::ReadField(std::string filename, FieldHandle& field, std::string importer)
-{
+{  
   if (importer == "")
   {
     Piostream *stream = auto_istream(filename, pr_);
@@ -262,6 +274,8 @@ bool DataIOAlgo::ReadPath(std::string filename, PathHandle& path, std::string im
 
 bool DataIOAlgo::WriteField(std::string filename, FieldHandle& field, std::string exporter)
 {
+  if (field.get_rep() == 0) return (false);
+  
   if ((exporter == "text")||(exporter == "Text"))
   {
     Piostream* stream;
@@ -316,6 +330,8 @@ bool DataIOAlgo::WriteField(std::string filename, FieldHandle& field, std::strin
 
 bool DataIOAlgo::WriteMatrix(std::string filename, MatrixHandle& matrix, std::string exporter)
 {
+  if (matrix.get_rep() == 0) return (false);
+
   if ((exporter == "text")||(exporter == "Text"))
   {
     Piostream* stream;
@@ -370,6 +386,8 @@ bool DataIOAlgo::WriteMatrix(std::string filename, MatrixHandle& matrix, std::st
 
 bool DataIOAlgo::WriteBundle(std::string filename, BundleHandle& bundle, std::string exporter)
 {
+  if (bundle.get_rep() == 0) return (false);
+
   if ((exporter == "text")||(exporter == "Text"))
   {
     Piostream* stream;
@@ -414,6 +432,8 @@ bool DataIOAlgo::WriteBundle(std::string filename, BundleHandle& bundle, std::st
 
 bool DataIOAlgo::WriteNrrd(std::string filename, NrrdDataHandle& nrrd, std::string exporter)
 {
+  if (nrrd.get_rep() == 0) return (false);
+
   if ((exporter == "text")||(exporter == "Text"))
   {
     Piostream* stream;
@@ -457,6 +477,8 @@ bool DataIOAlgo::WriteNrrd(std::string filename, NrrdDataHandle& nrrd, std::stri
 
 bool DataIOAlgo::WriteColorMap(std::string filename, ColorMapHandle& colormap, std::string exporter)
 {
+  if (colormap.get_rep() == 0) return (false);
+
   if ((exporter == "text")||(exporter == "Text"))
   {
     Piostream* stream;
@@ -499,6 +521,8 @@ bool DataIOAlgo::WriteColorMap(std::string filename, ColorMapHandle& colormap, s
 
 bool DataIOAlgo::WriteColorMap2(std::string filename, ColorMap2Handle& colormap, std::string exporter)
 {
+  if (colormap.get_rep() == 0) return (false);
+
   if ((exporter == "text")||(exporter == "Text"))
   {
     Piostream* stream;
@@ -541,6 +565,8 @@ bool DataIOAlgo::WriteColorMap2(std::string filename, ColorMap2Handle& colormap,
 
 bool DataIOAlgo::WritePath(std::string filename, PathHandle& path, std::string exporter)
 {
+  if (path.get_rep() == 0) return (false);
+
   if ((exporter == "text")||(exporter == "Text"))
   {
     Piostream* stream;
@@ -580,6 +606,32 @@ bool DataIOAlgo::WritePath(std::string filename, PathHandle& path, std::string e
   }
   return (true);
 }
+
+bool DataIOAlgo::FileExists(std::string filename)
+{
+  FILE* fp;
+  fp = ::fopen (filename.c_str(), "r");
+  if (!fp)
+  {
+    return (false);
+  }
+  ::fclose(fp);
+  
+  return (true);
+}
+
+
+bool DataIOAlgo::CreateDir(std::string dirname)
+{
+  struct stat buf;
+  if (::LSTAT(dirname.c_str(),&buf) < 0)
+  {
+    int exitcode = MKDIR(dirname.c_str(), 0777);
+    if (exitcode) return (false);
+  }        
+  return (true);
+}
+
 
 } // end namespace SCIRunAlgo
 

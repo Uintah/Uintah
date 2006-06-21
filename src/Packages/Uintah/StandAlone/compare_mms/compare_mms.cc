@@ -13,8 +13,12 @@
  *  Copyright (C) 2005 U of U
  */
 
-#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS.h>
-#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS1.h>
+//#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS.h>
+//#include <Packages/Uintah/Dataflow/Modules/Operators/MMS/MMS1.h>
+#include <Packages/Uintah/StandAlone/compare_mms/MMS.h>
+#include <Packages/Uintah/StandAlone/compare_mms/ExpMMS.h>
+#include <Packages/Uintah/StandAlone/compare_mms/LinearMMS.h>
+#include <Packages/Uintah/StandAlone/compare_mms/SineMMS.h>
 
 #include <Packages/Uintah/CCA/Components/ProblemSpecification/ProblemSpecReader.h>
 
@@ -30,7 +34,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/SFCYVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SFCZVariable.h>
 #include <Packages/Uintah/Core/Math/Matrix3.h>
-
+#include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
@@ -67,87 +71,232 @@ usage()
   exit(1);
 }
 
+
+static
 void
-parse_args( int argc, char *argv[] )
+usage( const std::string & message,
+       const std::string& badarg,
+       const std::string& progname)
 {
-  if( argc != 2 ) {
-    usage();
-  }
-
-  // From args, determine which mms to use... now just hardcoding to 1.
-  mms = new MMS1();
-
-  udaFileName = argv[1];
+      cerr << message << "\n";
+      if(badarg != "")
+	cerr << "Error parsing argument: " << badarg << '\n';
+      cerr << "Usage: " << progname << " [options] <input_file_name>\n\n";
+      cerr << "Valid options are:\n";
+      cerr << "-h[elp]              : This usage information.\n";
+      cerr << "-ice                 : \n";
+      cerr << "-arches              : \n";
+      cerr << "-mms <linear, sine or exp> \n";
+      cerr << "-uda <archive file>\n";
+      cerr << "-v,--variable <variable name>\n";
+      
+      exit(1);
 }
 
 int
 main( int argc, char *argv[] )
 {
-  parse_args( argc, argv );
+	string varName;
+	string whichMMS;
+	bool do_arches=false;
+	bool do_ice=false;
+  for(int i=1;i<argc;i++){
+    string s=argv[i];
+    if( (s == "-help") || (s == "-h") ) {
+      usage( "", "", argv[0]);
+    } else if(s == "-arches"){
+      do_arches=true;
+    } else if(s == "-ice"){
+      do_ice=true;
+    } else if(s == "-mms") {
+      if(++i == argc){
+        usage("You must provide a mms name for -mms",
+              s, argv[0]);
+      }
+      whichMMS = argv[i];
+    } else if(s == "-uda") {
+      if(++i == argc){
+        usage("You must provide a uda name for -uda",
+              s, argv[0]);
+      }
+      udaFileName = argv[i];
+    } else if(s == "-v") {
+      if(++i == argc){
+        usage("You must provide a variable name for -v",
+              s, argv[0]);
+      }
+      varName = argv[i];
+    } else {
+	    ;
+    }
+  }
+  // Check for valid argument combinations
+  cout << "whichMMS= " << whichMMS << "\n";
+  if (do_ice && do_arches) {
+	 usage("ICE and Arches do not work together", "", argv[0]);
+  }
 
+  if (!(do_arches || do_ice)) {
+	  usage("You must specify -arches or -ice", "", argv[0]);
+  }
+  
   try {
     DataArchive* da1 = scinew DataArchive(udaFileName);
 
 //     // Sample of how to read data from the DA xml file.
      ProblemSpecReader psr( udaFileName + "/input.xml" );
      ProblemSpecP docTop = psr.readInputFile();
-     double dyVis;
-     //int    sos;
      double A;
+     double dyVis;
+     double p_ref;
+     double cu, cv, cw, cp;
      Vector resolution;
+     
+     if(do_ice) {
+     	ProblemSpecP cfdBlock = ((docTop->findBlock("CFD"))->findBlock("ICE")
+			     ->findBlock("customInitialization"))
+			     ->findBlock("manufacturedSolution");
 
-     ProblemSpecP cfdBlock = ((docTop->findBlock("CFD"))->findBlock("ICE")
-		     ->findBlock("customInitialization"))
-	     ->findBlock("manufacturedSolution");
+     	if( cfdBlock == 0 ) {
+	    printf("Failed to find CFD->ICE->customInitialization->manufacturedSolution in input.xml file.\n");
+	    exit(1);
+        }
 
-     if( cfdBlock == 0 )
-       {
-         printf("Failed to find CFD->ICE->customInitialization->manufacturedSolution in input.xml file.\n");
-         exit(1);
-       }
+//      later on if ICE code could specify whichMMS in ups file like we did in ARCHES code, then you can retrive it here, 
+//      so that user will not need to specify it during the running time, and based on whichMMS that you used, you can 
+//      get the corresponding parameters for it.   	     
+        if(cfdBlock->get( string("A"), A ) == 0 ) {
+           printf("Failed to find A in input.xml file.\n");
+           exit(1);
+        }
+        
+	ProblemSpecP phyConsBlock = (docTop->findBlock("PhysicalConstants"));
 
-     if( cfdBlock->get( string("A"), A ) == 0 )
-       {
-         printf("Failed to find A in input.xml file.\n");
-         exit(1);
-       }
+   	if(phyConsBlock == 0 ) {
+           printf("Failed to find PhysicalConstants in input.xml file.\n");
+           exit(1);
+        }
+	if(phyConsBlock->get( string("reference_pressure"), p_ref ) == 0 ) {
+           printf("Failed to find pressure in input.xml file.\n");
+           exit(1);
+        }
+	
+	ProblemSpecP matBlock = ((docTop->findBlock("MaterialProperties"))->findBlock("ICE"))->findBlock("material");
+
+   	if(matBlock == 0 ) {
+           printf("Failed to find MaterialProperties->ICE->material in input.xml file.\n");
+           exit(1);
+        }
+
+        if(matBlock->get( string("dynamic_viscosity"), dyVis ) == 0 ) {
+           printf("Failed to find dynamic_viscosity in input.xml file.\n");
+           exit(1);
+        }
+	printf( "dynamic viscosity: %lf\nA: %lf\np_ref:  %lf\n", dyVis, A, p_ref );
+
+        if(whichMMS=="linear") {
+  	   mms = new LinearMMS(cu, cv, cw, cp, p_ref);
+        }
+        else if(whichMMS=="sine") { 
+  	   mms = new SineMMS(A, dyVis, p_ref);
+        }
+        else if(whichMMS=="exp") { 
+  	   mms = new ExpMMS();
+        }
+        else {
+  
+//        throw InvalidValue("current MMS not supported: " + whichMMS, __FILE__, __LINE__);
+  
+	  cout << "current MMS not supported\n";
+	  exit(1);
+        }
+     }
+
+     if(do_arches) {
+	p_ref=0.0;
+     	ProblemSpecP mmsBlock = ((docTop->findBlock("CFD"))->findBlock("ARCHES")
+			     ->findBlock("MMS"));
+
+     	if( mmsBlock == 0 ) {
+	    printf("Failed to find CFD->ARCHES->MMS in input.xml file.\n");
+	    exit(1);
+        }
+
+        if(mmsBlock->get( string("whichMMS"), whichMMS ) == 0 ) {
+           printf("Failed to find A in input.xml file.\n");
+           exit(1);
+        }
+        
+
+        if(whichMMS=="linearMMS") {
+	   ProblemSpecP mmsSubBlock = mmsBlock->findBlock("linearMMS");
+	   if( mmsSubBlock == 0 ) {
+		printf("Failed to find CFD->ARCHES->MMS->linearMMS in input.xml file.\n");
+		exit(1);
+	   }
+	   
+	   if(mmsSubBlock->get( string("cu"), cu ) == 0 ) {
+              printf("Failed to find cu in input.xml file.\n");
+              exit(1);
+           }
+	   if(mmsSubBlock->get( string("cv"), cv ) == 0 ) {
+              printf("Failed to find cv in input.xml file.\n");
+              exit(1);
+           }
+	   if(mmsSubBlock->get( string("cw"), cw ) == 0 ) {
+              printf("Failed to find cw in input.xml file.\n");
+              exit(1);
+           }
+	   if(mmsSubBlock->get( string("cp"), cw ) == 0 ) {
+              printf("Failed to find cw in input.xml file.\n");
+              exit(1);
+           }
+  	   mms = new LinearMMS(cu, cv, cw, cp, p_ref);
+        }
+        else if(whichMMS=="sineMMS") { 
+	   ProblemSpecP mmsSubBlock = mmsBlock->findBlock("sineMMS");
+	   if( mmsSubBlock == 0 ) {
+		printf("Failed to find CFD->ARCHES->MMS->sineMMS in input.xml file.\n");
+		exit(1);
+	   }
+	   
+	   if(mmsSubBlock->get( string("amplitude"), A ) == 0 ) {
+              printf("Failed to find A in input.xml file.\n");
+              exit(1);
+           }
+           if(mmsSubBlock->get( string("viscosity"), dyVis ) == 0 ) {
+              printf("Failed to find viscosity in input.xml file.\n");
+              exit(1);
+           }
+	   p_ref=0.0;
+  	   mms = new SineMMS(A, dyVis, p_ref);
+        }
+        else if(whichMMS=="expMMS") { 
+  	   mms = new ExpMMS();
+        }
+        else {
+  
+//        throw InvalidValue("current MMS not supported: " + whichMMS, __FILE__, __LINE__);
+  
+	  cout << "current MMS not supported\n";
+	  exit(1);
+        }
+     }
+     
      ProblemSpecP GridBlock = ((docTop->findBlock("Grid"))->findBlock("Level")
-		     ->findBlock("Box"));
+			     ->findBlock("Box"));
 
-     if( GridBlock == 0 )
-       {
+     if( GridBlock == 0 ) {
          printf("Failed to find Grid->Level->Box in input.xml file.\n");
          exit(1);
-       }
-     if( GridBlock->get( string("resolution"), resolution ) == 0 )
-       {
+     }
+     if( GridBlock->get( string("resolution"), resolution ) == 0 ) {
          printf("Failed to find resolution in input.xml file.\n");
          exit(1);
-       }
-     
-     ProblemSpecP matBlock = ((docTop->findBlock("MaterialProperties"))->findBlock("ICE"))->findBlock("material");
+     }
+     cout <<  "read resolution value of resolution" << resolution << "\n";     
 
-     if( matBlock == 0 )
-       {
-         printf("Failed to find MaterialProperties->ICE->material in input.xml file.\n");
-         exit(1);
-       }
-
-     if( matBlock->get( string("dynamic_viscosity"), dyVis ) == 0 )
-       {
-         printf("Failed to find dynamic_viscosity in input.xml file.\n");
-         exit(1);
-       }
-
-/*     if( matBlock->get( string("speed_of_sound"), sos ) == 0 )
-       {
-         printf("Failed to find speed_of_sound in input.xml file.\n");
-         exit(1);
-       }
-*/     
-     printf( "read dynamic viscosity value of %lf\nA: %lf\n", dyVis, A );
-     cout <<  "read resolution value of resolution" << resolution << "\n";
-//     // When done, free up problem spec:
+//   When done, free up problem spec:
      docTop->releaseDocument();
 
 
@@ -187,10 +336,11 @@ main( int argc, char *argv[] )
 	    // JUST LOOK AT THE FIRST ONE FOR NOW FOR TESTING!!!
                   
 	        int i=0;
-	        double total_error=0.0;
+	        double total_error=0.0, total_errorU=0.0, total_errorV=0.0;
+//		Vector total_errVector = (0,0,0); 
                 printf("variable %s is a %s\n", vars[varIndex].c_str(), types[varIndex]->getName().c_str() );
 
-                if( vars[varIndex] != "press_CC" ) continue;
+                if( (vars[varIndex] != varName) ) continue;
 		////////////////////////////
 		// Iterate over the patches
 		for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
@@ -224,45 +374,126 @@ main( int argc, char *argv[] )
                         printf("working on matl: %d\n", matl);
 
                         // know that the first one in the test data set is pressure;
-                        CCVariable<double> pressure;
-                    
-                        da1->query(pressure, vars[varIndex], matl, patch, times[timeIndex]);
+                        CCVariable<double> scalarVar;
+                        CCVariable<Vector> vectorVar;
+			if (varName=="pressurePS"||varName=="press_CC"||varName=="newCCUVelocity"||varName=="newCCVVelocity") {
+			    da1->query(scalarVar, vars[varIndex], matl, patch, times[timeIndex]);
+			}
+			if (varName=="vel_CC"||varName=="newCCVelocity") {
+			    da1->query(vectorVar, vars[varIndex], matl, patch, times[timeIndex]);
+			}
 
                         IntVector low, high, size;
-                        pressure.getSizes(low,high,size);
+			if (varName=="pressurePS"||varName=="press_CC"||varName=="newCCUVelocity"||varName=="newCCVVelocity") {
+                            scalarVar.getSizes(low,high,size);
+			}
+                        if (varName=="vel_CC"||varName=="newCCVelocity") {
+                            vectorVar.getSizes(low,high,size);
+			}
                         cout << "Low:  " << low << "\n";
                         cout << "High: " << high << "\n";
                         cout << "Size: " << size << "\n";
 
                         double maxDiff = -FLT_MAX, minDiff = FLT_MAX;
+			double maxDiffU = -FLT_MAX, minDiffU = FLT_MAX;
+			double maxDiffV = -FLT_MAX, minDiffV = FLT_MAX;
 			
 			
                         //////////////////////////////
                         // Iterate over the cells
                         for(CellIterator iter = patch->getCellIterator(); !iter.done();iter++) {
                             IntVector cell = *iter;
+			    double analytic_value;
+			    double analytic_valueU;
+			    double analytic_valueV;
+			    double diff, diffU, diffV;
+			    			    
                             cout << cell << "\n";
 			    double x_pos = -0.5 + (cell[0]+0.5)*1.0/resolution.x();
 			    double y_pos = -0.5 + (cell[1]+0.5)*1.0/resolution.y();
-			    cout << "x_pos= " << x_pos << " y_pos= " << y_pos << "\n";
-//                            double analytic_value = mms->pressure( cell[0], cell[1], times[timeIndex] );
-			    double analytic_value = mms->pressure( x_pos, y_pos, times[timeIndex] );
-                            double diff = pressure[cell] - analytic_value;
-			    total_error+=diff*diff;
+			    double z_pos = -0.5 + (cell[2]+0.5)*1.0/resolution.z();
+			    cout << "x_pos= " << x_pos << " y_pos= " << y_pos << " z_pos= " << z_pos << "\n";
+			    if (varName=="pressurePS"||varName=="press_CC") {
+			    	cout << "varName= " << varName << "\n";
+				analytic_value = mms->pressure( x_pos, y_pos, z_pos, times[timeIndex] );
+				cout << "analytic_value= " << analytic_value << "\n";
+                            	diff = scalarVar[cell] - analytic_value;
+			    	total_error+=diff*diff;
+                            	if( diff > maxDiff ) maxDiff = diff;
+                            	if( diff < minDiff ) minDiff = diff;
 
-                            if( diff > maxDiff ) maxDiff = diff;
-                            if( diff < minDiff ) minDiff = diff;
-                            printf( "UDA value: %f, Analytic Value: %f.  Diff: %f, fabs(Diff): %f\n", 
-				    pressure[cell], analytic_value, diff, fabs(diff) );
+                            	printf( "UDA value: %f, Analytic Value: %f.  Diff: %f, fabs(Diff): %f\n", 
+				    	scalarVar[cell], analytic_value, diff, fabs(diff) );
+			    }
+			    
+			    if (varName=="newCCUVelocity") {
+			    	cout << "varName= " << varName << "\n";
+				analytic_value = mms->uVelocity( x_pos, y_pos, z_pos, times[timeIndex] );
+				
+				cout << "analytic_value= " << analytic_value << "\n";
+			    
+                            	diff = scalarVar[cell] - analytic_value;
+			    	total_error+=diff*diff;
+                            	if( diff > maxDiff ) maxDiff = diff;
+                            	if( diff < minDiff ) minDiff = diff;
+                            	printf( "UDA value: %f, Analytic Value: %f.  Diff: %f, fabs(Diff): %f\n", 
+				    	scalarVar[cell], analytic_value, diff, fabs(diff) );
+			    }
+			    
+			    if (varName=="newCCVVelocity") {
+			    	cout << "varName= " << varName << "\n";
+				analytic_value = mms->vVelocity( x_pos, y_pos, z_pos, times[timeIndex] );
+				
+				cout << "analytic_value= " << analytic_value << "\n";
+			    
+                            	diff = scalarVar[cell] - analytic_value;
+			    	total_error+=diff*diff;
+                            	if( diff > maxDiff ) maxDiff = diff;
+                            	if( diff < minDiff ) minDiff = diff;
+                            	printf( "UDA value: %f, Analytic Value: %f.  Diff: %f, fabs(Diff): %f\n", 
+				    	scalarVar[cell], analytic_value, diff, fabs(diff) );
+			    }
+			    
+			    if (varName=="vel_CC"||varName=="newCCVelocity") {
+			    	cout << "varName= " << varName << "\n";
+				analytic_valueU = mms->uVelocity( x_pos, y_pos, z_pos, times[timeIndex] );
+				analytic_valueV = mms->vVelocity( x_pos, y_pos, z_pos, times[timeIndex] );
+				
+				cout << "analytic_value= " << analytic_valueU << " " << analytic_valueV << "\n";
+			    
+                            	diffU = vectorVar[cell].x() - analytic_valueU;
+				diffV = vectorVar[cell].y() - analytic_valueV;
+			    	total_errorU+=diffU*diffU;
+				total_errorV+=diffV*diffV;
+                            	if( diffU > maxDiffU ) maxDiffU = diffU;
+				if( diffV > maxDiffV ) maxDiffV = diffV;
+                            	if( diffU < minDiffU ) minDiffU = diffU;
+				if( diffV < minDiffV ) minDiffV = diffV;
+                            	printf( "UDA value: %f, Analytic Value: %f.  Diff: %f, fabs(Diff): %f\n", 
+				    	vectorVar[cell].x(), analytic_valueU, diffU, fabs(diffU) );
+                            	printf( "UDA value: %f, Analytic Value: %f.  Diff: %f, fabs(Diff): %f\n", 
+				    	vectorVar[cell].y(), analytic_valueV, diffV, fabs(diffV) );
+			    } 
 			    i=i+1;
                         }
-                        printf( "Max diff: %f, Min diff %f\n", maxDiff, minDiff );
+			if (varName=="pressurePS"||varName=="press_CC"||varName=="newCCUVelocity"||varName=="newCCVVelocity") {
+                            printf( "Max diff: %f, Min diff %f\n", maxDiff, minDiff );
+			}
+			if (varName=="vel_CC"||varName=="newCCVelocity") {
+                            printf( "MaxU diff: %f, MaxV diff: %f, MinU diff %f, MinV diff %f\n", maxDiffU, maxDiffV, 
+				     minDiffU, minDiffV);
+			}
 			
                     } // end materials iteration
 
                 } // end patch iteration
 		
-                cout << "i= " << i << ", L2norm of error= " << sqrt(total_error/i) << "\n";
+		if (varName=="pressurePS"||varName=="press_CC"||varName=="newCCUVelocity"||varName=="newCCVVelocity") {
+                    cout << "i= " << i << ", L2norm of error= " << sqrt(total_error/i) << "\n";
+		}
+		if (varName=="vel_CC"||varName=="newCCVelocity") {
+                    cout << "i= " << i << ", L2norm of error= " << sqrt(total_errorU/i) << " " << sqrt(total_errorV/i) << "\n";
+		}
 		
             } // end variable iteration
 

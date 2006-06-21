@@ -7,10 +7,10 @@
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 
 #include <Packages/Uintah/Core/Grid/Task.h>
+#include <Packages/Uintah/Core/Grid/AMR.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
-#include <Packages/Uintah/Core/Grid/Variables/AMRInterpolate.h>
 #include <Packages/Uintah/Core/Exceptions/ConvergenceFailure.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h> 
 #include <Packages/Uintah/Core/Exceptions/InvalidValue.h>
@@ -854,8 +854,13 @@ void ICE::coarsen_delP(const ProcessorGroup*,
     cout_doing << d_myworld->myrank()<< " Doing Coarsen_" << variable->getName()
                << " on patch " << coarsePatch->getID() 
                << "\t\t\t ICE \tL-" <<coarseLevel->getIndex()<< endl;
-    CCVariable<double> delP;                  
+    CCVariable<double> delP, delP_old, delP_correction;                  
     new_dw->getModifiable(delP, variable, 0, coarsePatch);
+    new_dw->allocateTemporary(delP_old, coarsePatch);
+    new_dw->allocateTemporary(delP_correction, coarsePatch);
+    
+    delP_old.copy(delP);
+    delP_correction.initialize(0.0);
    
     Level::selectType finePatches;
     coarsePatch->getFineLevelPatches(finePatches);
@@ -896,6 +901,8 @@ void ICE::coarsen_delP(const ProcessorGroup*,
           delP_tmp += fine_delP[fc] * fineCellVol;
         }
         delP[c] =delP_tmp / coarseCellVol; 
+        
+        delP_correction[c] = delP_old[c] - delP[c];
       }
     }
 
@@ -903,6 +910,8 @@ void ICE::coarsen_delP(const ProcessorGroup*,
       ostringstream desc;
       desc << "BOT_coarsen_delP" << coarsePatch->getID();
       printData( 0, coarsePatch, 0,desc.str(), "delP",delP);
+      printData( 0, coarsePatch, 0,desc.str(), "delP_old",delP_old);
+      printData( 0, coarsePatch, 0,desc.str(), "delP_correction",delP_correction);
     }  
 
   } // for patches
@@ -988,7 +997,7 @@ void ICE::zeroMatrix_UnderFinePatches(const ProcessorGroup*,
 #if 1
     if (switchDebug_setupMatrix) {    
       ostringstream desc;
-      desc << "BOT_zeroMatrix_RHS_UnderFinePatches_coarse_patch_" << coarsePatch->getID()
+      desc << "BOT_zeroMatrix_UnderFinePatches_coarse_patch_" << coarsePatch->getID()
            <<  " L-" <<coarseLevel->getIndex()<< endl;
       printStencil( 0, coarsePatch, 1, desc.str(), "A", A);
     }
@@ -997,66 +1006,7 @@ void ICE::zeroMatrix_UnderFinePatches(const ProcessorGroup*,
   } // for patches
 }
 
-/*___________________________________________________________________
- Function~  ICE::matrixCoarseLevelIterator--  
- Purpose:  returns the iterator  THIS IS COMPILCATED AND CONFUSING
-_____________________________________________________________________*/
-void ICE::matrixCoarseLevelIterator(Patch::FaceType patchFace,
-                                       const Patch* coarsePatch,
-                                       const Patch* finePatch,
-                                       const Level* fineLevel,
-                                       CellIterator& iter,
-                                       bool& isRight_CP_FP_pair)
-{
-  CellIterator f_iter=finePatch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
 
-  // find the intersection of the fine patch face iterator and underlying coarse patch
-  IntVector f_lo_face = f_iter.begin();                 // fineLevel face indices   
-  IntVector f_hi_face = f_iter.end();
-
-  f_lo_face = fineLevel->mapCellToCoarser(f_lo_face);     
-  f_hi_face = fineLevel->mapCellToCoarser(f_hi_face);
-
-  IntVector c_lo_patch = coarsePatch->getLowIndex(); 
-  IntVector c_hi_patch = coarsePatch->getHighIndex();
-
-  IntVector l = Max(f_lo_face, c_lo_patch);             // intersection
-  IntVector h = Min(f_hi_face, c_hi_patch);
-
-  //__________________________________
-  // Offset for the coarse level iterator
-  // shift l & h,   1 cell for x+, y+, z+ finePatchfaces
-  // shift l only, -1 cell for x-, y-, z- finePatchfaces
-
-  string name = finePatch->getFaceName(patchFace);
-  IntVector offset = finePatch->faceDirection(patchFace);
-
-  if(name == "xminus" || name == "yminus" || name == "zminus"){
-    l += offset;
-  }
-  if(name == "xplus" || name == "yplus" || name == "zplus"){
-    l += offset;
-    h += offset;
-  }
-
-  l = Max(l, coarsePatch->getLowIndex());
-  h = Min(h, coarsePatch->getHighIndex());
-  
-  iter=CellIterator(l,h);
-  isRight_CP_FP_pair = false;
-  if ( coarsePatch->containsCell(l) ){
-    isRight_CP_FP_pair = true;
-  }
-  
-  if (cout_dbg.active()) {
-    cout_dbg << "refluxCoarseLevelIterator: face "<< patchFace
-             << " finePatch " << finePatch->getID()
-             << " coarsePatch " << coarsePatch->getID()
-             << " [CellIterator at " << iter.begin() << " of " << iter.end() << "] "
-             << " does this coarse patch own the face centered variable "
-             << isRight_CP_FP_pair << endl; 
-  }
-}
 
 /*___________________________________________________________________
  Function~  ICE::schedule_matrixBC_CFI_coarsePatch--  
@@ -1155,7 +1105,7 @@ void ICE::matrixBC_CFI_coarsePatch(const ProcessorGroup*,
           // determine the iterator on the coarse level.
           CellIterator c_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
           bool isRight_CP_FP_pair;
-          matrixCoarseLevelIterator( patchFace,coarsePatch, finePatch, fineLevel,
+          coarseLevel_CFI_Iterator( patchFace,coarsePatch, finePatch, fineLevel,
                                      c_iter ,isRight_CP_FP_pair);
 
           // eject if this is not the right coarse/fine patch pair

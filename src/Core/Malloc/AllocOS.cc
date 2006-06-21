@@ -65,8 +65,9 @@
 
 namespace SCIRun {
 
+#ifndef DISABLE_SCI_MALLOC
 static int devzero_fd=-1;
-
+#endif
 
 OSHunk* OSHunk::alloc(size_t size, bool returnable, Allocator* allocator)
 {

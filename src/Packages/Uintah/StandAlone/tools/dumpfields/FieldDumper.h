@@ -6,7 +6,7 @@
 #include <string>
 
 namespace Uintah {
-  using namespace SCIRun;
+  //using namespace SCIRun;
   using namespace std;
   
   class FieldDumper 

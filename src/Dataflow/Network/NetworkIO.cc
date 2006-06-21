@@ -648,7 +648,7 @@ NetworkIO::load_network()
 #endif
 
   gui->eval("setGlobal NetworkChanged 0");
-  gui->eval("set netedit_savefile " + net_file_);
+  gui->eval("set netedit_savefile {" + net_file_ + "}");
   gui->eval("::netedit scheduleok");
 
   // first draw autoview.
@@ -738,7 +738,8 @@ NetworkIO::start_net_doc(const string &fname, const string &vers)
   xmlNewProp(root_node, BAD_CAST "version", BAD_CAST vers.c_str());
 }
 
-void NetworkIO::write_net_doc()
+void
+NetworkIO::write_net_doc()
 {
   // write the file
   xmlSaveFormatFileEnc(out_fname_.c_str(), doc_, "UTF-8", 1);

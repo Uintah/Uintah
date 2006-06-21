@@ -79,6 +79,8 @@ bool FieldDataNodeToElemAlgo::FieldDataNodeToElem(ProgressReporter *pr,
 
   fi.fill_compile_info(ci);
   fo.fill_compile_info(ci);
+
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;  
  
   SCIRun::Handle<FieldDataNodeToElemAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))

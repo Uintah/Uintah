@@ -88,6 +88,8 @@ bool DistanceFieldCellAlgo::DistanceField(ProgressReporter *pr, FieldHandle inpu
   fobj.fill_compile_info(ci);
   fdobj.fill_compile_info(ci);
   
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;
+
   // Handle dynamic compilation
   SCIRun::Handle<DistanceFieldCellAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
@@ -153,6 +155,8 @@ bool DistanceFieldFaceAlgo::DistanceField(ProgressReporter *pr, FieldHandle inpu
   fi.fill_compile_info(ci);
   fo.fill_compile_info(ci);
   fobj.fill_compile_info(ci);
+
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;
   
   // Handle dynamic compilation
   SCIRun::Handle<DistanceFieldFaceAlgo> algo;
@@ -213,6 +217,8 @@ bool DistanceFieldEdgeAlgo::DistanceField(ProgressReporter *pr, FieldHandle inpu
   fi.fill_compile_info(ci);
   fo.fill_compile_info(ci);
   fobj.fill_compile_info(ci);
+
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;
   
   // Handle dynamic compilation
   SCIRun::Handle<DistanceFieldEdgeAlgo> algo;
@@ -274,12 +280,14 @@ bool DistanceFieldNodeAlgo::DistanceField(ProgressReporter *pr, FieldHandle inpu
   fo.fill_compile_info(ci);
   fobj.fill_compile_info(ci);
   
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;
+    
   // Handle dynamic compilation
   SCIRun::Handle<DistanceFieldNodeAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
     pr->compile_error(ci->filename_);
-//    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
     return(false);
   }
 

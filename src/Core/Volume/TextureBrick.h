@@ -83,7 +83,7 @@ public:
   virtual int sx() { return 0; }
   virtual int sy() { return 0; }
 
-  virtual GLenum tex_type() = 0;
+  virtual GLenum tex_type(int c) = 0;
   virtual void* tex_data(int c) = 0;
 
   inline bool dirty() const { return dirty_; }
@@ -146,7 +146,7 @@ public:
 		   const BBox& bbox, const BBox& tbox);
   virtual ~NrrdTextureBrick();
   
-  virtual GLenum tex_type();
+  virtual GLenum tex_type(int c);
   virtual void *tex_data(int c);
 
   virtual int sx();
@@ -155,12 +155,16 @@ public:
   void set_nrrds(const NrrdDataHandle &n0, const NrrdDataHandle &n1)
   { data_[0] = n0; data_[1] = n1; }
 
+  static bool tex_type_supported(const NrrdDataHandle &n);
+
   static const string type_name(int n = -1);
   virtual const TypeDescription* 
   get_type_description(tb_td_info_e td = FULL_TD_E) const;
 
 protected:
   NrrdDataHandle data_[TEXTURE_MAX_COMPONENTS];
+
+  static GLenum tex_type_aux(const NrrdDataHandle &n);
 };
 
 
@@ -174,7 +178,7 @@ public:
 		const BBox& bbox, const BBox& tbox);
   virtual ~TextureBrickT();
   
-  virtual GLenum tex_type() { return GLinfo<T>::type; }
+  virtual GLenum tex_type(int c) { return GLinfo<T>::type; }
   virtual void* tex_data(int c) { return data_[c]; }
   
   T* data(int c)

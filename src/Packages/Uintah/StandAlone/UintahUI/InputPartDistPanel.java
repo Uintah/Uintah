@@ -48,17 +48,17 @@ public class InputPartDistPanel extends JPanel {
   private JButton saveButton = null;
   public JTextField matNameEntry = null;
   public DecimalField volFracEntry = null;
-  public IntegerField size11Entry = null;
+  public DecimalField size11Entry = null;
   public DecimalField frac11Entry = null;
-  public IntegerField size12Entry = null;
+  public DecimalField size12Entry = null;
   public DecimalField frac12Entry = null;
-  public IntegerField size13Entry = null;
+  public DecimalField size13Entry = null;
   public DecimalField frac13Entry = null;
-  public IntegerField size14Entry = null;
+  public DecimalField size14Entry = null;
   public DecimalField frac14Entry = null;
-  public IntegerField size15Entry = null;
+  public DecimalField size15Entry = null;
   public DecimalField frac15Entry = null;
-  public IntegerField size16Entry = null;
+  public DecimalField size16Entry = null;
   public DecimalField frac16Entry = null;
   
   public InputPartDistPanel(ParticleSize partSizeDist,
@@ -107,18 +107,18 @@ public class InputPartDistPanel extends JPanel {
     JLabel label42 = new JLabel("of Particles");
     JLabel label43 = new JLabel("Size <=");
     JLabel label44 = new JLabel("Fraction (volume %)");
-    size11Entry = new IntegerField(d_partSizeDist.sizeInp[0],4);
+    size11Entry = new DecimalField(d_partSizeDist.sizeInp[0], 4);
     frac11Entry = new DecimalField(d_partSizeDist.volFracInp[0], 5);
-    size12Entry = new IntegerField(d_partSizeDist.sizeInp[1],4);
+    size12Entry = new DecimalField(d_partSizeDist.sizeInp[1], 4);
     frac12Entry = new DecimalField(d_partSizeDist.volFracInp[0]+
                                    d_partSizeDist.volFracInp[1], 5);
-    size13Entry = new IntegerField(0,4);
+    size13Entry = new DecimalField(0.0, 4);
     frac13Entry = new DecimalField(0.0, 5);
-    size14Entry = new IntegerField(0,4);
+    size14Entry = new DecimalField(0.0, 4);
     frac14Entry = new DecimalField(0.0, 5);
-    size15Entry = new IntegerField(0,4);
+    size15Entry = new DecimalField(0.0, 4);
     frac15Entry = new DecimalField(0.0, 5);
-    size16Entry = new IntegerField(0,4);
+    size16Entry = new DecimalField(0.0, 4);
     frac16Entry = new DecimalField(0.0, 5);
     panel4.add(label41);
     panel4.add(label42);
@@ -251,37 +251,37 @@ public class InputPartDistPanel extends JPanel {
           volFracEntry.setText(String.valueOf(st.nval));
           break;
         case 3: 
-          size11Entry.setValue((int) st.nval);
+          size11Entry.setValue(String.valueOf(st.nval));
           break;
         case 4: 
           frac11Entry.setText(String.valueOf(st.nval));
           break;
         case 5: 
-          size12Entry.setValue((int) st.nval);
+          size12Entry.setValue(String.valueOf(st.nval));
           break;
         case 6: 
           frac12Entry.setText(String.valueOf(st.nval));
           break;
         case 7: 
-          size13Entry.setValue((int) st.nval);
+          size13Entry.setValue(String.valueOf(st.nval));
           break;
         case 8: 
           frac13Entry.setText(String.valueOf(st.nval));
           break;
         case 9: 
-          size14Entry.setValue((int) st.nval);
+          size14Entry.setValue(String.valueOf(st.nval));
           break;
         case 10: 
           frac14Entry.setText(String.valueOf(st.nval));
           break;
         case 11: 
-          size15Entry.setValue((int) st.nval);
+          size15Entry.setValue(String.valueOf(st.nval));
           break;
         case 12: 
           frac15Entry.setText(String.valueOf(st.nval));
           break;
         case 13: 
-          size16Entry.setValue((int) st.nval);
+          size16Entry.setValue(String.valueOf(st.nval));
           break;
         case 14: 
           frac16Entry.setText(String.valueOf(st.nval));
@@ -314,7 +314,7 @@ public class InputPartDistPanel extends JPanel {
     try {
 
       // Line 1
-      int size = size11Entry.getValue(); 
+      double size = size11Entry.getValue(); 
       double volFrac = frac11Entry.getValue(); 
       if (size != 0) {
         d_partSizeDist.sizeInp[nofSizes] = size;
@@ -440,7 +440,7 @@ public class InputPartDistPanel extends JPanel {
     double[] sizeInp = new double[nofSizesInp];
     double[] volFracInp = new double[nofSizesInp]; 
     for (int ii = 0; ii < nofSizesInp; ii++) {
-      sizeInp[ii] = (double) d_partSizeDist.sizeInp[ii];
+      sizeInp[ii] = d_partSizeDist.sizeInp[ii];
       volFracInp[ii] = d_partSizeDist.volFracInp[ii];
     }
     
@@ -469,7 +469,11 @@ public class InputPartDistPanel extends JPanel {
       double maxSize = sizeInp[nofSizesInp-1];
       double sizeIncr = (maxSize-minSize)/(NUM_SIZES_MAX-1);
       double[] sizeCalc = new double[NUM_SIZES_MAX];
-      sizeCalc[0] = 0.5*minSize;
+      if (volFracInp[0] > 0.0) {
+        sizeCalc[0] = 0.5*minSize;
+      } else {
+        sizeCalc[0] = minSize;
+      }
       for (int ii = 1; ii < NUM_SIZES_MAX; ++ii) {
         sizeCalc[ii] = minSize + ii*sizeIncr;
       }
@@ -535,7 +539,7 @@ public class InputPartDistPanel extends JPanel {
     }
 
     // Copy the rest of the data into d_PartSizeDist
-    DecimalFormat df = new DecimalFormat("###.0");
+    DecimalFormat df = new DecimalFormat("##0.0##E0");
     System.out.println("Composite");
     System.out.println("Size "+
                        "... Number (2D) .. Vol.Frac (2D)"+

@@ -40,10 +40,11 @@ using namespace std;
 
 void
 nrrd_build_bricks(vector<TextureBrickHandle>& bricks,
-		  int nx, int ny, int nz,
-		  int nc, int* nb,
-		  const BBox& ignored, int card_mem)
+                  int nx, int ny, int nz,
+                  int nc, int* nb, int card_mem)
 {
+  const bool force_pow2 = !ShaderProgramARB::texture_non_power_of_two();
+
   const int brick_mem = card_mem*1024*1024/2;
   
   const unsigned int max_texture_size =
@@ -56,6 +57,12 @@ nrrd_build_bricks(vector<TextureBrickHandle>& bricks,
   bsize[0] = Min(Pow2(nx), max_texture_size);
   bsize[1] = Min(Pow2(ny), max_texture_size);
   bsize[2] = Min(Pow2(nz), max_texture_size);
+  if (force_pow2)
+  {
+    if (Pow2(nx) > (unsigned)nx) bsize[0] = Min(Pow2(nx)/2, max_texture_size);
+    if (Pow2(ny) > (unsigned)ny) bsize[1] = Min(Pow2(ny)/2, max_texture_size);
+    if (Pow2(nz) > (unsigned)nz) bsize[2] = Min(Pow2(nz)/2, max_texture_size);
+  }
   
   // Determine brick size here.
 
@@ -68,11 +75,11 @@ nrrd_build_bricks(vector<TextureBrickHandle>& bricks,
     {
       if (bsize[0] / bsize[1] >= 2 || bsize[1] < 4)
       {
-	bsize[0] /= 2;
+        bsize[0] /= 2;
       }
       else
       {
-	bsize[1] /= 2;
+        bsize[1] /= 2;
       }
     }
     else
@@ -91,56 +98,89 @@ nrrd_build_bricks(vector<TextureBrickHandle>& bricks,
       if (j) j--;
       for (int i = 0; i < nx; i += bsize[0])
       {
-	if (i) i--;
-	const int mx = Min(bsize[0], nx - i);
-	const int my = Min(bsize[1], ny - j);
-	const int mz = Min(bsize[2], nz - k);
+        if (i) i--;
+        const int mx = Min(bsize[0], nx - i);
+        const int my = Min(bsize[1], ny - j);
+        const int mz = Min(bsize[2], nz - k);
+        
+        int mx2 = mx;
+        int my2 = my;
+        int mz2 = mz;
+        if (force_pow2)
+        {
+          mx2 = Pow2(mx);
+          my2 = Pow2(my);
+          mz2 = Pow2(mz);
+        }
 
-	// Compute Texture Box.
-	const double tx0 = i?(0.5 / bsize[0]): 0.0;
-	const double ty0 = j?(0.5 / bsize[1]): 0.0;
-	const double tz0 = k?(0.5 / bsize[2]): 0.0;
-	
-	double tx1 = 1.0 - 0.5 / bsize[0];
-	if (mx < bsize[0]) tx1 = 1.0; //(mx + 0.5) / (double)bsize[0];
-	if (nx - i == bsize[0]) tx1 = 1.0;
+        // Compute Texture Box.
+        const double tx0 = i?((mx2 - mx + 0.5) / mx2): 0.0;
+        const double ty0 = j?((my2 - my + 0.5) / my2): 0.0;
+        const double tz0 = k?((mz2 - mz + 0.5) / mz2): 0.0;
+        
+        double tx1 = 1.0 - 0.5 / mx2;
+        if (mx < bsize[0]) tx1 = 1.0;
+        if (nx - i == bsize[0]) tx1 = 1.0;
 
-	double ty1 = 1.0 - 0.5 / bsize[1];
-	if (my < bsize[1]) ty1 = 1.0; //(my + 0.5) / (double)bsize[1];
-	if (ny - j == bsize[1]) ty1 = 1.0;
+        double ty1 = 1.0 - 0.5 / my2;
+        if (my < bsize[1]) ty1 = 1.0;
+        if (ny - j == bsize[1]) ty1 = 1.0;
 
-	double tz1 = 1.0 - 0.5 / bsize[2];
-	if (mz < bsize[2]) tz1 = 1.0; //(mz + 0.5) / (double)bsize[2];
-	if (nz - k == bsize[2]) tz1 = 1.0;
+        double tz1 = 1.0 - 0.5 / mz2;
+        if (mz < bsize[2]) tz1 = 1.0;
+        if (nz - k == bsize[2]) tz1 = 1.0;
 
-	BBox tbox(Point(tx0, ty0, tz0), Point(tx1, ty1, tz1));
+        BBox tbox(Point(tx0, ty0, tz0), Point(tx1, ty1, tz1));
 
-	// Compute BBox.
-	double bx1 = Min((i + bsize[0] - 0.5) / (double)nx, 1.0);
-	if (nx - i == bsize[0]) bx1 = 1.0;
+        // Compute BBox.
+        double bx1 = Min((i + bsize[0] - 0.5) / (double)nx, 1.0);
+        if (nx - i == bsize[0]) bx1 = 1.0;
 
-	double by1 = Min((j + bsize[1] - 0.5) / (double)ny, 1.0);
-	if (ny - j == bsize[1]) by1 = 1.0;
+        double by1 = Min((j + bsize[1] - 0.5) / (double)ny, 1.0);
+        if (ny - j == bsize[1]) by1 = 1.0;
 
-	double bz1 = Min((k + bsize[2] - 0.5) / (double)nz, 1.0);
-	if (nz - k == bsize[2]) bz1 = 1.0;
+        double bz1 = Min((k + bsize[2] - 0.5) / (double)nz, 1.0);
+        if (nz - k == bsize[2]) bz1 = 1.0;
 
-	BBox bbox(Point(i==0?0:(i+0.5) / (double)nx,
-			j==0?0:(j+0.5) / (double)ny,
-			k==0?0:(k+0.5) / (double)nz),
-		  Point(bx1, by1, bz1));
+        BBox bbox(Point(i==0?0:(i+0.5) / (double)nx,
+                        j==0?0:(j+0.5) / (double)ny,
+                        k==0?0:(k+0.5) / (double)nz),
+                  Point(bx1, by1, bz1));
 
-	NrrdTextureBrick *b =
-	  scinew NrrdTextureBrick(0, 0,
-				  mx, my, mz, //bsize[0], bsize[1], bsize[2],
-				  nc, nb,
-				  i, j, k,
-				  mx, my, mz,
-				  bbox, tbox);
-	bricks.push_back(b);
+        NrrdTextureBrick *b =
+          scinew NrrdTextureBrick(0, 0,
+                                  mx2, my2, mz2,
+                                  nc, nb,
+                                  i-(mx2-mx), j-(my2-my), k-(mz2-mz),
+                                  mx2, my2, mz2,
+                                  bbox, tbox);
+        bricks.push_back(b);
       }
     }
   }
+}
+
+
+
+void
+NrrdTextureBuilderAlgo::build_static(TextureHandle tHandle,
+                                     NrrdDataHandle vHandle,
+                                     double vmin, double vmax,
+                                     NrrdDataHandle gHandle,
+                                     double gmin, double gmax,
+                                     int card_mem)
+{
+  build_aux(tHandle, vHandle, vmin, vmax, gHandle, gmin, gmax,
+            card_mem, true);
+
+  vector<TextureBrickHandle>& bricks = tHandle->bricks();
+  for (unsigned int i=0; i<bricks.size(); i++)
+  {
+    NrrdTextureBrick *nbrick = (NrrdTextureBrick *) bricks[i].get_rep();
+    nbrick->set_nrrds(vHandle, gHandle);
+    bricks[i]->set_dirty(true);
+  }
+  tHandle->unlock_bricks();
 }
 
 
@@ -152,6 +192,36 @@ NrrdTextureBuilderAlgo::build(TextureHandle tHandle,
                               double gmin, double gmax,
                               int card_mem,
                               int is_uchar)
+{
+  build_aux(tHandle, vHandle, vmin, vmax, gHandle, gmin, gmax,
+            card_mem, is_uchar);
+
+  Nrrd* nv_nrrd = vHandle->nrrd_;
+  size_t axis_size[4];
+  nrrdAxisInfoGet_nva(nv_nrrd, nrrdAxisInfoSize, axis_size);
+
+  const int nx = axis_size[nv_nrrd->dim-3];
+  const int ny = axis_size[nv_nrrd->dim-2];
+  const int nz = axis_size[nv_nrrd->dim-1];
+  vector<TextureBrickHandle>& bricks = tHandle->bricks();
+  for (unsigned int i=0; i<bricks.size(); i++)
+  {
+    fill_brick(bricks[i], vHandle, vmin, vmax, gHandle, gmin, gmax,
+	       nx, ny, nz);
+    bricks[i]->set_dirty(true);
+  }
+  tHandle->unlock_bricks();
+}
+
+
+void
+NrrdTextureBuilderAlgo::build_aux(TextureHandle tHandle,
+                                  NrrdDataHandle vHandle,
+                                  double vmin, double vmax,
+                                  NrrdDataHandle gHandle,
+                                  double gmin, double gmax,
+                                  int card_mem,
+                                  int is_uchar)
 {
   Nrrd* nv_nrrd = vHandle->nrrd_;
   Nrrd* gm_nrrd = (gHandle.get_rep() ? gHandle->nrrd_ : 0);
@@ -223,11 +293,10 @@ NrrdTextureBuilderAlgo::build(TextureHandle tHandle,
 		   gHandle->nrrd_->type == nrrdTypeUChar &&
 		   gmin == 0 && gmax == 255);
 
-    if ( use_nrrd_brick &&
-	ShaderProgramARB::shaders_supported() &&
-	ShaderProgramARB::texture_non_power_of_two())
+    if( use_nrrd_brick &&
+        ShaderProgramARB::shaders_supported() )
     {
-      nrrd_build_bricks(bricks, nx, ny, nz, nc, nb, bbox, card_mem);
+      nrrd_build_bricks(bricks, nx, ny, nz, nc, nb, card_mem);
     }
     else
     {
@@ -245,14 +314,8 @@ NrrdTextureBuilderAlgo::build(TextureHandle tHandle,
   tHandle->set_bbox(bbox);
   tHandle->set_minmax(vmin, vmax, gmin, gmax);
   tHandle->set_transform(tform);
-  for (unsigned int i=0; i<bricks.size(); i++)
-  {
-    fill_brick(bricks[i], vHandle, vmin, vmax, gHandle, gmin, gmax,
-	       nx, ny, nz);
 
-    bricks[i]->set_dirty(true);
-  }
-  tHandle->unlock_bricks();
+  // tHandle still locked at this point.
 }
 
 

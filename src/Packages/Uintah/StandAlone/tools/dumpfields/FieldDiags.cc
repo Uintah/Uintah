@@ -4,6 +4,7 @@
 #include <map>
 #include <list>
 #include <numeric>
+#include <limits>
 
 using namespace std;
 using namespace SCIRun;
@@ -13,7 +14,7 @@ FieldDiag::~FieldDiag() {}
   
 bool 
 FieldDiag::has_mass(DataArchive * da, const Patch * patch, 
-                    TypeDescription::Type fieldtype,
+                    Uintah::TypeDescription::Type fieldtype,
                     int imat, double time, const IntVector & pt) const
 {
   switch(fieldtype) 

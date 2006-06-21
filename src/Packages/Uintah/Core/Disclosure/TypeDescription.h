@@ -2,18 +2,21 @@
 #define UINTAH_HOMEBREW_TypeDescription_H
 
 #include <sgi_stl_warnings_off.h>
-#include <string>
+#include   <string>
 #include <sgi_stl_warnings_on.h>
+
 #include <sci_defs/mpi_defs.h> // For MPIPP_H on SGI
 #include <sci_mpi.h>
 
 #include <Packages/Uintah/Core/Disclosure/share.h>
+
 namespace Uintah {
+
 using std::string;
 
 class Variable;
 
-   /**************************************
+/**************************************
      
      CLASS
        TypeDescription
@@ -40,87 +43,87 @@ class Variable;
       
      WARNING
       
-     ****************************************/
+****************************************/
     
-   class SCISHARE TypeDescription {
-   public:
-      enum Type {
-	 CCVariable,
-	 NCVariable,
-	 SFCXVariable,
-	 SFCYVariable,
-	 SFCZVariable,
-	 ParticleVariable,
-	 PerPatch,
-	 Point,
-	 Vector,
-	 Matrix3,
-	 ReductionVariable,
-	 SoleVariable,
-	 double_type,
-         float_type,
-	 bool_type,
-	 int_type,
-	 short_int_type,
-         long_type,
-         long64_type,
-         Short27,   // for Fracture
-	 Unknown,
-	 Other
-      };
+class SCISHARE TypeDescription {
+public:
+  enum Type {
+    CCVariable,
+    NCVariable,
+    SFCXVariable,
+    SFCYVariable,
+    SFCZVariable,
+    ParticleVariable,
+    PerPatch,
+    Point,
+    Vector,
+    Matrix3,
+    ReductionVariable,
+    SoleVariable,
+    double_type,
+    float_type,
+    bool_type,
+    int_type,
+    short_int_type,
+    long_type,
+    long64_type,
+    Short27,   // for Fracture
+    Unknown,
+    Other
+  };
 
-      TypeDescription(Type type, const string& name,
-		      bool isFlat, MPI_Datatype (*make_mpitype)());
-      TypeDescription(Type type, const string& name,
-		      bool isFlat, MPI_Datatype mpitype);
-      TypeDescription(Type type, const string& name,
-		      Variable* (*maker)(),
-		      const TypeDescription* subtype);
+  TypeDescription(Type type, const string& name,
+                  bool isFlat, MPI_Datatype (*make_mpitype)());
+  TypeDescription(Type type, const string& name,
+                  bool isFlat, MPI_Datatype mpitype);
+  TypeDescription(Type type, const string& name,
+                  Variable* (*maker)(),
+                  const TypeDescription* subtype);
      
-      bool isReductionVariable() const {
-	 return d_type == ReductionVariable;
-      }
-      Type getType() const {
-	 return d_type;
-      }
-      const TypeDescription* getSubType() const {
-	 return d_subtype;
-      }
-      string getName() const;
-      string getFileName() const;
+  bool isReductionVariable() const {
+    return d_type == ReductionVariable;
+  }
+  Type getType() const {
+    return d_type;
+  }
+  const TypeDescription* getSubType() const {
+    return d_subtype;
+  }
+  string getName() const;
+  string getFileName() const;
 
-      bool isFlat() const {
-	 return d_isFlat;
-      }
+  bool isFlat() const {
+    return d_isFlat;
+  }
 
-      MPI_Datatype getMPIType() const;
+  MPI_Datatype getMPIType() const;
 
-      struct SCISHARE Register {
-	 Register(const TypeDescription*);
-	 ~Register();
-      };
-      static const TypeDescription* lookupType(const string&);
+  struct SCISHARE Register {
+    Register(const TypeDescription*);
+    ~Register();
+  };
+  static const TypeDescription* lookupType(const string&);
 
-      Variable* createInstance() const;
+  Variable* createInstance() const;
 
-      ~TypeDescription();
+  ~TypeDescription();
 
-     static void deleteAll();
+  static void deleteAll();
      
-   private:
-      Type d_type;
-      const TypeDescription* d_subtype;
-      string d_name;
-      bool d_isFlat;
-      mutable MPI_Datatype d_mpitype;
-      MPI_Datatype (*d_mpitypemaker)();
-      Variable* (*d_maker)();
+private:
+  Type d_type;
+  const TypeDescription* d_subtype;
+  string d_name;
+  bool d_isFlat;
+  mutable MPI_Datatype d_mpitype;
+  MPI_Datatype (*d_mpitypemaker)();
+  Variable* (*d_maker)();
 
-      TypeDescription(const TypeDescription&);
-      TypeDescription& operator=(const TypeDescription&);
+  TypeDescription(const TypeDescription&);
+  TypeDescription& operator=(const TypeDescription&);
 
-     void register_type();
-   };
+  void register_type();
+};
 
 } // End namespace Uintah
 

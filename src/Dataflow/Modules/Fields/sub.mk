@@ -61,6 +61,7 @@ SRCS     += \
 	$(SRCDIR)/CreateMesh.cc\
 	$(SRCDIR)/CubitInterface.cc\
 	$(SRCDIR)/DirectMapping.cc\
+	$(SRCDIR)/ExtractHexSheet.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/FieldCage.cc\
 	$(SRCDIR)/FieldFrenet.cc\
@@ -75,6 +76,7 @@ SRCS     += \
 	$(SRCDIR)/InsertField.cc\
 	$(SRCDIR)/InsertHexSheet.cc\
 	$(SRCDIR)/IsoClip.cc\
+	$(SRCDIR)/IsoRefine.cc\
 	$(SRCDIR)/ManageFieldData.cc\
 	$(SRCDIR)/ManageFieldMesh.cc\
 	$(SRCDIR)/MapDataToMeshCoord.cc\

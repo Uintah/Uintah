@@ -33,6 +33,7 @@ SRCDIR := StandAlone
 SUBDIRS := \
 	$(SRCDIR)/Apps \
 	$(SRCDIR)/convert \
+	$(SRCDIR)/regression \
 	$(SRCDIR)/utils \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

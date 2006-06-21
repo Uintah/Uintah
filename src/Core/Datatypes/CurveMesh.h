@@ -244,6 +244,14 @@ public:
     get_nodes(result, idx);
   }
 
+  //! Defined get_nodes(Node::array, DElem::index_type)
+  void get_nodes(typename Node::array_type &a,
+                 typename Node::index_type i) const
+  {
+    a.clear();
+    a.push_back(i);
+  }
+
   //! Generate the list of points that make up a sufficiently accurate
   //! piecewise linear approximation of an edge.
   void pwl_approx_edge(vector<vector<double> > &coords,

@@ -49,12 +49,12 @@ TextureBrick::TextureBrick (int nx, int ny, int nz, int nc, int* nb,
     ref_cnt(0), lock("LockingHandle lock")
 {
 #if 0
-  cout << "Building brick: " 
-       << nx << " " << ny << " " << nz << ", "
-       << nc << " " << nb[0] << " " << nb[1] << ", "
-       << ox << " " << oy << " " << oz << ", "
-       << mx << " " << my << " " << mz << ", "
-       << tbox.min() << " " << tbox.max() << ", "
+  cout << "Building brick: nxyz = " 
+       << nx << " " << ny << " " << nz << ", nc = " << nc << ", nb01 = "
+       << nb[0] << " " << nb[1] << ", oxyz = "
+       << ox << " " << oy << " " << oz << ", mxzy = "
+       << mx << " " << my << " " << mz << ", tbox = "
+       << tbox.min() << " " << tbox.max() << ", bbox = "
        << bbox.min() << " " << bbox.max()
        << "\n";
 #endif
@@ -555,13 +555,32 @@ NrrdTextureBrick::sy()
 
 
 GLenum
-NrrdTextureBrick::tex_type()
+NrrdTextureBrick::tex_type_aux(const NrrdDataHandle &n)
 {
-  // TODO: Only support unsigned bytes at this time, since that's all we
-  // currently create.  Add rest later.  (Need to add texture
-  // transform to make min/max work without resampling data anyway).
-  ASSERT(data_[0]->nrrd_->type == nrrdTypeUChar);
-  return GL_UNSIGNED_BYTE;
+  // GL_BITMAP!?
+  if (n->nrrd_->type == nrrdTypeChar)   return GL_BYTE;
+  if (n->nrrd_->type == nrrdTypeUChar)  return GL_UNSIGNED_BYTE;
+  if (n->nrrd_->type == nrrdTypeShort)  return GL_SHORT;
+  if (n->nrrd_->type == nrrdTypeUShort) return GL_UNSIGNED_SHORT;
+  if (n->nrrd_->type == nrrdTypeInt)    return GL_INT;
+  if (n->nrrd_->type == nrrdTypeUInt)   return GL_UNSIGNED_INT;
+  if (n->nrrd_->type == nrrdTypeFloat)  return GL_FLOAT;
+  return GL_NONE;
+}
+
+
+GLenum
+NrrdTextureBrick::tex_type(int c)
+{
+  ASSERT(c < nc_);
+  return tex_type_aux(data_[c]);
+}
+
+
+bool
+NrrdTextureBrick::tex_type_supported(const NrrdDataHandle &n)
+{
+  return n->nrrd_ && tex_type_aux(n) != GL_NONE;
 }
 
 

@@ -423,32 +423,29 @@ TextureRenderer::load_brick(vector<TextureBrickHandle> &bricks, int bindex,
       }
 
       // download texture data
+      glPixelStorei(GL_UNPACK_ROW_LENGTH, brick->sx());
+      glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, brick->sy());
+      glPixelStorei(GL_UNPACK_ALIGNMENT, (nb == 1)?1:4);
 #if defined( GL_TEXTURE_COLOR_TABLE_SGI ) && defined(__sgi)
       if (reuse)
       {
         glTexSubImage3DEXT(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz, GL_RED,
-                           brick->tex_type(), brick->tex_data(c));
+                           brick->tex_type(c), brick->tex_data(c));
       }
       else
       {
         glTexImage3DEXT(GL_TEXTURE_3D, 0, GL_INTENSITY8,
                         nx, ny, nz, 0, GL_RED,
-                        brick->tex_type(), brick->tex_data(c));
+                        brick->tex_type(c), brick->tex_data(c));
       }
 #elif defined(GL_ARB_fragment_program) || defined(GL_ATI_fragment_shader)
       if (ShaderProgramARB::shaders_supported())
       {
         unsigned int format = (nb == 1 ? GL_LUMINANCE : GL_RGBA);
-        if (ShaderProgramARB::texture_non_power_of_two())
-        {
-          glPixelStorei(GL_UNPACK_ROW_LENGTH, brick->sx());
-          glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, brick->sy());
-          glPixelStorei(GL_UNPACK_ALIGNMENT, (nb == 1)?1:4);
-        }
         if (reuse && glTexSubImage3D)
         {
           glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz, format,
-                          brick->tex_type(), brick->tex_data(c));
+                          brick->tex_type(c), brick->tex_data(c));
         }
         else
         {
@@ -456,13 +453,7 @@ TextureRenderer::load_brick(vector<TextureBrickHandle> &bricks, int bindex,
           if (glTexImage3D)
 #  endif
             glTexImage3D(GL_TEXTURE_3D, 0, format, nx, ny, nz, 0, format,
-                         brick->tex_type(), brick->tex_data(c));
-        }
-        if (ShaderProgramARB::texture_non_power_of_two())
-        {
-          glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-          glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
-          glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+                         brick->tex_type(c), brick->tex_data(c));
         }
       }
       else
@@ -474,7 +465,7 @@ TextureRenderer::load_brick(vector<TextureBrickHandle> &bricks, int bindex,
         {
           glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz,
                           GL_COLOR_INDEX,
-                          brick->tex_type(), brick->tex_data(c));
+                          brick->tex_type(c), brick->tex_data(c));
         }
         else
         {
@@ -483,7 +474,7 @@ TextureRenderer::load_brick(vector<TextureBrickHandle> &bricks, int bindex,
 #    endif
             glTexImage3D(GL_TEXTURE_3D, 0, GL_COLOR_INDEX8_EXT,
                          nx, ny, nz, 0, GL_COLOR_INDEX,
-                         brick->tex_type(), brick->tex_data(c));
+                         brick->tex_type(c), brick->tex_data(c));
         }
       }
 #  elif defined(_WIN32) || defined(GL_VERSION_1_2) // Workaround for old bad nvidia headers.
@@ -492,7 +483,7 @@ TextureRenderer::load_brick(vector<TextureBrickHandle> &bricks, int bindex,
         {
           glTexSubImage3D(GL_TEXTURE_3D, 0, 0, 0, 0, nx, ny, nz,
                           GL_LUMINANCE,
-                          brick->tex_type(), brick->tex_data(c));
+                          brick->tex_type(c), brick->tex_data(c));
         }
         else
         {
@@ -501,11 +492,14 @@ TextureRenderer::load_brick(vector<TextureBrickHandle> &bricks, int bindex,
 #    endif
             glTexImage3D(GL_TEXTURE_3D, 0, GL_LUMINANCE,
                          nx, ny, nz, 0, GL_LUMINANCE,
-                         brick->tex_type(), brick->tex_data(c));
+                         brick->tex_type(c), brick->tex_data(c));
         }
       }
 #  endif
 #endif // !__sgi
+      glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+      glPixelStorei(GL_UNPACK_IMAGE_HEIGHT, 0);
+      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
     }
   }
   brick->set_dirty(false);

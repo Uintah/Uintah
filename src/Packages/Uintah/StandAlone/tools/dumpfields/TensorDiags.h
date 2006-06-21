@@ -14,8 +14,9 @@
 #include "FieldSelection.h"
 
 namespace Uintah {
-  using namespace SCIRun;
-  
+  //using namespace SCIRun;
+  using SCIRun::FieldSelection;
+
   // produce tensor diagnostic from tensor field
   class TensorDiag : public FieldDiag
   {
@@ -41,20 +42,20 @@ namespace Uintah {
                             ParticleVariable<Matrix3> & values) const = 0;
   };
   
-  int              numberOfTensorDiags(const TypeDescription * fldtype);
-  std::string      tensorDiagName     (const TypeDescription * fldtype, int idiag);
-  TensorDiag const * createTensorDiag (const TypeDescription * fldtype, int idiag,
+  int              numberOfTensorDiags(const Uintah::TypeDescription * fldtype);
+  std::string      tensorDiagName     (const Uintah::TypeDescription * fldtype, int idiag);
+  TensorDiag const * createTensorDiag (const Uintah::TypeDescription * fldtype, int idiag,
                                        const TensorDiag * preop=0);
   
   void describeTensorDiags(ostream & os);
   
   // list of requested tensor diagnostics
-  list<TensorDiag const *> createTensorDiags(const TypeDescription * fldtype, 
+  list<TensorDiag const *> createTensorDiags(const Uintah::TypeDescription * fldtype, 
                                              const FieldSelection & fldselection,
                                              const TensorDiag * preop=0);
   
   // create single tensor op, or null if none requested
-  TensorDiag const * createTensorOp(const FieldSelection & fldselection);
+  const TensorDiag * createTensorOp(const FieldSelection & fldselection);
   
 }
 

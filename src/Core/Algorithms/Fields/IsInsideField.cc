@@ -73,6 +73,8 @@ bool IsInsideFieldAlgo::IsInsideField(ProgressReporter *pr, FieldHandle input, F
   fo.fill_compile_info(ci);
   fobj.fill_compile_info(ci);
   
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;    
+  
   // Handle dynamic compilation
   SCIRun::Handle<IsInsideFieldAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))

@@ -29,10 +29,6 @@ HierarchicalRegridder::HierarchicalRegridder(const ProcessorGroup* pg) : Regridd
 {
   rdbg << "HierarchicalRegridder::HierarchicalRegridder() BGN" << endl;
 
-  d_dilatedCellsCreationLabel  = VarLabel::create("DilatedCellsCreation",
-                             CCVariable<int>::getTypeDescription());
-  d_dilatedCellsDeletionLabel = VarLabel::create("DilatedCellsDeletion",
-                             CCVariable<int>::getTypeDescription());
   d_activePatchesLabel = VarLabel::create("activePatches",
                              PerPatch<SubPatchFlag>::getTypeDescription());
 
@@ -227,60 +223,28 @@ Grid* HierarchicalRegridder::regrid(Grid* oldGrid, SchedulerP& scheduler, const 
   tempsched->get_dw(3)->setScrubbing(DataWarehouse::ScrubNone);
   
 
-  int ngc;
   for ( int levelIndex = 0; levelIndex < oldGrid->numLevels() && levelIndex < d_maxLevels-1; levelIndex++ ) {
-  // copy refine flags to the "old dw" so mpi copying will work correctly
+  // copy dilation to the "old dw" so mpi copying will work correctly
     const PatchSet* perproc = scheduler->getLoadBalancer()->getPerProcessorPatchSet(oldGrid->getLevel(levelIndex));
     perproc->addReference();
     const PatchSubset* psub = perproc->getSubset(d_myworld->myrank());
     MaterialSubset* msub = scinew MaterialSubset;
     msub->add(0);
     DataWarehouse* old_dw = tempsched->get_dw(2);
-    old_dw->transferFrom(parent_dw, d_sharedState->get_refineFlag_label(), psub, msub);
+    old_dw->transferFrom(parent_dw, d_dilatedCellsCreationLabel, psub, msub);
     delete msub;
 
     if (perproc->removeReference())
       delete perproc;
                        
-                       
-    // dilate flagged cells on this level
-    Task* dilate_task = scinew Task("RegridderCommon::Dilate Creation",
-                                 dynamic_cast<RegridderCommon*>(this),
-                                 &RegridderCommon::Dilate, 
-                                 DILATE_CREATION, old_dw);
-    ngc = Max(d_cellCreationDilation.x(), d_cellCreationDilation.y());
-    ngc = Max(ngc, d_cellCreationDilation.z());
-    
-    dilate_task->requires(Task::OldDW, d_sharedState->get_refineFlag_label(), d_sharedState->refineFlagMaterials(),
-                          Ghost::AroundCells, ngc);
-    dilate_task->computes(d_dilatedCellsCreationLabel);
-    tempsched->addTask(dilate_task, oldGrid->getLevel(levelIndex)->eachPatch(), d_sharedState->allMaterials());
-#if 0
-    if (d_cellCreationDilation != d_cellDeletionDilation) {
-      // dilate flagged cells (for deletion) on this level)
-      Task* dilate_delete_task = scinew Task("RegridderCommon::Dilate Deletion",
-                                          dynamic_cast<RegridderCommon*>(this),
-                                          &RegridderCommon::Dilate,
-                                          DILATE_DELETION, old_dw);
-
-      ngc = Max(d_cellDeletionDilation.x(), d_cellDeletionDilation.y());
-      ngc = Max(ngc, d_cellDeletionDilation.z());
-
-      dilate_delete_task->requires(Task::OldDW, d_sharedState->get_refineFlag_label(), 
-                                   d_sharedState->refineFlagMaterials(), Ghost::AroundCells, ngc);
-      dilate_delete_task->computes(d_dilatedCellsDeletionLabel);
-      tempsched->addTask(dilate_delete_task, oldGrid->getLevel(levelIndex)->eachPatch(), 
-                         d_sharedState->allMaterials());
-    }
-#endif
     // mark subpatches on this level (subpatches represent where patches on the next
     // level will be created).
     Task* mark_task = scinew Task("HierarchicalRegridder::MarkPatches2",
                                this, &HierarchicalRegridder::MarkPatches2);
-    mark_task->requires(Task::NewDW, d_dilatedCellsCreationLabel, Ghost::None);
+    mark_task->requires(Task::OldDW, d_dilatedCellsCreationLabel, Ghost::None);
 #if 0
     if (d_cellCreationDilation != d_cellDeletionDilation)
-      mark_task->requires(Task::NewDW, d_dilatedCellsDeletionLabel, Ghost::None);
+      mark_task->requires(Task::OldDW, d_dilatedCellsDeletionLabel, Ghost::None);
 #endif
 
     mark_task->computes(d_activePatchesLabel, d_sharedState->refineFlagMaterials());
@@ -305,7 +269,7 @@ IntVector HierarchicalRegridder::StartCellToLattice ( IntVector startCell, int l
 void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
                                          const PatchSubset* patches,
                                          const MaterialSubset* ,
-                                         DataWarehouse*,
+                                         DataWarehouse* old_dw,
                                          DataWarehouse* new_dw)
 {
   
@@ -329,12 +293,12 @@ void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
     constCCVariable<int> dilatedCellsCreated;
     // FIX Deletion - CCVariable<int>* dilatedCellsDeleted;
     new_dw->put(activePatches, d_activePatchesLabel, 0, patch);
-    new_dw->get(dilatedCellsCreated, d_dilatedCellsCreationLabel, 0, patch, Ghost::None, 0);
+    old_dw->get(dilatedCellsCreated, d_dilatedCellsCreationLabel, 0, patch, Ghost::None, 0);
     
     if (d_cellCreationDilation != d_cellDeletionDilation) {
       //FIX Deletion
       //constCCVariable<int> dcd;
-      //new_dw->get(dcd, d_dilatedCellsDeletionLabel, 0, patch, Ghost::None, 0);
+      //old_dw->get(dcd, d_dilatedCellsDeletionLabel, 0, patch, Ghost::None, 0);
       //dilatedCellsDeleted = dynamic_cast<CCVariable<int>*>(const_cast<CCVariableBase*>(dcd.clone()));
     }
     else {
@@ -681,8 +645,8 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups)
         
         /// pass in our own id to not increment the global id
         int patchID = (d_maxPatchSize[levelIdx] != d_patchSize[levelIdx]) ? id++ : -1;
-        const Patch* patch = addToLevel->addPatch(startCell, endCell + IntVector(1,1,1), 
-                                                  inStartCell, inEndCell + IntVector(1,1,1), patchID);
+        addToLevel->addPatch(startCell, endCell + IntVector(1,1,1), 
+			     inStartCell, inEndCell + IntVector(1,1,1), patchID);
       }
       if(levelIdx == 0){
         periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
@@ -731,7 +695,7 @@ Grid* HierarchicalRegridder::CreateGrid2(Grid* oldGrid, const ProblemSpecP& ups)
 #if 1
         // sort the superboxes.  On different iterations, the same patches can be sorted
         // differently, and thus force the regrid to happen when normally we would do nothing
-        PatchShell::Compare compare;
+        //PatchShell::Compare compare;
         //sort(finalPatches.begin(), finalPatches.end(), compare);
         size = finalPatches.size();
       }

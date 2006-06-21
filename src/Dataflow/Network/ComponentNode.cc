@@ -81,7 +81,8 @@ set_port_info(vector<PInfo*> &ports, xmlNodePtr snode)
 }
 
 
-bool set_port_info(ModuleInfo &mi, const xmlNodePtr cnode)
+bool
+set_port_info(ModuleInfo &mi, const xmlNodePtr cnode)
 {
   xmlNodePtr node = cnode->children;
   for (; node != 0; node = node->next) {
@@ -121,9 +122,8 @@ bool set_port_info(ModuleInfo &mi, const xmlNodePtr cnode)
 }
 
 
-
-
-bool set_description(ModuleInfo &mi, const xmlNodePtr cnode)
+bool
+set_description(ModuleInfo &mi, const xmlNodePtr cnode)
 {
   xmlNodePtr onode = cnode->children;
   for (; onode != 0; onode = onode->next) {
@@ -158,7 +158,8 @@ bool set_description(ModuleInfo &mi, const xmlNodePtr cnode)
 }
 
 
-bool set_gui_info(ModuleInfo &mi, const xmlNodePtr cnode)
+bool
+set_gui_info(ModuleInfo &mi, const xmlNodePtr cnode)
 {
   mi.has_gui_node_ = false;
   xmlNodePtr onode = cnode->children;
@@ -171,7 +172,8 @@ bool set_gui_info(ModuleInfo &mi, const xmlNodePtr cnode)
   return false;
 }
 
-void write_component_file(const ModuleInfo &mi, const char* filename) 
+void
+write_component_file(const ModuleInfo &mi, const char* filename) 
 {
   xmlDocPtr doc = 0;        /* document pointer */
   xmlNodePtr root_node = 0; /* node pointers */
@@ -275,7 +277,8 @@ void write_component_file(const ModuleInfo &mi, const char* filename)
   xmlFreeDoc(doc);
 }
 
-bool read_component_file(ModuleInfo &mi, const char* filename) 
+bool
+read_component_file(ModuleInfo &mi, const char* filename) 
 {
   /*
    * this initialize the library and check potential ABI mismatches

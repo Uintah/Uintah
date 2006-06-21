@@ -72,6 +72,8 @@ bool MappingMatrixToFieldAlgo::MappingMatrixToField(ProgressReporter *pr, FieldH
   fo.fill_compile_info(ci);
   fo2.fill_compile_info(ci);
   
+  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;    
+  
   // Handle dynamic compilation
   SCIRun::Handle<MappingMatrixToFieldAlgo> algo;
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))

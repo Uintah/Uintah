@@ -403,6 +403,8 @@ proc activate_file_submenus { } {
     bind . <Control-a> "selectAll"
     bind . <Control-e> "netedit scheduleall"
     bind . <Control-y> "redo"
+    bind . <Control-o> "popupLoadMenu"
+    bind . <Control-s> "popupSaveMenu"
     bind all <Control-q> "NiceQuit"
 }
 
@@ -969,7 +971,8 @@ proc popupLoadMenu {} {
     #dont ask user before clearing canvas
     ClearCanvas 0
     if {[string match *.srn $netedit_loadnet]} {
-	after 500 "uplevel \#0 netedit load_srn $netedit_loadnet"
+        # compensate for spaces in the filename (windows)
+	after 500 uplevel \#0 netedit load_srn \{\{$netedit_loadnet\}\}
     } else {
 	loadnet $netedit_loadnet 
     }
@@ -982,7 +985,7 @@ proc ClearCanvas { { confirm 1 } { subnet 0 } } {
     set do_clear yes
     if { $confirm } {
 	set message [list "Your network has not been saved." \
-			 "All Moduels and connections will be deleted." \
+			 "All Modules and connections will be deleted." \
 			 "Really clear?"]
 	set do_clear [tk_messageBox -title "Warning" -type yesno -parent . \
 			  -icon warning -message [join $message "\n\n"] ]

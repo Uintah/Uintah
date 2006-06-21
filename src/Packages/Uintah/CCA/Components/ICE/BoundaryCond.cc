@@ -3,11 +3,11 @@
 #include <Packages/Uintah/CCA/Components/ICE/ICEMaterial.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Packages/Uintah/Core/Grid/AMR.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
-#include <Packages/Uintah/Core/Grid/Variables/AMRInterpolate.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/Task.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
@@ -268,8 +268,8 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
   
   Vector gravity = sharedState->getGravity(); 
   int timestep = sharedState->getCurrentTopLevelTimeStep();
-  int numMatls  = sharedState->getNumICEMatls();
-  
+  int numICEMatls  = sharedState->getNumICEMatls();
+    
 //  This doesn't work with AMR.  The refine/setBC_fineLevel task only refines ICE matls so we don't
 //  have access to sp_vol_mpm.
 //
@@ -277,9 +277,6 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
 //    numMatls += sharedState->getNumMPMMatls();
 //  }
       
-  for (int m = 0; m < numMatls; m++) {
-    new_dw->allocateTemporary(rho_micro[m],  patch);
-  }
   //__________________________________
   // Iterate over the faces encompassing the domain
   vector<Patch::FaceType>::const_iterator iter;
@@ -307,17 +304,20 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
       }
       CellIterator iterLimits(lo,hi);
       
-      for (int m = 0; m < numMatls; m++) {
+      for (int m = 0; m < numICEMatls; m++) {
+        ICEMaterial* ice_matl = sharedState->getICEMaterial(m);
+        int matl= ice_matl->getDWIndex();
+                
         if (which_Var == "rho_micro") { 
           for (CellIterator iter=iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
-            rho_micro[m][c] =  rho_micro_tmp[m][c];
+            rho_micro[matl][c] =  rho_micro_tmp[matl][c];
           }
         }
         if (which_Var == "sp_vol") { 
           for (CellIterator iter=iterLimits; !iter.done();iter++) {
             IntVector c = *iter;
-            rho_micro[m][c] =  1.0/sp_vol_CC[m][c];
+            rho_micro[matl][c] =  1.0/sp_vol_CC[matl][c];
           }
         }  // sp_vol
       }  // numMatls
@@ -343,11 +343,14 @@ void setBC(CCVariable<double>& press_CC,
   BC_doing << "setBC (press_CC) "<< kind <<" " << which_Var
            << " mat_id = " << mat_id << endl;
 
-  int numMatls = sharedState->getNumMatls();
+  int numALLMatls = sharedState->getNumMatls();
   int topLevelTimestep = sharedState->getCurrentTopLevelTimeStep();  
   Vector gravity = sharedState->getGravity();
-  StaticArray<CCVariable<double> > rho_micro(numMatls);
-
+  StaticArray<CCVariable<double> > rho_micro(numALLMatls);
+  
+  for (int m = 0; m < numALLMatls; m++) {
+    new_dw->allocateTemporary(rho_micro[m],  patch);
+  }
   
   get_rho_micro(rho_micro, rho_micro_tmp, sp_vol_CC, 
                 patch, which_Var, sharedState,  new_dw, custom_BC_basket);

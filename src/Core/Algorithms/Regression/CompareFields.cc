@@ -63,7 +63,7 @@ bool CompareFieldsAlgo::CompareFields(ProgressReporter *pr, FieldHandle field1, 
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
     "ALGOCompareFields."+fi1.get_field_filename()+".",
-    "CompareFieldsAlgo","CompareFielsAlgoT",
+    "CompareFieldsAlgo","CompareFieldsAlgoT",
     fi1.get_field_name());
 
   ci->add_include(TypeDescription::cc_to_h(__FILE__));

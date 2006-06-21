@@ -174,7 +174,6 @@ OpenGLCmd(clientData, interp, argc, argv)
 #ifndef _WIN32
     int attributes[50];
     int idx = 0;
-    int i;
 #endif
 
 
