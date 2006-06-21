@@ -26,7 +26,7 @@ namespace Uintah {
     }
   };
 
-  std::ostream & operator << (std::ostream &out, const Uintah::Stencil7 &a);
+  SCISHARE std::ostream & operator << (std::ostream &out, const Uintah::Stencil7 &a);
 
 }
 

@@ -31,6 +31,7 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Disclosure/TypeDescription.h>
+#include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
 #include <Core/Exceptions/Exception.h>
 #include <Core/Exceptions/InternalError.h>
@@ -350,9 +351,12 @@ main( int argc, char** argv )
       Time::waitFor( (double)sleepTime );
     }
 
-    // Reader
+    // Read input file
     ProblemSpecInterface* reader = scinew ProblemSpecReader(filename);
     ProblemSpecP ups = reader->readInputFile();
+    if(ups->getNodeName() != "Uintah_specification")
+      throw ProblemSetupException("Input file is not a Uintah specification", __FILE__, __LINE__);
+
 
     // grab AMR from the ups file if not specified on the command line
     if (!do_AMR)
@@ -360,8 +364,7 @@ main( int argc, char** argv )
 
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
     SimulationController* ctl = 
-      scinew AMRSimulationController(world, do_AMR);
-    ctl->attachPort("problem spec", reader);
+      scinew AMRSimulationController(world, do_AMR, ups);
 
     Regridder* reg = 0;
     if(do_AMR) {

@@ -6,6 +6,10 @@
 #include <map>
 #include <list>
 
+#ifdef _WIN32
+#define snprintf _snprintf
+#endif
+
 using namespace std;
 
 namespace Uintah {
@@ -347,8 +351,8 @@ namespace Uintah {
   
   // --------------------------------------------------------------------------
   
-  typedef map<TypeDescription::Type, vector<ScalarDiag *> >     SDiagMap;
-  typedef map<string, map<TypeDescription::Type, ScalarDiag*> > PreSDiagMap;
+  typedef map<Uintah::TypeDescription::Type, vector<ScalarDiag *> >     SDiagMap;
+  typedef map<string, map<Uintah::TypeDescription::Type, ScalarDiag*> > PreSDiagMap;
   
   SDiagMap    _sdiagtable;
   PreSDiagMap _sprediagtable;
@@ -356,48 +360,48 @@ namespace Uintah {
   void createScalarDiags() {
     if(_sdiagtable.size()) return;
     
-    _sdiagtable[TypeDescription::float_type].push_back(new ScalarValueDiag());
-    _sdiagtable[TypeDescription::double_type].push_back(new ScalarValueDiag());
-    _sdiagtable[TypeDescription::double_type].push_back(new ScalarNormDiag());
+    _sdiagtable[Uintah::TypeDescription::float_type].push_back(new ScalarValueDiag());
+    _sdiagtable[Uintah::TypeDescription::double_type].push_back(new ScalarValueDiag());
+    _sdiagtable[Uintah::TypeDescription::double_type].push_back(new ScalarNormDiag());
     
-    _sdiagtable[TypeDescription::Vector].push_back(new VectorMagDiag());
-    _sdiagtable[TypeDescription::Vector].push_back(new VectorNormDiag());
-    _sdiagtable[TypeDescription::Vector].push_back(new VectorCompDiag(0));
-    _sdiagtable[TypeDescription::Vector].push_back(new VectorCompDiag(1));
-    _sdiagtable[TypeDescription::Vector].push_back(new VectorCompDiag(2));
-    _sdiagtable[TypeDescription::Vector].push_back(new VectorMinDiag());
-    _sdiagtable[TypeDescription::Vector].push_back(new VectorMaxDiag());
+    _sdiagtable[Uintah::TypeDescription::Vector].push_back(new VectorMagDiag());
+    _sdiagtable[Uintah::TypeDescription::Vector].push_back(new VectorNormDiag());
+    _sdiagtable[Uintah::TypeDescription::Vector].push_back(new VectorCompDiag(0));
+    _sdiagtable[Uintah::TypeDescription::Vector].push_back(new VectorCompDiag(1));
+    _sdiagtable[Uintah::TypeDescription::Vector].push_back(new VectorCompDiag(2));
+    _sdiagtable[Uintah::TypeDescription::Vector].push_back(new VectorMinDiag());
+    _sdiagtable[Uintah::TypeDescription::Vector].push_back(new VectorMaxDiag());
     
-    _sdiagtable[TypeDescription::Point].push_back(new VectorMagDiag());
-    _sdiagtable[TypeDescription::Point].push_back(new VectorCompDiag(0));
-    _sdiagtable[TypeDescription::Point].push_back(new VectorCompDiag(1));
-    _sdiagtable[TypeDescription::Point].push_back(new VectorCompDiag(2));
-    _sdiagtable[TypeDescription::Point].push_back(new VectorMinDiag());
-    _sdiagtable[TypeDescription::Point].push_back(new VectorMaxDiag());
+    _sdiagtable[Uintah::TypeDescription::Point].push_back(new VectorMagDiag());
+    _sdiagtable[Uintah::TypeDescription::Point].push_back(new VectorCompDiag(0));
+    _sdiagtable[Uintah::TypeDescription::Point].push_back(new VectorCompDiag(1));
+    _sdiagtable[Uintah::TypeDescription::Point].push_back(new VectorCompDiag(2));
+    _sdiagtable[Uintah::TypeDescription::Point].push_back(new VectorMinDiag());
+    _sdiagtable[Uintah::TypeDescription::Point].push_back(new VectorMaxDiag());
     
-    _sdiagtable[TypeDescription::Matrix3].push_back(new Matrix3MagDiag());
-    _sdiagtable[TypeDescription::Matrix3].push_back(new Matrix3Mag2Diag());
-    _sdiagtable[TypeDescription::Matrix3].push_back(new Matrix3CompDiag(0,0));
-    _sdiagtable[TypeDescription::Matrix3].push_back(new Matrix3CompDiag(0,1));
-    _sdiagtable[TypeDescription::Matrix3].push_back(new Matrix3CompDiag(0,2));
-    _sdiagtable[TypeDescription::Matrix3].push_back(new Matrix3CompDiag(1,0));
-    _sdiagtable[TypeDescription::Matrix3].push_back(new Matrix3CompDiag(1,1));
-    _sdiagtable[TypeDescription::Matrix3].push_back(new Matrix3CompDiag(1,2));
-    _sdiagtable[TypeDescription::Matrix3].push_back(new Matrix3CompDiag(2,0));
-    _sdiagtable[TypeDescription::Matrix3].push_back(new Matrix3CompDiag(2,1));
-    _sdiagtable[TypeDescription::Matrix3].push_back(new Matrix3CompDiag(2,2));
-    _sdiagtable[TypeDescription::Matrix3].push_back(new Matrix3MinEigenDiag());
-    _sdiagtable[TypeDescription::Matrix3].push_back(new Matrix3MidEigenDiag());
-    _sdiagtable[TypeDescription::Matrix3].push_back(new Matrix3MaxEigenDiag());
-    _sdiagtable[TypeDescription::Matrix3].push_back(new Matrix3TraceDiag());
-    _sdiagtable[TypeDescription::Matrix3].push_back(new Matrix3PressureDiag());
-    _sdiagtable[TypeDescription::Matrix3].push_back(new Matrix3EquivDiag());
-    _sdiagtable[TypeDescription::Matrix3].push_back(new Matrix3MinElemDiag());
-    _sdiagtable[TypeDescription::Matrix3].push_back(new Matrix3MaxElemDiag());
+    _sdiagtable[Uintah::TypeDescription::Matrix3].push_back(new Matrix3MagDiag());
+    _sdiagtable[Uintah::TypeDescription::Matrix3].push_back(new Matrix3Mag2Diag());
+    _sdiagtable[Uintah::TypeDescription::Matrix3].push_back(new Matrix3CompDiag(0,0));
+    _sdiagtable[Uintah::TypeDescription::Matrix3].push_back(new Matrix3CompDiag(0,1));
+    _sdiagtable[Uintah::TypeDescription::Matrix3].push_back(new Matrix3CompDiag(0,2));
+    _sdiagtable[Uintah::TypeDescription::Matrix3].push_back(new Matrix3CompDiag(1,0));
+    _sdiagtable[Uintah::TypeDescription::Matrix3].push_back(new Matrix3CompDiag(1,1));
+    _sdiagtable[Uintah::TypeDescription::Matrix3].push_back(new Matrix3CompDiag(1,2));
+    _sdiagtable[Uintah::TypeDescription::Matrix3].push_back(new Matrix3CompDiag(2,0));
+    _sdiagtable[Uintah::TypeDescription::Matrix3].push_back(new Matrix3CompDiag(2,1));
+    _sdiagtable[Uintah::TypeDescription::Matrix3].push_back(new Matrix3CompDiag(2,2));
+    _sdiagtable[Uintah::TypeDescription::Matrix3].push_back(new Matrix3MinEigenDiag());
+    _sdiagtable[Uintah::TypeDescription::Matrix3].push_back(new Matrix3MidEigenDiag());
+    _sdiagtable[Uintah::TypeDescription::Matrix3].push_back(new Matrix3MaxEigenDiag());
+    _sdiagtable[Uintah::TypeDescription::Matrix3].push_back(new Matrix3TraceDiag());
+    _sdiagtable[Uintah::TypeDescription::Matrix3].push_back(new Matrix3PressureDiag());
+    _sdiagtable[Uintah::TypeDescription::Matrix3].push_back(new Matrix3EquivDiag());
+    _sdiagtable[Uintah::TypeDescription::Matrix3].push_back(new Matrix3MinElemDiag());
+    _sdiagtable[Uintah::TypeDescription::Matrix3].push_back(new Matrix3MaxElemDiag());
   }
   
   void destroyScalarDiags() {
-    for(map<TypeDescription::Type, vector<ScalarDiag *> >::iterator tit(_sdiagtable.begin());
+    for(map<Uintah::TypeDescription::Type, vector<ScalarDiag *> >::iterator tit(_sdiagtable.begin());
         tit!=_sdiagtable.end();tit++) {
       for(vector<ScalarDiag *>::iterator dit(tit->second.begin());dit!=tit->second.end();dit++) {
         delete *dit;
@@ -409,49 +413,49 @@ namespace Uintah {
   void describeScalarDiags(ostream & os)
   {
     createScalarDiags();
-    if(_sdiagtable[TypeDescription::double_type].size())
+    if(_sdiagtable[Uintah::TypeDescription::double_type].size())
       os << "  Scalar -> Scalar" << endl;
-    for(vector<ScalarDiag *>::iterator dit(_sdiagtable[TypeDescription::double_type].begin());
-        dit!=_sdiagtable[TypeDescription::double_type].end();dit++) {
+    for(vector<ScalarDiag *>::iterator dit(_sdiagtable[Uintah::TypeDescription::double_type].begin());
+        dit!=_sdiagtable[Uintah::TypeDescription::double_type].end();dit++) {
       os << "    " << (*dit)->name() << endl;
     }
     
-    if(_sdiagtable[TypeDescription::Vector].size())
+    if(_sdiagtable[Uintah::TypeDescription::Vector].size())
       os << "  Vector -> Scalar" << endl;
-    for(vector<ScalarDiag *>::iterator dit(_sdiagtable[TypeDescription::Vector].begin());
-        dit!=_sdiagtable[TypeDescription::Vector].end();dit++) {
+    for(vector<ScalarDiag *>::iterator dit(_sdiagtable[Uintah::TypeDescription::Vector].begin());
+        dit!=_sdiagtable[Uintah::TypeDescription::Vector].end();dit++) {
       os << "    " << (*dit)->name() << endl;
     }
-    if(_sdiagtable[TypeDescription::Matrix3].size())
+    if(_sdiagtable[Uintah::TypeDescription::Matrix3].size())
       os << "  Tensor -> Scalar" << endl;
-    for(vector<ScalarDiag *>::iterator dit(_sdiagtable[TypeDescription::Matrix3].begin());
-        dit!=_sdiagtable[TypeDescription::Matrix3].end();dit++) {
+    for(vector<ScalarDiag *>::iterator dit(_sdiagtable[Uintah::TypeDescription::Matrix3].begin());
+        dit!=_sdiagtable[Uintah::TypeDescription::Matrix3].end();dit++) {
       os << "    " << (*dit)->name() << endl;
     }
   }
   
   // --------------------------------------------------------------------------
   
-  int numberOfScalarDiags(const TypeDescription * fldtype) {
+  int numberOfScalarDiags(const Uintah::TypeDescription * fldtype) {
     createScalarDiags();
     if(!_sdiagtable.count(fldtype->getSubType()->getType())) return 0;
     return _sdiagtable[fldtype->getSubType()->getType()].size();
   }
   
-  std::string scalarDiagName(const TypeDescription * fldtype, int idiag) {
+  std::string scalarDiagName(const Uintah::TypeDescription * fldtype, int idiag) {
     createScalarDiags();
     return _sdiagtable[fldtype->getSubType()->getType()][idiag]->name();
   }
   
-  ScalarDiag const * createScalarDiag(const TypeDescription * fldtype, int idiag,
+  ScalarDiag const * createScalarDiag(const Uintah::TypeDescription * fldtype, int idiag,
                                       const TensorDiag * tensorpreop)
   {
-    TypeDescription::Type srctype = fldtype->getSubType()->getType();
+    Uintah::TypeDescription::Type srctype = fldtype->getSubType()->getType();
     
     createScalarDiags();
     ScalarDiag const * sdiag =  _sdiagtable[srctype][idiag];
     
-    if(tensorpreop != 0 && srctype == TypeDescription::Matrix3 ) {
+    if(tensorpreop != 0 && srctype == Uintah::TypeDescription::Matrix3 ) {
       if(!_sprediagtable[ tensorpreop->name() ].count(srctype) )
         _sprediagtable[tensorpreop->name()][srctype]= 
           new PreTensorToScalarDiag( tensorpreop, dynamic_cast<const TensorToScalarDiag *>(sdiag) );
@@ -461,9 +465,9 @@ namespace Uintah {
       return sdiag;
     }
   }
-  
+    
   list<ScalarDiag const *> 
-  createScalarDiags(const TypeDescription * fldtype, 
+  createScalarDiags(const Uintah::TypeDescription * fldtype, 
                     const FieldSelection & fldselection,
                     const class TensorDiag * tensorpreop)
   {
