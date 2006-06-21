@@ -7,8 +7,9 @@
 class SineMMS : public MMS {
 
 public:
-  SineMMS::SineMMS(double A, double viscosity, double p_ref);
-  SineMMS::~SineMMS();
+  SineMMS(double A, double viscosity, double p_ref);
+  ~SineMMS();
+
   double pressure( double x, double y, double z, double time );
   double uVelocity( double x, double y, double z, double time );
   double vVelocity( double x, double y, double z, double time );
@@ -20,4 +21,5 @@ private:
   double viscosity_;
   double p_ref_;
 };
+
 #endif

@@ -4,8 +4,9 @@
 class MMS {
 
 public:
-  MMS::MMS();
-  virtual MMS::~MMS();
+  //MMS() {}
+  //virtual ~MMS() {}
+
   virtual double pressure( double x, double y, double z, double time ) = 0;
   virtual double uVelocity( double x, double y, double z, double time ) = 0;
   virtual double vVelocity( double x, double y, double z, double time ) = 0;
