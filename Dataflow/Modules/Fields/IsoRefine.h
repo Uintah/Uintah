@@ -299,6 +299,18 @@ public:
 			      MatrixHandle &interpolant);
 
   typename FIELD::mesh_type::Node::index_type
+  lookup(typename FIELD::mesh_type *mesh,
+         typename FIELD::mesh_type::Node::index_type a,
+         typename FIELD::mesh_type::Node::index_type b)
+  {
+    Point pa, pb;
+    mesh->get_point(pa, a);
+    mesh->get_point(pb, b);
+    const Point inbetween = Interpolate(pa, pb, 1.0/3.0);
+    return mesh->add_point(inbetween);
+  }
+
+  typename FIELD::mesh_type::Node::index_type
   lookup(typename FIELD::mesh_type *mesh, const Point &p)
   {
     return mesh->add_point(p);
@@ -436,50 +448,50 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
     {
       const int *ro = hex_reorder_table[which];
       
-      const Point e1 = Interpolate(p[ro[0]], p[ro[1]], 1.0/3.0);
-      const Point e3 = Interpolate(p[ro[0]], p[ro[3]], 1.0/3.0);
-      const Point e4 = Interpolate(p[ro[0]], p[ro[4]], 1.0/3.0);
-      const Point f2 = Interpolate(p[ro[0]], p[ro[2]], 1.0/3.0);
-      const Point f5 = Interpolate(p[ro[0]], p[ro[5]], 1.0/3.0);
-      const Point f7 = Interpolate(p[ro[0]], p[ro[7]], 1.0/3.0);
-      const Point in = Interpolate(p[ro[0]], p[ro[6]], 1.0/3.0);
+      const Point e01 = Interpolate(p[ro[0]], p[ro[1]], 1.0/3.0);
+      const Point e03 = Interpolate(p[ro[0]], p[ro[3]], 1.0/3.0);
+      const Point e04 = Interpolate(p[ro[0]], p[ro[4]], 1.0/3.0);
+      const Point f02 = Interpolate(p[ro[0]], p[ro[2]], 1.0/3.0);
+      const Point f05 = Interpolate(p[ro[0]], p[ro[5]], 1.0/3.0);
+      const Point f07 = Interpolate(p[ro[0]], p[ro[7]], 1.0/3.0);
+      const Point i06 = Interpolate(p[ro[0]], p[ro[6]], 1.0/3.0);
 
       // Add this corner.
       nnodes[0] = onodes[ro[0]];
-      nnodes[1] = lookup(refined, e1);
-      nnodes[2] = lookup(refined, f2);
-      nnodes[3] = lookup(refined, e3);
-      nnodes[4] = lookup(refined, e4);
-      nnodes[5] = lookup(refined, f5);
-      nnodes[6] = lookup(refined, in);
-      nnodes[7] = lookup(refined, f7);
+      nnodes[1] = lookup(refined, e01);
+      nnodes[2] = lookup(refined, f02);
+      nnodes[3] = lookup(refined, e03);
+      nnodes[4] = lookup(refined, e04);
+      nnodes[5] = lookup(refined, f05);
+      nnodes[6] = lookup(refined, i06);
+      nnodes[7] = lookup(refined, f07);
       refined->add_elem(nnodes);
 
       // Add the other three pieces.
-      nnodes[0] = lookup(refined, e1);
+      nnodes[0] = lookup(refined, e01);
       nnodes[1] = onodes[ro[1]];
       nnodes[2] = onodes[ro[2]];
-      nnodes[3] = lookup(refined, f2);
-      nnodes[4] = lookup(refined, f5);
+      nnodes[3] = lookup(refined, f02);
+      nnodes[4] = lookup(refined, f05);
       nnodes[5] = onodes[ro[5]];
       nnodes[6] = onodes[ro[6]];
-      nnodes[7] = lookup(refined, in);
+      nnodes[7] = lookup(refined, i06);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, e3);
-      nnodes[1] = lookup(refined, f2);
+      nnodes[0] = lookup(refined, e03);
+      nnodes[1] = lookup(refined, f02);
       nnodes[2] = onodes[ro[2]];
       nnodes[3] = onodes[ro[3]];
-      nnodes[4] = lookup(refined, f7);
-      nnodes[5] = lookup(refined, in);
+      nnodes[4] = lookup(refined, f07);
+      nnodes[5] = lookup(refined, i06);
       nnodes[6] = onodes[ro[6]];
       nnodes[7] = onodes[ro[7]];
       refined->add_elem(nnodes);
       
-      nnodes[0] = lookup(refined, e4);
-      nnodes[1] = lookup(refined, f5);
-      nnodes[2] = lookup(refined, in);
-      nnodes[3] = lookup(refined, f7);
+      nnodes[0] = lookup(refined, e04);
+      nnodes[1] = lookup(refined, f05);
+      nnodes[2] = lookup(refined, i06);
+      nnodes[3] = lookup(refined, f07);
       nnodes[4] = onodes[ro[4]];
       nnodes[5] = onodes[ro[5]];
       nnodes[6] = onodes[ro[6]];
