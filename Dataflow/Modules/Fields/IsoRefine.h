@@ -436,306 +436,827 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       nnodes[7] = onodes[ro[7]];
       refined->add_elem(nnodes);
     }
+    else if (inside == 128+64)
+    {
+      const int reorder_table[8][8] = {
+        {0, 1, 2, 3, 4, 5, 6, 7},
+        {1, 2, 3, 0, 5, 6, 7, 4},
+        {2, 3, 0, 1, 6, 7, 4, 5},
+        {3, 0, 1, 2, 7, 4, 5, 6},
+        {4, 7, 6, 5, 0, 3, 2, 1},
+        {5, 4, 7, 6, 1, 0, 3, 2},
+        {6, 5, 4, 7, 2, 1, 0, 3},
+        {7, 6, 5, 4, 3, 2, 1, 0}};
+      int which = 0;
+      const int *ro = reorder_table[which];
+
+      const Point e01 = Interpolate(p[ro[0]], p[ro[1]], 1.0/3.0);
+      const Point e10 = Interpolate(p[ro[1]], p[ro[0]], 1.0/3.0);
+      const Point e03 = Interpolate(p[ro[0]], p[ro[3]], 1.0/3.0);
+      const Point e12 = Interpolate(p[ro[1]], p[ro[2]], 1.0/3.0);
+      const Point e04 = Interpolate(p[ro[0]], p[ro[4]], 1.0/3.0);
+      const Point e15 = Interpolate(p[ro[1]], p[ro[5]], 1.0/3.0);
+
+      const Point f02 = Interpolate(p[ro[0]], p[ro[2]], 1.0/3.0);
+      const Point f20 = Interpolate(p[ro[2]], p[ro[0]], 1.0/3.0);
+      const Point f13 = Interpolate(p[ro[1]], p[ro[3]], 1.0/3.0);
+      const Point f31 = Interpolate(p[ro[3]], p[ro[1]], 1.0/3.0);
+
+      const Point f05 = Interpolate(p[ro[0]], p[ro[5]], 1.0/3.0);
+      const Point f50 = Interpolate(p[ro[5]], p[ro[0]], 1.0/3.0);
+      const Point f14 = Interpolate(p[ro[1]], p[ro[4]], 1.0/3.0);
+      const Point f41 = Interpolate(p[ro[4]], p[ro[1]], 1.0/3.0);
+
+      const Point f07 = Interpolate(p[ro[0]], p[ro[7]], 1.0/3.0);
+      const Point f16 = Interpolate(p[ro[1]], p[ro[6]], 1.0/3.0);
+
+      const Point i06 = Interpolate(p[ro[0]], p[ro[6]], 1.0/3.0);
+      const Point i17 = Interpolate(p[ro[1]], p[ro[7]], 1.0/3.0);
+      const Point i60 = Interpolate(p[ro[6]], p[ro[0]], 1.0/3.0);
+      const Point i71 = Interpolate(p[ro[7]], p[ro[1]], 1.0/3.0);
+
+      // Leading edge.
+      nnodes[0] = onodes[ro[0]];
+      nnodes[1] = lookup(refined, e01);
+      nnodes[2] = lookup(refined, f02);
+      nnodes[3] = lookup(refined, e03);
+      nnodes[4] = lookup(refined, e04);
+      nnodes[5] = lookup(refined, f05);
+      nnodes[6] = lookup(refined, i06);
+      nnodes[7] = lookup(refined, f07);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, e01);
+      nnodes[1] = lookup(refined, e10);
+      nnodes[2] = lookup(refined, f13);
+      nnodes[3] = lookup(refined, f02);
+      nnodes[4] = lookup(refined, f05);
+      nnodes[5] = lookup(refined, f14);
+      nnodes[6] = lookup(refined, i17);
+      nnodes[7] = lookup(refined, i06);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, e10);
+      nnodes[1] = onodes[1];
+      nnodes[2] = lookup(refined, e12);
+      nnodes[3] = lookup(refined, f13);
+      nnodes[4] = lookup(refined, f14);
+      nnodes[5] = lookup(refined, e15);
+      nnodes[6] = lookup(refined, f16);
+      nnodes[7] = lookup(refined, i17);
+      refined->add_elem(nnodes);
+
+      // Top center
+      nnodes[0] = lookup(refined, e03);
+      nnodes[1] = lookup(refined, f02);
+      nnodes[2] = lookup(refined, f31);
+      nnodes[3] = onodes[3];
+      nnodes[4] = lookup(refined, f07);
+      nnodes[5] = lookup(refined, i06);
+      nnodes[6] = lookup(refined, i71);
+      nnodes[7] = onodes[7];
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, f02);
+      nnodes[1] = lookup(refined, f13);
+      nnodes[2] = lookup(refined, f20);
+      nnodes[3] = lookup(refined, f31);
+      nnodes[4] = lookup(refined, i06);
+      nnodes[5] = lookup(refined, i17);
+      nnodes[6] = lookup(refined, i60);
+      nnodes[7] = lookup(refined, i71);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, f13);
+      nnodes[1] = lookup(refined, e12);
+      nnodes[2] = onodes[2];
+      nnodes[3] = lookup(refined, f20);
+      nnodes[4] = lookup(refined, i17);
+      nnodes[5] = lookup(refined, f16);
+      nnodes[6] = onodes[6];
+      nnodes[7] = lookup(refined, i60);
+      refined->add_elem(nnodes);
+
+      // Front Center
+      nnodes[0] = lookup(refined, e04);
+      nnodes[1] = lookup(refined, f05);
+      nnodes[2] = lookup(refined, i06);
+      nnodes[3] = lookup(refined, f07);
+      nnodes[4] = onodes[4];
+      nnodes[5] = lookup(refined, f41);
+      nnodes[6] = lookup(refined, i71);
+      nnodes[7] = onodes[7];
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, f05);
+      nnodes[1] = lookup(refined, f14);
+      nnodes[2] = lookup(refined, i17);
+      nnodes[3] = lookup(refined, i06);
+      nnodes[4] = lookup(refined, f41);
+      nnodes[5] = lookup(refined, f50);
+      nnodes[6] = lookup(refined, i60);
+      nnodes[7] = lookup(refined, i71);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, f14);
+      nnodes[1] = lookup(refined, e15);
+      nnodes[2] = lookup(refined, f16);
+      nnodes[3] = lookup(refined, i17);
+      nnodes[4] = lookup(refined, f50);
+      nnodes[5] = onodes[5];
+      nnodes[6] = onodes[6];
+      nnodes[7] = lookup(refined, i60);
+      refined->add_elem(nnodes);
+
+      // Outside wedges
+      nnodes[0] = lookup(refined, f31);
+      nnodes[1] = lookup(refined, f20);
+      nnodes[2] = onodes[2];
+      nnodes[3] = onodes[3];
+      nnodes[4] = lookup(refined, i71);
+      nnodes[5] = lookup(refined, i60);
+      nnodes[6] = onodes[6];
+      nnodes[7] = onodes[7];
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, f41);
+      nnodes[1] = lookup(refined, f50);
+      nnodes[2] = lookup(refined, i60);
+      nnodes[3] = lookup(refined, i71);
+      nnodes[4] = onodes[4];
+      nnodes[5] = onodes[5];
+      nnodes[6] = onodes[6];
+      nnodes[7] = onodes[7];
+      refined->add_elem(nnodes);
+    }
+    else if (inside == 128+64+32+16)
+    {
+      const int reorder_table[8][8] = {
+        {0, 1, 2, 3, 4, 5, 6, 7},
+        {1, 2, 3, 0, 5, 6, 7, 4},
+        {2, 3, 0, 1, 6, 7, 4, 5},
+        {3, 0, 1, 2, 7, 4, 5, 6},
+        {4, 7, 6, 5, 0, 3, 2, 1},
+        {5, 4, 7, 6, 1, 0, 3, 2},
+        {6, 5, 4, 7, 2, 1, 0, 3},
+        {7, 6, 5, 4, 3, 2, 1, 0}};
+      int which = 0;
+      const int *ro = reorder_table[which];
+
+      // top edges
+      const Point e01 = Interpolate(p[ro[0]], p[ro[1]], 1.0/3.0);
+      const Point e10 = Interpolate(p[ro[1]], p[ro[0]], 1.0/3.0);
+      const Point e12 = Interpolate(p[ro[1]], p[ro[2]], 1.0/3.0);
+      const Point e21 = Interpolate(p[ro[2]], p[ro[1]], 1.0/3.0);
+      const Point e23 = Interpolate(p[ro[2]], p[ro[3]], 1.0/3.0);
+      const Point e32 = Interpolate(p[ro[3]], p[ro[2]], 1.0/3.0);
+      const Point e03 = Interpolate(p[ro[0]], p[ro[3]], 1.0/3.0);
+      const Point e30 = Interpolate(p[ro[3]], p[ro[0]], 1.0/3.0);
+
+      // side edges
+      const Point e04 = Interpolate(p[ro[0]], p[ro[4]], 1.0/3.0);
+      const Point e15 = Interpolate(p[ro[1]], p[ro[5]], 1.0/3.0);
+      const Point e26 = Interpolate(p[ro[2]], p[ro[6]], 1.0/3.0);
+      const Point e37 = Interpolate(p[ro[3]], p[ro[7]], 1.0/3.0);
+
+      // top face
+      const Point f02 = Interpolate(p[ro[0]], p[ro[2]], 1.0/3.0);
+      const Point f20 = Interpolate(p[ro[2]], p[ro[0]], 1.0/3.0);
+      const Point f13 = Interpolate(p[ro[1]], p[ro[3]], 1.0/3.0);
+      const Point f31 = Interpolate(p[ro[3]], p[ro[1]], 1.0/3.0);
+
+      // front face
+      const Point f05 = Interpolate(p[ro[0]], p[ro[5]], 1.0/3.0);
+      const Point f50 = Interpolate(p[ro[5]], p[ro[0]], 1.0/3.0);
+      const Point f14 = Interpolate(p[ro[1]], p[ro[4]], 1.0/3.0);
+      const Point f41 = Interpolate(p[ro[4]], p[ro[1]], 1.0/3.0);
+
+      // right face
+      const Point f16 = Interpolate(p[ro[1]], p[ro[6]], 1.0/3.0);
+      const Point f61 = Interpolate(p[ro[6]], p[ro[1]], 1.0/3.0);
+      const Point f25 = Interpolate(p[ro[2]], p[ro[5]], 1.0/3.0);
+      const Point f52 = Interpolate(p[ro[5]], p[ro[2]], 1.0/3.0);
+
+      // back face
+      const Point f27 = Interpolate(p[ro[2]], p[ro[7]], 1.0/3.0);
+      const Point f72 = Interpolate(p[ro[7]], p[ro[2]], 1.0/3.0);
+      const Point f36 = Interpolate(p[ro[3]], p[ro[6]], 1.0/3.0);
+      const Point f63 = Interpolate(p[ro[6]], p[ro[3]], 1.0/3.0);
+
+      // left face
+      const Point f07 = Interpolate(p[ro[0]], p[ro[7]], 1.0/3.0);
+      const Point f70 = Interpolate(p[ro[7]], p[ro[0]], 1.0/3.0);
+      const Point f34 = Interpolate(p[ro[3]], p[ro[4]], 1.0/3.0);
+      const Point f43 = Interpolate(p[ro[4]], p[ro[3]], 1.0/3.0);
+
+      // Interior
+      const Point i06 = Interpolate(p[ro[0]], p[ro[6]], 1.0/3.0);
+      const Point i17 = Interpolate(p[ro[1]], p[ro[7]], 1.0/3.0);
+      const Point i24 = Interpolate(p[ro[2]], p[ro[4]], 1.0/3.0);
+      const Point i35 = Interpolate(p[ro[3]], p[ro[5]], 1.0/3.0);
+      const Point i42a = Interpolate(p[ro[4]], p[ro[2]], 1.0/3.0);
+      const Point i53a = Interpolate(p[ro[5]], p[ro[3]], 1.0/3.0);
+      const Point i60a = Interpolate(p[ro[6]], p[ro[0]], 1.0/3.0);
+      const Point i71a = Interpolate(p[ro[7]], p[ro[1]], 1.0/3.0);
+      const Point i42 = Interpolate(i06, i42a, 0.5);
+      const Point i53 = Interpolate(i17, i53a, 0.5);
+      const Point i60 = Interpolate(i24, i60a, 0.5);
+      const Point i71 = Interpolate(i35, i71a, 0.5);
+
+      // Top Front
+      nnodes[0] = onodes[ro[0]];
+      nnodes[1] = lookup(refined, e01);
+      nnodes[2] = lookup(refined, f02);
+      nnodes[3] = lookup(refined, e03);
+      nnodes[4] = lookup(refined, e04);
+      nnodes[5] = lookup(refined, f05);
+      nnodes[6] = lookup(refined, i06);
+      nnodes[7] = lookup(refined, f07);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, e01);
+      nnodes[1] = lookup(refined, e10);
+      nnodes[2] = lookup(refined, f13);
+      nnodes[3] = lookup(refined, f02);
+      nnodes[4] = lookup(refined, f05);
+      nnodes[5] = lookup(refined, f14);
+      nnodes[6] = lookup(refined, i17);
+      nnodes[7] = lookup(refined, i06);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, e10);
+      nnodes[1] = onodes[1];
+      nnodes[2] = lookup(refined, e12);
+      nnodes[3] = lookup(refined, f13);
+      nnodes[4] = lookup(refined, f14);
+      nnodes[5] = lookup(refined, e15);
+      nnodes[6] = lookup(refined, f16);
+      nnodes[7] = lookup(refined, i17);
+      refined->add_elem(nnodes);
+
+      // Top Center
+      nnodes[0] = lookup(refined, e03);
+      nnodes[1] = lookup(refined, f02);
+      nnodes[2] = lookup(refined, f31);
+      nnodes[3] = lookup(refined, e30);
+      nnodes[4] = lookup(refined, f07);
+      nnodes[5] = lookup(refined, i06);
+      nnodes[6] = lookup(refined, i35);
+      nnodes[7] = lookup(refined, f34);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, f02);
+      nnodes[1] = lookup(refined, f13);
+      nnodes[2] = lookup(refined, f20);
+      nnodes[3] = lookup(refined, f31);
+      nnodes[4] = lookup(refined, i06);
+      nnodes[5] = lookup(refined, i17);
+      nnodes[6] = lookup(refined, i24);
+      nnodes[7] = lookup(refined, i35);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, f13);
+      nnodes[1] = lookup(refined, e12);
+      nnodes[2] = lookup(refined, e21);
+      nnodes[3] = lookup(refined, f20);
+      nnodes[4] = lookup(refined, i17);
+      nnodes[5] = lookup(refined, f16);
+      nnodes[6] = lookup(refined, f25);
+      nnodes[7] = lookup(refined, i24);
+      refined->add_elem(nnodes);
+
+      // Top Back
+      nnodes[0] = lookup(refined, e30);
+      nnodes[1] = lookup(refined, f31);
+      nnodes[2] = lookup(refined, e32);
+      nnodes[3] = onodes[3];
+      nnodes[4] = lookup(refined, f34);
+      nnodes[5] = lookup(refined, i35);
+      nnodes[6] = lookup(refined, f36);
+      nnodes[7] = lookup(refined, e37);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, f31);
+      nnodes[1] = lookup(refined, f20);
+      nnodes[2] = lookup(refined, e23);
+      nnodes[3] = lookup(refined, e32);
+      nnodes[4] = lookup(refined, i35);
+      nnodes[5] = lookup(refined, i24);
+      nnodes[6] = lookup(refined, f27);
+      nnodes[7] = lookup(refined, f36);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, f20);
+      nnodes[1] = lookup(refined, e21);
+      nnodes[2] = onodes[2];
+      nnodes[3] = lookup(refined, e23);
+      nnodes[4] = lookup(refined, i24);
+      nnodes[5] = lookup(refined, f25);
+      nnodes[6] = lookup(refined, e26);
+      nnodes[7] = lookup(refined, f27);
+      refined->add_elem(nnodes);
+
+      // Front
+      nnodes[0] = lookup(refined, e04);
+      nnodes[1] = lookup(refined, f05);
+      nnodes[2] = lookup(refined, i06);
+      nnodes[3] = lookup(refined, f07);
+      nnodes[4] = onodes[4];
+      nnodes[5] = lookup(refined, f41);
+      nnodes[6] = lookup(refined, i42);
+      nnodes[7] = lookup(refined, f43);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, f05);
+      nnodes[1] = lookup(refined, f14);
+      nnodes[2] = lookup(refined, i17);
+      nnodes[3] = lookup(refined, i06);
+      nnodes[4] = lookup(refined, f41);
+      nnodes[5] = lookup(refined, f50);
+      nnodes[6] = lookup(refined, i53);
+      nnodes[7] = lookup(refined, i42);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, f14);
+      nnodes[1] = lookup(refined, e15);
+      nnodes[2] = lookup(refined, f16);
+      nnodes[3] = lookup(refined, i17);
+      nnodes[4] = lookup(refined, f50);
+      nnodes[5] = onodes[5];
+      nnodes[6] = lookup(refined, f52);
+      nnodes[7] = lookup(refined, i53);
+      refined->add_elem(nnodes);
+
+      // Center
+      nnodes[0] = lookup(refined, f07);
+      nnodes[1] = lookup(refined, i06);
+      nnodes[2] = lookup(refined, i35);
+      nnodes[3] = lookup(refined, f34);
+      nnodes[4] = lookup(refined, f43);
+      nnodes[5] = lookup(refined, i42);
+      nnodes[6] = lookup(refined, i71);
+      nnodes[7] = lookup(refined, f70);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, i06);
+      nnodes[1] = lookup(refined, i17);
+      nnodes[2] = lookup(refined, i24);
+      nnodes[3] = lookup(refined, i35);
+      nnodes[4] = lookup(refined, i42);
+      nnodes[5] = lookup(refined, i53);
+      nnodes[6] = lookup(refined, i60);
+      nnodes[7] = lookup(refined, i71);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, i17);
+      nnodes[1] = lookup(refined, f16);
+      nnodes[2] = lookup(refined, f25);
+      nnodes[3] = lookup(refined, i24);
+      nnodes[4] = lookup(refined, i53);
+      nnodes[5] = lookup(refined, f52);
+      nnodes[6] = lookup(refined, f61);
+      nnodes[7] = lookup(refined, i60);
+      refined->add_elem(nnodes);
+
+      // Back
+      nnodes[0] = lookup(refined, f34);
+      nnodes[1] = lookup(refined, i35);
+      nnodes[2] = lookup(refined, f36);
+      nnodes[3] = lookup(refined, e37);
+      nnodes[4] = lookup(refined, f70);
+      nnodes[5] = lookup(refined, i71);
+      nnodes[6] = lookup(refined, f72);
+      nnodes[7] = onodes[7];
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, i35);
+      nnodes[1] = lookup(refined, i24);
+      nnodes[2] = lookup(refined, f27);
+      nnodes[3] = lookup(refined, f36);
+      nnodes[4] = lookup(refined, i71);
+      nnodes[5] = lookup(refined, i60);
+      nnodes[6] = lookup(refined, f63);
+      nnodes[7] = lookup(refined, f72);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, i24);
+      nnodes[1] = lookup(refined, f25);
+      nnodes[2] = lookup(refined, e26);
+      nnodes[3] = lookup(refined, f27);
+      nnodes[4] = lookup(refined, i60);
+      nnodes[5] = lookup(refined, f61);
+      nnodes[6] = onodes[6];
+      nnodes[7] = lookup(refined, f63);
+      refined->add_elem(nnodes);
+
+      // Bottom Center
+      nnodes[0] = lookup(refined, f43);
+      nnodes[1] = lookup(refined, i42);
+      nnodes[2] = lookup(refined, i71);
+      nnodes[3] = lookup(refined, f70);
+      nnodes[4] = onodes[4];
+      nnodes[5] = lookup(refined, f41);
+      nnodes[6] = lookup(refined, f72);
+      nnodes[7] = onodes[7];
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, i42);
+      nnodes[1] = lookup(refined, i53);
+      nnodes[2] = lookup(refined, i60);
+      nnodes[3] = lookup(refined, i71);
+      nnodes[4] = lookup(refined, f41);
+      nnodes[5] = lookup(refined, f50);
+      nnodes[6] = lookup(refined, f63);
+      nnodes[7] = lookup(refined, f72);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, i53);
+      nnodes[1] = lookup(refined, f52);
+      nnodes[2] = lookup(refined, f61);
+      nnodes[3] = lookup(refined, i60);
+      nnodes[4] = lookup(refined, f50);
+      nnodes[5] = onodes[5];
+      nnodes[6] = onodes[6];
+      nnodes[7] = lookup(refined, f63);
+      refined->add_elem(nnodes);
+
+      // Bottom
+      nnodes[0] = lookup(refined, f41);
+      nnodes[1] = lookup(refined, f50);
+      nnodes[2] = lookup(refined, f63);
+      nnodes[3] = lookup(refined, f72);
+      nnodes[4] = onodes[4];
+      nnodes[5] = onodes[5];
+      nnodes[6] = onodes[6];
+      nnodes[7] = onodes[7];
+      refined->add_elem(nnodes);
+    }
     else
     {
-      Point edgep[24];
-      static int eorder[12][2] = {
-        {0, 1},  // 0  1
-        {1, 2},  // 2  3
-        {2, 3},  // 4  5
-        {3, 0},  // 6  7
-        {4, 5},  // 8  9
-        {5, 6},  // 10 11
-        {6, 7},  // 12 13
-        {7, 4},  // 14 15
-        {0, 4},  // 16 17
-        {5, 1},  // 18 19
-        {2, 6},  // 20 21
-        {7, 3}}; // 22 23
+      const int reorder_table[8][8] = {
+        {0, 1, 2, 3, 4, 5, 6, 7},
+        {1, 2, 3, 0, 5, 6, 7, 4},
+        {2, 3, 0, 1, 6, 7, 4, 5},
+        {3, 0, 1, 2, 7, 4, 5, 6},
+        {4, 7, 6, 5, 0, 3, 2, 1},
+        {5, 4, 7, 6, 1, 0, 3, 2},
+        {6, 5, 4, 7, 2, 1, 0, 3},
+        {7, 6, 5, 4, 3, 2, 1, 0}};
+      int which = 0;
+      const int *ro = reorder_table[which];
 
-      for (unsigned int i = 0; i < 12; i++)
-      {
-        edgep[i*2+0] = Interpolate(p[eorder[i][0]], p[eorder[i][1]], 1.0/3.0);
-        edgep[i*2+1] = Interpolate(p[eorder[i][0]], p[eorder[i][1]], 2.0/3.0);
-      }
-      
-      Point facep[24];
-      static int forder[6][4][2] = {
-        {{0, 5}, {2, 7}, {4, 1}, {6, 3}},
-        {{8, 13}, {10, 15}, {12, 9}, {14, 11}},
-        {{16, 23}, {6, 14}, {22, 17}, {15, 7}},
-        {{20, 19}, {2, 10}, {18, 21}, {11, 3}},
-        {{1, 9}, {16, 19}, {8, 0}, {18, 17}},
-        {{5, 13}, {20, 23}, {12, 4}, {22, 21}}};
-      for (unsigned int i = 0; i < 6; i++)
-      {
-        for (unsigned int j = 0; j < 4; j++)
-        {
-          facep[i*4+j] = Interpolate(edgep[forder[i][j][0]],
-                                     edgep[forder[i][j][1]], 1.0/3.0);
-        }
-      }
-      
-      Point interiorp[8];
-      static int iorder[8][2] = {
-        {0*4+0, 1*4+0},
-        {3*4+1, 2*4+0},
-        {5*4+1, 4*4+0},
-        {0*4+3, 1*4+3},
-        {2*4+3, 3*4+2},
-        {4*4+3, 5*4+2},
-        {1*4+2, 0*4+2},
-        {2*4+2, 3*4+3}};
-      for (unsigned int i = 0; i < 8; i++)
-      {
-        interiorp[i] = Interpolate(facep[iorder[i][0]],
-                                   facep[iorder[i][1]], 1.0/3.0);
-        inodes[i] = refined->add_point(interiorp[i]);
-      }
-      refined->add_elem(inodes);
+      // top edges
+      const Point e01 = Interpolate(p[ro[0]], p[ro[1]], 1.0/3.0);
+      const Point e10 = Interpolate(p[ro[1]], p[ro[0]], 1.0/3.0);
+      const Point e12 = Interpolate(p[ro[1]], p[ro[2]], 1.0/3.0);
+      const Point e21 = Interpolate(p[ro[2]], p[ro[1]], 1.0/3.0);
+      const Point e23 = Interpolate(p[ro[2]], p[ro[3]], 1.0/3.0);
+      const Point e32 = Interpolate(p[ro[3]], p[ro[2]], 1.0/3.0);
+      const Point e03 = Interpolate(p[ro[0]], p[ro[3]], 1.0/3.0);
+      const Point e30 = Interpolate(p[ro[3]], p[ro[0]], 1.0/3.0);
 
-      // Corner 0
-      if (inside & 1<<(7-0))
-      {
-        nnodes[0] = onodes[0];
-        nnodes[1] = lookup(refined, edgep[0]);
-        nnodes[2] = lookup(refined, facep[0*4+0]);
-        nnodes[3] = lookup(refined, edgep[7]);
-        nnodes[4] = lookup(refined, edgep[16]);
-        nnodes[5] = lookup(refined, facep[4*4+1]);
-        nnodes[6] = inodes[0];
-        nnodes[7] = lookup(refined, facep[2*4+0]);
-        refined->add_elem(nnodes);
-      }
-      
-      // Corner 1
-      if (inside & 1<<(7-1))
-      {
-        nnodes[0] = lookup(refined, edgep[1]);
-        nnodes[1] = onodes[1];
-        nnodes[2] = lookup(refined, edgep[2]);
-        nnodes[3] = lookup(refined, facep[0*4+1]);
-        nnodes[4] = lookup(refined, facep[4*4+0]);
-        nnodes[5] = lookup(refined, edgep[19]);
-        nnodes[6] = lookup(refined, facep[3*4+1]);
-        nnodes[7] = inodes[1];
-        refined->add_elem(nnodes);
-      }
-      
-      // Corner 2
-      if (inside & 1<<(7-2))
-      {
-        nnodes[0] = lookup(refined, facep[0*4+2]);
-        nnodes[1] = lookup(refined, edgep[3]);
-        nnodes[2] = onodes[2];
-        nnodes[3] = lookup(refined, edgep[4]);
-        nnodes[4] = inodes[2];
-        nnodes[5] = lookup(refined, facep[3*4+0]);
-        nnodes[6] = lookup(refined, edgep[20]);
-        nnodes[7] = lookup(refined, facep[5*4+1]);
-        refined->add_elem(nnodes);
-      }
-      
-      // Corner 3
-      if (inside & 1<<(7-3))
-      {
-        nnodes[0] = lookup(refined, edgep[6]);
-        nnodes[1] = lookup(refined, facep[0*4+3]);
-        nnodes[2] = lookup(refined, edgep[5]);
-        nnodes[3] = onodes[3];
-        nnodes[4] = lookup(refined, facep[2*4+1]);
-        nnodes[5] = inodes[3];
-        nnodes[6] = lookup(refined, facep[5*4+0]);
-        nnodes[7] = lookup(refined, edgep[23]);
-        refined->add_elem(nnodes);
-      }
-      
-      // Corner 4
-      if (inside & 1<<(7-4))
-      {
-        nnodes[0] = lookup(refined, edgep[8]);
-        nnodes[1] = onodes[4];
-        nnodes[2] = lookup(refined, edgep[15]);
-        nnodes[3] = lookup(refined, facep[1*4+0]);
-        nnodes[4] = lookup(refined, facep[4*4+2]);
-        nnodes[5] = lookup(refined, edgep[17]);
-        nnodes[6] = lookup(refined, facep[2*4+3]);
-        nnodes[7] = inodes[4];
-        refined->add_elem(nnodes);
-      }
-      
-      // Corner 5
-      if (inside & 1<<(7-5))
-      {
-        nnodes[0] = lookup(refined, edgep[9]);
-        nnodes[1] = onodes[5];
-        nnodes[2] = lookup(refined, edgep[18]);
-        nnodes[3] = lookup(refined, facep[4*4+3]);
-        nnodes[4] = lookup(refined, facep[1*4+1]);
-        nnodes[5] = lookup(refined, edgep[10]);
-        nnodes[6] = lookup(refined, facep[3*4+2]);
-        nnodes[7] = inodes[5];
-        refined->add_elem(nnodes);
-      }
-      
-      // Corner 6
-      if (inside & 1<<(7-6))
-      {
-        nnodes[0] = lookup(refined, facep[5*4+2]);
-        nnodes[1] = lookup(refined, edgep[21]);
-        nnodes[2] = onodes[6];
-        nnodes[3] = lookup(refined, edgep[12]);
-        nnodes[4] = inodes[6];
-        nnodes[5] = lookup(refined, facep[3*4+3]);
-        nnodes[6] = lookup(refined, edgep[11]);
-        nnodes[7] = lookup(refined, facep[1*4+2]);
-        refined->add_elem(nnodes);
-      }
-      
-      // Corner 7
-      if (inside & 1<<(7-7))
-      {
-        nnodes[0] = lookup(refined, edgep[22]);
-        nnodes[1] = lookup(refined, facep[5*4+3]);
-        nnodes[2] = lookup(refined, edgep[13]);
-        nnodes[3] = onodes[7];
-        nnodes[4] = lookup(refined, facep[2*4+2]);
-        nnodes[5] = inodes[7];
-        nnodes[6] = lookup(refined, facep[1*4+3]);
-        nnodes[7] = lookup(refined, edgep[14]);
-        refined->add_elem(nnodes);
-      }
+      // side edges
+      const Point e04 = Interpolate(p[ro[0]], p[ro[4]], 1.0/3.0);
+      const Point e40 = Interpolate(p[ro[4]], p[ro[0]], 1.0/3.0);
+      const Point e15 = Interpolate(p[ro[1]], p[ro[5]], 1.0/3.0);
+      const Point e51 = Interpolate(p[ro[5]], p[ro[1]], 1.0/3.0);
+      const Point e26 = Interpolate(p[ro[2]], p[ro[6]], 1.0/3.0);
+      const Point e62 = Interpolate(p[ro[6]], p[ro[2]], 1.0/3.0);
+      const Point e37 = Interpolate(p[ro[3]], p[ro[7]], 1.0/3.0);
+      const Point e73 = Interpolate(p[ro[7]], p[ro[3]], 1.0/3.0);
 
-      // Face interior 0
-      if (inside & 1<<(7-0) || inside & 1<<(7-1) ||
-          inside & 1<<(7-2) || inside & 1<<(7-3))
-      {
-        nnodes[0] = lookup(refined, facep[0*4+0]);
-        nnodes[1] = lookup(refined, facep[0*4+1]);
-        nnodes[2] = lookup(refined, facep[0*4+2]);
-        nnodes[3] = lookup(refined, facep[0*4+3]);
-      }
-      else
-      {
-        nnodes[0] = onodes[0];
-        nnodes[1] = onodes[1];
-        nnodes[2] = onodes[2];
-        nnodes[3] = onodes[3];
-      }
-      nnodes[4] = inodes[0];
-      nnodes[5] = inodes[1];
-      nnodes[6] = inodes[2];
-      nnodes[7] = inodes[3];
-      refined->add_elem(nnodes);
+      // bottom edges
+      const Point e45 = Interpolate(p[ro[4]], p[ro[5]], 1.0/3.0);
+      const Point e54 = Interpolate(p[ro[5]], p[ro[4]], 1.0/3.0);
+      const Point e56 = Interpolate(p[ro[5]], p[ro[6]], 1.0/3.0);
+      const Point e65 = Interpolate(p[ro[6]], p[ro[5]], 1.0/3.0);
+      const Point e67 = Interpolate(p[ro[6]], p[ro[7]], 1.0/3.0);
+      const Point e76 = Interpolate(p[ro[7]], p[ro[6]], 1.0/3.0);
+      const Point e74 = Interpolate(p[ro[7]], p[ro[4]], 1.0/3.0);
+      const Point e47 = Interpolate(p[ro[4]], p[ro[7]], 1.0/3.0);
       
-      // Face interior 1
-      if (inside & 1<<(7-4) || inside & 1<<(7-5) ||
-          inside & 1<<(7-6) || inside & 1<<(7-7))
-      {
-        nnodes[0] = lookup(refined, facep[1*4+1]);
-        nnodes[1] = lookup(refined, facep[1*4+0]);
-        nnodes[2] = lookup(refined, facep[1*4+3]);
-        nnodes[3] = lookup(refined, facep[1*4+2]);
-      }
-      else
-      {
-        nnodes[0] = onodes[5];
-        nnodes[1] = onodes[4];
-        nnodes[2] = onodes[7];
-        nnodes[3] = onodes[6];
-      }
-      nnodes[4] = inodes[5];
-      nnodes[5] = inodes[4];
-      nnodes[6] = inodes[7];
-      nnodes[7] = inodes[6];
+      // top face
+      const Point f02 = Interpolate(p[ro[0]], p[ro[2]], 1.0/3.0);
+      const Point f20 = Interpolate(p[ro[2]], p[ro[0]], 1.0/3.0);
+      const Point f13 = Interpolate(p[ro[1]], p[ro[3]], 1.0/3.0);
+      const Point f31 = Interpolate(p[ro[3]], p[ro[1]], 1.0/3.0);
+
+      // front face
+      const Point f05 = Interpolate(p[ro[0]], p[ro[5]], 1.0/3.0);
+      const Point f50 = Interpolate(p[ro[5]], p[ro[0]], 1.0/3.0);
+      const Point f14 = Interpolate(p[ro[1]], p[ro[4]], 1.0/3.0);
+      const Point f41 = Interpolate(p[ro[4]], p[ro[1]], 1.0/3.0);
+
+      // right face
+      const Point f16 = Interpolate(p[ro[1]], p[ro[6]], 1.0/3.0);
+      const Point f61 = Interpolate(p[ro[6]], p[ro[1]], 1.0/3.0);
+      const Point f25 = Interpolate(p[ro[2]], p[ro[5]], 1.0/3.0);
+      const Point f52 = Interpolate(p[ro[5]], p[ro[2]], 1.0/3.0);
+
+      // back face
+      const Point f27 = Interpolate(p[ro[2]], p[ro[7]], 1.0/3.0);
+      const Point f72 = Interpolate(p[ro[7]], p[ro[2]], 1.0/3.0);
+      const Point f36 = Interpolate(p[ro[3]], p[ro[6]], 1.0/3.0);
+      const Point f63 = Interpolate(p[ro[6]], p[ro[3]], 1.0/3.0);
+
+      // left face
+      const Point f07 = Interpolate(p[ro[0]], p[ro[7]], 1.0/3.0);
+      const Point f70 = Interpolate(p[ro[7]], p[ro[0]], 1.0/3.0);
+      const Point f34 = Interpolate(p[ro[3]], p[ro[4]], 1.0/3.0);
+      const Point f43 = Interpolate(p[ro[4]], p[ro[3]], 1.0/3.0);
+
+      // bottom face
+      const Point f46 = Interpolate(p[ro[4]], p[ro[6]], 1.0/3.0);
+      const Point f64 = Interpolate(p[ro[6]], p[ro[4]], 1.0/3.0);
+      const Point f57 = Interpolate(p[ro[5]], p[ro[7]], 1.0/3.0);
+      const Point f75 = Interpolate(p[ro[7]], p[ro[5]], 1.0/3.0);
+
+      // Interior
+      const Point i06 = Interpolate(p[ro[0]], p[ro[6]], 1.0/3.0);
+      const Point i17 = Interpolate(p[ro[1]], p[ro[7]], 1.0/3.0);
+      const Point i24 = Interpolate(p[ro[2]], p[ro[4]], 1.0/3.0);
+      const Point i35 = Interpolate(p[ro[3]], p[ro[5]], 1.0/3.0);
+      const Point i42 = Interpolate(p[ro[4]], p[ro[2]], 1.0/3.0);
+      const Point i53 = Interpolate(p[ro[5]], p[ro[3]], 1.0/3.0);
+      const Point i60 = Interpolate(p[ro[6]], p[ro[0]], 1.0/3.0);
+      const Point i71 = Interpolate(p[ro[7]], p[ro[1]], 1.0/3.0);
+
+      // Top Front
+      nnodes[0] = onodes[ro[0]];
+      nnodes[1] = lookup(refined, e01);
+      nnodes[2] = lookup(refined, f02);
+      nnodes[3] = lookup(refined, e03);
+      nnodes[4] = lookup(refined, e04);
+      nnodes[5] = lookup(refined, f05);
+      nnodes[6] = lookup(refined, i06);
+      nnodes[7] = lookup(refined, f07);
       refined->add_elem(nnodes);
 
-      // Face interior 2
-      if (inside & 1<<(7-4) || inside & 1<<(7-0) ||
-          inside & 1<<(7-3) || inside & 1<<(7-7))
-      {
-        nnodes[0] = lookup(refined, facep[2*4+0]);
-        nnodes[1] = lookup(refined, facep[2*4+1]);
-        nnodes[2] = lookup(refined, facep[2*4+2]);
-        nnodes[3] = lookup(refined, facep[2*4+3]);
-      }
-      else
-      {
-        nnodes[0] = onodes[0];
-        nnodes[1] = onodes[3];
-        nnodes[2] = onodes[7];
-        nnodes[3] = onodes[4];
-      }
-      nnodes[4] = inodes[0];
-      nnodes[5] = inodes[3];
-      nnodes[6] = inodes[7];
-      nnodes[7] = inodes[4];
+      nnodes[0] = lookup(refined, e01);
+      nnodes[1] = lookup(refined, e10);
+      nnodes[2] = lookup(refined, f13);
+      nnodes[3] = lookup(refined, f02);
+      nnodes[4] = lookup(refined, f05);
+      nnodes[5] = lookup(refined, f14);
+      nnodes[6] = lookup(refined, i17);
+      nnodes[7] = lookup(refined, i06);
       refined->add_elem(nnodes);
 
-      // Face interior 3
-      if (inside & 1<<(7-1) || inside & 1<<(7-5) ||
-          inside & 1<<(7-6) || inside & 1<<(7-2))
-      {
-        nnodes[0] = lookup(refined, facep[3*4+0]);
-        nnodes[1] = lookup(refined, facep[3*4+1]);
-        nnodes[2] = lookup(refined, facep[3*4+2]);
-        nnodes[3] = lookup(refined, facep[3*4+3]);
-      }
-      else
-      {
-        nnodes[0] = onodes[2];
-        nnodes[1] = onodes[1];
-        nnodes[2] = onodes[5];
-        nnodes[3] = onodes[6];
-      }
-      nnodes[4] = inodes[2];
-      nnodes[5] = inodes[1];
-      nnodes[6] = inodes[5];
-      nnodes[7] = inodes[6];
+      nnodes[0] = lookup(refined, e10);
+      nnodes[1] = onodes[1];
+      nnodes[2] = lookup(refined, e12);
+      nnodes[3] = lookup(refined, f13);
+      nnodes[4] = lookup(refined, f14);
+      nnodes[5] = lookup(refined, e15);
+      nnodes[6] = lookup(refined, f16);
+      nnodes[7] = lookup(refined, i17);
       refined->add_elem(nnodes);
 
-      // Face interior 4
-      if (inside & 1<<(7-0) || inside & 1<<(7-1) ||
-          inside & 1<<(7-4) || inside & 1<<(7-5))
-      {
-        nnodes[0] = lookup(refined, facep[4*4+0]);
-        nnodes[1] = lookup(refined, facep[4*4+1]);
-        nnodes[2] = lookup(refined, facep[4*4+2]);
-        nnodes[3] = lookup(refined, facep[4*4+3]);
-      }
-      else
-      {
-        nnodes[0] = onodes[1];
-        nnodes[1] = onodes[0];
-        nnodes[2] = onodes[4];
-        nnodes[3] = onodes[5];
-      }
-      nnodes[4] = inodes[1];
-      nnodes[5] = inodes[0];
-      nnodes[6] = inodes[4];
-      nnodes[7] = inodes[5];
+      // Top Center
+      nnodes[0] = lookup(refined, e03);
+      nnodes[1] = lookup(refined, f02);
+      nnodes[2] = lookup(refined, f31);
+      nnodes[3] = lookup(refined, e30);
+      nnodes[4] = lookup(refined, f07);
+      nnodes[5] = lookup(refined, i06);
+      nnodes[6] = lookup(refined, i35);
+      nnodes[7] = lookup(refined, f34);
       refined->add_elem(nnodes);
 
-      // Face interior 5
-      if (inside & 1<<(7-3) || inside & 1<<(7-2) ||
-          inside & 1<<(7-6) || inside & 1<<(7-7))
-      {
-        nnodes[0] = lookup(refined, facep[5*4+0]);
-        nnodes[1] = lookup(refined, facep[5*4+1]);
-        nnodes[2] = lookup(refined, facep[5*4+2]);
-        nnodes[3] = lookup(refined, facep[5*4+3]);
-      }
-      else
-      {
-        nnodes[0] = onodes[3];
-        nnodes[1] = onodes[2];
-        nnodes[2] = onodes[6];
-        nnodes[3] = onodes[7];
-      }
-      nnodes[4] = inodes[3];
-      nnodes[5] = inodes[2];
-      nnodes[6] = inodes[6];
-      nnodes[7] = inodes[7];
+      nnodes[0] = lookup(refined, f02);
+      nnodes[1] = lookup(refined, f13);
+      nnodes[2] = lookup(refined, f20);
+      nnodes[3] = lookup(refined, f31);
+      nnodes[4] = lookup(refined, i06);
+      nnodes[5] = lookup(refined, i17);
+      nnodes[6] = lookup(refined, i24);
+      nnodes[7] = lookup(refined, i35);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, f13);
+      nnodes[1] = lookup(refined, e12);
+      nnodes[2] = lookup(refined, e21);
+      nnodes[3] = lookup(refined, f20);
+      nnodes[4] = lookup(refined, i17);
+      nnodes[5] = lookup(refined, f16);
+      nnodes[6] = lookup(refined, f25);
+      nnodes[7] = lookup(refined, i24);
+      refined->add_elem(nnodes);
+
+      // Top Back
+      nnodes[0] = lookup(refined, e30);
+      nnodes[1] = lookup(refined, f31);
+      nnodes[2] = lookup(refined, e32);
+      nnodes[3] = onodes[3];
+      nnodes[4] = lookup(refined, f34);
+      nnodes[5] = lookup(refined, i35);
+      nnodes[6] = lookup(refined, f36);
+      nnodes[7] = lookup(refined, e37);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, f31);
+      nnodes[1] = lookup(refined, f20);
+      nnodes[2] = lookup(refined, e23);
+      nnodes[3] = lookup(refined, e32);
+      nnodes[4] = lookup(refined, i35);
+      nnodes[5] = lookup(refined, i24);
+      nnodes[6] = lookup(refined, f27);
+      nnodes[7] = lookup(refined, f36);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, f20);
+      nnodes[1] = lookup(refined, e21);
+      nnodes[2] = onodes[2];
+      nnodes[3] = lookup(refined, e23);
+      nnodes[4] = lookup(refined, i24);
+      nnodes[5] = lookup(refined, f25);
+      nnodes[6] = lookup(refined, e26);
+      nnodes[7] = lookup(refined, f27);
+      refined->add_elem(nnodes);
+
+      // Front
+      nnodes[0] = lookup(refined, e04);
+      nnodes[1] = lookup(refined, f05);
+      nnodes[2] = lookup(refined, i06);
+      nnodes[3] = lookup(refined, f07);
+      nnodes[4] = lookup(refined, e40);
+      nnodes[5] = lookup(refined, f41);
+      nnodes[6] = lookup(refined, i42);
+      nnodes[7] = lookup(refined, f43);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, f05);
+      nnodes[1] = lookup(refined, f14);
+      nnodes[2] = lookup(refined, i17);
+      nnodes[3] = lookup(refined, i06);
+      nnodes[4] = lookup(refined, f41);
+      nnodes[5] = lookup(refined, f50);
+      nnodes[6] = lookup(refined, i53);
+      nnodes[7] = lookup(refined, i42);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, f14);
+      nnodes[1] = lookup(refined, e15);
+      nnodes[2] = lookup(refined, f16);
+      nnodes[3] = lookup(refined, i17);
+      nnodes[4] = lookup(refined, f50);
+      nnodes[5] = lookup(refined, e51);
+      nnodes[6] = lookup(refined, f52);
+      nnodes[7] = lookup(refined, i53);
+      refined->add_elem(nnodes);
+
+      // Center
+      nnodes[0] = lookup(refined, f07);
+      nnodes[1] = lookup(refined, i06);
+      nnodes[2] = lookup(refined, i35);
+      nnodes[3] = lookup(refined, f34);
+      nnodes[4] = lookup(refined, f43);
+      nnodes[5] = lookup(refined, i42);
+      nnodes[6] = lookup(refined, i71);
+      nnodes[7] = lookup(refined, f70);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, i06);
+      nnodes[1] = lookup(refined, i17);
+      nnodes[2] = lookup(refined, i24);
+      nnodes[3] = lookup(refined, i35);
+      nnodes[4] = lookup(refined, i42);
+      nnodes[5] = lookup(refined, i53);
+      nnodes[6] = lookup(refined, i60);
+      nnodes[7] = lookup(refined, i71);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, i17);
+      nnodes[1] = lookup(refined, f16);
+      nnodes[2] = lookup(refined, f25);
+      nnodes[3] = lookup(refined, i24);
+      nnodes[4] = lookup(refined, i53);
+      nnodes[5] = lookup(refined, f52);
+      nnodes[6] = lookup(refined, f61);
+      nnodes[7] = lookup(refined, i60);
+      refined->add_elem(nnodes);
+
+      // Back
+      nnodes[0] = lookup(refined, f34);
+      nnodes[1] = lookup(refined, i35);
+      nnodes[2] = lookup(refined, f36);
+      nnodes[3] = lookup(refined, e37);
+      nnodes[4] = lookup(refined, f70);
+      nnodes[5] = lookup(refined, i71);
+      nnodes[6] = lookup(refined, f72);
+      nnodes[7] = lookup(refined, e73);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, i35);
+      nnodes[1] = lookup(refined, i24);
+      nnodes[2] = lookup(refined, f27);
+      nnodes[3] = lookup(refined, f36);
+      nnodes[4] = lookup(refined, i71);
+      nnodes[5] = lookup(refined, i60);
+      nnodes[6] = lookup(refined, f63);
+      nnodes[7] = lookup(refined, f72);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, i24);
+      nnodes[1] = lookup(refined, f25);
+      nnodes[2] = lookup(refined, e26);
+      nnodes[3] = lookup(refined, f27);
+      nnodes[4] = lookup(refined, i60);
+      nnodes[5] = lookup(refined, f61);
+      nnodes[6] = lookup(refined, e62);
+      nnodes[7] = lookup(refined, f63);
+      refined->add_elem(nnodes);
+
+      // Bottom Front
+      nnodes[0] = lookup(refined, e40);
+      nnodes[1] = lookup(refined, f41);
+      nnodes[2] = lookup(refined, i42);
+      nnodes[3] = lookup(refined, f43);
+      nnodes[4] = onodes[4];
+      nnodes[5] = lookup(refined, e45);
+      nnodes[6] = lookup(refined, f46);
+      nnodes[7] = lookup(refined, e47);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, f41);
+      nnodes[1] = lookup(refined, f50);
+      nnodes[2] = lookup(refined, i53);
+      nnodes[3] = lookup(refined, i42);
+      nnodes[4] = lookup(refined, e45);
+      nnodes[5] = lookup(refined, e54);
+      nnodes[6] = lookup(refined, f57);
+      nnodes[7] = lookup(refined, f46);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, f50);
+      nnodes[1] = lookup(refined, e51);
+      nnodes[2] = lookup(refined, f52);
+      nnodes[3] = lookup(refined, i53);
+      nnodes[4] = lookup(refined, e54);
+      nnodes[5] = onodes[5];
+      nnodes[6] = lookup(refined, e56);
+      nnodes[7] = lookup(refined, f57);
+      refined->add_elem(nnodes);
+
+      // Bottom Center
+      nnodes[0] = lookup(refined, f43);
+      nnodes[1] = lookup(refined, i42);
+      nnodes[2] = lookup(refined, i71);
+      nnodes[3] = lookup(refined, f70);
+      nnodes[4] = lookup(refined, e47);
+      nnodes[5] = lookup(refined, f46);
+      nnodes[6] = lookup(refined, f75);
+      nnodes[7] = lookup(refined, e74);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, i42);
+      nnodes[1] = lookup(refined, i53);
+      nnodes[2] = lookup(refined, i60);
+      nnodes[3] = lookup(refined, i71);
+      nnodes[4] = lookup(refined, f46);
+      nnodes[5] = lookup(refined, f57);
+      nnodes[6] = lookup(refined, f64);
+      nnodes[7] = lookup(refined, f75);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, i53);
+      nnodes[1] = lookup(refined, f52);
+      nnodes[2] = lookup(refined, f61);
+      nnodes[3] = lookup(refined, i60);
+      nnodes[4] = lookup(refined, f57);
+      nnodes[5] = lookup(refined, e56);
+      nnodes[6] = lookup(refined, e65);
+      nnodes[7] = lookup(refined, f64);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, f70);
+      nnodes[1] = lookup(refined, i71);
+      nnodes[2] = lookup(refined, f72);
+      nnodes[3] = lookup(refined, e73);
+      nnodes[4] = lookup(refined, e74);
+      nnodes[5] = lookup(refined, f75);
+      nnodes[6] = lookup(refined, e76);
+      nnodes[7] = onodes[7];
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, i71);
+      nnodes[1] = lookup(refined, i60);
+      nnodes[2] = lookup(refined, f63);
+      nnodes[3] = lookup(refined, f72);
+      nnodes[4] = lookup(refined, f75);
+      nnodes[5] = lookup(refined, f64);
+      nnodes[6] = lookup(refined, e67);
+      nnodes[7] = lookup(refined, e76);
+      refined->add_elem(nnodes);
+
+      nnodes[0] = lookup(refined, i60);
+      nnodes[1] = lookup(refined, f61);
+      nnodes[2] = lookup(refined, e62);
+      nnodes[3] = lookup(refined, f63);
+      nnodes[4] = lookup(refined, f64);
+      nnodes[5] = lookup(refined, e65);
+      nnodes[6] = onodes[6];
+      nnodes[7] = lookup(refined, e67);
       refined->add_elem(nnodes);
     }
     ++bi;
