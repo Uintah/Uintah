@@ -48,7 +48,7 @@ class wxSCIRunApp : public wxApp {
 public:
   virtual bool OnInit();
   // virtual int OnExit() { return wxApp::OnExit(); }
-  void AddTopWindow(const sci::cca::GUIBuilder::pointer& bc);
+  void AddBuilder(const sci::cca::GUIBuilder::pointer& bc);
   BuilderWindow* GetTopBuilderWindow() const;
 
   static void SetTopBuilder(const sci::cca::GUIBuilder::pointer& bc) { topBuilder = bc; }
@@ -62,7 +62,7 @@ private:
 
   // keep track of inital Builder component (instantiated from main)
   static sci::cca::GUIBuilder::pointer topBuilder;
-  //static std::vector<sci::cca::GUIBuilder> activeBuilders;
+  static std::vector<sci::cca::GUIBuilder::pointer> activeBuilders;
 };
 
 DECLARE_APP(wxSCIRunApp)

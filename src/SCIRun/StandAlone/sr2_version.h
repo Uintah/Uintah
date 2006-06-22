@@ -26,61 +26,10 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#ifndef SCIRun_StandAlone_sr2_version_h
+#define SCIRun_StandAlone_sr2_version_h
 
-#ifndef CCA_Components_GUIBuilder_MiniCanvas_h
-#define CCA_Components_GUIBuilder_MiniCanvas_h
-
-#include <map>
-#include <string>
-
-class wxRect;
-class wxPoint;
-class wxScrolledWindow;
-class wxPen;
-class wxBrush;
-
-namespace GUIBuilder {
-
-class BuilderWindow;
-class NetworkCanvas;
-class Connection;
-
-// Scrolled window???
-
-class MiniCanvas : public wxScrolledWindow {
-public:
-  MiniCanvas(wxWindow* parent, NetworkCanvas* canvas, wxWindowID id, const wxPoint& pos, const wxSize& size);
-  virtual ~MiniCanvas();
-
-  bool Create(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style = wxHSCROLL|wxVSCROLL|wxSUNKEN_BORDER|wxRETAINED);
-
-  void OnPaint(wxPaintEvent& event);
-  void PaintBackground(wxDC& dc);
-  void OnDraw(wxDC& dc);
-
-protected:
-  MiniCanvas() { Init(); }
-  void Init();
-  void OnEraseBackground(wxEraseEvent& event) {}
-
-private:
-  void scaleRect(wxRect& rect, const double scaleV, const double scaleH);
-  void scalePoints(wxPoint **points, const int size, const double scaleV, const double scaleH);
-
-  NetworkCanvas *canvas;
-  std::vector<wxRect> iRects;
-  std::vector<Connection*> conns;
-
-  wxColor vBoxColor;
-  wxColor iRectColor;
-  wxPen* goldenrodPen;
-  wxPen* lightGreyPen;
-  wxBrush* lightGreyBrush;
-
-  DECLARE_EVENT_TABLE()
-  DECLARE_DYNAMIC_CLASS(MiniCanvas)
-};
-
-}
+#define SR2_VERSION "0.1.1"
+// add a release candidate number when necessary
 
 #endif

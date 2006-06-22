@@ -26,20 +26,31 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+/*
+ *  NetworkCanvas.cc:
+ *
+ *  Written by:
+ *   Keming Zhang
+ *   Scientific Computing and Imaging
+ *   April 2002
+ *  Ported to wxWidgets:
+ *   Ayla Khan
+ *   January 2006
+ *
+ */
+
 #include <CCA/Components/GUIBuilder/Connection.h>
 #include <CCA/Components/GUIBuilder/ComponentIcon.h>
 #include <CCA/Components/GUIBuilder/PortIcon.h>
 #include <CCA/Components/GUIBuilder/NetworkCanvas.h>
-//#include <iostream>
 
 #include <wx/wx.h>
 #include <wx/window.h>
 #include <wx/gdicmn.h>
 #include <wx/dc.h>
-#include <wx/region.h>
 
 #ifndef DEBUG
-#  define DEBUG 0
+#  define DEBUG 1
 #endif
 
 
@@ -48,7 +59,7 @@ namespace GUIBuilder {
 const int Connection::NUM_POINTS(12);
 const int Connection::NUM_DRAW_POINTS(6);
 
-Connection::Connection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID::pointer& connID, bool possibleConnection) : pUses(pU), pProvides(pP), possibleConnection(possibleConnection), connectionID(connID)
+Connection::Connection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID::pointer& connID, bool possibleConnection) : pUses(pU), pProvides(pP), possibleConnection(possibleConnection), highlight(false), connectionID(connID)
 {
   points = new wxPoint[NUM_POINTS];
   drawPoints = new wxPoint[NUM_DRAW_POINTS];
@@ -214,27 +225,30 @@ void Connection::OnDraw(wxDC& dc)
 
 bool Connection::IsMouseOver(const wxPoint& position)
 {
-  const int tolerance = 4;
+  const int tolerance = 2;
 
   for (int i = 0; i < NUM_DRAW_POINTS; i += 2) {
-    wxRegion r;
-    wxRegion pr;
+    wxRect r;
+    wxRect pr;
 
     wxPoint pTopLeft, pBottomRight;
-    if (position.x - 2 < 0) {
-      pTopLeft.x = 0;
-    } else {
-      pTopLeft.x = position.x - 2;
-    }
-    if (position.y - 2 < 0) {
-      pTopLeft.y = 0;
-    } else {
-      pTopLeft.y = position.y - 2;
-    }
-    pBottomRight.x = position.x + 2;
-    pBottomRight.y = position.y + 2;
+//     if (position.x - tolerance <= 0) {
+//       pTopLeft.x = 0;
+//     } else {
+//       pTopLeft.x = position.x - tolerance;
+//     }
+//     if (position.y - tolerance <= 0) {
+//       pTopLeft.y = 0;
+//     } else {
+//       pTopLeft.y = position.y - tolerance;
+//     }
+    pTopLeft.x = position.x - tolerance;
+    pTopLeft.y = position.y - tolerance;
 
-    pr = wxRegion(pTopLeft, pBottomRight);
+    pBottomRight.x = position.x + tolerance;
+    pBottomRight.y = position.y + tolerance;
+
+    pr = wxRect(pTopLeft, pBottomRight);
 
 #if DEBUG
 std::cerr << "Connection::IsMouseOver point top left ("
@@ -255,7 +269,7 @@ std::cerr << "Connection::IsMouseOver point top left ("
 		<< "\tbottomRight=(" << bottomRight.x << ", " << bottomRight.y << ")"
 		<< std::endl;
 #endif
-      r = wxRegion(topLeft, bottomRight);
+      r = wxRect(topLeft, bottomRight);
     } else {
       wxPoint topLeft(drawPoints[i].x - tolerance, drawPoints[i].y - tolerance);
       wxPoint bottomRight(drawPoints[i+1].x + tolerance, drawPoints[i+1].y + tolerance);
@@ -268,9 +282,9 @@ std::cerr << "Connection::IsMouseOver point top left ("
 		<< "\tbottomRight=(" << bottomRight.x << ", " << bottomRight.y << ")"
 		<< std::endl;
 #endif
-      r = wxRegion(topLeft, bottomRight);
+      r = wxRect(topLeft, bottomRight);
     }
-    if (r.Intersect(pr)) {
+    if (r.Intersects(pr)) {
 #if DEBUG
       std::cerr << "Connection::IsMouseOver(..): mouse over!" << std::endl;
 #endif
@@ -296,12 +310,14 @@ void Connection::setConnection()
     drawPoints[i] = (points[i] + points[NUM_POINTS - 1 - i]);
     drawPoints[i].x /= 2;
     drawPoints[i].y /= 2;
+#if 0
 #if DEBUG
 std::cerr << "Connection::setConnection y_i = y_i+1, x_i <= x_i+1" << std::endl
           << "\tpoint " << i << "=(" << points[i].x << ", " << points[i].y <<  ") " << std::endl
           << "\tpoint " << NUM_POINTS - 1 - i << "=(" << points[NUM_POINTS - 1 - i].x << ", " << points[NUM_POINTS - 1 - i].y <<  ") " << std::endl
           << "\tdraw point " << i << "=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") "
           << std::endl;
+#endif
 #endif
   }
 }

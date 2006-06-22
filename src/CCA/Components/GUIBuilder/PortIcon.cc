@@ -63,8 +63,7 @@ IMPLEMENT_DYNAMIC_CLASS(PortIcon, wxWindow)
 
 PortIcon::PortIcon(const sci::cca::GUIBuilder::pointer& bc, ComponentIcon* parent,
                    wxWindowID id, GUIBuilder::PortType pt, const std::string& name)
-  : builder(bc), parent(parent), portType(pt), name(name), connecting(false),
-    ID_MENU_POPUP(BuilderWindow::GetNextID())
+  : builder(bc), parent(parent), portType(pt), name(name), ID_MENU_POPUP(BuilderWindow::GetNextID())
 {
   Init();
   Create(parent, id, wxT(name));
@@ -100,25 +99,22 @@ bool PortIcon::Create(wxWindow *parent, wxWindowID id, const wxString &name)
 void PortIcon::OnLeftDown(wxMouseEvent& event)
 {
   if (portType == GUIBuilder::Uses) {
-    connecting = parent->GetCanvas()->ShowPossibleConnections(this);
+    parent->GetCanvas()->ShowPossibleConnections(this);
   }
 }
 
 void PortIcon::OnLeftUp(wxMouseEvent& event)
 {
   // canvas draw connection
-  parent->GetCanvas()->OnConnect(this);
+  parent->GetCanvas()->Connect(this);
 }
 
-void PortIcon::OnMouseMove(wxMouseEvent& /*WXUNUSED(*/event/*)*/)
+void PortIcon::OnMouseMove(wxMouseEvent& WXUNUSED(event))
 {
-  if (connecting) {
-    NetworkCanvas *canvas = parent->GetCanvas();
-//    wxPoint p = event.GetPosition();
-    wxPoint p;
-    canvas->GetUnscrolledPosition(event.GetPosition(), p);
-    canvas->HighlightConnection(p);
-  }
+  NetworkCanvas *canvas = parent->GetCanvas();
+  wxPoint mp;
+  canvas->GetUnscrolledMousePosition(mp);
+  canvas->HighlightConnection(mp);
 }
 
 void PortIcon::OnRightClick(wxMouseEvent& event)

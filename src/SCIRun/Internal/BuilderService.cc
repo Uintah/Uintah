@@ -453,14 +453,14 @@ BuilderService::getBridgeablePortList(
 }
 
 std::string
-BuilderService::generateBridge(const sci::cca::ComponentID::pointer& c1,
-                               const std::string& port1,
-                               const sci::cca::ComponentID::pointer& c2,
-                               const std::string& port2)
+BuilderService::generateBridge(const sci::cca::ComponentID::pointer& uCID,
+                               const std::string& uPort,
+                               const sci::cca::ComponentID::pointer& pCID,
+                               const std::string& pPort)
 {
 #ifdef BUILD_BRIDGE
-  ComponentID* cid1 = dynamic_cast<ComponentID*>(c1.getPointer());
-  ComponentID* cid2 = dynamic_cast<ComponentID*>(c2.getPointer());
+  ComponentID* cid1 = dynamic_cast<ComponentID*>(uCID.getPointer());
+  ComponentID* cid2 = dynamic_cast<ComponentID*>(pCID.getPointer());
   if (!cid1 || !cid2) {
     throw sci::cca::CCAException::pointer(new CCAException("Cannot understand this ComponentID"));
   }
@@ -469,11 +469,11 @@ BuilderService::generateBridge(const sci::cca::ComponentID::pointer& c1,
   }
   ComponentInstance* comp1=framework->lookupComponent(cid1->name);
   ComponentInstance* comp2=framework->lookupComponent(cid2->name);
-  PortInstance* pr1=comp1->getPortInstance(port1);
+  PortInstance* pr1=comp1->getPortInstance(uPort);
   if (!pr1) {
     throw sci::cca::CCAException::pointer(new CCAException("Unknown uses port"));
   }
-  PortInstance* pr2=comp2->getPortInstance(port2);
+  PortInstance* pr2=comp2->getPortInstance(pPort);
   if (!pr2) {
     throw sci::cca::CCAException::pointer(new CCAException("Unknown provides port"));
   }

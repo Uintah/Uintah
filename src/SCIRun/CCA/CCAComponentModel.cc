@@ -55,7 +55,8 @@
 
 namespace SCIRun {
 
-const std::string CCAComponentModel::DEFAULT_PATH("/CCA/Components/xml");
+const std::string CCAComponentModel::DEFAULT_PATH("/CCA/Components");
+const std::string CCAComponentModel::DEFAULT_XML_PATH("/CCA/Components/xml");
 
 
 CCAComponentModel::CCAComponentModel(SCIRunFramework* framework,

@@ -50,8 +50,8 @@ Be sure to carefully check the build instructions for each thirdparty dependency
     </tr>
      <tr>
      <td>\ref gui</td>
-     <td>Qt</td>
-     <td>--with-qt=/path/to/qt</td>
+     <td>wxWidgets</td>
+     <td>--with-wxwidgets=/path/to/wxWidgets</td>
     </tr>
     <tr>
      <td>Dataflow components</td>
@@ -137,35 +137,38 @@ Version ? or better is required...
 Ncurses libraries and development headers need to be available to compile
 the text-based builder component (TxtBuilder). 
 
-\subsection depend_qt Qt
+\subsection depend_wx wxWidgets
 
-Qt is necessary if you want to build the graphical user interface to the
+<a href="http://www.wxwidgets.org/"wxWidgets</a> 
+is necessary if you want to build the graphical user interface to the
 SCIRun2 framework (recommended).
-A free version of Qt for noncommercial use can be downloaded from
-<a href="http://www.trolltech.com">www.trolltech.com</a>.
-The distributions "qt-x11-free-3.3.x" have been tested.
-<em>Be sure to configure and build Qt with multithreading enabled</em>
-(<b>Qt configure option -thread</b>).
+wxWidgets distributions organized by platform can be downloaded from 
+<a href="http://wxwidgets.org/downloads">this page</a>.
+The distributions "wxGTK-2.6.1" and "wxMac-2.6.1" have been built using gcc.
 
-Estimated time to build: 3-5 hours
+At least the following configure options need to be enabled:
+\code
+--with-opengl --with-libpng --with-libjpeg --with-libxpm --enable-shared --enable-stl
+--enable-threads --enable-help --enable-std_string --enable-std_iostreams --enable-gui
+--enable-config --enable-xrc --enable-exceptions --enable-file
+--enable-filesystem --enable-constraints
+\endcode
+Many are enabled by default for wxGTK and wxMac distributions (check documentation to be sure).
 
 Before building SCIRun2, set the following environment variables:
 \code
-QTDIR=/path/to/qt/installation
-PATH=$QTDIR/bin:$PATH
-LD_LIBRARY_PATH=$QTDIR/lib:$LD_LIBRARY_PATH
+WXDIR=/path/to/wxWidgets/installation
+PATH=$WXDIR/bin:$PATH
+LD_LIBRARY_PATH=$WXDIR/lib:$LD_LIBRARY_PATH
 \endcode
 
 \subsection depend_babel Babel
 
-<b>
-If you are using Babel 0.9.x, please upgrade to Babel 0.10.x.
-</b>
-
 The Babel compiler can be freely obtained from
 <a href="http://www.llnl.gov/CASC/components/babel.html">
 www.llnl.gov/CASC/components/babel.html</a>.
-SCIRun2 currently supports Babel version 0.10.0 or higher.
+SCIRun2 currently supports Babel 0.99.0 (1.0 rc 1), version
+0.11.x are also know to work.
 
 Babel requires Java, at least libxml2 2.4.0 and Python to build the testing
 framework.
@@ -180,37 +183,6 @@ JAVA_HOME=/path/to/java/install
 BABEL_HOME=/path/to/babel/install
 PATH=$JAVA_HOME/bin:$BABEL_HOME/bin:$PATH
 \endcode
-
-<!--
-\subsubsection depend_babel_1 Babel 0.9.0
-
-\em IMPORTANT! The standard distribution of Babel version 0.9.0 requires
-<a href="http://rpmfind.net/linux/rpm2html/search.php?query=libxml2">
-libxml2 2.6.2</a>.
-If you have at least libxml2 2.4.0, however, then you can apply
-<a href="http://www.sci.utah.edu/~ayla/cca/babel_090_libxml2_patch.txt">
-this patch</a>
-to your Babel source tree instead of upgrading libxml.
-The patch should be applied to the Babel <b>SOURCE</b> tree before building
-Babel.
-If you have already built Babel, then you will need to remove the current
-Babel installation, untar a clean source tree, apply the patch, then
-rebuild and install Babel.
-
-\code
-% cd babel-0.9.0
-% patch -p1 < babel_090_libxml2_patch.txt
-\endcode
-
-See
-<a href="https://www.cca-forum.org/bugs/babel/issue26.">this page</a>
-for further details.
-
-\subsubsection depend_babel_2 Babel 0.9.2
-
-The standard distribution of Babel version 0.9.2 requires at least
-libxml2 2.4.0.
--->
 
 \subsection depend_mpi MPI
 
@@ -287,7 +259,7 @@ PATH/TO/SCIRun/src/configure  --enable-scirun2
                               --with-mpi=$MPIDIR
                               --with-ruby=$RUBYDIR
                               --with-vtk=$VTKDIR
-                              --with-qt=$QTDIR
+                              --with-wxwidgets=$WXDIR
 \endcode
 
 You may want to start with a strong cup of coffee.

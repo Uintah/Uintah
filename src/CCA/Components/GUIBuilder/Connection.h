@@ -26,8 +26,21 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef Connection_h
-#define Connection_h
+/*
+ * Connection.h
+ *
+ * Written by:
+ *  Keming Zhang
+ *  SCI Institute
+ *  April 2002
+ *
+ * Ported to wxWidgets by:
+ *  Ayla Khan
+ *  January 2006
+ */
+
+#ifndef CCA_Components_GUIBuilder_Connection_h
+#define CCA_Components_GUIBuilder_Connection_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 #include <CCA/Components/GUIBuilder/GUIBuilder.h>
@@ -37,24 +50,24 @@ class wxPoint;
 class wxDC;
 class wxColor;
 
-// should probably check for wxUSE_THREADS
-
 namespace GUIBuilder {
 
 class PortIcon;
 
-class Connection /*: public wxEvtHandler*/ {
+class Connection {
 public:
-  Connection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID::pointer& connID,
+  Connection(PortIcon* pU,
+             PortIcon* pP,
+             const sci::cca::ConnectionID::pointer& connID,
              bool possibleConnection = false);
   virtual ~Connection();
 
   void ResetPoints();
-  void OnDraw(wxDC& dc);
+  virtual void OnDraw(wxDC& dc);
 
   bool IsMouseOver(const wxPoint& position);
-  void HighlightConnection() { highlight = true; }
-  void UnhighlightConnection() { highlight = false; }
+  void Highlight() { highlight = true; }
+  void Unhighlight() { highlight = false; }
   bool IsHighlighted() const { return highlight; }
 
   const sci::cca::ConnectionID::pointer GetConnectionID() const { return connectionID; }
@@ -64,22 +77,21 @@ public:
   void GetDrawingPoints(wxPoint **pa, const int size);
 
 protected:
-  wxColor color;
-  wxColor hColor;
   void setConnection();
 
-private:
   static const int NUM_POINTS;
   static const int NUM_DRAW_POINTS;
-  wxPoint* points;
+  wxColor color;
+  wxColor hColor;
   wxPoint* drawPoints;
+
+private:
+  wxPoint* points;
   PortIcon* pUses;
   PortIcon* pProvides;
   bool possibleConnection;
   bool highlight;
   sci::cca::ConnectionID::pointer connectionID;
-
-//   DECLARE_EVENT_TABLE()
 };
 
 }

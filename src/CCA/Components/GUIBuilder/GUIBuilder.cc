@@ -39,7 +39,9 @@
 #if HAVE_VTK
 #include <SCIRun/Vtk/VtkPortInstance.h>
 #endif
+#include <SCIRun/CCA/CCAComponentModel.h>
 
+#include <Core/Util/Environment.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Runnable.h>
@@ -49,7 +51,7 @@
 #include <Core/CCA/PIDL/pidl_cast.h>
 
 #ifndef DEBUG
-#  define DEBUG 1
+#  define DEBUG 0
 #endif
 
 namespace GUIBuilder {
@@ -61,7 +63,11 @@ extern "C" sci::cca::Component::pointer make_SCIRun_GUIBuilder()
   return sci::cca::Component::pointer(new GUIBuilder());
 }
 
-const std::string GUIBuilder::guiThreadName("wxWidgets GUI Builder");
+const std::string GUIBuilder::GUI_THREAD_NAME("wxWidgets GUI Builder");
+const std::string GUIBuilder::DEFAULT_SRC_DIR(sci_getenv("SCIRUN_SRCDIR"));
+const std::string GUIBuilder::DEFAULT_OBJ_DIR(sci_getenv("SCIRUN_OBJDIR"));
+const std::string GUIBuilder::DEFAULT_CCA_COMP_DIR(GUIBuilder::DEFAULT_SRC_DIR + CCAComponentModel::DEFAULT_PATH);
+
 Mutex GUIBuilder::builderLock("GUIBuilder class lock");
 wxSCIRunApp* GUIBuilder::app = 0;
 
@@ -77,6 +83,7 @@ private:
     sci::cca::GUIBuilder::pointer builder;
 };
 
+// not implemented yet
 class DestroyInstancesThread : public Runnable {
 public:
     DestroyInstancesThread(const sci::cca::GUIBuilder::pointer &bc) : builder(bc) {}
@@ -119,6 +126,20 @@ GUIBuilder::~GUIBuilder()
 #if DEBUG
   std::cerr << "GUIBuilder::~GUIBuilder(): from thread " << Thread::self()->getThreadName() << std::endl;
 #endif
+  try {
+    // get framework properties
+    sci::cca::ports::GUIService::pointer guiService =
+      pidl_cast<sci::cca::ports::GUIService::pointer>(services->getPort("cca.GUIService"));
+    guiService->removeBuilder(services->getComponentID()->getInstanceName());
+    services->releasePort("cca.GUIService");
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    std::cerr << "Error: GUI service is not available; " <<  e->getNote() << std::endl;
+  }
+
+  if (appLoader) {
+    delete appLoader;
+  }
 }
 
 // The first GUIBuilder to be instantiated (when wxTheApp is null) gets setServices
@@ -136,21 +157,33 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
   services = svc;
   builderLock.unlock();
 
-  // What framework do we belong to?
+  sci::cca::TypeMap::pointer tm;
+  // Get framework-specific properties
   try {
-    Guard g(&builderLock);
+    // get framework properties
     sci::cca::ports::FrameworkProperties::pointer fwkProperties =
       pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(services->getPort("cca.FrameworkProperties"));
-    sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
+    tm = fwkProperties->getProperties();
     services->releasePort("cca.FrameworkProperties");
-    frameworkURL = tm->getString("url", "NO URL AVAILABLE");
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    std::cerr << "Error: Framework URL is not available; " <<  e->getNote() << std::endl;
+    std::cerr << "Error: Framework properties service is not available (fatal error); " <<  e->getNote() << std::endl;
+    return;
+  }
+  frameworkURL = tm->getString("url", "NO URL AVAILABLE");
+
+  // set up application loading
+  std::string file = tm->getString("network file", "");
+  appLoader = new ApplicationLoader(file);
+  if (! file.empty()) {
+    // load application here?
   }
 
+  // get config dir
+  configDir = tm->getString("config dir", "");
+
   if (! wxTheApp) {
-    Thread *t = new Thread(new wxGUIThread(sci::cca::GUIBuilder::pointer(this)), guiThreadName.c_str(), 0, Thread::NotActivated);
+    Thread *t = new Thread(new wxGUIThread(sci::cca::GUIBuilder::pointer(this)), GUI_THREAD_NAME.c_str(), 0, Thread::NotActivated);
     t->setStackSize(8*256*1024);
     t->activate(false);
     t->detach();
@@ -159,12 +192,23 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
 #if DEBUG
     std::cerr << "GUIBuilder::setServices(..) try to add top window." << std::endl;
 #endif
-    if (Thread::self()->getThreadName() == guiThreadName) {
-      app->AddTopWindow(sci::cca::GUIBuilder::pointer(this));
+    if (Thread::self()->getThreadName() == GUI_THREAD_NAME) {
+      app->AddBuilder(sci::cca::GUIBuilder::pointer(this));
     //} else {
     // add to event queue???
     }
   }
+  try {
+    // get framework properties
+    sci::cca::ports::GUIService::pointer guiService =
+      pidl_cast<sci::cca::ports::GUIService::pointer>(services->getPort("cca.GUIService"));
+    guiService->addBuilder(services->getComponentID()->getInstanceName(), sci::cca::GUIBuilder::pointer(this));
+    services->releasePort("cca.GUIService");
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    std::cerr << "Error: GUI service is not available; " <<  e->getNote() << std::endl;
+  }
+
   setDefaultPortColors();
 }
 
@@ -323,6 +367,7 @@ GUIBuilder::getCompatiblePortList(const sci::cca::ComponentID::pointer &user,
   }
 }
 
+// Bridge (SCIM) functions
 void
 GUIBuilder::getBridgeablePortList(const sci::cca::ComponentID::pointer &user,
                                   const std::string& usesPortName,
@@ -343,6 +388,63 @@ GUIBuilder::getBridgeablePortList(const sci::cca::ComponentID::pointer &user,
     }
   }
 }
+
+// Connecting components from different component models with a bridge:
+// [user component] --- [bridge component] --- [provider component]
+// where --- is a bridge connection
+sci::cca::ComponentID::pointer
+GUIBuilder::generateBridge(const sci::cca::ComponentID::pointer &user,
+                           const std::string& usesPortName,
+                           const sci::cca::ComponentID::pointer &provider,
+                           const std::string& providesPortName,
+                           sci::cca::ConnectionID::pointer& connID1,
+                           sci::cca::ConnectionID::pointer& connID2)
+{
+  sci::cca::ComponentID::pointer bridgeCID;
+#ifdef BUILD_BRIDGE
+
+  try {
+    sci::cca::ports::BuilderService::pointer bs =
+      pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+    std::string instanceName = bs->generateBridge(user, usesPortName, provider, providesPortName);
+    if (instanceName.empty()) {
+      BuilderWindow *bw = app->GetTopBuilderWindow();
+      if (bw) {
+        bw->DisplayErrorMessage("BuilderService was unable to generate bridge for " + usesPortName + " and " + providesPortName + ".");
+      }
+    } else {
+      std::string className = "bridge:Bridge." + instanceName;
+      sci::cca::TypeMap::pointer tm = services->createTypeMap();
+      bridgeCID = bs->createInstance(instanceName, className, tm);
+
+      // get all ports for newly created bridge component
+      SSIDL::array1<std::string> usesPorts = bs->getUsedPortNames(bridgeCID);
+      SSIDL::array1<std::string> providesPorts = bs->getProvidedPortNames(bridgeCID);
+#if DEBUG
+      std::cerr << "Bridge: connect " << user->getInstanceName() << "->"
+                << usesPortName << " to " << bridgeCID->getInstanceName() << "->"
+                << providesPorts[0] << std::endl;
+#endif
+      connID1 = bs->connect(user, usesPortName, bridgeCID, providesPorts[0]);
+#if DEBUG
+      std::cerr << "Bridge: connect " << bridgeCID->getInstanceName() << "->"
+                << usesPorts[0] << " to " << provider->getInstanceName() << "->"
+                << providesPortName << std::endl;
+#endif
+      connID2 = bs->connect(bridgeCID, usesPorts[0], provider, providesPortName);
+    }
+    services->releasePort("cca.BuilderService");
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    if (bw) {
+      bw->DisplayErrorMessage("Error: Could not generate bridge for " + usesPortName + " and " + providesPortName + ";" +  e->getNote());
+    }
+  }
+#endif
+  return bridgeCID;
+}
+
 
 sci::cca::ConnectionID::pointer
 GUIBuilder::connect(const sci::cca::ComponentID::pointer &usesCID, const std::string &usesPortName,
@@ -381,10 +483,81 @@ void GUIBuilder::disconnect(const sci::cca::ConnectionID::pointer &connID, float
   }
 }
 
+//////////////////////////////////////////////////////////////////////////
+// Mediator between wxWidgets GUI classes and cca.FrameworkProxyService, cca.ComponentRepository.
+
 // add component class described in XML file to the ComponentRepository at runtime
-// void GUIBuilder::addComponentFromXML()
-// {
-// }
+void GUIBuilder::addComponentFromXML(const std::string& filePath, const std::string& componentModel)
+{
+  BuilderWindow *bw = app->GetTopBuilderWindow();
+  if (!bw) {
+    std::cerr << "ERROR: could not get top builder window from wxSCIRunApp." << std::endl;
+    return;
+  }
+  sci::cca::ports::FrameworkProperties::pointer fwkProperties;
+  try {
+    // append directory to sidl path!
+    fwkProperties =
+      pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(services->getPort("cca.FrameworkProperties"));
+  } catch (const sci::cca::CCAException::pointer &pe) {
+    bw->DisplayErrorMessage("Error: framework properties not found; " + pe->getNote());
+    return;
+  }
+  sci::cca::TypeMap::pointer tm = fwkProperties->getProperties();
+  SSIDL::array1<std::string> sArray = tm->getStringArray("sidl_xml_path", sArray);
+  sArray.push_back(filePath);
+  tm->putStringArray("sidl_xml_path", sArray);
+
+  services->releasePort("cca.FrameworkProperties");
+
+  try {
+    sci::cca::ports::ComponentRepository::pointer reg =
+      pidl_cast<sci::cca::ports::ComponentRepository::pointer>(
+                                                               services->getPort("cca.ComponentRepository"));
+
+    reg->addComponentClass(componentModel);
+  }
+  catch(const sci::cca::CCAException::pointer &pe) {
+    bw->DisplayErrorMessage("Error: component repository not found; " + pe->getNote());
+    return;
+  }
+  services->releasePort("cca.ComponentRepository");
+
+  // TODO: should update all active builder windows
+  bw->BuildAllPackageMenus();
+}
+
+//////////////////////////////////////////////////////////////////////////
+//  Mediator between wxWidgets GUI classes and cca.FrameworkProxyService
+
+void GUIBuilder::addFrameworkProxy(const std::string &loaderName, const std::string &user, const std::string &domain, const std::string &loaderPath)
+{
+std::cerr << "GUIBuilder::addFrameworkProxy(..): " << loaderName << ", " << user << ", " << domain << ", " << loaderPath << std::endl;
+  sci::cca::ports::FrameworkProxyService::pointer fwkProxy;
+  try {
+    fwkProxy =
+      pidl_cast<sci::cca::ports::FrameworkProxyService::pointer>(services->getPort("cca.FrameworkProxyService"));
+    fwkProxy->addLoader(loaderName, user, domain, loaderPath);
+  } catch (const sci::cca::CCAException::pointer &pe) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    bw->DisplayErrorMessage("Error: framework proxy service not found; " + pe->getNote());
+    return;
+  }
+}
+
+void GUIBuilder::removeFrameworkProxy(const std::string &loaderName)
+{
+  sci::cca::ports::FrameworkProxyService::pointer fwkProxy;
+  try {
+    fwkProxy =
+      pidl_cast<sci::cca::ports::FrameworkProxyService::pointer>(services->getPort("cca.FrameworkProxyService"));
+    fwkProxy->removeLoader(loaderName);
+  } catch (const sci::cca::CCAException::pointer &pe) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    bw->DisplayErrorMessage("Error: framework proxy service not found; " + pe->getNote());
+    return;
+  }
+}
 
 //////////////////////////////////////////////////////////////////////////
 // sci.cca.ports.GoPort support

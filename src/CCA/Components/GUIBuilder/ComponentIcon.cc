@@ -1,30 +1,41 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
+
+/*
+ *  ComponentIcon.cc:
+ *
+ *  Written by (Module.cc):
+ *   Steven G. Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   June 2002
+ *
+ */
 
 
 //#include <wx/region.h>
@@ -60,13 +71,16 @@ BEGIN_EVENT_TABLE(ComponentIcon, wxPanel)
   EVT_MENU(ID_MENU_GO, ComponentIcon::OnGo)
   EVT_MENU(ID_MENU_DELETE, ComponentIcon::OnDelete)
   EVT_BUTTON(ID_BUTTON_UI, ComponentIcon::OnUI)
-END_EVENT_TABLE()
+  END_EVENT_TABLE()
 
 IMPLEMENT_DYNAMIC_CLASS(ComponentIcon, wxPanel)
 
-ComponentIcon::ComponentIcon(const sci::cca::GUIBuilder::pointer& bc, wxWindowID winid,
-                             NetworkCanvas* parent, const sci::cca::ComponentID::pointer& compID, int x, int y)
-  : canvas(parent), hasUIPort(false), hasGoPort(false), isMoving(false), cid(compID), builder(bc)
+ComponentIcon::ComponentIcon(const sci::cca::GUIBuilder::pointer& bc,
+                             wxWindowID winid,
+                             NetworkCanvas* parent,
+                             const sci::cca::ComponentID::pointer& compID,
+                             int x, int y)
+    : canvas(parent), hasUIPort(false), hasGoPort(false), isMoving(false), cid(compID), builder(bc)
 {
 
   Init();
@@ -160,26 +174,26 @@ void ComponentIcon::OnMouseMove(wxMouseEvent& event)
 #if DEBUG
     std::cerr << "ComponentIcon::OnMouseMove(..) "
       //<< "event pos=(" << p.x << ", " << p.y << ")"
-            << std::endl
-	    << "\tmouse canvas pos=(" << mp.x << ", " << mp.y << ")"
-            << std::endl
-	    << "\ticon pos=(" << pp.x << ", " << pp.y << ")"
-           << std::endl
-	    << "\ttop left pos=(" << topLeft.x << ", " << topLeft.y << ")"
-            << std::endl;
+              << std::endl
+              << "\tmouse canvas pos=(" << mp.x << ", " << mp.y << ")"
+              << std::endl
+              << "\ticon pos=(" << pp.x << ", " << pp.y << ")"
+              << std::endl
+              << "\ttop left pos=(" << topLeft.x << ", " << topLeft.y << ")"
+              << std::endl;
 #endif
 
-//     // test
-//     wxPoint p;
-//     p = mp;
+    //     // test
+    //     wxPoint p;
+    //     p = mp;
 
     // adjust for canvas boundaries
     if (topLeft.x < 0) {
       newX -= topLeft.x;
       if (p.x < 0) {
-	mp.x -= p.x;
-	p.x = 0;
-	WarpPointer(mp.x, mp.y); // move mouse pointer
+        mp.x -= p.x;
+        p.x = 0;
+        WarpPointer(mp.x, mp.y); // move mouse pointer
       }
       dx -= 1;
     }
@@ -187,9 +201,9 @@ void ComponentIcon::OnMouseMove(wxMouseEvent& event)
     if (topLeft.y < 0) {
       newY -= topLeft.y;
       if (p.y < 0) {
-	mp.y -= p.y;
-	p.y = 0;
-	WarpPointer(mp.x, mp.y); // move mouse pointer
+        mp.y -= p.y;
+        p.y = 0;
+        WarpPointer(mp.x, mp.y); // move mouse pointer
       }
       dy -= 1;
     }
@@ -202,7 +216,7 @@ void ComponentIcon::OnMouseMove(wxMouseEvent& event)
       if (p.x > cw) {
         mp.x -= (p.x - cw);
         p.x = cw - mw;
-	WarpPointer(mp.x, mp.y);
+        WarpPointer(mp.x, mp.y);
       }
       dx = 1;
     }
@@ -215,7 +229,7 @@ void ComponentIcon::OnMouseMove(wxMouseEvent& event)
       if (p.y > ch) {
         mp.y -= (p.y - ch);
         p.y = ch;
-	WarpPointer(mp.x, mp.y);
+        WarpPointer(mp.x, mp.y);
       }
       dy = 1;
     }
@@ -224,7 +238,7 @@ void ComponentIcon::OnMouseMove(wxMouseEvent& event)
     wxPoint np;
     canvas->GetScrolledPosition(wxPoint(newX, newY), np);
 
-//     std::cerr << "\tmove to scrolled (" << np.x << ", " << np.y << ") or unscrolled (" << newX << ", " << newY << ")" << std::endl;
+    //     std::cerr << "\tmove to scrolled (" << np.x << ", " << np.y << ") or unscrolled (" << newX << ", " << newY << ")" << std::endl;
     //Move(np.x, np.y);
     Move(newX, newY);
     //Show(true);
@@ -232,19 +246,19 @@ void ComponentIcon::OnMouseMove(wxMouseEvent& event)
     canvas->Refresh();
 
 
-//     CalcScrolledPosition(newX, newY, &newX, &newY);
-//     movingIcon->Move(newX, newY);
-//     movingIcon->Show(true);
-//     // reset moving icon connections
-//     Refresh();
-//     builderWindow->RedrawMiniCanvas();
+    //     CalcScrolledPosition(newX, newY, &newX, &newY);
+    //     movingIcon->Move(newX, newY);
+    //     movingIcon->Show(true);
+    //     // reset moving icon connections
+    //     Refresh();
+    //     builderWindow->RedrawMiniCanvas();
 
-//     wxRect windowRect = GetClientRect();
-//     if (! windowRect.Inside(newX + mw, newY + mh)) {
-//       int xu = 0, yu = 0;
-//       GetScrollPixelsPerUnit(&xu, &yu);
-//       Scroll(newX/xu, newY/yu);
-//     }
+    //     wxRect windowRect = GetClientRect();
+    //     if (! windowRect.Inside(newX + mw, newY + mh)) {
+    //       int xu = 0, yu = 0;
+    //       GetScrollPixelsPerUnit(&xu, &yu);
+    //       Scroll(newX/xu, newY/yu);
+    //     }
   }
 
   event.StopPropagation();
@@ -257,7 +271,7 @@ void ComponentIcon::OnRightClick(wxMouseEvent& event)
 
 void ComponentIcon::OnGo(wxCommandEvent& event)
 {
-  builder->go(goPortName);
+  int status = builder->go(goPortName);
 }
 
 void ComponentIcon::OnDelete(wxCommandEvent& event)
@@ -267,7 +281,7 @@ void ComponentIcon::OnDelete(wxCommandEvent& event)
 
 void ComponentIcon::OnUI(wxCommandEvent& event)
 {
-  builder->ui(uiPortName);
+  int status = builder->ui(uiPortName);
 }
 
 void ComponentIcon::GetCanvasPosition(wxPoint& p)
@@ -335,6 +349,10 @@ void ComponentIcon::SetLayout()
                            STATUS_SIZE, wxDOUBLE_BORDER|wxRAISED_BORDER);
   gridBagSizer->Add(msgButton, wxGBPosition(1, 4), wxDefaultSpan, wxFIXED_MINSIZE|wxALIGN_LEFT, BORDER_SIZE);
 
+  // hide until implemented
+  msgButton->Enable(false);
+  msgButton->Show(false);
+
   SetSizerAndFit(gridBagSizer);
 }
 
@@ -354,21 +372,22 @@ void ComponentIcon::SetPortIcons()
                       wxDefaultSpan, wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, PORT_BORDER_SIZE);
   } else {
     for (unsigned int i = 0, j = 0; i < providedPorts.size(); i++) {
+ std::cerr << "ComponentIcon::SetPortIcons(): provided port=" << providedPorts[i] << std::endl;
       if (providedPorts[i].rfind("ui") != std::string::npos) {
-	if (builder->connectUIPort(cid->getInstanceName(), providedPorts[i], cid, uiPortName)) {
-	  hasUIPort = true;
-	}
+        if (builder->connectUIPort(cid->getInstanceName(), providedPorts[i], cid, uiPortName)) {
+          hasUIPort = true;
+        }
       } else if (providedPorts[i].rfind("go") != std::string::npos) {
-	if (builder->connectGoPort(cid->getInstanceName(), providedPorts[i], cid, goPortName)) {
-	  hasGoPort = true;
-	  popupMenu->Append(ID_MENU_GO, wxT("&Go"), wxT("CCA go port"));
-	}
+        if (builder->connectGoPort(cid->getInstanceName(), providedPorts[i], cid, goPortName)) {
+          hasGoPort = true;
+          popupMenu->Append(ID_MENU_GO, wxT("&Go"), wxT("CCA go port"));
+        }
       } else {
-	PortIcon *pi = new PortIcon(builder, this, wxID_ANY, GUIBuilder::Provides, providedPorts[i]);
-	//ports[providedPorts[i]] = pi;
-	providesPorts.push_back(pi);
-	gridBagSizer->Add(pi, wxGBPosition(j++, 0), wxDefaultSpan,
-			  wxFIXED_MINSIZE|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, PORT_BORDER_SIZE);
+        PortIcon *pi = new PortIcon(builder, this, wxID_ANY, GUIBuilder::Provides, providedPorts[i]);
+        //ports[providedPorts[i]] = pi;
+        providesPorts.push_back(pi);
+        gridBagSizer->Add(pi, wxGBPosition(j++, 0), wxDefaultSpan,
+                          wxFIXED_MINSIZE|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, PORT_BORDER_SIZE);
       }
     }
   }
@@ -382,13 +401,22 @@ void ComponentIcon::SetPortIcons()
                       wxDefaultSpan, wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, PORT_BORDER_SIZE);
   } else {
     for (unsigned int i = 0; i < usedPorts.size(); i++) {
-      PortIcon *pi = new PortIcon(builder, this, wxID_ANY, GUIBuilder::Uses, usedPorts[i]);
-      //ports[usedPorts[i]] = pi;
-      usesPorts.push_back(pi);
-      gridBagSizer->Add(pi, wxGBPosition(i, USES_PORT_COL),
-                        wxDefaultSpan, wxFIXED_MINSIZE|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, PORT_BORDER_SIZE);
+      if (usedPorts[i].rfind("ui") != std::string::npos) {
+        // show warning
+        continue;
+      } else if (usedPorts[i].rfind("go") != std::string::npos) {
+        // show warning
+        continue;
+      } else {
+        PortIcon *pi = new PortIcon(builder, this, wxID_ANY, GUIBuilder::Uses, usedPorts[i]);
+        //ports[usedPorts[i]] = pi;
+        usesPorts.push_back(pi);
+        gridBagSizer->Add(pi, wxGBPosition(i, USES_PORT_COL),
+                          wxDefaultSpan, wxFIXED_MINSIZE|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, PORT_BORDER_SIZE);
+      }
     }
   }
 }
 
 }
+

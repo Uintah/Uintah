@@ -31,45 +31,47 @@
  *  Colormap.h
  *
  *  Written by:
- *   Keming Zhang 
+ *   Keming Zhang
  *   Department of Computer Science
  *   University of Utah
  *   June 2002
+ *  Ported to wxWidgets:
  *
  */
 
 #ifndef Viewer_Colormap_h
 #define Viewer_Colormap_h
 
-#include <qapplication.h>
-#include <qpushbutton.h>
-#include <qmainwindow.h>
-#include <qmessagebox.h>
-#include <qapplication.h>
-#include <qframe.h>
-#include <qpainter.h>
-#include <qcolor.h>
-#include <qscrollview.h>
-#include <math.h>
-#include <stdlib.h>
-#include <iostream>
-#include <fstream>
-#include "vector2d.h"
+// #include <qapplication.h>
+// #include <qpushbutton.h>
+// #include <qmainwindow.h>
+// #include <qmessagebox.h>
+// #include <qapplication.h>
+// #include <qframe.h>
+// #include <qpainter.h>
+// #include <qcolor.h>
+// #include <qscrollview.h>
+// #include <math.h>
+// #include <stdlib.h>
+// #include <iostream>
+// #include <fstream>
+// #include "vector2d.h"
 
-class Colormap:public QFrame
-{
-public:
-  Colormap( QWidget *parent, const QString &type="Gray", double min=0.0, double max=1.0);
-  void setValues(double min, double max);
-  int height();
-  QColor getColor(double value);
-  void setType(const QString& type);
-protected:
-  void	paintEvent(QPaintEvent*e);
-  double minVal, maxVal;
-  QString type;
-  int borderY;
-};
+// class Colormap:public QFrame
+// {
+// public:
+//   Colormap( QWidget *parent, const QString &type="Gray", double min=0.0, double max=1.0);
+//   void setValues(double min, double max);
+//   int height();
+//   QColor getColor(double value);
+//   void setType(const QString& type);
+
+// protected:
+//   void	paintEvent(QPaintEvent*e);
+//   double minVal, maxVal;
+//   QString type;
+//   int borderY;
+// };
 
 #endif
 

@@ -47,7 +47,12 @@ interface FrameworkProxyService extends sci.cca.Port
 
 interface GUIService extends sci.cca.Port
 {
-  // connect to a GUI if available
+  // get first available builder?
+  // get builder by name
+  // connect to a GUIBuilder if available: assume or enforce in the same address space?
+  // unique builder name? throw CCAException?
+  void addBuilder(in string builderName, in sci.cca.GUIBuilder builder);
+  void removeBuilder(in string builderName);
 }
 
 //Temp test (Bridge)
@@ -80,23 +85,23 @@ interface StringPort extends sci.cca.Port
  * Component representation in GUI - set Qt widgets
  * and other properties in Module class.
  */
-interface ComponentIcon extends sci.cca.Port {
-    collective string getDisplayName();
-    collective string getDescription();
+// interface ComponentIcon extends sci.cca.Port {
+//     collective string getDisplayName();
+//     collective string getDescription();
 
-    // only "RECT" is supported, which draws a standard raised QFrame
-    collective string getIconShape();
+//     // only "RECT" is supported, which draws a standard raised QFrame
+//     collective string getIconShape();
 
-    // set steps = 0 to omit progress bar from icon
-    // progress bar - return # steps
-    collective int getProgressBar();
-}
+//     // set steps = 0 to omit progress bar from icon
+//     // progress bar - return # steps
+//     collective int getProgressBar();
+// }
 
 
-// report component progress
+// // report component progress
 interface Progress extends sci.cca.Port {
-    collective void updateProgress(in int progress);
-    collective void updateProgress(in int progress, in int totalSteps);
+//     collective void updateProgress(in int progress);
+//     collective void updateProgress(in int progress, in int totalSteps);
 }
 
 /**

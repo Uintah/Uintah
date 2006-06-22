@@ -34,9 +34,10 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/World
 
 SRCS     += \
-	$(SRCDIR)/World.cc
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
-	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
+            $(SRCDIR)/World.cc
+
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm \
+           Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

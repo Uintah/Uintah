@@ -28,7 +28,8 @@
 
 package sci {
   package cca {
-     class Hello implements-all sci.cca.Component, sci.cca.ComponentRelease {
-     }
+    class Hello implements-all sci.cca.Component, sci.cca.ComponentRelease {
+      string getMessage();
+    }
   }
 }

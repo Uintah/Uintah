@@ -40,14 +40,16 @@ SRCS += \
          $(SRCDIR)/NetworkCanvas.cc \
          $(SRCDIR)/MiniCanvas.cc \
          $(SRCDIR)/Connection.cc \
+         $(SRCDIR)/BridgeConnection.cc \
          $(SRCDIR)/ComponentIcon.cc \
          $(SRCDIR)/PortIcon.cc \
-	 $(SRCDIR)/ComponentWizardDialog.cc \
+         $(SRCDIR)/ComponentWizardDialog.cc \
          $(SRCDIR)/ComponentSkeletonWriter.cc \
-         $(SRCDIR)/CodePreviewDialog.cc \
-	 $(SRCDIR)/XMLPathDialog.cc
+         $(SRCDIR)/XMLPathDialog.cc \
+         $(SRCDIR)/FrameworkProxyDialog.cc \
+         $(SRCDIR)/CodePreviewDialog.cc
 
-PSELIBS := Core/CCA/spec Core/CCA/PIDL Core/Thread Core/Exceptions SCIRun
+PSELIBS := Core/CCA/spec Core/CCA/PIDL Core/OS Core/Thread Core/Exceptions SCIRun
 
 CFLAGS += $(WX_CXXFLAGS)
 CXXFLAGS += $(WX_CXXFLAGS)

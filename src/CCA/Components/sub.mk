@@ -57,7 +57,8 @@ SRCDIR   := CCA/Components
 SUBDIRS := \
             $(SRCDIR)/Hello \
             $(SRCDIR)/World \
-	    $(SRCDIR)/PDEdriver 
+            $(SRCDIR)/PDEdriver
+
 ifeq ($(HAVE_WX),yes)
   SUBDIRS += $(SRCDIR)/GUIBuilder
 endif

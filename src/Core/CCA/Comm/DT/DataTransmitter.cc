@@ -509,25 +509,28 @@ DataTransmitter::runRecvingThread(){
       }
       
       static int protocol_id = -1;
-#if defined(__sgi)
+#if defined(__sgi) || defined(__APPLE__)
       // SGI does not have SOL_TCP defined.  To the best of my knowledge
       // (ie: reading the man page) this is what you are supposed to do. (Dd)
-      if( protocol_id == -1 )
-	{
-	  struct protoent * p = getprotobyname("TCP");
-	  if( p == NULL )
-	    {
-	      cout << "DataTransmitter.cc: Error.  Lookup of protocol TCP failed!\n";
-	      exit();
-	      return;
-	    }
-	  protocol_id = p->p_proto;
-	}
+      if(protocol_id == -1) {
+        struct protoent * p = getprotobyname("TCP");
+        if(p == NULL) {
+          cout << "DataTransmitter.cc: Error.  Lookup of protocol TCP failed!\n";
+          exit();
+          return; 
+        }
+        protocol_id = p->p_proto;
+      }
+      int yes = 1;
+#else
+#ifdef _WIN32
+      protocol_id = IPPROTO_TCP;
+      char yes = 1; // the windows version of setsockopt takes a char*
 #else
       protocol_id = SOL_TCP;
-#endif
-      
       int yes = 1;
+#endif
+#endif
       if( setsockopt( new_fd, protocol_id, TCP_NODELAY, &yes, sizeof(int) ) == -1 ) {
 	perror("setsockopt");
       }
@@ -575,22 +578,29 @@ DataTransmitter::sendPacket(DTMessage *msg, int packetLen){
     }
     
     static int protocol_id = -1;
-#if defined(__sgi)
-    // SGI does not have SOL_TCP defined.  To the best of my knowledge
-    // (ie: reading the man page) this is what you are supposed to do. (Dd)
-    if( protocol_id == -1 ){
-      struct protoent * p = getprotobyname("TCP");
-      if( p == NULL ){
-	cout << "DataTransmitter.cc: Error.  TCP protocol lookup failed!\n";
-	exit();
-	return;
+#if defined(__sgi) || defined(__APPLE__)
+      // SGI does not have SOL_TCP defined.  To the best of my knowledge
+      // (ie: reading the man page) this is what you are supposed to do. (Dd)
+      if(protocol_id == -1) {
+        struct protoent * p = getprotobyname("TCP");
+        if(p == NULL) {
+          cout << "DataTransmitter.cc: Error.  Lookup of protocol TCP failed!\n";
+          exit();
+          return; 
+        }
+        protocol_id = p->p_proto;
       }
-      protocol_id = p->p_proto;
-    }
+      int yes = 1;
 #else
-    protocol_id = SOL_TCP;
+#ifdef _WIN32
+      protocol_id = IPPROTO_TCP; 
+      char yes = 1; // the windows version of setsockopt takes a char*
+#else
+      protocol_id = SOL_TCP;
+      int yes = 1;
 #endif
-    int yes=1;
+#endif
+
     if( setsockopt( new_fd, protocol_id, TCP_NODELAY, &yes, sizeof(int) ) == -1 ) {
       perror("setsockopt");
     }

@@ -26,16 +26,39 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+/*
+ *  NetworkCanvas.cc:
+ *
+ *  Written by (NetworkCanvasView.cc):
+ *   Steven G. Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   October 2001
+ *  Modified by:
+ *   Keming Zhang
+ *   March 2002
+ *  Ported to wxWidgets:
+ *   Ayla Khan
+ *   January 2006
+ *
+ *  Modifications:
+ *   The wxWidgets toolkit does not provide canvas classes,
+ *   so QCanvasView's functionality is approximated in this class.
+ */
+
 #include <wx/dcbuffer.h>
 #include <wx/scrolwin.h>
 #include <wx/event.h>
 #include <wx/menu.h>
+
+#include <sci_metacomponents.h>
 
 #include <CCA/Components/GUIBuilder/NetworkCanvas.h>
 #include <CCA/Components/GUIBuilder/BuilderWindow.h>
 #include <CCA/Components/GUIBuilder/ComponentIcon.h>
 #include <CCA/Components/GUIBuilder/PortIcon.h>
 #include <CCA/Components/GUIBuilder/Connection.h>
+#include <CCA/Components/GUIBuilder/BridgeConnection.h>
 
 #include <iostream>
 
@@ -63,7 +86,13 @@ END_EVENT_TABLE()
 
 IMPLEMENT_DYNAMIC_CLASS(NetworkCanvas, wxScrolledWindow)
 
-NetworkCanvas::NetworkCanvas(const sci::cca::GUIBuilder::pointer& bc, BuilderWindow* bw, wxWindow* parent, wxWindowID id, const wxPoint& pos, const wxSize& size) : builder(bc), builderWindow(bw), movingIcon(0)/*, highlightedConnection(0)*/
+NetworkCanvas::NetworkCanvas(const sci::cca::GUIBuilder::pointer& bc,
+                             BuilderWindow* bw,
+                             wxWindow* parent,
+                             wxWindowID id,
+                             const wxPoint& pos,
+                             const wxSize& size)
+  : builder(bc), builderWindow(bw), movingIcon(0), selectedConnection(0)
 {
   Init();
   Create(parent, id, pos, size);
@@ -73,7 +102,11 @@ NetworkCanvas::~NetworkCanvas()
 {
 }
 
-bool NetworkCanvas::Create(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style)
+bool NetworkCanvas::Create(wxWindow *parent,
+                           wxWindowID id,
+                           const wxPoint& pos,
+                           const wxSize& size,
+                           long style)
 {
   if (!wxScrolledWindow::Create(parent, id, pos, size, style)) {
     return false;
@@ -97,74 +130,65 @@ bool NetworkCanvas::Create(wxWindow *parent, wxWindowID id, const wxPoint& pos, 
 
 void NetworkCanvas::OnLeftDown(wxMouseEvent& event)
 {
-  wxPoint p = event.GetPosition();
-  wxPoint pp;
-  GetUnscrolledPosition(p, pp);
-  wxPoint mp;
-  GetUnscrolledMousePosition(mp);
-#if DEBUG
-  std::cerr << "NetworkCanvas::OnLeftDown(..):" << std::endl
-	    << "\t event position=(" << p.x << ", " << p.y << ")" << std::endl
-	    << "\t unscrolled event position=(" << pp.x << ", " << pp.y << ")" << std::endl
-	    << "\t unscrolled mouse position=(" << mp.x << ", " << mp.y << ")" << std::endl
-            << std::endl;
-  std::cerr << "NetworkCanvas::OnLeftDown(..)" << std::endl;
-  if (movingIcon) {
-    std::cerr << "\tmoving icon: " << movingIcon->GetComponentInstanceName() << std::endl;
-  }
-#endif
+//   wxPoint p = event.GetPosition();
+//   wxPoint pp;
+//   GetUnscrolledPosition(p, pp);
+//   wxPoint mp;
+//   GetUnscrolledMousePosition(mp);
+// #if DEBUG
+//   std::cerr << "NetworkCanvas::OnLeftDown(..):" << std::endl
+//             << "\t event position=(" << p.x << ", " << p.y << ")" << std::endl
+//             << "\t unscrolled event position=(" << pp.x << ", " << pp.y << ")" << std::endl
+//             << "\t unscrolled mouse position=(" << mp.x << ", " << mp.y << ")" << std::endl
+//             << std::endl;
+//   std::cerr << "NetworkCanvas::OnLeftDown(..)" << std::endl;
+//   if (movingIcon) {
+//     std::cerr << "\tmoving icon: " << movingIcon->GetComponentInstanceName() << std::endl;
+//   }
+// #endif
 }
 
 void NetworkCanvas::OnLeftUp(wxMouseEvent& event)
 {
-#if DEBUG
-  std::cerr << "NetworkCanvas::OnLeftUp(..)" << std::endl;
-  if (movingIcon) {
-    std::cerr << "\tmoving icon: " << movingIcon->GetComponentInstanceName() << std::endl;
-    movingIcon->OnLeftUp(event);
-  }
-#endif
+// #if DEBUG
+//   std::cerr << "NetworkCanvas::OnLeftUp(..)" << std::endl;
+// #endif
+//   if (movingIcon) {
+// #if DEBUG
+//     std::cerr << "\tmoving icon: " << movingIcon->GetComponentInstanceName() << std::endl;
+// #endif
+//     movingIcon->OnLeftUp(event);
+//     movingIcon = 0;
+//   }
 }
 
 void NetworkCanvas::OnMouseMove(wxMouseEvent& event)
 {
-#if DEBUG
-  if (movingIcon) {
-    std::cerr << "NetworkCanvas::OnMouseMove(..)" << std::endl;
-    std::cerr << "\tmoving icon: " << movingIcon->GetComponentInstanceName() << std::endl;
-    movingIcon->OnMouseMove(event);
-    //wxPoint p = event.GetPosition();
-    //WarpPointer(p.x, p.y);
-  }
-#endif
+//   if (movingIcon) {
+// #if DEBUG
+//     std::cerr << "NetworkCanvas::OnMouseMove(..)" << std::endl;
+//     std::cerr << "\tmoving icon: " << movingIcon->GetComponentInstanceName() << std::endl;
+// #endif
+//     movingIcon->OnMouseMove(event);
+//     //wxPoint p = event.GetPosition();
+//     //WarpPointer(p.x, p.y);
+//   }
 }
 
 void NetworkCanvas::OnRightClick(wxMouseEvent& event)
 {
-//   wxMenuItemList list = componentMenu->GetMenuItems();
-//   wxMenuItemList::compatibility_iterator node = list.GetFirst();
-//   while (node) {
-//     wxMenuItem *item = node->GetData();
-//     componentMenu->Destroy(item);
-//     node = list.GetFirst();
-//   }
-
-//   const MenuMap menus = builderWindow->GetComponentMenus();
-//   for (MenuMap::const_iterator iter = menus.begin(); iter != menus.end(); iter++) {
-// set menu parent???? would have to reset menu parent when done?
-//     componentMenu->Append();
-//   }
   wxPoint mp;
   GetUnscrolledMousePosition(mp);
+  selectedConnection = 0;
   for (ConnectionMap::iterator iter = connections.begin(); iter != connections.end(); iter++) {
     if (iter->second->IsMouseOver(mp)) {
+      selectedConnection = iter->second;
       PopupMenu(connectionPopupMenu, mp);
       return;
     }
   }
 
   PopupMenu(popupMenu, event.GetPosition());
-  //std::cerr << "NetworkCanvas::OnRightClick(..): popup menu done!" << std::endl;
 }
 
 void NetworkCanvas::OnMiddleClick(wxMouseEvent& event)
@@ -193,21 +217,24 @@ void NetworkCanvas::OnClear(wxCommandEvent& event)
 
 void NetworkCanvas::OnDisconnect(wxCommandEvent& event)
 {
-  wxPoint mp;
-  GetUnscrolledMousePosition(mp);
-  for (ConnectionMap::iterator iter = connections.begin(); iter != connections.end(); iter++) {
-    if (iter->second->IsMouseOver(mp)) {
-      Disconnect(iter);
-    }
+  if (selectedConnection) {
+      ConnectionMap::iterator lb = connections.lower_bound(selectedConnection->GetUsesPortIcon());
+      ConnectionMap::iterator ub = connections.upper_bound(selectedConnection->GetUsesPortIcon());
+
+      ConnectionMap::iterator cIter = lb;
+      while (cIter != ub) {
+        Connection *c = cIter->second;
+        if (selectedConnection->GetConnectionID() == c->GetConnectionID()) {
+          Disconnect(cIter);
+          return;
+        }
+        cIter++;
+      }
   }
-  builderWindow->RedrawMiniCanvas();
-  Refresh();
 }
 
 void NetworkCanvas::OnPaint(wxPaintEvent& event)
 {
-//   wxScrolledWindow::OnPaint(event);
-
   wxBufferedPaintDC dc(this);
   // Shifts the device origin so we don't have to worry
   // about the current scroll position ourselves.
@@ -243,36 +270,56 @@ void NetworkCanvas::PaintBackground(wxDC& dc)
   dc.DrawRectangle(windowRect);
 }
 
-void NetworkCanvas::DrawConnections(wxDC& dc)
+void NetworkCanvas::Connect(PortIcon* usesPortIcon)
 {
-  ConnectionMap::iterator iter;
-  for (iter = possibleConnections.begin(); iter != possibleConnections.end(); iter++) {
-    iter->second->OnDraw(dc);
-  }
-
-  for (iter = connections.begin(); iter != connections.end(); iter++) {
-    iter->second->OnDraw(dc);
-  }
-}
-
-void NetworkCanvas::OnConnect(PortIcon* usesPortIcon)
-{
-  ConnectionMap::iterator iter = possibleConnections.find(usesPortIcon);
-  if (iter != possibleConnections.end() && iter->second->IsHighlighted()) {
+  ConnectionMap::iterator lb = possibleConnections.lower_bound(usesPortIcon);
+  ConnectionMap::iterator ub = possibleConnections.upper_bound(usesPortIcon);
+  ConnectionMap::iterator iter = lb;
+  while (iter != ub) {
     Connection* c = iter->second;
     PortIcon* p = c->GetProvidesPortIcon();
 
-    sci::cca::ConnectionID::pointer connID =
-      builder->connect(usesPortIcon->GetParent()->GetComponentInstance(),
-		       usesPortIcon->GetPortName(),
-		       p->GetParent()->GetComponentInstance(),
-		       p->GetPortName());
-    if (connID.isNull()) {
-      builderWindow->DisplayErrorMessage("Connection failed.");
-    } else {
-      Connection *con = new Connection(usesPortIcon, p, connID);
-      connections.insert(std::make_pair(usesPortIcon, con));
+#ifdef BUILD_BRIDGE
+    // check if possible connection was a BridgeConnection
+    BridgeConnection* bc = dynamic_cast<BridgeConnection*>(c);
+    if (bc && bc->IsHighlighted()) {
+      sci::cca::ConnectionID::pointer connID1, connID2;
+      sci::cca::ComponentID::pointer bCID =
+        builder->generateBridge(usesPortIcon->GetParent()->GetComponentInstance(),
+                                usesPortIcon->GetPortName(),
+                                p->GetParent()->GetComponentInstance(),
+                                p->GetPortName(),
+                                connID1,
+                                connID2);
+      // placement?
+      ComponentIcon* bCI = AddIcon(bCID);
+      // Bridge connections:
+      // [user component] -con1- [bridge component] -con2- [provider component]
+      BridgeConnection *con1 = new BridgeConnection(usesPortIcon, bCI->GetPortIcon(connID1->getProviderPortName()), connID1);
+      connections.insert(std::make_pair(usesPortIcon, (Connection*) con1));
+
+      PortIcon* pi2 = bCI->GetPortIcon(connID2->getUserPortName());
+      BridgeConnection *con2 = new BridgeConnection(pi2, p, connID2);
+      connections.insert(std::make_pair(pi2, (Connection*) con2));
+      ClearPossibleConnections();
+      return;
     }
+#endif
+
+    if (c->IsHighlighted()) {
+      sci::cca::ConnectionID::pointer connID =
+        builder->connect(usesPortIcon->GetParent()->GetComponentInstance(),
+                         usesPortIcon->GetPortName(),
+                         p->GetParent()->GetComponentInstance(),
+                         p->GetPortName());
+      if (connID.isNull()) {
+        builderWindow->DisplayErrorMessage("Connection failed.");
+      } else {
+        Connection *con = new Connection(usesPortIcon, p, connID);
+        connections.insert(std::make_pair(usesPortIcon, con));
+      }
+    }
+    iter++;
   }
   ClearPossibleConnections();
 }
@@ -286,7 +333,9 @@ bool NetworkCanvas::ShowPossibleConnections(PortIcon* port)
 
     SSIDL::array1<std::string> portArray;
     builder->getCompatiblePortList(pCI->GetComponentInstance(),
-                                   port->GetPortName(), ci_->GetComponentInstance(), portArray);
+                                   port->GetPortName(),
+                                   ci_->GetComponentInstance(),
+                                   portArray);
 
     for (unsigned int j = 0; j < portArray.size(); j++) {
       Connection *con;
@@ -302,7 +351,7 @@ bool NetworkCanvas::ShowPossibleConnections(PortIcon* port)
           continue;
         }
         con = new Connection(pUses, pProvides, sci::cca::ConnectionID::pointer(0), true);
-	possibleConnections.insert(std::make_pair(pUses, con));
+        possibleConnections.insert(std::make_pair(pUses, con));
       } else {
         PortIcon *pUses = ci_->GetPortIcon(portArray[j]);
         if (pUses == 0) {
@@ -315,10 +364,55 @@ bool NetworkCanvas::ShowPossibleConnections(PortIcon* port)
           return false;
         }
         con = new Connection(pUses, pProvides, sci::cca::ConnectionID::pointer(0), true);
-	possibleConnections.insert(std::make_pair(pUses, con));
+        possibleConnections.insert(std::make_pair(pUses, con));
       }
     }
   }
+
+// TODO: is there a better way to figure out if bridging is available or not?
+#ifdef BUILD_BRIDGE
+  for (ComponentMap::iterator iter = components.begin(); iter != components.end(); iter++) {
+    ComponentIcon* ci_ = iter->second;
+
+    SSIDL::array1<std::string> portArray;
+    builder->getBridgeablePortList(pCI->GetComponentInstance(),
+                                   port->GetPortName(),
+                                   ci_->GetComponentInstance(),
+                                   portArray);
+
+    for (unsigned int j = 0; j < portArray.size(); j++) {
+      Connection *con;
+      if (type == GUIBuilder::Uses) {
+        PortIcon *pUses = pCI->GetPortIcon(port->GetPortName());
+        if (pUses == 0) {
+          std::cerr << "Error: could not locate port " << port->GetPortName() << std::endl;
+          continue;
+        }
+        PortIcon *pProvides = ci_->GetPortIcon(portArray[j]);
+        if (pProvides == 0) {
+          std::cerr << "Error: could not locate port " << portArray[j] << std::endl;
+          continue;
+        }
+        con = new BridgeConnection(pUses, pProvides, sci::cca::ConnectionID::pointer(0), true);
+        possibleConnections.insert(std::make_pair(pUses, con));
+      } else {
+        PortIcon *pUses = ci_->GetPortIcon(portArray[j]);
+        if (pUses == 0) {
+          std::cerr << "Error: could not locate port " << portArray[j] << std::endl;
+          return false;
+        }
+        PortIcon *pProvides = pCI->GetPortIcon(port->GetPortName());
+        if (pProvides == 0) {
+          std::cerr << "Error: could not locate port " << port->GetPortName() << std::endl;
+          return false;
+        }
+        con = new BridgeConnection(pUses, pProvides, sci::cca::ConnectionID::pointer(0), true);
+        possibleConnections.insert(std::make_pair(pUses, con));
+      }
+    }
+  }
+#endif
+
   if (possibleConnections.empty()) {
     return false;
   }
@@ -328,13 +422,17 @@ bool NetworkCanvas::ShowPossibleConnections(PortIcon* port)
 
 void NetworkCanvas::HighlightConnection(const wxPoint& point)
 {
+  Connection *hc = 0;
   for (ConnectionMap::iterator iter = possibleConnections.begin(); iter != possibleConnections.end(); iter++) {
-    bool ret = iter->second->IsMouseOver(point);
-    if (ret) {
-      iter->second->HighlightConnection();
-    } else {
-      iter->second->UnhighlightConnection();
+    if (iter->second->IsHighlighted()) {
+      iter->second->Unhighlight();
     }
+    if (iter->second->IsMouseOver(point) && hc == 0) {
+      hc = iter->second;
+    }
+  }
+  if (hc) {
+    hc->Highlight();
   }
   Refresh();
 }
@@ -366,19 +464,6 @@ void NetworkCanvas::Clear()
   }
 }
 
-void NetworkCanvas::Disconnect(const ConnectionMap::iterator& iter)
-{
-  Connection* c = iter->second;
-  if (c) {
-    builder->disconnect(c->GetConnectionID(), 0);
-    delete c;
-  }
-  connections.erase(iter);
-
-  builderWindow->RedrawMiniCanvas();
-  Refresh();
-}
-
 void NetworkCanvas::ClearPossibleConnections()
 {
   ConnectionMap::iterator iter = possibleConnections.begin();
@@ -403,7 +488,8 @@ void NetworkCanvas::ClearConnections()
   Refresh();
 }
 
-void NetworkCanvas::AddIcon(sci::cca::ComponentID::pointer& compID)
+ComponentIcon*
+NetworkCanvas::AddIcon(sci::cca::ComponentID::pointer& compID)
 {
   const int x = 10, y = 10;
 
@@ -420,14 +506,12 @@ void NetworkCanvas::AddIcon(sci::cca::ComponentID::pointer& compID)
   if (rects.empty()) {
     ci->Move(x, y);
     ci->Show(true);
-    //builderWindow->RedrawMiniCanvas();
     Refresh();
-    return;
+    return ci;
   }
 
   wxPoint origin(x, y);
   CalcUnscrolledPosition(origin.x, origin.y, &origin.x, &origin.y);
-// std::cerr << "NetworkCanvas::AddIcon(..) " << ci->GetComponentInstanceName() << " origin = (" << origin.x << ", " << origin.y << ")" << std::endl;
 
   wxSize size = ci->GetSize();
   const int ci_h = size.GetHeight();
@@ -444,15 +528,6 @@ void NetworkCanvas::AddIcon(sci::cca::ComponentID::pointer& compID)
     for (int irow = 0; irow < max_row; irow++) {
       wxRect candidateRect(origin.x + (displ.GetWidth() * icol), origin.y + (displ.GetHeight() * irow), ci_w, ci_h);
 
-// std::cerr << "\tcandidate rect: ("
-//           << origin.x + (displ.GetWidth() * icol)
-//           << ", "
-//           << origin.y + (displ.GetHeight() * irow)
-//           << ", "
-//           << ci_w
-//           << ", "
-//           << ci_h
-// 	  << ")" << std::endl;
       // check with all the viewable modules - can new icon be placed?
       // searching for intersections with existing icons
       bool intersects = false;
@@ -462,35 +537,28 @@ void NetworkCanvas::AddIcon(sci::cca::ComponentID::pointer& compID)
       }
 
       if (! intersects) {
-	int x_ = 0, y_ = 0;
-	CalcScrolledPosition(candidateRect.GetPosition().x, candidateRect.GetPosition().y, &x_, &y_);
-
-// std::cerr << "\tmove to: ("
-//           << x_
-//           << ", "
-//           << y_
-// 	  << ")" << std::endl;
+        int x_ = 0, y_ = 0;
+        CalcScrolledPosition(candidateRect.GetPosition().x, candidateRect.GetPosition().y, &x_, &y_);
 
         ci->Move(x_, y_);
         ci->Show(true);
 
-	wxRect windowRect = GetClientRect();
-	if (! windowRect.Inside(x_, y_)) {
-	  int xu = 0, yu = 0;
-	  GetScrollPixelsPerUnit(&xu, &yu);
-	  Scroll(x_/xu, y_/yu);
-	}
-	//builderWindow->RedrawMiniCanvas();
-	Refresh();
-        return;
+        wxRect windowRect = GetClientRect();
+        if (! windowRect.Inside(x_, y_)) {
+          int xu = 0, yu = 0;
+          GetScrollPixelsPerUnit(&xu, &yu);
+          Scroll(x_/xu, y_/yu);
+        }
+        Refresh();
+        return ci;
       }
     }
   }
 
   ci->Move(max_row, max_col);
   ci->Show(true);
-  //builderWindow->RedrawMiniCanvas();
   Refresh();
+  return ci;
 }
 
 void NetworkCanvas::DeleteIcon(const std::string& instanceName)
@@ -507,12 +575,12 @@ void NetworkCanvas::DeleteIcon(const std::string& instanceName)
 
       ConnectionMap::iterator cIter = lb;
       while (cIter != ub) {
-	Connection *c = cIter->second;
-	builder->disconnect(c->GetConnectionID(), 0);
-	delete c;
-	ConnectionMap::iterator tmp = cIter;
-	connections.erase(tmp);
-	cIter++;
+        Connection *c = cIter->second;
+        builder->disconnect(c->GetConnectionID(), 0);
+        delete c;
+        ConnectionMap::iterator tmp = cIter;
+        connections.erase(tmp);
+        cIter++;
       }
     }
 
@@ -520,15 +588,15 @@ void NetworkCanvas::DeleteIcon(const std::string& instanceName)
     for (PortList::const_iterator plIter = ppl.begin(); plIter != ppl.end(); plIter++) {
       ConnectionMap::iterator cIter = connections.begin();
       while (cIter != connections.end()) {
-	Connection* c = cIter->second;
-	if (c->GetProvidesPortIcon() == *plIter) {
-	  builder->disconnect(c->GetConnectionID(), 0);
-	  delete c;
-	  connections.erase(cIter);
-	  cIter = connections.begin();
-	} else {
-	  cIter++;
-	}
+        Connection* c = cIter->second;
+        if (c->GetProvidesPortIcon() == *plIter) {
+          builder->disconnect(c->GetConnectionID(), 0);
+          delete c;
+          connections.erase(cIter);
+          cIter = connections.begin();
+        } else {
+          cIter++;
+        }
       }
     }
     ci->Show(false);
@@ -595,11 +663,6 @@ PortIcon* NetworkCanvas::FindPortIconAtPointer(wxPoint& position)
   return 0;
 }
 
-// wxRect NetworkCanvas::GetIconRect(ComponentIcon* ci)
-// {
-//   return wxRect(0, 0, 0, 0);
-// }
-
 // compute and cache component icon rectangles
 void NetworkCanvas::GetComponentRects(std::vector<wxRect>& rv)
 {
@@ -657,6 +720,31 @@ wxRect NetworkCanvas::GetClientRect()
    wxRect windowRect(wxPoint(0, 0), GetClientSize());
    CalcUnscrolledPosition(windowRect.x, windowRect.y, &windowRect.x, &windowRect.y);
   return windowRect;
+}
+
+void NetworkCanvas::Disconnect(const ConnectionMap::iterator& iter)
+{
+  Connection* c = iter->second;
+  if (c) {
+    builder->disconnect(c->GetConnectionID(), 0);
+    delete c;
+  }
+  connections.erase(iter);
+
+  builderWindow->RedrawMiniCanvas();
+  Refresh();
+}
+
+void NetworkCanvas::DrawConnections(wxDC& dc)
+{
+  ConnectionMap::iterator iter;
+  for (iter = possibleConnections.begin(); iter != possibleConnections.end(); iter++) {
+    iter->second->OnDraw(dc);
+  }
+
+  for (iter = connections.begin(); iter != connections.end(); iter++) {
+    iter->second->OnDraw(dc);
+  }
 }
 
 ///////////////////////////////////////////////////////////////////////////

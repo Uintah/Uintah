@@ -70,19 +70,19 @@ usage()
 int
 main(int argc, char *argv[] )
 {
-    if (argc < 3) {
-	usage();
-    }
- /*Loader is MPI enabled*/
- MPI_Init(&argc,&argv);
- int mpi_size, mpi_rank;
- MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
- MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
+  if (argc < 3) {
+    usage();
+  }
+  /*Loader is MPI enabled*/
+  MPI_Init(&argc,&argv);
+  int mpi_size, mpi_rank;
+  MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
+  MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
 
 
   try {
     PIDL::initialize(mpi_rank, mpi_size);
-  } 
+  }
   catch(const Exception& e) {
     std::cerr << "Caught exception:\n";
     std::cerr << e.message() << '\n';
@@ -98,7 +98,7 @@ main(int argc, char *argv[] )
     sci::cca::Loader::pointer ploader;
     SCIRunLoader *sl=new SCIRunLoader(loaderName, frameworkURL);
     ploader=sci::cca::Loader::pointer(sl);
-    
+
     //allowing the framework to access ploader by URL anytime
     ploader->addReference();
 
@@ -110,9 +110,9 @@ main(int argc, char *argv[] )
     //--------------------------------------
     //initialize MPI lock manager
     PRMI::init(mpi_rank, mpi_size);
-    
+
     //   MPI_Comm_dup(MPI_COMM_WORLD, &MPI_COMM_WORLD_Dup);
-    
+
     DTAddress dtAddr=PIDL::getDT()->getAddress();
     if(mpi_rank==0){
       PRMI::orderSvc_ep=PRMI::orderSvcEp.getEP();
@@ -137,18 +137,18 @@ main(int argc, char *argv[] )
     MPI_Bcast(&PRMI::orderSvc_addr.port, 1, MPI_SHORT,0,MPI_COMM_WORLD);
     //root gatheres lockSvc_ep and lockSvc_addr
     MPI_Gather(&lockSvc_ep, 1, MPI_INT, PRMI::lockSvc_ep_list, 1, MPI_INT,
-	     0, MPI_COMM_WORLD);
+               0, MPI_COMM_WORLD);
     MPI_Gather(&dtAddr.ip, 1, MPI_INT, int_buf, 1, MPI_INT,
-	       0, MPI_COMM_WORLD);
+               0, MPI_COMM_WORLD);
     MPI_Gather(&dtAddr.port, 1, MPI_SHORT, short_buf, 1, MPI_SHORT,
-	       0, MPI_COMM_WORLD);
+               0, MPI_COMM_WORLD);
 #else
     //TODO: need do the broadcasting somehow....
 #endif
     if(mpi_rank==0){
       for(int i=0; i<mpi_size; i++){
-	PRMI::lockSvc_addr_list[i].ip=int_buf[i];
-	PRMI::lockSvc_addr_list[i].port=short_buf[i];
+        PRMI::lockSvc_addr_list[i].ip=int_buf[i];
+        PRMI::lockSvc_addr_list[i].port=short_buf[i];
       }
       delete []int_buf;
       delete []short_buf;
@@ -161,7 +161,7 @@ main(int argc, char *argv[] )
     dr[0] = new Index((sl->mpi_rank),(sl->mpi_rank)+1,1);  //first, last, stride
     MxNArrayRep* arrr = new MxNArrayRep(1,dr);
     sl->setCalleeDistribution("dURL",arrr);   //server is callee
-   
+
     Object::pointer obj=PIDL::objectFrom(frameworkURL);
     if(obj.isNull()){
       std::cerr << "Cannot get framework from url=" << frameworkURL << std::endl;
@@ -169,7 +169,8 @@ main(int argc, char *argv[] )
     }
 
     sci::cca::AbstractFramework::pointer framework=pidl_cast<sci::cca::AbstractFramework::pointer>(obj);
-  
+    // get GUIService attached to the remote framework and refresh it's associated GUIBuilders
+
     typedef char urlString[100] ;
     urlString s;
     std::strcpy(s, ploader->getURL().getString().c_str());
@@ -183,9 +184,9 @@ main(int argc, char *argv[] )
     if(sl->mpi_rank==0){
       SSIDL::array1< std::string> URLs;
       for(int i=0; i<sl->mpi_size; i++){
-	std::string url(buf[i]);
-	URLs.push_back(url);
-	std::cerr << "ploader URLs["<<i<<"]=" << url << std::endl;
+        std::string url(buf[i]);
+        URLs.push_back(url);
+        std::cerr << "ploader URLs["<<i<<"]=" << url << std::endl;
       }
       framework->registerLoader(loaderName, URLs);
       delete buf;
@@ -197,8 +198,8 @@ main(int argc, char *argv[] )
     framework->registerLoader(loaderName, URLs);
 #endif
   }catch(const MalformedURL& e) {
-	std::cerr << "slaveTest.cc: Caught MalformedURL exception:\n";
-	std::cerr << e.message() << '\n';
+    std::cerr << "slaveTest.cc: Caught MalformedURL exception:\n";
+    std::cerr << e.message() << '\n';
   }
   catch(const Exception& e) {
     std::cerr << "Caught exception:\n";

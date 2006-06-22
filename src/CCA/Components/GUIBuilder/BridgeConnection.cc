@@ -26,23 +26,49 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <CCA/Components/Builder/BridgeConnection.h>
+#include <CCA/Components/GUIBuilder/BridgeConnection.h>
 
-void BridgeConnection::drawShape(QPainter& p)
+namespace GUIBuilder {
+
+BridgeConnection::BridgeConnection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID::pointer& connID, bool possibleConnection) : Connection(pU, pP, connID, possibleConnection)
 {
-  QPointArray par(Connection::NUM_DRAW_POINTS);
-  Connection::drawConnection(p, points(), par);
-
-  QPen pen(color,4);
-  pen.setStyle(DotLine);
-  p.setPen(pen);
-  p.setBrush(blue);
-  p.drawPolyline(par);
-}
-
-std::string BridgeConnection::getConnectionType()
-{
-  return "BridgeConnection";
 }
 
 
+void BridgeConnection::OnDraw(wxDC& dc)
+{
+  ResetPoints();
+  setConnection();
+  if (IsHighlighted()) {
+    wxPen* pen = wxThePenList->FindOrCreatePen(hColor, 2, wxLONG_DASH);
+    dc.SetPen(*pen);
+  } else {
+    wxPen* pen = wxThePenList->FindOrCreatePen(color, 2, wxLONG_DASH);
+    dc.SetPen(*pen);
+  }
+  dc.SetBrush(*wxTRANSPARENT_BRUSH);
+  dc.DrawLines(NUM_DRAW_POINTS, drawPoints, 0, 0);
+}
+
+}
+
+#if 0
+
+// void BridgeConnection::drawShape(QPainter& p)
+// {
+//   QPointArray par(Connection::NUM_DRAW_POINTS);
+//   Connection::drawConnection(p, points(), par);
+
+//   QPen pen(color,4);
+//   pen.setStyle(DotLine);
+//   p.setPen(pen);
+//   p.setBrush(blue);
+//   p.drawPolyline(par);
+// }
+
+// std::string BridgeConnection::getConnectionType()
+// {
+//   return "BridgeConnection";
+// }
+
+#endif

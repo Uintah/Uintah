@@ -38,19 +38,19 @@ public:
 
     /** */
     virtual int removeLoader(const std::string &name);
-  
+
     /** */
     virtual sci::cca::Port::pointer
     getService(const std::string &);
 
-  //virtual void registerFramework(const std::string &frameworkURL); 
+  //virtual void registerFramework(const std::string &frameworkURL);
   //virtual void registerServices(const sci::cca::Services::pointer &svc);
 
 private:
     FrameworkProxyService(SCIRunFramework* fwk);
 
     // used by registerFramework & registerServices methods
-    //std::vector<sci::cca::Services::pointer> servicesList;  
+    //std::vector<sci::cca::Services::pointer> servicesList;
 };
 
 }

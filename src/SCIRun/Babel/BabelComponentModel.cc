@@ -63,7 +63,7 @@ extern "C" {
 
 namespace SCIRun {
 
-const std::string BabelComponentModel::DEFAULT_PATH("/CCA/Components/BabelTest/xml");
+const std::string BabelComponentModel::DEFAULT_XML_PATH("/CCA/Components/BabelTest/xml");
 
 
 BabelComponentModel::BabelComponentModel(SCIRunFramework* framework,

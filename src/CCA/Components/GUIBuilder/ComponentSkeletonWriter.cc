@@ -1,30 +1,42 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
+
+/*
+ * ComponentSkeletonWriter.cc
+ *
+ * Written by:
+ *  <author>
+ *  Scientific Computing and Imaging Institute
+ *  University of Utah
+ *  <date>
+ *
+ */
+
 
 #include<iostream>
 #include<fstream>
@@ -32,10 +44,10 @@
 
 #include <CCA/Components/GUIBuilder/ComponentSkeletonWriter.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/OS/dirent.h>
 #include <Core/OS/Dir.h>
 #include <Core/Util/Environment.h>
 #include <SCIRun/Internal/FrameworkProperties.h>
+#include <SCIRun/CCA/CCAComponentModel.h>
 
 #ifndef DEBUG
 #  define DEBUG 0
@@ -58,70 +70,68 @@ const std::string ComponentSkeletonWriter::DEFAULT_SIDL_NAMESPACE("sci.cca.");
 const std::string ComponentSkeletonWriter::DEFAULT_PORT_NAMESPACE("sci::cca::ports::");
 const std::string ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE("sci.cca.ports.");
 
-ComponentSkeletonWriter::ComponentSkeletonWriter(const std::string &cname, const std::vector<PortDescriptor*> pp, const std::vector<PortDescriptor*> up)
-  : SERVICES_POINTER(DEFAULT_NAMESPACE + "Services::pointer"), TYPEMAP_POINTER(DEFAULT_NAMESPACE + "TypeMap::pointer"),
-    compName(cname), providesPortsList(pp), usesPortsList(up)
-{ }
+ComponentSkeletonWriter::ComponentSkeletonWriter(const std::string &cname,
+                                                 const std::string& dir,
+                                                 const std::vector<PortDescriptor*> pp,
+                                                 const std::vector<PortDescriptor*> up)
+  : SERVICES_POINTER(DEFAULT_NAMESPACE + "Services::pointer"),
+    TYPEMAP_POINTER(DEFAULT_NAMESPACE + "TypeMap::pointer"),
+    compName(cname),
+    directory(dir),
+    providesPortsList(pp),
+    usesPortsList(up)
+{
+  Dir d(directory);
+  if (! d.exists()) {
+    // need to replace this with CCA exception?
+    std::string msg("Directory " + directory + " does not exist.");
+    throw InternalError(msg, __FILE__, __LINE__);
+  }
+}
 
 void ComponentSkeletonWriter::GenerateCode()
 {
-   std::string srcDir(sci_getenv("SCIRUN_SRCDIR"));
-   std::string compsDir("/CCA/Components/");
-
-  Dir d1 = Dir(srcDir + compsDir + compName);
-  if (!d1.exists()) {
-    d1.create(srcDir + "/CCA/Components/" + compName);
-  }
-
   // Header file
-  std::string sopf(srcDir + compsDir + compName + DIR_SEP + compName + ".h");
+  std::string sopf(directory + DIR_SEP + compName + ".h");
   componentHeaderFile.open(sopf.c_str());
   ComponentClassDefinitionCode(componentHeaderFile);
   componentHeaderFile.close();
 
   // Implementation file
-  std::string sosf(srcDir + compsDir + compName + DIR_SEP + compName + ".cc");
+  std::string sosf(directory + DIR_SEP + compName + ".cc");
   componentSourceFile.open(sosf.c_str());
   ComponentSourceFileCode(componentSourceFile);
   componentSourceFile.close();
 
   // Makefile fragment
-  std::string somf(srcDir + compsDir + compName + DIR_SEP + "sub.mk");
+  std::string somf(directory + DIR_SEP + "sub.mk");
   componentMakefile.open(somf.c_str());
   ComponentMakefileCode(componentMakefile);
   componentMakefile.close();
 }
 
-void ComponentSkeletonWriter::GenerateTempCode()
+void ComponentSkeletonWriter::GenerateTempCode(const std::string& tempHeaderFile,
+                                               const std::string& tempSourceFile,
+                                               const std::string& tempSubmakeFile)
 {
-
-  std::string srcDir(sci_getenv("SCIRUN_SRCDIR"));
-  std::string home(getenv("HOME"));
-  std::string compsDir("/CCA/Components/");
-  std::string tmp(FrameworkProperties::CONFIG_DIR);
-  std::string tmpDir = std::string(home + tmp + DIR_SEP + "ComponentGenerationWizard");
-  Dir d1 = Dir(tmpDir);
-  if (!d1.exists()) {
-    Dir::create(tmpDir);
-  }
+  // TODO: error checking for ofstream?
 
   // Header file
-  std::string sopf(tmpDir + DIR_SEP + "tempheader.txt");
+  std::string sopf(directory + DIR_SEP + tempHeaderFile);
   std::ofstream tempcomponentHeaderFile;
   tempcomponentHeaderFile.open(sopf.c_str());
   ComponentClassDefinitionCode(tempcomponentHeaderFile);
   tempcomponentHeaderFile.close();
 
   // Implementation file
-  std::string sosf(tmpDir + DIR_SEP + "tempsource.txt");
+  std::string sosf(directory + DIR_SEP + tempSourceFile);
   std::ofstream tempcomponentSourceFile;
   tempcomponentSourceFile.open(sosf.c_str());
   ComponentSourceFileCode(tempcomponentSourceFile);
   tempcomponentSourceFile.close();
 
   // Makefile fragment
-  std::string somf(tmpDir + DIR_SEP + "tempsubmake.txt");
-  //std::string sopf(tmpDir + DIR_SEP + "tempsubmake.txt");
+  std::string somf(directory + DIR_SEP + tempSubmakeFile);
   std::ofstream tempcomponentMakefile;
   tempcomponentMakefile.open(somf.c_str());
   ComponentMakefileCode(tempcomponentMakefile);
@@ -155,53 +165,43 @@ void ComponentSkeletonWriter::ComponentSourceFileCode(std::ofstream& fileStream)
 void ComponentSkeletonWriter::writeLicense(std::ofstream& fileStream)
 {
   std::ifstream lt;
-  std::string srcDir(sci_getenv("SCIRUN_SRCDIR"));
-  std::string currPath=srcDir + "/CCA/Components/GUIBuilder/license.txt";
-    lt.open(currPath.c_str());
-  if(!lt)
-    {
-      #if DEBUG
-        std::cout << "unable to read file" << std::endl;
-      #endif
+  std::string currPath(sci_getenv("SCIRUN_SRCDIR") + CCAComponentModel::DEFAULT_PATH + DIR_SEP + "license.txt");
+  lt.open(currPath.c_str());
+  if (! lt) {
+#if DEBUG
+    std::cout << "unable to read file" << std::endl;
+#endif
+  } else {
+    std::string line;
+    fileStream << OPEN_C_COMMENT << std::endl;
+    while (!lt.eof()) {
+      std::getline (lt,line);
+      fileStream << SP << line << std::endl;
     }
-    else
-    {
-      std::string line;
-       fileStream << OPEN_C_COMMENT << std::endl;
-       while(!lt.eof())
-	 {
-	   std::getline (lt,line);
-	   fileStream << SP << line << std::endl;
-	 }
-       fileStream << CLOSE_C_COMMENT << std::endl;
-       lt.close();
-    }
+    fileStream << CLOSE_C_COMMENT << std::endl;
+    lt.close();
+  }
 
 }
 
 void ComponentSkeletonWriter::writeMakefileLicense(std::ofstream& fileStream)
 {
   std::ifstream lt;
-  std::string srcDir(sci_getenv("SCIRUN_SRCDIR"));
-  std::string currPath=srcDir + "/CCA/Components/GUIBuilder/license.txt";
+  std::string currPath(sci_getenv("SCIRUN_SRCDIR") + CCAComponentModel::DEFAULT_PATH + DIR_SEP + "license.txt");
   lt.open(currPath.c_str());
-  if(!lt)
-    {
-      #if DEBUG
-        std::cout << "unable to read file" << std::endl;
-      #endif
+  if (! lt) {
+#if DEBUG
+    std::cout << "unable to read file" << std::endl;
+#endif
+  } else {
+    std::string line;
+    while (!lt.eof()) {
+      std::getline (lt,line);
+      fileStream << UNIX_SHELL_COMMENT << SP << line << std::endl;
     }
-  else
-    {
-       std::string line;
-       while(!lt.eof())
-	 {
-	   std::getline (lt,line);
-	   fileStream << UNIX_SHELL_COMMENT << SP << line << std::endl;
-	 }
-       fileStream << std::endl;
-       lt.close();
-    }
+    fileStream << std::endl;
+    lt.close();
+  }
 }
 
 void ComponentSkeletonWriter::writeHeaderInit(std::ofstream& fileStream)
@@ -220,7 +220,7 @@ void ComponentSkeletonWriter::writeComponentDefinitionCode(std::ofstream& fileSt
 {
   fileStream << std::endl;
   fileStream << "class " << compName << ": public " << DEFAULT_NAMESPACE << "Component {"
-          << std::endl;
+             << std::endl;
   // public members
   fileStream << "public:" << std::endl;
   fileStream << SP << compName << "();" << std::endl;
@@ -243,8 +243,8 @@ void ComponentSkeletonWriter::writePortClassDefinitionCode(std::ofstream& fileSt
 
     fileStream << std::endl;
     fileStream << "class " << (providesPortsList[i])->GetClassName() << " : public "
-                        << DEFAULT_PORT_NAMESPACE << (providesPortsList[i])->GetType() << " {"
-                        << std::endl;
+               << DEFAULT_PORT_NAMESPACE << (providesPortsList[i])->GetType() << " {"
+               << std::endl;
 
     //public  members
     fileStream << "public:" << std::endl;
@@ -253,6 +253,7 @@ void ComponentSkeletonWriter::writePortClassDefinitionCode(std::ofstream& fileSt
     if ((providesPortsList[i])->GetType() == "GoPort") {
       fileStream <<std::endl<< SP << "virtual int go();";
     }
+
     if ((providesPortsList[i])->GetType() == "UIPort") {
       fileStream <<std::endl << SP << "virtual int ui();";
     }
@@ -267,7 +268,7 @@ void ComponentSkeletonWriter::writePortClassDefinitionCode(std::ofstream& fileSt
 }
 
 
-  void ComponentSkeletonWriter::writeSourceInit(std::ofstream& fileStream)
+void ComponentSkeletonWriter::writeSourceInit(std::ofstream& fileStream)
 {
   fileStream << std::endl << std::endl;
 
@@ -301,19 +302,19 @@ void ComponentSkeletonWriter::writeConstructorandDestructorCode(std::ofstream& f
 {
   //Constructor code
   fileStream << std::endl << compName << "::" << compName << "()" << std::endl
-                      << "{" << std::endl
-                      << "}" << std::endl;
+             << "{" << std::endl
+             << "}" << std::endl;
   //Destructor code
   fileStream << std::endl << compName << "::~" << compName << "()" << std::endl
-                      << "{" << std::endl;
+             << "{" << std::endl;
   for (unsigned int i = 0; i < providesPortsList.size(); i++) {
     fileStream << SP << "services->removeProvidesPort("
-                        << QT << providesPortsList[i]->GetUniqueName() <<  QT << ");" << std::endl;
+               << QT << providesPortsList[i]->GetUniqueName() <<  QT << ");" << std::endl;
   }
 
   for (unsigned int i = 0; i < usesPortsList.size(); i++) {
     fileStream << SP << "services->unregisterUsesPort("
-                        << QT << usesPortsList[i]->GetUniqueName() << QT << ");" << std::endl;
+               << QT << usesPortsList[i]->GetUniqueName() << QT << ");" << std::endl;
   }
   fileStream << "}" << std::endl;
 }
@@ -322,7 +323,7 @@ void ComponentSkeletonWriter::writeConstructorandDestructorCode(std::ofstream& f
 void ComponentSkeletonWriter::writeSetServicesCode(std::ofstream& fileStream)
 {
   fileStream << std::endl
-                      << "void " << compName << "::setServices(const " << SERVICES_POINTER << "& svc)"<< std::endl;
+             << "void " << compName << "::setServices(const " << SERVICES_POINTER << "& svc)"<< std::endl;
   fileStream << "{" << std::endl;
   fileStream << SP << "services = svc;" << std::endl;
   //fileStream << std::endl << SP << "svc->registerForRelease(sci::cca::ComponentRelease::pointer(this)); ";
@@ -346,16 +347,16 @@ void ComponentSkeletonWriter::writeSetServicesCode(std::ofstream& fileStream)
     tempPortPtr = portName + "::pointer(" + tempPortInstance + ")";
 
     fileStream << SP << portName << " *" << tempPortInstance
-                        << " = new " << portName << "();" << std::endl;
+               << " = new " << portName << "();" << std::endl;
     fileStream << SP << tempPortInstance << "->setParent(this);" << std::endl;
 
     std::string propertiesMap("pProps");
     fileStream << SP << TYPEMAP_POINTER << " " << propertiesMap << i << " = svc->createTypeMap();" << std::endl;
 
     fileStream << SP << "svc->addProvidesPort(" << tempPortPtr
-                        << ", " << QT << tempPortCategory << QT
-                        << ", " << QT << DEFAULT_SIDL_PORT_NAMESPACE << portType << QT
-                        << ", " << propertiesMap << i << ");" << std::endl;
+               << ", " << QT << tempPortCategory << QT
+               << ", " << QT << DEFAULT_SIDL_PORT_NAMESPACE << portType << QT
+               << ", " << propertiesMap << i << ");" << std::endl;
 
     fileStream << std::endl;
   }
@@ -373,8 +374,8 @@ void ComponentSkeletonWriter::writeSetServicesCode(std::ofstream& fileStream)
     fileStream << SP << TYPEMAP_POINTER << " " << propertiesMap << i << " = svc->createTypeMap();" << std::endl;
 
     fileStream << SP << "svc->registerUsesPort(" << QT << tempPortCategory << QT
-                        << ", " << QT << DEFAULT_SIDL_PORT_NAMESPACE << portType << QT
-                        << ", " << propertiesMap << i << ");" << std::endl;
+               << ", " << QT << DEFAULT_SIDL_PORT_NAMESPACE << portType << QT
+               << ", " << propertiesMap << i << ");" << std::endl;
   }
 
   fileStream << "}" << std::endl;
@@ -393,43 +394,43 @@ void ComponentSkeletonWriter::writeGoAndUIFunctionsCode(std::ofstream& fileStrea
 #endif
     if (porttype.compare(string("UIPort")) == 0) {
       fileStream << std::endl <<"int " << providesPortsList[i]->GetClassName() << "::ui()"
-                          << std::endl
-                          << "{"
-                          << std::endl << SP << "return 0;"
-                          << std::endl
-                          << "}" << std::endl;
+                 << std::endl
+                 << "{"
+                 << std::endl << SP << "return 0;"
+                 << std::endl
+                 << "}" << std::endl;
     }
+
     if (porttype.compare(string("GoPort")) == 0) {
       fileStream << std::endl <<"int " << providesPortsList[i]->GetClassName() << "::go()"
-                          << std::endl
-                          << "{"
-                          << std::endl << SP << "return 0;"
-                          << std::endl
-                          << "}" << std::endl;
+                 << std::endl
+                 << "{"
+                 << std::endl << SP << "return 0;"
+                 << std::endl
+                 << "}" << std::endl;
     }
   }
   fileStream << std::endl;
 }
 
-  void ComponentSkeletonWriter::ComponentMakefileCode(std::ofstream& fileStream)
+void ComponentSkeletonWriter::ComponentMakefileCode(std::ofstream& fileStream)
 {
   writeMakefileLicense(fileStream);
   fileStream << "include $(SCIRUN_SCRIPTS)/smallso_prologue.mk" << std::endl;
   fileStream << std::endl
-                    << "SRCDIR := CCA/Components/" << compName << std::endl;
+             << "SRCDIR := CCA/Components/" << compName << std::endl;
   fileStream << std::endl
-                    << "SRCS += " << "$(SRCDIR)/" << compName << ".cc \\" << std::endl;
+             << "SRCS += " << "$(SRCDIR)/" << compName << ".cc \\" << std::endl;
   fileStream << std::endl
-                    << "PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm \\" << std::endl;
+             << "PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm \\" << std::endl;
   fileStream << SP << "Core/CCA/spec Core/Thread Core/Containers Core/Exceptions" << std::endl;
   fileStream << std::endl
-                    << "CFLAGS += $(WX_CXXFLAGS)" << std::endl
-                    << "CXXFLAGS += $(WX_CXXFLAGS)" << std::endl
-                    << "LIBS := $(WX_LIBRARY)" << std::endl;
+             << "CFLAGS += $(WX_CXXFLAGS)" << std::endl
+             << "CXXFLAGS += $(WX_CXXFLAGS)" << std::endl
+             << "LIBS := $(WX_LIBRARY)" << std::endl;
   fileStream << std::endl << "include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk" << std::endl;
   fileStream << std::endl << "$(SRCDIR)/" << compName << ".o: Core/CCA/spec/cca_sidl.h" << std::endl;
   fileStream << std::endl;
 }
 
-  
 }

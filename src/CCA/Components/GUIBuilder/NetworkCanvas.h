@@ -27,8 +27,35 @@
 */
 
 
-#ifndef NetworkCanvas_h
-#define NetworkCanvas_h
+/*
+ *  NetworkCanvas.h:
+ *
+ *  Written by:
+ *   Steven G. Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   October 2001
+ *  Modified by:
+ *   Keming Zhang
+ *   March 2002
+ *  Ported to wxWidgets:
+ *   Ayla Khan
+ *   January 2006
+ *
+ *  Modifications:
+ *   The wxWidgets toolkit does not provide canvas classes,
+ *   so QCanvasView's functionality is approximated in this class.
+ *
+ * Mouse:
+ * left: connections
+ * right: menus
+ * middle: if on connection, disconnect
+ *
+ */
+
+
+#ifndef CCA_Components_GUIBuilder_NetworkCanvas_h
+#define CCA_Components_GUIBuilder_NetworkCanvas_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 
@@ -69,7 +96,6 @@ public:
   bool Create(wxWindow *parent, wxWindowID id, const wxPoint& pos, const wxSize& size, long style = wxHSCROLL|wxVSCROLL|wxSUNKEN_BORDER|wxRETAINED /*|wxCLIP_CHILDREN*/);
 
   virtual void OnDraw(wxDC& dc);
-
   void OnPaint(wxPaintEvent& event);
   void PaintBackground(wxDC& dc);
 
@@ -86,10 +112,7 @@ public:
   void OnClear(wxCommandEvent& event);
   void OnDisconnect(wxCommandEvent& event);
 
-  //void DrawIcons(wxDC& dc);
-  void DrawConnections(wxDC& dc);
-
-  void OnConnect(PortIcon* pUsed);
+  void Connect(PortIcon* pUsed);
   bool ShowPossibleConnections(PortIcon* usesPort);
   void HighlightConnection(const wxPoint& point);
 
@@ -98,7 +121,7 @@ public:
   void ClearConnections();
 
   void SetMovingIcon(ComponentIcon* ci) { movingIcon = ci; }
-  void AddIcon(sci::cca::ComponentID::pointer& compID);
+  ComponentIcon* AddIcon(sci::cca::ComponentID::pointer& compID);
   void DeleteIcon(const std::string& instanceName);
 
   void GetUnscrolledPosition(const wxPoint& p, wxPoint& position);
@@ -119,6 +142,9 @@ protected:
   void Init();
   void SetMenus();
   void Disconnect(const ConnectionMap::iterator& iter);
+
+  //void DrawIcons(wxDC& dc);
+  void DrawConnections(wxDC& dc);
 
   // Only call this from a paint event handler or event handler helper function!
   wxRect GetClientRect();
@@ -146,9 +172,8 @@ private:
 
   BuilderWindow* builderWindow;
   ComponentIcon* movingIcon;
-//   ComponentIcon* connectingIcon;
+  Connection* selectedConnection;
 //   wxPoint movingStart;
-//   Connection* highlightedConnection;
 
   wxCursor *handCursor;
   wxCursor *arrowCursor;
