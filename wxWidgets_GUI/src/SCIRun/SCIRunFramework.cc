@@ -92,7 +92,8 @@ SCIRunFramework::SCIRunFramework()
 #endif
 
 #if HAVE_TAO
-  models.push_back(corba = new CorbaComponentModel(this, xmlPaths_));
+  // disable Corba for now
+  //models.push_back(corba = new CorbaComponentModel(this, xmlPaths_));
   models.push_back(tao = new TaoComponentModel(this, xmlPaths_));
 #endif
 }

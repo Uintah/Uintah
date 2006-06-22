@@ -26,6 +26,20 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+/*
+ *  BuilderWindow.h:
+ *
+ *  Written by:
+ *   Steven G. Parker
+ *   Department of Computer Science
+ *   University of Utah
+ *   October 2001
+ *
+ *  Ported to wxWidgets by:
+ *   Ayla Khan
+ *   January 2006
+ */
+
 #ifndef CCA_Components_GUIBuilder_BuilderWindow_h
 #define CCA_Components_GUIBuilder_BuilderWindow_h
 
@@ -75,6 +89,8 @@ public:
   void coalesce();
   void populateMenu(wxMenu* menu);
   void clear();
+  const std::string& getURL() const { return url; }
+  int getID() const { return id; }
 
   void OnInstantiateComponent(wxCommandEvent& event);
 
@@ -113,7 +129,9 @@ public:
     ID_MENU_WIZARDS,
     ID_MENU_ADDINFO,
     ID_MENU_ADD_SIDLXML,
-    ID_BUILDERWINDOW_HIGHEST = ID_MENU_ADDINFO + 1,
+    ID_MENU_ADD_PROXY,
+    ID_MENU_REMOVE_PROXY,
+    ID_BUILDERWINDOW_HIGHEST = ID_MENU_REMOVE_PROXY + 1,
   };
 
   BuilderWindow(const sci::cca::GUIBuilder::pointer& bc, wxWindow *parent);
@@ -129,6 +147,7 @@ public:
 
   // set builder only if builder is null
   bool SetBuilder(const sci::cca::GUIBuilder::pointer& bc);
+  void BuildAllPackageMenus();
 
   // Event handlers
   void OnQuit(wxCommandEvent& event);
@@ -138,10 +157,15 @@ public:
 #if GUI_TEST
   void OnTest(wxCommandEvent& event);
 #endif
+  void OnLoad(wxCommandEvent& event);
+  void OnSave(wxCommandEvent& event);
+  void OnSaveAs(wxCommandEvent& event);
   void OnClear(wxCommandEvent& event);
   void OnCompWizard(wxCommandEvent& event);
   void OnSidlXML(wxCommandEvent& event);
   void OnClearMessages(wxCommandEvent& event);
+  void OnAddFrameworkProxy(wxCommandEvent& event);
+  void OnRemoveFrameworkProxy(wxCommandEvent& event);
 
   void InstantiateComponent(const sci::cca::ComponentClassDescription::pointer& cd);
 
@@ -196,8 +220,11 @@ private:
   sci::cca::GUIBuilder::pointer builder;
   std::string url;
 
-  void buildPackageMenus();
-  void buildNetworkPackageMenus();
+  // Component menus:
+  // Need to build the menu bar and network window popup menu items
+  // separately, since they will be owned by different parents.
+  void buildPackageMenus(const ClassDescriptionList& list);
+  void buildNetworkPackageMenus(const ClassDescriptionList& list);
   void setDefaultText();
 };
 

@@ -33,6 +33,9 @@
     <!-- the SIDL GUI interface -->
     <component name="SCIRun.GUIBuilder" />
   </library>
+  <library name="libCCA_Components_TestComponent.so">
+    <component name="SCIRun.TestComponent" />
+  </library>
   <library name="libCCA_Components_Hello.so">
     <component name="SCIRun.Hello">
       <interface file="CCA/Components/Hello/StringPort.sidl" />

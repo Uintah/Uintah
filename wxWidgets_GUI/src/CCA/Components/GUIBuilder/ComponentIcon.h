@@ -27,8 +27,8 @@
 */
 
 
-#ifndef ComponentIcon_h
-#define ComponentIcon_h
+#ifndef CCA_Components_GUIBuilder_ComponentIcon_h
+#define CCA_Components_GUIBuilder_ComponentIcon_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 
@@ -57,7 +57,7 @@ class PortIcon;
 // private:
 // };
 
-//typedef std::map<std::string, PortIcon*> PortMap;
+
 typedef std::vector<PortIcon*> PortList;
 
 class ComponentIcon : public wxPanel {

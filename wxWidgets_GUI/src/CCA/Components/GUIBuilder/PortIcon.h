@@ -31,8 +31,8 @@
  *
  */
 
-#ifndef PortIcon_h
-#define PortIcon_h
+#ifndef CCA_Components_GUIBuilder_PortIcon_h
+#define CCA_Components_GUIBuilder_PortIcon_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 #include <CCA/Components/GUIBuilder/GUIBuilder.h>
@@ -77,7 +77,6 @@ protected:
   std::string name;
   std::string model;
   std::string type;
-  bool connecting;
 
   wxRect hRect;
   wxColor hColor;

@@ -26,35 +26,54 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#ifndef CCA_Components_GUIBuilder_BridgeConnection_h
+#define CCA_Components_GUIBuilder_BridgeConnection_h
 
+#include <CCA/Components/GUIBuilder/Connection.h>
 
+namespace GUIBuilder {
 
-#ifndef BRIDGE_CONNECTION_H
-#define BRIDGE_CONNECTION_H
-
-#include <CCA/Components/Builder/Connection.h>
-
-using namespace SCIRun;
-
-class BridgeConnection : public Connection 
-{
+class BridgeConnection : public Connection {
 public:
-  BridgeConnection(PortIcon* p1, PortIcon* p2, const sci::cca::ConnectionID::pointer &connID, QCanvasView *cv)
-  : Connection(p1, p2, connID, cv) { }
-  using Connection::resetPoints;
-  using Connection::isConnectedTo;
-  using Connection::getConnectionID;
-  using Connection::highlight;
-  using Connection::setDefault;
-  using Connection::usesPort;
-  using Connection::providesPort;
-  virtual std::string getConnectionType();
-
-protected:
-  void drawShape(QPainter& );
+  BridgeConnection(PortIcon* pU,
+                   PortIcon* pP,
+                   const sci::cca::ConnectionID::pointer& connID,
+                   bool possibleConnection = false);
+  virtual ~BridgeConnection() { std::cerr << "BridgeConnection::~BridgeConnection()" << std::endl; }
+  virtual void OnDraw(wxDC& dc);
 };
+
+}
 
 #endif
 
+#if 0
 
+// #ifndef BRIDGE_CONNECTION_H
+// #define BRIDGE_CONNECTION_H
 
+// #include <CCA/Components/Builder/Connection.h>
+
+// using namespace SCIRun;
+
+// class BridgeConnection : public Connection 
+// {
+// public:
+//   BridgeConnection(PortIcon* p1, PortIcon* p2, const sci::cca::ConnectionID::pointer &connID, QCanvasView *cv)
+//   : Connection(p1, p2, connID, cv) { }
+//   using Connection::resetPoints;
+//   using Connection::isConnectedTo;
+//   using Connection::getConnectionID;
+//   using Connection::highlight;
+//   using Connection::setDefault;
+//   using Connection::usesPort;
+//   using Connection::providesPort;
+//   virtual std::string getConnectionType();
+
+// protected:
+//   void drawShape(QPainter& );
+// };
+
+// #endif
+
+#endif

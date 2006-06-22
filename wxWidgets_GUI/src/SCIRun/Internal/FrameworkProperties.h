@@ -59,6 +59,7 @@ class SCIRunFramework;
  * components such as:
  *    key                    value          meaning
  *    url                    string         this framework's url
+ *    config dir             string         this framework's configuration directory (either in $HOME/.sr2 or $SCIRUN_OBJDIR/.sr2)
  *    network file           string         network file to be loaded by a builder
  */
 class FrameworkProperties : public ::sci::cca::ports::FrameworkProperties,
@@ -82,10 +83,6 @@ public:
 
   /** Set CCA framework properties from a TypeMap. */
   virtual void setProperties(const sci::cca::TypeMap::pointer& properties);
-
-  static std::string CONFIG_DIR;
-  static std::string CONFIG_FILE;
-  static std::string CACHE_FILE;
 
 private:
   FrameworkProperties(SCIRunFramework* framework);
@@ -112,6 +109,11 @@ private:
 
   /** Persistent framework properties from file. */
   bool writePropertiesToFile();
+
+  const static std::string CONFIG_DIR;
+  const static std::string CONFIG_FILE;
+  const static std::string CACHE_FILE;
+  const static std::string DIR_SEP;
 
   Dir dir;
   sci::cca::TypeMap::pointer frameworkProperties;

@@ -45,28 +45,46 @@
 #include <SCIRun/PortInstance.h>
 
 #include <Core/Util/Environment.h>
+#include <Core/Util/Assert.h>
 
 #include <iostream>
 #include <unistd.h>
 
 namespace SCIRun {
 
-std::string FrameworkProperties::CONFIG_DIR("/.sr2");
-std::string FrameworkProperties::CONFIG_FILE("sr2rc");
-std::string FrameworkProperties::CACHE_FILE("sr2.cache");
+const std::string FrameworkProperties::DIR_SEP("/");
+const std::string FrameworkProperties::CONFIG_DIR(DIR_SEP + ".sr2");
+const std::string FrameworkProperties::CONFIG_FILE("sr2rc");
+const std::string FrameworkProperties::CACHE_FILE("sr2.cache");
 
 FrameworkProperties::FrameworkProperties(SCIRunFramework* framework)
   : InternalFrameworkServiceInstance(framework, "internal:FrameworkProperties")
 {
-  char *HOME = getenv("HOME");
-  std::string name(HOME + CONFIG_DIR);
-  dir = Dir(name);
-  if (! dir.exists()) {
-    Dir::create(name);
-  }
-
   frameworkProperties = sci::cca::TypeMap::pointer(new TypeMap);
   frameworkProperties->putString("url", framework->getURL().getString());
+
+  // SCIRun2 configure and temp file directory is created by preference
+  // in the user's home directory.
+  // If this isn't possible, it should be created in the
+  // build directory instead.
+  // Not setting up the environment in the main loop is a serious error.
+  std::string name;
+  const char *home = getenv("HOME");
+  if (home) {
+    name = home + CONFIG_DIR;
+  } else {
+    const char *objdir = sci_getenv("SCIRUN_OBJDIR");
+    ASSERT(objdir);
+    name = objdir + CONFIG_DIR;
+  }
+  dir = Dir(name);
+  if (! dir.exists()) {
+    // Dir::create(..) throws an ErrnoException, which we are not handling
+    // at this time.
+    Dir::create(name);
+  }
+  frameworkProperties->putString("config dir", dir.getName());
+
   getLogin();
   initSidlPaths();
 }
@@ -113,17 +131,17 @@ void FrameworkProperties::initSidlPaths()
     return;
   } else {
     std::string srcDir(sci_getenv("SCIRUN_SRCDIR"));
-    sArray.push_back(srcDir + CCAComponentModel::DEFAULT_PATH);
+    sArray.push_back(srcDir + CCAComponentModel::DEFAULT_XML_PATH);
 #if HAVE_BABEL
-    sArray.push_back(srcDir + BabelComponentModel::DEFAULT_PATH);
+    sArray.push_back(srcDir + BabelComponentModel::DEFAULT_XML_PATH);
 #endif
 #if HAVE_VTK
-    sArray.push_back(srcDir + VtkComponentModel::DEFAULT_PATH);
+    sArray.push_back(srcDir + VtkComponentModel::DEFAULT_XML_PATH);
 #endif
 
 #if HAVE_TAO
-    sArray.push_back(srcDir + CorbaComponentModel::DEFAULT_PATH);
-    sArray.push_back(srcDir + TaoComponentModel::DEFAULT_PATH);
+    sArray.push_back(srcDir + CorbaComponentModel::DEFAULT_XML_PATH);
+    sArray.push_back(srcDir + TaoComponentModel::DEFAULT_XML_PATH);
 #endif
     frameworkProperties->putStringArray("sidl_xml_path", sArray);
   }
@@ -158,7 +176,7 @@ void FrameworkProperties::getLogin()
 
 bool FrameworkProperties::readPropertiesFromFile()
 {
-  std::string name(dir.getName() + "/" + CONFIG_FILE);
+  std::string name(dir.getName() + DIR_SEP + CONFIG_FILE);
   SSIDL::array1<std::string> sArray;
   if (parse_scirunrc(name)) {
     const char *dll_path = sci_getenv("SIDL_DLL_PATH");

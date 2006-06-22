@@ -38,15 +38,14 @@
  *
  */
 
-//#include <sci_defs/wx_defs.h>
+#include <sci_wx.h>
 #include <CCA/Components/Hello/Hello.h>
-//#include <CCA/Components/Builder/QtUtils.h>
 #include <Core/Thread/Time.h>
 #include <SCIRun/TypeMap.h>
 
 #include <iostream>
-
 #include <unistd.h>
+
 
 using namespace SCIRun;
 
@@ -70,7 +69,7 @@ void Hello::setServices(const sci::cca::Services::pointer& svc)
     svc->registerForRelease(sci::cca::ComponentRelease::pointer(this));
     sci::cca::TypeMap::pointer props = svc->createTypeMap();
 
-    HelloUIPort *uip = new HelloUIPort();
+    HelloUIPort *uip = new HelloUIPort(svc);
     uip->setParent(this);
     HelloUIPort::pointer uiPortPtr = HelloUIPort::pointer(uip);
 
@@ -100,12 +99,12 @@ void Hello::releaseServices(const sci::cca::Services::pointer& svc)
 {
 std::cerr << "Hello::releaseServices" << std::endl;
 
-    svc->unregisterUsesPort("stringport");
-//     svc->unregisterUsesPort("progress");
+    services->unregisterUsesPort("stringport");
+    //services->unregisterUsesPort("progress");
 
-//     svc->removeProvidesPort("ui");
-    svc->removeProvidesPort("go");
-//     svc->removeProvidesPort("icon");
+    //services->removeProvidesPort("ui");
+    services->removeProvidesPort("go");
+    //services->removeProvidesPort("icon");
 }
 
 
@@ -114,14 +113,25 @@ int HelloUIPort::ui()
 // #if HAVE_QT
 //     QMessageBox::information(0, "Hello", com->text);
 // #else
-    std::cerr << "UI not available." << std::endl;
+//    std::cerr << "UI not available." << std::endl;
 // #endif
-    return 0;
+#if HAVE_WX
+//   try {
+//     sci::cca::ports::GUIService::pointer guiService =
+//       pidl_cast<sci::cca::ports::GUIService::pointer>(services->getPort("cca.GUIService"));
+//     if (guiService.isNull()) {
+//     }
+//   }
+//   catch (const sci::cca::CCAException::pointer &e) {
+//     // error...
+//   }
+  wxMessageBox(com->getMessage(), "Hello Component", wxOK|wxICON_INFORMATION, 0);
+#endif
+  return 0;
 }
 
 int HelloGoPort::go()
 {
-  std::cout<<" Inside Go Function ";
     if (services.isNull()) {
         std::cerr << "Null services!\n";
         return 1;
@@ -152,14 +162,14 @@ int HelloGoPort::go()
     std::cerr << t*1000*1000 << " us/rep\n";
 
     if (! name.empty()) {
-      com->text = name.c_str();
+      com->setMessage(name);
     }
 
 //     pPtr->updateProgress(HelloComponentIcon::STEPS);
     services->releasePort("stringport");
 //     services->releasePort("progress");
 
-    std::cout<<" testing : "<<com->text;
+    std::cout << " testing : " << com->getMessage() << std::endl;
     return 0;
 }
 

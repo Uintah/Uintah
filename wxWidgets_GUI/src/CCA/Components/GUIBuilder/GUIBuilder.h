@@ -32,6 +32,9 @@
 #include <CCA/Components/GUIBuilder/wxSCIRunApp.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Core/Thread/Mutex.h>
+#include <SCIRun/ApplicationLoader.h>
+#include <SCIRun/StandAlone/sr2_version.h>
+
 #include <wx/gdicmn.h>
 
 #include <string>
@@ -50,13 +53,24 @@ public:
 
   virtual void setServices(const sci::cca::Services::pointer &svc);
   virtual std::string getFrameworkURL() { return frameworkURL; }
-  virtual void getPortInfo(const sci::cca::ComponentID::pointer& cid, const std::string& portName, std::string& model, std::string& type);
+  virtual std::string getConfigDir() { return configDir; }
+  virtual void getPortInfo(const sci::cca::ComponentID::pointer& cid,
+                           const std::string& portName, std::string& model, std::string& type);
 
   virtual void getComponentClassDescriptions(SSIDL::array1<sci::cca::ComponentClassDescription::pointer>& descArray);
 
-  virtual sci::cca::ComponentID::pointer createInstance(const std::string& className, const sci::cca::TypeMap::pointer& properties);
+  virtual sci::cca::ComponentID::pointer
+  createInstance(const std::string& className, const sci::cca::TypeMap::pointer& properties);
   virtual void destroyInstance(const sci::cca::ComponentID::pointer& cid, float timeout);
   virtual int destroyInstances(const SSIDL::array1<sci::cca::ComponentID::pointer>& cidArray, float timeout);
+
+  virtual sci::cca::ComponentID::pointer
+  generateBridge(const sci::cca::ComponentID::pointer &user,
+                 const std::string& usesPortName,
+                 const sci::cca::ComponentID::pointer &provider,
+                 const std::string& providesPortName,
+                 sci::cca::ConnectionID::pointer& connID1,
+                 sci::cca::ConnectionID::pointer& connID2);
 
   virtual void getUsedPortNames(const sci::cca::ComponentID::pointer& cid,
                                 SSIDL::array1<std::string>& nameArray);
@@ -78,6 +92,11 @@ public:
           const sci::cca::ComponentID::pointer &providesCID, const ::std::string &providesPortName);
   virtual void
   disconnect(const sci::cca::ConnectionID::pointer &connID, float timeout);
+
+  virtual void addComponentFromXML(const std::string& filePath, const std::string& componentModel);
+
+  virtual void addFrameworkProxy(const std::string &loaderName, const std::string &user, const std::string &domain, const std::string &loaderPath);
+  virtual void removeFrameworkProxy(const std::string &loaderName);
 
   virtual bool connectGoPort(const std::string& usesName, const std::string& providesPortName,
                              const sci::cca::ComponentID::pointer &cid, std::string& usesPortName);
@@ -111,6 +130,10 @@ public:
 
   static void setApp(wxSCIRunApp& a) { app = &a; }
 
+  static const std::string DEFAULT_SRC_DIR;
+  static const std::string DEFAULT_OBJ_DIR;
+  static const std::string DEFAULT_CCA_COMP_DIR;
+
 private:
   GUIBuilder(const GUIBuilder &);
   GUIBuilder& operator=(const GUIBuilder &);
@@ -126,6 +149,9 @@ private:
 
   sci::cca::Services::pointer services;
   std::string frameworkURL;
+  std::string configDir;
+  SCIRun::ApplicationLoader* appLoader;
+
   // Uses port names will be unique since they are generated from unique component instance names.
   ConnectionMap connectionMap;
 
@@ -135,7 +161,7 @@ private:
   // Note: implement using wxColorDatabase instead?
   PortColorMap portColors;
 
-  static const std::string guiThreadName;
+  static const std::string GUI_THREAD_NAME;
   static SCIRun::Mutex builderLock;
   static wxSCIRunApp* app;
 };

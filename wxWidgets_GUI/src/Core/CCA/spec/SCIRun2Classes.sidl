@@ -63,10 +63,9 @@ interface TaoServices {
   void removeProvidesPort(in string portName);
 }
 
-class GUIBuilder implements-all sci.cca.Component,
-                                sci.cca.ports.ComponentEventListener,
-                                sci.cca.ports.ConnectionEventListener {
+interface Builder extends sci.cca.Component {
   string getFrameworkURL();
+  string getConfigDir();
 
   // wrapper for ComponentRepository
 
@@ -81,11 +80,14 @@ class GUIBuilder implements-all sci.cca.Component,
   void destroyInstance(in cca.ComponentID cid, in float timeout);
   int destroyInstances(in array<cca.ComponentID> cidArray, in float timeout);
 
+  ComponentID generateBridge(in ComponentID user, in string usesPortName, in ComponentID provider, in string providesPortName, out ConnectionID connID1, out ConnectionID connID2);
+
   void getUsedPortNames(in cca.ComponentID cid, out array<string>);
   void getProvidedPortNames(in cca.ComponentID cid, out array<string>);
 
   void getCompatiblePortList(in sci.cca.ComponentID c1, in string port1,
                              in sci.cca.ComponentID c2, out array<string>);
+
   void getBridgeablePortList(in sci.cca.ComponentID c1, in string port1,
                              in sci.cca.ComponentID c2, out array<string>);
 
@@ -94,12 +96,23 @@ class GUIBuilder implements-all sci.cca.Component,
   void disconnect(in cca.ConnectionID connID, in float timeout); // note: don't support timeout yet
   // void disconnectAll(); note: not implemented in BuilderService yet
 
-  // manage go ports for the GUI
+  void addComponentFromXML(in string filePath, in string componentModel);
+
+  void addFrameworkProxy(in string loaderName, in string user, in string domain, in string loaderPath);
+  void removeFrameworkProxy(in string name);
+
+  // manage go ports for the UI
   bool connectGoPort(in string usesName, in string providesPortName, in cca.ComponentID cid, out string usesPortName);
   void disconnectGoPort(in string goPortName);
   int go(in string goPortName);
+}
 
-  // manage UI ports for the GUI
+// text builder also should have an implementing class
+class GUIBuilder implements-all sci.cca.Builder,
+                                sci.cca.ports.ComponentEventListener,
+                                sci.cca.ports.ConnectionEventListener {
+  // manage UI ports for the UI
+  // note: no UI handling for TxtBuilder
   bool connectUIPort(in string usesName, in string providesPortName, in cca.ComponentID cid, out string usesPortName);
   void disconnectUIPort(in string uiPortName);
   int ui(in string uiPortName);

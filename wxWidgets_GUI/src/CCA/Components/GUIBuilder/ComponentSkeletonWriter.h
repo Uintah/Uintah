@@ -27,6 +27,18 @@
 */
 
 
+/*
+ * ComponentSkeletonWriter.h
+ *
+ * Written by:
+ *  <author>
+ *  Scientific Computing and Imaging Institute
+ *  University of Utah
+ *  <date>
+ *
+ */
+
+
 
 #ifndef CCA_Components_GUIBuilder_ComponentSkeletonWriter_h
 #define CCA_Components_GUIBuilder_ComponentSkeletonWriter_h
@@ -54,14 +66,36 @@ private:
 
 class ComponentSkeletonWriter {
 public:
-  ComponentSkeletonWriter(const std::string &cname, const std::vector<PortDescriptor*> pp, const std::vector<PortDescriptor*> up);
+  /** throws internalException if directory does not exist */
+  ComponentSkeletonWriter(const std::string &cname,
+                          const std::string &dir,
+                          const std::vector<PortDescriptor*> pp,
+                          const std::vector<PortDescriptor*> up);
 
   void ComponentClassDefinitionCode(std::ofstream& fileStream);
   void ComponentSourceFileCode(std::ofstream& fileStream);
   void ComponentMakefileCode(std::ofstream& fileStream);
-  //void PortClassDefinitionCode();
+
   void GenerateCode();
-  void GenerateTempCode();
+  /** file basenames only */
+  void GenerateTempCode(const std::string& tempHeaderFile,
+                        const std::string& tempSourceFile,
+                        const std::string& tempSubmakeFile);
+
+  // frequently used string tokens
+  const static std::string SP;
+  const static std::string QT;
+  const static std::string DIR_SEP;
+  const static std::string OPEN_C_COMMENT;
+  const static std::string CLOSE_C_COMMENT;
+  const static std::string UNIX_SHELL_COMMENT;
+  const static std::string NEWLINE;
+
+  const static std::string DEFAULT_NAMESPACE;
+  const static std::string DEFAULT_SIDL_NAMESPACE;
+  const static std::string DEFAULT_PORT_NAMESPACE;
+  const static std::string DEFAULT_SIDL_PORT_NAMESPACE;
+
 private:
   void writeLicense(std::ofstream& fileStream);
   void writeMakefileLicense(std::ofstream& fileStream);
@@ -80,26 +114,13 @@ private:
   void writeSetServicesCode(std::ofstream& fileStream);
   void writeGoAndUIFunctionsCode(std::ofstream& fileStream);
 
-
-  // frequently used string tokens
-  const static std::string SP;
-  const static std::string QT;
-  const static std::string DIR_SEP;
-  const static std::string OPEN_C_COMMENT;
-  const static std::string CLOSE_C_COMMENT;
-  const static std::string UNIX_SHELL_COMMENT;
-  const static std::string NEWLINE;
-
-  const static std::string DEFAULT_NAMESPACE;
-  const static std::string DEFAULT_SIDL_NAMESPACE;
-  const static std::string DEFAULT_PORT_NAMESPACE;
-  const static std::string DEFAULT_SIDL_PORT_NAMESPACE;
+  // more frequently used string tokens
   const std::string SERVICES_POINTER;
   const std::string TYPEMAP_POINTER;
-  const std::string LICENCE;
 
   // Component name
   std::string compName;
+  std::string directory;
 
   // List of Ports added
   std::vector<PortDescriptor*> providesPortsList;

@@ -60,7 +60,7 @@ extern "C" {
 
 namespace SCIRun {
 
-const std::string VtkComponentModel::DEFAULT_PATH("/CCA/Components/VTK/xml");
+const std::string VtkComponentModel::DEFAULT_XML_PATH("/CCA/Components/VTK/xml");
 
 
 VtkComponentModel::VtkComponentModel(SCIRunFramework* framework,

@@ -254,6 +254,7 @@ public:
 protected:
     friend class Services;
     friend class BuilderService;
+    friend class GUIService;
     friend class ComponentEventService;
     friend class FrameworkProxyService;
     friend class ServiceRegistry;

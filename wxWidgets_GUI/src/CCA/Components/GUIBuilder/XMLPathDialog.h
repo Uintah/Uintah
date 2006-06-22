@@ -30,11 +30,13 @@
  * XMLPathDialog.h
  *
  * Written by:
+ *  (PathDialog.h)
  *  Ayla Khan
- *  SCI
+ *  Scientific Computing and Imaging Institute
  *  University of Utah
  *  November 2004
- *
+ * Ported to wxWidgets:
+ *  May 2006
  */
 
 
@@ -51,82 +53,41 @@ namespace GUIBuilder {
 class XMLPathDialog: public wxDialog {
 public:
   enum {
-    ID_COMBOBOX_COMP_MODEL = wxID_HIGHEST,
+    ID_BUTTON_FILE_PATH = wxID_HIGHEST,
   };
 
-  XMLPathDialog(wxWindow* parent, wxWindowID id = wxID_ANY, const wxString& caption = wxT("Component XML file path"), const wxPoint& pos = wxDefaultPosition, const wxSize& size = wxSize(600, 400), long style = wxCAPTION|wxSYSTEM_MENU);
+  XMLPathDialog(wxWindow* parent,
+                wxWindowID id = wxID_ANY,
+                const wxString& caption = wxT("Component XML file path"),
+                const wxPoint& pos = wxDefaultPosition,
+                const wxSize& size = wxSize(600, 400),
+                long style = wxCAPTION|wxSYSTEM_MENU);
   virtual ~XMLPathDialog() {}
+
+  void OnFilePath(wxCommandEvent& event);
+
+  wxString GetFilePath() const { return filePath.Strip(); }
+  wxString GetComponentModel() const { return cmComboBox->GetValue(); }
 
 protected:
   void SetLayout();
 
 private:
+  void setTextCtrl(wxBoxSizer& sizer, const int flags);
+
   wxArrayString componentModels;
+  wxString filePath;
+
   // component model wxComboBox
   wxComboBox* cmComboBox;
+
   // file path wxTextCtrl
   wxTextCtrl* fpTextCtrl;
+  wxButton* fpButton;
 
-//   DECLARE_EVENT_TABLE()
+  DECLARE_EVENT_TABLE()
 };
 
 }
-
-#endif
-
-#if 0
-
-// #include <qvariant.h>
-// #include <qdialog.h>
-
-// #include <vector>
-
-// class QVBoxLayout;
-// class QHBoxLayout;
-// class QSpacerItem;
-// class QComboBox;
-// class QGridLayout;
-// class QLabel;
-// class QLineEdit;
-// class QPushButton;
-// class QString;
-
-// class PathDialog : public QDialog
-// {
-//     Q_OBJECT
-
-// public:
-//     PathDialog(QWidget* parent = 0, const char* name = 0, bool modal = TRUE, WFlags fl = 0);
-//     ~PathDialog();
-
-//     QString selectedDirectory() const;
-//     QString selectedComponentModel() const;
-//     //void insertComponentModels(std::vector<std::string> &models);
-//     void insertComponentModels();
-
-// protected:
-//     QVBoxLayout* layoutDialog;
-//     QSpacerItem* verticalSpacing;
-//     QHBoxLayout* layoutName;
-//     QHBoxLayout* layoutPath;
-//     QHBoxLayout* layoutButtons;
-//     QSpacerItem* horizontalSpacing;
-
-// protected slots:
-//     virtual void languageChange();
-
-// private:
-//     QLabel* textLabelComponents;
-//     QComboBox* comboBoxName;
-//     QPushButton* buttonPath;
-//     QLineEdit* lineEditPath;
-//     QPushButton* buttonHelp;
-//     QPushButton* buttonOk;
-//     QPushButton* buttonCancel;
-//     QString workingDir;
-
-// private slots:
-//     void fileDialog();
-// };
 
 #endif

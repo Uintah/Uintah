@@ -4899,19 +4899,33 @@ if test $_sci_optional != "optional" && test "$WX_CONFIG" = "NOT_FOUND"; then
 fi
 
 SCI_CHECK_VERSION($WX_CONFIG,--version,2.6.0,,echo configure: error: wrong wxWidgets version.; exit)
-
 WX_LIBS=`$WX_CONFIG --libs`
 WX_CXXFLAGS=`$WX_CONFIG --cxxflags`
-
-_wx_lib_dir_flags=`echo $WX_LIBS | sed "s/ -[[^L]][[^ ]]*/ /g" | sed "s/^-[[^L]][[^ ]]*//g"`
-_wx_lib_flags=`echo $WX_LIBS | sed "s/ -[[^l]][[^ ]]*/ /g" | sed "s/^-[[^l]][[^ ]]*//g"`
-_wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^I]][[^ ]]*/ /g" | sed "s/^-[[^I]][[^ ]]*//g"`
-_wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^D]][[^ ]]*/ /g" | sed "s/^-[[^D]][[^ ]]*//g"`
 
 ext="$ac_ext"
 ac_ext="cc"
 
-SCI_TRY_LINK(WX,wxWidgets libraries,wx/wxprec.h,$_wx_inc_flags,$_wx_lib_flags,$_wx_lib_dir_flags,$_wx_def_flags,,$_sci_optional)
+case $host in
+  *linux*)
+    _wx_lib_dir_flags=`echo $WX_LIBS | sed "s/ -[[^L]][[^ ]]*/ /g" | sed "s/^-[[^L]][[^ ]]*//g"`
+    _wx_lib_flags=`echo $WX_LIBS | sed "s/ -[[^l]][[^ ]]*/ /g" | sed "s/^-[[^l]][[^ ]]*//g"`
+    _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^I]][[^ ]]*/ /g" | sed "s/^-[[^I]][[^ ]]*//g"`
+    _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^D]][[^ ]]*/ /g" | sed "s/^-[[^D]][[^ ]]*//g"`
+
+    SCI_TRY_LINK(WX,wxWidgets libraries,wx/wxprec.h,$_wx_inc_flags,$_wx_lib_flags,$_wx_lib_dir_flags,$_wx_def_flags,,$_sci_optional)
+    ;;
+  *-darwin*)
+    _wx_inc_flags="$_sci_inc $_sci_inc/mac-ansi-debug-2.6"
+    _wx_lib_flags="-lwx_macd_xrc-2.6 -lwx_macd_qa-2.6 -lwx_macd_html-2.6 -lwx_macd_adv-2.6 -lwx_macd_core-2.6 -lwx_base_carbond_xml-2.6 -lwx_base_carbond_net-2.6 -lwx_base_carbond-2.6"
+    _wx_lib_dir_flags="$_sci_lib"
+    _wx_def_flags=""
+
+    SCI_TRY_LINK(WX,wxWidgets libraries,wx/wxprec.h,$_wx_inc_flags,$_wx_lib_flags,$_wx_lib_dir_flags,$_wx_def_flags,,$_sci_optional)
+    ;;
+  *)
+    #assume there is no specific version
+    ;;
+esac
 
 # Restore the previous settings.
 ac_ext="$ext"

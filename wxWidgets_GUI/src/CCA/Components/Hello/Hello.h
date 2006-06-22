@@ -50,22 +50,27 @@ class Hello;
 
 class HelloUIPort : public sci::cca::ports::UIPort {
 public:
+  HelloUIPort(const sci::cca::Services::pointer& svc) : services(svc) {}
+
   virtual ~HelloUIPort() {}
   int ui();
   void setParent(Hello *com) { this->com = com; }
+
+private:
+  sci::cca::Services::pointer services;
   Hello *com;
 };
 
 class HelloGoPort : public sci::cca::ports::GoPort {
 public:
-  virtual ~HelloGoPort() {}
-
   HelloGoPort(const sci::cca::Services::pointer& svc) : services(svc) {}
+
+  virtual ~HelloGoPort() {}
   int go();
   void setParent(Hello *com) { this->com = com; }
-  Hello *com;
 
 private:
+  Hello *com;
   sci::cca::Services::pointer services;
 };
 
@@ -88,7 +93,9 @@ public:
   virtual ~Hello();
   virtual void setServices(const sci::cca::Services::pointer& svc);
   virtual void releaseServices(const sci::cca::Services::pointer& svc);
-  std::string text;
+  virtual std::string getMessage() { return text; }
+
+  void setMessage(const std::string& msg) { text = msg; }
 
 private:
   void setCommunicator(int comm) {
@@ -97,9 +104,10 @@ private:
   Hello(const Hello&);
   Hello& operator=(const Hello&);
 
+  std::string text;
   sci::cca::Services::pointer services;
 };
-  
+
 } //namespace SCIRun
 
 

@@ -44,7 +44,8 @@ SRCS     += \
 	    $(SRCDIR)/CCACommunicator.cc \
 	    $(SRCDIR)/resourceReference.cc \
 	    $(SRCDIR)/TypeMap.cc \
-	    $(SRCDIR)/SCIRunLoader.cc
+	    $(SRCDIR)/SCIRunLoader.cc \
+	    $(SRCDIR)/ApplicationLoader.cc
 
 SUBDIRS := \
 	    $(SRCDIR)/CCA \
