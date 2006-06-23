@@ -51072,18 +51072,18 @@ fi
 
 
 if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-  ## check for compatible version (0.10.0 or greater)
+  ## check for compatible version (0.11.0 or greater)
 
     ##  SCI_CHECK_VERSION
     _SCI_CORRECT_='echo $echo_n "$echo_c"'
     _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
     _SCI_VER_1_="0"
-    _SCI_VER_2_="0.10.0"
+    _SCI_VER_2_="0.11.0"
     _CUR_1_=""
     _CUR_2_=""
 
-    echo "$as_me:$LINENO: checking for \`basename $BABEL_BIN\` version 0.10.0" >&5
-echo $ECHO_N "checking for \`basename $BABEL_BIN\` version 0.10.0... $ECHO_C" >&6
+    echo "$as_me:$LINENO: checking for \`basename $BABEL_BIN\` version 0.11.0" >&5
+echo $ECHO_N "checking for \`basename $BABEL_BIN\` version 0.11.0... $ECHO_C" >&6
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -60802,10 +60802,10 @@ _sci_includes=''
 
     ;;
   *-darwin*)
-    _wx_inc_flags="$_sci_inc $_sci_inc/mac-ansi-debug-2.6"
-    _wx_lib_flags="-lwx_macd_xrc-2.6 -lwx_macd_qa-2.6 -lwx_macd_html-2.6 -lwx_macd_adv-2.6 -lwx_macd_core-2.6 -lwx_base_carbond_xml-2.6 -lwx_base_carbond_net-2.6 -lwx_base_carbond-2.6"
-    _wx_lib_dir_flags="$_sci_lib"
-    _wx_def_flags=""
+    _wx_lib_dir_flags=$WX_LIBS
+    _wx_lib_flags=$WX_LIBS
+    _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[^I][^ ]*/ /g" | sed "s/^-[^I][^ ]*//g"`
+    _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[^D][^ ]*/ /g" | sed "s/^-[^D][^ ]*//g"`
 
 
 ##

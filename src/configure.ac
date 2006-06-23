@@ -4203,8 +4203,8 @@ AC_CHECKING(for babel in $LIB_DIR_SIDL/../bin)
 AC_CHECK_PROG(BABEL_BIN,babel,$LIB_DIR_SIDL/../bin/babel,NONE,$LIB_DIR_SIDL/../bin)
 
 if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-  ## check for compatible version (0.10.0 or greater)
-  SCI_CHECK_VERSION($BABEL_BIN,--version,0.10.0,,echo configure: error: wrong Babel version.; exit)
+  ## check for compatible version (0.11.0 or greater)
+  SCI_CHECK_VERSION($BABEL_BIN,--version,0.11.0,,echo configure: error: wrong Babel version.; exit)
   DEF_BABEL="#define HAVE_BABEL 1"
   HAVE_BABEL="yes"
 fi
@@ -4915,10 +4915,10 @@ case $host in
     SCI_TRY_LINK(WX,wxWidgets libraries,wx/wxprec.h,$_wx_inc_flags,$_wx_lib_flags,$_wx_lib_dir_flags,$_wx_def_flags,,$_sci_optional)
     ;;
   *-darwin*)
-    _wx_inc_flags="$_sci_inc $_sci_inc/mac-ansi-debug-2.6"
-    _wx_lib_flags="-lwx_macd_xrc-2.6 -lwx_macd_qa-2.6 -lwx_macd_html-2.6 -lwx_macd_adv-2.6 -lwx_macd_core-2.6 -lwx_base_carbond_xml-2.6 -lwx_base_carbond_net-2.6 -lwx_base_carbond-2.6"
-    _wx_lib_dir_flags="$_sci_lib"
-    _wx_def_flags=""
+    _wx_lib_dir_flags=$WX_LIBS
+    _wx_lib_flags=$WX_LIBS
+    _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^I]][[^ ]]*/ /g" | sed "s/^-[[^I]][[^ ]]*//g"`
+    _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^D]][[^ ]]*/ /g" | sed "s/^-[[^D]][[^ ]]*//g"`
 
     SCI_TRY_LINK(WX,wxWidgets libraries,wx/wxprec.h,$_wx_inc_flags,$_wx_lib_flags,$_wx_lib_dir_flags,$_wx_def_flags,,$_sci_optional)
     ;;
