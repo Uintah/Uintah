@@ -108,10 +108,8 @@ WARNING
     ICELabel* Ilb;
     MaterialSet* mymatls;
     
-    double d_P_cj;
-    double d_D;
+    double d_D;   // detonation wave velocity
     double d_E0;
-    double d_rho0;
     Point  d_start_place;
     Vector d_direction;
     bool   d_react_mixed_cells;
