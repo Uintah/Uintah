@@ -42,11 +42,19 @@ $(COMPONENT)_LANGUAGE := $(BABEL_LANGUAGE)
 # files.  Since implementation code (*Impl*) already exists in the source tree, we first copy this existing
 # code to the babel target output directory.  Babel will not overwrite critical sections of the 
 # existing implementation code.
+
 ${OUTDIR}/${COMPONENT}.make: ${SRCDIR}/${COMPONENT}.sidl Core/Babel/timestamp
+  ifeq ($(IS_OSX),yes)
+	if ! test -d $(dir $@); then mkdir -p $(dir $@); fi
+	cp $(dir $<)*Impl.* $(dir $@)
+	$(BABEL) --server=$($(basename $(notdir $@))_LANGUAGE) --output-directory=$(dir $@) --repository-path=${BABEL_REPOSITORY} --suppress-timestamp $<
+	mv  $(dir $@)babel.make $@
+  else
 	if ! test -d $(dir $@); then mkdir -p $(dir $@); fi
 	cp -u $(dir $<)*Impl.* $(dir $@)
 	$(BABEL) --server=$($(basename $(notdir $@))_LANGUAGE) --output-directory=$(dir $@) --repository-path=${BABEL_REPOSITORY} --suppress-timestamp $<
 	mv  $(dir $@)babel.make $@
+  endif
 
 ${OUTDIR}/${COMPONENT}_stub.make: ${SRCDIR}/${COMPONENT}.sidl Core/Babel/timestamp
 	$(BABEL) --client=C++ --output-directory=$(dir $@) --repository-path=${BABEL_REPOSITORY} --suppress-timestamp $< 
