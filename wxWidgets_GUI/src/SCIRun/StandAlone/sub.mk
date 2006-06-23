@@ -57,6 +57,10 @@ ifeq ($(HAVE_MPI),yes)
   LIBS += $(MPI_LIBRARY)
 endif
 
+ifeq ($(HAVE_WX),yes)
+  LIBS += $(WX_LIBRARY)
+endif
+
 PROGRAM := sr
 SRCS := $(SRCDIR)/main.cc
 include $(SCIRUN_SCRIPTS)/program.mk
