@@ -64,7 +64,6 @@ void LightTime::outputProblemSpec(ProblemSpecP& ps)
   model_ps->appendElement("direction_if_plane",   d_direction);
   model_ps->appendElement("D",                    d_D);
   model_ps->appendElement("E0",                   d_E0);
-  model_ps->appendElement("rho0",                 d_rho0);
   model_ps->appendElement("react_mixed_cells",    d_react_mixed_cells);
 }
 //__________________________________
@@ -78,7 +77,6 @@ void LightTime::problemSetup(GridP&, SimulationStateP& sharedState,
   params->require("direction_if_plane",   d_direction);
   params->require("D",    d_D);
   params->require("E0",   d_E0);
-  params->require("rho0", d_rho0);
   params->getWithDefault("react_mixed_cells", d_react_mixed_cells,true);
   params->getWithDefault("AMR_Refinement_Criteria", d_refineCriteria,1e100);
 
@@ -160,7 +158,7 @@ void LightTime::scheduleComputeModelSources(SchedulerP& sched,
   Task* t = scinew Task("LightTime::computeModelSources", this, 
                         &LightTime::computeModelSources, mi);
   cout_doing << "LightTime::scheduleComputeModelSources "<<  endl;  
-  t->requires( Task::OldDW, mi->delT_Label);
+  //t->requires( Task::OldDW, mi->delT_Label);    AMR
   Ghost::GhostType  gn  = Ghost::None;
   const MaterialSubset* react_matl = matl0->thisMaterial();
   const MaterialSubset* prod_matl  = matl1->thisMaterial();
@@ -197,8 +195,9 @@ void LightTime::computeModelSources(const ProcessorGroup*,
                                     DataWarehouse* new_dw,
                                     const ModelInfo* mi)
 {
+  const Level* level = getLevel(patches);
   delt_vartype delT;
-  old_dw->get(delT, mi->delT_Label);
+  old_dw->get(delT, mi->delT_Label,level);
 
   int m0 = matl0->getDWIndex();
   int m1 = matl1->getDWIndex();
@@ -207,7 +206,7 @@ void LightTime::computeModelSources(const ProcessorGroup*,
     const Patch* patch = patches->get(p);  
     
     cout_doing << "Doing computeModelSources on patch "<< patch->getID()
-               <<"\t\t\t\t  LightTime" << endl;
+               <<"\t\t\t\t  LightTime \tL-" << level->getIndex()<< endl;
     CCVariable<double> mass_src_0, mass_src_1, mass_0;
     CCVariable<Vector> momentum_src_0, momentum_src_1;
     CCVariable<double> energy_src_0, energy_src_1;
@@ -252,16 +251,18 @@ void LightTime::computeModelSources(const ProcessorGroup*,
     // Product Data, 
     new_dw->get(prodRho,       Ilb->rho_CCLabel,   m1,patch,gn, 0);
 
-    const Level* lvl = patch->getLevel();
+    const Level* level = patch->getLevel();
     double time = d_sharedState->getElapsedTime();
     double delta_L = 1.5*pow(cell_vol,1./3.)/d_D;
 //    double delta_L = 1.5*dx.x()/d_D;
     double A=d_direction.x();
     double B=d_direction.y();
     double C=d_direction.z();
+    
     double x0=d_start_place.x();
     double y0=d_start_place.y();
     double z0=d_start_place.z();
+    
     double D = -A*x0 - B*y0 - C*z0;
     double denom = 1.0;
     double plane = 0.;
@@ -269,14 +270,15 @@ void LightTime::computeModelSources(const ProcessorGroup*,
       plane = 1.0;
       denom = sqrt(A*A + B*B + C*C);
     }
-
+ 
     for (CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
 
-      Point pos = lvl->getCellPosition(c);
+      Point pos = level->getCellPosition(c);
       double dist_plane = Abs(A*pos.x() + B*pos.y() + C*pos.z() + D)/denom;
       double dist_straight = (pos - d_start_place).length();
       double dist = dist_plane*plane + dist_straight*(1.-plane);
+      
       double t_b = dist/d_D; 
       double VF_SUM = 0.;
       if(!d_react_mixed_cells){
@@ -285,7 +287,11 @@ void LightTime::computeModelSources(const ProcessorGroup*,
       if((vol_frac_rct[c] + vol_frac_prd[c]) > VF_SUM){
         if (time >= t_b && rctRho[c] > d_TINY_RHO){
           Fr[c] = (time - t_b)/delta_L;
-          if(Fr[c] > .96) Fr[c] = 1.0;
+         
+          if(Fr[c] > .96) {
+            Fr[c] = 1.0;
+          }
+          
           double Fr_old = prodRho[c]/(rctRho[c]+prodRho[c]);
           delF[c] = Fr[c] - Fr_old;
 
