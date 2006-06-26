@@ -314,9 +314,12 @@ Tikhonov::execute()
 
   DenseMatrix *regForMatrix = scinew DenseMatrix(N, N);
   MatrixHandle regForMatrix_handle = regForMatrix;
-  ColumnMatrix *solution = scinew ColumnMatrix(N);
-  ColumnMatrix *Ax = scinew ColumnMatrix(M);
-  ColumnMatrix *Rx = scinew ColumnMatrix(N);
+  MatrixHandle solution_handle = scinew ColumnMatrix(N);
+  MatrixHandle Ax_handle = scinew ColumnMatrix(M);
+  MatrixHandle Rx_handle = scinew ColumnMatrix(N);
+  ColumnMatrix &solution = *(solution_handle->as_column());
+  ColumnMatrix &Ax = *(Ax_handle->as_column());
+  ColumnMatrix &Rx = *(Rx_handle->as_column());
 
   if ((reg_method_.get() == "single") || (reg_method_.get() == "slider"))
   {
@@ -374,16 +377,16 @@ Tikhonov::execute()
 
       for (k=0; k<N; k++)
       {
-        (*solution)[k] = (*mat_AtrY)[k];
+        solution[k] = (*mat_AtrY)[k];
       }
 
       //Before, solution will be equal to (A^T * y)
       //After, solution will be equal to x_reg
 
-      regForMatrix->solve(*solution);
+      regForMatrix->solve(solution);
       ////////////////////////////////
-      matrixForMatD->mult(*solution, *Ax, flops, memrefs, beg, end);
-      matrixRegMatD->mult(*solution, *Rx, flops, memrefs, beg, end);
+      matrixForMatD->mult(solution, Ax, flops, memrefs, beg, end);
+      matrixRegMatD->mult(solution, Rx, flops, memrefs, beg, end);
       rho[j] = 0;
       eta[j] = 0;
 
@@ -391,12 +394,12 @@ Tikhonov::execute()
 
       for (k=0; k<M; k++)
       {
-        (*Ax)[k] = (*Ax)[k]-(*matrixMeasDatD)[k];
-        rho[j] = rho[j] + (*Ax)[k]*(*Ax)[k];
+        Ax[k] -= (*matrixMeasDatD)[k];
+        rho[j] += Ax[k] * Ax[k];
       }
       for (k=0; k<N; k++)
       {
-        eta[j] = eta[j] + (*Rx)[k]*(*Rx)[k];
+        eta[j] += Rx[k] * Rx[k];
       }
       rho[j] = sqrt(rho[j]);
       eta[j] = sqrt(eta[j]);
@@ -404,14 +407,9 @@ Tikhonov::execute()
 
     lambda = FindCorner(rho, eta, lambdaArray, *kapa, &lambda_index, nLambda);
 
-    double lower_y = eta[0] / 10.0;
-    if (eta[nLambda-1] < lower_y)
-    {
-      lower_y = eta[nLambda-1];
-    }
-
     if (have_ui_.get())
     {
+      const double lower_y = Min(eta[0] / 10.0, eta[nLambda-1]);
       ostringstream str;
       str << get_id() << " plot_graph \" ";
       for (i=0; i<nLambda; i++)
@@ -425,10 +423,10 @@ Tikhonov::execute()
     delete kapa;
   } // END  else if (reg_method_.get() == "lcurve")
 
-  lambda2 = lambda*lambda;
+  lambda2 = lambda * lambda;
 
-  ColumnMatrix *RegParameter = scinew ColumnMatrix(1);
-  (*RegParameter)[0] = lambda;
+  MatrixHandle RegParameter = scinew ColumnMatrix(1);
+  RegParameter->put(0, 0, lambda);
 
   for (int i=0; i<N; i++)
   {
@@ -447,14 +445,8 @@ Tikhonov::execute()
   // SEND RESULTS TO THE OUTPUT PORTS
   MatrixHandle AtrYHandle(mat_AtrY);
   send_output_handle("InverseSoln", AtrYHandle);
-  MatrixHandle RegParameterHandle(RegParameter);
-  send_output_handle("RegParam", RegParameterHandle);
+  send_output_handle("RegParam", RegParameter);
   send_output_handle("RegInverseMat", inverse_matrix);
-
-
-  delete solution;
-  delete Ax;
-  delete Rx;
 }
 
 } // End namespace BioPSE
