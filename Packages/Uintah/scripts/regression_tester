@@ -177,7 +177,7 @@ echo;echo "Using the "$DIR "gold standard directory"
 
 mpm_test_cases="disks2mat4patch heatcond2mat inclined_plane_sphere foam_crush const_test_hypo const_test_cmr const_test_nhp const_test_vs adiCuJC4000s696K adiCuMTS4000s696K adiCuPTW4000s696K adiCuSCG4000s696K adiCuZA4000s696K test_corrug_plate test_cyl_pene_no_ero test_gurson_beckerdrucker_mts testConvert1MAdd"
 mpmf_test_cases="regressionFMPM"
-ice_test_cases="advect rieman_sm hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch impHotBlob"
+ice_test_cases="advect rieman_sm impHotBlob hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch"
 amr_test_cases="hotBlob_AMR advect2matAMR"
 mpmice_test_cases="advect massX guni2dRT TRWnoz testConvertMPMICEAdd"
 model_test_cases="HePlume JP8_Radiation"
