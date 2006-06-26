@@ -281,7 +281,7 @@ Tikhonov::execute()
   // calculate R^T * R
   DenseMatrix *mat_RtrR, *matrixRegMatD;
 
-  if (!iportRegMat->get(hMatrixRegMat))
+  if (!iportRegMat->get(hMatrixRegMat) && !hMatrixRegMat.get_rep())
   {
     matrixRegMatD = mat_identity(matrixForMatD->ncols());
     mat_RtrR = mat_identity(matrixForMatD->ncols());
