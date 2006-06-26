@@ -192,6 +192,7 @@ Tikhonov::mat_mult(DenseMatrix *A, DenseMatrix *B)
   return C;
 }
 
+
 //! This function make sure that the matrix is a DenseMatrix.
 DenseMatrix *
 Tikhonov::make_dense(MatrixHandle A) 
@@ -216,6 +217,7 @@ Tikhonov::make_dense(MatrixHandle A)
   }
 }
 
+
 //! This function make sure that the matrix is a ColumnMatrix.
 ColumnMatrix *
 Tikhonov::make_column(MatrixHandle A) 
@@ -239,6 +241,7 @@ Tikhonov::make_column(MatrixHandle A)
     return Asparse->column();
   }
 }
+
 
 //! Find Corner
 double
@@ -294,6 +297,7 @@ Tikhonov::FindCorner(Array1<double> &rho, Array1<double> &eta,
   return lambda_cor;
 }
 
+
 //! Module execution
 void
 Tikhonov::execute()
@@ -308,14 +312,11 @@ Tikhonov::execute()
 
   // DEFINE MATRIX HANDLES FOR INPUT/OUTPUT PORTS
   MatrixHandle hMatrixForMat, hMatrixRegMat, hMatrixMeasDat;
-  //MatrixHandle hMatrixRegInvMat, hMatrixInvSol;
     
   if(!iportForMat->get(hMatrixForMat)) 
   { 
-  
     error("Couldn't get handle to the Forward Prob Matrix.");
     return;
-		
   }
 		
   if(!iportMeasDat->get(hMatrixMeasDat)) 
@@ -329,8 +330,8 @@ Tikhonov::execute()
   ColumnMatrix *matrixMeasDatD = make_column(hMatrixMeasDat);
 
   // DIMENSION CHECK!!
-  int M = matrixForMatD->nrows();
-  int N = matrixForMatD->ncols();
+  const int M = matrixForMatD->nrows();
+  const int N = matrixForMatD->ncols();
   if (M!=matrixMeasDatD->nrows()) 
   {
     error("Input matrix dimensions must agree.");
@@ -375,13 +376,11 @@ Tikhonov::execute()
   ColumnMatrix *mat_AtrY = scinew ColumnMatrix(N);
   matrixForMatD->mult_transpose(*matrixMeasDatD, *mat_AtrY, flops, memrefs);
 
-    
   DenseMatrix  *regForMatrix = scinew DenseMatrix(N, N);
   ColumnMatrix *solution = scinew ColumnMatrix(N);
   ColumnMatrix *Ax = scinew ColumnMatrix(M);
   ColumnMatrix *Rx = scinew ColumnMatrix(N);
 
-    
   if ((reg_method_.get() == "single") || (reg_method_.get() == "slider"))
   {
     if (reg_method_.get() == "single")
@@ -423,7 +422,6 @@ Tikhonov::execute()
 	lambdaArray[j] = lambdaArray[j-1]*lam_step;
 
       lambda2 = lambdaArray[j] * lambdaArray[j];
-			
 			
       ///////////////////////////////////////
       ////Calculating the solution directly
