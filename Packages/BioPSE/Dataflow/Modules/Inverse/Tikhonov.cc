@@ -77,8 +77,6 @@ public:
   DenseMatrix  * mat_identity(int len);
   DenseMatrix  * mat_trans_mult_mat(DenseMatrix *A);
   DenseMatrix  * mat_mult(DenseMatrix *A, DenseMatrix *B); 
-  DenseMatrix  * make_dense(MatrixHandle A);
-  ColumnMatrix * make_column(MatrixHandle A);
 
   double FindCorner(Array1<double>  &rho, Array1<double>  &eta, 
 		    Array1<double>  &lambdaArray, 
@@ -193,56 +191,6 @@ Tikhonov::mat_mult(DenseMatrix *A, DenseMatrix *B)
 }
 
 
-//! This function make sure that the matrix is a DenseMatrix.
-DenseMatrix *
-Tikhonov::make_dense(MatrixHandle A) 
-{
-  DenseMatrix *Adense = dynamic_cast<DenseMatrix *>(A.get_rep());
-  if (Adense) 
-    return Adense;
-  SparseRowMatrix *Asparse = dynamic_cast<SparseRowMatrix *>(A.get_rep());
-  if (!Asparse) 
-  {
-    ColumnMatrix *Acol = dynamic_cast<ColumnMatrix *>(A.get_rep());
-    if (!Acol) 
-    {
-      warning("Bad input types.");
-      return Adense;
-    }
-    return Acol->dense();
-  } 
-  else 
-  {
-    return Asparse->dense();
-  }
-}
-
-
-//! This function make sure that the matrix is a ColumnMatrix.
-ColumnMatrix *
-Tikhonov::make_column(MatrixHandle A) 
-{
-  ColumnMatrix *Acol = dynamic_cast<ColumnMatrix *>(A.get_rep());
-  if (Acol) 
-    return Acol;
-  SparseRowMatrix *Asparse = dynamic_cast<SparseRowMatrix *>(A.get_rep());
-  if (!Asparse) 
-  {
-    DenseMatrix *Adense = dynamic_cast<DenseMatrix *>(A.get_rep());
-    if (!Adense) 
-    {
-      warning("Bad input types.");
-      return Acol;
-    }
-    return Adense->column();
-  }
-  else 
-  {
-    return Asparse->column();
-  }
-}
-
-
 //! Find Corner
 double
 Tikhonov::FindCorner(Array1<double> &rho, Array1<double> &eta, 
@@ -326,8 +274,8 @@ Tikhonov::execute()
   }
    
   // TYPE CHECK
-  DenseMatrix *matrixForMatD = make_dense(hMatrixForMat);
-  ColumnMatrix *matrixMeasDatD = make_column(hMatrixMeasDat);
+  DenseMatrix *matrixForMatD = hMatrixForMat->dense();
+  ColumnMatrix *matrixMeasDatD = hMatrixMeasDat->column();
 
   // DIMENSION CHECK!!
   const int M = matrixForMatD->nrows();
@@ -356,7 +304,7 @@ Tikhonov::execute()
   } 
   else 
   {
-    matrixRegMatD = make_dense(hMatrixRegMat);
+    matrixRegMatD = hMatrixRegMat->dense();
     if (N != matrixRegMatD->ncols()) 
     {
     	error("The dimension of Reg. Matrix is not compatible with forward matrix.");
