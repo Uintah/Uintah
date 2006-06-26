@@ -75,8 +75,8 @@ public:
 
   virtual void execute();
 
-  DenseMatrix  *mat_identity(int len);
-  DenseMatrix  *mat_trans_mult_mat(DenseMatrix *A);
+  DenseMatrix *mat_identity(int len);
+  DenseMatrix *mat_trans_mult_mat(const DenseMatrix &A);
 
   double FindCorner(const vector<double> &rho, const vector<double> &eta,
                     const vector<double> &lambdaArray,
@@ -124,19 +124,19 @@ Tikhonov::mat_identity(int len)
 
 
 //! This function computes A^T * A for a DenseMatrix
+// This is probably just an inefficient implementation of Mult_trans_X
+// from DenseMatrix.h.  No regression test available though.
 DenseMatrix *
-Tikhonov::mat_trans_mult_mat(DenseMatrix *A)
+Tikhonov::mat_trans_mult_mat(const DenseMatrix &A)
 {
-  int nRows = A->nrows();
-  int nCols = A->ncols();
-  int beg = -1;
-  int end = -1;
+  const int nRows = A.nrows();
+  const int nCols = A.ncols();
   int i, j; // i: column index, j: row index
   int flops, memrefs;
 
   DenseMatrix *B = scinew DenseMatrix(nCols, nCols);
-  ColumnMatrix *Ai = scinew ColumnMatrix(nRows);
-  ColumnMatrix *Bi = scinew ColumnMatrix(nCols);
+  ColumnMatrix Ai(nRows);
+  ColumnMatrix Bi(nCols);
 
   // For each column (i) of A, first create a column vector Ai = A[:][i]
   // Bi is then the i'th column of AtA, Bi = At * Ai
@@ -146,16 +146,15 @@ Tikhonov::mat_trans_mult_mat(DenseMatrix *A)
     // build copy of this column
     for (j=0; j<nRows; j++)
     {
-      (*Ai)[j] = (*A)[j][i];
+      Ai[j] = A[j][i];
     }
-    A->mult_transpose(*Ai, *Bi, flops, memrefs, beg, end);
+    A.mult_transpose(Ai, Bi, flops, memrefs);
     for (j=0; j<nCols; j++)
     {
-      (*B)[j][i] = (*Bi)[j];
+      (*B)[j][i] = Bi[j];
     }
   }
-  delete Ai;
-  delete Bi;
+ 
   return B;
 }
 
@@ -265,13 +264,11 @@ Tikhonov::execute()
       error("The dimension of RegularizationMat is not compatible with ForwardMat.");
       return;
     }
-    mat_RtrR_handle = mat_trans_mult_mat(matrixRegMat_handle->as_dense());
+    mat_RtrR_handle = mat_trans_mult_mat(*(matrixRegMat_handle->as_dense()));
   }
   DenseMatrix &mat_RtrR = *(mat_RtrR_handle->as_dense());
   DenseMatrix &matrixRegMatD = *(matrixRegMat_handle->as_dense());
 
-  int beg = -1;
-  int end = -1;
   double lambda = 0, lambda2 = 0;
   int lambda_index;
 
@@ -353,8 +350,8 @@ Tikhonov::execute()
 
       regForMatrix.solve(solution);
       ////////////////////////////////
-      matrixForMatD.mult(solution, Ax, flops, memrefs, beg, end);
-      matrixRegMatD.mult(solution, Rx, flops, memrefs, beg, end);
+      matrixForMatD.mult(solution, Ax, flops, memrefs);
+      matrixRegMatD.mult(solution, Rx, flops, memrefs);
       rho[j] = 0.0;
       eta[j] = 0.0;
 
