@@ -79,9 +79,9 @@ public:
   DenseMatrix  * mat_trans_mult_mat(DenseMatrix *A);
   DenseMatrix  * mat_mult(DenseMatrix *A, DenseMatrix *B);
 
-  double FindCorner(Array1<double>  &rho, Array1<double>  &eta,
-                    Array1<double>  &lambdaArray,
-                    ColumnMatrix *kapa, int *lambda_index, int nLambda);
+  double FindCorner(const vector<double> &rho, const vector<double> &eta,
+                    const vector<double> &lambdaArray,
+                    ColumnMatrix &kapa, int *lambda_index, int nLambda);
 };
 
 //! Module Maker
@@ -198,23 +198,20 @@ Tikhonov::mat_mult(DenseMatrix *A, DenseMatrix *B)
 
 //! Find Corner
 double
-Tikhonov::FindCorner(Array1<double> &rho, Array1<double> &eta,
-                     Array1<double> &lambdaArray,
-                     ColumnMatrix *kapa, int *lambda_index, int nLambda)
+Tikhonov::FindCorner(const vector<double> &rho, const vector<double> &eta,
+                     const vector<double> &lambdaArray,
+                     ColumnMatrix &kapa, int *lambda_index, int nLambda)
 {
-  Array1<double> deta, ddeta, drho, ddrho, lrho, leta;
+  vector<double> deta(nLambda, 0.0);
+  vector<double> ddeta(nLambda, 0.0);
+  vector<double> drho(nLambda, 0.0);
+  vector<double> ddrho(nLambda, 0.0);
+  vector<double> lrho(nLambda, 0.0);
+  vector<double> leta(nLambda, 0.0);
 
-  leta.setsize(nLambda);
-  deta.setsize(nLambda);
-  ddeta.setsize(nLambda);
-  lrho.setsize(nLambda);
-  drho.setsize(nLambda);
-  ddrho.setsize(nLambda);
-
-  double  maxKapa=-1e10;
-  int   i;
-
-  for(i=0; i<nLambda; i++)
+  double  maxKapa = -1.0e10;
+  int i;
+  for (i=0; i<nLambda; i++)
   {
     lrho[i] = log(rho[i])/log(10.0);
     leta[i] = log(eta[i])/log(10.0);
@@ -236,18 +233,19 @@ Tikhonov::FindCorner(Array1<double> &rho, Array1<double> &eta,
   ddeta[0] = ddeta[2];
   ddeta[1] = ddeta[2];
 
-  *lambda_index=0;
-  for(i=0; i<nLambda; i++)
+  *lambda_index = 0;
+  for (i=0; i<nLambda; i++)
   {
-    (*kapa)[i] = 2*(drho[i]*ddeta[i] - ddrho[i]*deta[i])/sqrt(pow((deta[i]*deta[i]+drho[i]*drho[i]),3));
-    if((*kapa)[i]>maxKapa)
+    kapa[i] = 2.0 * (drho[i] * ddeta[i] - ddrho[i] * deta[i]) / 
+      sqrt(pow((deta[i]*deta[i]+drho[i]*drho[i]), 3.0));
+    if (kapa[i] > maxKapa)
     {
-      maxKapa = (*kapa)[i];
+      maxKapa = kapa[i];
       *lambda_index = i;
     }
   }
-  double lambda_cor = lambdaArray[*lambda_index];
-  return lambda_cor;
+
+  return lambdaArray[*lambda_index];
 }
 
 
@@ -287,7 +285,6 @@ Tikhonov::execute()
 
   // calculate R^T * R
   DenseMatrix *mat_RtrR, *matrixRegMatD;
-
   if (!iportRegMat->get(hMatrixRegMat) && !hMatrixRegMat.get_rep())
   {
     matrixRegMatD = mat_identity(N);
@@ -342,14 +339,13 @@ Tikhonov::execute()
     msg_stream_ << "method = " << reg_method_.get() << "\n";//DISCARD
 
     int i, j, k, l;
-    Array1<double> lambdaArray, rho, eta;
     const int nLambda = lambda_num_.get();
 
     ColumnMatrix *kapa = scinew ColumnMatrix(nLambda);
 
-    lambdaArray.setsize(nLambda);
-    rho.setsize(nLambda);
-    eta.setsize(nLambda);
+    vector<double> lambdaArray(nLambda, 0.0);
+    vector<double> rho(nLambda, 0.0);
+    vector<double> eta(nLambda, 0.0);
 
     lambdaArray[0] = lambda_min_.get();
     const double lam_step =
@@ -406,7 +402,7 @@ Tikhonov::execute()
       eta[j] = sqrt(eta[j]);
     }
 
-    lambda = FindCorner(rho, eta, lambdaArray, kapa, &lambda_index, nLambda);
+    lambda = FindCorner(rho, eta, lambdaArray, *kapa, &lambda_index, nLambda);
 
     double lower_y = eta[0] / 10.0;
     if (eta[nLambda-1] < lower_y)
@@ -426,7 +422,9 @@ Tikhonov::execute()
       str << lambda << " ; update idletasks";
       get_gui()->execute(str.str().c_str());
     }
+    delete kapa;
   } // END  else if (reg_method_.get() == "lcurve")
+
   lambda2 = lambda*lambda;
 
   ColumnMatrix *RegParameter = scinew ColumnMatrix(1);
