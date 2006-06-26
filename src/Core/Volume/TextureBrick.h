@@ -165,6 +165,7 @@ protected:
   NrrdDataHandle data_[TEXTURE_MAX_COMPONENTS];
 
   static GLenum tex_type_aux(const NrrdDataHandle &n);
+  static size_t tex_type_size(GLenum e);
 };
 
 

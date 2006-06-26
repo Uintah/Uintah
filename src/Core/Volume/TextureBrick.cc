@@ -569,6 +569,20 @@ NrrdTextureBrick::tex_type_aux(const NrrdDataHandle &n)
 }
 
 
+size_t
+NrrdTextureBrick::tex_type_size(GLenum t)
+{
+  if (t == GL_BYTE)           { return sizeof(GLbyte); }
+  if (t == GL_UNSIGNED_BYTE)  { return sizeof(GLubyte); }
+  if (t == GL_SHORT)          { return sizeof(GLshort); }
+  if (t == GL_UNSIGNED_SHORT) { return sizeof(GLushort); }
+  if (t == GL_INT)            { return sizeof(GLint); }
+  if (t == GL_UNSIGNED_INT)   { return sizeof(GLuint); }
+  if (t == GL_FLOAT)          { return sizeof(GLfloat); }
+  return 0;
+}
+
+
 GLenum
 NrrdTextureBrick::tex_type(int c)
 {
@@ -591,7 +605,7 @@ NrrdTextureBrick::tex_data(int c)
   
   unsigned char *ptr = (unsigned char *)(data_[c]->nrrd_->data);
   const size_t offset = (oz() * sx() * sy() + oy() * sx() + ox()) * nb(c);
-  return ptr + offset;
+  return ptr + offset * tex_type_size(tex_type(c));
 }
 
 

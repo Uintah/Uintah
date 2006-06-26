@@ -99,7 +99,7 @@ ifeq ($(BUILD_DATAFLOW),yes)
   SUBDIRS += Dataflow
 endif
 
-SUBDIRS += pysci StandAlone $(COMPONENT_DIRS)
+SUBDIRS += StandAlone $(COMPONENT_DIRS)
 
 ifeq ($(BUILD_DATAFLOW),yes)
   SUBDIRS += main 
