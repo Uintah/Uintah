@@ -284,6 +284,7 @@ TextureRenderer::load_brick(vector<TextureBrickHandle> &bricks, int bindex,
     int nx = brick->nx();
     int ny = brick->ny();
     int nz = brick->nz();
+    GLenum textype = brick->tex_type(c);
     idx[c] = -1;
     for(unsigned int i=0; i<tex_pool_.size() && idx[c]<0; i++)
     {
@@ -291,6 +292,7 @@ TextureRenderer::load_brick(vector<TextureBrickHandle> &bricks, int bindex,
          && !brick->dirty() && tex_pool_[i].comp == c
          && nx == tex_pool_[i].nx && ny == tex_pool_[i].ny
          && nz == tex_pool_[i].nz && nb == tex_pool_[i].nb
+         && textype == tex_pool_[i].textype
          && glIsTexture(tex_pool_[i].id))
       {
         if (tex_pool_[i].brick == brick)
@@ -331,7 +333,8 @@ TextureRenderer::load_brick(vector<TextureBrickHandle> &bricks, int bindex,
       {
         if(tex_pool_[i].id != 0 && c == tex_pool_[i].comp
            && nx == tex_pool_[i].nx && ny == tex_pool_[i].ny
-           && nz == tex_pool_[i].nz && nb == tex_pool_[i].nb)
+           && nz == tex_pool_[i].nz && nb == tex_pool_[i].nb
+           && textype == tex_pool_[i].textype)
         {
           if (tex_pool_[i].brick == brick)
           {
@@ -394,7 +397,7 @@ TextureRenderer::load_brick(vector<TextureBrickHandle> &bricks, int bindex,
         glGenTextures(1, &tex_id);
         if(idx[c] < 0) {
           // create new entry
-          tex_pool_.push_back(TexParam(nx, ny, nz, nb, tex_id));
+          tex_pool_.push_back(TexParam(nx, ny, nz, nb, textype, tex_id));
           idx[c] = tex_pool_.size()-1;
         } else {
           // reuse existing entry

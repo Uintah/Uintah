@@ -134,9 +134,10 @@ protected:
     uint id;
     TextureBrickHandle brick;
     int comp;
-    TexParam() : nx(0), ny(0), nz(0), nb(0), id(0), brick(0), comp(0) {}
-    TexParam(int x, int y, int z, int b, uint i)
-      : nx(x), ny(y), nz(z), nb(b), id(i), brick(0), comp(0) {}
+    GLenum textype;
+    TexParam() : nx(0), ny(0), nz(0), nb(0), id(0), brick(0), comp(0), textype(GL_UNSIGNED_BYTE) {}
+    TexParam(int x, int y, int z, int b, GLenum f, uint i)
+      : nx(x), ny(y), nz(z), nb(b), id(i), brick(0), comp(0), textype(f) {}
   };
   vector<TexParam> tex_pool_;
   
