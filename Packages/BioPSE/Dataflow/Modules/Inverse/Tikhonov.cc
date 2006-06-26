@@ -77,7 +77,6 @@ public:
 
   DenseMatrix  *mat_identity(int len);
   DenseMatrix  *mat_trans_mult_mat(DenseMatrix *A);
-  DenseMatrix  *mat_mult(DenseMatrix *A, DenseMatrix *B);
 
   double FindCorner(const vector<double> &rho, const vector<double> &eta,
                     const vector<double> &lambdaArray,
@@ -158,41 +157,6 @@ Tikhonov::mat_trans_mult_mat(DenseMatrix *A)
   delete Ai;
   delete Bi;
   return B;
-}
-
-
-//! This function returns the multiplication of A and B
-DenseMatrix *
-Tikhonov::mat_mult(DenseMatrix *A, DenseMatrix *B)
-{
-  int nRows = B->nrows();
-  int nCols = B->ncols();
-  int beg = -1;
-  int end = -1;
-  int i, j; // i: column index, j: row index
-  int flops, memrefs;
-  DenseMatrix *C = scinew DenseMatrix(A->nrows(), B->ncols());
-  ColumnMatrix *Ci = scinew ColumnMatrix(A->nrows());
-  ColumnMatrix *Bi = scinew ColumnMatrix(B->nrows());
-  // For each column (i) of C, first create a column vector Bi = B[:][i]
-  // Ci is then the i'th column of A*B, Ci = A * Bi
-
-  for (i=0; i<nCols; i++)
-  {
-    // build copy of this column
-    for (j=0; j<nRows; j++)
-    {
-      (*Bi)[j] = (*B)[j][i];
-    }
-    A->mult(*Bi, *Ci, flops, memrefs, beg, end);
-    for (j=0; j<nCols; j++)
-    {
-      (*C)[j][i] = (*Ci)[j];
-    }
-  }
-  delete Ci;
-  delete Bi;
-  return C;
 }
 
 
