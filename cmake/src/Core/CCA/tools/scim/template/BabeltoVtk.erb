@@ -1,0 +1,95 @@
+
+using namespace somethingspc;
+using namespace SCIRun;
+using namespace std;
+using namespace <%= $inPackage%>;
+
+static BridgeServices* st_svcs;
+                              
+extern "C" BridgeComponent* make_Bridge_<%= $templateArgv[0]%>()
+{
+  return static_cast<BridgeComponent*>(new <%= rndBridgeName%>());
+}
+
+<port> 
+ <method> 
+<%= babelType($inMethodType)%> skel_<%= $inPackage%>_<%= $inPortName%>_<%= $inMethodName%>( struct <%= $inPackage%>_<%= $inPortName%>__object* self <%= commaoutDefArgs(method(:babelType))%>)
+{
+  <%= ifNEQPrint(babelType($inMethodType),"void",$inMethodType+" _result;")%>
+  <%= ifNEQPrint(babelType($inMethodType),"void",babelType($inMethodType)+" _bt_result;")%>
+  somethingspc::<%= $inPortName%>* _this = reinterpret_cast< somethingspc::<%= $inPortName%>*>(self->d_data);
+  <%= ifNEQPrint(babelType($inMethodType),"void","_result = ")%>_this-><%= $inMethodName%>(<%= outCallArgs%>);
+  <%= ifEQPrint($inMethodType,"string",'_bt_result = sidl_String_strdup(_result.c_str());')%>
+  <%= ifNEQPrint(babelType($inMethodType),"void","return _bt_result;")%>
+}
+ </method>
+                                                                                                   
+void skel_<%= $inPackage%>_<%= $inPortName%>__ctor(struct <%= $inPackage%>_<%= $inPortName%>__object* self ) {
+  self->d_data = reinterpret_cast< void*>(new somethingspc::<%= $inPortName%>());
+}
+                                                                                                   
+void skel_<%= $inPackage%>_<%= $inPortName%>__dtor(struct <%= $inPackage%>_<%= $inPortName%>__object* self ) {
+  delete ( reinterpret_cast< somethingspc::<%= $inPortName%>*>(self->d_data) );
+}
+</port>
+
+<%= rndBridgeName%>::<%= rndBridgeName%>(){
+}
+                                                                                                   
+<%= rndBridgeName%>::~<%= rndBridgeName%>(){
+}
+                                                                                                   
+void <%= rndBridgeName%>::setServices(const BridgeServices* svc) {
+  services=const_cast<BridgeServices*>(svc);
+  st_svcs = const_cast<BridgeServices*>(svc);
+
+<port> 
+  <%= $inPackage%>::<%= $inPortName%> dp_<%= $inPortName%> = <%= $inPackage%>::<%= $inPortName%>::_create();
+  <method>   
+  dp_<%= $inPortName%>._get_ior()-><% if($inPortName=="IDPort") then print 'd_gov_cca_ports_idport.' end%>d_epv->f_<%= $inMethodName%> = <% if($inPortName=="IDPort") then print "(char* (*)(void*))" end%>(skel_<%= $inPackage%>_<%= $inPortName%>_<%= $inMethodName%>);
+  </method>
+  dp_<%= $inPortName%>._get_ior()->d_epv->f__ctor = (skel_<%= $inPackage%>_<%= $inPortName%>__ctor);
+  dp_<%= $inPortName%>._get_ior()->d_epv->f__dtor = (skel_<%= $inPackage%>_<%= $inPortName%>__dtor);
+  services->addProvidesPort((void*)&dp_<%= $inPortName%>,"pport","gov.cca.ports.<%= $inPortName%>",Babel);
+</port> 
+ 
+  DataReader* dr = new DataReader();
+  services->addVtkPort(dr,VtkPortInstance::Output);
+}
+
+DataReader::DataReader() 
+{
+  OutPort::setName("DataReader::output");
+  addPort(this);
+  vtkID = vtkImageData::New(); 
+}
+
+vtkObject* DataReader::getOutput()
+{
+  return vtkID;
+}
+
+<port>
+<method> 
+<%= $inMethodType%> somethingspc::<%= $inPortName%>::<%= $inMethodName%>(<%= outDefArgs(method(:babelType))%>) {
+
+  vtk::Port* port = st_svcs->getVtkPort("DataReader::output");  
+  if(port == NULL) {
+    cerr << "Null Vtk port received\n";
+    return;
+  }
+  vtk::OutPort* oport = reinterpret_cast<vtk::OutPort* >(port);
+  vtkImageData* vtkID = reinterpret_cast<vtkImageData*>(oport->getOutput());
+  if(vtkID == NULL) {
+    cerr << "Unable to get vtkImageData from port\n";
+    return;
+  }
+
+  //Convert Data
+  <%= typeEmitConvertData("ContourData")%>
+
+  oport->update(SCIRun::vtk::Port::REFRESH);
+}
+</method> 
+</port>  
+

@@ -1,0 +1,276 @@
+<?xml version="1.0" encoding="iso-8859-1"?>
+<!DOCTYPE Uintah_specification SYSTEM "input.dtd">
+
+<!-- @version: -->
+
+
+<Uintah_specification>
+
+   <Meta>
+	<title>Arches JP8 Plume Multi Patch Run with Radiation</title>
+   </Meta>
+
+   <Time>
+	<maxTime>120.0</maxTime>
+	<initTime>0.0</initTime>
+	<delt_min>0.00001</delt_min>
+	<delt_max>0.005</delt_max>
+	<timestep_multiplier>0.4</timestep_multiplier>
+   </Time>
+
+   <DataArchiver>
+        <filebase>jp8_statictable.uda</filebase>
+	<outputInterval>0.1</outputInterval>
+	<save label = "uvwout"/>
+	<save label = "totalflowIN"/>
+	<save label = "totalflowOUT"/>
+	<save label = "denAccum"/>
+	<save label = "netflowOUTBC"/>
+	<save label = "totalKineticEnergy"/>
+	<save label = "pressurePS"/>
+        <save label = "newCCUVelocity"/>	
+        <save label = "newCCVVelocity"/>	
+        <save label = "newCCWVelocity"/>	
+        <save label = "newCCVelocity"/>
+	<save label = "scalarSP"/>
+	<save label = "densityCP"/>
+	<save label = "viscosityCTS"/>
+	<save label = "tempIN"/>
+        <save label = "co2IN"/>
+        <save label = "enthalpySP"/>
+        <save label = "absorpIN"/>
+        <save label = "sootFVIN"/>
+        <save label = "radiationSRCIN"/>
+        <save label = "velocityDivergence"/>
+        <save label = "continuityResidual"/>
+        <save label = "filterdrhodt"/>
+	<save label = "cellType"/>
+	<save label = "radiationFluxEIN"/>
+	<save label = "radiationFluxWIN"/>
+	<save label = "radiationFluxNIN"/>
+	<save label = "radiationFluxSIN"/>
+	<save label = "radiationFluxTIN"/>
+	<save label = "radiationFluxBIN"/>
+	<checkpoint cycle = "2" interval = "0.2"/>
+   </DataArchiver>
+
+    <PhysicalConstants>
+	<gravity>[-9.8,0,0]</gravity>
+	<ideal_gas_constant>1.0</ideal_gas_constant>
+	<pressure>0.0</pressure>
+    </PhysicalConstants>
+
+    <Grid>
+	<Level>
+	    <Box label = "1">
+	        <lower>[0,0,0]</lower>
+	        <upper>[6,6,6]</upper>
+	        <resolution>[40,40,40]</resolution>
+                <extraCells>[1,1,1]</extraCells>
+		<patches>[4,2,2]</patches>
+	    </Box>
+	</Level>
+    </Grid>
+
+
+   <CFD>
+	<!-- ARCHES specification -->
+
+	<ARCHES>
+	    <grow_dt>0.01</grow_dt>
+	    <variable_dt>true</variable_dt>
+   	    <nonlinear_solver>explicit</nonlinear_solver>
+    	    <turbulence_model>dynamicprocedure</turbulence_model>
+            <reacting_flow>true</reacting_flow>
+            <solve_enthalpy>true</solve_enthalpy>	
+	    <solve_reactingscalar>false</solve_reactingscalar>
+	    <Turbulence>
+		<cf>0.17</cf>
+		<fac_mesh>1.0</fac_mesh>
+		<filterl>0.000001</filterl>
+	        <var_const>0.1</var_const>
+	        <filter_cs_squared>true</filter_cs_squared>
+	    </Turbulence>
+            <ScaleSimilarity>
+                <cf>0.9</cf>
+            </ScaleSimilarity>
+
+	    <Properties>
+		<denUnderrelax>1.00</denUnderrelax>
+	        <ref_point>[-1,-1,-1]</ref_point>
+	        <radiation>true</radiation>
+	        <filter_drhodt>true</filter_drhodt>
+	        <opl>6.0</opl>
+	        <empirical_soot>false</empirical_soot>
+	        <mixing_model>StaticMixingTable</mixing_model>
+	        <StaticMixingTable>
+                  <adiabatic>false</adiabatic>
+                  <mixstatvars>1</mixstatvars>
+                  <rxnvars>0</rxnvars>
+                  <inputfile>nonadeqlb.tbl</inputfile>
+                </StaticMixingTable>
+	    </Properties>
+
+	    <BoundaryConditions>
+		<FlowInlet>
+		    <Flow_rate>0.094</Flow_rate>
+		    <MixtureFraction>
+			<Mixfrac>1.0</Mixfrac>
+	            </MixtureFraction>
+		    <TurblengthScale>0.04</TurblengthScale>
+		    <inletType>primary</inletType>
+		    <geom_object>
+		      <cylinder label = "inlet">
+			<bottom>[-5,3,3]</bottom>
+			<top>[0,3,3]</top>
+			<radius> 1 </radius>
+		      </cylinder>
+		    </geom_object>
+		</FlowInlet>
+		<WallBC>
+		    <geom_object>
+		      <box label = "botWall">
+			<min>[-1,-1,-1]</min>
+			<max>[0,7,7]</max>
+		      </box>
+		    </geom_object>
+		</WallBC>
+		<PressureBC>
+		    <flowRate>0</flowRate>
+		    <MixtureFraction>
+			<Mixfrac>0.0</Mixfrac>
+	            </MixtureFraction>
+		    <TurblengthScale>0.04</TurblengthScale>
+		    <RefPressure>0.0</RefPressure>
+		    <geom_object>
+		      <box label = "posY_xzWall">
+			<min>[0,6,-1]</min>
+			<max>[6,7,7]</max>
+		      </box>
+		      <box label = "zeroY_xzWall">
+			<min>[0,-1,-1]</min>
+			<max>[6,0,7]</max>
+		      </box>
+		      <box label = "posZ_xyWall">
+			<min>[0,-1,6]</min>
+			<max>[6,7,7]</max>
+		      </box>
+                      <box label = "zeroZ_xyWall">	
+			<min>[0,-1,-1]</min>
+			<max>[6,7,0]</max>
+		      </box>
+		    </geom_object>
+		</PressureBC>
+		<outletBC>
+		    <flowRate>0</flowRate>
+		    <MixtureFraction>
+			<Mixfrac>0.0</Mixfrac>
+	            </MixtureFraction>
+		    <TurblengthScale>0.04</TurblengthScale>
+		    <RefPressure>0.0</RefPressure>
+		    <geom_object>
+		      <box label = "topWall">
+			<min>[6,-1,-1]</min>
+			<max>[7,7,7]</max>
+		      </box>
+		    </geom_object>
+		</outletBC>
+	    </BoundaryConditions>
+
+	    <PhysicalConstants>
+		<gravity>[-9.8,0,0]</gravity>
+		<pressure>0.0</pressure>
+		<viscosity>0.000020</viscosity>
+		<schmidtNo>0.7</schmidtNo>
+	    </PhysicalConstants>
+
+	    <ExplicitSolver>
+		<timeIntegratorType>RK2SSP</timeIntegratorType>	
+		<max_iter>0</max_iter>	
+		<res_tol>2.0</res_tol>
+		<probe_data>false</probe_data>
+      	        <ProbePoints>
+	           <probe_point>[60,60,60]</probe_point>
+		</ProbePoints>
+	        <cal_pressure>true</cal_pressure>
+		<PressureSolver>
+		    <ref_point>[3,3,3]</ref_point>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>hypre</linear_solver>
+		    <LinearSolver>
+                        <ksptype>cg</ksptype>
+			<pctype>pfmg</pctype>
+			<max_iter>75</max_iter>
+		        <underrelax>1.00</underrelax>
+		    </LinearSolver>
+		</PressureSolver>
+
+		<cal_momentum>true</cal_momentum>
+		<MomentumSolver>
+		    <finite_difference>second</finite_difference>
+                    <central>true</central>
+		    <linear_solver>linegs</linear_solver>
+		    <LinearSolver>
+			<max_iter>8</max_iter>
+			<res_tol>0.0003</res_tol>
+			<underrelax>1.00</underrelax>
+		    </LinearSolver>
+		</MomentumSolver>
+
+		<cal_mixturescalar>true</cal_mixturescalar>
+		<MixtureFractionSolver>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>linegs</linear_solver>
+		    <LinearSolver>
+			<max_iter>6</max_iter>
+			<res_tol>0.0003</res_tol>
+			<underrelax>1.00</underrelax>
+		    </LinearSolver>
+		</MixtureFractionSolver>
+		<cal_enthalpy>true</cal_enthalpy>
+		<EnthalpySolver>
+                    <radiation>true</radiation>
+                    <discrete_ordinates>true</discrete_ordinates>
+                    <radiationCalcFreq>3</radiationCalcFreq>
+                    <DORadiationModel>
+	                <opl>6.0</opl>
+                        <ordinates>4</ordinates>
+                    </DORadiationModel>
+		    <finite_difference>second</finite_difference>
+		    <linear_solver>linegs</linear_solver>
+		    <LinearSolver>
+			<max_iter>6</max_iter>
+			<res_tol>0.0003</res_tol>
+			<underrelax>1.00</underrelax>
+		    </LinearSolver>
+		</EnthalpySolver>
+	    </ExplicitSolver>
+
+        </ARCHES>
+
+    </CFD>
+
+    <MaterialProperties>
+
+	<ARCHES>
+	</ARCHES>
+
+    </MaterialProperties>
+	
+    <!-- Question - how do we want to attach a bc to a region of the grid? -->
+    <PhysicalBC>
+    
+	<ARCHES>
+	</ARCHES>
+
+    </PhysicalBC>
+    
+    <InitialConditions>
+
+	<ARCHES>
+	</ARCHES>
+
+    </InitialConditions>
+
+</Uintah_specification>
+

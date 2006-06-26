@@ -1,0 +1,895 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+<!-- ********** Parameter Entities ********** -->
+<grammar xmlns:a="http://relaxng.org/ns/compatibility/annotations/1.0" xmlns="http://relaxng.org/ns/structure/1.0" datatypeLibrary="http://www.w3.org/2001/XMLSchema-datatypes">
+  <define name="filename">
+    <text/>
+  </define>
+  <!-- links -->
+  <!-- Links may contain phrases but not vice-versa -->
+  <define name="links">
+    <choice>
+      <ref name="rlink"/>
+      <ref name="slink"/>
+      <ref name="ulink"/>
+      <ref name="modref"/>
+      <ref name="xref"/>
+      <ref name="email"/>
+      <ref name="cite"/>
+    </choice>
+  </define>
+  <!-- "Phrases" -->
+  <define name="phrase">
+    <choice>
+      <ref name="firstterm"/>
+      <ref name="keyword"/>
+      <ref name="userinput"/>
+      <ref name="abbr"/>
+      <ref name="latex"/>
+      <ref name="path"/>
+      <ref name="emph"/>
+      <ref name="quote"/>
+    </choice>
+  </define>
+  <define name="phrase.content">
+    <text/>
+  </define>
+  <!-- Inlines -->
+  <define name="inline">
+    <choice>
+      <ref name="phrase"/>
+      <ref name="links"/>
+    </choice>
+  </define>
+  <define name="Inline">
+    <zeroOrMore>
+      <choice>
+        <text/>
+        <ref name="inline"/>
+      </choice>
+    </zeroOrMore>
+  </define>
+  <define name="link.content">
+    <zeroOrMore>
+      <choice>
+        <text/>
+        <ref name="phrase"/>
+      </choice>
+    </zeroOrMore>
+  </define>
+  <!-- Block level -->
+  <define name="list">
+    <choice>
+      <ref name="orderedlist"/>
+      <ref name="unorderedlist"/>
+      <ref name="desclist"/>
+    </choice>
+  </define>
+  <define name="admonition">
+    <choice>
+      <ref name="note"/>
+      <ref name="tip"/>
+      <ref name="warning"/>
+    </choice>
+  </define>
+  <define name="block">
+    <choice>
+      <ref name="p"/>
+      <ref name="latex"/>
+      <ref name="figure"/>
+      <ref name="pre"/>
+    </choice>
+  </define>
+  <!-- "Flow" level -->
+  <define name="BasicFlow">
+    <zeroOrMore>
+      <choice>
+        <ref name="block"/>
+        <ref name="list"/>
+      </choice>
+    </zeroOrMore>
+  </define>
+  <define name="DescFlow">
+    <zeroOrMore>
+      <choice>
+        <ref name="section"/>
+        <ref name="developer"/>
+        <ref name="block"/>
+        <ref name="list"/>
+        <ref name="admonition"/>
+      </choice>
+    </zeroOrMore>
+  </define>
+  <define name="DevFlow">
+    <zeroOrMore>
+      <choice>
+        <ref name="block"/>
+        <ref name="list"/>
+        <ref name="admonition"/>
+      </choice>
+    </zeroOrMore>
+  </define>
+  <define name="AdmonFlow">
+    <zeroOrMore>
+      <choice>
+        <ref name="block"/>
+        <ref name="list"/>
+      </choice>
+    </zeroOrMore>
+  </define>
+  <!-- ********** Elements ********** -->
+  <!-- A couple of reusable elements -->
+  <define name="datatype">
+    <element name="datatype">
+      <ref name="datatype.attlist"/>
+      <text/>
+    </element>
+  </define>
+  <define name="datatype.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <define name="componentname">
+    <element name="componentname">
+      <ref name="componentname.attlist"/>
+      <text/>
+    </element>
+  </define>
+  <define name="componentname.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <define name="devicename">
+    <element name="devicename">
+      <ref name="devicename.attlist"/>
+      <text/>
+    </element>
+  </define>
+  <define name="devicename.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <define name="title">
+    <element name="title">
+      <ref name="title.attlist"/>
+      <ref name="Inline"/>
+    </element>
+  </define>
+  <define name="title.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Top level -->
+  <define name="component">
+    <element name="component">
+      <ref name="component.attlist"/>
+      <ref name="overview"/>
+      <optional>
+        <ref name="implementation"/>
+      </optional>
+      <ref name="io"/>
+      <optional>
+        <ref name="gui"/>
+      </optional>
+      <optional>
+        <ref name="nets"/>
+      </optional>
+      <optional>
+        <ref name="testing"/>
+      </optional>
+    </element>
+  </define>
+  <define name="component.attlist" combine="interleave">
+    <attribute name="name"/>
+    <attribute name="category"/>
+  </define>
+  <!-- Overview of component's purpose -->
+  <define name="overview">
+    <element name="overview">
+      <ref name="overview.attlist"/>
+      <ref name="authors"/>
+      <ref name="summary"/>
+      <ref name="description"/>
+      <optional>
+        <ref name="examplesr"/>
+      </optional>
+    </element>
+  </define>
+  <define name="overview.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Brief (1 or 2 sentence) summary. -->
+  <define name="summary">
+    <element name="summary">
+      <ref name="summary.attlist"/>
+      <ref name="Inline"/>
+    </element>
+  </define>
+  <define name="summary.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Author(s) -->
+  <define name="authors">
+    <element name="authors">
+      <ref name="authors.attlist"/>
+      <oneOrMore>
+        <ref name="author"/>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="authors.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- 1 author -->
+  <define name="author">
+    <element name="author">
+      <ref name="author.attlist"/>
+      <ref name="Inline"/>
+    </element>
+  </define>
+  <define name="author.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Name of sr file which demonstrates use of this component -->
+  <!-- This element is obsolete! -->
+  <define name="examplesr">
+    <element name="examplesr">
+      <ref name="examplesr.attlist"/>
+      <ref name="filename"/>
+    </element>
+  </define>
+  <define name="examplesr.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Net descriptions -->
+  <define name="nets">
+    <element name="nets">
+      <ref name="nets.attlist"/>
+      <oneOrMore>
+        <ref name="net"/>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="nets.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <define name="net">
+    <element name="net">
+      <ref name="net.attlist"/>
+      <ref name="title"/>
+      <ref name="DescFlow"/>
+    </element>
+  </define>
+  <define name="net.attlist" combine="interleave">
+    <optional>
+      <attribute name="id">
+        <data type="ID"/>
+      </attribute>
+    </optional>
+  </define>
+  <!-- All the extra code files needed to build this component -->
+  <define name="implementation">
+    <element name="implementation">
+      <ref name="implementation.attlist"/>
+      <oneOrMore>
+        <choice>
+          <ref name="ccfile"/>
+          <ref name="cfile"/>
+          <ref name="ffile"/>
+        </choice>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="implementation.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- The name of a single .cc file -->
+  <define name="ccfile">
+    <element name="ccfile">
+      <ref name="ccfile.attlist"/>
+      <text/>
+    </element>
+  </define>
+  <define name="ccfile.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- The name of a single .c file -->
+  <define name="cfile">
+    <element name="cfile">
+      <ref name="cfile.attlist"/>
+      <text/>
+    </element>
+  </define>
+  <define name="cfile.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- The name of a single .f file -->
+  <define name="ffile">
+    <element name="ffile">
+      <ref name="ffile.attlist"/>
+      <text/>
+    </element>
+  </define>
+  <define name="ffile.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Component's inputs and outputs -->
+  <define name="io">
+    <element name="io">
+      <ref name="io.attlist"/>
+      <ref name="inputs"/>
+      <ref name="outputs"/>
+    </element>
+  </define>
+  <define name="io.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Component's inputs.  Inputs may come from a file, port, or device. -->
+  <define name="inputs">
+    <element name="inputs">
+      <ref name="inputs.attlist"/>
+      <oneOrMore>
+        <choice>
+          <ref name="file"/>
+          <ref name="port"/>
+          <ref name="device"/>
+        </choice>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="inputs.attlist" combine="interleave">
+    <optional>
+      <attribute name="lastportdynamic" a:defaultValue="no">
+        <choice>
+          <value>yes</value>
+          <value>no</value>
+        </choice>
+      </attribute>
+    </optional>
+  </define>
+  <!-- Component's outputs.  Outputs may be sent to a file, port, or device. -->
+  <define name="outputs">
+    <element name="outputs">
+      <ref name="outputs.attlist"/>
+      <oneOrMore>
+        <choice>
+          <ref name="file"/>
+          <ref name="port"/>
+          <ref name="device"/>
+        </choice>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="outputs.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!--
+    Describe content of file (i.e. temperature data) and the datatype
+    contained in the file.
+  -->
+  <define name="file">
+    <element name="file">
+      <ref name="file.attlist"/>
+      <ref name="description"/>
+      <ref name="datatype"/>
+    </element>
+  </define>
+  <define name="file.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!--
+    Describe data on port (i.e. temperature data) and the datatype being
+    transmitted.
+  -->
+  <define name="port">
+    <element name="port">
+      <ref name="port.attlist"/>
+      <ref name="name"/>
+      <ref name="description"/>
+      <ref name="datatype"/>
+      <zeroOrMore>
+        <ref name="componentname"/>
+      </zeroOrMore>
+    </element>
+  </define>
+  <define name="port.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- The user-defined name for this port -->
+  <define name="name">
+    <element name="name">
+      <ref name="name.attlist"/>
+      <text/>
+    </element>
+  </define>
+  <define name="name.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Describe data on device -->
+  <define name="device">
+    <element name="device">
+      <ref name="device.attlist"/>
+      <ref name="devicename"/>
+      <ref name="description"/>
+    </element>
+  </define>
+  <define name="device.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- GUI description (words and pictures) -->
+  <!-- Note: '(img, caption?)*' part of content model is obsolete. Use -->
+  <!-- figure and figref elements within a description element instead. -->
+  <define name="gui">
+    <element name="gui">
+      <ref name="gui.attlist"/>
+      <oneOrMore>
+        <ref name="description"/>
+        <oneOrMore>
+          <ref name="parameter"/>
+        </oneOrMore>
+        <zeroOrMore>
+          <ref name="img"/>
+          <optional>
+            <ref name="caption"/>
+          </optional>
+        </zeroOrMore>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="gui.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Description of 1 gui parameter. -->
+  <define name="parameter">
+    <element name="parameter">
+      <ref name="parameter.attlist"/>
+      <ref name="widget"/>
+      <ref name="datatype"/>
+      <ref name="label"/>
+      <ref name="description"/>
+    </element>
+  </define>
+  <define name="parameter.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!--  Name of gui widget (e.g. slider, text entry, checkbox) -->
+  <define name="widget">
+    <element name="widget">
+      <ref name="widget.attlist"/>
+      <text/>
+    </element>
+  </define>
+  <define name="widget.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Gui item label -->
+  <define name="label">
+    <element name="label">
+      <ref name="label.attlist"/>
+      <text/>
+    </element>
+  </define>
+  <define name="label.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Name of an image file -->
+  <define name="img">
+    <element name="img">
+      <ref name="img.attlist"/>
+      <ref name="filename"/>
+    </element>
+  </define>
+  <define name="img.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Image caption -->
+  <define name="caption">
+    <element name="caption">
+      <ref name="caption.attlist"/>
+      <ref name="Inline"/>
+    </element>
+  </define>
+  <define name="caption.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Specify testing plan(s) -->
+  <define name="testing">
+    <element name="testing">
+      <ref name="testing.attlist"/>
+      <oneOrMore>
+        <ref name="plan"/>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="testing.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Specify 1 testing plan. -->
+  <define name="plan">
+    <element name="plan">
+      <ref name="plan.attlist"/>
+      <ref name="description"/>
+      <oneOrMore>
+        <ref name="step"/>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="plan.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Specify 1 testing step -->
+  <define name="step">
+    <element name="step">
+      <ref name="step.attlist"/>
+      <ref name="DescFlow"/>
+    </element>
+  </define>
+  <define name="step.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Mini-documentation environment -->
+  <define name="description">
+    <element name="description">
+      <ref name="description.attlist"/>
+      <ref name="DescFlow"/>
+    </element>
+  </define>
+  <define name="description.attlist" combine="interleave">
+    <optional>
+      <attribute name="id">
+        <data type="ID"/>
+      </attribute>
+    </optional>
+  </define>
+  <!-- Description, net, and section subdivision -->
+  <define name="section">
+    <element name="section">
+      <ref name="section.attlist"/>
+      <optional>
+        <ref name="title"/>
+      </optional>
+      <ref name="DescFlow"/>
+    </element>
+  </define>
+  <define name="section.attlist" combine="interleave">
+    <optional>
+      <attribute name="id">
+        <data type="ID"/>
+      </attribute>
+    </optional>
+  </define>
+  <!-- Description information targeted at developers -->
+  <define name="developer">
+    <element name="developer">
+      <ref name="developer.attlist"/>
+      <ref name="DevFlow"/>
+    </element>
+  </define>
+  <define name="developer.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Calls attention to some piece of information. -->
+  <define name="note">
+    <element name="note">
+      <ref name="note.attlist"/>
+      <ref name="AdmonFlow"/>
+    </element>
+  </define>
+  <define name="note.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- A friendly word of advice. -->
+  <define name="tip">
+    <element name="tip">
+      <ref name="tip.attlist"/>
+      <ref name="AdmonFlow"/>
+    </element>
+  </define>
+  <define name="tip.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- A warning of some sort. -->
+  <define name="warning">
+    <element name="warning">
+      <ref name="warning.attlist"/>
+      <ref name="AdmonFlow"/>
+    </element>
+  </define>
+  <define name="warning.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Paragraph. -->
+  <define name="p">
+    <element name="p">
+      <ref name="p.attlist"/>
+      <ref name="Inline"/>
+    </element>
+  </define>
+  <define name="p.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Inline elements -->
+  <define name="firstterm">
+    <element name="firstterm">
+      <ref name="firstterm.attlist"/>
+      <ref name="phrase.content"/>
+    </element>
+  </define>
+  <define name="firstterm.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Introduce a new term -->
+  <define name="keyword">
+    <element name="keyword">
+      <ref name="keyword.attlist"/>
+      <ref name="phrase.content"/>
+    </element>
+  </define>
+  <define name="keyword.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Introduce a keyword -->
+  <define name="userinput">
+    <element name="userinput">
+      <ref name="userinput.attlist"/>
+      <ref name="phrase.content"/>
+    </element>
+  </define>
+  <define name="userinput.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Something entered by the user -->
+  <define name="cite">
+    <element name="cite">
+      <ref name="cite.attlist"/>
+      <ref name="phrase.content"/>
+    </element>
+  </define>
+  <!-- Citation -->
+  <define name="cite.attlist" combine="interleave">
+    <optional>
+      <attribute name="url"/>
+    </optional>
+  </define>
+  <define name="abbr">
+    <element name="abbr">
+      <ref name="abbr.attlist"/>
+      <ref name="phrase.content"/>
+    </element>
+  </define>
+  <define name="abbr.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- An abbreviation -->
+  <define name="path">
+    <element name="path">
+      <ref name="path.attlist"/>
+      <ref name="phrase.content"/>
+    </element>
+  </define>
+  <define name="path.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Path to file or directory -->
+  <define name="emph">
+    <element name="emph">
+      <ref name="emph.attlist"/>
+      <ref name="phrase.content"/>
+    </element>
+  </define>
+  <define name="emph.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Emphasized text -->
+  <define name="quote">
+    <element name="quote">
+      <ref name="quote.attlist"/>
+      <ref name="phrase.content"/>
+    </element>
+  </define>
+  <define name="quote.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Quoted text -->
+  <define name="email">
+    <element name="email">
+      <ref name="email.attlist"/>
+      <ref name="phrase.content"/>
+    </element>
+  </define>
+  <!-- Email address with link text -->
+  <define name="email.attlist" combine="interleave">
+    <attribute name="addr"/>
+  </define>
+  <define name="xref">
+    <element name="xref">
+      <ref name="xref.attlist"/>
+      <ref name="phrase.content"/>
+    </element>
+  </define>
+  <!-- General reference -->
+  <define name="xref.attlist" combine="interleave">
+    <attribute name="target">
+      <data type="IDREF"/>
+    </attribute>
+  </define>
+  <define name="modref">
+    <element name="modref">
+      <ref name="modref.attlist"/>
+      <ref name="phrase.content"/>
+    </element>
+  </define>
+  <!-- Module reference -->
+  <define name="modref.attlist" combine="interleave">
+    <attribute name="package">
+      <data type="NMTOKEN"/>
+    </attribute>
+    <attribute name="name"/>
+  </define>
+  <define name="rlink">
+    <element name="rlink">
+      <ref name="rlink.attlist"/>
+      <ref name="link.content"/>
+    </element>
+  </define>
+  <!-- Link from root of CVS tree -->
+  <define name="rlink.attlist" combine="interleave">
+    <attribute name="path"/>
+  </define>
+  <define name="slink">
+    <element name="slink">
+      <ref name="slink.attlist"/>
+      <ref name="link.content"/>
+    </element>
+  </define>
+  <!-- Link into SCI web site -->
+  <define name="slink.attlist" combine="interleave">
+    <attribute name="path"/>
+  </define>
+  <define name="ulink">
+    <element name="ulink">
+      <ref name="ulink.attlist"/>
+      <ref name="link.content"/>
+    </element>
+  </define>
+  <!-- URL link -->
+  <define name="ulink.attlist" combine="interleave">
+    <attribute name="url"/>
+  </define>
+  <!-- Ordered list, unordered list, and description list. -->
+  <define name="orderedlist">
+    <element name="orderedlist">
+      <ref name="orderedlist.attlist"/>
+      <oneOrMore>
+        <ref name="listitem"/>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="orderedlist.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <define name="unorderedlist">
+    <element name="unorderedlist">
+      <ref name="unorderedlist.attlist"/>
+      <oneOrMore>
+        <ref name="listitem"/>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="unorderedlist.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <define name="listitem">
+    <element name="listitem">
+      <ref name="listitem.attlist"/>
+      <ref name="BasicFlow"/>
+    </element>
+  </define>
+  <define name="listitem.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <define name="desclist">
+    <element name="desclist">
+      <ref name="desclist.attlist"/>
+      <oneOrMore>
+        <ref name="desclistitem"/>
+      </oneOrMore>
+    </element>
+  </define>
+  <define name="desclist.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <define name="desclistitem">
+    <element name="desclistitem">
+      <ref name="desclistitem.attlist"/>
+      <ref name="desclistterm"/>
+      <ref name="desclistdef"/>
+    </element>
+  </define>
+  <define name="desclistitem.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <define name="desclistterm">
+    <element name="desclistterm">
+      <ref name="desclistterm.attlist"/>
+      <text/>
+    </element>
+  </define>
+  <define name="desclistterm.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <define name="desclistdef">
+    <element name="desclistdef">
+      <ref name="desclistdef.attlist"/>
+      <ref name="BasicFlow"/>
+    </element>
+  </define>
+  <define name="desclistdef.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!--
+    Latex element.  Acts as both an inline phrase type element and a
+    block element
+  -->
+  <define name="latex">
+    <element name="latex">
+      <ref name="latex.attlist"/>
+      <text/>
+    </element>
+  </define>
+  <define name="latex.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <!-- Figure element -->
+  <define name="figure">
+    <element name="figure">
+      <ref name="figure.attlist"/>
+      <ref name="img"/>
+      <ref name="caption"/>
+    </element>
+  </define>
+  <define name="figure.attlist" combine="interleave">
+    <optional>
+      <attribute name="id">
+        <data type="ID"/>
+      </attribute>
+    </optional>
+  </define>
+  <!-- Pre element -->
+  <define name="pre">
+    <element name="pre">
+      <ref name="pre.attlist"/>
+      <text/>
+    </element>
+  </define>
+  <define name="pre.attlist" combine="interleave">
+    <empty/>
+  </define>
+  <start>
+    <choice>
+      <ref name="component"/>
+    </choice>
+  </start>
+</grammar>

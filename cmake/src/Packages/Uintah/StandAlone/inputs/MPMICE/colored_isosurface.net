@@ -1,0 +1,282 @@
+# SCI Network v1.22
+
+global userName
+set userName ""
+
+global runDate
+set runDate ""
+
+global runTime
+set runTime ""
+
+global Subnet
+set Subnet(Subnet$Subnet(Loading)_Name) {Main}
+set bbox {10 10 727 672}
+
+# Create a Uintah->DataIO->ArchiveReader Module
+set m1 [addModuleAtPosition "Uintah" "DataIO" "ArchiveReader" 10 10]
+
+# Create a Uintah->Selectors->TimestepSelector Module
+set m2 [addModuleAtPosition "Uintah" "Selectors" "TimestepSelector" 10 90]
+
+# Create a Uintah->Selectors->ScalarFieldExtractor Module
+set m3 [addModuleAtPosition "Uintah" "Selectors" "ScalarFieldExtractor" 10 170]
+
+# Create a SCIRun->Visualization->Isosurface Module
+set m4 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 10 358]
+
+# Create a SCIRun->Render->Viewer Module
+set m5 [addModuleAtPosition "SCIRun" "Render" "Viewer" 14 628]
+
+# Create a Uintah->Selectors->ScalarFieldExtractor Module
+set m6 [addModuleAtPosition "Uintah" "Selectors" "ScalarFieldExtractor" 197 169]
+
+# Create a SCIRun->Visualization->Isosurface Module
+set m7 [addModuleAtPosition "SCIRun" "Visualization" "Isosurface" 197 355]
+
+# Create a SCIRun->Render->SynchronizeGeometry Module
+set m8 [addModuleAtPosition "SCIRun" "Render" "SynchronizeGeometry" 110 544]
+
+# Create a SCIRun->FieldsData->MoveElemToNode Module
+set m9 [addModuleAtPosition "SCIRun" "FieldsData" "MoveElemToNode" 10 256]
+
+# Create a SCIRun->FieldsData->MoveElemToNode Module
+set m10 [addModuleAtPosition "SCIRun" "FieldsData" "MoveElemToNode" 197 253]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m11 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 10 455]
+
+# Create a SCIRun->Visualization->ShowField Module
+set m12 [addModuleAtPosition "SCIRun" "Visualization" "ShowField" 197 448]
+
+# Create a SCIRun->Visualization->GenStandardColorMaps Module
+set m13 [addModuleAtPosition "SCIRun" "Visualization" "GenStandardColorMaps" 368 43]
+
+# Create a SCIRun->Visualization->RescaleColorMap Module
+set m14 [addModuleAtPosition "SCIRun" "Visualization" "RescaleColorMap" 380 242]
+
+# Create a SCIRun->FieldsData->DirectInterpolate Module
+set m15 [addModuleAtPosition "SCIRun" "FieldsData" "DirectInterpolate" 406 366]
+
+# Create a Uintah->Selectors->VectorFieldExtractor Module
+set m16 [addModuleAtPosition "Uintah" "Selectors" "VectorFieldExtractor" 550 256]
+
+# Create a Uintah->Operators->VectorFieldOperator Module
+set m17 [addModuleAtPosition "Uintah" "Operators" "VectorFieldOperator" 488 452]
+
+# Create the Connections between Modules
+set c1 [addConnection $m15 0 $m12 0]
+set c2 [addConnection $m9 0 $m4 0]
+set c3 [addConnection $m10 0 $m7 0]
+set c4 [addConnection $m8 0 $m5 0]
+set c5 [addConnection $m13 0 $m14 0]
+set c6 [addConnection $m4 0 $m11 0]
+set c7 [addConnection $m11 0 $m8 0]
+set c8 [addConnection $m1 0 $m2 0]
+set c9 [addConnection $m17 0 $m15 0]
+set c10 [addConnection $m3 0 $m9 0]
+set c11 [addConnection $m6 0 $m10 0]
+set c12 [addConnection $m2 0 $m3 0]
+set c13 [addConnection $m2 0 $m6 0]
+set c14 [addConnection $m2 0 $m16 0]
+set c15 [addConnection $m16 0 $m17 0]
+set c16 [addConnection $m7 0 $m15 1]
+set c17 [addConnection $m14 0 $m12 1]
+set c18 [addConnection $m12 0 $m8 1]
+set c19 [addConnection $m17 0 $m14 1]
+set c20 [addConnection $m2 1 $m8 2]
+
+# Setup GUI for the Uintah->DataIO->ArchiveReader Module
+setGlobal $m1-tcl_status {Executing}
+setGlobal $m1-filebase {}
+
+# Setup GUI for the Uintah->Selectors->TimestepSelector Module
+setGlobal $m2-tcl_status {Done}
+setGlobal $m2-time {36}
+setGlobal $m2-max_time {40}
+setGlobal $m2-timeval {8.6501855991384508e-05}
+setGlobal $m2-anisleep {10}
+setGlobal $m2-def-color-a {}
+$m2 initialize_ui
+
+# Setup GUI for the Uintah->Selectors->ScalarFieldExtractor Module
+setGlobal $m3-tcl_status {Calling ScalarFieldExtractor!}
+setGlobal $m3-sVar {rho_CC}
+$m3 initialize_ui
+
+# Setup GUI for the SCIRun->Visualization->Isosurface Module
+setGlobal $m4-isoval {1183}
+setGlobal $m4-isoval-min {9.9999999999999998e-13}
+setGlobal $m4-isoval-max {10676.438360399377}
+setGlobal $m4-quantity-range {colormap}
+setGlobal $m4-isoval-list {0}
+setGlobal $m4-active_tab {MC}
+setGlobal $m4-color-r {1.00}
+setGlobal $m4-color-g {0.20}
+setGlobal $m4-color-b {0.00}
+
+# Setup GUI for the SCIRun->Render->Viewer Module
+$m5 ui
+setGlobal $m5-ViewWindow_0-pos {}
+setGlobal $m5-ViewWindow_0-caxes {0}
+setGlobal $m5-ViewWindow_0-raxes {0}
+setGlobal $m5-ViewWindow_0-iaxes {}
+setGlobal $m5-ViewWindow_0-have_collab_vis {0}
+setGlobal $m5-ViewWindow_0-view-eyep-x {0.43443466746800985}
+setGlobal $m5-ViewWindow_0-view-eyep-y {0.4413900552598638}
+setGlobal $m5-ViewWindow_0-view-eyep-z {0.45146937804239323}
+setGlobal $m5-ViewWindow_0-view-lookat-x {0.32457689147562252}
+setGlobal $m5-ViewWindow_0-view-lookat-y {0.025506047093806872}
+setGlobal $m5-ViewWindow_0-view-lookat-z {0.010058915154786633}
+setGlobal $m5-ViewWindow_0-view-up-x {-0.98398122588302561}
+setGlobal $m5-ViewWindow_0-view-up-y {0.12461229944143259}
+setGlobal $m5-ViewWindow_0-view-up-z {0.12748616371064317}
+setGlobal $m5-ViewWindow_0-view-fov {20}
+setGlobal $m5-ViewWindow_0-view-eyep_offset-x {}
+setGlobal $m5-ViewWindow_0-view-eyep_offset-y {}
+setGlobal $m5-ViewWindow_0-view-eyep_offset-z {}
+setGlobal $m5-ViewWindow_0-lightColors {{1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0} {1.0 1.0 1.0}}
+setGlobal $m5-ViewWindow_0-lightVectors {{ 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 } { 0 0 1 }}
+setGlobal $m5-ViewWindow_0-bgcolor-r {0.00}
+setGlobal $m5-ViewWindow_0-bgcolor-g {0.00}
+setGlobal $m5-ViewWindow_0-bgcolor-b {0.00}
+setGlobal $m5-ViewWindow_0-shading {}
+setGlobal $m5-ViewWindow_0-do_stereo {0}
+setGlobal $m5-ViewWindow_0-ambient-scale {1.0}
+setGlobal $m5-ViewWindow_0-diffuse-scale {1.0}
+setGlobal $m5-ViewWindow_0-specular-scale {0.4}
+setGlobal $m5-ViewWindow_0-emission-scale {1.0}
+setGlobal $m5-ViewWindow_0-shininess-scale {1.0}
+setGlobal $m5-ViewWindow_0-polygon-offset-factor {1.0}
+setGlobal $m5-ViewWindow_0-polygon-offset-units {0.0}
+setGlobal $m5-ViewWindow_0-point-size {1.0}
+setGlobal $m5-ViewWindow_0-line-width {1.0}
+setGlobal $m5-ViewWindow_0-sbase {0.40}
+setGlobal $m5-ViewWindow_0-sr {1}
+setGlobal $m5-ViewWindow_0-do_bawgl {0}
+setGlobal $m5-ViewWindow_0-drawimg {}
+setGlobal $m5-ViewWindow_0-saveprefix {}
+setGlobal $m5-ViewWindow_0-resx {}
+setGlobal $m5-ViewWindow_0-resy {}
+setGlobal $m5-ViewWindow_0-aspect {}
+setGlobal $m5-ViewWindow_0-aspect_ratio {}
+setGlobal $m5-ViewWindow_0-global-light {1}
+setGlobal $m5-ViewWindow_0-global-fog {0}
+setGlobal $m5-ViewWindow_0-global-debug {0}
+setGlobal $m5-ViewWindow_0-global-clip {1}
+setGlobal $m5-ViewWindow_0-global-cull {0}
+setGlobal $m5-ViewWindow_0-global-dl {0}
+setGlobal $m5-ViewWindow_0-global-type {Gouraud}
+setGlobal $m5-ViewWindow_0-ortho-view {0}
+setGlobal $m5-ViewWindow_0-clip-num {}
+setGlobal $m5-ViewWindow_0-clip-visible {}
+setGlobal $m5-ViewWindow_0-clip-selected {}
+setGlobal $m5-ViewWindow_0-clip-visible-1 {}
+setGlobal $m5-ViewWindow_0-clip-normal-x-1 {}
+setGlobal $m5-ViewWindow_0-clip-normal-y-1 {}
+setGlobal $m5-ViewWindow_0-clip-normal-z-1 {}
+setGlobal $m5-ViewWindow_0-clip-normal-d-1 {}
+setGlobal $m5-ViewWindow_0-clip-visible-2 {}
+setGlobal $m5-ViewWindow_0-clip-normal-x-2 {}
+setGlobal $m5-ViewWindow_0-clip-normal-y-2 {}
+setGlobal $m5-ViewWindow_0-clip-normal-z-2 {}
+setGlobal $m5-ViewWindow_0-clip-normal-d-2 {}
+setGlobal $m5-ViewWindow_0-clip-visible-3 {}
+setGlobal $m5-ViewWindow_0-clip-normal-x-3 {}
+setGlobal $m5-ViewWindow_0-clip-normal-y-3 {}
+setGlobal $m5-ViewWindow_0-clip-normal-z-3 {}
+setGlobal $m5-ViewWindow_0-clip-normal-d-3 {}
+setGlobal $m5-ViewWindow_0-clip-visible-4 {}
+setGlobal $m5-ViewWindow_0-clip-normal-x-4 {}
+setGlobal $m5-ViewWindow_0-clip-normal-y-4 {}
+setGlobal $m5-ViewWindow_0-clip-normal-z-4 {}
+setGlobal $m5-ViewWindow_0-clip-normal-d-4 {}
+setGlobal $m5-ViewWindow_0-clip-visible-5 {}
+setGlobal $m5-ViewWindow_0-clip-normal-x-5 {}
+setGlobal $m5-ViewWindow_0-clip-normal-y-5 {}
+setGlobal $m5-ViewWindow_0-clip-normal-z-5 {}
+setGlobal $m5-ViewWindow_0-clip-normal-d-5 {}
+setGlobal $m5-ViewWindow_0-clip-visible-6 {}
+setGlobal $m5-ViewWindow_0-clip-normal-x-6 {}
+setGlobal $m5-ViewWindow_0-clip-normal-y-6 {}
+setGlobal $m5-ViewWindow_0-clip-normal-z-6 {}
+setGlobal $m5-ViewWindow_0-clip-normal-d-6 {}
+setGlobal $m5-ViewWindow_0-unused {0}
+setGlobal $m5-ViewWindow_0-unused {1}
+setGlobal $m5-ViewWindow_0-unused {0}
+
+# Setup GUI for the Uintah->Selectors->ScalarFieldExtractor Module
+setGlobal $m6-tcl_status {Calling ScalarFieldExtractor!}
+setGlobal $m6-sVar {rho_CC}
+$m6 initialize_ui
+
+# Setup GUI for the SCIRun->Visualization->Isosurface Module
+setGlobal $m7-isoval {4963}
+setGlobal $m7-isoval-min {9.9999999999999998e-13}
+setGlobal $m7-isoval-max {10676.438360399377}
+setGlobal $m7-quantity-range {colormap}
+setGlobal $m7-isoval-list {1}
+setGlobal $m7-active_tab {MC}
+setGlobal $m7-color-r {0.00}
+setGlobal $m7-color-g {0.00}
+setGlobal $m7-color-b {1.00}
+$m7 initialize_ui
+
+# Setup GUI for the SCIRun->Render->SynchronizeGeometry Module
+setGlobal $m8-enforce {0}
+
+# Setup GUI for the SCIRun->FieldsData->MoveElemToNode Module
+
+# Setup GUI for the SCIRun->FieldsData->MoveElemToNode Module
+
+# Setup GUI for the SCIRun->Visualization->ShowField Module
+setGlobal $m11-nodes-on {0}
+setGlobal $m11-edges-on {0}
+setGlobal $m11-use-normals {1}
+setGlobal $m11-normalize-vectors {}
+setGlobal $m11-has_scalar_data {1}
+setGlobal $m11-def-color-r {0.00}
+setGlobal $m11-def-color-g {0.00}
+setGlobal $m11-def-color-b {1.00}
+setGlobal $m11-def-color-a {0.00}
+setGlobal $m11-active_tab {Faces}
+setGlobal $m11-node_scale {0.0300}
+setGlobal $m11-edge_scale {0.0150}
+setGlobal $m11-scalars_scale {0.300}
+setGlobal $m11-show_progress {}
+
+# Setup GUI for the SCIRun->Visualization->ShowField Module
+setGlobal $m12-nodes-on {0}
+setGlobal $m12-edges-on {0}
+setGlobal $m12-use-normals {1}
+setGlobal $m12-normalize-vectors {}
+setGlobal $m12-has_scalar_data {1}
+setGlobal $m12-def-color-r {0.00}
+setGlobal $m12-def-color-g {0.00}
+setGlobal $m12-def-color-b {1.00}
+setGlobal $m12-def-color-a {1.00}
+setGlobal $m12-active_tab {Faces}
+setGlobal $m12-node_scale {0.0300}
+setGlobal $m12-edge_scale {0.0150}
+setGlobal $m12-scalars_scale {0.300}
+setGlobal $m12-show_progress {}
+
+# Setup GUI for the SCIRun->Visualization->GenStandardColorMaps Module
+
+# Setup GUI for the SCIRun->Visualization->RescaleColorMap Module
+setGlobal $m14-isFixed {1}
+setGlobal $m14-max {1200}
+
+# Setup GUI for the SCIRun->FieldsData->DirectInterpolate Module
+$m15 initialize_ui
+
+# Setup GUI for the Uintah->Selectors->VectorFieldExtractor Module
+setGlobal $m16-tcl_status {Calling VectorFieldExtractor!}
+setGlobal $m16-sVar {vel_CC}
+$m16 initialize_ui
+
+# Setup GUI for the Uintah->Operators->VectorFieldOperator Module
+setGlobal $m17-operation {3}
+$m17 initialize_ui
+
+::netedit scheduleok

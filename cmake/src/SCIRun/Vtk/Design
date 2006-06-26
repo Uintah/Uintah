@@ -1,0 +1,42 @@
+Overview:
+	Typical Vtk applications use pipeline-like architecture, so we employ dataflow-like 
+component model as Vtk component model. What in the dataflow might not be really data: it 
+might be a pointer to an Vtk object, which can be modified when its dependencies are modified.
+An component model should specify:
+1.	what composes a component
+2. 	how to define a port
+3.	how ports can be connected
+4.	events handling
+5. 	how to run a component/network
+6.	how to modify a component's attributes
+7.	how to disconnect
+8.	how to create and destroy a component  
+
+
+Component:
+	A Vtk component represents a significant Vtk object which serves as a part
+	of the Vtk pipeline. A Vtk component might take zero or more input and/or output.
+
+Port:
+	A Vtk in port is an entrance of one of its input. A Vtk out port is an exit
+	of one of its output. An input/output is specified by the passed Vtk object type.
+	For example, an in port has type Ti if it requires an input of Ti pointer; an 
+	out port has type To if it generates an output of To pointer. Out port keeps an
+	To pointer, and in port has a common interface 
+		bool canCast(void * in_ptr)
+	which check if in_ptr can be dynamically casted to the in port type.
+
+Connection:
+	An in port of type Ti can be connected to a out port of type To if Ti can be 
+	successfully casted to To, say, canCast returns true. 	
+
+Component model:
+	Vtk component model's name is "Vtk", its components are located at 
+	SCIRun/src/Vtk/Components/xml			
+	SCIRun/src/Vtk/Components/Component_name
+	Vtk components can be connected to each other if they share the same component 
+	loader (thus share the same address space).
+
+
+	
+

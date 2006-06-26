@@ -1,0 +1,10 @@
+
+
+package BridgeTest {
+
+  interface iBridgeTestPort extends gov.cca.Port
+  {
+    void m2(in array<int, 1> a);
+  };
+
+};

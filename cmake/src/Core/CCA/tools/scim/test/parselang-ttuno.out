@@ -1,0 +1,26 @@
+
+inPackage=Example
+outPackage=
+
+templateArgv[0]=heyhey
+
+  
+  PORT
+  Circle
+  sidlCircle
+  EOF_PORT
+
+
+   
+        
+  PORTMETHOD
+  double area
+  area
+  EOF_PORTMETHOD
+    
+  PORTMETHOD
+  double perimeter
+  perimeter
+  EOF_PORTMETHOD
+  
+

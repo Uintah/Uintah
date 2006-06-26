@@ -1,0 +1,117 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3c.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   License for the specific language governing rights and limitations under
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+  <head>
+    <script type="text/javascript" src="../Utilities/HTML/tools.js"></script>
+    <script type="text/javascript">var doc = new ReleaseNotesDocument();</script>
+    <title>Version 1.24.0b Release Notes (Brief)</title>
+  </head>
+
+  <body>
+    <script type="text/javascript">doc.preContent();</script>
+
+    <h1 class="page-title">
+      Release Notes (Brief) for SCIRun Version 1.24.0b<br/>February 3, 2005 
+    </h1>
+
+    <a id="begin-toc">Contents:H1,H2</a>
+
+    <h1>New Projects in Version 1.24.0b</h1>
+    <ul>
+      <li>New BioImage PowerApp and tutorial. BioImage is a PowerApp
+      for visualizing regular, three dimensional scalar volumes, such
+      as MRI and CT datasets.  BioImage supports input datasets in
+      DICOM, Analyze, NRRD, VFF, PICT, VOL, and SCIRun (Field)
+      formats.  BioImage offers combined 2D and 3D visualization
+      options.  The 2D views are axis-aligned (axial, sagittal,
+      coronal), and support setting the window/level, color-mapping,
+      pan/zoom, and three display modes: slice, maximum intensity
+      projection (MIP), and slab.  The 3D visualization support
+      includes direct volume rendering, a technique for seeing
+      specific features of interest within a volume.  Users can paint
+      colored brush strokes over features of interest in the 2D views,
+      and the corresponding volume features will be interactively
+      updated and displayed in the 3D view.
+      
+      <p>For more information on BioImage, please see -- the <a
+      href="http://software.sci.utah.edu/doc/User/Tutorials/BioImage/bioimage.html">
+      BioImages tutorial.</a></p></li>
+ 
+
+      <li>High-performance Direct Volume Rendering.  We have
+          dramatically improved our volume rendering algorithms in
+          SCIRun.  With this release, we now offer support for
+          interactive visualization of high-resolution volumes (up to
+          512 x 512 x 512), using the latest graphics card technology.
+          Our volume rendering algorithms support normal-based
+          shading, as well as depth cueing, and user-specified
+          sampling rates (for controlling the level of accuracy and
+          interactivity in the rendering).  Our volume rendering
+          algorithm also supports multi-dimensional transfer
+          functions, which gives the user increased specificity when
+          identifying features of interest (especially
+          boundaries).</li>
+
+      <li>New ViewSlicer 2D rendering module.  This module supports
+          the interactive rendering of slices from a 3D volume.  As
+          described above, axis-aligned planes can be interactively
+          selected, windowed/leveled, color-mapped, and rendered.
+          This module provides the 2D viewing window of the BioImage
+          PowerApp.</li>
+
+      <li>Added support for 64 bit linux builds.  We have run preliminary
+          tests of SCIRun on 64 bit Altix and Gentoo linux.</li>
+    </ul>
+
+    <h1>Documentation</h1>
+    <ul>
+      <li>Platform specific installation guides</li>
+      <li>Tutorial for BioImage PowerApp</li>
+      <li>Tutorial for FusionViewer PowerApp</li>
+    </ul>
+
+    <h1>Network Editor Enhancements</h1>
+    <ul>
+      <li>Added an experimental SCIRUN_NO_PORT_CACHING environment
+      variable.  This should allow SCIRun to work on larger data
+      sets.</li>
+
+      <li>Added Bundle support.  Allows multiple data pipes to be
+          combined into a single pipe.  (Can help de-clutter canvas.)</li>
+    </ul>
+
+    <script type="text/javascript">new Toc().build();</script>
+    <script type="text/javascript">doc.postContent();</script>
+  </body>
+
+</html>
