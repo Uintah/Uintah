@@ -303,11 +303,11 @@ Tikhonov::execute()
     }
     mat_RtrR = mat_trans_mult_mat(matrixRegMatD);
   }
+  MatrixHandle mat_RtrR_handle = mat_RtrR;
 
   int beg = -1;
   int end = -1;
   double lambda = 0, lambda2 = 0;
-  double temp;
   int   lambda_index;
 
   // calculate A^T * Y
@@ -371,7 +371,7 @@ Tikhonov::execute()
       {
         for (l=0; l<N; l++)
         {
-          temp = (*mat_RtrR)[i][l];
+          const double temp = (*mat_RtrR)[i][l];
           (*regForMatrix)[i][l] = (*mat_AtrA)[i][l] + lambda2 * temp;
         }
       }
@@ -436,7 +436,7 @@ Tikhonov::execute()
   {
     for (int l=0; l<N; l++)
     {
-      temp = (*mat_RtrR)[i][l];
+      const double temp = (*mat_RtrR)[i][l];
       (*regForMatrix)[i][l] = (*mat_AtrA)[i][l] + lambda2 * temp;
     }
   }
@@ -452,6 +452,11 @@ Tikhonov::execute()
   MatrixHandle RegParameterHandle(RegParameter);
   send_output_handle("RegParam", RegParameterHandle);
   send_output_handle("RegInverseMat", inverse_matrix);
+
+
+  delete solution;
+  delete Ax;
+  delete Rx;
 }
 
 } // End namespace BioPSE
