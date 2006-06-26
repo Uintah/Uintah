@@ -75,9 +75,9 @@ public:
 
   virtual void execute();
 
-  DenseMatrix  * mat_identity(int len);
-  DenseMatrix  * mat_trans_mult_mat(DenseMatrix *A);
-  DenseMatrix  * mat_mult(DenseMatrix *A, DenseMatrix *B);
+  DenseMatrix  *mat_identity(int len);
+  DenseMatrix  *mat_trans_mult_mat(DenseMatrix *A);
+  DenseMatrix  *mat_mult(DenseMatrix *A, DenseMatrix *B);
 
   double FindCorner(const vector<double> &rho, const vector<double> &eta,
                     const vector<double> &lambdaArray,
@@ -261,13 +261,15 @@ Tikhonov::execute()
   if (!get_input_handle("MeasuredPots", hMatrixMeasDat, true)) return;
 
   // TYPE CHECK
-  DenseMatrix *matrixForMatD = forward_matrix_h->dense();
-  ColumnMatrix *matrixMeasDatD = hMatrixMeasDat->column();
+  MatrixHandle matrixForMat_handle = forward_matrix_h->dense();
+  DenseMatrix &matrixForMatD = *(matrixForMat_handle->as_dense());
+  MatrixHandle matrixMeasDat_handle = hMatrixMeasDat->column();
+  ColumnMatrix &matrixMeasDatD = *(matrixMeasDat_handle->as_column());
 
   // DIMENSION CHECK!!
   const int M = forward_matrix_h->nrows();
   const int N = forward_matrix_h->ncols();
-  if (M != matrixMeasDatD->nrows())
+  if (M != matrixMeasDatD.nrows())
   {
     error("Input matrix dimensions must agree.");
     return;
@@ -280,40 +282,43 @@ Tikhonov::execute()
 
   // calculate A^T * A
   MatrixHandle forward_transpose_h = forward_matrix_h->transpose();
-  MatrixHandle mat_AtrA_h = forward_transpose_h * forward_matrix_h;
-  DenseMatrix *mat_AtrA = mat_AtrA_h->dense();
+  MatrixHandle mat_AtrA_h = (forward_transpose_h * forward_matrix_h)->dense();
+  DenseMatrix &mat_AtrA = *(mat_AtrA_h->as_dense());
 
   // calculate R^T * R
-  DenseMatrix *mat_RtrR, *matrixRegMatD;
+  MatrixHandle mat_RtrR_handle;
+  MatrixHandle matrixRegMat_handle;
   if (!iportRegMat->get(hMatrixRegMat) && !hMatrixRegMat.get_rep())
   {
-    matrixRegMatD = mat_identity(N);
-    mat_RtrR = mat_identity(N);
+    matrixRegMat_handle = mat_identity(N);
+    mat_RtrR_handle = mat_identity(N);
   }
   else
   {
-    matrixRegMatD = hMatrixRegMat->dense();
-    if (N != matrixRegMatD->ncols())
+    matrixRegMat_handle = hMatrixRegMat->dense();
+    if (N != matrixRegMat_handle->ncols())
     {
       error("The dimension of RegularizationMat is not compatible with ForwardMat.");
       return;
     }
-    mat_RtrR = mat_trans_mult_mat(matrixRegMatD);
+    mat_RtrR_handle = mat_trans_mult_mat(matrixRegMat_handle->as_dense());
   }
-  MatrixHandle mat_RtrR_handle = mat_RtrR;
+  DenseMatrix &mat_RtrR = *(mat_RtrR_handle->as_dense());
+  DenseMatrix &matrixRegMatD = *(matrixRegMat_handle->as_dense());
 
   int beg = -1;
   int end = -1;
   double lambda = 0, lambda2 = 0;
-  int   lambda_index;
+  int lambda_index;
 
   // calculate A^T * Y
   int flops, memrefs;
-  ColumnMatrix *mat_AtrY = scinew ColumnMatrix(N);
-  matrixForMatD->mult_transpose(*matrixMeasDatD, *mat_AtrY, flops, memrefs);
+  MatrixHandle AtrYHandle = scinew ColumnMatrix(N);
+  ColumnMatrix &mat_AtrY = *(AtrYHandle->as_column());
+  matrixForMatD.mult_transpose(matrixMeasDatD, mat_AtrY, flops, memrefs);
 
-  DenseMatrix *regForMatrix = scinew DenseMatrix(N, N);
-  MatrixHandle regForMatrix_handle = regForMatrix;
+  MatrixHandle regForMatrix_handle = scinew DenseMatrix(N, N);
+  DenseMatrix &regForMatrix = *(regForMatrix_handle->as_dense());
   MatrixHandle solution_handle = scinew ColumnMatrix(N);
   MatrixHandle Ax_handle = scinew ColumnMatrix(M);
   MatrixHandle Rx_handle = scinew ColumnMatrix(N);
@@ -370,31 +375,30 @@ Tikhonov::execute()
       {
         for (l=0; l<N; l++)
         {
-          const double temp = (*mat_RtrR)[i][l];
-          (*regForMatrix)[i][l] = (*mat_AtrA)[i][l] + lambda2 * temp;
+          regForMatrix[i][l] = mat_AtrA[i][l] + lambda2 * mat_RtrR[i][l];
         }
       }
 
       for (k=0; k<N; k++)
       {
-        solution[k] = (*mat_AtrY)[k];
+        solution[k] = mat_AtrY[k];
       }
 
       //Before, solution will be equal to (A^T * y)
       //After, solution will be equal to x_reg
 
-      regForMatrix->solve(solution);
+      regForMatrix.solve(solution);
       ////////////////////////////////
-      matrixForMatD->mult(solution, Ax, flops, memrefs, beg, end);
-      matrixRegMatD->mult(solution, Rx, flops, memrefs, beg, end);
-      rho[j] = 0;
-      eta[j] = 0;
+      matrixForMatD.mult(solution, Ax, flops, memrefs, beg, end);
+      matrixRegMatD.mult(solution, Rx, flops, memrefs, beg, end);
+      rho[j] = 0.0;
+      eta[j] = 0.0;
 
       // Calculate the norm of Ax-b and Rx
 
       for (k=0; k<M; k++)
       {
-        Ax[k] -= (*matrixMeasDatD)[k];
+        Ax[k] -= matrixMeasDatD[k];
         rho[j] += Ax[k] * Ax[k];
       }
       for (k=0; k<N; k++)
@@ -432,18 +436,16 @@ Tikhonov::execute()
   {
     for (int l=0; l<N; l++)
     {
-      const double temp = (*mat_RtrR)[i][l];
-      (*regForMatrix)[i][l] = (*mat_AtrA)[i][l] + lambda2 * temp;
+      regForMatrix[i][l] = mat_AtrA[i][l] + lambda2 * mat_RtrR[i][l];
     }
   }
-  regForMatrix->solve(*mat_AtrY);
-  regForMatrix->invert();
+  regForMatrix.solve(mat_AtrY);
+  regForMatrix.invert();
 
   MatrixHandle inverse_matrix = regForMatrix_handle * forward_transpose_h;
 
   //...........................................................
   // SEND RESULTS TO THE OUTPUT PORTS
-  MatrixHandle AtrYHandle(mat_AtrY);
   send_output_handle("InverseSoln", AtrYHandle);
   send_output_handle("RegParam", RegParameter);
   send_output_handle("RegInverseMat", inverse_matrix);
