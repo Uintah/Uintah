@@ -101,8 +101,8 @@ using namespace SCIRun;
 #endif
 /* BW */
 
-/* This is for the Intel ecc compiler */
-#ifdef __ECC
+/* This is for the Intel compiler */
+#ifdef __INTEL_COMPILER
 #define __sigemptyset sigemptyset
 #endif
 
