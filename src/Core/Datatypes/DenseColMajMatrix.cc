@@ -263,6 +263,20 @@ DenseColMajMatrix::zero()
 }
 
 
+DenseColMajMatrix *
+DenseColMajMatrix::identity(int size)
+{
+  DenseColMajMatrix *result = scinew DenseColMajMatrix(size, size);
+  result->zero();
+  for (int i = 0; i < size; i++)
+  {
+    result->iget(i, i) = 1.0;
+  }
+
+  return result;
+}
+
+
 void
 DenseColMajMatrix::print() const
 {
