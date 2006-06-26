@@ -43,6 +43,7 @@
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
+#include <Core/Datatypes/MatrixOperations.h>
 #include <Core/GuiInterface/GuiVar.h>
 #include <iostream>
 #include <sstream>
@@ -154,6 +155,8 @@ Tikhonov::mat_trans_mult_mat(DenseMatrix *A)
       (*B)[j][i] = (*Bi)[j];
     }
   }
+  delete Ai;
+  delete Bi;
   return B;
 }
 
@@ -187,6 +190,8 @@ Tikhonov::mat_mult(DenseMatrix *A, DenseMatrix *B)
       (*C)[j][i] = (*Ci)[j];
     }
   }
+  delete Ci;
+  delete Bi;
   return C;
 }
 
@@ -253,17 +258,17 @@ Tikhonov::execute()
   MatrixIPort *iportRegMat = (MatrixIPort *)get_iport("RegularizationMat");
 
   // DEFINE MATRIX HANDLES FOR INPUT/OUTPUT PORTS
-  MatrixHandle hMatrixForMat, hMatrixRegMat, hMatrixMeasDat;
-  if (!get_input_handle("ForwardMat", hMatrixForMat, true)) return;
+  MatrixHandle forward_matrix_h, hMatrixRegMat, hMatrixMeasDat;
+  if (!get_input_handle("ForwardMat", forward_matrix_h, true)) return;
   if (!get_input_handle("MeasuredPots", hMatrixMeasDat, true)) return;
 
   // TYPE CHECK
-  DenseMatrix *matrixForMatD = hMatrixForMat->dense();
+  DenseMatrix *matrixForMatD = forward_matrix_h->dense();
   ColumnMatrix *matrixMeasDatD = hMatrixMeasDat->column();
 
   // DIMENSION CHECK!!
-  const int M = matrixForMatD->nrows();
-  const int N = matrixForMatD->ncols();
+  const int M = forward_matrix_h->nrows();
+  const int N = forward_matrix_h->ncols();
   if (M != matrixMeasDatD->nrows())
   {
     error("Input matrix dimensions must agree.");
@@ -276,15 +281,17 @@ Tikhonov::execute()
   //.........................................................................
 
   // calculate A^T * A
-  DenseMatrix *mat_AtrA = mat_mult(matrixForMatD->transpose(),matrixForMatD);
+  MatrixHandle forward_transpose_h = forward_matrix_h->transpose();
+  MatrixHandle mat_AtrA_h = forward_transpose_h * forward_matrix_h;
+  DenseMatrix *mat_AtrA = mat_AtrA_h->dense();
 
   // calculate R^T * R
   DenseMatrix *mat_RtrR, *matrixRegMatD;
 
   if (!iportRegMat->get(hMatrixRegMat) && !hMatrixRegMat.get_rep())
   {
-    matrixRegMatD = mat_identity(matrixForMatD->ncols());
-    mat_RtrR = mat_identity(matrixForMatD->ncols());
+    matrixRegMatD = mat_identity(N);
+    mat_RtrR = mat_identity(N);
   }
   else
   {
@@ -309,6 +316,7 @@ Tikhonov::execute()
   matrixForMatD->mult_transpose(*matrixMeasDatD, *mat_AtrY, flops, memrefs);
 
   DenseMatrix *regForMatrix = scinew DenseMatrix(N, N);
+  MatrixHandle regForMatrix_handle = regForMatrix;
   ColumnMatrix *solution = scinew ColumnMatrix(N);
   ColumnMatrix *Ax = scinew ColumnMatrix(M);
   ColumnMatrix *Rx = scinew ColumnMatrix(N);
@@ -433,11 +441,9 @@ Tikhonov::execute()
     }
   }
   regForMatrix->solve(*mat_AtrY);
-  DenseMatrix *InverseMatrix = scinew DenseMatrix(N, M);
-
   regForMatrix->invert();
 
-  Mult(*InverseMatrix, *regForMatrix, *(matrixForMatD->transpose()));
+  MatrixHandle inverse_matrix = regForMatrix_handle * forward_transpose_h;
 
   //...........................................................
   // SEND RESULTS TO THE OUTPUT PORTS
@@ -445,8 +451,7 @@ Tikhonov::execute()
   send_output_handle("InverseSoln", AtrYHandle);
   MatrixHandle RegParameterHandle(RegParameter);
   send_output_handle("RegParam", RegParameterHandle);
-  MatrixHandle InverseMatrixHandle(InverseMatrix);
-  send_output_handle("RegInverseMat", InverseMatrixHandle);
+  send_output_handle("RegInverseMat", inverse_matrix);
 }
 
 } // End namespace BioPSE
