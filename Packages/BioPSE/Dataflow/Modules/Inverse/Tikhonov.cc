@@ -250,28 +250,12 @@ Tikhonov::FindCorner(Array1<double> &rho, Array1<double> &eta,
 void
 Tikhonov::execute()
 {
-  MatrixIPort *iportForMat = (MatrixIPort *)get_iport("ForwardMat");
   MatrixIPort *iportRegMat = (MatrixIPort *)get_iport("RegularizationMat");
-  MatrixIPort *iportMeasDat = (MatrixIPort *)get_iport("MeasuredPots");
-
-  MatrixOPort *oportInvSol = (MatrixOPort *)get_oport("InverseSoln");
-  MatrixOPort *oportRegParam = (MatrixOPort *)get_oport("RegParam");
-  MatrixOPort *oportRegInvMat = (MatrixOPort *)get_oport("RegInverseMat");
 
   // DEFINE MATRIX HANDLES FOR INPUT/OUTPUT PORTS
   MatrixHandle hMatrixForMat, hMatrixRegMat, hMatrixMeasDat;
-
-  if(!iportForMat->get(hMatrixForMat))
-  {
-    error("Couldn't get handle to the Forward Prob Matrix.");
-    return;
-  }
-
-  if(!iportMeasDat->get(hMatrixMeasDat))
-  {
-    error("Couldn't get handle to the measured data.");
-    return;
-  }
+  if (!get_input_handle("ForwardMat", hMatrixForMat, true)) return;
+  if (!get_input_handle("MeasuredPots", hMatrixMeasDat, true)) return;
 
   // TYPE CHECK
   DenseMatrix *matrixForMatD = hMatrixForMat->dense();
@@ -307,8 +291,8 @@ Tikhonov::execute()
     matrixRegMatD = hMatrixRegMat->dense();
     if (N != matrixRegMatD->ncols())
     {
-        error("The dimension of Reg. Matrix is not compatible with forward matrix.");
-        return;
+      error("The dimension of RegularizationMat is not compatible with ForwardMat.");
+      return;
     }
     mat_RtrR = mat_trans_mult_mat(matrixRegMatD);
   }
@@ -458,11 +442,11 @@ Tikhonov::execute()
   //...........................................................
   // SEND RESULTS TO THE OUTPUT PORTS
   MatrixHandle AtrYHandle(mat_AtrY);
-  oportInvSol->send_and_dereference(AtrYHandle);
+  send_output_handle("InverseSoln", AtrYHandle);
   MatrixHandle RegParameterHandle(RegParameter);
-  oportRegParam->send_and_dereference(RegParameterHandle);
+  send_output_handle("RegParam", RegParameterHandle);
   MatrixHandle InverseMatrixHandle(InverseMatrix);
-  oportRegInvMat->send_and_dereference(InverseMatrixHandle);
+  send_output_handle("RegInverseMat", InverseMatrixHandle);
 }
 
 } // End namespace BioPSE
