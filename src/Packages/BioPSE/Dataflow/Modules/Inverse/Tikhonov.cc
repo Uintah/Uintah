@@ -75,7 +75,6 @@ public:
 
   virtual void execute();
 
-  DenseMatrix *mat_identity(int len);
   DenseMatrix *mat_trans_mult_mat(const DenseMatrix &A);
 
   double FindCorner(const vector<double> &rho, const vector<double> &eta,
@@ -105,21 +104,6 @@ Tikhonov::Tikhonov(GuiContext *context) :
 //! Destructor
 Tikhonov::~Tikhonov()
 {
-}
-
-
-//! Create Identity Matrix
-DenseMatrix *
-Tikhonov::mat_identity(int len)
-{
-  DenseMatrix *eye = scinew DenseMatrix(len, len);
-  // Does this make sure all the elements are 0?
-  eye->zero();
-  for(int i=0; i<len; i++)
-  {
-    eye->put(i, i, 1.0);
-  }
-  return eye;
 }
 
 
@@ -253,8 +237,8 @@ Tikhonov::execute()
   MatrixHandle matrixRegMat_handle;
   if (!iportRegMat->get(hMatrixRegMat) && !hMatrixRegMat.get_rep())
   {
-    matrixRegMat_handle = mat_identity(N);
-    mat_RtrR_handle = mat_identity(N);
+    matrixRegMat_handle = DenseMatrix::identity(N);
+    mat_RtrR_handle = DenseMatrix::identity(N);
   }
   else
   {
