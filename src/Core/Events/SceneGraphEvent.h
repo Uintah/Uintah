@@ -44,6 +44,7 @@ using namespace std;
 class SceneGraphEvent : public BaseEvent 
 {
 public:
+  SceneGraphEvent();
   SceneGraphEvent(GeomHandle o, string n, 
 		  const string &target = "",
 		  unsigned int time = 0);

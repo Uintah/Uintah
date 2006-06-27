@@ -38,6 +38,7 @@ namespace SCIRun {
 EventManager::id_tm_map_t EventManager::mboxes_;
 Mutex EventManager::mboxes_lock_("EventManager mboxes_ lock");
 Mailbox<event_handle_t> EventManager::mailbox_("EventManager", 1024);
+Piostream * EventManager::stream_ = 0;
 
 EventManager::EventManager() :
   tm_("EventManager tools")
@@ -86,6 +87,60 @@ EventManager::~EventManager()
     cerr << "EventManager has been destroyed." << endl;
   }
 }
+
+
+void
+EventManager::add_event(event_handle_t event) 
+{
+  if (stream_ && stream_->reading()) return;
+
+  mailbox_.send(event);
+}
+
+bool
+EventManager::record_trail_file(const string &filename)
+{
+  if (stream_) {
+    return false;
+  }
+
+  stream_ = auto_ostream(filename, "Text", 0);
+  
+  if (stream_ && stream_->error()) {
+    delete stream_;
+    return false;
+  }
+
+  return stream_;
+}
+
+bool
+EventManager::play_trail_file(const string &filename)
+{
+  if (stream_) {
+    return false;
+  }
+
+  stream_ = auto_istream(filename, 0);
+  
+  if (stream_ && stream_->error()) {
+    delete stream_;
+    return false;
+  }
+
+  return stream_;
+
+}
+
+
+void
+EventManager::stop_trail_file()
+{
+  ASSERT(stream_);
+  delete stream_;
+  stream_ = 0;
+}
+  
 
 EventManager::event_mailbox_t*
 EventManager::register_event_messages(string id)
@@ -156,12 +211,53 @@ EventManager::unregister_mailbox(event_mailbox_t *mailbox)
 
 
 void
+EventManager::play_trail() {
+  ASSERT(stream_ && stream_->reading());
+
+  event_handle_t event;
+  unsigned long event_time = 0;
+  unsigned long first_event_time = 0;
+  const double millisecond = 1.0 / 1000.0;
+  int count = 0;
+  TimeThrottle timer;
+  timer.start();
+  sci_putenv("SCIRUN_TRAIL_PLAYBACK", "1");
+  while (stream_) {
+    event = 0;
+    Pio(*stream_, event);
+  
+    if (!event.get_rep()) {
+      cerr << "Stopping on count: " << count << "\n";
+      stop_trail_file();
+      continue;
+    }
+    
+    event_time = event->get_time();
+    if (event_time) {
+      if (!first_event_time) {
+        first_event_time = event_time;
+        timer.start();
+      } else {
+        timer.wait_for_time((event_time-first_event_time) * millisecond);
+      }           
+    }
+
+    mailbox_.send(event);
+  }
+  sci_putenv("SCIRUN_TRAIL_PLAYBACK", "0");
+} 
+  
+
+void
 EventManager::run() 
 {
   bool done = false;
   event_handle_t event;
   do {
     event = tm_.propagate_event(mailbox_.receive());
+    if (stream_ && stream_->writing()) {
+      Pio(*stream_, event);
+    }
 
     if (dynamic_cast<QuitEvent*>(event.get_rep()) != 0 &&
         event->get_target().empty()) {
@@ -185,7 +281,8 @@ EventManager::run()
           }
 
           if (sci_getenv_p("SCI_DEBUG")) {
-            cerr << range.first->first << " size: " << range.first->second->numItems() << "\n";
+            cerr << range.first->first << " size: " 
+                 << range.first->second->numItems() << "\n";
           }
           range.first->second->send(event);
         }
