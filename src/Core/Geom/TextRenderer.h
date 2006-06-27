@@ -71,7 +71,8 @@ public:
                  VERTICAL = 16,
                  SHADOW = 32,
                  REVERSE = 64,
-                 DEFAULT = 128 };
+                 EXTRUDED = 128,
+                 DEFAULT = 256 };
 
   int                   width(const string &text, int flags = DEFAULT);
   int                   height(const string &text, int flags = DEFAULT);
@@ -106,7 +107,7 @@ private:
   struct LayoutInfo {
     GlyphInfo *         glyph_info_;
     Point               vertices_[4];
-    float *             color_;
+    float               color_[4];
   };
 
   typedef vector<LayoutInfo> LayoutVector;
