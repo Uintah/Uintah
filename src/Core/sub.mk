@@ -54,6 +54,7 @@ SUBDIRS := \
 	$(SRCDIR)/OS \
 	$(SRCDIR)/Persistent \
 	$(SRCDIR)/Services \
+	$(SRCDIR)/Skinner \
 	$(SRCDIR)/SystemCall \
 	$(SRCDIR)/Thread \
 	$(SRCDIR)/TkExtensions \
