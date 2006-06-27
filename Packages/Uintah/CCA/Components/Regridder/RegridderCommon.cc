@@ -378,6 +378,7 @@ void RegridderCommon::scheduleDilation(SchedulerP& sched, const LevelP& level)
 
   if (level->getIndex() >= d_maxLevels)
     return;
+
   // dilate flagged cells on this level
   Task* dilate_task = scinew Task("RegridderCommon::Dilate Creation", this,
 				  &RegridderCommon::Dilate, DILATE_CREATION);
@@ -389,10 +390,12 @@ void RegridderCommon::scheduleDilation(SchedulerP& sched, const LevelP& level)
 			Ghost::AroundCells, ngc);
 
   // we need this task on the init task, but will get bad if you require from old on the init task :)
+#if 0
   if (sched->get_dw(0) != 0)
     dilate_task->requires(Task::OldDW, d_dilatedCellsCreationLabel, Ghost::None, 0);
-  dilate_task->computes(d_dilatedCellsCreationLabel);
   dilate_task->computes(d_dilatedCellsCreationOldLabel);
+#endif
+  dilate_task->computes(d_dilatedCellsCreationLabel);
   sched->addTask(dilate_task, level->eachPatch(), d_sharedState->allMaterials());
 #if 0
   if (d_cellCreationDilation != d_cellDeletionDilation) {
