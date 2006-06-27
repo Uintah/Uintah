@@ -83,6 +83,8 @@ namespace Uintah {
       virtual void scheduleTimeAdvance( const LevelP& level, 
                                         SchedulerP&);
                                              
+      virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP&);
+
       virtual void scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched);
 
       void scheduleComputePressure(SchedulerP&, 

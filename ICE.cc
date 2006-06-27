@@ -926,6 +926,12 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
   cout_doing << "---------------------------------------------------------"<<endl;
 }
 
+void
+ICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
+{
+
+}
+
 /* _____________________________________________________________________
  Function~  ICE::scheduleComputeThermoTransportProperties--
 _____________________________________________________________________*/
