@@ -77,7 +77,7 @@ class Regridder;
 
       //! recursively schedule refinement, coarsening, and time advances for
       //! finer levels - compensating for time refinement.  Builds one taskgraph
-      void subCycleCompile(GridP& grid, int startDW, int dwStride, int numLevel, bool rootCycle);
+      void subCycleCompile(GridP& grid, int startDW, int dwStride, int step, int numLevel);
 
       //! recursively executes taskgraphs, as several were executed.  Similar to subCycleCompile,
       //! except that this executes the recursive taskgraphs, and compile builds one taskgraph
