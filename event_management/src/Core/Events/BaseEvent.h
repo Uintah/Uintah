@@ -50,16 +50,17 @@ class BaseEvent : public Datatype
 {
 public:
   BaseEvent(const string &target = "", 
-            unsigned int time = 0);
+            unsigned long time = 0);
 
   virtual ~BaseEvent();
 
-  BaseEvent& operator=(const BaseEvent&);
   virtual BaseEvent *clone() = 0;
-  virtual void io(Piostream&) {};
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
+
   //! Accessors 
   //! time the event took place
-  unsigned int          get_time() const { return time_; }
+  unsigned long         get_time() const { return time_; }
   string                get_target() const { return target_; }
 
   //! Mutators
@@ -71,12 +72,9 @@ public:
   virtual bool          is_window_event() { return false; }
   virtual bool          is_scene_graph_event() { return false; }
 
-  //! The ref_cnt var so that we can have handles to this type of object.
-  //  int ref_cnt;
-  //  Mutex lock;
 private:
   //! The event timestamp
-  unsigned int          time_;
+  unsigned long         time_;
   string                target_;
 };
 
@@ -85,7 +83,8 @@ class EventModifiers
 public: 
   EventModifiers();
   virtual ~EventModifiers();
-
+  virtual void          io(Piostream&);
+  static PersistentTypeID type_id;
   //! Modifiers
   enum {
     SHIFT_E           = 1 << 0,
@@ -102,7 +101,6 @@ public:
   unsigned int          get_modifiers() const { return modifiers_; }
   //! Mutators
   void                  set_modifiers(unsigned int m) { modifiers_ = m; }
-  
 protected:
   unsigned int         modifiers_;
 };
@@ -125,10 +123,12 @@ public:
                int x = 0, 
                int y = 0,
                const string &target = "", 
-               unsigned int time = 0);
+               unsigned long time = 0);
 
   virtual ~PointerEvent();
+  virtual void          io(Piostream&);
   virtual PointerEvent *clone() { return new PointerEvent(*this); }
+  static PersistentTypeID type_id;
 
   virtual bool          is_pointer_event() { return true; }
 
@@ -164,9 +164,13 @@ public:
            int keyval = 0,
            const string &key_string = "",
            const string &target = "",
-           unsigned int time = 0);
+           unsigned long time = 0);
   virtual ~KeyEvent();
+
   virtual KeyEvent *    clone() { return new KeyEvent(*this); }
+  virtual void          io(Piostream&);
+  static PersistentTypeID type_id;
+
   virtual bool          is_key_event() { return true; }
 
   //! Accessors
@@ -202,9 +206,12 @@ public:
 
   WindowEvent(unsigned int state = 0, 
               const string &target = "",
-              unsigned int time = 0);
+              unsigned long time = 0);
+
   virtual ~WindowEvent();
   virtual WindowEvent * clone() { return new WindowEvent(*this); }
+  virtual void          io(Piostream&);
+  static PersistentTypeID type_id;
 
   virtual bool          is_window_event() { return true; }
   
@@ -222,7 +229,10 @@ class QuitEvent : public BaseEvent {
 public:
   QuitEvent() {}
   virtual ~QuitEvent() {}
-  virtual QuitEvent * clone() { return new QuitEvent(*this); }
+  virtual void          io(Piostream&);
+  static PersistentTypeID type_id;
+
+  virtual QuitEvent *   clone() { return new QuitEvent(*this); }
 };
 
 
@@ -230,6 +240,7 @@ class RedrawEvent : public BaseEvent {
 public:
   RedrawEvent() {}
   virtual ~RedrawEvent() {}
+  virtual void          io(Piostream&);
   virtual RedrawEvent * clone() { return new RedrawEvent(*this); }
 };
 

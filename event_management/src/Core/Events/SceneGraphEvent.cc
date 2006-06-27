@@ -36,6 +36,18 @@ namespace SCIRun {
     
 using namespace std;
 
+// Persistent *make_SceneGraphEvent() { return new SceneGraphEvent(); }
+// PersistentTypeID SceneGraphEvent::type_id("SceneGraphEvent", "BaseEvent",
+//                                           make_SceneGraphEvent);
+
+SceneGraphEvent::SceneGraphEvent() :
+  BaseEvent(),
+  obj_(0),
+  name_(),
+  sg_id_(-1)
+{
+}
+    
 SceneGraphEvent::SceneGraphEvent(GeomHandle o, string n, 
 				 const string &target,
 				 unsigned int time) :
@@ -49,6 +61,17 @@ SceneGraphEvent::SceneGraphEvent(GeomHandle o, string n,
 SceneGraphEvent::~SceneGraphEvent()
 {
 }
+
+// void
+// SceneGraphEvent::io(Piostream &stream) {
+//   stream.begin_class(type_id.type, 1);
+//   BaseEvent::io(stream);
+//   SCIRun::Pio(stream, obj_);
+//   SCIRun::Pio(stream, name_);
+//   SCIRun::Pio(stream, sg_id_);
+//   stream.end_class();
+// }
+  
     
 
 } // namespace SCIRun
