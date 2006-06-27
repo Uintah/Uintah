@@ -87,15 +87,27 @@ public:
   //! which == button number, x,y in window at event time 
   virtual propagation_state_e pointer_down(int which, int x, int y, 
                                            unsigned int modifiers,
-                                           int time) = 0;
+                                           int time)
+  {
+    return CONTINUE_E;
+  }
+
   //! which == button number, x,y in window at event time 
   virtual propagation_state_e pointer_motion(int which, int x, int y, 
                                              unsigned int modifiers,
-                                             int time) = 0;
+                                             int time)
+  {
+    return CONTINUE_E;
+  }
+
   //! which == button number, x,y in window at event time 
   virtual propagation_state_e pointer_up(int which, int x, int y, 
                                          unsigned int modifiers,
-                                         int time) = 0;
+                                         int time)
+  {
+    return CONTINUE_E;
+  }
+
 private:
 };
 
@@ -107,10 +119,18 @@ public:
   
   virtual propagation_state_e key_press(string key, int keyval, 
                                         unsigned int modifiers, 
-                                        unsigned int time) = 0;
+                                        unsigned int time)
+  {
+    return CONTINUE_E;
+  }
+
   virtual propagation_state_e key_release(string key, int keyval, 
-                                          unsigned int modifiers, 
-                                          unsigned int time) = 0;
+                                          unsigned int modifiers,
+                                          unsigned int time)
+  {
+    return CONTINUE_E;
+  }
+
 private:
 };
 
@@ -120,13 +140,41 @@ public:
   WindowTool(string name);
   virtual ~WindowTool();
   
-  virtual propagation_state_e create_notify(unsigned int time) = 0;
-  virtual propagation_state_e destroy_notify(unsigned int time) = 0;
-  virtual propagation_state_e enter_notify(unsigned int time) = 0;
-  virtual propagation_state_e leave_notify(unsigned int time) = 0;
-  virtual propagation_state_e expose_notify(unsigned int time) = 0;
-  virtual propagation_state_e configure_notify(unsigned int time) = 0;
-  virtual propagation_state_e redraw_notify(unsigned int time) = 0;
+  virtual propagation_state_e create_notify(unsigned int time)
+  {
+    return CONTINUE_E;
+  }
+
+  virtual propagation_state_e destroy_notify(unsigned int time)
+  {
+    return CONTINUE_E;
+  }
+
+  virtual propagation_state_e enter_notify(unsigned int time)
+  {
+    return CONTINUE_E;
+  }
+
+  virtual propagation_state_e leave_notify(unsigned int time)
+  {
+    return CONTINUE_E;
+  }
+
+  virtual propagation_state_e expose_notify(unsigned int time)
+  {
+    return CONTINUE_E;
+  }
+
+  virtual propagation_state_e configure_notify(unsigned int time)
+  {
+    return CONTINUE_E;
+  }
+
+  virtual propagation_state_e redraw_notify(unsigned int time)
+  {
+    return CONTINUE_E;
+  }
+
 private:
 };
 
