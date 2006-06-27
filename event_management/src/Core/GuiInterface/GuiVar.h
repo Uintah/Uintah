@@ -80,7 +80,7 @@ public:
     GuiVar(context),
     gui_value_(val)
   {
-    ctx->set(gui_value_);
+    this->set(gui_value_);
   }
 
   virtual ~GuiSingle() {}
@@ -106,13 +106,16 @@ public:
 
   // Returns true if variable exists in TCL scope and is of type T
   inline bool valid() {
-    ASSERT(ctx);
-    return ctx->get(gui_value_);
+    if (ctx)
+      return ctx->get(gui_value_);
+    return true;
   }
 
   // Returns true if the gui variable and current state var different.
   inline bool changed( bool update = false ) {
-    ASSERT(ctx);
+    if (!ctx)
+      return false;
+
     ctx->reset();
     T temp;
     ctx->get(temp);
