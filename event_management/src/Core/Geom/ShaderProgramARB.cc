@@ -36,6 +36,7 @@
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Geom/TkOpenGLContext.h>
+#include <Core/Geom/X11OpenGLContext.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/Environment.h>
 
@@ -228,8 +229,10 @@ ShaderProgramARB::init_shaders_supported()
       {
 	// Create a test context.
 
-	TkOpenGLContext *context =
-	  new TkOpenGLContext(".testforshadersupport", 0, 0,0);
+	OpenGLContext *context =
+          new X11OpenGLContext(0,0,100, 100);
+
+        //	  new TkOpenGLContext(".testforshadersupport", 0, 0,0);
 
 	context->make_current();
 
@@ -329,7 +332,8 @@ ShaderProgramARB::init_shaders_supported()
 #else
 	supported_ = false;
 #endif
-	delete context;
+        context->release();
+        //delete context;
       }
       init_ = true;
     }
