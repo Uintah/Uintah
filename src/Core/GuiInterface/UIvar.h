@@ -60,10 +60,10 @@ class UiSingle
 public:
   UiSingle() : context_(0) {}
   UiSingle(const T &val) : context_(0), value_(val) {}
-  UiSingle(GuiContext* ctx) : context_(ctx) {}
+  UiSingle(GuiContext* ctx=0) : context_(ctx) {}
   UiSingle(GuiContext* ctx, const T &val) : context_(ctx), value_(val)
   {
-    context_->set(value_);
+    set(value_);
   }
 
   virtual ~UiSingle() {}
