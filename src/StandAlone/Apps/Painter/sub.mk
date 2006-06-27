@@ -27,10 +27,50 @@
 #
 
 
-#Makefile fragment for the SatndAlone directory
+# Makefile fragment for this subdirectory
 
-SRCDIR := StandAlone/Apps
-SUBDIRS := \
-	$(SRCDIR)/Painter \
+SRCDIR := StandAlone/Apps/Painter
 
-include $(SCIRUN_SCRIPTS)/recurse.mk
+ifeq ($(LARGESOS),yes)
+PSELIBS := Core
+else
+
+PSELIBS := Core/Algorithms/Visualization \
+           Core/Basis \
+           Core/Bundle \
+	   Core/Containers \
+	   Core/Datatypes \
+           Core/Events \
+	   Core/Exceptions \
+           Core/Geom \
+	   Core/Geometry \
+           Core/GuiInterface \
+	   Core/Init \
+           Core/Math \
+	   Core/Persistent \
+           Core/Skinner \
+           Core/Thread \
+	   Core/Util \
+           Core/Volume
+endif
+
+LIBS := $(LAPACK_LIBRARY) \
+        $(XML_LIBRARY) \
+        $(M_LIBRARY) \
+        $(GL_LIBRARY) \
+        $(TEEM_LIBRARY)
+
+ifeq ($(HAVE_INSIGHT), yes)   
+        PSELIBS += Packages/Insight/Core/Datatypes
+        LIBS += $(INSIGHT_LIBRARY)
+endif
+
+
+PROGRAM := $(SRCDIR)/painter
+
+SRCS := $(SRCDIR)/Painter.cc \
+        $(SRCDIR)/PainterTools.cc \
+        $(SRCDIR)/PainterBrushTool.cc \
+        $(SRCDIR)/main.cc \
+
+include $(SCIRUN_SCRIPTS)/program.mk
