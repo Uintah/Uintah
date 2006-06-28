@@ -1679,6 +1679,19 @@ TextPiostream::emit_pointer(int& have_data, int& pointer_id)
 }
 
 
+bool
+TextPiostream::eof() {
+  if (dir == Write) {
+    return false;
+  }
+
+  istream &in = *istr;
+  in.peek();
+  return in.eof();
+}
+    
+
+
 // FastPiostream is a non portable binary output.
 FastPiostream::FastPiostream(const string& filename, Direction dir,
                              ProgressReporter *pr)

@@ -2042,7 +2042,6 @@ Painter::SliceWindow::autoview(NrrdVolume *volume, double offset) {
 
 void
 Painter::create_undo_volume() {
-  cerr << "UNDO NOT IMPLEMENTED!\n";
   return;
   if (undo_volume_) 
     delete undo_volume_;
