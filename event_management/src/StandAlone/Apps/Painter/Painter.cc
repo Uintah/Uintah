@@ -1994,7 +1994,6 @@ Painter::Event::update_state(GuiArgs &args, Painter &painter) {
 
 void
 Painter::SliceWindow::autoview(NrrdVolume *volume, double offset) {
-  ASSERT(volume);
   autoview_ = false;
   double wid = region().width() -  2*offset;
   double hei = region().height() - 2*offset;
@@ -2013,23 +2012,28 @@ Painter::SliceWindow::autoview(NrrdVolume *volume, double offset) {
   int xax = x_axis();
   int yax = y_axis();
 
-  vector<int> zero(volume->nrrd_handle_->nrrd_->dim, 0);
-  vector<int> index = zero;
-  index[xax+1] = volume->nrrd_handle_->nrrd_->axis[xax+1].size;
-  double w_wid = (volume->index_to_world(index) - 
-                  volume->index_to_world(zero)).length();
-  double w_ratio = wid/w_wid;
-
-  index = zero;
-  index[yax+1] = volume->nrrd_handle_->nrrd_->axis[yax+1].size;
-  double w_hei = (volume->index_to_world(index) - 
-                  volume->index_to_world(zero)).length();
-  double h_ratio = hei/w_hei;
-
-  zoom_ = Min(w_ratio*100.0, h_ratio*100.0);
-  if (zoom_ < 1.0) zoom_ = 100.0; // ??
-  center_(xax) = volume->center()(xax);
-  center_(yax) = volume->center()(yax);
+  if (volume) {
+    vector<int> zero(volume->nrrd_handle_->nrrd_->dim, 0);
+    vector<int> index = zero;
+    index[xax+1] = volume->nrrd_handle_->nrrd_->axis[xax+1].size;
+    double w_wid = (volume->index_to_world(index) - 
+                    volume->index_to_world(zero)).length();
+    double w_ratio = wid/w_wid;
+    
+    index = zero;
+    index[yax+1] = volume->nrrd_handle_->nrrd_->axis[yax+1].size;
+    double w_hei = (volume->index_to_world(index) - 
+                    volume->index_to_world(zero)).length();
+    double h_ratio = hei/w_hei;
+    
+    zoom_ = Min(w_ratio*100.0, h_ratio*100.0);
+    if (zoom_ < 1.0) zoom_ = 100.0; // ??
+    center_(xax) = volume->center()(xax);
+    center_(yax) = volume->center()(yax);
+  } else {
+    center_ = Point(0,0,0);
+    zoom_ = 100;
+  }
   redraw();
 }
    
@@ -2392,6 +2396,81 @@ Painter::SliceWindow::process_event(event_handle_t event) {
   return BaseTool::CONTINUE_E;
 }
 
+
+
+
+
+#if 0
+
+#include <Core/Volume/VolumeRenderer.h>
+#include <Core/Events/SceneGraphEvent.h>
+#include <Core/Geom/ShaderProgramARB.h>
+#include <Core/Volume/ColorMap2.h>
+#include <Core/Algorithms/Visualization/NrrdTextureBuilderAlgo.h>
+
+void
+setup_volume_rendering() {
+  event_handle_t scene_event = 0;
+  
+  CompileInfoHandle ci =
+    NrrdTextureBuilderAlgo::get_compile_info(nrrd->type,nrrd->type);
+  
+  
+  const int card_mem = 128;
+  cerr << "nrrd texture\n";
+  TextureHandle texture = new Texture;
+  NrrdTextureBuilderAlgo::build_static(texture, 
+				       nrrd_handle, 0, 255,
+				       0, 0, 255, card_mem);
+  vector<Plane *> *planes = new vector<Plane *>;
+  
+  
+  string fn = string(argv[3]);
+  Piostream *stream = auto_istream(fn, 0);
+  if (!stream) {
+    cerr << "Error reading file '" + fn + "'." << std::endl;
+    return -1;
+  }  
+  // read the file.
+  ColorMap2 *cmap2 = new ColorMap2();
+  ColorMap2Handle icmap = cmap2;
+  try {
+    Pio(*stream, icmap);
+  } catch (...) {
+    cerr << "Error loading "+fn << std::endl;
+    icmap = 0;
+  }
+  delete stream;
+  ColorMapHandle cmap;
+  vector<ColorMap2Handle> *cmap2v = new vector<ColorMap2Handle>(0);
+  cmap2v->push_back(icmap);
+  string enabled("111111");
+  if (sci_getenv("CMAP_WIDGETS")) 
+    enabled = sci_getenv("CMAP_WIDGETS");
+  for (unsigned int i = 0; i < icmap->widgets().size(); ++ i) {
+    if (i < enabled.size() && enabled[i] == '1') {
+      icmap->widgets()[i]->set_onState(1); 
+    } else {
+      icmap->widgets()[i]->set_onState(0); 
+    }
+  }
+
+  VolumeRenderer *vol = new VolumeRenderer(texture, 
+					   cmap, 
+					   *cmap2v, 
+					   *planes,
+					   Round(card_mem*1024*1024*0.8));
+  vol->set_slice_alpha(-0.5);
+  vol->set_interactive_rate(4.0);
+  vol->set_sampling_rate(4.0);
+  vol->set_material(0.322, 0.868, 1.0, 18);
+  scene_event = new SceneGraphEvent(vol, "FOO");  
+  //  if (!sci_getenv_p("PAINTER_NOSCENE")) 
+  //    EventManager::add_event(scene_event);    
+
+}  
+
+#endif
 
 
 

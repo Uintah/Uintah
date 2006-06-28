@@ -77,86 +77,17 @@ start_trail_file() {
 }  
 
 
-#if 0
-
-#include <Core/Volume/VolumeRenderer.h>
-#include <Core/Events/SceneGraphEvent.h>
-#include <Core/Geom/ShaderProgramARB.h>
-#include <Core/Volume/ColorMap2.h>
-#include <Core/Algorithms/Visualization/NrrdTextureBuilderAlgo.h>
-
-void
-setup_volume_rendering() {
-  event_handle_t scene_event = 0;
-  
-  CompileInfoHandle ci =
-    NrrdTextureBuilderAlgo::get_compile_info(nrrd->type,nrrd->type);
-  
-  
-  const int card_mem = 128;
-  cerr << "nrrd texture\n";
-  TextureHandle texture = new Texture;
-  NrrdTextureBuilderAlgo::build_static(texture, 
-				       nrrd_handle, 0, 255,
-				       0, 0, 255, card_mem);
-  vector<Plane *> *planes = new vector<Plane *>;
-  
-  
-  string fn = string(argv[3]);
-  Piostream *stream = auto_istream(fn, 0);
-  if (!stream) {
-    cerr << "Error reading file '" + fn + "'." << std::endl;
-    return -1;
-  }  
-  // read the file.
-  ColorMap2 *cmap2 = new ColorMap2();
-  ColorMap2Handle icmap = cmap2;
-  try {
-    Pio(*stream, icmap);
-  } catch (...) {
-    cerr << "Error loading "+fn << std::endl;
-    icmap = 0;
-  }
-  delete stream;
-  ColorMapHandle cmap;
-  vector<ColorMap2Handle> *cmap2v = new vector<ColorMap2Handle>(0);
-  cmap2v->push_back(icmap);
-  string enabled("111111");
-  if (sci_getenv("CMAP_WIDGETS")) 
-    enabled = sci_getenv("CMAP_WIDGETS");
-  for (unsigned int i = 0; i < icmap->widgets().size(); ++ i) {
-    if (i < enabled.size() && enabled[i] == '1') {
-      icmap->widgets()[i]->set_onState(1); 
-    } else {
-      icmap->widgets()[i]->set_onState(0); 
-    }
-  }
-
-  VolumeRenderer *vol = new VolumeRenderer(texture, 
-					   cmap, 
-					   *cmap2v, 
-					   *planes,
-					   Round(card_mem*1024*1024*0.8));
-  vol->set_slice_alpha(-0.5);
-  vol->set_interactive_rate(4.0);
-  vol->set_sampling_rate(4.0);
-  vol->set_material(0.322, 0.868, 1.0, 18);
-  scene_event = new SceneGraphEvent(vol, "FOO");  
-  //  if (!sci_getenv_p("PAINTER_NOSCENE")) 
-  //    EventManager::add_event(scene_event);    
-
-}  
-
-#endif
-
-
 Painter *
-create_painter(const string &filename) {
-  NrrdDataHandle nrrd_handle = new NrrdData();
-  Nrrd *nrrd = nrrd_handle->nrrd_;
-  nrrdLoad(nrrd, filename.c_str(), 0); 
+create_painter(const char *filename) {
   BundleHandle bundle = new Bundle();
-  bundle->setNrrd(filename, nrrd_handle);
+
+  if (filename) {
+    NrrdDataHandle nrrd_handle = new NrrdData();
+    Nrrd *nrrd = nrrd_handle->nrrd_;
+    nrrdLoad(nrrd, filename, 0); 
+    bundle->setNrrd(filename, nrrd_handle);
+  }
+
   Painter *painter = new Painter(0);
   painter->add_bundle(bundle); 
   Skinner::XMLIO::register_maker<Painter::SliceWindow>((void *)painter); 
