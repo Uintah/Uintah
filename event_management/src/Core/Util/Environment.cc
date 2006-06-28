@@ -156,7 +156,7 @@ SCIRun::create_sci_environment(char **env, char *execname)
     }
   }
 
-  string rcfilename = ".scirunrc";
+  string executable_name = "scirun";
     
   if (!sci_getenv("SCIRUN_OBJDIR")) 
   {
@@ -171,7 +171,8 @@ SCIRun::create_sci_environment(char **env, char *execname)
       }
 
       string::size_type pos = objdir.find_last_of('/');
-      rcfilename = "."+objdir.substr(pos+1, objdir.size()-pos-1)+"rc";
+
+      executable_name = objdir.substr(pos+1, objdir.size()-pos-1);;
       objdir.erase(objdir.begin()+pos+1, objdir.end());
 
       sci_putenv("SCIRUN_OBJDIR", objdir);
@@ -189,7 +190,9 @@ SCIRun::create_sci_environment(char **env, char *execname)
   sci_putenv("SCIRUN_ITCL_WIDGETS", 
 	     MacroSubstitute(sci_getenv("SCIRUN_ITCL_WIDGETS")));
 
-  find_and_parse_rcfile(rcfilename);
+  sci_putenv("EXECUTABLE_NAME", executable_name);
+  string rcfile = "." + executable_name + "rc";
+  find_and_parse_rcfile(rcfile);
 }
 
 // emptryOrComment returns true if the 'line' passed in is a comment
@@ -232,10 +235,10 @@ SCIRun::parse_rcfile( const string &rcfile )
 
     char line[1024];
     // If we get to the EOF:
-    if( !fgets( line, 1024, filein ) ) break;
+    if( !fgets( line, 1023, filein ) ) break;
 
     int length = (int)strlen(line);
-    if( length > 0 ) {
+    if( line[length-1] == '\n' ) {
       // Replace CR with EOL.
       line[length-1] = 0;
     }
