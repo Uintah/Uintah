@@ -48,8 +48,10 @@ namespace SCIRun {
   class BaseTool;
 
   namespace Skinner {
+  
     bool init_skinner();
-
+    string load_skin(const string&filename);
+  
     class Runner : public SCIRun::Runnable {
     public:
       Runner(const Drawables_t &);

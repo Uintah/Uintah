@@ -136,7 +136,7 @@ EventManager::play_trail_file(const string &filename)
 void
 EventManager::stop_trail_file()
 {
-  ASSERT(stream_);
+  if (!stream_) return;
   delete stream_;
   stream_ = 0;
 }
