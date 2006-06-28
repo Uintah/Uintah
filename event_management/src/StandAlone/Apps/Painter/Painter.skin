@@ -172,7 +172,7 @@
   
 
   <object class="GLWindow">
-    <var name="id">Slice</var>
+    <var name="id">SCI-RENDER</var>
     <var name="width" type="int">1180</var>
     <var name="height" type="int">1500</var>
     <var name="posx" type="int">0</var>

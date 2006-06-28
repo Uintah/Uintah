@@ -29,35 +29,21 @@
 //    Author : McKay Davis
 //    Date   : Tue May 30 21:38:23 MDT 2006
 
-
-
-#include <main/sci_version.h>
 #include <Core/Events/EventManager.h>
-
 #include <Core/Skinner/Skinner.h>
 #include <Core/Skinner/XMLIO.h>
-#include <Core/Skinner/Window.h>
-
 #include <Core/Util/Environment.h>
 #include <Core/Bundle/Bundle.h>
-
 #include <Core/Events/Tools/QuitMainWindowTool.h>
-#include <Core/Events/Tools/FilterRedrawEventsTool.h>
-#include <Core/Volume/VolumeRenderer.h>
-#include <Core/Events/SceneGraphEvent.h>
-#include <Core/Geom/ShaderProgramARB.h>
-#include <Core/Volume/ColorMap2.h>
-
-#include <Core/Util/DynamicCompilation.h>
-#include <Core/Algorithms/Visualization/NrrdTextureBuilderAlgo.h>
-
 #include <StandAlone/Apps/Painter/Painter.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
+
 using std::cout;
+using namespace SCIRun;
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1424
@@ -65,15 +51,8 @@ using std::cout;
 #endif
 
 
-using namespace SCIRun;
-
-int
-main(int argc, char *argv[], char **environment) {
-
-  if (argc < 4) return 0;
-    create_sci_environment(environment, 0);
-
-  //  try {
+void
+start_trail_file() {
   const char *trailfile = sci_getenv("SCIRUN_TRAIL_FILE");
   const char *trailmode = sci_getenv("SCIRUN_TRAIL_MODE");
   if (trailmode && trailfile) {
@@ -95,19 +74,19 @@ main(int argc, char *argv[], char **environment) {
       cerr << trailfile << std::endl;
     }
   }
-  
+}  
 
 
-  ShaderProgramARB::init_shaders_supported();
+#if 0
 
+#include <Core/Volume/VolumeRenderer.h>
+#include <Core/Events/SceneGraphEvent.h>
+#include <Core/Geom/ShaderProgramARB.h>
+#include <Core/Volume/ColorMap2.h>
+#include <Core/Algorithms/Visualization/NrrdTextureBuilderAlgo.h>
 
-  BundleHandle bundle = new Bundle();
-  NrrdDataHandle nrrd_handle = new NrrdData();
-  Nrrd *nrrd = nrrd_handle->nrrd_;
-  string filename = string(argv[2]);
-  nrrdLoad(nrrd, filename.c_str(), 0);
-  
-  
+void
+setup_volume_rendering() {
   event_handle_t scene_event = 0;
   
   CompileInfoHandle ci =
@@ -162,74 +141,66 @@ main(int argc, char *argv[], char **environment) {
   vol->set_interactive_rate(4.0);
   vol->set_sampling_rate(4.0);
   vol->set_material(0.322, 0.868, 1.0, 18);
-  scene_event = new SceneGraphEvent(vol, "FOO");
-  
-  
-  bundle->setNrrd(string(argv[2]), nrrd_handle);
-  
-    Painter *painter = new Painter(0);
-    painter->add_bundle(bundle);
+  scene_event = new SceneGraphEvent(vol, "FOO");  
+  //  if (!sci_getenv_p("PAINTER_NOSCENE")) 
+  //    EventManager::add_event(scene_event);    
 
-    Skinner::init_skinner();
-    Skinner::XMLIO::register_maker<Painter::SliceWindow>((void *)painter);    
-    Skinner::Drawables_t drawables = Skinner::XMLIO::load(argv[1]);
+}  
 
-    //    Skinner::ThrottledToolManager *skinner_non_draw_event_manager = 
-    //      new Skinner::ThrottledToolManager("FourView", 120.0);
-    BaseTool *non_draw_tool = new FilterRedrawEventsTool("Skinner Events", 1);
-    //    skinner_non_draw_event_manager->add_tool(non_draw_tool,1);
-
-    for (unsigned int d = 0; d < drawables.size(); ++d) {
-      //      drawables[d]->process_event(new WindowEvent(WindowEvent::REDRAW_E));
-      ASSERT(dynamic_cast<Skinner::GLWindow *>(drawables[d]));
-      Skinner::ThrottledRunnableToolManager *runner = 
-        new Skinner::ThrottledRunnableToolManager(drawables[d]->get_id(), 120.0);
-      runner->add_tool(non_draw_tool,1);
-      runner->add_tool(drawables[d], 2);
-      string tname = drawables[d]->get_id()+" Throttled Tool Manager";
-      Thread *thread = new Thread(runner, tname.c_str());
-      thread->detach();
-      //      thread->add_tool(new FilterRedrawEventsTool("filter"), 1);
-      
-    }
+#endif
 
 
-//     Skinner::Runner *skinner = new Skinner::Runner(;
-//     Thread *skinner_thread = new Thread(skinner, "Skinner Runner");
-//     skinner_thread->detach();
-    
-    if (scene_event.get_rep()) {
+Painter *
+create_painter(const string &filename) {
+  NrrdDataHandle nrrd_handle = new NrrdData();
+  Nrrd *nrrd = nrrd_handle->nrrd_;
+  nrrdLoad(nrrd, filename.c_str(), 0); 
+  BundleHandle bundle = new Bundle();
+  bundle->setNrrd(filename, nrrd_handle);
+  Painter *painter = new Painter(0);
+  painter->add_bundle(bundle); 
+  Skinner::XMLIO::register_maker<Painter::SliceWindow>((void *)painter); 
+  return painter;
+}  
 
-    }
-
-    EventManager *em = new EventManager();
+void
+listen_for_events(const string &main_window_name) {
+  if (!main_window_name.empty()) {
     EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
-    if (!sci_getenv_p("PAINTER_NOSCENE")) 
-      EventManager::add_event(scene_event);    
-    em->tm().add_tool(new QuitMainWindowTool(drawables[0]->get_id()), 1);
+    EventManager *em = new EventManager();
+    em->tm().add_tool(new QuitMainWindowTool(main_window_name), 1);
     Thread *em_thread = new Thread(em, "Event Manager");
-    //    em_thread->detach();
-
-    //    em->run();
-    //    delete em;
-    if (trailmode && trailmode[0] == 'P') {
-      EventManager::play_trail();
-    }
-      
+    start_trail_file();
     em_thread->join();
-    cerr << argv[0] << " exited.\n";
-    if (trailmode && trailmode[0] == 'R') {
-      EventManager::stop_trail_file();
-    }
-    delete painter;
+    EventManager::stop_trail_file();
+  }
+}  
+  
 
-    Thread::exitAll(0);
+string
+get_skin_filename() {
+  if (sci_getenv("SKINNER_SKIN")) {
+    return sci_getenv("SKINNER_SKIN");
+  } 
+  const char *srcdir = sci_getenv("SCIRUN_SRCDIR");
+  if (srcdir) {
+    return string(srcdir) + "/StandAlone/Apps/Painter/Painter.skin";
+  } 
+  return "";
+}
 
-//   } catch (string &err) {
-//     cerr << "ERROR: " << err;
-//   } catch (...) {
-//     cerr << "Unhandled exception in Painter\n";
-//   }
+int
+main(int argc, char *argv[], char **environment) {
+  create_sci_environment(environment, argv[0]);
+  ShaderProgramARB::init_shaders_supported();
+
+  Painter *painter = create_painter(argv[1]);
+
+  listen_for_events(Skinner::load_skin(get_skin_filename()));
+
+  delete painter;
+
+  Thread::exitAll(0);
   return 0;
 }
 

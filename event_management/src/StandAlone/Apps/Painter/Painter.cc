@@ -1004,8 +1004,8 @@ Painter::SliceWindow::setup_gl_view()
   double cx = center_(x_axis());
   double cy = center_(y_axis());
   
-  double maxz = center_(axis_) + Min(hwid, hhei)*zoom_()/100.0;
-  double minz = center_(axis_) - Min(hwid, hhei)*zoom_()/100.0;
+  double maxz = center_(axis_) + Min(hwid, hhei)*zoom_()/50.0;
+  double minz = center_(axis_) - Min(hwid, hhei)*zoom_()/50.0;
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();

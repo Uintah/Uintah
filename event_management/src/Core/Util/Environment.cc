@@ -156,6 +156,8 @@ SCIRun::create_sci_environment(char **env, char *execname)
     }
   }
 
+  string rcfilename = ".scirunrc";
+    
   if (!sci_getenv("SCIRUN_OBJDIR")) 
   {
     if (!execname)
@@ -167,10 +169,11 @@ SCIRun::create_sci_environment(char **env, char *execname)
 	getcwd(cwd,MAXPATHLEN);
 	objdir = cwd+string("/")+objdir;
       }
-      int pos = objdir.length()-1;
-      while (pos >= 0 && objdir[pos] != '/') --pos;
-      ASSERT(pos >= 0);
+
+      string::size_type pos = objdir.find_last_of('/');
+      rcfilename = "."+objdir.substr(pos+1, objdir.size()-pos-1)+"rc";
       objdir.erase(objdir.begin()+pos+1, objdir.end());
+
       sci_putenv("SCIRUN_OBJDIR", objdir);
     }
   }
@@ -186,7 +189,7 @@ SCIRun::create_sci_environment(char **env, char *execname)
   sci_putenv("SCIRUN_ITCL_WIDGETS", 
 	     MacroSubstitute(sci_getenv("SCIRUN_ITCL_WIDGETS")));
 
-  find_and_parse_scirunrc();
+  find_and_parse_rcfile(rcfilename);
 }
 
 // emptryOrComment returns true if the 'line' passed in is a comment
@@ -208,11 +211,11 @@ emptyOrComment( const char * line )
   return true;
 }
 
-// parse_scirunrc reads the .scirunrc file 'rcfile' into the SCIRuns enviroment
+// parse_rcfile reads the file 'rcfile' into SCIRuns enviroment mechanism
 // It uses sci_putenv to set variables in the environment. 
 // Returns true if the file was opened and parsed.  False otherwise.
 bool
-SCIRun::parse_scirunrc( const string &rcfile )
+SCIRun::parse_rcfile( const string &rcfile )
 {
   FILE* filein = fopen(rcfile.c_str(),"r");
   if (!filein) return false;
@@ -247,8 +250,6 @@ SCIRun::parse_scirunrc( const string &rcfile )
 	removeLTWhiteSpace(var_val);
 	char* sub = MacroSubstitute(var_val);
 
-
-
 	// Only put the var into the environment if it is not already there.
 	if(!SCIRun::sci_getenv( var ) || 
 	   // Except the .scirunrc version, it should always come from the file
@@ -269,42 +270,45 @@ SCIRun::parse_scirunrc( const string &rcfile )
   return true;
 }
 
-// find_and_parse_scirunrc will search for the users .scirunrc file in 
+// find_and_parse_rcfile will search for the rcfile file in 
 // default locations and read it into the environemnt if possible.
 void
-SCIRun::find_and_parse_scirunrc()
+SCIRun::find_and_parse_rcfile(const string &rcfile)
 {
-  // Tell the user that we are searching for the .scirunrc file...
-  std::cout << "Parsing .scirunrc... ";
+  // Tell the user that we are searching for the rcfile...
+  std::cout << "Parsing " << rcfile << "... ";
   bool foundrc=false;
+  const string slash("/");
 
   // 1. check the local directory
-  string filename(".scirunrc");
-  foundrc = parse_scirunrc(filename);
-
+  string filename(rcfile);
+  foundrc = parse_rcfile(filename);
+  
   // 2. check the BUILD_DIR
   if (!foundrc) {
-    filename = SCIRUN_OBJDIR+string("/.scirunrc");
-    foundrc = parse_scirunrc(filename);
+    filename = SCIRUN_OBJDIR + slash + string(rcfile);
+    foundrc = parse_rcfile(filename);
   }
   
   // 3. check the user's home directory
   const char *HOME;
   if (!foundrc && (HOME = sci_getenv("HOME"))) {
-      filename = HOME+string("/.scirunrc");
-      foundrc = parse_scirunrc(filename);
+      filename = HOME + slash + string(rcfile);
+      foundrc = parse_rcfile(filename);
   }
   
   // 4. check the source code directory
   if (!foundrc) {
-    filename = SCIRUN_SRCDIR+string("/.scirunrc");
-    foundrc = parse_scirunrc(filename);
+    filename = SCIRUN_SRCDIR + slash + string(rcfile);
+    foundrc = parse_rcfile(filename);
   }
 
-  // The .scirunrc file wasn't found.
-  if(!foundrc) filename = string("not found.");
+  // The rcfile wasn't found.
+  if(!foundrc) { 
+    filename = string("not found.");
+  }
   
-  // print location of .scirunrc
+  // print location of the rcfile
   cout << filename << std::endl;
 }
 
@@ -347,7 +351,7 @@ SCIRun::copy_and_parse_scirunrc()
   else
   { 
     // If the scirunrc file was copied, then parse it.
-    parse_scirunrc(homerc);
+    parse_rcfile(homerc);
   }
 }
 
