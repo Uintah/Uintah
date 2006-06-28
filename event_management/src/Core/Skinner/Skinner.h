@@ -52,47 +52,6 @@ namespace SCIRun {
     bool init_skinner();
     string load_skin(const string&filename);
   
-    class Runner : public SCIRun::Runnable {
-    public:
-      Runner(const Drawables_t &);
-      virtual ~Runner();
-      virtual void              run();
-    private:
-      Drawables_t                       drawables_;
-      SCIRun::EventManager::event_mailbox_t *   mailbox_;
-    };
-
-
-
-    class ThrottledTool {
-    public:
-      ThrottledTool(BaseTool *tool,
-                    const string &name,
-                    double hertz = 30.0);
-
-      virtual ~ThrottledTool();
-    private:
-
-      class Runner : public SCIRun::Runnable {
-      public:
-        Runner(BaseTool *tool,
-               const string &name,
-               double hertz);
-        virtual ~Runner();
-        virtual void              run();
-      private:
-        SCIRun::EventManager::event_mailbox_t * mailbox_;
-        SCIRun::BaseTool *                      tool_;
-        double                                  hertz_;
-        string                                  name_;
-      };
-      
-      
-      SCIRun::Thread *                          thread_;
-    };
-
-
-
     class ThrottledRunnableToolManager : public ThrottledRunnable{
     public:
       ThrottledRunnableToolManager(const string &name,
@@ -123,24 +82,6 @@ namespace SCIRun {
       Drawable *                              drawable_;
       bool                                    redraw_;
       SCIRun::EventManager::event_mailbox_t * mailbox_;
-    };
-
-
-
-    class DrawableTree {
-    public:
-      DrawableTree();
-      virtual ~DrawableTree();
-
-      struct node_t {
-      public:
-        typedef vector<node_t *> children_t;
-
-        node_t();
-        ~node_t();
-        Drawable *      drawable_;
-        children_t *    children_;
-      };
     };
   }
 }
