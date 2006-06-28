@@ -105,11 +105,12 @@ EventManager::record_trail_file(const string &filename)
   }
 
   stream_ = auto_ostream(filename, "Text", 0);
-  
+
   if (stream_ && stream_->error()) {
     delete stream_;
     return false;
   }
+  stream_->disable_pointer_hashing();
 
   return stream_;
 }
@@ -216,9 +217,9 @@ EventManager::play_trail() {
 
   event_handle_t event;
   unsigned long event_time = 0;
-  unsigned long first_event_time = 0;
+  unsigned long last_event_time = 0;
+  double last_timer_time = 0;
   const double millisecond = 1.0 / 1000.0;
-  int count = 0;
   TimeThrottle timer;
   timer.start();
   sci_putenv("SCIRUN_TRAIL_PLAYBACK", "1");
@@ -227,23 +228,22 @@ EventManager::play_trail() {
     Pio(*stream_, event);
   
     if (!event.get_rep()) {
-      cerr << "Stopping on count: " << count << "\n";
       stop_trail_file();
       continue;
+    }   
+
+    if (event_time = event->get_time()) {
+      if (last_event_time) {
+        double diff = (event_time-last_event_time) * millisecond;
+        timer.wait_for_time(last_timer_time + diff);
+      }           
+      last_event_time = event_time;
+      last_timer_time = timer.time();
     }
     
-    event_time = event->get_time();
-    if (event_time) {
-      if (!first_event_time) {
-        first_event_time = event_time;
-        timer.start();
-      } else {
-        timer.wait_for_time((event_time-first_event_time) * millisecond);
-      }           
-    }
-
     mailbox_.send(event);
   }
+  timer.stop();
   sci_putenv("SCIRUN_TRAIL_PLAYBACK", "0");
 } 
   

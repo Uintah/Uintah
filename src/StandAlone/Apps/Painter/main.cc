@@ -53,8 +53,21 @@ using namespace SCIRun;
 
 void
 start_trail_file() {
+  string default_trailfile(string("/tmp/")+
+                           sci_getenv("EXECUTABLE_NAME")+".trail");
+  string default_trailmode("R");
+
   const char *trailfile = sci_getenv("SCIRUN_TRAIL_FILE");
   const char *trailmode = sci_getenv("SCIRUN_TRAIL_MODE");
+
+  if (!trailfile) {
+    trailfile = default_trailfile.c_str();
+  }
+
+  if (!trailmode) {
+    trailmode = default_trailmode.c_str();
+  }
+
   if (trailmode && trailfile) {
     if (trailmode[0] == 'R') {
       if (EventManager::record_trail_file(trailfile)) {
@@ -67,16 +80,17 @@ start_trail_file() {
 
     if (trailmode[0] == 'P') {
       if (EventManager::play_trail_file(trailfile)) {
-        cerr << "Playing trail file: ";
+        cerr << "Playing trail file: " << trailfile << std::endl;
+        EventManager::play_trail();
+        cerr << "Trail file completed.\n";
       } else {
-        cerr << "ERROR playinging trail file ";
+        cerr << "ERROR playing trail file " << trailfile << std::endl;
       } 
-      cerr << trailfile << std::endl;
     }
   }
 }  
 
-
+ 
 Painter *
 create_painter(const char *filename) {
   BundleHandle bundle = new Bundle();
@@ -102,6 +116,7 @@ listen_for_events(const string &main_window_name) {
     em->tm().add_tool(new QuitMainWindowTool(main_window_name), 1);
     Thread *em_thread = new Thread(em, "Event Manager");
     start_trail_file();
+
     em_thread->join();
     EventManager::stop_trail_file();
   }
@@ -122,17 +137,21 @@ get_skin_filename() {
 
 int
 main(int argc, char *argv[], char **environment) {
-  create_sci_environment(environment, argv[0]);
-  ShaderProgramARB::init_shaders_supported();
-
-  Painter *painter = create_painter(argv[1]);
-
-  listen_for_events(Skinner::load_skin(get_skin_filename()));
-
-  delete painter;
-
-  Thread::exitAll(0);
-  return 0;
+  try {
+    create_sci_environment(environment, argv[0]);
+    ShaderProgramARB::init_shaders_supported();
+    
+    Painter *painter = create_painter(argv[1]);
+    
+    listen_for_events(Skinner::load_skin(get_skin_filename()));
+    
+    delete painter;
+    
+    Thread::exitAll(0);
+  } catch (...) {
+    cerr << "blah!";
+  }
+    return 0;
 }
 
 
