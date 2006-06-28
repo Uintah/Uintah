@@ -111,17 +111,6 @@
            </Box>
            <spacing>        [0.25,0.25,0.25]  </spacing>
        </Level>
-       <Level>
-           <Box label = " Level 1">
-              <lower>        [2.0,2.0,0.0]    </lower>
-              <upper>        [4.0,4.0,0.25]    </upper>
-              <extraCells>   [1,1,1]    </extraCells>
-              <patches>      [1,1,1]    </patches>
-           </Box>
-           <spacing>        [0.125,0.125,0.25]  </spacing>
-       </Level>
-<!--
--->
     </Grid>
    
     <!--____________________________________________________________________-->
