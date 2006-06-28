@@ -160,6 +160,7 @@ public:
   virtual void io(double&);
   virtual void io(float&);
   virtual void io(string& str);
+  virtual bool eof();
 };
 
 

@@ -148,12 +148,14 @@ public:
   virtual void io(double&) = 0;
   virtual void io(float&) = 0;
   virtual void io(string& str) = 0;
+  virtual bool eof() { return false; }
 
   void io(Persistent*&, const PersistentTypeID&);
 
   bool reading() const { return dir == Read; }
   bool writing() const { return dir == Write; }
   bool error() const { return err; }
+
   int version() const { return version_; }
   bool backwards_compat_id() const { return backwards_compat_id_; }
   void set_backwards_compat_id(bool p) { backwards_compat_id_ = p; }

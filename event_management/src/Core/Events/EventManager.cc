@@ -223,7 +223,7 @@ EventManager::play_trail() {
   TimeThrottle timer;
   timer.start();
   sci_putenv("SCIRUN_TRAIL_PLAYBACK", "1");
-  while (stream_) {
+  while (stream_ && !stream_->eof()) {
     event = 0;
     Pio(*stream_, event);
   
