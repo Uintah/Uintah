@@ -31,10 +31,6 @@
 //    Date   : Tue Jun 27 13:01:42 2006
 
 #include <Core/Skinner/Skinner.h>
-#include <Core/Thread/Thread.h>
-#include <Core/Util/Timer.h>
-#include <iostream>
-
 #include <Core/Skinner/XMLIO.h>
 #include <Core/Skinner/Box.h>
 #include <Core/Skinner/Collection.h>
@@ -46,14 +42,8 @@
 #include <Core/Skinner/Text.h>
 #include <Core/Skinner/Texture.h>
 #include <Core/Skinner/Layout.h>
-
 #include <Core/Events/Tools/FilterRedrawEventsTool.h>
-
-#include <sci_gl.h>
-#include <sci_glu.h>
-#include <sci_glx.h>
-
-
+#include <iostream>
 
 using std::cerr;
 using std::endl;
