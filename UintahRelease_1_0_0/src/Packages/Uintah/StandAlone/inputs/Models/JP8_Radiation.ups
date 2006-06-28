@@ -274,7 +274,7 @@
            <iters_before_timestep_restart> 15 </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
              <tolerance>1.e-8         </tolerance>
-             <solver>         hybrid  </solver>
+             <solver>         cg      </solver>
              <preconditioner> pfmg    </preconditioner>
              <maxiterations>  7500    </maxiterations>
              <npre>           1       </npre>

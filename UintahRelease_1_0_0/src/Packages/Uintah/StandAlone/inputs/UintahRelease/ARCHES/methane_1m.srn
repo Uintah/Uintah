@@ -75,7 +75,7 @@
     </subnet>
     <module id="m2" package="Uintah" category="DataIO" name="ArchiveReader" gui_visible="yes">
       <position x="65" y="7"/>
-      <var name="filebase" val="{/home/borodai/raid2/borodai/tester/methane_1m.uda.000}"/>
+      <var name="filebase" val="{}"/>
       <var name="tcl_status" val="{Executing}"/>
       <var name="ui_geometry" val="{550x79+277+107}"/>
     </module>
