@@ -127,6 +127,7 @@
       <save label = "rho_CC"/>
       <save label = "vol_frac_CC"/>
       <save label = "temp_CC"/>
+      <save label = "p.particleID"    levels = "1"/>
       <save label = "p.x"             levels = "1"/>
       <save label = "p.volume"        levels = "1"/>
       <save label = "p.velocity"      levels = "1"/>
