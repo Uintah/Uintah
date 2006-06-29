@@ -207,7 +207,6 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
     for(int L = maxLevel-1; L> 0; L--){ // from finer to coarser levels
       LevelP coarseLevel = grid->getLevel(L-1);
       scheduleCoarsen(coarseLevel, sched);
-      scheduleFinalizeTimestep(coarseLevel, sched);
     }
     for(int L = 1; L<maxLevel; L++){   // from coarser to finer levels
       LevelP fineLevel = grid->getLevel(L);
