@@ -735,16 +735,6 @@ void setBC(CCVariable<double>& var_CC,
 	  (patch, face, var_CC,bound, bc_kind, bc_value, cell_dx,mat_id,child);
          
         //__________________________________
-        //  hardwiring for NGC nozzle simulation   
-        if ( desc == "Density" && 
-              bc_kind == "Custom" && custom_BC_basket->setLodiBcs) {
-          setNGC_Nozzle_BC<CCVariable<double>,double>
-                (patch, face, var_CC, desc,"CC", bound, 
-                 bc_kind,mat_id, child, sharedState, 
-                 custom_BC_basket->ng);
-        }
-        
-        //__________________________________
         //  debugging
         if( BC_dbg.active() ) {
           BC_dbg <<"Face: "<< face <<" I've set BC " << IveSetBC
@@ -761,7 +751,7 @@ void setBC(CCVariable<double>& var_CC,
 
 /* --------------------------------------------------------------------- 
  Function~  setBC--
- Purpose~   Takes care vector boundary condition
+ Purpose~   Takes care of vector boundary condition
  ---------------------------------------------------------------------  */
 void setBC(CCVariable<Vector>& var_CC,
            const string& desc,
@@ -1068,7 +1058,6 @@ void setBC_Temperature(CCVariable<double>& var,
   constCCVariable<double> placeHolder;
   
   basket->setLodiBcs      = false;
-  basket->setNGBcs        = false;
   basket->setMicroSlipBcs = false;
   basket->set_MMS_BCs     = false;
   

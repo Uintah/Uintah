@@ -7,6 +7,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/AMRInterpolate.h>
 #include <Packages/Uintah/CCA/Components/ICE/ICE.h>
 #include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
+#include <Core/Util/NotFinished.h>
 
 namespace Uintah {
   class AMRICE : public ICE{
@@ -253,9 +254,12 @@ void ICE::refluxOperator_applyCorrectionFluxes(
     IntVector c_FC_offset;
     CellIterator c_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
     bool isRight_CP_FP_pair;
+    NOT_FINISHED("ice_energy AMRICE");
+#if 0
     refluxCoarseLevelIterator( patchFace,coarsePatch, finePatch, fineLevel,
                                c_iter ,c_FC_offset,isRight_CP_FP_pair,
                                "applyRefluxCorrection");
+#endif
     
                                
     if (isRight_CP_FP_pair ){  // if the right coarse/fine patch pair
@@ -490,7 +494,11 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
     constCCVariable<double> cv_fine, rho_CC_fine;
 
     new_dw->getRegion(fine_q_CC,  varLabel,               indx, fineLevel, fl, fh, false);
+#if 0
     new_dw->getRegion(cv_fine,    lb->specific_heatLabel, indx, fineLevel, fl, fh, false);
+#else
+    NOT_FINISHED("amr cv broken");
+#endif
     new_dw->getRegion(rho_CC_fine,lb->rho_CCLabel,        indx, fineLevel, fl, fh, false);
 
     cout_dbg << " fineToCoarseOperator: finePatch "<< fl << " " << fh 
@@ -697,9 +705,12 @@ void ICE::refluxOperator_computeCorrectionFluxes(
     IntVector c_FC_offset;
     CellIterator c_iter(IntVector(-8,-8,-8),IntVector(-9,-9,-9));
     bool isRight_CP_FP_pair;
+    NOT_FINISHED("ice_energy AMRICE");
+#if 0
     refluxCoarseLevelIterator( patchFace,coarsePatch, finePatch, fineLevel,
                                c_iter ,c_FC_offset,isRight_CP_FP_pair,
                                "computeRefluxCorrection");
+#endif
 
     // 
     if (isRight_CP_FP_pair){

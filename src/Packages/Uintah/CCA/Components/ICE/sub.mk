@@ -4,8 +4,6 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/Uintah/CCA/Components/ICE
 
 SRCS       += $(SRCDIR)/ICE.cc \
-       $(SRCDIR)/AMRICE.cc \
-       $(SRCDIR)/ICERF.cc \
        $(SRCDIR)/ICEDebug.cc \
        $(SRCDIR)/ICEMaterial.cc \
        $(SRCDIR)/Diffusion.cc \
@@ -19,6 +17,8 @@ SRCS       += $(SRCDIR)/ICE.cc \
        $(SRCDIR)/impAMRICE.cc \
        $(SRCDIR)/customInitialize.cc   \
        $(SRCDIR)/ExchangeCoefficients.cc   	
+#       $(SRCDIR)/AMRICE.cc \
+#       $(SRCDIR)/ICERF.cc \
 
 SUBDIRS := $(SRCDIR)/EOS $(SRCDIR)/Advection $(SRCDIR)/CustomBCs $(SRCDIR)/Thermo $(SRCDIR)/Combined
 

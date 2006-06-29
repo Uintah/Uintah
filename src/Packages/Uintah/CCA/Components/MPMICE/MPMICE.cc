@@ -74,7 +74,10 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
 
   // Don't do AMRICE with MPMICE for now...
   if (d_doAMR) {
+    NOT_FINISHED("ice_energy AMRICE");
+#if 0
     d_ice  = scinew AMRICE(myworld);
+#endif
   }
   else {
     d_ice  = scinew ICE(myworld, false);
@@ -253,9 +256,10 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   one_matl->addReference();
   t->computes(MIlb->vel_CCLabel);
   t->computes(Ilb->rho_CCLabel); 
-  t->computes(Ilb->temp_CCLabel);
-  t->computes(Ilb->sp_vol_CCLabel);
-  t->computes(Ilb->speedSound_CCLabel); 
+  NOT_FINISHED("ice_energy MPMICE");
+  //t->computes(Ilb->temp_CCLabel);
+  //t->computes(Ilb->sp_vol_CCLabel);
+  //t->computes(Ilb->speedSound_CCLabel); 
   t->computes(MIlb->NC_CCweightLabel, one_matl);
   t->computes(Mlb->heatRate_CCLabel);
 
@@ -687,11 +691,11 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
     t->requires(Task::OldDW, MIlb->NC_CCweightLabel,one_matl,
                                                     Ghost::AroundCells, 1);
     t->requires(Task::OldDW, Ilb->sp_vol_CCLabel,   Ghost::None, 0); 
-    t->requires(Task::OldDW, MIlb->temp_CCLabel,    Ghost::None, 0);
+    t->requires(Task::OldDW, MIlb->otemp_CCLabel,    Ghost::None, 0);
 
     t->computes(MIlb->cMassLabel);
     t->computes(MIlb->vel_CCLabel);
-    t->computes(MIlb->temp_CCLabel);
+    t->computes(MIlb->otemp_CCLabel);
     t->computes(Ilb->sp_vol_CCLabel, mss);
     t->computes(Ilb->rho_CCLabel, mss); 
    
@@ -716,7 +720,7 @@ void MPMICE::scheduleCoarsenCC_0(SchedulerP& sched,
   scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->cMassLabel,
                             1.9531e-15,   modifies, "sum");
                             
-  scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->temp_CCLabel,
+  scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->otemp_CCLabel,
                             0.,           modifies,"massWeighted");
                             
   scheduleCoarsenVariableCC(sched, patches, mpm_matls, MIlb->vel_CCLabel,
@@ -773,7 +777,7 @@ void MPMICE::scheduleComputeLagrangianValuesMPM(SchedulerP& sched,
     t->requires(Task::NewDW, Ilb->int_eng_source_CCLabel,  gn);
     t->requires(Task::NewDW, Ilb->mom_source_CCLabel,      gn);
 
-    t->requires(Task::NewDW, MIlb->temp_CCLabel,           gn);
+    t->requires(Task::NewDW, MIlb->otemp_CCLabel,           gn);
     t->requires(Task::NewDW, MIlb->vel_CCLabel,            gn);
 
     if(d_ice->d_models.size() > 0 && !do_mlmpmice){
@@ -922,14 +926,15 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   Ghost::GhostType  gn  = Ghost::None;
   Ghost::GhostType  gac = Ghost::AroundCells;
 
-  t->requires(Task::OldDW,Ilb->temp_CCLabel,       ice_matls, gn);  
+  NOT_FINISHED("ice_energy MPMICE");
+  //t->requires(Task::OldDW,Ilb->temp_CCLabel,       ice_matls, gn);  
   t->requires(Task::OldDW,Ilb->rho_CCLabel,        ice_matls, gn);  
   t->requires(Task::OldDW,Ilb->sp_vol_CCLabel,     ice_matls, gn);  
-  t->requires(Task::NewDW,Ilb->specific_heatLabel, ice_matls, gn);  
-  t->requires(Task::NewDW,Ilb->gammaLabel,         ice_matls, gn);  
+  //t->requires(Task::NewDW,Ilb->specific_heatLabel, ice_matls, gn);  
+  //t->requires(Task::NewDW,Ilb->gammaLabel,         ice_matls, gn);  
 
                               // M P M
-  t->requires(Task::NewDW,MIlb->temp_CCLabel,      mpm_matls, gn);  
+  t->requires(Task::NewDW,MIlb->otemp_CCLabel,      mpm_matls, gn);  
   t->requires(Task::NewDW,Ilb->rho_CCLabel,        mpm_matls, gn);  
   t->requires(Task::NewDW,Ilb->sp_vol_CCLabel,     mpm_matls, gn);  
   t->requires(Task::OldDW, MIlb->NC_CCweightLabel, press_matl,gac,1);
@@ -1019,7 +1024,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel,    indx,patch);
       new_dw->allocateAndPut(rho_CC,    Ilb->rho_CCLabel,       indx,patch);
       new_dw->allocateAndPut(speedSound,Ilb->speedSound_CCLabel,indx,patch);
-      new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,      indx,patch);
+      new_dw->allocateAndPut(Temp_CC,  MIlb->otemp_CCLabel,      indx,patch);
       new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,       indx,patch);
 
       CCVariable<double> heatFlux;
@@ -1215,7 +1220,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 
       new_dw->allocateAndPut(cmass,    MIlb->cMassLabel,     indx, patch);  
       new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,    indx, patch);  
-      new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,   indx, patch);  
+      new_dw->allocateAndPut(Temp_CC,  MIlb->otemp_CCLabel,   indx, patch);  
       new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel, indx, patch); 
       new_dw->allocateAndPut(rho_CC,    Ilb->rho_CCLabel,    indx, patch);
       
@@ -1228,7 +1233,8 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       new_dw->get(gtemperature, Mlb->gTemperatureLabel, indx, patch,gac, 1);
       new_dw->get(gSp_vol,      Mlb->gSp_volLabel,      indx, patch,gac, 1);
       old_dw->get(sp_vol_CC_ice,Ilb->sp_vol_CCLabel,    indx, patch,gn, 0); 
-      old_dw->get(Temp_CC_ice,  MIlb->temp_CCLabel,     indx, patch,gn, 0);
+      NOT_FINISHED("ice_energy MPMICE");
+      //old_dw->get(Temp_CC_ice,  MIlb->temp_CCLabel,     indx, patch,gn, 0);
       IntVector nodeIdx[8];
 //      double sp_vol_orig = 1.0/(mpm_matl->getInitialDensity());
       
@@ -1367,7 +1373,7 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       new_dw->get(gvelocity,   Mlb->gVelocityStarLabel,     indx,patch,gac,1);
       new_dw->get(gtempstar,   Mlb->gTemperatureStarLabel,  indx,patch,gac,1);
       new_dw->get(cmass,       MIlb->cMassLabel,            indx,patch,gn, 0);
-      new_dw->get(Temp_CC_sur, MIlb->temp_CCLabel,          indx,patch,gn, 0);
+      new_dw->get(Temp_CC_sur, MIlb->otemp_CCLabel,          indx,patch,gn, 0);
       new_dw->get(vel_CC_sur,  MIlb->vel_CCLabel,           indx,patch,gn, 0);
       new_dw->get(mom_source,   Ilb->mom_source_CCLabel,    indx,patch,gn, 0);
       new_dw->get(int_eng_src,  Ilb->int_eng_source_CCLabel,indx,patch,gn, 0);
@@ -1762,16 +1768,17 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial( m );
       int indx = matl->getDWIndex();
       if(ice_matl[m]){                    // I C E
-        old_dw->get(Temp[m],      Ilb->temp_CCLabel,      indx,patch,gn,0);
+        NOT_FINISHED("ice_energy MPMICE");
+        //old_dw->get(Temp[m],      Ilb->temp_CCLabel,      indx,patch,gn,0);
         old_dw->get(rho_CC_old[m],Ilb->rho_CCLabel,       indx,patch,gn,0);
         old_dw->get(sp_vol_CC[m], Ilb->sp_vol_CCLabel,    indx,patch,gn,0);
         old_dw->get(vel_CC[m],    Ilb->vel_CCLabel,       indx,patch,gn,0);
-        new_dw->get(cv[m],        Ilb->specific_heatLabel,indx,patch,gn,0);
-        new_dw->get(gamma[m],     Ilb->gammaLabel,        indx,patch,gn,0);
+        //new_dw->get(cv[m],        Ilb->specific_heatLabel,indx,patch,gn,0);
+        //new_dw->get(gamma[m],     Ilb->gammaLabel,        indx,patch,gn,0);
         new_dw->allocateAndPut(rho_CC_new[m], Ilb->rho_CCLabel,  indx,patch);
       }
       if(mpm_matl[m]){                    // M P M
-        new_dw->get(Temp[m],     MIlb->temp_CCLabel, indx,patch,gn,0);
+        new_dw->get(Temp[m],     MIlb->otemp_CCLabel, indx,patch,gn,0);
         new_dw->get(mass_CC[m],  MIlb->cMassLabel,   indx,patch,gn,0);
         new_dw->get(vel_CC[m],   MIlb->vel_CCLabel,  indx,patch,gn,0);
         new_dw->get(sp_vol_CC[m],Ilb->sp_vol_CCLabel,indx,patch,gn,0); 
@@ -2259,9 +2266,10 @@ void MPMICE::scheduleInitializeAddedMaterial(const LevelP& level,
     t->computes(MIlb->vel_CCLabel,       add_matl);
     t->computes(Mlb->heatRate_CCLabel,   add_matl);
     t->computes(Ilb->rho_CCLabel,        add_matl);
-    t->computes(Ilb->temp_CCLabel,       add_matl);
+    NOT_FINISHED("ice_energy MPMICE");
+    //t->computes(Ilb->temp_CCLabel,       add_matl);
     t->computes(Ilb->sp_vol_CCLabel,     add_matl);
-    t->computes(Ilb->speedSound_CCLabel, add_matl);
+    //t->computes(Ilb->speedSound_CCLabel, add_matl);
 
     sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
@@ -2354,7 +2362,7 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
     new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel,    indx,patch);
     new_dw->allocateAndPut(rho_CC,    Ilb->rho_CCLabel,       indx,patch);
     new_dw->allocateAndPut(speedSound,Ilb->speedSound_CCLabel,indx,patch);
-    new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,      indx,patch);
+    new_dw->allocateAndPut(Temp_CC,  MIlb->otemp_CCLabel,      indx,patch);
     new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,       indx,patch);
     new_dw->allocateAndPut(heatRate_CC,Mlb->heatRate_CCLabel, indx,patch);
 
@@ -2498,7 +2506,7 @@ void MPMICE::scheduleRefine(const PatchSet* patches,
     task->computes(MIlb->NC_CCweightLabel);
     task->computes(Ilb->sp_vol_CCLabel);
     task->computes(MIlb->vel_CCLabel);
-    task->computes(Ilb->temp_CCLabel);
+    task->computes(Ilb->otemp_CCLabel);
   }
   sched->addTask(task, patches, d_sharedState->allMPMMaterials());
 }
@@ -2711,7 +2719,7 @@ MPMICE::refine(const ProcessorGroup*,
         new_dw->allocateTemporary(rho_CC,    patch);
 
         new_dw->allocateAndPut(sp_vol_CC,   Ilb->sp_vol_CCLabel,    dwi,patch);
-        new_dw->allocateAndPut(Temp_CC,     MIlb->temp_CCLabel,     dwi,patch);
+        new_dw->allocateAndPut(Temp_CC,     MIlb->otemp_CCLabel,     dwi,patch);
         new_dw->allocateAndPut(vel_CC,      MIlb->vel_CCLabel,      dwi,patch);
         
         mpm_matl->initializeDummyCCVariables(rho_micro,   rho_CC,

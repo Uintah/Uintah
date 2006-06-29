@@ -54,10 +54,15 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
   } else if (sim_comp == "impm" || sim_comp == "IMPM") {
     return scinew ImpMPM(world);
   } else if (sim_comp == "ice" || sim_comp == "ICE") {
-    if (doAMR)
+    if (doAMR){
+#if 0
       return scinew AMRICE(world);
-    else
+#else
+      return 0;
+#endif
+    } else {
       return scinew ICE(world);
+    }
   } else if (sim_comp == "mpmice" || sim_comp == "MPMICE") {
     return scinew MPMICE(world,STAND_MPMICE, doAMR);
   } else if (sim_comp == "smpmice" || sim_comp == "shellmpmice" || sim_comp == "SHELLMPMICE") {

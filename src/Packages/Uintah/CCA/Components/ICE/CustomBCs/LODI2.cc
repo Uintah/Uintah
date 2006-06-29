@@ -10,6 +10,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Math/MiscMath.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/NotFinished.h>
 #include <Core/Math/MiscMath.h>
 #include <typeinfo>
 
@@ -153,7 +154,8 @@ void addRequires_Lodi(Task* t,
   if(where == "Advection"){
     setLODI_bcs = true;
     t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims,gn, 0);
-    t->requires(Task::NewDW, lb->gammaLabel,        ice_matls, gn); 
+    NOT_FINISHED("ice_energy LODI2");
+    //t->requires(Task::NewDW, lb->gammaLabel,        ice_matls, gn); 
     // requires(Task::NewDW, lb->vel_CCLabel,       ice_matls, gn); 
     // requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, gn); 
     // requires(Task::NewDW, lb->speedSound_CCLabel,ice_matls, gn);
@@ -223,8 +225,9 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
     new_dw->get(lv->vel_CC,     lb->vel_CC_XchangeLabel,indx,patch,gn,0);
     new_dw->get(lv->press_CC,   lb->press_CCLabel,      0,   patch,gn,0);  
     new_dw->get(lv->rho_CC,     lb->rho_CCLabel,        indx,patch,gn,0);
-    new_dw->get(lv->gamma,      lb->gammaLabel,         indx,patch,gn,0);
-    new_dw->get(lv->speedSound, lb->speedSound_CCLabel, indx,patch,gn,0);
+    NOT_FINISHED("ice_energy LODI2 gamma/speedSound");
+    //new_dw->get(lv->gamma,      lb->gammaLabel,         indx,patch,gn,0);
+    //new_dw->get(lv->speedSound, lb->speedSound_CCLabel, indx,patch,gn,0);
   }
   //__________________________________
   //    Advection
@@ -232,8 +235,9 @@ void  preprocess_Lodi_BCs(DataWarehouse* old_dw,
     setLodiBcs = true;
     new_dw->get(lv->rho_CC,    lb->rho_CCLabel,        indx,patch,gn,0); 
     new_dw->get(lv->vel_CC,    lb->vel_CCLabel,        indx,patch,gn,0);
-    new_dw->get(lv->speedSound,lb->speedSound_CCLabel, indx,patch,gn,0); 
-    new_dw->get(lv->gamma,     lb->gammaLabel,         indx,patch,gn,0); 
+    NOT_FINISHED("ice_energy LODI2 gamma/speedSound");
+    //new_dw->get(lv->speedSound,lb->speedSound_CCLabel, indx,patch,gn,0); 
+    //new_dw->get(lv->gamma,     lb->gammaLabel,         indx,patch,gn,0); 
     new_dw->get(lv->press_CC,  lb->press_CCLabel,      0,   patch,gn,0); 
   }
   

@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Math/MiscMath.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/NotFinished.h>
 #include <Core/Math/MiscMath.h>
 #include <typeinfo>
 
@@ -113,7 +114,8 @@ void addRequires_MicroSlip(Task* t,
   
   if(where == "CC_Exchange"){
     t->requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, gn);
-    t->requires(Task::NewDW, lb->gammaLabel,        ice_matls, gn); 
+    NOT_FINISHED("ice_energy microSlipBCs");
+    //t->requires(Task::NewDW, lb->gammaLabel,        ice_matls, gn); 
     t->requires(Task::NewDW, lb->viscosityLabel,    ice_matls, gn);
     t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims,gn, 0);
     t->computes(lb->vel_CC_XchangeLabel);
@@ -121,7 +123,8 @@ void addRequires_MicroSlip(Task* t,
   }
   if(where == "Advection"){
     t->requires(Task::NewDW, lb->press_CCLabel,     press_matl,oims,gn, 0);
-    t->requires(Task::NewDW, lb->gammaLabel,        ice_matls, gn); 
+    NOT_FINISHED("ice_energy microSlipBCs");
+    //t->requires(Task::NewDW, lb->gammaLabel,        ice_matls, gn); 
     t->requires(Task::NewDW, lb->viscosityLabel,    ice_matls, gn);
     // requires(Task::NewDW, lb->vel_CCLabel,       ice_matls, gn); 
     // requires(Task::NewDW, lb->rho_CCLabel,       ice_matls, gn); 
@@ -205,7 +208,8 @@ void  preprocess_MicroSlip_BCs(DataWarehouse* old_dw,
     new_dw->get(sv->vel_CC,     lb->vel_CC_XchangeLabel, indx,patch,gn,0);
     new_dw->get(sv->Temp_CC,    lb->temp_CC_XchangeLabel,indx,patch,gn,0);
     new_dw->get(sv->viscosity,  lb->viscosityLabel,      indx,patch,gn,0);
-    new_dw->get(sv->gamma,      lb->gammaLabel,          indx,patch,gn,0);
+    NOT_FINISHED("ice_energy microSlipBCs gamma");
+    //new_dw->get(sv->gamma,      lb->gammaLabel,          indx,patch,gn,0);
     new_dw->get(sv->press_CC,   lb->press_CCLabel,       0,   patch,gn,0);
   }
   //__________________________________
@@ -214,9 +218,10 @@ void  preprocess_MicroSlip_BCs(DataWarehouse* old_dw,
     setMicroSlipBcs = true;
     new_dw->get(sv->rho_CC,    lb->rho_CCLabel,        indx,patch,gn,0); 
     new_dw->get(sv->vel_CC,    lb->vel_CCLabel,        indx,patch,gn,0);
-    new_dw->get(sv->Temp_CC,   lb->temp_CCLabel,       indx,patch,gn,0);
+    NOT_FINISHED("ice_energy microSlipBCs gamma and Temp");
+    //new_dw->get(sv->Temp_CC,   lb->temp_CCLabel,       indx,patch,gn,0);
     new_dw->get(sv->viscosity, lb->viscosityLabel,     indx,patch,gn,0); 
-    new_dw->get(sv->gamma,     lb->gammaLabel,         indx,patch,gn,0); 
+    //new_dw->get(sv->gamma,     lb->gammaLabel,         indx,patch,gn,0); 
     new_dw->get(sv->press_CC,  lb->press_CCLabel,      0,   patch,gn,0); 
   }
   //__________________________________
