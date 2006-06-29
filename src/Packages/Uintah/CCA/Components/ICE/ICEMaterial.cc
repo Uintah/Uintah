@@ -45,6 +45,7 @@ ICEMaterial::ICEMaterial(ProblemSpecP& ps, ModelSetup* setup): Material(ps)
   // Step 1a -- look for a combined model.  This allows a single subcomponent
   //   to operate as an equation of state and thermo interface (and possibly a
   //   a transport interface.
+  d_combined = CombinedFactory::create(ps, setup, this);
   if(d_combined){
     // If the properties object implements the particular model, these casts
     // will succeed, otherwise they will fail and the model will be specified

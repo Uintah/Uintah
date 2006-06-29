@@ -713,7 +713,7 @@ void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
 
     sched->addTask(t2, level->eachPatch(), ice_matls);
   }
-  
+  scheduleComputeSpeedOfSound(sched, level->eachPatch(), ice_matls);  
 }
 
 /* _____________________________________________________________________
@@ -862,7 +862,7 @@ void ICE::scheduleComputeTemperature(SchedulerP& sched,
   int numICEMatls = d_sharedState->getNumICEMatls();
   for(int m = 0;m < numICEMatls; m++){
     ICEMaterial* ice_matl = d_sharedState->getICEMaterial(m);
-    ice_matl->getThermo()->addTaskDependencies_int_eng(t, ThermoInterface::NewState, 0);
+    ice_matl->getThermo()->addTaskDependencies_Temp(t, ThermoInterface::NewState, 0);
   }
   t->computes(lb->ntemp_CCLabel);
   sched->addTask(t, patches, ice_matls);
@@ -1036,6 +1036,8 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched,
                                                           
   scheduleTestConservation(               sched, patches, ice_matls_sub,
                                                           all_matls); 
+
+  scheduleComputeTemperature(             sched, patches, ice_matls);
 
   if(d_canAddICEMaterial){
     //  This checks to see if the model on THIS patch says that it's
@@ -2387,6 +2389,7 @@ void ICE::computeInternalEnergy(const ProcessorGroup*,
       new_dw->allocateAndPut(int_eng, lb->int_eng_CCLabel, indx, patch);
       new_dw->get(Temp, lb->ntemp_CCLabel, indx, patch, Ghost::None, 0);
       new_dw->get(sp_vol, lb->sp_vol_CCLabel, indx, patch, Ghost::None, 0);
+      cerr << "compute internal energy: " << patch->getCellIterator() << '\n';
       ice_matl->getThermo()->compute_int_eng(patch->getCellIterator(), int_eng,
                                              0, new_dw, ThermoInterface::NewState,
                                              patch, indx, 0,

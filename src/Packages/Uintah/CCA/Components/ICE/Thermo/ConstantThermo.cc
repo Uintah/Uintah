@@ -8,12 +8,8 @@ using namespace Uintah;
 // There is a similar function in ICE.  It would be nice if eventually they
 // were put in a common place.  This one doesn't have the sum_src logic (which
 // I didn't understand) - Steve
-static bool areAllValuesPositive( const constCCVariable<double> & src, IntVector& neg_cell )
+static bool areAllValuesPositive( CellIterator iterLim, const constCCVariable<double> & src, IntVector& neg_cell )
 { 
-  IntVector l = src.getLowIndex();
-  IntVector h = src.getHighIndex();
-  CellIterator iterLim = CellIterator(l,h);
-  
   // find the first cell where the value is < 0   
   for(CellIterator iter=iterLim; !iter.done();iter++) {
     IntVector c = *iter;
@@ -185,7 +181,7 @@ void ConstantThermo::compute_Temp(CellIterator iter, CCVariable<double>& temp,
                                   const constCCVariable<double>& sp_vol)
 {
   IntVector neg_cell;
-  if( !areAllValuesPositive(int_eng, neg_cell) ) {
+  if( !areAllValuesPositive(iter, int_eng, neg_cell) ) {
     ostringstream warn;
     warn <<"ERROR ConstantThermo:(L-" << patch->getLevel()->getIndex() 
          <<"):compute_Temp, mat "<< matl <<" cell "
@@ -205,11 +201,11 @@ void ConstantThermo::compute_int_eng(CellIterator iter, CCVariable<double>& int_
                                      const constCCVariable<double>&)
 {
   IntVector neg_cell;
-  if( !areAllValuesPositive(int_eng, neg_cell) ) {
+  if( !areAllValuesPositive(iter, int_eng, neg_cell) ) {
     ostringstream warn;
     warn <<"ERROR ConstantThermo:(L-" << patch->getLevel()->getIndex() 
          <<"):compute_int_eng, mat "<< matl <<" cell "
-         << neg_cell << " temp is negative\n";
+         << neg_cell << " int_eng is negative (" << int_eng[neg_cell] << "\n";
     throw InternalError(warn.str(), __FILE__, __LINE__ );
   }
   for(;!iter.done();iter++)
@@ -287,14 +283,6 @@ void ConstantThermo::compute_int_eng(cellList::iterator iter, cellList::iterator
                                      const constCCVariable<double>& temp,
                                      const constCCVariable<double>&)
 {
-  IntVector neg_cell;
-  if( !areAllValuesPositive(int_eng, neg_cell) ) {
-    ostringstream warn;
-    warn <<"ERROR ConstantThermo:(L-" << patch->getLevel()->getIndex() 
-         <<"):compute_int_eng, mat "<< matl <<" cell "
-         << neg_cell << " temp is negative\n";
-    throw InternalError(warn.str(), __FILE__, __LINE__ );
-  }
   for(;iter != end;iter++)
     int_eng[*iter] = temp[*iter] * d_specificHeat;
 }
