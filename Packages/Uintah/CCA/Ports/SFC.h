@@ -59,7 +59,7 @@ template<int DIM, class LOCS>
 class SFC
 {
 public:
-	SFC(int dir[][DIM], ProcessorGroup *d_myworld) : dir(dir),set(0), locsv(0), locs(0), orders(0), sendbuf(0), recievebuf(0), mergebuf(0), d_myworld(d_myworld), block_size(3000), blocks_in_transit(3), sample_percent(.1), cleanup(BATCHERS) {};
+	SFC(int dir[][DIM], const ProcessorGroup *d_myworld) : dir(dir),set(0), locsv(0), locs(0), orders(0), sendbuf(0), recievebuf(0), mergebuf(0), d_myworld(d_myworld), block_size(3000), blocks_in_transit(3), sample_percent(.1), cleanup(BATCHERS) {};
 	virtual ~SFC() {};
 	void GenerateCurve(int mode=0);
 	void SetRefinements(unsigned int refinements);
@@ -105,7 +105,7 @@ protected:
 	void* recievebuf;
 	void* mergebuf;
 	
-	ProcessorGroup *d_myworld;
+	const ProcessorGroup *d_myworld;
 	
 	//Merge-Exchange Parameters
 	unsigned int block_size;
@@ -137,7 +137,7 @@ class SFC2D : public SFC<2,LOCS>
 {
 
 	public:
-		SFC2D(Curve curve,ProcessorGroup *d_myworld) : SFC<2,LOCS>(dir2,d_myworld) {SetCurve(curve);};
+		SFC2D(Curve curve,const ProcessorGroup *d_myworld) : SFC<2,LOCS>(dir2,d_myworld) {SetCurve(curve);};
 		virtual ~SFC2D() {};
 		void SetCurve(Curve curve);
 		void SetDimensions(REAL wx, REAL wy);
@@ -153,7 +153,7 @@ template<class LOCS>
 class SFC3D : public SFC<3,LOCS>
 {
 	public:
-		SFC3D(Curve curve,ProcessorGroup *d_myworld) : SFC<3,LOCS>(dir3, d_myworld) {SetCurve(curve);};
+		SFC3D(Curve curve,const ProcessorGroup *d_myworld) : SFC<3,LOCS>(dir3, d_myworld) {SetCurve(curve);};
 		virtual ~SFC3D() {};
 		void SetCurve(Curve curve);
 		void SetDimensions(REAL wx, REAL wy, REAL wz);
@@ -167,25 +167,25 @@ private:
 class SFC2f : public SFC2D<float>
 {
 	public:
-		SFC2f(Curve curve,ProcessorGroup *d_myworld) : SFC2D<float>(curve,d_myworld) {};
+		SFC2f(Curve curve,const ProcessorGroup *d_myworld) : SFC2D<float>(curve,d_myworld) {};
 };
 
 class SFC2d : public SFC2D<double>
 {
 	public:
-		SFC2d(Curve curve,ProcessorGroup *d_myworld) : SFC2D<double>(curve,d_myworld) {} ;
+		SFC2d(Curve curve,const ProcessorGroup *d_myworld) : SFC2D<double>(curve,d_myworld) {} ;
 };
 
 class SFC3f : public SFC3D<float>
 {
 	public:
-		SFC3f(Curve curve,ProcessorGroup *d_myworld) : SFC3D<float>(curve,d_myworld) {};
+		SFC3f(Curve curve,const ProcessorGroup *d_myworld) : SFC3D<float>(curve,d_myworld) {};
 };
 
 class SFC3d : public SFC3D<double>
 {
 	public:
-		SFC3d(Curve curve,ProcessorGroup *d_myworld) : SFC3D<double>(curve,d_myworld) {} ;
+		SFC3d(Curve curve,const ProcessorGroup *d_myworld) : SFC3D<double>(curve,d_myworld) {} ;
 };
 
 
@@ -877,7 +877,7 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 			rqueue.pop();
 			
 			MPI_Get_count(&status,MPI_BYTE,&b);
-			b*=inv_denom;
+			b=int(b*inv_denom);
 //			cout << rank << " recieved block of size\n";
 			while(b>0 && merged<n)
 			{
@@ -1013,7 +1013,7 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 			rqueue.pop();
 
 			MPI_Get_count(&status,MPI_BYTE,&b);
-			b*=inv_denom;
+			b=int(b*inv_denom);
 //			cout << rank << " recieved block of size\n";
 
 			while(b>0 && merged<n)
@@ -1163,7 +1163,7 @@ void SFC<DIM,LOCS>::PrimaryMerge()
 			if(rank==7 && to==8)
 			{
 
-				History<BITS>* sbuf=(History<BITS>*)sendbuf;
+//				History<BITS>* sbuf=(History<BITS>*)sendbuf;
 //				cout << "after exit\n";
 //				for(int i=0;i<n;i++)
 //					cout << i << " " << sbuf[i].i << ":" << sbuf[i].bits << endl;
