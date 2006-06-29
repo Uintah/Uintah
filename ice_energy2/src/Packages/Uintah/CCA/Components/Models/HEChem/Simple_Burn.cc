@@ -20,6 +20,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <iostream>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/NotFinished.h>
 
 using namespace Uintah;
 using namespace std;
@@ -212,7 +213,8 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
   // Reactants
   t->requires(Task::NewDW, Ilb->sp_vol_CCLabel,   react_matl, gn);
   t->requires(Task::NewDW, MIlb->vel_CCLabel,     react_matl, gn);
-  t->requires(Task::NewDW, MIlb->temp_CCLabel,    react_matl, gn);
+  NOT_FINISHED("ice_energy Simple_Burn");
+  //t->requires(Task::NewDW, MIlb->temp_CCLabel,    react_matl, gn);
   t->requires(Task::NewDW, MIlb->cMassLabel,      react_matl, gn);
   t->requires(Task::NewDW, Mlb->gMassLabel,       react_matl, gac,1);  
 
@@ -283,7 +285,8 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
    
     //__________________________________
     // Reactant data
-    new_dw->get(solidTemp,       MIlb->temp_CCLabel, m0,patch,gn, 0);
+    NOT_FINISHED("ice_energy Simple_Burn");
+    //new_dw->get(solidTemp,       MIlb->temp_CCLabel, m0,patch,gn, 0);
     new_dw->get(solidMass,       MIlb->cMassLabel,   m0,patch,gn, 0);
     new_dw->get(solidSp_vol,     Ilb->sp_vol_CCLabel,m0,patch,gn,0);
     new_dw->get(vel_CC,          MIlb->vel_CCLabel,  m0,patch,gn, 0);
@@ -408,7 +411,8 @@ void Simple_Burn::scheduleCheckNeedAddMaterial(SchedulerP& sched,
 
     t->requires(Task::OldDW, MIlb->NC_CCweightLabel,one_matl,   gac,1);
     t->requires(Task::NewDW, Mlb->gMassLabel,       react_matl, gac,1);
-    t->requires(Task::NewDW, MIlb->temp_CCLabel,    react_matl, gn);
+    NOT_FINISHED("ice_energy Simple_Burn");
+    //t->requires(Task::NewDW, MIlb->temp_CCLabel,    react_matl, gn);
 
     t->computes(Simple_Burn::surfaceTempLabel,   one_matl);
   }
@@ -450,7 +454,8 @@ void Simple_Burn::checkNeedAddMaterial(const ProcessorGroup*,
    
     //__________________________________
     // Reactant data
-    new_dw->get(solidTemp,   Ilb->temp_CCLabel, m0,patch,gn, 0);
+    NOT_FINISHED("ice_energy Simple_Burn");
+    //new_dw->get(solidTemp,   Ilb->temp_CCLabel, m0,patch,gn, 0);
     new_dw->get(NCsolidMass, Mlb->gMassLabel,   m0,patch,gac,1);
 
     //__________________________________

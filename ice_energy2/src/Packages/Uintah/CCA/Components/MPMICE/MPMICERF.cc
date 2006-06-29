@@ -13,6 +13,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarTypes.h>
 #include <Packages/Uintah/Core/Labels/MPMICELabel.h>
+#include <Core/Util/NotFinished.h>
 
 using namespace SCIRun;
 using namespace Uintah;
@@ -83,14 +84,15 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
       ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
       MPMMaterial* mpm_matl = dynamic_cast<MPMMaterial*>(matl);
       if(ice_matl){                    // I C E
-        old_dw->get(Temp[m],      Ilb->temp_CCLabel,      indx,patch,gn,0);
+        NOT_FINISHED("ICERF cv/gamma/temp");
+        //old_dw->get(Temp[m],      Ilb->temp_CCLabel,      indx,patch,gn,0);
         old_dw->get(rho_CC[m],    Ilb->rho_CCLabel,       indx,patch,gn,0);
         old_dw->get(sp_vol_CC[m], Ilb->sp_vol_CCLabel,    indx,patch,gn,0);
-        new_dw->get(cv[m],        Ilb->specific_heatLabel,indx,patch,gn,0);
-        new_dw->get(gamma[m],     Ilb->gammaLabel,        indx,patch,gn,0);
+        //new_dw->get(cv[m],        Ilb->specific_heatLabel,indx,patch,gn,0);
+        //new_dw->get(gamma[m],     Ilb->gammaLabel,        indx,patch,gn,0);
       }
       if(mpm_matl){                    // M P M    
-        new_dw->get(Temp[m],     MIlb->temp_CCLabel,  indx,patch,gn,0); 
+        new_dw->get(Temp[m],     MIlb->otemp_CCLabel,  indx,patch,gn,0); 
         new_dw->get(mass_CC[m],  MIlb->cMassLabel,    indx,patch,gn,0); 
       }
        new_dw->allocateTemporary(kappa[m],         patch);

@@ -21,5 +21,5 @@ PSELIBS := \
 CANTERA_DIR := /Users/sparker/sw
 ifneq ($(CANTERA_DIR),)
  INCLUDES := $(INCLUDES) -I$(CANTERA_DIR)/include
- CANTERA_LIBRARY := -L$(CANTERA_DIR)/lib/1.6.0 -loneD -lzeroD -ltransport -lcantera -lrecipes -lcvode -lctmath -ltpx -lconverters -lctcxx -framework Accelerate -L/sw/lib -lg2c
+ CANTERA_LIBRARY := -L$(CANTERA_DIR)/lib/1.6.0 -loneD -lzeroD -ltransport -lcantera -lrecipes -lcvode -lctmath -ltpx -lconverters -lctcxx -framework Accelerate
 endif

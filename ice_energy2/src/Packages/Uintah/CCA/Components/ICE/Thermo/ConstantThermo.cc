@@ -1,8 +1,31 @@
 
 #include <Packages/Uintah/CCA/Components/ICE/Thermo/ConstantThermo.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
+#include <Core/Exceptions/InternalError.h>
 
 using namespace Uintah;
+
+// There is a similar function in ICE.  It would be nice if eventually they
+// were put in a common place.  This one doesn't have the sum_src logic (which
+// I didn't understand) - Steve
+static bool areAllValuesPositive( const constCCVariable<double> & src, IntVector& neg_cell )
+{ 
+  IntVector l = src.getLowIndex();
+  IntVector h = src.getHighIndex();
+  CellIterator iterLim = CellIterator(l,h);
+  
+  // find the first cell where the value is < 0   
+  for(CellIterator iter=iterLim; !iter.done();iter++) {
+    IntVector c = *iter;
+    if (src[c] < 0.0 || isnan(src[c]) !=0) {
+      neg_cell = c;
+      return false;
+    }
+  }
+  neg_cell = IntVector(0,0,0); 
+  return true;      
+} 
+
 
 ConstantThermo::ConstantThermo(ProblemSpecP& ps, ModelSetup*, ICEMaterial* ice_matl)
   : ThermoInterface(ice_matl)
@@ -161,6 +184,14 @@ void ConstantThermo::compute_Temp(CellIterator iter, CCVariable<double>& temp,
                                   const constCCVariable<double>& int_eng,
                                   const constCCVariable<double>& sp_vol)
 {
+  IntVector neg_cell;
+  if( !areAllValuesPositive(int_eng, neg_cell) ) {
+    ostringstream warn;
+    warn <<"ERROR ConstantThermo:(L-" << patch->getLevel()->getIndex() 
+         <<"):compute_Temp, mat "<< matl <<" cell "
+         << neg_cell << " int_eng is negative\n";
+    throw InternalError(warn.str(), __FILE__, __LINE__ );
+  }
   double factor = 1./d_specificHeat;
   for(;!iter.done();iter++)
     temp[*iter] = int_eng[*iter] * factor;
@@ -173,6 +204,14 @@ void ConstantThermo::compute_int_eng(CellIterator iter, CCVariable<double>& int_
                                      const constCCVariable<double>& temp,
                                      const constCCVariable<double>&)
 {
+  IntVector neg_cell;
+  if( !areAllValuesPositive(int_eng, neg_cell) ) {
+    ostringstream warn;
+    warn <<"ERROR ConstantThermo:(L-" << patch->getLevel()->getIndex() 
+         <<"):compute_int_eng, mat "<< matl <<" cell "
+         << neg_cell << " temp is negative\n";
+    throw InternalError(warn.str(), __FILE__, __LINE__ );
+  }
   for(;!iter.done();iter++)
     int_eng[*iter] = temp[*iter] * d_specificHeat;
 }
@@ -248,6 +287,14 @@ void ConstantThermo::compute_int_eng(cellList::iterator iter, cellList::iterator
                                      const constCCVariable<double>& temp,
                                      const constCCVariable<double>&)
 {
+  IntVector neg_cell;
+  if( !areAllValuesPositive(int_eng, neg_cell) ) {
+    ostringstream warn;
+    warn <<"ERROR ConstantThermo:(L-" << patch->getLevel()->getIndex() 
+         <<"):compute_int_eng, mat "<< matl <<" cell "
+         << neg_cell << " temp is negative\n";
+    throw InternalError(warn.str(), __FILE__, __LINE__ );
+  }
   for(;iter != end;iter++)
     int_eng[*iter] = temp[*iter] * d_specificHeat;
 }

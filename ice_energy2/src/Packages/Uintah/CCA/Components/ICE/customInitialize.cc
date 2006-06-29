@@ -3,6 +3,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Util/NotFinished.h>
 
 using namespace Uintah;
 namespace Uintah {
@@ -110,6 +111,8 @@ void customInitialization(const Patch* patch,
     double t = 0.0; 
     double A = cib->mms_inputs->A;
     double nu = ice_matl->getViscosity();
+    NOT_FINISHED("ice_energy mms");
+#if 0
     double cv = ice_matl->getSpecificHeat();
     double gamma = ice_matl->getGamma();
     double p_ref = 101325;
@@ -129,6 +132,7 @@ void customInitialization(const Patch* patch,
       // back out temperature from the perfect gas law
       temp_CC[c]= press_CC[c]/ ( (gamma - 1.0) * cv * rho_CC[c] );
     }
+#endif
   } // mms_1
 }
 } // end uintah namespace
