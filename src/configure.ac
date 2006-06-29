@@ -3569,11 +3569,7 @@ case $host in
     fi
     ;;
   *linux*)
-    if test "$enable_64bit" = "yes"; then
-      PETSC_ARCH=linux64
-    else
-      PETSC_ARCH=linux
-    fi
+    PETSC_ARCH=linux-gnu
     ;;
   *-dec*)
     if test "$petsc"; then
