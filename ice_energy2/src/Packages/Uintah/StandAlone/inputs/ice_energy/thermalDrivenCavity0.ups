@@ -37,9 +37,6 @@
         <BCType id = "0" label = "Density" var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "mixtureFraction"      var = "Neumann">
-                              <value> 0.0 </value>       
-        </BCType>
       </Face>
       <Face side = "x+">
         <BCType id = "0" label = "Pressure" var = "Neumann">
@@ -53,9 +50,6 @@
         </BCType>
         <BCType id = "0" label = "Density" var = "Neumann">
                               <value> 0.0 </value>
-        </BCType>
-        <BCType id = "0"   label = "mixtureFraction"      var = "Neumann">
-                              <value> 0.0 </value>       
         </BCType>
       </Face>
       
@@ -72,9 +66,6 @@
         <BCType id = "0" label = "Density" var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "mixtureFraction"      var = "Neumann">
-                              <value> 0.0 </value>       
-        </BCType>
       </Face>
                         
       <Face side = "y+">
@@ -88,9 +79,6 @@
                               <value> 300.0 </value>
         </BCType>
         <BCType id = "0" label = "Density" var = "Neumann">
-                              <value> 0.0 </value>       
-        </BCType>
-        <BCType id = "0"   label = "mixtureFraction"      var = "Neumann">
                               <value> 0.0 </value>       
         </BCType>
       </Face>
@@ -108,9 +96,6 @@
         <BCType id = "0" label = "Density" var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0"   label = "mixtureFraction"      var = "Neumann">
-                              <value> 0.0 </value>       
-        </BCType>
       </Face>
       <Face side = "z+">        
         <BCType id = "0" label = "Pressure" var = "Neumann">
@@ -124,9 +109,6 @@
         </BCType>
         <BCType id = "0" label = "Density" var = "Neumann">
                               <value> 0.0 </value>
-        </BCType>
-        <BCType id = "0"   label = "mixtureFraction"      var = "Neumann">
-                              <value> 0.0 </value>       
         </BCType>
       </Face>
     </BoundaryConditions>
@@ -170,8 +152,8 @@
       <dbg_timeStart>       0      </dbg_timeStart>
       <dbg_timeStop>        0.01      </dbg_timeStop>
       <dbg_outputInterval>  1e-9      </dbg_outputInterval>
-      <dbg_BeginIndex>      [-1,16,0] </dbg_BeginIndex>
-      <dbg_EndIndex>        [3,21,1]  </dbg_EndIndex>
+      <dbg_BeginIndex>    [[-1,16,0]] </dbg_BeginIndex>
+      <dbg_EndIndex>      [[3,21,1]]  </dbg_EndIndex>
       <dbg_SigFigs>         12         </dbg_SigFigs>
       <dbg_Matls>           [0]       </dbg_Matls>
 <dbg_Level>  0    </dbg_Level>
@@ -240,14 +222,11 @@
            <isSurroundingMatl> true                     </isSurroundingMatl> 
            <burn type = "null"/>
            <EOS type = "ideal_gas">                     </EOS>
-           <Thermo type = "cantera single mixture">
-		<speciesMix>CH4:1</speciesMix>
-		<file>gri30.xml</file>
-                <id>gri30_mix</id>
-                <thermal_conductivity>100.0             </thermal_conductivity>
-           </Thermo>
            <dynamic_viscosity>  15.6e-6                 </dynamic_viscosity>
            <thermal_conductivity>100                    </thermal_conductivity>
+           <specific_heat>      716.0                   </specific_heat>
+           <speed_of_sound>     376                     </speed_of_sound>
+           <gamma>              1.4                     </gamma>
            <geom_object>
                 <box label = "wholeDomain">
                     <min>       [ 0.0, 0.0, 0.0 ]       </min>
