@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
-<network version="v1.25.3" name="{Main}" bbox="{0 4 905 720}" creationDate="{Thu Jun 22 2006}" creationTime="{14:32:30}" geometry="{1161x1058+0+0}">
+<network version="v1.25.3" name="{Main}" bbox="{0 4 905 720}" creationDate="{Fri Jun 30 2006}" creationTime="{12:53:31}" geometry="{1161x1058+0+0}">
   <note>{}</note>
   <modules>
     <module id="m1" package="Uintah" category="DataIO" name="ArchiveReader">
@@ -37,7 +37,7 @@
       <gui_callback>
         <callback>addViewer</callback>
       </gui_callback>
-      <var name="ViewWindow_0-geometry" val="654x643+935+100"/>
+      <var name="ViewWindow_0-geometry" val="654x642+935+120"/>
       <var name="ViewWindow_0-view-eyep-x" val="{0.691108534685}"/>
       <var name="ViewWindow_0-view-eyep-y" val="{1.00920660064}"/>
       <var name="ViewWindow_0-view-eyep-z" val="{4.17130308669}"/>
@@ -148,18 +148,6 @@
       <var name="sVar" val="{rho_CC}"/>
     </module>
     <module id="m9" package="SCIRun" category="Visualization" name="ShowColorMap">
-      <position x="18" y="554"/>
-      <var name="length" val="{half1}"/>
-      <var name="side" val="{left}"/>
-      <var name="numlabels" val="{5}"/>
-      <var name="scale" val="{1.0}"/>
-      <var name="numsigdigits" val="{5}"/>
-      <var name="units" val="{}"/>
-      <var name="text_color" val="{1}"/>
-      <var name="text-fontsize" val="{1}"/>
-      <var name="extra-padding" val="{0}"/>
-    </module>
-    <module id="m10" package="SCIRun" category="Visualization" name="ShowColorMap">
       <position x="534" y="310"/>
       <var name="length" val="{half2}"/>
       <var name="side" val="{left}"/>
@@ -171,7 +159,7 @@
       <var name="text-fontsize" val="{1}"/>
       <var name="extra-padding" val="{0}"/>
     </module>
-    <module id="m11" package="SCIRun" category="Math" name="BuildTransform">
+    <module id="m10" package="SCIRun" category="Math" name="BuildTransform">
       <position x="715" y="11"/>
       <var name="rotate_z" val="{1.0}"/>
       <var name="translate_x" val="{1.25}"/>
@@ -181,51 +169,31 @@
       <var name="shear_plane_d" val="{1.0}"/>
       <var name="widget_scale" val="{1.0}"/>
     </module>
-    <module id="m12" package="SCIRun" category="FieldsGeometry" name="TransformField">
+    <module id="m11" package="SCIRun" category="FieldsGeometry" name="TransformField">
       <position x="728" y="315"/>
     </module>
-    <module id="m13" package="SCIRun" category="FieldsGeometry" name="TransformField">
+    <module id="m12" package="SCIRun" category="FieldsGeometry" name="TransformField">
       <position x="516" y="309"/>
     </module>
-    <module id="m14" package="Uintah" category="Visualization" name="NodeHedgehog">
+    <module id="m13" package="Uintah" category="Visualization" name="NodeHedgehog">
       <position x="727" y="402"/>
       <var name="drawcylinders" val="{0}"/>
       <var name="norm_head" val="{0}"/>
     </module>
-    <module id="m15" package="Uintah" category="Selectors" name="VectorFieldExtractor">
+    <module id="m14" package="Uintah" category="Selectors" name="VectorFieldExtractor">
       <position x="728" y="223"/>
       <var name="tcl_status" val="{Calling FieldExtractor!}"/>
     </module>
-    <module id="m16" package="Uintah" category="Selectors" name="VectorFieldExtractor">
+    <module id="m15" package="Uintah" category="Selectors" name="VectorFieldExtractor">
       <position x="231" y="218"/>
       <var name="tcl_status" val="{Calling FieldExtractor!}"/>
     </module>
-    <module id="m17" package="Uintah" category="Visualization" name="NodeHedgehog">
+    <module id="m16" package="Uintah" category="Visualization" name="NodeHedgehog">
       <position x="231" y="406"/>
       <var name="drawcylinders" val="{0}"/>
       <var name="norm_head" val="{0}"/>
     </module>
-    <module id="m18" package="SCIRun" category="Visualization" name="TextureBuilder">
-      <position x="0" y="394"/>
-      <var name="vmin" val="{0.0}"/>
-      <var name="vmax" val="{1.0}"/>
-      <var name="gmin" val="{0.0}"/>
-      <var name="gmax" val="{1.0}"/>
-      <var name="is_fixed" val="{0}"/>
-      <var name="card_mem" val="{128}"/>
-      <var name="card_mem_auto" val="{1}"/>
-    </module>
-    <module id="m19" package="SCIRun" category="Visualization" name="TextureBuilder">
-      <position x="516" y="392"/>
-      <var name="vmin" val="{0.0}"/>
-      <var name="vmax" val="{1.0}"/>
-      <var name="gmin" val="{0.0}"/>
-      <var name="gmax" val="{1.0}"/>
-      <var name="is_fixed" val="{0}"/>
-      <var name="card_mem" val="{128}"/>
-      <var name="card_mem_auto" val="{1}"/>
-    </module>
-    <module id="m20" package="SCIRun" category="Visualization" name="VolumeSlicer">
+    <module id="m17" package="SCIRun" category="Visualization" name="VolumeSlicer">
       <position x="0" y="473"/>
       <var name="control_pos_saved" val="{0}"/>
       <var name="drawX" val="{1}"/>
@@ -245,7 +213,7 @@
       <var name="outline_levels" val="{0}"/>
       <var name="use_stencil" val="{0}"/>
     </module>
-    <module id="m21" package="SCIRun" category="Visualization" name="ShowColorMap">
+    <module id="m18" package="SCIRun" category="Visualization" name="ShowColorMap">
       <position x="533" y="556"/>
       <var name="length" val="{half2}"/>
       <var name="side" val="{left}"/>
@@ -257,7 +225,7 @@
       <var name="text-fontsize" val="{1}"/>
       <var name="extra-padding" val="{0}"/>
     </module>
-    <module id="m22" package="SCIRun" category="Visualization" name="VolumeSlicer">
+    <module id="m19" package="SCIRun" category="Visualization" name="VolumeSlicer">
       <position x="516" y="475"/>
       <var name="control_pos_saved" val="{0}"/>
       <var name="drawX" val="{1}"/>
@@ -277,33 +245,64 @@
       <var name="outline_levels" val="{0}"/>
       <var name="use_stencil" val="{0}"/>
     </module>
+    <module id="m20" package="Uintah" category="Visualization" name="UTextureBuilder">
+      <position x="517" y="392"/>
+      <var name="vmin" val="{0.0}"/>
+      <var name="vmax" val="{1.0}"/>
+      <var name="gmin" val="{0.0}"/>
+      <var name="gmax" val="{1.0}"/>
+      <var name="is_fixed" val="{0}"/>
+      <var name="card_mem" val="{16}"/>
+      <var name="card_mem_auto" val="{1}"/>
+    </module>
+    <module id="m21" package="Uintah" category="Visualization" name="UTextureBuilder">
+      <position x="1" y="378"/>
+      <var name="vmin" val="{0.0}"/>
+      <var name="vmax" val="{1.0}"/>
+      <var name="gmin" val="{0.0}"/>
+      <var name="gmax" val="{1.0}"/>
+      <var name="is_fixed" val="{0}"/>
+      <var name="card_mem" val="{16}"/>
+      <var name="card_mem_auto" val="{1}"/>
+    </module>
+    <module id="m22" package="SCIRun" category="Visualization" name="RescaleColorMap">
+      <position x="198" y="297"/>
+      <var name="main_frame" val="{.uiSCIRun_Visualization_RescaleColorMap_0}"/>
+      <var name="isFixed" val="{0}"/>
+      <var name="min" val="{0.0}"/>
+      <var name="max" val="{1.0}"/>
+      <var name="makeSymmetric" val="{0}"/>
+      <var name="ui_geometry" val="{314x129+223+566}"/>
+    </module>
   </modules>
   <connections>
-    <connection id="c1" from="m12" fromport="0" to="m14" toport="0"/>
-    <connection id="c2" from="m13" fromport="0" to="m19" toport="0"/>
-    <connection id="c3" from="m18" fromport="0" to="m20" toport="0"/>
-    <connection id="c4" from="m19" fromport="0" to="m22" toport="0"/>
-    <connection id="c5" from="m20" fromport="0" to="m5" toport="0"/>
-    <connection id="c6" from="m20" fromport="1" to="m9" toport="0"/>
-    <connection id="c7" from="m22" fromport="1" to="m21" toport="0"/>
-    <connection id="c8" from="m1" fromport="0" to="m4" toport="0"/>
-    <connection id="c9" from="m6" fromport="0" to="m7" toport="0"/>
-    <connection id="c10" from="m3" fromport="0" to="m18" toport="0"/>
-    <connection id="c11" from="m8" fromport="0" to="m13" toport="0"/>
-    <connection id="c12" from="m4" fromport="0" to="m3" toport="0"/>
-    <connection id="c13" from="m4" fromport="0" to="m16" toport="0"/>
-    <connection id="c14" from="m7" fromport="0" to="m8" toport="0"/>
-    <connection id="c15" from="m7" fromport="0" to="m15" toport="0"/>
-    <connection id="c16" from="m15" fromport="0" to="m12" toport="0"/>
-    <connection id="c17" from="m16" fromport="0" to="m17" toport="0"/>
-    <connection id="c18" from="m11" fromport="0" to="m12" toport="1"/>
-    <connection id="c19" from="m11" fromport="0" to="m13" toport="1"/>
-    <connection id="c20" from="m2" fromport="0" to="m20" toport="1"/>
-    <connection id="c21" from="m2" fromport="0" to="m22" toport="1"/>
-    <connection id="c22" from="m9" fromport="0" to="m5" toport="1"/>
-    <connection id="c23" from="m17" fromport="0" to="m5" toport="2"/>
-    <connection id="c24" from="m21" fromport="0" to="m5" toport="3"/>
-    <connection id="c25" from="m14" fromport="0" to="m5" toport="4"/>
-    <connection id="c26" from="m22" fromport="0" to="m5" toport="5"/>
+    <connection id="c1" from="m11" fromport="0" to="m13" toport="0"/>
+    <connection id="c2" from="m12" fromport="0" to="m20" toport="0"/>
+    <connection id="c3" from="m2" fromport="0" to="m22" toport="0"/>
+    <connection id="c4" from="m17" fromport="0" to="m5" toport="0"/>
+    <connection id="c5" from="m19" fromport="1" to="m18" toport="0"/>
+    <connection id="c6" from="m1" fromport="0" to="m4" toport="0"/>
+    <connection id="c7" from="m6" fromport="0" to="m7" toport="0"/>
+    <connection id="c8" from="m3" fromport="0" to="m21" toport="0"/>
+    <connection id="c9" from="m8" fromport="0" to="m12" toport="0"/>
+    <connection id="c10" from="m4" fromport="0" to="m3" toport="0"/>
+    <connection id="c11" from="m4" fromport="0" to="m15" toport="0"/>
+    <connection id="c12" from="m7" fromport="0" to="m8" toport="0"/>
+    <connection id="c13" from="m7" fromport="0" to="m14" toport="0"/>
+    <connection id="c14" from="m14" fromport="0" to="m11" toport="0"/>
+    <connection id="c15" from="m15" fromport="0" to="m16" toport="0"/>
+    <connection id="c16" from="m20" fromport="0" to="m19" toport="0"/>
+    <connection id="c17" from="m21" fromport="0" to="m17" toport="0"/>
+    <connection id="c18" from="m10" fromport="0" to="m11" toport="1"/>
+    <connection id="c19" from="m10" fromport="0" to="m12" toport="1"/>
+    <connection id="c20" from="m3" fromport="0" to="m22" toport="1"/>
+    <connection id="c21" from="m16" fromport="0" to="m5" toport="1"/>
+    <connection id="c22" from="m20" fromport="1" to="m19" toport="1"/>
+    <connection id="c23" from="m21" fromport="1" to="m17" toport="1"/>
+    <connection id="c24" from="m18" fromport="0" to="m5" toport="2"/>
+    <connection id="c25" from="m22" fromport="0" to="m20" toport="3"/>
+    <connection id="c26" from="m22" fromport="0" to="m21" toport="3"/>
+    <connection id="c27" from="m13" fromport="0" to="m5" toport="3"/>
+    <connection id="c28" from="m19" fromport="0" to="m5" toport="4"/>
   </connections>
 </network>
