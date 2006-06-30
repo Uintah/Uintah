@@ -194,9 +194,10 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
                                                             all_matls);
 
     scheduleAdvectAndAdvanceInTime(         sched, patches, ice_matls_sub,
-                                                            mpm_matls_sub,
-                                                            d_press_matl,
-                                                            all_matls);
+                                                            all_matls);     
+                                                                            
+    scheduleConservedtoPrimitive_Vars(      sched, patches, ice_matls_sub, 
+                                                            all_matls);      
 
     scheduleTestConservation(               sched, patches, ice_matls_sub,
                                                             all_matls); 

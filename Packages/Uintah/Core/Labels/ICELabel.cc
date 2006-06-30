@@ -75,6 +75,15 @@ ICELabel::ICELabel()
     VarLabel::create("mom_L_ME_CC",  CCVariable<Vector>::getTypeDescription());
   eng_L_ME_CCLabel = 
    VarLabel::create("eng_L_ME_CC",   CCVariable<double>::getTypeDescription());
+  mass_advLabel = 
+    VarLabel::create("mass_adv",    CCVariable<double>::getTypeDescription());
+  mom_advLabel = 
+    VarLabel::create("mom_adv",     CCVariable<Vector>::getTypeDescription());
+  eng_advLabel = 
+   VarLabel::create("eng_adv",      CCVariable<double>::getTypeDescription());
+  sp_vol_advLabel = 
+    VarLabel::create("sp_vol_adv",  CCVariable<double>::getTypeDescription());
+
   term2Label = 
     VarLabel::create("term2",        CCVariable<double>::getTypeDescription());
   term3Label = 
@@ -331,6 +340,11 @@ ICELabel::~ICELabel()
     VarLabel::destroy(mass_L_CCLabel);
     VarLabel::destroy(mom_L_ME_CCLabel);
     VarLabel::destroy(eng_L_ME_CCLabel);
+    VarLabel::destroy(mass_advLabel);
+    VarLabel::destroy(mom_advLabel);
+    VarLabel::destroy(eng_advLabel);
+    VarLabel::destroy(sp_vol_advLabel);    
+    
     VarLabel::destroy(term2Label);
     VarLabel::destroy(term3Label);
     VarLabel::destroy(f_theta_CCLabel);
