@@ -177,9 +177,12 @@ namespace Uintah {
       void scheduleAdvectAndAdvanceInTime(SchedulerP&, 
                                           const PatchSet*,
                                           const MaterialSubset*,
-                                          const MaterialSubset*,
-                                          const MaterialSubset*,
-                                          const MaterialSet*); 
+                                          const MaterialSet*);
+                                          
+      void scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
+                                             const PatchSet* patch_set,
+                                             const MaterialSubset* ice_matlsub,
+                                             const MaterialSet* ice_matls);
                              
       void scheduleTestConservation(SchedulerP&, 
                                     const PatchSet*,
@@ -489,6 +492,14 @@ namespace Uintah {
                                   const MaterialSubset* matls,
                                   DataWarehouse*,
                                   DataWarehouse*);
+                                  
+                                  
+      void conservedtoPrimitive_Vars(const ProcessorGroup*,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset*,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
+                                  
                                   
 //__________________________________
 //   RF TASKS    
@@ -813,6 +824,7 @@ namespace Uintah {
       bool switchDebug_MomentumExchange_CC;
       bool switchDebug_Source_Sink;
       bool switchDebug_advance_advect;
+      bool switchDebug_conserved_primitive;
       bool switchDebug_AMR_refine;
       bool switchDebug_AMR_refineInterface;
       bool switchDebug_AMR_coarsen;
@@ -1016,6 +1028,7 @@ namespace Uintah {
        const VarLabel* var;
        const VarLabel* src;
        const VarLabel* var_Lagrangian;
+       const VarLabel* var_adv;
       };
       struct AMR_refluxVariable {
        const MaterialSubset* matls;
