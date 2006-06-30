@@ -537,9 +537,10 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
     d_ice->scheduleMaxMach_on_Lodi_BC_Faces(sched, ice_level,ice_matls,
                                                              maxMach_PSS);
                                    
-    d_ice->scheduleAdvectAndAdvanceInTime(  sched, ice_patches, ice_matls_sub,
-                                                                mpm_matls_sub,
-                                                                press_matl,
+    d_ice->scheduleAdvectAndAdvanceInTime(   sched, ice_patches,ice_matls_sub,
+                                                                ice_matls);
+                                                                
+    d_ice->scheduleConservedtoPrimitive_Vars(sched, ice_patches,ice_matls_sub,
                                                                 ice_matls);
                                                                   
     d_ice->scheduleTestConservation(        sched, ice_patches, ice_matls_sub,
