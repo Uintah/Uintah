@@ -157,6 +157,7 @@ tetgen_2surf(string f1, string f2, string outfile)
 void add_pointer_event(PointerEvent *pe)
 {
   PointerEvent *p = new PointerEvent();
+  p->ref_cnt = 1; // workaround for assert in Datatype operator ==
   *p = *pe;
   event_handle_t event = p;
   EventManager::add_event(event);
@@ -165,6 +166,7 @@ void add_pointer_event(PointerEvent *pe)
 void add_key_event(KeyEvent *ke)
 {
   KeyEvent *k = new KeyEvent();
+  k->ref_cnt = 1; // workaround for assert in Datatype operator ==
   *k = *ke;
   event_handle_t event = k;
   EventManager::add_event(event);

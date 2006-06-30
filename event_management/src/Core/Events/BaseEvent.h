@@ -50,7 +50,7 @@ class BaseEvent : public Datatype
 {
 public:
   BaseEvent(const string &target = "", 
-            unsigned long time = 0);
+            long int time = 0);
 
   virtual ~BaseEvent();
 
@@ -60,11 +60,11 @@ public:
 
   //! Accessors 
   //! time the event took place
-  unsigned long         get_time() const { return time_; }
+  long int              get_time() const { return time_; }
   string                get_target() const { return target_; }
 
   //! Mutators
-  void                  set_time(unsigned t) { time_ = t; }
+  void                  set_time(long int t) { time_ = t; }
   void                  set_target(const string &t) { target_ = t; }
 
   virtual bool          is_pointer_event() { return false; }
@@ -74,7 +74,7 @@ public:
 
 private:
   //! The event timestamp
-  unsigned long         time_;
+  long int              time_;
   string                target_;
 };
 
@@ -227,8 +227,8 @@ private:
 
 class QuitEvent : public BaseEvent {
 public:
-  QuitEvent() {}
-  virtual ~QuitEvent() {}
+  QuitEvent();
+  virtual ~QuitEvent();
   virtual void          io(Piostream&);
   static PersistentTypeID type_id;
 
@@ -238,8 +238,8 @@ public:
 
 class RedrawEvent : public BaseEvent {
 public:
-  RedrawEvent() {}
-  virtual ~RedrawEvent() {}
+  RedrawEvent();
+  virtual ~RedrawEvent();
   virtual void          io(Piostream&);
   virtual RedrawEvent * clone() { return new RedrawEvent(*this); }
 };
