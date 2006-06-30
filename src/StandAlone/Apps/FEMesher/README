@@ -12,4 +12,4 @@ SCIRUN_ON_THE_FLY_LIBS_DIR=<full path to your SCIRun/dbg/on-the-fly-libs/>
 
 You must set your PYTHONCLASS env var to your builds pysci dir
 
-PYTHONCLASS=<full path to your SCIRun/dbg/pysci/>
+PYTHONPATH=<full path to your SCIRun/dbg/pysci/>
