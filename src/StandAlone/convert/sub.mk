@@ -159,6 +159,10 @@ PROGRAM := $(SRCDIR)/TextToTriSurfField
 SRCS := $(SRCDIR)/TextToTriSurfField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
+PROGRAM := $(SRCDIR)/MtoTriSurfField
+SRCS := $(SRCDIR)/MtoTriSurfField.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
 PROGRAM := $(SRCDIR)/VTKtoTriSurfField
 SRCS := $(SRCDIR)/VTKtoTriSurfField.cc
 include $(SCIRUN_SCRIPTS)/program.mk
@@ -193,6 +197,10 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TriSurfToTetgen
 SRCS := $(SRCDIR)/TriSurfToTetgen.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+PROGRAM := $(SRCDIR)/TriSurfToM
+SRCS := $(SRCDIR)/TriSurfToM.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/TetgenToTetVol

@@ -903,10 +903,11 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     // since there is a mutual exclusion between using
     // the min, max and spacing and the spaceDirection vectors
     // verify that this is a valid nrrd
-    if (nrrdCheck(data)) {
-      error("Error: Invalid NRRD.  Cannot compute transform.");
-      return false;
-    }
+//     if (nrrdCheck(data)) {
+//       cerr << "Error is: " << biffGet(NRRD) << endl;
+//       error("Error: Invalid NRRD.  Cannot compute transform.");
+//       return false;
+//     }
 
     // initialize the transform to the identity matrix
     double trans[16];

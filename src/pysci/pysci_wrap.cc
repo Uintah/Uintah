@@ -1338,32 +1338,59 @@ SWIG_Python_GetTypeList() {
 
 /* -------- TYPES TABLE (BEGIN) -------- */
 
-#define  SWIGTYPE_p_SCIRun__KeyEvent swig_types[0] 
-#define  SWIGTYPE_std__size_t swig_types[1] 
-#define  SWIGTYPE_size_t swig_types[2] 
-#define  SWIGTYPE_p_std__vectorTstd__string_std__allocatorTstd__string_t_t swig_types[3] 
-#define  SWIGTYPE_p_SCIRun__PointerEvent swig_types[4] 
-#define  SWIGTYPE_p_SCIRun__CallbackOpenGLContext swig_types[5] 
-#define  SWIGTYPE_p_SCIRun__OpenGLContext swig_types[6] 
-#define  SWIGTYPE_p_allocator_type swig_types[7] 
-#define  SWIGTYPE_p_std__allocatorTdouble_t swig_types[8] 
-#define  SWIGTYPE_p_SCIRun__QuitEvent swig_types[9] 
-#define  SWIGTYPE_p_size_type swig_types[10] 
-#define  SWIGTYPE_p_char swig_types[11] 
-#define  SWIGTYPE_p_std__vectorTdouble_std__allocatorTdouble_t_t swig_types[12] 
-#define  SWIGTYPE_p_p_char swig_types[13] 
-#define  SWIGTYPE_p_SCIRun__EventModifiers swig_types[14] 
-#define  SWIGTYPE_p_SCIRun__BaseEvent swig_types[15] 
-#define  SWIGTYPE_p_difference_type swig_types[16] 
-#define  SWIGTYPE_p_value_type swig_types[17] 
-#define  SWIGTYPE_std__ptrdiff_t swig_types[18] 
-#define  SWIGTYPE_ptrdiff_t swig_types[19] 
-#define  SWIGTYPE_p_SCIRun__Mutex swig_types[20] 
-#define  SWIGTYPE_p_f_p_void__int swig_types[21] 
-#define  SWIGTYPE_p_SCIRun__WindowEvent swig_types[22] 
-#define  SWIGTYPE_p_LockingHandleTSCIRun__BaseEvent_t swig_types[23] 
-#define  SWIGTYPE_p_std__allocatorTstd__string_t swig_types[24] 
-static swig_type_info *swig_types[26];
+#define  SWIGTYPE_p_ProgressState swig_types[0] 
+#define  SWIGTYPE_p_LockingHandleTSCIRun__BaseEvent_t swig_types[1] 
+#define  SWIGTYPE_p_MapIntPersistent swig_types[2] 
+#define  SWIGTYPE_p_f___p_SCIRun__Persistent swig_types[3] 
+#define  SWIGTYPE_p_SCIRun__Persistent swig_types[4] 
+#define  SWIGTYPE_p_p_SCIRun__Persistent swig_types[5] 
+#define  SWIGTYPE_p_SCIRun__BaseEvent swig_types[6] 
+#define  SWIGTYPE_p_SCIRun__PointerEvent swig_types[7] 
+#define  SWIGTYPE_p_f_p_void__int swig_types[8] 
+#define  SWIGTYPE_p_char swig_types[9] 
+#define  SWIGTYPE_p_p_char swig_types[10] 
+#define  SWIGTYPE_p_size_type swig_types[11] 
+#define  SWIGTYPE_p_bool swig_types[12] 
+#define  SWIGTYPE_p_SCIRun__QuitEvent swig_types[13] 
+#define  SWIGTYPE_p_double swig_types[14] 
+#define  SWIGTYPE_size_t swig_types[15] 
+#define  SWIGTYPE_std__size_t swig_types[16] 
+#define  SWIGTYPE_p_SCIRun__ProgressReporter swig_types[17] 
+#define  SWIGTYPE_p_SCIRun__EventModifiers swig_types[18] 
+#define  SWIGTYPE_p_std__vectorTstd__string_std__allocatorTstd__string_t_t swig_types[19] 
+#define  SWIGTYPE_p_long swig_types[20] 
+#define  SWIGTYPE_p_std__allocatorTdouble_t swig_types[21] 
+#define  SWIGTYPE_p_std__string swig_types[22] 
+#define  SWIGTYPE_p_unsigned_int swig_types[23] 
+#define  SWIGTYPE_p_SCIRun__OpenGLContext swig_types[24] 
+#define  SWIGTYPE_p_SCIRun__CallbackOpenGLContext swig_types[25] 
+#define  SWIGTYPE_p_MapStringPersistentTypeID swig_types[26] 
+#define  SWIGTYPE_p_SCIRun__PersistentTypeID swig_types[27] 
+#define  SWIGTYPE_p_std__vectorTdouble_std__allocatorTdouble_t_t swig_types[28] 
+#define  SWIGTYPE_p_SCIRun__Piostream swig_types[29] 
+#define  SWIGTYPE_p_std__ostream swig_types[30] 
+#define  SWIGTYPE_p_unsigned_char swig_types[31] 
+#define  SWIGTYPE_p_signed_char swig_types[32] 
+#define  SWIGTYPE_p_unsigned_short swig_types[33] 
+#define  SWIGTYPE_p_short swig_types[34] 
+#define  SWIGTYPE_ptrdiff_t swig_types[35] 
+#define  SWIGTYPE_std__ptrdiff_t swig_types[36] 
+#define  SWIGTYPE_p_SCIRun__Datatype swig_types[37] 
+#define  SWIGTYPE_p_MapPersistentInt swig_types[38] 
+#define  SWIGTYPE_p_SCIRun__Mutex swig_types[39] 
+#define  SWIGTYPE_p_SCIRun__WindowEvent swig_types[40] 
+#define  SWIGTYPE_p_SCIRun__RedrawEvent swig_types[41] 
+#define  SWIGTYPE_p_unsigned_long_long swig_types[42] 
+#define  SWIGTYPE_p_long_long swig_types[43] 
+#define  SWIGTYPE_p_float swig_types[44] 
+#define  SWIGTYPE_p_difference_type swig_types[45] 
+#define  SWIGTYPE_p_value_type swig_types[46] 
+#define  SWIGTYPE_p_int swig_types[47] 
+#define  SWIGTYPE_p_SCIRun__KeyEvent swig_types[48] 
+#define  SWIGTYPE_p_allocator_type swig_types[49] 
+#define  SWIGTYPE_p_unsigned_long swig_types[50] 
+#define  SWIGTYPE_p_std__allocatorTstd__string_t swig_types[51] 
+static swig_type_info *swig_types[53];
 
 /* -------- TYPES TABLE (END) -------- */
 
@@ -1377,9 +1404,13 @@ static swig_type_info *swig_types[26];
 
 #include "api.h"
 #include "../Core/Thread/Mutex.h"
+#include "../Core/Persistent/Persistent.h"
+#include "../Core/Util/ProgressReporter.h"
+#include "../Core/Datatypes/Datatype.h"
 #include "../Core/Events/BaseEvent.h"
 #include "../Core/Geom/OpenGLContext.h"
 #include "../Core/Geom/CallbackOpenGLContext.h"
+
 #include <iostream>
 
 static int PythonCallBack(void *clientdata)
@@ -1618,142 +1649,6 @@ SWIG_AsCharPtr(PyObject *obj, char **val)
 #include <limits.h>
 
 
-SWIGINTERNSHORT int
-  SWIG_CheckUnsignedLongInRange(unsigned long value,
-				unsigned long max_value,
-				const char *errmsg) 
-{
-  if (value > max_value) {
-    if (errmsg) {
-      PyErr_Format(PyExc_OverflowError,
-		   "value %lu is greater than '%s' minimum %lu",
-		   value, errmsg, max_value);
-    }
-    return 0;
-  }
-  return 1;
- }
-
-
-SWIGINTERN int
-  SWIG_AsVal_unsigned_SS_long(PyObject *obj, unsigned long *val) 
-{
-  if (PyInt_Check(obj)) {
-    long v = PyInt_AS_LONG(obj);
-    if (v >= 0) {
-      if (val) *val = v;
-      return 1;
-    }   
-  }
-  if (PyLong_Check(obj)) {
-    unsigned long v = PyLong_AsUnsignedLong(obj);
-    if (!PyErr_Occurred()) {
-      if (val) *val = v;
-      return 1;
-    } else {
-      if (!val) PyErr_Clear();
-      return 0;
-    }
-  } 
-  if (val) {
-    SWIG_type_error("unsigned long", obj);
-  }
-  return 0;
-}
-
-
-#if UINT_MAX != ULONG_MAX
-SWIGINTERN int
-  SWIG_AsVal_unsigned_SS_int(PyObject *obj, unsigned int *val)
-{ 
-  const char* errmsg = val ? "unsigned int" : (char*)0;
-  unsigned long v;
-  if (SWIG_AsVal_unsigned_SS_long(obj, &v)) {
-    if (SWIG_CheckUnsignedLongInRange(v, INT_MAX, errmsg)) {
-      if (val) *val = (unsigned int)(v);
-      return 1;
-    }
-  } else {
-    PyErr_Clear();
-  }
-  if (val) {
-    SWIG_type_error(errmsg, obj);
-  }
-  return 0;    
-}
-#else
-SWIGINTERNSHORT unsigned int
-  SWIG_AsVal_unsigned_SS_int(PyObject *obj, unsigned int *val)
-{
-  return SWIG_AsVal_unsigned_SS_long(obj,(unsigned long *)val);
-}
-#endif
-
-
-SWIGINTERNSHORT unsigned int
-SWIG_As_unsigned_SS_int(PyObject* obj)
-{
-  unsigned int v;
-  if (!SWIG_AsVal_unsigned_SS_int(obj, &v)) {
-    /*
-      this is needed to make valgrind/purify happier. 
-     */
-    memset((void*)&v, 0, sizeof(unsigned int));
-  }
-  return v;
-}
-
-  
-SWIGINTERNSHORT int
-SWIG_Check_unsigned_SS_int(PyObject* obj)
-{
-  return SWIG_AsVal_unsigned_SS_int(obj, (unsigned int*)0);
-}
-
-
-  /*@/usr/share/swig1.3/python/pymacros.swg,66,SWIG_define@*/
-#define SWIG_From_long PyInt_FromLong
-/*@@*/
-
-
-SWIGINTERNSHORT PyObject* 
-  SWIG_From_unsigned_SS_long(unsigned long value)
-{
-  return (value > LONG_MAX) ?
-    PyLong_FromUnsignedLong(value) 
-    : PyInt_FromLong((long)(value)); 
-}
-
-
-#if UINT_MAX < LONG_MAX
-/*@/usr/share/swig1.3/python/pymacros.swg,66,SWIG_define@*/
-#define SWIG_From_unsigned_SS_int SWIG_From_long
-/*@@*/
-#else
-/*@/usr/share/swig1.3/python/pymacros.swg,66,SWIG_define@*/
-#define SWIG_From_unsigned_SS_int SWIG_From_unsigned_SS_long
-/*@@*/
-#endif
-
-
-SWIGINTERNSHORT PyObject *
-SWIG_FromCharArray(const char* carray, size_t size)
-{
-  if (size > INT_MAX) {
-    return Py_None;    
-  } else {
-    return PyString_FromStringAndSize(carray, (int)(size));
-  }
-}
-
-
-SWIGINTERNSHORT PyObject*
-  SWIG_From_std_string(const std::string& s)
-  {
-    return SWIG_FromCharArray(s.data(), s.size());
-  }
-
-
 SWIGINTERN int
   SWIG_CheckLongInRange(long value, long min_value, long max_value,
 			const char *errmsg)
@@ -1849,6 +1744,279 @@ SWIGINTERNSHORT int
 SWIG_Check_int(PyObject* obj)
 {
   return SWIG_AsVal_int(obj, (int*)0);
+}
+
+
+SWIGINTERN int
+  SWIG_AsVal_double(PyObject *obj, double *val)
+{
+  if (PyFloat_Check(obj)) {
+    if (val) *val = PyFloat_AS_DOUBLE(obj);
+    return 1;
+  }  
+  if (PyInt_Check(obj)) {
+    if (val) *val = PyInt_AS_LONG(obj);
+    return 1;
+  }
+  if (PyLong_Check(obj)) {
+    double v = PyLong_AsDouble(obj);
+    if (!PyErr_Occurred()) {
+      if (val) *val = v;
+      return 1;
+    } else {
+      if (!val) PyErr_Clear();
+      return 0;
+    }
+  }
+  if (val) {
+    SWIG_type_error("double", obj);
+  }
+  return 0;
+}
+
+
+SWIGINTERNSHORT double
+SWIG_As_double(PyObject* obj)
+{
+  double v;
+  if (!SWIG_AsVal_double(obj, &v)) {
+    /*
+      this is needed to make valgrind/purify happier. 
+     */
+    memset((void*)&v, 0, sizeof(double));
+  }
+  return v;
+}
+
+  
+SWIGINTERNSHORT int
+SWIG_Check_double(PyObject* obj)
+{
+  return SWIG_AsVal_double(obj, (double*)0);
+}
+
+
+SWIGINTERNSHORT PyObject *
+SWIG_FromCharArray(const char* carray, size_t size)
+{
+  if (size > INT_MAX) {
+    return Py_None;    
+  } else {
+    return PyString_FromStringAndSize(carray, (int)(size));
+  }
+}
+
+
+SWIGINTERNSHORT PyObject*
+  SWIG_From_std_string(const std::string& s)
+  {
+    return SWIG_FromCharArray(s.data(), s.size());
+  }
+
+
+SWIGINTERN int
+  SWIG_AsVal_bool(PyObject *obj, bool *val)
+{
+  if (obj == Py_True) {
+    if (val) *val = true;
+    return 1;
+  }
+  if (obj == Py_False) {
+    if (val) *val = false;
+    return 1;
+  }
+  int res = 0;
+  if (SWIG_AsVal_int(obj, &res)) {    
+    if (val) *val = res ? true : false;
+    return 1;
+  } else {
+    PyErr_Clear();
+  }  
+  if (val) {
+    SWIG_type_error("bool", obj);
+  }
+  return 0;
+}
+
+
+SWIGINTERNSHORT bool
+SWIG_As_bool(PyObject* obj)
+{
+  bool v;
+  if (!SWIG_AsVal_bool(obj, &v)) {
+    /*
+      this is needed to make valgrind/purify happier. 
+     */
+    memset((void*)&v, 0, sizeof(bool));
+  }
+  return v;
+}
+
+  
+SWIGINTERNSHORT int
+SWIG_Check_bool(PyObject* obj)
+{
+  return SWIG_AsVal_bool(obj, (bool*)0);
+}
+
+
+SWIGINTERN int
+  SWIG_AsVal_unsigned_SS_long(PyObject *obj, unsigned long *val) 
+{
+  if (PyInt_Check(obj)) {
+    long v = PyInt_AS_LONG(obj);
+    if (v >= 0) {
+      if (val) *val = v;
+      return 1;
+    }   
+  }
+  if (PyLong_Check(obj)) {
+    unsigned long v = PyLong_AsUnsignedLong(obj);
+    if (!PyErr_Occurred()) {
+      if (val) *val = v;
+      return 1;
+    } else {
+      if (!val) PyErr_Clear();
+      return 0;
+    }
+  } 
+  if (val) {
+    SWIG_type_error("unsigned long", obj);
+  }
+  return 0;
+}
+
+
+SWIGINTERNSHORT unsigned long
+SWIG_As_unsigned_SS_long(PyObject* obj)
+{
+  unsigned long v;
+  if (!SWIG_AsVal_unsigned_SS_long(obj, &v)) {
+    /*
+      this is needed to make valgrind/purify happier. 
+     */
+    memset((void*)&v, 0, sizeof(unsigned long));
+  }
+  return v;
+}
+
+  
+SWIGINTERNSHORT int
+SWIG_Check_unsigned_SS_long(PyObject* obj)
+{
+  return SWIG_AsVal_unsigned_SS_long(obj, (unsigned long*)0);
+}
+
+
+  /*@/usr/share/swig1.3/python/pymacros.swg,66,SWIG_define@*/
+#define SWIG_From_long PyInt_FromLong
+/*@@*/
+
+
+SWIGINTERNSHORT long
+SWIG_As_long(PyObject* obj)
+{
+  long v;
+  if (!SWIG_AsVal_long(obj, &v)) {
+    /*
+      this is needed to make valgrind/purify happier. 
+     */
+    memset((void*)&v, 0, sizeof(long));
+  }
+  return v;
+}
+
+  
+SWIGINTERNSHORT int
+SWIG_Check_long(PyObject* obj)
+{
+  return SWIG_AsVal_long(obj, (long*)0);
+}
+
+
+SWIGINTERNSHORT PyObject* 
+  SWIG_From_unsigned_SS_long(unsigned long value)
+{
+  return (value > LONG_MAX) ?
+    PyLong_FromUnsignedLong(value) 
+    : PyInt_FromLong((long)(value)); 
+}
+
+
+#if UINT_MAX < LONG_MAX
+/*@/usr/share/swig1.3/python/pymacros.swg,66,SWIG_define@*/
+#define SWIG_From_unsigned_SS_int SWIG_From_long
+/*@@*/
+#else
+/*@/usr/share/swig1.3/python/pymacros.swg,66,SWIG_define@*/
+#define SWIG_From_unsigned_SS_int SWIG_From_unsigned_SS_long
+/*@@*/
+#endif
+
+
+SWIGINTERNSHORT int
+  SWIG_CheckUnsignedLongInRange(unsigned long value,
+				unsigned long max_value,
+				const char *errmsg) 
+{
+  if (value > max_value) {
+    if (errmsg) {
+      PyErr_Format(PyExc_OverflowError,
+		   "value %lu is greater than '%s' minimum %lu",
+		   value, errmsg, max_value);
+    }
+    return 0;
+  }
+  return 1;
+ }
+
+
+#if UINT_MAX != ULONG_MAX
+SWIGINTERN int
+  SWIG_AsVal_unsigned_SS_int(PyObject *obj, unsigned int *val)
+{ 
+  const char* errmsg = val ? "unsigned int" : (char*)0;
+  unsigned long v;
+  if (SWIG_AsVal_unsigned_SS_long(obj, &v)) {
+    if (SWIG_CheckUnsignedLongInRange(v, INT_MAX, errmsg)) {
+      if (val) *val = (unsigned int)(v);
+      return 1;
+    }
+  } else {
+    PyErr_Clear();
+  }
+  if (val) {
+    SWIG_type_error(errmsg, obj);
+  }
+  return 0;    
+}
+#else
+SWIGINTERNSHORT unsigned int
+  SWIG_AsVal_unsigned_SS_int(PyObject *obj, unsigned int *val)
+{
+  return SWIG_AsVal_unsigned_SS_long(obj,(unsigned long *)val);
+}
+#endif
+
+
+SWIGINTERNSHORT unsigned int
+SWIG_As_unsigned_SS_int(PyObject* obj)
+{
+  unsigned int v;
+  if (!SWIG_AsVal_unsigned_SS_int(obj, &v)) {
+    /*
+      this is needed to make valgrind/purify happier. 
+     */
+    memset((void*)&v, 0, sizeof(unsigned int));
+  }
+  return v;
+}
+
+  
+SWIGINTERNSHORT int
+SWIG_Check_unsigned_SS_int(PyObject* obj)
+{
+  return SWIG_AsVal_unsigned_SS_int(obj, (unsigned int*)0);
 }
 
 
@@ -2583,27 +2751,6 @@ namespace swig
 	};
       }
     
-
-SWIGINTERNSHORT unsigned long
-SWIG_As_unsigned_SS_long(PyObject* obj)
-{
-  unsigned long v;
-  if (!SWIG_AsVal_unsigned_SS_long(obj, &v)) {
-    /*
-      this is needed to make valgrind/purify happier. 
-     */
-    memset((void*)&v, 0, sizeof(unsigned long));
-  }
-  return v;
-}
-
-  
-SWIGINTERNSHORT int
-SWIG_Check_unsigned_SS_long(PyObject* obj)
-{
-  return SWIG_AsVal_unsigned_SS_long(obj, (unsigned long*)0);
-}
-
 static bool std_vector_Sl_std_string_Sg____nonzero__(std::vector<std::string > const *self){
       return !(self->empty());
     }
@@ -2617,27 +2764,6 @@ static std::vector<std::string >::value_type std_vector_Sl_std_string_Sg__pop(st
       self->pop_back();
       return x;
     }
-
-SWIGINTERNSHORT long
-SWIG_As_long(PyObject* obj)
-{
-  long v;
-  if (!SWIG_AsVal_long(obj, &v)) {
-    /*
-      this is needed to make valgrind/purify happier. 
-     */
-    memset((void*)&v, 0, sizeof(long));
-  }
-  return v;
-}
-
-  
-SWIGINTERNSHORT int
-SWIG_Check_long(PyObject* obj)
-{
-  return SWIG_AsVal_long(obj, (long*)0);
-}
-
 static std::vector<std::string,std::allocator<std::string > > *std_vector_Sl_std_string_Sg____getslice__(std::vector<std::string > *self,std::vector<std::string >::difference_type i,std::vector<std::string >::difference_type j){
       return swig::getslice(self, i, j);
     }
@@ -2659,34 +2785,6 @@ static void std_vector_Sl_std_string_Sg____setitem__(std::vector<std::string > *
 static void std_vector_Sl_std_string_Sg__append(std::vector<std::string > *self,std::vector<std::string >::value_type const &x){
       self->push_back(x);
     }
-
-SWIGINTERN int
-  SWIG_AsVal_double(PyObject *obj, double *val)
-{
-  if (PyFloat_Check(obj)) {
-    if (val) *val = PyFloat_AS_DOUBLE(obj);
-    return 1;
-  }  
-  if (PyInt_Check(obj)) {
-    if (val) *val = PyInt_AS_LONG(obj);
-    return 1;
-  }
-  if (PyLong_Check(obj)) {
-    double v = PyLong_AsDouble(obj);
-    if (!PyErr_Occurred()) {
-      if (val) *val = v;
-      return 1;
-    } else {
-      if (!val) PyErr_Clear();
-      return 0;
-    }
-  }
-  if (val) {
-    SWIG_type_error("double", obj);
-  }
-  return 0;
-}
-
 
   /*@/usr/share/swig1.3/python/pymacros.swg,66,SWIG_define@*/
 #define SWIG_From_double PyFloat_FromDouble
@@ -2722,27 +2820,6 @@ namespace swig {
 	};
       }
     
-
-SWIGINTERNSHORT double
-SWIG_As_double(PyObject* obj)
-{
-  double v;
-  if (!SWIG_AsVal_double(obj, &v)) {
-    /*
-      this is needed to make valgrind/purify happier. 
-     */
-    memset((void*)&v, 0, sizeof(double));
-  }
-  return v;
-}
-
-  
-SWIGINTERNSHORT int
-SWIG_Check_double(PyObject* obj)
-{
-  return SWIG_AsVal_double(obj, (double*)0);
-}
-
 static bool std_vector_Sl_double_Sg____nonzero__(std::vector<double > const *self){
       return !(self->empty());
     }
@@ -3387,35 +3464,2192 @@ static PyObject * Mutex_swigregister(PyObject *, PyObject *args) {
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
-static PyObject *_wrap_new_BaseEvent__SWIG_0(PyObject *, PyObject *args) {
+static PyObject *_wrap_new_ProgressReporter(PyObject *, PyObject *args) {
     PyObject *resultobj;
-    std::string *arg1 = 0 ;
-    unsigned int arg2 ;
-    SCIRun::BaseEvent *result;
+    SCIRun::ProgressReporter *result;
+    
+    if(!PyArg_ParseTuple(args,(char *)":new_ProgressReporter")) goto fail;
+    result = (SCIRun::ProgressReporter *)new SCIRun::ProgressReporter();
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__ProgressReporter, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_delete_ProgressReporter(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::ProgressReporter *arg1 = (SCIRun::ProgressReporter *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:delete_ProgressReporter",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__ProgressReporter, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    delete arg1;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_ProgressReporter_error(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::ProgressReporter *arg1 = (SCIRun::ProgressReporter *) 0 ;
+    std::string *arg2 = 0 ;
+    int res2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:ProgressReporter_error",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__ProgressReporter, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        std::string *ptr = (std::string *)0;
+        res2 = SWIG_AsPtr_std_string(obj1, &ptr);
+        if (!res2) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("std::string", obj1);
+        } else if (!ptr) {
+            SWIG_null_ref("std::string");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = ptr;
+    }
+    (arg1)->error((std::string const &)*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return resultobj;
+    fail:
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return NULL;
+}
+
+
+static PyObject *_wrap_ProgressReporter_warning(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::ProgressReporter *arg1 = (SCIRun::ProgressReporter *) 0 ;
+    std::string *arg2 = 0 ;
+    int res2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:ProgressReporter_warning",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__ProgressReporter, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        std::string *ptr = (std::string *)0;
+        res2 = SWIG_AsPtr_std_string(obj1, &ptr);
+        if (!res2) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("std::string", obj1);
+        } else if (!ptr) {
+            SWIG_null_ref("std::string");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = ptr;
+    }
+    (arg1)->warning((std::string const &)*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return resultobj;
+    fail:
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return NULL;
+}
+
+
+static PyObject *_wrap_ProgressReporter_remark(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::ProgressReporter *arg1 = (SCIRun::ProgressReporter *) 0 ;
+    std::string *arg2 = 0 ;
+    int res2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:ProgressReporter_remark",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__ProgressReporter, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        std::string *ptr = (std::string *)0;
+        res2 = SWIG_AsPtr_std_string(obj1, &ptr);
+        if (!res2) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("std::string", obj1);
+        } else if (!ptr) {
+            SWIG_null_ref("std::string");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = ptr;
+    }
+    (arg1)->remark((std::string const &)*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return resultobj;
+    fail:
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return NULL;
+}
+
+
+static PyObject *_wrap_ProgressReporter_compile_error(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::ProgressReporter *arg1 = (SCIRun::ProgressReporter *) 0 ;
+    std::string *arg2 = 0 ;
+    int res2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:ProgressReporter_compile_error",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__ProgressReporter, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        std::string *ptr = (std::string *)0;
+        res2 = SWIG_AsPtr_std_string(obj1, &ptr);
+        if (!res2) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("std::string", obj1);
+        } else if (!ptr) {
+            SWIG_null_ref("std::string");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = ptr;
+    }
+    (arg1)->compile_error((std::string const &)*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return resultobj;
+    fail:
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return NULL;
+}
+
+
+static PyObject *_wrap_ProgressReporter_add_raw_message(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::ProgressReporter *arg1 = (SCIRun::ProgressReporter *) 0 ;
+    std::string *arg2 = 0 ;
+    int res2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:ProgressReporter_add_raw_message",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__ProgressReporter, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        std::string *ptr = (std::string *)0;
+        res2 = SWIG_AsPtr_std_string(obj1, &ptr);
+        if (!res2) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("std::string", obj1);
+        } else if (!ptr) {
+            SWIG_null_ref("std::string");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = ptr;
+    }
+    (arg1)->add_raw_message((std::string const &)*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return resultobj;
+    fail:
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return NULL;
+}
+
+
+static PyObject *_wrap_ProgressReporter_msg_stream(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::ProgressReporter *arg1 = (SCIRun::ProgressReporter *) 0 ;
+    std::ostream *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:ProgressReporter_msg_stream",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__ProgressReporter, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        std::ostream &_result_ref = (arg1)->msg_stream();
+        result = (std::ostream *) &_result_ref;
+    }
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_std__ostream, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_ProgressReporter_msg_stream_flush(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::ProgressReporter *arg1 = (SCIRun::ProgressReporter *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:ProgressReporter_msg_stream_flush",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__ProgressReporter, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    (arg1)->msg_stream_flush();
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_ProgressReporter_report_progress(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::ProgressReporter *arg1 = (SCIRun::ProgressReporter *) 0 ;
+    SCIRun::ProgressReporter::ProgressState arg2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:ProgressReporter_report_progress",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__ProgressReporter, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (SCIRun::ProgressReporter::ProgressState)(SWIG_As_int(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->report_progress((SCIRun::ProgressReporter::ProgressState )arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_ProgressReporter_update_progress__SWIG_0(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::ProgressReporter *arg1 = (SCIRun::ProgressReporter *) 0 ;
+    double arg2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:ProgressReporter_update_progress",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__ProgressReporter, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (double)(SWIG_As_double(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->update_progress(arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_ProgressReporter_update_progress__SWIG_1(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::ProgressReporter *arg1 = (SCIRun::ProgressReporter *) 0 ;
+    int arg2 ;
+    int arg3 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOO:ProgressReporter_update_progress",&obj0,&obj1,&obj2)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__ProgressReporter, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (int)(SWIG_As_int(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        arg3 = (int)(SWIG_As_int(obj2)); 
+        if (SWIG_arg_fail(3)) SWIG_fail;
+    }
+    (arg1)->update_progress(arg2,arg3);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_ProgressReporter_update_progress(PyObject *self, PyObject *args) {
+    int argc;
+    PyObject *argv[4];
+    int ii;
+    
+    argc = PyObject_Length(args);
+    for (ii = 0; (ii < argc) && (ii < 3); ii++) {
+        argv[ii] = PyTuple_GetItem(args,ii);
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__ProgressReporter, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            _v = SWIG_Check_double(argv[1]);
+            if (_v) {
+                return _wrap_ProgressReporter_update_progress__SWIG_0(self,args);
+            }
+        }
+    }
+    if (argc == 3) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__ProgressReporter, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            _v = SWIG_Check_int(argv[1]);
+            if (_v) {
+                _v = SWIG_Check_int(argv[2]);
+                if (_v) {
+                    return _wrap_ProgressReporter_update_progress__SWIG_1(self,args);
+                }
+            }
+        }
+    }
+    
+    PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'ProgressReporter_update_progress'");
+    return NULL;
+}
+
+
+static PyObject *_wrap_ProgressReporter_increment_progress(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::ProgressReporter *arg1 = (SCIRun::ProgressReporter *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:ProgressReporter_increment_progress",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__ProgressReporter, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    (arg1)->increment_progress();
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject * ProgressReporter_swigregister(PyObject *, PyObject *args) {
+    PyObject *obj;
+    if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
+    SWIG_TypeClientData(SWIGTYPE_p_SCIRun__ProgressReporter, obj);
+    Py_INCREF(obj);
+    return Py_BuildValue((char *)"");
+}
+static PyObject *_wrap_PersistentTypeID_type_set(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::PersistentTypeID *arg1 = (SCIRun::PersistentTypeID *) 0 ;
+    SCIRun::string *arg2 = (SCIRun::string *) 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:PersistentTypeID_type_set",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__PersistentTypeID, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_std__string, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(2)) SWIG_fail;
+    if (arg1) (arg1)->type = *arg2;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_PersistentTypeID_type_get(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::PersistentTypeID *arg1 = (SCIRun::PersistentTypeID *) 0 ;
+    SCIRun::string *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:PersistentTypeID_type_get",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__PersistentTypeID, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (SCIRun::string *)& ((arg1)->type);
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_std__string, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_PersistentTypeID_parent_set(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::PersistentTypeID *arg1 = (SCIRun::PersistentTypeID *) 0 ;
+    SCIRun::string *arg2 = (SCIRun::string *) 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:PersistentTypeID_parent_set",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__PersistentTypeID, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_std__string, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(2)) SWIG_fail;
+    if (arg1) (arg1)->parent = *arg2;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_PersistentTypeID_parent_get(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::PersistentTypeID *arg1 = (SCIRun::PersistentTypeID *) 0 ;
+    SCIRun::string *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:PersistentTypeID_parent_get",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__PersistentTypeID, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (SCIRun::string *)& ((arg1)->parent);
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_std__string, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_PersistentTypeID_maker_set(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::PersistentTypeID *arg1 = (SCIRun::PersistentTypeID *) 0 ;
+    SCIRun::Persistent *(*arg2)() = (SCIRun::Persistent *(*)()) 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:PersistentTypeID_maker_set",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__PersistentTypeID, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_f___p_SCIRun__Persistent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(2)) SWIG_fail;
+    if (arg1) (arg1)->maker = arg2;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_PersistentTypeID_maker_get(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::PersistentTypeID *arg1 = (SCIRun::PersistentTypeID *) 0 ;
+    SCIRun::Persistent *(*result)();
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:PersistentTypeID_maker_get",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__PersistentTypeID, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (SCIRun::Persistent *(*)()) ((arg1)->maker);
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_f___p_SCIRun__Persistent, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_PersistentTypeID__SWIG_0(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::string *arg1 = 0 ;
+    SCIRun::string *arg2 = 0 ;
+    SCIRun::Persistent *(*arg3)() = (SCIRun::Persistent *(*)()) 0 ;
+    SCIRun::Persistent *(*arg4)() = (SCIRun::Persistent *(*)()) 0 ;
+    SCIRun::Persistent *(*arg5)() = (SCIRun::Persistent *(*)()) 0 ;
+    SCIRun::PersistentTypeID *result;
+    int res1 = 0 ;
+    int res2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    PyObject * obj3 = 0 ;
+    PyObject * obj4 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOOOO:new_PersistentTypeID",&obj0,&obj1,&obj2,&obj3,&obj4)) goto fail;
+    {
+        std::string *ptr = (std::string *)0;
+        res1 = SWIG_AsPtr_std_string(obj0, &ptr);
+        if (!res1) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("SCIRun::string", obj0);
+        } else if (!ptr) {
+            SWIG_null_ref("SCIRun::string");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        arg1 = ptr;
+    }
+    {
+        std::string *ptr = (std::string *)0;
+        res2 = SWIG_AsPtr_std_string(obj1, &ptr);
+        if (!res2) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("SCIRun::string", obj1);
+        } else if (!ptr) {
+            SWIG_null_ref("SCIRun::string");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = ptr;
+    }
+    SWIG_Python_ConvertPtr(obj2, (void **)&arg3, SWIGTYPE_p_f___p_SCIRun__Persistent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(3)) SWIG_fail;
+    SWIG_Python_ConvertPtr(obj3, (void **)&arg4, SWIGTYPE_p_f___p_SCIRun__Persistent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(4)) SWIG_fail;
+    SWIG_Python_ConvertPtr(obj4, (void **)&arg5, SWIGTYPE_p_f___p_SCIRun__Persistent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(5)) SWIG_fail;
+    result = (SCIRun::PersistentTypeID *)new SCIRun::PersistentTypeID((std::string const &)*arg1,(std::string const &)*arg2,arg3,arg4,arg5);
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__PersistentTypeID, 1);
+    if (res1 == SWIG_NEWOBJ) delete arg1;
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return resultobj;
+    fail:
+    if (res1 == SWIG_NEWOBJ) delete arg1;
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_PersistentTypeID__SWIG_1(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::string *arg1 = 0 ;
+    SCIRun::string *arg2 = 0 ;
+    SCIRun::Persistent *(*arg3)() = (SCIRun::Persistent *(*)()) 0 ;
+    SCIRun::Persistent *(*arg4)() = (SCIRun::Persistent *(*)()) 0 ;
+    SCIRun::PersistentTypeID *result;
+    int res1 = 0 ;
+    int res2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    PyObject * obj3 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOOO:new_PersistentTypeID",&obj0,&obj1,&obj2,&obj3)) goto fail;
+    {
+        std::string *ptr = (std::string *)0;
+        res1 = SWIG_AsPtr_std_string(obj0, &ptr);
+        if (!res1) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("SCIRun::string", obj0);
+        } else if (!ptr) {
+            SWIG_null_ref("SCIRun::string");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        arg1 = ptr;
+    }
+    {
+        std::string *ptr = (std::string *)0;
+        res2 = SWIG_AsPtr_std_string(obj1, &ptr);
+        if (!res2) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("SCIRun::string", obj1);
+        } else if (!ptr) {
+            SWIG_null_ref("SCIRun::string");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = ptr;
+    }
+    SWIG_Python_ConvertPtr(obj2, (void **)&arg3, SWIGTYPE_p_f___p_SCIRun__Persistent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(3)) SWIG_fail;
+    SWIG_Python_ConvertPtr(obj3, (void **)&arg4, SWIGTYPE_p_f___p_SCIRun__Persistent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(4)) SWIG_fail;
+    result = (SCIRun::PersistentTypeID *)new SCIRun::PersistentTypeID((std::string const &)*arg1,(std::string const &)*arg2,arg3,arg4);
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__PersistentTypeID, 0);
+    if (res1 == SWIG_NEWOBJ) delete arg1;
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return resultobj;
+    fail:
+    if (res1 == SWIG_NEWOBJ) delete arg1;
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_PersistentTypeID__SWIG_2(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::string *arg1 = 0 ;
+    SCIRun::string *arg2 = 0 ;
+    SCIRun::Persistent *(*arg3)() = (SCIRun::Persistent *(*)()) 0 ;
+    SCIRun::PersistentTypeID *result;
+    int res1 = 0 ;
+    int res2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOO:new_PersistentTypeID",&obj0,&obj1,&obj2)) goto fail;
+    {
+        std::string *ptr = (std::string *)0;
+        res1 = SWIG_AsPtr_std_string(obj0, &ptr);
+        if (!res1) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("SCIRun::string", obj0);
+        } else if (!ptr) {
+            SWIG_null_ref("SCIRun::string");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        arg1 = ptr;
+    }
+    {
+        std::string *ptr = (std::string *)0;
+        res2 = SWIG_AsPtr_std_string(obj1, &ptr);
+        if (!res2) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("SCIRun::string", obj1);
+        } else if (!ptr) {
+            SWIG_null_ref("SCIRun::string");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = ptr;
+    }
+    SWIG_Python_ConvertPtr(obj2, (void **)&arg3, SWIGTYPE_p_f___p_SCIRun__Persistent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(3)) SWIG_fail;
+    result = (SCIRun::PersistentTypeID *)new SCIRun::PersistentTypeID((std::string const &)*arg1,(std::string const &)*arg2,arg3);
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__PersistentTypeID, 0);
+    if (res1 == SWIG_NEWOBJ) delete arg1;
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return resultobj;
+    fail:
+    if (res1 == SWIG_NEWOBJ) delete arg1;
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return NULL;
+}
+
+
+static PyObject *_wrap_new_PersistentTypeID(PyObject *self, PyObject *args) {
+    int argc;
+    PyObject *argv[6];
+    int ii;
+    
+    argc = PyObject_Length(args);
+    for (ii = 0; (ii < argc) && (ii < 5); ii++) {
+        argv[ii] = PyTuple_GetItem(args,ii);
+    }
+    if (argc == 3) {
+        int _v;
+        _v = SWIG_AsPtr_std_string(argv[0], (std::string**)(0));
+        if (_v) {
+            _v = SWIG_AsPtr_std_string(argv[1], (std::string**)(0));
+            if (_v) {
+                {
+                    void *ptr;
+                    if (SWIG_ConvertPtr(argv[2], &ptr, SWIGTYPE_p_f___p_SCIRun__Persistent, 0) == -1) {
+                        _v = 0;
+                        PyErr_Clear();
+                    } else {
+                        _v = 1;
+                    }
+                }
+                if (_v) {
+                    return _wrap_new_PersistentTypeID__SWIG_2(self,args);
+                }
+            }
+        }
+    }
+    if (argc == 4) {
+        int _v;
+        _v = SWIG_AsPtr_std_string(argv[0], (std::string**)(0));
+        if (_v) {
+            _v = SWIG_AsPtr_std_string(argv[1], (std::string**)(0));
+            if (_v) {
+                {
+                    void *ptr;
+                    if (SWIG_ConvertPtr(argv[2], &ptr, SWIGTYPE_p_f___p_SCIRun__Persistent, 0) == -1) {
+                        _v = 0;
+                        PyErr_Clear();
+                    } else {
+                        _v = 1;
+                    }
+                }
+                if (_v) {
+                    {
+                        void *ptr;
+                        if (SWIG_ConvertPtr(argv[3], &ptr, SWIGTYPE_p_f___p_SCIRun__Persistent, 0) == -1) {
+                            _v = 0;
+                            PyErr_Clear();
+                        } else {
+                            _v = 1;
+                        }
+                    }
+                    if (_v) {
+                        return _wrap_new_PersistentTypeID__SWIG_1(self,args);
+                    }
+                }
+            }
+        }
+    }
+    if (argc == 5) {
+        int _v;
+        _v = SWIG_AsPtr_std_string(argv[0], (std::string**)(0));
+        if (_v) {
+            _v = SWIG_AsPtr_std_string(argv[1], (std::string**)(0));
+            if (_v) {
+                {
+                    void *ptr;
+                    if (SWIG_ConvertPtr(argv[2], &ptr, SWIGTYPE_p_f___p_SCIRun__Persistent, 0) == -1) {
+                        _v = 0;
+                        PyErr_Clear();
+                    } else {
+                        _v = 1;
+                    }
+                }
+                if (_v) {
+                    {
+                        void *ptr;
+                        if (SWIG_ConvertPtr(argv[3], &ptr, SWIGTYPE_p_f___p_SCIRun__Persistent, 0) == -1) {
+                            _v = 0;
+                            PyErr_Clear();
+                        } else {
+                            _v = 1;
+                        }
+                    }
+                    if (_v) {
+                        {
+                            void *ptr;
+                            if (SWIG_ConvertPtr(argv[4], &ptr, SWIGTYPE_p_f___p_SCIRun__Persistent, 0) == -1) {
+                                _v = 0;
+                                PyErr_Clear();
+                            } else {
+                                _v = 1;
+                            }
+                        }
+                        if (_v) {
+                            return _wrap_new_PersistentTypeID__SWIG_0(self,args);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    
+    PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'new_PersistentTypeID'");
+    return NULL;
+}
+
+
+static PyObject *_wrap_delete_PersistentTypeID(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::PersistentTypeID *arg1 = (SCIRun::PersistentTypeID *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:delete_PersistentTypeID",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__PersistentTypeID, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    delete arg1;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_PersistentTypeID_bc_maker1_set(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::PersistentTypeID *arg1 = (SCIRun::PersistentTypeID *) 0 ;
+    SCIRun::Persistent *(*arg2)() = (SCIRun::Persistent *(*)()) 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:PersistentTypeID_bc_maker1_set",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__PersistentTypeID, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_f___p_SCIRun__Persistent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(2)) SWIG_fail;
+    if (arg1) (arg1)->bc_maker1 = arg2;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_PersistentTypeID_bc_maker1_get(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::PersistentTypeID *arg1 = (SCIRun::PersistentTypeID *) 0 ;
+    SCIRun::Persistent *(*result)();
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:PersistentTypeID_bc_maker1_get",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__PersistentTypeID, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (SCIRun::Persistent *(*)()) ((arg1)->bc_maker1);
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_f___p_SCIRun__Persistent, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_PersistentTypeID_bc_maker2_set(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::PersistentTypeID *arg1 = (SCIRun::PersistentTypeID *) 0 ;
+    SCIRun::Persistent *(*arg2)() = (SCIRun::Persistent *(*)()) 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:PersistentTypeID_bc_maker2_set",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__PersistentTypeID, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_f___p_SCIRun__Persistent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(2)) SWIG_fail;
+    if (arg1) (arg1)->bc_maker2 = arg2;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_PersistentTypeID_bc_maker2_get(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::PersistentTypeID *arg1 = (SCIRun::PersistentTypeID *) 0 ;
+    SCIRun::Persistent *(*result)();
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:PersistentTypeID_bc_maker2_get",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__PersistentTypeID, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (SCIRun::Persistent *(*)()) ((arg1)->bc_maker2);
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_f___p_SCIRun__Persistent, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject * PersistentTypeID_swigregister(PyObject *, PyObject *args) {
+    PyObject *obj;
+    if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
+    SWIG_TypeClientData(SWIGTYPE_p_SCIRun__PersistentTypeID, obj);
+    Py_INCREF(obj);
+    return Py_BuildValue((char *)"");
+}
+static int _wrap_Piostream_PERSISTENT_VERSION_set(PyObject *) {
+    PyErr_SetString(PyExc_TypeError,"Variable Piostream_PERSISTENT_VERSION is read-only.");
+    return 1;
+}
+
+
+static PyObject *_wrap_Piostream_PERSISTENT_VERSION_get(void) {
+    PyObject *pyobj;
+    
+    {
+        pyobj = SWIG_From_int((int)(SCIRun::Piostream::PERSISTENT_VERSION)); 
+    }
+    return pyobj;
+}
+
+
+static PyObject *_wrap_Piostream_flag_error(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Piostream_flag_error",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    (arg1)->flag_error();
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_file_name_set(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    SCIRun::string *arg2 = (SCIRun::string *) 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Piostream_file_name_set",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_std__string, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(2)) SWIG_fail;
+    if (arg1) (arg1)->file_name = *arg2;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_file_name_get(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    SCIRun::string *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Piostream_file_name_get",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (SCIRun::string *)& ((arg1)->file_name);
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_std__string, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_delete_Piostream(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:delete_Piostream",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    delete arg1;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_peek_class(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    SCIRun::string result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Piostream_peek_class",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (arg1)->peek_class();
+    
+    {
+        resultobj = SWIG_From_std_string((std::string)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_begin_class(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    SCIRun::string *arg2 = 0 ;
+    int arg3 ;
+    int result;
+    int res2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOO:Piostream_begin_class",&obj0,&obj1,&obj2)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        std::string *ptr = (std::string *)0;
+        res2 = SWIG_AsPtr_std_string(obj1, &ptr);
+        if (!res2) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("SCIRun::string", obj1);
+        } else if (!ptr) {
+            SWIG_null_ref("SCIRun::string");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = ptr;
+    }
+    {
+        arg3 = (int)(SWIG_As_int(obj2)); 
+        if (SWIG_arg_fail(3)) SWIG_fail;
+    }
+    result = (int)(arg1)->begin_class((std::string const &)*arg2,arg3);
+    
+    {
+        resultobj = SWIG_From_int((int)(result)); 
+    }
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return resultobj;
+    fail:
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_end_class(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Piostream_end_class",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    (arg1)->end_class();
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_begin_cheap_delim(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Piostream_begin_cheap_delim",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    (arg1)->begin_cheap_delim();
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_end_cheap_delim(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Piostream_end_cheap_delim",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    (arg1)->end_cheap_delim();
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_io__SWIG_0(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    bool *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Piostream_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_bool, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("bool");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_io__SWIG_1(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    char *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Piostream_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_char, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("char");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_io__SWIG_2(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    signed char *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Piostream_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_signed_char, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("signed char");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_io__SWIG_3(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    unsigned char *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Piostream_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_unsigned_char, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("unsigned char");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_io__SWIG_4(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    short *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Piostream_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_short, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("short");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_io__SWIG_5(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    unsigned short *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Piostream_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_unsigned_short, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("unsigned short");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_io__SWIG_6(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    int *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Piostream_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_int, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("int");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_io__SWIG_7(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    unsigned int *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Piostream_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_unsigned_int, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("unsigned int");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_io__SWIG_8(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    long *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Piostream_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_long, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("long");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_io__SWIG_9(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    unsigned long *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Piostream_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_unsigned_long, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("unsigned long");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_io__SWIG_10(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    long long *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Piostream_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_long_long, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("long long");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_io__SWIG_11(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    unsigned long long *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Piostream_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_unsigned_long_long, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("unsigned long long");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_io__SWIG_12(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    double *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Piostream_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_double, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("double");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_io__SWIG_13(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    float *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Piostream_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_float, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("float");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_io__SWIG_14(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    SCIRun::string *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Piostream_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_std__string, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("SCIRun::string");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_io__SWIG_15(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    SCIRun::Persistent **arg2 = 0 ;
+    SCIRun::PersistentTypeID *arg3 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOO:Piostream_io",&obj0,&obj1,&obj2)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_p_SCIRun__Persistent, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("SCIRun::Persistent");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    {
+        SWIG_Python_ConvertPtr(obj2, (void **)&arg3, SWIGTYPE_p_SCIRun__PersistentTypeID, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(3)) SWIG_fail;
+        if (arg3 == NULL) {
+            SWIG_null_ref("SCIRun::PersistentTypeID");
+        }
+        if (SWIG_arg_fail(3)) SWIG_fail;
+    }
+    (arg1)->io(*arg2,(SCIRun::PersistentTypeID const &)*arg3);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_io(PyObject *self, PyObject *args) {
+    int argc;
+    PyObject *argv[4];
+    int ii;
+    
+    argc = PyObject_Length(args);
+    for (ii = 0; (ii < argc) && (ii < 3); ii++) {
+        argv[ii] = PyTuple_GetItem(args,ii);
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_bool, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Piostream_io__SWIG_0(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_char, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Piostream_io__SWIG_1(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_signed_char, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Piostream_io__SWIG_2(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_unsigned_char, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Piostream_io__SWIG_3(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_short, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Piostream_io__SWIG_4(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_unsigned_short, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Piostream_io__SWIG_5(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_int, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Piostream_io__SWIG_6(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_unsigned_int, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Piostream_io__SWIG_7(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_long, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Piostream_io__SWIG_8(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_unsigned_long, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Piostream_io__SWIG_9(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_long_long, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Piostream_io__SWIG_10(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_unsigned_long_long, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Piostream_io__SWIG_11(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_double, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Piostream_io__SWIG_12(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_float, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Piostream_io__SWIG_13(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_std__string, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Piostream_io__SWIG_14(self,args);
+            }
+        }
+    }
+    if (argc == 3) {
+        int _v;
+        {
+            void *ptr;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = 1;
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_p_SCIRun__Persistent, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                {
+                    void *ptr = 0;
+                    if (SWIG_ConvertPtr(argv[2], &ptr, SWIGTYPE_p_SCIRun__PersistentTypeID, 0) == -1) {
+                        _v = 0;
+                        PyErr_Clear();
+                    } else {
+                        _v = (ptr != 0);
+                    }
+                }
+                if (_v) {
+                    return _wrap_Piostream_io__SWIG_15(self,args);
+                }
+            }
+        }
+    }
+    
+    PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'Piostream_io'");
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_reading(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    bool result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Piostream_reading",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (bool)((SCIRun::Piostream const *)arg1)->reading();
+    
+    {
+        resultobj = SWIG_From_bool((bool)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_writing(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    bool result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Piostream_writing",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (bool)((SCIRun::Piostream const *)arg1)->writing();
+    
+    {
+        resultobj = SWIG_From_bool((bool)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_error(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    bool result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Piostream_error",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (bool)((SCIRun::Piostream const *)arg1)->error();
+    
+    {
+        resultobj = SWIG_From_bool((bool)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_version(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    int result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Piostream_version",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (int)((SCIRun::Piostream const *)arg1)->version();
+    
+    {
+        resultobj = SWIG_From_int((int)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_backwards_compat_id(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    bool result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Piostream_backwards_compat_id",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (bool)((SCIRun::Piostream const *)arg1)->backwards_compat_id();
+    
+    {
+        resultobj = SWIG_From_bool((bool)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_set_backwards_compat_id(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    bool arg2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Piostream_set_backwards_compat_id",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (bool)(SWIG_As_bool(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->set_backwards_compat_id(arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_supports_block_io(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    bool result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Piostream_supports_block_io",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (bool)(arg1)->supports_block_io();
+    
+    {
+        resultobj = SWIG_From_bool((bool)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Piostream_block_io(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = (SCIRun::Piostream *) 0 ;
+    void *arg2 = (void *) 0 ;
+    size_t arg3 ;
+    size_t arg4 ;
+    bool result;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    PyObject * obj3 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOOO:Piostream_block_io",&obj0,&obj1,&obj2,&obj3)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        if ((SWIG_ConvertPtr(obj1,(void **)(&arg2),0,SWIG_POINTER_EXCEPTION|0))== -1) {
+            SWIG_arg_fail(2);SWIG_fail;
+        }
+    }
+    {
+        arg3 = (size_t)(SWIG_As_unsigned_SS_long(obj2)); 
+        if (SWIG_arg_fail(3)) SWIG_fail;
+    }
+    {
+        arg4 = (size_t)(SWIG_As_unsigned_SS_long(obj3)); 
+        if (SWIG_arg_fail(4)) SWIG_fail;
+    }
+    result = (bool)(arg1)->block_io(arg2,arg3,arg4);
+    
+    {
+        resultobj = SWIG_From_bool((bool)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_auto_istream__SWIG_0(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::string *arg1 = 0 ;
+    SCIRun::ProgressReporter *arg2 = (SCIRun::ProgressReporter *) 0 ;
+    SCIRun::Piostream *result;
     int res1 = 0 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"OO:new_BaseEvent",&obj0,&obj1)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"OO:auto_istream",&obj0,&obj1)) goto fail;
     {
         std::string *ptr = (std::string *)0;
         res1 = SWIG_AsPtr_std_string(obj0, &ptr);
         if (!res1) {
             if (!PyErr_Occurred())
-            SWIG_type_error("std::string", obj0);
+            SWIG_type_error("SCIRun::string", obj0);
         } else if (!ptr) {
-            SWIG_null_ref("std::string");
+            SWIG_null_ref("SCIRun::string");
         }
         if (SWIG_arg_fail(1)) SWIG_fail;
         arg1 = ptr;
     }
-    {
-        arg2 = (unsigned int)(SWIG_As_unsigned_SS_int(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    result = (SCIRun::BaseEvent *)new SCIRun::BaseEvent((std::string const &)*arg1,arg2);
+    SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_SCIRun__ProgressReporter, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(2)) SWIG_fail;
+    result = (SCIRun::Piostream *)auto_istream((std::string const &)*arg1,arg2);
     
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__BaseEvent, 1);
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__Piostream, 0);
     if (res1 == SWIG_NEWOBJ) delete arg1;
     return resultobj;
     fail:
@@ -3424,29 +5658,88 @@ static PyObject *_wrap_new_BaseEvent__SWIG_0(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_new_BaseEvent__SWIG_1(PyObject *, PyObject *args) {
+static PyObject *_wrap_auto_ostream__SWIG_0(PyObject *, PyObject *args) {
     PyObject *resultobj;
-    std::string *arg1 = 0 ;
-    SCIRun::BaseEvent *result;
+    SCIRun::string *arg1 = 0 ;
+    SCIRun::string *arg2 = 0 ;
+    SCIRun::ProgressReporter *arg3 = (SCIRun::ProgressReporter *) 0 ;
+    SCIRun::Piostream *result;
+    int res1 = 0 ;
+    int res2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    PyObject * obj2 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OOO:auto_ostream",&obj0,&obj1,&obj2)) goto fail;
+    {
+        std::string *ptr = (std::string *)0;
+        res1 = SWIG_AsPtr_std_string(obj0, &ptr);
+        if (!res1) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("SCIRun::string", obj0);
+        } else if (!ptr) {
+            SWIG_null_ref("SCIRun::string");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        arg1 = ptr;
+    }
+    {
+        std::string *ptr = (std::string *)0;
+        res2 = SWIG_AsPtr_std_string(obj1, &ptr);
+        if (!res2) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("SCIRun::string", obj1);
+        } else if (!ptr) {
+            SWIG_null_ref("SCIRun::string");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = ptr;
+    }
+    SWIG_Python_ConvertPtr(obj2, (void **)&arg3, SWIGTYPE_p_SCIRun__ProgressReporter, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(3)) SWIG_fail;
+    result = (SCIRun::Piostream *)auto_ostream((std::string const &)*arg1,(std::string const &)*arg2,arg3);
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__Piostream, 0);
+    if (res1 == SWIG_NEWOBJ) delete arg1;
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return resultobj;
+    fail:
+    if (res1 == SWIG_NEWOBJ) delete arg1;
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return NULL;
+}
+
+
+static PyObject * Piostream_swigregister(PyObject *, PyObject *args) {
+    PyObject *obj;
+    if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
+    SWIG_TypeClientData(SWIGTYPE_p_SCIRun__Piostream, obj);
+    Py_INCREF(obj);
+    return Py_BuildValue((char *)"");
+}
+static PyObject *_wrap_auto_istream__SWIG_1(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::string *arg1 = 0 ;
+    SCIRun::Piostream *result;
     int res1 = 0 ;
     PyObject * obj0 = 0 ;
     
-    if(!PyArg_ParseTuple(args,(char *)"O:new_BaseEvent",&obj0)) goto fail;
+    if(!PyArg_ParseTuple(args,(char *)"O:auto_istream",&obj0)) goto fail;
     {
         std::string *ptr = (std::string *)0;
         res1 = SWIG_AsPtr_std_string(obj0, &ptr);
         if (!res1) {
             if (!PyErr_Occurred())
-            SWIG_type_error("std::string", obj0);
+            SWIG_type_error("SCIRun::string", obj0);
         } else if (!ptr) {
-            SWIG_null_ref("std::string");
+            SWIG_null_ref("SCIRun::string");
         }
         if (SWIG_arg_fail(1)) SWIG_fail;
         arg1 = ptr;
     }
-    result = (SCIRun::BaseEvent *)new SCIRun::BaseEvent((std::string const &)*arg1);
+    result = (SCIRun::Piostream *)SCIRun::auto_istream((std::string const &)*arg1);
     
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__BaseEvent, 0);
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__Piostream, 0);
     if (res1 == SWIG_NEWOBJ) delete arg1;
     return resultobj;
     fail:
@@ -3455,21 +5748,7 @@ static PyObject *_wrap_new_BaseEvent__SWIG_1(PyObject *, PyObject *args) {
 }
 
 
-static PyObject *_wrap_new_BaseEvent__SWIG_2(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    SCIRun::BaseEvent *result;
-    
-    if(!PyArg_ParseTuple(args,(char *)":new_BaseEvent")) goto fail;
-    result = (SCIRun::BaseEvent *)new SCIRun::BaseEvent();
-    
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__BaseEvent, 0);
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_new_BaseEvent(PyObject *self, PyObject *args) {
+static PyObject *_wrap_auto_istream(PyObject *self, PyObject *args) {
     int argc;
     PyObject *argv[3];
     int ii;
@@ -3478,32 +5757,1285 @@ static PyObject *_wrap_new_BaseEvent(PyObject *self, PyObject *args) {
     for (ii = 0; (ii < argc) && (ii < 2); ii++) {
         argv[ii] = PyTuple_GetItem(args,ii);
     }
-    if (argc == 0) {
-        return _wrap_new_BaseEvent__SWIG_2(self,args);
-    }
     if (argc == 1) {
         int _v;
         _v = SWIG_AsPtr_std_string(argv[0], (std::string**)(0));
         if (_v) {
-            return _wrap_new_BaseEvent__SWIG_1(self,args);
+            return _wrap_auto_istream__SWIG_1(self,args);
         }
     }
     if (argc == 2) {
         int _v;
         _v = SWIG_AsPtr_std_string(argv[0], (std::string**)(0));
         if (_v) {
-            _v = SWIG_Check_unsigned_SS_int(argv[1]);
+            {
+                void *ptr;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_SCIRun__ProgressReporter, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = 1;
+                }
+            }
             if (_v) {
-                return _wrap_new_BaseEvent__SWIG_0(self,args);
+                return _wrap_auto_istream__SWIG_0(self,args);
             }
         }
     }
     
-    PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'new_BaseEvent'");
+    PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'auto_istream'");
     return NULL;
 }
 
 
+static PyObject *_wrap_auto_ostream__SWIG_1(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::string *arg1 = 0 ;
+    SCIRun::string *arg2 = 0 ;
+    SCIRun::Piostream *result;
+    int res1 = 0 ;
+    int res2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:auto_ostream",&obj0,&obj1)) goto fail;
+    {
+        std::string *ptr = (std::string *)0;
+        res1 = SWIG_AsPtr_std_string(obj0, &ptr);
+        if (!res1) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("SCIRun::string", obj0);
+        } else if (!ptr) {
+            SWIG_null_ref("SCIRun::string");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        arg1 = ptr;
+    }
+    {
+        std::string *ptr = (std::string *)0;
+        res2 = SWIG_AsPtr_std_string(obj1, &ptr);
+        if (!res2) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("SCIRun::string", obj1);
+        } else if (!ptr) {
+            SWIG_null_ref("SCIRun::string");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = ptr;
+    }
+    result = (SCIRun::Piostream *)SCIRun::auto_ostream((std::string const &)*arg1,(std::string const &)*arg2);
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__Piostream, 0);
+    if (res1 == SWIG_NEWOBJ) delete arg1;
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return resultobj;
+    fail:
+    if (res1 == SWIG_NEWOBJ) delete arg1;
+    if (res2 == SWIG_NEWOBJ) delete arg2;
+    return NULL;
+}
+
+
+static PyObject *_wrap_auto_ostream(PyObject *self, PyObject *args) {
+    int argc;
+    PyObject *argv[4];
+    int ii;
+    
+    argc = PyObject_Length(args);
+    for (ii = 0; (ii < argc) && (ii < 3); ii++) {
+        argv[ii] = PyTuple_GetItem(args,ii);
+    }
+    if (argc == 2) {
+        int _v;
+        _v = SWIG_AsPtr_std_string(argv[0], (std::string**)(0));
+        if (_v) {
+            _v = SWIG_AsPtr_std_string(argv[1], (std::string**)(0));
+            if (_v) {
+                return _wrap_auto_ostream__SWIG_1(self,args);
+            }
+        }
+    }
+    if (argc == 3) {
+        int _v;
+        _v = SWIG_AsPtr_std_string(argv[0], (std::string**)(0));
+        if (_v) {
+            _v = SWIG_AsPtr_std_string(argv[1], (std::string**)(0));
+            if (_v) {
+                {
+                    void *ptr;
+                    if (SWIG_ConvertPtr(argv[2], &ptr, SWIGTYPE_p_SCIRun__ProgressReporter, 0) == -1) {
+                        _v = 0;
+                        PyErr_Clear();
+                    } else {
+                        _v = 1;
+                    }
+                }
+                if (_v) {
+                    return _wrap_auto_ostream__SWIG_0(self,args);
+                }
+            }
+        }
+    }
+    
+    PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'auto_ostream'");
+    return NULL;
+}
+
+
+static PyObject *_wrap_delete_Persistent(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Persistent *arg1 = (SCIRun::Persistent *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:delete_Persistent",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Persistent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    delete arg1;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Persistent_io(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Persistent *arg1 = (SCIRun::Persistent *) 0 ;
+    SCIRun::Piostream *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Persistent_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Persistent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject * Persistent_swigregister(PyObject *, PyObject *args) {
+    PyObject *obj;
+    if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
+    SWIG_TypeClientData(SWIGTYPE_p_SCIRun__Persistent, obj);
+    Py_INCREF(obj);
+    return Py_BuildValue((char *)"");
+}
+static PyObject *_wrap_Pio__SWIG_0(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = 0 ;
+    bool *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Pio",&obj0,&obj1)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_bool, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("bool");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    SCIRun::Pio(*arg1,*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Pio__SWIG_1(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = 0 ;
+    char *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Pio",&obj0,&obj1)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_char, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("char");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    SCIRun::Pio(*arg1,*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Pio__SWIG_2(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = 0 ;
+    signed char *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Pio",&obj0,&obj1)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_signed_char, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("signed char");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    SCIRun::Pio(*arg1,*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Pio__SWIG_3(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = 0 ;
+    unsigned char *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Pio",&obj0,&obj1)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_unsigned_char, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("unsigned char");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    SCIRun::Pio(*arg1,*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Pio__SWIG_4(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = 0 ;
+    short *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Pio",&obj0,&obj1)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_short, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("short");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    SCIRun::Pio(*arg1,*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Pio__SWIG_5(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = 0 ;
+    unsigned short *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Pio",&obj0,&obj1)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_unsigned_short, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("unsigned short");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    SCIRun::Pio(*arg1,*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Pio__SWIG_6(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = 0 ;
+    int *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Pio",&obj0,&obj1)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_int, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("int");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    SCIRun::Pio(*arg1,*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Pio__SWIG_7(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = 0 ;
+    unsigned int *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Pio",&obj0,&obj1)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_unsigned_int, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("unsigned int");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    SCIRun::Pio(*arg1,*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Pio__SWIG_8(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = 0 ;
+    long *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Pio",&obj0,&obj1)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_long, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("long");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    SCIRun::Pio(*arg1,*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Pio__SWIG_9(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = 0 ;
+    unsigned long *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Pio",&obj0,&obj1)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_unsigned_long, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("unsigned long");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    SCIRun::Pio(*arg1,*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Pio__SWIG_10(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = 0 ;
+    long long *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Pio",&obj0,&obj1)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_long_long, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("long long");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    SCIRun::Pio(*arg1,*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Pio__SWIG_11(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = 0 ;
+    unsigned long long *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Pio",&obj0,&obj1)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_unsigned_long_long, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("unsigned long long");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    SCIRun::Pio(*arg1,*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Pio__SWIG_12(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = 0 ;
+    double *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Pio",&obj0,&obj1)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_double, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("double");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    SCIRun::Pio(*arg1,*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Pio__SWIG_13(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = 0 ;
+    float *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Pio",&obj0,&obj1)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_float, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("float");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    SCIRun::Pio(*arg1,*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Pio__SWIG_14(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = 0 ;
+    SCIRun::string *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Pio",&obj0,&obj1)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_std__string, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("SCIRun::string");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    SCIRun::Pio(*arg1,*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Pio__SWIG_15(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Piostream *arg1 = 0 ;
+    SCIRun::Persistent *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Pio",&obj0,&obj1)) goto fail;
+    {
+        SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(1)) SWIG_fail;
+        if (arg1 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_SCIRun__Persistent, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("SCIRun::Persistent");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    SCIRun::Pio(*arg1,*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Pio(PyObject *self, PyObject *args) {
+    int argc;
+    PyObject *argv[3];
+    int ii;
+    
+    argc = PyObject_Length(args);
+    for (ii = 0; (ii < argc) && (ii < 2); ii++) {
+        argv[ii] = PyTuple_GetItem(args,ii);
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_bool, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Pio__SWIG_0(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_char, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Pio__SWIG_1(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_signed_char, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Pio__SWIG_2(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_unsigned_char, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Pio__SWIG_3(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_short, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Pio__SWIG_4(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_unsigned_short, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Pio__SWIG_5(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_int, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Pio__SWIG_6(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_unsigned_int, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Pio__SWIG_7(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_long, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Pio__SWIG_8(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_unsigned_long, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Pio__SWIG_9(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_long_long, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Pio__SWIG_10(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_unsigned_long_long, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Pio__SWIG_11(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_double, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Pio__SWIG_12(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_float, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Pio__SWIG_13(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_std__string, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Pio__SWIG_14(self,args);
+            }
+        }
+    }
+    if (argc == 2) {
+        int _v;
+        {
+            void *ptr = 0;
+            if (SWIG_ConvertPtr(argv[0], &ptr, SWIGTYPE_p_SCIRun__Piostream, 0) == -1) {
+                _v = 0;
+                PyErr_Clear();
+            } else {
+                _v = (ptr != 0);
+            }
+        }
+        if (_v) {
+            {
+                void *ptr = 0;
+                if (SWIG_ConvertPtr(argv[1], &ptr, SWIGTYPE_p_SCIRun__Persistent, 0) == -1) {
+                    _v = 0;
+                    PyErr_Clear();
+                } else {
+                    _v = (ptr != 0);
+                }
+            }
+            if (_v) {
+                return _wrap_Pio__SWIG_15(self,args);
+            }
+        }
+    }
+    
+    PyErr_SetString(PyExc_NotImplementedError,"No matching function for overloaded 'Pio'");
+    return NULL;
+}
+
+
+static PyObject *_wrap_Datatype_ref_cnt_set(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Datatype *arg1 = (SCIRun::Datatype *) 0 ;
+    int arg2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Datatype_ref_cnt_set",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Datatype, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (int)(SWIG_As_int(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    if (arg1) (arg1)->ref_cnt = arg2;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Datatype_ref_cnt_get(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Datatype *arg1 = (SCIRun::Datatype *) 0 ;
+    int result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Datatype_ref_cnt_get",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Datatype, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (int) ((arg1)->ref_cnt);
+    
+    {
+        resultobj = SWIG_From_int((int)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Datatype_lock_get(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Datatype *arg1 = (SCIRun::Datatype *) 0 ;
+    SCIRun::Mutex *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Datatype_lock_get",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Datatype, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (SCIRun::Mutex *)& ((arg1)->lock);
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__Mutex, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Datatype_generation_set(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Datatype *arg1 = (SCIRun::Datatype *) 0 ;
+    int arg2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:Datatype_generation_set",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Datatype, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        arg2 = (int)(SWIG_As_int(obj1)); 
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    if (arg1) (arg1)->generation = arg2;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Datatype_generation_get(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Datatype *arg1 = (SCIRun::Datatype *) 0 ;
+    int result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:Datatype_generation_get",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Datatype, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (int) ((arg1)->generation);
+    
+    {
+        resultobj = SWIG_From_int((int)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_delete_Datatype(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::Datatype *arg1 = (SCIRun::Datatype *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:delete_Datatype",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__Datatype, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    delete arg1;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_Datatype_compute_new_generation(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    int result;
+    
+    if(!PyArg_ParseTuple(args,(char *)":Datatype_compute_new_generation")) goto fail;
+    result = (int)SCIRun::Datatype::compute_new_generation();
+    
+    {
+        resultobj = SWIG_From_int((int)(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject * Datatype_swigregister(PyObject *, PyObject *args) {
+    PyObject *obj;
+    if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
+    SWIG_TypeClientData(SWIGTYPE_p_SCIRun__Datatype, obj);
+    Py_INCREF(obj);
+    return Py_BuildValue((char *)"");
+}
 static PyObject *_wrap_delete_BaseEvent(PyObject *, PyObject *args) {
     PyObject *resultobj;
     SCIRun::BaseEvent *arg1 = (SCIRun::BaseEvent *) 0 ;
@@ -3521,19 +7053,85 @@ static PyObject *_wrap_delete_BaseEvent(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_BaseEvent_clone(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::BaseEvent *arg1 = (SCIRun::BaseEvent *) 0 ;
+    SCIRun::BaseEvent *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:BaseEvent_clone",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__BaseEvent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (SCIRun::BaseEvent *)(arg1)->clone();
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__BaseEvent, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_BaseEvent_io(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::BaseEvent *arg1 = (SCIRun::BaseEvent *) 0 ;
+    SCIRun::Piostream *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:BaseEvent_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__BaseEvent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static int _wrap_BaseEvent_type_id_set(PyObject *_val) {
+    {
+        SCIRun::PersistentTypeID * temp;
+        if ((SWIG_ConvertPtr(_val, (void **)(&temp), SWIGTYPE_p_SCIRun__PersistentTypeID, SWIG_POINTER_EXCEPTION)) == -1) {
+            SWIG_append_errmsg("C/C++ variable 'SCIRun::BaseEvent::type_id'");
+            return 1;
+        }
+        SCIRun::BaseEvent::type_id = *((SCIRun::PersistentTypeID *) temp);
+    }
+    return 0;
+}
+
+
+static PyObject *_wrap_BaseEvent_type_id_get(void) {
+    PyObject *pyobj;
+    
+    pyobj = SWIG_NewPointerObj((void *)(&SCIRun::BaseEvent::type_id), SWIGTYPE_p_SCIRun__PersistentTypeID, 0);
+    return pyobj;
+}
+
+
 static PyObject *_wrap_BaseEvent_get_time(PyObject *, PyObject *args) {
     PyObject *resultobj;
     SCIRun::BaseEvent *arg1 = (SCIRun::BaseEvent *) 0 ;
-    unsigned int result;
+    long result;
     PyObject * obj0 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"O:BaseEvent_get_time",&obj0)) goto fail;
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__BaseEvent, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
-    result = (unsigned int)((SCIRun::BaseEvent const *)arg1)->get_time();
+    result = (long)((SCIRun::BaseEvent const *)arg1)->get_time();
     
     {
-        resultobj = SWIG_From_unsigned_SS_int((unsigned int)(result)); 
+        resultobj = SWIG_From_long((long)(result)); 
     }
     return resultobj;
     fail:
@@ -3544,7 +7142,7 @@ static PyObject *_wrap_BaseEvent_get_time(PyObject *, PyObject *args) {
 static PyObject *_wrap_BaseEvent_get_target(PyObject *, PyObject *args) {
     PyObject *resultobj;
     SCIRun::BaseEvent *arg1 = (SCIRun::BaseEvent *) 0 ;
-    std::string result;
+    SCIRun::string result;
     PyObject * obj0 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"O:BaseEvent_get_target",&obj0)) goto fail;
@@ -3564,7 +7162,7 @@ static PyObject *_wrap_BaseEvent_get_target(PyObject *, PyObject *args) {
 static PyObject *_wrap_BaseEvent_set_time(PyObject *, PyObject *args) {
     PyObject *resultobj;
     SCIRun::BaseEvent *arg1 = (SCIRun::BaseEvent *) 0 ;
-    unsigned int arg2 ;
+    long arg2 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     
@@ -3572,7 +7170,7 @@ static PyObject *_wrap_BaseEvent_set_time(PyObject *, PyObject *args) {
     SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__BaseEvent, SWIG_POINTER_EXCEPTION | 0);
     if (SWIG_arg_fail(1)) SWIG_fail;
     {
-        arg2 = (unsigned int)(SWIG_As_unsigned_SS_int(obj1)); 
+        arg2 = (long)(SWIG_As_long(obj1)); 
         if (SWIG_arg_fail(2)) SWIG_fail;
     }
     (arg1)->set_time(arg2);
@@ -3587,7 +7185,7 @@ static PyObject *_wrap_BaseEvent_set_time(PyObject *, PyObject *args) {
 static PyObject *_wrap_BaseEvent_set_target(PyObject *, PyObject *args) {
     PyObject *resultobj;
     SCIRun::BaseEvent *arg1 = (SCIRun::BaseEvent *) 0 ;
-    std::string *arg2 = 0 ;
+    SCIRun::string *arg2 = 0 ;
     int res2 = 0 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
@@ -3600,9 +7198,9 @@ static PyObject *_wrap_BaseEvent_set_target(PyObject *, PyObject *args) {
         res2 = SWIG_AsPtr_std_string(obj1, &ptr);
         if (!res2) {
             if (!PyErr_Occurred())
-            SWIG_type_error("std::string", obj1);
+            SWIG_type_error("SCIRun::string", obj1);
         } else if (!ptr) {
-            SWIG_null_ref("std::string");
+            SWIG_null_ref("SCIRun::string");
         }
         if (SWIG_arg_fail(2)) SWIG_fail;
         arg2 = ptr;
@@ -3698,67 +7296,6 @@ static PyObject *_wrap_BaseEvent_is_scene_graph_event(PyObject *, PyObject *args
 }
 
 
-static PyObject *_wrap_BaseEvent_ref_cnt_set(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    SCIRun::BaseEvent *arg1 = (SCIRun::BaseEvent *) 0 ;
-    int arg2 ;
-    PyObject * obj0 = 0 ;
-    PyObject * obj1 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"OO:BaseEvent_ref_cnt_set",&obj0,&obj1)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__BaseEvent, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    {
-        arg2 = (int)(SWIG_As_int(obj1)); 
-        if (SWIG_arg_fail(2)) SWIG_fail;
-    }
-    if (arg1) (arg1)->ref_cnt = arg2;
-    
-    Py_INCREF(Py_None); resultobj = Py_None;
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_BaseEvent_ref_cnt_get(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    SCIRun::BaseEvent *arg1 = (SCIRun::BaseEvent *) 0 ;
-    int result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:BaseEvent_ref_cnt_get",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__BaseEvent, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    result = (int) ((arg1)->ref_cnt);
-    
-    {
-        resultobj = SWIG_From_int((int)(result)); 
-    }
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
-static PyObject *_wrap_BaseEvent_lock_get(PyObject *, PyObject *args) {
-    PyObject *resultobj;
-    SCIRun::BaseEvent *arg1 = (SCIRun::BaseEvent *) 0 ;
-    SCIRun::Mutex *result;
-    PyObject * obj0 = 0 ;
-    
-    if(!PyArg_ParseTuple(args,(char *)"O:BaseEvent_lock_get",&obj0)) goto fail;
-    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__BaseEvent, SWIG_POINTER_EXCEPTION | 0);
-    if (SWIG_arg_fail(1)) SWIG_fail;
-    result = (SCIRun::Mutex *)& ((arg1)->lock);
-    
-    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__Mutex, 0);
-    return resultobj;
-    fail:
-    return NULL;
-}
-
-
 static PyObject * BaseEvent_swigregister(PyObject *, PyObject *args) {
     PyObject *obj;
     if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
@@ -3794,6 +7331,54 @@ static PyObject *_wrap_delete_EventModifiers(PyObject *, PyObject *args) {
     return resultobj;
     fail:
     return NULL;
+}
+
+
+static PyObject *_wrap_EventModifiers_io(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::EventModifiers *arg1 = (SCIRun::EventModifiers *) 0 ;
+    SCIRun::Piostream *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:EventModifiers_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__EventModifiers, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static int _wrap_EventModifiers_type_id_set(PyObject *_val) {
+    {
+        SCIRun::PersistentTypeID * temp;
+        if ((SWIG_ConvertPtr(_val, (void **)(&temp), SWIGTYPE_p_SCIRun__PersistentTypeID, SWIG_POINTER_EXCEPTION)) == -1) {
+            SWIG_append_errmsg("C/C++ variable 'SCIRun::EventModifiers::type_id'");
+            return 1;
+        }
+        SCIRun::EventModifiers::type_id = *((SCIRun::PersistentTypeID *) temp);
+    }
+    return 0;
+}
+
+
+static PyObject *_wrap_EventModifiers_type_id_get(void) {
+    PyObject *pyobj;
+    
+    pyobj = SWIG_NewPointerObj((void *)(&SCIRun::EventModifiers::type_id), SWIGTYPE_p_SCIRun__PersistentTypeID, 0);
+    return pyobj;
 }
 
 
@@ -3852,8 +7437,8 @@ static PyObject *_wrap_new_PointerEvent__SWIG_0(PyObject *, PyObject *args) {
     unsigned int arg1 ;
     int arg2 ;
     int arg3 ;
-    std::string *arg4 = 0 ;
-    unsigned int arg5 ;
+    SCIRun::string *arg4 = 0 ;
+    unsigned long arg5 ;
     SCIRun::PointerEvent *result;
     int res4 = 0 ;
     PyObject * obj0 = 0 ;
@@ -3880,15 +7465,15 @@ static PyObject *_wrap_new_PointerEvent__SWIG_0(PyObject *, PyObject *args) {
         res4 = SWIG_AsPtr_std_string(obj3, &ptr);
         if (!res4) {
             if (!PyErr_Occurred())
-            SWIG_type_error("std::string", obj3);
+            SWIG_type_error("SCIRun::string", obj3);
         } else if (!ptr) {
-            SWIG_null_ref("std::string");
+            SWIG_null_ref("SCIRun::string");
         }
         if (SWIG_arg_fail(4)) SWIG_fail;
         arg4 = ptr;
     }
     {
-        arg5 = (unsigned int)(SWIG_As_unsigned_SS_int(obj4)); 
+        arg5 = (unsigned long)(SWIG_As_unsigned_SS_long(obj4)); 
         if (SWIG_arg_fail(5)) SWIG_fail;
     }
     result = (SCIRun::PointerEvent *)new SCIRun::PointerEvent(arg1,arg2,arg3,(std::string const &)*arg4,arg5);
@@ -3907,7 +7492,7 @@ static PyObject *_wrap_new_PointerEvent__SWIG_1(PyObject *, PyObject *args) {
     unsigned int arg1 ;
     int arg2 ;
     int arg3 ;
-    std::string *arg4 = 0 ;
+    SCIRun::string *arg4 = 0 ;
     SCIRun::PointerEvent *result;
     int res4 = 0 ;
     PyObject * obj0 = 0 ;
@@ -3933,9 +7518,9 @@ static PyObject *_wrap_new_PointerEvent__SWIG_1(PyObject *, PyObject *args) {
         res4 = SWIG_AsPtr_std_string(obj3, &ptr);
         if (!res4) {
             if (!PyErr_Occurred())
-            SWIG_type_error("std::string", obj3);
+            SWIG_type_error("SCIRun::string", obj3);
         } else if (!ptr) {
-            SWIG_null_ref("std::string");
+            SWIG_null_ref("SCIRun::string");
         }
         if (SWIG_arg_fail(4)) SWIG_fail;
         arg4 = ptr;
@@ -4111,7 +7696,7 @@ static PyObject *_wrap_new_PointerEvent(PyObject *self, PyObject *args) {
                 if (_v) {
                     _v = SWIG_AsPtr_std_string(argv[3], (std::string**)(0));
                     if (_v) {
-                        _v = SWIG_Check_unsigned_SS_int(argv[4]);
+                        _v = SWIG_Check_unsigned_SS_long(argv[4]);
                         if (_v) {
                             return _wrap_new_PointerEvent__SWIG_0(self,args);
                         }
@@ -4140,6 +7725,72 @@ static PyObject *_wrap_delete_PointerEvent(PyObject *, PyObject *args) {
     return resultobj;
     fail:
     return NULL;
+}
+
+
+static PyObject *_wrap_PointerEvent_io(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::PointerEvent *arg1 = (SCIRun::PointerEvent *) 0 ;
+    SCIRun::Piostream *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:PointerEvent_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__PointerEvent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_PointerEvent_clone(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::PointerEvent *arg1 = (SCIRun::PointerEvent *) 0 ;
+    SCIRun::PointerEvent *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:PointerEvent_clone",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__PointerEvent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (SCIRun::PointerEvent *)(arg1)->clone();
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__PointerEvent, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static int _wrap_PointerEvent_type_id_set(PyObject *_val) {
+    {
+        SCIRun::PersistentTypeID * temp;
+        if ((SWIG_ConvertPtr(_val, (void **)(&temp), SWIGTYPE_p_SCIRun__PersistentTypeID, SWIG_POINTER_EXCEPTION)) == -1) {
+            SWIG_append_errmsg("C/C++ variable 'SCIRun::PointerEvent::type_id'");
+            return 1;
+        }
+        SCIRun::PointerEvent::type_id = *((SCIRun::PersistentTypeID *) temp);
+    }
+    return 0;
+}
+
+
+static PyObject *_wrap_PointerEvent_type_id_get(void) {
+    PyObject *pyobj;
+    
+    pyobj = SWIG_NewPointerObj((void *)(&SCIRun::PointerEvent::type_id), SWIGTYPE_p_SCIRun__PersistentTypeID, 0);
+    return pyobj;
 }
 
 
@@ -4304,9 +7955,9 @@ static PyObject *_wrap_new_KeyEvent__SWIG_0(PyObject *, PyObject *args) {
     unsigned int arg1 ;
     unsigned int arg2 ;
     int arg3 ;
-    std::string *arg4 = 0 ;
-    std::string *arg5 = 0 ;
-    unsigned int arg6 ;
+    SCIRun::string *arg4 = 0 ;
+    SCIRun::string *arg5 = 0 ;
+    unsigned long arg6 ;
     SCIRun::KeyEvent *result;
     int res4 = 0 ;
     int res5 = 0 ;
@@ -4335,9 +7986,9 @@ static PyObject *_wrap_new_KeyEvent__SWIG_0(PyObject *, PyObject *args) {
         res4 = SWIG_AsPtr_std_string(obj3, &ptr);
         if (!res4) {
             if (!PyErr_Occurred())
-            SWIG_type_error("std::string", obj3);
+            SWIG_type_error("SCIRun::string", obj3);
         } else if (!ptr) {
-            SWIG_null_ref("std::string");
+            SWIG_null_ref("SCIRun::string");
         }
         if (SWIG_arg_fail(4)) SWIG_fail;
         arg4 = ptr;
@@ -4347,15 +7998,15 @@ static PyObject *_wrap_new_KeyEvent__SWIG_0(PyObject *, PyObject *args) {
         res5 = SWIG_AsPtr_std_string(obj4, &ptr);
         if (!res5) {
             if (!PyErr_Occurred())
-            SWIG_type_error("std::string", obj4);
+            SWIG_type_error("SCIRun::string", obj4);
         } else if (!ptr) {
-            SWIG_null_ref("std::string");
+            SWIG_null_ref("SCIRun::string");
         }
         if (SWIG_arg_fail(5)) SWIG_fail;
         arg5 = ptr;
     }
     {
-        arg6 = (unsigned int)(SWIG_As_unsigned_SS_int(obj5)); 
+        arg6 = (unsigned long)(SWIG_As_unsigned_SS_long(obj5)); 
         if (SWIG_arg_fail(6)) SWIG_fail;
     }
     result = (SCIRun::KeyEvent *)new SCIRun::KeyEvent(arg1,arg2,arg3,(std::string const &)*arg4,(std::string const &)*arg5,arg6);
@@ -4376,8 +8027,8 @@ static PyObject *_wrap_new_KeyEvent__SWIG_1(PyObject *, PyObject *args) {
     unsigned int arg1 ;
     unsigned int arg2 ;
     int arg3 ;
-    std::string *arg4 = 0 ;
-    std::string *arg5 = 0 ;
+    SCIRun::string *arg4 = 0 ;
+    SCIRun::string *arg5 = 0 ;
     SCIRun::KeyEvent *result;
     int res4 = 0 ;
     int res5 = 0 ;
@@ -4405,9 +8056,9 @@ static PyObject *_wrap_new_KeyEvent__SWIG_1(PyObject *, PyObject *args) {
         res4 = SWIG_AsPtr_std_string(obj3, &ptr);
         if (!res4) {
             if (!PyErr_Occurred())
-            SWIG_type_error("std::string", obj3);
+            SWIG_type_error("SCIRun::string", obj3);
         } else if (!ptr) {
-            SWIG_null_ref("std::string");
+            SWIG_null_ref("SCIRun::string");
         }
         if (SWIG_arg_fail(4)) SWIG_fail;
         arg4 = ptr;
@@ -4417,9 +8068,9 @@ static PyObject *_wrap_new_KeyEvent__SWIG_1(PyObject *, PyObject *args) {
         res5 = SWIG_AsPtr_std_string(obj4, &ptr);
         if (!res5) {
             if (!PyErr_Occurred())
-            SWIG_type_error("std::string", obj4);
+            SWIG_type_error("SCIRun::string", obj4);
         } else if (!ptr) {
-            SWIG_null_ref("std::string");
+            SWIG_null_ref("SCIRun::string");
         }
         if (SWIG_arg_fail(5)) SWIG_fail;
         arg5 = ptr;
@@ -4442,7 +8093,7 @@ static PyObject *_wrap_new_KeyEvent__SWIG_2(PyObject *, PyObject *args) {
     unsigned int arg1 ;
     unsigned int arg2 ;
     int arg3 ;
-    std::string *arg4 = 0 ;
+    SCIRun::string *arg4 = 0 ;
     SCIRun::KeyEvent *result;
     int res4 = 0 ;
     PyObject * obj0 = 0 ;
@@ -4468,9 +8119,9 @@ static PyObject *_wrap_new_KeyEvent__SWIG_2(PyObject *, PyObject *args) {
         res4 = SWIG_AsPtr_std_string(obj3, &ptr);
         if (!res4) {
             if (!PyErr_Occurred())
-            SWIG_type_error("std::string", obj3);
+            SWIG_type_error("SCIRun::string", obj3);
         } else if (!ptr) {
-            SWIG_null_ref("std::string");
+            SWIG_null_ref("SCIRun::string");
         }
         if (SWIG_arg_fail(4)) SWIG_fail;
         arg4 = ptr;
@@ -4667,7 +8318,7 @@ static PyObject *_wrap_new_KeyEvent(PyObject *self, PyObject *args) {
                     if (_v) {
                         _v = SWIG_AsPtr_std_string(argv[4], (std::string**)(0));
                         if (_v) {
-                            _v = SWIG_Check_unsigned_SS_int(argv[5]);
+                            _v = SWIG_Check_unsigned_SS_long(argv[5]);
                             if (_v) {
                                 return _wrap_new_KeyEvent__SWIG_0(self,args);
                             }
@@ -4697,6 +8348,72 @@ static PyObject *_wrap_delete_KeyEvent(PyObject *, PyObject *args) {
     return resultobj;
     fail:
     return NULL;
+}
+
+
+static PyObject *_wrap_KeyEvent_clone(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::KeyEvent *arg1 = (SCIRun::KeyEvent *) 0 ;
+    SCIRun::KeyEvent *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:KeyEvent_clone",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__KeyEvent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (SCIRun::KeyEvent *)(arg1)->clone();
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__KeyEvent, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_KeyEvent_io(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::KeyEvent *arg1 = (SCIRun::KeyEvent *) 0 ;
+    SCIRun::Piostream *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:KeyEvent_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__KeyEvent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static int _wrap_KeyEvent_type_id_set(PyObject *_val) {
+    {
+        SCIRun::PersistentTypeID * temp;
+        if ((SWIG_ConvertPtr(_val, (void **)(&temp), SWIGTYPE_p_SCIRun__PersistentTypeID, SWIG_POINTER_EXCEPTION)) == -1) {
+            SWIG_append_errmsg("C/C++ variable 'SCIRun::KeyEvent::type_id'");
+            return 1;
+        }
+        SCIRun::KeyEvent::type_id = *((SCIRun::PersistentTypeID *) temp);
+    }
+    return 0;
+}
+
+
+static PyObject *_wrap_KeyEvent_type_id_get(void) {
+    PyObject *pyobj;
+    
+    pyobj = SWIG_NewPointerObj((void *)(&SCIRun::KeyEvent::type_id), SWIGTYPE_p_SCIRun__PersistentTypeID, 0);
+    return pyobj;
 }
 
 
@@ -4763,7 +8480,7 @@ static PyObject *_wrap_KeyEvent_get_keyval(PyObject *, PyObject *args) {
 static PyObject *_wrap_KeyEvent_get_key_string(PyObject *, PyObject *args) {
     PyObject *resultobj;
     SCIRun::KeyEvent *arg1 = (SCIRun::KeyEvent *) 0 ;
-    std::string result;
+    SCIRun::string result;
     PyObject * obj0 = 0 ;
     
     if(!PyArg_ParseTuple(args,(char *)"O:KeyEvent_get_key_string",&obj0)) goto fail;
@@ -4829,7 +8546,7 @@ static PyObject *_wrap_KeyEvent_set_keyval(PyObject *, PyObject *args) {
 static PyObject *_wrap_KeyEvent_set_key_string(PyObject *, PyObject *args) {
     PyObject *resultobj;
     SCIRun::KeyEvent *arg1 = (SCIRun::KeyEvent *) 0 ;
-    std::string arg2 ;
+    SCIRun::string arg2 ;
     PyObject * obj0 = 0 ;
     PyObject * obj1 = 0 ;
     
@@ -4841,9 +8558,9 @@ static PyObject *_wrap_KeyEvent_set_key_string(PyObject *, PyObject *args) {
         int res = SWIG_AsPtr_std_string(obj1, &ptr);
         if (!res) {
             if (!PyErr_Occurred())
-            SWIG_type_error("std::string", obj1);
+            SWIG_type_error("SCIRun::string", obj1);
         } else if (!ptr) {
-            SWIG_null_ref("std::string");
+            SWIG_null_ref("SCIRun::string");
         }
         if (SWIG_arg_fail(2)) SWIG_fail;
         arg2 = *ptr;
@@ -4868,8 +8585,8 @@ static PyObject * KeyEvent_swigregister(PyObject *, PyObject *args) {
 static PyObject *_wrap_new_WindowEvent__SWIG_0(PyObject *, PyObject *args) {
     PyObject *resultobj;
     unsigned int arg1 ;
-    std::string *arg2 = 0 ;
-    unsigned int arg3 ;
+    SCIRun::string *arg2 = 0 ;
+    unsigned long arg3 ;
     SCIRun::WindowEvent *result;
     int res2 = 0 ;
     PyObject * obj0 = 0 ;
@@ -4886,15 +8603,15 @@ static PyObject *_wrap_new_WindowEvent__SWIG_0(PyObject *, PyObject *args) {
         res2 = SWIG_AsPtr_std_string(obj1, &ptr);
         if (!res2) {
             if (!PyErr_Occurred())
-            SWIG_type_error("std::string", obj1);
+            SWIG_type_error("SCIRun::string", obj1);
         } else if (!ptr) {
-            SWIG_null_ref("std::string");
+            SWIG_null_ref("SCIRun::string");
         }
         if (SWIG_arg_fail(2)) SWIG_fail;
         arg2 = ptr;
     }
     {
-        arg3 = (unsigned int)(SWIG_As_unsigned_SS_int(obj2)); 
+        arg3 = (unsigned long)(SWIG_As_unsigned_SS_long(obj2)); 
         if (SWIG_arg_fail(3)) SWIG_fail;
     }
     result = (SCIRun::WindowEvent *)new SCIRun::WindowEvent(arg1,(std::string const &)*arg2,arg3);
@@ -4911,7 +8628,7 @@ static PyObject *_wrap_new_WindowEvent__SWIG_0(PyObject *, PyObject *args) {
 static PyObject *_wrap_new_WindowEvent__SWIG_1(PyObject *, PyObject *args) {
     PyObject *resultobj;
     unsigned int arg1 ;
-    std::string *arg2 = 0 ;
+    SCIRun::string *arg2 = 0 ;
     SCIRun::WindowEvent *result;
     int res2 = 0 ;
     PyObject * obj0 = 0 ;
@@ -4927,9 +8644,9 @@ static PyObject *_wrap_new_WindowEvent__SWIG_1(PyObject *, PyObject *args) {
         res2 = SWIG_AsPtr_std_string(obj1, &ptr);
         if (!res2) {
             if (!PyErr_Occurred())
-            SWIG_type_error("std::string", obj1);
+            SWIG_type_error("SCIRun::string", obj1);
         } else if (!ptr) {
-            SWIG_null_ref("std::string");
+            SWIG_null_ref("SCIRun::string");
         }
         if (SWIG_arg_fail(2)) SWIG_fail;
         arg2 = ptr;
@@ -5014,7 +8731,7 @@ static PyObject *_wrap_new_WindowEvent(PyObject *self, PyObject *args) {
         if (_v) {
             _v = SWIG_AsPtr_std_string(argv[1], (std::string**)(0));
             if (_v) {
-                _v = SWIG_Check_unsigned_SS_int(argv[2]);
+                _v = SWIG_Check_unsigned_SS_long(argv[2]);
                 if (_v) {
                     return _wrap_new_WindowEvent__SWIG_0(self,args);
                 }
@@ -5041,6 +8758,72 @@ static PyObject *_wrap_delete_WindowEvent(PyObject *, PyObject *args) {
     return resultobj;
     fail:
     return NULL;
+}
+
+
+static PyObject *_wrap_WindowEvent_clone(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::WindowEvent *arg1 = (SCIRun::WindowEvent *) 0 ;
+    SCIRun::WindowEvent *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:WindowEvent_clone",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__WindowEvent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (SCIRun::WindowEvent *)(arg1)->clone();
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__WindowEvent, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_WindowEvent_io(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::WindowEvent *arg1 = (SCIRun::WindowEvent *) 0 ;
+    SCIRun::Piostream *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:WindowEvent_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__WindowEvent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static int _wrap_WindowEvent_type_id_set(PyObject *_val) {
+    {
+        SCIRun::PersistentTypeID * temp;
+        if ((SWIG_ConvertPtr(_val, (void **)(&temp), SWIGTYPE_p_SCIRun__PersistentTypeID, SWIG_POINTER_EXCEPTION)) == -1) {
+            SWIG_append_errmsg("C/C++ variable 'SCIRun::WindowEvent::type_id'");
+            return 1;
+        }
+        SCIRun::WindowEvent::type_id = *((SCIRun::PersistentTypeID *) temp);
+    }
+    return 0;
+}
+
+
+static PyObject *_wrap_WindowEvent_type_id_get(void) {
+    PyObject *pyobj;
+    
+    pyobj = SWIG_NewPointerObj((void *)(&SCIRun::WindowEvent::type_id), SWIGTYPE_p_SCIRun__PersistentTypeID, 0);
+    return pyobj;
 }
 
 
@@ -5145,10 +8928,159 @@ static PyObject *_wrap_delete_QuitEvent(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_QuitEvent_io(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::QuitEvent *arg1 = (SCIRun::QuitEvent *) 0 ;
+    SCIRun::Piostream *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:QuitEvent_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__QuitEvent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static int _wrap_QuitEvent_type_id_set(PyObject *_val) {
+    {
+        SCIRun::PersistentTypeID * temp;
+        if ((SWIG_ConvertPtr(_val, (void **)(&temp), SWIGTYPE_p_SCIRun__PersistentTypeID, SWIG_POINTER_EXCEPTION)) == -1) {
+            SWIG_append_errmsg("C/C++ variable 'SCIRun::QuitEvent::type_id'");
+            return 1;
+        }
+        SCIRun::QuitEvent::type_id = *((SCIRun::PersistentTypeID *) temp);
+    }
+    return 0;
+}
+
+
+static PyObject *_wrap_QuitEvent_type_id_get(void) {
+    PyObject *pyobj;
+    
+    pyobj = SWIG_NewPointerObj((void *)(&SCIRun::QuitEvent::type_id), SWIGTYPE_p_SCIRun__PersistentTypeID, 0);
+    return pyobj;
+}
+
+
+static PyObject *_wrap_QuitEvent_clone(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::QuitEvent *arg1 = (SCIRun::QuitEvent *) 0 ;
+    SCIRun::QuitEvent *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:QuitEvent_clone",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__QuitEvent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (SCIRun::QuitEvent *)(arg1)->clone();
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__QuitEvent, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject * QuitEvent_swigregister(PyObject *, PyObject *args) {
     PyObject *obj;
     if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
     SWIG_TypeClientData(SWIGTYPE_p_SCIRun__QuitEvent, obj);
+    Py_INCREF(obj);
+    return Py_BuildValue((char *)"");
+}
+static PyObject *_wrap_new_RedrawEvent(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::RedrawEvent *result;
+    
+    if(!PyArg_ParseTuple(args,(char *)":new_RedrawEvent")) goto fail;
+    result = (SCIRun::RedrawEvent *)new SCIRun::RedrawEvent();
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__RedrawEvent, 1);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_delete_RedrawEvent(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::RedrawEvent *arg1 = (SCIRun::RedrawEvent *) 0 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:delete_RedrawEvent",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__RedrawEvent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    delete arg1;
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_RedrawEvent_io(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::RedrawEvent *arg1 = (SCIRun::RedrawEvent *) 0 ;
+    SCIRun::Piostream *arg2 = 0 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:RedrawEvent_io",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__RedrawEvent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        SWIG_Python_ConvertPtr(obj1, (void **)&arg2, SWIGTYPE_p_SCIRun__Piostream, SWIG_POINTER_EXCEPTION | 0);
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        if (arg2 == NULL) {
+            SWIG_null_ref("SCIRun::Piostream");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+    }
+    (arg1)->io(*arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_RedrawEvent_clone(PyObject *, PyObject *args) {
+    PyObject *resultobj;
+    SCIRun::RedrawEvent *arg1 = (SCIRun::RedrawEvent *) 0 ;
+    SCIRun::RedrawEvent *result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:RedrawEvent_clone",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__RedrawEvent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = (SCIRun::RedrawEvent *)(arg1)->clone();
+    
+    resultobj = SWIG_NewPointerObj((void*)(result), SWIGTYPE_p_SCIRun__RedrawEvent, 0);
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject * RedrawEvent_swigregister(PyObject *, PyObject *args) {
+    PyObject *obj;
+    if (!PyArg_ParseTuple(args,(char*)"O", &obj)) return NULL;
+    SWIG_TypeClientData(SWIGTYPE_p_SCIRun__RedrawEvent, obj);
     Py_INCREF(obj);
     return Py_BuildValue((char *)"");
 }
@@ -7429,8 +11361,68 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"Mutex_tryLock", _wrap_Mutex_tryLock, METH_VARARGS, NULL},
 	 { (char *)"Mutex_unlock", _wrap_Mutex_unlock, METH_VARARGS, NULL},
 	 { (char *)"Mutex_swigregister", Mutex_swigregister, METH_VARARGS, NULL},
-	 { (char *)"new_BaseEvent", _wrap_new_BaseEvent, METH_VARARGS, NULL},
+	 { (char *)"new_ProgressReporter", _wrap_new_ProgressReporter, METH_VARARGS, NULL},
+	 { (char *)"delete_ProgressReporter", _wrap_delete_ProgressReporter, METH_VARARGS, NULL},
+	 { (char *)"ProgressReporter_error", _wrap_ProgressReporter_error, METH_VARARGS, NULL},
+	 { (char *)"ProgressReporter_warning", _wrap_ProgressReporter_warning, METH_VARARGS, NULL},
+	 { (char *)"ProgressReporter_remark", _wrap_ProgressReporter_remark, METH_VARARGS, NULL},
+	 { (char *)"ProgressReporter_compile_error", _wrap_ProgressReporter_compile_error, METH_VARARGS, NULL},
+	 { (char *)"ProgressReporter_add_raw_message", _wrap_ProgressReporter_add_raw_message, METH_VARARGS, NULL},
+	 { (char *)"ProgressReporter_msg_stream", _wrap_ProgressReporter_msg_stream, METH_VARARGS, NULL},
+	 { (char *)"ProgressReporter_msg_stream_flush", _wrap_ProgressReporter_msg_stream_flush, METH_VARARGS, NULL},
+	 { (char *)"ProgressReporter_report_progress", _wrap_ProgressReporter_report_progress, METH_VARARGS, NULL},
+	 { (char *)"ProgressReporter_update_progress", _wrap_ProgressReporter_update_progress, METH_VARARGS, NULL},
+	 { (char *)"ProgressReporter_increment_progress", _wrap_ProgressReporter_increment_progress, METH_VARARGS, NULL},
+	 { (char *)"ProgressReporter_swigregister", ProgressReporter_swigregister, METH_VARARGS, NULL},
+	 { (char *)"PersistentTypeID_type_set", _wrap_PersistentTypeID_type_set, METH_VARARGS, NULL},
+	 { (char *)"PersistentTypeID_type_get", _wrap_PersistentTypeID_type_get, METH_VARARGS, NULL},
+	 { (char *)"PersistentTypeID_parent_set", _wrap_PersistentTypeID_parent_set, METH_VARARGS, NULL},
+	 { (char *)"PersistentTypeID_parent_get", _wrap_PersistentTypeID_parent_get, METH_VARARGS, NULL},
+	 { (char *)"PersistentTypeID_maker_set", _wrap_PersistentTypeID_maker_set, METH_VARARGS, NULL},
+	 { (char *)"PersistentTypeID_maker_get", _wrap_PersistentTypeID_maker_get, METH_VARARGS, NULL},
+	 { (char *)"new_PersistentTypeID", _wrap_new_PersistentTypeID, METH_VARARGS, NULL},
+	 { (char *)"delete_PersistentTypeID", _wrap_delete_PersistentTypeID, METH_VARARGS, NULL},
+	 { (char *)"PersistentTypeID_bc_maker1_set", _wrap_PersistentTypeID_bc_maker1_set, METH_VARARGS, NULL},
+	 { (char *)"PersistentTypeID_bc_maker1_get", _wrap_PersistentTypeID_bc_maker1_get, METH_VARARGS, NULL},
+	 { (char *)"PersistentTypeID_bc_maker2_set", _wrap_PersistentTypeID_bc_maker2_set, METH_VARARGS, NULL},
+	 { (char *)"PersistentTypeID_bc_maker2_get", _wrap_PersistentTypeID_bc_maker2_get, METH_VARARGS, NULL},
+	 { (char *)"PersistentTypeID_swigregister", PersistentTypeID_swigregister, METH_VARARGS, NULL},
+	 { (char *)"Piostream_flag_error", _wrap_Piostream_flag_error, METH_VARARGS, NULL},
+	 { (char *)"Piostream_file_name_set", _wrap_Piostream_file_name_set, METH_VARARGS, NULL},
+	 { (char *)"Piostream_file_name_get", _wrap_Piostream_file_name_get, METH_VARARGS, NULL},
+	 { (char *)"delete_Piostream", _wrap_delete_Piostream, METH_VARARGS, NULL},
+	 { (char *)"Piostream_peek_class", _wrap_Piostream_peek_class, METH_VARARGS, NULL},
+	 { (char *)"Piostream_begin_class", _wrap_Piostream_begin_class, METH_VARARGS, NULL},
+	 { (char *)"Piostream_end_class", _wrap_Piostream_end_class, METH_VARARGS, NULL},
+	 { (char *)"Piostream_begin_cheap_delim", _wrap_Piostream_begin_cheap_delim, METH_VARARGS, NULL},
+	 { (char *)"Piostream_end_cheap_delim", _wrap_Piostream_end_cheap_delim, METH_VARARGS, NULL},
+	 { (char *)"Piostream_io", _wrap_Piostream_io, METH_VARARGS, NULL},
+	 { (char *)"Piostream_reading", _wrap_Piostream_reading, METH_VARARGS, NULL},
+	 { (char *)"Piostream_writing", _wrap_Piostream_writing, METH_VARARGS, NULL},
+	 { (char *)"Piostream_error", _wrap_Piostream_error, METH_VARARGS, NULL},
+	 { (char *)"Piostream_version", _wrap_Piostream_version, METH_VARARGS, NULL},
+	 { (char *)"Piostream_backwards_compat_id", _wrap_Piostream_backwards_compat_id, METH_VARARGS, NULL},
+	 { (char *)"Piostream_set_backwards_compat_id", _wrap_Piostream_set_backwards_compat_id, METH_VARARGS, NULL},
+	 { (char *)"Piostream_supports_block_io", _wrap_Piostream_supports_block_io, METH_VARARGS, NULL},
+	 { (char *)"Piostream_block_io", _wrap_Piostream_block_io, METH_VARARGS, NULL},
+	 { (char *)"Piostream_swigregister", Piostream_swigregister, METH_VARARGS, NULL},
+	 { (char *)"auto_istream", _wrap_auto_istream, METH_VARARGS, NULL},
+	 { (char *)"auto_ostream", _wrap_auto_ostream, METH_VARARGS, NULL},
+	 { (char *)"delete_Persistent", _wrap_delete_Persistent, METH_VARARGS, NULL},
+	 { (char *)"Persistent_io", _wrap_Persistent_io, METH_VARARGS, NULL},
+	 { (char *)"Persistent_swigregister", Persistent_swigregister, METH_VARARGS, NULL},
+	 { (char *)"Pio", _wrap_Pio, METH_VARARGS, NULL},
+	 { (char *)"Datatype_ref_cnt_set", _wrap_Datatype_ref_cnt_set, METH_VARARGS, NULL},
+	 { (char *)"Datatype_ref_cnt_get", _wrap_Datatype_ref_cnt_get, METH_VARARGS, NULL},
+	 { (char *)"Datatype_lock_get", _wrap_Datatype_lock_get, METH_VARARGS, NULL},
+	 { (char *)"Datatype_generation_set", _wrap_Datatype_generation_set, METH_VARARGS, NULL},
+	 { (char *)"Datatype_generation_get", _wrap_Datatype_generation_get, METH_VARARGS, NULL},
+	 { (char *)"delete_Datatype", _wrap_delete_Datatype, METH_VARARGS, NULL},
+	 { (char *)"Datatype_compute_new_generation", _wrap_Datatype_compute_new_generation, METH_VARARGS, NULL},
+	 { (char *)"Datatype_swigregister", Datatype_swigregister, METH_VARARGS, NULL},
 	 { (char *)"delete_BaseEvent", _wrap_delete_BaseEvent, METH_VARARGS, NULL},
+	 { (char *)"BaseEvent_clone", _wrap_BaseEvent_clone, METH_VARARGS, NULL},
+	 { (char *)"BaseEvent_io", _wrap_BaseEvent_io, METH_VARARGS, NULL},
 	 { (char *)"BaseEvent_get_time", _wrap_BaseEvent_get_time, METH_VARARGS, NULL},
 	 { (char *)"BaseEvent_get_target", _wrap_BaseEvent_get_target, METH_VARARGS, NULL},
 	 { (char *)"BaseEvent_set_time", _wrap_BaseEvent_set_time, METH_VARARGS, NULL},
@@ -7439,17 +11431,17 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"BaseEvent_is_key_event", _wrap_BaseEvent_is_key_event, METH_VARARGS, NULL},
 	 { (char *)"BaseEvent_is_window_event", _wrap_BaseEvent_is_window_event, METH_VARARGS, NULL},
 	 { (char *)"BaseEvent_is_scene_graph_event", _wrap_BaseEvent_is_scene_graph_event, METH_VARARGS, NULL},
-	 { (char *)"BaseEvent_ref_cnt_set", _wrap_BaseEvent_ref_cnt_set, METH_VARARGS, NULL},
-	 { (char *)"BaseEvent_ref_cnt_get", _wrap_BaseEvent_ref_cnt_get, METH_VARARGS, NULL},
-	 { (char *)"BaseEvent_lock_get", _wrap_BaseEvent_lock_get, METH_VARARGS, NULL},
 	 { (char *)"BaseEvent_swigregister", BaseEvent_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_EventModifiers", _wrap_new_EventModifiers, METH_VARARGS, NULL},
 	 { (char *)"delete_EventModifiers", _wrap_delete_EventModifiers, METH_VARARGS, NULL},
+	 { (char *)"EventModifiers_io", _wrap_EventModifiers_io, METH_VARARGS, NULL},
 	 { (char *)"EventModifiers_get_modifiers", _wrap_EventModifiers_get_modifiers, METH_VARARGS, NULL},
 	 { (char *)"EventModifiers_set_modifiers", _wrap_EventModifiers_set_modifiers, METH_VARARGS, NULL},
 	 { (char *)"EventModifiers_swigregister", EventModifiers_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_PointerEvent", _wrap_new_PointerEvent, METH_VARARGS, NULL},
 	 { (char *)"delete_PointerEvent", _wrap_delete_PointerEvent, METH_VARARGS, NULL},
+	 { (char *)"PointerEvent_io", _wrap_PointerEvent_io, METH_VARARGS, NULL},
+	 { (char *)"PointerEvent_clone", _wrap_PointerEvent_clone, METH_VARARGS, NULL},
 	 { (char *)"PointerEvent_is_pointer_event", _wrap_PointerEvent_is_pointer_event, METH_VARARGS, NULL},
 	 { (char *)"PointerEvent_get_pointer_state", _wrap_PointerEvent_get_pointer_state, METH_VARARGS, NULL},
 	 { (char *)"PointerEvent_get_x", _wrap_PointerEvent_get_x, METH_VARARGS, NULL},
@@ -7460,6 +11452,8 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"PointerEvent_swigregister", PointerEvent_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_KeyEvent", _wrap_new_KeyEvent, METH_VARARGS, NULL},
 	 { (char *)"delete_KeyEvent", _wrap_delete_KeyEvent, METH_VARARGS, NULL},
+	 { (char *)"KeyEvent_clone", _wrap_KeyEvent_clone, METH_VARARGS, NULL},
+	 { (char *)"KeyEvent_io", _wrap_KeyEvent_io, METH_VARARGS, NULL},
 	 { (char *)"KeyEvent_is_key_event", _wrap_KeyEvent_is_key_event, METH_VARARGS, NULL},
 	 { (char *)"KeyEvent_get_key_state", _wrap_KeyEvent_get_key_state, METH_VARARGS, NULL},
 	 { (char *)"KeyEvent_get_keyval", _wrap_KeyEvent_get_keyval, METH_VARARGS, NULL},
@@ -7470,13 +11464,22 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"KeyEvent_swigregister", KeyEvent_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_WindowEvent", _wrap_new_WindowEvent, METH_VARARGS, NULL},
 	 { (char *)"delete_WindowEvent", _wrap_delete_WindowEvent, METH_VARARGS, NULL},
+	 { (char *)"WindowEvent_clone", _wrap_WindowEvent_clone, METH_VARARGS, NULL},
+	 { (char *)"WindowEvent_io", _wrap_WindowEvent_io, METH_VARARGS, NULL},
 	 { (char *)"WindowEvent_is_window_event", _wrap_WindowEvent_is_window_event, METH_VARARGS, NULL},
 	 { (char *)"WindowEvent_get_window_state", _wrap_WindowEvent_get_window_state, METH_VARARGS, NULL},
 	 { (char *)"WindowEvent_set_window_state", _wrap_WindowEvent_set_window_state, METH_VARARGS, NULL},
 	 { (char *)"WindowEvent_swigregister", WindowEvent_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_QuitEvent", _wrap_new_QuitEvent, METH_VARARGS, NULL},
 	 { (char *)"delete_QuitEvent", _wrap_delete_QuitEvent, METH_VARARGS, NULL},
+	 { (char *)"QuitEvent_io", _wrap_QuitEvent_io, METH_VARARGS, NULL},
+	 { (char *)"QuitEvent_clone", _wrap_QuitEvent_clone, METH_VARARGS, NULL},
 	 { (char *)"QuitEvent_swigregister", QuitEvent_swigregister, METH_VARARGS, NULL},
+	 { (char *)"new_RedrawEvent", _wrap_new_RedrawEvent, METH_VARARGS, NULL},
+	 { (char *)"delete_RedrawEvent", _wrap_delete_RedrawEvent, METH_VARARGS, NULL},
+	 { (char *)"RedrawEvent_io", _wrap_RedrawEvent_io, METH_VARARGS, NULL},
+	 { (char *)"RedrawEvent_clone", _wrap_RedrawEvent_clone, METH_VARARGS, NULL},
+	 { (char *)"RedrawEvent_swigregister", RedrawEvent_swigregister, METH_VARARGS, NULL},
 	 { (char *)"vector_string_empty", _wrap_vector_string_empty, METH_VARARGS, NULL},
 	 { (char *)"vector_string_size", _wrap_vector_string_size, METH_VARARGS, NULL},
 	 { (char *)"vector_string_clear", _wrap_vector_string_clear, METH_VARARGS, NULL},
@@ -7544,8 +11547,86 @@ static PyMethodDef SwigMethods[] = {
 
 /* -------- TYPE CONVERSION AND EQUIVALENCE RULES (BEGIN) -------- */
 
-static void *_p_SCIRun__CallbackOpenGLContextTo_p_SCIRun__OpenGLContext(void *x) {
-    return (void *)((SCIRun::OpenGLContext *)  ((SCIRun::CallbackOpenGLContext *) x));
+static void *_p_SCIRun__BaseEventTo_p_SCIRun__Datatype(void *x) {
+    return (void *)((SCIRun::Datatype *)  ((SCIRun::BaseEvent *) x));
+}
+static void *_p_SCIRun__WindowEventTo_p_SCIRun__Datatype(void *x) {
+    return (void *)((SCIRun::Datatype *) (SCIRun::BaseEvent *) ((SCIRun::WindowEvent *) x));
+}
+static void *_p_SCIRun__RedrawEventTo_p_SCIRun__Datatype(void *x) {
+    return (void *)((SCIRun::Datatype *) (SCIRun::BaseEvent *) ((SCIRun::RedrawEvent *) x));
+}
+static void *_p_SCIRun__QuitEventTo_p_SCIRun__Datatype(void *x) {
+    return (void *)((SCIRun::Datatype *) (SCIRun::BaseEvent *) ((SCIRun::QuitEvent *) x));
+}
+static void *_p_SCIRun__PointerEventTo_p_SCIRun__Datatype(void *x) {
+    return (void *)((SCIRun::Datatype *) (SCIRun::BaseEvent *) ((SCIRun::PointerEvent *) x));
+}
+static void *_p_SCIRun__KeyEventTo_p_SCIRun__Datatype(void *x) {
+    return (void *)((SCIRun::Datatype *) (SCIRun::BaseEvent *) ((SCIRun::KeyEvent *) x));
+}
+static void *_p_SCIRun__BaseEventTo_p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent *) (SCIRun::Datatype *) ((SCIRun::BaseEvent *) x));
+}
+static void *_p_SCIRun__WindowEventTo_p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent *) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::WindowEvent *) x));
+}
+static void *_p_SCIRun__RedrawEventTo_p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent *) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::RedrawEvent *) x));
+}
+static void *_p_SCIRun__QuitEventTo_p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent *) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::QuitEvent *) x));
+}
+static void *_p_SCIRun__DatatypeTo_p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent *)  ((SCIRun::Datatype *) x));
+}
+static void *_p_SCIRun__PointerEventTo_p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent *) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::PointerEvent *) x));
+}
+static void *_p_SCIRun__KeyEventTo_p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent *) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::KeyEvent *) x));
+}
+static void *_p_p_SCIRun__BaseEventTo_p_p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent **) (SCIRun::Datatype *) ((SCIRun::BaseEvent **) x));
+}
+static void *_p_p_SCIRun__WindowEventTo_p_p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent **) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::WindowEvent **) x));
+}
+static void *_p_p_SCIRun__RedrawEventTo_p_p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent **) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::RedrawEvent **) x));
+}
+static void *_p_p_SCIRun__QuitEventTo_p_p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent **) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::QuitEvent **) x));
+}
+static void *_p_p_SCIRun__DatatypeTo_p_p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent **)  ((SCIRun::Datatype **) x));
+}
+static void *_p_p_SCIRun__PointerEventTo_p_p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent **) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::PointerEvent **) x));
+}
+static void *_p_p_SCIRun__KeyEventTo_p_p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent **) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::KeyEvent **) x));
+}
+static void *_p_f___p_SCIRun__BaseEventTo_p_f___p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent *(*)()) (SCIRun::Datatype *) ((SCIRun::BaseEvent *(*)()) x));
+}
+static void *_p_f___p_SCIRun__WindowEventTo_p_f___p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent *(*)()) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::WindowEvent *(*)()) x));
+}
+static void *_p_f___p_SCIRun__RedrawEventTo_p_f___p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent *(*)()) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::RedrawEvent *(*)()) x));
+}
+static void *_p_f___p_SCIRun__QuitEventTo_p_f___p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent *(*)()) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::QuitEvent *(*)()) x));
+}
+static void *_p_f___p_SCIRun__DatatypeTo_p_f___p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent *(*)())  ((SCIRun::Datatype *(*)()) x));
+}
+static void *_p_f___p_SCIRun__PointerEventTo_p_f___p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent *(*)()) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::PointerEvent *(*)()) x));
+}
+static void *_p_f___p_SCIRun__KeyEventTo_p_f___p_SCIRun__Persistent(void *x) {
+    return (void *)((SCIRun::Persistent *(*)()) (SCIRun::Datatype *)(SCIRun::BaseEvent *) ((SCIRun::KeyEvent *(*)()) x));
 }
 static void *_p_SCIRun__PointerEventTo_p_SCIRun__EventModifiers(void *x) {
     return (void *)((SCIRun::EventModifiers *)  ((SCIRun::PointerEvent *) x));
@@ -7553,8 +11634,14 @@ static void *_p_SCIRun__PointerEventTo_p_SCIRun__EventModifiers(void *x) {
 static void *_p_SCIRun__KeyEventTo_p_SCIRun__EventModifiers(void *x) {
     return (void *)((SCIRun::EventModifiers *)  ((SCIRun::KeyEvent *) x));
 }
+static void *_p_SCIRun__CallbackOpenGLContextTo_p_SCIRun__OpenGLContext(void *x) {
+    return (void *)((SCIRun::OpenGLContext *)  ((SCIRun::CallbackOpenGLContext *) x));
+}
 static void *_p_SCIRun__WindowEventTo_p_SCIRun__BaseEvent(void *x) {
     return (void *)((SCIRun::BaseEvent *)  ((SCIRun::WindowEvent *) x));
+}
+static void *_p_SCIRun__RedrawEventTo_p_SCIRun__BaseEvent(void *x) {
+    return (void *)((SCIRun::BaseEvent *)  ((SCIRun::RedrawEvent *) x));
 }
 static void *_p_SCIRun__QuitEventTo_p_SCIRun__BaseEvent(void *x) {
     return (void *)((SCIRun::BaseEvent *)  ((SCIRun::QuitEvent *) x));
@@ -7565,57 +11652,111 @@ static void *_p_SCIRun__PointerEventTo_p_SCIRun__BaseEvent(void *x) {
 static void *_p_SCIRun__KeyEventTo_p_SCIRun__BaseEvent(void *x) {
     return (void *)((SCIRun::BaseEvent *)  ((SCIRun::KeyEvent *) x));
 }
-static swig_type_info _swigt__p_SCIRun__KeyEvent[] = {{"_p_SCIRun__KeyEvent", 0, "SCIRun::KeyEvent *", 0, 0, 0, 0},{"_p_SCIRun__KeyEvent", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__std__size_t[] = {{"_std__size_t", 0, "std::size_t", 0, 0, 0, 0},{"_std__size_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__size_t[] = {{"_size_t", 0, "size_t", 0, 0, 0, 0},{"_size_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_std__vectorTstd__string_std__allocatorTstd__string_t_t[] = {{"_p_std__vectorTstd__string_std__allocatorTstd__string_t_t", 0, "std::vector<std::string > *", 0, 0, 0, 0},{"_p_std__vectorTstd__string_std__allocatorTstd__string_t_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_ProgressState[] = {{"_p_ProgressState", 0, "ProgressState *", 0, 0, 0, 0},{"_p_ProgressState", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_LockingHandleTSCIRun__BaseEvent_t[] = {{"_p_LockingHandleTSCIRun__BaseEvent_t", 0, "LockingHandle<SCIRun::BaseEvent > *|SCIRun::event_handle_t *", 0, 0, 0, 0},{"_p_LockingHandleTSCIRun__BaseEvent_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_MapIntPersistent[] = {{"_p_MapIntPersistent", 0, "MapIntPersistent *", 0, 0, 0, 0},{"_p_MapIntPersistent", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_f___p_SCIRun__Persistent[] = {{"_p_f___p_SCIRun__Persistent", 0, "SCIRun::Persistent *(*)()", 0, 0, 0, 0},{"_p_f___p_SCIRun__BaseEvent", _p_f___p_SCIRun__BaseEventTo_p_f___p_SCIRun__Persistent, 0, 0, 0, 0, 0},{"_p_f___p_SCIRun__Persistent", 0, 0, 0, 0, 0, 0},{"_p_f___p_SCIRun__WindowEvent", _p_f___p_SCIRun__WindowEventTo_p_f___p_SCIRun__Persistent, 0, 0, 0, 0, 0},{"_p_f___p_SCIRun__RedrawEvent", _p_f___p_SCIRun__RedrawEventTo_p_f___p_SCIRun__Persistent, 0, 0, 0, 0, 0},{"_p_f___p_SCIRun__QuitEvent", _p_f___p_SCIRun__QuitEventTo_p_f___p_SCIRun__Persistent, 0, 0, 0, 0, 0},{"_p_f___p_SCIRun__Datatype", _p_f___p_SCIRun__DatatypeTo_p_f___p_SCIRun__Persistent, 0, 0, 0, 0, 0},{"_p_f___p_SCIRun__PointerEvent", _p_f___p_SCIRun__PointerEventTo_p_f___p_SCIRun__Persistent, 0, 0, 0, 0, 0},{"_p_f___p_SCIRun__KeyEvent", _p_f___p_SCIRun__KeyEventTo_p_f___p_SCIRun__Persistent, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_SCIRun__Persistent[] = {{"_p_SCIRun__Persistent", 0, "SCIRun::Persistent *", 0, 0, 0, 0},{"_p_SCIRun__BaseEvent", _p_SCIRun__BaseEventTo_p_SCIRun__Persistent, 0, 0, 0, 0, 0},{"_p_SCIRun__Persistent", 0, 0, 0, 0, 0, 0},{"_p_SCIRun__WindowEvent", _p_SCIRun__WindowEventTo_p_SCIRun__Persistent, 0, 0, 0, 0, 0},{"_p_SCIRun__RedrawEvent", _p_SCIRun__RedrawEventTo_p_SCIRun__Persistent, 0, 0, 0, 0, 0},{"_p_SCIRun__QuitEvent", _p_SCIRun__QuitEventTo_p_SCIRun__Persistent, 0, 0, 0, 0, 0},{"_p_SCIRun__PointerEvent", _p_SCIRun__PointerEventTo_p_SCIRun__Persistent, 0, 0, 0, 0, 0},{"_p_SCIRun__KeyEvent", _p_SCIRun__KeyEventTo_p_SCIRun__Persistent, 0, 0, 0, 0, 0},{"_p_SCIRun__Datatype", _p_SCIRun__DatatypeTo_p_SCIRun__Persistent, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_p_SCIRun__Persistent[] = {{"_p_p_SCIRun__Persistent", 0, "SCIRun::Persistent **", 0, 0, 0, 0},{"_p_p_SCIRun__BaseEvent", _p_p_SCIRun__BaseEventTo_p_p_SCIRun__Persistent, 0, 0, 0, 0, 0},{"_p_p_SCIRun__Persistent", 0, 0, 0, 0, 0, 0},{"_p_p_SCIRun__WindowEvent", _p_p_SCIRun__WindowEventTo_p_p_SCIRun__Persistent, 0, 0, 0, 0, 0},{"_p_p_SCIRun__RedrawEvent", _p_p_SCIRun__RedrawEventTo_p_p_SCIRun__Persistent, 0, 0, 0, 0, 0},{"_p_p_SCIRun__QuitEvent", _p_p_SCIRun__QuitEventTo_p_p_SCIRun__Persistent, 0, 0, 0, 0, 0},{"_p_p_SCIRun__Datatype", _p_p_SCIRun__DatatypeTo_p_p_SCIRun__Persistent, 0, 0, 0, 0, 0},{"_p_p_SCIRun__PointerEvent", _p_p_SCIRun__PointerEventTo_p_p_SCIRun__Persistent, 0, 0, 0, 0, 0},{"_p_p_SCIRun__KeyEvent", _p_p_SCIRun__KeyEventTo_p_p_SCIRun__Persistent, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_SCIRun__BaseEvent[] = {{"_p_SCIRun__BaseEvent", 0, "SCIRun::BaseEvent *", 0, 0, 0, 0},{"_p_SCIRun__BaseEvent", 0, 0, 0, 0, 0, 0},{"_p_SCIRun__WindowEvent", _p_SCIRun__WindowEventTo_p_SCIRun__BaseEvent, 0, 0, 0, 0, 0},{"_p_SCIRun__RedrawEvent", _p_SCIRun__RedrawEventTo_p_SCIRun__BaseEvent, 0, 0, 0, 0, 0},{"_p_SCIRun__QuitEvent", _p_SCIRun__QuitEventTo_p_SCIRun__BaseEvent, 0, 0, 0, 0, 0},{"_p_SCIRun__PointerEvent", _p_SCIRun__PointerEventTo_p_SCIRun__BaseEvent, 0, 0, 0, 0, 0},{"_p_SCIRun__KeyEvent", _p_SCIRun__KeyEventTo_p_SCIRun__BaseEvent, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_SCIRun__PointerEvent[] = {{"_p_SCIRun__PointerEvent", 0, "SCIRun::PointerEvent *", 0, 0, 0, 0},{"_p_SCIRun__PointerEvent", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_SCIRun__CallbackOpenGLContext[] = {{"_p_SCIRun__CallbackOpenGLContext", 0, "SCIRun::CallbackOpenGLContext *", 0, 0, 0, 0},{"_p_SCIRun__CallbackOpenGLContext", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_SCIRun__OpenGLContext[] = {{"_p_SCIRun__OpenGLContext", 0, "SCIRun::OpenGLContext *", 0, 0, 0, 0},{"_p_SCIRun__OpenGLContext", 0, 0, 0, 0, 0, 0},{"_p_SCIRun__CallbackOpenGLContext", _p_SCIRun__CallbackOpenGLContextTo_p_SCIRun__OpenGLContext, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_allocator_type[] = {{"_p_allocator_type", 0, "allocator_type *", 0, 0, 0, 0},{"_p_allocator_type", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_std__allocatorTdouble_t[] = {{"_p_std__allocatorTdouble_t", 0, "std::allocator<double > *|std::vector<double >::allocator_type *", 0, 0, 0, 0},{"_p_std__allocatorTdouble_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_SCIRun__QuitEvent[] = {{"_p_SCIRun__QuitEvent", 0, "SCIRun::QuitEvent *", 0, 0, 0, 0},{"_p_SCIRun__QuitEvent", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_size_type[] = {{"_p_size_type", 0, "size_type *", 0, 0, 0, 0},{"_p_size_type", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_f_p_void__int[] = {{"_p_f_p_void__int", 0, "int (*)(void *)|SCIRun::ZEROPARAMFUNC", 0, 0, 0, 0},{"_p_f_p_void__int", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_char[] = {{"_p_char", 0, "char *", 0, 0, 0, 0},{"_p_char", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_std__vectorTdouble_std__allocatorTdouble_t_t[] = {{"_p_std__vectorTdouble_std__allocatorTdouble_t_t", 0, "std::vector<double > *", 0, 0, 0, 0},{"_p_std__vectorTdouble_std__allocatorTdouble_t_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_p_char[] = {{"_p_p_char", 0, "char **", 0, 0, 0, 0},{"_p_p_char", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_size_type[] = {{"_p_size_type", 0, "size_type *", 0, 0, 0, 0},{"_p_size_type", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_bool[] = {{"_p_bool", 0, "bool *", 0, 0, 0, 0},{"_p_bool", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_SCIRun__QuitEvent[] = {{"_p_SCIRun__QuitEvent", 0, "SCIRun::QuitEvent *", 0, 0, 0, 0},{"_p_SCIRun__QuitEvent", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_double[] = {{"_p_double", 0, "double *", 0, 0, 0, 0},{"_p_double", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__size_t[] = {{"_size_t", 0, "size_t", 0, 0, 0, 0},{"_size_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__std__size_t[] = {{"_std__size_t", 0, "std::size_t", 0, 0, 0, 0},{"_std__size_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_SCIRun__ProgressReporter[] = {{"_p_SCIRun__ProgressReporter", 0, "SCIRun::ProgressReporter *", 0, 0, 0, 0},{"_p_SCIRun__ProgressReporter", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_SCIRun__EventModifiers[] = {{"_p_SCIRun__EventModifiers", 0, "SCIRun::EventModifiers *", 0, 0, 0, 0},{"_p_SCIRun__EventModifiers", 0, 0, 0, 0, 0, 0},{"_p_SCIRun__PointerEvent", _p_SCIRun__PointerEventTo_p_SCIRun__EventModifiers, 0, 0, 0, 0, 0},{"_p_SCIRun__KeyEvent", _p_SCIRun__KeyEventTo_p_SCIRun__EventModifiers, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_SCIRun__BaseEvent[] = {{"_p_SCIRun__BaseEvent", 0, "SCIRun::BaseEvent *", 0, 0, 0, 0},{"_p_SCIRun__BaseEvent", 0, 0, 0, 0, 0, 0},{"_p_SCIRun__WindowEvent", _p_SCIRun__WindowEventTo_p_SCIRun__BaseEvent, 0, 0, 0, 0, 0},{"_p_SCIRun__QuitEvent", _p_SCIRun__QuitEventTo_p_SCIRun__BaseEvent, 0, 0, 0, 0, 0},{"_p_SCIRun__PointerEvent", _p_SCIRun__PointerEventTo_p_SCIRun__BaseEvent, 0, 0, 0, 0, 0},{"_p_SCIRun__KeyEvent", _p_SCIRun__KeyEventTo_p_SCIRun__BaseEvent, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_std__vectorTstd__string_std__allocatorTstd__string_t_t[] = {{"_p_std__vectorTstd__string_std__allocatorTstd__string_t_t", 0, "std::vector<std::string > *", 0, 0, 0, 0},{"_p_std__vectorTstd__string_std__allocatorTstd__string_t_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_long[] = {{"_p_long", 0, "long *", 0, 0, 0, 0},{"_p_long", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_std__allocatorTdouble_t[] = {{"_p_std__allocatorTdouble_t", 0, "std::allocator<double > *|std::vector<double >::allocator_type *", 0, 0, 0, 0},{"_p_std__allocatorTdouble_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_std__string[] = {{"_p_std__string", 0, "std::string *|SCIRun::string *", 0, 0, 0, 0},{"_p_std__string", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_unsigned_int[] = {{"_p_unsigned_int", 0, "unsigned int *", 0, 0, 0, 0},{"_p_unsigned_int", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_SCIRun__OpenGLContext[] = {{"_p_SCIRun__OpenGLContext", 0, "SCIRun::OpenGLContext *", 0, 0, 0, 0},{"_p_SCIRun__OpenGLContext", 0, 0, 0, 0, 0, 0},{"_p_SCIRun__CallbackOpenGLContext", _p_SCIRun__CallbackOpenGLContextTo_p_SCIRun__OpenGLContext, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_SCIRun__CallbackOpenGLContext[] = {{"_p_SCIRun__CallbackOpenGLContext", 0, "SCIRun::CallbackOpenGLContext *", 0, 0, 0, 0},{"_p_SCIRun__CallbackOpenGLContext", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_MapStringPersistentTypeID[] = {{"_p_MapStringPersistentTypeID", 0, "MapStringPersistentTypeID *", 0, 0, 0, 0},{"_p_MapStringPersistentTypeID", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_SCIRun__PersistentTypeID[] = {{"_p_SCIRun__PersistentTypeID", 0, "SCIRun::PersistentTypeID *", 0, 0, 0, 0},{"_p_SCIRun__PersistentTypeID", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_std__vectorTdouble_std__allocatorTdouble_t_t[] = {{"_p_std__vectorTdouble_std__allocatorTdouble_t_t", 0, "std::vector<double > *", 0, 0, 0, 0},{"_p_std__vectorTdouble_std__allocatorTdouble_t_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_SCIRun__Piostream[] = {{"_p_SCIRun__Piostream", 0, "SCIRun::Piostream *", 0, 0, 0, 0},{"_p_SCIRun__Piostream", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_std__ostream[] = {{"_p_std__ostream", 0, "std::ostream *", 0, 0, 0, 0},{"_p_std__ostream", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_unsigned_char[] = {{"_p_unsigned_char", 0, "unsigned char *", 0, 0, 0, 0},{"_p_unsigned_char", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_signed_char[] = {{"_p_signed_char", 0, "signed char *", 0, 0, 0, 0},{"_p_signed_char", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_unsigned_short[] = {{"_p_unsigned_short", 0, "unsigned short *", 0, 0, 0, 0},{"_p_unsigned_short", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_short[] = {{"_p_short", 0, "short *", 0, 0, 0, 0},{"_p_short", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__ptrdiff_t[] = {{"_ptrdiff_t", 0, "ptrdiff_t", 0, 0, 0, 0},{"_ptrdiff_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__std__ptrdiff_t[] = {{"_std__ptrdiff_t", 0, "std::ptrdiff_t", 0, 0, 0, 0},{"_std__ptrdiff_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_SCIRun__Datatype[] = {{"_p_SCIRun__Datatype", 0, "SCIRun::Datatype *", 0, 0, 0, 0},{"_p_SCIRun__BaseEvent", _p_SCIRun__BaseEventTo_p_SCIRun__Datatype, 0, 0, 0, 0, 0},{"_p_SCIRun__WindowEvent", _p_SCIRun__WindowEventTo_p_SCIRun__Datatype, 0, 0, 0, 0, 0},{"_p_SCIRun__RedrawEvent", _p_SCIRun__RedrawEventTo_p_SCIRun__Datatype, 0, 0, 0, 0, 0},{"_p_SCIRun__QuitEvent", _p_SCIRun__QuitEventTo_p_SCIRun__Datatype, 0, 0, 0, 0, 0},{"_p_SCIRun__Datatype", 0, 0, 0, 0, 0, 0},{"_p_SCIRun__PointerEvent", _p_SCIRun__PointerEventTo_p_SCIRun__Datatype, 0, 0, 0, 0, 0},{"_p_SCIRun__KeyEvent", _p_SCIRun__KeyEventTo_p_SCIRun__Datatype, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_MapPersistentInt[] = {{"_p_MapPersistentInt", 0, "MapPersistentInt *", 0, 0, 0, 0},{"_p_MapPersistentInt", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_SCIRun__Mutex[] = {{"_p_SCIRun__Mutex", 0, "SCIRun::Mutex *", 0, 0, 0, 0},{"_p_SCIRun__Mutex", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_SCIRun__WindowEvent[] = {{"_p_SCIRun__WindowEvent", 0, "SCIRun::WindowEvent *", 0, 0, 0, 0},{"_p_SCIRun__WindowEvent", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_SCIRun__RedrawEvent[] = {{"_p_SCIRun__RedrawEvent", 0, "SCIRun::RedrawEvent *", 0, 0, 0, 0},{"_p_SCIRun__RedrawEvent", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_unsigned_long_long[] = {{"_p_unsigned_long_long", 0, "unsigned long long *", 0, 0, 0, 0},{"_p_unsigned_long_long", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_long_long[] = {{"_p_long_long", 0, "long long *", 0, 0, 0, 0},{"_p_long_long", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_float[] = {{"_p_float", 0, "float *", 0, 0, 0, 0},{"_p_float", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_difference_type[] = {{"_p_difference_type", 0, "difference_type *", 0, 0, 0, 0},{"_p_difference_type", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_value_type[] = {{"_p_value_type", 0, "value_type *", 0, 0, 0, 0},{"_p_value_type", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__std__ptrdiff_t[] = {{"_std__ptrdiff_t", 0, "std::ptrdiff_t", 0, 0, 0, 0},{"_std__ptrdiff_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__ptrdiff_t[] = {{"_ptrdiff_t", 0, "ptrdiff_t", 0, 0, 0, 0},{"_ptrdiff_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_SCIRun__Mutex[] = {{"_p_SCIRun__Mutex", 0, "SCIRun::Mutex *", 0, 0, 0, 0},{"_p_SCIRun__Mutex", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_f_p_void__int[] = {{"_p_f_p_void__int", 0, "int (*)(void *)|SCIRun::ZEROPARAMFUNC", 0, 0, 0, 0},{"_p_f_p_void__int", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_SCIRun__WindowEvent[] = {{"_p_SCIRun__WindowEvent", 0, "SCIRun::WindowEvent *", 0, 0, 0, 0},{"_p_SCIRun__WindowEvent", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
-static swig_type_info _swigt__p_LockingHandleTSCIRun__BaseEvent_t[] = {{"_p_LockingHandleTSCIRun__BaseEvent_t", 0, "LockingHandle<SCIRun::BaseEvent > *|SCIRun::event_handle_t *", 0, 0, 0, 0},{"_p_LockingHandleTSCIRun__BaseEvent_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_int[] = {{"_p_int", 0, "int *", 0, 0, 0, 0},{"_p_int", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_SCIRun__KeyEvent[] = {{"_p_SCIRun__KeyEvent", 0, "SCIRun::KeyEvent *", 0, 0, 0, 0},{"_p_SCIRun__KeyEvent", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_allocator_type[] = {{"_p_allocator_type", 0, "allocator_type *", 0, 0, 0, 0},{"_p_allocator_type", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
+static swig_type_info _swigt__p_unsigned_long[] = {{"_p_unsigned_long", 0, "unsigned long *", 0, 0, 0, 0},{"_p_unsigned_long", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 static swig_type_info _swigt__p_std__allocatorTstd__string_t[] = {{"_p_std__allocatorTstd__string_t", 0, "std::allocator<std::string > *|std::vector<std::string >::allocator_type *", 0, 0, 0, 0},{"_p_std__allocatorTstd__string_t", 0, 0, 0, 0, 0, 0},{0, 0, 0, 0, 0, 0, 0}};
 
 static swig_type_info *swig_types_initial[] = {
-_swigt__p_SCIRun__KeyEvent, 
-_swigt__std__size_t, 
-_swigt__size_t, 
-_swigt__p_std__vectorTstd__string_std__allocatorTstd__string_t_t, 
-_swigt__p_SCIRun__PointerEvent, 
-_swigt__p_SCIRun__CallbackOpenGLContext, 
-_swigt__p_SCIRun__OpenGLContext, 
-_swigt__p_allocator_type, 
-_swigt__p_std__allocatorTdouble_t, 
-_swigt__p_SCIRun__QuitEvent, 
-_swigt__p_size_type, 
-_swigt__p_char, 
-_swigt__p_std__vectorTdouble_std__allocatorTdouble_t_t, 
-_swigt__p_p_char, 
-_swigt__p_SCIRun__EventModifiers, 
+_swigt__p_ProgressState, 
+_swigt__p_LockingHandleTSCIRun__BaseEvent_t, 
+_swigt__p_MapIntPersistent, 
+_swigt__p_f___p_SCIRun__Persistent, 
+_swigt__p_SCIRun__Persistent, 
+_swigt__p_p_SCIRun__Persistent, 
 _swigt__p_SCIRun__BaseEvent, 
+_swigt__p_SCIRun__PointerEvent, 
+_swigt__p_f_p_void__int, 
+_swigt__p_char, 
+_swigt__p_p_char, 
+_swigt__p_size_type, 
+_swigt__p_bool, 
+_swigt__p_SCIRun__QuitEvent, 
+_swigt__p_double, 
+_swigt__size_t, 
+_swigt__std__size_t, 
+_swigt__p_SCIRun__ProgressReporter, 
+_swigt__p_SCIRun__EventModifiers, 
+_swigt__p_std__vectorTstd__string_std__allocatorTstd__string_t_t, 
+_swigt__p_long, 
+_swigt__p_std__allocatorTdouble_t, 
+_swigt__p_std__string, 
+_swigt__p_unsigned_int, 
+_swigt__p_SCIRun__OpenGLContext, 
+_swigt__p_SCIRun__CallbackOpenGLContext, 
+_swigt__p_MapStringPersistentTypeID, 
+_swigt__p_SCIRun__PersistentTypeID, 
+_swigt__p_std__vectorTdouble_std__allocatorTdouble_t_t, 
+_swigt__p_SCIRun__Piostream, 
+_swigt__p_std__ostream, 
+_swigt__p_unsigned_char, 
+_swigt__p_signed_char, 
+_swigt__p_unsigned_short, 
+_swigt__p_short, 
+_swigt__ptrdiff_t, 
+_swigt__std__ptrdiff_t, 
+_swigt__p_SCIRun__Datatype, 
+_swigt__p_MapPersistentInt, 
+_swigt__p_SCIRun__Mutex, 
+_swigt__p_SCIRun__WindowEvent, 
+_swigt__p_SCIRun__RedrawEvent, 
+_swigt__p_unsigned_long_long, 
+_swigt__p_long_long, 
+_swigt__p_float, 
 _swigt__p_difference_type, 
 _swigt__p_value_type, 
-_swigt__std__ptrdiff_t, 
-_swigt__ptrdiff_t, 
-_swigt__p_SCIRun__Mutex, 
-_swigt__p_f_p_void__int, 
-_swigt__p_SCIRun__WindowEvent, 
-_swigt__p_LockingHandleTSCIRun__BaseEvent_t, 
+_swigt__p_int, 
+_swigt__p_SCIRun__KeyEvent, 
+_swigt__p_allocator_type, 
+_swigt__p_unsigned_long, 
 _swigt__p_std__allocatorTstd__string_t, 
 0
 };
@@ -7968,6 +12109,40 @@ SWIGEXPORT(void) SWIG_init(void) {
     SWIG_InstallConstants(d,swig_const_table);
     
     {
+        PyDict_SetItemString(d,"ProgressReporter_Starting", SWIG_From_int((int)(SCIRun::ProgressReporter::Starting))); 
+    }
+    {
+        PyDict_SetItemString(d,"ProgressReporter_Compiling", SWIG_From_int((int)(SCIRun::ProgressReporter::Compiling))); 
+    }
+    {
+        PyDict_SetItemString(d,"ProgressReporter_CompilationDone", SWIG_From_int((int)(SCIRun::ProgressReporter::CompilationDone))); 
+    }
+    {
+        PyDict_SetItemString(d,"ProgressReporter_Done", SWIG_From_int((int)(SCIRun::ProgressReporter::Done))); 
+    }
+    {
+        PyDict_SetItemString(d,"SCI_project_Persistent_h", SWIG_From_int((int)(1))); 
+    }
+    {
+        PyDict_SetItemString(d,"Piostream_Read", SWIG_From_int((int)(SCIRun::Piostream::Read))); 
+    }
+    {
+        PyDict_SetItemString(d,"Piostream_Write", SWIG_From_int((int)(SCIRun::Piostream::Write))); 
+    }
+    {
+        PyDict_SetItemString(d,"Piostream_Big", SWIG_From_int((int)(SCIRun::Piostream::Big))); 
+    }
+    {
+        PyDict_SetItemString(d,"Piostream_Little", SWIG_From_int((int)(SCIRun::Piostream::Little))); 
+    }
+    PyDict_SetItemString(d,(char*)"cvar", SWIG_globals);
+    SWIG_addvarlink(SWIG_globals,(char*)"Piostream_PERSISTENT_VERSION",_wrap_Piostream_PERSISTENT_VERSION_get, _wrap_Piostream_PERSISTENT_VERSION_set);
+    {
+        PyDict_SetItemString(d,"SCI_project_Datatype_h", SWIG_From_int((int)(1))); 
+    }
+    SWIG_addvarlink(SWIG_globals,(char*)"BaseEvent_type_id",_wrap_BaseEvent_type_id_get, _wrap_BaseEvent_type_id_set);
+    SWIG_addvarlink(SWIG_globals,(char*)"EventModifiers_type_id",_wrap_EventModifiers_type_id_get, _wrap_EventModifiers_type_id_set);
+    {
         PyDict_SetItemString(d,"EventModifiers_SHIFT_E", SWIG_From_int((int)(SCIRun::EventModifiers::SHIFT_E))); 
     }
     {
@@ -8015,12 +12190,14 @@ SWIGEXPORT(void) SWIG_init(void) {
     {
         PyDict_SetItemString(d,"PointerEvent_BUTTON_5_E", SWIG_From_int((int)(SCIRun::PointerEvent::BUTTON_5_E))); 
     }
+    SWIG_addvarlink(SWIG_globals,(char*)"PointerEvent_type_id",_wrap_PointerEvent_type_id_get, _wrap_PointerEvent_type_id_set);
     {
         PyDict_SetItemString(d,"KeyEvent_KEY_PRESS_E", SWIG_From_int((int)(SCIRun::KeyEvent::KEY_PRESS_E))); 
     }
     {
         PyDict_SetItemString(d,"KeyEvent_KEY_RELEASE_E", SWIG_From_int((int)(SCIRun::KeyEvent::KEY_RELEASE_E))); 
     }
+    SWIG_addvarlink(SWIG_globals,(char*)"KeyEvent_type_id",_wrap_KeyEvent_type_id_get, _wrap_KeyEvent_type_id_set);
     {
         PyDict_SetItemString(d,"WindowEvent_CREATE_E", SWIG_From_int((int)(SCIRun::WindowEvent::CREATE_E))); 
     }
@@ -8040,7 +12217,15 @@ SWIGEXPORT(void) SWIG_init(void) {
         PyDict_SetItemString(d,"WindowEvent_CONFIGURE_E", SWIG_From_int((int)(SCIRun::WindowEvent::CONFIGURE_E))); 
     }
     {
+        PyDict_SetItemString(d,"WindowEvent_FOCUSIN_E", SWIG_From_int((int)(SCIRun::WindowEvent::FOCUSIN_E))); 
+    }
+    {
+        PyDict_SetItemString(d,"WindowEvent_FOCUSOUT_E", SWIG_From_int((int)(SCIRun::WindowEvent::FOCUSOUT_E))); 
+    }
+    {
         PyDict_SetItemString(d,"WindowEvent_REDRAW_E", SWIG_From_int((int)(SCIRun::WindowEvent::REDRAW_E))); 
     }
+    SWIG_addvarlink(SWIG_globals,(char*)"WindowEvent_type_id",_wrap_WindowEvent_type_id_get, _wrap_WindowEvent_type_id_set);
+    SWIG_addvarlink(SWIG_globals,(char*)"QuitEvent_type_id",_wrap_QuitEvent_type_id_get, _wrap_QuitEvent_type_id_set);
 }
 

@@ -3,9 +3,13 @@
 %{
 #include "api.h"
 #include "../Core/Thread/Mutex.h"
+#include "../Core/Persistent/Persistent.h"
+#include "../Core/Util/ProgressReporter.h"
+#include "../Core/Datatypes/Datatype.h"
 #include "../Core/Events/BaseEvent.h"
 #include "../Core/Geom/OpenGLContext.h"
 #include "../Core/Geom/CallbackOpenGLContext.h"
+
 #include <iostream>
 
 static int PythonCallBack(void *clientdata)
@@ -45,7 +49,11 @@ static int PythonCallBack(void *clientdata)
 %include "../Core/Geom/OpenGLContext.h"
 %include "../Core/Geom/CallbackOpenGLContext.h"
 %include "../Core/Thread/Mutex.h"
+%include "../Core/Util/ProgressReporter.h"
+%include "../Core/Persistent/Persistent.h"
+%include "../Core/Datatypes/Datatype.h"
 %include "../Core/Events/BaseEvent.h"
+
 
 namespace std {
    %template(vector_string) vector<string>;

@@ -55,7 +55,7 @@ PersistentTypeID KeyEvent::type_id("KeyEvent", "BaseEvent",
 PersistentTypeID EventModifiers::type_id("EventModifiers", "", 0);
 
 BaseEvent::BaseEvent(const string &target, 
-                     unsigned long time) :
+                     long int time) :
   Datatype(),
   time_(time),
   target_(target)
@@ -173,6 +173,32 @@ WindowEvent::io(Piostream &stream) {
   stream.end_class();
 }
 
+RedrawEvent::RedrawEvent()
+{
+
+}
+
+RedrawEvent::~RedrawEvent()
+{
+
+}
+
+void
+RedrawEvent::io(Piostream &stream) {
+  stream.begin_class(type_id.type, 1);
+  BaseEvent::io(stream);
+  stream.end_class();
+}
+
+QuitEvent::QuitEvent()
+{
+
+}
+
+QuitEvent::~QuitEvent() 
+{
+
+}
 
 void
 QuitEvent::io(Piostream &stream) {
