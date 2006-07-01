@@ -102,9 +102,9 @@ create_painter(const char *filename) {
     bundle->setNrrd(filename, nrrd_handle);
   }
 
-  Painter *painter = new Painter(0);
+  Painter *painter = new Painter(0,0);
   painter->add_bundle(bundle); 
-  Skinner::XMLIO::register_maker<Painter::SliceWindow>((void *)painter); 
+  //  Skinner::XMLIO::register_maker<Painter::SliceWindow>((void *)painter); 
   return painter;
 }  
 
@@ -137,21 +137,19 @@ get_skin_filename() {
 
 int
 main(int argc, char *argv[], char **environment) {
-  try {
-    create_sci_environment(environment, argv[0]);
-    ShaderProgramARB::init_shaders_supported();
-    
-    Painter *painter = create_painter(argv[1]);
-    
-    listen_for_events(Skinner::load_skin(get_skin_filename()));
-    
-    delete painter;
-    
-    Thread::exitAll(0);
-  } catch (...) {
-    cerr << "blah!";
-  }
-    return 0;
+
+  create_sci_environment(environment, argv[0]);
+  ShaderProgramARB::init_shaders_supported();
+  
+  //  Painter *painter = create_painter(argv[1]);
+  Skinner::XMLIO::register_maker<Painter>();
+  
+  listen_for_events(Skinner::load_skin(get_skin_filename()));
+  
+  //  delete painter;
+  
+  Thread::exitAll(0);
+  return 0;
 }
 
 

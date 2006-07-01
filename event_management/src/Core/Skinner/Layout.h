@@ -32,7 +32,7 @@
 #ifndef SKINNER_LAYOUT_H
 #define SKINNER_LAYOUT_H
 
-#include <Core/Skinner/Drawable.h>
+#include <Core/Skinner/Parent.h>
 #include <list>
 #include <map>
 #include <string>
@@ -149,15 +149,15 @@ namespace SCIRun {
     typedef map<Anchor, LinkPair, lt_Anchor>    AnchorLinkPairMap;
     typedef map<const Drawable *, double>         DrawableDoubleMap;
 
-    class Layout : public Drawable {
+    class Layout : public Parent {
     public:
-      Layout(Variables *, const Drawables_t &children);
+      Layout(Variables *);
       virtual ~Layout();
       static string                     class_name() { return "Layout"; }
       virtual propagation_state_e       process_event(event_handle_t);
       static DrawableMakerFunc_t        maker;
 
-      virtual MinMax                    minmax(unsigned int);
+      virtual MinMax                    get_minmax(unsigned int);
       
       Link &                            link(Drawable *, unsigned int);
       Link &                            link(const Anchor &);
@@ -168,7 +168,8 @@ namespace SCIRun {
                                                   Drawable *under = 0);
       bool                              add_over(Drawable *, 
                                                  Drawable *over = 0);
-      Drawable *                        get_child(const string &id);
+      //      Drawable *                        get_child(const string &id);
+      void                              set_children(const Drawables_t &);
 
     protected:
       void                      create_default_links(Drawable *);

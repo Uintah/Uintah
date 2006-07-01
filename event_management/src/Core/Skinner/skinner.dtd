@@ -45,7 +45,7 @@ Future elements?: gradient, button, slider, checkbox, radiobutton, 2d viewer, 3d
           type (string | int | double | bool | color) "string"
           propagate (yes | no) "no">
 
-<!ELEMENT object (object | var)*>
+<!ELEMENT object (var*, signal*, object*)>
 <!ATTLIST object
           class CDATA #REQUIRED
           id CDATA #IMPLIED>
@@ -54,3 +54,9 @@ Future elements?: gradient, button, slider, checkbox, radiobutton, 2d viewer, 3d
 <!ATTLIST definition
           class CDATA #REQUIRED
           state CDATA #IMPLIED>
+
+<!ELEMENT signal EMPTY>
+<!ATTLIST signal 
+          name CDATA #REQUIRED
+          target CDATA #REQUIRED>
+

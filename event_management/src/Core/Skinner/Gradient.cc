@@ -56,10 +56,11 @@ Skinner::Gradient::Gradient(Variables *variables,
 void
 Skinner::Gradient::render_gl()
 {
-  const double x = region_.x1();
-  const double y = region_.y1();
-  const double x2 = region_.x2();
-  const double y2 = region_.y2();
+  const RectRegion &region = get_region();
+  const double x = region.x1();
+  const double y = region.y1();
+  const double x2 = region.x2();
+  const double y2 = region.y2();
 
   glShadeModel(GL_SMOOTH);
   glBegin(GL_QUADS);
@@ -90,12 +91,8 @@ Skinner::Gradient::process_event(event_handle_t event) {
 
 
 Skinner::Drawable *
-Skinner::Gradient::maker(Variables *vars,
-                         const Skinner::Drawables_t &children,
-                         void *) 
+Skinner::Gradient::maker(Variables *vars) 
 {
-  ASSERT(children.empty());
-
   Color sw(1.0, 0.0, 0.0, 1.0);
   vars->maybe_get_color("bottom-color",sw);
   vars->maybe_get_color("left-color",sw);

@@ -67,6 +67,7 @@ namespace SCIRun {
     BaseTool::propagation_state_e
     Text::process_event(event_handle_t event)
     {
+      const RectRegion &region = get_region();
       WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
       if (window && window->get_window_state() == WindowEvent::REDRAW_E) {
         string text = "";
@@ -76,23 +77,23 @@ namespace SCIRun {
         renderer_->set_color(fgcolor_.r, fgcolor_.g, fgcolor_.b, fgcolor_.a);
         renderer_->set_shadow_color(bgcolor_.r, bgcolor_.g, bgcolor_.b, bgcolor_.a);
 
-        float mx = (region_.x2() + region_.x1())/2.0;
-        float my = (region_.y2() + region_.y1())/2.0;
+        float mx = (region.x2() + region.x1())/2.0;
+        float my = (region.y2() + region.y1())/2.0;
 
         float x = mx;
         float y = my;
         
         switch (flags_ & TextRenderer::ANCHOR_MASK) {
-        case TextRenderer::N:  x = mx; y = region_.y2(); break;
-        case TextRenderer::S:  x = mx; y = region_.y1(); break;
+        case TextRenderer::N:  x = mx; y = region.y2(); break;
+        case TextRenderer::S:  x = mx; y = region.y1(); break;
 
-        case TextRenderer::E:  x = region_.x2(); y = my; break;
-        case TextRenderer::W:  x = region_.x1(); y = my; break;
+        case TextRenderer::E:  x = region.x2(); y = my; break;
+        case TextRenderer::W:  x = region.x1(); y = my; break;
 
-        case TextRenderer::NE: x = region_.x2(); y = region_.y2(); break;
-        case TextRenderer::SE: x = region_.x2(); y = region_.y1(); break;
-        case TextRenderer::SW: x = region_.x1(); y = region_.y1(); break;
-        case TextRenderer::NW: x = region_.x1(); y = region_.y2(); break;
+        case TextRenderer::NE: x = region.x2(); y = region.y2(); break;
+        case TextRenderer::SE: x = region.x2(); y = region.y1(); break;
+        case TextRenderer::SW: x = region.x1(); y = region.y1(); break;
+        case TextRenderer::NW: x = region.x1(); y = region.y2(); break;
 
         case TextRenderer::C:  x = mx; y = my; break;
         }
@@ -102,7 +103,7 @@ namespace SCIRun {
     }
 
     Drawable *
-    Text::maker(Variables *vars, const Drawables_t &children, void *data)
+    Text::maker(Variables *vars)
     {
 
       Color fgcolor(1.0, 1.0, 1.0, 1.0);

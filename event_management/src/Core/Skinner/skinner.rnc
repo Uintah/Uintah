@@ -51,4 +51,8 @@ definition = element definition { attlist.definition, object }
 attlist.definition &=
   attribute class { text },
   attribute state { text }?
-start = skinner
+signal = element signal { attlist.signal, empty }
+attlist.signal &=
+  attribute name { text },
+  attribute slot { text }
+start = signal | skinner

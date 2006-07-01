@@ -49,14 +49,12 @@ namespace SCIRun {
   namespace Skinner {
     
    GLWindow::GLWindow(Variables *variables,
-                      Drawable *obj,
                       int width,
                       int height,
                       int posx,
                       int posy,
                       bool border) :
-      Drawable(variables),
-      child_(obj),
+      Parent(variables),
       width_(width),
       height_(height),
       posx_(posx),
@@ -80,6 +78,10 @@ namespace SCIRun {
       tname = get_id()+" Redraw";
       draw_runnable_ = new ThrottledRedraw(this, 120.0);
       draw_thread_ = new Thread(draw_runnable_, tname.c_str());
+
+      catcher_functions_["GLWindow::close"] = 
+        static_cast<SignalCatcher::CatcherFunctionPtr>(&GLWindow::close);
+
     }
 
     GLWindow::~GLWindow() 
@@ -93,7 +95,7 @@ namespace SCIRun {
     }
 
     MinMax
-    GLWindow::minmax(unsigned int ltype)
+    GLWindow::get_minmax(unsigned int ltype)
     {
       return SPRING_MINMAX;
     }
@@ -124,7 +126,6 @@ namespace SCIRun {
       bool redraw = (window && 
                      window->get_window_state() & WindowEvent::REDRAW_E);
       
-      
       if (redraw) {
         if (!context_->make_current()) {
           return CONTINUE_E;
@@ -132,7 +133,7 @@ namespace SCIRun {
         X11Lock::lock();
         int vpw = context_->width();
         int vph = context_->height();
-        child_->region() = RectRegion(0.0, 0.0, double(vpw), double(vph));
+        set_region(RectRegion(0.0, 0.0, double(vpw), double(vph)));
         
         glViewport(0, 0, vpw, vph);
         glMatrixMode(GL_PROJECTION);
@@ -158,8 +159,12 @@ namespace SCIRun {
         
         CHECK_OPENGL_ERROR();
       }
-      
-      child_->process_event(event);
+
+      for (Drawables_t::iterator child = children_.begin(); 
+           child != children_.end(); ++child) {
+        (*child)->set_region(get_region());
+        (*child)->process_event(event);
+      }
       
       if (redraw){ 
         glMatrixMode(GL_MODELVIEW);
@@ -175,11 +180,8 @@ namespace SCIRun {
     }
 
     Drawable *
-    GLWindow::maker(Variables *vars,
-                    const Skinner::Drawables_t &children,
-                    void *)
+    GLWindow::maker(Variables *vars)
     {
-      ASSERT(children.size() == 1);
       int width = 640;
       vars->maybe_get_int("width", width);
       
@@ -195,8 +197,13 @@ namespace SCIRun {
       bool border = true;
       vars->maybe_get_bool("border", border);
 
-      return new GLWindow(vars, children.back(), 
-                          width, height, posx, posy, border);
+      return new GLWindow(vars, width, height, posx, posy, border);
     }
+
+    BaseTool::propagation_state_e
+    GLWindow::close(event_handle_t) {
+      cerr << "Close Window\n";
+    }
+
   }
 }

@@ -222,16 +222,11 @@ namespace SCIRun {
     }
 
 
-    Layout::Layout(Variables *variables, const Drawables_t &children) :
-      Drawable(variables),
+    Layout::Layout(Variables *variables) :
+      Parent(variables),
       objects_(),
       links_()
     {
-      for (Drawables_t::const_iterator iter = children.begin(); 
-           iter != children.end(); ++iter) {
-        Drawable *child = *iter;
-        add_over(child);
-      }
     }
 
     Layout::~Layout() {
@@ -244,7 +239,7 @@ namespace SCIRun {
       DrawableList::iterator olast = objects_.end();      
       for(;oiter != olast; ++oiter) {
         Drawable *obj = *oiter;
-        MinMax minmax = obj->minmax(ltype);
+        MinMax minmax = obj->get_minmax(ltype);
         for (int pass = 0; pass < 2; ++pass) {
           unsigned int atype = 
             (ltype == Link::HORIZONTAL) ? Anchor::WEST : Anchor::SOUTH;
@@ -359,7 +354,7 @@ namespace SCIRun {
 
     // Untested
     MinMax
-    Layout::minmax(unsigned int ltype) {
+    Layout::get_minmax(unsigned int ltype) {
       AnchorLinkPairMap graph;
       compute_link_graph(ltype, graph);
 
@@ -393,16 +388,16 @@ namespace SCIRun {
       
       DrawableDoubleMap h_springs;
       DrawableDoubleMap v_springs;
-      compute_spring_lengths(region_.width(), h_spring_matrix, 
+      const RectRegion &region = get_region();
+      compute_spring_lengths(region.width(), h_spring_matrix, 
                              h_struts, h_springs);
-      compute_spring_lengths(region_.height(), v_spring_matrix, 
+      compute_spring_lengths(region.height(), v_spring_matrix, 
                              v_struts, v_springs);
       
       DrawableList::iterator oiter = objects_.begin();
       DrawableList::iterator olast = objects_.end();
-      const RectRegion &reg = region_;
-      double x1 = reg.x1();
-      double y1 = reg.y1();
+      double x1 = region.x1();
+      double y1 = region.y1();
       for(;oiter != olast; ++oiter) {
         Drawable *obj = *oiter;
         const RectRegion subregion
@@ -410,7 +405,7 @@ namespace SCIRun {
            y1+compute_anchor_offset(Anchor(obj,Anchor::SOUTH),v_springs,graph),
            x1+compute_anchor_offset(Anchor(obj,Anchor::EAST),h_springs,graph),
            y1+compute_anchor_offset(Anchor(obj,Anchor::NORTH),v_springs,graph));
-        obj->region() = subregion;
+        obj->set_region(subregion);
         obj->process_event(event);
       }
       return CONTINUE_E;
@@ -482,15 +477,25 @@ namespace SCIRun {
       return true;
     }
 
-    Drawable *
-    Layout::get_child(const string &id) {
-      for (DrawableList::iterator oiter = objects_.begin(); 
-           oiter != objects_.end(); ++oiter) {
-        if ((*oiter)->get_id() == get_id()+":"+id)
-          return *oiter;
+//     Drawable *
+//     Layout::get_child(const string &id) {
+//       for (DrawableList::iterator oiter = objects_.begin(); 
+//            oiter != objects_.end(); ++oiter) {
+//         if ((*oiter)->get_id() == get_id()+":"+id)
+//           return *oiter;
+//       }
+//       return 0;
+//     }
+
+    void
+    Layout::set_children(const Drawables_t &children) {
+      children_ = children;
+      for (Drawables_t::const_iterator iter = children.begin();
+           iter != children.end(); ++iter) {
+        add_over(*iter);
       }
-      return 0;
     }
+
 
     void
     Layout::create_default_links(Drawable *obj) {
@@ -504,11 +509,9 @@ namespace SCIRun {
 
 
     Drawable *
-    Layout::maker(Variables *vars, 
-                  const Drawables_t &children,
-                  void *)
+    Layout::maker(Variables *vars)
     {
-      return new Layout(vars, children);
+      return new Layout(vars);
     }                 
   }
 }

@@ -32,20 +32,22 @@
 #ifndef SKINNER_SKINNER_H
 #define SKINNER_SKINNER_H
 
-#include <Core/Skinner/Drawable.h>
 #include <Core/Events/EventManager.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Util/ThrottledRunnable.h>
 #include <teem/air.h>
 #include <string>
+#include <deque>
+using std::deque;
+
 
 using std::string;
 
 namespace SCIRun {
   class BaseTool;
-
   namespace Skinner {
-  
+    class Drawable;
+
     bool init_skinner();
     string load_skin(const string&filename);
   

@@ -47,7 +47,14 @@ namespace SCIRun {
 
       static string                     class_name() { return "Box"; }
       static DrawableMakerFunc_t        maker;
+      virtual int                       get_signal_id(const string &) const;
+
+      CatcherFunction_t                 make_red;
+      CatcherFunction_t                 make_blue;
+      CatcherFunction_t                 make_green;      
     private:
+      
+
       void                              draw_gl();
       Color                             color_;
       Color                             backup_;      
