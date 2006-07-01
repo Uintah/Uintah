@@ -390,6 +390,18 @@ uintah: sus \
         link_regression_tester
 
 ###############################################
+# rayleighNumber
+
+ifneq ($(CANTERA_DIR),)
+SRCS := $(SRCDIR)/rayleighNumber.cc
+PROGRAM := Packages/Uintah/StandAlone/rayleighNumber
+PSELIBS := 
+LIBS    := $(CANTERA_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/program.mk
+endif
+
+###############################################
 # pfs
 
 SRCS := $(SRCDIR)/pfs.cc
