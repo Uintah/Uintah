@@ -41,6 +41,7 @@
 #include <Core/Skinner/SceneGraph.h>
 #include <Core/Skinner/Text.h>
 #include <Core/Skinner/Texture.h>
+#include <Core/Skinner/Root.h>
 #include <Core/Skinner/Layout.h>
 #include <Core/Events/Tools/FilterRedrawEventsTool.h>
 #include <iostream>
@@ -55,7 +56,7 @@ namespace SCIRun {
       XMLIO::register_maker<Box>();
       XMLIO::register_maker<Collection>();
       XMLIO::register_maker<Frame>();
-      XMLIO::register_maker<GLWindow>();
+      //      XMLIO::register_maker<GLWindow>();
       XMLIO::register_maker<Gradient>();
       XMLIO::register_maker<Grid>();
       XMLIO::register_maker<Layout>();
@@ -66,31 +67,17 @@ namespace SCIRun {
       return true;
     }
 
-    string
+    BaseTool *
     load_skin(const string &filename) {
-      string main_window_name = "";
+      Root *root = 0;
       try {
         init_skinner();  
-        BaseTool *event_tool = new FilterRedrawEventsTool("Redraw Filter", 1);
-        Drawables_t drawables = Skinner::XMLIO::load(filename);
-        for (unsigned int d = 0; d < drawables.size(); ++d) {
-          ASSERT(dynamic_cast<Skinner::GLWindow *>(drawables[d]));
-          string id = drawables[d]->get_id();
-          ThrottledRunnableToolManager *runner = 
-            new ThrottledRunnableToolManager(id, 120.0);
-          runner->add_tool(event_tool,1);
-          runner->add_tool(drawables[d], 2);
-          id = id + " Throttled Tool Manager";
-          Thread *thread = new Thread(runner, id.c_str());
-          thread->detach();
-        }
-        if (drawables.size()) {
-          main_window_name = drawables[0]->get_id();
-        }
+        root = Skinner::XMLIO::load(filename);
+        root->spawn_redraw_threads();
       } catch (...) {
         cerr << "Skinner Exception.\n";
       }
-      return main_window_name;
+      return root;
     }
 
 

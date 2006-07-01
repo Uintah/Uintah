@@ -49,10 +49,11 @@ using std::list;
 namespace SCIRun {
   namespace Skinner {
     class Variables;
+    class Root;
 
     class XMLIO {
     public:
-      static Drawables_t        load(const string &filename);
+      static Root *             load(const string &filename);
       template<class T>
       static void               register_maker() 
       {
@@ -78,7 +79,7 @@ namespace SCIRun {
       
       static void        register_maker(const string &,
                                         DrawableMakerFunc_t *);
-      static Drawables_t eval_skinner_node(const xmlNodePtr,
+      static Root *      eval_skinner_node(const xmlNodePtr,
                                            const string &id);
       static void        eval_definition_node(const xmlNodePtr,
                                               string_node_map_t &);

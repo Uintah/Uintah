@@ -25,68 +25,58 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : Drawable.cc
+//    File   : Root.cc
 //    Author : McKay Davis
-//    Date   : Tue Jun 27 13:04:57 2006
-
-#include <Core/Skinner/Drawable.h>
+//    Date   : Fri Jun 30 22:10:07 2006
+#include <Core/Skinner/Skinner.h>
+#include <Core/Skinner/Root.h>
 #include <Core/Skinner/Variables.h>
+#include <Core/Skinner/Window.h>
+#include <Core/Events/Tools/FilterRedrawEventsTool.h>
+#include <iostream>
+
+using std::cerr;
+using std::endl;
 
 namespace SCIRun {
   namespace Skinner {
-    Drawable::Drawable(Variables *variables) :
-      BaseTool(variables ? variables->get_id() : ""),
-      SignalCatcher(),
-      SignalThrower(),
-
-      region_(),
-      variables_(variables)
+    Root::Root(Variables *variables) : 
+      Parent(variables),
+      windows_()
     {
-    }
-    
-    Drawable::~Drawable() 
-    {
-      if (variables_) delete variables_;
+      REGISTER_CATCHER_TARGET(Root::GLWindow_Maker);
     }
 
-    MinMax
-    Drawable::get_minmax(unsigned int)
-    {
-      return SPRING_MINMAX;
+    Root::~Root() {
     }
 
     BaseTool::propagation_state_e
-    Drawable::process_event(event_handle_t)
-    {
-      return STOP_E;
-    }
+    Root::GLWindow_Maker(event_handle_t event) {
+      MakerSignal *maker_signal = 
+        dynamic_cast<Skinner::MakerSignal *>(event.get_rep());
+      ASSERT(maker_signal);
+      
+      windows_.push_back(new GLWindow(maker_signal->get_vars()));
 
-    string
-    Drawable::get_id() const {
-      return variables_->get_id();
-    }
-
-    int
-    Drawable::get_signal_id(const string &) const {
-      return 0;
-    }
-
-
-    const RectRegion &
-    Drawable::get_region() const {
-      return region_;
+      maker_signal->set_signal_thrower(windows_.back());
+      maker_signal->set_signal_name(maker_signal->get_signal_name()+"_Done");
+      return MODIFIED_E;
     }
 
     void
-    Drawable::set_region(const RectRegion &region) {
-      region_ = region;
-    }
-
-
-    Variables *
-    Drawable::get_vars()
-    {
-      return variables_;
+    Root::spawn_redraw_threads() {
+      BaseTool *event_tool = new FilterRedrawEventsTool("Redraw Filter", 1);
+      for (unsigned int w = 0; w < windows_.size(); ++w) {
+        GLWindow *window = windows_[w];
+        string id = window->get_id();
+        ThrottledRunnableToolManager *runner = 
+          new ThrottledRunnableToolManager(id, 120.0);
+        runner->add_tool(event_tool,1);
+        runner->add_tool(window, 2);
+        id = id + " Throttled Tool Manager";
+        Thread *thread = new Thread(runner, id.c_str());
+        thread->detach();
+      }
     }
   }
 }

@@ -40,6 +40,7 @@
 #include <Core/Geom/X11Lock.h>
 #include <Core/Events/X11EventSpawner.h>
 #include <Core/Util/Environment.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <sci_gl.h>
 #include <sci_glu.h>
 #include <sci_glx.h>
@@ -48,24 +49,27 @@
 namespace SCIRun {
   namespace Skinner {
     
-   GLWindow::GLWindow(Variables *variables,
-                      int width,
-                      int height,
-                      int posx,
-                      int posy,
-                      bool border) :
+   GLWindow::GLWindow(Variables *variables) :
       Parent(variables),
-      width_(width),
-      height_(height),
-      posx_(posx),
-      posy_(posy),
-      border_(border),
+      width_(640),
+      height_(640),
+      posx_(0),
+      posy_(0),
+      border_(true),
       context_(0)
     {
+      variables->maybe_get_int("width", width_);
+      variables->maybe_get_int("height", height_);
+      variables->maybe_get_int("posx", posx_);
+      variables->maybe_get_int("posy", posy_);
+      variables->maybe_get_bool("border", border_);
+
+
+      ShaderProgramARB::init_shaders_supported();
       X11OpenGLContext *x11_context = 
-        new X11OpenGLContext(0, posx, posy, 
-                             (unsigned)width,(unsigned)height,
-                             border);
+        new X11OpenGLContext(0, posx_, posy_, 
+                             (unsigned)width_,(unsigned)height_,
+                             border_);
       context_ = x11_context;
 
       string tname = get_id()+" Event Spawner";
@@ -177,27 +181,6 @@ namespace SCIRun {
         X11Lock::unlock();
       }
       return CONTINUE_E;
-    }
-
-    Drawable *
-    GLWindow::maker(Variables *vars)
-    {
-      int width = 640;
-      vars->maybe_get_int("width", width);
-      
-      int height = 640;
-      vars->maybe_get_int("height", height);
-
-      int posx = 0;
-      vars->maybe_get_int("posx", posx);
-
-      int posy = 0;
-      vars->maybe_get_int("posy", posy);
-
-      bool border = true;
-      vars->maybe_get_bool("border", border);
-
-      return new GLWindow(vars, width, height, posx, posy, border);
     }
 
     BaseTool::propagation_state_e

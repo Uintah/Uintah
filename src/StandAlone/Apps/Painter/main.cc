@@ -30,7 +30,6 @@
 //    Date   : Tue May 30 21:38:23 MDT 2006
 
 #include <Core/Events/EventManager.h>
-#include <Core/Skinner/Skinner.h>
 #include <Core/Skinner/XMLIO.h>
 #include <Core/Util/Environment.h>
 #include <Core/Bundle/Bundle.h>
@@ -109,17 +108,13 @@ create_painter(const char *filename) {
 }  
 
 void
-listen_for_events(const string &main_window_name) {
-  if (!main_window_name.empty()) {
-    EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
-    EventManager *em = new EventManager();
-    em->tm().add_tool(new QuitMainWindowTool(main_window_name), 1);
-    Thread *em_thread = new Thread(em, "Event Manager");
-    start_trail_file();
-
-    em_thread->join();
-    EventManager::stop_trail_file();
-  }
+listen_for_events() {
+  EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
+  EventManager *em = new EventManager();
+  Thread *em_thread = new Thread(em, "Event Manager");
+  start_trail_file();
+  em_thread->join();
+  EventManager::stop_trail_file();
 }  
   
 
@@ -137,18 +132,13 @@ get_skin_filename() {
 
 int
 main(int argc, char *argv[], char **environment) {
-
   create_sci_environment(environment, argv[0]);
-  ShaderProgramARB::init_shaders_supported();
   
-  //  Painter *painter = create_painter(argv[1]);
   Skinner::XMLIO::register_maker<Painter>();
+  BaseTool *skinner = Skinner::load_skin(get_skin_filename());
+  listen_for_events();
+  //  delete skinner;
   
-  listen_for_events(Skinner::load_skin(get_skin_filename()));
-  
-  //  delete painter;
-  
-  Thread::exitAll(0);
   return 0;
 }
 

@@ -45,11 +45,11 @@ using std::string;
 
 namespace SCIRun {
   class BaseTool;
+  class Root;
   namespace Skinner {
     class Drawable;
 
-    bool init_skinner();
-    string load_skin(const string&filename);
+    BaseTool * load_skin(const string&filename);
   
     class ThrottledRunnableToolManager : public ThrottledRunnable{
     public:
@@ -82,6 +82,7 @@ namespace SCIRun {
       bool                                    redraw_;
       SCIRun::EventManager::event_mailbox_t * mailbox_;
     };
+
   }
 }
 

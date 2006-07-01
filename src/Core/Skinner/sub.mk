@@ -44,6 +44,7 @@ SRCS     += \
 	$(SRCDIR)/Layout.cc	    	\
 	$(SRCDIR)/Parent.cc	    	\
 	$(SRCDIR)/RectRegion.cc    	\
+	$(SRCDIR)/Root.cc        	\
 	$(SRCDIR)/SceneGraph.cc  	\
 	$(SRCDIR)/Signals.cc    	\
 	$(SRCDIR)/Skinner.cc    	\
