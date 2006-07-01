@@ -36,6 +36,9 @@ namespace SCIRun {
   namespace Skinner {
     Drawable::Drawable(Variables *variables) :
       BaseTool(variables->get_id()),
+      SignalCatcher(),
+      SignalThrower(),
+
       region_(),
       variables_(variables)
     {
@@ -47,7 +50,7 @@ namespace SCIRun {
     }
 
     MinMax
-    Drawable::minmax(unsigned int)
+    Drawable::get_minmax(unsigned int)
     {
       return SPRING_MINMAX;
     }
@@ -63,27 +66,28 @@ namespace SCIRun {
       return variables_->get_id();
     }
 
-    RectRegion &
-    Drawable::region() {
+    int
+    Drawable::get_signal_id(const string &) const {
+      return 0;
+    }
+
+
+    const RectRegion &
+    Drawable::get_region() const {
       return region_;
     }
 
-//     void
-//     Drawable::set_vars(Variables *variables) {
-//       variables_ = variables;
-//     }
+    void
+    Drawable::set_region(const RectRegion &region) {
+      region_ = region;
+    }
+
 
     Variables *
     Drawable::get_vars()
     {
       return variables_;
     }
-
-    
-    
-
-
-
   }
 }
     

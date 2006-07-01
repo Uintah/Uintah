@@ -32,20 +32,18 @@
 #ifndef SKINNER_COLLECTION_H
 #define SKINNER_COLLECTION_H
 
-#include <Core/Skinner/Drawable.h>
+#include <Core/Skinner/Parent.h>
 
 namespace SCIRun {
   namespace Skinner {
-    class Collection : public Drawable {
+    class Collection : public Parent {
     public:
-      Collection (Variables *, const Drawables_t &);
+      Collection (Variables *);
       virtual ~Collection();
       virtual propagation_state_e       process_event(event_handle_t);
-      virtual MinMax                    minmax(unsigned int);
+      virtual MinMax                    get_minmax(unsigned int);
       static string                     class_name() { return "Collection"; }
       static DrawableMakerFunc_t        maker;
-    private:
-      Drawables_t                       children_;
     };
   }
 }

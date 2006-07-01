@@ -333,8 +333,8 @@ Painter::CLUTLevelsTool::pointer_down(int b, int x, int y,
   x_ = x;
   y_ = y;
   
-  const double w = painter_->cur_window_->region().width();
-  const double h = painter_->cur_window_->region().width();
+  const double w = painter_->cur_window_->get_region().width();
+  const double h = painter_->cur_window_->get_region().height();
   scale_ = (vol->data_max_ - vol->data_min_) / sqrt(w*w+h*h);
 
   return pointer_motion(b,x,y,m,t);

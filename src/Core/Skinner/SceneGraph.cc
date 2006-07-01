@@ -54,12 +54,12 @@ Skinner::SceneGraph::need_redraw() {
 
 int
 Skinner::SceneGraph::width() const {
-  return Ceil(region_.width());
+  return Ceil(get_region().width());
 }
 
 int
 Skinner::SceneGraph::height() const {
-  return Ceil(region_.height());
+  return Ceil(get_region().height());
 }
 
 
@@ -67,13 +67,14 @@ Skinner::SceneGraph::height() const {
 BaseTool::propagation_state_e
 Skinner::SceneGraph::process_event(event_handle_t event) {
   event.detach();
+  const RectRegion &region = get_region();
   PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
   if (pointer) {
-    if (!region_.inside(pointer->get_x(), pointer->get_y())) {
+    if (!region.inside(pointer->get_x(), pointer->get_y())) {
       return CONTINUE_E;
     }
-    pointer->set_x(pointer->get_x() - Floor(region_.x1()));
-    pointer->set_y(Ceil(region_.y2()) - pointer->get_y());
+    pointer->set_x(pointer->get_x() - Floor(region.x1()));
+    pointer->set_y(Ceil(region.y2()) - pointer->get_y());
   }
 
   tm_.propagate_event(event);
@@ -82,8 +83,8 @@ Skinner::SceneGraph::process_event(event_handle_t event) {
   if (window && window->get_window_state() == WindowEvent::REDRAW_E) {
      GLint viewport[4];
      glGetIntegerv(GL_VIEWPORT, viewport);    
-     glViewport(Floor(region_.x1()), Floor(region_.y1()), 
-                Ceil(region_.width()), Ceil(region_.height()));
+     glViewport(Floor(region.x1()), Floor(region.y1()), 
+                Ceil(region.width()), Ceil(region.height()));
 
      glMatrixMode(GL_MODELVIEW);
      glPushMatrix();
@@ -113,11 +114,8 @@ Skinner::SceneGraph::process_event(event_handle_t event) {
 
 
 Skinner::Drawable *
-Skinner::SceneGraph::maker(Variables *variables,
-                           const Skinner::Drawables_t &child,
-                           void *) 
+Skinner::SceneGraph::maker(Variables *variables) 
 {
-  ASSERT(child.empty());
   return new SceneGraph(variables);
 }
 

@@ -119,11 +119,12 @@ namespace SCIRun {
 
       CHECK_OPENGL_ERROR();
 
+      const RectRegion &region = get_region();
       Point coords[4];
-      coords[0] = Point(region_.x1(), region_.y1(), 0.0);
-      coords[1] = Point(region_.x2(), region_.y1(), 0.0);
-      coords[2] = Point(region_.x2(), region_.y2(), 0.0);
-      coords[3] = Point(region_.x1(), region_.y2(), 0.0);
+      coords[0] = Point(region.x1(), region.y1(), 0.0);
+      coords[1] = Point(region.x2(), region.y1(), 0.0);
+      coords[2] = Point(region.x2(), region.y2(), 0.0);
+      coords[3] = Point(region.x1(), region.y2(), 0.0);
 
       float tex_coords[8] = {0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0};
 
@@ -145,7 +146,7 @@ namespace SCIRun {
     }
 
     Drawable *
-    Texture::maker(Variables *vars, const Drawables_t &children, void *)
+    Texture::maker(Variables *vars)
     {
       const string filename = vars->get_string("file");
 

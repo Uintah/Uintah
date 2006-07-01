@@ -25,43 +25,54 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : Window.h
+//    File   : Parent.cc
 //    Author : McKay Davis
-//    Date   : Tue Jun 27 13:04:12 2006
-
-#ifndef SKINNER_WINDOW_H
-#define SKINNER_WINDOW_H
+//    Date   : Thu Jun 29 19:23:07 2006
 
 #include <Core/Skinner/Parent.h>
 
 namespace SCIRun {
-  class OpenGLContext;
-  class ThrottledRunnable;
-  class Thread;
   namespace Skinner {
-    class GLWindow : public Parent {
-    public:
-      GLWindow (Variables *, int, int, int, int, bool);
-      virtual ~GLWindow();
-      static string                     class_name() { return "GLWindow"; }
-      virtual propagation_state_e       process_event(event_handle_t);
-      virtual MinMax                    get_minmax(unsigned int);
-      static DrawableMakerFunc_t        maker;
-    private:
-      CatcherFunction_t                 close;
-      int                               width_;
-      int                               height_;
-      int                               posx_;
-      int                               posy_;
-      bool                              border_;
-      OpenGLContext *                   context_;
-      ThrottledRunnable *               spawner_runnable_;
-      Thread *                          spawner_thread_;
-      ThrottledRunnable *               draw_runnable_;
-      Thread *                          draw_thread_;
-    };
+    Parent::Parent(Variables *vars) :
+      Drawable(vars),
+      children_()
+    {
+    }
+    
+    Parent::~Parent() {
+      for (Drawables_t::iterator citer = children_.begin(); 
+           citer != children_.end(); ++citer)
+     {
+       delete *citer;
+     }
+    }
 
+    BaseTool::propagation_state_e
+    Parent::process_event(event_handle_t e) {
+      for (Drawables_t::iterator citer = children_.begin(); 
+           citer != children_.end(); ++citer)
+      {
+        (*citer)->set_region(get_region());
+        (*citer)->process_event(e);
+      }
+      return Drawable::process_event(e);
+    }
+
+    int
+    Parent::get_signal_id(const string &str) {
+      return Drawable::get_signal_id(str);
+    }
+
+
+    MinMax
+    Parent::get_minmax(unsigned int dir) {
+      return Drawable::get_minmax(dir);
+    }
+
+    void
+    Parent::set_children(const Drawables_t &children) {
+      children_ = children;
+    }
   }
 }
-
-#endif
+    

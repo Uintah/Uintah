@@ -25,43 +25,29 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : Window.h
+//    File   : Parent.h
 //    Author : McKay Davis
-//    Date   : Tue Jun 27 13:04:12 2006
+//    Date   : Thu Jun 29 19:23:31 2006
 
-#ifndef SKINNER_WINDOW_H
-#define SKINNER_WINDOW_H
+#ifndef SKINNER_CONTAINER_H
+#define SKINNER_CONTAINER_H
 
-#include <Core/Skinner/Parent.h>
+#include <Core/Skinner/Drawable.h>
 
 namespace SCIRun {
-  class OpenGLContext;
-  class ThrottledRunnable;
-  class Thread;
   namespace Skinner {
-    class GLWindow : public Parent {
+    class Parent : public Drawable {
     public:
-      GLWindow (Variables *, int, int, int, int, bool);
-      virtual ~GLWindow();
-      static string                     class_name() { return "GLWindow"; }
-      virtual propagation_state_e       process_event(event_handle_t);
+      Parent(Variables *);
+      virtual ~Parent();
+      virtual propagation_state_e       process_event(event_handle_t e);
+      virtual int                       get_signal_id(const string &);;
       virtual MinMax                    get_minmax(unsigned int);
-      static DrawableMakerFunc_t        maker;
-    private:
-      CatcherFunction_t                 close;
-      int                               width_;
-      int                               height_;
-      int                               posx_;
-      int                               posy_;
-      bool                              border_;
-      OpenGLContext *                   context_;
-      ThrottledRunnable *               spawner_runnable_;
-      Thread *                          spawner_thread_;
-      ThrottledRunnable *               draw_runnable_;
-      Thread *                          draw_thread_;
+      virtual void                      set_children(const Drawables_t &);
+    protected:
+      Drawables_t                       children_;
     };
-
   }
 }
-
 #endif
+

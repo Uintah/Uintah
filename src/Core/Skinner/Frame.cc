@@ -45,33 +45,29 @@ Skinner::Frame::Frame(Variables *variables,
                       const Color &top,
                       const Color &bot,
                       const Color &left,
-                      const Color &right,
-                      Skinner::Drawable *child) 
-  : Skinner::Drawable(variables),
+                      const Color &right) 
+  : Skinner::Parent(variables),
     top_(top),
     bot_(bot),
     left_(left),
     right_(right),
     border_wid_(wid),
-    border_hei_(hei),
-    child_(child)
+    border_hei_(hei)
 {
 }
 
 
 Skinner::Frame::~Frame() {
-  if (child_) {
-    delete child_;
-  }
 }
 
 void
 Skinner::Frame::render_gl()
 {
-  const double x = region_.x1();
-  const double y = region_.y1();
-  const double x2 = region_.x2();
-  const double y2 = region_.y2();
+  const RectRegion &region = get_region();
+  const double x = region.x1();
+  const double y = region.y1();
+  const double x2 = region.x2();
+  const double y2 = region.y2();
 
   glBegin(GL_QUADS);
   glColor4dv(&bot_.r);
@@ -111,24 +107,23 @@ Skinner::Frame::process_event(event_handle_t event) {
   if (window && window->get_window_state() == WindowEvent::REDRAW_E)
     render_gl();
 
-  if (child_)
-  {
-    child_->region() = Skinner::RectRegion(region_.x1()+border_wid_,
-                                           region_.y1()+border_hei_,
-                                           region_.x2()-border_wid_,
-                                           region_.y2()-border_hei_);
-    child_->process_event(event);
+  const RectRegion &region = get_region();
+  const RectRegion subregion(region.x1()+border_wid_,
+                             region.y1()+border_hei_,
+                             region.x2()-border_wid_,
+                             region.y2()-border_hei_);
+  for (Drawables_t::iterator child = children_.begin(); 
+       child != children_.end(); ++child) {
+    (*child)->set_region(subregion);
+    (*child)->process_event(event);
   }
   return CONTINUE_E;
 }
 
 
 Skinner::Drawable *
-Skinner::Frame::maker(Variables *vars,
-                      const Skinner::Drawables_t &children,
-                      void *) 
+Skinner::Frame::maker(Variables *vars) 
 {
-  ASSERT(children.size() <= 1);
   Color bottom(0.75, 0.75, 0.75, 1.0);
   vars->maybe_get_color("color1", bottom);
   vars->maybe_get_color("bottom-color", bottom);
@@ -155,8 +150,8 @@ Skinner::Frame::maker(Variables *vars,
     SWAP (top, bottom);
     SWAP (left, right);
   }
-  Drawable *child = children.size() ? children.back() : 0;
-  return new Frame(vars, width, height, top, bottom, left, right, child);
+
+  return new Frame(vars, width, height, top, bottom, left, right);
 }
 
 

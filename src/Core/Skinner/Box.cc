@@ -31,6 +31,7 @@
 
 #include <Core/Skinner/Variables.h>
 #include <Core/Skinner/Box.h>
+#include <Core/Events/EventManager.h>
 #include <sci_gl.h>
 
 
@@ -41,6 +42,13 @@ namespace SCIRun {
       color_(color),
       backup_(1.,1.,1.,1.)
     {
+      catcher_functions_["make_red"] = 
+        static_cast<SignalCatcher::CatcherFunctionPtr>(&Box::make_red);
+      catcher_functions_["make_blue"] = 
+        static_cast<SignalCatcher::CatcherFunctionPtr>(&Box::make_blue);
+      catcher_functions_["make_green"] = 
+        static_cast<SignalCatcher::CatcherFunctionPtr>(&Box::make_green);
+
     }
 
     Box::~Box()
@@ -59,7 +67,7 @@ namespace SCIRun {
       glColor4dv(&color_.r);
       glBegin(GL_QUADS);
 
-      const double *coords = region_.coords2D();
+      const double *coords = get_region().coords2D();
       glVertex2dv(coords+0);
       glVertex2dv(coords+2);
       glVertex2dv(coords+4);
@@ -74,17 +82,74 @@ namespace SCIRun {
       WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
       if (window && window->get_window_state() == WindowEvent::REDRAW_E)
         draw_gl();
+      PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
+      if (pointer && get_region().inside(pointer->get_x(), pointer->get_y()) &&
+          (pointer->get_pointer_state() & PointerEvent::BUTTON_PRESS_E) &&
+          (pointer->get_pointer_state() & PointerEvent::BUTTON_1_E)) {
+        throw_signal("button_1_clicked");
+      }
+      if (pointer && 
+          (pointer->get_pointer_state() & PointerEvent::BUTTON_RELEASE_E) &&
+          (pointer->get_pointer_state() & PointerEvent::BUTTON_1_E)) {
+        throw_signal("button_1_released");
+      }
+
       return CONTINUE_E;
     }
 
 
     Drawable *
-    Box::maker(Variables *vars, const Drawables_t &, void *) 
+    Box::maker(Variables *vars) 
     {
       Color color(0,0,0,0);
       vars->maybe_get_color("color", color);
       return new Box(vars, color);
     }
+
+    int
+    Box::get_signal_id(const string &signalname) const {
+      if (signalname == "button_1_clicked") return 1;
+      if (signalname == "button_1_released") return 2;
+      return 0;
+    }
+
+    BaseTool::propagation_state_e
+    Box::make_red(event_handle_t event) {
+      Signal *signal = Signal::Cast(event);
+      color_.r = 1.0;
+      color_.g = 0.0;
+      color_.b = 0.0;
+      color_.a = 1.0;
+      EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
+      return BaseTool::CONTINUE_E;
+    }
+
+    BaseTool::propagation_state_e
+    Box::make_blue(event_handle_t event) {
+      Signal *signal = Signal::Cast(event);
+      color_.r = 0.0;
+      color_.g = 0.0;
+      color_.b = 1.0;
+      color_.a = 1.0;
+      EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
+      return BaseTool::CONTINUE_E;
+    }
+
+
+    BaseTool::propagation_state_e
+    Box::make_green(event_handle_t event) {
+      Signal *signal = Signal::Cast(event);
+      color_.r = 0.0;
+      color_.g = 1.0;
+      color_.b = 0.0;
+      color_.a = 1.0;
+      EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
+      return BaseTool::CONTINUE_E;
+    }
+        
+
+
+
 
   }
 

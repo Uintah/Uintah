@@ -34,13 +34,16 @@
 
 #include <Core/Skinner/Drawable.h>
 #include <libxml/xmlreader.h>
+#include <Core/Skinner/Skinner.h>
 
 #include <string>
 #include <map>
+#include <list>
 
 using std::string;
 using std::map;
 using std::pair;
+using std::list;
 
 
 namespace SCIRun {
@@ -50,13 +53,10 @@ namespace SCIRun {
     class XMLIO {
     public:
       static Drawables_t        load(const string &filename);
-      static void               register_maker(const string &,
-                                               DrawableMakerFunc_t *,
-                                               void *data = 0);
       template<class T>
-      static void               register_maker(void *data=0) 
+      static void               register_maker() 
       {
-        register_maker(T::class_name(), &T::maker, data);
+        register_maker(T::class_name(), &T::maker);
       }
 
       
@@ -67,22 +67,34 @@ namespace SCIRun {
       virtual ~XMLIO();
 
       typedef map<string, xmlNodePtr> string_node_map_t;
-      typedef pair<DrawableMakerFunc_t *, void *> DrawableMaker_t;
-      typedef map<string, DrawableMaker_t> DrawableMakerMap_t;
+      typedef map<string, DrawableMakerFunc_t *> DrawableMakerMap_t;
+
+      //      typedef pair<string, SignalThrower *> TossedSignal_t;
+      //      typedef map<string, TossedSignal_t> TargetSignalMap_t;
 
 
-      static Drawables_t        eval_skinner_node       (const xmlNodePtr,
-                                                         const string &id);
-      static void               eval_definition_node    (const xmlNodePtr,
-                                                         string_node_map_t &);
+      
 
-      static Drawable *        eval_object_node        (const xmlNodePtr,
-                                                        Variables *variables,
-                                                        string_node_map_t &,
-                                                        bool inst_def = false);
+      
+      static void        register_maker(const string &,
+                                        DrawableMakerFunc_t *);
+      static Drawables_t eval_skinner_node(const xmlNodePtr,
+                                           const string &id);
+      static void        eval_definition_node(const xmlNodePtr,
+                                              string_node_map_t &);
+      
+      static Drawable *  eval_object_node(const xmlNodePtr,
+                                          Variables *variables,
+                                          string_node_map_t &,
+                                          SignalThrower::SignalCatchers_t &);
 
-      static void              eval_var_node           (const xmlNodePtr,
-                                                         Variables *);
+
+      static void        eval_signal_node(const xmlNodePtr,
+                                          Drawable *,
+                                          SignalThrower::SignalCatchers_t &);
+
+      static void        eval_var_node(const xmlNodePtr,
+                                       Variables *);
 
       static DrawableMakerMap_t makers_;
     

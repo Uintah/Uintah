@@ -84,7 +84,7 @@
 #include <Core/Util/Timer.h>
 #include <Core/Util/Environment.h>
 #include <Core/Volume/CM2Widget.h>
-#include <Core/Skinner/Drawable.h>
+#include <Core/Skinner/Parent.h>
 #include <Core/Skinner/Color.h>
 #include <Core/Events/Tools/BaseTool.h>
 #include <Core/Events/Tools/ToolManager.h>
@@ -107,7 +107,7 @@ namespace SCIRun {
 using Insight::ITKDatatypeHandle;
 #endif
 
-class Painter
+class Painter : public Skinner::Parent
 {
 public:
   class SliceWindow;
@@ -198,11 +198,10 @@ private:
 public:
   class SliceWindow : public Skinner::Drawable {
   public:
-    SliceWindow(Skinner::Variables *, Painter *painter, GuiContext *ctx);
+    SliceWindow(Skinner::Variables *, Painter *painter);
     virtual ~SliceWindow() {}
     
     static string                       class_name() { return "SliceWindow"; }
-    static Skinner::DrawableMakerFunc_t maker;
     propagation_state_e                 process_event(event_handle_t event);
 
     void                render_gl();
@@ -738,9 +737,17 @@ private:
   void                  filter_callback_const (const itk::Object *, 
                                                const itk::EventObject &);
 #endif
-
+  
+  propagation_state_e   make_SliceWindow(event_handle_t);
+  //  propagation_state_e   start_brush_tool(event_handle_t);
+  CatcherFunction_t     start_brush_tool;
 public:
-  Painter(GuiContext* ctx);
+  static Skinner::DrawableMakerFunc_t maker;
+  static string         class_name() { return "Painter"; }
+  virtual int           get_signal_id(const string &signalname);
+
+
+  Painter(Skinner::Variables *, GuiContext* ctx);
   virtual ~Painter();
   //  virtual void		tcl_command(GuiArgs& args, void*);
   void			add_bundle(BundleHandle);  

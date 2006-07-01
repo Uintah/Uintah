@@ -32,13 +32,13 @@
 #ifndef SKINNER_FRAME_H
 #define SKINNER_FRAME_H
 
-#include <Core/Skinner/Drawable.h>
+#include <Core/Skinner/Parent.h>
 #include <Core/Skinner/Color.h>
 
 
 namespace SCIRun {
   namespace Skinner {  
-    class Frame : public Drawable {
+    class Frame : public Parent {
     public:
       Frame(Variables *variables,
             double wid, 
@@ -46,14 +46,14 @@ namespace SCIRun {
             const Color &top,
             const Color &bot,
             const Color &left,
-            const Color &right,
-            Skinner::Drawable *child);
+            const Color &right);
 
       ~Frame();
 
       static DrawableMakerFunc_t        maker;
       static  string                    class_name() {return "Frame";}
       propagation_state_e               process_event(event_handle_t event);
+
     private:
       void                              render_gl();
       Skinner::Color                    top_;
@@ -62,7 +62,6 @@ namespace SCIRun {
       Skinner::Color                    right_;
       double                            border_wid_;
       double                            border_hei_;
-      Skinner::Drawable *               child_;
     };
   }
 } // End namespace SCIRun

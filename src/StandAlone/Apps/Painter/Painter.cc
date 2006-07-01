@@ -159,28 +159,30 @@ Painter::NrrdSlice::NrrdSlice(Painter *painter,
 
 
 Painter::SliceWindow::SliceWindow(Skinner::Variables *variables,
-                                  Painter *painter, 
-                                  GuiContext *ctx) :  
+                                  Painter *painter) :  
   Skinner::Drawable(variables), 
   painter_(painter),
-  name_("INVALID"),
+  name_(variables->get_id()),
   viewport_(0),
   slices_(),
   slice_map_(),
   paint_layer_(0),
   center_(0,0,0),
   normal_(0,0,0),
-  slice_num_((!ctx) ? 0 : (!ctx) ? 0 : ctx->subVar("slice"), 0),
-  axis_((!ctx) ? 0 : ctx->subVar("axis")),
-  zoom_((!ctx) ? 0 : ctx->subVar("zoom"), 100.0),
-  slab_min_((!ctx) ? 0 : ctx->subVar("slab_min"), 0),
-  slab_max_((!ctx) ? 0 : ctx->subVar("slab_max"), 0),
+  slice_num_(0,0), //(!ctx) ? 0 : (!ctx) ? 0 : ctx->subVar("slice"), 0),
+  axis_(2),
+  zoom_(0,100.0),//!ctx) ? 0 : ctx->subVar("zoom"), 100.0),
+  slab_min_(0,0),//(!ctx) ? 0 : ctx->subVar("slab_min"), 0),
+  slab_max_(0,0),//(!ctx) ? 0 : ctx->subVar("slab_max"), 0),
   redraw_(true),
   autoview_(true),
-  mode_((!ctx) ? 0 : ctx->subVar("mode"),0),
-  show_guidelines_((!ctx) ? 0 : ctx->subVar("show_guidelines"),1),
+  mode_(0,0),//(!ctx) ? 0 : ctx->subVar("mode"),0),
+  show_guidelines_(0,1),//(!ctx) ? 0 : ctx->subVar("show_guidelines"),1),
   cursor_pixmap_(-1)
 {
+  int axis = 3;
+  variables->maybe_get_int("axis", axis);
+  axis_ = axis;
 }
 
 
@@ -387,25 +389,10 @@ Painter::NrrdVolume::get_nrrd()
   return nrrd_handle;
 }
 
-static int curax = 0;
 
-Skinner::Drawable *
-Painter::SliceWindow::maker(Skinner::Variables *vars, 
-                            const Skinner::Drawables_t &,
-                            void *data) 
-{
-  Painter *painter = (Painter *) data;
-  Painter::SliceWindow *window = new Painter::SliceWindow(vars, painter, 0);
-  window->name_ = vars->get_id();
-  window->set_axis(curax++);
-  curax %=3;
-  painter->windows_.push_back(window);
-  return window;
-}
-
-
-Painter::Painter(GuiContext* ctx) :
+Painter::Painter(Skinner::Variables *variables, GuiContext* ctx) :
   //  Module("Painter", ctx, Filter, "Render", "SCIRun"),
+  Parent(variables),
   cur_window_(0),
   tm_("Painter"),
   pointer_pos_(),
@@ -423,6 +410,11 @@ Painter::Painter(GuiContext* ctx) :
 {
   tm_.add_tool(new PointerToolSelectorTool(this), 50);
   tm_.add_tool(new KeyToolSelectorTool(this), 51);
+  catcher_functions_["SliceWindow_Maker"] =
+    static_cast<Skinner::SignalCatcher::CatcherFunctionPtr>(&Painter::make_SliceWindow);
+  catcher_functions_["Painter::start_brush_tool"] =
+    static_cast<Skinner::SignalCatcher::CatcherFunctionPtr>(&Painter::start_brush_tool);
+
 }
 
 Painter::~Painter()
@@ -573,8 +565,8 @@ Painter::SliceWindow::push_gl_2d_view() {
   glLoadIdentity();
   glScaled(2.0, 2.0, 2.0);
   glTranslated(-.5, -.5, -.5);
-  double vpw = region_.width();
-  double vph = region_.height();
+  double vpw = get_region().width();
+  double vph = get_region().height();
   glScaled(1.0/vpw, 1.0/vph, 1.0);
   CHECK_OPENGL_ERROR();
 }
@@ -598,8 +590,8 @@ Painter::SliceWindow::render_guide_lines(Point mouse) {
   GLdouble white[4] = { 1.0, 1.0, 1.0, 1.0 };
 
   push_gl_2d_view();
-  double vpw = region_.width();
-  double vph = region_.height();
+  double vpw = get_region().width();
+  double vph = get_region().height();
 
   glColor4dv(white);
   glBegin(GL_LINES); 
@@ -690,8 +682,8 @@ Painter::SliceWindow::render_frame(double x,
                                    double *color1,
                                    double *color2)
 {
-  const double vw = region_.width();
-  const double vh = region_.height();
+  const double vw = get_region().width();
+  const double vh = get_region().height();
   if (color1)
     glColor4dv(color1);
 
@@ -781,8 +773,9 @@ Painter::SliceWindow::render_grid()
   double gap = gaps[selected];
 
   profiler("gaps");
-  const int vw = Ceil(region_.width());
-  const int vh = Ceil(region_.height());
+  const Skinner::RectRegion &region = get_region();
+  const int vw = Ceil(region.width());
+  const int vh = Ceil(region.height());
 
   //  double grey1[4] = { 0.75, 0.75, 0.75, 1.0 };
   //  double grey2[4] = { 0.5, 0.5, 0.5, 1.0 };
@@ -797,8 +790,8 @@ Painter::SliceWindow::render_grid()
   glDisable(GL_TEXTURE_2D);
   CHECK_OPENGL_ERROR();
 
-  Point min = screen_to_world(Floor(region_.x1()),Floor(region_.y1()));
-  Point max = screen_to_world(Ceil(region_.x2())-1, Ceil(region_.y2())-1);
+  Point min = screen_to_world(Floor(region.x1()),Floor(region.y1()));
+  Point max = screen_to_world(Ceil(region.x2())-1, Ceil(region.y2())-1);
 
   int xax = x_axis();
   int yax = y_axis();
@@ -998,8 +991,8 @@ Painter::SliceWindow::setup_gl_view()
   glGetDoublev(GL_PROJECTION_MATRIX, gl_projection_matrix_);
   CHECK_OPENGL_ERROR();
 
-  double hwid = region_.width()*50.0/zoom_();
-  double hhei = region_.height()*50.0/zoom_();
+  double hwid = get_region().width()*50.0/zoom_();
+  double hhei = get_region().height()*50.0/zoom_();
 
   double cx = center_(x_axis());
   double cy = center_(y_axis());
@@ -1074,19 +1067,19 @@ Painter::SliceWindow::render_orientation_text()
   if (sec >= 3) SWAP (ttext, btext);
   profiler("start render");
   text->set_shadow_offset(2,-2);
-  text->render(ltext, 2, region_.height()/2,
+  text->render(ltext, 2, get_region().height()/2,
             TextRenderer::W | TextRenderer::SHADOW | TextRenderer::REVERSE);
   profiler("ltext");
 
-  text->render(rtext,region_.width()-2, region_.height()/2,
+  text->render(rtext,get_region().width()-2, get_region().height()/2,
                TextRenderer::E | TextRenderer::SHADOW | TextRenderer::REVERSE);
   profiler("rtext");
 
-  text->render(btext,region_.width()/2, 2,
+  text->render(btext,get_region().width()/2, 2,
                TextRenderer::S | TextRenderer::SHADOW | TextRenderer::REVERSE);
   profiler("btext");  
 
-  text->render(ttext,region_.width()/2, region_.height()-2, 
+  text->render(ttext,get_region().width()/2, get_region().height()-2, 
                TextRenderer::N | TextRenderer::SHADOW | TextRenderer::REVERSE);
   profiler("ttext");
 
@@ -1154,8 +1147,8 @@ Painter::SliceWindow::render_progress_bar() {
 
   push_gl_2d_view();
 
-  double vpw = region_.width();
-  double vph = region_.height();
+  double vpw = get_region().width();
+  double vph = get_region().height();
   double x_off = 50;
   double h = 50;
   double gap = 5;
@@ -1925,6 +1918,7 @@ Painter::set_probe() {
 
 void
 Painter::SliceWindow::set_probe() {
+  if (!painter_->current_volume_) return;
   if (painter_->cur_window_ != this &&
       painter_->current_volume_->inside_p(painter_->pointer_pos_)) {
     center_(axis_) = painter_->pointer_pos_(axis_);
@@ -1995,8 +1989,8 @@ Painter::Event::update_state(GuiArgs &args, Painter &painter) {
 void
 Painter::SliceWindow::autoview(NrrdVolume *volume, double offset) {
   autoview_ = false;
-  double wid = region().width() -  2*offset;
-  double hei = region().height() - 2*offset;
+  double wid = get_region().width() -  2*offset;
+  double hei = get_region().height() - 2*offset;
 
   
 //   FreeTypeFace *font = fonts_["orientation"];
@@ -2354,15 +2348,18 @@ Painter::filter_callback_const(const itk::Object *object,
 BaseTool::propagation_state_e
 Painter::SliceWindow::process_event(event_handle_t event) {
   PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
-
+  const Skinner::RectRegion &region = get_region();
   if (pointer) {
 //     Point pointer_point(pointer->get_x(), pointer->get_y(),0);
 //     Point min(region_.x1(), region_.y1(),0);
 //     Point max(region_.x2(), region_.y2(),0);
-    if (pointer->get_x() >= region_.x1()  &&
-        pointer->get_x() < region_.x2()  &&
-        pointer->get_y() >= region_.y1()  &&
-        pointer->get_y() < region_.y2()) {
+    if (pointer->get_pointer_state() & PointerEvent::BUTTON_PRESS_E)
+      cerr << "slice window press\n";
+    if (pointer->get_x() >= region.x1()  &&
+        pointer->get_x() < region.x2()  &&
+        pointer->get_y() >= region.y1()  &&
+        pointer->get_y() < region.y2()) {
+      //      if (region.inside(pointer->get_x(), pointer->get_y())) {
       painter_->cur_window_ = this;
       painter_->pointer_pos_ = screen_to_world(pointer->get_x(), 
                                                pointer->get_y());
@@ -2381,8 +2378,8 @@ Painter::SliceWindow::process_event(event_handle_t event) {
     glPushMatrix();
     GLint viewport[4];
     glGetIntegerv(GL_VIEWPORT, viewport);    
-    glViewport(Floor(region_.x1()), Floor(region_.y1()), 
-	       Ceil(region_.width()), Ceil(region_.height()));
+    glViewport(Floor(region.x1()), Floor(region.y1()), 
+	       Ceil(region.width()), Ceil(region.height()));
     render_gl();
     glViewport(viewport[0],viewport[1],viewport[2],viewport[3]);
     glMatrixMode(GL_MODELVIEW);
@@ -2395,7 +2392,41 @@ Painter::SliceWindow::process_event(event_handle_t event) {
   return BaseTool::CONTINUE_E;
 }
 
+int
+Painter::get_signal_id(const string &signalname) {
+  if (signalname == "SliceWindow_Maker") return 1;
+  if (signalname == "Painter::start_brush_tool") return 2;
+  return 0;
+}
 
+
+BaseTool::propagation_state_e 
+Painter::start_brush_tool(event_handle_t event) {
+  cerr << "Painter::start_brush_tool";
+  tm_.add_tool(new BrushTool(this),25); 
+  return STOP_E;
+}
+
+BaseTool::propagation_state_e 
+Painter::make_SliceWindow(event_handle_t event) {
+  //  event.detach();
+  Skinner::MakerSignal *maker_signal = 
+    dynamic_cast<Skinner::MakerSignal *>(event.get_rep());
+  ASSERT(maker_signal);
+
+  SliceWindow *window = new SliceWindow(maker_signal->get_vars(), this);
+  windows_.push_back(window);
+  maker_signal->set_signal_thrower(window);
+  maker_signal->set_signal_name("SliceWindow_Made");
+  return MODIFIED_E;
+}
+
+
+Skinner::Drawable *
+Painter::maker(Skinner::Variables *vars) 
+{
+  return new Painter(vars, 0);
+}
 
 
 
@@ -2468,6 +2499,8 @@ setup_volume_rendering() {
   //    EventManager::add_event(scene_event);    
 
 }  
+
+
 
 #endif
 

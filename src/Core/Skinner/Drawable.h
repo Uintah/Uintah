@@ -32,6 +32,7 @@
 #ifndef SKINNER_DRAWABLE_H
 #define SKINNER_DRAWABLE_H
 
+#include <Core/Skinner/Signals.h>
 #include <Core/Events/Tools/BaseTool.h>
 #include <Core/Skinner/RectRegion.h>
 #include <sci_gl.h>
@@ -50,38 +51,31 @@ namespace SCIRun {
     class Variables;
     typedef pair<double, double> MinMax;
 
-    class Drawable : public BaseTool {
+    class Drawable : public BaseTool, 
+                     public Skinner::SignalCatcher, 
+                     public SignalThrower {
     public:
       Drawable (Variables *);
       virtual ~Drawable();
 
       virtual propagation_state_e       process_event(event_handle_t);
       virtual string                    get_id() const;
-
-      virtual RectRegion &              region();
-      virtual MinMax                    minmax(unsigned int);
-
-      //      void                              set_vars(Variables *vars);
+      virtual int                       get_signal_id(const string &) const;
+      virtual MinMax                    get_minmax(unsigned int);
       Variables *                       get_vars();
-    protected:
-      //      typedef vector<CallbackFunc_t> CallbackSet_t;
-      //      typedef map<EventManager *, CallbackSet_t> Callbacks_t;
-      //      void                      process_before_callbacks(EventState &);
-      //      void                      process_after_callbacks(EventState &);
-
-      RectRegion                        region_;
+      const RectRegion &                get_region() const;
+      void                              set_region(const RectRegion &);
+      
     private:
+      RectRegion                        region_;
       Variables *                       variables_;
-      //      Callbacks_t               callbacks_;
     };
   
+
     typedef map<string, string> KeyValMap_t;
     typedef vector<Drawable *> Drawables_t;
     
-    typedef Drawable * DrawableMakerFunc_t(Skinner::Variables *,
-                                           const Drawables_t &,
-                                           void *);
-
+    typedef Drawable * DrawableMakerFunc_t(Skinner::Variables *);
 
     typedef pair<GLenum, GLenum> blendfunc_t;
 

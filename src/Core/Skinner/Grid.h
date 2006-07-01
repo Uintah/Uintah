@@ -32,11 +32,11 @@
 #ifndef SKINNER_GRID_H
 #define SKINNER_GRID_H
 
-#include <Core/Skinner/Drawable.h>
+#include <Core/Skinner/Parent.h>
 
 namespace SCIRun {
   namespace Skinner {
-    class Grid : public Drawable {
+    class Grid : public Parent {
     public:
       Grid (Variables *, int, int);
       virtual ~Grid();
@@ -47,6 +47,7 @@ namespace SCIRun {
 
       void                              set_cell(int, int, Drawable *, 
                                                  double, double);
+      virtual void                      set_children(const Drawables_t &);
     private:
       vector<vector<Drawable *> >       cells_;
       vector<double>                    col_width_;

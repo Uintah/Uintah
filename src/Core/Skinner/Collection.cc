@@ -35,24 +35,17 @@
 
 namespace SCIRun {
   namespace Skinner {
-    Collection::Collection(Variables *variables, 
-                           const Drawables_t &children) :
-      Drawable(variables),
-      children_(children)
+    Collection::Collection(Variables *variables) :
+      Parent(variables)
     {
     }
 
     Collection::~Collection()
     {
-      for (Drawables_t::iterator citer = children_.begin(); 
-           citer != children_.end(); ++citer)
-     {
-       delete *citer;
-     }
     }
 
     MinMax
-    Collection::minmax(unsigned int ltype)
+    Collection::get_minmax(unsigned int ltype)
     {
       return SPRING_MINMAX;
     }
@@ -62,20 +55,16 @@ namespace SCIRun {
     {
       for (unsigned int i = 0; i < children_.size(); ++i) {
         ASSERT(children_[i]);
-        children_[i]->region() = region_;
+        children_[i]->set_region(get_region());
         children_[i]->process_event(event);
       }
       return CONTINUE_E;
     }
 
     Drawable *
-    Collection::maker(Variables *variables,
-                      const Drawables_t &children,
-                      void *)
+    Collection::maker(Variables *variables)
     {
-      return new Collection(variables, children);
+      return new Collection(variables);
     }
-
-
   }
 }

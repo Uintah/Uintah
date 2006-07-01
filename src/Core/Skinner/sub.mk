@@ -42,8 +42,10 @@ SRCS     += \
 	$(SRCDIR)/Gradient.cc	    	\
 	$(SRCDIR)/Grid.cc	    	\
 	$(SRCDIR)/Layout.cc	    	\
+	$(SRCDIR)/Parent.cc	    	\
 	$(SRCDIR)/RectRegion.cc    	\
 	$(SRCDIR)/SceneGraph.cc  	\
+	$(SRCDIR)/Signals.cc    	\
 	$(SRCDIR)/Skinner.cc    	\
 	$(SRCDIR)/Text.cc       	\
 	$(SRCDIR)/Texture.cc    	\
