@@ -738,9 +738,10 @@ private:
                                                const itk::EventObject &);
 #endif
   
-  propagation_state_e   make_SliceWindow(event_handle_t);
   //  propagation_state_e   start_brush_tool(event_handle_t);
+  CatcherFunction_t     SliceWindow_Maker;
   CatcherFunction_t     start_brush_tool;
+  CatcherFunction_t     quit;
 public:
   static Skinner::DrawableMakerFunc_t maker;
   static string         class_name() { return "Painter"; }

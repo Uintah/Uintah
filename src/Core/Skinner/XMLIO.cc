@@ -196,6 +196,7 @@ namespace SCIRun {
       // Now we have Variables, Create the Object!
       Drawable * object = 0;
 
+      
       // First, see if the current catchers can create and throw back 
       // an object of type "classname"
       string makerstr = classname+"_Maker";
@@ -206,11 +207,10 @@ namespace SCIRun {
         SignalThrower::throw_signal(catchers, find_maker);
       // And we see what the cather returned
       MakerSignal *made = dynamic_cast<MakerSignal*>(catcher_return.get_rep());
-      if (made && made->get_signal_name() == classname+"_Made") {
+      if (made && made->get_signal_name() == (makerstr+"_Done")) {
         // It returned a Maker that we wanted... Hooray!
         object = dynamic_cast<Drawable *>(made->get_signal_thrower());
       }
-
 
       // Search the static_makers table and see if it contains
       // the classname we want....DEPRECIATED, maybe goes away?
@@ -218,7 +218,6 @@ namespace SCIRun {
         object = (*makers_[classname])(variables);
       }
       
-
       // At this point, the if the object is uninstantiatable, return
       if (!object) {
         delete variables;
@@ -227,10 +226,11 @@ namespace SCIRun {
         return 0;
       }
 
+      
+      //cerr << object->get_id() << " - adding catcher";
 
       // Now the object is created, fill the catchersondeck tree
       // with targets contained by the new object.
-      cerr << object->get_id() << " - adding catcher";
       SignalCatcher::TargetIDs_t catcher_targets =object->get_all_target_ids();
       SignalCatcher::TargetIDs_t::iterator id_iter;
       for(id_iter  = catcher_targets.begin();
@@ -283,9 +283,10 @@ namespace SCIRun {
           cerr << "class : " << classname << " does not allow <object>\n";
       }
 
+      //      cerr << object->get_id() << " - removing catcher";
+
       // Re-get all object ids, as we may have pushed some aliases 
       // during eval_skinner_node
-      cerr << object->get_id() << " - removing catcher";
       catcher_targets = object->get_all_target_ids();
       for(id_iter  = catcher_targets.begin();
           id_iter != catcher_targets.end(); ++id_iter) {
@@ -364,11 +365,9 @@ namespace SCIRun {
       string signalname = XMLUtil::node_att_as_string(node, "name");
       string signaltarget = XMLUtil::node_att_as_string(node, "target");
       SignalThrower *thrower = dynamic_cast<SignalThrower *>(object);
-      if (!thrower) {
-        cerr << "Signal in non throwing object\n";
-        return;
-      }
-
+      SignalCatcher *thrower_as_catcher = dynamic_cast<SignalCatcher*>(object);
+      ASSERT(thrower);
+      ASSERT(thrower_as_catcher);
 
       SignalThrower::SignalCatchers_t::iterator catchers_iter = 
         catchers.find(signaltarget);
@@ -379,21 +378,7 @@ namespace SCIRun {
         return;
       }
 
-      SignalCatcher *thrower_as_catcher = dynamic_cast<SignalCatcher*>(object);
 
-
-//        cerr << "Catchers for " << object->get_id() << ": ";
-//       SignalThrower::SignalCatchers_t::iterator citer = catchers.begin();
-//       for (; citer != catchers.end(); ++citer) {
-//         cerr << citer->first << (citer->second.empty() ? 0 : 1) << ", ";
-//       }
-//       cerr << std::endl;
-
-//       if(catchers.find(signaltarget) == catchers.end()) {
-//         cerr << "Signal " << signalname 
-//              << " cannot find target " << signaltarget << std::endl;
-//         return;
-//       }
 
       SignalThrower::CatchersOnDeck_t &signal_catchers = catchers_iter->second;
       SignalThrower::CatchersOnDeck_t::iterator catcher_iter = 
@@ -404,75 +389,22 @@ namespace SCIRun {
         //          catcher->get_catcher(signaltarget);
         if (function) {
           if (thrower->get_signal_id(signalname)) {
-            cerr << " Add Catcher: " << signalname << std::endl;
+//             cerr << object->get_id() << ":" << signalname 
+//                  << " caught by : " << ((Drawable *)(catcher))->get_id() 
+//                  << ": " << signaltarget << std::endl;
             thrower->catchers_[signalname].push_front
               (make_pair(catcher, function));
           }  else {
-            cerr << "Translating signal: " 
-                 << signalname << " to: " << signaltarget << std::endl;
+            //cerr << "Translating signal: " 
+            //     << signalname << " to: " << signaltarget << std::endl;
             catchers[signalname].push_front(make_pair(catcher, function));
             thrower_as_catcher->catcher_functions_[signalname] = function;
-            cerr << object->get_id() << " - now contains";
             object->get_all_target_ids();
           }
-
-
-//           if (thrower->add_catcher_function(signalname, catcher, function)) {
-//             Drawable *catcherdrawable = static_cast<Drawable *>(catcher);
-//             if (catcherdrawable) {
-//               cerr << "Catcher for " << signalname 
-//                    << " is id " << catcherdrawable->get_id() 
-//                    << " target " << signaltarget << std::endl;
-//             }
-//           } else if (thrower_as_catcher) {            
-//             cerr << "Translating signal: " 
-//                  << signalname << " to: " << signaltarget << std::endl;
-//             catchers[signalname].push_front(make_pair(catcher, function));
-//             thrower_as_catcher->catcher_functions_[signalname] = function;
-//           }
         }
       }
     }
         
-        
-      
-
-
-      //      for (SignalCatcherList_t::iterator catcher_iter = catchers.begin();
-//              catcher_iter != catchers.end(); ++catcher_iter) {
-//           SignalCatcher *catcher = *catcher_iter;
-//           SignalCatcher::CatcherFunctionPtr function = 
-//             catcher->get_catcher(signaltarget);
-//           if (function) {
-//             thrower->add_catcher_function(signalname, catcher, function);
-//           }
-//         }
-//       }
-      
-
-
-//        int signal_id = thrower->get_signal_id(signalname);
-//       if (signal_id) {
-//         signals[signaltarget] = make_pair(signalname, thrower);
-//       }
-
-
-//         for (SignalCatcherList_t::iterator catcher_iter = catchers.begin();
-//              catcher_iter != catchers.end(); ++catcher_iter) {
-//           SignalCatcher *catcher = *catcher_iter;
-//           SignalCatcher::CatcherFunctionPtr function = 
-//             catcher->get_catcher(signaltarget);
-//           if (function) {
-//             thrower->add_catcher_function(signalname, catcher, function);
-//           }
-//         }
-//       }
-//    }
-                        
-      
-      
-    
-
     void
     XMLIO::register_maker(const string &name, DrawableMakerFunc_t *maker)
     {
