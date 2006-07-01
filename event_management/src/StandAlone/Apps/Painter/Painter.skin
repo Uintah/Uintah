@@ -101,7 +101,7 @@
         <var name="bottom-color">$slice-background-color</var>
         <var name="top-color" type="color">$grey</var>
       </object>
-      <object class="SliceWindow"/>
+      <object class="Painter::SliceWindow"/>
       <object class="Text">
         <var name="text">$name</var>  
         <var name="size">40</var>  
@@ -235,6 +235,9 @@
                 <var name="button_text" propagate="yes">QUIT</var>
                 <var name="button_color" propagate="yes">#FF0000FF</var>
                 <var name="text_color" propagate="yes">#FFFFFFFF</var>
+                <signal name="Button2::clicked" 
+                        target="Painter::quit"/>
+
               </object>
 
             </object>
@@ -350,7 +353,7 @@
     <var name="posy" type="int">50</var>
     <var name="border">1</var>
     <object class="Painter">
-      <object class="SliceWindow"/>
+      <object class="Painter::SliceWindow"/>
     </object>
   </object>
 

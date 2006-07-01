@@ -410,11 +410,9 @@ Painter::Painter(Skinner::Variables *variables, GuiContext* ctx) :
 {
   tm_.add_tool(new PointerToolSelectorTool(this), 50);
   tm_.add_tool(new KeyToolSelectorTool(this), 51);
-  catcher_functions_["SliceWindow_Maker"] =
-    static_cast<Skinner::SignalCatcher::CatcherFunctionPtr>(&Painter::make_SliceWindow);
-  catcher_functions_["Painter::start_brush_tool"] =
-    static_cast<Skinner::SignalCatcher::CatcherFunctionPtr>(&Painter::start_brush_tool);
-
+  REGISTER_CATCHER_TARGET(Painter::quit);
+  REGISTER_CATCHER_TARGET(Painter::SliceWindow_Maker);
+  REGISTER_CATCHER_TARGET(Painter::start_brush_tool);
 }
 
 Painter::~Painter()
@@ -2353,8 +2351,6 @@ Painter::SliceWindow::process_event(event_handle_t event) {
 //     Point pointer_point(pointer->get_x(), pointer->get_y(),0);
 //     Point min(region_.x1(), region_.y1(),0);
 //     Point max(region_.x2(), region_.y2(),0);
-    if (pointer->get_pointer_state() & PointerEvent::BUTTON_PRESS_E)
-      cerr << "slice window press\n";
     if (pointer->get_x() >= region.x1()  &&
         pointer->get_x() < region.x2()  &&
         pointer->get_y() >= region.y1()  &&
@@ -2408,7 +2404,15 @@ Painter::start_brush_tool(event_handle_t event) {
 }
 
 BaseTool::propagation_state_e 
-Painter::make_SliceWindow(event_handle_t event) {
+Painter::quit(event_handle_t event) {
+  EventManager::add_event(new QuitEvent());
+  return STOP_E;
+}
+
+
+
+BaseTool::propagation_state_e 
+Painter::SliceWindow_Maker(event_handle_t event) {
   //  event.detach();
   Skinner::MakerSignal *maker_signal = 
     dynamic_cast<Skinner::MakerSignal *>(event.get_rep());
@@ -2417,7 +2421,7 @@ Painter::make_SliceWindow(event_handle_t event) {
   SliceWindow *window = new SliceWindow(maker_signal->get_vars(), this);
   windows_.push_back(window);
   maker_signal->set_signal_thrower(window);
-  maker_signal->set_signal_name("SliceWindow_Made");
+  maker_signal->set_signal_name(maker_signal->get_signal_name()+"_Done");
   return MODIFIED_E;
 }
 

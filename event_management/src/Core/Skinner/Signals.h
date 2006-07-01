@@ -42,6 +42,10 @@ using std::deque;
 using std::vector;
 
 
+#define REGISTER_CATCHER_TARGET(catcher_function) \
+  catcher_functions_[#catcher_function] = \
+    static_cast<SCIRun::Skinner::SignalCatcher::CatcherFunctionPtr> \
+      (&catcher_function);
 
 
 namespace SCIRun {

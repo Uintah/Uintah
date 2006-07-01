@@ -142,13 +142,13 @@ namespace SCIRun {
     SignalCatcher::TargetIDs_t
     SignalCatcher::get_all_target_ids() {
       TargetIDs_t ids;
-      cerr << "_ids: ";
+      //      cerr << "_ids: ";
       for(signal_slot_map_t::iterator titer = catcher_functions_.begin();
           titer != catcher_functions_.end(); ++titer) {
-        cerr << titer->first << ", ";
+        //        cerr << titer->first << ", ";
         ids.push_back(titer->first);
       }
-      cerr << std::endl;
+      //      cerr << std::endl;
       return ids;
     }
 
