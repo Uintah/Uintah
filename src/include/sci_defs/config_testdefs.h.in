@@ -46,14 +46,14 @@ the binary side), they will have the correct '0' or '1' value.
 
 */
 
-#define HAVE_LIMITS_H 0
-#define HAVE_SYS_SELECT_H 0
-#define HAVE_UNISTD_H 0
-#define HAVE_SYS_TIME_H 0
-#define HAVE_SYS_UUID_H 0
-#define HAVE_UUID_UUID_H 0
-#define HAVE_EXT_ALGORITHM 0
-#define HAVE_STDINT_H 0
-#define HAVE_INTTYPES_H 0
+#define HAVE_LIMITS_H @HAVE_LIMITS_H@
+#define HAVE_SYS_SELECT_H @HAVE_SYS_SELECT_H@
+#define HAVE_UNISTD_H @HAVE_UNISTD_H@
+#define HAVE_SYS_TIME_H @HAVE_SYS_TIME_H@
+#define HAVE_SYS_UUID_H @HAVE_SYS_UUID_H@
+#define HAVE_UUID_UUID_H @HAVE_UUID_UUID_H@
+#define HAVE_EXT_ALGORITHM @HAVE_EXT_ALGORITHM_H@
+#define HAVE_STDINT_H @HAVE_STDINT_H@
+#define HAVE_INTTYPES_H @HAVE_INTTYPES_H@
 
 #endif
