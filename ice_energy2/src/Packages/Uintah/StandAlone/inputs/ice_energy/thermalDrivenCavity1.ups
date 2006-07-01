@@ -4,13 +4,24 @@
 
    <Meta>
        <title>thermally driven cavity problem test</title>
+       <notes>Rayleigh number Ra = (g*B*(Th-Tc)L^3)/(v*a)
+              g = gravitational constant
+              B = volumetric thermal expansion coefficient
+              Th = Temperature of hot wall
+              Tc = Temperature of cold wall
+              L = wall length
+              v = viscosity
+              a = thermal diffusivity
+              fluid properties evaluated at (Tc+Th)/2
+              Ra = 19103982637.518291
+       </notes>
    </Meta>
    
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            1.0          </maxTime>
+       <maxTime>            0.1          </maxTime>
        <initTime>           0.0          </initTime>
        <delt_min>           0.0          </delt_min> 
        <delt_max>           0.1          </delt_max>                               
@@ -66,7 +77,7 @@
         <BCType id = "0" label = "Velocity" var = "Dirichlet">
                               <value> [0.,0.,0.] </value>
         </BCType>
-        <BCType id = "0" label = "Temperature" var = "Dirichlet">
+        <BCType id = "0" label = "Temperature" var = "Neumann">
                               <value> 300.0 </value>
         </BCType>
         <BCType id = "0" label = "Density" var = "Neumann">
@@ -84,7 +95,7 @@
         <BCType id = "0" label = "Velocity" var = "Dirichlet">
                               <value> [0.,0.,0.] </value>
         </BCType>
-        <BCType id = "0" label = "Temperature" var = "Dirichlet">
+        <BCType id = "0" label = "Temperature" var = "Neumann">
                               <value> 300.0 </value>
         </BCType>
         <BCType id = "0" label = "Density" var = "Neumann">
@@ -112,7 +123,7 @@
                               <value> 0.0 </value>       
         </BCType>
       </Face>
-      <Face side = "z+">        
+      <Face side = "z+">
         <BCType id = "0" label = "Pressure" var = "Neumann">
                               <value> 0.0  </value>
         </BCType>
@@ -133,11 +144,11 @@
        <Level>
            <Box label = "1">
               <lower>        [0,  0,  0]     </lower>
-              <upper>        [0.15,.15,0.0075]  </upper>
+              <upper>        [1, 1,  .00625]  </upper>
               <extraCells>   [1,1,1]         </extraCells>
               <patches>      [1,1,1]         </patches>
            </Box>
-           <spacing>         [0.0075,0.0075,0.0075]    </spacing>
+           <spacing>         [0.00625,0.00625,0.00625]    </spacing>
        </Level>
     </Grid>    
     <!--____________________________________________________________________-->
@@ -170,8 +181,8 @@
       <dbg_timeStart>       0      </dbg_timeStart>
       <dbg_timeStop>        0.01      </dbg_timeStop>
       <dbg_outputInterval>  1e-9      </dbg_outputInterval>
-      <dbg_BeginIndex>      [-1,16,0] </dbg_BeginIndex>
-      <dbg_EndIndex>        [3,21,1]  </dbg_EndIndex>
+      <dbg_BeginIndex>    [[-1,16,0]] </dbg_BeginIndex>
+      <dbg_EndIndex>      [[3,21,1]]  </dbg_EndIndex>
       <dbg_SigFigs>         12         </dbg_SigFigs>
       <dbg_Matls>           [0]       </dbg_Matls>
 <dbg_Level>  0    </dbg_Level>
@@ -199,7 +210,7 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.25</cfl>
+         <cfl>0.5</cfl>
        <ICE>
         <max_iteration_equilibration> 50 </max_iteration_equilibration>
         <advection type = "FirstOrder"/>
@@ -212,7 +223,7 @@
         
         <ImplicitSolver>
            <max_outer_iterations>      10    </max_outer_iterations>
-           <outer_iteration_tolerance> 1e-16 </outer_iteration_tolerance>
+           <outer_iteration_tolerance> 1e-15 </outer_iteration_tolerance>
 	    <Parameters>
 	       <tolerance>1.e-16      </tolerance> 
 	       <norm>     LInfinity  </norm>
@@ -241,13 +252,12 @@
            <burn type = "null"/>
            <EOS type = "ideal_gas">                     </EOS>
            <Thermo type = "cantera single mixture">
-		<speciesMix>CH4:1</speciesMix>
+		<speciesMix>O2:0.77,N2:0.23</speciesMix>
 		<file>gri30.xml</file>
                 <id>gri30_mix</id>
-                <thermal_conductivity>100.0             </thermal_conductivity>
+                <thermal_conductivity>0.026197599       </thermal_conductivity>
            </Thermo>
            <dynamic_viscosity>  15.6e-6                 </dynamic_viscosity>
-           <thermal_conductivity>100                    </thermal_conductivity>
            <geom_object>
                 <box label = "wholeDomain">
                     <min>       [ 0.0, 0.0, 0.0 ]       </min>
@@ -255,7 +265,7 @@
                 </box>
                <res>                 [2,2,2]            </res>
                <velocity>      [0.,0.,0.]               </velocity>
-               <density>       1.1792946927374306000e+00</density>
+               <density>       1.2998533767414207</density>
                <pressure>      101325.0                 </pressure>     
                <temperature>   300.0                    </temperature>
            </geom_object>
