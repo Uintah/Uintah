@@ -35,7 +35,7 @@ Future elements?: gradient, button, slider, checkbox, radiobutton, 2d viewer, 3d
 
 -->
 
-<!ELEMENT skinner (definition*, object+)> 
+<!ELEMENT skinner (var*, definition*, object+)> 
 <!ATTLIST skinner 
           version CDATA #REQUIRED> 
 

@@ -44,6 +44,8 @@
 #include <Core/Skinner/Texture.h>
 #include <Core/Skinner/Layout.h>
 
+#include <Core/Util/Environment.h>
+
 #include <iostream>
 
 using std::cerr;
@@ -142,13 +144,17 @@ namespace SCIRun {
     SignalCatcher::TargetIDs_t
     SignalCatcher::get_all_target_ids() {
       TargetIDs_t ids;
-      //      cerr << "_ids: ";
+      bool print = sci_getenv_p("SKINNER_XMLIO_DEBUG");
+      if (print)
+        cerr << "_ids: ";
       for(signal_slot_map_t::iterator titer = catcher_functions_.begin();
           titer != catcher_functions_.end(); ++titer) {
-        //        cerr << titer->first << ", ";
+        if (print) 
+          cerr << titer->first << ", ";
         ids.push_back(titer->first);
       }
-      //      cerr << std::endl;
+      if (print)
+        cerr << std::endl;
       return ids;
     }
 

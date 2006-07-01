@@ -39,6 +39,7 @@
 #include <Core/Skinner/Text.h>
 #include <Core/Skinner/Texture.h>
 #include <Core/Skinner/Window.h>
+#include <Core/Skinner/Root.h>
 
 #include <Core/XMLUtil/XMLUtil.h>
 #include <Core/Containers/StringUtil.h>
@@ -62,10 +63,9 @@ namespace SCIRun {
     {
     }
 
-    Drawables_t
+    Root *
     XMLIO::load(const string &filename)
     {
-      Drawables_t objs;
       /*
        * this initialize the library and check potential ABI mismatches
        * between the version it was compiled for and the actual shared
@@ -88,7 +88,7 @@ namespace SCIRun {
       ctxt = xmlNewParserCtxt();
       if (!ctxt) {
         std::cerr << "XMLIO::load failed xmlNewParserCtx()\n";
-        return objs;
+        return 0;
       }
 
       /* parse the file, activating the DTD validation option */
@@ -99,22 +99,22 @@ namespace SCIRun {
       if (!doc) {
         std::cerr << "Skinner::XMLIO::load failed to parse " 
                   << filename << std::endl;
-        return objs;
+        return 0;
       } 
       if (!ctxt->valid) {
           std::cerr << "Skinner::XMLIO::load dailed to validate " 
                     << filename << std::endl;
-          return objs;
+          return 0;
       }
       
 
       // parse the doc at network node.
-
+      Root *root;
       for (xmlNode *cnode=doc->children; cnode!=0; cnode=cnode->next) {
         if (XMLUtil::node_is_dtd(cnode, "skinner")) 
           continue;
         if (XMLUtil::node_is_element(cnode, "skinner")) 
-          objs = eval_skinner_node(cnode, filename);
+          root = eval_skinner_node(cnode, filename);
         else if (!XMLUtil::node_is_comment(cnode))
           throw "Unknown node type";
       }               
@@ -125,7 +125,7 @@ namespace SCIRun {
       xmlFreeParserCtxt(ctxt);  
       xmlCleanupParser();
 
-      return objs;
+      return root;
     }
     
 
@@ -137,10 +137,12 @@ namespace SCIRun {
                             //TargetSignalMap_t &signals,
                             SignalThrower::SignalCatchers_t &catchers) 
     {
-      ASSERT(XMLUtil::node_is_element(node, "object"));
+      const bool root_node = XMLUtil::node_is_element(node, "skinner");
+      ASSERT(root_node || XMLUtil::node_is_element(node, "object"));
 
-      // classname is exact class type for this skiner drawable
-      string classname = XMLUtil::node_att_as_string(node, "class");
+      // classname is exact class type for this skinner drawable
+      string classname = "Skinner::Root";
+      XMLUtil::maybe_get_att_as_string(node, "class", classname);
 
       // The classname could refer to a previously parsed <definition> node
       // in that case, we instance the contained single object node as it were 
@@ -181,7 +183,7 @@ namespace SCIRun {
       // get the Variables that determine this instances unique properties
       // Create a new Variables context with our Unique ID
       // This creates new memory that needs to be freed by the object
-      variables = variables->spawn(unique_id);
+      variables = new Variables(unique_id, variables);
 
       // Spin through the xml var nodes and set their values
       for (Nodes_t::iterator mnode = merged_nodes.begin(); 
@@ -196,26 +198,31 @@ namespace SCIRun {
       // Now we have Variables, Create the Object!
       Drawable * object = 0;
 
+      if (root_node) {
+        object = new Root(variables);
+      } else {
       
-      // First, see if the current catchers can create and throw back 
-      // an object of type "classname"
-      string makerstr = classname+"_Maker";
-      // The special Signal to ask for a maker is created
-      event_handle_t find_maker = new MakerSignal(makerstr, variables);
-      // And thrown to the Catcher...
-      event_handle_t catcher_return = 
-        SignalThrower::throw_signal(catchers, find_maker);
-      // And we see what the cather returned
-      MakerSignal *made = dynamic_cast<MakerSignal*>(catcher_return.get_rep());
-      if (made && made->get_signal_name() == (makerstr+"_Done")) {
-        // It returned a Maker that we wanted... Hooray!
-        object = dynamic_cast<Drawable *>(made->get_signal_thrower());
-      }
+        // First, see if the current catchers can create and throw back 
+        // an object of type "classname"
+        string makerstr = classname+"_Maker";
+        // The special Signal to ask for a maker is created
+        event_handle_t find_maker = new MakerSignal(makerstr, variables);
+        // And thrown to the Catcher...
+        event_handle_t catcher_return = 
+          SignalThrower::throw_signal(catchers, find_maker);
+        // And we see what the cather returned
+        MakerSignal *made = dynamic_cast<MakerSignal*>(catcher_return.get_rep());
+        if (made && made->get_signal_name() == (makerstr+"_Done")) {
+          // It returned a Maker that we wanted... Hooray!
+          object = dynamic_cast<Drawable *>(made->get_signal_thrower());
+        } else {
 
-      // Search the static_makers table and see if it contains
-      // the classname we want....DEPRECIATED, maybe goes away?
-      if (makers_.find(classname) != makers_.end()) {
-        object = (*makers_[classname])(variables);
+          // Search the static_makers table and see if it contains
+          // the classname we want....DEPRECIATED, maybe goes away?
+          if (makers_.find(classname) != makers_.end()) {
+            object = (*makers_[classname])(variables);
+          }
+        }
       }
       
       // At this point, the if the object is uninstantiatable, return
@@ -226,8 +233,8 @@ namespace SCIRun {
         return 0;
       }
 
-      
-      //cerr << object->get_id() << " - adding catcher";
+      if (sci_getenv_p("SKINNER_XMLIO_DEBUG"))      
+        cerr << object->get_id() << " - adding catcher";
 
       // Now the object is created, fill the catchersondeck tree
       // with targets contained by the new object.
@@ -282,8 +289,9 @@ namespace SCIRun {
       if (have_unwanted_children) { 
           cerr << "class : " << classname << " does not allow <object>\n";
       }
-
-      //      cerr << object->get_id() << " - removing catcher";
+      
+      if (sci_getenv_p("SKINNER_XMLIO_DEBUG"))
+        cerr << object->get_id() << " - removing catcher";
 
       // Re-get all object ids, as we may have pushed some aliases 
       // during eval_skinner_node
@@ -299,28 +307,24 @@ namespace SCIRun {
     }
 
 
-    vector<Drawable *>
+    Root *
     XMLIO::eval_skinner_node(const xmlNodePtr node, const string &id)
     {
       ASSERT(XMLUtil::node_is_element(node, "skinner"));
       Drawables_t children;
       string_node_map_t definitions;
-      //      TargetSignalMap_t signals;
       SignalThrower::SignalCatchers_t catchers;
-      Variables *variables = new Variables(id);
 
       for (xmlNode *cnode=node->children; cnode!=0; cnode=cnode->next) {
         if (XMLUtil::node_is_element(cnode, "definition")) {
           eval_definition_node(cnode, definitions);
-        } else if (XMLUtil::node_is_element(cnode, "object")) {
-          children.push_back(eval_object_node(cnode, 
-                                              variables, 
-                                              definitions,
-                                              catchers));
         } 
       }
-      ASSERT(!children.empty());
-      return children;
+      
+      Drawable * object = eval_object_node(node, 0, definitions, catchers);
+      Skinner::Root *root = dynamic_cast<Skinner::Root*>(object);
+      ASSERT(root);
+      return root;
     }
 
     void

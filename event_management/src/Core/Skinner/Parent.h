@@ -41,7 +41,7 @@ namespace SCIRun {
       Parent(Variables *);
       virtual ~Parent();
       virtual propagation_state_e       process_event(event_handle_t e);
-      virtual int                       get_signal_id(const string &);;
+      virtual int                       get_signal_id(const string &);
       virtual MinMax                    get_minmax(unsigned int);
       virtual void                      set_children(const Drawables_t &);
     protected:

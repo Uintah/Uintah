@@ -48,12 +48,13 @@ using std::set;
 namespace SCIRun {
   namespace Skinner {
     class Variables {
-      Variables         (const string &id, Variables *parent);
+
     public:
-      Variables         (const string &id);
+      //      Variables         (const string &id);
+      Variables         (const string &id, Variables *parent=0);
       virtual           ~Variables();
 
-      Variables *       spawn(const string &id);
+      //      Variables *       spawn(const string &id);
       Variables *       parent();
       void              insert(const string &name,
                                const string &value, 

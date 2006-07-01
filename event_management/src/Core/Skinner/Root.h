@@ -25,41 +25,34 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : Window.h
+//    File   : Root.h
 //    Author : McKay Davis
-//    Date   : Tue Jun 27 13:04:12 2006
+//    Date   : Fri Jun 30 22:06:40 2006
 
-#ifndef SKINNER_WINDOW_H
-#define SKINNER_WINDOW_H
+#ifndef SKINNER_ROOT_H
+#define SKINNER_ROOT_H
 
 #include <Core/Skinner/Parent.h>
+#include <string>
+using std::string;
 
 namespace SCIRun {
-  class OpenGLContext;
-  class ThrottledRunnable;
-  class Thread;
   namespace Skinner {
-    class GLWindow : public Parent {
+    class Variables;
+    class GLWindow;
+    class Root : public Parent {
     public:
-      GLWindow (Variables *);
-      virtual ~GLWindow();
-      virtual propagation_state_e       process_event(event_handle_t);
-      virtual MinMax                    get_minmax(unsigned int);
+      Root(Variables *);
+      virtual ~Root();
+      void spawn_redraw_threads();
     private:
-      CatcherFunction_t                 close;
-      int                               width_;
-      int                               height_;
-      int                               posx_;
-      int                               posy_;
-      bool                              border_;
-      OpenGLContext *                   context_;
-      ThrottledRunnable *               spawner_runnable_;
-      Thread *                          spawner_thread_;
-      ThrottledRunnable *               draw_runnable_;
-      Thread *                          draw_thread_;
+      CatcherFunction_t GLWindow_Maker;
+      typedef vector<GLWindow *> GLWindows_t;
+      GLWindows_t windows_;
     };
-
   }
 }
+
+
 
 #endif

@@ -115,7 +115,6 @@ namespace SCIRun {
 
     BaseTool::propagation_state_e
     Box::make_red(event_handle_t event) {
-      Signal *signal = Signal::Cast(event);
       color_.r = 1.0;
       color_.g = 0.0;
       color_.b = 0.0;
@@ -126,7 +125,6 @@ namespace SCIRun {
 
     BaseTool::propagation_state_e
     Box::make_blue(event_handle_t event) {
-      Signal *signal = Signal::Cast(event);
       color_.r = 0.0;
       color_.g = 0.0;
       color_.b = 1.0;
@@ -138,7 +136,6 @@ namespace SCIRun {
 
     BaseTool::propagation_state_e
     Box::make_green(event_handle_t event) {
-      Signal *signal = Signal::Cast(event);
       color_.r = 0.0;
       color_.g = 1.0;
       color_.b = 0.0;

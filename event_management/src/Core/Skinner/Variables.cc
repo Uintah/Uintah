@@ -44,21 +44,16 @@
 
 namespace SCIRun {
   namespace Skinner {
-    Variables::Variables(const string &id) 
-      : variables_(),
-        parent_(0),
-        children_()
-    {
-      insert("id", id);
-    }
-
     Variables::Variables(const string &id, Variables *parent) 
       : variables_(),
         parent_(parent),
         children_()
     {
-      ASSERT(parent);
-      insert("id", id);
+      if (parent) {
+        insert("id", parent->get_id()+":"+id);
+      } else {
+        insert("id", id);
+      }
     }
 
     Variables::~Variables() 
@@ -77,11 +72,11 @@ namespace SCIRun {
       }
     }
 
-    Variables *
-    Variables::spawn(const string &id)
-    {
-      return new Variables(get_id()+":"+id, this);
-    }
+//     Variables *
+//     Variables::spawn(const string &id)
+//     {
+//       return new Variables(get_id()+":"+id, this);
+//     }
 
     Variables *
     Variables::parent() {
