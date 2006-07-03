@@ -61,6 +61,8 @@ namespace SCIRun {
                                const string &type_str = "string",
                                bool propagate = false);
 
+      bool              exists(const string &varname) const;
+
       string            get_id() const;
       int               get_int(const string &);
       double            get_double(const string &);

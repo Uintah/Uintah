@@ -56,7 +56,6 @@ namespace SCIRun {
       XMLIO::register_maker<Box>();
       XMLIO::register_maker<Collection>();
       XMLIO::register_maker<Frame>();
-      //      XMLIO::register_maker<GLWindow>();
       XMLIO::register_maker<Gradient>();
       XMLIO::register_maker<Grid>();
       XMLIO::register_maker<Layout>();
@@ -74,8 +73,12 @@ namespace SCIRun {
         init_skinner();  
         root = Skinner::XMLIO::load(filename);
         root->spawn_redraw_threads();
+      } catch (const string &error) {
+        cerr << "Skinner Error: " << error << std::endl;
+      } catch (const char *&error) {
+        cerr << "Skinner Error: " << error << std::endl;
       } catch (...) {
-        cerr << "Skinner Exception.\n";
+        cerr << "Skinner Exception" << std::endl;
       }
       return root;
     }

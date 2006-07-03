@@ -44,8 +44,10 @@ Skinner::Gradient::Gradient(Variables *variables,
                             const Color &se,
                             const Color &ne,
                             const Color &nw)
-  : Skinner::Drawable(variables)
+  : Skinner::Drawable(variables),
+    backslash_(false)
 {
+  variables->maybe_get_bool("backslash", backslash_);
   colors_[0] = sw;
   colors_[1] = se;
   colors_[2] = ne;
@@ -63,15 +65,39 @@ Skinner::Gradient::render_gl()
   const double y2 = region.y2();
 
   glShadeModel(GL_SMOOTH);
-  glBegin(GL_QUADS);
-  glColor4dv(&colors_[0].r);
-  glVertex3d(x,y,0);
-  glColor4dv(&colors_[1].r);
-  glVertex3d(x2,y,0);
-  glColor4dv(&colors_[2].r);
-  glVertex3d(x2,y2,0);
-  glColor4dv(&colors_[3].r);
-  glVertex3d(x,y2,0);
+  glBegin(GL_TRIANGLES);
+
+  if (backslash_) {
+    glColor4dv(&colors_[0].r);
+    glVertex3d(x,y,0);
+    glColor4dv(&colors_[1].r);
+    glVertex3d(x2,y,0);
+    glColor4dv(&colors_[3].r);
+    glVertex3d(x,y2,0);
+
+
+    glColor4dv(&colors_[1].r);
+    glVertex3d(x2,y,0);
+    glColor4dv(&colors_[2].r);
+    glVertex3d(x2,y2,0);
+    glColor4dv(&colors_[3].r);
+    glVertex3d(x,y2,0);
+  } else {
+
+    glColor4dv(&colors_[0].r);
+    glVertex3d(x,y,0);
+    glColor4dv(&colors_[2].r);
+    glVertex3d(x2,y2,0);
+    glColor4dv(&colors_[3].r);
+    glVertex3d(x,y2,0);
+
+    glColor4dv(&colors_[0].r);
+    glVertex3d(x,y,0);
+    glColor4dv(&colors_[1].r);
+    glVertex3d(x2,y,0);
+    glColor4dv(&colors_[2].r);
+    glVertex3d(x2,y2,0);
+  }
 
   glEnd();
   CHECK_OPENGL_ERROR();
@@ -101,7 +127,7 @@ Skinner::Gradient::maker(Variables *vars)
   Color se(0.0, 1.0, 0.0, 1.0);
   vars->maybe_get_color("bottom-color",se);
   vars->maybe_get_color("right-color",se);
-  vars->maybe_get_color("sw-color",se);
+  vars->maybe_get_color("se-color",se);
 
   Color ne(0.0, 1.0, 0.0, 1.0);
   vars->maybe_get_color("top-color",ne);

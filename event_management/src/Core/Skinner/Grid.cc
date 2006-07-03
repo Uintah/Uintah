@@ -34,6 +34,7 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Util/Assert.h>
+#include <Core/Containers/StringUtil.h>
 #include <iostream>
 
 
@@ -147,9 +148,13 @@ namespace SCIRun {
       //      row = cells_.size() - row;
       row--;
       col--;//cells_[row].size() - col;
-      if (cells_[row][col])
-        std::cerr << std::endl;
-      ASSERT(cells_[row][col] == 0);
+
+      if (cells_[row][col]) {
+        throw (get_id() + "Row: " + to_string(row) + 
+               " Col: " + to_string(col) + " already occupied by: " +
+               cells_[row][col]->get_id());
+      }
+
       cells_[row][col] = obj;
 
       col_width_[col] = Max(col_width_[col], width);

@@ -52,6 +52,7 @@ namespace SCIRun {
     private:
       void                         render_gl();
       Skinner::Color               colors_[4];
+      bool                         backslash_;
     };
   }
 } // End namespace SCIRun
