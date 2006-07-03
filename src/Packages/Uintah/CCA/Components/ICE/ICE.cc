@@ -144,6 +144,7 @@ ICE::~ICE()
        t_iter != d_modelSetup->tvars.end(); t_iter++){
        TransportedVariable* tvar = *t_iter;
     VarLabel::destroy(tvar->var_Lagrangian);
+    VarLabel::destroy(tvar->var_adv);
     delete tvar;
   }
   cout_doing << d_myworld->myrank() << " Doing: destorying refluxing variables " << endl;
