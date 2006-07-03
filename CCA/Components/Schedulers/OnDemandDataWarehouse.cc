@@ -470,11 +470,13 @@ OnDemandDataWarehouse::recvMPI(SendState& rs, BufferInfo& buffer,
         }
         else {
           psubset = old_dw->getParticleSubset(matlIndex,patch,low,high);
+#if 0
           if (numParticles != psubset->numParticles()) {
             cout << d_myworld->myrank() << " BAD: pset " << psubset->getLow() << " " << psubset->getHigh() << " " << psubset->numParticles() << " particles, src: " << from << " range: " << low << " " << high << " " << numParticles << " particles " << " patch " << patch->getLowIndex() << " " << patch->getHighIndex() << " " << matlIndex << endl;
             //old_dw->printParticleSubsets();
             ASSERTEQ(numParticles, psubset->numParticles());
           }
+#endif
         }
         ParticleSubset* recvset = new ParticleSubset(psubset->getParticleSet(),
                                                      true, matlIndex, patch, 
