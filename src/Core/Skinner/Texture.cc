@@ -34,6 +34,7 @@
 #include <Core/Geom/TextureObj.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/FileUtils.h>
+#include <Core/Math/MiscMath.h>
 #include <sci_gl.h>
 #include <sci_glu.h>
 
@@ -111,10 +112,10 @@ namespace SCIRun {
       float tw = repeatx_ ? (region.width()/float(tex_->width())) : 1.0;
       float th = repeaty_ ? (region.height()/float(tex_->height())) : 1.0;
 
-      float tex_coords[8] = {0.0, 0.0, 
-                             tw, 0.0,
-                             tw, th,
-                             0.0, th };
+      float tex_coords[8] = {0, Floor(th)-th, 
+                             tw, Floor(th)-th,
+                             tw, Floor(th),
+                             0.0, Floor(th) };
         
       glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
                       //                        GL_CLAMP_TO_EDGE);
