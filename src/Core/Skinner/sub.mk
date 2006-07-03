@@ -54,7 +54,17 @@ SRCS     += \
 	$(SRCDIR)/Variables.cc      	\
 	$(SRCDIR)/XMLIO.cc    
 
-PSELIBS := Core/Containers Core/Exceptions Core/Thread Core/Datatypes Core/Geom Core/Util Core/XMLUtil Core/GuiInterface Core/Events
+PSELIBS := Core/Containers  \
+           Core/Datatypes \
+           Core/Events \
+           Core/Exceptions \
+	   Core/Geom  \
+	   Core/Geometry  \
+	   Core/Math  \
+	   Core/Persistent  \
+	   Core/Thread \
+	   Core/Util \
+	   Core/XMLUtil
 
 LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY) $(GL_LIBRARY) $(TEEM_LIBRARY) $(XML2_LIBRARY)
 

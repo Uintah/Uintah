@@ -180,9 +180,10 @@ Painter::SliceWindow::SliceWindow(Skinner::Variables *variables,
   show_guidelines_(0,1),//(!ctx) ? 0 : ctx->subVar("show_guidelines"),1),
   cursor_pixmap_(-1)
 {
-  int axis = 3;
+  int axis = 2;
   variables->maybe_get_int("axis", axis);
-  axis_ = axis;
+  set_axis(axis);
+  //  axis_ = axis;
 }
 
 
@@ -406,13 +407,16 @@ Painter::Painter(Skinner::Variables *variables, GuiContext* ctx) :
   tools_(),
   anatomical_coordinates_((!ctx) ? 0 : ctx->subVar("anatomical_coordinates"), 1),
   show_grid_((!ctx) ? 0 : ctx->subVar("show_grid"), 1),
-  show_text_((!ctx) ? 0 : ctx->subVar("show_text"), 1)
+  show_text_((!ctx) ? 0 : ctx->subVar("show_text"), 1),
+  volume_lock_("Volume")
 {
   tm_.add_tool(new PointerToolSelectorTool(this), 50);
   tm_.add_tool(new KeyToolSelectorTool(this), 51);
+
   REGISTER_CATCHER_TARGET(Painter::quit);
   REGISTER_CATCHER_TARGET(Painter::SliceWindow_Maker);
   REGISTER_CATCHER_TARGET(Painter::start_brush_tool);
+  REGISTER_CATCHER_TARGET(Painter::load_CThead);
 }
 
 Painter::~Painter()
@@ -444,6 +448,7 @@ double_to_string(double val)
 
 void
 Painter::SliceWindow::render_gl() {
+  painter_->volume_lock_.lock();
   //  profiler.disable();
   profiler.enter("SliceWindow::render_gl");
 
@@ -535,6 +540,7 @@ Painter::SliceWindow::render_gl() {
   profiler.print();
 
   CHECK_OPENGL_ERROR();
+  painter_->volume_lock_.unlock();
 }
 
 
@@ -995,8 +1001,10 @@ Painter::SliceWindow::setup_gl_view()
   double cx = center_(x_axis());
   double cy = center_(y_axis());
   
-  double maxz = center_(axis_) + Min(hwid, hhei)*zoom_()/50.0;
-  double minz = center_(axis_) - Min(hwid, hhei)*zoom_()/50.0;
+  double diagonal = hwid*hwid+hhei*hhei;
+
+  double maxz = center_(axis_) + diagonal*zoom_()/100.0;
+  double minz = center_(axis_) - diagonal*zoom_()/100.0;
 
   glMatrixMode(GL_PROJECTION);
   glLoadIdentity();
@@ -1435,7 +1443,7 @@ Painter::SliceWindow::extract_slices() {
 
 void
 Painter::SliceWindow::set_axis(unsigned int axis) {
-  axis_ = axis;
+  axis_ = axis % 3;
   normal_ = Vector(axis == 0 ? 1 : 0,
                    axis == 1 ? 1 : 0,
                    axis == 2 ? 1 : 0);
@@ -2058,6 +2066,7 @@ Painter::undo_volume() {
 void
 Painter::recompute_volume_list()
 {
+  volume_lock_.lock();
   string currentname = "";
   if (current_volume_)
     currentname = current_volume_->name_.get();
@@ -2102,6 +2111,7 @@ Painter::recompute_volume_list()
     current_volume_ = newcurrent;
   
   extract_all_window_slices();
+  volume_lock_.unlock();
 
   redraw_all();  
 }
@@ -2406,6 +2416,23 @@ Painter::start_brush_tool(event_handle_t event) {
 BaseTool::propagation_state_e 
 Painter::quit(event_handle_t event) {
   EventManager::add_event(new QuitEvent());
+  return STOP_E;
+}
+
+
+
+BaseTool::propagation_state_e 
+Painter::load_CThead(event_handle_t event) {
+  BundleHandle bundle = new Bundle();
+  
+  const string filename = "/SCIRun/Data/CThead.nhdr";
+  //const string filename = "/SCIRun/Data/UCLA/ba03-float.nrrd";
+  NrrdDataHandle nrrd_handle = new NrrdData();
+  Nrrd *nrrd = nrrd_handle->nrrd_;
+  nrrdLoad(nrrd, filename.c_str(), 0); 
+  bundle->setNrrd(filename, nrrd_handle);
+
+  add_bundle(bundle); 
   return STOP_E;
 }
 

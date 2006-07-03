@@ -678,6 +678,8 @@ private:
   UIint			show_grid_;
   UIint			show_text_;
 
+  Mutex                 volume_lock_;
+
   typedef vector<BundleHandle> Bundles;
 
   // Methods for drawing to the GL window
@@ -742,6 +744,7 @@ private:
   CatcherFunction_t     SliceWindow_Maker;
   CatcherFunction_t     start_brush_tool;
   CatcherFunction_t     quit;
+  CatcherFunction_t     load_CThead;
 public:
   static Skinner::DrawableMakerFunc_t maker;
   static string         class_name() { return "Painter"; }

@@ -41,6 +41,7 @@
 #include <Core/Events/X11EventSpawner.h>
 #include <Core/Util/Environment.h>
 #include <Core/Geom/ShaderProgramARB.h>
+#include <Core/Events/BaseEvent.h>
 #include <sci_gl.h>
 #include <sci_glu.h>
 #include <sci_glx.h>
@@ -185,7 +186,9 @@ namespace SCIRun {
 
     BaseTool::propagation_state_e
     GLWindow::close(event_handle_t) {
-      cerr << "Close Window\n";
+      QuitEvent *qe = new QuitEvent();
+      qe->set_target(get_id());
+      EventManager::add_event(qe);
     }
 
   }

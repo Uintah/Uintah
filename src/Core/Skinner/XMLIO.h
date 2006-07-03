@@ -39,11 +39,13 @@
 #include <string>
 #include <map>
 #include <list>
+#include <vector>
 
 using std::string;
 using std::map;
 using std::pair;
 using std::list;
+using std::vector;
 
 
 namespace SCIRun {
@@ -68,7 +70,20 @@ namespace SCIRun {
       virtual ~XMLIO();
 
       typedef map<string, xmlNodePtr> string_node_map_t;
+
+      typedef vector<string_node_map_t> definition_nodes_t;
+
       typedef map<string, DrawableMakerFunc_t *> DrawableMakerMap_t;
+      typedef vector<xmlNodePtr> merged_nodes_t;
+
+
+      static xmlNodePtr find_definition(definition_nodes_t &,
+                                        const string &classname);
+      
+      static void eval_merged_object_nodes_and_push_definitions
+      (merged_nodes_t &, definition_nodes_t &);
+                                 
+
 
       //      typedef pair<string, SignalThrower *> TossedSignal_t;
       //      typedef map<string, TossedSignal_t> TargetSignalMap_t;
@@ -86,7 +101,7 @@ namespace SCIRun {
       
       static Drawable *  eval_object_node(const xmlNodePtr,
                                           Variables *variables,
-                                          string_node_map_t &,
+                                          definition_nodes_t &,
                                           SignalThrower::SignalCatchers_t &);
 
 

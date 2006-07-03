@@ -250,8 +250,14 @@ namespace SCIRun {
       value(val),
       var_type(vtype),
       propagate(prop) 
-      {
-      }
+    {
+    }
+
+    bool
+    Variables::exists(const string &varname) const {
+      string temp;
+      return maybe_get_string(varname, temp);
+    }
     
   }
 }

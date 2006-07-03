@@ -32,8 +32,6 @@
 #include <Core/Events/EventManager.h>
 #include <Core/Skinner/XMLIO.h>
 #include <Core/Util/Environment.h>
-#include <Core/Bundle/Bundle.h>
-#include <Core/Events/Tools/QuitMainWindowTool.h>
 #include <StandAlone/Apps/Painter/Painter.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -88,38 +86,14 @@ start_trail_file() {
     }
   }
 }  
-
- 
-Painter *
-create_painter(const char *filename) {
-  BundleHandle bundle = new Bundle();
-
-  if (filename) {
-    NrrdDataHandle nrrd_handle = new NrrdData();
-    Nrrd *nrrd = nrrd_handle->nrrd_;
-    nrrdLoad(nrrd, filename, 0); 
-    bundle->setNrrd(filename, nrrd_handle);
-  }
-
-  Painter *painter = new Painter(0,0);
-  painter->add_bundle(bundle); 
-  //  Skinner::XMLIO::register_maker<Painter::SliceWindow>((void *)painter); 
-  return painter;
-}  
-
-void
-listen_for_events() {
-  EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
-  EventManager *em = new EventManager();
-  Thread *em_thread = new Thread(em, "Event Manager");
-  start_trail_file();
-  em_thread->join();
-  EventManager::stop_trail_file();
-}  
   
 
 string
 get_skin_filename() {
+  if (!sci_getenv("SKINNER_DIR")) {
+    sci_putenv("SKINNER_DIR",
+               string(sci_getenv("SCIRUN_SRCDIR"))+"/Core/Skinner/Data");
+  }
   if (sci_getenv("SKINNER_SKIN")) {
     return sci_getenv("SKINNER_SKIN");
   } 
@@ -132,13 +106,17 @@ get_skin_filename() {
 
 int
 main(int argc, char *argv[], char **environment) {
-  create_sci_environment(environment, argv[0]);
-  
+  create_sci_environment(environment, argv[0]);  
   Skinner::XMLIO::register_maker<Painter>();
-  BaseTool *skinner = Skinner::load_skin(get_skin_filename());
-  listen_for_events();
-  //  delete skinner;
-  
+  Skinner::load_skin(get_skin_filename());
+  EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
+  EventManager *em = new EventManager();
+  Thread *em_thread = new Thread(em, "Event Manager");
+  start_trail_file();
+  //em->wait()->down();
+  em_thread->join();
+  EventManager::stop_trail_file();
+
   return 0;
 }
 
@@ -147,3 +125,4 @@ main(int argc, char *argv[], char **environment) {
 #pragma reset woff 1424
 #pragma reset woff 1209 
 #endif
+

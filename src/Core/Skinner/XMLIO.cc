@@ -129,11 +129,57 @@ namespace SCIRun {
     }
     
 
+    xmlNodePtr
+    XMLIO::find_definition(definition_nodes_t &definitions,
+                           const string &classname) 
+    {
+      // Go backwards through the vector becasue we want to search
+      // UP the current object context tree defined in the skinner file
+      // looking for definitions in the nearest ancestor before looking
+      // at their parent node
+      definition_nodes_t::reverse_iterator def_map_iter = definitions.rbegin();
+      definition_nodes_t::reverse_iterator def_map_end = definitions.rend();
+      for (;def_map_iter != def_map_end; ++def_map_iter) {
+        string_node_map_t::iterator found_def = def_map_iter->find(classname);
+        if (found_def != def_map_iter->end()) {
+          return found_def->second;
+        }
+      }
+      return 0;
+    }
+
+
+
+
+    void
+    XMLIO::eval_merged_object_nodes_and_push_definitions
+    (merged_nodes_t &merged_nodes, definition_nodes_t &defs)
+    {
+      defs.push_back(string_node_map_t());
+      string_node_map_t &node_def_map = defs.back();
+
+      // Spin through the xml var nodes and set their values
+      for (merged_nodes_t::iterator mnode = merged_nodes.begin(); 
+           mnode != merged_nodes.end(); ++mnode) {        
+        for (xmlNode *cnode = (*mnode)->children; cnode; cnode = cnode->next) {
+          if (XMLUtil::node_is_element(cnode, "definition")) {
+            eval_definition_node(cnode, node_def_map);
+          } 
+        }     
+      } 
+
+      if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
+        cerr << std::endl;
+      }
+
+    }
+
+
 
     Drawable *
     XMLIO::eval_object_node(const xmlNodePtr node, 
                             Variables *variables,
-                            string_node_map_t &definitions,
+                            definition_nodes_t &definitions,
                             //TargetSignalMap_t &signals,
                             SignalThrower::SignalCatchers_t &catchers) 
     {
@@ -142,16 +188,27 @@ namespace SCIRun {
 
       // classname is exact class type for this skinner drawable
       string classname = "Skinner::Root";
-      XMLUtil::maybe_get_att_as_string(node, "class", classname);
+      bool foundclassname = 
+        XMLUtil::maybe_get_att_as_string(node, "class", classname);
 
-      // The classname could refer to a previously parsed <definition> node
-      // in that case, we instance the contained single object node as it were 
-      // createed in the current context.  <var>s and <signals> are tags
-      // are allowed in both this <object> tag and the <definiition>
-      // encapsulated <object> tag.  The Variables and signals of the
-      // encapsulated tag are merged last.
-      string_node_map_t::iterator definition = definitions.find(classname);
+      if (!root_node && !foundclassname) { // redundant, as dtd should fail
+        cerr << "Object does not have classname\n";
+        return 0;
+      }
 
+      // If the string in the xml file is proceeded with a $, then
+      // its a variable dereference
+      while (classname[0] == '$' &&
+             variables->maybe_get_string
+             (classname.substr(1,classname.length()-1), classname)) 
+      {
+        if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
+            cerr << variables->get_id() << " is actually a classname: " 
+                 << classname << "\n";
+        }
+      }
+
+      
       // Object id is not required, create unique one if not found
       // The first merged node contains the id
       string unique_id = "";
@@ -161,22 +218,6 @@ namespace SCIRun {
         static int objcount = 0;
         unique_id = classname+"."+to_string(objcount++);
       }
-      
-      typedef vector<xmlNodePtr> Nodes_t;
-      Nodes_t merged_nodes(1,node);
-
-      // Is this object tag, just an alias to another object node?
-      bool isa_definition = (definition != definitions.end());
-      if (isa_definition) {
-        // If we are just a reference to a definition, we need to switch
-        // classnames to the encapsulated object
-        const xmlNodePtr dnode = definition->second;
-        classname = XMLUtil::node_att_as_string(dnode, "class");
-        
-        // When searching for vars, signals, and children
-        // we need to merge the two nodes
-        merged_nodes.push_back(definition->second);
-      }
 
 
       // First, before we can even construct the object, we need to 
@@ -184,9 +225,53 @@ namespace SCIRun {
       // Create a new Variables context with our Unique ID
       // This creates new memory that needs to be freed by the object
       variables = new Variables(unique_id, variables);
+      
+
+      // The classname could refer to a previously parsed <definition> node
+      // in that case, we instance the contained single object node as it were 
+      // createed in the current context.  <var>s and <signals> are tags
+      // are allowed in both this <object> tag and the <definiition>
+      // encapsulated <object> tag.  The Variables, signals/catchers of the
+      // encapsulated tag are merged last.
+      // Is this object tag, just an alias to another object node?
+      // Definitions can contain nested already decalred definitions as
+      // their object classname, unroll the definitions  until we find
+      // an non previously defined classname
+      merged_nodes_t merged_nodes(1,node);
+      xmlNodePtr dnode = find_definition(definitions, classname);
+      while (dnode)
+      {
+        // When searching for vars, signals, and children
+        // we need to merge the encapsulated nodes
+        merged_nodes.push_back(dnode);
+        // If we are just a reference to a definition, we need to switch
+        // classnames to the encapsulated object
+        classname = XMLUtil::node_att_as_string(dnode, "class");
+
+        if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
+          cerr << variables->get_id() << " is actually a classname: " 
+               << classname << "\n";
+        }
+
+        // If the string in the xml file is proceeded with a $, then
+        // its a variable dereference
+        while (classname[0] == '$' &&
+               variables->maybe_get_string
+               (classname.substr(1,classname.length()-1), classname)) 
+        {
+          if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
+            cerr << variables->get_id() << " is actually a classname: " 
+                 << classname << "\n";
+          }
+        }
+
+        // Iteratre to the next nested definition, if there is one...
+        dnode = find_definition(definitions, classname);
+      }
+
 
       // Spin through the xml var nodes and set their values
-      for (Nodes_t::iterator mnode = merged_nodes.begin(); 
+      for (merged_nodes_t::iterator mnode = merged_nodes.begin(); 
            mnode != merged_nodes.end(); ++mnode) {        
         for (xmlNode *cnode = (*mnode)->children; cnode; cnode = cnode->next) {
           if (XMLUtil::node_is_element(cnode, "var")) {
@@ -233,8 +318,9 @@ namespace SCIRun {
         return 0;
       }
 
-      if (sci_getenv_p("SKINNER_XMLIO_DEBUG"))      
+      if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
         cerr << object->get_id() << " - adding catcher";
+      }
 
       // Now the object is created, fill the catchersondeck tree
       // with targets contained by the new object.
@@ -251,7 +337,7 @@ namespace SCIRun {
 
       // Now the Catchers On Deck are ready, look if the xml file has
       // created any signals to hookup
-      for (Nodes_t::iterator mnode = merged_nodes.begin();
+      for (merged_nodes_t::iterator mnode = merged_nodes.begin();
            mnode != merged_nodes.end(); ++mnode) {
         for (xmlNode *cnode = (*mnode)->children; cnode; cnode = cnode->next) {
           if (XMLUtil::node_is_element(cnode, "signal")) {
@@ -259,13 +345,21 @@ namespace SCIRun {
           } 
         }
       }
-      
+         
+
+      // Search for definitions
+      if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
+        cerr << object->get_id() << " - adding definitions:";
+      }
+
+      eval_merged_object_nodes_and_push_definitions(merged_nodes, definitions);
+                               
       // Time to look for children object nodes
       Drawables_t children(0);
       bool have_unwanted_children = false;
       Parent *parent = dynamic_cast<Parent *>(object);
       // Search the merged nodes for object nodes.
-      for (Nodes_t::iterator mnode = merged_nodes.begin(); 
+      for (merged_nodes_t::iterator mnode = merged_nodes.begin(); 
            mnode != merged_nodes.end(); ++mnode) {        
         for (xmlNode *cnode = (*mnode)->children; cnode; cnode = cnode->next) {
           if (XMLUtil::node_is_element(cnode, "object")) {
@@ -290,11 +384,21 @@ namespace SCIRun {
           cerr << "class : " << classname << " does not allow <object>\n";
       }
       
-      if (sci_getenv_p("SKINNER_XMLIO_DEBUG"))
-        cerr << object->get_id() << " - removing catcher";
 
-      // Re-get all object ids, as we may have pushed some aliases 
-      // during eval_skinner_node
+      // We are done w/ local definitions as all children have been made
+      if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
+        cerr << object->get_id() << " - popping definitions\n";
+      }
+      definitions.pop_back();
+
+      if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
+        cerr << object->get_id() << " - removing catcher";
+      }
+
+
+      // After having children, this node is done/ w/ local catcher targets, 
+      // Re-get all object ids, as we may have pushed 
+      // some aliases during eval_signal_node
       catcher_targets = object->get_all_target_ids();
       for(id_iter  = catcher_targets.begin();
           id_iter != catcher_targets.end(); ++id_iter) {
@@ -311,15 +415,8 @@ namespace SCIRun {
     XMLIO::eval_skinner_node(const xmlNodePtr node, const string &id)
     {
       ASSERT(XMLUtil::node_is_element(node, "skinner"));
-      Drawables_t children;
-      string_node_map_t definitions;
+      definition_nodes_t definitions;
       SignalThrower::SignalCatchers_t catchers;
-
-      for (xmlNode *cnode=node->children; cnode!=0; cnode=cnode->next) {
-        if (XMLUtil::node_is_element(cnode, "definition")) {
-          eval_definition_node(cnode, definitions);
-        } 
-      }
       
       Drawable * object = eval_object_node(node, 0, definitions, catchers);
       Skinner::Root *root = dynamic_cast<Skinner::Root*>(object);
@@ -333,6 +430,9 @@ namespace SCIRun {
     {
       ASSERT(XMLUtil::node_is_element(node, "definition"));
       string classname = XMLUtil::node_att_as_string(node, "class");
+      if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
+        cerr << classname << ", ";
+      }
 
       for (xmlNode *cnode=node->children; cnode!=0; cnode=cnode->next) {
         if (XMLUtil::node_is_element(cnode, "object")) {
@@ -349,8 +449,16 @@ namespace SCIRun {
       ASSERT(variables);
       bool propagate = 
         XMLUtil::node_att_as_string(node, "propagate") == "yes" ? true : false;
+      bool overwrite = 
+        XMLUtil::node_att_as_string(node, "overwrite") == "yes" ? true : false;
 
-      variables->insert(XMLUtil::node_att_as_string(node, "name"),
+      const string varname = XMLUtil::node_att_as_string(node, "name");
+
+      if (!overwrite && variables->exists(varname)) {
+        return;
+      }
+
+      variables->insert(varname,
                         XMLUtil::xmlChar_to_char(node->children->content),
                         XMLUtil::node_att_as_string(node, "type"),
                         propagate);

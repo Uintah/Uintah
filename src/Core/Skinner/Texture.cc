@@ -105,28 +105,42 @@ namespace SCIRun {
       glRotated(degrees_, 0,0,1);
       glTranslated(-0.5, -0.5, 0.0);
 
-      if (!tex_->tex_id()) {
-        repeatx_ = false;
-        repeaty_ = false;
+      const RectRegion &region = get_region();
+
         
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
-                        GL_CLAMP_TO_EDGE);
-        //                        repeatx_ ? GL_REPEAT : GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
-                        GL_CLAMP_TO_EDGE);
-        //                        repeaty_ ? GL_REPEAT : GL_CLAMP_TO_EDGE);
-      }
+      float tw = repeatx_ ? (region.width()/float(tex_->width())) : 1.0;
+      float th = repeaty_ ? (region.height()/float(tex_->height())) : 1.0;
+
+      float tex_coords[8] = {0.0, 0.0, 
+                             tw, 0.0,
+                             tw, th,
+                             0.0, th };
+        
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S,
+                      //                        GL_CLAMP_TO_EDGE);
+                      //repeatx_ ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+                      GL_REPEAT);
+      
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T,
+                      //                        GL_CLAMP_TO_EDGE);
+                      //                        repeaty_ ? GL_REPEAT : GL_CLAMP_TO_EDGE);
+                      GL_REPEAT);
+      //      }
+      
+
+
+
 
       CHECK_OPENGL_ERROR();
 
-      const RectRegion &region = get_region();
+
       Point coords[4];
       coords[0] = Point(region.x1(), region.y1(), 0.0);
       coords[1] = Point(region.x2(), region.y1(), 0.0);
       coords[2] = Point(region.x2(), region.y2(), 0.0);
       coords[3] = Point(region.x1(), region.y2(), 0.0);
 
-      float tex_coords[8] = {0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0, 1.0};
+
 
       tex_->draw(4, coords, tex_coords);
       glMatrixMode(GL_TEXTURE);
