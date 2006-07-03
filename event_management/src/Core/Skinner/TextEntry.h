@@ -25,55 +25,32 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : Parent.cc
+//    File   : TextEntry.h
 //    Author : McKay Davis
-//    Date   : Thu Jun 29 19:23:07 2006
+//    Date   : Mon Jul  3 01:01:07 2006
+
+#ifndef SKINNER_TEXTENTRY_H
+#define SKINNER_TEXTENTRY_H
 
 #include <Core/Skinner/Parent.h>
-
+#include <string>
+using std::string;
 
 namespace SCIRun {
   namespace Skinner {
-    Parent::Parent(Variables *vars) :
-      Drawable(vars),
-      children_()
-    {
-    }
-    
-    Parent::~Parent() {
-      for (Drawables_t::iterator citer = children_.begin(); 
-           citer != children_.end(); ++citer)
-     {
-       delete *citer;
-     }
-    }
-
-    BaseTool::propagation_state_e
-    Parent::process_event(event_handle_t e) {
-      for (Drawables_t::iterator citer = children_.begin(); 
-           citer != children_.end(); ++citer)
-      {
-        (*citer)->set_region(get_region());
-        (*citer)->process_event(e);
-      }
-      return Drawable::process_event(e);
-    }
-
-    int
-    Parent::get_signal_id(const string &str) {
-      return Drawable::get_signal_id(str);
-    }
-
-
-    MinMax
-    Parent::get_minmax(unsigned int dir) {
-      return Drawable::get_minmax(dir);
-    }
-
-    void
-    Parent::set_children(const Drawables_t &children) {
-      children_ = children;
-    }
+    class TextEntry : public Parent {
+    public:
+      TextEntry (Variables *);
+      virtual ~TextEntry();
+      virtual propagation_state_e       process_event(event_handle_t);
+      virtual MinMax                    get_minmax(unsigned int);
+      static string                     class_name() { return "TextEntry"; }
+      static DrawableMakerFunc_t        maker;
+    private:
+      string                            str_;
+      bool                              inside_;
+    };
   }
 }
-    
+
+#endif

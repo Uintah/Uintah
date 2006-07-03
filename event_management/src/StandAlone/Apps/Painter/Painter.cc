@@ -411,12 +411,17 @@ Painter::Painter(Skinner::Variables *variables, GuiContext* ctx) :
   volume_lock_("Volume")
 {
   tm_.add_tool(new PointerToolSelectorTool(this), 50);
-  tm_.add_tool(new KeyToolSelectorTool(this), 51);
+  //  tm_.add_tool(new KeyToolSelectorTool(this), 51);
 
+  REGISTER_CATCHER_TARGET(Painter::Autoview);
   REGISTER_CATCHER_TARGET(Painter::quit);
   REGISTER_CATCHER_TARGET(Painter::SliceWindow_Maker);
   REGISTER_CATCHER_TARGET(Painter::start_brush_tool);
   REGISTER_CATCHER_TARGET(Painter::load_CThead);
+  REGISTER_CATCHER_TARGET(Painter::LoadFile);
+  REGISTER_CATCHER_TARGET(Painter::CopyLayer);
+  REGISTER_CATCHER_TARGET(Painter::DeleteLayer);
+  REGISTER_CATCHER_TARGET(Painter::NewLayer);
 }
 
 Painter::~Painter()
@@ -2433,6 +2438,63 @@ Painter::load_CThead(event_handle_t event) {
   bundle->setNrrd(filename, nrrd_handle);
 
   add_bundle(bundle); 
+  return STOP_E;
+}
+
+BaseTool::propagation_state_e 
+Painter::CopyLayer(event_handle_t) {
+  copy_current_layer();
+  return STOP_E;
+}
+
+BaseTool::propagation_state_e 
+Painter::DeleteLayer(event_handle_t) {
+  kill_current_layer();
+  return STOP_E;
+}
+
+BaseTool::propagation_state_e 
+Painter::NewLayer(event_handle_t) {
+  new_current_layer();
+  return STOP_E;
+}
+
+
+BaseTool::propagation_state_e 
+Painter::LoadFile(event_handle_t event) {
+  BundleHandle bundle = new Bundle();
+  
+  string filename = "";
+  if (get_vars()->maybe_get_string("TextEntry::value", filename)) {
+    //const string filename = "/SCIRun/Data/UCLA/ba03-float.nrrd";
+    NrrdDataHandle nrrd_handle = new NrrdData();
+    Nrrd *nrrd = nrrd_handle->nrrd_;
+    if (nrrdLoad(nrrd, filename.c_str(), 0)) {
+      get_vars()->insert("Painter::status_text",
+                         "Cannot Load Nrrd: "+filename,
+                         "string", true);
+    } else {
+      bundle->setNrrd(filename, nrrd_handle);
+      add_bundle(bundle); 
+      get_vars()->insert("Painter::status_text",
+                         "Cannot Load Nrrd: "+filename, 
+                         "string", true);
+    }
+  } 
+  return STOP_E;
+}
+
+
+BaseTool::propagation_state_e 
+Painter::Autoview(event_handle_t) {
+  if (current_volume_) {
+    SliceWindows::iterator window = windows_.begin();
+    SliceWindows::iterator end = windows_.end();
+    for (;window != end; ++window) {
+      (*window)->autoview(current_volume_);
+    }
+  }
+
   return STOP_E;
 }
 

@@ -50,17 +50,6 @@ namespace SCIRun {
       return SPRING_MINMAX;
     }
 
-    BaseTool::propagation_state_e
-    Collection::process_event(event_handle_t event)
-    {
-      for (unsigned int i = 0; i < children_.size(); ++i) {
-        ASSERT(children_[i]);
-        children_[i]->set_region(get_region());
-        children_[i]->process_event(event);
-      }
-      return CONTINUE_E;
-    }
-
     Drawable *
     Collection::maker(Variables *variables)
     {

@@ -112,6 +112,24 @@ namespace SCIRun {
     }
 
 
+    void
+    Variables::change_parent(const string &name, 
+                             const string &value,
+                             const string &type_str,
+                             bool propagate)
+    {
+
+      Variables *cur = this;
+      while (cur) {
+        if (cur->variables_.find(name) == cur->variables_.end()) {
+          cur = cur->parent_;
+        } else {
+          cur->insert(name, value, type_str, propagate);
+          return;
+        }
+      }
+    }
+        
     bool
     Variables::maybe_get_int(const string &name, int &val) {
       string str;
@@ -257,6 +275,14 @@ namespace SCIRun {
     Variables::exists(const string &varname) const {
       string temp;
       return maybe_get_string(varname, temp);
+    }
+    
+    string
+    Variables::dereference(const string &value) const {
+      string temp = value;
+      while (temp[0] == '$' && 
+             maybe_get_string(temp.substr(1,temp.length()-1), temp));
+      return temp;
     }
     
   }

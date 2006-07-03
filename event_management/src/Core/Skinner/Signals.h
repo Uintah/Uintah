@@ -50,20 +50,12 @@ using std::vector;
 
 namespace SCIRun {
   namespace Skinner {
-    template <class T>
-    class event_isa_class {
-    public:
-      static T            Cast(event_handle_t e) {
-        return dynamic_cast<T>(e.get_rep());
-      }
-    };
 
     class Signal; 
     class SignalThrower;
     class SignalCatcher;
 
-    class Signal : public SCIRun::BaseEvent, 
-                   public event_isa_class<Signal *>
+    class Signal : public SCIRun::BaseEvent
     {
     public:
       Signal(const string &name, SignalThrower *);//const string &target);

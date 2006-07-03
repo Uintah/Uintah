@@ -32,13 +32,6 @@
 
 #include <Core/Skinner/XMLIO.h>
 #include <Core/Skinner/Variables.h>
-#include <Core/Skinner/Box.h>
-#include <Core/Skinner/Collection.h>
-#include <Core/Skinner/Grid.h>
-#include <Core/Skinner/Layout.h>
-#include <Core/Skinner/Text.h>
-#include <Core/Skinner/Texture.h>
-#include <Core/Skinner/Window.h>
 #include <Core/Skinner/Root.h>
 
 #include <Core/XMLUtil/XMLUtil.h>
@@ -457,11 +450,14 @@ namespace SCIRun {
       if (!overwrite && variables->exists(varname)) {
         return;
       }
-
-      variables->insert(varname,
-                        XMLUtil::xmlChar_to_char(node->children->content),
-                        XMLUtil::node_att_as_string(node, "type"),
-                        propagate);
+      
+      const char *contents = 0;
+      if (node->children) { 
+        contents = XMLUtil::xmlChar_to_char(node->children->content);
+      }
+      const string value = contents ? contents : "";
+      const string typestr = XMLUtil::node_att_as_string(node, "type");
+      variables->insert(varname, value, typestr, propagate);
     }
                         
 
@@ -489,8 +485,6 @@ namespace SCIRun {
              << " cannot find target " << signaltarget << std::endl;
         return;
       }
-
-
 
       SignalThrower::CatchersOnDeck_t &signal_catchers = catchers_iter->second;
       SignalThrower::CatchersOnDeck_t::iterator catcher_iter = 
