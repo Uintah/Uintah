@@ -40,7 +40,6 @@ namespace SCIRun {
     public:
       Collection (Variables *);
       virtual ~Collection();
-      virtual propagation_state_e       process_event(event_handle_t);
       virtual MinMax                    get_minmax(unsigned int);
       static string                     class_name() { return "Collection"; }
       static DrawableMakerFunc_t        maker;

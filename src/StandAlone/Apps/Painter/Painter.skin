@@ -28,8 +28,9 @@
 
   <definition class="ShadowedBox"> 
     <object class="Collection"> 
-      <var name="border-size1" propagate="yes">15</var>
-      <var name="border-size2" propagate="yes">5</var>
+      <var name="border-size1" propagate="yes" overwrite="no">15</var>
+      <var name="border-size2" propagate="yes" overwrite="no">5</var>
+
       <object class="Grid">
         <var name="rows">3</var>
         <var name="cols">3</var>
@@ -284,45 +285,167 @@
 
 
   <definition class="HelpButton">
-    <object class="Grid">
-      <var name="rows">1</var>
-      <var name="cols">2</var>
+    <object class="Collection">
+      <object class="Box">
+        <var name="color">#000000</var>
+        <signal name="button_1_clicked"
+                target="Painter::quit"/>
 
-      <var name="Button2::color" propagate="yes">#44FF44FF</var>
-      <var name="Button2::height" propagate="yes">35</var>
-      <var name="Button2::Text::text" propagate="yes">?</var>
-      <var name="Button2::Text::size" propagate="yes">43</var>
-      <var name="Button2::Text::fgcolor" propagate="yes">#003300FF</var>
-      <var name="Button2::Text::bgcolor" propagate="yes">#FFFFFFFF</var>
-
-<!--      
-      <definition class="Button2::child">
-        <object class="Collection">
-          <object class="Box">
-            <var name="color">#44FF44FF</var>
-          </object>
-
-          <object class="Text">
-            <var name="anchor">C</var>
-            <var name="text">NOW</var>
-            <var name="fgcolor">#000000FF</var>
-            <var name="size">50</var>
-          </object>
-
+      </object>
+      <object class="Grid">
+        <var name="rows">1</var>
+        <var name="cols">2</var>
+        
+        <var name="Button2::color" propagate="yes">#44FF44FF</var>
+        <var name="Button2::height" propagate="yes">35</var>
+        <var name="Button2::Text::text" propagate="yes">?</var>
+        <var name="Button2::Text::size" propagate="yes">43</var>
+        <var name="Button2::Text::fgcolor" propagate="yes">#003300FF</var>
+        <var name="Button2::Text::bgcolor" propagate="yes">#FFFFFFFF</var>
+        <object class="Button2">
+          <var name="row">1</var>
+          <var name="col">2</var>
+          <var name="cell-width">35</var>
+          <signal name="Button2::clicked"
+                  target="Painter::quit"/>
         </object>
-      </definition>
--->
-
-      <object class="Button2">
-        <var name="row">1</var>
-        <var name="col">2</var>
-        <var name="cell-width">35</var>
-        <signal name="Button2::clicked"
-                target="Painter::help"/>
       </object>
     </object>
   </definition>
   
+
+  <definition class="FileLoadBox">
+    <object class="Grid">
+      <var name="rows">1</var>
+      <var name="cols">1</var>
+      
+      <object class="ShadowedBox">
+        <var name="row">1</var>
+        <var name="col">1</var>        
+        <var name="cell-height">140</var>
+
+        <definition class="ShadowedBox::child">
+          <object class="Collection">
+            
+            <object class="Box">
+              <var name="color">#AAAAAAAA</var>
+            </object>
+
+            <object class="Texture">
+              <var name="file">BackgroundTile03.png</var>
+              <var name="color">#AAAAAAFF</var>
+              <var name="repeatx">1</var>
+              <var name="repeaty">1</var>
+            </object>
+            
+            <object class="Texture">
+              <var name="file">BackgroundTile03.png</var>
+              <var name="color">#000000</var>
+              <var name="repeatx">1</var>
+              <var name="repeaty">1</var>
+            </object>
+
+            <object class="Grid">
+              <var name="rows">3</var>
+              <var name="cols">3</var>
+
+              <object class="Text">
+                <var name="row">1</var>
+                <var name="col">1</var>
+                <var name="text"> Volume File to Load:</var>
+                <var name="size">30</var>
+                <var name="fgcolor">#000000FF</var>
+                <var name="bgcolor">#FFFFFF80</var>
+                <var name="anchor">W</var>
+                <var name="offsetx">-2</var>
+                <var name="offsety">2</var>
+                <var name="shadow">1</var>
+                <var name="cell-width">50</var>
+              </object>
+
+              <object class="Collection">
+                <var name="row">2</var>
+                <var name="col">1</var>        
+                <var name="cell-width">50</var>
+              </object>
+
+              <object class="ShadowedBox">
+                <var name="row">2</var>
+                <var name="col">2</var>        
+                <var name="cell-height">40</var>
+                <var name="cell-width">600</var>
+                <var name="border-size1" propagate="yes">5</var>
+                <var name="border-size2" propagate="yes">5</var>
+
+                <definition class="ShadowedBox::child">
+                  <object class="Collection">
+
+                    <object class="Box">
+                      <var name="color">#FFFFFFFF</var>
+                    </object>
+
+
+
+                    <object class="Text">
+                      <var name="text">$TextEntry::value</var>
+                      <var name="size">30</var>
+                      <var name="anchor">W</var>
+                      <var name="fgcolor">#000000FF</var>
+                      <var name="bgcolor">#FFFFFFFF</var>
+                      <var name="bgcolor">#00000080</var>
+                      <var name="offsetx">-1</var>
+                      <var name="offsety">1</var>
+                      <var name="shadow">0</var>
+                    </object>
+                      
+                    <object class="TextEntry">
+
+                    </object>
+                  </object>
+                </definition>
+              </object>
+
+              <object class="Grid"> 
+                <var name="row">3</var>
+                <var name="col">2</var>
+                <object class="Grid"> 
+                  <var name="rows">2</var>
+                  <var name="cols">2</var>
+
+                  <object class="Collection">
+                    <var name="color">#FF0000FF</var>
+                    <var name="row">1</var>
+                    <var name="col">1</var>
+                    <var name="cell-height">5</var>
+                  </object>
+
+                  <object class="Button2">
+                    <var name="row">2</var>
+                    <var name="col">1</var>
+                    
+                    <var name="Button2::Text::text" propagate="yes">Cancel</var>
+                    <signal name="Button2::clicked" 
+                            target="Painter::Autoview"/>
+                  </object>
+                  <object class="Button2">
+                    <var name="row">2</var>
+                    <var name="col">2</var>
+                    
+                    <var name="Button2::Text::text" propagate="yes">Load</var>
+                    <signal name="Button2::clicked" 
+                            target="Painter::LoadFile"/>
+                  </object>
+
+                </object>
+              </object>
+            </object>
+          </object>
+        </definition>
+
+        
+      </object>
+    </object>
+  </definition>
   
   <!--
     ***** Definitions Over
@@ -330,6 +453,9 @@
   -->
 
   <object class="Painter">
+    <var name="Painter::status_text" propagate="yes"> </var>
+    <var name="TextEntry::value" propagate="yes"></var>
+
     <object class="Root::GLWindow" id="SCI-RENDER">
       <var name="id">$program_name</var>
       <var name="width" type="int">800</var>
@@ -362,10 +488,10 @@
         <var name="rows">3</var>
         <var name="cols">1</var>
 
-        <object class="Collection">
+        <object class="FileLoadBox">
           <var name="row">1</var>
           <var name="col">1</var>
-          <var name="cell-height">10</var>
+          <var name="cell-height">150</var>
         </object>
 
 
@@ -378,7 +504,7 @@
           <var name="rows">1</var>
           <var name="cols">2</var>
 
-          <var name="cell-height">40</var>
+          <var name="cell-height">35</var>
           
           
           <object class="Collection">
@@ -406,19 +532,15 @@
                 <object class="Box">
                   <var name="color">#808080A0</var>
                 </object>
-                <object class="Grid">
-                  <var name="rows">1</var>
-                  <var name="cols">5</var>
-                  
-                  <object class="Text">
-                    <var name="row">1</var>
-                    <var name="col">3</var>
-                    <var name="text">$painter_status</var>
-                    <var name="size">25</var>
-                    <var name="shadow">1</var>
-                    <var name="offsetx">-3</var>
-                    <var name="offsety">3</var>
-                  </object>
+                <object class="Text">
+                  <var name="row">1</var>
+                  <var name="col">3</var>
+                  <var name="text">$Painter::status_text</var>
+                  <var name="size">30</var>
+                  <var name="anchor">W</var>
+                  <var name="shadow">1</var>
+                  <var name="offsetx">-2</var>
+                  <var name="offsety">2</var>
                 </object>
               </object>
             </object>
@@ -530,11 +652,15 @@
           </object>
         </object>
       </object>
+
+
+
     </object>
 
 
 
-    <object class="Root::GLWindow" id="SCI-RENDER">
+    <object class="Root::GLWindow" id="Tools">
+      <var name="id">Tools</var>
       <var name="width" type="int">200</var>
       <var name="height" type="int">800</var>
       <var name="posx" type="int">0</var>
@@ -555,18 +681,20 @@
         <var name="text_bgcolor" propagate="yes">#FFFFFFFF</var>
         <var name="text_fgcolor" propagate="yes">#000000FF</var>
 
+        <var name="cell-height" propagate="yes">33</var>
+
         <object class="Button2">
           <var name="row">1</var>
           <var name="col">1</var>
-          <var name="Button2::Text::text" propagate="yes">Quit</var>
+          <var name="Button2::Text::text" propagate="yes">Autoview</var>
           <signal name="Button2::clicked" 
-                  target="Painter::quit"/>
+                  target="Painter::Autoview"/>
         </object>
         
         <object class="Button2">
           <var name="row">2</var>
           <var name="col">1</var>
-          <var name="Button2::Text::text" propagate="yes">Load Volume</var>
+          <var name="Button2::Text::text" propagate="yes">Load Layer</var>
           <var name="text_color" propagate="yes">#FFFFFFFF</var>
           <signal name="Button2::clicked" 
                   target="Painter::load_CThead"/>          
@@ -575,7 +703,7 @@
         <object class="Button2">
           <var name="row">3</var>
           <var name="col">1</var>
-          <var name="Button2::Text::text" propagate="yes">Save Volume</var>
+          <var name="Button2::Text::text" propagate="yes">Save Layer</var>
           <signal name="Button2::clicked" 
                   target="Painter::save_volume"/>          
         </object>
@@ -583,22 +711,29 @@
         <object class="Button2">
           <var name="row">4</var>
           <var name="col">1</var>
-          <var name="Button2::Text::text" propagate="yes">Delete Layer</var>
+          <var name="Button2::Text::text" propagate="yes">Copy Layer</var>
           <signal name="Button2::clicked" 
-                  target="Painter::delete_layer"/>
-          
+                  target="Painter::CopyLayer"/>
         </object>
+
+        <object class="Button2">
+          <var name="row">5</var>
+          <var name="col">1</var>
+          <var name="Button2::Text::text" propagate="yes">New Layer</var>
+          <signal name="Button2::clicked" 
+                  target="Painter::NewLayer"/>
+        </object>
+
 
         <object class="Button2">
           <var name="row">6</var>
           <var name="col">1</var>
-          <var name="Button2::Text::text" propagate="yes">Crop Tool</var>
-          <var name="text_color" propagate="yes">#FFFFFFFF</var>
+          <var name="Button2::Text::text" propagate="yes">Delete Layer</var>
           <signal name="Button2::clicked" 
-                  target="Painter::start_brush_tool"/>
+                  target="Painter::DeleteLayer"/>
           
         </object>
-        
+
         <object class="Button2">
           <var name="row">7</var>
           <var name="col">1</var>
@@ -609,8 +744,80 @@
           
         </object>
 
+
+        <object class="Button2">
+          <var name="row">8</var>
+          <var name="col">1</var>
+          <var name="Button2::Text::text" propagate="yes">Crop Tool</var>
+          <var name="text_color" propagate="yes">#FFFFFFFF</var>
+          <signal name="Button2::clicked" 
+                  target="Painter::start_brush_tool"/>
+          
+        </object>
+
+        <object class="Button2">
+          <var name="row">9</var>
+          <var name="col">1</var>
+          <var name="Button2::Text::text" propagate="yes">ITK Gradient Magnitude</var>
+          <var name="text_color" propagate="yes">#FFFFFFFF</var>
+          <signal name="Button2::clicked" 
+                  target="Painter::start_brush_tool"/>
+          
+        </object>
+
         <object class="Button2">
           <var name="row">10</var>
+          <var name="col">1</var>
+          <var name="Button2::Text::text" propagate="yes">ITK Confidence Connected</var>
+          <var name="text_color" propagate="yes">#FFFFFFFF</var>
+          <signal name="Button2::clicked" 
+                  target="Painter::start_brush_tool"/>
+          
+        </object>
+
+        <object class="Button2">
+          <var name="row">11</var>
+          <var name="col">1</var>
+          <var name="Button2::Text::text" propagate="yes">ITK Threshold Levelset</var>
+          <var name="text_color" propagate="yes">#FFFFFFFF</var>
+          <signal name="Button2::clicked" 
+                  target="Painter::start_brush_tool"/>
+          
+        </object>
+
+
+        <object class="Button2">
+          <var name="row">12</var>
+          <var name="col">1</var>
+          <var name="Button2::Text::text" propagate="yes">ITK Anisotropic Diffusion</var>
+          <var name="text_color" propagate="yes">#FFFFFFFF</var>
+          <signal name="Button2::clicked" 
+                  target="Painter::start_brush_tool"/>
+          
+        </object>
+
+        <object class="Button2">
+          <var name="row">13</var>
+          <var name="col">1</var>
+          <var name="Button2::Text::text" propagate="yes">ITK Hole Fill</var>
+          <var name="text_color" propagate="yes">#FFFFFFFF</var>
+          <signal name="Button2::clicked" 
+                  target="Painter::start_brush_tool"/>
+          
+        </object>
+
+        <object class="Button2">
+          <var name="row">14</var>
+          <var name="col">1</var>
+          <var name="Button2::Text::text" propagate="yes">Flood Fill</var>
+          <var name="text_color" propagate="yes">#FFFFFFFF</var>
+          <signal name="Button2::clicked" 
+                  target="Painter::start_brush_tool"/>
+          
+        </object>               
+
+        <object class="Button2">
+          <var name="row">15</var>
           <var name="col">1</var>
           <var name="Button2::Text::text" propagate="yes">Credits</var>
           <var name="text_color" propagate="yes">#FFFFFFFF</var>
@@ -619,16 +826,21 @@
           
         </object>
 
+        <object class="Button2">
+          <var name="row">18</var>
+          <var name="col">1</var>
+          <var name="Button2::Text::text" propagate="yes">Quit</var>
+          <var name="text_color" propagate="yes">#FFFFFFFF</var>
+          <signal name="Button2::clicked" 
+                  target="Painter::quit"/>
+          
+        </object>
+
+
       </object>
     </object>
 
-
-            
-
-
-
-
-
+          
     <object class="Root::GLWindow" id="Splash">
       <var name="width" type="int">800</var>
       <var name="height" type="int">200</var>
@@ -827,8 +1039,8 @@
               <var name="fgcolor">#aaaaEEa0</var>
               <var name="fgcolor">#FF444480</var>
               <var name="bgcolor">$clear</var>
-              <var name="offsetx">-11</var>
-              <var name="offsety">16</var>
+              <var name="offsetx">-18</var>
+              <var name="offsety">33</var>
             </object>
 
             <object class="Text">            
@@ -842,8 +1054,8 @@
               <var name="shadow">1</var>
               <var name="fgcolor">#FFFFFFFF</var>
               <var name="bgcolor">$clear</var>
-              <var name="offsetx">-10</var>
-              <var name="offsety">15</var>
+              <var name="offsetx">-16</var>
+              <var name="offsety">31</var>
             </object>
           </object>
 

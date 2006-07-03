@@ -90,10 +90,6 @@ start_trail_file() {
 
 string
 get_skin_filename() {
-  if (!sci_getenv("SKINNER_DIR")) {
-    sci_putenv("SKINNER_DIR",
-               string(sci_getenv("SCIRUN_SRCDIR"))+"/Core/Skinner/Data");
-  }
   if (sci_getenv("SKINNER_SKIN")) {
     return sci_getenv("SKINNER_SKIN");
   } 
@@ -107,6 +103,14 @@ get_skin_filename() {
 int
 main(int argc, char *argv[], char **environment) {
   create_sci_environment(environment, argv[0]);  
+  
+  if (!sci_getenv("SKINNER_DIR")) {
+    sci_putenv("SKINNER_DIR",
+               string(sci_getenv("SCIRUN_SRCDIR"))+"/Core/Skinner/Data");
+  }
+  
+  sci_putenv("SCIRUN_FONT_PATH",string(sci_getenv("SKINNER_DIR"))+"/Fonts");
+
   Skinner::XMLIO::register_maker<Painter>();
   Skinner::load_skin(get_skin_filename());
   EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));

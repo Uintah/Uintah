@@ -49,6 +49,7 @@ SRCS     += \
 	$(SRCDIR)/Signals.cc    	\
 	$(SRCDIR)/Skinner.cc    	\
 	$(SRCDIR)/Text.cc       	\
+	$(SRCDIR)/TextEntry.cc       	\
 	$(SRCDIR)/Texture.cc    	\
 	$(SRCDIR)/Window.cc      	\
 	$(SRCDIR)/Variables.cc      	\
