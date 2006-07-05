@@ -18,6 +18,7 @@ SRCS     += \
 	$(SRCDIR)/SplitFieldByDomain.cc\
   $(SRCDIR)/MergeFields.cc\
 	$(SRCDIR)/DomainBoundary.cc\
+	$(SRCDIR)/IndexedDomainBoundary.cc\
 	$(SRCDIR)/SplitFieldByConnectedRegion.cc\
 	$(SRCDIR)/CollectFields.cc\
 #[INSERT NEW CODE FILE HERE]

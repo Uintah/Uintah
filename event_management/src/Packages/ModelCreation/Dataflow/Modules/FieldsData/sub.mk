@@ -29,6 +29,7 @@ SRCS     += \
 	$(SRCDIR)/MappingMatrixToField.cc\
 	$(SRCDIR)/GetFieldData.cc\
   $(SRCDIR)/SetFieldData.cc\
+	$(SRCDIR)/IndicesToData.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

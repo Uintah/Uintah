@@ -252,6 +252,7 @@ void ClipFieldByFunction::execute()
   
   // Now do the clipping
 
+
   SCIRunAlgo::FieldsAlgo fieldalgo(this);
 
   FieldHandle output;
