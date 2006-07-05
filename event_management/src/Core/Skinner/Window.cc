@@ -84,9 +84,8 @@ namespace SCIRun {
       draw_runnable_ = new ThrottledRedraw(this, 120.0);
       draw_thread_ = new Thread(draw_runnable_, tname.c_str());
 
-      catcher_functions_["GLWindow::close"] = 
-        static_cast<SignalCatcher::CatcherFunctionPtr>(&GLWindow::close);
 
+      REGISTER_CATCHER_TARGET(GLWindow::close);
     }
 
     GLWindow::~GLWindow() 
@@ -114,9 +113,19 @@ namespace SCIRun {
 # if 1
         if ((pointer->get_pointer_state() & PointerEvent::MOTION_E) &&
             sci_getenv_p("SCIRUN_TRAIL_PLAYBACK")) {
+          const char *trailmode = sci_getenv("SCIRUN_TRAIL_MODE");
           X11OpenGLContext *x11 = dynamic_cast<X11OpenGLContext *>(context_);
+
+          Window src_win = x11->window_;
+          
+          // if the second letter of SCIRUN_TRAIL_MODE is G, 
+          // Grab the pointer from the root window from the user
+          if (trailmode && trailmode[1] == 'G') {
+            src_win = None;
+          }
+
           if (x11) {
-            XWarpPointer(x11->display_, x11->window_, x11->window_,
+            XWarpPointer(x11->display_, src_win, x11->window_,
                          0,0, x11->width(), x11->height(),
                          pointer->get_x(), pointer->get_y());
           }
@@ -189,6 +198,7 @@ namespace SCIRun {
       QuitEvent *qe = new QuitEvent();
       qe->set_target(get_id());
       EventManager::add_event(qe);
+      return STOP_E;
     }
 
   }

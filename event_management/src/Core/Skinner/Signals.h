@@ -42,10 +42,10 @@ using std::deque;
 using std::vector;
 
 
-#define REGISTER_CATCHER_TARGET(catcher_function) \
-  catcher_functions_[#catcher_function] = \
+#define REGISTER_CATCHER_TARGET(catcher_target_function_name) \
+  catcher_targets_[#catcher_target_function_name] = \
     static_cast<SCIRun::Skinner::SignalCatcher::CatcherFunctionPtr> \
-      (&catcher_function);
+      (&catcher_target_function_name);
 
 
 namespace SCIRun {
@@ -54,14 +54,18 @@ namespace SCIRun {
     class Signal; 
     class SignalThrower;
     class SignalCatcher;
+    class Variables;
 
     class Signal : public SCIRun::BaseEvent
     {
     public:
-      Signal(const string &name, SignalThrower *);//const string &target);
+      Signal(const string &name, SignalThrower *, const string &data = "");
       ~Signal();
       string              get_signal_name() { return signal_name_; }
       void                set_signal_name(const string &n) { signal_name_=n; }
+
+      const string &      get_signal_data() { return signal_data_; }
+      void                set_signal_data(const string &d) { signal_data_=d; }
 
       SignalThrower *     get_signal_thrower() { return thrower_; }
       void                set_signal_thrower(SignalThrower *t) { thrower_=t; }
@@ -70,7 +74,8 @@ namespace SCIRun {
       virtual void        io(Piostream&);
       static PersistentTypeID type_id;
     private:
-      string              signal_name_; 
+      string              signal_name_;
+      string              signal_data_;
       SignalThrower *     thrower_;
     };
   
@@ -88,8 +93,8 @@ namespace SCIRun {
       BaseTool::propagation_state_e CatcherFunction_t(event_handle_t);
 
 
-      typedef map<string, CatcherFunctionPtr> signal_slot_map_t;
-      signal_slot_map_t   catcher_functions_;
+      typedef map<string, CatcherFunctionPtr> CatcherTargets_t;
+      CatcherTargets_t   catcher_targets_;
       typedef vector<string> TargetIDs_t;
       TargetIDs_t        get_all_target_ids();
       CatcherFunctionPtr get_catcher(const string &name);
@@ -102,24 +107,28 @@ namespace SCIRun {
       virtual ~SignalThrower();
       //      map<string, string>               signalname_catcher_map_t;
       //      signalname_catcher_map_t          catchers_;
-      //      SignalCatcher::signal_slot_map_t  catcher_functions_;
+      //      SignalCatcher::CatcherTargets_t  catcher_targets_;
       //      map<string, SignalCatcher *>      catcher_classes_;
 
       typedef pair<SignalCatcher*,SignalCatcher::CatcherFunctionPtr> Catcher_t;
       typedef deque<Catcher_t> CatchersOnDeck_t;
-      typedef map<string, CatchersOnDeck_t> SignalCatchers_t;
-      //      typedef vector<SignalCatcher *> SignalCatcherPointers_t;
+      typedef pair<CatchersOnDeck_t, string> CatchersOnDeckWithData_t;
+      typedef map<string, CatchersOnDeckWithData_t> SignalCatchers_t;
       SignalCatchers_t  catchers_;
 
-      event_handle_t  throw_signal(const string &);
+
+      event_handle_t  throw_signal(const string &,
+                                   Variables *vars = 0);
     public:
       static event_handle_t throw_signal(SignalCatchers_t &catchers,
-                                         event_handle_t &signal);
+                                         event_handle_t &signal,
+                                         Variables *vars = 0);
                                    
       virtual int     get_signal_id(const string &) const = 0;
-      bool            add_catcher_function(const string &, 
-                                           SignalCatcher *,
-                                           SignalCatcher::CatcherFunctionPtr);
+      bool            hookup_signal_to_catcher_target(const string &,
+                                                      const string &,
+                                                      SignalCatcher *,
+                                                      SignalCatcher::CatcherFunctionPtr);
 
     };
 

@@ -47,6 +47,7 @@ namespace SCIRun {
       col_width_(cols+1, AIR_NEG_INF),
       row_height_(rows+1, AIR_NEG_INF)    
     {
+      REGISTER_CATCHER_TARGET(Grid::ReLayoutCells);
     }
 
     Grid::~Grid() {
@@ -56,6 +57,7 @@ namespace SCIRun {
     BaseTool::propagation_state_e
     Grid::process_event(event_handle_t event)
     {
+      ReLayoutCells(event);
       const RectRegion &region = get_region();
       unsigned int rows = cells_.size();
       double usedy = 0.0;
@@ -162,6 +164,38 @@ namespace SCIRun {
 
 
     }
+
+
+    BaseTool::propagation_state_e
+    Grid::ReLayoutCells(event_handle_t) {
+#if 1
+      col_width_ = vector<double>(col_width_.size(), AIR_NEG_INF);
+      row_height_ = vector<double>(row_height_.size(), AIR_NEG_INF);
+      for (Drawables_t::const_iterator iter = children_.begin(); 
+           iter != children_.end(); ++iter) {
+        Variables *cvars = (*iter)->get_vars();
+        ASSERT(cvars);
+        int row = 1;
+        cvars->maybe_get_int("row", row);
+        
+        int col = 1;
+        cvars->maybe_get_int("col", col);
+        
+        double width = AIR_NEG_INF;
+        cvars->maybe_get_double("cell-width", width);
+        
+        double height = AIR_NEG_INF;
+        cvars->maybe_get_double("cell-height", height);
+
+        row--;
+        col--;
+        col_width_[col] = Max(col_width_[col], width);
+        row_height_[row] = Max(row_height_[row], height);
+      }
+#endif
+      return STOP_E;
+    }
+      
 
 
     Drawable *

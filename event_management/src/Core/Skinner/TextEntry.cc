@@ -35,6 +35,7 @@
 #include <Core/Events/EventManager.h>
 #include <Core/Util/Assert.h>
 #include <Core/Events/keysyms.h>
+#include <Core/Util/FileUtils.h>
 
 
 namespace SCIRun {
@@ -56,6 +57,37 @@ namespace SCIRun {
       return SPRING_MINMAX;
     }
 
+    void
+    TextEntry::autocomplete() {
+      pair<string, string> dirfile = split_filename(str_);
+      if (!validDir(dirfile.first)) return;
+      
+      vector<string> files = 
+        GetFilenamesStartingWith(dirfile.first, dirfile.second);
+
+      if (files.empty()) {
+        return;
+      } if (files.size() == 1) {
+        str_ = dirfile.first + files[0];
+        if (validDir(str_)) {
+          str_ = str_ + "/";
+        }
+      } else {
+        unsigned int j0 = dirfile.second.size();
+        unsigned int j = j0;
+        do {
+          for (unsigned int i = 1; i < files.size(); ++i) {
+            if ((j == files[i].size()) || (files[i][j] != files[i-1][j])) {
+              str_ = str_ + files[i].substr(j0, j-j0);
+              return;
+            }
+          }
+          ++j;
+        } while (1);
+      }
+    }
+
+
     BaseTool::propagation_state_e
     TextEntry::process_event(event_handle_t event)
     {
@@ -70,11 +102,21 @@ namespace SCIRun {
         int code = key->get_keyval();
         if ((code >= SCIRun_a) && (code <= SCIRun_z)) {
           code -= SCIRun_a; 
-
+          
           if (key->get_modifiers() & EventModifiers::SHIFT_E) {
             code += char_traits<wchar_t>::to_int_type('A');
           } else {
             code += char_traits<wchar_t>::to_int_type('a');
+          }
+          str_ = str_ + string(1, char_traits<wchar_t>::to_char_type(code));
+        } else if ((code >= SCIRun_0) && (code <= SCIRun_9)) {
+          code -= SCIRun_0; 
+
+          if (key->get_modifiers() & EventModifiers::SHIFT_E) {
+            // insert special chars here
+            code += char_traits<wchar_t>::to_int_type('0');
+          } else {
+            code += char_traits<wchar_t>::to_int_type('0');
           }
           str_ = str_ + string(1, char_traits<wchar_t>::to_char_type(code));
         } else if (code == SCIRun_slash) {
@@ -83,18 +125,25 @@ namespace SCIRun {
           str_ = str_ + string(".");
         } else if (code == SCIRun_minus) {
           str_ = str_ + string("-");
+        } else if (code == SCIRun_underscore) {
+          str_ = str_ + string("_");
+        } else if (code == SCIRun_space) {
+          str_ = str_ + string(" ");
+        } else if (code == SCIRun_Tab) {
+          autocomplete();
         } else if (code == SCIRun_BackSpace) {
           str_ = str_.substr(0, str_.length()-1);
+        } else {
+          //          cerr << get_id() << " cannot handle keycode: " << code << std::endl;
         }
-
-        
+                
         EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
-            
+        
         get_vars()->change_parent("TextEntry::value", str_, "string", true);
       }
-
       return Parent::process_event(event);
     }
+
 
     Drawable *
     TextEntry::maker(Variables *variables)

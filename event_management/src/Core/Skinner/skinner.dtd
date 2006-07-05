@@ -54,7 +54,7 @@
           class CDATA #REQUIRED
           state CDATA #IMPLIED>
 
-<!ELEMENT signal EMPTY>
+<!ELEMENT signal (#PCDATA)>
 <!ATTLIST signal 
           name CDATA #REQUIRED
           target CDATA #REQUIRED>

@@ -34,6 +34,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/Skinner
 
 SRCS     += \
+	$(SRCDIR)/Animation.cc	    	\
 	$(SRCDIR)/Box.cc		\
 	$(SRCDIR)/Collection.cc	    	\
 	$(SRCDIR)/Color.cc	    	\

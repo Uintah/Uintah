@@ -66,6 +66,19 @@ namespace SCIRun {
     void
     Root::spawn_redraw_threads() {
       BaseTool *event_tool = new FilterRedrawEventsTool("Redraw Filter", 1);
+#if 0
+      string id = get_id();
+      ThrottledRunnableToolManager *runner = 
+        new ThrottledRunnableToolManager(id, 120.0);
+
+      runner->add_tool(event_tool,1);
+      runner->add_tool(this, 2);
+      
+      id = id + " Throttled Tool Manager";
+      Thread *thread = new Thread(runner, id.c_str());
+      thread->detach();
+#else 
+
       for (unsigned int w = 0; w < windows_.size(); ++w) {
         GLWindow *window = windows_[w];
         string id = window->get_id();
@@ -77,6 +90,7 @@ namespace SCIRun {
         Thread *thread = new Thread(runner, id.c_str());
         thread->detach();
       }
+#endif
     }
   }
 }

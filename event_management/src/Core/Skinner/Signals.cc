@@ -31,19 +31,7 @@
 
 
 #include <Core/Skinner/Signals.h>
-
-#include <Core/Skinner/XMLIO.h>
-#include <Core/Skinner/Box.h>
-#include <Core/Skinner/Collection.h>
-#include <Core/Skinner/Frame.h>
-#include <Core/Skinner/Window.h>
-#include <Core/Skinner/Gradient.h>
-#include <Core/Skinner/Grid.h>
-#include <Core/Skinner/SceneGraph.h>
-#include <Core/Skinner/Text.h>
-#include <Core/Skinner/Texture.h>
-#include <Core/Skinner/Layout.h>
-
+#include <Core/Skinner/Variables.h>
 #include <Core/Util/Environment.h>
 
 #include <iostream>
@@ -56,10 +44,12 @@ namespace SCIRun {
     Persistent *make_Signal() { return new Signal("",0); }
     PersistentTypeID Signal::type_id("Signal", "BaseEvent", &make_Signal);
 
-    Signal::Signal(const string &name, SignalThrower *thrower) :
+    Signal::Signal(const string &name, SignalThrower *thrower, 
+                   const string &data) :
       BaseEvent("", 0),
       signal_name_(name),
-      thrower_(thrower)
+      signal_data_(data),
+      thrower_(thrower)      
     {
     }
 
@@ -71,7 +61,7 @@ namespace SCIRun {
 
     
     SignalCatcher::SignalCatcher() :
-      catcher_functions_()
+      catcher_targets_()
     {
     }
 
@@ -80,8 +70,8 @@ namespace SCIRun {
     SignalCatcher::CatcherFunctionPtr
     SignalCatcher::get_catcher(const string &name)
     {
-      if (catcher_functions_.find(name) != catcher_functions_.end()) {
-        return catcher_functions_[name];
+      if (catcher_targets_.find(name) != catcher_targets_.end()) {
+        return catcher_targets_[name];
       }
       return 0;
     }
@@ -95,15 +85,14 @@ namespace SCIRun {
     SignalThrower::~SignalThrower() {
     }
       
-
     bool
-    SignalThrower::add_catcher_function(const string &signalname, 
-                                        SignalCatcher *catcher,
-                                        SignalCatcher::CatcherFunctionPtr func)
+    SignalThrower::hookup_signal_to_catcher_target
+    (const string &signalname, const string &signaldata, 
+     SignalCatcher *catcher, SignalCatcher::CatcherFunctionPtr func)
     {
       if (get_signal_id(signalname)) {
-        cerr << " Add Catcher: " << signalname << std::endl;
-        catchers_[signalname].push_front(make_pair(catcher, func));
+        catchers_[signalname].first.push_front(make_pair(catcher, func));
+        catchers_[signalname].second = signaldata;
         return true;
       } 
       return false;
@@ -111,7 +100,8 @@ namespace SCIRun {
 
     event_handle_t
     SignalThrower::throw_signal(SignalCatchers_t &catchers,
-                                event_handle_t &signalh) {
+                                event_handle_t &signalh,
+                                Variables *vars) {
 
       Signal *signal = dynamic_cast<Signal *>(signalh.get_rep());
       ASSERT(signal);
@@ -119,10 +109,18 @@ namespace SCIRun {
       const string &signalname = signal->get_signal_name();
       //      cerr << "Throw signal: " <<  signalname << std::endl;
       if (catchers.find(signalname) == catchers.end()) return signalh;
-
-      CatchersOnDeck_t &signal_catchers = catchers[signalname];
-      for(CatchersOnDeck_t::iterator catcher_iter = signal_catchers.begin();
+      
+      CatchersOnDeck_t &signal_catchers = catchers[signalname].first;
+      for(CatchersOnDeck_t::iterator catcher_iter = 
+            signal_catchers.begin();
           catcher_iter != signal_catchers.end(); ++catcher_iter) {
+
+        string signaldata = catchers[signalname].second;
+        if (vars) {
+          signaldata = vars->dereference(signaldata);
+        }
+        signal->set_signal_data(signaldata);
+
         SignalCatcher *instance = catcher_iter->first;
         SignalCatcher::CatcherFunctionPtr catcher = catcher_iter->second;
         state = (instance->*catcher)(signal);
@@ -135,9 +133,9 @@ namespace SCIRun {
 
 
     event_handle_t
-    SignalThrower::throw_signal(const string &signalname) {
+    SignalThrower::throw_signal(const string &signalname, Variables *vars) {
       event_handle_t signal = new Signal(signalname, this);
-      return throw_signal(catchers_, signal);
+      return throw_signal(catchers_, signal, vars);
     }
 
 
@@ -147,8 +145,8 @@ namespace SCIRun {
       bool print = sci_getenv_p("SKINNER_XMLIO_DEBUG");
       if (print)
         cerr << "_ids: ";
-      for(signal_slot_map_t::iterator titer = catcher_functions_.begin();
-          titer != catcher_functions_.end(); ++titer) {
+      for(CatcherTargets_t::iterator titer = catcher_targets_.begin();
+          titer != catcher_targets_.end(); ++titer) {
         if (print) 
           cerr << titer->first << ", ";
         ids.push_back(titer->first);

@@ -25,36 +25,45 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : Grid.h
+//    File   : Animation.h
 //    Author : McKay Davis
-//    Date   : Tue Jun 27 13:04:42 2006
+//    Date   : Tue Jul  4 17:47:07 2006
 
-#ifndef SKINNER_GRID_H
-#define SKINNER_GRID_H
+
+#ifndef SKINNER_ANIMATION_H
+#define SKINNER_ANIMATION_H
 
 #include <Core/Skinner/Parent.h>
 
+
+
 namespace SCIRun {
   namespace Skinner {
-    class Grid : public Parent {
+    class Animation : public Parent {
     public:
-      Grid (Variables *, int, int);
-      virtual ~Grid();
-
-      virtual propagation_state_e       process_event(event_handle_t);
-      static string                     class_name() { return "Grid"; }
+      Animation (Variables *);
+      virtual ~Animation();
+      virtual MinMax                    get_minmax(unsigned int);
+      static string                     class_name() { return "Animation"; }
       static DrawableMakerFunc_t        maker;
-
-      void                              set_cell(int, int, Drawable *, 
-                                                 double, double);
-      virtual void                      set_children(const Drawables_t &);
-
+      
+      virtual propagation_state_e       process_event(event_handle_t);
     private:
-      CatcherFunction_t                 ReLayoutCells;
+      CatcherFunction_t                 AnimateHeight;
+      CatcherFunction_t                 AnimateVariableDescending;
+      CatcherFunction_t                 AnimateVariable;
+      CatcherFunction_t                 AnimateVariableAscending;
+      double                            variable_begin_;
+      double                            variable_end_;
+      int                               curvar_;
 
-      vector<vector<Drawable *> >       cells_;
-      vector<double>                    col_width_;
-      vector<double>                    row_height_;
+      double                            start_time_;
+      double                            stop_time_;
+
+      bool                              at_start_;
+      bool                              ascending_;
+
+      TimeThrottle *                    timer_;
     };
   }
 }

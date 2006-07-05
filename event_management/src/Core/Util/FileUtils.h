@@ -41,6 +41,10 @@
 
 #include <map>
 #include <string>
+#include <vector>
+
+using std::string;
+using std::vector;
 
 #include <Core/Util/share.h>
 
@@ -61,6 +65,11 @@ SCISHARE void InsertStringInFile(char* filename, char* match, char* insert);
 // the directory named "dir"
 
 SCISHARE std::map<int,char*>* GetFilenamesEndingWith(char* dir, char* ext);
+
+SCISHARE vector<string> GetFilenamesStartingWith(const string & dir,
+                                                 const string & prefix);
+
+SCISHARE std::pair<string, string> split_filename(string fname);
 
 
 SCISHARE bool validFile(std::string filename);
