@@ -64,6 +64,8 @@ itcl_class ModelCreation_FieldsData_SelectByFieldData {
         option add *textBackground white	
         iwidgets::scrolledtext $function.function -height 60 -hscrollmode dynamic
         $function.function insert end [set $this-function]
+        bind $function.function <Leave> "$this update_text"
+                
         pack $w.ff -side top -anchor w -fill both 
         pack $function.function -side top -fill both 
 
