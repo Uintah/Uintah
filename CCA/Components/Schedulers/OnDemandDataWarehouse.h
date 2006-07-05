@@ -118,7 +118,7 @@ public:
                                    IntVector low = IntVector(0,0,0), IntVector high = IntVector(0,0,0));
    virtual bool haveParticleSubset(int matlIndex, const Patch*, 
                                    IntVector low = IntVector(0,0,0),
-                                   IntVector high = IntVector(0,0,0));
+                                   IntVector high = IntVector(0,0,0), bool exact = false);
    virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*,
                                             IntVector low, IntVector high);
    virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*);
