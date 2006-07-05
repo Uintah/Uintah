@@ -457,7 +457,7 @@ public:
                const Point &p6, const Point &p7);
   typename Elem::index_type add_elem(typename Node::array_type a);
   void node_reserve(size_t s) { points_.reserve(s); }
-  void elem_reserve(size_t s) { edges_.reserve(s*8); }
+  void elem_reserve(size_t s) { cells_.reserve(s*8); }
   virtual bool is_editable() const { return true; }
   virtual int dimensionality() const { return 3; }
   virtual int topology_geometry() const { return (Mesh::UNSTRUCTURED | Mesh::IRREGULAR); }

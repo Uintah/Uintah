@@ -152,6 +152,10 @@ class SCISHARE FieldsAlgo : public AlgoLibrary {
     // does merge fields.
     bool GatherFields(std::list<FieldHandle> inputs, FieldHandle& output);
 
+    // IndicesToData:
+    // Transform indexed data into to data. Using a matrix as a lookup table.
+    bool IndicesToData(FieldHandle input, FieldHandle& output, MatrixHandle data);
+
     // IsInsiedField:
     // This is an implementation of locate whether an element is contained within an
     // object.
