@@ -10,9 +10,10 @@ RegridderCommon* RegridderFactory::create(ProblemSpecP& ps,
 {
   RegridderCommon* regrid = 0;
   string regridder = "Hierarchical";
-  
-  ProblemSpecP reg_ps = ps->findBlock("Regridder");
-  if (reg_ps)
+ 
+  ProblemSpecP amr = ps->findBlock("AMR");	
+  ProblemSpecP reg_ps = amr->findBlock("Regridder");
+  if (reg_ps) 
     reg_ps->get("type",regridder);
 
   if(regridder == "Hierarchical") {
@@ -21,7 +22,7 @@ RegridderCommon* RegridderFactory::create(ProblemSpecP& ps,
     regrid = new BNRRegridder(world);
   } else
     regrid = 0;
-  
+ 
   return regrid;
 
 }
