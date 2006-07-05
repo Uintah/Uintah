@@ -11,17 +11,17 @@
 # TEEM_INCLUDE where to find teem/nrrd.h, etc.
 #
 
-
+# DV Fix finding teem library in thirdparty
 FIND_LIBRARY(TEEM_LIBRARY teem
   /usr/lib
   /usr/local/lib
-  c:/work/Thirdparty/Thirdparty-win32-8.4-vc-13.10/lib
+  ${SCIRUN_THIRDPARTY_PATH}/lib
 )
 
 FIND_PATH(TEEM_INCLUDE_DIR teem/nrrd.h
   /usr/local/include
   /usr/include
-  c:/work/Thirdparty/Thirdparty-win32-8.4-vc-13.10/include
+  ${SCIRUN_THIRDPARTY_PATH}/include
  )
 
 
@@ -31,7 +31,7 @@ IF (TEEM_LIBRARY)
     SET(DEF_TEEM "#define HAVE_TEEM 1")	
 
     # Test Teem
-    ADD_EXECUTABLE(testTeem ${CMAKE_SOURCE_DIR}/Testing//Thirdparty/TestTeem.cc)
+    ADD_EXECUTABLE(testTeem ${CMAKE_SOURCE_DIR}/Testing/Thirdparty/TestTeem.cc)
     TARGET_LINK_LIBRARIES(testTeem ${TEEM_LIBRARY})
     ADD_TEST(Teem_Test ${EXECUTABLE_OUTPUT_PATH}/testTeem)
 
