@@ -98,9 +98,9 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
 	mixFrac=0.0;
   if(mixFracVars < small)
 	mixFracVars=0.0;
-  double var_limit=mixFracVars/((mixFrac*(1.0-mixFrac))+small);
-  if(var_limit > 0.9)
-  	mixFracVars=(2.0/3.0)*mixFracVars;
+  double var_limit=(mixFrac*(1.0-mixFrac));
+  if(mixFracVars > var_limit)
+  	mixFracVars=var_limit;
   // Heat loss for adiabatic case
   double current_heat_loss=0.0;
   double zero_heat_loss=0.0;
