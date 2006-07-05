@@ -38,14 +38,17 @@
 namespace SCIRun {
   namespace Skinner {
     Box::Box(Variables *variables, const Color &color) :
-      Drawable(variables),
+      Parent(variables),
       color_(color),
-      backup_(1.,1.,1.,1.)
+      focus_mode_(false),
+      focus_(false)
     {
 
       REGISTER_CATCHER_TARGET(Box::make_red);
       REGISTER_CATCHER_TARGET(Box::make_blue);
       REGISTER_CATCHER_TARGET(Box::make_green);
+
+      variables->maybe_get_bool("focus_mode", focus_mode_);
 
     }
 
@@ -78,21 +81,37 @@ namespace SCIRun {
     Box::process_event(event_handle_t event)
     {
       WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
-      if (window && window->get_window_state() == WindowEvent::REDRAW_E)
+      bool draw = (window && window->get_window_state() == WindowEvent::REDRAW_E);
+
+      if (draw) {
         draw_gl();
+      }
+
       PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
+
+      if (focus_mode_ && pointer) {
+        focus_ = get_region().inside(pointer->get_x(), pointer->get_y());
+      }
+        
       if (pointer && get_region().inside(pointer->get_x(), pointer->get_y()) &&
           (pointer->get_pointer_state() & PointerEvent::BUTTON_PRESS_E) &&
-          (pointer->get_pointer_state() & PointerEvent::BUTTON_1_E)) {
+          (pointer->get_pointer_state() & PointerEvent::BUTTON_1_E)) 
+      {
         throw_signal("button_1_clicked", get_vars());
-      }
+      } 
+
       if (pointer && 
           (pointer->get_pointer_state() & PointerEvent::BUTTON_RELEASE_E) &&
           (pointer->get_pointer_state() & PointerEvent::BUTTON_1_E)) {
         throw_signal("button_1_released", get_vars());
       }
 
-      return CONTINUE_E;
+
+      if (focus_ || draw) {
+        return Parent::process_event(event);
+      } 
+
+      return STOP_E;
     }
 
 
@@ -141,11 +160,6 @@ namespace SCIRun {
       EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
       return BaseTool::CONTINUE_E;
     }
-        
-
-
-
-
   }
 
 }

@@ -319,21 +319,19 @@
     <object class="ShadowedBox">
       <var name="TextEntry::value" propagate="yes"></var>
       <definition class="ShadowedBox::child">
-        <object class="Collection">
-          
-          <object class="Box">
-            <var name="color">#AAAAAAAA</var>
-          </object>
+        <object class="Box">
+          <var name="focus_mode">1</var>
+          <var name="color">#AAAAAAAA</var>
           
           <object class="Texture">
-            <var name="file">BackgroundTile03.png</var>
+            <var name="file">BackgroundTile04.png</var>
             <var name="color">#AAAAAAFF</var>
             <var name="repeatx">1</var>
             <var name="repeaty">1</var>
           </object>
           
           <object class="Texture">
-            <var name="file">BackgroundTile03.png</var>
+            <var name="file">BackgroundTile04.png</var>
             <var name="color">#000000</var>
             <var name="repeatx">1</var>
             <var name="repeaty">1</var>
@@ -444,23 +442,23 @@
       ***** Objects Begin
   -->
 
-        <object class="Animation">
-          <var name="variable-1-seconds">0.5</var>
-          <var name="variable-1-begin">0</var>
-          <var name="variable-1-end">150</var>
-          <var name="Animation::variable-1" propagate="yes">0</var>
-
-          <var name="variable-2-seconds">0.5</var>
-          <var name="variable-2-begin">0</var>
-          <var name="variable-2-end">150</var>      
-          <var name="Animation::variable-2" propagate="yes">0</var>
-
-  <object class="Painter">
-    <var name="Painter::status_text" propagate="yes"> </var>
+  <object class="Animation">
+    <var name="variable-1-seconds">0.5</var>
+    <var name="variable-1-begin">0</var>
+    <var name="variable-1-end">150</var>
+    <var name="Animation::variable-1" propagate="yes">0</var>
+    
+    <var name="variable-2-seconds">0.5</var>
+    <var name="variable-2-begin">0</var>
+    <var name="variable-2-end">150</var>      
+    <var name="Animation::variable-2" propagate="yes">0</var>
+    
+    <object class="Painter">
+      <var name="Painter::status_text" propagate="yes"> </var>
       <object class="Root::GLWindow" id="SCI-RENDER">
-
-<!--
--->
+        
+        <!--
+        -->
 
         <var name="id">$program_name</var>
         <var name="width" type="int">800</var>
@@ -477,14 +475,14 @@
         </object>
 
         <object class="Texture">
-          <var name="file">BackgroundTile03.png</var>
+          <var name="file">BackgroundTile04.png</var>
           <var name="color">#DDDDE0FF</var>
           <var name="repeatx">1</var>
           <var name="repeaty">1</var>
         </object>
 
         <object class="Texture">
-          <var name="file">BackgroundTile03.png</var>
+          <var name="file">BackgroundTile04.png</var>
           <var name="color">#000000</var>
           <var name="repeatx">1</var>
           <var name="repeaty">1</var>
@@ -698,7 +696,7 @@
         <var name="border" type="int">$Window::borders</var>
 
         <object class="Texture">
-          <var name="file">BackgroundTile03.png</var>
+          <var name="file">BackgroundTile04.png</var>
           <var name="color">#FFFFFFA0</var>
           <var name="repeatx">1</var>
           <var name="repeaty">1</var>

@@ -33,12 +33,12 @@
 #ifndef SKINNER_BOX_H
 #define SKINNER_BOX_H
 
-#include <Core/Skinner/Drawable.h>
+#include <Core/Skinner/Parent.h>
 #include <Core/Skinner/Color.h>
 
 namespace SCIRun {
   namespace Skinner {
-    class Box : public Drawable {
+    class Box : public Parent {
     public:
       Box(Variables *, const Color &);
       virtual ~Box();
@@ -57,7 +57,8 @@ namespace SCIRun {
 
       void                              draw_gl();
       Color                             color_;
-      Color                             backup_;      
+      bool                              focus_mode_;
+      bool                              focus_;
     };
   }
 }

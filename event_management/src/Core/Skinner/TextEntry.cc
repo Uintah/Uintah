@@ -100,10 +100,11 @@ namespace SCIRun {
       KeyEvent *key = dynamic_cast<KeyEvent *>(event.get_rep());
       if (key && (key->get_key_state() & KeyEvent::KEY_PRESS_E)) {
         int code = key->get_keyval();
+        bool shift = (key->get_modifiers() & EventModifiers::SHIFT_E);
         if ((code >= SCIRun_a) && (code <= SCIRun_z)) {
           code -= SCIRun_a; 
           
-          if (key->get_modifiers() & EventModifiers::SHIFT_E) {
+          if (shift) {
             code += char_traits<wchar_t>::to_int_type('A');
           } else {
             code += char_traits<wchar_t>::to_int_type('a');
@@ -123,9 +124,9 @@ namespace SCIRun {
           str_ = str_ + string("/");
         } else if (code == SCIRun_period) {
           str_ = str_ + string(".");
-        } else if (code == SCIRun_minus) {
+        } else if (code == SCIRun_minus && !shift) {
           str_ = str_ + string("-");
-        } else if (code == SCIRun_underscore) {
+        } else if (code == SCIRun_minus && shift) {
           str_ = str_ + string("_");
         } else if (code == SCIRun_space) {
           str_ = str_ + string(" ");
@@ -134,7 +135,7 @@ namespace SCIRun {
         } else if (code == SCIRun_BackSpace) {
           str_ = str_.substr(0, str_.length()-1);
         } else {
-          //          cerr << get_id() << " cannot handle keycode: " << code << std::endl;
+          cerr << get_id() << " cannot handle keycode: " << code << std::endl;
         }
                 
         EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));

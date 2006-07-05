@@ -199,6 +199,7 @@ Painter::ITKImageFileRead(event_handle_t event) {
   ASSERT(signal);
 
   const string &filename = signal->get_signal_data();
+  if (!validFile(filename)) return STOP_E;
 
   typedef itk::ImageFileReader<itk::Image<float, 3> > FileReaderType;
   
