@@ -32,6 +32,8 @@
 
 #include <Core/Skinner/Skinner.h>
 #include <Core/Skinner/XMLIO.h>
+
+#include <Core/Skinner/Animation.h>
 #include <Core/Skinner/Box.h>
 #include <Core/Skinner/Collection.h>
 #include <Core/Skinner/Frame.h>
@@ -40,8 +42,9 @@
 #include <Core/Skinner/Grid.h>
 #include <Core/Skinner/SceneGraph.h>
 #include <Core/Skinner/Text.h>
-#include <Core/Skinner/TextEntry.h>
+#include <Core/Skinner/Text.h>
 #include <Core/Skinner/Texture.h>
+#include <Core/Skinner/TextEntry.h>
 #include <Core/Skinner/Root.h>
 #include <Core/Skinner/Layout.h>
 #include <Core/Events/Tools/FilterRedrawEventsTool.h>
@@ -54,6 +57,7 @@ namespace SCIRun {
   namespace Skinner {
     bool
     init_skinner() {
+      XMLIO::register_maker<Animation>();
       XMLIO::register_maker<Box>();
       XMLIO::register_maker<Collection>();
       XMLIO::register_maker<Frame>();
@@ -71,10 +75,11 @@ namespace SCIRun {
     BaseTool *
     load_skin(const string &filename) {
       Root *root = 0;
-      try {
+      //      try {
         init_skinner();  
         root = Skinner::XMLIO::load(filename);
         root->spawn_redraw_threads();
+#if 0
       } catch (const string &error) {
         cerr << "Skinner Error: " << error << std::endl;
       } catch (const char *&error) {
@@ -82,6 +87,7 @@ namespace SCIRun {
       } catch (...) {
         cerr << "Skinner Exception" << std::endl;
       }
+#endif
       return root;
     }
 

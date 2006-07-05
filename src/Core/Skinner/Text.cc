@@ -73,6 +73,10 @@ namespace SCIRun {
         string text = "";
         get_vars()->maybe_get_string("text", text);
           
+        if (renderer_->height(text) > region.height()) {
+          return CONTINUE_E;
+        }
+
         renderer_->set_shadow_offset(offsetx_, offsety_);
         renderer_->set_color(fgcolor_.r, fgcolor_.g, fgcolor_.b, fgcolor_.a);
         renderer_->set_shadow_color(bgcolor_.r, bgcolor_.g, bgcolor_.b, bgcolor_.a);

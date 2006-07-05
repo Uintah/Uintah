@@ -42,12 +42,10 @@ namespace SCIRun {
       color_(color),
       backup_(1.,1.,1.,1.)
     {
-      catcher_functions_["make_red"] = 
-        static_cast<SignalCatcher::CatcherFunctionPtr>(&Box::make_red);
-      catcher_functions_["make_blue"] = 
-        static_cast<SignalCatcher::CatcherFunctionPtr>(&Box::make_blue);
-      catcher_functions_["make_green"] = 
-        static_cast<SignalCatcher::CatcherFunctionPtr>(&Box::make_green);
+
+      REGISTER_CATCHER_TARGET(Box::make_red);
+      REGISTER_CATCHER_TARGET(Box::make_blue);
+      REGISTER_CATCHER_TARGET(Box::make_green);
 
     }
 
@@ -86,12 +84,12 @@ namespace SCIRun {
       if (pointer && get_region().inside(pointer->get_x(), pointer->get_y()) &&
           (pointer->get_pointer_state() & PointerEvent::BUTTON_PRESS_E) &&
           (pointer->get_pointer_state() & PointerEvent::BUTTON_1_E)) {
-        throw_signal("button_1_clicked");
+        throw_signal("button_1_clicked", get_vars());
       }
       if (pointer && 
           (pointer->get_pointer_state() & PointerEvent::BUTTON_RELEASE_E) &&
           (pointer->get_pointer_state() & PointerEvent::BUTTON_1_E)) {
-        throw_signal("button_1_released");
+        throw_signal("button_1_released", get_vars());
       }
 
       return CONTINUE_E;

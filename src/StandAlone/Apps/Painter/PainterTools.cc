@@ -391,10 +391,12 @@ Painter::ZoomTool::pointer_motion(int button, int x, int y,
                                 unsigned int modifiers,
                                 int time)
 {
-  ASSERT(window_);
-  int delta = x + y - x_ - y_;
-  window_->zoom_ = Max(0.00001, zoom_ * Pow(1.002,delta));
-  window_->redraw();
+  //  ASSERT(window_);
+  if (window_) {
+    int delta = x + y - x_ - y_;
+    window_->zoom_ = Max(0.00001, zoom_ * Pow(1.002,delta));
+    window_->redraw();
+  }
   return STOP_E;
 }    
   

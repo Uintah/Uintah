@@ -138,6 +138,8 @@ Thread::Thread(ThreadGroup* g, const char* name)
 void
 Thread::run_body()
 {
+  runner_->run();
+#if 0
     try {
 	runner_->run();
     } catch(const ThreadError& e){
@@ -164,6 +166,7 @@ Thread::run_body()
 	Thread::niceAbort();
 #endif
     }
+#endif
 }
 
 Thread::Thread(Runnable* runner, const char* name,
@@ -289,7 +292,7 @@ Thread::niceAbort(void* context /* = 0 */)
   fprintf(stderr, getStackTrace(context).c_str());
   char* smode = getenv("SCI_SIGNALMODE");
   if (!smode)
-    smode = "ask"; //"e"; 
+    smode = "e"; 
 	
   Thread* s=Thread::self();
   print_threads();
@@ -357,6 +360,7 @@ Thread::niceAbort(void* context /* = 0 */)
     } else if (strcasecmp(smode, "kill") == 0) {
       exit();
     } else if (strcasecmp(smode, "exit") == 0) {
+      fprintf(stderr, "Exiting\n");
       exitAll(1);
     } else {
       fprintf(stderr, "Unrecognized option, exiting\n");

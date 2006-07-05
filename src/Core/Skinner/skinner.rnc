@@ -41,7 +41,7 @@ attlist.var &=
   attribute name { text },
   [ a:defaultValue = "string" ]
   attribute type { "string" | "int" | "double" | "bool" | "color" }?,
-  [ a:defaultValue = "no" ] attribute overwrite { "yes" | "no" }?,
+  [ a:defaultValue = "yes" ] attribute overwrite { "yes" | "no" }?,
   [ a:defaultValue = "no" ] attribute propagate { "yes" | "no" }?
 object =
   element object { attlist.object, var*, signal*, definition*, object* }
@@ -52,7 +52,7 @@ definition = element definition { attlist.definition, object }
 attlist.definition &=
   attribute class { text },
   attribute state { text }?
-signal = element signal { attlist.signal, empty }
+signal = element signal { attlist.signal, text }
 attlist.signal &=
   attribute name { text },
   attribute target { text }

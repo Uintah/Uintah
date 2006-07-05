@@ -71,6 +71,7 @@ PROGRAM := $(SRCDIR)/painter
 SRCS := $(SRCDIR)/Painter.cc \
         $(SRCDIR)/PainterTools.cc \
         $(SRCDIR)/PainterBrushTool.cc \
+        $(SRCDIR)/PainterSignalTargets.cc \
         $(SRCDIR)/main.cc \
 
 include $(SCIRUN_SCRIPTS)/program.mk

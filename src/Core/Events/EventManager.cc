@@ -50,6 +50,7 @@ EventManager::EventManager() :
 
 EventManager::~EventManager()
 {
+  mailbox_.send(new QuitEvent());
   mboxes_lock_.lock();
   bool empty = mboxes_.empty();
   mboxes_lock_.unlock();
@@ -93,6 +94,12 @@ void
 EventManager::add_event(event_handle_t event) 
 {
   if (stream_ && stream_->reading()) return;
+
+  KeyEvent *ke = dynamic_cast<KeyEvent*>(event.get_rep());
+  if (ke && !ke->get_key_state() )
+  {
+    cerr << "Invalid key event\n";
+  }
 
   mailbox_.send(event);
 }
@@ -232,7 +239,7 @@ EventManager::play_trail() {
       continue;
     }   
 
-    if (event_time = event->get_time()) {
+    if ((event_time = event->get_time())) {
       if (last_event_time) {
         double diff = (event_time-last_event_time) * millisecond;
         timer.wait_for_time(last_timer_time + diff);
@@ -289,7 +296,7 @@ EventManager::run()
       }
     } else {
       if (sci_getenv_p("SCI_DEBUG")) {
-        cerr << "Event target mailbox id """"\n";
+        cerr << "Event target mailbox id empty, broadcastingb\n";
       }
 
       id_tm_map_t::iterator it = mboxes_.begin();

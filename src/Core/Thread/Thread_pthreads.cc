@@ -599,6 +599,7 @@ Thread::exitAll(int code)
     // Just use the normal exit function.
     ::exit(code);
   }
+  ::exit(code);
 }
 
 

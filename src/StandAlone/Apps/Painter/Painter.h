@@ -741,15 +741,18 @@ private:
 #endif
   
   //  propagation_state_e   start_brush_tool(event_handle_t);
+  CatcherFunction_t     InitializeSignalCatcherTargets;
   CatcherFunction_t     SliceWindow_Maker;
-  CatcherFunction_t     start_brush_tool;
+  CatcherFunction_t     StartBrushTool;
   CatcherFunction_t     quit;
-  CatcherFunction_t     load_CThead;
   CatcherFunction_t     Autoview;
-  CatcherFunction_t     LoadFile;
   CatcherFunction_t     CopyLayer;
   CatcherFunction_t     DeleteLayer;
   CatcherFunction_t     NewLayer;
+  CatcherFunction_t     StartITKGradientTool;
+  CatcherFunction_t     ITKImageFileRead;
+  CatcherFunction_t     ITKImageFileWrite;
+  CatcherFunction_t     NrrdFileRead;
 public:
   static Skinner::DrawableMakerFunc_t maker;
   static string         class_name() { return "Painter"; }

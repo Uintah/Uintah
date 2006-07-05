@@ -324,7 +324,7 @@ namespace SCIRun {
         const string &id = *id_iter;
         SignalThrower::Catcher_t catcher_target = 
           make_pair(object, object->get_catcher(id));
-        catchers[id].push_front(catcher_target);
+        catchers[id].first.push_front(catcher_target);
       }
 
 
@@ -396,8 +396,8 @@ namespace SCIRun {
       for(id_iter  = catcher_targets.begin();
           id_iter != catcher_targets.end(); ++id_iter) {
         const string &id = *id_iter;
-        ASSERTMSG(!catchers[id].empty(), "Catchers Empty!");
-        catchers[id].pop_front();
+        ASSERTMSG(!catchers[id].first.empty(), "Catchers Empty!");
+        catchers[id].first.pop_front();
       }
       
       return object;
@@ -486,28 +486,36 @@ namespace SCIRun {
         return;
       }
 
-      SignalThrower::CatchersOnDeck_t &signal_catchers = catchers_iter->second;
+      const char *node_contents = 0;
+      if (node->children) { 
+        node_contents = XMLUtil::xmlChar_to_char(node->children->content);
+        if (node_contents && catchers_iter->second.second == "") {
+          catchers_iter->second.second = node_contents;
+        }
+      }
+
+      SignalThrower::CatchersOnDeck_t &signal_catchers = catchers_iter->second.first;
       SignalThrower::CatchersOnDeck_t::iterator catcher_iter = 
         signal_catchers.begin();
       for (;catcher_iter != signal_catchers.end(); ++catcher_iter) {
         SignalCatcher *catcher = catcher_iter->first;
         SignalCatcher::CatcherFunctionPtr function = catcher_iter->second;
         //          catcher->get_catcher(signaltarget);
-        if (function) {
-          if (thrower->get_signal_id(signalname)) {
-//             cerr << object->get_id() << ":" << signalname 
-//                  << " caught by : " << ((Drawable *)(catcher))->get_id() 
-//                  << ": " << signaltarget << std::endl;
-            thrower->catchers_[signalname].push_front
-              (make_pair(catcher, function));
-          }  else {
-            //cerr << "Translating signal: " 
-            //     << signalname << " to: " << signaltarget << std::endl;
-            catchers[signalname].push_front(make_pair(catcher, function));
-            thrower_as_catcher->catcher_functions_[signalname] = function;
-            object->get_all_target_ids();
+        ASSERT(function);
+          
+          if (!thrower->hookup_signal_to_catcher_target
+              (signalname, catchers_iter->second.second, catcher, function) &&
+              object->catcher_targets_.find(signalname) == object->catcher_targets_.end())
+          {
+//             cerr << "Translating signal: " 
+//                  << signalname << " to: " << signaltarget << std::endl;
+            catchers[signalname].first.push_front(make_pair(catcher, function));
+            catchers[signalname].second = catchers_iter->second.second;
+
+            object->catcher_targets_[signalname] = function;
+            //            cerr << object->get_id() << " now has catcher targets: ";
+            thrower_as_catcher->get_all_target_ids();
           }
-        }
       }
     }
         

@@ -179,9 +179,12 @@ Mailbox<Item>::Mailbox(const char* name, int size)
 template<class Item>
 Mailbox<Item>::~Mailbox()
 {
+  mutex_.tryLock();
+  mutex_.unlock();
+
   // release all waiting threads
-  empty_.conditionBroadcast();
-  full_.conditionBroadcast();
+  //  empty_.conditionBroadcast();
+  //  full_.conditionBroadcast();
 }
 
 template<class Item>
