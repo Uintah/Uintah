@@ -6,7 +6,8 @@ SUBDIRS := \
         $(SRCDIR)/TestMatrix3 \
         $(SRCDIR)/TestConsecutiveRangeSet \
         $(SRCDIR)/TestRangeTree \
-	$(SRCDIR)/TestBoxGrouper \
+				$(SRCDIR)/TestBoxGrouper \
+				$(SRCDIR)/BNRRegridder \
 #       $(SRCDIR)/SFCTest \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
