@@ -7,7 +7,11 @@ SRCDIR   := Packages/Uintah/CCA/Components/Regridder
 SRCS     += $(SRCDIR)/RegridderCommon.cc \
 	    $(SRCDIR)/RegridderFactory.cc \
 	    $(SRCDIR)/HierarchicalRegridder.cc \
-	    $(SRCDIR)/BNRRegridder.cc
+			$(SRCDIR)/BNRTask.cc \
+	    $(SRCDIR)/BNRRegridder.cc \
+	    $(SRCDIR)/PatchFixer.cc 
+			
+			
 
 PSELIBS := \
 	Packages/Uintah/CCA/Ports        \
