@@ -65,16 +65,19 @@
 #include <Core/Events/EventManager.h>
 #include <Core/Events/Tools/BaseTool.h>
 #include <Core/Util/FileUtils.h>
+
+#ifdef HAVE_INSIGHT
+
 #include <itkImageFileReader.h>
 #include <itkImageFileWriter.h>
 
+#endif
 
 namespace SCIRun {
 
 
 BaseTool::propagation_state_e 
 Painter::InitializeSignalCatcherTargets(event_handle_t) {
-  cerr << "initializing signal catcher targets for painter\n";
   REGISTER_CATCHER_TARGET(Painter::Autoview);
   REGISTER_CATCHER_TARGET(Painter::quit);
   REGISTER_CATCHER_TARGET(Painter::SliceWindow_Maker);
@@ -170,7 +173,9 @@ Painter::Autoview(event_handle_t) {
 
 BaseTool::propagation_state_e 
 Painter::StartITKGradientTool(event_handle_t) {
+#ifdef HAVE_INSIGHT
   tm_.add_tool(new ITKGradientMagnitudeTool(this),100); 
+#endif
   return STOP_E;
 }
 
@@ -194,6 +199,7 @@ Painter::SliceWindow_Maker(event_handle_t event) {
 
 BaseTool::propagation_state_e 
 Painter::ITKImageFileRead(event_handle_t event) {
+#ifdef HAVE_INSIGHT
   cerr << "ITKImageFileRead\n";
   Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
   ASSERT(signal);
@@ -236,6 +242,7 @@ Painter::ITKImageFileRead(event_handle_t event) {
 
   // ITKDataTypeSignal *return_event = new ITKDataTypeSignal(img);
   //  event = return_event;
+#endif
   return MODIFIED_E;
 }
 
@@ -243,6 +250,7 @@ Painter::ITKImageFileRead(event_handle_t event) {
 
 BaseTool::propagation_state_e 
 Painter::ITKImageFileWrite(event_handle_t event) {
+#ifdef HAVE_INSIGHT
   cerr << "ITKImageFileWrite\n";
 
   Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
@@ -276,6 +284,7 @@ Painter::ITKImageFileWrite(event_handle_t event) {
 
   // ITKDataTypeSignal *return_event = new ITKDataTypeSignal(img);
   //  event = return_event;
+#endif
   return MODIFIED_E;
 }
 
