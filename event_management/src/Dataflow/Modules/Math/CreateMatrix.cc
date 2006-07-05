@@ -30,6 +30,8 @@ private:
   GuiInt    nrows_;
   GuiInt    ncols_;
   GuiString data_;
+  GuiString clabel_;
+  GuiString rlabel_;
 };
 
 
@@ -38,7 +40,9 @@ CreateMatrix::CreateMatrix(GuiContext* ctx)
   : Module("CreateMatrix", ctx, Source, "Math", "SCIRun"),
     nrows_(get_ctx()->subVar("rows"), 1),
     ncols_(get_ctx()->subVar("cols"), 1),
-    data_(get_ctx()->subVar("data"), "{0.0}")
+    data_(get_ctx()->subVar("data"), "{0.0}"),
+    clabel_(get_ctx()->subVar("clabel"), "{0}"),
+    rlabel_(get_ctx()->subVar("rlabel"), "{0}")
 {
 }
 
