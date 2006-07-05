@@ -42,6 +42,7 @@
 #include <Core/Algorithms/Fields/GetFieldDataMinMax.h>
 #include <Core/Algorithms/Fields/GetFieldInfo.h>
 #include <Core/Algorithms/Fields/IsInsideField.h>
+#include <Core/Algorithms/Fields/IndicesToData.h>
 #include <Core/Algorithms/Fields/LinkFieldBoundary.h>
 #include <Core/Algorithms/Fields/LinkToCompGrid.h>
 #include <Core/Algorithms/Fields/LinkToCompGridByDomain.h>
@@ -84,22 +85,6 @@ bool FieldsAlgo::ApplyMappingMatrix(FieldHandle fsrc,  FieldHandle fdst, FieldHa
 
 bool FieldsAlgo::ClipFieldBySelectionMask(FieldHandle input, FieldHandle& output, MatrixHandle selmask,MatrixHandle &interpolant)
 {
-  if (input.get_rep() == 0)
-  {
-    error("ClipFieldBySelectionMask: No input field is given");
-    return(false);  
-  }
-  if (!input->mesh()->is_editable()) 
-  {
-    FieldHandle temp;
-    if(!Unstructure(input,temp))
-    {
-      error("ClipFieldBySelectionMask: Could not edit the mesh");
-      return(false);
-    }
-    input = temp;
-  }
-
   ClipBySelectionMaskAlgo algo;
   return(algo.ClipBySelectionMask(pr_,input,output,selmask,interpolant));
 }
@@ -202,6 +187,14 @@ bool FieldsAlgo::IsInsideField(FieldHandle input, FieldHandle& output, FieldHand
   IsInsideFieldAlgo algo;
   return(algo.IsInsideField(pr_,input,output,objectfield));
 }
+
+
+bool FieldsAlgo::IndicesToData(FieldHandle input, FieldHandle& output, MatrixHandle data)
+{
+  IndicesToDataAlgo algo;
+  return(algo.IndicesToData(pr_,input,output,data));
+}
+
 
 bool FieldsAlgo::LinkFieldBoundary(FieldHandle input, MatrixHandle& NodeLink, MatrixHandle& ElemLink, double tol, bool linkx, bool linky, bool linkz)
 {

@@ -104,7 +104,7 @@ bool FieldDataElemToNodeAlgoT<FIELD,OFIELD>::FieldDataElemToNode(ProgressReporte
   mesh->begin(it);
   mesh->end(eit);
 
-  if ((method == "Interpolate")||(method == "Average"))
+  if ((method == "Interpolate")||(method == "Average")||(method == "interpolate")||(method == "average"))
   {
     while (it != eit)
     {
@@ -121,7 +121,7 @@ bool FieldDataElemToNodeAlgoT<FIELD,OFIELD>::FieldDataElemToNode(ProgressReporte
     }
   }
   
-  if (method == "Max")
+  if ((method == "Max")||(method=="max")||(method=="maximum")||(method=="Maximum"))
   {
     while (it != eit)
     {
@@ -143,7 +143,7 @@ bool FieldDataElemToNodeAlgoT<FIELD,OFIELD>::FieldDataElemToNode(ProgressReporte
     }
   }
   
-  if (method == "Min")
+  if ((method == "Min")||(method=="min")||(method=="minimum")||(method="Minimum"))
   {
     while (it != eit)
     {
@@ -165,7 +165,7 @@ bool FieldDataElemToNodeAlgoT<FIELD,OFIELD>::FieldDataElemToNode(ProgressReporte
     }    
   }
 
-  if (method == "Sum")
+  if ((method == "Sum")||(method=="sum"))
   {
     while (it != eit)
     {
@@ -181,7 +181,7 @@ bool FieldDataElemToNodeAlgoT<FIELD,OFIELD>::FieldDataElemToNode(ProgressReporte
     }
   }
 
-  if (method == "Median")
+  if ((method == "Median")||(method == "median"))
   {
     while (it != eit)
     {

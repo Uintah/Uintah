@@ -19,6 +19,7 @@ SRCS     += $(SRCDIR)/ApplyMappingMatrix.cc\
             $(SRCDIR)/ConvertToTriSurf.cc\
             $(SRCDIR)/DomainBoundary.cc\
             $(SRCDIR)/ClipBySelectionMask.cc\
+            $(SRCDIR)/IndicesToData.cc\
             $(SRCDIR)/DistanceField.cc\
             $(SRCDIR)/FieldsAlgo.cc\
             $(SRCDIR)/FieldBoundary.cc\
