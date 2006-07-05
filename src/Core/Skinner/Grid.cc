@@ -57,7 +57,10 @@ namespace SCIRun {
     BaseTool::propagation_state_e
     Grid::process_event(event_handle_t event)
     {
-      ReLayoutCells(event);
+      WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
+      if (window && window->get_window_state() & WindowEvent::REDRAW_E) {
+        ReLayoutCells(event);
+      }
       const RectRegion &region = get_region();
       unsigned int rows = cells_.size();
       double usedy = 0.0;
