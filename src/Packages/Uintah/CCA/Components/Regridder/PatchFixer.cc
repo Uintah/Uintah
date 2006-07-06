@@ -10,37 +10,37 @@ void PatchFixer::BuildLattice(const vector<PseudoPatch> &patches)
 {
 	//bound patches
 
-	bounds=patches[0];
+	bounds_=patches[0];
 	for(unsigned int p=1;p<patches.size();p++)
 	{
 		for(unsigned int d=0;d<3;d++)
 		{
-			if(patches[p].high[d]>bounds.high[d])
-				bounds.high[d]=patches[p].high[d];
-			if(patches[p].low[d]<bounds.low[d])
-				bounds.low[d]=patches[p].low[d];
+			if(patches[p].high[d]>bounds_.high[d])
+				bounds_.high[d]=patches[p].high[d];
+			if(patches[p].low[d]<bounds_.low[d])
+				bounds_.low[d]=patches[p].low[d];
 		}								
 	}
 
 	//allocate celltolattice mapping
-	csize=bounds.high-bounds.low+IntVector(1,1,1);
-	cellstolattice[0].resize(csize[0]);
-	cellstolattice[1].resize(csize[1]);
-	cellstolattice[2].resize(csize[2]);
+	csize_=bounds_.high-bounds_.low+IntVector(1,1,1);
+	cellstolattice_[0].resize(csize_[0]);
+	cellstolattice_[1].resize(csize_[1]);
+	cellstolattice_[2].resize(csize_[2]);
 	
 
 	//initialize celltolattice mapping
-	cellstolattice[0].assign(csize[0],-99999999);
-	cellstolattice[1].assign(csize[1],-99999999);
-	cellstolattice[2].assign(csize[2],-99999999);
+	cellstolattice_[0].assign(csize_[0],-99999999);
+	cellstolattice_[1].assign(csize_[1],-99999999);
+	cellstolattice_[2].assign(csize_[2],-99999999);
 
 	//mark each lattice point that exists
 	for(unsigned int p=0;p<patches.size();p++)
 	{
 		for(int d=0;d<3;d++)
 		{
-			cellstolattice[d][patches[p].low[d]-bounds.low[d]]=1;
-			cellstolattice[d][patches[p].high[d]-bounds.low[d]]=1;
+			cellstolattice_[d][patches[p].low[d]-bounds_.low[d]]=1;
+			cellstolattice_[d][patches[p].high[d]-bounds_.low[d]]=1;
 		}
 	}
 
@@ -48,22 +48,22 @@ void PatchFixer::BuildLattice(const vector<PseudoPatch> &patches)
 	for(unsigned int d=0;d<3;d++)
 	{
 		int l=-1;	//lattice coordinate
-		for(int i=0;i<csize[d];i++)
+		for(int i=0;i<csize_[d];i++)
 		{
-			if(cellstolattice[d][i]==1)		//edge exists
+			if(cellstolattice_[d][i]==1)		//edge exists
 			{
 				l++;
-				latticetocells[d].push_back(i+bounds.low[d]);		//map lattice coordinate to cell coordinate
+				latticetocells_[d].push_back(i+bounds_.low[d]);		//map lattice coordinate to cell coordinate
 			}
-			cellstolattice[d][i]=l;
+			cellstolattice_[d][i]=l;
 		}	
-		lsize[d]=l;
+		lsize_[d]=l;
 	}
 				
 	//make lattice
-	int size=lsize[0]*lsize[1]*lsize[2];
-	lattice.resize(size);
-	lattice.assign(size,-1);
+	int size=lsize_[0]*lsize_[1]*lsize_[2];
+	lattice_.resize(size);
+	lattice_.assign(size,-1);
 				
 	//Fill lattice
 	for(unsigned int p=0;p<patches.size();p++)
@@ -74,7 +74,7 @@ void PatchFixer::BuildLattice(const vector<PseudoPatch> &patches)
 }
 void PatchFixer::Fill(const PseudoPatch patch,const int id)
 {
-	int Y=lsize[0],Z=Y*lsize[1];
+	int Y=lsize_[0],Z=Y*lsize_[1];
 	int b[3]={patch.low[0],patch.low[1],patch.low[2]};
 	int e[3]={patch.high[0],patch.high[1],patch.high[2]};
 
@@ -89,7 +89,7 @@ void PatchFixer::Fill(const PseudoPatch patch,const int id)
 					index=b[0]+y*Y+z*Z;
 					for(int x=b[0];x<e[0];x++)
 					{
-						lattice[index]=id;
+						lattice_[index]=id;
 						index++;
 					}
 			}
@@ -98,12 +98,12 @@ void PatchFixer::Fill(const PseudoPatch patch,const int id)
 void PatchFixer::FixUp(vector<PseudoPatch> &patches)
 {
 	//search lattice
-  int size=patches.size()/numprocs;
-	int rem=patches.size()%numprocs;
+  int size=patches.size()/d_myworld->size();
+	int rem=patches.size()%d_myworld->size();
 	int mystart=0,myend;
 	int mysize=size;
 	
-	if(rank<rem)
+	if(d_myworld->myrank()<rem)
 	  mysize++;
 
 	if(mysize==0)
@@ -112,9 +112,9 @@ void PatchFixer::FixUp(vector<PseudoPatch> &patches)
 	}
 	else
 	{
-		for(int p=0;p<numprocs;p++)
+		for(int p=0;p<d_myworld->size();p++)
 		{
-		  if(p==rank)
+		  if(p==d_myworld->myrank())
 		    break;
 		  if(p<rem)
 		    mystart+=size+1;
@@ -147,7 +147,7 @@ void PatchFixer::FixUp(vector<PseudoPatch> &patches)
 			current=search.top();
 			search.pop();
 			/*
-			cout << "rank:" << rank << ": searching patch: {"  
+			cout << "d_myworld->myrank():" << d_myworld->myrank() << ": searching patch: {"  
 					 << current.low[0] << "-" << current.high[0] << ", "
 					 << current.low[1] << "-" << current.high[1] << ", "
 					 << current.low[2] << "-" << current.high[2] << "}\n";
@@ -160,16 +160,16 @@ void PatchFixer::FixUp(vector<PseudoPatch> &patches)
 			FixFace(patches,current,2,1);
 		}
 	}
-	vector<int> patch_sizes(numprocs);
-	vector<int> displacements(numprocs);
+	vector<int> patch_sizes(d_myworld->size());
+	vector<int> displacements(d_myworld->size());
 	int my_patch_size=patches.size();
 	//allgather patchset sizes
-	MPI_Allgather(&my_patch_size,1,MPI_INT,&patch_sizes[0],1,MPI_INT,comm);	
+	MPI_Allgather(&my_patch_size,1,MPI_INT,&patch_sizes[0],1,MPI_INT,d_myworld->getComm());	
 	
 	int total_size=patch_sizes[0];
 	displacements[0]=0;
 	patch_sizes[0]*=sizeof(PseudoPatch);
-	for(int p=1;p<numprocs;p++)
+	for(int p=1;p<d_myworld->size();p++)
 	{
 		displacements[p]=total_size*sizeof(PseudoPatch);
 		total_size+=patch_sizes[p];
@@ -179,28 +179,28 @@ void PatchFixer::FixUp(vector<PseudoPatch> &patches)
 	
 	patches.resize(total_size);
 	/*
-	cout << "rank:" << rank << ": total size:" << total_size << endl;	
+	cout << "d_myworld->myrank():" << d_myworld->myrank() << ": total size:" << total_size << endl;	
 	
-	cout << "rank:" << rank << ": displacements: " ;	
-	for(int p=0;p<numprocs;p++)
+	cout << "d_myworld->myrank():" << d_myworld->myrank() << ": displacements: " ;	
+	for(int p=0;p<d_myworld->size();p++)
 	{
 			cout << displacements[p] << " ";
 	}
 	cout << endl;
-	cout << "rank:" << rank << ": counts: " ;	
-	for(int p=0;p<numprocs;p++)
+	cout << "d_myworld->myrank():" << d_myworld->myrank() << ": counts: " ;	
+	for(int p=0;p<d_myworld->size();p++)
 	{
 			cout << patch_sizes[p] << " ";
 	}
 	cout << endl;
 	*/
 	//allgatherv patchsets
-	MPI_Allgatherv(&mypatches[0],my_patch_size*sizeof(PseudoPatch),MPI_BYTE,&patches[0],&patch_sizes[0],&displacements[0],MPI_BYTE,comm);
+	MPI_Allgatherv(&mypatches[0],my_patch_size*sizeof(PseudoPatch),MPI_BYTE,&patches[0],&patch_sizes[0],&displacements[0],MPI_BYTE,d_myworld->getComm());
 }
 
 void PatchFixer::FixFace(vector<PseudoPatch> &patches,PseudoPatch patch, int dim, int side)
 {
-	int Y=lsize[0],Z=Y*lsize[1];
+	int Y=lsize_[0],Z=Y*lsize_[1];
 	int xdim,ydim,zdim,Xm,Ym,Zm;
 	int x,by,bz,ey,ez;
 	int p1,p2;
@@ -236,7 +236,7 @@ void PatchFixer::FixFace(vector<PseudoPatch> &patches,PseudoPatch patch, int dim
 		cout << "error invalid side in fixup\n";
 		exit(0);
 	}
-	if(x>=0 && x<lsize[xdim])	//only search if i'm not beyond the bounds
+	if(x>=0 && x<lsize_[xdim])	//only search if i'm not beyond the bounds_
 	{
 		by=CellToLattice(patch.low[ydim],ydim);
 		ey=CellToLattice(patch.high[ydim],ydim);
@@ -245,16 +245,16 @@ void PatchFixer::FixFace(vector<PseudoPatch> &patches,PseudoPatch patch, int dim
 
 		for(int y=by;y<ey;y++)
 		{
-			bool state=lattice[x*Xm+y*Ym+bz*Zm]!=-1;
+			bool state=lattice_[x*Xm+y*Ym+bz*Zm]!=-1;
 			bool newstate;
 			for(int z=bz+1;z<ez;z++)
 			{
-				newstate=lattice[x*Xm+y*Ym+z*Zm]!=-1;
+				newstate=lattice_[x*Xm+y*Ym+z*Zm]!=-1;
 				if(state!=newstate)
 				{
 					state=newstate;
-					p1=lattice[(x-side)*Xm+y*Ym+z*Zm];
-					p2=lattice[(x-side)*Xm+y*Ym+(z-1)*Zm];
+					p1=lattice_[(x-side)*Xm+y*Ym+z*Zm];
+					p2=lattice_[(x-side)*Xm+y*Ym+(z-1)*Zm];
 					if(p1==p2)
 					{
 						Split split;
@@ -268,16 +268,16 @@ void PatchFixer::FixFace(vector<PseudoPatch> &patches,PseudoPatch patch, int dim
 		
 		for(int z=bz;z<ez;z++)
 		{
-			bool state=lattice[x*Xm+by*Ym+z*Zm]!=-1;
+			bool state=lattice_[x*Xm+by*Ym+z*Zm]!=-1;
 			bool newstate;
 			for(int y=by+1;y<ey;y++)
 			{
-				newstate=lattice[x*Xm+y*Ym+z*Zm]!=-1;
+				newstate=lattice_[x*Xm+y*Ym+z*Zm]!=-1;
 				if(state!=newstate)
 				{
 					state=newstate;
-					p1=lattice[(x-side)*Xm+y*Ym+z*Zm];
-					p2=lattice[(x-side)*Xm+(y-1)*Ym+z*Zm];
+					p1=lattice_[(x-side)*Xm+y*Ym+z*Zm];
+					p2=lattice_[(x-side)*Xm+(y-1)*Ym+z*Zm];
 					if(p1==p2)
 					{
 						Split split;
