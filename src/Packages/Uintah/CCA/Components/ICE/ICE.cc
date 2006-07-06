@@ -905,17 +905,35 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
                                    
   scheduleAdvectAndAdvanceInTime(         sched, patches, ice_matls_sub,
                                                           all_matls);
-                                                          
+}
+/* _____________________________________________________________________
+ Function~  ICE::scheduleFinalizeTimestep--
+  This is called after scheduleTimeAdvance and the scheduleCoarsen
+_____________________________________________________________________*/
+void
+ICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
+{
+
+  if(!doICEOnLevel(level->getIndex(), level->getGrid()->numLevels()))
+    return;
+
+  const PatchSet* patches = level->eachPatch();
+  const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
+  const MaterialSet* all_matls = d_sharedState->allMaterials();  
+  const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
+
+
   scheduleConservedtoPrimitive_Vars(      sched, patches, ice_matls_sub,
                                                           all_matls);
                                                           
   if(d_analysisModule){                                                        
-    d_analysisModule->scheduleDoAnalysis(   sched, level);
+    d_analysisModule->scheduleDoAnalysis( sched, level);
   }                                                          
                                                           
   scheduleTestConservation(               sched, patches, ice_matls_sub,
-                                                          all_matls); 
-
+                                                          all_matls);
+                                                          
+  //_________________________________                                                        
   if(d_canAddICEMaterial){
     //  This checks to see if the model on THIS patch says that it's
     //  time to add a new material
@@ -926,12 +944,6 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     scheduleSetNeedAddMaterialFlag(         sched, level,   all_matls);
   }
   cout_doing << "---------------------------------------------------------"<<endl;
-}
-
-void
-ICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
-{
-
 }
 
 /* _____________________________________________________________________
@@ -5245,8 +5257,8 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
             string Labelname = tvar->var->getName();
             CCVariable<double> q_CC;
             constCCVariable<double> q_adv;
-            new_dw->allocateAndPut(q_CC, tvar->var,indx, patch);
-            new_dw->get(q_adv, tvar->var_adv, indx, patch, gn,0);
+            new_dw->allocateAndPut(q_CC, tvar->var,     indx, patch);
+            new_dw->get(q_adv,           tvar->var_adv, indx, patch, gn,0);
              
             for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
               IntVector c = *iter;
@@ -5710,7 +5722,9 @@ void ICE::ICEModelSetup::registerAMR_RefluxVariable(const MaterialSubset* matls,
 {
   AMR_refluxVariable* t = scinew AMR_refluxVariable;
   t->matls = matls;
-  t->var_CC = var;
+  string var_adv_name = var->getName() + "_adv";
+  t->var_adv = VarLabel::find(var_adv_name);  //Advected conserved quantity
+  
   t->var_X_FC_flux = VarLabel::create(var->getName()+"_X_FC_flux", 
                                 SFCXVariable<double>::getTypeDescription());
   t->var_Y_FC_flux = VarLabel::create(var->getName()+"_Y_FC_flux", 
