@@ -3560,6 +3560,7 @@ sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 #fi
 PETSC_VERSION_DIR=petsc-2.2.1
 
+if test -z "$PETSC_ARCH"; then
 case $host in
   *-irix*)
     if test "$enable_64bit" = "yes"; then
@@ -3599,7 +3600,7 @@ case $host in
     PETSC_ARCH=""
     ;;
 esac
-
+fi
 # check for mpi-uni if either --with-unipetsc or --with-mpiuni,
 #   check here to look in petsc's subdirs.
 #  --  search for mpi-uni  --------------------------------------------
