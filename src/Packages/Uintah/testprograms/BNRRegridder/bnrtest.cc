@@ -5,6 +5,8 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 
 #include <iostream>
+
+using namespace Uintah;
 using namespace std;
 
 const int X=700, Y=700;
