@@ -111,9 +111,16 @@ endif
 all: $(OTF_LIBS)
 
 %.d: %.cc
+ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@echo "Building .d file for: $<"
+	@set -e; $(CXX) -M $(CFLAGS) $(INCLUDES) $< \
+          | sed 's/\($*\)\.o[ :]*/\1.o $@ : /g' > $@; \
+          [ -s $@ ] || rm -f $@
+else
 	set -e; $(CXX) -M $(CFLAGS) $(INCLUDES) $< \
           | sed 's/\($*\)\.o[ :]*/\1.o $@ : /g' > $@; \
           [ -s $@ ] || rm -f $@
+endif
 
 %.o : %.cc %.d
 ifeq ($(SCI_MAKE_BE_QUIET),true)
