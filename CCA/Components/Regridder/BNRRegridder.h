@@ -45,28 +45,35 @@ WARNING
   public:
     BNRRegridder(const ProcessorGroup* pg);
     virtual ~BNRRegridder();
-		void SetTolerance(float tola, float tolb) {this->tola=tola;this->tolb=tolb;};
+    void SetTolerance(float tola, float tolb) {this->tola=tola;this->tolb=tolb;};
     //! Create a new Grid
     virtual Grid* regrid(Grid* oldGrid, SchedulerP& sched, 
                          const ProblemSpecP& ups);
 		
-		/***** these should be private*******/
-		void RunBR(vector<IntVector> &flags, vector<PseudoPatch> &patches);
-	private:
-		int task_count;								//number of tasks created on this proc
-		MPI_Comm comm;								//mpi communicator
-		float tola,tolb;							//Tolerance parameters
-		/*
-		int tag_start;								//beginning of my tag range
-		int tags;											//number of tags I have
-		*/
-		//queues for tasks
-		list<BNRTask> tasks;				//list of tasks created throughout the run
-		queue<BNRTask*> immediate_q;  //tasks that are always ready to run
-		queue<BNRTask*> delay_q;      //tasks that may be ready to run    
-		queue<BNRTask*> tag_q;				//tasks that are waiting for tags to continue
-		queue<int> tags;							//available tags
-		PatchFixer patchfixer;
+    virtual void problemSetup(const ProblemSpecP& params,
+			      const GridP& grid,
+			      const SimulationStateP& state);
+
+    /***** these should be private*******/
+    void RunBR(vector<IntVector> &flags, vector<PseudoPatch> &patches);
+  private:
+    void problemSetup_BulletProofing(const int k);
+    int task_count;								//number of tasks created on this proc
+    MPI_Comm comm;								//mpi communicator
+    float tola,tolb;							//Tolerance parameters
+    /*
+      int tag_start;								//beginning of my tag range
+      int tags;											//number of tags I have
+    */
+    
+//queues for tasks
+    list<BNRTask> tasks;				//list of tasks created throughout the run
+    queue<BNRTask*> immediate_q;  //tasks that are always ready to run
+    queue<BNRTask*> delay_q;      //tasks that may be ready to run    
+    queue<BNRTask*> tag_q;				//tasks that are waiting for tags to continue
+    queue<int> tags;							//available tags
+    PatchFixer patchfixer;
+    SizeList d_minPatchSize;
   };
 
 } // End namespace Uintah
