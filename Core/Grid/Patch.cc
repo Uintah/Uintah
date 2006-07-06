@@ -1228,13 +1228,7 @@ void Patch::cullIntersection(VariableBasis basis, IntVector bl, const Patch* nei
     if (n_int_high[dim] == p_int_low[dim]) {
       region_high[dim] = Min(region_high[dim], neighbor->getInteriorHighIndex(basis)[dim]);
     }
-    else if (n_int_low[dim] == p_int_low[dim] && n_int_high[dim] == p_int_high[dim]) {
-      // DO NOTHING
-    }
-    else {
-      if (!(n_int_low[dim] == p_int_high[dim]))
-        cout << "    BAd patchon dim " << dim << ": " << p_int_low << " " << p_int_high << " neighor " << n_int_low << " " << n_int_high << endl;
-      ASSERT(n_int_low[dim] == p_int_high[dim]);
+    else if (n_int_low[dim] == p_int_high[dim]) {
       region_low[dim] = Max(region_low[dim], neighbor->getInteriorLowIndex(basis)[dim]);
     }
   }
