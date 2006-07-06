@@ -901,8 +901,10 @@ OnDemandDataWarehouse::haveParticleSubset(int matlIndex, const Patch* patch,
      return true;
    }
 
-   if (exact)
+   if (exact) {
+     d_lock.readUnlock();
      return false;
+   }
 
    // if not found, look for an encompassing particle subset
    for (iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
