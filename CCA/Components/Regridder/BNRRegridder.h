@@ -45,7 +45,7 @@ WARNING
   public:
     BNRRegridder(const ProcessorGroup* pg);
     virtual ~BNRRegridder();
-    void SetTolerance(float tola, float tolb) {this->tola=tola;this->tolb=tolb;};
+    void SetTolerance(float tola, float tolb) {tola_=tola;tolb_=tolb;};
     //! Create a new Grid
     virtual Grid* regrid(Grid* oldGrid, SchedulerP& sched, 
                          const ProblemSpecP& ups);
@@ -58,22 +58,17 @@ WARNING
     void RunBR(vector<IntVector> &flags, vector<PseudoPatch> &patches);
   private:
     void problemSetup_BulletProofing(const int k);
-    int task_count;								//number of tasks created on this proc
-    MPI_Comm comm;								//mpi communicator
-    float tola,tolb;							//Tolerance parameters
-    /*
-      int tag_start;								//beginning of my tag range
-      int tags;											//number of tags I have
-    */
+    int task_count_;								//number of tasks created on this proc
+    float tola_,tolb_;							//Tolerance parameters
     
 //queues for tasks
-    list<BNRTask> tasks;				//list of tasks created throughout the run
-    queue<BNRTask*> immediate_q;  //tasks that are always ready to run
-    queue<BNRTask*> delay_q;      //tasks that may be ready to run    
-    queue<BNRTask*> tag_q;				//tasks that are waiting for tags to continue
-    queue<int> tags;							//available tags
-    PatchFixer patchfixer;
-    SizeList d_minPatchSize;
+    list<BNRTask> tasks_;				//list of tasks created throughout the run
+    queue<BNRTask*> immediate_q_;  //tasks that are always ready to run
+    queue<BNRTask*> delay_q_;      //tasks that may be ready to run    
+    queue<BNRTask*> tag_q_;				//tasks that are waiting for tags to continue
+    queue<int> tags_;							//available tags
+    PatchFixer patchfixer_;
+    SizeList d_minPatchSize_;
   };
 
 } // End namespace Uintah

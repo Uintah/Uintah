@@ -1,33 +1,31 @@
 
 #include <Packages/Uintah/Core/Parallel/Parallel.h>
+#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/CCA/Components/Regridder/BNRRegridder.h>
 #include <Packages/Uintah/CCA/Components/Regridder/PatchFixer.h>
-#include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
+using namespace Uintah;
 
 #include <iostream>
 
 using namespace Uintah;
 using namespace std;
-
-const int X=700, Y=700;
+const int X_RES=10, Y_RES=10;
 float prob=.98;
-/*
-int f_array[X][Y]=
+int f_array[X_RES][Y_RES]=
 {
 	{1,1,0,0,0,0,0,0,0,0},
 	{1,1,0,0,0,0,0,0,0,0},
 	{1,1,1,1,0,0,0,0,0,0},
 	{1,1,1,1,0,0,0,0,0,0},
-	{0,0,1,1,0,0,0,0,0,0},
-	{0,0,1,1,1,1,1,1,1,1},
-	{0,0,1,1,1,1,1,1,1,1},
-	{0,0,0,0,0,0,0,0,1,1},
-	{0,0,0,0,0,0,0,0,1,1},
-	{0,0,0,0,0,0,0,0,1,1}
+	{0,0,1,1,1,1,0,0,0,0},
+	{0,0,1,1,1,1,0,0,0,0},
+	{0,0,0,0,1,1,1,1,0,0},
+	{0,0,0,0,1,1,1,1,0,0},
+	{0,0,0,0,0,0,1,1,1,1},
+	{0,0,0,0,0,0,1,1,1,1}
 };
-*/
 /*
-int f_array[X][Y]=
+int f_array[X_RES][Y_RES]=
 {
 	{1,1,1,1,1,1,1,1,0,0},
 	{1,1,1,1,0,1,1,1,0,0},
@@ -58,8 +56,8 @@ int main(int argc, char** argv)
 	PseudoPatch patch;
 
 	vector<IntVector> flags;
-	int size=X*Y/numprocs;
-	int rem=X*Y%numprocs;
+	int size=X_RES*Y_RES/numprocs;
+	int rem=X_RES*Y_RES%numprocs;
 	int mystart=0;
 	int mysize=size;
 	if(rank<rem)
@@ -75,15 +73,15 @@ int main(int argc, char** argv)
 			mystart+=size;
 	}
 	int f=0;	
-	for(int x=0;x<X;x++)
+	for(int x=0;x<X_RES;x++)
 	{
-		for(int y=0;y<Y;y++,f++)
+		for(int y=0;y<Y_RES;y++,f++)
 		{
 			if(f>=mystart && f<mystart+mysize)
 			{
 				float r=drand48();				
-				//	if(f_array[x][y]==1)
-				if(r<=prob)
+				if(f_array[x][y]==1)
+				//if(r<=prob)
 				{
 					IntVector flag;
 					flag[0]=x;
@@ -136,7 +134,7 @@ int main(int argc, char** argv)
 	{
 			cout << "Fixup done\n";
 			cout << "There are: " << patches.size() << " patches.\n";
-		/*
+		
 			cout << "They are: ";
 			for(unsigned int p=0;p<patches.size();p++)
 			{
@@ -146,11 +144,11 @@ int main(int argc, char** argv)
 					cout << patches[p].low[2] << "-" <<patches[p].high[2] << "} ";
 			}
 			cout << endl;
-			*/
+			
 	}
 		
 	MPI_Barrier(MPI_COMM_WORLD);	
-	if(rank==0)
+	//if(rank==0)
 		cout << "Timings: BR=" << finish1-start1 << " FixUp=" << finish2-start2 << " Total=" << finish1-start1+finish2-start2 << endl;
 
 	

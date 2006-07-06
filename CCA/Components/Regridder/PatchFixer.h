@@ -45,21 +45,16 @@ WARNING
   public:
     PatchFixer(const ProcessorGroup* pg) : d_myworld(pg) 
 		{
-			rank=d_myworld->myrank();
-			numprocs=d_myworld->size();
-			comm=d_myworld->getComm();
 		};
     ~PatchFixer() {};
 		void FixUp(vector<PseudoPatch> &patches);	
 	private:
 		const ProcessorGroup *d_myworld;
-		vector<int> lattice;
-		vector<int> cellstolattice[3];
-		vector<int> latticetocells[3];
-		PseudoPatch bounds;
-		IntVector csize,lsize;		
-		int rank, numprocs;		
-		MPI_Comm comm;
+		vector<int> lattice_;
+		vector<int> cellstolattice_[3];
+		vector<int> latticetocells_[3];
+		PseudoPatch bounds_;
+		IntVector csize_,lsize_;		
 		
 		void FixFace(vector<PseudoPatch> &patches,PseudoPatch patch, int dim, int side);
 		void SplitPatch(int index, vector<PseudoPatch> &patches, const Split &split);
@@ -67,7 +62,7 @@ WARNING
 		void Fill(const PseudoPatch patch,const int id);
 		inline int CellToLattice(int c, int d)
 		{
-		  return cellstolattice[d][c-bounds.low[d]];
+		  return cellstolattice_[d][c-bounds_.low[d]];
 		};
 		inline void CellToLattice( int* c)
 		{
@@ -78,7 +73,7 @@ WARNING
 		};
 		inline int LatticeToCell(int l, int d)
 		{
-			return latticetocells[d][l];
+			return latticetocells_[d][l];
 		};
 		inline void LatticeToCell( int* l)
 		{
