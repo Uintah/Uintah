@@ -82,13 +82,7 @@
 #include <Core/Events/keysyms.h>
 
 #ifdef HAVE_INSIGHT
-#  include <itkGradientMagnitudeImageFilter.h>
 #  include <itkConfidenceConnectedImageFilter.h>
-#  include <itkCurvatureAnisotropicDiffusionImageFilter.h>
-#  include <itkBinaryBallStructuringElement.h>
-#  include <itkBinaryDilateImageFilter.h>
-#  include <itkBinaryErodeImageFilter.h>
-#  include <itkImportImageFilter.h>
 #endif
 
 
@@ -135,7 +129,7 @@ Painter::KeyToolSelectorTool::key_press(string, int keyval,
   case SCIRun_minus:    window.zoom_out(); break;
   case SCIRun_comma:    window.prev_slice(); break;
   case SCIRun_period:   window.next_slice(); break;
-  case SCIRun_u:        painter_->undo_volume();
+    //  case SCIRun_u:        painter_->undo_volume();
   case SCIRun_a:        tm_.add_tool(new CropTool(painter_),100); break;
   case SCIRun_f:        tm_.add_tool(new FloodfillTool(painter_),100); break;
   case SCIRun_b:        tm_.add_tool(new BrushTool(painter_),25); break;
@@ -154,9 +148,8 @@ Painter::KeyToolSelectorTool::key_press(string, int keyval,
   case SCIRun_p:        painter_->opacity_up();break;
   case SCIRun_o:        painter_->opacity_down();break;
     
-
   case SCIRun_k:        
-    tm_.add_tool(new ITKConfidenceConnectedImageFilterTool(painter_),49); 
+    
     break;
 
   }
@@ -192,9 +185,6 @@ Painter::KeyToolSelectorTool::key_press(string, int keyval,
   }
 
   if (key == "h") {
-    if (tools_.empty()) {
-      tools_.push_back(new BrushTool(this));
-      tools_.push_back(new ITKThresholdTool(this));
   }
 
 #endif
@@ -283,10 +273,6 @@ Painter::PointerToolSelectorTool::pointer_motion(int button, int x, int y,
 {
   return CONTINUE_E;
 }
-
-
-
-
 
 
 
@@ -1029,7 +1015,9 @@ Painter::StatisticsTool::draw(SliceWindow &window)
 
 
 Painter::ITKConfidenceConnectedImageFilterTool::ITKConfidenceConnectedImageFilterTool(Painter *painter) :
+  BaseTool("ITK Confidence Connected\nImage Filter"),
   PainterPointerTool(painter, "ITK Confidence Connected\nImage Filter"),
+  seed_(),
   volume_(0)
 {
 }
@@ -1039,20 +1027,27 @@ BaseTool::propagation_state_e
 Painter::ITKConfidenceConnectedImageFilterTool::pointer_down
 (int b, int x, int y, unsigned int m, int t)
 {
-  return STOP_E;
+  BaseTool::propagation_state_e state = pointer_motion(b,x,y,m,t);
+
+  return state;
 }
 
 BaseTool::propagation_state_e
 Painter::ITKConfidenceConnectedImageFilterTool::pointer_up
 (int b, int x, int y, unsigned int m, int t)
 {
+  return pointer_motion(b,x,y,m,t);
+}
+
+
+void
+Painter::ITKConfidenceConnectedImageFilterTool::finish() {
   if (!volume_) 
-    volume_ = painter_->current_volume_;
+    return;
+
   if (!volume_->index_valid(seed_))
-    seed_ = volume_->world_to_index(painter_->pointer_pos_);
-  if (!volume_->index_valid(seed_))
-    return QUIT_AND_STOP_E;
-    
+    return;
+
 #ifdef HAVE_INSIGHT    
   typedef itk::ConfidenceConnectedImageFilter
     < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D > FilterType;
@@ -1085,31 +1080,65 @@ Painter::ITKConfidenceConnectedImageFilterTool::pointer_up
   painter_->set_all_slices_tex_dirty();
   painter_->redraw_all();
 #endif
-  
-  return QUIT_AND_STOP_E;
 }
 
 BaseTool::propagation_state_e
 Painter::ITKConfidenceConnectedImageFilterTool::pointer_motion
 (int b, int x, int y, unsigned int m, int t)
 {
-//   if (b) {
-//     volume_ = painter_->current_volume_;
-//     if (volume_)
-//       seed_ = volume_->world_to_index(event.position_);
-//     painter_->redraw_all();
-//     return STOP_E;
-//   }
-//   return CONTINUE_E;
+  if (b == 1) {
+    if (!volume_) 
+      volume_ = painter_->current_volume_;
+    if (volume_) {
+      vector<int> newseed = volume_->world_to_index(painter_->pointer_pos_);
+      if (volume_->index_valid(newseed)) 
+        seed_ = newseed;
+
+      painter_->redraw_all();
+      return STOP_E;
+    }
+  }
   return CONTINUE_E;
+
 }
 
 
 
-#if 0
-int 
-Painter::ITKConfidenceConnectedImageFilterTool::do_event(Event &event)
+BaseTool::propagation_state_e 
+Painter::ITKConfidenceConnectedImageFilterTool::process_event
+(event_handle_t event)
 {
+  RedrawSliceWindowEvent *redraw = 
+    dynamic_cast<RedrawSliceWindowEvent *>(event.get_rep());
+
+  if (redraw) {
+    draw_gl(redraw->get_window());
+  }
+
+  ExecuteEvent *execute = 
+    dynamic_cast<ExecuteEvent *>(event.get_rep());
+
+  if (execute) {
+    finish();
+  }
+
+  QuitEvent *quit = 
+    dynamic_cast<QuitEvent *>(event.get_rep());
+
+  if (quit) {
+    return QUIT_AND_STOP_E;
+  }
+
+  
+
+
+  return CONTINUE_E;
+}
+  
+
+
+#if 0
+  {
   bool finish = (event.type_ == Event::KEY_PRESS_E && event.key_ == " ");
   if (!finish && event.keys_.size()) 
     return FALLTHROUGH_E;
@@ -1129,10 +1158,15 @@ Painter::ITKConfidenceConnectedImageFilterTool::do_event(Event &event)
   return FALLTHROUGH_E;
 }
 
-int
-Painter::ITKConfidenceConnectedImageFilterTool::draw(Painter::SliceWindow &window)
+#endif
+
+
+
+void
+Painter::ITKConfidenceConnectedImageFilterTool::draw_gl(Painter::SliceWindow &window)
 {
-  if (!volume_ || !volume_->index_valid(seed_)) return 0;
+  if (!volume_ || !volume_->index_valid(seed_)) return;
+
   vector<double> index(seed_.size());
   index[0] = seed_[0];
   for (unsigned int s = 1; s < index.size(); ++s)
@@ -1182,13 +1216,11 @@ Painter::ITKConfidenceConnectedImageFilterTool::draw(Painter::SliceWindow &windo
   }
 
   glLineWidth(1.0);
-  
-  return 0;
 }
   
 
 
-
+#if 0
 Painter::LayerMergeTool::LayerMergeTool(Painter *painter):
   PainterTool(painter, "Layer Merge")
 {

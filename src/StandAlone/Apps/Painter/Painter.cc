@@ -450,6 +450,7 @@ Painter::SliceWindow::render_gl() {
   profiler.enter("SliceWindow::render_gl");
 
   NrrdVolume *vol = painter_->current_volume_;
+
   string clut_ww_wl = "";
   string clut_min_max = "";
   string value = "";
@@ -517,6 +518,9 @@ Painter::SliceWindow::render_gl() {
 
   profiler("render_guide_lines");
 
+  event_handle_t redraw_window = new RedrawSliceWindowEvent(*this);
+  painter_->tm_.propagate_event(redraw_window);
+
 //   for (unsigned int t = 0; t < tools_.size(); ++t) {
 //     tools_[t]->draw(window);
 //     if (event_.window_ == &window)
@@ -526,10 +530,7 @@ Painter::SliceWindow::render_gl() {
 
   profiler("tool draw");
 
-  render_text();
-
-  profiler("render_text");
-
+ 
 //   if (filter_text_.length()) 
 //     window.render_progress_bar();
 

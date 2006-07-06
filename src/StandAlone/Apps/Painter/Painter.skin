@@ -325,6 +325,72 @@
   </definition>
   
 
+  <definition class="FilterDialog">
+    <object class="ShadowedBox">
+      <var name="FilterDialog::text" 
+           propagate="yes" 
+           overwrite="no">Filter:</var>
+      <definition class="ShadowedBox::child">
+        <object class="Box">
+          <var name="focus_mode">1</var>
+          <var name="color">#AAAAAAAA</var>
+          
+          <object class="Texture">
+            <var name="file">BackgroundTile04.png</var>
+            <var name="color">#AAAAAAFF</var>
+            <var name="repeatx">1</var>
+            <var name="repeaty">1</var>
+          </object>
+          
+          <object class="Texture">
+            <var name="file">BackgroundTile04.png</var>
+            <var name="color">#000000</var>
+            <var name="repeatx">1</var>
+            <var name="repeaty">1</var>
+          </object>
+          
+          <object class="Grid">
+            <var name="rows">5</var>
+            <var name="cols">5</var>
+
+
+            <object class="Text">
+              <var name="row">1</var>
+              <var name="col">1</var>
+              <var name="text">$FilterDialog::text</var>
+              <var name="size">30</var>
+              <var name="fgcolor">#000000FF</var>
+              <var name="bgcolor">#FFFFFF80</var>
+              <var name="anchor">W</var>
+              <var name="offsetx">-2</var>
+              <var name="offsety">2</var>
+              <var name="shadow">1</var>
+            </object>
+
+            
+            <object class="Button2">
+              <var name="row">3</var>
+              <var name="col">2</var>
+              <var name="Button2::Text::text" propagate="yes">Cancel</var>
+              <signal name="Button2::clicked" 
+                      target="FilterDialog::Cancel"/>
+            </object>
+            <object class="Button2">
+              <var name="row">3</var>
+              <var name="col">4</var>
+              <var name="Button2::Text::text" propagate="yes">Execute</var>
+              <signal name="Button2::clicked" 
+                      target="FilterDialog::Execute"/>
+            </object>
+          </object>
+        </object>
+      </definition>
+    </object>
+  </definition>
+  
+    
+
+
   <definition class="FileLoadBox">
     <object class="ShadowedBox">
       <var name="TextEntry::value" propagate="yes"></var>
@@ -461,6 +527,12 @@
     <var name="variable-2-end">150</var>      
     <var name="Animation::variable-2" propagate="yes">0</var>
     
+    <var name="variable-3-seconds">0.5</var>
+    <var name="variable-3-begin">0</var>
+    <var name="variable-3-end">150</var>      
+    <var name="Animation::variable-3" propagate="yes">0</var>
+    
+
     <object class="Painter">
       <var name="Painter::status_text" propagate="yes"> </var>
       <object class="Root::GLWindow" id="SCI-RENDER">
@@ -499,8 +571,9 @@
 
 
         <object class="Grid" id="MainGrid">
-          <var name="rows">4</var>
+          <var name="rows">5</var>
           <var name="cols">1</var>
+
 
           <object class="FileLoadBox">
             <var name="row">1</var>
@@ -519,6 +592,7 @@
           </object>
           
 
+
           <object class="FileLoadBox">
             <var name="row">2</var>
             <var name="col">1</var>
@@ -534,10 +608,29 @@
           </object>
 
 
+          <object class="FilterDialog">
+            <var name="row">4</var>
+            <var name="col">1</var>
+            <var name="cell-height">$Animation::variable-3</var>
+
+            <signal name="FilterDialog::Cancel" 
+                    target="Painter::ITKFilterCancel"></signal>
+
+            <signal name="FilterDialog::Cancel" 
+                    target="Animation::AnimateVariableDescending">3</signal>
+
+            <signal name="FilterDialog::Execute" 
+                    target="Painter::ITKFilterExecute"></signal>
+
+            <signal name="FileLoadBox::Execute" 
+                    target="Animation::AnimateVariableDescending" >3</signal>
+            
+          </object>
+         
           
 
           <object class="Grid">
-            <var name="row">4</var>
+            <var name="row">5</var>
             <var name="col">1</var>
 
             <var name="rows">1</var>
@@ -808,8 +901,11 @@
             <var name="col">1</var>
             <var name="Button2::Text::text" propagate="yes">ITK Confidence Connected</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
-            <signal name="Button2::clicked" 
-                    target="Quit"/>
+            <signal name="Button2::clicked"
+                    target="Painter::ITKConfidenceConnected"/>
+
+            <signal name="Button2::clicked"
+                    target="Animation::AnimateVariableAscending">3</signal>
             
           </object>
 
@@ -818,8 +914,8 @@
             <var name="col">1</var>
             <var name="Button2::Text::text" propagate="yes">ITK Threshold Levelset</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
-            <signal name="Button2::clicked" 
-                    target="Quit"/>
+            <signal name="Button2::clicked"
+                    target="Painter::ITKThresholdLevelSet"/>
             
           </object>
 

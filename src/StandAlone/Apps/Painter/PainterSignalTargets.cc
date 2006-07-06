@@ -86,7 +86,11 @@ namespace SCIRun {
 BaseTool::propagation_state_e 
 Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::SliceWindow_Maker);
+
   REGISTER_CATCHER_TARGET(Painter::StartBrushTool);
+  REGISTER_CATCHER_TARGET(Painter::StartCropTool);
+  REGISTER_CATCHER_TARGET(Painter::StartFloodFillTool);
+
   REGISTER_CATCHER_TARGET(Painter::Autoview);
   REGISTER_CATCHER_TARGET(Painter::CopyLayer);
   REGISTER_CATCHER_TARGET(Painter::DeleteLayer);
@@ -96,12 +100,17 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::NrrdFileRead);
   REGISTER_CATCHER_TARGET(Painter::NrrdFileWrite);
 
+  REGISTER_CATCHER_TARGET(Painter::ITKFilterExecute);  
+  REGISTER_CATCHER_TARGET(Painter::ITKFilterCancel);
+
   REGISTER_CATCHER_TARGET(Painter::ITKBinaryDilate);  
   REGISTER_CATCHER_TARGET(Painter::ITKImageFileRead);
   REGISTER_CATCHER_TARGET(Painter::ITKImageFileWrite);
   REGISTER_CATCHER_TARGET(Painter::ITKGradientMagnitude);
   REGISTER_CATCHER_TARGET(Painter::ITKBinaryDilateErode);
   REGISTER_CATCHER_TARGET(Painter::ITKCurvatureAnisotropic);
+  REGISTER_CATCHER_TARGET(Painter::ITKConfidenceConnected);
+  REGISTER_CATCHER_TARGET(Painter::ITKThresholdLevelSet);
    
   return STOP_E;
 }
@@ -129,6 +138,22 @@ Painter::StartBrushTool(event_handle_t event) {
   tm_.add_tool(new BrushTool(this),25); 
   return STOP_E;
 }
+  
+
+BaseTool::propagation_state_e 
+Painter::StartCropTool(event_handle_t event) {
+  tm_.add_tool(new CropTool(this),100);
+  return CONTINUE_E;
+}
+
+
+BaseTool::propagation_state_e 
+Painter::StartFloodFillTool(event_handle_t event) {
+  tm_.add_tool(new CropTool(this),100);
+  return CONTINUE_E;
+}
+
+
 
 
 BaseTool::propagation_state_e 
@@ -456,8 +481,6 @@ Painter::ITKCurvatureAnisotropic(event_handle_t event) {
     < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D > FilterType;
   FilterType::Pointer filter = FilterType::New();  
 
-  const Skinner::Variables *vars = get_vars();
-  
   filter->SetNumberOfIterations
     (get_vars()->get_int(name+"::numberOfIterations"));
   filter->SetTimeStep
@@ -477,6 +500,40 @@ Painter::ITKCurvatureAnisotropic(event_handle_t event) {
   redraw_all();
 #endif
   return STOP_E;
+}
+
+
+BaseTool::propagation_state_e 
+Painter::ITKConfidenceConnected(event_handle_t event) {
+#ifdef HAVE_INSIGHT
+  tm_.add_tool(new ITKConfidenceConnectedImageFilterTool(this),49); 
+#endif
+  return CONTINUE_E;
+}
+
+
+BaseTool::propagation_state_e 
+Painter::ITKThresholdLevelSet(event_handle_t event) {
+#ifdef HAVE_INSIGHT
+  tm_.add_tool(new BrushTool(this), 99);
+  tm_.add_tool(new ITKThresholdTool(this), 100);
+#endif
+  return CONTINUE_E;
+}
+
+
+BaseTool::propagation_state_e 
+Painter::ITKFilterExecute(event_handle_t event) {
+  ExecuteEvent *execute = new ExecuteEvent();
+  tm_.propagate_event(execute);
+  return CONTINUE_E;
+}
+
+BaseTool::propagation_state_e 
+Painter::ITKFilterCancel(event_handle_t event) {
+  QuitEvent *quit = new QuitEvent();
+  tm_.propagate_event(quit);
+  return CONTINUE_E;
 }
 
 

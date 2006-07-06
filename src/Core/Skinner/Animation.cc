@@ -225,7 +225,7 @@ namespace SCIRun {
 
       
 
-      return STOP_E;
+      return CONTINUE_E;
     }
 
   }
