@@ -66,97 +66,98 @@ namespace SCIRun {
     }
 
     SignalCatcher::~SignalCatcher() {  } 
-  
-    SignalCatcher::CatcherFunctionPtr
-    SignalCatcher::get_catcher(const string &name)
+
+
+    void
+    SignalCatcher::register_target(const string &targetname,
+                                   CatcherFunctionPtr function) 
     {
-      if (catcher_targets_.find(name) != catcher_targets_.end()) {
-        return catcher_targets_[name];
-      }
-      return 0;
+      ASSERT(function);
+      CatcherTargetInfo_t callback;
+      callback.catcher_ = this;
+      callback.function_ = function;
+      callback.data_ = "";
+      callback.targetname_ = targetname;
+
+      catcher_targets_.push_back(callback);
     }
 
 
     SignalThrower::SignalThrower() :
-      catchers_()
+      all_catchers_()
     {
     }
 
     SignalThrower::~SignalThrower() {
     }
       
-    bool
-    SignalThrower::hookup_signal_to_catcher_target
-    (const string &signalname, const string &signaldata, 
-     SignalCatcher *catcher, SignalCatcher::CatcherFunctionPtr func)
-    {
-      if (get_signal_id(signalname)) {
-        catchers_[signalname].first.push_front(make_pair(catcher, func));
-        catchers_[signalname].second = signaldata;
-        return true;
-      } 
-      return false;
-    }
-
-    event_handle_t
-    SignalThrower::throw_signal(SignalCatchers_t &catchers,
-                                event_handle_t &signalh,
-                                Variables *vars) {
-
-      Signal *signal = dynamic_cast<Signal *>(signalh.get_rep());
-      ASSERT(signal);
-      BaseTool::propagation_state_e state;
-      const string &signalname = signal->get_signal_name();
-      //      cerr << "Throw signal: " <<  signalname << std::endl;
-      if (catchers.find(signalname) == catchers.end()) return signalh;
-      
-      CatchersOnDeck_t &signal_catchers = catchers[signalname].first;
-      for(CatchersOnDeck_t::iterator catcher_iter = 
-            signal_catchers.begin();
-          catcher_iter != signal_catchers.end(); ++catcher_iter) {
-
-        string signaldata = catchers[signalname].second;
-        if (vars) {
-          signaldata = vars->dereference(signaldata);
-        }
-        signal->set_signal_data(signaldata);
-
-        SignalCatcher *instance = catcher_iter->first;
-        SignalCatcher::CatcherFunctionPtr catcher = catcher_iter->second;
-        state = (instance->*catcher)(signal);
-        if (state == BaseTool::STOP_E) break;        
-      }
-      return signal;
-    }
-      
-
-
 
     event_handle_t
     SignalThrower::throw_signal(const string &signalname, Variables *vars) {
       event_handle_t signal = new Signal(signalname, this);
-      return throw_signal(catchers_, signal, vars);
+      return throw_signal(all_catchers_, signal, vars);
     }
 
 
-    SignalCatcher::TargetIDs_t
-    SignalCatcher::get_all_target_ids() {
-      TargetIDs_t ids;
-      bool print = sci_getenv_p("SKINNER_XMLIO_DEBUG");
-      if (print)
-        cerr << "_ids: ";
-      for(CatcherTargets_t::iterator titer = catcher_targets_.begin();
-          titer != catcher_targets_.end(); ++titer) {
-        if (print) 
-          cerr << titer->first << ", ";
-        ids.push_back(titer->first);
+
+
+    event_handle_t
+    SignalThrower::throw_signal(SignalToAllCatchers_t &catchers,
+                                 event_handle_t &signalh,
+                                 Variables *vars)
+    {
+
+      Signal *signal = dynamic_cast<Signal *>(signalh.get_rep());
+      ASSERT(signal);
+      const string &signalname = signal->get_signal_name();
+      //      cerr << "Throw signal2: " <<  signalname << std::endl;
+
+      if (catchers.find(signalname) == catchers.end()) return signalh;
+      BaseTool::propagation_state_e state = BaseTool::CONTINUE_E;
+      SignalToAllCatchers_t::iterator iter = catchers.find(signalname);
+      if (iter != catchers.end()) {
+        AllSignalCatchers_t::iterator riter = iter->second.begin();
+        AllSignalCatchers_t::iterator rend = iter->second.end();
+        for(;riter != rend; ++riter) {
+          SignalCatcher::CatcherTargetInfo_t &callback = *riter;
+
+          ASSERT(callback.catcher_);
+          ASSERT(callback.function_);
+
+          string signaldata = callback.data_;
+          if (vars) {
+            signaldata = vars->dereference(signaldata);
+          }
+          signal->set_signal_data(signaldata);
+          
+          state = (callback.catcher_->*callback.function_)(signal);
+          if (state == BaseTool::STOP_E) break;
+        }
       }
-      if (print)
-        cerr << std::endl;
-      return ids;
+      return signalh;
     }
 
 
+
+    SignalThrower::SignalToAllCatchers_t
+    SignalThrower::collapse_tree(SignalCatcher::TreeOfCatchers_t &tree) {
+      SignalToAllCatchers_t allcatchers;
+      SignalCatcher::TreeOfCatchers_t::reverse_iterator triter = tree.rbegin();
+      SignalCatcher::TreeOfCatchers_t::reverse_iterator trend = tree.rend();
+      for (;triter != trend; ++triter) {
+        SignalCatcher::NodeCatchers_t &node_catchers = *triter;
+        SignalCatcher::NodeCatchers_t::iterator nriter = node_catchers.begin();
+        SignalCatcher::NodeCatchers_t::iterator nrend = node_catchers.end();
+        for (;nriter != nrend; ++nriter) {
+          SignalCatcher::CatcherTargetInfo_t &callback = *nriter;
+          ASSERT(callback.catcher_);
+          ASSERT(callback.function_);
+          allcatchers[callback.targetname_].push_back(callback);
+        }
+      }
+      return allcatchers;
+    }
+               
   }
 }
     

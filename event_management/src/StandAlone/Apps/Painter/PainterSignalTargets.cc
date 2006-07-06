@@ -283,7 +283,9 @@ Painter::ITKImageFileRead(event_handle_t event) {
   ASSERT(signal);
 
   const string &filename = signal->get_signal_data();
-  if (!validFile(filename)) return STOP_E;
+  if (!validFile(filename)) {
+    return STOP_E;
+  }
 
   typedef itk::ImageFileReader<itk::Image<float, 3> > FileReaderType;
   
@@ -306,6 +308,7 @@ Painter::ITKImageFileRead(event_handle_t event) {
 
   if (!img->data_) { 
     cerr << "no itk image\n";
+    return STOP_E;
   }
 
   ITKDatatypeHandle img_handle = img;
@@ -320,7 +323,7 @@ Painter::ITKImageFileRead(event_handle_t event) {
 
   // ITKDataTypeSignal *return_event = new ITKDataTypeSignal(img);
   //  event = return_event;
-  return MODIFIED_E;
+  return CONTINUE_E;
 #endif
 }
 

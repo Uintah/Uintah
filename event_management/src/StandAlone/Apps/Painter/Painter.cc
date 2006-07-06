@@ -411,7 +411,7 @@ Painter::Painter(Skinner::Variables *variables, GuiContext* ctx) :
   volume_lock_("Volume")
 {
   tm_.add_tool(new PointerToolSelectorTool(this), 50);
-  tm_.add_tool(new KeyToolSelectorTool(this), 51);
+  //  tm_.add_tool(new KeyToolSelectorTool(this), 51);
 
   InitializeSignalCatcherTargets(0);
 }
