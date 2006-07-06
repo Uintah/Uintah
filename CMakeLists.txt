@@ -15,6 +15,10 @@ SET(SCIRUN_VERSION_PATCH "3")
 SET(SCIRUN_VERSION_STRING "${SCIRUN_VERSION_MAJOR}.${SCIRUN_VERSION_MINOR}.${SCIRUN_VERSION_PATCH}")
 
 #-----------------------------------------------------------------------------
+# Test for some required system information.
+INCLUDE (CMakeBackwardCompatibilityC)
+
+#-----------------------------------------------------------------------------
 # Configure Dart testing support.  This should be done before any
 # MESSAGE(FATAL_ERROR ...) commands are invoked.
 INCLUDE(${CMAKE_ROOT}/Modules/Dart.cmake)
@@ -193,14 +197,14 @@ MARK_AS_ADVANCED(THROW_LEVEL ASSERTION_LEVEL DEF_HASH TEMPLATE_TAG TEMPLATE_BOX)
 # DV Add with_exc stuff from configure.ac
 
 INCLUDE (${CMAKE_ROOT}/Modules/CheckIncludeFile.cmake)
-CHECK_INCLUDE_FILE("limits.h"     HAVE_LIMITS_H)
-CHECK_INCLUDE_FILE("sys/select.h"     HAVE_SYS_SELECT_H)
-CHECK_INCLUDE_FILE("uinstd.h"     HAVE_UNISTD_H)
-CHECK_INCLUDE_FILE("sys/time.h"     HAVE_SYS_TIME_H)
+CHECK_INCLUDE_FILE(limits.h HAVE_LIMITS_H)
+CHECK_INCLUDE_FILE(sys/select.h HAVE_SYS_SELECT_H)
+CHECK_INCLUDE_FILE(uinstd.h HAVE_UNISTD_H)
+CHECK_INCLUDE_FILE(sys/time.h HAVE_SYS_TIME_H)
 # DV Fix this one (ext/algorithm)
-CHECK_INCLUDE_FILE("ext/algorithm"     HAVE_EXT_ALGORITHM_H)
-CHECK_INCLUDE_FILE("stdint.h"     HAVE_STDINT_H)
-CHECK_INCLUDE_FILE("inttypes.h"     HAVE_INTTYPES_H)
+CHECK_INCLUDE_FILE(ext/algorithm  HAVE_EXT_ALGORITHM_H)
+CHECK_INCLUDE_FILE(stdint.h HAVE_STDINT_H)
+CHECK_INCLUDE_FILE(inttypes.h HAVE_INTTYPES_H)
 SET(HAVE_SYS_UUID_H 0)
 SET(HAVE_UUID_UUID_H 0)
 
@@ -243,12 +247,17 @@ ENDIF(WIN32)
 #-----------------------------------------------------------------------------
 # Z lib
 IF(WIN32 AND NOT CYGWIN)
-  SET(ZLIB_LIBRARY ${SCI_THIRDPARTY_DIR}/lib/z)	 
+  SET(ZLIB_LIBRARY ${SCI_THIRDPARTY_DIR}/lib/z)
   SET(ZLIB_INCLUDE ${SCI_THIRDPARTY_DIR}/include)	 
 ELSE(WIN32 AND NOT CYGWIN)
   FIND_PACKAGE( ZLIB )
 ENDIF(WIN32 AND NOT CYGWIN)
 SET(SCIRUN_INCLUDE_THIRDPARTY ${SCIRUN_INCLUDE_THIRDPARTY} ${ZLIB_INCLUDE_DIR})
+
+
+#-----------------------------------------------------------------------------
+# DV XML2 FROM 3P FOR NOW
+SET(XML2_LIBRARY ${SCI_THIRDPARTY_DIR}/lib/xml2)	 
 
 #-----------------------------------------------------------------------------
 # Teem
@@ -260,6 +269,14 @@ IF (TEEM_LIBRARY)
   ENDIF(TEEM_INCLUDE_DIR)
 ENDIF(TEEM_LIBRARY)
 SET(DEF_GDCM "#define HAVE_GDCM 0")
+
+#-----------------------------------------------------------------------------
+# Math library
+IF(UNIX)
+  SET(M_LIBRARY -lm)
+ELSE(UNIX)
+  SET(M_LIBRARY)
+ENDIF(UNIX)
 
 
 #-----------------------------------------------------------------------------
