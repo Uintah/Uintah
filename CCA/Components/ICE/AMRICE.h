@@ -120,7 +120,6 @@ namespace Uintah {
     template<class T>
     void fineToCoarseOperator(CCVariable<T>& q_CC,
                               const CCVariable<double>& rho_CC_coarse,
-                              constCCVariable<double>& cv_coarse,
                               const string& quantity,
                               const VarLabel* varLabel,
                               const int indx,
@@ -464,8 +463,7 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
 _____________________________________________________________________*/
 template<class T>
 void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
-                                  const CCVariable<double>& rho_CC_coarse,
-                                  constCCVariable<double>& cv_coarse,
+                                  const CCVariable<double>& mass_adv_coarse,
                                   const string& quantity,
                                   const VarLabel* varLabel,
                                   const int indx,
@@ -477,9 +475,7 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
   Level::selectType finePatches;
   coarsePatch->getFineLevelPatches(finePatches);
    
-  Vector dx_c = coarseLevel->dCell();
   Vector dx_f = fineLevel->dCell();
-  double coarseCellVol = dx_c.x()*dx_c.y()*dx_c.z();
   double fineCellVol   = dx_f.x()*dx_f.y()*dx_f.z();
                           
   for(int i=0;i<finePatches.size();i++){
@@ -493,62 +489,35 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
     }
     
     constCCVariable<T> fine_q_CC;
-    constCCVariable<double> cv_fine, rho_CC_fine;
+    constCCVariable<double> rho_CC_fine;
 
-    new_dw->getRegion(fine_q_CC,  varLabel,               indx, fineLevel, fl, fh, false);
-    new_dw->getRegion(cv_fine,    lb->specific_heatLabel, indx, fineLevel, fl, fh, false);
-    new_dw->getRegion(rho_CC_fine,lb->rho_CCLabel,        indx, fineLevel, fl, fh, false);
+    new_dw->getRegion(fine_q_CC,  varLabel,         indx, fineLevel, fl, fh, false);
+    new_dw->getRegion(rho_CC_fine,lb->rho_CCLabel,  indx, fineLevel, fl, fh, false);
 
     cout_dbg << " fineToCoarseOperator: finePatch "<< fl << " " << fh 
              << " coarsePatch "<< cl << " " << ch << endl;
              
-    IntVector refinementRatio = fineLevel->getRefinementRatio();
-    
-    //__________________________________
-    //  switches that modify the equation
-    //  depending on what quantity is being coarsened.
-    double switch1 = d_EVIL_NUM;    
-    double switch2 = d_EVIL_NUM;    
-    double switch3 = d_EVIL_NUM;    
-    if(quantity == "mass" || quantity == "pressure" || quantity == "sp_vol"){
-      switch1 = 1.0;
-      switch2 = 0.0;
-      switch3 = 0.0;         
-    }
-    if(quantity == "momentum" || quantity == "scalar"){
-      switch1 = 0.0;
-      switch2 = 1.0;
-      switch3 = 0.0;         
-    }
-    if(quantity == "energy"){
-      switch1 = 0.0;
-      switch2 = 0.0;
-      switch3 = 1.0;
-    }
+    IntVector r_Ratio = fineLevel->getRefinementRatio();
+    double inv_RR = 1.0/( (double)r_Ratio.x() * r_Ratio.y() * r_Ratio.z() );
     
     T zero(0.0);
     // iterate over coarse level cells
     for(CellIterator iter(cl, ch); !iter.done(); iter++){
       IntVector c = *iter;
       T q_CC_tmp(zero);
+      double sumMass_fine = 0;
       IntVector fineStart = coarseLevel->mapCellToFiner(c);
     
       // for each coarse level cell iterate over the fine level cells   
-      for(CellIterator inside(IntVector(0,0,0),refinementRatio );
+      for(CellIterator inside(IntVector(0,0,0),r_Ratio );
                                           !inside.done(); inside++){
         IntVector fc = fineStart + *inside;
-        double mass_fineLevel = rho_CC_fine[fc] * fineCellVol;
+        sumMass_fine = rho_CC_fine[fc] * fineCellVol;
         
-        q_CC_tmp += fine_q_CC[fc] * switch1 * fineCellVol            
-                  + fine_q_CC[fc] * switch2 * mass_fineLevel         
-                  + fine_q_CC[fc] * switch3 * mass_fineLevel * cv_fine[fc];
+        q_CC_tmp += fine_q_CC[fc];
       }
-      double mass_CC_coarse = rho_CC_coarse[c] * coarseCellVol;
-      double denominator = switch1 * coarseCellVol     
-                         + switch2 * mass_CC_coarse
-                         + switch3 * mass_CC_coarse * cv_coarse[c];
                          
-      q_CC[c] =q_CC_tmp / denominator;
+      q_CC[c] =q_CC_tmp * inv_RR;
     }
   }
   cout_dbg.setActive(false);// turn off the switch for cout_dbg
@@ -770,6 +739,9 @@ void ICE::refluxOperator_computeCorrectionFluxes(
                               + switch1 * coarseCellVol     
                               + switch2 * mass_CC_coarse
                               + switch3 * mass_CC_coarse * cv[c_CC]; 
+/*`==========TESTING==========*/
+           denominator = 1.0; 
+/*===========TESTING==========`*/
 
            Q_X_coarse_flux[c_FC] = ( c_FaceNormal*Q_X_coarse_flux_org[c_FC] + coeff* f_FaceNormal*sum_fineLevelFlux) /denominator;
 
@@ -811,7 +783,9 @@ void ICE::refluxOperator_computeCorrectionFluxes(
                               + switch1 * coarseCellVol     
                               + switch2 * mass_CC_coarse
                               + switch3 * mass_CC_coarse * cv[c_CC];
-
+/*`==========TESTING==========*/
+           denominator = 1.0; 
+/*===========TESTING==========`*/
 
            Q_Y_coarse_flux[c_FC] = (c_FaceNormal*Q_Y_coarse_flux_org[c_FC] + coeff*f_FaceNormal*sum_fineLevelFlux) /denominator;
 
@@ -854,6 +828,11 @@ void ICE::refluxOperator_computeCorrectionFluxes(
                               + switch1 * coarseCellVol     
                               + switch2 * mass_CC_coarse
                               + switch3 * mass_CC_coarse * cv[c_CC];
+                              
+/*`==========TESTING==========*/
+           denominator = 1.0; 
+/*===========TESTING==========`*/
+                              
            Q_Z_coarse_flux[c_FC] = (c_FaceNormal*Q_Z_coarse_flux_org[c_FC] + coeff*f_FaceNormal*sum_fineLevelFlux) /denominator;
            
             count += one_zero;                              

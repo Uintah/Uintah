@@ -194,21 +194,40 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
                                                             all_matls);
 
     scheduleAdvectAndAdvanceInTime(         sched, patches, ice_matls_sub,
-                                                            all_matls);     
-                                                                            
-    scheduleConservedtoPrimitive_Vars(      sched, patches, ice_matls_sub, 
-                                                            all_matls);      
+                                                            all_matls);   
 
     scheduleTestConservation(               sched, patches, ice_matls_sub,
                                                             all_matls); 
   }
   //__________________________________
-  //  coarsen and refineInterface
+  //  coarsen
   if(d_doAMR){
     for(int L = maxLevel-1; L> 0; L--){ // from finer to coarser levels
       LevelP coarseLevel = grid->getLevel(L-1);
       scheduleCoarsen(coarseLevel, sched);
     }
+  }
+    
+    
+  //__________________________________
+  //   finalize timestep  
+  for(int L = 0; L<maxLevel; L++){
+    LevelP level = grid->getLevel(L);
+    const PatchSet* patches = level->eachPatch();
+    scheduleConservedtoPrimitive_Vars(    sched, patches, ice_matls_sub,
+                                                          all_matls);
+                                                          
+    if(d_analysisModule){                                                        
+      d_analysisModule->scheduleDoAnalysis( sched, level);
+    }                                                          
+                                                          
+    scheduleTestConservation(             sched, patches, ice_matls_sub,
+                                                          all_matls);
+  }
+  
+  //__________________________________
+  //   refine CFI
+  if(d_doAMR){
     for(int L = 1; L<maxLevel; L++){   // from coarser to finer levels
       LevelP fineLevel = grid->getLevel(L);
       scheduleRefineInterface(fineLevel, sched, true, true);

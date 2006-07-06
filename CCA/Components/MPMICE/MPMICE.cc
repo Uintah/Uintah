@@ -539,7 +539,31 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
                                    
     d_ice->scheduleAdvectAndAdvanceInTime(   sched, ice_patches,ice_matls_sub,
                                                                 ice_matls);
-                                                                
+  }
+
+} // end scheduleTimeAdvance()
+
+
+/* _____________________________________________________________________
+MPMICE::scheduleFinalizeTimestep--
+This task called at the very bottom of the timestep,
+after scheduleTimeAdvance and the scheduleCoarsen
+_____________________________________________________________________*/
+void
+MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
+{
+  const LevelP& mpm_level = do_mlmpmice? level->getGrid()->getLevel(level->getGrid()->numLevels()-1) : level;
+
+  const PatchSet* mpm_patches = mpm_level->eachPatch();
+  const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
+  const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
+  const MaterialSet* all_matls = d_sharedState->allMaterials();
+  const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
+
+  vector<PatchSubset*> maxMach_PSS(Patch::numFaces);
+  for (int l = 0; l < level->getGrid()->numLevels(); l++) {
+    const LevelP& ice_level = level->getGrid()->getLevel(l);
+    const PatchSet* ice_patches = ice_level->eachPatch();                                                                
     d_ice->scheduleConservedtoPrimitive_Vars(sched, ice_patches,ice_matls_sub,
                                                                 ice_matls);
                                                                   
@@ -548,8 +572,8 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   }
 
   if(d_ice->d_canAddICEMaterial){
-    for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
-      const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
+    for (int l = 0; l < level->getGrid()->numLevels(); l++) {
+      const LevelP& ice_level = level->getGrid()->getLevel(l);
 
       //  This checks to see if the model on THIS patch says that it's
       //  time to add a new material
@@ -587,7 +611,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
     }
   }
   cout_doing << "---------------------------------------------------------"<<endl;
-} // end scheduleTimeAdvance()
+}
 
 
 //______________________________________________________________________
