@@ -43,9 +43,9 @@ using std::vector;
 
 
 #define REGISTER_CATCHER_TARGET(catcher_target_function_name) \
-  catcher_targets_[#catcher_target_function_name] = \
+  this->register_target(#catcher_target_function_name, \
     static_cast<SCIRun::Skinner::SignalCatcher::CatcherFunctionPtr> \
-      (&catcher_target_function_name);
+      (&catcher_target_function_name));
 
 
 namespace SCIRun {
@@ -78,7 +78,7 @@ namespace SCIRun {
       string              signal_data_;
       SignalThrower *     thrower_;
     };
-  
+    
     class SignalCatcher {
     public:
       SignalCatcher();
@@ -88,16 +88,26 @@ namespace SCIRun {
       BaseTool::propagation_state_e 
       (SCIRun::Skinner::SignalCatcher::* CatcherFunctionPtr)(event_handle_t);
 
-
       typedef 
       BaseTool::propagation_state_e CatcherFunction_t(event_handle_t);
 
 
-      typedef map<string, CatcherFunctionPtr> CatcherTargets_t;
-      CatcherTargets_t   catcher_targets_;
-      typedef vector<string> TargetIDs_t;
-      TargetIDs_t        get_all_target_ids();
-      CatcherFunctionPtr get_catcher(const string &name);
+      struct CatcherTargetInfo_t { 
+        SignalCatcher *         catcher_;
+        CatcherFunctionPtr      function_;
+        string                  data_;
+        string                  targetname_;
+      };
+
+      typedef vector<CatcherTargetInfo_t> NodeCatchers_t;
+      typedef vector<NodeCatchers_t> TreeOfCatchers_t;
+      NodeCatchers_t            get_all_targets() { return catcher_targets_; }
+    protected:
+      void                      register_target(const string &targetname,
+                                                CatcherFunctionPtr function);
+
+    private:
+      NodeCatchers_t            catcher_targets_;            
     };
   
   
@@ -105,30 +115,31 @@ namespace SCIRun {
     public:      
       SignalThrower();
       virtual ~SignalThrower();
-      //      map<string, string>               signalname_catcher_map_t;
-      //      signalname_catcher_map_t          catchers_;
-      //      SignalCatcher::CatcherTargets_t  catcher_targets_;
-      //      map<string, SignalCatcher *>      catcher_classes_;
-
-      typedef pair<SignalCatcher*,SignalCatcher::CatcherFunctionPtr> Catcher_t;
-      typedef deque<Catcher_t> CatchersOnDeck_t;
-      typedef pair<CatchersOnDeck_t, string> CatchersOnDeckWithData_t;
-      typedef map<string, CatchersOnDeckWithData_t> SignalCatchers_t;
-      SignalCatchers_t  catchers_;
+      typedef vector<SignalCatcher::CatcherTargetInfo_t> AllSignalCatchers_t;
+      typedef map<string, AllSignalCatchers_t> SignalToAllCatchers_t;
+      SignalToAllCatchers_t all_catchers_;
 
 
       event_handle_t  throw_signal(const string &,
                                    Variables *vars = 0);
+
+
     public:
-      static event_handle_t throw_signal(SignalCatchers_t &catchers,
-                                         event_handle_t &signal,
-                                         Variables *vars = 0);
+      static event_handle_t throw_signal(SignalToAllCatchers_t &catchers,
+                                          event_handle_t &signal,
+                                          Variables *vars = 0);
+
+      static SignalToAllCatchers_t  collapse_tree(SignalCatcher::TreeOfCatchers_t &);
+
                                    
       virtual int     get_signal_id(const string &) const = 0;
+
       bool            hookup_signal_to_catcher_target(const string &,
                                                       const string &,
                                                       SignalCatcher *,
                                                       SignalCatcher::CatcherFunctionPtr);
+
+
 
     };
 

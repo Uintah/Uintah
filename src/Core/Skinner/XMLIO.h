@@ -102,12 +102,17 @@ namespace SCIRun {
       static Drawable *  eval_object_node(const xmlNodePtr,
                                           Variables *variables,
                                           definition_nodes_t &,
-                                          SignalThrower::SignalCatchers_t &);
+                                          SignalCatcher::TreeOfCatchers_t &);
+      //                                          SignalThrower::SignalCatchers_t &);
 
 
       static void        eval_signal_node(const xmlNodePtr,
                                           Drawable *,
-                                          SignalThrower::SignalCatchers_t &);
+                                          SignalThrower::SignalToAllCatchers_t &,
+                                          SignalCatcher::TreeOfCatchers_t &);
+                                          
+
+      //                                          SignalThrower::SignalCatchers_t &);
 
       static void        eval_var_node(const xmlNodePtr,
                                        Variables *);

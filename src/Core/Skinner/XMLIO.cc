@@ -161,9 +161,9 @@ namespace SCIRun {
         }     
       } 
 
-      if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
-        cerr << std::endl;
-      }
+//       if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
+//         cerr << std::endl;
+//       }
 
     }
 
@@ -174,28 +174,31 @@ namespace SCIRun {
                             Variables *variables,
                             definition_nodes_t &definitions,
                             //TargetSignalMap_t &signals,
-                            SignalThrower::SignalCatchers_t &catchers) 
+                            //                            SignalThrower::SignalCatchers_t &catchers) 
+                            SignalCatcher::TreeOfCatchers_t &catcher_tree)
     {
       const bool root_node = XMLUtil::node_is_element(node, "skinner");
       ASSERT(root_node || XMLUtil::node_is_element(node, "object"));
-
+      
       // classname is exact class type for this skinner drawable
       string classname = "Skinner::Root";
       bool foundclassname = 
         XMLUtil::maybe_get_att_as_string(node, "class", classname);
-
+      
       if (!root_node && !foundclassname) { // redundant, as dtd should fail
         cerr << "Object does not have classname\n";
         return 0;
       }
-
+      
+      const bool printdebug = sci_getenv_p("SKINNER_XMLIO_DEBUG");
+    
       // If the string in the xml file is proceeded with a $, then
       // its a variable dereference
       while (classname[0] == '$' &&
              variables->maybe_get_string
              (classname.substr(1,classname.length()-1), classname)) 
       {
-        if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
+        if (printdebug) {
             cerr << variables->get_id() << " is actually a classname: " 
                  << classname << "\n";
         }
@@ -273,28 +276,32 @@ namespace SCIRun {
         }
       }
 
+      SignalThrower::SignalToAllCatchers_t allcatchers = 
+        SignalThrower::collapse_tree(catcher_tree);
+
       // Now we have Variables, Create the Object!
       Drawable * object = 0;
 
       if (root_node) {
         object = new Root(variables);
       } else {
-      
+     
         // First, see if the current catchers can create and throw back 
         // an object of type "classname"
         string makerstr = classname+"_Maker";
+
         // The special Signal to ask for a maker is created
         event_handle_t find_maker = new MakerSignal(makerstr, variables);
         // And thrown to the Catcher...
         event_handle_t catcher_return = 
-          SignalThrower::throw_signal(catchers, find_maker);
+          SignalThrower::throw_signal(allcatchers, find_maker);
         // And we see what the cather returned
         MakerSignal *made = dynamic_cast<MakerSignal*>(catcher_return.get_rep());
         if (made && made->get_signal_name() == (makerstr+"_Done")) {
           // It returned a Maker that we wanted... Hooray!
           object = dynamic_cast<Drawable *>(made->get_signal_thrower());
         } else {
-
+          
           // Search the static_makers table and see if it contains
           // the classname we want....DEPRECIATED, maybe goes away?
           if (makers_.find(classname) != makers_.end()) {
@@ -311,21 +318,19 @@ namespace SCIRun {
         return 0;
       }
 
-      if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
-        cerr << object->get_id() << " - adding catcher";
-      }
 
-      // Now the object is created, fill the catchersondeck tree
-      // with targets contained by the new object.
-      SignalCatcher::TargetIDs_t catcher_targets =object->get_all_target_ids();
-      SignalCatcher::TargetIDs_t::iterator id_iter;
-      for(id_iter  = catcher_targets.begin();
-          id_iter != catcher_targets.end(); ++id_iter) {
-        const string &id = *id_iter;
-        SignalThrower::Catcher_t catcher_target = 
-          make_pair(object, object->get_catcher(id));
-        catchers[id].first.push_front(catcher_target);
+      catcher_tree.push_back(object->get_all_targets());
+      SignalCatcher::NodeCatchers_t &ncatchers = catcher_tree.back();
+      SignalCatcher::NodeCatchers_t::iterator citer = ncatchers.begin();
+      SignalCatcher::NodeCatchers_t::iterator cend = ncatchers.end();
+      if (printdebug) cerr << object->get_id() << " adding catchers: ";
+      for (;citer != cend;++citer) {
+        SignalCatcher::CatcherTargetInfo_t &callback = *citer;        
+        allcatchers[callback.targetname_].push_back(callback);
+        if (printdebug) cerr << callback.targetname_ << " , ";
+
       }
+      if (printdebug) cerr << std::endl;
 
 
       // Now the Catchers On Deck are ready, look if the xml file has
@@ -334,16 +339,15 @@ namespace SCIRun {
            mnode != merged_nodes.end(); ++mnode) {
         for (xmlNode *cnode = (*mnode)->children; cnode; cnode = cnode->next) {
           if (XMLUtil::node_is_element(cnode, "signal")) {
-            eval_signal_node(cnode, object, catchers);
+            eval_signal_node(cnode, object, allcatchers, catcher_tree);
           } 
         }
       }
          
-
-      // Search for definitions
-      if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
-        cerr << object->get_id() << " - adding definitions:";
-      }
+//       // Search for definitions
+//       if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
+//         cerr << object->get_id() << " - adding definitions:";
+//       }
 
       eval_merged_object_nodes_and_push_definitions(merged_nodes, definitions);
                                
@@ -358,7 +362,7 @@ namespace SCIRun {
           if (XMLUtil::node_is_element(cnode, "object")) {
             if (parent) { 
               Drawable *child = 
-                eval_object_node(cnode, variables, definitions, catchers);
+                eval_object_node(cnode, variables, definitions, catcher_tree);
               if (child) {
                 children.push_back(child);
               }
@@ -378,27 +382,18 @@ namespace SCIRun {
       }
       
 
-      // We are done w/ local definitions as all children have been made
-      if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
-        cerr << object->get_id() << " - popping definitions\n";
-      }
+//       // We are done w/ local definitions as all children have been made
+//       if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
+//         cerr << object->get_id() << " - popping definitions\n";
+//      }
+
       definitions.pop_back();
 
       if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
-        cerr << object->get_id() << " - removing catcher";
+        cerr << object->get_id() << " - removing catchers\n";
       }
+      catcher_tree.pop_back();
 
-
-      // After having children, this node is done/ w/ local catcher targets, 
-      // Re-get all object ids, as we may have pushed 
-      // some aliases during eval_signal_node
-      catcher_targets = object->get_all_target_ids();
-      for(id_iter  = catcher_targets.begin();
-          id_iter != catcher_targets.end(); ++id_iter) {
-        const string &id = *id_iter;
-        ASSERTMSG(!catchers[id].first.empty(), "Catchers Empty!");
-        catchers[id].first.pop_front();
-      }
       
       return object;
     }
@@ -409,7 +404,8 @@ namespace SCIRun {
     {
       ASSERT(XMLUtil::node_is_element(node, "skinner"));
       definition_nodes_t definitions;
-      SignalThrower::SignalCatchers_t catchers;
+      //      SignalThrower::SignalCatchers_t catchers;
+      SignalCatcher::TreeOfCatchers_t catchers;
       
       Drawable * object = eval_object_node(node, 0, definitions, catchers);
       Skinner::Root *root = dynamic_cast<Skinner::Root*>(object);
@@ -423,9 +419,9 @@ namespace SCIRun {
     {
       ASSERT(XMLUtil::node_is_element(node, "definition"));
       string classname = XMLUtil::node_att_as_string(node, "class");
-      if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
-        cerr << classname << ", ";
-      }
+//       if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
+//         cerr << classname << ", ";
+//       }
 
       for (xmlNode *cnode=node->children; cnode!=0; cnode=cnode->next) {
         if (XMLUtil::node_is_element(cnode, "object")) {
@@ -459,63 +455,62 @@ namespace SCIRun {
       const string typestr = XMLUtil::node_att_as_string(node, "type");
       variables->insert(varname, value, typestr, propagate);
     }
-                        
+    
+    
 
-
-
+    
     void
     XMLIO::eval_signal_node(const xmlNodePtr node,
                             Drawable *object,
-                            SignalThrower::SignalCatchers_t &catchers)
-      //                            TargetSignalMap_t &signals) 
+                            SignalThrower::SignalToAllCatchers_t &allcatchers,
+                            SignalCatcher::TreeOfCatchers_t &catcher_tree)
     {
       ASSERT(XMLUtil::node_is_element(node, "signal"));
       string signalname = XMLUtil::node_att_as_string(node, "name");
       string signaltarget = XMLUtil::node_att_as_string(node, "target");
-      SignalThrower *thrower = dynamic_cast<SignalThrower *>(object);
-      SignalCatcher *thrower_as_catcher = dynamic_cast<SignalCatcher*>(object);
-      ASSERT(thrower);
-      ASSERT(thrower_as_catcher);
 
-      SignalThrower::SignalCatchers_t::iterator catchers_iter = 
-        catchers.find(signaltarget);
 
-      if (catchers_iter == catchers.end()) {
+      SignalThrower::SignalToAllCatchers_t::iterator cpos = allcatchers.find(signaltarget);
+      if (cpos == allcatchers.end()) {
         cerr << "Signal " << signalname 
              << " cannot find target " << signaltarget << std::endl;
         return;
       }
 
+      string signaldata = "";
       const char *node_contents = 0;
       if (node->children) { 
         node_contents = XMLUtil::xmlChar_to_char(node->children->content);
-        if (node_contents && catchers_iter->second.second == "") {
-          catchers_iter->second.second = node_contents;
+        if (node_contents) {
+          signaldata = node_contents;
         }
       }
+      
+      SignalThrower::AllSignalCatchers_t &catchers = cpos->second;
+      SignalThrower::AllSignalCatchers_t::reverse_iterator citer = catchers.rbegin();
+      SignalThrower::AllSignalCatchers_t::reverse_iterator cend = catchers.rend();
+      
+      for (;citer != cend; ++citer) {
+        SignalCatcher::CatcherTargetInfo_t &callback = *citer;
+        ASSERT(callback.catcher_);
+        ASSERT(callback.function_);
+        if (callback.data_.empty()) callback.data_ = signaldata;
+        if (object->get_signal_id(signalname)) {
+          cerr << " signalname: " << signalname 
+               << " connecting to " << signaltarget 
+               << " with data: " << signaldata << std::endl;
 
-      SignalThrower::CatchersOnDeck_t &signal_catchers = catchers_iter->second.first;
-      SignalThrower::CatchersOnDeck_t::iterator catcher_iter = 
-        signal_catchers.begin();
-      for (;catcher_iter != signal_catchers.end(); ++catcher_iter) {
-        SignalCatcher *catcher = catcher_iter->first;
-        SignalCatcher::CatcherFunctionPtr function = catcher_iter->second;
-        //          catcher->get_catcher(signaltarget);
-        ASSERT(function);
-          
-          if (!thrower->hookup_signal_to_catcher_target
-              (signalname, catchers_iter->second.second, catcher, function) &&
-              object->catcher_targets_.find(signalname) == object->catcher_targets_.end())
-          {
-//             cerr << "Translating signal: " 
-//                  << signalname << " to: " << signaltarget << std::endl;
-            catchers[signalname].first.push_front(make_pair(catcher, function));
-            catchers[signalname].second = catchers_iter->second.second;
+          object->all_catchers_[signalname].push_back(callback);
 
-            object->catcher_targets_[signalname] = function;
-            //            cerr << object->get_id() << " now has catcher targets: ";
-            thrower_as_catcher->get_all_target_ids();
-          }
+        } else {
+          cerr << object->get_id() << " aliasing: " << signalname 
+               << " to " << signaltarget << std::endl;
+
+          SignalCatcher::CatcherTargetInfo_t newcallback = callback;
+          newcallback.targetname_ = signalname;
+          catcher_tree.back().push_back(newcallback);
+          allcatchers[signalname].push_back(newcallback);
+        }
       }
     }
         

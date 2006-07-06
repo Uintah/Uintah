@@ -45,10 +45,14 @@ namespace SCIRun {
       windows_()
     {
       REGISTER_CATCHER_TARGET(Root::GLWindow_Maker);
-      catcher_targets_["Quit"] =
-        static_cast<SCIRun::Skinner::SignalCatcher::CatcherFunctionPtr>
-        (&Root::Quit);
-      catcher_targets_["QUIT"] = catcher_targets_["Quit"];
+      register_target
+        ("Quit",
+         static_cast<SCIRun::Skinner::SignalCatcher::CatcherFunctionPtr>
+         (&Root::Quit));
+      register_target
+        ("QUIT",
+         static_cast<SCIRun::Skinner::SignalCatcher::CatcherFunctionPtr>
+         (&Root::Quit));
     }
 
 
@@ -70,6 +74,7 @@ namespace SCIRun {
 
     BaseTool::propagation_state_e 
     Root::Quit(event_handle_t event) {
+      cerr << "Root::Quit" << std::endl;
       EventManager::add_event(new QuitEvent());
       return STOP_E;
     }
