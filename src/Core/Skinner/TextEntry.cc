@@ -135,7 +135,7 @@ namespace SCIRun {
         } else if (code == SCIRun_BackSpace) {
           str_ = str_.substr(0, str_.length()-1);
         } else {
-          cerr << get_id() << " cannot handle keycode: " << code << std::endl;
+          //          cerr << get_id() << " cannot handle keycode: " << code << std::endl;
         }
                 
         EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));

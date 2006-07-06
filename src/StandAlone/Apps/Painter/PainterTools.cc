@@ -139,7 +139,6 @@ Painter::KeyToolSelectorTool::key_press(string, int keyval,
   case SCIRun_a:        tm_.add_tool(new CropTool(painter_),100); break;
   case SCIRun_f:        tm_.add_tool(new FloodfillTool(painter_),100); break;
   case SCIRun_b:        tm_.add_tool(new BrushTool(painter_),25); break;
-  case SCIRun_m:        tm_.add_tool(new LayerMergeTool(painter_),100); break;
   case SCIRun_l:        tm_.add_tool(new StatisticsTool(painter_),100); break;
 
   case SCIRun_c:        painter_->copy_current_layer(); break;
@@ -158,22 +157,6 @@ Painter::KeyToolSelectorTool::key_press(string, int keyval,
 
   case SCIRun_k:        
     tm_.add_tool(new ITKConfidenceConnectedImageFilterTool(painter_),49); 
-    break;
-
-  case SCIRun_g:
-    tm_.add_tool(new ITKGradientMagnitudeTool(painter_),100); 
-    break;
-
-  case SCIRun_d:
-    tm_.add_tool(new ITKCurvatureAnisotropicDiffusionTool(painter_),100); 
-    break;
-    
-  case SCIRun_j: 
-    tm_.add_tool(new ITKBinaryDilateErodeTool(painter_),100); 
-    break;
-
-  case SCIRun_1: 
-    tm_.add_tool(new ITKBinaryDilateTool(painter_),100); 
     break;
 
   }
@@ -1203,117 +1186,7 @@ Painter::ITKConfidenceConnectedImageFilterTool::draw(Painter::SliceWindow &windo
   return 0;
 }
   
-#endif
-  
 
-Painter::ITKGradientMagnitudeTool::ITKGradientMagnitudeTool(Painter *painter) :
-  PainterTool(painter,"ITK Gradient Magnitude")
-{
-#ifdef HAVE_INSIGHT
-  typedef itk::GradientMagnitudeImageFilter
-    < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D > FilterType;
-  FilterType::Pointer filter = FilterType::New();
-
-  NrrdVolume *vol = new NrrdVolume(painter_->current_volume_, name_, 2);
-  painter_->volume_map_[name_] = vol;
-  painter_->show_volume(name_);
-  painter_->recompute_volume_list();
-
-  painter_->do_itk_filter<Painter::ITKImageFloat3D>(filter, vol->nrrd_handle_);
-  vol->reset_data_range();
-  painter_->current_volume_ = vol;
-  painter_->redraw_all();
-#endif
-}
-
-
-
-
-Painter::ITKBinaryDilateTool::ITKBinaryDilateTool(Painter *painter) :
-  BaseTool("ITK Fill Holes")
-{
-#ifdef HAVE_INSIGHT
-  typedef itk::BinaryBallStructuringElement< float, 3> StructuringElementType;
-  typedef itk::BinaryDilateImageFilter
-    < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D, StructuringElementType > FilterType;
-  FilterType::Pointer filter = FilterType::New();
-
-  StructuringElementType structuringElement;
-  structuringElement.SetRadius( 2 );
-  structuringElement.CreateStructuringElement();
-
-  filter->SetKernel(structuringElement);
-  filter->SetDilateValue(255);
-
-  NrrdVolume *vol = painter->current_volume_;
-  painter->do_itk_filter<Painter::ITKImageFloat3D>(filter, vol->nrrd_handle_);
-  painter->redraw_all();
-#endif
-}
-
-
-
-Painter::ITKBinaryDilateErodeTool::ITKBinaryDilateErodeTool(Painter *painter) :
-  PainterTool(painter,"ITK Fill Holes")
-{
-#ifdef HAVE_INSIGHT
-  typedef itk::BinaryBallStructuringElement< float, 3> StructuringElementType;
-  typedef itk::BinaryDilateImageFilter
-    < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D, StructuringElementType > FilterType;
-  FilterType::Pointer filter = FilterType::New();
-
-
-  StructuringElementType structuringElement;
-  structuringElement.SetRadius( 3 );
-  structuringElement.CreateStructuringElement();
-
-  filter->SetKernel(structuringElement);
-  filter->SetDilateValue(255);
-
-  typedef itk::BinaryErodeImageFilter
-    < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D, StructuringElementType > FilterType2;
-  FilterType2::Pointer filter2 = FilterType2::New();
-
-  filter2->SetKernel(structuringElement);
-  filter2->SetErodeValue(255);
-
-  NrrdVolume *vol = new NrrdVolume(painter_->current_volume_, name_, 2);
-  painter_->volume_map_[name_] = vol;
-  painter_->show_volume(name_);
-  painter_->recompute_volume_list();
-  
-  painter_->do_itk_filter<Painter::ITKImageFloat3D>(filter, vol->nrrd_handle_);
-  painter_->do_itk_filter<Painter::ITKImageFloat3D>(filter2, vol->nrrd_handle_);
-
-  painter_->current_volume_ = vol;
-  painter_->redraw_all();
-#endif
-}
-
-
-Painter::ITKCurvatureAnisotropicDiffusionTool::ITKCurvatureAnisotropicDiffusionTool(Painter *painter) :
-  PainterTool(painter,"ITK Curvature Anisotropic Diffusion")
-{
-#ifdef HAVE_INSIGHT 
-  typedef itk::CurvatureAnisotropicDiffusionImageFilter
-    < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D > FilterType;
-  FilterType::Pointer filter = FilterType::New();
-  
-  filter->SetNumberOfIterations(5);
-  filter->SetTimeStep(0.075);
-  filter->SetConductanceParameter(1.0);
-  
-  NrrdVolume *vol = new NrrdVolume(painter_->current_volume_, name_, 2);
-  painter_->volume_map_[name_] = vol;
-  painter_->show_volume(name_);
-  painter_->recompute_volume_list();
-  
-  painter_->do_itk_filter<Painter::ITKImageFloat3D>(filter, vol->nrrd_handle_);
-
-  painter_->current_volume_ = vol;
-  painter_->redraw_all();
-#endif
-}
 
 
 Painter::LayerMergeTool::LayerMergeTool(Painter *painter):
@@ -1358,7 +1231,7 @@ Painter::LayerMergeTool::LayerMergeTool(Painter *painter):
 }
   
 
-  
+#endif  
 
 
 } // End namespace SCIRun

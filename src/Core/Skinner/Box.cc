@@ -41,7 +41,7 @@ namespace SCIRun {
       Parent(variables),
       color_(color),
       focus_mode_(false),
-      focus_(false)
+      focus_(true)
     {
 
       REGISTER_CATCHER_TARGET(Box::make_red);
@@ -89,7 +89,7 @@ namespace SCIRun {
 
       PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
 
-      if (focus_mode_ && pointer) {
+      if (pointer) {
         focus_ = get_region().inside(pointer->get_x(), pointer->get_y());
       }
         
@@ -107,7 +107,7 @@ namespace SCIRun {
       }
 
 
-      if (focus_ || draw) {
+      if (!focus_mode_ || (focus_ && focus_mode_) || draw) {
         return Parent::process_event(event);
       } 
 

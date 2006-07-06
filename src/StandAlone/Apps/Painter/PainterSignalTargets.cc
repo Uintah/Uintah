@@ -68,8 +68,15 @@
 
 #ifdef HAVE_INSIGHT
 
-#include <itkImageFileReader.h>
-#include <itkImageFileWriter.h>
+#  include <itkImageFileReader.h>
+#  include <itkImageFileWriter.h>
+#  include <itkGradientMagnitudeImageFilter.h>
+#  include <itkConfidenceConnectedImageFilter.h>
+#  include <itkCurvatureAnisotropicDiffusionImageFilter.h>
+#  include <itkBinaryBallStructuringElement.h>
+#  include <itkBinaryDilateImageFilter.h>
+#  include <itkBinaryErodeImageFilter.h>
+#  include <itkImportImageFilter.h>
 
 #endif
 
@@ -78,20 +85,41 @@ namespace SCIRun {
 
 BaseTool::propagation_state_e 
 Painter::InitializeSignalCatcherTargets(event_handle_t) {
-  REGISTER_CATCHER_TARGET(Painter::Autoview);
-  REGISTER_CATCHER_TARGET(Painter::quit);
   REGISTER_CATCHER_TARGET(Painter::SliceWindow_Maker);
-  REGISTER_CATCHER_TARGET(Painter::StartITKGradientTool);
-  REGISTER_CATCHER_TARGET(Painter::ITKImageFileRead);
-  REGISTER_CATCHER_TARGET(Painter::ITKImageFileWrite);
-  REGISTER_CATCHER_TARGET(Painter::NrrdFileRead);
+  REGISTER_CATCHER_TARGET(Painter::StartBrushTool);
+  REGISTER_CATCHER_TARGET(Painter::Autoview);
   REGISTER_CATCHER_TARGET(Painter::CopyLayer);
   REGISTER_CATCHER_TARGET(Painter::DeleteLayer);
   REGISTER_CATCHER_TARGET(Painter::NewLayer);
-  REGISTER_CATCHER_TARGET(Painter::StartBrushTool);
+  REGISTER_CATCHER_TARGET(Painter::MergeLayer);
+
+  REGISTER_CATCHER_TARGET(Painter::NrrdFileRead);
+  REGISTER_CATCHER_TARGET(Painter::NrrdFileWrite);
+
+  REGISTER_CATCHER_TARGET(Painter::ITKBinaryDilate);  
+  REGISTER_CATCHER_TARGET(Painter::ITKImageFileRead);
+  REGISTER_CATCHER_TARGET(Painter::ITKImageFileWrite);
+  REGISTER_CATCHER_TARGET(Painter::ITKGradientMagnitude);
+  REGISTER_CATCHER_TARGET(Painter::ITKBinaryDilateErode);
+  REGISTER_CATCHER_TARGET(Painter::ITKCurvatureAnisotropic);
+   
   return STOP_E;
 }
 
+
+BaseTool::propagation_state_e 
+Painter::SliceWindow_Maker(event_handle_t event) {
+  //  event.detach();
+  Skinner::MakerSignal *maker_signal = 
+    dynamic_cast<Skinner::MakerSignal *>(event.get_rep());
+  ASSERT(maker_signal);
+
+  SliceWindow *window = new SliceWindow(maker_signal->get_vars(), this);
+  windows_.push_back(window);
+  maker_signal->set_signal_thrower(window);
+  maker_signal->set_signal_name(maker_signal->get_signal_name()+"_Done");
+  return MODIFIED_E;
+}
 
 
 
@@ -102,11 +130,22 @@ Painter::StartBrushTool(event_handle_t event) {
   return STOP_E;
 }
 
+
 BaseTool::propagation_state_e 
-Painter::quit(event_handle_t event) {
-  EventManager::add_event(new QuitEvent());
+Painter::Autoview(event_handle_t) {
+  if (current_volume_) {
+    SliceWindows::iterator window = windows_.begin();
+    SliceWindows::iterator end = windows_.end();
+    for (;window != end; ++window) {
+      (*window)->autoview(current_volume_);
+    }
+  }
+
   return STOP_E;
 }
+
+
+
 
 BaseTool::propagation_state_e 
 Painter::CopyLayer(event_handle_t) {
@@ -126,6 +165,48 @@ Painter::NewLayer(event_handle_t) {
   return STOP_E;
 }
 
+
+
+BaseTool::propagation_state_e 
+Painter::MergeLayer(event_handle_t event) {
+  NrrdVolumeOrder::iterator volname = 
+    std::find(volume_order_.begin(), 
+              volume_order_.end(), 
+              current_volume_->name_.get());
+  
+  if (volname == volume_order_.begin()) return STOP_E;
+  NrrdVolume *vol1 = volume_map_[*volname];
+  NrrdVolume *vol2 = volume_map_[*(--volname)];
+    
+
+  NrrdData *nout = new NrrdData();
+  NrrdIter *ni1 = nrrdIterNew();
+  NrrdIter *ni2 = nrrdIterNew();
+    
+  nrrdIterSetNrrd(ni1, vol1->nrrd_handle_->nrrd_);
+  nrrdIterSetNrrd(ni2, vol2->nrrd_handle_->nrrd_);
+  
+  if (nrrdArithIterBinaryOp(nout->nrrd_, nrrdBinaryOpMax, ni1, ni2)) {
+    char *err = biffGetDone(NRRD);
+    string errstr = (err ? err : "");
+    free(err);
+    throw errstr;
+  }
+
+  nrrdIterNix(ni1);
+  nrrdIterNix(ni2);
+
+  nrrdKeyValueCopy(nout->nrrd_,  vol1->nrrd_handle_->nrrd_);
+  nrrdKeyValueCopy(nout->nrrd_,  vol2->nrrd_handle_->nrrd_);
+  
+  vol1->nrrd_handle_->nrrd_ = nout->nrrd_;
+  vol2->keep_ = 0;
+  
+  recompute_volume_list();
+  current_volume_ = vol1;
+  return STOP_E;
+}
+  
 
 BaseTool::propagation_state_e 
 Painter::NrrdFileRead(event_handle_t event) {
@@ -155,51 +236,48 @@ Painter::NrrdFileRead(event_handle_t event) {
   return STOP_E;  
 }
 
-
 BaseTool::propagation_state_e 
-Painter::Autoview(event_handle_t) {
-  if (current_volume_) {
-    SliceWindows::iterator window = windows_.begin();
-    SliceWindows::iterator end = windows_.end();
-    for (;window != end; ++window) {
-      (*window)->autoview(current_volume_);
-    }
-  }
-
-  return STOP_E;
+Painter::NrrdFileWrite(event_handle_t event) {
+  ASSERTMSG(0, "Not implemented");
+  return STOP_E;  
 }
 
 
-
 BaseTool::propagation_state_e 
-Painter::StartITKGradientTool(event_handle_t) {
+Painter::ITKBinaryDilate(event_handle_t event) {
 #ifdef HAVE_INSIGHT
-  tm_.add_tool(new ITKGradientMagnitudeTool(this),100); 
+  string name = "ITKBinaryDilate";
+  typedef itk::BinaryBallStructuringElement< float, 3> StructuringElementType;
+  typedef itk::BinaryDilateImageFilter
+    < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D, StructuringElementType > FilterType;
+  FilterType::Pointer filter = FilterType::New();
+
+  StructuringElementType structuringElement;
+  structuringElement.SetRadius
+    (get_vars()->get_int(name+"::radius"));
+  structuringElement.CreateStructuringElement();
+  
+  filter->SetKernel(structuringElement);
+  filter->SetDilateValue
+    (get_vars()->get_double(name+"::dilateValue"));
+
+  NrrdVolume *vol = current_volume_;
+  do_itk_filter<Painter::ITKImageFloat3D>(filter, vol->nrrd_handle_);
+  redraw_all();
 #endif
   return STOP_E;
 }
 
 
 
-BaseTool::propagation_state_e 
-Painter::SliceWindow_Maker(event_handle_t event) {
-  //  event.detach();
-  Skinner::MakerSignal *maker_signal = 
-    dynamic_cast<Skinner::MakerSignal *>(event.get_rep());
-  ASSERT(maker_signal);
-
-  SliceWindow *window = new SliceWindow(maker_signal->get_vars(), this);
-  windows_.push_back(window);
-  maker_signal->set_signal_thrower(window);
-  maker_signal->set_signal_name(maker_signal->get_signal_name()+"_Done");
-  return MODIFIED_E;
-}
-
-
 
 BaseTool::propagation_state_e 
 Painter::ITKImageFileRead(event_handle_t event) {
-#ifdef HAVE_INSIGHT
+
+#ifndef HAVE_INSIGHT
+  return NrrdFileRead(event);
+#else
+
   cerr << "ITKImageFileRead\n";
   Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
   ASSERT(signal);
@@ -242,17 +320,17 @@ Painter::ITKImageFileRead(event_handle_t event) {
 
   // ITKDataTypeSignal *return_event = new ITKDataTypeSignal(img);
   //  event = return_event;
-#endif
   return MODIFIED_E;
+#endif
 }
 
 
 
 BaseTool::propagation_state_e 
 Painter::ITKImageFileWrite(event_handle_t event) {
-#ifdef HAVE_INSIGHT
-  cerr << "ITKImageFileWrite\n";
-
+#ifndef HAVE_INSIGHT
+  return NrrdFileWrite(event);
+#else
   Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
   ASSERT(signal);
 
@@ -267,7 +345,6 @@ Painter::ITKImageFileWrite(event_handle_t event) {
   typedef FileWriterType::InputImageType ImageType;
   ImageType *img = dynamic_cast<ImageType *>(itk_image_h->data_.GetPointer());
   ASSERT(img);
-
 
   // set writer
   writer->SetFileName( filename.c_str() );
@@ -287,6 +364,119 @@ Painter::ITKImageFileWrite(event_handle_t event) {
 #endif
   return MODIFIED_E;
 }
+
+
+
+
+
+BaseTool::propagation_state_e 
+Painter::ITKBinaryDilateErode(event_handle_t event) {
+#ifdef HAVE_INSIGHT
+  string name = "ITKBinaryDilateErode";
+  typedef itk::BinaryBallStructuringElement< float, 3> StructuringElementType;
+  typedef itk::BinaryDilateImageFilter
+    < Painter::ITKImageFloat3D, 
+    Painter::ITKImageFloat3D,
+    StructuringElementType > FilterType;
+  FilterType::Pointer filter = FilterType::New();
+
+  StructuringElementType structuringElement;
+  structuringElement.SetRadius
+    (get_vars()->get_int(name+"::radius"));
+  structuringElement.CreateStructuringElement();
+
+  filter->SetKernel(structuringElement);
+  filter->SetDilateValue
+    (get_vars()->get_double(name+"::dilateValue"));
+
+  typedef itk::BinaryErodeImageFilter
+    < Painter::ITKImageFloat3D, 
+    Painter::ITKImageFloat3D, 
+    StructuringElementType > FilterType2;
+  FilterType2::Pointer filter2 = FilterType2::New();
+
+  filter2->SetKernel(structuringElement);
+  filter2->SetErodeValue
+    (get_vars()->get_double(name+"::erodeValue"));
+
+  NrrdVolume *vol = new NrrdVolume(current_volume_, name, 2);
+  volume_map_[name] = vol;
+  show_volume(name);
+  recompute_volume_list();
+  
+  do_itk_filter<Painter::ITKImageFloat3D>(filter, vol->nrrd_handle_);
+  do_itk_filter<Painter::ITKImageFloat3D>(filter2, vol->nrrd_handle_);
+
+  set_all_slices_tex_dirty();
+  current_volume_ = vol;  
+#endif
+  return STOP_E;
+}
+
+
+
+
+BaseTool::propagation_state_e 
+Painter::ITKGradientMagnitude(event_handle_t) {
+#ifdef HAVE_INSIGHT
+  string name = "ITKGradientMagnitude";
+  typedef itk::GradientMagnitudeImageFilter
+    < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D > FilterType;
+  FilterType::Pointer filter = FilterType::New();
+
+  NrrdVolume *vol = new NrrdVolume(current_volume_, name, 2);
+  volume_map_[name] = vol;
+  show_volume(name);
+  recompute_volume_list();
+
+  do_itk_filter<Painter::ITKImageFloat3D>(filter, vol->nrrd_handle_);
+  vol->reset_data_range();
+ 
+  current_volume_ = vol;
+  
+  set_all_slices_tex_dirty();
+  redraw_all();
+#endif
+  return STOP_E;
+}
+
+
+
+
+
+
+BaseTool::propagation_state_e 
+Painter::ITKCurvatureAnisotropic(event_handle_t event) {
+#ifdef HAVE_INSIGHT
+  string name = "ITKCurvatureAnisotropic";
+  typedef itk::CurvatureAnisotropicDiffusionImageFilter
+    < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D > FilterType;
+  FilterType::Pointer filter = FilterType::New();  
+
+  const Skinner::Variables *vars = get_vars();
+  
+  filter->SetNumberOfIterations
+    (get_vars()->get_int(name+"::numberOfIterations"));
+  filter->SetTimeStep
+    (get_vars()->get_double(name+"::timeStep"));
+  filter->SetConductanceParameter
+    (get_vars()->get_double(name+"::conductanceParameter"));
+  
+  NrrdVolume *vol = new NrrdVolume(current_volume_, name, 2);
+  volume_map_[name] = vol;
+  show_volume(name);
+  recompute_volume_list();
+  
+  do_itk_filter<Painter::ITKImageFloat3D>(filter, vol->nrrd_handle_);
+  
+  current_volume_ = vol;
+  set_all_slices_tex_dirty();
+  redraw_all();
+#endif
+  return STOP_E;
+}
+
+
 
 
   
