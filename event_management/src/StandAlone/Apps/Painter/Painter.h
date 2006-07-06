@@ -484,14 +484,18 @@ private:
   };
 
 
-  class ITKConfidenceConnectedImageFilterTool : public PainterPointerTool {
+  class ITKConfidenceConnectedImageFilterTool : public virtual BaseTool,
+                                                public PainterPointerTool
+  {
   public:
     ITKConfidenceConnectedImageFilterTool(Painter *painter);
     propagation_state_e pointer_down(int, int, int, unsigned int, int);
     propagation_state_e pointer_up(int, int, int, unsigned int, int);
     propagation_state_e pointer_motion(int, int, int, unsigned int, int);
-    //    int                 draw(SliceWindow &window);
+    propagation_state_e process_event(event_handle_t);
   private:
+    void                draw_gl(SliceWindow &window);
+    void                finish();
     vector<int>         seed_;
     NrrdVolume *        volume_;
   };
@@ -509,23 +513,6 @@ private:
     double              squared_sum_;
     int                 count_;
   };
-
-
-#if 0
-  class FooTool : public PointerTool, public  KeyTool {
-  public:
-    FooTool();
-    virtual ~FooTool();
-          
-    propagation_state_e pointer_down(int, int, int, unsigned int, int);
-    propagation_state_e pointer_up(int, int, int, unsigned int, int);
-    propagation_state_e pointer_motion(int, int, int, unsigned int, int);
-
-    propagation_state_e key_press(string, int, unsigned int, unsigned int);
-    propagation_state_e key_release(string, int, unsigned int, unsigned int);
-  };
-#endif
-    
 
 
   friend class PainterTool;
@@ -692,8 +679,11 @@ private:
   //  propagation_state_e   start_brush_tool(event_handle_t);
   CatcherFunction_t     InitializeSignalCatcherTargets;
   CatcherFunction_t     SliceWindow_Maker;
+
   CatcherFunction_t     StartBrushTool;
-  CatcherFunction_t     Quit;
+  CatcherFunction_t     StartCropTool;
+  CatcherFunction_t     StartFloodFillTool;
+
   CatcherFunction_t     Autoview;
   CatcherFunction_t     CopyLayer;
   CatcherFunction_t     DeleteLayer;
@@ -703,12 +693,20 @@ private:
   CatcherFunction_t     NrrdFileRead;
   CatcherFunction_t     NrrdFileWrite;
 
+  CatcherFunction_t     ITKFilterExecute;
+  CatcherFunction_t     ITKFilterCancel;
+
   CatcherFunction_t     ITKBinaryDilate;
   CatcherFunction_t     ITKImageFileRead;
   CatcherFunction_t     ITKImageFileWrite;
   CatcherFunction_t     ITKGradientMagnitude;
   CatcherFunction_t     ITKBinaryDilateErode;
   CatcherFunction_t     ITKCurvatureAnisotropic;
+  CatcherFunction_t     ITKConfidenceConnected;
+  CatcherFunction_t     ITKThresholdLevelSet;
+
+  
+
 
 public:
   static Skinner::DrawableMakerFunc_t maker;
@@ -724,6 +722,29 @@ public:
 
 
 
+
+class RedrawSliceWindowEvent : public RedrawEvent 
+{
+  Painter::SliceWindow &        window_;
+public:
+  RedrawSliceWindowEvent(Painter::SliceWindow &window) :
+    RedrawEvent(),
+    window_(window)
+  {
+  }
+  
+  ~RedrawSliceWindowEvent() {}
+  Painter::SliceWindow &       get_window() { return window_; }
+};
+
+
+
+class ExecuteEvent : public QuitEvent 
+{
+public:
+  ExecuteEvent() : QuitEvent() {}
+  ~ExecuteEvent() {}
+};
 
 
 template<class T>

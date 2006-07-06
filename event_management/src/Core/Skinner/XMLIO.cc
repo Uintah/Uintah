@@ -496,15 +496,19 @@ namespace SCIRun {
         ASSERT(callback.function_);
         if (callback.data_.empty()) callback.data_ = signaldata;
         if (object->get_signal_id(signalname)) {
-          cerr << " signalname: " << signalname 
-               << " connecting to " << signaltarget 
-               << " with data: " << signaldata << std::endl;
-
+          if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
+            cerr << " signalname: " << signalname 
+                 << " connecting to " << signaltarget 
+                 << " with data: " << signaldata << std::endl;
+          }
+            
           object->all_catchers_[signalname].push_back(callback);
 
         } else {
-          cerr << object->get_id() << " aliasing: " << signalname 
-               << " to " << signaltarget << std::endl;
+          if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
+            cerr << object->get_id() << " aliasing: " << signalname 
+                 << " to " << signaltarget << std::endl;
+          }
 
           SignalCatcher::CatcherTargetInfo_t newcallback = callback;
           newcallback.targetname_ = signalname;
