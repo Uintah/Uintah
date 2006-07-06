@@ -426,29 +426,6 @@ private:
     double              pick_dist_[2][3];
   };
 
-#if 0
-  class BrushTool : public PainterTool {
-  public:
-    BrushTool(Painter *painter);
-    ~BrushTool();
-    int                 do_event(Event &);
-
-    int                 draw_mouse_cursor(Event &);
-  private:
-    int                 button_press(Event &);
-    int                 button_release(Event &);
-    int                 my_mouse_motion(Event &);
-    int                 key_press(Event &);
-
-    void                line(Nrrd *, double, int, int, int, int, bool);
-    void                splat(Nrrd *, double,int,int);
-    SliceWindow *       window_;
-    NrrdSlice *         slice_;
-    float               value_;
-    vector<int>         last_index_;
-    double              radius_;
-  };
-#endif
 
   class BrushTool : public KeyTool, public PointerTool {
   public:
@@ -518,35 +495,7 @@ private:
     vector<int>         seed_;
     NrrdVolume *        volume_;
   };
-
-  class ITKGradientMagnitudeTool : public PainterTool {
-  public:
-    ITKGradientMagnitudeTool(Painter *painter);
-  private:
-  };
-
-
-
-  class ITKCurvatureAnisotropicDiffusionTool : public PainterTool {
-  public:
-    ITKCurvatureAnisotropicDiffusionTool(Painter *painter);
-  private:
-  };
-
-  class ITKBinaryDilateErodeTool : public PainterTool {
-  public:
-    ITKBinaryDilateErodeTool(Painter *painter);
-  private:
-  };
-
-
-  class ITKBinaryDilateTool : public BaseTool {
-  public:
-    ITKBinaryDilateTool(Painter *painter);
-  private:
-  };
-
-
+ 
 
   class StatisticsTool : public PainterTool {
   public:
@@ -744,15 +693,23 @@ private:
   CatcherFunction_t     InitializeSignalCatcherTargets;
   CatcherFunction_t     SliceWindow_Maker;
   CatcherFunction_t     StartBrushTool;
-  CatcherFunction_t     quit;
+  CatcherFunction_t     Quit;
   CatcherFunction_t     Autoview;
   CatcherFunction_t     CopyLayer;
   CatcherFunction_t     DeleteLayer;
   CatcherFunction_t     NewLayer;
-  CatcherFunction_t     StartITKGradientTool;
+  CatcherFunction_t     MergeLayer;
+
+  CatcherFunction_t     NrrdFileRead;
+  CatcherFunction_t     NrrdFileWrite;
+
+  CatcherFunction_t     ITKBinaryDilate;
   CatcherFunction_t     ITKImageFileRead;
   CatcherFunction_t     ITKImageFileWrite;
-  CatcherFunction_t     NrrdFileRead;
+  CatcherFunction_t     ITKGradientMagnitude;
+  CatcherFunction_t     ITKBinaryDilateErode;
+  CatcherFunction_t     ITKCurvatureAnisotropic;
+
 public:
   static Skinner::DrawableMakerFunc_t maker;
   static string         class_name() { return "Painter"; }

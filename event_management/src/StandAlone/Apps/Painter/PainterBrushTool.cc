@@ -186,7 +186,8 @@ Painter::BrushTool::pointer_up(int b, int x, int y, unsigned int m, int t)
 
     //    nrrdSave("/tmp/vol.nrrd", vol->nrrd_handle_->nrrd_, 0);
     //    nrrdSave("/tmp/slice.nrrd", slice_->texture_->nrrd_handle_->nrrd_, 0);
-    vol->nrrd_handle_->nrrd_->content[0] = 0;
+    if (vol->nrrd_handle_->nrrd_->content)
+      vol->nrrd_handle_->nrrd_->content[0] = 0;
     if (nrrdSplice(vol->nrrd_handle_->nrrd_,
                    vol->nrrd_handle_->nrrd_,
                    slice_->texture_->nrrd_handle_->nrrd_,

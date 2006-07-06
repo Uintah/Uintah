@@ -2,8 +2,19 @@
 <!DOCTYPE skinner PUBLIC "-//Skinner/Drawable DTD" "skinner.dtd">
 
 <skinner version="1.0">
-  <var name="program_name" propagate="yes">SCI-RENDER 0.1</var>
+  <var name="program_name" propagate="yes">BioPSE RENDER 0.1</var>
   <var name="full_program_name" propagate="yes">Raster Explorer and N-Dimensional Editor Revision 0.1</var>
+
+
+  <var name="ITKCurvatureAnisotropic::numberOfIterations" propagate="yes">5</var>
+  <var name="ITKCurvatureAnisotropic::timeStep" propagate="yes">0.075</var>
+  <var name="ITKCurvatureAnisotropic::conductanceParameter" propagate="yes">1.0</var>
+
+  <var name="ITKBinaryDilateErode::radius" propagate="yes">3</var>
+  <var name="ITKBinaryDilateErode::dilateValue" propagate="yes">255</var>
+  <var name="ITKBinaryDilateErode::erodeValue" propagate="yes">255</var>
+
+
   <var name="grey" propagate="yes">#444444FF</var>
   <var name="grey2" propagate="yes">#777777FF</var>
   <var name="grey3" propagate="yes">#AAAAAAFF</var>
@@ -25,10 +36,9 @@
   <var name="black90" propagate="yes">#000000BB</var>
   <var name="Window::borders" propagate="yes">1</var>
 
-
-
   <definition class="ShadowedBox"> 
-    <object class="Collection"> 
+    <object class="Box"> 
+      <var name="color">#00000000</var>
       <var name="border-size1" propagate="yes" overwrite="no">15</var>
       <var name="border-size2" propagate="yes" overwrite="no">5</var>
 
@@ -290,7 +300,7 @@
       <object class="Box">
         <var name="color">#000000</var>
         <signal name="button_1_clicked"
-                target="Painter::quit"/>
+                target="Quit"/>
 
       </object>
       <object class="Grid">
@@ -308,7 +318,7 @@
           <var name="col">2</var>
           <var name="cell-width">35</var>
           <signal name="Button2::clicked"
-                  target="Painter::quit"/>
+                  target="Quit"/>
         </object>
       </object>
     </object>
@@ -424,8 +434,6 @@
                   <var name="col">3</var>
                   
                   <var name="Button2::Text::text" propagate="yes">Load</var>
-                  <!--                      <signal name="Button2::clicked" 
-                       target="Painter::ITKImageFileRead">$TextEntry::value</signal>-->
                   <signal name="Button2::clicked" 
                           target="FileLoadBox::LoadButtonPress">$TextEntry::value</signal>
                 </object>
@@ -501,10 +509,10 @@
             <var name="cell-height">$Animation::variable-1</var>
             <signal name="FileLoadBox::CancelButtonPress" 
                     target="Animation::AnimateVariableDescending">1</signal>
-            
-            
+
             <signal name="FileLoadBox::LoadButtonPress" 
                     target="Painter::ITKImageFileRead"></signal>
+
             
           </object>
           
@@ -517,7 +525,7 @@
 
             <var name="cell-height">$Animation::variable-2</var>
             <signal name="FileLoadBox::CancelButtonPress" 
-                    target="Animation::AnimateVariableDescending">1</signal>
+                    target="Animation::AnimateVariableDescending">2</signal>
             
             
             <signal name="FileLoadBox::LoadButtonPress" 
@@ -722,6 +730,7 @@
           <object class="Button2">
             <var name="row">2</var>
             <var name="col">1</var>
+            <var name="bug">1</var>
             <var name="Button2::Text::text" propagate="yes">Load Layer</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
             <signal name="Button2::clicked" 
@@ -731,9 +740,13 @@
           <object class="Button2">
             <var name="row">3</var>
             <var name="col">1</var>
+            <var name="bug">2</var>
             <var name="Button2::Text::text" propagate="yes">Save Layer</var>
             <signal name="Button2::clicked" 
                     target="Animation::AnimateVariableAscending">2</signal>
+            <signal name="Button2::clicked" 
+                    target="Quit">2</signal>
+
           </object>
           
           <object class="Button2">
@@ -779,7 +792,7 @@
             <var name="Button2::Text::text" propagate="yes">Crop Tool</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
             <signal name="Button2::clicked" 
-                    target="Painter::quit"/>
+                    target="Quit"/>
             
           </object>
 
@@ -789,7 +802,7 @@
             <var name="Button2::Text::text" propagate="yes">ITK Gradient Magnitude</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
             <signal name="Button2::clicked" 
-                    target="Painter::quit"/>
+                    target="Painter::ITKGradientMagnitude"/>
             
           </object>
 
@@ -799,7 +812,7 @@
             <var name="Button2::Text::text" propagate="yes">ITK Confidence Connected</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
             <signal name="Button2::clicked" 
-                    target="Painter::quit"/>
+                    target="Quit"/>
             
           </object>
 
@@ -809,7 +822,7 @@
             <var name="Button2::Text::text" propagate="yes">ITK Threshold Levelset</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
             <signal name="Button2::clicked" 
-                    target="Painter::quit"/>
+                    target="Quit"/>
             
           </object>
 
@@ -820,7 +833,7 @@
             <var name="Button2::Text::text" propagate="yes">ITK Anisotropic Diffusion</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
             <signal name="Button2::clicked" 
-                    target="Painter::quit"/>
+                    target="Painter::ITKCurvatureAnisotropic"/>
             
           </object>
 
@@ -829,8 +842,8 @@
             <var name="col">1</var>
             <var name="Button2::Text::text" propagate="yes">ITK Hole Fill</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
-            <signal name="Button2::clicked" 
-                    target="Painter::quit"/>
+            <signal name="ITKBinaryDilateErode" 
+                    target="Quit"/>
             
           </object>
 
@@ -840,7 +853,7 @@
             <var name="Button2::Text::text" propagate="yes">Flood Fill</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
             <signal name="Button2::clicked" 
-                    target="Painter::quit"/>
+                    target="Quit"/>
             
           </object>               
 
@@ -850,7 +863,7 @@
             <var name="Button2::Text::text" propagate="yes">Credits</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
             <signal name="Button2::clicked" 
-                    target="blah"/>
+                    target="Quit"/>
             
           </object>
 
@@ -860,7 +873,7 @@
             <var name="Button2::Text::text" propagate="yes">Quit</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
             <signal name="Button2::clicked" 
-                    target="Painter::quit"/>
+                    target="Quit"/>
             
           </object>
 
@@ -870,6 +883,7 @@
 
       
       <object class="Root::GLWindow" id="Splash">
+        <var name="id"> </var>
         <var name="width" type="int">800</var>
         <var name="height" type="int">200</var>
         <var name="posx" type="int">100</var>

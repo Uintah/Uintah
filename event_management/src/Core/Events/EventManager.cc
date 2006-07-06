@@ -238,8 +238,11 @@ EventManager::play_trail() {
       stop_trail_file();
       continue;
     }   
+    WindowEvent *window = dynamic_cast<WindowEvent*>(event.get_rep());
+    bool redraw = (window && 
+                   (window->get_window_state() & WindowEvent::REDRAW_E));
 
-    if ((event_time = event->get_time())) {
+    if (!redraw && (event_time = event->get_time())) {
       if (last_event_time) {
         double diff = (event_time-last_event_time) * millisecond;
         timer.wait_for_time(last_timer_time + diff);

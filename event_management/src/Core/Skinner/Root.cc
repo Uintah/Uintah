@@ -45,7 +45,12 @@ namespace SCIRun {
       windows_()
     {
       REGISTER_CATCHER_TARGET(Root::GLWindow_Maker);
+      catcher_targets_["Quit"] =
+        static_cast<SCIRun::Skinner::SignalCatcher::CatcherFunctionPtr>
+        (&Root::Quit);
+      catcher_targets_["QUIT"] = catcher_targets_["Quit"];
     }
+
 
     Root::~Root() {
     }
@@ -63,6 +68,12 @@ namespace SCIRun {
       return MODIFIED_E;
     }
 
+    BaseTool::propagation_state_e 
+    Root::Quit(event_handle_t event) {
+      EventManager::add_event(new QuitEvent());
+      return STOP_E;
+    }
+    
     void
     Root::spawn_redraw_threads() {
       BaseTool *event_tool = new FilterRedrawEventsTool("Redraw Filter", 1);

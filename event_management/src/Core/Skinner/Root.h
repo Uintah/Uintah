@@ -47,6 +47,7 @@ namespace SCIRun {
       void spawn_redraw_threads();
     private:
       CatcherFunction_t GLWindow_Maker;
+      CatcherFunction_t Quit;
       typedef vector<GLWindow *> GLWindows_t;
       GLWindows_t windows_;
     };
