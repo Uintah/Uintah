@@ -119,7 +119,7 @@ void AMRSimulationController::run()
    // the number of levels the regridder can handle .
    // Only do if not restarting
 
-   if (d_doAMR && !d_restarting && d_regridder->isAdaptive()){
+   if (d_regridder && !d_restarting && d_regridder->isAdaptive()){
      while (currentGrid->numLevels() < d_regridder->maxLevels() &&
             d_regridder->flaggedCellsOnFinestLevel(currentGrid, d_scheduler)) {
        if (!doInitialTimestepRegridding(currentGrid)) {
@@ -144,7 +144,7 @@ void AMRSimulationController::run()
    }
    while( t < d_timeinfo->maxTime && iterations < max_iterations) {
 
-     if (d_doAMR && d_regridder->needsToReGrid() && !first) {
+     if (d_regridder && d_regridder->needsToReGrid() && !first) {
        doRegridding(currentGrid);
      }
 
@@ -482,18 +482,15 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
     d_sharedState->setCurrentTopLevelTimeStep( 0 );
     t = d_timeinfo->initTime;
     // Initialize the CFD and/or MPM data
-    for(int i=0;i<grid->numLevels();i++) {
+    for(int i=grid->numLevels()-1; i >= 0; i--) {
       d_sim->scheduleInitialize(grid->getLevel(i), d_scheduler);
       d_sim->scheduleComputeStableTimestep(grid->getLevel(i),d_scheduler);
       
-      if (d_doAMR) {
+      if (d_regridder) {
         // so we can initially regrid
         d_regridder->scheduleInitializeErrorEstimate(d_scheduler, grid->getLevel(i));
         d_sim->scheduleInitialErrorEstimate(grid->getLevel(i), d_scheduler);
 	d_regridder->scheduleDilation(d_scheduler, grid->getLevel(i));
-        if (i > 0) {
-          d_sim->scheduleRefineInterface(grid->getLevel(i), d_scheduler, false, true);
-        }
       }
     }
   }
@@ -545,10 +542,10 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
   // for dynamic lb's, set up patch config after changing grid
   d_lb->possiblyDynamicallyReallocate(currentGrid, true); 
   
-  for(int i=0;i<currentGrid->numLevels();i++) {
+  for(int i=currentGrid->numLevels()-1; i >= 0; i--) {
     d_sim->scheduleInitialize(currentGrid->getLevel(i), d_scheduler);
     d_sim->scheduleComputeStableTimestep(currentGrid->getLevel(i),d_scheduler);
-    if (d_doAMR) {
+    if (d_regridder) {
       d_regridder->scheduleInitializeErrorEstimate(d_scheduler, currentGrid->getLevel(i));
       d_sim->scheduleInitialErrorEstimate(currentGrid->getLevel(i), d_scheduler);
       d_regridder->scheduleDilation(d_scheduler, currentGrid->getLevel(i));
@@ -666,7 +663,7 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
     
   for(int i = currentGrid->numLevels()-1; i >= 0; i--){
     dbg << d_myworld->myrank() << "   final TG " << i << endl;
-    if (d_doAMR) {
+    if (d_regridder) {
       d_regridder->scheduleInitializeErrorEstimate(d_scheduler, currentGrid->getLevel(i));
       d_sim->scheduleErrorEstimate(currentGrid->getLevel(i), d_scheduler);
       d_regridder->scheduleDilation(d_scheduler, currentGrid->getLevel(i));

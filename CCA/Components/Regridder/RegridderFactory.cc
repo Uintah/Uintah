@@ -9,20 +9,23 @@ RegridderCommon* RegridderFactory::create(ProblemSpecP& ps,
                                           const ProcessorGroup* world)
 {
   RegridderCommon* regrid = 0;
-  string regridder = "Hierarchical";
- 
+  
   ProblemSpecP amr = ps->findBlock("AMR");	
   ProblemSpecP reg_ps = amr->findBlock("Regridder");
-  if (reg_ps) 
+  if (reg_ps) {
+    // only instantiate if there is a Regridder section.  If 
+    // no type specified, call it 'Hierarchical'
+    string regridder = "Hierarchical";
     reg_ps->get("type",regridder);
 
-  if(regridder == "Hierarchical") {
-    regrid = new HierarchicalRegridder(world);
-  } else if(regridder == "BNR") {
-    regrid = new BNRRegridder(world);
-  } else
-    regrid = 0;
- 
+    if(regridder == "Hierarchical") {
+      regrid = new HierarchicalRegridder(world);
+    } else if(regridder == "BNR") {
+      regrid = new BNRRegridder(world);
+    } else
+      regrid = 0;
+  }
+
   return regrid;
 
 }
