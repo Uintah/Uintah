@@ -111,22 +111,8 @@ WARNING
               int p_rank,
               BNRTask *parent,
               unsigned int tag);
-    /*: status(NEW), patch(patch), flags(flags), parent(parent), sibling(0), tag(tag), p_group(p_group), p_rank(p_rank) 
-      {
-      if(controller->task_count/controller->tags>0)
-      cout << "WARNING REUSING TAGS\n";
-      //calculate hypercube dimensions
-      unsigned int p=1;
-      d=0;
-      while(p<p_group.size())
-      {
-      p<<=1;
-      d++;
-      }
-      };
-    */
     void continueTask();
-    void setSibling(BNRTask *sibling) {this->sibling=sibling;};   
+    void setSibling(BNRTask *sibling) {sibling_=sibling;};   
     void ComputeLocalSignature();
     void BoundSignatures();
     void CheckTolA();       
@@ -137,43 +123,43 @@ WARNING
     bool Broadcast(void *message, int count, MPI_Datatype datatype,unsigned int tag);
 
     // Task information
-    Task_Status status;               // Status of current task
-    PseudoPatch patch;                // patch that is being worked on
-    FlagsList flags;                  // list of flags inside this task
-    BNRTask *parent;                  // pointer to parent task
-    BNRTask *sibling;                 // pointer to sibling task
-    BNRTask *left, *right;
+    Task_Status status_;               // Status of current task
+    PseudoPatch patch_;                // patch that is being worked on
+    FlagsList flags_;                  // list of flags inside this task
+    BNRTask *parent_;                  // pointer to parent task
+    BNRTask *sibling_;                 // pointer to sibling task
+    BNRTask *left_, *right_;
                 
-    unsigned int total_flags;       // total number of flags on all processors within this patch
-    unsigned int patch_vol;         // volume of the patch 
-    bool acceptable;                // patch acceptablity
-    IntVector offset;
+    unsigned int total_flags_;       // total number of flags on all processors within this patch
+    unsigned int patch_vol_;         // volume of the patch 
+    bool acceptable_;                // patch acceptablity
+    IntVector offset_;
 
     // Signatures
-    vector<int>     count[3];
+    vector<int>     count_[3];
                 
     // MPI Communication state
-    unsigned int tag;                 // unique message tag
-    std::queue<MPI_Request> mpi_requests;  // requests that must be finished before task can continue
-    int stage;                        // hypercube send/recieve stage
-    int d;                            // dimension of hypercube
+    unsigned int tag_;                 // unique message tag
+    std::queue<MPI_Request> mpi_requests_;  // requests that must be finished before task can continue
+    int stage_;                        // hypercube send/recieve stage
+    int d_;                            // dimension of hypercube
                 
     // Communication buffers
-    vector<FlagsCount> flagscount;  
-    vector<int> sum[3];
-    ChildTasks ctasks;              
+    vector<FlagsCount> flagscount_;  
+    vector<int> sum_[3];
+    ChildTasks ctasks_;              
 
     // Participating processor information
-    vector<int> p_group;            // particpating processor group
-    int p_rank;                     // rank within group
+    vector<int> p_group_;            // particpating processor group
+    int p_rank_;                     // rank within group
         
     // pointer to controlling algorithm
-    static BNRRegridder *controller;    // controlling algorithm;
+    static BNRRegridder *controller_;    // controlling algorithm;
 
-    vector<PseudoPatch> my_patches;     // list of patches
-    unsigned int my_size;               // number of patches on the parent
-    unsigned int left_size;             // number of patches in left child
-    unsigned int right_size;            // number of patches in right child
+    vector<PseudoPatch> my_patches_;     // list of patches
+    unsigned int my_size_;               // number of patches on the parent
+    unsigned int left_size_;             // number of patches in left child
+    unsigned int right_size_;            // number of patches in right child
   };
 
 } // End namespace Uintah
