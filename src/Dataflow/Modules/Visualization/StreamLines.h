@@ -116,10 +116,6 @@ public:
 
   void parallel_generate(int proc, SLData *d);
 
-  void FindNodes(vector<Point>&, Point, double, double, int, 
-		 const VectorFieldInterfaceHandle &vfi,
-		 bool remove_colinear_p, int method);
-
   virtual void set_result_value(Field *cf,
                                 CMesh::Node::index_type di,
                                 SFLD *sfield,
@@ -193,15 +189,17 @@ parallel_generate( int proc, SLData *d)
 
   CFieldL *cfield = (CFieldL *) d->fh.get_rep();
 
-  const double tolerance2 = d->tolerance * d->tolerance;
+  CMesh::Node::index_type n1, n2;
 
-  Point seed;
   Vector test;
-  vector<Point> nodes;
-  nodes.reserve(d->maxsteps);
+
+  BasicIntegrators BI;
+  BI.nodes_.reserve(d->maxsteps);                   // storage for points
+  BI.tolerance2_  = d->tolerance * d->tolerance;    // square error tolerance
+  BI.maxsteps_    = d->maxsteps;                    // max number of steps
+  BI.vfi_         = d->vfi;                         // the vector field
 
   vector<Point>::iterator node_iter;
-  CMesh::Node::index_type n1, n2;
 
   // Try to find the streamline for each seed point.
   typename SLOC::iterator siter, siter_end;
@@ -222,50 +220,54 @@ parallel_generate( int proc, SLData *d)
 
     d->pr->increment_progress();
 
-    smesh->get_point(seed, *siter);
+    smesh->get_point(BI.seed_, *siter);
 
     // Is the seed point inside the field?
-    if (!d->vfi->interpolate(test, seed))
+    if (!d->vfi->interpolate(test, BI.seed_))
     {
       ++siter;
       ++count;
       continue;
     }
 
-    nodes.clear();
-    nodes.push_back(seed);
+    BI.nodes_.clear();
+    BI.nodes_.push_back(BI.seed_);
 
     int cc = 0;
 
     // Find the negative streamlines.
-    if( d->direction <= 1 )
-    {
-      FindNodes(nodes, seed, tolerance2, -d->stepsize, d->maxsteps,
-		d->vfi, d->rcp, d->met);
-      if ( d->direction == 1 )
-      {
-	reverse(nodes.begin(), nodes.end());
-	cc = nodes.size();
+    if( d->direction <= 1 ) {
+      BI.stepsize_ = -d->stepsize;   // initial step size
+      BI.integrate( d->met );
+
+      if ( d->direction == 1 ) {
+	reverse(BI.nodes_.begin(), BI.nodes_.end());
+	cc = BI.nodes_.size();
 	cc = -(cc - 1);
       }
     }
+
     // Append the positive streamlines.
-    if( d->direction >= 1 ){
-      FindNodes(nodes, seed, tolerance2, d->stepsize, d->maxsteps,
-		d->vfi, d->rcp, d->met);
+    if( d->direction >= 1 ) {
+      BI.stepsize_ = d->stepsize;   // initial step size
+      BI.integrate( d->met );
     }
+
+    if (d->rcp)
+      BI.nodes_.erase(CleanupPoints(BI.nodes_, BI.tolerance2_),
+		      BI.nodes_.end());
 
     double length = 0;
 
     Point p1;
 
     if( d->value == 4 ) {
-      node_iter = nodes.begin();
-      if (node_iter != nodes.end()) {
+      node_iter = BI.nodes_.begin();
+      if (node_iter != BI.nodes_.end()) {
 	p1 = *node_iter;	
 	++node_iter;
 
-	while (node_iter != nodes.end()) {
+	while (node_iter != BI.nodes_.end()) {
 	  length += Vector( *node_iter-p1 ).length();
 	  p1 = *node_iter;
 	  ++node_iter;
@@ -273,9 +275,9 @@ parallel_generate( int proc, SLData *d)
       }
     }
 
-    node_iter = nodes.begin();
+    node_iter = BI.nodes_.begin();
 
-    if (node_iter != nodes.end()) {
+    if (node_iter != BI.nodes_.end()) {
       d->lock.lock();
       n1 = cfield->get_typed_mesh()->add_node(*node_iter);
       p1 = *node_iter;
@@ -301,7 +303,7 @@ parallel_generate( int proc, SLData *d)
 
       cc++;
 
-      while (node_iter != nodes.end()) {
+      while (node_iter != BI.nodes_.end()) {
 	n2 = cfield->get_typed_mesh()->add_node(*node_iter);
 	cfield->resize_fdata();
 
@@ -336,40 +338,6 @@ parallel_generate( int proc, SLData *d)
   }
 
   d->fh->set_property( "Streamline Count", count, false );
-}
-
-
-template <class FSRC, class STYPE, class SLOC>
-void StreamLinesAlgoT<FSRC, STYPE, SLOC>::
-StreamLinesAlgoT::FindNodes(vector<Point> &v, // storage for points
-			    Point x,          // initial point
-			    double t2,        // square error tolerance
-			    double s,         // initial step size
-			    int n,            // max number of steps
-			    const VectorFieldInterfaceHandle &vfi, // the field
-			    bool remove_colinear_p,
-			    int method)
-{
-
-  BasicIntegrators BI;
-
-  if (method == 0)
-    BI.FindAdamsBashforth(v, x, t2, s, n, vfi);
-
-//else if (method == 1)
-    // TODO: Implement AdamsMoulton
-
-  else if (method == 2)
-    BI.FindHeun(v, x, t2, s, n, vfi);
-
-  else if (method == 3)
-    BI.FindRK4(v, x, t2, s, n, vfi);
-
-  else if (method == 4)
-    BI.FindRKF(v, x, t2, s, n, vfi);
-
-  if (remove_colinear_p)
-    v.erase(CleanupPoints(v, t2), v.end());
 }
 
 
