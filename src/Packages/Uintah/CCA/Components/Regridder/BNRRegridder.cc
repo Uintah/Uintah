@@ -129,16 +129,13 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched,
     //Fixup patchlist
     patchfixer_.FixUp(patches);
     
-     cout << "Patches: ";
     //Uncoarsen
     IntVector mult=d_minPatchSize_[l]*d_cellRefinementRatio[l];
     for(unsigned int p=0;p<patches.size();p++)
     {
       patches[p].low=patches[p].low*mult;
       patches[p].high=patches[p].high*mult;
-      cout << "{" << patches[p].low << " " << patches[p].high << "} ";
     }
-    cout << endl;
 
     //create level and set up parameters
     Point anchor;
