@@ -604,10 +604,12 @@ void BNRTask::continueTaskSerial()
 
 	BoundSignatures();	
 	
+  total_flags_=flags_.size;
+	
   CheckTolA();
 	if(acceptable_)
 	{
-		//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": patch_ is acceptable_\n";
+		///cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": patch_ is acceptable_\n";
 		my_patches_.push_back(patch_);
 	}
 	else
@@ -625,17 +627,26 @@ void BNRTask::continueTaskSerial()
 		CreateTasks();
 		
 		status_=WAITING_FOR_CHILDREN;	
+
+		//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": waiting for children\n";
 		return;
+		//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": children done\n";
 		
 		WAIT_FOR_CHILDREN:
     	
-    //copy patches from left and right children
+    //copy patches from left children
     for(unsigned int p=0;p<left_->my_patches_.size();p++)
     {
       my_patches_.push_back(left_->my_patches_[p]);
     }
+    //copy patches from left and right children
+    for(unsigned int p=0;p<right_->my_patches_.size();p++)
+    {
+      my_patches_.push_back(right_->my_patches_[p]);
+    }
         
 		//check tolerance b and take better patch_set
+		//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": checking tolb\n";
 		CheckTolB();
 		if(!acceptable_)
 		{
@@ -772,6 +783,7 @@ void BNRTask::CheckTolA()
 	IntVector size=patch_.high-patch_.low;
 	patch_vol_=size[0]*size[1]*size[2];
 	acceptable_= float(total_flags_)/patch_vol_>=controller_->tola_;
+	//cout << "rank:" << p_group_[p_rank_] << ": pid:" << tag_  << ": patch_vol:" << patch_vol_ << " flags:" << total_flags_ << endl;
 }
 
 void BNRTask::CheckTolB()
@@ -783,7 +795,7 @@ void BNRTask::CheckTolB()
 				IntVector size=my_patches_[p].high-my_patches_[p].low;
 				children_vol+=size[0]*size[1]*size[2];
 		}
-		
+	  //cout << "children_vol:" << children_vol << " patch_vol:" <<patch_vol_ << " tolb:" << controller_->tolb_ << endl;	
 		//compare to patch_ volume of parent_
 		if(float(children_vol)/patch_vol_>=controller_->tolb_)
 		{
