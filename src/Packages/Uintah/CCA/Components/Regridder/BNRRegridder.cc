@@ -40,8 +40,11 @@ BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task
     tag_end=tag_start+div+1;
   else
     tag_end=tag_start+div;
-  
-  
+
+  //don't have zero in the tag list  
+  if(rank==0)
+    tag_start++;
+
   for(int i=tag_start;i<tag_end;i++)
     tags_.push(i<<1);
   //	cout << "rank:" << rank << ": tag_start:" << tag_start << " tags__end:" << tag_end << endl;
@@ -126,13 +129,16 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched,
     //Fixup patchlist
     patchfixer_.FixUp(patches);
     
+     cout << "Patches: ";
     //Uncoarsen
     IntVector mult=d_minPatchSize_[l]*d_cellRefinementRatio[l];
     for(unsigned int p=0;p<patches.size();p++)
     {
       patches[p].low=patches[p].low*mult;
       patches[p].high=patches[p].high*mult;
+      cout << "{" << patches[p].low << " " << patches[p].high << "} ";
     }
+    cout << endl;
 
     //create level and set up parameters
     Point anchor;
@@ -233,6 +239,13 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
       }
     }
   }
+  if(patch.low[0]==INT_MAX)
+  {
+     //no flags exit
+     if(rank==0)
+         cout << "No flags on this level\n";
+     return;
+  }
   /*
     cout << "rank: " << rank << " initial patch: {" 
     << patch.low[0] << "-" << patch.high[0] << ", "
@@ -246,14 +259,6 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
   flagslist.size=flags.size();
   tasks_.push_back(BNRTask(patch,flagslist,procs,rank,0,0));
   BNRTask *root=&tasks_.back();
-  //increment task count to insure tag uniqueness
-  if(rank==0)
-  {
-    if(tags_.front()!=0)
-      cout << "ERROR wrong tag_ at front\n";
-    tags_.pop(); 
-    task_count_++;
-  }
   
   //place on immediate_q_
   immediate_q_.push(root);									
