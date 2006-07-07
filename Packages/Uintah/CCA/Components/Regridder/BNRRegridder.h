@@ -59,7 +59,7 @@ WARNING
   private:
     void problemSetup_BulletProofing(const int k);
     int task_count_;								//number of tasks created on this proc
-    float tola_,tolb_;							//Tolerance parameters
+    double tola_,tolb_;							//Tolerance parameters
     
 //queues for tasks
     list<BNRTask> tasks_;				//list of tasks created throughout the run
