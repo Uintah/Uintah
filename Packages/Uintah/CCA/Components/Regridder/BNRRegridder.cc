@@ -128,6 +128,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched,
     RunBR(coarse_flag_vector,patches);  
     //Fixup patchlist
     patchfixer_.FixUp(patches);
+
     
     //Uncoarsen
     for(unsigned int p=0;p<patches.size();p++)
@@ -192,7 +193,6 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
   
   //bound flags
   PseudoPatch patch;
-  
   if(flags.size()>0)
   {
     patch.low=patch.high=flags[0];
@@ -219,10 +219,26 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
   
   vector<PseudoPatch> bounds(numprocs);
   MPI_Allgather(&patch,sizeof(PseudoPatch),MPI_BYTE,&bounds[0],sizeof(PseudoPatch),MPI_BYTE,d_myworld->getComm());
-  
-  patch.low=bounds[0].low;
-  patch.high=bounds[0].high;
-  for(int p=1;p<numprocs;p++)
+ 
+
+  //search for first processor that has flags 
+  int p=0;
+  while(bounds[p].low[0]==INT_MAX && p<numprocs )
+  {
+     p++;
+  }
+
+  if(p==numprocs)
+  {
+    if(rank==0)
+      cout << "No flags on this level\n";
+    return;
+  }
+
+  //find the bounds
+  patch.low=bounds[p].low;
+  patch.high=bounds[p].high;
+  for(p++;p<numprocs;p++)
   {
     for(int d=0;d<3;d++)
     {
@@ -234,13 +250,6 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
           patch.high[d]=bounds[p].high[d];
       }
     }
-  }
-  if(patch.low[0]==INT_MAX)
-  {
-     //no flags exit
-     if(rank==0)
-         cout << "No flags on this level\n";
-     return;
   }
   /*
     cout << "rank: " << rank << " initial patch: {" 
@@ -337,7 +346,6 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
     //cout << "rank:" << rank << ": pid:" << task->tag_ << ": task returned with status: " << task->status << endl;
     
   }
-  
   /*	
     int p_rank=tasks_.front().p_rank;
     
@@ -377,6 +385,7 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
   patches.resize(size);
   
   MPI_Bcast(&patches[0],size*sizeof(PseudoPatch),MPI_BYTE,tasks_.front().p_group_[0],d_myworld->getComm());
+
 }
 
 void BNRRegridder::problemSetup(const ProblemSpecP& params, 
