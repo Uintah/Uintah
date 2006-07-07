@@ -18,13 +18,13 @@ BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task
   
   int *tag_ub, maxtag_ ,flag;
   int tag_start, tag_end;
-  
-  MPI_Attr_get(d_myworld->getComm(),MPI_TAG_UB,&tag_ub,&flag);
-  if(flag)
-    maxtag_=(*tag_ub>>1);
-  else
-    maxtag_=(32767>>1);
 
+  maxtag_=(32767>>1);
+  if (d_myworld->size() > 1) {
+    MPI_Attr_get(d_myworld->getComm(),MPI_TAG_UB,&tag_ub,&flag);
+    if(flag)
+      maxtag_=(*tag_ub>>1);
+  }
   maxtag_++;
   int div=maxtag_/numprocs;
   int rem=maxtag_%numprocs;
@@ -126,6 +126,10 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched,
     vector<PseudoPatch> patches;
     //Parallel BR over coarse flags
     RunBR(coarse_flag_vector,patches);  
+    
+    // if there are no patches on this level, don't create any more levels
+    if (patches.size() == 0)
+      break;
     //Fixup patchlist
     patchfixer_.FixUp(patches);
 
@@ -413,6 +417,30 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
       d_minPatchSize_[i] = lastRatio;
   }
 
+  regrid_spec->get("patch_split_tolerance", tola_);
+  regrid_spec->get("patch_combine_tolerance", tolb_);
+
+  if (tola_ < 0) {
+    if (d_myworld->myrank() == 0)
+      cout << "  Bounding Regridder's patch_split_tolerance to [0,1]\n";
+    tola_ = 0;
+  }
+  if (tola_ > 1) {
+    if (d_myworld->myrank() == 0)
+      cout << "  Bounding Regridder's patch_split_tolerance to [0,1]\n";
+    tola_ = 1;
+  }
+  if (tolb_ < 0) {
+    if (d_myworld->myrank() == 0)
+      cout << "  Bounding Regridder's patch_combine_tolerance to [0,1]\n";
+    tolb_ = 0;
+  }
+  if (tolb_ > 1) {
+    if (d_myworld->myrank() == 0)
+      cout << "  Bounding Regridder's patch_combine_tolerance to [0,1]\n";
+    tolb_ = 1;
+  }
+
   for (int k = 0; k < d_maxLevels; k++) {
     if (k < (d_maxLevels-1)) {
       problemSetup_BulletProofing(k);
@@ -447,5 +475,11 @@ void BNRRegridder::problemSetup_BulletProofing(const int k)
 
     }
   }
+  if ( Mod( d_cellNum[k], d_minPatchSize_[k] ) != IntVector(0,0,0) ) {
+    ostringstream msg;
+    msg << "Problem Setup: Regridder: The overall number of cells on level " << k << "(" << d_cellNum[k] << ") is not divisible by the minimum patch size (" <<  d_minPatchSize_[k] << ")\n";
+    throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+  }
+    
 }
 
