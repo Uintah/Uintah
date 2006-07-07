@@ -19,35 +19,37 @@ BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task
   int *tag_ub, maxtag_ ,flag;
   int tag_start, tag_end;
 
-  maxtag_=(32767>>1);
-  if (d_myworld->size() > 1) {
+  if(numprocs>1)
+  {  
     MPI_Attr_get(d_myworld->getComm(),MPI_TAG_UB,&tag_ub,&flag);
     if(flag)
       maxtag_=(*tag_ub>>1);
+    else
+      maxtag_=(32767>>1);
+
+    maxtag_++;
+    int div=maxtag_/numprocs;
+    int rem=maxtag_%numprocs;
+  
+    tag_start=div*rank;
+  
+    if(rank<rem)
+      tag_start+=rank;
+    else
+      tag_start+=rem;
+  
+    if(rank<rem)
+      tag_end=tag_start+div+1;
+    else
+      tag_end=tag_start+div;
+
+    //don't have zero in the tag list  
+    if(rank==0)
+      tag_start++;
+
+    for(int i=tag_start;i<tag_end;i++)
+      tags_.push(i<<1);
   }
-  maxtag_++;
-  int div=maxtag_/numprocs;
-  int rem=maxtag_%numprocs;
-  
-  tag_start=div*rank;
-  
-  if(rank<rem)
-    tag_start+=rank;
-  else
-    tag_start+=rem;
-  
-  if(rank<rem)
-    tag_end=tag_start+div+1;
-  else
-    tag_end=tag_start+div;
-
-  //don't have zero in the tag list  
-  if(rank==0)
-    tag_start++;
-
-  for(int i=tag_start;i<tag_end;i++)
-    tags_.push(i<<1);
-  //	cout << "rank:" << rank << ": tag_start:" << tag_start << " tags__end:" << tag_end << endl;
 }
 
 BNRRegridder::~BNRRegridder()
@@ -132,7 +134,6 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched,
       break;
     //Fixup patchlist
     patchfixer_.FixUp(patches);
-
     
     //Uncoarsen
     for(unsigned int p=0;p<patches.size();p++)
@@ -221,40 +222,48 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
   }
   
   
-  vector<PseudoPatch> bounds(numprocs);
-  MPI_Allgather(&patch,sizeof(PseudoPatch),MPI_BYTE,&bounds[0],sizeof(PseudoPatch),MPI_BYTE,d_myworld->getComm());
- 
-
-  //search for first processor that has flags 
-  int p=0;
-  while(bounds[p].low[0]==INT_MAX && p<numprocs )
+  if(numprocs>1)
   {
-     p++;
-  }
+    vector<PseudoPatch> bounds(numprocs);
+    MPI_Allgather(&patch,sizeof(PseudoPatch),MPI_BYTE,&bounds[0],sizeof(PseudoPatch),MPI_BYTE,d_myworld->getComm());
 
-  if(p==numprocs)
-  {
-    if(rank==0)
-      cout << "No flags on this level\n";
-    return;
-  }
-
-  //find the bounds
-  patch.low=bounds[p].low;
-  patch.high=bounds[p].high;
-  for(p++;p<numprocs;p++)
-  {
-    for(int d=0;d<3;d++)
+    //search for first processor that has flags 
+    int p=0;
+    while(bounds[p].low[0]==INT_MAX && p<numprocs )
     {
-      if(bounds[p].low[0]!=INT_MAX)
+      p++;
+    }
+
+    if(p==numprocs)
+    {
+      if(rank==0)
+        cout << "No flags on this level\n";
+      return;
+    }
+ 
+    //find the bounds
+    patch.low=bounds[p].low;
+    patch.high=bounds[p].high;
+    for(p++;p<numprocs;p++)
+    {
+      for(int d=0;d<3;d++)
       {
-        if(bounds[p].low[d]<patch.low[d])
-          patch.low[d]=bounds[p].low[d];
-        if(bounds[p].high[d]>patch.high[d])
-          patch.high[d]=bounds[p].high[d];
+        if(bounds[p].low[0]!=INT_MAX)
+        { 
+          if(bounds[p].low[d]<patch.low[d])
+            patch.low[d]=bounds[p].low[d];
+          if(bounds[p].high[d]>patch.high[d])
+            patch.high[d]=bounds[p].high[d];
+        }
       }
     }
   }
+  else if (patch.low==patch.high)
+  {
+    cout << "No flags on this level\n";
+    return;
+  }
+
   /*
     cout << "rank: " << rank << " initial patch: {" 
     << patch.low[0] << "-" << patch.high[0] << ", "
@@ -288,7 +297,10 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
       immediate_q_.pop();
       //runable task found, continue task
       //			cout << "rank:" << rank << ": starting from immediate_q_ with status: " << task->status << endl;
-      task->continueTask();
+      if(task->p_group_.size()>1)
+        task->continueTask();
+      else
+        task->continueTaskSerial();
     }
     else if(!delay_q_.empty())
     {
@@ -350,46 +362,21 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
     //cout << "rank:" << rank << ": pid:" << task->tag_ << ": task returned with status: " << task->status << endl;
     
   }
-  /*	
-    int p_rank=tasks_.front().p_rank;
-    
-    if(rank==0 && rank==p_rank)
-    {
-      //root processor already has patch list, copy it over
-      patches.assign(tasks_.front().my_patches_.begin(),tasks_.front().my_patches_.end());
-    }
-    else 
-    {
-      if(rank==0)	//recieve patch list
-      {
-        MPI_Status status;
-        int size;
-        MPI_Recv(&size,1,MPI_INT,MPI_ANY_SOURCE,0,d_myworld->getComm(),&status);
-        cout << "size is : " << size << endl;
-        patches.resize(size);
-        MPI_Recv(&patches[0],size*sizeof(PseudoPatch),MPI_BYTE,MPI_ANY_SOURCE,0,d_myworld->getComm(),&status);
-      }
-      else if(p_rank==0)	//send patch list
-      {
-        unsigned int size=tasks_.front().my_patches_.size();
-        MPI_Send(&size,1,MPI_INT,0,0,d_myworld->getComm());
-        MPI_Send(&tasks_.front().my_patches_[0],size*sizeof(PseudoPatch),MPI_BYTE,0,0,d_myworld->getComm());
-      }	
-    }
-  */
-  //cout << "rank:" << rank << ": remaing tags_ on this proc:" << tags_.size() << endl;;
+  
   if(rank==tasks_.front().p_group_[0])
   {
     patches.assign(tasks_.front().my_patches_.begin(),tasks_.front().my_patches_.end());
   }
-  unsigned int size=tasks_.front().my_patches_.size();
-  //cout << "rank:" << rank << ": pid:" << tasks_.front().tag_ << ": broadcasting size root is:" << tasks_.front().p_group_[0] << endl;
-  MPI_Bcast(&size,1,MPI_INT,tasks_.front().p_group_[0],d_myworld->getComm());
-  //cout << "rank:" << rank << ": pid:" << tasks_.front().tag_ << ": size is:" << size << endl;
-  patches.resize(size);
+  if(numprocs>1)
+  {
+    unsigned int size=tasks_.front().my_patches_.size();
+    //cout << "rank:" << rank << ": pid:" << tasks_.front().tag_ << ": broadcasting size root is:" << tasks_.front().p_group_[0] << endl;
+    MPI_Bcast(&size,1,MPI_INT,tasks_.front().p_group_[0],d_myworld->getComm());
+    //cout << "rank:" << rank << ": pid:" << tasks_.front().tag_ << ": size is:" << size << endl;
+    patches.resize(size);
   
-  MPI_Bcast(&patches[0],size*sizeof(PseudoPatch),MPI_BYTE,tasks_.front().p_group_[0],d_myworld->getComm());
-
+    MPI_Bcast(&patches[0],size*sizeof(PseudoPatch),MPI_BYTE,tasks_.front().p_group_[0],d_myworld->getComm());
+  }
 }
 
 void BNRRegridder::problemSetup(const ProblemSpecP& params, 
