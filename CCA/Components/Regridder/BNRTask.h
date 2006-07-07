@@ -112,6 +112,7 @@ WARNING
               BNRTask *parent,
               unsigned int tag);
     void continueTask();
+    void continueTaskSerial();
     void setSibling(BNRTask *sibling) {sibling_=sibling;};   
     void ComputeLocalSignature();
     void BoundSignatures();

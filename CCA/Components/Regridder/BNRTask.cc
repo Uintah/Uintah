@@ -20,11 +20,6 @@ BNRRegridder *BNRTask::controller_=0;
 
 BNRTask::BNRTask(PseudoPatch patch, FlagsList flags, const vector<int> &p_group, int p_rank, BNRTask *parent, unsigned int tag): status_(NEW), patch_(patch), flags_(flags), parent_(parent), sibling_(0), tag_(tag), p_group_(p_group), p_rank_(p_rank)
 {
-		/*
-	if(controller_->task_count_/controller_->tags_>0)
-		cout << "WARNING REUSING TAGS\n";
-	*/
-
 	//calculate hypercube dimensions
  	unsigned int p=1;
   d_=0;
@@ -459,14 +454,14 @@ void BNRTask::continueTask()
 			status_=WAITING_FOR_CHILDREN;	
 			
 			
-			//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": waiting for children\n";
+			//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": waiting for children, p_group_.size():" << p_group_.size() << endl;
 		
 			//don't place on delay_q_ child task will do that
 			return;
 		
 			WAIT_FOR_CHILDREN:
 			
-			//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": waiting for patch_ count_: left_tag_:" << left_->tag_+1 << " right_tag_:" << right_->tag_+1 << endl;
+			//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": waiting for patch count: left_tag_:" << left_->tag_+1 << " right_tag_:" << right_->tag_+1 << endl;
 			//begin # of patch_es recv
 			mpi_requests_.push(request);
 			MPI_Irecv(&left_size_,1,MPI_INT,MPI_ANY_SOURCE,left_->tag_+1,controller_->d_myworld->getComm(),&mpi_requests_.back());
@@ -480,7 +475,7 @@ void BNRTask::continueTask()
 			WAIT_FOR_PATCH_COUNT:
 			//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": activated by child\n";
 			
-		//	cout << "rank:" << p_group_[p_rank_] << ": pid:" << tag_ << ": waiting for patch_es: left_size_: " << left_size << " right_size_: " << right_size_ << " left_tag_: " << left_->tag_ << " right_tag_: " << right_->tag_ << endl;
+			//cout << "rank:" << p_group_[p_rank_] << ": pid:" << tag_ << ": waiting for patches: left_size: " << left_size_ << " right_size: " << right_size_ << " left_tag_: " << left_->tag_ << " right_tag_: " << right_->tag_ << endl;
 			status_=WAITING_FOR_PATCHES;
 
 			my_patches_.resize(left_size_+right_size_);
@@ -552,8 +547,143 @@ void BNRTask::continueTask()
 		//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": activating parent_ on tag_:" << parent_->tag_ << endl;
 		//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": sibling_ tag_:" << sibling_->tag_ << " sibling_ status_:" << sibling_->status_ << endl;
 		
-		//place parent_ on delay queue (parent_ is waiting for d_myworld->getComm()unication from children)
+		//place parent_ on delay queue (parent_ is waiting for communication from children)
 		controller_->delay_q_.push(parent_);
+	}
+
+	
+	//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": mpi_requests_.size():" << mpi_requests_.size() << endl;
+	if(!mpi_requests_.empty())
+	{
+						
+		//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": waiting to finish sends\n";
+		//must wait for final communication to finish
+		controller_->delay_q_.push(this);
+	}
+	else
+	{
+		//cout << "rank:" << p_group_[p_rank_] << ": pid:" << tag_  << ": task done\n";
+	}
+	return; 
+
+}
+
+void BNRTask::continueTaskSerial()
+{
+  
+	//cout << "rank:" << p_group_[p_rank_]<< ": pid:" << tag_ << ": continueing task serial with status:" <<status_ << endl;
+	switch (status_)
+	{
+					case NEW: 																														//0
+									goto TASK_START;
+					case WAITING_FOR_CHILDREN:																						//8
+                  goto WAIT_FOR_CHILDREN;
+					case GATHERING_FLAG_COUNT:																						//1
+					case BROADCASTING_FLAG_COUNT:																					//2
+					case COMMUNICATING_SIGNATURES:																				//3
+					case BROADCASTING_CHILD_TASKS:																				//7
+					case BROADCASTING_ACCEPTABILITY:																			//5
+					case WAITING_FOR_PATCH_COUNT:																					//9
+					case WAITING_FOR_PATCHES:																							//10
+					case WAITING_FOR_TAGS:																								//6
+          case SUMMING_SIGNATURES:																							//4
+					case TERMINATED:																											//11
+					default:
+                  cout << "Error invalid status(" << status_ << ") in serial task\n";
+                  exit(0);
+									return;
+	}
+									
+	TASK_START:
+					
+	offset_=-patch_.low;
+	
+	//cout << "rank:" << p_group_[p_rank_]<< ": pid:" << tag_ << ": computing local signature\n";
+	//compute local signatures
+	ComputeLocalSignature();
+
+	BoundSignatures();	
+	
+  CheckTolA();
+	if(acceptable_)
+	{
+		//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": patch_ is acceptable_\n";
+		my_patches_.push_back(patch_);
+	}
+	else
+	{
+		//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": patch_ is not acceptable_\n";
+		ctasks_.split=FindSplit();
+		//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": split: d:" << ctasks_.split.d << ", index:" << ctasks_.split.index << endl;
+		ctasks_.left=ctasks_.right=patch_;
+		ctasks_.left.high[ctasks_.split.d]=ctasks_.right.low[ctasks_.split.d]=ctasks_.split.index;
+    ctasks_.ltag=0;
+    ctasks_.rtag=0;
+		controller_->task_count_++;
+		controller_->task_count_++;
+			
+		CreateTasks();
+		
+		status_=WAITING_FOR_CHILDREN;	
+		return;
+		
+		WAIT_FOR_CHILDREN:
+    	
+    //copy patches from left and right children
+    for(unsigned int p=0;p<left_->my_patches_.size();p++)
+    {
+      my_patches_.push_back(left_->my_patches_[p]);
+    }
+        
+		//check tolerance b and take better patch_set
+		CheckTolB();
+		if(!acceptable_)
+		{
+			my_patches_.resize(0);
+			my_patches_.push_back(patch_);
+		}
+	}
+	
+	//COMMUNICATE_PATCH_LIST:	
+	if( parent_!=0 && parent_->p_group_.size()!=1)
+	{
+    
+		//send up the chain or to the root processor
+	  MPI_Request request;
+
+		//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": sending patch_list to parent_: " << parent_->p_group_[0]  << " on tag_: " << tag_+1 << " my_patches_.size():" << my_patches_.size() << " parent_ id:" << parent_->tag_<< endl;
+		my_size_=my_patches_.size();
+	
+		mpi_requests_.push(request);
+		//send patch_ count_ to parent_
+		MPI_Isend(&my_size_,1,MPI_INT,parent_->p_group_[0],tag_+1,controller_->d_myworld->getComm(),&mpi_requests_.back());
+ 		
+		if(my_size_>0)
+		{
+			mpi_requests_.push(request);
+			//send patch_ list to parent_
+			MPI_Isend(&my_patches_[0],my_size_*sizeof(PseudoPatch),MPI_BYTE,parent_->p_group_[0],tag_,controller_->d_myworld->getComm(),&mpi_requests_.back());
+		}
+	}
+	
+	status_=TERMINATED;
+	//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": terminating\n";
+	//deallocate waisted space
+	count_[0].clear();
+	count_[1].clear();
+	count_[2].clear();
+	
+	//if parent_ is waiting activiate parent_ 
+	if(parent_!=0 && parent_->p_rank_==0 && sibling_->status_==TERMINATED )
+	{
+		//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": activating parent_ on tag_:" << parent_->tag_ << endl;
+		//cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": sibling_ tag_:" << sibling_->tag_ << " sibling_ status_:" << sibling_->status_ << endl;
+		
+		//place parent_ on delay queue (parent_ is waiting for communication from children)
+    if(parent_!=0 && parent_->p_group_.size()>1)
+		  controller_->delay_q_.push(parent_);
+    else
+      controller_->immediate_q_.push(parent_);
 	}
 
 	
@@ -569,14 +699,11 @@ void BNRTask::continueTask()
 	{
 		//cout << "rank:" << p_group_[p_rank_] << ": pid:" << tag_  << ": task done\n";
 	}
-	if(parent_!=0)
-	{
-		p_group_.clear();
-	}
 
 	return; 
 
 }
+
 
 void BNRTask::ComputeLocalSignature()
 {
@@ -897,17 +1024,17 @@ void BNRTask::CreateTasks()
 
 	rightflags_.locs=flags_.locs+front;
 	rightflags_.size=flags_.size-front;
-	/*
+/*	
 	cout << "rank:" << p_group_[p_rank_] << ": pid:" << tag_ << ": left_ patch_: tag_:" << ctasks_.ltag << " {" 
-					<< ctasks_.left_.low[0] << "-" << ctasks_.left_.high[0] << ", "
-					<< ctasks_.left_.low[1] << "-" << ctasks_.left_.high[1] << ", "
-					<< ctasks_.left_.low[2] << "-" << ctasks_.left_.high[2] << "}\n";
+					<< ctasks_.left.low[0] << "-" << ctasks_.left.high[0] << ", "
+					<< ctasks_.left.low[1] << "-" << ctasks_.left.high[1] << ", "
+					<< ctasks_.left.low[2] << "-" << ctasks_.left.high[2] << "}\n";
 	
 	
 	cout << "rank:" << p_group_[p_rank_] << ": pid:" << tag_ << ": right_ patch_: tag_:" << ctasks_.rtag << " {" 
-					<< ctasks_.right_.low[0] << "-" << ctasks_.right_.high[0] << ", "
-					<< ctasks_.right_.low[1] << "-" << ctasks_.right_.high[1] << ", "
-					<< ctasks_.right_.low[2] << "-" << ctasks_.right_.high[2] << "}\n";
+					<< ctasks_.right.low[0] << "-" << ctasks_.right.high[0] << ", "
+					<< ctasks_.right.low[1] << "-" << ctasks_.right.high[1] << ", "
+					<< ctasks_.right.low[2] << "-" << ctasks_.right.high[2] << "}\n";
 	*/
 	/*	
 	//output left_ flags_
