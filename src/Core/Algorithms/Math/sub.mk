@@ -12,8 +12,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Algorithms/Math
 
-SRCS     += $(SRCDIR)/MathAlgo.cc\
-            $(SRCDIR)/BuildFEMatrix.cc\
+SRCS     += $(SRCDIR)/MathAlgo.cc \
+            $(SRCDIR)/BasicIntegrators.cc \
+            $(SRCDIR)/BuildFEMatrix.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS :=  Core/Datatypes Core/Util Core/Containers      \

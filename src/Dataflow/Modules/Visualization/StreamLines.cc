@@ -26,30 +26,14 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+//    File   : StreamLines.cc
+//    Author : Allen R. Sanderson
+//    Date   : July 2006
 
-/*
- *  StreamLines.cc:
- *
- *  Written by:
- *   moulding
- *   TODAY'S DATE HERE
- *
- */
 
-#include <Dataflow/Network/Module.h>
-#include <Core/Datatypes/FieldInterface.h>
-#include <Core/Malloc/Allocator.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
-#include <Core/Datatypes/CurveMesh.h>
-#include <Core/Geometry/CompGeom.h>
-#include <Core/Geometry/CompGeom.h>
-#include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Modules/Visualization/StreamLines.h>
-#include <Core/Containers/Handle.h>
 
-#include <iostream>
-#include <vector>
-#include <math.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 
 namespace SCIRun {
 
@@ -207,6 +191,32 @@ StreamLines::execute()
   }
    
   send_output_handle( "Streamlines", field_output_handle_, true );
+}
+
+
+vector<Point>::iterator
+StreamLinesAlgo::CleanupPoints(vector<Point> &input, double e2)
+{
+
+  // Removes colinear points from the list of points.
+  unsigned int i, j = 0;
+
+  for (i=1; i < input.size()-1; i++) {
+    const Vector v0 = input[i] - input[j];
+    const Vector v1 = input[i] - input[i+1];
+
+    if (Cross(v0, v1).length2() > e2 && Dot(v0, v1) < 0.0) {
+      j++;
+      if (i != j) { input[j] = input[i]; }
+    }
+  }
+
+  if (input.size() > 1) {
+    j++;
+    input[j] = input[input.size()-1];
+  }
+
+  return input.begin() + j + 1;
 }
 
 

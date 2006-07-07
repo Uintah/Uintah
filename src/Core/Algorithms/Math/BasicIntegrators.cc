@@ -27,20 +27,22 @@
 */
 
 
-//    File   : StreamlineIntegrator.cc
+//    File   : BasicIntegrators.cc
 //    Author : Allen R. Sanderson
 //    Date   : July 2006
 
 
-#include <Core/Algorithms/Visualization/StreamlineIntegrator.h>
+#include <Core/Algorithms/Math/BasicIntegrators.h>
 
 namespace SCIRun {
 
 using namespace std;
 
 //! interpolate using the generic linear interpolator
-static inline bool
-interpolate(const VectorFieldInterfaceHandle &vfi, const Point &p, Vector &v)
+bool
+BasicIntegrators::interpolate(const VectorFieldInterfaceHandle &vfi,
+			      const Point &p,
+			      Vector &v)
 {
   return vfi->interpolate(v, p) && (v.safe_normalize() > 0.0);
 }
@@ -61,11 +63,11 @@ static const double rkf_d[][5]=
    {439.0/216, -8.0, 3680.0/513, -845.0/4104, 0},
    {-8.0/27, 2.0, -3544.0/2565, 1859.0/4104, -11.0/40}};
 
-static int
-ComputeRKFTerms(Vector v[6],       // storage for terms
-		const Point &p,    // previous point
-		double s,          // current step size
-		const VectorFieldInterfaceHandle &vfi)
+int
+BasicIntegrators::ComputeRKFTerms(Vector v[6],       // storage for terms
+				  const Point &p,    // previous point
+				  double s,          // current step size
+				  const VectorFieldInterfaceHandle &vfi)
 {
   // Already computed this one when we did the inside test.
   //  if (!interpolate(vfi, p, v[0]))
@@ -107,13 +109,13 @@ ComputeRKFTerms(Vector v[6],       // storage for terms
 }
 
 
-static void
-FindRKF(vector<Point> &v, // storage for points
-	Point x,          // initial point
-	double t2,        // square error tolerance
-	double s,         // initial step size
-	int n,            // max number of steps
-	const VectorFieldInterfaceHandle &vfi) // the field
+void
+BasicIntegrators::FindRKF(vector<Point> &v, // storage for points
+			  Point x,          // initial point
+			  double t2,        // square error tolerance
+			  double s,         // initial step size
+			  int n,            // max number of steps
+			  const VectorFieldInterfaceHandle &vfi) // the field
 {
   Vector terms[6];
 
@@ -157,13 +159,13 @@ FindRKF(vector<Point> &v, // storage for points
 }
 
 
-static void
-FindHeun(vector<Point> &v, // storage for points
-	 Point x,          // initial point
-	 double t2,        // square error tolerance
-	 double s,         // initial step size
-	 int n,            // max number of steps
-	 const VectorFieldInterfaceHandle &vfi) // the field
+void
+BasicIntegrators::FindHeun(vector<Point> &v, // storage for points
+			   Point x,          // initial point
+			   double t2,        // square error tolerance
+			   double s,         // initial step size
+			   int n,            // max number of steps
+			   const VectorFieldInterfaceHandle &vfi) // the field
 {
   int i;
   Vector v0, v1;
@@ -187,13 +189,13 @@ FindHeun(vector<Point> &v, // storage for points
 }
 
 
-static void
-FindRK4(vector<Point> &v,
-	Point x,
-	double t2,
-	double s,
-	int n,
-	const VectorFieldInterfaceHandle &vfi)
+void
+BasicIntegrators::FindRK4(vector<Point> &v,
+			  Point x,
+			  double t2,
+			  double s,
+			  int n,
+			  const VectorFieldInterfaceHandle &vfi)
 {
   Vector f[4];
   int i;
@@ -226,13 +228,13 @@ FindRK4(vector<Point> &v,
 }
 
 
-static void
-FindAdamsBashforth(vector<Point> &v, // storage for points
-		   Point x,          // initial point
-		   double t2,        // square error tolerance
-		   double s,         // initial step size
-		   int n,            // max number of steps
-		   const VectorFieldInterfaceHandle &vfi) // the field
+void
+BasicIntegrators::FindAdamsBashforth(vector<Point> &v, // storage for points
+				     Point x,          // initial point
+				     double t2,        // square error tolerance
+				     double s,         // initial step size
+				     int n,            // max number of steps
+				     const VectorFieldInterfaceHandle &vfi) // the field
 {
   FindRK4(v, x, t2, s, Min(n, 5), vfi);
 
@@ -265,60 +267,5 @@ FindAdamsBashforth(vector<Point> &v, // storage for points
     v.push_back(x);
   }
 }
-
-
-vector<Point>::iterator
-StreamLinesCleanupPoints(vector<Point> &input, double e2)
-{
-  unsigned int i, j = 0;
-
-  for (i=1; i < input.size()-1; i++) {
-    const Vector v0 = input[i] - input[j];
-    const Vector v1 = input[i] - input[i+1];
-
-    if (Cross(v0, v1).length2() > e2 && Dot(v0, v1) < 0.0) {
-      j++;
-      if (i != j) { input[j] = input[i]; }
-    }
-  }
-
-  if (input.size() > 1) {
-    j++;
-    input[j] = input[input.size()-1];
-  }
-
-  return input.begin() + j + 1;
-}
-
-
-void
-StreamlineIntergrator::FindNodes(vector<Point> &v, // storage for points
-				 Point x,          // initial point
-				 double t2,        // square error tolerance
-				 double s,         // initial step size
-				 int n,            // max number of steps
-				 const VectorFieldInterfaceHandle &vfi, // the field
-				 bool remove_colinear_p,
-				 int method)
-{
-  if (method == 0)
-    FindAdamsBashforth(v, x, t2, s, n, vfi);
-
-//else if (method == 1)
-    // TODO: Implement AdamsMoulton
-
-  else if (method == 2)
-    FindHeun(v, x, t2, s, n, vfi);
-
-  else if (method == 3)
-    FindRK4(v, x, t2, s, n, vfi);
-
-  else if (method == 4)
-    FindRKF(v, x, t2, s, n, vfi);
-
-  if (remove_colinear_p)
-    v.erase(StreamLinesCleanupPoints(v, t2), v.end());
-}
-
 
 }
