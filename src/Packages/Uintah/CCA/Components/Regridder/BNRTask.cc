@@ -183,9 +183,10 @@ void BNRTask::continueTask()
 		{
 			if(parent_==0)
 			{
-					//sort flags_ so this processor knows who will be broadcasting the results out
-					sort(flagscount_.begin(),flagscount_.end());
-			}
+			  //sort flags_ so this processor knows who will be broadcasting the results out
+				sort(flagscount_.begin(),flagscount_.end());
+        p_group_[0]=flagscount_[0].rank;        
+      }
 			//cout << "rank:" << p_group_[p_rank_] << ": pid:" << tag_ << ": no flags_, terminating\n";
 			p_rank_=-1;
 			goto TERMINATE;		
