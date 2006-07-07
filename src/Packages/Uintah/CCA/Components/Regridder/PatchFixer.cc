@@ -161,26 +161,28 @@ void PatchFixer::FixUp(vector<PseudoPatch> &patches)
 			FixFace(patches,current,2,1);
 		}
 	}
-	vector<int> patch_sizes(d_myworld->size());
-	vector<int> displacements(d_myworld->size());
 	int my_patch_size=patches.size();
 	//allgather patchset sizes
-	MPI_Allgather(&my_patch_size,1,MPI_INT,&patch_sizes[0],1,MPI_INT,d_myworld->getComm());	
-	
-	int total_size=patch_sizes[0];
-	displacements[0]=0;
-	patch_sizes[0]*=sizeof(PseudoPatch);
-	for(int p=1;p<d_myworld->size();p++)
-	{
-		displacements[p]=total_size*sizeof(PseudoPatch);
-		total_size+=patch_sizes[p];
-		patch_sizes[p]*=sizeof(PseudoPatch);
-	}
-	vector<PseudoPatch> mypatches(patches);
-	
-	patches.resize(total_size);
-	//allgatherv patchsets
-	MPI_Allgatherv(&mypatches[0],my_patch_size*sizeof(PseudoPatch),MPI_BYTE,&patches[0],&patch_sizes[0],&displacements[0],MPI_BYTE,d_myworld->getComm());
+  if(d_myworld->size()>1)
+  {
+	  vector<int> patch_sizes(d_myworld->size());
+  	vector<int> displacements(d_myworld->size());
+	  MPI_Allgather(&my_patch_size,1,MPI_INT,&patch_sizes[0],1,MPI_INT,d_myworld->getComm());	
+
+	  int total_size=patch_sizes[0];
+	  displacements[0]=0;
+	  patch_sizes[0]*=sizeof(PseudoPatch);
+	  for(int p=1;p<d_myworld->size();p++)
+	  {
+		  displacements[p]=total_size*sizeof(PseudoPatch);
+		  total_size+=patch_sizes[p];
+	  	patch_sizes[p]*=sizeof(PseudoPatch);
+	  }
+	  vector<PseudoPatch> mypatches(patches);
+	  patches.resize(total_size);
+	  //allgatherv patchsets
+	  MPI_Allgatherv(&mypatches[0],my_patch_size*sizeof(PseudoPatch),MPI_BYTE,&patches[0],&patch_sizes[0],&displacements[0],MPI_BYTE,d_myworld->getComm());
+  }
 }
 
 void PatchFixer::FixFace(vector<PseudoPatch> &patches,PseudoPatch patch, int dim, int side)
