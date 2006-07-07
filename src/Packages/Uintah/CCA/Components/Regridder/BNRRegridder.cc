@@ -116,7 +116,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched,
     set<IntVector> coarse_flag_set;
     for(unsigned int f=0;f<flaglist.size();f++)
     {
-      coarse_flag_set.insert(flaglist[f]/d_minPatchSize_[l]);
+      coarse_flag_set.insert( flaglist[f]*d_cellRefinementRatio[l]/d_minPatchSize_[l] );
     }
     
     //create flags vector
@@ -130,11 +130,10 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched,
     patchfixer_.FixUp(patches);
     
     //Uncoarsen
-    IntVector mult=d_minPatchSize_[l]*d_cellRefinementRatio[l];
     for(unsigned int p=0;p<patches.size();p++)
     {
-      patches[p].low=patches[p].low*mult;
-      patches[p].high=patches[p].high*mult;
+      patches[p].low=patches[p].low*d_minPatchSize_[l];
+      patches[p].high=patches[p].high*d_minPatchSize_[l];
     }
 
     //create level and set up parameters
@@ -174,7 +173,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched,
   d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
 
 
-  cout << *newGrid;
+  //cout << *newGrid;
   newGrid->performConsistencyCheck();
   return newGrid;
 }
