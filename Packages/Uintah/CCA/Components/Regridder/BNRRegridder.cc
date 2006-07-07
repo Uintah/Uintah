@@ -296,11 +296,11 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
       task=immediate_q_.front();
       immediate_q_.pop();
       //runable task found, continue task
-      //			cout << "rank:" << rank << ": starting from immediate_q_ with status: " << task->status << endl;
-      if(task->p_group_.size()>1)
-        task->continueTask();
-      else
+ 			//cout << "rank:" << rank << ": starting from immediate_q_ with status: " << task->status_ << endl;
+      if(task->p_group_.size()==1)
         task->continueTaskSerial();
+      else
+        task->continueTask();
     }
     else if(!delay_q_.empty())
     {
