@@ -50,44 +50,29 @@ using namespace std;
 class SCISHARE BasicIntegrators
 {
 public:
-  inline bool interpolate(const VectorFieldInterfaceHandle &vfi,
-			  const Point &p,
-			  Vector &v);
-
+  void FindAdamsBashforth();
+  void FindAdamsMoulton();
+  void FindHeun();
+  void FindRK4();
+  void FindRKF();
 
   int ComputeRKFTerms(Vector v[6],       // storage for terms
 		      const Point &p,    // previous point
-		      double s,          // current step size
-		      const VectorFieldInterfaceHandle &vfi);
+		      double s );        // current step size
 
-  void FindRKF(vector<Point> &v, // storage for points
-	       Point x,          // initial point
-	       double t2,        // square error tolerance
-	       double s,         // initial step size
-	       int n,            // max number of steps
-	       const VectorFieldInterfaceHandle &vfi); // the field
+  void integrate( unsigned int method );
 
-  void FindHeun(vector<Point> &v, // storage for points
-		Point x,          // initial point
-		double t2,        // square error tolerance
-		double s,         // initial step size
-		int n,            // max number of steps
-		const VectorFieldInterfaceHandle &vfi); // the field
+protected:
+  inline bool interpolate( const Point &p, Vector &v);
 
-  void FindRK4(vector<Point> &v,
-	       Point x,
-	       double t2,
-	       double s,
-	       int n,
-	       const VectorFieldInterfaceHandle &vfi);
+public:
+  Point seed_;                         // initial point
+  double tolerance2_;                  // square error tolerance
+  double stepsize_;                    // initial step size
+  int maxsteps_;                       // max number of steps
+  VectorFieldInterfaceHandle vfi_;     // the field
 
-  void FindAdamsBashforth(vector<Point> &v, // storage for points
-			  Point x,          // initial point
-			  double t2,        // square error tolerance
-			  double s,         // initial step size
-			  int n,            // max number of steps
-			  const VectorFieldInterfaceHandle &vfi); // the field
-
+  vector<Point> nodes_;                // storage for points
 };
 
 } // End namespace SCIRun

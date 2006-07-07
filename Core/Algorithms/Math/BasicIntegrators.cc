@@ -40,11 +40,10 @@ using namespace std;
 
 //! interpolate using the generic linear interpolator
 bool
-BasicIntegrators::interpolate(const VectorFieldInterfaceHandle &vfi,
-			      const Point &p,
-			      Vector &v)
+BasicIntegrators::interpolate( const Point &p,
+			       Vector &v)
 {
-  return vfi->interpolate(v, p) && (v.safe_normalize() > 0.0);
+  return vfi_->interpolate(v, p) && (v.safe_normalize() > 0.0);
 }
 
 
@@ -63,69 +62,128 @@ static const double rkf_d[][5]=
    {439.0/216, -8.0, 3680.0/513, -845.0/4104, 0},
    {-8.0/27, 2.0, -3544.0/2565, 1859.0/4104, -11.0/40}};
 
-int
-BasicIntegrators::ComputeRKFTerms(Vector v[6],       // storage for terms
-				  const Point &p,    // previous point
-				  double s,          // current step size
-				  const VectorFieldInterfaceHandle &vfi)
+
+void
+BasicIntegrators::FindAdamsBashforth()
 {
-  // Already computed this one when we did the inside test.
-  //  if (!interpolate(vfi, p, v[0]))
-  //  {
-  //    return -1;
-  //  }
-  v[0] *= s;
+  // Initialize Adams-Bashforth with five steps from the forth-order
+  // Runga-Kutta.
+
+  int n = maxsteps_;
+  maxsteps_ = Min(maxsteps_, 5);
+  FindRK4();
+  maxsteps_ = n;
+
+  if (nodes_.size() < 5) {
+    return;
+  }
+
+  Vector f[5];
+  int i;
+
+  for (i = 0; i < 5; i++)
+    interpolate(nodes_[nodes_.size() - 1 - i], f[i]);
   
-  if (!interpolate(vfi, p + v[0]*rkf_d[1][0], v[1]))
-    return 0;
-
-  v[1] *= s;
+  seed_ = nodes_[nodes_.size() - 1];
   
-  if (!interpolate(vfi, p + v[0]*rkf_d[2][0] + v[1]*rkf_d[2][1], v[2]))
-    return 1;
+  for (i = 5; i < maxsteps_; i++) {
+    seed_ += (stepsize_/720.) * (1901.0 * f[0] - 2774.0 * f[1] +
+		       2616.0 * f[2] - 1274.0 * f[3] +
+		       251.0 * f[4]);
+    
+    f[4] = f[3];
+    f[3] = f[2];
+    f[2] = f[1];
+    f[1] = f[0];
 
-  v[2] *= s;
-  
-  if (!interpolate(vfi, p + v[0]*rkf_d[3][0] + v[1]*rkf_d[3][1] +
-		   v[2]*rkf_d[3][2], v[3]))
-    return 2;
+    if (!interpolate(seed_, f[0])) {
+      break; 
+    }
 
-  v[3] *= s;
-  
-  if (!interpolate(vfi, p + v[0]*rkf_d[4][0] + v[1]*rkf_d[4][1] +
-		   v[2]*rkf_d[4][2] + v[3]*rkf_d[4][3], v[4]))
-    return 3;
-
-  v[4] *= s;
-  
-  if (!interpolate(vfi, p + v[0]*rkf_d[5][0] + v[1]*rkf_d[5][1] +
-		   v[2]*rkf_d[5][2] + v[3]*rkf_d[5][3] +
-		   v[4]*rkf_d[5][4], v[5]))
-    return 4;
-
-  v[5] *= s;
-
-  return 5;
+    nodes_.push_back(seed_);
+  }
 }
 
 
 void
-BasicIntegrators::FindRKF(vector<Point> &v, // storage for points
-			  Point x,          // initial point
-			  double t2,        // square error tolerance
-			  double s,         // initial step size
-			  int n,            // max number of steps
-			  const VectorFieldInterfaceHandle &vfi) // the field
+BasicIntegrators::FindAdamsMoulton()
+{
+  // TODO: Implement AdamsMoulton
+}
+
+
+void
+BasicIntegrators::FindHeun()
+{
+  int i;
+  Vector v0, v1;
+
+  if (!interpolate(seed_, v0))
+    return;
+
+  for (i=0; i<maxsteps_; i ++) {
+    v0 *= stepsize_;
+    if (!interpolate(seed_ + v0, v1))
+      break;
+
+    v1 *= stepsize_;
+    seed_ += 0.5 * (v0 + v1);
+
+    if (!interpolate(seed_, v0))
+      break;
+
+    nodes_.push_back(seed_);
+  }
+}
+
+
+void
+BasicIntegrators::FindRK4()
+{
+  Vector f[4];
+  int i;
+
+  if (!interpolate(seed_, f[0]))
+    return;
+
+  for (i = 0; i < maxsteps_; i++) {
+    f[0] *= stepsize_;
+    if (!interpolate(seed_ + f[0] * 0.5, f[1]))
+      break;
+
+    f[1] *= stepsize_;
+    if (!interpolate(seed_ + f[1] * 0.5, f[2]))
+      break;
+
+    f[2] *= stepsize_;
+    if (!interpolate(seed_ + f[2], f[3]))
+      break;
+
+    f[3] *= stepsize_;
+
+    seed_ += (f[0] + 2.0 * f[1] + 2.0 * f[2] + f[3]) * (1.0 / 6.0);
+
+    // If the new point is inside the field, add it.  Otherwise stop.
+    if (!interpolate(seed_, f[0]))
+      break;
+
+    nodes_.push_back(seed_);
+  }
+}
+
+
+void
+BasicIntegrators::FindRKF()
 {
   Vector terms[6];
 
-  if (!interpolate(vfi, x, terms[0]))
+  if (!interpolate(seed_, terms[0]))
     return;
 
-  for (int i=0; i<n; i++) {
+  for (int i=0; i<maxsteps_; i++) {
     // Compute the next set of terms.
-    if (ComputeRKFTerms(terms, x, s, vfi) < 5) {
-      s /= 1.5;
+    if (ComputeRKFTerms(terms, seed_, stepsize_) < 5) {
+      stepsize_ /= 1.5;
       continue;
     }
 
@@ -138,134 +196,97 @@ BasicIntegrators::FindRKF(vector<Point> &v, // storage for points
     // Is the error tolerable?  Adjust the step size accordingly.  Too
     // small?  Grow it for next time but keep small-error result.  Too
     // big?  Recompute with smaller size.
-    if (err2 * 16384.0 < t2) {
-      s *= 2.0;
+    if (err2 * 16384.0 < tolerance2_) {
+      stepsize_ *= 2.0;
 
-    } else if (err2 > t2) {
-      s /= 2.0;
+    } else if (err2 > tolerance2_) {
+      stepsize_ /= 2.0;
       continue;
     }
 
     // Compute and add the point to the list of points found.
-    x = x  +  terms[0]*rkf_a[0] + terms[1]*rkf_a[1] + terms[2]*rkf_a[2] + 
+    seed_ = seed_ + terms[0]*rkf_a[0] + terms[1]*rkf_a[1] + terms[2]*rkf_a[2] + 
       terms[3]*rkf_a[3] + terms[4]*rkf_a[4] + terms[5]*rkf_a[5];
 
     // If the new point is inside the field, add it.  Otherwise stop.
-    if (!interpolate(vfi, x, terms[0]))
+    if (!interpolate(seed_, terms[0]))
       break;
 
-    v.push_back(x);
+    nodes_.push_back(seed_);
   }
 }
 
 
-void
-BasicIntegrators::FindHeun(vector<Point> &v, // storage for points
-			   Point x,          // initial point
-			   double t2,        // square error tolerance
-			   double s,         // initial step size
-			   int n,            // max number of steps
-			   const VectorFieldInterfaceHandle &vfi) // the field
+int
+BasicIntegrators::ComputeRKFTerms(Vector v[6],       // storage for terms
+				  const Point &p,    // previous point
+				  double s)
 {
-  int i;
-  Vector v0, v1;
-
-  if (!interpolate(vfi, x, v0))
-    return;
-
-  for (i=0; i < n; i ++) {
-    v0 *= s;
-    if (!interpolate(vfi, x + v0, v1))
-      break;
-
-    v1 *= s;
-    x += 0.5 * (v0 + v1);
-
-    if (!interpolate(vfi, x, v0))
-      break;
-
-    v.push_back(x);
-  }
-}
-
-
-void
-BasicIntegrators::FindRK4(vector<Point> &v,
-			  Point x,
-			  double t2,
-			  double s,
-			  int n,
-			  const VectorFieldInterfaceHandle &vfi)
-{
-  Vector f[4];
-  int i;
-
-  if (!interpolate(vfi, x, f[0]))
-    return;
-
-  for (i = 0; i < n; i++) {
-    f[0] *= s;
-    if (!interpolate(vfi, x + f[0] * 0.5, f[1]))
-      break;
-
-    f[1] *= s;
-    if (!interpolate(vfi, x + f[1] * 0.5, f[2]))
-      break;
-
-    f[2] *= s;
-    if (!interpolate(vfi, x + f[2], f[3]))
-      break;
-
-    f[3] *= s;
-
-    x += (f[0] + 2.0 * f[1] + 2.0 * f[2] + f[3]) * (1.0 / 6.0);
-
-    // If the new point is inside the field, add it.  Otherwise stop.
-    if (!interpolate(vfi, x, f[0]))
-      break;
-    v.push_back(x);
-  }
-}
-
-
-void
-BasicIntegrators::FindAdamsBashforth(vector<Point> &v, // storage for points
-				     Point x,          // initial point
-				     double t2,        // square error tolerance
-				     double s,         // initial step size
-				     int n,            // max number of steps
-				     const VectorFieldInterfaceHandle &vfi) // the field
-{
-  FindRK4(v, x, t2, s, Min(n, 5), vfi);
-
-  if (v.size() < 5) {
-    return;
-  }
-
-  Vector f[5];
-  int i;
-
-  for (i = 0; i < 5; i++)
-    interpolate(vfi, v[v.size() - 1 - i], f[i]);
+  // Already computed this one when we did the inside test.
+  //  if (!interpolate(p, v[0]))
+  //  {
+  //    return -1;
+  //  }
+  v[0] *= s;
   
-  x = v[v.size() - 1];
+  if (!interpolate(p + v[0]*rkf_d[1][0], v[1]))
+    return 0;
+
+  v[1] *= s;
   
-  for (i = 5; i < n; i++) {
-    x += (s/720.) * (1901.0 * f[0] - 2774.0 * f[1] +
-		     2616.0 * f[2] - 1274.0 * f[3] +
-		     251.0 * f[4]);
+  if (!interpolate(p + v[0]*rkf_d[2][0] + v[1]*rkf_d[2][1], v[2]))
+    return 1;
 
-    f[4] = f[3];
-    f[3] = f[2];
-    f[2] = f[1];
-    f[1] = f[0];
+  v[2] *= s;
+  
+  if (!interpolate(p + v[0]*rkf_d[3][0] + v[1]*rkf_d[3][1] +
+		   v[2]*rkf_d[3][2], v[3]))
+    return 2;
 
-    if (!interpolate(vfi, x, f[0])) {
-      break; 
-    }
+  v[3] *= s;
+  
+  if (!interpolate(p + v[0]*rkf_d[4][0] + v[1]*rkf_d[4][1] +
+		   v[2]*rkf_d[4][2] + v[3]*rkf_d[4][3], v[4]))
+    return 3;
 
-    v.push_back(x);
+  v[4] *= s;
+  
+  if (!interpolate(p + v[0]*rkf_d[5][0] + v[1]*rkf_d[5][1] +
+		   v[2]*rkf_d[5][2] + v[3]*rkf_d[5][3] +
+		   v[4]*rkf_d[5][4], v[5]))
+    return 4;
+
+  v[5] *= s;
+
+  return 5;
+}
+
+
+void
+BasicIntegrators::integrate( unsigned int method )
+{
+  switch ( method ) {
+  case 0:
+    FindAdamsBashforth();
+    break;
+
+  case 1:
+    FindAdamsMoulton();
+    break;
+
+  case 2:
+    FindHeun();
+    break;
+
+  case 3:
+    FindRK4();
+    break;
+
+  case 4:
+    FindRKF();
+    break;
   }
 }
+
 
 }
