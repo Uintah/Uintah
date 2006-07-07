@@ -27,20 +27,19 @@
 */
 
 
-//    File   : StreamLineIntergrator.h
+//    File   : BasicIntergrators.h
 //    Author : Allen R. Sanderson
 //    Date   : July 2006
 
 
-#if !defined(Visualization_StreamLineIntergrator_h)
-#define Visualization_StreamLineIntergrator_h
+#if !defined(Math_BasicIntergrators_h)
+#define Math_BasicIntergrators_h
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Core/Algorithms/Visualization/share.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Geometry/Point.h>
 
@@ -48,16 +47,50 @@ namespace SCIRun {
 
 using namespace std;
 
-class SCISHARE StreamlineIntergrator
+class SCISHARE BasicIntegrators
 {
 public:
+  inline bool interpolate(const VectorFieldInterfaceHandle &vfi,
+			  const Point &p,
+			  Vector &v);
 
-  void FindNodes(vector<Point>&, Point, double, double, int, 
-		 const VectorFieldInterfaceHandle &vfi,
-		 bool remove_colinear_p, int method);
+
+  int ComputeRKFTerms(Vector v[6],       // storage for terms
+		      const Point &p,    // previous point
+		      double s,          // current step size
+		      const VectorFieldInterfaceHandle &vfi);
+
+  void FindRKF(vector<Point> &v, // storage for points
+	       Point x,          // initial point
+	       double t2,        // square error tolerance
+	       double s,         // initial step size
+	       int n,            // max number of steps
+	       const VectorFieldInterfaceHandle &vfi); // the field
+
+  void FindHeun(vector<Point> &v, // storage for points
+		Point x,          // initial point
+		double t2,        // square error tolerance
+		double s,         // initial step size
+		int n,            // max number of steps
+		const VectorFieldInterfaceHandle &vfi); // the field
+
+  void FindRK4(vector<Point> &v,
+	       Point x,
+	       double t2,
+	       double s,
+	       int n,
+	       const VectorFieldInterfaceHandle &vfi);
+
+  void FindAdamsBashforth(vector<Point> &v, // storage for points
+			  Point x,          // initial point
+			  double t2,        // square error tolerance
+			  double s,         // initial step size
+			  int n,            // max number of steps
+			  const VectorFieldInterfaceHandle &vfi); // the field
+
 };
 
 } // End namespace SCIRun
 
-#endif // Visualization_StreamLineIntergrator_h
+#endif // Math_BasicIntergrators_h
 

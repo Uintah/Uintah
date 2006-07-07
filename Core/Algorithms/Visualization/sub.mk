@@ -44,7 +44,6 @@ SRCS     += \
 	$(SRCDIR)/QuadMC.cc		\
 	$(SRCDIR)/RenderField.cc	\
 	$(SRCDIR)/Sage.cc		\
-	$(SRCDIR)/StreamlineIntegrator.cc	\
 	$(SRCDIR)/TetMC.cc		\
 	$(SRCDIR)/TextureBuilderAlgo.cc	\
 	$(SRCDIR)/TriMC.cc		\

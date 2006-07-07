@@ -34,11 +34,13 @@
 #if !defined(_STREAMLINES_H_)
 #define _STREAMLINES_H_
 
-#include <Core/Algorithms/Visualization/StreamlineIntegrator.h>
+#include <Dataflow/Network/Module.h>
+
+#include <Core/Algorithms/Math/BasicIntegrators.h>
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/FieldInterface.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Geometry/CompGeom.h>
 #include <Core/Thread/Thread.h>
 #include <algorithm>
 #include <sstream>
@@ -70,9 +72,6 @@ typedef struct _SLData {
 } SLData;
 
 
-SCISHARE vector<Point>::iterator
-StreamLinesCleanupPoints(vector<Point> &input, double e2);
-
 class SCISHARE StreamLinesAlgo : public DynamicAlgoBase
 {
 public:
@@ -93,6 +92,8 @@ public:
 					    const string &dsrc,
 					    const TypeDescription *sloc,
 					    int value);
+protected:
+  vector<Point>::iterator CleanupPoints(vector<Point> &input, double e2);
 };
 
 
@@ -114,6 +115,10 @@ public:
 			      int np);
 
   void parallel_generate(int proc, SLData *d);
+
+  void FindNodes(vector<Point>&, Point, double, double, int, 
+		 const VectorFieldInterfaceHandle &vfi,
+		 bool remove_colinear_p, int method);
 
   virtual void set_result_value(Field *cf,
                                 CMesh::Node::index_type di,
@@ -177,8 +182,7 @@ execute(ProgressReporter *pr,
 
 
 template <class FSRC, class STYPE, class SLOC>
-void
-StreamLinesAlgoT<FSRC, STYPE, SLOC>::
+void StreamLinesAlgoT<FSRC, STYPE, SLOC>::
 parallel_generate( int proc, SLData *d)
 {
   FSRC *sfield = (FSRC *) d->seed_field_h.get_rep();
@@ -206,8 +210,6 @@ parallel_generate( int proc, SLData *d)
 
   int count = 0;
   
-  StreamlineIntergrator SLI;
-
   while (siter != siter_end)
   {
     // If this seed doesn't "belong" to this parallel thread,
@@ -238,8 +240,8 @@ parallel_generate( int proc, SLData *d)
     // Find the negative streamlines.
     if( d->direction <= 1 )
     {
-      SLI.FindNodes(nodes, seed, tolerance2, -d->stepsize, d->maxsteps,
-		    d->vfi, d->rcp, d->met);
+      FindNodes(nodes, seed, tolerance2, -d->stepsize, d->maxsteps,
+		d->vfi, d->rcp, d->met);
       if ( d->direction == 1 )
       {
 	reverse(nodes.begin(), nodes.end());
@@ -249,8 +251,8 @@ parallel_generate( int proc, SLData *d)
     }
     // Append the positive streamlines.
     if( d->direction >= 1 ){
-      SLI.FindNodes(nodes, seed, tolerance2, d->stepsize, d->maxsteps,
-		    d->vfi, d->rcp, d->met);
+      FindNodes(nodes, seed, tolerance2, d->stepsize, d->maxsteps,
+		d->vfi, d->rcp, d->met);
     }
 
     double length = 0;
@@ -336,6 +338,39 @@ parallel_generate( int proc, SLData *d)
   d->fh->set_property( "Streamline Count", count, false );
 }
 
+
+template <class FSRC, class STYPE, class SLOC>
+void StreamLinesAlgoT<FSRC, STYPE, SLOC>::
+StreamLinesAlgoT::FindNodes(vector<Point> &v, // storage for points
+			    Point x,          // initial point
+			    double t2,        // square error tolerance
+			    double s,         // initial step size
+			    int n,            // max number of steps
+			    const VectorFieldInterfaceHandle &vfi, // the field
+			    bool remove_colinear_p,
+			    int method)
+{
+
+  BasicIntegrators BI;
+
+  if (method == 0)
+    BI.FindAdamsBashforth(v, x, t2, s, n, vfi);
+
+//else if (method == 1)
+    // TODO: Implement AdamsMoulton
+
+  else if (method == 2)
+    BI.FindHeun(v, x, t2, s, n, vfi);
+
+  else if (method == 3)
+    BI.FindRK4(v, x, t2, s, n, vfi);
+
+  else if (method == 4)
+    BI.FindRKF(v, x, t2, s, n, vfi);
+
+  if (remove_colinear_p)
+    v.erase(CleanupPoints(v, t2), v.end());
+}
 
 
 template <class SFLD, class STYPE, class SLOC>
@@ -625,7 +660,7 @@ StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::FindNodes(vector<Point> &v,
 
   if (remove_colinear_p)
   {
-    v.erase(StreamLinesCleanupPoints(v, 1.0e-6), v.end());
+    v.erase(CleanupPoints(v, 1.0e-6), v.end());
   }
 }
 
