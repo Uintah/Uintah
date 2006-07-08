@@ -98,7 +98,15 @@ SUBDIRS := Core
 ifeq ($(BUILD_DATAFLOW),yes)
   SUBDIRS += Dataflow
 endif
-SUBDIRS += pysci
+
+HAVE_PYDEV    := @HAVE_PYDEV@
+PYDEV_LIBRARY := @PYDEV_LIB_DIR_FLAG@ @PYDEV_LIB_FLAG@
+PYDEV_INCLUDE := @INC_PYDEV_H@
+
+ifeq ($(HAVE_PYDEV),yes)
+  SUBDIRS += pysci
+endif
+
 SUBDIRS += StandAlone $(COMPONENT_DIRS)
 
 ifeq ($(BUILD_DATAFLOW),yes)

@@ -502,6 +502,12 @@ SCI_ARG_ENABLE(threads,
                  Specify a thread implementation (pthreads or irix)),
   [threads="$enableval"],
   [threads=${threads='unknown'}])
+SCI_ARG_ENABLE(pysci,
+  AC_HELP_STRING(--enable-pysci,
+                 Build python interface for certain SCIRun functionality.
+                 example: --enable-pysci),
+  [pysci="$enableval"],
+  [pysci="no"])
 SCI_ARG_ENABLE(debug,
   AC_HELP_STRING(--enable-debug,
                  Turn on debugging (default is -g) or specify your own.
@@ -3182,6 +3188,37 @@ AC_SUBST(INC_TETGEN_H)
 AC_SUBST(TETGEN_LIB_DIR_FLAG)
 AC_SUBST(DEF_TETGEN)
 AC_SUBST(HAVE_TETGEN)
+
+##  --  enable-pysci  ------------------------
+
+# if pysci is enabled, find the python dev info
+HAVE_PYDEV="unknown"
+if test "$pysci" = "yes"; then
+  
+  _sci_inc="/usr/include/python2.4" 
+  SCI_COMPILE_LINK_TEST(PYDEV, python developement environment (2.4),
+  [
+    #include <Python.h>
+  ],
+  $_sci_inc, python2.4,,,
+  [
+    /*some basic python dev calls...*/
+    PyObject *type = 0;
+    Py_XINCREF(type);
+  ],not-optional)
+  
+  
+  if test "$HAVE_PYDEV" = "yes"; then
+    DEF_PYDEV="#define HAVE_PYDEV"
+  fi
+  
+fi
+
+AC_SUBST(PYDEV_LIB_FLAG)
+AC_SUBST(INC_PYDEV_H)
+AC_SUBST(PYDEV_LIB_DIR_FLAG)
+AC_SUBST(DEF_PYDEV)
+AC_SUBST(HAVE_PYDEV)
 
 ##  --  search for atlas stuff  -------------------------------------------
 
