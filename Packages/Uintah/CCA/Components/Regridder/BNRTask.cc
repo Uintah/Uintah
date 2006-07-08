@@ -775,15 +775,15 @@ void BNRTask::BoundSignatures()
 		}
 		patch_.low=low;
 		patch_.high=high;
+    size=high-low;
+    patch_.volume=size[0]*size[1]*size[2];
 }
 
 void BNRTask::CheckTolA()
 {
-	patch_vol_=1;
 	IntVector size=patch_.high-patch_.low;
-	patch_vol_=size[0]*size[1]*size[2];
-	acceptable_= float(total_flags_)/patch_vol_>=controller_->tola_;
-	//cout << "rank:" << p_group_[p_rank_] << ": pid:" << tag_  << ": patch_vol:" << patch_vol_ << " flags:" << total_flags_ << endl;
+	acceptable_= float(total_flags_)/patch_.volume>=controller_->tola_;
+	//cout << "rank:" << p_group_[p_rank_] << ": pid:" << tag_  << ": patch_vol:" << patch_.volume << " flags:" << total_flags_ << endl;
 }
 
 void BNRTask::CheckTolB()
@@ -792,12 +792,11 @@ void BNRTask::CheckTolB()
 		int children_vol=0;
 		for(unsigned int p=0;p<my_patches_.size();p++)
 		{
-				IntVector size=my_patches_[p].high-my_patches_[p].low;
-				children_vol+=size[0]*size[1]*size[2];
+				children_vol+=my_patches_[p].volume;
 		}
 	  //cout << "children_vol:" << children_vol << " patch_vol:" <<patch_vol_ << " tolb:" << controller_->tolb_ << endl;	
 		//compare to patch_ volume of parent_
-		if(float(children_vol)/patch_vol_>=controller_->tolb_)
+		if(float(children_vol)/patch_.volume>=controller_->tolb_)
 		{
 			acceptable_=false;
 		}

@@ -56,10 +56,12 @@ WARNING
 
     /***** these should be private*******/
     void RunBR(vector<IntVector> &flags, vector<PseudoPatch> &patches);
+    void PostFixup(vector<PseudoPatch> &patches,IntVector min_patch_size);
   private:
     void problemSetup_BulletProofing(const int k);
     int task_count_;								//number of tasks created on this proc
     double tola_,tolb_;							//Tolerance parameters
+    unsigned int target_patches_;
     
 //queues for tasks
     list<BNRTask> tasks_;				//list of tasks created throughout the run

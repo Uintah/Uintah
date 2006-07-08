@@ -282,8 +282,14 @@ void PatchFixer::SplitPatch(int index, vector<PseudoPatch> &patches, const Split
 	PseudoPatch right=patches[index];
 	patches[index].high[split.d]=right.low[split.d]=split.index;
 
+  //calculate new volumes
+  IntVector size=right.high-right.low;
+  right.volume=size[0]*size[1]*size[2];
+  patches[index].volume-=right.volume;
+
 	patches.push_back(right);
 
+  //update lattice
 	Fill(right,(int)patches.size()-1);
 }
 				
