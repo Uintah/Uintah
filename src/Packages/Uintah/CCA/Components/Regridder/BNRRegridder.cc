@@ -9,6 +9,7 @@ using namespace Uintah;
 
 #include <vector>
 #include <set>
+#include <algorithm>
 using namespace std;
 
 BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task_count_(0),tola_(1),tolb_(1), patchfixer_(pg)
@@ -50,6 +51,7 @@ BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task
     for(int i=tag_start;i<tag_end;i++)
       tags_.push(i<<1);
   }
+
 }
 
 BNRRegridder::~BNRRegridder()
@@ -134,7 +136,9 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched,
       break;
     //Fixup patchlist
     patchfixer_.FixUp(patches);
-    
+   
+    PostFixup(patches,d_minPatchSize_[l]);
+
     //Uncoarsen
     for(unsigned int p=0;p<patches.size();p++)
     {
@@ -389,7 +393,7 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
 
   ProblemSpecP amr_spec = params->findBlock("AMR");
   ProblemSpecP regrid_spec = amr_spec->findBlock("Regridder");
-
+  
   if (!regrid_spec) {
     return; // already warned about it in RC::problemSetup
   }
@@ -427,6 +431,20 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
       cout << "  Bounding Regridder's patch_combine_tolerance to [0,1]\n";
     tolb_ = 1;
   }
+ 
+  if(d_myworld->size()==1)
+  {
+    target_patches_=1;
+  }
+  else
+  {
+    //NOTE TO BRYAN: 
+    //Put in code to read target patches here.  User should be able to specify a fixed number or a number per processor
+    //if there is only 1 proc then target_patches_ should always be 1 (at least that makes the most sense)
+    //i am not if any bullet proofing is needed.
+    target_patches_=4*d_myworld->size();
+  }
+
 
   for (int k = 0; k < d_maxLevels; k++) {
     if (k < (d_maxLevels-1)) {
@@ -468,5 +486,67 @@ void BNRRegridder::problemSetup_BulletProofing(const int k)
     throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
   }
     
+}
+
+/***************************************************
+ * PostFixup takes the patchset and attempts to subdivide 
+ * the largest patches until target_patches_ patches exist
+ * this should help the load balancer.  This function
+ * does not split patches up to be smaller than the minimum
+ * patch size in each dimension.
+ * *************************************************/
+//I am doing this in serial for now, it should be very quick and more expensive 
+//to do in parallel since the number of patches is typically very small
+void BNRRegridder::PostFixup(vector<PseudoPatch> &patches, IntVector min_patch_size)
+{
+  if(patches.size()>=target_patches_) //enough patches do not do a post fixup
+  {
+    return;
+  }
+  //build a max heap
+  make_heap(patches.begin(),patches.end());
+  //split max and place children on heap until i have enough patches
+  unsigned int i=patches.size()-1;
+  while(patches.size()<target_patches_)
+  {
+    IntVector size;
+    pop_heap(patches.begin(),patches.end());
+    //find max dimension
+    size=patches[i].high-patches[i].low;
+    
+    //skip dimensions that splitting would make them to small
+    int max_d=0;
+    while(size[max_d]<2*min_patch_size[max_d] && max_d<3)
+       max_d++;
+
+    if(max_d==3)  //no dimensions can be split
+    {
+        break;
+    }
+    //find max
+    for(int d=max_d+1;d<3;d++)
+    {
+      if(size[d]>size[max_d] && size[d]>=2*min_patch_size[d])
+        max_d=d;
+    }
+
+    //calculate split point
+    int index=(patches[i].high[max_d]+patches[i].low[max_d])/2;
+
+    PseudoPatch right=patches[i];
+    //adjust patches by split
+    patches[i].high[max_d]=right.low[max_d]=index;
+
+    //recalculate volumes
+    size=right.high-right.low;
+    right.volume=size[0]*size[1]*size[2];
+    patches[i].volume-=right.volume;
+    //heapify
+    push_heap(patches.begin(),patches.end());
+    patches.push_back(right);
+    push_heap(patches.begin(),patches.end());
+
+    i++;
+  }
 }
 

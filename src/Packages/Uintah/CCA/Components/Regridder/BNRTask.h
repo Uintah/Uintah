@@ -74,7 +74,18 @@ WARNING
   {
     IntVector low;                                  // low point of patch
     IntVector high;                                 // high point of patch
+    int volume;                                     // volume of patch
   };
+
+  inline bool operator<(PseudoPatch p1, PseudoPatch p2)
+  {
+    return p2.volume>p1.volume;
+  }
+  inline ostream& operator<<(ostream& out, PseudoPatch p1)
+  {
+      out << "{" << p1.low << " " << p1.high << " (" << p1.volume << ")}";
+      return out;
+  }
   struct Split
   {
     int d;                                         //dimension of split
@@ -132,7 +143,6 @@ WARNING
     BNRTask *left_, *right_;
                 
     unsigned int total_flags_;       // total number of flags on all processors within this patch
-    unsigned int patch_vol_;         // volume of the patch 
     bool acceptable_;                // patch acceptablity
     IntVector offset_;
 
