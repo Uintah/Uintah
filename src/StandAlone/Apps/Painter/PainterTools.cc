@@ -83,6 +83,7 @@
 
 #ifdef HAVE_INSIGHT
 #  include <itkConfidenceConnectedImageFilter.h>
+#  include <itkThresholdSegmentationLevelSetImageFilter.h>
 #endif
 
 
@@ -346,8 +347,9 @@ Painter::ZoomTool::pointer_down(int button, int x, int y,
                                 int time)
 {
   if (!painter_->cur_window_) {
-    return QUIT_AND_CONTINUE_E;
+    return QUIT_AND_STOP_E;
   }
+
   window_ = painter_->cur_window_;
   zoom_ = window_->zoom_;
   x_ = x;
@@ -360,12 +362,15 @@ Painter::ZoomTool::pointer_motion(int button, int x, int y,
                                 unsigned int modifiers,
                                 int time)
 {
-  //  ASSERT(window_);
-  if (window_) {
-    int delta = x + y - x_ - y_;
-    window_->zoom_ = Max(0.00001, zoom_ * Pow(1.002,delta));
-    window_->redraw();
+  if (!window_ || (button != 3) || (modifiers != EventModifiers::SHIFT_E)) {
+    return QUIT_AND_STOP_E;
   }
+
+  //  if (window_) {
+  int delta = x + y - x_ - y_;
+  window_->zoom_ = Max(0.00001, zoom_ * Pow(1.002,delta));
+  window_->redraw();
+    //  }
   return STOP_E;
 }    
   
@@ -454,7 +459,9 @@ Painter::PanTool::pointer_motion(int b, int x, int y, unsigned int m, int t)
 
 
 Painter::CropTool::CropTool(Painter *painter) : 
-  PainterTool(painter, "Crop"),
+  BaseTool("Crop"),
+  PointerTool("Crop"),
+  painter_(painter),
   pick_(0)
 {
   ASSERT(painter_->current_volume_);
@@ -466,91 +473,20 @@ Painter::CropTool::CropTool(Painter *painter) :
 
 Painter::CropTool::~CropTool() {}
 
-
-int
-Painter::CropTool::do_event(Event &event) {
-
-  if (event.type_ == Event::KEY_PRESS_E &&
-      event.key_ == " ") {
-    //int *minmax[2] = { new int[minmax_[0].size()], new int[minmax_[1].size()] };
-    size_t *minmax[2] = { new size_t[minmax_[0].size()], new size_t[minmax_[1].size()] };
-    for (int i = 0; i < 2; ++i)
-      for (unsigned int a = 0; a < minmax_[0].size(); ++a)
-	minmax[i][a] = minmax_[i][a]-(i==1?1:0);
-    NrrdDataHandle nout_handle = new NrrdData();
-    if (nrrdCrop(nout_handle->nrrd_,
-		 painter_->current_volume_->nrrd_handle_->nrrd_,
-		 minmax[0], minmax[1])) {
-      char *err = biffGetDone(NRRD);
-      string str = string("nrrdcrop: ") + err;
-      free(err);
-      throw str;
-    }
-
-    painter_->current_volume_->nrrd_handle_ = nout_handle;
-    painter_->current_volume_->build_index_to_world_matrix();
-    delete[] minmax[0];
-    delete[] minmax[1];
-    painter_->extract_all_window_slices();
-    painter_->redraw_all();
-    return QUIT_E;
+BaseTool::propagation_state_e
+Painter::CropTool::pointer_motion
+(int b, int x, int y, unsigned int m, int t) 
+{
+  if (!pick_) {
+    return CONTINUE_E;
   }
 
-  if (event.type_ == Event::KEY_PRESS_E &&
-      event.key_ == "q") {
-    return QUIT_E;
-  }
-
-  if (!event.keys_.empty())
-    return FALLTHROUGH_E;
-
-  if (event.type_ == Event::BUTTON_PRESS_E && event.window_) {
-    double units = 100.0 / event.window_->zoom_; // world space units per pixel
-    pick_ = 1;
-    for (int i = 0; i < 2; ++i) {
-      pick_minmax_[i] = minmax_[i];
-      Point p = painter_->current_volume_->index_to_world(minmax_[i]);
-      for (int a = 0; a < 3; ++a) {
-        Vector n(a==0 ? 1:0, a==1?1:0, a==2?1:0);
-        if (i) n = -1*n;
-        Plane plane(p, n);
-        pick_dist_[i][a] = plane.eval_point(event.position_)/units;
-        if (Abs(pick_dist_[i][a]) < 5.0) pick_ |= 2;
-        if (pick_dist_[i][a] < 0.0 && 
-	    a != event.window_->axis_) pick_ = pick_ & ~1;
-      }
-    }
-    pick_index_ = painter_->current_volume_->point_to_index(event.position_);
-
-    return HANDLED_E;
-  }
-
-
-  if (pick_ && event.type_ == Event::BUTTON_RELEASE_E && event.window_) {
-    for (unsigned int a = 0; a < minmax_[0].size(); ++a)
-      if (minmax_[0][a] > minmax_[1][a])
-	SWAP(minmax_[0][a],minmax_[1][a]);
-
-    pick_ = 0;
-    return HANDLED_E;
-  }
-
-  if (pick_ && event.type_ == Event::MOTION_E && event.window_) {
-    pick_mouse_motion(event);
-    return HANDLED_E;
-  }
-
-  return FALLTHROUGH_E;
-}
-
-
-void
-Painter::CropTool::pick_mouse_motion(Event &event) {
-  ASSERT(pick_ && event.type_ == Event::MOTION_E && event.window_);
-  unsigned int axis = event.window_->axis_;
+  SliceWindow *window = painter_->cur_window_;
+  ASSERT(window);
+  unsigned int axis = window->axis_;
   vector<int> max_index = painter_->current_volume_->max_index();
   vector<double> idx = 
-    painter_->current_volume_->point_to_index(event.position_);
+    painter_->current_volume_->point_to_index(painter_->pointer_pos_);
 
   if (pick_ == 1) {  // Clicked inside crop box
     for (unsigned int a = 0; a < idx.size(); ++ a) {    
@@ -575,12 +511,81 @@ Painter::CropTool::pick_mouse_motion(Event &event) {
   }
   
   painter_->redraw_all();
+  return STOP_E;
+}
+
+BaseTool::propagation_state_e
+Painter::CropTool::pointer_down
+(int b, int x, int y, unsigned int m, int t) 
+{
+  if (b == 1 && !m) {
+    SliceWindow *window = painter_->cur_window_;
+    ASSERT(window);
+    
+    double units = 100.0 / window->zoom_; // world space units per pixel
+    pick_ = 1;
+    for (int i = 0; i < 2; ++i) {
+      pick_minmax_[i] = minmax_[i];
+      Point p = painter_->current_volume_->index_to_world(minmax_[i]);
+      for (int a = 0; a < 3; ++a) {
+        Vector n(a==0 ? 1:0, a==1?1:0, a==2?1:0);
+        if (i) n = -1*n;
+        Plane plane(p, n);
+        pick_dist_[i][a] = plane.eval_point(painter_->pointer_pos_)/units;
+        if (Abs(pick_dist_[i][a]) < 5.0) pick_ |= 2;
+        if (pick_dist_[i][a] < 0.0 && 
+	    a != window->axis_) pick_ = pick_ & ~1;
+      }
+    }
+    pick_index_ = 
+      painter_->current_volume_->point_to_index(painter_->pointer_pos_);
+    return STOP_E;
+  }
+  return CONTINUE_E;
+}
+
+
+
+BaseTool::propagation_state_e
+Painter::CropTool::pointer_up
+(int b, int x, int y, unsigned int m, int t) 
+{
+  if (pick_) {
+    for (unsigned int a = 0; a < minmax_[0].size(); ++a)
+      if (minmax_[0][a] > minmax_[1][a])
+        SWAP(minmax_[0][a],minmax_[1][a]);
+    
+    pick_ = 0;
+    return STOP_E;
+  }
+  return CONTINUE_E;
+}
+
+
+BaseTool::propagation_state_e 
+Painter::CropTool::process_event(event_handle_t event)
+{
+  RedrawSliceWindowEvent *redraw = 
+    dynamic_cast<RedrawSliceWindowEvent *>(event.get_rep());
+  if (redraw) {
+    draw_gl(redraw->get_window());
+  }
+
+  if (dynamic_cast<FinishEvent *>(event.get_rep())) {
+    finish();
+  }
+
+  if (dynamic_cast<QuitEvent *>(event.get_rep())) {
+    return QUIT_AND_STOP_E;
+  }
+ 
+  return CONTINUE_E;
 }
 
 
 
 int
-Painter::CropTool::draw(SliceWindow &window) {
+Painter::CropTool::draw_gl(SliceWindow &window) {
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
@@ -634,7 +639,7 @@ Painter::CropTool::draw(SliceWindow &window) {
   widths[2] = 2.0;
   
   glEnable(GL_POINT_SMOOTH);
-  for (int pass = 2; pass < 5; ++pass) {
+  for (int pass = 0; pass < 5; ++pass) {
     glColor4dv(colors[pass]);
     glPointSize(widths[pass]);
     glBegin(GL_POINTS);
@@ -653,6 +658,38 @@ Painter::CropTool::draw(SliceWindow &window) {
   return 0; 
 }
 
+void
+Painter::CropTool::finish()
+{
+  size_t *minmax[2] = { new size_t[minmax_[0].size()], 
+                        new size_t[minmax_[1].size()] };
+
+  for (int i = 0; i < 2; ++i) {
+    for (unsigned int a = 0; a < minmax_[0].size(); ++a) {
+      minmax[i][a] = minmax_[i][a]-(i==1?1:0);
+    }
+  }
+
+  NrrdDataHandle nout_handle = new NrrdData();
+  if (nrrdCrop(//painter_->current_volume_->nrrd_handle_->nrrd_,
+               nout_handle->nrrd_,
+               painter_->current_volume_->nrrd_handle_->nrrd_,
+               minmax[0], minmax[1])) {
+    char *err = biffGetDone(NRRD);
+    string str = string("nrrdcrop: ") + err;
+    free(err);
+    throw str;
+  }
+  
+  painter_->current_volume_->set_nrrd(nout_handle);
+  
+  //  painter_->current_volume_->build_index_to_world_matrix();
+
+  delete[] minmax[0];
+  delete[] minmax[1];
+  painter_->extract_all_window_slices();
+  painter_->redraw_all();  
+}
 
 void
 Painter::CropTool::set_window_cursor(SliceWindow &window, int cursor) 
@@ -846,88 +883,140 @@ Painter::FloodfillTool::do_floodfill()
 
 
 Painter::ITKThresholdTool::ITKThresholdTool(Painter *painter) :
-  PainterTool(painter, "ITK Threshold"),
-  seed_volume_(0),
-  source_volume_(0)
+  BaseTool("ITK Threshold"),
+  painter_(painter),
+  seed_volume_(0)
 {
 }
 
 
-int
-Painter::ITKThresholdTool::do_event(Event &event)
-{
-  if (event.type_ != Event::KEY_PRESS_E)
-    return FALLTHROUGH_E;
 
-  NrrdVolume *cur = painter_->current_volume_;
-  NrrdVolume *temp = 0;
-  if (event.key_ == "1" && cur && cur != seed_volume_) {
-    if (source_volume_) source_volume_->name_prefix_ = "";
-    source_volume_ = cur;
-    source_volume_->name_prefix_ = "Source - ";
-    painter_->redraw_all();
-    return HANDLED_E;
-  }
-  
-  if (event.key_ == "2" && cur && cur != source_volume_) {
+BaseTool::propagation_state_e 
+Painter::ITKThresholdTool::process_event
+(event_handle_t event)
+{
+
+  if (dynamic_cast<SetLayerEvent *>(event.get_rep())) {
     if (seed_volume_) seed_volume_->name_prefix_ = "";
-    seed_volume_ = cur;
+    seed_volume_ = painter_->current_volume_;
     seed_volume_->name_prefix_ = "Seed - ";
     painter_->redraw_all();
-    return HANDLED_E;
   }
 
-  
-  if (event.key_ == "q" || event.key_ == "Q") {
-    return QUIT_E;
+  if (dynamic_cast<FinishEvent *>(event.get_rep())) {
+    if (painter_->current_volume_  == seed_volume_) {
+      painter_->get_vars()->insert
+        ("Painter::status_text",
+         "Cannot use same layers for source and seed", "string", true);
+      painter_->redraw_all();
+      return STOP_E;
+    }
+
+    if (!seed_volume_) {
+      painter_->get_vars()->insert
+        ("Painter::status_text",
+         "No seed layer set", "string", true);
+      painter_->redraw_all();
+      return STOP_E;
+    }
+
+    finish();
   }
-  
-  if (event.key_ == " " && seed_volume_ && source_volume_) {
-    string name = "ITK Threshold Result";
-    temp = painter_->copy_current_volume(name, 1);
-    temp->colormap_.set(1);
-    temp->data_min_ = -4.0;
-    temp->data_max_ = 4.0;
-    temp->clut_min_ = 0.0;
-    temp->clut_max_ = 0.5;
 
-    name = "ITK Threshold Source";
-    temp = new NrrdVolume(source_volume_, name, 2);
-    source_volume_->name_prefix_ = "";
-    temp->keep_ = 0;
-    painter_->volumes_.push_back(temp);
-    painter_->volume_map_[name] = temp;
-
-    name = "ITK Threshold Seed";
-    pair<double, double> mean = 
-      painter_->compute_mean_and_deviation(source_volume_->nrrd_handle_->nrrd_,
-                                           seed_volume_->nrrd_handle_->nrrd_);
-    double factor = 2.5;
-    double min = mean.first - factor*mean.second;
-    double max = mean.first + factor*mean.second;
-    //    min = mean.first;
-    //    max = mean.second;
-    nrrdKeyValueAdd(seed_volume_->nrrd_handle_->nrrd_,
-                    "lower_threshold", to_string(min).c_str());
-    nrrdKeyValueAdd(seed_volume_->nrrd_handle_->nrrd_,
-                    "upper_threshold", to_string(max).c_str());
-    
-    
-    temp = new NrrdVolume(seed_volume_, name, 2);
-    seed_volume_->name_prefix_ = "";
-    temp->keep_ = 0;
-    painter_->volume_map_[name] = temp;
-
-    painter_->filter_text_ = get_name() + "\nFilter Running, Please Wait";
-    painter_->redraw_all();
-    //    painter_->want_to_execute();
-
-    return QUIT_ALL_E;
+  if (dynamic_cast<QuitEvent *>(event.get_rep())) {
+    return QUIT_AND_STOP_E;
   }
-  
-  return FALLTHROUGH_E;
+ 
+  return CONTINUE_E;
 }
 
+
+void
+Painter::ITKThresholdTool::finish()
+{
+  NrrdDataHandle source_nrrdh = painter_->current_volume_->nrrd_handle_;
+  typedef itk::ThresholdSegmentationLevelSetImageFilter
+    < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D > FilterType;
+  FilterType::Pointer filter = FilterType::New();
+  painter_->get_vars()->insert("ToolDialog::text", "ITK Threshold Segmentation Level Set Running...", "string", true);  
+  painter_->get_vars()->unset("ProgressBar::bar_height");
+  painter_->get_vars()->insert("ToolDialog::button_height", "0", "string", true);
+  painter_->get_vars()->insert("Painter::progress_bar_total_width","500","string", true);
+
+
+  string name = "ITK Threshold Result";
+  Painter::NrrdVolume *new_layer = new NrrdVolume(seed_volume_, name, 0);
+  new_layer->colormap_.set(1);
+  new_layer->data_min_ = -4.0;
+  new_layer->data_max_ = 4.0;
+  new_layer->clut_min_ = 4.0/255.0;
+  new_layer->clut_max_ = 4.0;
+
+  //  new_layer->clut_min_ = -4.0;//0.5/255.0;
+  //  new_layer->clut_max_ = 4.0;//0.5;
+
+  painter_->volume_map_[name] = new_layer;
+  painter_->volumes_.push_back(new_layer);
+  painter_->show_volume(name);
+  painter_->recompute_volume_list();
+  
+  
+  
+  NrrdDataHandle seed_nrrdh = new_layer->nrrd_handle_;
+
+  name = "ITK Threshold Seed";
+  pair<double, double> mean = painter_->compute_mean_and_deviation
+    (source_nrrdh->nrrd_, seed_nrrdh->nrrd_);
+
+  double factor = 2.5;
+  double min = mean.first - factor*mean.second;
+  double max = mean.first + factor*mean.second;
+
+
+  filter->SetLowerThreshold(min);
+  filter->SetUpperThreshold(max);
+
+
+  string minmaxstr = "Threshold min: " + to_string(min) +
+    "Threshold max: " + to_string(max);
+  
+  painter_->get_vars()->insert("Painter::status_text",
+                               minmaxstr, "string", true);
+
+
+  string scope = "ITKThresholdTool::";
+  Skinner::Variables *vars = painter_->get_vars();
+  filter->SetCurvatureScaling(vars->get_double(scope+"curvatureScaling"));
+  filter->SetPropagationScaling(vars->get_double(scope+"propagationScaling"));
+  filter->SetEdgeWeight(vars->get_double(scope+"edgeWeight"));
+  filter->SetNumberOfIterations(vars->get_int(scope+"numberOfIterations"));
+  filter->SetMaximumRMSError(vars->get_double(scope+"maximumRMSError"));
+  if (vars->get_bool(scope+"reverseExpansionDirection")) 
+    filter->ReverseExpansionDirectionOn();
+  else 
+    filter->ReverseExpansionDirectionOff();
+  filter->SetIsoSurfaceValue(vars->get_double(scope+"isoSurfaceValue"));
+  filter->SetSmoothingIterations(vars->get_int(scope+"smoothingIterations"));
+  filter->SetSmoothingTimeStep(vars->get_double(scope+"smoothingTimeStep"));
+  filter->SetSmoothingConductance(vars->get_double(scope+"smoothingConductance"));
+
+  ITKDatatypeHandle img_handle = painter_->nrrd_to_itk_image(source_nrrdh);
+  Painter::ITKImageFloat3D *imgp = 
+    dynamic_cast<Painter::ITKImageFloat3D *>(img_handle->data_.GetPointer());
+  filter->SetFeatureImage(imgp);
+
+
+  painter_->filter_volume_ = new_layer;
+  painter_->filter_update_img_ = painter_->nrrd_to_itk_image(seed_nrrdh);
+
+  painter_->do_itk_filter<Painter::ITKImageFloat3D>(filter, seed_nrrdh);
+  new_layer->nrrd_handle_ = seed_nrrdh;
+
+  painter_->set_all_slices_tex_dirty();
+  painter_->redraw_all();
+  
+}
+ 
 
 Painter::StatisticsTool::StatisticsTool(Painter *painter) :
   PainterTool(painter, "Statistics"),
@@ -1049,6 +1138,16 @@ Painter::ITKConfidenceConnectedImageFilterTool::finish() {
     return;
 
 #ifdef HAVE_INSIGHT    
+  painter_->get_vars()->insert("ToolDialog::text", 
+                     " ITK Confidence Connected Filter Running...",
+                     "string", true);
+
+  painter_->get_vars()->unset("ProgressBar::bar_height");
+  painter_->get_vars()->insert("ToolDialog::button_height", "0", "string", true);
+  painter_->get_vars()->insert("Painter::progress_bar_total_width","500","string", true);
+  painter_->redraw_all();
+
+
   typedef itk::ConfidenceConnectedImageFilter
     < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D > FilterType;
   FilterType::Pointer filter = FilterType::New();
@@ -1060,23 +1159,24 @@ Painter::ITKConfidenceConnectedImageFilterTool::finish() {
   filter->SetNumberOfIterations(3);
   filter->SetMultiplier(2.0);
   filter->SetSeed(seed_point);
-  filter->SetReplaceValue(255.0);
+  filter->SetReplaceValue(1.0);
   filter->SetInitialNeighborhoodRadius(1);
 
   string name = "Confidence Connected";
   NrrdVolume *temp = new NrrdVolume(volume_, name, 2);
   painter_->volume_map_[name] = temp;
   //temp->colormap_.set(2);
-  temp->clut_min_ = temp->data_min_ = 0;
-  temp->clut_max_ = temp->data_max_ = 255.0;
+  temp->clut_min_ = temp->data_min_ = 0.5;
+  temp->clut_max_ = temp->data_max_ = 1.0;
   painter_->current_volume_ = temp;
 
-  painter_->show_volume(name);
-  painter_->recompute_volume_list();
   cerr << "starting\n";
   painter_->do_itk_filter<Painter::ITKImageFloat3D>(filter, 
                                                     temp->nrrd_handle_);
   cerr << "done\n";
+  painter_->show_volume(name);
+  painter_->recompute_volume_list();
+
   painter_->set_all_slices_tex_dirty();
   painter_->redraw_all();
 #endif
@@ -1086,7 +1186,7 @@ BaseTool::propagation_state_e
 Painter::ITKConfidenceConnectedImageFilterTool::pointer_motion
 (int b, int x, int y, unsigned int m, int t)
 {
-  if (b == 1) {
+  if (b == 1 && !m) {
     if (!volume_) 
       volume_ = painter_->current_volume_;
     if (volume_) {
@@ -1110,28 +1210,18 @@ Painter::ITKConfidenceConnectedImageFilterTool::process_event
 {
   RedrawSliceWindowEvent *redraw = 
     dynamic_cast<RedrawSliceWindowEvent *>(event.get_rep());
-
   if (redraw) {
     draw_gl(redraw->get_window());
   }
 
-  ExecuteEvent *execute = 
-    dynamic_cast<ExecuteEvent *>(event.get_rep());
-
-  if (execute) {
+  if (dynamic_cast<FinishEvent *>(event.get_rep())) {
     finish();
   }
 
-  QuitEvent *quit = 
-    dynamic_cast<QuitEvent *>(event.get_rep());
-
-  if (quit) {
+  if (dynamic_cast<QuitEvent *>(event.get_rep())) {
     return QUIT_AND_STOP_E;
   }
-
-  
-
-
+ 
   return CONTINUE_E;
 }
   

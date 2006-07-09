@@ -88,10 +88,12 @@ namespace SCIRun {
       }
 
       PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
+      KeyEvent *key = dynamic_cast<KeyEvent *>(event.get_rep());
 
       if (pointer) {
         focus_ = get_region().inside(pointer->get_x(), pointer->get_y());
       }
+
         
       if (pointer && get_region().inside(pointer->get_x(), pointer->get_y()) &&
           (pointer->get_pointer_state() & PointerEvent::BUTTON_PRESS_E) &&
@@ -107,7 +109,14 @@ namespace SCIRun {
       }
 
 
-      if (!focus_mode_ || (focus_ && focus_mode_) || draw) {
+      bool propagate = false;
+      if (!pointer && !key) {
+        propagate = true;
+      }
+      
+      propagate = (propagate || !focus_mode_ || draw || focus_) ;
+        
+      if (propagate) {
         return Parent::process_event(event);
       } 
 

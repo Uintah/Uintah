@@ -65,7 +65,12 @@
 #include <Core/Events/EventManager.h>
 #include <Core/Events/Tools/BaseTool.h>
 #include <Core/Util/FileUtils.h>
-
+#include <Core/Events/SceneGraphEvent.h>
+#include <Core/Geom/ShaderProgramARB.h>
+#include <Core/Volume/ColorMap2.h>
+#include <Core/Volume/VolumeRenderer.h>
+#include <Core/Util/DynamicCompilation.h>
+#include <Core/Algorithms/Visualization/NrrdTextureBuilderAlgo.h>
 #ifdef HAVE_INSIGHT
 
 #  include <itkImageFileReader.h>
@@ -100,8 +105,9 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::NrrdFileRead);
   REGISTER_CATCHER_TARGET(Painter::NrrdFileWrite);
 
-  REGISTER_CATCHER_TARGET(Painter::ITKFilterExecute);  
-  REGISTER_CATCHER_TARGET(Painter::ITKFilterCancel);
+  REGISTER_CATCHER_TARGET(Painter::CancelTool);  
+  REGISTER_CATCHER_TARGET(Painter::FinishTool);
+  REGISTER_CATCHER_TARGET(Painter::SetLayer);
 
   REGISTER_CATCHER_TARGET(Painter::ITKBinaryDilate);  
   REGISTER_CATCHER_TARGET(Painter::ITKImageFileRead);
@@ -111,6 +117,8 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::ITKCurvatureAnisotropic);
   REGISTER_CATCHER_TARGET(Painter::ITKConfidenceConnected);
   REGISTER_CATCHER_TARGET(Painter::ITKThresholdLevelSet);
+
+  REGISTER_CATCHER_TARGET(Painter::ShowVolumeRendering);
    
   return STOP_E;
 }
@@ -142,14 +150,23 @@ Painter::StartBrushTool(event_handle_t event) {
 
 BaseTool::propagation_state_e 
 Painter::StartCropTool(event_handle_t event) {
-  tm_.add_tool(new CropTool(this),100);
+  get_vars()->insert("ToolDialog::text", " Crop Volume...",
+                     "string", true);
+  get_vars()->insert("Painter::progress_bar_text", "", "string", true);
+  get_vars()->insert("ProgressBar::bar_height","0","string",true);
+  get_vars()->insert("Painter::progress_bar_total_width","0","string", true);
+  get_vars()->unset("ToolDialog::button_height"); 
+  redraw_all();
+
+  tm_.add_tool(new CropTool(this),25);
+  redraw_all();
   return CONTINUE_E;
 }
 
 
 BaseTool::propagation_state_e 
 Painter::StartFloodFillTool(event_handle_t event) {
-  tm_.add_tool(new CropTool(this),100);
+  tm_.add_tool(new CropTool(this),25);
   return CONTINUE_E;
 }
 
@@ -211,7 +228,7 @@ Painter::MergeLayer(event_handle_t event) {
   nrrdIterSetNrrd(ni1, vol1->nrrd_handle_->nrrd_);
   nrrdIterSetNrrd(ni2, vol2->nrrd_handle_->nrrd_);
   
-  if (nrrdArithIterBinaryOp(nout->nrrd_, nrrdBinaryOpMax, ni1, ni2)) {
+  if (nrrdArithIterBinaryOp(nout->nrrd_, nrrdBinaryOpMultiply, ni1, ni2)) {
     char *err = biffGetDone(NRRD);
     string errstr = (err ? err : "");
     free(err);
@@ -248,17 +265,18 @@ Painter::NrrdFileRead(event_handle_t event) {
     get_vars()->insert("Painter::status_text",
                        "Cannot Load Nrrd: "+filename, 
                        "string", true);
+    return STOP_E;
     
-  } else {
-    BundleHandle bundle = new Bundle();
-    bundle->setNrrd(filename, nrrd_handle);
-    add_bundle(bundle); 
-    get_vars()->insert("Painter::status_text",
-                       "Successfully Loaded Nrrd: "+filename,
-                       "string", true);
+  } 
+  pair<string, string> dirfile = split_filename(filename);
+  BundleHandle bundle = new Bundle();
+  bundle->setNrrd(dirfile.second, nrrd_handle);
+  add_bundle(bundle); 
+  get_vars()->insert("Painter::status_text",
+                     "Successfully Loaded Nrrd: "+filename,
+                     "string", true);
 
-  }
-  return STOP_E;  
+  return CONTINUE_E;  
 }
 
 BaseTool::propagation_state_e 
@@ -339,10 +357,12 @@ Painter::ITKImageFileRead(event_handle_t event) {
   ITKDatatypeHandle img_handle = img;
   NrrdDataHandle nrrd_handle = itk_image_to_nrrd(img_handle);
 
+  pair<string, string> dirfile = split_filename(filename);
+
   if (nrrd_handle->nrrd_) {
     cerr << "nrrd converted!\n";
     BundleHandle bundle = new Bundle(); 
-    bundle->setNrrd(filename, nrrd_handle);
+    bundle->setNrrd(dirfile.second, nrrd_handle);
     add_bundle(bundle); 
   }
 
@@ -400,7 +420,9 @@ Painter::ITKImageFileWrite(event_handle_t event) {
 BaseTool::propagation_state_e 
 Painter::ITKBinaryDilateErode(event_handle_t event) {
 #ifdef HAVE_INSIGHT
+
   string name = "ITKBinaryDilateErode";
+  cerr << name << std::endl;
   typedef itk::BinaryBallStructuringElement< float, 3> StructuringElementType;
   typedef itk::BinaryDilateImageFilter
     < Painter::ITKImageFloat3D, 
@@ -431,14 +453,34 @@ Painter::ITKBinaryDilateErode(event_handle_t event) {
   volume_map_[name] = vol;
   show_volume(name);
   recompute_volume_list();
-  
+
+  get_vars()->insert("ToolDialog::text", 
+                     " ITK Binary Dilate Filter...",
+                     "string", true);
+  get_vars()->insert("Painter::progress_bar_text", "", "string", true);
+  get_vars()->unset("ProgressBar::bar_height");
+  get_vars()->insert("Painter::progress_bar_total_width","500","string", true);
+  get_vars()->insert("ToolDialog::button_height", "0", "string", true); 
+  redraw_all();
+
   do_itk_filter<Painter::ITKImageFloat3D>(filter, vol->nrrd_handle_);
+
+  get_vars()->insert("ToolDialog::text", 
+                     " ITK Binary Erode Filter...",
+                     "string", true);
+  get_vars()->insert("Painter::progress_bar_text", "", "string", true);
+  get_vars()->unset("ProgressBar::bar_height");
+  get_vars()->insert("Painter::progress_bar_total_width","500","string", true);
+  get_vars()->insert("ToolDialog::button_height", "0", "string", true); 
+  redraw_all();
+
   do_itk_filter<Painter::ITKImageFloat3D>(filter2, vol->nrrd_handle_);
 
   set_all_slices_tex_dirty();
+  redraw_all();
   current_volume_ = vol;  
 #endif
-  return STOP_E;
+  return CONTINUE_E;
 }
 
 
@@ -447,6 +489,15 @@ Painter::ITKBinaryDilateErode(event_handle_t event) {
 BaseTool::propagation_state_e 
 Painter::ITKGradientMagnitude(event_handle_t) {
 #ifdef HAVE_INSIGHT
+  get_vars()->insert("ToolDialog::text", 
+                     " ITK Gradient Magnigude Filter:",
+                     "string", true);
+  get_vars()->insert("ToolDialog::button_height", "0", "string", true);
+  get_vars()->insert("Painter::progress_bar_text", "", "string", true);
+  get_vars()->unset("ProgressBar::bar_height");
+  get_vars()->insert("Painter::progress_bar_total_width","500","string", true);
+  redraw_all();
+
   string name = "ITKGradientMagnitude";
   typedef itk::GradientMagnitudeImageFilter
     < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D > FilterType;
@@ -465,7 +516,7 @@ Painter::ITKGradientMagnitude(event_handle_t) {
   set_all_slices_tex_dirty();
   redraw_all();
 #endif
-  return STOP_E;
+  return CONTINUE_E;
 }
 
 
@@ -476,11 +527,20 @@ Painter::ITKGradientMagnitude(event_handle_t) {
 BaseTool::propagation_state_e 
 Painter::ITKCurvatureAnisotropic(event_handle_t event) {
 #ifdef HAVE_INSIGHT
-  string name = "ITKCurvatureAnisotropic";
+  get_vars()->insert("ToolDialog::text", 
+                     " ITK Curvature Anisotropic Diffusion Filter:",
+                     "string", true);
+  get_vars()->insert("Painter::progress_bar_text", "", "string", true);
+  get_vars()->unset("ProgressBar::bar_height");
+  get_vars()->insert("Painter::progress_bar_total_width","500","string", true);
+  get_vars()->insert("ToolDialog::button_height", "0", "string", true);
+  redraw_all();
+
   typedef itk::CurvatureAnisotropicDiffusionImageFilter
     < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D > FilterType;
   FilterType::Pointer filter = FilterType::New();  
 
+  string name = "ITKCurvatureAnisotropic";
   filter->SetNumberOfIterations
     (get_vars()->get_int(name+"::numberOfIterations"));
   filter->SetTimeStep
@@ -499,14 +559,21 @@ Painter::ITKCurvatureAnisotropic(event_handle_t event) {
   set_all_slices_tex_dirty();
   redraw_all();
 #endif
-  return STOP_E;
+  return CONTINUE_E;
 }
 
 
 BaseTool::propagation_state_e 
 Painter::ITKConfidenceConnected(event_handle_t event) {
+  get_vars()->insert("ToolDialog::text", 
+                     " ITK Confidence Connected Filter: Place Seed Point",
+                     "string", true);
+  get_vars()->insert("ToolDialog::button_height", "40", "string", true);
+  get_vars()->insert("Painter::progress_bar_text", "", "string", true);
+  redraw_all();
+
 #ifdef HAVE_INSIGHT
-  tm_.add_tool(new ITKConfidenceConnectedImageFilterTool(this),49); 
+  tm_.add_tool(new ITKConfidenceConnectedImageFilterTool(this),25); 
 #endif
   return CONTINUE_E;
 }
@@ -515,24 +582,113 @@ Painter::ITKConfidenceConnected(event_handle_t event) {
 BaseTool::propagation_state_e 
 Painter::ITKThresholdLevelSet(event_handle_t event) {
 #ifdef HAVE_INSIGHT
-  tm_.add_tool(new BrushTool(this), 99);
-  tm_.add_tool(new ITKThresholdTool(this), 100);
+  get_vars()->insert
+    ("ToolDialog::text", 
+     " ITK Threshold Segmentation Level Set Filter: Choose seed layer...",
+     "string", true);
+  get_vars()->insert("Painter::progress_bar_text", "", "string", true);
+  get_vars()->insert("ProgressBar::bar_height","0","string", true);
+  get_vars()->insert("Painter::progress_bar_total_width","0","string", true);
+  get_vars()->unset("ToolDialog::button_height");
+  redraw_all();
+
+  tm_.add_tool(new BrushTool(this), 25);
+  tm_.add_tool(new ITKThresholdTool(this), 26);
 #endif
   return CONTINUE_E;
 }
 
 
 BaseTool::propagation_state_e 
-Painter::ITKFilterExecute(event_handle_t event) {
-  ExecuteEvent *execute = new ExecuteEvent();
-  tm_.propagate_event(execute);
+Painter::FinishTool(event_handle_t event) {
+  tm_.propagate_event(new FinishEvent());
   return CONTINUE_E;
 }
 
 BaseTool::propagation_state_e 
-Painter::ITKFilterCancel(event_handle_t event) {
-  QuitEvent *quit = new QuitEvent();
-  tm_.propagate_event(quit);
+Painter::CancelTool(event_handle_t event) {
+  tm_.propagate_event(new QuitEvent());
+  return CONTINUE_E;
+}
+
+BaseTool::propagation_state_e 
+Painter::SetLayer(event_handle_t event) {
+  tm_.propagate_event(new SetLayerEvent());
+  return CONTINUE_E;
+}
+
+
+BaseTool::propagation_state_e 
+Painter::ShowVolumeRendering(event_handle_t event) {   
+  event_handle_t scene_event = 0;
+
+  if (!current_volume_) return STOP_E;
+  NrrdDataHandle nrrd_handle = current_volume_->nrrd_handle_;
+
+  
+  NrrdDataHandle volnrrd = new NrrdData();
+  NrrdRange *range = nrrdRangeNewSet(nrrd_handle->nrrd_, nrrdBlind8BitRangeState);
+  nrrdQuantize(volnrrd->nrrd_, nrrd_handle->nrrd_, range, 8);
+  nrrdRangeNix(range);
+
+  Nrrd *nrrd = volnrrd->nrrd_;
+  
+  CompileInfoHandle ci =
+    NrrdTextureBuilderAlgo::get_compile_info(nrrd->type,nrrd->type);
+    
+  const int card_mem = 128;
+  cerr << "nrrd texture\n";
+  TextureHandle texture = new Texture;
+  NrrdTextureBuilderAlgo::build_static(texture, 
+                                       nrrd_handle, 0, 255,
+                                       0, 0, 255, card_mem);
+  
+
+    
+  const char *colormap = sci_getenv("PAINTER_CMAP2");
+  if (!colormap) {
+    cerr << "no colormap file specified1\n";
+    return STOP_E;
+  }
+
+  string fn = string(colormap);
+  Piostream *stream = auto_istream(fn, 0);
+  if (!stream) {
+    cerr << "Error reading file '" + fn + "'." << std::endl;
+    return STOP_E;
+  }  
+  // read the file.
+  ColorMap2 *cmap2 = new ColorMap2();
+  ColorMap2Handle icmap = cmap2;
+  try {
+    Pio(*stream, icmap);
+  } catch (...) {
+    cerr << "Error loading "+fn << std::endl;
+    icmap = 0;
+    delete stream;
+    return STOP_E;
+  }
+  delete stream;
+  ColorMapHandle cmap;
+  vector<ColorMap2Handle> *cmap2v = new vector<ColorMap2Handle>(0);
+  cmap2v->push_back(icmap);
+
+  vector<Plane *> *planes = new vector<Plane *>;
+  VolumeRenderer *vol = new VolumeRenderer(texture, 
+                                           cmap, 
+                                           *cmap2v, 
+                                           *planes,
+                                           Round(card_mem*1024*1024*0.8));
+  vol->set_slice_alpha(-0.5);
+  vol->set_slice_alpha(0.1);
+  vol->set_interactive_rate(4.0);
+  vol->set_sampling_rate(4.0);
+  vol->set_material(0.322, 0.868, 1.0, 18);
+  vol->set_interp(0);
+  scene_event = new SceneGraphEvent(vol, "FOO");
+  //EventManager::add_event(scene_event);
+  process_event(scene_event);
+  cerr << "nrrd texture sent\n";
   return CONTINUE_E;
 }
 

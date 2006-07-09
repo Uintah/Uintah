@@ -302,6 +302,11 @@ void
 TextRenderer::render(const string &text, float x, float y, int flags)
 {
 #ifdef HAVE_FREETYPE
+  render_string_glyphs_to_texture(text);
+  CHECK_OPENGL_ERROR();
+  if (!texture_) return;
+
+
   CHECK_OPENGL_ERROR();
   glMatrixMode(GL_PROJECTION);
   glPushMatrix();
@@ -326,7 +331,7 @@ TextRenderer::render(const string &text, float x, float y, int flags)
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   CHECK_OPENGL_ERROR();
-  render_string_glyphs_to_texture(text);
+
   Point anchor(x,y,0.0);
   Vector left(1,0,0);
   Vector up(0,1,0);

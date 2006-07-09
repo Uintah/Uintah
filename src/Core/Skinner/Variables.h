@@ -61,6 +61,7 @@ namespace SCIRun {
                                const string &type_str = "string",
                                bool propagate = false);
 
+      void              unset(const string &);
       // dangerous, breaks closures
       void              change_parent(const string &name,
                                       const string &value, 

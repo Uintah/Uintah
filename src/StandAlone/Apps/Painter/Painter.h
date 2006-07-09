@@ -86,6 +86,7 @@
 #include <Core/Volume/CM2Widget.h>
 #include <Core/Skinner/Parent.h>
 #include <Core/Skinner/Color.h>
+#include <Core/Skinner/Variables.h>
 #include <Core/Events/Tools/BaseTool.h>
 #include <Core/Events/Tools/ToolManager.h>
 
@@ -408,17 +409,25 @@ private:
     LayerMergeTool(Painter *painter);
   };
 
-  class CropTool : public PainterTool {
+  class CropTool : public virtual BaseTool,
+                   public PointerTool {
   public:
     CropTool(Painter *painter);
     ~CropTool();
-    int                 do_event(Event &);
-    int                 draw(SliceWindow &window);
+    propagation_state_e process_event(event_handle_t);
+    propagation_state_e pointer_motion(int b, int x, int y,
+                                     unsigned m, int t);
+    propagation_state_e pointer_down(int b, int x, int y,
+                                     unsigned m, int t);
+    propagation_state_e pointer_up(int b, int x, int y,
+                                   unsigned m, int t);
   private:
+    int                 draw_gl(SliceWindow &window);
     typedef vector<BBox> BBoxes;
-    void                pick_mouse_motion(Event &);
+    void                finish();
+    //    void                pick_mouse_motion(Event &);
     void                set_window_cursor(SliceWindow &window, int cursor);
-    
+    Painter *           painter_;
     int                 pick_;
     vector<int>         minmax_[2];
     vector<int>         pick_minmax_[2];
@@ -474,13 +483,14 @@ private:
   };
 
 
-  class ITKThresholdTool : public PainterTool {
+  class ITKThresholdTool : public BaseTool {
   public:
     ITKThresholdTool(Painter *painter);
-    int                 do_event(Event &);
+    propagation_state_e process_event(event_handle_t);
   private:
+    void                finish();
+    Painter *           painter_;
     NrrdVolume *        seed_volume_;
-    NrrdVolume *        source_volume_;
   };
 
 
@@ -659,7 +669,9 @@ private:
   pair<double, double>  compute_mean_and_deviation(Nrrd *, Nrrd *);
   NrrdVolume *          copy_current_volume(const string &, int mode=0);
 
+  NrrdVolume *          filter_volume_;
 #ifdef HAVE_INSIGHT
+  ITKDatatypeHandle     filter_update_img_;
   ITKDatatypeHandle     nrrd_to_itk_image(NrrdDataHandle &nrrd);
   //itk::Object::Pointer  nrrd_to_itk_image(NrrdDataHandle &nrrd);
   
@@ -693,8 +705,9 @@ private:
   CatcherFunction_t     NrrdFileRead;
   CatcherFunction_t     NrrdFileWrite;
 
-  CatcherFunction_t     ITKFilterExecute;
-  CatcherFunction_t     ITKFilterCancel;
+  CatcherFunction_t     FinishTool;
+  CatcherFunction_t     CancelTool;
+  CatcherFunction_t     SetLayer;
 
   CatcherFunction_t     ITKBinaryDilate;
   CatcherFunction_t     ITKImageFileRead;
@@ -704,6 +717,8 @@ private:
   CatcherFunction_t     ITKCurvatureAnisotropic;
   CatcherFunction_t     ITKConfidenceConnected;
   CatcherFunction_t     ITKThresholdLevelSet;
+
+  CatcherFunction_t     ShowVolumeRendering;
 
   
 
@@ -739,11 +754,18 @@ public:
 
 
 
-class ExecuteEvent : public QuitEvent 
+class FinishEvent : public QuitEvent 
 {
 public:
-  ExecuteEvent() : QuitEvent() {}
-  ~ExecuteEvent() {}
+  FinishEvent() : QuitEvent() {}
+  ~FinishEvent() {}
+};
+
+class SetLayerEvent : public RedrawEvent 
+{
+public:
+  SetLayerEvent() : RedrawEvent() {}
+  ~SetLayerEvent() {}
 };
 
 
@@ -930,12 +952,23 @@ Painter::do_itk_filter(itk::ImageToImageFilter<ImageType, ImageType> *filter,
     cerr << "ITK Exception: \n";
     err.Print(cerr);
     return false;
+  } catch (...) {
+    cerr << "ITK Filter error!\n";
+    return false;
   }
   
   Insight::ITKDatatypeHandle output_img = new Insight::ITKDatatype();
   output_img->data_ = filter->GetOutput();
 
   nrrd_handle = itk_image_to_nrrd(output_img);
+
+  get_vars()->insert("ProgressBar::bar_height","0","string", true);
+  get_vars()->insert("Painter::progress_bar_total_width","0","string", true);
+  get_vars()->insert("Painter::progress_bar_text","F","string", true);
+  get_vars()->insert("Painter::progress_bar_done_width","0","string", true);
+  get_vars()->insert("ToolDialog::button_height","0","string", true);
+  get_vars()->insert("ToolDialog::text","","string", true);
+
 
   return true;
 }

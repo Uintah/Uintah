@@ -84,6 +84,7 @@
 
 #ifdef HAVE_INSIGHT
 #  include <itkImportImageFilter.h>
+#include <itkThresholdSegmentationLevelSetImageFilter.h>
 #endif
 
 #ifdef _WIN32
@@ -274,13 +275,22 @@ Painter::NrrdVolume::NrrdVolume(NrrdVolume *copy,
   copy->mutex_.lock();
   mutex_.lock();
 
-  if (clear == 2) {
-    nrrd_handle_ = copy->nrrd_handle_;
-  } else {
+  ASSERT(clear >= 0 && clear <= 2);
+  
+  switch (clear) {
+  case 0: {
     nrrd_handle_ = scinew NrrdData();
     nrrdCopy(nrrd_handle_->nrrd_, copy->nrrd_handle_->nrrd_);
-    if (clear) 
-      memset(nrrd_handle_->nrrd_->data, 0, nrrd_data_size(nrrd_handle_->nrrd_));
+  } break;
+  case 1: {
+    nrrd_handle_ = scinew NrrdData();
+    nrrdCopy(nrrd_handle_->nrrd_, copy->nrrd_handle_->nrrd_);
+    memset(nrrd_handle_->nrrd_->data, 0, nrrd_data_size(nrrd_handle_->nrrd_));
+  } break;
+  default:
+  case 2: {
+    nrrd_handle_ = copy->nrrd_handle_;
+  } break;
   }
 
   mutex_.unlock();
@@ -325,6 +335,16 @@ Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd_handle)
   for (unsigned int a = 0; a < n->dim; ++a) {
     if (n->axis[a].center == nrrdCenterUnknown)
       n->axis[a].center = nrrdCenterNode;
+
+#if 0
+    if (airIsNaN(n->axis[a].min) && 
+        airIsNaN(n->axis[a].max)) 
+    {
+      if (airIsNaN(n->axis[a].spacing)) {
+        n->axis[0].spacing = 1.0;
+      }
+#endif
+
     if (n->axis[a].min > n->axis[a].max)
       SWAP(n->axis[a].min,n->axis[a].max);
     if (n->axis[a].spacing < 0.0)
@@ -408,10 +428,15 @@ Painter::Painter(Skinner::Variables *variables, GuiContext* ctx) :
   anatomical_coordinates_((!ctx) ? 0 : ctx->subVar("anatomical_coordinates"), 1),
   show_grid_((!ctx) ? 0 : ctx->subVar("show_grid"), 1),
   show_text_((!ctx) ? 0 : ctx->subVar("show_text"), 1),
-  volume_lock_("Volume")
+  volume_lock_("Volume"),
+  filter_volume_(0)  
 {
+#ifdef HAVE_INSIGHT
+  filter_update_img_ = 0;
+#endif
+
   tm_.add_tool(new PointerToolSelectorTool(this), 50);
-  //  tm_.add_tool(new KeyToolSelectorTool(this), 51);
+  tm_.add_tool(new KeyToolSelectorTool(this), 51);
 
   InitializeSignalCatcherTargets(0);
 }
@@ -446,8 +471,6 @@ double_to_string(double val)
 void
 Painter::SliceWindow::render_gl() {
   painter_->volume_lock_.lock();
-  //  profiler.disable();
-  profiler.enter("SliceWindow::render_gl");
 
   NrrdVolume *vol = painter_->current_volume_;
 
@@ -460,7 +483,6 @@ Painter::SliceWindow::render_gl() {
     const float ww = vol->clut_max_ - vol->clut_min_;
     const float wl = vol->clut_min_ + ww/2.0;
     clut_ww_wl = "WL: " + to_string(wl) +  " -- WW: " + to_string(ww);
-
 
     clut_min_max = ("Min: " + to_string(vol->clut_min_) + 
                     " -- Max: " + to_string(vol->clut_max_));
@@ -477,13 +499,15 @@ Painter::SliceWindow::render_gl() {
       value = "Value: " + to_string(val);
     }
   }
-  get_vars()->parent()->insert("value", value, "string", true);
-  get_vars()->parent()->insert("clut_min_max", clut_min_max, "string", true);
-  get_vars()->parent()->insert("clut_ww_wl", clut_ww_wl, "string", true);
-  get_vars()->parent()->insert("xyz_pos", xyz_pos, "string", true);
-  get_vars()->parent()->insert("sca_pos", sca_pos, "string", true);
+
+  get_vars()->change_parent("value", value, "string", true);
+  get_vars()->change_parent("clut_min_max", clut_min_max, "string", true);
+  get_vars()->change_parent("clut_ww_wl", clut_ww_wl, "string", true);
+  get_vars()->change_parent("xyz_pos", xyz_pos, "string", true);
+  get_vars()->change_parent("sca_pos", sca_pos, "string", true);
 
     
+
   setup_gl_view();
   if (autoview_) {
     autoview(painter_->current_volume_);
@@ -491,7 +515,6 @@ Painter::SliceWindow::render_gl() {
   }
   CHECK_OPENGL_ERROR();
 
-  profiler("setup gl");
 
   for (unsigned int s = 0; s < slices_.size(); ++s) {
     if (paint_layer_ && slices_[s]->volume_ == paint_layer_->volume_)
@@ -500,42 +523,26 @@ Painter::SliceWindow::render_gl() {
       slices_[s]->draw();
   }
 
-  profiler("draw slices");
-
-  painter_->draw_slice_lines(*this);
-
-  profiler("draw slice lines");
-
   if (painter_->show_grid_()) 
     render_grid();
 
-  profiler("render grid");
-
-  if (painter_->cur_window_ == this) {
-    //    Point windowpos(event_.x_, event_.y_, 0);
-    //    window.render_guide_lines(windowpos);
-  }
-
-  profiler("render_guide_lines");
+  painter_->draw_slice_lines(*this);
 
   event_handle_t redraw_window = new RedrawSliceWindowEvent(*this);
   painter_->tm_.propagate_event(redraw_window);
+  render_text();
+
+  //if (painter_->cur_window_ == this) {
+  //    Point windowpos(event_.x_, event_.y_, 0);
+  //    window.render_guide_lines(windowpos);
+  //}
+
 
 //   for (unsigned int t = 0; t < tools_.size(); ++t) {
 //     tools_[t]->draw(window);
 //     if (event_.window_ == &window)
 //       tools_[t]->draw_mouse_cursor(event_);
 //   }
-
-
-  profiler("tool draw");
-
- 
-//   if (filter_text_.length()) 
-//     window.render_progress_bar();
-
-  profiler.leave();
-  profiler.print();
 
   CHECK_OPENGL_ERROR();
   painter_->volume_lock_.unlock();
@@ -1266,44 +1273,35 @@ Painter::SliceWindow::render_vertical_text(FreeTypeTextTexture *text,
 void
 Painter::SliceWindow::render_text()
 {
-#if 0
-  return;
-  if (!painter_->show_text_()) return;
-  profiler.enter("render_text");  
-  if (!(painter_->font1_ && painter_->font2_ && painter_->font3_)) return;
-  TextRenderer &font1 = *painter_->font1_;
-  TextRenderer &font2 = *painter_->font2_;
-  //TextRenderer &font3 = *painter_->font3_;
-  
   const int yoff = 19;
   const int xoff = 19;
-  const double vw = region_.width();
-  const double vh = region_.height();
-  
-  const int y_pos = font1.height("X")+2;
-  font1.render("Zoom: "+to_string(zoom_())+"%", xoff, yoff, 
-               TextRenderer::SHADOW | TextRenderer::SW);
-  profiler("zoom");
+  const double vw = get_region().width();
+  const double vh = get_region().height();
 
-
+  TextRenderer *renderer = FontManager::get_renderer(20);
   NrrdVolume *vol = painter_->current_volume_;
-  
+  const int y_pos = renderer->height("X")+2;
   for (unsigned int s = 0; s < slices_.size(); ++s) {
     string str = slices_[s]->volume_->name_prefix_ + 
       slices_[s]->volume_->name_.get();
     if (slices_[s]->volume_ == vol) {
-      font1.set_color(240/255.0, 1.0, 0.0, 1.0);
+      renderer->set_color(240/255.0, 1.0, 0.0, 1.0);
       str = "->" + str;
     } else {
-      font1.set_color(1.0, 1.0, 1.0, 1.0);
+      renderer->set_color(1.0, 1.0, 1.0, 1.0);
     }
 
-    font1.render(str,
-                 vw-2-xoff, vh-2-yoff-(y_pos*(slices_.size()-1-s)),
-                 TextRenderer::NE | TextRenderer::SHADOW);
+    renderer->render(str,
+                     vw-2-xoff, vh-2-yoff-(y_pos*(slices_.size()-1-s)),
+                     TextRenderer::NE | TextRenderer::SHADOW);
   }
-  profiler("volumes");
+
+
+#if 0
   font1.set_color(1.0, 1.0, 1.0, 1.0);
+  const int y_pos = font1.height("X")+2;
+  font1.render("Zoom: "+to_string(zoom_())+"%", xoff, yoff, 
+               TextRenderer::SHADOW | TextRenderer::SW);
 
 
   if (painter_->tools_.size())
@@ -1416,13 +1414,20 @@ Painter::SliceWindow::extract_slices() {
     slices_.resize(volumes.size());
   
   for (unsigned int s = slices_.size(); s < volumes.size(); ++s) {
-    if (volumes[s] == painter_->current_volume_) 
+    if (volumes[s] == painter_->current_volume_) {
       center_ = painter_->current_volume_->center();
+    }
     slices_.push_back(scinew NrrdSlice(painter_, volumes[s], center_, normal_));
   }
 
   slice_map_.clear();
   for (unsigned int s = 0; s < volumes.size(); ++s) {
+    if (volumes[s] == painter_->current_volume_ &&
+        !painter_->current_volume_->inside_p(center_)) {
+      int ax = axis_;
+      center_(ax) = painter_->current_volume_->center()(ax);
+    }
+
     slice_map_[volumes[s]] = slices_[s];
     slices_[s]->volume_ = volumes[s];
     slices_[s]->plane_ = Plane(center_, normal_);
@@ -1789,9 +1794,12 @@ Painter::NrrdVolume::build_index_to_world_matrix() {
   for (int i = 0; i < dim-1; ++i) {
     if (airExists(nrrd->axis[i].spacing))
       matrix.put(i,i,nrrd->axis[i].spacing);
-    else 
+    else if (airExists(nrrd->axis[i].min) && airExists(nrrd->axis[i].max))
       matrix.put(i,i,((nrrd->axis[i].max-nrrd->axis[i].min)/
                       nrrd->axis[i].size));
+    else
+      matrix.put(i,i, 1.0);
+
     if (airExists(nrrd->axis[i].min))
       matrix.put(i, nrrd->dim, nrrd->axis[i].min);
   }
@@ -2185,6 +2193,8 @@ Painter::copy_current_volume(const string &name, int mode) {
   volume_map_[name] = vol;
   volumes_.push_back(vol);
   show_volume(name);
+  vol->clut_min_ = vol->data_max_/255.0;
+  vol->clut_max_ = vol->data_max_;
   extract_all_window_slices();
   redraw_all();
   return vol;
@@ -2201,6 +2211,19 @@ Painter::nrrd_to_itk_image(NrrdDataHandle &nrrd) {
   const unsigned int Dim = 3;
   typedef float PixType;
   ASSERT(n->dim == Dim+1);
+
+  if (n->type != nrrdTypeFloat) {
+    NrrdDataHandle nrrd2 = new NrrdData();
+    if (nrrdConvert(nrrd2->nrrd_, n, nrrdTypeFloat)) {
+      char *err = biffGetDone(NRRD);
+      string errstr = (err ? err : "");
+      free(err);
+      throw errstr;
+    }
+    nrrd = nrrd2;
+    n = nrrd->nrrd_;
+  }
+
   ASSERT(n->type == nrrdTypeFloat);
   //  typedef typename itk::Image<float, 3> ImageType;
   //  typedef typename itk::ImageRegionIterator<ImageType> IteratorType;
@@ -2310,6 +2333,7 @@ Painter::itk_image_to_nrrd(ITKDatatypeHandle &img_handle) {
 }
 
 
+
 void
 Painter::filter_callback(itk::Object *object,
                          const itk::EventObject &event)
@@ -2320,12 +2344,40 @@ Painter::filter_callback(itk::Object *object,
   double value = process->GetProgress();
   if (typeid(itk::ProgressEvent) == typeid(event))
   {
-    std::cerr << "Filter Progress: " << value * 100.0 << "%\n";
+    double total = get_vars()->get_double("Painter::progress_bar_total_width");
+    get_vars()->insert("Painter::progress_bar_done_width", 
+                       to_string(value * total), "string", true);
+    
+    get_vars()->insert("Painter::progress_bar_text", 
+                       to_string(round(value * 100))+ " %  ", "string", true);
+
+    if (filter_volume_ && filter_update_img_.get_rep()) {
+      //      typedef Painter::ITKImageFloat3D ImageType;
+      //      typedef itk::ImageToImageFilter<ImageType, ImageType> FilterType;
+      typedef itk::ThresholdSegmentationLevelSetImageFilter
+        < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D > FilterType;
+      
+      
+      FilterType *filter = dynamic_cast<FilterType *>(object);
+      ASSERT(filter);
+      volume_lock_.lock();
+      filter_update_img_->data_ = filter->GetOutput();
+      //filter_update_img_->data_ = filter->GetFeatureImage();
+      filter_volume_->nrrd_handle_ = itk_image_to_nrrd(filter_update_img_);
+      volume_lock_.unlock();
+      set_all_slices_tex_dirty();
+      redraw_all();
+    }
+
+    redraw_all();
+
   }
+
+
 
   if (typeid(itk::IterationEvent) == typeid(event))
   {
-    std::cerr << "Filter Iteration: " << value * 100.0 << "%\n";
+    //    std::cerr << "Filter Iteration: " << value * 100.0 << "%\n";
   }
   //  if (value > 0.5) process->AbortGenerateDataOn();
 

@@ -31,13 +31,14 @@
 
 #include <Core/Events/EventManager.h>
 #include <Core/Util/Environment.h>
+#include <Core/Util/Timer.h>
 #include <iostream>
 
 namespace SCIRun {
 
 EventManager::id_tm_map_t EventManager::mboxes_;
 Mutex EventManager::mboxes_lock_("EventManager mboxes_ lock");
-Mailbox<event_handle_t> EventManager::mailbox_("EventManager", 1024);
+Mailbox<event_handle_t> EventManager::mailbox_("EventManager", 8024);
 Piostream * EventManager::stream_ = 0;
 
 EventManager::EventManager() :
@@ -90,6 +91,8 @@ EventManager::~EventManager()
 }
 
 
+
+
 void
 EventManager::add_event(event_handle_t event) 
 {
@@ -100,6 +103,7 @@ EventManager::add_event(event_handle_t event)
   {
     cerr << "Invalid key event\n";
   }
+
 
   mailbox_.send(event);
 }
@@ -164,7 +168,7 @@ EventManager::register_event_messages(string id)
     cerr << "Mailbox id \"" << id << "\" registered\n";
   }
   string mbox_name = "event_mailbox_" + id;
-  event_mailbox_t* mbox = new event_mailbox_t(mbox_name.c_str(), 1024);
+  event_mailbox_t* mbox = new event_mailbox_t(mbox_name.c_str(), 8024);
   mboxes_.insert(make_pair(id, mbox));
   mboxes_lock_.unlock();
   return mbox;
@@ -238,11 +242,7 @@ EventManager::play_trail() {
       stop_trail_file();
       continue;
     }   
-    WindowEvent *window = dynamic_cast<WindowEvent*>(event.get_rep());
-    bool redraw = (window && 
-                   (window->get_window_state() & WindowEvent::REDRAW_E));
-
-    if (!redraw && (event_time = event->get_time())) {
+    if ((event_time = event->get_time())) {
       if (last_event_time) {
         double diff = (event_time-last_event_time) * millisecond;
         timer.wait_for_time(last_timer_time + diff);
@@ -265,6 +265,26 @@ EventManager::run()
   event_handle_t event;
   do {
     event = tm_.propagate_event(mailbox_.receive());
+
+    static unsigned long last_event_time = 0;
+    static double last_timer_time = 0;
+    static ::TimeThrottle timer;
+    if (timer.current_state() == Timer::Stopped) {
+      timer.start();
+    }
+    
+    if (event->get_time()) {
+      last_event_time = event->get_time();
+      last_timer_time = timer.time();
+    } else if (last_event_time) {
+      last_event_time += (timer.time() - last_timer_time)*100.0;
+      last_timer_time = timer.time();
+      
+      event->set_time(last_event_time);
+    }
+
+
+
     if (stream_ && stream_->writing()) {
       Pio(*stream_, event);
     }
