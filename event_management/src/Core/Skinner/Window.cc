@@ -47,6 +47,8 @@
 #include <sci_glx.h>
 #include <iostream>
 
+#include <Core/Thread/Semaphore.h>
+
 namespace SCIRun {
   namespace Skinner {
     
@@ -96,6 +98,9 @@ namespace SCIRun {
       draw_thread_->join();
       // context must be deleted after event spawer is done
       delete context_;
+      context_ = 0;
+      Semaphore pause("pause",0);
+      pause.down();
     }
 
     MinMax
@@ -106,7 +111,6 @@ namespace SCIRun {
     
     BaseTool::propagation_state_e
     GLWindow::process_event(event_handle_t event) {
-      ASSERT(context_);
 
       PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
       if (pointer) {
@@ -141,6 +145,7 @@ namespace SCIRun {
                      window->get_window_state() & WindowEvent::REDRAW_E);
       
       if (redraw) {
+        ASSERT(context_);
         if (!context_->make_current()) {
           return CONTINUE_E;
         }

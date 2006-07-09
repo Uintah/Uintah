@@ -36,6 +36,7 @@
 #include <Core/Skinner/Animation.h>
 #include <Core/Skinner/Box.h>
 #include <Core/Skinner/Collection.h>
+#include <Core/Skinner/Colormap1D.h>
 #include <Core/Skinner/Frame.h>
 #include <Core/Skinner/Window.h>
 #include <Core/Skinner/Gradient.h>
@@ -60,6 +61,7 @@ namespace SCIRun {
       XMLIO::register_maker<Animation>();
       XMLIO::register_maker<Box>();
       XMLIO::register_maker<Collection>();
+      XMLIO::register_maker<Colormap1D>();
       XMLIO::register_maker<Frame>();
       XMLIO::register_maker<Gradient>();
       XMLIO::register_maker<Grid>();
@@ -78,6 +80,7 @@ namespace SCIRun {
       //      try {
         init_skinner();  
         root = Skinner::XMLIO::load(filename);
+        ASSERT(root);
         root->spawn_redraw_threads();
 #if 0
       } catch (const string &error) {

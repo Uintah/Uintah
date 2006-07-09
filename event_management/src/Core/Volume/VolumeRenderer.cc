@@ -199,11 +199,14 @@ VolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 VolumeRenderer::draw_volume()
 {
+  Ray view_ray = compute_view();
+  double length = view_ray.direction().length2();
+  if (!(length > 0)) return;
+
   tex_->lock_bricks();
 
   const int levels = tex_->nlevels();
 
-  Ray view_ray = compute_view();
   vector<vector<TextureBrickHandle> > bricks(levels);
   int total_brick_size = 0;
   int firstlevel = -1;

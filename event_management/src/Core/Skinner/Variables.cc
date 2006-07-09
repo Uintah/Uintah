@@ -284,6 +284,13 @@ namespace SCIRun {
              maybe_get_string(temp.substr(1,temp.length()-1), temp));
       return temp;
     }
-    
+
+    void
+    Variables::unset(const string &name) {
+      name_value_map_t::iterator iter = variables_.find(name);
+      if (iter != variables_.end()) {
+        variables_.erase(iter);
+      }
+    }    
   }
 }

@@ -104,8 +104,13 @@ Skinner::Frame::render_gl()
 BaseTool::propagation_state_e
 Skinner::Frame::process_event(event_handle_t event) {
   WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
+
   if (window && window->get_window_state() == WindowEvent::REDRAW_E)
+  {
+    if ((border_hei_*2) > get_region().height() ||
+        (border_wid_*2) > get_region().width()) return CONTINUE_E;
     render_gl();
+  }
 
   const RectRegion &region = get_region();
   const RectRegion subregion(region.x1()+border_wid_,

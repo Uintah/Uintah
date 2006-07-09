@@ -2,17 +2,53 @@
 <!DOCTYPE skinner PUBLIC "-//Skinner/Drawable DTD" "skinner.dtd">
 
 <skinner version="1.0">
-  <var name="program_name" propagate="yes">BioPSE RENDER 0.1</var>
+  <var name="program_name" propagate="yes">SCI-RENDER 0.1</var>
   <var name="full_program_name" propagate="yes">Raster Explorer and N-Dimensional Editor Revision 0.1</var>
 
 
-  <var name="ITKCurvatureAnisotropic::numberOfIterations" propagate="yes">5</var>
-  <var name="ITKCurvatureAnisotropic::timeStep" propagate="yes">0.075</var>
+  <var name="ITKCurvatureAnisotropic::numberOfIterations" propagate="yes">10</var>
+  <var name="ITKCurvatureAnisotropic::timeStep" propagate="yes">0.0625</var>
   <var name="ITKCurvatureAnisotropic::conductanceParameter" propagate="yes">1.0</var>
 
   <var name="ITKBinaryDilateErode::radius" propagate="yes">3</var>
-  <var name="ITKBinaryDilateErode::dilateValue" propagate="yes">255</var>
-  <var name="ITKBinaryDilateErode::erodeValue" propagate="yes">255</var>
+  <var name="ITKBinaryDilateErode::dilateValue" propagate="yes">1</var>
+  <var name="ITKBinaryDilateErode::erodeValue" propagate="yes">1</var>
+
+  <var name="ITKThresholdTool::curvatureScaling" 
+       propagate="yes">1</var>
+
+  <var name="ITKThresholdTool::propagationScaling" 
+       propagate="yes">1</var>
+
+  <var name="ITKThresholdTool::edgeWeight" 
+       propagate="yes">0</var>
+
+  <var name="ITKThresholdTool::numberOfIterations" 
+       propagate="yes">5000</var>
+
+  <var name="ITKThresholdTool::maximumRMSError" 
+       propagate="yes">0</var>
+
+  <var name="ITKThresholdTool::reverseExpansionDirection" 
+       propagate="yes">1</var>
+
+  <var name="ITKThresholdTool::isoSurfaceValue" 
+       propagate="yes">0.5</var>
+
+  <var name="ITKThresholdTool::smoothingIterations" 
+       propagate="yes">0</var>
+
+  <var name="ITKThresholdTool::smoothingTimeStep" 
+       propagate="yes">0</var>
+
+  <var name="ITKThresholdTool::smoothingConductance" 
+       propagate="yes">0</var>
+
+
+  <var name="ITKBinaryDilateErode::dilateValue" propagate="yes">1</var>
+  <var name="ITKBinaryDilateErode::erodeValue" propagate="yes">1</var>
+
+
 
 
   <var name="grey" propagate="yes">#444444FF</var>
@@ -39,6 +75,8 @@
   <definition class="ShadowedBox"> 
     <object class="Box"> 
       <var name="color">#00000000</var>
+      <var name="focus_mode">1</var>
+
       <var name="border-size1" propagate="yes" overwrite="no">15</var>
       <var name="border-size2" propagate="yes" overwrite="no">5</var>
 
@@ -325,11 +363,8 @@
   </definition>
   
 
-  <definition class="FilterDialog">
+  <definition class="ToolDialog">
     <object class="ShadowedBox">
-      <var name="FilterDialog::text" 
-           propagate="yes" 
-           overwrite="no">Filter:</var>
       <definition class="ShadowedBox::child">
         <object class="Box">
           <var name="focus_mode">1</var>
@@ -351,13 +386,13 @@
           
           <object class="Grid">
             <var name="rows">5</var>
-            <var name="cols">5</var>
+            <var name="cols">1</var>
 
 
             <object class="Text">
               <var name="row">1</var>
               <var name="col">1</var>
-              <var name="text">$FilterDialog::text</var>
+              <var name="text">$ToolDialog::text</var>
               <var name="size">30</var>
               <var name="fgcolor">#000000FF</var>
               <var name="bgcolor">#FFFFFF80</var>
@@ -367,20 +402,83 @@
               <var name="shadow">1</var>
             </object>
 
-            
-            <object class="Button2">
+            <object class="Grid">
+              <var name="ProgressBar::bar_height" 
+                   propagate="yes"
+                   overwrite="no">50</var>
               <var name="row">3</var>
-              <var name="col">2</var>
-              <var name="Button2::Text::text" propagate="yes">Cancel</var>
-              <signal name="Button2::clicked" 
-                      target="FilterDialog::Cancel"/>
+              <var name="col">1</var>
+
+              <var name="rows">1</var>
+              <var name="cols">3</var>
+              <object class="Frame">
+                <var name="row">1</var>
+                <var name="col">2</var>
+                <var name="cell-width">$Painter::progress_bar_total_width</var>
+                <var name="cell-height">$ProgressBar::bar_height</var>
+
+                <var name="width">3</var>
+                <var name="height">3</var>
+
+
+                
+                <object class="Grid">
+                  <var name="rows">1</var>
+                  <var name="cols">2</var>
+                  <object class="Frame">
+                    <var name="row">1</var>
+                    <var name="col">1</var>
+                    <var name="color1">#22CC22A0</var>
+                    <var name="color2">#77FF77C0</var>
+                    <var name="cell-width">$Painter::progress_bar_done_width</var>
+                    <object class="Box">
+                      <var name="color">#44ff44A0</var>
+                    </object>
+                  </object>
+                </object>
+   
+                <object class="Text">
+                  <var name="fgcolor">#000000FF</var>
+                  <var name="bgcolor">#FFFFFFFF</var>
+                  <var name="text">$Painter::progress_bar_text</var>
+                  <var name="size">24</var>
+                  <var name="offsetx">-2</var>
+                  <var name="offsety">2</var>
+                  
+                  <var name="shadow">1</var>
+                  <var name="anchor">C</var>
+                </object>
+
+              </object>
             </object>
-            <object class="Button2">
-              <var name="row">3</var>
-              <var name="col">4</var>
-              <var name="Button2::Text::text" propagate="yes">Execute</var>
-              <signal name="Button2::clicked" 
-                      target="FilterDialog::Execute"/>
+            
+            <object class="Grid">
+              <var name="ToolDialog::button_height" 
+                   propagate="yes"
+                   overwrite="no">40</var>
+
+              <var name="row">5</var>
+              <var name="col">1</var>
+              <var name="cell-height">$ToolDialog::button_height</var>
+              <var name="rows">1</var>
+              <var name="cols">5</var>
+
+              <object class="Button2">
+                <var name="row">1</var>
+                <var name="col">2</var>
+                <var name="Button2::color" propagate="yes" overwrite="no">#FFEEEEFF</var>
+                <var name="Button2::Text::text" propagate="yes">Cancel</var>
+                <signal name="Button2::clicked" 
+                        target="ToolDialog::Cancel"/>
+              </object>
+              <object class="Button2">
+                <var name="row">1</var>
+                <var name="col">4</var>
+                <var name="Button2::color" propagate="yes" overwrite="no">#EEFFEEFF</var>
+                <var name="Button2::Text::text" propagate="yes">Execute</var>
+                <signal name="Button2::clicked" 
+                        target="ToolDialog::Execute"/>
+              </object>
             </object>
           </object>
         </object>
@@ -490,18 +588,18 @@
                 <object class="Button2">
                   <var name="row">2</var>
                   <var name="col">1</var>
-                  
-                  <var name="Button2::Text::text" propagate="yes">Close</var>
+                  <var name="Button2::color" propagate="yes">#FFEEEEFF</var>
+                  <var name="Button2::Text::text" propagate="yes">Cancel</var>
                   <signal name="Button2::clicked" 
                           target="FileLoadBox::CancelButtonPress"/>
                 </object>
                 <object class="Button2">
                   <var name="row">2</var>
                   <var name="col">3</var>
-                  
-                  <var name="Button2::Text::text" propagate="yes">Load</var>
+                  <var name="Button2::color" propagate="yes">#EEFFEEFF</var>
+                  <var name="Button2::Text::text" propagate="yes">OK</var>
                   <signal name="Button2::clicked" 
-                          target="FileLoadBox::LoadButtonPress">$TextEntry::value</signal>
+                          target="FileLoadBox::OKButtonPress">$TextEntry::value</signal>
                 </object>
               </object>
             </object>
@@ -531,10 +629,55 @@
     <var name="variable-3-begin">0</var>
     <var name="variable-3-end">150</var>      
     <var name="Animation::variable-3" propagate="yes">0</var>
+
+    <var name="variable-4-seconds">0.5</var>
+    <var name="variable-4-begin">0</var>
+    <var name="variable-4-end">150</var>      
+    <var name="Animation::variable-4" propagate="yes">0</var>
     
 
     <object class="Painter">
       <var name="Painter::status_text" propagate="yes"> </var>
+      <var name="Painter::progress_bar_text"
+           propagate="yes"></var>
+      <var name="Painter::progress_bar_total_width"
+           propagate="yes">500</var>
+      <var name="Painter::progress_bar_done_width"
+           propagate="yes">0</var>
+
+      <var name="ToolDialog::text" 
+           propagate="yes" 
+           overwrite="no"></var>
+      
+      <var name="ToolDialog::button_height" 
+           propagate="yes"
+           overwrite="no">40</var>
+
+      <var name="value" 
+           propagate="yes"
+           overwrite="no"></var>
+
+
+      <var name="clut_min_max" 
+           propagate="yes"
+           overwrite="no"></var>
+
+      <var name="clut_ww_wl" 
+           propagate="yes"
+           overwrite="no"></var>
+
+      <var name="xyz_pos" 
+           propagate="yes"
+           overwrite="no"></var>
+
+
+      <var name="sca_pos" 
+           propagate="yes"
+           overwrite="no"></var>
+
+
+
+
       <object class="Root::GLWindow" id="SCI-RENDER">
         
         <!--
@@ -571,7 +714,7 @@
 
 
         <object class="Grid" id="MainGrid">
-          <var name="rows">5</var>
+          <var name="rows">6</var>
           <var name="cols">1</var>
 
 
@@ -583,11 +726,18 @@
             <signal name="FileLoadBox::CancelButtonPress" 
                     target="Animation::AnimateVariableDescending">1</signal>
 
-            <signal name="FileLoadBox::LoadButtonPress" 
+            <signal name="FileLoadBox::OKButtonPress" 
                     target="Painter::ITKImageFileRead"></signal>
 
-            <signal name="FileLoadBox::LoadButtonPress" 
+<!--            <signal name="FileLoadBox::OKButtonPress" 
+                    target="Painter::NrrdFileRead"></signal>-->
+
+            <signal name="FileLoadBox::OKButtonPress" 
                     target="Animation::AnimateVariableDescending" >1</signal>
+
+            <signal name="FileLoadBox::OKButtonPress" 
+                    target="Painter::Autoview" >1</signal>
+
             
           </object>
           
@@ -603,34 +753,65 @@
             <signal name="FileLoadBox::CancelButtonPress" 
                     target="Animation::AnimateVariableDescending">2</signal>
             
+
+            <signal name="FileLoadBox::OKButtonPress" 
+                    target="Painter::ITKImageFileWrite"></signal>
+            
+
+            <signal name="FileLoadBox::OKButtonPress" 
+                    target="Animation::AnimateVariableDescending">2</signal>
+            
             
             
           </object>
 
 
-          <object class="FilterDialog">
+          <object class="ToolDialog">
             <var name="row">4</var>
             <var name="col">1</var>
             <var name="cell-height">$Animation::variable-3</var>
 
-            <signal name="FilterDialog::Cancel" 
-                    target="Painter::ITKFilterCancel"></signal>
+            <signal name="ToolDialog::Cancel" 
+                    target="Painter::CancelTool"></signal>
 
-            <signal name="FilterDialog::Cancel" 
+            <signal name="ToolDialog::Cancel" 
                     target="Animation::AnimateVariableDescending">3</signal>
 
-            <signal name="FilterDialog::Execute" 
-                    target="Painter::ITKFilterExecute"></signal>
+            <signal name="ToolDialog::Execute" 
+                    target="Painter::FinishTool"></signal>
 
-            <signal name="FileLoadBox::Execute" 
+            <signal name="ToolDialog::Execute" 
                     target="Animation::AnimateVariableDescending" >3</signal>
             
           </object>
          
-          
+
+          <object class="ToolDialog">
+            <var name="row">5</var>
+            <var name="col">1</var>
+            <var name="cell-height">$Animation::variable-4</var>
+
+            <signal name="ToolDialog::Cancel" 
+                    target="Painter::SetLayer"></signal>
+<!--
+            <signal name="ToolDialog::Cancel" 
+                    target="Painter::CancelTool"></signal>
+
+            <signal name="ToolDialog::Cancel" 
+                    target="Animation::AnimateVariableDescending">3</signal>
+-->
+
+            <signal name="ToolDialog::Execute" 
+                    target="Painter::FinishTool"></signal>
+
+            <signal name="ToolDialog::Execute" 
+                    target="Animation::AnimateVariableDescending" >3</signal>
+            
+          </object>
+         
 
           <object class="Grid">
-            <var name="row">5</var>
+            <var name="row">6</var>
             <var name="col">1</var>
 
             <var name="rows">1</var>
@@ -730,7 +911,7 @@
 
               <object class="ShadowedPainterWindow">
                 <var name="row">2</var>
-                <var name="col">2</var>
+                <var name="col">4</var>
                 <var name="axis" propagate="yes">0</var>
                 <var name="GradientBackground::bottom-color"
                      type="color" propagate="yes">$light_red</var>
@@ -750,7 +931,7 @@
 
               <object class="ShadowedPainterWindow">
                 <var name="row">2</var>
-                <var name="col">4</var>
+                <var name="col">2</var>
                 <var name="axis" propagate="yes">1</var>
                 <var name="GradientBackground::bottom-color" 
                      type="color" propagate="yes">$light_blue</var>
@@ -793,7 +974,7 @@
         <var name="width" type="int">200</var>
         <var name="height" type="int">800</var>
         <var name="posx" type="int">0</var>
-        <var name="posy" type="int">20</var>
+        <var name="posy" type="int">0</var>
         <var name="border" type="int">$Window::borders</var>
 
         <object class="Texture">
@@ -815,32 +996,31 @@
           <object class="Button2">
             <var name="row">1</var>
             <var name="col">1</var>
-            <var name="Button2::Text::text" propagate="yes">Autoview</var>
-            <signal name="Button2::clicked" 
-                    target="Painter::Autoview"/>
-          </object>
-          
-          <object class="Button2">
-            <var name="row">2</var>
-            <var name="col">1</var>
-            <var name="bug">1</var>
             <var name="Button2::Text::text" propagate="yes">Load Layer</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
             <signal name="Button2::clicked" 
                     target="Animation::AnimateVariableAscending">1</signal>
           </object>
-          
+       
           <object class="Button2">
-            <var name="row">3</var>
+            <var name="row">2</var>
             <var name="col">1</var>
-            <var name="bug">2</var>
             <var name="Button2::Text::text" propagate="yes">Save Layer</var>
             <signal name="Button2::clicked" 
                     target="Animation::AnimateVariableAscending">2</signal>
           </object>
-          
+
           <object class="Button2">
             <var name="row">4</var>
+            <var name="col">1</var>
+            <var name="Button2::Text::text" propagate="yes">Autoview</var>
+            <signal name="Button2::clicked" 
+                    target="Painter::Autoview"/>
+          </object>
+          
+          
+          <object class="Button2">
+            <var name="row">5</var>
             <var name="col">1</var>
             <var name="Button2::Text::text" propagate="yes">Copy Layer</var>
             <signal name="Button2::clicked" 
@@ -848,7 +1028,7 @@
           </object>
 
           <object class="Button2">
-            <var name="row">5</var>
+            <var name="row">6</var>
             <var name="col">1</var>
             <var name="Button2::Text::text" propagate="yes">New Layer</var>
             <signal name="Button2::clicked" 
@@ -857,7 +1037,7 @@
 
 
           <object class="Button2">
-            <var name="row">6</var>
+            <var name="row">7</var>
             <var name="col">1</var>
             <var name="Button2::Text::text" propagate="yes">Delete Layer</var>
             <signal name="Button2::clicked" 
@@ -866,7 +1046,16 @@
           </object>
 
           <object class="Button2">
-            <var name="row">7</var>
+            <var name="row">8</var>
+            <var name="col">1</var>
+            <var name="Button2::Text::text" propagate="yes">Merge Layer</var>
+            <signal name="Button2::clicked" 
+                    target="Painter::MergeLayer"/>
+            
+          </object>
+
+          <object class="Button2">
+            <var name="row">9</var>
             <var name="col">1</var>
             <var name="Button2::Text::text" propagate="yes">Brush Tool</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
@@ -875,29 +1064,36 @@
             
           </object>
 
-
           <object class="Button2">
-            <var name="row">8</var>
+            <var name="row">10</var>
             <var name="col">1</var>
             <var name="Button2::Text::text" propagate="yes">Crop Tool</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
             <signal name="Button2::clicked" 
-                    target="Quit"/>
+                    target="Painter::StartCropTool"/>
+
+            <signal name="Button2::clicked"
+                    target="Animation::AnimateVariableAscending">3</signal>
             
           </object>
 
           <object class="Button2">
-            <var name="row">9</var>
+            <var name="row">11</var>
             <var name="col">1</var>
             <var name="Button2::Text::text" propagate="yes">ITK Gradient Magnitude</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
+            <signal name="Button2::clicked"
+                    target="Animation::AnimateVariableDescending">3</signal>
             <signal name="Button2::clicked" 
                     target="Painter::ITKGradientMagnitude"/>
+            <signal name="Button2::clicked"
+                    target="Animation::AnimateVariableAscending">3</signal>
+
             
           </object>
 
           <object class="Button2">
-            <var name="row">10</var>
+            <var name="row">12</var>
             <var name="col">1</var>
             <var name="Button2::Text::text" propagate="yes">ITK Confidence Connected</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
@@ -910,38 +1106,121 @@
           </object>
 
           <object class="Button2">
-            <var name="row">11</var>
+            <var name="row">13</var>
             <var name="col">1</var>
             <var name="Button2::Text::text" propagate="yes">ITK Threshold Levelset</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
+
             <signal name="Button2::clicked"
                     target="Painter::ITKThresholdLevelSet"/>
+
+            <signal name="Button2::clicked"
+                    target="Animation::AnimateVariableAscending">4</signal>
             
           </object>
 
 
-          <object class="Button2">
-            <var name="row">12</var>
-            <var name="col">1</var>
-            <var name="Button2::Text::text" propagate="yes">ITK Anisotropic Diffusion</var>
-            <var name="text_color" propagate="yes">#FFFFFFFF</var>
-            <signal name="Button2::clicked" 
-                    target="Painter::ITKCurvatureAnisotropic"/>
-            
-          </object>
-
-          <object class="Button2">
-            <var name="row">13</var>
-            <var name="col">1</var>
-            <var name="Button2::Text::text" propagate="yes">ITK Hole Fill</var>
-            <var name="text_color" propagate="yes">#FFFFFFFF</var>
-            <signal name="ITKBinaryDilateErode" 
-                    target="Quit"/>
-            
-          </object>
 
           <object class="Button2">
             <var name="row">14</var>
+            <var name="col">1</var>
+            <var name="Button2::Text::text" propagate="yes">ITK Anisotropic Diffusion</var>
+            <var name="text_color" propagate="yes">#FFFFFFFF</var>
+
+            <signal name="Button2::clicked"
+                    target="Animation::AnimateVariableDescending">3</signal>
+            <signal name="Button2::clicked" 
+                    target="Painter::ITKCurvatureAnisotropic"/>
+            <signal name="Button2::clicked"
+                    target="Animation::AnimateVariableAscending">3</signal>
+                        
+          </object>
+
+          <object class="Button2">
+            <var name="row">15</var>
+            <var name="col">1</var>
+            <var name="Button2::Text::text" propagate="yes">ITK Hole Fill</var>
+            <var name="text_color" propagate="yes">#FFFFFFFF</var>
+            <signal name="Button2::clicked"
+                    target="Animation::AnimateVariableDescending">3</signal>
+            <signal name="Button2::clicked" 
+                    target="Painter::ITKBinaryDilateErode"/>
+            <signal name="Button2::clicked"
+                    target="Animation::AnimateVariableAscending">3</signal>
+
+            
+          </object>
+
+
+
+
+          <object class="Grid">
+            <var name="row">18</var>
+            <var name="col">1</var> 
+
+            <var name="cell-height">200</var>
+            
+            <var name="rows">2</var>
+            <var name="cols">2</var>      
+            <var name="shadow" propagate="yes">1</var>
+            <var name="offsetx" propagate="yes">2</var>
+            <var name="offsety" propagate="yes">-2</var>
+            <var name="bgcolor" propagate="yes">#000000FF</var>
+            <var name="fgcolor" propagate="yes">#FFFFFFFF</var>
+            <object class="Grid">
+              <var name="row">2</var>
+              <var name="col">1</var>
+              <var name="rows">5</var>
+              <var name="cols">1</var>
+              
+              <object class="Text">
+                <var name="row">1</var>
+                <var name="col">1</var>
+                <var name="text">$clut_ww_wl</var>
+                <var name="shadow">1</var>
+                <var name="size">20</var>
+              </object>
+              
+              <object class="Text">
+                <var name="row">2</var>
+                <var name="col">1</var>
+                <var name="text">$clut_min_max</var>
+                <var name="shadow">1</var>
+                <var name="size">20</var>
+              </object>
+              
+              <object class="Text">
+                <var name="row">3</var>
+                <var name="col">1</var>
+                <var name="text">$value</var>
+                <var name="shadow">1</var>
+                <var name="size">20</var>
+              </object>
+              
+              <object class="Text">
+                <var name="row">4</var>
+                <var name="col">1</var>
+                <var name="text">$sca_pos</var>
+                <var name="shadow">1</var>
+                <var name="size">20</var>
+              </object>
+              
+              <object class="Text">
+                <var name="row">5</var>
+                <var name="col">1</var>
+                <var name="text">$xyz_pos</var>
+                <var name="shadow">1</var>
+                <var name="size">20</var>
+              </object>
+            </object>
+          </object>
+
+
+
+
+<!--
+          <object class="Button2">
+            <var name="row">16</var>
             <var name="col">1</var>
             <var name="Button2::Text::text" propagate="yes">Flood Fill</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
@@ -949,19 +1228,20 @@
                     target="Quit"/>
             
           </object>               
+-->
 
           <object class="Button2">
-            <var name="row">15</var>
+            <var name="row">17</var>
             <var name="col">1</var>
-            <var name="Button2::Text::text" propagate="yes">Credits</var>
+            <var name="Button2::Text::text" propagate="yes">Volume Rendering</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
             <signal name="Button2::clicked" 
-                    target="Quit"/>
+                    target="Painter::ShowVolumeRendering"/>
             
           </object>
 
           <object class="Button2">
-            <var name="row">18</var>
+            <var name="row">20</var>
             <var name="col">1</var>
             <var name="Button2::Text::text" propagate="yes">Quit</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
@@ -969,7 +1249,6 @@
                     target="Quit"/>
             
           </object>
-
         </object>
       </object>
 
@@ -980,7 +1259,7 @@
         <var name="height" type="int">200</var>
         <var name="posx" type="int">100</var>
         <var name="posy" type="int">300</var>
-        <var name="border" type="int">$Window::borders</var>
+        <var name="border" type="int">1</var>
 
         <var name="topcolor" propagate="yes">#DDDDDDFF</var>
         <var name="botcolor" propagate="yes">#222222FF</var>
@@ -1256,70 +1535,4 @@
   </object>
 </skinner>
 
-<!--
 
-
-<object class="Grid">
-<var name="rows">2</var>
-<var name="cols">2</var>      
-<var name="shadow" propagate="yes">1</var>
-<var name="offsetx" propagate="yes">2</var>
-<var name="offsety" propagate="yes">-2</var>
-<var name="bgcolor" propagate="yes">#000000FF</var>
-<var name="fgcolor" propagate="yes">#FFFFFFFF</var>
-<object class="Grid">
-<var name="row">2</var>
-<var name="col">1</var>
-<var name="rows">15</var>
-<var name="cols">1</var>
-
-<object class="Text">
-<var name="row">11</var>
-<var name="col">1</var>
-<var name="text">$clut_ww_wl</var>
-<var name="shadow">1</var>
-<var name="size">20</var>
-</object>
-
-<object class="Text">
-<var name="row">12</var>
-<var name="col">1</var>
-<var name="text">$clut_min_max</var>
-<var name="shadow">1</var>
-<var name="size">20</var>
-</object>
-
-<object class="Text">
-<var name="row">13</var>
-<var name="col">1</var>
-<var name="text">$value</var>
-<var name="shadow">1</var>
-<var name="size">20</var>
-</object>
-
-<object class="Text">
-<var name="row">14</var>
-<var name="col">1</var>
-<var name="text">$sca_pos</var>
-<var name="shadow">1</var>
-<var name="size">20</var>
-</object>
-
-<object class="Text">
-<var name="row">15</var>
-<var name="col">1</var>
-<var name="text">$xyz_pos</var>
-<var name="shadow">1</var>
-<var name="size">20</var>
-</object>
-</object>
-</object>
-</object>
-</definition>
-
-<definition class="ShadowedBoxInterior"> 
-<object class="Frame1-child"/>
-</definition>
-
-
--->
