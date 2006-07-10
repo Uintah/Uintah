@@ -44,12 +44,6 @@
 #include <Core/Basis/TriLinearLgn.h>
 #include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Datatypes/HexVolMesh.h>
-#include <Core/Datatypes/TriSurfMesh.h>
-
-#include <Dataflow/Modules/Fields/HexToTet.h>
-#include <Dataflow/Modules/Fields/FieldBoundary.h>
-
-#include <Core/Algorithms/Visualization/MarchingCubes.h>
 
 #include <sci_hash_map.h>
 #include <algorithm>
