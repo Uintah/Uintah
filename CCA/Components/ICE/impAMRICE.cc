@@ -215,7 +215,8 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
     LevelP level = grid->getLevel(L);
     const PatchSet* patches = level->eachPatch();
     scheduleConservedtoPrimitive_Vars(    sched, patches, ice_matls_sub,
-                                                          all_matls);
+                                                          all_matls,
+                                                          "afterAdvection");
                                                           
     if(d_analysisModule){                                                        
       d_analysisModule->scheduleDoAnalysis( sched, level);
