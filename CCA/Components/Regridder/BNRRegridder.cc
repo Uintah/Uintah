@@ -51,15 +51,13 @@ BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task
     for(int i=tag_start;i<tag_end;i++)
       tags_.push(i<<1);
   }
-
 }
 
 BNRRegridder::~BNRRegridder()
 {
 }
 
-Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, 
-                     const ProblemSpecP& ups)
+Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP& ups)
 {
   LoadBalancer *lb=sched->getLoadBalancer();
   
@@ -113,8 +111,8 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched,
       //keep old grid level
       //continue
      
-		//saftey layers? how?
-		
+    //saftey layers? how?
+    
 
     //Coarsen Flags
     set<IntVector> coarse_flag_set;
@@ -126,7 +124,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched,
     //create flags vector
     vector<IntVector> coarse_flag_vector(coarse_flag_set.size());
     coarse_flag_vector.assign(coarse_flag_set.begin(),coarse_flag_set.end());
-		
+    
     vector<PseudoPatch> patches;
     //Parallel BR over coarse flags
     RunBR(coarse_flag_vector,patches);  
@@ -178,16 +176,13 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched,
     return oldGrid;
   }
 
-
   d_newGrid = true;
   d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
-
 
   //cout << *newGrid;
   newGrid->performConsistencyCheck();
   return newGrid;
 }
-
 
 void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches)
 {
@@ -195,7 +190,6 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
   int numprocs=d_myworld->size();
   
   tasks_.clear();
-  
   vector<int> procs(numprocs);
   for(int p=0;p<numprocs;p++)
     procs[p]=p;
@@ -225,7 +219,6 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
     patch.low[0]=INT_MAX;
   }
   
-  
   if(numprocs>1)
   {
     vector<PseudoPatch> bounds(numprocs);
@@ -240,8 +233,7 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
 
     if(p==numprocs)
     {
-      if(rank==0)
-        cout << "No flags on this level\n";
+      //no flags exit
       return;
     }
  
@@ -262,18 +254,12 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
       }
     }
   }
-  else if (patch.low==patch.high)
+  else if (flags.size()==0)
   {
-    cout << "No flags on this level\n";
+    //no flags on this level
     return;
   }
 
-  /*
-    cout << "rank: " << rank << " initial patch: {" 
-    << patch.low[0] << "-" << patch.high[0] << ", "
-    << patch.low[1] << "-" << patch.high[1] << ", "
-    << patch.low[2] << "-" << patch.high[2] << "}\n";
-  */
   //create initial task
   BNRTask::controller_=this;
   FlagsList flagslist;
@@ -281,13 +267,12 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
   flagslist.size=flags.size();
   tasks_.push_back(BNRTask(patch,flagslist,procs,rank,0,0));
   BNRTask *root=&tasks_.back();
-  
+ 
   //place on immediate_q_
-  immediate_q_.push(root);									
+  immediate_q_.push(root);                  
   //control loop
   while(true)
   {
-    //		cout << "rank:" << rank << ": control loop: immediate_q_.size():" << immediate_q_.size() << " delay_q_.size():" << delay_q_.size() << endl;
     BNRTask *task;
     if(!tag_q_.empty() && tags_.size()>1)
     {
@@ -300,71 +285,38 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
       task=immediate_q_.front();
       immediate_q_.pop();
       //runable task found, continue task
- 			//cout << "rank:" << rank << ": starting from immediate_q_ with status: " << task->status_ << endl;
+      //cout << "rank:" << rank << ": starting from immediate_q_ with status: " << task->status_ << endl;
       if(task->p_group_.size()==1)
         task->continueTaskSerial();
       else
         task->continueTask();
     }
-    else if(!delay_q_.empty())
+    else if(free_requests_.size()<requests_.size())  //communication waiting to complete
     {
-      //search through delay_q_ checking for finished MPI and runnable tasks
-      
-      //cout << rank << ": queue size b: " << delay_q_.size() << endl;			
-      task=delay_q_.front();
-      delay_q_.pop();
-      MPI_Status status;
-      //			cout << "rank:" << rank << ": finding a ready task on delay_q_\n";
-      while(!task->mpi_requests_.empty())
+      //cout << "rank:" << rank << ": waiting on requests\n";
+      //wait on requests
+      int count;
+      MPI_Waitsome(requests_.size(),&requests_[0],&count,&indicies_[0],MPI_STATUSES_IGNORE);
+      //cout << "rank:" << rank << ": completed requests:" << count << endl;
+      //handle each request
+      for(int c=0;c<count;c++)
       {
-        int completed;
-        //cout << "rank:" << rank << ": pid:" << task->tag_ << ": testing request: status:" << task->status << endl;
-        MPI_Test(&task->mpi_requests_.front(),&completed,&status);
-        if(completed)
+        BNRTask *task=request_to_task_[indicies_[c]];
+        free_requests_.push(indicies_[c]);
+        if(--task->remaining_requests_==0)  //task has completed communication
         {
-          //					cout << "rank:" << rank << ": pid:" << task->tag_ << " completed non-blocking request" << endl;
-          if(status.MPI_ERROR!=0)
+          if(task->status_!=TERMINATED)     //if task needs more work
           {
-            cout << "rank:" << rank << ": pid:" << task->tag_ << " non-blocking request returned error code: " << status.MPI_ERROR << endl;
-            exit(0);
+            immediate_q_.push(task);        //place it on the immediate_q 
           }
-          //pop request
-          task->mpi_requests_.pop();
-        }
-        else
-        {
-          /*
-            MPI_Status status;
-            int flag;
-            MPI_Iprobe(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,&flag,&status);
-            if(flag)
-            {
-            cout << "rank:" << rank << ": pid:" << task->tag_ << " non-blocking request cannot be completed but message waiting: "
-            << " source:" << status.MPI_SOURCE << " tag_:" << status.MPI_TAG << endl;
-            
-            }
-          */
-          //place at the end of the queue and continue searching
-          delay_q_.push(task);
-          //get a new task
-          task=delay_q_.front();
-          delay_q_.pop();
         }
       }
-      //cout << rank << ": queue size a: " << delay_q_.size() << endl;			
-      //runable task found, continue task
-      //			cout << "rank:" << rank << ": starting from delay_q_ with status: " << task->status << endl;
-      task->continueTask();
     }
-    else if(tag_q_.empty())
+    else  //no tasks remaining, no communication waiting, algorithm is done
     {
-      
-      //			cout << "rank:" << rank << ": all queues empty, terminating\n";
-      
-      break;
+       //cout << "rank:" << rank << ": terminating\n";
+      break; 
     }
-    //cout << "rank:" << rank << ": pid:" << task->tag_ << ": task returned with status: " << task->status << endl;
-    
   }
   
   if(rank==tasks_.front().p_group_[0])
@@ -374,9 +326,7 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
   if(numprocs>1)
   {
     unsigned int size=tasks_.front().my_patches_.size();
-    //cout << "rank:" << rank << ": pid:" << tasks_.front().tag_ << ": broadcasting size root is:" << tasks_.front().p_group_[0] << endl;
     MPI_Bcast(&size,1,MPI_INT,tasks_.front().p_group_[0],d_myworld->getComm());
-    //cout << "rank:" << rank << ": pid:" << tasks_.front().tag_ << ": size is:" << size << endl;
     patches.resize(size);
   
     MPI_Bcast(&patches[0],size*sizeof(PseudoPatch),MPI_BYTE,tasks_.front().p_group_[0],d_myworld->getComm());
