@@ -183,6 +183,20 @@ IsoRefine::execute()
     ifieldhandle = algo->execute(this, ifieldhandle);
   }
 
+  if (ext == "Hex")
+  {
+    const TypeDescription *ftd = ifieldhandle->get_type_description();
+    CompileInfoHandle ci = IRMakeConvexAlgo::get_compile_info(ftd);
+    Handle<IRMakeConvexAlgo> algo;
+    if (!DynamicCompilation::compile(ci, algo, false, this))
+    {
+      error("Unable to compile IRMakeConvex algorithm.");
+      return;
+    }
+    ifieldhandle.detach();
+    algo->execute(this, ifieldhandle);
+  }
+
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   CompileInfoHandle ci = IsoRefineAlgo::get_compile_info(ftd, ext);
   Handle<IsoRefineAlgo> algo;
@@ -250,6 +264,31 @@ IRMakeLinearAlgo::get_compile_info(const TypeDescription *fsrc)
                        base_class_name, 
                        template_class_name,
                        fsrcstr + ", " + fdststr);
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  rval->add_mesh_include("../src/Core/Datatypes/HexVolMesh.h");
+  rval->add_basis_include("../src/Core/Basis/HexTrilinearLgn.h");
+  fsrc->fill_compile_info(rval);
+
+  return rval;
+}
+
+
+CompileInfoHandle
+IRMakeConvexAlgo::get_compile_info(const TypeDescription *fsrc)
+{
+  // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  const string template_class_name("IRMakeConvexAlgoT");
+  static const string base_class_name("IRMakeConvexAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       fsrc->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       fsrc->get_name());
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);

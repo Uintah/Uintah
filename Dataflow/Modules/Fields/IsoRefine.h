@@ -69,8 +69,6 @@ public:
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
 					    string ext);
 
-protected:
-
   static int hex_reorder_table[14][8];
 };
 
@@ -1403,6 +1401,192 @@ IRMakeLinearAlgoT<IFIELD, OFIELD>::execute(ProgressReporter *reporter,
   }
   
   return ofield;
+}
+
+
+class SCISHARE IRMakeConvexAlgo : public DynamicAlgoBase
+{
+public:
+
+  virtual void execute(ProgressReporter *reporter, FieldHandle fieldh) = 0;
+
+  //! support the dynamically compiled algorithm concept
+  static CompileInfoHandle get_compile_info(const TypeDescription *fsr);
+
+  int pattern_table[256][2];
+
+  inline unsigned int iedge(unsigned int a, unsigned int b)
+  {
+    return (1<<(7-a)) | (1<<(7-b));
+  }
+
+  inline unsigned int iface(unsigned int a, unsigned int b,
+                            unsigned int c, unsigned int d)
+  {
+    return iedge(a, b) | iedge(c, d);
+  }
+
+  inline void set_table(int i, int pattern, int reorder)
+  {
+    pattern_table[i][0] = pattern;
+    pattern_table[i][1] = reorder;
+  }
+
+  inline void set_table_once(int i, int pattern, int reorder)
+  {
+    if (pattern_table[i][0] < 0)
+    {
+      pattern_table[i][0] = pattern;
+      pattern_table[i][1] = reorder;
+    }
+  }
+
+  inline void set_iface_partials(unsigned int a, unsigned int b,
+                                 unsigned int c, unsigned int d,
+                                 int pattern, int reorder)
+  {
+    set_table_once(iedge(a, b), pattern, reorder);
+    set_table_once(iedge(a, c), pattern, reorder);
+    set_table_once(iedge(a, d), pattern, reorder);
+    set_table_once(iedge(b, c), pattern, reorder);
+    set_table_once(iedge(b, d), pattern, reorder);
+    set_table_once(iedge(c, d), pattern, reorder);
+    set_table(iface(b, b, c, d), pattern, reorder);
+    set_table(iface(a, c, c, d), pattern, reorder);
+    set_table(iface(a, b, d, d), pattern, reorder);
+    set_table(iface(a, b, c, a), pattern, reorder);
+  }
+
+  void init_pattern_table()
+  {
+    for (int i = 0; i < 256; i++)
+    {
+      set_table(i, -1, 0);
+    }
+
+    set_table(0, 0, 0);
+
+    // Add corners
+    set_table(1, 1, 7);
+    set_table(2, 1, 6);
+    set_table(4, 1, 5);
+    set_table(8, 1, 4);
+    set_table(16, 1, 3);
+    set_table(32, 1, 2);
+    set_table(64, 1, 1);
+    set_table(128, 1, 0);
+
+    // Add edges
+    set_table(iedge(0, 1), 2, 0);
+    set_table(iedge(1, 2), 2, 1);
+    set_table(iedge(2, 3), 2, 2);
+    set_table(iedge(3, 0), 2, 3);
+    set_table(iedge(4, 5), 2, 5);
+    set_table(iedge(5, 6), 2, 6);
+    set_table(iedge(6, 7), 2, 7);
+    set_table(iedge(7, 4), 2, 4);
+    set_table(iedge(0, 4), 2, 8);
+    set_table(iedge(1, 5), 2, 9);
+    set_table(iedge(2, 6), 2, 10);
+    set_table(iedge(3, 7), 2, 11);
+
+    set_table(iface(0, 1, 2, 3), 4, 0);
+    set_table(iface(0, 1, 5, 4), 4, 12);
+    set_table(iface(1, 2, 6, 5), 4, 9);
+    set_table(iface(2, 3, 7, 6), 4, 13);
+    set_table(iface(3, 0, 4, 7), 4, 8);
+    set_table(iface(4, 5, 6, 7), 4, 7);
+
+    set_iface_partials(0, 1, 2, 3, -4, 0);
+    set_iface_partials(0, 1, 5, 4, -4, 12);
+    set_iface_partials(1, 2, 6, 5, -4, 9);
+    set_iface_partials(2, 3, 7, 6, -4, 13);
+    set_iface_partials(3, 0, 4, 7, -4, 8);
+    set_iface_partials(4, 5, 6, 7, -4, 7);
+
+    set_table(255, 8, 0);
+  }
+};
+
+
+template <class FIELD>
+class IRMakeConvexAlgoT : public IRMakeConvexAlgo
+{
+public:
+  //! virtual interface. 
+  virtual void execute(ProgressReporter *reporter, FieldHandle fieldh);
+};
+
+
+template <class FIELD>
+void
+IRMakeConvexAlgoT<FIELD>::execute(ProgressReporter *reporter,
+                                  FieldHandle fieldh)
+{
+  const bool lte = true;
+  const double isoval = 0.5;
+  double newval = 0.0;
+
+  FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
+  typename FIELD::mesh_type *mesh = field->get_typed_mesh().get_rep();
+
+  init_pattern_table();
+  
+  typename FIELD::mesh_type::Node::array_type onodes(8);
+  typename FIELD::value_type v[8];
+  
+  bool changed;
+  do {
+    newval -= 1.0;
+    changed = false;
+    typename FIELD::mesh_type::Elem::iterator bi, ei;
+    mesh->begin(bi); mesh->end(ei);
+    while (bi != ei)
+    {
+      mesh->get_nodes(onodes, *bi);
+    
+      // Get the values and compute an inside/outside mask.
+      unsigned int inside = 0;
+      unsigned int inside_count = 0;
+      for (unsigned int i = 0; i < onodes.size(); i++)
+      {
+        field->value(v[i], onodes[i]);
+        inside = inside << 1;
+        if (v[i] > isoval)
+        {
+          inside |= 1;
+          inside_count++;
+        }
+      }
+
+      // Invert the mask if we are doing less than.
+      if (lte) { inside = ~inside & 0xff; inside_count = 8 - inside_count; }
+
+      const int pattern = pattern_table[inside][0];
+      const int which = pattern_table[inside][1];
+
+      if (pattern == -1)
+      {
+        changed = true;
+        for (unsigned int i = 0; i < onodes.size(); i++)
+        {
+          field->set_value(newval, onodes[i]);
+        }
+      }
+      else if (pattern == -4)
+      {
+        changed = true;
+        const int *ro = IsoRefineAlgo::hex_reorder_table[which];
+
+        for (unsigned int i = 0; i < 4; i++)
+        {
+          field->set_value(newval, onodes[ro[i]]);
+        }
+      }
+
+      ++bi;
+    }
+  } while (changed);
 }
 
 
