@@ -147,7 +147,8 @@ IsoRefine::execute()
 
   string ext = "";
   const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
-  if (mtd->get_name().find("HexVolMesh") != string::npos)
+  if (mtd->get_name().find("HexVolMesh") != string::npos ||
+      mtd->get_name().find("LatVolMesh") != string::npos)
   {
     ext = "Hex";
   }
@@ -224,8 +225,8 @@ IsoRefineAlgo::get_compile_info(const TypeDescription *fsrc,
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
-  rval->add_mesh_include("../src/Core/Datatypes/TriSurfMesh.h");
-  rval->add_basis_include("../src/Core/Basis/TriLinearLgn.h");
+  rval->add_mesh_include("../src/Core/Datatypes/HexVolMesh.h");
+  rval->add_basis_include("../src/Core/Basis/HexTrilinearLgn.h");
   fsrc->fill_compile_info(rval);
 
   return rval;
