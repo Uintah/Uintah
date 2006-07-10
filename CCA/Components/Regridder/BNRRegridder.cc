@@ -388,11 +388,9 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
   }
   else
   {
-    //NOTE TO BRYAN: 
-    //Put in code to read target patches here.  User should be able to specify a fixed number or a number per processor
-    //if there is only 1 proc then target_patches_ should always be 1 (at least that makes the most sense)
-    //i am not if any bullet proofing is needed.
-    target_patches_=4*d_myworld->size();
+    int patches_per_proc=1;
+    regrid_spec->get("patches_per_level_per_proc",patches_per_proc);
+    target_patches_=patches_per_proc*d_myworld->size();
   }
 
 
