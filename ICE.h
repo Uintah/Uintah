@@ -182,7 +182,8 @@ namespace Uintah {
       void scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
                                              const PatchSet* patch_set,
                                              const MaterialSubset* ice_matlsub,
-                                             const MaterialSet* ice_matls);
+                                             const MaterialSet* ice_matls,
+                                             const string& where);
                              
       void scheduleTestConservation(SchedulerP&, 
                                     const PatchSet*,
