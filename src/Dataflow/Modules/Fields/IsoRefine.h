@@ -1350,6 +1350,62 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
 }
 
 
-} // end namespace SCIRun
+
+class SCISHARE IRMakeLinearAlgo : public DynamicAlgoBase
+{
+public:
+
+  virtual FieldHandle execute(ProgressReporter *reporter,
+                              FieldHandle fieldh) = 0;
+
+  //! support the dynamically compiled algorithm concept
+  static CompileInfoHandle get_compile_info(const TypeDescription *fsr);
+};
+
+
+template <class IFIELD, class OFIELD>
+class IRMakeLinearAlgoT : public IRMakeLinearAlgo
+{
+public:
+  //! virtual interface. 
+  virtual FieldHandle execute(ProgressReporter *reporter, FieldHandle fieldh);
+};
+
+
+template <class IFIELD, class OFIELD>
+FieldHandle
+IRMakeLinearAlgoT<IFIELD, OFIELD>::execute(ProgressReporter *reporter,
+                                           FieldHandle fieldh)
+{
+  IFIELD *ifield = dynamic_cast<IFIELD*>(fieldh.get_rep());
+  typename IFIELD::mesh_type *imesh = ifield->get_typed_mesh().get_rep();
+  OFIELD *ofield = scinew OFIELD(imesh);
+
+  typename IFIELD::mesh_type::Node::array_type nodes;
+  typename IFIELD::value_type val;
+
+  typename IFIELD::mesh_type::Elem::iterator itr, eitr;
+  imesh->begin(itr);
+  imesh->end(eitr);
+
+  while (itr != eitr)
+  {
+    ifield->value(val, *itr);
+    if (val > 0.5)
+    {
+      imesh->get_nodes(nodes, *itr);
+      for (unsigned int i = 0; i < nodes.size(); i++)
+      {
+        ofield->set_value(val, nodes[i]);
+      }
+    }
+    ++itr;
+  }
+  
+  return ofield;
+}
+
+
+} // namespace SCIRun
 
 #endif // ClipField_h
