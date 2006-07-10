@@ -54,7 +54,7 @@ WARNING
 			      const GridP& grid,
 			      const SimulationStateP& state);
 
-    /***** these should be private*******/
+    /***** these should be private (public for testing)*******/
     void RunBR(vector<IntVector> &flags, vector<PseudoPatch> &patches);
     void PostFixup(vector<PseudoPatch> &patches,IntVector min_patch_size);
   private:
@@ -63,14 +63,19 @@ WARNING
     double tola_,tolb_;							//Tolerance parameters
     unsigned int target_patches_;
     
-//queues for tasks
+    //queues for tasks
     list<BNRTask> tasks_;				//list of tasks created throughout the run
     queue<BNRTask*> immediate_q_;  //tasks that are always ready to run
-    queue<BNRTask*> delay_q_;      //tasks that may be ready to run    
     queue<BNRTask*> tag_q_;				//tasks that are waiting for tags to continue
     queue<int> tags_;							//available tags
     PatchFixer patchfixer_;
     SizeList d_minPatchSize_;
+
+    //request handeling variables
+    vector<MPI_Request> requests_;
+    vector<int> indicies_;
+    vector<BNRTask*> request_to_task_;
+    queue<int>  free_requests_;
   };
 
 } // End namespace Uintah
