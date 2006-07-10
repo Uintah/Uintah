@@ -131,6 +131,7 @@ WARNING
     void CheckTolB();
     Split FindSplit();
     void CreateTasks();
+    MPI_Request* getRequest();
                 
     bool Broadcast(void *message, int count, MPI_Datatype datatype,unsigned int tag);
 
@@ -151,7 +152,7 @@ WARNING
                 
     // MPI Communication state
     unsigned int tag_;                 // unique message tag
-    std::queue<MPI_Request> mpi_requests_;  // requests that must be finished before task can continue
+    unsigned int remaining_requests_;   // remaining requests on this task
     int stage_;                        // hypercube send/recieve stage
     int d_;                            // dimension of hypercube
                 
