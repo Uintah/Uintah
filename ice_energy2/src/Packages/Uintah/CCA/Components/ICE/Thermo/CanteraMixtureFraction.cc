@@ -17,7 +17,6 @@
 #include <cantera/IdealGasMix.h>
 #include <cantera/equilibrium.h>
 
-#define equilibrate(a, b)
 using namespace Uintah;
 
 CanteraMixtureFraction::CanteraMixtureFraction(ProblemSpecP& ps, ModelSetup* setup,
