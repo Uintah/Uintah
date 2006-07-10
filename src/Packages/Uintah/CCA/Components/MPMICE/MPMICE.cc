@@ -241,7 +241,7 @@ void MPMICE::outputProblemSpec(ProblemSpecP& root_ps)
 void MPMICE::scheduleInitialize(const LevelP& level,
                             SchedulerP& sched)
 {
-  printSchedule(level,"MPMICE::scheduleInitialize\t\t\t");
+  printSchedule(level,"MPMICE::scheduleInitialize\t\t\t\t\t");
 
   d_mpm->scheduleInitialize(level, sched);
   d_ice->scheduleInitialize(level, sched);
@@ -267,10 +267,7 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   }
     
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
-  if (cout_doing.active()) {
-    cout_doing << "Done with Initialization \t\t\t MPMICE" <<endl;
-    cout_norm << "--------------------------------\n"<<endl;   
-  }
+
   if (one_matl->removeReference())
     delete one_matl; // shouln't happen, but...  
 }
@@ -322,9 +319,9 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
   cout_doing << "---------------------------------------------------------Level ";
   if(do_mlmpmice){
-    cout_doing << inlevel->getIndex() << " (ICE) " << mpm_level->getIndex() << " (MPM)";
+    cout_doing << inlevel->getIndex() << " (ICE) " << mpm_level->getIndex() << " (MPM)"<< endl;;
   } else {
-    cout_doing << inlevel->getIndex();
+    cout_doing << inlevel->getIndex()<< endl;
   }
 
  //__________________________________
@@ -539,6 +536,10 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
                                    
     d_ice->scheduleAdvectAndAdvanceInTime(   sched, ice_patches,ice_matls_sub,
                                                                 ice_matls);
+                                                                
+    d_ice->scheduleConservedtoPrimitive_Vars(sched, ice_patches,ice_matls_sub,
+                                                                ice_matls,
+                                                                "afterAdvection");
   }
 
 } // end scheduleTimeAdvance()
@@ -552,24 +553,26 @@ _____________________________________________________________________*/
 void
 MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
 {
+  cout_doing << "----------------------------"<<endl;
+  cout_doing << d_myworld->myrank() << " MPMICE::scheduleFinalizeTimestep\t\t\t\tL-" <<level->getIndex()<< endl;
   const LevelP& mpm_level = do_mlmpmice? level->getGrid()->getLevel(level->getGrid()->numLevels()-1) : level;
 
   const PatchSet* mpm_patches = mpm_level->eachPatch();
+  const PatchSet* ice_patches = level->eachPatch();
+  
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
 
   vector<PatchSubset*> maxMach_PSS(Patch::numFaces);
-  for (int l = 0; l < level->getGrid()->numLevels(); l++) {
-    const LevelP& ice_level = level->getGrid()->getLevel(l);
-    const PatchSet* ice_patches = ice_level->eachPatch();                                                                
-    d_ice->scheduleConservedtoPrimitive_Vars(sched, ice_patches,ice_matls_sub,
-                                                                ice_matls);
-                                                                  
-    d_ice->scheduleTestConservation(        sched, ice_patches, ice_matls_sub,
-                                                                all_matls); 
-  }
+                                                                
+  d_ice->scheduleConservedtoPrimitive_Vars(sched, ice_patches,ice_matls_sub,
+                                                              ice_matls,
+                                                              "finalizeTimestep");
+
+  d_ice->scheduleTestConservation(        sched, ice_patches, ice_matls_sub,
+                                                              all_matls); 
 
   if(d_ice->d_canAddICEMaterial){
     for (int l = 0; l < level->getGrid()->numLevels(); l++) {
@@ -1005,7 +1008,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){ 
     const Patch* patch = patches->get(p);
-    printTask(patches, patch, "Doing actuallyInitialize");
+    printTask(patches, patch, "Doing actuallyInitialize \t\t\t\t");
 
     NCVariable<double> NC_CCweight;
     new_dw->allocateAndPut(NC_CCweight, MIlb->NC_CCweightLabel,    0, patch);

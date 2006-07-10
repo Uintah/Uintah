@@ -755,7 +755,7 @@ void ICE::scheduleComputeStableTimestep(const LevelP& level,
     return;
 
   Task* t = 0;
-  cout_doing << d_myworld->myrank() << " ICE::scheduleComputeStableTimestep \t\t\tL-"
+  cout_doing << d_myworld->myrank() << " ICE::scheduleComputeStableTimestep \t\t\t\tL-"
              <<level->getIndex() << endl;
   t = scinew Task("ICE::actuallyComputeStableTimestep",
                    this, &ICE::actuallyComputeStableTimestep);
@@ -905,6 +905,10 @@ ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
                                    
   scheduleAdvectAndAdvanceInTime(         sched, patches, ice_matls_sub,
                                                           all_matls);
+                                                          
+  scheduleConservedtoPrimitive_Vars(      sched, patches, ice_matls_sub,
+                                                          all_matls,
+                                                          "afterAdvection");
 }
 /* _____________________________________________________________________
  Function~  ICE::scheduleFinalizeTimestep--
@@ -916,7 +920,9 @@ ICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
 
   if(!doICEOnLevel(level->getIndex(), level->getGrid()->numLevels()))
     return;
-
+    
+  cout_doing << "----------------------------"<<endl;  
+  cout_doing << d_myworld->myrank() << " ICE::scheduleFinalizeTimestep\t\t\t\t\tL-" <<level->getIndex()<< endl;
   const PatchSet* patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();  
@@ -924,7 +930,8 @@ ICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
 
 
   scheduleConservedtoPrimitive_Vars(      sched, patches, ice_matls_sub,
-                                                          all_matls);
+                                                          all_matls,
+                                                          "finalizeTimestep");
                                                           
   if(d_analysisModule){                                                        
     d_analysisModule->scheduleDoAnalysis( sched, level);
@@ -1740,12 +1747,27 @@ _____________________________________________________________________*/
 void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
                                     const PatchSet* patch_set,
                                     const MaterialSubset* ice_matlsub,
-                                    const MaterialSet* ice_matls)
+                                    const MaterialSet* ice_matls,
+                                    const string& where)
 {
+  ASSERT( where == "afterAdvection" || where == "finalizeTimestep");
+  
   int levelIndex = getLevel(patch_set)->getIndex();
-  if(!doICEOnLevel(levelIndex, getLevel(patch_set)->getGrid()->numLevels()))
+  int numLevels = getLevel(patch_set)->getGrid()->numLevels();
+  if(!doICEOnLevel(levelIndex,numLevels ))
     return;
-
+    
+  // single level problems we only need to perform this task once
+  // immediately after advecton
+  if(numLevels == 1 && where == "finalizeTimestep")  
+    return;
+    
+  // On the finest level we only need to perform this task once
+  // immediately after advecton
+  if(levelIndex + 1 == numLevels && where ==  "finalizeTimestep")
+    return;
+    
+  //---------------------------  
   cout_doing << d_myworld->myrank() << " ICE::scheduleConservedtoPrimitive_Vars" 
              << "\t\t\tL-"<< levelIndex << endl;
              
@@ -1767,10 +1789,17 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
                              d_customBC_var_basket);
                              
   task->modifies(lb->rho_CCLabel);
-  task->modifies(lb->sp_vol_CCLabel);
-  task->computes(lb->temp_CCLabel);
-  task->computes(lb->vel_CCLabel);
-  task->computes(lb->machLabel);    
+  task->modifies(lb->sp_vol_CCLabel);               
+  if( where == "afterAdvection"){
+    task->computes(lb->temp_CCLabel);
+    task->computes(lb->vel_CCLabel);
+    task->computes(lb->machLabel);
+  }
+  if( where == "finalizeTimestep"){
+    task->modifies(lb->temp_CCLabel);
+    task->modifies(lb->vel_CCLabel);
+    task->modifies(lb->machLabel);
+  } 
   
   //__________________________________
   // Model Variables.
@@ -1781,7 +1810,14 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
         iter != d_modelSetup->tvars.end(); iter++){
       TransportedVariable* tvar = *iter;
       task->requires(Task::NewDW, tvar->var_adv, tvar->matls, gn,0);
-      task->computes(tvar->var,   tvar->matls);
+      
+      if( where == "afterAdvection"){
+        task->computes(tvar->var,   tvar->matls);
+      }
+      if( where == "finalizeTimestep"){
+        task->computes(tvar->var,   tvar->matls);
+      }
+      
     }
   }
   sched->addTask(task, patch_set, ice_matls);
@@ -1800,7 +1836,7 @@ void ICE::scheduleTestConservation(SchedulerP& sched,
 
   if(d_conservationTest->onOff) {
     cout_doing << d_myworld->myrank() << " ICE::scheduleTestConservation" 
-               << "\t\t\tL-"<< levelIndex<< endl;
+               << "\t\t\t\t\tL-"<< levelIndex<< endl;
     
     Task* t= scinew Task("ICE::TestConservation",
                    this, &ICE::TestConservation);
@@ -2072,7 +2108,7 @@ void ICE::actuallyInitialize(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     cout_doing << d_myworld->myrank() << " Doing Initialize on patch " << patch->getID() 
-         << "\t\t\t ICE \tL-" <<L_indx<< endl;
+         << "\t\t\t\t ICE \tL-" <<L_indx<< endl;
     int numMatls    = d_sharedState->getNumICEMatls();
     int numALLMatls = d_sharedState->getNumMatls();
     Vector grav     = d_sharedState->getGravity();
@@ -2288,6 +2324,7 @@ void ICE::computeThermoTransportProperties(const ProcessorGroup*,
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
+    cout_doing << " ---------------------------------------------- L-"<< levelIndex<< endl;
     cout_doing << d_myworld->myrank() << " Doing computeThermoTransportProperties on patch "
                << patch->getID() << "\t ICE \tL-" <<levelIndex<< endl;
    
@@ -2914,7 +2951,7 @@ void ICE::computeVel_FC(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
     
     cout_doing << d_myworld->myrank() << " Doing computeVel_FC on patch " 
-           << patch->getID() << "\t\t\tICE \tL-"<<level->getIndex()<< endl;
+           << patch->getID() << "\t\t\t ICE \tL-"<<level->getIndex()<< endl;
 
     int numMatls = d_sharedState->getNumMatls();
     
