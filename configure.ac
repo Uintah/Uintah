@@ -4415,58 +4415,51 @@ AC_SUBST(OOGL_LIB_FLAG)
 AC_SUBST(OOGL_LIB_DIR_FLAG)
 
 ##  --  search for glew  -----------------------------------------------
-if test "$sci_required_glew" = "yes"; then
-  if test "$with_glew"; then
-    # first find the opengl headers and libraries
-    if test "$with_opengl"; then
-      _sci_lib="$with_glew/lib $with_opengl/lib"
-      _sci_inc="$with_glew/include $with_opengl/include"
-    else
-      _sci_lib="$with_glew/lib /usr/X11R6/lib"
-      _sci_inc="$with_glew/include /usr/X11R6/include"
-    fi
+_sci_optional=optional
+_sci_lib="$sci_thirdparty_lib"
+_sci_inc="$sci_thirdparty_include"
+
+if test "$with_glew"; then
+  if test "$with_glew" = "yes"; then
+    AC_MSG_WARN(GLEW is already required - you do not need to specify --with-glew.)
   else
-    if test "$with_opengl"; then
-      _sci_lib="/usr/X11R6/lib $with_opengl/lib"
-      _sci_inc="/usr/X11R6/include $with_opengl/include"
-    else
-      _sci_lib="/usr/X11R6/lib"
-      _sci_inc="/usr/X11R6/include"
-    fi        
-  fi
+    _sci_lib="$with_glew"
+    _sci_lib="$with_glew/include"
+    BASE_LIB_PATH(_sci_lib,$_sci_lib)
+    _sci_optional=specific
+  fi 
+fi
 
-# Was:
-#    #include<GL/glew.h>
-#
-#    #ifndef GLAPIENTRY
-#      #define GLAPIENTRY
-#    #endif
-#
-#    #ifndef GLEWAPI
-#      #define GLEWAPI
-#    #endif
-#    #include<GL/glxew.h>
+# First find the opengl headers and libraries
+if test "$with_opengl"; then
+  _sci_lib="$_sci_lib $with_opengl/lib"
+  _sci_inc="$_sci_inc $with_opengl/include"
+else
+  _sci_lib="$_sci_lib /usr/X11R6/lib"
+  _sci_inc="$_sci_inc /usr/X11R6/include"
+fi
 
-  SCI_TRY_LINK(GLEW,glew libraries and headers,GL/glew.h GL/glxew.h,
-               $_sci_inc, GLEW,$_sci_lib,,,optional)
+SCI_TRY_LINK(GLEW,glew libraries and headers,GL/glew.h GL/glxew.h,
+             $_sci_inc, GLEW,$_sci_lib,,,$_sci_optional)
 
-  if test "$HAVE_GLEW" = "yes"; then
-    DEF_GLEW="#define HAVE_GLEW 1"
-  fi  
+if test "$HAVE_GLEW" = "yes"; then
+  DEF_GLEW="#define HAVE_GLEW 1"
+fi  
 
-  if test "$with_glew" && test ! "$DEF_GLEW"; then
-    echo
-    AC_MSG_ERROR(One or more of the GLEW components is missing.)
-    echo
-  fi
+if test "$with_glew" && test ! "$DEF_GLEW"; then
+  echo
+  AC_MSG_ERROR(One or more of the GLEW components is missing.)
+  echo
+fi
 
-  if test "$GLEW_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
-    AC_MSG_WARN("$GLEW_LIB_DIR_FLAG")
-    AC_MSG_WARN("flag for GLEW has been removed.")
-    GLEW_LIB_DIR_FLAG=""
-  fi
+if test "$GLEW_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
+  AC_MSG_WARN("$GLEW_LIB_DIR_FLAG")
+  AC_MSG_WARN("flag for GLEW has been removed.")
+  GLEW_LIB_DIR_FLAG=""
+fi
 
-fi # end sci_required_glew
+SCI_SUBST_THIRDPARTY_DIR(GLEW_LIB_DIR_FLAG)
+SCI_SUBST_THIRDPARTY_DIR(INC_GLEW_H)
 
 AC_SUBST(DEF_GLEW)
 AC_SUBST(INC_GLEW_H)

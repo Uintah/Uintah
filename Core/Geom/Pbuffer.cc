@@ -52,6 +52,7 @@ using std::cerr;
 using std::endl;
 using std::string;
 
+#ifndef HAVE_GLEW
 #ifndef _WIN32
 
 #  ifndef GLX_ATI_pixel_format_float
@@ -358,6 +359,7 @@ using std::string;
   static PFNWGLDESTROYPBUFFERARBPROC wglDestroyPbufferARB = 0;
   static PFNWGLQUERYPBUFFERARBPROC wglQueryPbufferARB = 0;
 #  define GL_CLAMP_TO_EDGE                  0x812F
+#endif
 #endif
 
 static bool mInit = false;
@@ -783,11 +785,11 @@ Pbuffer::create ()
     if (mSupported && mATI_render_texture)
     {
 #if !defined(__sgi)
-      bool fail = false;
-      fail = fail || (glXBindTexImageATI = (PFNGLXBINDTEXIMAGEATIPROC)
-                      getProcAddress("glXBindTexImageATI")) == 0;
-      fail = fail || (glXReleaseTexImageATI = (PFNGLXRELEASETEXIMAGEATIPROC)
-                      getProcAddress("glXReleaseTexImageATI")) == 0;
+      bool fail = !false;
+#ifndef HAVE_GLEW      
+      fail = fail || (getProcAddress("glXBindTexImageATI")) == 0;
+      fail = fail || (getProcAddress("glXReleaseTexImageATI")) == 0;
+#endif
       if (fail)
       {
         mSupported = false;
