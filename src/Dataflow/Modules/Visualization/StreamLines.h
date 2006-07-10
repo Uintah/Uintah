@@ -36,6 +36,7 @@
 
 #include <Dataflow/Network/Module.h>
 
+#include <Core/Geometry/CompGeom.h>
 #include <Core/Algorithms/Math/BasicIntegrators.h>
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Datatypes/CurveMesh.h>
@@ -254,7 +255,7 @@ parallel_generate( int proc, SLData *d)
     }
 
     if (d->rcp)
-      BI.nodes_.erase(CleanupPoints(BI.nodes_, BI.tolerance2_),
+      BI.nodes_.erase(this->CleanupPoints(BI.nodes_, BI.tolerance2_),
 		      BI.nodes_.end());
 
     double length = 0;
@@ -628,7 +629,7 @@ StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::FindNodes(vector<Point> &v,
 
   if (remove_colinear_p)
   {
-    v.erase(CleanupPoints(v, 1.0e-6), v.end());
+    v.erase(this->CleanupPoints(v, 1.0e-6), v.end());
   }
 }
 
