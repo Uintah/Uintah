@@ -1442,6 +1442,10 @@ RenderField<Fld, Loc>::render_faces_linear(Fld *sfld,
     tmp->add(faces);
     tmp->add(qfaces);
     face_switch = tmp;
+    if (sfld->basis_order() == 0 && mesh->dimensionality() == 3)
+    {
+      def_color = true;
+    }
   }
   else if ((sfld->basis_order() == 0) && (mesh->dimensionality() == 3) && !def_color)
   {
