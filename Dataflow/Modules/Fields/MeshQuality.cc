@@ -90,7 +90,7 @@ MeshQuality::execute()
   }
 
   if (last_field_generation_ == ifieldhandle->generation &&
-      oport_cached("Smoothed") )
+      oport_cached("Checked") )
   {
     // We're up to date, return.
     return;
