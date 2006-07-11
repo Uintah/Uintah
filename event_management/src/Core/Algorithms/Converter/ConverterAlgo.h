@@ -65,9 +65,14 @@ class SCISHARE ConverterAlgo : public AlgoLibrary {
     bool TransformToMatrix(Transform& trans, MatrixHandle& matrix);
     
     bool MatricesToDipoleField(MatrixHandle locations,MatrixHandle strengths,FieldHandle& Dipoles);
+    
+    // Converters from regular spaced data to a regular field
+    // datalocation specifies whether the data is "Node" or "Element" based
     bool MatrixToField(MatrixHandle input, FieldHandle& output,std::string datalocation);
     bool NrrdToField(NrrdDataHandle input, FieldHandle& output,std::string datalocation);
 
+    // Converter from NrrdToMatrix
+    bool NrrdToMatrix(NrrdDataHandle input, MatrixHandle& output);
 };
 
 } // SCIRunAlgo

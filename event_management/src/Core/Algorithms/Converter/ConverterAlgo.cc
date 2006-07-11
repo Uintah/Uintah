@@ -316,6 +316,110 @@ bool ConverterAlgo::NrrdToField(NrrdDataHandle input, FieldHandle& output,std::s
   return(algo.NrrdToField(pr_,input,output,datalocation));
 }
 
+bool ConverterAlgo::NrrdToMatrix(NrrdDataHandle input,MatrixHandle& output)
+{
+  if (!(input.get_rep()))
+  {
+    error("NrrdToMatrix: No input Nrrd was given");
+    return (false);
+  }
+
+  Nrrd* nrrd = input->nrrd_;
+    
+  if (nrrd == 0)
+  {
+    error("NrrdToMatrix: NrrdData does not contain Nrrd");    
+    return (false);
+  }
+
+  if (nrrd->dim > 2)
+  {
+    error("NrrdToMatrix: Nrrd has a dimension larger than 2 which cannot be stored into a matrix");
+    return (false);
+  }
+  
+  if (nrrd->dim < 1)
+  {
+    error("NrrdToMatrix: Nrrd dimension is zero");
+    return (false);
+  }
+  
+  int m = 1;
+  int n = 1;
+  if (nrrd->dim > 0) m = nrrd->axis[0].size;
+  if (nrrd->dim > 1) n = nrrd->axis[1].size;
+  
+  output = dynamic_cast<Matrix *>(scinew DenseMatrix(n,m));
+  
+  if (output.get_rep() == 0)
+  {
+    error("NrrdToMatrix: Could not allocate the output Matrix");
+    return (false);    
+  }
+  double* data = output->get_data_pointer();
+  
+  int size = n*m;
+  
+  switch (nrrd->type)
+  {
+    case nrrdTypeChar:
+    {
+      char *ptr = reinterpret_cast<char *>(nrrd->data);
+      for (int p=0; p<size; p++) { data[p] = static_cast<double>(ptr[p]); }
+    }
+    break;
+    case nrrdTypeUChar:
+    {
+      unsigned char *ptr = reinterpret_cast<unsigned char *>(nrrd->data);
+      for (int p=0; p<size; p++) { data[p] = static_cast<double>(ptr[p]); }
+    }
+    break;
+    case nrrdTypeShort:
+    {
+      short *ptr = reinterpret_cast<short *>(nrrd->data);
+      for (int p=0; p<size; p++) { data[p] = static_cast<double>(ptr[p]); }
+    }
+    break;
+    case nrrdTypeUShort:
+    {
+      unsigned short *ptr = reinterpret_cast<unsigned short *>(nrrd->data);
+      for (int p=0; p<size; p++) { data[p] = static_cast<double>(ptr[p]); }
+    }
+    break;
+    case nrrdTypeInt:
+    {
+      int *ptr = reinterpret_cast<int *>(nrrd->data);
+      for (int p=0; p<size; p++) { data[p] = static_cast<double>(ptr[p]); }
+    }
+    break;
+    case nrrdTypeUInt:
+    {
+      unsigned int *ptr = reinterpret_cast<unsigned int *>(nrrd->data);
+      for (int p=0; p<size; p++) { data[p] = static_cast<double>(ptr[p]); }
+    }
+    break;
+    case nrrdTypeFloat:
+    {
+      float *ptr = reinterpret_cast<float *>(nrrd->data);
+      for (int p=0; p<size; p++) { data[p] = static_cast<double>(ptr[p]); }
+    }
+    break;
+    case nrrdTypeDouble:
+    {
+      double *ptr = reinterpret_cast<double *>(nrrd->data);
+      for (int p=0; p<size; p++) { data[p] = static_cast<double>(ptr[p]); }
+    }
+    break;
+    default:
+    {
+      error("NrrdToMatrix: Unknown Nrrd type");
+      return (false);    
+    }
+  }    
+  
+  return(true);
+}
+
 
 } // end namespace SCIRunAlgo
 
