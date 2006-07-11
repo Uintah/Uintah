@@ -263,7 +263,7 @@ VolumeRenderer::draw_volume()
   glGetLightfv(GL_LIGHT0+light_, GL_POSITION, light_pos);
   GLfloat clear_color[4];
   glGetFloatv(GL_COLOR_CLEAR_VALUE, clear_color);
-  int vp[4];
+  GLint vp[4];
   glGetIntegerv(GL_VIEWPORT, vp);
 
   //--------------------------------------------------------------------------

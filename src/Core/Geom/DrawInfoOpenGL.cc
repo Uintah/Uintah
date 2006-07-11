@@ -74,7 +74,7 @@ quad_error(GLenum code)
 
 // May need to do this for really old GCC compilers?
 //typedef void (*gluQuadricCallbackType)(...);
-typedef void (*gluQuadricCallbackType)();
+typedef GLvoid (*gluQuadricCallbackType)(...);
 
 DrawInfoOpenGL::DrawInfoOpenGL() :
   polycount_(0),

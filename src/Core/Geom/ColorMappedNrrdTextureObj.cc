@@ -116,7 +116,7 @@ ColorMappedNrrdTextureObj::~ColorMappedNrrdTextureObj()
   if (own_data_ && data_) delete[] data_;
   for (unsigned int t = 0; t < texture_id_.size(); ++t) 
     if (glIsTexture(texture_id_[t]))
-        glDeleteTextures(1,&texture_id_[t]);
+        glDeleteTextures(1,(const GLuint *)&texture_id_[t]);
 }
 
 void
@@ -296,7 +296,7 @@ ColorMappedNrrdTextureObj::bind(int x, int y)
   const bool bound = glIsTexture(texture_id_[pos]);
 
   if (!bound) {
-    glGenTextures(1, &texture_id_[pos]);
+    glGenTextures(1, (GLuint *)&texture_id_[pos]);
     CHECK_OPENGL_ERROR();  
   }
 

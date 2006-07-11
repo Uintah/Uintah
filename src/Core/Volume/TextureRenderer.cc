@@ -382,7 +382,7 @@ TextureRenderer::load_brick(vector<TextureBrickHandle> &bricks, int bindex,
           {
             // delete found object
             if(glIsTexture(tex_pool_[free_idx].id))
-              glDeleteTextures(1, &tex_pool_[free_idx].id);
+              glDeleteTextures(1, (GLuint*)&tex_pool_[free_idx].id);
             tex_pool_[free_idx].id = 0;
           }
           free_tex_mem_ += size_max;
@@ -394,7 +394,7 @@ TextureRenderer::load_brick(vector<TextureBrickHandle> &bricks, int bindex,
         }
         // allocate new object
         unsigned int tex_id;
-        glGenTextures(1, &tex_id);
+        glGenTextures(1, (GLuint*)&tex_id);
         if(idx[c] < 0) {
           // create new entry
           tex_pool_.push_back(TexParam(nx, ny, nz, nb, textype, tex_id));
@@ -711,8 +711,8 @@ TextureRenderer::build_colormap1(Array2<float>& cmap_array,
       // Update 1D texture.
       if (cmap_tex == 0 || size_dirty)
       {
-        glDeleteTextures(1, &cmap_tex);
-        glGenTextures(1, &cmap_tex);
+        glDeleteTextures(1, (GLuint*)&cmap_tex);
+        glGenTextures(1, (GLuint*)&cmap_tex);
         glBindTexture(GL_TEXTURE_1D, cmap_tex);
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -903,9 +903,9 @@ TextureRenderer::colormap2_software_rasterize()
   // update texture
   if(!cmap2_tex_ || size_dirty) {
     if(glIsTexture(cmap2_tex_)) {
-      glDeleteTextures(1, &cmap2_tex_);
+      glDeleteTextures(1, (GLuint*)&cmap2_tex_);
     }
-    glGenTextures(1, &cmap2_tex_);
+    glGenTextures(1, (GLuint*)&cmap2_tex_);
     glBindTexture(GL_TEXTURE_2D, cmap2_tex_);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
