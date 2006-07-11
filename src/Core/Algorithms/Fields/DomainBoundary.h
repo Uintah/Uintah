@@ -40,7 +40,7 @@ using namespace SCIRun;
 class DomainBoundary2Algo : public DynamicAlgoBase
 {
 public:
-  virtual bool DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+  virtual bool DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary);
 };
 
 
@@ -48,7 +48,7 @@ template <class FSRC, class FDST>
 class DomainBoundary2AlgoT : public DomainBoundary2Algo
 {
 public:
-  virtual bool DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+  virtual bool DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary);
 
 private:
   typedef class {
@@ -63,7 +63,7 @@ private:
 
 
 template <class FSRC, class FDST>
-bool DomainBoundary2AlgoT<FSRC, FDST>::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
+bool DomainBoundary2AlgoT<FSRC, FDST>::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary)
 {
   FSRC *ifield = dynamic_cast<FSRC *>(input.get_rep());
   if (ifield == 0)
@@ -197,9 +197,20 @@ bool DomainBoundary2AlgoT<FSRC, FDST>::DomainBoundary(ProgressReporter *pr, Fiel
           ifield->value(val2,nci);
           if (innerboundaryonly == false)
           {
-            if ((((val1 >= minval)&&(val1 <= maxval))||((val2 >= minval)&&(val2 <= maxval)))||(userange == false))
+            if (noinnerboundary)
             {
-              if (!(val1 == val2)) includeface = true;             
+              if ((((val1 >= minval)&&(val1 <= maxval)&&(!((val2 >= minval)&&(val2 <= maxval))))||
+                   ((val2 >= minval)&&(val2 <= maxval)&&(!((val1 >= minval)&&(val1 <= maxval)))))&&(userange == true))
+              {
+                if (!(val1 == val2)) includeface = true;             
+              }              
+            }
+            else
+            {
+              if ((((val1 >= minval)&&(val1 <= maxval))||((val2 >= minval)&&(val2 <= maxval)))||(userange == false))
+              {
+                if (!(val1 == val2)) includeface = true;             
+              }
             }
           }
           else
@@ -288,7 +299,7 @@ bool DomainBoundary2AlgoT<FSRC, FDST>::DomainBoundary(ProgressReporter *pr, Fiel
 class DomainBoundaryAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+  virtual bool DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary);
 };
 
 
@@ -296,13 +307,13 @@ template <class FSRC, class FDST>
 class DomainBoundaryAlgoT : public DomainBoundaryAlgo
 {
 public:
-  virtual bool DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+  virtual bool DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary);
 
 };
 
 
 template <class FSRC, class FDST>
-bool DomainBoundaryAlgoT<FSRC, FDST>::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
+bool DomainBoundaryAlgoT<FSRC, FDST>::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary)
 {
   FSRC *ifield = dynamic_cast<FSRC *>(input.get_rep());
   if (ifield == 0)
@@ -499,7 +510,7 @@ bool DomainBoundaryAlgoT<FSRC, FDST>::DomainBoundary(ProgressReporter *pr, Field
 class DomainBoundary3Algo : public DynamicAlgoBase
 {
 public:
-  virtual bool DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+  virtual bool DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary);
 };
 
 
@@ -507,13 +518,13 @@ template <class FSRC, class FDST>
 class DomainBoundary3AlgoT : public DomainBoundary3Algo
 {
 public:
-  virtual bool DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+  virtual bool DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary);
 
 };
 
 
 template <class FSRC, class FDST>
-bool DomainBoundary3AlgoT<FSRC, FDST>::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
+bool DomainBoundary3AlgoT<FSRC, FDST>::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary)
 {
   FSRC *ifield = dynamic_cast<FSRC *>(input.get_rep());
   if (ifield == 0)
@@ -722,7 +733,7 @@ bool DomainBoundary3AlgoT<FSRC, FDST>::DomainBoundary(ProgressReporter *pr, Fiel
 class DomainBoundary4Algo : public DynamicAlgoBase
 {
 public:
-  virtual bool DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+  virtual bool DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary);
 };
 
 
@@ -730,7 +741,7 @@ template <class FSRC, class FDST>
 class DomainBoundary4AlgoT : public DomainBoundary4Algo
 {
 public:
-  virtual bool DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly);
+  virtual bool DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary);
 
 private:
   typedef class {
@@ -745,7 +756,7 @@ private:
 
 
 template <class FSRC, class FDST>
-bool DomainBoundary4AlgoT<FSRC, FDST>::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
+bool DomainBoundary4AlgoT<FSRC, FDST>::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary)
 {
   FSRC *ifield = dynamic_cast<FSRC *>(input.get_rep());
   if (ifield == 0)
