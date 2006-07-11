@@ -67,6 +67,9 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/CollectFields.tcl\
 	$(SRCDIR)/SetFieldData.tcl\
   $(SRCDIR)/TimeToWeights.tcl\
+	$(SRCDIR)/NodalMapping.tcl\
+	$(SRCDIR)/ModalMapping.tcl\
+	$(SRCDIR)/CurrentDensityMapping.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/ModelCreation/Dataflow/GUI

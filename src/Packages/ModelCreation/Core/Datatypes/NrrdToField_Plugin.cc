@@ -1,3 +1,4 @@
+
 /*
    For more information, please see: http://software.sci.utah.edu
 
@@ -26,44 +27,60 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-
-#include <Core/Algorithms/Fields/FieldsAlgo.h>
-#include <Core/Datatypes/Field.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
-
-namespace ModelCreation {
-
-using namespace SCIRun;
-
-class IndexedDomainBoundary : public Module {
-public:
-  IndexedDomainBoundary(GuiContext*);
-  virtual void execute();
-  
-};
-
-
-DECLARE_MAKER(IndexedDomainBoundary)
-IndexedDomainBoundary::IndexedDomainBoundary(GuiContext* ctx)
-  : Module("IndexedDomainBoundary", ctx, Source, "FieldsCreate", "ModelCreation")
-{
-}
-
-void IndexedDomainBoundary::execute()
-{
-  FieldHandle ifield, ofield;
-  MatrixHandle ElemLink;
-  SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
+/*
+ *  NrrdToMatrix_IEPlugin.cc
+ *
+ *  Written by:
+ *   Jeroen Stinstra
+ *   Department of Computer Science
+ *   University of Utah
+ *
+ *  Copyright (C) 2005 SCI Group
+ */
  
-  if(!(get_input_handle("Field",ifield,true))) return;
-  if (ifield->is_property("ElemLink")) ifield->get_property("ElemLink",ElemLink);
+#include <Core/Algorithms/DataIO/DataIOAlgo.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
+
+#include <Core/Init/init.h>
+
+#include <string>
+
+namespace SCIRun {
+
+FieldHandle Nodal_NrrdToField_reader(ProgressReporter *pr, const char *filename)
+{
+  FieldHandle field = 0;
+  NrrdDataHandle nrrd = 0;
   
-  if(!(algo.IndexedDomainBoundary(ifield,ofield,ElemLink,0.0,0.0,false,true,false,false,false))) return;
+  SCIRunAlgo::DataIOAlgo dalgo(pr);
+  SCIRunAlgo::ConverterAlgo calgo(pr);
+
+  std::string fn = filename;
   
-  send_output_handle("Field",ofield,true);
+  if (dalgo.ReadNrrd(fn,nrrd))
+  {
+    calgo.NrrdToField(nrrd,field,"Node");
+  }
+  
+  return (field);
 }
 
-} // End namespace ModelCreation
+FieldHandle Modal_NrrdToField_reader(ProgressReporter *pr, const char *filename)
+{
+  FieldHandle field = 0;
+  NrrdDataHandle nrrd = 0;
+  
+  SCIRunAlgo::DataIOAlgo dalgo(pr);
+  SCIRunAlgo::ConverterAlgo calgo(pr);
 
+  std::string fn = filename;
+  
+  if (dalgo.ReadNrrd(fn,nrrd))
+  {
+    calgo.NrrdToField(nrrd,field,"Element");
+  }
+  
+  return (field);
+}
+
+}

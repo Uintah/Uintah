@@ -30,6 +30,9 @@ SRCS     += \
 	$(SRCDIR)/GetFieldData.cc\
   $(SRCDIR)/SetFieldData.cc\
 	$(SRCDIR)/IndicesToData.cc\
+	$(SRCDIR)/NodalMapping.cc\
+	$(SRCDIR)/ModalMapping.cc\
+	$(SRCDIR)/CurrentDensityMapping.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

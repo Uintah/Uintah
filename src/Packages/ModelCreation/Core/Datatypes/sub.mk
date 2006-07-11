@@ -15,6 +15,7 @@ SRCDIR   := Packages/ModelCreation/Core/Datatypes
 SRCS     += $(SRCDIR)/Startup.cc\
             $(SRCDIR)/SimpleTextFile.cc\
             $(SRCDIR)/NrrdToMatrix_Plugin.cc\
+            $(SRCDIR)/NrrdToField_Plugin.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS :=  Core/ImportExport\
@@ -22,8 +23,8 @@ PSELIBS :=  Core/ImportExport\
             Core/Exceptions Core/Thread Core/GuiInterface \
             Core/Geom Core/Geometry Dataflow/Network \
             Packages/ModelCreation/Core/Algorithms \
-            Core/Algorithms/Fields \
-            Core/Algorithms/Math \
+            Core/Algorithms/DataIO \
+            Core/Algorithms/Converter \
             
 LIBS := $(TEEM_LIBRARY)
 

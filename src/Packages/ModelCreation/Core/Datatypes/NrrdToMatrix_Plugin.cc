@@ -41,7 +41,6 @@
 // This is a plugin is meant to read simple text files with pure data
 // in ascii format into a SCIRun matrix.
 
-#include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Init/init.h>
 
