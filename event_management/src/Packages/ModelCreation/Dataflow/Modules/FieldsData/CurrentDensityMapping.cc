@@ -26,44 +26,64 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Core/Algorithms/Fields/FieldsAlgo.h>
-#include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
+
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-class IndexedDomainBoundary : public Module {
+class CurrentDensityMapping : public Module {
 public:
-  IndexedDomainBoundary(GuiContext*);
+  CurrentDensityMapping(GuiContext*);
   virtual void execute();
-  
+
+  private:
+    GuiString mappingmethod_;
+    GuiString integrationmethod_;
+    GuiString integrationfilter_;
+    GuiInt multiply_with_normal_;
+
 };
 
 
-DECLARE_MAKER(IndexedDomainBoundary)
-IndexedDomainBoundary::IndexedDomainBoundary(GuiContext* ctx)
-  : Module("IndexedDomainBoundary", ctx, Source, "FieldsCreate", "ModelCreation")
+DECLARE_MAKER(CurrentDensityMapping)
+CurrentDensityMapping::CurrentDensityMapping(GuiContext* ctx)
+  : Module("CurrentDensityMapping", ctx, Source, "FieldsData", "ModelCreation"),
+    mappingmethod_(ctx->subVar("mappingmethod")),
+    integrationmethod_(ctx->subVar("integrationmethod")),
+    integrationfilter_(ctx->subVar("integrationfilter")),
+    multiply_with_normal_(ctx->subVar("multiply-with-normal"))
 {
 }
 
-void IndexedDomainBoundary::execute()
+void CurrentDensityMapping::execute()
 {
-  FieldHandle ifield, ofield;
-  MatrixHandle ElemLink;
-  SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
- 
-  if(!(get_input_handle("Field",ifield,true))) return;
-  if (ifield->is_property("ElemLink")) ifield->get_property("ElemLink",ElemLink);
+  FieldHandle fpot, fcon, fdst, fout;
   
-  if(!(algo.IndexedDomainBoundary(ifield,ofield,ElemLink,0.0,0.0,false,true,false,false,false))) return;
+  if (!(get_input_handle("Potential",fpot,true))) return;
+  if (!(get_input_handle("Conductivity",fcon,true))) return;
+  if (!(get_input_handle("Destination",fdst,true))) return;
   
-  send_output_handle("Field",ofield,true);
+  std::string mappingmethod = mappingmethod_.get();
+  std::string integrationmethod = integrationmethod_.get();
+  std::string integrationfilter = integrationfilter_.get();
+  bool multiply_with_normal = multiply_with_normal_.get();
+  
+  SCIRunAlgo::FieldsAlgo algo(this);
+  
+  if (!(algo.CurrentDensityMapping(fpot,fcon,fdst,fout,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal))) return;
+  
+  send_output_handle("Destination",fout,true);
 }
+
 
 } // End namespace ModelCreation
+
 

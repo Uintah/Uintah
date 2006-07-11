@@ -26,44 +26,54 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Core/Algorithms/Fields/FieldsAlgo.h>
-#include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-class IndexedDomainBoundary : public Module {
-public:
-  IndexedDomainBoundary(GuiContext*);
-  virtual void execute();
-  
+class NodalMapping : public Module {
+  public:
+    NodalMapping(GuiContext*);
+    virtual void execute();
+
+  private:
+    GuiString mappingmethod_;
+    GuiDouble def_value_;
 };
 
 
-DECLARE_MAKER(IndexedDomainBoundary)
-IndexedDomainBoundary::IndexedDomainBoundary(GuiContext* ctx)
-  : Module("IndexedDomainBoundary", ctx, Source, "FieldsCreate", "ModelCreation")
+DECLARE_MAKER(NodalMapping)
+NodalMapping::NodalMapping(GuiContext* ctx)
+  : Module("NodalMapping", ctx, Source, "FieldsData", "ModelCreation"),
+    mappingmethod_(ctx->subVar("mappingmethod")),
+    def_value_(ctx->subVar("def-value"))
 {
 }
 
-void IndexedDomainBoundary::execute()
+void NodalMapping::execute()
 {
-  FieldHandle ifield, ofield;
-  MatrixHandle ElemLink;
-  SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
- 
-  if(!(get_input_handle("Field",ifield,true))) return;
-  if (ifield->is_property("ElemLink")) ifield->get_property("ElemLink",ElemLink);
+  FieldHandle fsrc, fdst, fout;
   
-  if(!(algo.IndexedDomainBoundary(ifield,ofield,ElemLink,0.0,0.0,false,true,false,false,false))) return;
+  if (!(get_input_handle("Source",fsrc,true))) return;
+  if (!(get_input_handle("Destination",fdst,true))) return;
   
-  send_output_handle("Field",ofield,true);
+  std::string mappingmethod = mappingmethod_.get();
+  double def_value = def_value_.get();
+  
+  SCIRunAlgo::FieldsAlgo algo(this);
+  
+  if (!(algo.NodalMapping(fsrc,fdst,fout,mappingmethod,def_value))) return;
+  
+  send_output_handle("Destination",fout,true);
 }
 
 } // End namespace ModelCreation
+
 

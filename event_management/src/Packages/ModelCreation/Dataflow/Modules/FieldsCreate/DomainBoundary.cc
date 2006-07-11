@@ -46,8 +46,11 @@ private:
   GuiInt    guiuserange_;
   GuiDouble guiminrange_;
   GuiDouble guimaxrange_;
+  GuiInt    guiusevalue_;
+  GuiDouble guivalue_;
   GuiInt    guiincludeouterboundary_;
   GuiInt    guiinnerboundaryonly_;
+  GuiInt    guinoinnerboundary_;
   GuiInt    guidisconnect_;
   
   
@@ -60,8 +63,11 @@ DomainBoundary::DomainBoundary(GuiContext* ctx)
     guiuserange_(get_ctx()->subVar("userange")),
     guiminrange_(get_ctx()->subVar("minrange")),
     guimaxrange_(get_ctx()->subVar("maxrange")),
+    guiusevalue_(get_ctx()->subVar("usevalue")),
+    guivalue_(get_ctx()->subVar("value")),
     guiincludeouterboundary_(get_ctx()->subVar("includeouterboundary")),
     guiinnerboundaryonly_(get_ctx()->subVar("innerboundaryonly")),    
+    guinoinnerboundary_(get_ctx()->subVar("noinnerboundary")),    
     guidisconnect_(get_ctx()->subVar("disconnect"))    
 {
 }
@@ -75,19 +81,23 @@ void DomainBoundary::execute()
   if(!(get_input_handle("Field",ifield,true))) return;
   if (ifield->is_property("ElemLink")) ifield->get_property("ElemLink",ElemLink);
   
-  double minrange, maxrange;
-  bool   userange, includeouterboundary;
-  bool   innerboundaryonly;
+  double minrange, maxrange, value;
+  bool   userange, usevalue, includeouterboundary;
+  bool   innerboundaryonly, noinnerboundary;
   bool   disconnect;
 
   minrange = guiminrange_.get();
   maxrange = guimaxrange_.get();
+  value    = guivalue_.get();
   userange = static_cast<bool>(guiuserange_.get());
+  usevalue = static_cast<bool>(guiusevalue_.get());
   includeouterboundary = static_cast<bool>(guiincludeouterboundary_.get());
   innerboundaryonly = static_cast<bool>(guiinnerboundaryonly_.get());
+  noinnerboundary = static_cast<bool>(guinoinnerboundary_.get());
   disconnect = static_cast<bool>(guidisconnect_.get());
   
-  if(!(algo.DomainBoundary(ifield,ofield,ElemLink,minrange,maxrange,userange,includeouterboundary,innerboundaryonly,disconnect))) return;
+  if (usevalue) { userange = true; minrange = value; maxrange = value; }
+  if(!(algo.DomainBoundary(ifield,ofield,ElemLink,minrange,maxrange,userange,includeouterboundary,innerboundaryonly,noinnerboundary,disconnect))) return;
   
   send_output_handle("Field",ofield,true);
 }
