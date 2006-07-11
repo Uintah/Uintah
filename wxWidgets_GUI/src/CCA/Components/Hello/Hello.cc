@@ -55,7 +55,9 @@ extern "C" sci::cca::Component::pointer make_SCIRun_Hello()
 }
 
 
-Hello::Hello() : text("GO hasn't been called yet!")
+Hello::Hello() : text("GO hasn't been called yet!"),
+                 displayName("Hello Component"),
+                 description("The Hello component is a sample CCA component that uses a sci::cca::StringPort.")
 {
 }
 
@@ -65,34 +67,34 @@ Hello::~Hello()
 
 void Hello::setServices(const sci::cca::Services::pointer& svc)
 {
-    services = svc;
-    svc->registerForRelease(sci::cca::ComponentRelease::pointer(this));
-    sci::cca::TypeMap::pointer props = svc->createTypeMap();
+  services = svc;
+  services->registerForRelease(sci::cca::ComponentRelease::pointer(this));
 
-    HelloUIPort *uip = new HelloUIPort(svc);
-    uip->setParent(this);
-    HelloUIPort::pointer uiPortPtr = HelloUIPort::pointer(uip);
+  HelloUIPort *uip = new HelloUIPort(services);
+  uip->setParent(this);
+  HelloUIPort::pointer uiPortPtr = HelloUIPort::pointer(uip);
 
-    svc->addProvidesPort(uiPortPtr, "ui", "sci.cca.ports.UIPort",
-                         sci::cca::TypeMap::pointer(0));
+  services->addProvidesPort(uiPortPtr,
+                            "ui",
+                            "sci.cca.ports.UIPort",
+                            sci::cca::TypeMap::pointer(0));
 
-    HelloGoPort *gp = new HelloGoPort(svc);
-    gp->setParent(this);
-    HelloGoPort::pointer goPortPtr = HelloGoPort::pointer(gp);
+  services->addProvidesPort(sci::cca::ports::GoPort::pointer(this),
+                            "go",
+                            "sci.cca.ports.GoPort",
+                            sci::cca::TypeMap::pointer(0));
 
-    svc->addProvidesPort(goPortPtr, "go", "sci.cca.ports.GoPort",
-                         sci::cca::TypeMap::pointer(0));
+  services->addProvidesPort(sci::cca::ports::ComponentIcon::pointer(this),
+                            "componenticon",
+                            "sci.cca.ports.ComponentIcon",
+                            sci::cca::TypeMap::pointer(0));
 
-    props->putString("cca.portName", "stringport");
-    props->putString("cca.portType", "sci.cca.ports.StringPort");
-    svc->registerUsesPort("stringport","sci.cca.ports.StringPort", props);
+  sci::cca::TypeMap::pointer props = svc->createTypeMap();
+  props->putString("cca.portName", "stringport");
+  props->putString("cca.portType", "sci.cca.ports.StringPort");
 
-//     HelloComponentIcon::pointer ciPortPtr = HelloComponentIcon::pointer(new HelloComponentIcon);
-//     svc->addProvidesPort(ciPortPtr, "icon", "sci.cca.ports.ComponentIcon",
-//                          sci::cca::TypeMap::pointer(0));
-
-//     sci::cca::TypeMap::pointer props2 = svc->createTypeMap();
-//     svc->registerUsesPort("progress","sci.cca.ports.Progress", props2);
+  services->registerUsesPort("stringport", "sci.cca.ports.StringPort", props);
+  services->registerUsesPort("progress", "sci.cca.ports.Progress", sci::cca::TypeMap::pointer(0));
 }
 
 void Hello::releaseServices(const sci::cca::Services::pointer& svc)
@@ -107,34 +109,11 @@ std::cerr << "Hello::releaseServices" << std::endl;
     //services->removeProvidesPort("icon");
 }
 
-
-int HelloUIPort::ui()
-{
-// #if HAVE_QT
-//     QMessageBox::information(0, "Hello", com->text);
-// #else
-//    std::cerr << "UI not available." << std::endl;
-// #endif
-#if HAVE_WX
-//   try {
-//     sci::cca::ports::GUIService::pointer guiService =
-//       pidl_cast<sci::cca::ports::GUIService::pointer>(services->getPort("cca.GUIService"));
-//     if (guiService.isNull()) {
-//     }
-//   }
-//   catch (const sci::cca::CCAException::pointer &e) {
-//     // error...
-//   }
-  wxMessageBox(com->getMessage(), "Hello Component", wxOK|wxICON_INFORMATION, 0);
-#endif
-  return 0;
-}
-
-int HelloGoPort::go()
+int Hello::go()
 {
     if (services.isNull()) {
         std::cerr << "Null services!\n";
-        return 1;
+        return -1;
     }
     std::cerr << "Hello.go.getPort...";
     double st = SCIRun::Time::currentSeconds();
@@ -147,7 +126,7 @@ int HelloGoPort::go()
     }
     catch (const sci::cca::CCAException::pointer &e) {
         std::cerr << e->getNote() << std::endl;
-        return 1;
+        return -1;
     }
 
 //      sci::cca::ports::Progress::pointer pPtr =
@@ -162,34 +141,30 @@ int HelloGoPort::go()
     std::cerr << t*1000*1000 << " us/rep\n";
 
     if (! name.empty()) {
-      com->setMessage(name);
+      setMessage(name);
     }
 
 //     pPtr->updateProgress(HelloComponentIcon::STEPS);
     services->releasePort("stringport");
 //     services->releasePort("progress");
 
-    std::cout << " testing : " << com->getMessage() << std::endl;
+    std::cout << " testing : " << getMessage() << std::endl;
     return 0;
 }
 
-// std::string HelloComponentIcon::getDisplayName()
-// {
-//     return std::string("Hello Component");
-// }
-
-// std::string HelloComponentIcon::getDescription()
-// {
-//     return std::string("The Hello component is a sample CCA component that uses a sci::cca::StringPort.");
-// }
-
-// int HelloComponentIcon::getProgressBar()
-// {
-//     return STEPS;
-// }
-
-// std::string HelloComponentIcon::getIconShape()
-// {
-//     return std::string("RECT");
-// }
-
+int HelloUIPort::ui()
+{
+#if HAVE_WX
+//   try {
+//     sci::cca::ports::GUIService::pointer guiService =
+//       pidl_cast<sci::cca::ports::GUIService::pointer>(services->getPort("cca.GUIService"));
+//     if (guiService.isNull()) {
+//     }
+//   }
+//   catch (const sci::cca::CCAException::pointer &e) {
+//     // error...
+//   }
+  wxMessageBox(com->getMessage(), wxT(com->getDisplayName()), wxOK|wxICON_INFORMATION, 0);
+#endif
+  return 0;
+}
