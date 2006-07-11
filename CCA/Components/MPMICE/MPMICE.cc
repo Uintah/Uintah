@@ -732,10 +732,6 @@ void MPMICE::scheduleCoarsenCC_0(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* mpm_matls)
 {
-  if(!d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
-                          getLevel(patches)->getGrid()->numLevels()))
-    return;
-
   printSchedule(patches, "MPMICE::scheduleCoarsenCC_0\t\t\t\t\t");
  
   bool modifies = false;
@@ -762,10 +758,6 @@ void MPMICE::scheduleCoarsenNCMass(SchedulerP& sched,
                                    const PatchSet* patches,
                                    const MaterialSet* mpm_matls)
 {
-  if(!d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
-                          getLevel(patches)->getGrid()->numLevels()))
-    return;
-                                                                                
   printSchedule(patches, "MPMICE::scheduleCoarsenNCMass\t\t\t\t\t");
                                                                                 
   bool modifies = false;
@@ -824,10 +816,6 @@ void MPMICE::scheduleCoarsenLagrangianValuesMPM(SchedulerP& sched,
                                                 const PatchSet* patches,
                                                 const MaterialSet* mpm_matls)
 {
-  if(!d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
-                          getLevel(patches)->getGrid()->numLevels()))
-    return;
-
   printSchedule(patches,"MPMICE:scheduleCoarsenLagrangianValues mpm_matls\t\t");
 
   scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->rho_CCLabel,
@@ -846,10 +834,6 @@ void MPMICE::scheduleComputeCCVelAndTempRates(SchedulerP& sched,
                                               const PatchSet* patches,
                                               const MaterialSet* mpm_matls)
 {
-  if(!d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
-                          getLevel(patches)->getGrid()->numLevels()))
-    return;
-
   printSchedule(patches, "MPMICE::scheduleComputeCCVelAndTempRates\t\t\t");
 
   Task* t=scinew Task("MPMICE::computeCCVelAndTempRates",
@@ -935,9 +919,6 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
                                      const MaterialSubset* press_matl,
                                      const MaterialSet* all_matls)
 {
-  if(!d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
-                          getLevel(patches)->getGrid()->numLevels()))
-    return;
   Task* t = NULL;
 
   printSchedule(patches, "MPMICE::scheduleComputeEquilibrationPressure\t\t\t");
@@ -2495,24 +2476,16 @@ void MPMICE::scheduleRefine(const PatchSet* patches,
   d_ice->scheduleRefine(patches, sched);
   d_mpm->scheduleRefine(patches, sched);
 
-  const Level* fineLevel = getLevel(patches);
-  int L_indx = fineLevel->getIndex();
-  int num_levels = fineLevel->getGrid()->numLevels();
-
   printSchedule(patches,"MPMICE::scheduleRefine\t\t\t\t");
 
   Task* task = scinew Task("MPMICE::refine", this, &MPMICE::refine);
   
   task->computes(MIlb->NC_CCweightLabel);
+  task->computes(Mlb->heatRate_CCLabel);
+  task->computes(Ilb->sp_vol_CCLabel);
+  task->computes(MIlb->vel_CCLabel);
+  task->computes(Ilb->temp_CCLabel);
 
-  if(d_ice->doICEOnLevel(L_indx, num_levels)) {
-    task->computes(Mlb->heatRate_CCLabel);
-  }
-  //if(d_mpm->flags->doMPMOnLevel(L_indx, num_levels)) {
-    task->computes(Ilb->sp_vol_CCLabel);
-    task->computes(MIlb->vel_CCLabel);
-    task->computes(Ilb->temp_CCLabel);
-    //}
   sched->addTask(task, patches, d_sharedState->allMPMMaterials());
 }
 
@@ -2659,7 +2632,6 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
 }
 
 //______________________________________________________________________
-//
 void
 MPMICE::refine(const ProcessorGroup*,
                const PatchSubset* patches,
@@ -2667,10 +2639,6 @@ MPMICE::refine(const ProcessorGroup*,
                DataWarehouse*,
                DataWarehouse* new_dw)
 {
-  const Level* fineLevel = getLevel(patches);
-  int L_indx = fineLevel->getIndex();
-  int num_levels = fineLevel->getGrid()->numLevels();
-
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
     printTask(patches,patch,"Doing refine\t\t\t\t\t");
@@ -2702,62 +2670,56 @@ MPMICE::refine(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
-      //if (cout_doing.active()) {
       cout <<"Doing refine on patch "
            << patch->getID() << " material # = " << dwi << endl;
-      //}
       
-      if(d_ice->doICEOnLevel(L_indx, num_levels)) {
-        // for now, create 0 heat flux
-        CCVariable<double> heatFlux;
-        new_dw->allocateAndPut(heatFlux, Mlb->heatRate_CCLabel, dwi, patch);
-        heatFlux.initialize(0.0);
+      // for now, create 0 heat flux
+      CCVariable<double> heatFlux;
+      new_dw->allocateAndPut(heatFlux, Mlb->heatRate_CCLabel, dwi, patch);
+      heatFlux.initialize(0.0);
+
+      CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC;
+      CCVariable<Vector> vel_CC;
+
+      new_dw->allocateTemporary(rho_micro, patch);
+      new_dw->allocateTemporary(rho_CC,    patch);
+
+      new_dw->allocateAndPut(sp_vol_CC,   Ilb->sp_vol_CCLabel,    dwi,patch);
+      new_dw->allocateAndPut(Temp_CC,     MIlb->temp_CCLabel,     dwi,patch);
+      new_dw->allocateAndPut(vel_CC,      MIlb->vel_CCLabel,      dwi,patch);
+
+      mpm_matl->initializeDummyCCVariables(rho_micro,   rho_CC,
+                                           Temp_CC,     vel_CC,  
+                                          d_sharedState->getNumMatls(),patch);  
+      //__________________________________
+      //  Set boundary conditions                                     
+      setBC(rho_micro, "Density",      patch, d_sharedState, dwi, new_dw);    
+      setBC(Temp_CC,   "Temperature",  patch, d_sharedState, dwi, new_dw);    
+      setBC(vel_CC,    "Velocity",     patch, d_sharedState, dwi, new_dw);
+      for (CellIterator iter = patch->getExtraCellIterator();
+           !iter.done();iter++){
+        sp_vol_CC[*iter] = 1.0/rho_micro[*iter];
       }
 
-      //if(d_mpm->flags->doMPMOnLevel(L_indx, num_levels)) {
-        CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC;
-        CCVariable<Vector> vel_CC;
-
-        new_dw->allocateTemporary(rho_micro, patch);
-        new_dw->allocateTemporary(rho_CC,    patch);
-
-        new_dw->allocateAndPut(sp_vol_CC,   Ilb->sp_vol_CCLabel,    dwi,patch);
-        new_dw->allocateAndPut(Temp_CC,     MIlb->temp_CCLabel,     dwi,patch);
-        new_dw->allocateAndPut(vel_CC,      MIlb->vel_CCLabel,      dwi,patch);
-        
-        mpm_matl->initializeDummyCCVariables(rho_micro,   rho_CC,
-                                             Temp_CC,     vel_CC,  
-                                            d_sharedState->getNumMatls(),patch);  
-        //__________________________________
-        //  Set boundary conditions                                     
-        setBC(rho_micro, "Density",      patch, d_sharedState, dwi, new_dw);    
-        setBC(Temp_CC,   "Temperature",  patch, d_sharedState, dwi, new_dw);    
-        setBC(vel_CC,    "Velocity",     patch, d_sharedState, dwi, new_dw);
-        for (CellIterator iter = patch->getExtraCellIterator();
-             !iter.done();iter++){
-          sp_vol_CC[*iter] = 1.0/rho_micro[*iter];
-        }
-      
-        //__________________________________
-        //    B U L L E T   P R O O F I N G
-        IntVector neg_cell;
-        ostringstream warn;
-        if( !d_ice->areAllValuesPositive(rho_CC, neg_cell) ) {
-          warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
-              <<neg_cell << " rho_CC is negative\n";
-          throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
-        }
-        if( !d_ice->areAllValuesPositive(Temp_CC, neg_cell) ) {
-          warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
-              <<neg_cell << " Temp_CC is negative\n";
-          throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
-        }
-        if( !d_ice->areAllValuesPositive(sp_vol_CC, neg_cell) ) {
-          warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
-              <<neg_cell << " sp_vol_CC is negative\n";
-          throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
-        }
-        //}  //on mpmLevel
+      //__________________________________
+      //    B U L L E T   P R O O F I N G
+      IntVector neg_cell;
+      ostringstream warn;
+      if( !d_ice->areAllValuesPositive(rho_CC, neg_cell) ) {
+        warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
+            <<neg_cell << " rho_CC is negative\n";
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+      }
+      if( !d_ice->areAllValuesPositive(Temp_CC, neg_cell) ) {
+        warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
+            <<neg_cell << " Temp_CC is negative\n";
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+      }
+      if( !d_ice->areAllValuesPositive(sp_vol_CC, neg_cell) ) {
+        warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
+            <<neg_cell << " sp_vol_CC is negative\n";
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+      }
     }  //mpmMatls
   }  //patches
 }

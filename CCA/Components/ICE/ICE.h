@@ -851,10 +851,6 @@ namespace Uintah {
       int d_max_iter_implicit;
       int d_iters_before_timestep_restart;
       double d_outer_iter_tolerance;
-
-      bool doICEOnLevel(int level, int numLevels);
-      int d_minGridLevel;
-      int d_maxGridLevel;
       
       // ADD HEAT VARIABLES
       vector<int>    d_add_heat_matls;

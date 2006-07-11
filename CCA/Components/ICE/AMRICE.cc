@@ -69,10 +69,6 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
   ice_ps->getWithDefault( "regridderTest", d_regridderTest,     false);
   ice_ps->getWithDefault( "do_Refluxing",  d_doRefluxing,       true);
   ice_ps->getWithDefault( "useLockStep",   d_useLockStep,       false);
-
-  // Min/Max for AMR and semi-AMR problems
-  ice_ps->getWithDefault("min_grid_level", d_minGridLevel, 0);
-  ice_ps->getWithDefault("max_grid_level", d_maxGridLevel, 1000);
   
   //__________________________________
   // Pull out the refinement threshold criteria 
@@ -256,7 +252,7 @@ void AMRICE::scheduleRefineInterface(const LevelP& fineLevel,
                                      bool needCoarseOld, 
                                      bool needCoarseNew)
 {
-  if(fineLevel->getIndex() > 0  && doICEOnLevel(fineLevel->getIndex(), fineLevel->getGrid()->numLevels())){
+  if(fineLevel->getIndex() > 0 ){
     cout_doing << d_myworld->myrank() << " AMRICE::scheduleRefineInterface \t\t\tL-" 
                << fineLevel->getIndex() 
                << " coarseOld: " << needCoarseOld 
@@ -490,7 +486,7 @@ void AMRICE::scheduleSetBC_FineLevel(const PatchSet* patches,
   const Level* fineLevel = getLevel(patches);
   int L_indx = fineLevel->getIndex();
   
-  if(L_indx > 0  && doICEOnLevel(L_indx, fineLevel->getGrid()->numLevels())){
+  if(L_indx > 0 ){
     cout_doing << d_myworld->myrank() << " AMRICE::scheduleSetBC_FineLevel \t\t\tL-" 
                << L_indx <<" P-" << *patches << '\n';
     
@@ -710,7 +706,7 @@ void AMRICE::scheduleRefine(const PatchSet* patches,
   const Level* fineLevel = getLevel(patches);
   int L_indx = fineLevel->getIndex();
   
-  if(L_indx > 0  && doICEOnLevel(L_indx, fineLevel->getGrid()->numLevels())){
+  if(L_indx > 0 ){
     
     cout_doing << d_myworld->myrank() 
                << " AMRICE::scheduleRefine\t\t\t\tL-" 
@@ -946,10 +942,7 @@ _____________________________________________________________________*/
 void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
                                SchedulerP& sched)
 {
-  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();
-  if(!doICEOnLevel(fineLevel->getIndex(), fineLevel->getGrid()->numLevels()))
-    return;
-    
+  const Level* fineLevel = coarseLevel->getFinerLevel().get_rep();    
   Ghost::GhostType  gn = Ghost::None; 
   cout_doing << d_myworld->myrank() 
              << " AMRICE::scheduleCoarsen\t\t\t\tL-" 
@@ -1830,10 +1823,7 @@ void AMRICE::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
 ______________________________________________________________________*/
 void AMRICE::scheduleErrorEstimate(const LevelP& coarseLevel,
                                    SchedulerP& sched)
-{
-//  if(!doICEOnLevel(coarseLevel->getIndex()+1, coarseLevel->getGrid()->numLevels()))
-//    return;
-  
+{  
   cout_doing << d_myworld->myrank() 
              << " AMRICE::scheduleErrorEstimate \t\t\tL-" 
              << coarseLevel->getIndex() << '\n';
