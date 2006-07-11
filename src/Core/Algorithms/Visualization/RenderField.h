@@ -375,8 +375,10 @@ RenderField<Fld, Loc>::render(FieldHandle fh,  bool nodes,
 			      unsigned div, bool fut)
 
 {
-  Fld *fld = dynamic_cast<Fld*>(fh.get_rep());
-  ASSERT(fld != 0);
+  // workaround for compiler bug, occasionally this cast fails and shouldn't
+  //Fld *fld = dynamic_cast<Fld*>(fh.get_rep());
+  ASSERT(fh.get_rep() != 0);
+  Fld *fld = (Fld*)fh.get_rep();
   
   typename Fld::mesh_handle_type mesh = fld->get_typed_mesh();
   bool do_linear = (fld->basis_order() < 2 && 
