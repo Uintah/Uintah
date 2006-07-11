@@ -39,6 +39,8 @@ SRCS     += $(SRCDIR)/ApplyMappingMatrix.cc\
             $(SRCDIR)/SplitFieldByDomain.cc\
             $(SRCDIR)/SetFieldData.cc\
             $(SRCDIR)/MappingMatrixToField.cc\
+            $(SRCDIR)/Mapping.cc\
+            $(SRCDIR)/CurrentDensityMapping.cc\
             $(SRCDIR)/TransformField.cc\
             $(SRCDIR)/ToPointCloud.cc\
             $(SRCDIR)/Unstructure.cc\

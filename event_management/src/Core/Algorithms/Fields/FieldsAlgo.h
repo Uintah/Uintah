@@ -100,12 +100,12 @@ class SCISHARE FieldsAlgo : public AlgoLibrary {
     // DomainLink: addition to make opposite boundaries link together. In this case elements
     //    at opposite boundaries can still have a linking boundary and hence they may show
     //    up as internal boundaries 
-    bool DomainBoundary(FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool disconnect = true);
+    bool DomainBoundary(FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary, bool disconnect = true);
 
     // IndexedBoundary:
     // Like the version above, but it adds a vector to each element, indicating the original face/curve index, and the
     // two indices of the elements on both sides of the face/curve. These indices are put in a vector.
-    bool IndexedDomainBoundary(FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool disconnect = true);
+    bool IndexedDomainBoundary(FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary, bool disconnect = true);
     
     // FieldDataNodeToElem and FieldDataElemToNode:
     // Change where the data is located the algorithms now employ summing, median, maximum and minimum
@@ -212,6 +212,89 @@ class SCISHARE FieldsAlgo : public AlgoLibrary {
     // them is smaller than tolerance. This is an alternative front end to
     // MergeFields.
     bool MergeNodes(FieldHandle input, FieldHandle& output, double tolerance, bool mergeelements = true, bool matchvalue = true);
+ 
+ 
+    // ModalMapping:
+    // Map data from a source field (any type) onto the elements of the destination field.
+    // This mapping involves integrating over the elements to get a fair representation of
+    // the original field
+    // MappingMethod:
+    //  How do we select data
+    //  ClosestNodalData = Find the closest data containing element or node
+    //  ClosestInterpolatedData = Find the closest interpolated data point. Inside the volume it picks the value
+    //                            the interpolation model predicts and outside it makes a shortest projection
+    //  InterpolatedData = Uses interpolated data using the interpolation model whereever possible and assumes no
+    //                     value outside the source field
+    // IntegrationMethod:
+    //  Gaussian1 = Use 1st order Gaussian weights and nodes for integration
+    //  Gaussian2 = Use 2nd order Gaussian weights and nodes for integration
+    //  Gaussian3 = Use 3rd order Gaussian weights and nodes for integration
+    //  Regular1  = Use 1 evenly space node in each dimension 
+    //  Regular2  = Use 2 evenly space nodes in each dimension 
+    //  Regular3  = Use 3 evenly space nodes in each dimension 
+    //  Regular4  = Use 4 evenly space nodes in each dimension 
+    // Integration Filter:
+    //  Average =  take average value over integration nodes but disregard weights
+    //  Integrate = sum values over integration nodes using gaussian weights
+    //  Minimum = find minimum value using integration nodes
+    //  Maximum = find maximum value using integration nodes
+    //  Median  = find median value using integration nodes
+    //  MostCommon = find most common value among integration nodes    
+    bool ModalMapping(int numproc, FieldHandle src, FieldHandle dst, FieldHandle& output, std::string mappingmethod,
+                       std::string integrationmethod, std::string integrationfilter, double def_value = 0.0);
+    bool ModalMapping(FieldHandle src, FieldHandle dst, FieldHandle& output, std::string mappingmethod,
+                       std::string integrationmethod, std::string integrationfilter, double def_value = 0.0);
+
+
+    // CurrentDensityMapping:
+    // Map data from a potential field and a conductivity field into a current density field. The underlying geometry
+    // of all the different fields can be different. This method is intended to map volumetric potential and conductivity
+    // data onto a surface. The method has an option to multiply with the surface normal and hence one can sample and
+    // integrate the potential/conductivity data into the  current that passes through an element. Summing this vector
+    // will generate the total amount of current through a model.
+    //
+    // MappingMethod:
+    //  How do we select data
+    //  InterpolatedData = Uses interpolated data using the interpolation model whereever possible and assumes no
+    //                     value outside the source field
+    // IntegrationMethod:
+    //  Gaussian1 = Use 1st order Gaussian weights and nodes for integration
+    //  Gaussian2 = Use 2nd order Gaussian weights and nodes for integration
+    //  Gaussian3 = Use 3rd order Gaussian weights and nodes for integration
+    //  Regular1  = Use 1 evenly space node in each dimension 
+    //  Regular2  = Use 2 evenly space nodes in each dimension 
+    //  Regular3  = Use 3 evenly space nodes in each dimension 
+    //  Regular4  = Use 4 evenly space nodes in each dimension 
+    // Integration Filter:
+    //  Average =  take average value over integration nodes but disregard weights
+    //  Integrate = sum values over integration nodes using gaussian weights
+    //  Minimum = find minimum value using integration nodes
+    //  Maximum = find maximum value using integration nodes
+    //  Median  = find median value using integration nodes
+    //  MostCommon = find most common value among integration nodes 
+    //
+    // Most likely one wants to use the integration option to compute fluxes through a mesh
+    // This method can be used with any sampling of output mesh, although the best results
+    // are probably obtained when using a mesh that is a slice of the volumetric mesh.
+    bool CurrentDensityMapping(int numproc, FieldHandle pot, FieldHandle con, FieldHandle dst, FieldHandle& output, std::string mappingmethod,
+                       std::string integrationmethod, std::string integrationfilter, bool multiply_with_normal);
+    bool CurrentDensityMapping(FieldHandle pot, FieldHandle con, FieldHandle dst, FieldHandle& output, std::string mappingmethod,
+                       std::string integrationmethod, std::string integrationfilter, bool multiply_with_normal);
+    
+
+    // NodalMapping:
+    // Map data from a source field (any type) onto the nodes of the destination field.
+    // MappingMethod:
+    //  How do we select data
+    //  ClosestNodalData = Find the closest data containing element or node
+    //  ClosestInterpolatedData = Find the closest interpolated data point. Inside the volume it picks the value
+    //                            the interpolation model predicts and outside it makes a shortest projection
+    //  InterpolatedData = Uses interpolated data using the interpolation model whereever possible and assumes no
+    //                     value outside the source field
+
+    bool NodalMapping(int numproc, FieldHandle src, FieldHandle dst, FieldHandle& output, std::string mappingmethod, double def_value = 0.0);
+    bool NodalMapping( FieldHandle src, FieldHandle dst, FieldHandle& output, std::string mappingmethod, double def_value = 0.0);
+ 
  
     // ScaleField:
     // Scales FieldData and MeshData, used to change units properly both in

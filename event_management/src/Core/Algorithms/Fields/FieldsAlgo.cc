@@ -32,6 +32,7 @@
 #include <Core/Algorithms/Fields/ClipBySelectionMask.h>
 #include <Core/Algorithms/Fields/ConvertToTetVol.h>
 #include <Core/Algorithms/Fields/ConvertToTriSurf.h>
+#include <Core/Algorithms/Fields/CurrentDensityMapping.h>
 #include <Core/Algorithms/Fields/DomainBoundary.h>
 #include <Core/Algorithms/Fields/DistanceField.h>
 #include <Core/Algorithms/Fields/FieldDataElemToNode.h>
@@ -47,6 +48,7 @@
 #include <Core/Algorithms/Fields/LinkToCompGrid.h>
 #include <Core/Algorithms/Fields/LinkToCompGridByDomain.h>
 #include <Core/Algorithms/Fields/MappingMatrixToField.h>
+#include <Core/Algorithms/Fields/Mapping.h>
 #include <Core/Algorithms/Fields/MergeFields.h>
 #include <Core/Algorithms/Fields/ScaleField.h>
 #include <Core/Algorithms/Fields/SetFieldData.h>
@@ -139,32 +141,32 @@ bool FieldsAlgo::FieldDataElemToNode(FieldHandle input, FieldHandle& output, std
 }
 
 
-bool FieldsAlgo::DomainBoundary(FieldHandle input,FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool disconnect)
+bool FieldsAlgo::DomainBoundary(FieldHandle input,FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary, bool disconnect)
 {
   if (disconnect)
   {
     DomainBoundary2Algo algo;
-    return(algo.DomainBoundary(pr_,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));  
+    return(algo.DomainBoundary(pr_,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly,noinnerboundary));  
   }
   else
   {
     DomainBoundaryAlgo algo;
-    return(algo.DomainBoundary(pr_,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
+    return(algo.DomainBoundary(pr_,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly,noinnerboundary));
   }
 }
 
 
-bool FieldsAlgo::IndexedDomainBoundary(FieldHandle input,FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool disconnect)
+bool FieldsAlgo::IndexedDomainBoundary(FieldHandle input,FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary, bool disconnect)
 {
   if (disconnect)
   {
     DomainBoundary4Algo algo;
-    return(algo.DomainBoundary(pr_,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));  
+    return(algo.DomainBoundary(pr_,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly,noinnerboundary));  
   }
   else
   {
     DomainBoundary3Algo algo;
-    return(algo.DomainBoundary(pr_,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
+    return(algo.DomainBoundary(pr_,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly,noinnerboundary));
   }
 }
 
@@ -212,6 +214,48 @@ bool FieldsAlgo::LinkToCompGridByDomain(FieldHandle Geometry, MatrixHandle NodeL
 {
   LinkToCompGridByDomainAlgo algo;
   return (algo.LinkToCompGridByDomain(pr_,Geometry,NodeLink,GeomToComp,CompToGeom));
+}
+
+
+bool FieldsAlgo::CurrentDensityMapping(int numproc, FieldHandle pot, FieldHandle con, FieldHandle dst, FieldHandle& output, std::string mappingmethod,
+                       std::string integrationmethod, std::string integrationfilter, bool multiply_with_normal)
+{
+  CurrentDensityMappingAlgo algo;
+  return (algo.CurrentDensityMapping(pr_,numproc,pot,con,dst,output,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal));
+}
+
+bool FieldsAlgo::CurrentDensityMapping(FieldHandle pot, FieldHandle con, FieldHandle dst,  FieldHandle& output, std::string mappingmethod,
+                       std::string integrationmethod, std::string integrationfilter, bool multiply_with_normal)
+{
+  CurrentDensityMappingAlgo algo;
+  return (algo.CurrentDensityMapping(pr_,0,pot,con,dst,output,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal));
+}
+
+
+bool FieldsAlgo::ModalMapping(int numproc, FieldHandle src, FieldHandle dst, FieldHandle& output, std::string mappingmethod,
+                       std::string integrationmethod, std::string integrationfilter, double def_value)
+{
+  ModalMappingAlgo algo;
+  return (algo.ModalMapping(pr_,numproc,src,dst,output,mappingmethod,integrationmethod,integrationfilter,def_value));
+}
+
+bool FieldsAlgo::ModalMapping(FieldHandle src, FieldHandle dst, FieldHandle& output, std::string mappingmethod,
+                       std::string integrationmethod, std::string integrationfilter, double def_value)
+{
+  ModalMappingAlgo algo;
+  return (algo.ModalMapping(pr_,0,src,dst,output,mappingmethod,integrationmethod,integrationfilter,def_value));
+}
+
+bool FieldsAlgo::NodalMapping(int numproc, FieldHandle src, FieldHandle dst, FieldHandle& output, std::string mappingmethod, double def_value)
+{
+  NodalMappingAlgo algo;
+  return (algo.NodalMapping(pr_,numproc,src,dst,output,mappingmethod,def_value));
+}
+
+bool FieldsAlgo::NodalMapping(FieldHandle src, FieldHandle dst, FieldHandle& output, std::string mappingmethod, double def_value)
+{
+  NodalMappingAlgo algo;
+  return (algo.NodalMapping(pr_,0,src,dst,output,mappingmethod,def_value));
 }
 
 bool FieldsAlgo::MappingMatrixToField(FieldHandle input, FieldHandle& output, MatrixHandle mappingmatrix)
