@@ -31,7 +31,7 @@
  *  Hello.h
  *
  *  Written by:
- *   Keming Zhang 
+ *   Keming Zhang
  *   Department of Computer Science
  *   University of Utah
  *   March 2002
@@ -53,38 +53,14 @@ public:
   HelloUIPort(const sci::cca::Services::pointer& svc) : services(svc) {}
 
   virtual ~HelloUIPort() {}
-  int ui();
+  virtual int ui();
+
   void setParent(Hello *com) { this->com = com; }
 
 private:
   sci::cca::Services::pointer services;
   Hello *com;
 };
-
-class HelloGoPort : public sci::cca::ports::GoPort {
-public:
-  HelloGoPort(const sci::cca::Services::pointer& svc) : services(svc) {}
-
-  virtual ~HelloGoPort() {}
-  int go();
-  void setParent(Hello *com) { this->com = com; }
-
-private:
-  Hello *com;
-  sci::cca::Services::pointer services;
-};
-
-// class HelloComponentIcon : public sci::cca::ports::ComponentIcon {
-// public:
-//   HelloComponentIcon() {}
-//   virtual ~HelloComponentIcon() {}
-
-//   virtual std::string getDisplayName();
-//   virtual std::string getDescription();
-//   virtual std::string getIconShape();
-//   virtual int getProgressBar();
-//   static const int STEPS = 50;
-// };
 
 // demonstrate use of Go port, UI port and ComponentRelease
 class Hello : public sci::cca::Hello {
@@ -93,19 +69,30 @@ public:
   virtual ~Hello();
   virtual void setServices(const sci::cca::Services::pointer& svc);
   virtual void releaseServices(const sci::cca::Services::pointer& svc);
+
   virtual std::string getMessage() { return text; }
+  virtual std::string getDisplayName() { return displayName; }
+  virtual std::string getDescription() { return description; }
+
+  virtual int go();
 
   void setMessage(const std::string& msg) { text = msg; }
 
 private:
   void setCommunicator(int comm) {
-    //MPI_COMM_COM=MPI_COMM_WORLD; //*(MPI_Comm*)(comm);
+    //MPI_COMM_COM=MPI_COMM_WORLD;
+    //*(MPI_Comm*)(comm);
   }
   Hello(const Hello&);
   Hello& operator=(const Hello&);
 
   std::string text;
   sci::cca::Services::pointer services;
+
+  std::string displayName;
+  std::string description;
+
+
 };
 
 } //namespace SCIRun
