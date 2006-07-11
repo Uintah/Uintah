@@ -41,6 +41,7 @@
 #ifndef Datatypes_GenericField_h
 #define Datatypes_GenericField_h
 
+#include <Core/Basis/Locate.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/builtin.h>
 #include <Core/Datatypes/Field.h>
@@ -112,6 +113,9 @@ public:
     ElemData<field_type> fcd(*this, ei);
     val = basis_.interpolate(coords, fcd);
   }
+
+  void  gradient(vector<value_type>& grad, const vector<double>& coords,
+          typename mesh_type::Elem::index_type ci ) const;
 
   //! creates the matrix grad, you must delete it when finished.
   void cell_gradient(typename mesh_type::Elem::index_type ci,
@@ -718,48 +722,97 @@ GenericField<Mesh, Basis, FData>::get_type_description(td_info_e td) const
   };
 }
 
-template <class T>
-unsigned int get_vsize(T*);
 
-template <>
-SCISHARE unsigned int get_vsize(Vector*);
 
-template <>
-SCISHARE unsigned int get_vsize(Tensor*);
 
-//size for scalars
-template <class T>
-unsigned int get_vsize(T*)
-{
-  return 1;
-}
+// Unfortunately even for the linear case gradients are not necessarily 
+// constant. Hence provide a means of getting the real gradient at a
+// location. This method is similar to interpolate but returns the local
+// gradient instead.
 
-template <class T>
+template <class Mesh, class Basis, class FData>
 void
-load_partials(const vector<T> &grad, DenseMatrix &m);
-
-template <>
-SCISHARE void
-load_partials(const vector<Vector> &grad, DenseMatrix &m);
-
-template <>
-SCISHARE void
-load_partials(const vector<Tensor> &grad, DenseMatrix &m);
-
-
-//scalar version
-template <class T>
-void
-load_partials(const vector<T> &grad, DenseMatrix &m)
+GenericField<Mesh, Basis, FData>::
+gradient(vector<value_type>& grad, const vector<double>& coords, 
+                     typename mesh_type::Elem::index_type ci) const
 {
-  int i = 0;
-  typename vector<T>::const_iterator iter = grad.begin();
-  while(iter != grad.end()) {
-    const T &v = *iter++;
-    m.put(i, 0, (double)v);
-    ++i;
+  grad.resize(3);
+ 
+  ElemData<field_type> fcd(*this, ci);
+  // derivative is constant anywhere in the linear cell
+  
+  // get the mesh Jacobian for the element.
+  vector<Point> Jv;
+  mesh_->derivate(coords, ci, Jv);
+
+  int dim = basis_.domain_dimension();
+  double J[9], Ji[9];
+
+  // TO DO:
+  // Squeeze out more STL vector operations as they require memory
+  // being reserved, we should have simple C style arrays which are build
+  // directly on the stack. As this is mostly used for volume data, it has 
+  // only been optimized for this kind of data
+  if (dim == 3)
+  {
+    J[0] = Jv[0].x();
+    J[1] = Jv[0].y();
+    J[2] = Jv[0].z();
+    J[3] = Jv[1].x();
+    J[4] = Jv[1].y();
+    J[5] = Jv[1].z();
+    J[6] = Jv[2].x();
+    J[7] = Jv[2].y();
+    J[8] = Jv[2].z();        
   }
+  else if (dim == 2)
+  {
+    Vector J2 = Cross(Jv[0].asVector(),Jv[1].asVector());
+    J2.normalize();
+    J[0] = Jv[0].x();
+    J[1] = Jv[0].y();
+    J[2] = Jv[0].z();
+    J[3] = Jv[1].x();
+    J[4] = Jv[1].y();
+    J[5] = Jv[1].z();
+    J[6] = J2.x();
+    J[7] = J2.y();
+    J[8] = J2.z();    
+  }
+  else if (dim == 1)
+  {
+    // The same thing as for the surface but then for a curve.
+    // Again this matrix should have a positive determinant as well. It actually
+    // has an internal degree of freedom, which is not being used.
+    Vector J1, J2;
+    Jv[0].asVector().find_orthogonal(J1,J2);
+    J[0] = Jv[0].x();
+    J[1] = Jv[0].y();
+    J[2] = Jv[0].z();
+    J[3] = J1.x();
+    J[4] = J1.y();
+    J[5] = J1.z();
+    J[6] = J2.x();
+    J[7] = J2.y();
+    J[8] = J2.z();          
+  }
+  
+  InverseMatrix3x3(J,Ji);
+  
+  vector<value_type> g;
+  basis_.derivate(coords, fcd, g);
+
+  grad[0] = static_cast<value_type>(g[0]*Ji[0])+static_cast<value_type>(g[1]*Ji[1])+static_cast<value_type>(g[2]*Ji[2]);
+  grad[1] = static_cast<value_type>(g[0]*Ji[3])+static_cast<value_type>(g[1]*Ji[4])+static_cast<value_type>(g[2]*Ji[5]);
+  grad[2] = static_cast<value_type>(g[0]*Ji[6])+static_cast<value_type>(g[1]*Ji[7])+static_cast<value_type>(g[2]*Ji[8]);
 }
+
+
+// DO NOT USE cell_gradient
+// This implementation is limitted to volumetric data
+// and inproperly assumes gradients to be constant
+// This function only works properly for a TetVolMesh
+// It is still here for compatibility reasons
 
 template <class Mesh, class Basis, class FData>
 void
@@ -805,6 +858,55 @@ cell_gradient(typename mesh_type::Elem::index_type ci,
 
   Mult(*grad, J, local);
 }
+
+// Functions for cell_gradient
+// These should go as soon as cell_gradient
+// has been replaced
+
+template <class T>
+unsigned int get_vsize(T*);
+
+template <>
+SCISHARE unsigned int get_vsize(Vector*);
+
+template <>
+SCISHARE unsigned int get_vsize(Tensor*);
+
+//size for scalars
+template <class T>
+unsigned int get_vsize(T*)
+{
+  return 1;
+}
+
+template <class T>
+void
+load_partials(const vector<T> &grad, DenseMatrix &m);
+
+template <>
+SCISHARE void
+load_partials(const vector<Vector> &grad, DenseMatrix &m);
+
+template <>
+SCISHARE void
+load_partials(const vector<Tensor> &grad, DenseMatrix &m);
+
+
+//scalar version
+template <class T>
+void
+load_partials(const vector<T> &grad, DenseMatrix &m)
+{
+  int i = 0;
+  typename vector<T>::const_iterator iter = grad.begin();
+  while(iter != grad.end()) {
+    const T &v = *iter++;
+    m.put(i, 0, (double)v);
+    ++i;
+  }
+}
+
+///
 
 template <class Mesh, class Basis, class FData>
 const TypeDescription *
