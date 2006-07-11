@@ -59,10 +59,67 @@ BNRRegridder::~BNRRegridder()
 
 Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP& ups)
 {
+  MPI_Barrier(d_myworld->getComm());
+  if(d_myworld->myrank()==0)
+  {
+    cout << "Starting regrid\n";
+  }
   LoadBalancer *lb=sched->getLoadBalancer();
   
   Grid* newGrid = scinew Grid();
   ProblemSpecP grid_ps = ups->findBlock("Grid");
+
+  vector<set<IntVector> > coarse_flag_sets(oldGrid->numLevels());
+  vector< vector<PseudoPatch> > patch_sets(oldGrid->numLevels());
+  //create flags sets
+  
+  //For each level Fine to Coarse
+  for(int l=oldGrid->numLevels()-1; l >= 0;l--)
+  {
+    if(l>=d_maxLevels-1)
+      continue;
+
+    const LevelP level=oldGrid->getLevel(l);
+   
+    //create coarse flag set 
+    const PatchSubset *ps=lb->getPerProcessorPatchSet(level)->getSubset(d_myworld->myrank());
+    for(int p=0;p<ps->size();p++)
+    {
+      const Patch *patch=ps->get(p);
+      DataWarehouse *dw=sched->getLastDW();
+      constCCVariable<int> flags;
+      dw->get(flags, d_dilatedCellsCreationLabel, 0, patch, Ghost::None, 0);
+      for (CellIterator ci(patch->getInteriorCellLowIndex(), patch->getInteriorCellHighIndex()); !ci.done(); ci++)
+      {
+        if (flags[*ci])
+        {
+         coarse_flag_sets[l].insert(*ci*d_cellRefinementRatio[l]/d_minPatchSize);
+        }
+      }
+    }
+    //create flags vector
+    vector<IntVector> coarse_flag_vector(coarse_flag_sets[l].size());
+    coarse_flag_vector.assign(coarse_flag_sets[l].begin(),coarse_flag_sets[l].end());
+    
+    //Parallel BR over coarse flags
+    RunBR(coarse_flag_vector,patch_sets[l]);  
+   
+    if(patch_sets[l].empty())
+       continue;
+
+    //saftey layers
+    if(l>0)
+    {
+      AddSafetyLayer(patch_sets[l],coarse_flag_sets[l-1], d_cellRefinementRatio[l-1] );
+    }
+    
+    //Fixup patchlist
+    patchfixer_.FixUp(patch_sets[l]);
+  
+    //Post fixup patchlist 
+    PostFixup(patch_sets[l],d_minPatchSize);
+
+  }
   
   // create level 0
   Point anchor = oldGrid->getLevel(0)->getAnchor();
@@ -82,94 +139,38 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
   }
   level0->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
   level0->assignBCS(grid_ps);
-  
-  //For each level Fine -> Coarse
+
+  //For each level Coarse -> Fine
   for(int l=0; l < oldGrid->numLevels() && l < d_maxLevels-1;l++)
   {
-    const LevelP level=oldGrid->getLevel(l);
-    
-    //Create Flag List
-    vector<IntVector> flaglist;
-    
-    const PatchSubset *ps=lb->getPerProcessorPatchSet(level)->getSubset(d_myworld->myrank());
-    for(int p=0;p<ps->size();p++)
-    {
-      const Patch *patch=ps->get(p);
-      DataWarehouse *dw=sched->getLastDW();
-      constCCVariable<int> flags;
-      dw->get(flags, d_dilatedCellsCreationLabel, 0, patch, Ghost::None, 0);
-      for (CellIterator ci(patch->getInteriorCellLowIndex(), patch->getInteriorCellHighIndex()); !ci.done(); ci++)
-      {
-        if (flags[*ci])
-        {
-         flaglist.push_back(*ci);
-        }
-      }
-    }
-    
-    //if flags are tighltly bound by old grid level...
-      //keep old grid level
-      //continue
-     
-    //saftey layers? how?
-    
-
-    //Coarsen Flags
-    set<IntVector> coarse_flag_set;
-    for(unsigned int f=0;f<flaglist.size();f++)
-    {
-      coarse_flag_set.insert( flaglist[f]*d_cellRefinementRatio[l]/d_minPatchSize_[l] );
-    }
-    
-    //create flags vector
-    vector<IntVector> coarse_flag_vector(coarse_flag_set.size());
-    coarse_flag_vector.assign(coarse_flag_set.begin(),coarse_flag_set.end());
-    
-    vector<PseudoPatch> patches;
-    //Parallel BR over coarse flags
-    RunBR(coarse_flag_vector,patches);  
-    
     // if there are no patches on this level, don't create any more levels
-    if (patches.size() == 0)
+    if (patch_sets[l].size() == 0)
       break;
-    //Fixup patchlist
-    patchfixer_.FixUp(patches);
-   
-    PostFixup(patches,d_minPatchSize_[l]);
 
-    //Uncoarsen
-    for(unsigned int p=0;p<patches.size();p++)
-    {
-      patches[p].low=patches[p].low*d_minPatchSize_[l];
-      patches[p].high=patches[p].high*d_minPatchSize_[l];
-    }
-
-    //create level and set up parameters
-    Point anchor;
-    Vector spacing;
-    
     // parameters based on next-fine level.
-    if (l+1 < oldGrid->numLevels()) {
-      anchor = oldGrid->getLevel(l+1)->getAnchor();
-      spacing = oldGrid->getLevel(l+1)->dCell();
-    } else {
-      anchor = newGrid->getLevel(l)->getAnchor();
-      spacing = newGrid->getLevel(l)->dCell() / d_cellRefinementRatio[l];
-    }
+    spacing = spacing / d_cellRefinementRatio[l];
     
     LevelP newLevel = newGrid->addLevel(anchor, spacing);
     newLevel->setExtraCells(extraCells);
     
     //for each patch
-    for(unsigned int p=0;p<patches.size();p++)
+    for(unsigned int p=0;p<patch_sets[l].size();p++)
     {
-      IntVector low = patches[p].low, high = patches[p].high;
+      //uncoarsen
+      IntVector low = patch_sets[l][p].low*d_minPatchSize;
+      IntVector high =patch_sets[l][p].high*d_minPatchSize;
       //create patch
       newLevel->addPatch(low, high, low, high);
     }
     
     newLevel->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
     newLevel->assignBCS(grid_ps);
+  }
+  
+  MPI_Barrier(d_myworld->getComm());
+  if(d_myworld->myrank()==0)
+  {
+    cout << "Finished regrid\n";
   }
   if (*newGrid == *oldGrid) {
     delete newGrid;
@@ -302,6 +303,9 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
       for(int c=0;c<count;c++)
       {
         BNRTask *task=request_to_task_[indicies_[c]];
+        //not needed
+        request_to_task_[indicies_[c]]=0;
+
         free_requests_.push(indicies_[c]);
         if(--task->remaining_requests_==0)  //task has completed communication
         {
@@ -331,6 +335,14 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
   
     MPI_Bcast(&patches[0],size*sizeof(PseudoPatch),MPI_BYTE,tasks_.front().p_group_[0],d_myworld->getComm());
   }
+
+  for(unsigned int i=0;i<request_to_task_.size();i++)
+  {
+    if(request_to_task_[i]!=0)
+    {
+      cout << "Error request not completed?\n";
+    }
+  }
 }
 
 void BNRRegridder::problemSetup(const ProblemSpecP& params, 
@@ -347,16 +359,8 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
   if (!regrid_spec) {
     return; // already warned about it in RC::problemSetup
   }
-  // get lattice refinement ratio, expand it to max levels
-  regrid_spec->require("min_patch_size", d_minPatchSize_);
-
-  int size = (int) d_minPatchSize_.size();
-  IntVector lastRatio = d_minPatchSize_[size - 1];
-  if (size < d_maxLevels-1) {
-    d_minPatchSize_.resize(d_maxLevels-1);
-    for (int i = size; i < d_maxLevels-1; i++)
-      d_minPatchSize_[i] = lastRatio;
-  }
+  // get min patch size
+  regrid_spec->require("min_patch_size", d_minPatchSize);
 
   regrid_spec->get("patch_split_tolerance", tola_);
   regrid_spec->get("patch_combine_tolerance", tolb_);
@@ -409,28 +413,28 @@ void BNRRegridder::problemSetup_BulletProofing(const int k)
   // For 2D problems the lattice refinement ratio 
   // and the cell refinement ratio must be 1 in that plane
   for(int dir = 0; dir <3; dir++){
-    if(d_cellNum[k][dir] == 1 && d_minPatchSize_[k][dir] != 1) {
+    if(d_cellNum[k][dir] == 1 && d_minPatchSize[dir] != 1) {
       ostringstream msg;
       msg << "Problem Setup: Regridder: The problem you're running is <3D. \n"
           << " The min Patch Size must be 1 in the other dimensions. \n"
           << "Grid Size: " << d_cellNum[k] 
-          << " min patch size: " << d_minPatchSize_[k] << endl;
+          << " min patch size: " << d_minPatchSize << endl;
       throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
       
     }
 
-    if(d_cellNum[k][dir] != 1 && d_minPatchSize_[k][dir] < 4) {
+    if(d_cellNum[k][dir] != 1 && d_minPatchSize[dir] < 4) {
       ostringstream msg;
       msg << "Problem Setup: Regridder: Min Patch Size needs to be at least 4 cells in each dimension \n"
           << "except for 1-cell-wide dimensions.\n"
-          << "  Patch size on level " << k << ": " << d_minPatchSize_[k] << endl;
+          << "  Patch size on level " << k << ": " << d_minPatchSize << endl;
       throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
 
     }
   }
-  if ( Mod( d_cellNum[k], d_minPatchSize_[k] ) != IntVector(0,0,0) ) {
+  if ( Mod( d_cellNum[k], d_minPatchSize ) != IntVector(0,0,0) ) {
     ostringstream msg;
-    msg << "Problem Setup: Regridder: The overall number of cells on level " << k << "(" << d_cellNum[k] << ") is not divisible by the minimum patch size (" <<  d_minPatchSize_[k] << ")\n";
+    msg << "Problem Setup: Regridder: The overall number of cells on level " << k << "(" << d_cellNum[k] << ") is not divisible by the minimum patch size (" <<  d_minPatchSize << ")\n";
     throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
   }
     
@@ -498,3 +502,7 @@ void BNRRegridder::PostFixup(vector<PseudoPatch> &patches, IntVector min_patch_s
   }
 }
 
+void BNRRegridder::AddSafetyLayer(const vector<PseudoPatch> &patches,set<IntVector> &flag_set, IntVector refinement_ratio )
+{
+
+}

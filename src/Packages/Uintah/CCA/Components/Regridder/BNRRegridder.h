@@ -5,6 +5,7 @@
 #include <Packages/Uintah/CCA/Components/Regridder/PatchFixer.h>
 #include <queue>
 #include <list>
+#include <set>
 using namespace std;
 
 namespace Uintah {
@@ -59,6 +60,8 @@ WARNING
     void PostFixup(vector<PseudoPatch> &patches,IntVector min_patch_size);
   private:
     void problemSetup_BulletProofing(const int k);
+    void AddSafetyLayer(const vector<PseudoPatch> &patches,set<IntVector> &flag_set, IntVector refinement_ratio );
+
     int task_count_;								//number of tasks created on this proc
     double tola_,tolb_;							//Tolerance parameters
     unsigned int target_patches_;
@@ -69,7 +72,7 @@ WARNING
     queue<BNRTask*> tag_q_;				//tasks that are waiting for tags to continue
     queue<int> tags_;							//available tags
     PatchFixer patchfixer_;
-    SizeList d_minPatchSize_;
+    IntVector d_minPatchSize;
 
     //request handeling variables
     vector<MPI_Request> requests_;
