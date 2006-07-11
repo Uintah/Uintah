@@ -877,6 +877,7 @@ ShowField::execute()
   {
     data_dirty_ = false;
     if (vfld_handle.get_rep() &&
+        vfld_handle->query_vector_interface().get_rep() &&
 	data_vector_renderer_.get_rep() &&
 	vectors_on_.get())
     {
@@ -902,6 +903,7 @@ ShowField::execute()
       data_id_ = ogeom_->addObj(geom, fname + vdname);
     }
     else if (vfld_handle.get_rep() &&
+             vfld_handle->query_tensor_interface().get_rep() &&
 	     data_tensor_renderer_.get_rep() &&
 	     tensors_on_.get())
     {
@@ -918,6 +920,7 @@ ShowField::execute()
       data_id_ = ogeom_->addObj(data, fname + "Tensors");
     }
     else if (vfld_handle.get_rep() &&
+             vfld_handle->query_scalar_interface().get_rep() &&
 	     data_scalar_renderer_.get_rep() &&
 	     scalars_on_.get())
     {

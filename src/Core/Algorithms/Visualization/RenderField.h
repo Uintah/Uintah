@@ -3352,7 +3352,7 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   {
     colorstyle = 1;
   }
-  else if (cfld->query_vector_interface().get_rep())
+  else if (cfld && cfld->query_vector_interface().get_rep())
   {
     colorstyle = 2;
   }
@@ -3364,7 +3364,7 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   // Use a default color?
   bool def_color = !(cmap.get_rep()) || force_def_color;
   bool vec_color = false;
-  if (def_color && cfld->query_vector_interface().get_rep()
+  if (def_color && cfld && cfld->query_vector_interface().get_rep()
       && !force_def_color)
   {
     def_color = false;
@@ -3551,7 +3551,7 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
   bool def_color = !(cmap.get_rep()) || force_def_color;
   bool vec_color = false;
   MaterialHandle vcol(0);
-  if (def_color && cfld->query_vector_interface().get_rep()
+  if (def_color && cfld && cfld->query_vector_interface().get_rep()
       && !force_def_color)
   {
     def_color = false;
