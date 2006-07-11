@@ -260,7 +260,6 @@ BuilderService::getUsedPortNames(const sci::cca::ComponentID::pointer &cid)
 }
 
 // TODO: make sure that port properties are actually created
-// TODO: extend to other component models
 sci::cca::TypeMap::pointer
 BuilderService::getPortProperties(const sci::cca::ComponentID::pointer &cid, const std::string &portname)
 {
@@ -269,11 +268,6 @@ BuilderService::getPortProperties(const sci::cca::ComponentID::pointer &cid, con
     return framework->createTypeMap();
   }
   return comp->getPortProperties(portname);
-  //     CCAComponentInstance* ccaComp = dynamic_cast<CCAComponentInstance*>(comp);
-  //     if (! ccaComp) {
-  //  return framework->createTypeMap();
-  //     }
-  //     return ccaComp->getPortProperties(portname);
 }
 
 void BuilderService::setPortProperties(const sci::cca::ComponentID::pointer& cid,
