@@ -903,10 +903,11 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     // since there is a mutual exclusion between using
     // the min, max and spacing and the spaceDirection vectors
     // verify that this is a valid nrrd
-    if (nrrdCheck(data)) {
-      error("Error: Invalid NRRD.  Cannot compute transform.");
-      return false;
-    }
+//     if (nrrdCheck(data)) {
+//       cerr << "Error is: " << biffGet(NRRD) << endl;
+//       error("Error: Invalid NRRD.  Cannot compute transform.");
+//       return false;
+//     }
 
     // initialize the transform to the identity matrix
     double trans[16];
@@ -1312,6 +1313,9 @@ NrrdToFieldFieldAlgo::get_compile_info(const TypeDescription *mtd,
   // Add in the include path to compile this obj
   rval->add_include(include_path);
   rval->add_namespace("SCITeem");
+
+  rval->add_data_include("../src/Core/Geometry/Vector.h");
+  rval->add_data_include("../src/Core/Geometry/Tensor.h");
 
   rval->add_basis_include("../src/Core/Basis/Constant.h");
   rval->add_basis_include("../src/Core/Basis/CrvLinearLgn.h");
