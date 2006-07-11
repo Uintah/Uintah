@@ -174,8 +174,6 @@
         
         <Refinement_Criteria_Thresholds>
         </Refinement_Criteria_Thresholds>
-        <min_grid_level>0</min_grid_level>
-        <max_grid_level>1</max_grid_level>
       </ICE>
       <MPM>
         <min_grid_level>1</min_grid_level>
