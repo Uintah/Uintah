@@ -821,7 +821,7 @@ GeomColorMap::draw(DrawInfoOpenGL* di, Material *m, double time)
     if (di->cmtexture_ == 0)
     {
       glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-      glGenTextures(1, &(di->cmtexture_));
+      glGenTextures(1, (GLuint *)&(di->cmtexture_));
     }
 
     // Send Cmap
@@ -6352,7 +6352,7 @@ HistogramTex::draw(DrawInfoOpenGL* di, Material* matl, double)
     glBindTexture(GL_TEXTURE_1D, texName);
   }
 
-  int vp[4];
+  GLint vp[4];
   glGetIntegerv( GL_VIEWPORT, vp );
   glClearColor(0.0, 0.0, 0.0, 0.0);
 
@@ -6394,7 +6394,7 @@ TexSquare::draw(DrawInfoOpenGL* di, Material* matl, double)
   glEnable(GL_TEXTURE_2D);
   bool bound = glIsTexture(texname_);
   if (!bound)
-    glGenTextures(1, &texname_);
+    glGenTextures(1, (GLuint *)&texname_);
   glBindTexture(GL_TEXTURE_2D, texname_);
   glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
   if (!bound && texture)
@@ -6500,7 +6500,7 @@ GeomTexRectangle::draw(DrawInfoOpenGL* di, Material* matl, double)
 
   if (!bound)
   {
-    glGenTextures(1, &texname_);
+    glGenTextures(1, (GLuint *)&texname_);
   }
 
   glBindTexture(GL_TEXTURE_2D, texname_);

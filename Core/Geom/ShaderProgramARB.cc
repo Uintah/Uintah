@@ -193,14 +193,14 @@ ShaderProgramARB::create()
   if (shaders_supported())
   {
     glEnable(type_);
-    glGenProgramsARB(1, &id_);
+    glGenProgramsARB(1, (GLuint*)&id_);
     glBindProgramARB(type_, id_);
     glProgramStringARB(type_, GL_PROGRAM_FORMAT_ASCII_ARB,
                            program_.length(), program_.c_str());
     if (glGetError() != GL_NO_ERROR)
     {
       int position;
-      glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, &position);
+      glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, (GLint*)&position);
       int start = position;
       for (; start > 0 && program_[start] != '\n'; start--);
       if (program_[start] == '\n') start++;
@@ -243,7 +243,7 @@ ShaderProgramARB::destroy ()
 {
   if (shaders_supported())
   {
-    glDeleteProgramsARB(1, &id_);
+    glDeleteProgramsARB(1, (const GLuint*)&id_);
     id_ = 0;
   }
 }

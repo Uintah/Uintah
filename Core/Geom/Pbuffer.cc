@@ -988,7 +988,7 @@ Pbuffer::create ()
     if (render_tex_)
     {
       // create pbuffer texture object
-      glGenTextures(1, &tex_);
+      glGenTextures(1, (GLuint*)&tex_);
       if (format_ == GL_FLOAT)
       {
         if (mNV_float_buffer)
