@@ -5552,39 +5552,53 @@ void ICE::hydrostaticPressureAdjustment(const Patch* patch,
 void ICE::getExchangeCoefficients( FastMatrix& K, FastMatrix& H  )
 {
   int numMatls  = d_sharedState->getNumMatls();
-    // Fill in the exchange matrix with the vector of exchange coefficients.
-   // The vector of exchange coefficients only contains the upper triagonal
-   // matrix
 
-   // Check if the # of coefficients = # of upper triangular terms needed
-   int num_coeff = ((numMatls)*(numMatls) - numMatls)/2;
+  // The vector of exchange coefficients only contains the upper triagonal
+  // matrix
 
-   vector<double> d_K_mom = d_exchCoeff->K_mom();
-   vector<double> d_K_heat = d_exchCoeff->K_heat();
+  // Check if the # of coefficients = # of upper triangular terms needed
+  int num_coeff = ((numMatls)*(numMatls) - numMatls)/2;
 
-   vector<double>::iterator it=d_K_mom.begin(),it1=d_K_heat.begin();
+  vector<double> d_K_mom = d_exchCoeff->K_mom();
+  vector<double> d_K_heat = d_exchCoeff->K_heat();
+  vector<double>::iterator it=d_K_mom.begin(),it1=d_K_heat.begin();
 
-   if (num_coeff == (int)d_K_mom.size() && num_coeff==(int)d_K_heat.size()) {
-     // Fill in the upper triangular matrix
-     for (int i = 0; i < numMatls; i++ )  {
-      for (int j = i + 1; j < numMatls; j++) {
-        K(i,j) = K(j,i) = *it++;
-        H(i,j) = H(j,i) = *it1++;
+  //__________________________________
+  // bulletproofing
+  bool test = false;
+  string desc;
+  if (num_coeff != (int)d_K_mom.size()) {
+    test = true;
+    desc = "momentum";
+  }  
+  if (num_coeff !=(int)d_K_heat.size()) {
+    test = true;
+    desc = desc + " energy";
+  }
+  if(test) {   
+    ostringstream warn;
+    warn << "\nThe number of exchange coefficients (" << desc << ") is incorrect.\n";
+    warn << "Here is the correct specification:\n";
+    for (int i = 0; i < numMatls; i++ ){
+      for (int j = i+1; j < numMatls; j++){
+        warn << i << "->" << j << ",\t"; 
       }
-     }
-   } else if (2*num_coeff==(int)d_K_mom.size() && 
-             2*num_coeff == (int)d_K_heat.size()){
-     // Fill in the whole matrix but skip the diagonal terms
-     for (int i = 0; i < numMatls; i++ )  {
-      for (int j = 0; j < numMatls; j++) {
-        if (i == j) continue;
-        K(i,j) = *it++;
-        H(i,j) = *it1++;
+      warn << "\n";
+      for (int k = 0; k <= i; k++ ){
+        warn << "\t";
       }
-     }
-   } else 
-     throw InvalidValue("Number of exchange components don't match.", __FILE__, __LINE__);
-  
+    } 
+    throw ProblemSetupException(warn.str(), __FILE__, __LINE__);
+  }
+
+  // Fill in the upper triangular matrix
+  for (int i = 0; i < numMatls; i++ )  {
+    K(i,i) = H(i,i) = 0.0;
+    for (int j = i + 1; j < numMatls; j++) {
+      K(i,j) = K(j,i) = *it++;
+      H(i,j) = H(j,i) = *it1++;
+    }
+  }
 }
 
 /*_____________________________________________________________________
