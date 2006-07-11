@@ -934,6 +934,7 @@ Painter::ITKThresholdTool::process_event
 void
 Painter::ITKThresholdTool::finish()
 {
+#if HAVE_INSIGHT
   NrrdDataHandle source_nrrdh = painter_->current_volume_->nrrd_handle_;
   typedef itk::ThresholdSegmentationLevelSetImageFilter
     < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D > FilterType;
@@ -1014,7 +1015,7 @@ Painter::ITKThresholdTool::finish()
 
   painter_->set_all_slices_tex_dirty();
   painter_->redraw_all();
-  
+#endif
 }
  
 
