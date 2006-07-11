@@ -51,10 +51,6 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
     LevelP level = grid->getLevel(L);
     const PatchSet* patches = level->eachPatch();
     
-    if(!doICEOnLevel(level->getIndex(), level->getGrid()->numLevels())){
-      return;
-    }
-
     // for AMR, we need to reset the initial Delt otherwise some unsuspecting level will
     // get the init delt when it didn't compute delt on L0.
     if (d_sharedState->getCurrentTopLevelTimeStep() > 1){
@@ -161,10 +157,6 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
   for(int L = 0; L<maxLevel; L++){
     LevelP level = grid->getLevel(L);
     const PatchSet* patches = level->eachPatch();
-    
-    if(!doICEOnLevel(level->getIndex(), level->getGrid()->numLevels())){
-      continue;
-    }    
     
     scheduleComputePressFC(                 sched, patches, d_press_matl,
                                                             all_matls);

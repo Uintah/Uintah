@@ -76,8 +76,6 @@ ICE::ICE(const ProcessorGroup* myworld, const bool doAMR)
   MIlb = scinew MPMICELabel();
 
   d_doAMR               = doAMR;
-  d_minGridLevel        = 0;
-  d_maxGridLevel        = 1000;
   d_useLockStep         = false; 
   d_doRefluxing         = false;
   d_add_heat            = false;
@@ -635,10 +633,6 @@ void ICE::actuallyInitializeAddedMaterial(const ProcessorGroup*,
 _____________________________________________________________________*/
 void ICE::scheduleInitialize(const LevelP& level,SchedulerP& sched)
 {
-  if(!doICEOnLevel(level->getIndex(), level->getGrid()->numLevels())){
-    return;
-  }
-
   cout_doing << d_myworld->myrank() << " Doing ICE::scheduleInitialize " << endl;
   Task* t = scinew Task("ICE::actuallyInitialize",
                   this, &ICE::actuallyInitialize);
@@ -751,9 +745,6 @@ _____________________________________________________________________*/
 void ICE::scheduleComputeStableTimestep(const LevelP& level,
                                       SchedulerP& sched)
 {
-  if(!doICEOnLevel(level->getIndex(), level->getGrid()->numLevels()))
-    return;
-
   Task* t = 0;
   cout_doing << d_myworld->myrank() << " ICE::scheduleComputeStableTimestep \t\t\t\tL-"
              <<level->getIndex() << endl;
@@ -791,9 +782,6 @@ _____________________________________________________________________*/
 void
 ICE::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 {
-  if(!doICEOnLevel(level->getIndex(), level->getGrid()->numLevels()))
-    return;
-
   // for AMR, we need to reset the initial Delt otherwise some unsuspecting level will
   // get the init delt when it didn't compute delt on L0.
   if (d_sharedState->getCurrentTopLevelTimeStep() > 1)
@@ -917,10 +905,6 @@ _____________________________________________________________________*/
 void
 ICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
 {
-
-  if(!doICEOnLevel(level->getIndex(), level->getGrid()->numLevels()))
-    return;
-    
   cout_doing << "----------------------------"<<endl;  
   cout_doing << d_myworld->myrank() << " ICE::scheduleFinalizeTimestep\t\t\t\t\tL-" <<level->getIndex()<< endl;
   const PatchSet* patches = level->eachPatch();
@@ -960,9 +944,6 @@ void ICE::scheduleComputeThermoTransportProperties(SchedulerP& sched,
                                 const LevelP& level,
                                 const MaterialSet* ice_matls)
 { 
-  if(!doICEOnLevel(level->getIndex(), level->getGrid()->numLevels()))
-    return;
-
   Task* t;
   cout_doing << d_myworld->myrank() << " ICE::schedulecomputeThermoTransportProperties" 
              << "\t\t\tL-"<< level->getIndex()<< endl;
@@ -1004,9 +985,6 @@ void ICE::scheduleComputePressure(SchedulerP& sched,
                                   const MaterialSet* ice_matls)
 {
   int levelIndex = getLevel(patches)->getIndex();
-  if(!doICEOnLevel(levelIndex, getLevel(patches)->getGrid()->numLevels()))
-    return;
-
   Task* t = 0;
   
   cout_doing << d_myworld->myrank() << " ICE::scheduleComputeEquilibrationPressure" 
@@ -1056,9 +1034,6 @@ void ICE::scheduleComputeTempFC(SchedulerP& sched,
                                 const MaterialSet* all_matls)
 { 
   int levelIndex = getLevel(patches)->getIndex();
-  if(!doICEOnLevel(levelIndex, getLevel(patches)->getGrid()->numLevels()))
-    return;
-
   if(d_models.size()>0){
     Task* t;
     cout_doing << d_myworld->myrank() << " ICE::scheduleComputeTempFC" 
@@ -1089,9 +1064,6 @@ void ICE::scheduleComputeVel_FC(SchedulerP& sched,
                                 bool recursion)
 { 
   int levelIndex = getLevel(patches)->getIndex();
-  if(!doICEOnLevel(levelIndex, getLevel(patches)->getGrid()->numLevels()))
-    return;
-
   Task* t = 0;
 
   cout_doing << d_myworld->myrank() << " ICE::scheduleComputeVel_FC" 
@@ -1127,9 +1099,6 @@ void ICE::scheduleAddExchangeContributionToFCVel(SchedulerP& sched,
                                            bool recursion)
 {
   int levelIndex = getLevel(patches)->getIndex();
-  if(!doICEOnLevel(levelIndex, getLevel(patches)->getGrid()->numLevels()))
-    return;
-
   cout_doing << d_myworld->myrank() << " ICE::scheduleAddExchangeContributionToFCVel" 
              << "\t\t\tL-" << levelIndex<< endl;
   Task* task = scinew Task("ICE::addExchangeContributionToFCVel",
@@ -1164,9 +1133,6 @@ void ICE::scheduleComputeModelSources(SchedulerP& sched,
                                       const MaterialSet* matls)
 {
   int levelIndex = level->getIndex();
-  if(!doICEOnLevel(levelIndex, level->getGrid()->numLevels()))
-    return;
-
   if(d_models.size() != 0){
     cout_doing << d_myworld->myrank() << " ICE::scheduleModelMassExchange" 
                << "\t\t\tL-"<< levelIndex<< endl;
@@ -1205,9 +1171,6 @@ void ICE::scheduleUpdateVolumeFraction(SchedulerP& sched,
                                        const MaterialSet* matls)
 {
   int levelIndex =level->getIndex();
-  if(!doICEOnLevel(levelIndex, level->getGrid()->numLevels()))
-    return;
-
   if(d_models.size() != 0){
     cout_doing << d_myworld->myrank() << " ICE::scheduleUpdateVolumeFraction" 
                << "\t\t\tL-"<< levelIndex<< endl;
@@ -1238,9 +1201,6 @@ void ICE::scheduleComputeDelPressAndUpdatePressCC(SchedulerP& sched,
                                             const MaterialSet* matls)
 {
   int levelIndex = getLevel(patches)->getIndex();
-  if(!doICEOnLevel(levelIndex, getLevel(patches)->getGrid()->numLevels()))
-    return;
-
   cout_doing << d_myworld->myrank() << " ICE::scheduleComputeDelPressAndUpdatePressCC" 
              << "\t\t\tL-"<< levelIndex<< endl;
   Task *task = scinew Task("ICE::computeDelPressAndUpdatePressCC",
@@ -1289,9 +1249,6 @@ void ICE::scheduleComputePressFC(SchedulerP& sched,
                              const MaterialSet* matls)
 { 
   int levelIndex = getLevel(patches)->getIndex();
-  if(!doICEOnLevel(levelIndex, getLevel(patches)->getGrid()->numLevels()))
-    return;
-
   cout_doing << d_myworld->myrank() << " ICE::scheduleComputePressFC" 
              << "\t\t\t\t\tL-"<< levelIndex<< endl;
                                 
@@ -1322,9 +1279,6 @@ ICE::scheduleAccumulateMomentumSourceSinks(SchedulerP& sched,
 					   const MaterialSet* matls)
 {
   int levelIndex = getLevel(patches)->getIndex();
-  if(!doICEOnLevel(levelIndex, getLevel(patches)->getGrid()->numLevels()))
-    return;
-
   Task* t;
   cout_doing << d_myworld->myrank() << " ICE::scheduleAccumulateMomentumSourceSinks" 
              << "\t\t\tL-"<< levelIndex<< endl;
@@ -1372,9 +1326,6 @@ void ICE::scheduleAccumulateEnergySourceSinks(SchedulerP& sched,
 
 {
   int levelIndex = getLevel(patches)->getIndex();
-  if(!doICEOnLevel(levelIndex, getLevel(patches)->getGrid()->numLevels()))
-    return;
-
   Task* t;              // EQ
   cout_doing << d_myworld->myrank() << " ICE::scheduleAccumulateEnergySourceSinks" 
              << "\t\t\tL-" << levelIndex << endl;
@@ -1417,9 +1368,6 @@ void ICE::scheduleComputeLagrangianValues(SchedulerP& sched,
                                      const MaterialSet* ice_matls)
 {
   int levelIndex = getLevel(patches)->getIndex();
-  if(!doICEOnLevel(levelIndex, getLevel(patches)->getGrid()->numLevels()))
-    return;
-
   cout_doing << d_myworld->myrank() << " ICE::scheduleComputeLagrangianValues" 
              << "\t\t\t\tL-"<< levelIndex<< endl;
              
@@ -1457,9 +1405,6 @@ void ICE::scheduleComputeLagrangianSpecificVolume(SchedulerP& sched,
                                             const MaterialSet* matls)
 {
   int levelIndex = getLevel(patches)->getIndex();
-  if(!doICEOnLevel(levelIndex, getLevel(patches)->getGrid()->numLevels()))
-    return;
-
   Task* t = 0;
   cout_doing << d_myworld->myrank() << " ICE::scheduleComputeLagrangianSpecificVolume" 
              << "\t\t\tL-"<< levelIndex<< endl;
@@ -1507,9 +1452,6 @@ void ICE::scheduleComputeLagrangian_Transported_Vars(SchedulerP& sched,
                                                      const MaterialSet* matls)
 {
   int levelIndex = getLevel(patches)->getIndex();
-  if(!doICEOnLevel(levelIndex, getLevel(patches)->getGrid()->numLevels()))
-    return;
-
   if(d_models.size() > 0 && d_modelSetup->tvars.size() > 0){
     cout_doing << d_myworld->myrank() << " ICE::scheduleComputeLagrangian_Transported_Vars" 
                << "\t\t\tL-"<<levelIndex<< endl;
@@ -1547,9 +1489,6 @@ void ICE::scheduleAddExchangeToMomentumAndEnergy(SchedulerP& sched,
                                const MaterialSet* all_matls)
 {
   int levelIndex = getLevel(patches)->getIndex();
-  if(!doICEOnLevel(levelIndex, getLevel(patches)->getGrid()->numLevels()))
-    return;
-
   Task* t = 0;
 
   cout_doing << d_myworld->myrank() << " ICE::scheduleAddExchangeToMomentumAndEnergy" 
@@ -1600,10 +1539,6 @@ void ICE::scheduleMaxMach_on_Lodi_BC_Faces(SchedulerP& sched,
                                      const MaterialSet* matls,
                                      vector<PatchSubset*> & /*maxMach_PSS*/)
 { 
-  int levelIndex = level->getIndex();
-  if(!doICEOnLevel(levelIndex, level->getGrid()->numLevels()))
-    return;
-
   if(d_customBC_var_basket->usingLodi) {
     cout_doing << d_myworld->myrank() << " ICE::scheduleMaxMach_on_Lodi_BC_Faces" 
                << "\t\t\tL-levelIndex" << endl;
@@ -1700,9 +1635,6 @@ void ICE::scheduleAdvectAndAdvanceInTime(SchedulerP& sched,
                                     const MaterialSet* ice_matls)
 {
   int levelIndex = getLevel(patch_set)->getIndex();
-  if(!doICEOnLevel(levelIndex, getLevel(patch_set)->getGrid()->numLevels()))
-    return;
-
   cout_doing << d_myworld->myrank() << " ICE::scheduleAdvectAndAdvanceInTime" 
              << "\t\t\t\tL-"<< levelIndex << endl;
              
@@ -1754,9 +1686,6 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
   
   int levelIndex = getLevel(patch_set)->getIndex();
   int numLevels = getLevel(patch_set)->getGrid()->numLevels();
-  if(!doICEOnLevel(levelIndex,numLevels ))
-    return;
-    
   // single level problems we only need to perform this task once
   // immediately after advecton
   if(numLevels == 1 && where == "finalizeTimestep")  
@@ -1831,9 +1760,6 @@ void ICE::scheduleTestConservation(SchedulerP& sched,
                                    const MaterialSet* all_matls)
 {
   int levelIndex = getLevel(patches)->getIndex();
-  if(!doICEOnLevel(levelIndex, getLevel(patches)->getGrid()->numLevels()))
-    return;
-
   if(d_conservationTest->onOff) {
     cout_doing << d_myworld->myrank() << " ICE::scheduleTestConservation" 
                << "\t\t\t\t\tL-"<< levelIndex<< endl;
@@ -5877,10 +5803,6 @@ void ICE::setNeedAddMaterialFlag(const ProcessorGroup*,
     }
  }
 
-bool ICE::doICEOnLevel(int level, int /*numLevels*/)
-{
-  return level >= d_minGridLevel && level <= d_maxGridLevel;
-}
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1209
