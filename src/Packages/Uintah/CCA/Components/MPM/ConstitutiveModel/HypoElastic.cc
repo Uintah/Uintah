@@ -274,10 +274,8 @@ void HypoElastic::computeStressTensor(const PatchSubset* patches,
     //
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     Matrix3 velGrad,deformationGradientInc,Identity,zero(0.),One(1.);
     double c_dil=0.0,Jinc;

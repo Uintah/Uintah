@@ -213,10 +213,8 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
     Identity.Identity();
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
 
     Matrix3 Rotation;

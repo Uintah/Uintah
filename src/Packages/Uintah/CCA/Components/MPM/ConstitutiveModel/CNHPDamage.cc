@@ -195,10 +195,8 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(pp);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     // Initialize patch variables
     double se = 0.0;
@@ -408,10 +406,8 @@ CNHPDamage::computeStressTensorImplicit(const PatchSubset* patches,
     const Patch* patch = patches->get(pp);
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     // Initialize patch variables
     double se = 0.0;
@@ -613,10 +609,8 @@ CNHPDamage::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(pp);
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     // Set up array for solver
     IntVector lowIndex = patch->getInteriorNodeLowIndex();
