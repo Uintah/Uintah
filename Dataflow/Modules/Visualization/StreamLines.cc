@@ -197,21 +197,23 @@ StreamLines::execute()
 vector<Point>::iterator
 StreamLinesAlgo::CleanupPoints(vector<Point> &input, double e2)
 {
-
   // Removes colinear points from the list of points.
   unsigned int i, j = 0;
 
-  for (i=1; i < input.size()-1; i++) {
+  for (i=1; i < input.size()-1; i++)
+  {
     const Vector v0 = input[i] - input[j];
     const Vector v1 = input[i] - input[i+1];
 
-    if (Cross(v0, v1).length2() > e2 && Dot(v0, v1) < 0.0) {
+    if (Cross(v0, v1).length2() > e2 && Dot(v0, v1) < 0.0)
+    {
       j++;
       if (i != j) { input[j] = input[i]; }
     }
   }
 
-  if (input.size() > 1) {
+  if (input.size() > 1)
+  {
     j++;
     input[j] = input[input.size()-1];
   }
