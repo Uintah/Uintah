@@ -462,10 +462,8 @@ ShellMaterial::interpolateParticleRotToGrid(const PatchSubset* patches,
     const Patch* patch = patches->get(p);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<double> S;
-    S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
 
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch, gan, NGN, 
                                                      lb->pXLabel);
@@ -585,10 +583,8 @@ ShellMaterial::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(pp);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
 
     // Read the datawarehouse
@@ -903,12 +899,9 @@ ShellMaterial::computeRotInternalMoment(const PatchSubset* patches,
                                                      lb->pXLabel);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<double> S;
-    S.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
 
     // Get stuff from datawarehouse
@@ -995,12 +988,9 @@ ShellMaterial::computeRotAcceleration(const PatchSubset* patches,
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<double> S;
-    S.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
 
     // Get stuff from datawarehouse

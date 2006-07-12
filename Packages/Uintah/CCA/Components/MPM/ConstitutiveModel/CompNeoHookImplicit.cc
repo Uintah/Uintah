@@ -173,10 +173,8 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
     Identity.Identity();
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
     
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
@@ -255,10 +253,8 @@ CompNeoHookImplicit::computeStressTensor(const PatchSubset* patches,
         particleIndex idx = *iter;
 
         // Fill in the B and Bnl matrices and the dof vector
-        vector<IntVector> ni;
-        ni.reserve(8);
-        vector<Vector> d_S;
-        d_S.reserve(8);
+        vector<IntVector> ni(8);
+        vector<Vector> d_S(8);
         interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
         for(int k = 0; k < 8; k++) {
           // Need to loop over the neighboring patches l2g to get the right
