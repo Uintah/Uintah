@@ -1351,10 +1351,8 @@ void FractureMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
     int numMatls = d_sharedState->getNumMPMMatls();
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<double> S;
-    S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
 
 
     NCVariable<double> gmassglobal,gtempglobal,gvolumeglobal;
@@ -1638,10 +1636,8 @@ void FractureMPM::computeArtificialViscosity(const ProcessorGroup*,
 
     int numMatls = d_sharedState->getNumMPMMatls();
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1821,12 +1817,9 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
     Id.Identity();
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<double> S;
-    S.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
@@ -2412,12 +2405,9 @@ void FractureMPM::calculateDampingRate(const ProcessorGroup*,
       int numMPMMatls=d_sharedState->getNumMPMMatls();
       
       ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-      vector<IntVector> ni;
-      ni.reserve(interpolator->size());
-      vector<double> S;
-      S.reserve(interpolator->size());
-      vector<Vector> d_S;
-      d_S.reserve(interpolator->size());
+      vector<IntVector> ni(interpolator->size());
+      vector<double> S(interpolator->size());
+      vector<Vector> d_S(interpolator->size());
 
       for(int m = 0; m < numMPMMatls; m++){
 	MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -2773,12 +2763,9 @@ void FractureMPM::computeParticleTempFromGrid(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<double> S;
-    S.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
@@ -2845,12 +2832,9 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<double> S;
-    S.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their
