@@ -93,8 +93,8 @@ public:
 					    const string &dsrc,
 					    const TypeDescription *sloc,
 					    int value);
-protected:
-  vector<Point>::iterator CleanupPoints(vector<Point> &input, double e2);
+
+  static vector<Point>::iterator CleanupPoints(vector<Point> &in, double e2);
 };
 
 
@@ -255,7 +255,7 @@ parallel_generate( int proc, SLData *d)
     }
 
     if (d->rcp)
-      BI.nodes_.erase(this->CleanupPoints(BI.nodes_, BI.tolerance2_),
+      BI.nodes_.erase(CleanupPoints(BI.nodes_, BI.tolerance2_),
 		      BI.nodes_.end());
 
     double length = 0;
@@ -629,7 +629,7 @@ StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::FindNodes(vector<Point> &v,
 
   if (remove_colinear_p)
   {
-    v.erase(this->CleanupPoints(v, 1.0e-6), v.end());
+    v.erase(StreamLinesAlgo::CleanupPoints(v, 1.0e-6), v.end());
   }
 }
 
