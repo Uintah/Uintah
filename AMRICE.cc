@@ -975,6 +975,9 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
   task->requires(Task::NewDW, lb->mom_advLabel,
                0, Task::FineLevel,  all_matls_sub,ND, gn, 0, fat);
 
+  task->requires(Task::NewDW, lb->rho_CCLabel,
+               0, Task::FineLevel,  all_matls_sub,ND, gn, 0, fat);
+
   //__________________________________
   // Model Variables.
   if(d_modelSetup && d_modelSetup->tvars.size() > 0){
