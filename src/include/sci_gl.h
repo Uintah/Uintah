@@ -100,9 +100,9 @@ typedef unsigned short wchar_t;
 #ifndef GLAPIENTRY
 #define GLAPIENTRY APIENTRY
 #endif
-
+#define SCISHARE __declspec(dllimport)
 #else // ! _WIN32
-
+#define SCISHARE
 #ifndef GLAPIENTRY
   #define GLAPIENTRY
 #endif
@@ -121,7 +121,7 @@ typedef unsigned short wchar_t;
 extern "C" {
 #endif
 
-extern int sci_glew_init();
+extern SCISHARE int sci_glew_init();
 
 #ifdef __cplusplus
 }
@@ -140,43 +140,8 @@ extern int sci_glew_init();
 #ifdef _WIN32
 // gl extensions - declare and do them once (the ones that can be used in many places)
 //   leave the pbuffer ones where they are.
-// these will be initialized in TkOpenGLContext.cc
-#  define GL_TEXTURE_3D 0x806F
-#  define GL_TEXTURE0 0x84C0
-#  define GL_TEXTURE1 0x84C1
-#  define GL_TEXTURE2 0x84C2
-#  define GL_TEXTURE3 0x84C3
-
-#  define GL_TEXTURE0_ARB 0x84C0
-#  define GL_TEXTURE1_ARB 0x84C1
-#  define GL_TEXTURE2_ARB 0x84C2
-#  define GL_MAX_TEXTURE_UNITS_ARB 0x84E2
-
-#  define GL_TEXTURE_3D 0x806F
-#  define GL_CLAMP_TO_EDGE 0x812F
-#  define GL_TEXTURE_WRAP_R 0x8072
-#  define GL_UNPACK_IMAGE_HEIGHT 0x806E
-#  define GL_SHARED_TEXTURE_PALETTE_EXT 0x81FB
-#  define GL_PROXY_TEXTURE_3D 0x8070
-
-#  define GL_FRAGMENT_PROGRAM_ARB 0x8804
-
-#  define GL_ARB_fragment_program 1
-#  define GL_EXT_shared_texture_palette 1
-
-#  define GL_FUNC_ADD 0x8006
-#  define GL_MAX 0x8008
 
   typedef unsigned int uint;
-
-  typedef void (GLAPIENTRY * PFNGLACTIVETEXTUREPROC) (GLenum texture);
-  typedef void (GLAPIENTRY * PFNGLBLENDEQUATIONPROC) (GLenum mode);
-  typedef void (GLAPIENTRY * PFNGLTEXIMAGE3DPROC) (GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid *pixels);
-  typedef void (GLAPIENTRY * PFNGLTEXSUBIMAGE3DPROC) (GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint zoffset, GLsizei width, GLsizei height, GLsizei depth, GLenum format, GLenum type, const GLvoid *pixels);
-  typedef void (GLAPIENTRY * PFNGLMULTITEXCOORD1FPROC) (GLenum target, GLfloat s);
-  typedef void (GLAPIENTRY * PFNGLMULTITEXCOORD2FVPROC) (GLenum target, const GLfloat *v);
-  typedef void (GLAPIENTRY * PFNGLMULTITEXCOORD3FPROC) (GLenum target, GLfloat s, GLfloat t, GLfloat r);
-  typedef void (GLAPIENTRY * PFNGLCOLORTABLEPROC) (GLenum target, GLenum internalformat, GLsizei width, GLenum format, GLenum type, const GLvoid *table);
 
   __declspec(dllimport) PFNGLACTIVETEXTUREPROC glActiveTexture;
   __declspec(dllimport) PFNGLBLENDEQUATIONPROC glBlendEquation;

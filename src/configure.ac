@@ -1138,6 +1138,12 @@ if test ! -e "`type $CXX | sed 's%^.* /%/%'`"; then
   SCI_MSG_ERROR(Could not find the specified C++ compiler (CC))
 fi
 
+if test "$IS_WIN" = "yes"; then
+  # don't require fortran on windows yet 
+  # (Uintah disables fortran compilation on windows for the moment...)
+  sci_required_fortran="no"
+fi
+
 if test $sci_required_fortran = "yes"; then
   if test ! -e "`type $F77 | sed 's%^.* /%/%'`"; then
     SCI_MSG_ERROR(Could not find the specified Fortran compiler ($F77))
@@ -4439,8 +4445,13 @@ else
   _sci_inc="$_sci_inc /usr/X11R6/include"
 fi
 
-SCI_TRY_LINK(GLEW,glew libraries and headers,GL/glew.h GL/glxew.h,
-             $_sci_inc, GLEW,$_sci_lib,,,$_sci_optional)
+if test "$IS_WIN" = "yes"; then
+  SCI_TRY_LINK(GLEW,glew libraries and headers,GL/glew.h GL/wglew.h,
+                $_sci_inc, glew32,$_sci_lib,,,optional)
+else
+  SCI_TRY_LINK(GLEW,glew libraries and headers,GL/glew.h GL/glxew.h,
+                $_sci_inc, GLEW,$_sci_lib,,,$_sci_optional)
+fi
 
 if test "$HAVE_GLEW" = "yes"; then
   DEF_GLEW="#define HAVE_GLEW 1"
