@@ -40,14 +40,16 @@ namespace Uintah {
     void destroyMatrix(bool recursion);
 
     void fillMatrix(int,int[],int,int j[],double v[]);
-    
-    void fillVector(int, double);
+
+    void fillVector(int, double,bool add = false);
 
     void fillTemporaryVector(int, double);
     
     void copyL2G(Array3<int>& l2g, const Patch* patch);
 
     void removeFixedDOF(int num_nodes);
+
+    void removeFixedDOFHeat(int num_nodes);
 
     void finalizeMatrix();
 
@@ -63,6 +65,11 @@ namespace Uintah {
 
     void applyBCSToRHS();
 
+    void printMatrix();
+
+    void printRHS();
+
+    map<int,double> d_BC;
   private:
 
     // Needed for the local to global mappings
