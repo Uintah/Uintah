@@ -149,12 +149,12 @@ void MPMPetscSolver::solve()
 {
   PC          precond;           
   KSP         solver;
-#  if 0
+#if 0
   if(d_DOFsPerNode<3){
-  PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_ASCII_DENSE);
-  MatView(d_A,PETSC_VIEWER_STDOUT_WORLD);
+    PetscViewerSetFormat(PETSC_VIEWER_STDOUT_WORLD,PETSC_VIEWER_ASCII_DENSE);
+    MatView(d_A,PETSC_VIEWER_STDOUT_WORLD);
   }
-#  endif
+#endif
   KSPCreate(PETSC_COMM_WORLD,&solver);
   KSPSetOperators(solver,d_A,d_A,DIFFERENT_NONZERO_PATTERN);
   KSPGetPC(solver,&precond);
@@ -163,16 +163,18 @@ void MPMPetscSolver::solve()
   KSPSetTolerances(solver,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
   
 
-#  ifdef debug
+#if 0
+  MatView(d_A,PETSC_VIEWER_STDOUT_WORLD);
   VecView(d_B,PETSC_VIEWER_STDOUT_WORLD);
-#  endif
+#endif
   KSPSolve(solver,d_B,d_x);
-#  ifdef LOG
+#ifdef LOG
   KSPView(solver,PETSC_VIEWER_STDOUT_WORLD);
   int its;
   KSPGetIterationNumber(solver,&its);
   PetscPrintf(PETSC_COMM_WORLD,"Iterations %d\n",its);
-#  endif
+  VecView(d_x,PETSC_VIEWER_STDOUT_WORLD);
+#endif
   KSPDestroy(solver);
 }
 
@@ -242,7 +244,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
                     globalcolumns, PETSC_DEFAULT, diag, 
                     PETSC_DEFAULT, onnz, &d_A);
 
-    if(d_DOFsPerNode==3){
+    if(d_DOFsPerNode>=1){
       MatSetOption(d_A, MAT_USE_INODES);
     }
 #endif
@@ -298,10 +300,13 @@ void MPMPetscSolver::flushMatrix()
   MatAssemblyEnd(d_A,MAT_FLUSH_ASSEMBLY);
 }
 
-void MPMPetscSolver::fillVector(int i,double v)
+void MPMPetscSolver::fillVector(int i,double v,bool add)
 {
   PetscScalar value = v;
-  VecSetValues(d_B,1,&i,&value,INSERT_VALUES);
+  if (add)
+    VecSetValues(d_B,1,&i,&value,ADD_VALUES);
+  else
+    VecSetValues(d_B,1,&i,&value,INSERT_VALUES);
 }
 
 void MPMPetscSolver::fillTemporaryVector(int i,double v)
@@ -314,6 +319,8 @@ void MPMPetscSolver::assembleVector()
 {
   VecAssemblyBegin(d_B);
   VecAssemblyEnd(d_B);
+  //  VecView(d_B,PETSC_VIEWER_STDOUT_WORLD);
+  
 }
 
 void MPMPetscSolver::assembleTemporaryVector()
@@ -324,14 +331,17 @@ void MPMPetscSolver::assembleTemporaryVector()
 
 void MPMPetscSolver::applyBCSToRHS()
 {
+  //VecView(d_B,PETSC_VIEWER_STDOUT_WORLD);
+  //VecView(d_t,PETSC_VIEWER_STDOUT_WORLD);
   MatMultAdd(d_A,d_t,d_B,d_B);
-
+  //VecView(d_B,PETSC_VIEWER_STDOUT_WORLD);
 }
 
 void MPMPetscSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
 {
   mapping.copy(d_petscLocalToGlobal[patch]);
 }
+
 
 void MPMPetscSolver::removeFixedDOF(int num_nodes)
 {
@@ -347,6 +357,7 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
     // Take care of the d_B side
     PetscScalar v = 0.;
     const int index = *iter;
+
     VecSetValues(d_B,1,&index,&v,INSERT_VALUES);
     MatSetValue(d_A,index,index,1.,INSERT_VALUES);
   }
@@ -395,10 +406,101 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
   MatAssemblyEnd(d_A,MAT_FINAL_ASSEMBLY);
 }
 
+void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
+{
+  IS is;
+  int* indices;
+  int in = 0;
+
+  indices = new int[d_DOF.size()];
+  PetscScalar* temp_vec;
+  VecGetArray(d_t,&temp_vec);
+  for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
+       iter++) {
+    indices[in++] = *iter;
+    //  cout << "DOF = " << *iter << endl;
+
+    // Take care of the d_B side
+    const int index = *iter;
+    PetscScalar v = -temp_vec[index];
+    VecSetValues(d_B,1,&index,&v,INSERT_VALUES);
+    MatSetValue(d_A,index,index,1.,INSERT_VALUES);
+  }
+  VecRestoreArray(d_t,&temp_vec);
+  //VecView(d_B,PETSC_VIEWER_STDOUT_WORLD);
+
+#if 1
+  MatAssemblyBegin(d_A,MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd(d_A,MAT_FINAL_ASSEMBLY);
+#endif
+
+  ISCreateGeneral(PETSC_COMM_SELF,d_DOF.size(),indices,&is);
+
+  PetscScalar one = 1.0;
+#if (PETSC_VERSION_MINOR == 2)
+  MatZeroRows(d_A,is,&one);
+#endif
+#if (PETSC_VERSION_MINOR == 3)
+  MatZeroRowsIS(d_A,is,one);
+#endif
+
+
+#if 1
+  MatTranspose(d_A,PETSC_NULL);
+#if (PETSC_VERSION_MINOR == 2)
+  MatZeroRows(d_A,is,&one);
+#endif
+#if (PETSC_VERSION_MINOR == 3)
+  MatZeroRowsIS(d_A,is,one);
+#endif
+  MatTranspose(d_A,PETSC_NULL);
+#endif
+
+
+  delete[] indices;
+  ISDestroy(is);
+
+  // Make sure the nodes that are outside of the material have values 
+  // assigned and solved for.  The solutions will be 0.
+#if 0
+  MatGetDiagonal(d_A,d_diagonal);
+  PetscScalar* diag;
+  VecGetArray(d_diagonal,&diag);
+
+  for (int j = 0; j < num_nodes; j++) {
+    if (compare(diag[j],0.)) {
+      VecSetValues(d_diagonal,1,&j,&one,INSERT_VALUES);
+      PetscScalar v = 0.;
+      VecSetValues(d_B,1,&j,&v,INSERT_VALUES);
+    }
+  }
+
+  VecRestoreArray(d_diagonal,&diag);
+  VecAssemblyBegin(d_diagonal);
+  VecAssemblyEnd(d_diagonal);
+  MatDiagonalSet(d_A,d_diagonal,INSERT_VALUES);
+#endif
+
+
+  VecAssemblyBegin(d_B);
+  VecAssemblyEnd(d_B);
+
+  MatAssemblyBegin(d_A,MAT_FINAL_ASSEMBLY);
+  MatAssemblyEnd(d_A,MAT_FINAL_ASSEMBLY);
+  //MatView(d_A,PETSC_VIEWER_STDOUT_WORLD);
+  //VecView(d_B,PETSC_VIEWER_STDOUT_WORLD);
+
+}
+
 void MPMPetscSolver::finalizeMatrix()
 {
   MatAssemblyBegin(d_A,MAT_FINAL_ASSEMBLY);
   MatAssemblyEnd(d_A,MAT_FINAL_ASSEMBLY);
+  //  MatAssemblyBegin(d_C,MAT_FINAL_ASSEMBLY);
+  //MatAssemblyEnd(d_C,MAT_FINAL_ASSEMBLY);
+  //  MatView(d_A,PETSC_VIEWER_STDOUT_WORLD);
+  //MatView(d_C,PETSC_VIEWER_STDOUT_WORLD);
+
 }
 
 int MPMPetscSolver::getSolution(vector<double>& xPetsc)
