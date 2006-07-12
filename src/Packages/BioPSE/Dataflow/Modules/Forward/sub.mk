@@ -43,6 +43,7 @@ SRCS     += $(SRCDIR)/AnisoSphereModel.cc\
             $(SRCDIR)/ApplyFEMCurrentSource.cc\
             $(SRCDIR)/ApplyFEMElectrodeSource.cc\
             $(SRCDIR)/ApplyFEMVoltageSource.cc\
+            $(SRCDIR)/BEMTransferSrcToInf.cc\
             $(SRCDIR)/ComputeCurrent.cc\
             $(SRCDIR)/ConfigureElectrode.cc\
             $(SRCDIR)/ConfigureWireElectrode.cc\
