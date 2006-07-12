@@ -50,6 +50,7 @@ SRCS     += $(SRCDIR)/AnisoSphereModel.cc\
             $(SRCDIR)/DipoleInSphere.cc\
             $(SRCDIR)/DipoleInAnisoSpheres.cc\
             $(SRCDIR)/ForwardMagneticField.cc\
+            $(SRCDIR)/GetActivationTimes.cc\
             $(SRCDIR)/IndicesToTensors.cc\
             $(SRCDIR)/InsertElectrodes.cc\
             $(SRCDIR)/InsertVoltageSource.cc\
