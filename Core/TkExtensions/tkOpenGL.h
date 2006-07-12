@@ -34,7 +34,7 @@
  * ClientData struct for the Tk 'opengl' widget command
  *
  */
-
+#include <sci_gl.h>
 #include <sci_glx.h>
 #include <stdio.h>
 #include <tk.h>

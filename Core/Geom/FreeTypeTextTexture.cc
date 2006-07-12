@@ -49,6 +49,11 @@
 #include <sci_glu.h>
 #include <sci_glx.h>
 
+#ifdef _WIN32
+#undef min
+#undef max
+#endif
+
 namespace SCIRun {  
 
 FreeTypeTextTexture::FreeTypeTextTexture(const string &text, 

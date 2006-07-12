@@ -42,6 +42,7 @@
 
 #include <Core/Datatypes/Field.h>
 #include <Core/Geometry/Point.h>
+#include <Core/Algorithms/Math/share.h>
 
 namespace SCIRun {
 
