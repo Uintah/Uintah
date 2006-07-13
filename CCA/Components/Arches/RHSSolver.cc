@@ -26,7 +26,7 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_scalar_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_vel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/computeVel_fort.h>
 
@@ -202,7 +202,7 @@ RHSSolver::scalarLisolve(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-    fort_explicit(idxLo, idxHi, vars->scalar, constvars->old_scalar,
+    fort_explicit_scalar(idxLo, idxHi, vars->scalar, constvars->old_scalar,
 		  constvars->scalarCoeff[Arches::AE], 
 		  constvars->scalarCoeff[Arches::AW], 
 		  constvars->scalarCoeff[Arches::AN], 
@@ -231,7 +231,7 @@ RHSSolver::enthalpyLisolve(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-    fort_explicit(idxLo, idxHi, vars->enthalpy, constvars->old_enthalpy,
+    fort_explicit_scalar(idxLo, idxHi, vars->enthalpy, constvars->old_enthalpy,
 		  constvars->scalarCoeff[Arches::AE], 
 		  constvars->scalarCoeff[Arches::AW], 
 		  constvars->scalarCoeff[Arches::AN], 
