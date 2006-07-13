@@ -45,11 +45,6 @@ public:
   TendShrink(SCIRun::GuiContext *ctx);
   virtual ~TendShrink();
   virtual void execute();
-
-private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-
 };
 
 DECLARE_MAKER(TendShrink)
@@ -59,26 +54,19 @@ TendShrink::TendShrink(SCIRun::GuiContext *ctx) :
 {
 }
 
-TendShrink::~TendShrink() {
+
+TendShrink::~TendShrink()
+{
 }
+
 
 void 
 TendShrink::execute()
 {
-  NrrdDataHandle nrrd_handle;
-
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
 
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
-
-  if (!inrrd_->get(nrrd_handle))
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input InputNrrd.");
-    return;
-  }
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
   Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
@@ -93,7 +81,8 @@ TendShrink::execute()
   nout->axis[0].kind = nrrdKind3DMaskedSymMatrix;
 
   NrrdDataHandle out(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(out);
+
+  send_output_handle("OutputNrrd", out);
 }
 
 } // End namespace SCITeem

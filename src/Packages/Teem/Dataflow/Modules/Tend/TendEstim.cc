@@ -54,7 +54,6 @@ public:
 private:
   NrrdIPort*      inbmat_;
   NrrdIPort*      indwi_;
-  NrrdOPort*      otens_;
 
   GuiInt       knownB0_;
   GuiInt       use_default_threshold_;
@@ -89,7 +88,6 @@ TendEstim::execute()
   update_state(NeedData);
   inbmat_ = (NrrdIPort *)get_iport("Bmat");
   indwi_ = (NrrdIPort *)get_iport("DWI");
-  otens_ = (NrrdOPort *)get_oport("Tensors");
   //  oerr_ = (NrrdOPort *)get_oport("Error");
 
   //Nrrd *sliced_bmat = 0;
@@ -132,7 +130,8 @@ TendEstim::execute()
 
   nout->axis[0].kind = nrrdKind3DMaskedSymMatrix;
   NrrdDataHandle ntmp(scinew NrrdData(nout));
-  otens_->send_and_dereference(ntmp);
+
+  send_output_handle("Tensors", ntmp);
 
   update_state(Completed);
 }

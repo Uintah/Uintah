@@ -48,8 +48,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  
   GuiInt          x_;
   GuiInt          y_;
   GuiInt          z_;
@@ -130,19 +128,10 @@ TendPoint::~TendPoint() {
 void 
 TendPoint::execute()
 {
-  NrrdDataHandle nrrd_handle;
-
   update_state(NeedData);
 
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-
-  if (!inrrd_->get(nrrd_handle))
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input InputNrrd.");
-    return;
-  }
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
   reset_vars();
 
