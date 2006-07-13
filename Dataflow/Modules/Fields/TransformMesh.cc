@@ -144,10 +144,7 @@ TransformMesh::execute()
     fHandle_ = algo->execute(fHandle);
   }
 
-  if( fHandle_.get_rep() ) {
-    FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-    ofield_port->send_and_dereference(fHandle_, true);
-  }
+  send_output_handle("Output Field", fHandle_, true);
 }
 
 

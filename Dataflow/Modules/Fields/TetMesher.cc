@@ -284,10 +284,10 @@ TetMesher::write_tet_file(const int &npoints, double* const points,
   
   my_tetvolfield* tvf = scinew my_tetvolfield(tvm);
   FieldHandle tvH = dynamic_cast<Field*>(tvf);
-  FieldOPort *ofld = (FieldOPort *)get_oport("TetVol");
-  ofld->send(tvH);
 
   cout << "Finished loading " << ntets << " tetrahedrons.\n\n";
+
+  send_output_handle("TetVol", tvH);
 
   return true;
 }

@@ -124,12 +124,6 @@ ChangeFieldBasis::execute()
     generation_ = fh.get_rep()->generation;
   }
 
-  // The output port is required.
-  FieldOPort *ofport = (FieldOPort*)get_oport("Output");
-
-  // The output port is required.
-  MatrixOPort *omport = (MatrixOPort*)get_oport("Mapping");
-
   int basis_order = fh->basis_order();
   const string &bstr = outputdataat_.get();
   if (bstr == "Linear")
@@ -156,11 +150,10 @@ ChangeFieldBasis::execute()
   {
     // No changes, just send the original through (it may be nothing!).
     remark("Passing field from input port to output port unchanged.");
-    ofport->send_and_dereference(fh);
+    send_output_handle("Output", fh);
 
     MatrixHandle m(SparseRowMatrix::identity(fh->data_size()));
-    omport->send_and_dereference(m);
-
+    send_output_handle("Mapping", m);
     return;
   }
 
@@ -225,6 +218,7 @@ ChangeFieldBasis::execute()
 
   if (interpolant.get_rep() == 0)
   {
+    MatrixOPort *omport = (MatrixOPort*)get_oport("Mapping");
     if (omport->nconnections() > 0)
     {
       error("Mapping for that location combination is not supported.");
@@ -235,8 +229,8 @@ ChangeFieldBasis::execute()
     }
   }
 
-  ofport->send_and_dereference(ef);
-  omport->send_and_dereference(interpolant);
+  send_output_handle("Output", ef);
+  send_output_handle("Mapping", interpolant);
 }
 
     

@@ -181,8 +181,7 @@ AttractNormals::execute()
 
   FieldHandle ofieldhandle(algo->execute(this, ifieldhandle, attractor));
 
-  FieldOPort *ofield_port = (FieldOPort *)get_output_port("Output Field");
-  ofield_port->send_and_dereference(ofieldhandle);
+  send_output_handle("Output Field", ofieldhandle);
 }
 
 

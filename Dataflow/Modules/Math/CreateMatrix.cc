@@ -76,14 +76,7 @@ CreateMatrix::execute()
   handle = dynamic_cast<Matrix *>(dmat);
   delete mat;
   
-  MatrixOPort *oport;
-  if (!(oport = dynamic_cast<MatrixOPort *>(get_oport(0))))
-  {
-    error("Cannot find ouput port");
-    return;
-  }
-  
-  oport->send_and_dereference(handle);
+  send_output_handle("Matrix", handle);
 }
 
 } // End namespace SCIRun

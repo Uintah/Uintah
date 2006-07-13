@@ -165,8 +165,7 @@ MeshSmoother::execute()
   FieldHandle ofield = algo->execute(this, ifieldhandle, 
                                      sb, last_smooth_scheme_ );
   
-  FieldOPort *ofield_port = (FieldOPort *)get_oport("Smoothed");
-  ofield_port->send_and_dereference(ofield);
+  send_output_handle("Smoothed", ofield);
 }
 
 

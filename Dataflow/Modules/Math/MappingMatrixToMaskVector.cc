@@ -74,7 +74,6 @@ MappingMatrixToMaskVector::execute()
 {
   update_state(Module::JustStarted);
   MatrixIPort * matrix_iport_ = (MatrixIPort *)get_iport("MappingMatrix");
-  NrrdOPort * nrrd_oport_ = (NrrdOPort *)get_oport("MaskVector");
 
   update_state(Module::NeedData);
   
@@ -108,7 +107,7 @@ MappingMatrixToMaskVector::execute()
     }
   }
 
-  nrrd_oport_->send_and_dereference(nrrdH);
+  send_output_handle("MaskVector", nrrdH);
 }
 
 } // End namespace SCIRun

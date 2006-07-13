@@ -137,9 +137,7 @@ ToStructured::execute()
     }
   }
 
-  FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-  ofield_port->send(ofieldhandle_);
-  if (!ofield_port->have_data()) { ofieldhandle_ = 0; }
+  send_output_handle("Output Field", ofieldhandle_, true);
 }
 
 

@@ -278,7 +278,6 @@ ChangeFieldBounds::execute()
   }
 
   // The output port is required.
-  FieldOPort *oport = (FieldOPort*)get_oport("Output Field");
   update_state(Executing);
 
   // build the transform widget and set the the initial
@@ -389,15 +388,12 @@ ChangeFieldBounds::execute()
   fh->mesh_detach();
   fh->mesh()->transform(t);
 
-  oport->send_and_dereference(fh);
+  send_output_handle("Output Field", fh);
 
-  // The output port is required.
-  MatrixOPort *moport = (MatrixOPort*)get_oport("Transformation Matrix");
-
-  // convert the transform into a matrix and send it out   
+  // Convert the transform into a matrix and send it out.
   DenseMatrix *matrix_transform = scinew DenseMatrix(t);
   MatrixHandle mh = matrix_transform;
-  moport->send_and_dereference(mh);
+  send_output_handle("Transformation Matrix", mh);
 }
 
     

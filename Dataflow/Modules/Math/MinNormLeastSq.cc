@@ -65,8 +65,6 @@ class MinNormLeastSq : public Module {
   MatrixIPort* A1_imat_;
   MatrixIPort* A2_imat_;
   MatrixIPort* b_imat_;
-  MatrixOPort* w_omat_;
-  MatrixOPort* bprime_omat_;
 
 public:
   MinNormLeastSq(GuiContext* ctx);
@@ -91,8 +89,6 @@ MinNormLeastSq::execute()
   A1_imat_ = (MatrixIPort *)get_iport("BasisVec2(Col)");
   A2_imat_ = (MatrixIPort *)get_iport("BasisVec3(Col)");
   b_imat_  = (MatrixIPort *)get_iport("TargetVec(Col)");
-  w_omat_  = (MatrixOPort *)get_oport("WeightVec(Col)");
-  bprime_omat_  = (MatrixOPort *)get_oport("ResultVec(Col)");
 
   int i;
   vector<MatrixHandle> in(4);
@@ -136,12 +132,12 @@ MinNormLeastSq::execute()
   ColumnMatrix* w_vec = new ColumnMatrix(3);
   w_vec->set_data(x);   
   MatrixHandle w_vecH(w_vec);
-  w_omat_->send_and_dereference(w_vecH);
+  send_output_handle("WeightVec(Col)", w_vecH);
 
   ColumnMatrix* bprime_vec = new ColumnMatrix(size);
   bprime_vec->set_data(bprime);
   MatrixHandle bprime_vecH(bprime_vec);
-  bprime_omat_->send_and_dereference(bprime_vecH);
+  send_output_handle("ResultVec(Col)", bprime_vecH);
 }    
 
 } // End namespace SCIRun

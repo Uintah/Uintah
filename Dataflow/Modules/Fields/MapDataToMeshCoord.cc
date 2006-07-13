@@ -144,8 +144,7 @@ MapDataToMeshCoord::execute()
     
     FieldHandle ofield(algo->execute(ifield, coord));
     
-    FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");
-    ofp->send_and_dereference(ofield);
+    send_output_handle("Output Field", ofield);
   }
 }
 

@@ -108,9 +108,6 @@ ChangeFieldDataType::execute()
     return;
   }
 
-  // The output port is required.
-  FieldOPort *oport = (FieldOPort*)get_oport("Output Field");
-
   const string old_data_str = fh->get_type_description(Field::MESH_TD_E)->get_name();
   const string new_data_str = outputdatatype_.get();
 
@@ -132,7 +129,7 @@ ChangeFieldDataType::execute()
   }
   else if (new_data_str == last_data_str_ && oport_cached("Output Field"))
   {
-    oport->send_and_dereference(outputfield_, true);
+    send_output_handle("Output Field", outputfield_, true);
     return;
   }
   last_data_str_ = new_data_str;
@@ -142,7 +139,7 @@ ChangeFieldDataType::execute()
     // No changes, just send the original through.
     outputfield_ = fh;
     remark("Passing field from input port to output port unchanged.");
-    oport->send_and_dereference(outputfield_, true);
+    send_output_handle("Output Field", outputfield_, true);
     return;
   }
 
@@ -190,7 +187,7 @@ ChangeFieldDataType::execute()
     }
   }
     
-  oport->send_and_dereference(outputfield_, true);
+  send_output_handle("Output Field", outputfield_, true);
 }
 
     

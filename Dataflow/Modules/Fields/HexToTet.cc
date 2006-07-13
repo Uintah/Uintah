@@ -93,13 +93,11 @@ HexToTet::execute()
     return;
   }
 
-  FieldOPort *ofp = (FieldOPort *)get_oport("TetVol");
-
   // Cache generation.
   if (ofieldhandle_.get_rep() &&
       ifieldhandle->generation == last_generation_)
   {
-    ofp->send_and_dereference(ofieldhandle_, true);
+    send_output_handle("TetVol", ofieldhandle_, true);
     return;
   }
   last_generation_ = ifieldhandle->generation;
@@ -133,7 +131,8 @@ HexToTet::execute()
       return;
     }
   }
-  ofp->send_and_dereference(ofieldhandle_, true);
+
+  send_output_handle("TetVol", ofieldhandle_, true);
 }
 
 

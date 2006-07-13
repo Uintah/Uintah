@@ -686,12 +686,7 @@ SampleField::execute()
     }
   }
 
-
-  if( fHandle_.get_rep() )
-  {
-    FieldOPort *ofield_port = (FieldOPort *)get_oport("Samples");
-    ofield_port->send_and_dereference(fHandle_, true);
-  }
+  send_output_handle("Samples", fHandle_, true);
 }
 
 

@@ -78,7 +78,6 @@ void CastMLVtoHV::execute()
 {
   // must find ports and have valid data on inputs
   FieldIPort *iport_ = (FieldIPort*)get_iport("MaskedLatVolField");
-  FieldOPort *oport_ = (FieldOPort*)get_oport("HexVolField");
 
   FieldHandle ifieldH;
   if (!iport_->get(ifieldH) || 
@@ -86,7 +85,7 @@ void CastMLVtoHV::execute()
     return;
   
   if (ifieldH->generation == last_gen_ && ofieldH_.get_rep()) {
-    oport_->send_and_dereference(ofieldH_, true);
+    send_output_handle("HexVolField", ofieldH_, true);
     return;
   }
   last_gen_ = ifieldH->generation;
@@ -134,7 +133,7 @@ void CastMLVtoHV::execute()
 
   ofieldH_ = algo->execute(ifieldH, ifieldH->basis_order());
 
-  oport_->send_and_dereference(ofieldH_, true);
+  send_output_handle("HexVolField", ofieldH_, true);
 }
 
 

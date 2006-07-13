@@ -136,7 +136,6 @@ ErrorMetric::execute()
 {
      ivec1P_ = (MatrixIPort *)get_iport("Vec1");
      ivec2P_ = (MatrixIPort *)get_iport("Vec2");
-     errorP_ = (MatrixOPort *)get_oport("Error out");
 
      MatrixHandle ivec1H;
      ColumnMatrix* ivec1;
@@ -233,7 +232,8 @@ ErrorMetric::execute()
          error("Unknown ErrorMetric::methodTCL_ - " + meth);
          *val=0;
      }
-     errorP_->send_and_dereference(errorH);
+
+     send_output_handle("Error Out", errorH);
 }
 
 

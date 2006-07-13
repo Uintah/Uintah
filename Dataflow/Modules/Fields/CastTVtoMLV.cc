@@ -84,7 +84,6 @@ void CastTVtoMLV::execute()
 {
   // must find ports and have valid data on inputs
   FieldIPort *iport_ = (FieldIPort*)get_iport("TetVolFieldMask");
-  FieldOPort *oport_ = (FieldOPort*)get_oport("LatVolField");
 
   FieldHandle ifieldH;
   if (!iport_->get(ifieldH) || 
@@ -150,8 +149,9 @@ void CastTVtoMLV::execute()
     }
     ++ib;
   }
+
   FieldHandle tmp(lv);
-  oport_->send_and_dereference(tmp);
+  send_output_handle("LatVolField", tmp);
 }
 
 } // End namespace SCIRun

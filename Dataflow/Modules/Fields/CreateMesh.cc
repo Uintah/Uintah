@@ -129,8 +129,7 @@ CreateMesh::execute()
     return;
   }
 
-  FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");
-  ofp->send_and_dereference(result_field);
+  send_output_handle("Output Field", result_field);
 }
 
 

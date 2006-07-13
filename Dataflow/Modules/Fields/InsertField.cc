@@ -170,24 +170,9 @@ InsertField::execute()
     algo2->extract(extended_, mapping_, combined_, added_nodes, added_elems);
   }
 
-  if( combined_.get_rep() )
-  {
-    FieldOPort *ofield_port = (FieldOPort *)get_oport("Combined Field");
-    ofield_port->send_and_dereference(combined_, true);
-  }
-
-  if( extended_.get_rep() )
-  {
-    FieldOPort *ofield_port = (FieldOPort *)get_oport("Extended Insert Field");
-    ofield_port->send_and_dereference(extended_, true);
-  }
-
-  if( mapping_.get_rep() )
-  {
-    MatrixOPort *oport =
-      (MatrixOPort *)get_oport("Combined To Extended Mapping");
-    oport->send_and_dereference(mapping_, true);
-  }
+  send_output_handle("Combined Field", combined_, true);
+  send_output_handle("Extended Insert Field", extended_, true);
+  send_output_handle("Combined To Extended Mapping", mapping_, true);
 }
 
 

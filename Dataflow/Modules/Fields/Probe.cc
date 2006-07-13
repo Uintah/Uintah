@@ -426,12 +426,10 @@ Probe::execute()
   gui_locz_.set(location.z());
   if (gui_show_value_.get()) { gui_value_.set(valstr.str()); }
 
-  FieldOPort *ofp = (FieldOPort *)get_oport("Probe Point");
-  ofp->send_and_dereference(ofield);
+  send_output_handle("Probe Point", ofield);
 
   if (input_field_p)
   {
-    MatrixOPort *mp = (MatrixOPort *)get_oport("Element Index");
     unsigned int index = 0;
     switch (ifieldhandle->basis_order())
     {
@@ -454,7 +452,7 @@ Probe::execute()
     }
     MatrixHandle cm = scinew ColumnMatrix(1);
     cm->put(0, 0, index);
-    mp->send_and_dereference(cm);
+    send_output_handle("Element Index", cm);
   }
 }
 

@@ -56,7 +56,6 @@ namespace SCIRun {
 class LinAlgBinary : public Module {
   MatrixIPort* imatA_;
   MatrixIPort* imatB_;
-  MatrixOPort* omat_;
 
   GuiString op_;
   GuiString function_;
@@ -81,7 +80,6 @@ LinAlgBinary::~LinAlgBinary()
 void LinAlgBinary::execute() {
   imatA_ = (MatrixIPort *)get_iport("A");
   imatB_ = (MatrixIPort *)get_iport("B");
-  omat_ = (MatrixOPort *)get_oport("Output");
   
   update_state(NeedData);
   MatrixHandle aH, bH;
@@ -114,7 +112,7 @@ void LinAlgBinary::execute() {
       return;
     }
     MatrixHandle mtmp(aH + bH);
-    omat_->send_and_dereference(mtmp);
+    send_output_handle("Output", mtmp);
     return;
   } else if (op == "Mult") {
     if (!aH.get_rep()) {
@@ -133,7 +131,7 @@ void LinAlgBinary::execute() {
       return;
     }
     MatrixHandle mtmp(aH * bH);
-    omat_->send_and_dereference(mtmp);
+    send_output_handle("Output", mtmp);
     return;
   } else if (op == "Function") {
     if (aH->nrows()*aH->ncols() != bH->nrows()*bH->ncols()) {
@@ -192,7 +190,7 @@ void LinAlgBinary::execute() {
     {
       x[i] = algo->user_function(a[i], b[i]);
     }
-    omat_->send_and_dereference(m);
+    send_output_handle("Output", m);
     return;
   } else if (op == "SelectColumns") {
     if (!aH.get_rep() || !bH.get_rep()) {
@@ -220,16 +218,16 @@ void LinAlgBinary::execute() {
     if (dynamic_cast<DenseMatrix *>(aH.get_rep()))
     {
       MatrixHandle mtmp(cd);
-      omat_->send_and_dereference(mtmp);
+      send_output_handle("Output", mtmp);
     }
     else if (dynamic_cast<ColumnMatrix *>(aH.get_rep())) {
       MatrixHandle mtmp(cd->column());
       delete cd;
-      omat_->send_and_dereference(mtmp);
+      send_output_handle("Output", mtmp);
     } else {
       MatrixHandle mtmp(cd->sparse());
       delete cd;
-      omat_->send_and_dereference(mtmp);
+      send_output_handle("Output", mtmp);
     }
     return;
   } else if (op == "SelectRows") {
@@ -258,16 +256,16 @@ void LinAlgBinary::execute() {
     if (dynamic_cast<DenseMatrix *>(aH.get_rep()))
     {
       MatrixHandle mtmp(cd);
-      omat_->send_and_dereference(mtmp);
+      send_output_handle("Output", mtmp);
     }
     else if (dynamic_cast<ColumnMatrix *>(aH.get_rep())) {
       MatrixHandle mtmp(cd->column());
       delete cd;
-      omat_->send_and_dereference(mtmp);
+      send_output_handle("Output", mtmp);
     } else {
       MatrixHandle mtmp(cd->sparse());
       delete cd;
-      omat_->send_and_dereference(mtmp);
+      send_output_handle("Output", mtmp);
     }
     return;
   } else if (op == "NormalizeAtoB") {
@@ -310,7 +308,7 @@ void LinAlgBinary::execute() {
     const double scale = (bmax - bmin)/(amax - amin);
     for (i=0; i<na; i++)
       anew[i] = (a[i]-amin)*scale+bmin;
-    omat_->send_and_dereference(anewH);
+    send_output_handle("Output", anewH);
   } else {
     warning("Don't know operation "+op);
     return;

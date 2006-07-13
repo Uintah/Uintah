@@ -442,14 +442,8 @@ SeedPoints::execute()
     }
 
     FieldHandle ofield = field;
-    
-    FieldOPort *ofp = (FieldOPort *)get_oport("SeedPoints Point");
-    if (!ofp) 
-    {
-      error("Unable to initialize oport 'SeedPoints Point'.");
-      return;
-    }
-    ofp->send_and_dereference(ofield);
+    send_output_handle("SeedPoints Point", ofield);
+
     gui_send_.set(0);
   }
 }
