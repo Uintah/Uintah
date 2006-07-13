@@ -60,7 +60,8 @@ WARNING
     void PostFixup(vector<PseudoPatch> &patches,IntVector min_patch_size);
   private:
     void problemSetup_BulletProofing(const int k);
-    void AddSafetyLayer(const vector<PseudoPatch> &patches,set<IntVector> &flag_set, IntVector refinement_ratio );
+    void AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVector> &coarse_flags,
+                        const vector<const Patch*>& coarse_patches, int level);
 
     int task_count_;								//number of tasks created on this proc
     double tola_,tolb_;							//Tolerance parameters
