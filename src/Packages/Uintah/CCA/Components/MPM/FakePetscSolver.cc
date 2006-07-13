@@ -101,6 +101,11 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::removeFixedDOF()!", __FILE__, __LINE__ );
 }
 
+void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
+{
+ throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::removeFixedDOFHeat()!", __FILE__, __LINE__ );
+}
+
 
 void MPMPetscSolver::finalizeMatrix()
 {
