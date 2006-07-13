@@ -1744,7 +1744,7 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
         task->computes(tvar->var,   tvar->matls);
       }
       if( where == "finalizeTimestep"){
-        task->computes(tvar->var,   tvar->matls);
+        task->modifies(tvar->var,   tvar->matls);
       }
       
     }
