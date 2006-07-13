@@ -70,7 +70,7 @@ public:
   Point seed_;                         // initial point
   double tolerance2_;                  // square error tolerance
   double stepsize_;                    // initial step size
-  int maxsteps_;                       // max number of steps
+  unsigned int maxsteps_;              // max number of steps
   VectorFieldInterfaceHandle vfi_;     // the field
 
   vector<Point> nodes_;                // storage for points
