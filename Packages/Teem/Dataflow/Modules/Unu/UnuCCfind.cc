@@ -55,9 +55,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-  
   GuiInt          connectivity_;
   GuiString       type_;
   GuiInt          usetype_;
@@ -67,31 +64,25 @@ private:
 DECLARE_MAKER(UnuCCfind)
 UnuCCfind::UnuCCfind(GuiContext* ctx)
   : Module("UnuCCfind", ctx, Source, "UnuAtoM", "Teem"),
-    inrrd_(0), onrrd_(0),
     connectivity_(get_ctx()->subVar("connectivity")),
     type_(get_ctx()->subVar("type")),
     usetype_(get_ctx()->subVar("usetype"))
 {
 }
 
-UnuCCfind::~UnuCCfind(){
+
+UnuCCfind::~UnuCCfind()
+{
 }
 
+
 void
-UnuCCfind::execute(){
-  NrrdDataHandle nrrd_handle;
-
+UnuCCfind::execute()
+{
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty InputNrrd.");
-    return;
-  }
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
   reset_vars();
 
@@ -123,7 +114,7 @@ UnuCCfind::execute(){
     nout->axis[i].kind = nin->axis[i].kind;
   }
 
-  onrrd_->send_and_dereference(out);
+  send_output_handle("OutputNrrd", out);
 }
 
 

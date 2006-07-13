@@ -55,10 +55,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdIPort*      idmap_;
-  NrrdOPort*      onrrd_;
-
   GuiInt       length_;
   GuiInt       rescale_;
   GuiDouble    min_;
@@ -73,7 +69,6 @@ private:
 DECLARE_MAKER(UnuImap)
 UnuImap::UnuImap(GuiContext* ctx)
   : Module("UnuImap", ctx, Source, "UnuAtoM", "Teem"),
-    inrrd_(0), idmap_(0), onrrd_(0),
     length_(get_ctx()->subVar("length")),
     rescale_(get_ctx()->subVar("rescale")),
     min_(get_ctx()->subVar("min")),
@@ -85,32 +80,22 @@ UnuImap::UnuImap(GuiContext* ctx)
 {
 }
 
-UnuImap::~UnuImap(){
+
+UnuImap::~UnuImap()
+{
 }
 
+
 void
- UnuImap::execute(){
-  NrrdDataHandle nrrd_handle;
-  NrrdDataHandle dmap_handle;
-
+UnuImap::execute()
+{
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  idmap_ = (NrrdIPort *)get_iport("IrregularMapNrrd");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
-  if (!idmap_->get(dmap_handle))
-    return;
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
-  if (!nrrd_handle.get_rep()) {
-    error("Empty InputNrrd.");
-    return;
-  }
-  if (!dmap_handle.get_rep()) {
-    error("Empty IrregularNrrd.");
-    return;
-  }
+  NrrdDataHandle dmap_handle;
+  if (!get_input_handle("IrregularMapNrrd", dmap_handle)) return;
 
   reset_vars();
 
@@ -132,8 +117,9 @@ void
     nacl = NULL;
   }
 
-  int rescale = rescale_.get();
-  if (rescale) {
+  const int rescale = rescale_.get();
+  if (rescale)
+  {
     double min = AIR_NAN, max = AIR_NAN;
     if (!useinputmin_.get())
       min = min_.get();
@@ -143,14 +129,19 @@ void
     nrrdRangeSafeSet(range, nin, nrrdBlind8BitRangeState);
   }
 
-  if (usetype_.get()) {
-    if (nrrdApply1DIrregMap(nout, nin, range, dmap, nacl, dmap->type, rescale)) {
+  if (usetype_.get())
+  {
+    if (nrrdApply1DIrregMap(nout, nin, range, dmap,
+                            nacl, dmap->type, rescale))
+    {
       char *err = biffGetDone(NRRD);
       error(string("Error Mapping Nrrd to Lookup Table: ") + err);
       free(err);
       return;
     }
-  } else {
+  }
+  else
+  {
     if (nrrdApply1DIrregMap(nout, nin, range, dmap, nacl,
                             string_to_nrrd_type(type_.get()), rescale))
     {
@@ -172,7 +163,7 @@ void
     nout->axis[i].kind = nin->axis[i].kind;
   }
 
-  onrrd_->send_and_dereference(out);
+  send_output_handle("OutputNrrd", out);
 }
 
 

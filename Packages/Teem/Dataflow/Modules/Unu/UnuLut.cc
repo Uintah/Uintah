@@ -55,10 +55,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdIPort*      ilut_;
-  NrrdOPort*      onrrd_;
-
   GuiInt       rescale_;
   GuiDouble    min_;
   GuiInt       useinputmin_;
@@ -72,7 +68,6 @@ private:
 DECLARE_MAKER(UnuLut)
 UnuLut::UnuLut(GuiContext* ctx)
   : Module("UnuLut", ctx, Source, "UnuAtoM", "Teem"),
-    inrrd_(0), ilut_(0), onrrd_(0),
     rescale_(get_ctx()->subVar("rescale")),
     min_(get_ctx()->subVar("min")),
     useinputmin_(get_ctx()->subVar("useinputmin")),
@@ -92,27 +87,13 @@ UnuLut::~UnuLut()
 void
 UnuLut::execute()
 {
-  NrrdDataHandle nrrd_handle;
-  NrrdDataHandle lut_handle;
-
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  ilut_ = (NrrdIPort *)get_iport("LookupTableNrrd");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
-  if (!ilut_->get(lut_handle))
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty InputNrrd.");
-    return;
-  }
-  if (!lut_handle.get_rep()) {
-    error("Empty LookupTableNrrd.");
-    return;
-  }
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
+  
+  NrrdDataHandle lut_handle;
+  if (!get_input_handle("LookupTableNrrd", lut_handle)) return;
 
   reset_vars();
 
@@ -164,7 +145,7 @@ UnuLut::execute()
     nout->axis[i].kind = nin->axis[i].kind;
   }
 
-  onrrd_->send_and_dereference(out);
+  send_output_handle("OutputNrrd", out);
 }
 
 

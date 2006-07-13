@@ -58,10 +58,8 @@ public:
   virtual ~UnuPermute();
   virtual void execute();
   virtual void tcl_command(GuiArgs&, void*);
-private:
 
-  NrrdIPort           *inrrd_;
-  NrrdOPort           *onrrd_;
+private:
   GuiInt               dim_;
   GuiInt               uis_;
   vector<GuiInt*>      axes_;
@@ -73,6 +71,7 @@ private:
 } // End namespace SCITeem
 
 using namespace SCITeem;
+
 DECLARE_MAKER(UnuPermute)
 
 UnuPermute::UnuPermute(GuiContext *ctx) : 
@@ -84,7 +83,8 @@ UnuPermute::UnuPermute(GuiContext *ctx) :
   // value will be overwritten at gui side initialization.
   dim_.set(0);
 
-  for (int a = 0; a < 4; a++) {
+  for (int a = 0; a < 4; a++) 
+  {
     ostringstream str;
     str << "axis" << a;
     axes_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
@@ -92,7 +92,9 @@ UnuPermute::UnuPermute(GuiContext *ctx) :
   }
 }
 
-UnuPermute::~UnuPermute() {
+
+UnuPermute::~UnuPermute()
+{
 }
 
 
@@ -115,17 +117,12 @@ UnuPermute::valid_data(unsigned int* axes) {
 void 
 UnuPermute::execute()
 {
-  NrrdDataHandle nrrdH;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("Nrrd");
-  onrrd_ = (NrrdOPort *)get_oport("Nrrd");
 
-  if (!inrrd_->get(nrrdH))
-    return;
-  if (!nrrdH.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
+  NrrdDataHandle nrrdH;
+  if (!get_input_handle("Nrrd", nrrdH)) return;
+
+  reset_vars();
 
   dim_.set(nrrdH->nrrd_->dim);
 
@@ -196,11 +193,9 @@ UnuPermute::execute()
   }
 
   if (!changed && !new_dataset && last_nrrdH_.get_rep()) {
-    onrrd_->send_and_dereference(last_nrrdH_, true);
+    send_output_handle("Nrrd", last_nrrdH_, true);
     return;
   }
-
-
 
   unsigned int* axp = &(last_axes_[0]);
   if (!valid_data(axp)) return;
@@ -211,8 +206,10 @@ UnuPermute::execute()
   nrrdAxesPermute(nout, nin, axp);
 
   last_nrrdH_ = scinew NrrdData(nout);
-  onrrd_->send_and_dereference(last_nrrdH_, true);
+
+  send_output_handle("Nrrd", last_nrrdH_, true);
 }
+
 
 void 
 UnuPermute::tcl_command(GuiArgs& args, void* userdata)

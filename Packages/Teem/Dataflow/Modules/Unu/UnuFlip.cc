@@ -47,9 +47,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-
   GuiInt          axis_;
 };
 
@@ -70,28 +67,25 @@ UnuFlip::~UnuFlip()
 void 
 UnuFlip::execute()
 {
-  NrrdDataHandle nrrd_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
+  reset_vars();
 
   Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
   
-  if (axis_.get() >= (int)nin->dim) {
-    error("Axis " + to_string(axis_.get()) + " out of bounds [0," + to_string(nin->dim-1));
+  if (axis_.get() >= (int)nin->dim)
+  {
+    error("Axis " + to_string(axis_.get()) +
+          " out of bounds [0," + to_string(nin->dim-1));
     return;
   }
 
-  if (nrrdFlip(nout, nin, axis_.get())) {
+  if (nrrdFlip(nout, nin, axis_.get()))
+  {
    char *err = biffGetDone(NRRD);
     error(string("Error Flipping nrrd: ") + err);
     free(err);
@@ -107,11 +101,12 @@ UnuFlip::execute()
   out->copy_properties(nrrd_handle.get_rep());
 
   // Copy the axis kinds
-  for (size_t i=0; i<nin->dim; i++) {
+  for (size_t i=0; i<nin->dim; i++)
+  {
     nout->axis[i].kind = nin->axis[i].kind;
   }
 
-  onrrd_->send_and_dereference(out);
+  send_output_handle("OutputNrrd", out);
 }
 
 

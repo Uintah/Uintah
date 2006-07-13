@@ -51,9 +51,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-
   GuiInt       height_;
   GuiInt       log_;
   GuiDouble    max_;
@@ -80,32 +77,29 @@ UnuDhisto::~UnuDhisto()
 void 
 UnuDhisto::execute()
 {
-  NrrdDataHandle nrrd_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
   reset_vars();
 
   Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
-  if (usemax_.get()) {
-    if (nrrdHistoDraw(nout, nin, height_.get(), log_.get(), max_.get())) {
+  if (usemax_.get())
+  {
+    if (nrrdHistoDraw(nout, nin, height_.get(), log_.get(), max_.get()))
+    {
       char *err = biffGetDone(NRRD);
       error(string("Error creating DHistogram nrrd: ") + err);
       free(err);
     }
-  } else {
-    if (nrrdHistoDraw(nout, nin, height_.get(), log_.get(), AIR_NAN)) {
+  }
+  else
+  {
+    if (nrrdHistoDraw(nout, nin, height_.get(), log_.get(), AIR_NAN))
+    {
       char *err = biffGetDone(NRRD);
       error(string("Error creating DHistogram nrrd: ") + err);
       free(err);
@@ -113,7 +107,8 @@ UnuDhisto::execute()
   }
 
   NrrdDataHandle out(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(out);
+
+  send_output_handle("OutputNrrd", out);
 }
 
 
