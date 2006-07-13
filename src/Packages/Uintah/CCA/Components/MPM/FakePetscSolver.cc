@@ -60,7 +60,7 @@ void MPMPetscSolver::flushMatrix()
 }
 
 
-void MPMPetscSolver::fillVector(int i,double v,bool add = false)
+void MPMPetscSolver::fillVector(int i,double v,bool add)
 {
  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::fillVector()!", __FILE__, __LINE__ );
 }
