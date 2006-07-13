@@ -53,9 +53,9 @@ private:
   GuiInt                        gui_max_steps_;
   GuiInt                        gui_direction_;
   GuiInt                        gui_value_;
-  GuiInt                        gui_remove_colinear_;
+  GuiInt                        gui_remove_colinear_pts_;
   GuiInt                        gui_method_;
-  GuiInt                        gui_np_;
+  GuiInt                        gui_nthreads_;
 
   bool execute_error_;
 };
@@ -69,9 +69,9 @@ StreamLines::StreamLines(GuiContext* ctx) :
   gui_max_steps_(get_ctx()->subVar("maxsteps"), 2000),
   gui_direction_(get_ctx()->subVar("direction"), 1),
   gui_value_(get_ctx()->subVar("value"), 1),
-  gui_remove_colinear_(get_ctx()->subVar("remove-colinear"), 1),
+  gui_remove_colinear_pts_(get_ctx()->subVar("remove-colinear-pts"), 1),
   gui_method_(get_ctx()->subVar("method"), 4),
-  gui_np_(get_ctx()->subVar("np"), 1),
+  gui_nthreads_(get_ctx()->subVar("nthreads"), 1),
   execute_error_(0)
 {
 }
@@ -79,16 +79,6 @@ StreamLines::StreamLines(GuiContext* ctx) :
 StreamLines::~StreamLines()
 {
 }
-
-
-static inline int
-CLAMP(int a, int lower, int upper)
-{
-  if (a < lower) return lower;
-  else if (a > upper) return upper;
-  return a;
-}
-
 
 void
 StreamLines::execute()
@@ -119,14 +109,14 @@ StreamLines::execute()
       
       inputs_changed_ ||
 
-      gui_tolerance_.changed( true )       ||
-      gui_step_size_.changed( true )       ||
-      gui_max_steps_.changed( true )       ||
-      gui_direction_.changed( true )       ||
-      gui_value_.changed( true )           ||
-      gui_remove_colinear_.changed( true ) ||
-      gui_method_.changed( true )          ||
-      gui_np_.changed( true )              ||
+      gui_tolerance_.changed( true )           ||
+      gui_step_size_.changed( true )           ||
+      gui_max_steps_.changed( true )           ||
+      gui_direction_.changed( true )           ||
+      gui_value_.changed( true )               ||
+      gui_remove_colinear_pts_.changed( true ) ||
+      gui_method_.changed( true )              ||
+      gui_nthreads_.changed( true )            ||
 
       execute_error_ ) {
   
@@ -172,7 +162,7 @@ StreamLines::execute()
 			 gui_max_steps_.get(),
 			 gui_direction_.get(),
 			 gui_value_.get(),
-			 gui_remove_colinear_.get());
+			 gui_remove_colinear_pts_.get());
     } else {
       CompileInfoHandle ci =
 	StreamLinesAlgo::get_compile_info(sftd, dsttype, sltd,
@@ -183,10 +173,13 @@ StreamLines::execute()
       field_output_handle_ =
 	algo->execute(this, sField, vfi,
 		      gui_tolerance_.get(),
-		      gui_step_size_.get(), gui_max_steps_.get(),
-		      gui_direction_.get(), gui_value_.get(),
-		      gui_remove_colinear_.get(),
-		      gui_method_.get(), CLAMP(gui_np_.get(), 1, 256));
+		      gui_step_size_.get(),
+		      gui_max_steps_.get(),
+		      gui_direction_.get(),
+		      gui_value_.get(),
+		      gui_remove_colinear_pts_.get(),
+		      gui_method_.get(),
+		      gui_nthreads_.get());
     }
   }
    
