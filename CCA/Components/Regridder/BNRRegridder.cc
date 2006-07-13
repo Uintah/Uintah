@@ -60,6 +60,8 @@ BNRRegridder::~BNRRegridder()
 
 Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP& ups)
 {
+  double start;
+  double brtotal=0,futotal=0,sltotal=0,pfutotal=0,crtotal=0, ctotal=0, ftotal=0, atotal=0;
   LoadBalancer *lb=sched->getLoadBalancer();
   
   Grid* newGrid = scinew Grid();
@@ -75,6 +77,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
     if(l>=d_maxLevels-1)
       continue;
 
+    start=MPI_Wtime();
     const LevelP level=oldGrid->getLevel(l);
    
     //create coarse flag set 
@@ -96,27 +99,33 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
     //create flags vector
     vector<IntVector> coarse_flag_vector(coarse_flag_sets[l].size());
     coarse_flag_vector.assign(coarse_flag_sets[l].begin(),coarse_flag_sets[l].end());
-    
+    ctotal+=MPI_Wtime()-start;
+    start=MPI_Wtime(); 
     //Parallel BR over coarse flags
     RunBR(coarse_flag_vector,patch_sets[l]);  
-   
+    brtotal+=MPI_Wtime()-start;
+
     if(patch_sets[l].empty())
        continue;
 
     //saftey layers
     if(l>0)
     {
+      start=MPI_Wtime();
       AddSafetyLayer(patch_sets[l], coarse_flag_sets[l-1], lb->getPerProcessorPatchSet(oldGrid->getLevel(l))->getSubset(d_myworld->myrank())->getVector(), l);
+      sltotal+=MPI_Wtime()-start;
     }
     
     //Fixup patchlist
+    start=MPI_Wtime();
     patchfixer_.FixUp(patch_sets[l]);
-  
+    futotal+=MPI_Wtime()-start;
     //Post fixup patchlist 
+    start=MPI_Wtime();
     PostFixup(patch_sets[l],d_minPatchSize);
-
+    pfutotal+=MPI_Wtime()-start;
   }
-  
+  start=MPI_Wtime(); 
   // create level 0
   Point anchor = oldGrid->getLevel(0)->getAnchor();
   Vector spacing = oldGrid->getLevel(0)->dCell();
@@ -133,8 +142,14 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
     IntVector high = p->getCellHighIndex();
     level0->addPatch(low, high, inlow, inhigh);
   }
+  crtotal+=MPI_Wtime()-start;
+  start=MPI_Wtime();
   level0->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
+  ftotal+=MPI_Wtime()-start;
+  start=MPI_Wtime();
   level0->assignBCS(grid_ps);
+  atotal+=MPI_Wtime()-start;
+  start=MPI_Wtime();
 
   //For each level Coarse -> Fine
   for(int l=0; l < oldGrid->numLevels() && l < d_maxLevels-1;l++)
@@ -159,9 +174,18 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
       newLevel->addPatch(low, high, low, high);
     }
     
+    crtotal+=MPI_Wtime()-start;
+    start=MPI_Wtime();
     newLevel->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
+    ftotal+=MPI_Wtime()-start;
+    start=MPI_Wtime();
     newLevel->assignBCS(grid_ps);
+    atotal+=MPI_Wtime()-start;
+    start=MPI_Wtime();
   }
+  crtotal+=MPI_Wtime()-start;
+  if(d_myworld->myrank()==0)
+          cout << "BRTime:" << brtotal << " SLTime:" << sltotal << " FUTime:" << futotal << " PFUTime:" << pfutotal << " CoarsenTime: " << ctotal << " CRTime:" << crtotal << " FTime: " << ftotal << " ATime: " << atotal << endl; 
   if (*newGrid == *oldGrid) {
     delete newGrid;
     return oldGrid;
@@ -170,7 +194,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
   d_newGrid = true;
   d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
 
-  //if (d_myworld->myrank() == 0 ) cout << *newGrid;
+  if (d_myworld->myrank() == 0 ) cout << *newGrid;
   newGrid->performConsistencyCheck();
   return newGrid;
 }
@@ -480,17 +504,23 @@ void BNRRegridder::PostFixup(vector<PseudoPatch> &patches, IntVector min_patch_s
 void BNRRegridder::AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVector> &coarse_flags, 
                                   const vector<const Patch*>& coarse_patches, int level)
 {
+//  cout << "Adding Saftey Layers for level: " << level << " coarse_patches.size():" << coarse_patches.size() << " patches.size():" << patches.size() << endl; 
+  /*
+  cout << "Coarse patches:\n";
+  for(int p=0;p<coarse_patches.size();p++)
+       cout << *coarse_patches[p] << endl;
+ */
   if (coarse_patches.size() == 0)
     return;
   //create a range tree out of my patches
   PatchRangeTree prt(coarse_patches);
-  
   //for each patch (padded with 1 cell) 
   for(unsigned p=0;p<patches.size();p++)
   {
     // convert from coarse coordinates to real coordinates on the coarser level, with a safety layer
     IntVector low = patches[p].low*d_minPatchSize/d_cellRefinementRatio[level] - d_minBoundaryCells;
     IntVector high = patches[p].high*d_minPatchSize/d_cellRefinementRatio[level] + d_minBoundaryCells;
+    //cout << "Padded Patch: " << low << " " << high << endl;
     Level::selectType intersecting_patches;
     //intersect range tree
     prt.query(low, high, intersecting_patches);
@@ -498,15 +528,22 @@ void BNRRegridder::AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVect
     for (int i = 0; i < intersecting_patches.size(); i++)
     {
       const Patch* patch = intersecting_patches[i];
-      IntVector int_low = Max(patch->getInteriorCellLowIndex(), low);
-      IntVector int_high = Min(patch->getInteriorCellHighIndex(), high);
-
+      IntVector int_low = Max(patch->getCellLowIndex(), low);
+      IntVector int_high = Min(patch->getCellHighIndex(), high);
+      //cout << "Intersection:" << int_low << " " << int_high << endl; 
+      int_low=int_low/d_minPatchSize;
+      int_high[0]=(int)ceil(int_high[0]/(float)d_minPatchSize[0]);
+      int_high[1]=(int)ceil(int_high[1]/(float)d_minPatchSize[1]);
+      int_high[2]=(int)ceil(int_high[2]/(float)d_minPatchSize[2]);
+      //cout << "Adding flags: ";
       //for overlapping cells
       for (CellIterator iter(int_low, int_high); !iter.done(); iter++)
       {
         //add to coarse flag list, in coarse coarse-level coordinates
-        coarse_flags.insert(*iter/d_minPatchSize);
+        coarse_flags.insert(*iter);
+        //cout << *iter*d_minPatchSize << " ";
       }
+      //cout << endl;
     }
   }
 }
