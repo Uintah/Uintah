@@ -119,7 +119,6 @@ namespace Uintah {
                          
     template<class T>
     void fineToCoarseOperator(CCVariable<T>& q_CC,
-                              const CCVariable<double>& rho_CC_coarse,
                               const string& quantity,
                               const VarLabel* varLabel,
                               const int indx,
@@ -463,7 +462,6 @@ void AMRICE::CoarseToFineOperator(CCVariable<T>& q_CC,
 _____________________________________________________________________*/
 template<class T>
 void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
-                                  const CCVariable<double>& mass_adv_coarse,
                                   const string& quantity,
                                   const VarLabel* varLabel,
                                   const int indx,

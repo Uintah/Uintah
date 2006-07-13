@@ -1062,19 +1062,19 @@ void AMRICE::coarsen(const ProcessorGroup*,
       new_dw->getModifiable(mom_adv,   lb->mom_advLabel,    indx, coarsePatch);  
       
       // coarsen         
-      fineToCoarseOperator<double>(mass_adv,     mass_adv, "conserved", 
+      fineToCoarseOperator<double>(mass_adv,   "conserved", 
                          lb->mass_advLabel,   indx, new_dw, 
                          coarsePatch, coarseLevel, fineLevel);      
 
-      fineToCoarseOperator<double>(sp_vol_adv,   mass_adv, "conserved",
+      fineToCoarseOperator<double>(sp_vol_adv, "conserved",
                          lb->sp_vol_advLabel, indx, new_dw, 
                          coarsePatch, coarseLevel, fineLevel);
 
-      fineToCoarseOperator<double>(eng_adv,      mass_adv, "conserved",   
+      fineToCoarseOperator<double>(eng_adv,   "conserved",   
                          lb->eng_advLabel,    indx, new_dw, 
                          coarsePatch, coarseLevel, fineLevel);
        
-      fineToCoarseOperator<Vector>( mom_adv,     mass_adv, "conserved",   
+      fineToCoarseOperator<Vector>( mom_adv,  "conserved",   
                          lb->mom_advLabel,    indx, new_dw, 
                          coarsePatch, coarseLevel, fineLevel);
       
@@ -1084,7 +1084,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
           // pressure
         CCVariable<double> press_CC;                  
         new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,    coarsePatch);
-        fineToCoarseOperator<double>(press_CC,  mass_adv, "non-conserved",
+        fineToCoarseOperator<double>(press_CC, "non-conserved",
                          lb->press_CCLabel, 0,   new_dw, 
                          coarsePatch, coarseLevel, fineLevel);
       }                   
@@ -1101,7 +1101,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
           if(tvar->matls->contains(indx)){
             CCVariable<double> q_CC_adv;
             new_dw->getModifiable(q_CC_adv, tvar->var_adv, indx, coarsePatch);
-            fineToCoarseOperator<double>(q_CC_adv, mass_adv, "conserved", 
+            fineToCoarseOperator<double>(q_CC_adv, "conserved", 
                        tvar->var_adv, indx, new_dw, 
                        coarsePatch, coarseLevel, fineLevel);
             
