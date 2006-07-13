@@ -70,7 +70,7 @@ BasicIntegrators::FindAdamsBashforth()
   // Runga-Kutta.
 
   int n = maxsteps_;
-  maxsteps_ = Min(maxsteps_, 5);
+  maxsteps_ = maxsteps_ < 5 ? maxsteps_ : 5;
   FindRK4();
   maxsteps_ = n;
 
@@ -79,14 +79,14 @@ BasicIntegrators::FindAdamsBashforth()
   }
 
   Vector f[5];
-  int i;
 
-  for (i = 0; i < 5; i++)
+  for (unsigned int i=0; i<5; i++) {
     interpolate(nodes_[nodes_.size() - 1 - i], f[i]);
-  
+  }
+
   seed_ = nodes_[nodes_.size() - 1];
   
-  for (i = 5; i < maxsteps_; i++) {
+  for (unsigned int i=5; i<maxsteps_; i++) {
     seed_ += (stepsize_/720.) * (1901.0 * f[0] - 2774.0 * f[1] +
 		       2616.0 * f[2] - 1274.0 * f[3] +
 		       251.0 * f[4]);
@@ -115,13 +115,12 @@ BasicIntegrators::FindAdamsMoulton()
 void
 BasicIntegrators::FindHeun()
 {
-  int i;
   Vector v0, v1;
 
   if (!interpolate(seed_, v0))
     return;
 
-  for (i=0; i<maxsteps_; i ++) {
+  for (unsigned int i=0; i<maxsteps_; i++) {
     v0 *= stepsize_;
     if (!interpolate(seed_ + v0, v1))
       break;
@@ -141,12 +140,11 @@ void
 BasicIntegrators::FindRK4()
 {
   Vector f[4];
-  int i;
 
   if (!interpolate(seed_, f[0]))
     return;
 
-  for (i = 0; i < maxsteps_; i++) {
+  for (unsigned int i=0; i<maxsteps_; i++) {
     f[0] *= stepsize_;
     if (!interpolate(seed_ + f[0] * 0.5, f[1]))
       break;
@@ -180,7 +178,7 @@ BasicIntegrators::FindRKF()
   if (!interpolate(seed_, terms[0]))
     return;
 
-  for (int i=0; i<maxsteps_; i++) {
+  for (unsigned int i=0; i<maxsteps_; i++) {
     // Compute the next set of terms.
     if (ComputeRKFTerms(terms, seed_, stepsize_) < 5) {
       stepsize_ /= 1.5;
@@ -188,9 +186,9 @@ BasicIntegrators::FindRKF()
     }
 
     // Compute the approximate local truncation error.
-    const Vector err = terms[0]*rkf_ab[0] + terms[1]*rkf_ab[1]
-      + terms[2]*rkf_ab[2] + terms[3]*rkf_ab[3] + terms[4]*rkf_ab[4]
-      + terms[5]*rkf_ab[5];
+    const Vector err = (terms[0]*rkf_ab[0] + terms[1]*rkf_ab[1] +
+			terms[2]*rkf_ab[2] + terms[3]*rkf_ab[3] +
+			terms[4]*rkf_ab[4] + terms[5]*rkf_ab[5]);
     const double err2 = err.length2();
     
     // Is the error tolerable?  Adjust the step size accordingly.  Too
@@ -205,8 +203,8 @@ BasicIntegrators::FindRKF()
     }
 
     // Compute and add the point to the list of points found.
-    seed_ = seed_ + terms[0]*rkf_a[0] + terms[1]*rkf_a[1] + terms[2]*rkf_a[2] + 
-      terms[3]*rkf_a[3] + terms[4]*rkf_a[4] + terms[5]*rkf_a[5];
+    seed_ += (terms[0]*rkf_a[0] + terms[1]*rkf_a[1] + terms[2]*rkf_a[2] + 
+	      terms[3]*rkf_a[3] + terms[4]*rkf_a[4] + terms[5]*rkf_a[5]);
 
     // If the new point is inside the field, add it.  Otherwise stop.
     if (!interpolate(seed_, terms[0]))
@@ -239,19 +237,22 @@ BasicIntegrators::ComputeRKFTerms(Vector v[6],       // storage for terms
 
   v[2] *= s;
   
-  if (!interpolate(p + v[0]*rkf_d[3][0] + v[1]*rkf_d[3][1] +
+  if (!interpolate(p +
+		   v[0]*rkf_d[3][0] + v[1]*rkf_d[3][1] +
 		   v[2]*rkf_d[3][2], v[3]))
     return 2;
 
   v[3] *= s;
   
-  if (!interpolate(p + v[0]*rkf_d[4][0] + v[1]*rkf_d[4][1] +
+  if (!interpolate(p +
+		   v[0]*rkf_d[4][0] + v[1]*rkf_d[4][1] +
 		   v[2]*rkf_d[4][2] + v[3]*rkf_d[4][3], v[4]))
     return 3;
 
   v[4] *= s;
   
-  if (!interpolate(p + v[0]*rkf_d[5][0] + v[1]*rkf_d[5][1] +
+  if (!interpolate(p +
+		   v[0]*rkf_d[5][0] + v[1]*rkf_d[5][1] +
 		   v[2]*rkf_d[5][2] + v[3]*rkf_d[5][3] +
 		   v[4]*rkf_d[5][4], v[5]))
     return 4;

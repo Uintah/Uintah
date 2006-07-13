@@ -64,10 +64,10 @@ typedef struct _SLData {
   int maxsteps;
   int direction;
   int value;
-  bool rcp;
-  int met;
-  int np;
-  ProgressReporter *pr;
+  bool remove_colinear_pts;
+  int method;
+  int nthreads;
+  ProgressReporter *reporter;
 
   _SLData() : lock("StreamLines Lock") {}
 } SLData;
@@ -76,7 +76,7 @@ typedef struct _SLData {
 class SCISHARE StreamLinesAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(ProgressReporter *pr,
+  virtual FieldHandle execute(ProgressReporter *reporter,
                               FieldHandle seed_field_h,
 			      VectorFieldInterfaceHandle vfi,
 			      double tolerance,
@@ -84,9 +84,9 @@ public:
 			      int maxsteps,
 			      int direction,
 			      int value,
-			      bool remove_colinear_p,
+			      bool remove_colinear_pts,
 			      int method, 
-			      int np) = 0;
+			      int nthreads) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
@@ -103,7 +103,7 @@ class StreamLinesAlgoT : public StreamLinesAlgo
 {
 public:
   //! virtual interface. 
-  virtual FieldHandle execute(ProgressReporter *pr,
+  virtual FieldHandle execute(ProgressReporter *reporter,
                               FieldHandle seed_field_h,
 			      VectorFieldInterfaceHandle vfi,
 			      double tolerance,
@@ -111,9 +111,9 @@ public:
 			      int maxsteps,
 			      int direction,
 			      int value,
-			      bool remove_colinear_p,
+			      bool remove_colinear_pts,
 			      int method,
-			      int np);
+			      int nthreads);
 
   void parallel_generate(int proc, SLData *d);
 
@@ -128,7 +128,7 @@ public:
 template <class FSRC, class STYPE, class SLOC>
 FieldHandle
 StreamLinesAlgoT<FSRC, STYPE, SLOC>::
-execute(ProgressReporter *pr,
+execute(ProgressReporter *reporter,
         FieldHandle seed_field_h,
 	VectorFieldInterfaceHandle vfi,
 	double tolerance,
@@ -136,9 +136,9 @@ execute(ProgressReporter *pr,
 	int maxsteps,
 	int direction,
 	int value,
-	bool rcp,
-	int met,
-	int np)
+	bool remove_colinear_pts,
+	int method,
+	int nthreads)
 {
   SLData d;
   d.seed_field_h=seed_field_h;
@@ -148,10 +148,10 @@ execute(ProgressReporter *pr,
   d.maxsteps=maxsteps;
   d.direction=direction;
   d.value=value;
-  d.rcp=rcp;
-  d.met=met;
-  d.np=np;
-  d.pr=pr;
+  d.remove_colinear_pts=remove_colinear_pts;
+  d.method=method;
+  d.nthreads=nthreads;
+  d.reporter=reporter;
 
   typedef CrvLinearLgn<STYPE> DatBasisL;
   typedef GenericField<CMesh, DatBasisL, vector<STYPE> > CFieldL;
@@ -166,11 +166,11 @@ execute(ProgressReporter *pr,
   typename FSRC::mesh_handle_type smesh = sfield->get_typed_mesh();
   smesh->size(prsize_tmp);
   const unsigned int prsize = (unsigned int)prsize_tmp;
-  pr->update_progress(0, prsize);
+  reporter->update_progress(0, prsize);
 
   Thread::parallel(this,
                    &StreamLinesAlgoT<FSRC, STYPE, SLOC>::parallel_generate,
-                   np, &d);
+                   nthreads, &d);
 
   cf->freeze();
 
@@ -213,13 +213,13 @@ parallel_generate( int proc, SLData *d)
   {
     // If this seed doesn't "belong" to this parallel thread,
     // ignore it and continue on the next seed.
-    if (count%d->np != proc) {
+    if (count%d->nthreads != proc) {
       ++siter;
       ++count;
       continue;
     }
 
-    d->pr->increment_progress();
+    d->reporter->increment_progress();
 
     smesh->get_point(BI.seed_, *siter);
 
@@ -239,11 +239,14 @@ parallel_generate( int proc, SLData *d)
     // Find the negative streamlines.
     if( d->direction <= 1 ) {
       BI.stepsize_ = -d->stepsize;   // initial step size
-      BI.integrate( d->met );
+      BI.integrate( d->method );
 
       if ( d->direction == 1 ) {
+
+	BI.seed_ = BI.nodes_[0];  // Reset the seed
+
 	reverse(BI.nodes_.begin(), BI.nodes_.end());
-	cc = BI.nodes_.size();
+	cc = BI.nodes_.size() - 1;
 	cc = -(cc - 1);
       }
     }
@@ -251,10 +254,10 @@ parallel_generate( int proc, SLData *d)
     // Append the positive streamlines.
     if( d->direction >= 1 ) {
       BI.stepsize_ = d->stepsize;   // initial step size
-      BI.integrate( d->met );
+      BI.integrate( d->method );
     }
 
-    if (d->rcp)
+    if (d->remove_colinear_pts)
       BI.nodes_.erase(CleanupPoints(BI.nodes_, BI.tolerance2_),
 		      BI.nodes_.end());
 
@@ -386,7 +389,7 @@ public:
 class StreamLinesAccAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(ProgressReporter *pr,
+  virtual FieldHandle execute(ProgressReporter *reporter,
                               FieldHandle seed_field_h,
 			      FieldHandle vfield_h,
 			      int maxsteps,
@@ -409,7 +412,7 @@ template <class FSRC, class SLOC, class VFLD, class FDST>
 class StreamLinesAccAlgoT : public StreamLinesAccAlgo
 {
 public:
-  virtual FieldHandle execute(ProgressReporter *pr,
+  virtual FieldHandle execute(ProgressReporter *reporter,
                               FieldHandle seed_field_h,
 			      FieldHandle vfield_h,
 			      int maxsteps,
@@ -431,7 +434,7 @@ public:
 
 template <class FSRC, class SLOC, class VFLD, class FDST>
 FieldHandle
-StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::execute(ProgressReporter *pr,
+StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::execute(ProgressReporter *reporter,
                                                      FieldHandle seed_field_h,
                                                      FieldHandle vfield_h,
                                                      int maxsteps,
@@ -480,7 +483,7 @@ StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::execute(ProgressReporter *pr,
       continue;
     }
 
-    pr->update_progress(count, prsize);
+    reporter->update_progress(count, prsize);
 
     nodes.clear();
     nodes.push_back(seed);
