@@ -56,9 +56,6 @@ private:
   // Create a memory for a new nrrd, that is arranged 3 x n;
   bool extract_gradients(vector<double> &);
 
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-
   GuiString    gradient_list_;
 };
 
@@ -104,22 +101,24 @@ TendBmat::extract_gradients(vector<double> &d)
 void 
 TendBmat::execute()
 {
-  NrrdDataHandle nrrd_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("nin");
-  onrrd_ = (NrrdOPort *)get_oport("nout");
 
+  NrrdDataHandle nrrd_handle;
+  NrrdIPort *inrrd = (NrrdIPort *)get_iport("nin");
   bool we_own_the_data;
   vector<double> *mat=0;
   Nrrd *nin;
-
-  if (inrrd_->get(nrrd_handle) && nrrd_handle.get_rep()) {
+  if (inrrd->get(nrrd_handle) && nrrd_handle.get_rep())
+  {
     we_own_the_data = false;
     nin = nrrd_handle->nrrd_;
-  } else {
+  }
+  else
+  {
     we_own_the_data = true;
     mat = new vector<double>;
-    if (! extract_gradients(*mat)) {
+    if (! extract_gradients(*mat))
+    {
       error("Please adjust your input in the gui to represent a 3 x N set.");
       return;
     }
@@ -139,13 +138,15 @@ TendBmat::execute()
   nout->axis[0].label = airStrdup("tensor components");
   nout->axis[1].label = airStrdup("n");
 
-  if (we_own_the_data) {
+  if (we_own_the_data)
+  {
     nrrdNix(nin);
     delete mat;
   }
 
   NrrdDataHandle ntmp(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(ntmp);
+
+  send_output_handle("nout", ntmp);
 }
 
 

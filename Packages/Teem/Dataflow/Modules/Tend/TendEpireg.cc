@@ -55,10 +55,6 @@ public:
 private:
   bool extract_gradients(vector<double> &d);
 
-  NrrdIPort*      inrrd_;
-  NrrdIPort*      igrad_; 
-  NrrdOPort*      onrrd_;
-
   GuiString    gradient_list_;
   GuiInt       reference_;
   GuiDouble    blur_x_;
@@ -124,32 +120,29 @@ TendEpireg::extract_gradients(vector<double> &d)
 void 
 TendEpireg::execute()
 {
-  NrrdDataHandle nrrd_handle;
-  NrrdDataHandle grad_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("nin");
-  igrad_ = (NrrdIPort *)get_iport("ngrad");
-  onrrd_ = (NrrdOPort *)get_oport("nout");
 
-  bool we_own_the_data;
-  vector<double> *mat=0;
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("nin", nrrd_handle)) return;
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
   Nrrd *nin = nrrd_handle->nrrd_;
-  Nrrd *ngrad;
 
-  if (igrad_->get(grad_handle) && grad_handle.get_rep()) {
+  NrrdIPort *igrad = (NrrdIPort *)get_iport("ngrad");
+  NrrdDataHandle grad_handle;
+  Nrrd *ngrad;
+  bool we_own_the_data;
+  vector<double> *mat = 0;
+  if (igrad->get(grad_handle) && grad_handle.get_rep())
+  {
     we_own_the_data = false;
     ngrad = grad_handle->nrrd_;
-  } else {
+  }
+  else
+  {
     we_own_the_data = false;
     mat = new vector<double>;
-    if (! extract_gradients(*mat)) {
+    if (! extract_gradients(*mat))
+    {
       error("Please adjust your input in the gui to represent a 3 x N set.");
       return;
     }
@@ -208,7 +201,8 @@ TendEpireg::execute()
   }
 
   NrrdDataHandle ntmp(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(ntmp);
+
+  send_output_handle("nout", ntmp);
 
   update_state(Completed);
 }

@@ -47,12 +47,8 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-
   GuiDouble       threshold_;
   GuiDouble       scale_;
-
 };
 
 DECLARE_MAKER(TendExpand)
@@ -73,20 +69,12 @@ TendExpand::~TendExpand()
 void 
 TendExpand::execute()
 {
-  NrrdDataHandle nrrd_handle;
-
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
 
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input InputNrrd.");
-    return;
-  }
+  reset_vars();
 
   Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
@@ -101,7 +89,9 @@ TendExpand::execute()
   nout->axis[0].kind = nrrdKind3DMatrix;
 
   NrrdDataHandle out(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(out);
+
+  send_output_handle("OutputNrrd", out);
 }
+
 
 } // End namespace SCITeem
