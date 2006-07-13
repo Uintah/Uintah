@@ -1,5 +1,6 @@
 #include <Packages/Uintah/CCA/Components/Regridder/BNRRegridder.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/PatchRangeTree.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -59,11 +60,6 @@ BNRRegridder::~BNRRegridder()
 
 Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP& ups)
 {
-  MPI_Barrier(d_myworld->getComm());
-  if(d_myworld->myrank()==0)
-  {
-    cout << "Starting regrid\n";
-  }
   LoadBalancer *lb=sched->getLoadBalancer();
   
   Grid* newGrid = scinew Grid();
@@ -110,7 +106,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
     //saftey layers
     if(l>0)
     {
-      AddSafetyLayer(patch_sets[l],coarse_flag_sets[l-1], d_cellRefinementRatio[l-1] );
+      AddSafetyLayer(patch_sets[l], coarse_flag_sets[l-1], lb->getPerProcessorPatchSet(oldGrid->getLevel(l))->getSubset(d_myworld->myrank())->getVector(), l);
     }
     
     //Fixup patchlist
@@ -166,12 +162,6 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
     newLevel->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
     newLevel->assignBCS(grid_ps);
   }
-  
-  MPI_Barrier(d_myworld->getComm());
-  if(d_myworld->myrank()==0)
-  {
-    cout << "Finished regrid\n";
-  }
   if (*newGrid == *oldGrid) {
     delete newGrid;
     return oldGrid;
@@ -180,7 +170,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
   d_newGrid = true;
   d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
 
-  //cout << *newGrid;
+  //if (d_myworld->myrank() == 0 ) cout << *newGrid;
   newGrid->performConsistencyCheck();
   return newGrid;
 }
@@ -303,9 +293,6 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
       for(int c=0;c<count;c++)
       {
         BNRTask *task=request_to_task_[indicies_[c]];
-        //not needed
-        request_to_task_[indicies_[c]]=0;
-
         free_requests_.push(indicies_[c]);
         if(--task->remaining_requests_==0)  //task has completed communication
         {
@@ -332,16 +319,7 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
     unsigned int size=tasks_.front().my_patches_.size();
     MPI_Bcast(&size,1,MPI_INT,tasks_.front().p_group_[0],d_myworld->getComm());
     patches.resize(size);
-  
     MPI_Bcast(&patches[0],size*sizeof(PseudoPatch),MPI_BYTE,tasks_.front().p_group_[0],d_myworld->getComm());
-  }
-
-  for(unsigned int i=0;i<request_to_task_.size();i++)
-  {
-    if(request_to_task_[i]!=0)
-    {
-      cout << "Error request not completed?\n";
-    }
   }
 }
 
@@ -463,22 +441,19 @@ void BNRRegridder::PostFixup(vector<PseudoPatch> &patches, IntVector min_patch_s
   {
     IntVector size;
     pop_heap(patches.begin(),patches.end());
+
+    if(patches[i].volume==1)  //check if patch is to small to split
+       break;
+
     //find max dimension
     size=patches[i].high-patches[i].low;
     
-    //skip dimensions that splitting would make them to small
     int max_d=0;
-    while(size[max_d]<2*min_patch_size[max_d] && max_d<3)
-       max_d++;
-
-    if(max_d==3)  //no dimensions can be split
-    {
-        break;
-    }
+    
     //find max
-    for(int d=max_d+1;d<3;d++)
+    for(int d=1;d<3;d++)
     {
-      if(size[d]>size[max_d] && size[d]>=2*min_patch_size[d])
+      if(size[d]>size[max_d] && size[d]>1)
         max_d=d;
     }
 
@@ -502,7 +477,36 @@ void BNRRegridder::PostFixup(vector<PseudoPatch> &patches, IntVector min_patch_s
   }
 }
 
-void BNRRegridder::AddSafetyLayer(const vector<PseudoPatch> &patches,set<IntVector> &flag_set, IntVector refinement_ratio )
+void BNRRegridder::AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVector> &coarse_flags, 
+                                  const vector<const Patch*>& coarse_patches, int level)
 {
+  if (coarse_patches.size() == 0)
+    return;
+  //create a range tree out of my patches
+  PatchRangeTree prt(coarse_patches);
+  
+  //for each patch (padded with 1 cell) 
+  for(unsigned p=0;p<patches.size();p++)
+  {
+    // convert from coarse coordinates to real coordinates on the coarser level, with a safety layer
+    IntVector low = patches[p].low*d_minPatchSize/d_cellRefinementRatio[level] - d_minBoundaryCells;
+    IntVector high = patches[p].high*d_minPatchSize/d_cellRefinementRatio[level] + d_minBoundaryCells;
+    Level::selectType intersecting_patches;
+    //intersect range tree
+    prt.query(low, high, intersecting_patches);
+    //for each intersecting patch
+    for (int i = 0; i < intersecting_patches.size(); i++)
+    {
+      const Patch* patch = intersecting_patches[i];
+      IntVector int_low = Max(patch->getInteriorCellLowIndex(), low);
+      IntVector int_high = Min(patch->getInteriorCellHighIndex(), high);
 
+      //for overlapping cells
+      for (CellIterator iter(int_low, int_high); !iter.done(); iter++)
+      {
+        //add to coarse flag list, in coarse coarse-level coordinates
+        coarse_flags.insert(*iter/d_minPatchSize);
+      }
+    }
+  }
 }
