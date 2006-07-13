@@ -5030,6 +5030,10 @@ void ICE::advectAndAdvanceInTime(const ProcessorGroup* /*pg*/,
       new_dw->allocateAndPut(int_eng_adv, lb->eng_advLabel,    indx,patch); 
       new_dw->allocateAndPut(sp_vol_adv,  lb->sp_vol_advLabel, indx,patch); 
 
+      mass_adv.initialize(0.0);
+      mom_adv.initialize(Vector(0.0,0.0,0.0));
+      int_eng_adv.initialize(0.0);
+      sp_vol_adv.initialize(0.0);
       q_advected.initialize(0.0);  
       qV_advected.initialize(Vector(0.0,0.0,0.0)); 
       
@@ -5163,7 +5167,7 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
                << patch->getID() << "\t\t ICE \tL-" <<L_indx<< endl;
 
     Vector dx = patch->dCell();
-    double invvol = 1.0/ (dx.x()*dx.y()*dx.z());
+    double invvol = 1.0/(dx.x()*dx.y()*dx.z());
     Ghost::GhostType  gn  = Ghost::None;
     int numMatls = d_sharedState->getNumICEMatls();
 
