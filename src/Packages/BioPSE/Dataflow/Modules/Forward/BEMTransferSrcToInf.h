@@ -96,6 +96,11 @@ BEMTransferSrcToInfAlgoT<MESH, LOC>::execute(ProgressReporter *reporter,
 
   ColumnMatrix *output = scinew ColumnMatrix((unsigned int) output_size);
 
+  for(int i=0; i < output_size; i++)
+  {
+    output->put(i,0,0);
+  }
+
   while (pbi != pei)
   {
     Point p;
@@ -118,11 +123,13 @@ BEMTransferSrcToInfAlgoT<MESH, LOC>::execute(ProgressReporter *reporter,
       result = (v.x() * (surface_point.x()-p.x()) +
                 v.y() * (surface_point.y()-p.y()) +
                 v.z() * (surface_point.z()-p.z())) /
-               (4 * pi * pow((surface_point.x()-p.x())^2 +
-                             (surface_point.y()-p.y())^2 +
-                             (surface_point.z()-p.z())^2), 3/2);
+               (4 * M_PI * pow(pow(surface_point.x()-p.x(),2) +
+                           pow(surface_point.y()-p.y(),2) +
+                           pow(surface_point.z()-p.z(),2), 3/2));
 
-      output->put((unsigned int)(*bi), 0, result);
+
+      double current = output->get((unsigned int)(*bi), 0)+result; 
+      output->put((unsigned int)(*bi), 0, current);
 
       ++bi;
     }
