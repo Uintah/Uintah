@@ -3,7 +3,7 @@ c
 c
 c*********************************************************************
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_scalar_fort.h>
 C-----------------------------------------------------------------------
 *
 *     This routine is a relaxation operation on x, given the linear
