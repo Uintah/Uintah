@@ -541,68 +541,64 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
                                                                 ice_matls,
                                                                 "afterAdvection");
   }
+  if(d_ice->d_canAddICEMaterial){
+     for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
+       const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
 
+       //  This checks to see if the model on THIS patch says that it's
+       //  time to add a new material
+       d_ice->scheduleCheckNeedAddMaterial(  sched, ice_level,   all_matls);
+
+       //  This one checks to see if the model on ANY patch says that it's
+       //  time to add a new material
+       d_ice->scheduleSetNeedAddMaterialFlag(sched, ice_level,   all_matls);
+     }
+   }
+
+   if(d_mpm->flags->d_canAddMPMMaterial){
+     //  This checks to see if the model on THIS patch says that it's
+     //  time to add a new material
+     d_mpm->scheduleCheckNeedAddMPMMaterial( sched, mpm_patches, mpm_matls);
+
+     //  This one checks to see if the model on ANY patch says that it's
+     //  time to add a new material
+     d_mpm->scheduleSetNeedAddMaterialFlag(  sched, mpm_level,   mpm_matls);
+   }
+
+   sched->scheduleParticleRelocation(mpm_level,
+                                 Mlb->pXLabel_preReloc, 
+                                 d_sharedState->d_particleState_preReloc,
+                                 Mlb->pXLabel, d_sharedState->d_particleState,
+                                 Mlb->pParticleIDLabel, mpm_matls);
 } // end scheduleTimeAdvance()
 
 
 /* _____________________________________________________________________
 MPMICE::scheduleFinalizeTimestep--
 This task called at the very bottom of the timestep,
-after scheduleTimeAdvance and the scheduleCoarsen
+after scheduleTimeAdvance and the scheduleCoarsen.  
+
+This is scheduled on every level.
 _____________________________________________________________________*/
 void
 MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
 {
   cout_doing << "----------------------------"<<endl;
   cout_doing << d_myworld->myrank() << " MPMICE::scheduleFinalizeTimestep\t\t\t\tL-" <<level->getIndex()<< endl;
-  const LevelP& mpm_level = do_mlmpmice? level->getGrid()->getLevel(level->getGrid()->numLevels()-1) : level;
-
-  const PatchSet* mpm_patches = mpm_level->eachPatch();
-  const PatchSet* ice_patches = level->eachPatch();
   
+  const PatchSet* ice_patches = level->eachPatch();
   const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
-  const MaterialSet* mpm_matls = d_sharedState->allMPMMaterials();
   const MaterialSet* all_matls = d_sharedState->allMaterials();
   const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
 
   vector<PatchSubset*> maxMach_PSS(Patch::numFaces);
-                                                                
+                                                          
   d_ice->scheduleConservedtoPrimitive_Vars(sched, ice_patches,ice_matls_sub,
                                                               ice_matls,
                                                               "finalizeTimestep");
 
   d_ice->scheduleTestConservation(        sched, ice_patches, ice_matls_sub,
-                                                              all_matls); 
-
-  if(d_ice->d_canAddICEMaterial){
-    for (int l = 0; l < level->getGrid()->numLevels(); l++) {
-      const LevelP& ice_level = level->getGrid()->getLevel(l);
-
-      //  This checks to see if the model on THIS patch says that it's
-      //  time to add a new material
-      d_ice->scheduleCheckNeedAddMaterial(  sched, ice_level,   all_matls);
-                                                                                
-      //  This one checks to see if the model on ANY patch says that it's
-      //  time to add a new material
-      d_ice->scheduleSetNeedAddMaterialFlag(sched, ice_level,   all_matls);
-    }
-  }
-
-  if(d_mpm->flags->d_canAddMPMMaterial){
-    //  This checks to see if the model on THIS patch says that it's
-    //  time to add a new material
-    d_mpm->scheduleCheckNeedAddMPMMaterial( sched, mpm_patches, mpm_matls);
-                                                                                
-    //  This one checks to see if the model on ANY patch says that it's
-    //  time to add a new material
-    d_mpm->scheduleSetNeedAddMaterialFlag(  sched, mpm_level,   mpm_matls);
-  }
-
-  sched->scheduleParticleRelocation(mpm_level,
-                                Mlb->pXLabel_preReloc, 
-                                d_sharedState->d_particleState_preReloc,
-                                Mlb->pXLabel, d_sharedState->d_particleState,
-                                Mlb->pParticleIDLabel, mpm_matls);
+                                                              all_matls);
 
   //__________________________________
   // clean up memory
