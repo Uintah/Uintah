@@ -975,9 +975,6 @@ void AMRICE::scheduleCoarsen(const LevelP& coarseLevel,
   task->requires(Task::NewDW, lb->mom_advLabel,
                0, Task::FineLevel,  all_matls_sub,ND, gn, 0, fat);
 
-  task->requires(Task::NewDW, lb->rho_CCLabel,
-               0, Task::FineLevel,  all_matls_sub,ND, gn, 0, fat);
-
   //__________________________________
   // Model Variables.
   if(d_modelSetup && d_modelSetup->tvars.size() > 0){
@@ -1065,19 +1062,19 @@ void AMRICE::coarsen(const ProcessorGroup*,
       new_dw->getModifiable(mom_adv,   lb->mom_advLabel,    indx, coarsePatch);  
       
       // coarsen         
-      fineToCoarseOperator<double>(mass_adv,     mass_adv, "mass", 
+      fineToCoarseOperator<double>(mass_adv,     mass_adv, "conserved", 
                          lb->mass_advLabel,   indx, new_dw, 
                          coarsePatch, coarseLevel, fineLevel);      
 
-      fineToCoarseOperator<double>(sp_vol_adv,   mass_adv, "sp_vol",
+      fineToCoarseOperator<double>(sp_vol_adv,   mass_adv, "conserved",
                          lb->sp_vol_advLabel, indx, new_dw, 
                          coarsePatch, coarseLevel, fineLevel);
 
-      fineToCoarseOperator<double>(eng_adv,      mass_adv, "energy",   
+      fineToCoarseOperator<double>(eng_adv,      mass_adv, "conserved",   
                          lb->eng_advLabel,    indx, new_dw, 
                          coarsePatch, coarseLevel, fineLevel);
        
-      fineToCoarseOperator<Vector>( mom_adv,     mass_adv, "momentum",   
+      fineToCoarseOperator<Vector>( mom_adv,     mass_adv, "conserved",   
                          lb->mom_advLabel,    indx, new_dw, 
                          coarsePatch, coarseLevel, fineLevel);
       
@@ -1087,7 +1084,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
           // pressure
         CCVariable<double> press_CC;                  
         new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,    coarsePatch);
-        fineToCoarseOperator<double>(press_CC,  mass_adv, "pressure",
+        fineToCoarseOperator<double>(press_CC,  mass_adv, "non-conserved",
                          lb->press_CCLabel, 0,   new_dw, 
                          coarsePatch, coarseLevel, fineLevel);
       }                   
@@ -1104,7 +1101,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
           if(tvar->matls->contains(indx)){
             CCVariable<double> q_CC_adv;
             new_dw->getModifiable(q_CC_adv, tvar->var_adv, indx, coarsePatch);
-            fineToCoarseOperator<double>(q_CC_adv, mass_adv, "scalar", 
+            fineToCoarseOperator<double>(q_CC_adv, mass_adv, "conserved", 
                        tvar->var_adv, indx, new_dw, 
                        coarsePatch, coarseLevel, fineLevel);
             
@@ -1120,7 +1117,7 @@ void AMRICE::coarsen(const ProcessorGroup*,
       //  Print Data 
       if(switchDebug_AMR_coarsen){
         ostringstream desc;     
-        desc << "coarsen_Mat_" << indx << "_patch_"<< coarsePatch->getID();
+        desc << "BOT_coarsen_Mat_" << indx << "_patch_"<< coarsePatch->getID();
        // printData(indx, coarsePatch,   1, desc.str(), "press_CC",  press_CC);
         printData(indx, coarsePatch,   1, desc.str(), "mass_adv",    mass_adv);
         printData(indx, coarsePatch,   1, desc.str(), "sp_vol_adv",  sp_vol_adv);

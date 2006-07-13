@@ -474,9 +474,6 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
 {
   Level::selectType finePatches;
   coarsePatch->getFineLevelPatches(finePatches);
-   
-  Vector dx_f = fineLevel->dCell();
-  double fineCellVol   = dx_f.x()*dx_f.y()*dx_f.z();
                           
   for(int i=0;i<finePatches.size();i++){
     const Patch* finePatch = finePatches[i];
@@ -489,31 +486,30 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
     }
     
     constCCVariable<T> fine_q_CC;
-    constCCVariable<double> rho_CC_fine;
-
-    new_dw->getRegion(fine_q_CC,  varLabel,         indx, fineLevel, fl, fh, false);
-    new_dw->getRegion(rho_CC_fine,lb->rho_CCLabel,  indx, fineLevel, fl, fh, false);
+    new_dw->getRegion(fine_q_CC,  varLabel, indx, fineLevel, fl, fh, false);
 
     cout_dbg << " fineToCoarseOperator: finePatch "<< fl << " " << fh 
              << " coarsePatch "<< cl << " " << ch << endl;
              
     IntVector r_Ratio = fineLevel->getRefinementRatio();
-    double inv_RR = 1.0/( (double)r_Ratio.x() * r_Ratio.y() * r_Ratio.z() );
     
+    double inv_RR = 1.0;    
+    
+    if(quantity == "non-conserved"){
+      inv_RR = 1.0/( (double)(r_Ratio.x() * r_Ratio.y() * r_Ratio.z()) );
+    }
+
     T zero(0.0);
     // iterate over coarse level cells
     for(CellIterator iter(cl, ch); !iter.done(); iter++){
       IntVector c = *iter;
       T q_CC_tmp(zero);
-      double sumMass_fine = 0;
       IntVector fineStart = coarseLevel->mapCellToFiner(c);
     
       // for each coarse level cell iterate over the fine level cells   
       for(CellIterator inside(IntVector(0,0,0),r_Ratio );
                                           !inside.done(); inside++){
-        IntVector fc = fineStart + *inside;
-        sumMass_fine = rho_CC_fine[fc] * fineCellVol;
-        
+        IntVector fc = fineStart + *inside;        
         q_CC_tmp += fine_q_CC[fc];
       }
                          
