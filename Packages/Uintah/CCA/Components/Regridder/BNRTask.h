@@ -47,22 +47,6 @@ WARNING
   inline bool operator<(FlagsCount f1, FlagsCount f2)
   {
     return f1.count>f2.count;
-    /*
-      if(f1.count==0)  //zeros need to be at the end of the list
-      return false;
-      if(f2.count==0)
-      return true;
-      if(f1.count<f2.count)
-      return true;
-    */
-    /*
-      if(f2.count>f1.count)
-      return false;
-      if(f1.rank<r2.rank)
-      return true;
-      else
-    */
-    return false;
   }
 
   struct FlagsList
@@ -111,11 +95,6 @@ WARNING
     friend class BNRRegridder;
 
     private:
-      BNRTask()
-      {
-        cout << "Error empty BNRTask constructor\n";
-        exit(0);
-      }
       BNRTask(PseudoPatch patch,
               FlagsList flags,
               const vector<int> &p_group,
@@ -136,25 +115,25 @@ WARNING
     bool Broadcast(void *message, int count, MPI_Datatype datatype,unsigned int tag);
 
     // Task information
-    Task_Status status_;               // Status of current task
-    PseudoPatch patch_;                // patch that is being worked on
-    FlagsList flags_;                  // list of flags inside this task
-    BNRTask *parent_;                  // pointer to parent task
-    BNRTask *sibling_;                 // pointer to sibling task
+    Task_Status status_;                // Status of current task
+    PseudoPatch patch_;                 // patch that is being worked on
+    FlagsList flags_;                   // list of flags inside this task
+    BNRTask *parent_;                   // pointer to parent task
+    BNRTask *sibling_;                  // pointer to sibling task
     BNRTask *left_, *right_;
                 
-    unsigned int total_flags_;       // total number of flags on all processors within this patch
-    bool acceptable_;                // patch acceptablity
+    unsigned int total_flags_;          // total number of flags on all processors within this patch
+    bool acceptable_;                   // patch acceptablity
     IntVector offset_;
 
     // Signatures
     vector<int>     count_[3];
                 
     // MPI Communication state
-    unsigned int tag_;                 // unique message tag
+    unsigned int tag_;                  // unique message tag
     unsigned int remaining_requests_;   // remaining requests on this task
-    int stage_;                        // hypercube send/recieve stage
-    int d_;                            // dimension of hypercube
+    int stage_;                         // hypercube send/recieve stage
+    int d_;                             // dimension of hypercube
                 
     // Communication buffers
     vector<FlagsCount> flagscount_;  
@@ -162,16 +141,16 @@ WARNING
     ChildTasks ctasks_;              
 
     // Participating processor information
-    vector<int> p_group_;            // particpating processor group
-    int p_rank_;                     // rank within group
+    vector<int> p_group_;               // particpating processor group
+    int p_rank_;                        // rank within group
         
     // pointer to controlling algorithm
-    static BNRRegridder *controller_;    // controlling algorithm;
+    static BNRRegridder *controller_;   // controlling algorithm;
 
-    vector<PseudoPatch> my_patches_;     // list of patches
-    unsigned int my_size_;               // number of patches on the parent
-    unsigned int left_size_;             // number of patches in left child
-    unsigned int right_size_;            // number of patches in right child
+    vector<PseudoPatch> my_patches_;    // list of patches
+    unsigned int my_size_;              // number of patches on the parent
+    unsigned int left_size_;            // number of patches in left child
+    unsigned int right_size_;           // number of patches in right child
   };
 
 } // End namespace Uintah
