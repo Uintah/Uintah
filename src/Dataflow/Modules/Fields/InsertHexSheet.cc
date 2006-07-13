@@ -165,10 +165,8 @@ void InsertHexSheet::execute()
   algo->execute( this, hexfieldhandle, trifieldhandle, 
                  side1field, side2field, add_to_side1, add_layer );
   
-  FieldOPort *ofield_port2 = (FieldOPort *)get_oport("Side1Field");
-  ofield_port2->send_and_dereference(side1field);
-  FieldOPort *ofield_port3 = (FieldOPort *)get_oport("Side2Field");
-  ofield_port3->send_and_dereference(side2field);
+  send_output_handle("Side1Field", side1field);
+  send_output_handle("Side2Field", side2field);
 }
 
 CompileInfoHandle

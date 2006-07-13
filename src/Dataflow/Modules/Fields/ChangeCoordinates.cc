@@ -94,8 +94,7 @@ ChangeCoordinates::execute()
   if (!DynamicCompilation::compile(ci, algo, this)) return;
   algo->execute(this, field->mesh(), oldsystem, newsystem);
 
-  FieldOPort *ofld = (FieldOPort *)get_oport("Output Field");
-  ofld->send_and_dereference(field);
+  send_output_handle("Output Field", field);
 }
 
 CompileInfo *

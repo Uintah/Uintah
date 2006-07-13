@@ -384,8 +384,7 @@ ClipField::execute()
 
   if (ofield_.get_rep())
   {
-    FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-    ofield_port->send_and_dereference(ofield_, true);
+    send_output_handle("Output Field", ofield_, true);
   }
 }
 

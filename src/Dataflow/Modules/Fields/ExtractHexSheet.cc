@@ -165,10 +165,8 @@ void ExtractHexSheet::execute()
   FieldHandle keptfield, extractedfield;
   algo->execute( this, hexfieldhandle, edgeids, keptfield, extractedfield );
   
-  FieldOPort *ofield_port2 = (FieldOPort *)get_oport("NewHexField");
-  ofield_port2->send_and_dereference(keptfield);
-  FieldOPort *ofield_port3 = (FieldOPort *)get_oport("ExtractedHexes");
-  ofield_port3->send_and_dereference(extractedfield);
+  send_output_handle("NewHexField", keptfield);
+  send_output_handle("ExtractedHexes", extractedfield);
 }
 
 CompileInfoHandle

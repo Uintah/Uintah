@@ -125,13 +125,13 @@ BuildMappingMatrix::execute()
 
   fsrc_h->mesh()->synchronize(Mesh::LOCATE_E);
   const int interp_basis = (interpolation_basis_.get() == "linear")?1:0;
-  MatrixOPort *omp = (MatrixOPort *)get_oport("Mapping");
   MatrixHandle mh(algo->execute(this,
                                 fsrc_h->mesh(), fdst_h->mesh(), interp_basis,
                                 map_source_to_single_dest_.get(),
                                 exhaustive_search_.get(),
                                 exhaustive_search_max_dist_.get(), np_.get()));
-  omp->send_and_dereference(mh);
+
+  send_output_handle("Mapping", mh);
 }
 
 CompileInfoHandle

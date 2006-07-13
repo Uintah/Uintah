@@ -141,8 +141,8 @@ MeshQuality::execute()
   }
 
   FieldHandle ofield = algo->execute(this, ifieldhandle);  
-  FieldOPort *ofield_port = (FieldOPort *)get_oport("Checked");
-  ofield_port->send_and_dereference(ofield);
+
+  send_output_handle("Checked", ofield);
 }
 
 

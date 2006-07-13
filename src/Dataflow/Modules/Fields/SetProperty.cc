@@ -72,7 +72,6 @@ void
 SetProperty::execute()
 {
   FieldIPort *ifield = (FieldIPort *)get_iport("Input");
-  FieldOPort *ofield = (FieldOPort *)get_oport("Output");
 
   FieldHandle fldH;
   if (!ifield->get(fldH))
@@ -95,6 +94,6 @@ SetProperty::execute()
     fldH->set_property(prop_.get(), val_.get(), false);
   }
   
-  ofield->send_and_dereference(fldH);
+  send_output_handle("Output", fldH);
 }
 } // End namespace SCIRun

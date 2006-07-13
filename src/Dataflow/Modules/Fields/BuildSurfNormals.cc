@@ -52,9 +52,6 @@ private:
   FieldIPort*               infield_;
   int                       inmesh_gen_;
 
-  //! DenseMatrix containing one Vector per node.
-  MatrixOPort*              omat_;
-  
   //! Handle on the generated surface.
   MatrixHandle              normals_h_;
 };
@@ -76,8 +73,6 @@ void
 BuildSurfNormals::execute()
 {
   infield_ = (FieldIPort *)get_iport("Surface Field");
-  omat_ = (MatrixOPort *)get_oport("Nodal Surface Normals");
-
   FieldHandle input;
   if (!(infield_->get(input) && input.get_rep()))
   {
@@ -111,8 +106,8 @@ BuildSurfNormals::execute()
     normals_h_ = algo->execute(this, mesh);
   }
 
-  // keep it around unless user selects port caching
-  omat_->send_and_dereference(normals_h_, true);
+  // Keep it around unless user selects port caching.
+  send_output_handle("Nodal Surface Normals", normals_h_, true);
 }
 
 

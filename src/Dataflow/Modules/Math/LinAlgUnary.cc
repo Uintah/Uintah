@@ -131,7 +131,6 @@ void LinAlgUnary::Ceil(double *x, int n) {
 
 void LinAlgUnary::execute() {
   MatrixIPort* imat_ = (MatrixIPort *)get_iport("Input");
-  MatrixOPort* omat_ = (MatrixOPort *)get_oport("Output");
 
   update_state(NeedData);
   MatrixHandle mh;
@@ -222,7 +221,7 @@ void LinAlgUnary::execute() {
   }
 
   MatrixHandle mtmp(m);
-  omat_->send_and_dereference(mtmp);
+  send_output_handle("Output", mtmp);
 }
 
 

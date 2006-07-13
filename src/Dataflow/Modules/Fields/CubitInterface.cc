@@ -347,8 +347,6 @@ CubitInterface::execute()
 {
   iport1_ = (FieldIPort *)get_iport("Field");
   iport2_ = (FieldIPort *)get_iport("PointCloudField");
-  oport_  = (FieldOPort *)get_oport("Field");
-
 
   FieldHandle field1;
   iport1_->get(field1);
@@ -360,7 +358,6 @@ CubitInterface::execute()
   // Get the PointCloudField from the seco port
   FieldHandle pcf;
   iport2_->get(pcf);
-
 
   if (field1->get_type_description()->get_name().find("TriSurfField")) {
     error("Field connected to port 1 must be TriSurfField.");
@@ -429,7 +426,8 @@ CubitInterface::execute()
   typedef ConstantBasis<double> CBF;
   typedef GenericField<TVMesh, CBF, vector<double> > TVField;
   FieldHandle f = scinew TVField(mesh);
-  oport_->send_and_dereference(f);
+
+  send_output_handle("Field", f);
 }
 
 

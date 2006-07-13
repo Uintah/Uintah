@@ -180,8 +180,7 @@ SelectField::execute()
 
   if (forward_p)
   {
-    FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-    ofield_port->send_and_dereference(output_field_, true);
+    send_output_handle("Output Field", output_field_, true);
   }
 }
 

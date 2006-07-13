@@ -131,8 +131,7 @@ MaskLattice::execute()
   }
   FieldHandle ofield(algo->execute(ifieldhandle));
 
-  FieldOPort *ofp = (FieldOPort *)get_oport("Output Masked Field");
-  ofp->send_and_dereference(ofield);
+  send_output_handle("Output Masked Field", ofield);
 }
 
 

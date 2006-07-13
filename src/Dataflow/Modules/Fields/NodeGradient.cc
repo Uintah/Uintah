@@ -119,12 +119,7 @@ NodeGradient::execute()
     fieldout_ = algo->execute(fieldin);
   }
 
-  // Send the data downstream
-  if ( fieldout_.get_rep() )
-  {
-    FieldOPort* ofp = (FieldOPort *) get_oport("Output Gradient");
-    ofp->send_and_dereference(fieldout_, true);
-  }
+  send_output_handle("Output Gradient", fieldout_, true);
 }
 
 

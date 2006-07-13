@@ -108,8 +108,6 @@ MaskLatVolWithTriSurf::execute()
     return;
   }
 
-  FieldOPort *omask = (FieldOPort *) get_oport("LatVol Mask");
-
   typedef HexTrilinearLgn<char>                                  DatBasis;
   typedef GenericField<LVMesh, DatBasis, FData3d<char, LVMesh> > LVField;
   LVField *mask = scinew LVField(latvolM);
@@ -189,6 +187,8 @@ MaskLatVolWithTriSurf::execute()
   // inside the TriSurf (count face crossings)
 
   FieldHandle ftmp(mask);
-  omask->send_and_dereference(ftmp);
+  send_output_handle("LatVol Mask", ftmp);
 }
+
+
 } // End namespace SCIRun

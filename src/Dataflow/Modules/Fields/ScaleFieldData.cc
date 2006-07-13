@@ -108,8 +108,7 @@ ScaleFieldData::execute()
 
   FieldHandle ofieldhandle(algo->execute(ifieldhandle, imatrix));
 
-  FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-  ofield_port->send_and_dereference(ofieldhandle);
+  send_output_handle("Output Field", ofieldhandle);
 }
 
 

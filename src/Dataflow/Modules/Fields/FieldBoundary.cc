@@ -151,13 +151,8 @@ FieldBoundary::execute()
     warning("Use the DirectInterpolate module if interpolation is required.");
   }
 
-  osurf_->send(tri_fh_);
-  ointerp_->send(interp_mh_);
-  if (!osurf_->have_data() || !ointerp_->have_data())
-  {
-    tri_fh_ = 0;
-    interp_mh_ = 0;
-  }
+  send_output_handle("BoundaryField", tri_fh_, true);
+  send_output_handle("Mapping", interp_mh_, true);
 }
 
 

@@ -214,11 +214,8 @@ IsoClip::execute()
 				     isoval, gui_lte_.get(),
 				     interp);
   
-  FieldOPort *ofield_port = (FieldOPort *)get_oport("Clipped");
-  ofield_port->send_and_dereference(ofield);
-
-  MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Mapping");
-  omatrix_port->send_and_dereference(interp);
+  send_output_handle("Clipped", ofield);
+  send_output_handle("Mapping", interp);
 }
 
 CompileInfoHandle

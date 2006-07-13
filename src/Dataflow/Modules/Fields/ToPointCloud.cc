@@ -118,14 +118,7 @@ ToPointCloud::execute()
       ofieldhandle_->copy_properties(ifieldhandle.get_rep());
   }
 
-  // Get a handle to the output field port.
-  if ( ofieldhandle_.get_rep() ) {
-    FieldOPort* ofp = (FieldOPort *) get_oport("Output Field");
-    
-    // Send the data downstream
-    ofp->send(ofieldhandle_);
-    if (!ofp->have_data()) { ofieldhandle_ = 0; }
-  }
+  send_output_handle("Output Field", ofieldhandle_, true);
 }
 
 
