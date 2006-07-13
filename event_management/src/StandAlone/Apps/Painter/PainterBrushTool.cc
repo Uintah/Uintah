@@ -89,14 +89,15 @@ namespace SCIRun {
 
 
 Painter::BrushTool::BrushTool(Painter *painter) :
-  KeyTool("Paint Brush"),
+  BaseTool("Paint Brush"),
   PointerTool("Paint Brush"),
   painter_(painter),
   window_(0),
   slice_(0),
   value_(airNaN()),
   last_index_(),
-  radius_(5.0)
+  radius_(5.0),
+  draw_cursor_(0)
 {
   painter_->create_undo_volume();  
 }
@@ -108,13 +109,19 @@ Painter::BrushTool::~BrushTool()
 
 
 BaseTool::propagation_state_e
-Painter::BrushTool::key_press(string key, int keyval,
-                               unsigned int modifiers,
-                               unsigned int time)
+Painter::BrushTool::process_event(event_handle_t event)
 {
-  switch (keyval) {
-  case SCIRun_space: return QUIT_AND_STOP_E; break;
+
+  RedrawSliceWindowEvent *redraw = 
+    dynamic_cast<RedrawSliceWindowEvent *>(event.get_rep());
+  if (redraw) {
+    draw_gl(redraw->get_window());
   }
+
+  if (dynamic_cast<QuitEvent *>(event.get_rep())) {
+    return QUIT_AND_CONTINUE_E;
+  }
+
   return CONTINUE_E;
 }
 
@@ -159,10 +166,12 @@ Painter::BrushTool::pointer_down(int b, int x, int y, unsigned int m, int t)
     return STOP_E;
   } else if (b == 4) {
     radius_ *= 1.1;
+    draw_cursor_ = true;
     painter_->redraw_all();    
     return STOP_E;
   } else if (b == 5) {
     radius_ /= 1.1;
+    draw_cursor_ = true;
     painter_->redraw_all();
     return STOP_E;
   }
@@ -250,35 +259,38 @@ Painter::BrushTool::pointer_motion(int b, int x, int y, unsigned int m, int t)
 }
 
 
-#if 0
-int
-Painter::BrushTool::draw_mouse_cursor(Event &event)
+void
+Painter::BrushTool::draw_gl(SliceWindow &window)
 {
+  if (!draw_cursor_) return;
+  if (&window != painter_->cur_window_) return;
+  painter_->redraw_all();
+  draw_cursor_ = false;
   NrrdVolume *vol = painter_->current_volume_;
-  if (!event.window_ || !vol) return 0;
+  if (!vol) return;
   glColor4f(1.0, 0.0, 0.0, 1.0);
   glLineWidth(2.0);
   glBegin(GL_LINES);
 
-  //  int x0 = Floor(event.position_(event.window_->x_axis()));
-  //  int y0 = Floor(event.position_(event.window_->y_axis()));
-  //  int z0 = Floor(event.position_(event.window_->axis_));
+  //  int x0 = Floor(event.position_(window.x_axis()));
+  //  int y0 = Floor(event.position_(window.y_axis()));
+  //  int z0 = Floor(event.position_(window.axis_));
   //  int wid = int(Ceil(radius_));
 
 
-  Vector up = event.window_->y_dir();
+  Vector up = window.y_dir();
   vector<double> upv = vol->vector_to_index(up);
   upv[max_vector_magnitude_index(upv)] /= 
     Abs(upv[max_vector_magnitude_index(upv)]);
   up =vol->index_to_vector(upv);
 
-  Vector right = event.window_->x_dir();
+  Vector right = window.x_dir();
   vector<double> rightv = vol->vector_to_index(right);
   rightv[max_vector_magnitude_index(rightv)] /= 
     Abs(rightv[max_vector_magnitude_index(rightv)]);
   right = vol->index_to_vector(rightv);
 
-  Point center = vol->index_to_world(vol->world_to_index(event.position_));
+  Point center = vol->index_to_world(vol->world_to_index(painter_->pointer_pos_));
 
   double rsquared = radius_*radius_;
   const int wid = Round(radius_);
@@ -320,9 +332,7 @@ Painter::BrushTool::draw_mouse_cursor(Event &event)
     }
   glEnd();
   glLineWidth(1.0);
-  return 0;
 }
-#endif
 
 
 void

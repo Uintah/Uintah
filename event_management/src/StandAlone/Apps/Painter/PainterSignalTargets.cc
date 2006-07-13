@@ -108,6 +108,7 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::CancelTool);  
   REGISTER_CATCHER_TARGET(Painter::FinishTool);
   REGISTER_CATCHER_TARGET(Painter::SetLayer);
+  REGISTER_CATCHER_TARGET(Painter::LoadColorMap1D);
 
   REGISTER_CATCHER_TARGET(Painter::ITKBinaryDilate);  
   REGISTER_CATCHER_TARGET(Painter::ITKImageFileRead);
@@ -142,7 +143,6 @@ Painter::SliceWindow_Maker(event_handle_t event) {
 
 BaseTool::propagation_state_e 
 Painter::StartBrushTool(event_handle_t event) {
-  cerr << "Painter::start_brush_tool";
   tm_.add_tool(new BrushTool(this),25); 
   return STOP_E;
 }
@@ -321,7 +321,6 @@ Painter::ITKImageFileRead(event_handle_t event) {
   return NrrdFileRead(event);
 #else
 
-  cerr << "ITKImageFileRead\n";
   Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
   ASSERT(signal);
 
@@ -360,7 +359,6 @@ Painter::ITKImageFileRead(event_handle_t event) {
   pair<string, string> dirfile = split_filename(filename);
 
   if (nrrd_handle->nrrd_) {
-    cerr << "nrrd converted!\n";
     BundleHandle bundle = new Bundle(); 
     bundle->setNrrd(dirfile.second, nrrd_handle);
     add_bundle(bundle); 
@@ -422,7 +420,6 @@ Painter::ITKBinaryDilateErode(event_handle_t event) {
 #ifdef HAVE_INSIGHT
 
   string name = "ITKBinaryDilateErode";
-  cerr << name << std::endl;
   typedef itk::BinaryBallStructuringElement< float, 3> StructuringElementType;
   typedef itk::BinaryDilateImageFilter
     < Painter::ITKImageFloat3D, 
@@ -568,7 +565,8 @@ Painter::ITKConfidenceConnected(event_handle_t event) {
   get_vars()->insert("ToolDialog::text", 
                      " ITK Confidence Connected Filter: Place Seed Point",
                      "string", true);
-  get_vars()->insert("ToolDialog::button_height", "40", "string", true);
+  get_vars()->insert("ProgressBar::bar_height","0","string",true);
+  get_vars()->unset("ToolDialog::button_height");
   get_vars()->insert("Painter::progress_bar_text", "", "string", true);
   redraw_all();
 
@@ -637,7 +635,6 @@ Painter::ShowVolumeRendering(event_handle_t event) {
     NrrdTextureBuilderAlgo::get_compile_info(nrrd->type,nrrd->type);
     
   const int card_mem = 128;
-  cerr << "nrrd texture\n";
   TextureHandle texture = new Texture;
   NrrdTextureBuilderAlgo::build_static(texture, 
                                        nrrd_handle, 0, 255,
@@ -688,12 +685,39 @@ Painter::ShowVolumeRendering(event_handle_t event) {
   scene_event = new SceneGraphEvent(vol, "FOO");
   //EventManager::add_event(scene_event);
   process_event(scene_event);
-  cerr << "nrrd texture sent\n";
   return CONTINUE_E;
 }
 
 
 
+
+BaseTool::propagation_state_e 
+Painter::LoadColorMap1D(event_handle_t event) {   
+  Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
+  ASSERT(signal);
+  const string &fn = signal->get_signal_data();
+  Piostream *stream = auto_istream(fn, 0);
+  if (!stream) {
+    cerr << "Error reading file '" + fn + "'." << std::endl;
+    return STOP_E;
+  }  
+
+  // read the file.
+  ColorMapHandle cmaph = 0;
+  try {
+    Pio(*stream, cmaph);
+  } catch (...) {
+    cerr << "Error loading "+fn << std::endl;
+    cmaph = 0;
+    delete stream;
+    return STOP_E;
+  }
+  delete stream;
+
+  Bundle *bundle = new Bundle();
+  bundle->setColorMap(fn, cmaph);
+  add_bundle(bundle);
+}
 
   
 } // end namespace SCIRun

@@ -429,6 +429,7 @@ Painter::Painter(Skinner::Variables *variables, GuiContext* ctx) :
   show_grid_((!ctx) ? 0 : ctx->subVar("show_grid"), 1),
   show_text_((!ctx) ? 0 : ctx->subVar("show_text"), 1),
   volume_lock_("Volume"),
+  bundles_(),
   filter_volume_(0)  
 {
 #ifdef HAVE_INSIGHT
@@ -439,6 +440,11 @@ Painter::Painter(Skinner::Variables *variables, GuiContext* ctx) :
   tm_.add_tool(new KeyToolSelectorTool(this), 51);
 
   InitializeSignalCatcherTargets(0);
+  Skinner::Signal *signal = new Skinner::Signal("LoadColorMap1D",
+                                                this, "LoadColorMap1D");
+  string srcdir = sci_getenv("SCIRUN_SRCDIR")+string("/Core/Skinner/Data/");
+  signal->set_signal_data(srcdir+"Rainbow.cmap");
+  LoadColorMap1D(signal);
 }
 
 Painter::~Painter()
@@ -1912,9 +1918,8 @@ Painter::extract_data_from_bundles(Bundles &bundles)
 void
 Painter::add_bundle(BundleHandle bundle)
 {
-  Bundles bundles;
-  bundles.push_back(bundle);
-  extract_data_from_bundles(bundles);
+  bundles_.push_back(bundle);
+  extract_data_from_bundles(bundles_);
   recompute_volume_list();
 }
 

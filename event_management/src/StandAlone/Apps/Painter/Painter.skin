@@ -6,9 +6,9 @@
   <var name="full_program_name" propagate="yes">Raster Explorer and N-Dimensional Editor Revision 0.1</var>
 
 
-  <var name="ITKCurvatureAnisotropic::numberOfIterations" propagate="yes">10</var>
+  <var name="ITKCurvatureAnisotropic::numberOfIterations" propagate="yes">5</var>
   <var name="ITKCurvatureAnisotropic::timeStep" propagate="yes">0.0625</var>
-  <var name="ITKCurvatureAnisotropic::conductanceParameter" propagate="yes">1.0</var>
+  <var name="ITKCurvatureAnisotropic::conductanceParameter" propagate="yes">5.0</var>
 
   <var name="ITKBinaryDilateErode::radius" propagate="yes">3</var>
   <var name="ITKBinaryDilateErode::dilateValue" propagate="yes">1</var>
@@ -463,11 +463,20 @@
               <var name="rows">1</var>
               <var name="cols">5</var>
 
+
               <object class="Button2">
                 <var name="row">1</var>
                 <var name="col">2</var>
-                <var name="Button2::color" propagate="yes" overwrite="no">#FFEEEEFF</var>
-                <var name="Button2::Text::text" propagate="yes">Cancel</var>
+                <var name="ToolDialog::Button1::color"
+                     propagate="yes"
+                     overwrite="no">#FFEEEEFF</var>
+                <var name="ToolDialog::Button1::text"
+                     propagate="yes"
+                     overwrite="no">Cancel</var>
+
+                   
+                <var name="Button2::color" propagate="yes" overwrite="no">$ToolDialog::Button1::color</var>
+                <var name="Button2::Text::text" propagate="yes">$ToolDialog::Button1::text</var>
                 <signal name="Button2::clicked" 
                         target="ToolDialog::Cancel"/>
               </object>
@@ -684,7 +693,7 @@
         -->
 
         <var name="id">$program_name</var>
-        <var name="width" type="int">800</var>
+        <var name="width" type="int">1100</var>
         <var name="height" type="int">800</var>
         <var name="posx" type="int">220</var>
         <var name="posy" type="int">20</var>
@@ -725,13 +734,12 @@
             <var name="cell-height">$Animation::variable-1</var>
             <signal name="FileLoadBox::CancelButtonPress" 
                     target="Animation::AnimateVariableDescending">1</signal>
-
             <signal name="FileLoadBox::OKButtonPress" 
                     target="Painter::ITKImageFileRead"></signal>
-
-<!--            <signal name="FileLoadBox::OKButtonPress" 
-                    target="Painter::NrrdFileRead"></signal>-->
-
+<!--
+            <signal name="FileLoadBox::OKButtonPress" 
+                    target="Painter::NrrdFileRead"></signal>
+-->
             <signal name="FileLoadBox::OKButtonPress" 
                     target="Animation::AnimateVariableDescending" >1</signal>
 
@@ -790,6 +798,8 @@
             <var name="row">5</var>
             <var name="col">1</var>
             <var name="cell-height">$Animation::variable-4</var>
+            <var name="ToolDialog::Button1::text" propagate="yes">Set Seed Layer</var>
+            <var name="ToolDialog::Button1::color" propagate="yes">#EEFFEEFF</var>
 
             <signal name="ToolDialog::Cancel" 
                     target="Painter::SetLayer"></signal>
@@ -971,12 +981,14 @@
 
       <object class="Root::GLWindow" id="Tools">
         <var name="id">Tools</var>
-        <var name="width" type="int">200</var>
+        <var name="width" type="int">250</var>
         <var name="height" type="int">800</var>
-        <var name="posx" type="int">0</var>
-        <var name="posy" type="int">0</var>
+        <var name="posx" type="int">1150</var>
+        <var name="posy" type="int">50</var>
         <var name="border" type="int">$Window::borders</var>
-
+        <var name="border" type="int">0</var>
+        <object class="Frame">
+          <var name="invert">1</var>
         <object class="Texture">
           <var name="file">BackgroundTile04.png</var>
           <var name="color">#FFFFFFA0</var>
@@ -1061,7 +1073,8 @@
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
             <signal name="Button2::clicked" 
                     target="Painter::StartBrushTool"/>
-            
+            <signal name="Button2::clicked"
+                    target="Animation::AnimateVariableAscending">3</signal>                        
           </object>
 
           <object class="Button2">
@@ -1250,16 +1263,18 @@
             
           </object>
         </object>
+        </object>
       </object>
 
       
       <object class="Root::GLWindow" id="Splash">
-        <var name="id"> </var>
+        <var name="id">Splash</var>
         <var name="width" type="int">800</var>
         <var name="height" type="int">200</var>
-        <var name="posx" type="int">100</var>
+        <var name="posx" type="int">300</var>
         <var name="posy" type="int">300</var>
         <var name="border" type="int">1</var>
+        <var name="border" type="int">0</var>
 
         <var name="topcolor" propagate="yes">#DDDDDDFF</var>
         <var name="botcolor" propagate="yes">#222222FF</var>

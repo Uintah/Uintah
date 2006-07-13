@@ -148,11 +148,20 @@ Painter::KeyToolSelectorTool::key_press(string, int keyval,
 
   case SCIRun_p:        painter_->opacity_up();break;
   case SCIRun_o:        painter_->opacity_down();break;
-    
-  case SCIRun_k:        
-    
-    break;
 
+  case SCIRun_u:            
+    if (painter_->current_volume_) {
+      painter_->current_volume_->colormap_.set(Max(0,painter_->current_volume_->colormap_.get()-1));
+      painter_->set_all_slices_tex_dirty();
+      painter_->redraw_all();
+    } break;
+  case SCIRun_i:
+    if (painter_->current_volume_) {
+      painter_->current_volume_->colormap_.set(Min(int(painter_->colormap_names_.size()), 
+                                         painter_->current_volume_->colormap_.get()+1));
+      painter_->set_all_slices_tex_dirty();
+      painter_->redraw_all();
+    } break;    
   }
 
   painter_->redraw_all();
@@ -163,20 +172,9 @@ Painter::KeyToolSelectorTool::key_press(string, int keyval,
 #if 0
 
   if (key == "[") {
-    if (current_volume_) {
-      current_volume_->colormap_.set(Max(0, current_volume_->colormap_.get()-1));
-      set_all_slices_tex_dirty();
-      redraw_all();
-    }
   }
 
   if (key == "]") {
-    if (current_volume_) {
-      current_volume_->colormap_.set(Min(int(colormap_names_.size()), 
-                                         current_volume_->colormap_.get()+1));
-      set_all_slices_tex_dirty();
-      redraw_all();
-    }
   }
 
   if (key == "q") { 
@@ -576,7 +574,7 @@ Painter::CropTool::process_event(event_handle_t event)
   }
 
   if (dynamic_cast<QuitEvent *>(event.get_rep())) {
-    return QUIT_AND_STOP_E;
+    return QUIT_AND_CONTINUE_E;
   }
  
   return CONTINUE_E;
@@ -924,7 +922,7 @@ Painter::ITKThresholdTool::process_event
   }
 
   if (dynamic_cast<QuitEvent *>(event.get_rep())) {
-    return QUIT_AND_STOP_E;
+    return QUIT_AND_CONTINUE_E;
   }
  
   return CONTINUE_E;
@@ -979,7 +977,7 @@ Painter::ITKThresholdTool::finish()
 
 
   string minmaxstr = "Threshold min: " + to_string(min) +
-    "Threshold max: " + to_string(max);
+    " Threshold max: " + to_string(max);
   
   painter_->get_vars()->insert("Painter::status_text",
                                minmaxstr, "string", true);
@@ -1166,7 +1164,7 @@ Painter::ITKConfidenceConnectedImageFilterTool::finish() {
   string name = "Confidence Connected";
   NrrdVolume *temp = new NrrdVolume(volume_, name, 2);
   painter_->volume_map_[name] = temp;
-  //temp->colormap_.set(2);
+  temp->colormap_.set(1);
   temp->clut_min_ = temp->data_min_ = 0.5;
   temp->clut_max_ = temp->data_max_ = 1.0;
   painter_->current_volume_ = temp;
