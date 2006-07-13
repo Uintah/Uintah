@@ -245,6 +245,8 @@ EventManager::play_trail() {
     if ((event_time = event->get_time())) {
       if (last_event_time) {
         double diff = (event_time-last_event_time) * millisecond;
+        if (diff > 10) diff = 10;
+        if (diff < 0) diff = 0;
         timer.wait_for_time(last_timer_time + diff);
       }           
       last_event_time = event_time;
@@ -266,6 +268,7 @@ EventManager::run()
   do {
     event = tm_.propagate_event(mailbox_.receive());
 
+#if 1
     static unsigned long last_event_time = 0;
     static double last_timer_time = 0;
     static ::TimeThrottle timer;
@@ -275,14 +278,12 @@ EventManager::run()
     
     if (event->get_time()) {
       last_event_time = event->get_time();
-      last_timer_time = timer.time();
     } else if (last_event_time) {
       last_event_time += (timer.time() - last_timer_time)*100.0;
-      last_timer_time = timer.time();
-      
       event->set_time(last_event_time);
     }
-
+    last_timer_time = timer.time();
+#endif
 
 
     if (stream_ && stream_->writing()) {

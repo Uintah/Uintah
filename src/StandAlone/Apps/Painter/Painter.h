@@ -436,11 +436,12 @@ private:
   };
 
 
-  class BrushTool : public KeyTool, public PointerTool {
+  class BrushTool : virtual public BaseTool,
+                    public PointerTool {
   public:
     BrushTool(Painter *painter);
     ~BrushTool();
-
+    propagation_state_e process_event(event_handle_t);
     propagation_state_e pointer_motion(int b, int x, int y,
                                      unsigned m, int t);
 
@@ -455,7 +456,7 @@ private:
 
       //    int                 draw_mouse_cursor(Event &);
   private:
-
+    void                draw_gl(SliceWindow &);
     void                line(Nrrd *, double, int, int, int, int, bool);
     void                splat(Nrrd *, double,int,int);
 
@@ -465,6 +466,7 @@ private:
     float               value_;
     vector<int>         last_index_;
     double              radius_;
+    bool                draw_cursor_;
   };
 
 
@@ -627,6 +629,7 @@ private:
   Mutex                 volume_lock_;
 
   typedef vector<BundleHandle> Bundles;
+  Bundles               bundles_;
 
   // Methods for drawing to the GL window
   void			redraw_all();
@@ -708,6 +711,7 @@ private:
   CatcherFunction_t     FinishTool;
   CatcherFunction_t     CancelTool;
   CatcherFunction_t     SetLayer;
+  CatcherFunction_t     LoadColorMap1D;
 
   CatcherFunction_t     ITKBinaryDilate;
   CatcherFunction_t     ITKImageFileRead;

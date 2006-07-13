@@ -74,7 +74,6 @@ namespace SCIRun {
 
     BaseTool::propagation_state_e 
     Root::Quit(event_handle_t event) {
-      cerr << "Root::Quit" << std::endl;
       EventManager::add_event(new QuitEvent());
       return STOP_E;
     }
