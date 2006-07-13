@@ -45,10 +45,6 @@ public:
   NrrdGradient(SCIRun::GuiContext *ctx);
   virtual ~NrrdGradient();
   virtual void execute();
-
-private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
 };
 
 DECLARE_MAKER(NrrdGradient)
@@ -58,24 +54,17 @@ NrrdGradient::NrrdGradient(SCIRun::GuiContext *ctx) :
 {
 }
 
-NrrdGradient::~NrrdGradient() {
+NrrdGradient::~NrrdGradient()
+{
 }
 
 void 
 NrrdGradient::execute()
 {
-  NrrdDataHandle nin_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_->get(nin_handle))
-    return;
-
-  if (!nin_handle.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
+  NrrdDataHandle nin_handle;
+  if (!get_input_handle("InputNrrd", nin_handle));
 
   Nrrd *nin = nin_handle->nrrd_;
   Nrrd *nout = nrrdNew();
@@ -166,7 +155,8 @@ NrrdGradient::execute()
   // Copy the properties
   nout_handle->copy_properties(nin_handle.get_rep());
 
-  onrrd_->send(nout_handle);
+  send_output_handle("OutputNrrd", nout_handle);
 }
+
 
 } // End namespace SCITeem

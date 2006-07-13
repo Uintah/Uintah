@@ -54,7 +54,6 @@ using namespace SCIRun;
 class MatrixToNrrd : public Module {
 public:
 
-  MatrixIPort* imat_;
   NrrdOPort*   ndata_;
   NrrdOPort*   nrows_;
   NrrdOPort*   ncols_;
@@ -76,27 +75,27 @@ public:
 DECLARE_MAKER(MatrixToNrrd)
 MatrixToNrrd::MatrixToNrrd(GuiContext* ctx)
   : Module("MatrixToNrrd", ctx, Source, "Converters", "Teem"),
-    imat_(0), ndata_(0), nrows_(0), ncols_(0),
+    ndata_(0), nrows_(0), ncols_(0),
     matrix_generation_(-1)
 {
 }
 
-MatrixToNrrd::~MatrixToNrrd(){
+
+MatrixToNrrd::~MatrixToNrrd()
+{
 }
 
+
 void
- MatrixToNrrd::execute(){
+MatrixToNrrd::execute()
+{
   // Get ports
-  imat_ = (MatrixIPort *)get_iport("Matrix");
   ndata_ = (NrrdOPort *)get_oport("Data");
   nrows_ = (NrrdOPort *)get_oport("Rows");
   ncols_ = (NrrdOPort *)get_oport("Columns");
 
-  // Determine if it is a Column, Dense or Sparse matrix
   MatrixHandle matH;
-  if (!imat_->get(matH)) {
-    return;
-  }
+  if (!get_input_handle("Matrix", matH)) return;
 
   if (matrix_generation_ != matH->generation ||
       !ndata_->have_data() &&
@@ -116,9 +115,11 @@ void
   }
 }
 
+
 void
-MatrixToNrrd::create_and_send_column_matrix_nrrd(MatrixHandle matH) {
-  ColumnMatrix* matrix = dynamic_cast<ColumnMatrix*>(matH.get_rep());
+MatrixToNrrd::create_and_send_column_matrix_nrrd(MatrixHandle matH)
+{
+  ColumnMatrix* matrix = matH->as_column();
 
   size_t size[NRRD_DIM_MAX];
   size[0] = matrix->nrows();
@@ -144,8 +145,9 @@ MatrixToNrrd::create_and_send_column_matrix_nrrd(MatrixHandle matH) {
 
 
 void
-MatrixToNrrd::create_and_send_dense_matrix_nrrd(MatrixHandle matH) {
-  DenseMatrix* matrix = dynamic_cast<DenseMatrix*>(matH.get_rep());
+MatrixToNrrd::create_and_send_dense_matrix_nrrd(MatrixHandle matH)
+{
+  DenseMatrix* matrix = matH->as_dense();
 
   int rows = matrix->nrows();
   int cols = matrix->ncols();
@@ -177,9 +179,11 @@ MatrixToNrrd::create_and_send_dense_matrix_nrrd(MatrixHandle matH) {
   ndata_->send_and_dereference(dataH);  
 }
 
+
 void
-MatrixToNrrd::create_and_send_sparse_matrix_nrrd(MatrixHandle matH) {
-  SparseRowMatrix* matrix = dynamic_cast<SparseRowMatrix*>(matH.get_rep());
+MatrixToNrrd::create_and_send_sparse_matrix_nrrd(MatrixHandle matH)
+{
+  SparseRowMatrix* matrix = matH->as_sparse();
 
   size_t nnz[NRRD_DIM_MAX];
   nnz[0] = matrix->get_nnz();
@@ -224,7 +228,6 @@ MatrixToNrrd::create_and_send_sparse_matrix_nrrd(MatrixHandle matH) {
   for (i=0; i<rows+1; i++) {
     rows_p[i] = rr[i];
   }
-
   
   // send nrrds
   NrrdDataHandle dataH(data_n);
