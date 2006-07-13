@@ -87,23 +87,20 @@ UnuAxinfo::UnuAxinfo(GuiContext* ctx)
 {
 }
 
-UnuAxinfo::~UnuAxinfo(){
+
+UnuAxinfo::~UnuAxinfo()
+{
 }
 
 
-void UnuAxinfo::execute()
+void
+UnuAxinfo::execute()
 {
-  NrrdIPort *iport = (NrrdIPort*)get_iport("Nrrd"); 
-  NrrdOPort *oport = (NrrdOPort*)get_oport("Nrrd");
-  
   update_state(NeedData);
   
   // The input port (with data) is required.
   NrrdDataHandle nh;
-  if (!iport->get(nh)) 
-    {
-      return;
-    }
+  if (!get_input_handle("Nrrd", nh)) return;
   
   unsigned int axis = axis_.get();
   if( !nh.get_rep() || generation_ != nh->generation ) {
@@ -191,7 +188,7 @@ void UnuAxinfo::execute()
   // Copy the properties.
   out->copy_properties(nh.get_rep());
   
-  oport->send_and_dereference(out);
+  send_output_handle("Nrrd", out);
 }
 
 

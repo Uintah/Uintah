@@ -94,15 +94,17 @@ UnuPad::UnuPad(GuiContext *ctx) :
 {
   // value will be overwritten at gui side initialization.
   dim_.set(0);
-
-  
 }
 
-UnuPad::~UnuPad() {
+
+UnuPad::~UnuPad()
+{
 }
+
 
 void
-UnuPad::load_gui() {
+UnuPad::load_gui()
+{
   dim_.reset();
   if (dim_.get() == 0) { return; }
 
@@ -118,25 +120,16 @@ UnuPad::load_gui() {
   }
 }
 
+
 void 
 UnuPad::execute()
 {
-  NrrdDataHandle nrrdH;
   update_state(NeedData);
 
-  NrrdIPort *inrrd = (NrrdIPort *)get_iport("Nrrd");
+  NrrdDataHandle nrrdH;
+  if (!get_input_handle("Nrrd", nrrdH)) return;
 
-  if (!inrrd) {
-    error("Unable to initialize iport 'Nrrd'.");
-    return;
-  }
-
-  if (!(inrrd->get(nrrdH) && nrrdH.get_rep())) {
-    error("No input nrrd handle or representation.");
-    return;
-  }
-
-  dim_.reset();
+  reset_vars();
 
   // test for new input
   if (last_generation_ != nrrdH->generation) {
@@ -244,10 +237,6 @@ UnuPad::execute()
       nout->axis[0].kind = nrrdKindDomain;
   }
 
-  if (last_nrrdH_.get_rep())
-  {
-    NrrdOPort* onrrd = (NrrdOPort *)get_oport("Nrrd");
-    onrrd->send_and_dereference(last_nrrdH_, true);
-  }
+  send_output_handle("Nrrd", last_nrrdH_, true);
 }
 

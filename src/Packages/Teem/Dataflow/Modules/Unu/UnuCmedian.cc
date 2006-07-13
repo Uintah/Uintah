@@ -51,13 +51,8 @@ public:
   virtual void execute();
 
 private:
-
-
   Nrrd* do_filter(Nrrd *nin);
   bool is_scalar(const string& s) const;
-
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
 
   GuiInt          mode_;
   GuiInt          radius_;
@@ -86,7 +81,9 @@ UnuCmedian::UnuCmedian(SCIRun::GuiContext *ctx) :
 {
 }
 
-UnuCmedian::~UnuCmedian() {
+
+UnuCmedian::~UnuCmedian()
+{
 }
 
 
@@ -138,21 +135,14 @@ UnuCmedian::is_scalar(const string& s) const
   return (s.find(scalar) < s.size());
 }
 
-void 
+
+void
 UnuCmedian::execute()
 {
-  NrrdDataHandle nrrd_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("nin");
-  onrrd_ = (NrrdOPort *)get_oport("nout");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("nin", nrrd_handle)) return;
 
   Nrrd *nin = nrrd_handle->nrrd_;
   NrrdDataHandle nsend(0);
@@ -160,7 +150,8 @@ UnuCmedian::execute()
   bool do_execute = false;
   if (old_mode_ != mode_.get() || old_radius_ != radius_.get() ||
       old_weight_ != weight_.get() || old_pad_ != pad_.get() ||
-      old_generation_ != nrrd_handle->generation) {
+      old_generation_ != nrrd_handle->generation)
+  {
     do_execute = true;
     old_mode_ = mode_.get();
     old_radius_ = radius_.get();
@@ -190,7 +181,8 @@ UnuCmedian::execute()
   //! Slice a scalar out of the tuple axis and filter it. So for Vectors
   //! and Tensors, a component wise filtering occurs.
 
-  if(nrrdKindSize(nrrd_handle->nrrd_->axis[0].kind) > 1) {
+  if (nrrdKindSize(nrrd_handle->nrrd_->axis[0].kind) > 1)
+  {
     vector<Nrrd*> out;
     for (unsigned int i = 0; i < nrrd_handle->nrrd_->axis[0].size; i++) 
     { 
@@ -218,17 +210,21 @@ UnuCmedian::execute()
       return;
     }
     NrrdDataHandle ntmp(nrrd_joined);
-    onrrd_->send_and_dereference(ntmp);
-  } else {
+    send_output_handle("nout", ntmp);
+  }
+  else
+  {
     Nrrd *nout_filtered;
     nout_filtered = do_filter(nrrd_handle->nrrd_);
-    if (!nout_filtered) {
+    if (!nout_filtered)
+    {
       error("Error filtering, returning");
       return;
     }
     NrrdDataHandle ntmp(scinew NrrdData(nout_filtered));
-    onrrd_->send_and_dereference(ntmp);
+    send_output_handle("nout", ntmp);
   }
 }
+
 
 } // End namespace SCITeem

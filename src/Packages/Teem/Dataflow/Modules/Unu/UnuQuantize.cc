@@ -53,8 +53,6 @@ namespace SCITeem {
 using namespace SCIRun;
 
 class UnuQuantize : public Module {
-  NrrdIPort* inrrd_;
-  NrrdOPort* onrrd_;
   GuiDouble minf_;
   GuiDouble maxf_;
   GuiInt useinputmin_;
@@ -74,7 +72,9 @@ public:
 };
 
 } // End namespace SCITeem
+
 using namespace SCITeem;
+
 DECLARE_MAKER(UnuQuantize)
 
 UnuQuantize::UnuQuantize(GuiContext *ctx)
@@ -90,23 +90,21 @@ UnuQuantize::UnuQuantize(GuiContext *ctx)
 {
 }
 
-UnuQuantize::~UnuQuantize() {
+
+UnuQuantize::~UnuQuantize()
+{
 }
+
 
 void 
 UnuQuantize::execute()
 {
-  NrrdDataHandle nrrdH;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("Nrrd");
-  onrrd_ = (NrrdOPort *)get_oport("Nrrd");
 
-  if (!inrrd_->get(nrrdH))
-    return;
-  if (!nrrdH.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
+  NrrdDataHandle nrrdH;
+  if (!get_input_handle("Nrrd", nrrdH)) return;
+  
+  reset_vars();
 
   if (last_generation_ != nrrdH->generation) {
     // set default values for min,max
@@ -139,7 +137,7 @@ UnuQuantize::execute()
       last_nbits_ == nbits &&
       last_nrrdH_.get_rep())
   {
-    onrrd_->send_and_dereference(last_nrrdH_, true);
+    send_output_handle("Nrrd", last_nrrdH_, true);
     return;
   }
 
@@ -165,6 +163,7 @@ UnuQuantize::execute()
   last_maxf_ = maxf;
   last_nbits_ = nbits;
   last_nrrdH_ = nrrd;
-  onrrd_->send_and_dereference(last_nrrdH_, true);
+
+  send_output_handle("Nrrd", last_nrrdH_, true);
 }
 

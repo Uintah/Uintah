@@ -49,7 +49,6 @@ private:
   NrrdIPort*      inrrd1_;
   NrrdIPort*      inrrd2_;
   NrrdIPort*      inrrd3_;
-  NrrdOPort*      onrrd_;
 
   GuiString    operator_;
   GuiDouble    float1_;
@@ -97,7 +96,6 @@ Unu3op::execute()
   inrrd1_ = (NrrdIPort *)get_iport("InputNrrd1");
   inrrd2_ = (NrrdIPort *)get_iport("InputNrrd2");
   inrrd3_ = (NrrdIPort *)get_iport("InputNrrd3");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
   if (!inrrd1_->get(nrrd_handle1)) 
     first_nrrd_ = false;
@@ -222,7 +220,7 @@ Unu3op::execute()
   }
 
   NrrdDataHandle out(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(out);
+  send_output_handle("OutputNrrd", out);
 }
 
 unsigned int

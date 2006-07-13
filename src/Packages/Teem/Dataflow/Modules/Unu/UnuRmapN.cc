@@ -70,26 +70,15 @@ UnuRmapN::~UnuRmapN()
 void
 UnuRmapN::execute()
 {
-  NrrdDataHandle nrrd_handle;
-  NrrdDataHandle dmap_handle;
-
   update_state(NeedData);
-  NrrdIPort *inrrd = (NrrdIPort *)get_iport("InputNrrd");
-  NrrdIPort *idmap = (NrrdIPort *)get_iport("RegularMapNrrd");
 
-  if (!inrrd->get(nrrd_handle))
-    return;
-  if (!idmap->get(dmap_handle))
-    return;
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
-  if (!nrrd_handle.get_rep()) {
-    error("Empty InputNrrd.");
-    return;
-  }
-  if (!dmap_handle.get_rep()) {
-    error("Empty RegularMapNrrd.");
-    return;
-  }
+  NrrdDataHandle dmap_handle;
+  if (!get_input_handle("RegularMapNrrd", dmap_handle)) return;
+
+  reset_vars();
 
   Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nmap = dmap_handle->nrrd_;
@@ -167,8 +156,7 @@ UnuRmapN::execute()
   // Copy the properties.
   out->copy_properties(nrrd_handle.get_rep());
 
-  NrrdOPort *onrrd = (NrrdOPort *)get_oport("OutputNrrd");
-  onrrd->send_and_dereference(out);
+  send_output_handle("OutputNrrd", out);
 }
 
 
