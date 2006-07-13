@@ -61,15 +61,14 @@ MPI_Request* BNRTask::getRequest()
 }
 
 /*
- *  This function continues a task from where it left_ off
+ *  This function continues a task from where it left off
  *  Each task runs through the BR algorithm and performs
  *  communication where needed.  When the task is unable
- *  to make progress by waiting on communication it is
- *  placed on the delay_q_.  Tasks on the delay_q_ will 
- *  be continued after their communication is finished.
- *  I use goto's in this and I know they are bad form 
- *  but in this case goto's make the algorithm easier 
- *  to understand.
+ *  to make progress by waiting on communication it terminates 
+ *  and is restarted later by the main controll loop in
+ *  BNRRegridder::RunBR().  I use goto's in this and I know 
+ *  they are bad form but in this case goto's make the algorithm 
+ *  easier to understand.
  */
 void BNRTask::continueTask()
 {
@@ -189,7 +188,7 @@ void BNRTask::continueTask()
     if(Broadcast(&flagscount_[0],flagscount_.size()*sizeof(FlagsCount),MPI_BYTE,1))
       return;
     
-    if(flags_.size==0)  //if i don't have any flags_ don't participate any longer
+    if(flags_.size==0)  //if i don't have any flags don't participate any longer
     {
       if(parent_==0)
       {
@@ -246,7 +245,7 @@ void BNRTask::continueTask()
     cout << endl;
     cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": p_group_.size():" << p_group_.size() << " p_rank_: " << p_rank_ << " d:" << d << endl;
   */
-    //compute #of flags_ on new root 
+    //compute total # of flags on new root 
     if(p_rank_==0)
     {
 //      cout << "rank:" << p_group_[p_rank_]<< ": pid:" << tag_ << ": count_ing flags_\n";
@@ -283,7 +282,7 @@ void BNRTask::continueTask()
       
     //cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": stage_:" << stage_ << " d:" << d << endl;
     
-    //global reduce sum_ signatures
+    //global reduce sum signatures
     if(stage_<d_)
     {
       stride=1<<(d_-1-stage_);
@@ -332,20 +331,17 @@ void BNRTask::continueTask()
           partner=p_rank_-stride;
           //cout << "rank:" << p_group_[p_rank_] <<": pid:" << tag_ <<  ": sending to " << p_group_[partner] <<  " tag_=" << tag_ <<  endl;
           //Nonblocking recieve msg from partner
-          
           MPI_Isend(&count_[0][0],count_[0].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
           MPI_Isend(&count_[1][0],count_[1].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
           MPI_Isend(&count_[2][0],count_[2].size(),MPI_INT,p_group_[partner],tag_,controller_->d_myworld->getComm(),getRequest());
           return;
       }
     }
-    
 //    cout << "rank:" << p_group_[p_rank_] <<": pid:" << tag_ <<  ": deallocating sum_ array\n";
     //deallocate sum_ array
     sum_[0].clear();  
     sum_[1].clear();  
     sum_[2].clear();  
-    
   }  
   
   if(p_rank_==0)
@@ -396,7 +392,6 @@ void BNRTask::continueTask()
     {
       my_patches_.push_back(patch_);
     }
-    //goto COMMUNICATE_PATCH_LIST;
   }
   else
   {
@@ -542,7 +537,7 @@ void BNRTask::continueTask()
     //cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": activating parent_ on tag_:" << parent_->tag_ << endl;
     //cout << "rank:" << p_group_[p_rank_] << ": " << "pid:" << tag_  << ": sibling_ tag_:" << sibling_->tag_ << " sibling_ status_:" << sibling_->status_ << endl;
     
-    //place parent_ on delay queue (parent_ is waiting for communication from children)
+    //place parent_ on delay queue (parent is waiting for communication from children)
     controller_->immediate_q_.push(parent_);
   }
 
@@ -563,14 +558,14 @@ void BNRTask::continueTaskSerial()
           case WAITING_FOR_CHILDREN:                                            //8
                   goto WAIT_FOR_CHILDREN;
           case GATHERING_FLAG_COUNT:                                            //1
-          case BROADCASTING_FLAG_COUNT:                                          //2
+          case BROADCASTING_FLAG_COUNT:                                         //2
           case COMMUNICATING_SIGNATURES:                                        //3
-          case BROADCASTING_CHILD_TASKS:                                        //7
-          case BROADCASTING_ACCEPTABILITY:                                      //5
-          case WAITING_FOR_PATCH_COUNT:                                          //9
-          case WAITING_FOR_PATCHES:                                              //10
-          case WAITING_FOR_TAGS:                                                //6
           case SUMMING_SIGNATURES:                                              //4
+          case BROADCASTING_ACCEPTABILITY:                                      //5
+          case WAITING_FOR_TAGS:                                                //6
+          case BROADCASTING_CHILD_TASKS:                                        //7
+          case WAITING_FOR_PATCH_COUNT:                                         //9
+          case WAITING_FOR_PATCHES:                                             //10
           case TERMINATED:                                                      //11
           default:
                   cout << "Error invalid status(" << status_ << ") in serial task\n";
@@ -1021,7 +1016,7 @@ void BNRTask::CreateTasks()
   cout << endl;
   */  
     
-  //create new tasks_    
+  //create new tasks   
   
   controller_->tasks_.push_back(BNRTask(ctasks_.left,leftflags_,p_group_,p_rank_,this,ctasks_.ltag));
   left_=&controller_->tasks_.back();
