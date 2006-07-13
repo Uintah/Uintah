@@ -211,11 +211,8 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
 void
 NrrdInfo::execute()
 {
-  NrrdIPort *iport = (NrrdIPort*)get_iport("Query Nrrd"); 
-  
-  // The input port (with data) is required.
   NrrdDataHandle nh;
-  if (!iport->get(nh) || !nh.get_rep())
+  if (!get_input_handle("Query Nrrd", nh))
   {
     clear_vals();
     generation_ = -1;
