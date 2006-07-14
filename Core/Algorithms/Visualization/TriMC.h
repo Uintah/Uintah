@@ -272,6 +272,7 @@ void TriMC<Field>::extract_n( cell_index_type cell, double v )
     
     const double d0 = (v-value[a])/double(value[b]-value[a]);
     const double d1 = (v-value[a])/double(value[c]-value[a]);
+
     const Point p0(Interpolate(p[a], p[b], d0));
     const Point p1(Interpolate(p[a], p[c], d1));
 
