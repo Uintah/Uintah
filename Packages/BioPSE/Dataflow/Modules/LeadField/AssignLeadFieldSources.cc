@@ -66,13 +66,7 @@ class AssignLeadFieldSources : public Module
   typedef PointCloudMesh<ConstantBasis<Point> >                 PCMesh;
   typedef ConstantBasis<Vector>                                 FDCVectorBasis;
   typedef GenericField<PCMesh, FDCVectorBasis, vector<Vector> > PCField;
-  
-  FieldIPort *ifp; 
-  MatrixIPort *imp;
-  FieldOPort *ofp;
-  FieldOPort *ofp2;
-  FieldOPort *ofp3;
-  FieldOPort *ofp4;
+
 public:
   AssignLeadFieldSources(GuiContext *context);
   virtual ~AssignLeadFieldSources();
@@ -88,28 +82,19 @@ AssignLeadFieldSources::AssignLeadFieldSources(GuiContext *context)
 {
 }
 
+
 AssignLeadFieldSources::~AssignLeadFieldSources()
 {
 }
 
+
 void
 AssignLeadFieldSources::execute()
 {
-
-  ifp = (FieldIPort*)get_iport("Mesh");
-  imp = (MatrixIPort*)get_iport("Data");
-
-  ofp = (FieldOPort*)get_oport("VectorField");
-  ofp2 = (FieldOPort*)get_oport("Field(double)");
-  ofp3 = (FieldOPort*)get_oport("PointCloud(Vector)");
-  ofp4 = (FieldOPort*)get_oport("PrimaryPointCloud(Vector)");
-
   // Get input matrix.
   MatrixHandle imatrix;
-  if (!(imp->get(imatrix)) || !(imatrix.get_rep())) {
-    remark("No input matrix.");
-    return;
-  }
+  if (!get_input_handle("Data", imatrix)) return;
+
   ColumnMatrix *cm = dynamic_cast<ColumnMatrix *>(imatrix.get_rep());
   if (!cm) {
     remark("Matrix was supposed to be a ColumnMatrix.");
@@ -118,10 +103,8 @@ AssignLeadFieldSources::execute()
 
   // Get input field.
   FieldHandle ifield;
-  if (!(ifp->get(ifield)) || !(ifield.get_rep())) {
-    remark("No input field.");
-    return;
-  }
+  if (!get_input_handle("Mesh", ifield)) return;
+
   MeshHandle mbh = ifield->mesh();
   TVMesh *tvm = dynamic_cast<TVMesh *>(mbh.get_rep());
   if (!tvm) {
@@ -202,13 +185,13 @@ AssignLeadFieldSources::execute()
     ofield2->fdata()[ui]=node_sums[ui]/node_refs[ui];
 
   FieldHandle ofieldh(ofield);
-  ofp->send_and_dereference(ofieldh);
+  send_output_handle("VectorField", ofieldh);
   FieldHandle ofield2h(ofield2);
-  ofp2->send_and_dereference(ofield2h);
+  send_output_handle("Field(double)", ofield2h);
   FieldHandle pch(pc);
-  ofp3->send_and_dereference(pch);
+  send_output_handle("PointCloud(Vector)", pch);
   FieldHandle pc2h(pc2);
-  ofp4->send_and_dereference(pc2h);
+  send_output_handle("PrimaryPointCloud(Vector)", pc2h);
 }
 
 } // End namespace BioPSE
