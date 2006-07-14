@@ -28,25 +28,19 @@
 
 
 /*
- *  ToPointCloud: Store/retrieve values from an input matrix to/from 
- *            the data of a field
  *
- *  Written by:
- *   Michael Callahan
- *   Department of Computer Science
- *   University of Utah
- *   February 2001
+ *  Rewritten by:
+ *   Jeroen Stinstra
  *
- *  Copyright (C) 2001 SCI Institute
+ * The old algorithm was failing to copy data, use the algorithm from
+ * the ModelCreation Kernel in Algorithms instead.
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
-#include <Dataflow/Modules/Fields/ToPointCloud.h>
-#include <Core/Containers/Handle.h>
 
-#include <iostream>
-#include <stdio.h>
+#include <Core/Datatypes/Field.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace SCIRun {
 
@@ -54,115 +48,34 @@ class ToPointCloud : public Module
 {
 public:
   ToPointCloud(GuiContext* ctx);
-  virtual ~ToPointCloud();
   virtual void execute();
-
-protected:
-  int last_generation_;
-  FieldHandle ofieldhandle_;
 };
-
 
 DECLARE_MAKER(ToPointCloud)
 ToPointCloud::ToPointCloud(GuiContext* context)
-  : Module("ToPointCloud", context, Filter, "FieldsGeometry", "SCIRun"),
-    last_generation_(0)
+  : Module("ToPointCloud", context, Filter, "FieldsGeometry", "SCIRun")
 {
 }
-
-
-ToPointCloud::~ToPointCloud()
-{
-}
-
 
 void
 ToPointCloud::execute()
 {
-  bool update = false;
+  FieldHandle ifield, ofield;
+  
+  // Get the input from the ports
+  if (!(get_input_handle("Input Field",ifield,true))) return;
 
-  // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
-  FieldHandle ifieldhandle;
+  // Declare the algorithm library and reroute the 
+  // ProgressReporter to the algorithm library.
+  SCIRunAlgo::FieldsAlgo algo(this);
 
-  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep())) {
-    error( "No handle or representation" );
-    return;
-  }
+  // Run algorithm and exit if algorithm fails.
+  // Error are automatically reported through the
+  // ProgressReporter.
+  if (!(algo.ToPointCloud(ifield,ofield))) return;
 
-  if (ifieldhandle->generation != last_generation_) {
-    update = true;
-    last_generation_ = ifieldhandle->generation;
-  }
-
-  if( !ofieldhandle_.get_rep() || update )
-  {
-    string dstname("PointCloudMesh<ConstantBasis<Point> >");
-    string dst_basis_name("ConstantBasis");
-
-    const TypeDescription *ftd = ifieldhandle->get_type_description();
-    TypeDescription::td_vec *tdv = 
-      ifieldhandle->get_type_description(Field::FDATA_TD_E)->get_sub_type();
-    string data_name = (*tdv)[0]->get_name();
-    
-    CompileInfoHandle ci = ToPointCloudAlgo::get_compile_info(ftd, dstname, 
-							      dst_basis_name,
-							      data_name);
-    Handle<ToPointCloudAlgo> algo;
-
-    if (!module_dynamic_compile(ci, algo)) return;
-    
-    ofieldhandle_ = algo->execute(this, ifieldhandle);
-
-    if (ofieldhandle_.get_rep())
-      ofieldhandle_->copy_properties(ifieldhandle.get_rep());
-  }
-
-  // Get a handle to the output field port.
-  if ( ofieldhandle_.get_rep() ) {
-    FieldOPort* ofp = (FieldOPort *) get_oport("Output Field");
-    
-    // Send the data downstream
-    ofp->send(ofieldhandle_);
-    if (!ofp->have_data()) { ofieldhandle_ = 0; }
-  }
+  // Send handles to output ports
+  send_output_handle("Output Field",ofield,true);
 }
-
-
-
-CompileInfoHandle
-ToPointCloudAlgo::get_compile_info(const TypeDescription *fsrc,
-				  const string &mesh_dst,
-				  const string &basis_dst,
-				  const string &data_dst)
-{
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("ToPointCloudAlgoT");
-  static const string base_class_name("ToPointCloudAlgo");
-
-  const string fdstname = "GenericField<" + mesh_dst + ", " + 
-    basis_dst + "<" + data_dst + ">, vector<" + data_dst + "> > ";
-
-  CompileInfo *rval = 
-    scinew CompileInfo(template_class_name + "." +
-		       fsrc->get_filename() + "." +
-		       to_filename(fdstname) + ".",
-                       base_class_name, 
-                       template_class_name, 
-                       fsrc->get_name() + "," + fdstname);
-
-  // Add in the include path to compile this obj
-  rval->add_include(include_path);
-  rval->add_basis_include("../src/Core/Basis/Constant.h");
-  rval->add_mesh_include("../src/Core/Datatypes/PointCloudMesh.h");
-//   rval->add_mesh_include("../src/Core/Datatypes/CurveMesh.h");
-//   rval->add_mesh_include("../src/Core/Datatypes/QuadSurfMesh.h");
-//   rval->add_mesh_include("../src/Core/Datatypes/HexVolMesh.h");
-
-  fsrc->fill_compile_info(rval);
-  return rval;
-}
-
 
 } // End namespace SCIRun
