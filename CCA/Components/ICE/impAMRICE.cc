@@ -186,10 +186,11 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
                                                             all_matls);
 
     scheduleAdvectAndAdvanceInTime(         sched, patches, ice_matls_sub,
-                                                            all_matls);   
-
-    scheduleTestConservation(               sched, patches, ice_matls_sub,
                                                             all_matls); 
+                                                            
+    scheduleConservedtoPrimitive_Vars(    sched, patches,   ice_matls_sub,
+                                                            all_matls,
+                                                            "afterAdvection");                                         
   }
   //__________________________________
   //  coarsen
@@ -199,8 +200,6 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
       scheduleCoarsen(coarseLevel, sched);
     }
   }
-    
-    
   //__________________________________
   //   finalize timestep  
   for(int L = 0; L<maxLevel; L++){
@@ -208,7 +207,7 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
     const PatchSet* patches = level->eachPatch();
     scheduleConservedtoPrimitive_Vars(    sched, patches, ice_matls_sub,
                                                           all_matls,
-                                                          "afterAdvection");
+                                                          "finalizeTimestep");
                                                           
     if(d_analysisModule){                                                        
       d_analysisModule->scheduleDoAnalysis( sched, level);
@@ -867,21 +866,37 @@ void ICE::coarsen_delP(const ProcessorGroup*,
     cout_doing << d_myworld->myrank()<< " Doing Coarsen_" << variable->getName()
                << " on patch " << coarsePatch->getID() 
                << "\t\t\t ICE \tL-" <<coarseLevel->getIndex()<< endl;
+    int indx = 0;           
     CCVariable<double> delP, delP_old, delP_correction;                  
-    new_dw->getModifiable(delP, variable, 0, coarsePatch);
+    new_dw->getModifiable(delP, variable, indx, coarsePatch);
     new_dw->allocateTemporary(delP_old, coarsePatch);
     new_dw->allocateTemporary(delP_correction, coarsePatch);
     
     delP_old.copy(delP);
     delP_correction.initialize(0.0);
-   
+/*`==========TESTING==========*/
+#if 0
+  Todd, replace the guts of this task with     
+    fineToCoarseOperator<double>(delP, "non-conserved", variable, 
+                      indx, new_dw, coarsePatch, coarseLevel, fineLevel);
+                      
+    IntVector cl, ch, fl, fh;
+    getFineLevelRange(coarsePatch, finePatch, cl, ch, fl, fh);
+
+    // iterate over coarse level cells
+    for(CellIterator iter(cl, ch); !iter.done(); iter++){
+      IntVector c = *iter;
+      delP_correction[c] = delP_old[c] - delP[c];
+    }
+#endif 
+/*===========TESTING==========`*/
+
+#if 1
     Level::selectType finePatches;
     coarsePatch->getFineLevelPatches(finePatches);
-
-    Vector dx_c = coarseLevel->dCell();
-    Vector dx_f = fineLevel->dCell();
-    double coarseCellVol = dx_c.x()*dx_c.y()*dx_c.z();
-    double fineCellVol   = dx_f.x()*dx_f.y()*dx_f.z();
+    
+    IntVector r_Ratio = fineLevel->getRefinementRatio();
+    double inv_RR = 1.0/( (double)(r_Ratio.x() * r_Ratio.y() * r_Ratio.z()) );
 
     for(int i=0;i<finePatches.size();i++){
       const Patch* finePatch = finePatches[i];
@@ -895,11 +910,6 @@ void ICE::coarsen_delP(const ProcessorGroup*,
       constCCVariable<double> fine_delP;
       new_dw->getRegion(fine_delP,  variable, 0, fineLevel, fl, fh);
 
-      //cout << " fineToCoarseOperator: finePatch "<< fl << " " << fh 
-      //         << " coarsePatch "<< cl << " " << ch << endl;
-
-      IntVector refinementRatio = fineLevel->getRefinementRatio();
-
       // iterate over coarse level cells
       for(CellIterator iter(cl, ch); !iter.done(); iter++){
         IntVector c = *iter;
@@ -907,17 +917,17 @@ void ICE::coarsen_delP(const ProcessorGroup*,
         IntVector fineStart = coarseLevel->mapCellToFiner(c);
 
         // for each coarse level cell iterate over the fine level cells   
-        for(CellIterator inside(IntVector(0,0,0),refinementRatio );
+        for(CellIterator inside(IntVector(0,0,0),r_Ratio );
                                             !inside.done(); inside++){
           IntVector fc = fineStart + *inside;
-
-          delP_tmp += fine_delP[fc] * fineCellVol;
-        }
-        delP[c] =delP_tmp / coarseCellVol; 
+          delP_tmp += fine_delP[fc];
+        } 
+        delP[c] =delP_tmp * inv_RR;
         
         delP_correction[c] = delP_old[c] - delP[c];
       }
     }
+#endif
 
     if (switchDebug_updatePressure) {
       ostringstream desc;
