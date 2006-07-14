@@ -25,6 +25,7 @@ SRCS     += $(SRCDIR)/ApplyMappingMatrix.cc\
             $(SRCDIR)/FieldBoundary.cc\
             $(SRCDIR)/FieldDataNodeToElem.cc\
             $(SRCDIR)/FieldDataElemToNode.cc\
+            $(SRCDIR)/GetFieldMeasure.cc\
             $(SRCDIR)/GetFieldData.cc\
             $(SRCDIR)/GetFieldDataMinMax.cc\
             $(SRCDIR)/GetFieldInfo.cc\

@@ -339,6 +339,11 @@ bool ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::ModalMapping(Progress
    
   Thread::parallel(this,&ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel,np,&IData);
     
+  if (output.get_rep() == 0)
+  {
+    std::cout << "ERROR NO HANDLE\n";
+  }  
+    
   return (IData.retval);
 }
 
