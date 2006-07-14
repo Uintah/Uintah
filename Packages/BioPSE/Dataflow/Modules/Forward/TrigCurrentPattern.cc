@@ -65,28 +65,25 @@ TrigCurrentPattern::TrigCurrentPattern(GuiContext* ctx)
 {
 }
 
-TrigCurrentPattern::~TrigCurrentPattern(){
+
+TrigCurrentPattern::~TrigCurrentPattern()
+{
 }
 
+
 void
- TrigCurrentPattern::execute(){
- 
+TrigCurrentPattern::execute()
+{
   cout << "In TrigCurrentPattern " << endl;
 
   //! Input ports
   MatrixIPort*  iportCurrentPatternIndex_;
   MatrixIPort*  iportElectrodeParams_;
 
-  //! Output ports
-  MatrixOPort*  oportCurrentVector_;
-
   iportCurrentPatternIndex_ = (MatrixIPort *)get_iport("CurrentPatternIndex");
   iportElectrodeParams_ = (MatrixIPort *)get_iport("Electrode Parameters");
 
-  oportCurrentVector_ = (MatrixOPort *)get_oport("CurrentPatternVector");
-
   double currentMagnitude = Max(magnitudeTCL_.get(), 0.0);
-
 
   cout << "Current magnitude = " << currentMagnitude << endl;
 
@@ -154,7 +151,7 @@ void
 
   //! Sending result
   MatrixHandle cmatrix(currentPattern);
-  oportCurrentVector_->send_and_dereference(cmatrix);
+  send_output_handle("CurrentPatternVector", cmatrix);
 }
 
 } // End namespace BioPSE

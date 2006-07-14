@@ -109,17 +109,9 @@ ApplyFEMElectrodeSource::~ApplyFEMElectrodeSource()
 void
 ApplyFEMElectrodeSource::execute()
 {
-  FieldIPort *iportField = (FieldIPort *)get_iport("Mesh");
-  MatrixIPort *iportRhs = (MatrixIPort *)get_iport("Input RHS");
-
-  MatrixOPort *oportRhs = (MatrixOPort *)get_oport("Output RHS");
-
   //! Obtaining handles to computation objects
   FieldHandle hField;
-  if (!iportField->get(hField) || !hField.get_rep()) {
-    error("Can't get handle to input mesh.");
-    return;
-  }
+  if (!get_input_handle("Mesh", hField)) return;
 
   TSMesh *hTriMesh = 0;
   if ((hTriMesh = dynamic_cast<TSMesh*> (hField->mesh().get_rep())))
@@ -142,6 +134,7 @@ ApplyFEMElectrodeSource::execute()
 
   // If the user passed in a vector the right size, copy it into ours.
   ColumnMatrix* rhs = 0;
+  MatrixIPort *iportRhs = (MatrixIPort *)get_iport("Input RHS");
   MatrixHandle  hRhsIn;
   if (iportRhs->get(hRhsIn) && hRhsIn.get_rep())
   {
@@ -172,7 +165,8 @@ ApplyFEMElectrodeSource::execute()
   ProcessTriElectrodeSet( rhs, hTriMesh );
   
   //! Sending result
-  oportRhs->send(MatrixHandle(rhs));
+  MatrixHandle rhs_tmp(rhs);
+  send_output_handle("Output RHS", rhs_tmp);
 }
 
 

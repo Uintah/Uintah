@@ -85,17 +85,9 @@ ConfigureWireElectrode::~ConfigureWireElectrode()
 void
 ConfigureWireElectrode::execute()
 {
-  FieldIPort* ielec = (FieldIPort *) get_iport("Electrode");
-  FieldOPort* oelec = (FieldOPort *) get_oport("Electrode");
-  
   FieldHandle ielecH;
+  if (!get_input_handle("Electrode", ielecH)) return;
 
-  if (!ielec->get(ielecH))
-    return;
-  if (!ielecH.get_rep()) {
-    error("Empty input electrode.");
-    return;
-  }
   MeshHandle meshH = ielecH->mesh();
   CMesh *mesh=dynamic_cast<CMesh *>(meshH.get_rep());
   if (!mesh) {
@@ -174,7 +166,7 @@ ConfigureWireElectrode::execute()
     ++qni;
   }
   FieldHandle qfield(quadFld);
-  oelec->send_and_dereference(qfield);
+  send_output_handle("Electrode", qfield);
 }
 
 } // End namespace BioPSE

@@ -46,14 +46,6 @@ public:
   virtual ~ForwardMagneticField();
 
   virtual void execute();
-
-private:
-  FieldIPort* electricFieldP_;
-  FieldIPort* cond_tens_;
-  FieldIPort* sourceLocationP_;
-  FieldIPort* detectorPtsP_;
-  FieldOPort* magneticFieldAtPointsP_;
-  FieldOPort* magnitudeFieldP_;
 };
 
 
@@ -73,31 +65,27 @@ void
 ForwardMagneticField::execute()
 {
 // J = (sigma)*E + J(source)
-  electricFieldP_ = (FieldIPort *)get_iport("Electric Field");
   FieldHandle efld;
-  if (!electricFieldP_->get(efld)) return;
-
-  cond_tens_ = (FieldIPort *)get_iport("Conductivity Tensors");
-  FieldHandle ctfld;
-  if (!cond_tens_->get(ctfld)) return;
+  if (!get_input_handle("Electric Field", efld)) return;
 
   if (efld->query_vector_interface().get_rep() == 0) {
     error("Must have Vector field as Electric Field input");
     return;
   }
 
-  sourceLocationP_ = (FieldIPort *)get_iport("Dipole Sources");
+  FieldHandle ctfld;
+  if (!get_input_handle("Conductivity Tensors", ctfld)) return;
+
   FieldHandle dipoles;
-  if (!sourceLocationP_->get(dipoles)) return;
+  if (!get_input_handle("Dipole Sources", dipoles)) return;
 
   if (dipoles->query_vector_interface().get_rep() == 0) {
     error("Must have Vector field as Dipole Sources input");
     return;
   }
   
-  detectorPtsP_ = (FieldIPort *)get_iport("Detector Locations");
   FieldHandle detectors;
-  if (!detectorPtsP_->get(detectors)) return;
+  if (!get_input_handle("Detector Locations", detectors)) return;
   
   if (detectors->query_vector_interface().get_rep() == 0) {
     error("Must have Vector field as Detector Locations input");
@@ -142,11 +130,10 @@ ForwardMagneticField::execute()
      cerr << "null field magnitudes" << endl;
     return;
   }
-  magneticFieldAtPointsP_ = (FieldOPort *)get_oport("Magnetic Field");
-  magneticFieldAtPointsP_->send_and_dereference(magnetic_field);
+
+  send_output_handle("Magnetic Field", magnetic_field);
   
-  magnitudeFieldP_ = (FieldOPort *)get_oport("Magnitudes");
-  magnitudeFieldP_->send_and_dereference(magnitudes);
+  send_output_handle("Magnitudes", magnitudes);
 }
 
 

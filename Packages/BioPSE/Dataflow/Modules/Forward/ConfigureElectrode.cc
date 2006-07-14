@@ -77,17 +77,9 @@ ConfigureElectrode::~ConfigureElectrode()
 void
 ConfigureElectrode::execute()
 {
-  FieldIPort* ielec = (FieldIPort *) get_iport("Electrode");
-  FieldOPort* oelec = (FieldOPort *) get_oport("Electrode");
-  
   FieldHandle ielecH;
+  if (!get_input_handle("Electrode", ielecH)) return;
 
-  if (!ielec->get(ielecH))
-    return;
-  if (!ielecH.get_rep()) {
-    error("Empty input electrode.");
-    return;
-  }
   CField *elecFld = dynamic_cast<CField*>(ielecH.get_rep());
   if (!elecFld) {
     error("Input electrode wasn't a CurveField<double>.");
@@ -104,7 +96,7 @@ ConfigureElectrode::execute()
   elecFld->set_property("active_side", active, false);
 
   FieldHandle efield(elecFld);
-  oelec->send_and_dereference(efield);
+  send_output_handle("Electrode", efield);
 }
 
 } // End namespace BioPSE
