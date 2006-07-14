@@ -6,6 +6,7 @@
 #include <queue>
 #include <list>
 #include <set>
+#include <fstream>
 using namespace std;
 
 namespace Uintah {
@@ -59,6 +60,8 @@ WARNING
     void RunBR(vector<IntVector> &flags, vector<PseudoPatch> &patches);
     void PostFixup(vector<PseudoPatch> &patches,IntVector min_patch_size);
   private:
+    //function for outputing grid in parsable format
+    void writeGrid(Grid* grid);
     void problemSetup_BulletProofing(const int k);
     void AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVector> &coarse_flags,
                         const vector<const Patch*>& coarse_patches, int level);
@@ -80,6 +83,8 @@ WARNING
     vector<int> indicies_;
     vector<BNRTask*> request_to_task_;
     queue<int>  free_requests_;
+
+    ofstream fout;
   };
 
 } // End namespace Uintah
