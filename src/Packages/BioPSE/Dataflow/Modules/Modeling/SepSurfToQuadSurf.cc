@@ -85,16 +85,10 @@ SepSurfToQuadSurf::~SepSurfToQuadSurf()
 void
 SepSurfToQuadSurf::execute()
 {
-  // Make sure the ports exist.
-  FieldIPort *ifp = (FieldIPort *)get_iport("SepSurf");
-  FieldOPort *ofp = (FieldOPort *)get_oport("QuadSurf");
-
   // Make sure the input data exists.
   FieldHandle ifieldH;
-  if (!ifp->get(ifieldH) || !ifieldH.get_rep()) {
-    error("No input data");
-    return;
-  }
+  if (!get_input_handle("SepSurf", ifieldH)) return;
+
   SepSurf *ss = dynamic_cast<SepSurf *>(ifieldH.get_rep());
   if (!ss) {
     error("Input field was not a SepSurf");
@@ -144,9 +138,9 @@ SepSurfToQuadSurf::execute()
     ++fb;
     ++count;
   }
-  //  cerr << "count="<<count<<" data.size()="<<data.size()<<"\n";
+
   FieldHandle qsfH(qsf);
-  ofp->send_and_dereference(qsfH);
+  send_output_handle("QuadSurf", qsfH);
 }    
 
 } // End namespace BioPSE

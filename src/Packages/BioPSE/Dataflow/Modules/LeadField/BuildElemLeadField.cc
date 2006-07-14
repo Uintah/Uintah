@@ -97,35 +97,30 @@ BuildElemLeadField::BuildElemLeadField(GuiContext *context)
 {
 }
 
-BuildElemLeadField::~BuildElemLeadField(){}
 
-void BuildElemLeadField::execute() {
-  FieldIPort *mesh_iport = (FieldIPort *)get_iport("Domain Mesh");
-  MatrixIPort *interp_iport = 
-    (MatrixIPort *)get_iport("Electrode Interpolant");
+BuildElemLeadField::~BuildElemLeadField()
+{
+}
+
+
+void
+BuildElemLeadField::execute()
+{
   MatrixIPort *sol_iport = (MatrixIPort *)get_iport("Solution Vectors");
   MatrixOPort *rhs_oport = (MatrixOPort *)get_oport("RHS Vector");
-  MatrixOPort* leadfield_oport = 
-    (MatrixOPort *)get_oport("Leadfield (nelecs x nelemsx3)");
 
   int nnodes;
   int nelems;
   FieldHandle mesh_in;
-  if (!mesh_iport->get(mesh_in) || !mesh_in.get_rep()) {
-    error("Couldn't get input mesh.");
-    return;
-  }
+  if (!get_input_handle("Domain Mesh", mesh_in)) return;
 
   SCIRunAlgo::FieldsAlgo algo(this);
   if (!(algo.GetFieldInfo(mesh_in, nnodes, nelems))) return;
 
   MatrixHandle interp_in;
-  if (!interp_iport->get(interp_in) || !interp_in.get_rep()) {
-    error("Couldn't get electrode interpolant.");
-    return;
-  }
+  if (!get_input_handle("Electrode Interpolant", interp_in)) return;
 
-  // can't shortcut return, downstream from the send intermediate may be 
+  // Can't shortcut return, downstream from the send intermediate may be 
   // waiting for output, so don't hang.
   last_mesh_generation_ = mesh_in->generation;
   last_interp_generation_ = interp_in->generation;
@@ -178,6 +173,9 @@ void BuildElemLeadField::execute() {
     counter++;
   }
   leadfield_ = leadfield_mat;
-  leadfield_oport->send(leadfield_);
+
+  send_output_handle("Leadfield (nelecs x nelemsx3)", leadfield_, true);
 } 
+
+
 } // End namespace BioPSE

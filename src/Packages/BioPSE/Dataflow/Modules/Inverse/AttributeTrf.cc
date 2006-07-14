@@ -74,23 +74,22 @@ AttributeTrf::AttributeTrf(GuiContext *context)
 }
 
 // DESTRUCTOR
-AttributeTrf::~AttributeTrf(){
+AttributeTrf::~AttributeTrf()
+{
 }
 
 ///////////////////////////////////////////////
 // MODULE EXECUTION
 ///////////////////////////////////////////////
-void AttributeTrf::execute()
+void
+AttributeTrf::execute()
 {
   FieldIPort *iportGeomF = (FieldIPort *)get_iport("InputFld");
   MatrixOPort *oportAttrib = (MatrixOPort *)get_oport("OutputMat");
 
   // Getting input field.
   FieldHandle hFieldGeomF;
-  if(!iportGeomF->get(hFieldGeomF) || !hFieldGeomF.get_rep()) { 
-    error("Couldn't get handle to the Input Field.");
-    return;
-  }
+  if (!get_input_handle("InputFld", hFieldGeomF)) return;
 
   TSMesh *tsm=dynamic_cast<TSMesh *>(hFieldGeomF->mesh().get_rep());
   if (!tsm) {
@@ -99,7 +98,8 @@ void AttributeTrf::execute()
   }
 
   MatrixHandle smat(surfaceLaplacian(tsm));
-  oportAttrib->send_and_dereference(smat);
+
+  send_output_handle("OutputMat", smat);
 }
 
 } // End namespace BioPSE
