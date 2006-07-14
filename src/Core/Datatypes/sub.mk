@@ -36,7 +36,7 @@ SRCDIR   := Core/Datatypes
 SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/Color.cc		    	\
 	$(SRCDIR)/ColumnMatrix.cc	    	\
-	$(SRCDIR)/Datatype.cc		    	\
+	$(SRCDIR)/Datatype.cc                   \
 	$(SRCDIR)/DenseColMajMatrix.cc	    	\
 	$(SRCDIR)/DenseMatrix.cc	    	\
 	$(SRCDIR)/Field.cc		    	\
