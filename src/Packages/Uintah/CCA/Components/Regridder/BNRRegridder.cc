@@ -6,12 +6,15 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
+#include <Core/Util/DebugStream.h>
 using namespace Uintah;
 
 #include <vector>
 #include <set>
 #include <algorithm>
 using namespace std;
+
+//static DebugStream dbg("BNRPatches",false);
 
 BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task_count_(0),tola_(1),tolb_(1), patchfixer_(pg)
 {
@@ -52,10 +55,19 @@ BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task
     for(int i=tag_start;i<tag_end;i++)
       tags_.push(i<<1);
   }
+  
+  if(/*dbg.active() &&*/ rank==0)
+  {
+     //fout.open("patches.txt");
+  }
 }
 
 BNRRegridder::~BNRRegridder()
 {
+  if(/*dbg.active() &&*/ d_myworld->myrank()==0)
+  {
+    //fout.close();
+  }
 }
 
 Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP& ups)
@@ -168,8 +180,8 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
     for(unsigned int p=0;p<patch_sets[l].size();p++)
     {
       //uncoarsen
-      IntVector low = patch_sets[l][p].low*d_minPatchSize;
-      IntVector high =patch_sets[l][p].high*d_minPatchSize;
+      IntVector low = patch_sets[l][p].low = patch_sets[l][p].low*d_minPatchSize;
+      IntVector high = patch_sets[l][p].high = patch_sets[l][p].high*d_minPatchSize;
       //create patch
       newLevel->addPatch(low, high, low, high);
     }
@@ -194,7 +206,10 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
   d_newGrid = true;
   d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
 
-  if (d_myworld->myrank() == 0 ) cout << *newGrid;
+  if (/*dbg.active() &&*/ d_myworld->myrank()==0)
+  {
+    //writeGrid(newGrid);
+  }
   newGrid->performConsistencyCheck();
   return newGrid;
 }
@@ -453,24 +468,29 @@ void BNRRegridder::problemSetup_BulletProofing(const int k)
 //to do in parallel since the number of patches is typically very small
 void BNRRegridder::PostFixup(vector<PseudoPatch> &patches, IntVector min_patch_size)
 {
-  if(patches.size()>=target_patches_) //enough patches do not do a post fixup
+  //calculate total volume
+  int volume=0;
+  for(unsigned int p=0;p<patches.size();p++)
   {
-    return;
+    volume+=patches[p].volume;
   }
+
+  int volume_threshold=volume/d_myworld->size();
+
   //build a max heap
   make_heap(patches.begin(),patches.end());
-  //split max and place children on heap until i have enough patches
-  unsigned int i=patches.size()-1;
-  while(patches.size()<target_patches_)
+ 
+  unsigned int i=patches.size()-1; 
+  //split max and place children on heap until i have enough patches and patches are not to big
+  while(patches.size()<target_patches_ || patches[0].volume>volume_threshold)
   {
-    IntVector size;
+    if(patches[0].volume==1)  //check if patch is to small to split
+       return;
+    
     pop_heap(patches.begin(),patches.end());
 
-    if(patches[i].volume==1)  //check if patch is to small to split
-       break;
-
     //find max dimension
-    size=patches[i].high-patches[i].low;
+    IntVector size=patches[i].high-patches[i].low;
     
     int max_d=0;
     
@@ -546,4 +566,31 @@ void BNRRegridder::AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVect
       //cout << endl;
     }
   }
+}
+
+void BNRRegridder::writeGrid(Grid* grid)
+{
+  int levels=grid->numLevels();
+  //write #of levels
+  fout.write((char*)&levels,sizeof(int));
+  
+  //for each level
+  for(int l=0;l<levels;l++)
+  {
+    const LevelP level=grid->getLevel(l);     
+    int patches=level->numPatches();
+    //write # of patches
+    fout.write((char*)&patches,sizeof(int));
+
+    //write patches
+    for(Level::const_patchIterator iter=level->patchesBegin();iter!=level->patchesEnd();iter++)
+    {
+      const Patch *patch=*iter;
+      IntVector low=patch->getInteriorCellLowIndex();
+      IntVector high=patch->getInteriorCellHighIndex();
+      fout.write((char*)&low,sizeof(IntVector));
+      fout.write((char*)&high,sizeof(IntVector));
+    }
+  }
+  fout.flush();
 }
