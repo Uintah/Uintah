@@ -83,12 +83,8 @@ void
 ToStructured::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("Input Field", ifieldhandle)) return;
 
   if (!ofieldhandle_.get_rep() ||
       ifieldhandle->generation != last_generation_)

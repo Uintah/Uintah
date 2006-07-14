@@ -75,19 +75,18 @@ ExtractHexSheet::ExtractHexSheet(GuiContext* ctx)
 {
 }
 
+
 ExtractHexSheet::~ExtractHexSheet()
 {
 }
 
-void ExtractHexSheet::execute()
+
+void
+ExtractHexSheet::execute()
 {
-    // Get input fields.
-  FieldIPort *hexfp = (FieldIPort *)get_iport("HexField");
+  // Get input fields.
   FieldHandle hexfieldhandle;
-  if (!(hexfp->get(hexfieldhandle) && hexfieldhandle.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("HexField", hexfieldhandle)) return;
 
   bool changed = false;
 
@@ -119,17 +118,14 @@ void ExtractHexSheet::execute()
     changed = true;
   }
 
-//  cout << "Edges:";
   for( unsigned int i=0; i<edgeids.size(); i++ )
   {
     if( edge_ids_[i] != edgeids[i] ) 
     {
       edge_ids_[i] = edgeids[i];
-//      cout << " " << edgeids[i];
       changed = true;
     }
   }
-//  cout << endl;
 
   if (last_field_generation_ == hexfieldhandle->generation &&
       oport_cached( "NewHexField" )&&

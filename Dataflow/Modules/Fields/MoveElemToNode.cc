@@ -79,12 +79,8 @@ void
 MoveElemToNode::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Elem Field");
   FieldHandle ifield;
-  if (!(ifp->get(ifield) && ifield.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("Elem Field", ifield)) return;
 
   // Get the output port now, because we may be able to pass the field
   // directly through if it is already cell centered.

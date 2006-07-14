@@ -82,13 +82,8 @@ void
 ManageFieldData::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!(ifp->get(ifieldhandle) && (ifieldhandle.get_rep())))
-  {
-    error( "No field available in the 'Input Field' port.");
-    return;
-  }
+  if (!get_input_handle("Input Field", ifieldhandle)) return;
 
   // TODO: Using datasize this way appears to be wrong, as it depends
   // on the input DATA_AT size and not the one picked for output.
@@ -131,9 +126,8 @@ ManageFieldData::execute()
 
   // Compute output field.
   FieldHandle result_field;
-  MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Input Matrix");
   MatrixHandle imatrixhandle;
-  if (!(imatrix_port->get(imatrixhandle) && imatrixhandle.get_rep()))
+  if (!get_input_handle("Input Matrix", imatrixhandle, false))
   {
     remark("No input matrix connected, sending field as is.");
     result_field = ifieldhandle;

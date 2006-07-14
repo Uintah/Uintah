@@ -249,7 +249,6 @@ void
 FieldInfo::execute()
 {
   FieldHandle field_input_handle;
-
   if( !get_input_handle( "Input Field", field_input_handle, true ) ) {
     clear_vals();
     return;

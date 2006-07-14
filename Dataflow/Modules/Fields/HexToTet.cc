@@ -85,13 +85,8 @@ HexToTet::~HexToTet()
 void
 HexToTet::execute()
 {
-  FieldIPort *ifieldport = (FieldIPort *)get_iport("HexVol");
   FieldHandle ifieldhandle;
-  if(!(ifieldport->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
-    error("Can't get field.");
-    return;
-  }
+  if (!get_input_handle("HexVol", ifieldhandle)) return;
 
   // Cache generation.
   if (ofieldhandle_.get_rep() &&

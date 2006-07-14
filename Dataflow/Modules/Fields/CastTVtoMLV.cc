@@ -67,7 +67,8 @@ public:
   virtual void execute();
 };
 
-  DECLARE_MAKER(CastTVtoMLV)
+
+DECLARE_MAKER(CastTVtoMLV)
 
 CastTVtoMLV::CastTVtoMLV(GuiContext* ctx)
   : Module("CastTVtoMLV", ctx, Filter, "FieldsGeometry", "SCIRun"),
@@ -77,19 +78,17 @@ CastTVtoMLV::CastTVtoMLV(GuiContext* ctx)
 {
 }
 
-CastTVtoMLV::~CastTVtoMLV(){
+
+CastTVtoMLV::~CastTVtoMLV()
+{
 }
 
-void CastTVtoMLV::execute()
-{
-  // must find ports and have valid data on inputs
-  FieldIPort *iport_ = (FieldIPort*)get_iport("TetVolFieldMask");
 
+void
+CastTVtoMLV::execute()
+{
   FieldHandle ifieldH;
-  if (!iport_->get(ifieldH) || 
-      !ifieldH.get_rep())
-    return;
-  
+  if (!get_input_handle("TetVolFieldMask", ifieldH)) return;
 
   typedef TetVolMesh<TetLinearLgn<Point> >    TVMesh;
   typedef TetLinearLgn<Vector>                TFDVectorBasis;
@@ -104,8 +103,6 @@ void CastTVtoMLV::execute()
     error(msg);
     return;
   }                     
-
-
 
   TVV *tv = (TVV *) ifieldH.get_rep();
   TVMesh *tvm = (TVMesh *) tv->get_typed_mesh().get_rep();

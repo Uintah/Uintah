@@ -97,11 +97,9 @@ bool ChangeFieldDataType::types_equal_p(FieldHandle f)
 void
 ChangeFieldDataType::execute()
 {
-  FieldIPort *iport = (FieldIPort*)get_iport("Input Field"); 
-
   // The input port (with data) is required.
   FieldHandle fh;
-  if (!iport->get(fh) || !fh.get_rep())
+  if (!get_input_handle("Input Field", fh))
   {
     fldname_.set("---");
     inputdatatype_.set("---");

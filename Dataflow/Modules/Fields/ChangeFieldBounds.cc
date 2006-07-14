@@ -267,11 +267,8 @@ ChangeFieldBounds::build_widget(FieldHandle f, bool reset)
 void
 ChangeFieldBounds::execute()
 {
-  FieldIPort *iport = (FieldIPort*)get_iport("Input Field"); 
-
-  // The input port (with data) is required.
   FieldHandle fh;
-  if (!iport->get(fh) || !fh.get_rep())
+  if (!get_input_handle("Input Field", fh))
   {
     clear_vals();
     return;

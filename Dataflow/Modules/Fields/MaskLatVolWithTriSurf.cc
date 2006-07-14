@@ -85,24 +85,18 @@ MaskLatVolWithTriSurf::execute()
   FieldIPort *trisurf = (FieldIPort *) get_iport("TriSurfField");
 
   FieldHandle latvolH, trisurfH;
-  LVMesh::handle_type latvolM;
-  TSMesh::handle_type trisurfM;
-  
-  if (!latvol->get(latvolH)) {
-    warning("No input on LatVol port.");
-    return;
-  }
-  latvolM = dynamic_cast<LVMesh*>(latvolH->mesh().get_rep());
+  if (!get_input_handle("LatVolField", latvolH)) return;
+  if (!get_input_handle("TriSurfField", trisurfH)) return;
+
+  LVMesh::handle_type latvolM =
+    dynamic_cast<LVMesh*>(latvolH->mesh().get_rep());
   if (!latvolH.get_rep()) {
     error("Input field was not a LatVol.");
     return;
   }
 
-  if (!trisurf->get(trisurfH)) {
-    warning("No input on TriSurf port.");
-    return;
-  }
-  trisurfM = dynamic_cast<TSMesh*>(trisurfH->mesh().get_rep());
+  TSMesh::handle_type trisurfM =
+    dynamic_cast<TSMesh*>(trisurfH->mesh().get_rep());
   if (!trisurfM.get_rep()) {
     error("Input field was not a TriSurf.");
     return;

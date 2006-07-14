@@ -85,13 +85,8 @@ QuadToTri::~QuadToTri()
 void
 QuadToTri::execute()
 {
-  FieldIPort *ifieldport = (FieldIPort *)get_iport("QuadSurf");
   FieldHandle ifieldhandle;
-  if(!(ifieldport->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
-    error("Can't get field.");
-    return;
-  }
+  if (!get_input_handle("QuadSurf", ifieldhandle)) return;
 
   // Cache generation.
   if (ofieldhandle_.get_rep() &&

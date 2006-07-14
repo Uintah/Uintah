@@ -109,22 +109,13 @@ void
 AttractNormals::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("Input Field", ifieldhandle)) return;
 
-  FieldIPort *ipp = (FieldIPort *)get_iport("Input Point");
   FieldHandle ipointhandle;
-  if (!(ipp->get(ipointhandle) && ipointhandle.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("Input Point", ipointhandle)) return;
   
-  PCMesh *ipcm =
-    dynamic_cast<PCMesh *>(ipointhandle->mesh().get_rep());
+  PCMesh *ipcm = dynamic_cast<PCMesh *>(ipointhandle->mesh().get_rep());
   if (!ipcm)
   {
     error("Input point not in a PCField format.");

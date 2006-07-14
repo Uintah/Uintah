@@ -163,19 +163,17 @@ void
 SeedPoints::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!ifp) {
-    error("Unable to initialize " + module_name_ + "'s iport.");
-    return;
-  }
+  if (!get_input_handle("Input Field", ifieldhandle)) return;
 
   bool input_field_p = true;
-  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
-    input_field_p = false;
-    return;
-  }
+  // TODO: It looks like the input field is meant to be optional even
+  // though it is not.
+  //  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
+  //  {
+  //    input_field_p = false;
+  //    return;
+  //  }
 
   // Maybe update the widget.
   BBox bbox;

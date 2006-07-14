@@ -77,26 +77,21 @@ InsertHexSheet::InsertHexSheet(GuiContext* ctx)
 {
 }
 
+
 InsertHexSheet::~InsertHexSheet()
 {
 }
 
-void InsertHexSheet::execute()
-{
-    // Get input fields.
-  FieldIPort *hexfp = (FieldIPort *)get_iport("HexField");
-  FieldHandle hexfieldhandle;
-  if (!(hexfp->get(hexfieldhandle) && hexfieldhandle.get_rep()))
-  {
-    return;
-  }
 
-  FieldIPort *trifp = (FieldIPort *)get_iport("TriField");
+void
+InsertHexSheet::execute()
+{
+  // Get input fields.
+  FieldHandle hexfieldhandle;
+  if (!get_input_handle("HexField", hexfieldhandle)) return;
+
   FieldHandle trifieldhandle;
-  if (!(trifp->get(trifieldhandle) && trifieldhandle.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("TriField", trifieldhandle)) return;
 
   bool changed = false;
   add_to_side_.reset();
