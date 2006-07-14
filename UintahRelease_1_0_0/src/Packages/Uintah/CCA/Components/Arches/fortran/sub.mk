@@ -22,7 +22,7 @@ SRCS += \
 	$(SRCDIR)/celltypeInit.F \
 	$(SRCDIR)/computeVel.F \
 	$(SRCDIR)/enthalpyradthinsrc.F \
-	$(SRCDIR)/explicit.F \
+	$(SRCDIR)/explicit_scalar.F \
 	$(SRCDIR)/explicit_vel.F \
 	$(SRCDIR)/fixval.F \
 	$(SRCDIR)/fixval_trans.F \
@@ -98,7 +98,7 @@ $(SRCDIR)/cellg.$(OBJEXT): $(SRCDIR)/cellg_fort.h
 $(SRCDIR)/celltypeInit.$(OBJEXT): $(SRCDIR)/celltypeInit_fort.h
 $(SRCDIR)/computeVel.$(OBJEXT): $(SRCDIR)/computeVel_fort.h
 $(SRCDIR)/enthalpyradthinsrc.$(OBJEXT): $(SRCDIR)/enthalpyradthinsrc_fort.h
-$(SRCDIR)/explicit.$(OBJEXT): $(SRCDIR)/explicit_fort.h
+$(SRCDIR)/explicit_scalar.$(OBJEXT): $(SRCDIR)/explicit_scalar_fort.h
 $(SRCDIR)/explicit_vel.$(OBJEXT): $(SRCDIR)/explicit_vel_fort.h
 $(SRCDIR)/inlbcs.$(OBJEXT): $(SRCDIR)/inlbcs_fort.h $(SRCDIR)/ramping.h
 $(SRCDIR)/mascal.$(OBJEXT): $(SRCDIR)/mascal_fort.h

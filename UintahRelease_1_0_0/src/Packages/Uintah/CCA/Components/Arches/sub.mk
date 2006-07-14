@@ -126,12 +126,12 @@ $(SRCDIR)/CompDynamicProcedure.$(OBJEXT): $(SRCDIR)/fortran/comp_dynamic_7loop_f
 $(SRCDIR)/CompDynamicProcedure.$(OBJEXT): $(SRCDIR)/fortran/comp_dynamic_8loop_fort.h
 $(SRCDIR)/PressureSolver.$(OBJEXT): $(SRCDIR)/fortran/add_hydrostatic_term_topressure_fort.h
 $(SRCDIR)/PressureSolver.$(OBJEXT): $(SRCDIR)/fortran/normpress_fort.h
-$(SRCDIR)/RHSSolver.$(OBJEXT): $(SRCDIR)/fortran/explicit_fort.h
+$(SRCDIR)/RHSSolver.$(OBJEXT): $(SRCDIR)/fortran/explicit_scalar_fort.h
 $(SRCDIR)/RHSSolver.$(OBJEXT): $(SRCDIR)/fortran/explicit_vel_fort.h
+$(SRCDIR)/RHSSolver.$(OBJEXT): $(SRCDIR)/fortran/computeVel_fort.h
 $(SRCDIR)/SmagorinskyModel.$(OBJEXT): $(SRCDIR)/fortran/scalarvarmodel_fort.h
 $(SRCDIR)/SmagorinskyModel.$(OBJEXT): $(SRCDIR)/fortran/smagmodel_fort.h
 $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/add_mm_enth_src_fort.h
-$(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/computeVel_fort.h
 $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/enthalpyradthinsrc_fort.h
 $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/mascal_fort.h
 $(SRCDIR)/Source.$(OBJEXT): $(SRCDIR)/fortran/mascal_scalar_fort.h
