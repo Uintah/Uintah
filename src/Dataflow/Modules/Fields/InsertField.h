@@ -714,8 +714,8 @@ InsertFieldExtractT<TFIELD, IFIELD>::extract(FieldHandle &result_field,
   typename IFIELD::mesh_type::Node::size_type onodesize;
   omesh->size(onodesize);
 
-  const int nrows = onodesize;
-  const int ncols = tnodesize;
+  const int nrows = (int)onodesize;
+  const int ncols = (int)tnodesize;
   int *rr = scinew int[nrows+1];
   int *cc = scinew int[nrows];
   double *d = scinew double[nrows];

@@ -145,7 +145,8 @@ public:
   virtual void execute();
 };
 
-  DECLARE_MAKER(ShowMatrix)
+
+DECLARE_MAKER(ShowMatrix)
 
 ShowMatrix::ShowMatrix(GuiContext* context)
   : Module("ShowMatrix", context, Filter, "Visualization", "SCIRun"),
@@ -728,8 +729,6 @@ ShowMatrix::get_matrix_data(MatrixHandle mh)
     gui_col_end_.set(data.col_end);
     gui_cols_.set(m->ncols()-1);
     
-
-
     data.min = get_value(mh, data.row_begin, data.col_begin);
     data.max = data.min;
     
