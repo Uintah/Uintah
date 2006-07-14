@@ -71,16 +71,11 @@ TensorsToIndices::~TensorsToIndices()
 {
 }
 
-void TensorsToIndices::execute() {
-  FieldIPort* ifieldport = (FieldIPort *) get_iport("IndexField");
-  FieldOPort* ofieldport = (FieldOPort *) get_oport("TensorField");
+void
+TensorsToIndices::execute()
+{
   FieldHandle ifieldH;
-  if (!ifieldport->get(ifieldH))
-    return;
-  if (!ifieldH.get_rep()) {
-    error("Empty input field.");
-    return;
-  }
+  if (!get_input_handle("TensorField", ifieldH)) return;
 
   const TypeDescription *field_src_td = ifieldH->get_type_description();
   const string field_dst_name = 
@@ -97,8 +92,11 @@ void TensorsToIndices::execute() {
   if (!module_dynamic_compile(ci, algo)) return;
 
   FieldHandle ofieldH = algo->execute(ifieldH);
-  ofieldport->send_and_dereference(ofieldH);
+  
+  send_output_handle("IndexField", ofieldH);
 }
+
+
 } // End namespace BioPSE
 
 namespace SCIRun {

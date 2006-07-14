@@ -76,22 +76,17 @@ InsertVoltageSource::InsertVoltageSource(GuiContext *context)
 {
 }
 
+
 InsertVoltageSource::~InsertVoltageSource()
 {
 }
 
-void InsertVoltageSource::execute() {
-  FieldIPort* imesh = (FieldIPort *) get_iport("TetMesh");
-  FieldIPort* isource = (FieldIPort *) get_iport("VoltageSource");
-  FieldOPort* omesh = (FieldOPort *) get_oport("TetMesh");
 
+void
+InsertVoltageSource::execute()
+{
   FieldHandle imeshH;
-  if (!imesh->get(imeshH))
-    return;
-  if (!imeshH.get_rep()) {
-    error("Empty input mesh.");
-    return;
-  }
+  if (!get_input_handle("TetMesh", imeshH)) return;
 
   MeshHandle tetVolH = imeshH->mesh();
   TVMesh *tvm = dynamic_cast<TVMesh *>(tetVolH.get_rep());
@@ -99,14 +94,9 @@ void InsertVoltageSource::execute() {
     error("Input FEM wasn't a TetVolField.");
     return;
   }
-
+  
   FieldHandle isourceH;
-  if (!isource->get(isourceH))
-    return;
-  if (!isourceH.get_rep()) {
-    error("Empty input source.");
-    return;
-  }
+  if (!get_input_handle("VoltageSource", isourceH)) return;
 
   int groundfirst = groundfirst_.get();
   vector<Point> sources;
@@ -205,20 +195,21 @@ void InsertVoltageSource::execute() {
     }
   }
 
-  for (int i=0; i<bc_tet_nodes.size(); i++) {
+  for (int i=0; i<bc_tet_nodes.size(); i++)
+  {
     double val=0;
     int nsrcs=closest[bc_tet_nodes[i]].size();
     for (int j=0; j<nsrcs; j++)
       val+=closest[bc_tet_nodes[i]][j].second/nsrcs;
-//    dirichlet.push_back(pair<int, double>(bc_tet_nodes[i],
-//					  closest[bc_tet_nodes[i]].second));
-//    }
     dirichlet.push_back(pair<int, double>((int)bc_tet_nodes[i], val));
   }
   imeshH->set_property("dirichlet", dirichlet, false);
   imeshH->set_property("conductivity_table", conds, false);
-  omesh->send_and_dereference(imeshH);
+
+  send_output_handle("TetMesh", imeshH);
 }
+
+
 } // End namespace BioPSE
 
 namespace SCIRun {

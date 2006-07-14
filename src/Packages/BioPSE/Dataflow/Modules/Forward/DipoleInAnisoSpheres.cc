@@ -106,7 +106,8 @@ DipoleInAnisoSpheres::DipoleInAnisoSpheres(GuiContext *context) :
   Module("DipoleInAnisoSpheres", context, Filter, "Forward", "BioPSE"),
   accuracy(context->subVar("accuracy")),
   expTerms(context->subVar("expTerms"))
-{}
+{
+}
 
 
 DipoleInAnisoSpheres::~DipoleInAnisoSpheres()
