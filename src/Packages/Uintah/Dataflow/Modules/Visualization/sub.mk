@@ -6,6 +6,7 @@ SRCDIR   := Packages/Uintah/Dataflow/Modules/Visualization
 
 SRCS     += \
 	$(SRCDIR)/GridVisualizer.cc \
+	$(SRCDIR)/GLSLShader.cc \
 	$(SRCDIR)/PatchVisualizer.cc \
 	$(SRCDIR)/PatchDataVisualizer.cc \
 	$(SRCDIR)/RescaleColorMapForParticles.cc \
@@ -19,6 +20,7 @@ SRCS     += \
 	$(SRCDIR)/VariablePlotter.cc \
 	$(SRCDIR)/NodeHedgehog.cc \
 	$(SRCDIR)/SubFieldHistogram.cc \
+	$(SRCDIR)/UTextureBuilder.cc
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \
