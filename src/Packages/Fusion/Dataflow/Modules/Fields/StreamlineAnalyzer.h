@@ -284,6 +284,7 @@ protected:
 	       unsigned int &twist,
 	       unsigned int &skip,
 	       unsigned int &island,
+	       float &avenode,
 	       bool &groupCCW,
 	       unsigned int &windingNextBest );
 
@@ -1046,31 +1047,47 @@ FingerCheck( vector< Point >& points, unsigned int nbins ) {
 
   int cc = 0;
 
+  bool violation = false;
+
+  // Check a point and its neighbor from one group with a point from
+  // all of the other groups.
   for( unsigned int i=0; i<n-nbins; i++ ) {
     for( unsigned int j=i+1; j<i+nbins; j++ ) {
 
       Vector v0 = Vector( points[i      ] - points[j] );
       Vector v1 = Vector( points[i+nbins] - points[j] );
       
+      v0.safe_normalize();
+      v1.safe_normalize();
+
       double dotProd = Dot( v0, v1 );
       
-      if( dotProd < 0.0 )
-	return pair< pair< double, double >, pair< double, double > >
-	  ( pair< double, double >(-1,1.0e12),
-	    pair< double, double >(-1,1.0e12) );
-      
-      dotProdAveLength += sqrt(dotProd / v0.length2());
-      
-      dotProd /= (v0.length() * v1.length());
-      dotProdAveAngle += dotProd;
-      
-//     cerr << j
-// 	 << " Len Dot Prod " << sqrt(dotProd) << "  "
-// 	 << " Ang Dot Prod " << dotProd << endl;
+      cerr << i << "  " << i+nbins << "  " << j
+	  << " Len Dot Prod " << sqrt(dotProd) << "  "
+ 	  << " Ang Dot Prod " << dotProd << endl;
 
-      cc++;
+      if( dotProd < 0.0 ) {
+	violation = true;
+
+// 	return pair< pair< double, double >, pair< double, double > >
+// 	  ( pair< double, double >(-1,1.0e12),
+// 	    pair< double, double >(-1,1.0e12) );
+      } else {
+      
+	dotProdAveLength += sqrt(dotProd / v0.length2());
+      
+	dotProd /= (v0.length() * v1.length());
+	dotProdAveAngle += dotProd;
+	
+	cc++;
+      }
     }
   }
+
+  if( violation )
+    return pair< pair< double, double >, pair< double, double > >
+      ( pair< double, double >(-1,1.0e12),
+	pair< double, double >(-1,1.0e12) );
 
   dotProdAveLength /= cc;
   dotProdAveAngle  /= cc;
@@ -1115,27 +1132,52 @@ basicChecks( vector< Point >& points,
 	     unsigned int &twist,
 	     unsigned int &skip,
 	     unsigned int &island,
+	     float &avenode,
 	     bool &groupCCW,
 	     unsigned int &windingNextBest ) {
 
   Vector v0, v1;
 
-  // Do a check for islands.
+  // See if it is posible to find the next best based on the
+  // overlap which will rule out possible windings.
+  windingNextBest = 0;
+  avenode = 0;
+
+  // Do a check for islands. Islands will exists if there is a change
+  // in direction of the connected points relative to the centroid of
+  // all of the points.
+
   island = 0;
 
+  bool baseCCW;
+
   for( unsigned int i=0; i<winding; i++ ) {
+
+    // Get the direction based on the first two points.
     v0 = (Vector) points[i        ] - centroid;
     v1 = (Vector) points[i+winding] - centroid;
 
     bool lastCCW = (ccw( v0, v1 ) == 1);
     v0 = v1;
 
+    // The islands should all go in the same direction initally.
+    if( i == 0 ) {
+      baseCCW = lastCCW;
+    } else if( baseCCW != lastCCW ) {
+      island = 0;
+      break;
+    }
+
+    // Get the direction based on the remaining points.
     for( unsigned int j=i+2*winding; j<points.size(); j+=winding ) {
       v1 = (Vector) points[j] - centroid;
 
       bool CCW = (ccw( v0, v1 ) == 1);
       v0 = v1;
-	    
+
+      // A switch in direction indicates that an island is
+      // present. Stop the check as we will worry about it being
+      // complete later.
       if( CCW != lastCCW ) {
 	island++;
 	break;
@@ -1143,39 +1185,43 @@ basicChecks( vector< Point >& points,
     }
   }
 
-  // The direction of the points in a group.
+
+  // Get the direction of the points for the first group. Assume that
+  // the direction is the same for all of the other groups.
   groupCCW = (ccw( (Vector) points[0      ] - centroid, 
 		   (Vector) points[winding] - centroid ) == 1);
   
-//  cerr << 0 << "  " << ccw( (Vector) points[0      ] - centroid, 
-//			    (Vector) points[winding] - centroid ) << endl;
-
-  // Find the next group that is the same direction of the
-  // points that are in each group.
+  // Find the next group that is the same direction of the points that
+  // are with in each group. The skip is the index offset from one
+  // group to the next.
   skip = 1;
 
-  double angleMin = 9999;
+  // Necessary only if the winding is greater than 2.
+  if( winding > 2 ) {
+    double angleMin = 9999;
 
-  v0 = (Vector) points[0] - centroid;
+    v0 = (Vector) points[0] - centroid;
 
-  for( unsigned int i=1; i<winding; i++ ) {
-    v1 = (Vector) points[i] - centroid;
+    for( unsigned int i=1; i<winding; i++ ) {
+      v1 = (Vector) points[i] - centroid;
 
-    // Get the direction of the twisting.
-    bool CCW = (ccw( v0, v1 ) == 1);
+      // Get the direction of the next group and the angle between the
+      // first group and next group.
+      bool CCW = (ccw( v0, v1 ) == 1);
 
-//    cerr << i << "  " << ccw( v0, v1 ) << endl;
+      double angle = acos( Dot( v0, v1 ) / (v0.length() * v1.length()) );
 
-    double angle = acos( Dot( v0, v1 ) / (v0.length() * v1.length()) );
+      // If islands exists it does matter what the direction is
+      // because should not be any overlap just find the skip.
 
-//    cerr << i << "  angle " << angle << "  " << (CCW == groupCCW) << endl;
-
-    if( (island || (!island && CCW == groupCCW)) &&
-	angleMin > angle ) {
-      angleMin = angle;
-      skip = i;
-
-//      cerr << " new skip " << i << endl;
+      // If no islands the groups will overlap so the directions must
+      // match. The skip will be found based on the minimum angle
+      // between two groups.
+      if( (island || (!island && CCW == groupCCW)) &&
+	  angleMin > angle ) {
+	angleMin = angle;
+	skip = i;
+      }
     }
   }
 
@@ -1189,7 +1235,9 @@ basicChecks( vector< Point >& points,
       break;
 
   if( twist == winding ) {
-    cerr << "WINDING - TWIST - SKIP ERROR  winding " << winding
+    cerr << endl
+	 << "ERROR in finding the - WINDING - TWIST - SKIP"
+	 << " winding " << winding
 	 << " twist " << twist
 	 << " skip " << skip
 	 << endl;
@@ -1198,7 +1246,7 @@ basicChecks( vector< Point >& points,
 
   } else {
 
-    // Sanity check for the twist calculation
+    // Sanity check for the twist/skip calculation
     double angleSum = 0;
 
     if( winding > 2 ) {
@@ -1211,38 +1259,154 @@ basicChecks( vector< Point >& points,
 
 	Vector v0 = (Vector) points[start] - centroid;
 
-	do {
-	  //	cerr << start << "  " << stop << "  " << next << endl;
+	// Get the angle traveled from the first group to the second
+	// for one winding. This is done by summing the angle starting
+	// with the first group and going to the geometrically next
+	// group stopping when the logically next group is found.
 
+	do {
 	  Vector v1 = (Vector) points[next] - centroid;
 
 	  angleSum += acos( Dot( v0, v1 ) / (v0.length() * v1.length()) );
+
+// 	  cerr << " winding " << i
+// 	       << " start " << start
+// 	       << " next " << next
+// 	       << " stop " << stop
+// 	       << " twist angle "
+// 	       << acos( Dot( v0, v1 ) / (v0.length() * v1.length()) ) << endl;
 
 	  start = next;
 	  next  = (start + skip) % winding;
 
 	  v0 = v1;
 	} while( start != stop );
-
-	//      cerr << angleSum / (2.0 * M_PI) << endl;
       }
 
-      unsigned int twistCheck = (unsigned int)
-	(angleSum / (2.0 * M_PI) + M_PI/winding);
+      // THe total number of twist should be the same. Account small
+      // rounding errors by adding 25% of the distanced traveled in
+      // one winding.
+      unsigned int twistCheck =
+	(unsigned int) (angleSum / (2.0 * M_PI) + M_PI/2.0/winding);
 
       if( twistCheck != twist ) {
-	cerr << "Twist mismatch " << twistCheck <<  "  " << twist << endl;
+	cerr << endl
+	     << "WARNING - TWIST MISMATCH "
+	     << " angle sum " << (angleSum / (2.0 * M_PI))
+	     << " winding " << winding
+	     << " twistCheck " << twistCheck
+	     << " twist " << twist
+	     << " skip " << skip
+	     << endl;
       }
     }
   }
 
-  // See if it is posible to find the next best based on the
-  // overlap which will rule out possible windings.
-  windingNextBest = 0;
+  // Island sanity check make sure no island overlaps another island.
+  if( island ) {
 
-  if( !island ) {
+    for( unsigned int i=0; i<winding && i+winding<points.size(); i++ ) {
+      unsigned int previous = (i - skip + winding) % winding;
+
+      // See if a point overlaps the first section.
+      for( unsigned int j=previous; j<points.size(); j+=winding ) {
+
+	v0 = (Vector) points[i        ] - (Vector) points[j];
+	v1 = (Vector) points[i+winding] - (Vector) points[j];
+
+	if( Dot( v0, v1 ) < 0 ) {
+
+	  island = false;
+
+	  v0.safe_normalize();
+	  v1.safe_normalize();
+
+	  cerr << "FAILED ISLAND SANITY CHECK "
+	       << i << "  " << i + winding << "  " << j << "  "
+	       << Dot( v0, v1 ) << endl;
+
+	  break;
+	}
+      }
+
+      // See if the first point overlaps another section.
+      if( island ) {
+	for( unsigned int j=previous; j<points.size()-winding; j+=winding ) {
+
+	  v0 = (Vector) points[i] - (Vector) points[j];
+	  v1 = (Vector) points[i] - (Vector) points[j+winding];
+
+	  if( Dot( v0, v1 ) < 0 ) {
+	    island = false;
+	  v0.safe_normalize();
+	  v1.safe_normalize();
+
+	  cerr << "FAILED ISLAND SANITY CHECK "
+	       << i << "  " << j << "  " << j + winding << "  "
+	       << Dot( v0, v1 ) << endl;
+
+
+	    break;
+	  }
+	}
+      }
+
+      unsigned int next = (i + skip) % winding;
+
+      // See if a point overlaps the first section.
+      if( island ) {
+	for( unsigned int j=next; j<points.size(); j+=winding ) {
+
+	  v0 = (Vector) points[i        ] - (Vector) points[j];
+	  v1 = (Vector) points[i+winding] - (Vector) points[j];
+	  
+	  if( Dot( v0, v1 ) < 0 ) {
+	    island = false;
+	  v0.safe_normalize();
+	  v1.safe_normalize();
+
+	  cerr << "FAILED ISLAND SANITY CHECK "
+	       << i << "  " << i + winding << "  " << j << "  "
+	       << Dot( v0, v1 ) << endl;
+
+	    break;
+	  }
+	}
+      }
+
+      // See if the first point overlaps another section.
+      if( island ) {
+	for( unsigned int j=next; j<points.size()-winding; j+=winding ) {
+
+	  v0 = (Vector) points[i] - (Vector) points[j];
+	  v1 = (Vector) points[i] - (Vector) points[j+winding];
+
+	  if( Dot( v0, v1 ) < 0 ) {
+	    island = false;
+	  v0.safe_normalize();
+	  v1.safe_normalize();
+
+	  cerr << "FAILED ISLAND SANITY CHECK "
+	       << i << "  " << j << "  " << j + winding << "  "
+	       << Dot( v0, v1 ) << endl;
+
+	    break;
+	  }
+	}
+      }
+    }
+
+    if( island ) {
+      // In this case there is no overlap so the number of nodes is
+      // just use the average.
+      avenode = (float) points.size() / (float) winding;
+    }
+  }
+
+  else {
     unsigned int previous = winding - skip;
 
+    // See if a point overlaps the first section.
     for( unsigned int j=previous; j<points.size(); j+=winding ) {
 
       v0 = (Vector) points[      0] - (Vector) points[j];
@@ -1252,6 +1416,63 @@ basicChecks( vector< Point >& points,
 	windingNextBest = j - winding;
 	break;
       }
+    }
+
+    // See if the first point overlaps another section.
+    if( windingNextBest == 0 ) {
+      for( unsigned int j=previous; j<points.size()-winding; j+=winding ) {
+
+	v0 = (Vector) points[0] - (Vector) points[j];
+	v1 = (Vector) points[0] - (Vector) points[j+winding];
+
+	if( Dot( v0, v1 ) < 0 ) {
+	  windingNextBest = j;
+	  break;
+	}
+      }
+    }
+
+    // If next best winding is set then there is an overlap. As such,
+    // check to see if the number of points that would be in each
+    // group is the same.
+    if( windingNextBest ) {
+
+      unsigned int nnodes = windingNextBest / winding + 1;
+
+      // Search each group
+      for( unsigned int i=0; i<winding; i++ ) {
+
+	// and check for overlap with the next group.
+	unsigned int j = (i + skip) % winding;
+
+	unsigned int nodes = nnodes;
+
+	while( i + nodes * winding < points.size() ) {
+	  // Check to see if the first overlapping point is really a
+	  // fill-in point. This happens because the spacing between
+	  // winding groups varries between groups.
+
+	  unsigned int k = i + nodes * winding;
+
+	  v0 = (Vector) points[j          ] - (Vector) points[k];
+	  v1 = (Vector) points[k - winding] - (Vector) points[k];
+
+	  if( Dot( v0, v1 ) < 0.0 )
+	    nodes++;
+	  else
+	    break;
+	}
+
+	avenode += nodes;
+      }
+
+      avenode /= winding;
+
+    } else {
+
+      // In this case there is no overlap so the number of nodes can
+      // not be determined correctly so just use the average.
+      avenode = (float) points.size() / (float) winding;
     }
   }
 
@@ -1383,6 +1604,7 @@ execute(FieldHandle& ifield_h,
   vector< unsigned int > twists;
   vector< unsigned int > skips;
   vector< unsigned int > islands;
+  vector< float > avenodes;
 
   Point lastPt, currPt;
   double lastAng, currAng;
@@ -1475,20 +1697,28 @@ execute(FieldHandle& ifield_h,
       centroid /= (double) points.size();
 
       unsigned int winding, twist, skip, island, windingNextBest;
+      float avenode;
       bool groupCCW;
 
+      float bestNodes = 1;
+
+//      if( 0 && (windings.size() == 0 || override) ) {
       if( override ) {
 	winding = override;
+
+//	if( windings.size() == 0 && override == 0 )
+//	  winding = 4;
 
 	// Do this to get the basic values of the fieldline.
 	basicChecks( points, centroid,
 		     winding, twist, skip,
-		     island, groupCCW, windingNextBest );
+		     island, avenode, groupCCW, windingNextBest );
 
 	windings.push_back( winding );
 	twists.push_back( twist );
 	skips.push_back( skip );
 	islands.push_back( island );
+	avenodes.push_back( avenode );
 
       } else {
 
@@ -1527,16 +1757,16 @@ execute(FieldHandle& ifield_h,
 
 	  // If any finger check results in a negative dot product
 	  // skip it.
-	  pair< pair< double, double >, pair< double, double > > fingers =
-	    FingerCheck( points, winding );
+// 	  pair< pair< double, double >, pair< double, double > > fingers =
+// 	    FingerCheck( points, winding );
 
-	  if( fingers.first.first   < 0 ||
-	      fingers.first.second  < 0 ||
-	      fingers.second.first  < 0 ||
-	      fingers.second.second < 0 )
-	    continue;
+// 	  if( fingers.first.first   < 0 ||
+// 	      fingers.first.second  < 0 ||
+// 	      fingers.second.first  < 0 ||
+// 	      fingers.second.second < 0 )
+// 	    continue;
 
-	  cerr << winding << " Passed FingerCheck\n";
+// 	  cerr << winding << " Passed FingerCheck\n";
 
 	  // Passed all checks so add it to the possibility list.
 	  windingList.push_back( winding );
@@ -1548,28 +1778,49 @@ execute(FieldHandle& ifield_h,
 	  // Do the basic checks
 	  if ( basicChecks( points, centroid,
 			    winding, twist, skip,
-			    island, groupCCW, windingNextBest ) ) {
+			    island, avenode, groupCCW, windingNextBest ) ) {
 	       
 	    cerr << "windings " << winding 
 		 << "  twists " << twist
 		 << "  skip "   << skip
 		 << "  groupCCW " << groupCCW
 		 << "  islands " << island
+		 << "  avenodes " << avenode
 		 << "  next best winding " << windingNextBest;
-	    
-	    if( windingNextBest == 0 || island > 0 )
+
+	    if( order == 2 && windingList.size() > 1 && island > 0 ) {
+
+	      if( i > 0 ) 
+		cerr << " REPLACED - Islands" << endl;
+	      else
+		cerr << " START - Islands" << endl;
+
+	      while ( i > 0 ) {
+		windingList.erase( windingList.begin() );
+		i--;
+	      }
+
+	      while ( windingList.size() > 1 ) {
+		windingList.erase( windingList.begin()+1 );
+	      }
+
+	      continue;
+
+	    } else if( order != 2 && (windingNextBest == 0 || island > 0) ) {
+	      cerr << endl;
 	      continue;
 
 	    // If very low order and has less than three points in
 	    // each group skip it.
-	    if( 2*winding - skip == windingNextBest ) {
-	       //winding < 5 && 
-	       //windingNextBest/winding < 2 ) {
+	    } else if( order != 2 && 2*winding - skip == windingNextBest &&
+		winding < 5 && 
+		windingNextBest/winding < 2 ) {
 	      
 	      vector< unsigned int >::iterator inList =
 		find( windingList.begin(),
 		      windingList.end(), windingNextBest );
 	    
+	      // Found the next best in the list so delete the current one.
 	      if( inList != windingList.end() ) {
 		cerr << " REMOVED - Too few points" << endl;
 		
@@ -1579,12 +1830,13 @@ execute(FieldHandle& ifield_h,
 		
 		continue;
 	      }
-	    } else if( order == 0 ) {
-	      cerr << endl;
+	    } 
 
-	      // Basic philosophy - take the lower ordered surface
-	      // winding which is then smoothed.
+	    if( order == 0 ) {
 
+	      cerr << " KEEP - low" << endl;
+
+	      // Take the lower ordered surface.
 	      unsigned int windingNextBestTmp = windingNextBest;
 	      unsigned int islandTmp = island;
 
@@ -1597,13 +1849,14 @@ execute(FieldHandle& ifield_h,
 
 		  windingList.erase( inList );
 
-		  unsigned int windingTmp = windingNextBest;
+		  unsigned int windingTmp = windingNextBestTmp;
 		  unsigned int twistTmp, skipTmp;
+		  float avenodeTmp;
 		  bool groupCCWTmp;
 		  
 		  if( basicChecks( points, centroid,
 				   windingTmp, twistTmp, skipTmp,
-				   islandTmp, groupCCWTmp,
+				   islandTmp, avenodeTmp, groupCCWTmp,
 				   windingNextBestTmp ) ) {
 		    
 		    cerr << "windings " << windingTmp
@@ -1611,23 +1864,26 @@ execute(FieldHandle& ifield_h,
 			 << "  skip "   << skipTmp
 			 << "  groupCCW " << groupCCWTmp
 			 << "  islands " << islandTmp
-			 << "  next best winding " << windingNextBestTmp;
-
-		    cerr << " REMOVED - low" << endl;
+			 << "  avenodes " << avenodeTmp
+			 << "  next best winding " << windingNextBestTmp
+			 << " REMOVED - low" << endl;		  
 		  }
+
 		} else {
 		  windingNextBestTmp = 0;
 		}
 	      }
+
 	    } else if( order == 1 ) {
 
 	      unsigned int windingTmp = windingNextBest;
 	      unsigned int twistTmp, skipTmp, islandTmp, windingNextBestTmp;
+	      float avenodeTmp;
 	      bool groupCCWTmp;
 		  
 	      if( basicChecks( points, centroid,
 			       windingTmp, twistTmp, skipTmp,
-			       islandTmp, groupCCWTmp,
+			       islandTmp, avenodeTmp, groupCCWTmp,
 			       windingNextBestTmp ) ) {
 		    
 		if( 2*windingTmp - skipTmp != windingNextBestTmp ) {
@@ -1645,60 +1901,110 @@ execute(FieldHandle& ifield_h,
 		    i--;
 		
 		    continue;
+
+		  } else {
+		    cerr << " KEEP - high" << endl;
 		  }
 		}
 	      }
-	    }
+	    } else if( order == 2 ) {
 
-	    cerr << endl;
+	      // Keep the winding where the number of nodes for each
+	      // group is closest to being the same.
+// 	      float diff =
+// 		(avenode - floor(avenode)) < (ceil(avenode)-avenode) ?
+// 		(avenode - floor(avenode)) : (ceil(avenode)-avenode);
+
+	      // For the first keep is as the base winding.
+	      if( i == 0 ) {
+		bestNodes = avenode;
+
+		cerr << " START " << endl;
+
+		
+	      } else if( windingList[0] <= 3 && bestNodes < 8 ) {
+		bestNodes = avenode;
+		windingList.erase( windingList.begin() );
+		
+		i--;
+
+		cerr << " REPLACED " << endl;
+
+		// The current winding is the best so erase the first.
+	      } else if( bestNodes < avenode ) {
+		bestNodes = avenode;
+		windingList.erase( windingList.begin() );
+		
+		i--;
+
+		cerr << " REPLACED " << endl;
+
+		continue;
+
+		// The first winding is the best so erase the current.
+	      } else {
+		windingList.erase( windingList.begin()+i );
+		
+		i--;
+		
+		cerr << " REMOVED " << endl;
+
+		continue;
+	      }
+	    }
 	  } else {
 	    windingList.erase( windingList.begin()+i );
 
 	    i--;
 		
+	    cerr << "windings " << winding
+		 << " FAILED Basic checks" << endl;
+
 	    continue;
 	  }
 
 	  // Do the finger check again to get the best.
-	  pair< pair< double, double >, pair< double, double > > fingers =
-	    FingerCheck( points, winding );
+// 	  pair< pair< double, double >, pair< double, double > > fingers =
+// 	    FingerCheck( points, winding );
 
-	  if( fingers.first.first > 0 &&
-	      fingers.first.second > 0 &&
-	      fingers.second.first > 0 &&
-	      fingers.second.second > 0 ) {
+// 	  if( fingers.first.first > 0 &&
+// 	      fingers.first.second > 0 &&
+// 	      fingers.second.first > 0 &&
+// 	      fingers.second.second > 0 ) {
+//	  {
+//   	    cerr << winding << " fingers "
+//  		 << fingers.first.first << "  "
+//  		 << fingers.first.second << "  "
+//  		 << fingers.second.first << "  "
+//  		 << fingers.second.second << "  "
+// 		 << endl;
 
-  	    cerr << winding << " fingers "
- 		 << fingers.first.first << "  "
- 		 << fingers.first.second << "  "
- 		 << fingers.second.first << "  "
- 		 << fingers.second.second << "  "
-		 << endl;
-
-	    if( LengthMin.second > fingers.first.second ){
-	      LengthMin2 = LengthMin;
+// 	    if( LengthMin.second > fingers.first.second ){
+// 	      LengthMin2 = LengthMin;
 	      
-	      LengthMin.first  = winding;
-	      LengthMin.second = fingers.first.second;
+// 	      LengthMin.first  = winding;
+// 	      LengthMin.second = fingers.first.second;
 
-	    } else if( LengthMin2.second > fingers.first.second ){
+// 	    } else if( LengthMin2.second > fingers.first.second ){
 
-	      LengthMin2.first  = winding;
-	      LengthMin2.second = fingers.first.second;
-	    }
+// 	      LengthMin2.first  = winding;
+// 	      LengthMin2.second = fingers.first.second;
+// 	    }
 	    
-	    if( AngleMin.second > fingers.second.second ){
-	      AngleMin2 = AngleMin;
+// 	    if( AngleMin.second > fingers.second.second ){
+// 	      AngleMin2 = AngleMin;
 	      
-	      AngleMin.first  = winding;
-	      AngleMin.second = fingers.second.second;
+// 	      AngleMin.first  = winding;
+// 	      AngleMin.second = fingers.second.second;
 
-	    } else if( AngleMin2.second > fingers.second.second ){
-	      AngleMin2.first  = winding;
-	      AngleMin2.second = fingers.second.second;
-	    }
-	  }
-	}
+// 	    } else if( AngleMin2.second > fingers.second.second ){
+// 	      AngleMin2.first  = winding;
+// 	      AngleMin2.second = fingers.second.second;
+// 	    }
+// 	  }
+ 	}
+
+// 	cerr << endl;
 
 	if( windingList.size() == 0 ) {
 	  windings.push_back( 0 );
@@ -1750,41 +2056,33 @@ execute(FieldHandle& ifield_h,
 	    windings.push_back( AngleMin.first );
 	}
 
-	cerr << "End of streamline A " << count
-	     << "  windings " << winding  << endl;
-	
 	if( windings[count] != 0 ) {
 
 	  winding = windings[count];
 
-	  cerr << "End of streamline B " << count
-	       << "  windings " << winding  << endl;
-	
 	  // Do this again to get the values back.
 	  basicChecks( points, centroid,
 		       winding, twist, skip,
-		       island, groupCCW, windingNextBest );
+		       island, avenode, groupCCW, windingNextBest );
 	  twists.push_back( twist );
 	  skips.push_back( skip );
 	  islands.push_back( island );
-
-	  cerr << "End of streamline C " << count
-	       << "  windings " << winding  << endl;	
+	  avenodes.push_back( avenode );
 	}
 
-	cerr << " Length selection        "
-	     << LengthMin.first << "  "
-	     << LengthMin.second << "  "
-	     << LengthMin2.first << "  "
-	     << LengthMin2.second << "  "
-	     << endl;
+// 	cerr << " Length selection        "
+// 	     << LengthMin.first << "  "
+// 	     << LengthMin.second << "  "
+// 	     << LengthMin2.first << "  "
+// 	     << LengthMin2.second << "  "
+// 	     << endl;
 
-	cerr << " Angle selection         "
-	     << AngleMin.first << "  "
-	     << AngleMin.second << "  "
-	     << AngleMin2.first << "  "
-	     << AngleMin2.second << "  "
-	     << endl;
+// 	cerr << " Angle selection         "
+// 	     << AngleMin.first << "  "
+// 	     << AngleMin.second << "  "
+// 	     << AngleMin2.first << "  "
+// 	     << AngleMin2.second << "  "
+// 	     << endl;
 
 	// This is for island analysis - if the initial centroid
 	// locations are provided which have the winding value from
@@ -1940,18 +2238,26 @@ execute(FieldHandle& ifield_h,
     unsigned int nnodes = (int) 1e8;
     bool VALID = true;
 
-    // Validation check
+    // Sanity check
     for( unsigned int p=0; p<planes.size(); p++ ) {
       for( unsigned int i=0; i<winding; i++ ) {
 
-	cerr << i << " points in bin " << bins[p][i].size() << endl;
+// 	for( unsigned int j=0, k=bins[p][i].size()-1;
+// 	     j<bins[p][i].size()/2; j++, k-- ) {
+
+// 	  pair<Point, double> tmp_bin = bins[p][i][j];
+// 	  bins[p][i][j] = bins[p][i][k];
+// 	  bins[p][i][k] = tmp_bin;
+// 	}
 
 	if( nnodes > bins[p][i].size() )
 	  nnodes = bins[p][i].size();
 
 	if( bins[p][i].size() < 1 ) {
-	  cerr << "INVALID - Plane " << p << " bin  " << i
-	       << " bin size=" << bins[p][i].size() << endl;
+	  cerr << "INVALID - Plane " << p
+	       << " bin  " << i
+	       << " number of points " << bins[p][i].size()
+	       << endl;
 
 	  VALID = false;
 
@@ -2022,13 +2328,13 @@ execute(FieldHandle& ifield_h,
  	  unsigned int index0 = (middleIndex - startIndex ) / 2;
  	  unsigned int index1 = (  stopIndex - middleIndex) / 2;
 
-	  unsigned int nodes = stopIndex - startIndex;
+	  unsigned int nodes = stopIndex - startIndex + 1;
 
- 	  cerr << "Indexes mid " << nodes
-	       << "  " << (startIndex + index0)%nodes 
+ 	  cerr << "Indexes mid " << nodes << " nodes "
+	       << "  " << ( startIndex + index0)%nodes 
 	       << "  " << (middleIndex - index0)%nodes
 	       << "  " << (middleIndex + index1)%nodes
-	       << "  " << (stopIndex - index1)%nodes << endl;
+	       << "  " << (  stopIndex - index1)%nodes << endl;
 
  	  localCentroids[i] =
  	    ( (Vector) bins[p][i][( startIndex + index0)%nodes].first + 
@@ -2036,20 +2342,45 @@ execute(FieldHandle& ifield_h,
 
  	      (Vector) bins[p][i][(middleIndex + index1)%nodes].first + 
  	      (Vector) bins[p][i][(  stopIndex - index1)%nodes].first ) / 4.0;
-
-	  cerr << i << "  " << localCentroids[i] << endl;
 	}
       }
     }
 
 
-    if( overlaps == 1 || overlaps == 3 )
-      removeOverlap( bins[p], nnodes, winding, twist, skip, island );
-    
-    if( overlaps == 2 )
-      mergeOverlap( bins[p], nnodes, winding, twist, skip, island );
-    else if( overlaps == 3 )
-      smoothCurve( bins[p], nnodes, winding, twist, skip, island );
+    for( unsigned int p=0; p<planes.size(); p++ ) {
+      if( overlaps == 1 || overlaps == 3 )
+	removeOverlap( bins[p], nnodes, winding, twist, skip, island );
+      
+      if( overlaps == 2 )
+	mergeOverlap( bins[p], nnodes, winding, twist, skip, island );
+      else if( overlaps == 3 )
+	smoothCurve( bins[p], nnodes, winding, twist, skip, island );
+
+      // Sanity check
+      for( unsigned int i=0; i<winding; i++ ) {
+
+	if( nnodes > bins[p][i].size() )
+	  nnodes = bins[p][i].size();
+
+	if( bins[p][i].size() < 1 ) {
+	  cerr << "INVALID - Plane " << p
+	       << " bin  " << i
+	       << " number of points " << bins[p][i].size()
+	       << endl;
+
+	  VALID = false;
+
+	  return;
+	}
+	  
+	cerr << "Surface " << c
+	     << " plane " << p
+	     << " bin " << i
+	     << " base number of nodes " << nnodes
+	     << " number of points " << bins[p][i].size()
+	     << endl;
+      }
+    }
 
     cerr << "Surface " << c << " is a "
 	 << winding << ":" << twist << " surface ("
@@ -2103,7 +2434,7 @@ execute(FieldHandle& ifield_h,
 
       if( completeIslands ) {
 
-	if( baseCentroids.size() ) {
+ 	if( baseCentroids.size() ) {
 
 	  unsigned int cc = 0;
 
@@ -2147,7 +2478,7 @@ execute(FieldHandle& ifield_h,
 	    typename PCFIELD::mesh_type::Node::index_type n =
 	      opccmesh->add_node((Point) localCentroids[i]);
 	    opccfield->resize_fdata();
-	    opccfield->set_value( (double) winding, n );
+	    opccfield->set_value( (double) i, n );
 
 	    // Separatrices
 	    unsigned int j = (i+skip) % winding;
@@ -2170,7 +2501,7 @@ execute(FieldHandle& ifield_h,
 					     localSeparatrices[jj][j])/2.0));
 
 	    opcsfield->resize_fdata();
-	    opcsfield->set_value( (double) winding, n);
+	    opcsfield->set_value( (double) i, n);
 
 //  	    n = opcsmesh->add_node((Point) localSeparatrices[0][i]);
 // 	    opcsfield->resize_fdata();
@@ -2416,7 +2747,16 @@ islandCheck( vector< pair< Point, double > > &bins,
     if( length0 < length1 )
       stopIndex--;
 
-    cerr << "complete\n";
+    cerr << "complete 3 turns\n";
+
+    if( 2*startIndex == middleIndex + 1 ) {
+      // First point is actually the start point.
+      cerr << "First point is actually the start point.\n";
+
+      stopIndex   = middleIndex;
+      middleIndex = startIndex;
+      startIndex  = 0;
+    }
 
   } else if( turns == 2 ) {
 
@@ -2431,7 +2771,7 @@ islandCheck( vector< pair< Point, double > > &bins,
       turns = 3;
     } else if( bins.size() < 2 * (middleIndex - startIndex) - 1 ) {
       // No possible over lap.
-      cerr <<  "No possible over lap.\n";
+      cerr <<  "islandCheck - No possible over lap.\n";
 
       stopIndex = startIndex + bins.size() - 1;
 
@@ -2443,7 +2783,7 @@ islandCheck( vector< pair< Point, double > > &bins,
 	    < 0 ) {
 	  stopIndex = startIndex + (j-1) + 1; // Add one for the zeroth 
 	  turns = 3;
-	  cerr <<  "First point overlaps another section after " << j-1 << endl;
+	  cerr <<  "islandCheck - First point overlaps another section after " << j-1 << endl;
 	  break;
 	}
       }
@@ -2456,7 +2796,7 @@ islandCheck( vector< pair< Point, double > > &bins,
 	      < 0 ) {
 	    stopIndex = startIndex + (j-1) + 1; // Add one for the zeroth 
 	    turns = 3;
-	    cerr << "A point overlaps the first section at " << j-1 << endl;
+	    cerr << "islandCheck - A point overlaps the first section at " << j-1 << endl;
 	    break;
 	  }
 	}
@@ -2464,7 +2804,7 @@ islandCheck( vector< pair< Point, double > > &bins,
       // No overlap found
       if( turns == 2 ) {
 	stopIndex = startIndex + bins.size() - 1;
-	cerr << "No overlap found\n";
+	cerr << "islandCheck - No overlap found\n";
       }
     }
   } else {
@@ -2576,10 +2916,8 @@ surfaceCheck( vector< vector< pair< Point, double > > > &bins,
     // Check to see if the first overlapping point is really a
     // fill-in point. This happens because the spacing between
     // winding groups varries between groups.
-    Vector v0 = (Vector) bins[j][0       ].first -
-      (Vector) bins[i][nodes].first;
-    Vector v1 = (Vector) bins[i][nodes-1].first -
-      (Vector) bins[i][nodes].first;
+    Vector v0 = (Vector) bins[j][0      ].first - (Vector) bins[i][nodes].first;
+    Vector v1 = (Vector) bins[i][nodes-1].first - (Vector) bins[i][nodes].first;
     
     if( Dot( v0, v1 ) < 0.0 )
       nodes++;
@@ -2631,14 +2969,14 @@ removeOverlap( vector< vector < pair< Point, double > > > &bins,
       } else {
 	if( 2*startIndex == middleIndex + 1 ) {
 	  // First point is actually the start point.
-	  cerr << "First point is actually the start point.\n";
+	  cerr << "removeOverlap - First point is actually the start point.\n";
 
 	  nodes = middleIndex;
 	  completeIsland = true;
 
 	} else if( bins[i].size() < 2 * (middleIndex - startIndex) - 1 ) {
 	  // No possible over lap.
-	  cerr <<  "No possible over lap.\n";
+	  cerr <<  "removeOverlap - No possible over lap.\n";
 
 	  nodes = bins[i].size();
 
@@ -2649,8 +2987,16 @@ removeOverlap( vector< vector < pair< Point, double > > > &bins,
 		     (Vector) bins[i][j-1].first - (Vector) bins[i][0].first )
 		< 0 ) {
 
-	      cerr <<  "First point overlaps another section after " << j-1 << endl;
-	      nodes = j;
+	      // Check for bogus overlaps.
+	      if( turns == 3 && j > stopIndex - startIndex + 2 ) {
+		cerr << "removeOverlap - Bogus overlap section at " << j-1 << endl;
+		nodes = stopIndex - startIndex + 1;
+	      } else {
+
+		cerr <<  "removeOverlap - First point overlaps another section after " << j-1 << endl;
+		nodes = j;
+	      }
+
 	      completeIsland = true;
 	      break;
 	    }
@@ -2662,8 +3008,15 @@ removeOverlap( vector< vector < pair< Point, double > > > &bins,
 	      if( Dot( (Vector) bins[i][0].first - (Vector) bins[i][j].first,
 		       (Vector) bins[i][1].first - (Vector) bins[i][j].first )
 		  < 0 ) {
-		cerr << "A point overlaps the first section at " << j-1 << endl;
-		nodes = j;
+		// Check for bogus overlaps.
+		if( turns == 3 && j > stopIndex - startIndex + 2 ) {
+		  cerr << "removeOverlap - Bogus overlap section at " << j-1 << endl;
+		  nodes = stopIndex - startIndex + 1;
+		} else {
+		  cerr << "removeOverlap - A point overlaps the first section at " << j-1 << endl;
+		  nodes = j;
+		}
+
 		completeIsland = true;
 		break;
 	      }
@@ -2671,8 +3024,17 @@ removeOverlap( vector< vector < pair< Point, double > > > &bins,
 
 	  // No overlap found
 	  if( nodes == 0 ) {
-	    nodes = bins[i].size();
-	    cerr << "No overlap found\n";
+	    if( turns == 3 ) {
+	      nodes = stopIndex - startIndex + 1;
+	      cerr << "removeOverlap - No overlap found using the indexes instead\n";
+	      if( nodes <= bins[i].size() )
+		completeIsland = true;
+	      else
+		nodes = bins[i].size();
+	    } else {
+	      nodes = bins[i].size();
+	      cerr << "No overlap found\n";
+	    }
 	  }
 	}
       }
@@ -2695,19 +3057,25 @@ removeOverlap( vector< vector < pair< Point, double > > > &bins,
 
   } else {  // Surface
 
+    // This gives the total number of node for each group.
     surfaceCheck( bins, winding, skip, centroidGlobal, nnodes );
 
     for( unsigned int i=0; i<winding; i++ ) {
       unsigned int nodes = surfaceCheck( bins, i, (i+skip)%winding, nnodes );
       
-      if( nodes * i != avennodes )
-	cerr << i << " nnodes mismatch ";
-
       avennodes += nodes;
 
       // Erase all of the overlapping points.
       bins[i].erase( bins[i].begin()+nodes, bins[i].end() );
     }
+
+    if( (unsigned int) (avennodes / winding) * winding != avennodes )
+      cerr << "nnodes mismatch "
+	   << " nodes " << avennodes / winding
+	   << " avennodes " << (float) avennodes / (float) winding
+	   << endl;
+
+
   }
 
   nnodes = (unsigned int) ((double) avennodes / (double) winding + 0.5);
