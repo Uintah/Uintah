@@ -90,12 +90,9 @@ void
 SelectField::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("Input Field", ifieldhandle)) return;
+
   if (!ifieldhandle->query_scalar_interface(this).get_rep())
   {
     error("This module only works on scalar fields.");

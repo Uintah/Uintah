@@ -97,12 +97,8 @@ FieldMeasures::~FieldMeasures()
 void
 FieldMeasures::execute()
 {
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle fieldhandle;
-  if (!(ifp->get(fieldhandle) && fieldhandle.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("Input Field", fieldhandle)) return;
 
   MeshHandle mesh = fieldhandle->mesh();
 

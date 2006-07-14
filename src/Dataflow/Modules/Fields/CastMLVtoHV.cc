@@ -62,29 +62,27 @@ public:
   virtual void execute();
 };
 
-  DECLARE_MAKER(CastMLVtoHV)
+DECLARE_MAKER(CastMLVtoHV)
 
 CastMLVtoHV::CastMLVtoHV(GuiContext* ctx)
   : Module("CastMLVtoHV", ctx, Filter, "FieldsGeometry", "SCIRun"), last_gen_(-1)
 {
 }
 
-CastMLVtoHV::~CastMLVtoHV(){
+
+CastMLVtoHV::~CastMLVtoHV()
+{
 }
 
 
-
-void CastMLVtoHV::execute()
+void
+CastMLVtoHV::execute()
 {
-  // must find ports and have valid data on inputs
-  FieldIPort *iport_ = (FieldIPort*)get_iport("MaskedLatVolField");
-
   FieldHandle ifieldH;
-  if (!iport_->get(ifieldH) || 
-      !ifieldH.get_rep())
-    return;
+  if (!get_input_handle("MaskedLatVolField", ifieldH)) return;
   
-  if (ifieldH->generation == last_gen_ && ofieldH_.get_rep()) {
+  if (ifieldH->generation == last_gen_ && ofieldH_.get_rep())
+  {
     send_output_handle("HexVolField", ofieldH_, true);
     return;
   }

@@ -102,19 +102,11 @@ void
 TransformField::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifield;
-  if (!(ifp->get(ifield) && ifield.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("Input Field", ifield)) return;
 
-  MatrixIPort *imp = (MatrixIPort *)get_iport("Transform Matrix");
   MatrixHandle imatrix;
-  if (!(imp->get(imatrix) && imatrix.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("Transform Matrix", imatrix)) return;
 
   if (ifield_generation_ != ifield->generation ||
       imatrix_generation_ != imatrix->generation ||

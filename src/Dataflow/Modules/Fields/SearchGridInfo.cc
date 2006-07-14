@@ -113,13 +113,8 @@ SearchGridInfo::~SearchGridInfo()
 void
 SearchGridInfo::execute()
 {
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
-    error("Input Field is required.");
-    return;
-  }
+  if (!get_input_handle("Input Field", ifieldhandle)) return;
 
   // Create blank mesh.
   int sizex, sizey, sizez;

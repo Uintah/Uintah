@@ -197,12 +197,8 @@ void
 ClipField::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("Input Field", ifieldhandle)) return;
   if (!ifieldhandle->mesh()->is_editable())
   {
     error("Not an editable mesh type (try passing Field through an Unstructure module first).");
@@ -230,7 +226,8 @@ ClipField::execute()
 
   // Update the widget.
   const BBox bbox = ifieldhandle->mesh()->get_bounding_box();
-  if (first_pass_ && points_differ()) {
+  if (first_pass_ && points_differ())
+  {
     Point center(center_x_.get(), center_y_.get(), center_z_.get());
     Point right(right_x_.get(), right_y_.get(), right_z_.get());
     Point down(down_x_.get(), down_y_.get(), down_z_.get());

@@ -89,13 +89,8 @@ void
 MapDataToMeshCoord::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifield;
-  if (!(ifp->get(ifield) && ifield.get_rep()))
-  {
-    error("Input field is empty.");
-    return;
-  }
+  if (!get_input_handle("Input Field", ifield)) return;
 
   if (ifield->query_scalar_interface(this).get_rep() == 0)
   {

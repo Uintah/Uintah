@@ -86,7 +86,6 @@ void
 FieldFrenet::execute()
 {
   FieldHandle field_input_handle;
-
   if( !get_input_handle( "Input Field", field_input_handle, true  ) ) return;
 
   if( field_input_handle->mesh()->topology_geometry() ==

@@ -599,14 +599,8 @@ SampleField::execute()
 {
   ogport_ = (GeometryOPort *)get_oport("Sampling Widget");
 
-  FieldIPort *ifport = (FieldIPort *)get_iport("Field to Sample");
-
   FieldHandle fHandle;
-  // The field input is required.
-  if (!(ifport->get(fHandle) && fHandle.get_rep())) {
-    error("Required input field is empty.");
-    return;
-  }
+  if (!get_input_handle("Field to Sample", fHandle)) return;
 
   bool update = gui_force_rake_reset_.get();
 
@@ -627,8 +621,8 @@ SampleField::execute()
     update = true;
   }
 
-  if (whichTab == "Widget") {
-
+  if (whichTab == "Widget")
+  {
     // See if the widget type or number seeds has changed.
     string swtype = gui_wtype_.get();
     double maxSeeds = gui_maxSeeds_.get();
@@ -638,8 +632,8 @@ SampleField::execute()
 	widget_change_ ||
 	swtype_ != swtype ||
 	maxSeeds_ != maxSeeds ||
-	error_ ) {
-
+	error_ )
+    {
       widget_change_ = false;
       swtype_ = swtype;
       maxSeeds_ = maxSeeds;
@@ -654,7 +648,8 @@ SampleField::execute()
 	fHandle_ = execute_frame(fHandle);
     }
   }
-  else if (whichTab == "Random") {
+  else if (whichTab == "Random")
+  {
     int numSeeds = gui_numSeeds_.get();
     string randdist = gui_randdist_.get();
     int rngSeed  = gui_rngSeed_.get();
@@ -665,8 +660,8 @@ SampleField::execute()
 	randdist_ != randdist ||
 	rngSeed_  != rngSeed ||
 	rngInc_   != rngInc  ||
-	clamp_    != clamp ) {
-
+	clamp_    != clamp )
+    {
       numSeeds_ = numSeeds;
       randdist_ = randdist;
       rngSeed_  = rngSeed;
@@ -674,7 +669,7 @@ SampleField::execute()
       clamp_    = clamp;
 
       update = true;
-   }
+    }
 
     if( !fHandle_.get_rep() ||
 	update ||

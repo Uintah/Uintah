@@ -88,12 +88,8 @@ void
 MeshSmoother::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input");
   FieldHandle ifieldhandle;
-  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("Input", ifieldhandle)) return;
 
   bool changed = false;
   smooth_scheme_.reset();

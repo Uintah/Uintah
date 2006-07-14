@@ -89,12 +89,8 @@ void
 TransformMesh::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle fHandle;
-  if (!(ifp->get(fHandle) && fHandle.get_rep())) {
-    error("Input field is empty.");
-    return;
-  }
+  if (!get_input_handle("Input Field", fHandle)) return;
 
   // TODO: Check that field has mutable points here.
 

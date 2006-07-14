@@ -122,12 +122,8 @@ void
 IsoClip::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input");
   FieldHandle ifieldhandle;
-  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("Input", ifieldhandle)) return;
 
   MatrixIPort *imp = (MatrixIPort *)get_iport("Optional Isovalue");
   MatrixHandle isomat;

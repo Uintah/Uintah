@@ -67,8 +67,6 @@ public:
   typedef ImageMesh<QuadBilinearLgn<Point> >  IMesh;
 
 private:
-  //! input port
-  FieldIPort*              infield_;
   //! output port
   GeometryOPort           *ogeom_;  
 
@@ -94,7 +92,6 @@ private:
 DECLARE_MAKER(FieldCage)
 FieldCage::FieldCage(GuiContext* ctx) : 
   Module("FieldCage", ctx, Filter, "FieldsOther", "SCIRun"), 
-  infield_(0),
   ogeom_(0),
   sizex_(get_ctx()->subVar("sizex"), 10),
   sizey_(get_ctx()->subVar("sizey"), 10),
@@ -120,17 +117,11 @@ FieldCage::execute()
 {
   // tell module downstream to delete everything we have sent it before.
   // This is typically viewer, it owns the scene graph memory we create here.
-  
-  infield_ = (FieldIPort *)get_iport("Field");
+
   ogeom_ = (GeometryOPort *)get_oport("Scene Graph");
   
   FieldHandle fld_handle;
-  infield_->get(fld_handle);
-  if(!fld_handle.get_rep())
-  {
-    warning("No Data in port 1 field.");
-    return;
-  }
+  if (!get_input_handle("Field", fld_handle)) return;
   
   bool mesh_new = fld_handle->mesh()->generation != mesh_generation_;
   bool field_new = fld_handle->generation != field_generation_;

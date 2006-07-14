@@ -72,17 +72,10 @@ BuildSurfNormals::~BuildSurfNormals()
 void 
 BuildSurfNormals::execute()
 {
-  infield_ = (FieldIPort *)get_iport("Surface Field");
   FieldHandle input;
-  if (!(infield_->get(input) && input.get_rep()))
-  {
-    error("No input field data.");
-    return;
-  }
+  if (!get_input_handle("Surface Field", input)) return;
 
-  //const TypeDescription *mtd = input->get_type_description(Field::MESH_TD_E);
-
-  // this module only can operate on surface fields.
+  // This module only can operate on surface fields.
   if (input->mesh()->dimensionality() != 2) 
   {
     error("Input field must be a Surface field.");

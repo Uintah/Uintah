@@ -101,13 +101,8 @@ void
 TransformData3::execute()
 {
   // Get input field.
-  FieldIPort *ifp0 = (FieldIPort *)get_iport("Input Field 0");
   FieldHandle fHandle0;
-  if (!(ifp0->get(fHandle0) && fHandle0.get_rep()))
-  {
-    error("Input field 0 is empty.");
-    return;
-  }
+  if (!get_input_handle("Input Field 0", fHandle0)) return;
 
   if (fHandle0->basis_order() == -1)
   {
@@ -115,13 +110,8 @@ TransformData3::execute()
     return;
   }
 
-  FieldIPort *ifp1 = (FieldIPort *)get_iport("Input Field 1");
   FieldHandle fHandle1;
-  if (!(ifp1->get(fHandle1) && fHandle1.get_rep()))
-  {
-    error("Input field 1 is empty.");
-    return;
-  }
+  if (!get_input_handle("Input Field 1", fHandle1)) return;
 
   if (fHandle1->basis_order() == -1)
   {
@@ -129,13 +119,8 @@ TransformData3::execute()
     return;
   }
 
-  FieldIPort *ifp2 = (FieldIPort *)get_iport("Input Field 2");
   FieldHandle fHandle2;
-  if (!(ifp2->get(fHandle2) && fHandle2.get_rep()))
-  {
-    error("Input field 2 is empty.");
-    return;
-  }
+  if (!get_input_handle("Input Field 2", fHandle2)) return;
 
   if (fHandle2->basis_order() == -1)
   {

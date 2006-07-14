@@ -107,11 +107,8 @@ ChangeFieldBasis::update_input_attributes(FieldHandle f)
 void
 ChangeFieldBasis::execute()
 {
-  FieldIPort *iport = (FieldIPort*)get_iport("Input"); 
-  
-  // The input port (with data) is required.
   FieldHandle fh;
-  if (!iport->get(fh) || !fh.get_rep())
+  if (!get_input_handle("Input", fh))
   {
     fldname_.set("---");
     inputdataat_.set("---");
