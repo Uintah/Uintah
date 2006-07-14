@@ -5160,9 +5160,9 @@ SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
 if test "$HAVE_HYPRE" = "yes" ; then
   DEF_HYPRE="#define HAVE_HYPRE 1"
 
-  if test -f $LIB_DIR_HYPRE/../include/HYPRE_config.h; then
+  if test -f $HYPRE_LIB_DIR/../include/HYPRE_config.h; then
     # Determine the version of hypre.
-    found_it=`grep "PACKAGE_VERSION" $LIB_DIR_HYPRE/../include/HYPRE_config.h | grep 1.9`
+    found_it=`grep "PACKAGE_VERSION" $HYPRE_LIB_DIR/../include/HYPRE_config.h | grep 1.9`
     DEF_HYPRE_1_9="#define HAVE_HYPRE_1_9 0"
     HAVE_HYPRE_1_9="no"
     if test -n "$found_it"; then
