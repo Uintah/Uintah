@@ -75,6 +75,7 @@ public:
   GuiString		inputsizey_;
   GuiString		inputsizez_;
 
+  GuiInt                box_mode_;
   GuiDouble             box_scale_;
   GuiPoint              box_center_;
   GuiPoint              box_right_;
@@ -99,7 +100,7 @@ public:
   virtual void widget_moved(bool, BaseWidget*);
 };
 
-  DECLARE_MAKER(ChangeFieldBounds)
+DECLARE_MAKER(ChangeFieldBounds)
 
 ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
   : Module("ChangeFieldBounds", ctx, Filter, "FieldsGeometry", "SCIRun"),
@@ -117,6 +118,7 @@ ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
     inputsizex_(get_ctx()->subVar("inputsizex", false), "---"),
     inputsizey_(get_ctx()->subVar("inputsizey", false), "---"),
     inputsizez_(get_ctx()->subVar("inputsizez", false), "---"),
+    box_mode_(get_ctx()->subVar("box-mode"), 0),
     box_scale_(get_ctx()->subVar("box-scale"), -1.0),
     box_center_(get_ctx()->subVar("box-center")),
     box_right_(get_ctx()->subVar("box-right")),
@@ -138,11 +140,11 @@ ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
   inputsizez_.set("---");
 }
 
+
 ChangeFieldBounds::~ChangeFieldBounds()
 {
   delete box_;
 }
-
 
 
 void
@@ -239,9 +241,9 @@ ChangeFieldBounds::build_widget(FieldHandle f, bool reset)
     box_initial_transform_.pre_trans(r);
     box_initial_transform_.pre_translate(center.asVector());
 
-
     box_->SetScale(l2norm * 0.015);
     box_->SetPosition(center, right, down, in);
+    box_->SetCurrentMode(box_mode_.get());
     box_scale_.set(-1.0);
   }
   else
@@ -252,6 +254,7 @@ ChangeFieldBounds::build_widget(FieldHandle f, bool reset)
     box_->SetScale(l2norm * 0.015);
     box_->SetPosition(box_center_.get(), box_right_.get(),
 		      box_down_.get(), box_in_.get());
+    box_->SetCurrentMode(box_mode_.get());
   }
 
   GeomGroup *widget_group = scinew GeomGroup;
@@ -408,6 +411,7 @@ ChangeFieldBounds::widget_moved(bool last, BaseWidget*)
     outputsizex_.set((right.x()-center.x())*2.);
     outputsizey_.set((down.y()-center.y())*2.);
     outputsizez_.set((in.z()-center.z())*2.);
+    box_mode_.set(box_->GetMode());
     box_scale_.set(box_->GetScale());
     box_center_.set(center);
     box_right_.set(right);
