@@ -148,7 +148,7 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
 
     if( d_useLockStep && trr != 1){
       string warn;
-      warn ="\n INPUT FILE ERROR:\n To use the lockstep algorithm you must specify \n<Grid> \n  <time_refinement_ratio> 1 </time_refinement_ratio> \n</Grid>";
+      warn ="\n INPUT FILE ERROR:\n To use the lockstep algorithm you must specify \n<AMR> \n  <time_refinement_ratio> 1 </time_refinement_ratio> \n</AMR>";
       throw ProblemSetupException(warn, __FILE__, __LINE__);
     }
   }
