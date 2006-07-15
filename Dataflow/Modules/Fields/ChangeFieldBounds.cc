@@ -226,8 +226,6 @@ ChangeFieldBounds::build_widget(FieldHandle f, bool reset)
     Point down(center + sizey/2.);
     Point in(center +sizez/2.);
 
-    const double l2norm = size.length();
-
     // Translate * Rotate * Scale.
     Transform r;
     Point unused;
@@ -241,17 +239,28 @@ ChangeFieldBounds::build_widget(FieldHandle f, bool reset)
     box_initial_transform_.pre_trans(r);
     box_initial_transform_.pre_translate(center.asVector());
 
-    box_->SetScale(l2norm * 0.015);
+    const double newscale = size.length() * 0.015;
+    double bscale = box_scale_.get();
+    if (bscale < newscale * 1e-2 || bscale > newscale * 1e2)
+    {
+      bscale = newscale;
+    }
+    box_->SetScale(bscale); // callback sets box_scale for us.
     box_->SetPosition(center, right, down, in);
     box_->SetCurrentMode(box_mode_.get());
-    box_scale_.set(-1.0);
   }
   else
   {
     const double l2norm = (box_right_.get().vector() +
 			   box_down_.get().vector() +
 			   box_in_.get().vector()).length();
-    box_->SetScale(l2norm * 0.015);
+    const double newscale = l2norm * 0.015;
+    double bscale = box_scale_.get();
+    if (bscale < newscale * 1e-2 || bscale > newscale * 1e2)
+    {
+      bscale = newscale;
+    }
+    box_->SetScale(bscale); // callback sets box_scale for us.
     box_->SetPosition(box_center_.get(), box_right_.get(),
 		      box_down_.get(), box_in_.get());
     box_->SetCurrentMode(box_mode_.get());
@@ -412,13 +421,13 @@ ChangeFieldBounds::widget_moved(bool last, BaseWidget*)
     outputsizey_.set((down.y()-center.y())*2.);
     outputsizez_.set((in.z()-center.z())*2.);
     box_mode_.set(box_->GetMode());
-    box_scale_.set(box_->GetScale());
     box_center_.set(center);
     box_right_.set(right);
     box_down_.set(down);
     box_in_.set(in);
     want_to_execute();
   }
+  box_scale_.set(box_->GetScale());
 }
 
 
