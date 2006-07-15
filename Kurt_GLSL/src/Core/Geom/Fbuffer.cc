@@ -72,39 +72,39 @@ Fbuffer::check_buffer ()
 
   case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT:
     std::cerr << " GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT_EXT \n";
-    exit(0);
+    return false;
 
   case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT:
     std::cerr << " GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT_EXT \n";
-    exit(0);
+    return false;
 
   case GL_FRAMEBUFFER_INCOMPLETE_DUPLICATE_ATTACHMENT_EXT:
     std::cerr << " GL_FRAMEBUFFER_INCOMPLETE_DUPLICATE_ATTACHMENT_EXT \n";
-    exit(0);
+    return false;
 
   case GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT:
     std::cerr << " GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT \n";
-    exit(0);
+    return false;
 
   case GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT:
     std::cerr << " GL_FRAMEBUFFER_INCOMPLETE_FORMATS_EXT \n";
-    exit(0);
+    return false;
 
   case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT:
     std::cerr << " GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER_EXT \n";
-    exit(0);
+    return false;
 
   case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT:
     std::cerr << " GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER_EXT \n";
-    exit(0);
+    return false;
 
   case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
     std::cerr << " GL_FRAMEBUFFER_UNSUPPORTED_EXT \n";
-    exit(0);
+    return false;
 
   default:
     std::cerr << " GL_FRAMEBUFFER_UNKNOWN " << status << std::endl;
-    exit(0);
+    return false;
   }
 }
 
