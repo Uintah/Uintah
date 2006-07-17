@@ -33,8 +33,6 @@
 // dynamic compilation and will include all the standard dataflow types
 #include <Core/Algorithms/Util/DynamicAlgo.h>
 
-// Additionally we include sci_hash_map here as it is needed by the algorithm
-
 namespace SCIRunAlgo {
 
 using namespace SCIRun;
@@ -127,7 +125,7 @@ bool IndicesToScalarAlgoT<FSRC, FDST>::IndicesToData(ProgressReporter *pr, Field
     typename FSRC::value_type val;
     while (nbi != nei)
     {
-      ifield->value(val,*ebi);
+      ifield->value(val,*nbi);
       unsigned int idx = static_cast<unsigned int>(val);
       if ((val < 0)|| (val >= max_index))
       {
@@ -266,7 +264,7 @@ bool IndicesToVectorAlgoT<FSRC, FDST>::IndicesToData(ProgressReporter *pr, Field
     typename FSRC::value_type val;
     while (nbi != nei)
     {
-      ifield->value(val,*ebi);
+      ifield->value(val,*nbi);
       unsigned int idx = static_cast<unsigned int>(val);
       if ((val < 0)|| (val >= max_index))
       {
@@ -402,7 +400,7 @@ bool IndicesToTensorAlgoT<FSRC, FDST>::IndicesToData(ProgressReporter *pr, Field
     typename FSRC::value_type val;
     while (nbi != nei)
     {
-      ifield->value(val,*ebi);
+      ifield->value(val,*nbi);
       unsigned int idx = static_cast<unsigned int>(val);
       if ((val < 0)|| (val >= max_index))
       {

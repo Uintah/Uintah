@@ -26,55 +26,22 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/Algorithms/Fields/ScaleField.h>
+#ifndef CORE_ALGORITHMS_FIELDS_GETBOUNDINGBOX_H
+#define CORE_ALGORITHMS_FIELDS_GETBOUNDINGBOX_H 1
+
+
+#include <Core/Algorithms/Util/DynamicAlgo.h>
 
 namespace SCIRunAlgo {
 
 using namespace SCIRun;
 
-bool ScaleFieldAlgo::ScaleField(ProgressReporter *pr, FieldHandle input, FieldHandle& output,double datascale, double meshscale, bool scale_from_center)
+class GetBoundingBoxAlgo : public DynamicAlgoBase
 {
-  if (input.get_rep() == 0)
-  {
-    pr->error("ScaleField: No input field");
-    return (false);
-  }
+  public:
+    virtual bool GetBoundingBox(ProgressReporter *pr,FieldHandle input, FieldHandle& output);  
+};
 
-  // no precompiled version available, so compile one
+} // end namespace SCIRunAlgo
 
-  FieldInformation fi(input);
-  
-  if (fi.is_nonlinear())
-  {
-    pr->error("ScaleField: This function has not yet been defined for non-linear elements");
-    return (false);
-  }
-
-  // Setup dynamic files
-
-  SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "ALGOScaleField."+fi.get_field_filename()+".",
-    "ScaleFieldAlgo","ScaleFieldAlgoT",
-    fi.get_field_name());
-
-  ci->add_include(TypeDescription::cc_to_h(__FILE__));
-  ci->add_namespace("SCIRunAlgo");
-  ci->add_namespace("SCIRun");
-  
-  fi.fill_compile_info(ci);
-  
-  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;    
-  
-  // Handle dynamic compilation
-  SCIRun::Handle<ScaleFieldAlgo> algo;
-  if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
-  {
-    pr->compile_error(ci->filename_);
-    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
-    return(false);
-  }
-
-  return(algo->ScaleField(pr,input,output,datascale,meshscale,scale_from_center));
-}
-
-} // End namespace SCIRunAlgo
+#endif

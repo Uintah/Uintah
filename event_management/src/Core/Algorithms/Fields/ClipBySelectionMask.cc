@@ -68,12 +68,6 @@ ClipBySelectionMaskAlgo::ClipBySelectionMask(ProgressReporter *pr,
   {
     fo.set_mesh_type("CurveMesh");
   }
-  else
-  {
-    pr->error("No unstructure method available for mesh: " + mesh_type);
-    return (false);
-  }
-
   
   CompileInfoHandle ci = 
     scinew CompileInfo("ALGOClipBySelectionMask." + fi.get_field_filename() + "." + fo.get_field_filename() + ".",

@@ -26,55 +26,56 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/Algorithms/Fields/ScaleField.h>
+#include <Core/Basis/NoData.h>
+#include <Core/Basis/HexTrilinearLgn.h>
+#include <Core/Datatypes/LatVolMesh.h>
+#include <Core/Containers/FData.h>
+#include <Core/Datatypes/GenericField.h>
+
+#include <Core/Algorithms/Fields/GetBoundingBox.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Geometry/BBox.h>
 
 namespace SCIRunAlgo {
 
 using namespace SCIRun;
 
-bool ScaleFieldAlgo::ScaleField(ProgressReporter *pr, FieldHandle input, FieldHandle& output,double datascale, double meshscale, bool scale_from_center)
+bool GetBoundingBoxAlgo::GetBoundingBox(SCIRun::ProgressReporter *pr,SCIRun::FieldHandle input, SCIRun::FieldHandle& output)
 {
+  // Safety checks
   if (input.get_rep() == 0)
   {
-    pr->error("ScaleField: No input field");
+    pr->error("GetBoundingBox: No input field");
     return (false);
   }
 
-  // no precompiled version available, so compile one
-
-  FieldInformation fi(input);
+  // Get mesh
+  MeshHandle mesh = input->mesh();
   
-  if (fi.is_nonlinear())
+  if (mesh.get_rep() == 0)
   {
-    pr->error("ScaleField: This function has not yet been defined for non-linear elements");
+    pr->error("GetBoundingBox: No mesh associated with input field");
     return (false);
   }
 
-  // Setup dynamic files
+  // Get bounding box from input. This is one of the few operations one can do
+  // with virtual functions.
+  BBox box = mesh->get_bounding_box();
+  Point min = box.min();
+  Point max = box.max();
+  
+  // Create a simple latvol field based on the minimum and maximum point
+  LockingHandle<LatVolMesh<HexTrilinearLgn<Point> > > omesh = scinew LatVolMesh<HexTrilinearLgn<Point> >(2,2,2,min,max); 
+  output = dynamic_cast<SCIRun::Field *>(scinew GenericField<LatVolMesh<HexTrilinearLgn<Point> >, NoDataBasis<double> , FData3d<double,LatVolMesh<HexTrilinearLgn<Point> > > >(omesh.get_rep()));
 
-  SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "ALGOScaleField."+fi.get_field_filename()+".",
-    "ScaleFieldAlgo","ScaleFieldAlgoT",
-    fi.get_field_name());
-
-  ci->add_include(TypeDescription::cc_to_h(__FILE__));
-  ci->add_namespace("SCIRunAlgo");
-  ci->add_namespace("SCIRun");
-  
-  fi.fill_compile_info(ci);
-  
-  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;    
-  
-  // Handle dynamic compilation
-  SCIRun::Handle<ScaleFieldAlgo> algo;
-  if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
+  // If this somehow failed return an error
+  if (output.get_rep() == 0)
   {
-    pr->compile_error(ci->filename_);
-    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
-    return(false);
+    pr->error("GetBoundingBox: Could not allocate output mesh");
+    return (false);  
   }
 
-  return(algo->ScaleField(pr,input,output,datascale,meshscale,scale_from_center));
-}
+  return (true);
+}   
 
-} // End namespace SCIRunAlgo
+} // namespace SCIRunAlgo

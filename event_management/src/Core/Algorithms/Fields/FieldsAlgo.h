@@ -52,6 +52,11 @@ class SCISHARE FieldsAlgo : public AlgoLibrary {
     // ApplyMappingMatrix:
     // Copy the  data from one field to the other using a mapping matrix
     bool ApplyMappingMatrix(FieldHandle fsrc,  FieldHandle fdst, FieldHandle& output, MatrixHandle mapping);
+
+    // ApplyMappingMatrix:
+    // Get the bounding box of a data set
+    bool GetBoundingBox(FieldHandle input,  FieldHandle& output);
+
   
     // BundleToFieldArray:
     // Created an vector of fields out of the bundle type
@@ -159,8 +164,9 @@ class SCISHARE FieldsAlgo : public AlgoLibrary {
     // IsInsiedField:
     // This is an implementation of locate whether an element is contained within an
     // object.
-    bool IsInsideField(FieldHandle input, FieldHandle& output, FieldHandle object);
-
+    bool IsInsideField(FieldHandle input, FieldHandle& output, FieldHandle object, std::string output_type = "double", std::string basis_type = "same as input");
+    bool IsInsideFields(FieldHandle input, FieldHandle& output, std::vector<FieldHandle> objectfields, std::string output_type = "double", std::string basis_type = "same as input");
+    
     // LinkFieldBoundary:
     // Compute the node-to-node link and the edge-element-to-edge-element matrix.
     // This function assumes that the field uses Cartesian coordinates and that it is 
@@ -299,7 +305,7 @@ class SCISHARE FieldsAlgo : public AlgoLibrary {
     // ScaleField:
     // Scales FieldData and MeshData, used to change units properly both in
     // geometry and in data space. 
-    bool ScaleField(FieldHandle input, FieldHandle& output, double scaledata, double scalemesh);
+    bool ScaleField(FieldHandle input, FieldHandle& output, double scaledata, double scalemesh, bool scale_from_center = true);
 
     // SplitFieldByDomain:
     // Use the element data to segment the input field into volumes/areas with a

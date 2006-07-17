@@ -63,6 +63,9 @@ class SCISHARE MathAlgo : public AlgoLibrary {
     // Build the FEMMatrix using a variable number of processes
     bool BuildFEMatrix(FieldHandle field, MatrixHandle& matrix, int num_proc, MatrixHandle ConductivityTable = 0, MatrixHandle GeomToComp = 0, MatrixHandle CompToGeom = 0);
     
+    // CreateFEDirichletBC()
+    bool CreateFEDirichletBC(MatrixHandle FEin, MatrixHandle RHSin, MatrixHandle BC, MatrixHandle& FEout, MatrixHandle& RHSout);
+    
     // Resize a matrix, Dense or Sparse
     bool ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int n);
     
