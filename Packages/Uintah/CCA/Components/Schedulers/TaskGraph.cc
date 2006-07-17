@@ -77,6 +77,7 @@ TaskGraph::initialize()
 
   d_initRequiredVars.clear();
   edges.clear();
+  currentIteration = 0;
 }
 
 bool
@@ -598,7 +599,8 @@ TaskGraph::createDetailedTasks( bool useInternalDeps, const GridP& grid,
 	const PatchSubset* pss = ps->getSubset(p);
 	for(int m=0;m<ms->size();m++){
 	  const MaterialSubset* mss = ms->getSubset(m);
-	  if(lb->inNeighborhood(pss, mss))
+	  if(lb->inNeighborhood(pss, mss) && (pss->size() > 0 || task->getType() != Task::Output))
+            // don't make output tasks if there are no patches
 	    createDetailedTask(task, pss, mss);
 	}
       }
@@ -1274,6 +1276,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
     } 
     else if (patches && patches->empty() && 
              (req->patches_dom == Task::FineLevel || task->getTask()->getType() == Task::OncePerProc ||
+              task->getTask()->getType() == Task::Output || 
               strcmp(task->getTask()->getName(), "SchedulerCommon::copyDataToNewGrid") == 0))
     {
       // this is a either coarsen task where there aren't any fine patches, or a PerProcessor task where
@@ -1317,14 +1320,15 @@ int TaskGraph::findVariableLocation(Task::Dependency* req,
   // restart from checkpoint.
   int proc;
   if ((req->task->mapDataWarehouse(Task::ParentNewDW) != -1 && req->whichdw != Task::ParentOldDW) ||
-      currentIteration > 0 || req->lookInOldTG) {
+      currentIteration > 0 || (req->lookInOldTG && type_ == Scheduler::IntermediateTaskGraph)) {
     // provide some accomodation for Dynamic load balancers and sub schedulers.  We need to
     // treat the requirement like a "old" dw req but it needs to be found on the current processor
     // Same goes for successive executions of the same TG
     proc = lb->getPatchwiseProcessorAssignment(patch);
   }
-  else
+  else {
     proc = lb->getOldProcessorAssignment(req->var, patch, matl);
+  }
   return proc;
 }
 
