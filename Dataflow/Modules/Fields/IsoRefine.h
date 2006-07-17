@@ -321,7 +321,12 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
       QSMesh::Node::array_type inodes(4);
       for (unsigned int i = 0; i < 4; i++)
       {
-        interiorp[i] = Interpolate(p[i], p[(i+2)%4], 1.0/3.0);
+        const int tab[4][2] =
+          {{0,0}, {1, 0}, {1, 1}, {0, 1}};
+        vector<double> coords(2);
+        coords[0] = tab[i][0] * 1.0/3.0 + 1.0/3.0;
+        coords[1] = tab[i][1] * 1.0/3.0 + 1.0/3.0;
+        mesh->interpolate(interiorp[i], coords, *bi);
         inodes[i] = refined->add_point(interiorp[i]);
       }
       refined->add_elem(inodes);
