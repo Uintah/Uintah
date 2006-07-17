@@ -304,19 +304,20 @@ SolveMatrix::execute()
 	  to_string(size) + " x " + to_string(matrix->ncols()));
     return;
   }
-  if (rhs->nrows() != size)
+  if (rhs->nrows() != size || rhs->ncols() != 1)
   {
     error("Matrix size mismatch.");
     return;
   }
 
-  ColumnMatrix *rhsp = dynamic_cast<ColumnMatrix*>(rhs.get_rep());
-  ColumnMatrix *solp = dynamic_cast<ColumnMatrix*>(solution.get_rep());
+  ColumnMatrix *rhsp = rhs->as_column();
+  ColumnMatrix *solp = solution->as_column();
   Matrix* mat = matrix.get_rep();
 
+  bool delete_rhsp = false;
   if (!rhsp) {
-    error("rhs isn't a column!");
-    return;
+    rhsp = rhs->column();
+    delete_rhsp = true;
   }
 
   ep = emit_partial.get();
@@ -367,6 +368,8 @@ SolveMatrix::execute()
     solport->send_intermediate(solution);
   else
     solport->send(solution);
+
+  if (delete_rhsp) { delete rhsp; }
 }
 
 
