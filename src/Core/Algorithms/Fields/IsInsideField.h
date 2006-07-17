@@ -38,19 +38,19 @@ using namespace SCIRun;
 class IsInsideFieldAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool IsInsideField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, FieldHandle object);
+  virtual bool IsInsideField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, FieldHandle object, double newval,double defval, std::string output_type, std::string basis_type);
 };
 
 template<class FSRC, class FDST, class FOBJ>
 class IsInsideFieldAlgoT : public IsInsideFieldAlgo
 {
 public:
-  virtual bool IsInsideField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, FieldHandle object);
+  virtual bool IsInsideField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, FieldHandle object, double newval,double defval, std::string output_type, std::string basis_type);
 };
 
 
 template<class FSRC, class FDST, class FOBJ>
-bool IsInsideFieldAlgoT<FSRC,FDST,FOBJ>::IsInsideField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, FieldHandle objectfield)
+bool IsInsideFieldAlgoT<FSRC,FDST,FOBJ>::IsInsideField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, FieldHandle objectfield, double newval,double defval, std::string output_type, std::string basis_type)
 {
   FOBJ* objfield = dynamic_cast<FOBJ* >(objectfield.get_rep());
   if (objfield == 0)
@@ -69,16 +69,52 @@ bool IsInsideFieldAlgoT<FSRC,FDST,FOBJ>::IsInsideField(ProgressReporter *pr, Fie
   typename FSRC::mesh_type *imesh = ifield->get_typed_mesh().get_rep();
   typename FOBJ::mesh_type *objmesh = objfield->get_typed_mesh().get_rep();
 
-  FDST* ofield = scinew FDST(imesh);
-  if (ofield == 0)
+  FDST* ofield;
+  
+  if (output.get_rep() == 0)
   {
-    pr->error("IsInsideField: Could not create output field");
-    return(false);
+    ofield = scinew FDST(imesh);
+    if (ofield == 0)
+    {
+      pr->error("IsInsideField: Could not create output field");
+      return(false);
+    }
+
+    ofield->resize_fdata();
+    output = dynamic_cast<SCIRun::Field* >(ofield);  
+
+    if (ofield->basis_order() == 0)
+    {
+      typename FSRC::mesh_type::Elem::iterator it, it_end;
+
+      imesh->begin(it); 
+      imesh->end(it_end);
+
+      while (it != it_end)
+      {
+        ofield->set_value(static_cast<typename FDST::value_type>(defval),*(it));
+        ++it;
+      }
+    }
+    else
+    {
+      typename FSRC::mesh_type::Node::iterator it, it_end;
+
+      imesh->begin(it); 
+      imesh->end(it_end);
+
+      while (it != it_end)
+      {
+        ofield->set_value(static_cast<typename FDST::value_type>(defval),*(it));
+        ++it;
+      }    
+    }
   }
-
-  ofield->resize_fdata();
-  output = dynamic_cast<SCIRun::Field* >(ofield);  
-
+  else
+  {
+    ofield = dynamic_cast<FDST *>(output.get_rep());
+  }
+  
   objmesh->synchronize(Mesh::LOCATE_E);
 
 
@@ -110,7 +146,8 @@ bool IsInsideFieldAlgoT<FSRC,FDST,FOBJ>::IsInsideField(ProgressReporter *pr, Fie
           val *= 0;
         }
       }
-      ofield->set_value(val,*(it));
+
+      if (val == 1) ofield->set_value(static_cast<typename FDST::value_type>(newval),*(it));
       ++it;
     }
   }
@@ -136,7 +173,7 @@ bool IsInsideFieldAlgoT<FSRC,FDST,FOBJ>::IsInsideField(ProgressReporter *pr, Fie
         val = 0;       
       }
       
-      ofield->set_value(val,*(it));
+      if (val == 1) ofield->set_value(static_cast<typename FDST::value_type>(newval),*(it));
       ++it;
     }
   }

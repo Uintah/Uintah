@@ -202,7 +202,7 @@ bool DomainBoundary2AlgoT<FSRC, FDST>::DomainBoundary(ProgressReporter *pr, Fiel
               if ((((val1 >= minval)&&(val1 <= maxval)&&(!((val2 >= minval)&&(val2 <= maxval))))||
                    ((val2 >= minval)&&(val2 <= maxval)&&(!((val1 >= minval)&&(val1 <= maxval)))))&&(userange == true))
               {
-                if (!(val1 == val2)) includeface = true;             
+                includeface = true;             
               }              
             }
             else
@@ -447,9 +447,20 @@ bool DomainBoundaryAlgoT<FSRC, FDST>::DomainBoundary(ProgressReporter *pr, Field
           ifield->value(val2,nci);
           if (innerboundaryonly == false)
           {
-            if ((((val1 >= minval)&&(val1 <= maxval))||((val2 >= minval)&&(val2 <= maxval)))||(userange == false))
+            if (noinnerboundary)
             {
-              if (!(val1 == val2)) includeface = true;             
+              if ((((val1 >= minval)&&(val1 <= maxval)&&(!((val2 >= minval)&&(val2 <= maxval))))||
+                   ((val2 >= minval)&&(val2 <= maxval)&&(!((val1 >= minval)&&(val1 <= maxval)))))&&(userange == true))
+              {
+                includeface = true;             
+              }              
+            }
+            else
+            {
+              if ((((val1 >= minval)&&(val1 <= maxval))||((val2 >= minval)&&(val2 <= maxval)))||(userange == false))
+              {
+                if (!(val1 == val2)) includeface = true;             
+              }
             }
           }
           else
@@ -658,9 +669,20 @@ bool DomainBoundary3AlgoT<FSRC, FDST>::DomainBoundary(ProgressReporter *pr, Fiel
           ifield->value(val2,nci);
           if (innerboundaryonly == false)
           {
-            if ((((val1 >= minval)&&(val1 <= maxval))||((val2 >= minval)&&(val2 <= maxval)))||(userange == false))
+            if (noinnerboundary)
             {
-              if (!(val1 == val2)) includeface = true;             
+              if ((((val1 >= minval)&&(val1 <= maxval)&&(!((val2 >= minval)&&(val2 <= maxval))))||
+                   ((val2 >= minval)&&(val2 <= maxval)&&(!((val1 >= minval)&&(val1 <= maxval)))))&&(userange == true))
+              {
+                includeface = true;             
+              }              
+            }
+            else
+            {
+              if ((((val1 >= minval)&&(val1 <= maxval))||((val2 >= minval)&&(val2 <= maxval)))||(userange == false))
+              {
+                if (!(val1 == val2)) includeface = true;             
+              }
             }
           }
           else
@@ -890,9 +912,20 @@ bool DomainBoundary4AlgoT<FSRC, FDST>::DomainBoundary(ProgressReporter *pr, Fiel
           ifield->value(val2,nci);
           if (innerboundaryonly == false)
           {
-            if ((((val1 >= minval)&&(val1 <= maxval))||((val2 >= minval)&&(val2 <= maxval)))||(userange == false))
+            if (noinnerboundary)
             {
-              if (!(val1 == val2)) includeface = true;             
+              if ((((val1 >= minval)&&(val1 <= maxval)&&(!((val2 >= minval)&&(val2 <= maxval))))||
+                   ((val2 >= minval)&&(val2 <= maxval)&&(!((val1 >= minval)&&(val1 <= maxval)))))&&(userange == true))
+              {
+                includeface = true;             
+              }              
+            }
+            else
+            {
+              if ((((val1 >= minval)&&(val1 <= maxval))||((val2 >= minval)&&(val2 <= maxval)))||(userange == false))
+              {
+                if (!(val1 == val2)) includeface = true;             
+              }
             }
           }
           else

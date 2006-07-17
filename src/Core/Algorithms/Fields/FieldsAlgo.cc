@@ -26,8 +26,10 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Core/Algorithms/Fields/ApplyMappingMatrix.h>
+#include <Core/Algorithms/Fields/GetBoundingBox.h>
 #include <Core/Algorithms/Fields/ClearAndChangeFieldBasis.h>
 #include <Core/Algorithms/Fields/ClipBySelectionMask.h>
 #include <Core/Algorithms/Fields/ConvertToTetVol.h>
@@ -84,6 +86,13 @@ bool FieldsAlgo::ApplyMappingMatrix(FieldHandle fsrc,  FieldHandle fdst, FieldHa
   ApplyMappingMatrixAlgo algo;
   return(algo.ApplyMappingMatrix(pr_,fsrc,fdst,output,mapping));
 }
+
+bool FieldsAlgo::GetBoundingBox(FieldHandle input,  FieldHandle& output)
+{
+  GetBoundingBoxAlgo algo;
+  return(algo.GetBoundingBox(pr_,input,output));
+}
+
 
 bool FieldsAlgo::ClipFieldBySelectionMask(FieldHandle input, FieldHandle& output, MatrixHandle selmask,MatrixHandle &interpolant)
 {
@@ -184,10 +193,27 @@ bool FieldsAlgo::ConvertToTriSurf(FieldHandle input, FieldHandle& output)
   return(algo.ConvertToTriSurf(pr_,input,output));
 }
 
-bool FieldsAlgo::IsInsideField(FieldHandle input, FieldHandle& output, FieldHandle objectfield)
+bool FieldsAlgo::IsInsideField(FieldHandle input, FieldHandle& output, FieldHandle objectfield, std::string output_type, std::string basis_type)
 {
   IsInsideFieldAlgo algo;
-  return(algo.IsInsideField(pr_,input,output,objectfield));
+  output = 0;
+  return(algo.IsInsideField(pr_,input,output,objectfield,1.0,0.0,output_type,basis_type));
+}
+
+bool FieldsAlgo::IsInsideFields(FieldHandle input, FieldHandle& output, std::vector<FieldHandle> objectfields, std::string output_type,std::string basis_type)
+{
+  IsInsideFieldAlgo algo;
+  output = 0;
+  for (int p=1; p<=objectfields.size(); p++)
+  {
+    if (!(algo.IsInsideField(pr_,input,output,objectfields[p-1],static_cast<double>(p),0.0,output_type,basis_type)))
+    {
+      output = 0;
+      return (false);
+    }
+  }
+  
+  return (true);
 }
 
 
@@ -281,7 +307,7 @@ bool FieldsAlgo::MakeEditable(FieldHandle input,FieldHandle& output)
 
 bool FieldsAlgo::MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergefields, bool mergeelements, bool matchvalue)
 {
-  for (size_t p = 0; p < inputs.size(); p++) if (!MakeEditable(inputs[0],inputs[0])) return (false);
+  for (size_t p = 0; p < inputs.size(); p++) if (!MakeEditable(inputs[p],inputs[p])) return (false);
   MergeFieldsAlgo algo;
   return(algo.MergeFields(pr_,inputs,output,tolerance,mergefields,mergeelements,matchvalue));
 }
@@ -359,10 +385,10 @@ bool FieldsAlgo::ClearAndChangeFieldBasis(FieldHandle input,FieldHandle& output,
   return(algo.ClearAndChangeFieldBasis(pr_,input,output,newbasis));
 }
 
-bool FieldsAlgo::ScaleField(FieldHandle input, FieldHandle& output, double scaledata, double scalemesh)
+bool FieldsAlgo::ScaleField(FieldHandle input, FieldHandle& output, double scaledata, double scalemesh, bool scale_from_center)
 {
   ScaleFieldAlgo algo;
-  return(algo.ScaleField(pr_,input,output,scaledata,scalemesh));
+  return(algo.ScaleField(pr_,input,output,scaledata,scalemesh,scale_from_center));
 }
 
 bool FieldsAlgo::BundleToFieldArray(BundleHandle input, std::vector<FieldHandle>& output)

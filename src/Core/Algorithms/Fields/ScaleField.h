@@ -31,6 +31,7 @@
 #define CORE_ALGORITHMS_FIELDS_SCALEFIELD_H 1
 
 #include <Core/Algorithms/Util/DynamicAlgo.h>
+#include <Core/Geometry/BBox.h>
 #include <sci_hash_map.h>
 
 namespace SCIRunAlgo {
@@ -40,7 +41,7 @@ using namespace SCIRun;
 class ScaleFieldAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool ScaleField(ProgressReporter *pr, FieldHandle input, FieldHandle& output,double datascale,double meshscale);
+  virtual bool ScaleField(ProgressReporter *pr, FieldHandle input, FieldHandle& output,double datascale,double meshscale, bool scale_from_center);
 };
 
 
@@ -48,12 +49,12 @@ template <class FIELD>
 class ScaleFieldAlgoT : public ScaleFieldAlgo
 {
 public:
-  virtual bool ScaleField(ProgressReporter *pr, FieldHandle input, FieldHandle& output,double datascale,double meshscale);
+  virtual bool ScaleField(ProgressReporter *pr, FieldHandle input, FieldHandle& output,double datascale,double meshscale, bool scale_from_center);
 };
 
 
 template <class FIELD>
-bool ScaleFieldAlgoT<FIELD>::ScaleField(ProgressReporter *pr, FieldHandle input, FieldHandle& output,double datascale,double meshscale)
+bool ScaleFieldAlgoT<FIELD>::ScaleField(ProgressReporter *pr, FieldHandle input, FieldHandle& output,double datascale,double meshscale, bool scale_from_center)
 {
   FIELD *ifield = dynamic_cast<FIELD *>(input.get_rep());
   if (ifield == 0)
@@ -70,14 +71,21 @@ bool ScaleFieldAlgoT<FIELD>::ScaleField(ProgressReporter *pr, FieldHandle input,
     return (false);
   }
   
+  BBox box = input->mesh()->get_bounding_box();
+  Vector center = 0.5*(box.min()+box.max());
+  
+  
+  
   // scale mesh
   ofield->mesh_detach();
   Transform tf;
   tf.load_identity();
+  if (scale_from_center) tf.pre_translate(-center);
   tf.pre_scale(Vector(meshscale,meshscale,meshscale));
+  if (scale_from_center) tf.pre_translate(center);
   ofield->mesh()->transform(tf);
 
-  typename FIELD::mesh_type_handle omesh = ofield->get_typed_mesh();
+  typename FIELD::mesh_handle_type omesh = ofield->get_typed_mesh();
 
   // scale data
   if (ofield->basis_order() == 0)

@@ -14,6 +14,7 @@ SRCDIR   := Core/Algorithms/Math
 
 SRCS     += $(SRCDIR)/MathAlgo.cc\
             $(SRCDIR)/BuildFEMatrix.cc\
+            $(SRCDIR)/CreateFEDirichletBC.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS :=  Core/Datatypes Core/Util Core/Containers      \

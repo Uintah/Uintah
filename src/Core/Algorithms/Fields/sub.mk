@@ -14,6 +14,7 @@ SRCDIR   := Core/Algorithms/Fields
 
 
 SRCS     += $(SRCDIR)/ApplyMappingMatrix.cc\
+            $(SRCDIR)/GetBoundingBox.cc\
             $(SRCDIR)/ClearAndChangeFieldBasis.cc\
             $(SRCDIR)/ConvertToTetVol.cc\
             $(SRCDIR)/ConvertToTriSurf.cc\
@@ -25,10 +26,10 @@ SRCS     += $(SRCDIR)/ApplyMappingMatrix.cc\
             $(SRCDIR)/FieldBoundary.cc\
             $(SRCDIR)/FieldDataNodeToElem.cc\
             $(SRCDIR)/FieldDataElemToNode.cc\
-            $(SRCDIR)/GetFieldMeasure.cc\
             $(SRCDIR)/GetFieldData.cc\
             $(SRCDIR)/GetFieldDataMinMax.cc\
             $(SRCDIR)/GetFieldInfo.cc\
+            $(SRCDIR)/GetFieldMeasure.cc\
             $(SRCDIR)/IsInsideField.cc\
             $(SRCDIR)/LinkFieldBoundary.cc\
             $(SRCDIR)/LinkToCompGrid.cc\

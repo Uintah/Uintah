@@ -28,6 +28,7 @@
 
 #include <Core/Algorithms/Math/MathAlgo.h>
 #include <Core/Algorithms/Math/BuildFEMatrix.h>
+#include <Core/Algorithms/Math/CreateFEDirichletBC.h>
 
 #include <Core/Datatypes/MatrixOperations.h>
 
@@ -71,6 +72,15 @@ MathAlgo::BuildFEMatrix(FieldHandle field, MatrixHandle& matrix, int num_proc,
   matrix = GeomToComp*matrix*CompToGeom;
   return true;
 }
+
+bool 
+MathAlgo::CreateFEDirichletBC(MatrixHandle FEin, MatrixHandle RHSin, MatrixHandle BC, 
+                          MatrixHandle& FEout, MatrixHandle& RHSout)
+{
+  CreateFEDirichletBCAlgo algo;
+  return (algo.CreateFEDirichletBC(pr_, FEin, RHSin, BC, FEout, RHSout));
+}
+
 
 
 bool

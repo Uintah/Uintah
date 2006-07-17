@@ -120,7 +120,7 @@ bool ClipBySelectionMaskAlgoT<FSRC,FDST>::ClipBySelectionMask(ProgressReporter *
     return(false);
   }
 
-  std::vector<typename FDST::mesh_type::Node::index_type> nodemap(numnodes,static_cast<typename FDST::mesh_type::Node::index_type>(numnodes));
+  std::vector<unsigned int> nodemap(numnodes,static_cast<unsigned int>(numnodes));
   std::vector<unsigned int> elemmap;
 
   typename FSRC::mesh_type::Elem::iterator bi, ei;
@@ -173,7 +173,7 @@ bool ClipBySelectionMaskAlgoT<FSRC,FDST>::ClipBySelectionMask(ProgressReporter *
           Point np;
           imesh->get_center(np, onodes[i]);
           const typename FDST::mesh_type::Node::index_type nodeindex = omesh->add_point(np);
-          nodemap[static_cast<unsigned int>(onodes[i])] = nodeindex;
+          nodemap[static_cast<unsigned int>(onodes[i])] = static_cast<unsigned int>(nodeindex);
           nnodes[i] = nodeindex;
           if (ifield->basis_order() == 1)
           {
@@ -184,7 +184,7 @@ bool ClipBySelectionMaskAlgoT<FSRC,FDST>::ClipBySelectionMask(ProgressReporter *
         }
         else
         {
-          nnodes[i] = nodemap[static_cast<unsigned int>(onodes[i])];
+          nnodes[i] = static_cast<typename FDST::mesh_type::Node::index_type>(nodemap[static_cast<unsigned int>(onodes[i])]);
         }
       }
 
