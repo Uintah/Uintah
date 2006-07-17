@@ -24,6 +24,6 @@ PSELIBS :=  Core/Datatypes Core/Util Core/Containers      \
             Core/Persistent         \
             Core/Basis Core/Bundle
 
-LIBS :=
+LIBS := $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

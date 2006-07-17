@@ -26,8 +26,14 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
 #include <Core/Algorithms/Math/CreateFEDirichletBC.h>
+
+#include <sci_defs/teem_defs.h>
+
+#ifdef HAVE_TEEM
+#include <teem/air.h>
+#endif
+
 
 namespace SCIRunAlgo {
 
