@@ -33,10 +33,24 @@
 
 #if defined (HAVE_WX)
 
-// WX checks here
+#include <wx/wxprec.h>
+#ifndef WX_PRECOMP
+# include <wx/wx.h>
+#endif
 
-#  include <wx/msgdlg.h>
-#  include <wx/textdlg.h>
+// some useful headers
+#include <wx/chkconf.h>
+#include <wx/dialog.h>
+#include <wx/msgdlg.h>
+#include <wx/filedlg.h>
+#include <wx/dirdlg.h>
+#include <wx/textdlg.h>
+#include <wx/utils.h>
+
+// WX module checks
+#if ! defined(wxUSE_THREADS) || ! defined(wxUSE_STD_IOSTREAM) || ! defined(wxUSE_STD_STRING) || ! defined(wxUSE_LIBPNG) || ! defined(wxUSE_LIBJPEG) || ! defined(wxUSE_MENUS)
+#  error("wxWidgets not configured correctly.  Please see build documentation for details.")
+#endif // WX module checks
 
 #endif
 

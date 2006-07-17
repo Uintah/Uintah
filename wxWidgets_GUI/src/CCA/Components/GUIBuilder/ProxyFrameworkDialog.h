@@ -42,7 +42,7 @@
 #ifndef CCA_Components_GUIBuilder_FrameworkProxyDialog_h
 #define CCA_Components_GUIBuilder_FrameworkProxyDialog_h
 
-#include <wx/dialog.h>
+#include <sci_wx.h>
 
 class wxStaticText;
 class wxComboBox;
@@ -79,92 +79,4 @@ private:
 
 }
 
-#endif
-
-#if 0
-// #ifndef ClusterDialog_h
-// #define ClusterDialog_h
-
-// #include <qvariant.h>
-// #include <qdialog.h>
-
-// class QVBoxLayout;
-// class QHBoxLayout;
-// class QGridLayout;
-// class QSpacerItem;
-// class QLabel;
-// class QComboBox;
-// class QLineEdit;
-// class QSpinBox;
-// class QButtonGroup;
-// class QRadioButton;
-// class QPushButton;
-// class QString;
-
-// class ClusterDialog : public QDialog
-// {
-//     Q_OBJECT
-
-// public:
-//     ClusterDialog(const char* defaultLoader, const char* defaultDomain,
-// 		    const char* defaultLogin, const char* defaultPath, QWidget* parent = 0,
-// 		    const char* name = 0, bool modal = FALSE, WFlags fl = 0);
-//     ClusterDialog(QWidget* parent = 0, const char* name = 0,
-// 		    bool modal = FALSE, WFlags fl = 0);
-//     ~ClusterDialog();
-
-//     QString loader() const;
-//     QString domain() const;
-//     QString login() const;
-//     QString path() const;
-//     QString password() const;
-//     QString copies() const;
-//     QString where() const;
-
-// protected:
-//     QVBoxLayout* layoutDialog;
-//     QSpacerItem* verticalSpacing1;
-//     QSpacerItem* verticalSpacing2;
-//     QHBoxLayout* layoutLoader;
-//     QHBoxLayout* layoutDomain;
-//     QHBoxLayout* layoutLogin;
-//     QHBoxLayout* layoutPath;
-//     QHBoxLayout* layoutPasswd;
-//     QHBoxLayout* layoutCopies;
-//     QGridLayout* layoutWhere;
-//     QHBoxLayout* layoutButton;
-//     QHBoxLayout* layoutButtons;
-//     QSpacerItem* horizontalSpacing;
-
-// protected slots:
-//     virtual void languageChange();
-
-// private:
-//     void setDefaultText(const char* defaultLoader, const char* defaultDomain, const char* defaultLogin, const char* defaultPath);
-//     void setWidgets(const char* name, bool modal, WFlags fl);
-
-//     QLabel* textLabelLoader;
-//     QComboBox* comboBoxLoader;
-//     QLabel* textLabelDomain;
-//     QComboBox* comboBoxDomain;
-//     QLabel* textLabelLogin;
-//     QComboBox* comboBoxLogin;
-//     QLabel* textLabelPath;
-//     QComboBox* comboBoxPath;
-//     QLabel* textLabelPasswd;
-//     QLineEdit* lineEditPasswd;
-//     QLabel* textLabelCopies;
-//     QSpinBox* spinBoxCopies;
-//     QButtonGroup* buttonGroup;
-//     QRadioButton* radioButtonCPU;
-//     QRadioButton* radioButtonNode;
-//     QLabel* textLabelWhere;
-//     QLineEdit* lineEditWhere;
-//     QPushButton* buttonHelp;
-//     QPushButton* pushButtonReset;
-//     QPushButton* buttonOk;
-//     QPushButton* buttonCancel;
-// };
-
-// #endif
 #endif

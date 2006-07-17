@@ -61,9 +61,16 @@ END_EVENT_TABLE()
 
 IMPLEMENT_DYNAMIC_CLASS(PortIcon, wxWindow)
 
-PortIcon::PortIcon(const sci::cca::GUIBuilder::pointer& bc, ComponentIcon* parent,
-                   wxWindowID id, GUIBuilder::PortType pt, const std::string& name)
-  : builder(bc), parent(parent), portType(pt), name(name), ID_MENU_POPUP(BuilderWindow::GetNextID())
+PortIcon::PortIcon(const sci::cca::GUIBuilder::pointer& bc,
+                   ComponentIcon* parent,
+                   wxWindowID id,
+                   GUIBuilder::PortType pt,
+                   const std::string& name,
+                   const std::string& componentModel,
+                   const std::string& sidlType)
+  : builder(bc), parent(parent), portType(pt),
+    name(name), componentModel(componentModel), sidlType(sidlType),
+    ID_MENU_POPUP(BuilderWindow::GetNextID())
 {
   Init();
   Create(parent, id, wxT(name));
@@ -78,10 +85,7 @@ bool PortIcon::Create(wxWindow *parent, wxWindowID id, const wxString &name)
   if (! wxWindow::Create(parent, id, wxDefaultPosition, wxSize(PORT_WIDTH, PORT_HEIGHT), wxNO_BORDER, name)) {
     return false;
   }
-
-  builder->getPortInfo(this->parent->GetComponentInstance(), name, model, type);
-
-  void* c = builder->getPortColor(type);
+  void* c = builder->getPortColor(sidlType);
   pColor = wxColor(*((wxColor*) c));
 
   //need database of port types/colours
@@ -91,7 +95,7 @@ bool PortIcon::Create(wxWindow *parent, wxWindowID id, const wxString &name)
     hColor = wxTheColourDatabase->Find("RED");
   }
   SetBackgroundColour(pColor);
-  SetToolTip(wxT(type + " " + this->name));
+  SetToolTip(wxT(sidlType + " " + this->name));
 
   return true;
 }

@@ -566,7 +566,7 @@ void NetworkCanvas::DeleteIcon(const std::string& instanceName)
   ComponentMap::iterator iter = components.find(instanceName);
   if (iter != components.end()) {
     ComponentIcon *ci = iter->second;
-
+    sci::cca::ComponentID::pointer cid = ci->GetComponentInstance();
     // disconnect
     PortList upl = ci->GetUsesPorts();
     for (PortList::const_iterator plIter = upl.begin(); plIter != upl.end(); plIter++) {
@@ -600,10 +600,10 @@ void NetworkCanvas::DeleteIcon(const std::string& instanceName)
       }
     }
     ci->Show(false);
-
     delete ci;
+
    // destroy instance
-    builder->destroyInstance(ci->GetComponentInstance(), 0);
+    builder->destroyInstance(cid, 0);
     components.erase(iter);
   }
   Refresh();

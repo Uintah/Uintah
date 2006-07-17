@@ -41,7 +41,6 @@
 #include <wx/sizer.h>
 #include <wx/combobox.h>
 #include <wx/button.h>
-#include <wx/dirdlg.h>
 #include <wx/valtext.h>
 
 #include <CCA/Components/GUIBuilder/XMLPathDialog.h>

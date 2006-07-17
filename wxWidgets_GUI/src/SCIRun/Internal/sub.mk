@@ -51,8 +51,6 @@ SRCS     += \
 ifeq ($(HAVE_WX),yes)
  SRCS += \
          $(SRCDIR)/GUIService.cc
-
- LIBS := $(WX_LIBRARY)
 endif
 
 $(SRCDIR)/ComponentRegistry.o: Core/CCA/spec/cca_sidl.h

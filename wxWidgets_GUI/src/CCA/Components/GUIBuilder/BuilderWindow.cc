@@ -47,8 +47,6 @@
 #include <wx/textctrl.h>
 #include <wx/laywin.h>
 #include <wx/string.h>
-#include <wx/msgdlg.h>
-#include <wx/filedlg.h>
 
 #include <vector>
 #include <map>
@@ -268,14 +266,14 @@ void BuilderWindow::RedrawMiniCanvas()
   miniCanvas->Refresh();
 }
 
-void BuilderWindow::DisplayMessage(const std::string& line)
+void BuilderWindow::DisplayMessage(const wxString& line)
 {
   // Used to (temporarily - local scope) redirect all output sent to a C++ ostream object to a wxTextCtrl.
   wxStreamToTextRedirector redirect(textCtrl);
   std::cout << line << std::endl;
 }
 
-void BuilderWindow::DisplayErrorMessage(const std::string& line)
+void BuilderWindow::DisplayErrorMessage(const wxString& line)
 {
   textCtrl->SetDefaultStyle(wxTextAttr(*wxRED));
   // Used to (temporarily - local scope) redirect all output sent to a C++ ostream object to a wxTextCtrl.
@@ -284,17 +282,17 @@ void BuilderWindow::DisplayErrorMessage(const std::string& line)
   textCtrl->SetDefaultStyle(wxTextAttr(*wxBLACK));
 }
 
-void BuilderWindow::DisplayMessages(const std::vector<std::string>& lines)
+void BuilderWindow::DisplayMessages(const std::vector<wxString>& lines)
 {
   wxStreamToTextRedirector redirect(textCtrl);
 
-  for (std::vector<std::string>::const_iterator iter = lines.begin(); iter != lines.end(); iter++) {
+  for (std::vector<wxString>::const_iterator iter = lines.begin(); iter != lines.end(); iter++) {
     std::cout << *iter << std::endl;
   }
 }
 
 
-void BuilderWindow::DisplayErrorMessages(const std::vector<std::string>& lines)
+void BuilderWindow::DisplayErrorMessages(const std::vector<wxString>& lines)
 {
   textCtrl->SetDefaultStyle(wxTextAttr(*wxRED));
   DisplayMessages(lines);
@@ -365,6 +363,7 @@ void BuilderWindow::OnTest(wxCommandEvent&/* event */)
 //   //this->SetCursor(wxCursor(wxCURSOR_WAIT));
 //   this->SetCursor(*wxHOURGLASS_CURSOR);
 
+  wxBusyCursor wait;
   statusBar->SetStatusText("Build components", 0);
   try {
     sci::cca::ComponentID::pointer helloCid = builder->createInstance("SCIRun.Hello", sci::cca::TypeMap::pointer(0));
@@ -608,7 +607,7 @@ void BuilderWindow::SetLayout()
 
 void BuilderWindow::buildPackageMenus(const ClassDescriptionList& list)
 {
-  //SetCursor(wxCursor(wxCURSOR_WAIT));
+  wxBusyCursor wait;
   MenuTreeMap menuTrees;
 
   // build menu trees for component model and component types in model
@@ -657,17 +656,16 @@ void BuilderWindow::buildPackageMenus(const ClassDescriptionList& list)
       delete oldMenu;
     }
   }
-  //SetCursor(wxCursor(wxCURSOR_ARROW));
 }
 
 void BuilderWindow::buildNetworkPackageMenus(const ClassDescriptionList& list)
 {
+  wxBusyCursor wait;
   if (networkCanvas == 0) {
     DisplayErrorMessage("Cannot build network canvas menus: network canvas does not exist.");
     return;
   }
 
-  //SetCursor(wxCursor(wxCURSOR_WAIT));
   MenuTreeMap menuTrees;
   // build menu trees for component model and component types in model
   for (ClassDescriptionList::const_iterator iter = list.begin(); iter != list.end(); iter++) {
@@ -709,15 +707,14 @@ void BuilderWindow::buildNetworkPackageMenus(const ClassDescriptionList& list)
       networkCanvas->popupMenu->Append(menuID, wxT(iter->first), menu);
     }
   }
-  //SetCursor(wxCursor(wxCURSOR_ARROW));
 }
 
 void BuilderWindow::setDefaultText()
 {
-  std::vector<std::string> v;
-  v.push_back(std::string("SCIRun2 v ") + SR2_VERSION);
-  v.push_back(std::string("Framework URL: ") + url);
-  v.push_back(std::string("--------------------\n"));
+  std::vector<wxString> v;
+  v.push_back(wxString("SCIRun2 v ") + wxString(SR2_VERSION));
+  v.push_back(wxString("Framework URL: ") + wxString(url.c_str()));
+  v.push_back("--------------------\n");
   DisplayMessages(v);
 }
 

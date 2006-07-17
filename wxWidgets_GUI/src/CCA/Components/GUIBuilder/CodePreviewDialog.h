@@ -40,13 +40,9 @@
 #ifndef CCA_Components_GUIBuilder_CodePreviewDialog_h
 #define CCA_Components_GUIBuilder_CodePreviewDialog_h
 
-#include <wx/wxprec.h>
-#ifndef WX_PRECOMP
-#include <wx/wx.h>
-#include<wx/grid.h>
-#endif
 
 #include <CCA/Components/GUIBuilder/ComponentSkeletonWriter.h>
+#include <sci_wx.h>
 #include <vector>
 
 class wxWindow;

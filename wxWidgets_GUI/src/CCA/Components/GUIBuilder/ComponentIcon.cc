@@ -52,6 +52,9 @@
 #include <CCA/Components/GUIBuilder/ComponentIcon.h>
 #include <CCA/Components/GUIBuilder/PortIcon.h>
 #include <CCA/Components/GUIBuilder/NetworkCanvas.h>
+#include <CCA/Components/GUIBuilder/BuilderWindow.h>
+#include <CCA/Components/GUIBuilder/GUIBuilder.h>
+#include <Core/Thread/Time.h>
 
 #include <string>
 
@@ -75,12 +78,16 @@ BEGIN_EVENT_TABLE(ComponentIcon, wxPanel)
 
 IMPLEMENT_DYNAMIC_CLASS(ComponentIcon, wxPanel)
 
+const wxString ComponentIcon::INIT_TIME("0.0");
+
 ComponentIcon::ComponentIcon(const sci::cca::GUIBuilder::pointer& bc,
                              wxWindowID winid,
                              NetworkCanvas* parent,
                              const sci::cca::ComponentID::pointer& compID,
                              int x, int y)
-    : canvas(parent), hasUIPort(false), hasGoPort(false), isMoving(false), cid(compID), builder(bc)
+    : canvas(parent),
+      hasUIPort(false), hasGoPort(false), hasProgress(false), hasComponentIcon(false),
+      isMoving(false), cid(compID), builder(bc)
 {
 
   Init();
@@ -95,6 +102,14 @@ ComponentIcon::~ComponentIcon()
 
   if (hasUIPort) {
     builder->disconnectUIPort(uiPortName);
+  }
+
+//   if (hasProgress) {
+//     builder->disconnectProgress(progressPortName);
+//   }
+
+  if (hasComponentIcon) {
+    builder->disconnectComponentIcon(ciPortName);
   }
 
   PortList::iterator iter;
@@ -183,10 +198,6 @@ void ComponentIcon::OnMouseMove(wxMouseEvent& event)
               << std::endl;
 #endif
 
-    //     // test
-    //     wxPoint p;
-    //     p = mp;
-
     // adjust for canvas boundaries
     if (topLeft.x < 0) {
       newX -= topLeft.x;
@@ -271,7 +282,19 @@ void ComponentIcon::OnRightClick(wxMouseEvent& event)
 
 void ComponentIcon::OnGo(wxCommandEvent& event)
 {
-  int status = builder->go(goPortName);
+  timeLabel->SetLabel(INIT_TIME);
+  // timer start
+  double start = Time::currentSeconds();
+  /*int status = */builder->go(goPortName);
+  double time = Time::currentSeconds() - start;
+  timeLabel->SetLabel(wxString::Format("%.3f", time));
+}
+
+void ComponentIcon::OnInfo(wxCommandEvent& event)
+{
+  // TODO: All UI information should be consolidated to a single frame
+  // as in SCIRun's GUI.
+  // show desc in message box
 }
 
 void ComponentIcon::OnDelete(wxCommandEvent& event)
@@ -281,7 +304,7 @@ void ComponentIcon::OnDelete(wxCommandEvent& event)
 
 void ComponentIcon::OnUI(wxCommandEvent& event)
 {
-  int status = builder->ui(uiPortName);
+  /* int status = */builder->ui(uiPortName);
 }
 
 void ComponentIcon::GetCanvasPosition(wxPoint& p)
@@ -335,16 +358,15 @@ void ComponentIcon::SetLayout()
   label = new wxStaticText(this, wxID_ANY, cid->getInstanceName(), wxDefaultPosition, wxDefaultSize, wxALIGN_LEFT);
   gridBagSizer->Add(label, wxGBPosition(0, 2), wxGBSpan(1, 2), wxALL|wxALIGN_CENTER, BORDER_SIZE);
 
-  timeLabel = new wxStaticText(this, wxID_ANY, wxT("0.0"), wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
+  timeLabel = new wxStaticText(this, wxID_ANY, INIT_TIME, wxDefaultPosition, wxDefaultSize, wxALIGN_CENTER);
   gridBagSizer->Add(timeLabel, wxGBPosition(1, 2), wxDefaultSpan, wxALL|wxALIGN_CENTER_HORIZONTAL, BORDER_SIZE);
 
-  const int PROG_LEN = 50;
-  const wxSize PROG_SIZE(PROG_LEN, 15);
+  const wxSize PROG_SIZE(PROG_LEN / 2, 15);
   progressGauge = new wxGauge(this, ID_PROGRESS, PROG_LEN, wxDefaultPosition, PROG_SIZE,
                               wxDOUBLE_BORDER|wxSUNKEN_BORDER|wxGA_HORIZONTAL|wxGA_SMOOTH);
   gridBagSizer->Add(progressGauge, wxGBPosition(1, 3), wxDefaultSpan, wxALL|wxALIGN_LEFT, BORDER_SIZE);
 
-  const wxSize STATUS_SIZE(15, 15);
+  const wxSize STATUS_SIZE(45, 15);
   msgButton = new wxButton(this, ID_BUTTON_STATUS, wxT(""), wxDefaultPosition,
                            STATUS_SIZE, wxDOUBLE_BORDER|wxRAISED_BORDER);
   gridBagSizer->Add(msgButton, wxGBPosition(1, 4), wxDefaultSpan, wxFIXED_MINSIZE|wxALIGN_LEFT, BORDER_SIZE);
@@ -372,19 +394,26 @@ void ComponentIcon::SetPortIcons()
                       wxDefaultSpan, wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, PORT_BORDER_SIZE);
   } else {
     for (unsigned int i = 0, j = 0; i < providedPorts.size(); i++) {
- std::cerr << "ComponentIcon::SetPortIcons(): provided port=" << providedPorts[i] << std::endl;
-      if (providedPorts[i].rfind("ui") != std::string::npos) {
+      std::string model, type;
+      builder->getPortInfo(GetComponentInstance(), providedPorts[i], model, type);
+
+      // would be useful to have the namespace string stored somewhere...
+      if (type == GUIBuilder::UIPORT) {
         if (builder->connectUIPort(cid->getInstanceName(), providedPorts[i], cid, uiPortName)) {
           hasUIPort = true;
         }
-      } else if (providedPorts[i].rfind("go") != std::string::npos) {
+      } else if (type == GUIBuilder::GOPORT) {
         if (builder->connectGoPort(cid->getInstanceName(), providedPorts[i], cid, goPortName)) {
           hasGoPort = true;
           popupMenu->Append(ID_MENU_GO, wxT("&Go"), wxT("CCA go port"));
         }
+      } else if (type == GUIBuilder::COMPONENTICON_PORT) {
+        if (builder->connectComponentIcon(cid->getInstanceName(), providedPorts[i], cid, ciPortName)) {
+          hasComponentIcon = true;
+        }
       } else {
-        PortIcon *pi = new PortIcon(builder, this, wxID_ANY, GUIBuilder::Provides, providedPorts[i]);
-        //ports[providedPorts[i]] = pi;
+        PortIcon *pi = new PortIcon(builder, this, wxID_ANY,
+                                    GUIBuilder::Provides, providedPorts[i], model, type);
         providesPorts.push_back(pi);
         gridBagSizer->Add(pi, wxGBPosition(j++, 0), wxDefaultSpan,
                           wxFIXED_MINSIZE|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL, PORT_BORDER_SIZE);
@@ -400,19 +429,28 @@ void ComponentIcon::SetPortIcons()
     gridBagSizer->Add(PortIcon::PORT_WIDTH, PortIcon::PORT_HEIGHT, wxGBPosition(0, USES_PORT_COL),
                       wxDefaultSpan, wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, PORT_BORDER_SIZE);
   } else {
-    for (unsigned int i = 0; i < usedPorts.size(); i++) {
-      if (usedPorts[i].rfind("ui") != std::string::npos) {
-        // show warning
+    for (unsigned int i = 0, j = 0; i < usedPorts.size(); i++) {
+      std::string model, type;
+      builder->getPortInfo(GetComponentInstance(), usedPorts[i], model, type);
+
+      // It doesn't make sense for a component that isn't a UI to use these ports.
+      if (type == GUIBuilder::UIPORT ||
+          type == GUIBuilder::GOPORT ||
+          type == GUIBuilder::COMPONENTICON_PORT) {
+        canvas->GetBuilderWindow()->DisplayMessage(wxT(GetComponentInstanceName() + " should provide, and not use, ports of type " + type));
         continue;
-      } else if (usedPorts[i].rfind("go") != std::string::npos) {
-        // show warning
-        continue;
+      }
+
+      if (type == GUIBuilder::PROGRESS_PORT) {
+//         if (builder->connectProgress(cid->getInstanceName(), providedPorts[i], cid, progressPortName)) {
+          hasProgress = true;
+//         }
       } else {
-        PortIcon *pi = new PortIcon(builder, this, wxID_ANY, GUIBuilder::Uses, usedPorts[i]);
-        //ports[usedPorts[i]] = pi;
-        usesPorts.push_back(pi);
-        gridBagSizer->Add(pi, wxGBPosition(i, USES_PORT_COL),
-                          wxDefaultSpan, wxFIXED_MINSIZE|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, PORT_BORDER_SIZE);
+
+      PortIcon *pi = new PortIcon(builder, this, wxID_ANY, GUIBuilder::Uses, usedPorts[i], model, type);
+      usesPorts.push_back(pi);
+      gridBagSizer->Add(pi, wxGBPosition(j++, USES_PORT_COL),
+                        wxDefaultSpan, wxFIXED_MINSIZE|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, PORT_BORDER_SIZE);
       }
     }
   }

@@ -32,6 +32,8 @@
 
 #include <CCA/Components/GUIBuilder/GUIBuilder.h>
 #include <CCA/Components/GUIBuilder/BuilderWindow.h>
+// for default namespace strings - these may be moved elsewhere in the future
+#include <CCA/Components/GUIBuilder/ComponentSkeletonWriter.h>
 
 #include <sci_metacomponents.h>
 #include <SCIRun/SCIRunFramework.h>
@@ -67,6 +69,10 @@ const std::string GUIBuilder::GUI_THREAD_NAME("wxWidgets GUI Builder");
 const std::string GUIBuilder::DEFAULT_SRC_DIR(sci_getenv("SCIRUN_SRCDIR"));
 const std::string GUIBuilder::DEFAULT_OBJ_DIR(sci_getenv("SCIRUN_OBJDIR"));
 const std::string GUIBuilder::DEFAULT_CCA_COMP_DIR(GUIBuilder::DEFAULT_SRC_DIR + CCAComponentModel::DEFAULT_PATH);
+const std::string GUIBuilder::GOPORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "GoPort");
+const std::string GUIBuilder::UIPORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "UIPort");
+const std::string GUIBuilder::PROGRESS_PORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "Progress");
+const std::string GUIBuilder::COMPONENTICON_PORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "ComponentIcon");
 
 Mutex GUIBuilder::builderLock("GUIBuilder class lock");
 wxSCIRunApp* GUIBuilder::app = 0;
@@ -198,6 +204,7 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
     // add to event queue???
     }
   }
+
   try {
     // get framework properties
     sci::cca::ports::GUIService::pointer guiService =
@@ -208,6 +215,11 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
   catch (const sci::cca::CCAException::pointer &e) {
     std::cerr << "Error: GUI service is not available; " <<  e->getNote() << std::endl;
   }
+
+  services->addProvidesPort(sci::cca::ports::Progress::pointer(this),
+                            "progress",
+                            "sci.cca.ports.Progress",
+                            sci::cca::TypeMap::pointer(0));
 
   setDefaultPortColors();
 }
@@ -579,7 +591,7 @@ bool GUIBuilder::connectGoPort(const std::string& usesName, const std::string& p
             << ", component instance=" << cid->getInstanceName() << std::endl;
 #endif
   // do we really need to look for SCIRun ports (ie. sci.go?)
-  return connectPort(usesPortName, providesPortName, "sci.cca.ports.GoPort", cid);
+  return connectPort(usesPortName, providesPortName, GOPORT, cid);
 }
 
 void GUIBuilder::disconnectGoPort(const std::string& goPortName)
@@ -624,7 +636,7 @@ bool GUIBuilder::connectUIPort(const std::string& usesName, const std::string& p
             << ", component instance=" << cid->getInstanceName() << std::endl;
 #endif
   // do we really need to look for SCIRun ports (ie. sci.ui?)
-  return connectPort(usesPortName, providesPortName, "sci.cca.ports.UIPort", cid);
+  return connectPort(usesPortName, providesPortName, UIPORT, cid);
 }
 
 void GUIBuilder::disconnectUIPort(const std::string& uiPortName)
@@ -654,6 +666,56 @@ int GUIBuilder::ui(const std::string& uiPortName)
   services->releasePort(uiPortName);
   return status;
 }
+
+//////////////////////////////////////////////////////////////////////////
+// sci.cca.ports.Progress support
+
+// bool GUIBuilder::connectProgress(const std::string& usesName, const std::string& providesPortName, const sci::cca::ComponentID::pointer &cid, std::string& usesPortName)
+// {
+//   usesPortName = usesName + "." + "progress";
+// #if DEBUG
+//   std::cerr << "GUIBuilder::connectProgress(..): uses port name=" << usesPortName
+//             << ", provides port name=" << providesPortName
+//             << ", component instance=" << cid->getInstanceName() << std::endl;
+// #endif
+//   return connectPort(usesPortName, providesPortName, PROGRESS_PORT, cid);
+// }
+
+// void GUIBuilder::disconnectProgress(const std::string& progessPortName)
+// {
+// #if DEBUG
+//   std::cerr << "GUIBuilder::disconnectProgress(..): progress port name=" << progressPortName << std::endl;
+// #endif
+//   disconnectPort(progessPortName);
+// }
+
+void GUIBuilder::updateProgress(int) {}
+
+//////////////////////////////////////////////////////////////////////////
+// sci.cca.ports.ComponentIcon support
+
+bool GUIBuilder::connectComponentIcon(const std::string& usesName, const std::string& providesPortName, const sci::cca::ComponentID::pointer &cid, std::string& usesPortName)
+{
+  usesPortName = usesName + "." + "componenticon";
+#if DEBUG
+  std::cerr << "GUIBuilder::connectComponentIcon(..): uses port name=" << usesPortName
+            << ", provides port name=" << providesPortName
+            << ", component instance=" << cid->getInstanceName() << std::endl;
+#endif
+  return connectPort(usesPortName, providesPortName, COMPONENTICON_PORT, cid);
+}
+
+void GUIBuilder::disconnectComponentIcon(const std::string& ciPortName)
+{
+#if DEBUG
+  std::cerr << "GUIBuilder::disconnectComponentIcon(..): component icon port name=" << ciPortName << std::endl;
+#endif
+  disconnectPort(ciPortName);
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+// set port icon colors
 
 bool GUIBuilder::setPortColor(const std::string& portType, const std::string& colorName)
 {
