@@ -39,7 +39,7 @@
  */
 
 #include <sci_defs/dataflow_defs.h>
-#include <sci_defs/wx_defs.h>
+#include <sci_wx.h>
 
 #include <SCIRun/Internal/FrameworkInternalException.h>
 #include <SCIRun/Internal/InternalComponentModel.h>

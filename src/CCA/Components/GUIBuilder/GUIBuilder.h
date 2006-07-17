@@ -108,6 +108,20 @@ public:
   virtual void disconnectUIPort(const std::string& uiPortName);
   virtual int ui(const std::string& uiPortName);
 
+  // progress
+
+//   virtual bool connectProgress(const std::string& usesName, const std::string& providesPortName,
+//                                const sci::cca::ComponentID::pointer &cid, std::string& usesPortName);
+//   virtual void disconnectProgress(const std::string& progessPortName);
+
+
+  virtual void updateProgress(int);
+
+  // progress
+
+  virtual bool connectComponentIcon(const std::string& usesName, const std::string& providesPortName,
+                                    const sci::cca::ComponentID::pointer &cid, std::string& usesPortName);
+  virtual void disconnectComponentIcon(const std::string& ciPortName);
 
   // Note: make both setPortColor functions static when support for static functions is available
 
@@ -133,6 +147,10 @@ public:
   static const std::string DEFAULT_SRC_DIR;
   static const std::string DEFAULT_OBJ_DIR;
   static const std::string DEFAULT_CCA_COMP_DIR;
+  static const std::string GOPORT;
+  static const std::string UIPORT;
+  static const std::string PROGRESS_PORT;
+  static const std::string COMPONENTICON_PORT;
 
 private:
   GUIBuilder(const GUIBuilder &);

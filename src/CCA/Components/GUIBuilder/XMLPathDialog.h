@@ -43,7 +43,7 @@
 #ifndef CCA_Components_GUIBuilder_XMLPathDialog_h
 #define CCA_Components_GUIBuilder_XMLPathDialog_h
 
-#include <wx/dialog.h>
+#include <sci_wx.h>
 
 class wxComboBox;
 class wxArrayString;

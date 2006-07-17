@@ -39,6 +39,7 @@
 
 #include <CCA/Components/GUIBuilder/CodePreviewDialog.h>
 
+#include<wx/grid.h>
 #include <wx/file.h>
 #include <wx/textfile.h>
 

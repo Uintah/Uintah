@@ -111,6 +111,10 @@ ifeq ($(HAVE_BABEL),yes)
   LIBS := $(LIBS) $(SIDL_LIBRARY)
 endif
 
+ifeq ($(HAVE_WX),yes)
+ LIBS := $(LIBS) $(WX_LIBRARY)
+endif
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 SUBDIRS := \

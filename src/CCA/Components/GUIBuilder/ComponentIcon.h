@@ -87,6 +87,7 @@ public:
   void OnMouseMove(wxMouseEvent& event);
   void OnRightClick(wxMouseEvent& event);
   void OnGo(wxCommandEvent& event);
+  void OnInfo(wxCommandEvent& event);
   void OnDelete(wxCommandEvent& event);
   void OnUI(wxCommandEvent& event);
 
@@ -120,20 +121,21 @@ protected:
   wxButton* uiButton;
   wxButton* msgButton;
   wxGauge* progressGauge;
-  //wxSize borderSize;
 
   wxMenu *popupMenu;
-  //wxMenu* goMenu;
 
   bool hasUIPort;
   bool hasGoPort;
-  //bool isSciPort;
+  bool hasProgress;
+  bool hasComponentIcon;
   bool isMoving;
 
   sci::cca::ComponentID::pointer cid;
   sci::cca::GUIBuilder::pointer builder;
   std::string goPortName;
   std::string uiPortName;
+  std::string progressPortName;
+  std::string ciPortName;
 
   //PortMap ports;
   PortList usesPorts;
@@ -145,6 +147,8 @@ protected:
   static const int GAP_SIZE = 1;
   static const int BORDER_SIZE = 4;
   static const int PORT_BORDER_SIZE = 10;
+  static const int PROG_LEN = 100;
+  static const wxString INIT_TIME;
 
 private:
   ComponentIcon(const ComponentIcon&);

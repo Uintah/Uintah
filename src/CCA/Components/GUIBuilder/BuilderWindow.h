@@ -49,12 +49,7 @@
 #  define GUI_TEST 1
 #endif
 
-
-#include <wx/wxprec.h>
-#ifndef WX_PRECOMP
- #include <wx/wx.h>
-#endif
-
+#include <sci_wx.h>
 #include <Core/CCA/spec/cca_sidl.h>
 
 #include <string>
@@ -170,10 +165,10 @@ public:
   void InstantiateComponent(const sci::cca::ComponentClassDescription::pointer& cd);
 
   void RedrawMiniCanvas();
-  void DisplayMessage(const std::string& line);
-  void DisplayErrorMessage(const std::string& line);
-  void DisplayMessages(const std::vector<std::string>& lines);
-  void DisplayErrorMessages(const std::vector<std::string>& lines);
+  void DisplayMessage(const wxString& line);
+  void DisplayErrorMessage(const wxString& line);
+  void DisplayMessages(const std::vector<wxString>& lines);
+  void DisplayErrorMessages(const std::vector<wxString>& lines);
 
   //const MenuMap& GetComponentMenus() { return menus; }
 

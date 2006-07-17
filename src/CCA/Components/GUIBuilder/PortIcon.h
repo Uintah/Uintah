@@ -46,8 +46,13 @@ class ComponentIcon;
 
 class PortIcon : public wxWindow {
 public:
-  PortIcon(const sci::cca::GUIBuilder::pointer& bc, ComponentIcon *parent,
-           wxWindowID id, GUIBuilder::PortType pt, const std::string& name);
+  PortIcon(const sci::cca::GUIBuilder::pointer& bc,
+           ComponentIcon *parent,
+           wxWindowID id,
+           GUIBuilder::PortType pt,
+           const std::string& name,
+           const std::string& componentModel,
+           const std::string& sidlType);
   virtual ~PortIcon();
   bool Create(wxWindow *parent, wxWindowID id, const wxString &name);
 
@@ -75,8 +80,8 @@ protected:
   ComponentIcon* parent;
   GUIBuilder::PortType portType;
   std::string name;
-  std::string model;
-  std::string type;
+  std::string componentModel;
+  std::string sidlType;
 
   wxRect hRect;
   wxColor hColor;

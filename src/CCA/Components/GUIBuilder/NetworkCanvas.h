@@ -134,6 +134,8 @@ public:
   void GetComponentRects(std::vector<wxRect>& rv);
   void GetConnections(std::vector<Connection*>& cv);
 
+  BuilderWindow* GetBuilderWindow() { return builderWindow; }
+
 //   const ComponentMap& getComponentIcons() const { return components; }
 //   const std::vector<Connection*>& getConnections() const { return connections; }
 
