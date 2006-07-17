@@ -122,7 +122,7 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
 
   ProblemSpecP amr_ps = root->findBlock("AMR");
   if (amr_ps) {
-    ProblemSpecP mpm_amr_ps = root->findBlock("MPM");
+    ProblemSpecP mpm_amr_ps = amr_ps->findBlock("MPM");
     mpm_amr_ps->getWithDefault("min_grid_level", d_minGridLevel, 0);
     mpm_amr_ps->getWithDefault("max_grid_level", d_maxGridLevel, 1000);
   }

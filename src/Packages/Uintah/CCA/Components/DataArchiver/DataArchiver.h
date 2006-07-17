@@ -119,8 +119,7 @@ using std::pair;
       //! p_dir.
       void output(const ProcessorGroup*, const PatchSubset* patch,
 		              const MaterialSubset* matls, DataWarehouse* old_dw,
-		              DataWarehouse* new_dw, Dir* p_dir, const VarLabel*,
-		              bool isThisCheckpoint);
+		              DataWarehouse* new_dw, int type);
 
       //! Task that handles outputting non-checkpoint reduction variables.
       //! Scheduled in finalizeTimestep.
@@ -129,15 +128,6 @@ using std::pair;
 			   const MaterialSubset* matls,
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw);
-
-      //! This calls output for all of the checkpoint reduction variables
-      //! which will end up in globals.xml / globals.data -- in this way,
-      //! all this data will be output by one process avoiding conflicts.
-      void outputCheckpointReduction(const ProcessorGroup* world,
-				     const PatchSubset* patch,
-				     const MaterialSubset* matls,
-				     DataWarehouse* old_dw,
-				     DataWarehouse* new_dw);
 
       //! Recommended to use sharedState directly if you can.
       virtual int getCurrentTimestep()
@@ -211,7 +201,7 @@ using std::pair;
 			  string* pTimestepDir /* passed back */, bool hasGlobals = false);
 
       //! helper for finalizeTimestep - schedules a task for each var's output
-      void scheduleOutputTimestep(Dir& dir, vector<SaveItem>& saveLabels,
+      void scheduleOutputTimestep(vector<SaveItem>& saveLabels,
 				  const GridP& grid, SchedulerP& sched,
 				  bool isThisCheckpoint);
 

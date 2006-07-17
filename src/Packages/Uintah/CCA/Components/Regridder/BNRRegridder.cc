@@ -448,6 +448,15 @@ void BNRRegridder::problemSetup_BulletProofing(const int k)
       throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
 
     }
+
+    if(d_cellNum[k][dir] != 1 && d_minPatchSize[dir] % d_cellRefinementRatio[k][dir] != 0) {
+      ostringstream msg;
+      msg << "Problem Setup: Regridder: Min Patch Size needs to be divisible by the cell refinement ratio\n"
+          << "  Patch size on level " << k << ": " << d_minPatchSize 
+          << ", refinement ratio on level " << k << ": " << d_cellRefinementRatio[k] << endl;
+      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+
+    }
   }
   if ( Mod( d_cellNum[k], d_minPatchSize ) != IntVector(0,0,0) ) {
     ostringstream msg;

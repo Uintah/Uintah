@@ -80,13 +80,13 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
 	int pidx = getPatchwiseProcessorAssignment(p);
         ostr << ' ' << p->getID() << ';' << pidx;
 	ASSERTRANGE(pidx, 0, d_myworld->size());
-	if(pidx != idx){
+	if (pidx != idx && task->getTask()->getType() != Task::Output) {
 	  cerrLock.lock();
 	  cerr << d_myworld->myrank() << " WARNING: inconsistent task (" << task->getTask()->getName() 
 	       << ") assignment (" << pidx << ", " << idx 
 	       << ") in LoadBalancerCommon\n";
 	  cerrLock.unlock();
-	}
+       }
       }
     } else {
       if( Parallel::usingMPI() && task->getTask()->isReductionTask() ){
@@ -130,9 +130,12 @@ bool LoadBalancerCommon::possiblyDynamicallyReallocate(const GridP& grid, bool f
     // This is a good place to do it, as it is automatically called when the
     // grid changes.
     levelPerProcPatchSets.clear();
+    outputPatchSets.clear();
     gridPerProcPatchSet = createPerProcessorPatchSet(grid);
-    for (int i = 0; i < grid->numLevels(); i++)
+    for (int i = 0; i < grid->numLevels(); i++) {
       levelPerProcPatchSets.push_back(createPerProcessorPatchSet(grid->getLevel(i)));
+      outputPatchSets.push_back(createOutputPatchSet(grid->getLevel(i)));
+    }
   }
   return false;
 }
@@ -178,6 +181,30 @@ LoadBalancerCommon::createPerProcessorPatchSet(const GridP& grid)
   patches->sortSubsets();  
   return patches;
 }
+
+const PatchSet* 
+LoadBalancerCommon::createOutputPatchSet(const LevelP& level)
+{
+  if (d_outputNthProc == 1) {
+    // assume the perProcessor set on the level was created first
+    return levelPerProcPatchSets[level->getIndex()].get_rep();
+  }
+  else {
+    PatchSet* patches = scinew PatchSet();
+    patches->createEmptySubsets(d_myworld->size());
+    for(Level::const_patchIterator iter = level->patchesBegin();
+        iter != level->patchesEnd(); iter++){
+      const Patch* patch = *iter;
+      int proc = (getPatchwiseProcessorAssignment(patch) / d_outputNthProc) * d_outputNthProc;
+      ASSERTRANGE(proc, 0, d_myworld->size());
+      PatchSubset* subset = patches->getSubset(proc);
+      subset->add(patch);
+    }
+    patches->sortSubsets();
+    return patches;
+  }
+}
+
 
 void
 LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)

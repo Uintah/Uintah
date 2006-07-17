@@ -228,6 +228,8 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
 void SerialMPM::scheduleInitialize(const LevelP& level,
                                    SchedulerP& sched)
 {
+  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
+    return;
   Task* t = scinew Task("MPM::actuallyInitialize",
                         this, &SerialMPM::actuallyInitialize);
 
@@ -1219,18 +1221,7 @@ void SerialMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
 void SerialMPM::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                              SchedulerP& sched)
 {
-  if (amr_doing.active())
-    amr_doing << "SerialMPM::scheduleInitialErrorEstimate on level " << coarseLevel->getIndex() << '\n';
-    
-  // The simulation controller should not schedule it every time step
-  Task* task = scinew Task("initialErrorEstimate", 
-          this, &SerialMPM::initialErrorEstimate);
-          
-  task->requires(Task::NewDW, lb->pXLabel,  Ghost::AroundCells, 0);
-
-  task->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
-  task->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
-  sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMPMMaterials());
+  scheduleErrorEstimate(coarseLevel, sched);
 }
 
 void SerialMPM::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
