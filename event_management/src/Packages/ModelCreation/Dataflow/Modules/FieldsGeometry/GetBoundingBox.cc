@@ -26,66 +26,41 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/Field.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
-
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-class ModalMapping : public Module {
-  public:
-    ModalMapping(GuiContext*);
-    virtual void execute();
-
-  private:
-    GuiString mappingmethod_;
-    GuiString integrationmethod_;
-    GuiString integrationfilter_;
-    GuiDouble def_value_;
+class GetBoundingBox : public Module {
+public:
+  GetBoundingBox(GuiContext*);
+  virtual void execute();
 };
 
 
-DECLARE_MAKER(ModalMapping)
-ModalMapping::ModalMapping(GuiContext* ctx)
-  : Module("ModalMapping", ctx, Source, "FieldsData", "ModelCreation"),
-    mappingmethod_(ctx->subVar("mappingmethod")),
-    integrationmethod_(ctx->subVar("integrationmethod")),
-    integrationfilter_(ctx->subVar("integrationfilter")),
-    def_value_(ctx->subVar("def-value"))  
+DECLARE_MAKER(GetBoundingBox)
+GetBoundingBox::GetBoundingBox(GuiContext* ctx)
+  : Module("GetBoundingBox", ctx, Source, "FieldsGeometry", "ModelCreation")
 {
 }
 
-
-void ModalMapping::execute()
+void GetBoundingBox::execute()
 {
-  FieldHandle fsrc, fdst, fout;
-  
-  if (!(get_input_handle("Source",fsrc,true))) return;
-  if (!(get_input_handle("Destination",fdst,true))) return;
-  
-  std::string mappingmethod = mappingmethod_.get();
-  std::string integrationmethod = integrationmethod_.get();
-  std::string integrationfilter = integrationfilter_.get();
-  double def_value = def_value_.get();
-  
+  FieldHandle ifield, ofield;
+  if (!(get_input_handle("Field",ifield,true))) return;
+
   SCIRunAlgo::FieldsAlgo algo(this);
-  
-  if (!(algo.ModalMapping(fsrc,fdst,fout,mappingmethod,integrationmethod,integrationfilter,def_value))) return;
-  
-  if (fout.get_rep() == 0)
-  {
-    error("NO OUTPUT HANDLE WAS CREATED");
-  }
-  
-  send_output_handle("Destination",fout,true);
+  if (!(algo.GetBoundingBox(ifield,ofield))) return;
+
+  send_output_handle("BoundingBox",ofield,true);
 }
+
 
 } // End namespace ModelCreation
 

@@ -33,6 +33,7 @@ SRCS     += \
 	$(SRCDIR)/NodalMapping.cc\
 	$(SRCDIR)/ModalMapping.cc\
 	$(SRCDIR)/CurrentDensityMapping.cc\
+	$(SRCDIR)/IsInsideFields.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

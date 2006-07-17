@@ -16,6 +16,7 @@ SRCS     += \
 	$(SRCDIR)/BuildFEMatrix.cc\
 	$(SRCDIR)/LinkToCompGrid.cc\
 	$(SRCDIR)/LinkToCompGridByDomain.cc\
+	$(SRCDIR)/CreateFEDirichletBC.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

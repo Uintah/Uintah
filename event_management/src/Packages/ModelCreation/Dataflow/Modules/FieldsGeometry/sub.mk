@@ -22,6 +22,7 @@ SRCS     += \
 	$(SRCDIR)/LinkFieldBoundary.cc\
 	$(SRCDIR)/Unstructure.cc\
 	$(SRCDIR)/ScaleField.cc\
+	$(SRCDIR)/GetBoundingBox.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

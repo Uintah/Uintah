@@ -26,79 +26,52 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/Algorithms/Fields/FieldsAlgo.h>
-#include <Core/Algorithms/Converter/ConverterAlgo.h>
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/Matrix.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
+
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 
-#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Matrix.h>
+
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
+
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-class ScaleField : public Module {
+class IsInsideFields : public Module {
 public:
-  ScaleField(GuiContext*);
-
+  IsInsideFields(GuiContext*);
   virtual void execute();
-
-private:
-  GuiDouble guidatascale_;
-  GuiDouble guigeomscale_;   
-  GuiInt    guiusegeomcenter_;  
 };
 
 
-DECLARE_MAKER(ScaleField)
-ScaleField::ScaleField(GuiContext* ctx)
-  : Module("ScaleField", ctx, Source, "FieldsGeometry", "ModelCreation"),
-    guidatascale_(ctx->subVar("datascale")),
-    guigeomscale_(ctx->subVar("geomscale")),
-    guiusegeomcenter_(ctx->subVar("usegeomcenter"))
+DECLARE_MAKER(IsInsideFields)
+IsInsideFields::IsInsideFields(GuiContext* ctx)
+  : Module("IsInsideFields", ctx, Source, "FieldsData", "ModelCreation")
 {
 }
 
 
-void ScaleField::execute()
+void IsInsideFields::execute()
 {
-  FieldHandle input, output;
-  MatrixHandle DataScale,GeomScale;
+  SCIRun::FieldHandle input, output;
+  std::vector<SCIRun::FieldHandle> objectfields;
+  
   if (!(get_input_handle("Field",input,true))) return;
-  
-  get_input_handle("DataScaleFactor",DataScale,false);
-  get_input_handle("GeomScaleFactor",GeomScale,false);
-  
-  double datascale, geomscale;
-  SCIRunAlgo::ConverterAlgo calgo(this);
-  SCIRunAlgo::FieldsAlgo    falgo(this);
-  
-  if (DataScale.get_rep()) 
-  {
-    datascale = 1.0;
-    calgo.MatrixToDouble(DataScale,datascale); 
-    guidatascale_.set(datascale);
-    get_ctx()->reset();
-  }
+  if (!(get_dynamic_input_handles("Object",objectfields,true))) return;
 
-  if (GeomScale.get_rep()) 
-  {
-    geomscale = 1.0;
-    calgo.MatrixToDouble(GeomScale,geomscale); 
-    guigeomscale_.set(geomscale);
-    get_ctx()->reset();
-  }
-
-  geomscale = guigeomscale_.get();
-  datascale = guidatascale_.get();
-
-  if(!(falgo.ScaleField(input, output, datascale, geomscale,guiusegeomcenter_.get()))) return;
+  if (objectfields.size() == 0) return;
   
+  SCIRunAlgo::FieldsAlgo algo(this);
+  
+  if(!(algo.IsInsideFields(input,output,objectfields))) return;
+ 
   send_output_handle("Field",output,true);
 }
-
 
 } // End namespace ModelCreation
 
