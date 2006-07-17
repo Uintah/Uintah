@@ -152,8 +152,6 @@ struct CGData {
 };
 
 class SolveMatrix : public Module {
-  MatrixIPort* matrixport;
-  MatrixIPort* rhsport;
   MatrixOPort* solport;
   MatrixHandle solution;
 
@@ -274,24 +272,13 @@ SolveMatrix::set_compute_time_stats(PStats *stats, double time, int nprocs)
 void
 SolveMatrix::execute()
 {
-  matrixport = (MatrixIPort *)get_iport("Matrix");
-  rhsport = (MatrixIPort *)get_iport("RHS");
   solport = (MatrixOPort *)get_oport("Solution");
 
   MatrixHandle matrix;
+  if (!get_input_handle("Matrix", matrix)) return;
+
   MatrixHandle rhs;
-
-  if (!rhsport->get(rhs) || !matrixport->get(matrix))
-  {
-    return;
-  }
-
-  if ( !matrix.get_rep() || !rhs.get_rep() )
-  {
-    warning("No input.");
-    solport->send(MatrixHandle(0));
-    return;
-  }
+  if (!get_input_handle("RHS", rhs)) return;
 
   if (use_previous_soln.get() && solution.get_rep() &&
      solution->nrows() == rhs->nrows())
