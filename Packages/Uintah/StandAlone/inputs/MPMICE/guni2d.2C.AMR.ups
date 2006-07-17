@@ -68,18 +68,18 @@
       <save label = "vol_frac_CC"/>
       <save label = "vel_CC"/>
       <save label = "g.mass"          material = "0,1"/>
-      <save label = "p.x"             levels = "1"/>
-      <save label = "p.mass"          levels = "1"/>
-      <save label = "p.temperature"   levels = "1"/>
-      <save label = "p.porosity"      levels = "1"/>
-      <save label = "p.particleID"    levels = "1"/>
-      <save label = "p.velocity"      levels = "1"/>
-      <save label = "p.stress"        levels = "1"/>
+      <save label = "p.x"             levels = "-1"/>
+      <save label = "p.mass"          levels = "-1"/>
+      <save label = "p.temperature"   levels = "-1"/>
+      <save label = "p.porosity"      levels = "-1"/>
+      <save label = "p.particleID"    levels = "-1"/>
+      <save label = "p.velocity"      levels = "-1"/>
+      <save label = "p.stress"        levels = "-1"/>
 <!--
 -->
-      <save label = "p.damage"        material = "0" levels = "1"/>
-      <save label = "p.plasticStrain" material = "0" levels = "1"/>
-      <save label = "p.strainRate"    material = "0" levels = "1"/>
+      <save label = "p.damage"        material = "0" levels = "-1"/>
+      <save label = "p.plasticStrain" material = "0" levels = "-1"/>
+      <save label = "p.strainRate"    material = "0" levels = "-1"/>
       <save label = "delP_Dilatate"/>
       <save label = "delP_MassX"/>
       <checkpoint cycle = "2" timestepInterval = "20"/>
@@ -116,8 +116,8 @@
         </Refinement_Criteria_Thresholds>
       </ICE>
       <MPM>
-        <min_grid_level>1</min_grid_level>
-        <max_grid_level>1</max_grid_level>
+        <min_grid_level>-1</min_grid_level>
+        <max_grid_level>-1</max_grid_level>
       </MPM>
       <Regridder>
         <max_levels>                  2       </max_levels>
