@@ -149,6 +149,7 @@ struct CGData {
   double err;
   double bnorm;
   CGData();
+  void clear();
 };
 
 class SolveMatrix : public Module {
@@ -707,8 +708,33 @@ SolveMatrix::jacobi_sci(Matrix* matrix, ColumnMatrix& lhs, ColumnMatrix& rhs)
 
 
 CGData::CGData()
-  : reducer("SolveMatrix reduction barrier")
+  : timer(0),
+    diag(0),
+    Z(0),
+    R(0),
+    P(0),
+    Z1(0),
+    R1(0),
+    P1(0),
+    trans(0),
+    reducer("SolveMatrix reduction barrier"),
+    stats(0)
 {
+}
+
+void
+CGData::clear()
+{
+  if (timer) { delete timer; timer = 0; }
+  if (diag) { delete diag; diag = 0; }
+  if (Z) { delete Z; Z = 0; }
+  if (R) { delete R; R = 0; }
+  if (P) { delete P; P = 0; }
+  if (Z1) { delete Z1; Z1 = 0; }
+  if (R1) { delete R1; R1 = 0; }
+  if (P1) { delete P1; P1 = 0; }
+  if (trans) { delete trans; trans = 0; }
+  if (stats) { delete stats; stats = 0; }
 }
 
 
@@ -734,8 +760,7 @@ SolveMatrix::conjugate_gradient_sci(Matrix* matrix,
   remark("Conjugate Gradient done in " +
          to_string(data.timer->time()) + " seconds.");
 
-  delete data.timer;
-  delete data.stats;
+  data.clear();
 }
 
 
@@ -996,8 +1021,7 @@ SolveMatrix::bi_conjugate_gradient_sci(Matrix* matrix,
   remark("Bi Conjugate Gradient done in " +
          to_string(data.timer->time()) + " seconds.");
 
-  delete data.timer;
-  delete data.stats;
+  data.clear();
 }
 
 
