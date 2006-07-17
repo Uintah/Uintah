@@ -352,7 +352,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   cout_norm << "Pulled out InitialConditions block of the input file" << endl;
 
   // Exchange Coefficients
-  cout << "numMatls " << d_sharedState->getNumMatls() << endl;
+  if (d_myworld->myrank() == 0) 
+    cout << "numMatls " << d_sharedState->getNumMatls() << endl;
   d_exchCoeff->problemSetup(mat_ps, sharedState);
 
   cout_norm << "Pulled out exchange coefficients of the input file" << endl;
