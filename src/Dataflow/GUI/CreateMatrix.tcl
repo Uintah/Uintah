@@ -187,7 +187,6 @@ itcl_class SCIRun_Math_CreateMatrix {
             for {set r 0} {$r < $nrows } {incr r} {
                   
             iwidgets::entryfield $d.data-$r-$c \
-                      -validate real \
                       -command "$this update_data $r $c" \
                       -width 8                     
     

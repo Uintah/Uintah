@@ -298,13 +298,14 @@ itcl_class BaseViewWindow {
 	bind $w <Lock-ButtonRelease-1> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-2> "$this-c mpick end %x %y %s %b"
 	bind $w <Lock-ButtonRelease-3> "$this-c mpick end %x %y %s %b"
+
     }
 
     method setWindow { w width height } {
 	set renderWindow $w
 	if {[winfo exists $renderWindow]} {
 	    destroy $renderWindow
-	}
+	} 
 
 	upvar \#0 $this-currentvisual visual
 	$this-c setgl $renderWindow $visual $width $height
@@ -502,6 +503,17 @@ itcl_class ViewWindow {
 	wm iconname $w $title
 	wm minsize $w 100 100
 	set_traces
+
+  bind $w <Control-KeyPress-0> "$this-c autoview"
+
+  bind $w <Control-KeyPress-1> "setGlobal $this-pos x0_z1 ; $this-c Views"
+  bind $w <Control-KeyPress-2> "setGlobal $this-pos x1_z1 ; $this-c Views"
+
+  bind $w <Control-KeyPress-3> "setGlobal $this-pos y0_z1 ; $this-c Views"
+  bind $w <Control-KeyPress-4> "setGlobal $this-pos y1_z1 ; $this-c Views"
+
+  bind $w <Control-KeyPress-5> "setGlobal $this-pos z0_x0 ; $this-c Views"
+  bind $w <Control-KeyPress-6> "setGlobal $this-pos z1_x0 ; $this-c Views"
 
 	frame $w.menu -relief raised -borderwidth 3
 	pack $w.menu -fill x

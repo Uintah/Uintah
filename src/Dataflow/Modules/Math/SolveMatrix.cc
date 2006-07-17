@@ -320,6 +320,13 @@ SolveMatrix::execute()
     return;
   }
 
+  // Get around the ColumnMatrix silliness.
+  // This is a simple fix, the better solution would be
+  // to collapse the ColumnMatrix and the DenseMatrix into
+  // one class.
+  MatrixHandle Temp = dynamic_cast<Matrix *>(rhs->column());
+  rhs = Temp;
+
   ColumnMatrix *rhsp = dynamic_cast<ColumnMatrix*>(rhs.get_rep());
   ColumnMatrix *solp = dynamic_cast<ColumnMatrix*>(solution.get_rep());
   Matrix* mat = matrix.get_rep();

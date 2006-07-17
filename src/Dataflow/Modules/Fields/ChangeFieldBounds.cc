@@ -75,6 +75,7 @@ public:
   GuiString		inputsizey_;
   GuiString		inputsizez_;
 
+  GuiInt                box_mode_;
   GuiDouble             box_scale_;
   GuiPoint              box_center_;
   GuiPoint              box_right_;
@@ -99,7 +100,7 @@ public:
   virtual void widget_moved(bool, BaseWidget*);
 };
 
-  DECLARE_MAKER(ChangeFieldBounds)
+DECLARE_MAKER(ChangeFieldBounds)
 
 ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
   : Module("ChangeFieldBounds", ctx, Filter, "FieldsGeometry", "SCIRun"),
@@ -117,6 +118,7 @@ ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
     inputsizex_(get_ctx()->subVar("inputsizex", false), "---"),
     inputsizey_(get_ctx()->subVar("inputsizey", false), "---"),
     inputsizez_(get_ctx()->subVar("inputsizez", false), "---"),
+    box_mode_(get_ctx()->subVar("box-mode"), 0),
     box_scale_(get_ctx()->subVar("box-scale"), -1.0),
     box_center_(get_ctx()->subVar("box-center")),
     box_right_(get_ctx()->subVar("box-right")),
@@ -138,11 +140,11 @@ ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
   inputsizez_.set("---");
 }
 
+
 ChangeFieldBounds::~ChangeFieldBounds()
 {
   delete box_;
 }
-
 
 
 void
@@ -224,8 +226,6 @@ ChangeFieldBounds::build_widget(FieldHandle f, bool reset)
     Point down(center + sizey/2.);
     Point in(center +sizez/2.);
 
-    const double l2norm = size.length();
-
     // Translate * Rotate * Scale.
     Transform r;
     Point unused;
@@ -239,19 +239,31 @@ ChangeFieldBounds::build_widget(FieldHandle f, bool reset)
     box_initial_transform_.pre_trans(r);
     box_initial_transform_.pre_translate(center.asVector());
 
-
-    box_->SetScale(l2norm * 0.015);
+    const double newscale = size.length() * 0.015;
+    double bscale = box_scale_.get();
+    if (bscale < newscale * 1e-2 || bscale > newscale * 1e2)
+    {
+      bscale = newscale;
+    }
+    box_->SetScale(bscale); // callback sets box_scale for us.
     box_->SetPosition(center, right, down, in);
-    box_scale_.set(-1.0);
+    box_->SetCurrentMode(box_mode_.get());
   }
   else
   {
     const double l2norm = (box_right_.get().vector() +
 			   box_down_.get().vector() +
 			   box_in_.get().vector()).length();
-    box_->SetScale(l2norm * 0.015);
+    const double newscale = l2norm * 0.015;
+    double bscale = box_scale_.get();
+    if (bscale < newscale * 1e-2 || bscale > newscale * 1e2)
+    {
+      bscale = newscale;
+    }
+    box_->SetScale(bscale); // callback sets box_scale for us.
     box_->SetPosition(box_center_.get(), box_right_.get(),
 		      box_down_.get(), box_in_.get());
+    box_->SetCurrentMode(box_mode_.get());
   }
 
   GeomGroup *widget_group = scinew GeomGroup;
@@ -267,18 +279,14 @@ ChangeFieldBounds::build_widget(FieldHandle f, bool reset)
 void
 ChangeFieldBounds::execute()
 {
-  FieldIPort *iport = (FieldIPort*)get_iport("Input Field"); 
-
-  // The input port (with data) is required.
   FieldHandle fh;
-  if (!iport->get(fh) || !fh.get_rep())
+  if (!get_input_handle("Input Field", fh))
   {
     clear_vals();
     return;
   }
 
   // The output port is required.
-  FieldOPort *oport = (FieldOPort*)get_oport("Output Field");
   update_state(Executing);
 
   // build the transform widget and set the the initial
@@ -389,15 +397,12 @@ ChangeFieldBounds::execute()
   fh->mesh_detach();
   fh->mesh()->transform(t);
 
-  oport->send_and_dereference(fh);
+  send_output_handle("Output Field", fh);
 
-  // The output port is required.
-  MatrixOPort *moport = (MatrixOPort*)get_oport("Transformation Matrix");
-
-  // convert the transform into a matrix and send it out   
+  // Convert the transform into a matrix and send it out.
   DenseMatrix *matrix_transform = scinew DenseMatrix(t);
   MatrixHandle mh = matrix_transform;
-  moport->send_and_dereference(mh);
+  send_output_handle("Transformation Matrix", mh);
 }
 
     
@@ -415,13 +420,14 @@ ChangeFieldBounds::widget_moved(bool last, BaseWidget*)
     outputsizex_.set((right.x()-center.x())*2.);
     outputsizey_.set((down.y()-center.y())*2.);
     outputsizez_.set((in.z()-center.z())*2.);
-    box_scale_.set(box_->GetScale());
+    box_mode_.set(box_->GetMode());
     box_center_.set(center);
     box_right_.set(right);
     box_down_.set(down);
     box_in_.set(in);
     want_to_execute();
   }
+  box_scale_.set(box_->GetScale());
 }
 
 
