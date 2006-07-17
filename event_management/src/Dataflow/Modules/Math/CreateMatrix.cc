@@ -73,7 +73,42 @@ CreateMatrix::execute()
   std::istringstream iss(data);
   for (int p = 0; p < (nrows*ncols); p++)
   {
-      iss >> ptr[p];
+    iss >> ptr[p];
+
+#ifdef HAVE_TEEM
+    if (!iss)
+    {
+      char ibuf[5];
+      iss.clear();
+      iss.get(ibuf,3);
+      // Make sure the comparison is case insensitive.
+      airToLower(ibuf);
+      if (strncmp(ibuf,"nan",3)==0)
+      {
+        data = (double) AIR_NAN;
+      }
+      else if (strncmp(ibuf,"inf",3)==0)
+      {
+        data = (double) AIR_POS_INF;
+      }
+      else
+      {
+        iss.clear();
+        iss.get(&(ibuf[3]),1);
+        // Set the last character to null for airToLower.
+        airToLower(ibuf);
+        if (strncmp(ibuf,"-inf",4)==0)
+        {
+          data = (double) AIR_NEG_INF;
+        }  	  	
+        else
+        {
+          error("Matrix contains invalid information");
+          return;
+        }
+      }
+    }
+#endif      
   }
 
   DenseMatrix *dmat = mat->dense();
