@@ -651,8 +651,7 @@ FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *reporter,
                                  MatrixHandle &interp,
 				 int basis_order)
 {
-  if (Msh::elem_type_description()->get_name() ==
-      Msh::cell_type_description()->get_name())
+  if (mesh->dimensionality() == 3)
   {
     string algoname = "Tri";
 
@@ -683,9 +682,14 @@ FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *reporter,
     {
       algo->execute(reporter, mesh, boundary, interp, basis_order);
     }
+    else
+    {
+      reporter->error("Fields of '" + mtd->get_name() + 
+                      "' type are not currently supported.");
+      return;
+    }
   }
-  else if (Msh::elem_type_description()->get_name() ==
-	   Msh::face_type_description()->get_name())
+  else if (mesh->dimensionality() == 2)
   {
     const TypeDescription *mtd = get_type_description((Msh *)0);
     CompileInfoHandle ci =
@@ -699,11 +703,13 @@ FieldBoundaryAlgoT<Msh>::execute(ProgressReporter *reporter,
     {
       reporter->error("Fields of '" + mtd->get_name() + 
                       "' type are not currently supported.");
+      return;
     }
   }
   else
   {
     reporter->error("Boundary module only works on volumes and surfaces.");
+    return;
   }
 
   // Set the source range for the interpolation field.
