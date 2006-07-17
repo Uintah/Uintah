@@ -14,7 +14,8 @@ using namespace Uintah;
 #include <algorithm>
 using namespace std;
 
-//static DebugStream dbg("BNRPatches",false);
+static DebugStream dbg("BNRPatches",false);
+static DebugStream dbgstats("BNRStats",false);
 
 BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task_count_(0),tola_(1),tolb_(1), patchfixer_(pg)
 {
@@ -56,17 +57,17 @@ BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task
       tags_.push(i<<1);
   }
   
-  if(/*dbg.active() &&*/ rank==0)
+  if(dbg.active() && rank==0)
   {
-     //fout.open("patches.txt");
+     fout.open("patches.txt");
   }
 }
 
 BNRRegridder::~BNRRegridder()
 {
-  if(/*dbg.active() &&*/ d_myworld->myrank()==0)
+  if(dbg.active() && d_myworld->myrank()==0)
   {
-    //fout.close();
+    fout.close();
   }
 }
 
@@ -164,6 +165,8 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
   start=MPI_Wtime();
 
   //For each level Coarse -> Fine
+  vector<double> sums;
+  vector<double> square_sums;
   for(int l=0; l < oldGrid->numLevels() && l < d_maxLevels-1;l++)
   {
     // if there are no patches on this level, don't create any more levels
@@ -175,6 +178,8 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
     
     LevelP newLevel = newGrid->addLevel(anchor, spacing);
     newLevel->setExtraCells(extraCells);
+
+    double sum=0, sum_of_squares=0;
     
     //for each patch
     for(unsigned int p=0;p<patch_sets[l].size();p++)
@@ -184,6 +189,19 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
       IntVector high = patch_sets[l][p].high = patch_sets[l][p].high*d_minPatchSize;
       //create patch
       newLevel->addPatch(low, high, low, high);
+      
+      if (dbgstats.active()) {
+        IntVector size = high-low;
+        int vol = size.x()*size.y()*size.z();
+        sum += vol;
+        sum_of_squares += vol*vol;
+      }
+      
+    }
+    
+    if (dbgstats.active()) {
+      sums.push_back(sum);
+      square_sums.push_back(sum_of_squares);
     }
     
     crtotal+=MPI_Wtime()-start;
@@ -206,10 +224,19 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
   d_newGrid = true;
   d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
 
-  if (/*dbg.active() &&*/ d_myworld->myrank()==0)
+  if (dbg.active() && d_myworld->myrank()==0)
   {
-    //writeGrid(newGrid);
+    writeGrid(newGrid);
   }
+  if (dbgstats.active() && d_myworld->myrank() == 0) {
+    for (int i = 1; i < newGrid->numLevels(); i++) {
+      int n = newGrid->getLevel(i)->numPatches();
+      double mean = sums[i-1] / n;
+      double std_dev = sqrt((n*square_sums[i-1] - sums[i-1]*sums[i-1])/(n*n));
+      dbgstats << " L" << i << ": Volume " << sums[i-1]<< ", mean patch volume " << mean << ", std. dev. patch volume " << std_dev << endl;
+    }
+  }
+
   newGrid->performConsistencyCheck();
   return newGrid;
 }
