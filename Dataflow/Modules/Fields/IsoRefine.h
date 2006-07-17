@@ -137,22 +137,23 @@ public:
 #ifdef HAVE_HASH_MAP
 #  if defined(__ECC) || defined(_MSC_VER)
   typedef hash_map<edgepair_t,
-		   typename FIELD::mesh_type::Node::index_type,
+		   QSMesh::Node::index_type,
 		   edgepairhash> edge_hash_type;
 #  else
   typedef hash_map<edgepair_t,
-		   typename FIELD::mesh_type::Node::index_type,
+		   QSMesh::Node::index_type,
 		   edgepairhash,
 		   edgepairequal> edge_hash_type;
 #  endif
 #else
   typedef map<edgepair_t,
-	      typename FIELD::mesh_type::Node::index_type,
+	      QSMesh::Node::index_type,
 	      edgepairless> edge_hash_type;
 #endif
 
-  typename FIELD::mesh_type::Node::index_type
+  typename QSMesh::Node::index_type
   lookup(typename FIELD::mesh_type *mesh,
+         QSMesh *refined,
          edge_hash_type &edgemap,
          typename FIELD::mesh_type::Node::index_type a,
          typename FIELD::mesh_type::Node::index_type b)
@@ -166,8 +167,7 @@ public:
       mesh->get_point(pa, a);
       mesh->get_point(pb, b);
       const Point inbetween = Interpolate(pa, pb, 1.0/3.0);
-      const typename FIELD::mesh_type::Node::index_type newnode =
-        mesh->add_point(inbetween);
+      const QSMesh::Node::index_type newnode = refined->add_point(inbetween);
       edgemap[ep] = newnode;
       return newnode;
     }
@@ -189,13 +189,14 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   typename FIELD::mesh_type *mesh =
       dynamic_cast<typename FIELD::mesh_type *>(fieldh->mesh().get_rep());
-  typename FIELD::mesh_type *refined = scinew typename FIELD::mesh_type();
+  QSMesh *refined = scinew QSMesh();
   refined->copy_properties(mesh);
 
-  edge_hash_type edgemap;
+  edge_hash_type emap;
 
   typename FIELD::mesh_type::Node::array_type onodes(4);
-  typename FIELD::mesh_type::Node::array_type nnodes(4);
+  QSMesh::Node::array_type oqnodes(4);
+  QSMesh::Node::array_type nnodes(4);
   typename FIELD::value_type v[4];
   Point p[4];
   
@@ -222,6 +223,7 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
     {
       mesh->get_center(p[i], onodes[i]);
       field->value(v[i], onodes[i]);
+      oqnodes[i] = QSMesh::Node::index_type((unsigned int)onodes[i]);
       inside = inside << 1;
       if (v[i] > isoval)
       {
@@ -237,7 +239,7 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
     if (!refine_elem && inside == 0)
     {
       // Nodes are the same order, so just add the element.
-      refined->add_elem(onodes);
+      refined->add_elem(oqnodes);
     }
     else if (!refine_elem &&
              (inside == 1 || inside == 2 || inside == 4 || inside == 8))
@@ -255,25 +257,25 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
 
       const Point interior = Interpolate(p[i0], p[i2], 1.0/3.0);
 
-      const typename FIELD::mesh_type::Node::index_type interior_node =
+      const QSMesh::Node::index_type interior_node =
         refined->add_point(interior);
 
-      nnodes[0] = onodes[i0];
-      nnodes[1] = lookup(refined, edgemap, onodes[i0], onodes[i1]);
+      nnodes[0] = oqnodes[i0];
+      nnodes[1] = lookup(mesh, refined, emap, onodes[i0], onodes[i1]);
       nnodes[2] = interior_node;
-      nnodes[3] = lookup(refined, edgemap, onodes[i0], onodes[i3]);
+      nnodes[3] = lookup(mesh, refined, emap, onodes[i0], onodes[i3]);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, edgemap, onodes[i0], onodes[i1]);
-      nnodes[1] = onodes[i1];
-      nnodes[2] = onodes[i2];
+      nnodes[0] = lookup(mesh, refined, emap, onodes[i0], onodes[i1]);
+      nnodes[1] = oqnodes[i1];
+      nnodes[2] = oqnodes[i2];
       nnodes[3] = interior_node;
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, edgemap, onodes[i0], onodes[i3]);
+      nnodes[0] = lookup(mesh, refined, emap, onodes[i0], onodes[i3]);
       nnodes[1] = interior_node;
-      nnodes[2] = onodes[i2];
-      nnodes[3] = onodes[i3];
+      nnodes[2] = oqnodes[i2];
+      nnodes[3] = oqnodes[i3];
       refined->add_elem(nnodes);
     }
     else if (!refine_elem && (inside == 5 || inside == 10))
@@ -287,37 +289,36 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
       const int i3 = (index+3)%4;
 
       const Point center = Interpolate(p[index], p[(index+2)%4], 1.0/2.0);
-      const typename FIELD::mesh_type::Node::index_type center_node =
-        refined->add_point(center);
+      const QSMesh::Node::index_type center_node = refined->add_point(center);
 
-      nnodes[0] = onodes[i0];
-      nnodes[1] = lookup(refined, edgemap, onodes[i0], onodes[i1]);
+      nnodes[0] = oqnodes[i0];
+      nnodes[1] = lookup(mesh, refined, emap, onodes[i0], onodes[i1]);
       nnodes[2] = center_node;
-      nnodes[3] = lookup(refined, edgemap, onodes[i0], onodes[i3]);
+      nnodes[3] = lookup(mesh, refined, emap, onodes[i0], onodes[i3]);
       refined->add_elem(nnodes);
 
-      nnodes[0] = lookup(refined, edgemap, onodes[i0], onodes[i1]);
-      nnodes[1] = onodes[i1];
-      nnodes[2] = lookup(refined, edgemap, onodes[i2], onodes[i1]);
+      nnodes[0] = lookup(mesh, refined, emap, onodes[i0], onodes[i1]);
+      nnodes[1] = oqnodes[i1];
+      nnodes[2] = lookup(mesh, refined, emap, onodes[i2], onodes[i1]);
       nnodes[3] = center_node;
       refined->add_elem(nnodes);
 
       nnodes[0] = center_node;
-      nnodes[1] = lookup(refined, edgemap, onodes[i2], onodes[i1]);
-      nnodes[2] = onodes[i2];
-      nnodes[3] = lookup(refined, edgemap, onodes[i2], onodes[i3]);
+      nnodes[1] = lookup(mesh, refined, emap, onodes[i2], onodes[i1]);
+      nnodes[2] = oqnodes[i2];
+      nnodes[3] = lookup(mesh, refined, emap, onodes[i2], onodes[i3]);
       refined->add_elem(nnodes);
       
-      nnodes[0] = lookup(refined, edgemap, onodes[i0], onodes[i3]);
+      nnodes[0] = lookup(mesh, refined, emap, onodes[i0], onodes[i3]);
       nnodes[1] = center_node;
-      nnodes[2] = lookup(refined, edgemap, onodes[i2], onodes[i3]);
-      nnodes[3] = onodes[i3];
+      nnodes[2] = lookup(mesh, refined, emap, onodes[i2], onodes[i3]);
+      nnodes[3] = oqnodes[i3];
       refined->add_elem(nnodes);
     }
     else
     {
       Point interiorp[4];
-      typename FIELD::mesh_type::Node::array_type inodes(4);
+      QSMesh::Node::array_type inodes(4);
       for (unsigned int i = 0; i < 4; i++)
       {
         interiorp[i] = Interpolate(p[i], p[(i+2)%4], 1.0/3.0);
@@ -329,28 +330,28 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
       {
         if (inside & (1 << (3-i)))
         {
-          nnodes[0] = onodes[i];
-          nnodes[1] = lookup(refined, edgemap, onodes[i], onodes[(i+1)%4]);
+          nnodes[0] = oqnodes[i];
+          nnodes[1] = lookup(mesh, refined, emap, onodes[i], onodes[(i+1)%4]);
           nnodes[2] = inodes[i];
-          nnodes[3] = lookup(refined, edgemap, onodes[i], onodes[(i+3)%4]);
+          nnodes[3] = lookup(mesh, refined, emap, onodes[i], onodes[(i+3)%4]);
           refined->add_elem(nnodes);
         }
 
         if (inside & (1 << (3-i)))
         {
-          nnodes[0] = lookup(refined, edgemap, onodes[i], onodes[(i+1)%4]);
+          nnodes[0] = lookup(mesh, refined, emap, onodes[i], onodes[(i+1)%4]);
         }
         else
         {
-          nnodes[0] = onodes[i];
+          nnodes[0] = oqnodes[i];
         }
         if (inside & (1 << (3 - (i+1)%4)))
         {
-          nnodes[1] = lookup(refined, edgemap, onodes[(i+1)%4], onodes[i]);
+          nnodes[1] = lookup(mesh, refined, emap, onodes[(i+1)%4], onodes[i]);
         }
         else
         {
-          nnodes[1] = onodes[(i+1)%4];
+          nnodes[1] = oqnodes[(i+1)%4];
         }
         nnodes[2] = inodes[(i+1)%4];
         nnodes[3] = inodes[i];
@@ -360,7 +361,8 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
     ++bi;
   }
 
-  FIELD *ofield = scinew FIELD(refined);
+  GenericField<QSMesh, QuadBilinearLgn<double>, vector<double> > *ofield =
+    scinew GenericField<QSMesh, QuadBilinearLgn<double>, vector<double> >(refined);
   ofield->copy_properties(fieldh.get_rep());
   return ofield;
 }
