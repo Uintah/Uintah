@@ -463,29 +463,36 @@ public:
 #endif
 
   HVMesh::Node::index_type
-  lookup(typename FIELD::mesh_type *mesh,
-         HVMesh *refined,
-         edge_hash_type &edgemap,
-         typename FIELD::mesh_type::Node::index_type a,
-         typename FIELD::mesh_type::Node::index_type b)
+  add_point(typename FIELD::mesh_type *mesh,
+            HVMesh *refined,
+            const typename FIELD::mesh_type::Elem::index_type &elem,
+            const Point &coordsp)
   {
-    edgepair_t ep;
-    ep.first = a; ep.second = b;
-    const typename edge_hash_type::iterator loc = edgemap.find(ep);
-    if (loc == edgemap.end())
-    {
-      Point pa, pb;
-      mesh->get_point(pa, a);
-      mesh->get_point(pb, b);
-      const Point inbetween = Interpolate(pa, pb, 1.0/3.0);
-      const HVMesh::Node::index_type newnode = refined->add_point(inbetween);
-      edgemap[ep] = newnode;
-      return newnode;
-    }
-    else
-    {
-      return (*loc).second;
-    }
+    vector<double> coords(3);
+    coords[0] = coordsp.x();
+    coords[1] = coordsp.y();
+    coords[2] = coordsp.z();
+    Point inbetween;
+    mesh->interpolate(inbetween, coords, elem);
+    return refined->add_point(inbetween);
+  }
+
+
+  HVMesh::Node::index_type
+  add_point(typename FIELD::mesh_type *mesh,
+            HVMesh *refined,
+            const typename FIELD::mesh_type::Elem::index_type &elem,
+            const int *reorder, int a, int b)
+  {
+    const Point coordsp =
+      Interpolate(hcoords[reorder[a]], hcoords[reorder[b]], 1.0/3.0);
+    vector<double> coords(3);
+    coords[0] = coordsp.x();
+    coords[1] = coordsp.y();
+    coords[2] = coordsp.z();
+    Point inbetween;
+    mesh->interpolate(inbetween, coords, elem);
+    return refined->add_point(inbetween);
   }
 
   HVMesh::Node::index_type
@@ -501,15 +508,8 @@ public:
     const typename edge_hash_type::iterator loc = edgemap.find(ep);
     if (loc == edgemap.end())
     {
-      const Point coordsp =
-        Interpolate(hcoords[reorder[a]], hcoords[reorder[b]], 1.0/3.0);
-      vector<double> coords(3);
-      coords[0] = coordsp.x();
-      coords[1] = coordsp.y();
-      coords[2] = coordsp.z();
-      Point inbetween;
-      mesh->interpolate(inbetween, coords, elem);
-      const HVMesh::Node::index_type newnode = refined->add_point(inbetween);
+      const HVMesh::Node::index_type newnode =
+        add_point(mesh, refined, elem, reorder, a, b);
       edgemap[ep] = newnode;
       return newnode;
     }
@@ -611,9 +611,7 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
   typename FIELD::mesh_type::Node::array_type onodes(8);
   HVMesh::Node::array_type ohnodes(8);
   HVMesh::Node::array_type nnodes(8);
-  //typename FIELD::mesh_type::Node::array_type inodes(8);
   typename FIELD::value_type v[8];
-  Point p[8];
   
   // Copy all of the nodes from mesh to refined.  They won't change,
   // we only add nodes.
@@ -621,8 +619,9 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
   mesh->begin(bni); mesh->end(eni);
   while (bni != eni)
   {
-    mesh->get_point(p[0], *bni);
-    refined->add_point(p[0]);
+    Point p;
+    mesh->get_point(p, *bni);
+    refined->add_point(p);
     ++bni;
   }
 
@@ -637,7 +636,6 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
     unsigned int inside_count = 0;
     for (unsigned int i = 0; i < onodes.size(); i++)
     {
-      mesh->get_center(p[i], onodes[i]);
       field->value(v[i], onodes[i]);
       ohnodes[i] = HVMesh::Node::index_type((unsigned int)onodes[i]);
       inside = inside << 1;
@@ -663,8 +661,8 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
     {
       const int *ro = hex_reorder_table[which];
       
-      const Point i06 = Interpolate(p[ro[0]], p[ro[6]], 1.0/3.0);
-      const HVMesh::Node::index_type i06node = refined->add_point(i06);
+      const HVMesh::Node::index_type i06node =
+        add_point(mesh, refined, *bi, ro, 0, 6);
 
       // Add this corner.
       nnodes[0] = ohnodes[ro[0]];
@@ -712,14 +710,14 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
     {
       const int *ro = hex_reorder_table[which];
 
-      const Point i06 = Interpolate(p[ro[0]], p[ro[6]], 1.0/3.0);
-      const Point i17 = Interpolate(p[ro[1]], p[ro[7]], 1.0/3.0);
-      const Point i60 = Interpolate(p[ro[6]], p[ro[0]], 1.0/3.0);
-      const Point i71 = Interpolate(p[ro[7]], p[ro[1]], 1.0/3.0);
-      const HVMesh::Node::index_type i06node = refined->add_point(i06);
-      const HVMesh::Node::index_type i17node = refined->add_point(i17);
-      const HVMesh::Node::index_type i60node = refined->add_point(i60);
-      const HVMesh::Node::index_type i71node = refined->add_point(i71);
+      const HVMesh::Node::index_type i06node =
+        add_point(mesh, refined, *bi, ro, 0, 6);
+      const HVMesh::Node::index_type i17node =
+        add_point(mesh, refined, *bi, ro, 1, 7);
+      const HVMesh::Node::index_type i60node =
+        add_point(mesh, refined, *bi, ro, 6, 0);
+      const HVMesh::Node::index_type i71node =
+        add_point(mesh, refined, *bi, ro, 7, 1);
 
       // Leading edge.
       nnodes[0] = ohnodes[ro[0]];
@@ -840,26 +838,36 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       const int *ro = hex_reorder_table[which];
 
       // Interior
-      const Point i06 = Interpolate(p[ro[0]], p[ro[6]], 1.0/3.0);
-      const Point i17 = Interpolate(p[ro[1]], p[ro[7]], 1.0/3.0);
-      const Point i24 = Interpolate(p[ro[2]], p[ro[4]], 1.0/3.0);
-      const Point i35 = Interpolate(p[ro[3]], p[ro[5]], 1.0/3.0);
-      const Point i42a = Interpolate(p[ro[4]], p[ro[2]], 1.0/3.0);
-      const Point i53a = Interpolate(p[ro[5]], p[ro[3]], 1.0/3.0);
-      const Point i60a = Interpolate(p[ro[6]], p[ro[0]], 1.0/3.0);
-      const Point i71a = Interpolate(p[ro[7]], p[ro[1]], 1.0/3.0);
+      const HVMesh::Node::index_type i06node =
+        add_point(mesh, refined, *bi, ro, 0, 6);
+      const HVMesh::Node::index_type i17node =
+        add_point(mesh, refined, *bi, ro, 1, 7);
+      const HVMesh::Node::index_type i24node =
+        add_point(mesh, refined, *bi, ro, 2, 4);
+      const HVMesh::Node::index_type i35node =
+        add_point(mesh, refined, *bi, ro, 3, 5);
+
+      
+      const Point i06 = Interpolate(hcoords[ro[0]], hcoords[ro[6]], 1.0/3.0);
+      const Point i17 = Interpolate(hcoords[ro[1]], hcoords[ro[7]], 1.0/3.0);
+      const Point i24 = Interpolate(hcoords[ro[2]], hcoords[ro[4]], 1.0/3.0);
+      const Point i35 = Interpolate(hcoords[ro[3]], hcoords[ro[5]], 1.0/3.0);
+      const Point i42a = Interpolate(hcoords[ro[4]], hcoords[ro[2]], 1.0/3.0);
+      const Point i53a = Interpolate(hcoords[ro[5]], hcoords[ro[3]], 1.0/3.0);
+      const Point i60a = Interpolate(hcoords[ro[6]], hcoords[ro[0]], 1.0/3.0);
+      const Point i71a = Interpolate(hcoords[ro[7]], hcoords[ro[1]], 1.0/3.0);
       const Point i42 = Interpolate(i06, i42a, 0.5);
       const Point i53 = Interpolate(i17, i53a, 0.5);
       const Point i60 = Interpolate(i24, i60a, 0.5);
       const Point i71 = Interpolate(i35, i71a, 0.5);
-      const HVMesh::Node::index_type i06node = refined->add_point(i06);
-      const HVMesh::Node::index_type i17node = refined->add_point(i17);
-      const HVMesh::Node::index_type i24node = refined->add_point(i24);
-      const HVMesh::Node::index_type i35node = refined->add_point(i35);
-      const HVMesh::Node::index_type i42node = refined->add_point(i42);
-      const HVMesh::Node::index_type i53node = refined->add_point(i53);
-      const HVMesh::Node::index_type i60node = refined->add_point(i60);
-      const HVMesh::Node::index_type i71node = refined->add_point(i71);
+      const HVMesh::Node::index_type i42node =
+        add_point(mesh, refined, *bi, i42);
+      const HVMesh::Node::index_type i53node =
+        add_point(mesh, refined, *bi, i53);
+      const HVMesh::Node::index_type i60node =
+        add_point(mesh, refined, *bi, i60);
+      const HVMesh::Node::index_type i71node =
+        add_point(mesh, refined, *bi, i71);
 
       // Top Front
       nnodes[0] = ohnodes[ro[0]];
@@ -1094,22 +1102,22 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
       const int *ro = hex_reorder_table[which];
 
       // Interior
-      const Point i06 = Interpolate(p[ro[0]], p[ro[6]], 1.0/3.0);
-      const Point i17 = Interpolate(p[ro[1]], p[ro[7]], 1.0/3.0);
-      const Point i24 = Interpolate(p[ro[2]], p[ro[4]], 1.0/3.0);
-      const Point i35 = Interpolate(p[ro[3]], p[ro[5]], 1.0/3.0);
-      const Point i42 = Interpolate(p[ro[4]], p[ro[2]], 1.0/3.0);
-      const Point i53 = Interpolate(p[ro[5]], p[ro[3]], 1.0/3.0);
-      const Point i60 = Interpolate(p[ro[6]], p[ro[0]], 1.0/3.0);
-      const Point i71 = Interpolate(p[ro[7]], p[ro[1]], 1.0/3.0);
-      const HVMesh::Node::index_type i06node = refined->add_point(i06);
-      const HVMesh::Node::index_type i17node = refined->add_point(i17);
-      const HVMesh::Node::index_type i24node = refined->add_point(i24);
-      const HVMesh::Node::index_type i35node = refined->add_point(i35);
-      const HVMesh::Node::index_type i42node = refined->add_point(i42);
-      const HVMesh::Node::index_type i53node = refined->add_point(i53);
-      const HVMesh::Node::index_type i60node = refined->add_point(i60);
-      const HVMesh::Node::index_type i71node = refined->add_point(i71);
+      const HVMesh::Node::index_type i06node =
+        add_point(mesh, refined, *bi, ro, 0, 6);
+      const HVMesh::Node::index_type i17node =
+        add_point(mesh, refined, *bi, ro, 1, 7);
+      const HVMesh::Node::index_type i24node =
+        add_point(mesh, refined, *bi, ro, 2, 4);
+      const HVMesh::Node::index_type i35node =
+        add_point(mesh, refined, *bi, ro, 3, 5);
+      const HVMesh::Node::index_type i42node =
+        add_point(mesh, refined, *bi, ro, 4, 2);
+      const HVMesh::Node::index_type i53node =
+        add_point(mesh, refined, *bi, ro, 5, 3);
+      const HVMesh::Node::index_type i60node =
+        add_point(mesh, refined, *bi, ro, 6, 0);
+      const HVMesh::Node::index_type i71node =
+        add_point(mesh, refined, *bi, ro, 7, 1);
 
       // Top Front
       nnodes[0] = ohnodes[ro[0]];
