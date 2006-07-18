@@ -255,8 +255,12 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
       const int i2 = (index+2)%4;
       const int i3 = (index+3)%4;
 
-      const Point interior = Interpolate(p[i0], p[i2], 1.0/3.0);
-
+      const int tab[4][2] = {{0,0}, {1, 0}, {1, 1}, {0, 1}};
+      vector<double> coords(2);
+      coords[0] = tab[index][0] * 1.0/3.0 + 1.0/3.0;
+      coords[1] = tab[index][1] * 1.0/3.0 + 1.0/3.0;
+      Point interior;
+      mesh->interpolate(interior, coords, *bi);
       const QSMesh::Node::index_type interior_node =
         refined->add_point(interior);
 
@@ -288,8 +292,13 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
       const int i2 = (index+2)%4;
       const int i3 = (index+3)%4;
 
-      const Point center = Interpolate(p[index], p[(index+2)%4], 1.0/2.0);
-      const QSMesh::Node::index_type center_node = refined->add_point(center);
+      vector<double> coords(2);
+      coords[0] = 0.5;
+      coords[1] = 0.5;
+      Point center;
+      mesh->interpolate(center, coords, *bi);
+      const QSMesh::Node::index_type center_node =
+        refined->add_point(center);
 
       nnodes[0] = oqnodes[i0];
       nnodes[1] = lookup(mesh, refined, emap, onodes[i0], onodes[i1]);
