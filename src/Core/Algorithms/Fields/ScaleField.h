@@ -97,6 +97,8 @@ bool ScaleFieldAlgoT<FIELD>::ScaleField(ProgressReporter *pr, FieldHandle input,
     omesh->end(it_end);
     while (it != it_end)
     {
+      ifield->value(val,*it);
+      val = val*datascale;
       ofield->set_value(val,*(it));
       ++it;
     }
@@ -110,6 +112,8 @@ bool ScaleFieldAlgoT<FIELD>::ScaleField(ProgressReporter *pr, FieldHandle input,
     omesh->end(it_end);
     while (it != it_end)
     {
+      ifield->value(val,*it);
+      val = val*datascale;
       ofield->set_value(val,*(it));
       ++it;
     }  

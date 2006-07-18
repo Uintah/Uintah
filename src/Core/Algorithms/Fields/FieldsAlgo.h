@@ -252,6 +252,11 @@ class SCISHARE FieldsAlgo : public AlgoLibrary {
                        std::string integrationmethod, std::string integrationfilter, double def_value = 0.0);
 
 
+    bool GradientModalMapping(int numproc, FieldHandle src, FieldHandle dst, FieldHandle& output, std::string mappingmethod,
+                       std::string integrationmethod, std::string integrationfilter, bool calcnorm = false);
+    bool GradientModalMapping(FieldHandle src, FieldHandle dst, FieldHandle& output, std::string mappingmethod,
+                       std::string integrationmethod, std::string integrationfilter,bool calcnorm = false);
+
     // CurrentDensityMapping:
     // Map data from a potential field and a conductivity field into a current density field. The underlying geometry
     // of all the different fields can be different. This method is intended to map volumetric potential and conductivity
