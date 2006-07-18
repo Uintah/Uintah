@@ -97,7 +97,7 @@ void CollectFields::execute()
   algo.GatherFields(buffer_,Output);
   bufferlock_.unlock();
 
-  send_output_handle("Fields",Output,true);
+  send_output_handle("Fields",Output,false);
 }
 
 

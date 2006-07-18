@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="GradientModalMapping" category="FieldsData" optional="false">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module maps the gradient on the destination field.
+
+    </summary>
+    <description>
+      <p>        This module maps the gradient on the destination field.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Source</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Destination</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>Destination</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

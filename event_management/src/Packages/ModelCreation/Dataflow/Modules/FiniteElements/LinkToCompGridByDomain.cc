@@ -64,8 +64,8 @@ void LinkToCompGridByDomain::execute()
   SCIRunAlgo::FieldsAlgo algo(this);
   algo.LinkToCompGridByDomain(Geometry,NodeLink,GeomToComp,CompToGeom);
 
-  send_output_handle("GeomToComp",GeomToComp,true);
-  send_output_handle("CompToGeom",CompToGeom,true);
+  send_output_handle("GeomToComp",GeomToComp,false);
+  send_output_handle("CompToGeom",CompToGeom,false);
 }
 
 } // End namespace ModelCreation

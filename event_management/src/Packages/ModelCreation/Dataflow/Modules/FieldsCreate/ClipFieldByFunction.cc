@@ -263,12 +263,8 @@ void ClipFieldByFunction::execute()
     return;
   }
 
-  FieldOPort* field_oport = dynamic_cast<FieldOPort *>(get_output_port("Field"));
-  if (field_oport) field_oport->send(output);
-
-  MatrixOPort* interpolant_oport = dynamic_cast<MatrixOPort *>(get_output_port("Mapping"));
-  if (interpolant_oport) interpolant_oport->send(interpolant);
-
+  send_output_handle("Field",output,false);
+  send_output_handle("Mapping",interpolant,false);
 }
 
 void

@@ -34,36 +34,34 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
 
-
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-class ModalMapping : public Module {
-  public:
-    ModalMapping(GuiContext*);
-    virtual void execute();
+class GradientModalMapping : public Module {
+public:
+  GradientModalMapping(GuiContext*);
+  virtual void execute();
 
   private:
     GuiString mappingmethod_;
     GuiString integrationmethod_;
-    GuiString integrationfilter_;
-    GuiDouble def_value_;
+    GuiString integrationfilter_;  
+    GuiInt    calcnorm_;
 };
 
 
-DECLARE_MAKER(ModalMapping)
-ModalMapping::ModalMapping(GuiContext* ctx)
-  : Module("ModalMapping", ctx, Source, "FieldsData", "ModelCreation"),
+DECLARE_MAKER(GradientModalMapping)
+GradientModalMapping::GradientModalMapping(GuiContext* ctx)
+  : Module("GradientModalMapping", ctx, Source, "FieldsData", "ModelCreation"),
     mappingmethod_(ctx->subVar("mappingmethod")),
     integrationmethod_(ctx->subVar("integrationmethod")),
     integrationfilter_(ctx->subVar("integrationfilter")),
-    def_value_(ctx->subVar("def-value"))  
+    calcnorm_(ctx->subVar("calcnorm"))
 {
 }
 
-
-void ModalMapping::execute()
+void GradientModalMapping::execute()
 {
   FieldHandle fsrc, fdst, fout;
   
@@ -73,14 +71,15 @@ void ModalMapping::execute()
   std::string mappingmethod = mappingmethod_.get();
   std::string integrationmethod = integrationmethod_.get();
   std::string integrationfilter = integrationfilter_.get();
-  double def_value = def_value_.get();
   
   SCIRunAlgo::FieldsAlgo algo(this);
+  bool calcnorm = static_cast<bool>(calcnorm_.get());
   
-  if (!(algo.ModalMapping(fsrc,fdst,fout,mappingmethod,integrationmethod,integrationfilter,def_value))) return;
+  if (!(algo.GradientModalMapping(fsrc,fdst,fout,mappingmethod,integrationmethod,integrationfilter,calcnorm))) return;
   
   send_output_handle("Destination",fout,false);
 }
+
 
 } // End namespace ModelCreation
 

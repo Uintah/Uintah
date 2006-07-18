@@ -62,7 +62,7 @@ void IndicesToData::execute()
   SCIRunAlgo::FieldsAlgo falgo(this); 
   if (!(falgo.IndicesToData(input,output,data))) return;
   
-  send_output_handle("Field",output,true);
+  send_output_handle("Field",output,false);
 }
 
 } // End namespace ModelCreation

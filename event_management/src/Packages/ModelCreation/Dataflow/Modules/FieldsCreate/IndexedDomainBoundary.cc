@@ -62,7 +62,7 @@ void IndexedDomainBoundary::execute()
   
   if(!(algo.IndexedDomainBoundary(ifield,ofield,ElemLink,0.0,0.0,false,true,false,false,false))) return;
   
-  send_output_handle("Field",ofield,true);
+  send_output_handle("Field",ofield,false);
 }
 
 } // End namespace ModelCreation

@@ -68,7 +68,7 @@ void DistanceToBoundary::execute()
   if(!(algo.FieldBoundary(input,object,dummy))) return;
   if(!(algo.DistanceField(input,output,object))) return;
 
-  send_output_handle("DistanceField",output,true);
+  send_output_handle("DistanceField",output,false);
 }
 
 } // End namespace ModelCreation

@@ -79,9 +79,9 @@ void LinkFieldBoundary::execute()
   output->set_property("NodeLink",NodeLink,false);
   output->set_property("ElemLink",ElemLink,false);
   
-  send_output_handle("Field",output,true);
-  send_output_handle("NodeLink",NodeLink,true);
-  send_output_handle("ElemLink",ElemLink,true);  
+  send_output_handle("Field",output,false);
+  send_output_handle("NodeLink",NodeLink,false);
+  send_output_handle("ElemLink",ElemLink,false);  
 }
 
 } // End namespace ModelCreation

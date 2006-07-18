@@ -80,7 +80,7 @@ void
   
   if(!(algo.FieldDataNodeToElem(input,output,method))) return;
   
-  send_output_handle("Field",output,true);
+  send_output_handle("Field",output,false);
 }
 
 } // End namespace ModelCreation

@@ -1,7 +1,7 @@
-itcl_class ModelCreation_FieldsData_CurrentDensityMapping {
+itcl_class ModelCreation_FieldsData_GradientModalMapping {
     inherit Module
     constructor {config} {
-        set name CurrentDensityMapping
+        set name GradientModalMapping
         set_defaults
     }
 
@@ -9,15 +9,15 @@ itcl_class ModelCreation_FieldsData_CurrentDensityMapping {
       global $this-mappingmethod
       global $this-integrationmethod
       global $this-integrationfilter
-      global $this-multiply-with-normal
+      global $this-calcnorm
       set $this-mappingmethod "InterpolatedData"
       set $this-integrationmethod "Gaussian2"
-      set $this-integrationfilter "Integrate"
-      set $this-multiply-with-normal 0
+      set $this-integrationfilter "Average"    
+      set $this-calcnorm 0    
     }
 
     method ui {} {
-        set w .ui[modname]
+       set w .ui[modname]
         if {[winfo exists $w]} {
             return
         }
@@ -37,15 +37,15 @@ itcl_class ModelCreation_FieldsData_CurrentDensityMapping {
         myselectionbutton $w.f.sel1 0 1 { InterpolatedData } $this-mappingmethod
         myselectionbutton $w.f.sel2 1 1 { Gaussian1 Gaussian2 Gaussian3 Regular1 Regular2 Regular3 Regular4 Regular5 } $this-integrationmethod
         myselectionbutton $w.f.sel3 2 1 { Integrate Average WeightedAverage Sum Median Minimum Maximum MostCommon} $this-integrationfilter
-        checkbutton $w.f.mwn -text "Multiply current density vector with surface normal" -variable $this-multiply-with-normal
-        grid $w.f.mwn -row 3 -column 1 -sticky news -columnspan 2
+    
+        checkbutton $w.f.norm -text "Calculate norm of gradient" -variable $this-calcnorm
+        grid $w.f.norm -row 3 -column 0 -columnspan 2 -sticky w
         
         makeSciButtonPanel $w $w $this
         moveToCursor $w
+
     }
-
-
-
+    
    method myselectionbutton { win x y arglist var} {
         frame $win 
         grid $win  -row $x -column $y -sticky news
@@ -78,5 +78,7 @@ itcl_class ModelCreation_FieldsData_CurrentDensityMapping {
           set $var [$win get]
         }
     }
-
+    
 }
+
+

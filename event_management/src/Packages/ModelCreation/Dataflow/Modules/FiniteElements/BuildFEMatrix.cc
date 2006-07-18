@@ -68,7 +68,7 @@ void BuildFEMatrix::execute()
   
   if(!(numericalgo.BuildFEMatrix(Field,SysMatrix,1,Conductivity,GeomToComp,CompToGeom))) return;
   
-  send_output_handle("FEMatrix",SysMatrix,true);  
+  send_output_handle("FEMatrix",SysMatrix,false);  
 }
 
 

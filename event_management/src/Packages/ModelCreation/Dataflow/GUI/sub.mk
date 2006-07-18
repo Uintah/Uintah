@@ -37,6 +37,8 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/FieldGetStringProperty.tcl\
 	$(SRCDIR)/FieldSetMatrixProperty.tcl\
 	$(SRCDIR)/FieldSetStringProperty.tcl\
+  $(SRCDIR)/IsInsideField.tcl\
+  $(SRCDIR)/IsInsideFields.tcl\
 	$(SRCDIR)/LinkFieldBoundary.tcl\
 	$(SRCDIR)/MatrixInfo.tcl\
 	$(SRCDIR)/MatrixReader.tcl\
@@ -70,6 +72,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/NodalMapping.tcl\
 	$(SRCDIR)/ModalMapping.tcl\
 	$(SRCDIR)/CurrentDensityMapping.tcl\
+	$(SRCDIR)/GradientModalMapping.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/ModelCreation/Dataflow/GUI
