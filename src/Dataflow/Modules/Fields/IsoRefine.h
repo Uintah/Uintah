@@ -198,7 +198,6 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
   QSMesh::Node::array_type oqnodes(4);
   QSMesh::Node::array_type nnodes(4);
   typename FIELD::value_type v[4];
-  Point p[4];
   
   // Copy all of the nodes from mesh to refined.  They won't change,
   // we only add nodes.
@@ -206,8 +205,9 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
   mesh->begin(bni); mesh->end(eni);
   while (bni != eni)
   {
-    mesh->get_point(p[0], *bni);
-    refined->add_point(p[0]);
+    Point p;
+    mesh->get_point(p, *bni);
+    refined->add_point(p);
     ++bni;
   }
 
@@ -221,7 +221,6 @@ IsoRefineAlgoQuad<FIELD>::execute(ProgressReporter *reporter,
     unsigned int inside = 0;
     for (unsigned int i = 0; i < onodes.size(); i++)
     {
-      mesh->get_center(p[i], onodes[i]);
       field->value(v[i], onodes[i]);
       oqnodes[i] = QSMesh::Node::index_type((unsigned int)onodes[i]);
       inside = inside << 1;
