@@ -34,6 +34,7 @@ SRCS     += \
 	$(SRCDIR)/ModalMapping.cc\
 	$(SRCDIR)/CurrentDensityMapping.cc\
 	$(SRCDIR)/IsInsideFields.cc\
+	$(SRCDIR)/GradientModalMapping.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

@@ -71,7 +71,7 @@ void NodalMapping::execute()
   
   if (!(algo.NodalMapping(fsrc,fdst,fout,mappingmethod,def_value))) return;
   
-  send_output_handle("Destination",fout,true);
+  send_output_handle("Destination",fout,false);
 }
 
 } // End namespace ModelCreation

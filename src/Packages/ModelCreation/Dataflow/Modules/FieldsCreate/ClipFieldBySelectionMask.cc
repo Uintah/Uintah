@@ -68,8 +68,8 @@ void ClipFieldBySelectionMask::execute()
   SCIRunAlgo::FieldsAlgo algo(this);
   if(!(algo.ClipFieldBySelectionMask(input,output,selmask,interpolant))) return;
   
-  send_output_handle("ClippedField",output,true);
-  send_output_handle("MappingMatrix",interpolant, true);
+  send_output_handle("ClippedField",output,false);
+  send_output_handle("MappingMatrix",interpolant,false);
 }
 
 } // End namespace ModelCreation

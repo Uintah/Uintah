@@ -61,7 +61,7 @@ void SplitFieldByDomain::execute()
   if(!(get_input_handle("Field",input,true))) return;
   SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));  
   if(!(algo.SplitFieldByDomain(input,output))) return;
-  send_output_handle("SplitField",output,true);
+  send_output_handle("SplitField",output,false);
 }
 
 

@@ -76,7 +76,7 @@ void SignedDistanceToField::execute()
   
   if(!(algo.SignedDistanceField(input,output,object))) return;
    
-  send_output_handle("SignedDistanceField",output,true); 
+  send_output_handle("SignedDistanceField",output,false); 
 }
 
 

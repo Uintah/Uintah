@@ -46,12 +46,18 @@ class IsInsideFields : public Module {
 public:
   IsInsideFields(GuiContext*);
   virtual void execute();
+  
+private:
+  GuiString outputbasis_;
+  GuiString outputtype_;  
 };
 
 
 DECLARE_MAKER(IsInsideFields)
 IsInsideFields::IsInsideFields(GuiContext* ctx)
-  : Module("IsInsideFields", ctx, Source, "FieldsData", "ModelCreation")
+  : Module("IsInsideFields", ctx, Source, "FieldsData", "ModelCreation"),
+    outputbasis_(ctx->subVar("outputbasis")),
+    outputtype_(ctx->subVar("outputtype"))
 {
 }
 
@@ -68,9 +74,9 @@ void IsInsideFields::execute()
   
   SCIRunAlgo::FieldsAlgo algo(this);
   
-  if(!(algo.IsInsideFields(input,output,objectfields))) return;
+  if(!(algo.IsInsideFields(input,output,objectfields,outputtype_.get(),outputbasis_.get()))) return;
  
-  send_output_handle("Field",output,true);
+  send_output_handle("Field",output,false);
 }
 
 } // End namespace ModelCreation

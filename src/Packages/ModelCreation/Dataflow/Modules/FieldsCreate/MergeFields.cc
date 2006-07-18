@@ -92,7 +92,7 @@ void MergeFields::execute()
     output = temp;
   }
   
-  send_output_handle("Field",output,true);
+  send_output_handle("Field",output,false);
 }
 
 

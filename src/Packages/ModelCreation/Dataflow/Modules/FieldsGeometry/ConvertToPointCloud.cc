@@ -60,7 +60,7 @@ void ConvertToPointCloud::execute()
   SCIRunAlgo::FieldsAlgo algo(this);
   if (!(algo.ToPointCloud(ifield,ofield))) return;
 
-  send_output_handle("Field",ofield,true);
+  send_output_handle("Field",ofield,false);
 }
 
  

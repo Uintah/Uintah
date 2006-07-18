@@ -80,7 +80,7 @@ void CurrentDensityMapping::execute()
   
   if (!(algo.CurrentDensityMapping(fpot,fcon,fdst,fout,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal))) return;
   
-  send_output_handle("Destination",fout,true);
+  send_output_handle("Destination",fout,false);
 }
 
 

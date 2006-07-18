@@ -96,7 +96,7 @@ void ScaleField::execute()
 
   if(!(falgo.ScaleField(input, output, datascale, geomscale,guiusegeomcenter_.get()))) return;
   
-  send_output_handle("Field",output,true);
+  send_output_handle("Field",output,false);
 }
 
 

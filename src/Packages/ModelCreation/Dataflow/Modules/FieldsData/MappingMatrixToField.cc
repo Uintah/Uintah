@@ -75,7 +75,7 @@ void MappingMatrixToField::execute()
   SCIRunAlgo::FieldsAlgo fieldmath(this);  
   if(!(fieldmath.MappingMatrixToField(input,output,matrix))) return;
   
-  send_output_handle("IndicesField",output,true);
+  send_output_handle("IndicesField",output,false);
 }
 
 } // End namespace ModelCreation

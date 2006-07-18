@@ -1,21 +1,17 @@
-itcl_class ModelCreation_FieldsData_CurrentDensityMapping {
+itcl_class ModelCreation_FieldsData_IsInsideField {
     inherit Module
     constructor {config} {
-        set name CurrentDensityMapping
+        set name IsInsideField
         set_defaults
     }
-
+    
     method set_defaults {} {
-      global $this-mappingmethod
-      global $this-integrationmethod
-      global $this-integrationfilter
-      global $this-multiply-with-normal
-      set $this-mappingmethod "InterpolatedData"
-      set $this-integrationmethod "Gaussian2"
-      set $this-integrationfilter "Integrate"
-      set $this-multiply-with-normal 0
+      global $this-outputbasis
+      global $this-outputtype
+      set $this-outputbasis "same as input"
+      set $this-outputtype "double"
     }
-
+    
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -25,25 +21,18 @@ itcl_class ModelCreation_FieldsData_CurrentDensityMapping {
         toplevel $w
         
         frame $w.f
-        
         pack $w.f
-        label $w.f.lab1 -text "Interpolation/Extrapolation of source data"
-        label $w.f.lab2 -text "Integration Sampling Nodes"
-        label $w.f.lab3 -text "Integration Sampling Method"
+        label $w.f.lab1 -text "Data location"
         grid $w.f.lab1 -row 0 -column 0 -sticky e
+        label $w.f.lab2 -text "Data type"
         grid $w.f.lab2 -row 1 -column 0 -sticky e
-        grid $w.f.lab3 -row 2 -column 0 -sticky e
         
-        myselectionbutton $w.f.sel1 0 1 { InterpolatedData } $this-mappingmethod
-        myselectionbutton $w.f.sel2 1 1 { Gaussian1 Gaussian2 Gaussian3 Regular1 Regular2 Regular3 Regular4 Regular5 } $this-integrationmethod
-        myselectionbutton $w.f.sel3 2 1 { Integrate Average WeightedAverage Sum Median Minimum Maximum MostCommon} $this-integrationfilter
-        checkbutton $w.f.mwn -text "Multiply current density vector with surface normal" -variable $this-multiply-with-normal
-        grid $w.f.mwn -row 3 -column 1 -sticky news -columnspan 2
+        myselectionbutton $w.f.sel1 0 1 { "same as input" "linear" "constant" } $this-outputbasis
+        myselectionbutton $w.f.sel2 1 1 { "same as input" "char" "short" "unsigned short" "unsigned int" "int" "float" "double" } $this-outputtype
         
         makeSciButtonPanel $w $w $this
         moveToCursor $w
     }
-
 
 
    method myselectionbutton { win x y arglist var} {
@@ -78,5 +67,6 @@ itcl_class ModelCreation_FieldsData_CurrentDensityMapping {
           set $var [$win get]
         }
     }
-
 }
+
+    

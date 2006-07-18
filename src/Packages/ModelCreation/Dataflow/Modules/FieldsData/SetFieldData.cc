@@ -66,7 +66,7 @@ void SetFieldData::execute()
   SCIRunAlgo::FieldsAlgo algo(this);
   if(!(algo.SetFieldData(Input,Output,Data,keepscalartype))) return;
   
-  send_output_handle("Field",Output,true);
+  send_output_handle("Field",Output,false);
 }
 
 } // End namespace ModelCreation

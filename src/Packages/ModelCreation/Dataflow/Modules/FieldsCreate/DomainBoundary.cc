@@ -99,7 +99,7 @@ void DomainBoundary::execute()
   if (usevalue) { userange = true; minrange = value; maxrange = value; }
   if(!(algo.DomainBoundary(ifield,ofield,ElemLink,minrange,maxrange,userange,includeouterboundary,innerboundaryonly,noinnerboundary,disconnect))) return;
   
-  send_output_handle("Field",ofield,true);
+  send_output_handle("Field",ofield,false);
 }
 
 } // End namespace ModelCreation

@@ -69,8 +69,8 @@ void CreateFEDirichletBC::execute()
   if (!(falgo.GetFieldData(BCfield,BC))) return;
   if (!(malgo.CreateFEDirichletBC(FEin,RHSin,BC,FEout,RHSout))) return;
     
-  send_output_handle("FEMatrix",FEout,true);
-  send_output_handle("RHS",RHSout,true);
+  send_output_handle("FEMatrix",FEout,false);
+  send_output_handle("RHS",RHSout,false);
 }
 
 } // End namespace ModelCreation

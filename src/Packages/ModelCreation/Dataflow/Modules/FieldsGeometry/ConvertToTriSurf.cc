@@ -60,7 +60,7 @@ void ConvertToTriSurf::execute()
 
   if (!(algo.ConvertToTriSurf(ifield,ofield))) return;
   
-  send_output_handle("Field",ofield,true);
+  send_output_handle("Field",ofield,false);
 }
 
 
