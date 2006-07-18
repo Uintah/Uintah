@@ -504,6 +504,7 @@ VolumeRenderer::draw_volume()
     vector<TextureBrickHandle>& bs  = bricks[0];
     for (unsigned int i=0; i < bs.size(); i++) {
       TextureBrickHandle b = bs[i];
+      if (!test_against_view(b->bbox())) continue; // Clip against view.
       vertex.clear();
       texcoord.clear();
       mask.clear();
@@ -778,6 +779,8 @@ VolumeRenderer::draw_wireframe()
     glColor4f(0.8*(i+1.0)/bricks.size(), 0.8*(i+1.0)/bricks.size(), 0.8, 1.0);
 
     TextureBrickHandle b = bricks[i];
+    if (!test_against_view(b->bbox())) continue;
+
     const Point &pmin(b->bbox().min());
     const Point &pmax(b->bbox().max());
     Point corner[8];

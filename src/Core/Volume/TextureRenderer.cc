@@ -263,6 +263,42 @@ TextureRenderer::compute_view()
   return Ray(p, v);
 }
 
+bool
+TextureRenderer::test_against_view(const BBox &bbox)
+{
+  double mvmat[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, mvmat);
+  Transform mv;
+  mv.set_trans(mvmat);
+
+  double prmat[16];
+  glGetDoublev(GL_PROJECTION_MATRIX, prmat);
+  Transform pr;
+  pr.set_trans(prmat);
+
+  bool overx = true;
+  bool overy = true;
+  bool overz = true;
+  bool underx = true;
+  bool undery = true;
+  bool underz = true;
+  for (int i = 0; i < 8; i++)
+  {
+    const Point pold((i&1)?bbox.min().x():bbox.max().x(),
+                     (i&2)?bbox.min().y():bbox.max().y(),
+                     (i&4)?bbox.min().z():bbox.max().z());
+    const Point p = pr.project(mv.project(pold));
+    overx = overx && (p.x() > 1.0);
+    overy = overy && (p.y() > 1.0);
+    overz = overz && (p.z() > 1.0);
+    underx = underx && (p.x() < -1.0);
+    undery = undery && (p.y() < -1.0);
+    underz = underz && (p.z() < -1.0);
+  }
+
+  return !(overx || overy || overz || underx || undery || underz);
+}
+
 void
 TextureRenderer::load_brick(vector<TextureBrickHandle> &bricks, int bindex,
                             bool use_cmap2)

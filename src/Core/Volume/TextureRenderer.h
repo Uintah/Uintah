@@ -141,6 +141,11 @@ protected:
   };
   vector<TexParam> tex_pool_;
   
+  // Tests the bounding box against the current MODELVIEW and
+  // PROJECTION matrices to determine if it is within the viewport.
+  // Returns true if it is visible.
+  bool test_against_view(const BBox &bbox);
+
   Ray compute_view();
   void load_brick(vector<TextureBrickHandle> &b, int i, bool use_cmap2);
   void draw_polygons(vector<float>& vertex, vector<float>& texcoord,
