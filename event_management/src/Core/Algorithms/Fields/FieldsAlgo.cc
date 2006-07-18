@@ -272,6 +272,21 @@ bool FieldsAlgo::ModalMapping(FieldHandle src, FieldHandle dst, FieldHandle& out
   return (algo.ModalMapping(pr_,0,src,dst,output,mappingmethod,integrationmethod,integrationfilter,def_value));
 }
 
+
+bool FieldsAlgo::GradientModalMapping(int numproc, FieldHandle src, FieldHandle dst, FieldHandle& output, std::string mappingmethod,
+                       std::string integrationmethod, std::string integrationfilter, bool calcnorm)
+{
+  GradientModalMappingAlgo algo;
+  return (algo.GradientModalMapping(pr_,numproc,src,dst,output,mappingmethod,integrationmethod,integrationfilter,calcnorm));
+}
+
+bool FieldsAlgo::GradientModalMapping(FieldHandle src, FieldHandle dst, FieldHandle& output, std::string mappingmethod,
+                       std::string integrationmethod, std::string integrationfilter, bool calcnorm)
+{
+  GradientModalMappingAlgo algo;
+  return (algo.GradientModalMapping(pr_,0,src,dst,output,mappingmethod,integrationmethod,integrationfilter,calcnorm));
+}
+
 bool FieldsAlgo::NodalMapping(int numproc, FieldHandle src, FieldHandle dst, FieldHandle& output, std::string mappingmethod, double def_value)
 {
   NodalMappingAlgo algo;
