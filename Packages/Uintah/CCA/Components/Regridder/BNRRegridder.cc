@@ -12,10 +12,12 @@ using namespace Uintah;
 #include <vector>
 #include <set>
 #include <algorithm>
+#include <iomanip>
 using namespace std;
 
-static DebugStream dbg("BNRPatches",false);
+static DebugStream dbgpatches("BNRPatches",false);
 static DebugStream dbgstats("BNRStats",false);
+static DebugStream dbgtimes("BNRTimes",false);
 
 BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task_count_(0),tola_(1),tolb_(1), patchfixer_(pg)
 {
@@ -57,15 +59,15 @@ BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task
       tags_.push(i<<1);
   }
   
-  if(dbg.active() && rank==0)
+  if(dbgpatches.active() && rank==0)
   {
-     fout.open("patches.txt");
+     fout.open("patches.bin");
   }
 }
 
 BNRRegridder::~BNRRegridder()
 {
-  if(dbg.active() && d_myworld->myrank()==0)
+  if(dbgpatches.active() && d_myworld->myrank()==0)
   {
     fout.close();
   }
@@ -81,6 +83,13 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
   ProblemSpecP grid_ps = ups->findBlock("Grid");
 
   vector<set<IntVector> > coarse_flag_sets(oldGrid->numLevels());
+  vector<vector <IntVector> > flag_sets;
+
+  if(dbgpatches.active())
+  {
+    flag_sets.resize(oldGrid->numLevels());
+  }
+
   vector< vector<PseudoPatch> > patch_sets(oldGrid->numLevels());
   //create flags sets
   
@@ -106,6 +115,10 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
         if (flags[*ci])
         {
          coarse_flag_sets[l].insert(*ci*d_cellRefinementRatio[l]/d_minPatchSize);
+         if(dbgpatches.active())
+         {
+            flag_sets[l].push_back(*ci);
+         }
         }
       }
     }
@@ -128,7 +141,6 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
       AddSafetyLayer(patch_sets[l], coarse_flag_sets[l-1], lb->getPerProcessorPatchSet(oldGrid->getLevel(l))->getSubset(d_myworld->myrank())->getVector(), l);
       sltotal+=MPI_Wtime()-start;
     }
-    
     //Fixup patchlist
     start=MPI_Wtime();
     patchfixer_.FixUp(patch_sets[l]);
@@ -165,8 +177,6 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
   start=MPI_Wtime();
 
   //For each level Coarse -> Fine
-  vector<double> sums;
-  vector<double> square_sums;
   for(int l=0; l < oldGrid->numLevels() && l < d_maxLevels-1;l++)
   {
     // if there are no patches on this level, don't create any more levels
@@ -179,8 +189,6 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
     LevelP newLevel = newGrid->addLevel(anchor, spacing);
     newLevel->setExtraCells(extraCells);
 
-    double sum=0, sum_of_squares=0;
-    
     //for each patch
     for(unsigned int p=0;p<patch_sets[l].size();p++)
     {
@@ -189,19 +197,6 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
       IntVector high = patch_sets[l][p].high = patch_sets[l][p].high*d_minPatchSize;
       //create patch
       newLevel->addPatch(low, high, low, high);
-      
-      if (dbgstats.active()) {
-        IntVector size = high-low;
-        int vol = size.x()*size.y()*size.z();
-        sum += vol;
-        sum_of_squares += vol*vol;
-      }
-      
-    }
-    
-    if (dbgstats.active()) {
-      sums.push_back(sum);
-      square_sums.push_back(sum_of_squares);
     }
     
     crtotal+=MPI_Wtime()-start;
@@ -214,7 +209,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
     start=MPI_Wtime();
   }
   crtotal+=MPI_Wtime()-start;
-  if(d_myworld->myrank()==0)
+  if(dbgtimes.active() && d_myworld->myrank()==0)
           cout << "BRTime:" << brtotal << " SLTime:" << sltotal << " FUTime:" << futotal << " PFUTime:" << pfutotal << " CoarsenTime: " << ctotal << " CRTime:" << crtotal << " FTime: " << ftotal << " ATime: " << atotal << endl; 
   if (*newGrid == *oldGrid) {
     delete newGrid;
@@ -224,16 +219,73 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
   d_newGrid = true;
   d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
 
-  if (dbg.active() && d_myworld->myrank()==0)
+  if (dbgpatches.active())
   {
-    writeGrid(newGrid);
+     if(d_myworld->myrank()==0)
+     { 
+         //gather flags
+        //for each processors
+        for(int p=1;p<d_myworld->size();p++)
+        {
+           //for each level
+           for(unsigned int l=0;l<flag_sets.size();l++)
+           {
+              int numFlags;
+              MPI_Status status;
+              //cout << "rank: 0:  receiving count from: " << p << endl;
+              //recieve the number of flags they have
+              MPI_Recv(&numFlags,1,MPI_INT,p,0,MPI_COMM_WORLD,&status);
+              int size=flag_sets[l].size();
+              //resize vector
+              flag_sets[l].resize(size+numFlags);
+              //recieve the flags
+              //cout << "rank: 0:  receiving " << numFlags << " flags from: " << p << endl;
+              MPI_Recv(&flag_sets[l][size],sizeof(IntVector)*numFlags,MPI_BYTE,p,1,MPI_COMM_WORLD,&status);
+           }
+         }
+        //cout << *newGrid;
+        writeGrid(newGrid,flag_sets);
+     }
+     else
+     {
+      
+        //for each level
+        for(unsigned int l=0;l<flag_sets.size();l++)
+        {
+          int size=flag_sets[l].size();
+
+          //cout << "rank: " << d_myworld->myrank() << " sending count(" << size << ")\n";
+          //send the number of flags i have
+          MPI_Send(&size,1,MPI_INT,0,0,MPI_COMM_WORLD);
+          //cout << "rank: " << d_myworld->myrank() << " sending flags\n";
+          //send the flags
+          MPI_Send(&flag_sets[l][0],sizeof(IntVector)*size,MPI_BYTE,0,1,MPI_COMM_WORLD);
+        }
+     }
   }
-  if (dbgstats.active() && d_myworld->myrank() == 0) {
-    for (int i = 1; i < newGrid->numLevels(); i++) {
-      int n = newGrid->getLevel(i)->numPatches();
-      double mean = sums[i-1] / n;
-      double std_dev = sqrt((n*square_sums[i-1] - sums[i-1]*sums[i-1])/(n*n));
-      dbgstats << " L" << i << ": Volume " << sums[i-1]<< ", mean patch volume " << mean << ", std. dev. patch volume " << std_dev << endl;
+  if (dbgstats.active() && d_myworld->myrank() == 0) 
+  {
+    dbgstats << " Grid Statistics:\n";
+    for (int l = 0; l < newGrid->numLevels()-1; l++) 
+    {
+      int total_vol=0;
+      int n = patch_sets[l].size();
+      //calculate total volume 
+      for(int p=0;p<n;p++)
+      {
+        total_vol+=patch_sets[l][p].volume;
+      }
+      //calculate mean
+      double mean = total_vol /(double) n;
+      //calcualte standard deviation
+      double stdv=0;
+      for(int p=0;p<n;p++)
+      {
+        double diff=patch_sets[l][p].volume-mean;
+        stdv+=diff*diff;
+      }
+      stdv=sqrt(stdv)/n;
+      dbgstats << left << "  L" << setw(6) << l+1 << ": Patches: " << setw(6) << n << " Volume:" << setw(6) << total_vol<< " Mean Volume:" << setw(6) << mean << " stdv:" << setw(6) << stdv << endl;
     }
   }
 
@@ -604,12 +656,13 @@ void BNRRegridder::AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVect
   }
 }
 
-void BNRRegridder::writeGrid(Grid* grid)
+void BNRRegridder::writeGrid(Grid* grid,vector<vector<IntVector> > flag_sets)
 {
   int levels=grid->numLevels();
+  flag_sets.resize(levels);
   //write #of levels
   fout.write((char*)&levels,sizeof(int));
-  
+
   //for each level
   for(int l=0;l<levels;l++)
   {
@@ -626,7 +679,14 @@ void BNRRegridder::writeGrid(Grid* grid)
       IntVector high=patch->getInteriorCellHighIndex();
       fout.write((char*)&low,sizeof(IntVector));
       fout.write((char*)&high,sizeof(IntVector));
+
     }
+    int numFlags=flag_sets[l].size();
+    //write number of flags
+    fout.write((char*)&numFlags,sizeof(int));
+    //write flags
+    if(numFlags>0)
+      fout.write((char*)&flag_sets[l][0],sizeof(IntVector)*numFlags);
   }
   fout.flush();
 }
