@@ -1673,10 +1673,21 @@ OpenGL::dump_image(const string& fname, const string& ftype)
   else
 #endif
   {
-    ofstream dumpfile(fname.c_str());
+    string fnamecopy = fname;
+    if (ftype == "png")
+    {
+      static bool firsttime = true;
+      if (firsttime)
+      {
+        view_window_->setMovieMessage(" ERROR - No PNG support in this build, saving PPM images.", true);
+        firsttime = false;
+      }
+      fnamecopy = fname.substr(0, fname.find("png")) + "ppm";
+    }
+    ofstream dumpfile(fnamecopy.c_str());
     if ( !dumpfile )
     {
-      string errorMsg = "ERROR opening file: " + fname;
+      string errorMsg = "ERROR opening file: " + fnamecopy;
       view_window_->setMovieMessage( errorMsg, true );
       cerr << errorMsg << "\n";
       return;
