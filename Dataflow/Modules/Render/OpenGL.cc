@@ -501,9 +501,8 @@ OpenGL::render_and_save_image( int x, int y,
                                const string & fname, const string & ftype )
                                
 {
-  bool use_convert = false;
-
 #if defined(HAVE_PNG) && HAVE_PNG
+  bool use_convert = false;
   bool write_png = false;
   // Either the user specified the type to be ppm or raw (in that case
   // we create that type of image), or they specified the "by_extension"
@@ -608,6 +607,7 @@ OpenGL::render_and_save_image( int x, int y,
       return;
     }
   }
+  FILE *fp = NULL;
 #endif
 
   ASSERT(sci_getenv("SCIRUN_TMP_DIR"));
@@ -618,7 +618,6 @@ OpenGL::render_and_save_image( int x, int y,
 
 
   int channel_bytes, num_channels;
-  FILE *fp = NULL;
 
   if (ftype == "ppm" || ftype == "raw")
   {
