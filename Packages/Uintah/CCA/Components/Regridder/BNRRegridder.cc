@@ -232,14 +232,12 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
            {
               int numFlags;
               MPI_Status status;
-              //cout << "rank: 0:  receiving count from: " << p << endl;
               //recieve the number of flags they have
               MPI_Recv(&numFlags,1,MPI_INT,p,0,MPI_COMM_WORLD,&status);
               int size=flag_sets[l].size();
               //resize vector
               flag_sets[l].resize(size+numFlags);
               //recieve the flags
-              //cout << "rank: 0:  receiving " << numFlags << " flags from: " << p << endl;
               MPI_Recv(&flag_sets[l][size],sizeof(IntVector)*numFlags,MPI_BYTE,p,1,MPI_COMM_WORLD,&status);
            }
          }
@@ -254,10 +252,8 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
         {
           int size=flag_sets[l].size();
 
-          //cout << "rank: " << d_myworld->myrank() << " sending count(" << size << ")\n";
           //send the number of flags i have
           MPI_Send(&size,1,MPI_INT,0,0,MPI_COMM_WORLD);
-          //cout << "rank: " << d_myworld->myrank() << " sending flags\n";
           //send the flags
           MPI_Send(&flag_sets[l][0],sizeof(IntVector)*size,MPI_BYTE,0,1,MPI_COMM_WORLD);
         }
@@ -269,23 +265,21 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
     for (int l = 0; l < newGrid->numLevels()-1; l++) 
     {
       int total_vol=0;
+      int sum_of_vol_squared=0;
       int n = patch_sets[l].size();
-      //calculate total volume 
+      //calculate total volume and volume squared
+      int vol_mult=d_minPatchSize[0]*d_minPatchSize[1]*d_minPatchSize[2];
       for(int p=0;p<n;p++)
       {
-        total_vol+=patch_sets[l][p].volume;
+        int vol=patch_sets[l][p].volume*vol_mult;
+        total_vol+=vol;
+        sum_of_vol_squared+=vol*vol;
       }
       //calculate mean
       double mean = total_vol /(double) n;
-      //calcualte standard deviation
-      double stdv=0;
-      for(int p=0;p<n;p++)
-      {
-        double diff=patch_sets[l][p].volume-mean;
-        stdv+=diff*diff;
-      }
-      stdv=sqrt(stdv)/n;
-      dbgstats << left << "  L" << setw(6) << l+1 << ": Patches: " << setw(6) << n << " Volume:" << setw(6) << total_vol<< " Mean Volume:" << setw(6) << mean << " stdv:" << setw(6) << stdv << endl;
+      double stdv = sqrt((sum_of_vol_squared-total_vol*total_vol/(double)n)/(double)n);
+      
+      dbgstats << left << "  L" << setw(8) << l+1 << ": Patches: " << setw(8) << n << " Volume: " << setw(8) << total_vol<< " Mean Volume: " << setw(8) << mean << " stdv: " << setw(8) << stdv << " relative stdv: " << setw(8) << stdv/mean << endl;
     }
   }
 
