@@ -1442,7 +1442,8 @@ DataArchiver::scheduleOutputTimestep(vector<DataArchiver::SaveItem>& saveLabels,
         
         const MaterialSubset* matls = iter->second.get_rep()->getUnion();
 
-        t->requires(Task::NewDW, (*saveIter).label_, matls, Ghost::None, 0, true);
+        // out of domain really is only there to handle the "all-in-one material", but doesn't break anything else
+        t->requires(Task::NewDW, (*saveIter).label_, matls, Task::OutOfDomain, Ghost::None, 0, true);
         n++;
       }
     }
