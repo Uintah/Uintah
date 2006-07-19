@@ -61,7 +61,7 @@ WARNING
     void PostFixup(vector<PseudoPatch> &patches,IntVector min_patch_size);
   private:
     //function for outputing grid in parsable format
-    void writeGrid(Grid* grid);
+    void writeGrid(Grid* grid,vector<vector<IntVector> > flag_sets);
     void problemSetup_BulletProofing(const int k);
     void AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVector> &coarse_flags,
                         const vector<const Patch*>& coarse_patches, int level);

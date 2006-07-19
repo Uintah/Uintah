@@ -162,6 +162,9 @@ void PatchFixer::FixUp(vector<PseudoPatch> &patches)
 		}
 	}
 	int my_patch_size=patches.size();
+
+  //Split patches that are bigger than threashold?
+
 	//allgather patchset sizes
   if(d_myworld->size()>1)
   {
@@ -188,7 +191,7 @@ void PatchFixer::FixUp(vector<PseudoPatch> &patches)
 void PatchFixer::FixFace(vector<PseudoPatch> &patches,PseudoPatch patch, int dim, int side)
 {
 	int Y=lsize_[0],Z=Y*lsize_[1];
-	int xdim,ydim,zdim,Xm,Ym,Zm;
+	int xdim=0,ydim=0,zdim=0,Xm=0,Ym=0,Zm=0;
 	int x,by,bz,ey,ez;
 	int p1,p2;
 
@@ -209,6 +212,9 @@ void PatchFixer::FixFace(vector<PseudoPatch> &patches,PseudoPatch patch, int dim
 			ydim=0;Ym=1;
 			zdim=1;Zm=Y;
 			break;
+     default:
+      cout << "Invalid dimension in FixFace\n";
+      exit(0);
 	}
 	if(side==-1)
 	{
