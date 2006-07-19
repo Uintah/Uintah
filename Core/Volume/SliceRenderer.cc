@@ -240,7 +240,8 @@ SliceRenderer::draw_slice()
   for(unsigned int i=0; i<bricks.size(); i++) {
     double t;
     TextureBrickHandle b = bricks[i];
-    load_brick(bricks, i, use_cmap2);
+    if (!test_against_view(b->bbox())) continue; // Clip brick against view.
+
     vertex.clear();
     texcoord.clear();
     size.clear();
@@ -327,7 +328,11 @@ SliceRenderer::draw_slice()
       }
     }
 
-    draw_polygons(vertex, texcoord, size, true, use_fog, 0);
+    if (size.size()) // Only load brick if there is something to draw.
+    {
+      load_brick(bricks, i, use_cmap2);
+      draw_polygons(vertex, texcoord, size, true, use_fog, 0);
+    }
   }
 
   glPopMatrix();
