@@ -342,6 +342,9 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   // Fracture
   d_mpm->scheduleAdjustCrackContactInterpolated(sched,mpm_patches,  mpm_matls);
 
+  d_mpm->scheduleExMomInterpolated(           sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
+
   // schedule the interpolation of mass and volume to the cell centers
   scheduleInterpolateNCToCC_0(                sched, mpm_patches, one_matl, 
                                                                   mpm_matls);
@@ -426,9 +429,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
     }
   } 
   
-  d_mpm->scheduleExMomInterpolated(           sched, mpm_patches, mpm_matls);
-  d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
-
   for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
     const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
     const PatchSet* ice_patches = ice_level->eachPatch();
