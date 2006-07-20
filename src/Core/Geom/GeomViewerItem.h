@@ -70,6 +70,7 @@ public:
   virtual GeomObj* clone();
 
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
+  virtual void fbpick_draw(DrawInfoOpenGL*, Material*, double time);
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
     

@@ -428,14 +428,16 @@ COLOR_FTOB(double v)
 
 
 void
-GeomSpheres::add(const Point &center)
+GeomSpheres::add(const Point &center, unsigned int idx)
 {
   centers_.push_back(center);
+  item_idx_.push_back(idx);
 }
 
 
 void
-GeomSpheres::add(const Point &center, const MaterialHandle &mat)
+GeomSpheres::add(const Point &center, const MaterialHandle &mat,
+		 unsigned int idx)
 {
   add(center);
   const unsigned char r0 = COLOR_FTOB(mat->diffuse.r());
@@ -446,14 +448,16 @@ GeomSpheres::add(const Point &center, const MaterialHandle &mat)
   colors_.push_back(g0);
   colors_.push_back(b0);
   colors_.push_back(a0);
+  item_idx_.push_back(idx);
 }
 
 
 void
-GeomSpheres::add(const Point &center, float index)
+GeomSpheres::add(const Point &center, float index, unsigned int idx)
 {
   add(center);
   indices_.push_back(index);
+  item_idx_.push_back(idx);
 }
 
 

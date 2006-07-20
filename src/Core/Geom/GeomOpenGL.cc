@@ -738,7 +738,13 @@ GeomDL::reset_bbox()
   }
 }
 
-
+void
+GeomDL::fbpick_draw(DrawInfoOpenGL* di, Material *m, double time)
+{
+  if ( !child_.get_rep() ) return;
+  cerr << "GeomDL::fbpick_draw" << endl;
+  child_->fbpick_draw(di,m,time);  // do not use display list
+}
 void
 GeomDL::draw(DrawInfoOpenGL* di, Material *m, double time)
 {
@@ -1065,6 +1071,15 @@ GeomCones::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 
 void
+GeomContainer::fbpick_draw(DrawInfoOpenGL* di, Material* matl, double time)
+{
+  if (child_.get_rep())
+  {
+    child_->fbpick_draw(di, matl, time);
+  }
+}
+
+void
 GeomContainer::draw(DrawInfoOpenGL* di, Material* matl, double time)
 {
   if (child_.get_rep())
@@ -1072,6 +1087,7 @@ GeomContainer::draw(DrawInfoOpenGL* di, Material* matl, double time)
     child_->draw(di, matl, time);
   }
 }
+
 
 
 void
@@ -2092,6 +2108,14 @@ GeomQMesh::draw(DrawInfoOpenGL* di, Material* matl, double)
   post_draw(di);
 }
 
+void
+GeomGroup::fbpick_draw(DrawInfoOpenGL* di, Material* matl, double time)
+{
+  for (unsigned int i=0; i<objs.size(); i++)
+  {
+    objs[i]->fbpick_draw(di, matl, time);
+  }
+}
 
 void
 GeomGroup::draw(DrawInfoOpenGL* di, Material* matl, double time)
@@ -3433,6 +3457,52 @@ GeomSpheres::draw(DrawInfoOpenGL* di, Material* matl, double)
   post_draw(di);
 }
 
+inline
+void 
+idx2rgba(unsigned int idx, unsigned char &r, unsigned char &g, 
+	 unsigned char &b, unsigned char &a)
+{
+  const unsigned int rmask = 0xff000000;
+  const unsigned int gmask = 0x00ff0000;
+  const unsigned int bmask = 0x0000ff00;
+  const unsigned int amask = 0x000000ff;
+  r = (idx & rmask) >> 24;
+  g = (idx & gmask) >> 16;
+  b = (idx & bmask) >> 8;
+  a = (idx & amask);
+}
+
+
+void
+GeomSpheres::fbpick_draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  cerr << "spheres fbpick draw: " << endl;
+  const bool ulr = radii_.size() == centers_.size();
+  if (!ulr && global_radius_ < 1.0e-6) { return; }
+
+  if (!pre_draw(di, matl, 1)) return;
+
+  di->polycount_ += 2 * (nu_-1) * (nv_-1) * centers_.size();
+
+
+  glDisable(GL_TEXTURE_1D);
+  glDisable(GL_TEXTURE_2D);
+  glMatrixMode(GL_MODELVIEW);
+  for (unsigned int i=0; i < centers_.size(); i++)
+  {
+    unsigned char r, g, b, a;
+    idx2rgba(item_idx_[i], r, g, b, a);
+    //cerr << "r,g,b,a: " << r << "," << g << "," << b << "," << a << endl;
+    glColor4ub(r, g, b, a);
+    glPushMatrix();
+    glTranslated(centers_[i].x(), centers_[i].y(), centers_[i].z());
+    gluSphere(di->qobj_, ulr?radii_[i]:global_radius_, nu_, nv_);
+    glPopMatrix();
+  }
+
+  post_draw(di);
+}
+
 
 void
 GeomEllipsoid::draw(DrawInfoOpenGL* di, Material* matl, double)
@@ -3449,6 +3519,14 @@ GeomEllipsoid::draw(DrawInfoOpenGL* di, Material* matl, double)
 
 }
 
+void
+GeomSwitch::fbpick_draw(DrawInfoOpenGL* di, Material* matl, double time)
+{
+  if (state && child_.get_rep())
+  {
+    child_->fbpick_draw(di, matl, time);
+  }
+}
 
 void
 GeomSwitch::draw(DrawInfoOpenGL* di, Material* matl, double time)
@@ -3849,7 +3927,6 @@ GeomTri::draw(DrawInfoOpenGL* di, Material* matl, double)
   post_draw(di);
 }
 
-
 void
 GeomTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
 {
@@ -3957,6 +4034,34 @@ GeomTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
   post_draw(di);
 }
 
+void
+GeomFastTriangles::fbpick_draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  if (!pre_draw(di, matl, 1)) return;
+  cerr << "GeomFastTriangles::fbpick_draw(...)" << endl;
+  glDisable(GL_LIGHTING);
+  glDisable(GL_TEXTURE_1D);
+  glDisable(GL_TEXTURE_2D);
+  glDisable(GL_TEXTURE_3D);
+  glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+  glShadeModel(GL_FLAT);
+  unsigned int nverts = points_.size();  // number of vertices.
+  vector<unsigned char> cols(nverts * 4); // 4 bytes per vertex.
+  for (unsigned int v = 0; v < nverts * 4; v+=4) {
+    unsigned int face_idx = v / 12;
+    unsigned char r, g, b, a;
+    idx2rgba(face_idx, r, g, b, a);
+    cols[v] = r;
+    cols[v+1] = g;
+    cols[v+2] = b;
+    cols[v+3] = a;
+  }
+  glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(cols.front()));
+  glEnableClientState(GL_COLOR_ARRAY);
+  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glDrawArrays(GL_TRIANGLES, 0, points_.size()/3);
+}
 
 void
 GeomFastTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)
@@ -4192,6 +4297,11 @@ GeomFastTrianglesTwoSided::draw(DrawInfoOpenGL* di, Material* matl, double)
   post_draw(di);
 }
 
+void
+GeomTranspTriangles::fbpick_draw(DrawInfoOpenGL* di, Material* matl, double)
+{
+  cerr << "GeomTranspTriangles::fbpick_draw(...)" << endl;
+}
 
 void
 GeomTranspTriangles::draw(DrawInfoOpenGL* di, Material* matl, double)

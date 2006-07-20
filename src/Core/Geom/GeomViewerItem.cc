@@ -107,6 +107,12 @@ GeomViewerItem::io(Piostream& stream)
   stream.end_class();
 }
 
+void
+GeomViewerItem::fbpick_draw(DrawInfoOpenGL* di, Material *m, double time)
+{
+  cerr << "calling child_ fbpick_draw" << endl;
+  child_->fbpick_draw(di,m,time);
+}
 
 void
 GeomViewerItem::draw(DrawInfoOpenGL* di, Material *m, double time)

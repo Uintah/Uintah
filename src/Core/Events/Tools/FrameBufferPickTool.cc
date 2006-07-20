@@ -25,64 +25,45 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : BaseTool.cc
+//    File   : FrameBufferPickTool.cc
 //    Author : Martin Cole
-//    Date   : Thu May 25 21:08:59 2006
+//    Date   : Wed Jul 19 10:52:18 2006
 
-#include <Core/Events/BaseEvent.h>
-#include <Core/Events/Tools/BaseTool.h>
-#include <string>
-#include <iostream>
+#include <Core/Events/Tools/FrameBufferPickTool.h>
+#include <sstream>
 
 namespace SCIRun {
 
-using namespace std;
-
-BaseTool::BaseTool(string name) :
-  ref_cnt(0),
-  name_(name)
+FrameBufferPickTool::FrameBufferPickTool(string name, 
+					 vector<unsigned char> &fb_img) :
+  PointerTool(name),
+  fb_img_(fb_img)
 {
 }
 
-BaseTool::~BaseTool()
+FrameBufferPickTool::~FrameBufferPickTool()
 {
 }
 
-PointerTool::PointerTool(string name) :
-  BaseTool(name)
+BaseTool::propagation_state_e
+FrameBufferPickTool::pointer_down(int which, int x, int y, 
+				  unsigned int, int time)
 {
+  return CONTINUE_E;
 }
 
-PointerTool::~PointerTool()
+BaseTool::propagation_state_e
+FrameBufferPickTool::pointer_motion(int which, int x, int y, 
+				    unsigned int, int time)
 {
+  return CONTINUE_E;
 }
 
-KeyTool::KeyTool(string name) :
-  BaseTool(name)
+BaseTool::propagation_state_e
+FrameBufferPickTool::pointer_up(int which, int x, int y, 
+				unsigned int, int time)
 {
-}
-
-KeyTool::~KeyTool()
-{
-}
-
-WindowTool::WindowTool(string name) :
-  BaseTool(name)
-{
-}
-
-WindowTool::~WindowTool()
-{
-}
-
-TMNotificationTool::TMNotificationTool(string name) :
-  BaseTool(name)
-{
-}
-
-TMNotificationTool::~TMNotificationTool()
-{
+  return CONTINUE_E;
 }
 
 } // namespace SCIRun
-

@@ -179,6 +179,39 @@ private:
 };
 
 
+//! A TMNotificationTool is used by a tool manager and pushes and pops tools
+//! on its stacks based on the notifications it recieves. 
+class TMNotificationTool :  public virtual BaseTool
+{
+public:
+  TMNotificationTool(string name);
+  virtual ~TMNotificationTool();
+
+
+  virtual propagation_state_e start_tool(string id, unsigned int time)
+  {
+    return CONTINUE_E;
+  }
+
+  virtual propagation_state_e stop_tool(string id, unsigned int time)
+  {
+    return CONTINUE_E;
+  }
+
+  virtual propagation_state_e suspend_tool(string id, unsigned int time)
+  {
+    return CONTINUE_E;
+  }
+
+  virtual propagation_state_e resume_tool(string id, unsigned int time)
+  {
+    return CONTINUE_E;
+  }
+  
+private:
+};
+
+
 } // namespace SCIRun
 
 #endif // BaseTool_h
