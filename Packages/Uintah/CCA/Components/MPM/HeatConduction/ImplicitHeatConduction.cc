@@ -35,6 +35,10 @@ ImplicitHeatConduction::ImplicitHeatConduction(SimulationStateP& sS,
   do_IHC=d_flag->d_doImplicitHeatConduction;
   d_HC_transient=d_flag->d_doTransientImplicitHeatConduction;
 
+  one_matl = scinew MaterialSubset();
+  one_matl->add(0);
+  one_matl->addReference();
+
   if(d_flag->d_8or27==8){
     NGP=1;
     NGN=1;
@@ -46,37 +50,30 @@ ImplicitHeatConduction::ImplicitHeatConduction(SimulationStateP& sS,
 
 ImplicitHeatConduction::~ImplicitHeatConduction()
 {
- if(do_IHC){
-  int numMatls = d_sharedState->getNumMPMMatls();
-  for(int m = 0; m < numMatls; m++){
-    delete d_HC_solver[m];
+  if(one_matl->removeReference())
+    delete one_matl;
+  
+  if(do_IHC){
+    delete d_HC_solver;
+    
+    if(d_perproc_patches && d_perproc_patches->removeReference()) {
+      delete d_perproc_patches;
+      cout << "Freeing patches!!\n";
+    }
   }
-
-  if(d_perproc_patches && d_perproc_patches->removeReference()) {
-    delete d_perproc_patches;
-    cout << "Freeing patches!!\n";
-  }
- }
 }
 
 void ImplicitHeatConduction::problemSetup(string solver_type)
 {
-   int numMatls = d_sharedState->getNumMPMMatls();
 
-   if (solver_type == "petsc") {
-     d_HC_solver = vector<Solver*>(numMatls);
-     for(int m=0;m<numMatls;m++) {
-       d_HC_solver[m] = scinew MPMPetscSolver();
-       d_HC_solver[m]->initialize();
-     }
-   }
-   else {
-     d_HC_solver = vector<Solver*>(numMatls);
-     for(int m=0;m<numMatls;m++){
-       d_HC_solver[m]=scinew SimpleSolver();
-       d_HC_solver[m]->initialize();
-     }
-   }
+  if (solver_type == "petsc") {
+    d_HC_solver = scinew MPMPetscSolver();
+    d_HC_solver->initialize();
+  }
+  else {
+    d_HC_solver=scinew SimpleSolver();
+    d_HC_solver->initialize();
+  }
 }
 
 void ImplicitHeatConduction::scheduleDestroyHCMatrix(SchedulerP& sched,
@@ -117,7 +114,7 @@ void ImplicitHeatConduction::scheduleApplyHCBoundaryConditions(SchedulerP& schd,
   Task* t = scinew Task("ImpMPM::applyHCBoundaryCondition", this,
                         &ImplicitHeatConduction::applyHCBoundaryConditions);
                                                                                 
-  t->computes(lb->gTemperatureStarLabel);
+  t->computes(lb->gTemperatureStarLabel,one_matl);
                                                                                 
   schd->addTask(t, patches, matls);
  }
@@ -144,11 +141,10 @@ void ImplicitHeatConduction::scheduleFormHCStiffnessMatrix(SchedulerP& sched,
  if(do_IHC){
   Task* t = scinew Task("ImpMPM::formHCStiffnessMatrix",this,
                         &ImplicitHeatConduction::formHCStiffnessMatrix);
-                                                                                
-  t->requires(Task::NewDW,lb->gMassLabel, Ghost::None);
+
   t->requires(Task::OldDW,d_sharedState->get_delt_label());
-                                                                                
   sched->addTask(t, patches, matls);
+
  }
 }
 
@@ -160,12 +156,10 @@ void ImplicitHeatConduction::scheduleFormHCQ(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::formHCQ", this,
                         &ImplicitHeatConduction::formHCQ);
                                                                                 
-  Ghost::GhostType  gnone = Ghost::None;
-                                                                                
   t->requires(Task::OldDW,      d_sharedState->get_delt_label());
-  t->requires(Task::NewDW,lb->gTemperatureLabel,      gnone,0);
-  t->requires(Task::NewDW,lb->gMassLabel,             gnone,0);
-  t->requires(Task::NewDW,lb->gExternalHeatRateLabel, gnone,0);
+  t->requires(Task::NewDW,lb->gTemperatureLabel, one_matl,Ghost::AroundCells,
+              1);
+  t->requires(Task::NewDW,lb->gExternalHeatRateLabel, Ghost::AroundCells,1);
                                                                                 
   sched->addTask(t, patches, matls);
  }
@@ -181,7 +175,7 @@ void ImplicitHeatConduction::scheduleAdjustHCQAndHCKForBCs(SchedulerP& sched,
 
   Ghost::GhostType  gnone = Ghost::None;
 
-  t->requires(Task::NewDW, lb->gTemperatureStarLabel,  gnone,0);
+  t->requires(Task::NewDW, lb->gTemperatureStarLabel,one_matl,gnone,0);
 
   sched->addTask(t, patches, matls);
  }
@@ -207,10 +201,10 @@ void ImplicitHeatConduction::scheduleGetTemperatureIncrement(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::getTemperatureIncrement", this,
                         &ImplicitHeatConduction::getTemperatureIncrement);
                                                                                 
-  t->requires(Task::NewDW, lb->gTemperatureNoBCLabel, Ghost::None);
-  t->requires(Task::NewDW, lb->gMassLabel,            Ghost::None);
-  t->modifies(lb->gTemperatureStarLabel);
-  t->computes(lb->gTemperatureRateLabel);
+
+  //t->requires(Task::NewDW, lb->gTemperatureLabel,one_matl,Ghost::None);
+  t->modifies(lb->gTemperatureLabel,one_matl);
+  t->computes(lb->gTemperatureRateLabel,one_matl);
                                                                                 
   sched->addTask(t, patches, matls);
  }
@@ -218,7 +212,7 @@ void ImplicitHeatConduction::scheduleGetTemperatureIncrement(SchedulerP& sched,
   Task* t = scinew Task("ImpMPM::fillgTemperatureRate", this,
                         &ImplicitHeatConduction::fillgTemperatureRate);
 
-  t->computes(lb->gTemperatureRateLabel);
+  t->computes(lb->gTemperatureRateLabel,one_matl);
 
   sched->addTask(t, patches, matls);
  }
@@ -233,9 +227,8 @@ void ImplicitHeatConduction::destroyHCMatrix(const ProcessorGroup*,
   if (cout_doing.active())
     cout_doing <<"Doing destroyHCMatrix " <<"\t\t\t\t\t IMPM" << "\n" << "\n";
 
-  for (int m = 0; m < d_sharedState->getNumMPMMatls(); m++ ) {
-    d_HC_solver[m]->destroyMatrix(false);
-  }
+    d_HC_solver->destroyMatrix(false);
+
 }
 
 void ImplicitHeatConduction::createHCMatrix(const ProcessorGroup* pg,
@@ -245,37 +238,38 @@ void ImplicitHeatConduction::createHCMatrix(const ProcessorGroup* pg,
                                             DataWarehouse* new_dw)
 {
   int numMatls = d_sharedState->getNumMPMMatls();
-  for (int m = 0; m < numMatls; m++){
-    map<int,int> dof_diag;
-    for(int pp=0;pp<patches->size();pp++){
-      const Patch* patch = patches->get(pp);
-      if (cout_doing.active()) {
-        cout_doing <<"Doing createHCMatrix on patch " << patch->getID()
-                   << "\t\t\t\t IMPM"    << "\n" << "\n";
-      }
-                                                                                
-      d_HC_solver[m]->createLocalToGlobalMapping(pg,d_perproc_patches,
-                                                 patches,1);
-                                                                                
-      IntVector lowIndex = patch->getInteriorNodeLowIndex();
-      IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
-                                                                                
-      Array3<int> l2g(lowIndex,highIndex);
-      d_HC_solver[m]->copyL2G(l2g,patch);
-                                                                                
-      CCVariable<int> visited;
-      new_dw->allocateTemporary(visited,patch,Ghost::AroundCells,1);
-      visited.initialize(0);
-                                                                                
+
+  map<int,int> dof_diag;
+  for(int pp=0;pp<patches->size();pp++){
+    const Patch* patch = patches->get(pp);
+    if (cout_doing.active()) {
+      cout_doing <<"Doing createHCMatrix on patch " << patch->getID()
+                 << "\t\t\t\t IMPM"    << "\n" << "\n";
+    }
+    
+    d_HC_solver->createLocalToGlobalMapping(pg,d_perproc_patches,
+                                            patches,1);
+    
+    IntVector lowIndex = patch->getInteriorNodeLowIndex();
+    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    
+    Array3<int> l2g(lowIndex,highIndex);
+    d_HC_solver->copyL2G(l2g,patch);
+    
+    CCVariable<int> visited;
+    new_dw->allocateTemporary(visited,patch,Ghost::AroundCells,1);
+    visited.initialize(0);
+    
+    for (int m = 0; m < numMatls; m++){                                                                                
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       constParticleVariable<Point> px;
       ParticleSubset* pset;
-                                                                                
+      
       pset = old_dw->getParticleSubset(dwi,patch, Ghost::AroundNodes,1,
-                                                          lb->pXLabel);
+                                       lb->pXLabel);
       old_dw->get(px,lb->pXLabel,pset);
-                                                                                
+      
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -301,8 +295,8 @@ void ImplicitHeatConduction::createHCMatrix(const ProcessorGroup* pg,
         }
       }
     }
-    d_HC_solver[m]->createMatrix(pg,dof_diag);
   }
+  d_HC_solver->createMatrix(pg,dof_diag);
 }
 
 void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
@@ -321,52 +315,77 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
     IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
                                                                                 
-    // Apply grid boundary conditions to the temperature before storing the data
-    for (int m = 0; m < d_sharedState->getNumMPMMatls(); m++ ) {
-      d_HC_solver[m]->copyL2G(l2g,patch);
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int matl = mpm_matl->getDWIndex();
+    // Apply grid boundary conditions to the temperature before storing the 
+    // data -- all data is for material 0 -- single temperature field.
+    
+    d_HC_solver->copyL2G(l2g,patch);
+    int matl = 0;
 
-      NCVariable<double> gtemp;
+    NCVariable<double> gtemp;
 
-      new_dw->allocateAndPut(gtemp, lb->gTemperatureStarLabel,matl,patch);
-      gtemp.initialize(0.);
-                                                                                
-      for(Patch::FaceType face = Patch::startFace;
-          face <= Patch::endFace; face=Patch::nextFace(face)){
-        const BoundCondBase *temp_bcs;
-        if (patch->getBCType(face) == Patch::None) {
-          int numChildren =
-            patch->getBCDataArray(face)->getNumberChildren(matl);
-          for (int child = 0; child < numChildren; child++) {
-            vector<IntVector> bound,nbound,sfx,sfy,sfz;
-            vector<IntVector>::const_iterator boundary;
-                                                                                
-            temp_bcs = patch->getArrayBCValues(face,matl,"Temperature",bound,
-                                               nbound,sfx,sfy,sfz,child);
-            if (temp_bcs != 0) {
-              const TemperatureBoundCond* bc =
-                           dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
-              if (bc->getKind() == "Dirichlet") {
-                for (boundary=nbound.begin(); boundary != nbound.end();
-                     boundary++) {
-                  gtemp[*boundary] = bc->getValue();
-                }
-                IntVector l,h;
-                patch->getFaceNodes(face,0,l,h);
-                for(NodeIterator it(l,h); !it.done(); it++) {
-                  IntVector n = *it;
-                  int dof = l2g[n];
-                  d_HC_solver[m]->d_DOF.insert(dof);
-                }
+    new_dw->allocateAndPut(gtemp, lb->gTemperatureStarLabel,matl,patch);
+    gtemp.initialize(0.);
+    
+    for(Patch::FaceType face = Patch::startFace;
+        face <= Patch::endFace; face=Patch::nextFace(face)){
+      const BoundCondBase *temp_bcs;
+      if (patch->getBCType(face) == Patch::None) {
+        int numChildren =
+          patch->getBCDataArray(face)->getNumberChildren(matl);
+        for (int child = 0; child < numChildren; child++) {
+          vector<IntVector> bound,nbound,sfx,sfy,sfz;
+          vector<IntVector>::const_iterator boundary;
+          
+          temp_bcs = patch->getArrayBCValues(face,matl,"Temperature",bound,
+                                             nbound,sfx,sfy,sfz,child);
+          if (temp_bcs != 0) {
+            const TemperatureBoundCond* bc =
+              dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
+            if (bc->getKind() == "Dirichlet") {
+              for (boundary=nbound.begin(); boundary != nbound.end();
+                   boundary++) {
+                gtemp[*boundary] = bc->getValue();
               }
-              delete temp_bcs;
+              IntVector l,h;
+              patch->getFaceNodes(face,0,l,h);
+              for(NodeIterator it(l,h); !it.done(); it++) {
+                IntVector n = *it;
+                int dof = l2g[n];
+                //  cout << "Node: " << n << " dof: " << dof << endl;
+                vector<int> neigh;
+                // Find the neighbors for this DOF
+                for (int i = -1; i<=1; i++) {
+                  for (int j = -1; j<=1; j++) {
+                    for (int k = -1; k<=1; k++) {
+                      IntVector neighbor = n + IntVector(i,j,k);
+                      if (neighbor.x() >= lowIndex.x() && 
+                          neighbor.x() < highIndex.x() &&
+                          neighbor.y() >= lowIndex.y() &&
+                          neighbor.y() < highIndex.y() &&
+                          neighbor.z() >= lowIndex.z() &&
+                          neighbor.z() < highIndex.z()) {
+                        int dof_neighbor = l2g[neighbor];
+                        if (dof_neighbor > 0 && dof_neighbor != dof) {
+#if 0
+                          cout << "neighbor: " << neighbor << " dof: " 
+                               << dof_neighbor << endl;
+#endif
+                          neigh.push_back(dof_neighbor);
+                        }
+                      }
+                    }
+                  }
+                }
+                d_HC_solver->d_DOFNeighbors[dof] = neigh;
+                d_HC_solver->d_DOF.insert(dof);
+              }
             }
+            delete temp_bcs;
           }
-        } else
-          continue;
-      }  // faces
-    }    // matls
+        }
+      } else
+        continue;
+    }  // faces
   }      // patches
 }
 
@@ -388,19 +407,19 @@ void ImplicitHeatConduction::findFixedHCDOF(const ProcessorGroup*,
     Array3<int> l2g(lowIndex,highIndex);
                                                                                 
     int numMatls = d_sharedState->getNumMPMMatls();
+    d_HC_solver->copyL2G(l2g,patch);
     for(int m = 0; m < numMatls; m++){
-      d_HC_solver[m]->copyL2G(l2g,patch);
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
       constNCVariable<double> mass;
       new_dw->get(mass,   lb->gMassLabel,matlindex,patch,Ghost::None,0);
-                                                                                
+                                                                               
       for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
         IntVector n = *iter;
         // Just look on the grid to see if the gmass is 0 and then remove that
         if (compare(mass[n],0.)) {
           int dof = l2g[n];
-          d_HC_solver[m]->d_DOF.insert(dof);
+          d_HC_solver->d_DOF.insert(dof);
         }
       }  // node iterator
     }    // loop over matls
@@ -428,15 +447,13 @@ void ImplicitHeatConduction::formHCStiffnessMatrix(const ProcessorGroup*,
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
 
+    d_HC_solver->copyL2G(l2g,patch);
     int numMatls = d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int matlindex = mpm_matl->getDWIndex();
-      d_HC_solver[m]->copyL2G(l2g,patch);
-                                                                                
-      constNCVariable<double> gmass;
+                                                                               
       delt_vartype dt;
-      new_dw->get(gmass,lb->gMassLabel, matlindex,patch,Ghost::None,0);
       old_dw->get(dt,d_sharedState->get_delt_label(), patch->getLevel());
                                                                                 
       ParticleSubset* pset;
@@ -454,59 +471,54 @@ void ImplicitHeatConduction::formHCStiffnessMatrix(const ProcessorGroup*,
       int dof[8];
       double K  = mpm_matl->getThermalConductivity();
       double Cp = mpm_matl->getSpecificHeat();
+      double rho = mpm_matl->getInitialDensity();
                                                                                 
       for(ParticleSubset::iterator iter = pset->begin();
                                    iter != pset->end(); iter++){
         particleIndex idx = *iter;
         // Get the node indices that surround the cell
-        vector<IntVector> ni;
-        ni.reserve(8);
-        vector<Vector> d_S;
-        d_S.reserve(8);
-                                                                                
-        interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
-                                                                                
+        vector<IntVector> ni(8);
+        vector<double> S(8);
+        vector<Vector> d_S(8);
+
+        interpolator->findCellAndWeightsAndShapeDerivatives(px[idx],ni,S,d_S);
+                                                                               
         for(int ii = 0;ii<8;ii++){
           for(int jj = 0;jj<8;jj++){
             kHC[ii][jj]=0.;
           }
         }
-                                                                                
+                                
         for(int ii = 0;ii<8;ii++){
           int l2g_node_num = l2g[ni[ii]];
           dof[ii]=l2g_node_num;
           for(int jj = 0;jj<8;jj++){
+            // Thermal inertia terms
+            if (d_HC_transient) {
+              kHC[ii][jj] += S[jj]*S[ii]*Cp*rho*pvolume[idx]/dt;
+            }
             for(int dir=0;dir<3;dir++){
               kHC[ii][jj]+=d_S[jj][dir]*d_S[ii][dir]*(K/(dx[dir]*dx[dir]))
-                                                    *pvolume[idx];
+                *pvolume[idx];
             }
           }
         }
-                                                                                
+        
         for (int I = 0; I < 8;I++){
           for (int J = 0; J < 8; J++){
             v[8*I+J] = kHC[I][J];
           }
         }
-        d_HC_solver[m]->fillMatrix(8,dof,8,dof,v);
-      }
-                                                                                
-      if (d_HC_transient) {
-        // Thermal inertia terms
-        for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
-          IntVector n = *iter;
-          int dof[1];
-          dof[0] = l2g[n];
-          v[0] = gmass[n]*(Cp/dt);
-          d_HC_solver[m]->fillMatrix(1,dof,1,dof,v);
-        }  // node iterator
-      }
+        d_HC_solver->fillMatrix(8,dof,8,dof,v);
+      }                                                                                
     }    // matls
     delete interpolator;
+
   }
-  for (int m = 0; m < d_sharedState->getNumMPMMatls(); m++)
-    d_HC_solver[m]->finalizeMatrix();
+  d_HC_solver->finalizeMatrix();
+
 }
+
 
 void ImplicitHeatConduction::formHCQ(const ProcessorGroup*,
                                      const PatchSubset* patches,
@@ -524,38 +536,82 @@ void ImplicitHeatConduction::formHCQ(const ProcessorGroup*,
     IntVector lowIndex = patch->getInteriorNodeLowIndex();
     IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
-                                                                                
+
+    LinearInterpolator* interpolator = new LinearInterpolator(patch);                                                                                
+    d_HC_solver->copyL2G(l2g,patch);
+
+    constNCVariable<double> temperature;
+    new_dw->get(temperature, lb->gTemperatureLabel, 0,patch,Ghost::AroundCells,
+                1);
+
+#if 0
+    for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
+      IntVector n = *iter;
+      cout << "temperature[" << n << "]= " << temperature[n] << endl;
+    }
+#endif
+
     int numMatls = d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
-      d_HC_solver[m]->copyL2G(l2g,patch);
-                                                                                
+                                                                               
       delt_vartype dt;
-      Ghost::GhostType  gnone = Ghost::None;
-                                                                                
-      constNCVariable<double> mass,temperature,gextheatrate;
-                                                                                
+                                                                               
+      constNCVariable<double> gextheatrate;
+                                                                               
       old_dw->get(dt,d_sharedState->get_delt_label(), patch->getLevel());
-      new_dw->get(temperature, lb->gTemperatureLabel,      dwi,patch,gnone,0);
-      new_dw->get(mass,        lb->gMassLabel,             dwi,patch,gnone,0);
-      new_dw->get(gextheatrate,lb->gExternalHeatRateLabel, dwi,patch,gnone,0);
-                                                                                
+
+      new_dw->get(gextheatrate,lb->gExternalHeatRateLabel, dwi,patch,
+                  Ghost::AroundCells,1);
+                                                                          
+      ParticleSubset* pset;
+      pset = old_dw->getParticleSubset(dwi, patch);
+      constParticleVariable<Point> px;
+      constParticleVariable<double> pvolume;
+
+      old_dw->get(px,lb->pXLabel,pset);
+      old_dw->get(pvolume,lb->pVolumeLabel,pset);
+      
+      int dof[8];
       double Cp = mpm_matl->getSpecificHeat();
-                                                                                
-      for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {        IntVector n = *iter;
-        int dof[1];
-        dof[0] = l2g[n];
-        double v = 0.;
-        if (d_HC_transient) {
-          // Thermal inertia term
-          v = temperature[n]*mass[n]*Cp/dt + gextheatrate[n];
+      double rho = mpm_matl->getInitialDensity();
+#if 0
+      cout << "Cp = " << Cp << " rho = " << rho << endl;
+#endif
+
+      for(ParticleSubset::iterator iter = pset->begin();
+                                   iter != pset->end(); iter++){
+        particleIndex idx = *iter;
+        // Get the node indices that surround the cell
+        vector<IntVector> ni(8);
+        vector<double> S(8);
+
+        interpolator->findCellAndWeights(px[idx],ni,S);
+                                                                               
+        bool add = true;
+
+
+        for(int ii = 0;ii<8;ii++){
+          //  cout << "ni = " << ni[ii] << endl;
+          int l2g_node_num = l2g[ni[ii]];
+          double v = 0;
+          dof[ii]=l2g_node_num;
+          for(int jj = 0;jj<8;jj++){
+            // Thermal inertia terms
+            if (d_HC_transient) {
+              v += S[jj]*S[ii]*Cp*rho*pvolume[idx]*temperature[ni[jj]]/dt + 
+                gextheatrate[ni[ii]];
+            }
+          }
+          // cout << "v[" << l2g_node_num << "]= " << v << endl;
+          d_HC_solver->fillVector(dof[ii],v,add);
         }
-        d_HC_solver[m]->fillVector(dof[0],v);
       }
-      d_HC_solver[m]->assembleVector();
     }  // matls
+    delete interpolator;
   }    // patches
+  d_HC_solver->assembleVector();
 }
 
 void ImplicitHeatConduction::adjustHCQAndHCKForBCs(const ProcessorGroup*,
@@ -578,31 +634,33 @@ void ImplicitHeatConduction::adjustHCQAndHCKForBCs(const ProcessorGroup*,
     IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
 
-    int numMatls = d_sharedState->getNumMPMMatls();
-    for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-      d_HC_solver[m]->copyL2G(l2g,patch);
+    d_HC_solver->copyL2G(l2g,patch);
+    int dwi = 0;
 
-      Ghost::GhostType  gnone = Ghost::None;
-                                                                                
-      constNCVariable<double> temperature;
-                                                                                
-      new_dw->get(temperature, lb->gTemperatureStarLabel,  dwi,patch,gnone,0);
-
-      for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {        IntVector n = *iter;
-        int dof[1];
-        dof[0] = l2g[n];
-        double v = -temperature[n];
-        d_HC_solver[m]->fillTemporaryVector(dof[0],v);
-      }
-      d_HC_solver[m]->assembleTemporaryVector();
-
-      d_HC_solver[m]->removeFixedDOF(num_nodes);
-
-      d_HC_solver[m]->applyBCSToRHS();
-    }  // matls
+    Ghost::GhostType  gnone = Ghost::None;
+    
+    constNCVariable<double> temperature;
+    
+    // gTemperatureStar are the boundary condition values for the temperature
+    // determined earlier in applyHCBoundaryConditions()
+    
+    new_dw->get(temperature, lb->gTemperatureStarLabel,dwi,patch,gnone,0);
+    
+    for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+      IntVector n = *iter;
+      int dof[1];
+      dof[0] = l2g[n];
+      double v = -temperature[n];
+      d_HC_solver->fillTemporaryVector(dof[0],v);
+    }
   }    // patches
+  d_HC_solver->assembleTemporaryVector();
+  
+  d_HC_solver->applyBCSToRHS();
+  
+  d_HC_solver->removeFixedDOFHeat(num_nodes);
+      
+
 }
 
 void ImplicitHeatConduction::solveForTemp(const ProcessorGroup*,
@@ -611,23 +669,16 @@ void ImplicitHeatConduction::solveForTemp(const ProcessorGroup*,
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw)
 {
-  int num_nodes = 0;
   for(int p = 0; p<patches->size();p++) {
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing <<"Doing solveForTemp on patch " << patch->getID()
                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
-                                                                                
-    IntVector nodes = patch->getNInteriorNodes();
-    num_nodes += (nodes.x())*(nodes.y())*(nodes.z());
   }
-                                                                                
-  int numMatls = d_sharedState->getNumMPMMatls();
-  for(int m = 0; m < numMatls; m++){
-    d_HC_solver[m]->removeFixedDOF(num_nodes);
-    d_HC_solver[m]->solve();
-  }
+  d_HC_solver->solve();
+
+
 }
 
 void ImplicitHeatConduction::getTemperatureIncrement(const ProcessorGroup*,
@@ -643,7 +694,6 @@ void ImplicitHeatConduction::getTemperatureIncrement(const ProcessorGroup*,
                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
 
-    Ghost::GhostType  gn = Ghost::None;
     delt_vartype dt;
     old_dw->get(dt, d_sharedState->get_delt_label(),patch->getLevel());
                                                                                 
@@ -651,64 +701,34 @@ void ImplicitHeatConduction::getTemperatureIncrement(const ProcessorGroup*,
     IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
                                                                                 
-    int numMatls = d_sharedState->getNumMPMMatls();
+    NCVariable<double>  tempRate;
+    NCVariable<double> temp;
 
-    StaticArray<NCVariable<double> > TempImp(numMatls),tempRate(numMatls);
-    StaticArray<constNCVariable<double> >temp(numMatls),gmass(numMatls);
-    vector<double> Cp(numMatls);
+    int dwi = 0;
 
-    for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-      new_dw->getModifiable(TempImp[m],  lb->gTemperatureStarLabel,dwi,patch);
-      new_dw->allocateAndPut(tempRate[m],lb->gTemperatureRateLabel,dwi,patch);
-      new_dw->get(temp[m],               lb->gTemperatureLabel, dwi,patch,gn,0);
-      new_dw->get(gmass[m],              lb->gMassLabel,        dwi,patch,gn,0);
-      Cp[m]=mpm_matl->getSpecificHeat();
-      tempRate[m].initialize(0.0);
-      TempImp[m].initialize(0.0);
+    new_dw->allocateAndPut(tempRate,lb->gTemperatureRateLabel,dwi,patch);
+    //new_dw->get(temp,lb->gTemperatureLabel, dwi,patch,Ghost::None,0);
+    new_dw->getModifiable(temp,lb->gTemperatureLabel, dwi,patch);
 
-      d_HC_solver[m]->copyL2G(l2g,patch);
 
-      vector<double> x;
-      int begin = d_HC_solver[m]->getSolution(x);
+    tempRate.initialize(0.0);
 
-      for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
-        IntVector n = *iter;
-        int dof = l2g[n] - begin;
-        TempImp[m][n] = x[dof];
-        //cout << "temp[" << n << "]=" << TempImp[m][n] << endl;
-      }
+    d_HC_solver->copyL2G(l2g,patch);
+
+    vector<double> x;
+    int begin = d_HC_solver->getSolution(x);
+
+    for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+      IntVector n = *iter;
+      int dof = l2g[n] - begin;
+      tempRate[n] = (x[dof] - temp[n])/dt;
+      temp[n] = x[dof];
+#if 0
+      cout << "tempRate[" << n << "]= " << tempRate[n] << endl;
+#endif
     }
+  }
 
-    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
-      double numerator=0.0;
-      double denominator=0.0;
-      IntVector c = *iter;
-      for(int m = 0; m < numMatls; m++) {
-        numerator   += (TempImp[m][c] * gmass[m][c]  * Cp[m]);
-        denominator += (gmass[m][c]   * Cp[m]);
-      }
-
-      double contactTemperature = numerator/denominator;
-
-      for(int m = 0; m < numMatls; m++) {
-        TempImp[m][c]=contactTemperature;
-      }
-    }
-
-      // Set BCs on final temperature (for now, we should be able to can this)
-    for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-      MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Temperature",TempImp[m],8);
-      for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
-        IntVector n = *iter;
-        tempRate[m][n] = (TempImp[m][n]-temp[m][n])/dt;
-      }
-    } // matls
-  }   // patches
 }
 
 void ImplicitHeatConduction::fillgTemperatureRate(const ProcessorGroup*,
@@ -723,15 +743,11 @@ void ImplicitHeatConduction::fillgTemperatureRate(const ProcessorGroup*,
       cout_doing <<"Doing fillgTemperatureRate on patch " << patch->getID()
                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
-    int numMatls = d_sharedState->getNumMPMMatls();
-                                                                                
-    for(int m = 0; m < numMatls; m++){
-      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      int dwi = mpm_matl->getDWIndex();
-                                                                                
-      NCVariable<double> tempRate;
-      new_dw->allocateAndPut(tempRate,lb->gTemperatureRateLabel,dwi,patch);
-      tempRate.initialize(0.0);
-    }
+
+    int dwi = 0;
+    NCVariable<double> tempRate;
+    new_dw->allocateAndPut(tempRate,lb->gTemperatureRateLabel,dwi,patch);
+    tempRate.initialize(0.0);
+
   }
 }
