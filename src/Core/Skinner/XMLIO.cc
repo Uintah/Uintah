@@ -487,8 +487,8 @@ namespace SCIRun {
       }
       
       SignalThrower::AllSignalCatchers_t &catchers = cpos->second;
-      SignalThrower::AllSignalCatchers_t::reverse_iterator citer = catchers.rbegin();
-      SignalThrower::AllSignalCatchers_t::reverse_iterator cend = catchers.rend();
+      SignalThrower::AllSignalCatchers_t::iterator citer = catchers.begin();
+      SignalThrower::AllSignalCatchers_t::iterator cend = catchers.end();
       
       for (;citer != cend; ++citer) {
         SignalCatcher::CatcherTargetInfo_t &callback = *citer;
