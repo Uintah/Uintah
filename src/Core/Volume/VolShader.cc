@@ -361,38 +361,74 @@ VolShader::emit(string& s)
   {
     if (shading_)
     {
-      z << VOL_VLUP_2_1;
       if (vsize_ == 1)
       {
-	z << VOL_GRAD_COMPUTE_2_1;
-      }
-
-      z << VOL_LIT_BODY_NOGRAD;
-      if (vsize_ == 1)
-      {
-	z << VOL_COMPUTED_GRADIENT_LOOKUP;
-      }
-      else
-      {
-	z << VOL_GLUP_2_4;
-      }
-
-      if (num_cmaps_ > 1)
-      {
-	z << VOL_TFLUP_MASK_HEAD;
-	for (int n = 0; n < num_cmaps_; ++n)
+        z << VOL_VLUP_2_1;
+        z << VOL_GRAD_COMPUTE_2_1;
+        z << VOL_LIT_BODY_NOGRAD;
+        if (channels_ == 1)
         {
-	  z << VOL_TFLUP_2_1_MASK;
+          z << VOL_COMPUTED_GRADIENT_LOOKUP;
         }
-      }
-      else
-      {
-	if (vsize_ == 1)
+        else
+        {
+          z << VOL_GLUP_2_1;
+        }
+        
+        if (num_cmaps_ > 1)
+        {
+          z << VOL_TFLUP_MASK_HEAD;
+          for (int n = 0; n < num_cmaps_; ++n)
+          {
+            z << VOL_TFLUP_2_1_MASK;
+          }
+        }
+        else
+        {
 	  z << VOL_TFLUP_2_1;
-	else
-	  z << VOL_TFLUP_2_4;
+        }
+        z << VOL_LIT_END;
       }
-      z << VOL_LIT_END;
+      else // vsize_ == 4
+      {
+        z << VOL_VLUP_2_1;
+        if (channels_ == 1)
+        {
+          z << VOL_GRAD_COMPUTE_2_4;
+        }
+
+        z << VOL_LIT_BODY_NOGRAD;
+
+        if (channels_ == 1)
+        {
+          z << VOL_COMPUTED_GRADIENT_LOOKUP;
+        }
+        else
+        {
+          z << VOL_GLUP_2_4;
+        }
+
+        if (num_cmaps_ > 1)
+        {
+          z << VOL_TFLUP_MASK_HEAD;
+          for (int n = 0; n < num_cmaps_; ++n)
+          {
+            z << VOL_TFLUP_2_1_MASK;
+          }
+        }
+        else
+        {
+          if (channels_ == 1)
+          {
+            z << VOL_TFLUP_2_1;
+          }
+          else
+          {
+            z << VOL_TFLUP_2_4;
+          }
+        }
+        z << VOL_LIT_END;
+      }
     }
     else // No shading, 2D colormap.
     {
