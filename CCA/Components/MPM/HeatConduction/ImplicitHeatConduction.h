@@ -118,11 +118,12 @@ namespace Uintah {
   private:
     MPMLabel* lb;
     MPMFlags* d_flag;
+    MaterialSubset* one_matl;
     bool do_IHC;
     bool d_HC_transient;
     const PatchSet* d_perproc_patches;
 
-    vector<Solver*> d_HC_solver;
+    Solver* d_HC_solver;
 
     SimulationStateP d_sharedState;
     int NGP, NGN;
