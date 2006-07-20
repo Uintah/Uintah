@@ -55,9 +55,6 @@ void init_pysci(char**environment)
     sci_putenv("SCIRUN_VERSION", SCIRUN_VERSION);
     sci_putenv("SCIRUN_RCFILE_SUBVERSION", SCIRUN_RCFILE_SUBVERSION);
 
-    // to solve the mysterious unresolved when loading dynamic compiled so's
-    //_ZTIN6SCIRun5FieldE
-    //typeinfo for SCIRun::Field
     SCIRunInit();
 
     //! create the EventManager thread.
@@ -169,6 +166,17 @@ void add_key_event(KeyEvent *ke)
   k->ref_cnt = 1; // workaround for assert in Datatype operator ==
   *k = *ke;
   event_handle_t event = k;
+  cerr << "adding key event" << endl;
+  EventManager::add_event(event);
+}
+
+void add_tm_notify_event(TMNotifyEvent *te)
+{
+  TMNotifyEvent *t = new TMNotifyEvent();
+  t->ref_cnt = 1; // workaround for assert in Datatype operator ==
+  *t = *te;
+  event_handle_t event = t;
+  cerr << "adding tm notify event" << endl;
   EventManager::add_event(event);
 }
 
@@ -196,8 +204,8 @@ bool show_field(int fld_id)
   // input parameters to RenderField::render
   // fld_handle - the field to render
   bool do_nodes = true; // show nodes or not.
-  bool do_edges = true; // show edges or not.
-  bool do_faces = false; // show faces or not.
+  bool do_edges = false; // show edges or not.
+  bool do_faces = true; // show faces or not.
 
 //   ColorMap(const vector<Color>& rgb,
 // 	   const vector<float>& rgbT,
@@ -207,8 +215,8 @@ bool show_field(int fld_id)
   ColorMapHandle color_map = 0; // mapping data values to colors 
   //color when no color_map.
   MaterialHandle def_material = new Material(Color(0.3, 0.7, 0.3)); 
-  string ndt = "Points"; // or "Spheres" or "Axes"  
-  string edt = "Lines"; // or "Cylinders" 
+  string ndt = "Spheres"; // "Points" or "Spheres" or "Axes"  
+  string edt = "Lines"; // "Lines" or "Cylinders" 
   double ns = 0.3; // node scale factor. 
   double es = 0.3; // edge scale factor.
   double vscale = 0.3; // Vectors scale factor. 

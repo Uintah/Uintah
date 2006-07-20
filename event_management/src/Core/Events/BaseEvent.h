@@ -46,9 +46,12 @@ namespace SCIRun {
 
 using namespace std;
 
+
 class BaseEvent : public Datatype
 {
 public:
+  //! target is the id of the mailbox given by EventManager, 
+  //! if it is an empty string then all Event Mailboxes get the event.
   BaseEvent(const string &target = "", 
             long int time = 0);
 
@@ -71,6 +74,7 @@ public:
   virtual bool          is_key_event() { return false; }
   virtual bool          is_window_event() { return false; }
   virtual bool          is_scene_graph_event() { return false; }
+  virtual bool          is_tm_notify_event() { return false; }
 
 private:
   //! The event timestamp
@@ -242,6 +246,35 @@ public:
   virtual ~RedrawEvent();
   virtual void          io(Piostream&);
   virtual RedrawEvent * clone() { return new RedrawEvent(*this); }
+};
+
+class TMNotifyEvent : public BaseEvent {
+public:
+  enum {
+    START_E,
+    STOP_E,
+    SUSPEND_E,
+    RESUME_E
+  };
+
+  TMNotifyEvent(const string &id = "", unsigned int s = START_E, 
+		const string &target = "", unsigned long time = 0);
+  virtual ~TMNotifyEvent();
+
+  virtual void          io(Piostream&);
+  virtual TMNotifyEvent * clone() { return new TMNotifyEvent(*this); }
+
+  virtual bool          is_tm_notify_event() { return true; }
+
+  string       get_tool_id()      const          { return tool_id_; }
+  unsigned int get_notify_state() const          { return notify_state_; }
+
+  void         set_tool_id(string id)            { tool_id_ = id; } 
+  void         set_notify_state(unsigned int s)  { notify_state_ = s; }
+
+private:
+  string                    tool_id_;
+  unsigned int              notify_state_;
 };
 
 typedef LockingHandle<BaseEvent> event_handle_t;

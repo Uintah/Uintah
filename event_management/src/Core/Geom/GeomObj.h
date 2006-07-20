@@ -87,6 +87,7 @@ public:
 #ifdef SCI_OPENGL
   int pre_draw(DrawInfoOpenGL*, Material*, int lit);
   virtual void draw(DrawInfoOpenGL*, Material*, double time)=0;
+  virtual void fbpick_draw(DrawInfoOpenGL*, Material*, double time) {}
   int post_draw(DrawInfoOpenGL*);
 #endif
   virtual void get_triangles( Array1<float> &v );

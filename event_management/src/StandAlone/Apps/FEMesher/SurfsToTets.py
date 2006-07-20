@@ -77,7 +77,7 @@ class Viewer(threading.Thread) :
             print "running"
         
             self.drawing_area = SimpleDrawingArea(self.glconfig)
-            self.drawing_area.set_size_request(800, 450)
+            self.drawing_area.set_size_request(1366, 768)
             self.drawing_area.show()
 
             while (self.drawing_area.sci_context == None) :
@@ -119,7 +119,7 @@ def progress_timeout(pbobj):
     return True
 
 class SimpleDrawingArea(gtk.DrawingArea, gtk.gtkgl.Widget):
-    """OpenGL drawing area for simple demo."""
+    """OpenGL drawing area."""
 
     def __init__(self, glconfig):
         print "called __init__"
@@ -407,6 +407,7 @@ class SurfsToTets:
         e.set_key_string(event.string)
         e.set_key_state(pysci.KeyEvent.KEY_PRESS_E)
         pysci.add_key_event(e)
+	print e
         return True
 
     def on_eventbox_enter_notify_event(self, window_widget, event) :
@@ -462,6 +463,42 @@ class SurfsToTets:
                                                             state))
         pysci.add_pointer_event(e)
         return True
+
+    def on_add_b_clicked(self, a) :
+	print "on_add_b_clicked"
+	# first arg: is the name of the tool,
+	# second arg: the notify state,
+	# third arg: target just our viewer window tool manager for the event
+	e = pysci.TMNotifyEvent("GeomPickTool", pysci.TMNotifyEvent.START_E,
+				"OpenGLViewer")
+	pysci.add_tm_notify_event(e)
+	
+    def on_remove_b_clicked(self, a) :
+	print "on_remove_b_clicked"
+	
+    def on_nodes_tb_toggled(self, a) :
+	print "on_nodes_tb_toggled"
+	
+    def on_edges_tb_toggled(self, a) :
+	print "on_edges_tb_toggled"
+	
+    def on_faces_tb_toggled(self, a) :
+	print "on_faces_tb_toggled"
+	
+    def on_elems_tb_toggled(self, a) :
+	print "on_elems_tb_toggled"
+
+
+    #sel_cb is the check button in the menu.
+    def on_show_selection_activate(self, sel_cb) :
+	print "on_show_selection_activate"
+	sel_tb = self.xml_.get_widget("selection_tb")
+	if sel_cb.get_active() :
+		sel_tb.show()
+	else :
+		sel_tb.hide()
+	
+	
 
 if __name__ == "__main__" :
     gtk.threads_init()

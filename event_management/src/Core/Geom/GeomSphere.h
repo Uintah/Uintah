@@ -128,6 +128,7 @@ private:
   int nu_;
   int nv_;
   double global_radius_;
+  vector<unsigned int> item_idx_;
   
 public:
 
@@ -138,9 +139,10 @@ public:
   virtual GeomObj* clone();
   virtual void get_bounds(BBox&);
   
-  void add(const Point &center);
-  void add(const Point &center, const MaterialHandle &mat);
-  void add(const Point &center, float index);
+  void add(const Point &center, unsigned int idx = 0);
+  void add(const Point &center, const MaterialHandle &mat, 
+	   unsigned int idx = 0);
+  void add(const Point &center, float index, unsigned int idx = 0);
 
   // If radius is too small, the sphere is not added and false is returned.
   bool add_radius(const Point &cen, double radius);
@@ -149,6 +151,7 @@ public:
 
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
+  virtual void fbpick_draw(DrawInfoOpenGL*, Material*, double time);
 #endif
   
   virtual void io(Piostream&);

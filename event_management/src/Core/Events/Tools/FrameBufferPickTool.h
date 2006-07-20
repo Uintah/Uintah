@@ -25,12 +25,12 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : ViewRotateTool.h
+//    File   : FrameBufferPickTool.h
 //    Author : Martin Cole
-//    Date   : Thu Jun  8 15:34:34 MDT 2006
+//    Date   : Tue Jul 18 14:05:48 2006
 
-#if !defined(ViewRotateTool_h)
-#define ViewRotateTool_h
+#if !defined(FrameBufferPickTool_h)
+#define FrameBufferPickTool_h
 
 #include <Core/Events/Tools/ViewToolInterface.h>
 #include <Core/Events/Tools/BaseTool.h>
@@ -38,14 +38,17 @@
 #include <Core/Events/Tools/Ball.h>
 #include <Core/Events/Tools/BallMath.h>
 #include <Core/Geometry/Transform.h>
+#include <vector>
 
 namespace SCIRun {
 
-class ViewRotateTool : public PointerTool
+using std::vector;
+
+class FrameBufferPickTool : public PointerTool
 {
 public:
-  ViewRotateTool(string name, ViewToolInterface* i);
-  virtual ~ViewRotateTool();
+  FrameBufferPickTool(string name, vector<unsigned char> &fb_img);
+  virtual ~FrameBufferPickTool();
 
   //! which == button number, x,y in window at event time 
   virtual propagation_state_e pointer_down(int which, int x, int y, 
@@ -61,19 +64,10 @@ public:
                                          int time);
 
 private:
-  ViewToolInterface                 *scene_interface_;
-  BallData                          *ball_;
-  View                               rot_view_;
-  int                                last_x_;
-  int                                last_y_;
-  bool                               rotate_valid_p_;
-  double                             eye_dist_;
-  Transform                          prev_trans_;
-  int			             prev_time_[3]; 
-  HVect			             prev_quat_[3];
-  int			             last_time_;
+  //FBPickInterface                 *fbp_interface_;
+  vector<unsigned char>           &fb_img_;
 };
 
 } // namespace SCIRun
 
-#endif //ViewRotateTool_h
+#endif //FrameBufferPickTool_h

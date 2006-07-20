@@ -125,7 +125,12 @@ CTAGS := ctags
 
 SCIRUN_APP_DIR := $(OBJTOP_ABS)/../SCIRun/
 
-all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM BioImage FusionViewer LevelSetSegmenter
+PYTARG =
+ifeq ($(HAVE_PYDEV),yes)
+  PYTARG := lnpysci
+endif
+
+all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM BioImage FusionViewer LevelSetSegmenter $(PYTARG)
 
 .PHONY: prereqs
 prereqs: $(MAKEFILEDIRS) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(VCDIR) $(VCDEPS)
@@ -141,6 +146,12 @@ $(CREATETCLINDEX): $(SRCTOP)/scripts/createTclIndex.in $(OBJTOP)/Makefile
               -e 's,TCL_INIT_DIR,$(TCL_INIT_DIR),g' \
               $(SRCTOP)/scripts/createTclIndex.in > $(CREATETCLINDEX)
 	-@chmod a+x $(CREATETCLINDEX)
+
+lnpysci: $(SRCTOP)/pysci/pysci.py $(OBJTOP)/lib/libpysci.so	
+	ln -sf ../../src/pysci/pysci.py pysci/pysci.py
+	ln -sf ../lib/libpysci.so pysci/_pysci.so
+	touch lnpysci
+
 
 packmaker: $(SRCTOP)/scripts/packmaker.in $(OBJTOP)/Makefile
 	@echo creating packmaker

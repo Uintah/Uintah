@@ -8,6 +8,8 @@ namespace SCIRun {
 class CallbackOpenGLContext;
 class KeyEvent;
 class PointerEvent;
+class TMNotifyEvent;
+
 using std::string;
 
 int load_field(string fname);
@@ -20,5 +22,6 @@ bool tetgen_2surf(string f1, string f2, string out);
 void run_viewer_thread(CallbackOpenGLContext *ogl);
 void add_pointer_event(PointerEvent *p);
 void add_key_event(KeyEvent *k);
+void add_tm_notify_event(TMNotifyEvent *t);
 
 }

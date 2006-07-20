@@ -32,14 +32,15 @@
 SRCDIR   := Core/Events/Tools
 
 SRCS     += \
-	$(SRCDIR)/AutoviewTool.cc	\
-	$(SRCDIR)/Ball.cc		\
-	$(SRCDIR)/BallAux.cc		\
-	$(SRCDIR)/BallMath.cc		\
-	$(SRCDIR)/BaseTool.cc		\
-	$(SRCDIR)/ToolManager.cc	\
-	$(SRCDIR)/ViewRotateTool.cc	\
-	$(SRCDIR)/ViewScaleTool.cc	\
-	$(SRCDIR)/ViewTranslateTool.cc	\
+	$(SRCDIR)/AutoviewTool.cc		\
+	$(SRCDIR)/Ball.cc			\
+	$(SRCDIR)/BallAux.cc			\
+	$(SRCDIR)/BallMath.cc			\
+	$(SRCDIR)/BaseTool.cc			\
+	$(SRCDIR)/FrameBufferPickTool.cc	\
+	$(SRCDIR)/ToolManager.cc		\
+	$(SRCDIR)/ViewRotateTool.cc		\
+	$(SRCDIR)/ViewScaleTool.cc		\
+	$(SRCDIR)/ViewTranslateTool.cc		\
 
 

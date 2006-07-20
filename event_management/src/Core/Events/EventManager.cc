@@ -303,30 +303,31 @@ EventManager::run()
       mbox_range_t range = mboxes_.equal_range(target);
       if (range.first == range.second) {
         if (sci_getenv_p("SCI_DEBUG")) {
-          cerr << "Event target mailbox id """ << target << """ not found.\n";
+          cerr << "Event target mailbox id """ << target 
+	       << """ not found." << endl;
         }
       } else {
-        for (;range.first != range.second; ++range.first) {
+        while(range.first != range.second) 
+	{
           if (sci_getenv_p("SCI_DEBUG")) {
-            cerr << "Event target mailbox id """ << target << """\n";
-          }
-
-          if (sci_getenv_p("SCI_DEBUG")) {
-            cerr << range.first->first << " size: " 
-                 << range.first->second->numItems() << "\n";
+            cerr << "Event target mailbox id " << target 
+		 << " found, sending." << endl;
+            cerr << range.first->first << ": mailbox numItems: " 
+                 << range.first->second->numItems() << endl;
           }
           range.first->second->send(event);
+	  ++range.first;
         }
       }
     } else {
       if (sci_getenv_p("SCI_DEBUG")) {
-        cerr << "Event target mailbox id empty, broadcastingb\n";
+        cerr << "Event target mailbox id empty, broadcasting." << endl;
       }
 
       id_tm_map_t::iterator it = mboxes_.begin();
       for (;it != mboxes_.end(); ++it) {
         if (sci_getenv_p("SCI_DEBUG")) {
-          cerr << it->first << " size: " << it->second->numItems() << "\n";
+          cerr << it->first << " size: " << it->second->numItems() << endl;
         }
         it->second->send(event);
       }

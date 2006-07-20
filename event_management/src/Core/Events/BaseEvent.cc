@@ -66,10 +66,10 @@ BaseEvent::~BaseEvent()
 {
 }
 
-
+const int BASEEVENT_VERSION = 1;
 void
 BaseEvent::io(Piostream &stream) {
-  stream.begin_class(type_id.type, 1);
+  stream.begin_class(type_id.type, BASEEVENT_VERSION);
   SCIRun::Pio(stream, target_);
   SCIRun::Pio(stream, time_);
   stream.end_class();
@@ -111,9 +111,10 @@ PointerEvent::~PointerEvent()
 {
 }
 
+const int POINTEREVENT_VERSION = 1;
 void
 PointerEvent::io(Piostream &stream) {
-  stream.begin_class(type_id.type, 1);
+  stream.begin_class(type_id.type, POINTEREVENT_VERSION);
   BaseEvent::io(stream);
   EventModifiers::io(stream);
   SCIRun::Pio(stream, p_state_);
@@ -140,10 +141,10 @@ KeyEvent::~KeyEvent()
 {
 }
 
-
+const int KEYEVENT_VERSION = 1;
 void
 KeyEvent::io(Piostream &stream) {
-  stream.begin_class(type_id.type, 1);
+  stream.begin_class(type_id.type, KEYEVENT_VERSION);
   BaseEvent::io(stream);
   EventModifiers::io(stream);
   SCIRun::Pio(stream, k_state_);
@@ -165,9 +166,10 @@ WindowEvent::~WindowEvent()
 {
 }   
 
+const int WINDOWEVENT_VERSION = 1;
 void
 WindowEvent::io(Piostream &stream) {
-  stream.begin_class(type_id.type, 1);
+  stream.begin_class(type_id.type, WINDOWEVENT_VERSION);
   BaseEvent::io(stream);
   SCIRun::Pio(stream, w_state_);
   stream.end_class();
@@ -183,9 +185,10 @@ RedrawEvent::~RedrawEvent()
 
 }
 
+const int REDRAWEVENT_VERSION = 1;
 void
 RedrawEvent::io(Piostream &stream) {
-  stream.begin_class(type_id.type, 1);
+  stream.begin_class(type_id.type, REDRAWEVENT_VERSION);
   BaseEvent::io(stream);
   stream.end_class();
 }
@@ -199,11 +202,36 @@ QuitEvent::~QuitEvent()
 {
 
 }
-
+const int QUITEVENT_VERSION = 1;
 void
 QuitEvent::io(Piostream &stream) {
-  stream.begin_class(type_id.type, 1);
+  stream.begin_class(type_id.type, QUITEVENT_VERSION);
   BaseEvent::io(stream);
+  stream.end_class();
+}
+
+
+TMNotifyEvent::TMNotifyEvent(const string &id,
+			     unsigned int s,
+			     const string &target,
+			     unsigned long time) :
+  BaseEvent(target, time),
+  tool_id_(id),
+  notify_state_(s)
+{
+}
+
+TMNotifyEvent::~TMNotifyEvent()
+{
+}
+
+const int TMNOTIFYEVENT_VERSION = 1;
+void
+TMNotifyEvent::io(Piostream &stream) {
+  stream.begin_class(type_id.type, TMNOTIFYEVENT_VERSION);
+  BaseEvent::io(stream);
+  SCIRun::Pio(stream, tool_id_);
+  SCIRun::Pio(stream, notify_state_);
   stream.end_class();
 }
 
