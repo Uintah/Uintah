@@ -213,7 +213,8 @@ SliceRenderer::draw_slice()
   // set up shaders
   FragmentProgramARB* shader = 0;
   int blend_mode = 0;
-  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0, false, true,
+  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0, tex_->nc(),
+                                       false, true,
                                        use_fog, blend_mode, cmap2_.size());
 
   if(shader) {
@@ -426,7 +427,8 @@ SliceRenderer::multi_level_draw()
   // set up shaders
   FragmentProgramARB* shader = 0;
   int blend_mode = 0;
-  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0, false, true,
+  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0, tex_->nc(),
+                                       false, true,
                                        use_fog, blend_mode, cmap2_.size());
 
   if(shader) {

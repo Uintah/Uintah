@@ -67,7 +67,8 @@ namespace SCIRun {
 "TEX c, v.w, texture[2], 1D; \n"
 #define VOL_TFLUP_2_1 \
 "TEX c, v, texture[2], 2D; \n"
-
+#define VOL_TFLUP_2_4 \
+"TEX c, v.wxyz, texture[2], 2D; \n"
 
 #define VOL_TFLUP_MASK_HEAD \
 "PARAM mask = program.local[3];\n" \
@@ -85,9 +86,6 @@ namespace SCIRun {
 "SGE f, f, 0.5; \n" \
 "MAD_SAT c, b, f, c; \n" \
 "ADD v.w, v.w, g.w; \n"
-
-#define VOL_TFLUP_2_4 \
-"TEX c, v.wxyz, texture[2], 2D; \n"
 
 #define VOL_FOG_HEAD \
 "PARAM fc = state.fog.color; \n" \
@@ -199,40 +197,42 @@ namespace SCIRun {
 
 #define VOL_GRAD_COMPUTE_2_4 \
 "PARAM dir = program.local[4]; \n" \
-"TEMP grad; \n" \
 "TEMP r; \n" \
 "TEMP p; \n" \
-"TEMP dirx; \n" \
-"TEMP diry; \n" \
-"TEMP dirz; \n" \
+"PARAM tmat[]  = { state.matrix.texture[0].invtrans }; \n" \
 "MOV v, v.wwww; \n" \
-"MOV grad, 0; \n" /* new code */ \
-"MOV dirx.x, dir.x; \n" \
-"MOV diry.y, dir.y; \n" \
-"MOV dirz.z, dir.z; \n" \
-"ADD_SAT p, fragment.texcoord[0], dirx; \n" \
+"MOV n, 0; \n" \
+"MOV w.x, dir.x; \n" \
+"ADD_SAT p, fragment.texcoord[0], w; \n" \
 "TEX r, p, texture[0], 3D; \n" \
-"ADD grad.x, r.w, grad.x; \n" \
-"SUB_SAT p, fragment.texcoord[0], dirx; \n" \
+"ADD n.x, r.w, n.x; \n" \
+"SUB_SAT p, fragment.texcoord[0], w; \n" \
 "TEX r, p, texture[0], 3D; \n" \
-"SUB grad.x, r.w, grad.x; \n" \
-"ADD_SAT p, fragment.texcoord[0], diry; \n" \
+"SUB n.x, r.w, n.x; \n" \
+"MOV w, 0; \n" \
+"MOV w.y, dir.y; \n" \
+"ADD_SAT p, fragment.texcoord[0], w; \n" \
 "TEX r, p, texture[0], 3D; \n" \
-"ADD grad.y, r.w, grad.y; \n" \
-"SUB_SAT p, fragment.texcoord[0], diry; \n" \
+"ADD n.y, r.w, n.y; \n" \
+"SUB_SAT p, fragment.texcoord[0], w; \n" \
 "TEX r, p, texture[0], 3D; \n" \
-"SUB grad.y, r.w, grad.y; \n" \
-"ADD_SAT p, fragment.texcoord[0], dirz; \n" \
+"SUB n.y, r.w, n.y; \n" \
+"MOV w, 0; \n" \
+"MOV w.z, dir.z; \n" \
+"ADD_SAT p, fragment.texcoord[0], w; \n" \
 "TEX r, p, texture[0], 3D; \n" \
-"ADD grad.z, r.w, grad.z; \n" \
-"SUB_SAT p, fragment.texcoord[0], dirz; \n" \
+"ADD n.z, r.w, n.z; \n" \
+"SUB_SAT p, fragment.texcoord[0], w; \n" \
 "TEX r, p, texture[0], 3D; \n" \
-"SUB grad.z, r.w, grad.z; \n" \
-"DP3 r, grad, grad; \n" \
+"SUB n.z, r.w, n.z; \n" \
+"DP3 w.x, n.x, tmat[0]; \n" \
+"DP3 w.y, n.y, tmat[1]; \n" \
+"DP3 w.z, n.z, tmat[2]; \n" \
+"DP3 r, w, w; \n" \
 "RSQ p, r.x; \n" \
 "DST p, r, p; \n" \
 "MUL p.y, p, 1.75; \n" \
-"MUL n.xyz, grad, 1.0; \n#" // The # at the end of the line is a cheap way of disabling the next instruction
+"MUL n.xyz, w, 1.0; \n#" // The # at the end of the line is a cheap way of disabling the next instruction
 
 
 #define VOL_COMPUTED_GRADIENT_LOOKUP \
@@ -241,6 +241,9 @@ namespace SCIRun {
 
 #define VOL_FRAGMENT_BLEND_HEAD \
 "TEMP n; \n"
+
+#define VOL_GRAD_COMPUTE_NOLIGHT_HEAD \
+"TEMP w; \n"
 
 #define VOL_FRAGMENT_BLEND_OVER_NV \
 "TEX v, fragment.position.xyyy, texture[3], RECT; \n" \
@@ -264,10 +267,11 @@ namespace SCIRun {
 "MOV result.color, c; \n"
 
 
-VolShader::VolShader(int dim, int vsize, bool shading, 
+VolShader::VolShader(int dim, int vsize, int channels, bool shading, 
 		     bool frag, bool fog, int blend, int cmaps)
   : dim_(dim), 
-    vsize_(vsize), 
+    vsize_(vsize),
+    channels_(channels),
     shading_(shading),
     fog_(fog),
     blend_(blend),
@@ -321,7 +325,7 @@ VolShader::emit(string& s)
     z << VOL_FOG_HEAD;
   }
 
-  if (dim_ == 1)
+  if (dim_ == 1)  // 1D colormap
   {
     // Get value
     z << VOL_VLUP_1_1;
@@ -353,7 +357,7 @@ VolShader::emit(string& s)
       z << VOL_LIT_END;
     }
   }
-  else // dim_ == 2
+  else // dim_ == 2, 2D colormap
   {
     if (shading_)
     {
@@ -377,7 +381,9 @@ VolShader::emit(string& s)
       {
 	z << VOL_TFLUP_MASK_HEAD;
 	for (int n = 0; n < num_cmaps_; ++n)
+        {
 	  z << VOL_TFLUP_2_1_MASK;
+        }
       }
       else
       {
@@ -388,19 +394,43 @@ VolShader::emit(string& s)
       }
       z << VOL_LIT_END;
     }
-    else // !shading_
+    else // No shading, 2D colormap.
     {
       if (vsize_ == 1)
       {
         z << VOL_VLUP_2_1;
-        z << VOL_GLUP_2_1;
+        if (channels_ == 1)
+        {
+          // Compute Gradient magnitude and use it.
+          if (!blend_) z << VOL_FRAGMENT_BLEND_HEAD;
+          z << VOL_GRAD_COMPUTE_NOLIGHT_HEAD;
+          z << VOL_GRAD_COMPUTE_2_1;
+          z << "\n";
+          z << VOL_COMPUTED_GRADIENT_LOOKUP;
+        }
+        else
+        {
+          z << VOL_GLUP_2_1;
+        }
         z << VOL_TFLUP_2_1;
       }
       else // vsize_ == 4
       {
         z << VOL_VLUP_2_4;
-        z << VOL_GLUP_2_4;
-        z << VOL_TFLUP_2_4;
+        if (channels_ == 1)
+        {
+          if (!blend_) z << VOL_FRAGMENT_BLEND_HEAD;
+          z << VOL_GRAD_COMPUTE_NOLIGHT_HEAD;
+          z << VOL_GRAD_COMPUTE_2_4;
+          z << "\n";
+          z << VOL_COMPUTED_GRADIENT_LOOKUP;
+          z << VOL_TFLUP_2_1; // look it up as if 2_1
+        }
+        else
+        {
+          z << VOL_GLUP_2_4;
+          z << VOL_TFLUP_2_4;
+        }
       }
     }
   }
@@ -442,7 +472,7 @@ VolShader::emit(string& s)
   z << VOL_TAIL;
 
   s = z.str();
-  //std::cerr << s << std::endl;
+  std::cerr << s << std::endl;
   return false;
 }
 
@@ -459,22 +489,22 @@ VolShaderFactory::~VolShaderFactory()
 }
 
 FragmentProgramARB*
-VolShaderFactory::shader(int dim, int vsize, bool shading, 
+VolShaderFactory::shader(int dim, int vsize, int channels, bool shading, 
 			 bool frag, bool fog, int blend, int cmaps)
 {
   if(prev_shader_ >= 0) {
-    if(shader_[prev_shader_]->match(dim, vsize, shading, frag, fog, blend, cmaps)) {
+    if(shader_[prev_shader_]->match(dim, vsize, channels, shading, frag, fog, blend, cmaps)) {
       return shader_[prev_shader_]->program();
     }
   }
   for(unsigned int i=0; i<shader_.size(); i++) {
-    if(shader_[i]->match(dim, vsize, shading, frag, fog, blend, cmaps)) {
+    if(shader_[i]->match(dim, vsize, channels, shading, frag, fog, blend, cmaps)) {
       prev_shader_ = i;
       return shader_[i]->program();
     }
   }
-  //std::cout << "dim = " << dim << ", vsize = " << vsize << ", shading = "  << shading << ", frag = " << frag << ", fog = " << fog << ", blend = " << blend << ", cmaps = " << cmaps << "\n";
-  VolShader* s = new VolShader(dim, vsize, shading, frag, fog, blend, cmaps);
+  std::cout << "dim = " << dim << ", vsize = " << vsize << ", channels = " << channels << ", shading = "  << shading << ", frag = " << frag << ", fog = " << fog << ", blend = " << blend << ", cmaps = " << cmaps << "\n";
+  VolShader* s = new VolShader(dim, vsize, channels, shading, frag, fog, blend, cmaps);
   if(s->create()) {
     delete s;
     return 0;

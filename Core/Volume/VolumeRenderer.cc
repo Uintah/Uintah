@@ -257,7 +257,7 @@ VolumeRenderer::draw_volume()
     return;
   }
 
-  const bool use_shading = true;
+  const bool use_shading = shading_;
   const GLboolean use_fog = glIsEnabled(GL_FOG);
   GLfloat light_pos[4];
   glGetLightfv(GL_LIGHT0+light_, GL_POSITION, light_pos);
@@ -423,7 +423,7 @@ VolumeRenderer::draw_volume()
       }
     }
   }
-  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0,
+  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0, tex_->nc(),
                                        use_shading, false,
                                        use_fog, blend_mode, cmap2_.size());
   if (shader)
