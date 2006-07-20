@@ -240,7 +240,7 @@ namespace SCIRun {
 
 
 #define VOL_FRAGMENT_BLEND_HEAD \
-"TEMP n;"
+"TEMP n; \n"
 
 #define VOL_FRAGMENT_BLEND_OVER_NV \
 "TEX v, fragment.position.xyyy, texture[3], RECT; \n" \
@@ -300,47 +300,57 @@ VolShader::emit(string& s)
 
   z << VOL_HEAD;
 
-  // dim, vsize, and shading
+  // Set up light/blend variables and input parameters.
   if (shading_)
   {
     z << VOL_LIT_HEAD;
   }
+  else if (blend_)
+  {
+    z << VOL_FRAGMENT_BLEND_HEAD;
+  }
+
   if (frag_)
   {
     z << VOL_FRAG_HEAD;
   }
+  
+  // Set up fog variables and input parameters.
   if (fog_)
   {
     z << VOL_FOG_HEAD;
   }
+
   if (dim_ == 1)
   {
+    // Get value
+    z << VOL_VLUP_1_1;
+    
     if (shading_)
     {
-      z << VOL_VLUP_1_1;
-      z << VOL_LIT_BODY_NOGRAD;
-      if (vsize_==1)
-        z << VOL_TFLUP_1_1;
-      else         
-        z << VOL_TFLUP_1_4;
-      z << VOL_LIT_END;
-    }
-    else // !shading_
-    {
-      if (blend_)
-      {
-        z << VOL_FRAGMENT_BLEND_HEAD;
-      }
       if (vsize_ == 1)
       {
-        z << VOL_VLUP_1_1;
-        z << VOL_TFLUP_1_1;
+        // Compute the normal if needed and not there.
+        z << VOL_GRAD_COMPUTE_2_1;
       }
-      else // vsize_ == 4
-      {
-        z << VOL_VLUP_1_4;
-        z << VOL_TFLUP_1_4;
-      }
+      // Add the lighting.
+      z << VOL_LIT_BODY_NOGRAD;
+    }
+    
+    // Lookup the colormap entry for this value.
+    if (vsize_ == 1)
+    {
+      z << VOL_TFLUP_1_1;
+    }
+    else
+    {
+      z << VOL_TFLUP_1_4;
+    }
+
+    // Apply the lighting.
+    if (shading_)
+    {
+      z << VOL_LIT_END;
     }
   }
   else // dim_ == 2
@@ -380,10 +390,6 @@ VolShader::emit(string& s)
     }
     else // !shading_
     {
-      if (blend_)
-      {
-        z << VOL_FRAGMENT_BLEND_HEAD;
-      }
       if (vsize_ == 1)
       {
         z << VOL_VLUP_2_1;
@@ -436,7 +442,7 @@ VolShader::emit(string& s)
   z << VOL_TAIL;
 
   s = z.str();
-  //  std::cerr << s << std::endl;
+  //std::cerr << s << std::endl;
   return false;
 }
 
@@ -467,6 +473,7 @@ VolShaderFactory::shader(int dim, int vsize, bool shading,
       return shader_[i]->program();
     }
   }
+  //std::cout << "dim = " << dim << ", vsize = " << vsize << ", shading = "  << shading << ", frag = " << frag << ", fog = " << fog << ", blend = " << blend << ", cmaps = " << cmaps << "\n";
   VolShader* s = new VolShader(dim, vsize, shading, frag, fog, blend, cmaps);
   if(s->create()) {
     delete s;
