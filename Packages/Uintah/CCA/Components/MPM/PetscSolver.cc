@@ -439,7 +439,12 @@ void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
 
 
   PetscScalar* y = new PetscScalar[d_DOF.size()];
+#if (PETSC_VERSION_MINOR == 3)
   VecScale(d_t,-1.);
+#endif
+#if (PETSC_VERSION_MINOR == 2)
+  VecScale(-1.,d_t);
+#endif
   VecGetValues(d_t,d_DOF.size(),indices,y);
   VecSetValues(d_B,d_DOF.size(),indices,y,INSERT_VALUES);
 
