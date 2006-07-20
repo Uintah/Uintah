@@ -285,7 +285,7 @@ bool
 VolShader::create()
 {
   string s;
-  if(emit(s)) return true;
+  if (emit(s)) return true;
   program_ = new FragmentProgramARB(s);
   return false;
 }
@@ -293,25 +293,30 @@ VolShader::create()
 bool
 VolShader::emit(string& s)
 {
-  if(dim_!=1 && dim_!=2) return true;
-  if(vsize_!=1 && vsize_!=4) return true;
-  if(blend_!=0 && blend_!=1 && blend_!=2) return true;
+  if (dim_!=1 && dim_!=2) return true;
+  if (vsize_!=1 && vsize_!=4) return true;
+  if (blend_!=0 && blend_!=1 && blend_!=2) return true;
   ostringstream z;
 
   z << VOL_HEAD;
 
   // dim, vsize, and shading
-  if(shading_) {
+  if (shading_)
+  {
     z << VOL_LIT_HEAD;
   }
-  if(frag_) {
+  if (frag_)
+  {
     z << VOL_FRAG_HEAD;
   }
-  if(fog_) {
+  if (fog_)
+  {
     z << VOL_FOG_HEAD;
   }
-  if(dim_ == 1) {
-    if(shading_) {
+  if (dim_ == 1)
+  {
+    if (shading_)
+    {
       z << VOL_VLUP_1_1;
       z << VOL_LIT_BODY_NOGRAD;
       if (vsize_==1)
@@ -319,78 +324,115 @@ VolShader::emit(string& s)
       else         
         z << VOL_TFLUP_1_4;
       z << VOL_LIT_END;
-    } else { // !shading_
-      if(blend_) {
+    }
+    else // !shading_
+    {
+      if (blend_)
+      {
         z << VOL_FRAGMENT_BLEND_HEAD;
       }
-      if(vsize_ == 1) {
+      if (vsize_ == 1)
+      {
         z << VOL_VLUP_1_1;
         z << VOL_TFLUP_1_1;
-      } else { // vsize_ == 4
+      }
+      else // vsize_ == 4
+      {
         z << VOL_VLUP_1_4;
         z << VOL_TFLUP_1_4;
       }
     }
-  } else { // dim_ == 2
-    if(shading_) {
+  }
+  else // dim_ == 2
+  {
+    if (shading_)
+    {
       z << VOL_VLUP_2_1;
-      if (vsize_ == 1) {
+      if (vsize_ == 1)
+      {
 	z << VOL_GRAD_COMPUTE_2_1;
       }
 
       z << VOL_LIT_BODY_NOGRAD;
-      if (vsize_ == 1) {
+      if (vsize_ == 1)
+      {
 	z << VOL_COMPUTED_GRADIENT_LOOKUP;
-      } else {
+      }
+      else
+      {
 	z << VOL_GLUP_2_4;
       }
 
-      if (num_cmaps_ > 1) {
+      if (num_cmaps_ > 1)
+      {
 	z << VOL_TFLUP_MASK_HEAD;
 	for (int n = 0; n < num_cmaps_; ++n)
 	  z << VOL_TFLUP_2_1_MASK;
-      } else {
+      }
+      else
+      {
 	if (vsize_ == 1)
 	  z << VOL_TFLUP_2_1;
 	else
 	  z << VOL_TFLUP_2_4;
       }
       z << VOL_LIT_END;
-    } else { // !shading_
-      if(blend_) {
+    }
+    else // !shading_
+    {
+      if (blend_)
+      {
         z << VOL_FRAGMENT_BLEND_HEAD;
       }
-      if(vsize_ == 1) {
+      if (vsize_ == 1)
+      {
         z << VOL_VLUP_2_1;
         z << VOL_GLUP_2_1;
         z << VOL_TFLUP_2_1;
-      } else { // vsize_ == 4
+      }
+      else // vsize_ == 4
+      {
         z << VOL_VLUP_2_4;
         z << VOL_GLUP_2_4;
         z << VOL_TFLUP_2_4;
       }
     }
   }
+
   // frag
-  if(frag_) {
+  if (frag_)
+  {
     z << VOL_FRAG_BODY;
   }
+
   // fog
-  if(fog_) {
+  if (fog_)
+  {
     z << VOL_FOG_BODY;
   }
+
   // blend
-  if(blend_ == 0) {
+  if (blend_ == 0)
+  {
     z << VOL_RASTER_BLEND;
-  } else if(blend_ == 1) {
+  }
+  else if (blend_ == 1)
+  {
     z << VOL_FRAGMENT_BLEND_OVER_NV;
-  } else if(blend_ == 2) {
+  }
+  else if (blend_ == 2)
+  {
     z << VOL_FRAGMENT_BLEND_MIP_NV;
-  } else if(blend_ == 3) {
+  }
+  else if (blend_ == 3)
+  {
     z << VOL_FRAGMENT_BLEND_OVER_ATI;
-  } else if(blend_ == 4) {
+  }
+  else if (blend_ == 4)
+  {
     z << VOL_FRAGMENT_BLEND_MIP_ATI;
   }
+
   z << VOL_TAIL;
 
   s = z.str();
