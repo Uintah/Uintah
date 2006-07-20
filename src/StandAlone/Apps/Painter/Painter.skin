@@ -734,6 +734,7 @@
             <var name="cell-height">$Animation::variable-1</var>
             <signal name="FileLoadBox::CancelButtonPress" 
                     target="Animation::AnimateVariableDescending">1</signal>
+
             <signal name="FileLoadBox::OKButtonPress" 
                     target="Painter::ITKImageFileRead"></signal>
 <!--
@@ -758,19 +759,15 @@
             <var name="FileLoadBox::text" propagate="yes"> Volume File to Save: </var>
 
             <var name="cell-height">$Animation::variable-2</var>
+
             <signal name="FileLoadBox::CancelButtonPress" 
                     target="Animation::AnimateVariableDescending">2</signal>
             
-
             <signal name="FileLoadBox::OKButtonPress" 
                     target="Painter::ITKImageFileWrite"></signal>
             
-
             <signal name="FileLoadBox::OKButtonPress" 
-                    target="Animation::AnimateVariableDescending">2</signal>
-            
-            
-            
+                    target="Animation::AnimateVariableDescending">2</signal>                                    
           </object>
 
 
@@ -803,19 +800,12 @@
 
             <signal name="ToolDialog::Cancel" 
                     target="Painter::SetLayer"></signal>
-<!--
-            <signal name="ToolDialog::Cancel" 
-                    target="Painter::CancelTool"></signal>
-
-            <signal name="ToolDialog::Cancel" 
-                    target="Animation::AnimateVariableDescending">3</signal>
--->
 
             <signal name="ToolDialog::Execute" 
                     target="Painter::FinishTool"></signal>
 
             <signal name="ToolDialog::Execute" 
-                    target="Animation::AnimateVariableDescending" >3</signal>
+                    target="Animation::AnimateVariableDescending">3</signal>
             
           </object>
          
@@ -986,7 +976,7 @@
         <var name="posx" type="int">1150</var>
         <var name="posy" type="int">50</var>
         <var name="border" type="int">$Window::borders</var>
-        <var name="border" type="int">0</var>
+
         <object class="Frame">
           <var name="invert">1</var>
         <object class="Texture">
@@ -1096,11 +1086,11 @@
             <var name="Button2::Text::text" propagate="yes">ITK Gradient Magnitude</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
             <signal name="Button2::clicked"
-                    target="Animation::AnimateVariableDescending">3</signal>
+                    target="Animation::AnimateVariableAscending">3</signal>
             <signal name="Button2::clicked" 
                     target="Painter::ITKGradientMagnitude"/>
             <signal name="Button2::clicked"
-                    target="Animation::AnimateVariableAscending">3</signal>
+                    target="Animation::AnimateVariableDescending">3</signal>
 
             
           </object>
@@ -1141,11 +1131,11 @@
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
 
             <signal name="Button2::clicked"
-                    target="Animation::AnimateVariableDescending">3</signal>
+                    target="Animation::AnimateVariableAscending">3</signal>
             <signal name="Button2::clicked" 
                     target="Painter::ITKCurvatureAnisotropic"/>
             <signal name="Button2::clicked"
-                    target="Animation::AnimateVariableAscending">3</signal>
+                    target="Animation::AnimateVariableDescending">3</signal>
                         
           </object>
 
@@ -1155,11 +1145,11 @@
             <var name="Button2::Text::text" propagate="yes">ITK Hole Fill</var>
             <var name="text_color" propagate="yes">#FFFFFFFF</var>
             <signal name="Button2::clicked"
-                    target="Animation::AnimateVariableDescending">3</signal>
+                    target="Animation::AnimateVariableAscending">3</signal>
             <signal name="Button2::clicked" 
                     target="Painter::ITKBinaryDilateErode"/>
             <signal name="Button2::clicked"
-                    target="Animation::AnimateVariableAscending">3</signal>
+                    target="Animation::AnimateVariableDescending">3</signal>
 
             
           </object>
@@ -1274,7 +1264,6 @@
         <var name="posx" type="int">300</var>
         <var name="posy" type="int">300</var>
         <var name="border" type="int">1</var>
-        <var name="border" type="int">0</var>
 
         <var name="topcolor" propagate="yes">#DDDDDDFF</var>
         <var name="botcolor" propagate="yes">#222222FF</var>
@@ -1548,6 +1537,7 @@
       </object>
     </object>
   </object>
+
 </skinner>
 
 
