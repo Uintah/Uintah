@@ -65,6 +65,7 @@ namespace Uintah {
     virtual void applyBCSToRHS() = 0;
 
     set<int> d_DOF;
+    map<int,vector<int> > d_DOFNeighbors;
   };
 
 }

@@ -4,6 +4,7 @@
 #include <sci_defs/petsc_defs.h>
 
 #include <Packages/Uintah/CCA/Components/MPM/PetscSolver.h>
+#include <Packages/Uintah/Core/Exceptions/PetscError.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
@@ -249,6 +250,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
     }
 #endif
     MatSetOption(d_A, MAT_KEEP_ZEROED_ROWS);
+    //    MatSetOption(d_A,MAT_IGNORE_ZERO_ENTRIES);
 
     // Create vectors.  Note that we form 1 vector from scratch and
     // then duplicate as needed.
@@ -319,8 +321,6 @@ void MPMPetscSolver::assembleVector()
 {
   VecAssemblyBegin(d_B);
   VecAssemblyEnd(d_B);
-  //  VecView(d_B,PETSC_VIEWER_STDOUT_WORLD);
-  
 }
 
 void MPMPetscSolver::assembleTemporaryVector()
@@ -331,10 +331,10 @@ void MPMPetscSolver::assembleTemporaryVector()
 
 void MPMPetscSolver::applyBCSToRHS()
 {
-  //VecView(d_B,PETSC_VIEWER_STDOUT_WORLD);
-  //VecView(d_t,PETSC_VIEWER_STDOUT_WORLD);
-  MatMultAdd(d_A,d_t,d_B,d_B);
-  //VecView(d_B,PETSC_VIEWER_STDOUT_WORLD);
+  int ierr = MatMultAdd(d_A,d_t,d_B,d_B);
+  if (ierr)
+    throw PetscError(ierr, "MatMultAdd", __FILE__, __LINE__);
+
 }
 
 void MPMPetscSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
@@ -367,7 +367,7 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
 
   ISCreateGeneral(PETSC_COMM_SELF,d_DOF.size(),indices,&is);
   delete[] indices;
-
+  
 
   PetscScalar one = 1.0;
 #if (PETSC_VERSION_MINOR == 2)
@@ -413,64 +413,51 @@ void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
   int in = 0;
 
   indices = new int[d_DOF.size()];
-  PetscScalar* temp_vec;
-  VecGetArray(d_t,&temp_vec);
+  
+  flushMatrix();
+
+  // Zero the rows/columns that contain the node numbers with BCs.
+
   for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
        iter++) {
-    indices[in++] = *iter;
-    //  cout << "DOF = " << *iter << endl;
-
-    // Take care of the d_B side
     const int index = *iter;
-    PetscScalar v = -temp_vec[index];
-    VecSetValues(d_B,1,&index,&v,INSERT_VALUES);
-    MatSetValue(d_A,index,index,1.,INSERT_VALUES);
+    indices[in++] = *iter;
+
+    vector<int> neighbors = d_DOFNeighbors[index];
+    for (vector<int>::iterator n = neighbors.begin(); n != neighbors.end();
+         n++) {
+      int ierr = MatSetValue(d_A,*n,index,0,INSERT_VALUES);
+      if (ierr)
+        cout << "MatSetValue error for " << index << "," << *n << endl;
+      ierr = MatSetValue(d_A,index,*n,0,INSERT_VALUES);
+      if (ierr)
+        cout << "MatSetValue error for " << index << "," << *n << endl;
+      ierr = MatSetValue(d_A,index,index,1,INSERT_VALUES);
+      if (ierr)
+        cout << "MatSetValue error for " << index << "," << *n << endl;
+    }
   }
-  VecRestoreArray(d_t,&temp_vec);
-  //VecView(d_B,PETSC_VIEWER_STDOUT_WORLD);
-
-#if 1
-  MatAssemblyBegin(d_A,MAT_FINAL_ASSEMBLY);
-  MatAssemblyEnd(d_A,MAT_FINAL_ASSEMBLY);
-#endif
-
-  ISCreateGeneral(PETSC_COMM_SELF,d_DOF.size(),indices,&is);
-
-  PetscScalar one = 1.0;
-#if (PETSC_VERSION_MINOR == 2)
-  MatZeroRows(d_A,is,&one);
-#endif
-#if (PETSC_VERSION_MINOR == 3)
-  MatZeroRowsIS(d_A,is,one);
-#endif
 
 
-#if 1
-  MatTranspose(d_A,PETSC_NULL);
-#if (PETSC_VERSION_MINOR == 2)
-  MatZeroRows(d_A,is,&one);
-#endif
-#if (PETSC_VERSION_MINOR == 3)
-  MatZeroRowsIS(d_A,is,one);
-#endif
-  MatTranspose(d_A,PETSC_NULL);
-#endif
+  PetscScalar* y = new PetscScalar[d_DOF.size()];
+  VecScale(d_t,-1.);
+  VecGetValues(d_t,d_DOF.size(),indices,y);
+  VecSetValues(d_B,d_DOF.size(),indices,y,INSERT_VALUES);
 
+  finalizeMatrix();
 
-  delete[] indices;
-  ISDestroy(is);
 
   // Make sure the nodes that are outside of the material have values 
   // assigned and solved for.  The solutions will be 0.
-#if 0
+#if 1
   MatGetDiagonal(d_A,d_diagonal);
   PetscScalar* diag;
   VecGetArray(d_diagonal,&diag);
 
   for (int j = 0; j < num_nodes; j++) {
     if (compare(diag[j],0.)) {
+      PetscScalar v = 0.,one = 1.;
       VecSetValues(d_diagonal,1,&j,&one,INSERT_VALUES);
-      PetscScalar v = 0.;
       VecSetValues(d_B,1,&j,&v,INSERT_VALUES);
     }
   }
@@ -482,13 +469,13 @@ void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
 #endif
 
 
-  VecAssemblyBegin(d_B);
-  VecAssemblyEnd(d_B);
+  assembleVector();
+  finalizeMatrix();
 
-  MatAssemblyBegin(d_A,MAT_FINAL_ASSEMBLY);
-  MatAssemblyEnd(d_A,MAT_FINAL_ASSEMBLY);
-  //MatView(d_A,PETSC_VIEWER_STDOUT_WORLD);
-  //VecView(d_B,PETSC_VIEWER_STDOUT_WORLD);
+#if 0
+  MatView(d_A,PETSC_VIEWER_STDOUT_WORLD);
+  VecView(d_B,PETSC_VIEWER_STDOUT_WORLD);
+#endif
 
 }
 
@@ -496,11 +483,6 @@ void MPMPetscSolver::finalizeMatrix()
 {
   MatAssemblyBegin(d_A,MAT_FINAL_ASSEMBLY);
   MatAssemblyEnd(d_A,MAT_FINAL_ASSEMBLY);
-  //  MatAssemblyBegin(d_C,MAT_FINAL_ASSEMBLY);
-  //MatAssemblyEnd(d_C,MAT_FINAL_ASSEMBLY);
-  //  MatView(d_A,PETSC_VIEWER_STDOUT_WORLD);
-  //MatView(d_C,PETSC_VIEWER_STDOUT_WORLD);
-
 }
 
 int MPMPetscSolver::getSolution(vector<double>& xPetsc)
