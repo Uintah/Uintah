@@ -408,7 +408,6 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
 
 void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
 {
-  IS is;
   int* indices;
   int in = 0;
 
