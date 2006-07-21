@@ -76,8 +76,8 @@ RadLinearSolver::problemSetup(const ProblemSpecP& params)
 	db->require("ksptype",d_kspType);
       else
 	d_kspType = "gmres";
-      if (db->findBlock("tolerance"))
-	db->require("tolerance",d_tolerance);
+      if (db->findBlock("res_tol"))
+	db->require("res_tol",d_tolerance);
       else
 	d_tolerance = 1.e-08;
       if (db->findBlock("pctype"))
@@ -486,7 +486,7 @@ RadLinearSolver::radLinearSolve()
     if(ierr)
       throw PetscError(ierr, "KSPSetType", __FILE__, __LINE__);
   }
-  ierr = KSPSetTolerances(solver, d_tolerance, PETSC_DEFAULT, PETSC_DEFAULT, PETSC_DEFAULT);
+  ierr = KSPSetTolerances(solver,PETSC_DEFAULT, d_tolerance, PETSC_DEFAULT, PETSC_DEFAULT);
   if(ierr)
     throw PetscError(ierr, "KSPSetTolerances", __FILE__, __LINE__);
 
