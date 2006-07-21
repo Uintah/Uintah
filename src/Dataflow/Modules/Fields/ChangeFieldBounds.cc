@@ -248,6 +248,10 @@ ChangeFieldBounds::build_widget(FieldHandle f, bool reset)
     box_->SetScale(bscale); // callback sets box_scale for us.
     box_->SetPosition(center, right, down, in);
     box_->SetCurrentMode(box_mode_.get());
+    box_center_.set(center);
+    box_right_.set(right);
+    box_down_.set(down);
+    box_in_.set(in);
   }
   else
   {
