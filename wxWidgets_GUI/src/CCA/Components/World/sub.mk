@@ -36,8 +36,13 @@ SRCDIR   := CCA/Components/World
 SRCS     += \
             $(SRCDIR)/World.cc
 
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm \
-           Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
+PSELIBS := \
+           Core/CCA/PIDL Core/CCA/spec \
+           Core/Thread Core/Containers Core/Exceptions
+
+ifeq ($(HAVE_WX),yes)
+ LIBS := $(WX_LIBRARY)
+endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -38,16 +38,10 @@
  *
  */
 
-// #include <sci_defs/wx_defs.h>
+#include <sci_wx.h>
 #include <CCA/Components/World/World.h>
 #include <iostream>
 
-// #if HAVE_QT
-//  #include <qinputdialog.h>
-//  #include <qstring.h>
-// #endif
-
-//using namespace std;
 using namespace SCIRun;
 
 extern "C" sci::cca::Component::pointer make_SCIRun_World()
@@ -70,52 +64,25 @@ World::~World()
 void World::setServices(const sci::cca::Services::pointer& svc)
 {
     services = svc;
+    ComponentIcon* ci = new ComponentIcon();
     StringPort *sp = new StringPort();
     sp->setParent(this);
     svc->addProvidesPort(StringPort::pointer(sp), "stringport",
                          "sci.cca.ports.StringPort", svc->createTypeMap());
 
-    WUIPort *uip = new WUIPort();
+    WUIPort *uip = new WUIPort(ci->getDisplayName());
     uip->setParent(this);
     svc->addProvidesPort(WUIPort::pointer(uip),"ui","sci.cca.ports.UIPort", svc->createTypeMap());
 
-//     svc->addProvidesPort(ComponentIcon::pointer(new ComponentIcon), "icon",
-//                          "sci.cca.ports.ComponentIcon", props);
+    svc->addProvidesPort(ComponentIcon::pointer(ci), "icon",
+                         "sci.cca.ports.ComponentIcon", svc->createTypeMap());
 }
-
-std::string StringPort::getString() { return com->text; }
 
 int WUIPort::ui()
 {
-// #if HAVE_QT
-//     bool ok;
-//     QString t = QInputDialog::getText("World", "Enter some text:",
-//         QLineEdit::Normal, QString::null, &ok);
-//     if (ok && !t.isEmpty()) {
-//         com->text = t.ascii();
-//     }
-// #endif
+#if HAVE_WX
+  wxString t = wxGetTextFromUser(wxT("Enter some text"), displayName);
+  com->setText(t.c_str());
+#endif
     return 0;
 }
-
-
-// std::string ComponentIcon::getDisplayName()
-// {
-//     return "World";
-// }
-
-// std::string ComponentIcon::getDescription()
-// {
-//     return "The World component is a sample CCA component that provides a sci::cca::StringPort.";
-// }
-
-// int ComponentIcon::getProgressBar()
-// {
-//     return 0;
-// }
- 
-// std::string ComponentIcon::getIconShape()
-// {
-//     return "RECT";
-// }
- 
