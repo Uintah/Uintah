@@ -42,6 +42,7 @@ SRCS     += \
 	$(SRCDIR)/Drawable.cc    	\
 	$(SRCDIR)/Frame.cc	    	\
 	$(SRCDIR)/Gradient.cc	    	\
+	$(SRCDIR)/Graph2D.cc	    	\
 	$(SRCDIR)/Grid.cc	    	\
 	$(SRCDIR)/Layout.cc	    	\
 	$(SRCDIR)/Parent.cc	    	\
