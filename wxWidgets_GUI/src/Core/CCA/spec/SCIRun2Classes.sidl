@@ -109,7 +109,6 @@ interface Builder extends sci.cca.Component {
 
 // text builder also should have an implementing class
 class GUIBuilder implements-all sci.cca.Builder,
-                                sci.cca.ports.Progress,
                                 sci.cca.ports.ComponentEventListener,
                                 sci.cca.ports.ConnectionEventListener {
   // manage UI ports for the GUI
@@ -118,9 +117,11 @@ class GUIBuilder implements-all sci.cca.Builder,
   void disconnectUIPort(in string uiPortName);
   int ui(in string uiPortName);
 
-  // manage Progress ports for the GUI
-  //bool connectProgress(in string usesName, in string providesPortName, in cca.ComponentID cid, out string usesPortName);
-  //void disconnectProgress(in string progressPortName);
+  void updateProgress(in cca.ComponentID cid, in int progressPercent);
+
+//   // manage Progress ports for the GUI
+//   bool connectProgress(in string providesName, in string usesPortName, in cca.ComponentID cid, out string providesPortName);
+//   void disconnectProgress(in string progressPortName);
 
   // manage ComponentIcon ports for the GUI
   bool connectComponentIcon(in string usesName, in string providesPortName, in cca.ComponentID cid, out string usesPortName);

@@ -66,6 +66,7 @@ namespace GUIBuilder {
 class BuilderWindow;
 class MiniCanvas;
 class NetworkCanvas;
+class ComponentIcon;
 
 class MenuTree : public wxEvtHandler {
 public:
@@ -143,6 +144,7 @@ public:
   // set builder only if builder is null
   bool SetBuilder(const sci::cca::GUIBuilder::pointer& bc);
   void BuildAllPackageMenus();
+  ComponentIcon* GetComponentIcon(const std::string& instanceName);
 
   // Event handlers
   void OnQuit(wxCommandEvent& event);

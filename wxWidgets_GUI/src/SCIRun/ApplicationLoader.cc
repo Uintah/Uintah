@@ -65,7 +65,9 @@ void ApplicationLoader::setFileName(const std::string& fn)
   }
 }
 
-bool ApplicationLoader::loadNetworkFile(/*const SSIDL::array1<sci::cca::ComponentID::pointer>& componentList*/)
+// options: get builder as argument or use GUIService to get any and all builders?
+// OR call ApplicationLoader from GUIService?
+bool ApplicationLoader::loadNetworkFile()
 {
   if (fileName.empty()) {
     return false;

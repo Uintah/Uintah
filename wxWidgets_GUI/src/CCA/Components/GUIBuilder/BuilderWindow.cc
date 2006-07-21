@@ -266,6 +266,11 @@ void BuilderWindow::RedrawMiniCanvas()
   miniCanvas->Refresh();
 }
 
+ComponentIcon* BuilderWindow::GetComponentIcon(const std::string& instanceName)
+{
+  return networkCanvas->GetIcon(instanceName);
+}
+
 void BuilderWindow::DisplayMessage(const wxString& line)
 {
   // Used to (temporarily - local scope) redirect all output sent to a C++ ostream object to a wxTextCtrl.

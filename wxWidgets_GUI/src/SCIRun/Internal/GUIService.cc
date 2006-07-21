@@ -56,14 +56,11 @@ void GUIService::removeBuilder(const std::string& builderName)
   }
 }
 
-// void GUIService::builderDisplayMessage(const std::string& messageLine)
-// {
-// }
-
-// void GUIService::buildComponentMenus()
-// {
-//   for (GUIBuilderMap::iterator iter = builders.begin(); iter != builders.end(); iter++) {
-//   }
-// }
+void GUIService::updateProgress(const sci::cca::ComponentID::pointer& cid, int progressPercent)
+{
+  for (GUIBuilderMap::iterator iter = builders.begin(); iter != builders.end(); iter++) {
+    iter->second->updateProgress(cid, progressPercent);
+  }
+}
 
 }

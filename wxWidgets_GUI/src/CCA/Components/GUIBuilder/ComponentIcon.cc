@@ -43,7 +43,6 @@
 
 #include <wx/dcbuffer.h>
 #include <wx/gdicmn.h> // color database
-#include <wx/panel.h>
 #include <wx/stattext.h>
 #include <wx/gbsizer.h>
 #include <wx/gauge.h>
@@ -86,7 +85,7 @@ ComponentIcon::ComponentIcon(const sci::cca::GUIBuilder::pointer& bc,
                              const sci::cca::ComponentID::pointer& compID,
                              int x, int y)
     : canvas(parent),
-      hasUIPort(false), hasGoPort(false), hasProgress(false), hasComponentIcon(false),
+      hasUIPort(false), hasGoPort(false), hasComponentIcon(false),
       isMoving(false), cid(compID), builder(bc)
 {
 
@@ -103,10 +102,6 @@ ComponentIcon::~ComponentIcon()
   if (hasUIPort) {
     builder->disconnectUIPort(uiPortName);
   }
-
-//   if (hasProgress) {
-//     builder->disconnectProgress(progressPortName);
-//   }
 
   if (hasComponentIcon) {
     builder->disconnectComponentIcon(ciPortName);
@@ -282,6 +277,7 @@ void ComponentIcon::OnRightClick(wxMouseEvent& event)
 
 void ComponentIcon::OnGo(wxCommandEvent& event)
 {
+  ResetProgress();
   timeLabel->SetLabel(INIT_TIME);
   // timer start
   double start = Time::currentSeconds();
@@ -327,6 +323,20 @@ PortIcon* ComponentIcon::GetPortIcon(const std::string& portName)
     }
   }
   return 0;
+}
+
+void ComponentIcon::UpdateProgress(int p)
+{
+  // naive impl.
+  int steps = (p / 100) * PROG_LEN;
+  progressGauge->SetValue(steps);
+  Refresh();
+}
+
+void ComponentIcon::ResetProgress()
+{
+  progressGauge->SetValue(0);
+  Refresh();
 }
 
 
@@ -441,17 +451,10 @@ void ComponentIcon::SetPortIcons()
         continue;
       }
 
-      if (type == GUIBuilder::PROGRESS_PORT) {
-//         if (builder->connectProgress(cid->getInstanceName(), providedPorts[i], cid, progressPortName)) {
-          hasProgress = true;
-//         }
-      } else {
-
       PortIcon *pi = new PortIcon(builder, this, wxID_ANY, GUIBuilder::Uses, usedPorts[i], model, type);
       usesPorts.push_back(pi);
       gridBagSizer->Add(pi, wxGBPosition(j++, USES_PORT_COL),
                         wxDefaultSpan, wxFIXED_MINSIZE|wxALIGN_RIGHT|wxALIGN_CENTER_VERTICAL, PORT_BORDER_SIZE);
-      }
     }
   }
 }

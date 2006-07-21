@@ -53,6 +53,7 @@ interface GUIService extends sci.cca.Port
   // unique builder name? throw CCAException?
   void addBuilder(in string builderName, in sci.cca.GUIBuilder builder);
   void removeBuilder(in string builderName);
+  void updateProgress(in cca.ComponentID cid, in int progressPercent);
 }
 
 //Temp test (Bridge)
@@ -97,10 +98,10 @@ interface ComponentIcon extends sci.cca.Port {
 }
 
 
-// report component progress
-interface Progress extends sci.cca.Port {
-  collective void updateProgress(in int progressPercent);
-}
+// // report component progress
+// interface Progress extends sci.cca.Port {
+//   collective void updateProgress(in int progressPercent);
+// }
 
 /**
  * Provide a user interface for a component - a UI button

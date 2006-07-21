@@ -122,6 +122,8 @@ public:
 
   void SetMovingIcon(ComponentIcon* ci) { movingIcon = ci; }
   ComponentIcon* AddIcon(sci::cca::ComponentID::pointer& compID);
+  ComponentIcon* GetIcon(const std::string& instanceName);
+  ComponentIcon* GetIcon(sci::cca::ComponentID::pointer& compID) { return GetIcon(compID->getInstanceName()); }
   void DeleteIcon(const std::string& instanceName);
 
   void GetUnscrolledPosition(const wxPoint& p, wxPoint& position);
