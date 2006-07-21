@@ -37,6 +37,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Events/EventManager.h>
 #include <Core/Events/keysyms.h>
+#include <Core/Datatypes/DenseMatrix.h>
 #include <sci_gl.h>
 #include <sci_glu.h>
 
@@ -47,28 +48,26 @@ namespace SCIRun {
       : Parent(variables),
         data_(0)
     {
-      Piostream *stream = auto_istream("/SCIRun/Data/test.mat", 0);
-      ASSERT(stream);
-      MatrixHandle mh = 0;
-      Pio(*stream, mh);
-      delete stream;
+      for (int n = 0; n < 20; ++n) {
 
-      MatrixHandle mh2 = 0;
-      stream = auto_istream("/SCIRun/Data/test2.mat", 0);
-      ASSERT(stream);
-      Pio(*stream, mh2);
-      delete stream;
+        int rows = Ceil(drand48() * 50);
+        
+        DenseMatrix *mat = new DenseMatrix(rows, 2);
 
-      add_matrix(mh);
-      add_matrix(mh2);
+        double x = 0.0;
 
-      for (int n = 0; n < 25; ++n) {
-        mh = mh2;
-        mh.detach();
-        for (int r = 0; r < mh->nrows(); ++r) {
-          mh->put(r, 1, mh->get(r, 1)*(n+1));
+        mat->put(0, 0, 0);
+        mat->put(0, 1, 50);
+        
+        for (int r = 1 ; r < rows; ++r ) {
+          if (r == rows-1) x = Round(x);
+          mat->put(r, 0, x);
+          mat->put(r, 1, mat->get(r-1, 1) + (50 - drand48() * 100.0));
+          x += drand48() * 2.0 + 0.5;
         }
-        add_matrix(mh);
+
+        add_matrix(mat);
+
       }
     }
 
@@ -177,8 +176,8 @@ namespace SCIRun {
       const int y2 = Floor(region.y2());
       const double font_size = get_vars()->get_double("font_size");
 
-      gapx_ = font_size*2+5;
-      gapy_ = font_size*2+5;
+      gapx_ = font_size*3+5;
+      gapy_ = font_size+25;
 
       TextRenderer *renderer = FontManager::get_renderer(font_size);
 
