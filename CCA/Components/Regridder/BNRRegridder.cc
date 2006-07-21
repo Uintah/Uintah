@@ -27,6 +27,7 @@ BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task
   int *tag_ub, maxtag_ ,flag;
   int tag_start, tag_end;
 
+  //generate tag lists for processors
   if(numprocs>1)
   {  
     MPI_Attr_get(d_myworld->getComm(),MPI_TAG_UB,&tag_ub,&flag);
@@ -131,25 +132,27 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
     RunBR(coarse_flag_vector,patch_sets[l]);  
     brtotal+=MPI_Wtime()-start;
 
-    if(patch_sets[l].empty())
+    if(patch_sets[l].empty()) //no patches goto next level
        continue;
 
-    //saftey layers
+    //add saftey layers for finer level
     if(l>0)
     {
       start=MPI_Wtime();
       AddSafetyLayer(patch_sets[l], coarse_flag_sets[l-1], lb->getPerProcessorPatchSet(oldGrid->getLevel(l))->getSubset(d_myworld->myrank())->getVector(), l);
       sltotal+=MPI_Wtime()-start;
     }
-    //Fixup patchlist
+    //Fixup patchlist:  this forces neighbor constraints
     start=MPI_Wtime();
     patchfixer_.FixUp(patch_sets[l]);
     futotal+=MPI_Wtime()-start;
-    //Post fixup patchlist 
+    //Post fixup patchlist: this creates more patches as specified in the input file
     start=MPI_Wtime();
     PostFixup(patch_sets[l],d_minPatchSize);
     pfutotal+=MPI_Wtime()-start;
   }
+
+  //Create the grid
   start=MPI_Wtime(); 
   // create level 0
   Point anchor = oldGrid->getLevel(0)->getAnchor();
@@ -297,7 +300,7 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
   for(int p=0;p<numprocs;p++)
     procs[p]=p;
   
-  //bound flags
+  //bound local flags
   PseudoPatch patch;
   if(flags.size()>0)
   {
@@ -312,6 +315,7 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
           patch.high[d]=flags[f][d];
       }
     }
+    //make high bounds non-inclusive
     patch.high[0]++;
     patch.high[1]++;
     patch.high[2]++;
@@ -322,6 +326,7 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
     patch.low[0]=INT_MAX;
   }
   
+  //Calculate global bounds
   if(numprocs>1)
   {
     vector<PseudoPatch> bounds(numprocs);
@@ -377,13 +382,15 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
   while(true)
   {
     BNRTask *task;
+    //check tag_q for processors waiting for tags
     if(!tag_q_.empty() && tags_.size()>1)
     {
+        //2 tags are available continue the task
         task=tag_q_.front();
         tag_q_.pop();
         task->continueTask();
     }
-    else if(!immediate_q_.empty())
+    else if(!immediate_q_.empty())  //check for tasks that are able to make progress
     {
       task=immediate_q_.front();
       immediate_q_.pop();
@@ -394,13 +401,11 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
       else
         task->continueTask();
     }
-    else if(free_requests_.size()<requests_.size())  //communication waiting to complete
+    else if(free_requests_.size()<requests_.size())  //no tasks can make progress finish communication
     {
-      //cout << "rank:" << rank << ": waiting on requests\n";
-      //wait on requests
       int count;
+      //wait on requests
       MPI_Waitsome(requests_.size(),&requests_[0],&count,&indicies_[0],MPI_STATUSES_IGNORE);
-      //cout << "rank:" << rank << ": completed requests:" << count << endl;
       //handle each request
       for(int c=0;c<count;c++)
       {
@@ -417,20 +422,24 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
     }
     else  //no tasks remaining, no communication waiting, algorithm is done
     {
-       //cout << "rank:" << rank << ": terminating\n";
       break; 
     }
   }
-  
+ 
+  //check for controlling processors 
   if(rank==tasks_.front().p_group_[0])
   {
+    //assign the patches to my list
     patches.assign(tasks_.front().my_patches_.begin(),tasks_.front().my_patches_.end());
   }
   if(numprocs>1)
   {
-    unsigned int size=tasks_.front().my_patches_.size();
+    //broad cast size out
+    unsigned int size=patches.size();
     MPI_Bcast(&size,1,MPI_INT,tasks_.front().p_group_[0],d_myworld->getComm());
+    //resize patchlist
     patches.resize(size);
+    //broadcast patches
     MPI_Bcast(&patches[0],size*sizeof(PseudoPatch),MPI_BYTE,tasks_.front().p_group_[0],d_myworld->getComm());
   }
 }
@@ -438,7 +447,6 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
 void BNRRegridder::problemSetup(const ProblemSpecP& params, 
                                 const GridP& oldGrid,
                                 const SimulationStateP& state)
-
 {
   RegridderCommon::problemSetup(params, oldGrid, state);
   d_sharedState = state;
@@ -455,6 +463,7 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
   regrid_spec->get("patch_split_tolerance", tola_);
   regrid_spec->get("patch_combine_tolerance", tolb_);
 
+  //bound tolerances
   if (tola_ < 0) {
     if (d_myworld->myrank() == 0)
       cout << "  Bounding Regridder's patch_split_tolerance to [0,1]\n";
@@ -476,14 +485,22 @@ void BNRRegridder::problemSetup(const ProblemSpecP& params,
     tolb_ = 1;
   }
  
+  //set target patches
   if(d_myworld->size()==1)
   {
+    //if there is only 1 processor attempt for minimum number of patches
     target_patches_=1;
   }
   else
   {
     int patches_per_proc=1;
     regrid_spec->get("patches_per_level_per_proc",patches_per_proc);
+    if (patches_per_proc<1)
+    {
+      if (d_myworld->myrank() == 0)
+        cout << "  Bounding patches_per_level_per_proc to [1,infinity]\n";
+      patches_per_proc=1;
+    }
     target_patches_=patches_per_proc*d_myworld->size();
   }
 
@@ -606,12 +623,7 @@ void BNRRegridder::PostFixup(vector<PseudoPatch> &patches, IntVector min_patch_s
 void BNRRegridder::AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVector> &coarse_flags, 
                                   const vector<const Patch*>& coarse_patches, int level)
 {
-//  cout << "Adding Saftey Layers for level: " << level << " coarse_patches.size():" << coarse_patches.size() << " patches.size():" << patches.size() << endl; 
-  /*
-  cout << "Coarse patches:\n";
-  for(int p=0;p<coarse_patches.size();p++)
-       cout << *coarse_patches[p] << endl;
- */
+  
   if (coarse_patches.size() == 0)
     return;
   //create a range tree out of my patches
@@ -622,30 +634,31 @@ void BNRRegridder::AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVect
     // convert from coarse coordinates to real coordinates on the coarser level, with a safety layer
     IntVector low = patches[p].low*d_minPatchSize/d_cellRefinementRatio[level] - d_minBoundaryCells;
     IntVector high = patches[p].high*d_minPatchSize/d_cellRefinementRatio[level] + d_minBoundaryCells;
-    //cout << "Padded Patch: " << low << " " << high << endl;
+    
     Level::selectType intersecting_patches;
     //intersect range tree
     prt.query(low, high, intersecting_patches);
+    
     //for each intersecting patch
     for (int i = 0; i < intersecting_patches.size(); i++)
     {
       const Patch* patch = intersecting_patches[i];
       IntVector int_low = Max(patch->getCellLowIndex(), low);
       IntVector int_high = Min(patch->getCellHighIndex(), high);
-      //cout << "Intersection:" << int_low << " " << int_high << endl; 
+      
+      //round low coordinate down
       int_low=int_low/d_minPatchSize;
+      //round high coordinate up
       int_high[0]=(int)ceil(int_high[0]/(float)d_minPatchSize[0]);
       int_high[1]=(int)ceil(int_high[1]/(float)d_minPatchSize[1]);
       int_high[2]=(int)ceil(int_high[2]/(float)d_minPatchSize[2]);
-      //cout << "Adding flags: ";
+      
       //for overlapping cells
       for (CellIterator iter(int_low, int_high); !iter.done(); iter++)
       {
         //add to coarse flag list, in coarse coarse-level coordinates
         coarse_flags.insert(*iter);
-        //cout << *iter*d_minPatchSize << " ";
       }
-      //cout << endl;
     }
   }
 }

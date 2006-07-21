@@ -120,14 +120,14 @@ WARNING
     FlagsList flags_;                   // list of flags inside this task
     BNRTask *parent_;                   // pointer to parent task
     BNRTask *sibling_;                  // pointer to sibling task
-    BNRTask *left_, *right_;
+    BNRTask *left_, *right_;            // left and right child tasks
                 
     unsigned int total_flags_;          // total number of flags on all processors within this patch
     bool acceptable_;                   // patch acceptablity
-    IntVector offset_;
+    IntVector offset_;                  // offset for indexing 
 
     // Signatures
-    vector<int>     count_[3];
+    vector<int>     count_[3];          // histogram signature
                 
     // MPI Communication state
     unsigned int tag_;                  // unique message tag
@@ -136,9 +136,9 @@ WARNING
     int d_;                             // dimension of hypercube
                 
     // Communication buffers
-    vector<FlagsCount> flagscount_;  
-    vector<int> sum_[3];
-    ChildTasks ctasks_;              
+    vector<FlagsCount> flagscount_;     // buffer for gathering the number of flags
+    vector<int> sum_[3];                // buffer for calculating global histogram
+    ChildTasks ctasks_;                 // structure of child tasks
 
     // Participating processor information
     vector<int> p_group_;               // particpating processor group
