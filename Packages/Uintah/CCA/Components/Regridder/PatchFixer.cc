@@ -9,7 +9,6 @@ using namespace std;
 void PatchFixer::BuildLattice(const vector<PseudoPatch> &patches)
 {
 	//bound patches
-
 	bounds_=patches[0];
 	for(unsigned int p=1;p<patches.size();p++)
 	{
@@ -73,6 +72,8 @@ void PatchFixer::BuildLattice(const vector<PseudoPatch> &patches)
 		Fill(patches[p],p);
 	}
 }
+
+//Fill the lattice in the volume of patch with the value id
 void PatchFixer::Fill(const PseudoPatch patch,const int id)
 {
 	int Y=lsize_[0],Z=Y*lsize_[1];
@@ -96,6 +97,7 @@ void PatchFixer::Fill(const PseudoPatch patch,const int id)
 			}
 	}
 }
+
 void PatchFixer::FixUp(vector<PseudoPatch> &patches)
 {
 	//search lattice
@@ -136,6 +138,7 @@ void PatchFixer::FixUp(vector<PseudoPatch> &patches)
 		//delete all patches that are not mine
 		patches.resize(mysize);
 	
+    //make fixup search area
 		stack <PseudoPatch> search;
 		for(int p=0;p<mysize;p++)
 		{
@@ -143,17 +146,13 @@ void PatchFixer::FixUp(vector<PseudoPatch> &patches)
 		}	
 
 		PseudoPatch current;
+    //search area and fix each face
 		while(!search.empty())
 		{
 			current=search.top();
 			search.pop();
-			/*
-			cout << "d_myworld->myrank():" << d_myworld->myrank() << ": searching patch: {"  
-					 << current.low[0] << "-" << current.high[0] << ", "
-					 << current.low[1] << "-" << current.high[1] << ", "
-					 << current.low[2] << "-" << current.high[2] << "}\n";
-			*/
-			FixFace(patches,current,0,-1);
+			
+      FixFace(patches,current,0,-1);
 			FixFace(patches,current,0,1);
 			FixFace(patches,current,1,-1);
 			FixFace(patches,current,1,1);
@@ -163,8 +162,8 @@ void PatchFixer::FixUp(vector<PseudoPatch> &patches)
 	}
 	int my_patch_size=patches.size();
 
-  //Split patches that are bigger than threashold?
-
+  //it may be worth moving splitting patches below the threashold to here
+ 
 	//allgather patchset sizes
   if(d_myworld->size()>1)
   {
@@ -235,6 +234,7 @@ void PatchFixer::FixFace(vector<PseudoPatch> &patches,PseudoPatch patch, int dim
 		ey=CellToLattice(patch.high[ydim],ydim);
 		bz=CellToLattice(patch.low[zdim],zdim);
 		ez=CellToLattice(patch.high[zdim],zdim);
+    //search along face in one dimension
 		for(int y=by;y<ey;y++)
 		{
 			bool state=lattice_[x*Xm+y*Ym+bz*Zm]!=-1;
@@ -242,12 +242,12 @@ void PatchFixer::FixFace(vector<PseudoPatch> &patches,PseudoPatch patch, int dim
 			for(int z=bz+1;z<ez;z++)
 			{
 				newstate=lattice_[x*Xm+y*Ym+z*Zm]!=-1;
-				if(state!=newstate)
+				if(state!=newstate) //change of state indicates edge needed
 				{
 					state=newstate;
 					p1=lattice_[(x-side)*Xm+y*Ym+z*Zm];
 					p2=lattice_[(x-side)*Xm+y*Ym+(z-1)*Zm];
-					if(p1==p2)
+					if(p1==p2)        //no edge exists so split
 					{
 						Split split;
 						split.d=zdim;
@@ -257,6 +257,7 @@ void PatchFixer::FixFace(vector<PseudoPatch> &patches,PseudoPatch patch, int dim
 				}
 			}
 		}
+    //search along face in the other dimension
 		for(int z=bz;z<ez;z++)
 		{
 			bool state=lattice_[x*Xm+by*Ym+z*Zm]!=-1;
@@ -264,12 +265,12 @@ void PatchFixer::FixFace(vector<PseudoPatch> &patches,PseudoPatch patch, int dim
 			for(int y=by+1;y<ey;y++)
 			{
 				newstate=lattice_[x*Xm+y*Ym+z*Zm]!=-1;
-				if(state!=newstate)
+				if(state!=newstate) //change of state indicates edge needed
 				{
 					state=newstate;
 					p1=lattice_[(x-side)*Xm+y*Ym+z*Zm];
 					p2=lattice_[(x-side)*Xm+(y-1)*Ym+z*Zm];
-					if(p1==p2)
+					if(p1==p2)        //no edge exists so split
 					{
 						Split split;
 						split.d=ydim;

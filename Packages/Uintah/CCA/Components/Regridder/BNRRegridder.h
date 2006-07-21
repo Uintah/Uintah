@@ -68,23 +68,23 @@ WARNING
 
     int task_count_;								//number of tasks created on this proc
     double tola_,tolb_;							//Tolerance parameters
-    unsigned int target_patches_;
+    unsigned int target_patches_;   //Minimum number of patches the algorithm attempts to reach
     
     //queues for tasks
-    list<BNRTask> tasks_;				//list of tasks created throughout the run
-    queue<BNRTask*> immediate_q_;  //tasks that are always ready to run
-    queue<BNRTask*> tag_q_;				//tasks that are waiting for tags to continue
-    queue<int> tags_;							//available tags
-    PatchFixer patchfixer_;
-    IntVector d_minPatchSize;
+    list<BNRTask> tasks_;				    //list of tasks created throughout the run
+    queue<BNRTask*> immediate_q_;   //tasks that are always ready to run
+    queue<BNRTask*> tag_q_;				  //tasks that are waiting for tags to continue
+    queue<int> tags_;							  //available tags
+    PatchFixer patchfixer_;         //Fixup class
+    IntVector d_minPatchSize;       //minimum patch size in each dimension
 
     //request handeling variables
-    vector<MPI_Request> requests_;
-    vector<int> indicies_;
-    vector<BNRTask*> request_to_task_;
-    queue<int>  free_requests_;
+    vector<MPI_Request> requests_;    //MPI requests
+    vector<int> indicies_;            //return value from waitsome
+    vector<BNRTask*> request_to_task_;//maps requests to tasks using the indicies returned from waitsome
+    queue<int>  free_requests_;       //list of free requests
 
-    ofstream fout;
+    ofstream fout;                    //debug stream for outputing patches. should be moved into the debug stream.
   };
 
 } // End namespace Uintah
