@@ -51,7 +51,7 @@ using namespace SCIRun;
 
 extern "C" sci::cca::Component::pointer make_SCIRun_Hello()
 {
-    return sci::cca::Component::pointer(new Hello());
+  return sci::cca::Component::pointer(new Hello());
 }
 
 
@@ -85,7 +85,7 @@ void Hello::setServices(const sci::cca::Services::pointer& svc)
                             sci::cca::TypeMap::pointer(0));
 
   services->addProvidesPort(sci::cca::ports::ComponentIcon::pointer(this),
-                            "componenticon",
+                            "icon",
                             "sci.cca.ports.ComponentIcon",
                             sci::cca::TypeMap::pointer(0));
 
@@ -94,76 +94,86 @@ void Hello::setServices(const sci::cca::Services::pointer& svc)
   props->putString("cca.portType", "sci.cca.ports.StringPort");
 
   services->registerUsesPort("stringport", "sci.cca.ports.StringPort", props);
-  services->registerUsesPort("progress", "sci.cca.ports.Progress", sci::cca::TypeMap::pointer(0));
 }
 
 void Hello::releaseServices(const sci::cca::Services::pointer& svc)
 {
-std::cerr << "Hello::releaseServices" << std::endl;
+  services->unregisterUsesPort("stringport");
 
-    services->unregisterUsesPort("stringport");
-    //services->unregisterUsesPort("progress");
-
-    //services->removeProvidesPort("ui");
-    services->removeProvidesPort("go");
-    //services->removeProvidesPort("icon");
+  services->removeProvidesPort("ui");
+  services->removeProvidesPort("go");
+  services->removeProvidesPort("icon");
 }
 
 int Hello::go()
 {
-    if (services.isNull()) {
-        std::cerr << "Null services!\n";
-        return -1;
+  if (services.isNull()) {
+    std::cerr << "Null services!\n";
+    return -1;
+  }
+  sci::cca::ports::GUIService::pointer guiService;
+  try {
+    guiService = pidl_cast<sci::cca::ports::GUIService::pointer>(services->getPort("cca.GUIService"));
+    if (guiService.isNull()) {
+#if HAVE_WX
+      wxMessageBox(wxT("GUIService is not available"), wxT(getDisplayName()), wxOK|wxICON_ERROR, 0);
+#else
+      std::cerr << "GUIService is not available" << std::endl;
+#endif
+      return -2;
     }
-    std::cerr << "Hello.go.getPort...";
-    double st = SCIRun::Time::currentSeconds();
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+#if HAVE_WX
+    wxMessageBox(e->getNote(), wxT(getDisplayName()), wxOK|wxICON_ERROR, 0);
+#else
+    std::cerr << e->getNote() << std::endl;
+#endif
+  }
+  sci::cca::ComponentID::pointer cid = services->getComponentID();
 
-    sci::cca::Port::pointer pp;
-//     sci::cca::Port::pointer progPort;
-    try {
-        pp = services->getPort("stringport");
-//         progPort = services->getPort("progress");
-    }
-    catch (const sci::cca::CCAException::pointer &e) {
-        std::cerr << e->getNote() << std::endl;
-        return -1;
-    }
+  double st = SCIRun::Time::currentSeconds();
 
-//      sci::cca::ports::Progress::pointer pPtr =
-//          pidl_cast<sci::cca::ports::Progress::pointer>(progPort);
+  guiService->updateProgress(cid, 20);
 
-    sci::cca::ports::StringPort::pointer sp =
-        pidl_cast<sci::cca::ports::StringPort::pointer>(pp);
-    std::string name = sp->getString();
+  sci::cca::Port::pointer pp;
+  try {
+    pp = services->getPort("stringport");
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+#if HAVE_WX
+    wxMessageBox(e->getNote(), wxT(getDisplayName()), wxOK|wxICON_ERROR, 0);
+#else
+    std::cerr << e->getNote() << std::endl;
+#endif
+    return -1;
+  }
 
-    double t = Time::currentSeconds() - st;
-    std::cerr << "Done in " << t << "secs\n";
-    std::cerr << t*1000*1000 << " us/rep\n";
+  guiService->updateProgress(cid, 50);
 
-    if (! name.empty()) {
-      setMessage(name);
-    }
+  sci::cca::ports::StringPort::pointer sp =
+    pidl_cast<sci::cca::ports::StringPort::pointer>(pp);
+  std::string name = sp->getString();
 
-//     pPtr->updateProgress(HelloComponentIcon::STEPS);
-    services->releasePort("stringport");
-//     services->releasePort("progress");
+  double t = Time::currentSeconds() - st;
+  std::cerr << "Done in " << t << "secs\n";
+  std::cerr << t*1000*1000 << " us/rep\n";
 
-    std::cout << " testing : " << getMessage() << std::endl;
-    return 0;
+  if (! name.empty()) {
+    setMessage(name);
+  }
+
+  guiService->updateProgress(cid, 100);
+
+  services->releasePort("stringport");
+  services->releasePort("cca.GUIService");
+
+  return 0;
 }
 
 int HelloUIPort::ui()
 {
 #if HAVE_WX
-//   try {
-//     sci::cca::ports::GUIService::pointer guiService =
-//       pidl_cast<sci::cca::ports::GUIService::pointer>(services->getPort("cca.GUIService"));
-//     if (guiService.isNull()) {
-//     }
-//   }
-//   catch (const sci::cca::CCAException::pointer &e) {
-//     // error...
-//   }
   wxMessageBox(com->getMessage(), wxT(com->getDisplayName()), wxOK|wxICON_INFORMATION, 0);
 #endif
   return 0;

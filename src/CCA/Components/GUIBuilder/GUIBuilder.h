@@ -40,8 +40,6 @@
 #include <string>
 #include <map>
 
-// check \#if wxUSE_STATUSBAR, wxUSE_MENUS, wxUSE_THREADS, wxUSE_STREAMS, wxUSE_STD_IOSTREAM...
-
 namespace GUIBuilder {
 
 class GUIBuilder : public sci::cca::GUIBuilder {
@@ -108,16 +106,13 @@ public:
   virtual void disconnectUIPort(const std::string& uiPortName);
   virtual int ui(const std::string& uiPortName);
 
-  // progress
-
-//   virtual bool connectProgress(const std::string& usesName, const std::string& providesPortName,
-//                                const sci::cca::ComponentID::pointer &cid, std::string& usesPortName);
+//   // progress
+//   virtual bool connectProgress(const std::string& providesName, const std::string& usesPortName, const sci::cca::ComponentID::pointer &cid, std::string& providesPortName);
 //   virtual void disconnectProgress(const std::string& progessPortName);
 
+  virtual void updateProgress(const sci::cca::ComponentID::pointer& cid, int progressPercent);
 
-  virtual void updateProgress(int);
-
-  // progress
+//   // progress
 
   virtual bool connectComponentIcon(const std::string& usesName, const std::string& providesPortName,
                                     const sci::cca::ComponentID::pointer &cid, std::string& usesPortName);

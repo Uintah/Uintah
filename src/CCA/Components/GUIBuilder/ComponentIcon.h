@@ -32,16 +32,17 @@
 
 #include <Core/CCA/spec/cca_sidl.h>
 
-//#include <map>
+#include <wx/panel.h>
+
 #include <vector>
 
 //class wxRegion;
 
 class wxWindow;
-class wxPanel;
 class wxGridBagSizer;
 class wxButton;
 class wxGauge;
+class wxStaticText;
 
 namespace GUIBuilder {
 
@@ -96,8 +97,10 @@ public:
 
   const sci::cca::ComponentID::pointer GetComponentInstance() const { return cid; }
   const std::string GetComponentInstanceName() { return cid->getInstanceName(); }
-  //PortIcon* GetPortIcon(const std::string& portName) { return ports[portName]; }
   PortIcon* GetPortIcon(const std::string& portName);
+
+  void UpdateProgress(int);
+  void ResetProgress();
 
   const PortList& GetProvidesPorts() const { return providesPorts; }
   const PortList& GetUsesPorts() const { return usesPorts; }
@@ -126,15 +129,14 @@ protected:
 
   bool hasUIPort;
   bool hasGoPort;
-  bool hasProgress;
   bool hasComponentIcon;
   bool isMoving;
 
   sci::cca::ComponentID::pointer cid;
   sci::cca::GUIBuilder::pointer builder;
+
   std::string goPortName;
   std::string uiPortName;
-  std::string progressPortName;
   std::string ciPortName;
 
   //PortMap ports;

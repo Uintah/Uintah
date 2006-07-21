@@ -32,6 +32,7 @@
 
 #include <CCA/Components/GUIBuilder/GUIBuilder.h>
 #include <CCA/Components/GUIBuilder/BuilderWindow.h>
+#include <CCA/Components/GUIBuilder/ComponentIcon.h>
 // for default namespace strings - these may be moved elsewhere in the future
 #include <CCA/Components/GUIBuilder/ComponentSkeletonWriter.h>
 
@@ -200,8 +201,10 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
 #endif
     if (Thread::self()->getThreadName() == GUI_THREAD_NAME) {
       app->AddBuilder(sci::cca::GUIBuilder::pointer(this));
-    //} else {
-    // add to event queue???
+    } else {
+      // add to wx event queue???
+      std::cerr << "Builders can only be created in the GUI thread...Aborting!" << std::endl;
+      abort();
     }
   }
 
@@ -215,11 +218,6 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
   catch (const sci::cca::CCAException::pointer &e) {
     std::cerr << "Error: GUI service is not available; " <<  e->getNote() << std::endl;
   }
-
-  services->addProvidesPort(sci::cca::ports::Progress::pointer(this),
-                            "progress",
-                            "sci.cca.ports.Progress",
-                            sci::cca::TypeMap::pointer(0));
 
   setDefaultPortColors();
 }
@@ -544,12 +542,14 @@ void GUIBuilder::addComponentFromXML(const std::string& filePath, const std::str
 
 void GUIBuilder::addFrameworkProxy(const std::string &loaderName, const std::string &user, const std::string &domain, const std::string &loaderPath)
 {
-std::cerr << "GUIBuilder::addFrameworkProxy(..): " << loaderName << ", " << user << ", " << domain << ", " << loaderPath << std::endl;
+  std::cerr << "GUIBuilder::addFrameworkProxy(..): " << loaderName << ", " << user << ", " << domain << ", " << loaderPath << std::endl;
   sci::cca::ports::FrameworkProxyService::pointer fwkProxy;
   try {
     fwkProxy =
       pidl_cast<sci::cca::ports::FrameworkProxyService::pointer>(services->getPort("cca.FrameworkProxyService"));
     fwkProxy->addLoader(loaderName, user, domain, loaderPath);
+
+    services->releasePort("cca.FrameworkProxyService");
   } catch (const sci::cca::CCAException::pointer &pe) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     bw->DisplayErrorMessage("Error: framework proxy service not found; " + pe->getNote());
@@ -564,6 +564,8 @@ void GUIBuilder::removeFrameworkProxy(const std::string &loaderName)
     fwkProxy =
       pidl_cast<sci::cca::ports::FrameworkProxyService::pointer>(services->getPort("cca.FrameworkProxyService"));
     fwkProxy->removeLoader(loaderName);
+
+    services->releasePort("cca.FrameworkProxyService");
   } catch (const sci::cca::CCAException::pointer &pe) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
     bw->DisplayErrorMessage("Error: framework proxy service not found; " + pe->getNote());
@@ -618,7 +620,7 @@ int GUIBuilder::go(const std::string& goPortName)
     return -1;
   }
   int status = goPort->go();
-  // set progress based on status
+
   services->releasePort(goPortName);
   return status;
 }
@@ -667,29 +669,21 @@ int GUIBuilder::ui(const std::string& uiPortName)
   return status;
 }
 
-//////////////////////////////////////////////////////////////////////////
-// sci.cca.ports.Progress support
+/////////////////////////////////////////////////////////////////////////////
+// component progress
 
-// bool GUIBuilder::connectProgress(const std::string& usesName, const std::string& providesPortName, const sci::cca::ComponentID::pointer &cid, std::string& usesPortName)
-// {
-//   usesPortName = usesName + "." + "progress";
-// #if DEBUG
-//   std::cerr << "GUIBuilder::connectProgress(..): uses port name=" << usesPortName
-//             << ", provides port name=" << providesPortName
-//             << ", component instance=" << cid->getInstanceName() << std::endl;
-// #endif
-//   return connectPort(usesPortName, providesPortName, PROGRESS_PORT, cid);
-// }
-
-// void GUIBuilder::disconnectProgress(const std::string& progessPortName)
-// {
-// #if DEBUG
-//   std::cerr << "GUIBuilder::disconnectProgress(..): progress port name=" << progressPortName << std::endl;
-// #endif
-//   disconnectPort(progessPortName);
-// }
-
-void GUIBuilder::updateProgress(int) {}
+void GUIBuilder::updateProgress(const sci::cca::ComponentID::pointer& cid, int progressPercent)
+{
+  // get all builder windows
+  // this should be done in a worker thread
+  BuilderWindow *bw = app->GetTopBuilderWindow();
+  if (bw) {
+    ComponentIcon* ci = bw->GetComponentIcon(cid->getInstanceName());
+    if (ci) {
+      ci->UpdateProgress(progressPercent);
+    }
+  }
+}
 
 //////////////////////////////////////////////////////////////////////////
 // sci.cca.ports.ComponentIcon support

@@ -48,7 +48,7 @@
 #include <wx/utils.h>
 
 // WX module checks
-#if ! defined(wxUSE_THREADS) || ! defined(wxUSE_STD_IOSTREAM) || ! defined(wxUSE_STD_STRING) || ! defined(wxUSE_LIBPNG) || ! defined(wxUSE_LIBJPEG) || ! defined(wxUSE_MENUS)
+#if ! defined(wxUSE_THREADS) || ! defined(wxUSE_STD_IOSTREAM) || ! defined(wxUSE_STD_STRING) || ! defined(wxUSE_LIBPNG) || ! defined(wxUSE_LIBJPEG) || ! defined(wxUSE_MENUS) || ! defined(wxUSE_STATUSBAR) || ! defined(wxUSE_STREAMS)
 #  error("wxWidgets not configured correctly.  Please see build documentation for details.")
 #endif // WX module checks
 

@@ -561,6 +561,16 @@ NetworkCanvas::AddIcon(sci::cca::ComponentID::pointer& compID)
   return ci;
 }
 
+ComponentIcon* NetworkCanvas::GetIcon(const std::string& instanceName)
+{
+  ComponentMap::iterator iter = components.find(instanceName);
+  if (iter != components.end()) {
+    return iter->second;
+  }
+
+  return 0;
+}
+
 void NetworkCanvas::DeleteIcon(const std::string& instanceName)
 {
   ComponentMap::iterator iter = components.find(instanceName);
