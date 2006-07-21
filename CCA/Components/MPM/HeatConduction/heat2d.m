@@ -270,37 +270,45 @@ function bcs = generate_bcs(bar_dim,spacing)
   count = 1;
 
   #left face (x minus case)
-  if (xface.l.type == "D" || xface.l.type == "d")
+  if (xface.l.type == "D" || xface.l.type == "d" || xface.l.type == "N" ||
+      xface.l.type == "n")
     for (j = 1:dy+1)
       i = 1;
       bcs.n(count) = i + (j - 1)*(dx + 1);
+      bcs.t(count) = xface.l.type;
       bcs.v(count++) = xface.l.value;
     endfor
   endif
 
   #right face (x plus case)
-  if (xface.r.type == "D" || xface.r.type == "d")
+  if (xface.r.type == "D" || xface.r.type == "d" || xface.r.type == "N" ||
+      xface.r.type == "n")
     for (j = 1:dy+1)
       i = dx + 1;
       bcs.n(count) = i + (j - 1)*(dx + 1);
+      bcs.t(count) = xface.r.type;
       bcs.v(count++) = xface.r.value;
     endfor
   endif
 
   #bottom face (y minus case)
-  if (yface.b.type == "D" || yface.b.type == "d")
+  if (yface.b.type == "D" || yface.b.type == "d" || yface.b.type == "N" ||
+      yface.b.type == "n")
     for (i = 1:dx+1)
       j = 1;
       bcs.n(count) = i + (j-1)*(dx+1);
+      bcs.t(count) = yface.b.type;
       bcs.v(count++) = yface.b.value;
     endfor
   endif
 
   #top face (y top case)
-  if (yface.t.type == "D" || yface.t.type == "d")
+  if (yface.t.type == "D" || yface.t.type == "d" || yface.t.type == "N" || 
+      yface.t.type == "n")
     for (i = 1:dx+1)
       j = dy;
       bcs.n(count) = i + (j-1)*(dx+1);
+      bcs.t(count) = yface.t.type;
       bcs.v(count++) = yface.t.value;
     endfor
   endif
@@ -319,17 +327,23 @@ function [K,F] = apply_bcs(K,F,bcs)
     for (bc=1:bc_size)
       node=bcs.n(bc);
       bcvalue = bcs.v(bc);
-      for (j=1:nr)
-        kvalue = K(j,node);
-        F(j) -= kvalue*bcvalue;
-        if (j != node)
-          K(j,node) = 0;
-          K(node,j) = 0;
-        else
-          K(j,node) = 1;
-        endif
-      endfor
-      F(node) = bcvalue;
+      bctype = bcs.t(bc);
+      if (bctype == "N" || bctype == "n")
+        F(node) += bcvalue;
+      endif
+      if (bctype == "D" || bctype == "d")
+        for (j=1:nr)
+          kvalue = K(j,node);
+          F(j) -= kvalue*bcvalue;
+          if (j != node)
+            K(j,node) = 0;
+            K(node,j) = 0;
+          else
+            K(j,node) = 1;
+          endif
+        endfor
+        F(node) = bcvalue;
+      endif
     endfor
     F = F';
 endfunction

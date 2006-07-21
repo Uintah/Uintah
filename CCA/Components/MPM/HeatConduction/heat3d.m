@@ -57,20 +57,16 @@ function [K,F] = form_matrix(K,F,points,elems,materials,dt,theta,T)
     K = assemble(element,K,KE,C,dt,theta);
     F = source_term(element,F,KE,C,dt,theta,T);
   endfor
+  K
+  T
+  F
 endfunction
 
 function [KE,Ca] = element_linear(i,element,points,materials)
-  n1 = element(1);
-  n2 = element(2);
-  n3 = element(3);
-  n4 = element(4);
-  n5 = element(5);
-  n6 = element(6);
-  n7 = element(7);
-  n8 = element(8);
 
-  pts = [points(n1),points(n2),points(n3),points(n4),points(n5),points(n6),points(n7),points(n8)];
-
+  n = [element(1:8)];
+  pts = [points(n)];
+  
   [xi,eta,delta,weight] = gauss_quadrature;
 
   for (order=1:2)
@@ -120,13 +116,26 @@ function [xi,eta,delta,weight] = gauss_quadrature
   delta(1,1,1) = 0;
   weight(1,1) = 2;
 
-  xi(2,1) = -1/sqrt(3);
-  xi(2,2) = 1/sqrt(3);
-  eta(2,1) = -1/sqrt(3);
-  eta(2,2) = 1/sqrt(3);
-  delta(2,1) = -1/sqrt(3);
-  delta(2,2) = 1/sqrt(3);
-  weight(2,1) = weight(2,2) = 1;
+  part_loc = true;
+
+   if (part_loc)
+     xi(2,1) = -1/2;
+     xi(2,2) = 1/2;
+     eta(2,1) = -1/2;
+     eta(2,2) = 1/2;
+     delta(2,1) = -1/2;
+     delta(2,2) = 1/2;
+     weight(2,1) = weight(2,2) = 1;
+  else
+     xi(2,1) = -1/sqrt(3);
+     xi(2,2) = 1/sqrt(3);
+     eta(2,1) = -1/sqrt(3);
+     eta(2,2) = 1/sqrt(3);
+     delta(2,1) = -1/sqrt(3);
+     delta(2,2) = 1/sqrt(3);
+     weight(2,1) = weight(2,2) = 1;
+  endif
+
 
   xi(3,1) = -sqrt(3/5);
   xi(3,2) = 0;
@@ -329,6 +338,81 @@ function F = source_term(element,F,KE,C,dt,theta,T)
 
 endfunction
 
+function MP = generate_material_points(points,elems)
+
+  for (elem_num=1:nr)
+
+    for (j=1:8)
+      element(j) = elems(elem_num,j);
+    endfor
+
+    pts = [points(element(1:8))];
+
+    order = 2;
+
+    for (jor = 1:order)
+      for (kor = 1:order)
+        for (lor = 1:order)
+          gauss_point.xi = xi(order,lor);
+          gauss_point.eta = eta(order,kor);
+          gauss_point.delta = delta(order,jor);
+          shape(order,lor,kor,jor) = shape_linear(gauss_point,pts);
+        endfor
+      endfor
+    endfor
+    
+    for (jor=1:order)
+      for (kor=1:order)
+        for (lor=1:order)
+          gp.xi = xi(order,lor);
+          gp.eta = eta(order,kor);
+          gp.delta = delta(order,jor);
+          mp.x = mp.y = mp.z = 0;
+          for (i=1:8)
+            mp.x += shape(order,lor,kor,jor).phi(i)*pts(i).x;
+            mp.y += shape(order,lor,kor,jor).phi(i)*pts(i).y;
+            mp.z += shape(order,lor,kor,jor).phi(i)*pts(i).z;
+          endfor
+          MP(count++) = mp;
+        endfor
+      endfor
+    endfor
+
+  endfor  
+
+  
+endfunction
+
+function found_it = find_element(points,elements,tp)
+  [nr,nc] = size(elements);
+
+  for (i=1:nr)
+    element = elements(i,1:8);
+    pts = [points(element(1:8))];
+
+    if (tp.x >= pts(1).x && tp.y >= pts(1).y && tp.z >= pts(1).z && tp.x <= pts(8).x && tp.y <= pts(8).y && tp.z <= pts(8).z)
+      index = i;
+    endif
+
+  endfor
+  found_it = elements(index,1:8);
+
+endfunction
+
+
+function [pts,shape] = findNodesAndWeights(points,elements,material_point)
+
+  element = find_element(points,elements,material_point);
+
+  pts = [points(element(1:8))];
+
+  mp.xi = material_point.x;
+  mp.eta = material_point.y;
+  mp.delta = material_point.z;
+  shape = shape_linear(mp,pts);
+
+endfunction
+
 function bcs = generate_bcs(bar_dim,spacing)
 
   xface.l.type = input("input bc type for x left face (D)irchlet or (N)eumann ","s");
@@ -352,69 +436,87 @@ function bcs = generate_bcs(bar_dim,spacing)
   count = 1;
 
   #left face (x minus case)
-  if (xface.l.type == "D" || xface.l.type == "d")
+  if (xface.l.type == "D" || xface.l.type == "d" || xface.l.type == "N" ||
+      xface.l.type == "n")
     for (j = 1:dy+1)
       i = 1;
       bcs.n(count) = i + (j - 1)*(dx + 1);
+      bcs.t(count) = xface.l.type;
       bcs.v(count++) = xface.l.value;
       bcs.n(count) = (dx+1)*(dy+1) + i + (j - 1)*(dx+1);
+      bcs.t(count) = xface.l.type;
       bcs.v(count++) = xface.l.value;
     endfor
   endif
 
   #right face (x plus case)
-  if (xface.r.type == "D" || xface.r.type == "d")
+  if (xface.r.type == "D" || xface.r.type == "d" || xface.r.type == "N" || 
+      xface.r.type == "n")
     for (j = 1:dy+1)
       i = dx + 1;
       bcs.n(count) = i + (j - 1)*(dx + 1);
+      bcs.t(count) = xface.r.type;
       bcs.v(count++) = xface.r.value;
       bcs.n(count) = (dx+1)*(dy+1) + i + (j - 1)*(dx + 1);
+      bcs.t(count) = xface.r.type;
       bcs.v(count++) = xface.r.value;
     endfor
   endif
 
   #bottom face (y minus case)
-  if (yface.b.type == "D" || yface.b.type == "d")
+  if (yface.b.type == "D" || yface.b.type == "d" || yface.b.type == "N" ||
+      yface.b.type == "n")
     for (i = 1:dx+1)
       j = 1;
       bcs.n(count) = i + (j-1)*(dx+1);
+      bcs.t(count) = yface.b.type;
       bcs.v(count++) = yface.b.value;
       bcs.n(count) = (dx+1)*(dy+1) + i + (j-1)*(dx+1);
+      bcs.t(count) = yface.b.type;
       bcs.v(count++) = yface.b.value;
     endfor
   endif
 
-  #top face (y top case)
-  if (yface.t.type == "D" || yface.t.type == "d")
+  #top face (y plus case)
+  if (yface.t.type == "D" || yface.t.type == "d" || yface.t.type == "N" ||
+      yface.t.type == "n")
     for (i = 1:dx+1)
       j = dy;
       bcs.n(count) = i + (j-1)*(dx+1);
+      bcs.t(count) = yface.t.type;
       bcs.v(count++) = yface.t.value;
       bcs.n(count) = (dx+1)*(dy+1) + i + (j-1)*(dx+1);
+      bcs.t(count) = yface.t.type;
       bcs.v(count++) = yface.t.value;
     endfor
   endif
 
 #FIX for z
   #front face (z minus case)
-  if (zface.f.type == "D" || zface.f.type == "d")
+  if (zface.f.type == "D" || zface.f.type == "d" || zface.f.type == "N" ||
+      zface.f.type == "n")
     for (i = 1:dx+1)
       j = 1;
       bcs.n(count) = i + (j-1)*(dx+1);
-      bcs.v(count++) = yface.b.value;
+      bcs.t(count) = zface.f.type;
+      bcs.v(count++) = zface.f.value;
       bcs.n(count) = (dx+1)*(dy+1)+ i + (j-1)*(dx+1);
-      bcs.v(count++) = yface.b.value;
+      bcs.t(count) = zface.f.type;
+      bcs.v(count++) = zface.f.value;
     endfor
   endif
 
-  #top face (y top case)
-  if (yface.t.type == "D" || yface.t.type == "d")
+  #back face (z plus case)
+  if (zface.b.type == "D" || zface.b.type == "d" || zface.b.type == "N" ||
+      zface.b.type == "n")
     for (i = 1:dx+1)
       j = dy;
       bcs.n(count) = i + (j-1)*(dx+1);
-      bcs.v(count++) = yface.t.value;
+      bcs.t(count) = zface.b.type;
+      bcs.v(count++) = zface.b.value;
       bcs.n(count) = (dx+1)*(dy+1) + i + (j-1)*(dx+1);
-      bcs.v(count++) = yface.t.value;
+      bcs.t(count) = zface.b.type;
+      bcs.v(count++) = zface.b.value;
     endfor
   endif
 
@@ -428,23 +530,37 @@ function [K,F] = apply_bcs(K,F,bcs)
     [nr,nc]=size(K);
 
     bc_size = length(bcs.n);
+    printf("BEFORE applying bcs\n");
+    bcs
+    K
+    F
 
     for (bc=1:bc_size)
       node=bcs.n(bc);
       bcvalue = bcs.v(bc);
-      for (j=1:nr)
-        kvalue = K(j,node);
-        F(j) -= kvalue*bcvalue;
-        if (j != node)
-          K(j,node) = 0;
-          K(node,j) = 0;
-        else
-          K(j,node) = 1;
-        endif
-      endfor
-      F(node) = bcvalue;
+      bctype = bcs.t(bc);
+      if (bctype == "N" || bctype == "n")
+        F(node) += bcvalue;
+      endif
+      if (bctype == "D" || bctype == "d")
+        for (j=1:nr)
+          kvalue = K(j,node);
+          F(j) -= kvalue*bcvalue;
+          if (j != node)
+            K(j,node) = 0;
+            K(node,j) = 0;
+          else
+            K(j,node) = 1;
+          endif
+        endfor
+        F(node) = bcvalue;
+      endif
     endfor
     F = F';
+
+    printf("After applying bcs\n");
+    K
+    F
 endfunction
 
 function a = solve_system(K,F)
@@ -473,17 +589,13 @@ function materials = create_materials_element(p,e,mat)
   [nr,nc] = size(e);
 
   for (elem = 1:nr)
-    n1 = e(elem,1);
-    n2 = e(elem,2);
-    n3 = e(elem,3);
-    n4 = e(elem,4);
-    n5 = e(elem,5);
-    n6 = e(elem,6);
-    n7 = e(elem,7);
-    n8 = e(elem,8);
-    center.x = (p(n1).x + p(n2).x + p(n3).x + p(n4).x + p(n5).x + p(n6).x + p(n7).x + p(n8).x)/8;
-    center.y = (p(n1).y + p(n2).y + p(n3).y + p(n4).y + p(n5).y + p(n6).y + p(n7).y + p(n8).y)/8;
-    center.z = (p(n1).z + p(n2).z + p(n3).z + p(n4).z + p(n5).z + p(n6).z + p(n7).z + p(n8).z)/8;
+    center.x = center.y = center.z = 0;
+    for (j = 1:8)
+      n = e(elem,j);
+      center.x += (p(n).x)/8;
+      center.y += (p(n).y)/8;
+      center.z += (p(n).z)/8;
+    endfor
     for (i=1:length(mat.kond))
       if (mat.le(i).x <= center.x && center.x <= mat.re(i).x && mat.le(i).y <= center.y && center.y <= mat.re(i).y && mat.le(i).z <= center.z && center.z <= mat.re(i).z)
         materials.kond(elem) = mat.kond(i);
@@ -501,6 +613,77 @@ function T = set_intial_condition(initial_temp,num)
 endfunction
 
 
+function [MP,Temp_mp] = interpolate_temperature_to_gauss_points(points,elems,T)
+
+  [xi,eta,delta,weight] = gauss_quadrature;
+
+  [nr,nc] = size(elems);
+  count = 1;
+
+  for (elem_num=1:nr)
+    for (j=1:8)
+      element(j) = elems(elem_num,j);
+      T_elem(j) = T(element(j));
+    endfor
+
+    pts = [points(element(1:8))];
+
+    order = 2;
+
+    for (jor = 1:order)
+      for (kor = 1:order)
+        for (lor = 1:order)
+          gauss_point.xi = xi(order,lor);
+          gauss_point.eta = eta(order,kor);
+          gauss_point.delta = delta(order,jor);
+          shape(order,lor,kor,jor) = shape_linear(gauss_point,pts);
+        endfor
+      endfor
+    endfor
+    
+    for (jor=1:order)
+      for (kor=1:order)
+        for (lor=1:order)
+          gp.xi = xi(order,lor);
+          gp.eta = eta(order,kor);
+          gp.delta = delta(order,jor);
+          Temp = 0;
+          mp.x = mp.y = mp.z = 0;
+          for (i=1:8)
+            Temp += shape(order,lor,kor,jor).phi(i)*T_elem(i);
+            mp.x += shape(order,lor,kor,jor).phi(i)*pts(i).x;
+            mp.y += shape(order,lor,kor,jor).phi(i)*pts(i).y;
+            mp.z += shape(order,lor,kor,jor).phi(i)*pts(i).z;
+          endfor
+          Temp_mp(count)=Temp;
+          MP(count++) = mp;
+        endfor
+      endfor
+    endfor
+
+  endfor
+
+endfunction
+
+function Tnodes = interpolate_MP_temperatures_to_nodes(points,elems,MP,Temp_mp)
+
+  np = length(points);
+  Tnodes(1:np) = 0;
+
+  for (i=1:length(MP))
+    element = find_element(points,elems,MP(i))
+    [pts,shape] = findNodesAndWeights(points,elems,MP(i));
+
+    for (j=1:8)
+      Temp_mp(i)
+      shape.phi(j)
+      Tnodes(element(j)) += Temp_mp(i)*shape.phi(j)
+    endfor
+
+  endfor
+
+endfunction
+
 function main()
 
   bar.x = input("input size of bar in x dimension ");
@@ -511,7 +694,7 @@ function main()
   spacing.z = input("input grid spacing in z dimension ");
 
   [p,e] = make_grid(bar,spacing);
-
+  
   bcs = generate_bcs(bar,spacing);
 
   initial_temp = input("input initial temperature ");
@@ -558,6 +741,11 @@ function main()
     [Keff,Feff] = form_matrix(K,F,p,e,materials,dt,theta,T);
     [Keff,Feff] = apply_bcs(Keff,Feff,bcs,materials);
     T = solve_system(Keff,Feff)
+#    [MP, Temp_mp] = interpolate_temperature_to_gauss_points(p,e,T);
+#    MP
+#    Temp_mp
+#    Tnodes = interpolate_MP_temperatures_to_nodes(p,e,MP,Temp_mp);
+#    Tnodes
     xlabel("Bar points");
     ylabel("Temperature");
     plot_title = "Temperature at ";

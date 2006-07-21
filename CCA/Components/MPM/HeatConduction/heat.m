@@ -41,13 +41,13 @@ function [K,F] = form_matrix(K,F,points,elems,materials,dt,theta,T)
     element(1) = elems(elem_num,1);
     element(2) = elems(elem_num,2);
     [KE,C] = element_linear(elem_num,element,points,materials);
-#    KE
-#    C
+    KE
+    C
     K = assemble(element,K,KE,C,dt,theta);
     F = source_term(element,F,KE,C,dt,theta,T);
   endfor
-  K
-  F
+#  K
+#  F
 
 endfunction
 
@@ -192,9 +192,11 @@ endfunction
 function bcs = generate_bcs(bc,p)
   #printf("Doing generate_bcs\n");
   bcs.n(1) = 1;
-  bcs.v(1) = bc.left;
+  bcs.v(1) = bc.left.value;
+  bcs.t(1) = bc.left.type;
   bcs.n(2) = length(p);
-  bcs.v(2) = bc.right;
+  bcs.v(2) = bc.right.value;
+  bcs.t(2) = bc.right.type;
   
 endfunction
 
@@ -206,17 +208,23 @@ function [K,F] = apply_bcs(K,F,bcs)
     for (bc=1:2)
       node=bcs.n(bc);
       bcvalue = bcs.v(bc);
-      for (j=1:nr)
-        kvalue = K(j,node);
-        F(j) -= kvalue*bcvalue;
-        if (j != node)
-          K(j,node) = 0;
-          K(node,j) = 0;
-        else
-          K(j,node) = 1;
-        endif
-      endfor
-      F(node) = bcvalue;
+      bctype = bcs.t(bc);
+      if (bctype == "N" || bctype == "n")
+        F(node) += bcvalue;
+      endif
+      if (bctype == "D" || bctype == "d") 
+        for (j=1:nr)
+          kvalue = K(j,node);
+          F(j) -= kvalue*bcvalue;
+          if (j != node)
+            K(j,node) = 0;
+            K(node,j) = 0;
+          else
+            K(j,node) = 1;
+          endif
+        endfor
+        F(node) = bcvalue;
+      endif
     endfor
     F = F';
 endfunction
@@ -265,8 +273,8 @@ endfunction
 
 function Texact = exact_solution(x,t,n,bc,initial_temp,bar,mat)
 
-  C = initial_temp - bc.left; # f(x) - U_0
-  D = bc.right - bc.left;     # U_l - U_0
+  C = initial_temp - bc.left.value; # f(x) - U_0
+  D = bc.right.value - bc.left.value;     # U_l - U_0
   c_p = mat.specific_heat(1);
   rho = mat.density(1);
   k = mat.kond(1);
@@ -277,7 +285,7 @@ function Texact = exact_solution(x,t,n,bc,initial_temp,bar,mat)
     T_ic += A*sin(i*pi*x/bar)*exp(-i^2 * pi^2 * t * k/(c_p*rho*bar^2));
   endfor
 
-  T_ss = bc.left + D/bar * x;
+  T_ss = bc.left.value + D/bar * x;
 
   Texact = T_ss + T_ic; 
 
@@ -288,8 +296,10 @@ function main()
   
   bar = input("input size of bar ");
   spacing = input("input grid spacing ");
-  bc.left = input("input left bc value ");
-  bc.right = input("input right bc value ");
+  bc.left.value = input("input left bc value ");
+  bc.left.type = input("input left bc type (D)irchlet or (N)eumann ","s");
+  bc.right.value = input("input right bc value ");
+  bc.right.type = input("input right bc type (D)irchlet or (N)eumann ","s");
 
   initial_temp = input("input initial temperature ");
 
