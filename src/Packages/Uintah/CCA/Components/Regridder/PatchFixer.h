@@ -50,11 +50,11 @@ WARNING
 		void FixUp(vector<PseudoPatch> &patches);	
 	private:
 		const ProcessorGroup *d_myworld;
-		vector<int> lattice_;
-		vector<int> cellstolattice_[3];
-		vector<int> latticetocells_[3];
-		PseudoPatch bounds_;
-		IntVector csize_,lsize_;		
+		vector<int> lattice_;                   //lattice of ints
+		vector<int> cellstolattice_[3];         //map from cells to lattice
+		vector<int> latticetocells_[3];         //map from lattice to cells
+		PseudoPatch bounds_;                    //bounds of the patches
+		IntVector csize_,lsize_;		            // size of the cells and lattice
 		
 		void FixFace(vector<PseudoPatch> &patches,PseudoPatch patch, int dim, int side);
 		void SplitPatch(int index, vector<PseudoPatch> &patches, const Split &split);
