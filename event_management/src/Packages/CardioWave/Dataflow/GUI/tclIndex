@@ -19,3 +19,4 @@ set auto_index(CardioWave_ContinuousBiDomain_CBDAddStimulus) [list source [file 
 set auto_index(CardioWave_ContinuousBiDomain_CBDAddReference) [list source [file join $dir CBDAddReference.tcl]]
 set auto_index(CardioWave_ContinuousBiDomain_CBDCreateSimulation) [list source [file join $dir CBDCreateSimulation.tcl]]
 set auto_index(CardioWave_ContinuousBiDomain_CBDBuildSimulation) [list source [file join $dir CBDBuildSimulation.tcl]]
+set auto_index(CardioWave_TissueModel_RegularBundle) [list source [file join $dir RegularBundle.tcl]]

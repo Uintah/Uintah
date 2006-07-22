@@ -97,7 +97,7 @@ bool CardioWaveConverter::byteswapmachine()
 bool CardioWaveConverter::cwFileTOsciMatrix(std::string filename,MatrixHandle& mh,ProgressReporter *pr)
 {
   FILE* fid;
-  std::string header(' ',128);
+  std::string header(128,' ');
   
   // Make sure that we set a default value
   mh = 0;
@@ -219,6 +219,8 @@ bool CardioWaveConverter::cwFileTOsciMatrix(std::string filename,MatrixHandle& m
         int  bwn;   iss >> bwn;
         int  dummy; iss >> dummy;
         int  nz;    iss >> nz;
+        
+        std::cout << "dummy= " << dummy << "nz= " << nz <<"\n";
         
         int *jcoef = scinew int[nz*nrows];
         double *coef = scinew double[nz*nrows];
@@ -966,7 +968,7 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
     
     std::ostringstream oss;
     oss << nrows << " " << ncols << " " << bwp << " " << bwn << " " << "1" << " " << nz;
-    
+
     std::string ssize = oss.str();
     header.replace(6,ssize.size(),ssize);
     

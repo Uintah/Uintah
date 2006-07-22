@@ -101,7 +101,7 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDBuildSimulation {
 		makeSaveFilebox \
 			-parent $w \
 			-filevar $this-filename-set \
-			-setcmd "wm withdraw $w;  $this OpenNewSimulationfile" \
+			-command "wm withdraw $w;  $this OpenNewSimulationfile" \
  			-commandname "Set" \
 			-cancel "wm withdraw $w" \
 			-title "Enter the filename of simulation" \

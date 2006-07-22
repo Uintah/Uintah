@@ -24,24 +24,28 @@
 # if you want to edit this file by hand, see the "Create A New Component"
 # documentation on how to do it correctly.
 
-SRCDIR := Packages/CardioWave/Dataflow/GUI
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCS := \
-	$(SRCDIR)/TimeDataReader.tcl\
-	$(SRCDIR)/DMDAddMembrane.tcl\
-	$(SRCDIR)/DMDAddStimulus.tcl\
-	$(SRCDIR)/DMDAddStimulusSeries.tcl\
-	$(SRCDIR)/DMDAddReference.tcl\
-	$(SRCDIR)/DMDCreateSimulation.tcl\
-	$(SRCDIR)/DMDBuildSimulation.tcl\
-	$(SRCDIR)/DMDConductionVelocity.tcl\
-  $(SRCDIR)/CBDAddMembrane.tcl\
-	$(SRCDIR)/CBDAddStimulus.tcl\
-	$(SRCDIR)/CBDAddReference.tcl\
-	$(SRCDIR)/CBDCreateSimulation.tcl\
-	$(SRCDIR)/CBDBuildSimulation.tcl\
-	$(SRCDIR)/RegularBundle.tcl\
-#[INSERT NEW TCL FILE HERE]
+SRCDIR   := Packages/CardioWave/Core/TissueModels
 
-include $(SCIRUN_SCRIPTS)/tclIndex.mk
+SRCS     += \
+            $(SRCDIR)/RegularBundle.cc\
+#[INSERT NEW CODE FILE HERE]
+
+PSELIBS := Core/Datatypes Dataflow/Network \
+        Core/Persistent Core/Containers Core/Util \
+        Core/Exceptions Core/Thread Core/GuiInterface \
+        Core/Geom Core/Datatypes Core/Geometry \
+        Core/GeomInterface Core/Bundle \
+        Core/Algorithms/Util \
+        Core/Algorithms/Fields \
+        Core/Algorithms/Converter \
+        Core/Algorithms/DataIO \
+        Core/Algorithms/Math \
+        Core/Basis \
+                
+LIBS :=
+
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
