@@ -397,7 +397,7 @@ bool ModelAlgo::DMDBuildDomain(BundleHandle Model)
   double* nodetypevecptr = volvec.get_data_pointer();
   
   int synnum = num_volumenodes;
-  SparseElementVector sev(num_synnodes*5);
+  SparseElementVector sev(num_synnodes*3);
   int k = 0;
   for (size_t p=0; p<membranetable.size();p++)
   {
@@ -411,22 +411,22 @@ bool ModelAlgo::DMDBuildDomain(BundleHandle Model)
       volvecptr[synnum] = membranetable[p][q].surface;
       nodetypevecptr[synnum] = nodetypes[p];
       k++; synnum++; 
-      sev[k].row = membranetable[p][q].node1;
-      sev[k].col = membranetable[p][q].node1;
-      sev[k].val = 0.0;
-      k++;
+//      sev[k].row = membranetable[p][q].node1;
+//      sev[k].col = membranetable[p][q].node1;
+//      sev[k].val = 0.0;
+//      k++;
       sev[k].row = membranetable[p][q].node1;
       sev[k].col = membranetable[p][q].node2;
-      sev[k].val = 0.0;
+      sev[k].val = 1.0;
       k++;    
       sev[k].row = membranetable[p][q].node2;
       sev[k].col = membranetable[p][q].node1;
-      sev[k].val = 0.0;
+      sev[k].val = 1.0;
       k++; 
-      sev[k].row = membranetable[p][q].node2;
-      sev[k].col = membranetable[p][q].node2;
-      sev[k].val = 0.0;
-      k++;           
+//      sev[k].row = membranetable[p][q].node2;
+//      sev[k].col = membranetable[p][q].node2;
+//      sev[k].val = 0.0;
+//      k++;           
       sevmapping[j].row = membranetable[p][q].node0;
       sevmapping[j].col = membranetable[p][q].node1;
       sevmapping[j].val = -1.0;      
@@ -477,11 +477,13 @@ bool ModelAlgo::DMDBuildDomain(BundleHandle Model)
   std::string filename_systemmatrix = filenamebase + ".fem.spr";
   std::string filename_volumevector = filenamebase + ".vol.vec";
   std::string filename_nodetypevector = filenamebase + ".nt.vec";
+  std::string filename_domaintypevector = filenamebase + ".dt.vec";
   std::string filename_visbundle = filenamebase + ".vis.bdl";
   
   // Reorder domain properties
   nodetype = mapping*nodetype;
   volvec = mapping*volvec;
+  
 
   if (!(dataioalgo.WriteMatrix(filename_systemmatrix,sysmatrix,"CardioWave Sparse Matrix")))
   {
@@ -500,9 +502,28 @@ bool ModelAlgo::DMDBuildDomain(BundleHandle Model)
     return (false);
   }
 
-  sysmatrix = 0;
   nodetype = 0;
   volvec = 0;
+
+
+  MatrixHandle domaintype;
+  fieldalgo.GetFieldData(elementtype,domaintype);
+  if (elementtype->is_property("CompToGeom"))
+  {
+    MatrixHandle comptogeom =elementtype->get_property("CompToGeom",CompToGeom);
+    domaintype = comptogeom*domaintype;
+  }
+  numericalgo.ResizeMatrix(domaintype,domaintype,num_totalnodes,1);
+  domaintype = mapping*domaintype;
+
+  if (!(dataioalgo.WriteMatrix(filename_domaintypevector,domaintype,"CardioWave Byte Vector")))
+  {
+    error("DMDBuildDomain: Could not write domaintype vector");  
+    return (false);
+  }
+  
+  domaintype = 0;
+  sysmatrix = 0;
   
   MatrixHandle imapping = mapping->transpose();
   if (imapping.get_rep() == 0)

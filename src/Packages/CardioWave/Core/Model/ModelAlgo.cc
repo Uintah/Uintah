@@ -665,6 +665,9 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     error("DMDBuildDomain: Could not extract DomainType from ElementType field");
     return (false);   
   }
+  
+  if (!(CompToGeom.get_rep())) DomainType = CompToGeom*DomainType;
+  
   if(!(numericalgo.ResizeMatrix(DomainType,DomainType,num_totalnodes,1)))
   {
     error("DMDBuildDomain: Could not resize DomainType matrix");
@@ -741,7 +744,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     return (false);
   }
 
-  if (!(dataioalgo.WriteMatrix(filename_nodetype,DomainType,"CardioWave Byte Vector")))
+  if (!(dataioalgo.WriteMatrix(filename_domaintype,DomainType,"CardioWave Byte Vector")))
   {
     error("DMDBuildDomain: Could not write domaintype vector");  
     return (false);

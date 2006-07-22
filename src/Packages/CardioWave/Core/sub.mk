@@ -24,6 +24,7 @@ SUBDIRS := \
         $(SRCDIR)/Algorithms \
         $(SRCDIR)/Datatypes \
         $(SRCDIR)/Model \
+        $(SRCDIR)/TissueModels \
         $(SRCDIR)/XML \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
