@@ -37,8 +37,37 @@ Gsi=0.09
 <parameters>solverrestart=15
 maxiter=500
 solvertol=1.000000e-05
+solverrestart=8
+exitaterror=false
 </parameters>
 <description>This is the GMRES solver using a parallel solver.
+</description>
+</nwsolver>
+
+<nwsolver>
+<name>GMRES/Parallel solver (test result)</name>
+<file>SparseOps1D.c Parallel1D.c SolverGMRES.c</file>
+<parameters>solverrestart=15
+maxiter=500
+solvertol=1.000000e-05
+solverrestart=8
+exitaterror=true
+</parameters>
+<description>This is the GMRES solver using a parallel solver.
+</description>
+</nwsolver>
+
+
+<nwsolver>
+<name>GMRES/Single solver (test result)</name>
+<file>SparseOpsNone.c ParallelNone.c SolverGMRES.c</file>
+<parameters>solverrestart=15
+maxiter=500
+solvertol=1.000000e-05
+solverrestart=8
+exitaterror=true
+</parameters>
+<description>This is the GMRES solver using a single processor.
 </description>
 </nwsolver>
 
@@ -48,6 +77,8 @@ solvertol=1.000000e-05
 <parameters>solverrestart=15
 maxiter=500
 solvertol=1.000000e-05
+solverrestart=8
+exitaterror=false
 </parameters>
 <description>This is the GMRES solver using a single processor.
 </description>
@@ -55,9 +86,10 @@ solvertol=1.000000e-05
 
 <nwsolver>
 <name>CG/Parallel solver</name>
-<file>SparseOps1D.c Parallel1D.c SolverGMRES.c</file>
+<file>SparseOps1D.c Parallel1D.c SolverCG.c</file>
 <parameters>maxiter=500
 solvertol=1.000000e-05
+exitaterror=false
 </parameters>
 <description>This is the Conjungate Gradient solver using a parallel solver.
 </description>
@@ -65,13 +97,38 @@ solvertol=1.000000e-05
 
 <nwsolver>
 <name>CG/Single solver</name>
-<file>SparseOpsNone.c ParallelNone.c SolverGMRES.c</file>
+<file>SparseOpsNone.c ParallelNone.c SolverCG.c</file>
 <parameters>maxiter=500
 solvertol=1.000000e-05
+exitaterror=false
 </parameters>
 <description>This is the Conjungate Gradient solver using a single processor.
 </description>
 </nwsolver>
+
+<nwsolver>
+<name>CG/Parallel solver (test result)</name>
+<file>SparseOps1D.c Parallel1D.c SolverCG.c</file>
+<parameters>maxiter=500
+solvertol=1.000000e-05
+exitaterror=true
+</parameters>
+<description>This is the Conjungate Gradient solver using a parallel solver.
+</description>
+</nwsolver>
+
+<nwsolver>
+<name>CG/Single solver (test result)</name>
+<file>SparseOpsNone.c ParallelNone.c SolverCG.c</file>
+<parameters>maxiter=500
+solvertol=1.000000e-05
+exitaterror=true
+</parameters>
+<description>This is the Conjungate Gradient solver using a single processor.
+</description>
+</nwsolver>
+
+
 
 <nwtimestep>
 <name>Semi-Implicit Timestepper</name>
@@ -83,6 +140,23 @@ tfinal=5
 </description>
 </nwtimestep>
 
+<nwtimestep>
+<name>Adaptive Semi-Implicit Timestepper</name>
+<file>TstepSBmicro.c</file>
+<parameters>adaptive=yes
+dt=0.005
+dt0=0.0005
+dtmax=0.05
+dtmin=5e-05
+dtstim=5e-05
+dtfactor=1
+tfinal=1500
+</parameters>
+<description>This is currently the only timestepper for the discrete multidomain available.
+</description>
+</nwtimestep>
+
+
 <output>
 <name>SCIRun output</name>
 <file>OutputSCIRun.c</file>
@@ -93,9 +167,9 @@ dumpve=no
 dumpvb=no
 dumpq=no
 dumpaux=no
-dumptime=no
-dumpstep=500
-outputfile=result.out
+dumptime=yes
+dumpstep=100
+dumpsize=20
 </parameters>
 <description>The configuration writes a series of output files with a header file that can be read into SCIRun. The 'dumpstep' parameter can be used to set the number of timeframes in a single file. All the separate files are linked by one NRRD header file.
 </description>
@@ -111,8 +185,9 @@ dumpve=no
 dumpvb=no
 dumpq=no
 dumpaux=no
-dumptime=no
-dumpstep=500
+dumptime=yes
+dumpstep=100
+dumpsize=20
 printspacing=0.005
 printnodes=0
 printvm=yes
@@ -121,7 +196,6 @@ printve=no
 printq=no
 printaux=no
 printtime=no
-outputfile=result.out
 </parameters>
 <description>This configuration writes a series of output files with a header file that can be read into SCIRun. The 'dumpstep' parameter can be used to set the number of timeframes in a single file. All the separate files are linked by one NRRD header file. This configuration as well writes text files of a certain node to be able to track progress.
 </description>
@@ -146,7 +220,6 @@ printve=no
 printq=no
 printaux=no
 printtime=no
-outputfile=result.out
 </parameters>
 <description>This configuration is the default CardioWave way of outputting data. Unfortunately there is no easy way of importing data in this format into SCIRun as it is a pure memory dump of the results. Hence only use this one if the results are not to be displayed in SCIRun. 
 </description>
@@ -159,13 +232,15 @@ cm=1.0
 debug=4
 loadstate=no
 savestate=no
-loadfile=restart.load
-savefile=restart.save
-statefile=restart
-checkpoint=no
+restartfile=cwmodel.restart
+autorestart=false
 ckptfile=check
 ckptinterval=1.0
 useauxvars=no
+ecs_domaintype=0
+ics_domaintype=1
+vi0=-84
+ve0=0
 </parameters>
 <description>Default parameters for neurowave application.
 </description>

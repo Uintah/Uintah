@@ -233,7 +233,7 @@ bool BuildStimulusTableCellAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
 
   elementtypemesh->size(sz);
   elementtypemesh->begin(it);
-  elementtypemesh->begin(it_end);  
+  elementtypemesh->end(it_end);  
   
   std::vector<bool> indomain(sz);
   dval = static_cast<typename FNODE::value_type>(domaintype);
@@ -267,7 +267,7 @@ bool BuildStimulusTableCellAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
   typename FNODE::mesh_type::Node::array_type nodes;  
     
   elementtypemesh->begin(cit);
-  elementtypemesh->begin(cit_end);  
+  elementtypemesh->end(cit_end);  
  
   stimulustablelist.clear();
 
@@ -291,6 +291,7 @@ bool BuildStimulusTableCellAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
         stimulustablelist.push_back(stimitem);
       }
     }
+    ++cit;    
   }
   
   std::sort(stimulustablelist.begin(),stimulustablelist.end());
@@ -404,7 +405,7 @@ bool BuildStimulusTableFaceAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
 
   elementtypemesh->size(sz);
   elementtypemesh->begin(it);
-  elementtypemesh->begin(it_end);  
+  elementtypemesh->end(it_end);  
 
   std::vector<bool> indomain(sz);
 
@@ -436,7 +437,7 @@ bool BuildStimulusTableFaceAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
   typename FNODE::mesh_type::Node::array_type nodes;  
     
   elementtypemesh->begin(cit);
-  elementtypemesh->begin(cit_end);  
+  elementtypemesh->end(cit_end);  
  
   stimulustablelist.clear();
  
@@ -458,9 +459,9 @@ bool BuildStimulusTableFaceAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
         stimulustablelist.push_back(stimitem);
       }
     }
+    ++cit;
   }
 
-  std::cout << "table size= " << stimulustablelist.size() << "\n";  
   std::sort(stimulustablelist.begin(),stimulustablelist.end());
 
   size_t k = 0;
@@ -488,8 +489,6 @@ bool BuildStimulusTableFaceAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
       }
     }
   }
-   
-  std::cout << "table size= " << stimulustablelist.size() << "\n";
                  
                                              
   // Success:
@@ -574,7 +573,7 @@ bool BuildStimulusTableEdgeAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
 
   elementtypemesh->size(sz);
   elementtypemesh->begin(it);
-  elementtypemesh->begin(it_end);  
+  elementtypemesh->end(it_end);  
 
   std::vector<bool> indomain(sz);
 
@@ -606,7 +605,7 @@ bool BuildStimulusTableEdgeAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
   typename FNODE::mesh_type::Node::array_type nodes;  
     
   elementtypemesh->begin(cit);
-  elementtypemesh->begin(cit_end);  
+  elementtypemesh->end(cit_end);  
  
   stimulustablelist.clear();
  
@@ -628,6 +627,7 @@ bool BuildStimulusTableEdgeAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
         stimulustablelist.push_back(stimitem);
       }
     }
+    ++cit;
   }
 
   std::sort(stimulustablelist.begin(),stimulustablelist.end());
@@ -740,7 +740,7 @@ bool BuildStimulusTableNodeAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
 
   elementtypemesh->size(sz);
   elementtypemesh->begin(it);
-  elementtypemesh->begin(it_end);  
+  elementtypemesh->end(it_end);  
 
   std::vector<bool> indomain(sz);
 
@@ -772,7 +772,7 @@ bool BuildStimulusTableNodeAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
   typename FNODE::mesh_type::Node::array_type nodes;  
     
   elementtypemesh->begin(cit);
-  elementtypemesh->begin(cit_end);  
+  elementtypemesh->end(cit_end);  
  
   stimulustablelist.clear();
  
@@ -789,6 +789,7 @@ bool BuildStimulusTableNodeAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
         stimulustablelist.push_back(stimitem);
       }
     }
+    ++cit;
   }
 
   std::sort(stimulustablelist.begin(),stimulustablelist.end());

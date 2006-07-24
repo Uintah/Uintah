@@ -177,7 +177,7 @@ void DMDAddReference::execute()
   {
     MatrixHandle UseElement;
     mc.DoubleToMatrix(1.0,UseElement);
-    Reference->setMatrix("UseElement",UseElement);
+    Reference->setMatrix("UseElements",UseElement);
   }
   
   StringHandle SourceFile = scinew String("BCondZero.cc ");
