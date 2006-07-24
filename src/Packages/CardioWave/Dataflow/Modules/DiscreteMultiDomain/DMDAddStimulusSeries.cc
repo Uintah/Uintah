@@ -160,7 +160,7 @@ void DMDAddStimulusSeries::execute()
       if (OldSourceFile.get_rep())
       {
         oldsourcefile = OldSourceFile->get();
-        if (oldsourcefile != "StimFile.c ")
+        if (oldsourcefile != "StimSeriesFile.c ")
         {
           error("CardioWave does not allow for different stimulus models to be mixed together");
           return;
@@ -189,9 +189,10 @@ void DMDAddStimulusSeries::execute()
   Stimulus->setField("Geometry",Geometry);
 
   val = guidomain_.get(); mc.DoubleToMatrix(val,Domain); 
-  val = guidomain_.get(); mc.DoubleToMatrix(val,Current); 
+  val = guicurrent_.get(); mc.DoubleToMatrix(val,Current); 
   val = guistart_.get(); mc.DoubleToMatrix(val,Start); 
   val = guiend_.get(); mc.DoubleToMatrix(val,End); 
+  val = guiduration_.get(); mc.DoubleToMatrix(val,Duration); 
  
   int fielddensity = guicurrentdensity_.get();
   mc.IntToMatrix(fielddensity,FieldDensity); 

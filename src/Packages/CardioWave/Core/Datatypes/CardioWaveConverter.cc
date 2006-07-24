@@ -37,6 +37,11 @@
 #include <sstream>
 #include <iostream>
 
+#include <sci_defs/teem_defs.h>
+
+#ifdef HAVE_TEEM
+#include <teem/air.h>
+#endif
 
 using namespace std;
 using namespace SCIRun;
@@ -992,7 +997,11 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
         s = cc[r];
         if (s == p)
         {
+#ifdef HAVE_TEEM
+          if (AIR_EXISTS_D(d[r])) coef[p] = d[r]; coef[p] = 0.0;
+#else
           coef[p] = d[r];
+#endif
         }
         else
         {
@@ -1001,7 +1010,11 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
             if (jcoef[p+t*nrows] == p+1)
             {
               jcoef[p+t*nrows] = s+1;
+#ifdef HAVE_TEEM
+              if (AIR_EXISTS_D(d[r])) coef[p+t*nrows] = d[r]; else coef[p+t*nrows] = 0.0; 
+#else              
               coef[p+t*nrows] = d[r];
+#endif
               break;
             }
           }  
