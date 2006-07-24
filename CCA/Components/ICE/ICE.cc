@@ -1185,6 +1185,7 @@ void ICE::scheduleUpdateVolumeFraction(SchedulerP& sched,
     task->requires( Task::NewDW, lb->compressibilityLabel,gn);
     task->modifies(lb->sumKappaLabel, press_matl);  
     task->modifies(lb->vol_frac_CCLabel);
+    task->modifies(lb->f_theta_CCLabel);
     
 
     sched->addTask(task, level->eachPatch(), matls);
@@ -3711,6 +3712,7 @@ void ICE::updateVolumeFraction(const ProcessorGroup*,
     int numALLMatls = d_sharedState->getNumMatls();
     CCVariable<double> sumKappa;
     StaticArray<CCVariable<double> > vol_frac(numALLMatls);
+    StaticArray<CCVariable<double> > f_theta(numALLMatls);
     StaticArray<constCCVariable<double> > rho_CC(numALLMatls);
     StaticArray<constCCVariable<double> > sp_vol(numALLMatls);
     StaticArray<constCCVariable<double> > modVolSrc(numALLMatls);
@@ -3725,6 +3727,7 @@ void ICE::updateVolumeFraction(const ProcessorGroup*,
       Material* matl = d_sharedState->getMaterial(m);
       int indx = matl->getDWIndex();
       new_dw->getModifiable(vol_frac[m], lb->vol_frac_CCLabel, indx,patch);
+      new_dw->getModifiable(f_theta[m],  lb->f_theta_CCLabel,  indx,patch);
       new_dw->get(rho_CC[m],      lb->rho_CCLabel,             indx,patch,gn,0);
       new_dw->get(sp_vol[m],      lb->sp_vol_CCLabel,          indx,patch,gn,0);
       new_dw->get(modVolSrc[m],   lb->modelVol_srcLabel,       indx,patch,gn,0);
@@ -3737,14 +3740,17 @@ void ICE::updateVolumeFraction(const ProcessorGroup*,
       for(int m=0;m<matls->size();m++){
         total_vol+=(rho_CC[m][c]*vol)*sp_vol[m][c];
       }
-      
+
       double sumKappa_tmp = 0.0;
       for(int m=0;m<matls->size();m++){
         double new_vol = vol_frac[m][c]*total_vol+modVolSrc[m][c];
-        vol_frac[m][c] = max(new_vol/total_vol,0.);
+        vol_frac[m][c] = max(new_vol/total_vol,1.e-100);
         sumKappa_tmp += vol_frac[m][c] * kappa[m][c];
       }
       sumKappa[c] = sumKappa_tmp;
+      for (int m = 0; m < matls->size(); m++) {
+        f_theta[m][c] = vol_frac[m][c]*kappa[m][c]/sumKappa[c];
+      }
     }
   }
 }
