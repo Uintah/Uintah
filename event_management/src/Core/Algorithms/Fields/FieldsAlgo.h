@@ -134,6 +134,9 @@ class SCISHARE FieldsAlgo : public AlgoLibrary {
     // GetFieldDataMinMax:
     bool GetFieldDataMinMax(FieldHandle input, double& min, double& max);
 
+    // GetFieldMeasure:
+    bool GetFieldMeasure(FieldHandle input, string method, double& measuer);
+
     // DistanceToField and SignedDistanceToField:
     // Compute distance field. These functions take a destination field (input)
     // and an object field to which the distance needs to be computed.

@@ -67,7 +67,7 @@ bool IsInsideFieldAlgo::IsInsideField(ProgressReporter *pr, FieldHandle input, F
   else if ((basis_type == "constant")||(basis_type == "Constant")) fo.make_constantdata();
   
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "ALGOIsInsideField."+fi.get_field_filename()+"."+fobj.get_field_filename()+".",
+    "ALGOIsInsideField."+fi.get_field_filename()+"."+fo.get_field_filename()+"."+fobj.get_field_filename()+".",
     "IsInsideFieldAlgo","IsInsideFieldAlgoT",
     fi.get_field_name() + "," + fo.get_field_name() + "," + fobj.get_field_name() );
 

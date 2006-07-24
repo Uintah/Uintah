@@ -84,7 +84,6 @@ class SCISHARE MathAlgo : public AlgoLibrary {
     // Apply an operation on a column by column basis
     bool ApplyColumnOperation(MatrixHandle input, MatrixHandle& output, std::string operation); 
     
-    
 };
 
 
