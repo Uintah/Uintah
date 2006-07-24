@@ -43,6 +43,7 @@
 #include <Core/Algorithms/Fields/GatherFields.h>
 #include <Core/Algorithms/Fields/GetFieldData.h>
 #include <Core/Algorithms/Fields/GetFieldDataMinMax.h>
+#include <Core/Algorithms/Fields/GetFieldMeasure.h>
 #include <Core/Algorithms/Fields/GetFieldInfo.h>
 #include <Core/Algorithms/Fields/IsInsideField.h>
 #include <Core/Algorithms/Fields/IndicesToData.h>
@@ -120,6 +121,13 @@ bool FieldsAlgo::GetFieldData(FieldHandle input, MatrixHandle& data)
   GetFieldDataAlgo algo;
   return(algo.GetFieldData(pr_,input,data));
 }
+
+bool FieldsAlgo::GetFieldMeasure(FieldHandle input, std::string method, double& measure)
+{
+  GetFieldMeasureAlgo algo;
+  return(algo.GetFieldMeasure(pr_,input,method,measure));
+}
+
 
 
 bool FieldsAlgo::GetFieldDataMinMax(FieldHandle input, double& min, double& max)

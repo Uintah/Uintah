@@ -408,7 +408,7 @@ MathAlgo::ReverseCuthillmcKee(MatrixHandle im, MatrixHandle& om,
   {
     for (int p=0;p<(m+1);p++) { mrr[p] = p; }
     for (int p=0;p<m;p++) { md[p] = 1.0;  }
-    for (int p=0;p<m;p++) { mcc[p] = X[p]; }
+    for (int p=0;p<m;p++) { mcc[X[p]] = p; }
   }
     
   for (int p=0;p<m;p++) { Q[X[p]] = p; }
@@ -442,7 +442,7 @@ bool
 MathAlgo::CuthillmcKee(MatrixHandle im, MatrixHandle& om,
                        MatrixHandle& mapping, bool calcmapping)
 {
- int *rr, *cc;
+  int *rr, *cc;
   double *d;
   int n,m,nnz;
 
@@ -594,7 +594,7 @@ MathAlgo::CuthillmcKee(MatrixHandle im, MatrixHandle& om,
   {
     for (int p=0;p<(m+1);p++) { mrr[p] = p; }
     for (int p=0;p<m;p++) { md[p] = 1.0;  }
-    for (int p=0;p<m;p++) { mcc[p] = X[p]; }
+    for (int p=0;p<m;p++) { mcc[X[p]] = p; }
   }
     
    for (int p=0;p<m;p++) { Q[X[p]] = p; }
