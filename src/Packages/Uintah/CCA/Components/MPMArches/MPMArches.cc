@@ -806,10 +806,8 @@ void MPMArches::interpolateParticlesToGrid(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<double> S;
-    S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
 
 
     int numMatls = d_sharedState->getNumMPMMatls();
