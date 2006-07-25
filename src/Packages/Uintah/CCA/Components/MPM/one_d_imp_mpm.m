@@ -31,16 +31,36 @@ if problem_type==2 %simple oscillator
     v0=1.0;
     Amp=v0/(2.*3.14159/period);
 end
+if problem_type==5 % colliding bars
+    period=10.0*dx/100.;
+end
 
 tfinal=1.0*period;
 
-ip=1;
-xp(ip)=dx/(2.*PPC);
-
 % create particles
-while xp(ip)+dx/PPC < bar_length
-    ip=ip+1;
-    xp(ip)=xp(ip-1)+dx/PPC;
+ip=1;
+                                                                                
+if problem_type~=5
+  xp(ip)=dx/(2.*PPC);
+                                                                                
+  while xp(ip)+dx/PPC < bar_length
+     ip=ip+1;
+     xp(ip)=xp(ip-1)+dx/PPC;
+  end
+end
+
+if problem_type==5
+  xp(ip)=dx/(2.*PPC);
+  while xp(ip)+dx/PPC < (bar_length/2. - dx)
+     ip=ip+1;
+     xp(ip)=xp(ip-1)+dx/PPC;
+  end
+  ip=ip+1;
+  xp(ip)=domain-dx/(2.*PPC);
+  while xp(ip)-dx/PPC > (bar_length/2. + dx)
+     ip=ip+1;
+     xp(ip)=xp(ip-1)-dx/PPC;
+  end
 end
 
 NP=ip  % Particle count
@@ -64,6 +84,21 @@ if problem_type==2
    mp(NP)=Mass;
    vp(NP)=v0;
 end
+if problem_type==5
+ for ip=1:NP
+   if xp(ip) < .5*bar_length
+      vp(ip)=100.0;
+   end
+   if xp(ip) > .5*bar_length
+      vp(ip)=-100.0;
+   end
+ end
+ close all;
+ plot(xp,mp,'bx');
+ hold on;
+ p=input('hit return');
+end
+
 
 % create array of nodal locations, only used in plotting
 for(ig=1:NN)
@@ -73,6 +108,9 @@ end
 
 % set up BCs
 numBCs=1;
+if problem_type==5
+    numBCs=0;
+end
 
 BCNode(1)=1;
 BCValue(1)=0.;
@@ -92,7 +130,7 @@ while t<tfinal
 
     % initialize arrays to be zero
     for ig=1:NN
-        mg(ig)=0.;
+        mg(ig)=1.e-100;
         vg(ig)=0.;
         ug(ig)=0.;
         dug(ig)=0.;
@@ -160,6 +198,13 @@ while t<tfinal
       %add inertial term
       for(ig=1:NN)
          KK(ig,ig)=KK(ig,ig)+(4./(dt*dt))*mg(ig);
+         if KK(ig,ig)<1e-10
+            for jg=1:NN
+              KK(jg,ig)=0.;
+            end
+            KK(ig,ig)=1.;
+            Q(ig)=0.;
+         end
       end
 
       %apply boundary conditions
@@ -245,18 +290,37 @@ while t<tfinal
     end
 
     TIME(tstep)=t;
+
+    if problem_type==5
+     if mod(tstep,100)
+      close all;
+      %% Create figure
+      figure1 = figure;
+                                                                                
+      %% Create axes
+      axes1 = axes('Parent',figure1);
+      xlim(axes1,[0 1]);
+      box(axes1,'on');
+      hold(axes1,'all');
+      plot(xp,mp,'bx');
+      hold on;
+      p=input('hit return');
+     end
+    end
 end
 
-close all;
-subplot(2,1,1),plot(TIME,DX_tip,'bx');
-hold on;
-subplot(2,1,1),plot(TIME,Exact_tip,'r-');
-subplot(2,1,2),plot(TIME,TE,'b-');
+if problem_type ~= 5
+  close all;
+  subplot(2,1,1),plot(TIME,DX_tip,'bx');
+  hold on;
+  subplot(2,1,1),plot(TIME,Exact_tip,'r-');
+  subplot(2,1,2),plot(TIME,TE,'b-');
 
-E_err=TE(1)-TE(tstep)
+  E_err=TE(1)-TE(tstep)
 
-% compute error
-err=abs(DX_tip(tstep)-Exact_tip(tstep))
+  % compute error
+  err=abs(DX_tip(tstep)-Exact_tip(tstep))
+end
 
 length(TIME)
 
