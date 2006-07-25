@@ -15,7 +15,7 @@ SUBDIRS := \
 	$(SRCDIR)/DataInfo\
 	$(SRCDIR)/DataIO\
 	$(SRCDIR)/Script\
-        $(SRCDIR)/SelectionMask\
+  $(SRCDIR)/SelectionMask\
 	$(SRCDIR)/FieldsData\
 	$(SRCDIR)/FieldsCreate\
 	$(SRCDIR)/FieldsProperty\

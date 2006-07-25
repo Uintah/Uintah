@@ -35,6 +35,7 @@ SRCS     += \
 	$(SRCDIR)/CurrentDensityMapping.cc\
 	$(SRCDIR)/IsInsideFields.cc\
 	$(SRCDIR)/GradientModalMapping.cc\
+	$(SRCDIR)/FieldDataMeasure.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \
