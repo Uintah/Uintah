@@ -76,6 +76,10 @@ class SCISHARE FieldsAlgo : public AlgoLibrary {
     // Clip using a selectionmask to clip a field
     bool ClipFieldBySelectionMask(FieldHandle input, FieldHandle& output, MatrixHandle SelectionMask,MatrixHandle &interpolant);
 
+    // ClipFieldByField:
+    // Clip using a mesh.
+    bool ClipFieldByField(FieldHandle input, FieldHandle& output, FieldHandle objfield, MatrixHandle &interpolant);
+
     // ConvertToTetVol:
     // This function converts an hexvol or latvol into a tetvol. The functionality
     // is similar to HexToTet, but does more checks and is more robust and works

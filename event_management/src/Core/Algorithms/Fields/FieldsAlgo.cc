@@ -101,6 +101,15 @@ bool FieldsAlgo::ClipFieldBySelectionMask(FieldHandle input, FieldHandle& output
   return(algo.ClipBySelectionMask(pr_,input,output,selmask,interpolant));
 }
 
+bool FieldsAlgo::ClipFieldByField(FieldHandle input, FieldHandle& output, FieldHandle objfield, MatrixHandle &interpolant)
+{
+  MatrixHandle mask;
+  FieldHandle  temp;
+  if(!(IsInsideField(input,temp,objfield))) return (false);
+  if(!(GetFieldData(temp,mask))) return (false);
+  return(ClipFieldBySelectionMask(input,output,mask,interpolant));
+}
+
 
 bool FieldsAlgo::FieldBoundary(FieldHandle input, FieldHandle& output,MatrixHandle& mapping)
 {
