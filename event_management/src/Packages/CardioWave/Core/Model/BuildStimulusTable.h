@@ -294,6 +294,15 @@ bool BuildStimulusTableCellAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
     ++cit;    
   }
   
+  
+  if (isgeomtocomp)
+  {
+    for (size_t p=1; p < stimulustablelist.size(); p++) 
+    {
+      stimulustablelist[p].node = geomtocompcc[stimulustablelist[p].node];
+    }
+  }
+  
   std::sort(stimulustablelist.begin(),stimulustablelist.end());
 
   size_t k = 0;
@@ -313,13 +322,6 @@ bool BuildStimulusTableCellAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
   if (stimulustablelist.size() > 0)       
   {
     stimulustablelist.resize(k+1);
-    if (isgeomtocomp)
-    {
-      for (size_t p=1; p < stimulustablelist.size(); p++) 
-      {
-        stimulustablelist[p].node = geomtocompcc[stimulustablelist[p].node];
-      }
-    }
   }
 
   
@@ -462,6 +464,15 @@ bool BuildStimulusTableFaceAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
     ++cit;
   }
 
+
+  if (isgeomtocomp)
+  {
+    for (size_t p=1; p < stimulustablelist.size(); p++) 
+    {
+      stimulustablelist[p].node = geomtocompcc[stimulustablelist[p].node];
+    }
+  }
+
   std::sort(stimulustablelist.begin(),stimulustablelist.end());
 
   size_t k = 0;
@@ -481,13 +492,6 @@ bool BuildStimulusTableFaceAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
   if (stimulustablelist.size() > 0)       
   {
     stimulustablelist.resize(k+1);
-    if (isgeomtocomp)
-    {
-      for (size_t p=1; p < stimulustablelist.size(); p++) 
-      {
-        stimulustablelist[p].node = geomtocompcc[stimulustablelist[p].node];
-      }
-    }
   }
                  
                                              
@@ -630,6 +634,14 @@ bool BuildStimulusTableEdgeAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
     ++cit;
   }
 
+  if (isgeomtocomp)
+  {
+    for (size_t p=1; p < stimulustablelist.size(); p++) 
+    {
+      stimulustablelist[p].node = geomtocompcc[stimulustablelist[p].node];
+    }
+  }
+
   std::sort(stimulustablelist.begin(),stimulustablelist.end());
 
   size_t k = 0;
@@ -649,13 +661,6 @@ bool BuildStimulusTableEdgeAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
   if (stimulustablelist.size() > 0)       
   {
     stimulustablelist.resize(k+1);
-    if (isgeomtocomp)
-    {
-      for (size_t p=1; p < stimulustablelist.size(); p++) 
-      {
-        stimulustablelist[p].node = geomtocompcc[stimulustablelist[p].node];
-      }
-    }
   }
 
                  
@@ -792,6 +797,14 @@ bool BuildStimulusTableNodeAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
     ++cit;
   }
 
+  if (isgeomtocomp)
+  {
+    for (size_t p=1; p < stimulustablelist.size(); p++) 
+    {
+      stimulustablelist[p].node = geomtocompcc[stimulustablelist[p].node];
+    }
+  }
+
   std::sort(stimulustablelist.begin(),stimulustablelist.end());
 
   size_t k = 0;
@@ -811,13 +824,6 @@ bool BuildStimulusTableNodeAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
   if (stimulustablelist.size() > 0)       
   {
     stimulustablelist.resize(k+1);
-    if (isgeomtocomp)
-    {
-      for (size_t p=1; p < stimulustablelist.size(); p++) 
-      {
-        stimulustablelist[p].node = geomtocompcc[stimulustablelist[p].node];
-      }
-    }
   }
 
 

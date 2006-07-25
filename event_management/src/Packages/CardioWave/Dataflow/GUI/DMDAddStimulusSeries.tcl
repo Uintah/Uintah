@@ -56,7 +56,7 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDAddStimulusSeries {
       grid $stim.lab2 -row 1 -column 0
       grid $stim.lab3 -row 2 -column 0
       grid $stim.lab4 -row 3 -column 0
-      grid $stim.lab4 -row 4 -column 0
+      grid $stim.lab5 -row 4 -column 0
       grid $stim.en1 -row 0 -column 1
       grid $stim.en2 -row 1 -column 1
       grid $stim.en3 -row 2 -column 1

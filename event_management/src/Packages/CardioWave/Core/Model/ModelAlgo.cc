@@ -83,7 +83,8 @@ bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable
   double* nodetypeptr = NodeType->get_data_pointer();
   double* domaintypeptr = DomainType->get_data_pointer();
   
-  for (int p=0; p<num_volumenodes;p++) nodetypeptr[p] = 0.0;
+  for (int p=0; p<num_totalnodes;p++) nodetypeptr[p] = 0.0;
+  for (int p=0; p<num_totalnodes;p++) volumeptr[p] = 0.0;
   
   // Build the Membrane connections
 
@@ -100,38 +101,39 @@ bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable
   {
     for (int q=0; q< membranetable[p].size(); q++)
     { 
+      membranetable[p][q].snode = synnum;
       sev[k].row = synnum;
       sev[k].col = synnum;
       sev[k].val = 1.0;
       volumeptr[synnum] = membranetable[p][q].surface;
       nodetypeptr[synnum] = nodetypes[p];
       domaintypeptr[synnum] = -1.0;
-      k++; synnum++; 
+      k++;  
       sev[k].row = membranetable[p][q].node1;
       sev[k].col = membranetable[p][q].node2;
       sev[k].val = nan;
       k++;    
       sev[k].row = membranetable[p][q].node2;
       sev[k].col = membranetable[p][q].node1;
-      sev[k].val = nan;
+      sev[k].val = nan;                                                                 
       k++; 
       sev[k].row = membranetable[p][q].node2;
-      sev[k].col = membranetable[p][q].node0;
+      sev[k].col = synnum;
       sev[k].val = nan;
       k++; 
-      sev[k].row = membranetable[p][q].node0;
+      sev[k].row = synnum;
       sev[k].col = membranetable[p][q].node2;
       sev[k].val = nan;
       k++; 
       sev[k].row = membranetable[p][q].node1;
-      sev[k].col = membranetable[p][q].node0;
+      sev[k].col = synnum;
       sev[k].val = nan;
       k++; 
-      sev[k].row = membranetable[p][q].node0;
+      sev[k].row = synnum;
       sev[k].col = membranetable[p][q].node1;
       sev[k].val = nan;
       k++; 
-
+      synnum++;
    }    
   }
 
@@ -211,7 +213,7 @@ bool ModelAlgo::DMDMembraneTableToMatrix(MembraneTable MembraneTable,MatrixHandl
   int p =0;
   for (int k=0; k <MembraneTable.size(); k++)
   {
-    dataptr[p++] = static_cast<double>(MembraneTable[k].node0);
+    dataptr[p++] = static_cast<double>(MembraneTable[k].snode);
     dataptr[p++] = static_cast<double>(MembraneTable[k].node1);
     dataptr[p++] = static_cast<double>(MembraneTable[k].node2);
     dataptr[p++] = static_cast<double>(MembraneTable[k].surface);
@@ -912,7 +914,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   {
     for (int q=0; q< membranetable[p].size(); q++)
     { 
-      membranetable[p][q].node0 = renumber[membranetable[p][q].node0];
+      membranetable[p][q].snode = renumber[membranetable[p][q].snode];
       membranetable[p][q].node1 = renumber[membranetable[p][q].node1];
       membranetable[p][q].node2 = renumber[membranetable[p][q].node2];
     }
@@ -947,7 +949,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     {
       for (int q=0; q< membranetable[p].size(); q++)
       { 
-      memfile << membranetable[p][q].node0 << " " << membranetable[p][q].node1 << " " << membranetable[p][q].node2 << "\n";
+      memfile << membranetable[p][q].snode << " " << membranetable[p][q].node1 << " " << membranetable[p][q].node2 << "\n";
       }
     }
   }

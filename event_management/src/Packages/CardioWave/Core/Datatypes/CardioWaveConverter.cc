@@ -998,7 +998,7 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
         if (s == p)
         {
 #ifdef HAVE_TEEM
-          if (AIR_EXISTS_D(d[r])) coef[p] = d[r]; coef[p] = 0.0;
+          if (AIR_EXISTS_D(d[r])) coef[p] = d[r]; else coef[p] = 0.0;
 #else
           coef[p] = d[r];
 #endif

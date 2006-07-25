@@ -123,7 +123,7 @@ void DMDAddMembrane::execute()
     MembraneBundle.detach();    
   }
 
-  int membrane_num = 0;
+  int membrane_num = 1;
   std::string fieldname;
   {
     std::ostringstream oss;
