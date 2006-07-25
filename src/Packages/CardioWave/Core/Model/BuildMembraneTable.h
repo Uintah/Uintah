@@ -49,6 +49,7 @@ class membraneparam_type {
     unsigned int node0;       // node in membrane model
     unsigned int node1;       // node in element type on 1st side
     unsigned int node2;       // node in element type on other side
+    unsigned int snode;
     double       surface;
     
 };
