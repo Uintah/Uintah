@@ -1143,10 +1143,8 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
     old_dw->get(delT, d_sharedState->get_delt_label());
 
     ParticleInterpolator* interpolator = d_mpm->flags->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<double> S;
-    S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
 
     double p_ref = d_sharedState->getRefPress();
     constNCVariable<double>   pressNC;    
