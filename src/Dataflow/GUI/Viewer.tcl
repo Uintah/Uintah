@@ -515,6 +515,10 @@ itcl_class ViewWindow {
   bind $w <Control-KeyPress-5> "setGlobal $this-pos z0_x0 ; $this-c Views"
   bind $w <Control-KeyPress-6> "setGlobal $this-pos z1_x0 ; $this-c Views"
 
+  bind $w <Control-KeyPress-7> "setGlobal $this-pos x0_y1 ; $this-c Views"
+  bind $w <Control-KeyPress-8> "setGlobal $this-pos x0_y0 ; $this-c Views"
+
+
 	frame $w.menu -relief raised -borderwidth 3
 	pack $w.menu -fill x
 
