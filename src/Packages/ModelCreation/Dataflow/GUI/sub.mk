@@ -73,6 +73,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ModalMapping.tcl\
 	$(SRCDIR)/CurrentDensityMapping.tcl\
 	$(SRCDIR)/GradientModalMapping.tcl\
+	$(SRCDIR)/FieldDataMeasure.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/ModelCreation/Dataflow/GUI

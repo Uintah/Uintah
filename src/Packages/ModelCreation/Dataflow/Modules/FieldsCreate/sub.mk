@@ -21,6 +21,7 @@ SRCS     += \
 	$(SRCDIR)/IndexedDomainBoundary.cc\
 	$(SRCDIR)/SplitFieldByConnectedRegion.cc\
 	$(SRCDIR)/CollectFields.cc\
+	$(SRCDIR)/ClipFieldByField.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \
