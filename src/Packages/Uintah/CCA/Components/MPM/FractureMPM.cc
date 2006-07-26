@@ -312,6 +312,7 @@ FractureMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleComputeHeatExchange(            sched, patches, matls);
   scheduleAdjustCrackContactInterpolated( sched, patches, matls);//for FractureMPM
   scheduleExMomInterpolated(              sched, patches, matls);
+  scheduleSetBCsInterpolated(             sched, patches, matls);
   scheduleComputeStressTensor(            sched, patches, matls);
   scheduleComputeContactArea(             sched, patches, matls);
   scheduleComputeInternalForce(           sched, patches, matls);
