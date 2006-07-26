@@ -508,7 +508,7 @@ VolShader::emit(string& s)
   z << VOL_TAIL;
 
   s = z.str();
-  std::cerr << s << std::endl;
+  //std::cerr << s << std::endl;
   return false;
 }
 
@@ -539,7 +539,6 @@ VolShaderFactory::shader(int dim, int vsize, int channels, bool shading,
       return shader_[i]->program();
     }
   }
-  std::cout << "dim = " << dim << ", vsize = " << vsize << ", channels = " << channels << ", shading = "  << shading << ", frag = " << frag << ", fog = " << fog << ", blend = " << blend << ", cmaps = " << cmaps << "\n";
   VolShader* s = new VolShader(dim, vsize, channels, shading, frag, fog, blend, cmaps);
   if(s->create()) {
     delete s;
