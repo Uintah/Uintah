@@ -46,10 +46,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdIPort*      wnrrd_;
-  NrrdOPort*      onrrd_;
-
   GuiInt       bins_;
   GuiDouble    min_;
   GuiInt       useinputmin_;
@@ -71,36 +67,33 @@ UnuHisto::UnuHisto(SCIRun::GuiContext *ctx) :
 {
 }
 
-UnuHisto::~UnuHisto() {
+
+UnuHisto::~UnuHisto()
+{
 }
+
 
 void 
 UnuHisto::execute()
 {
-  NrrdDataHandle nrrd_handle;
-  NrrdDataHandle weight_handle;
-
   update_state(NeedData);
 
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  wnrrd_ = (NrrdIPort *)get_iport("WeightNrrd");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
-  if (!inrrd_->get(nrrd_handle)) 
-    return;
+  NrrdDataHandle weight_handle;
 
-  if (!nrrd_handle.get_rep()) {
-    error("Empty InputNrrd.");
-    return;
+  Nrrd *nin = nrrd_handle->nrrd_;
+
+  Nrrd *weight = 0;
+  if (get_input_handle("WeightNrrd", weight_handle, false) &&
+      weight_handle.get_rep())
+  {
+    weight = weight_handle->nrrd_;
   }
 
   reset_vars();
 
-  Nrrd *nin = nrrd_handle->nrrd_;
-  Nrrd *weight = 0;
-  if (wnrrd_->get(weight_handle)) {
-    weight = weight_handle->nrrd_;    
-  }
   Nrrd *nout = nrrdNew();
 
   NrrdRange *range = NULL;
@@ -114,16 +107,18 @@ UnuHisto::execute()
   nrrdRangeNew(min, max);
   nrrdRangeSafeSet(range, nin, nrrdBlind8BitRangeState);
 
-  unsigned int type = string_to_nrrd_type(type_.get());
+  const unsigned int type = string_to_nrrd_type(type_.get());
 
-  if (nrrdHisto(nout, nin, range, weight, bins_.get(), type)) {
+  if (nrrdHisto(nout, nin, range, weight, bins_.get(), type))
+  {
     char *err = biffGetDone(NRRD);
     error(string("Error creating Histogram nrrd: ") + err);
     free(err);
   }
 
   NrrdDataHandle out(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(out);
+
+  send_output_handle("OutputNrrd", out);
 }
 
 

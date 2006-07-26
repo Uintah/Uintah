@@ -36,6 +36,7 @@ SRCS := \
 	$(SRCDIR)/AnimatedStreams.tcl\
 	$(SRCDIR)/VariablePlotter.tcl\
 	$(SRCDIR)/TensorToTensorConvertor.tcl\
+	$(SRCDIR)/UTextureBuilder.tcl\
 #[INSERT NEW TCL FILE HERE]
 #	$(SRCDIR)/EigenEvaluator.tcl\
 #	$(SRCDIR)/ParticleEigenEvaluator.tcl\

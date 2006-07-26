@@ -134,8 +134,6 @@ Coregister::execute()
     return;
   }
 
-  MatrixOPort *omat = (MatrixOPort *)get_oport("Transform");
-
   vector<Point> fixedPts, mobilePts;
   Transform trans;
 
@@ -192,7 +190,7 @@ Coregister::execute()
   coreg->getMisfit(misfit);
 
   MatrixHandle dm(scinew DenseMatrix(trans));
-  omat->send_and_dereference(dm);
+  send_output_handle("Transform", dm);
 }
 
 

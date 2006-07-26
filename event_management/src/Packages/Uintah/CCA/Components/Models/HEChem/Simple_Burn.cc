@@ -110,22 +110,25 @@ void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
     mymatls->addReference();
   }
 }
-
+//______________________________________________________________________
+//
 void Simple_Burn::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP model_ps = ps->appendChild("Model");
   model_ps->setAttribute("type","Simple_Burn");
-
   model_ps->appendElement("Active",            d_active);
   model_ps->appendElement("ThresholdTemp",     d_thresholdTemp);
   model_ps->appendElement("ThresholdPressure", d_thresholdPress);
   model_ps->appendElement("fromMaterial",      matl0->getName());
-  model_ps->appendElement("toMaterial",        matl1->getName());
-  model_ps->appendElement("Enthalpy",          d_Enthalpy);
-  model_ps->appendElement("BurnCoeff",         d_BurnCoeff);
-  model_ps->appendElement("refPressure",       d_refPress);
+  if(d_active){
+    model_ps->appendElement("toMaterial",        matl1->getName());
+    model_ps->appendElement("Enthalpy",          d_Enthalpy);
+    model_ps->appendElement("BurnCoeff",         d_BurnCoeff);
+    model_ps->appendElement("refPressure",       d_refPress);
+  }
 }
-
+//______________________________________________________________________
+//
 void Simple_Burn::activateModel(GridP&, SimulationStateP& sharedState,
 			        ModelSetup*)
 {

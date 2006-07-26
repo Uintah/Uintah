@@ -69,19 +69,8 @@ ColorMap2ToNrrd::~ColorMap2ToNrrd()
 void
 ColorMap2ToNrrd::execute()
 {
-  ColorMap2IPort* cmap2_port = (ColorMap2IPort*)get_iport("Input");
-  if (!cmap2_port)
-  {
-    error("Could not get input port 'Input'.");
-    return;
-  }
-  
   ColorMap2Handle cmap2;
-  if (!(cmap2_port->get(cmap2) && cmap2.get_rep()))
-  {
-    error("No data in input port.");
-    return;
-  }
+  if (!get_input_handle("Input", cmap2)) return;
 
   if (cmap2->generation != last_generation_ ||
       !oport_cached("Output Image"))
@@ -142,7 +131,8 @@ ColorMap2ToNrrd::execute()
       return;
     }
     NrrdDataHandle nrrd_h(nd);
-    nrrd_port->send_and_dereference(nrrd_h);
+
+    send_output_handle("Output Image", nrrd_h);
   }
 }
 

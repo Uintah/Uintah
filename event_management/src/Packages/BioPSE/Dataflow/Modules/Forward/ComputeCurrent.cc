@@ -84,20 +84,10 @@ ComputeCurrent::~ComputeCurrent()
 void
 ComputeCurrent::execute()
 {
-  FieldIPort* efield_port = (FieldIPort *) get_iport("TetMesh EField");
-  FieldIPort* sigmas_port = (FieldIPort *) get_iport("TetMesh Sigmas");
-  FieldOPort* ofield_port = (FieldOPort *) get_oport("Currents");
-
   FieldHandle efieldH, sigmasH;
+  if (!get_input_handle("TetMesh EField", efieldH)) return;
+  if (!get_input_handle("TetMesh Sigmas", sigmasH)) return;
 
-  if (!efield_port->get(efieldH) || !efieldH.get_rep()) {
-    error("Empty input E Field.");
-    return;
-  }
-  if (!sigmas_port->get(sigmasH) || !sigmasH.get_rep()) {
-    error("Empty input Sigmas.");
-    return;
-  }
   if (efieldH->mesh().get_rep() != sigmasH->mesh().get_rep()) {
     error("EField and Sigma Field need to have the same mesh.");
     return;
@@ -108,6 +98,7 @@ ComputeCurrent::execute()
     error("EField isn't a TetVolField<Vector>.");
     return;
   }
+
   bool index_based = true;
   TVFieldI *sigmasInt =  dynamic_cast<TVFieldI*>(sigmasH.get_rep());
   TVFieldT *sigmasTensor = dynamic_cast<TVFieldT*>(sigmasH.get_rep());
@@ -168,7 +159,7 @@ ComputeCurrent::execute()
   }
 
   FieldHandle ftmp(ofield);
-  ofield_port->send_and_dereference(ftmp);
+  send_output_handle("Currents", ftmp);
 }
 
 } // End namespace BioPSE

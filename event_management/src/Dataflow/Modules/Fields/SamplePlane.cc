@@ -383,8 +383,7 @@ SamplePlane::execute()
   // Transform field.
   ofh->mesh()->transform(trans);
 
-  FieldOPort *ofp = (FieldOPort *)get_oport("Output Sample Field");
-  ofp->send_and_dereference(ofh);
+  send_output_handle("Output Sample Field", ofh);
 }
 
 

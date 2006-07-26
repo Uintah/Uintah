@@ -56,10 +56,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdIPort*      islice_;
-  NrrdOPort*      onrrd_;
-
   GuiInt       axis_;
   GuiInt       position_;
 };
@@ -68,7 +64,6 @@ private:
 DECLARE_MAKER(UnuSplice)
 UnuSplice::UnuSplice(GuiContext* ctx)
   : Module("UnuSplice", ctx, Source, "UnuNtoZ", "Teem"),
-    inrrd_(0), islice_(0), onrrd_(0),
     axis_(get_ctx()->subVar("axis"), 0),
     position_(get_ctx()->subVar("position"), 0)
 {
@@ -83,27 +78,13 @@ UnuSplice::~UnuSplice()
 void
 UnuSplice::execute()
 {
-  NrrdDataHandle nrrd_handle;
-  NrrdDataHandle slice_handle;
-
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  islice_ = (NrrdIPort *)get_iport("SliceNrrd");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
-  if (!islice_->get(slice_handle))
-    return;
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
-  if (!nrrd_handle.get_rep()) {
-    error("Empty InputNrrd.");
-    return;
-  }
-  if (!slice_handle.get_rep()) {
-    error("Empty SliceNrrd.");
-    return;
-  }
+  NrrdDataHandle slice_handle;
+  if (!get_input_handle("SliceNrrd", slice_handle)) return;
 
   reset_vars();
 
@@ -136,7 +117,7 @@ UnuSplice::execute()
     nout->axis[i].kind = nin->axis[i].kind;
   }
 
-  onrrd_->send_and_dereference(out);
+  send_output_handle("OutputNrrd", out);
 }
 
 } // End namespace Teem

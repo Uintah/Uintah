@@ -82,12 +82,8 @@ void
 MeshQuality::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input");
   FieldHandle ifieldhandle;
-  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("Input", ifieldhandle)) return;
 
   if (last_field_generation_ == ifieldhandle->generation &&
       oport_cached("Checked") )
@@ -141,8 +137,8 @@ MeshQuality::execute()
   }
 
   FieldHandle ofield = algo->execute(this, ifieldhandle);  
-  FieldOPort *ofield_port = (FieldOPort *)get_oport("Checked");
-  ofield_port->send_and_dereference(ofield);
+
+  send_output_handle("Checked", ofield);
 }
 
 

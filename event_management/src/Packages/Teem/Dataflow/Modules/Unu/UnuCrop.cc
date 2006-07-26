@@ -114,8 +114,11 @@ UnuCrop::UnuCrop(SCIRun::GuiContext *ctx) :
   }
 }
 
-UnuCrop::~UnuCrop() {
+
+UnuCrop::~UnuCrop()
+{
 }
+
 
 void 
 UnuCrop::execute()
@@ -123,12 +126,9 @@ UnuCrop::execute()
   update_state(NeedData);
 
   NrrdDataHandle nrrdH;
-  NrrdIPort* inrrd = (NrrdIPort *)get_iport("Nrrd");
+  if (!get_input_handle("Nrrd", nrrdH)) return;
 
-  if (!inrrd->get(nrrdH) || !nrrdH.get_rep()) {
-    error( "No handle or representation" );
-    return;
-  }
+  reset_vars();
 
   MatrixHandle matrixH;
   MatrixIPort* imatrix = (MatrixIPort *)get_iport("Current Index");
@@ -311,7 +311,8 @@ UnuCrop::execute()
     DenseMatrix *indexMat = scinew DenseMatrix( num_axes_.get(), 2 );
     last_matrixH_ = MatrixHandle(indexMat);
 
-    for(int i=0; i< num_axes_.get(); i++) {
+    for(int i=0; i< num_axes_.get(); i++)
+    {
 	mins_[i]->reset();
 	maxs_[i]->reset();
 	min[i] = parse(nrrdH, mins_[i]->get(),i);
@@ -319,9 +320,10 @@ UnuCrop::execute()
 
       indexMat->put(i, 0, (double) min[i]);
       indexMat->put(i, 1, (double) max[i]);
-
+      
       if (nrrdKindSize(nin->axis[i].kind) > 1 &&
-	  (min[i] != 0 || max[i] != (size_t) absmaxs_[i]->get())) {
+	  (min[i] != 0 || max[i] != (size_t) absmaxs_[i]->get()))
+      {
 	warning("Trying to crop axis " + to_string(i) +
 		" which does not have a kind of nrrdKindDomain or nrrdKindUnknown");
       }
@@ -376,18 +378,10 @@ UnuCrop::execute()
       nout->axis[0].kind = nrrdKindDomain;
   }
 
-  if (last_nrrdH_.get_rep())
-  {
-    NrrdOPort* onrrd = (NrrdOPort *)get_oport("Nrrd");
-    onrrd->send_and_dereference(last_nrrdH_, true);
-  }
-
-  if (last_matrixH_.get_rep())
-  {
-    MatrixOPort* omatrix = (MatrixOPort *)get_oport("Selected Index");
-    omatrix->send_and_dereference( last_matrixH_, true );
-  }
+  send_output_handle("Nrrd", last_nrrdH_, true);
+  send_output_handle("Selected Index", last_matrixH_, true);
 }
+
 
 void 
 UnuCrop::tcl_command(GuiArgs& args, void* userdata)

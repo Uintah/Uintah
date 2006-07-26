@@ -55,10 +55,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdIPort*      idmap_;
-  NrrdOPort*      onrrd_;
-
   GuiInt       rescale_;
   GuiDouble    min_;
   GuiInt       useinputmin_;
@@ -72,7 +68,6 @@ private:
 DECLARE_MAKER(UnuRmap)
 UnuRmap::UnuRmap(GuiContext* ctx)
   : Module("UnuRmap", ctx, Source, "UnuNtoZ", "Teem"),
-    inrrd_(0), idmap_(0), onrrd_(0),
     rescale_(get_ctx()->subVar("rescale")),
     min_(get_ctx()->subVar("min")),
     useinputmin_(get_ctx()->subVar("useinputmin")),
@@ -83,32 +78,22 @@ UnuRmap::UnuRmap(GuiContext* ctx)
 {
 }
 
-UnuRmap::~UnuRmap(){
+
+UnuRmap::~UnuRmap()
+{
 }
 
+
 void
- UnuRmap::execute(){
-  NrrdDataHandle nrrd_handle;
-  NrrdDataHandle dmap_handle;
-
+UnuRmap::execute()
+{
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  idmap_ = (NrrdIPort *)get_iport("RegularMapNrrd");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
-  if (!idmap_->get(dmap_handle))
-    return;
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
-  if (!nrrd_handle.get_rep()) {
-    error("Empty InputNrrd.");
-    return;
-  }
-  if (!dmap_handle.get_rep()) {
-    error("Empty RegularMapNrrd.");
-    return;
-  }
+  NrrdDataHandle dmap_handle;
+  if (!get_input_handle("RegularMapNrrd", dmap_handle)) return;
 
   reset_vars();
 
@@ -160,7 +145,7 @@ void
     nout->axis[i].kind = nin->axis[i].kind;
   }
 
-  onrrd_->send_and_dereference(out);
+  send_output_handle("OutputNrrd", out);
 }
 
 

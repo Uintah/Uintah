@@ -196,8 +196,7 @@ void ColumnMatrix::resize(int new_rows)
 
 void ColumnMatrix::zero()
 {
-    for(int i=0; i<nrows_; i++)
-	data[i] = 0.0;
+  memset(data, 0, sizeof(double) * nrows_);
 }
 
 extern "C" double cm_vnorm(int beg, int end, double* data);

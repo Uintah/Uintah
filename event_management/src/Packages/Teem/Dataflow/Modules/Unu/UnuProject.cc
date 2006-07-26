@@ -51,9 +51,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-
   GuiInt       axis_;
   GuiInt    measure_;
   int       old_generation_;
@@ -84,18 +81,10 @@ UnuProject::~UnuProject()
 void 
 UnuProject::execute()
 {
-  NrrdDataHandle nrrd_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("nin");
-  onrrd_ = (NrrdOPort *)get_oport("nout");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("nin", nrrd_handle)) return;
 
   reset_vars();
   
@@ -124,7 +113,7 @@ UnuProject::execute()
     last_nrrdH_ = scinew NrrdData(nout);
   }
 
-  onrrd_->send_and_dereference(last_nrrdH_, true);
+  send_output_handle("nout", last_nrrdH_, true);
 }
 
 

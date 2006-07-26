@@ -55,9 +55,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-  
   GuiInt          connectivity_;
 };
 
@@ -65,7 +62,6 @@ private:
 DECLARE_MAKER(UnuCCadj)
 UnuCCadj::UnuCCadj(GuiContext* ctx)
   : Module("UnuCCadj", ctx, Source, "UnuAtoM", "Teem"),
-    inrrd_(0), onrrd_(0),
     connectivity_(get_ctx()->subVar("connectivity"), 1)
 {
 }
@@ -79,19 +75,10 @@ UnuCCadj::~UnuCCadj()
 void
 UnuCCadj::execute()
 {
-  NrrdDataHandle nrrd_handle;
-
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty InputNrrd.");
-    return;
-  }
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
   reset_vars();
 
@@ -114,7 +101,7 @@ UnuCCadj::execute()
     nout->axis[i].kind = nin->axis[i].kind;
   }
 
-  onrrd_->send_and_dereference(out);
+  send_output_handle("OutputNrrd", out);
 }
 
 } // End namespace Teem

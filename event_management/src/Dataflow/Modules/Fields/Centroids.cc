@@ -76,10 +76,8 @@ Centroids::~Centroids()
 void
 Centroids::execute()
 {
-  // must find ports and have valid data on inputs
-  FieldIPort *ifieldPort = (FieldIPort*)get_iport("TetVolField");
   FieldHandle ifieldhandle;
-  if (!ifieldPort->get(ifieldhandle) || !ifieldhandle.get_rep()) return;
+  if (!get_input_handle("TetVolField", ifieldhandle)) return;
 
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   CompileInfoHandle ci = CentroidsAlgo::get_compile_info(ftd);
@@ -88,8 +86,7 @@ Centroids::execute()
 
   FieldHandle ofieldhandle(algo->execute(this, ifieldhandle));
   
-  FieldOPort *ofieldPort = (FieldOPort*)get_oport("PointCloudField");
-  ofieldPort->send_and_dereference(ofieldhandle);
+  send_output_handle("PointCloudField", ofieldhandle);
 }
 
 

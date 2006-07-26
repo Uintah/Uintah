@@ -52,8 +52,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdOPort*      onrrd_;
-
   GuiInt          torus_;
   GuiDouble       anisotropy_;
   GuiDouble       maxca1_;
@@ -61,7 +59,6 @@ private:
   GuiDouble       boundary_;
   GuiDouble       thickness_;
   GuiInt          size_;
-
 };
 
 DECLARE_MAKER(TendSatin)
@@ -108,9 +105,9 @@ TendSatin::execute()
 
   nout->axis[0].kind = nrrdKind3DMaskedSymMatrix;
 
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
   NrrdDataHandle out(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(out);
+
+  send_output_handle("OutputNrrd", out);
 }
 
 

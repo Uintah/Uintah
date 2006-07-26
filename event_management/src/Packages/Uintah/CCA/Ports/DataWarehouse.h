@@ -122,7 +122,7 @@ public:
                                   IntVector high = IntVector(0,0,0)) = 0;
   virtual bool haveParticleSubset(int matlIndex, const Patch*,
                                   IntVector low = IntVector(0,0,0),
-                                  IntVector high = IntVector(0,0,0)) = 0;
+                                  IntVector high = IntVector(0,0,0), bool exact = false) = 0;
   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*,
                                             IntVector low, IntVector high) = 0;
   virtual ParticleSubset* getParticleSubset(int matlIndex, const Patch*) = 0;

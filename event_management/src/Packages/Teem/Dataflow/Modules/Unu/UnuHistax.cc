@@ -46,9 +46,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-
   GuiInt       axis_;
   GuiInt       bins_;
   GuiDouble    min_;
@@ -72,24 +69,19 @@ UnuHistax::UnuHistax(SCIRun::GuiContext *ctx) :
 {
 }
 
-UnuHistax::~UnuHistax() {
+
+UnuHistax::~UnuHistax()
+{
 }
+
 
 void 
 UnuHistax::execute()
 {
-  NrrdDataHandle nrrd_handle;
-
   update_state(NeedData);
 
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
-
-  if (!inrrd_->get(nrrd_handle)) 
-    return;
-
-  if (!nrrd_handle.get_rep()) 
-    return;
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
   reset_vars();
 
@@ -116,7 +108,8 @@ UnuHistax::execute()
   }
 
   NrrdDataHandle out(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(out);
+
+  send_output_handle("OutputNrrd", out);
 }
 
 

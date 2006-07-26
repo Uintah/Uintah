@@ -383,6 +383,7 @@ FieldExtractorAlgo::build_minimal_patch_grid( GridP oldGrid )
       
       Patch* newPatch =
         newLevel->addPatch(low, high, inLow, inHigh);
+      newLevel->setExtraCells( level->getExtraCells() );
       list<const Patch*> oldPatches; 
       for (unsigned int p = 0; p < (*superIter)->getBoxes().size(); p++) {
         const Patch* patch = (*superIter)->getBoxes()[p];

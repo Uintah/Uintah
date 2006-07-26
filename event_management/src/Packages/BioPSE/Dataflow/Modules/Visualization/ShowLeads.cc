@@ -54,8 +54,6 @@ public:
   virtual void execute();
 
 private:
-  MatrixIPort *iport_;
-
   GuiString units_;
   GuiDouble tmin_;
   GuiDouble tmax_;
@@ -69,7 +67,6 @@ DECLARE_MAKER(ShowLeads)
 
 ShowLeads::ShowLeads(GuiContext *context) : 
   Module("ShowLeads", context, Source, "Visualization", "BioPSE"),
-  iport_(0),
   units_(context->subVar("time-units")),
   tmin_(context->subVar("time-min")),
   tmax_(context->subVar("time-max")),
@@ -77,17 +74,18 @@ ShowLeads::ShowLeads(GuiContext *context) :
 {
 }
 
-ShowLeads::~ShowLeads(){
+
+ShowLeads::~ShowLeads()
+{
 }
 
-void ShowLeads::execute(){
 
-  iport_ = (MatrixIPort *)get_iport("Potentials");
+void
+ShowLeads::execute()
+{
   MatrixHandle mh;
-  if (! iport_->get(mh)) {
-    error("Cannot get matrix from input port.");
-    return;
-  }
+  if (!get_input_handle("Potentials", mh)) return;
+
   if (mh->generation == gen_) { 
     remark("Same input matrix, nothing changed.");
     return; 

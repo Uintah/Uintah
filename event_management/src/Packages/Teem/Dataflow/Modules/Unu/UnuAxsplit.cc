@@ -46,9 +46,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-
   GuiInt       axis_;
   GuiInt       fastsize_;
   GuiInt       slowsize_;
@@ -73,23 +70,18 @@ UnuAxsplit::~UnuAxsplit()
 void 
 UnuAxsplit::execute()
 {
-  NrrdDataHandle nrrd_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
+  reset_vars();
 
   Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
-  if (nrrdAxesSplit(nout, nin, axis_.get(), fastsize_.get(), slowsize_.get())) {
+  if (nrrdAxesSplit(nout, nin, axis_.get(), fastsize_.get(), slowsize_.get()))
+  {
     char *err = biffGetDone(NRRD);
     error(string("Error Axsplitting nrrd: ") + err);
     free(err);
@@ -100,7 +92,8 @@ UnuAxsplit::execute()
   // Copy the properties.
   out->copy_properties(nrrd_handle.get_rep());
 
-  onrrd_->send_and_dereference(out);
+  send_output_handle("OutputNrrd", out);
 }
+
 
 } // End namespace SCITeem

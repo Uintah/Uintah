@@ -63,7 +63,6 @@ public:
   virtual ~FieldToNrrd();
   virtual void execute();
 private:
-  FieldIPort  *ifield_;
   NrrdOPort   *opoints_;
   NrrdOPort   *oconnect_;
   NrrdOPort   *odata_;
@@ -96,15 +95,12 @@ FieldToNrrd::~FieldToNrrd()
 void
 FieldToNrrd::execute()
 {
-  ifield_ = (FieldIPort *)get_iport("Field");
   opoints_ = (NrrdOPort *)get_oport("Points");
   oconnect_ = (NrrdOPort *)get_oport("Connections");
   odata_ = (NrrdOPort *)get_oport("Data");
   
   FieldHandle field_handle; 
-  if (!(ifield_->get(field_handle) && field_handle.get_rep())) {
-    return;
-  }
+  if (!get_input_handle("Field", field_handle)) return;
 
   // Just data for lattices, data and points for structured, all for rest.
   bool compute_points_p = true;

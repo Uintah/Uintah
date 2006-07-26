@@ -48,25 +48,16 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class SetEITGround : public Module {
-    //! Private data
-
-    //! Input ports
-    MatrixIPort* iportInPot_;
-    MatrixIPort* iportMeshToElectrodeMap_;
-
-    //! Output ports
-    MatrixOPort* oportGndPot_;
-    MatrixOPort* oportElectrodePot_;
-
 public:
-    GuiString methodTCL_; //method of applying a ground, ie. "zero mean at electrodes"
+  // Method of applying a ground, ie. "zero mean at electrodes"
+  GuiString methodTCL_;
 
-    //! Constructor/Destructor
-    SetEITGround(GuiContext *context);
-    virtual ~SetEITGround();
+  //! Constructor/Destructor
+  SetEITGround(GuiContext *context);
+  virtual ~SetEITGround();
 
-    //! Public methods
-    virtual void execute();
+  //! Public methods
+  virtual void execute();
 };
 
 DECLARE_MAKER(SetEITGround)
@@ -74,177 +65,163 @@ DECLARE_MAKER(SetEITGround)
 SetEITGround::SetEITGround(GuiContext *context)
              : Module("SetEITGround", context, Source, "Forward", "BioPSE")
              , methodTCL_(context->subVar("methodTCL"))
-{}
+{
+}
+
 
 SetEITGround::~SetEITGround()
-{}
-
-void SetEITGround::execute()
 {
-    iportInPot_ = (MatrixIPort *)get_iport("InputPotentialVector");
-    iportMeshToElectrodeMap_ = (MatrixIPort *)get_iport("Mesh to Electrode Map");
+}
 
-    oportGndPot_ = (MatrixOPort *)get_oport("OutputPotentialVector");
-    oportElectrodePot_ = (MatrixOPort *)get_oport("Electrode Potentials");
+
+void
+SetEITGround::execute()
+{
+  // Validate inputs.
+  MatrixHandle hInPot;
+  if (!get_input_handle("InputPotentialVector", hInPot)) return;
+
+  MatrixHandle hMeshToElectrodeMap;
+  if (!get_input_handle("Mesh to Electrode Map", hMeshToElectrodeMap)) return;
+  // Assign local pointer to input potential vector
+  ColumnMatrix *InPot = dynamic_cast<ColumnMatrix*>(hInPot.get_rep());
   
-    // Validate inputs.
-    MatrixHandle hInPot;
-    if (!iportInPot_->get(hInPot) || !hInPot.get_rep())
-    {
-        error("Can't get handle to input potential vector.");
-        return;
-    }
+  if (!InPot)
+  {
+    error("can't cast input and/or output as a column!");
+    return;
+  }
 
-    MatrixHandle hMeshToElectrodeMap;
-    if (!iportMeshToElectrodeMap_->get(hMeshToElectrodeMap) || !hMeshToElectrodeMap.get_rep())
-    {
-        error("Can't get handle to input mesh to electrode map vector.");
-        return;
-    }
+  // Determine the dimension (number of nodes) of the input potential vector.
+  int numNodes = InPot->nrows();
 
-    // Assign local pointer to input potential vector
-    ColumnMatrix *InPot = dynamic_cast<ColumnMatrix*>(hInPot.get_rep());
-  
-    if (!InPot)
-    {
-        error("can't cast input and/or output as a column!");
-        return;
-    }
-
-    // determine the dimension (number of nodes) of the input potential vector
-    int numNodes = InPot->nrows();
-
-    //cout << "Number of mesh nodes: " << numNodes << endl;
-
-    // Assign local pointer to input mesh-to-electrde-map vector
-    ColumnMatrix *meshToElectrodeMap = dynamic_cast<ColumnMatrix*>(hMeshToElectrodeMap.get_rep());
+  // Assign local pointer to input mesh-to-electrde-map vector
+  ColumnMatrix *meshToElectrodeMap = dynamic_cast<ColumnMatrix*>(hMeshToElectrodeMap.get_rep());
   
 
-    // allocate memory for the potentials we are going to compute and send to the output
-    ColumnMatrix* gndPot = scinew ColumnMatrix(numNodes);
-    if (!gndPot)
-    {
-        error("can't allocate output column matrix!");
-        return;
-    }
+  // Allocate memory for the potentials we are going to compute and
+  // send to the output.
+  ColumnMatrix* gndPot = scinew ColumnMatrix(numNodes);
+  if (!gndPot)
+  {
+    error("can't allocate output column matrix!");
+    return;
+  }
   
-    double sum_potential  = 0.0;
-    double mean_potential = 0.0;
-    int numElectrodeNodes = 0;
+  double sum_potential  = 0.0;
+  double mean_potential = 0.0;
+  int numElectrodeNodes = 0;
 
-    for (int i=0; i<numNodes; i++)
+  for (int i=0; i<numNodes; i++)
+  {
+    if ( (*meshToElectrodeMap)[i] != -1)
     {
-        if ( (*meshToElectrodeMap)[i] != -1)
-        {
-            sum_potential += (*InPot)[i];
-            numElectrodeNodes++;
-	}
+      sum_potential += (*InPot)[i];
+      numElectrodeNodes++;
     }
+  }
 
-    mean_potential = sum_potential/numElectrodeNodes;
+  mean_potential = sum_potential/numElectrodeNodes;
 
-    cout << "numElectrodeNodes: " << numElectrodeNodes << " Mean boundary node potential: " << mean_potential << endl;
+  cout << "numElectrodeNodes: " << numElectrodeNodes << " Mean boundary node potential: " << mean_potential << endl;
 
-    // subtract the boundary node mean from the input potential at each node and 
-    // store this in the output potential vector.
+  // Subtract the boundary node mean from the input potential at each node and 
+  // store this in the output potential vector.
 
-    for (int i=0; i<numNodes; i++)
+  for (int i=0; i<numNodes; i++)
+  {
+    (*gndPot)[i] = (*InPot)[i] - mean_potential;  
+  }
+
+  // Determine the number of electrodes. The meshToElectrodeMap is a
+  // column matrix where each element contains the electrode index for
+  // the particular mesh node index. If a mesh node j is not "covered
+  // by" an electrode, meshToElectrodeMap[j] = -1. If mesh node j does
+  // belong to an electrode, then meshToElectrodeMap[j] contains the
+  // index of that electrode. The maximum value in meshToElectrodeMap
+  // is the number of electrodes minus one, since zero is a valid
+  // electrode index.
+
+  // Find the maximum value in meshToElectrodeMap.
+  int numElectrodes = -1;
+  for (int j = 0; j < numNodes; j++)
+  {
+    if ( (*meshToElectrodeMap)[j] > numElectrodes)
     {
-      (*gndPot)[i] = (*InPot)[i] - mean_potential;  
+      numElectrodes = (int) (*meshToElectrodeMap)[j];
     }
+  }
+  numElectrodes++;  // add one because electrode index is zero based
 
-    // Determine the number of electrodes. The meshToElectrodeMap is a column matrix where each element contains the
-    // electrode index for the particular mesh node index. If a mesh node j is not "covered by" an electrode, 
-    // meshToElectrodeMap[j] = -1. If mesh node j does belong to an electrode, then meshToElectrodeMap[j] contains the
-    // index of that electrode. The maximum value in meshToElectrodeMap is the number of electrodes minus one, since 
-    // zero is a valid electrode index.
-
-    // Find the maximum value in meshToElectrodeMap.
-    int numElectrodes = -1;
-    for (int j = 0; j < numNodes; j++)
-    {
-        if ( (*meshToElectrodeMap)[j] > numElectrodes)
-        {
-  	    numElectrodes = (int) (*meshToElectrodeMap)[j];
-	}
-    }
-    numElectrodes++;  // add one because electrode index is zero based
-
-    cout << "SetEITGround: numElectrodes found: " << numElectrodes << endl;
+  cout << "SetEITGround: numElectrodes found: " << numElectrodes << endl;
     
-    // allocate memory for the electrode potentials we are going to extract and send to the output
-    ColumnMatrix* electrodePot = scinew ColumnMatrix(numElectrodes);
-    if (!electrodePot)
-    {
-        error("can't allocate output for electrode potentials column matrix!");
-        return;
-    }
+  // Allocate memory for the electrode potentials we are going to
+  // extract and send to the output.
+  ColumnMatrix* electrodePot = scinew ColumnMatrix(numElectrodes);
+  if (!electrodePot)
+  {
+    error("can't allocate output for electrode potentials column matrix!");
+    return;
+  }
 
-    // Initialize the electrodePot vector to all zeros
-    // -----------------------------------------------
-    for (int i = 0; i < numElectrodes; i++)
-    {
-        (*electrodePot)[i] = 0.0;
-    }
+  // Initialize the electrodePot vector to all zeros
+  // -----------------------------------------------
+  for (int i = 0; i < numElectrodes; i++)
+  {
+    (*electrodePot)[i] = 0.0;
+  }
     
-    // Search through the meshToElectrodeMap and pull out electrode voltages from
-    // the grounded potential vector. If an electrode has more than one node, take the 
-    // average value.
-    // -------------------------------------------------------------------------------
-    // declare array to store the count of the number of nodes on each electrode
-    Array1<int>  nodeCount;
-    nodeCount.resize(numElectrodes);
-    for (int i = 0; i < numElectrodes; i++)
-    {
-        nodeCount[i] = 0;
-    }
+  // Search through the meshToElectrodeMap and pull out electrode
+  // voltages from the grounded potential vector. If an electrode has
+  // more than one node, take the average value.
+  // ------------------------------------------------------------------------
+  // declare array to store the count of the number of nodes on each
+  // electrode
+  Array1<int>  nodeCount;
+  nodeCount.resize(numElectrodes);
+  for (int i = 0; i < numElectrodes; i++)
+  {
+    nodeCount[i] = 0;
+  }
 
-    for (int i = 0; i < numNodes; i++)
+  for (int i = 0; i < numNodes; i++)
+  {
+    if ( (*meshToElectrodeMap)[i] != -1)
     {
-        if ( (*meshToElectrodeMap)[i] != -1)
-        {
-	    // count the number of nodes on each electrode
- 	    // -------------------------------------------
-	    nodeCount[(int) (*meshToElectrodeMap)[i] ]++;
-            // accumulate the sum of electrode potentials
-            // ------------------------------------------	    
-            (*electrodePot)[ (int) (*meshToElectrodeMap)[i] ] +=  (*gndPot)[i];
-	}
+      // count the number of nodes on each electrode
+      // -------------------------------------------
+      nodeCount[(int) (*meshToElectrodeMap)[i] ]++;
+      // accumulate the sum of electrode potentials
+      // ------------------------------------------	    
+      (*electrodePot)[ (int) (*meshToElectrodeMap)[i] ] +=  (*gndPot)[i];
     }
+  }
 
-    for (int i = 0; i < numElectrodes; i++)
-    {
-        (*electrodePot)[i] /= nodeCount[i];
-    }
+  for (int i = 0; i < numElectrodes; i++)
+  {
+    (*electrodePot)[i] /= nodeCount[i];
+  }
 
-    // Shift the values circularly by one - this is just a test
-    double saveFirstValue = (*electrodePot)[0];
-    for (int i = 0; i < numElectrodes-1; i++)
-    {
-      (*electrodePot)[i] = (*electrodePot)[i+1];
-    }
-    (*electrodePot)[numElectrodes-1] = saveFirstValue;
+  // Shift the values circularly by one - this is just a test
+  double saveFirstValue = (*electrodePot)[0];
+  for (int i = 0; i < numElectrodes-1; i++)
+  {
+    (*electrodePot)[i] = (*electrodePot)[i+1];
+  }
+  (*electrodePot)[numElectrodes-1] = saveFirstValue;
     
-    // print out values - for development debugging; leave commented out for now
-    //cout << "input and output vectors" << endl;
-    //for (int i=0; i<numNodes; i++)
-    //{
-    //    cout << (*InPot)[i] << " " << (*gndPot)[i] << endl;
-    //}
+  for (int i=0; i<numElectrodes; i++)
+  {
+    cout << i << " " << (*electrodePot)[i] << endl;
+  }
 
-    for (int i=0; i<numElectrodes; i++)
-    {
-      cout << i << " " << (*electrodePot)[i] << endl;
-    }
+  //! Sending results
+  MatrixHandle gpmatrix(gndPot);
+  send_output_handle("OutputPotentialVector", gpmatrix);
 
-    //! Sending results
-    MatrixHandle gpmatrix(gndPot);
-    oportGndPot_->send_and_dereference(gpmatrix);
-    MatrixHandle epmatrix(electrodePot);
-    oportElectrodePot_->send_and_dereference(epmatrix);
+  MatrixHandle epmatrix(electrodePot);
+  send_output_handle("Electrode Potentials", epmatrix);
 }
 
 
 } // End namespace BioPSE
-
-

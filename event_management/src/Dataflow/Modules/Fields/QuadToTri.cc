@@ -85,21 +85,14 @@ QuadToTri::~QuadToTri()
 void
 QuadToTri::execute()
 {
-  FieldIPort *ifieldport = (FieldIPort *)get_iport("QuadSurf");
   FieldHandle ifieldhandle;
-  if(!(ifieldport->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
-    error("Can't get field.");
-    return;
-  }
-
-  FieldOPort *ofp = (FieldOPort *)get_oport("TriSurf");
+  if (!get_input_handle("QuadSurf", ifieldhandle)) return;
 
   // Cache generation.
   if (ofieldhandle_.get_rep() &&
       ifieldhandle->generation == last_generation_)
   {
-    ofp->send_and_dereference(ofieldhandle_, true);
+    send_output_handle("TriSurf", ofieldhandle_, true);
     return;
   }
   last_generation_ = ifieldhandle->generation;
@@ -145,7 +138,8 @@ QuadToTri::execute()
       return;
     }
   }
-  ofp->send_and_dereference(ofieldhandle_, true);
+
+  send_output_handle("TriSurf", ofieldhandle_, true);
 }
 
 CompileInfoHandle

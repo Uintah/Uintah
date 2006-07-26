@@ -39,7 +39,7 @@
  *  Copyright (C) 199? SCI Group
  */
 
-#ifdef __ECC
+#ifdef __INTEL_COMPILER
    // Disable the fprintf warning that appears everywhere in this file on icpc.
 #  pragma warning( disable : 181 )
 #endif

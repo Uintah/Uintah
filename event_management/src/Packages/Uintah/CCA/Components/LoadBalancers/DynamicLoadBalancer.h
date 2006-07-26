@@ -108,6 +108,8 @@ namespace Uintah {
     /// Helper for assignPatchesFactor.  Collects each patch's particles
     void collectParticles(const GridP& grid, std::vector<PatchInfo>& allParticles);
 
+    // calls space-filling curve on level, and stores results in pre-allocated output
+    void useSFC(const LevelP& level, unsigned* output);
     bool thresholdExceeded(const std::vector<float>& patch_costs);
 
     std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
@@ -130,9 +132,11 @@ namespace Uintah {
     double d_lbThreshold; //< gain threshold to exceed to require lb'ing
     float d_cellFactor;
     int d_dynamicAlgorithm;
+    bool d_levelIndependent;
     bool d_timeRefineWeight;
     bool d_doSpaceCurve;
     bool d_collectParticles;
+    bool d_restartTimestep;
     int d_state; //< idle, postLB, checkLB, initLB
   };
 } // End namespace Uintah

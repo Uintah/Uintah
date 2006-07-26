@@ -119,6 +119,8 @@ public:
 private:
   //////////
   // Insert Documentation Here:
+  MaterialSubset* one_matl;
+
   friend class MPMICE;
 
   inline bool compare(double num1, double num2)
@@ -184,7 +186,7 @@ private:
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw,
-                                       bool recursion);
+                                       const bool recursion);
 
   void createMatrix(                   const ProcessorGroup*,
                                        const PatchSubset* patches,
@@ -216,7 +218,7 @@ private:
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw,
-                                       bool recursion);
+                                       const bool recursion);
 
   // No matrix calculations are performed.
   void computeStressTensor(            const ProcessorGroup*,
@@ -322,7 +324,7 @@ private:
 				       DataWarehouse* new_dw);
 
   void scheduleComputeStressTensor( SchedulerP&, const PatchSet*,
-                                    const MaterialSet*, bool recursion);
+                                    const MaterialSet*, const bool recursion);
 
   void scheduleFormStiffnessMatrix( SchedulerP&, const PatchSet*,
                                     const MaterialSet*);
@@ -366,7 +368,7 @@ private:
                                                const MaterialSet*);
 
   void scheduleDestroyMatrix(      SchedulerP&, const PatchSet*,
-                                   const MaterialSet*, bool recursion);
+                                   const MaterialSet*, const bool recursion);
 
   void scheduleDestroyHCMatrix(    SchedulerP&, const PatchSet*,
                                    const MaterialSet*);
@@ -472,6 +474,8 @@ private:
   const PatchSet* d_perproc_patches;
 
   Solver* d_solver;
+  string d_solver_type;
+  bool d_temp_solve;
 
   bool d_dynamic;
   bool d_rigid_body;

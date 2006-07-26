@@ -9,6 +9,7 @@ TESTS = [   ("advect_mpmice", "advect.ups", 1, "ALL"),	\
             ("guni2d", "guni2dRT.ups", 4, "ALL"),     \
             ("TRWnoz", "TRWnoz.ups", 1, "ALL"),     \
             ("testConvertMPMICEAdd", "testConvertMPMICEAdd.ups", 1, "ALL"),\
+            ("advect_2L_MI", "advect_2L_MI.ups", 1, "ALL"),\
             ("thermx8patch", "thermx8patch.ups", 8, "IRIX64"),     \
     	]
 

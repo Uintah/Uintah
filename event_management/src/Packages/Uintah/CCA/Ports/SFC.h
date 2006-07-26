@@ -59,7 +59,7 @@ template<int DIM, class LOCS>
 class SFC
 {
 public:
-	SFC(int dir[][DIM], ProcessorGroup *d_myworld) : dir(dir),set(0), locsv(0), locs(0), orders(0), sendbuf(0), recievebuf(0), mergebuf(0), d_myworld(d_myworld), block_size(3000), blocks_in_transit(3), sample_percent(.1), cleanup(BATCHERS) {};
+	SFC(int dir[][DIM], const ProcessorGroup *d_myworld) : dir(dir),set(0), locsv(0), locs(0), orders(0), sendbuf(0), recievebuf(0), mergebuf(0), d_myworld(d_myworld), block_size(3000), blocks_in_transit(3), sample_percent(.1), cleanup(BATCHERS) {};
 	virtual ~SFC() {};
 	void GenerateCurve(int mode=0);
 	void SetRefinements(unsigned int refinements);
@@ -105,7 +105,7 @@ protected:
 	void* recievebuf;
 	void* mergebuf;
 	
-	ProcessorGroup *d_myworld;
+	const ProcessorGroup *d_myworld;
 	
 	//Merge-Exchange Parameters
 	unsigned int block_size;
@@ -121,7 +121,7 @@ protected:
 	void SerialR(unsigned int* orders,vector<unsigned int> *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o=0);
 
 	template<class BITS> void SerialH();
-	template<class BITS> void SerialHR(History<BITS>* orders,vector<unsigned int > *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o=0, unsigned int r=0, BITS history=0);
+	template<class BITS> void SerialHR(unsigned int* orders,History<BITS>* corders,vector<unsigned int > *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o=0, unsigned int r=0, BITS history=0);
 	template<class BITS> void Parallel();
 	template<class BITS> int MergeExchange(int to);	
 	template<class BITS> void PrimaryMerge();
@@ -137,7 +137,7 @@ class SFC2D : public SFC<2,LOCS>
 {
 
 	public:
-		SFC2D(Curve curve,ProcessorGroup *d_myworld) : SFC<2,LOCS>(dir2,d_myworld) {SetCurve(curve);};
+		SFC2D(Curve curve,const ProcessorGroup *d_myworld) : SFC<2,LOCS>(dir2,d_myworld) {SetCurve(curve);};
 		virtual ~SFC2D() {};
 		void SetCurve(Curve curve);
 		void SetDimensions(REAL wx, REAL wy);
@@ -153,7 +153,7 @@ template<class LOCS>
 class SFC3D : public SFC<3,LOCS>
 {
 	public:
-		SFC3D(Curve curve,ProcessorGroup *d_myworld) : SFC<3,LOCS>(dir3, d_myworld) {SetCurve(curve);};
+		SFC3D(Curve curve,const ProcessorGroup *d_myworld) : SFC<3,LOCS>(dir3, d_myworld) {SetCurve(curve);};
 		virtual ~SFC3D() {};
 		void SetCurve(Curve curve);
 		void SetDimensions(REAL wx, REAL wy, REAL wz);
@@ -167,25 +167,25 @@ private:
 class SFC2f : public SFC2D<float>
 {
 	public:
-		SFC2f(Curve curve,ProcessorGroup *d_myworld) : SFC2D<float>(curve,d_myworld) {};
+		SFC2f(Curve curve,const ProcessorGroup *d_myworld) : SFC2D<float>(curve,d_myworld) {};
 };
 
 class SFC2d : public SFC2D<double>
 {
 	public:
-		SFC2d(Curve curve,ProcessorGroup *d_myworld) : SFC2D<double>(curve,d_myworld) {} ;
+		SFC2d(Curve curve,const ProcessorGroup *d_myworld) : SFC2D<double>(curve,d_myworld) {} ;
 };
 
 class SFC3f : public SFC3D<float>
 {
 	public:
-		SFC3f(Curve curve,ProcessorGroup *d_myworld) : SFC3D<float>(curve,d_myworld) {};
+		SFC3f(Curve curve,const ProcessorGroup *d_myworld) : SFC3D<float>(curve,d_myworld) {};
 };
 
 class SFC3d : public SFC3D<double>
 {
 	public:
-		SFC3d(Curve curve,ProcessorGroup *d_myworld) : SFC3D<double>(curve,d_myworld) {} ;
+		SFC3d(Curve curve,const ProcessorGroup *d_myworld) : SFC3D<double>(curve,d_myworld) {} ;
 };
 
 
@@ -307,21 +307,21 @@ void SFC<DIM,LOCS>::GenerateCurve(int mode)
 		cout << "************************\n";	
 		return;
 	}
-	if(P==1 && (mode==1 || mode==0))
+	if( mode!=2 && (P==1 || mode==1) )
 	{
 		Serial();
 	}
 	else if(mode==2)
 	{
 										 
-		if(refinements*DIM<=32)
+		if(refinements*DIM<=sizeof(unsigned int)*8)
 		{
 		 	vector<History<unsigned int> > sbuf;
 			sbuf.resize(n);
 			sendbuf=(void*)&(sbuf[0]);
 			SerialH<unsigned int>();
 		}
-		else if(refinements*DIM<=65)
+		else if(refinements*DIM<=sizeof(unsigned long long)*8)
 		{
 		 	vector<History<unsigned long long> > sbuf;
 			sbuf.resize(n);
@@ -339,11 +339,11 @@ void SFC<DIM,LOCS>::GenerateCurve(int mode)
 		rank=d_myworld->myrank();
 		Comm=d_myworld->getComm();
 		//Pick which generate to use
-		if(refinements*DIM<=32)
+		if(refinements*DIM<=sizeof(unsigned int)*8)
 		{
 			Parallel<unsigned int>();
 		}
-		else if(refinements*DIM<=64)
+		else if(refinements*DIM<=sizeof(unsigned long long)*8)
 		{
 			Parallel<unsigned long long>();
 		}
@@ -384,10 +384,11 @@ void SFC<DIM,LOCS>::SerialH()
 	orders->resize(n);
 
 	History<BITS> *sbuf=(History<BITS>*)sendbuf;
+	unsigned int *o=&(*orders)[0];
 	
 	for(unsigned int i=0;i<n;i++)
 	{
-		sbuf[i].i=i;
+		o[i]=i;
 	}
 
 	vector<unsigned int> bin[BINS];
@@ -395,9 +396,9 @@ void SFC<DIM,LOCS>::SerialH()
 	{
 		bin[b].reserve(n/BINS);
 	}
-	
+
 	//Recursive call
-	SerialHR<BITS>(sbuf,bin,n,center,dimensions);
+	SerialHR<BITS>(o,sbuf,bin,n,center,dimensions);
 
 }
 
@@ -481,7 +482,7 @@ void SFC<DIM,LOCS>::SerialR(unsigned int* orders,vector<unsigned int> *bin, unsi
 }
 
 template<int DIM, class LOCS> template<class BITS> 
-void SFC<DIM,LOCS>::SerialHR(History<BITS>* orders,vector<unsigned int> *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o, unsigned int r, BITS history)
+void SFC<DIM,LOCS>::SerialHR(unsigned int* orders, History<BITS>* corders,vector<unsigned int> *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o, unsigned int r, BITS history)
 {
 	REAL newcenter[BINS][DIM], newdimension[DIM];
 	unsigned int size[BINS];
@@ -499,19 +500,16 @@ void SFC<DIM,LOCS>::SerialHR(History<BITS>* orders,vector<unsigned int> *bin, un
 	//Bin points
 	for(i=0;i<n;i++)
 	{
-		b=inverse[o][Bin(&locs[orders[i].i*DIM],center)];
-		bin[b].push_back(orders[i].i);
+		b=inverse[o][Bin(&locs[orders[i]*DIM],center)];
+		bin[b].push_back(orders[i]);
 	}
 
 	//Reorder points by placing bins together in order
 	for(b=0;b<BINS;b++)
 	{
 		size[b]=(unsigned int)bin[b].size();
-		
-		for(unsigned int i=0;i<size[b];i++)
-		{
-			orders[index++].i=bin[b][i];
-		}
+		memcpy(&orders[index],&bin[b][0],sizeof(unsigned int)*size[b]);
+		index+=size[b];
 	}
 
 	//Halve all dimensions
@@ -535,19 +533,20 @@ void SFC<DIM,LOCS>::SerialHR(History<BITS>* orders,vector<unsigned int> *bin, un
 			//save history for each point in bucket
 			for(unsigned int j=0;j<size[b];j++)
 			{
-				orders[j].bits=NextHistory;
+				corders[j].bits=NextHistory;
+				corders[j].i=orders[j];
 			}
 		}
 		else if( size[b]>1)
 		{
 			NextHistory= ((history<<DIM)|b);
-			SerialHR<BITS>(orders,bin,size[b],newcenter[b],newdimension,orientation[o][b],r+1,NextHistory);
+			SerialHR<BITS>(orders,corders,bin,size[b],newcenter[b],newdimension,orientation[o][b],r+1,NextHistory);
 		}
 		else if (size[b]==1)
 		{
 			NextHistory= ((history<<DIM)|b);
 
-			LOCS *loc=&locs[orders[0].i*DIM];
+			LOCS *loc=&locs[orders[0]*DIM];
 			REAL Clocs[DIM];
 			REAL dims[DIM];
 			int Co=orientation[o][b];
@@ -575,8 +574,10 @@ void SFC<DIM,LOCS>::SerialHR(History<BITS>* orders,vector<unsigned int> *bin, un
 				}
 				Co=orientation[Co][b];
 			}
-			orders[0].bits=NextHistory;
+			corders[0].bits=NextHistory;
+			corders[0].i=orders[0];
 		}
+		corders+=size[b];
 		orders+=size[b];
 	}
 }
@@ -636,6 +637,12 @@ void SFC<DIM,LOCS>::Parallel()
 	{
 		c[i].i+=istart;	
 	}
+//	for(int i=0;i<n;i++)
+//	{
+//		if(sbuf[i].i==300105)
+//			cout << "after serial on " << rank << "at index " << i << " 300105:" << sbuf[i].bits << endl;
+//	}
+	
 
 	//resize buffers
 //	sbuf.resize(max_n);
@@ -655,6 +662,8 @@ void SFC<DIM,LOCS>::Parallel()
 	ptime+=finish-start;
 #endif
 	
+	History<BITS> *ssbuf=(History<BITS>*)sendbuf;
+
 #ifdef _TIMESFC_
 	start=timer->currentSeconds();
 #endif
@@ -664,6 +673,8 @@ void SFC<DIM,LOCS>::Parallel()
 	cleantime+=finish-start;
 #endif
 
+	ssbuf=(History<BITS>*)sendbuf;
+	
 	orders->resize(n);
 
 	//make pointer to internal buffers for a fast copy	
@@ -719,12 +730,17 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 	}
 //	cout << rank << ": Max-min done\n";
 	
+//	for(int i=0;i<n;i++)
+//	{
+//		if(sbuf[i].i==300105)
+//			cout << "Potential exchange between " << rank << " and " << to << endl;
+//	}
+	
 	unsigned int nsend=n_per_proc[rank];
 	unsigned int nrecv=n_per_proc[to];
 	//sample exchange
 	unsigned int minn=min(n,n2);
 	unsigned int sample_size=(int)(minn*sample_percent);
-
 
 	if(sample_size>=5)
 	{
@@ -781,7 +797,7 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 		{
 			ihigh+=(ilow-sample_size);
 		}
-		nrecv=nsend=int((ihigh+1)*stridehigh);
+		nrecv=nsend=int((ihigh+2)*stridehigh);
 
 		if(nsend>n)
 		{
@@ -792,14 +808,13 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 			nrecv=n2;
 		}
 	}	
-	
 	//final exchange
 //	cout << rank << ": sample done\n";
+	
 	int b;
 	unsigned int block_count=0;
 	int sremaining=nsend;
 	int rremaining=nrecv;
-	
 //	cout << sremaining << " " << rremaining << endl;
 	unsigned int sent=0, recvd=0, merged=0;
 //	cout << rank << " Block size: " << block_size << endl;	
@@ -862,12 +877,17 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 			rqueue.pop();
 			
 			MPI_Get_count(&status,MPI_BYTE,&b);
-			b*=inv_denom;
+			b=int(b*inv_denom);
 //			cout << rank << " recieved block of size\n";
 			while(b>0 && merged<n)
 			{
+//				if(rank==8 && to==9)
+//					cout << mrbuf[0].bits << " " << msbuf[0].bits << endl;
+				
 				if(mrbuf[0].bits<msbuf[0].bits)
 				{
+//					if(mrbuf[0].i==300105)
+//						cout << rank << " recieved 300105:" << mrbuf[0].bits << " from " << to << endl;
 					//pull from recieve buffer
 					mbuf[merged]=mrbuf[0];
 					mrbuf++;
@@ -875,6 +895,8 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 				}
 				else
 				{
+//					if(msbuf[0].i==300105)
+//						cout << rank << " keeping 300105:" << msbuf[0].bits << " from " << to << endl;
 					//pull from send buffer
 					mbuf[merged]=msbuf[0];
 					msbuf++;
@@ -927,6 +949,7 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 		if(merged<n)	//merge additional elements from send buff
 		{
 			memcpy(mbuf+merged,msbuf,(n-merged)*sizeof(History<BITS>));
+//			cout << rank << " (ASC) merging more from " << to << endl;
 		}
 	}
 	else
@@ -990,13 +1013,17 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 			rqueue.pop();
 
 			MPI_Get_count(&status,MPI_BYTE,&b);
-			b*=inv_denom;
+			b=int(b*inv_denom);
 //			cout << rank << " recieved block of size\n";
 
 			while(b>0 && merged<n)
 			{
+//				if(rank==9 && to==8)
+//					cout << mrbuf[0].bits << " " << msbuf[0].bits << endl;
 				if(mrbuf[0].bits>msbuf[0].bits) //merge from recieve buff
 				{
+//					if(mrbuf[0].i==300105)
+//						cout << rank << " recieving 300105:" << mrbuf[0].bits << " from " << to << endl;
 					mbuf--;
 					mbuf[0]=mrbuf[0];
 					mrbuf--;
@@ -1004,14 +1031,13 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 				}
 				else	//merge from send buff
 				{
+//					if(msbuf[0].i==300105)
+//						cout << rank << " keeping " << msbuf[0].i << ":" << msbuf[0].bits << " from " << to << endl;
 					mbuf--;
 					mbuf[0]=msbuf[0];
 					msbuf--;
 				}
 				merged++;
-
-
-
 			}
 			
 			//send more if needed
@@ -1056,7 +1082,19 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 		}
 		if(merged<n) //merge additional elements off of msbuf
 		{
-			memcpy(mbuf-n+merged,msbuf-n+merged,(n-merged)*sizeof(History<BITS>));
+			int rem=n-merged;
+			memcpy(mbuf-rem,msbuf-rem+1,(rem)*sizeof(History<BITS>));
+//			cout << rank << " (DSC) merging more from " << to << endl;
+		
+			/*
+			(while(merged<n)
+			{
+				mbuf--;
+				mbuf[0]=msbuf[0];
+				msbuf--;
+				merged++;
+			}
+			*/
 		}
 	}
 	while(!rqueue.empty())
@@ -1071,7 +1109,15 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 		squeue.pop();
 //		cout << rank << " sent left over block\n";
 	}
+	
 	swap(mergebuf,sendbuf);
+	
+	sbuf=(History<BITS>*)sendbuf;
+//	for(int i=0;i<n;i++)
+//	{
+//			if(sbuf[i].i==300105)
+//				cout << rank << " found on me at index " << i << " after merge\n";
+//	}
 	return 1;
 }
 
@@ -1088,10 +1134,8 @@ void SFC<DIM,LOCS>::PrimaryMerge()
 	HC_MERGE cur;
 	bool send;
 	int to;
-
 	cur.base=0;
 	cur.P=P;
-
 	q.push(cur);
 	while(!q.empty())
 	{
@@ -1102,32 +1146,41 @@ void SFC<DIM,LOCS>::PrimaryMerge()
 		base=cur.base;
 		P=cur.P;
 		send=false;
-		if(rank>=base && rank<base+P*.5)
+		if(rank>=base && rank<base+(P>>1))
 		{
 			send=true;
-			to=rank+(P+1)*.5;
+			to=rank+((P+1)>>1);
 		}
-		else if(rank-(P+1)*.5>=base && rank-(P+1)*.5<base+P*.5)
+		else if(rank-((P+1)>>1)>=base && rank-((P+1)>>1)<base+(P>>1))
 		{
 			send=true;
-			to=rank-(P+1)*.5;
+			to=rank-((P+1)>>1);
 		}
 
 		if(send)
 		{
 			MergeExchange<BITS>(to);
+			if(rank==7 && to==8)
+			{
+
+//				History<BITS>* sbuf=(History<BITS>*)sendbuf;
+//				cout << "after exit\n";
+//				for(int i=0;i<n;i++)
+//					cout << i << " " << sbuf[i].i << ":" << sbuf[i].bits << endl;
+//				cout << "done\n";
+			}
 		}
 
 		//make next stages
 
-		cur.P=(P+1)*.5;
+		cur.P=((P+1)>>1);
 		if(cur.P>1)
 		{
-			cur.base=base+P*.5;
+			cur.base=base+(P>>1);
 			q.push(cur);
 		}
 
-		cur.P=P-(P+1)*.5;
+		cur.P=P-((P+1)>>1);
 		if(cur.P>1)
 		{
 			cur.base=base;

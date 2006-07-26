@@ -53,6 +53,7 @@ class PatchRangeTree
 {
 public:
   PatchRangeTree(const std::vector<Patch*>& patches);
+  PatchRangeTree(const std::vector<const Patch*>& patches);
 
   ~PatchRangeTree();
   

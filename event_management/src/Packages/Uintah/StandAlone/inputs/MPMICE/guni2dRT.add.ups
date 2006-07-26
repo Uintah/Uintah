@@ -121,6 +121,7 @@
        <CanAddICEMaterial>true</CanAddICEMaterial>
        <ICE>
         <advection type = "SecondOrder"/>
+        <ClampSpecificVolume>true</ClampSpecificVolume>
       </ICE>        
     </CFD>
 

@@ -102,6 +102,7 @@ WARNING
     //! Returns the patchset of all patches that have work done on this processor.
     virtual const PatchSet* getPerProcessorPatchSet(const LevelP& level) = 0;
     virtual const PatchSet* getPerProcessorPatchSet(const GridP& grid) = 0;
+    virtual const PatchSet* getOutputPerProcessorPatchSet(const LevelP& level) = 0;
 
     //! For dynamic load balancers, Check if we need to rebalance the load, and do so if necessary.
     virtual bool possiblyDynamicallyReallocate(const GridP&, bool /*force*/) = 0;

@@ -85,7 +85,6 @@ void
 CastMatrix::execute()
 {
   imat_ = (MatrixIPort *)get_iport("Input");
-  omat_ = (MatrixOPort *)get_oport("Output");
   
   update_state(NeedData);
   MatrixHandle imH;
@@ -117,7 +116,8 @@ CastMatrix::execute()
     error("CastMatrix: unknown cast type "+newtype);
     return;
   }
-  omat_->send_and_dereference(omH);
+
+  send_output_handle("Output", omH);
 }
 
 } // End namespace SCIRun

@@ -48,6 +48,10 @@ namespace Uintah {
     const VarLabel* mass_L_CCLabel;
     const VarLabel* mom_L_ME_CCLabel;
     const VarLabel* eng_L_ME_CCLabel;
+    const VarLabel* mass_advLabel;
+    const VarLabel* mom_advLabel;
+    const VarLabel* eng_advLabel;
+    const VarLabel* sp_vol_advLabel;
     const VarLabel* created_vol_CCLabel;
     const VarLabel* term2Label;
     const VarLabel* term3Label;
