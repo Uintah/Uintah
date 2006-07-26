@@ -212,6 +212,14 @@ protected:
 					  const MaterialSubset* matls,
 					  DataWarehouse* old_dw,
 					  DataWarehouse* new_dw);
+
+  //////////
+  // Insert Documentation Here:
+  virtual void setBCsInterpolated(const ProcessorGroup*,
+				  const PatchSubset* patches,
+				  const MaterialSubset* matls,
+				  DataWarehouse* old_dw,
+				  DataWarehouse* new_dw);
   //////////
   // Insert Documentation Here:
   virtual void computeStressTensor(const ProcessorGroup*,
@@ -350,6 +358,9 @@ protected:
 
   virtual void scheduleInterpolateParticlesToGrid(SchedulerP&, const PatchSet*,
                                                   const MaterialSet*);
+
+  virtual void scheduleSetBCsInterpolated(SchedulerP&, const PatchSet*,
+                                                       const MaterialSet*);
 
   virtual void scheduleComputeHeatExchange(SchedulerP&, const PatchSet*,
 					   const MaterialSet*);
