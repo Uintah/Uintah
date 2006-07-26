@@ -338,11 +338,14 @@ PlanarContoursToSegVol::PlanarContoursToSegVol(const clString& get_id())
     gen=-1;
 }
 
+
 PlanarContoursToSegVol::~PlanarContoursToSegVol()
 {
 }
 
-void PlanarContoursToSegVol::execute()
+
+void
+PlanarContoursToSegVol::execute()
 {
     ContourSetHandle contours;
     if (!incontour->get(contours)) return;

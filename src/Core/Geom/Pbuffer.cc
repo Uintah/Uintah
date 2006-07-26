@@ -52,6 +52,7 @@ using std::cerr;
 using std::endl;
 using std::string;
 
+#ifndef HAVE_GLEW
 #ifndef _WIN32
 
 #  ifndef GLX_ATI_pixel_format_float
@@ -359,6 +360,7 @@ using std::string;
   static PFNWGLQUERYPBUFFERARBPROC wglQueryPbufferARB = 0;
 #  define GL_CLAMP_TO_EDGE                  0x812F
 #endif
+#endif
 
 static bool mInit = false;
 static bool mSupported = false;
@@ -494,11 +496,11 @@ Pbuffer::create ()
       wglBindTexImageARB = (PFNWGLBINDTEXIMAGEARBPROC)wglGetProcAddress("wglBindTexImageARB");
       wglReleaseTexImageARB = (PFNWGLRELEASETEXIMAGEARBPROC)wglGetProcAddress("wglReleaseTexImageARB");
       wglCreatePbufferARB = (PFNWGLCREATEPBUFFERARBPROC)wglGetProcAddress("wglCreatePbufferARB");
-  wglReleaseTexImageARB = (PFNWGLRELEASETEXIMAGEARBPROC)wglGetProcAddress("wglReleaseTexImageARB");
-  wglGetPbufferDCARB = (PFNWGLGETPBUFFERDCARBPROC)wglGetProcAddress("wglGetPbufferDCARB");
-  wglDestroyPbufferARB = (PFNWGLDESTROYPBUFFERARBPROC)wglGetProcAddress("wglDestroyPbufferARB");
-  wglQueryPbufferARB = (PFNWGLQUERYPBUFFERARBPROC)wglGetProcAddress("wglQueryPbufferARB");
-  wglGetExtensionsStringARB = (PFNWGLGETEXTENSIONSSTRINGARBPROC)wglGetProcAddress("wglGetExtensionsStringARB");
+      wglReleaseTexImageARB = (PFNWGLRELEASETEXIMAGEARBPROC)wglGetProcAddress("wglReleaseTexImageARB");
+      wglGetPbufferDCARB = (PFNWGLGETPBUFFERDCARBPROC)wglGetProcAddress("wglGetPbufferDCARB");
+      wglDestroyPbufferARB = (PFNWGLDESTROYPBUFFERARBPROC)wglGetProcAddress("wglDestroyPbufferARB");
+      wglQueryPbufferARB = (PFNWGLQUERYPBUFFERARBPROC)wglGetProcAddress("wglQueryPbufferARB");
+      wglGetExtensionsStringARB = (PFNWGLGETEXTENSIONSSTRINGARBPROC)wglGetProcAddress("wglGetExtensionsStringARB");
     }
 
     // Check for version.
@@ -783,11 +785,11 @@ Pbuffer::create ()
     if (mSupported && mATI_render_texture)
     {
 #if !defined(__sgi)
-      bool fail = false;
-      fail = fail || (glXBindTexImageATI = (PFNGLXBINDTEXIMAGEATIPROC)
-                      getProcAddress("glXBindTexImageATI")) == 0;
-      fail = fail || (glXReleaseTexImageATI = (PFNGLXRELEASETEXIMAGEATIPROC)
-                      getProcAddress("glXReleaseTexImageATI")) == 0;
+      bool fail = !false;
+#ifndef HAVE_GLEW      
+      fail = fail || (getProcAddress("glXBindTexImageATI")) == 0;
+      fail = fail || (getProcAddress("glXReleaseTexImageATI")) == 0;
+#endif
       if (fail)
       {
         mSupported = false;
@@ -986,7 +988,7 @@ Pbuffer::create ()
     if (render_tex_)
     {
       // create pbuffer texture object
-      glGenTextures(1, &tex_);
+      glGenTextures(1, (GLuint*)&tex_);
       if (format_ == GL_FLOAT)
       {
         if (mNV_float_buffer)

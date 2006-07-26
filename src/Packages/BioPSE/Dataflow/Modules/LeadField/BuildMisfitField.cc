@@ -94,9 +94,15 @@ BuildMisfitField::BuildMisfitField(GuiContext *context)
 {
 }
 
-BuildMisfitField::~BuildMisfitField(){}
 
-double BuildMisfitField::compute_misfit(double *b, double *bprime, int nr) {
+BuildMisfitField::~BuildMisfitField()
+{
+}
+
+
+double
+BuildMisfitField::compute_misfit(double *b, double *bprime, int nr)
+{
   double avg1=0, avg2=0;
   int r;
   for (r=0; r<nr; r++) {
@@ -137,44 +143,39 @@ double BuildMisfitField::compute_misfit(double *b, double *bprime, int nr) {
   } else if (last_metric_ == "CC") {
     return cc;
   } else {
-    cerr << "BuildMisfitField: error - unknown metric "<<last_metric_<<endl;
+    error("Unknown metric '" + last_metric_ + "'.");
     return 0;
   }
 }
 
-void BuildMisfitField::execute() {
-  MatrixIPort *leadfield_iport = 
-    (MatrixIPort *)get_iport("Leadfield (nelecs x nelemsx3)");
-  MatrixIPort *measurements_iport = 
-    (MatrixIPort *)get_iport("Measurement Vector");
-  MatrixOPort *misfit_oport = 
-    (MatrixOPort *)get_oport("Misfit Vector");
 
+void
+BuildMisfitField::execute()
+{
   MatrixHandle leadfield_in;
-  if (!leadfield_iport->get(leadfield_in) || !leadfield_in.get_rep()) {
-    cerr << "BuildMisfitField -- couldn't get leadfield.  Returning.\n";
-    return;
-  }
+  if (!get_input_handle("Leadfield (nelecs x nelemsx3)", leadfield_in)) return;
+
   DenseMatrix *dm = dynamic_cast<DenseMatrix*>(leadfield_in.get_rep());
   if (!dm) {
-    cerr << "BuildMisfitField -- error, leadfield wasn't a DenseMatrix.\n";
+    error("Leadfield wasn't a DenseMatrix.");
     return;
   }
 
   MatrixHandle measurements_in;
-  if (!measurements_iport->get(measurements_in) || !measurements_in.get_rep()) {
-    cerr << "BuildMisfitField -- couldn't get measurement vector.  Returning.\n";
-    return;
-  }
+  if (!get_input_handle("Measurement Vector", measurements_in)) return;
+
   ColumnMatrix *cm = dynamic_cast<ColumnMatrix*>(measurements_in.get_rep());
   if (!cm) {
-    cerr << "BuildMisfitField -- error, measurement vectors wasn't a ColumnMatrix.\n";
+    error("Measurement vectors wasn't a ColumnMatrix.");
     return;
   }
+
   if (cm->nrows() != dm->nrows()) {
-    cerr << "BuildMisfitField -- error, leadfield ("<<dm->nrows()<<") and measurements ("<<cm->nrows()<<") have different numbers of rows.\n";
+    error("Leadfield (" + to_string(dm->nrows()) +") and measurements (" +
+      to_string(cm->nrows()) +") have different numbers of rows.");
     return;
   }
+
   int nr = cm->nrows();
   int nelems = dm->ncols()/3;
 
@@ -184,9 +185,11 @@ void BuildMisfitField::execute() {
  
   if (last_leadfield_generation_ == dm->generation &&
       last_measurements_generation_ == cm->generation &&
-      last_metric_ == metric && last_pvalue_ == pvalue) {
-    cerr << "BuildMisfitField -- sending same data again.\n";
-    misfit_oport->send(last_misfit_);
+      last_metric_ == metric && last_pvalue_ == pvalue &&
+      last_misfit_.get_rep())
+  {
+    remark("Sending same data again.");
+    send_output_handle("Misfit Vector", last_misfit_, true);
     return;
   }
 
@@ -232,7 +235,9 @@ void BuildMisfitField::execute() {
     delete[] A[c];
   }
 
-  misfit_oport->send(last_misfit_);
-  cerr << "Best misfit was "<<best_val<<", which was cell "<<best_idx<<"\n";
+  send_output_handle("Misfit Vector", last_misfit_, true);
+  remark("Best misfit was " + to_string(best_val) + ", which was cell " +
+         to_string(best_idx) + ".");
 }
+
 } // End namespace BioPSE

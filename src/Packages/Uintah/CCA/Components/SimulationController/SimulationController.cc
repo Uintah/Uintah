@@ -104,8 +104,11 @@ namespace Uintah {
     }
     d_output->problemSetup(d_ups, d_sharedState.get_rep());
 
-    d_ups->get("doMultiTaskgraphing", d_doMultiTaskgraphing);
-
+    ProblemSpecP amr_ps = d_ups->findBlock("AMR");
+    if (amr_ps) {
+      amr_ps->get("doMultiTaskgraphing", d_doMultiTaskgraphing);
+    }
+    
     // Parse time struct
     d_timeinfo = scinew SimulationTime(d_ups);
     
@@ -237,8 +240,8 @@ namespace Uintah {
     d_output->initializeOutput(d_ups);
     
     // set up regridder with initial infor about grid
-    if (d_doAMR) {
-      d_regridder = dynamic_cast<Regridder*>(getPort("regridder"));
+    d_regridder = dynamic_cast<Regridder*>(getPort("regridder"));
+    if (d_regridder) {
       d_regridder->problemSetup(d_ups, grid, d_sharedState);
     }
 

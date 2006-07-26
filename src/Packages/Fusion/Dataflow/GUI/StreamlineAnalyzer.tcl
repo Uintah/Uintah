@@ -152,11 +152,15 @@ itcl_class Fusion_Fields_StreamlineAnalyzer {
 	radiobutton $w.windings.order.low -text "Low" \
 	    -variable $this-order -value 0
 
-	radiobutton $w.windings.order.high -text "high" \
+	radiobutton $w.windings.order.high -text "High" \
 	    -variable $this-order -value 1
+
+	radiobutton $w.windings.order.node -text "Node" \
+	    -variable $this-order -value 2
 
 	pack $w.windings.order.label \
 	    $w.windings.order.low $w.windings.order.high \
+	    $w.windings.order.node \
 	    -side left -anchor w
 
 	pack $w.windings.values $w.windings.order \

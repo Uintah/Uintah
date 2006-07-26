@@ -241,10 +241,8 @@ void MWViscoElastic::computeStressTensor(const PatchSubset* patches,
     double onethird = (1.0/3.0);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
 
     Identity.Identity();

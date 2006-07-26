@@ -79,12 +79,8 @@ void
 MoveElemToNode::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Elem Field");
   FieldHandle ifield;
-  if (!(ifp->get(ifield) && ifield.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("Elem Field", ifield)) return;
 
   // Get the output port now, because we may be able to pass the field
   // directly through if it is already cell centered.
@@ -97,7 +93,7 @@ MoveElemToNode::execute()
     if (ifield->basis_order() != 0)
     {
       remark("Field is already cell centered.  Passing through.");
-      ofp->send_and_dereference(ifield);
+      send_output_handle("Node Field", ifield);
       return;
     }
     ext = "Lat";
@@ -107,7 +103,7 @@ MoveElemToNode::execute()
     if (ifield->basis_order() != 0)
     {
       remark("Field is already cell centered.  Passing through.");
-      ofp->send_and_dereference(ifield);
+      send_output_handle("Node Field", ifield);
       return;
     }
     ext = "SHex";
@@ -153,7 +149,7 @@ MoveElemToNode::execute()
 
     FieldHandle ofield(algo->execute(this, ifield));
   
-    ofp->send_and_dereference(ofield);
+    send_output_handle("Node Field", ofield);
   }
 }
 

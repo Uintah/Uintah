@@ -94,13 +94,6 @@ Submatrix::execute()
   nrow_.set(to_string(imatrix->nrows()));
   ncol_.set(to_string(imatrix->ncols()));
   
-  MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
-  if (!omp)
-  {
-    error("Could not open output matrix port.");
-    return;
-  }
-
   MatrixIPort *cmp = (MatrixIPort *)get_iport("Optional Range Bounds");
   MatrixHandle cmatrix;
   int mincol, maxcol, minrow, maxrow;
@@ -159,12 +152,12 @@ Submatrix::execute()
   if (minrow == 0 && maxrow == (imatrix->nrows()-1) &&
       mincol == 0 && maxcol == (imatrix->ncols()-1))
   {
-    omp->send_and_dereference(imatrix);
+    send_output_handle("Output Matrix", imatrix);
   }
   else
   {
     MatrixHandle omatrix(imatrix->submatrix(minrow, mincol, maxrow, maxcol));
-    omp->send_and_dereference(omatrix);
+    send_output_handle("Output Matrix", omatrix);
   }
 }
 

@@ -63,7 +63,8 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
   switchDebug_LagrangianTransportedVars = false;
   switchDebug_MomentumExchange_CC       = false; 
   switchDebug_Source_Sink               = false; 
-  switchDebug_advance_advect           = false;
+  switchDebug_advance_advect            = false;
+  switchDebug_conserved_primitive       = false;
   
   switchDebug_AMR_refine          = false;
   switchDebug_AMR_refineInterface = false;
@@ -138,6 +139,8 @@ void ICE::printData_problemSetup( const ProblemSpecP& prob_spec)
        switchDebug_Source_Sink           = true;
       else if (debug_attr["label"] == "switchDebug_advance_advect")
        switchDebug_advance_advect       = true;
+      else if (debug_attr["label"] == "switchDebug_conserved_primitive")
+       switchDebug_conserved_primitive  = true;
       else if (debug_attr["label"] == "switchDebug_AMR_refine")
        switchDebug_AMR_refine           = true;
       else if (debug_attr["label"] == "switchDebug_AMR_refineInterface")

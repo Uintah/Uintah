@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
-<network version="v1.25.2" name="{Main}" bbox="{42 10 549 526}" creationDate="{Thu Mar 16 2006}" creationTime="{10:34:42}" geometry="{800x800+0+0}">
+<network version="v1.25.3" name="{Main}" bbox="{42 10 549 526}" creationDate="{Thu Jul 20 2006}" creationTime="{15:59:35}" geometry="{800x800+0+0}">
   <note>{}</note>
   <modules>
     <module id="m1" package="SCIRun" category="FieldsCreate" name="SampleLattice">
@@ -16,7 +16,7 @@
       <gui_callback>
         <callback>addViewer</callback>
       </gui_callback>
-      <var name="ViewWindow_0-geometry" val="654x642+426+120"/>
+      <var name="ViewWindow_0-geometry" val="654x641+431+144"/>
       <var name="ViewWindow_0-view-eyep-x" val="{9.72473635534}"/>
       <var name="ViewWindow_0-view-eyep-y" val="{-7.19817157767}"/>
       <var name="ViewWindow_0-view-eyep-z" val="{-4.52472439422}"/>
@@ -59,6 +59,7 @@
       <var name="ViewWindow_0-inertia_x" val="{1.0}"/>
       <var name="ViewWindow_0-inertia_y" val="{0}"/>
       <var name="ViewWindow_0-currentvisual" val="{1}"/>
+      <var name="ViewWindow_0-autoav" val="{0}"/>
       <var name="ViewWindow_0-caxes" val="{1}"/>
       <var name="ViewWindow_0-pos" val="{}"/>
       <var name="ViewWindow_0-clip-num" val="{}"/>
@@ -107,21 +108,25 @@
       <var name="ViewWindow_0-global-cull" val="{0}"/>
       <var name="ViewWindow_0-global-dl" val="{0}"/>
       <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
+      <var name="&quot;ViewWindow_0-VolumeRenderer Transparent (1)&quot;" val="{1}"/>
     </module>
     <module id="m3" package="SCIRun" category="Visualization" name="GenStandardColorMaps">
       <position x="354" y="278"/>
+      <var name="mapName" val="{Rainbow}"/>
+      <var name="gamma" val="{0.0}"/>
+      <var name="resolution" val="{255}"/>
+      <var name="reverse" val="{0}"/>
+      <var name="faux" val="{0}"/>
       <var name="positionList" val="{{0 0} {115 3} {158 34} {332 34}}"/>
       <var name="nodeList" val="{512 1149 1485 818}"/>
       <var name="width" val="{335}"/>
       <var name="height" val="{40}"/>
-      <var name="resolution" val="{255}"/>
-      <var name="realres" val="{255}"/>
     </module>
     <module id="m4" package="SCIRun" category="FieldsData" name="TransformData" gui_visible="yes">
       <position x="42" y="85"/>
-      <var name="function" val="{result = sqrt(x*x + y*y + z*z);&#10;&#10;}"/>
+      <var name="function" val="{result = sqrt(x*x + y*y + z*z);&#10;&#10;&#10;}"/>
       <var name="outputdatatype" val="{input}"/>
-      <var name="ui_geometry" val="{433x169+53+18}"/>
+      <var name="ui_geometry" val="{433x169+806+765}"/>
     </module>
     <module id="m5" package="SCIRun" category="FieldsData" name="NodeGradient">
       <position x="130" y="231"/>
@@ -133,7 +138,7 @@
       <var name="gmin" val="{0.686140661635}"/>
       <var name="gmax" val="{0.999728688196}"/>
       <var name="is_fixed" val="{0}"/>
-      <var name="card_mem" val="{128}"/>
+      <var name="card_mem" val="{256}"/>
       <var name="card_mem_auto" val="{1}"/>
     </module>
     <module id="m7" package="SCIRun" category="Visualization" name="VolumeVisualizer">
@@ -144,11 +149,11 @@
       <var name="gradient_max" val="{0.0}"/>
       <var name="adaptive" val="{1}"/>
       <var name="cmap_size" val="{8}"/>
-      <var name="sw_raster" val="{0}"/>
+      <var name="sw_raster" val="{1}"/>
       <var name="render_style" val="{0}"/>
       <var name="alpha_scale" val="{0.0}"/>
       <var name="interp_mode" val="{1}"/>
-      <var name="shading" val="{0}"/>
+      <var name="shading" val="{1}"/>
       <var name="ambient" val="{0.5}"/>
       <var name="diffuse" val="{0.5}"/>
       <var name="specular" val="{0.0}"/>
@@ -158,10 +163,11 @@
       <var name="multi_level" val="{1}"/>
       <var name="use_stencil" val="{0}"/>
       <var name="invert_opacity" val="{0}"/>
-      <var name="num_clipping_planes" val="{2}"/>
+      <var name="num_clipping_planes" val="{-1}"/>
       <var name="show_clipping_widgets" val="{1}"/>
       <var name="level_on" val="{}"/>
       <var name="level_vals" val="{}"/>
+      <var name="ui_geometry" val="{336x522+801+452}"/>
     </module>
   </modules>
   <connections>

@@ -120,10 +120,10 @@ ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
     inputsizez_(get_ctx()->subVar("inputsizez", false), "---"),
     box_mode_(get_ctx()->subVar("box-mode"), 0),
     box_scale_(get_ctx()->subVar("box-scale"), -1.0),
-    box_center_(get_ctx()->subVar("box-center")),
-    box_right_(get_ctx()->subVar("box-right")),
-    box_down_(get_ctx()->subVar("box-down")),
-    box_in_(get_ctx()->subVar("box-in")),
+    box_center_(get_ctx()->subVar("box-center"), Point(0.0, 0.0, 0.0)),
+    box_right_(get_ctx()->subVar("box-right"), Point(0.0, 0.0, 0.0)),
+    box_down_(get_ctx()->subVar("box-down"), Point(0.0, 0.0, 0.0)),
+    box_in_(get_ctx()->subVar("box-in"), Point(0.0, 0.0, 0.0)),
     resetting_(get_ctx()->subVar("resetting", false), 0),
     widget_lock_("ChangeFieldBounds widget lock"),
     generation_(-1),
@@ -187,7 +187,11 @@ ChangeFieldBounds::update_input_attributes(FieldHandle f)
 void
 ChangeFieldBounds::build_widget(FieldHandle f, bool reset)
 {
-  if (reset || box_scale_.get() <= 0)
+  if (reset || box_scale_.get() <= 0 ||
+      box_center_.get() == Point(0.0, 0.0, 0.0) &&
+      box_right_.get() == Point(0.0, 0.0, 0.0) &&
+      box_down_.get() == Point(0.0, 0.0, 0.0) &&
+      box_in_.get() == Point(0.0, 0.0, 0.0))
   {
     Point center;
     Vector size;
@@ -248,6 +252,10 @@ ChangeFieldBounds::build_widget(FieldHandle f, bool reset)
     box_->SetScale(bscale); // callback sets box_scale for us.
     box_->SetPosition(center, right, down, in);
     box_->SetCurrentMode(box_mode_.get());
+    box_center_.set(center);
+    box_right_.set(right);
+    box_down_.set(down);
+    box_in_.set(in);
   }
   else
   {

@@ -101,9 +101,7 @@ void
 NrrdSelectTime::send_selection(NrrdDataHandle in, 
 			       int which, unsigned int time_axis, bool cache)
 {
-  NrrdOPort *onrrd = (NrrdOPort *)get_oport("Time Slice");
-  MatrixOPort *osel = (MatrixOPort *)get_oport("Selected Index");
-  NrrdDataHandle onrrd_handle(0);
+  NrrdDataHandle onrrd_handle;
 
   if ((unsigned int)time_axis == in->nrrd_->dim - 1)
   {
@@ -157,15 +155,15 @@ NrrdSelectTime::send_selection(NrrdDataHandle in,
   // Copy the properties.
   onrrd_handle->copy_properties(in.get_rep());
 
+  NrrdOPort *onrrd = (NrrdOPort *)get_oport("Time Slice");
   onrrd->set_cache( cache );
   onrrd->send_and_dereference(onrrd_handle);
 
-
   ColumnMatrix *selected = scinew ColumnMatrix(1);
   selected->put(0, 0, (double)which);
-
   MatrixHandle stmp(selected);
-  osel->send_and_dereference(stmp);
+  
+  send_output_handle("Selected Index", stmp);
 }
 
 

@@ -48,13 +48,7 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      bmat_;
-  NrrdIPort*      referenceimg_;
-  NrrdIPort*      tensor_;
-  NrrdOPort*      onrrd_;
-
   GuiDouble       bvalue_;
-
 };
 
 DECLARE_MAKER(TendSim)
@@ -74,36 +68,17 @@ TendSim::~TendSim()
 void 
 TendSim::execute()
 {
-  NrrdDataHandle bmat_handle;
-  NrrdDataHandle referenceimg_handle;
-  NrrdDataHandle tensor_handle;
   update_state(NeedData);
-  bmat_ = (NrrdIPort *)get_iport("BMatrixNrrd");
-  referenceimg_ = (NrrdIPort *)get_iport("ReferenceNrrd");
-  tensor_ = (NrrdIPort *)get_iport("TensorNrrd");
 
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
+  NrrdDataHandle bmat_handle;
+  if (!get_input_handle("BMatrixNrrd", bmat_handle)) return;
 
-  if (!bmat_->get(bmat_handle))
-    return;
-  if (!referenceimg_->get(referenceimg_handle))
-    return;
-  if (!tensor_->get(tensor_handle))
-    return;
+  NrrdDataHandle referenceimg_handle;
+  if (!get_input_handle("ReferenceNrrd", referenceimg_handle)) return;
 
-  if (!bmat_handle.get_rep()) {
-    error("Empty input Confidence Nrrd.");
-    return;
-  }
-  if (!referenceimg_handle.get_rep()) {
-    error("Empty input ReferenceNrrd Nrrd.");
-    return;
-  }
-  if (!tensor_handle.get_rep()) {
-    error("Empty input TensorNrrd Nrrd.");
-    return;
-  }
-  
+  NrrdDataHandle tensor_handle;
+  if (!get_input_handle("TensorNrrd", tensor_handle)) return;
+
   Nrrd *bmat = bmat_handle->nrrd_;
   Nrrd *referenceimg = referenceimg_handle->nrrd_;
   Nrrd *tensor = tensor_handle->nrrd_;
@@ -116,9 +91,9 @@ TendSim::execute()
     return;
   }
 
-
   NrrdDataHandle ntmp(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(ntmp);
+
+  send_output_handle("OutputNrrd", ntmp);
 }
 
 } // End namespace SCITeem

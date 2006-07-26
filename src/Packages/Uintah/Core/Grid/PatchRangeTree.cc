@@ -30,6 +30,31 @@ PatchRangeTree::PatchRangeTree(const std::vector<Patch*>& patches)
   d_rangeTree = scinew RangeTree<PatchPoint, int>(pointList, 3 /*dimensions*/);
 }
 
+PatchRangeTree::PatchRangeTree(const std::vector<const Patch*>& patches)
+  :  d_maxPatchDimensions(0, 0, 0),
+     d_patchPoints(new PatchPoint[patches.size()]),
+     d_numPatches((int)patches.size())
+{
+  list<PatchPoint*> pointList;
+  IntVector dimensions;
+  
+  for (int i = 0; i < (int)patches.size(); i++) {
+    d_patchPoints[i].setPatch(patches[i]);
+    pointList.push_back(&d_patchPoints[i]);
+    
+    dimensions =
+      patches[i]->getNodeHighIndex() - patches[i]->getNodeLowIndex();
+
+    for (int j = 0; j < 3; j++) {
+      if (dimensions[j] > d_maxPatchDimensions[j]) {
+	d_maxPatchDimensions[j] = dimensions[j];
+      }
+    }
+  }
+
+  d_rangeTree = scinew RangeTree<PatchPoint, int>(pointList, 3 /*dimensions*/);
+}
+
 PatchRangeTree::~PatchRangeTree()
 {
   delete d_rangeTree;

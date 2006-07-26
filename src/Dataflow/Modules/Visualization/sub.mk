@@ -66,6 +66,7 @@ SRCS     += \
 PSELIBS := \
 	Core/Algorithms/Visualization \
 	Core/Algorithms/Fields        \
+	Core/Algorithms/Math          \
 	Core/Basis         \
 	Core/Containers    \
 	Core/Datatypes     \

@@ -1443,6 +1443,10 @@ RenderField<Fld, Loc>::render_faces_linear(Fld *sfld,
     tmp->add(faces);
     tmp->add(qfaces);
     face_switch = tmp;
+    if (sfld->basis_order() == 0 && mesh->dimensionality() == 3)
+    {
+      def_color = true;
+    }
   }
   else if ((sfld->basis_order() == 0) && (mesh->dimensionality() == 3) && !def_color)
   {
@@ -3349,7 +3353,7 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   {
     colorstyle = 1;
   }
-  else if (cfld->query_vector_interface().get_rep())
+  else if (cfld && cfld->query_vector_interface().get_rep())
   {
     colorstyle = 2;
   }
@@ -3361,7 +3365,7 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   // Use a default color?
   bool def_color = !(cmap.get_rep()) || force_def_color;
   bool vec_color = false;
-  if (def_color && cfld->query_vector_interface().get_rep()
+  if (def_color && cfld && cfld->query_vector_interface().get_rep()
       && !force_def_color)
   {
     def_color = false;
@@ -3548,7 +3552,7 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
   bool def_color = !(cmap.get_rep()) || force_def_color;
   bool vec_color = false;
   MaterialHandle vcol(0);
-  if (def_color && cfld->query_vector_interface().get_rep()
+  if (def_color && cfld && cfld->query_vector_interface().get_rep()
       && !force_def_color)
   {
     def_color = false;

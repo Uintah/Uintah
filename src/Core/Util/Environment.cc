@@ -50,6 +50,7 @@
 #else
 #define MAXPATHLEN 256
 #include <direct.h>
+#include <windows.h>
 #endif
 
 
@@ -140,6 +141,54 @@ SCIRun::sci_putenv( const string &key, const string &val )
   scirun_env[key] = val;
 }  
 
+
+#ifdef _WIN32
+void getWin32RegistryValues(string& obj, string& src, string& thirdparty, string& packages)
+{
+  // on an installed version of SCIRun, query these values from the registry, overwriting the compiled version
+  // if not an installed version, return the compiled values unchanged
+  HKEY software, company, scirun, pack;
+  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE", 0, KEY_READ, &software) == ERROR_SUCCESS) {
+    if (RegOpenKeyEx(software, "SCI Institute", 0, KEY_READ, &company) == ERROR_SUCCESS) {
+      if (RegOpenKeyEx(company, "SCIRun", 0, KEY_READ, &scirun) == ERROR_SUCCESS) {
+        char data[512];
+        DWORD size = 512;
+        DWORD type;
+        int code = RegQueryValueEx(scirun, "InstallPath", 0, &type, (LPBYTE) data, &size);
+        if (type == REG_SZ && code == ERROR_SUCCESS) {
+          obj = string(data)+"\bin";
+          src = string(data)+"\src";
+          thirdparty = data;
+          cout << "Data: " << data << endl;
+        }
+
+        if (RegOpenKeyEx(scirun, "Packages", 0, KEY_READ, &pack) == ERROR_SUCCESS) {
+          packages = "";
+          int code = ERROR_SUCCESS;
+          char name[128];
+          DWORD nameSize = 128;
+          FILETIME filetime;
+          int index = 0;
+          for (; code == ERROR_SUCCESS; index++) {
+            if (index > 0)
+              packages = packages + name + ",";
+            code = RegEnumKeyEx(pack, index, name, &nameSize, 0, 0, 0, &filetime);
+          }
+          // lose trailing comma
+          if (index > 0 && packages[packages.length()-1] == ',')
+            packages[packages.length()-1] = 0;
+          cout << "Packages: " << packages << endl;
+          RegCloseKey(pack);
+        }
+        RegCloseKey(scirun);
+      }
+      RegCloseKey(company);
+    }
+    RegCloseKey(software);
+  }
+
+}
+#endif
 // get_existing_env() will fill up the SCIRun::existing_env string set
 // with all the currently set environment variable keys, but not their values
 void
@@ -157,11 +206,19 @@ SCIRun::create_sci_environment(char **env, char *execname)
   }
 
   string executable_name = "scirun";
-    
+  string objdir = SCIRUN_OBJDIR;
+  string srcdir = SCIRUN_SRCDIR;
+  string thirdpartydir = SCIRUN_THIRDPARTY_DIR;
+  string packages = LOAD_PACKAGE;
+
+#ifdef _WIN32
+  getWin32RegistryValues(objdir, srcdir, thirdpartydir, packages);
+#endif
+
   if (!sci_getenv("SCIRUN_OBJDIR")) 
   {
     if (!execname)
-      sci_putenv("SCIRUN_OBJDIR", SCIRUN_OBJDIR);
+      sci_putenv("SCIRUN_OBJDIR", objdir);
     else {
       string objdir(execname);
       if (execname[0] != '/') {
@@ -180,11 +237,11 @@ SCIRun::create_sci_environment(char **env, char *execname)
   }
 
   if (!sci_getenv("SCIRUN_SRCDIR"))
-      sci_putenv("SCIRUN_SRCDIR", SCIRUN_SRCDIR);
+      sci_putenv("SCIRUN_SRCDIR", srcdir);
   if (!sci_getenv("SCIRUN_THIRDPARTY_DIR"))
-      sci_putenv("SCIRUN_THIRDPARTY_DIR", SCIRUN_THIRDPARTY_DIR);
+      sci_putenv("SCIRUN_THIRDPARTY_DIR", thirdpartydir);
   if (!sci_getenv("SCIRUN_LOAD_PACKAGE"))
-    sci_putenv("SCIRUN_LOAD_PACKAGE", LOAD_PACKAGE);
+    sci_putenv("SCIRUN_LOAD_PACKAGE", packages);
   if (!sci_getenv("SCIRUN_ITCL_WIDGETS"))
     sci_putenv("SCIRUN_ITCL_WIDGETS", ITCL_WIDGETS);
   sci_putenv("SCIRUN_ITCL_WIDGETS", 

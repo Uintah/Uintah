@@ -52,11 +52,6 @@ namespace BioPSE {
 using namespace SCIRun;
 
 class ElectrodeManager : public Module {
-  //! Private data
-
-  //! Output port
-  MatrixOPort*  electrodeParams_;
-  MatrixOPort*  currPattIndicies_;
 
 public:
   GuiInt modelTCL_;
@@ -92,9 +87,6 @@ ElectrodeManager::~ElectrodeManager()
 void
 ElectrodeManager::execute()
 {
-  electrodeParams_ = (MatrixOPort *)get_oport("Electrode Parameters");
-  currPattIndicies_ = (MatrixOPort *)get_oport("Current Pattern Index Vector");
-
   unsigned int model = modelTCL_.get();
   unsigned int numEl = Max(numElTCL_.get(), 0);
   double lengthEl = Max(lengthElTCL_.get(), 0.0);
@@ -127,9 +119,10 @@ ElectrodeManager::execute()
 
   //! Sending result
   MatrixHandle ehandle(elParams);
-  electrodeParams_->send_and_dereference(ehandle);
+  send_output_handle("Electrode Parameters", ehandle);
+
   MatrixHandle chandle(currPattIndicies);
-  currPattIndicies_->send_and_dereference(chandle);
+  send_output_handle("Current Pattern Index Vector", chandle);
 }
 
 

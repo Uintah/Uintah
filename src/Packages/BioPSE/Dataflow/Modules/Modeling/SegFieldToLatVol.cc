@@ -85,16 +85,10 @@ SegFieldToLatVol::~SegFieldToLatVol()
 void
 SegFieldToLatVol::execute()
 {
-  // Make sure the ports exist.
-  FieldIPort *ifp = (FieldIPort *)get_iport("SegField");
-  FieldOPort *ofp = (FieldOPort *)get_oport("LatVolField");
-
   // Make sure the input data exists.
   FieldHandle ifieldH;
-  if (!ifp->get(ifieldH) || !ifieldH.get_rep()) {
-    error("No input data");
-    return;
-  }
+  if (!get_input_handle("SegField", ifieldH)) return;
+
   SegLatVolField *slvf = dynamic_cast<SegLatVolField *>(ifieldH.get_rep());
   if (!slvf) {
     error("Input field was not a SegLatVolField");
@@ -123,7 +117,9 @@ SegFieldToLatVol::execute()
     return;
   }
   FieldHandle lvfH(lvf);
-  ofp->send_and_dereference(lvfH);
+
+  send_output_handle("LatVolField", lvfH);
 }
+
 } // End namespace BioPSE
 

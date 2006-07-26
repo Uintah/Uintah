@@ -628,8 +628,7 @@ UnuMake::execute()
   }
 
   // Send the data downstream.
-  NrrdOPort *outport = (NrrdOPort *)get_oport("OutputNrrd");
-  outport->send_and_dereference(read_handle_); // always read, so always clear
+  send_output_handle("OutputNrrd", read_handle_);// always read so always clear
 
   update_state(Completed);
 }

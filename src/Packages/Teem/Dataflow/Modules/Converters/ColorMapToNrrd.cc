@@ -50,8 +50,6 @@ using namespace SCIRun;
 class ColorMapToNrrd : public Module {
 public:
 
-  ColorMapIPort* icmap_;
-  NrrdOPort*   nout_;
   int          colormap_generation_;
 
   ColorMapToNrrd(GuiContext*);
@@ -65,7 +63,6 @@ public:
 DECLARE_MAKER(ColorMapToNrrd)
 ColorMapToNrrd::ColorMapToNrrd(GuiContext* ctx)
   : Module("ColorMapToNrrd", ctx, Source, "Converters", "Teem"),
-    icmap_(0), nout_(0),
     colormap_generation_(-1)
 {
 }
@@ -79,17 +76,11 @@ ColorMapToNrrd::~ColorMapToNrrd()
 void
 ColorMapToNrrd::execute()
 {
-  // Get ports
-  icmap_ = (ColorMapIPort *)get_iport("ColorMap");
-  nout_ = (NrrdOPort *)get_oport("Output");
-
   ColorMapHandle cmapH;
-  if (!icmap_->get(cmapH)) {
-    return;
-  }
+  if (!get_input_handle("ColorMap", cmapH)) return;
 
   if (colormap_generation_ != cmapH->generation ||
-      !nout_->have_data())
+      !oport_cached("Output"))
   {
     colormap_generation_ = cmapH->generation;
 
@@ -113,7 +104,8 @@ ColorMapToNrrd::execute()
     // Send the data nrrd.
     nd->nrrd_->axis[0].label = airStrdup("Colors");
     NrrdDataHandle dataH(nd);
-    nout_->send_and_dereference(dataH);
+
+    send_output_handle("Output", dataH);
   }
 }
 

@@ -47,15 +47,12 @@ public:
   virtual void execute();
 
 private:
-  NrrdOPort*      onrrd_;
-
   GuiInt          resolution_;
   GuiInt          whole_;
   GuiInt          values_;
   GuiString       anisotropy_;
 
   unsigned int get_anisotropy(const string &an);
-
 };
 
 DECLARE_MAKER(TendAnplot)
@@ -82,8 +79,6 @@ TendAnplot::execute()
 
   update_state(NeedData);
 
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
-
   Nrrd *nout = nrrdNew();
 
   if (tenAnisoPlot(nout, get_anisotropy(anisotropy_.get()), 
@@ -95,7 +90,8 @@ TendAnplot::execute()
   }
 
   NrrdDataHandle out(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(out);
+
+  send_output_handle("OutputNrrd", out);
 }
 
 

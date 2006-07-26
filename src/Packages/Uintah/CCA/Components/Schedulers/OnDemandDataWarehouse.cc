@@ -465,13 +465,13 @@ OnDemandDataWarehouse::recvMPI(SendState& rs, BufferInfo& buffer,
         // sometime we have to force a receive to match a send.
         // in these cases just ignore this new subset
         ParticleSubset* psubset;
-        if (!old_dw->haveParticleSubset(matlIndex, patch, low, high)) {
+        if (!old_dw->haveParticleSubset(matlIndex, patch, low, high, true)) {
           psubset = old_dw->createParticleSubset(numParticles, matlIndex, patch, low, high);
         }
         else {
           psubset = old_dw->getParticleSubset(matlIndex,patch,low,high);
           if (numParticles != psubset->numParticles()) {
-            cout << d_myworld->myrank() << " BAD: pset " << psubset->getLow() << " " << psubset->getHigh() << " " << psubset->numParticles() << " particles, src: " << from << " range: " << low << " " << high << " " << numParticles << " particles " << " patch " << patch->getLowIndex() << " " << patch->getHighIndex() << " " << matlIndex << endl;
+            cout << d_myworld->myrank() << " ERROR: Number of particles sent for range " << low << " " << high << ": " << numParticles << " does not equal the stored particle subset (range " << psubset->getLow() << " " << psubset->getHigh() << ": " << psubset->numParticles() << " particles) on patch " << patch->getID() << " " << " matl " << matlIndex << endl;
             //old_dw->printParticleSubsets();
             ASSERTEQ(numParticles, psubset->numParticles());
           }
@@ -884,7 +884,7 @@ OnDemandDataWarehouse::getNewParticleState(int matlIndex, const Patch* patch)
 bool
 OnDemandDataWarehouse::haveParticleSubset(int matlIndex, const Patch* patch,
                                           IntVector low /* = (0,0,0) */,
-                                          IntVector high /* = (0,0,0) */)
+                                          IntVector high /* = (0,0,0) */, bool exact /*=false*/)
 {
   d_lock.readLock();
 
@@ -900,7 +900,12 @@ OnDemandDataWarehouse::haveParticleSubset(int matlIndex, const Patch* patch,
      d_lock.readUnlock();
      return true;
    }
-   
+
+   if (exact) {
+     d_lock.readUnlock();
+     return false;
+   }
+
    // if not found, look for an encompassing particle subset
    for (iter = d_psetDB.begin(); iter != d_psetDB.end(); iter++) {
      const PSPatchMatlGhost& pmg = iter->first;

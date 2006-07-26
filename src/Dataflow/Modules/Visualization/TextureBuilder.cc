@@ -39,57 +39,29 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Algorithms/Visualization/TextureBuilderAlgo.h>
 #include <Core/Geom/ShaderProgramARB.h>
-#include <Core/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Volume/VideoCardInfo.h>
 
 #include <Dataflow/Network/Ports/TexturePort.h>
-#include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
 #include <sci_defs/ogl_defs.h>
 
 
-
-
-
+// Make sure to include this last
+#include <Dataflow/Modules/Visualization/TextureBuilder.h>
 
 namespace SCIRun {
 
 typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
 
-class TextureBuilder : public Module
-{
-public:
-  TextureBuilder(GuiContext*);
-  virtual ~TextureBuilder();
-
-  virtual void execute();
-
-private:
-  TextureHandle tHandle_;
-
-  GuiDouble gui_vminval_;
-  GuiDouble gui_vmaxval_;
-  GuiDouble gui_gminval_;
-  GuiDouble gui_gmaxval_;
-
-  GuiInt gui_fixed_;
-  GuiInt gui_card_mem_;
-  GuiInt gui_card_mem_auto_;
-  int card_mem_;
-
-  int vfield_last_generation_;
-  int gfield_last_generation_;
-  double vminval_, vmaxval_;
-  double gminval_, gmaxval_;
-};
 
 
 DECLARE_MAKER(TextureBuilder)
 
-TextureBuilder::TextureBuilder(GuiContext* ctx)
-  : Module("TextureBuilder", ctx, Source, "Visualization", "SCIRun"),
+TextureBuilder::TextureBuilder(GuiContext* ctx, const std::string& name,
+                 SchedClass sc,  const string& cat, const string& pack)
+  : Module(name, ctx, sc, cat, pack),
     tHandle_(new Texture),
     gui_vminval_(get_ctx()->subVar("vmin"), 0),
     gui_vmaxval_(get_ctx()->subVar("vmax"), 1),

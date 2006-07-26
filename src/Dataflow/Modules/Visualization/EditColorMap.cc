@@ -468,7 +468,7 @@ EditColorMap::DrawGraphs( int flush)
 
   if (textureid_ == 0)
   {
-    glGenTextures(1, &textureid_);
+    glGenTextures(1, (GLuint*)&textureid_);
   }
 
   // Send Cmap

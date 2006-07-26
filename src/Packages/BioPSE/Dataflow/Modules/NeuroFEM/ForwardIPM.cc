@@ -870,14 +870,9 @@ ForwardIPM::write_pebbles_file(string filename)
 void
 ForwardIPM::execute()
 {
-  FieldIPort *condmesh_port = (FieldIPort *)get_iport("CondMesh");
   FieldHandle condmesh;
-  if (!(condmesh_port->get(condmesh) && condmesh.get_rep()))
-  {
-    warning("CondMesh field required to continue.");
-    return;
-  }
-  
+  if (!get_input_handle("CondMesh", condmesh)) return;
+
   string mesh_type = condmesh->get_type_description(Field::MESH_TD_E)->get_name();
   if (mesh_type.find("TetVolMesh") != string::npos &&
       mesh_type.find("HexVolMesh") != string::npos)
@@ -896,31 +891,14 @@ ForwardIPM::execute()
     return;
   }
 
-  FieldIPort *electrodes_port = (FieldIPort *)get_iport("Electrodes");
   FieldHandle electrodes;
-  if (!(electrodes_port->get(electrodes) && electrodes.get_rep()))
-  {
-    warning("Electrodes field required to continue.");
-    return;
-  }
-  
-  MatrixIPort *dipole_port1 = (MatrixIPort *)get_iport("Dipole Positions");
-  MatrixHandle dipole1;
-  
-  if (!(dipole_port1->get(dipole1) && dipole1.get_rep()))
-  {
-    warning("Dipole required to continue.");
-    return;
-  }
+  if (!get_input_handle("Electrodes", electrodes)) return;
 
-  MatrixIPort *dipole_port2 = (MatrixIPort *)get_iport("Dipole Moments");
+  MatrixHandle dipole1;
+  if (!get_input_handle("Dipole Positions", dipole1)) return;
+
   MatrixHandle dipole2;
-  
-  if (!(dipole_port2->get(dipole2) && dipole2.get_rep()))
-  {
-    warning("Dipole required to continue.");
-    return;
-  }
+  if (!get_input_handle("Dipole Moments", dipole2)) return;
 
   // Make our tmp directory
   //const string tmpdir = "/tmp/ForwardIPM" + to_string(getpid()) +"/";
@@ -997,7 +975,7 @@ ForwardIPM::execute()
     // Read in the results and send them along.
     MatrixOPort *pot_oport = (MatrixOPort *)get_oport("Forward Potential");
 
-    if (!send_result_file(this,pot_oport, resultfile))
+    if (!send_result_file(this, pot_oport, resultfile))
     {
       error("Unable to send output matrix.");
       throw false;

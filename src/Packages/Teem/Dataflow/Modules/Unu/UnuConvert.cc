@@ -52,8 +52,6 @@ namespace SCITeem {
 using namespace SCIRun;
 
 class UnuConvert : public Module {
-  NrrdIPort* inrrd_;
-  NrrdOPort* onrrd_;
   GuiInt type_;
   int last_type_;
   int last_generation_;
@@ -76,30 +74,28 @@ UnuConvert::UnuConvert(SCIRun::GuiContext *ctx)
 {
 }
 
-UnuConvert::~UnuConvert() {
+
+UnuConvert::~UnuConvert()
+{
 }
+
 
 void 
 UnuConvert::execute()
 {
-  NrrdDataHandle nrrdH;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("Nrrd");
-  onrrd_ = (NrrdOPort *)get_oport("Nrrd");
 
-  if (!inrrd_->get(nrrdH))
-    return;
-  if (!nrrdH.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
+  NrrdDataHandle nrrdH;
+  if (!get_input_handle("Nrrd", nrrdH)) return;
+
+  reset_vars();
 
   int type = type_.get();
   if (last_generation_ == nrrdH->generation &&
       last_type_ == type &&
       last_nrrdH_.get_rep())
   {
-    onrrd_->send_and_dereference(last_nrrdH_, true);
+    send_output_handle("Nrrd", last_nrrdH_, true);
     return;
   }
 
@@ -118,6 +114,6 @@ UnuConvert::execute()
   }
 
   last_nrrdH_ = scinew NrrdData(nout);
-  onrrd_->send_and_dereference(last_nrrdH_, true);
+  send_output_handle("Nrrd", last_nrrdH_, true);
 }
 

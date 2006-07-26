@@ -37,6 +37,9 @@
 #  else /* !HAVE_GLEW */
 #    include <GL/glx.h>
 #  endif
+#else
+#  if defined(HAVE_GLEW)
+#    include <GL/wglew.h>
+#  endif
 #endif
-
 #endif  /* #define SCI_GLX_H */

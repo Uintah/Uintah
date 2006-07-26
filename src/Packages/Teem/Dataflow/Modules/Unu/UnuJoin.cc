@@ -52,8 +52,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdOPort* onrrd_;
-
   NrrdDataHandle    onrrd_handle_;  //! the cached output nrrd handle.
   vector<int>       in_generation_; //! all input generation nums.
   int               onrrd_type_;    //! target type for output nrrd.
@@ -66,12 +64,13 @@ private:
 };
 
 } // End namespace SCITeem
+
 using namespace SCITeem;
+
 DECLARE_MAKER(UnuJoin)
 
 UnuJoin::UnuJoin(SCIRun::GuiContext *ctx) : 
   Module("UnuJoin", ctx, Filter, "UnuAtoM", "Teem"), 
-  onrrd_(0),
   onrrd_handle_(0),
   in_generation_(0),
   onrrd_type_(nrrdTypeLast),
@@ -92,9 +91,6 @@ UnuJoin::~UnuJoin()
 void 
 UnuJoin::execute()
 {
-  if (! onrrd_) {
-    onrrd_ = (NrrdOPort *)get_oport("JoinedNrrd");
-  }
   port_range_type range = get_iports("Nrrds");
   if (range.first == range.second) { return; }
 
@@ -220,6 +216,6 @@ UnuJoin::execute()
     onrrd_handle_ = onrrd;
   }
 
-  onrrd_->send_and_dereference(onrrd_handle_, true);
+  send_output_handle("JoinedNrrd", onrrd_handle_, true);
 }
 

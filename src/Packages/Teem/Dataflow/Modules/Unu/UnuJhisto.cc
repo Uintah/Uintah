@@ -55,10 +55,6 @@ public:
 
   virtual void execute();
 
-  NrrdIPort*      weight_;
-  NrrdIPort*      inrrd1_;
-  NrrdOPort*      onrrd_;
-
   GuiString       bins_;
   GuiString       mins_;
   GuiString       maxs_;
@@ -94,43 +90,36 @@ UnuJhisto::~UnuJhisto()
 void
 UnuJhisto::execute()
 {
-  NrrdDataHandle weight_handle;
-  NrrdDataHandle nrrd_handle1;
-
   update_state(NeedData);
-  weight_ = (NrrdIPort *)get_iport("WeightNrrd");
-  inrrd1_ = (NrrdIPort *)get_iport("InputNrrd1");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  Nrrd *weight = 0;
-  Nrrd *nin1 = 0;
-  Nrrd *nout = nrrdNew();
+  NrrdDataHandle nrrd_handle1;
+  if (!get_input_handle("InputNrrd1", nrrd_handle1)) return;
+
+  NrrdDataHandle weight_handle;
+  get_input_handle("WeightNrrd", weight_handle, false);
+
+  Nrrd *nin1 = nrrd_handle1->nrrd_;
 
   bool need_execute = false;
 
-  if (!weight_->get(weight_handle)) {
+  Nrrd *weight = 0;
+  if (!weight_handle.get_rep())
+  {
     weight = 0;
     weight_generation_ = -1;
   }
-  else {
-    if (weight_handle->generation != weight_generation_) {
+  else
+  {
+    if (weight_handle->generation != weight_generation_)
+    {
       need_execute = true;
       weight_generation_ = weight_handle->generation;
     }
     weight = weight_handle->nrrd_;
   }
 
-  if (!inrrd1_->get(nrrd_handle1))
-    return;
-  else
-    nin1 = nrrd_handle1->nrrd_;
-
-  if (!nrrd_handle1.get_rep()) {
-    error("Empty InputNrrd1.");
-    return;
-  }
-
-  if (inrrd1_generation_ != nrrd_handle1->generation) {
+  if (inrrd1_generation_ != nrrd_handle1->generation)
+  {
     need_execute = true;
     inrrd1_generation_ = nrrd_handle1->generation;
   }
@@ -147,7 +136,8 @@ UnuJhisto::execute()
   {
     NrrdIPort *inrrd = (NrrdIPort *)get_iport(pi->second);
     NrrdDataHandle nrrd;
-    if (inrrd->get(nrrd) && nrrd.get_rep()) {
+    if (inrrd->get(nrrd) && nrrd.get_rep())
+    {
       if ((int)nrrd->nrrd_->dim > max_dim)
 	max_dim = nrrd->nrrd_->dim;
       
@@ -156,7 +146,8 @@ UnuJhisto::execute()
     ++pi; 
   }
 
-  if ((nrrds.size()-1) != (unsigned)num_inrrd2_) {
+  if ((nrrds.size()-1) != (unsigned)num_inrrd2_)
+  {
     need_execute = true;
     num_inrrd2_ = nrrds.size()-1; // minus 1 accounts for inrrd1
   }
@@ -166,7 +157,8 @@ UnuJhisto::execute()
   if (old_bins_ != bins_.get() ||
       old_mins_ != mins_.get() ||
       old_maxs_ != maxs_.get() ||
-      old_type_ != type_.get()) {
+      old_type_ != type_.get())
+  {
     old_bins_ = bins_.get();
     old_mins_ = mins_.get();
     old_maxs_ = maxs_.get();
@@ -210,18 +202,24 @@ UnuJhisto::execute()
     i=0, start=0;
     int which = 0, end=0, counter=0;
     inword = false;
-    while (i < (int)bins.length()) {
+    while (i < (int)bins.length())
+    {
       ch = bins[i];
-      if(isspace(ch)) {
-	if (inword) {
+      if(isspace(ch))
+      {
+	if (inword)
+        {
 	  end = i;
 	  bin[counter] = (atoi(bins.substr(start,end-start).c_str()));
 	  which++;
 	  counter++;
 	  inword = false;
 	}
-      } else if (i == (int)bins.length()-1) {
-	if (!inword) {
+      }
+      else if (i == (int)bins.length()-1)
+      {
+	if (!inword)
+        {
 	  start = i;
 	}
 	end = i+1;
@@ -229,8 +227,11 @@ UnuJhisto::execute()
 	which++;
 	counter++;
 	inword = false;
-      } else {
-	if(!inword) {
+      }
+      else
+      {
+	if(!inword)
+        {
 	  start = i;
 	  inword = true;
 	}
@@ -240,7 +241,8 @@ UnuJhisto::execute()
 
     Nrrd **nrrds_array = scinew Nrrd *[nrrds.size()];
     NrrdRange **range = scinew NrrdRange *[nrrds.size()];
-    for (unsigned int d = 0; d< nrrds.size(); d++) {
+    for (unsigned int d = 0; d< nrrds.size(); d++)
+    {
       nrrds_array[d] = nrrds[d]->nrrd_;
       range[d] = nrrdRangeNew(AIR_NAN, AIR_NAN);
     }
@@ -250,24 +252,32 @@ UnuJhisto::execute()
     int minsLen = 0;
     i = 0;
     inword = false;
-    while (i < (int)mins.length()) {
+    while (i < (int)mins.length())
+    {
       ch = mins[i];
-      if(isspace(ch)) {
-	if (inword) {
+      if(isspace(ch))
+      {
+	if (inword)
+        {
 	  minsLen++;
 	  inword = false;
 	}
-      } else if (i == (int)mins.length()-1) {
+      }
+      else if (i == (int)mins.length()-1)
+      {
 	minsLen++;
 	inword = false;
-      } else {
-	if(!inword) 
+      }
+      else
+      {
+	if (!inword) 
 	  inword = true;
       }
       i++;
     }
     
-    if ((int)nrrds.size() != minsLen) {
+    if ((int)nrrds.size() != minsLen)
+    {
       error("Number of input nrrds is not equal to number of mins specifications.");
       return;
     }
@@ -277,10 +287,13 @@ UnuJhisto::execute()
     i=0, start=0;
     which = 0, end=0, counter=0;
     inword = false;
-    while (i < (int)mins.length()) {
+    while (i < (int)mins.length())
+    {
       ch = mins[i];
-      if(isspace(ch)) {
-	if (inword) {
+      if(isspace(ch))
+      {
+	if (inword)
+        {
 	  end = i;
 	  if (mins.substr(start,end-start) == "nan")
 	    min[counter] = AIR_NAN;
@@ -290,8 +303,11 @@ UnuJhisto::execute()
 	  counter++;
 	  inword = false;
 	}
-      } else if (i == (int)mins.length()-1) {
-	if (!inword) {
+      }
+      else if (i == (int)mins.length()-1)
+      {
+	if (!inword)
+        {
 	  start = i;
 	}
 	end = i+1;
@@ -302,15 +318,17 @@ UnuJhisto::execute()
 	which++;
 	counter++;
 	inword = false;
-      } else {
-	if(!inword) {
+      }
+      else
+      {
+	if (!inword)
+        {
 	  start = i;
 	  inword = true;
 	}
       }
       i++;
     }
-    
     
     for (int d=0; d<(int)nrrds.size(); d++) {
       range[d]->min = min[d];
@@ -321,24 +339,32 @@ UnuJhisto::execute()
     int maxsLen = 0;
     inword = false;
     i = 0;
-    while (i < (int)maxs.length()) {
+    while (i < (int)maxs.length())
+    {
       ch = maxs[i];
-      if(isspace(ch)) {
-	if (inword) {
+      if(isspace(ch))
+      {
+	if (inword)
+        {
 	  maxsLen++;
 	  inword = false;
 	}
-      } else if (i == (int)maxs.length()-1) {
+      }
+      else if (i == (int)maxs.length()-1)
+      {
 	maxsLen++;
 	inword = false;
-      } else {
+      }
+      else
+      {
 	if(!inword) 
 	  inword = true;
       }
       i++;
     }
     
-    if ((int)nrrds.size() != maxsLen) {
+    if ((int)nrrds.size() != maxsLen)
+    {
       error("Number of input nrrds is not equal to number of maxs specifications.");
       return;
     }
@@ -348,10 +374,13 @@ UnuJhisto::execute()
     i=0, start=0;
     which = 0, end=0, counter=0;
     inword = false;
-    while (i < (int)maxs.length()) {
+    while (i < (int)maxs.length())
+    {
       ch = maxs[i];
-      if(isspace(ch)) {
-	if (inword) {
+      if(isspace(ch))
+      {
+	if (inword)
+        {
 	  end = i;
 	  if (maxs.substr(start,end-start) == "nan")
 	    max[counter] = AIR_NAN;
@@ -361,8 +390,11 @@ UnuJhisto::execute()
 	  counter++;
 	  inword = false;
 	}
-      } else if (i == (int)maxs.length()-1) {
-	if (!inword) {
+      }
+      else if (i == (int)maxs.length()-1)
+      {
+	if (!inword)
+        {
 	  start = i;
 	}
 	end = i+1;
@@ -373,8 +405,11 @@ UnuJhisto::execute()
 	which++;
 	counter++;
 	inword = false;
-      } else {
-	if(!inword) {
+      }
+      else
+      {
+	if(!inword)
+        {
 	  start = i;
 	  inword = true;
 	}
@@ -399,6 +434,8 @@ UnuJhisto::execute()
       }
     }
 
+    Nrrd *nout = nrrdNew();
+
     if (nrrdHistoJoint(nout, nrrds_array, range,
 		       (unsigned int)nrrds.size(), weight, bin,
                        string_to_nrrd_type(type_.get()), 
@@ -412,9 +449,10 @@ UnuJhisto::execute()
 
     last_nrrdH_ = scinew NrrdData(nout);
 
-    if (nrrds.size()) {
-
-      if (airIsNaN(range[0]->min) || airIsNaN(range[0]->max)) {
+    if (nrrds.size())
+    {
+      if (airIsNaN(range[0]->min) || airIsNaN(range[0]->max))
+      {
 	NrrdRange *minmax = nrrdRangeNewSet(nrrds_array[0],
                                             nrrdBlind8BitRangeFalse);
 	if (airIsNaN(range[0]->min)) range[0]->min = minmax->min;
@@ -427,7 +465,8 @@ UnuJhisto::execute()
 		      to_string(range[0]->max).c_str());
     }
     
-    for (int d=0; d < (int)nrrds.size(); ++d) {
+    for (int d=0; d < (int)nrrds.size(); ++d)
+    {
       nrrdRangeNix(range[d]);
     }
     delete [] range;
@@ -438,7 +477,8 @@ UnuJhisto::execute()
     delete max;
     
   }
-  onrrd_->send_and_dereference(last_nrrdH_, true);
+
+  send_output_handle("OutputNrrd", last_nrrdH_, true);
 }
 
 

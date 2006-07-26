@@ -109,19 +109,13 @@ GatherFields::execute()
     remark("Clearing accumulated fields.");
     fHandle_ = 0;
 
-    // Send something.
-    FieldOPort *ofield_port = (FieldOPort *) get_oport("Output Field");
-#if 1
     // Sending 0 does not clear caches.
     typedef PointCloudMesh<ConstantBasis<double> > PCMesh; 
     typedef NoDataBasis<double> NDBasis;
     typedef GenericField<PCMesh, NDBasis, vector<double> > PCField;
     FieldHandle empty = scinew PCField(scinew PCMesh());
 
-    ofield_port->send_and_dereference(empty);
-#else
-    ofield_port->send( fHandle_ );
-#endif
+    send_output_handle("Output Field", empty);
     return;
   }
 
@@ -291,12 +285,7 @@ GatherFields::execute()
     }
   }
 
-  // Send the data downstream
-  if( fHandle_.get_rep() )
-  {
-    FieldOPort *ofield_port = (FieldOPort *) get_oport("Output Field");
-    ofield_port->send_and_dereference( fHandle_, true );
-  }    
+  send_output_handle("Output Field", fHandle_, true);
 }
 
 

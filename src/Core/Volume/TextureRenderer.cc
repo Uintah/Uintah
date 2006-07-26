@@ -263,6 +263,42 @@ TextureRenderer::compute_view()
   return Ray(p, v);
 }
 
+bool
+TextureRenderer::test_against_view(const BBox &bbox)
+{
+  double mvmat[16];
+  glGetDoublev(GL_MODELVIEW_MATRIX, mvmat);
+  Transform mv;
+  mv.set_trans(mvmat);
+
+  double prmat[16];
+  glGetDoublev(GL_PROJECTION_MATRIX, prmat);
+  Transform pr;
+  pr.set_trans(prmat);
+
+  bool overx = true;
+  bool overy = true;
+  bool overz = true;
+  bool underx = true;
+  bool undery = true;
+  bool underz = true;
+  for (int i = 0; i < 8; i++)
+  {
+    const Point pold((i&1)?bbox.min().x():bbox.max().x(),
+                     (i&2)?bbox.min().y():bbox.max().y(),
+                     (i&4)?bbox.min().z():bbox.max().z());
+    const Point p = pr.project(mv.project(pold));
+    overx = overx && (p.x() > 1.0);
+    overy = overy && (p.y() > 1.0);
+    overz = overz && (p.z() > 1.0);
+    underx = underx && (p.x() < -1.0);
+    undery = undery && (p.y() < -1.0);
+    underz = underz && (p.z() < -1.0);
+  }
+
+  return !(overx || overy || overz || underx || undery || underz);
+}
+
 void
 TextureRenderer::load_brick(vector<TextureBrickHandle> &bricks, int bindex,
                             bool use_cmap2)
@@ -382,7 +418,7 @@ TextureRenderer::load_brick(vector<TextureBrickHandle> &bricks, int bindex,
           {
             // delete found object
             if(glIsTexture(tex_pool_[free_idx].id))
-              glDeleteTextures(1, &tex_pool_[free_idx].id);
+              glDeleteTextures(1, (GLuint*)&tex_pool_[free_idx].id);
             tex_pool_[free_idx].id = 0;
           }
           free_tex_mem_ += size_max;
@@ -394,7 +430,7 @@ TextureRenderer::load_brick(vector<TextureBrickHandle> &bricks, int bindex,
         }
         // allocate new object
         unsigned int tex_id;
-        glGenTextures(1, &tex_id);
+        glGenTextures(1, (GLuint*)&tex_id);
         if(idx[c] < 0) {
           // create new entry
           tex_pool_.push_back(TexParam(nx, ny, nz, nb, textype, tex_id));
@@ -711,8 +747,8 @@ TextureRenderer::build_colormap1(Array2<float>& cmap_array,
       // Update 1D texture.
       if (cmap_tex == 0 || size_dirty)
       {
-        glDeleteTextures(1, &cmap_tex);
-        glGenTextures(1, &cmap_tex);
+        glDeleteTextures(1, (GLuint*)&cmap_tex);
+        glGenTextures(1, (GLuint*)&cmap_tex);
         glBindTexture(GL_TEXTURE_1D, cmap_tex);
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
         glTexParameteri(GL_TEXTURE_1D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -903,9 +939,9 @@ TextureRenderer::colormap2_software_rasterize()
   // update texture
   if(!cmap2_tex_ || size_dirty) {
     if(glIsTexture(cmap2_tex_)) {
-      glDeleteTextures(1, &cmap2_tex_);
+      glDeleteTextures(1, (GLuint*)&cmap2_tex_);
     }
-    glGenTextures(1, &cmap2_tex_);
+    glGenTextures(1, (GLuint*)&cmap2_tex_);
     glBindTexture(GL_TEXTURE_2D, cmap2_tex_);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);

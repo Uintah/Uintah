@@ -85,10 +85,14 @@ RawToDenseMatrix::RawToDenseMatrix(GuiContext *context) :
 {
 }
 
-RawToDenseMatrix::~RawToDenseMatrix(){
+RawToDenseMatrix::~RawToDenseMatrix()
+{
 }
 
-void RawToDenseMatrix::execute(){
+
+void
+RawToDenseMatrix::execute()
+{
   oport_ = (MatrixOPort *)get_oport("DenseMatrix");
   filename_.reset();
 
@@ -105,8 +109,6 @@ void RawToDenseMatrix::execute(){
 #else
   time_t new_filemodification = buf.st_mtime;
 #endif
-
-
 
   if (!handle_.get_rep() || 
       filename_.get() != old_filename_ || 

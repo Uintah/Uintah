@@ -58,7 +58,7 @@ vectors.</summary>
     </inputs>
     <outputs>
       <port>
-        <name>Error out</name>
+        <name>Error Out</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>
     </outputs>

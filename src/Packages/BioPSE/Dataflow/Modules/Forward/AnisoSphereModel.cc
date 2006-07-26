@@ -100,23 +100,28 @@ public:
 
 DECLARE_MAKER(AnisoSphereModel)
 
-  AnisoSphereModel::AnisoSphereModel(GuiContext *context) : 
-    Module("AnisoSphereModel", context, Filter, "Forward", "BioPSE"),
-    r_scalp(context->subVar("r_scalp")),
-    r_skull(context->subVar("r_skull")),
-    r_cbsf(context->subVar("r_cbsf")),
-    r_brain(context->subVar("r_brain")),
-    units(context->subVar("units")),
-    rc_scalp(context->subVar("rc_scalp")),
-    rc_skull(context->subVar("rc_skull")),
-    rc_cbsf(context->subVar("rc_cbsf")),
-    rc_brain(context->subVar("rc_brain")),
-    tc_scalp(context->subVar("tc_scalp")),
-    tc_skull(context->subVar("tc_skull")),
-    tc_cbsf(context->subVar("tc_cbsf")),
-    tc_brain(context->subVar("tc_brain")) {}
+AnisoSphereModel::AnisoSphereModel(GuiContext *context) : 
+  Module("AnisoSphereModel", context, Filter, "Forward", "BioPSE"),
+  r_scalp(context->subVar("r_scalp")),
+  r_skull(context->subVar("r_skull")),
+  r_cbsf(context->subVar("r_cbsf")),
+  r_brain(context->subVar("r_brain")),
+  units(context->subVar("units")),
+  rc_scalp(context->subVar("rc_scalp")),
+  rc_skull(context->subVar("rc_skull")),
+  rc_cbsf(context->subVar("rc_cbsf")),
+  rc_brain(context->subVar("rc_brain")),
+  tc_scalp(context->subVar("tc_scalp")),
+  tc_skull(context->subVar("tc_skull")),
+  tc_cbsf(context->subVar("tc_cbsf")),
+  tc_brain(context->subVar("tc_brain"))
+{
+}
 
-AnisoSphereModel::~AnisoSphereModel() {}
+
+AnisoSphereModel::~AnisoSphereModel()
+{
+}
 
 
 void

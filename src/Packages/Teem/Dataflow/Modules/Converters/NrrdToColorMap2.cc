@@ -70,48 +70,37 @@ NrrdToColorMap2::~NrrdToColorMap2()
 void
 NrrdToColorMap2::execute()
 {
-  NrrdIPort* image_port = (NrrdIPort*)get_iport("Image");
-  if(image_port) {
-    NrrdDataHandle h;
-    image_port->get(h);
-    if (h.get_rep() && (h->generation != in_nrrd_gen_ || !ocmap_h_.get_rep()))
-    {
-      ocmap_h_ = 0;
-      in_nrrd_gen_ = h->generation;
-      if(h->nrrd_->dim != 3) {
-        error("Invalid input dimension. Must be 3d");
-	return;
-      }
-      if (h->nrrd_->dim != 3 || h->nrrd_->axis[0].size != 4) {
-        error("Invalid input size. Must be 4xWidthxHeigh");
-	return;
-      }
+  NrrdDataHandle h;
+  if (!get_input_handle("Image", h)) return;
 
-      if (h->nrrd_->type != nrrdTypeFloat) {
-	error("input nrrd must be of type float: use UnuConvert");
-	return;
-      }
-
-      NrrdDataHandle temp = scinew NrrdData;
-      nrrdFlip(temp->nrrd_, h->nrrd_, 2);
-
-      vector<CM2WidgetHandle> widget;
-      widget.push_back(scinew ImageCM2Widget(temp));
-
-      ocmap_h_ = scinew ColorMap2(widget, false, -1, make_pair(0.0, -1.0));
-    } else if (!h.get_rep()) {
-      error("No data in input port.");
+  if (h->generation != in_nrrd_gen_ || !ocmap_h_.get_rep())
+  {
+    ocmap_h_ = 0;
+    in_nrrd_gen_ = h->generation;
+    if(h->nrrd_->dim != 3) {
+      error("Invalid input dimension. Must be 3d");
       return;
     }
-  } else {
-    error("Could not get input port");
-    return;
+    if (h->nrrd_->dim != 3 || h->nrrd_->axis[0].size != 4) {
+      error("Invalid input size. Must be 4xWidthxHeigh");
+      return;
+    }
+
+    if (h->nrrd_->type != nrrdTypeFloat) {
+      error("input nrrd must be of type float: use UnuConvert");
+      return;
+    }
+
+    NrrdDataHandle temp = scinew NrrdData;
+    nrrdFlip(temp->nrrd_, h->nrrd_, 2);
+
+    vector<CM2WidgetHandle> widget;
+    widget.push_back(scinew ImageCM2Widget(temp));
+
+    ocmap_h_ = scinew ColorMap2(widget, false, -1, make_pair(0.0, -1.0));
   }
 
-  ColorMap2OPort* cmap_port = (ColorMap2OPort*)get_oport("Output ColorMap");
-  if (cmap_port) {
-    cmap_port->send_and_dereference(ocmap_h_, true);
-  }
+  send_output_handle("Output ColorMap", ocmap_h_, true);
 }
 
 

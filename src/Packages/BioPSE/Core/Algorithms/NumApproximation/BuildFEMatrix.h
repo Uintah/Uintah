@@ -277,6 +277,21 @@ BuildFEMatrix<Field>::build_local_matrix(typename BuildFEMatrix::Mesh::Elem::ind
     //cerr << J[6] << '\t' << J[7] << '\t' << J[8] << '\n';
 	
     double detJ = InverseMatrix3x3(J, Ji);
+#if 0
+    if (detJ<1.0e-20) {
+      typename Mesh::Node::array_type na;
+      hMesh_->get_nodes(na, c_ind);
+      cerr << "Degenerate element points:\n";
+      for (unsigned int ii=0; ii<na.size(); ii++) {
+	Point p;
+	hMesh_->get_point(p, na[ii]);
+	cerr << "   "<<p<<"\n";
+      }
+      cerr << "\n";
+      return;
+    }
+    if (detJ<1.0e-20) return;
+#endif
     ASSERT(detJ>0);
     detJ*=w[i]*hMesh_->get_basis().volume();
 

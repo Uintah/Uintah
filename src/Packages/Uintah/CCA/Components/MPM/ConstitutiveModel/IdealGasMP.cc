@@ -174,10 +174,8 @@ void IdealGasMP::computeStressTensor(const PatchSubset* patches,
     Matrix3 Identity;
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     Identity.Identity();
 

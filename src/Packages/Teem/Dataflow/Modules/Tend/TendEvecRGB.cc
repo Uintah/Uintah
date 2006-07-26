@@ -54,9 +54,6 @@ public:
 private:
   unsigned get_method(const string &s) const;
 
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-
   GuiInt       evec_;
   GuiString    aniso_metric_;
   GuiDouble    background_;
@@ -136,18 +133,11 @@ TendEvecRGB::get_method(const string &s) const
 void 
 TendEvecRGB::execute()
 {
-  NrrdDataHandle nrrd_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("nin");
-  onrrd_ = (NrrdOPort *)get_oport("nout");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("nin", nrrd_handle)) return;
 
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
   reset_vars();
 
   Nrrd *nin = nrrd_handle->nrrd_;
@@ -172,7 +162,8 @@ TendEvecRGB::execute()
   remark("nrrdKind changed to nrrdKind3Vector");
 
   NrrdDataHandle ntmp(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(ntmp);
+
+  send_output_handle("nout", ntmp);
 }
 
 } // End namespace SCITeem

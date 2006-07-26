@@ -55,10 +55,6 @@ public:
 
   virtual void execute();
 
-  NrrdIPort*      inrrd_;
-  NrrdIPort*      isub_;
-  NrrdOPort*      onrrd_;
-
   GuiString       mins_;
 };
 
@@ -66,9 +62,6 @@ public:
 DECLARE_MAKER(UnuInset)
 UnuInset::UnuInset(GuiContext* ctx)
   : Module("UnuInset", ctx, Source, "UnuAtoM", "Teem"),
-    inrrd_(0),
-    isub_(0),
-    onrrd_(0),
     mins_(get_ctx()->subVar("mins"), "0")
 {
 }
@@ -82,27 +75,13 @@ UnuInset::~UnuInset()
 void
 UnuInset::execute()
 {
-  NrrdDataHandle nrrd_handle;
-  NrrdDataHandle sub_handle;
-
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  isub_ = (NrrdIPort *)get_iport("SubRegionNrrd");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
-  if (!isub_->get(sub_handle))
-    return;
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
-  if (!nrrd_handle.get_rep()) {
-    error("Empty InputNrrd.");
-    return;
-  }
-  if (!sub_handle.get_rep()) {
-    error("Empty SubRegionNrrd.");
-    return;
-  }
+  NrrdDataHandle sub_handle;
+  if (!get_input_handle("SubRegionNrrd", sub_handle)) return;
 
   reset_vars();
 
@@ -116,25 +95,34 @@ UnuInset::execute()
   char ch;
   int i=0, start=0;
   bool inword = false;
-  while (i < (int)mins.length()) {
+  while (i < (int)mins.length())
+  {
     ch = mins[i];
-    if(isspace(ch)) {
-      if (inword) {
+    if(isspace(ch))
+    {
+      if (inword)
+      {
 	minsLen++;
 	inword = false;
       }
-    } else if (i == (int)mins.length()-1) {
+    }
+    else if (i == (int)mins.length()-1)
+    {
       minsLen++;
       inword = false;
-    } else {
+    }
+    else
+    {
       if(!inword) 
 	inword = true;
     }
     i++;
   }
 
-  if (minsLen != nin->dim) {
-    error("min coords " + to_string(minsLen) + " != nrrd dim " + to_string(nin->dim));
+  if (minsLen != nin->dim)
+  {
+    error("min coords " + to_string(minsLen) +
+          " != nrrd dim " + to_string(nin->dim));
     return;
   }
 
@@ -143,18 +131,24 @@ UnuInset::execute()
   i=0, start=0;
   int which = 0, end=0, counter=0;
   inword = false;
-  while (i < (int)mins.length()) {
+  while (i < (int)mins.length())
+  {
     ch = mins[i];
-    if(isspace(ch)) {
-      if (inword) {
+    if (isspace(ch))
+    {
+      if (inword)
+      {
 	end = i;
 	min[counter] = (atoi(mins.substr(start,end-start).c_str()));
 	which++;
 	counter++;
 	inword = false;
       }
-    } else if (i == (int)mins.length()-1) {
-      if (!inword) {
+    }
+    else if (i == (int)mins.length()-1)
+    {
+      if (!inword)
+      {
 	start = i;
       }
       end = i+1;
@@ -162,8 +156,11 @@ UnuInset::execute()
       which++;
       counter++;
       inword = false;
-    } else {
-      if(!inword) {
+    }
+    else
+    {
+      if(!inword)
+      {
 	start = i;
 	inword = true;
       }
@@ -171,7 +168,8 @@ UnuInset::execute()
     i++;
   }
 
-  if (nrrdInset(nout, nin, sub, min)) {
+  if (nrrdInset(nout, nin, sub, min))
+  {
     char *err = biffGetDone(NRRD);
     error(string("Error Insetting nrrd: ") + err);
     free(err);
@@ -179,18 +177,18 @@ UnuInset::execute()
 
   delete min;
 
-
   NrrdDataHandle out(scinew NrrdData(nout));
 
   // Copy the properties.
   out->copy_properties(nrrd_handle.get_rep());
 
   // Copy the axis kinds
-  for (unsigned int i=0; i<nin->dim; i++) {
+  for (unsigned int i=0; i<nin->dim; i++)
+  {
     nout->axis[i].kind = nin->axis[i].kind;
   }
 
-  onrrd_->send_and_dereference(out);
+  send_output_handle("OutputNrrd", out);
 }
 
 

@@ -55,37 +55,28 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-
 };
 
 
 DECLARE_MAKER(UnuCCsettle)
 UnuCCsettle::UnuCCsettle(GuiContext* ctx)
-  : Module("UnuCCsettle", ctx, Source, "UnuAtoM", "Teem"),
-    inrrd_(0), onrrd_(0)
+  : Module("UnuCCsettle", ctx, Source, "UnuAtoM", "Teem")
 {
 }
 
-UnuCCsettle::~UnuCCsettle(){
+
+UnuCCsettle::~UnuCCsettle()
+{
 }
 
+
 void
- UnuCCsettle::execute(){
-  NrrdDataHandle nrrd_handle;
-
+UnuCCsettle::execute()
+{
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty InputNrrd.");
-    return;
-  }
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
   reset_vars();
 
@@ -109,8 +100,9 @@ void
     nout->axis[i].kind = nin->axis[i].kind;
   }
 
-  onrrd_->send_and_dereference(out);
+  send_output_handle("OutputNrrd", out);
 }
+
 
 } // End namespace Teem
 
