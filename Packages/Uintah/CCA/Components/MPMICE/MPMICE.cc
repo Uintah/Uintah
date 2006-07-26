@@ -343,6 +343,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   d_mpm->scheduleAdjustCrackContactInterpolated(sched,mpm_patches,  mpm_matls);
 
   d_mpm->scheduleExMomInterpolated(           sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleSetBCsInterpolated(          sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
 
   // schedule the interpolation of mass and volume to the cell centers
