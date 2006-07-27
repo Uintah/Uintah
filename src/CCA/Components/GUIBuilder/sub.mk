@@ -44,11 +44,10 @@ SRCS += \
          $(SRCDIR)/ComponentIcon.cc \
          $(SRCDIR)/PortIcon.cc \
          $(SRCDIR)/ComponentWizardDialog.cc \
-         $(SRCDIR)/ComponentSkeletonWriter.cc \
          $(SRCDIR)/XMLPathDialog.cc \
          $(SRCDIR)/FrameworkProxyDialog.cc \
-         $(SRCDIR)/CodePreviewDialog.cc
-
+         $(SRCDIR)/CodePreviewDialog.cc \
+	 $(SRCDIR)/ComponentWizardHelper.cc
 PSELIBS := Core/CCA/spec Core/CCA/PIDL Core/OS Core/Thread Core/Exceptions SCIRun
 
 CFLAGS += $(WX_CXXFLAGS)

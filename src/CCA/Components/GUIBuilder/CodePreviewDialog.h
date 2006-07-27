@@ -41,7 +41,7 @@
 #define CCA_Components_GUIBuilder_CodePreviewDialog_h
 
 
-#include <CCA/Components/GUIBuilder/ComponentSkeletonWriter.h>
+#include <SCIRun/ComponentSkeletonWriter.h>
 #include <sci_wx.h>
 #include <vector>
 
@@ -59,13 +59,16 @@ public:
   enum {
       ID_ViewSourceFileCode = wxID_HIGHEST,
       ID_ViewHeaderFileCode,
-      ID_ViewMakeFileCode
-    };
+      ID_ViewSidlFileCode,
+      ID_ViewMakeFileCode,
+  };
 
   /** Requires full path to files */
   CodePreviewDialog(const wxString& headerFile,
                     const wxString& sourceFile,
                     const wxString& submakeFile,
+                    const wxString& sidlFile,
+                    const bool isWithSidl,
                     wxWindow *parent,
                     wxWindowID id,
                     const wxString &title,
@@ -77,7 +80,8 @@ public:
   void OnViewSourceFileCode( wxCommandEvent &event );
   void OnViewHeaderFileCode( wxCommandEvent &event );
   void OnViewMakeFileCode( wxCommandEvent &event );
-
+  void OnViewSidlFileCode( wxCommandEvent &event );
+  
 private:
   wxTextCtrl *codePreview;
   wxButton *viewSourceFileCode;
@@ -87,7 +91,8 @@ private:
   std::string headerFile;
   std::string sourceFile;
   std::string submakeFile;
-
+  std::string sidlFile;
+  bool isWithSidl;
   DECLARE_EVENT_TABLE()
 };
 
