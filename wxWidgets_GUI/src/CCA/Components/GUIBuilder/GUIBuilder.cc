@@ -34,7 +34,7 @@
 #include <CCA/Components/GUIBuilder/BuilderWindow.h>
 #include <CCA/Components/GUIBuilder/ComponentIcon.h>
 // for default namespace strings - these may be moved elsewhere in the future
-#include <CCA/Components/GUIBuilder/ComponentSkeletonWriter.h>
+#include <SCIRun/ComponentSkeletonWriter.h>
 
 #include <sci_metacomponents.h>
 #include <SCIRun/SCIRunFramework.h>
@@ -123,6 +123,8 @@ DestroyInstancesThread::run()
 
 GUIBuilder::GUIBuilder()
 {
+  
+
 #if DEBUG
   std::cerr << "GUIBuilder::GUIBuilder(): from thread " << Thread::self()->getThreadName() << std::endl;
 #endif
@@ -220,6 +222,9 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
   }
 
   setDefaultPortColors();
+
+  // register for scirun2.services.builderservice.component.* topics
+
 }
 
 //////////////////////////////////////////////////////////////////////////
@@ -770,21 +775,13 @@ void* GUIBuilder::getPortColor(const std::string& portType)
 //////////////////////////////////////////////////////////////////////////
 // CCA Event services
 //
-// These should be replaced by new event services currently under proposal.
 
-void GUIBuilder::connectionActivity(const sci::cca::ports::ConnectionEvent::pointer& e)
+
+void GUIBuilder::processEvent(const std::string& topicName, const sci::cca::TypeMap::pointer& eventBody)
 {
-#if DEBUG
-  std::cerr << "GUIBuilder::connectionActivity(..)" << std::endl;
-#endif
+  // process events
 }
 
-void GUIBuilder::componentActivity(const sci::cca::ports::ComponentEvent::pointer& e)
-{
-#if DEBUG
-  std::cerr << "GUIBuilder::componentActivity: got event for component " << e->getComponentID()->getInstanceName() << std::endl;
-#endif
-}
 
 ///////////////////////////////////////////////////////////////////////////
 // private member functions

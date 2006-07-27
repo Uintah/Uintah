@@ -442,7 +442,9 @@ void BuilderWindow::OnSaveAs(wxCommandEvent& event)
 void BuilderWindow::OnCompWizard(wxCommandEvent& event)
 {
   ComponentWizardDialog cwDialog(builder, this, wxID_ANY, "Component wizard dialog", wxPoint(100, 100), wxSize(600, 800), wxRESIZE_BORDER|wxCAPTION|wxSYSTEM_MENU);
-  cwDialog.ShowModal();
+  if (cwDialog.ShowModal() == wxID_OK){
+    cwDialog.Generate();
+  }
 }
 
 void BuilderWindow::OnSidlXML(wxCommandEvent& event)

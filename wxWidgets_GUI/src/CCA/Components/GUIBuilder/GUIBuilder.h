@@ -118,6 +118,11 @@ public:
                                     const sci::cca::ComponentID::pointer &cid, std::string& usesPortName);
   virtual void disconnectComponentIcon(const std::string& ciPortName);
 
+
+  // events
+  virtual void processEvent(const std::string& topicName, const sci::cca::TypeMap::pointer& eventBody);
+
+
   // Note: make both setPortColor functions static when support for static functions is available
 
   // Use if color is in wxColorDatabase and is being used by another port, if not returns false.
@@ -133,9 +138,6 @@ public:
   // Get stored port colour, if it doesn't exist then return a default.
   //void getPortColor(const std::string& portName, char& red, char& green, char& blue);
   void* getPortColor(const std::string& portName);
-
-  virtual void connectionActivity(const sci::cca::ports::ConnectionEvent::pointer &e);
-  virtual void componentActivity(const sci::cca::ports::ComponentEvent::pointer &e);
 
   static void setApp(wxSCIRunApp& a) { app = &a; }
 

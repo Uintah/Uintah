@@ -55,11 +55,14 @@ BEGIN_EVENT_TABLE(CodePreviewDialog, wxDialog)
   EVT_BUTTON( ID_ViewSourceFileCode, CodePreviewDialog::OnViewSourceFileCode )
   EVT_BUTTON( ID_ViewHeaderFileCode, CodePreviewDialog::OnViewHeaderFileCode )
   EVT_BUTTON( ID_ViewMakeFileCode, CodePreviewDialog::OnViewMakeFileCode )
+  EVT_BUTTON( ID_ViewSidlFileCode, CodePreviewDialog::OnViewSidlFileCode )
 END_EVENT_TABLE()
 
 CodePreviewDialog::CodePreviewDialog(const wxString& headerFile,
                                      const wxString& sourceFile,
                                      const wxString& submakeFile,
+                                     const wxString& sidlFile,
+                                     const bool isWithSidl,
                                      wxWindow *parent,
                                      wxWindowID id,
                                      const wxString &title,
@@ -70,7 +73,9 @@ CodePreviewDialog::CodePreviewDialog(const wxString& headerFile,
   : wxDialog(parent, id, title, pos, size, style),
     headerFile(headerFile),
     sourceFile(sourceFile),
-    submakeFile(submakeFile)
+    submakeFile(submakeFile),
+    sidlFile(sidlFile),
+    isWithSidl(isWithSidl)
 {
   const int centerFlags = wxALIGN_CENTER|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
 
@@ -79,37 +84,45 @@ CodePreviewDialog::CodePreviewDialog(const wxString& headerFile,
   wxBoxSizer *viewbuttonSizer = new wxBoxSizer( wxHORIZONTAL );
   wxBoxSizer *cancelSizer = new wxBoxSizer( wxHORIZONTAL );
   codePreview = new wxTextCtrl(this,wxID_ANY,wxT(""),wxDefaultPosition,wxSize(600,400),wxTE_MULTILINE);
-  textSizer->Add(codePreview, 1, centerFlags, 2);
+  textSizer->Add(codePreview, 1, wxEXPAND, 2);
   viewSourceFileCode = new wxButton(this,ID_ViewSourceFileCode,wxT("View Source File Code"));
   viewHeaderFileCode = new wxButton(this,ID_ViewHeaderFileCode,wxT("View Header File Code"));
   viewMakeFileCode = new wxButton(this,ID_ViewMakeFileCode,wxT("View Makefile Code"));
+ 
   viewbuttonSizer->Add(viewSourceFileCode, 1, centerFlags, 2);
   viewbuttonSizer->Add(viewHeaderFileCode, 1, centerFlags, 2);
   viewbuttonSizer->Add(viewMakeFileCode, 1, centerFlags, 2);
+  if(isWithSidl)
+    viewbuttonSizer->Add(new wxButton(this,ID_ViewSidlFileCode,wxT("View Sidl File Code")), 1, centerFlags, 2);
   cancelSizer->Add(new wxButton(this,wxID_CANCEL,wxT("&Cancel")), 1, centerFlags, 2);
   topSizer->AddSpacer(10);
-  topSizer->Add(textSizer, 1, centerFlags, 2);
+  topSizer->Add(textSizer, 1, wxEXPAND, 2);
   topSizer->AddSpacer(20);
   topSizer->Add(viewbuttonSizer, 1, centerFlags, 2);
   topSizer->AddSpacer(20);
   topSizer->Add(cancelSizer, 1, centerFlags, 2);
 
+  topSizer->AddGrowableCol(0);
+  topSizer->AddGrowableRow(0);
+  topSizer->AddGrowableRow(1);
+  topSizer->AddGrowableRow(2);
   SetAutoLayout( TRUE );     // tell dialog to use sizer
   SetSizer( topSizer );      // actually set the sizer
   topSizer->Fit( this );           // set size to minimum size as calculated by the sizer
   topSizer->SetSizeHints( this );   // set size hints to honour mininum size
+  wxCommandEvent tmpEvent;
+  OnViewSourceFileCode(tmpEvent);
 }
 
 void CodePreviewDialog::OnViewSourceFileCode(wxCommandEvent& event)
 {
   codePreview->Clear();
-
   std::ifstream tempfile;
   tempfile.open(sourceFile.c_str());
   if (!tempfile) {
-#if DEBUG
+    //#if DEBUG
     std::cout << "unable to read file" << std::endl;
-#endif
+    //#endif
 
     // TODO: error dialog?
 
@@ -152,7 +165,32 @@ void CodePreviewDialog::OnViewHeaderFileCode(wxCommandEvent& event)
   }
 
 }
+void CodePreviewDialog::OnViewSidlFileCode(wxCommandEvent& event)
+{
+  codePreview->Clear();
 
+  std::ifstream tempfile;
+  tempfile.open(sidlFile.c_str());
+  if (!tempfile) {
+#if DEBUG
+    std::cout << "unable to read file" << std::endl;
+#endif
+
+    // TODO: error dialog?
+
+  } else {
+    std::string line;
+    codePreview->Clear();
+    SetTitle("Preview Sidl File");
+    while (!tempfile.eof()) {
+      std::getline(tempfile, line);
+      codePreview->AppendText(wxString(line));
+      codePreview->AppendText(wxT("\n"));
+    }
+    tempfile.close();
+  }
+
+}
 void CodePreviewDialog::OnViewMakeFileCode(wxCommandEvent& event)
 {
   codePreview->Clear();
@@ -169,7 +207,7 @@ void CodePreviewDialog::OnViewMakeFileCode(wxCommandEvent& event)
   } else {
     std::string line;
     codePreview->Clear();
-    SetTitle("Preview Makefile File");
+    SetTitle("Preview Make File");
     while (!tempfile.eof()) {
       std::getline (tempfile,line);
       codePreview->AppendText(wxString(line));

@@ -45,7 +45,7 @@
 #include <wx/wx.h>
 #endif
 
-#include <CCA/Components/GUIBuilder/ComponentSkeletonWriter.h>
+#include <SCIRun/ComponentSkeletonWriter.h>
 #include <CCA/Components/GUIBuilder/GUIBuilder.h>
 #include <vector>
 
@@ -67,6 +67,7 @@ public:
     ID_AddUsesPort,
     ID_RemovePort,
     ID_PreviewCode,
+    ID_Choose,
   };
 
   ComponentWizardDialog(const sci::cca::GUIBuilder::pointer& bc,
@@ -79,29 +80,30 @@ public:
                         const wxString& name = "ComponentWizardDialogBox");
 
   ~ComponentWizardDialog();
-
-  void OnOk( wxCommandEvent &event );
+  void Generate();
   void OnAddProvidesPort( wxCommandEvent &event );
   void OnAddUsesPort( wxCommandEvent &event );
   void OnRemovePort( wxCommandEvent &event );
   void OnPreviewCode( wxCommandEvent &event );
   void OnSize(wxSizeEvent &event);
+  void OnChoose( wxCommandEvent &event );
   virtual bool Validate();
-
+  std::string getTempDirectoryName();
 private:
+  std::string getTempDirName();
+  std::string getCompDirName();
   wxTextCtrl  *componentName;
-  wxStaticText *lcomponentName;
-  wxButton *AddProvidesPort;
-  wxButton *AddUsesPort;
-  wxButton *Preview;
+  wxTextCtrl *location;
   wxGrid *listofPorts;
-
+  wxCheckBox *portInfo;
+  
   int count_table;
   bool isPreviewed;
+  bool isWithSidl;
   sci::cca::GUIBuilder::pointer builder;
 
   wxString GetText();
-
+  wxString GetLocation();
   //To store the list of ports added by the user
   std::vector <PortDescriptor*> pp;
   std::vector <PortDescriptor*> up;
@@ -121,7 +123,8 @@ public:
   std::string GetPortNameText() const;
   std::string GetDataTypeText() const;
   std::string GetDescriptionText() const;
-
+  virtual bool Validate();
+  
 private:
   wxTextCtrl  *pname;
   wxTextCtrl  *dtype;
