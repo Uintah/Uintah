@@ -84,6 +84,7 @@ FrameworkProperties::FrameworkProperties(SCIRunFramework* framework)
     Dir::create(name);
   }
   frameworkProperties->putString("config dir", dir.getName());
+  frameworkProperties->putString("network file", "application.app");
 
   getLogin();
   initSidlPaths();
