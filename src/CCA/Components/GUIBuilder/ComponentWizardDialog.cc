@@ -78,7 +78,6 @@ ComponentWizardDialog::ComponentWizardDialog(const sci::cca::GUIBuilder::pointer
                                              const wxString& name)
   : wxDialog(parent, id, title, pos, size, style), count_table(0), isPreviewed(false), builder(bc)
 {
-  
   const int centerFlags = wxALIGN_CENTER|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
   const int leftFlags = wxALIGN_LEFT|wxLEFT|wxRIGHT|wxALIGN_CENTER_VERTICAL;
   wxGridBagSizer *topSizer = new wxGridBagSizer();
@@ -104,7 +103,7 @@ ComponentWizardDialog::ComponentWizardDialog(const sci::cca::GUIBuilder::pointer
   i+=2;
   listofPorts = new wxGrid(this, wxID_ANY,wxDefaultPosition ,wxSize(500,140));
   listofPorts->CreateGrid(5,4);
-  for(int i=0;i<4;i++)
+  for (int i=0;i<4;i++)
     listofPorts->SetColSize(i,listofPorts->GetDefaultColSize()+20);
   listofPorts->SetColLabelValue(0,"Port Class");
   listofPorts->SetColLabelValue(1,"Data Type");
@@ -118,9 +117,9 @@ ComponentWizardDialog::ComponentWizardDialog(const sci::cca::GUIBuilder::pointer
   topSizer->Add( new wxButton( this, ID_PreviewCode, wxT("P&review") ), wxGBPosition(i,1) ,wxGBSpan(1,1),centerFlags);
   topSizer->Add( new wxButton( this, wxID_OK, wxT("&Generate") ), wxGBPosition(i,2) ,wxGBSpan(1,1),centerFlags);
   topSizer->Add( new wxButton( this, wxID_CANCEL, wxT("&Cancel") ), wxGBPosition(i,3) ,wxGBSpan(1,1),centerFlags);
-  for(int i=0; i<15;i++)
+  for (int i=0; i<15;i++)
     topSizer->AddGrowableRow(i);
-  for(int i=0; i<6;i++)
+  for (int i=0; i<6;i++)
     topSizer->AddGrowableCol(i);
   SetAutoLayout( TRUE );     // tell dialog to use sizer
   SetSizer( topSizer );      // actually set the sizer
@@ -159,17 +158,18 @@ void ComponentWizardDialog::Generate()
   isWithSidl = portInfo->GetValue();
   pp.clear();
   up.clear();
-  for(int i=0;i<count_table;i++) {
-    if(listofPorts->GetCellValue(i,3).compare("ProvidesPort")==0) {
-      pp.push_back(new PortDescriptor(listofPorts->GetCellValue(i,0),listofPorts->GetCellValue(i,1),listofPorts->GetCellValue(i,2)));
+  for (int i = 0;i < count_table; i++) {
+    if (listofPorts->GetCellValue(i, 3).compare("ProvidesPort") == 0) {
+      pp.push_back(new PortDescriptor(listofPorts->GetCellValue(i, 0), listofPorts->GetCellValue(i, 1), listofPorts->GetCellValue(i, 2)));
     }
-    if(listofPorts->GetCellValue(i,3).compare("UsesPort")==0) {
-      up.push_back(new PortDescriptor(listofPorts->GetCellValue(i,0),listofPorts->GetCellValue(i,1),listofPorts->GetCellValue(i,2)));
+    if (listofPorts->GetCellValue(i, 3).compare("UsesPort") == 0) {
+      up.push_back(new PortDescriptor(listofPorts->GetCellValue(i, 0), listofPorts->GetCellValue(i,1), listofPorts->GetCellValue(i, 2)));
     }
   }
   std::string compName(componentName->GetValue());
-  std::string compDir(std::string(GetLocation()) + compName);
-  ComponentWizardHelper newHelper(builder,compName,compDir,pp,up,isWithSidl);
+  //std::string compDir(std::string(GetLocation()) + compName);
+  std::string compDir(GetLocation().c_str() + compName);
+  ComponentWizardHelper newHelper(builder, compName, compDir, pp, up, isWithSidl);
   newHelper.createComponent();
   return;
 }
@@ -189,64 +189,65 @@ bool ComponentWizardDialog::Validate()
     wxMessageBox(msg, wxT("Create Component"),
                  wxOK | wxICON_INFORMATION, this);
     return FALSE;
-  } 
+  }
 
-  for(int i=0; i<listofPorts->GetNumberRows(); i++)
-    {
-      //if one cell is empty all cells must be empty
-      if(listofPorts->GetCellValue(i,0).empty())
-        {
-          if(!(listofPorts->GetCellValue(i,1).empty()&&listofPorts->GetCellValue(i,2).empty()&&listofPorts->GetCellValue(i,3).empty()))
-            {
-              std::cout << "Incomplete entries\n";
-              wxMessageBox(wxT("Incomplete Entries"), wxT("Create Component"),
-                           wxOK | wxICON_INFORMATION, this);
-              return FALSE;
-            }
-        }
-
-      if(!listofPorts->GetCellValue(i,0).empty())
-        {
-          if(listofPorts->GetCellValue(i,1).empty()||listofPorts->GetCellValue(i,2).empty()||listofPorts->GetCellValue(i,3).empty())
-            {
-              std::cout << "Incomplete Entries\n";
-              wxMessageBox(wxT("Incomplete Entries"), wxT("Create Component"),
-                           wxOK | wxICON_INFORMATION, this);
-              return FALSE;
-               
-            }
-        }
+  for (int i=0; i<listofPorts->GetNumberRows(); i++) {
+    //if one cell is empty all cells must be empty
+    if (listofPorts->GetCellValue(i,0).empty()) {
+      if (!(listofPorts->GetCellValue(i,1).empty() &&
+            listofPorts->GetCellValue(i,2).empty() &&
+            listofPorts->GetCellValue(i,3).empty())) {
+        //std::cout << "Incomplete entries\n";
+        wxMessageBox(wxT("Incomplete Entries"), wxT("Create Component"),
+                     wxOK | wxICON_INFORMATION, this);
+        return FALSE;
+      }
     }
+
+    if (!listofPorts->GetCellValue(i,0).empty()) {
+      if (listofPorts->GetCellValue(i,1).empty() ||
+          listofPorts->GetCellValue(i,2).empty() ||
+          listofPorts->GetCellValue(i,3).empty()) {
+        //std::cout << "Incomplete Entries\n";
+        wxMessageBox(wxT("Incomplete Entries"), wxT("Create Component"),
+                     wxOK | wxICON_INFORMATION, this);
+        return FALSE;
+
+      }
+    }
+  }
 
   //Check if another component with the same name already exists
   std::string compName(componentName->GetValue());
   std::string compDirName = GetLocation();
   Dir destDir = Dir(compDirName + ComponentSkeletonWriter::DIR_SEP + compName);
-  if (destDir.exists()) 
-    {
-      if (wxNO == wxMessageBox(wxT("Another component with the same name exists.\nDo you wan't to overwrite ?"), wxT("Create Component"),
-                               wxYES | wxNO | wxICON_INFORMATION | wxNO_DEFAULT, this))
-        return FALSE;
-    }
+  if (destDir.exists()) {
+    if (wxNO == wxMessageBox(wxT("Another component with the same name exists.\nDo you wan't to overwrite ?"), wxT("Create Component"), wxYES | wxNO | wxICON_INFORMATION | wxNO_DEFAULT, this))
+      return FALSE;
+  }
   return TRUE;
 }
 
+// TODO: would it make sense to put common functionality from
+// OnAddProvidesPort and OnAddUsesPort in a helper funtion?
+
 void ComponentWizardDialog::OnAddProvidesPort(wxCommandEvent& event)
 {
-  AddPortDialog addpport (this,  wxID_ANY, "Add provides port", wxPoint(10, 20), wxSize(600, 600), wxRESIZE_BORDER);
+  AddPortDialog addpport(this,  wxID_ANY, "Add provides port", wxPoint(10, 20), wxSize(600, 600), wxRESIZE_BORDER);
   if (addpport.ShowModal() == wxID_OK) {
-    bool flag = true;
+    bool emptyRowFlag = true;
     // To find the number of rows - Checking for the first non empty row from the last
-    for(int i=listofPorts->GetNumberRows()-1; (i>=0)&&(flag == true); i--)
-      {
-        if(!(listofPorts->GetCellValue(i,0).empty()&&listofPorts->GetCellValue(i,1).empty()&&listofPorts->GetCellValue(i,2).empty()&&listofPorts->GetCellValue(i,3).empty()))
-          {
-            flag = false;
-            count_table = i+1;
-          }
+    for (int i = listofPorts->GetNumberRows() - 1; (i >= 0) && (emptyRowFlag == true); i--) {
+      if (!(listofPorts->GetCellValue(i,0).empty() &&
+            listofPorts->GetCellValue(i,1).empty() &&
+            listofPorts->GetCellValue(i,2).empty() &&
+            listofPorts->GetCellValue(i,3).empty())) {
+        emptyRowFlag = false;
+        count_table = i+1;
       }
+    }
     count_table++;
-    int row=count_table-1;
+    int row = count_table - 1;
     listofPorts->InsertRows(row,1);
     listofPorts->SetCellValue(row,0,addpport.GetPortNameText());
     listofPorts->SetCellValue(row,1,addpport.GetDataTypeText());
@@ -259,18 +260,19 @@ void ComponentWizardDialog::OnAddProvidesPort(wxCommandEvent& event)
 
 void ComponentWizardDialog::OnAddUsesPort(wxCommandEvent& event)
 {
-  AddPortDialog addpport (this, wxID_ANY, "Add uses port", wxPoint(10, 20), wxSize(600, 600), wxRESIZE_BORDER);
+  AddPortDialog addpport(this, wxID_ANY, "Add uses port", wxPoint(10, 20), wxSize(600, 600), wxRESIZE_BORDER);
   if (addpport.ShowModal() == wxID_OK) {
-    bool flag = true;
+    bool emptyRowFlag = true;
     // To find the number of rows - Checking for the first non empty row from the last
-    for(int i=listofPorts->GetNumberRows()-1; (i>=0)&&(flag == true); i--)
-      {
-        if(!(listofPorts->GetCellValue(i,0).empty()&&listofPorts->GetCellValue(i,1).empty()&&listofPorts->GetCellValue(i,2).empty()&&listofPorts->GetCellValue(i,3).empty()))
-          {
-            flag = false;
-            count_table = i+1;
-          }
+    for (int i=listofPorts->GetNumberRows() - 1; (i >= 0) && (emptyRowFlag == true); i--) {
+      if (!(listofPorts->GetCellValue(i,0).empty() &&
+            listofPorts->GetCellValue(i,1).empty() &&
+            listofPorts->GetCellValue(i,2).empty() &&
+            listofPorts->GetCellValue(i,3).empty())) {
+        emptyRowFlag = false;
+        count_table = i+1;
       }
+    }
     count_table++;
     int row = count_table - 1;
     listofPorts->InsertRows(row, 1);
@@ -281,27 +283,30 @@ void ComponentWizardDialog::OnAddUsesPort(wxCommandEvent& event)
   }
 }
 
+// TODO: would it make sense to put common functionality from
+// OnRemoveProvidesPort and OnRemoveUsesPort in a helper funtion?
+
 //To Remove a Port from the List of Ports Added
 
 void ComponentWizardDialog::OnRemovePort(wxCommandEvent& event)
 {
-  bool flag = true;
+  bool emptyRowFlag = true;
   //To find the number of rows - Checking for the first non empty row from the last
-  for(int i=listofPorts->GetNumberRows()-1; (i>=0)&&(flag == true); i--)
-    {
-      if(!(listofPorts->GetCellValue(i,0).empty()&&listofPorts->GetCellValue(i,1).empty()&&listofPorts->GetCellValue(i,2).empty()&&listofPorts->GetCellValue(i,3).empty()))
-        {
-          flag = false;
-          count_table = i+1;
-        }
+  for (int i=listofPorts->GetNumberRows()-1; (i >= 0) && (emptyRowFlag == true); i--) {
+    if (!(listofPorts->GetCellValue(i,0).empty() &&
+          listofPorts->GetCellValue(i,1).empty() &&
+          listofPorts->GetCellValue(i,2).empty() &&
+          listofPorts->GetCellValue(i,3).empty())) {
+      emptyRowFlag = false;
+      count_table = i+1;
     }
+  }
   wxArrayInt sel_rows = listofPorts->GetSelectedRows();
-  for(int row_num=0;row_num<(int)sel_rows.Count();row_num++)
-    {
-      listofPorts->DeleteRows(sel_rows.Item(row_num),1);
-      count_table--;
-      listofPorts->InsertRows(listofPorts->GetNumberRows()-1,1);
-    }
+  for (int row_num=0;row_num<(int)sel_rows.Count();row_num++) {
+    listofPorts->DeleteRows(sel_rows.Item(row_num),1);
+    count_table--;
+    listofPorts->InsertRows(listofPorts->GetNumberRows()-1,1);
+  }
 }
 
 //To Preview the Files generated for the Component
@@ -313,17 +318,14 @@ void ComponentWizardDialog::OnPreviewCode(wxCommandEvent& event)
   pp.clear();
   up.clear();
 
-  for(int i=0;i<count_table;i++)
-    {
-      if(listofPorts->GetCellValue(i,3).compare("ProvidesPort")==0)
-        {
-          pp.push_back(new PortDescriptor(listofPorts->GetCellValue(i,0),listofPorts->GetCellValue(i,1),listofPorts->GetCellValue(i,2)));
-        }
-      if(listofPorts->GetCellValue(i,3).compare("UsesPort")==0)
-        {
-          up.push_back(new PortDescriptor(listofPorts->GetCellValue(i,0),listofPorts->GetCellValue(i,1),listofPorts->GetCellValue(i,2)));
-        }
+  for (int i=0;i<count_table;i++) {
+    if (listofPorts->GetCellValue(i,3).compare("ProvidesPort") == 0) {
+      pp.push_back(new PortDescriptor(listofPorts->GetCellValue(i,0),listofPorts->GetCellValue(i,1),listofPorts->GetCellValue(i,2)));
     }
+    if (listofPorts->GetCellValue(i,3).compare("UsesPort") == 0) {
+      up.push_back(new PortDescriptor(listofPorts->GetCellValue(i,0),listofPorts->GetCellValue(i,1),listofPorts->GetCellValue(i,2)));
+    }
+  }
   isPreviewed=true;
   ComponentWizardHelper newHelper(builder,componentName->GetValue(),GetLocation(),pp,up,isWithSidl);
   std::string sopf;
@@ -340,16 +342,16 @@ void ComponentWizardDialog::OnChoose(wxCommandEvent &e)
   std::string compDir = getCompDirName();
   wxDirDialog dialog(this, wxT("Testing directory picker"),compDir, wxDD_NEW_DIR_BUTTON);
   if (dialog.ShowModal() == wxID_OK){
-      wxString path = dialog.GetPath();
-      location->SetValue(path);
+    wxString path = dialog.GetPath();
+    location->SetValue(path);
   }
 }
 
 std::string ComponentWizardDialog::getCompDirName()
 {
-   std::string srcDir(sci_getenv("SCIRUN_SRCDIR"));
-   std::string compDir(srcDir + "/CCA/Components/");
-   return compDir;
+  std::string srcDir(sci_getenv("SCIRUN_SRCDIR"));
+  std::string compDir(srcDir + "/CCA/Components/");
+  return compDir;
 }
 
 std::string ComponentWizardDialog::getTempDirName()
@@ -359,15 +361,18 @@ std::string ComponentWizardDialog::getTempDirName()
   std::string tmpDirName = std::string(tmp  + ComponentSkeletonWriter::DIR_SEP + "ComponentGenerationWizard");
   return tmpDirName;
 }
+
 wxString ComponentWizardDialog::GetLocation()
 {
   std::string path = location->GetValue();
   int end = path.length()-1;
-  if(path.at(end) != '/'){
+  if (path.at(end) != '/') {
     path.append(end,'/');
   }
   return path;
 }
+
+
 //////////////////////////////////////////////////////////////////////////
 // AddPortDialog helper class
 
@@ -443,36 +448,33 @@ std::string AddPortDialog::GetDescriptionText() const
 
 bool AddPortDialog::Validate()
 {
-  if ((GetPortNameText().empty())) 
-    {
-      std::cout << "\nPort name is empty";
-      wxString msg;
-      msg.Printf(wxT("Port name field is Empty"));
+  if ((GetPortNameText().empty())) {
+    std::cout << "\nPort name is empty";
+    wxString msg;
+    msg.Printf(wxT("Port name field is Empty"));
 
-      wxMessageBox(msg, wxT("Add Provides Port"),
-                   wxOK | wxICON_INFORMATION, this);
-      return FALSE;
-    }
-  if (GetDataTypeText().empty()) 
-    {
-      wxString msg;
-      msg.Printf(wxT("Port type field is Empty"));
+    wxMessageBox(msg, wxT("Add Provides Port"),
+                 wxOK | wxICON_INFORMATION, this);
+    return FALSE;
+  }
+  if (GetDataTypeText().empty()) {
+    wxString msg;
+    msg.Printf(wxT("Port type field is Empty"));
 
-      wxMessageBox(msg, wxT("Add Uses Port"),
-                   wxOK | wxICON_INFORMATION, this);
+    wxMessageBox(msg, wxT("Add Uses Port"),
+                 wxOK | wxICON_INFORMATION, this);
 
-      return FALSE;
-    } 
-  if (GetDescriptionText().empty()) 
-    {
-      std::cout << "\nPort description is empty";
-      wxString msg;
-      msg.Printf(wxT("Port Description field is Empty"));
+    return FALSE;
+  }
+  if (GetDescriptionText().empty()) {
+    std::cout << "\nPort description is empty";
+    wxString msg;
+    msg.Printf(wxT("Port Description field is Empty"));
 
-      wxMessageBox(msg, wxT("Add Uses Port"),
-                   wxOK | wxICON_INFORMATION, this);
-      return FALSE;
-    }
+    wxMessageBox(msg, wxT("Add Uses Port"),
+                 wxOK | wxICON_INFORMATION, this);
+    return FALSE;
+  }
   return TRUE;
 }
 
