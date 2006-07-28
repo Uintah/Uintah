@@ -19,10 +19,9 @@ SET(SCIRUN_VERSION_STRING "${SCIRUN_VERSION_MAJOR}.${SCIRUN_VERSION_MINOR}.${SCI
 INCLUDE (CMakeBackwardCompatibilityC)
 
 #-----------------------------------------------------------------------------
-# Configure Dart testing support.  This should be done before any
+# Configure testing support.  This should be done before any
 # MESSAGE(FATAL_ERROR ...) commands are invoked.
-INCLUDE(${CMAKE_ROOT}/Modules/Dart.cmake)
-MARK_AS_ADVANCED(TCL_TCLSH DART_ROOT)
+INCLUDE( CTest )
 IF(BUILD_TESTING)
   ENABLE_TESTING()
   SET(BUILDNAME "${BUILDNAME}" CACHE STRING "Name of build on the dashboard")
@@ -297,7 +296,7 @@ SET(TK_VERSION 8.3)
 # Z lib
 IF(WIN32 AND NOT CYGWIN)
   SET(ZLIB_LIBRARY ${SCI_THIRDPARTY_DIR}/lib/z)
-  SET(ZLIB_INCLUDE ${SCI_THIRDPARTY_DIR}/include)	 
+  SET(ZLIB_INCLUDE ${SCI_THIRDPARTY_DIR}/include)
 ELSE(WIN32 AND NOT CYGWIN)
   FIND_PACKAGE( ZLIB )
 ENDIF(WIN32 AND NOT CYGWIN)
@@ -306,7 +305,7 @@ SET(SCIRUN_INCLUDE_THIRDPARTY ${SCIRUN_INCLUDE_THIRDPARTY} ${ZLIB_INCLUDE_DIR})
 
 #-----------------------------------------------------------------------------
 # DV XML2 FROM 3P FOR NOW
-SET(XML2_LIBRARY ${SCI_THIRDPARTY_DIR}/lib/xml2)	 
+SET(XML2_LIBRARY ${SCI_THIRDPARTY_DIR}/lib/xml2)
 
 #-----------------------------------------------------------------------------
 # Teem
