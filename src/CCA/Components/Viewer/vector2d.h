@@ -58,6 +58,9 @@ public:
     y = v.y;
   }
 
+  double getX() const { return x; }
+  double getY() const { return y; }
+
   const vector2d& operator+() const { return *this; }
   vector2d operator-() const { return vector2d(-x, -y); }
 
