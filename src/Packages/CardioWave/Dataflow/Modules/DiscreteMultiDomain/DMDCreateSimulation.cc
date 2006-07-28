@@ -218,7 +218,7 @@ void DMDCreateSimulation::execute()
   int reference_num;
   int stimulus_num;
   std::string fieldname;
-  membrane_num = 0;
+  membrane_num = 1;
 
   {
     std::ostringstream oss;

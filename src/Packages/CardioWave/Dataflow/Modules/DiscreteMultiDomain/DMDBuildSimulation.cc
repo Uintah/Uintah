@@ -33,7 +33,7 @@ DECLARE_MAKER(DMDBuildSimulation)
 DMDBuildSimulation::DMDBuildSimulation(GuiContext* ctx)
   : Module("DMDBuildSimulation", ctx, Source, "DiscreteMultiDomain", "CardioWave"),
     gui_filename_(ctx->subVar("filename")),
-    gui_enable_debug_(ctx->subVar("enabledebug")),
+    gui_enable_debug_(ctx->subVar("usedebug")),
     gui_build_visualization_bundle_(ctx->subVar("buildvisbundle"))
 {
 }

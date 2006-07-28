@@ -5,7 +5,7 @@
 <synapse>
 <name>Modified LuoRudy Model</name>
 <file>SynMLR.c</file>
-<nodetype>mlr_nodetype</nodetype>
+<nodetype>sMLR_NodeType</nodetype>
 <parameters>Eb=-59.87 
 Ek=-77.0 
 Ek1=-87.26 
@@ -24,8 +24,8 @@ Gsi=0.09
 <synapse>
 <name>Resistive Gap Junction</name>
 <file>SynPassiveGJ.c</file>
-<nodetype>passivegj_nodetype</nodetype>
-<parameters>spassivegj_resistance=0.0015
+<nodetype>sPassiveGJ_NodeType</nodetype>
+<parameters>sPassiveGJ_resistance=0.0015
 </parameters>
 <description>This is a simple resistive gap junction model.
 </description>
@@ -167,6 +167,8 @@ dumpve=no
 dumpvb=no
 dumpq=no
 dumpaux=no
+dumpr=no
+dumpb=no
 dumptime=yes
 dumpstep=100
 dumpsize=20
@@ -184,6 +186,8 @@ dumpvi=no
 dumpve=no
 dumpvb=no
 dumpq=no
+dumpr=no
+dumpb=no
 dumpaux=no
 dumptime=yes
 dumpstep=100
@@ -229,7 +233,6 @@ printtime=no
 <file>NeuroKernel.c VectorOps.c CWaveKernel.c</file>
 <parameters>beta=1.0
 cm=1.0
-debug=4
 loadstate=no
 savestate=no
 restartfile=cwmodel.restart
@@ -250,7 +253,6 @@ ve0=0
 <file>VectorOps.c CWaveKernel.c</file>
 <parameters>beta=1.0
 cm=1.0
-debug=4
 loadstate=no
 savestate=no
 loadfile=restart.load
