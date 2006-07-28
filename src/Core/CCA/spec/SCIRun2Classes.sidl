@@ -105,12 +105,14 @@ interface Builder extends sci.cca.Component {
   bool connectGoPort(in string usesName, in string providesPortName, in cca.ComponentID cid, out string usesPortName);
   void disconnectGoPort(in string goPortName);
   int go(in string goPortName);
+
+  // test saving files
+  void saveApplication();
+  // test saving files
 }
 
 // text builder also should have an implementing class
-class GUIBuilder implements-all sci.cca.Builder,
-                                sci.cca.ports.ComponentEventListener,
-                                sci.cca.ports.ConnectionEventListener {
+class GUIBuilder implements-all sci.cca.Builder {
   // manage UI ports for the GUI
   // note: no UI handling for TxtBuilder
   bool connectUIPort(in string usesName, in string providesPortName, in cca.ComponentID cid, out string usesPortName);
