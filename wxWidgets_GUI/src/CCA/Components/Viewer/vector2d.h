@@ -46,6 +46,8 @@
 #include <assert.h>
 #include <iostream>
 
+namespace Viewer {
+
 class vector2d  {
 public:
   vector2d() : x(0), y(0) {}
@@ -73,6 +75,19 @@ public:
   void normalize();
 
 private:
+  friend bool operator==(const vector2d &t1, const vector2d &t2);
+  friend bool operator!=(const vector2d &t1, const vector2d &t2);
+  friend std::istream &operator>>(std::istream &is, vector2d &t);
+  friend std::ostream &operator<<(std::ostream &os, const vector2d &t);
+  friend vector2d unit_vector(const vector2d& v);
+  friend vector2d operator+(const vector2d &v1, const vector2d &v2);
+  friend vector2d operator-(const vector2d &v1, const vector2d &v2);
+  friend vector2d operator*(double t, const vector2d &v);
+  friend vector2d operator*(const vector2d &v, double t);
+  friend vector2d operator*(const vector2d &v1, const vector2d &v2);
+  friend vector2d operator/(const vector2d &v, double t);
+  friend double operator%(const vector2d &v1, const vector2d &v2);
+
   double x, y;
 };
 
@@ -85,86 +100,103 @@ inline void vector2d::normalize() {
 //////////////////////////////////////////////////////////////////////////
 // vector2d operators
 
-inline vector2d& vector2d::operator+=(const vector2d &v){
+inline vector2d& vector2d::operator+=(const vector2d &v)
+{
   x  += v.x;
   y  += v.y;
   return *this;
 }
 
-inline vector2d& vector2d::operator-=(const vector2d& v) {
+inline vector2d& vector2d::operator-=(const vector2d& v)
+{
   x  -= v.x;
   y  -= v.y;
   return *this;
 }
 
-inline vector2d& vector2d::operator*=(const double t) {
+inline vector2d& vector2d::operator*=(const double t)
+{
   x  *= t;
   y  *= t;
   return *this;
 }
 
-inline vector2d& vector2d::operator/=(const double t) {
+inline vector2d& vector2d::operator/=(const double t)
+{
   x  /= t;
   y  /= t;
   return *this;
 }
 
 //////////////////////////////////////////////////////////////////////////
-// convenience functions that use vector2d
+// convenience (friend) functions that use vector2d
 
-inline bool operator==(const vector2d &t1, const vector2d &t2) {
+inline bool operator==(const vector2d &t1, const vector2d &t2)
+{
   return ((t1.x == t2.x) && (t1.y == t2.y));
 }
 
-inline bool operator!=(const vector2d &t1, const vector2d &t2) {
+inline bool operator!=(const vector2d &t1, const vector2d &t2)
+{
   return ((t1.x != t2.x) || (t1.y != t2.y));
 }
 
-inline std::istream &operator>>(std::istream &is, vector2d &t) {
+inline std::istream &operator>>(std::istream &is, vector2d &t)
+{
   is >> t.x >> t.y;
   return is;
 }
 
-inline std::ostream &operator<<(std::ostream &os, const vector2d &t) {
+inline std::ostream &operator<<(std::ostream &os, const vector2d &t)
+{
   os << t.x << " " << t.y;
   return os;
 }
 
-inline vector2d unit_vector(const vector2d& v) {
+inline vector2d unit_vector(const vector2d& v)
+{
   double k = 1.0 / sqrt(v.x * v.x + v.y * v.y);
   return vector2d(v.x*k, v.y*k);
 }
 
-inline vector2d operator+(const vector2d &v1, const vector2d &v2) {
+inline vector2d operator+(const vector2d &v1, const vector2d &v2)
+{
   return vector2d( v1.x + v2.x, v1.y + v2.y);
 }
 
-inline vector2d operator-(const vector2d &v1, const vector2d &v2) {
+inline vector2d operator-(const vector2d &v1, const vector2d &v2)
+{
   return vector2d( v1.x - v2.x, v1.y - v2.y);
 }
 
-inline vector2d operator*(double t, const vector2d &v) {
+inline vector2d operator*(double t, const vector2d &v)
+{
   return vector2d(t * v.x, t * v.y);
 }
 
-inline vector2d operator*(const vector2d &v, double t) {
+inline vector2d operator*(const vector2d &v, double t)
+{
   return vector2d(t * v.x, t * v.y);
 }
 
 
-inline vector2d operator*(const vector2d &v1, const vector2d &v2) {
+inline vector2d operator*(const vector2d &v1, const vector2d &v2)
+{
   return vector2d(v1.x * v2.x, v1.y * v2.y);
 }
 
 
-inline vector2d operator/(const vector2d &v, double t) {
+inline vector2d operator/(const vector2d &v, double t)
+{
   return vector2d(v.x / t, v.y / t);
 }
 
 // inner product
-inline double operator%(const vector2d &v1, const vector2d &v2) {
+inline double operator%(const vector2d &v1, const vector2d &v2)
+{
   return v1.x * v2.x + v1.y * v2.y ;
 }
 
+}
 
 #endif
