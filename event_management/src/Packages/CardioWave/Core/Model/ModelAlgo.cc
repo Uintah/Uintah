@@ -549,8 +549,8 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
           converteralgo.MatrixToDouble(Duration,duration);
         }
         stimulusdomain.push_back(domain);
-        stimulusstart.push_back(end);     
-        stimulusend.push_back(start);
+        stimulusstart.push_back(start);     
+        stimulusend.push_back(end);
         stimulusduration.push_back(duration);
         num_stimulus++;
 
@@ -815,6 +815,26 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     error("DMDBuildDomain: Could not build system sparse matrix");
     return (false);  
   }
+
+
+  if (!(dataioalgo.WriteMatrix("fe_matrix.mat",fematrix)))
+  {
+    error("DMDBuildDomain: Could not write matrix");  
+    return (false);
+  }
+
+  if (!(dataioalgo.WriteMatrix("syn_matrix.mat",synmatrix)))
+  {
+    error("DMDBuildDomain: Could not write matrix");  
+    return (false);
+  }
+
+  if (!(dataioalgo.WriteMatrix("sys_matrix.mat",sysmatrix)))
+  {
+    error("DMDBuildDomain: Could not write matrix");  
+    return (false);
+  }
+
   
   synmatrix = 0;
   fematrix = 0;
@@ -853,7 +873,6 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   NodeType = mapping*NodeType;
   DomainType = mapping*DomainType;
   VolumeVec = mapping*VolumeVec;
-
 
   if (!(dataioalgo.WriteMatrix(filename_mapping,mapping,"CardioWave Sparse Matrix")))
   {
@@ -949,7 +968,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     {
       for (int q=0; q< membranetable[p].size(); q++)
       { 
-      memfile << membranetable[p][q].snode << " " << membranetable[p][q].node1 << " " << membranetable[p][q].node2 << "\n";
+      memfile << membranetable[p][q].snode << " " << membranetable[p][q].node2 << " " << membranetable[p][q].node1 << "\n";
       }
     }
   }

@@ -886,7 +886,7 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
 
     header[0] = 'V';
     header[1] = 'B';
-    header[2] = '8'; // We do not yet support byte vectors of size 2
+    header[2] = '8'; // We do not yet support vectors of size 4
     header[3] = ':';
     header[4] = ' ';
     if (byteswapmachine() == true) header[1] = 'L';
