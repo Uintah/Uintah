@@ -34,23 +34,20 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/Viewer
 
 SRCS     += \
-	$(SRCDIR)/Viewer.cc \
-	$(SRCDIR)/ViewerWindow.cc \
-	$(SRCDIR)/MainWindow.cc \
-	$(SRCDIR)/Colormap.cc
+            $(SRCDIR)/Viewer.cc \
+            $(SRCDIR)/ViewerWindow.cc \
+            $(SRCDIR)/MainWindow.cc \
+            $(SRCDIR)/Colormap.cc
 
-#$(SRCDIR)/moc_ViewerWindow.cc \
 
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm \
-           Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
+PSELIBS := \
+           Core/CCA/PIDL Core/CCA/spec \
+           Core/Thread Core/Containers Core/Exceptions
 
-ifeq ($(HAVE_WX),yes)
- LIBS := $(WX_LIBRARY)
-endif
+LIBS := $(WX_LIBRARY) $(M_LIBRARY)
+
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
-#include $(SCIRUN_SCRIPTS)/program.mk
 
 $(SRCDIR)/Viewer.o: Core/CCA/spec/cca_sidl.h
 $(SRCDIR)/ViewerWindow.o: Core/CCA/spec/cca_sidl.h

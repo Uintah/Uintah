@@ -31,36 +31,25 @@
 
 SRCDIR   := CCA/Components
 
-#ifeq ($(HAVE_QT),yes)
-#  SUBDIRS := \
-#             $(SRCDIR)/TxtBuilder \
-#             $(SRCDIR)/Hello  \
-#             $(SRCDIR)/ListPlotter \
-#             $(SRCDIR)/ZList \
-#             $(SRCDIR)/ZListWriter \
-#             $(SRCDIR)/Viewer \
-#             $(SRCDIR)/LinSolver \
-#             $(SRCDIR)/FileReader \
-#             $(SRCDIR)/FEM \
-#             $(SRCDIR)/Tri \
-#             $(SRCDIR)/TableTennis \
-#             $(SRCDIR)/TTClient \
-#             $(SRCDIR)/World \
-#             $(SRCDIR)/PDEdriver
-#else
-# SUBDIRS := \
-#            $(SRCDIR)/TxtBuilder \
-#            $(SRCDIR)/Hello \
-#            $(SRCDIR)/World
-#endif
-
-SUBDIRS := \
-            $(SRCDIR)/Hello \
-            $(SRCDIR)/World \
-            $(SRCDIR)/PDEdriver
+SUBDIRS   := \
+             $(SRCDIR)/TxtBuilder  \
+             $(SRCDIR)/Hello       \
+             $(SRCDIR)/World       \
+             $(SRCDIR)/TableTennis \
+             $(SRCDIR)/TTClient    \
+             $(SRCDIR)/FEM         \
+             $(SRCDIR)/LinSolver
 
 ifeq ($(HAVE_WX),yes)
-  SUBDIRS += $(SRCDIR)/GUIBuilder
+  SUBDIRS += \
+             $(SRCDIR)/GUIBuilder  \
+             $(SRCDIR)/PDEdriver   \
+             $(SRCDIR)/FileReader  \
+             $(SRCDIR)/Tri         \
+             $(SRCDIR)/Viewer      \
+             $(SRCDIR)/ListPlotter \
+             $(SRCDIR)/ZList       \
+             $(SRCDIR)/ZListWriter
 endif
 
 ifeq ($(HAVE_TAO),yes)

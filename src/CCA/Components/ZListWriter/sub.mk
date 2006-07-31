@@ -33,14 +33,13 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/ZListWriter
 
 SRCS     += \
-	$(SRCDIR)/ZListWriter.cc
+            $(SRCDIR)/ZListWriter.cc
 
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
-	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
+PSELIBS  := \
+            Core/CCA/PIDL Core/CCA/spec \
+            Core/Thread Core/Containers Core/Exceptions
 
-ifeq ($(HAVE_QT),yes)
-LIBS := $(QT_LIBRARY)
-endif
+LIBS := $(WX_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

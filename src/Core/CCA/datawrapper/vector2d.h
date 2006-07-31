@@ -46,7 +46,7 @@
 #include <assert.h>
 #include <iostream>
 
-namespace Viewer {
+namespace SCIRun {
 
 class vector2d  {
 public:

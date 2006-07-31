@@ -334,6 +334,9 @@ ifeq ($(BUILD_SCIRUN2),yes)
   HAVE_GLOBUS := @HAVE_GLOBUS@
 
   HAVE_WX := @HAVE_WX@
+  ifeq ($(HAVE_WX), yes)
+    HAVE_GUI := yes
+  endif
   WX_LIBRARY := @WX_LIBS@
   WX_CXXFLAGS := @WX_CXXFLAGS@
 

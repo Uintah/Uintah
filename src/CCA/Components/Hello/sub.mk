@@ -48,11 +48,10 @@ $(SRCDIR)/Hello_sidl.h: $(SRCDIR)/Hello.sidl $(SIDL_EXE)
 GENHDRS := $(SRCDIR)/Hello_sidl.h
 
 PSELIBS := \
-#Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm Core/CCA/spec \
            Core/CCA/PIDL Core/CCA/spec \
            Core/Thread Core/Containers Core/Exceptions
 
-ifeq ($(HAVE_WX),yes)
+ifeq ($(HAVE_GUI),yes)
  LIBS := $(WX_LIBRARY)
 endif
 

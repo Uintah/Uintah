@@ -65,19 +65,8 @@ public:
   virtual int go();
 
 private:
-//   void updateProgress(int counter);
   sci::cca::Services::pointer services;
-//   sci::cca::ports::Progress::pointer pPtr;
 };
-
-// class PDEComponentIcon : public virtual sci::cca::ports::ComponentIcon {
-// public:
-//   virtual ~PDEComponentIcon() {}
-//   virtual std::string getDisplayName();
-//   virtual std::string getDescription();
-//   virtual std::string getIconShape();
-//   virtual int getProgressBar();
-// };
 
 }
 

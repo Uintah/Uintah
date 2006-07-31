@@ -33,6 +33,8 @@
 
 #if defined (HAVE_WX)
 
+#define HAVE_GUI 1
+
 #include <wx/wxprec.h>
 #ifndef WX_PRECOMP
 # include <wx/wx.h>

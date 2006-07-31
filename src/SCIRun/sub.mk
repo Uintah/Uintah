@@ -34,22 +34,23 @@ SRCDIR   := SCIRun
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCS     += \
-	    $(SRCDIR)/SCIRunFramework.cc \
-	    $(SRCDIR)/ComponentDescription.cc \
-	    $(SRCDIR)/ComponentInstance.cc \
-	    $(SRCDIR)/ComponentModel.cc \
-	    $(SRCDIR)/PortDescription.cc \
-	    $(SRCDIR)/PortInstance.cc \
-	    $(SRCDIR)/PortInstanceIterator.cc\
-	    $(SRCDIR)/CCACommunicator.cc \
-	    $(SRCDIR)/resourceReference.cc \
-	    $(SRCDIR)/TypeMap.cc \
-	    $(SRCDIR)/SCIRunLoader.cc \
-	    $(SRCDIR)/ApplicationLoader.cc
+            $(SRCDIR)/SCIRunFramework.cc \
+            $(SRCDIR)/ComponentDescription.cc \
+            $(SRCDIR)/ComponentInstance.cc \
+            $(SRCDIR)/ComponentModel.cc \
+            $(SRCDIR)/PortDescription.cc \
+            $(SRCDIR)/PortInstance.cc \
+            $(SRCDIR)/PortInstanceIterator.cc\
+            $(SRCDIR)/CCACommunicator.cc \
+            $(SRCDIR)/resourceReference.cc \
+            $(SRCDIR)/TypeMap.cc \
+            $(SRCDIR)/SCIRunLoader.cc \
+            $(SRCDIR)/ApplicationLoader.cc \
+            $(SRCDIR)/ComponentSkeletonWriter.cc
 
 SUBDIRS := \
-	    $(SRCDIR)/CCA \
-	    $(SRCDIR)/Internal
+           $(SRCDIR)/CCA \
+           $(SRCDIR)/Internal
 
 ifeq ($(BUILD_DATAFLOW),yes)
   SUBDIRS += $(SRCDIR)/Dataflow
@@ -65,8 +66,8 @@ endif
 
 ifeq ($(HAVE_TAO),yes)
  SUBDIRS += \
-	    $(SRCDIR)/Corba \
-	    $(SRCDIR)/Tao
+            $(SRCDIR)/Corba \
+            $(SRCDIR)/Tao
 endif
 
 ifeq ($(BUILD_BRIDGE),yes)

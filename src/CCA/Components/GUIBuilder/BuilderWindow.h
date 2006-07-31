@@ -46,7 +46,7 @@
 
 // turn off for release
 #ifndef GUI_TEST
-#  define GUI_TEST 1
+#  define GUI_TEST 0
 #endif
 
 #include <sci_wx.h>
