@@ -104,108 +104,21 @@ bool ApplicationLoader::loadNetworkFile()
     }
   }
 
-//   GuiInterface *gui = GuiInterface::getSingleton();
-//   gui->eval("::netedit dontschedule");
-
-  // parse the doc at network node.
-  //process_network_node(doc->children);
 
   xmlFreeDoc(doc);
   /* free up the parser context */
   xmlFreeParserCtxt(ctxt);
-// #ifndef _WIN32
-//   // there is a problem on windows when using Uintah
-//   // which is either caused or exploited by this
-//   xmlCleanupParser();
-// #endif
 
-//   gui->eval("setGlobal NetworkChanged 0");
-//   gui->eval("set netedit_savefile " + net_file_);
-//   gui->eval("::netedit scheduleok");
-
-  // first draw autoview.
-//   autoview_pending_ = true;
-//   return true;
-
-//   if (filename.empty()) {
-//     //displayMsg("Error: cannot load file with empty file name.");
-//     // use GUIService to display error message
-//     return;
-//   }
-//   std::ifstream is(filename.c_str());
-
-//   int numMod = 0;
-//   int numConn = 0;
-//   std::string modName;
-//   int modName_x;
-//   int modName_y;
-//   std::vector<sci::cca::ComponentID::pointer> cidTable;
-
-//   is >> numMod >> numConn;
-//   std::cout << "numMod=" << numMod << std::endl;
-//   std::cout << "numConn=" << numConn << std::endl;
-
-//   // If there's a error creating a component, stop trying to load
-//   // the network file until there are improvements to the
-//   // network file format.
-//   try {
-// //     sci::cca::ports::BuilderService::pointer builder = pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
-//     for (int i = 0; i < numMod; i++) {
-//       is >> modName >> modName_x >> modName_y;
-
-//       sci::cca::ComponentID::pointer cid;
-//       TypeMap *tm = new TypeMap;
-//       tm->putInt("x", modName_x);
-//       tm->putInt("y", modName_y);
-
-//       cid = builder->createInstance(modName,
-//                                     modName, sci::cca::TypeMap::pointer(tm));
-
-//       if (! cid.isNull()) {
-//         if (modName != "SCIRun.Builder") {
-//           cidTable.push_back(cid);
-//         }
-//       }
-//     }
-
-//     if (cidTable.size() < 2) {
-//       // report error
-//       unsetCursor();
-//       return;
-//     }
-
-//     for (int i = 0; i < numConn; i++) {
-//       int iu, ip;
-//       std::string up, pp;
-//       is >> iu >> up >> ip >> pp;
-//       //networkCanvasView->addPendingConnection(cidTable[iu], up, cidTable[ip], pp);
-//       sci::cca::ConnectionID::pointer connID =
-//         builder->connect(cidTable[iu], up, cidTable[ip], pp);
-//     }
-//   }
-//   catch(const sci::cca::CCAException::pointer &pe) {
-//     //displayMsg(pe->getNote());
-//   }
-//   // is this still needed? - for SCIRun Dataflow maybe?
-//   catch(const Exception &e) {
-//     //displayMsg(e.message());
-//   }
-//   catch(...) {
-//     //displayMsg("Caught unexpected exception while loading network.");
-//   }
-
-// //   services->releasePort("cca.BuilderService");
-//   is.close();
   return false;
 }
 
-bool ApplicationLoader::saveNetworkFileAs(const std::string& fn)
+bool ApplicationLoader::saveNetworkFileAs(const sci::cca::ports::BuilderService::pointer& bs, const sci::cca::GUIBuilder::pointer& gs, const std::string& fn)
 {
   fileName = fn;
-  return saveNetworkFile();
+  return saveNetworkFile(bs, gs);
 }
 
-bool ApplicationLoader::saveNetworkFile()
+bool ApplicationLoader::saveNetworkFile(const sci::cca::ports::BuilderService::pointer& bs, const sci::cca::GUIBuilder::pointer& gs)
 {
   if (fileName.empty()) {
     return false;
@@ -238,47 +151,6 @@ bool ApplicationLoader::saveNetworkFile()
    */
   xmlNewProp(root_node, BAD_CAST "version", BAD_CAST SR2_VERSION);
 
-//   QCanvasItemList tempQCL = miniCanvas->allItems();
-//   setCursor(Qt::WaitCursor);
-//   std::ofstream saveOutputFile(filename.c_str());
-
-//   const ModuleMap *modules = networkCanvasView->getModules();
-//   std::vector<Module*> saveModules;
-//   std::vector<Connection*> saveConnections = networkCanvasView->getConnections();
-
-//   saveOutputFile << modules->size() << std::endl;
-//   saveOutputFile << saveConnections.size() << std::endl;
-
-//   if (saveOutputFile.is_open()) {
-//     for (ModuleMap::const_iterator iter = modules->begin(); iter != modules->end(); iter++) {
-//       saveOutputFile << iter->second->componentID()->getInstanceName() << std::endl;
-//       saveOutputFile << iter->second->x() << std::endl;
-//       saveOutputFile << iter->second->y() << std::endl;
-//       saveModules.push_back(iter->second);
-//     }
-
-//     // inefficient (O(n^2)), but will change with improvements to network file format
-//     for (unsigned int k = 0; k < saveConnections.size(); k++) {
-//       Module* um = saveConnections[k]->usesPort()->module();
-//       Module* pm = saveConnections[k]->providesPort()->module();
-//       unsigned int iu = 0;
-//       unsigned int ip = 0;
-
-//       for (unsigned int i = 0; i < saveModules.size();i++) {
-//         if (saveModules[i] == um) {
-//           iu = i;
-//         }
-//         if (saveModules[i] == pm) {
-//           ip = i;
-//         }
-//       }
-//       saveOutputFile << iu << " " <<
-//         saveConnections[k]->usesPort()->name() << " " << ip << " " <<
-//         saveConnections[k]->providesPort()->name() << std::endl;
-//     }
-//   }
-//   saveOutputFile.close();
-//   unsetCursor();
   xmlSaveFormatFileEnc(fileName.c_str(), xmlDoc, "UTF-8", 1);
 
   // free the document

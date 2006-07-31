@@ -1,29 +1,29 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
 
 
@@ -38,19 +38,11 @@
  *
  */
 
-#include <sci_defs/qt_defs.h>
 #include <CCA/Components/TTClient/TTClient.h>
-#include <CCA/Components/Builder/QtUtils.h>
 #include <Core/Thread/Time.h>
+#include <sci_wx.h>
 #include <iostream>
 
-#if HAVE_QT
- #include <qmessagebox.h>
- #include <qinputdialog.h>
- #include <qstring.h>
-#endif
-
-using namespace std;
 using namespace SCIRun;
 
 extern "C" sci::cca::Component::pointer make_SCIRun_TTClient()
@@ -68,7 +60,6 @@ TTClient::~TTClient()
   services->removeProvidesPort("ui");
   services->removeProvidesPort("go");
   services->unregisterUsesPort("tt");
-  services->unregisterUsesPort("progress");
 }
 
 void TTClient::setServices(const sci::cca::Services::pointer& svc)
@@ -87,64 +78,82 @@ void TTClient::setServices(const sci::cca::Services::pointer& svc)
   svc->addProvidesPort(goPortPtr, "go", "sci.cca.ports.GoPort", props);
 
   svc->registerUsesPort("tt", "sci.cca.ports.TTPort", props);
-    svc->registerUsesPort("progress","sci.cca.ports.Progress", props);
 }
 
-int ttUIPort::ui() 
+int ttUIPort::ui()
 {
-#ifdef HAVE_QT
-    bool ok;
-    int res = QInputDialog::getInteger("TTClient", "TTClient iterate count (from [1, 1000]):",
-        TTCl->getCount(), 1, 1000, 1, &ok);
-    if (ok && res > 0) {
-      TTCl->setCount(res);
-    }
+#if HAVE_GUI
+  int res = (int) wxGetNumberFromUser( wxT("Ping pong test between TTClient and TableTennis."),
+                                       wxT("Iterate count (from [1, 1000]):"),
+                                       wxT("TTClient"),
+                                       TTCl->getCount(), 1, 1000);
+  if (res > 0) {
+    TTCl->setCount(res);
+  }
 #else
-    std::cerr << "UI not available, using default (count = " << TTCl->getCount() << ")." << std::endl;
+  std::cerr << "UI not available, using default (count = " << TTCl->getCount() << ")." << std::endl;
 #endif
   return 0;
 }
 
 
-int ttGoPort::go() 
+int ttGoPort::go()
 {
-  PP::PingPong::pointer PPptr;
-  sci::cca::ports::Progress::pointer pPtr;
+  sci::cca::Services::pointer services = TTCl->getServices();
+#if HAVE_GUI
+  sci::cca::ports::GUIService::pointer guiService;
   try {
-      sci::cca::Port::pointer pp = TTCl->getServices()->getPort("tt");
-      PPptr = pidl_cast<PP::PingPong::pointer>(pp);
-      sci::cca::Port::pointer progPort = TTCl->getServices()->getPort("progress");
-      pPtr = pidl_cast<sci::cca::ports::Progress::pointer>(progPort);
+    guiService = pidl_cast<sci::cca::ports::GUIService::pointer>(services->getPort("cca.GUIService"));
+    if (guiService.isNull()) {
+      wxMessageBox(wxT("GUIService is not available"), wxT("TTClient"), wxOK|wxICON_ERROR, 0);
+      return -2;
+    }
   }
   catch (const sci::cca::CCAException::pointer &e) {
-#if HAVE_QT
-    QMessageBox::critical(0, "TTClient", e->getNote());
+    wxMessageBox(e->getNote(), wxT("TTClient"), wxOK|wxICON_ERROR, 0);
+  }
+  sci::cca::ComponentID::pointer cid = services->getComponentID();
+#endif
+
+  PP::PingPong::pointer PPptr;
+  try {
+    sci::cca::Port::pointer pp = services->getPort("tt");
+    PPptr = pidl_cast<PP::PingPong::pointer>(pp);
+  }
+  catch (const sci::cca::CCAException::pointer &e) {
+#if HAVE_GUI
+    wxMessageBox(e->getNote(), wxT("TTClient"), wxOK|wxICON_ERROR, 0);
 #else
     cout << e->getNote() << endl;
 #endif
-    return 1;
+    return -1;
   }
 
   const int mi = TTCl->getCount();
   double start = Time::currentSeconds();
   for (int i = 0; i < mi; i++) {
-      int retval = PPptr->pingpong(i);
-      pPtr->updateProgress(i+1, mi);
-      cout << "Pingpong: retval = " << retval << endl;
+    int retval = PPptr->pingpong(i);
+#if HAVE_GUI
+  guiService->updateProgress(cid, int(i / mi));
+#endif
+    std::cout << "Pingpong: retval = " << retval << std::endl;
   }
   double elapsed = Time::currentSeconds() - start;
-  ostringstream stm;
+  std::ostringstream stm;
   stm << mi << " reps in " << elapsed << " seconds" << std::endl;
   double us = elapsed / mi * 1000 * 1000;
   stm << us << " us/rep" << std::endl;
 
-#if HAVE_QT
-  QMessageBox::information(0, "TTClient", stm.str());
+#if HAVE_GUI
+  wxMessageBox(wxT(stm.str().c_str()), wxT("TTClient"), wxOK|wxICON_INFORMATION, 0);
+  guiService->updateProgress(cid, 100);
+  services->releasePort("cca.GUIService");
 #else
-  std::cerr << stm.str();
+  std::cerr << stm.str() << std::endl;
 #endif
 
-  TTCl->getServices()->releasePort("tt");
-  TTCl->getServices()->releasePort("progress");
+  services->releasePort("tt");
+  services->releasePort("progress");
+
   return 0;
 }

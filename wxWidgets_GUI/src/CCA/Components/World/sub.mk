@@ -40,7 +40,7 @@ PSELIBS := \
            Core/CCA/PIDL Core/CCA/spec \
            Core/Thread Core/Containers Core/Exceptions
 
-ifeq ($(HAVE_WX),yes)
+ifeq ($(HAVE_GUI),yes)
  LIBS := $(WX_LIBRARY)
 endif
 

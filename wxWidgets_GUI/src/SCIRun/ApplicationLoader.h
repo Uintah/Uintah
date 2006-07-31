@@ -29,6 +29,8 @@
 #ifndef SCIRun_ApplicationLoader_h
 #define SCIRun_ApplicationLoader_h
 
+#include <Core/CCA/spec/cca_sidl.h>
+
 #include <libxml/xmlreader.h>
 #include <string>
 #include <stack>
@@ -47,9 +49,14 @@ public:
   ApplicationLoader(const std::string& fn) : fileName(fn) {}
   const std::string& getFileName() const { return fileName; }
   void setFileName(const std::string& fn);
+
   bool loadNetworkFile();
-  bool saveNetworkFileAs(const std::string& fn);
-  bool saveNetworkFile();
+
+  bool saveNetworkFileAs(const sci::cca::ports::BuilderService::pointer& bs, const sci::cca::GUIBuilder::pointer& gs, const std::string& fn);
+  //bool saveNetworkFileAs(const sci::cca::ports::BuilderService::pointer& bs, const std::string& fn) { return false; }
+
+  bool saveNetworkFile(const sci::cca::ports::BuilderService::pointer& bs, const sci::cca::GUIBuilder::pointer& gs);
+  //bool saveNetworkFile(const sci::cca::ports::BuilderService::pointer& bs) { return false; }
 
   static const std::string APPLICATION_FILE_EXTENSION;
 

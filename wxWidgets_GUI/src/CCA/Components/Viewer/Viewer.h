@@ -43,24 +43,26 @@
 
 #include <Core/CCA/spec/cca_sidl.h>
 
-namespace SCIRun {
+namespace Viewer {
 
 class Viewer;
 
-class myViewPort : public virtual sci::cca::ports::ViewPort {
+class ViewPort : public virtual sci::cca::ports::ViewPort {
 public:
-  virtual ~myViewPort(){}
+  virtual ~ViewPort() {}
   virtual int view2dPDE(const SSIDL::array1<double> &nodes,
                         const SSIDL::array1<int> &triangles,
                         const SSIDL::array1<double> &solution);
 };
 
+// rename to 2D Viewer???
 
 class Viewer : public sci::cca::Component {
 public:
   Viewer();
   virtual ~Viewer();
   virtual void setServices(const sci::cca::Services::pointer& svc);
+
 private:
   Viewer(const Viewer&);
   Viewer& operator=(const Viewer&);

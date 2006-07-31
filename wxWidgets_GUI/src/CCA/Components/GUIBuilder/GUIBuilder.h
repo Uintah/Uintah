@@ -139,6 +139,9 @@ public:
   //void getPortColor(const std::string& portName, char& red, char& green, char& blue);
   void* getPortColor(const std::string& portName);
 
+  // test ApplicationLoader
+  virtual void saveApplication();
+
   static void setApp(wxSCIRunApp& a) { app = &a; }
 
   static const std::string DEFAULT_SRC_DIR;

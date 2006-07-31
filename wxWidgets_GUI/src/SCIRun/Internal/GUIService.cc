@@ -56,8 +56,14 @@ void GUIService::removeBuilder(const std::string& builderName)
   }
 }
 
+// TODO: update SIDL with throws clause
 void GUIService::updateProgress(const sci::cca::ComponentID::pointer& cid, int progressPercent)
 {
+  if (progressPercent > 100) {
+    throw sci::cca::CCAException::pointer(new CCAException("Progress percent cannot be > 100"));
+  } else if (progressPercent < 0) {
+    throw sci::cca::CCAException::pointer(new CCAException("Progress percent cannot be < 0"));
+  }
   for (GUIBuilderMap::iterator iter = builders.begin(); iter != builders.end(); iter++) {
     iter->second->updateProgress(cid, progressPercent);
   }

@@ -772,6 +772,24 @@ void* GUIBuilder::getPortColor(const std::string& portType)
   return (void*) c;
 }
 
+// test ApplicationLoader
+void GUIBuilder::saveApplication()
+{
+  sci::cca::ports::BuilderService::pointer bs;
+  try {
+    bs =
+      pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
+    appLoader->saveNetworkFile(bs, sci::cca::GUIBuilder::pointer(this));
+    services->releasePort("cca.BuilderService");
+  } catch (const sci::cca::CCAException::pointer &pe) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    bw->DisplayErrorMessage("Error: builder service not found; " + pe->getNote());
+    return;
+  }
+}
+// test ApplicationLoader
+
+
 //////////////////////////////////////////////////////////////////////////
 // CCA Event services
 //

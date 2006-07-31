@@ -57,8 +57,8 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Containers/StringUtil.h>
 
-#if GUI_TEST
 # include <SCIRun/TypeMap.h>
+#if GUI_TEST
 # include <SCIRun/CCA/CCAException.h>
 #endif
 
@@ -364,10 +364,6 @@ void BuilderWindow::OnSize(wxSizeEvent& WXUNUSED(event))
 #if GUI_TEST
 void BuilderWindow::OnTest(wxCommandEvent&/* event */)
 {
-//   wxCursor oldCursor = GetCursor();
-//   //this->SetCursor(wxCursor(wxCURSOR_WAIT));
-//   this->SetCursor(*wxHOURGLASS_CURSOR);
-
   wxBusyCursor wait;
   statusBar->SetStatusText("Build components", 0);
   try {
@@ -399,13 +395,14 @@ void BuilderWindow::OnTest(wxCommandEvent&/* event */)
     DisplayErrorMessage(e->getNote());
   }
   statusBar->SetStatusText("Components built", 0);
-//   this->SetCursor(oldCursor);
 }
 #endif
 
 // network file handling will have to be moved outside of GUI classes
 void BuilderWindow::OnLoad(wxCommandEvent& event)
 {
+  wxBusyCursor wait;
+
   wxString wildcard(wxT("SCIRun2 application files"));
   wildcard += wxT("(*.") + wxT(ApplicationLoader::APPLICATION_FILE_EXTENSION) + wxT(")");
   wxFileDialog fDialog(this, wxT("Open application file"), wxT(GUIBuilder::DEFAULT_OBJ_DIR), wxT(wxEmptyString), wxT(wildcard), wxOPEN|wxFILE_MUST_EXIST|wxCHANGE_DIR);
@@ -422,21 +419,22 @@ void BuilderWindow::OnLoad(wxCommandEvent& event)
 void BuilderWindow::OnSave(wxCommandEvent& event)
 {
   // need to see if a file name has been set?
+  builder->saveApplication();
 }
 
 void BuilderWindow::OnSaveAs(wxCommandEvent& event)
 {
-  wxString wildcard(wxT("SCIRun2 application files"));
-  wildcard += wxT("(*.") + wxT(ApplicationLoader::APPLICATION_FILE_EXTENSION) + wxT(")");
-  wxFileDialog fDialog(this, wxT("Open application file"), wxT(GUIBuilder::DEFAULT_OBJ_DIR), wxT(wxEmptyString), wxT(wildcard), wxSAVE|wxOVERWRITE_PROMPT|wxCHANGE_DIR);
-  statusBar->SetStatusText("Saving application file", 0);
-  if (fDialog.ShowModal() == wxID_OK) {
-    wxString path = fDialog.GetPath();
-    // use GUIBuilder to save file
-    statusBar->SetStatusText("Application file loaded", 0);
-  } else {
-    statusBar->SetStatusText("", 0);
-  }
+//   wxString wildcard(wxT("SCIRun2 application files"));
+//   wildcard += wxT("(*.") + wxT(ApplicationLoader::APPLICATION_FILE_EXTENSION) + wxT(")");
+//   wxFileDialog fDialog(this, wxT("Open application file"), wxT(GUIBuilder::DEFAULT_OBJ_DIR), wxT(wxEmptyString), wxT(wildcard), wxSAVE|wxOVERWRITE_PROMPT|wxCHANGE_DIR);
+//   statusBar->SetStatusText("Saving application file", 0);
+//   if (fDialog.ShowModal() == wxID_OK) {
+//     wxString path = fDialog.GetPath();
+//     // use GUIBuilder to save file
+//     statusBar->SetStatusText("Application file loaded", 0);
+//   } else {
+//     statusBar->SetStatusText("", 0);
+//   }
 }
 
 void BuilderWindow::OnCompWizard(wxCommandEvent& event)
@@ -449,7 +447,6 @@ void BuilderWindow::OnCompWizard(wxCommandEvent& event)
 
 void BuilderWindow::OnSidlXML(wxCommandEvent& event)
 {
-  std::cerr << "BuilderWindow::OnSidlXML(..)" << std::endl;
   XMLPathDialog pathDialog(this, wxID_ANY);
   if (pathDialog.ShowModal() == wxID_OK) {
     builder->addComponentFromXML(pathDialog.GetFilePath(), pathDialog.GetComponentModel());
@@ -482,8 +479,9 @@ void BuilderWindow::OnRemoveFrameworkProxy(wxCommandEvent& event)
 
 void BuilderWindow::InstantiateComponent(const sci::cca::ComponentClassDescription::pointer& cd)
 {
+  wxBusyCursor wait;
   statusBar->SetStatusText("Build component", 0);
-  //try {
+
   TypeMap *tm = new TypeMap;
   tm->putString("LOADER NAME", cd->getLoaderName());
 
@@ -496,10 +494,7 @@ void BuilderWindow::InstantiateComponent(const sci::cca::ComponentClassDescripti
 #endif
     networkCanvas->AddIcon(cid);
   }
-  //}
-  //catch (const sci::cca::CCAException::pointer &e) {
-  //  std::cerr << e->getNote() << std::endl;
-  //}
+
   statusBar->SetStatusText("Component built", 0);
 }
 

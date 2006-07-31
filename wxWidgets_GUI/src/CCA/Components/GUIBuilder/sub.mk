@@ -31,24 +31,27 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR := CCA/Components/GUIBuilder
+SRCDIR  := CCA/Components/GUIBuilder
 
-SRCS += \
-         $(SRCDIR)/wxSCIRunApp.cc \
-         $(SRCDIR)/GUIBuilder.cc \
-         $(SRCDIR)/BuilderWindow.cc \
-         $(SRCDIR)/NetworkCanvas.cc \
-         $(SRCDIR)/MiniCanvas.cc \
-         $(SRCDIR)/Connection.cc \
-         $(SRCDIR)/BridgeConnection.cc \
-         $(SRCDIR)/ComponentIcon.cc \
-         $(SRCDIR)/PortIcon.cc \
-         $(SRCDIR)/ComponentWizardDialog.cc \
-         $(SRCDIR)/XMLPathDialog.cc \
-         $(SRCDIR)/FrameworkProxyDialog.cc \
-         $(SRCDIR)/CodePreviewDialog.cc \
-	 $(SRCDIR)/ComponentWizardHelper.cc
-PSELIBS := Core/CCA/spec Core/CCA/PIDL Core/OS Core/Thread Core/Exceptions SCIRun
+SRCS    += \
+           $(SRCDIR)/wxSCIRunApp.cc \
+           $(SRCDIR)/GUIBuilder.cc \
+           $(SRCDIR)/BuilderWindow.cc \
+           $(SRCDIR)/NetworkCanvas.cc \
+           $(SRCDIR)/MiniCanvas.cc \
+           $(SRCDIR)/Connection.cc \
+           $(SRCDIR)/BridgeConnection.cc \
+           $(SRCDIR)/ComponentIcon.cc \
+           $(SRCDIR)/PortIcon.cc \
+           $(SRCDIR)/ComponentWizardDialog.cc \
+           $(SRCDIR)/XMLPathDialog.cc \
+           $(SRCDIR)/FrameworkProxyDialog.cc \
+           $(SRCDIR)/CodePreviewDialog.cc \
+           $(SRCDIR)/ComponentWizardHelper.cc
+
+PSELIBS := \
+           SCIRun Core/CCA/spec Core/CCA/PIDL \
+           Core/OS Core/Thread Core/Exceptions
 
 CFLAGS += $(WX_CXXFLAGS)
 CXXFLAGS += $(WX_CXXFLAGS)

@@ -31,7 +31,7 @@
  *  MainWindow.cc
  *
  *  Written by:
- *   Keming Zhang 
+ *   Keming Zhang
  *   Department of Computer Science
  *   University of Utah
  *   June 2002
@@ -39,54 +39,87 @@
  */
 
 
-#include <qlayout.h>
-#include <qobject.h>
-#include <qcombobox.h>
-#include <qcheckbox.h>
+#include <CCA/Components/Viewer/MainWindow.h>
+#include <CCA/Components/Viewer/ViewerWindow.h>
+#include <CCA/Components/Viewer/Colormap.h>
 
-#include "MainWindow.h"
-#include "ViewerWindow.h"
-#include "Colormap.h"
+#include <wx/checkbox.h>
+#include <wx/event.h>
+#include <wx/gbsizer.h>
 
-MainWindow::MainWindow( QWidget *parent, const char *name,
-			SSIDL::array1<double> nodes1d, 
-		        SSIDL::array1<int> triangles, 
-			SSIDL::array1<double> solution)
-        : QWidget( parent, name )
+namespace Viewer {
+
+
+MainWindow::MainWindow(wxWindow *parent,
+                       const char *name,
+                       SSIDL::array1<double> nodes1d,
+                       SSIDL::array1<int> triangles,
+                       SSIDL::array1<double> solution)
+  : wxFrame( parent, wxID_ANY, wxT(name), wxPoint(X, Y), wxSize(WIDTH, HEIGHT), wxMINIMIZE_BOX|wxCAPTION|wxCLOSE_BOX)
 {
-    setGeometry(QRect(200,200,500,500));
-    Colormap *cmap=new Colormap(this);
-    ViewerWindow *viewer=new ViewerWindow(this,cmap, nodes1d, triangles, solution);
+  //setGeometry(QRect(200,200,500,500));
+  wxGridBagSizer *topSizer = new wxGridBagSizer(4, 4);
+  topSizer->AddGrowableRow(1);
 
-    QCheckBox *optionMesh=new QCheckBox("Show Mesh",this);
-    QCheckBox *optionCoordinates=new QCheckBox("Show Coordinates",this);
+  viewer = new ViewerWindow(this, cmap, nodes1d, triangles, solution);
+  cmap = new Colormap(this);
 
-    QGridLayout *grid = new QGridLayout( this, 2, 2, 10 );
-    //2x2, 10 pixel border
+  meshCheckBox = new wxCheckBox(this, ID_CHECKBOX_MESH, "Show Mesh");
+  PushEventHandler(meshCheckBox);
+  meshCheckBox->Connect(ID_CHECKBOX_MESH, wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler(ViewerWindow::OnToggleMesh));
+  topSizer->Add(meshCheckBox, wxGBPosition(0, 0), wxGBSpan(1, 1), wxALL|wxALIGN_CENTER, 2);
 
-    QBoxLayout * hlayout = new QHBoxLayout(grid );
-    hlayout->addWidget(optionMesh);
-    hlayout->addWidget(optionCoordinates);
-    
+  coordsCheckBox = new wxCheckBox(this, ID_CHECKBOX_COORDS, "Show Coordinates");
+  PushEventHandler(coordsCheckBox);
+  coordsCheckBox->Connect(ID_CHECKBOX_COORDS, wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler(ViewerWindow::OnToggleCoordinates));
+  topSizer->Add(coordsCheckBox, wxGBPosition(0, 1), wxGBSpan(1, 1), wxALL|wxALIGN_CENTER, 2);
 
-    QComboBox *type=new QComboBox(this);
-    type->insertItem("Gray");
-    type->insertItem("Color");
+  topSizer->Add(viewer, wxGBPosition(1, 0), wxGBSpan(1, 1), wxALL|wxALIGN_CENTER, 2);
+  topSizer->Add(cmap, wxGBPosition(1, 1), wxGBSpan(1, 1), wxALL|wxALIGN_CENTER, 2);
 
-    grid->addWidget( viewer, 0, 0 );
-    grid->addLayout( hlayout, 1, 0);
-    connect(type, SIGNAL(activated(const QString&)), 
-	    viewer, SLOT(refresh(const QString&) ) );  
-    connect(optionMesh, SIGNAL(clicked()), 
-	    viewer, SLOT(toggleMesh() ) );  
-    connect(optionCoordinates, SIGNAL(clicked()), 
-	    viewer, SLOT(toggleCoordinates() ) ); 
-    grid->addWidget( type, 1, 1 );
-    grid->addWidget( cmap, 0, 1 );
-    grid->setColStretch( 0, 10 );
-    grid->setColStretch( 1, 1 );
-    grid->setRowStretch( 0, 10 );
-    grid->setRowStretch( 1, 1 );
+//     QGridLayout *grid = new QGridLayout( this, 2, 2, 10 );
+//     //2x2, 10 pixel border
+
+//     QBoxLayout * hlayout = new QHBoxLayout(grid );
+//     hlayout->addWidget(optionMesh);
+//     hlayout->addWidget(optionCoordinates);
+
+
+//     QComboBox *type=new QComboBox(this);
+//     type->insertItem("Gray");
+//     type->insertItem("Color");
+
+//     grid->addWidget( viewer, 0, 0 );
+//     grid->addLayout( hlayout, 1, 0);
+//     connect(type, SIGNAL(activated(const QString&)),
+//       viewer, SLOT(refresh(const QString&) ) );
+//     connect(optionMesh, SIGNAL(clicked()),
+//       viewer, SLOT(toggleMesh() ) );
+//     connect(optionCoordinates, SIGNAL(clicked()),
+//       viewer, SLOT(toggleCoordinates() ) );
+//     grid->addWidget( type, 1, 1 );
+//     grid->addWidget( cmap, 0, 1 );
+//     grid->setColStretch( 0, 10 );
+//     grid->setColStretch( 1, 1 );
+//     grid->setRowStretch( 0, 10 );
+//     grid->setRowStretch( 1, 1 );
+
+  SetAutoLayout(true);
+  SetSizer(topSizer);
+
+  topSizer->Fit(this);
+  topSizer->SetSizeHints(this);
 }
 
+MainWindow::~MainWindow()
+{
+  meshCheckBox->Disconnect();
+  coordsCheckBox->Disconnect();
+  // event cleanup: pop last 2 event handlers on this window's stack
+  PopEventHandler();
+  PopEventHandler();
+  if (cmap) delete cmap;
+  if (viewer) delete viewer;
+}
 
+}
