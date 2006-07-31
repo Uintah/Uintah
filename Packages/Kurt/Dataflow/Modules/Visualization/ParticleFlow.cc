@@ -232,7 +232,7 @@ void
   }
 
   
-  // ogeom->flushViews();
+ ogeom->flushViews();
 
 }
 
@@ -287,7 +287,7 @@ ParticleFlow::build_widget(FieldHandle f)
     Point c, r, d;
     Vector diag(b.max() - b.min());
     c = (b.min() + diag * 0.5);
-    c.y( b.min().y());
+//     c.y( b.min().y());
     r = c + Vector(diag.x()*0.5, 0, 0);
     d = c + Vector(0.0, 0.0, diag.z()*0.5);
     // Apply the new coordinates.
