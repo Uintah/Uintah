@@ -47,7 +47,7 @@
 #include <Core/CCA/PIDL/ReferenceMgr.h>
 #include <Core/CCA/PIDL/MxNScheduler.h>
 #include <Core/CCA/PIDL/XceptionRelay.h>
-#include <Core/CCA/Comm/PRMI.h>
+#include <Core/CCA/PIDL/PRMI.h>
 #include <sgi_stl_warnings_off.h>
 #include <vector> 
 #include <string>

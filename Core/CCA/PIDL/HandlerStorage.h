@@ -53,6 +53,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 #include <Core/CCA/PIDL/ProxyBase.h>
+
 namespace SCIRun {
 /**************************************
  

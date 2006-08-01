@@ -40,7 +40,7 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include "PIDLException.h"
+#include <Core/CCA/PIDL/PIDLException.h>
 using namespace SCIRun;
 
 PIDLException::PIDLException()

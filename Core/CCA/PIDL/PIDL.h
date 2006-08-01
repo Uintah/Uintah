@@ -54,15 +54,17 @@ namespace SCIRun {
   class SpChannel;
   class URL;
 /**************************************
- 
+
 CLASS
    PIDL
-   
+
 KEYWORDS
    PIDL
-   
+
 DESCRIPTION
    A class to encapsulate several static methods for PIDL.
+   PIDL::initialize can only be called once a session per framework.
+
 ****************************************/
 
   class DataTransmitter;
@@ -77,7 +79,7 @@ DESCRIPTION
     static void finalize();
 
     //////////
-    // Get the start point channel  
+    // Get the start point channel
     static SpChannel* getSpChannel();
 
     //////////
@@ -91,7 +93,7 @@ DESCRIPTION
     //////////
     // Create a base Object class from the given URL array
     static Object::pointer objectFrom(const int urlc, const URL urlv[], int mysize = 1, int myrank = 0);
-      
+
     //////////
     // Create a base Object class from the given URL vector
     static Object::pointer objectFrom(const std::vector<URL>& urlv, int mysize = 1, int myrank = 0);
@@ -102,7 +104,7 @@ DESCRIPTION
     //static Object::pointer objectFrom(const Reference&, int mysize = 1, int myrank = 0);
 
     //////////
-    // Create a base Object class from a vector of proxies  
+    // Create a base Object class from a vector of proxies
     static Object::pointer objectFrom(const std::vector<Object::pointer>& pxy, int mysize = 1, int myrank = 0);
 
     //////////
@@ -129,7 +131,7 @@ DESCRIPTION
     static bool isFramework();
 
     //////////
-    // Rank and size for parallel proxies are statically set 
+    // Rank and size for parallel proxies are statically set
     // into these variables. Set by PIDL::initialize().
     static int rank;
     static int size;
@@ -150,7 +152,7 @@ DESCRIPTION
 
     //////////
     // Initialize a parallel communication library to
-    // be used within a component 
+    // be used within a component
     //    static void setIntraCommunication(int c);
 
     //////////
@@ -169,7 +171,3 @@ DESCRIPTION
 
 
 #endif
-
-
-
-

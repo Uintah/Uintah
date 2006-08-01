@@ -59,9 +59,9 @@ $(SRCDIR)/sidl_sidl.h: $(SRCDIR)/sidl.sidl $(SIDL_EXE)
 
 GENHDRS := $(SRCDIR)/sidl_sidl.h
 
-PSELIBS := Core/CCA/PIDL
+PSELIBS := Core/CCA/PIDL Core/Exceptions
 
-LIBS := 
+LIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
