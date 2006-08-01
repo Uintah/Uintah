@@ -40,15 +40,17 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include "TypeInfo.h"
-#include <Core/CCA/Comm/CommError.h>
+#include <Core/CCA/PIDL/TypeInfo.h>
+#include <Core/CCA/PIDL/CommError.h>
 #include <Core/CCA/PIDL/Object.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/PIDL/ProxyBase.h>
-#include <Core/CCA/Comm/Message.h>
+#include <Core/CCA/PIDL/Message.h>
 #include <Core/CCA/PIDL/TypeInfo_internal.h>
 #include <Core/Exceptions/InternalError.h>
+
 #include <iostream>
+
 using namespace SCIRun;
 
 TypeInfo::TypeInfo(TypeInfo_internal* priv)

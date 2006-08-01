@@ -31,17 +31,26 @@
 # Makefile fragment for this subdirectory
 #
 
-SRCDIR   := Core/CCA/tools/sidl
-SIDL_SRCDIR := $(SRCDIR)
+SRCDIR        := Core/CCA/tools/sidl
+SIDL_SRCDIR   := $(SRCDIR)
 
-GENSRCS := $(SRCDIR)/parser.cc $(SRCDIR)/parser.h $(SRCDIR)/scanner.cc
-SRCS := $(SRCDIR)/Spec.cc $(SRCDIR)/SymbolTable.cc $(SRCDIR)/emit.cc \
-        $(SRCDIR)/main.cc $(SRCDIR)/parser.y $(SRCDIR)/scanner.l \
-        $(SRCDIR)/static_check.cc
+GENSRCS       := \
+                 $(SRCDIR)/parser.cc \
+                 $(SRCDIR)/parser.h \
+                 $(SRCDIR)/scanner.cc
 
-PROGRAM := $(SRCDIR)/sidl
-SIDL_EXE := $(PROGRAM)
-PSELIBS := Core/Util
+SRCS          := \
+                 $(SRCDIR)/Spec.cc \
+                 $(SRCDIR)/SymbolTable.cc \
+                 $(SRCDIR)/emit.cc \
+                 $(SRCDIR)/main.cc \
+                 $(SRCDIR)/parser.y \
+                 $(SRCDIR)/scanner.l \
+                 $(SRCDIR)/static_check.cc
+
+PROGRAM       := $(SRCDIR)/sidl
+SIDL_EXE      := $(PROGRAM)
+PSELIBS       := Core/Util
 
 include $(SCIRUN_SCRIPTS)/program.mk
 
@@ -65,4 +74,4 @@ $(SRCDIR)/parser.h: $(SRCDIR)/parser.y
 $(SRCDIR)/parser.cc: $(SRCDIR)/parser.h
 
 SIDL_BUILTINS := $(SRCTOP_ABS)/Core/CCA/SSIDL/
-CXXFLAGS += -DSIDL_BUILTINS=\"$(SIDL_BUILTINS)\"
+CXXFLAGS      += -DSIDL_BUILTINS=\"$(SIDL_BUILTINS)\"

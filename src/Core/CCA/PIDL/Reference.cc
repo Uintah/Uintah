@@ -40,10 +40,12 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include "Reference.h"
+#include <Core/CCA/PIDL/Reference.h>
 #include <Core/CCA/PIDL/TypeInfo.h>
 #include <Core/CCA/PIDL/PIDL.h>
+
 #include <assert.h>
+
 using namespace SCIRun;
 
 Reference::Reference()

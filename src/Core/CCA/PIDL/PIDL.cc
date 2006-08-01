@@ -46,12 +46,13 @@
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/PIDL/Object_proxy.h>
 #include <Core/CCA/PIDL/Warehouse.h>
-#include <Core/CCA/Comm/DT/DataTransmitter.h>
-#include <Core/CCA/Comm/SocketSpChannel.h>
-#include <Core/CCA/Comm/SocketEpChannel.h>
-#include <Core/CCA/Comm/SocketMessage.h>
-//#include <Core/CCA/Comm/Intra/IntraComm.h>
-#include <Core/Exceptions/InternalError.h> 
+#include <Core/CCA/PIDL/SocketSpChannel.h>
+#include <Core/CCA/PIDL/SocketEpChannel.h>
+#include <Core/CCA/PIDL/SocketMessage.h>
+//#include <Core/CCA/PIDL/Intra/IntraComm.h>
+#include <Core/Exceptions/InternalError.h>
+#include <Core/CCA/DT/DataTransmitter.h>
+
 #include <sys/types.h>
 #include <unistd.h>
 #include <iostream>
@@ -61,14 +62,14 @@
 // removed in revision 30469:
 //
 //#ifdef HAVE_MPI
-//#include <Core/CCA/Comm/Intra/IntraCommMPI.h>
+//#include <Core/CCA/PIDL/Intra/IntraCommMPI.h>
 //#endif
 //////////////////////////////////////////////////////////////////////////
 
 #ifdef HAVE_GLOBUS
-#include <Core/CCA/Comm/NexusSpChannel.h>
-#include <Core/CCA/Comm/NexusEpChannel.h>
-#include <Core/CCA/Comm/CommNexus.h>
+# include <Core/CCA/PIDL/NexusSpChannel.h>
+# include <Core/CCA/PIDL/NexusEpChannel.h>
+# include <Core/CCA/PIDL/CommNexus.h>
 #endif
 
 //Inter-Component Comm libraries supported
@@ -110,7 +111,7 @@ PIDL::sampleProxy(false);
 void
 PIDL::initialize(int rank,int size)
 {
-  //Default for communication purposes 
+  //Default for communication purposes
 #ifdef HAVE_GLOBUS
   setCommunication(COMM_NEXUS);
 #else
@@ -119,9 +120,9 @@ PIDL::initialize(int rank,int size)
   switch (comm_type) {
   case COMM_SOCKET:
     if(!theDataTransmitter){
-      theDataTransmitter=new DataTransmitter;
+      theDataTransmitter = new DataTransmitter;
       theDataTransmitter->run();
-      //TODO: sb should delete theDataTransmitter
+      //TODO: sb should delete theDataTransmitter ???
     }
     break;
 #ifdef HAVE_GLOBUS
@@ -148,7 +149,7 @@ PIDL::initialize(int rank,int size)
 
 }
 
-bool 
+bool
 PIDL::isFramework(){
   return isfrwk;
 }
@@ -175,7 +176,7 @@ PIDL::finalize()
   }
 }
 
-SpChannel*  
+SpChannel*
 PIDL::getSpChannel() {
   switch (comm_type) {
   case COMM_SOCKET:
@@ -189,7 +190,7 @@ PIDL::getSpChannel() {
   }
 }
 
-EpChannel*  
+EpChannel*
 PIDL::getEpChannel() {
   switch (comm_type) {
   case COMM_SOCKET:
@@ -207,7 +208,7 @@ Warehouse*
 PIDL::getWarehouse()
 {
   if(!warehouse)
-    throw SCIRun::InternalError("Warehouse not initialized!\n", __FILE__, __LINE__);
+    throw SCIRun::InternalError("Warehouse not initialized!", __FILE__, __LINE__);
   return warehouse;
 }
 
@@ -217,36 +218,36 @@ PIDL::objectFrom(const URL& url)
   return Object::pointer(new Object_proxy(url));
 }
 
-Object::pointer 
+Object::pointer
 PIDL::objectFrom(const int urlc, const URL urlv[], int mysize, int myrank)
 {
   return Object::pointer(new Object_proxy(urlc,urlv,mysize,myrank));
 }
 
-Object::pointer 
+Object::pointer
 PIDL::objectFrom(const std::vector<URL>& urlv, int mysize, int myrank)
 {
   return Object::pointer(new Object_proxy(urlv,mysize,myrank));
 }
 
-Object::pointer 
+Object::pointer
 PIDL::objectFrom(const std::vector<Object::pointer>& pxy, int mysize, int myrank)
 {
-  return Object::pointer(new Object_proxy(pxy,mysize,myrank));	
+  return Object::pointer(new Object_proxy(pxy,mysize,myrank));
 }
 
-void 
+void
 PIDL::serveObjects()
 {
   if(!warehouse)
-    throw SCIRun::InternalError("Warehouse not initialized!\n", __FILE__, __LINE__);
+    throw SCIRun::InternalError("Warehouse not initialized!", __FILE__, __LINE__);
   warehouse->run();
 }
 
 //////////////////////////////////////////////////////////////////////////
 // removed in revision 30469:
 //
-// IntraComm* 
+// IntraComm*
 // PIDL::getIntraComm()
 // {
 // #ifdef HAVE_MPI
@@ -267,8 +268,8 @@ void
 PIDL::setCommunication(int c)
 {
   if (comm_type != 0)
-    throw SCIRun::InternalError("Cannot modify communication setting after it has been set once\n", __FILE__, __LINE__);
-  else { 
+    throw SCIRun::InternalError("Cannot modify communication setting more than once", __FILE__, __LINE__);
+  else {
     comm_type = c;
   }
 }
@@ -290,11 +291,13 @@ PIDL::setCommunication(int c)
 
 
 DataTransmitter*
-PIDL::getDT(){
+PIDL::getDT()
+{
   return theDataTransmitter;
 }
 
 bool
-PIDL::isNexus(){
-  return comm_type== COMM_NEXUS;
+PIDL::isNexus()
+{
+  return comm_type == COMM_NEXUS;
 }
