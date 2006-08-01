@@ -5154,27 +5154,11 @@ fi
 # so we aren't going to check for it in any version.  If the other 3
 # libs exist, we will assume that HYPRE_blas is there if it is needed.
 SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
-                         HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI,
+                         HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu,
                          $_sci_lib,,,$_sci_optional)
 
 if test "$HAVE_HYPRE" = "yes" ; then
   DEF_HYPRE="#define HAVE_HYPRE 1"
-
-  if test -f $HYPRE_LIB_DIR/../include/HYPRE_config.h; then
-    # Determine the version of hypre.
-    found_it=`grep "PACKAGE_VERSION" $HYPRE_LIB_DIR/../include/HYPRE_config.h | grep 1.9`
-    DEF_HYPRE_1_9="#define HAVE_HYPRE_1_9 0"
-    HAVE_HYPRE_1_9="no"
-    if test -n "$found_it"; then
-       DEF_HYPRE_1_9="#define HAVE_HYPRE_1_9 1"
-       HAVE_HYPRE_1_9="yes"
-       # Hypre 1.9 added the 'superlu' lib... can't check for it above as 1.7 doesn't have it.
-       # Once we force an upgrade to 1.9 for everyone, then we will check for it, but for now
-       # I just hardcode it here.
-       HYPRE_LIB_FLAG="$HYPRE_LIB_FLAG -lHYPRE_superlu"
-    fi
-  fi
-
 fi
 
 if test "$with_hypre" && test ! "$DEF_HYPRE"; then
@@ -5183,8 +5167,6 @@ if test "$with_hypre" && test ! "$DEF_HYPRE"; then
 fi
 
 AC_SUBST(HAVE_HYPRE)
-AC_SUBST(HAVE_HYPRE_1_9)
-AC_SUBST(DEF_HYPRE_1_9)
 AC_SUBST(DEF_HYPRE)
 AC_SUBST(INC_HYPRE_H)
 AC_SUBST(HYPRE_LIB_FLAG)
