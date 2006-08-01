@@ -42,6 +42,7 @@
 
 #include <Core/Geometry/Point.h>
 #include <Core/Math/MusilRNG.h>
+#include <vector>
 
 #include <Core/Geometry/share.h>
 
@@ -80,6 +81,13 @@ SCISHARE bool
 closest_line_to_line(double &s, double &t,
                      const Point &A0, const Point &A1,
                      const Point &B0, const Point &B1);
+
+
+SCISHARE void
+TriTriIntersection(const Point &A0, const Point &A1, const Point &A2,
+                   const Point &B0, const Point &B1, const Point &B2,
+                   std::vector<Point> &results);
+
 
 
 SCISHARE void

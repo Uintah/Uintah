@@ -279,5 +279,46 @@ tetrahedra_volume(const Point &p0, const Point &p1,
 }
 
 
+void
+TriTriIntersection(const Point &A0, const Point &A1, const Point &A2,
+                   const Point &B0, const Point &B1, const Point &B2,
+                   std::vector<Point> &results)
+{
+  double t, u, v;
+  if (RayTriangleIntersection(t, u, v, false, A0, A1-A0, B0, B1, B2) &&
+      t >= 0.0 && t <= 1.0)
+  {
+    results.push_back(A0 + (A1-A0) * t);
+  }
+  if (RayTriangleIntersection(t, u, v, false, A1, A2-A1, B0, B1, B2) &&
+      t >= 0.0 && t <= 1.0)
+  {
+    results.push_back(A1 + (A2-A1) * t);
+  }
+  if (RayTriangleIntersection(t, u, v, false, A2, A0-A2, B0, B1, B2) &&
+      t >= 0.0 && t <= 1.0)
+  {
+    results.push_back(A2 + (A0-A2) * t);
+  }
+  if (RayTriangleIntersection(t, u, v, false, B0, B1-B0, A0, A1, A2) &&
+      t >= 0.0 && t <= 1.0)
+  {
+    results.push_back(B0 + (B1-B0) * t);
+  }
+  if (RayTriangleIntersection(t, u, v, false, B1, B2-B1, A0, A1, A2) &&
+      t >= 0.0 && t <= 1.0)
+  {
+    results.push_back(B1 + (B2-B1) * t);
+  }
+  if (RayTriangleIntersection(t, u, v, false, B2, B0-B2, A0, A1, A2) &&
+      t >= 0.0 && t <= 1.0)
+  {
+    results.push_back(B2 + (B0-B2) * t);
+  }
+}
+
+
+
+
 }
 
