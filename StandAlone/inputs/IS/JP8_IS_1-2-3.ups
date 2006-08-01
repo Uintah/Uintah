@@ -452,12 +452,12 @@
         </constitutive_model>
         <geom_object>
           <difference>
-            <cylinder label = "outer cylinder">
+            <cylinder>
               <bottom>           [0.0,0.0,-.06985]   </bottom>
               <top>              [0.0,0.0, .06985]   </top>
               <radius>           0.05715             </radius>
             </cylinder>
-            <cylinder label = "inner cylinder">
+            <cylinder>
               <bottom>           [0.0,0.0,-.0508]   </bottom>
               <top>              [0.0,0.0, .0508]   </top>
               <radius>           0.0508             </radius>
