@@ -478,6 +478,10 @@ public:
   double find_closest_elem(Point &result, typename Elem::index_type &elem,
                            const Point &p) const;
 
+  double find_closest_elems(Point &result,
+                            vector<typename Elem::index_type> &elem,
+                            const Point &p) const;
+
   static const TypeDescription* node_type_description();
   static const TypeDescription* edge_type_description();
   static const TypeDescription* face_type_description();
@@ -2374,6 +2378,95 @@ TriSurfMesh<Basis>::find_closest_elem(Point &result,
     cout << "dmin = " << dmin << ", dmin2 = " << dmin2 << "\n";
   }
 #endif
+
+  return sqrt(dmin);
+}
+
+
+template <class Basis>
+double
+TriSurfMesh<Basis>::find_closest_elems(Point &result,
+                                       vector<typename TriSurfMesh::Elem::index_type> &faces,
+                                       const Point &p) const
+{
+  // Walking the grid like this works really well if we're near the
+  // surface.  It's degenerately bad if for example the point is
+  // placed in the center of a sphere (because then we still have to
+  // test all the faces, but with the grid overhead and triangle
+  // duplication as well).
+  ASSERTMSG(synchronized_ & LOCATE_E,
+            "TriSurfMesh::find_closest_elem requires synchronize(LOCATE_E).")
+
+  // Convert to grid coordinates.
+  int oi, oj, ok;
+  grid_->unsafe_locate(oi, oj, ok, p);
+
+  // Clamp to closest point on the grid.
+  oi = Max(Min(oi, grid_->get_ni()-1), 0);
+  oj = Max(Min(oj, grid_->get_nj()-1), 0);
+  ok = Max(Min(ok, grid_->get_nk()-1), 0);
+
+  int bi, ei, bj, ej, bk, ek;
+  bi = ei = oi;
+  bj = ej = oj;
+  bk = ek = ok;
+  
+  double dmin = DBL_MAX;
+  bool found;
+  do {
+    const int bii = Max(bi, 0);
+    const int eii = Min(ei, grid_->get_ni()-1);
+    const int bjj = Max(bj, 0);
+    const int ejj = Min(ej, grid_->get_nj()-1);
+    const int bkk = Max(bk, 0);
+    const int ekk = Min(ek, grid_->get_nk()-1);
+    found = false;
+    for (int i = bii; i <= eii; i++)
+    {
+      for (int j = bjj; j <= ejj; j++)
+      {
+        for (int k = bkk; k <= ekk; k++)
+        {
+          if (i == bi || i == ei || j == bj || j == ej || k == bk || k == ek)
+          {
+            if (grid_->min_distance_squared(p, i, j, k) < dmin)
+            {
+              found = true;
+              const list<unsigned int> *candidates;
+              grid_->lookup_ijk(candidates, i, j, k);
+
+              list<unsigned int>::const_iterator iter = candidates->begin();
+              while (iter != candidates->end())
+              {
+                Point rtmp;
+                unsigned int idx = *iter * 3;
+                closest_point_on_tri(rtmp, p,
+                                     points_[faces_[idx  ]],
+                                     points_[faces_[idx+1]],
+                                     points_[faces_[idx+2]]);
+                const double dtmp = (p - rtmp).length2();
+                if (dtmp < dmin - MIN_ELEMENT_VAL)
+                {
+                  faces.clear();
+                  result = rtmp;
+                  faces.push_back(*iter);
+                  dmin = dtmp;
+                }
+                else if (dtmp < dmin + MIN_ELEMENT_VAL)
+                {
+                  faces.push_back(*iter);
+                }
+                ++iter;
+              }
+            }
+          }
+        }
+      }
+    }
+    bi--;ei++;
+    bj--;ej++;
+    bk--;ek++;
+  } while (found) ;
 
   return sqrt(dmin);
 }
