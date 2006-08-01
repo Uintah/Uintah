@@ -39,26 +39,17 @@
  */
 
 #include <CCA/Components/Viewer/Viewer.h>
-#include <iostream>
-#include <CCA/Components/Builder/QtUtils.h>
-
-#include <qapplication.h>
-#include <qpushbutton.h>
-#include <qmainwindow.h>
-#include <qmessagebox.h>
-#include <qapplication.h>
-#include <qframe.h>
-#include <qpainter.h>
-#include <qcolor.h>
-#include <qdialog.h>
+#include <CCA/Components/Viewer/MainWindow.h>
+#include <Core/CCA/datawrapper/vector2d.h>
 
 #include <math.h>
 #include <stdlib.h>
 #include <iostream>
 #include <fstream>
-#include "vector2d.h"
-#include "MainWindow.h"
-using namespace std;
+
+
+namespace Viewer {
+
 using namespace SCIRun;
 
 extern "C" sci::cca::Component::pointer make_SCIRun_Viewer()
@@ -66,36 +57,35 @@ extern "C" sci::cca::Component::pointer make_SCIRun_Viewer()
   return sci::cca::Component::pointer(new Viewer());
 }
 
-Viewer::Viewer(){
+Viewer::Viewer()
+{
 }
 
-Viewer::~Viewer(){
+Viewer::~Viewer()
+{
+  services->removeProvidesPort("viewer");
 }
 
 void Viewer::setServices(const sci::cca::Services::pointer& svc)
 {
-  services=svc;
-  myViewPort::pointer uip(new myViewPort);
-  svc->addProvidesPort(uip,"viewer","sci.cca.ports.ViewPort",   sci::cca::TypeMap::pointer(NULL));
+  services = svc;
+  sci::cca::TypeMap::pointer props = svc->createTypeMap();
+  services->addProvidesPort(ViewPort::pointer(new ViewPort), "viewer", "sci.cca.ports.ViewPort", props);
 }
 
-int 
-myViewPort::view2dPDE(const SSIDL::array1<double> &nodes, 
-		      const SSIDL::array1<int> &triangles, 
-		      const SSIDL::array1<double> &solution){
+int
+ViewPort::view2dPDE(const SSIDL::array1<double> &nodes,
+                    const SSIDL::array1<int> &triangles,
+                    const SSIDL::array1<double> &solution)
+{
 
-  if(nodes.size()/2 !=solution.size()){
-    QMessageBox::warning(0,"Viewer","Mesh and Field do not match!");
+  if (nodes.size() / 2 != solution.size()) {
+    wxMessageBox(wxT("Mesh and Field do not match!"), wxT("Viewer"), wxOK|wxICON_ERROR, 0);
     return 1;
   }
 
-  (new MainWindow(0, 0, nodes,triangles,solution))->show();
+  (new MainWindow(0, 0, nodes,triangles,solution))->Show();
   return 0;
 }
 
-
- 
-
-
-
-
+}

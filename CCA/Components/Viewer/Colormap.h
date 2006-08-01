@@ -31,45 +31,44 @@
  *  Colormap.h
  *
  *  Written by:
- *   Keming Zhang 
+ *   Keming Zhang
  *   Department of Computer Science
  *   University of Utah
  *   June 2002
+ *  Ported to wxWidgets:
  *
  */
 
 #ifndef Viewer_Colormap_h
 #define Viewer_Colormap_h
 
-#include <qapplication.h>
-#include <qpushbutton.h>
-#include <qmainwindow.h>
-#include <qmessagebox.h>
-#include <qapplication.h>
-#include <qframe.h>
-#include <qpainter.h>
-#include <qcolor.h>
-#include <qscrollview.h>
-#include <math.h>
-#include <stdlib.h>
-#include <iostream>
-#include <fstream>
-#include "vector2d.h"
+#include <sci_wx.h>
+#include <wx/gdicmn.h>
 
-class Colormap:public QFrame
-{
+namespace Viewer {
+
+class Colormap : public wxPanel {
 public:
-  Colormap( QWidget *parent, const QString &type="Gray", double min=0.0, double max=1.0);
+  Colormap(wxWindow *parent, const wxString& type = "Gray", double min = 0.0, double max = 1.0);
+
   void setValues(double min, double max);
+  void setType(const wxString& type);
+  wxColor getColor(double value);
+
   int height();
-  QColor getColor(double value);
-  void setType(const QString& type);
+
 protected:
-  void	paintEvent(QPaintEvent*e);
+  void OnPaint(wxPaintEvent& event);
+
+private:
+  wxString type;
   double minVal, maxVal;
-  QString type;
   int borderY;
+
+  DECLARE_EVENT_TABLE()
 };
+
+}
 
 #endif
 

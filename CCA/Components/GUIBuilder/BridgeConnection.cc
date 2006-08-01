@@ -26,72 +26,49 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- * PathDialog.h
- *
- * Written by:
- *  Ayla Khan
- *  SCI
- *  University of Utah
- *  November 2004
- *
- */
+#include <CCA/Components/GUIBuilder/BridgeConnection.h>
 
+namespace GUIBuilder {
 
-#ifndef PathDialog_h
-#define PathDialog_h
-
-#include <qvariant.h>
-#include <qdialog.h>
-
-#include <vector>
-
-class QVBoxLayout;
-class QHBoxLayout;
-class QSpacerItem;
-class QComboBox;
-class QGridLayout;
-class QLabel;
-class QLineEdit;
-class QPushButton;
-class QString;
-
-class PathDialog : public QDialog
+BridgeConnection::BridgeConnection(PortIcon* pU, PortIcon* pP, const sci::cca::ConnectionID::pointer& connID, bool possibleConnection) : Connection(pU, pP, connID, possibleConnection)
 {
-    Q_OBJECT
+}
 
-public:
-    PathDialog(QWidget* parent = 0, const char* name = 0, bool modal = TRUE, WFlags fl = 0);
-    ~PathDialog();
 
-    QString selectedDirectory() const;
-    QString selectedComponentModel() const;
-    //void insertComponentModels(std::vector<std::string> &models);
-    void insertComponentModels();
+void BridgeConnection::OnDraw(wxDC& dc)
+{
+  ResetPoints();
+  setConnection();
+  if (IsHighlighted()) {
+    wxPen* pen = wxThePenList->FindOrCreatePen(hColor, 2, wxLONG_DASH);
+    dc.SetPen(*pen);
+  } else {
+    wxPen* pen = wxThePenList->FindOrCreatePen(color, 2, wxLONG_DASH);
+    dc.SetPen(*pen);
+  }
+  dc.SetBrush(*wxTRANSPARENT_BRUSH);
+  dc.DrawLines(NUM_DRAW_POINTS, drawPoints, 0, 0);
+}
 
-protected:
-    QVBoxLayout* layoutDialog;
-    QSpacerItem* verticalSpacing;
-    QHBoxLayout* layoutName;
-    QHBoxLayout* layoutPath;
-    QHBoxLayout* layoutButtons;
-    QSpacerItem* horizontalSpacing;
+}
 
-protected slots:
-    virtual void languageChange();
+#if 0
 
-private:
-    QLabel* textLabelComponents;
-    QComboBox* comboBoxName;
-    QPushButton* buttonPath;
-    QLineEdit* lineEditPath;
-    QPushButton* buttonHelp;
-    QPushButton* buttonOk;
-    QPushButton* buttonCancel;
-    QString workingDir;
+// void BridgeConnection::drawShape(QPainter& p)
+// {
+//   QPointArray par(Connection::NUM_DRAW_POINTS);
+//   Connection::drawConnection(p, points(), par);
 
-private slots:
-    void fileDialog();
-};
+//   QPen pen(color,4);
+//   pen.setStyle(DotLine);
+//   p.setPen(pen);
+//   p.setBrush(blue);
+//   p.drawPolyline(par);
+// }
 
-#endif // PathDialog_h
+// std::string BridgeConnection::getConnectionType()
+// {
+//   return "BridgeConnection";
+// }
+
+#endif

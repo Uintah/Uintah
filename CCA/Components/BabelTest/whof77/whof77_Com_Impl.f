@@ -30,16 +30,11 @@ C
 C       File:          whof77_Com_Impl.f
 C       Symbol:        whof77.Com-v1.0
 C       Symbol Type:   class
-C       Babel Version: 0.7.4
-C       SIDL Created:  20030915 14:58:51 MST
-C       Generated:     20030915 14:58:55 MST
+C       Babel Version: 0.99.2
 C       Description:   Server-side implementation for whof77.Com
 C       
 C       WARNING: Automatically generated; only changes within splicers preserved
 C       
-C       babel-version = 0.7.4
-C       source-line   = 13
-C       source-url    = file:/home/sci/damevski/SCIRun/src/CCA/Components/BabelTest/whof77/whof77.sidl
 C       
 
 
@@ -49,61 +44,194 @@ C
 
 
 C       DO-NOT-DELETE splicer.begin(_miscellaneous_code_start)
-C       Insert extra code here...
+C       Insert-Code-Here {_miscellaneous_code_start} (extra code)
 C       DO-NOT-DELETE splicer.end(_miscellaneous_code_start)
 
 
 
 
 C       
+C       Method:  _ctor[]
 C       Class constructor called when the class is created.
 C       
 
-        subroutine whof77_Com__ctor_impl(self)
+        subroutine whof77_Com__ctor_fi(self, exception)
         implicit none
+C        in whof77.Com self
         integer*8 self
+C        out sidl.BaseInterface exception
+        integer*8 exception
+
 C       DO-NOT-DELETE splicer.begin(whof77.Com._ctor)
-C       Insert the implementation here...
+C       Insert-Code-Here {whof77.Com._ctor} (_ctor method)
+C       
+C       This method has not been implemented
+C       
+
+        integer*8 throwaway
+        call sidl_NotImplementedException__create_f
+     $      (exception, throwaway)
+        if (exception .ne. 0) then
+           call sidl_NotImplementedException_setNote_f(
+     $         exception,
+     $         'This method has not been implemented',
+     $         throwaway)
+        endif
+        return
 C       DO-NOT-DELETE splicer.end(whof77.Com._ctor)
         end
 
 
 C       
+C       Method:  _ctor2[]
+C       Special Class constructor called when the user wants to wrap his own private data.
+C       
+
+        subroutine whof77_Com__ctor2_fi(self, private_data, exception)
+        implicit none
+C        in whof77.Com self
+        integer*8 self
+C        in opaque private_data
+        integer*8 private_data
+C        out sidl.BaseInterface exception
+        integer*8 exception
+
+C       DO-NOT-DELETE splicer.begin(whof77.Com._ctor2)
+C       Insert-Code-Here {whof77.Com._ctor2} (_ctor2 method)
+C       
+C       This method has not been implemented
+C       
+
+        integer*8 throwaway
+        call sidl_NotImplementedException__create_f
+     $      (exception, throwaway)
+        if (exception .ne. 0) then
+           call sidl_NotImplementedException_setNote_f(
+     $         exception,
+     $         'This method has not been implemented',
+     $         throwaway)
+        endif
+        return
+C       DO-NOT-DELETE splicer.end(whof77.Com._ctor2)
+        end
+
+
+C       
+C       Method:  _dtor[]
 C       Class destructor called when the class is deleted.
 C       
 
-        subroutine whof77_Com__dtor_impl(self)
+        subroutine whof77_Com__dtor_fi(self, exception)
         implicit none
+C        in whof77.Com self
         integer*8 self
+C        out sidl.BaseInterface exception
+        integer*8 exception
+
 C       DO-NOT-DELETE splicer.begin(whof77.Com._dtor)
-C       Insert the implementation here...
+C       Insert-Code-Here {whof77.Com._dtor} (_dtor method)
+C       
+C       This method has not been implemented
+C       
+
+        integer*8 throwaway
+        call sidl_NotImplementedException__create_f
+     $      (exception, throwaway)
+        if (exception .ne. 0) then
+           call sidl_NotImplementedException_setNote_f(
+     $         exception,
+     $         'This method has not been implemented',
+     $         throwaway)
+        endif
+        return
 C       DO-NOT-DELETE splicer.end(whof77.Com._dtor)
         end
 
 
 C       
-C       Obtain Services handle, through which the 
-C       component communicates with the framework. 
-C       This is the one method that every CCA Component
-C       must implement. 
+C       Method:  _load[]
+C       Static class initializer called exactly once before any user-defined method is dispatched
 C       
 
-        subroutine whof77_Com_setServices_impl(self, services)
+        subroutine whof77_Com__load_fi(exception)
         implicit none
+C        out sidl.BaseInterface exception
+        integer*8 exception
+
+C       DO-NOT-DELETE splicer.begin(whof77.Com._load)
+C       Insert-Code-Here {whof77.Com._load} (_load method)
+C       
+C       This method has not been implemented
+C       
+
+        integer*8 throwaway
+        call sidl_NotImplementedException__create_f
+     $      (exception, throwaway)
+        if (exception .ne. 0) then
+           call sidl_NotImplementedException_setNote_f(
+     $         exception,
+     $         'This method has not been implemented',
+     $         throwaway)
+        endif
+        return
+C       DO-NOT-DELETE splicer.end(whof77.Com._load)
+        end
+
+
+C       
+C       Method:  setServices[]
+C        Starts up a component presence in the calling framework.
+C       @param Svc the component instance's handle on the framework world.
+C       Contracts concerning Svc and setServices:
+C       
+C       The component interaction with the CCA framework
+C       and Ports begins on the call to setServices by the framework.
+C       
+C       This function is called exactly once for each instance created
+C       by the framework.
+C       
+C       The argument Svc will never be nil/null.
+C       
+C       Those uses ports which are automatically connected by the framework
+C       (so-called service-ports) may be obtained via getPort during
+C       setServices.
+C       
+
+        subroutine whof77_Com_setServices_fi(self, services, exception)
+        implicit none
+C        in whof77.Com self
         integer*8 self
+C        in gov.cca.Services services
         integer*8 services
+C        out sidl.BaseInterface exception
+        integer*8 exception
+
 C       DO-NOT-DELETE splicer.begin(whof77.Com.setServices)
-C       Insert the implementation here...
-        integer*8  idport, interface
+C       Insert-Code-Here {whof77.Com.setServices} (setServices method)
+C       
+C       This method has not been implemented
+C       
+C        integer*8  idport, interface
 C        write(*,*) 'World (in F77) should be returned, but how?'
 C        call whof77_IDPort__create_f(idport)
 C        call gov_cca_Port__cast_f(idport,"gov.cca.ports.Port",interface)
 C        call gov_cca_Services_addProvidesPort_f(services,interface,
 C     $   "idport", "gov.cca.ports.IDPort",0)
+
+        integer*8 throwaway
+        call sidl_NotImplementedException__create_f
+     $      (exception, throwaway)
+        if (exception .ne. 0) then
+           call sidl_NotImplementedException_setNote_f(
+     $         exception,
+     $         'This method has not been implemented',
+     $         throwaway)
+        endif
+        return
 C       DO-NOT-DELETE splicer.end(whof77.Com.setServices)
         end
 
 
 C       DO-NOT-DELETE splicer.begin(_miscellaneous_code_end)
-C       Insert extra code here...
+C       Insert-Code-Here {_miscellaneous_code_end} (extra code)
 C       DO-NOT-DELETE splicer.end(_miscellaneous_code_end)

@@ -38,101 +38,116 @@
  *
  */
 
- 
-#include <qsizepolicy.h>
+
+
+#include <CCA/Components/Viewer/Colormap.h>
+#include <Core/CCA/datawrapper/vector2d.h>
+
+#include <math.h>
+#include <stdlib.h>
 #include <iostream>
+#include <fstream>
 
-#include "Colormap.h"
-using namespace std;
+namespace Viewer {
 
-Colormap::Colormap( QWidget *parent, const QString &type, double min, double max) 
-  : QFrame( parent )
+BEGIN_EVENT_TABLE(Colormap, wxPanel)
+  EVT_PAINT(Colormap::OnPaint)
+END_EVENT_TABLE()
+
+Colormap::Colormap(wxWindow *parent, const wxString &type, double min, double max)
+  : wxPanel(parent, wxID_ANY), type(type), minVal(min), maxVal(max), borderY(12)
 {
-  setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding, 30,100)); 
-  setType(type);
-  setValues(min,max);
-  setFrameStyle(Panel|Sunken);
-  setLineWidth(2);
-  borderY=12;
+//   setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Expanding, 30,100));
+//   setType(type);
+//   setValues(min,max);
+
+//   setFrameStyle(Panel|Sunken);
+//   setLineWidth(2);
 }
 
-int Colormap::height()
+void Colormap::setType(const wxString &type)
 {
-  return QFrame::height()-borderY*2;
-}
-void Colormap::setType(const QString &type)
-{
-  this->type=type;
-  update();
+  this->type = type;
+  Refresh();
 }
 
 void Colormap::setValues(double min, double max)
 {
-  minVal=min;
-  maxVal=max;
+  minVal = min;
+  maxVal = max;
 }
 
-QColor Colormap::getColor(double value)
+int Colormap::height()
 {
-  double val=(value-minVal)/(maxVal-minVal);
-  if(type=="Color"){
-    double r,g,b;
-    if(val<=0.5){
-      r=0;
-      g=val*2;
-      b=1-g;
+  int w, h;
+  GetSize(&w, &h);
+  return h - borderY * 2;
+}
+
+wxColor Colormap::getColor(double value)
+{
+  double val = (value - minVal) / (maxVal - minVal);
+  if (type == "Color") {
+    double r, g, b;
+    if (val <= 0.5) {
+      r = 0;
+      g = val * 2;
+      b = 1 - g;
+    } else {
+      b = 0;
+      g = (1 - val) * 2;
+      r = 1 - g;
     }
-    else{
-      b=0;
-      g=(1-val)*2;
-      r=1-g;
-    }
-    return QColor(int(r*255),int(g*255),int(b*255));
-  }
-  else if(type=="Gray"){
-    int g=int(val*255);
-    if(g>255) g=255;
-    if(g<0) g=0;
-    return QColor(g,g,g);
-  }
-  else{
-    cerr<<"unkown colormap type"<<endl;
-    return QColor(0,0,0);
+    return wxColor((unsigned char)(r * 255), (unsigned char)(g * 255), (unsigned char)(b * 255));
+  } else if (type == "Gray") { // grayscale
+    unsigned char g = (unsigned char) floor(val * 255);
+#if 0
+//     if (g > 255) {
+//       g = 255;
+//     } else if (g < 0 ) {
+//       g = 0;
+//     }
+#endif
+    return wxColor(g, g, g);
+  } else {
+    wxMessageBox("Unknown Colormap type", wxT("Colormap Error"), wxOK|wxICON_ERROR, 0);
+    return wxColor(0, 0, 0);
   }
 }
 
-void Colormap::paintEvent(QPaintEvent* )
+void Colormap::OnPaint(wxPaintEvent& event)
 {
-  QPainter p(this);
-  for(int y=0; y<=height(); y++){
-    double val=double(height()-y)/height();
-    p.setPen(getColor(minVal+(maxVal-minVal)*val));
-    p.drawLine(0,borderY+y,width(),borderY+y);
-  }
+//   QPainter p(this);
+//   for(int y=0; y<=height(); y++){
+//     double val=double(height()-y)/height();
+//     p.setPen(getColor(minVal+(maxVal-minVal)*val));
+//     p.drawLine(0,borderY+y,width(),borderY+y);
+//   }
 
-  //display values
-  
-  int ny=5;
+//   //display values
 
-  p.setPen(QColor(255,0,255));
-  //  p.setBrush(white);
-  for(int iy=0; iy<=ny; iy++){
-    double value=minVal+iy*(maxVal-minVal)/ny;
-    int y=borderY+(ny-iy)*height()/ny;
-    char s[10];
-    if( fabs(value)>0.01 && fabs(value)<100){
-	sprintf(s,"%6.4lf",value);
-    }
-    else{
-      sprintf(s,"%7.2lf",value);
-    }
-    sprintf(s,"%7.2lf",value);
-    
-    int w=12*6;
-    int h=14;
-    QRect r(width()/2-w/2,y-h/2, w, h);
-    
-    p.drawText(r,Qt::AlignCenter, s);
-  }
-}  
+//   int ny=5;
 
+//   p.setPen(QColor(255,0,255));
+//   //  p.setBrush(white);
+//   for(int iy=0; iy<=ny; iy++){
+//     double value=minVal+iy*(maxVal-minVal)/ny;
+//     int y=borderY+(ny-iy)*height()/ny;
+//     char s[10];
+//     if( fabs(value)>0.01 && fabs(value)<100){
+//   sprintf(s,"%6.4lf",value);
+//     }
+//     else{
+//       sprintf(s,"%7.2lf",value);
+//     }
+//     sprintf(s,"%7.2lf",value);
+
+//     int w=12*6;
+//     int h=14;
+//     QRect r(width()/2-w/2,y-h/2, w, h);
+
+//     p.drawText(r,Qt::AlignCenter, s);
+//   }
+}
+
+}

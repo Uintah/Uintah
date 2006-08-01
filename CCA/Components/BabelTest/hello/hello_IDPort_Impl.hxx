@@ -24,23 +24,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
+
 // File:          hello_IDPort_Impl.hxx
 // Symbol:        hello.IDPort-v1.0
 // Symbol Type:   class
-// Babel Version: 0.11.0
+// Babel Version: 0.99.2
 // Description:   Server-side implementation for hello.IDPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.11.0
 // 
 
 #ifndef included_hello_IDPort_Impl_hxx
 #define included_hello_IDPort_Impl_hxx
 
-#ifndef included_sidl_ucxx_hxx
-#include "sidl_ucxx.hxx"
+#ifndef included_sidl_cxx_hxx
+#include "sidl_cxx.hxx"
 #endif
 #ifndef included_hello_IDPort_IOR_h
 #include "hello_IDPort_IOR.h"
@@ -71,7 +71,7 @@ namespace hello {
   /**
    * Symbol "hello.IDPort" (version 1.0)
    */
-  class IDPort_impl : public virtual UCXX ::hello::IDPort 
+  class IDPort_impl : public virtual ::hello::IDPort 
   // DO-NOT-DELETE splicer.begin(hello.IDPort._inherits)
   // Insert-Code-Here {hello.IDPort._inherits} (optional inheritance here)
   // DO-NOT-DELETE splicer.end(hello.IDPort._inherits)
@@ -85,42 +85,45 @@ namespace hello {
     // Insert-Code-Here {hello.IDPort._implementation} (additional details)
     // DO-NOT-DELETE splicer.end(hello.IDPort._implementation)
 
+    bool _wrapped;
   public:
-    // default constructor, shouldn't be used (required)
-    IDPort_impl() : StubBase(0,true) { } 
+    // default constructor, used for data wrapping(required)
+    IDPort_impl();
+    // sidl constructor (required)
+    // Note: alternate Skel constructor doesn't call addref()
+    // (fixes bug #275)
+    IDPort_impl( struct hello_IDPort__object * s ) : StubBase(s,true),
+      _wrapped(false) { _ctor(); }
 
-      // sidl constructor (required)
-      // Note: alternate Skel constructor doesn't call addref()
-      // (fixes bug #275)
-      IDPort_impl( struct hello_IDPort__object * s ) : StubBase(s,
-        true) { _ctor(); }
+    // user defined construction
+    void _ctor();
 
-      // user defined construction
-      void _ctor();
+    // virtual destructor (required)
+    virtual ~IDPort_impl() { _dtor(); }
 
-      // virtual destructor (required)
-      virtual ~IDPort_impl() { _dtor(); }
+    // user defined destruction
+    void _dtor();
 
-      // user defined destruction
-      void _dtor();
+    // true if this object was created by a user newing the impl
+    inline bool _isWrapped() {return _wrapped;}
 
-      // static class initializer
-      static void _load();
+    // static class initializer
+    static void _load();
 
-    public:
+  public:
 
 
-      /**
-       * Test prot. Return a string as an ID for Hello component
-       */
-      ::std::string
-      getID_impl() ;
-    };  // end class IDPort_impl
+    /**
+     *  Test prot. Return a string as an ID for Hello component
+     */
+    ::std::string
+    getID_impl() ;
+  };  // end class IDPort_impl
 
-  } // end namespace hello
+} // end namespace hello
 
-  // DO-NOT-DELETE splicer.begin(hello.IDPort._misc)
-  // Insert-Code-Here {hello.IDPort._misc} (miscellaneous things)
-  // DO-NOT-DELETE splicer.end(hello.IDPort._misc)
+// DO-NOT-DELETE splicer.begin(hello.IDPort._misc)
+// Insert-Code-Here {hello.IDPort._misc} (miscellaneous things)
+// DO-NOT-DELETE splicer.end(hello.IDPort._misc)
 
-  #endif
+#endif

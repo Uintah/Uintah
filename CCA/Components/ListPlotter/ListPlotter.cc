@@ -1,29 +1,29 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
 
 
@@ -38,13 +38,11 @@
  *
  */
 
+
+#include <CCA/Components/ListPlotter/ListPlotter.h>
+#include <CCA/Components/ListPlotter/ListPlotterForm.h>
+
 #include <iostream>
-#include <CCA/Components/Builder/QtUtils.h>
-#include <qapplication.h>
-#include <qpushbutton.h>
-#include <qmessagebox.h>
-#include "ListPlotter.h"
-#include "ListPlotterForm.h"
 
 using namespace SCIRun;
 
@@ -60,8 +58,8 @@ ListPlotter::ListPlotter()
 
 ListPlotter::~ListPlotter()
 {
-    services->unregisterUsesPort("listport");
-    services->removeProvidesPort("ui");
+  services->unregisterUsesPort("listport");
+  services->removeProvidesPort("ui");
 }
 
 void ListPlotter::setServices(const sci::cca::Services::pointer& svc)
@@ -76,28 +74,28 @@ void ListPlotter::setServices(const sci::cca::Services::pointer& svc)
 
 int ImUIPort::ui()
 {
-  
-  ListPlotterForm *w = new ListPlotterForm; 
+
+  ListPlotterForm *w = new ListPlotterForm;
   sci::cca::ports::ZListPort::pointer lport;
   try {
-    sci::cca::Port::pointer pp = services->getPort("listport");	
+    sci::cca::Port::pointer pp = services->getPort("listport");
     lport = pidl_cast<sci::cca::ports::ZListPort::pointer>(pp);
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    QMessageBox::warning(0, "ListPlotter", e->getNote());
-    return 1;
-  }  
-  SSIDL::array1<double> data = lport->getList();	
+    wxMessageBox(e->getNote(), wxT("ListPlotter"), wxOK|wxICON_ERROR, 0);
+    return -1;
+  }
+  SSIDL::array1<double> data = lport->getList();
   services->releasePort("listport");
 
   int size = data.size();
-  double *val = new double[size]; 	
+  double *val = new double[size];
   for (int i = 0; i < size; i++) {
-	val[i] = data[i];	
+    val[i] = data[i];
   }
   w->setData(val, size);
-  w->show();
+  // could use ShowModal...
+  w->Show();
   delete [] val;
   return 0;
 }
-

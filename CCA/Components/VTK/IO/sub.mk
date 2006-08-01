@@ -35,12 +35,18 @@ SRCDIR   := CCA/Components/VTK/IO
 
 SRCS     += $(SRCDIR)/ImageReader.cc \
 	    $(SRCDIR)/StructuredPointsReader.cc \
-	    $(SRCDIR)/JPEGReader.cc  
+	    $(SRCDIR)/JPEGReader.cc
 
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
-	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
-QT_LIBDIR := $(QT_LIBRARY)
-LIBS := $(VTK_LIBRARY) $(QT_LIBRARY) $(LIBS)
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm Core/CCA/spec \
+           Core/Thread Core/Containers Core/Exceptions
+
+
+
+#QT_LIBDIR := $(QT_LIBRARY)
+#LIBS := $(VTK_LIBRARY) $(QT_LIBRARY) $(LIBS)
+
+LIBS += $(VTK_LIBRARY)
+
 INCLUDES := $(VTK_INCLUDE) $(QT_INCLUDE) $(INCLUDES)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
