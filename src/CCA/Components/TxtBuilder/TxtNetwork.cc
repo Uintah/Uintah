@@ -317,7 +317,7 @@ TxtNetwork::loadFile()
             cid = bs->createInstance(type, type, sci::cca::TypeMap::pointer(0));
 
             if (! cid.isNull()) {
-                if (type != "SCIRun.Builder") {
+                if (type != "SCIRun.GUIBuilder") {
                     cidTable.push_back(cid);
 		    addModule(new TxtModule(cid, type),y,x);
                 }

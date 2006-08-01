@@ -26,35 +26,68 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+/*
+ * XMLPathDialog.h
+ *
+ * Written by:
+ *  (PathDialog.h)
+ *  Ayla Khan
+ *  Scientific Computing and Imaging Institute
+ *  University of Utah
+ *  November 2004
+ * Ported to wxWidgets:
+ *  May 2006
+ */
 
 
+#ifndef CCA_Components_GUIBuilder_XMLPathDialog_h
+#define CCA_Components_GUIBuilder_XMLPathDialog_h
 
-#ifndef BRIDGE_CONNECTION_H
-#define BRIDGE_CONNECTION_H
+#include <sci_wx.h>
 
-#include <CCA/Components/Builder/Connection.h>
+class wxComboBox;
+class wxArrayString;
 
-using namespace SCIRun;
+namespace GUIBuilder {
 
-class BridgeConnection : public Connection 
-{
+class XMLPathDialog: public wxDialog {
 public:
-  BridgeConnection(PortIcon* p1, PortIcon* p2, const sci::cca::ConnectionID::pointer &connID, QCanvasView *cv)
-  : Connection(p1, p2, connID, cv) { }
-  using Connection::resetPoints;
-  using Connection::isConnectedTo;
-  using Connection::getConnectionID;
-  using Connection::highlight;
-  using Connection::setDefault;
-  using Connection::usesPort;
-  using Connection::providesPort;
-  virtual std::string getConnectionType();
+  enum {
+    ID_BUTTON_FILE_PATH = wxID_HIGHEST,
+  };
+
+  XMLPathDialog(wxWindow* parent,
+                wxWindowID id = wxID_ANY,
+                const wxString& caption = wxT("Component XML file path"),
+                const wxPoint& pos = wxDefaultPosition,
+                const wxSize& size = wxSize(600, 400),
+                long style = wxCAPTION|wxSYSTEM_MENU);
+  virtual ~XMLPathDialog() {}
+
+  void OnFilePath(wxCommandEvent& event);
+
+  wxString GetFilePath() const { return filePath.Strip(); }
+  wxString GetComponentModel() const { return cmComboBox->GetValue(); }
 
 protected:
-  void drawShape(QPainter& );
+  void SetLayout();
+
+private:
+  void setTextCtrl(wxBoxSizer& sizer, const int flags);
+
+  wxArrayString componentModels;
+  wxString filePath;
+
+  // component model wxComboBox
+  wxComboBox* cmComboBox;
+
+  // file path wxTextCtrl
+  wxTextCtrl* fpTextCtrl;
+  wxButton* fpButton;
+
+  DECLARE_EVENT_TABLE()
 };
 
+}
+
 #endif
-
-
-

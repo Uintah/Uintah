@@ -24,23 +24,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+
 // 
 // File:          BridgeTest_BridgeTestPort_Impl.hxx
 // Symbol:        BridgeTest.BridgeTestPort-v1.0
 // Symbol Type:   class
-// Babel Version: 0.11.0
+// Babel Version: 0.99.2
 // Description:   Server-side implementation for BridgeTest.BridgeTestPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.11.0
 // 
 
 #ifndef included_BridgeTest_BridgeTestPort_Impl_hxx
 #define included_BridgeTest_BridgeTestPort_Impl_hxx
 
-#ifndef included_sidl_ucxx_hxx
-#include "sidl_ucxx.hxx"
+#ifndef included_sidl_cxx_hxx
+#include "sidl_cxx.hxx"
 #endif
 #ifndef included_BridgeTest_BridgeTestPort_IOR_h
 #include "BridgeTest_BridgeTestPort_IOR.h"
@@ -71,7 +71,7 @@ namespace BridgeTest {
   /**
    * Symbol "BridgeTest.BridgeTestPort" (version 1.0)
    */
-  class BridgeTestPort_impl : public virtual UCXX ::BridgeTest::BridgeTestPort 
+  class BridgeTestPort_impl : public virtual ::BridgeTest::BridgeTestPort 
   // DO-NOT-DELETE splicer.begin(BridgeTest.BridgeTestPort._inherits)
   // Insert-Code-Here {BridgeTest.BridgeTestPort._inherits} (optional inheritance here)
   // DO-NOT-DELETE splicer.end(BridgeTest.BridgeTestPort._inherits)
@@ -85,45 +85,48 @@ namespace BridgeTest {
     // Insert-Code-Here {BridgeTest.BridgeTestPort._implementation} (additional details)
     // DO-NOT-DELETE splicer.end(BridgeTest.BridgeTestPort._implementation)
 
+    bool _wrapped;
   public:
-    // default constructor, shouldn't be used (required)
-    BridgeTestPort_impl() : StubBase(0,true) { } 
+    // default constructor, used for data wrapping(required)
+    BridgeTestPort_impl();
+    // sidl constructor (required)
+    // Note: alternate Skel constructor doesn't call addref()
+    // (fixes bug #275)
+    BridgeTestPort_impl( struct BridgeTest_BridgeTestPort__object * s ) : 
+      StubBase(s,true), _wrapped(false) { _ctor(); }
 
-      // sidl constructor (required)
-      // Note: alternate Skel constructor doesn't call addref()
-      // (fixes bug #275)
-      BridgeTestPort_impl( struct BridgeTest_BridgeTestPort__object * s ) : 
-        StubBase(s,true) { _ctor(); }
+    // user defined construction
+    void _ctor();
 
-      // user defined construction
-      void _ctor();
+    // virtual destructor (required)
+    virtual ~BridgeTestPort_impl() { _dtor(); }
 
-      // virtual destructor (required)
-      virtual ~BridgeTestPort_impl() { _dtor(); }
+    // user defined destruction
+    void _dtor();
 
-      // user defined destruction
-      void _dtor();
+    // true if this object was created by a user newing the impl
+    inline bool _isWrapped() {return _wrapped;}
 
-      // static class initializer
-      static void _load();
+    // static class initializer
+    static void _load();
 
-    public:
+  public:
 
-      /**
-       * user defined non-static method.
-       */
-      void
-      m2_impl (
-        /* in array<int> */UCXX ::sidl::array<int32_t> a
-      )
-      ;
+    /**
+     * user defined non-static method.
+     */
+    void
+    m2_impl (
+      /* in array<int> */::sidl::array<int32_t> a
+    )
+    ;
 
-    };  // end class BridgeTestPort_impl
+  };  // end class BridgeTestPort_impl
 
-  } // end namespace BridgeTest
+} // end namespace BridgeTest
 
 // DO-NOT-DELETE splicer.begin(BridgeTest.BridgeTestPort._misc)
 // Insert-Code-Here {BridgeTest.BridgeTestPort._misc} (miscellaneous things)
 // DO-NOT-DELETE splicer.end(BridgeTest.BridgeTestPort._misc)
 
-  #endif
+#endif

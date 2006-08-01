@@ -26,79 +26,47 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#ifndef CCA_Components_GUIBuilder_wxSCIRunApp_h
+#define CCA_Components_GUIBuilder_wxSCIRunApp_h
 
-/*
- *  Builder.h: 
- *
- *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
- *   University of Utah
- *   October 2001
- *
- */
+#include <wx/app.h>
+#include <wx/wxprec.h>
+#ifndef WX_PRECOMP
+ #include <wx/wx.h>
+#endif
 
-#ifndef SCIRun_Framework_Builder_h
-#define SCIRun_Framework_Builder_h
-
+#include <Core/Thread/Semaphore.h>
+#include <Core/Thread/Thread.h>
 #include <Core/CCA/spec/cca_sidl.h>
 
-#include <string>
-
-
-namespace SCIRun{
+namespace GUIBuilder {
 
 class BuilderWindow;
-class Builder;
 
-/**
- * \class myBuilderPort
- *
- * An extension and implementation of sci::cca::ports::BuilderPort. 
- */
-class myBuilderPort : public virtual sci::cca::ports::BuilderPort
-{
+// wxApp is a singleton class, has private copy ctor, assgn. op. (see wx/app.h, wx/def.h)
+class wxSCIRunApp : public wxApp {
 public:
-  virtual ~myBuilderPort();
-  /** Obtain Services handle, through which the component communicates with the
-      framework. */
-  virtual void setServices(const sci::cca::Services::pointer& svc);
-  
-    /** ? */
-    virtual void buildRemotePackageMenus(
-    const sci::cca::ports::ComponentRepository::pointer &reg,
-    const std::string &frameworkURL);
+  virtual bool OnInit();
+  // virtual int OnExit() { return wxApp::OnExit(); }
+  void AddBuilder(const sci::cca::GUIBuilder::pointer& bc);
+  BuilderWindow* GetTopBuilderWindow() const;
 
-protected:
-  friend class Builder;
-  sci::cca::Services::pointer services;
-  BuilderWindow* builder;
-};
+  static void SetTopBuilder(const sci::cca::GUIBuilder::pointer& bc) { topBuilder = bc; }
 
-
-/**
- * \class Builder
- *
- * ?
- */
-class Builder : public sci::cca::Component
-{
-public:
-  Builder();
-  virtual ~Builder();
-  
-  /** Obtain Services handle, through which the component communicates with the
-      framework. */
-  virtual void setServices(const sci::cca::Services::pointer& svc);
-
-  virtual void setCommunicator(int comm) {  };
+  static void semDown() { sem.down(); }
+  static void semUp() { sem.up(); }
 
 private:
-  Builder(const Builder&);
-  Builder& operator=(const Builder&);
-  myBuilderPort builderPort;
+  static SCIRun::Mutex appLock;
+  static SCIRun::Semaphore sem;
+
+  // keep track of inital Builder component (instantiated from main)
+  static sci::cca::GUIBuilder::pointer topBuilder;
+  static std::vector<sci::cca::GUIBuilder::pointer> activeBuilders;
 };
 
-} //namespace SCIRun
+DECLARE_APP(wxSCIRunApp)
+
+}
 
 #endif

@@ -29,6 +29,13 @@
 -->
 
 <metacomponentmodel name="cca">
+  <library name="libCCA_Components_GUIBuilder.so">
+    <!-- the SIDL GUI interface -->
+    <component name="SCIRun.GUIBuilder" />
+  </library>
+  <library name="libCCA_Components_TestComponent.so">
+    <component name="SCIRun.TestComponent" />
+  </library>
   <library name="libCCA_Components_Hello.so">
     <component name="SCIRun.Hello">
       <interface file="CCA/Components/Hello/StringPort.sidl" />
@@ -38,9 +45,6 @@
     <component name="SCIRun.World">
       <interface file="CCA/Components/World/StringPort.sidl" />
     </component>
-  </library>
-  <library name="libCCA_Components_Builder.so">
-    <component name="SCIRun.Builder" />
   </library>
   <library name="libCCA_Components_FEM.so">
     <component name="SCIRun.FEM" />

@@ -24,16 +24,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
+
 // File:          hello_GoPort_Impl.cxx
 // Symbol:        hello.GoPort-v1.0
 // Symbol Type:   class
-// Babel Version: 0.11.0
+// Babel Version: 0.99.2
 // Description:   Server-side implementation for hello.GoPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.11.0
 // 
 #include "hello_GoPort_Impl.hxx"
 
@@ -49,13 +49,23 @@
 #ifndef included_sidl_ClassInfo_hxx
 #include "sidl_ClassInfo.hxx"
 #endif
+#ifndef included_sidl_NotImplementedException_hxx
+#include "sidl_NotImplementedException.hxx"
+#endif
 // DO-NOT-DELETE splicer.begin(hello.GoPort._includes)
-//#include "gov_cca_ports_GoPort.hh"
 #include <iostream.h>
 
 #include "sidl_String.h"
 #include "gov_cca_ports_IDPort.hxx"
 // DO-NOT-DELETE splicer.end(hello.GoPort._includes)
+
+// speical constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
+hello::GoPort_impl::GoPort_impl() : StubBase(reinterpret_cast< 
+  void*>(::hello::GoPort::_wrapObj(this)),false) , _wrapped(true){ 
+  // DO-NOT-DELETE splicer.begin(hello.GoPort._ctor2)
+  // Insert-Code-Here {hello.GoPort._ctor2} (ctor2)
+  // DO-NOT-DELETE splicer.end(hello.GoPort._ctor2)
+}
 
 // user defined constructor
 void hello::GoPort_impl::_ctor() {
@@ -86,9 +96,10 @@ void hello::GoPort_impl::_load() {
  */
 void
 hello::GoPort_impl::setServices_impl (
-  /* in */UCXX ::gov::cca::Services services ) 
+  /* in */::gov::cca::Services services ) 
 {
   // DO-NOT-DELETE splicer.begin(hello.GoPort.setServices)
+  // Insert-Code-Here {hello.GoPort.setServices} (setServices method)
   this->svc = services;
   // DO-NOT-DELETE splicer.end(hello.GoPort.setServices)
 }
@@ -105,13 +116,13 @@ hello::GoPort_impl::go_impl ()
 {
   // DO-NOT-DELETE splicer.begin(hello.GoPort.go)
   ::std::cerr << "hello::GoPort::go() starts..." << ::std::endl;
-  UCXX ::gov::cca::Port p = svc.getPort("idport");
-  UCXX ::gov::cca::ports::IDPort s = UCXX ::sidl::babel_cast<UCXX ::gov::cca::ports::IDPort>(p);
-  if (s._not_nil()) {
-    ::std::cerr << "Hello " << s.getID() << ::std::endl;
-  } else {
+  ::gov::cca::Port p = svc.getPort("idport");
+  ::gov::cca::ports::IDPort s = ::sidl::babel_cast< ::gov::cca::ports::IDPort>(p);
+  if (s._is_nil()) {
     ::std::cerr << "getPort() returns null" << ::std::endl;
+    return -1;
   }
+  ::std::cerr << "Hello " << s.getID() << ::std::endl;
   return 0;
   // DO-NOT-DELETE splicer.end(hello.GoPort.go)
 }

@@ -26,23 +26,54 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <CCA/Components/Builder/BridgeConnection.h>
+#ifndef CCA_Components_GUIBuilder_BridgeConnection_h
+#define CCA_Components_GUIBuilder_BridgeConnection_h
 
-void BridgeConnection::drawShape(QPainter& p)
-{
-  QPointArray par(Connection::NUM_DRAW_POINTS);
-  Connection::drawConnection(p, points(), par);
+#include <CCA/Components/GUIBuilder/Connection.h>
 
-  QPen pen(color,4);
-  pen.setStyle(DotLine);
-  p.setPen(pen);
-  p.setBrush(blue);
-  p.drawPolyline(par);
+namespace GUIBuilder {
+
+class BridgeConnection : public Connection {
+public:
+  BridgeConnection(PortIcon* pU,
+                   PortIcon* pP,
+                   const sci::cca::ConnectionID::pointer& connID,
+                   bool possibleConnection = false);
+  virtual ~BridgeConnection() { std::cerr << "BridgeConnection::~BridgeConnection()" << std::endl; }
+  virtual void OnDraw(wxDC& dc);
+};
+
 }
 
-std::string BridgeConnection::getConnectionType()
-{
-  return "BridgeConnection";
-}
+#endif
 
+#if 0
 
+// #ifndef BRIDGE_CONNECTION_H
+// #define BRIDGE_CONNECTION_H
+
+// #include <CCA/Components/Builder/Connection.h>
+
+// using namespace SCIRun;
+
+// class BridgeConnection : public Connection 
+// {
+// public:
+//   BridgeConnection(PortIcon* p1, PortIcon* p2, const sci::cca::ConnectionID::pointer &connID, QCanvasView *cv)
+//   : Connection(p1, p2, connID, cv) { }
+//   using Connection::resetPoints;
+//   using Connection::isConnectedTo;
+//   using Connection::getConnectionID;
+//   using Connection::highlight;
+//   using Connection::setDefault;
+//   using Connection::usesPort;
+//   using Connection::providesPort;
+//   virtual std::string getConnectionType();
+
+// protected:
+//   void drawShape(QPainter& );
+// };
+
+// #endif
+
+#endif

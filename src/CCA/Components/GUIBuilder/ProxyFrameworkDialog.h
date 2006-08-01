@@ -26,35 +26,57 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
 /*
- *  QtUtils.h: 
+ * FrameworkProxyDialog.h
  *
- *  Written by:
- *   Steven G. Parker
- *   Department of Computer Science
- *   University of Utah
- *   October 2001
+ * Written by:
+ *  Ayla Khan
+ *  Scientific Computing and Imaging Institute
+ *  University of Utah
+ *  September 2004
+ *
+ *  Copyright (C) 2004 SCI Institute
  *
  */
 
-#ifndef SCIRun_Framework_QtUtils_h
-#define SCIRun_Framework_QtUtils_h
+#ifndef CCA_Components_GUIBuilder_FrameworkProxyDialog_h
+#define CCA_Components_GUIBuilder_FrameworkProxyDialog_h
 
-class QApplication;
+#include <sci_wx.h>
 
-namespace SCIRun {
-  class QtUtils {
-  public:
-    static QApplication* getApplication();
+class wxStaticText;
+class wxComboBox;
+class wxTextCtrl;
+class wxSpinCtrl;
+class wxButton;
+class wxRadioBox;
 
-  private:
-    QtUtils();
-    virtual ~QtUtils();
+namespace GUIBuilder {
 
-    QtUtils(const QtUtils&);
-    QtUtils& operator=(const QtUtils&);
-  };
+class FrameworkProxyDialog : public wxDialog {
+public:
+  FrameworkProxyDialog(const std::string& defaultLoader="localhost", const std::string& defaultDomain="localhost", const std::string& defaultLogin);
+  virtual ~FrameworkProxyDialog();
+
+protected:
+  void SetLayout();
+
+private:
+  wxComboBox* loaderComboBox;
+  wxComboBox* domainComboBox;
+  wxComboBox* loginComboBox;
+  wxComboBox* pathComboBox;
+  wxTextCtrl* passwdTextCtrl;
+
+  wxSpinCtrl* copiesSpinCtrl;
+  //wxRadioButton* radioButtonCPU;
+  //wxRadioButton* radioButtonNode;
+  wxRadioBox* mpiWhereRadioBox;
+  wxTextCtrl* whereTextCtrl;
+  wxButton* helpButton;
+  wxButton* resetButton;
+};
+
 }
 
 #endif

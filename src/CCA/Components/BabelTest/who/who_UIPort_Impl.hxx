@@ -24,23 +24,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+
 // 
 // File:          who_UIPort_Impl.hxx
 // Symbol:        who.UIPort-v1.0
 // Symbol Type:   class
-// Babel Version: 0.11.0
+// Babel Version: 0.99.2
 // Description:   Server-side implementation for who.UIPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.11.0
 // 
 
 #ifndef included_who_UIPort_Impl_hxx
 #define included_who_UIPort_Impl_hxx
 
-#ifndef included_sidl_ucxx_hxx
-#include "sidl_ucxx.hxx"
+#ifndef included_sidl_cxx_hxx
+#include "sidl_cxx.hxx"
 #endif
 #ifndef included_who_UIPort_IOR_h
 #include "who_UIPort_IOR.h"
@@ -71,7 +71,7 @@ namespace who {
   /**
    * Symbol "who.UIPort" (version 1.0)
    */
-  class UIPort_impl : public virtual UCXX ::who::UIPort 
+  class UIPort_impl : public virtual ::who::UIPort 
   // DO-NOT-DELETE splicer.begin(who.UIPort._inherits)
   // Insert-Code-Here {who.UIPort._inherits} (optional inheritance here)
   // DO-NOT-DELETE splicer.end(who.UIPort._inherits)
@@ -85,41 +85,44 @@ namespace who {
     // Insert-Code-Here {who.UIPort._implementation} (additional details)
     // DO-NOT-DELETE splicer.end(who.UIPort._implementation)
 
+    bool _wrapped;
   public:
-    // default constructor, shouldn't be used (required)
-    UIPort_impl() : StubBase(0,true) { } 
+    // default constructor, used for data wrapping(required)
+    UIPort_impl();
+    // sidl constructor (required)
+    // Note: alternate Skel constructor doesn't call addref()
+    // (fixes bug #275)
+    UIPort_impl( struct who_UIPort__object * s ) : StubBase(s,true),
+      _wrapped(false) { _ctor(); }
 
-      // sidl constructor (required)
-      // Note: alternate Skel constructor doesn't call addref()
-      // (fixes bug #275)
-      UIPort_impl( struct who_UIPort__object * s ) : StubBase(s,
-        true) { _ctor(); }
+    // user defined construction
+    void _ctor();
 
-      // user defined construction
-      void _ctor();
+    // virtual destructor (required)
+    virtual ~UIPort_impl() { _dtor(); }
 
-      // virtual destructor (required)
-      virtual ~UIPort_impl() { _dtor(); }
+    // user defined destruction
+    void _dtor();
 
-      // user defined destruction
-      void _dtor();
+    // true if this object was created by a user newing the impl
+    inline bool _isWrapped() {return _wrapped;}
 
-      // static class initializer
-      static void _load();
+    // static class initializer
+    static void _load();
 
-    public:
+  public:
 
-      /**
-       * user defined non-static method.
-       */
-      int32_t
-      ui_impl() ;
-    };  // end class UIPort_impl
+    /**
+     * user defined non-static method.
+     */
+    int32_t
+    ui_impl() ;
+  };  // end class UIPort_impl
 
-  } // end namespace who
+} // end namespace who
 
-  // DO-NOT-DELETE splicer.begin(who.UIPort._misc)
-  // Insert-Code-Here {who.UIPort._misc} (miscellaneous things)
-  // DO-NOT-DELETE splicer.end(who.UIPort._misc)
+// DO-NOT-DELETE splicer.begin(who.UIPort._misc)
+// Insert-Code-Here {who.UIPort._misc} (miscellaneous things)
+// DO-NOT-DELETE splicer.end(who.UIPort._misc)
 
-  #endif
+#endif

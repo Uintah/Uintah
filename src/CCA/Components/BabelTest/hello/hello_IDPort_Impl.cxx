@@ -24,16 +24,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
-// 
+//
+
 // File:          hello_IDPort_Impl.cxx
 // Symbol:        hello.IDPort-v1.0
 // Symbol Type:   class
-// Babel Version: 0.11.0
+// Babel Version: 0.99.2
 // Description:   Server-side implementation for hello.IDPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.11.0
 // 
 #include "hello_IDPort_Impl.hxx"
 
@@ -46,9 +46,20 @@
 #ifndef included_sidl_ClassInfo_hxx
 #include "sidl_ClassInfo.hxx"
 #endif
+#ifndef included_sidl_NotImplementedException_hxx
+#include "sidl_NotImplementedException.hxx"
+#endif
 // DO-NOT-DELETE splicer.begin(hello.IDPort._includes)
 // Insert-Code-Here {hello.IDPort._includes} (additional includes or code)
 // DO-NOT-DELETE splicer.end(hello.IDPort._includes)
+
+// speical constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
+hello::IDPort_impl::IDPort_impl() : StubBase(reinterpret_cast< 
+  void*>(::hello::IDPort::_wrapObj(this)),false) , _wrapped(true){ 
+  // DO-NOT-DELETE splicer.begin(hello.IDPort._ctor2)
+  // Insert-Code-Here {hello.IDPort._ctor2} (ctor2)
+  // DO-NOT-DELETE splicer.end(hello.IDPort._ctor2)
+}
 
 // user defined constructor
 void hello::IDPort_impl::_ctor() {
@@ -75,15 +86,15 @@ void hello::IDPort_impl::_load() {
 
 // user defined non-static methods:
 /**
- * Test prot. Return a string as an ID for Hello component
+ *  Test prot. Return a string as an ID for Hello component
  */
 ::std::string
 hello::IDPort_impl::getID_impl () 
 
 {
   // DO-NOT-DELETE splicer.begin(hello.IDPort.getID)
-  // What is this supposed to do???
-  return ::std::string("hello::IDPort_impl::getID_Impl()");
+  // Insert-Code-Here {hello.IDPort.getID} (getID method)
+    return ::std::string("hello::IDPort_impl::getID_Impl()");
   // DO-NOT-DELETE splicer.end(hello.IDPort.getID)
 }
 
