@@ -235,6 +235,8 @@ namespace Uintah {
       const VarLabel* d_cpINLabel;
       const VarLabel* d_co2INLabel;
       const VarLabel* d_h2oINLabel;
+      const VarLabel* d_normalizedScalarVarLabel;
+      const VarLabel* d_heatLossLabel;
       const VarLabel* d_h2sINLabel;
       const VarLabel* d_so2INLabel;
       const VarLabel* d_so3INLabel;
