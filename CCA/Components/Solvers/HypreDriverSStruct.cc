@@ -62,8 +62,8 @@ HypreDriverSStruct::HyprePatch::HyprePatch(const int level,
   _patch(0), 
   _matl(matl),
   _level(level),
-  _low(IntVector(-9*(level+1),-9,-9)),
-  _high(IntVector(-9*(level+1),-9,-9))
+  _low(IntVector(Parallel::getMPIRank(),level,-9)),
+  _high(IntVector(Parallel::getMPIRank(),level,-9))
 {
 }
 
