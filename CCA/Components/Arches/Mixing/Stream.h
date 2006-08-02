@@ -165,6 +165,12 @@ namespace Uintah {
       inline double getdrhodh() const {
         return d_drhodh;
       }
+      inline double getnormalizedScalarVar() const {
+        return d_normalizedScalarVar;
+      }
+      inline double getheatLoss() const {
+        return d_heatLoss;
+      }
 
     public:
       double d_pressure; // Pa
@@ -208,6 +214,7 @@ namespace Uintah {
                       //Value changed in ***MixingModel::computeProps
       int d_H2Oindex; //Set to 0 in constructor.
                       //Value changed in ***MixingModel::computeProps     
+      double d_normalizedScalarVar, d_heatLoss;
     private:
       // includes all the vars except vectors...
       // increase the value if want to increase number of variables

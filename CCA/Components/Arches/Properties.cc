@@ -232,6 +232,8 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->computes(d_lab->d_cpINLabel);
       tsk->computes(d_lab->d_co2INLabel);
       tsk->computes(d_lab->d_h2oINLabel);
+      tsk->computes(d_lab->d_normalizedScalarVarLabel);
+      tsk->computes(d_lab->d_heatLossLabel);
       tsk->computes(d_lab->d_enthalpyRXNLabel);
       if (d_calcReactingScalar)
         tsk->computes(d_lab->d_reactscalarSRCINLabel);
@@ -262,6 +264,8 @@ Properties::sched_reComputeProps(SchedulerP& sched, const PatchSet* patches,
       tsk->modifies(d_lab->d_cpINLabel);
       tsk->modifies(d_lab->d_co2INLabel);
       tsk->modifies(d_lab->d_h2oINLabel);
+      tsk->modifies(d_lab->d_normalizedScalarVarLabel);
+      tsk->modifies(d_lab->d_heatLossLabel);
       tsk->modifies(d_lab->d_enthalpyRXNLabel);
       if (d_calcReactingScalar)
         tsk->modifies(d_lab->d_reactscalarSRCINLabel);
@@ -338,6 +342,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
     CCVariable<double> cp;
     CCVariable<double> co2;
     CCVariable<double> h2o;
+    CCVariable<double> normalizedScalarVar;
+    CCVariable<double> heatLoss;
     CCVariable<double> enthalpyRXN;
     CCVariable<double> reactscalarSRC;
     CCVariable<double> drhodf;
@@ -406,6 +412,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         new_dw->allocateAndPut(cp, d_lab->d_cpINLabel, matlIndex, patch);
         new_dw->allocateAndPut(co2, d_lab->d_co2INLabel, matlIndex, patch);
         new_dw->allocateAndPut(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
+        new_dw->allocateAndPut(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, matlIndex, patch);
+        new_dw->allocateAndPut(heatLoss, d_lab->d_heatLossLabel, matlIndex, patch);
         new_dw->allocateAndPut(enthalpyRXN, d_lab->d_enthalpyRXNLabel,
 			       matlIndex, patch);
         if (d_calcReactingScalar)
@@ -447,6 +455,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
         new_dw->getModifiable(cp, d_lab->d_cpINLabel, matlIndex, patch);
         new_dw->getModifiable(co2, d_lab->d_co2INLabel, matlIndex, patch);
         new_dw->getModifiable(h2o, d_lab->d_h2oINLabel, matlIndex, patch);
+        new_dw->getModifiable(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, matlIndex, patch);
+        new_dw->getModifiable(heatLoss, d_lab->d_heatLossLabel, matlIndex, patch);
         new_dw->getModifiable(enthalpyRXN, d_lab->d_enthalpyRXNLabel,
 			       matlIndex, patch);
         if (d_calcReactingScalar)
@@ -487,6 +497,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
       cp.initialize(0.0);
       co2.initialize(0.0);
       h2o.initialize(0.0);
+      normalizedScalarVar.initialize(0.0);
+      heatLoss.initialize(0.0);
       enthalpyRXN.initialize(0.0);
       if (d_calcReactingScalar)
 	  reactscalarSRC.initialize(0.0);
@@ -605,6 +617,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    cp[currCell] = outStream.getCP();
 	    co2[currCell] = outStream.getCO2();
 	    h2o[currCell] = outStream.getH2O();
+	    normalizedScalarVar[currCell] = outStream.getnormalizedScalarVar();
+	    heatLoss[currCell] = outStream.getheatLoss();
 	    enthalpyRXN[currCell] = outStream.getEnthalpy();
 // Uncomment the next line to check enthalpy transport in adiabatic case
 	    enthalpyRXN[currCell] -= enthalpy[currCell];
@@ -722,6 +736,10 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
 		Ghost::None, Arches::ZEROGHOSTCELLS);
     tsk->requires(Task::OldDW, d_lab->d_co2INLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_normalizedScalarVarLabel, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+    tsk->requires(Task::OldDW, d_lab->d_heatLossLabel, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
     /*
     tsk->requires(Task::OldDW, d_lab->d_enthalpyRXNLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
@@ -767,6 +785,8 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
     tsk->computes(d_lab->d_tempINLabel);
     tsk->computes(d_lab->d_cpINLabel);
     tsk->computes(d_lab->d_co2INLabel);
+    tsk->computes(d_lab->d_normalizedScalarVarLabel);
+    tsk->computes(d_lab->d_heatLossLabel);
     tsk->computes(d_lab->d_enthalpyRXNLabel);
     if (d_calcReactingScalar)
       tsk->computes(d_lab->d_reactscalarSRCINLabel);
@@ -875,6 +895,8 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     constCCVariable<double> tempIN;
     constCCVariable<double> cpIN;
     constCCVariable<double> co2IN;
+    constCCVariable<double> normalizedScalarVar;
+    constCCVariable<double> heatLoss;
 
     constCCVariable<double> coIN;
     constCCVariable<double> h2sIN;
@@ -897,6 +919,8 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     CCVariable<double> tempIN_new;
     CCVariable<double> cpIN_new;
     CCVariable<double> co2IN_new;
+    CCVariable<double> normalizedScalarVar_new;
+    CCVariable<double> heatLoss_new;
     CCVariable<double> enthalpyRXN_new;
     CCVariable<double> reactScalarSrc_new;
     constCCVariable<double> solidTemp;
@@ -912,6 +936,10 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
       old_dw->get(cpIN, d_lab->d_cpINLabel, matlIndex, patch,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
       old_dw->get(co2IN, d_lab->d_co2INLabel, matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      old_dw->get(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, matlIndex, patch,
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+      old_dw->get(heatLoss, d_lab->d_heatLossLabel, matlIndex, patch,
 		  Ghost::None, Arches::ZEROGHOSTCELLS);
       /*
       old_dw->get(enthalpyRXN, d_lab->d_enthalpyRXNLabel, matlIndex, patch,
@@ -933,6 +961,12 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
       new_dw->allocateAndPut(co2IN_new, d_lab->d_co2INLabel, 
 			     matlIndex, patch);
       co2IN_new.copyData(co2IN);
+      new_dw->allocateAndPut(normalizedScalarVar_new, d_lab->d_normalizedScalarVarLabel, 
+			     matlIndex, patch);
+      normalizedScalarVar_new.copyData(normalizedScalarVar);
+      new_dw->allocateAndPut(heatLoss_new, d_lab->d_heatLossLabel, 
+			     matlIndex, patch);
+      heatLoss_new.copyData(heatLoss);
 
       new_dw->allocateAndPut(enthalpyRXN_new, d_lab->d_enthalpyRXNLabel, 
 			     matlIndex, patch);
