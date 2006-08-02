@@ -28,7 +28,7 @@
 
 
 /*
- *  TaoComponentInstance.h: 
+ *  TaoComponentInstance.h:
  *
  *  Written by:
  *   Steven G. Parker
@@ -75,10 +75,11 @@ public:
                        const sci::cca::TypeMap::pointer& tm,
                        tao::Component* component);
   virtual ~TaoComponentInstance();
-  
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
-  void registerUsesPort(const std::string& name, const std::string& type);
+  void registerUsesPort(const std::string& name, const std::string& type,
+                        const sci::cca::TypeMap::pointer& properties);
 
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
@@ -87,8 +88,9 @@ public:
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   void addProvidesPort(const std::string& name,
-                       const std::string& type);
-                       
+                       const std::string& type,
+                       const sci::cca::TypeMap::pointer& properties);
+
 
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
@@ -97,6 +99,9 @@ public:
   // Methods from ComponentInstance
   virtual PortInstance* getPortInstance(const std::string& name);
   virtual PortInstanceIterator* getPorts();
+
+  virtual sci::cca::TypeMap::pointer getPortProperties(const std::string& portName);
+  virtual void setPortProperties(const std::string& portName, const sci::cca::TypeMap::pointer& tm);
 
   sci::cca::ComponentID::pointer getComponentID();
 
@@ -122,10 +127,10 @@ private:
   };
   std::map<std::string, TaoPortInstance*> ports;
   SCIRun::Mutex lock_ports;
- 
+
   tao::Component* component;
   Mutex *mutex;
-  
+
   TaoComponentInstance(const TaoComponentInstance&);
   TaoComponentInstance& operator=(const TaoComponentInstance&);
 };

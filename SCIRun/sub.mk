@@ -34,21 +34,23 @@ SRCDIR   := SCIRun
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCS     += \
-	    $(SRCDIR)/SCIRunFramework.cc \
-	    $(SRCDIR)/ComponentDescription.cc \
-	    $(SRCDIR)/ComponentInstance.cc \
-	    $(SRCDIR)/ComponentModel.cc \
-	    $(SRCDIR)/PortDescription.cc \
-	    $(SRCDIR)/PortInstance.cc \
-	    $(SRCDIR)/PortInstanceIterator.cc\
-	    $(SRCDIR)/CCACommunicator.cc \
-	    $(SRCDIR)/resourceReference.cc \
-	    $(SRCDIR)/TypeMap.cc \
-	    $(SRCDIR)/SCIRunLoader.cc
+            $(SRCDIR)/SCIRunFramework.cc \
+            $(SRCDIR)/ComponentDescription.cc \
+            $(SRCDIR)/ComponentInstance.cc \
+            $(SRCDIR)/ComponentModel.cc \
+            $(SRCDIR)/PortDescription.cc \
+            $(SRCDIR)/PortInstance.cc \
+            $(SRCDIR)/PortInstanceIterator.cc\
+            $(SRCDIR)/CCACommunicator.cc \
+            $(SRCDIR)/resourceReference.cc \
+            $(SRCDIR)/TypeMap.cc \
+            $(SRCDIR)/SCIRunLoader.cc \
+            $(SRCDIR)/ApplicationLoader.cc \
+            $(SRCDIR)/ComponentSkeletonWriter.cc
 
 SUBDIRS := \
-	    $(SRCDIR)/CCA \
-	    $(SRCDIR)/Internal
+           $(SRCDIR)/CCA \
+           $(SRCDIR)/Internal
 
 ifeq ($(BUILD_DATAFLOW),yes)
   SUBDIRS += $(SRCDIR)/Dataflow
@@ -64,8 +66,8 @@ endif
 
 ifeq ($(HAVE_TAO),yes)
  SUBDIRS += \
-	    $(SRCDIR)/Corba \
-	    $(SRCDIR)/Tao
+            $(SRCDIR)/Corba \
+            $(SRCDIR)/Tao
 endif
 
 ifeq ($(BUILD_BRIDGE),yes)
@@ -76,23 +78,24 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 
 ifeq ($(HAVE_GLOBUS),yes)
   PSELIBS := Core/OS Core/Containers Core/Util Core/XMLUtil \
-	     Core/GuiInterface Core/CCA/spec \
-	     Core/CCA/PIDL Core/CCA/SSIDL \
-	     Core/Exceptions Core/TkExtensions Core/Init Core/Thread \
-	     Core/globus_threads Core/CCA/Comm
+             Core/GuiInterface Core/CCA/spec \
+             Core/CCA/PIDL Core/CCA/SSIDL \
+             Core/Exceptions Core/TkExtensions Core/Init Core/Thread \
+             Core/globus_threads
 else
   PSELIBS := Core/OS Core/Containers Core/Util Core/XMLUtil \
-	     Core/GuiInterface Core/CCA/spec \
-	     Core/CCA/PIDL Core/CCA/SSIDL \
-	     Core/Exceptions Core/Thread \
-	     Core/TkExtensions Core/Init Core/CCA/Comm
-endif
-
-ifeq ($(BUILD_DATAFLOW),yes)
- PSELIBS += Dataflow/Network Dataflow/TCLThread
+             Core/GuiInterface Core/CCA/spec \
+             Core/CCA/PIDL Core/CCA/SSIDL \
+             Core/Exceptions Core/Thread \
+             Core/TkExtensions Core/Init
 endif
 
 LIBS := $(XML2_LIBRARY)
+
+ifeq ($(BUILD_DATAFLOW),yes)
+ PSELIBS += Dataflow/Network Dataflow/TCLThread
+ LIBS := $(TK_LIBRARY) $(TCL_LIBRARY) $(LIBS)
+endif
 
 ifeq ($(HAVE_RUBY),yes)
  PSELIBS := $(PSELIBS) Core/CCA/tools/strauss
@@ -104,15 +107,24 @@ ifeq ($(HAVE_MPI),yes)
  LIBS := $(LIBS) $(MPI_LIBRARY)
 endif
 
-LIBS := $(LIBS) -lcrypt -ldl
+ifeq ($(IS_OSX),yes)
+  LIBS := $(LIBS) -ldl
+else
+  # who uses libcrypt.so?
+  LIBS := $(LIBS) -lcrypt -ldl
+endif
 
 ifeq ($(HAVE_BABEL),yes)
   LIBS := $(LIBS) $(SIDL_LIBRARY)
 endif
 
+ifeq ($(HAVE_WX),yes)
+ LIBS := $(LIBS) $(WX_LIBRARY)
+endif
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 SUBDIRS := \
-	   $(SRCDIR)/StandAlone
+           $(SRCDIR)/StandAlone
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

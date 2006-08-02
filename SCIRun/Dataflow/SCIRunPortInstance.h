@@ -61,34 +61,46 @@ class SCIRunComponentInstance;
 class SCIRunPortInstance : public PortInstance
 {
 public:
-  enum DataflowPortType { Output, Input };
-  SCIRunPortInstance(SCIRunComponentInstance*, Port* port, DataflowPortType type);
+  enum DataflowPortType { Output = 0, Input = 1 };
+  SCIRunPortInstance(SCIRunComponentInstance*, Port* port,
+                     const sci::cca::TypeMap::pointer& properties, DataflowPortType type);
   ~SCIRunPortInstance();
 
   /** */
   virtual bool connect(PortInstance*);
+
   /** */
   virtual PortInstance::PortType portType();
+
   /** */
   virtual std::string getUniqueName();
+
   /** */
   virtual bool disconnect(PortInstance*);
+
   /** */
   virtual bool canConnectTo(PortInstance *);
+
   /** */
   virtual std::string getType();
+
   /** */
   virtual std::string getModel();
+
+  virtual sci::cca::TypeMap::pointer getProperties() { return properties; }
+  virtual void setProperties(const sci::cca::TypeMap::pointer& tm);
 
 private:
   friend class BridgeComponentInstance;
 
   SCIRunPortInstance(const SCIRunPortInstance&);
   SCIRunPortInstance& operator=(const SCIRunPortInstance&);
+  void setDefaultProperties();
 
   SCIRunComponentInstance* component;
   Port* port;
   DataflowPortType porttype;
+  sci::cca::TypeMap::pointer properties;
 };
 
 } // end namespace SCIRun

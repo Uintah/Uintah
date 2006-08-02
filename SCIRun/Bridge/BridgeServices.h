@@ -61,7 +61,6 @@
  #include <SCIRun/Vtk/VtkPortInstance.h>
 #endif
 
-
 namespace SCIRun {
 
 typedef enum {

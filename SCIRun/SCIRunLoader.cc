@@ -283,7 +283,7 @@ void SCIRunLoader::buildComponentList()
 {
   destroyComponentList();
 
-  std::string component_path = sci_getenv("SCIRUN_SRCDIR") + CCAComponentModel::DEFAULT_PATH;
+  std::string component_path = sci_getenv("SCIRUN_SRCDIR") + CCAComponentModel::DEFAULT_XML_PATH;
   std::vector<std::string> sArray;
   sArray.push_back(component_path);
 

@@ -33,12 +33,11 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := CCA/Components/VTK
 
-#SRCS     += 
+PSELIBS  := \
+            Core/CCA/PIDL Core/CCA/spec \
+            Core/Thread Core/Containers Core/Exceptions
 
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
-	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
-QT_LIBDIR := $(QT_LIBRARY)
-LIBS := $(VTK_LIBRARY) $(QT_LIBRARY) $(LIBS)
-INCLUDES := $(VTK_INCLUDE) $(QT_INCLUDE) $(INCLUDES)
+LIBS     := $(VTK_LIBRARY) $(LIBS)
+INCLUDES := $(VTK_INCLUDE) $(INCLUDES)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

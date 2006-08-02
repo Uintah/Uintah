@@ -28,7 +28,7 @@
 
 
 /*
- *  Services.h: 
+ *  Services.h:
  *
  *  Written by:
  *   Keming Zhang
@@ -41,58 +41,56 @@
 #ifndef SCIRun_Corba_Services_h
 #define SCIRun_Corba_Services_h
 
-#include <map>
-#include <string>
-#include <vector>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <SCIRun/Corba/Component.h>
-namespace SCIRun
-{
-  namespace corba
-    {
-      /**
-       * \class Services
-       *
-       * 
-       *
-       */
-      class Services: public sci::cca::CorbaServices{
+#include <map>
+#include <vector>
+#include <string>
 
-      public:
-	Services(Component* com);
-	virtual ~Services();
-	// int .sci.cca.CorbaServices.registerUsesPort(in string portName, in string portType)
-	virtual int registerUsesPort(const ::std::string& portName, const ::std::string& portType);
+namespace SCIRun {
+namespace corba {
+/**
+ * \class Services
+ *
+ *
+ *
+ */
 
-	// int .sci.cca.CorbaServices.unregisterUsesPort(in string portName)
-	virtual int unregisterUsesPort(const ::std::string& portName);
-  
-	// int .sci.cca.CorbaServices.addProvidesPort(in string portName, in string portType, in string ior)
-	virtual int addProvidesPort(const ::std::string& portName, const ::std::string& portType, const ::std::string& ior);
-  
-	// int .sci.cca.CorbaServices.removeProvidesPort(in string portName)
-	virtual int removeProvidesPort(const ::std::string& portName);
-  
-	// string .sci.cca.CorbaServices.getIOR(in string portName)
-	virtual ::std::string getIOR(const ::std::string& portName);
+class Services : public sci::cca::CorbaServices {
+public:
+  Services(Component* com);
+  virtual ~Services();
 
-	int check();
+  // int .sci.cca.CorbaServices.registerUsesPort(in string portName, in string portType)
+  virtual int registerUsesPort(const ::std::string& portName, const ::std::string& portType);
 
-	int done();
+  // int .sci.cca.CorbaServices.unregisterUsesPort(in string portName)
+  virtual int unregisterUsesPort(const ::std::string& portName);
 
-	bool go();
+  // int .sci.cca.CorbaServices.addProvidesPort(in string portName, in string portType, in string ior)
+  virtual int addProvidesPort(const ::std::string& portName, const ::std::string& portType, const ::std::string& ior);
 
-	void letGo();
+  // int .sci.cca.CorbaServices.removeProvidesPort(in string portName)
+  virtual int removeProvidesPort(const ::std::string& portName);
 
-	static sci::cca::CorbaServices::pointer getCorbaServices(const std::string & url);
-      private:
-	Component* com;
-	bool wait;
-	bool ready2go;
-      };
+  // string .sci.cca.CorbaServices.getIOR(in string portName)
+  virtual ::std::string getIOR(const ::std::string& portName);
 
-    } // end namespace SCIRun::corba
+  int check();
+  int done();
+  bool go();
+  void letGo();
+
+  static sci::cca::CorbaServices::pointer getCorbaServices(const std::string & url);
+
+private:
+  Component* com;
+  bool wait;
+  bool ready2go;
+};
+
+} // end namespace SCIRun::corba
 
 } // end namespace SCIRun
 

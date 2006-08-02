@@ -82,7 +82,7 @@ bool BabelPortInstance::connect(PortInstance* to)
     connections.push_back(p2);
     lock_connections.unlock();
   } else {
-   p2->connect(this);
+    p2->connect(this);
   }
   return true;
 }
@@ -111,10 +111,12 @@ std::string BabelPortInstance::getUniqueName()
 bool BabelPortInstance::disconnect(PortInstance* to)
 {
   BabelPortInstance* p2 = dynamic_cast<BabelPortInstance*>(to);
-  if (!p2) { return false; }
+  if (!p2) {
+    return false;
+  }
 
   if (porttype != Uses) {
-    std::cerr<<"disconnect can be called only by user"<<std::endl;
+    std::cerr << "disconnect can be called only by user" << std::endl;
     return false;
   }
   std::vector<PortInstance*>::iterator iter;
@@ -137,8 +139,7 @@ bool BabelPortInstance::canConnectTo(PortInstance* to)
   //std::cerr<<"type(p2)="<<p2->type<<std::endl;
   //std::cerr<<"port type(p1)="<<porttype<<std::endl;
   //std::cerr<<"port type(p2)="<<p2->porttype<<std::endl;
-
-  if ( p2 && getType() == p2->getType() && portType() != p2->portType() ) {
+  if (p2 && getType() == p2->getType() && portType() != p2->portType()) {
     if (available() && p2->available()) { return true; }
   }
   return false;
@@ -146,7 +147,7 @@ bool BabelPortInstance::canConnectTo(PortInstance* to)
 
 bool BabelPortInstance::available()
 {
-  return portType()== Provides || connections.size() == 0;
+  return portType() == Provides || connections.size() == 0;
 }
 
 PortInstance* BabelPortInstance::getPeer()
@@ -166,8 +167,9 @@ void BabelPortInstance::incrementUseCount()
 
 bool BabelPortInstance::decrementUseCount()
 {
-  if (useCount <= 0) { return false; }
-
+  if (useCount <= 0) {
+    return false;
+  }
   useCount--;
   return true;
 }
@@ -176,6 +178,5 @@ bool BabelPortInstance::portInUse()
 {
     return useCount > 0;
 }
-
 
 } // end namespace SCIRun

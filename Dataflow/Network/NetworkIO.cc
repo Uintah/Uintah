@@ -708,6 +708,7 @@ NetworkIO::pop_subnet_scope()
 void 
 NetworkIO::start_net_doc(const string &fname, const string &vers)
 {
+std::cerr << "NetworkIO::start_net_doc(" << fname << ", " << vers << ")" << std::endl;
   out_fname_ = fname;
   xmlNodePtr root_node = 0; /* node pointers */
   xmlDtdPtr dtd = 0;        /* DTD pointer */
