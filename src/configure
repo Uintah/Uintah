@@ -340,7 +340,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW DEF_PTOLEMY_PACKAGE HAVE_PTOLEMY_PACKAGE DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX IS_WIN IS_AIX ac_ct_CC EXEEXT OBJEXT EGREP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL DEBUG OGL_ERR_MACRO AS LD PATH_TO_VC PATH_TO_PSDK PATH_TO_MSYS_BIN NEED_OSX_SYSTEMSTUBS NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS WIN_OTFFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP TCL_LIB_DIR TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_DIR TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H ITCL_LIB_DIR ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION XML2_LIB_FLAG XML2_LIB_DIR_FLAG INC_XML2_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG HAVE_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG HAVE_JAVA DEF_JAVA JAVA MESQUITE_LIB_FLAG INC_MESQUITE_H MESQUITE_LIB_DIR_FLAG DEF_MESQUITE HAVE_MESQUITE VERDICT_LIB_FLAG INC_VERDICT_H VERDICT_LIB_DIR_FLAG DEF_VERDICT HAVE_VERDICT CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL TETGEN_LIB_FLAG INC_TETGEN_H TETGEN_LIB_DIR_FLAG DEF_TETGEN HAVE_TETGEN HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG HAVE_GDCM DEF_GDCM INC_GDCM_H GDCM_LIB_FLAG GDCM_LIB_DIR_FLAG HAVE_PTOLEMY DEF_PTOLEMY PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG HAVE_NCURSES DEF_NCURSES INC_NCURSES_H NCURSES_LIB_FLAG NCURSES_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_TENA DEF_TENA TENA_BIN_DIR INC_TENA_H TENA_LIB_DIR TENA_LIB_DIR_FLAG TENA_VERSION TENA_PLATFORM TENA_OMC_VERSION TENA_DEFINES HAVE_TENA_OM DEF_TENA_OM TENA_OM_DEF_DIR TENA_OM_IMPL_DIR BUILD_SCIRUN2 WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW DEF_PTOLEMY_PACKAGE HAVE_PTOLEMY_PACKAGE DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX IS_WIN IS_AIX ac_ct_CC EXEEXT OBJEXT EGREP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL DEBUG OGL_ERR_MACRO AS LD PATH_TO_VC PATH_TO_PSDK PATH_TO_MSYS_BIN NEED_OSX_SYSTEMSTUBS NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS WIN_OTFFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP TCL_LIB_DIR TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_DIR TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H ITCL_LIB_DIR ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION XML2_LIB_FLAG XML2_LIB_DIR_FLAG INC_XML2_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG HAVE_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG JAVAC JAR HAVE_JAVA DEF_JAVA JAVA MESQUITE_LIB_FLAG INC_MESQUITE_H MESQUITE_LIB_DIR_FLAG DEF_MESQUITE HAVE_MESQUITE VERDICT_LIB_FLAG INC_VERDICT_H VERDICT_LIB_DIR_FLAG DEF_VERDICT HAVE_VERDICT CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL TETGEN_LIB_FLAG INC_TETGEN_H TETGEN_LIB_DIR_FLAG DEF_TETGEN HAVE_TETGEN HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG HAVE_GDCM DEF_GDCM INC_GDCM_H GDCM_LIB_FLAG GDCM_LIB_DIR_FLAG HAVE_PTOLEMY DEF_PTOLEMY PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL BABEL_CLASSPATH INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG HAVE_NCURSES DEF_NCURSES INC_NCURSES_H NCURSES_LIB_FLAG NCURSES_LIB_DIR_FLAG WX_CONFIG HAVE_WX DEF_WX WX_CXXFLAGS WX_LIBS HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_TENA DEF_TENA TENA_BIN_DIR INC_TENA_H TENA_LIB_DIR TENA_LIB_DIR_FLAG TENA_VERSION TENA_PLATFORM TENA_OMC_VERSION TENA_DEFINES HAVE_TENA_OM DEF_TENA_OM TENA_OM_DEF_DIR TENA_OM_IMPL_DIR BUILD_SCIRUN2 WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -821,6 +821,14 @@ ac_env_CXXCPP_set=${CXXCPP+set}
 ac_env_CXXCPP_value=$CXXCPP
 ac_cv_env_CXXCPP_set=${CXXCPP+set}
 ac_cv_env_CXXCPP_value=$CXXCPP
+ac_env_JAVAC_set=${JAVAC+set}
+ac_env_JAVAC_value=$JAVAC
+ac_cv_env_JAVAC_set=${JAVAC+set}
+ac_cv_env_JAVAC_value=$JAVAC
+ac_env_JAR_set=${JAR+set}
+ac_env_JAR_value=$JAR
+ac_cv_env_JAR_set=${JAR+set}
+ac_cv_env_JAR_value=$JAR
 
 #
 # Report the --help message.
@@ -943,8 +951,7 @@ Optional Packages:
 --with-fortran=DIR      Use the fortran (eg: g2c) installation in DIR/lib
 --with-ptolemyII=DIR    Use the Ptolemy II (eg: ptII4.0.1) installation in
                           DIR (Ptolemy package only)
---with-java=DIR         Use the Java distribution in DIR (Ptolemy package
-                          only)
+--with-java=DIR         Use the Java distribution in DIR
 --with-mpi=DIR          Use the mpi installation in DIR
 --with-mpiuni=DIR       Use the mpiuni installation in DIR
 --with-hypre=DIR        Use the hypre installation in DIR
@@ -969,7 +976,7 @@ Optional Packages:
 --with-ncurses=DIR      Use the Ncurses installation in DIR
 --with-babel=DIR        Use the Babel installation in DIR (strongly
                           recommended for SCIRun2)
---with-qt=DIR           Use the Qt installation in DIR
+--with-wxwidgets=DIR    Use the wxWidgets installation in DIR
 --with-ruby=DIR         Use the ruby installation in DIR where DIR points to
                           the --prefix option specified when installing ruby.
                           A standard ruby install defaults to
@@ -1011,6 +1018,8 @@ Some influential environment variables:
   FFLAGS      Fortran 77 compiler flags
   CPP         C preprocessor
   CXXCPP      C++ preprocessor
+  JAVAC       Java compiler
+  JAR         Java archive tool
 
 Use these variables to override the choices made by `configure' or to help
 it to find libraries and programs with nonstandard names/locations.
@@ -2225,18 +2234,18 @@ echo "$as_me: error: The file or directory parameter ($babel) specified for --wi
 
 
 
-# Check whether --with-qt or --without-qt was given.
-if test "${with_qt+set}" = set; then
-  withval="$with_qt"
-  with_qt="$withval"
-   sci_required_qt=yes
+# Check whether --with-wxwidgets or --without-wxwidgets was given.
+if test "${with_wxwidgets+set}" = set; then
+  withval="$with_wxwidgets"
+  with_wx="$withval"
+   sci_required_wx=yes
 else
-  with_qt=""
+  with_wx=""
 fi;
-  sci_arg_with_list="$sci_arg_with_list --with-qt --without-qt"
-  if test -n "$qt" -a ! -e "$qt"; then
-    { { echo "$as_me:$LINENO: error: The file or directory parameter ($qt) specified for --with-qt does not exist!  Please verify that the path and file are correct." >&5
-echo "$as_me: error: The file or directory parameter ($qt) specified for --with-qt does not exist!  Please verify that the path and file are correct." >&2;}
+  sci_arg_with_list="$sci_arg_with_list --with-wxwidgets --without-wxwidgets"
+  if test -n "$wxwidgets" -a ! -e "$wxwidgets"; then
+    { { echo "$as_me:$LINENO: error: The file or directory parameter ($wxwidgets) specified for --with-wxwidgets does not exist!  Please verify that the path and file are correct." >&5
+echo "$as_me: error: The file or directory parameter ($wxwidgets) specified for --with-wxwidgets does not exist!  Please verify that the path and file are correct." >&2;}
    { (exit 1); exit 1; }; }
   fi
 
@@ -6892,7 +6901,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6895:" \
+echo "$as_me:6904:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -33481,6 +33490,7 @@ echo "${ECHO_T}Found Java top directory $_java_top" >&6
     fi
   done
 elif test "$with_java"; then
+  ## need to link more than one library
   _sci_optional=required
   _sci_inc="$with_java/include"
   _java_top=$with_java
@@ -34000,6 +34010,156 @@ _sci_includes=''
 ##
 
 
+
+
+  # Extract the first word of "javac", so it can be a program name with args.
+set dummy javac; ac_word=$2
+echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
+if test "${ac_cv_path_JAVAC+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  case $JAVAC in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_JAVAC="$JAVAC" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $_java_top $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_JAVAC="$as_dir/$ac_word$ac_exec_ext"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+
+  test -z "$ac_cv_path_JAVAC" && ac_cv_path_JAVAC="NOT_FOUND"
+  ;;
+esac
+fi
+JAVAC=$ac_cv_path_JAVAC
+
+if test -n "$JAVAC"; then
+  echo "$as_me:$LINENO: result: $JAVAC" >&5
+echo "${ECHO_T}$JAVAC" >&6
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
+  if test "$JAVAC" = "NOT_FOUND"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { echo "$as_me:$LINENO: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&5
+echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+{ { echo "$as_me:$LINENO: error: java not found" >&5
+echo "$as_me: error: java not found" >&2;}
+   { (exit 1); exit 1; }; }
+
+  fi
+
+
+  # Extract the first word of "jar", so it can be a program name with args.
+set dummy jar; ac_word=$2
+echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
+if test "${ac_cv_path_JAR+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  case $JAR in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_JAR="$JAR" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $_java_top $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_JAR="$as_dir/$ac_word$ac_exec_ext"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+
+  test -z "$ac_cv_path_JAR" && ac_cv_path_JAR="NOT_FOUND"
+  ;;
+esac
+fi
+JAR=$ac_cv_path_JAR
+
+if test -n "$JAR"; then
+  echo "$as_me:$LINENO: result: $JAR" >&5
+echo "${ECHO_T}$JAR" >&6
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
+  if test "$JAR" = "NOT_FOUND"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { echo "$as_me:$LINENO: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&5
+echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+{ { echo "$as_me:$LINENO: error: jar not found" >&5
+echo "$as_me: error: jar not found" >&2;}
+   { (exit 1); exit 1; }; }
+
+  fi
 fi
 
 if test "$HAVE_JAVA" = "yes"; then
@@ -50444,6 +50604,7 @@ fi
 
 
 ##  --  search for Ptolemy II ---------------------------------------------------
+
 if test "$sci_required_ptolemyII" = "yes"; then
   echo "$as_me:$LINENO: checking for Ptolemy II." >&5
 echo $ECHO_N "checking for Ptolemy II.... $ECHO_C" >&6
@@ -50463,8 +50624,7 @@ echo "$as_me: error: Java installation directory is missing." >&2;}
 echo "${ECHO_T}$pdir" >&6
 
     PTOLEMY_PATH="$pdir"
-    #PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar:$JAVA_PATH/jre:/lib/rt.jar"
-    PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar:/lib/rt.jar"
+    PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar"
     HAVE_PTOLEMY="yes"
     HAVE_PTOLEMY_PACKAGE="yes"
     DEF_PTOLEMY="#define HAVE_PTOLEMY 1"
@@ -50619,6 +50779,7 @@ fi
 
 ##  --  search for Babel  ----------------------------------------------------
 
+## add Thirdparty path
 _sci_lib=
 _sci_inc=
 _sci_optional=optional
@@ -50627,10 +50788,12 @@ if test "$with_babel" = "yes"; then
   _sci_optional=required
 elif test "$with_babel"; then
   _sci_lib="$with_babel/lib"
-  _sci_inc="$with_babel/include"
-  _sci_optional=specific
+  _sci_inc="$with_babel/include $with_babel/include/cxx $with_babel/include/f77"
+  _sci_optional=required
 fi
 
+## should try to link with C++ header?
+_babel_libs="-lsidl -lsidlx -lsidlstub_cxx -lsidlstub_f77 -lsidlstub_java"
 
 ##
 ## SCI_TRY_LINK (SIDL):  sidl library and headers
@@ -50670,7 +50833,7 @@ fi
 ## arg 4 : $_sci_inc
 ## arg 5 : sidl
 ## arg 6 : $_sci_lib
-## arg 7 :
+## arg 7 : $_babel_libs
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : $_sci_optional
 ##
@@ -50908,7 +51071,7 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs  $LIBS"
+LIBS="$_sci_libs $_babel_libs $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
@@ -51129,8 +51292,8 @@ _sci_includes=''
 
 
 BABEL_BIN=
-{ echo "$as_me:$LINENO: checking for babel in $LIB_DIR_SIDL/../bin..." >&5
-echo "$as_me: checking for babel in $LIB_DIR_SIDL/../bin..." >&6;}
+{ echo "$as_me:$LINENO: checking for babel in $SIDL_LIB_DIR/../bin..." >&5
+echo "$as_me: checking for babel in $SIDL_LIB_DIR/../bin..." >&6;}
 # Extract the first word of "babel", so it can be a program name with args.
 set dummy babel; ac_word=$2
 echo "$as_me:$LINENO: checking for $ac_word" >&5
@@ -51142,13 +51305,13 @@ else
   ac_cv_prog_BABEL_BIN="$BABEL_BIN" # Let the user override the test.
 else
 as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $LIB_DIR_SIDL/../bin
+for as_dir in $SIDL_LIB_DIR/../bin
 do
   IFS=$as_save_IFS
   test -z "$as_dir" && as_dir=.
   for ac_exec_ext in '' $ac_executable_extensions; do
   if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_BABEL_BIN="$LIB_DIR_SIDL/../bin/babel"
+    ac_cv_prog_BABEL_BIN="$SIDL_LIB_DIR/../bin/babel"
     echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
     break 2
   fi
@@ -51169,18 +51332,18 @@ fi
 
 
 if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-  ## check for compatible version (0.11.0 or greater)
+  ## check for compatible version (0.99.0 or greater)
 
     ##  SCI_CHECK_VERSION
     _SCI_CORRECT_='echo $echo_n "$echo_c"'
     _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
     _SCI_VER_1_="0"
-    _SCI_VER_2_="0.11.0"
+    _SCI_VER_2_="0.99.0"
     _CUR_1_=""
     _CUR_2_=""
 
-    echo "$as_me:$LINENO: checking for \`basename $BABEL_BIN\` version 0.11.0" >&5
-echo $ECHO_N "checking for \`basename $BABEL_BIN\` version 0.11.0... $ECHO_C" >&6
+    echo "$as_me:$LINENO: checking for \`basename $BABEL_BIN\` version 0.99.0" >&5
+echo $ECHO_N "checking for \`basename $BABEL_BIN\` version 0.99.0... $ECHO_C" >&6
 
     if test ""; then
       _SCI_CORRECT_=''
@@ -51234,12 +51397,20 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
 fi
 
 ## make missing babel an error!
+BABEL_CLASSPATH=
 if test "$with_babel" && test ! "$DEF_BABEL"; then
   echo
   { { echo "$as_me:$LINENO: error: One or more of the Babel components is missing." >&5
 echo "$as_me: error: One or more of the Babel components is missing." >&2;}
    { (exit 1); exit 1; }; }
 fi
+
+if test "$HAVE_JAVA" = "yes"; then
+  BABEL_CLASSPATH=`find $LIB_DIR_SIDL -follow -name "*.jar" 2> /dev/null | tr -d "\n"`
+  { echo "$as_me:$LINENO: Babel classpath=$BABEL_CLASSPATH" >&5
+echo "$as_me: Babel classpath=$BABEL_CLASSPATH" >&6;}
+fi
+
 
 
 
@@ -60305,7 +60476,6 @@ fi #end sci_required_globus
 sci_defs_files="$sci_defs_files include/sci_defs/globus_testdefs.h"
 
 ##  --  search for ncurses  ----------------------------------------------
-
 _sci_lib=
 _sci_inc=
 _sci_optional=optional
@@ -60834,28 +61004,172 @@ fi
 
 
 
-##  --  search for Qt  ----------------------------------------------------
+##  --  search for wxWidgets  --------------------------------------------
 
-_sci_lib=
 _sci_inc=
 _sci_optional=optional
 
-if test "$with_qt" = "yes"; then
+if test "$with_wx" = "yes"; then
   _sci_optional=required
-elif test "$with_qt"; then
-  _sci_lib="$with_qt/lib"
-  _sci_inc="$with_qt/include"
+elif test "$with_wx"; then
+  ## can't use 'specific' setting because we'll try to link more than 1 library later
   _sci_optional=required
+  _sci_lib="$with_wx/lib"
+  _sci_inc="$with_wx/include"
 fi
+
+_wx_bin=$_sci_lib/../bin
+WX_CONFIG=
+# Extract the first word of "wx-config", so it can be a program name with args.
+set dummy wx-config; ac_word=$2
+echo "$as_me:$LINENO: checking for $ac_word" >&5
+echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
+if test "${ac_cv_path_WX_CONFIG+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  case $WX_CONFIG in
+  [\\/]* | ?:[\\/]*)
+  ac_cv_path_WX_CONFIG="$WX_CONFIG" # Let the user override the test with a path.
+  ;;
+  *)
+  as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
+for as_dir in $_wx_bin $PATH
+do
+  IFS=$as_save_IFS
+  test -z "$as_dir" && as_dir=.
+  for ac_exec_ext in '' $ac_executable_extensions; do
+  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
+    ac_cv_path_WX_CONFIG="$as_dir/$ac_word$ac_exec_ext"
+    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
+    break 2
+  fi
+done
+done
+
+  test -z "$ac_cv_path_WX_CONFIG" && ac_cv_path_WX_CONFIG="NOT_FOUND"
+  ;;
+esac
+fi
+WX_CONFIG=$ac_cv_path_WX_CONFIG
+
+if test -n "$WX_CONFIG"; then
+  echo "$as_me:$LINENO: result: $WX_CONFIG" >&5
+echo "${ECHO_T}$WX_CONFIG" >&6
+else
+  echo "$as_me:$LINENO: result: no" >&5
+echo "${ECHO_T}no" >&6
+fi
+
+
+if test $_sci_optional != "optional" && test "$WX_CONFIG" = "NOT_FOUND"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { echo "$as_me:$LINENO: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&5
+echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+{ { echo "$as_me:$LINENO: error: wx-config not found" >&5
+echo "$as_me: error: wx-config not found" >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+
+
+    ##  SCI_CHECK_VERSION
+    _SCI_CORRECT_='echo $echo_n "$echo_c"'
+    _SCI_NOTCORRECT_='echo $echo_n "$echo_c"'
+    _SCI_VER_1_="0"
+    _SCI_VER_2_="2.6.0"
+    _CUR_1_=""
+    _CUR_2_=""
+
+    echo "$as_me:$LINENO: checking for \`basename $WX_CONFIG\` version 2.6.0" >&5
+echo $ECHO_N "checking for \`basename $WX_CONFIG\` version 2.6.0... $ECHO_C" >&6
+
+    if test ""; then
+      _SCI_CORRECT_=''
+    fi
+
+    if test "echo configure: error: wrong wxWidgets version.; exit"; then
+      _SCI_NOTCORRECT_='echo configure: error: wrong wxWidgets version.; exit'
+    fi
+
+    if test ""; then
+      _SCI_COMP_=""
+    else
+      _SCI_COMP_="-gt"
+    fi
+
+    eval "$WX_CONFIG --version 2> conftest.out >> conftest.out"
+    _SCI_REPORT_="`cat conftest.out | head -n 1 | sed 's%[^0-9\. ]*%%g;s%^ *%%' | cut -f1 -d' ' `"
+    _SCI_VER_1_="$_SCI_REPORT_"
+
+    _SCI_BIGGER_=yes
+    _SCI_LAST_=""
+    while test "$_SCI_VER_2_"; do
+      if test "$_SCI_LAST_" = "$_SCI_VER_2_"; then
+        break
+      fi
+      _SCI_LAST_="$_SCI_VER_2_"
+      _CUR_1_=`echo $_SCI_VER_1_ | sed 's%\.[0-9]*[a-z]*%%g'`
+      _SCI_VER_1_=`echo $_SCI_VER_1_ | sed 's%[0-9]*[a-z]*\.%%'`
+      _CUR_2_=`echo $_SCI_VER_2_ | sed 's%\.[0-9]*[a-z]*%%g'`
+      _SCI_VER_2_=`echo $_SCI_VER_2_ | sed 's%[0-9]*[a-z]*\.%%'`
+      if test $_CUR_2_ $_SCI_COMP_ $_CUR_1_; then
+        _SCI_BIGGER_=no
+        break
+      elif test $_CUR_1_ -gt $_CUR_2_; then
+        break
+      fi
+    done
+
+    if test "$_SCI_BIGGER_" = "yes"; then
+      echo "$as_me:$LINENO: result: yes ($_SCI_REPORT_)" >&5
+echo "${ECHO_T}yes ($_SCI_REPORT_)" >&6
+      eval $_SCI_CORRECT_
+    else
+      echo "$as_me:$LINENO: result: no ($_SCI_REPORT_)" >&5
+echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
+      eval $_SCI_NOTCORRECT_
+    fi
+
+WX_LIBS=`$WX_CONFIG --libs`
+WX_CXXFLAGS=`$WX_CONFIG --cxxflags`
 
 ext="$ac_ext"
 ac_ext="cc"
 
-qt_bin=$_sci_lib/../bin
-# Only looking for one .h file... assuming all the rest are in the same place.
+case $host in
+  *linux*)
+    _wx_lib_dir_flags=`echo $WX_LIBS | sed "s/ -[^L][^ ]*/ /g" | sed "s/^-[^L][^ ]*//g"`
+    _wx_lib_flags=`echo $WX_LIBS | sed "s/ -[^l][^ ]*/ /g" | sed "s/^-[^l][^ ]*//g"`
+    _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[^I][^ ]*/ /g" | sed "s/^-[^I][^ ]*//g"`
+    _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[^D][^ ]*/ /g" | sed "s/^-[^D][^ ]*//g"`
+
 
 ##
-## SCI_TRY_LINK (QT_MT):  qt library
+## SCI_TRY_LINK (WX):  wxWidgets libraries
 ##
 ## arguments mean:
 ## arg 1 : variable base name (e.g., MATH)
@@ -60886,35 +61200,35 @@ qt_bin=$_sci_lib/../bin
 ##
 ## Here are the specific values for this invocation:
 ##
-## arg 1 : QT_MT
-## arg 2 : qt library
-## arg 3 : qapplication.h
-## arg 4 : $_sci_inc
-## arg 5 : qt-mt Xxf86vm
-## arg 6 : $_sci_lib /usr/X11R6/lib
-## arg 7 : -DQT_THREAD_SUPPORT -DQT_NO_XIM
+## arg 1 : WX
+## arg 2 : wxWidgets libraries
+## arg 3 : wx/wxprec.h
+## arg 4 : $_wx_inc_flags
+## arg 5 : $_wx_lib_flags
+## arg 6 : $_wx_lib_dir_flags
+## arg 7 : $_wx_def_flags
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
 ## arg 9 : $_sci_optional
 ##
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      QT_MT_LIB_DIR        => lib path
-##      QT_MT_LIB_DIR_FLAG   => all the -L's
-##      QT_MT_LIB_FLAG       => all the -l's
-##      HAVE_QT_MT           => yes or no
-##      INC_QT_MT_H          => all the -I's
-##      HAVE_QT_MT_H         => yes or no
+##      WX_LIB_DIR        => lib path
+##      WX_LIB_DIR_FLAG   => all the -L's
+##      WX_LIB_FLAG       => all the -l's
+##      HAVE_WX           => yes or no
+##      INC_WX_H          => all the -I's
+##      HAVE_WX_H         => yes or no
 
 if test 9 != 9; then
-     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for qt library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for qt library.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for wxWidgets libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for wxWidgets libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
 
-echo "$as_me:$LINENO: checking for qt library ($_sci_optional)" >&5
-echo $ECHO_N "checking for qt library ($_sci_optional)... $ECHO_C" >&6
+echo "$as_me:$LINENO: checking for wxWidgets libraries ($_sci_optional)" >&5
+echo $ECHO_N "checking for wxWidgets libraries ($_sci_optional)... $ECHO_C" >&6
 _sci_savelibs=$LIBS
 _sci_saveldflags=$LDFLAGS
 _sci_savecflags=$CFLAGS
@@ -60924,19 +61238,19 @@ _sci_includes=
 
 if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
      echo
-     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for qt library must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: Last parameter of SCI-TRY-LINK for qt library must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for wxWidgets libraries must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for wxWidgets libraries must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
-# If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
+# If $_wx_inc_flags (the -I paths) is blank, do nothing, else do the for statement.
 
-for inc in $_sci_inc; do
+for inc in $_wx_inc_flags; do
 
   if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
      echo ""
-     { { echo "$as_me:$LINENO: error: Please do not specify /usr/include as the location for QT_MT include files." >&5
-echo "$as_me: error: Please do not specify /usr/include as the location for QT_MT include files." >&2;}
+     { { echo "$as_me:$LINENO: error: Please do not specify /usr/include as the location for WX include files." >&5
+echo "$as_me: error: Please do not specify /usr/include as the location for WX include files." >&2;}
    { (exit 1); exit 1; }; }
   fi
 
@@ -60951,8 +61265,8 @@ echo "$as_me: error: Please do not specify /usr/include as the location for QT_M
         # Has some other -?.
         if test "$debugging" = "yes"; then
           echo
-          { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of QT_MT check.  Skipping $inc." >&5
-echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of QT_MT check.  Skipping $inc." >&2;}
+          { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_wx_inc_flags) of WX check.  Skipping $inc." >&5
+echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_wx_inc_flags) of WX check.  Skipping $inc." >&2;}
         fi
         continue
      fi
@@ -60973,10 +61287,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "qt-mt Xxf86vm"; then
+if test -n "$_wx_lib_flags"; then
 
    found_framework=no
-   for lib in "" qt-mt Xxf86vm; do
+   for lib in "" $_wx_lib_flags; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -61006,8 +61320,8 @@ if test -n "qt-mt Xxf86vm"; then
             # Has some other -?.
             if test "$debugging" = "yes"; then
               echo
-              { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of QT_MT check (disregarding $lib)." >&5
-echo "$as_me: WARNING: Only -l options are allowed in arg 5 of QT_MT check (disregarding $lib)." >&2;}
+              { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of WX check (disregarding $lib)." >&5
+echo "$as_me: WARNING: Only -l options are allowed in arg 5 of WX check (disregarding $lib)." >&2;}
             fi
             continue
          fi
@@ -61035,9 +61349,9 @@ fi
 
 ### Take care of arg 6 (the list of lib paths)
 
-if test -n "$_sci_lib /usr/X11R6/lib"; then
+if test -n "$_wx_lib_dir_flags"; then
 
-   for path in "" $_sci_lib /usr/X11R6/lib; do
+   for path in "" $_wx_lib_dir_flags; do
 
       if test -z "$path"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -61052,8 +61366,8 @@ if test -n "$_sci_lib /usr/X11R6/lib"; then
             # Has some other -?.
             if test "$debugging" = "yes"; then
               echo
-              { echo "$as_me:$LINENO: WARNING: Only -L options are allowed in arg 6 of QT_MT check (disregarding $path)." >&5
-echo "$as_me: WARNING: Only -L options are allowed in arg 6 of QT_MT check (disregarding $path)." >&2;}
+              { echo "$as_me:$LINENO: WARNING: Only -L options are allowed in arg 6 of WX check (disregarding $path)." >&5
+echo "$as_me: WARNING: Only -L options are allowed in arg 6 of WX check (disregarding $path)." >&2;}
             fi
             continue
          fi
@@ -61073,12 +61387,12 @@ fi
 
 if test "$_sci_optional" = "specific"; then
   # If 'specific' then only one lib is allowed:
-  ### Determine if there is only one item in $_sci_lib /usr/X11R6/lib (I don't know of a better way to do this.)
+  ### Determine if there is only one item in $_wx_lib_dir_flags (I don't know of a better way to do this.)
   __sci_pass=false
   __sci_first_time=true
 
   # Must have the "" for the SGI sh.
-  for value in "" $_sci_lib /usr/X11R6/lib; do
+  for value in "" $_wx_lib_dir_flags; do
     if test "$value" = ""; then
       continue
     fi
@@ -61090,15 +61404,15 @@ if test "$_sci_optional" = "specific"; then
     fi
   done
   if test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for QT_MT only one library path may be specified for arg 6 (you had: $_sci_lib /usr/X11R6/lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for QT_MT only one library path may be specified for arg 6 (you had: $_sci_lib /usr/X11R6/lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for WX only one library path may be specified for arg 6 (you had: $_wx_lib_dir_flags).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for WX only one library path may be specified for arg 6 (you had: $_wx_lib_dir_flags).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
   fi
   # and only one include path:
-  ### Determine if there is only one item in $_sci_inc
+  ### Determine if there is only one item in $_wx_inc_flags
   __sci_pass=false
   __sci_first_time=true
-  for value in "" $_sci_inc; do
+  for value in "" $_wx_inc_flags; do
     if test "$value" = ""; then
       continue
     fi
@@ -61109,9 +61423,9 @@ echo "$as_me: error: For specific SCI-TRY-LINK test for QT_MT only one library p
       __sci_pass=false
     fi
   done
-  if test -n "$_sci_inc" && test $__sci_pass != "true"; then
-       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for QT_MT only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
-echo "$as_me: error: For specific SCI-TRY-LINK test for QT_MT only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+  if test -n "$_wx_inc_flags" && test $__sci_pass != "true"; then
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for WX only one include path may be specified for arg 4 (you had: $_wx_inc_flags).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for WX only one include path may be specified for arg 4 (you had: $_wx_inc_flags).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
   fi
 fi
@@ -61130,13 +61444,13 @@ else
   LDFLAGS="$_sci_lib_path $LDFLAGS"
 fi
 
-LIBS="$_sci_libs -DQT_THREAD_SUPPORT -DQT_NO_XIM $LIBS"
+LIBS="$_sci_libs $_wx_def_flags $LIBS"
 
 # Build up a list of the #include <file> lines for use in compilation:
 __extern_c="no"
 __sci_pound_includes=""
 
-for inc in "" qapplication.h; do
+for inc in "" wx/wxprec.h; do
     if test "$inc" = "extern_C"; then
        __sci_pound_includes="extern \"C\" {"
        __extern_c=yes
@@ -61199,7 +61513,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval QT_MT_LIB_DIR='"$_sci_lib /usr/X11R6/lib"'
+eval WX_LIB_DIR='"$_wx_lib_dir_flags"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -61216,7 +61530,7 @@ _final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
 # Remove leading spaces
 _final_dirs=`echo "$_final_dirs" | sed "s/^ *//"`
 
-eval QT_MT_LIB_DIR_FLAG="'$_final_dirs'"
+eval WX_LIB_DIR_FLAG="'$_final_dirs'"
 
 # Remove any -L from the list of libs.  (-L's should only be in the dir path.)
 final_libs=
@@ -61230,8 +61544,8 @@ done
 
 # Remove leading spaces
 final_libs=`echo $final_libs | sed "s/^ *//"`
-eval QT_MT_LIB_FLAG="'$final_libs'"
-eval HAVE_QT_MT="yes"
+eval WX_LIB_FLAG="'$final_libs'"
+eval HAVE_WX="yes"
 
 final_incs=
 for inc in "" $_sci_includes; do
@@ -61243,8 +61557,8 @@ done
 # Remove leading spaces
 final_incs=`echo $final_incs | sed "s/^ *//"`
 
-eval INC_QT_MT_H="'$final_incs'"
-eval HAVE_QT_MT_H="yes"
+eval INC_WX_H="'$final_incs'"
+eval HAVE_WX_H="yes"
 
 echo "$as_me:$LINENO: result: yes" >&5
 echo "${ECHO_T}yes" >&6
@@ -61254,12 +61568,12 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval QT_MT_LIB_DIR=''
-eval QT_MT_LIB_DIR_FLAG=''
-eval QT_MT_LIB_FLAG=''
-eval HAVE_QT_MT="no"
-eval INC_QT_MT_H=''
-eval HAVE_QT_MT_H="no"
+eval WX_LIB_DIR=''
+eval WX_LIB_DIR_FLAG=''
+eval WX_LIB_FLAG=''
+eval HAVE_WX="no"
+eval INC_WX_H=''
+eval HAVE_WX_H="no"
 echo "$as_me:$LINENO: result: not found" >&5
 echo "${ECHO_T}not found" >&6
 if test "$_sci_optional" != "optional"; then
@@ -61290,13 +61604,13 @@ echo "$as_me: WARNING:
   " >&2;}
 fi
 
-{ { echo "$as_me:$LINENO: error: Test for required QT_MT failed.
+{ { echo "$as_me:$LINENO: error: Test for required WX failed.
     To see the failed compile information, look in config.log,
-    search for QT_MT. Please install the relevant libraries
+    search for WX. Please install the relevant libraries
      or specify the correct paths and try to configure again." >&5
-echo "$as_me: error: Test for required QT_MT failed.
+echo "$as_me: error: Test for required WX failed.
     To see the failed compile information, look in config.log,
-    search for QT_MT. Please install the relevant libraries
+    search for WX. Please install the relevant libraries
      or specify the correct paths and try to configure again." >&2;}
    { (exit 1); exit 1; }; }
 
@@ -61309,16 +61623,16 @@ rm -f conftest.err conftest.$ac_objext \
 if test "$_sci_optional" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
-  for i in "" qapplication.h; do
-    #echo looking for $_sci_inc/$i
-    if test ! -e $_sci_inc/$i; then
-     { { echo "$as_me:$LINENO: error: Specifically requested QT_MT include file '$_sci_inc/$i' was not found" >&5
-echo "$as_me: error: Specifically requested QT_MT include file '$_sci_inc/$i' was not found" >&2;}
+  for i in "" wx/wxprec.h; do
+    #echo looking for $_wx_inc_flags/$i
+    if test ! -e $_wx_inc_flags/$i; then
+     { { echo "$as_me:$LINENO: error: Specifically requested WX include file '$_wx_inc_flags/$i' was not found" >&5
+echo "$as_me: error: Specifically requested WX include file '$_wx_inc_flags/$i' was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
   # Make sure the exact libraries were found
-  for i in "" qt-mt Xxf86vm; do
+  for i in "" $_wx_lib_flags; do
     if test -z "$i"; then
        continue
     fi
@@ -61326,9 +61640,9 @@ echo "$as_me: error: Specifically requested QT_MT include file '$_sci_inc/$i' wa
     if test -z "$has_minus"; then
        i=`echo $i | sed 's/-l//g'`
     fi
-    if test ! -e $_sci_lib /usr/X11R6/lib/lib$i.so && test ! -e $_sci_lib /usr/X11R6/lib/lib$i.a && test ! -e $_sci_lib /usr/X11R6/lib/$i.lib; then
-     { { echo "$as_me:$LINENO: error: Specifically requested QT_MT library file '$_sci_lib /usr/X11R6/lib/$i' (.so or .a) was not found" >&5
-echo "$as_me: error: Specifically requested QT_MT library file '$_sci_lib /usr/X11R6/lib/$i' (.so or .a) was not found" >&2;}
+    if test ! -e $_wx_lib_dir_flags/lib$i.so && test ! -e $_wx_lib_dir_flags/lib$i.a && test ! -e $_wx_lib_dir_flags/$i.lib; then
+     { { echo "$as_me:$LINENO: error: Specifically requested WX library file '$_wx_lib_dir_flags/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested WX library file '$_wx_lib_dir_flags/$i' (.so or .a) was not found" >&2;}
    { (exit 1); exit 1; }; }
     fi
   done
@@ -61345,74 +61659,533 @@ _sci_libs=''
 _sci_includes=''
 
 ##
-## END of SCI_TRY_LINK (QT_MT):  qt library
+## END of SCI_TRY_LINK (WX):  wxWidgets libraries
 ##
 
 
-QT_MOC_BIN=""
-{ echo "$as_me:$LINENO: checking for moc in $qt_bin..." >&5
-echo "$as_me: checking for moc in $qt_bin..." >&6;}
-# Extract the first word of "moc", so it can be a program name with args.
-set dummy moc; ac_word=$2
-echo "$as_me:$LINENO: checking for $ac_word" >&5
-echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6
-if test "${ac_cv_prog_QT_MOC_BIN+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  if test -n "$QT_MOC_BIN"; then
-  ac_cv_prog_QT_MOC_BIN="$QT_MOC_BIN" # Let the user override the test.
-else
-as_save_IFS=$IFS; IFS=$PATH_SEPARATOR
-for as_dir in $PATH
-do
-  IFS=$as_save_IFS
-  test -z "$as_dir" && as_dir=.
-  for ac_exec_ext in '' $ac_executable_extensions; do
-  if $as_executable_p "$as_dir/$ac_word$ac_exec_ext"; then
-    ac_cv_prog_QT_MOC_BIN="$qt_bin/moc"
-    echo "$as_me:$LINENO: found $as_dir/$ac_word$ac_exec_ext" >&5
-    break 2
-  fi
-done
-done
-
-  test -z "$ac_cv_prog_QT_MOC_BIN" && ac_cv_prog_QT_MOC_BIN="NOMOC"
-fi
-fi
-QT_MOC_BIN=$ac_cv_prog_QT_MOC_BIN
-if test -n "$QT_MOC_BIN"; then
-  echo "$as_me:$LINENO: result: $QT_MOC_BIN" >&5
-echo "${ECHO_T}$QT_MOC_BIN" >&6
-else
-  echo "$as_me:$LINENO: result: no" >&5
-echo "${ECHO_T}no" >&6
-fi
+    ;;
+  *-darwin*)
+    _wx_lib_dir_flags=$WX_LIBS
+    _wx_lib_flags=$WX_LIBS
+    _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[^I][^ ]*/ /g" | sed "s/^-[^I][^ ]*//g"`
+    _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[^D][^ ]*/ /g" | sed "s/^-[^D][^ ]*//g"`
 
 
-# Restore the previous settings.
-ac_ext="$ext"
+##
+## SCI_TRY_LINK (WX):  wxWidgets libraries
+##
+## arguments mean:
+## arg 1 : variable base name (e.g., MATH)
+## arg 2 : checking message
+## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
+##           If the first arg is "extern_C", then extern "C" is added around includes.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
+##           (Only one may be given if "Specific" (arg9) is chosen.)
+## arg 5 : list of libs to link against
+##           If the libraries do not have a '-l' on them, it is appeneded.
+##           If the arg has any prefix besides '-l' (eg: -L or -D), then the arg
+##           is removed completely.  (-framework is also allowed for Mac support.)
+##           All the libs specified in arg 5 will be part of the <VAR>_LIB_FLAG
+##           if the link is successful.
+## arg 6 : lib paths
+##           If the arg does not have -L on it, then -L will be added.
+##           If it has any other -?, then the arg is removed.
+##           (only one may be givein if "Specific" (arg9) is chosen.)
+## arg 7 : extra link flags
+##           This is where to put anything else you need for the compilation
+##           line.  NOTE, none of these args propagate anywhere.
+## arg 8 : body of code to compile. May be EMPTY, in which case a dummy routine is tried.
+## arg 9 : 'optional' or 'required' or 'specific' required argument
+##             If specific, then SCI_TRY_LINK will take only one lib
+##             path and one include path and will verify that the
+##             libs/includes are in that path.
+##
+## Here are the specific values for this invocation:
+##
+## arg 1 : WX
+## arg 2 : wxWidgets libraries
+## arg 3 : wx/wxprec.h
+## arg 4 : $_wx_inc_flags
+## arg 5 : $_wx_lib_flags
+## arg 6 : $_wx_lib_dir_flags
+## arg 7 : $_wx_def_flags
+## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
+## arg 9 : $_sci_optional
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      WX_LIB_DIR        => lib path
+##      WX_LIB_DIR_FLAG   => all the -L's
+##      WX_LIB_FLAG       => all the -l's
+##      HAVE_WX           => yes or no
+##      INC_WX_H          => all the -I's
+##      HAVE_WX_H         => yes or no
 
-if test "$HAVE_QT_MT" = "yes" && test $QT_MOC_BIN != "NOMOC"; then
-   DEF_QT="#define HAVE_QT 1"
-   HAVE_QT="yes"
-fi
-
-if test "$with_qt" && test ! "$DEF_QT"; then
-  echo
-  { { echo "$as_me:$LINENO: error: One or more of the QT components is missing." >&5
-echo "$as_me: error: One or more of the QT components is missing." >&2;}
+if test 9 != 9; then
+     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for wxWidgets libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for wxWidgets libraries.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
 
+echo "$as_me:$LINENO: checking for wxWidgets libraries ($_sci_optional)" >&5
+echo $ECHO_N "checking for wxWidgets libraries ($_sci_optional)... $ECHO_C" >&6
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
+     echo
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for wxWidgets libraries must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for wxWidgets libraries must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+# If $_wx_inc_flags (the -I paths) is blank, do nothing, else do the for statement.
+
+for inc in $_wx_inc_flags; do
+
+  if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
+     echo ""
+     { { echo "$as_me:$LINENO: error: Please do not specify /usr/include as the location for WX include files." >&5
+echo "$as_me: error: Please do not specify /usr/include as the location for WX include files." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+  # Make sure it doesn't have any thing but -I
+  #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
+  has_minus=`echo $inc | sed 's/-.*//'`
+  if test -z "$has_minus"; then
+     has_minus_i=`echo $inc | sed 's/-I.*//'`
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
+        # Has some other -?.
+        if test "$debugging" = "yes"; then
+          echo
+          { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_wx_inc_flags) of WX check.  Skipping $inc." >&5
+echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_wx_inc_flags) of WX check.  Skipping $inc." >&2;}
+        fi
+        continue
+     fi
+  fi
+
+  the_inc=`echo $inc | grep "\-I"`
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
+     # If the include arg does not already have -I on it.
+     if test -d $inc; then
+        # If the directory exists
+        _sci_includes="$_sci_includes -I$inc"
+     fi
+  else
+     # It already has -I so just add it directly.
+     _sci_includes="$_sci_includes $inc"
+  fi
+done
+
+### Take care of arg 5 (the list of libs)
+
+if test -n "$_wx_lib_flags"; then
+
+   found_framework=no
+   for lib in "" $_wx_lib_flags; do
+
+      if test -z "$lib"; then
+         # SGI sh needs the "" in the for statement... so skip it here.
+         continue
+      fi
+
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
+      # Make sure it doesn't have any thing but -l
+      has_minus=`echo $lib | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_l=`echo $lib | sed 's/-l.*//'`
+         has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -z "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of WX check (disregarding $lib)." >&5
+echo "$as_me: WARNING: Only -l options are allowed in arg 5 of WX check (disregarding $lib)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      the_lib=`echo $lib | grep "\-l"`
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
+         # If the lib arg does not have -l on it, then add -l.
+         if test "$IS_VC" = "yes"; then
+           if test -n "`echo $lib | sed 's,.*\.lib,,'`"; then
+             final_lib=$lib.lib
+           else
+             final_lib=$lib
+           fi
+         else
+           final_lib=-l$lib
+         fi
+      else
+         # It already has -l so just add it directly.
+         final_lib=$lib
+      fi
+      _sci_libs="$_sci_libs $final_lib"
+   done
+fi
+
+### Take care of arg 6 (the list of lib paths)
+
+if test -n "$_wx_lib_dir_flags"; then
+
+   for path in "" $_wx_lib_dir_flags; do
+
+      if test -z "$path"; then
+         # SGI sh needs the "" in the for statement... so skip it here.
+         continue
+      fi
+
+      # Make sure it doesn't have any thing but -L
+      has_minus=`echo $path | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_L=`echo $path | sed 's/-L.*//'`
+         if test -n "$has_minus_L"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { echo "$as_me:$LINENO: WARNING: Only -L options are allowed in arg 6 of WX check (disregarding $path)." >&5
+echo "$as_me: WARNING: Only -L options are allowed in arg 6 of WX check (disregarding $path)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      # Remove the '-L' (if it has one).
+      the_path=`echo $path | sed 's/-L//'`
+      if test -d "$the_path"; then
+         _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$the_path -L$the_path"
+      else
+         echo
+         { echo "$as_me:$LINENO: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
+echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+      fi
+   done
+fi
+
+if test "$_sci_optional" = "specific"; then
+  # If 'specific' then only one lib is allowed:
+  ### Determine if there is only one item in $_wx_lib_dir_flags (I don't know of a better way to do this.)
+  __sci_pass=false
+  __sci_first_time=true
+
+  # Must have the "" for the SGI sh.
+  for value in "" $_wx_lib_dir_flags; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test $__sci_pass != "true"; then
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for WX only one library path may be specified for arg 6 (you had: $_wx_lib_dir_flags).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for WX only one library path may be specified for arg 6 (you had: $_wx_lib_dir_flags).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  # and only one include path:
+  ### Determine if there is only one item in $_wx_inc_flags
+  __sci_pass=false
+  __sci_first_time=true
+  for value in "" $_wx_inc_flags; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test -n "$_wx_inc_flags" && test $__sci_pass != "true"; then
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for WX only one include path may be specified for arg 4 (you had: $_wx_inc_flags).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for WX only one include path may be specified for arg 4 (you had: $_wx_inc_flags).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+fi
+
+### Debug messages:
+#echo "sci_includes: $_sci_includes"
+#echo "sci_libs: $_sci_libs"
+#echo "sci_lib_path: $_sci_lib_path"
+
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+if test "$IS_VC" = "yes"; then
+  oldLIB=$LIB
+  export LIB="`echo $_sci_lib_path | sed 's, -LIBPATH:,;,g' | sed 's,-LIBPATH:,,g' | sed 's, -L,;,g' | sed 's,-L,,g'`;$LIB"
+else
+  LDFLAGS="$_sci_lib_path $LDFLAGS"
+fi
+
+LIBS="$_sci_libs $_wx_def_flags $LIBS"
+
+# Build up a list of the #include <file> lines for use in compilation:
+__extern_c="no"
+__sci_pound_includes=""
+
+for inc in "" wx/wxprec.h; do
+    if test "$inc" = "extern_C"; then
+       __sci_pound_includes="extern \"C\" {"
+       __extern_c=yes
+    else
+      # Have to have the "" for the SGI sh.
+      if test "$inc" = ""; then
+        continue
+      fi
+      __sci_pound_includes="$__sci_pound_includes
+#include <$inc>"
+    fi
+done
+
+if test "$__extern_c" = "yes"; then
+    __sci_pound_includes="$__sci_pound_includes
+}"
+fi
+
+
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$__sci_pound_includes
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+
+
+if test "$IS_VC" = "yes"; then
+  LIB=$oldLIB
+fi
+
+eval WX_LIB_DIR='"$_wx_lib_dir_flags"'
+
+# Remove any bad (/usr/lib) lib paths and the thirdparty lib path
+_final_dirs=
+for _dir in "" $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+    _final_dirs="$_final_dirs $_dir"
+  fi
+done
+
+# Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
+
+# Remove leading spaces
+_final_dirs=`echo "$_final_dirs" | sed "s/^ *//"`
+
+eval WX_LIB_DIR_FLAG="'$_final_dirs'"
+
+# Remove any -L from the list of libs.  (-L's should only be in the dir path.)
+final_libs=
+for _lib in "" $LIBS; do
+  bad_l_arg=`echo "$_lib" | grep "\-L"`
+  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
+    final_libs="$final_libs $_lib"
+  fi
+done
+
+# Remove leading spaces
+final_libs=`echo $final_libs | sed "s/^ *//"`
+eval WX_LIB_FLAG="'$final_libs'"
+eval HAVE_WX="yes"
+
+final_incs=
+for inc in "" $_sci_includes; do
+   if test "$inc" != "$INC_SCI_THIRDPARTY_H"; then
+      final_incs="$final_incs $inc"
+   fi
+done
+
+# Remove leading spaces
+final_incs=`echo $final_incs | sed "s/^ *//"`
+
+eval INC_WX_H="'$final_incs'"
+eval HAVE_WX_H="yes"
+
+echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+eval WX_LIB_DIR=''
+eval WX_LIB_DIR_FLAG=''
+eval WX_LIB_FLAG=''
+eval HAVE_WX="no"
+eval INC_WX_H=''
+eval HAVE_WX_H="no"
+echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+if test "$_sci_optional" != "optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { echo "$as_me:$LINENO: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&5
+echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+{ { echo "$as_me:$LINENO: error: Test for required WX failed.
+    To see the failed compile information, look in config.log,
+    search for WX. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&5
+echo "$as_me: error: Test for required WX failed.
+    To see the failed compile information, look in config.log,
+    search for WX. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+
+if test "$_sci_optional" = "specific"; then
+  #echo specific
+  # Make sure the exact includes were found
+  for i in "" wx/wxprec.h; do
+    #echo looking for $_wx_inc_flags/$i
+    if test ! -e $_wx_inc_flags/$i; then
+     { { echo "$as_me:$LINENO: error: Specifically requested WX include file '$_wx_inc_flags/$i' was not found" >&5
+echo "$as_me: error: Specifically requested WX include file '$_wx_inc_flags/$i' was not found" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  done
+  # Make sure the exact libraries were found
+  for i in "" $_wx_lib_flags; do
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    if test ! -e $_wx_lib_dir_flags/lib$i.so && test ! -e $_wx_lib_dir_flags/lib$i.a && test ! -e $_wx_lib_dir_flags/$i.lib; then
+     { { echo "$as_me:$LINENO: error: Specifically requested WX library file '$_wx_lib_dir_flags/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested WX library file '$_wx_lib_dir_flags/$i' (.so or .a) was not found" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  done
+fi
+
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+##
+## END of SCI_TRY_LINK (WX):  wxWidgets libraries
+##
+
+
+    ;;
+  *)
+    #assume there is no specific version
+    ;;
+esac
+
+# Restore the previous settings.
+ac_ext="$ext"
+
+if test "$HAVE_WX" = "yes"; then
+  DEF_WX="#define HAVE_WX 1"
+fi
 
 
 
 
 
-sci_defs_files="$sci_defs_files include/sci_defs/qt_testdefs.h"
+sci_defs_files="$sci_defs_files include/sci_defs/wx_testdefs.h"
 
-##  --  search for ruby  ----------------------------------------------------
+##  --  search for ruby  ------------------------------------------------
 if test "$sci_required_ruby" = "yes"; then
   _sci_optional=optional
 
@@ -62495,7 +63268,6 @@ if test "$sci_required_vtk" = "yes"; then
 
   ext="$ac_ext"
   ac_ext="cc"
-
   # Only looking for one .h file... assuming all the rest are in the same place.
 
 ##
@@ -62991,7 +63763,6 @@ _sci_includes=''
 ##
 ## END of SCI_TRY_LINK (VTK):  vtk library
 ##
-
 
 
   # Restore the previous settings.
@@ -65312,7 +66083,6 @@ case $host in
     ;;
 esac
 
-
 ##  --  See if we have everything needed for SCIRun2 ----------------------
 
 if test "$enable_scirun2" = "yes"; then
@@ -66193,6 +66963,8 @@ s,@UNP_LIB_DIR_FLAG@,$UNP_LIB_DIR_FLAG,;t t
 s,@INC_UNP_H@,$INC_UNP_H,;t t
 s,@F_LIB_FLAG@,$F_LIB_FLAG,;t t
 s,@F_LIB_DIR_FLAG@,$F_LIB_DIR_FLAG,;t t
+s,@JAVAC@,$JAVAC,;t t
+s,@JAR@,$JAR,;t t
 s,@HAVE_JAVA@,$HAVE_JAVA,;t t
 s,@DEF_JAVA@,$DEF_JAVA,;t t
 s,@JAVA@,$JAVA,;t t
@@ -66268,6 +67040,7 @@ s,@TAU_MAKEFILE@,$TAU_MAKEFILE,;t t
 s,@BABEL_BIN@,$BABEL_BIN,;t t
 s,@HAVE_BABEL@,$HAVE_BABEL,;t t
 s,@DEF_BABEL@,$DEF_BABEL,;t t
+s,@BABEL_CLASSPATH@,$BABEL_CLASSPATH,;t t
 s,@INC_SIDL_H@,$INC_SIDL_H,;t t
 s,@SIDL_LIB_FLAG@,$SIDL_LIB_FLAG,;t t
 s,@SIDL_LIB_DIR_FLAG@,$SIDL_LIB_DIR_FLAG,;t t
@@ -66331,12 +67104,11 @@ s,@DEF_NCURSES@,$DEF_NCURSES,;t t
 s,@INC_NCURSES_H@,$INC_NCURSES_H,;t t
 s,@NCURSES_LIB_FLAG@,$NCURSES_LIB_FLAG,;t t
 s,@NCURSES_LIB_DIR_FLAG@,$NCURSES_LIB_DIR_FLAG,;t t
-s,@QT_MOC_BIN@,$QT_MOC_BIN,;t t
-s,@HAVE_QT@,$HAVE_QT,;t t
-s,@DEF_QT@,$DEF_QT,;t t
-s,@INC_QT_MT_H@,$INC_QT_MT_H,;t t
-s,@QT_MT_LIB_FLAG@,$QT_MT_LIB_FLAG,;t t
-s,@QT_MT_LIB_DIR_FLAG@,$QT_MT_LIB_DIR_FLAG,;t t
+s,@WX_CONFIG@,$WX_CONFIG,;t t
+s,@HAVE_WX@,$HAVE_WX,;t t
+s,@DEF_WX@,$DEF_WX,;t t
+s,@WX_CXXFLAGS@,$WX_CXXFLAGS,;t t
+s,@WX_LIBS@,$WX_LIBS,;t t
 s,@HAVE_RUBY@,$HAVE_RUBY,;t t
 s,@DEF_RUBY@,$DEF_RUBY,;t t
 s,@INC_RUBY_H@,$INC_RUBY_H,;t t

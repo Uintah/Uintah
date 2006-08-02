@@ -44,25 +44,50 @@
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/PortInstance.h>
 
-#include <Core/OS/Dir.h>
 #include <Core/Util/Environment.h>
+#include <Core/Util/Assert.h>
 
 #include <iostream>
 #include <unistd.h>
 
 namespace SCIRun {
 
-std::string FrameworkProperties::CONFIG_DIR("/.sr2");
-std::string FrameworkProperties::CONFIG_FILE("sr2rc");
-std::string FrameworkProperties::CACHE_FILE("sr2.cache");
+const std::string FrameworkProperties::DIR_SEP("/");
+const std::string FrameworkProperties::CONFIG_DIR(DIR_SEP + ".sr2");
+const std::string FrameworkProperties::CONFIG_FILE("sr2rc");
+const std::string FrameworkProperties::CACHE_FILE("sr2.cache");
 
 FrameworkProperties::FrameworkProperties(SCIRunFramework* framework)
   : InternalFrameworkServiceInstance(framework, "internal:FrameworkProperties")
 {
-    frameworkProperties = sci::cca::TypeMap::pointer(new TypeMap);
-    frameworkProperties->putString("url", framework->getURL().getString());
-    getLogin();
-    initSidlPaths();
+  frameworkProperties = sci::cca::TypeMap::pointer(new TypeMap);
+  frameworkProperties->putString("url", framework->getURL().getString());
+
+  // SCIRun2 configure and temp file directory is created by preference
+  // in the user's home directory.
+  // If this isn't possible, it should be created in the
+  // build directory instead.
+  // Not setting up the environment in the main loop is a serious error.
+  std::string name;
+  const char *home = getenv("HOME");
+  if (home) {
+    name = home + CONFIG_DIR;
+  } else {
+    const char *objdir = sci_getenv("SCIRUN_OBJDIR");
+    ASSERT(objdir);
+    name = objdir + CONFIG_DIR;
+  }
+  dir = Dir(name);
+  if (! dir.exists()) {
+    // Dir::create(..) throws an ErrnoException, which we are not handling
+    // at this time.
+    Dir::create(name);
+  }
+  frameworkProperties->putString("config dir", dir.getName());
+  frameworkProperties->putString("network file", "application.app");
+
+  getLogin();
+  initSidlPaths();
 }
 
 FrameworkProperties::~FrameworkProperties()
@@ -72,136 +97,112 @@ FrameworkProperties::~FrameworkProperties()
 InternalFrameworkServiceInstance*
 FrameworkProperties::create(SCIRunFramework* framework)
 {
-    FrameworkProperties* fp = new FrameworkProperties(framework);
-    return fp;
+  FrameworkProperties* fp = new FrameworkProperties(framework);
+  return fp;
 }
 
 sci::cca::TypeMap::pointer
 FrameworkProperties::getProperties()
 {
-    return frameworkProperties;
+  return frameworkProperties;
 }
 
 void
 FrameworkProperties::setProperties(const sci::cca::TypeMap::pointer& properties)
 {
-    frameworkProperties = properties;
+  frameworkProperties = properties;
 }
 
 sci::cca::Port::pointer FrameworkProperties::getService(const std::string& name)
 {
-    return sci::cca::Port::pointer(this);
+  return sci::cca::Port::pointer(this);
 }
 
 void FrameworkProperties::initSidlPaths()
 {
+  SSIDL::array1<std::string> sArray;
+  // ';' seperated list of directories where one can find SIDL xml files
+  // getenv may return NULL if SIDL_XML_PATH was not set
+  const char *component_path = getenv("SIDL_XML_PATH");
+  if (component_path) {
+    std::string s(component_path);
+    parseEnvVariable(s, ';', sArray);
+    frameworkProperties->putStringArray("sidl_xml_path", sArray);
+  } else if (readPropertiesFromFile()) {
+    return;
+  } else {
     std::string srcDir(sci_getenv("SCIRUN_SRCDIR"));
-    std::string fullCCAXMLPath(srcDir + CCAComponentModel::DEFAULT_PATH);
-    SSIDL::array1<std::string> sArray;
-
-    // ';' seperated list of directories where one can find SIDL xml files
-    // getenv may return NULL if SIDL_XML_PATH was not set
-    const char *component_path = getenv("SIDL_XML_PATH");
-    if (component_path) {
-        std::string s(component_path);
-        parseEnvVariable(s, ';', sArray);
-	// Check to make sure that the default CCA path is in the array.
-	// If not found, add it.
-	bool found = false;
-	for (SSIDL::array1<std::string>::iterator iter = sArray.begin();
-	     iter != sArray.end(); iter++) {
-	  if (*iter == fullCCAXMLPath) {
-	    found = true;
-	    break;
-	  }
-	}
-	if (! found) {
-	  sArray.push_back(fullCCAXMLPath);
-	}
-        frameworkProperties->putStringArray("sidl_xml_path", sArray);
-    } else if (readPropertiesFromFile()) {
-        return;
-    } else {
-        sArray.push_back(fullCCAXMLPath);
+    sArray.push_back(srcDir + CCAComponentModel::DEFAULT_XML_PATH);
 #if HAVE_BABEL
-        sArray.push_back(srcDir + BabelComponentModel::DEFAULT_PATH);
+    sArray.push_back(srcDir + BabelComponentModel::DEFAULT_XML_PATH);
 #endif
 #if HAVE_VTK
-        sArray.push_back(srcDir + VtkComponentModel::DEFAULT_PATH);
+    sArray.push_back(srcDir + VtkComponentModel::DEFAULT_XML_PATH);
 #endif
 
 #if HAVE_TAO
-        sArray.push_back(srcDir + CorbaComponentModel::DEFAULT_PATH);
-        sArray.push_back(srcDir + TaoComponentModel::DEFAULT_PATH);
+    sArray.push_back(srcDir + CorbaComponentModel::DEFAULT_XML_PATH);
+    sArray.push_back(srcDir + TaoComponentModel::DEFAULT_XML_PATH);
 #endif
-        frameworkProperties->putStringArray("sidl_xml_path", sArray);
-    }
-    // SIDL_DLL_PATH env. variable is read and parsed in VtkComponentModel etc.
+    frameworkProperties->putStringArray("sidl_xml_path", sArray);
+  }
+  // SIDL_DLL_PATH env. variable is read and parsed in VtkComponentModel etc.
 }
 
 void FrameworkProperties::parseEnvVariable(std::string& input,
                                            const char token,
                                            SSIDL::array1<std::string>& stringArray)
 {
-    std::string::size_type i = 0;
-    while ( i != std::string::npos ) {
-        i = input.find(token);
-        if (i < input.size()) {
-            stringArray.push_back(input.substr(0, i));
-            input = input.substr(i + 1, input.size());
-        } else {
-            stringArray.push_back(input);
-        }
+  std::string::size_type i = 0;
+  while ( i != std::string::npos ) {
+    i = input.find(token);
+    if (i < input.size()) {
+      stringArray.push_back(input.substr(0, i));
+      input = input.substr(i + 1, input.size());
+    } else {
+      stringArray.push_back(input);
     }
+  }
 }
 
 void FrameworkProperties::getLogin()
 {
-    char *login = getlogin();
-    if (login) {
-        frameworkProperties->putString("default_login", std::string(login));
-    } else {
-        frameworkProperties->putString("default_login", std::string());
-    }
+  char *login = getlogin();
+  if (login) {
+    frameworkProperties->putString("default_login", std::string(login));
+  } else {
+    frameworkProperties->putString("default_login", std::string());
+  }
 }
 
 bool FrameworkProperties::readPropertiesFromFile()
 {
-    char *HOME = getenv("HOME");
-    std::string name(HOME);
-    sci_putenv("HOME", HOME);
-
-    name += CONFIG_DIR + "/" + CONFIG_FILE;
-    SSIDL::array1<std::string> sArray;
-    if (parse_scirunrc(name)) {
-        const char *dll_path = sci_getenv("SIDL_DLL_PATH");
-        if (dll_path != 0) {
-            frameworkProperties->putString("sidl_dll_path", dll_path);
-        }
-
-        const char *xml_path = sci_getenv("SIDL_XML_PATH");
-        if (xml_path != 0) {
-            std::string s(xml_path);
-            parseEnvVariable(s, ';', sArray);
-            frameworkProperties->putStringArray("sidl_xml_path", sArray);
-        }
-        return true;
+  std::string name(dir.getName() + DIR_SEP + CONFIG_FILE);
+  SSIDL::array1<std::string> sArray;
+  if (parse_scirunrc(name)) {
+    const char *dll_path = sci_getenv("SIDL_DLL_PATH");
+    if (dll_path != 0) {
+      frameworkProperties->putString("sidl_dll_path", dll_path);
     }
-    return false;
+
+    const char *xml_path = sci_getenv("SIDL_XML_PATH");
+    if (xml_path != 0) {
+      std::string s(xml_path);
+      parseEnvVariable(s, ';', sArray);
+      frameworkProperties->putStringArray("sidl_xml_path", sArray);
+    }
+    return true;
+  }
+
+  return false;
 }
 
 bool FrameworkProperties::writePropertiesToFile()
 {
-    char *HOME = getenv("HOME");
-    std::string name(HOME);
-    name.append(CONFIG_DIR);
-    Dir dir(name);
-    if (! dir.exists()) {
-        Dir::create(name);
-    }
-    // get file
-    // write to file
-    return false;
+  // check that file exists
+  // get file
+  // write to file
+  return false;
 }
 
 }

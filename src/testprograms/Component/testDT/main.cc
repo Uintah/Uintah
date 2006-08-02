@@ -41,21 +41,22 @@
  */
 
 #include <sci_defs/mpi_defs.h>
-#include <iostream>
-#include <fstream>
-#include <unistd.h>
+#include <sci_mpi.h>
 #include <Core/CCA/PIDL/URL.h>
 #include <Core/CCA/PIDL/PIDL.h>
-#include <Core/CCA/Comm/DT/DataTransmitter.h>
-#include <Core/CCA/Comm/DT/DTMessage.h>
-#include <Core/CCA/Comm/DT/DTMessageTag.h>
-#include <Core/CCA/Comm/DT/DTPoint.h>
+#include <Core/CCA/DT/DataTransmitter.h>
+#include <Core/CCA/DT/DTMessage.h>
+#include <Core/CCA/DT/DTMessageTag.h>
+#include <Core/CCA/DT/DTPoint.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Runnable.h>
+
+#include <iostream>
+#include <fstream>
+#include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
-#include <sci_mpi.h>
 
 using namespace SCIRun;
 using namespace std;
@@ -259,20 +260,20 @@ int main(int argc, char* argv[])
     
     DTAddress myaddr;
     URL url(PIDL::getDT()->getUrl());
-    myaddr.ip= url.getIP();
-    myaddr.port= url.getPortNumber();
+    myaddr.setIP(url.getIP());
+    myaddr.setPort(url.getPortNumber());
     
     MPI_Allgather(&myaddr, sizeof(DTAddress), MPI_CHAR,  
 		  addrlist, sizeof(DTAddress), MPI_CHAR,   MPI_COMM_WORLD);
     
-    if(mpi_rank==0){
+    if (mpi_rank == 0) {
       //cerr<<"gathered addresses are:"<<endl;
-      for(int i=0; i<mpi_size; i++){
+      for (int i = 0; i < mpi_size; i++) {
 	//cerr<<"addr "<<i<<"="<<addrlist[i].ip<<":"<<addrlist[i].port<<endl;
       }
     }
     
-    DTPoint **eplist=new (DTPoint*)[nServer*mpi_size];
+    DTPoint **eplist= new DTPoint* [nServer * mpi_size];
     
     MPI_Allgather(ep, sizeof(DTPoint *)*nServer, MPI_CHAR,   
 		  eplist, sizeof(DTPoint *)*nServer, MPI_CHAR,  MPI_COMM_WORLD);

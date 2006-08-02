@@ -60,7 +60,7 @@
 
 using namespace SCIRun;
 
-const std::string BridgeComponentModel::DEFAULT_PATH("/src/CCA/Components/xml");
+const std::string BridgeComponentModel::DEFAULT_XML_PATH("/src/CCA/Components/xml");
 
 int BridgeComponent::bridgeID(0);
 
@@ -91,7 +91,7 @@ void BridgeComponentModel::destroyComponentList()
 void BridgeComponentModel::buildComponentList(const StringVector& files)
 {
   destroyComponentList();
-  std::string component_path = sci_getenv("SCIRUN_SRCDIR") + DEFAULT_PATH;
+  std::string component_path = sci_getenv("SCIRUN_SRCDIR") + DEFAULT_XML_PATH;
   while (component_path != "") {
     unsigned int firstColon = component_path.find(':');
     std::string dir;

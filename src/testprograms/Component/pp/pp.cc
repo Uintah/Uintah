@@ -44,19 +44,17 @@
 #include <vector>
 #include <unistd.h>
 #include <string>
-#include <Core/CCA/PIDL/PIDL.h>
 
-#include <Core/CCA/Comm/SocketEpChannel.h>
-#include <Core/CCA/Comm/SocketSpChannel.h>
-#include <Core/CCA/Comm/Message.h>
+#include <Core/CCA/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/SocketEpChannel.h>
+#include <Core/CCA/PIDL/SocketSpChannel.h>
+#include <Core/CCA/PIDL/Message.h>
 
 #include <Core/CCA/PIDL/MalformedURL.h>
 
 #include <testprograms/Component/pp/PingPong_impl.h>
 
 #include <Core/Thread/Time.h>
-
-using namespace std;
 
 using namespace SCIRun;
 using namespace PingPong_ns;
@@ -65,13 +63,13 @@ using namespace PingPong_ns;
 
 void usage(char* progname)
 {
-    cerr << "usage: " << progname << " [options]\n";
-    cerr << "valid options are:\n";
-    cerr << "  -server  - server process\n";
-    cerr << "  -client  - client process\n";
-    cerr << "  -stop  - stop the server\n";
-    cerr << "  -test  - test the ploader\n";
-    cerr << "\n";
+    std::cerr << "usage: " << progname << " [options]\n";
+    std::cerr << "valid options are:\n";
+    std::cerr << "  -server  - server process\n";
+    std::cerr << "  -client  - client process\n";
+    std::cerr << "  -stop  - stop the server\n";
+    std::cerr << "  -test  - test the ploader\n";
+    std::cerr << "\n";
     exit(1);
 }
 
@@ -102,90 +100,90 @@ int main(int argc, char* argv[])
 	Port_impl::pointer port(new Port_impl);
 	port->addReference();
 	pp->addReference();
-	cerr << "Port is Waiting connections...\n";
-	ofstream f("pp.url");
+	std::cerr << "Port is Waiting connections...\n";
+	std::ofstream f("pp.url");
 	std::string s;
-	f<<pp->getURL().getString()<<endl;
-	f<<port->getURL().getString()<<endl;
+	f<<pp->getURL().getString()<< std::endl;
+	f<<port->getURL().getString()<< std::endl;
 	f.close();
       } 
 
       else if(client){
-	ifstream f("pp.url");
+	std::ifstream f("pp.url");
 	std::string ppurl, porturl;
 	f>>ppurl;
 	f>>porturl;
-	cerr<<"ppurl="<<ppurl<<endl;
-	cerr<<"porturl="<<porturl<<endl;
+	std::cerr<<"ppurl="<<ppurl<< std::endl;
+	std::cerr<<"porturl="<<porturl<< std::endl;
 	f.close();
 	Object::pointer ppobj=
 	  PIDL::objectFrom(ppurl);
 	Object::pointer portobj=
 	  PIDL::objectFrom(porturl);
-	cerr << "Object_from completed\n";
+	std::cerr << "Object_from completed\n";
 
 	PingPong::pointer pp=pidl_cast<PingPong::pointer>(ppobj);
 	Port::pointer port=pidl_cast<Port::pointer>(portobj);
-	cerr << "pidl_cast completed\n";
+	std::cerr << "pidl_cast completed\n";
 
 	if(port.isNull() || pp.isNull() ){
-	  cerr << "port or pp is null\n";
+	  std::cerr << "port or pp is null\n";
 	  abort();
 	}
 
-	cerr << "Calling pingpong....\n";
-	cerr<<pp->pingpong(port)<<endl;
+	std::cerr << "Calling pingpong....\n";
+	std::cerr<<pp->pingpong(port)<< std::endl;
       }
       else if(stop){
-	ifstream f("pp.url");
+	std::ifstream f("pp.url");
 	std::string ppurl, porturl;
 	f>>ppurl;
 	f>>porturl;
-	cerr<<"ppurl="<<ppurl<<endl;
-	cerr<<"porturl="<<porturl<<endl;
+	std::cerr<<"ppurl="<<ppurl<< std::endl;
+	std::cerr<<"porturl="<<porturl<< std::endl;
 	f.close();
 	Object::pointer ppobj=
 	  PIDL::objectFrom(ppurl);
 	Object::pointer portobj=
 	 PIDL::objectFrom(porturl);
-	cerr << "Object_from completed\n";
+	std::cerr << "Object_from completed\n";
 	
 	PingPong::pointer pp=pidl_cast<PingPong::pointer>(ppobj);
 	Port::pointer port=pidl_cast<Port::pointer>(portobj);
-	cerr << "pidl_cast completed\n";
+	std::cerr << "pidl_cast completed\n";
 	
 	if(port.isNull() || pp.isNull() ){
-	  cerr << "port or pp is null\n";
+	  std::cerr << "port or pp is null\n";
 	  abort();
 	}
 	
-	cerr << "Calling stop() for both server objects....\n";
+	std::cerr << "Calling stop() for both server objects....\n";
 	pp->stop();
 	port->stop();
 	
       }
       else if(test){
-	cerr<<"url="<<url;
+	std::cerr<<"url="<<url;
 	Object::pointer obj=PIDL::objectFrom(url);
-	cerr << "Object_from completed\n";
+	std::cerr << "Object_from completed\n";
       }
 
       PIDL::serveObjects();
       PIDL::finalize();
-      cerr << "exits\n";
+      std::cerr << "exits\n";
     } catch(const MalformedURL& e) {
-	cerr << "pp.cc: Caught MalformedURL exception:\n";
-	cerr << e.message() << '\n';
+	std::cerr << "pp.cc: Caught MalformedURL exception:\n";
+	std::cerr << e.message() << '\n';
     } catch(const InternalError &e) {
-	cerr << "Caught unexpected exception!\n";
-	cerr << e.message() << '\n';
+	std::cerr << "Caught unexpected exception!\n";
+	std::cerr << e.message() << '\n';
 	abort();
     } catch(const Exception& e) {
-	cerr << "pp.cc: Caught exception:\n";
-	cerr << e.message() << '\n';
+	std::cerr << "pp.cc: Caught exception:\n";
+	std::cerr << e.message() << '\n';
 	abort();
     } catch(...) {
-	cerr << "Caught unexpected exception!\n";
+	std::cerr << "Caught unexpected exception!\n";
 	abort();
     }
     return 0;

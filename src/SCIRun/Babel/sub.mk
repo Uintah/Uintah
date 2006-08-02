@@ -1,11 +1,11 @@
 #
 #  For more information, please see: http://software.sci.utah.edu
-#
+# 
 #  The MIT License
-#
+# 
 #  Copyright (c) 2004 Scientific Computing and Imaging Institute,
 #  University of Utah.
-#
+# 
 #  License for the specific language governing rights and limitations under
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -13,10 +13,10 @@
 #  the rights to use, copy, modify, merge, publish, distribute, sublicense,
 #  and/or sell copies of the Software, and to permit persons to whom the
 #  Software is furnished to do so, subject to the following conditions:
-#
+# 
 #  The above copyright notice and this permission notice shall be included
 #  in all copies or substantial portions of the Software.
-#
+# 
 #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 #  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 #  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -40,29 +40,27 @@ ifeq ($(HAVE_QT),yes)
 endif
 
 ${OUTPUTDIR}/framework.make: ${FWKSIDL} Core/Babel/timestamp
+  ifeq ($(IS_OSX),yes)
+	if ! test -d $(dir $@); then mkdir -p $(dir $@); fi
+	cp $(dir $<)*Impl.* $(dir $@)
+	$(BABEL) --server=C++ --output-directory=$(dir $@) --repository-path=${BABEL_REPOSITORY} --suppress-timestamp $<
+	mv  $(dir $@)babel.make $@
+  else
 	if ! test -d $(dir $@); then mkdir -p $(dir $@); fi
 	cp -u $(dir $<)*Impl.* $(dir $@)
-	$(BABEL) --server=UC++ --output-directory=$(dir $@) --repository-path=${BABEL_REPOSITORY} --suppress-timestamp $<
+	$(BABEL) --server=C++ --output-directory=$(dir $@) --repository-path=${BABEL_REPOSITORY} --suppress-timestamp $<
 	mv  $(dir $@)babel.make $@
+  endif
 
 ${OUTPUTDIR}/cca.make: ${CCASIDL}
-	$(BABEL) --client=UC++ --output-directory=${dir $@} --suppress-timestamp $<
+	$(BABEL) --client=C++ --output-directory=${dir $@} --suppress-timestamp $<
 	mv $(dir $@)babel.make $@
 
-# SRCS := $(SRCS) $(SRCDIR)/BabelComponentModel.cc \
-# 	$(SRCDIR)/BabelComponentInstance.cc \
-# 	$(SRCDIR)/BabelComponentDescription.cc \
-# 	$(SRCDIR)/BabelPortInstance.cc
-
-SRCS += \
-        $(SRCDIR)/BabelComponentModel.cc \
+SRCS := $(SRCS) $(SRCDIR)/BabelComponentModel.cc \
         $(SRCDIR)/BabelComponentInstance.cc \
         $(SRCDIR)/BabelComponentDescription.cc \
         $(SRCDIR)/BabelPortInstance.cc
 
-
-
-# Get these from framework.make
 IORSRCS :=
 STUBSRCS :=
 IMPLSRCS :=
@@ -70,7 +68,6 @@ SKELSRCS :=
 include ${OUTPUTDIR}/framework.make
 SRCS := $(SRCS) $(patsubst %,$(SRCDIR)/%,$(IORSRCS) $(STUBSRCS) $(IMPLSRCS) $(SKELSRCS))
 
-# Get these from cca.make
 IORSRCS :=
 STUBSRCS :=
 IMPLSRCS :=

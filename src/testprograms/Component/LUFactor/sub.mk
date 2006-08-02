@@ -29,24 +29,27 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := testprograms/Component/LUFactor
+SRCDIR  := testprograms/Component/LUFactor
 
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/Thread \
-	Core/Exceptions Core/CCA/Comm
+PSELIBS := \
+           Core/CCA/SSIDL Core/CCA/PIDL \
+           Core/Thread Core/Exceptions
 endif
 
 ifeq ($(HAVE_GLOBUS),yes)
-PSELIBS+=Core/globus_threads
+PSELIBS += Core/globus_threads
 endif
 
-LIBS := $(MPI_LIBRARY) 
+LIBS    := $(MPI_LIBRARY) 
 
 PROGRAM := $(SRCDIR)/LUFactor
-SRCS := $(SRCDIR)/LUFactor.cc $(SRCDIR)/LUFactor_sidl.cc \
-	$(SRCDIR)/LUFactor_impl.cc
+SRCS    := \
+           $(SRCDIR)/LUFactor.cc \
+           $(SRCDIR)/LUFactor_sidl.cc \
+           $(SRCDIR)/LUFactor_impl.cc
 GENHDRS := $(SRCDIR)/LUFactor_sidl.h
 
 include $(SCIRUN_SCRIPTS)/program.mk

@@ -76,25 +76,26 @@ class ConnectionEvent;
  * \sa InternalComponentModel
  */
 class BuilderService : public sci::cca::ports::BuilderService,
-                       public InternalFrameworkServiceInstance
+		       public InternalFrameworkServiceInstance
 {
-  public:
+public:
   virtual ~BuilderService();
-  
+
   /** Factory method for creating an instance of a BuilderService class.
       Returns a reference counted pointer to a newly-allocated BuilderService
       port.  The \em framework parameter is a pointer to the relevent framework
       and the \em name parameter will become the unique name for the new port.*/
   static InternalFrameworkServiceInstance *create(SCIRunFramework* framework);
-  
+
   /** Creates an instance of the component of type \em className.  The
       parameter \em instanceName is the unique name of the newly created
-      instance. This method is implemented through a createComponentInstance
+      instance.  Leave \em instanceName empty to have a unique name generated
+      by the framework. This method is implemented through a createComponentInstance
       call to the SCIRunFramework. */
   virtual sci::cca::ComponentID::pointer
   createInstance(const std::string& instanceName,
-                 const std::string& className,
-                 const sci::cca::TypeMap::pointer &properties);
+		 const std::string& className,
+		 const sci::cca::TypeMap::pointer &properties);
 
   /** Returns a list (array) of CCA ComponentIDs that exist in the
       BuilderService's framework. */
@@ -120,7 +121,7 @@ class BuilderService : public sci::cca::ports::BuilderService,
       Null TypeMaps are not allowed. */
   virtual void
   setComponentProperties(const sci::cca::ComponentID::pointer &cid,
-                         const sci::cca::TypeMap::pointer &map);
+			 const sci::cca::TypeMap::pointer &map);
 
   /** Returns the Component ID (opaque reference to a component instantiation)
       for the serialized component reference \em s. */
@@ -152,25 +153,25 @@ class BuilderService : public sci::cca::ports::BuilderService,
   /** Returns a map of port properties exposed by the framework. */
   virtual sci::cca::TypeMap::pointer
   getPortProperties(const sci::cca::ComponentID::pointer &cid,
-                    const std::string& portname);
-  
+		    const std::string& portname);
+
   /** */
   virtual void
   setPortProperties(const sci::cca::ComponentID::pointer &cid,
-                    const std::string &portname,
-                    const sci::cca::TypeMap::pointer &map);
+		    const std::string &portname,
+		    const sci::cca::TypeMap::pointer &map);
 
   /** */
   virtual sci::cca::ConnectionID::pointer
   connect(const sci::cca::ComponentID::pointer &user,
-          const std::string &usesPortName,
-          const sci::cca::ComponentID::pointer &provider,
-          const ::std::string &providesPortName);
+	  const std::string &usesPortName,
+	  const sci::cca::ComponentID::pointer &provider,
+	  const ::std::string &providesPortName);
 
   /** */
   virtual SSIDL::array1<sci::cca::ConnectionID::pointer>
   getConnectionIDs(const SSIDL::array1<sci::cca::ComponentID::pointer>
-                       &componentList);
+		       &componentList);
 
 
   /** Returns a CCA TypeMap that represents any properties associated
@@ -190,7 +191,7 @@ class BuilderService : public sci::cca::ports::BuilderService,
   /** */
   virtual void
   setConnectionProperties(const sci::cca::ConnectionID::pointer &connID,
-                          const sci::cca::TypeMap::pointer &map);
+			  const sci::cca::TypeMap::pointer &map);
 
   /** */
   virtual void
@@ -199,22 +200,22 @@ class BuilderService : public sci::cca::ports::BuilderService,
   /** */
   virtual void
   disconnectAll(const sci::cca::ComponentID::pointer &id1,
-                const sci::cca::ComponentID::pointer &id2,
-                float timeout);
+		const sci::cca::ComponentID::pointer &id2,
+		float timeout);
 
   /** */
   virtual SSIDL::array1<std::string>
   getCompatiblePortList(const sci::cca::ComponentID::pointer &user,
-                        const std::string &usesPortName,
-                        const sci::cca::ComponentID::pointer &provider);
+			const std::string &usesPortName,
+			const sci::cca::ComponentID::pointer &provider);
 
 
-  // Bridge methods 
+  // Bridge methods
   /** */
   virtual SSIDL::array1<std::string>
-  getBridgablePortList(const sci::cca::ComponentID::pointer &c1,
-                       const std::string &port1,
-                       const sci::cca::ComponentID::pointer &c2);
+  getBridgeablePortList(const sci::cca::ComponentID::pointer &c1,
+                        const std::string &port1,
+                        const sci::cca::ComponentID::pointer &c2);
 
   /** */
   virtual std::string
@@ -223,9 +224,9 @@ class BuilderService : public sci::cca::ports::BuilderService,
                  const sci::cca::ComponentID::pointer &c2,
                  const std::string &port2);
   // END Bridge methods
-  
+
   /** */
-  sci::cca::Port::pointer getService(const std::string &);
+  virtual sci::cca::Port::pointer getService(const std::string &);
 
   /** */
   int addComponentClasses(const std::string &loaderName);
@@ -233,7 +234,7 @@ class BuilderService : public sci::cca::ports::BuilderService,
   /** */
   int removeComponentClasses(const std::string &loaderName);
 
-  private:
+private:
     friend class ConnectionEventService;
     BuilderService(SCIRunFramework* fwk);
     /** Returns the URL of this BuilderService component's framework. */

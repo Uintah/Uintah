@@ -28,7 +28,7 @@
 
 
 /*
- *  Port.h: 
+ *  Port.h:
  *
  *  Written by:
  *   Keming Zhang
@@ -40,60 +40,64 @@
 
 #ifndef SCIRun_Vtk_Port_h
 #define SCIRun_Vtk_Port_h
+
 #include <string>
 #include <vector>
+
 class vtkObject;
 
-namespace SCIRun
-{
-  namespace vtk
-    {
-      class Component;
-      /**
-       * \class Port
-       *
-       * Defines the generic interface for a SCIRun::vtk port.  A port is either an
-       * input port (see InPort) or an output port (see OutPort).
-       *
-       */
-      class Port{
-      public:
-	Port();
-	virtual ~Port();
-	
-	/** Sets the name of this port. */
-	void setName(const std::string &name);
-	
-	void setComponent(Component *com);
-	
-	/** Returns the name of this port */
-	std::string getName();
-	
-	/** Returns \em true if this port is an input port and \em false otherwise. */
-	bool isInput();
-	
-	/** update the vtk objects and connections. The flag indicates the update type.*/
-	virtual void update(int flag)=0;
-  
-	/** add a connected port to the list */
-	void addConnectedPort(Port *port);
-	
-	/** del a connected port from the list */
-	void delConnectedPort(Port *port);
+namespace SCIRun {
 
-	virtual void refresh(int flag);
+namespace vtk {
 
-	/** update types */
-	static const int REFRESH=0;
-	static const int RESETCAMERA=1;
-	
-      protected:
-	std::string name;
-	bool is_input;
-	std::vector<Port*> connPortList;
-	Component * com;
-      };
-    }
+class Component;
+/**
+ * \class Port
+ *
+ * Defines the generic interface for a SCIRun::vtk port.  A port is either an
+ * input port (see InPort) or an output port (see OutPort).
+ *
+ */
+class Port {
+public:
+  Port();
+  virtual ~Port();
+
+  /** Sets the name of this port. */
+  void setName(const std::string &name);
+
+  void setComponent(Component *com);
+
+  /** Returns the name of this port */
+  std::string getName();
+
+  /** Returns \em true if this port is an input port and \em false otherwise. */
+  bool isInput();
+
+  /** update the vtk objects and connections. The flag indicates the update type.*/
+  virtual void update(int flag)=0;
+
+  /** add a connected port to the list */
+  void addConnectedPort(Port *port);
+
+  /** del a connected port from the list */
+  void delConnectedPort(Port *port);
+
+  virtual void refresh(int flag);
+
+  /** update types */
+  static const int REFRESH = 0;
+  static const int RESETCAMERA = 1;
+
+protected:
+  std::string name;
+  bool is_input;
+  std::vector<Port*> connPortList;
+  Component *com;
+};
+
+}
+
 }
 
 #endif

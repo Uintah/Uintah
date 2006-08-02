@@ -1,29 +1,29 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
 
 
@@ -39,7 +39,7 @@
  */
 
 #include <SCIRun/Babel/framework.hxx>
-#include <SCIRun/Babel/sidl.hxx>
+#include <sidl.hxx>
 
 #include <SCIRun/Babel/BabelComponentModel.h>
 #include <SCIRun/Babel/BabelComponentDescription.h>
@@ -64,7 +64,7 @@ extern "C" {
 
 namespace SCIRun {
 
-const std::string BabelComponentModel::DEFAULT_PATH("/CCA/Components/BabelTest/xml");
+const std::string BabelComponentModel::DEFAULT_XML_PATH("/CCA/Components/BabelTest/xml");
 
 
 BabelComponentModel::BabelComponentModel(SCIRunFramework* framework,
@@ -95,32 +95,33 @@ void BabelComponentModel::buildComponentList(const StringVector& files)
   destroyComponentList();
 
   // update SIDL Loader
-  std::string search_path = UCXX ::sidl::Loader::getSearchPath();
+  std::string searchPath(::sidl::Loader::getSearchPath());
+  bool emptySearchPath = searchPath.empty();
   if (files.empty()) {
     StringVector xmlPaths_;
     getXMLPaths(framework, xmlPaths_);
 
     for (StringVector::iterator iter = xmlPaths_.begin(); iter != xmlPaths_.end(); iter++) {
       if (parseComponentModelXML(*iter, this)) {
-	std::string path(pathname(*iter));
-	if (search_path.find(path) == std::string::npos) {
-	  // This is the ';' separated path that sidl::Loader will search for
-	  // *.scl files. Babel *.scl files are necessary for mapping component
-	  // names with their DLLs.
-	  UCXX ::sidl::Loader::addSearchPath(path);
-	}
+        std::string path(pathname(*iter));
+        if (emptySearchPath || searchPath.find(path) == std::string::npos) {
+          // This is the ';' separated path that sidl::Loader will search for
+          // *.scl files. Babel *.scl files are necessary for mapping component
+          // names with their DLLs.
+          ::sidl::Loader::addSearchPath(path);
+        }
       }
     }
   } else {
     for (StringVector::const_iterator iter = files.begin(); iter != files.end(); iter++) {
       if (parseComponentModelXML(*iter, this)) {
-	std::string path(pathname(*iter));
-	if (search_path.find(path) == std::string::npos) {
-	  // This is the ';' separated path that sidl::Loader will search for
-	  // *.scl files. Babel *.scl files are necessary for mapping component
-	  // names with their DLLs.
-	  UCXX ::sidl::Loader::addSearchPath(path);
-	}
+        std::string path(pathname(*iter));
+        if (emptySearchPath || searchPath.find(path) == std::string::npos) {
+          // This is the ';' separated path that sidl::Loader will search for
+          // *.scl files. Babel *.scl files are necessary for mapping component
+          // names with their DLLs.
+          ::sidl::Loader::addSearchPath(path);
+        }
       }
     }
   }
@@ -139,28 +140,28 @@ BabelComponentModel::setComponentDescription(const std::string& type, const std:
   }
 }
 
-UCXX ::gov::cca::Services
+::gov::cca::Services
 BabelComponentModel::createServices(const std::string& instanceName,
-				    const std::string& className,
-				    const UCXX ::gov::cca::TypeMap& properties)
+                                    const std::string& className,
+                                    const ::gov::cca::TypeMap& properties)
 {
   /*
-  UCXX ::gov::cca::Component nullCom;
-  UCXX ::gov::cca::Services svc;
-  cerr<<"need associate svc with ci in createServices!"<<endl;
-  BabelComponentInstance* ci = new BabelComponentInstance(framework,
-			      instanceName, className,
-			      properties,
-			      nullCom,
-			      svc);
-  framework->registerComponent(ci, instanceName);
+    ::gov::cca::Component nullCom;
+    ::gov::cca::Services svc;
+    cerr<<"need associate svc with ci in createServices!"<<endl;
+    BabelComponentInstance* ci = new BabelComponentInstance(framework,
+    instanceName, className,
+    properties,
+    nullCom,
+    svc);
+    framework->registerComponent(ci, instanceName);
 
-  //ci->addReference();
+    //ci->addReference();
 
   */
   // is this supposed to be called by AbstractFramework.getServices???
-  NOT_FINISHED("gov::cca::Services BabelComponentModel::createServices(const std::string& instanceName, const std::string& className, const UCXX ::gov::cca::TypeMap& properties)");
-  UCXX ::gov::cca::Services svc;
+  NOT_FINISHED("gov::cca::Services BabelComponentModel::createServices(const std::string& instanceName, const std::string& className, const ::gov::cca::TypeMap& properties)");
+  ::gov::cca::Services svc;
   return svc;
 }
 
@@ -174,14 +175,14 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string &name, 
 {
 #if DEBUG
   std::cerr << "BabelComponentModel::createInstance: attempt to create "
-	    << name << " type " << type << std::endl;
+            << name << " type " << type << std::endl;
 #endif
   Guard g1(&lock_components);
   componentDB_type::iterator iter = components.find(type);
 
   if (iter == components.end()) {
     std::cerr << "ERROR: Component " << type << " is not a registered component."
-	      << std::endl;
+              << std::endl;
     return 0;
   }
 
@@ -225,32 +226,32 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string &name, 
    *
    * Note for *nix: make sure library path is in LD_LIBRARY_PATH
    */
-  UCXX ::sidl::DLL library = UCXX ::sidl::Loader::findLibrary(type, "ior/impl", UCXX ::sidl::Scope_SCLSCOPE, UCXX ::sidl::Resolve_SCLRESOLVE);
+  ::sidl::DLL library = ::sidl::Loader::findLibrary(type, "ior/impl", ::sidl::Scope_SCLSCOPE, ::sidl::Resolve_SCLRESOLVE);
 #if DEBUG
-  std::cerr << "sidl::Loader::getSearchPath=" << UCXX ::sidl::Loader::getSearchPath() << std::endl;
+  std::cerr << "sidl::Loader::getSearchPath=" << ::sidl::Loader::getSearchPath() << std::endl;
   // get default finder and report search path
-  UCXX ::sidl::Finder f = UCXX ::sidl::Loader::getFinder();
+  ::sidl::Finder f = ::sidl::Loader::getFinder();
   std::cerr << "sidl::Finder::getSearchPath=" << f.getSearchPath() << std::endl;
 #endif
   if (library._is_nil()) {
     std::cerr << "Could not find library for type " << type << ". "
-	      << "Check your environment settings as described in the Babel and SCIRun2 usage instructions."
-	      << std::endl;
+              << "Check your environment settings as described in the Babel and SCIRun2 usage instructions."
+              << std::endl;
     return 0;
   }
 
-  UCXX ::sidl::BaseClass sidl_class = library.createClass(type);
+  ::sidl::BaseClass sidl_class = library.createClass(type);
   // cast BaseClass instance to Component
   // babel_cast<>() introduced in UC++ bindings, returns nil pointer on bad cast
-  UCXX ::gov::cca::Component component = UCXX ::sidl::babel_cast<UCXX ::gov::cca::Component>(sidl_class);
+  ::gov::cca::Component component = ::sidl::babel_cast< ::gov::cca::Component>(sidl_class);
   if ( component._is_nil() ) {
     std::cerr << "Cannot load babel component of type " << type
-	      << ". Babel component not created." << std::endl;
+              << ". Babel component not created." << std::endl;
     return 0;
   }
-  UCXX ::framework::Services svc = UCXX ::framework::Services::_create();
+  ::framework::Services svc = ::framework::Services::_create();
   component.setServices(svc);
-  UCXX ::gov::cca::TypeMap nullMap;
+  ::gov::cca::TypeMap nullMap;
 
   BabelComponentInstance* ci =
     new BabelComponentInstance(framework, name, type, nullMap, component, svc);
@@ -261,7 +262,10 @@ ComponentInstance* BabelComponentModel::createInstance(const std::string &name, 
 bool BabelComponentModel::destroyInstance(ComponentInstance *ci)
 {
   NOT_FINISHED("bool BabelComponentModel::destroyInstance(ComponentInstance *ci)");
-  //make sure why ci->addReference() is called in createInstance();
+  // make sure why ci->addReference() is called in createInstance(); -- removed (AK)
+
+  // not sure if deleteReference() is appropriate here
+  // TODO: need to support release component callback
   delete ci;
   return false;
 }
@@ -272,7 +276,7 @@ const std::string BabelComponentModel::getName() const
 }
 
 void BabelComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
-			  bool /*listInternal*/)
+                                                bool /*listInternal*/)
 {
   SCIRun::Guard g1(&lock_components);
   for (componentDB_type::iterator iter=components.begin();
@@ -310,7 +314,7 @@ std::string BabelComponentModel::createComponent(const std::string& name, const 
   }
 
   std::string makername = "make_" + type;
-  for (int i = 0;i < (int)makername.size(); i++) {
+  for (int i = 0; i < (int)makername.size(); i++) {
     if (makername[i] == '.') {
       makername[i] = '_';
     }
@@ -324,10 +328,10 @@ std::string BabelComponentModel::createComponent(const std::string& name, const 
   }
 #if 0
   /*  sci::cca::Component::pointer (*maker)() = (sci::cca::Component::pointer (*)())(maker_v);
-  component = (*maker)();
-  //need to make sure addReference() will not cause problem
-  component->addReference();
-  return component->getURL().getString();
+      component = (*maker)();
+      //need to make sure addReference() will not cause problem
+      component->addReference();
+      return component->getURL().getString();
   */
 #endif
   return std::string();

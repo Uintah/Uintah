@@ -39,6 +39,7 @@
  */
 
 #include <sci_defs/dataflow_defs.h>
+#include <sci_wx.h>
 
 #include <SCIRun/Internal/FrameworkInternalException.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
@@ -49,6 +50,7 @@
 #include <SCIRun/Internal/ComponentRegistry.h>
 #include <SCIRun/Internal/FrameworkProperties.h>
 #include <SCIRun/Internal/FrameworkProxyService.h>
+#include <SCIRun/Internal/GUIService.h>
 #include <SCIRun/SCIRunFramework.h>
 
 #if BUILD_DATAFLOW
@@ -75,6 +77,9 @@ InternalComponentModel::InternalComponentModel(SCIRunFramework* framework)
 #endif
     addService(new InternalFrameworkServiceDescription(this, "cca.FrameworkProperties", &FrameworkProperties::create));
     addService(new InternalFrameworkServiceDescription(this, "cca.FrameworkProxyService", &FrameworkProxyService::create));
+#if HAVE_WX
+    addService(new InternalFrameworkServiceDescription(this, "cca.GUIService", &GUIService::create));
+#endif
 }
 
 InternalComponentModel::~InternalComponentModel()

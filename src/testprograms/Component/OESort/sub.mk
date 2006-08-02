@@ -29,30 +29,36 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := testprograms/Component/OESort
+SRCDIR  := testprograms/Component/OESort
 
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/Thread \
-	Core/Exceptions Core/CCA/Comm
+PSELIBS := \
+           Core/CCA/SSIDL Core/CCA/PIDL \
+           Core/Thread Core/Exceptions
 endif
 
 ifeq ($(HAVE_GLOBUS),yes)
-PSELIBS+=Core/globus_threads
+PSELIBS += Core/globus_threads
 endif
 
-LIBS := $(MPI_LIBRARY) 
+LIBS    := $(MPI_LIBRARY) 
 
 PROGRAM := $(SRCDIR)/OESort
-SRCS := $(SRCDIR)/OESort.cc $(SRCDIR)/OESort_sidl.cc \
-	$(SRCDIR)/OESort_impl.cc
+SRCS    := \
+           $(SRCDIR)/OESort.cc \
+           $(SRCDIR)/OESort_sidl.cc \
+	   $(SRCDIR)/OESort_impl.cc
 GENHDRS := $(SRCDIR)/OESort_sidl.h
 include $(SCIRUN_SCRIPTS)/program.mk
 
 PROGRAM := $(SRCDIR)/OESplit
-SRCS := $(SRCDIR)/OESplit.cc $(SRCDIR)/OESort_sidl.cc \
-        $(SRCDIR)/OESort_impl.cc
+
+SRCS    := \
+           $(SRCDIR)/OESplit.cc \
+           $(SRCDIR)/OESort_sidl.cc \
+           $(SRCDIR)/OESort_impl.cc
 GENHDRS := $(SRCDIR)/OESort_sidl.h
 include $(SCIRUN_SCRIPTS)/program.mk
 

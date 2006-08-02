@@ -38,7 +38,7 @@
 #include <sci_defs/ruby_defs.h>
 
 // There are currently too many SCIRun Dataflow dependencies
-// in the Bridge component model to build it without SCIRun.
+// in the Bridge component model to build it without SCIRun dataflow.
 #if defined (HAVE_RUBY) && defined (HAVE_BABEL) && defined (BUILD_DATAFLOW)
 #  define BUILD_BRIDGE 1
 #endif

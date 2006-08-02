@@ -29,27 +29,30 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := testprograms/Component/exceptiontest
+SRCDIR  := testprograms/Component/exceptiontest
 
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/Thread \
-	Core/Exceptions Core/CCA/Comm
+PSELIBS := \
+           Core/CCA/SSIDL Core/CCA/PIDL \
+           Core/Thread Core/Exceptions
 endif
 
 ifeq ($(HAVE_GLOBUS),yes)
 PSELIBS += Core/globus_threads
-LIBS := $(GLOBUS_LIBRARY)
+LIBS    := $(GLOBUS_LIBRARY)
 else
-LIBS :=
+LIBS    :=
 endif
 
-LIBS += $(MPI_LIBRARY)
+LIBS    += $(MPI_LIBRARY)
 
 PROGRAM := $(SRCDIR)/pingthrow
-SRCS := $(SRCDIR)/pingthrow.cc $(SRCDIR)/PingThrow_sidl.cc \
-	$(SRCDIR)/PingThrow_impl.cc
+SRCS    := \
+           $(SRCDIR)/pingthrow.cc \
+           $(SRCDIR)/PingThrow_sidl.cc \
+	   $(SRCDIR)/PingThrow_impl.cc
 GENHDRS := $(SRCDIR)/PingThrow_sidl.h
 
 include $(SCIRUN_SCRIPTS)/program.mk

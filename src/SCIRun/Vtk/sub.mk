@@ -31,15 +31,16 @@
 
 SRCDIR   := SCIRun/Vtk
 
-SRCS     += $(SRCDIR)/VtkComponentModel.cc \
-	$(SRCDIR)/VtkComponentDescription.cc \
-	$(SRCDIR)/VtkComponentInstance.cc \
-	$(SRCDIR)/VtkPortInstance.cc \
-	$(SRCDIR)/VtkUIPort.cc \
-	$(SRCDIR)/Port.cc \
-	$(SRCDIR)/InPort.cc \
-	$(SRCDIR)/OutPort.cc \
-	$(SRCDIR)/Component.cc 
+SRCS     += \
+            $(SRCDIR)/VtkComponentModel.cc \
+            $(SRCDIR)/VtkComponentDescription.cc \
+            $(SRCDIR)/VtkComponentInstance.cc \
+            $(SRCDIR)/VtkPortInstance.cc \
+            $(SRCDIR)/VtkUIPort.cc \
+            $(SRCDIR)/Port.cc \
+            $(SRCDIR)/InPort.cc \
+            $(SRCDIR)/OutPort.cc \
+            $(SRCDIR)/Component.cc
 
 
 
