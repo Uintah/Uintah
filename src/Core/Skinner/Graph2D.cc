@@ -245,7 +245,7 @@ namespace SCIRun {
       glEnd();
       CHECK_OPENGL_ERROR();
       
-      glGetIntegerv(GL_VIEWPORT, viewport_);
+      glGetIntegerv(GL_VIEWPORT, (GLint*)viewport_);
       glViewport(x + Ceil(gapx_), y + Ceil(gapy_),
                  x2 - x - Ceil(gapx_), y2 - y - Ceil(gapy_));
       CHECK_OPENGL_ERROR();
