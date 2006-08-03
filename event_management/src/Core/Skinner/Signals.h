@@ -41,7 +41,6 @@ using std::string;
 using std::deque;
 using std::vector;
 
-
 #define REGISTER_CATCHER_TARGET(catcher_target_function_name) \
   this->register_target(#catcher_target_function_name, \
     static_cast<SCIRun::Skinner::SignalCatcher::CatcherFunctionPtr> \
@@ -84,6 +83,7 @@ namespace SCIRun {
       SignalCatcher();
       ~SignalCatcher();
 
+      // Typedefs 
       typedef 
       BaseTool::propagation_state_e 
       (SCIRun::Skinner::SignalCatcher::* CatcherFunctionPtr)(event_handle_t);
@@ -97,10 +97,14 @@ namespace SCIRun {
         CatcherFunctionPtr      function_;
         string                  data_;
         string                  targetname_;
+        bool                    threaded_;
       };
 
       typedef vector<CatcherTargetInfo_t> NodeCatchers_t;
       typedef vector<NodeCatchers_t> TreeOfCatchers_t;
+
+
+      // Only method
       NodeCatchers_t            get_all_targets() { return catcher_targets_; }
     protected:
       void                      register_target(const string &targetname,
@@ -115,21 +119,21 @@ namespace SCIRun {
     public:      
       SignalThrower();
       virtual ~SignalThrower();
+
+      // Typedefs
       typedef vector<SignalCatcher::CatcherTargetInfo_t> AllSignalCatchers_t;
       typedef map<string, AllSignalCatchers_t> SignalToAllCatchers_t;
-      SignalToAllCatchers_t all_catchers_;
 
 
-      event_handle_t  throw_signal(const string &,
-                                   Variables *vars = 0);
+      event_handle_t                    throw_signal(const string &,
+                                                     Variables *vars = 0);
+      
+      
+      static event_handle_t             throw_signal(SignalToAllCatchers_t &,
+                                                     event_handle_t &signal,
+                                                     Variables *vars = 0);
 
-
-    public:
-      static event_handle_t throw_signal(SignalToAllCatchers_t &catchers,
-                                          event_handle_t &signal,
-                                          Variables *vars = 0);
-
-      static SignalToAllCatchers_t  collapse_tree(SignalCatcher::TreeOfCatchers_t &);
+      static SignalToAllCatchers_t      collapse_tree(SignalCatcher::TreeOfCatchers_t &);
 
                                    
       virtual int     get_signal_id(const string &) const = 0;
@@ -139,11 +143,12 @@ namespace SCIRun {
                                                       SignalCatcher *,
                                                       SignalCatcher::CatcherFunctionPtr);
 
-
-
+      // Should be private
+      SignalToAllCatchers_t all_catchers_;
     };
 
     class Variables;
+
     class MakerSignal : public Signal
     {
       Variables * variables_;

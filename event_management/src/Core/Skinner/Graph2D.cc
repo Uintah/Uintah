@@ -37,6 +37,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Events/EventManager.h>
 #include <Core/Events/keysyms.h>
+#include <Core/Events/MatrixEvent.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <sci_gl.h>
 #include <sci_glu.h>
@@ -243,8 +244,6 @@ namespace SCIRun {
       glVertex2d(gapx_, gapy_);
       glEnd();
       CHECK_OPENGL_ERROR();
-
-
       
       glGetIntegerv(GL_VIEWPORT, viewport_);
       glViewport(x + Ceil(gapx_), y + Ceil(gapy_),
@@ -438,6 +437,15 @@ namespace SCIRun {
 
     BaseTool::propagation_state_e
     Graph2D::process_event(event_handle_t event) {
+
+      MatrixEvent *matrix = dynamic_cast<MatrixEvent *>(event.get_rep());
+      if (matrix) {
+        data_ = matrix->get_data();
+        calculate_data_range();
+        reset_window();
+        EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
+      }
+
       WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
       if (window && window->get_window_state() == WindowEvent::REDRAW_E)
       {

@@ -32,9 +32,12 @@
 #
 
 namespace a = "http://relaxng.org/ns/compatibility/annotations/1.0"
+namespace xi = "http://www.w3.org/2001/XInclude"
 
 skinner =
-  element skinner { attlist.skinner, var*, definition*, object+ }
+  element skinner {
+    attlist.skinner, var*, \include*, definition*, object*
+  }
 attlist.skinner &= attribute version { text }
 var = element var { attlist.var, text }
 attlist.var &=
@@ -56,4 +59,8 @@ signal = element signal { attlist.signal, text }
 attlist.signal &=
   attribute name { text },
   attribute target { text }
+\include = element xi:include { attlist.include, empty }
+attlist.include &=
+  attribute href { text },
+  attribute parse { text }
 start = skinner

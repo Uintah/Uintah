@@ -46,6 +46,7 @@ namespace SCIRun {
       windows_()
     {
       REGISTER_CATCHER_TARGET(Root::GLWindow_Maker);
+      REGISTER_CATCHER_TARGET(Root::GLWindow_Destructor);
       REGISTER_CATCHER_TARGET(Root::Graph2D_Maker);
       REGISTER_CATCHER_TARGET(Root::ColorMap2D_Maker);
       register_target
@@ -72,6 +73,32 @@ namespace SCIRun {
 
       maker_signal->set_signal_thrower(windows_.back());
       maker_signal->set_signal_name(maker_signal->get_signal_name()+"_Done");
+      return MODIFIED_E;
+    }
+
+    BaseTool::propagation_state_e
+    Root::GLWindow_Destructor(event_handle_t event) {
+
+      Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
+      ASSERT(signal);
+      
+      GLWindow *window = 
+        dynamic_cast<Skinner::GLWindow *>(signal->get_signal_thrower());
+      ASSERT(window);
+      
+      GLWindows_t::iterator iter =
+        find(windows_.begin(), windows_.end(), window);
+      ASSERT(iter != windows_.end());
+
+      windows_.erase(iter);
+
+      Drawables_t::iterator citer = 
+        find(children_.begin(), children_.end(), window);
+      ASSERT(citer != children_.end());
+      children_.erase(citer);
+
+
+
       return MODIFIED_E;
     }
 

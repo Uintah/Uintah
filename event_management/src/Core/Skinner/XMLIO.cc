@@ -41,6 +41,9 @@
 
 #include <libxml/xmlreader.h>
 #include <libxml/catalog.h>
+#include <libxml/xinclude.h>
+#include <libxml/xpathInternals.h>
+
 #include <iostream>
 
 
@@ -68,46 +71,93 @@ namespace SCIRun {
       LIBXML_TEST_VERSION;
       
       xmlParserCtxtPtr ctxt; /* the parser context */
-      xmlDocPtr doc; /* the resulting document tree */
+
       
       string dtd = string(sci_getenv("SCIRUN_SRCDIR")) + 
         string("/Core/Skinner/skinner.dtd");
+
       xmlInitializeCatalog();
       xmlCatalogAdd(XMLUtil::char_to_xmlChar("public"), 
                     XMLUtil::char_to_xmlChar("-//Skinner/Drawable DTD"), 
                     XMLUtil::char_to_xmlChar(dtd.c_str()));
      
-      /* create a parser context */
+      //      /* create a parser context */
       ctxt = xmlNewParserCtxt();
       if (!ctxt) {
         std::cerr << "XMLIO::load failed xmlNewParserCtx()\n";
         return 0;
       }
 
+
+      
       /* parse the file, activating the DTD validation option */
-      doc = xmlCtxtReadFile(ctxt, filename.c_str(), 0, (XML_PARSE_DTDATTR | 
-                                                        XML_PARSE_DTDVALID | 
-                                                        XML_PARSE_PEDANTIC));
+      xmlDocPtr doc = xmlCtxtReadFile(ctxt, filename.c_str(), 0, XML_PARSE_DTDATTR | XML_PARSE_DTDVALID | XML_PARSE_PEDANTIC); //flags);
+
+      /*
+       * apply the XInclude process, this should trigger the I/O just
+       * registered.
+       */
+      int inc = xmlXIncludeProcess(doc);
+      if (inc < 0) {
+        cerr << "XInclude processing failed\n";
+	return 0;
+      }
+
+      int flags = XML_PARSE_DTDATTR | XML_PARSE_DTDVALID | XML_PARSE_PEDANTIC;
+      int options = xmlCtxtUseOptions(ctxt, flags);
+
+      //doc = xmlReadMemory(
+
+      //xmlDocPtr doc = xmlParseFile(filename.c_str());
       /* check if parsing suceeded */
       if (!doc) {
         std::cerr << "Skinner::XMLIO::load failed to parse " 
                   << filename << std::endl;
         return 0;
       } 
-      if (!ctxt->valid) {
-          std::cerr << "Skinner::XMLIO::load dailed to validate " 
-                    << filename << std::endl;
-          return 0;
-      }
+
+      //      xmlDtdPtr xmldtd = xmlParseDTD(0, XMLUtil::char_to_xmlChar(dtd.c_str()));
+      //      doc->intSubset = xmldtd;
+      //      if (doc->children == NULL) 
+      //        xmlAddChild((xmlNodePtr)doc, (xmlNodePtr)xmldtd);
+      //      else 
+      //        xmlAddPrevSibling(doc->children, (xmlNodePtr)xmldtd);
+
+      xmlXPathContextPtr xi_ctx = xmlXPathNewContext(doc);
+
+      int xi_result = 0;
+
+      /*
+        xmlXPathRegisterNs
+        (xi_ctx, 
+         XMLUtil::char_to_xmlChar("xi"), 
+         XMLUtil::char_to_xmlChar("http://www.w3.org/2001/XInclude"));
+      */
       
+      
+
+
+      xmlValidCtxtPtr valid_ctx = xmlNewValidCtxt();
+      int valid = xmlValidateDtdFinal(valid_ctx, doc);
+      
+      //      xmlCtxtUseOptions(ctxt, XML_PARSE_PEDANTIC);
+      //      if (!ctxt->valid) {
+      //          std::cerr << "Skinner::XMLIO::load dailed to validate " 
+      //                    << filename << std::endl;
+      //          return 0;
+      //      }
+      
+
 
       // parse the doc at network node.
       Root *root;
       for (xmlNode *cnode=doc->children; cnode!=0; cnode=cnode->next) {
         if (XMLUtil::node_is_dtd(cnode, "skinner")) 
           continue;
-        if (XMLUtil::node_is_element(cnode, "skinner")) 
+        if (XMLUtil::node_is_element(cnode, "skinner")) {
+          
           root = eval_skinner_node(cnode, filename);
+        } 
         else if (!XMLUtil::node_is_comment(cnode))
           throw "Unknown node type";
       }               
@@ -212,7 +262,7 @@ namespace SCIRun {
         // Note: This isnt absolutely guaranteed to make unique ids
         // It can be broken by hardcoding the id in the XML
         static int objcount = 0;
-        unique_id = classname+"."+to_string(objcount++);
+        unique_id = classname+"-"+to_string(objcount++);
       }
 
 
@@ -320,10 +370,16 @@ namespace SCIRun {
 
 
       catcher_tree.push_back(object->get_all_targets());
+
+      allcatchers = 
+        SignalThrower::collapse_tree(catcher_tree);
+
+      if (printdebug) cerr << object->get_id() << " adding catchers\n";
+#if 0
       SignalCatcher::NodeCatchers_t &ncatchers = catcher_tree.back();
       SignalCatcher::NodeCatchers_t::iterator citer = ncatchers.begin();
       SignalCatcher::NodeCatchers_t::iterator cend = ncatchers.end();
-      if (printdebug) cerr << object->get_id() << " adding catchers: ";
+
       for (;citer != cend;++citer) {
         SignalCatcher::CatcherTargetInfo_t &callback = *citer;        
         allcatchers[callback.targetname_].push_back(callback);
@@ -331,6 +387,7 @@ namespace SCIRun {
 
       }
       if (printdebug) cerr << std::endl;
+#endif
 
 
       // Now the Catchers On Deck are ready, look if the xml file has
@@ -436,23 +493,31 @@ namespace SCIRun {
     {
       ASSERT(XMLUtil::node_is_element(node, "var"));
       ASSERT(variables);
-      bool propagate = 
-        XMLUtil::node_att_as_string(node, "propagate") == "yes" ? true : false;
-      bool overwrite = 
-        XMLUtil::node_att_as_string(node, "overwrite") == "yes" ? true : false;
-
       const string varname = XMLUtil::node_att_as_string(node, "name");
+
+      string str = "";
+      bool overwrite = true;
+      if (XMLUtil::maybe_get_att_as_string(node,"overwrite",str) && 
+          str == "no")
+        overwrite = false;
 
       if (!overwrite && variables->exists(varname)) {
         return;
       }
-      
+
+      bool propagate =
+        XMLUtil::maybe_get_att_as_string(node,"propagate",str) && str == "yes";
+                 
+
       const char *contents = 0;
       if (node->children) { 
         contents = XMLUtil::xmlChar_to_char(node->children->content);
       }
       const string value = contents ? contents : "";
-      const string typestr = XMLUtil::node_att_as_string(node, "type");
+
+      string typestr = "string";
+      XMLUtil::maybe_get_att_as_string(node, "type", typestr);
+
       variables->insert(varname, value, typestr, propagate);
     }
     
@@ -468,7 +533,11 @@ namespace SCIRun {
       ASSERT(XMLUtil::node_is_element(node, "signal"));
       string signalname = XMLUtil::node_att_as_string(node, "name");
       string signaltarget = XMLUtil::node_att_as_string(node, "target");
-
+      string str;
+      XMLUtil::maybe_get_att_as_string(node, "threaded", str);
+      bool threaded = (str == "yes");
+      if (threaded) cerr << signalname << "Threaded=yes\n";
+      
 
       SignalThrower::SignalToAllCatchers_t::iterator cpos = allcatchers.find(signaltarget);
       if (cpos == allcatchers.end()) {
@@ -495,6 +564,7 @@ namespace SCIRun {
         ASSERT(callback.catcher_);
         ASSERT(callback.function_);
         if (callback.data_.empty()) callback.data_ = signaldata;
+        if (threaded) callback.threaded_ = true;
         if (object->get_signal_id(signalname)) {
           if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
             cerr << " signalname: " << signalname 
@@ -507,7 +577,7 @@ namespace SCIRun {
         } else {
           if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
             cerr << object->get_id() << " aliasing: " << signalname 
-                 << " to " << signaltarget << std::endl;
+                 << " to " << signaltarget << " of " << ((Drawable *)(callback.catcher_))->get_id() << std::endl;
           }
 
           SignalCatcher::CatcherTargetInfo_t newcallback = callback;

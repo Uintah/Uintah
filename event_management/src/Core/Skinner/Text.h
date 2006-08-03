@@ -59,6 +59,7 @@ namespace SCIRun {
       static DrawableMakerFunc_t        maker;
 
     private:
+      CatcherFunction_t                 redraw;
       Color                             fgcolor_;
       Color                             bgcolor_;
       unsigned int                      flags_;

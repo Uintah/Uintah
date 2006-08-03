@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
+<network version="v1.25.3" name="{Main}" bbox="{0 0 703 214}" creationDate="{Wed Aug 02 2006}" creationTime="{18:05:40}" geometry="{800x800+0+0}">
+  <note>{}</note>
+  <modules>
+    <module id="m1" package="SCIRun" category="Render" name="Graph">
+      <position x="0" y="157"/>
+    </module>
+    <module id="m2" package="SCIRun" category="Math" name="CreateMatrix">
+      <position x="357" y="0"/>
+      <var name="rows" val="{10}"/>
+      <var name="cols" val="{2}"/>
+      <var name="data" val="{{1 2 3 4 5 6 7 8 9 10} {15 32 50 64 72 45 15 0 -5 10}}"/>
+      <var name="clabel" val="{0 1}"/>
+      <var name="rlabel" val="{0 1 2 3 4 5 6 7 8 9}"/>
+      <var name="ui_geometry" val="{502x649+242+558}"/>
+    </module>
+    <module id="m3" package="SCIRun" category="Math" name="CreateMatrix">
+      <position x="181" y="0"/>
+      <var name="rows" val="{10}"/>
+      <var name="cols" val="{2}"/>
+      <var name="data" val="{{1 2 3 4 5 6 7 8 9 10} {32 93 189 283 109 034 272 103 023 200}}"/>
+      <var name="clabel" val="{0 1}"/>
+      <var name="rlabel" val="{0 1 2 3 4 5 6 7 8 9}"/>
+      <var name="ui_geometry" val="{502x649+314+402}"/>
+    </module>
+    <module id="m4" package="SCIRun" category="String" name="CreateString">
+      <position x="0" y="0"/>
+      <var name="inputstring" val="{Graph Title&#10;}"/>
+      <var name="ui_geometry" val="{566x411+234+430}"/>
+    </module>
+    <module id="m5" package="SCIRun" category="Math" name="CreateMatrix">
+      <position x="538" y="0"/>
+      <var name="rows" val="{10}"/>
+      <var name="cols" val="{2}"/>
+      <var name="data" val="{{1 2 3 4 5 6 7 8 9 10} {5 10 30 39 44 45 14 1 9 12}}"/>
+      <var name="clabel" val="{0 1}"/>
+      <var name="rlabel" val="{0 1 2 3 4 5 6 7 8 9}"/>
+      <var name="ui_geometry" val="{502x649+498+229}"/>
+    </module>
+  </modules>
+  <connections>
+    <connection id="c1" from="m4" fromport="0" to="m1" toport="0"/>
+    <connection id="c2" from="m3" fromport="0" to="m1" toport="1"/>
+    <connection id="c3" from="m2" fromport="0" to="m1" toport="2"/>
+    <connection id="c4" from="m5" fromport="0" to="m1" toport="3"/>
+  </connections>
+</network>

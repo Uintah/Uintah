@@ -49,7 +49,7 @@ namespace SCIRun {
   namespace Skinner {
     class Drawable;
 
-    BaseTool * load_skin(const string&filename);
+    Drawable * load_skin(const string&filename);
   
     class ThrottledRunnableToolManager : public ThrottledRunnable{
     public:

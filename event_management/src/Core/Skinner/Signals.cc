@@ -33,7 +33,8 @@
 #include <Core/Skinner/Signals.h>
 #include <Core/Skinner/Variables.h>
 #include <Core/Util/Environment.h>
-
+#include <Core/Thread/Thread.h>
+#include <Core/Thread/Runnable.h>
 #include <iostream>
 
 using std::cerr;
@@ -99,12 +100,44 @@ namespace SCIRun {
     }
 
 
+    class ThreadedCallback : public Runnable {
+    public:     
+      ThreadedCallback() : callback_(0), signal_(0), state_(BaseTool::STOP_E){}
+      virtual ~ThreadedCallback() { cerr << "threaded callback done\n"; }
+
+      void      set_callback(SignalCatcher::CatcherTargetInfo_t *callback) {
+        callback_ = callback;
+      }
+
+      void      set_signal(const event_handle_t &signal) {
+        signal_ = signal;
+      }
+      
+      event_handle_t get_signal() {
+        return signal_;
+      }
+
+      virtual void run() {
+        ASSERT(callback_);
+        state_ = (callback_->catcher_->*callback_->function_)(signal_);
+        signal_ = 0;
+      }
+
+      BaseTool::propagation_state_e     get_state() { return state_; }
+    private:
+      SignalCatcher::CatcherTargetInfo_t *      callback_;
+      event_handle_t                            signal_;
+      BaseTool::propagation_state_e             state_;
+    };
+      
+      
+      
 
 
     event_handle_t
     SignalThrower::throw_signal(SignalToAllCatchers_t &catchers,
-                                 event_handle_t &signalh,
-                                 Variables *vars)
+                                event_handle_t &signalh,
+                                Variables *vars)
     {
 
       Signal *signal = dynamic_cast<Signal *>(signalh.get_rep());
@@ -130,7 +163,15 @@ namespace SCIRun {
           }
           signal->set_signal_data(signaldata);
           
-          state = (callback.catcher_->*callback.function_)(signal);
+          if (!callback.threaded_) {
+            state = (callback.catcher_->*callback.function_)(signal);
+          } else {
+            cerr << "threading: " << signalname << std::endl;
+            ThreadedCallback *threaded_callback = new ThreadedCallback();
+            threaded_callback->set_callback(&callback);
+            threaded_callback->set_signal(signal);
+            new Thread(threaded_callback, signalname.c_str());
+          }
           if (state == BaseTool::STOP_E) break;
         }
       }

@@ -60,6 +60,8 @@ namespace SCIRun {
       flags_ |= shadow   ? TextRenderer::SHADOW   : 0;
       flags_ |= extruded ? TextRenderer::EXTRUDED : 0;
       flags_ |= reverse  ? TextRenderer::REVERSE  : 0;
+      
+      //      REGISTER_CATCHER_TARGET(Text::redraw);
     }
 
     Text::~Text() {}
@@ -105,6 +107,47 @@ namespace SCIRun {
       }
       return CONTINUE_E;
     }
+
+    BaseTool::propagation_state_e
+    Text::redraw(event_handle_t)
+    {
+      const RectRegion &region = get_region();
+      string text = "";
+      get_vars()->maybe_get_string("text", text);
+      
+      if (renderer_->height(text) > region.height()) {
+        return CONTINUE_E;
+      }
+      
+      renderer_->set_shadow_offset(offsetx_, offsety_);
+      renderer_->set_color(fgcolor_.r, fgcolor_.g, fgcolor_.b, fgcolor_.a);
+      renderer_->set_shadow_color(bgcolor_.r, bgcolor_.g, bgcolor_.b, bgcolor_.a);
+      
+      float mx = (region.x2() + region.x1())/2.0;
+      float my = (region.y2() + region.y1())/2.0;
+      
+      float x = mx;
+      float y = my;
+      
+      switch (flags_ & TextRenderer::ANCHOR_MASK) {
+      case TextRenderer::N:  x = mx; y = region.y2(); break;
+      case TextRenderer::S:  x = mx; y = region.y1(); break;
+        
+      case TextRenderer::E:  x = region.x2(); y = my; break;
+      case TextRenderer::W:  x = region.x1(); y = my; break;
+        
+      case TextRenderer::NE: x = region.x2(); y = region.y2(); break;
+      case TextRenderer::SE: x = region.x2(); y = region.y1(); break;
+      case TextRenderer::SW: x = region.x1(); y = region.y1(); break;
+      case TextRenderer::NW: x = region.x1(); y = region.y2(); break;
+        
+      case TextRenderer::C:  x = mx; y = my; break;
+      }
+      renderer_->render(text, x, y, flags_);
+      
+      return CONTINUE_E;
+    }
+
 
     Drawable *
     Text::maker(Variables *vars)

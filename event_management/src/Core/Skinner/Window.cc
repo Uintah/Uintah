@@ -99,8 +99,13 @@ namespace SCIRun {
       // context must be deleted after event spawer is done
       delete context_;
       context_ = 0;
-      Semaphore pause("pause",0);
-      pause.down();
+      throw_signal("GLWindow::Destructor");
+    }
+
+    int
+    GLWindow::get_signal_id(const string &name) const {
+      if (name == "GLWindow::Destructor") return 1;
+      return 0;
     }
 
     MinMax

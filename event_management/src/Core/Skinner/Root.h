@@ -47,6 +47,7 @@ namespace SCIRun {
       void spawn_redraw_threads();
     private:
       CatcherFunction_t GLWindow_Maker;
+      CatcherFunction_t GLWindow_Destructor;
       CatcherFunction_t ColorMap2D_Maker;
       CatcherFunction_t Graph2D_Maker;
       CatcherFunction_t Quit;
