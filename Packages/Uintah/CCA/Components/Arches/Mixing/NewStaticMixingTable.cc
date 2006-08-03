@@ -93,15 +93,15 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
   /*if(mixFrac > 1.0)
 	mixFrac=1.0;
   else if (mixFrac < small)
-	mixFrac=0.0;
-  if(mixFracVars < small)
-	mixFracVars=0.0;*/
+	mixFrac=0.0;*/
 
   double mixFracVars = 0.0;
   if (d_calcVariance) {
     mixFracVars = inStream.d_mixVarVariance[0];
 
     double var_limit = (mixFrac*(1.0-mixFrac));
+    if(mixFracVars < small)
+      mixFracVars=0.0;
     if(mixFracVars > var_limit)
       mixFracVars = var_limit;
 
