@@ -60,6 +60,9 @@ private:
   GuiDouble cell_length_;
   GuiDouble cell_crosssection_;
   GuiDouble ics_vol_frac_;
+
+  GuiInt connection_x_;
+  GuiInt connection_y_;
 };
 
 
@@ -78,7 +81,9 @@ RegularBundle::RegularBundle(GuiContext* ctx)
   bath_end_(ctx->subVar("bath-start")),
   cell_length_(ctx->subVar("cell-length")),
   cell_crosssection_(ctx->subVar("cell-crosssection")),
-  ics_vol_frac_(ctx->subVar("ics-vol-frac"))
+  ics_vol_frac_(ctx->subVar("ics-vol-frac")),
+  connection_x_(ctx->subVar("lateral-connection-x")),
+  connection_y_(ctx->subVar("lateral-connection-y"))
 {
 }
 
@@ -94,6 +99,8 @@ void RegularBundle::execute()
   Tissue.set_numelems_z(elemsz_.get());
   Tissue.set_numelems_bath_start(bath_start_.get());
   Tissue.set_numelems_bath_end(bath_end_.get());
+  Tissue.set_connection_x(connection_x_.get());
+  Tissue.set_connection_y(connection_y_.get());
 
   Tissue.set_cell_length(cell_length_.get());
   Tissue.set_cell_crosssection(cell_crosssection_.get());

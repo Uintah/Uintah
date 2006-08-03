@@ -54,61 +54,77 @@ DMDCreateDomain::DMDCreateDomain(GuiContext* ctx)
 
 void DMDCreateDomain::execute()
 {
-
+  // Define input handles:
   FieldHandle Conductivity;
   FieldHandle ElementType;
+  FieldHandle InitialPotential;
   MatrixHandle ConductivityTable;
   MatrixHandle NodeLink;
   MatrixHandle ElemLink;
   
+  // Get the latest input objects:
   if (!(get_input_handle("Conductivity",Conductivity,true))) return;
   if (!(get_input_handle("ElementType",ElementType,true))) return;
-
+  get_input_handle("Initial Potential",InitialPotential,false);
   get_input_handle("ConductivityTable",ConductivityTable,false); 
 
-  if(ElementType->is_property("NodeLink")) ElementType->get_property("NodeLink",NodeLink);
-  if(ElementType->is_property("ElemLink")) ElementType->get_property("ElemLink",ElemLink);
 
-  BundleHandle output = scinew Bundle();
-  if (output.get_rep() == 0)
+  // A module should only execute when data has changed otherwise it should return
+  // the cached values:
+  if (inputs_changed_ || !oport_cached("DomainBundle"))
   {
-    error("Could not allocate output Bundle");
-    return;
-  }
+    if(ElementType->is_property("NodeLink")) ElementType->get_property("NodeLink",NodeLink);
+    if(ElementType->is_property("ElemLink")) ElementType->get_property("ElemLink",ElemLink);
 
-  output->setField("Conductivity",Conductivity);
-  output->setField("ElementType",ElementType);
-  output->setMatrix("ConductivityTable",ConductivityTable);
-  output->setMatrix("NodeLink",NodeLink);
-  output->setMatrix("ElemLink",ElemLink);
-  
-  std::string sourcefile = "DomainSPRfile.c ";
-  StringHandle SourceFile = scinew String(sourcefile);
-  if (SourceFile.get_rep() == 0)
-  {
-    error("Could not allocate String");
-    return;
-  }
-  output->setString("SourceFile",SourceFile);
-  
-  std::string parameters = "scale_int=1.0\nscale_ext=1.0\nscale_bath=1.0\nscale_area=1.0\n";
-  StringHandle Parameters = scinew String(parameters);
-  if (Parameters.get_rep() == 0)
-  {
-    error("Could not allocate String");
-    return;
-  }
-  output->setString("Parameters",Parameters);
-  
-  BundleHandle DomainBundle = scinew Bundle;
-  if (DomainBundle.get_rep() == 0)
-  {
-    error("Could not allocate DomainBundle");
-    return;
-  }
+    // Create the output object:
+    BundleHandle output = scinew Bundle();
+    if (output.get_rep() == 0)
+    {
+      error("Could not allocate output Bundle");
+      return;
+    }
 
-  DomainBundle->setBundle("Domain",output);
-  send_output_handle("DomainBundle",DomainBundle,true);
+    // Add all the input to the output object:
+    output->setField("Conductivity",Conductivity);
+    output->setField("ElementType",ElementType);
+    output->setMatrix("ConductivityTable",ConductivityTable);
+    output->setMatrix("NodeLink",NodeLink);
+    output->setMatrix("ElemLink",ElemLink);
+    if (InitialPotential.get_rep()) output->setField("InitialPotential",InitialPotential);
+    
+    std::string sourcefile = "DomainSPRfile.c ";
+    StringHandle SourceFile = scinew String(sourcefile);
+    if (SourceFile.get_rep() == 0)
+    {
+      error("Could not allocate String");
+      return;
+    }
+    output->setString("SourceFile",SourceFile);
+    
+    std::string parameters = "scale_int=1.0\nscale_ext=1.0\nscale_bath=1.0\nscale_area=1.0\n";
+    StringHandle Parameters = scinew String(parameters);
+    if (Parameters.get_rep() == 0)
+    {
+      error("Could not allocate String");
+      return;
+    }
+  
+    output->setString("Parameters",Parameters);
+    
+    // Wrap the bundle in a new bundle so we can merge everything together
+    // downstream:
+    BundleHandle DomainBundle = scinew Bundle;
+    if (DomainBundle.get_rep() == 0)
+    {
+      error("Could not allocate DomainBundle");
+      return;
+    }
+
+    DomainBundle->setBundle("Domain",output);
+
+    // Send the output:
+    send_output_handle("DomainBundle",DomainBundle,false);
+  }
 }
 
 } // End namespace CardioWave

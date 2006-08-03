@@ -59,7 +59,7 @@ bool ModelAlgo::DMDBuildMembraneTable(FieldHandle ElementType, FieldHandle Membr
   return(algo.BuildMembraneTable(pr_,ElementType,MembraneModel,CompToGeom,NodeLink, ElemLink,MembraneTable,MappingMatrix));
 }
 
-bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable, std::vector<double>& nodetypes, int num_volumenodes, int num_synnodes, MatrixHandle& NodeType, MatrixHandle& DomainType, MatrixHandle& Volume, MatrixHandle& MembraneMatrix)
+bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable, std::vector<double>& nodetypes, int num_volumenodes, int num_synnodes, MatrixHandle& NodeType, MatrixHandle& Volume, MatrixHandle& MembraneMatrix)
 {
   SCIRunAlgo::MathAlgo numericalgo(pr_);
   int num_totalnodes = num_volumenodes + num_synnodes;
@@ -81,7 +81,6 @@ bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable
     return (false);
   }
   double* nodetypeptr = NodeType->get_data_pointer();
-  double* domaintypeptr = DomainType->get_data_pointer();
   
   for (int p=0; p<num_totalnodes;p++) nodetypeptr[p] = 0.0;
   for (int p=0; p<num_totalnodes;p++) volumeptr[p] = 0.0;
@@ -107,7 +106,6 @@ bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable
       sev[k].val = 1.0;
       volumeptr[synnum] = membranetable[p][q].surface;
       nodetypeptr[synnum] = nodetypes[p];
-      domaintypeptr[synnum] = -1.0;
       k++;  
       sev[k].row = membranetable[p][q].node1;
       sev[k].col = membranetable[p][q].node2;
@@ -248,7 +246,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
 
   bool debug = true;
   bool visbundle = true;
-  bool optimizesystem = true;
+  bool optimizesystem = false;
   if (SimulationBundle->is_property("enable_debug")) SimulationBundle->get_property("enable_debug",debug);
   if (SimulationBundle->is_property("build_visualization_bundle")) SimulationBundle->get_property("build_visualization_bundle",visbundle);
   if (SimulationBundle->is_property("optimize_system")) SimulationBundle->get_property("optimize_system",optimizesystem);
@@ -260,7 +258,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   std::string filename_sysmatrix;   // The system matrix
   std::string filename_mapping;   // The system matrix
   std::string filename_nodetype;    // A vector with the nodetype for each node in the system
-  std::string filename_domaintype;  // A vector with the domaintype for each node in the system
+  std::string filename_potential0;  // A vector with the domaintype for each node in the system
   std::string filename_surface;     // Surface factors for the cell membrane
   std::string filename_in;          // Parameter file
   std::string filename_script;      // The script to build simulation
@@ -289,7 +287,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   filename_sysmatrix = filenamebase + ".fem.spr";
   filename_mapping   = filenamebase + ".map.spr";
   filename_nodetype  = filenamebase + ".nt.bvec";
-  filename_domaintype= filenamebase + ".dt.bvec";
+  filename_potential0= filenamebase + ".vm0.vec";
   filename_surface   = filenamebase + ".area.vec";
   filename_in        = filenamebase + ".in";
   filename_script    = filenamebase + ".script.sh";
@@ -326,8 +324,8 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     
     rel_filename = filename_nodetype; pos = 0; while (pos!=string::npos) { pos = rel_filename.find('/'); rel_filename = rel_filename.substr(pos+1); }
     infile << "nodefile=" << rel_filename << "\n";
-    rel_filename = filename_domaintype; pos = 0; while (pos!=string::npos) { pos = rel_filename.find('/'); rel_filename = rel_filename.substr(pos+1); }
-    infile << "domainfile=" << rel_filename<< "\n";
+    rel_filename = filename_potential0; pos = 0; while (pos!=string::npos) { pos = rel_filename.find('/'); rel_filename = rel_filename.substr(pos+1); }
+    infile << "vm0file=" << rel_filename<< "\n";
     rel_filename = filename_membrane; pos = 0; while (pos!=string::npos) { pos = rel_filename.find('/'); rel_filename = rel_filename.substr(pos+1); }
     infile << "synapsefile=" << rel_filename << "\n";
     rel_filename = filename_sysmatrix; pos = 0; while (pos!=string::npos) { pos = rel_filename.find('/'); rel_filename = rel_filename.substr(pos+1); }
@@ -391,6 +389,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     return (false);        
   }
   
+  FieldHandle InitialPotential = Domain->getField("InitialPotential");
   FieldHandle ElementType = Domain->getField("ElementType");
   FieldHandle Conductivity = Domain->getField("Conductivity");
   MatrixHandle ConductivityTable = Domain->getMatrix("ConductivityTable");
@@ -749,7 +748,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   
   MatrixHandle VolumeVec;
   MatrixHandle NodeType;
-  MatrixHandle DomainType;
+  MatrixHandle Potential0;
 
   if(!(fieldsalgo.FieldDataElemToNode(ElementType,ElementType,"Max")))
   {
@@ -757,51 +756,54 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     return (false);   
   }
 
-  if(!(fieldsalgo.GetFieldData(ElementType,DomainType)))
+  if (InitialPotential.get_rep())
   {
-    error("DMDBuildDomain: Could not extract DomainType from ElementType field");
-    return (false);   
-  }
-
-  if (CompToGeom.get_rep())
-  {
-    SparseRowMatrix* spr = CompToGeom->as_sparse();
-    if (spr == 0)
+    if(!(fieldsalgo.GetFieldData(InitialPotential,Potential0)))
     {
-      error("DMDBuildDomain: Could not obtain pointer to CompToGeom matrix");
-      return (false);       
-    }
-    
-    int* rr = spr->rows;
-    int* cc = spr->columns;
-    MatrixHandle Temp = dynamic_cast<Matrix *>(scinew DenseMatrix(num_totalnodes,1));
-    if (Temp.get_rep() == 0)
-    {
-      error("DMDBuildDomain: Could not resize DomainType Matrix");
-      return (false);       
-    }
-    
-    double* ptr = Temp->get_data_pointer();
-    double* src = DomainType->get_data_pointer();
-
-    for (int r=0; r<num_totalnodes; r++) ptr[r] = 0.0;
-    for (int r=0; r<CompToGeom->nrows(); r++)
-    {
-      ptr[cc[rr[r]]] = src[r];
-    }
-    DomainType = Temp;
-  }
-  else
-  {
-    if(!(numericalgo.ResizeMatrix(DomainType,DomainType,num_totalnodes,1)))
-    {
-      error("DMDBuildDomain: Could not resize DomainType matrix");
+      error("DMDBuildDomain: Could not extract InitialPotential");
       return (false);   
     }
+
+    if (CompToGeom.get_rep())
+    {
+      SparseRowMatrix* spr = CompToGeom->as_sparse();
+      if (spr == 0)
+      {
+        error("DMDBuildDomain: Could not obtain pointer to CompToGeom matrix");
+        return (false);       
+      }
+      
+      int* rr = spr->rows;
+      int* cc = spr->columns;
+      MatrixHandle Temp = dynamic_cast<Matrix *>(scinew DenseMatrix(num_totalnodes,1));
+      if (Temp.get_rep() == 0)
+      {
+        error("DMDBuildDomain: Could not resize DomainType Matrix");
+        return (false);       
+      }
+      
+      double* ptr = Temp->get_data_pointer();
+      double* src = Potential0->get_data_pointer();
+
+      for (int r=0; r<num_totalnodes; r++) ptr[r] = 0.0;
+      for (int r=0; r<CompToGeom->nrows(); r++)
+      {
+        ptr[cc[rr[r]]] = src[r];
+      }
+      Potential0 = Temp;
+    }
+    else
+    {
+      if(!(numericalgo.ResizeMatrix(Potential0,Potential0,num_totalnodes,1)))
+      {
+        error("DMDBuildDomain: Could not resize DomainType matrix");
+        return (false);   
+      }
+    }
   }
   
   
-  if (!(DMDBuildMembraneMatrix(membranetable,nodetypes,num_volumenodes,num_synnodes,NodeType,DomainType,VolumeVec,synmatrix)))
+  if (!(DMDBuildMembraneMatrix(membranetable,nodetypes,num_volumenodes,num_synnodes,NodeType,VolumeVec,synmatrix)))
   {
     error("DMDBuildDomain: Could not build Synapse matrix");
     return (false); 
@@ -861,17 +863,29 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   
 
   MatrixHandle mapping;
-  if(!(numericalgo.ReverseCuthillmcKee(sysmatrix,sysmatrix,mapping)))
+  
+  if (optimizesystem)
   {
-    error("DMDBuildDomain: Matrix reordering failed");
-    return (false);    
+    if(!(numericalgo.ReverseCuthillmcKee(sysmatrix,sysmatrix,mapping)))
+    {
+      error("DMDBuildDomain: Matrix reordering failed");
+      return (false);    
+    }
   }
-
+  else
+  {
+    if(!(numericalgo.IdentityMatrix(num_totalnodes,mapping)))
+    {
+      error("DMDBuildDomain: Matrix reordering failed");
+      return (false);    
+    }
+  }
+  
   remark("Reordering through Reverse CuthillMcKee");  
 
   // Reorder domain properties
   NodeType = mapping*NodeType;
-  DomainType = mapping*DomainType;
+  if (Potential0.get_rep()) Potential0 = mapping*Potential0;
   VolumeVec = mapping*VolumeVec;
 
   if (!(dataioalgo.WriteMatrix(filename_mapping,mapping,"CardioWave Sparse Matrix")))
@@ -897,18 +911,18 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     return (false);
   }
 
-  if (!(dataioalgo.WriteMatrix(filename_domaintype,DomainType,"CardioWave Byte Vector")))
+  if (Potential0.get_rep())
   {
-    error("DMDBuildDomain: Could not write domaintype vector");  
-    return (false);
+    if (!(dataioalgo.WriteMatrix(filename_potential0,Potential0,"CardioWave Byte Vector")))
+    {
+      error("DMDBuildDomain: Could not write initial potential vector");  
+      return (false);
+    }
   }
-
-
   remark("Created domain files");  
  
   // clean memory
   sysmatrix = 0;
-  DomainType = 0;
   NodeType = 0;
   VolumeVec = 0;
   
@@ -1023,9 +1037,8 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   }
 
   remark("Wrote stimulus, reference and membrane table"); 
-
-
-  if (!(numericalgo.ResizeMatrix(imapping,imapping,num_totalnodes,num_volumenodes)))
+  
+  if (!(numericalgo.ResizeMatrix(imapping,imapping,num_volumenodes,num_totalnodes)))
   {
     error("DMDBuildDomain: Could not resize mapping matrix");
     return (false);        
@@ -1043,11 +1056,13 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   VolumeField->setField("Field",ElementType);
   VolumeField->setMatrix("Mapping",imapping);
   VisualizationBundle->setBundle("Tissue",VolumeField);
-  
+    
   for (size_t p=0; p <num_membranes; p++)
   {
     std::ostringstream oss;
     oss << "Membrane_" << p;
+    
+    membranemapping[p] = membranemapping[p]*imapping;
     
     BundleHandle MembraneBundle = scinew Bundle;
     MembraneBundle->setField("Field",Membranes[p]);

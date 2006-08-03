@@ -57,7 +57,9 @@ public:
     numelems_bath_end_(6),
     cell_length_(100e-6),
     cell_crosssection_(300e-12),
-    ics_vol_frac_(0.8)
+    ics_vol_frac_(0.8),
+    numconnectionx_(2),
+    numconnectiony_(2)
   {
   }
   
@@ -80,6 +82,9 @@ public:
   inline void set_ics_vol_frac(double f) {ics_vol_frac_ = f;}
   inline void set_ecs_vol_frac(double f) {ics_vol_frac_ = 1.0-f;}
 
+  inline void set_connection_x(int x) {numconnectionx_ = x;}
+  inline void set_connection_y(int y) {numconnectiony_ = y;}
+
   bool create_mesh(FieldHandle& output);
 
 private:
@@ -94,6 +99,9 @@ private:
   int numelems_z_;
   int numelems_bath_start_;
   int numelems_bath_end_;
+  
+  int numconnectionx_;
+  int numconnectiony_;
   
   double cell_length_;
   double cell_crosssection_;

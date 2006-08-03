@@ -28,7 +28,6 @@ SRCDIR := Packages/CardioWave/Dataflow/Modules
 
 SUBDIRS := \
 	$(SRCDIR)/ContinuousBiDomain\
-	$(SRCDIR)/DataIO\
 	$(SRCDIR)/DiscreteMultiDomain\
 	$(SRCDIR)/Model\
 	$(SRCDIR)/Tools\
