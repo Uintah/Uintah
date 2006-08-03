@@ -114,7 +114,7 @@ bool NrrdToFieldAlgoT::NrrdToField(ProgressReporter* pr,NrrdDataHandle input, Fi
     for (int q=0 ; q<sd && q < 3; q++)
     {
       if (airExists(nrrd->spaceOrigin[q])) Origin[q] = nrrd->spaceOrigin[q]; else Origin[q] = 0.0;
-      for (int p=0; p<dim && p < 3;p++)
+      for (size_t p=0; p<dim && p < 3;p++)
         if (airExists(nrrd->axis[p].spaceDirection[q])) SpaceDir[p][q] = nrrd->axis[p].spaceDirection[q]; else SpaceDir[p][q] = 0.0;
     }
   

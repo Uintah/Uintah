@@ -171,8 +171,8 @@ class SCISHARE FieldsAlgo : public AlgoLibrary {
     // IsInsiedField:
     // This is an implementation of locate whether an element is contained within an
     // object.
-    bool IsInsideField(FieldHandle input, FieldHandle& output, FieldHandle object, std::string output_type = "double", std::string basis_type = "same as input");
-    bool IsInsideFields(FieldHandle input, FieldHandle& output, std::vector<FieldHandle> objectfields, std::string output_type = "double", std::string basis_type = "same as input");
+    bool IsInsideField(FieldHandle input, FieldHandle& output, FieldHandle object, std::string output_type = "double", std::string basis_type = "same as input",bool partial_inside = false, double outval = 0.0, double inval = 1.0);
+    bool IsInsideFields(FieldHandle input, FieldHandle& output, std::vector<FieldHandle> objectfields, std::string output_type = "double", std::string basis_type = "same as input",bool partial_inside = false, double outval = 0.0);
     
     // LinkFieldBoundary:
     // Compute the node-to-node link and the edge-element-to-edge-element matrix.

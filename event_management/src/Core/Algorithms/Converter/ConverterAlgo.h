@@ -73,6 +73,9 @@ class SCISHARE ConverterAlgo : public AlgoLibrary {
 
     // Converter from NrrdToMatrix
     bool NrrdToMatrix(NrrdDataHandle input, MatrixHandle& output);
+
+    // Convert Matrix to String
+    bool MatrixToString(MatrixHandle input, StringHandle& output);
 };
 
 } // SCIRunAlgo

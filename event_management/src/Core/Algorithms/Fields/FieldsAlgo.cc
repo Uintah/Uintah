@@ -105,7 +105,7 @@ bool FieldsAlgo::ClipFieldByField(FieldHandle input, FieldHandle& output, FieldH
 {
   MatrixHandle mask;
   FieldHandle  temp;
-  if(!(IsInsideField(input,temp,objfield))) return (false);
+  if(!(IsInsideField(input,temp,objfield,"char","constant"))) return (false);
   if(!(GetFieldData(temp,mask))) return (false);
   return(ClipFieldBySelectionMask(input,output,mask,interpolant));
 }
@@ -210,26 +210,25 @@ bool FieldsAlgo::ConvertToTriSurf(FieldHandle input, FieldHandle& output)
   return(algo.ConvertToTriSurf(pr_,input,output));
 }
 
-bool FieldsAlgo::IsInsideField(FieldHandle input, FieldHandle& output, FieldHandle objectfield, std::string output_type, std::string basis_type)
+bool FieldsAlgo::IsInsideField(FieldHandle input, FieldHandle& output, FieldHandle objectfield, std::string output_type, std::string basis_type,bool partial_inside,double outval, double inval)
 {
   IsInsideFieldAlgo algo;
   output = 0;
-  return(algo.IsInsideField(pr_,input,output,objectfield,1.0,0.0,output_type,basis_type));
+  return(algo.IsInsideField(pr_,input,output,objectfield,inval,outval,output_type,basis_type,partial_inside));
 }
 
-bool FieldsAlgo::IsInsideFields(FieldHandle input, FieldHandle& output, std::vector<FieldHandle> objectfields, std::string output_type,std::string basis_type)
+bool FieldsAlgo::IsInsideFields(FieldHandle input, FieldHandle& output, std::vector<FieldHandle> objectfields, std::string output_type,std::string basis_type,bool partial_inside,double outval)
 {
   IsInsideFieldAlgo algo;
   output = 0;
   for (int p=1; p<=objectfields.size(); p++)
   {
-    if (!(algo.IsInsideField(pr_,input,output,objectfields[p-1],static_cast<double>(p),0.0,output_type,basis_type)))
+    if (!(algo.IsInsideField(pr_,input,output,objectfields[p-1],static_cast<double>(p),outval,output_type,basis_type,partial_inside)))
     {
       output = 0;
       return (false);
     }
   }
-  
   return (true);
 }
 

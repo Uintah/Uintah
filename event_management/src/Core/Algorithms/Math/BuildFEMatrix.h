@@ -382,6 +382,7 @@ void FEMBuilder<FIELD>::build_local_matrix(typename FIELD::mesh_type::Elem::inde
       vol = meshhandle_->get_basis().length(0);  
     }
 
+    ASSERT(dim >=1 && dim <=3);
     for (unsigned int i = 0; i < d.size(); i++)
     {
       std::vector<Point> Jv;
@@ -432,7 +433,7 @@ void FEMBuilder<FIELD>::build_local_matrix(typename FIELD::mesh_type::Elem::inde
         J[7] = J2.y();
         J[8] = J2.z();    
       }
-      else if (dim == 1)
+      else
       {
         // The same thing as for the surface but then for a curve.
         // Again this matrix should have a positive determinant as well. It actually
