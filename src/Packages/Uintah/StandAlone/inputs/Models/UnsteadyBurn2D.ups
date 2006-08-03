@@ -238,7 +238,7 @@
                <D5>  0.61  </D5>
              </damage_model>
 
-             <initial_material_temperature>  294.0 </initial_material_temperature>
+             <initial_material_temperature>  460.0 </initial_material_temperature>
              <initial_mean_porosity>         0.005 </initial_mean_porosity>
              <initial_std_porosity>          0.001 </initial_std_porosity>
              <critical_porosity>             0.5   </critical_porosity>
