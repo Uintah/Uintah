@@ -753,6 +753,8 @@ gradient(vector<value_type>& grad, const vector<double>& coords,
   // being reserved, we should have simple C style arrays which are build
   // directly on the stack. As this is mostly used for volume data, it has 
   // only been optimized for this kind of data
+
+  ASSERT(dim >=1 && dim <=3);
   if (dim == 3)
   {
     J[0] = Jv[0].x();
@@ -779,7 +781,7 @@ gradient(vector<value_type>& grad, const vector<double>& coords,
     J[7] = J2.y();
     J[8] = J2.z();    
   }
-  else if (dim == 1)
+  else
   {
     // The same thing as for the surface but then for a curve.
     // Again this matrix should have a positive determinant as well. It actually
@@ -796,11 +798,11 @@ gradient(vector<value_type>& grad, const vector<double>& coords,
     J[7] = J2.y();
     J[8] = J2.z();          
   }
-  
+
   InverseMatrix3x3(J,Ji);
   
   vector<value_type> g;
-  basis_.derivate(coords, fcd, g);
+  basis_.derivate(coords, fcd, g);  
 
   grad[0] = static_cast<value_type>(g[0]*Ji[0])+static_cast<value_type>(g[1]*Ji[1])+static_cast<value_type>(g[2]*Ji[2]);
   grad[1] = static_cast<value_type>(g[0]*Ji[3])+static_cast<value_type>(g[1]*Ji[4])+static_cast<value_type>(g[2]*Ji[5]);
