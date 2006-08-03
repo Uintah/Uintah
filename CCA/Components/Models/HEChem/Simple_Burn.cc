@@ -132,7 +132,6 @@ void Simple_Burn::outputProblemSpec(ProblemSpecP& ps)
 void Simple_Burn::activateModel(GridP&, SimulationStateP& sharedState,
 			        ModelSetup*)
 {
-  cout << "I'm in activateModel" << endl;
   d_active=true;
   matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
   params->require("Enthalpy",         d_Enthalpy);

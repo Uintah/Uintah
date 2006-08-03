@@ -49,7 +49,6 @@ JWLpp::~JWLpp()
 void JWLpp::problemSetup(GridP&, SimulationStateP& sharedState,
 			     ModelSetup*)
 {
-  cout << "I'm in problem setup" << endl;
   d_sharedState = sharedState;
   bool defaultActive=true;
   params->getWithDefault("Active", d_active, defaultActive);
@@ -108,7 +107,6 @@ void JWLpp::outputProblemSpec(ProblemSpecP& ps)
 
 void JWLpp::activateModel(GridP&, SimulationStateP& sharedState, ModelSetup*)
 {
-  cout << "I'm in activateModel" << endl;
   d_active=true;
 #if 0
   params->require("G",    d_G);
