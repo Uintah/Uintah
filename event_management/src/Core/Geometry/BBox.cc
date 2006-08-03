@@ -117,7 +117,7 @@ void BBox::extend(const BBox& b)
 
 void BBox::extend_disc(const Point& cen, const Vector& normal, double r)
 {
-  if (normal.length2() < 1.e-6) { extend(cen); return; }
+  if (normal.length2() < 1.e-12) { extend(cen); return; }
   Vector n(normal.normal());
   double x=Sqrt(1-n.x())*r;
   double y=Sqrt(1-n.y())*r;
