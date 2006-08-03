@@ -119,7 +119,7 @@ bool TissueModel_RegularBundle::create_mesh(FieldHandle& output)
       for (int k=0; k<numnodes_z-1; k++)
       {
         int ze = 0;
-        if (k >= numelems_bath_start_ && k < numelems_bath_start_ + (numcellsz_*(numelems_z_))) ze = (k-numelems_bath_start_)/numelems_z_ + 1;
+        if (k >= numelems_bath_start_ && k < numelems_bath_end_ + (numcellsz_*(numelems_z_))) ze = (k-numelems_bath_start_)/numelems_z_ + 1;
         if (ze && xe[i] && ye[j])
         {
           ofield->set_value(xe[i]+((numcellsx_-1)*ye[j])+(numcellsx_*numcellsy_)*(ze-1),LatVolMesh<HexTrilinearLgn<Point> >::Elem::index_type(omesh,i,j,k));
@@ -131,7 +131,86 @@ bool TissueModel_RegularBundle::create_mesh(FieldHandle& output)
       }
     }
   }
-  
+ 
+  int zstart = static_cast<int>((numelems_z_/2))-static_cast<int>(((numconnectionx_)/2));
+  int zend = static_cast<int>((numelems_z_/2))+static_cast<int>(((numconnectionx_+1)/2));
+   
+  int ystart = static_cast<int>((numelems_y_ics_/2))-static_cast<int>(((numconnectionx_)/2));
+  int yend = static_cast<int>((numelems_y_ics_/2))+static_cast<int>(((numconnectionx_+1)/2));
+     
+  for (int i=0; i < numcellsx_-1; i++)
+  {
+    for (int j=0; j < numcellsy_; j++)
+    {
+      for (int k=0; k < numcellsz_; k++)
+      {
+        for (int p= (numelems_x_ecs_+numelems_x_ics_)*(i+1)+i*numelems_x_ecs_; p < (2*numelems_x_ecs_+numelems_x_ics_)*(i+1);p++)
+        {
+          for (int q = ystart+numelems_y_ecs_+j*(2*numelems_y_ecs_+numelems_y_ics_); q < yend+numelems_y_ecs_+j*(2*numelems_y_ecs_+numelems_y_ics_); q++)
+          {
+            for (int r= numelems_bath_start_+zstart+k*(numelems_z_); r < numelems_bath_start_+zend+k*(numelems_z_); r++)
+            {
+              ofield->set_value(1+i+j*numcellsx_+k*(numcellsx_*numcellsy_),LatVolMesh<HexTrilinearLgn<Point> >::Elem::index_type(omesh,p,q,r));
+            }
+          }
+        }
+
+        for (int p= (2*numelems_x_ecs_+numelems_x_ics_)*(i+1); p < (2*numelems_x_ecs_+numelems_x_ics_)*(i+1)+numelems_x_ecs_;p++)
+        {
+          for (int q = ystart+numelems_y_ecs_+j*(2*numelems_y_ecs_+numelems_y_ics_); q < yend+numelems_y_ecs_+j*(2*numelems_y_ecs_+numelems_y_ics_); q++)
+          {
+            for (int r= numelems_bath_start_+zstart+k*(numelems_z_); r < numelems_bath_start_+zend+k*(numelems_z_); r++)
+            {
+              ofield->set_value(2+i+j*numcellsx_+k*(numcellsx_*numcellsy_),LatVolMesh<HexTrilinearLgn<Point> >::Elem::index_type(omesh,p,q,r));
+            }
+          }
+        }
+ 
+      }
+    }
+  }
+
+
+
+  zstart = static_cast<int>((numelems_z_/2))-static_cast<int>(((numconnectiony_)/2));
+  zend = static_cast<int>((numelems_z_/2))+static_cast<int>(((numconnectiony_+1)/2));
+   
+  int xstart = static_cast<int>((numelems_x_ics_/2))-static_cast<int>(((numconnectiony_)/2));
+  int xend = static_cast<int>((numelems_x_ics_/2))+static_cast<int>(((numconnectiony_+1)/2));
+     
+  for (int i=0; i < numcellsx_; i++)
+  {
+    for (int j=0; j < numcellsy_-1; j++)
+    {
+      for (int k=0; k < numcellsz_; k++)
+      {
+        for (int p = xstart+numelems_x_ecs_+i*(2*numelems_x_ecs_+numelems_x_ics_); p < xend+numelems_x_ecs_+i*(2*numelems_x_ecs_+numelems_x_ics_); p++)
+        {
+          for (int q= (numelems_y_ecs_+numelems_y_ics_)*(j+1)+j*numelems_y_ecs_; q < (2*numelems_y_ecs_+numelems_y_ics_)*(j+1);q++)
+          {
+            for (int r= numelems_bath_start_+zstart+k*(numelems_z_); r < numelems_bath_start_+zend+k*(numelems_z_); r++)
+            {
+              ofield->set_value(1+i+j*numcellsx_+k*(numcellsx_*numcellsy_),LatVolMesh<HexTrilinearLgn<Point> >::Elem::index_type(omesh,p,q,r));
+            }
+          }
+        }
+
+        for (int p = xstart+numelems_x_ecs_+i*(2*numelems_x_ecs_+numelems_x_ics_); p < xend+numelems_x_ecs_+i*(2*numelems_x_ecs_+numelems_x_ics_); p++)
+        {
+          for (int q= (numelems_y_ecs_+numelems_y_ics_)*(j+1)+j*numelems_y_ecs_; q < (2*numelems_y_ecs_+numelems_y_ics_)*(j+1);q++)
+          {
+            for (int r= numelems_bath_start_+zstart+k*(numelems_z_); r < numelems_bath_start_+zend+k*(numelems_z_); r++)
+            {
+              ofield->set_value(1+i+(j+1)*numcellsx_+k*(numcellsx_*numcellsy_),LatVolMesh<HexTrilinearLgn<Point> >::Elem::index_type(omesh,p,q,r));
+            }
+          }
+        }
+ 
+      }
+    }
+  }
+
+        
   return (true); 
 }
 

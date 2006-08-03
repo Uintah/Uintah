@@ -28,7 +28,6 @@
 
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 #include <Core/Bundle/Bundle.h>
 #include <Core/Datatypes/Field.h>
@@ -83,6 +82,7 @@ DMDAddStimulus::DMDAddStimulus(GuiContext* ctx)
 
 void DMDAddStimulus::execute()
 {
+  // Create input handles for objects:
   BundleHandle StimulusBundle;
   FieldHandle Geometry;
   MatrixHandle Domain;
@@ -90,125 +90,130 @@ void DMDAddStimulus::execute()
   MatrixHandle Start;
   MatrixHandle End;
   MatrixHandle FieldDensity;
-  
-  // required ones
+
+  // get the latest data
   if(!(get_input_handle("Geometry",Geometry,true))) return;
-  // optional ones
   get_input_handle("StimulusBundle",StimulusBundle,false);
   get_input_handle("Domain",Domain,false);
   get_input_handle("Current",Current,false);
   get_input_handle("Start",Start,false);
   get_input_handle("End",End,false);
 
-  SCIRunAlgo::ConverterAlgo mc(this);
-  double val;
-
-  if (mc.MatrixToDouble(Domain,val)) guidomain_.set(val);
-  if (mc.MatrixToDouble(Current,val)) guicurrent_.set(val);
-  if (mc.MatrixToDouble(Start,val)) guistart_.set(val);      
-  if (mc.MatrixToDouble(End,val)) guiend_.set(val);  
-  
-  if (StimulusBundle.get_rep() == 0)
+  // If nothing changed, do nothing:
+  if (inputs_changed_ || guidomain_.changed() || guicurrent_.changed() || 
+      guistart_.changed() || guiend_.changed() || guicurrentdensity_.changed() || 
+      guiuseelements_.changed() || !oport_cached("StimulationBundle"))
   {
-    StimulusBundle = scinew Bundle();
+    // Add entrypoint to converter library
+    SCIRunAlgo::ConverterAlgo mc(this);
+    double val;
+
+    if (mc.MatrixToDouble(Domain,val)) guidomain_.set(val);
+    if (mc.MatrixToDouble(Current,val)) guicurrent_.set(val);
+    if (mc.MatrixToDouble(Start,val)) guistart_.set(val);      
+    if (mc.MatrixToDouble(End,val)) guiend_.set(val);  
+    
     if (StimulusBundle.get_rep() == 0)
     {
-      error("Could not allocate new stimulus bundle");
-      return;
+      StimulusBundle = scinew Bundle();
+      if (StimulusBundle.get_rep() == 0)
+      {
+        error("Could not allocate new stimulus bundle");
+        return;
+      }
     }
-  }
-  else
-  {
-    StimulusBundle.detach();
-  }
+    else
+    {
+      StimulusBundle.detach();
+    }
 
-  
-  int stimulus_num = 0;
-  std::string fieldname;
-  
-  {
-    std::ostringstream oss;
-    oss << "Stimulus_" << stimulus_num;
-    fieldname = oss.str(); 
-  }
-  
-  while (StimulusBundle->isBundle(fieldname))
-  {
-    stimulus_num++;
+    
+    int stimulus_num = 0;
+    std::string fieldname;
+    
     {
       std::ostringstream oss;
       oss << "Stimulus_" << stimulus_num;
       fieldname = oss.str(); 
     }
-  }
-
-  if (stimulus_num > 0)
-  {
-    std::string oldsourcefile;    
-    BundleHandle OldStimulus;
-    StringHandle OldSourceFile;
     
-    if (StimulusBundle->isBundle("Stimulus_0"))
+    while (StimulusBundle->isBundle(fieldname))
     {
-      OldStimulus = StimulusBundle->getBundle("Stimulus_0");
-      OldSourceFile = OldStimulus->getString("SourceFile");
-      if (OldSourceFile.get_rep())
+      stimulus_num++;
       {
-        oldsourcefile = OldSourceFile->get();
-        if (oldsourcefile != "StimFile.c ")
-        {
-          error("CardioWave does not allow for different stimulus models to be mixed together");
-          return;
-        }
-      }  
+        std::ostringstream oss;
+        oss << "Stimulus_" << stimulus_num;
+        fieldname = oss.str(); 
+      }
     }
-  }
 
+    if (stimulus_num > 0)
+    {
+      std::string oldsourcefile;    
+      BundleHandle OldStimulus;
+      StringHandle OldSourceFile;
+      
+      if (StimulusBundle->isBundle("Stimulus_0"))
+      {
+        OldStimulus = StimulusBundle->getBundle("Stimulus_0");
+        OldSourceFile = OldStimulus->getString("SourceFile");
+        if (OldSourceFile.get_rep())
+        {
+          oldsourcefile = OldSourceFile->get();
+          if (oldsourcefile != "StimFile.c ")
+          {
+            error("CardioWave does not allow for different stimulus models to be mixed together");
+            return;
+          }
+        }  
+      }
+    }
 
-
-  BundleHandle Stimulus;
-  Stimulus = scinew Bundle();
-  if (Stimulus.get_rep() == 0)
-  {
-    error("Could not allocate new stimulus bundle");
-    return;
-  }
-  
-  {
-    std::ostringstream oss;
-    oss << "Stimulus_" << stimulus_num;
-    fieldname = oss.str(); 
-  }
-  StimulusBundle->setBundle(fieldname,Stimulus);
+    BundleHandle Stimulus;
+    Stimulus = scinew Bundle();
+    if (Stimulus.get_rep() == 0)
+    {
+      error("Could not allocate new stimulus bundle");
+      return;
+    }
     
-  Stimulus->setField("Geometry",Geometry);
+    {
+      std::ostringstream oss;
+      oss << "Stimulus_" << stimulus_num;
+      fieldname = oss.str(); 
+    }
+    StimulusBundle->setBundle(fieldname,Stimulus);
+      
+    Stimulus->setField("Geometry",Geometry);
 
-  val = guidomain_.get(); mc.DoubleToMatrix(val,Domain); 
-  val = guidomain_.get(); mc.DoubleToMatrix(val,Current); 
-  val = guistart_.get(); mc.DoubleToMatrix(val,Start); 
-  val = guiend_.get(); mc.DoubleToMatrix(val,End); 
- 
-  int fielddensity = guicurrentdensity_.get();
-  mc.IntToMatrix(fielddensity,FieldDensity); 
+    val = guidomain_.get(); mc.DoubleToMatrix(val,Domain); 
+    val = guidomain_.get(); mc.DoubleToMatrix(val,Current); 
+    val = guistart_.get(); mc.DoubleToMatrix(val,Start); 
+    val = guiend_.get(); mc.DoubleToMatrix(val,End); 
+   
+    int fielddensity = guicurrentdensity_.get();
+    mc.IntToMatrix(fielddensity,FieldDensity); 
 
-  MatrixHandle UseElements;
-  int useelements = guiuseelements_.get();
-  mc.IntToMatrix(useelements,UseElements);
+    MatrixHandle UseElements;
+    int useelements = guiuseelements_.get();
+    mc.IntToMatrix(useelements,UseElements);
 
-  Stimulus->setMatrix("Domain",Domain);
-  Stimulus->setMatrix("Current",Current);
-  Stimulus->setMatrix("Start",Start);
-  Stimulus->setMatrix("End",End);
-  Stimulus->setMatrix("FieldDensity",FieldDensity);
-  Stimulus->setMatrix("UseElements",UseElements);
+    Stimulus->setMatrix("Domain",Domain);
+    Stimulus->setMatrix("Current",Current);
+    Stimulus->setMatrix("Start",Start);
+    Stimulus->setMatrix("End",End);
+    Stimulus->setMatrix("FieldDensity",FieldDensity);
+    Stimulus->setMatrix("UseElements",UseElements);
 
-  StringHandle SourceFile = scinew String("StimFile.c ");
-  Stimulus->setString("SourceFile",SourceFile);
+    StringHandle SourceFile = scinew String("StimFile.c ");
+    Stimulus->setString("SourceFile",SourceFile);
 
-  StringHandle Parameters = scinew String("");
-  Stimulus->setString("Parameters",Parameters);
+    StringHandle Parameters = scinew String("");
+    Stimulus->setString("Parameters",Parameters);
 
-  send_output_handle("StimulusBundle",StimulusBundle,true);
+    // Send new data downstream:
+    send_output_handle("StimulusBundle",StimulusBundle,true);
+  }
 }
 
 } // End namespace CardioWave

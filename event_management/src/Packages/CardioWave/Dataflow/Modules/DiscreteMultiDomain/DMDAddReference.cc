@@ -28,7 +28,6 @@
 
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 #include <Core/Bundle/Bundle.h>
 #include <Core/Datatypes/Field.h>
@@ -77,116 +76,123 @@ DMDAddReference::DMDAddReference(GuiContext* ctx)
 
 void DMDAddReference::execute()
 {
-  // Make sure we have a reference bundle
+  // Define the input handles:
   BundleHandle ReferenceBundle;
   FieldHandle  Geometry;
   MatrixHandle RefVal;
   MatrixHandle RefDomain;
   
-  // required ones
+  // Get the input from the ports:
   if (!(get_input_handle("Geometry",Geometry,true))) return;
-  // optional ones
   get_input_handle("ReferenceBundle",ReferenceBundle,false);
   get_input_handle("Value",RefVal,false);
   get_input_handle("Domain",RefDomain,false);
   
-  if (ReferenceBundle.get_rep() == 0) 
+  // Test whether we need to execute:
+  if (inputs_changed_ || guiusefieldvalue_.changed() || guireferencevalue_.changed() ||  
+      guireferencedomain_.changed() || guiuseelements_.changed() || !oport_cached("ReferenceBundle"))
   {
-    ReferenceBundle = scinew Bundle();
-    if (ReferenceBundle.get_rep() == 0)
+    // Test whether we have a ReferenceBundle on the input:
+    if (ReferenceBundle.get_rep() == 0) 
     {
-      error("Could not allocate new reference bundle");
-      return;
+      ReferenceBundle = scinew Bundle();
+      if (ReferenceBundle.get_rep() == 0)
+      {
+        error("Could not allocate new reference bundle");
+        return;
+      } 
     } 
-  } 
-  else
-  {
-    ReferenceBundle.detach();
-  }
-  
-  // Try to find which reference numbers have already been taken
-  int reference_num = 0;
-  std::string fieldname;
-  
-  {
-    std::ostringstream oss;
-    oss << "Reference_" << reference_num;
-    fieldname = oss.str(); 
-  }
-  while (ReferenceBundle->isBundle(fieldname))
-  {
-    reference_num++;
+    else
+    {
+      // We need a copy any way to conform to the dataflow system:
+      ReferenceBundle.detach();
+    }
+    
+    // Try to find which reference numbers have already been taken:
+    int reference_num = 0;
+    std::string fieldname;
+    
     {
       std::ostringstream oss;
       oss << "Reference_" << reference_num;
       fieldname = oss.str(); 
     }
-  }
-  
-  // Add a new bundle to the bundle with the data
-  // from this module
-  BundleHandle Reference = scinew Bundle();
-  if (Reference.get_rep() == 0)
-  {
-    error("Could not allocate new reference bundle");
-    return;
-  }
-
-  // Link new Bundle to main Bundle
-  
-  {
-    std::ostringstream oss;
-    oss << "Reference_" << reference_num;
-    fieldname = oss.str(); 
-  }
-  ReferenceBundle->setBundle(fieldname,Reference);
-
-  SCIRunAlgo::ConverterAlgo mc(this);
-
-  // fill out bundle with data
-  Reference->setField("Geometry",Geometry);
-
-  bool usefieldvalue = static_cast<bool>(guiusefieldvalue_.get());
-
-  // If user wants to set the reference value explicitly
-  if (usefieldvalue == false)
-  {
-    double referencevalue = 0.0;
-    if (RefVal.get_rep())
+    while (ReferenceBundle->isBundle(fieldname))
     {
-      mc.MatrixToDouble(RefVal,referencevalue);
-    	guireferencevalue_.set(referencevalue);
+      reference_num++;
+      {
+        std::ostringstream oss;
+        oss << "Reference_" << reference_num;
+        fieldname = oss.str(); 
+      }
     }
-    referencevalue = guireferencevalue_.get();
-    mc.DoubleToMatrix(referencevalue,RefVal);
-    Reference->setMatrix("Value",RefVal);
+    
+    // Add a new bundle to the bundle with the data
+    // from this module
+    BundleHandle Reference = scinew Bundle();
+    if (Reference.get_rep() == 0)
+    {
+      error("Could not allocate new reference bundle");
+      return;
+    }
+
+    // Link new Bundle to main Bundle
+    {
+      std::ostringstream oss;
+      oss << "Reference_" << reference_num;
+      fieldname = oss.str(); 
+    }
+    ReferenceBundle->setBundle(fieldname,Reference);
+
+    // Get entry point to converter library
+    SCIRunAlgo::ConverterAlgo mc(this);
+
+    // fill out bundle with data
+    Reference->setField("Geometry",Geometry);
+
+    bool usefieldvalue = static_cast<bool>(guiusefieldvalue_.get());
+
+    // If user wants to set the reference value explicitly
+    if (usefieldvalue == false)
+    {
+      double referencevalue = 0.0;
+      if (RefVal.get_rep())
+      {
+        mc.MatrixToDouble(RefVal,referencevalue);
+        guireferencevalue_.set(referencevalue);
+      }
+      referencevalue = guireferencevalue_.get();
+      mc.DoubleToMatrix(referencevalue,RefVal);
+      Reference->setMatrix("Value",RefVal);
+    }
+
+    double referencedomain = 0.0;
+    if (RefDomain.get_rep())
+    {
+      mc.MatrixToDouble(RefDomain,referencedomain);
+      guireferencedomain_.set(referencedomain);
+    }
+    referencedomain = guireferencedomain_.get();
+    mc.DoubleToMatrix(referencedomain,RefDomain);
+    Reference->setMatrix("Domain",RefDomain);
+
+    bool useelement = static_cast<bool>(guiuseelements_.get());
+    if (useelement)
+    {
+      MatrixHandle UseElement;
+      mc.DoubleToMatrix(1.0,UseElement);
+      Reference->setMatrix("UseElements",UseElement);
+    }
+    
+    StringHandle SourceFile = scinew String("BCondZero.cc ");
+    Reference->setString("SourceFile",SourceFile);
+
+    StringHandle Parameters = scinew String("");
+    Reference->setString("Parameters",Parameters);
+
+    // Send data downstream:
+    send_output_handle("ReferenceBundle",ReferenceBundle,false);
   }
-
-  double referencedomain = 0.0;
-  if (RefDomain.get_rep())
-  {
-    mc.MatrixToDouble(RefDomain,referencedomain);
-    guireferencedomain_.set(referencedomain);
-  }
-  referencedomain = guireferencedomain_.get();
-  mc.DoubleToMatrix(referencedomain,RefDomain);
-  Reference->setMatrix("Domain",RefDomain);
-
-  bool useelement = static_cast<bool>(guiuseelements_.get());
-  if (useelement)
-  {
-    MatrixHandle UseElement;
-    mc.DoubleToMatrix(1.0,UseElement);
-    Reference->setMatrix("UseElements",UseElement);
-  }
-  
-  StringHandle SourceFile = scinew String("BCondZero.cc ");
-  Reference->setString("SourceFile",SourceFile);
-
-  StringHandle Parameters = scinew String("");
-  Reference->setString("Parameters",Parameters);
-
-  send_output_handle("ReferenceBundle",ReferenceBundle,true);
 }
 
 

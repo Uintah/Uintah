@@ -342,6 +342,7 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
   bool isgeomtocomp = false;
   int* geomrr = 0;
   int* geomcc = 0;
+  int numgeomtocomp = 0;
   
   if (CompToGeom.get_rep())
   {
@@ -355,6 +356,7 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
     {
       geomrr = spr->rows;
       geomcc = spr->columns;
+      
       isgeomtocomp = true;
     }
     else
@@ -685,8 +687,8 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
 
 
   int *mrr = scinew int[nummembranenodes+1];
-  int *mcc = scinew int[nummembranenodes];
-  double* mvv = scinew double[nummembranenodes];
+  int *mcc = scinew int[2*nummembranenodes];
+  double* mvv = scinew double[2*nummembranenodes];
 
   if ((mrr == 0)||(mcc == 0)||(mvv == 0))
   {
@@ -785,17 +787,24 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
     return (true);    
   }    
 
-
-  for (int r = 0; r < nummembranenodes; r++)
+  for (int r=0; r < nummembranenodes; r++)
   {
-    mcc[r] = mrr[r];
-    mrr[r] = r;
-    mvv[r] = 1.0;
+    mrr[r] = 2*r;
+    mcc[2*r] = membranetablelist[r].node2;
+    mcc[2*r+1] = membranetablelist[r].node1;
+    mvv[2*r] = 1.0;
+    mvv[2*r] = -1.0;
   }
-  mrr[nummembranenodes] = nummembranenodes; // An extra entry goes on the end of rr.
+ 
+  mrr[nummembranenodes] = 2*nummembranenodes; // An extra entry goes on the end of rr.
 
-  MappingMatrix = dynamic_cast<Matrix *>(scinew SparseRowMatrix(nummembranenodes, k, mrr, mcc, nummembranenodes, mvv));
-  
+  k = numelementnodes;
+  if (CompToGeom.get_rep())
+  {
+    k = CompToGeom->ncols();
+  }
+
+  MappingMatrix = dynamic_cast<Matrix *>(scinew SparseRowMatrix(nummembranenodes, k, mrr, mcc, 2*nummembranenodes, mvv));
   if (MappingMatrix.get_rep() == 0)
   {
     pr->error("LinkToCompGrid: Could build geometry to computational mesh mapping matrix");

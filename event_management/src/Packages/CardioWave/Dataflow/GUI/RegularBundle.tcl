@@ -21,6 +21,9 @@ itcl_class CardioWave_TissueModel_RegularBundle {
        global $this-cell-crosssection
        global $this-ics-vol-frac
 
+       global $this-lateral-connection-x
+       global $this-lateral-connection-y
+
        set $this-cells-x 3
        set $this-cells-y 3
        set $this-cells-z 3
@@ -35,6 +38,9 @@ itcl_class CardioWave_TissueModel_RegularBundle {
        set $this-cell-length 100E-6
        set $this-cell-crosssection 300E-12
        set $this-ics-vol-frac 0.8
+
+       set $this-lateral-connection-x 10
+       set $this-lateral-connection-y 10
              
     }
 
@@ -65,6 +71,9 @@ itcl_class CardioWave_TissueModel_RegularBundle {
         label $w.f.l12 -text "Cell cross section"
         label $w.f.l13 -text "ICS volume fraction"
 
+        label $w.f.l14 -text "Number of elements for lateral connection in X"
+        label $w.f.l15 -text "Number of elements for lateral connection in Y"
+
         entry $w.f.e1 -textvariable $this-cells-x
         entry $w.f.e2 -textvariable $this-cells-y
         entry $w.f.e3 -textvariable $this-cells-z
@@ -81,6 +90,9 @@ itcl_class CardioWave_TissueModel_RegularBundle {
         entry $w.f.e12 -textvariable $this-cell-crosssection
         entry $w.f.e13 -textvariable $this-ics-vol-frac
 
+        entry $w.f.e14 -textvariable $this-lateral-connection-x
+        entry $w.f.e15 -textvariable $this-lateral-connection-y
+
         grid $w.f.l1 -row 0 -column 0 -sticky e
         grid $w.f.l2 -row 1 -column 0 -sticky e
         grid $w.f.l3 -row 2 -column 0 -sticky e
@@ -94,6 +106,8 @@ itcl_class CardioWave_TissueModel_RegularBundle {
         grid $w.f.l11 -row 10 -column 0 -sticky e
         grid $w.f.l12 -row 11 -column 0 -sticky e
         grid $w.f.l13 -row 12 -column 0 -sticky e
+        grid $w.f.l14 -row 13 -column 0 -sticky e
+        grid $w.f.l15 -row 14 -column 0 -sticky e
 
         grid $w.f.e1 -row 0 -column 1 -sticky news
         grid $w.f.e2 -row 1 -column 1 -sticky news
@@ -108,6 +122,8 @@ itcl_class CardioWave_TissueModel_RegularBundle {
         grid $w.f.e11 -row 10 -column 1 -sticky news
         grid $w.f.e12 -row 11 -column 1 -sticky news
         grid $w.f.e13 -row 12 -column 1 -sticky news
+        grid $w.f.e14 -row 13 -column 1 -sticky news
+        grid $w.f.e15 -row 14 -column 1 -sticky news
 
         makeSciButtonPanel $w $w $this
         moveToCursor $w
