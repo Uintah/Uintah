@@ -1,3 +1,8 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<?xml-stylesheet href="component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
 <!--
    For more information, please see: http://software.sci.utah.edu
 
@@ -24,45 +29,30 @@
    LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
    FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
    DEALINGS IN THE SOFTWARE.
-
-   File   : skinner.dtd 
-   Author : McKay Davis
-   Date   : Tue April 18 2006
-   Description : The dtd that describes the valid grammar for Skinner files
-
-
 -->
 
-<!ELEMENT skinner (var*, xi:include*, definition*, object*)> 
-<!ATTLIST skinner 
-          version CDATA #REQUIRED
-          xmlns:xi CDATA "http://www.w3.org/2001/XInclude"> 
 
 
-<!ELEMENT var (#PCDATA)>
-<!ATTLIST var
-          name CDATA #REQUIRED
-          type (string | int | double | bool | color) "string"
-          overwrite (yes | no) "yes"
-          propagate (yes | no) "no">
+<component name="Graph" category="Render">
+  <overview>
+    <authors>
+      <author>McKay Davis</author>
+    </authors>
+    <summary>Renders input Nx2 matrices in a 2D graph</summary>
+    <description/>
+  </overview>
+  <io>
 
-<!ELEMENT object (var*, signal*, definition*, object*)>
-<!ATTLIST object
-          class CDATA #REQUIRED
-          id CDATA #IMPLIED>
+    <inputs lastportdynamic="yes">
+      <port>
+        <name>Title</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
 
-<!ELEMENT definition (object)>
-<!ATTLIST definition
-          class CDATA #REQUIRED
-          state CDATA #IMPLIED>
-
-<!ELEMENT signal (#PCDATA)>
-<!ATTLIST signal 
-          name CDATA #REQUIRED
-          target CDATA #REQUIRED
-          threaded (yes | no) "no">
-
-<!ELEMENT xi:include EMPTY>
-<!ATTLIST xi:include
-          href CDATA #REQUIRED
-          parse CDATA #REQUIRED>
+      <port>
+        <name>Input</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+  </io>
+</component>

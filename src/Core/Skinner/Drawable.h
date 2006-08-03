@@ -35,16 +35,12 @@
 #include <Core/Skinner/Signals.h>
 #include <Core/Events/Tools/BaseTool.h>
 #include <Core/Skinner/RectRegion.h>
-#include <sci_gl.h>
 
 #include <vector>
-#include <map>
 #include <string>
 
 using std::vector;
-using std::map;
 using std::string;
-using std::pair;
 
 namespace SCIRun {
   namespace Skinner {
@@ -52,37 +48,43 @@ namespace SCIRun {
     typedef pair<double, double> MinMax;
 
     class Drawable : public BaseTool, 
-                     public Skinner::SignalCatcher, 
+                     public SignalCatcher, 
                      public SignalThrower {
     public:
       Drawable (Variables *);
       virtual ~Drawable();
 
-      virtual propagation_state_e       process_event(event_handle_t);
-      virtual string                    get_id() const;
-      virtual int                       get_signal_id(const string &) const;
-      virtual MinMax                    get_minmax(unsigned int);
+      // All Avaliable variables to this context, 
       Variables *                       get_vars();
+
+      // Shortcut to get_vars()->get_id();
+      virtual string                    get_id() const;
+
+      // virtual method of SCIRun::BaseTool::process_event
+      virtual propagation_state_e       process_event(event_handle_t);
+
+      // virtual method of SCIRun::BaseTool::get_modified_event
+      virtual void                      get_modified_event(event_handle_t &);
+
+      // virtual method of SCIRun::Skinner::SignalThrower::get_signal_id
+      virtual int                       get_signal_id(const string &) const;
+      
+      //  These need to be moved into vars?
+      virtual MinMax                    get_minmax(unsigned int);
       const RectRegion &                get_region() const;
       void                              set_region(const RectRegion &);
-      
+
     private:
       RectRegion                        region_;
       Variables *                       variables_;
     };
   
-
-    typedef map<string, string> KeyValMap_t;
     typedef vector<Drawable *> Drawables_t;
     
     typedef Drawable * DrawableMakerFunc_t(Skinner::Variables *);
 
-    typedef pair<GLenum, GLenum> blendfunc_t;
-
     static MinMax INFINITE_MINMAX(AIR_NEG_INF, AIR_POS_INF);
     static MinMax SPRING_MINMAX(0, AIR_POS_INF);
-
-
   }
 }
 #endif

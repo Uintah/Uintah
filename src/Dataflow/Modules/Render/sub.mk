@@ -46,6 +46,7 @@ SRCS     += \
 	$(SRCDIR)/BallMath.cc\
 	$(SRCDIR)/Camera.cc\
 	$(SRCDIR)/EditPath.cc\
+	$(SRCDIR)/Graph.cc\
 	$(SRCDIR)/OpenGL.cc\
 	$(SRCDIR)/SynchronizeGeometry.cc\
 	$(SRCDIR)/ViewWindow.cc\
@@ -70,6 +71,7 @@ PSELIBS := \
 	Core/Containers    \
 	Core/GuiInterface  \
 	Core/Persistent    \
+	Core/Skinner       \
 	Core/Thread        \
 	Core/TkExtensions  \
 	Core/Util          \

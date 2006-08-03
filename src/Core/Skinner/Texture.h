@@ -34,10 +34,12 @@
 
 #include <Core/Skinner/Drawable.h>
 #include <Core/Skinner/Color.h>
+#include <sci_gl.h>
 
 namespace SCIRun {
   class TextureObj;
   namespace Skinner {
+    typedef pair<GLenum, GLenum> blendfunc_t;
     class Texture : public Drawable {
     public:
       Texture (Variables *variables,

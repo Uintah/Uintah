@@ -45,6 +45,7 @@ namespace SCIRun {
       virtual ~GLWindow();
       virtual propagation_state_e       process_event(event_handle_t);
       virtual MinMax                    get_minmax(unsigned int);
+      virtual int                       get_signal_id(const string &) const;
     private:
       CatcherFunction_t                 close;
       int                               width_;

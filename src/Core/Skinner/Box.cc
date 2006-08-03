@@ -146,6 +146,7 @@ namespace SCIRun {
       color_.b = 0.0;
       color_.a = 1.0;
       EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
+      cerr << "Box::make_red\n";
       return BaseTool::CONTINUE_E;
     }
 

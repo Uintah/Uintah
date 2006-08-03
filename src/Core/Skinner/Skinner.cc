@@ -74,7 +74,7 @@ namespace SCIRun {
       return true;
     }
 
-    BaseTool *
+    Drawable *
     load_skin(const string &filename) {
       Root *root = 0;
       //      try {

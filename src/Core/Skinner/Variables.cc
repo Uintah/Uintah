@@ -50,7 +50,7 @@ namespace SCIRun {
         children_()
     {
       if (parent) {
-        insert("id", parent->get_id()+":"+id);
+        insert("id", parent->get_id()+"/"+id);
       } else {
         insert("id", id);
       }

@@ -56,9 +56,18 @@ namespace SCIRun {
     }
 
     BaseTool::propagation_state_e
-    Drawable::process_event(event_handle_t)
+    Drawable::process_event(event_handle_t event)
     {
+      WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
+      if (window && window->get_window_state() == WindowEvent::REDRAW_E) {
+        throw_signal("redraw");
+      }
       return STOP_E;
+    }
+
+    void
+    Drawable::get_modified_event(event_handle_t &)
+    {
     }
 
     string
@@ -67,7 +76,8 @@ namespace SCIRun {
     }
 
     int
-    Drawable::get_signal_id(const string &) const {
+    Drawable::get_signal_id(const string &name) const {
+      if (name == "redraw") return 1;
       return 0;
     }
 
