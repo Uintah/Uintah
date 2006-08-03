@@ -26,16 +26,11 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-
-#include <Dataflow/Network/Ports/FieldPort.h>
-#include <Dataflow/Network/Ports/MatrixPort.h>
-
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
-
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
@@ -57,18 +52,26 @@ DistanceToBoundary::DistanceToBoundary(GuiContext* ctx)
 
 void DistanceToBoundary::execute()
 {
+  // Define handles:
   FieldHandle input,output;
   FieldHandle object;
 
+  // Get input from ports:
   if (!(get_input_handle("Field",input,true))) return;  
   
-  SCIRunAlgo::FieldsAlgo algo(this);
+  // Only do work if it is needed:
+  if (inputs_changed_ || !oport_cached("DistanceField"))
+  {
+    // Entry point to fields library:
+    SCIRunAlgo::FieldsAlgo algo(this);
 
-  MatrixHandle dummy;
-  if(!(algo.FieldBoundary(input,object,dummy))) return;
-  if(!(algo.DistanceField(input,output,object))) return;
+    MatrixHandle dummy;
+    if(!(algo.FieldBoundary(input,object,dummy))) return;
+    if(!(algo.DistanceField(input,output,object))) return;
 
-  send_output_handle("DistanceField",output,false);
+    // Send data downstream:
+    send_output_handle("DistanceField",output,false);
+  }
 }
 
 } // End namespace ModelCreation

@@ -27,15 +27,12 @@
 */
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-
-#include <Core/Algorithms/Fields/FieldsAlgo.h>
-#include <Core/Algorithms/Converter/ConverterAlgo.h>
-
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 
 namespace ModelCreation {
 
@@ -60,20 +57,29 @@ FieldDataMeasure::FieldDataMeasure(GuiContext* ctx)
 
 void FieldDataMeasure::execute()
 {
+  // define dataflow handles:
   FieldHandle input;
   MatrixHandle output;
   double measure;
   
+  // get data from ports:
   if (!(get_input_handle("Field",input,true))) return;
   
-  SCIRunAlgo::FieldsAlgo falgo(this);
-  SCIRunAlgo::ConverterAlgo calgo(this);
+  // only do work if needed:
+  if (inputs_changed_ || measure_.changed() || !oport_cached("Measure"))
+  {
+    // entry points into scirun core:
+    SCIRunAlgo::FieldsAlgo falgo(this);
+    SCIRunAlgo::ConverterAlgo calgo(this);
   
-  std::string method = measure_.get();
-  if (!(falgo.GetFieldMeasure(input,method,measure))) return;
-  if (!(calgo.DoubleToMatrix(measure,output))) return;
-  
-  send_output_handle("Measure",output, false);
+    // get the data measure wanted and compute it:
+    std::string method = measure_.get();
+    if (!(falgo.GetFieldMeasure(input,method,measure))) return;
+    if (!(calgo.DoubleToMatrix(measure,output))) return;
+   
+    // send data downstream:
+    send_output_handle("Measure",output, false);
+  }
 }
 
 

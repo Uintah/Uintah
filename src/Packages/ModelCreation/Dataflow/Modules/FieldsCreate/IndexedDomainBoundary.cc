@@ -53,16 +53,24 @@ IndexedDomainBoundary::IndexedDomainBoundary(GuiContext* ctx)
 
 void IndexedDomainBoundary::execute()
 {
+  // Define local handles of data objects:
   FieldHandle ifield, ofield;
   MatrixHandle ElemLink;
-  SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
- 
+  
+  // Get the new input data:   
   if(!(get_input_handle("Field",ifield,true))) return;
   if (ifield->is_property("ElemLink")) ifield->get_property("ElemLink",ElemLink);
-  
-  if(!(algo.IndexedDomainBoundary(ifield,ofield,ElemLink,0.0,0.0,false,true,false,false,false))) return;
-  
-  send_output_handle("Field",ofield,false);
+
+  // Only reexecute if the input changed. SCIRun uses simple scheduling
+  // that executes every module downstream even if no data has changed: 
+  if (inputs_changed_ || !oport_cached("Field"))
+  {  
+    SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));  
+    if(!(algo.IndexedDomainBoundary(ifield,ofield,ElemLink,0.0,0.0,false,true,false,false,false))) return;
+
+    // send new output if there is any:        
+    send_output_handle("Field",ofield,false);
+  }
 }
 
 } // End namespace ModelCreation

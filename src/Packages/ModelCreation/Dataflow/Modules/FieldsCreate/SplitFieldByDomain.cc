@@ -55,13 +55,23 @@ SplitFieldByDomain::SplitFieldByDomain(GuiContext* ctx)
 
 void SplitFieldByDomain::execute()
 {
+  // Define local handles of data objects:
   FieldHandle input;
   FieldHandle output;
   
+  // Get the new input data:    
   if(!(get_input_handle("Field",input,true))) return;
-  SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));  
-  if(!(algo.SplitFieldByDomain(input,output))) return;
-  send_output_handle("SplitField",output,false);
+
+  // Only reexecute if the input changed. SCIRun uses simple scheduling
+  // that executes every module downstream even if no data has changed:  
+  if (inputs_changed_ || !oport_cached("SplitField"))
+  {
+    SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));  
+    if(!(algo.SplitFieldByDomain(input,output))) return;
+
+    // send new output if there is any:   
+    send_output_handle("SplitField",output,false);
+  }
 }
 
 

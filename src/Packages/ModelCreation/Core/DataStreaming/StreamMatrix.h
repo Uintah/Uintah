@@ -47,6 +47,10 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
+// This class is intended for streaming 2D datafiles stored in the nrrd file
+// format into SCIRun. The data will be left on disk and will not be loaded
+// into memory. 
+
 namespace ModelCreation {
 
 class StreamMatrixAlgo {

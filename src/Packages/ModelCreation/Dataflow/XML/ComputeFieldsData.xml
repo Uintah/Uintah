@@ -84,7 +84,7 @@
         <datatype>SCIRun::String</datatype>
       </port>      
       <port>
-        <name>MatrixData</name>
+        <name>Array</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>

@@ -113,15 +113,15 @@
   <io>
     <inputs lastportdynamic="yes">
       <port>
-        <name>Field</name>
+        <name>Field1</name>
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>Field</name>
+        <name>Field2</name>
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>
-        <name>Field</name>
+        <name>Field3</name>
         <datatype>SCIRun::Field</datatype>
       </port>
       <port>
@@ -129,7 +129,7 @@
         <datatype>SCIRun::String</datatype>
       </port>      
       <port>
-        <name>DataArray</name>
+        <name>Array</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>

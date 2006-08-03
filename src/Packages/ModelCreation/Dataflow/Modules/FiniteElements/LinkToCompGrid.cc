@@ -27,14 +27,12 @@
 */
 
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
-
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
-
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
+
 
 namespace ModelCreation {
 
@@ -61,14 +59,14 @@ void LinkToCompGrid::execute()
   
   if (!(get_input_handle("NodeLink",NodeLink,true))) return;
   
-  SCIRunAlgo::FieldsAlgo algo(this);
-  algo.LinkToCompGrid(NodeLink,GeomToComp,CompToGeom);
+  if (inputs_changed_ || !oport_cached("GeomToComp") || !oport_cached("CompToGeom"))
+  {
+    SCIRunAlgo::FieldsAlgo algo(this);
+    algo.LinkToCompGrid(NodeLink,GeomToComp,CompToGeom);
 
-  send_output_handle("GeomToComp",GeomToComp,false);
-  send_output_handle("CompToGeom",CompToGeom,false);
+    send_output_handle("GeomToComp",GeomToComp,false);
+    send_output_handle("CompToGeom",CompToGeom,false);
+  }
 }
 
-
 } // End namespace ModelCreation
-
-

@@ -30,7 +30,7 @@
     </inputs>
     <outputs>
       <port>
-        <name>Bundle</name>
+        <name>Fields</name>
         <datatype>SCIRun::Bundle</datatype>
       </port>
     </outputs>

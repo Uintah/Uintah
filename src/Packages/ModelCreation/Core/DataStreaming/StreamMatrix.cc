@@ -95,7 +95,7 @@ StreamMatrixAlgo::StreamMatrixAlgo(SCIRun::ProgressReporter* pr) :
 
 
 StreamMatrixAlgo::StreamMatrixAlgo(SCIRun::ProgressReporter* pr, std::string filename) :
-  pr_(pr), byteskip_(0), lineskip_(0), elemsize_(0), ntype_(0), dimension_(0),
+  pr_(pr), lineskip_(0), byteskip_(0), elemsize_(0), ntype_(0), dimension_(0),
   start_(0), end_(0), step_(0), subdim_(0), useformatting_(false), swapbytes_(false)
 {
   open(filename);
@@ -536,7 +536,7 @@ bool StreamMatrixAlgo::open(std::string filename)
     ncolsr = 0;
     int q = 0;
     coloffset_.resize(datafilenames_.size()+1);
-    for (int p = 0;p < datafilenames_.size();p++)
+    for (size_t p = 0;p < datafilenames_.size();p++)
     {
       struct stat buf;
       if (LSTAT(datafilenames_[p].c_str(),&buf) < 0)
@@ -577,7 +577,7 @@ bool StreamMatrixAlgo::close()
 
 bool StreamMatrixAlgo::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle indices)
 {
-  FILE* datafile;
+
   int   datafile_uni;
 
   // Check whether we have an index ort multiple indices
@@ -593,7 +593,7 @@ bool StreamMatrixAlgo::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandl
   double *idataptr =  indices->get_data_pointer();
   
   // Copy and cast the indices to intergers
-  for (int p=0; p<idx.size(); p++) idx[p] = static_cast<int>(idataptr[p]);
+  for (size_t p=0; p<idx.size(); p++) idx[p] = static_cast<int>(idataptr[p]);
   
   // Create the output matrix
   SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(idx.size(),sizes_[0]);
@@ -613,7 +613,7 @@ bool StreamMatrixAlgo::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandl
   std::string fn;
   // Loop over all the indices
   int k = 0;
-  for (k=0; k< idx.size(); k++)
+  for (k=0; k< static_cast<int>(idx.size()); k++)
   {
     int coffset = idx[k];
      
@@ -621,8 +621,8 @@ bool StreamMatrixAlgo::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandl
     {
       // find file to read
       int  p=0;
-      for (p=0;p<coloffset_.size();p++) { if((coffset >= coloffset_[p] )&&(coffset <coloffset_[p+1])) break;}
-      if (p == coloffset_.size()) 
+      for (p=0;p<static_cast<int>(coloffset_.size());p++) { if((coffset >= coloffset_[p] )&&(coffset <coloffset_[p+1])) break;}
+      if (p == static_cast<int>(coloffset_.size())) 
       {
         pr_->error("StreamMatrixAlgo: Column index out of range");
         return (false);
@@ -638,7 +638,8 @@ bool StreamMatrixAlgo::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandl
     }
     
     #ifndef HAVE_UNISTD_H 
-    
+      FILE*                   datafile;
+
       // Use normal C functions (for files upto 2Gb)
       datafile = ::fopen(fn.c_str(),"rb");
       if (datafile == 0)
@@ -788,7 +789,6 @@ bool StreamMatrixAlgo::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandl
 
 bool StreamMatrixAlgo::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandle weights)
 {
-  FILE* datafile;
   int   datafile_uni;
 
   // Check whether we have an index ort multiple indices
@@ -813,7 +813,6 @@ bool StreamMatrixAlgo::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::Mat
   int    *cols  = spr_weights->columns;
   double *vals = spr_weights->a;
   int    nrows = spr_weights->nrows();
-  int    ncols = spr_weights->ncols();
   int    nnz  = spr_weights->get_data_size(); 
  
   if ((rows == 0)||(cols==0)||(vals==0))
@@ -858,8 +857,8 @@ bool StreamMatrixAlgo::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::Mat
     {
       // find file to read
       int  p=0;
-      for (p=0;p<coloffset_.size();p++) { if((coffset >= coloffset_[p] )&&(coffset <coloffset_[p+1])) break;}
-      if (p == coloffset_.size()) 
+      for (p=0;p<static_cast<int>(coloffset_.size());p++) { if((coffset >= coloffset_[p] )&&(coffset <coloffset_[p+1])) break;}
+      if (p == static_cast<int>(coloffset_.size())) 
       {
         pr_->error("StreamMatrixAlgo: Column index out of range");
         return (false);
@@ -875,7 +874,8 @@ bool StreamMatrixAlgo::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::Mat
     }
     
     #ifndef HAVE_UNISTD_H 
-    
+      FILE*                   datafile;
+
       // Use normal C functions (for files upto 2Gb)
       datafile = ::fopen(fn.c_str(),"rb");
       if (datafile == 0)
@@ -1063,7 +1063,7 @@ bool StreamMatrixAlgo::getrowmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandl
   // Converter matrix into STL vector
   std::vector<int> idx(imat->get_data_size());
   double *idataptr =  imat->get_data_pointer();
-  for (int p=0; p<idx.size(); p++) idx[p] = static_cast<int>(idataptr[p]);
+  for (size_t p=0; p<idx.size(); p++) idx[p] = static_cast<int>(idataptr[p]);
 
   // Create output martrix
   SCIRun::DenseMatrix *mat = scinew SCIRun::DenseMatrix(idx.size(),sizes_[1]);
@@ -1095,7 +1095,7 @@ bool StreamMatrixAlgo::getrowmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandl
     if (datafilenames_.size() > 0)
     {
      // check whether we already read all files
-      if (datafilenames_.size() == k) break; // done
+      if (static_cast<int>(datafilenames_.size()) == k) break; // done
       // get start and end column
       cstart = coloffset_[k];
       cend = coloffset_[k+1];
@@ -1112,6 +1112,7 @@ bool StreamMatrixAlgo::getrowmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandl
 
 
   #ifndef HAVE_UNISTD_H
+    FILE*                   datafile;
     datafile = ::fopen(fn.c_str(),"rb");
     if (datafile == 0) 
     {
@@ -1235,7 +1236,7 @@ bool StreamMatrixAlgo::getrowmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandl
     int oldidx = 0;
     for (int j=cstart;j<cend;j++)
     {
-      for (int p=0;p<idx.size();p++)
+      for (int p=0;p<static_cast<int>(idx.size());p++)
       {
         if (::lseek(datafile_uni,static_cast<off_t>(elemsize_)*static_cast<off_t>(idx[p]-oldidx),SEEK_CUR)<0)
         {

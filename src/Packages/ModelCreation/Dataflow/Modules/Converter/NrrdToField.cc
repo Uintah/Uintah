@@ -59,14 +59,24 @@ NrrdToField::NrrdToField(GuiContext* ctx)
 
 void NrrdToField::execute()
 {
+  // Define local handles of data objects:
   NrrdDataHandle nrrd;
   FieldHandle ofield;
-  SCIRunAlgo::ConverterAlgo algo(dynamic_cast<ProgressReporter *>(this));
-  std::string datalocation = guidatalocation_.get();
 
+  // Get the new input data: 
   if (!(get_input_handle("Nrrd",nrrd,true))) return;
-  if (!(algo.NrrdToField(nrrd,ofield,datalocation))) return;
-  send_output_handle("Field",ofield,true);
+
+  // Only reexecute if the input changed. SCIRun uses simple scheduling
+  // that executes every module downstream even if no data has changed:  
+  if (inputs_changed_ || guidatalocation_.changed() || !oport_cached("Field"))
+  {
+    SCIRunAlgo::ConverterAlgo algo(dynamic_cast<ProgressReporter *>(this));
+    std::string datalocation = guidatalocation_.get();
+    if (!(algo.NrrdToField(nrrd,ofield,datalocation))) return;
+
+    // send new output if there is any:    
+    send_output_handle("Field",ofield,false);
+  }
 }
 
 

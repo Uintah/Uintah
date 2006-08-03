@@ -8,8 +8,17 @@ itcl_class ModelCreation_FieldsData_IsInsideField {
     method set_defaults {} {
       global $this-outputbasis
       global $this-outputtype
+
+      global $this-outval
+      global $this-inval
+      global $this-partial-inside
+      
       set $this-outputbasis "same as input"
       set $this-outputtype "double"
+      set $this-outval 0
+      set $this-inval  1
+      set $this-partial-inside 0
+      
     }
     
     method ui {} {
@@ -26,9 +35,22 @@ itcl_class ModelCreation_FieldsData_IsInsideField {
         grid $w.f.lab1 -row 0 -column 0 -sticky e
         label $w.f.lab2 -text "Data type"
         grid $w.f.lab2 -row 1 -column 0 -sticky e
+        label $w.f.lab3 -text "Outside value"
+        grid $w.f.lab3 -row 2 -column 0 -sticky e
+        label $w.f.lab4 -text "Inside value"
+        grid $w.f.lab4 -row 3 -column 0 -sticky e
+        
+        
         
         myselectionbutton $w.f.sel1 0 1 { "same as input" "linear" "constant" } $this-outputbasis
         myselectionbutton $w.f.sel2 1 1 { "same as input" "char" "short" "unsigned short" "unsigned int" "int" "float" "double" } $this-outputtype
+        entry $w.f.e1 -textvariable $this-outval
+        entry $w.f.e2 -textvariable $this-inval
+        checkbutton $w.f.e3 -text "Count partial inside elements" -variable $this-partial-inside
+        
+        grid $w.f.e1 -row 2 -column 1 -sticky news
+        grid $w.f.e2 -row 3 -column 1 -sticky news
+        grid $w.f.e3 -row 4 -column 0 -columnspan 2
         
         makeSciButtonPanel $w $w $this
         moveToCursor $w

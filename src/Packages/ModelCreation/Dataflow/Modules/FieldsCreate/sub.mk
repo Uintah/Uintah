@@ -29,7 +29,7 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/GeomInterface Core/TkExtensions \
-        Packages/ModelCreation/Core/Algorithms \
+        Core/Algorithms/ArrayMath \
         Core/Algorithms/Converter \
         Core/Algorithms/Fields 
                  

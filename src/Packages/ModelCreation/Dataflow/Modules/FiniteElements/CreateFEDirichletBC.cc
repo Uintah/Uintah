@@ -26,16 +26,14 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/Algorithms/Math/MathAlgo.h>
-#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
-
+#include <Core/Algorithms/Math/MathAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 namespace ModelCreation {
 
@@ -63,14 +61,17 @@ void CreateFEDirichletBC::execute()
   if (!(get_input_handle("FEMatrix",FEin,true))) return;
   get_input_handle("RHS",RHSin,false);
   
-  SCIRunAlgo::FieldsAlgo falgo(this);
-  SCIRunAlgo::MathAlgo malgo(this);
-  
-  if (!(falgo.GetFieldData(BCfield,BC))) return;
-  if (!(malgo.CreateFEDirichletBC(FEin,RHSin,BC,FEout,RHSout))) return;
+  if (inputs_changed_ || !oport_cached("FEMatrix") || !oport_cached("RHS"))
+  {
+    SCIRunAlgo::FieldsAlgo falgo(this);
+    SCIRunAlgo::MathAlgo malgo(this);
     
-  send_output_handle("FEMatrix",FEout,false);
-  send_output_handle("RHS",RHSout,false);
+    if (!(falgo.GetFieldData(BCfield,BC))) return;
+    if (!(malgo.CreateFEDirichletBC(FEin,RHSin,BC,FEout,RHSout))) return;
+      
+    send_output_handle("FEMatrix",FEout,false);
+    send_output_handle("RHS",RHSout,false);
+  }
 }
 
 } // End namespace ModelCreation

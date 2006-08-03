@@ -70,16 +70,20 @@ void ModalMapping::execute()
   if (!(get_input_handle("Source",fsrc,true))) return;
   if (!(get_input_handle("Destination",fdst,true))) return;
   
-  std::string mappingmethod = mappingmethod_.get();
-  std::string integrationmethod = integrationmethod_.get();
-  std::string integrationfilter = integrationfilter_.get();
-  double def_value = def_value_.get();
-  
-  SCIRunAlgo::FieldsAlgo algo(this);
-  
-  if (!(algo.ModalMapping(fsrc,fdst,fout,mappingmethod,integrationmethod,integrationfilter,def_value))) return;
-  
-  send_output_handle("Destination",fout,false);
+  if (inputs_changed_ || mappingmethod_.changed() || integrationmethod_.changed() ||
+      integrationfilter_.changed() || !oport_cached("Destination"))
+  {
+    std::string mappingmethod = mappingmethod_.get();
+    std::string integrationmethod = integrationmethod_.get();
+    std::string integrationfilter = integrationfilter_.get();
+    double def_value = def_value_.get();
+    
+    SCIRunAlgo::FieldsAlgo algo(this);
+    
+    if (!(algo.ModalMapping(fsrc,fdst,fout,mappingmethod,integrationmethod,integrationfilter,def_value))) return;
+    
+    send_output_handle("Destination",fout,false);
+  }
 }
 
 } // End namespace ModelCreation
