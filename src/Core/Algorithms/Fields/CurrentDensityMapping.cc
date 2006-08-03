@@ -99,11 +99,11 @@ bool CurrentDensityMappingAlgo::CurrentDensityMapping(ProgressReporter *pr,
       pr->error("CurrentDensityMapping: Output field is not a surface and thus is the multiplication with the surface normal not available");
       return (false);
     }
-    fi_out.set_data_type("Vector");
+    fi_out.set_data_type(fi_pot.get_data_type());  
   }
   else
   {
-    fi_out.set_data_type(fi_pot.get_data_type());  
+    fi_out.set_data_type("Vector");
   }
   
   // We are doing nodal mapping

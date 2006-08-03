@@ -92,7 +92,6 @@ MathAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int n)
     int* row = input->get_row();
     int* col = input->get_col();
     int sm = input->nrows();
-    int nnz = input->get_data_size();
  
     int newnnz=0;
     for (int p=1; p<(m+1); p++)
@@ -116,18 +115,28 @@ MathAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int n)
       if (newval) delete newval;
       if (newcol) delete newcol;
       if (newrow) delete newrow;
-      return false;
+      return (false);
     }
     
     int k = 0;
-    for (int p=0; p<nnz; p++) 
-    if (col[p] < n) 
+
+    for (int p=1; p<(m+1); p++)
     {
-      newval[k] = val[p];
-      newcol[k] = col[p];
-      k++;
+      if (p <= sm)
+      {
+        for (int q = row[p-1]; q < row[p]; q++)
+        {
+          if (col[p] < n) 
+          {
+            newval[k] = val[p];
+            newcol[k] = col[p];
+            k++;
+          }        
+        }
+      }
     }
     
+            
     int r=0;
     newrow[0] = 0;
     for (int p=1; p<(m+1); p++)
@@ -186,6 +195,41 @@ MathAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int n)
   
   return false;
 }
+
+bool 
+MathAlgo::IdentityMatrix(int n,MatrixHandle& output)
+{
+  int *rows = scinew int[n+1];
+  int *cols = scinew int[n];
+  double* vals = scinew double[n];
+  
+  if ((rows==0)||(cols==0)||(vals==0))
+  {
+    if (rows) delete[] rows;
+    if (cols) delete[] cols;
+    if (vals) delete[] vals;
+    error("IdentityMatrix: Could not allocate output matrix");
+    return (false);  
+  }
+
+  for (int r=0; r<n+1; r++)
+  {
+    rows[r] = r;
+  }
+  
+  for (int c=0; c<n; c++) 
+  {
+    cols[c] = c;
+    vals[c] = 1.0;
+  }
+  
+  output = scinew SparseRowMatrix(n,n,rows,cols,n,vals);
+  if (output.get_rep()) return (true);
+
+  error("IdentityMatrix: Could not allocate output matrix");  
+  return (false);  
+}
+
 
 
 bool
@@ -293,8 +337,8 @@ MathAlgo::ReverseCuthillmcKee(MatrixHandle im, MatrixHandle& om,
   d  = sim->a;
   
   // reserve mapping space  
-  int *mrr, *mcc;
-  double *md;
+  int *mrr = 0, *mcc = 0;
+  double *md = 0;
 
   int *drr, *dcc;
   double *dd;
@@ -482,8 +526,8 @@ MathAlgo::CuthillmcKee(MatrixHandle im, MatrixHandle& om,
   
   // reserve mapping space
   
-  int *mrr, *mcc;
-  double *md;
+  int *mrr = 0, *mcc = 0;
+  double *md = 0;
 
   int *drr, *dcc;
   double *dd;

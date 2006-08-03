@@ -51,7 +51,7 @@ class CurrentDensityMappingAlgo : public DynamicAlgoBase
 
 
 template <class INTEGRATOR, class FPOT, class FCON, class FDST, class FOUT>
-class CurrentDensityMappingAlgoT : public ModalMappingAlgo
+class CurrentDensityMappingAlgoT : public CurrentDensityMappingAlgo
 {
 public:
   virtual bool CurrentDensityMapping(ProgressReporter* pr,
@@ -82,7 +82,7 @@ public:
 };
 
 template <class INTEGRATOR, class FPOT, class FCON, class FDST, class FOUT>
-class CurrentDensityMappingNormalAlgoT : public ModalMappingAlgo
+class CurrentDensityMappingNormalAlgoT : public CurrentDensityMappingAlgo
 {
 public:
   virtual bool CurrentDensityMapping(ProgressReporter* pr,
@@ -195,7 +195,7 @@ bool CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::CurrentDensityM
   if (numproc > 0) { np = numproc; }
   IData.numproc = np;
    
-  Thread::parallel(this,&ModalMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel,np,&IData);
+  Thread::parallel(this,&CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel,np,&IData);
     
   return (IData.retval);
 }
@@ -225,7 +225,7 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
   std::vector<double> weights;
   std::string filter = idata->integrationfilter;
   double con;
-  std::vector<typename FPOT::value_type> grad;
+  typename FOUT::value_type grad;
   Vector g;
   
   // Determine the filter and loop over nodes
@@ -239,7 +239,7 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
 
       for (size_t p = 0; p < points.size(); p++)
       {
-        if (pmapping.get_gradien(points[p],grad)&&cmapping.get_data(points[p],con))
+        if (pmapping.get_gradient(points[p],grad)&&cmapping.get_data(points[p],con))
         {
           g[0] = grad[0]; g[1] = grad[1]; g[2] = grad[2];
           valarray[p] = -(con*g);
@@ -262,12 +262,12 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
     while (it != eit)
     {
       integrator.get_nodes_and_weights(*it,points,weights);
-      typename FOUT::value_type val = 0;
-      typename FOUT::value_type tval = 0;
+      typename FOUT::value_type val; val = 0;
+      typename FOUT::value_type tval; tval = 0;
 
       if (points.size() > 0)
       {
-        if (pmapping.get_gradien(points[0],grad)&&cmapping.get_data(points[0],con))
+        if (pmapping.get_gradient(points[0],grad)&&cmapping.get_data(points[0],con))
         {
           g[0] = grad[0]; g[1] = grad[1]; g[2] = grad[2];
           val = -(con*g); 
@@ -278,7 +278,7 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
         }
         for (size_t p = 1; p < points.size(); p++)
         {
-          if (pmapping.get_gradien(points[p],grad)&&cmapping.get_data(points[p],con))
+          if (pmapping.get_gradient(points[p],grad)&&cmapping.get_data(points[p],con))
           {
             g[0] = grad[0]; g[1] = grad[1]; g[2] = grad[2];
             tval = -(con*g); 
@@ -301,8 +301,8 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
     while (it != eit)
     {
       integrator.get_nodes_and_weights(*it,points,weights);
-      typename FOUT::value_type val = 0;
-      typename FOUT::value_type tval = 0;
+      typename FOUT::value_type val; val = 0;
+      typename FOUT::value_type tval; tval = 0;
 
       if (points.size() > 0)
       {
@@ -357,8 +357,8 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
       }
       sort(valarray.begin(),valarray.end());
        
-      typename FOUT::value_type rval = 0;
-      typename FOUT::value_type val = 0;
+      typename FOUT::value_type rval; rval = 0;
+      typename FOUT::value_type val;  val = 0;
       int rnum = 0;
       
       int p = 0;
@@ -390,7 +390,7 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
       val = 0;
       for (int p=0; p<points.size(); p++)
       {
-        if (pmapping.get_gradien(points[p],grad)&&cmapping.get_data(points[p],con))
+        if (pmapping.get_gradient(points[p],grad)&&cmapping.get_data(points[p],con))
         {
           g[0] = grad[0]; g[1] = grad[1]; g[2] = grad[2];
           val2 = -(con*g); 
@@ -417,7 +417,7 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
       val = 0;
       for (int p=0; p<points.size(); p++)
       {
-        if (pmapping.get_gradien(points[p],grad)&&cmapping.get_data(points[p],con))
+        if (pmapping.get_gradient(points[p],grad)&&cmapping.get_data(points[p],con))
         {
           g[0] = grad[0]; g[1] = grad[1]; g[2] = grad[2];        
           val2 = -(con*g); 
@@ -444,7 +444,7 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
       val = 0;
       for (int p=0; p<points.size(); p++)
       {
-        if (pmapping.get_gradien(points[p],grad)&&cmapping.get_data(points[p],con))
+        if (pmapping.get_gradient(points[p],grad)&&cmapping.get_data(points[p],con))
         {
           g[0] = grad[0]; g[1] = grad[1]; g[2] = grad[2];        
           val2 = -(con*g); 
@@ -470,7 +470,7 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
       val = 0;
       for (int p=0; p<points.size(); p++)
       {
-        if (pmapping.get_gradien(points[p],grad)&&cmapping.get_data(points[p],con))
+        if (pmapping.get_gradient(points[p],grad)&&cmapping.get_data(points[p],con))
         {
           g[0] = grad[0]; g[1] = grad[1]; g[2] = grad[2];
           val2 = -(con*g); 
@@ -612,7 +612,7 @@ void CurrentDensityMappingNormalAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(
   std::vector<Vector> normals;
   std::string filter = idata->integrationfilter;
   double con;
-  std::vector<typename FPOT::value_type> grad;
+  Vector grad;
   Vector g;
   
   // Determine the filter and loop over nodes
@@ -648,7 +648,7 @@ void CurrentDensityMappingNormalAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(
     // minimum filter over integration nodes
     while (it != eit)
     {
-      integrator.get_nodes_and_weights(*it,points,weights);
+      integrator.get_nodes_normals_and_weights(*it,points,normals,weights);
       typename FOUT::value_type val = 0;
       typename FOUT::value_type tval = 0;
 

@@ -420,6 +420,66 @@ bool ConverterAlgo::NrrdToMatrix(NrrdDataHandle input,MatrixHandle& output)
   return(true);
 }
 
+bool ConverterAlgo::MatrixToString(MatrixHandle input, StringHandle& output)
+{
+  std::ostringstream oss;
+  if (input.get_rep()==0)
+  {
+    error("MatrixToString: No input matrix");
+    return (false);
+  }
+   
+  if (input->is_sparse())
+  {
+    SparseRowMatrix* spr = dynamic_cast<SparseRowMatrix*>(input.get_rep());
+    int *rr = spr->rows;
+    int *cc = spr->columns;
+    double *d  = spr->a;
+    int m   = spr->nrows();
+    int n   = spr->ncols();
+    
+    oss << "Sparse Matrix ("<<m<<"x"<<n<<"):\n";
+    if ((rr)&&(cc)&&(d))
+    {
+      for (int r = 0; r < m; r++)
+      {
+        for (int c=rr[r]; c<rr[r+1];c++)
+        {
+          oss << "["<<r<<","<<cc[c]<<"] = " << d[c] << "\n";
+        }
+      }
+    }
+  }
+  else
+  {
+    input = input->dense();
+    int m = input->nrows();
+    int n = input->ncols();
+    double* d = input->get_data_pointer();
+    oss << "Dense inputrix ("<<m<<"x"<<n<<"):\n";
+    int k = 0;
+    for (int r=0; r<m;r++)
+    {
+      for (int c=0; c<n;c++)
+      {
+        oss << d[k++] << " ";
+      }
+      oss << "\n";
+    }
+  }
+  
+  output = scinew String(oss.str());
+
+  if (output.get_rep()==0)
+  {
+    error("MatrixToString: Could not generate output");
+    return (false);
+  }
+  
+  return (true);
+}
+
+
 
 } // end namespace SCIRunAlgo
 
