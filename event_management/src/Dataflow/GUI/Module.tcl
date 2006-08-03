@@ -218,6 +218,38 @@ itcl_class Module {
 	return [llength [$this info method ui]]
     }
 
+    method have_play_stop_button {} {
+      return [llength [$this info method play_stop ]]
+    }
+
+    method toggle_play_stop { b mod} {
+      global $this-play-stop
+
+      if {[set $this-play-stop] == 0} {
+        $b configure -text ">"
+        set $this-play-stop 1
+        $this setColorAndTitle
+        $this-c needexecute
+      } else {
+        $b configure -text "||"
+        set $this-play-stop 0
+        $this setColorAndTitle red
+      }
+      
+      $this play_stop
+    }
+    
+    method is_stopped {} {
+      global $this-play-stop
+      if { ![info exists $this-play-stop]} {
+        return 0
+      }
+      if {[set $this-play-stop] == 0} {
+        return 1
+      }
+      return 0
+    }
+
     #  Make the modules icon on a particular canvas
     method make_icon {modx mody { ignore_placement 0 } } {
 	global Disabled Subnet Color ToolTipText
@@ -246,6 +278,27 @@ itcl_class Module {
 	    pack $p.ui -side left -ipadx 5 -ipady 2
 	    Tooltip $p.ui $ToolTipText(ModuleUI)
 	}
+
+	if {[have_play_stop_button]} {
+      if { ![info exists $this-play-stop] } {
+        global $this-play-stop 
+        set $this-play-stop 1
+      }
+      global $this-play-stop 
+
+      button $p.play_stop -text ">" -command "$this toggle_play_stop $p.play_stop $modframe"
+      
+      if {[set $this-play-stop] == 1} {
+        $p.play_stop configure -text ">"
+      } else {
+        $p.play_stop configure -text "||"
+      }
+
+	    pack $p.play_stop -side left -ipadx 5 -ipady 2 -pady 3
+      set make_time 0
+      set make_progress_graph 0
+	}
+
 
 	# Make the title
 	label $p.title -text "$name" -font $modname_font -anchor w
@@ -347,6 +400,7 @@ itcl_class Module {
 	if { ![winfo exists $m] } return
 	if ![string length $color] {
 	    set color $Color(Basecolor)
+	    if { [$this is_stopped] } { set color red }
 	    if { [$this is_selected] } { set color $Color(Selected) }
 	    setIfExists disabled Disabled([modname]) 0
 	    if { $disabled } { set color [blend $color $Color(Disabled)] }
