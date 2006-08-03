@@ -561,7 +561,7 @@ long MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
 
   if (mldims.isdense())
   {
-    long size = mldims.getnumelements();
+    size_t size = static_cast<size_t>(mldims.getnumelements());
                                                      
     if (!((size > 0)&&(size < 4)))
     {

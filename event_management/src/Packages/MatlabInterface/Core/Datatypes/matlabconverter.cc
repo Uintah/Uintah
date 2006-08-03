@@ -379,6 +379,8 @@ long matlabconverter::sciColorMapCompatible(matlabarray &ma, std::string &infote
         return(2);                        
       }
     break;
+    default:
+    break;
   }
   
   if (postremark) remark(std::string("Matrix '" + ma.getname() + "' cannot be translated into a SCIRun ColorMap (matrix is not a dense array)."));
@@ -585,7 +587,7 @@ void matlabconverter::mlArrayTOsciColorMap(matlabarray &ma,ColorMapHandle &handl
   
   for (int p=0;p<n;p++)
   {
-    SCIRun::Color color(data[q++],data[q++],data[q++]);
+    SCIRun::Color color(data[q],data[q+1],data[q+2]); q+=3;
     rgb[p] = color;
     if (m == 4) alpha = static_cast<float>(data[q++]);
     rgbT[p] = v;
@@ -1086,7 +1088,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
           double maxdata[NRRD_DIM_MAX];
           for (long p=0;p<NRRD_DIM_MAX;p++)
           {
-            if (p < dims.size()) maxdata[p] = static_cast<double>(dims[p]);
+            if (p < static_cast<long>(dims.size())) maxdata[p] = static_cast<double>(dims[p]);
             else maxdata[p] = 1.0;
           }
                           
@@ -1441,7 +1443,7 @@ void matlabconverter::sciNrrdDataTOmlMatrix(NrrdDataHandle &scinrrd, matlabarray
   dims.resize(nrrdptr->dim);
         
   long totsize = 1; // this one is used as an internal check and is handy to have
-  for (long p=0; p<(nrrdptr->dim);p++)
+  for (long p=0; p<static_cast<long>(nrrdptr->dim);p++)
   {
     dims[p] = nrrdptr->axis[p].size;
     totsize *= dims[p];
@@ -1517,7 +1519,7 @@ void matlabconverter::sciNrrdDataTOmlArray(NrrdDataHandle &scinrrd, matlabarray 
   axisma.createstructarray(dims,axisfieldnames);
                 
                 
-  for (long p=0; p<nrrdptr->dim; p++ )
+  for (long p=0; p<static_cast<long>(nrrdptr->dim); p++ )
   {
     matlabarray sizema;
     matlabarray spacingma;
