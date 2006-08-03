@@ -3896,15 +3896,6 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                        (tau_Y_FC[top].x()   - tau_Y_FC[bottom].x())* areaY +
                        (tau_Z_FC[front].x() - tau_Z_FC[back].x())  * areaZ;
 
-if(c.x() == 24 && c.y() > 106 && c.z() ==0){
-  cout << c  << endl;
-  cout << "(tau_X_FC[right].x() - tau_X_FC[left].x()) \t" 
-       << (tau_X_FC[right].x() - tau_X_FC[left].x())
-       << "\ntau_Y_FC[top].x()   - tau_Y_FC[bottom].x()) \t"
-       << (tau_Y_FC[top].x()   - tau_Y_FC[bottom].x())
-       << "\nViscous source " << viscous_source << endl;
-}
-
         mom_source[c].x( (-pressure_source * areaX + 
                            viscous_source +
                            mass * gravity.x() * include_term) * delT ); 
