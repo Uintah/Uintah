@@ -134,6 +134,9 @@ CreateMatrix::execute()
         }
       }
     }
+#else
+    if (!iss) ptr[p] = 0.0;
+
 #endif      
   }
 
@@ -141,7 +144,7 @@ CreateMatrix::execute()
   handle = dynamic_cast<Matrix *>(dmat);
   delete mat;
   
-  send_output_handle("Matrix", handle);
+  send_output_handle("matrix", handle, false);
 }
 
 } // End namespace SCIRun

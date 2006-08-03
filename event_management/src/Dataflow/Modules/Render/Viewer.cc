@@ -104,7 +104,8 @@ Viewer::Viewer(GuiContext* ctx)
     view_window_lock_("Viewer view window lock"),
     max_portno_(0),
     stop_rendering_(false),
-    synchronized_debt_(0)
+    synchronized_debt_(0),
+    delete_check_autoview_on_load_(false)
 {
 
   map<LightID, int> li;
@@ -133,6 +134,12 @@ Viewer::Viewer(GuiContext* ctx)
 //----------------------------------------------------------------------
 Viewer::~Viewer()
 {
+
+  if (delete_check_autoview_on_load_)
+  {
+    sched_->remove_callback(check_autoview_on_load, this);
+  }
+
   for(unsigned int i=0;i<view_window_.size();i++)
   {
     view_window_lock_.lock();
@@ -144,6 +151,7 @@ Viewer::~Viewer()
 #endif
     view_window_lock_.unlock();
   }
+  
 
 }
 
@@ -922,6 +930,7 @@ Viewer::set_context(Network* network)
     sched_->add_callback(save_image_callback, this, -1);
   }
   sched_->add_callback(check_autoview_on_load, this, -1);
+  delete_check_autoview_on_load_ = true;
 }
 
 bool

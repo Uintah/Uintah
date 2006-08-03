@@ -72,6 +72,17 @@ int IsoRefineAlgo::hex_reorder_table[14][8] = {
 };
 
 
+double IsoRefineAlgo::hcoords_double[8][3] = {
+  { 0.0, 0.0, 0.0},
+  { 1.0, 0.0, 0.0},
+  { 1.0, 1.0, 0.0},
+  { 0.0, 1.0, 0.0},
+  { 0.0, 0.0, 1.0},
+  { 1.0, 0.0, 1.0},
+  { 1.0, 1.0, 1.0},
+  { 0.0, 1.0, 1.0}
+};
+
 class IsoRefine : public Module
 {
 private:
