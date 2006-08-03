@@ -28,10 +28,8 @@
 
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-
-#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/Field.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
@@ -64,14 +62,17 @@ void NodalMapping::execute()
   if (!(get_input_handle("Source",fsrc,true))) return;
   if (!(get_input_handle("Destination",fdst,true))) return;
   
-  std::string mappingmethod = mappingmethod_.get();
-  double def_value = def_value_.get();
-  
-  SCIRunAlgo::FieldsAlgo algo(this);
-  
-  if (!(algo.NodalMapping(fsrc,fdst,fout,mappingmethod,def_value))) return;
-  
-  send_output_handle("Destination",fout,false);
+  if (inputs_changed_ || mappingmethod_.changed() || !oport_cached("Desitination"))
+  {
+    std::string mappingmethod = mappingmethod_.get();
+    double def_value = def_value_.get();
+    
+    SCIRunAlgo::FieldsAlgo algo(this);
+    
+    if (!(algo.NodalMapping(fsrc,fdst,fout,mappingmethod,def_value))) return;
+    
+    send_output_handle("Destination",fout,false);
+  }
 }
 
 } // End namespace ModelCreation

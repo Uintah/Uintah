@@ -26,10 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/ImportExport/Matrix/MatrixIEPlugin.h>
-#include <Core/ImportExport/Field/FieldIEPlugin.h>
-
-#include <Packages/ModelCreation/Core/Algorithms/TVMHelp.h>
+#include <Core/Algorithms/ArrayMath/ArrayEngineHelp.h>
 
 namespace ModelCreation
 {
@@ -39,7 +36,7 @@ std::string tvm_help_field;
 
 extern "C" void * ModelCreationInit(void *param) 
 {
-  TensorVectorMath::TVMHelp Help;
+  TensorVectorMath::ArrayEngineHelp Help;
   tvm_help_matrix = Help.gethelp(false);
   tvm_help_field  = Help.gethelp(true);
 
@@ -47,19 +44,6 @@ extern "C" void * ModelCreationInit(void *param)
 }
 
 } // end namespace
-
-namespace SCIRun {
-  extern MatrixHandle SimpleTextFileMatrix_reader(ProgressReporter *pr, const char *filename);
-  extern bool SimpleTextFileMatrix_writer(ProgressReporter *pr, MatrixHandle matrix, const char *filename);
-  extern MatrixHandle NrrdToMatrix_reader(ProgressReporter *pr, const char *filename);
-  extern FieldHandle  Nodal_NrrdToField_reader(ProgressReporter *pr, const char *filename);
-  extern FieldHandle  Modal_NrrdToField_reader(ProgressReporter *pr, const char *filename);
-
-  static MatrixIEPlugin SimpleTextFileMatrix_plugin("TextFile","", "",SimpleTextFileMatrix_reader,SimpleTextFileMatrix_writer);
-  static MatrixIEPlugin NrrdToMatrix_plugin("NrrdFile","{.nhdr} {.nrrd}", "",NrrdToMatrix_reader,0);
-  static FieldIEPlugin  NodalNrrdToField_plugin("NrrdFile[DataOnNodes]","{.nhdr} {.nrrd}", "", Nodal_NrrdToField_reader, 0);
-  static FieldIEPlugin  ModalNrrdToField_plugin("NrrdFile[DataOnElements]","{.nhdr} {.nrrd}", "", Modal_NrrdToField_reader, 0);
-}
 
 
 

@@ -26,24 +26,11 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  FieldDataNodeToElem.cc:
- *
- *  Written by:
- *   jeroen
- *   TODAY'S DATE HERE
- *
- */
-
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-
-#include <Dataflow/Network/Ports/FieldPort.h>
-#include <Dataflow/Network/Ports/MatrixPort.h>
-
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
-
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
@@ -68,19 +55,27 @@ FieldDataNodeToElem::FieldDataNodeToElem(GuiContext* ctx)
 {
 }
 
-void
- FieldDataNodeToElem::execute()
+void FieldDataNodeToElem::execute()
 {
+  // define input handles:
   FieldHandle input;
   FieldHandle output;
+  
+  // get data from ports:
   if (!(get_input_handle("Field",input,true))) return;
   
-  std::string method = method_.get();
-  SCIRunAlgo::FieldsAlgo algo(this);
+  // Only do work if needed:
+  if (inputs_changed_ || method_.changed() || !oport_cached("Field"))
+  {
+    std::string method = method_.get();
+    SCIRunAlgo::FieldsAlgo algo(this);
   
-  if(!(algo.FieldDataNodeToElem(input,output,method))) return;
+    // Actual algorithm:
+    if(!(algo.FieldDataNodeToElem(input,output,method))) return;
   
-  send_output_handle("Field",output,false);
+    // Send data downstream:
+    send_output_handle("Field",output,false);
+  }
 }
 
 } // End namespace ModelCreation

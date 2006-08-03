@@ -68,16 +68,20 @@ void GradientModalMapping::execute()
   if (!(get_input_handle("Source",fsrc,true))) return;
   if (!(get_input_handle("Destination",fdst,true))) return;
   
-  std::string mappingmethod = mappingmethod_.get();
-  std::string integrationmethod = integrationmethod_.get();
-  std::string integrationfilter = integrationfilter_.get();
-  
-  SCIRunAlgo::FieldsAlgo algo(this);
-  bool calcnorm = static_cast<bool>(calcnorm_.get());
-  
-  if (!(algo.GradientModalMapping(fsrc,fdst,fout,mappingmethod,integrationmethod,integrationfilter,calcnorm))) return;
-  
-  send_output_handle("Destination",fout,false);
+  if (inputs_changed_ || mappingmethod_.changed() || integrationmethod_.changed() ||
+      integrationfilter_.changed() || !oport_cached("Destination"))
+  {
+    std::string mappingmethod = mappingmethod_.get();
+    std::string integrationmethod = integrationmethod_.get();
+    std::string integrationfilter = integrationfilter_.get();
+    
+    SCIRunAlgo::FieldsAlgo algo(this);
+    bool calcnorm = static_cast<bool>(calcnorm_.get());
+    
+    if (!(algo.GradientModalMapping(fsrc,fdst,fout,mappingmethod,integrationmethod,integrationfilter,calcnorm))) return;
+    
+    send_output_handle("Destination",fout,false);
+  }
 }
 
 

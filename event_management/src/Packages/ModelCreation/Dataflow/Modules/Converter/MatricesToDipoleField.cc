@@ -59,16 +59,24 @@ MatricesToDipoleField::MatricesToDipoleField(GuiContext* ctx)
 
 void MatricesToDipoleField::execute()
 {
+  // Define local handles of data objects:
   MatrixHandle Locations, Strengths;
   FieldHandle DipoleField;
   
+  // Get the new input data:
   if (!(get_input_handle("Locations",Locations,true))) return;
   if (!(get_input_handle("Strengths",Strengths,true))) return;
 
-  SCIRunAlgo::ConverterAlgo algo(this);
-  if(!(algo.MatricesToDipoleField(Locations,Strengths,DipoleField))) return;
+  // Only reexecute if the input changed. SCIRun uses simple scheduling
+  // that executes every module downstream even if no data has changed:
+  if (inputs_changed_ || !oport_cached("DipoleField"))
+  {
+    SCIRunAlgo::ConverterAlgo algo(this);
+    if(!(algo.MatricesToDipoleField(Locations,Strengths,DipoleField))) return;
   
-  send_output_handle("DipoleField",DipoleField,true);
+    // send new output if there is any:
+    send_output_handle("DipoleField",DipoleField,false);
+  }
 }
 
 } // End namespace ModelCreation

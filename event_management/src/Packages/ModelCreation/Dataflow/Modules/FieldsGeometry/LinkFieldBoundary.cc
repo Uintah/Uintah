@@ -27,11 +27,11 @@
 */
 
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
-
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 namespace ModelCreation {
 
@@ -65,23 +65,29 @@ void LinkFieldBoundary::execute()
 {
   FieldHandle input, output;
   MatrixHandle NodeLink, ElemLink;
+  
   if(!(get_input_handle("Field",input,true))) return;
 
-  double tol = guitol_.get();
-  bool   linkx = static_cast<bool>(guilinkx_.get());
-  bool   linky = static_cast<bool>(guilinky_.get());
-  bool   linkz = static_cast<bool>(guilinkz_.get());
+  if (inputs_changed_ ||  guilinkx_.changed() || guilinky_.changed() ||
+      guilinkz_.changed() || guitol_.changed() || !oport_cached("Field") ||
+      !oport_cached("NodeLink") || !oport_cached("ElemLink"))
+  {
+    double tol = guitol_.get();
+    bool   linkx = static_cast<bool>(guilinkx_.get());
+    bool   linky = static_cast<bool>(guilinky_.get());
+    bool   linkz = static_cast<bool>(guilinkz_.get());
 
-  SCIRunAlgo::FieldsAlgo fieldsalgo(this);
-  if(!(fieldsalgo.LinkFieldBoundary(input,NodeLink,ElemLink,tol,linkx,linky,linkz))) return;
-  
-  output = input->clone();
-  output->set_property("NodeLink",NodeLink,false);
-  output->set_property("ElemLink",ElemLink,false);
-  
-  send_output_handle("Field",output,false);
-  send_output_handle("NodeLink",NodeLink,false);
-  send_output_handle("ElemLink",ElemLink,false);  
+    SCIRunAlgo::FieldsAlgo fieldsalgo(this);
+    if(!(fieldsalgo.LinkFieldBoundary(input,NodeLink,ElemLink,tol,linkx,linky,linkz))) return;
+    
+    output = input->clone();
+    output->set_property("NodeLink",NodeLink,false);
+    output->set_property("ElemLink",ElemLink,false);
+    
+    send_output_handle("Field",output,false);
+    send_output_handle("NodeLink",NodeLink,false);
+    send_output_handle("ElemLink",ElemLink,false);  
+  }
 }
 
 } // End namespace ModelCreation

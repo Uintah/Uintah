@@ -27,11 +27,10 @@
 */
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 #include <Core/Datatypes/Field.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/Matrix.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 
 #include <Packages/ModelCreation/Core/Fields/ExampleFields.h>

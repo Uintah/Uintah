@@ -42,68 +42,39 @@ class SplitFieldByConnectedRegion : public Module {
 public:
   SplitFieldByConnectedRegion(GuiContext*);
   virtual void execute();
-private:
-  int fGeneration_;
+
 };
 
 
 DECLARE_MAKER(SplitFieldByConnectedRegion)
 SplitFieldByConnectedRegion::SplitFieldByConnectedRegion(GuiContext* ctx)
-  : Module("SplitFieldByConnectedRegion", ctx, Source, "FieldsCreate", "ModelCreation"),
-    fGeneration_(-1)
+  : Module("SplitFieldByConnectedRegion", ctx, Source, "FieldsCreate", "ModelCreation")
 {
 }
 
 
 void SplitFieldByConnectedRegion::execute()
 {
-  FieldIPort *field_iport;
-  
-  if (!(field_iport = dynamic_cast<FieldIPort *>(get_input_port(0))))
-  {
-    error("Could not find Field input port");
-    return;
-  }
-    
+  // Define local handles of data objects:  
   FieldHandle input;
-  
-  field_iport->get(input);
-  
-  if (input.get_rep() == 0)
-  {
-    warning("No Field was found on input port");
-    return;
-  }
-  
-  bool update = false;
 
-  if ( (fGeneration_ != input->generation )) 
+  // Get the new input data:    
+  if (!(get_input_handle("Field",input,true))) return;
+ 
+  // Only reexecute if the input changed. SCIRun uses simple scheduling
+  // that executes every module downstream even if no data has changed:         
+  if (inputs_changed_  || !oport_cached("Fields"))
   {
-    fGeneration_ = input->generation;
-    update = true;
-  }
-
-  if(update)
-  {
-    SCIRunAlgo::FieldsAlgo fieldmath(dynamic_cast<ProgressReporter *>(this));  
+    SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));  
     
     std::vector<FieldHandle> ofields;
-    if(!(fieldmath.SplitFieldByConnectedRegion(input,ofields)))
-    {
-      error("Dynamically compile algorithm failed");
-      return;
-    }
+    if(!(algo.SplitFieldByConnectedRegion(input,ofields))) return;
   
     BundleHandle output;
+    if(!(algo.FieldArrayToBundle(ofields,output))) return;
 
-    if(!(fieldmath.FieldArrayToBundle(ofields,output)))
-    {
-      error("FieldArrayToBundle failed");
-      return;
-    }
-  
-    BundleOPort* output_oport = dynamic_cast<BundleOPort *>(get_output_port(0));
-    if (output_oport) output_oport->send(output);
+    // send new output if there is any:   
+    send_output_handle("Fields",output,false);
   }
 }
 

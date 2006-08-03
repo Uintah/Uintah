@@ -74,6 +74,10 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/CurrentDensityMapping.tcl\
 	$(SRCDIR)/GradientModalMapping.tcl\
 	$(SRCDIR)/FieldDataMeasure.tcl\
+	$(SRCDIR)/BundleBreakPoint.tcl\
+	$(SRCDIR)/FieldBreakPoint.tcl\
+	$(SRCDIR)/MatrixBreakPoint.tcl\
+	$(SRCDIR)/StringBreakPoint.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/ModelCreation/Dataflow/GUI

@@ -65,22 +65,31 @@ CurrentDensityMapping::CurrentDensityMapping(GuiContext* ctx)
 
 void CurrentDensityMapping::execute()
 {
+  // Define input handles:
   FieldHandle fpot, fcon, fdst, fout;
   
+  // Get input from ports:
   if (!(get_input_handle("Potential",fpot,true))) return;
   if (!(get_input_handle("Conductivity",fcon,true))) return;
   if (!(get_input_handle("Destination",fdst,true))) return;
   
-  std::string mappingmethod = mappingmethod_.get();
-  std::string integrationmethod = integrationmethod_.get();
-  std::string integrationfilter = integrationfilter_.get();
-  bool multiply_with_normal = multiply_with_normal_.get();
-  
-  SCIRunAlgo::FieldsAlgo algo(this);
-  
-  if (!(algo.CurrentDensityMapping(fpot,fcon,fdst,fout,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal))) return;
-  
-  send_output_handle("Destination",fout,false);
+  if (inputs_changed_ || mappingmethod_.changed() || 
+      integrationmethod_.changed() || multiply_with_normal_.changed() ||
+      !oport_cached("Destination"))
+  {
+    // Get parameters from GUI:
+    std::string mappingmethod = mappingmethod_.get();
+    std::string integrationmethod = integrationmethod_.get();
+    std::string integrationfilter = integrationfilter_.get();
+    bool multiply_with_normal = multiply_with_normal_.get();
+    
+    // Entry point to fields algo library:
+    SCIRunAlgo::FieldsAlgo algo(this);
+    if (!(algo.CurrentDensityMapping(fpot,fcon,fdst,fout,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal))) return;
+    
+    // Send output downstream:
+    send_output_handle("Destination",fout,false);
+  }
 }
 
 

@@ -72,11 +72,13 @@ void IsInsideFields::execute()
 
   if (objectfields.size() == 0) return;
   
-  SCIRunAlgo::FieldsAlgo algo(this);
-  
-  if(!(algo.IsInsideFields(input,output,objectfields,outputtype_.get(),outputbasis_.get()))) return;
+  if (inputs_changed_ || !oport_cached("Field"))
+  {
+    SCIRunAlgo::FieldsAlgo algo(this);
+    if(!(algo.IsInsideFields(input,output,objectfields,outputtype_.get(),outputbasis_.get()))) return;
  
-  send_output_handle("Field",output,false);
+    send_output_handle("Field",output,false);
+  }
 }
 
 } // End namespace ModelCreation

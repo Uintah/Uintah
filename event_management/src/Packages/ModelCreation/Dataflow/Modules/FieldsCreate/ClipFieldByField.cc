@@ -27,14 +27,12 @@
 */
 
 
-#include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/Field.h>
 
 #include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
-
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
@@ -57,19 +55,27 @@ ClipFieldByField::ClipFieldByField(GuiContext* ctx)
 
 void ClipFieldByField::execute()
 {
+  // Define local handles of data objects:
   FieldHandle input;
   FieldHandle output;
   FieldHandle object;
   MatrixHandle interpolant;
   
+  // Get the new input data is:  
   if (!(get_input_handle("Field",input,true))) return;
   if (!(get_input_handle("Object",object,true))) return;
 
-  SCIRunAlgo::FieldsAlgo algo(this);
-  if(!(algo.ClipFieldByField(input,output,object,interpolant))) return;
-  
-  send_output_handle("Field",output,false);
-  send_output_handle("Mapping",interpolant,false);
+  // Only reexecute if the input changed. SCIRun uses simple scheduling
+  // that executes every module downstream even if no data has changed:  
+  if (inputs_changed_ || !oport_cached("Field") || !oport_cached("Mapping"))
+  {
+    SCIRunAlgo::FieldsAlgo algo(this);
+    if(!(algo.ClipFieldByField(input,output,object,interpolant))) return;
+
+    // send new output if there is any:      
+    send_output_handle("Field",output,false);
+    send_output_handle("Mapping",interpolant,false);
+  }
 }
 
 

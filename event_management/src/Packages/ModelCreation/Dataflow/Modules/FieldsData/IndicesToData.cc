@@ -59,10 +59,13 @@ void IndicesToData::execute()
   if (!(get_input_handle("Field",input,true))) return;
   if (!(get_input_handle("Data",data,true))) return;
   
-  SCIRunAlgo::FieldsAlgo falgo(this); 
-  if (!(falgo.IndicesToData(input,output,data))) return;
-  
-  send_output_handle("Field",output,false);
+  if (inputs_changed_ || !oport_cached("Field"))
+  {
+    SCIRunAlgo::FieldsAlgo falgo(this); 
+    if (!(falgo.IndicesToData(input,output,data))) return;
+    
+    send_output_handle("Field",output,false);
+  }
 }
 
 } // End namespace ModelCreation

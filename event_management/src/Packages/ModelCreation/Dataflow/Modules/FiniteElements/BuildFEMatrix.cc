@@ -28,11 +28,11 @@
 
 
 #include <Core/Algorithms/Math/MathAlgo.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
-
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 namespace ModelCreation {
 
@@ -43,7 +43,6 @@ public:
   BuildFEMatrix(GuiContext*);
 
   virtual void execute();
-
 };
 
 
@@ -56,22 +55,23 @@ BuildFEMatrix::BuildFEMatrix(GuiContext* ctx)
 
 void BuildFEMatrix::execute()
 {
-  SCIRunAlgo::MathAlgo numericalgo(this);
-  
   FieldHandle Field;
   MatrixHandle Conductivity;
   MatrixHandle GeomToComp, CompToGeom;
   MatrixHandle SysMatrix;
+  
   if (!(get_input_handle("Field",Field,true))) return;
   get_input_handle("ConductivityTable",Conductivity,false);
   get_input_handle("GeomToComp",GeomToComp,false);
   
-  if(!(numericalgo.BuildFEMatrix(Field,SysMatrix,1,Conductivity,GeomToComp,CompToGeom))) return;
-  
-  send_output_handle("FEMatrix",SysMatrix,false);  
+  if (inputs_changed_ || !oport_cached("FEMatrix"))
+  {
+    SCIRunAlgo::MathAlgo numericalgo(this);
+    if(!(numericalgo.BuildFEMatrix(Field,SysMatrix,1,Conductivity,GeomToComp,CompToGeom))) return;
+    
+    send_output_handle("FEMatrix",SysMatrix,false);  
+  }
 }
-
-
 
 } // End namespace ModelCreation
 

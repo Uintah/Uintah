@@ -11,7 +11,7 @@
 SRCDIR := Packages/ModelCreation/Dataflow/Modules
 
 SUBDIRS := \
-	$(SRCDIR)/TensorVectorMath\
+	$(SRCDIR)/BreakPoint\
 	$(SRCDIR)/DataInfo\
 	$(SRCDIR)/DataIO\
 	$(SRCDIR)/Script\
@@ -25,6 +25,7 @@ SUBDIRS := \
 	$(SRCDIR)/Converter\
 	$(SRCDIR)/Math\
 	$(SRCDIR)/DataStreaming\
+	$(SRCDIR)/TensorVectorMath\
 	$(SRCDIR)/Time\
 #[INSERT NEW CATEGORY DIR HERE]
 
