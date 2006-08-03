@@ -48,6 +48,13 @@
 #include <sstream>
 #include <iomanip>
 
+#include <sci_defs/teem_defs.h>
+
+#ifdef HAVE_TEEM
+#include <teem/air.h>
+#include <teem/nrrd.h>
+#endif
+
 using std::string;
 using std::vector;
 using namespace SCIRun;
@@ -143,7 +150,48 @@ bool GuiContext::get(double& value)
   istringstream s(result);
   s >> value;
   if(!s)
+  {
+#ifndef HAVE_TEEM    
     return false;
+#else
+    // This piece of code makes sure we accept nan, inf or -inf as input
+    // from TCL
+    char ibuf[5];
+    s.clear();
+    s.get(ibuf,4);
+    // Set the last character to null for airToLower.
+    ibuf[3] = '\0';
+    // Make sure the comparison is case insensitive.
+    airToLower(ibuf);
+
+    if (strcmp(ibuf,"nan")==0)
+    {
+      value = (double) AIR_NAN;
+    }
+    else if (strcmp(ibuf,"inf")==0)
+    {
+      value = (double) AIR_POS_INF;
+    }
+    else
+    {
+      s.clear();
+      s.get(&(ibuf[3]),2);
+      // Set the last character to null for airToLower.
+      ibuf[4] = '\0';
+      airToLower(ibuf);
+      if (strcmp(ibuf,"-inf")==0)
+      {
+        value = (double) AIR_NEG_INF;
+      }
+      else
+      {
+        return (false);
+      }
+    }
+#endif
+  }
+  
+  
   context_state_ |= CACHED_E;
   return true;
 }
