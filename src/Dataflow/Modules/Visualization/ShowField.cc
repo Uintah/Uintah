@@ -539,7 +539,8 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     text_id_ = 0;
 
     // set new scale defaults based on input.
-    Vector diag = fld_handle->mesh()->get_bounding_box().diagonal();
+    BBox bbox = fld_handle->mesh()->get_bounding_box();
+    Vector diag = bbox.diagonal();
     cur_mesh_scale_factor_ = diag.length();
     gui_use_defaults_.reset();
     if (gui_use_defaults_.get() || 
