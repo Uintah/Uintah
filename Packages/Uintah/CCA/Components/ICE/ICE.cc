@@ -3896,6 +3896,15 @@ void ICE::accumulateMomentumSourceSinks(const ProcessorGroup*,
                        (tau_Y_FC[top].x()   - tau_Y_FC[bottom].x())* areaY +
                        (tau_Z_FC[front].x() - tau_Z_FC[back].x())  * areaZ;
 
+if(c.x() == 24 && c.y() > 106 && c.z() ==0){
+  cout << c  << endl;
+  cout << "(tau_X_FC[right].x() - tau_X_FC[left].x()) \t" 
+       << (tau_X_FC[right].x() - tau_X_FC[left].x())
+       << "\ntau_Y_FC[top].x()   - tau_Y_FC[bottom].x()) \t"
+       << (tau_Y_FC[top].x()   - tau_Y_FC[bottom].x())
+       << "\nViscous source " << viscous_source << endl;
+}
+
         mom_source[c].x( (-pressure_source * areaX + 
                            viscous_source +
                            mass * gravity.x() * include_term) * delT ); 
@@ -4412,13 +4421,15 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
       //____ B U L L E T   P R O O F I N G----
       IntVector neg_cell;
       if (!areAllValuesPositive(sp_vol_L, neg_cell)) {
+        cout << "\nICE:WARNING......Negative specific Volume"<< endl;
+        cout << "cell              "<< neg_cell << " level " <<  level->getIndex() << endl;
         cout << "matl              "<< indx << endl;
-        cout << "cell              "<< neg_cell << endl;
         cout << "sum_thermal_exp   "<< sum_therm_exp[neg_cell] << endl;
         cout << "sp_vol_src        "<< sp_vol_src[neg_cell] << endl;
         cout << "mass sp_vol_L     "<< sp_vol_L[neg_cell] << endl;
         cout << "mass sp_vol_L_old "
              << (rho_CC[neg_cell]*vol*sp_vol_CC[neg_cell]) << endl;
+        cout << "-----------------------------------"<<endl;
 //        ostringstream warn;
 //        int L = level->getIndex();
 //        warn<<"ERROR ICE:("<<L<<"):computeLagrangianSpecificVolumeRF, mat "<<indx
