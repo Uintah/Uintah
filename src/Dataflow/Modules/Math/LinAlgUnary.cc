@@ -129,99 +129,103 @@ void LinAlgUnary::Ceil(double *x, int n) {
   }
 }
 
-void LinAlgUnary::execute() {
-  MatrixIPort* imat_ = (MatrixIPort *)get_iport("Input");
-
-  update_state(NeedData);
+void LinAlgUnary::execute() 
+{
   MatrixHandle mh;
-  if (!imat_->get(mh) || !mh.get_rep()) {
-    error( "No handle or representation" );
-    return;
-  }
+  
+  if (!(get_input_handle("Input",mh,true))) return;
 
-  string op = op_.get();
+  if (inputs_changed_ || op_.changed() || function_.changed() || !oport_cached("Output"))
+  {
 
-  MatrixHandle m;
+    string op = op_.get();
+    MatrixHandle m;
 
-  if (op == "Transpose") {
-    Matrix *mat = mh->transpose();
-    m = mat;
-  } else if (op == "Invert") {
-    DenseMatrix *dm = mh->dense();
-    if (! dm->invert()) {
-      error("Input Matrix not invertible.");
+    if (op == "Transpose") {
+      Matrix *mat = mh->transpose();
+      m = mat;
+    } else if (op == "Invert") {
+      m = dynamic_cast<Matrix *>(mh->dense());
+      if (m.get_rep() == 0) { error("Could not convert matrix to dense matrix"); return; }
+      m.detach();
+      
+      DenseMatrix *dm = dynamic_cast<DenseMatrix *>(m.get_rep());
+      if (! dm->invert()) {
+        error("Input Matrix not invertible.");
+        return;
+      }
+    } else if (op == "Sort") {
+      m = dynamic_cast<Matrix *>(mh->dense());
+      if (m.get_rep() == 0) { error("Could not convert matrix to dense matrix"); return; }
+      m.detach();
+      insertion_sort(m->get_data_pointer(), m->get_data_size());
+      if (mh->is_sparse()) { m = m->sparse(); }
+    } else if (op == "Subtract_Mean") {
+      m = dynamic_cast<Matrix *>(mh->dense());
+      if (m.get_rep() == 0) { error("Could not convert matrix to dense matrix"); return; }
+      m.detach();
+      subtract_mean(m->get_data_pointer(), m->get_data_size());
+    } else if (op == "Normalize") {
+      m = mh->clone();
+      normalize(m->get_data_pointer(), m->get_data_size());
+    } else if (op == "Round") {
+      m = mh->clone();
+      round(m->get_data_pointer(), m->get_data_size());
+    } else if (op == "Floor") {
+      m = mh->clone();
+      Floor(m->get_data_pointer(), m->get_data_size());
+    } else if (op == "Ceil") {
+      m = mh->clone();
+      Ceil(m->get_data_pointer(), m->get_data_size());
+    } else if (op == "Function") {
+      if (mh->is_sparse())
+      {
+        remark("Only calling function for non-zero sparse matrix elements.");
+      }
+
+      // Remove trailing white-space from the function string.
+      string func = function_.get();
+      while (func.size() && isspace(func[func.size()-1]))
+      {
+        func.resize(func.size()-1);
+      }
+
+      // Compile the function.
+      int hoffset = 0;
+      Handle<LinAlgUnaryAlgo> algo;
+      for( ;; )
+      {
+        CompileInfoHandle ci =
+          LinAlgUnaryAlgo::get_compile_info(func, hoffset);
+        if (!DynamicCompilation::compile(ci, algo, false, this))
+        {
+          error("Your function would not compile.");
+          get_gui()->eval(get_id() + " compile_error "+ci->filename_);
+          DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
+          return;
+        }
+        if (algo->identify() == func)
+        {
+          break;
+        }
+        hoffset++;
+      }
+
+      // Get the data from the matrix, iterate over it calling the function.
+      m = mh->clone();
+      double *x = m->get_data_pointer();
+      const unsigned int n = m->get_data_size();
+      for (unsigned int i = 0; i < n; i++)
+      {
+        x[i] = algo->user_function(x[i]);
+      }
+    } else {
+      warning("Don't know operation "+op);
       return;
     }
-    m = dm;
-  } else if (op == "Sort") {
-    // Not real efficient for sparse row matrices, but works now.
-    m = (mh->is_sparse())?mh->dense():mh->clone();
-    insertion_sort(m->get_data_pointer(), m->get_data_size());
-    if (mh->is_sparse()) { m = m->sparse(); }
-  } else if (op == "Subtract_Mean") {
-    m = (mh->is_sparse())?mh->dense():mh->clone();
-    subtract_mean(m->get_data_pointer(), m->get_data_size());
-  } else if (op == "Normalize") {
-    m = mh->clone();
-    normalize(m->get_data_pointer(), m->get_data_size());
-  } else if (op == "Round") {
-    m = mh->clone();
-    round(m->get_data_pointer(), m->get_data_size());
-  } else if (op == "Floor") {
-    m = mh->clone();
-    Floor(m->get_data_pointer(), m->get_data_size());
-  } else if (op == "Ceil") {
-    m = mh->clone();
-    Ceil(m->get_data_pointer(), m->get_data_size());
-  } else if (op == "Function") {
-    if (mh->is_sparse())
-    {
-      remark("Only calling function for non-zero sparse matrix elements.");
-    }
 
-    // Remove trailing white-space from the function string.
-    string func = function_.get();
-    while (func.size() && isspace(func[func.size()-1]))
-    {
-      func.resize(func.size()-1);
-    }
-
-    // Compile the function.
-    int hoffset = 0;
-    Handle<LinAlgUnaryAlgo> algo;
-    for( ;; )
-    {
-      CompileInfoHandle ci =
-	LinAlgUnaryAlgo::get_compile_info(func, hoffset);
-      if (!DynamicCompilation::compile(ci, algo, false, this))
-      {
-	error("Your function would not compile.");
-	get_gui()->eval(get_id() + " compile_error "+ci->filename_);
-	DynamicLoader::scirun_loader().cleanup_failed_compile(ci);
-	return;
-      }
-      if (algo->identify() == func)
-      {
-	break;
-      }
-      hoffset++;
-    }
-
-    // Get the data from the matrix, iterate over it calling the function.
-    m = mh->clone();
-    double *x = m->get_data_pointer();
-    const unsigned int n = m->get_data_size();
-    for (unsigned int i = 0; i < n; i++)
-    {
-      x[i] = algo->user_function(x[i]);
-    }
-  } else {
-    warning("Don't know operation "+op);
-    return;
+    send_output_handle("Output", m);
   }
-
-  MatrixHandle mtmp(m);
-  send_output_handle("Output", mtmp);
 }
 
 
