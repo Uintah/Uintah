@@ -60,6 +60,17 @@ private:
   int card_mem_;
   GuiInt gui_animate_;
   GuiDouble gui_time_;
+  GuiInt gui_nsteps_;
+  GuiDouble gui_step_size_;
+  GuiInt gui_recompute_points_;
+  GuiInt gui_freeze_particles_;
+
+  GuiPoint gui_center_;
+  GuiPoint gui_right_;
+  GuiPoint gui_down_;
+  GuiDouble gui_widget_scale_;
+  GuiInt   gui_widget_reset_;
+
 
   ParticleFlowRenderer *flow_ren_;
 
@@ -79,8 +90,17 @@ ParticleFlow::ParticleFlow(GuiContext* ctx)
     vfield_prev_generation_(-1),
     cmap_prev_generation_(-1),
     card_mem_(video_card_memory_size()),
-    gui_animate_(ctx->subVar("animate")),
-    gui_time_(ctx->subVar("time")),
+    gui_animate_(ctx->subVar("animate"), 0),
+    gui_time_(ctx->subVar("time"), -0.05),
+    gui_nsteps_(ctx->subVar("nsteps"), 32),
+    gui_step_size_(ctx->subVar("step-size"), 1.0),
+    gui_recompute_points_(ctx->subVar("recompute-points"), 0),
+    gui_freeze_particles_(ctx->subVar("freeze-particles"), 0),
+    gui_center_(ctx->subVar("center"), Point(0,0,0)),
+    gui_right_(ctx->subVar("right"), Point(0,0,0)),
+    gui_down_(ctx->subVar("down"), Point(0,0,0)),
+    gui_widget_scale_(ctx->subVar("widget-scale"), 0),
+    gui_widget_reset_(ctx->subVar("widget-reset"), 0),
     flow_ren_(0),
     widget_lock_("ParticleFlow widget lock"),
     frame_(0)
@@ -114,10 +134,19 @@ ParticleFlow::widget_moved(bool last, BaseWidget*)
 {
   if (last) {
     if( flow_ren_ ){
+      double s;
       Point c, r, d;
       frame_->GetPosition( c, r, d);
-      cerr<<"frame state is "<<frame_->GetStateString()<<"\n";
+      s = frame_->GetScale();
+
+      gui_center_.set( c );
+      gui_right_.set(r);
+      gui_down_.set(d);
+      gui_widget_scale_.set( s );
+
+//       cerr<<"frame state is "<<frame_->GetStateString()<<"\n";
       flow_ren_->update_transform( c, r, d );
+      
     }
     want_to_execute();
   }
@@ -154,7 +183,7 @@ void
 
   bool field_dirty = false;
 
-  if (vfield->generation != vfield_prev_generation_)
+  if (vfield->generation != vfield_prev_generation_ || gui_widget_reset_.get())
   {
     // new field or range change
     VectorFieldInterfaceHandle vfi = vfield->query_vector_interface(this);
@@ -204,7 +233,7 @@ void
     
     Point c, r, d;
     frame_->GetPosition(c,r,d);
-    cerr<<"frame state is "<<frame_->GetStateString()<<"\n";
+//     cerr<<"frame state is "<<frame_->GetStateString()<<"\n";
     flow_ren_->update_transform( c, r, d );
   } else {
     flow_ren_->update_vector_field( vfield );
@@ -213,11 +242,12 @@ void
  
 
   flow_ren_->set_animation( bool(gui_animate_.get()) );
-  if( gui_animate_.get() ){
-        reset_vars();
-        flow_ren_->set_time_increment( float(gui_time_.get()));
-  }
-
+  flow_ren_->set_time_increment( float(gui_time_.get()));
+  flow_ren_->set_nsteps( (unsigned int)( gui_nsteps_.get()));
+  flow_ren_->set_step_size( gui_step_size_.get());
+  flow_ren_->recompute_points( bool(gui_recompute_points_.get()));
+  flow_ren_->freeze( bool( gui_freeze_particles_.get()));
+  gui_recompute_points_.set(0);  // default to false
   ColorMapHandle cmap;
   bool have_cmap = (icmap->get(cmap) && cmap.get_rep());
   if( have_cmap ){
@@ -277,17 +307,22 @@ ParticleFlow::build_widget(FieldHandle f)
 
 //   if( resize ) {
 
-  if(!b.valid()){
-    warning("Input box is invalid -- using unit cube.");
-    b.extend(Point(0,0,0));
-    b.extend(Point(1,1,1));
-  }
+  if( gui_widget_reset_.get() == 1 || gui_widget_scale_.get() <= 0 ||
+      (gui_center_.get() == Point(0,0,0) &&
+       gui_right_.get() == Point(0,0,0) &&
+       gui_down_.get() == Point(0,0,0) )) {
+
+    if(!b.valid()){
+      warning("Input box is invalid -- using unit cube.");
+      b.extend(Point(0,0,0));
+      b.extend(Point(1,1,1));
+    }
 
     double s;
     Point c, r, d;
     Vector diag(b.max() - b.min());
     c = (b.min() + diag * 0.5);
-//     c.y( b.min().y());
+    //     c.y( b.min().y());
     r = c + Vector(diag.x()*0.5, 0, 0);
     d = c + Vector(0.0, 0.0, diag.z()*0.5);
     // Apply the new coordinates.
@@ -298,6 +333,31 @@ ParticleFlow::build_widget(FieldHandle f)
 
     frame_->SetScale(s); // do first, widget_moved resets
     frame_bbox_ = b;
+    gui_center_.set( c );
+    gui_right_.set( r );
+    gui_down_.set( d );
+    gui_widget_scale_.set( s );
+    gui_widget_reset_.set( 0 );
+
+  } else {
+    const double l2norm = (gui_right_.get().vector() +
+			   Cross(gui_down_.get().vector(), 
+                                 gui_right_.get().vector()) +
+			   gui_down_.get().vector()).length();
+    const double s = l2norm * 0.015;
+    
+    double scale = gui_widget_scale_.get();
+    if( scale < s * 1e-2 || scale > s * 1e2 ){
+      scale = s;
+    }
+
+    frame_->SetPosition(gui_center_.get(), 
+                        gui_right_.get(), 
+                        gui_down_.get());
+    frame_->SetScale( scale );
+    
+ 
+  }
 //   }
 
   

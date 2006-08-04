@@ -2,15 +2,8 @@ itcl_class Kurt_Visualization_ParticleFlow {
     inherit Module
     constructor {config} {
         set name ParticleFlow
-        set_defaults
     }
 
-    method set_defaults {} {
-	global $this-animate
-        global $this-time
-        set $this-animate 0
-        set $this-time 0.002
-    }
 
     method ui {} {
         set w .ui[modname]
@@ -18,23 +11,57 @@ itcl_class Kurt_Visualization_ParticleFlow {
             return
         }
         toplevel $w
+        wm geometry $w ""
 
         frame $w.f
-	frame $w.f1 
-        frame $w.f2
+	frame $w.f1
+        frame $w.f2 -borderwidth 2 -relief groove 
+        frame $w.f3 -borderwidth 2 
+        frame $w.f4 -borderwidth 2 
         
-        pack $w.f -side top
-	pack $w.f1 $w.f2 -in $w.f -padx 2 -pady 2 -fill x -side left
+#        pack $w.f -side top -expand yes -fill both
+	pack $w.f2 $w.f3 $w.f4 $w.f1  -padx 2 -pady 2 \
+            -expand yes -side top -anchor w -fill x -padx 2 -pady 2
 	
 	set n "$this-c needexecute"
 
-        checkbutton $w.f1.animate -text Animate -variable $this-animate
-        label $w.f2.l -text "Particle life time increment"
-        scale $w.f2.scale -to 0.01 -from 0.0002 -orient horizontal \
-            -variable $this-time -resolution 0.0002
-        pack  $w.f1.animate 
-        pack $w.f2.l $w.f2.scale  -side top
+        checkbutton $w.f1.animate -text Animate -variable $this-animate 
+        checkbutton $w.f1.freeze -text "Freeze Particles" \
+            -variable $this-freeze-particles -command $n
+        label $w.f2.l -text "Particle life time decrement"
+        scale $w.f2.scale -to 0.05 -from 0.0002 -orient horizontal \
+            -variable $this-time -resolution 0.0002 
+        pack  $w.f1.animate $w.f1.freeze -anchor nw
+        pack $w.f2.l $w.f2.scale  -side top -expand yes -fill x
 
+        frame $w.f3.f1
+        frame $w.f3.f2
+        pack  $w.f3.f1 $w.f3.f2 -side left -expand yes -fill x -anchor w \
+            -padx 2 -pady 2
+
+        label $w.f3.f1.l -text "iterations: "
+        entry $w.f3.f2.e -textvariable "$this-nsteps"
+        pack $w.f3.f1.l $w.f3.f2.e
+
+        frame $w.f4.f1
+        frame $w.f4.f2
+        pack  $w.f4.f1 $w.f4.f2 -side left -expand yes -fill x -anchor w \
+            -padx 2 -pady 2
+
+        label $w.f4.f1.l -text "step size: "
+        scale $w.f4.f2.s -variable "$this-step-size" -from 0.0001 -to 1.0 \
+            -resolution 0.0001 -orient horizontal
+        pack $w.f4.f1.l $w.f4.f2.s -expand yes -fill x
+
+        button $w.recompute -text "Recompute Points from start points" \
+            -command "set $this-recompute-points 1; $n"
+        button $w.reset -text "Reset Frame Widget" \
+            -command "set $this-widget-reset 1; $n"
+
+        pack $w.recompute $w.reset -side top -expand yes -fill x
+
+        bind $w.f3.f2.e <Return> $n 
+        bind $w.f4.f2.s <ButtonRelease> $n 
 
         makeSciButtonPanel $w $w $this
         moveToCursor $w
