@@ -46,7 +46,7 @@ itcl_class ModelCreation_FieldsData_FieldDataMeasure {
           $win.c insert end [set $var]
         }
 
-        bind $win.c <Map> "$win.c select {[set $var]}"
+        $win.c select [set $var] 
         pack $win.c	-fill x
     }
 

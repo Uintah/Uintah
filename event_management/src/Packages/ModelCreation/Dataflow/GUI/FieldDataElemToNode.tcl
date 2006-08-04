@@ -57,10 +57,9 @@ itcl_class ModelCreation_FieldsData_FieldDataElemToNode {
 
 	label $win.l2 -text "" -width 40 -anchor w -just left
 
-	# hack to associate optionmenus with a textvariable
-	bind $win.c <Map> "$win.c select {[set $var]}"
-
-	pack $win.l1 $win.colon -side left
+  $win.c select [set $var]  
+	
+  pack $win.l1 $win.colon -side left
 	pack $win.c $win.l2 -side left	
     }
 

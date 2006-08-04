@@ -47,6 +47,7 @@ itcl_class ModelCreation_FieldsData_GradientModalMapping {
     }
     
    method myselectionbutton { win x y arglist var} {
+
         frame $win 
         grid $win  -row $x -column $y -sticky news
         iwidgets::optionmenu $win.c -foreground darkred -command " $this comboget $win.c $var "
@@ -65,9 +66,11 @@ itcl_class ModelCreation_FieldsData_GradientModalMapping {
           $win.c insert end [set $var]
         }
 
-        bind $win.c <Map> "$win.c select {[set $var]}"
+        $win.c select [set $var]
+  
         pack $win.c	-fill x
     }
+
 
 
     method comboget { win var } {

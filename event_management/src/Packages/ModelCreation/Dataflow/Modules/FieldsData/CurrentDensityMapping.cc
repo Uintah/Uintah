@@ -73,7 +73,7 @@ void CurrentDensityMapping::execute()
   if (!(get_input_handle("Conductivity",fcon,true))) return;
   if (!(get_input_handle("Destination",fdst,true))) return;
   
-  if (inputs_changed_ || mappingmethod_.changed() || 
+  if (inputs_changed_ || mappingmethod_.changed() || integrationfilter_.changed() ||
       integrationmethod_.changed() || multiply_with_normal_.changed() ||
       !oport_cached("Destination"))
   {
