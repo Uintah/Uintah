@@ -408,9 +408,7 @@ bool ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::ModalMapping(Progress
   IData.numproc = np;
    
   Thread::parallel(this,&ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel,np,&IData);
-  
-  std::cout << "retval="<<IData.retval<<"\n";  
-        
+          
   return (IData.retval);
 }
 
