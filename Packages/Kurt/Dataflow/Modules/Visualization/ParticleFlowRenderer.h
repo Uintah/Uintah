@@ -64,11 +64,14 @@ public:
   void update_vector_field( FieldHandle vfh, bool normalize = false );
   void update_time( double time );
   void update_transform(const Point& c, const Point& r, const Point& d);
-  void set_animation( bool a ) 
-  { if(animating_ != a) reset_ = true;  animating_ = a;}
+  void set_animation( bool a ) { animating_ = a;}
   void set_time_increment(float i){ time_increment_ = i; }
-  
+  void set_nsteps( unsigned int n) { nsteps_ = n; }
+  void set_step_size( double d ) { step_size_ = d; }
+  void recompute_points( bool r ){ recompute_ = r; }
+  void freeze( bool f ){ frozen_ = f; }
   void create_points(GLint w, GLint h);
+  void reset(){ reset_ = true; }
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
 #endif
@@ -94,14 +97,16 @@ private:
   bool part_tex_dirty_;
   bool animating_;
   bool reset_;
-  
+  bool recompute_;
+  bool frozen_;
 
   double time_;
   float time_increment_;
-  float particle_time_;
   
   unsigned int nx_, ny_, nz_;
-  
+  unsigned int nsteps_;
+  double step_size_;
+
   GLuint flow_tex_;
   GLuint part_tex_[2];
   GLfloat *vfield_;

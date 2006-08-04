@@ -80,9 +80,12 @@ ParticleFlowRenderer::ParticleFlowRenderer() :
   part_tex_dirty_(true),
   animating_(false),
   reset_(true),
+  recompute_(true),
+  frozen_(false),
   time_(0.0),
-  time_increment_(0.002f),
-  particle_time_(0.0),
+  time_increment_(0.05f),
+  nsteps_(1),
+  step_size_(1.0),
   flow_tex_(0),
   vfield_(0),
   cmap_h_(0),
@@ -134,9 +137,12 @@ ParticleFlowRenderer::ParticleFlowRenderer(const ParticleFlowRenderer& copy):
   part_tex_dirty_(copy.part_tex_dirty_),
   animating_(copy.animating_),
   reset_(copy.reset_),
+  recompute_(copy.recompute_),
+  frozen_(copy.frozen_),
   time_( copy.time_),
   time_increment_(copy.time_increment_),
-  particle_time_(copy.particle_time_),
+  nsteps_(copy.nsteps_),
+  step_size_(copy.step_size_),
   flow_tex_(copy.flow_tex_),
   vfield_(copy.vfield_),
   cmap_h_( copy.cmap_h_),
@@ -243,7 +249,9 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
     draw_flow_outline();
   } else {
 #if 1
-    if(!initialized_){
+//     cerr<< "init = "<< initialized_<<", reset = "<<reset_<<
+//       ",  recompute = "<<recompute_<<"\n";
+    if(!initialized_ || reset_ || recompute_){
       if( /* cmap_h_ == 0 || */ fh_ == 0){
         return;
       }
@@ -276,195 +284,201 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
       // create_points for rendering
       create_points(array_width_, array_height_);
       
-      cerr<<"Starting array values are:  \n";
-      print_array(array_width_*array_height_, 4, start_verts_);
+      //       cerr<<"Starting array values are:  \n";
+      //       print_array(array_width_*array_height_, 4, start_verts_);
       initialized_ = true;
+      reset_ = false;
     }
 #endif
 
-    
-
-    if( part_tex_dirty_ ){
-      load_part_texture( 0, start_verts_);
-      load_part_texture( 1, current_verts_);
-      part_tex_dirty_ = false;
-    }
-    else {
-      load_part_texture( 1, current_verts_);
-    }
-
-
-
-    if( flow_tex_dirty_ ){
-      reload_flow_texture();
-    }
-
-
-    CHECK_OPENGL_ERROR("");
-    glMatrixMode(GL_MODELVIEW);
-//    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-
-    // save the current draw buffer
-    glGetIntegerv(GL_DRAW_BUFFER, &current_draw_buffer_);
-
-    // render to the frame buffer object
-    fb_->enable();
-    // draw to texture 
-    glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);  
-    // get the current viewport dimensions
-    // check the frame buffer again.
-    fb_->check_buffer();
-
-    int vp[4];
-    glGetIntegerv(GL_VIEWPORT, vp);
-    // set the viewport to texture size
-    glViewport(0,0, array_width_, array_height_);
-
-    cerr<<"Current array values are:  \n";
-    print_array(array_width_*array_height_, 4, current_verts_);
-
-    CHECK_OPENGL_ERROR("");
-    // bind the textures
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, part_tex_[0]);
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, part_tex_[1]);
-    glActiveTexture(GL_TEXTURE2);
-    glBindTexture(GL_TEXTURE_3D, flow_tex_);
-    CHECK_OPENGL_ERROR("");      
-    glActiveTexture(GL_TEXTURE1);
-    double m[16];
-    glGetDoublev(GL_PROJECTION_MATRIX, m);
-//     CHECK_OPENGL_ERROR("");      
-    glMatrixMode(GL_PROJECTION);
-//     CHECK_OPENGL_ERROR("");      
-    glLoadIdentity();
-//     CHECK_OPENGL_ERROR("");      
-    gluOrtho2D(0,1,0,1);
-//     CHECK_OPENGL_ERROR("");      
-    glMatrixMode(GL_MODELVIEW);
-//     CHECK_OPENGL_ERROR("");    
-    glPushMatrix();
-//     CHECK_OPENGL_ERROR("");    
-    glLoadIdentity();
-    CHECK_OPENGL_ERROR("");    
-
-    {
-      GLdouble mat[16];
-      shader_trans_.get_trans( mat );
-      Transform  tform;
-      fh_->mesh()->get_canonical_transform(tform);
-      double mvmat[16];
-      tform.invert();
-      tform.get_trans(mvmat);
-      GLfloat matf[16];
-      GLfloat mvmatf[16];
-      cerr<<"Widget Transform:\n";
-      for(int i = 0; i < 16; i++){
-        matf[i] = (float) mat[i];
-        cerr<<matf[i];
-        if( (i+1) % 4 == 0 ){
-          cerr<<"\n";
-        } else {
-          cerr<<", ";
-        }
+    if( !frozen_){
+      
+      if( part_tex_dirty_ ){
+        load_part_texture( 0, start_verts_);
+        load_part_texture( 1, current_verts_);
+        part_tex_dirty_ = false;
       }
-      cerr<<"Canonical Mesh Transform:\n";
-      for(int i = 0; i < 16; i++){
-        mvmatf[i] = (float) mvmat[i];
-        cerr<<mvmatf[i];
-        if( (i+1) % 4 == 0 ){
-          cerr<<"\n";
-        } else {
-          cerr<<", ";
-        }
+      else {
+        load_part_texture( 1, current_verts_);
       }
 
-      Transform mtform;
-      double mmmat[16];
-      fh_->mesh()->transform(mtform);
-      mtform.post_trans( tform );
-      mtform.get_trans(mmmat);
-      GLfloat mmmatf[16];
-      cerr<<"Mesh Transform:\n";
-      for(int i = 0; i < 16; i++){
-        mmmatf[i] = float(mmmat[i]);
-        cerr<<mmmatf[i];
-        if( (i+1) % 4 == 0 ){
-          cerr<<"\n";
-        } else {
-          cerr<<", ";
-        }
+
+
+      if( flow_tex_dirty_ ){
+        reload_flow_texture();
       }
       
-      //   // Set up initial uniform values
-      shader_->initialize_uniform( "ParticleTrans", 1, false, &(matf[0]));
-      shader_->initialize_uniform( "MeshTrans", 1, false, &(mmmatf[0]));
-//       shader_->initialize_uniform( "MeshSize", GLfloat(nx_), GLfloat(ny_),
-//                                    GLfloat(nz_) );
-      shader_->initialize_uniform( "Time", GLfloat(-0.05));
-      shader_->initialize_uniform( "StartPositions", 0 );
-      shader_->initialize_uniform( "Positions", 1 );      
-      shader_->initialize_uniform( "Flow", 2 );      
+
+      CHECK_OPENGL_ERROR("");
+      glMatrixMode(GL_MODELVIEW);
+      //    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+      
+      
+      // save the current draw buffer
+      glGetIntegerv(GL_DRAW_BUFFER, &current_draw_buffer_);
+      
+      // render to the frame buffer object
+      fb_->enable();
+      // draw to texture 
+      glDrawBuffer(GL_COLOR_ATTACHMENT0_EXT);  
+      // get the current viewport dimensions
+      // check the frame buffer again.
+      //    fb_->check_buffer();
+
+      int vp[4];
+      glGetIntegerv(GL_VIEWPORT, vp);
+      // set the viewport to texture size
+      glViewport(0,0, array_width_, array_height_);
+      
+      //     cerr<<"Current array values are:  \n";
+      //     print_array(array_width_*array_height_, 4, current_verts_);
+
+
+      CHECK_OPENGL_ERROR("");
+      // bind the textures
+      glActiveTexture(GL_TEXTURE0);
+      glBindTexture(GL_TEXTURE_2D, part_tex_[0]);
+      glActiveTexture(GL_TEXTURE1);
+      glBindTexture(GL_TEXTURE_2D, part_tex_[1]);
+      glActiveTexture(GL_TEXTURE2);
+      glBindTexture(GL_TEXTURE_3D, flow_tex_);
+      CHECK_OPENGL_ERROR("");      
+      glActiveTexture(GL_TEXTURE1);
+      double m[16];
+      glGetDoublev(GL_PROJECTION_MATRIX, m);
+      //     CHECK_OPENGL_ERROR("");      
+      glMatrixMode(GL_PROJECTION);
+      //     CHECK_OPENGL_ERROR("");      
+      glLoadIdentity();
+      //     CHECK_OPENGL_ERROR("");      
+      gluOrtho2D(0,1,0,1);
+      //     CHECK_OPENGL_ERROR("");      
+      glMatrixMode(GL_MODELVIEW);
+      //     CHECK_OPENGL_ERROR("");    
+      glPushMatrix();
+      //     CHECK_OPENGL_ERROR("");    
+      glLoadIdentity();
+      CHECK_OPENGL_ERROR("");    
+
+      {
+        GLdouble mat[16];
+        shader_trans_.get_trans( mat );
+        Transform  tform;
+        fh_->mesh()->get_canonical_transform(tform);
+        double mvmat[16];
+        tform.invert();
+        tform.get_trans(mvmat);
+        GLfloat matf[16];
+        GLfloat mvmatf[16];
+        //       cerr<<"Widget Transform:\n";
+        for(int i = 0; i < 16; i++){
+          matf[i] = (float) mat[i];
+          //         cerr<<matf[i];
+          //         if( (i+1) % 4 == 0 ){
+          //           cerr<<"\n";
+          //         } else {
+          //           cerr<<", ";
+          //         }
+        }
+        //       cerr<<"Canonical Mesh Transform:\n";
+        for(int i = 0; i < 16; i++){
+          mvmatf[i] = (float) mvmat[i];
+          //         cerr<<mvmatf[i];
+          //         if( (i+1) % 4 == 0 ){
+          //           cerr<<"\n";
+          //         } else {
+          //           cerr<<", ";
+          //         }
+        }
+
+        Transform mtform;
+        double mmmat[16];
+        fh_->mesh()->transform(mtform);
+        mtform.post_trans( tform );
+        mtform.get_trans(mmmat);
+        GLfloat mmmatf[16];
+        //       cerr<<"Mesh Transform:\n";
+        for(int i = 0; i < 16; i++){
+          mmmatf[i] = float(mmmat[i]);
+          //         cerr<<mmmatf[i];
+          //         if( (i+1) % 4 == 0 ){
+          //           cerr<<"\n";
+          //         } else {
+          //           cerr<<", ";
+          //         }
+        }
+      
+        //   // Set up initial uniform values
+        shader_->initialize_uniform( "ParticleTrans", 1, false, &(matf[0]));
+        shader_->initialize_uniform( "MeshTrans", 1, false, &(mmmatf[0]));
+        //       shader_->initialize_uniform( "MeshSize", GLfloat(nx_), GLfloat(ny_),
+        //                                    GLfloat(nz_) );
+        shader_->initialize_uniform( "StartPositions", 0 );
+        shader_->initialize_uniform( "Positions", 1 );      
+        shader_->initialize_uniform( "Flow", 2 );      
+        shader_->initialize_uniform( "Time", GLfloat(-time_increment_));
+        shader_->initialize_uniform( "Step", GLfloat( step_size_));
+
+      }
+      printOpenGLError();
+
+      // use shader_ to move points in framebuffer object
+      glUseProgram(shader_->program_object());
+
+      glBegin(GL_QUADS);
+      {
+        glMultiTexCoord2f(GL_TEXTURE0, 0, 0); glVertex2f(0, 0);
+        glMultiTexCoord2f(GL_TEXTURE0, 1, 0); glVertex2f(1, 0);
+        glMultiTexCoord2f(GL_TEXTURE0, 1, 1); glVertex2f(1, 1);
+        glMultiTexCoord2f(GL_TEXTURE0, 0, 1); glVertex2f(0, 1);
+      }
+      glEnd();
+      printOpenGLError();
+      glPopMatrix(); //MODELVIEW
+      CHECK_OPENGL_ERROR("");    
+      glMatrixMode(GL_PROJECTION);
+      CHECK_OPENGL_ERROR("");    
+      glLoadMatrixd( m );
+      glMatrixMode(GL_MODELVIEW);
+      CHECK_OPENGL_ERROR("");    
+      // disable the shader
+      glUseProgram(0);
+      CHECK_OPENGL_ERROR("");    
+      // undo the texture bindings
+      glActiveTexture(GL_TEXTURE0_ARB);
+      //     glDisable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D, 0);
+      glActiveTexture(GL_TEXTURE1_ARB);
+      //     glDisable(GL_TEXTURE_2D);
+      glBindTexture(GL_TEXTURE_2D, 0);
+      glActiveTexture(GL_TEXTURE2_ARB);
+      //     glDisable(GL_TEXTURE_3D);
+      glBindTexture(GL_TEXTURE_3D, 0);
+      glActiveTexture(GL_TEXTURE0);
+      CHECK_OPENGL_ERROR(""); 
+
+      // read the pixels from the framebuffer object
+      glReadPixels(0,0, array_width_, array_height_,
+                   GL_RGBA, GL_FLOAT, current_verts_);
+      //     cerr<<"Current array values are now: \n";
+      //     print_array(array_width_*array_height_, 4, current_verts_);
+
+      // disable the framebuffer object
+      fb_->disable();
+      // reset the draw buffer parameters
+      glDrawBuffer( current_draw_buffer_);
+      glViewport(vp[0], vp[1], vp[2], vp[3]);
+      CHECK_OPENGL_ERROR("");    
+      // Prepare to render points.
+      glEnable(GL_DEPTH_TEST);
+      GLboolean lighting = glIsEnabled(GL_LIGHTING);
+      glDisable(GL_LIGHTING);
+      glColor4f(1.0,1.0,1.0,1.0);
+      CHECK_OPENGL_ERROR("");
+      if(lighting) glEnable(GL_LIGHTING);
+
+      recompute_ = false;
     }
-    printOpenGLError();
-
-    // use shader_ to move points in framebuffer object
-    glUseProgram(shader_->program_object());
-
-    glBegin(GL_QUADS);
-    {
-      glMultiTexCoord2f(GL_TEXTURE0, 0, 0); glVertex2f(0, 0);
-      glMultiTexCoord2f(GL_TEXTURE0, 1, 0); glVertex2f(1, 0);
-      glMultiTexCoord2f(GL_TEXTURE0, 1, 1); glVertex2f(1, 1);
-      glMultiTexCoord2f(GL_TEXTURE0, 0, 1); glVertex2f(0, 1);
-    }
-    glEnd();
-    printOpenGLError();
-    glPopMatrix(); //MODELVIEW
-    CHECK_OPENGL_ERROR("");    
-    glMatrixMode(GL_PROJECTION);
-    CHECK_OPENGL_ERROR("");    
-    glLoadMatrixd( m );
-    glMatrixMode(GL_MODELVIEW);
-    CHECK_OPENGL_ERROR("");    
-    // disable the shader
-    glUseProgram(0);
-    CHECK_OPENGL_ERROR("");    
-    // undo the texture bindings
-    glActiveTexture(GL_TEXTURE0_ARB);
-//     glDisable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE1_ARB);
-//     glDisable(GL_TEXTURE_2D);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE2_ARB);
-//     glDisable(GL_TEXTURE_3D);
-    glBindTexture(GL_TEXTURE_3D, 0);
-    glActiveTexture(GL_TEXTURE0);
-    CHECK_OPENGL_ERROR(""); 
-
-    // read the pixels from the framebuffer object
-    glReadPixels(0,0, array_width_, array_height_,
-                 GL_RGBA, GL_FLOAT, current_verts_);
-    cerr<<"Current array values are now: \n";
-    print_array(array_width_*array_height_, 4, current_verts_);
-
-    // disable the framebuffer object
-    fb_->disable();
-    // reset the draw buffer parameters
-    glDrawBuffer( current_draw_buffer_);
-    glViewport(vp[0], vp[1], vp[2], vp[3]);
-    CHECK_OPENGL_ERROR("");    
-    // Prepare to render points.
-    glEnable(GL_DEPTH_TEST);
-    GLboolean lighting = glIsEnabled(GL_LIGHTING);
-    glDisable(GL_LIGHTING);
-    glColor4f(1.0,1.0,1.0,1.0);
-    CHECK_OPENGL_ERROR("");
-    if(lighting) glEnable(GL_LIGHTING);
-
     draw_points();
     CHECK_OPENGL_ERROR("");
   }
@@ -732,11 +746,13 @@ ParticleFlowRenderer::updateAnim()
 {
 CHECK_OPENGL_ERROR("");
 
-  particle_time_ += time_increment_;
-  if (particle_time_ > 15.0)
-    particle_time_ = 0.0;
+//   particle_time_ = -time_increment_;
+//   if (particle_time_ > 15.0)
+//     particle_time_ = 0.0;
   
-  shader_->initialize_uniform("Time", particle_time_);
+//   cerr<<"shader 'Time' = "<<particle_time_<<" ";
+
+  shader_->initialize_uniform("Time", time_increment_);
   
   CHECK_OPENGL_ERROR("");
 }
@@ -981,7 +997,7 @@ void
 ParticleFlowRenderer::update_transform(const Point& c, const Point& r, 
                                        const Point& d)
 {
-  cerr<<"Updating widget transform.\n";
+//   cerr<<"Updating widget transform.\n";
   Transform s;
   Point unused;
   shader_trans_.load_identity();
