@@ -939,7 +939,7 @@ Painter::ITKThresholdTool::finish()
   FilterType::Pointer filter = FilterType::New();
   painter_->get_vars()->insert("ToolDialog::text", "ITK Threshold Segmentation Level Set Running...", "string", true);  
   painter_->get_vars()->unset("ProgressBar::bar_height");
-  painter_->get_vars()->insert("ToolDialog::button_height", "0", "string", true);
+  //  painter_->get_vars()->insert("ToolDialog::button_height", "0", "string", true);
   painter_->get_vars()->insert("Painter::progress_bar_total_width","500","string", true);
 
 

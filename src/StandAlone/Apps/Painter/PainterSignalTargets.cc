@@ -71,6 +71,9 @@
 #include <Core/Volume/VolumeRenderer.h>
 #include <Core/Util/DynamicCompilation.h>
 #include <Core/Algorithms/Visualization/NrrdTextureBuilderAlgo.h>
+
+#include <sys/mman.h>
+
 #ifdef HAVE_INSIGHT
 
 #  include <itkImageFileReader.h>
@@ -102,6 +105,7 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::NewLayer);
   REGISTER_CATCHER_TARGET(Painter::MergeLayer);
 
+  REGISTER_CATCHER_TARGET(Painter::MemMapFileRead);
   REGISTER_CATCHER_TARGET(Painter::NrrdFileRead);
   REGISTER_CATCHER_TARGET(Painter::NrrdFileWrite);
 
@@ -120,6 +124,8 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::ITKThresholdLevelSet);
 
   REGISTER_CATCHER_TARGET(Painter::ShowVolumeRendering);
+
+  REGISTER_CATCHER_TARGET(Painter::AbortFilterOn);
    
   return STOP_E;
 }
@@ -144,7 +150,7 @@ Painter::SliceWindow_Maker(event_handle_t event) {
 BaseTool::propagation_state_e 
 Painter::StartBrushTool(event_handle_t event) {
   tm_.add_tool(new BrushTool(this),25); 
-  return STOP_E;
+  return CONTINUE_E;
 }
   
 
@@ -183,7 +189,7 @@ Painter::Autoview(event_handle_t) {
     }
   }
 
-  return STOP_E;
+  return CONTINUE_E;
 }
 
 
@@ -192,19 +198,19 @@ Painter::Autoview(event_handle_t) {
 BaseTool::propagation_state_e 
 Painter::CopyLayer(event_handle_t) {
   copy_current_layer();
-  return STOP_E;
+  return CONTINUE_E;
 }
 
 BaseTool::propagation_state_e 
 Painter::DeleteLayer(event_handle_t) {
   kill_current_layer();
-  return STOP_E;
+  return CONTINUE_E;
 }
 
 BaseTool::propagation_state_e 
 Painter::NewLayer(event_handle_t) {
   new_current_layer();
-  return STOP_E;
+  return CONTINUE_E;
 }
 
 
@@ -246,7 +252,7 @@ Painter::MergeLayer(event_handle_t event) {
   
   recompute_volume_list();
   current_volume_ = vol1;
-  return STOP_E;
+  return CONTINUE_E;
 }
   
 
@@ -261,6 +267,7 @@ Painter::NrrdFileRead(event_handle_t event) {
 
   NrrdDataHandle nrrd_handle = new NrrdData();
   Nrrd *nrrd = nrrd_handle->nrrd_;
+
   if (nrrdLoad(nrrd, filename.c_str(), 0)) {
     get_vars()->insert("Painter::status_text",
                        "Cannot Load Nrrd: "+filename, 
@@ -268,6 +275,52 @@ Painter::NrrdFileRead(event_handle_t event) {
     return STOP_E;
     
   } 
+  
+  pair<string, string> dirfile = split_filename(filename);
+  BundleHandle bundle = new Bundle();
+  bundle->setNrrd(dirfile.second, nrrd_handle);
+  add_bundle(bundle); 
+  get_vars()->insert("Painter::status_text",
+                     "Successfully Loaded Nrrd: "+filename,
+                     "string", true);
+
+  return CONTINUE_E;  
+}
+
+
+BaseTool::propagation_state_e 
+Painter::MemMapFileRead(event_handle_t event) {
+  Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
+  ASSERT(signal);
+  const string &filename = signal->get_signal_data();
+  //  if (!validFile(filename)) {
+  //    return STOP_E;
+  //  }
+  const string datafile = filename+".img";
+  const string nrrdfile = filename+".nhdr";
+
+  NrrdDataHandle nrrd_handle = new NrrdData();
+  Nrrd *nrrd = nrrd_handle->nrrd_;
+
+  int fd = open(datafile.c_str(), O_RDONLY);
+  if (!fd) {
+    cerr << "Not opened\n";
+    return STOP_E;
+  }
+
+
+  if (nrrdLoad(nrrd, nrrdfile.c_str(), 0)) {
+    get_vars()->insert("Painter::status_text",
+                       "Cannot Load Nrrd: "+filename, 
+                       "string", true);
+    //    return STOP_E;
+    
+  } 
+
+  struct stat buf;
+  fstat(fd, &buf);
+  nrrd->data = mmap(0, buf.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+  
   pair<string, string> dirfile = split_filename(filename);
   BundleHandle bundle = new Bundle();
   bundle->setNrrd(dirfile.second, nrrd_handle);
@@ -308,7 +361,7 @@ Painter::ITKBinaryDilate(event_handle_t event) {
   do_itk_filter<Painter::ITKImageFloat3D>(filter, vol->nrrd_handle_);
   redraw_all();
 #endif
-  return STOP_E;
+  return CONTINUE_E;
 }
 
 
@@ -616,6 +669,7 @@ Painter::SetLayer(event_handle_t event) {
 }
 
 
+
 BaseTool::propagation_state_e 
 Painter::ShowVolumeRendering(event_handle_t event) {   
   event_handle_t scene_event = 0;
@@ -717,6 +771,14 @@ Painter::LoadColorMap1D(event_handle_t event) {
   Bundle *bundle = new Bundle();
   bundle->setColorMap(fn, cmaph);
   add_bundle(bundle);
+}
+
+
+
+BaseTool::propagation_state_e 
+Painter::AbortFilterOn(event_handle_t event) {
+  abort_filter_ = true;
+  return CONTINUE_E;
 }
 
   

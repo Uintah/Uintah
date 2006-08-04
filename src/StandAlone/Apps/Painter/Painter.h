@@ -673,6 +673,7 @@ private:
   NrrdVolume *          copy_current_volume(const string &, int mode=0);
 
   NrrdVolume *          filter_volume_;
+  bool                  abort_filter_;
 #ifdef HAVE_INSIGHT
   ITKDatatypeHandle     filter_update_img_;
   ITKDatatypeHandle     nrrd_to_itk_image(NrrdDataHandle &nrrd);
@@ -705,6 +706,7 @@ private:
   CatcherFunction_t     NewLayer;
   CatcherFunction_t     MergeLayer;
 
+  CatcherFunction_t     MemMapFileRead;
   CatcherFunction_t     NrrdFileRead;
   CatcherFunction_t     NrrdFileWrite;
 
@@ -723,6 +725,7 @@ private:
   CatcherFunction_t     ITKThresholdLevelSet;
 
   CatcherFunction_t     ShowVolumeRendering;
+  CatcherFunction_t     AbortFilterOn;
 
   
 
@@ -953,9 +956,13 @@ Painter::do_itk_filter(itk::ImageToImageFilter<ImageType, ImageType> *filter,
   try {
     filter->Update();
   } catch (itk::ExceptionObject &err) {
-    cerr << "ITK Exception: \n";
-    err.Print(cerr);
-    return false;
+    if (!abort_filter_) {
+      cerr << "ITK Exception: \n";
+      err.Print(cerr);
+      return false;
+    } else {
+      abort_filter_ = false;
+    }
   } catch (...) {
     cerr << "ITK Filter error!\n";
     return false;

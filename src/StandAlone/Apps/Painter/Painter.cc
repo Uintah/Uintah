@@ -308,7 +308,7 @@ Painter::NrrdVolume::set_nrrd(NrrdDataHandle &nrrd_handle)
 {
   mutex_.lock();
   nrrd_handle_ = nrrd_handle;
-  nrrd_handle_.detach();
+  //  nrrd_handle_.detach();
   //  nrrdBasicInfoCopy(nrrd_handle_->nrrd_, nrrd->nrrd,0);
   //  nrrdAxisInfoCopy(nrrd_handle_->nrrd_, nrrd->nrrd, 0,0);
   //  nrrdCopy(nrrd_handle_->nrrd_, nrrd->nrrd);
@@ -430,7 +430,8 @@ Painter::Painter(Skinner::Variables *variables, GuiContext* ctx) :
   show_text_((!ctx) ? 0 : ctx->subVar("show_text"), 1),
   volume_lock_("Volume"),
   bundles_(),
-  filter_volume_(0)  
+  filter_volume_(0),
+  abort_filter_(false)
 {
 #ifdef HAVE_INSIGHT
   filter_update_img_ = 0;
@@ -1798,13 +1799,22 @@ Painter::NrrdVolume::build_index_to_world_matrix() {
   DenseMatrix matrix(dim, dim);
   matrix.zero();
   for (int i = 0; i < dim-1; ++i) {
-    if (airExists(nrrd->axis[i].spacing))
+    if (airExists(nrrd->axis[i].spacing)) {
+      if (nrrd->axis[i].spacing == 0.0) {
+        nrrd->axis[i].spacing = 1.0;
+      }
       matrix.put(i,i,nrrd->axis[i].spacing);
-    else if (airExists(nrrd->axis[i].min) && airExists(nrrd->axis[i].max))
-      matrix.put(i,i,((nrrd->axis[i].max-nrrd->axis[i].min)/
-                      nrrd->axis[i].size));
-    else
+    } else if (airExists(nrrd->axis[i].min) && airExists(nrrd->axis[i].max)) {
+      if (nrrd->axis[i].min == nrrd->axis[i].max) {
+        nrrd->axis[i].spacing = 1.0;
+        matrix.put(i,i,1.0);
+      } else {
+        matrix.put(i,i,((nrrd->axis[i].max-nrrd->axis[i].min)/
+                        nrrd->axis[i].size));
+      }
+    } else {
       matrix.put(i,i, 1.0);
+    }
 
     if (airExists(nrrd->axis[i].min))
       matrix.put(i, nrrd->dim, nrrd->axis[i].min);
@@ -2384,7 +2394,11 @@ Painter::filter_callback(itk::Object *object,
   {
     //    std::cerr << "Filter Iteration: " << value * 100.0 << "%\n";
   }
-  //  if (value > 0.5) process->AbortGenerateDataOn();
+  if (abort_filter_) {
+    //    abort_filter_ = false;
+    process->AbortGenerateDataOn();
+  }
+
 
 }
 
