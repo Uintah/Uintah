@@ -408,7 +408,9 @@ bool ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::ModalMapping(Progress
   IData.numproc = np;
    
   Thread::parallel(this,&ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel,np,&IData);
-    
+  
+  std::cout << "retval="<<IData.retval<<"\n";  
+        
   return (IData.retval);
 }
 
@@ -439,11 +441,12 @@ void ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,
   if ((filter == "median")||(filter == "Median"))
   {
     // median filter over integration nodes
+    std::vector<typename FOUT::value_type> valarray;
+
     while (it != eit)
     {
       integrator.get_nodes_and_weights(*it,points,weights);
-      std::vector<typename FOUT::value_type> valarray(points.size());
-
+      valarray.resize(points.size());
       for (size_t p = 0; p < points.size(); p++)
       {
         if(!(mapping.get_data(points[p],valarray[p]))) valarray[p] = idata->def_value;
@@ -505,10 +508,13 @@ void ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,
   {
     // Filter designed for segmentations where one wants the most common element to be the
     // sampled element
+    
+    std::vector<typename FOUT::value_type> valarray;
+
     while (it != eit)
     {
       integrator.get_nodes_and_weights(*it,points,weights);
-      std::vector<typename FOUT::value_type> valarray(points.size());
+      valarray.resize(points.size());
 
       for (size_t p = 0; p < points.size(); p++)
       {
@@ -615,7 +621,7 @@ void ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,
   }
   else
   {
-    if (numproc == 0)
+    if (procnum == 0)
     {
       idata->pr->error("ModalMapping: Filter method is unknown");
       idata->retval = false;
@@ -623,7 +629,7 @@ void ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,
     return;
   }
   
-  if (numproc == 0) idata->retval = true;
+  if (procnum == 0) idata->retval = true;
 }
 
 
@@ -724,11 +730,12 @@ void GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int 
   if ((filter == "median")||(filter == "Median"))
   {
     // median filter over integration nodes
+    std::vector<typename FOUT::value_type> valarray;
+
     while (it != eit)
     {
       integrator.get_nodes_and_weights(*it,points,weights);
-      std::vector<typename FOUT::value_type> valarray(points.size());
-
+      valarray.resize(points.size());
       for (size_t p = 0; p < points.size(); p++)
       {
         if(!(mapping.get_gradient(points[p],valarray[p]))) valarray[p] = 0;
@@ -790,11 +797,12 @@ void GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int 
   {
     // Filter designed for segmentations where one wants the most common element to be the
     // sampled element
+
+    std::vector<typename FOUT::value_type> valarray;
     while (it != eit)
     {
       integrator.get_nodes_and_weights(*it,points,weights);
-      std::vector<typename FOUT::value_type> valarray(points.size());
-
+      valarray.resize(points.size());
       for (size_t p = 0; p < points.size(); p++)
       {
         if(!(mapping.get_gradient(points[p],valarray[p]))) valarray[p] = 0;
@@ -900,7 +908,7 @@ void GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int 
   }
   else
   {
-    if (numproc == 0)
+    if (procnum == 0)
     {
       idata->pr->error("GradientModalMapping: Filter method is unknown");
       idata->retval = false;
@@ -908,7 +916,7 @@ void GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int 
     return;
   }
   
-  if (numproc == 0) idata->retval = true;
+  if (procnum == 0) idata->retval = true;
 }
 
 
@@ -1010,11 +1018,12 @@ void GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(
   if ((filter == "median")||(filter == "Median"))
   {
     // median filter over integration nodes
+    std::vector<typename FOUT::value_type> valarray;
+
     while (it != eit)
     {
       integrator.get_nodes_and_weights(*it,points,weights);
-      std::vector<typename FOUT::value_type> valarray(points.size());
-
+      valarray.resize(points.size());
       for (size_t p = 0; p < points.size(); p++)
       {
         if(!(mapping.get_gradient(points[p],val2))) val2 = 0;
@@ -1081,11 +1090,11 @@ void GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(
   {
     // Filter designed for segmentations where one wants the most common element to be the
     // sampled element
+    std::vector<typename FOUT::value_type> valarray;
     while (it != eit)
     {
       integrator.get_nodes_and_weights(*it,points,weights);
-      std::vector<typename FOUT::value_type> valarray(points.size());
-
+      valarray.resize(points.size());
       for (size_t p = 0; p < points.size(); p++)
       {
         if(!(mapping.get_gradient(points[p],val2))) val2 = 0;
@@ -1192,7 +1201,7 @@ void GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(
   }
   else
   {
-    if (numproc == 0)
+    if (procnum == 0)
     {
       idata->pr->error("GradientModalMapping: Filter method is unknown");
       idata->retval = false;
@@ -1200,7 +1209,7 @@ void GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(
     return;
   }
   
-  if (numproc == 0) idata->retval = true;
+  if (procnum == 0) idata->retval = true;
 }
 
 
@@ -1532,8 +1541,26 @@ class GaussianIntegration
             coords_[p].push_back(gauss_.GaussianPoints[p][q]);
           weights_[p] = gauss_.GaussianWeights[p];
         }
-        vol_ = basis_.volume();
+        
         dim_ = basis_.domain_dimension();
+        if (dim_ == 3)
+        {
+          vol_ = basis_.volume();
+        }
+        else if (dim_ == 2)
+        {
+          vol_ = basis_.area(0);
+        }
+        else if (dim_ == 0)
+        {
+          vol_ = basis_.length(0);
+        }
+        else
+        {
+          vol_ = 0.0;
+        }
+        
+        
       }
     }
 
@@ -1711,6 +1738,7 @@ class RegularIntegration
       for (int k=0; k < weights_.size(); k++)
       {
         mesh_->interpolate(gpoints[k],coords_[k],idx);
+        mesh_->derivate(coords_[k],idx,Jv_);
 
         if (dim_ == 3)
         {

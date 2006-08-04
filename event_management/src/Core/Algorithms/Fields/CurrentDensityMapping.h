@@ -488,7 +488,7 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
   }
   else
   {
-    if (numproc == 0)
+    if (procnum == 0)
     {
       idata->pr->error("CurrentDensintyMapping: Filter method is unknown");
       idata->retval = false;
@@ -496,7 +496,7 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
     return;
   }
   
-  if (numproc == 0) idata->retval = true;
+  if (procnum == 0) idata->retval = true;
 }
 
 
@@ -619,10 +619,11 @@ void CurrentDensityMappingNormalAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(
   if ((filter == "median")||(filter == "Median"))
   {
     // median filter over integration nodes
+    std::vector<typename FOUT::value_type> valarray;
     while (it != eit)
     {
       integrator.get_nodes_normals_and_weights(*it,points,normals,weights);
-      std::vector<typename FOUT::value_type> valarray(points.size());
+      valarray.resize(points.size());
 
       for (size_t p = 0; p < points.size(); p++)
       {
@@ -726,11 +727,11 @@ void CurrentDensityMappingNormalAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(
   {
     // Filter designed for segmentations where one wants the most common element to be the
     // sampled element
+    std::vector<typename FOUT::value_type> valarray;
     while (it != eit)
     {
       integrator.get_nodes_normals_and_weights(*it,points,normals,weights);
-      std::vector<typename FOUT::value_type> valarray(points.size());
-
+      valarray.resize(points.size());
       for (size_t p = 0; p < points.size(); p++)
       {
         if (pmapping.get_gradient(points[p],grad)&&cmapping.get_data(points[p],con))
@@ -877,7 +878,7 @@ void CurrentDensityMappingNormalAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(
   }
   else
   {
-    if (numproc == 0)
+    if (procnum == 0)
     {
       idata->pr->error("CurrentDensintyMapping: Filter method is unknown");
       idata->retval = false;
@@ -885,7 +886,7 @@ void CurrentDensityMappingNormalAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(
     return;
   }
   
-  if (numproc == 0) idata->retval = true;
+  if (procnum == 0) idata->retval = true;
 }
 
 
@@ -899,7 +900,7 @@ class NormalGaussianIntegration
 {
   public:
 
-    NormalGaussianIntegration(FIELD* field)
+    inline NormalGaussianIntegration(FIELD* field)
     {
       field_ = field;
       if (field_)
@@ -915,12 +916,28 @@ class NormalGaussianIntegration
             coords_[p].push_back(gauss_.GaussianPoints[p][q]);
           weights_[p] = gauss_.GaussianWeights[p];
         }
-        vol_ = basis_.volume();
+        
         dim_ = basis_.domain_dimension();
+        if (dim_ == 3)
+        {
+          vol_ = basis_.volume();
+        }
+        else if (dim_ == 2)
+        {
+          vol_ = basis_.area(0);
+        }
+        else if (dim_ == 0)
+        {
+          vol_ = basis_.length(0);
+        }
+        else
+        {
+          vol_ = 0.0;
+        }
       }
     }
 
-    void get_nodes_normals_and_weights(typename FIELD::mesh_type::Elem::index_type idx, std::vector<Point>& gpoints, std::vector<Vector>& gnormals, std::vector<double>& gweights)
+    inline void get_nodes_normals_and_weights(typename FIELD::mesh_type::Elem::index_type idx, std::vector<Point>& gpoints, std::vector<Vector>& gnormals, std::vector<double>& gweights)
     {    
       gpoints.resize(gauss_.GaussianNum);
       gweights.resize(gauss_.GaussianNum);
@@ -934,7 +951,7 @@ class NormalGaussianIntegration
       }
     }
         
-    void get_nodes_normals_and_iweights(typename FIELD::mesh_type::Elem::index_type idx, std::vector<Point>& gpoints, std::vector<Vector>& gnormals, std::vector<double>& gweights)
+    inline void get_nodes_normals_and_iweights(typename FIELD::mesh_type::Elem::index_type idx, std::vector<Point>& gpoints, std::vector<Vector>& gnormals, std::vector<double>& gweights)
     {    
       
       gpoints.resize(gauss_.GaussianNum);
@@ -1019,13 +1036,15 @@ class NormalRegularIntegration
 {
   public:
 
-    NormalRegularIntegration(FIELD* field)
+    inline NormalRegularIntegration(FIELD* field)
     {
       field_ = field;
       if (field_)
       {
         mesh_  = field->get_typed_mesh().get_rep();
         basis_ = mesh_->get_basis();
+        
+        vol_ = 0.0;
         
         dim_ = basis_.domain_dimension();
         if (dim_ == 1)
@@ -1038,6 +1057,7 @@ class NormalRegularIntegration
             coords_[p].push_back((0.5+p)/SIZE);
             weights_[p] = 1/SIZE;
           }          
+          vol_ = 1.0;
         }
         
         if (dim_ == 2)
@@ -1054,6 +1074,7 @@ class NormalRegularIntegration
               weights_[p+q*SIZE] = 1/(SIZE*SIZE);
             }
           }         
+          vol_ = 1.0;
         }
 
         if (dim_ == 3)
@@ -1074,11 +1095,12 @@ class NormalRegularIntegration
               }
             }
           }         
+          vol_ = 1.0;         
         }
       }  
     }
 
-    void get_nodes_normals_and_weights(typename FIELD::mesh_type::Elem::index_type idx, std::vector<Point>& gpoints, std::vector<Vector>& gnormals, std::vector<double>& gweights)
+    inline void get_nodes_normals_and_weights(typename FIELD::mesh_type::Elem::index_type idx, std::vector<Point>& gpoints, std::vector<Vector>& gnormals, std::vector<double>& gweights)
     {    
       gpoints.resize(weights_.size());
       gweights.resize(weights_.size());
@@ -1092,7 +1114,7 @@ class NormalRegularIntegration
       }
     }
 
-    void get_nodes_normals_and_iweights(typename FIELD::mesh_type::Elem::index_type idx, std::vector<Point>& gpoints, std::vector<Vector>& gnormals, std::vector<double>& gweights)
+    inline void get_nodes_normals_and_iweights(typename FIELD::mesh_type::Elem::index_type idx, std::vector<Point>& gpoints, std::vector<Vector>& gnormals, std::vector<double>& gweights)
     {    
       gpoints.resize(weights_.size());
       gweights.resize(weights_.size());
@@ -1102,6 +1124,7 @@ class NormalRegularIntegration
       {
         mesh_->interpolate(gpoints[k],coords_[k],idx);
         mesh_->get_normal(gnormals[k],coords_[k],idx,0);
+        mesh_->derivate(coords_[k],idx,Jv_);
 
         if (dim_ == 3)
         {
