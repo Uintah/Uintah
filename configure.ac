@@ -4237,9 +4237,9 @@ _sci_lib=
 _sci_inc=
 _sci_optional=optional
 
-if test "$with_babel" = "yes"; then
+if test "$enable_scirun2" = "yes" -a "$with_babel" = "yes"; then
   _sci_optional=required
-elif test "$with_babel"; then
+elif test "$enable_scirun2" = "yes" -a "$with_babel"; then
   _sci_lib="$with_babel/lib"
   _sci_inc="$with_babel/include $with_babel/include/cxx $with_babel/include/f77"
   _sci_optional=required
@@ -4945,59 +4945,63 @@ AC_SUBST(NCURSES_LIB_DIR_FLAG)
 ##  --  search for wxWidgets  --------------------------------------------
 
 _sci_inc=
+_sci_lib=
 _sci_optional=optional
 
-if test "$with_wx" = "yes"; then
-  _sci_optional=required
-elif test "$with_wx"; then
-  ## can't use 'specific' setting because we'll try to link more than 1 library later
-  _sci_optional=required
-  _sci_lib="$with_wx/lib"
-  _sci_inc="$with_wx/include"
-fi
+if test "$enable_scirun2" = "yes" ; then
 
-_wx_bin=$_sci_lib/../bin
-WX_CONFIG=
-AC_PATH_PROG(WX_CONFIG,wx-config,NOT_FOUND,$_wx_bin $PATH)
+ if test "$with_wx" = "yes"; then
+   _sci_optional=required
+ elif test "$with_wx"; then
+   ## can't use 'specific' setting because we'll try to link more than 1 library later
+   _sci_optional=required
+   _sci_lib="$with_wx/lib"
+   _sci_inc="$with_wx/include"
+ fi
 
-if test $_sci_optional != "optional" && test "$WX_CONFIG" = "NOT_FOUND"; then
-  SCI_MSG_ERROR(wx-config not found)
-fi
+ _wx_bin=$_sci_lib/../bin
+ WX_CONFIG=
+ AC_PATH_PROG(WX_CONFIG,wx-config,NOT_FOUND,$_wx_bin $PATH)
 
-SCI_CHECK_VERSION($WX_CONFIG,--version,2.6.0,,echo configure: error: wrong wxWidgets version.; exit)
-WX_LIBS=`$WX_CONFIG --libs`
-WX_CXXFLAGS=`$WX_CONFIG --cxxflags`
+ if test $_sci_optional != "optional" && test "$WX_CONFIG" = "NOT_FOUND"; then
+   SCI_MSG_ERROR(wx-config not found)
+ fi
 
-ext="$ac_ext"
-ac_ext="cc"
+ SCI_CHECK_VERSION($WX_CONFIG,--version,2.6.0,,echo configure: error: wrong wxWidgets version.; exit)
+ WX_LIBS=`$WX_CONFIG --libs`
+ WX_CXXFLAGS=`$WX_CONFIG --cxxflags`
 
-case $host in
-  *linux*)
-    _wx_lib_dir_flags=`echo $WX_LIBS | sed "s/ -[[^L]][[^ ]]*/ /g" | sed "s/^-[[^L]][[^ ]]*//g"`
-    _wx_lib_flags=`echo $WX_LIBS | sed "s/ -[[^l]][[^ ]]*/ /g" | sed "s/^-[[^l]][[^ ]]*//g"`
-    _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^I]][[^ ]]*/ /g" | sed "s/^-[[^I]][[^ ]]*//g"`
-    _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^D]][[^ ]]*/ /g" | sed "s/^-[[^D]][[^ ]]*//g"`
+ ext="$ac_ext"
+ ac_ext="cc"
 
-    SCI_TRY_LINK(WX,wxWidgets libraries,wx/wxprec.h,$_wx_inc_flags,$_wx_lib_flags,$_wx_lib_dir_flags,$_wx_def_flags,,$_sci_optional)
-    ;;
-  *-darwin*)
-    _wx_lib_dir_flags=$WX_LIBS
-    _wx_lib_flags=$WX_LIBS
-    _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^I]][[^ ]]*/ /g" | sed "s/^-[[^I]][[^ ]]*//g"`
-    _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^D]][[^ ]]*/ /g" | sed "s/^-[[^D]][[^ ]]*//g"`
+ case $host in
+   *linux*)
+     _wx_lib_dir_flags=`echo $WX_LIBS | sed "s/ -[[^L]][[^ ]]*/ /g" | sed "s/^-[[^L]][[^ ]]*//g"`
+     _wx_lib_flags=`echo $WX_LIBS | sed "s/ -[[^l]][[^ ]]*/ /g" | sed "s/^-[[^l]][[^ ]]*//g"`
+     _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^I]][[^ ]]*/ /g" | sed "s/^-[[^I]][[^ ]]*//g"`
+     _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^D]][[^ ]]*/ /g" | sed "s/^-[[^D]][[^ ]]*//g"`
 
-    SCI_TRY_LINK(WX,wxWidgets libraries,wx/wxprec.h,$_wx_inc_flags,$_wx_lib_flags,$_wx_lib_dir_flags,$_wx_def_flags,,$_sci_optional)
-    ;;
-  *)
-    #assume there is no specific version
-    ;;
-esac
+     SCI_TRY_LINK(WX,wxWidgets libraries,wx/wxprec.h,$_wx_inc_flags,$_wx_lib_flags,$_wx_lib_dir_flags,$_wx_def_flags,,$_sci_optional)
+     ;;
+   *-darwin*)
+     _wx_lib_dir_flags=$WX_LIBS
+     _wx_lib_flags=$WX_LIBS
+     _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^I]][[^ ]]*/ /g" | sed "s/^-[[^I]][[^ ]]*//g"`
+     _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^D]][[^ ]]*/ /g" | sed "s/^-[[^D]][[^ ]]*//g"`
 
-# Restore the previous settings.
-ac_ext="$ext"
+     SCI_TRY_LINK(WX,wxWidgets libraries,wx/wxprec.h,$_wx_inc_flags,$_wx_lib_flags,$_wx_lib_dir_flags,$_wx_def_flags,,$_sci_optional)
+     ;;
+   *)
+     #assume there is no specific version
+     ;;
+ esac
 
-if test "$HAVE_WX" = "yes"; then
-  DEF_WX="#define HAVE_WX 1"
+ # Restore the previous settings.
+ ac_ext="$ext"
+
+ if test "$HAVE_WX" = "yes"; then
+   DEF_WX="#define HAVE_WX 1"
+ fi
 fi
 
 AC_SUBST(HAVE_WX)
