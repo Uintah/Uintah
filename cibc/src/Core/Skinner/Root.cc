@@ -94,8 +94,9 @@ namespace SCIRun {
 
       Drawables_t::iterator citer = 
         find(children_.begin(), children_.end(), window);
-      ASSERT(citer != children_.end());
-      children_.erase(citer);
+      if (citer != children_.end()) {
+        children_.erase(citer);
+      }
 
 
 
