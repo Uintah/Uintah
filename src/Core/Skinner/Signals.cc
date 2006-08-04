@@ -69,6 +69,17 @@ namespace SCIRun {
     SignalCatcher::~SignalCatcher() {  } 
 
 
+    SignalCatcher::CatcherTargetInfo_t::CatcherTargetInfo_t() :
+      catcher_(0),
+      function_(0),
+      data_(""),
+      targetname_(""),
+      threaded_(false)
+    {
+    }
+      
+
+
     void
     SignalCatcher::register_target(const string &targetname,
                                    CatcherFunctionPtr function) 
