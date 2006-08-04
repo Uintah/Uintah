@@ -37,6 +37,14 @@
         <name>Field</name>
         <datatype>SCIRun::Field</datatype>
       </port>
+      <port>
+        <name>MinValue/Value</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>MaxValue</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>
