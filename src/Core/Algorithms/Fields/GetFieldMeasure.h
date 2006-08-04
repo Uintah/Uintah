@@ -139,7 +139,8 @@ bool GetFieldMeasureAlgoT<FIELD>::GetFieldMeasure(SCIRun::ProgressReporter *pr,S
     
     if ((method == "minimum")||(method == "Minimum")||(method=="min")||(method=="Min"))
     {
-      tval = DBL_MAX;
+      tval = 0;
+      if (it != it_end) tval = field->value(*it);
       while (it != it_end)
       {
         val = field->value(*it);
@@ -150,7 +151,8 @@ bool GetFieldMeasureAlgoT<FIELD>::GetFieldMeasure(SCIRun::ProgressReporter *pr,S
     }
     else if ((method == "maximum")||(method == "Maximum")||(method=="max")||(method=="Max"))
     {
-      tval = -DBL_MAX;
+      tval = 0;
+      if (it != it_end) tval = field->value(*it);
       while (it != it_end)
       {
         val = field->value(*it);

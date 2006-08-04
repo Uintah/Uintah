@@ -69,7 +69,7 @@ bool IsInsideFieldAlgo::IsInsideField(ProgressReporter *pr, FieldHandle input, F
   if ((basis_type == "linear")||(basis_type == "Linear")) fo.make_lineardata();
   else if ((basis_type == "constant")||(basis_type == "Constant")) fo.make_constantdata();
   
-  // In case no data location is there make one.
+  // In case no data location is present, make one.
   if (fo.is_nodata()) fo.make_lineardata();
   
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
