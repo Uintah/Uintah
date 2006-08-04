@@ -64,6 +64,7 @@ PSELIBS := \
 	Core/Basis         \
 	Core/Bundle        \
 	Core/Datatypes     \
+	Core/Events        \
 	Core/Exceptions    \
 	Core/Geometry      \
 	Core/Geom          \
