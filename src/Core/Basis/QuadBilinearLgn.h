@@ -206,6 +206,27 @@ protected:
 
 //! Class with weights and coordinates for 2nd order Gaussian integration
 template <class T>
+class QuadGaussian1
+{
+public:
+  static int GaussianNum;
+  static T GaussianPoints[1][2];
+  static T GaussianWeights[1];
+};
+
+template <class T>
+int QuadGaussian1<T>::GaussianNum = 1;
+
+template <class T>
+T QuadGaussian1<T>::GaussianPoints[1][2] = {
+  {0.5, 0.5}};
+
+template <class T>
+T QuadGaussian1<T>::GaussianWeights[1] = {1.0};
+
+
+//! Class with weights and coordinates for 2nd order Gaussian integration
+template <class T>
 class QuadGaussian2 
 {
 public:
