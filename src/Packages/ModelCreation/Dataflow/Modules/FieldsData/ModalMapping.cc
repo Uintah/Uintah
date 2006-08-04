@@ -71,7 +71,7 @@ void ModalMapping::execute()
   if (!(get_input_handle("Destination",fdst,true))) return;
   
   if (inputs_changed_ || mappingmethod_.changed() || integrationmethod_.changed() ||
-      integrationfilter_.changed() || !oport_cached("Destination"))
+      integrationfilter_.changed() || def_value_.changed() || !oport_cached("Destination"))
   {
     std::string mappingmethod = mappingmethod_.get();
     std::string integrationmethod = integrationmethod_.get();

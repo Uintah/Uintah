@@ -72,7 +72,7 @@ void IsInsideFields::execute()
 
   if (objectfields.size() == 0) return;
   
-  if (inputs_changed_ || !oport_cached("Field"))
+  if (inputs_changed_ || outputbasis_.changed() || outputtype_.changed() || !oport_cached("Field"))
   {
     SCIRunAlgo::FieldsAlgo algo(this);
     if(!(algo.IsInsideFields(input,output,objectfields,outputtype_.get(),outputbasis_.get()))) return;
