@@ -93,6 +93,7 @@ namespace SCIRun {
 
 
       struct CatcherTargetInfo_t { 
+        CatcherTargetInfo_t();
         SignalCatcher *         catcher_;
         CatcherFunctionPtr      function_;
         string                  data_;
