@@ -26,9 +26,8 @@ using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
 //__________________________________   
-//  setenv SCI_DEBUG "MPMICE_NORMAL_COUT:+,MPMICE_DOING_COUT:+"
-//  MPMICE_DOING_COUT:   dumps when tasks are scheduled and performed
-static DebugStream cout_doing("MPMICE_DOING_COUT", false);
+//  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
+static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
 
 const double Steady_Burn::R = 8.314;
@@ -55,9 +54,8 @@ Steady_Burn::~Steady_Burn(){
     delete mymatls;
 }
 
-
+//______________________________________________________________________
 void Steady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*){
-  cout<<"I am in problem setup" << endl;
   d_sharedState = sharedState;
   matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
   matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");  
@@ -101,7 +99,7 @@ void Steady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup
   }
   mymatls->addReference();
 }
-
+//______________________________________________________________________
 void Steady_Burn::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP model_ps = ps->appendChild("Model");
@@ -122,9 +120,9 @@ void Steady_Burn::outputProblemSpec(ProblemSpecP& ps)
   model_ps->appendElement("ThresholdPressure", ThresholdPressure);
   model_ps->appendElement("IgnitionTemp",      ignitionTemp);
 }
-
+//______________________________________________________________________
 void Steady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, const ModelInfo*){
-  cout_doing << "Steady_Burn::scheduleInitialize" << endl;
+  printSchedule(level,"Steady_Burn::scheduleInitialize\t\t\t");
   Task* t = scinew Task("Steady_Burn::initialize", this, &Steady_Burn::initialize);                        
   MaterialSubset* one_matl  = scinew MaterialSubset();
   one_matl->add(0);
@@ -132,7 +130,7 @@ void Steady_Burn::scheduleInitialize(SchedulerP& sched, const LevelP& level, con
   sched->addTask(t, level->eachPatch(), mymatls);
 }
 
-
+//______________________________________________________________________
 void Steady_Burn::initialize(const ProcessorGroup*, 
 			     const PatchSubset* patches, 
 			     const MaterialSubset* /*matls*/, 
@@ -141,19 +139,28 @@ void Steady_Burn::initialize(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++) {
     const Patch* patch = patches->get(p);
     cout_doing << "Doing Initialize on patch " << patch->getID()<< "\t\t\t STEADY_BURN" << endl; 
+    
+    // What does this task do??
   }        
 }
 
-
+//______________________________________________________________________
 void Steady_Burn::scheduleComputeStableTimestep(SchedulerP&, const LevelP&, const ModelInfo*){
   // None necessary...
 }
 
-
-void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched, const LevelP& level, const ModelInfo* mi){
-  Task* t = scinew Task("Steady_Burn::computeModelSources", this, &Steady_Burn::computeModelSources, mi);
-  cout_doing << "Steady_Burn::scheduleComputeModelSources" << endl;
+//______________________________________________________________________
+// only perform this task on the finest level
+void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched, 
+                                              const LevelP& level, 
+                                              const ModelInfo* mi){
+  Task* t = scinew Task("Steady_Burn::computeModelSources", this, 
+                        &Steady_Burn::computeModelSources, mi);
+ 
+  if (level->hasFinerLevel())
+    return;  
   
+  printSchedule(level,"Steady_Burn::scheduleComputeModelSources\t\t\t");  
   t->requires( Task::OldDW, mi->delT_Label);
 
   Ghost::GhostType  gac = Ghost::AroundCells;  
@@ -198,7 +205,9 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched, const LevelP& l
 }
 
 
-void Steady_Burn::scheduleModifyThermoTransportProperties(SchedulerP&, const LevelP&, const MaterialSet*){
+void Steady_Burn::scheduleModifyThermoTransportProperties(SchedulerP&, 
+                                                          const LevelP&, 
+                                                          const MaterialSet*){
   // do nothing      
 }
 
@@ -229,7 +238,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
     
-    cout_doing << "Doing massExchange on patch "<< patch->getID()<<"\t\t\t\t Steady_Burn"<<endl;
+    printTask(patches,patch,"Doing computeModelSources\t\t\t\t");
     CCVariable<double> mass_src_0, mass_src_1, mass_0;
     CCVariable<Vector> momentum_src_0, momentum_src_1;
     CCVariable<double> energy_src_0, energy_src_1;
@@ -244,7 +253,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     new_dw->getModifiable(mass_src_1,     mi->mass_source_CCLabel,     m1, patch);   
     new_dw->getModifiable(momentum_src_1, mi->momentum_source_CCLabel, m1, patch);   
     new_dw->getModifiable(energy_src_1,   mi->energy_source_CCLabel,   m1, patch);   
-    new_dw->getModifiable(sp_vol_src_1,   mi->sp_vol_source_CCLabel,   m1, patch);   
+    new_dw->getModifiable(sp_vol_src_1,   mi->sp_vol_source_CCLabel,   m1, patch);
     
     constCCVariable<double>   press_CC, solidTemp, solidMass, solidSp_vol;
     constNCVariable<double>   NC_CCweight, NCsolidMass;
@@ -404,7 +413,6 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
 }
 
 //______________________________________________________________________
-
 double Steady_Burn::computeSurfaceArea(Vector &rhoGradVector, Vector &dx){
   double delX = dx.x();
   double delY = dx.y();
@@ -426,7 +434,8 @@ double Steady_Burn::computeSurfaceArea(Vector &rhoGradVector, Vector &dx){
   return delX*delY*delZ / (TmpX+TmpY+TmpZ) * coeff; 
 }
 
-
+//______________________________________________________________________
+//
 Vector Steady_Burn::computeDensityGradientVector(IntVector *nodeIdx, 
 						 constNCVariable<double> &NCsolidMass, 
 						 constNCVariable<double> &NC_CCweight, 
@@ -489,8 +498,6 @@ void Steady_Burn::setMPMLabel(MPMLabel* MLB){
 /****************************************************************************/
 /******************* Bisection Secant Solver ********************************/
 /****************************************************************************/
-
-
 double Steady_Burn::computeBurnedMass(double To, double P, double Vc, double surfArea, double delT, double solidMass){  
   UpdateConstants(To, P, Vc);
   double Ts = Tmin + (Tmax - Tmin) * BisectionSecant();
@@ -501,7 +508,7 @@ double Steady_Burn::computeBurnedMass(double To, double P, double Vc, double sur
   return burnedMass;
 }
 
-
+//______________________________________________________________________
 void Steady_Burn::UpdateConstants(double To, double P, double Vc){
   /* CC1 = Ac*R*Kc/Ec/Cp        */
   /* CC2 = Qc/Cp/2              */
@@ -641,3 +648,25 @@ double Steady_Burn::BisectionSecant(){
   
   return x0;
 }
+
+//______________________________________________________________________
+void Steady_Burn::printSchedule(const LevelP& level,
+                           const string& where){
+  if (cout_doing.active()){
+     cout_doing << d_myworld->myrank() << " " 
+                << where << "L-"
+                << level->getIndex()<< endl;
+   }  
+}
+//______________________________________________________________________
+void Steady_Burn::printTask(const PatchSubset* patches,
+                          const Patch* patch,
+                          const string& where){
+  if (cout_doing.active()){
+     cout_doing << d_myworld->myrank() << " " 
+                << where << " STEADY_BURN L-"
+                << getLevel(patches)->getIndex()
+                << " patch " << patch->getGridIndex()<< endl;
+   }  
+}
+//______________________________________________________________________
