@@ -111,7 +111,13 @@ WARNING
     double computeWSBSurfaceTemp(double Ts, double To, double P, double Vc);
     
     double computeMassTransferRate(double Ts, double To, double Vc);
-    
+                     
+    void printSchedule(const LevelP& level,
+                     const string& where); 
+                     
+    void printTask(const PatchSubset* patches,
+                 const Patch* patch,
+                 const string& where);
     
     Steady_Burn(const Steady_Burn&);
     Steady_Burn& operator=(const Steady_Burn&);
