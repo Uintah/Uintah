@@ -26,50 +26,54 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/Algorithms/Math/MathAlgo.h>
+#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
-
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-class CuthillMcKee : public Module {
+class FindClosestNodeIndexByValue : public Module {
 public:
-  CuthillMcKee(GuiContext*);
+  FindClosestNodeIndexByValue(GuiContext*);
   virtual void execute();
-
 };
 
 
-DECLARE_MAKER(CuthillMcKee)
-CuthillMcKee::CuthillMcKee(GuiContext* ctx)
-  : Module("CuthillMcKee", ctx, Source, "Math", "ModelCreation")
+DECLARE_MAKER(FindClosestNodeIndexByValue)
+FindClosestNodeIndexByValue::FindClosestNodeIndexByValue(GuiContext* ctx)
+  : Module("FindClosestNodeIndexByValue", ctx, Source, "FieldsGeometry", "ModelCreation")
 {
 }
 
-
-void CuthillMcKee::execute()
+void FindClosestNodeIndexByValue::execute()
 {
-  MatrixHandle Mat, Mapping, InverseMapping;
-  if(!(get_input_handle("Matrix",Mat,true))) return;
-
-  if (inputs_changed_ || !oport_cached("Matrix") || !oport_cached("Mapping") || !oport_cached("InverseMapping"))
+  FieldHandle field, points;
+  MatrixHandle value;
+  
+  if (!(get_input_handle("Field",field,true))) return;
+  if (!(get_input_handle("Points",points,true))) return;
+  if (!(get_input_handle("Value",value,true))) return;
+  
+  if (inputs_changed_ || !oport_cached("Indices"))
   {
-    SCIRunAlgo::MathAlgo algo(this);
-    if(!(algo.CuthillmcKee(Mat,Mat,InverseMapping,true))) return;
+    MatrixHandle indices;
+    double val;
     
-    Mapping = InverseMapping->transpose();
+    SCIRunAlgo::FieldsAlgo algo(this);
+    SCIRunAlgo::ConverterAlgo calgo(this);
     
-    send_output_handle("Matrix",Mat,true);
-    send_output_handle("Mapping",Mapping,true);
-    send_output_handle("InverseMapping",InverseMapping,true);
+    if (!(calgo.MatrixToDouble(value,val))) return;
+    if (!(algo.FindClosestNodeByValue(field,indices,points,val))) return;
+    
+    send_output_handle("Indices",indices,false);
   }
 }
-
 
 } // End namespace ModelCreation
 

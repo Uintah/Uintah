@@ -27,7 +27,7 @@
 */
 
 /*
- *  ComputeDataArray.cc:
+ *  CreateDataArray.cc:
  *
  *  Written by:
  *   Jeroen Stinstra
@@ -62,9 +62,9 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-class ComputeDataArray : public Module {
+class CreateDataArray : public Module {
 public:
-  ComputeDataArray(GuiContext*);
+  CreateDataArray(GuiContext*);
   virtual void execute();
   virtual void tcl_command(GuiArgs&, void*);
   
@@ -74,24 +74,24 @@ private:
 };
 
 
-DECLARE_MAKER(ComputeDataArray)
-ComputeDataArray::ComputeDataArray(GuiContext* ctx)
-  : Module("ComputeDataArray", ctx, Source, "TensorVectorMath", "ModelCreation"),
+DECLARE_MAKER(CreateDataArray)
+CreateDataArray::CreateDataArray(GuiContext* ctx)
+  : Module("CreateDataArray", ctx, Source, "TensorVectorMath", "ModelCreation"),
   guifunction_(get_ctx()->subVar("function")),
   guiformat_(get_ctx()->subVar("format"))
 {
 }
 
-void ComputeDataArray::execute()
+void CreateDataArray::execute()
 {
   // Define handles for input
-  MatrixHandle data;
+  MatrixHandle size;
   StringHandle func;
   std::vector<MatrixHandle> matrices;
   
   // Get latest handles from ports
   get_input_handle("Function",func,false);
-  get_input_handle("DataArray",data,false);
+  get_input_handle("Size",size,false);
   get_dynamic_input_handles("Array",matrices,false);
 
   get_gui()->lock();
@@ -101,11 +101,8 @@ void ComputeDataArray::execute()
 
   // Do something if data changed
   if (inputs_changed_ || guifunction_.changed() || guiformat_.changed() ||
-      !oport_cached("DataArray"))
+      !oport_cached("Array"))
   {
-
-    size_t mstart = 2;
-    if (data.get_rep() == 0) mstart--;
 
     // Check the size of the inputs
     size_t numinputs = matrices.size();
@@ -116,7 +113,7 @@ void ComputeDataArray::execute()
     }
     
     // Define input aray
-    SCIRunAlgo::ArrayObjectList inputlist(numinputs+mstart,SCIRunAlgo::ArrayObject(this));
+    SCIRunAlgo::ArrayObjectList inputlist(numinputs+1,SCIRunAlgo::ArrayObject(this));
     SCIRunAlgo::ArrayObjectList outputlist(1,SCIRunAlgo::ArrayObject(this));
   
 
@@ -132,44 +129,32 @@ void ComputeDataArray::execute()
     
     int n = 1;
 
-    if (data.get_rep())
+    if (size.get_rep())
     {
-      if ((data->ncols()==1)||(data->ncols()==3)||(data->ncols()==6)||(data->ncols()==9))
+      if ((size->ncols() != 1)&&(size->nrows()!=1))
       {
-        inputlist[0].create_inputdata(data,"DATA");
+        error("Size input needs to be a 1 by 1 matrix");
+        return;
       }
-      
-      if (n > 1) 
-      {
-        if (n != data->nrows()&&(data->nrows() != 1))
-        {
-          std::ostringstream oss;
-          oss << "The number of elements in each ScalarArray, VectorArray, or TensorArray is not equal";
-          error(oss.str());
-          return;          
-        }
-      }
-      else
-      {
-        n = data->nrows();
-      }    
+      n = static_cast<int>(size->get(0,0));
+      if (n == 0) n = 1;
     }
     
     // Add an object for getting the index and size of the array.
-    if(!(inputlist[mstart-1].create_inputindex("INDEX","SIZE")))
+    if(!(inputlist[0].create_inputindex("INDEX","SIZE")))
     {
       error("Internal error in module");
       return;
     } 
    
     for (size_t p = 0; p < numinputs; p++)
-    {      
+    {
       if (matrices[p].get_rep())
       {
         if ((matrices[p]->ncols()==1)||(matrices[p]->ncols()==3)||(matrices[p]->ncols()==6)||(matrices[p]->ncols()==9))
         {
           matrixname[0] = mname++;
-          inputlist[p+mstart].create_inputdata(matrices[p],matrixname);
+          inputlist[p+1].create_inputdata(matrices[p],matrixname);
         }
         else
         {
@@ -200,6 +185,7 @@ void ComputeDataArray::execute()
       
     MatrixHandle omatrix;  
     outputlist[0].create_outputdata(n,format,"RESULT",omatrix);
+    
   
     std::string function = guifunction_.get();
     
@@ -215,11 +201,11 @@ void ComputeDataArray::execute()
 }
 
 
-void ComputeDataArray::tcl_command(GuiArgs& args, void* userdata)
+void CreateDataArray::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {
-    args.error("ComputeScalarArray needs a minor command");
+    args.error("CreateScalarArray needs a minor command");
     return;
   }
 

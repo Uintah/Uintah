@@ -26,6 +26,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ComputeFieldsData.tcl\
 	$(SRCDIR)/ComputeFieldNodes.tcl\
 	$(SRCDIR)/ComputeFieldsNodes.tcl\
+	$(SRCDIR)/CreateDataArray.tcl\
 	$(SRCDIR)/CreateFieldData.tcl\
 	$(SRCDIR)/DataArrayInfo.tcl\
 	$(SRCDIR)/FieldDataElemToNode.tcl\

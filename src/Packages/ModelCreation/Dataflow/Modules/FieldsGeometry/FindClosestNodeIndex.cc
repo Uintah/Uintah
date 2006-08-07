@@ -26,45 +26,49 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef CORE_ALGORITHMS_TVMHELP_H
-#define CORE_ALGORITHMS_TVMHELP_H 1
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
+#include <Dataflow/Network/Module.h>
 
-#include <sgi_stl_warnings_off.h>
-#include <string>
-#include <list>
-#include <sgi_stl_warnings_on.h>
+namespace ModelCreation {
 
-namespace TensorVectorMath {
+using namespace SCIRun;
 
-class TVMHelpEntry {
-  public:
-    std::string functionname;
-    std::string functionsyntax;
-    std::string description;
+class FindClosestNodeIndex : public Module {
+public:
+  FindClosestNodeIndex(GuiContext*);
+  virtual void execute();
 };
 
-inline bool operator<(const TVMHelpEntry& e1,const TVMHelpEntry& e2)
+
+DECLARE_MAKER(FindClosestNodeIndex)
+FindClosestNodeIndex::FindClosestNodeIndex(GuiContext* ctx)
+  : Module("FindClosestNodeIndex", ctx, Source, "FieldsGeometry", "ModelCreation")
 {
-  return(e1.functionname<e2.functionname);
 }
 
-class TVMHelp {
+void FindClosestNodeIndex::execute()
+{
+  FieldHandle field, points;
   
-  public:
+  if (!(get_input_handle("Field",field,true))) return;
+  if (!(get_input_handle("Points",points,true))) return;
   
-    TVMHelp();
-    std::string gethelp(bool addelem = false);
+  if (inputs_changed_ || !oport_cached("Indices"))
+  {
+    MatrixHandle indices;
     
-  private:
-    void add(std::string functionname,std::string syntax,std::string description);
-    void createhelplist();
-    void createhelplist_element();
+    SCIRunAlgo::FieldsAlgo algo(this);
+    if(!(algo.FindClosestNode(field,indices,points))) return;
     
-    std::string helphtml_;
-    std::list<TVMHelpEntry> helplist_;
-};
+    send_output_handle("Indices",indices,false);
+  }
+}
 
 
-} // end namespace
+} // End namespace ModelCreation
 
-#endif
+

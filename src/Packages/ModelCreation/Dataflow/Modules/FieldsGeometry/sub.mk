@@ -23,6 +23,8 @@ SRCS     += \
 	$(SRCDIR)/Unstructure.cc\
 	$(SRCDIR)/ScaleField.cc\
 	$(SRCDIR)/GetBoundingBox.cc\
+	$(SRCDIR)/FindClosestNodeIndex.cc\
+	$(SRCDIR)/FindClosestNodeIndexByValue.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

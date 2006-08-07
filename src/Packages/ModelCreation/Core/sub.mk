@@ -4,8 +4,6 @@ SRCDIR := Packages/ModelCreation/Core
 
 SUBDIRS := \
         $(SRCDIR)/Datatypes \
-        $(SRCDIR)/DataStreaming \
-        $(SRCDIR)/Algorithms \
         $(SRCDIR)/Fields \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
