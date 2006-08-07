@@ -2258,67 +2258,7 @@ void MPMICE::scheduleInitializeAddedMaterial(const LevelP& level,
       delete add_matl; // shouln't happen, but...
   }
 }
-/*______________________________________________________________________
- Function~  setBC_rho_micro
- Purpose: set the boundary conditions for the microscopic density in 
- MPMICE computeEquilibration Press
-______________________________________________________________________*/
-void MPMICE::setBC_rho_micro(const Patch* patch,
-                             MPMMaterial* mpm_matl,
-                             ICEMaterial* ice_matl,
-                             const int indx,
-                             const CCVariable<double>& cv,
-                             const CCVariable<double>& gamma,
-                             const CCVariable<double>& press_new,
-                             const CCVariable<double>& Temp,
-                             const double press_ref,
-                             CCVariable<double>& rho_micro)
-{
-  //__________________________________
-  //  loop over faces on the boundary
-  vector<Patch::FaceType>::const_iterator f;
-  for (f  = patch->getBoundaryFaces()->begin(); 
-       f != patch->getBoundaryFaces()->end(); ++f){
-    Patch::FaceType face = *f;
-    
-    int numChildren = patch->getBCDataArray(face)->getNumberChildren(indx);
-    for (int child = 0;  child < numChildren; child++) {
-      double bc_value = -9;
-      string bc_kind = "NotSet";
-      vector<IntVector> bound;
-      
-      bool foundIterator =
-        getIteratorBCValueBCKind<double>( patch, face, child, "Density", indx,
-                                          bc_value, bound, bc_kind); 
-      
-      //cout << " face " << face << " bc_kind " << bc_kind << " \t indx " << indx
-      //     <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1) << endl;
-      
-      if (foundIterator && bc_kind == "Dirichlet") { 
-        // what do you put here?
-      }
-      if (foundIterator && bc_kind != "Dirichlet") {      // Everything else
-        vector<IntVector>::const_iterator iter;
-        
-        if(ice_matl){             //  I C E
-          for (iter=bound.begin(); iter != bound.end(); iter++) {
-            IntVector c = *iter;
-            rho_micro[c] = 
-              ice_matl->getEOS()->computeRhoMicro(press_new[c],gamma[c],
-                                           cv[c],Temp[c],rho_micro[c]);
-          }
-        } else if(mpm_matl){     //  M P M
-          for (iter=bound.begin(); iter != bound.end(); iter++) {
-            IntVector c = *iter;
-            rho_micro[c] =  
-              mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
-                                         press_new[c],press_ref,mpm_matl);
-          }
-        }  // mpm
-      } // if not
-    } // child loop
-  } // face loop
-}
+
 //______________________________________________________________________
 void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*, 
                                                 const PatchSubset* patches,
