@@ -70,6 +70,7 @@ namespace Uintah {
     bool        d_doGridReset;   // Default is true, standard MPM
     double      d_min_part_mass; // Minimum particle mass before deletion  
     double      d_max_vel;       // Maxmimum particle velocity before  deletion
+    bool        d_usingSoilFoam_CM;   // if using soil and foam CM
 
 
     ParticleInterpolator* d_interpolator;

@@ -109,6 +109,7 @@ WARNING
    double getMeltTemperature() const;
 
    bool getIsRigid() const;
+   bool getIsSoilFoam() const;
 
    int nullGeomObject() const;
 
@@ -148,6 +149,8 @@ WARNING
 
    // for implicit rigid body contact
    bool d_is_rigid;
+   
+   bool d_is_soilFoam;
 
    std::vector<GeometryObject*> d_geom_objs;
 

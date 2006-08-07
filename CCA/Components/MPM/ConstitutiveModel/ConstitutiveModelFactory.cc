@@ -56,7 +56,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     throw ProblemSetupException(txt, __FILE__, __LINE__);
   }   
 
-/*
+/*  MARTIN:  LOOK HERE TO ADD NEW CM.
   if (mat_type == "rigid")
     return(scinew RigidMaterial(child,flags));
 
@@ -132,10 +132,9 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (mat_type ==  "elastic_plastic")
     return(scinew ElasticPlastic(child,flags));
 */
-  if (mat_type ==  "soil_foam")
+  if (mat_type ==  "soil_foam"){
     return(scinew SoilFoam(child,flags));
-
-  else 
+  }else 
     throw ProblemSetupException("Unknown Material Type R ("+mat_type+")", __FILE__, __LINE__);
 
   return 0;
