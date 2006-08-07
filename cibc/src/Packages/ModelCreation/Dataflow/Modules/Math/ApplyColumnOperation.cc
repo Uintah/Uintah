@@ -27,11 +27,9 @@
 */
 
 #include <Core/Datatypes/Matrix.h>
-#include <Core/Algorithms/Math/MathAlgo.h>
-
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Algorithms/Math/MathAlgo.h>
 
 namespace ModelCreation {
 
@@ -60,12 +58,15 @@ void ApplyColumnOperation::execute()
   
   if (!(get_input_handle("Matrix",input,true))) return;
   
-  SCIRunAlgo::MathAlgo algo(this);
+  if (inputs_changed_ || guimethod_.changed() || !oport_cached("Vector"))
+  {
+    std::string method = guimethod_.get();
   
-  std::string method = guimethod_.get();
-  if (!(algo.ApplyColumnOperation(input,output,method))) return;
+    SCIRunAlgo::MathAlgo algo(this);
   
-  send_output_handle("Vector",output,true);
+    if (!(algo.ApplyColumnOperation(input,output,method))) return;
+    send_output_handle("Vector",output,false);
+  }
 }
 
 

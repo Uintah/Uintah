@@ -1,8 +1,8 @@
-itcl_class ModelCreation_TensorVectorMath_ComputeDataArray {
+itcl_class ModelCreation_TensorVectorMath_CreateDataArray {
     inherit Module
 
     constructor {config} {
-        set name ComputeDataArray
+        set name CreateDataArray
         set_defaults
     }
 
@@ -11,7 +11,7 @@ itcl_class ModelCreation_TensorVectorMath_ComputeDataArray {
       global $this-help
       global $this-format
 
-      set $this-function "RESULT = abs(DATA);"
+      set $this-function "RESULT = abs(A);"
       set $this-help ""
       set $this-format "Scalar"
       
@@ -38,8 +38,8 @@ itcl_class ModelCreation_TensorVectorMath_ComputeDataArray {
         frame $infoframe.info
         pack $infoframe.info -side left
         set info $infoframe.info
-        label $info.info1 -text "Function: RESULT = function(DATA,A,B,C,...)"
-        label $info.info2 -text "Input array: DATA, A, B, C, ... (scalar,vector, or tensor)"
+        label $info.info1 -text "Function: RESULT = function(A,B,C,...)"
+        label $info.info2 -text "Input array: A, B, C, ... (scalar,vector, or tensor)"
         label $info.info3 -text "Output array: RESULT (scalar)"
         label $info.info4 -text "Element index: INDEX (scalar)"
         label $info.info5 -text "Number of elements: SIZE (scalar)"

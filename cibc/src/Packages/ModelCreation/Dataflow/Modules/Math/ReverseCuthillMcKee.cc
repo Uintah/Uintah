@@ -57,14 +57,17 @@ void ReverseCuthillMcKee::execute()
   MatrixHandle Mat, Mapping, InverseMapping;
   if(!(get_input_handle("Matrix",Mat,true))) return;
 
-  SCIRunAlgo::MathAlgo algo(this);
-  if(!(algo.ReverseCuthillmcKee(Mat,Mat,InverseMapping,true))) return;
-  
-  Mapping = InverseMapping->transpose();
-  
-  send_output_handle("Matrix",Mat,true);
-  send_output_handle("Mapping",Mapping,true);
-  send_output_handle("InverseMapping",InverseMapping,true);
+  if (inputs_changed_ || !oport_cached("Matrix") || !oport_cached("Mapping") || !oport_cached("InverseMapping"))
+  {
+    SCIRunAlgo::MathAlgo algo(this);
+    if(!(algo.ReverseCuthillmcKee(Mat,Mat,InverseMapping,true))) return;
+    
+    Mapping = InverseMapping->transpose();
+    
+    send_output_handle("Matrix",Mat,true);
+    send_output_handle("Mapping",Mapping,true);
+    send_output_handle("InverseMapping",InverseMapping,true);
+  }
 }
 
 

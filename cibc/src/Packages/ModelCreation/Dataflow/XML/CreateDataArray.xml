@@ -31,7 +31,7 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<component name="ComputeDataArray" category="TensorVectorMath">
+<component name="CreateDataArray" category="TensorVectorMath">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>
@@ -102,7 +102,7 @@
       <section>
       <title>See Also </title>
       <p>
-      <modref package="ModelCreation" name="ComputeFieldData" />	
+      <modref package="ModelCreation" name="CreateFieldData" />	
       <modref package="ModelCreation" name="ReplicateDataArray" />	
       </p>
       </section>      
@@ -112,7 +112,7 @@
   <io>
     <inputs lastportdynamic="yes">
       <port>
-        <name>DataArray</name>
+        <name>Size</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
