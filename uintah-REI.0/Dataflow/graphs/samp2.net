@@ -1,0 +1,34 @@
+# SCI Network 1.0
+
+global userName
+set userName "telnet"
+
+global runDate
+set runDate " Tue  Mar 23 1999"
+
+global runTime
+set runTime " 10:37:49"
+
+set m0 [addModuleAtPosition IsoSurface 181 142]
+set m1 [addModuleAtPosition ScalarFieldReader 153 33]
+set m2 [addModuleAtPosition Salmon 211 332]
+
+addConnection $m1 0 $m0 0
+addConnection $m0 0 $m2 0
+
+set IsoSurface_0-notes {}
+set IsoSurface_0-seed_point-x -1.79769e+308
+set IsoSurface_0-seed_point-y -1.79769e+308
+set IsoSurface_0-seed_point-z -1.79769e+308
+set IsoSurface_0-seed_point-x -1.79769e+308
+set IsoSurface_0-seed_point-y -1.79769e+308
+set IsoSurface_0-seed_point-z -1.79769e+308
+set IsoSurface_0-have_seedpoint 0
+set IsoSurface_0-isoval 1
+set IsoSurface_0-do_3dwidget 1
+set IsoSurface_0-emit_surface 0
+set IsoSurface_0-show_progress -2147483647
+set ScalarFieldReader_0-notes {}
+set ScalarFieldReader_0-filename {/home/sci/data1/development/data/cube.sfield}
+set Salmon_0-notes {}
+

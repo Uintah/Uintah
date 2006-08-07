@@ -1,0 +1,4 @@
+void mm_modify_prescoef(CCVariable<double> ae, CCVariable<double> aw,
+     CCVariable<double> an, CCVariable<double> as,
+     CCVariable<double> at, CCVariable<double> ab,
+     constCCVariable<double> epsg, IntVector valid_lo, IntVector valid_hi);

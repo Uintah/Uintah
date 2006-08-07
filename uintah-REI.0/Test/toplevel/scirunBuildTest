@@ -1,0 +1,162 @@
+#!/bin/sh
+
+#test OS - should be IRIX64 or Linux
+OS=`uname -s`
+BUILD_DIR=/usr/sci/projects/Uintah/tester/"$OS"/
+BUILDROOT=/usr/sci/projects/Uintah/tester/"$OS"/SCIRun_NoUintah
+SCRIPT_DIR=/usr/sci/projects/Uintah/tester/bin
+USE_PREV_BUILD="no"
+SEND_MAIL_TO="scirun-develop@cs.utah.edu"
+#SEND_MAIL_TO="worthen@cs.utah.edu"
+PARALLELISM=1
+VERBOSE="no"
+
+if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
+  CC=cc
+  CXX=CC
+  F77=f77
+elif [ "$OS" == "Linux" ]; then
+  CC="/usr/sci/local/bin/gcc"
+  CXX="/usr/sci/local/bin/c++"
+  F77="/usr/sci/local/bin/g77"
+else
+  echo "Unknown OS.  Abort."
+  exit -1
+fi
+
+export CC CXX F77
+
+unset SHELL
+umask 002
+cd "$BUILD_DIR"
+
+while [ "$#" -gt 0 ]; do
+    case "$1" in
+    -nomail)
+	SEND_MAIL_TO=""
+	;;
+    -j)
+	if [ "$#" -gt 1 ]; then
+	    shift
+	    PARALLELISM="$1"
+	fi
+	;;
+     -help)
+	cat <<EOF
+Usage: buildshell should only be run by at(1) or cron(1)
+    To run immediately, use "at now" with the path to this script as stdin.
+    Options:
+	-nomail:  Do not send email on error; useful for testing
+	-help:    Display this option summary
+	-verbose: Verbose output
+EOF
+		exit 0
+		;;
+	-verbose)
+	    VERBOSE="yes"
+	    ;;
+	*)
+		echo "$1: Unknown option"
+		exit 1
+		;;
+	esac
+	shift
+done
+
+PATH="$SCRIPT_DIR":/local/bin:/usr/sci/local/bin/:/usr/gnu/bin:/usr/local/bin:"$PATH":.
+CVSROOT="csf.cs.utah.edu:/csafe_noexport/cvs/cvsroot"
+CVS_RSH=ssh
+export PATH CVSROOT CVS_RSH OS VERBOSE
+
+MAKE_PARALLELISM="$PARALLELISM"
+
+# use /usr/var/tmp on machines that have it, with the assumption that it will
+# have more space than /tmp (true for burn at least)
+if [ -d /usr/var/tmp ]; then
+	TMPDIR=/usr/var/tmp
+	export TMPDIR
+fi
+
+export BUILD_DIR BUILDROOT TEST_DATA PARALLELISM MAKE_PARALLELISM SEND_MAIL_TO
+
+if [ -d $BUILDROOT ]; then
+	if [ "$VERBOSE" == "yes" ]; then
+	    echo "Removing $BUILDROOT"
+	fi
+	rm -rf $BUILDROOT
+fi
+
+mkdir $BUILDROOT
+if [ "$VERBOSE" == "no" ]; then
+    echo "Checking out latest version at `date` to " > "$BUILDROOT"/log
+    echo "$BUILDROOT" >> "$BUILDROOT"/log
+else
+    echo "Checking out latest version at `date` to " 
+    echo "$BUILDROOT"
+fi
+cd $BUILD_DIR
+
+if [ "$VERBOSE" == "no" ]; then
+    cvs checkout -P -d SCIRun_NoUintah SCIRun > "$BUILDROOT"/cvs_co.log 2>&1
+else
+    cvs checkout -P -d SCIRun_NoUintah SCIRun 
+fi
+
+retval=$?
+if [ $retval != "0" ]; then
+  echo "CVS checkout failed with code $retval"
+  echo "Look at ${BUILDROOT}/cvs_co.log for more information"
+  exit 1
+fi
+
+PATH="$BUILDROOT"/src/Packages/Uintah/Test/helpers:"$PATH"
+
+if [ "$OS" == "IRIX64" -o "$OS" == "IRIX" ]; then
+  DBG_CONFIGURE="'--enable-debug' '--enable-64bit'"
+  OPT_CONFIGURE="'--enable-optimize=-Ofast -G0 -OPT:div_split=OFF' '--disable-sci-malloc' '--enable-assertion-level=0' '--enable-64bit'"
+else
+  DBG_CONFIGURE="--enable-debug --with-thirdparty=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.0.4-32bit"
+  OPT_CONFIGURE="--enable-optimize --disable-sci-malloc --enable-assertion-level=0 --with-thirdparty=/usr/sci/projects/Uintah/Thirdparty/1.0.0/Linux/gcc-3.0.4-32bit"
+fi
+
+export PATH DBG_CONFIGURE OPT_CONFIGURE
+
+
+echo "" >> "$BUILDROOT"/log
+
+failed=0
+
+if [ "$VERBOSE" == "no" ]; then
+    build_scirun "dbg" "$DBG_CONFIGURE" >> "$BUILDROOT"/log 2>&1
+else
+    build_scirun "dbg" "$DBG_CONFIGURE"
+fi
+
+if [ $? != 0 ]; then
+  failed=1
+else
+
+  if [ "$VERBOSE" == "no" ]; then
+    build_scirun "opt" "$OPT_CONFIGURE" >> "$BUILDROOT"/log 2>&1 
+  else
+    build_scirun "opt" "$OPT_CONFIGURE"
+  fi
+
+  if [ $? != 0 ]; then
+    failed=1
+  fi
+fi 
+
+if [ "$SEND_MAIL_TO" != "" -a $failed != "0" ]; then
+    subject="***Failure compiling scirun on `hostname`***"
+
+    cat > "$BUILDROOT"/mail.msg <<EOF
+Subject: $subject
+To: $SEND_MAIL_TO
+EOF
+    cat "$BUILDROOT"/log >> "$BUILDROOT"/mail.msg
+    /usr/lib/sendmail "$SEND_MAIL_TO" < "$BUILDROOT"/mail.msg
+    rm -f "$BUILDROOT"/mail.msg
+fi
+
+exit $failed

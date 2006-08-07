@@ -1,0 +1,9 @@
+<?xml version='1.0' encoding='ISO-8859-1' ?>
+<!-- OFHC Half Hard Copper -->
+<Uintah_Include>
+  <melting_temp_model type="scg_Tm">
+    <T_m0> 1790.0 </T_m0> 
+    <Gamma_0> 2.02 </Gamma_0>
+    <a> 1.5 </a>
+  </melting_temp_model>
+</Uintah_Include>
