@@ -1,4 +1,5 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModelFactory.h>
+/*
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/RigidMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompMooneyRivlin.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHook.h>
@@ -21,6 +22,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ElasticPlastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticPlastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/IdealGasMP.h>
+*/
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/SoilFoam.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 #include <Packages/Uintah/CCA/Components/MPM/MPMFlags.h>
@@ -54,6 +56,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
     throw ProblemSetupException(txt, __FILE__, __LINE__);
   }   
 
+/*
   if (mat_type == "rigid")
     return(scinew RigidMaterial(child,flags));
 
@@ -128,8 +131,8 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type ==  "elastic_plastic")
     return(scinew ElasticPlastic(child,flags));
-
-  else if (mat_type ==  "soil_foam")
+*/
+  if (mat_type ==  "soil_foam")
     return(scinew SoilFoam(child,flags));
 
   else 

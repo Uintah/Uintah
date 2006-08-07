@@ -178,6 +178,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       IntVector c = *iter;
       double total_mat_vol = 0.0;
+      double maxvolstrain = 0.0;
       for (int m = 0; m < numALLMatls; m++) {
         Material* matl = d_sharedState->getMaterial( m );
         ICEMaterial* ice_matl = dynamic_cast<ICEMaterial*>(matl);
@@ -203,7 +204,7 @@ void MPMICE::computeRateFormPressure(const ProcessorGroup*,
 
           mpm_matl->getConstitutiveModel()->
             computePressEOSCM(rho_micro[m][c],press_eos[m], press_ref,
-                              dp_drho[m], tmp,mpm_matl);
+                              dp_drho[m], tmp,mpm_matl, maxvolstrain);
 
           mat_volume[m] = mat_vol[m][c];
         }              

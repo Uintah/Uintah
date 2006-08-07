@@ -563,13 +563,10 @@ SoilFoam::addComputesAndRequires(Task* task,
 }
 
 double SoilFoam::computeRhoMicroCM(double pressure,
-                                      const double /*p_ref*/,
-                                           const MPMMaterial* matl)
+                                    const double /*p_ref*/,
+                                    const MPMMaterial* matl,
+                                    const double maxvolstrain)
 {
-
-  //cout << "NO VERSION OF computeRhoMicroCM EXISTS YET FOR SoilFoam"
-  //   << endl;
-
   int i1 = 0, i;
   for(i=1; i<9; i++){
     if(d_initialData.eps[i+1]<d_initialData.eps[i])
@@ -585,7 +582,8 @@ double SoilFoam::computeRhoMicroCM(double pressure,
 void SoilFoam::computePressEOSCM(double rho_cur,double& pressure,
                                          double /*p_ref*/,
                                          double& dp_drho, double& tmp,
-                                         const MPMMaterial* matl)
+                                         const MPMMaterial* matl,
+                                         const double maxvolstrain)
 {
   double rho_orig = matl->getInitialDensity();
   double vol_strain = log(rho_orig/rho_cur);
@@ -599,9 +597,6 @@ void SoilFoam::computePressEOSCM(double rho_cur,double& pressure,
   dp_drho = -slope[i1]/rho_cur;
   //cout <<" load "<<vol_strain<<" "<<sv_min[idx]<<" "<<pres<<endl;
   tmp = (-slope[i1] + 4.*d_initialData.G/3.)/rho_cur;  // speed of sound squared
-
-  //cout << "NO VERSION OF computePressEOSCM EXISTS YET FOR SoilFoam"
-  //   << endl;
 }
 
 double SoilFoam::getCompressibility()

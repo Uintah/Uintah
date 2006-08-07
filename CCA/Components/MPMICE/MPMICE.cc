@@ -346,6 +346,12 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   d_mpm->scheduleSetBCsInterpolated(          sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
 
+  // 1.  MARTIN:  if(d_cm==SoilFoam) push max vol. strain from particles to nodes
+  //     see MPM::interpolateParticlesToGrid
+  //     
+  // 2.  MARTIN:  push max vol. strain from nodes to CC
+  //     see MPMICE::interpolateNCToCC_0
+
   // schedule the interpolation of mass and volume to the cell centers
   scheduleInterpolateNCToCC_0(                sched, mpm_patches, one_matl, 
                                                                   mpm_matls);
@@ -938,7 +944,7 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->requires(Task::NewDW,Ilb->sp_vol_CCLabel,     mpm_matls, gn);  
   t->requires(Task::NewDW,MIlb->cMassLabel,        mpm_matls, gn);  
   t->requires(Task::OldDW, MIlb->NC_CCweightLabel, press_matl,gac,1);
- 
+  //MARTIN:  3.  Require max vol strain from CC
  
   t->requires(Task::OldDW,Ilb->press_CCLabel,      press_matl, gn);
   t->requires(Task::OldDW,Ilb->vel_CCLabel,        ice_matls,  gn);
@@ -1052,13 +1058,14 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
       setBC(rho_micro, "Density",      patch, d_sharedState, indx, new_dw);    
       setBC(Temp_CC,   "Temperature",  patch, d_sharedState, indx, new_dw);    
       setBC(vel_CC,    "Velocity",     patch, d_sharedState, indx, new_dw);
+      double maxvolstrain=0.;
       for (CellIterator iter = patch->getExtraCellIterator();
                                                         !iter.done();iter++){
         IntVector c = *iter;
         sp_vol_CC[c] = 1.0/rho_micro[c];
 
         mpm_matl->getConstitutiveModel()->
-            computePressEOSCM(rho_micro[c],junk, p_ref, junk, tmp,mpm_matl); 
+            computePressEOSCM(rho_micro[c],junk, p_ref, junk, tmp,mpm_matl,maxvolstrain); 
         speedSound[c] = sqrt(tmp);
       }
       
@@ -1722,6 +1729,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > rho_CC_old(numALLMatls);
     StaticArray<constCCVariable<double> > mass_CC(numALLMatls);
     StaticArray<constCCVariable<Vector> > vel_CC(numALLMatls);
+    // MARTIN 4.  Declare MaxVolStrainCC as above
     constCCVariable<double> press;    
     CCVariable<double> press_new, delPress_tmp,sumKappa, TMV_CC;
     CCVariable<double> sum_imp_delP;    
@@ -1766,6 +1774,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         new_dw->get(sp_vol_CC[m],Ilb->sp_vol_CCLabel,indx,patch,gn,0); 
         new_dw->get(rho_CC_old[m],Ilb->rho_CCLabel,  indx,patch,gn,0);
         new_dw->allocateTemporary(rho_CC_new[m],  patch);
+        // MARTIN 5.  Get MaxVolStrainCC as above
       }
       new_dw->allocateTemporary(rho_micro[m],  patch);
       new_dw->allocateAndPut(vol_frac[m],   Ilb->vol_frac_CCLabel,  indx,patch);
@@ -1782,6 +1791,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     // see Docs/MPMICE.txt for explaination of why we ONlY
     // use eos evaulations for rho_micro_mpm
 
+    double maxvolstrain;
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
       double total_mat_vol = 0.0;
@@ -1790,7 +1800,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
         } else if(mpm_matl[m]){                //  M P M
           rho_micro[m][c] =  mpm_matl[m]->getConstitutiveModel()->
-            computeRhoMicroCM(press_new[c],press_ref, mpm_matl[m]); 
+            computeRhoMicroCM(press_new[c],press_ref, mpm_matl[m],maxvolstrain); 
         }
         mat_volume[m] = (rho_CC_old[m][c]*cell_vol)/rho_micro[m][c];
         total_mat_vol += mat_volume[m];
@@ -1844,7 +1854,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
           } else if(mpm_matl[m]){    // MPM
             mpm_matl[m]->getConstitutiveModel()->
               computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
-                                dp_drho[m], c_2,mpm_matl[m]);
+                                dp_drho[m], c_2,mpm_matl[m],maxvolstrain);
           }
         }
 
@@ -1883,7 +1893,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
          } if(mpm_matl[m]){
            rho_micro[m][c] =  
              mpm_matl[m]->getConstitutiveModel()->computeRhoMicroCM(
-                                          press_new[c],press_ref,mpm_matl[m]);
+                                          press_new[c],press_ref,mpm_matl[m],maxvolstrain);
          }
          vol_frac[m][c]   = rho_CC_new[m][c]/rho_micro[m][c];
          sum += vol_frac[m][c];
@@ -1907,7 +1917,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
            } else if(mpm_matl[m]){
               mpm_matl[m]->getConstitutiveModel()->
                    computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
-                                     dp_drho[m],c_2,mpm_matl[m]);
+                                     dp_drho[m],c_2,mpm_matl[m],maxvolstrain);
            }
            speedSound[m][c] = sqrt(c_2);         // Isentropic speed of sound
          }
@@ -2095,6 +2105,8 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
    StaticArray<double> vfL(numALLMatls);
    Pm = press[c];
 
+   double maxvolstrain=0.;
+
    while ( count < d_ice->d_max_iter_equilibration && converged == false) {
    count++;
    sum = 0.;
@@ -2110,7 +2122,7 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
      if(mpm_matl){        // MPM
        rho_micro[m][c] =
          mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
-                                      Pm,press_ref,mpm_matl);
+                                      Pm,press_ref,mpm_matl,maxvolstrain);
      }
      vol_frac[m][c] = rho_CC_new[m][c]/rho_micro[m][c];
      sum += vol_frac[m][c];
@@ -2138,7 +2150,7 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
         if(mpm_matl){       // MPM
            mpm_matl->getConstitutiveModel()->
                 computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
-                                  dp_drho[m],c_2,mpm_matl);
+                                  dp_drho[m],c_2,mpm_matl,maxvolstrain);
         }
         speedSound[m][c] = sqrt(c_2);     // Isentropic speed of sound
      }
@@ -2170,10 +2182,10 @@ void MPMICE::binaryPressureSearch(  StaticArray<constCCVariable<double> >& Temp,
      if(mpm_matl){        //  MPM
        rhoMicroR =
          mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
-                                      Pright,press_ref,mpm_matl);
+                                      Pright,press_ref,mpm_matl,maxvolstrain);
        rhoMicroL =
          mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
-                                      Pleft, press_ref,mpm_matl);
+                                      Pleft, press_ref,mpm_matl,maxvolstrain);
      }
      vfR[m] = rho_CC_new[m][c]/rhoMicroR;
      vfL[m] = rho_CC_new[m][c]/rhoMicroL;
@@ -2258,67 +2270,7 @@ void MPMICE::scheduleInitializeAddedMaterial(const LevelP& level,
       delete add_matl; // shouln't happen, but...
   }
 }
-/*______________________________________________________________________
- Function~  setBC_rho_micro
- Purpose: set the boundary conditions for the microscopic density in 
- MPMICE computeEquilibration Press
-______________________________________________________________________*/
-void MPMICE::setBC_rho_micro(const Patch* patch,
-                             MPMMaterial* mpm_matl,
-                             ICEMaterial* ice_matl,
-                             const int indx,
-                             const CCVariable<double>& cv,
-                             const CCVariable<double>& gamma,
-                             const CCVariable<double>& press_new,
-                             const CCVariable<double>& Temp,
-                             const double press_ref,
-                             CCVariable<double>& rho_micro)
-{
-  //__________________________________
-  //  loop over faces on the boundary
-  vector<Patch::FaceType>::const_iterator f;
-  for (f  = patch->getBoundaryFaces()->begin(); 
-       f != patch->getBoundaryFaces()->end(); ++f){
-    Patch::FaceType face = *f;
-    
-    int numChildren = patch->getBCDataArray(face)->getNumberChildren(indx);
-    for (int child = 0;  child < numChildren; child++) {
-      double bc_value = -9;
-      string bc_kind = "NotSet";
-      vector<IntVector> bound;
-      
-      bool foundIterator =
-        getIteratorBCValueBCKind<double>( patch, face, child, "Density", indx,
-                                          bc_value, bound, bc_kind); 
-      
-      //cout << " face " << face << " bc_kind " << bc_kind << " \t indx " << indx
-      //     <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1) << endl;
-      
-      if (foundIterator && bc_kind == "Dirichlet") { 
-        // what do you put here?
-      }
-      if (foundIterator && bc_kind != "Dirichlet") {      // Everything else
-        vector<IntVector>::const_iterator iter;
-        
-        if(ice_matl){             //  I C E
-          for (iter=bound.begin(); iter != bound.end(); iter++) {
-            IntVector c = *iter;
-            rho_micro[c] = 
-              ice_matl->getEOS()->computeRhoMicro(press_new[c],gamma[c],
-                                           cv[c],Temp[c],rho_micro[c]);
-          }
-        } else if(mpm_matl){     //  M P M
-          for (iter=bound.begin(); iter != bound.end(); iter++) {
-            IntVector c = *iter;
-            rho_micro[c] =  
-              mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
-                                         press_new[c],press_ref,mpm_matl);
-          }
-        }  // mpm
-      } // if not
-    } // child loop
-  } // face loop
-}
+
 //______________________________________________________________________
 void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*, 
                                                 const PatchSubset* patches,
@@ -2346,6 +2298,7 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
     new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,      indx,patch);
     new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,       indx,patch);
     new_dw->allocateAndPut(heatRate_CC,Mlb->heatRate_CCLabel, indx,patch);
+    double maxvolstrain=0.;
 
     heatRate_CC.initialize(0.0);
 
@@ -2362,7 +2315,7 @@ void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*,
       sp_vol_CC[c] = 1.0/rho_micro[c];
                                                                               
       mpm_matl->getConstitutiveModel()->
-          computePressEOSCM(rho_micro[c],junk, p_ref, junk, tmp,mpm_matl);
+          computePressEOSCM(rho_micro[c],junk, p_ref, junk, tmp,mpm_matl,maxvolstrain);
       speedSound[c] = sqrt(tmp);
     }
   }
