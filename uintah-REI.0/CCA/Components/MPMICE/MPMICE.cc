@@ -99,7 +99,6 @@ MPMICE::~MPMICE()
   delete d_mpm;
   delete d_ice;
 }
-
 //__________________________________
 //    For restarting timesteps
 bool MPMICE::restartableTimesteps()
@@ -345,12 +344,16 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   d_mpm->scheduleExMomInterpolated(           sched, mpm_patches, mpm_matls);
   d_mpm->scheduleSetBCsInterpolated(          sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
-
+  
+  
+  if(d_mpm->flags->d_usingSoilFoam_CM){
+    cout << "using soil and foam"<<endl;
   // 1.  MARTIN:  if(d_cm==SoilFoam) push max vol. strain from particles to nodes
   //     see MPM::interpolateParticlesToGrid
   //     
   // 2.  MARTIN:  push max vol. strain from nodes to CC
   //     see MPMICE::interpolateNCToCC_0
+  }
 
   // schedule the interpolation of mass and volume to the cell centers
   scheduleInterpolateNCToCC_0(                sched, mpm_patches, one_matl, 
