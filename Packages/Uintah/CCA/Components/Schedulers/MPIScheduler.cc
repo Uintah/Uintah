@@ -726,7 +726,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   ASSERT(sends_.numRequests() == 0);
   if(d_logTimes)
     emitTime("final wait");
-  if(restartable && tgnum == graphs.size() -1) {
+  if(restartable && tgnum == (int) graphs.size() -1) {
     // Copy the restart flag to all processors
     int myrestart = dws[dws.size()-1]->timestepRestarted();
     int netrestart;

@@ -16,8 +16,10 @@ SendState::SendState()
 SendState::~SendState()
 {
   for(maptype::iterator iter = sendSubsets.begin();
-      iter != sendSubsets.end();iter++)
-    delete iter->second;
+      iter != sendSubsets.end();iter++) {
+    if (iter->second->removeReference())
+      delete iter->second;
+  }
 }
 
 ParticleSubset*
@@ -40,6 +42,7 @@ SendState::add_sendset(ParticleSubset* sendset, int dest, const Patch* patch,
   if(iter != sendSubsets.end())
     SCI_THROW(InternalError("sendSubset already exists", __FILE__, __LINE__));
   sendSubsets[make_pair(PSPatchMatlGhost(patch, matlIndex, low, high, dwid), dest)]=sendset;
+  sendset->addReference();
 }
 
 void SendState::print() 

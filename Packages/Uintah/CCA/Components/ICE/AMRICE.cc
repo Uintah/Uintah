@@ -1253,7 +1253,7 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
       new_dw->get(cv,    lb->specific_heatLabel,indx,coarsePatch, gac,1);
       
       Level::selectType finePatches;
-      coarsePatch->getFineLevelPatches(finePatches);
+      coarsePatch->getOtherLevelPatches(1, finePatches, 1); // get with a ghost cell to make sure you get all patches 
       
       
       
@@ -1264,8 +1264,8 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
         //   compute the correction
         // one_zero:  used to increment the CFI counter.
         if(finePatch->hasCoarseFineInterfaceFace() ){
-          cout_doing << d_myworld->myrank() 
-                     << "  coarsePatch " << coarsePatch->getID() 
+          cout_doing << d_myworld->myrank()
+                     << "  coarsePatch " << coarsePatch->getID()
                      <<" finepatch " << finePatch->getID()<< endl;
 
 /*`==========TESTING==========*/
@@ -1428,7 +1428,7 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
        l[y] != h[y] && l[z] != h[z] ){
     isRight_CP_FP_pair = true;
   }
-  
+
   
  /*`==========TESTING==========*/
 #if 0
@@ -1562,7 +1562,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
       new_dw->get(cv,                   lb->specific_heatLabel,indx,coarsePatch, gn,0);
       
       Level::selectType finePatches;
-      coarsePatch->getFineLevelPatches(finePatches); 
+      coarsePatch->getOtherLevelPatches(1, finePatches, 1); // get with a ghost cell to make sure you get all patches 
       
       for(int i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i];        
