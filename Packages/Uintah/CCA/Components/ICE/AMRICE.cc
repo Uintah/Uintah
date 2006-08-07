@@ -1144,6 +1144,9 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
   
   Ghost::GhostType gn  = Ghost::None;
   Ghost::GhostType gac = Ghost::AroundCells;
+  Ghost::GhostType gx  = Ghost::AroundFacesX;
+  Ghost::GhostType gy  = Ghost::AroundFacesY;
+  Ghost::GhostType gz  = Ghost::AroundFacesZ;
   bool  fat = true;  // possibly (F)rom (A)nother (T)askgraph
   
   
@@ -1154,32 +1157,32 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
   // Fluxes from the fine level            
                                       // MASS
   task->requires(Task::NewDW, lb->mass_X_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gx, 1, fat);
   task->requires(Task::NewDW, lb->mass_Y_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gy, 1, fat);
   task->requires(Task::NewDW, lb->mass_Z_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gz, 1, fat);
                                       // MOMENTUM
   task->requires(Task::NewDW, lb->mom_X_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gx, 1, fat);
   task->requires(Task::NewDW, lb->mom_Y_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gy, 1, fat);
   task->requires(Task::NewDW, lb->mom_Z_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gz, 1, fat);
                                       // INT_ENG
   task->requires(Task::NewDW, lb->int_eng_X_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gx, 1, fat);
   task->requires(Task::NewDW, lb->int_eng_Y_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gy, 1, fat);
   task->requires(Task::NewDW, lb->int_eng_Z_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gz, 1, fat);
                                       // SPECIFIC VOLUME
   task->requires(Task::NewDW, lb->sp_vol_X_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gx, 1, fat);
   task->requires(Task::NewDW, lb->sp_vol_Y_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gy, 1, fat);
   task->requires(Task::NewDW, lb->sp_vol_Z_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);             
+               0,Task::FineLevel, 0, Task::NormalDomain, gz, 1, fat);             
 
   //__________________________________
   // Model Variables.
@@ -1190,11 +1193,11 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
       AMR_refluxVariable* rvar = *iter;
       
       task->requires(Task::NewDW, rvar->var_X_FC_flux,
-                  0, Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+                  0, Task::FineLevel, 0, Task::NormalDomain, gx, 1, fat);
       task->requires(Task::NewDW, rvar->var_Y_FC_flux,
-                  0, Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+                  0, Task::FineLevel, 0, Task::NormalDomain, gy, 1, fat);
       task->requires(Task::NewDW, rvar->var_Z_FC_flux,
-                  0, Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+                  0, Task::FineLevel, 0, Task::NormalDomain, gz, 1, fat);
                   
       task->modifies(rvar->var_X_FC_flux, fat);
       task->modifies(rvar->var_Y_FC_flux, fat);
