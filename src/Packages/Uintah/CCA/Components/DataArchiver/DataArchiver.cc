@@ -59,12 +59,6 @@
 #define PADSIZE 1024L
 #define ALL_LEVELS 99
 
-// RNJ - Leave a define that will turn on and off
-//       the PVFS fix just in case someone has a
-//       problem and needs a way to turn it off.
-
-#define PVFS_FIX
-
 #define OUTPUT 0
 #define CHECKPOINT 1
 #define CHECKPOINT_REDUCTION 2
@@ -823,6 +817,14 @@ DataArchiver::finalizeTimestep(double time, double delt,
   }
   
   d_numLevelsInOutput = grid->numLevels();
+  
+#if SCI_ASSERTION_LEVEL >= 2
+  d_outputCalled.clear();
+  d_outputCalled.resize(d_numLevelsInOutput, false);
+  d_checkpointCalled.clear();
+  d_checkpointCalled.resize(d_numLevelsInOutput, false);
+  d_checkpointReductionCalled = false;
+#endif
 
   // we don't want to schedule more tasks unless we're recompiling
   if (!recompile)
@@ -1031,6 +1033,14 @@ DataArchiver::reEvaluateOutputTimestep(double /*orig_delt*/, double new_delt)
       d_checkpointTimestepDirs.pop_back();
     }
   }
+
+#if SCI_ASSERTION_LEVEL >= 2
+  d_outputCalled.clear();
+  d_outputCalled.resize(d_numLevelsInOutput, false);
+  d_checkpointCalled.clear();
+  d_checkpointCalled.resize(d_numLevelsInOutput, false);
+  d_checkpointReductionCalled = false;
+#endif
 }
 
 void
@@ -1291,123 +1301,6 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
 
     }
   }
-
-#ifdef PVFS_FIX
-
-  d_outputLock.lock(); 
-  {
-    // Close data file handles used in regular outputs.
-      
-    map< int, pair<int, char*> >::iterator dataFileHandleIdx = d_DataFileHandles.begin();
-    map< int, pair<int, char*> >::iterator dataFileHandleEnd = d_DataFileHandles.end();
-
-    while ( dataFileHandleIdx != dataFileHandleEnd ) {
-
-      int fd = dataFileHandleIdx->second.first;
-      char* filename = dataFileHandleIdx->second.second;
-
-      if ( close( fd ) == -1 ) {
-        cerr << "Error closing file: " << filename << ", errno=" << errno << '\n';
-        throw ErrnoException("DataArchiver::executedTimestep (close call)", errno, __FILE__, __LINE__);
-      }
-
-      dataFileHandleIdx++;  
-    }
-
-    d_DataFileHandles.clear();
-
-
-    // Close data file handles used in checkpoint outputs.
-
-    dataFileHandleIdx = d_CheckpointDataFileHandles.begin();
-    dataFileHandleEnd = d_CheckpointDataFileHandles.end();
-    
-    while ( dataFileHandleIdx != dataFileHandleEnd ) {
-      
-      int fd = dataFileHandleIdx->second.first;
-      char* filename = dataFileHandleIdx->second.second;
-
-      if ( close( fd ) == -1 ) {
-        cerr << "Error closing file: " << filename << ", errno=" << errno << '\n';
-        throw ErrnoException("DataArchiver::executedTimestep (close call)", errno, __FILE__, __LINE__);
-      }
-      
-      dataFileHandleIdx++;  
-    }
-    
-    d_CheckpointDataFileHandles.clear();
-    
-    
-    // Write out XML data files used in regular outputs.
-
-    map< int, ProblemSpecP >::iterator xmlDocIdx = d_XMLDataDocs.begin();
-    map< int, ProblemSpecP >::iterator xmlDocEnd = d_XMLDataDocs.end();
-
-    Dir tdir = d_dir.getSubdir(tname.str());
-
-    while ( xmlDocIdx != xmlDocEnd ) {
-
-      ProblemSpecP tempXMLDataFile = xmlDocIdx->second;
-
-      // Get the file name
-      
-      ostringstream lname;
-      lname << "l" << xmlDocIdx->first;
-      Dir ldir = tdir.getSubdir(lname.str());        
-      ostringstream pname;
-      pname << "p" << setw(5) << setfill('0') << d_myworld->myrank();
-      string xmlFilename;       
-      xmlFilename = ldir.getName() + "/" + pname.str() + ".xml";
-        
-      // Open the file and write out the XML Doc.
-      
-      tempXMLDataFile->output(xmlFilename.c_str());
-      tempXMLDataFile->releaseDocument();
-        
-      xmlDocIdx++;
-
-    } // while ( xmlDocIdx != xmlDocEnd ) {
-
-    d_XMLDataDocs.clear();
-
-
-    // Write out XML data files used in checkpoint outputs.
-
-    xmlDocIdx = d_CheckpointXMLDataDocs.begin();
-    xmlDocEnd = d_CheckpointXMLDataDocs.end();
-
-    tdir = d_checkpointsDir.getSubdir(tname.str());
-
-    while ( xmlDocIdx != xmlDocEnd ) {
-
-      ProblemSpecP tempXMLDataFile = xmlDocIdx->second;
-
-      // Get the file name
-      
-      ostringstream lname;
-      lname << "l" << xmlDocIdx->first;
-      Dir ldir = tdir.getSubdir(lname.str());        
-      ostringstream pname;
-      pname << "p" << setw(5) << setfill('0') << d_myworld->myrank();
-      string xmlFilename;       
-      xmlFilename = ldir.getName() + "/" + pname.str() + ".xml";
-        
-      // Open the file and write out the XML Doc.
-      
-      tempXMLDataFile->output(xmlFilename.c_str());
-      tempXMLDataFile->releaseDocument();
-        
-      xmlDocIdx++;
-
-    } // while ( xmlDocIdx != xmlDocEnd ) {
-
-    d_CheckpointXMLDataDocs.clear();
-
-  }
-  d_outputLock.unlock();
-
-#endif // #ifdef PVFS_FIX
-
 }
 
 void
@@ -1561,11 +1454,32 @@ DataArchiver::output(const ProcessorGroup*,
                      DataWarehouse* new_dw,
                      int type)
 {
+  // IMPORTANT - this function should only be called once per processor per level per type
+  //   (files will be opened and closed, and those operations are heavy on 
+  //   parallel file systems)
+
   // return if not an outpoint/checkpoint timestep
   if ((!d_wasOutputTimestep && type == OUTPUT) || 
       (!d_wasCheckpointTimestep && type != OUTPUT)) {
     return;
   }
+
+#if SCI_ASSERTION_LEVEL >= 2
+  // double-check to make sure only called once per level
+  int levelid = type != CHECKPOINT_REDUCTION ? getLevel(patches)->getIndex() : -1;
+  if (type == OUTPUT) {
+    ASSERT(d_outputCalled[levelid] == false);
+    d_outputCalled[levelid] = true;
+  }
+  else if (type == CHECKPOINT) {
+    ASSERT(d_checkpointCalled[levelid] == false);
+    d_checkpointCalled[levelid] = true;
+  }
+  else {
+    ASSERT(d_checkpointReductionCalled == false);
+    d_checkpointReductionCalled = true;
+  }
+#endif
 
   vector< SaveItem >& saveLabels = (type == OUTPUT ? d_saveLabels :
                                     type == CHECKPOINT ? d_checkpointLabels : 
@@ -1646,50 +1560,20 @@ DataArchiver::output(const ProcessorGroup*,
 
     // file-opening flags
 #ifdef _WIN32
-    int flags = O_WRONLY|O_CREAT|O_BINARY;
+    int flags = O_WRONLY|O_CREAT|O_BINARY|O_TRUNC;
 #else
-    int flags = O_WRONLY|O_CREAT;
+    int flags = O_WRONLY|O_CREAT|O_TRUNC;
 #endif
 
-#ifdef PVFS_FIX
-    if ( type == CHECKPOINT_REDUCTION )
+#if 0
+    // DON'T reload a timestep.xml - it will probably mean there was a timestep restart that had written data
+    // and we will want to overwrite it
+    ifstream test(xmlFilename.c_str());
+    if(test){
+      doc = loadDocument(xmlFilename);
+    } else
 #endif
-    {
-      ifstream test(xmlFilename.c_str());
-      if(test){
-        doc = loadDocument(xmlFilename);
-      } else {
-        doc = ProblemSpec::createDocument("Uintah_Output");
-      }
-    }
-#ifdef PVFS_FIX
-    else
-    {
-      map< int, ProblemSpecP >* currentXMLDataDocMap;
-      map< int, ProblemSpecP >::iterator currentXMLDataDoc;
-
-      if ( type == CHECKPOINT ) {
-        currentXMLDataDocMap = &d_CheckpointXMLDataDocs;
-      }
-      else {
-        currentXMLDataDocMap = &d_XMLDataDocs;
-      }
-      
-      currentXMLDataDoc = currentXMLDataDocMap->find(level->getIndex());
-
-      // RNJ - If we don't have an XML Index Doc, go ahead
-      //       and create one, otherwise use the one we
-      //       already have.
-
-      if ( currentXMLDataDoc == currentXMLDataDocMap->end() ) {
-        doc = ProblemSpec::createDocument("Uintah_Output");
-        (*currentXMLDataDocMap)[level->getIndex()] = doc;
-      }
-      else {
-        doc = (*currentXMLDataDocMap)[level->getIndex()];
-      }
-    }
-#endif
+    doc = ProblemSpec::createDocument("Uintah_Output");
 
     // Find the end of the file
     ASSERT(doc != 0);
@@ -1708,56 +1592,13 @@ DataArchiver::output(const ProcessorGroup*,
 
     int fd;
     char* filename;
-#ifdef PVFS_FIX
-    if ( type == CHECKPOINT_REDUCTION )
-#endif
-    {
-      // Open the data file
-      filename = (char*) dataFilename.c_str();
-      fd = open(filename, flags, 0666);
-      if ( fd == -1 ) {
-        cerr << "Cannot open dataFile: " << dataFilename << '\n';
-        throw ErrnoException("DataArchiver::output (open call)", errno, __FILE__, __LINE__);
-      }
+    // Open the data file
+    filename = (char*) dataFilename.c_str();
+    fd = open(filename, flags, 0666);
+    if ( fd == -1 ) {
+      cerr << "Cannot open dataFile: " << dataFilename << '\n';
+      throw ErrnoException("DataArchiver::output (open call)", errno, __FILE__, __LINE__);
     }
-#ifdef PVFS_FIX
-    else
-    {
-      // map of levels to file descriptors.  select between 
-      // data files and checkpoint file handles
-      map< int, pair<int, char*> >* currentDataFileHandleMap;
-      map< int, pair<int, char*> >::iterator currentDataFileHandle;
-
-      if ( type == CHECKPOINT ) {
-        currentDataFileHandleMap = &d_CheckpointDataFileHandles;
-      }
-      else {
-        currentDataFileHandleMap = &d_DataFileHandles;
-      }
-
-      currentDataFileHandle = currentDataFileHandleMap->find(level->getIndex());
-      // RNJ - If we haven't created a data file, go ahead
-      //       and create one, otherwise use the one we
-      //       already have.
-
-      if ( currentDataFileHandle == currentDataFileHandleMap->end() ) {
-        filename = (char*) dataFilename.c_str();
-        fd = open(filename, flags, 0666);
-        
-        if ( fd == -1 ) {
-          cerr << "Cannot open dataFile: " << dataFilename << '\n';
-          throw ErrnoException("DataArchiver::output (open call)", errno, __FILE__, __LINE__);
-        }
-        else {
-          (*currentDataFileHandleMap)[level->getIndex()] = make_pair(fd, filename);
-        }
-      }
-      else {
-        fd = (*currentDataFileHandleMap)[level->getIndex()].first;
-        filename = (*currentDataFileHandleMap)[level->getIndex()].second;
-      }
-    }
-#endif    
 
     // loop over variables
     vector<SaveItem>::iterator saveIter;
@@ -1873,25 +1714,15 @@ DataArchiver::output(const ProcessorGroup*,
         }
       }
     }
-    // close files and handles (with pvfs fix, only do this with reductions).
-#ifdef PVFS_FIX
-    if ( type == CHECKPOINT_REDUCTION )
-#endif
-      {
-        int s = close(fd);
-        if(s == -1) {
-          cerr << "Error closing file: " << filename << ", errno=" << errno << '\n';
-          throw ErrnoException("DataArchiver::output (close call)", errno, __FILE__, __LINE__);
-        }
-      }
-    
-#ifdef PVFS_FIX
-    if ( type == CHECKPOINT_REDUCTION )
-#endif
-    {
-      doc->output(xmlFilename.c_str());
-      doc->releaseDocument();
+    // close files and handles 
+    int s = close(fd);
+    if(s == -1) {
+      cerr << "Error closing file: " << filename << ", errno=" << errno << '\n';
+      throw ErrnoException("DataArchiver::output (close call)", errno, __FILE__, __LINE__);
     }
+    
+    doc->output(xmlFilename.c_str());
+    doc->releaseDocument();
   }
   d_outputLock.unlock(); 
 
@@ -2165,6 +1996,12 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
          label_map[dep->var->getName()][*liter];
        unionedVarMatls = unionedVarMatls.unioned(matls);
      }
+     if (dep->var->getName() == "p.x" && *levels.begin() == 0) {
+       cout << *dep << endl;
+       cout << *dep->task << endl;
+     }
+     
+     //cout << "  Adding checkpoint var " << *dep->var << " levels " << levels << " matls " << matls << endl;
    }
          
    d_checkpointLabels.reserve(label_map.size());
