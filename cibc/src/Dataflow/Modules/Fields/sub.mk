@@ -75,6 +75,7 @@ SRCS     += \
 	$(SRCDIR)/HexToTet.cc\
 	$(SRCDIR)/InsertField.cc\
 	$(SRCDIR)/InsertHexSheet.cc\
+	$(SRCDIR)/IntersectTri.cc\
 	$(SRCDIR)/IsoClip.cc\
 	$(SRCDIR)/IsoRefine.cc\
 	$(SRCDIR)/ManageFieldData.cc\
