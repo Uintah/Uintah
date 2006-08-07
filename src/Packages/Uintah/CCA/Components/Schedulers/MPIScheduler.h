@@ -131,7 +131,6 @@ WARNING
     SendState*            rs_;
     
     MPIRelocate      reloc_;
-    const VarLabel * reloc_new_posLabel_;
     double           d_lasttime;
     vector<char*>    d_labels;
     vector<double>   d_times;
