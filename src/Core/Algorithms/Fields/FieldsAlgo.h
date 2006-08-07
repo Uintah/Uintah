@@ -123,6 +123,12 @@ class SCISHARE FieldsAlgo : public AlgoLibrary {
     bool FieldDataNodeToElem(FieldHandle input, FieldHandle& output, std::string method);
     bool FieldDataElemToNode(FieldHandle input, FieldHandle& output, std::string method);
     
+    // FindClosestNodeByValue:
+    // Find the closest node with a certain value. This is needed for the multi domain stuff where multiple nodes
+    // might exist in the same position
+    bool FindClosestNodeByValue(FieldHandle input, MatrixHandle& output, FieldHandle& points, double value);
+    bool FindClosestNode(FieldHandle input, MatrixHandle& output, FieldHandle& points);
+    
     // ManageFieldData was split into two parts:
     // GetFieldData: Extract the data from the field into a matrix
     // SetFieldData: Put the data contained in a matrix into the field

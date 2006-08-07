@@ -40,6 +40,8 @@
 #include <Core/Algorithms/Fields/FieldDataElemToNode.h>
 #include <Core/Algorithms/Fields/FieldDataNodeToElem.h>
 #include <Core/Algorithms/Fields/FieldBoundary.h>
+#include <Core/Algorithms/Fields/FindClosestNodeByValue.h>
+#include <Core/Algorithms/Fields/FindClosestNode.h>
 #include <Core/Algorithms/Fields/GatherFields.h>
 #include <Core/Algorithms/Fields/GetFieldData.h>
 #include <Core/Algorithms/Fields/GetFieldDataMinMax.h>
@@ -164,6 +166,18 @@ bool FieldsAlgo::FieldDataElemToNode(FieldHandle input, FieldHandle& output, std
 {
   FieldDataElemToNodeAlgo algo;
   return(algo.FieldDataElemToNode(pr_,input,output,method));
+}
+
+bool FieldsAlgo::FindClosestNodeByValue(FieldHandle input, MatrixHandle& output, FieldHandle& points, double value)
+{
+  FindClosestNodeByValueAlgo algo;
+  return(algo.FindClosestNodeByValue(pr_,input,output,points,value));
+}
+
+bool FieldsAlgo::FindClosestNode(FieldHandle input, MatrixHandle& output, FieldHandle& points)
+{
+  FindClosestNodeAlgo algo;
+  return(algo.FindClosestNode(pr_,input,output,points));
 }
 
 
