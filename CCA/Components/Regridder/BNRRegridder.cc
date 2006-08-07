@@ -116,6 +116,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
         if (flags[*ci])
         {
          coarse_flag_sets[l].insert(*ci*d_cellRefinementRatio[l]/d_minPatchSize);
+         
          if(dbgpatches.active())
          {
             flag_sets[l].push_back(*ci);
@@ -123,7 +124,6 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
         }
       }
     }
-    //create flags vector
     vector<IntVector> coarse_flag_vector(coarse_flag_sets[l].size());
     coarse_flag_vector.assign(coarse_flag_sets[l].begin(),coarse_flag_sets[l].end());
     ctotal+=MPI_Wtime()-start;
@@ -221,7 +221,10 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
 
   d_newGrid = true;
   d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
-
+/*
+  if(d_myworld->myrank()==0)
+    cout << *newGrid;
+*/
   if (dbgpatches.active())
   {
      if(d_myworld->myrank()==0)
@@ -244,7 +247,6 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
               MPI_Recv(&flag_sets[l][size],sizeof(IntVector)*numFlags,MPI_BYTE,p,1,MPI_COMM_WORLD,&status);
            }
          }
-        //cout << *newGrid;
         writeGrid(newGrid,flag_sets);
      }
      else
@@ -325,7 +327,6 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
     //use INT_MAX to signal no patch;
     patch.low[0]=INT_MAX;
   }
-  
   //Calculate global bounds
   if(numprocs>1)
   {
@@ -635,6 +636,17 @@ void BNRRegridder::AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVect
     IntVector low = patches[p].low*d_minPatchSize/d_cellRefinementRatio[level] - d_minBoundaryCells;
     IntVector high = patches[p].high*d_minPatchSize/d_cellRefinementRatio[level] + d_minBoundaryCells;
     
+    for(int d=0;d<3;d++)
+    {
+      if(low[d]<0)
+      {
+         low[d]=0;
+      }
+      if(high[d]>d_cellNum[level][d])
+      {
+          high[d]=d_cellNum[level][d];
+      }
+    }
     Level::selectType intersecting_patches;
     //intersect range tree
     prt.query(low, high, intersecting_patches);
@@ -643,6 +655,7 @@ void BNRRegridder::AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVect
     for (int i = 0; i < intersecting_patches.size(); i++)
     {
       const Patch* patch = intersecting_patches[i];
+
       IntVector int_low = Max(patch->getCellLowIndex(), low);
       IntVector int_high = Min(patch->getCellHighIndex(), high);
       
