@@ -172,6 +172,8 @@ WARNING
     int numTasks_;
     int d_generation;
 
+    const VarLabel * reloc_new_posLabel_;
+
     SimulationStateP d_sharedState;
 
     std::vector<OnDemandDataWarehouseP> dws;
