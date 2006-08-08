@@ -43,17 +43,17 @@ ${OUTPUTDIR}/framework.make: ${FWKSIDL} Core/Babel/timestamp
   ifeq ($(IS_OSX),yes)
 	if ! test -d $(dir $@); then mkdir -p $(dir $@); fi
 	cp $(dir $<)*Impl.* $(dir $@)
-	$(BABEL) --server=C++ --output-directory=$(dir $@) --repository-path=${BABEL_REPOSITORY} --suppress-timestamp $<
+	$(BABEL) --server=C++ --output-directory=$(dir $@) --repository-path=${BABEL_REPOSITORY} $<
 	mv  $(dir $@)babel.make $@
   else
 	if ! test -d $(dir $@); then mkdir -p $(dir $@); fi
 	cp -u $(dir $<)*Impl.* $(dir $@)
-	$(BABEL) --server=C++ --output-directory=$(dir $@) --repository-path=${BABEL_REPOSITORY} --suppress-timestamp $<
+	$(BABEL) --server=C++ --output-directory=$(dir $@) --repository-path=${BABEL_REPOSITORY} $<
 	mv  $(dir $@)babel.make $@
   endif
 
 ${OUTPUTDIR}/cca.make: ${CCASIDL}
-	$(BABEL) --client=C++ --output-directory=${dir $@} --suppress-timestamp $<
+	$(BABEL) --client=C++ --output-directory=${dir $@} $<
 	mv $(dir $@)babel.make $@
 
 SRCS := $(SRCS) $(SRCDIR)/BabelComponentModel.cc \
