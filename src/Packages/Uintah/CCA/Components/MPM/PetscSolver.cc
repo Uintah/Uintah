@@ -408,32 +408,33 @@ void MPMPetscSolver::removeFixedDOF(int num_nodes)
 
 void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
 {
-  int* indices;
-  int in = 0;
-
-  indices = new int[d_DOF.size()];
-  
   flushMatrix();
 
   // Zero the rows/columns that contain the node numbers with BCs.
-
+  int* indices = new int[d_DOF.size()];  
+  int in = 0;
   for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
        iter++) {
     const int index = *iter;
     indices[in++] = *iter;
 
-    vector<int> neighbors = d_DOFNeighbors[index];
+    vector<int>& neighbors = d_DOFNeighbors[index];
+
     for (vector<int>::iterator n = neighbors.begin(); n != neighbors.end();
          n++) {
-      int ierr = MatSetValue(d_A,*n,index,0,INSERT_VALUES);
+      int ierr;
+      // zero out the columns
+      ierr = MatSetValue(d_A,*n,index,0,INSERT_VALUES);
       if (ierr)
         cout << "MatSetValue error for " << index << "," << *n << endl;
+      // zero out the rows
       ierr = MatSetValue(d_A,index,*n,0,INSERT_VALUES);
       if (ierr)
         cout << "MatSetValue error for " << index << "," << *n << endl;
+
       ierr = MatSetValue(d_A,index,index,1,INSERT_VALUES);
       if (ierr)
-        cout << "MatSetValue error for " << index << "," << *n << endl;
+        cout << "MatSetValue error for " << index << "," << index << endl;
     }
   }
 
