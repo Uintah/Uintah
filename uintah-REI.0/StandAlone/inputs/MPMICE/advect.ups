@@ -198,17 +198,36 @@
     <MaterialProperties>
        <MPM>
          <material>
-              <density>             8900.0           </density>
-              <constitutive_model type = "comp_neo_hook_plastic">
-                  <useModifiedEOS>     true          </useModifiedEOS>
-                  <bulk_modulus>      117.0e7        </bulk_modulus>
-                  <shear_modulus>      43.8e7        </shear_modulus>
-                  <yield_stress>       70.0e6        </yield_stress>
-                  <hardening_modulus>  43.8e5        </hardening_modulus>
-                  <alpha>               0.0          </alpha>
-                  <strain_limit>       3.05          </strain_limit>
-                  <reduction_factor>   1.0           </reduction_factor>
-              </constitutive_model>
+            <includeFlowWork>        false           </includeFlowWork>
+               <density>             1700.0          </density>
+               <constitutive_model type = "soil_foam">
+                    <elastic_shear>4.488E+9</elastic_shear>
+                    <a0>1000.0</a0>
+                    <a1>0.0</a1>
+                    <a2>0.00333</a2>
+                    <pc>0.0</pc>
+                    <eps0>0.0</eps0>
+                    <eps1>-4.88E-02</eps1>
+                    <eps2>-9.53E-02</eps2>
+                    <eps3>-1.82E-01</eps3>
+                    <eps4>-2.62E-01</eps4>
+                    <eps5>-3.36E-01</eps5>
+                    <eps6>-4.05E-01</eps6>
+                    <eps7>-4.70E-01</eps7>
+                    <eps8>-5.31E-01</eps8>
+                    <eps9>-5.88E-01</eps9>
+                    <p0>101325.</p0>
+                    <p1>8.02E+07</p1>
+                    <p2>1.57E+08</p2>
+                    <p3>3.69E+08</p3>
+                    <p4>7.71E+08</p4>
+                    <p5>1.50E+09</p5>
+                    <p6>2.68E+09</p6>
+                    <p7>4.45E+09</p7>
+                    <p8>6.95E+09</p8>
+                    <p9>1.03E+10</p9>
+                </constitutive_model>
+
                 <thermal_conductivity>  400.0         </thermal_conductivity>
                 <specific_heat>         386.0         </specific_heat>
                 <geom_object>
