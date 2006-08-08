@@ -234,5 +234,21 @@ interface ComponentEventService extends Port {
 
    void moveComponent(in ComponentID component, in int x, in int y);
 }
+interface EventService extends cca.Port
+{
+//Should return a pointer to the Topic if it already exists
+           cca.Topic createTopic(in string topicName) throws EventServiceException;
+           cca.WildcardTopic createWildcardTopic(in string topicName) throws EventServiceException;
+	   //cca.Topic createPersistentTopic(in string topicName) throws EventServiceException;
+	   cca.Topic getTopic(in string topicName) throws EventServiceException;
+	   cca.WildcardTopic getWildcardTopic(in string topicName) throws EventServiceException;
+	   void  releaseTopic(in string topicName) throws EventServiceException;
+	   void  releaseWildcardTopic(in string topicName) throws EventServiceException;
+ //return an empty topic if not present
+//Eventually this should throw an exception
+           //cca.Topic getTopicRef(in string topicName);
+	   void processEvents() throws EventServiceException;
+
+}// end interface EventService
 
 // END proposed - sparker
