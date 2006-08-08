@@ -106,7 +106,8 @@ package cca {
     interface CCAException extends SSIDL.BaseException {
       CCAExceptionType getCCAExceptionType();
     } // end interface CCAException
-
+    interface EventServiceException extends CCAException {
+    }
 
     /**
      * The one interface all frameworks must implement. A unique instance

@@ -52,7 +52,7 @@
 #include <SCIRun/Internal/FrameworkProxyService.h>
 #include <SCIRun/Internal/GUIService.h>
 #include <SCIRun/SCIRunFramework.h>
-
+#include <SCIRun/Internal/EventService.h>
 #if BUILD_DATAFLOW
  #include <SCIRun/Dataflow/DataflowScheduler.h>
 #endif
@@ -77,6 +77,7 @@ InternalComponentModel::InternalComponentModel(SCIRunFramework* framework)
 #endif
     addService(new InternalFrameworkServiceDescription(this, "cca.FrameworkProperties", &FrameworkProperties::create));
     addService(new InternalFrameworkServiceDescription(this, "cca.FrameworkProxyService", &FrameworkProxyService::create));
+    addService(new InternalFrameworkServiceDescription(this, "cca.EventService", &EventService::create));
 #if HAVE_WX
     addService(new InternalFrameworkServiceDescription(this, "cca.GUIService", &GUIService::create));
 #endif

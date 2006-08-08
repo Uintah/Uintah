@@ -135,3 +135,38 @@ class GUIBuilder implements-all sci.cca.Builder {
   // opaque type is wxColor*
   opaque getPortColor(in string portName);
 }
+interface IEventListener
+{
+        //void processEvent(in string topicName, in Event theEvent);
+	void processEvent(in string topicName, in cca.TypeMap theEventBody);
+}//end interface IEventListener
+
+/*interface Event 
+{
+// stores event header and event body
+  void setHeader(in cca.TypeMap header);                                                   
+  void setBody(in cca.TypeMap body);                                                     
+  cca.TypeMap getHeader();
+  cca.TypeMap getBody();
+
+}*/
+
+interface Topic
+{
+        //void sendEvent(in Event theEvent) throws EventServiceException;
+        void sendEvent(in cca.TypeMap theEventBody) throws EventServiceException;
+	void registerEventListener(in string listenerKey, in IEventListener theListener) throws EventServiceException;
+        void unregisterEventListener(in string listenerKey);
+        string getTopicName();
+//The following methods  should be called only by the EventService
+        void processEvents() throws EventServiceException;
+        void addWildcardTopic(in string topicName, in cca.WildcardTopic theWildcardTopic )throws EventServiceException;
+        void removeWildcardTopic(in string topicName)throws EventServiceException;
+}
+
+interface WildcardTopic
+{
+        void registerEventListener(in string listenerKey, in IEventListener theListener) throws EventServiceException;
+        void unregisterEventListener(in string listenerKey);
+        string getTopicName();
+}
