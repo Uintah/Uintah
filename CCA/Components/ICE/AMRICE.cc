@@ -1449,8 +1449,7 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
 /*===========TESTING==========`*/  
 
   
-  //__________________________________
-  //bulletproofing
+  //____ B U L L E T   P R O O F I N G----  
   if (isRight_CP_FP_pair ){
     IntVector diff = Abs(l - h);
     if( ( l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z() ) || diff[p_dir] > 1) {
@@ -1742,7 +1741,7 @@ void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
                                        const PatchSubset* coarsePatches,
                                        const MaterialSubset*,
                                        DataWarehouse*,
-                                       DataWarehouse*,
+                                       DataWarehouse* new_dw,
                                        string description)
 {
   const Level* coarseLevel = getLevel(coarsePatches);
@@ -1790,7 +1789,10 @@ void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
               int n_CFI_cells     =  finePatch->getFaceMark(1, patchFace);
               //__________________________________
               //  If the number of "marked" cells/numICEMatls != n_CFI_cells
-              if ( n_touched_cells != n_CFI_cells){
+              // ignore if a timestep restart has already been requested
+              bool tsr = new_dw->timestepRestarted();
+              
+              if ( n_touched_cells != n_CFI_cells && !tsr){
                 ostringstream warn;
                 warn << d_myworld->myrank() << " AMRICE:refluxing_" << description
                      << " \n CFI face: "
