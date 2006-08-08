@@ -14,6 +14,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ImplicitCM.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/NormalForceBC.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
 #include <Packages/Uintah/Core/Grid/LinearInterpolator.h>
 #include <Packages/Uintah/CCA/Components/MPM/HeatConduction/ImplicitHeatConduction.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
@@ -1233,6 +1234,8 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
   // Calculate the force vector at each particle for each bc
   std::vector<double> forceMagPerPart;
   std::vector<NormalForceBC*> nfbcP;
+  std::vector<double> heatFluxMagPerPart;
+  std::vector<HeatFluxBC*> hfbcP;
   if (flags->d_useLoadCurves) {
     // Currently, only one load curve at a time is supported, but
     // I've left the infrastructure in place to go to multiple
@@ -1250,6 +1253,14 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
 
         // Calculate the force per particle at current time
         forceMagPerPart.push_back(nfbc->getLoad(time));
+      }
+      if (bcs_type == "HeatFlux") {
+        HeatFluxBC* hfbc =
+         dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+        hfbcP.push_back(hfbc);
+
+        // Calculate the force per particle at current time
+        heatFluxMagPerPart.push_back(hfbc->heatflux(time));
       }
     }
   }
@@ -1592,7 +1603,12 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
           IntVector c = *iter;
           gvel_old[m][c] /= gmass[m][c];
           gacc[m][c]     /= gmass[m][c];
+          GMASS[c] += gmass[m][c];
+#if 0
+          cout << "Before: gTemperature[" << c << "]= " << gTemperature[c] << endl;
           gTemperature[c] /= gmass[m][c];
+          cout << "After: gTemperature[" << c << "]= " << gTemperature[c] << endl;
+#endif
           gTemperatureNoBC[m][c] = gTemperature[c];
         }
       }
@@ -2812,6 +2828,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         pvolumeNew[idx]      = pvolume[idx];
         //  pTemp[idx]           = pTempOld[idx] + tempRate*delT;
         pTemp[idx]           = ptemp + tempRate*delT;
+        //        cout << "pTemp[" << idx << "]= " << pTemp[idx] << endl;
 
         if(pmassNew[idx] <= 0.0){
           delete_particles->addParticle(idx);
