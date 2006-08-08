@@ -143,23 +143,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
     d_switchCriteria->problemSetup(prob_spec,materials_ps,d_sharedState);
   }
 
-#if 0
-    
-  // Get the PBX matl id
-  int matl_id = 0;
-  for (ProblemSpecP child = prob_spec->findBlock("material"); child != 0;
-       child = child->findNextBlock("material")) {
-    string name_type;
-    if (!child->getAttribute("name",name_type))
-      throw ProblemSetupException("No name for material", __FILE__, __LINE__);
-    
-    if (name_type == "reactant")
-      pbx_matl_num = matl_id; 
-    
-    matl_id++;
-  }
-#endif
-
   //__________________________________
   //  I C E
   if(!dataArchiver){
@@ -1307,23 +1290,26 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         d_ice->printVector( indx, patch, 1,desc.str(), "vel_CC", 0, vel_CC);
       }
       //---- B U L L E T   P R O O F I N G------
+      // ignore BP if timestep restart has already been requested
       IntVector neg_cell;
       ostringstream warn;
+      bool tsr = new_dw->timestepRestarted();
+      
       int L = getLevel(patches)->getIndex();
       if(d_testForNegTemps_mpm){
-        if (!d_ice->areAllValuesPositive(Temp_CC, neg_cell)) {
+        if (!d_ice->areAllValuesPositive(Temp_CC, neg_cell) && !tsr) {
           warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx 
                <<" cell "
                << neg_cell << " Temp_CC " << Temp_CC[neg_cell] << "\n ";
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
       }
-      if (!d_ice->areAllValuesPositive(rho_CC, neg_cell)) {
+      if (!d_ice->areAllValuesPositive(rho_CC, neg_cell) && !tsr) {
         warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx 
              <<" cell " << neg_cell << " rho_CC " << rho_CC[neg_cell]<< "\n ";
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
-      if (!d_ice->areAllValuesPositive(sp_vol_CC, neg_cell)) {
+      if (!d_ice->areAllValuesPositive(sp_vol_CC, neg_cell) && !tsr) {
         warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx 
              <<" cell "
              << neg_cell << " sp_vol_CC " << sp_vol_CC[neg_cell]<<"\n ";
@@ -1495,10 +1481,13 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       }
       
       //---- B U L L E T   P R O O F I N G------
+      // ignore BP if timestep restart has already been requested
       IntVector neg_cell;
       ostringstream warn;
+      bool tsr = new_dw->timestepRestarted();
+      
       if(d_testForNegTemps_mpm){
-        if (!d_ice->areAllValuesPositive(int_eng_L, neg_cell)) {
+        if (!d_ice->areAllValuesPositive(int_eng_L, neg_cell) && !tsr) {
           int L = getLevel(patches)->getIndex();
           warn <<"ERROR MPMICE:("<< L<<"):computeLagrangianValuesMPM, mat "
                << indx<<" cell "
@@ -1932,7 +1921,10 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
       //__________________________________
       //      BULLET PROOFING
-      if(test_max_iter == d_ice->d_max_iter_equilibration) 
+      // ignore BP if timestep restart has already been requested
+      bool tsr = new_dw->timestepRestarted();
+      
+      if(test_max_iter == d_ice->d_max_iter_equilibration && !tsr) 
        throw MaxIteration(c,count,n_passes,L_indx,
                          "MaxIterations reached", __FILE__, __LINE__);
 
@@ -1940,11 +1932,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
            ASSERT(( vol_frac[m][c] > 0.0 ) ||
                   ( vol_frac[m][c] < 1.0));
       }
-      if ( fabs(sum - 1.0) > convergence_crit) {  
+      if ( fabs(sum - 1.0) > convergence_crit && !tsr) {  
          throw MaxIteration(c,count,n_passes, L_indx,
                          "MaxIteration reached vol_frac != 1", __FILE__, __LINE__);
       }
-      if ( press_new[c] < 0.0 ) {
+      if ( press_new[c] < 0.0 && !tsr) {
          throw MaxIteration(c,count,n_passes, L_indx,
                          "MaxIteration reached press_new < 0", __FILE__, __LINE__);
       }

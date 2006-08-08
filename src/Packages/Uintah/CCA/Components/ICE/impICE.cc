@@ -842,8 +842,11 @@ void ICE::updatePressure(const ProcessorGroup*,
       printData( 0, patch, 1,desc.str(), "Press_CC",      press_CC);
     }
     //____ B U L L E T   P R O O F I N G----
+    // ignore BP if a timestep restart has already been requested
     IntVector neg_cell;
-    if(!areAllValuesPositive(press_CC, neg_cell)) {
+    bool tsr = new_dw->timestepRestarted();
+    
+    if(!areAllValuesPositive(press_CC, neg_cell) && !tsr) {
       ostringstream warn;
       warn <<"ERROR ICE::updatePressure cell "
            << neg_cell << " negative pressure\n ";        
