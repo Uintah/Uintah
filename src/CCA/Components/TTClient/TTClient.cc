@@ -124,7 +124,7 @@ int ttGoPort::go()
 #if HAVE_GUI
     wxMessageBox(e->getNote(), wxT("TTClient"), wxOK|wxICON_ERROR, 0);
 #else
-    cout << e->getNote() << endl;
+    std::cout << e->getNote() << std::endl;
 #endif
     return -1;
   }
