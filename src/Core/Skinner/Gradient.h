@@ -38,21 +38,25 @@ namespace SCIRun {
   namespace Skinner {  
     class Gradient : public Drawable {
     public:
-      Gradient(Variables *variables,
-               const Color &sw,
-               const Color &se,
-               const Color &ne,
-               const Color &nw);
-
+      Gradient(Variables *variables);
 
       static DrawableMakerFunc_t   maker;
       static  string               class_name() {return "Gradient";}
       propagation_state_e          process_event(event_handle_t event);
 
     private:
+      enum {
+        SW = 0,
+        SE = 1,
+        NE = 2,
+        NW = 3
+      };
+
       void                         render_gl();
+      void                         render_radial_gl();
       Skinner::Color               colors_[4];
       bool                         backslash_;
+      int                          anchor_;
     };
   }
 } // End namespace SCIRun
