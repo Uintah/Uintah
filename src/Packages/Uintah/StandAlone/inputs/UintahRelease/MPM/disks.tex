@@ -14,8 +14,8 @@ manuscript for a description of the problem.
 \subsection*{\underline{Simulation Specifics}}
 \begin{description} 
 \item [Component used:] \hfill MPM
-\item [Input file name:] \hfill disks_sulsky.ups
-\item [Command used to run input file:]\hfill sus disks_sulsky.ups
+\item [Input file name:] \hfill disks\_sulsky.ups
+\item [Command used to run input file:]\hfill sus disks\_sulsky.ups
 \item [Simulation Domain:]\hfill    1.0 x 1.0 x 0.05 m
 
 \item [Cell Spacing:]\hfill \\ 
@@ -34,9 +34,10 @@ manuscript for a description of the problem.
 
 Figure~\ref{figdisks} shows a snapshot of the simulation, as the disks
 are beginning to collide.
-\begin{figure}[b]
+
+\begin{figure}[]
   \center
-%  \scalebox{0.2}{\includegraphics{disks.png}}
+  \scalebox{0.7}{\includegraphics{disks.eps}}
   \caption{Colliding elastic disks.  Particles colored according to
 equivalent stress, grid according to nodal mass.}
   \label{figdisks}
@@ -47,10 +48,12 @@ In this case, both the kinetic and strain energies are avaiable and can
 be plotted to create a graph similar to that in Fig. 5a of \cite{sulskycmame}.
 e.g. using gnuplot:
 
-cd disks.uda.000
-gnuplot
-gnuplot> plot "StrainEnergy.dat", "KineticEnergy.dat"
-gnuplot> quit
+\begin{quote}
+cd disks.uda.000 \\
+gnuplot \\
+gnuplot$>$ plot "StrainEnergy.dat", "KineticEnergy.dat" \\
+gnuplot$>$ quit \\
+\end{quote}
 
 \bibliography{../references}
 

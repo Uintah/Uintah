@@ -68,11 +68,12 @@ where NP is the number of processors being used.
 
 Figure~\ref{figfoam} shows a snapshot of the simulation, as the foam
 is at 50\% compaction.
+
 \begin{figure}[b]
   \center
-%  \scalebox{0.2}{\includegraphics{foam.png}}
+  \scalebox{0.8}{\includegraphics{foam.eps}}
   \caption{Compaction of a foam microstructure.}
-  \label{figdisks}
+  \label{figfoam}
 \end{figure}
 
 In this simulation, the reaction forces at 5 of the 6 computational boundaries
@@ -83,11 +84,13 @@ e.g. BndyForce\_zminus.dat.  Because the reaction force is a vector, it
 is enclosed in square brackets which may be removed by use of a script in
 the inputs directory:
 
-cd foam.uda.000
-../inputs/ICE/Scripts/removeBraces BndyForce\_zminus.dat
-gnuplot
-gnuplot> plot "BndyForce\_zminus.dat" using 1:4
-gnuplot> quit
+\begin{quote}
+cd foam.uda.000 \\
+../inputs/ICE/Scripts/removeBraces BndyForce\_zminus.dat \\
+gnuplot \\
+gnuplot$>$ plot "BndyForce\_zminus.dat" using 1:4 \\
+gnuplot$>$ quit 
+\end{quote}
 
 These reaction forces are similar to what would be measured on a mechanical
 testing device, and help to understand the material behavior.
