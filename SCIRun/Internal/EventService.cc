@@ -1,49 +1,39 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
 
 #include <SCIRun/Internal/EventService.h>
-#include <Core/CCA/PIDL/PIDL.h>
-#include <SCIRun/PortInstanceIterator.h>
+#include <SCIRun/Internal/Topic.h>
+#include <SCIRun/Internal/WildcardTopic.h>
+#include <SCIRun/Internal/EventServiceException.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/CCA/CCAException.h>
-#include <SCIRun/PortInstance.h>
-#include <SCIRun/CCA/ComponentID.h>
-#include <SCIRun/CCA/CCAComponentInstance.h>
-#include <SCIRun/ComponentInstance.h>
-#include <SCIRun/CCA/ConnectionID.h>
-#include <SCIRun/Internal/ConnectionEvent.h>
-#include <SCIRun/Internal/ConnectionEventService.h>
-#include <SCIRun/Internal/EventServiceException.h>
-#include <iostream>
-#include <string>
-#include <vector>
-namespace SCIRun {
 
+namespace SCIRun {
 
 EventService::EventService(SCIRunFramework* framework)
   : InternalFrameworkServiceInstance(framework, "internal:EventService")
@@ -52,20 +42,18 @@ EventService::EventService(SCIRunFramework* framework)
 
 EventService::~EventService()
 {
-//   eventMap.clear();
-//   eventListenerMap.clear();
-//   topicList.clear();
   topicMap.clear();
+  wildcardTopicMap.clear();
 }
 
 sci::cca::ComponentID::pointer
 EventService::createInstance(const std::string& instanceName,
-                               const std::string& className,
-                               const sci::cca::TypeMap::pointer& properties)
+                             const std::string& className,
+                             const sci::cca::TypeMap::pointer& properties)
 {
   if (instanceName.size()) {
     if (framework->lookupComponent(instanceName) != 0) {
-      throw sci::cca::CCAException::pointer(new CCAException("Component instance name " + instanceName + " is not unique"));
+      throw CCAExceptionPtr(new CCAException("Component instance name " + instanceName + " is not unique"));
     }
     return framework->createComponentInstance(instanceName, className, properties);
   }
@@ -75,160 +63,169 @@ EventService::createInstance(const std::string& instanceName,
 InternalFrameworkServiceInstance*
 EventService::create(SCIRunFramework* framework)
 {
-  EventService* n = new EventService(framework);
-  return n;
+  return new EventService(framework);
 }
-sci::cca::Port::pointer
-EventService::getService(const std::string&)
+
+sci::cca::Topic::pointer EventService::createTopic(const std::string &topicName)
 {
-  return sci::cca::Port::pointer(this);
+  if (topicName.empty()) {
+    throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
+  }
+
+  sci::cca::Topic::pointer topicPtr;
+  TopicMap::iterator iter = topicMap.find(topicName);
+  if (iter == topicMap.end()) { // new Topic
+    topicPtr = new Topic(topicName);
+    topicMap[topicName] = topicPtr;
+  } else { // Topic already present
+    topicPtr = iter->second;
+  }
+
+  // for all WildcardTopics:
+  // check for matching topic name and add to newly created Topic's WildcardTopics map
+  for (WildcardTopicMap::iterator wildcardTopicIter = wildcardTopicMap.begin();
+       wildcardTopicIter != wildcardTopicMap.end(); wildcardTopicIter++) {
+
+    if (isMatch(wildcardTopicIter->second->getTopicName(), topicName)) {
+      Topic* t = dynamic_cast<Topic*>(topicPtr.getPointer());
+      if (t == 0) {
+        throw EventServiceExceptionPtr(new EventServiceException("Topic pointer is null"));
+      }
+      t->addWildcardTopic(topicName, wildcardTopicIter->second);
+
+    }
+  }
+  return topicPtr;
 }
 
 sci::cca::Topic::pointer EventService::getTopic(const std::string &topicName)
 {
-  if(topicName.empty())
-    {
-      throw sci::cca::EventServiceException::pointer (new EventServiceException("Topic name empty", sci::cca::Unexpected)); 
-    }
-  std::map<std::string, sci::cca::Topic::pointer>::iterator iter = topicMap.find(topicName);
-  if(iter == topicMap.end())
-    {
-      throw sci::cca::EventServiceException::pointer (new EventServiceException("Topic not found", sci::cca::Unexpected)); 
-    }
-  else
-    {
-       sci::cca::Topic::pointer topicPtr(iter->second);
-       return topicPtr;
-    }
+  if (topicName.empty()) {
+    throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
+  }
 
+  TopicMap::iterator iter = topicMap.find(topicName);
+  if (iter == topicMap.end()) {
+    throw EventServiceExceptionPtr(new EventServiceException("Topic not found", sci::cca::Unexpected));
+  } else {
+    return iter->second;
+  }
 }
-sci::cca::WildcardTopic::pointer EventService::getWildcardTopic(const std::string &topicName)
-{
-  if(topicName.empty())
-    {
-      throw sci::cca::EventServiceException::pointer (new EventServiceException("Topic name empty", sci::cca::Unexpected)); 
-    }
-  std::map<std::string, sci::cca::WildcardTopic::pointer>::iterator iter = wildcardTopicMap.find(topicName);
-  if(iter == wildcardTopicMap.end())
-    {
-      throw sci::cca::EventServiceException::pointer (new EventServiceException("Topic not found", sci::cca::Unexpected)); 
-    }
-  else
-    {
-       sci::cca::WildcardTopic::pointer wildcardTopicPtr(iter->second);
-       return wildcardTopicPtr;
-    }
 
-}
-sci::cca::Topic::pointer EventService::createTopic(const std::string &topicName)
-{
-  sci::cca::Topic::pointer topicPtr;
-  if(topicName.empty())
-    {
-      throw sci::cca::EventServiceException::pointer (new EventServiceException("Topic name empty", sci::cca::Unexpected)); 
-    }
-  std::map<std::string, sci::cca::Topic::pointer>::iterator iter = topicMap.find(topicName);
-  //Topic not present previously
-  if(iter == topicMap.end())
-    {
-      topicPtr = new Topic(topicName);
-      topicMap[topicName] = topicPtr;
-    }
-  
-  //Topic already present
-  else{
-     topicPtr = iter->second;
-  }  
-  //For all wildcard topics check is the match topic name and add to wildcardtopics map.
-  std::map<std::string, sci::cca::WildcardTopic::pointer>::iterator wildcardTopicIter;
-  for(wildcardTopicIter = wildcardTopicMap.begin(); wildcardTopicIter != wildcardTopicMap.end(); wildcardTopicIter++)
-    if(isMatch(wildcardTopicIter->second->getTopicName(),topicName))
-      topicPtr->addWildcardTopic(topicName,wildcardTopicIter->second);
-  return topicPtr;
-}
 sci::cca::WildcardTopic::pointer EventService::createWildcardTopic(const std::string &topicName)
 {
-  sci::cca::WildcardTopic::pointer wildcardTopicPtr;
-  if(topicName.empty())
-    {
-      throw sci::cca::EventServiceException::pointer (new EventServiceException("Topic name empty", sci::cca::Unexpected)); 
-    }
-  std::map<std::string, sci::cca::WildcardTopic::pointer>::iterator iter = wildcardTopicMap.find(topicName);
-  //Topic not present previously
-  if(iter == wildcardTopicMap.end())
-    {
-      wildcardTopicPtr = new WildcardTopic(topicName);
-      wildcardTopicMap[topicName] = wildcardTopicPtr;
-    }
-  else{
-  //Topic already present
-      wildcardTopicPtr = iter->second;
+  if (topicName.empty()) {
+    throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
   }
-  //For all topics add to respective topic's wildcardtopics map
-  std::map<std::string, sci::cca::Topic::pointer>::iterator topicIter;
-  for(topicIter = topicMap.begin(); topicIter != topicMap.end(); topicIter++)
-    if(isMatch(topicIter->second->getTopicName(),topicName)){
-      topicIter->second->addWildcardTopic(topicName,wildcardTopicPtr);
-    }
-return wildcardTopicPtr;
 
+  sci::cca::WildcardTopic::pointer wildcardTopicPtr;
+  WildcardTopicMap::iterator iter = wildcardTopicMap.find(topicName);
+  if (iter == wildcardTopicMap.end()) { // new WildcardTopic
+    wildcardTopicPtr = new WildcardTopic(topicName);
+    wildcardTopicMap[topicName] = wildcardTopicPtr;
+  } else { // WildcardTopic already present
+    wildcardTopicPtr = iter->second;
+  }
+
+  // for all Topics:
+  // add newly created WildcardTopic to matching Topic's WildcardTopics map
+  for (TopicMap::iterator topicIter = topicMap.begin(); topicIter != topicMap.end(); topicIter++) {
+    if (isMatch(topicIter->second->getTopicName(), topicName)) {
+      Topic* t = dynamic_cast<Topic*>((topicIter->second).getPointer());
+      if (t == 0) {
+        throw EventServiceExceptionPtr(new EventServiceException("Topic pointer is null"));
+      }
+      t->addWildcardTopic(topicName, wildcardTopicPtr);
+    }
+  }
+  return wildcardTopicPtr;
 }
+
+sci::cca::WildcardTopic::pointer EventService::getWildcardTopic(const std::string &topicName)
+{
+  if (topicName.empty()) {
+    throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
+  }
+
+  WildcardTopicMap::iterator iter = wildcardTopicMap.find(topicName);
+  if (iter == wildcardTopicMap.end()) {
+    throw EventServiceExceptionPtr(new EventServiceException("Topic not found", sci::cca::Unexpected));
+  } else {
+    return iter->second;
+  }
+}
+
 void EventService::releaseTopic(const std::string &topicName)
 {
-  if(topicName.empty())
-    {
-      throw sci::cca::EventServiceException::pointer (new EventServiceException("Topic name empty", sci::cca::Unexpected)); 
-    }
-  std::map<std::string, sci::cca::Topic::pointer>::iterator iter = topicMap.find(topicName);
-  if(iter == topicMap.end())
-    {
-      throw sci::cca::EventServiceException::pointer (new EventServiceException("Topic not found", sci::cca::Unexpected)); 
-    }
+  if (topicName.empty()) {
+    throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
+  }
+
+  TopicMap::iterator iter = topicMap.find(topicName);
+  if (iter == topicMap.end()) {
+    throw EventServiceExceptionPtr(new EventServiceException("Topic not found", sci::cca::Unexpected));
+  }
   topicMap.erase(iter);
 }
+
 void EventService::releaseWildcardTopic(const std::string &topicName)
 {
-  if(topicName.empty())
-    {
-      throw sci::cca::EventServiceException::pointer (new EventServiceException("Topic name empty", sci::cca::Unexpected)); 
+  if (topicName.empty()) {
+    throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
+  }
+
+  WildcardTopicMap::iterator iter = wildcardTopicMap.find(topicName);
+  if (iter == wildcardTopicMap.end()) {
+    throw EventServiceExceptionPtr(new EventServiceException("Topic not found", sci::cca::Unexpected));
+  }
+
+  // for all Topics that match this WildcardTopic: remove this WildcardTopic from the wildcardTopicsMap
+  for (TopicMap::iterator topicIter = topicMap.begin(); topicIter != topicMap.end(); topicIter++) {
+    if (isMatch(topicIter->second->getTopicName(), topicName)) {
+      Topic* t = dynamic_cast<Topic*>((topicIter->second).getPointer());
+      if (t == 0) {
+        throw EventServiceExceptionPtr(new EventServiceException("Topic pointer is null"));
+      }
+      t->removeWildcardTopic(topicName);
     }
-  std::map<std::string, sci::cca::WildcardTopic::pointer>::iterator iter = wildcardTopicMap.find(topicName);
-  if(iter == wildcardTopicMap.end())
-    {
-      throw sci::cca::EventServiceException::pointer (new EventServiceException("Topic not found", sci::cca::Unexpected)); 
-    }
-  std::map<std::string, sci::cca::Topic::pointer>::iterator topicIter;
-  //for all topics that match this wildcard topic remove this wildcartopic from the wildcatdtopics map
-  for(topicIter = topicMap.begin(); topicIter != topicMap.end(); topicIter++)
-    if(isMatch(topicIter->second->getTopicName(),topicName))
-      topicIter->second->removeWildcardTopic(topicName);
+  }
   wildcardTopicMap.erase(iter);
 }
+
 void EventService::processEvents()
 {
-  std::map<std::string, sci::cca::Topic::pointer>::iterator iter;
-  if(topicMap.empty())
-    {
-      return;
+  if (topicMap.empty()) {
+    return;
+  }
+
+  for (TopicMap::iterator iter = topicMap.begin(); iter != topicMap.end(); iter++) {
+    // Call processEvents() on each Topic
+    Topic* t = dynamic_cast<Topic*>((iter->second).getPointer());
+    if (t == 0) {
+      throw EventServiceExceptionPtr(new EventServiceException("Topic pointer is null"));
     }
-  for(iter = topicMap.begin(); iter != topicMap.end(); iter++)
-    {
-      //Call processEvents() for each topic
-      iter->second->processEvents();
-    }
-  
-}
-bool EventService::isMatch(std::string topicName, std::string wildcardTopicName)
-{
-  std::string::size_type wildcard  = wildcardTopicName.find('*');
-  if (wildcard == std::string::npos)
-    return false;
-  std::string wc = wildcardTopicName.substr(0,wildcard);
-  std::string::size_type loc = topicName.find(wc);
-  if (loc == 0)
-    return true;
-  else
-    return false;
-}
+    t->processEvents();
+  }
 }
 
+
+// TODO: check wildcardTopicName for correct formatting?
+bool EventService::isMatch(const std::string& topicName, const std::string& wildcardTopicName)
+{
+  std::string::size_type wildcardTokenPos = wildcardTopicName.rfind('*');
+
+  // found a wildcard token at the end of the wildcard topic name
+  if (wildcardTokenPos != std::string::npos) {
+    std::string wc = wildcardTopicName.substr(0, wildcardTokenPos);
+    std::string::size_type loc = topicName.find(wc);
+
+    // found a substring matching topic name up to wildcard position
+    if (loc == 0) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+}
