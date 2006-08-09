@@ -1,29 +1,29 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
 
 distribution array DMatrix <double,2>;
@@ -32,17 +32,17 @@ distribution array DMatrix <double,2>;
 /** Port to Framework properties. */
 interface FrameworkProperties extends sci.cca.Port
 {
-    TypeMap getProperties();
-    void setProperties(in TypeMap properties);
+  TypeMap getProperties();
+  void setProperties(in TypeMap properties);
 }
 
 interface FrameworkProxyService extends sci.cca.Port
 {
-    int addLoader(in string loaderName, in string login, in string domain, in string path);
-    int removeLoader(in string name);
+  int addLoader(in string loaderName, in string login, in string domain, in string path);
+  int removeLoader(in string name);
 
-    //void registerFramework(in string frameworkURL);
-    //void registerServices(in sci.cca.Services svc);
+  //void registerFramework(in string frameworkURL);
+  //void registerServices(in sci.cca.Services svc);
 }
 
 interface GUIService extends sci.cca.Port
@@ -54,6 +54,18 @@ interface GUIService extends sci.cca.Port
   void addBuilder(in string builderName, in sci.cca.GUIBuilder builder);
   void removeBuilder(in string builderName);
   void updateProgress(in cca.ComponentID cid, in int progressPercent);
+}
+
+// Should part of an extended builder service.
+interface ApplicationLoaderService extends sci.cca.Port {
+  string getFileName();
+  void setFileName(in string filename);
+
+  void loadNetworkFile();
+  void loadNetworkFile[As](in string filename);
+
+  void saveNetworkFile();
+  void saveNetworkFile[As](in string filename);
 }
 
 //Temp test (Bridge)
@@ -116,19 +128,19 @@ interface UIPort extends sci.cca.Port
    * @return 0 for success, -1 for fatal error, other non-zero
    *  values for others errors.
    */
-    collective int ui();
+  collective int ui();
 }
 
 // unused for now -> should test with ploader
 //abstract interface
 //interface BuilderPort extends sci.cca.Port
 //{
-    /** The builder port is designed for the Builder only
-     *  There is only one port for convenience.
-     *  All final modification should be done through
-     *  the BuilderService and the BuilderService will tranverse
-     *  each Builder
-     */
+/** The builder port is designed for the Builder only
+ *  There is only one port for convenience.
+ *  All final modification should be done through
+ *  the BuilderService and the BuilderService will tranverse
+ *  each Builder
+ */
 //    void buildRemotePackageMenus(in sci.cca.ports.ComponentRepository reg, in string frameworkURL);
 //}
 
@@ -136,7 +148,7 @@ interface UIPort extends sci.cca.Port
 //abstract interface
 interface ZListPort extends sci.cca.Port
 {
-    array<double> getList();
+  array<double> getList();
 }
 /* $Source: /usr/sci/projects/cvsrepository/SCIRun/src/Core/CCA/spec/SCIRun2Ports.sidl,v $ */
 
@@ -145,40 +157,40 @@ interface ZListPort extends sci.cca.Port
 //abstract interface
 interface LinSolverPort extends sci.cca.Port
 {
-    //provides a interface to
-    collective
-    int jacobi(in DMatrix A, in array<double> b, out array<double> x);
+  //provides a interface to
+  collective
+  int jacobi(in DMatrix A, in array<double> b, out array<double> x);
 }
 
 //abstract interface
 interface PDEdescriptionPort extends sci.cca.Port
 {
-    //provides a interface to
-    int getPDEdescription(out array<double> nodes, out array<int> boundaries,
-			  out array<int> dirichletNodes, out array<double> dirichletValues);
+  //provides a interface to
+  int getPDEdescription(out array<double> nodes, out array<int> boundaries,
+                        out array<int> dirichletNodes, out array<double> dirichletValues);
 }
 
 //abstract interface
 interface MeshPort extends sci.cca.Port
 {
-    //provides a interface to
-    int triangulate(in array<double> nodes, in array<int> boundaries, out array<int> triangles);
+  //provides a interface to
+  int triangulate(in array<double> nodes, in array<int> boundaries, out array<int> triangles);
 }
 
 //abstract interface
 interface ViewPort extends sci.cca.Port
 {
-    //provides a interface to
-    int view2dPDE(in array<double> nodes, in array<int> triangles, in array<double> solution);
+  //provides a interface to
+  int view2dPDE(in array<double> nodes, in array<int> triangles, in array<double> solution);
 }
 
 //abstract interface
 interface FEMmatrixPort extends sci.cca.Port
 {
-    //provides a interface to
-    int makeFEMmatrices(in array<int> mesh, in array<double> nodes,
-	                in array<int> dirichletNodes, in array<double> dirichletValues,
-			out array<double,2> Ag, out array<double> fg, out int size);
+  //provides a interface to
+  int makeFEMmatrices(in array<int> mesh, in array<double> nodes,
+                      in array<int> dirichletNodes, in array<double> dirichletValues,
+                      out array<double,2> Ag, out array<double> fg, out int size);
 }
 
 // BEGIN proposed sparker
@@ -197,6 +209,7 @@ enum ComponentEventType {
   ComponentDestroyed=4,
   ComponentMoved=5,
 }
+
 interface ComponentEventListener {
   void componentActivity(in ComponentEvent evt);
 }
@@ -204,50 +217,66 @@ interface ComponentEventListener {
 interface ComponentEvent {
   ComponentEventType getEventType() ;
 
-   /** Get the ComponentID of the affected Component. */
+  /** Get the ComponentID of the affected Component. */
   ComponentID getComponentID();
 
-   /** Get the Properties of the affected Component. */
+  /** Get the Properties of the affected Component. */
   TypeMap getComponentProperties() ;
 }
 
 interface ComponentEventService extends Port {
   /** Sign up to be told about component activity.
       @param ComponentEventType must be one of the integer values
-             ALL, ConnectPending, Connected, DisconnectPending, Disconnected
-             as defined in @see ContainerEventType.
-             ALL means listening to all of the other four listed here.
+      ALL, ConnectPending, Connected, DisconnectPending, Disconnected
+      as defined in @see ContainerEventType.
+      ALL means listening to all of the other four listed here.
       @param l, an object (this component or its delegate) that listens
-             by implementing the ConnectionEventListener callback.
+      by implementing the ConnectionEventListener callback.
       @param playInitialEvents, send events for components that have
-             already been instantiated
+      already been instantiated
   */
-   void addComponentEventListener(in ComponentEventType type, in ComponentEventListener l, in bool playInitialEvents);
+  void addComponentEventListener(in ComponentEventType type, in ComponentEventListener l, in bool playInitialEvents);
 
   /** Ignore future ComponentEvents of the given type.
       Removing a non-added listener is not an error.
       @param ComponentEventType must be one of the integer values defined in
-             addConnectionEventListener.
+      addConnectionEventListener.
       @param l, a previously added listener interface.
-   */
-   void removeComponentEventListener(in ComponentEventType type, in ComponentEventListener l) ;
+  */
+  void removeComponentEventListener(in ComponentEventType type, in ComponentEventListener l) ;
 
-   void moveComponent(in ComponentID component, in int x, in int y);
+  void moveComponent(in ComponentID component, in int x, in int y);
 }
-interface EventService extends cca.Port
-{
-//Should return a pointer to the Topic if it already exists
-           cca.Topic createTopic(in string topicName) throws EventServiceException;
-           cca.WildcardTopic createWildcardTopic(in string topicName) throws EventServiceException;
-	   //cca.Topic createPersistentTopic(in string topicName) throws EventServiceException;
-	   cca.Topic getTopic(in string topicName) throws EventServiceException;
-	   cca.WildcardTopic getWildcardTopic(in string topicName) throws EventServiceException;
-	   void  releaseTopic(in string topicName) throws EventServiceException;
-	   void  releaseWildcardTopic(in string topicName) throws EventServiceException;
- //return an empty topic if not present
-//Eventually this should throw an exception
-           //cca.Topic getTopicRef(in string topicName);
-	   void processEvents() throws EventServiceException;
+
+/**
+ * Proposed EventService
+ *
+ * Put something descriptive here...
+ *
+ * link: https://www.cca-forum.org/wiki/tiki-index.php?page=Event+Specification+Proposal
+ */
+interface EventService extends cca.Port {
+
+  // Should return a pointer to the Topic if it already exists
+  // exception if casting to C++ pointer fails, Topic.addWildcardTopic throws exception
+  cca.Topic createTopic(in string topicName) throws EventServiceException;
+
+  cca.Topic getTopic(in string topicName) throws EventServiceException;
+
+  // Should return a pointer to the Topic if it already exists
+  // exception if casting to C++ pointer fails, Topic.addWildcardTopic throws exception
+  cca.WildcardTopic createWildcardTopic(in string topicName) throws EventServiceException;
+
+  // throws exception if topicName is empty or if not found
+  cca.WildcardTopic getWildcardTopic(in string topicName) throws EventServiceException;
+
+  // throws exception if topicName is empty or if not found
+  void releaseTopic(in string topicName) throws EventServiceException;
+
+  // throws exception if topicName is empty or if not found
+  void releaseWildcardTopic(in string topicName) throws EventServiceException;
+
+  void processEvents();
 
 }// end interface EventService
 
