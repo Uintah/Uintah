@@ -31,14 +31,22 @@
 #define SCIRun_Internal_EventServiceException_h
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/CCA/CCAException.h>
-
 
 namespace SCIRun {
-/* /class EventServiceException */
 
-/* This class is used to specify the various EventService Exceptions  */
-class EventServiceException : public sci::cca::EventServiceException{
+typedef sci::cca::EventServiceException::pointer EventServiceExceptionPtr;
+
+/**
+ * \class EventServiceException
+ *
+ * Exceptions thrown by EventService, Topic and WildcardTopic methods.
+ *
+ * \sa EventService
+ * \sa Topic
+ * \sa WildcardTopic
+ */
+
+class EventServiceException : public sci::cca::EventServiceException {
 public:
     EventServiceException(const std::string &msg,
                  sci::cca::CCAExceptionType type = sci::cca::Nonstandard);
