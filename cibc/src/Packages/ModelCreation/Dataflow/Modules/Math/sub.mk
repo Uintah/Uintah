@@ -19,6 +19,7 @@ SRCS     += \
 	$(SRCDIR)/ApplyRowOperation.cc\
 	$(SRCDIR)/ApplyColumnOperation.cc\
 	$(SRCDIR)/AppendMatrix.cc\
+	$(SRCDIR)/SelectSubMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \
