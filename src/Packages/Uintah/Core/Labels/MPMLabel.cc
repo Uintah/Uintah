@@ -92,6 +92,9 @@ MPMLabel::MPMLabel()
   
   pExternalHeatRateLabel = VarLabel::create( "p.externalHeatRate",
 			ParticleVariable<double>::getTypeDescription() );
+
+  pExternalHeatFluxLabel = VarLabel::create( "p.externalHeatFlux",
+			ParticleVariable<double>::getTypeDescription() );
   
   pSurfLabel = VarLabel::create( "p.surface",
 			ParticleVariable<int>::getTypeDescription() );
@@ -185,6 +188,9 @@ MPMLabel::MPMLabel()
 
   pExternalHeatRateLabel_preReloc = VarLabel::create( "p.externalHeatRate+",
 			ParticleVariable<double>::getTypeDescription() );
+
+  pExternalHeatFluxLabel_preReloc = VarLabel::create( "p.externalHeatFlux+",
+			ParticleVariable<double>::getTypeDescription() );
   
   pSurfLabel_preReloc = VarLabel::create( "p.surface+",
 			ParticleVariable<int>::getTypeDescription() );
@@ -241,6 +247,9 @@ MPMLabel::MPMLabel()
 
   gExternalHeatRateLabel = VarLabel::create("g.externalHeatRate",
 			NCVariable<double>::getTypeDescription());
+
+  gExternalHeatFluxLabel = VarLabel::create("g.externalHeatFlux",
+                       NCVariable<double>::getTypeDescription());
 
   NC_CCweightLabel     = VarLabel::create("NC_CCweight",
                      NCVariable<double>::getTypeDescription());
@@ -350,6 +359,7 @@ MPMLabel::MPMLabel()
   // for assigning particle ids
   pCellNAPIDLabel =
     VarLabel::create("cellNAPID", CCVariable<short int>::getTypeDescription());
+
 
   doMechLabel = VarLabel::create( "doMech", delt_vartype::getTypeDescription());
 
