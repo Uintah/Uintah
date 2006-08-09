@@ -2,6 +2,7 @@
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/VelocityBoundCond.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/SymmetryBoundCond.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/TemperatureBoundCond.h>
+#include <Packages/Uintah/Core/Grid/BoundaryConditions/PressureBoundCond.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/fillFace.h>
 #include <Core/Geometry/IntVector.h>
 #include <Packages/Uintah/Core/Grid/BoundaryConditions/BCDataArray.h>
@@ -144,7 +145,6 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
   for(Patch::FaceType face = Patch::startFace;
       face <= Patch::endFace; face=Patch::nextFace(face)){
     IntVector oneCell = patch->faceDirection(face);
-    const BoundCondBase *temp_bcs;
     if (patch->getBCType(face) == Patch::None) {
       int numChildren = patch->getBCDataArray(face)->getNumberChildren(dwi);
       IntVector l(0,0,0),h(0,0,0);
@@ -152,12 +152,13 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
         patch->getFaceExtraNodes(face,0,l,h);
       }
       for (int child = 0; child < numChildren; child++) {
-	vector<IntVector> bound, nbound,sfx,sfy,sfz;
-	vector<IntVector>::const_iterator b;
-	temp_bcs = patch->getArrayBCValues(face,dwi,type,bound,nbound,
-					   sfx,sfy,sfz,child);
-    
-	if (temp_bcs != 0) {
+       vector<IntVector> bound, nbound,sfx,sfy,sfz;
+       vector<IntVector>::const_iterator b;
+       if(type=="Temperature"){
+	const BoundCondBase *temp_bcs = patch->getArrayBCValues(face,dwi,
+	                                               type,bound,nbound,
+                                                       sfx,sfy,sfz,child);
+	if (temp_bcs != 0){
 	  const TemperatureBoundCond* bc =
 	    dynamic_cast<const TemperatureBoundCond*>(temp_bcs);
 	  if (bc->getKind() == "Dirichlet") {
@@ -175,6 +176,73 @@ void MPMBoundCond::setBoundaryCondition(const Patch* patch,int dwi,
 	  }
 	  delete temp_bcs;
 	}
+       }
+
+       if(type=="Pressure"){
+	const BoundCondBase *press_bcs = patch->getArrayBCValues(face,dwi,
+	                                                type,bound,nbound,
+                                                        sfx,sfy,sfz,child);
+	if (press_bcs != 0) {
+	  const PressureBoundCond* bc =
+	    dynamic_cast<const PressureBoundCond*>(press_bcs);
+	  if (bc->getKind() == "Dirichlet") {
+            double bcv = bc->getValue();
+	    for (b = nbound.begin(); b != nbound.end();b++){
+              IntVector nd = *b;
+	      variable[nd] = bcv;
+            }
+            if(n8or27==27){
+              for(NodeIterator it(l,h); !it.done(); it++) {
+                IntVector nd = *it;
+	        variable[nd] = bcv;
+              }
+            }
+          }
+
+	  if (bc->getKind() == "Neumann" && n8or27==27) {
+            Vector deltax = patch->dCell();
+            double dx = -9;
+	    IntVector off(-9,-9,-9);
+            if (face == Patch::xplus){
+              dx = deltax.x();
+	      off=IntVector(1,0,0);
+            }
+	    else if (face == Patch::xminus){
+              dx = deltax.x();
+	      off=IntVector(-1,0,0);
+            }
+	    else if (face == Patch::yplus){
+              dx = deltax.y();
+	      off=IntVector(0,1,0);
+            }
+	    else if (face == Patch::yminus){
+              dx = deltax.y();
+	      off=IntVector(0,-1,0);
+            }
+	    else if (face == Patch::zplus){
+              dx = deltax.z();
+	      off=IntVector(0,0,1);
+            }
+	    else if (face == Patch::zminus){
+              dx = deltax.z();
+	      off=IntVector(0,0,-1);
+            }
+
+            double gradv = bc->getValue();
+            for(NodeIterator it(l,h); !it.done(); it++) {
+              IntVector nd = *it;
+	      variable[nd] = variable[nd-off] + gradv*dx;
+//	      if(face==Patch::xminus){
+//	        cout << "node = " << nd << " variable = " << variable[nd]
+//		     << " variable-off = " << variable[nd-off] << endl;
+//              }
+            }
+          }
+
+	  delete press_bcs;
+	}
+       }
+
       }
     } else
       continue;
