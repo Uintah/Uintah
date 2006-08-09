@@ -227,19 +227,8 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
        throw ProblemSetupException("No load curve in ups, d_useLoadCurve==true?", __FILE__, __LINE__);
     }
    }
-#if 1
+
    materialProblemSetup(restart_mat_ps, d_sharedState,flags);
-#endif
-#if 0
-   int numMatls=0;
-   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
-       ps = ps->findNextBlock("material") ) {
-     MPMMaterial *mat = scinew MPMMaterial(ps, d_sharedState);
-     //register as an MPM material
-     sharedState->registerMPMMaterial(mat);
-     numMatls++;
-   }
-#endif
 
    mpm_soln_ps->get("solver",d_solver_type);
    
