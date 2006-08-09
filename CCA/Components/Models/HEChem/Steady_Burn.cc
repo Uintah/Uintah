@@ -371,7 +371,8 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
 	
 	Vector rhoGradVector = computeDensityGradientVector(nodeIdx, NCsolidMass, NC_CCweight,dx);
        	double surfArea = computeSurfaceArea(rhoGradVector, dx); 
-	double burnedMass = computeBurnedMass(Tzero, productPress, solidSp_vol[c], surfArea, delT, solidMass[c]);
+	double burnedMass = computeBurnedMass(Tzero, productPress, solidSp_vol[c], 
+					      surfArea, delT, solidMass[c], dx);
 		
 #ifdef TOTALS
 	totalSurfArea += surfArea;
@@ -498,13 +499,15 @@ void Steady_Burn::setMPMLabel(MPMLabel* MLB){
 /****************************************************************************/
 /******************* Bisection Secant Solver ********************************/
 /****************************************************************************/
-double Steady_Burn::computeBurnedMass(double To, double P, double Vc, double surfArea, double delT, double solidMass){  
+double Steady_Burn::computeBurnedMass(double To, double P, double Vc, double surfArea, 
+				      double delT, double solidMass, Vector& dx){  
   UpdateConstants(To, P, Vc);
   double Ts = Tmin + (Tmax - Tmin) * BisectionSecant();
   double Mr =  sqrt(C1*Ts*Ts/(Ts-C2)*exp(-Ec/R/Ts));
   double burnedMass = delT * surfArea * Mr;
-  if (burnedMass + d_TINY_RHO > solidMass) 
-    burnedMass = solidMass - d_TINY_RHO;  
+  double min_mass = dx.x()*dx.y()*dx.z()*d_TINY_RHO;
+  if (burnedMass + min_mass > solidMass) 
+    burnedMass = solidMass - min_mass;  
   return burnedMass;
 }
 

@@ -106,12 +106,8 @@ WARNING
                                         Vector &dx);
     
     double computeBurnedMass(double To, double P, double Vc, double surfArea, 
-			     double delT, double solidMass);
-    
-    double computeWSBSurfaceTemp(double Ts, double To, double P, double Vc);
-    
-    double computeMassTransferRate(double Ts, double To, double Vc);
-                     
+			     double delT, double solidMass, Vector& dx);
+                         
     void printSchedule(const LevelP& level,
                      const string& where); 
                      
