@@ -75,7 +75,7 @@ private:
    * Iterates through all the \em listeners for this Topic and calls processEvents()
    * on each listener for each \em Event.
    */
-  void processEvents(const EventBodyList& eventBodyList);
+  void processEvents(const EventPtrList& eventList);
 
   std::string topicName;
   EventListenerMap eventListenerMap;

@@ -34,7 +34,33 @@
 
 namespace SCIRun {
 
-typedef SSIDL::array1<sci::cca::TypeMap::pointer> EventBodyList;
+class Topic;
+typedef SSIDL::array1<sci::cca::Event::pointer> EventPtrList;
+
+/**
+ * \class Event
+ *
+ * An Event contains a header (cca.TypeMap) and a body (cca.TypeMap).
+ * (more class desc...)
+ *
+ */
+class Event : public sci::cca::Event {
+public:
+  Event() {}
+  Event(const sci::cca::TypeMap::pointer& theHeader, const sci::cca::TypeMap::pointer& theBody)
+    : header(theHeader), body(theBody) {}
+
+  virtual void setHeader(const sci::cca::TypeMap::pointer& h) { header = h; }
+  virtual void setBody(const sci::cca::TypeMap::pointer& b) { body = b; }
+
+  virtual sci::cca::TypeMap::pointer getHeader() { return header; }
+  virtual sci::cca::TypeMap::pointer getBody() { return body; }
+
+private:
+  sci::cca::TypeMap::pointer header;
+  sci::cca::TypeMap::pointer body;
+};
+
 
 /**
  * \class Topic
@@ -51,7 +77,7 @@ public:
    * Sends an Event with the specified \em eventBody.
    * The parameter \em eventBody is a pointer to a CCA TypeMap of the \em message to be sent.
    */
-  virtual void sendEvent(const sci::cca::TypeMap::pointer& eventBody);
+  virtual void sendEvent(const sci::cca::Event::pointer& theEvent);
 
   /**
    * Adds a \em listener to the collection of listeners for this Topic.
@@ -94,10 +120,11 @@ private:
   void removeWildcardTopic(const std::string& topicName);
 
   std::string topicName;
-  EventBodyList eventBodyList;
+  EventPtrList eventList;
   EventListenerMap eventListenerMap;
   WildcardTopicMap wildcardTopicMap;
 };
+
 
 }
 #endif
