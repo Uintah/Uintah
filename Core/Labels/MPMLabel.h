@@ -69,6 +69,8 @@ using std::vector;
       const VarLabel* pdTdtLabel_preReloc; //for heat conduction
       const VarLabel* pExternalHeatRateLabel; //for heat conduction
       const VarLabel* pExternalHeatRateLabel_preReloc; //for heat conduction
+      const VarLabel* pExternalHeatFluxLabel; //for heat conduction
+      const VarLabel* pExternalHeatFluxLabel_preReloc; //for heat conduction
       const VarLabel* pParticleIDLabel;
       const VarLabel* pParticleIDLabel_preReloc;
       const VarLabel* pSizeLabel;
@@ -105,6 +107,7 @@ using std::vector;
       const VarLabel* gTemperatureStarLabel; //for heat conduction
       const VarLabel* gdTdtLabel;
       const VarLabel* gExternalHeatRateLabel;
+      const VarLabel* gExternalHeatFluxLabel;
       const VarLabel* gThermalContactTemperatureRateLabel;
       const VarLabel* gNormTractionLabel;
       const VarLabel* gSurfNormLabel;
