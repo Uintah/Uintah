@@ -621,6 +621,8 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(pdTdtLabel_preReloc);
   VarLabel::destroy(pExternalHeatRateLabel);
   VarLabel::destroy(pExternalHeatRateLabel_preReloc);
+  VarLabel::destroy(pExternalHeatFluxLabel);
+  VarLabel::destroy(pExternalHeatFluxLabel_preReloc);
   VarLabel::destroy(pSurfLabel);
   VarLabel::destroy(pSurfLabel_preReloc);
   VarLabel::destroy(pParticleIDLabel);
@@ -658,6 +660,7 @@ MPMLabel::~MPMLabel()
   VarLabel::destroy(gTemperatureRateLabel);
   VarLabel::destroy(gdTdtLabel);
   VarLabel::destroy(gExternalHeatRateLabel);
+  VarLabel::destroy(gExternalHeatFluxLabel);
   VarLabel::destroy(NC_CCweightLabel);
   VarLabel::destroy(gThermalContactTemperatureRateLabel);
   VarLabel::destroy(gStressForSavingLabel);
