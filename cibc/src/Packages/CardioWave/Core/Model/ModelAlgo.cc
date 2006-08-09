@@ -32,6 +32,7 @@
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Core/Algorithms/DataIO/DataIOAlgo.h>
 #include <Core/Algorithms/Converter/ConverterAlgo.h>
+#include <Core/Algorithms/Regression/RegressionAlgo.h>
 #include <Core/Datatypes/MatrixOperations.h>
 #include <Core/Algorithms/Math/MathAlgo.h>
 #include <fstream>
@@ -61,7 +62,7 @@ bool ModelAlgo::DMDBuildMembraneTable(FieldHandle ElementType, FieldHandle Membr
 
 bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable, std::vector<double>& nodetypes, int num_volumenodes, int num_synnodes, MatrixHandle& NodeType, MatrixHandle& Volume, MatrixHandle& MembraneMatrix)
 {
-  SCIRunAlgo::MathAlgo numericalgo(pr_);
+  SCIRunAlgo::MathAlgo mathalgo(pr_);
   int num_totalnodes = num_volumenodes + num_synnodes;
   
   // Build a vector for the surface areas
@@ -135,7 +136,7 @@ bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable
    }    
   }
 
-  if(!(numericalgo.CreateSparseMatrix(sev, MembraneMatrix, num_totalnodes, num_totalnodes)))
+  if(!(mathalgo.CreateSparseMatrix(sev, MembraneMatrix, num_totalnodes, num_totalnodes)))
   {
     error("DMDBuildDomain: Could not build synapse sparse matrix");
     return (false);
@@ -226,10 +227,12 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   // Forward the ProgressReporter so everything can forward an error
 
   SCIRunAlgo::FieldsAlgo  fieldsalgo(pr_);
-  SCIRunAlgo::MathAlgo numericalgo(pr_);
+  SCIRunAlgo::MathAlgo mathalgo(pr_);
   SCIRunAlgo::ConverterAlgo converteralgo(pr_);
   SCIRunAlgo::DataIOAlgo  dataioalgo(pr_);
-
+  SCIRunAlgo::RegressionAlgo regalgo(pr_); // Need this for field comparisons
+  
+  
   // Step 0: Some sanity checks
   
   if (SimulationBundle.get_rep() == 0)
@@ -265,6 +268,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   std::string filename_membrane;    // Membrane description (geometry)
   std::string filename_stimulus;    // Stimulus nodes in a file
   std::string filename_reference;   // Reference nodes in a file   
+  std::string filename_electrode;   // Reference nodes in a file   
   std::string filename_output;      // name of output file   
   
   // Try to derive the filename
@@ -294,6 +298,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   filename_membrane  = filenamebase + ".mem.txt";
   filename_stimulus  = filenamebase + ".stim.txt";
   filename_reference = filenamebase + ".ref.txt";
+  filename_electrode = filenamebase + ".elec.txt";
   filename_output    = filenamebase + ".out";
    
   // Step 2: Save the model to file, we need to have an archived version
@@ -338,6 +343,9 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     infile << "outputfile=" << rel_filename << "\n";
     rel_filename = filename_stimulus; pos = 0; while (pos!=string::npos) { pos = rel_filename.find('/'); rel_filename = rel_filename.substr(pos+1); }
     infile << "stimfile=" << rel_filename << "\n";
+    rel_filename = filename_electrode; pos = 0; while (pos!=string::npos) { pos = rel_filename.find('/'); rel_filename = rel_filename.substr(pos+1); }
+    infile << "electrodefile="<< rel_filename << "\n";
+
     
     if (debug) infile << "debug=4" << "\n"; else infile << "debug=0" << "\n";
     
@@ -426,6 +434,10 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   std::vector<bool>        usereferencevalues;
   std::vector<bool>        referenceuseelements;
 
+  std::vector<FieldHandle> Electrodes;
+  std::vector<double>      electrodedomain;
+  std::vector<int>         electrodemembrane;
+
   std::vector<FieldHandle> Stimulus;
   std::vector<double>      stimulusdomain;
   std::vector<double>      stimuluscurrent;
@@ -438,7 +450,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   size_t num_membranes = 0;
   size_t num_stimulus = 0;
   size_t num_references = 0;
-
+  size_t num_electrodes = 0;
 
   // Loop through all sub bundles in the mother bundle to get all the individual
   // components of the model. Next to the volume each piece of membrane has its
@@ -515,7 +527,6 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
       {
         warning("DMDBuildDomain: One of the reference fields misses a Geometry or a Domain");
       }
-
     }
 
     if (bundlename.substr(0,9) == "Stimulus_")
@@ -586,9 +597,59 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     }
   }
 
+
+  
+  for (size_t p=0; p < SimulationBundle->numBundles(); p++)
+  {
+    // Do we have a membrane definition
+    std::string bundlename = SimulationBundle->getBundleName(p);
+
+    if (bundlename.substr(0,10) == "Electrode_")
+    {
+      BundleHandle ElectrodeBundle =  SimulationBundle->getBundle(bundlename);
+      FieldHandle Geometry = ElectrodeBundle->getField("Electrodes");
+      FieldHandle Membrane = ElectrodeBundle->getField("Membrane");
+      MatrixHandle Domain = ElectrodeBundle->getMatrix("Domain");    
+      if (Geometry.get_rep() && Domain.get_rep())
+      {
+        double domain;
+        converteralgo.MatrixToDouble(Domain,domain);
+        electrodedomain.push_back(domain);
+        electrodemembrane.push_back(-1);
+        Electrodes.push_back(Geometry);
+        num_electrodes++;
+      }
+      else if (Geometry.get_rep() && Membrane.get_rep())
+      {
+        int membranenum = -1;
+        for (size_t q=0; q< Membranes.size(); q++)
+        {
+          if (regalgo.CompareFields(Membrane,Membranes[q])) { membranenum = q; break; }
+        }
+        
+        if (membranenum >= 0)
+        {
+          electrodedomain.push_back(0.0);
+          electrodemembrane.push_back(membranenum);
+          Electrodes.push_back(Geometry);
+          num_electrodes++;
+        }
+        else
+        {
+          warning("DMDBuildDomain: Membrane Electrode is defined for a membrane not part of the model");        
+        }
+      }
+      else
+      {
+        warning("DMDBuildDomain: One of the electrode fields misses a Membrane or a Domain");
+      }      
+    }    
+  }
+
+
   {
     std::ostringstream oss;
-    oss << "Number of membranes="<<num_membranes<<" ,number of stimulus="<<num_stimulus<<" ,number of references="<<num_references;
+    oss << "Number of membranes="<<num_membranes<<" ,number of stimulus="<<num_stimulus<<" ,number of references="<<num_references << " ,number of electrodes="<< num_electrodes;
     remark(oss.str());
   }
   
@@ -619,6 +680,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   num_membranes = Membranes.size();
   num_stimulus  = Stimulus.size();
   num_references = References.size();
+  num_electrodes = Electrodes.size();
   
   // To be able to map data back onto the geometry we will be needed mapping matrices
   // Hence define a lot of properties. Most of it we need for the model or the
@@ -661,7 +723,6 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     
     // Figure out how many synapse nodes are needed.
     num_synnodes += membranetable[p].size();
-    
   }
   
   remark("Located nodes that form the membranes in volume");
@@ -725,7 +786,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   // them.
   MatrixHandle fematrix;
   MatrixHandle synmatrix;
-  if(!(numericalgo.BuildFEMatrix(Conductivity,fematrix,-1,ConductivityTable,GeomToComp,CompToGeom)))
+  if(!(mathalgo.BuildFEMatrix(Conductivity,fematrix,-1,ConductivityTable,GeomToComp,CompToGeom)))
   {
     error("DMDBuildDomain: Could not build FE Matrix");
     return(false);
@@ -738,7 +799,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   int num_totalnodes = num_volumenodes + num_synnodes;
   
   // Resize the matrix so we can use it to store the synapse nodes as well
-  if(!(numericalgo.ResizeMatrix(fematrix,fematrix,num_totalnodes,num_totalnodes)))
+  if(!(mathalgo.ResizeMatrix(fematrix,fematrix,num_totalnodes,num_totalnodes)))
   {
     error("DMDBuildDomain: Could not resize FE matrix");
     return (false);
@@ -794,7 +855,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     }
     else
     {
-      if(!(numericalgo.ResizeMatrix(Potential0,Potential0,num_totalnodes,1)))
+      if(!(mathalgo.ResizeMatrix(Potential0,Potential0,num_totalnodes,1)))
       {
         error("DMDBuildDomain: Could not resize DomainType matrix");
         return (false);   
@@ -866,7 +927,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   
   if (optimizesystem)
   {
-    if(!(numericalgo.ReverseCuthillmcKee(sysmatrix,sysmatrix,mapping)))
+    if(!(mathalgo.ReverseCuthillmcKee(sysmatrix,sysmatrix,mapping)))
     {
       error("DMDBuildDomain: Matrix reordering failed");
       return (false);    
@@ -874,7 +935,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   }
   else
   {
-    if(!(numericalgo.IdentityMatrix(num_totalnodes,mapping)))
+    if(!(mathalgo.IdentityMatrix(num_totalnodes,mapping)))
     {
       error("DMDBuildDomain: Matrix reordering failed");
       return (false);    
@@ -1038,7 +1099,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
 
   remark("Wrote stimulus, reference and membrane table"); 
   
-  if (!(numericalgo.ResizeMatrix(imapping,imapping,num_volumenodes,num_totalnodes)))
+  if (!(mathalgo.ResizeMatrix(imapping,imapping,num_volumenodes,num_totalnodes)))
   {
     error("DMDBuildDomain: Could not resize mapping matrix");
     return (false);        
@@ -1070,6 +1131,88 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     VisualizationBundle->setBundle(oss.str(),MembraneBundle);
   }
 
+  MatrixHandle Mapping;
+  std::vector<unsigned int> columnselection;
+  std::vector<std::vector<unsigned int> > indices(num_electrodes);   
+
+
+  std::cout << "num_electrodes=" << num_electrodes << "\n";
+  for (size_t p=0; p < num_electrodes; p++)
+  {
+    MatrixHandle LocalMapping;
+    std::vector<unsigned int> rowselection;
+    std::ostringstream oss;
+    oss << "electrode " << p;
+  
+    if (electrodemembrane[p] >= 0)
+    {
+      if(!(fieldsalgo.FindClosestNode(Membranes[electrodemembrane[p]],rowselection,Electrodes[p])))
+      {
+        error("DMDBuildSimulation: Could not find electrodes within specified membrane for "+oss.str());
+        return (false);
+      }
+      if(!(mathalgo.MatrixSelectRows(membranemapping[p],LocalMapping,rowselection)))
+      {
+        error("DMDBuildSimulation: Could not select rows from mapping matrix for electrodes of "+oss.str());
+        return (false);
+      }
+      if(!(mathalgo.MatrixAppendRows(Mapping,Mapping,LocalMapping,indices[p])))
+      {
+        error("DMDBuildSimulation: Could not append rows to mapping matrix for electrodes of "+oss.str());
+        return (false);      
+      }
+    }
+    else
+    {
+      if(!(fieldsalgo.FindClosestNodeByValue(ElementType,rowselection,Electrodes[p],electrodedomain[p])))
+      {
+        error("DMDBuildSimulation: Could not find electrodes within specified domain for "+oss.str());
+        return (false);      
+      }
+            
+      if(!(mathalgo.MatrixSelectRows(imapping,LocalMapping,rowselection)))
+      {
+        error("DMDBuildSimulation: Could not select rows from mapping matrix for electrodes of "+oss.str());
+        return (false);
+      }      
+      if(!(mathalgo.MatrixAppendRows(Mapping,Mapping,LocalMapping,indices[p])))
+      {
+        error("DMDBuildSimulation: Could not append rows to mapping matrix for electrodes of "+oss.str());
+        return (false);      
+      } 
+    }
+  }
+
+  if (num_electrodes >0)
+  {
+    if (!(mathalgo.MatrixNonZeroColumns(Mapping,columnselection)))
+    {
+      error("DMDBuildSimulation: Could not find non zero rows in mapping matrix");
+      return (false);      
+    }
+    
+    if (!(mathalgo.MatrixSelectColumns(Mapping,Mapping,columnselection)))
+    {
+      error("DMDBuildSimulation: Could not select non zero rows in mapping matrix");
+      return (false);      
+    }
+
+  }
+
+  for (size_t p=0; p <num_electrodes; p++)
+  {
+    std::ostringstream oss;
+    oss << "Electrode_" << p;  
+    
+    MatrixHandle EMapping;
+    mathalgo.MatrixSelectRows(Mapping,EMapping,indices[p]);
+  
+    BundleHandle ElectrodeBundle = scinew Bundle;
+    ElectrodeBundle->setField("Field",Electrodes[p]);
+    ElectrodeBundle->setMatrix("Mapping",EMapping);
+    VisualizationBundle->setBundle(oss.str(),ElectrodeBundle);
+  }  
+
   if (!(dataioalgo.WriteBundle(filename_visbundle,VisualizationBundle)))
   {
     error("DMDBuildDomain: Could not write visualization information");
@@ -1077,6 +1220,23 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   }
 
   remark("Created Visualization Bundle"); 
+  
+  try
+  {
+    std::ofstream electrodefile;
+    electrodefile.open(filename_electrode.c_str());
+    for (int p=0; p<columnselection.size();p++)
+    {
+      electrodefile << columnselection[p] << ", I\n";
+    }
+  }
+  catch (...)
+  {
+    error("DMDBuildDomain: Could not write electrodes file");
+    return (false);  
+  }
+
+  remark("Wrote electrode table");   
    
   return (true);
 }

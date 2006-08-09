@@ -192,9 +192,8 @@ void DMDCreateSimulation::execute()
     SimulationBundle->merge(MembraneBundle);
     SimulationBundle->merge(StimulusBundle);
     SimulationBundle->merge(ReferenceBundle);
+    SimulationBundle->merge(ElectrodeBundle);
 
-
-    
     std::string solvername = guisolvername_.get();
     std::string tstepname  = guitstepname_.get();
     std::string outputname = guioutputname_.get();
@@ -227,6 +226,7 @@ void DMDCreateSimulation::execute()
     int membrane_num;
     int reference_num;
     int stimulus_num;
+    int electrode_num;
     std::string fieldname;
     membrane_num = 1;
 
@@ -307,6 +307,34 @@ void DMDCreateSimulation::execute()
         fieldname = oss.str();
       }
     }
+
+    electrode_num = 0;
+    {
+      std::ostringstream oss;
+      oss << "Electrode_" << electrode_num;
+      fieldname = oss.str();
+    }
+    while (SimulationBundle->isBundle(fieldname))
+    {
+      ElectrodeBundle = SimulationBundle->getBundle(fieldname);
+      StringHandle ElectrodeParam = ElectrodeBundle->getString("Parameters");
+      if (ElectrodeParam.get_rep())
+      {
+        std::ostringstream oss;
+        oss << electrode_num;
+        paramstr += "# Parameters for electrode " + oss.str() + "\n\n";
+        paramstr += ElectrodeParam->get() + "\n";
+      }
+      electrode_num++;
+      {
+        std::ostringstream oss;
+        oss << "Electrode_" << electrode_num;
+        fieldname = oss.str();
+      }
+    }
+
+
+
 
     if (ExtParameters.get_rep())
     {
@@ -407,6 +435,31 @@ void DMDCreateSimulation::execute()
         fieldname = oss.str();
       }
     }
+
+    electrode_num = 0;
+    {
+      std::ostringstream oss;
+      oss << "Electrode_" << electrode_num;
+      fieldname = oss.str();
+    }
+    while (SimulationBundle->isBundle(fieldname))
+    {
+      ElectrodeBundle = SimulationBundle->getBundle(fieldname);
+      StringHandle ElectrodeSourceFile = ElectrodeBundle->getString("SourceFile");
+      if (ElectrodeSourceFile.get_rep())
+      {
+        sourcefiles += ElectrodeSourceFile->get() + " ";
+      }
+      electrode_num++;
+      {
+        std::ostringstream oss;
+        oss << "Electrode_" << electrode_num;
+        fieldname = oss.str();
+      }
+    }
+
+
+
     
     StringHandle SourceFile = scinew String(sourcefiles);
     SimulationBundle->setString("SourceFile",SourceFile);

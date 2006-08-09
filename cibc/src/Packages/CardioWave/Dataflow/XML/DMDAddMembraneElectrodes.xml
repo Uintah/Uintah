@@ -1,13 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
-<component name="DMDCreateElectrodes" category="DiscreteMultiDomain" optional="false">
+<component name="DMDAddMembraneElectrodes" category="DiscreteMultiDomain" optional="false">
   <overview>
     <authors>
       <author>Jeroen Stinstra</author>
     </authors>
     <summary>
       This module defines electrode positions for detailed time recordings.
-
     </summary>
     <description>
       <p>        This module defines electrode positions for detailed time recordings. </p>
@@ -21,6 +20,10 @@
       </port>
       <port>
         <name>Electrodes</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>Membrane</name>
         <datatype>SCIRun::Field</datatype>
       </port>
     </inputs>
