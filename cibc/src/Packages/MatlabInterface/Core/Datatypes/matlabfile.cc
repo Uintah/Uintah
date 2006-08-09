@@ -55,64 +55,63 @@ matlabfile::~matlabfile()
 
 void matlabfile::open(std::string filename,std::string accessmode)
 {
-    matfile::open(filename,accessmode);
+  matfile::open(filename,accessmode);
+  
+  if (isreadaccess())
+  {   // scan the file for the number of matrices
+      // This function will index the file and get all the matrix names
+      // If it is a compressed file, it will automatically uncompress every
+      // block (this behavior may be changed to become more memory efficient)
     
-    if (isreadaccess())
-    {   //scan the file for the number of matrices
-		// This function will index the file and get all the matrix names
-		// If it is a compressed file, it will automatically uncompress every
-		// block (this behavior may be changed to become more memory efficient)
-    	
-    	long tagptr;
-    	matfiledata mfd;
-    	std::stack<long> ptrstack;
-		std::stack<std::string> strstack;
-		bool compressedmatrix = false;
-		
-		tagptr = firsttag();
-    	while(tagptr)
-    	{
-    	    readtag(mfd);
-			
-			// Bug fix, this bool was not reset
-			compressedmatrix = false;
-			// If the tag tells that the next block is compressed
-			// Open this compressed block before continuing
-			if (mfd.type() == miCOMPRESSED)
-			{
-				compressedmatrix = true; // to mark that we have to close the compressed session
-				opencompression(); // uncompress the data
-				readtag(mfd); // read the first tag, which should be miMATRIX
-			}
-			if (mfd.type() != miMATRIX) throw invalid_file_format();
-    	    
-			openchild();
-				readtag(mfd);
-				nexttag();
-				readtag(mfd);
-				nexttag();
-				readdat(mfd);
-			closechild();
-			if (compressedmatrix) closecompression();
-			
-			strstack.push(mfd.getstring());
-    	    ptrstack.push(tagptr);
-			tagptr = nexttag();    		
-    	}
-    	
-		matrixaddress_.resize(ptrstack.size());
-    	matrixname_.resize(strstack.size());
-		for (long p=static_cast<long>(ptrstack.size()-1);p>=0;p--) 
-		{
-			matrixaddress_[p] = ptrstack.top();
-			ptrstack.pop();
-			matrixname_[p] = strstack.top();
-			strstack.pop();
-		}
-		
-		rewind();
+    int tagptr;
+    matfiledata mfd;
+    std::stack<int> ptrstack;
+    std::stack<std::string> strstack;
+    bool compressedmatrix = false;
+    
+    tagptr = firsttag();
+    while(tagptr)
+    {
+      readtag(mfd);
+      
+      // Bug fix, this bool was not reset
+      compressedmatrix = false;
+      // If the tag tells that the next block is compressed
+      // Open this compressed block before continuing
+      if (mfd.type() == miCOMPRESSED)
+      {
+        compressedmatrix = true; // to mark that we have to close the compressed session
+        opencompression(); // uncompress the data
+        readtag(mfd); // read the first tag, which should be miMATRIX
+      }
+      if (mfd.type() != miMATRIX) throw invalid_file_format();
+        
+      openchild();
+        readtag(mfd);
+        nexttag();
+        readtag(mfd);
+        nexttag();
+        readdat(mfd);
+      closechild();
+      if (compressedmatrix) closecompression();
+      
+      strstack.push(mfd.getstring());
+      ptrstack.push(tagptr);
+      tagptr = nexttag();    		
     }
-	
+    
+    matrixaddress_.resize(ptrstack.size());
+    matrixname_.resize(strstack.size());
+    for (int p=static_cast<int>(ptrstack.size()-1);p>=0;p--) 
+    {
+      matrixaddress_[p] = ptrstack.top();
+      ptrstack.pop();
+      matrixname_[p] = strstack.top();
+      strstack.pop();
+    }
+    
+    rewind();
+  }
 }
 
 
@@ -184,7 +183,7 @@ void matlabfile::exportmatlabarray(matlabarray &matrix)
 	matrixheader.type(miMATRIX);
 	writedat(matrixheader);
 
-	std::vector<unsigned long> classinfo(2);
+	std::vector<unsigned int> classinfo(2);
 	
 	if (matrix.isempty()) 
 	{   // in case of an empty matrix goto the next one
@@ -196,7 +195,7 @@ void matlabfile::exportmatlabarray(matlabarray &matrix)
 		classinfo[1] = 0;
 			
 		matrixclass.putandcastvector(classinfo,miUINT32);
-		std::vector<long> mdims(2);
+		std::vector<int> mdims(2);
 		mdims[0] = 0; mdims[1] = 0;
 		matrixdims.putandcastvector(mdims,miINT32);
 		matrixname.putstring("");
@@ -230,7 +229,7 @@ void matlabfile::exportmatlabarray(matlabarray &matrix)
 	
 	matrixheader.type(miMATRIX);
 	matrixclass.putandcastvector(classinfo,miUINT32);
-	std::vector<long> mdims = matrix.getdims();
+	std::vector<int> mdims = matrix.getdims();
 	matrixdims.putandcastvector(mdims,miINT32);
 	matrixname.putstring(matrix.getname());
 	
@@ -282,7 +281,7 @@ void matlabfile::exportmatlabarray(matlabarray &matrix)
 				
 			case mxCELL:
 				{
-				for (long p=0;p<matrix.getnumelements();p++)
+				for (int p=0;p<matrix.getnumelements();p++)
 				{
 					matlabarray ma;
 					ma = matrix.getcell(p);
@@ -293,9 +292,9 @@ void matlabfile::exportmatlabarray(matlabarray &matrix)
 				
 			case mxSTRUCT:
 				{
-				long numel = matrix.getnumelements()*matrix.getnumfields();
+				int numel = matrix.getnumelements()*matrix.getnumfields();
 			
-			    std::vector<long>  fieldnamelen(1);
+			    std::vector<int>  fieldnamelen(1);
 				matfiledata matrixfieldnamelength;
 				matfiledata matrixfieldnames;
 			
@@ -307,7 +306,7 @@ void matlabfile::exportmatlabarray(matlabarray &matrix)
 				writedat(matrixfieldnames);
 				nexttag();
 			
-				for (long p=0;p<numel;p++)
+				for (int p=0;p<numel;p++)
 				{
 					matlabarray ma;
 					ma = matrix.getcell(p);
@@ -318,9 +317,9 @@ void matlabfile::exportmatlabarray(matlabarray &matrix)
 					
 			case mxOBJECT:
 				{
-				long numel = matrix.getnumelements()*matrix.getnumfields();
+				int numel = matrix.getnumelements()*matrix.getnumfields();
 			
-			    std::vector<long>  fieldnamelen(1);
+			    std::vector<int>  fieldnamelen(1);
 				matfiledata matrixfieldnamelength;
 				matfiledata matrixfieldnames;
 				matfiledata matrixclassname;
@@ -336,7 +335,7 @@ void matlabfile::exportmatlabarray(matlabarray &matrix)
 				writedat(matrixfieldnames);
 				nexttag();
 			
-				for (long p=0;p<numel;p++)
+				for (int p=0;p<numel;p++)
 				{
 					matlabarray ma;
 					ma = matrix.getcell(p);
@@ -349,7 +348,7 @@ void matlabfile::exportmatlabarray(matlabarray &matrix)
 				{
 				matfiledata matrixstring;
 				std::string str = matrix.getstring();
-				matrixstring.putandcast(str.c_str(),static_cast<long>(str.size()),miUINT16);
+				matrixstring.putandcast(str.c_str(),static_cast<int>(str.size()),miUINT16);
 				writedat(matrixstring);
 				}
 				break;
@@ -411,11 +410,11 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
     // first element in this datasegment denotes the matrix class
     
     if (matrixclass.size() == 0) { closechild(); return; }
-    unsigned long classinfo =  matrixclass.getandcastvalue<unsigned long>(0);
+    unsigned int classinfo =  matrixclass.getandcastvalue<unsigned int>(0);
     mxtype matrixtype = static_cast<mxtype>((0x000000FF & classinfo));
       
 
-    std::vector<long> dims;
+    std::vector<int> dims;
     matrixdims.getandcastvector(dims);
     std::string name = matrixname.getstring();
 
@@ -457,12 +456,12 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
         if (classinfo & 0x0400) matrix.setglobal(1);
         if (classinfo & 0x0800) matrix.setcomplex(1);
            
-        long numcells = matrix.getnumelements();
+        int numcells = matrix.getnumelements();
         matlabarray submatrix;
         
         if (mode)
         {
-          for (long p=0;p<numcells;p++)
+          for (int p=0;p<numcells;p++)
           {
             if(!nexttag()) break; // no more matrices
             importmatlabarray(submatrix,mode);
@@ -483,7 +482,7 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
             nexttag();
             readdat(matrixfieldnames);
       	
-            long fieldnamelength = matrixfieldnamelength.getandcastvalue<long>(0);
+            int fieldnamelength = matrixfieldnamelength.getandcastvalue<int>(0);
             std::vector<std::string> fieldnames = matrixfieldnames.getstringarray(fieldnamelength);
             
             matrix.createstructarray(dims,fieldnames); 
@@ -496,12 +495,12 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
             if (classinfo & 0x0400) matrix.setglobal(1);
             if (classinfo & 0x0800) matrix.setcomplex(1);
                         
-            long numcells = matrix.getnumelements()*matrix.getnumfields();
+            int numcells = matrix.getnumelements()*matrix.getnumfields();
             matlabarray submatrix;
             
             if (mode)
             {
-              for (long p=0;p<numcells;p++)
+              for (int p=0;p<numcells;p++)
               {
                 if(!nexttag()) break; // nomore matrices
                 importmatlabarray(submatrix,mode);
@@ -524,7 +523,7 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
             nexttag();
             readdat(matrixfieldnames);
             
-            long fieldnamelength = matrixfieldnamelength.getandcastvalue<long>(0);
+            int fieldnamelength = matrixfieldnamelength.getandcastvalue<int>(0);
             std::vector<std::string> fieldnames = matrixfieldnames.getstringarray(fieldnamelength);
             std::string classname = matrixclassname.getstring();
 			
@@ -539,12 +538,12 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
             if (classinfo & 0x0400) matrix.setglobal(1);
             if (classinfo & 0x0800) matrix.setcomplex(1);
             
-            long numcells = matrix.getnumelements()*matrix.getnumfields();
+            int numcells = matrix.getnumelements()*matrix.getnumfields();
             matlabarray submatrix;
             
             if (mode)
             {
-              for (long p=0;p<numcells;p++)
+              for (int p=0;p<numcells;p++)
               {
                 if(!nexttag()) break; // nomore matrices
                 importmatlabarray(submatrix,mode);
@@ -617,16 +616,16 @@ void matlabfile::importmatlabarray(matlabarray& matrix,int mode)
 // ***********************************************
 // access functions to the matrices in the matfile
 
-long matlabfile::getnummatlabarrays()
+int matlabfile::getnummatlabarrays()
 {
-	return(static_cast<long>(matrixaddress_.size()));
+	return(static_cast<int>(matrixaddress_.size()));
 }
 
 
-matlabarray matlabfile::getmatlabarrayshortinfo(long matrixindex)
+matlabarray matlabfile::getmatlabarrayshortinfo(int matrixindex)
 {
 	if (iswriteaccess()) throw invalid_file_access();
-	if (matrixindex >= static_cast<long>(matrixaddress_.size())) throw out_of_range();
+	if (matrixindex >= static_cast<int>(matrixaddress_.size())) throw out_of_range();
 
 	matlabarray ma;
 	rewind();
@@ -639,8 +638,8 @@ matlabarray matlabfile::getmatlabarrayshortinfo(long matrixindex)
 matlabarray matlabfile::getmatlabarrayshortinfo(std::string matrixname)
 {
 	if (iswriteaccess()) throw invalid_file_access();
-	long matrixindex = -1;
-	for (long p=0;p<static_cast<long>(matrixname_.size());p++) 
+	int matrixindex = -1;
+	for (int p=0;p<static_cast<int>(matrixname_.size());p++) 
 	{
 		if (matrixname_[p] == matrixname) { matrixindex = p; break; }
 	}
@@ -654,10 +653,10 @@ matlabarray matlabfile::getmatlabarrayshortinfo(std::string matrixname)
 	return(ma);
 }
 
-matlabarray matlabfile::getmatlabarrayinfo(long matrixindex)
+matlabarray matlabfile::getmatlabarrayinfo(int matrixindex)
 {
 	if (iswriteaccess()) throw invalid_file_access();
-	if (matrixindex >= static_cast<long>(matrixaddress_.size())) throw out_of_range();
+	if (matrixindex >= static_cast<int>(matrixaddress_.size())) throw out_of_range();
 
 	matlabarray ma;
 	rewind();
@@ -670,8 +669,8 @@ matlabarray matlabfile::getmatlabarrayinfo(long matrixindex)
 matlabarray matlabfile::getmatlabarrayinfo(std::string matrixname)
 {
 	if (iswriteaccess()) throw invalid_file_access();
-	long matrixindex = -1;
-	for (long p=0;p<static_cast<long>(matrixname_.size());p++) 
+	int matrixindex = -1;
+	for (int p=0;p<static_cast<int>(matrixname_.size());p++) 
 	{
 		if (matrixname_[p] == matrixname) { matrixindex = p; break; }
 	}
@@ -685,10 +684,10 @@ matlabarray matlabfile::getmatlabarrayinfo(std::string matrixname)
 	return(ma);
 }
 
-matlabarray matlabfile::getmatlabarray(long matrixindex)
+matlabarray matlabfile::getmatlabarray(int matrixindex)
 {
 	if (iswriteaccess()) throw invalid_file_access();
-	if (matrixindex >= static_cast<long>(matrixaddress_.size())) throw out_of_range();
+	if (matrixindex >= static_cast<int>(matrixaddress_.size())) throw out_of_range();
 	
 	matlabarray ma;
 	rewind();
@@ -700,8 +699,8 @@ matlabarray matlabfile::getmatlabarray(long matrixindex)
 matlabarray matlabfile::getmatlabarray(std::string matrixname)
 {
 	if (iswriteaccess()) throw invalid_file_access();
-	long matrixindex = -1;
-	for (long p=0;p<static_cast<long>(matrixname_.size());p++) 
+	int matrixindex = -1;
+	for (int p=0;p<static_cast<int>(matrixname_.size());p++) 
 	{
 		if (matrixname_[p] == matrixname) { matrixindex = p; break; }
 	}

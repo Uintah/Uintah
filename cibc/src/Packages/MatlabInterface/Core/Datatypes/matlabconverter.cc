@@ -159,13 +159,13 @@ bool matlabconverter::isvalidmatrixname(std::string name)
   bool valid = true;
   bool foundchar = false;
 
-  for (long p=0; p < static_cast<long>(name.size()); p++)
+  for (int p=0; p < static_cast<int>(name.size()); p++)
   {
     if (p == 0)
     {   
       // A variable name is not allowed to start with a number
       foundchar = false;
-      for (long q = 0; q < static_cast<long>(validstartchar.size()); q++) 
+      for (int q = 0; q < static_cast<int>(validstartchar.size()); q++) 
       {
         if (name[p] == validstartchar[q]) { foundchar = true; break; }
       }
@@ -173,7 +173,7 @@ bool matlabconverter::isvalidmatrixname(std::string name)
     else
     {
       foundchar = false;
-      for (long q = 0; q < static_cast<long>(validchar.size()); q++) 
+      for (int q = 0; q < static_cast<int>(validchar.size()); q++) 
       {
         if (name[p] == validchar[q]) { foundchar = true; break; }
       }
@@ -186,7 +186,7 @@ bool matlabconverter::isvalidmatrixname(std::string name)
 
 void matlabconverter::mlPropertyTOsciProperty(matlabarray &ma,PropertyManager *handle)
 {
-  long numfields;
+  int numfields;
   matlabarray::mlclass mclass;
   matlabarray subarray;
   std::string propname;
@@ -202,7 +202,7 @@ void matlabconverter::mlPropertyTOsciProperty(matlabarray &ma,PropertyManager *h
   FieldHandle     field;
   
   // properties are stored in field property
-  long propindex = ma.getfieldnameindexCI("property");
+  int propindex = ma.getfieldnameindexCI("property");
         
   if (propindex > -1)
   { // field property exists
@@ -212,7 +212,7 @@ void matlabconverter::mlPropertyTOsciProperty(matlabarray &ma,PropertyManager *h
               
     numfields = proparray.getnumfields();
           
-    for (long p=0; p<numfields; p++)
+    for (int p=0; p<numfields; p++)
     {
       subarray = proparray.getfield(0,p);
       mclass = subarray.getclass();
@@ -339,7 +339,7 @@ void matlabconverter::sciPropertyTOmlProperty(PropertyManager *handle,matlabarra
   ma.setfield(0,"property",proparray);
 }
 
-long matlabconverter::sciColorMapCompatible(matlabarray &ma, std::string &infotext, bool postremark)
+int matlabconverter::sciColorMapCompatible(matlabarray &ma, std::string &infotext, bool postremark)
 {
   infotext = "";
   if (ma.isempty()) return(0);
@@ -354,7 +354,7 @@ long matlabconverter::sciColorMapCompatible(matlabarray &ma, std::string &infote
       {
         // check whether the data is of a proper format
           
-        vector<long> dims;        
+        vector<int> dims;        
         dims = ma.getdims();
         if (dims.size() > 2)
         {   
@@ -391,7 +391,7 @@ long matlabconverter::sciColorMapCompatible(matlabarray &ma, std::string &infote
 // the program knows how to convert 
 // the matlabarray into a scirun matrix
 
-long matlabconverter::sciMatrixCompatible(matlabarray &ma, std::string &infotext, bool postremark)
+int matlabconverter::sciMatrixCompatible(matlabarray &ma, std::string &infotext, bool postremark)
 {
   infotext = "";
   if (ma.isempty())
@@ -409,7 +409,7 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, std::string &infotext
     {
       // check whether the data is of a proper format
         
-      vector<long> dims;        
+      vector<int> dims;        
       dims = ma.getdims();
       if (dims.size() > 2)
       {   
@@ -441,7 +441,7 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, std::string &infotext
     }           
   case matlabarray::mlSTRUCT:
     {
-      long index;
+      int index;
       /* A lot of different names can be used for the data:
          This has mainly historical reasons: a lot of different
          names have been used at CVRTI to store data, to be 
@@ -461,7 +461,7 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, std::string &infotext
         return(0); // incompatible
       }
                 
-      long numel;
+      int numel;
       numel = ma.getnumelements();
       if (numel > 1) 
       {
@@ -480,7 +480,7 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, std::string &infotext
         return(0); // not compatible
       }
         
-      vector<long> dims;        
+      vector<int> dims;        
       dims = subarray.getdims();
       if (dims.size() > 2)
         {   
@@ -514,7 +514,7 @@ long matlabconverter::sciMatrixCompatible(matlabarray &ma, std::string &infotext
                 
 
 
-long matlabconverter::sciStringCompatible(matlabarray &ma, std::string &infotext, bool postremark)
+int matlabconverter::sciStringCompatible(matlabarray &ma, std::string &infotext, bool postremark)
 {
   infotext = "";
   if (ma.isempty()) return(0);
@@ -714,7 +714,7 @@ void matlabconverter::mlArrayTOsciMatrix(matlabarray &ma,MatrixHandle &handle)
         // - property: optional extra struct array with key
         //             /value pairs for the property manager
                                 
-        long dataindex, propertyindex;
+        int dataindex, propertyindex;
         dataindex = ma.getfieldnameindexCI("data");
         if (dataindex == -1) dataindex = ma.getfieldnameindex("potvals");
         if (dataindex == -1) dataindex = ma.getfieldnameindexCI("field");
@@ -763,7 +763,7 @@ void matlabconverter::sciMatrixTOmlMatrix(MatrixHandle &scimat,matlabarray &mlma
     dmatrix = scimat->as_dense();
     tmatrix = dmatrix->transpose();
               
-    vector<long> dims(2);
+    vector<int> dims(2);
     dims[1] = tmatrix->nrows();
     dims[0] = tmatrix->ncols();
     mlmat.createdensearray(dims,dataformat);
@@ -776,7 +776,7 @@ void matlabconverter::sciMatrixTOmlMatrix(MatrixHandle &scimat,matlabarray &mlma
     DenseColMajMatrix* tmatrix;
     tmatrix = scimat->as_dense_col_maj();
               
-    vector<long> dims(2);
+    vector<int> dims(2);
     dims[0] = scimat->nrows();
     dims[1] = scimat->ncols();
     mlmat.createdensearray(dims,dataformat);
@@ -785,7 +785,7 @@ void matlabconverter::sciMatrixTOmlMatrix(MatrixHandle &scimat,matlabarray &mlma
   if (scimat->is_column())
   {
     ColumnMatrix* cmatrix;
-    vector<long> dims(2);
+    vector<int> dims(2);
     cmatrix = scimat->as_column();
     dims[0] = cmatrix->nrows();
     dims[1] = cmatrix->ncols();
@@ -799,7 +799,7 @@ void matlabconverter::sciMatrixTOmlMatrix(MatrixHandle &scimat,matlabarray &mlma
     smatrix = scimat->as_sparse();
     tmatrix = smatrix->transpose();
               
-    vector<long> dims(2);
+    vector<int> dims(2);
     dims[1] = tmatrix->nrows();
     dims[0] = tmatrix->ncols();
     mlmat.createsparsearray(dims,dataformat);
@@ -839,7 +839,7 @@ void matlabconverter::sciMatrixTOmlArray(MatrixHandle &scimat,matlabarray &mlmat
 // in case it is compatible return a positive value and write
 // out an infostring with a summary of the contents of the matrix
 
-long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, std::string &infostring, bool postremark)
+int matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, std::string &infostring, bool postremark)
 {
   infostring = "";
   if (mlarray.isempty()) return(0);
@@ -861,7 +861,7 @@ long matlabconverter::sciNrrdDataCompatible(matlabarray &mlarray, std::string &i
         
   if ((mclass == matlabarray::mlSTRUCT)||(mclass == matlabarray::mlOBJECT))
   {
-    long fieldnameindex;
+    int fieldnameindex;
     matlabarray subarray;
               
     fieldnameindex = mlarray.getfieldnameindexCI("data");
@@ -999,7 +999,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
                   
           // obtain the dimensions of the new nrrd
           size_t nrrddims[NRRD_DIM_MAX];
-          std::vector<long> dims = mlarray.getdims();
+          std::vector<int> dims = mlarray.getdims();
           int nrrddim = static_cast<int>(dims.size());
           
           // NRRD cannot do more then 10 dimensions... N(E)RRD
@@ -1011,34 +1011,34 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
           switch (nrrdtype)
           {
             case nrrdTypeChar:
-              mlarray.getnumericarray(static_cast<signed char *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
+              mlarray.getnumericarray(static_cast<signed char *>(nrrddataptr->nrrd_->data),static_cast<int>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             case nrrdTypeUChar:
-              mlarray.getnumericarray(static_cast<unsigned char *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
+              mlarray.getnumericarray(static_cast<unsigned char *>(nrrddataptr->nrrd_->data),static_cast<int>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             case nrrdTypeShort:
-              mlarray.getnumericarray(static_cast<signed short *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
+              mlarray.getnumericarray(static_cast<signed short *>(nrrddataptr->nrrd_->data),static_cast<int>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             case nrrdTypeUShort:
-              mlarray.getnumericarray(static_cast<unsigned short *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
+              mlarray.getnumericarray(static_cast<unsigned short *>(nrrddataptr->nrrd_->data),static_cast<int>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             case nrrdTypeInt:
-              mlarray.getnumericarray(static_cast<signed long *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
+              mlarray.getnumericarray(static_cast<signed int *>(nrrddataptr->nrrd_->data),static_cast<int>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             case nrrdTypeUInt:
-              mlarray.getnumericarray(static_cast<unsigned long *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
+              mlarray.getnumericarray(static_cast<unsigned int *>(nrrddataptr->nrrd_->data),static_cast<int>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             case nrrdTypeLLong:
-              mlarray.getnumericarray(static_cast<int64 *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
+              mlarray.getnumericarray(static_cast<int64 *>(nrrddataptr->nrrd_->data),static_cast<int>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             case nrrdTypeULLong:
-              mlarray.getnumericarray(static_cast<uint64 *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
+              mlarray.getnumericarray(static_cast<uint64 *>(nrrddataptr->nrrd_->data),static_cast<int>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             case nrrdTypeFloat:
-              mlarray.getnumericarray(static_cast<float *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
+              mlarray.getnumericarray(static_cast<float *>(nrrddataptr->nrrd_->data),static_cast<int>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             case nrrdTypeDouble:
-              mlarray.getnumericarray(static_cast<double *>(nrrddataptr->nrrd_->data),static_cast<long>(nrrdElementNumber(nrrddataptr->nrrd_)));
+              mlarray.getnumericarray(static_cast<double *>(nrrddataptr->nrrd_->data),static_cast<int>(nrrdElementNumber(nrrddataptr->nrrd_)));
               break;
             default:
               throw matlabconverter_error();
@@ -1055,7 +1055,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
           labels.resize(nrrddim);
           const char *labelptr[NRRD_DIM_MAX];
                       
-          for (long p=0;p<nrrddim;p++)
+          for (int p=0;p<nrrddim;p++)
           {
             std::ostringstream oss; 
             oss << "dimension " << (p+1);
@@ -1070,7 +1070,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
           nrrdAxisInfoSet_nva(nrrddataptr->nrrd_,nrrdAxisInfoLabel,labelptr);
            
           double spacing[NRRD_DIM_MAX];
-          for (long p=0;p<NRRD_DIM_MAX;p++)
+          for (int p=0;p<NRRD_DIM_MAX;p++)
           {
             spacing[p] = 1.0;
           }
@@ -1078,7 +1078,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
           nrrdAxisInfoSet_nva(nrrddataptr->nrrd_,nrrdAxisInfoSpacing,spacing);
           
           double mindata[NRRD_DIM_MAX];
-          for (long p=0;p<NRRD_DIM_MAX;p++)
+          for (int p=0;p<NRRD_DIM_MAX;p++)
           {
             mindata[p] = 0.0;
           }
@@ -1086,16 +1086,16 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
           nrrdAxisInfoSet_nva(nrrddataptr->nrrd_,nrrdAxisInfoMin,mindata);            
           
           double maxdata[NRRD_DIM_MAX];
-          for (long p=0;p<NRRD_DIM_MAX;p++)
+          for (int p=0;p<NRRD_DIM_MAX;p++)
           {
-            if (p < static_cast<long>(dims.size())) maxdata[p] = static_cast<double>(dims[p]);
+            if (p < static_cast<int>(dims.size())) maxdata[p] = static_cast<double>(dims[p]);
             else maxdata[p] = 1.0;
           }
                           
           nrrdAxisInfoSet_nva(nrrddataptr->nrrd_,nrrdAxisInfoMax,maxdata); 
           
           int centerdata[NRRD_DIM_MAX];
-          for (long p=0;p<NRRD_DIM_MAX;p++)
+          for (int p=0;p<NRRD_DIM_MAX;p++)
           {
             centerdata[p] = 2;
           }
@@ -1129,7 +1129,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
     case matlabarray::mlSTRUCT:
     case matlabarray::mlOBJECT:
       {
-        long dataindex;
+        int dataindex;
         dataindex = mlarray.getfieldnameindexCI("data");
         if (dataindex == -1) dataindex = mlarray.getfieldnameindexCI("potvals");
         if (dataindex == -1) dataindex = mlarray.getfieldnameindexCI("field");
@@ -1167,15 +1167,15 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
                                 
         // Add axes properties if they are specified
                                 
-        long axisindex;
+        int axisindex;
         axisindex = mlarray.getfieldnameindexCI("axis");
                                 
         if (axisindex != -1)
         {
           matlabarray::mlclass axisarrayclass;
           matlabarray axisarray;
-          long numaxis;
-          long fnindex;
+          int numaxis;
+          int fnindex;
           matlabarray farray;
                       
           axisarray = mlarray.getfieldCI(0,"axis");
@@ -1204,7 +1204,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
               // Set some default values in case the
               // label is not defined by the matlabarray
                       
-              for (long p=0;p<NRRD_DIM_MAX;p++)
+              for (int p=0;p<NRRD_DIM_MAX;p++)
               {
                 std::ostringstream oss; 
                 oss << "dimension " << (p+1);
@@ -1215,7 +1215,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
               // In case the label is set in the matlabarray
               // add this label to the clabels array
                       
-              for (long p=0;p<numaxis;p++)
+              for (int p=0;p<numaxis;p++)
               {
                 farray = axisarray.getfield(p,fnindex);
                 if (farray.getclass() == matlabarray::mlSTRING)
@@ -1241,7 +1241,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
               // Set some default values in case the
               // unit is not defined by the matlabarray
                       
-              for (long p=0;p<NRRD_DIM_MAX;p++)
+              for (int p=0;p<NRRD_DIM_MAX;p++)
                 {
                   units[p] = "unknown";
                   cunits[p] = units[p].c_str();
@@ -1250,7 +1250,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
               // In case the unit is set in the matlabarray
               // add this unit to the clabels array
                       
-              for (long p=0;p<numaxis;p++)
+              for (int p=0;p<numaxis;p++)
                 {
                   farray = axisarray.getfield(p,fnindex);
                   if (farray.getclass() == matlabarray::mlSTRING)
@@ -1274,12 +1274,12 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
                     // Set some default values in case the
                     // spacing is not defined by the matlabarray
                             
-                    for (long p=0;p<NRRD_DIM_MAX;p++)
+                    for (int p=0;p<NRRD_DIM_MAX;p++)
                       {
                         spacing[p] = 1.0;
                       }
                             
-                    for (long p=0;p<numaxis;p++)
+                    for (int p=0;p<numaxis;p++)
                       {
                         farray = axisarray.getfield(p,fnindex);
                         if ((farray.getclass() == matlabarray::mlDENSE)&&(farray.getnumelements() > 0))
@@ -1303,12 +1303,12 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
                     // Set some default values in case the
                     // minimum is not defined by the matlabarray
                             
-                    for (long p=0;p<NRRD_DIM_MAX;p++)
+                    for (int p=0;p<NRRD_DIM_MAX;p++)
                       {
                         mindata[p] = AIR_NAN;
                       }
                             
-                    for (long p=0;p<numaxis;p++)
+                    for (int p=0;p<numaxis;p++)
                       {
                         farray = axisarray.getfield(p,fnindex);
                         if ((farray.getclass() == matlabarray::mlDENSE)&&(farray.getnumelements() > 0))
@@ -1333,12 +1333,12 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
                   // Set some default values in case the
                   // maximum is not defined by the matlabarray
                           
-                  for (long p=0;p<NRRD_DIM_MAX;p++)
+                  for (int p=0;p<NRRD_DIM_MAX;p++)
                   {
                     maxdata[p] = AIR_NAN;
                   }
                           
-                  for (long p=0;p<numaxis;p++)
+                  for (int p=0;p<numaxis;p++)
                   {
                     farray = axisarray.getfield(p,fnindex);
                     if ((farray.getclass() == matlabarray::mlDENSE)&&(farray.getnumelements() > 0))
@@ -1355,18 +1355,18 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
                 fnindex = axisarray.getfieldnameindexCI("center");
                 if (fnindex != -1)
                 {
-                  long centerdata[NRRD_DIM_MAX];
-                  std::vector<long> data;
+                  int centerdata[NRRD_DIM_MAX];
+                  std::vector<int> data;
                           
                   // Set some default values in case the
                   // maximum is not defined by the matlabarray
                           
-                  for (long p=0;p<NRRD_DIM_MAX;p++)
+                  for (int p=0;p<NRRD_DIM_MAX;p++)
                   {
                     centerdata[p] = 2;
                   }
                           
-                  for (long p=0;p<numaxis;p++)
+                  for (int p=0;p<numaxis;p++)
                   {
                     farray = axisarray.getfield(p,fnindex);
                     if ((farray.getclass() == matlabarray::mlDENSE)&&(farray.getnumelements() > 0))
@@ -1381,7 +1381,7 @@ void matlabconverter::mlArrayTOsciNrrdData(matlabarray &mlarray,NrrdDataHandle &
               }
         }
                       
-        long propertyindex;
+        int propertyindex;
         propertyindex = mlarray.getfieldnameindexCI("property");
                                 
         if (propertyindex != -1)
@@ -1429,7 +1429,7 @@ void matlabconverter::sciNrrdDataTOmlMatrix(NrrdDataHandle &scinrrd, matlabarray
   mlarray.clear();
 
   // first determine the size of a nrrd
-  std::vector<long> dims;
+  std::vector<int> dims;
   nrrdptr = scinrrd->nrrd_;
   
   if (!nrrdptr)
@@ -1442,8 +1442,8 @@ void matlabconverter::sciNrrdDataTOmlMatrix(NrrdDataHandle &scinrrd, matlabarray
       
   dims.resize(nrrdptr->dim);
         
-  long totsize = 1; // this one is used as an internal check and is handy to have
-  for (long p=0; p<static_cast<long>(nrrdptr->dim);p++)
+  int totsize = 1; // this one is used as an internal check and is handy to have
+  for (int p=0; p<static_cast<int>(nrrdptr->dim);p++)
   {
     dims[p] = nrrdptr->axis[p].size;
     totsize *= dims[p];
@@ -1475,8 +1475,8 @@ void matlabconverter::sciNrrdDataTOmlMatrix(NrrdDataHandle &scinrrd, matlabarray
       case nrrdTypeUChar   : mlarray.setnumericarray(static_cast<unsigned char *>(nrrdptr->data),totsize,dataformat); break;
       case nrrdTypeShort   : mlarray.setnumericarray(static_cast<signed short *>(nrrdptr->data),totsize,dataformat); break;
       case nrrdTypeUShort  : mlarray.setnumericarray(static_cast<unsigned short *>(nrrdptr->data),totsize,dataformat); break;
-      case nrrdTypeInt     : mlarray.setnumericarray(static_cast<signed long *>(nrrdptr->data),totsize,dataformat); break;
-      case nrrdTypeUInt    : mlarray.setnumericarray(static_cast<unsigned long *>(nrrdptr->data),totsize,dataformat); break;
+      case nrrdTypeInt     : mlarray.setnumericarray(static_cast<signed int *>(nrrdptr->data),totsize,dataformat); break;
+      case nrrdTypeUInt    : mlarray.setnumericarray(static_cast<unsigned int *>(nrrdptr->data),totsize,dataformat); break;
       case nrrdTypeLLong   : mlarray.setnumericarray(static_cast<int64 *>(nrrdptr->data),totsize,dataformat); break;
       case nrrdTypeULLong  : mlarray.setnumericarray(static_cast<uint64 *>(nrrdptr->data),totsize,dataformat); break;   
       }
@@ -1513,13 +1513,13 @@ void matlabconverter::sciNrrdDataTOmlArray(NrrdDataHandle &scinrrd, matlabarray 
   nrrdptr = scinrrd->nrrd_;
                                 
   matlabarray axisma;
-  vector<long> dims(2);
+  vector<int> dims(2);
   dims[0] = nrrdptr->dim;
   dims[1] = 1;
   axisma.createstructarray(dims,axisfieldnames);
                 
                 
-  for (long p=0; p<static_cast<long>(nrrdptr->dim); p++ )
+  for (int p=0; p<static_cast<int>(nrrdptr->dim); p++ )
   {
     matlabarray sizema;
     matlabarray spacingma;
@@ -1585,7 +1585,7 @@ void matlabconverter::sciNrrdDataTOmlArray(NrrdDataHandle &scinrrd, matlabarray 
 //   LatVolMesh
 //   any suggestions for other types that need support ??
 
-long matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring, bool postremark)
+int matlabconverter::sciFieldCompatible(matlabarray mlarray,string &infostring, bool postremark)
 {
   MatlabToFieldAlgo algo;
   algo.setreporter(pr_);
@@ -1767,7 +1767,7 @@ void matlabconverter::sciFieldTOmlArray(FieldHandle &scifield,matlabarray &mlarr
     {
       // strip the whole data structure
       mlarray = mlarray.getfield(0,"field");
-      return; // leave since we are no longer dealing with a struct
+      return; // leave since we are no inter dealing with a struct
     }
     else
     {
@@ -1793,12 +1793,12 @@ void matlabconverter::sciFieldTOmlArray(FieldHandle &scifield,matlabarray &mlarr
   }        
 }
 
-long matlabconverter::sciBundleCompatible(matlabarray &mlarray, string &infostring, bool postremark)
+int matlabconverter::sciBundleCompatible(matlabarray &mlarray, string &infostring, bool postremark)
 {
   infostring = "";
   if (!mlarray.isstruct()) return(0);
   if (mlarray.getnumelements()==0) return(0);
-  long nfields = mlarray.getnumfields();
+  int nfields = mlarray.getnumfields();
   
   std::string dummyinfo;
   int numfields = 0;
@@ -1808,7 +1808,7 @@ long matlabconverter::sciBundleCompatible(matlabarray &mlarray, string &infostri
   int numstrings = 0;
   
   matlabarray subarray;
-  for (long p = 0; p < nfields; p++)
+  for (int p = 0; p < nfields; p++)
   {
     subarray = mlarray.getfield(0,p);
     if (sciStringCompatible(subarray,dummyinfo,false)) { numstrings++; continue; }
@@ -1847,7 +1847,7 @@ void matlabconverter::mlArrayTOsciBundle(matlabarray &mlarray,BundleHandle &scib
     error("Matlab array does not contain any fields.");
     throw matlabconverter_error();
   }
-  long numfields = mlarray.getnumfields();
+  int numfields = mlarray.getnumfields();
   
   scibundle = scinew Bundle;
   if (scibundle.get_rep() == 0)
@@ -1863,7 +1863,7 @@ void matlabconverter::mlArrayTOsciBundle(matlabarray &mlarray,BundleHandle &scib
   // We do not want explanations why a field cannot be translated
   // We are testing here whether they can
 
-  for (long p = 0; p < numfields; p++)
+  for (int p = 0; p < numfields; p++)
   {
     subarray = mlarray.getfield(0,p);
     fname = mlarray.getfieldname(p);

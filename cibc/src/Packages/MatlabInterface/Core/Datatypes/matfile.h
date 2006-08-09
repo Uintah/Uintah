@@ -103,11 +103,11 @@ class matfile : public matfilebase {
 	// a file.
 	
 	struct matfileptr {
-            long	hdrptr;		// location of tag header
-            long	datptr;		// location of data segment
-            long	startptr;	// location of the first tag header (to go one level up)
-            long	endptr;		// location of the end of the data segment (end+1)
-            long	size;		// length of data segment
+            int	hdrptr;		// location of tag header
+            int	datptr;		// location of data segment
+            int	startptr;	// location of the first tag header (to go one level up)
+            int	endptr;		// location of the end of the data segment (end+1)
+            int	size;		// length of data segment
             mitype type;
             };
 
@@ -121,13 +121,13 @@ class matfile : public matfilebase {
 	struct compressbuffer {
 			matfiledata mbuffer;	// Buffer with reference counting
 			// char	*buffer;	// buffer with uncompressed data
-			long	buffersize; // size of the buffer;
-			long	bufferoffset; // file offset of the buffer
+			int	buffersize; // size of the buffer;
+			int	bufferoffset; // file offset of the buffer
 			};
 
 	struct mxfile {
 
-			long		ref_;			// Reference counter
+			int		ref_;			// Reference counter
 			
 			// The file can be read in two modes
 			// 1) directly out of the file using the fptr_
@@ -145,16 +145,16 @@ class matfile : public matfilebase {
 			
 			char		*fcmpbuffer_;   // Compression buffer
 			matfiledata fcmpmbuffer_;   // Same buffer but wrapped with my memory management system
-			long		fcmpsize_;		// Size of the buffer
-			long		fcmpoffset_;	// Offset of the buffer
-			long		fcmpcount_;		// Counter to check where next to read data
-      long    fcmpalignoffset_;    // Correction for alignment problem in filess
+			int		fcmpsize_;		// Size of the buffer
+			int		fcmpoffset_;	// Offset of the buffer
+			int		fcmpcount_;		// Counter to check where next to read data
+      int    fcmpalignoffset_;    // Correction for alignment problem in filess
 			
 			FILE		*fptr_;			// File pointer
 			std::string fname_;			// Filename
 			std::string fmode_;			// File access mode: "r" or "w"
         
-			long	    flength_;		// File length	
+			int	    flength_;		// File length	
         
 			char	    headertext_[118]; 	// The text in the header of the matfile
 			int32_t		subsysdata_[2];		// NEW IN VERSION 7
@@ -184,7 +184,7 @@ class matfile : public matfilebase {
 	// To further optimize the performance, loops should be
 	// unrolled in this function.
 	// currently it only supports certain element sizes
-   	void mfswapbytes(void *buffer,long elsize,long size);
+   	void mfswapbytes(void *buffer,int elsize,int size);
 	
 	// test byte swapping
 	bool byteswap();
@@ -202,11 +202,11 @@ class matfile : public matfilebase {
 	// consistent interface.
 	// The offset version start reading at an certain location (includes a fseek at the start)
 	  
-  	void mfread(void *buffer,long elsize,long size);	// read data and do byte swapping
-	void mfread(void *buffer,long elsize,long size,long offset);
+  	void mfread(void *buffer,int elsize,int size);	// read data and do byte swapping
+	void mfread(void *buffer,int elsize,int size,int offset);
    	
-	void mfwrite(void *buffer,long elsize,long size);
-	void mfwrite(void *buffer,long elsize,long size,long offset); 
+	void mfwrite(void *buffer,int elsize,int size);
+	void mfwrite(void *buffer,int elsize,int size,int offset); 
 
   public:
   	// constructors
@@ -267,9 +267,9 @@ class matfile : public matfilebase {
 	// rewind:
 	//  Go to the first tag at the top level
 	 
-	long firsttag();
-	long nexttag();
-	long gototag(long tag);
+	int firsttag();
+	int nexttag();
+	int gototag(int tag);
 	void rewind();
 		       
 	// A quick test to see what kind of access to the

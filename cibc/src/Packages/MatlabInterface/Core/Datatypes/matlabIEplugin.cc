@@ -44,7 +44,7 @@ MatlabMatrix_reader(ProgressReporter *pr, const char *filename)
   matlabfile mf;
   matlabconverter mc(pr);
   matlabarray ma;
-  long numarrays;
+  int numarrays;
   string dummytext;
   MatrixHandle mh;
   
@@ -54,7 +54,7 @@ MatlabMatrix_reader(ProgressReporter *pr, const char *filename)
   {
       mf.open(std::string(filename),"r");
       numarrays = mf.getnummatlabarrays();
-      for (long p=0;p<numarrays;p++)
+      for (int p=0;p<numarrays;p++)
       {
         ma = mf.getmatlabarrayinfo(p);
         if (mc.sciMatrixCompatible(ma,dummytext)) 
@@ -107,7 +107,7 @@ MatlabNrrd_reader(ProgressReporter *pr, const char *filename)
   matlabfile mf;
   matlabconverter mc(pr);
   matlabarray ma;
-  long numarrays;
+  int numarrays;
   string dummytext;
   NrrdDataHandle mh;
   
@@ -117,7 +117,7 @@ MatlabNrrd_reader(ProgressReporter *pr, const char *filename)
   {
       mf.open(std::string(filename),"r");
       numarrays = mf.getnummatlabarrays();
-      for (long p=0;p<numarrays;p++)
+      for (int p=0;p<numarrays;p++)
       {
         ma = mf.getmatlabarrayinfo(p);
         if (mc.sciNrrdDataCompatible(ma,dummytext)) 
@@ -169,7 +169,7 @@ MatlabField_reader(ProgressReporter *pr, const char *filename)
   matlabfile mf;
   matlabconverter mc(pr);
   matlabarray ma;
-  long numarrays;
+  int numarrays;
   string dummytext;
   FieldHandle mh;
   
@@ -179,7 +179,7 @@ MatlabField_reader(ProgressReporter *pr, const char *filename)
   {
       mf.open(std::string(filename),"r");
       numarrays = mf.getnummatlabarrays();
-      for (long p=0;p<numarrays;p++)
+      for (int p=0;p<numarrays;p++)
       {
         ma = mf.getmatlabarrayinfo(p);
         if (mc.sciFieldCompatible(ma,dummytext)) 
