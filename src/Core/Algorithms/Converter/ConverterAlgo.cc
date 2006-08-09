@@ -48,6 +48,67 @@ ConverterAlgo::ConverterAlgo(ProgressReporter* pr) :
 {
 }
 
+bool ConverterAlgo::MatrixToDoubleVector(MatrixHandle matrix, std::vector<double> &val)
+{
+  if (matrix.get_rep() == 0) { val.resize(0); return (false); }
+
+  val.resize(matrix->nrows() * matrix->ncols());
+  
+  MatrixHandle mat = dynamic_cast<Matrix*>(matrix->dense());
+  if (mat.get_rep() == 0)
+  {
+    error("MatrixToDoubleVector: Matrix could not be translated into a dense matrix");
+    return (false);    
+  }
+  double* data = mat->get_data_pointer();
+  
+  for (size_t r=0; r<val.size(); r++) val[r] = static_cast<double>(data[r]);
+
+  return (true);
+}
+
+
+bool ConverterAlgo::MatrixToIntVector(MatrixHandle matrix, std::vector<int> &val)
+{
+  if (matrix.get_rep() == 0) { val.resize(0); return (false); }
+
+  val.resize(matrix->nrows() * matrix->ncols());
+  
+  MatrixHandle mat = dynamic_cast<Matrix*>(matrix->dense());
+  if (mat.get_rep() == 0)
+  {
+    error("MatrixToIntVector: Matrix could not be translated into a dense matrix");
+    return (false);    
+  }
+  double* data = mat->get_data_pointer();
+  
+  for (size_t r=0; r<val.size(); r++) val[r] = static_cast<int>(data[r]);
+
+  return (true);
+}
+
+
+bool ConverterAlgo::MatrixToUnsignedIntVector(MatrixHandle matrix, std::vector<unsigned int> &val)
+{
+  if (matrix.get_rep() == 0) { val.resize(0); return (false); }
+
+  val.resize(matrix->nrows() * matrix->ncols());
+  
+  MatrixHandle mat = dynamic_cast<Matrix*>(matrix->dense());
+  if (mat.get_rep() == 0)
+  {
+    error("MatrixToIntVector: Matrix could not be translated into a dense matrix");
+    return (false);    
+  }
+  double* data = mat->get_data_pointer();
+  
+  for (size_t r=0; r<val.size(); r++) val[r] = static_cast<unsigned int>(data[r]);
+
+  return (true);
+}
+
+
+
 bool ConverterAlgo::MatrixToDouble(MatrixHandle matrix, double &val)
 {
   if (matrix.get_rep() == 0) return (false);
@@ -68,6 +129,7 @@ bool ConverterAlgo::MatrixToDouble(MatrixHandle matrix, double &val)
   val = mat->get(0,0);
   return (true);
 }
+
 
 bool ConverterAlgo::MatrixToInt(MatrixHandle matrix, int &val)
 {
@@ -92,6 +154,33 @@ bool ConverterAlgo::MatrixToInt(MatrixHandle matrix, int &val)
   if ((temp - static_cast<double>(val)) != 0.0)
   {
     warning("MatrixToInt: Value in matrix is not of integer value, rounding value to nearest integer value");
+  }  
+  return (true);
+}
+
+bool ConverterAlgo::MatrixToUnsignedInt(MatrixHandle matrix, unsigned int &val)
+{
+  if (matrix.get_rep() == 0) return (false);
+
+  if ((matrix->nrows() * matrix->ncols()) != 1)
+  {
+    error("MatrixToUnsignedInt: Matrix has not dimensions 1 x 1");
+    return (false);
+  }
+  
+  MatrixHandle mat = dynamic_cast<Matrix*>(matrix->dense());
+  if (mat.get_rep() == 0)
+  {
+    error("MatrixToUnsignedInt: Matrix could not be translated into a dense matrix");
+    return (false);    
+  }
+  
+  double temp = mat->get(0,0);   
+  val = static_cast<unsigned int>(temp);
+  
+  if ((temp - static_cast<double>(val)) != 0.0)
+  {
+    warning("MatrixToUnsignedInt: Value in matrix is not of integer value, rounding value to nearest integer value");
   }  
   return (true);
 }
@@ -217,6 +306,44 @@ bool ConverterAlgo::MatrixToTransform(MatrixHandle matrix, Transform& trans)
 }
 
 
+bool ConverterAlgo::DoubleVectorToMatrix(std::vector<double> val, MatrixHandle& matrix)
+{
+  matrix = dynamic_cast<Matrix*>(scinew DenseMatrix(val.size(),1));
+  if (matrix.get_rep() == 0) 
+  {
+    error("DoubleToMatrix: Could not allocate memory");
+    return (false);
+  }
+  double* data = matrix->get_data_pointer();
+  for (size_t r=0; r< val.size(); r++) data[r] = static_cast<double>(val[r]);
+  return (true);
+}
+
+bool ConverterAlgo::IntVectorToMatrix(std::vector<int> val, MatrixHandle& matrix)
+{
+  matrix = dynamic_cast<Matrix*>(scinew DenseMatrix(val.size(),1));
+  if (matrix.get_rep() == 0) 
+  {
+    error("DoubleToMatrix: Could not allocate memory");
+    return (false);
+  }
+  double* data = matrix->get_data_pointer();
+  for (size_t r=0; r< val.size(); r++) data[r] = static_cast<double>(val[r]);
+  return (true);
+}
+
+bool ConverterAlgo::UnsignedIntVectorToMatrix(std::vector<unsigned int> val, MatrixHandle& matrix)
+{
+  matrix = dynamic_cast<Matrix*>(scinew DenseMatrix(val.size(),1));
+  if (matrix.get_rep() == 0) 
+  {
+    error("DoubleToMatrix: Could not allocate memory");
+    return (false);
+  }
+  double* data = matrix->get_data_pointer();
+  for (size_t r=0; r< val.size(); r++) data[r] = static_cast<double>(val[r]);
+  return (true);
+}
 bool ConverterAlgo::DoubleToMatrix(double val, MatrixHandle& matrix)
 {
   matrix = dynamic_cast<Matrix*>(scinew DenseMatrix(1,1));
@@ -237,7 +364,19 @@ bool ConverterAlgo::IntToMatrix(int val, MatrixHandle& matrix)
     error("IntToMatrix: Could not allocate memory");
     return (false);
   }
-  matrix->put(0,0,static_cast<int>(val));
+  matrix->put(0,0,static_cast<double>(val));
+  return (true);
+}
+
+bool ConverterAlgo::UnsignedIntToMatrix(unsigned int val, MatrixHandle& matrix)
+{
+  matrix = dynamic_cast<Matrix*>(scinew DenseMatrix(1,1));
+  if (matrix.get_rep() == 0) 
+  {
+    error("IntToMatrix: Could not allocate memory");
+    return (false);
+  }
+  matrix->put(0,0,static_cast<double>(val));
   return (true);
 }
 

@@ -86,6 +86,17 @@ class SCISHARE MathAlgo : public AlgoLibrary {
     
     bool IdentityMatrix(int n,MatrixHandle& output); 
     
+    bool MatrixSelectRows(MatrixHandle input, MatrixHandle& output, std::vector<unsigned int> rows);
+    bool MatrixSelectColumns(MatrixHandle input, MatrixHandle& output, std::vector<unsigned int> columns);
+    bool MatrixSelectSubMatrix(MatrixHandle input, MatrixHandle& output, std::vector<unsigned int> rows, std::vector<unsigned int> columns);
+    
+    bool MatrixNonZeroRows(MatrixHandle input, std::vector<unsigned int>& rows);
+    bool MatrixNonZeroColumns(MatrixHandle input, std::vector<unsigned int>& columns);
+    bool MatrixZeroRows(MatrixHandle input, std::vector<unsigned int>& rows);
+    bool MatrixZeroColumns(MatrixHandle input, std::vector<unsigned int>& columns);
+    
+    bool MatrixAppendRows(MatrixHandle input,MatrixHandle& output,MatrixHandle Rows,std::vector<unsigned int>& newrows);
+    bool MatrixAppendColumns(MatrixHandle input,MatrixHandle& output,MatrixHandle Columns,std::vector<unsigned int>& newcolumns);
 };
 
 

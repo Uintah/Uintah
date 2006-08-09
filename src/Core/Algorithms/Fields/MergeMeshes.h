@@ -26,8 +26,8 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef CORE_ALGORITHMS_FIELDS_MERGEFIELDS_H
-#define CORE_ALGORITHMS_FIELDS_MERGEFIELDS_H 1
+#ifndef CORE_ALGORITHMS_FIELDS_MERGEMESHES_H
+#define CORE_ALGORITHMS_FIELDS_MERGEMESHES_H 1
 
 // The following include file will include all tools needed for doing 
 // dynamic compilation and will include all the standard dataflow types
@@ -38,23 +38,23 @@
 
 namespace SCIRunAlgo {
 
-class MergeFieldsAlgo : public SCIRun::DynamicAlgoBase
+class MergeMeshesAlgo : public SCIRun::DynamicAlgoBase
 {
   public:
-    virtual bool MergeFields(SCIRun::ProgressReporter *pr,std::vector<SCIRun::FieldHandle> input, SCIRun::FieldHandle& output, double tolerance, bool mergenodes, bool mergeelements, bool matchval);  
+    virtual bool MergeMeshes(SCIRun::ProgressReporter *pr,std::vector<SCIRun::FieldHandle> input, SCIRun::FieldHandle& output, double tolerance, bool mergenodes, bool mergeelements);  
 };
 
 
 template <class FIELD>
-class  MergeFieldsAlgoT : public MergeFieldsAlgo
+class  MergeMeshesAlgoT : public MergeMeshesAlgo
 {
   public:
-    virtual bool MergeFields(SCIRun::ProgressReporter *pr, std::vector<SCIRun::FieldHandle> input, SCIRun::FieldHandle& output, double tol, bool mergenodes, bool mergeelements, bool matchval);
+    virtual bool MergeMeshes(SCIRun::ProgressReporter *pr, std::vector<SCIRun::FieldHandle> input, SCIRun::FieldHandle& output, double tol, bool mergenodes, bool mergeelements);
  
 };
 
 template <class FIELD>
-bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vector<SCIRun::FieldHandle> fieldvec, SCIRun::FieldHandle& output, double tol, bool mergenodes, bool mergeelements, bool matchval)
+bool MergeMeshesAlgoT<FIELD>::MergeMeshes(SCIRun::ProgressReporter *pr, std::vector<SCIRun::FieldHandle> fieldvec, SCIRun::FieldHandle& output, double tol, bool mergenodes, bool mergeelements)
 {
 
 #ifdef HAVE_HASH_MAP
@@ -72,31 +72,10 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
 
   for (size_t p = 0; p < fieldvec.size(); p++)
   {
-    FIELD* ifield = dynamic_cast<FIELD *>(fieldvec[p].get_rep());
-    if (ifield == 0) 
+    if (!(fieldvec[p]->mesh()->is_editable()))
     {
-      pr->error("MergeFields: Fields are not compatible");
+      pr->error("MergeMeshes: Field type is not editable");
       return (false);
-    }
-    
-    if (!(ifield->mesh()->is_editable()))
-    {
-      pr->error("MergeFields: Field type is not editable");
-      return (false);
-    }
-
-    
-    if (p == 0) 
-    {
-      basisorder = ifield->basis_order();
-    }
-    else
-    {
-      if (ifield->basis_order() != basisorder)
-      {
-        pr->error("MergeFields: Field basisorders are not equal");
-        return (false);
-      }
     }
   }
   
@@ -116,8 +95,7 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
     double zmin, zmax;
     numnodes[p] = 0;
     
-    FIELD* ifield = dynamic_cast<FIELD *>(fieldvec[p].get_rep());
-    typename FIELD::mesh_type* imesh = dynamic_cast<typename FIELD::mesh_type*>(ifield->mesh().get_rep());
+    typename FIELD::mesh_type* imesh = dynamic_cast<typename FIELD::mesh_type*>(fieldvec[p]->mesh().get_rep());
 
     typename FIELD::mesh_type::Elem::iterator eit, eit_end;
     imesh->begin(eit);
@@ -188,14 +166,6 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
     return (false);
   }
   
-  if (basisorder == 0) ofield->fdata().resize(totnumelements);  
-  if (basisorder == 1) ofield->fdata().resize(totnumnodes);  
-  if (basisorder > 1)
-  {
-    pr->error("This function has not yet been implemented for higher order elements");
-    return (false);
-  }
-
   int actnumnodes = 0;      
   int actnumelements = 0;  
     
@@ -216,8 +186,7 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
     std::vector<typename FIELD::mesh_type::Node::index_type> localindex(numnodes[p]);
     std::vector<bool>  localindex_assigned(numnodes[p]);
     
-    FIELD* ifield = dynamic_cast<FIELD *>(fieldvec[p].get_rep());
-    typename FIELD::mesh_type* imesh = dynamic_cast<typename FIELD::mesh_type *>(ifield->mesh().get_rep());
+    typename FIELD::mesh_type* imesh = dynamic_cast<typename FIELD::mesh_type *>(fieldvec[p]->mesh().get_rep());
     
     typename FIELD::mesh_type::Elem::iterator it, it_end;
     imesh->begin(it);
@@ -225,7 +194,6 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
   
     typename FIELD::mesh_type::Node::array_type nodes;
     typename FIELD::mesh_type::Node::array_type newnodes;
-    typename FIELD::value_type v1,v2;
     double dist, mindist;
     double tol2 = tol*tol;
     
@@ -248,7 +216,6 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
             std::pair<typename node_index_type::iterator,typename node_index_type::iterator> lit;
             SCIRun::Point P,Q;
             imesh->get_center(P,nodeq);
-            if (matchval) v1 = ifield->value(nodeq);
             key = static_cast<int>((P.x()-Xmin)*Xmul);
             key += (static_cast<int>((P.y()-Ymin)*Ymul))<<8;
             key += (static_cast<int>((P.z()-Zmin)*Zmul))<<16;
@@ -267,33 +234,14 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
                     typename FIELD::mesh_type::Node::index_type idx = (*(lit.first)).second;
                     omesh->get_center(Q,idx);
                     
-                    if (matchval) 
+                    dist = (P.x()-Q.x())*(P.x()-Q.x()) + (P.y()-Q.y())*(P.y()-Q.y()) + (P.z()-Q.z())*(P.z()-Q.z());
+                    if (dist <= mindist)
                     {
-                      v2 = ofield->value(idx);                 
-                      if (v1 == v2)
-                      {
-                        dist = (P.x()-Q.x())*(P.x()-Q.x()) + (P.y()-Q.y())*(P.y()-Q.y()) + (P.z()-Q.z())*(P.z()-Q.z());
-                        if (dist <= mindist)
-                        {
-                          newnodes[q] = idx;
-                          localindex[nodeq] = newnodes[q];
-                          localindex_assigned[nodeq] = true;
-                          mindist = dist;
-                          foundit = true;
-                        }
-                      }
-                    }
-                    else
-                    {
-                      dist = (P.x()-Q.x())*(P.x()-Q.x()) + (P.y()-Q.y())*(P.y()-Q.y()) + (P.z()-Q.z())*(P.z()-Q.z());
-                      if (dist <= mindist)
-                      {
-                        newnodes[q] = idx;
-                        localindex[nodeq] = newnodes[q];
-                        localindex_assigned[nodeq] = true;
-                        mindist = dist;
-                        foundit = true;
-                      }
+                      newnodes[q] = idx;
+                      localindex[nodeq] = newnodes[q];
+                      localindex_assigned[nodeq] = true;
+                      mindist = dist;
+                      foundit = true;
                     }
                     ++(lit.first);  
                   }
@@ -303,10 +251,6 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
             {
               actnumnodes++;
               newnodes[q] = omesh->add_point(P);
-              if(basisorder > 0)
-              {
-                ofield->set_value(ifield->value(nodeq),newnodes[q]);
-              } 
               localindex[nodeq] = newnodes[q];
               localindex_assigned[nodeq] = true;            
               node_index_.insert(typename node_index_type::value_type(key,newnodes[q]));
@@ -315,14 +259,9 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
           else
           {
             SCIRun::Point P;
-            imesh->get_center(P,nodeq);
-          
+            imesh->get_center(P,nodeq);          
             newnodes[q] = omesh->add_point(P);
             actnumnodes++;
-            if(basisorder > 0)
-            {
-              ofield->set_value(ifield->value(nodeq),newnodes[q]);
-            } 
             localindex[nodeq] = newnodes[q];
             localindex_assigned[nodeq] = true;           
           }
@@ -362,27 +301,13 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
 
       if (addelem)
       {
-        if (basisorder == 0)
-        {
-          
-          typename FIELD::mesh_type::Elem::index_type idx = omesh->add_elem(newnodes);
-          ofield->set_value(ifield->value((*it)),idx);
-          actnumelements++;
-        }
-        else
-        {
-          omesh->add_elem(newnodes);
-          actnumelements++;
-        }
+        omesh->add_elem(newnodes);
+        actnumelements++;
       }
       
       ++it;
     }
   }
-
-  if (basisorder == 0) ofield->fdata().resize(actnumelements);  
-  if (basisorder == 1) ofield->fdata().resize(actnumnodes);  
-
   return (true);
 }
 
