@@ -358,48 +358,52 @@ void SFC<DIM,LOCS>::GenerateCurve(int mode)
 template<int DIM, class LOCS>
 void SFC<DIM,LOCS>::Serial()
 {
-	orders->resize(n);
+  if(n!=0)
+  {
+	  orders->resize(n);
 
-	unsigned int *o=&(*orders)[0];
+	  unsigned int *o=&(*orders)[0];
 	
-	for(unsigned int i=0;i<n;i++)
-	{
-		o[i]=i;
-	}
+	  for(unsigned int i=0;i<n;i++)
+	  {
+		  o[i]=i;
+	  }
 
-	vector<unsigned int> bin[BINS];
-	for(int b=0;b<BINS;b++)
-	{
-		bin[b].reserve(n/BINS);
-	}
-	//Recursive call
-	SerialR(o,bin,n,center,dimensions);
-
+	  vector<unsigned int> bin[BINS];
+	  for(int b=0;b<BINS;b++)
+	  {
+		  bin[b].reserve(n/BINS);
+	  }
+	  //Recursive call
+	  SerialR(o,bin,n,center,dimensions);
+  }
 }
 
 
 template<int DIM, class LOCS> template<class BITS>
 void SFC<DIM,LOCS>::SerialH()
 {
-	orders->resize(n);
+  if(n!=0)
+  {
+	  orders->resize(n);
 
-	History<BITS> *sbuf=(History<BITS>*)sendbuf;
-	unsigned int *o=&(*orders)[0];
+	  History<BITS> *sbuf=(History<BITS>*)sendbuf;
+	  unsigned int *o=&(*orders)[0];
 	
-	for(unsigned int i=0;i<n;i++)
-	{
-		o[i]=i;
-	}
+	  for(unsigned int i=0;i<n;i++)
+	  {
+		  o[i]=i;
+	  }
 
-	vector<unsigned int> bin[BINS];
-	for(int b=0;b<BINS;b++)
-	{
-		bin[b].reserve(n/BINS);
-	}
+	  vector<unsigned int> bin[BINS];
+	  for(int b=0;b<BINS;b++)
+	  {
+		  bin[b].reserve(n/BINS);
+	  }
 
-	//Recursive call
-	SerialHR<BITS>(o,sbuf,bin,n,center,dimensions);
-
+	  //Recursive call
+	  SerialHR<BITS>(o,sbuf,bin,n,center,dimensions);
+  }
 }
 
 template<int DIM, class LOCS> 
@@ -589,12 +593,20 @@ void SFC<DIM,LOCS>::Parallel()
 	unsigned int i;
 	vector<unsigned int> n_per_proc(P);
 	this->n_per_proc=&n_per_proc[0];	
-	sbuf.resize(n);
-	mbuf.resize(n);
-	sendbuf=(void*)&(sbuf[0]);
-	recievebuf=(void*)&(rbuf[0]);
-	mergebuf=(void*)&(mbuf[0]);
-	
+  
+  if(n!=0)
+  {
+	  sbuf.resize(n);
+	  mbuf.resize(n);
+	  sendbuf=(void*)&(sbuf[0]);
+	  recievebuf=(void*)&(rbuf[0]);
+	  mergebuf=(void*)&(mbuf[0]);
+  }
+  else
+  {
+    sendbuf=recievebuf=mergebuf=0;
+  }
+
 	//start sending n to every other processor
 	//start recieving n from every other processor
 	//or
@@ -637,11 +649,6 @@ void SFC<DIM,LOCS>::Parallel()
 	{
 		c[i].i+=istart;	
 	}
-//	for(int i=0;i<n;i++)
-//	{
-//		if(sbuf[i].i==300105)
-//			cout << "after serial on " << rank << "at index " << i << " 300105:" << sbuf[i].bits << endl;
-//	}
 	
 
 	//resize buffers
@@ -687,7 +694,6 @@ void SFC<DIM,LOCS>::Parallel()
 		//COPY to orders
 		o[i]=c[i].i;	
 	}
-	
 }
 
 #define ASCENDING 0
@@ -702,6 +708,11 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 	queue<MPI_Request> squeue, rqueue;
 	unsigned int tag=0;
 	unsigned int n2=n_per_proc[to];
+  
+  //temperary fix to prevent processors with no elements from crashing
+  if(n==0 || n2==0)
+     return 0;
+
 	MPI_Request srequest, rrequest;
 	MPI_Status status;
 	
@@ -729,12 +740,6 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 		return 0;
 	}
 //	cout << rank << ": Max-min done\n";
-	
-//	for(int i=0;i<n;i++)
-//	{
-//		if(sbuf[i].i==300105)
-//			cout << "Potential exchange between " << rank << " and " << to << endl;
-//	}
 	
 	unsigned int nsend=n_per_proc[rank];
 	unsigned int nrecv=n_per_proc[to];
@@ -881,13 +886,9 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 //			cout << rank << " recieved block of size\n";
 			while(b>0 && merged<n)
 			{
-//				if(rank==8 && to==9)
-//					cout << mrbuf[0].bits << " " << msbuf[0].bits << endl;
 				
 				if(mrbuf[0].bits<msbuf[0].bits)
 				{
-//					if(mrbuf[0].i==300105)
-//						cout << rank << " recieved 300105:" << mrbuf[0].bits << " from " << to << endl;
 					//pull from recieve buffer
 					mbuf[merged]=mrbuf[0];
 					mrbuf++;
@@ -895,8 +896,6 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 				}
 				else
 				{
-//					if(msbuf[0].i==300105)
-//						cout << rank << " keeping 300105:" << msbuf[0].bits << " from " << to << endl;
 					//pull from send buffer
 					mbuf[merged]=msbuf[0];
 					msbuf++;
@@ -1018,12 +1017,8 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 
 			while(b>0 && merged<n)
 			{
-//				if(rank==9 && to==8)
-//					cout << mrbuf[0].bits << " " << msbuf[0].bits << endl;
 				if(mrbuf[0].bits>msbuf[0].bits) //merge from recieve buff
 				{
-//					if(mrbuf[0].i==300105)
-//						cout << rank << " recieving 300105:" << mrbuf[0].bits << " from " << to << endl;
 					mbuf--;
 					mbuf[0]=mrbuf[0];
 					mrbuf--;
@@ -1031,8 +1026,6 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 				}
 				else	//merge from send buff
 				{
-//					if(msbuf[0].i==300105)
-//						cout << rank << " keeping " << msbuf[0].i << ":" << msbuf[0].bits << " from " << to << endl;
 					mbuf--;
 					mbuf[0]=msbuf[0];
 					msbuf--;
@@ -1113,11 +1106,6 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 	swap(mergebuf,sendbuf);
 	
 	sbuf=(History<BITS>*)sendbuf;
-//	for(int i=0;i<n;i++)
-//	{
-//			if(sbuf[i].i==300105)
-//				cout << rank << " found on me at index " << i << " after merge\n";
-//	}
 	return 1;
 }
 
@@ -1133,7 +1121,7 @@ void SFC<DIM,LOCS>::PrimaryMerge()
 	queue<HC_MERGE> q;
 	HC_MERGE cur;
 	bool send;
-	int to;
+	int to=-1;
 	cur.base=0;
 	cur.P=P;
 	q.push(cur);
@@ -1160,15 +1148,6 @@ void SFC<DIM,LOCS>::PrimaryMerge()
 		if(send)
 		{
 			MergeExchange<BITS>(to);
-			if(rank==7 && to==8)
-			{
-
-//				History<BITS>* sbuf=(History<BITS>*)sendbuf;
-//				cout << "after exit\n";
-//				for(int i=0;i<n;i++)
-//					cout << i << " " << sbuf[i].i << ":" << sbuf[i].bits << endl;
-//				cout << "done\n";
-			}
 		}
 
 		//make next stages
