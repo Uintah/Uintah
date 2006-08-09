@@ -102,13 +102,8 @@ WARNING
                                         constNCVariable<double> &NC_CCweight,
                                         Vector &dx);
     
-    double computeBurnedMass(double To, double P, double Vc, double surfArea, 
-			     double delT, double solidMass, double& beta, double& Ts);
-    
-    double computeWSBSurfaceTemp(double Ts, double To, double P, double Vc);
-    
-    double computeMassTransferRate(double Ts, double To, double Vc);
-    
+    double computeBurnedMass(double To, double P, double Vc, double surfArea, double delT,
+			     double solidMass, double& beta, double& Ts, Vector& dx);
     
     Unsteady_Burn(const Unsteady_Burn&);
     Unsteady_Burn& operator=(const Unsteady_Burn&);

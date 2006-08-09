@@ -490,8 +490,8 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
 	double beta = NewBeta[c];
 	double Ts   = NewTs[c]; 
 
-	double burnedMass = computeBurnedMass(Tzero, productPress, solidSp_vol[c], 
-					      surfArea, delT, solidMass[c], beta, Ts);
+	double burnedMass = computeBurnedMass(Tzero, productPress, solidSp_vol[c], surfArea,
+					      delT, solidMass[c], beta, Ts, dx);
 	
 	NewBeta[c] = beta;
 	NewTs[c]   = Ts;
@@ -640,7 +640,7 @@ void Unsteady_Burn::setMPMLabel(MPMLabel* MLB){
 /******************* Bisection Secant Solver ********************************/
 /****************************************************************************/
 double Unsteady_Burn::computeBurnedMass(double To, double P, double Vc, double surfArea, double delT, 
-					double solidMass, double& beta, double& Ts){  
+					double solidMass, double& beta, double& Ts, Vector& dx){  
   UpdateConstants(To, P, Vc);
 
   double   Ts_local = Tmin + (Tmax - Tmin) * BisectionSecant();
@@ -681,9 +681,9 @@ double Unsteady_Burn::computeBurnedMass(double To, double P, double Vc, double s
   }
    
   double burnedMass = delT * surfArea * m_unsteady;
-  if (burnedMass + d_TINY_RHO > solidMass) 
-    burnedMass = solidMass - d_TINY_RHO;  
-  
+  double min_mass = dx.x()*dx.y()*dx.z()*d_TINY_RHO;
+  if (burnedMass + min_mass > solidMass) 
+    burnedMass = solidMass - min_mass;  
   return burnedMass;
 }
 
