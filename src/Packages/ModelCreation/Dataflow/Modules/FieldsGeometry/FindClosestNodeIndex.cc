@@ -31,6 +31,7 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 #include <Dataflow/Network/Module.h>
 
 namespace ModelCreation {
@@ -61,8 +62,12 @@ void FindClosestNodeIndex::execute()
   {
     MatrixHandle indices;
     
+    SCIRunAlgo::ConverterAlgo calgo(this);
     SCIRunAlgo::FieldsAlgo algo(this);
-    if(!(algo.FindClosestNode(field,indices,points))) return;
+    
+    std::vector<unsigned int> idxs;
+    if (!(algo.FindClosestNode(field,idxs,points))) return;
+    if (!(calgo.UnsignedIntVectorToMatrix(idxs,indices))) return;
     
     send_output_handle("Indices",indices,false);
   }

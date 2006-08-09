@@ -26,54 +26,48 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
-#include <Core/Algorithms/Converter/ConverterAlgo.h>
 #include <Dataflow/Network/Module.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-class FindClosestNodeIndexByValue : public Module {
+class FieldBoundary : public Module {
 public:
-  FindClosestNodeIndexByValue(GuiContext*);
+  FieldBoundary(GuiContext*);
   virtual void execute();
 };
 
 
-DECLARE_MAKER(FindClosestNodeIndexByValue)
-FindClosestNodeIndexByValue::FindClosestNodeIndexByValue(GuiContext* ctx)
-  : Module("FindClosestNodeIndexByValue", ctx, Source, "FieldsGeometry", "ModelCreation")
+DECLARE_MAKER(FieldBoundary)
+FieldBoundary::FieldBoundary(GuiContext* ctx)
+  : Module("FieldBoundary", ctx, Source, "FieldsCreate", "ModelCreation")
 {
 }
 
-void FindClosestNodeIndexByValue::execute()
+void FieldBoundary::execute()
 {
-  FieldHandle field, points;
-  MatrixHandle value;
+  FieldHandle field;
   
   if (!(get_input_handle("Field",field,true))) return;
-  if (!(get_input_handle("Points",points,true))) return;
-  if (!(get_input_handle("Value",value,true))) return;
   
-  if (inputs_changed_ || !oport_cached("Indices"))
+  if (inputs_changed_ || !oport_cached("Boundary") || !oport_cached("Mapping"))
   {
-    MatrixHandle indices;
-    double val;
+    FieldHandle ofield;
+    MatrixHandle mapping;
     
-    SCIRunAlgo::FieldsAlgo algo(this);
-    SCIRunAlgo::ConverterAlgo calgo(this);
+    SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
     
-    
-    std::vector<unsigned int> idxs;
-    if (!(algo.FindClosestNodeByValue(field,idxs,points,val))) return;
-    if (!(calgo.UnsignedIntVectorToMatrix(idxs,indices))) return;    
-    
-    send_output_handle("Indices",indices,false);
+    if (!(algo.FieldBoundary(field,ofield,mapping))) return;
+
+    send_output_handle("Boundary",ofield,false);
+    send_output_handle("Mapping",mapping,false);
   }
 }
 

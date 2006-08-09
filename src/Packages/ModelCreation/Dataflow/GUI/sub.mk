@@ -46,6 +46,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/MatrixToField.tcl\
 	$(SRCDIR)/MatrixWriter.tcl\
 	$(SRCDIR)/MergeFields.tcl\
+	$(SRCDIR)/MergeMeshes.tcl\
 	$(SRCDIR)/MergeNodes.tcl\
 	$(SRCDIR)/NrrdToField.tcl\
 	$(SRCDIR)/ParameterList.tcl\
@@ -79,6 +80,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/FieldBreakPoint.tcl\
 	$(SRCDIR)/MatrixBreakPoint.tcl\
 	$(SRCDIR)/StringBreakPoint.tcl\
+	$(SRCDIR)/AppendMatrix.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/ModelCreation/Dataflow/GUI
