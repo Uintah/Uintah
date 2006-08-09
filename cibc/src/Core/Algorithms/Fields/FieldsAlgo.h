@@ -126,8 +126,8 @@ class SCISHARE FieldsAlgo : public AlgoLibrary {
     // FindClosestNodeByValue:
     // Find the closest node with a certain value. This is needed for the multi domain stuff where multiple nodes
     // might exist in the same position
-    bool FindClosestNodeByValue(FieldHandle input, MatrixHandle& output, FieldHandle& points, double value);
-    bool FindClosestNode(FieldHandle input, MatrixHandle& output, FieldHandle& points);
+    bool FindClosestNodeByValue(FieldHandle input, std::vector<unsigned int>& output, FieldHandle& points, double value);
+    bool FindClosestNode(FieldHandle input, std::vector<unsigned int>& output, FieldHandle& points);
     
     // ManageFieldData was split into two parts:
     // GetFieldData: Extract the data from the field into a matrix
@@ -225,6 +225,7 @@ class SCISHARE FieldsAlgo : public AlgoLibrary {
     // new output field. If mergenodes is true, nodes will be merge if the
     // distance between them is smaller than tolerance  
     bool MergeFields(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergenodes = true, bool mergeelements = true, bool matchvalue = true);
+    bool MergeMeshes(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergenodes = true, bool mergeelements = true);
 
     // MergeNodes: 
     // Merge the nodes in a field together if the distance between

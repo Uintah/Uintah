@@ -40,7 +40,7 @@ using namespace SCIRun;
 class FindClosestNodeAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool FindClosestNode(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, FieldHandle& points);
+  virtual bool FindClosestNode(ProgressReporter *pr, FieldHandle input, std::vector<unsigned int>& output, FieldHandle& points);
 };
 
 
@@ -48,12 +48,12 @@ template <class FSRC, class FPNT>
 class FindClosestNodeAlgoT : public FindClosestNodeAlgo
 {
 public:
-  virtual bool FindClosestNode(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, FieldHandle& points);
+  virtual bool FindClosestNode(ProgressReporter *pr, FieldHandle input, std::vector<unsigned int>& output, FieldHandle& points);
 };
 
 
 template <class FSRC, class FPNT>
-bool FindClosestNodeAlgoT<FSRC, FPNT>::FindClosestNode(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, FieldHandle& points)
+bool FindClosestNodeAlgoT<FSRC, FPNT>::FindClosestNode(ProgressReporter *pr, FieldHandle input, std::vector<unsigned int>& output, FieldHandle& points)
 {
 
   FSRC *ifield = dynamic_cast<FSRC *>(input.get_rep());
@@ -103,16 +103,7 @@ bool FindClosestNodeAlgoT<FSRC, FPNT>::FindClosestNode(ProgressReporter *pr, Fie
     return (false);  
   }
 
-  DenseMatrix* mat = scinew DenseMatrix(static_cast<int>(nnodes),1);
-  if (mat == 0)
-  {
-    pr->error("FindClosestNode: Could not allocate output matrix");
-    return (false);  
-  }
-
-  output = dynamic_cast<Matrix *>(mat);
-
-  double *data = mat->get_data_pointer();
+  output.resize(nnodes);
   
   imesh->synchronize(Mesh::LOCATE_E);
        
@@ -159,7 +150,7 @@ bool FindClosestNodeAlgoT<FSRC, FPNT>::FindClosestNode(ProgressReporter *pr, Fie
       }
     }
     ++pit;
-    data[m] = static_cast<double>(idx);
+    output[m] = static_cast<unsigned int>(idx);
     m++;
   }
   

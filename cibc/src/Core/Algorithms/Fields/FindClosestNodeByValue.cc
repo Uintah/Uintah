@@ -32,7 +32,7 @@ namespace SCIRunAlgo {
 
 using namespace SCIRun;
 
-bool FindClosestNodeByValueAlgo::FindClosestNodeByValue(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, FieldHandle& points, double value)
+bool FindClosestNodeByValueAlgo::FindClosestNodeByValue(ProgressReporter *pr, FieldHandle input, std::vector<unsigned int>& output, FieldHandle& points, double value)
 {
   if (input.get_rep() == 0)
   {

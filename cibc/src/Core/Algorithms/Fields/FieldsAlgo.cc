@@ -55,6 +55,7 @@
 #include <Core/Algorithms/Fields/MappingMatrixToField.h>
 #include <Core/Algorithms/Fields/Mapping.h>
 #include <Core/Algorithms/Fields/MergeFields.h>
+#include <Core/Algorithms/Fields/MergeMeshes.h>
 #include <Core/Algorithms/Fields/ScaleField.h>
 #include <Core/Algorithms/Fields/SetFieldData.h>
 #include <Core/Algorithms/Fields/SplitFieldByDomain.h>
@@ -168,13 +169,13 @@ bool FieldsAlgo::FieldDataElemToNode(FieldHandle input, FieldHandle& output, std
   return(algo.FieldDataElemToNode(pr_,input,output,method));
 }
 
-bool FieldsAlgo::FindClosestNodeByValue(FieldHandle input, MatrixHandle& output, FieldHandle& points, double value)
+bool FieldsAlgo::FindClosestNodeByValue(FieldHandle input, std::vector<unsigned int>& output, FieldHandle& points, double value)
 {
   FindClosestNodeByValueAlgo algo;
   return(algo.FindClosestNodeByValue(pr_,input,output,points,value));
 }
 
-bool FieldsAlgo::FindClosestNode(FieldHandle input, MatrixHandle& output, FieldHandle& points)
+bool FieldsAlgo::FindClosestNode(FieldHandle input, std::vector<unsigned int>& output, FieldHandle& points)
 {
   FindClosestNodeAlgo algo;
   return(algo.FindClosestNode(pr_,input,output,points));
@@ -357,6 +358,12 @@ bool FieldsAlgo::MergeFields(std::vector<FieldHandle> inputs, FieldHandle& outpu
   return(algo.MergeFields(pr_,inputs,output,tolerance,mergefields,mergeelements,matchvalue));
 }
 
+bool FieldsAlgo::MergeMeshes(std::vector<FieldHandle> inputs, FieldHandle& output, double tolerance, bool mergefields, bool mergeelements)
+{
+  for (size_t p = 0; p < inputs.size(); p++) if (!MakeEditable(inputs[p],inputs[p])) return (false);
+  MergeMeshesAlgo algo;
+  return(algo.MergeMeshes(pr_,inputs,output,tolerance,mergefields,mergeelements));
+}
 
 bool FieldsAlgo::GatherFields(std::list<FieldHandle> inputs, FieldHandle& output)
 {

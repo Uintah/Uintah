@@ -54,12 +54,20 @@ class SCISHARE ConverterAlgo : public AlgoLibrary {
     // Conversion tools for Matrices
     bool MatrixToDouble(MatrixHandle matrix, double &val);
     bool MatrixToInt(MatrixHandle matrix, int &val);
+    bool MatrixToUnsignedInt(MatrixHandle matrix, unsigned int &val);
     bool MatrixToVector(MatrixHandle matrix, Vector& vec);
+    bool MatrixToDoubleVector(MatrixHandle matrix, std::vector<double>& vec);
+    bool MatrixToIntVector(MatrixHandle matrix, std::vector<int>& vec);
+    bool MatrixToUnsignedIntVector(MatrixHandle matrix, std::vector<unsigned int>& vec);
     bool MatrixToTensor(MatrixHandle matrix, Tensor& ten);
     bool MatrixToTransform(MatrixHandle matrix, Transform& trans);
-    
+
+    bool DoubleVectorToMatrix(std::vector<double> val, MatrixHandle& matrix);
+    bool IntVectorToMatrix(std::vector<int> val, MatrixHandle& matrix);    
+    bool UnsignedIntVectorToMatrix(std::vector<unsigned int> val, MatrixHandle& matrix);    
     bool DoubleToMatrix(double val, MatrixHandle& matrix);
     bool IntToMatrix(int val, MatrixHandle& matrix);
+    bool UnsignedIntToMatrix(unsigned int val, MatrixHandle& matrix);
     bool VectorToMatrix(Vector& vec, MatrixHandle& matrix);
     bool TensorToMatrix(Tensor& ten, MatrixHandle matrix);
     bool TransformToMatrix(Transform& trans, MatrixHandle& matrix);

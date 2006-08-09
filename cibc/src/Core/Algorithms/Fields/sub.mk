@@ -38,6 +38,7 @@ SRCS     += $(SRCDIR)/ApplyMappingMatrix.cc\
             $(SRCDIR)/LinkToCompGridByDomain.cc\
             $(SRCDIR)/GatherFields.cc\
             $(SRCDIR)/MergeFields.cc\
+            $(SRCDIR)/MergeMeshes.cc\
             $(SRCDIR)/ScaleField.cc\
             $(SRCDIR)/SplitByConnectedRegion.cc\
             $(SRCDIR)/SplitFieldByDomain.cc\

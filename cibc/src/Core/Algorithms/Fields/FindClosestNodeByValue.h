@@ -40,7 +40,7 @@ using namespace SCIRun;
 class FindClosestNodeByValueAlgo : public DynamicAlgoBase
 {
 public:
-  virtual bool FindClosestNodeByValue(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, FieldHandle& points, double value);
+  virtual bool FindClosestNodeByValue(ProgressReporter *pr, FieldHandle input, std::vector<unsigned int>& output, FieldHandle& points, double value);
 };
 
 
@@ -48,12 +48,12 @@ template <class FSRC, class FPNT>
 class FindClosestNodeByValueAlgoT : public FindClosestNodeByValueAlgo
 {
 public:
-  virtual bool FindClosestNodeByValue(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, FieldHandle& points, double value);
+  virtual bool FindClosestNodeByValue(ProgressReporter *pr, FieldHandle input, std::vector<unsigned int>& output, FieldHandle& points, double value);
 };
 
 
 template <class FSRC, class FPNT>
-bool FindClosestNodeByValueAlgoT<FSRC, FPNT>::FindClosestNodeByValue(ProgressReporter *pr, FieldHandle input, MatrixHandle& output, FieldHandle& points, double value)
+bool FindClosestNodeByValueAlgoT<FSRC, FPNT>::FindClosestNodeByValue(ProgressReporter *pr, FieldHandle input, std::vector<unsigned int>& output, FieldHandle& points, double value)
 {
 
   FSRC *ifield = dynamic_cast<FSRC *>(input.get_rep());
@@ -103,16 +103,7 @@ bool FindClosestNodeByValueAlgoT<FSRC, FPNT>::FindClosestNodeByValue(ProgressRep
     return (false);  
   }
 
-  DenseMatrix* mat = scinew DenseMatrix(static_cast<int>(nnodes),1);
-  if (mat == 0)
-  {
-    pr->error("FindClosestNodeByValue: Could not allocate output matrix");
-    return (false);  
-  }
-
-  output = dynamic_cast<Matrix *>(mat);
-
-  double *data = mat->get_data_pointer();
+  output.resize(nnodes);
   
   typename FPNT::mesh_type::Node::iterator pit, pit_end;
   typename FSRC::mesh_type::Node::index_type idx;
@@ -150,7 +141,7 @@ bool FindClosestNodeByValueAlgoT<FSRC, FPNT>::FindClosestNodeByValue(ProgressRep
         ++it;
       }
       ++pit;
-      data[m] = static_cast<double>(idx);
+      output[m] = static_cast<unsigned int>(idx);
       m++;
     }
   }
@@ -178,7 +169,7 @@ bool FindClosestNodeByValueAlgoT<FSRC, FPNT>::FindClosestNodeByValue(ProgressRep
         ++it;
       }
       ++pit;
-      data[m] = static_cast<double>(idx);
+      output[m] = static_cast<unsigned int>(idx);
       m++;
     }  
   }
