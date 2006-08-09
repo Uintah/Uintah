@@ -28,6 +28,7 @@
 
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Algorithms/Math/MathAlgo.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 
@@ -35,57 +36,60 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-class AppendMatrix : public Module {
+class SelectSubMatrix : public Module {
 public:
-  AppendMatrix(GuiContext*);
+  SelectSubMatrix(GuiContext*);
   virtual void execute();
-  
-private:
-  GuiString guiroc_;
 };
 
 
-DECLARE_MAKER(AppendMatrix)
-AppendMatrix::AppendMatrix(GuiContext* ctx)
-  : Module("AppendMatrix", ctx, Source, "Math", "ModelCreation"),
-    guiroc_(ctx->subVar("row-or-column"))
+DECLARE_MAKER(SelectSubMatrix)
+SelectSubMatrix::SelectSubMatrix(GuiContext* ctx)
+  : Module("SelectSubMatrix", ctx, Source, "Math", "ModelCreation")
 {
 }
 
-void AppendMatrix::execute()
+void SelectSubMatrix::execute()
 {
-  MatrixHandle base;
-  std::vector<MatrixHandle> matrices;
+  MatrixHandle matrix, rows, columns;
   
-  get_input_handle("BaseMatrix",base,false);
-  get_dynamic_input_handles("AppendMatrix",matrices,false);
+  if (!(get_input_handle("Matrix",matrix,true))) return;
+  get_input_handle("Rows",rows,false);
+  get_input_handle("Columns",columns,false);
   
-  if (inputs_changed_ || guiroc_.changed() || !oport_cached("Matrix"))
+  if ( (rows.get_rep() == 0)&&(columns.get_rep()))
   {
-    std::string roc = guiroc_.get();
+    error("No row or column indices are specified");
+    return;
+  }
+
+  if (inputs_changed_ || !oport_cached("Matrix"))
+  {
+    MatrixHandle output;
+  
     SCIRunAlgo::MathAlgo malgo(this);
-    MatrixHandle matrix;
+    SCIRunAlgo::ConverterAlgo calgo(this);
     
-    if (roc == "column")
+    std::vector<unsigned int> ri, ci;
+    
+    if (rows.get_rep() && columns.get_rep())
     {
-      std::vector<unsigned int> dummy;
-      matrix = base;
-      for (int p=0; p<static_cast<int>(matrices.size());p++)
-      { 
-        if (!(malgo.MatrixAppendColumns(matrix,matrix,matrices[p],dummy))) return;
-      }
+      if (!(calgo.MatrixToUnsignedIntVector(rows,ri))) return;
+      if (!(calgo.MatrixToUnsignedIntVector(columns,ci))) return;
+      if (!(malgo.MatrixSelectSubMatrix(matrix,output,ri,ci))) return;
+    }
+    else if (rows.get_rep() == 0)
+    {
+      if (!(calgo.MatrixToUnsignedIntVector(columns,ci))) return;
+      if (!(malgo.MatrixSelectColumns(matrix,output,ci))) return;    
     }
     else
     {
-      std::vector<unsigned int> dummy;
-      matrix = base;
-      for (int p=0; p<static_cast<int>(matrices.size());p++)
-      { 
-        if (!(malgo.MatrixAppendRows(matrix,matrix,matrices[p],dummy))) return;
-      }    
+      if (!(calgo.MatrixToUnsignedIntVector(rows,ri))) return;
+      if (!(malgo.MatrixSelectRows(matrix,output,ri))) return;        
     }
   
-    send_output_handle("Matrix",matrix,false);
+    send_output_handle("Matrix",output,false);
   }
 }
 
