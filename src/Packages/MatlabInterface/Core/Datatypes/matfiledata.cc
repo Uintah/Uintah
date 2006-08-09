@@ -134,7 +134,7 @@ matfiledata& matfiledata::operator= (const matfiledata &mfd)
 }
 
 
-void matfiledata::newdatabuffer(long bytesize,mitype type)
+void matfiledata::newdatabuffer(int bytesize,mitype type)
 {
   if (m_ == 0) throw internal_error();
   if (m_->dataptr_ != 0) clear();
@@ -175,10 +175,10 @@ void matfiledata::type(mitype type)
   m_->type_ = type; 
 }
 
-long matfiledata::bytesize()
+int matfiledata::bytesize()
 { 
   if (m_ == 0) throw internal_error();
-	if(ptr_) return(m_->bytesize_ - static_cast<long>(static_cast<char *>(ptr_) - static_cast<char *>(m_->dataptr_)));
+	if(ptr_) return(m_->bytesize_ - static_cast<int>(static_cast<char *>(ptr_) - static_cast<char *>(m_->dataptr_)));
   return(m_->bytesize_); 
 }
 
@@ -188,9 +188,9 @@ matfiledata::mitype matfiledata::type()
   return(m_->type_); 
 }
 
-long matfiledata::elsize(matfiledata::mitype type)
+int matfiledata::elsize(matfiledata::mitype type)
 {
-  long elsize = 1;
+  int elsize = 1;
    switch (type)
    {
       case miINT8: case miUINT8: case miUTF8:
@@ -207,13 +207,13 @@ long matfiledata::elsize(matfiledata::mitype type)
    return(elsize);
 }
 
-long matfiledata::elsize()
+int matfiledata::elsize()
 {
 	if (m_ == 0) throw internal_error();
 	return(elsize(m_->type_));
 }   		
 
-long matfiledata::size()
+int matfiledata::size()
 { 
   if (m_ == 0) throw internal_error();
   return(m_->bytesize_/elsize()); 
@@ -236,16 +236,16 @@ std::string matfiledata::getstring()
 
 void matfiledata::putstring(std::string str)
 {
-  long dsize;
+  int dsize;
   char *ptr;
   
-  dsize = static_cast<long>(str.size());
+  dsize = static_cast<int>(str.size());
   clear();
 	if (dsize > 0)
 	{
 		newdatabuffer(dsize,miUINT8);
 		ptr = static_cast<char *>(databuffer());
-		for (long p=0;p<dsize;p++) { ptr[p] = str[p];} 	
+		for (int p=0;p<dsize;p++) { ptr[p] = str[p];} 	
 	}
 	else
 	{
@@ -253,10 +253,10 @@ void matfiledata::putstring(std::string str)
 	}	
 }
 
-std::vector<std::string> matfiledata::getstringarray(long maxstrlen)
+std::vector<std::string> matfiledata::getstringarray(int maxstrlen)
 {
   char *ptr;
-  long numstrings;
+  int numstrings;
     
 	if ((maxstrlen == 0)||(size() == 0))
 	{
@@ -268,10 +268,10 @@ std::vector<std::string> matfiledata::getstringarray(long maxstrlen)
   std::vector<std::string> vec(numstrings);
   
   ptr = static_cast<char *>(databuffer());
-	long q,s;
+	int q,s;
   for (q=0, s=0; q < (numstrings*maxstrlen); q+=maxstrlen,s++)
   {
-    long p,r;
+    int p,r;
     for (p=0; p<maxstrlen; p++) { if (ptr[q+p] == 0) break; }
     std::string str(p,'\0');
     for (r=0;r<p;r++) { str[r] = ptr[q+r];}
@@ -281,26 +281,26 @@ std::vector<std::string> matfiledata::getstringarray(long maxstrlen)
   return(vec);
 }
 
-long matfiledata::putstringarray(std::vector<std::string> vec)
+int matfiledata::putstringarray(std::vector<std::string> vec)
 {
   char *ptr;
-  long maxstrlen = 8;
+  int maxstrlen = 8;
   
-  for (long p=0;p<static_cast<long>(vec.size());p++) 
-  { std::string str = vec[p]; if (maxstrlen < static_cast<long>(str.size()+1)) maxstrlen = static_cast<long>(str.size()+1); }
+  for (int p=0;p<static_cast<int>(vec.size());p++) 
+  { std::string str = vec[p]; if (maxstrlen < static_cast<int>(str.size()+1)) maxstrlen = static_cast<int>(str.size()+1); }
     
 	maxstrlen = (((maxstrlen-1)/8)+1)*8;
 	
   clear();
-	long dsize = static_cast<long>(vec.size()*maxstrlen);
+	int dsize = static_cast<int>(vec.size()*maxstrlen);
   newdatabuffer(dsize,miUINT8);
   ptr = static_cast<char *>(databuffer());
   
-  for (long q=0, r=0;q<dsize;q+=maxstrlen,r++) 
+  for (int q=0, r=0;q<dsize;q+=maxstrlen,r++) 
   {
-    long p;
+    int p;
     std::string str = vec[r];
-    for (p=0;p<static_cast<long>(str.size());p++) { ptr[p+q] = str[p]; }
+    for (p=0;p<static_cast<int>(str.size());p++) { ptr[p+q] = str[p]; }
     for (;p<maxstrlen;p++) {ptr[p+q] = 0;}
   }		
 	
@@ -310,7 +310,7 @@ long matfiledata::putstringarray(std::vector<std::string> vec)
 
 
 // in case of a void just copy the data (no conversion)
-void matfiledata::getdata(void *dataptr,long dbytesize)
+void matfiledata::getdata(void *dataptr,int dbytesize)
 {
   if (databuffer() == 0) return;
   if (dataptr  == 0) return;
@@ -321,7 +321,7 @@ void matfiledata::getdata(void *dataptr,long dbytesize)
 }
 
 
-void matfiledata::putdata(void *dataptr,long dbytesize,mitype type)
+void matfiledata::putdata(void *dataptr,int dbytesize,mitype type)
 {
 	clear();
 	if (dataptr == 0) return;
@@ -340,7 +340,7 @@ void matfiledata::putdata(void *dataptr,long dbytesize,mitype type)
 // reordering in memory. It has a certain memory overhead
 // on the otherhand it should be more flexible
 
-matfiledata matfiledata::reorder(const std::vector<long> &newindices)
+matfiledata matfiledata::reorder(const std::vector<int> &newindices)
 {
 	// some general integrity checks
 	
@@ -354,24 +354,24 @@ matfiledata matfiledata::reorder(const std::vector<long> &newindices)
 	// as the indices specified do not need to match the
 	// number of the original data field
 	
-	long newbytesize;
+	int newbytesize;
 	void *newdatabuffer;
 	
-	newbytesize = static_cast<long>(elsize()*newindices.size());
+	newbytesize = static_cast<int>(elsize()*newindices.size());
 	newbuffer.newdatabuffer(newbytesize,type());
 	newdatabuffer = newbuffer.databuffer();
 	
 	// get the sizes of the of the old and new datablocks in elements
 	
-	// long osize = size();
-	long dsize = static_cast<long>(newindices.size());
+	// int osize = size();
+	int dsize = static_cast<int>(newindices.size());
 	
 	// check limits
 	// This is overhead but will prevent serious problems as it
 	// checks limits and at least creates a exception in case 
 	// something went wrong
 	
-	//for (long p = 0; p< dsize ; p++)
+	//for (int p = 0; p< dsize ; p++)
 	//{
 	//	if ((newindices[p] < 0)||(newindices[p] >= osize)) throw out_of_range();
 	//}
@@ -383,28 +383,28 @@ matfiledata matfiledata::reorder(const std::vector<long> &newindices)
 		{
 			char *data = static_cast<char *>(databuffer());
 			char *newdata = static_cast<char *>(newdatabuffer);
-			for (long p = 0; p < dsize ; p++) { newdata[p] = data[newindices[p]]; }
+			for (int p = 0; p < dsize ; p++) { newdata[p] = data[newindices[p]]; }
 		}
 		break;
 		case 2:
 		{
 			short *data = static_cast<short *>(databuffer());
 			short *newdata = static_cast<short *>(newdatabuffer);
-			for (long p = 0; p < dsize ; p++) { newdata[p] = data[newindices[p]]; }
+			for (int p = 0; p < dsize ; p++) { newdata[p] = data[newindices[p]]; }
 		}
 		break;
 		case 4:
 		{
 			int32_t *data = static_cast<int32_t *>(databuffer());
 			int32_t *newdata = static_cast<int32_t *>(newdatabuffer);
-			for (long p = 0; p < dsize ; p++) { newdata[p] = data[newindices[p]]; }
+			for (int p = 0; p < dsize ; p++) { newdata[p] = data[newindices[p]]; }
 		}
 		break;
 		case 8:
 		{
 			double *data = static_cast<double *>(databuffer());
 			double *newdata = static_cast<double *>(newdatabuffer);
-			for (long p = 0; p < dsize ; p++) { newdata[p] = data[newindices[p]]; }
+			for (int p = 0; p < dsize ; p++) { newdata[p] = data[newindices[p]]; }
 		}
 		break;
 		default:
@@ -427,7 +427,7 @@ void matfiledata::ptrclear()
  
 // slightly different version using C style arguments
 
-matfiledata matfiledata::reorder(long *newindices,long dsize)
+matfiledata matfiledata::reorder(int *newindices,int dsize)
 {
 	// some general integrity checks
 	
@@ -441,7 +441,7 @@ matfiledata matfiledata::reorder(long *newindices,long dsize)
 	// as the indices specified do not need to match the
 	// number of the original data field
 	
-	long newbytesize;
+	int newbytesize;
 	void *newdatabuffer;
 	
 	newbytesize = elsize()*dsize;
@@ -450,14 +450,14 @@ matfiledata matfiledata::reorder(long *newindices,long dsize)
 	
 	// get the sizes of the of the old and new datablocks in elements
 	
-	long osize = size();
+	int osize = size();
 	
 	// check limits
 	// This is overhead but will prevent serious problems as it
 	// checks limits and at least creates a exception in case 
 	// something went wrong
 	
-	for (long p = 0; p< dsize ; p++)
+	for (int p = 0; p< dsize ; p++)
 	{
 		if ((newindices[p] < 0)||(newindices[p] >= osize)) throw out_of_range();
 	}
@@ -469,28 +469,28 @@ matfiledata matfiledata::reorder(long *newindices,long dsize)
 		{
 			char *data = static_cast<char *>(databuffer());
 			char *newdata = static_cast<char *>(newdatabuffer);
-			for (long p = 0; p < dsize ; p++) { newdata[p] = data[newindices[p]]; }
+			for (int p = 0; p < dsize ; p++) { newdata[p] = data[newindices[p]]; }
 		}
 		break;
 		case 2:
 		{
 			short *data = static_cast<short *>(databuffer());
 			short *newdata = static_cast<short *>(newdatabuffer);
-			for (long p = 0; p < dsize ; p++) { newdata[p] = data[newindices[p]]; }
+			for (int p = 0; p < dsize ; p++) { newdata[p] = data[newindices[p]]; }
 		}
 		break;
 		case 4:
 		{
 			int32_t *data = static_cast<int32_t *>(databuffer());
 			int32_t *newdata = static_cast<int32_t *>(newdatabuffer);
-			for (long p = 0; p < dsize ; p++) { newdata[p] = data[newindices[p]]; }
+			for (int p = 0; p < dsize ; p++) { newdata[p] = data[newindices[p]]; }
 		}
 		break;
 		case 8:
 		{
 			double *data = static_cast<double *>(databuffer());
 			double *newdata = static_cast<double *>(newdatabuffer);
-			for (long p = 0; p < dsize ; p++) { newdata[p] = data[newindices[p]]; }
+			for (int p = 0; p < dsize ; p++) { newdata[p] = data[newindices[p]]; }
 		}
 		break;
 		default:

@@ -90,7 +90,7 @@ namespace MatlabIO {
         
     // NOTE: These fields are only available for
     // read access
-    std::vector<long> matrixaddress_;
+    std::vector<int> matrixaddress_;
     std::vector<std::string> matrixname_;
         
   private:
@@ -116,16 +116,16 @@ namespace MatlabIO {
     // inside, it does read the headers of sub matrices, getmatlabarrayshortinfo()
     // on the other hand only reads the header of the top level matlabarray
     // (no submatrices are read)
-    long getnummatlabarrays();
+    int getnummatlabarrays();
 
-    matlabarray getmatlabarrayshortinfo(long matrixindex);
+    matlabarray getmatlabarrayshortinfo(int matrixindex);
     matlabarray getmatlabarrayshortinfo(std::string name);
 
-    matlabarray getmatlabarrayinfo(long matrixindex);
+    matlabarray getmatlabarrayinfo(int matrixindex);
     matlabarray getmatlabarrayinfo(std::string name);
         
     // function reading matrices
-    matlabarray getmatlabarray(long matrixindex);
+    matlabarray getmatlabarray(int matrixindex);
     matlabarray getmatlabarray(std::string name);
 
 

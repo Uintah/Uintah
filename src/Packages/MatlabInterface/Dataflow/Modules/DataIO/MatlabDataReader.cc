@@ -105,7 +105,7 @@ class MatlabDataReader : public Module
     //   retrieves the current filename and the matrix selected in this
     //   file and returns an object containing the full matrix
     
-    matlabarray readmatlabarray(long p);
+    matlabarray readmatlabarray(int p);
 
     // displayerror()
     //   Relay an error during the matrixselection process directly to
@@ -187,7 +187,7 @@ void MatlabDataReader::execute()
 
   try
   {
-    for (long p=0;p<3;p++)
+    for (int p=0;p<3;p++)
     {
 
       // Find the output port the scheduler has created 
@@ -212,7 +212,7 @@ void MatlabDataReader::execute()
       ofield_[p]->send(mh);
     }
 
-    for (long p=0;p<3;p++)
+    for (int p=0;p<3;p++)
     {
 
       // Find the output port the scheduler has created 
@@ -236,7 +236,7 @@ void MatlabDataReader::execute()
       omatrix_[p]->send(mh);
     }
 
-    for (long p=0;p<3;p++)
+    for (int p=0;p<3;p++)
     {
 
       // Find the output port the scheduler has created 
@@ -326,7 +326,7 @@ void MatlabDataReader::tcl_command(GuiArgs& args, void* userdata)
 }
 
 
-matlabarray MatlabDataReader::readmatlabarray(long p)
+matlabarray MatlabDataReader::readmatlabarray(int p)
 {
   matlabarray marray;
   std::string filename = guifilename_.get();
@@ -405,7 +405,7 @@ void MatlabDataReader::indexmatlabfile(bool postmsg)
   std::vector<std::string> matrixnamelist(NUMPORTS);
   bool foundmatrixname[NUMPORTS];
   
-  for (long p=0;p<NUMPORTS;p++)
+  for (int p=0;p<NUMPORTS;p++)
   {
     matrixinfotexts[p] = "{ ";
     matrixnames[p] = "{ ";
@@ -429,18 +429,18 @@ void MatlabDataReader::indexmatlabfile(bool postmsg)
     
     // all matlab data is stored in a matlabarray object
     matlabarray ma;
-    long cindex = 0;		// compability index, which matlab array fits the SCIRun matrix best? 
-    long maxindex = 0;		// highest index found so far
+    int cindex = 0;		// compability index, which matlab array fits the SCIRun matrix best? 
+    int maxindex = 0;		// highest index found so far
             
     // Scan the file and see which matrices are compatible
     // Only those will be shown (you cannot select incompatible matrices).
             
     std::string infotext;
     
-    for (long p=0;p<mfile.getnummatlabarrays();p++)
+    for (int p=0;p<mfile.getnummatlabarrays();p++)
     {
       ma = mfile.getmatlabarrayinfo(p); // do not load all the data fields
-      for (long q=0;q<NUMPORTS;q++)
+      for (int q=0;q<NUMPORTS;q++)
       {
         if ((q==0)||(q==1)||(q==2)) cindex = translate.sciFieldCompatible(ma,infotext);
         if ((q==3)||(q==4)||(q==5)) cindex = translate.sciMatrixCompatible(ma,infotext);
@@ -462,7 +462,7 @@ void MatlabDataReader::indexmatlabfile(bool postmsg)
     }
     
     
-    for (long q=0;q<NUMPORTS;q++)
+    for (int q=0;q<NUMPORTS;q++)
     {
       matrixinfotexts[q] += "{none} } ";
       matrixnames[q] += "{<none>} } ";
@@ -474,7 +474,7 @@ void MatlabDataReader::indexmatlabfile(bool postmsg)
     // cannot be found or if no matrixname has been specified
     
     matrixname = "";
-    for (long p=0;p<NUMPORTS;p++)
+    for (int p=0;p<NUMPORTS;p++)
     {
       if (foundmatrixname[p] == false) 
       {   
@@ -490,7 +490,7 @@ void MatlabDataReader::indexmatlabfile(bool postmsg)
       matrixname += "{" + matrixnamelist[p] + "} ";
     }
     
-    for (long q=0;q<NUMPORTS;q++)
+    for (int q=0;q<NUMPORTS;q++)
     {
       matrixinfotextslist += matrixinfotexts[q];
       matrixnameslist += matrixnames[q];

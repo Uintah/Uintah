@@ -61,7 +61,7 @@ namespace MatlabIO {
 
 // Function for doing byteswapping when loading a file created on a different platform 
   
-void matfile::mfswapbytes(void *vbuffer,long elsize,long size)
+void matfile::mfswapbytes(void *vbuffer,int elsize,int size)
 {
    char temp;
    char *buffer = static_cast<char *>(vbuffer);
@@ -76,18 +76,18 @@ void matfile::mfswapbytes(void *vbuffer,long elsize,long size)
          break;
       case 2:  
 		// Do a 2 bytes element byte swap. 
-		for(long p=0;p<size;p+=2)
+		for(int p=0;p<size;p+=2)
 		  { temp = buffer[p]; buffer[p] = buffer[p+1]; buffer[p+1] = temp; }
 		break;
       case 4:
 		// Do a 4 bytes element byte swap.
-		for(long p=0;p<size;p+=4)
+		for(int p=0;p<size;p+=4)
 		  { temp = buffer[p]; buffer[p] = buffer[p+3]; buffer[p+3] = temp; 
 			temp = buffer[p+1]; buffer[p+1] = buffer[p+2]; buffer[p+2] = temp; }
 		break;
       case 8:
 		// Do a 8 bytes element byte swap.
-		for(long p=0;p<size;p+=8)
+		for(int p=0;p<size;p+=8)
 		  { temp = buffer[p]; buffer[p] = buffer[p+7]; buffer[p+7] = temp; 
 			temp = buffer[p+1]; buffer[p+1] = buffer[p+6]; buffer[p+6] = temp; 
 			temp = buffer[p+2]; buffer[p+2] = buffer[p+5]; buffer[p+5] = temp; 
@@ -102,17 +102,17 @@ void matfile::mfswapbytes(void *vbuffer,long elsize,long size)
 // these functions invoke byteswapping and decrease the amount of coding in
 // the more dedicated read and write functions.
 
-void matfile::mfwrite(void *buffer,long elsize,long size)
+void matfile::mfwrite(void *buffer,int elsize,int size)
 {
 	FILE *fptr;
 	fptr = m_->fptr_;
 	
     if (fptr == 0) return;
-    if (static_cast<long>(fwrite(buffer,elsize,size,fptr)) != size) throw io_error();
+    if (static_cast<int>(fwrite(buffer,elsize,size,fptr)) != size) throw io_error();
     if (ferror(fptr)) throw io_error();
 }
 
-void matfile::mfwrite(void *buffer,long elsize,long size,long offset)
+void matfile::mfwrite(void *buffer,int elsize,int size,int offset)
 {
     FILE *fptr;
   	fptr = m_->fptr_;
@@ -120,11 +120,11 @@ void matfile::mfwrite(void *buffer,long elsize,long size,long offset)
 	  if (fptr == 0) return;
     if (fseek(fptr,offset,SEEK_SET) != 0) throw io_error();
     if (ferror(fptr)) throw io_error();
-    if (static_cast<long>(fwrite(buffer,elsize,size,fptr)) != size) throw io_error();
+    if (static_cast<int>(fwrite(buffer,elsize,size,fptr)) != size) throw io_error();
     if (ferror(fptr)) throw io_error();
 }
 
-void matfile::mfread(void *buffer,long elsize,long size)
+void matfile::mfread(void *buffer,int elsize,int size)
 {
 	if (m_->fcmpbuffer_ == 0)
 	{
@@ -132,7 +132,7 @@ void matfile::mfread(void *buffer,long elsize,long size)
 		fptr = m_->fptr_;
 	
 		if (fptr == 0) return;
-		if (static_cast<long>(fread(buffer,elsize,size,fptr)) != size) throw io_error();
+		if (static_cast<int>(fread(buffer,elsize,size,fptr)) != size) throw io_error();
 		if (ferror(fptr)) throw io_error();
 		if (m_->byteswap_) mfswapbytes(buffer,elsize,size);
 	}
@@ -145,7 +145,7 @@ void matfile::mfread(void *buffer,long elsize,long size)
 	}
 }
 
-void matfile::mfread(void *buffer,long elsize,long size,long offset)
+void matfile::mfread(void *buffer,int elsize,int size,int offset)
 {
 	if (m_->fcmpbuffer_ == 0)
 	{
@@ -155,7 +155,7 @@ void matfile::mfread(void *buffer,long elsize,long size,long offset)
 		if (fptr == 0) return;
 		if (fseek(fptr,offset,SEEK_SET) != 0) throw io_error();
 		if (ferror(fptr)) throw io_error();
-		if (static_cast<long>(fread(buffer,elsize,size,fptr)) != size) throw io_error();
+		if (static_cast<int>(fread(buffer,elsize,size,fptr)) != size) throw io_error();
 		if (ferror(fptr)) throw io_error();
 		if (m_->byteswap_) mfswapbytes(buffer,elsize,size);
 	}
@@ -280,13 +280,13 @@ std::string matfile::getheadertext()
 
 void matfile::setheadertext(std::string text)
 {
-    long len;
+    int len;
     const char *ctext = text.c_str();
 	
-	len = static_cast<long>(text.size());
+	len = static_cast<int>(text.size());
     if (len > 116) len = 116;		// Protection against textheaders that are too long
     
-	for (long p=0;p<len;p++) m_->headertext_[p] = ctext[p];
+	for (int p=0;p<len;p++) m_->headertext_[p] = ctext[p];
 }
 
 
@@ -343,7 +343,7 @@ void matfile::open(std::string filename,std::string mode)
             m_->version_ = 0x0100;
             m_->byteswap_ = 0;
                 	
-            for(long p=0;p<116;p++) m_->headertext_[p] = 0;
+            for(int p=0;p<116;p++) m_->headertext_[p] = 0;
             strcpy(&(m_->headertext_[0]),"MATLAB 5.0 MAT-FILE");
             
             mfwriteheader();
@@ -419,7 +419,7 @@ void matfile::rewind()
 	m_->fcmpsize_ = 0;
 }
 
-long matfile::nexttag()
+int matfile::nexttag()
 {
   bool compresstag = false;
 
@@ -507,8 +507,8 @@ bool matfile::opencompression()
 	if (m_->fcmpbuffer_ != 0) throw compression_error();
 
 	// Get the size and position of the compressed data
-	long compressblockoffset = m_->curptr_.datptr;
-	long compressblocksize = m_->curptr_.size;
+	int compressblockoffset = m_->curptr_.datptr;
+	int compressblocksize = m_->curptr_.size;
 	
 	// Make sure we are not in compressed mode
 	m_->fcmpbuffer_ = 0;
@@ -519,7 +519,7 @@ bool matfile::opencompression()
 	// First check whether the work we require has already been
 	// done. We should not overheat the processor without any good
 	// reason.
-	for (unsigned long p = 0;p<m_->cmplist_.size();p++)
+	for (unsigned int p = 0;p<m_->cmplist_.size();p++)
 	{
 		cmpbuffer = m_->cmplist_[p];
 		if (cmpbuffer.bufferoffset == compressblockoffset)
@@ -542,7 +542,7 @@ bool matfile::opencompression()
 		char *sourcebuffer = 0;
 		matfiledata destbuffer;
 		int32_t *destbufferheader = 0;
-		long destlen = 0;
+		int destlen = 0;
 		
 		// We do some dynamic allocation here, if this fails the function
 		// should clear up its memory
@@ -569,9 +569,9 @@ bool matfile::opencompression()
 			// If byteswapping needs to be done, it needs to be done
 			if (m_->byteswap_) mfswapbytes(destbufferheader,sizeof(int32_t),2);
 			
-			// The first long should be indicating it is a matrix
-			if (destbufferheader[0] != static_cast<long>(miMATRIX)) throw invalid_file_format();
-			// The secong long descibes the size of the contents of the matrix minus its header
+			// The first int should be indicating it is a matrix
+			if (destbufferheader[0] != static_cast<int>(miMATRIX)) throw invalid_file_format();
+			// The secong int descibes the size of the contents of the matrix minus its header
 			// Hence the plus 8
 			destlen = destbufferheader[1]+8;
 					
@@ -616,7 +616,7 @@ bool matfile::opencompression()
 	}
 	
     matfileptr childptr;
-    long datptr = m_->curptr_.datptr;
+    int datptr = m_->curptr_.datptr;
     datptr = (((datptr-1)/8)+1)*8;
     
     childptr.hdrptr = datptr;
@@ -664,14 +664,14 @@ void matfile::closechild()
 	
     if (iswriteaccess())
     {
-        long segsize;
+        int segsize;
         if (m_->curptr_.datptr != -1) nexttag();
 		
         segsize = m_->curptr_.hdrptr-parptr.datptr;
 		
 		m_->ptrstack_.pop();
         m_->curptr_ = parptr;    
-        mfwrite(static_cast<void *>(&segsize),sizeof(long),1,m_->curptr_.hdrptr+4);
+        mfwrite(static_cast<void *>(&segsize),sizeof(int),1,m_->curptr_.hdrptr+4);
 		m_->curptr_.size = segsize;
     }
     else
@@ -681,7 +681,7 @@ void matfile::closechild()
     }
 }
 
-long matfile::firsttag()
+int matfile::firsttag()
 {
     m_->curptr_.hdrptr = m_->curptr_.startptr;
     m_->curptr_.datptr = -1;
@@ -689,7 +689,7 @@ long matfile::firsttag()
     if (m_->curptr_.hdrptr == m_->curptr_.endptr) return(0); else return(m_->curptr_.hdrptr);
 }
 
-long matfile::gototag(long tagaddress)
+int matfile::gototag(int tagaddress)
 {
     m_->curptr_.hdrptr = tagaddress;
     m_->curptr_.datptr = -1;
@@ -730,7 +730,7 @@ void matfile::readtag(matfiledata& md)
       }
       m_->curptr_.datptr = m_->curptr_.hdrptr+4;
     }
-      m_->curptr_.size = static_cast<long>(size);
+      m_->curptr_.size = static_cast<int>(size);
 
       // If type still invalid then something else is going on
       // Throw an exception as we cannot read this field
@@ -779,7 +779,7 @@ void matfile::readdat(matfiledata& md)
             }
             m_->curptr_.datptr = m_->curptr_.hdrptr+4;
         }
-        m_->curptr_.size = static_cast<long>(size);
+        m_->curptr_.size = static_cast<int>(size);
 
         // If type still invalid then something else is going on
         // Throw an exception as we cannot read this field
@@ -847,16 +847,16 @@ void matfile::writedat(matfiledata& md)
 	// fill the datablock with zeros until it is alligned with 8 byte boundary
 	
 	// BUG FIX
-	long headersize = 8;
+	int headersize = 8;
 	if ((md.type() != miMATRIX)&&(md.bytesize() < 5)) headersize = 4;
 	
-	long remsize = (((((md.bytesize()+headersize)-1)/8)+1)*8)-(md.bytesize()+headersize);
+	int remsize = (((((md.bytesize()+headersize)-1)/8)+1)*8)-(md.bytesize()+headersize);
 	
 	if ((headersize == 8)&&(md.bytesize() == 0)) return;
 	
 	if (remsize)
 	{   // fill up remaining bytes
-		long buffer[2] = {0,0};
+		int buffer[2] = {0,0};
 		mfwrite(static_cast<void *>(&buffer[0]),1,remsize,m_->curptr_.datptr+md.bytesize());
 	}
 }
