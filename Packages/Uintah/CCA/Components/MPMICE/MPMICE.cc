@@ -8,6 +8,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/FractureMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMBoundCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Packages/Uintah/Core/Labels/ICELabel.h>
@@ -1108,6 +1109,10 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
         pressNC[*iter]  += .125*pressCC[cIdx[in]];
       }
     }
+
+    // Apply grid boundary conditions to the pressure before storing the data
+    MPMBoundCond bc;
+    bc.setBoundaryCondition(patch,0,"Pressure",   pressNC,   d_8or27);
   }
 }
 
@@ -1197,7 +1202,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       CCVariable<double> cmass,Temp_CC, sp_vol_CC, rho_CC;
       CCVariable<Vector> vel_CC;
       constCCVariable<double> Temp_CC_ice, sp_vol_CC_ice;
-      constCCVariable<Vector> vel_CC_ice;
 
       new_dw->allocateAndPut(cmass,    MIlb->cMassLabel,     indx, patch);  
       new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,    indx, patch);  
