@@ -136,9 +136,17 @@ class GUIBuilder implements-all sci.cca.Builder {
   opaque getPortColor(in string portName);
 }
 
+// stores event header and event body
+interface Event {
+  void setHeader(in cca.TypeMap header);
+  void setBody(in cca.TypeMap body);
+
+  cca.TypeMap getHeader();
+  cca.TypeMap getBody();
+}
+
 interface EventListener {
-  //void processEvent(in string topicName, in Event theEvent);
-  void processEvent(in string topicName, in cca.TypeMap theEventBody);
+  void processEvent(in string topicName, in Event theEvent);
 } //end interface EventListener
 
 
@@ -149,8 +157,8 @@ interface AbstractTopic {
 }
 
 interface Topic extends AbstractTopic {
-  //void sendEvent(in Event theEvent) throws EventServiceException;
-  void sendEvent(in cca.TypeMap theEventBody) throws EventServiceException;
+  // allow empty headers and body or not (only check for null currently)?
+  void sendEvent(in Event theEvent) throws EventServiceException;
 }
 
 interface WildcardTopic extends AbstractTopic {

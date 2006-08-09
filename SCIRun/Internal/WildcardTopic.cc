@@ -70,14 +70,13 @@ void WildcardTopic::unregisterEventListener(const std::string& listenerKey)
   eventListenerMap.erase(iter);
 }
 
-//void WildcardTopic::processEvents(const std::map<std::string, sci::cca::IEventListener::pointer> &eventListenerMap)
-void WildcardTopic::processEvents(const EventBodyList& eventBodyList)
+void WildcardTopic::processEvents(const EventPtrList& eventList)
 {
   if (eventListenerMap.empty()) {
     return;
   }
 
-  if (eventBodyList.empty()) {
+  if (eventList.empty()) {
     return;
   }
 
@@ -85,9 +84,9 @@ void WildcardTopic::processEvents(const EventBodyList& eventBodyList)
        eventListenerIter != eventListenerMap.end(); eventListenerIter++) {
 
     // Call processEvent() on each Listener
-    for (unsigned int i = 0; i < eventBodyList.size(); i++) {
+    for (unsigned int i = 0; i < eventList.size(); i++) {
       // Call processEvent() on each event
-      eventListenerIter->second->processEvent(topicName, eventBodyList[i]);
+      eventListenerIter->second->processEvent(topicName, eventList[i]);
     }
   }
 }

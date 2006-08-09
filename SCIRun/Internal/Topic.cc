@@ -36,16 +36,22 @@ Topic::Topic(const std::string& name) : topicName(name) {}
 
 Topic::~Topic()
 {
-  eventBodyList.clear();
+  eventList.clear();
   eventListenerMap.clear();
 }
 
-void Topic::sendEvent(const sci::cca::TypeMap::pointer &eventBody)
+void Topic::sendEvent(const sci::cca::Event::pointer& event)
 {
-  if (eventBody.isNull()) {
-    throw EventServiceExceptionPtr (new EventServiceException("EventBody pointer is null", sci::cca::Unexpected));
+  if (event->getHeader().isNull()) {
+    throw EventServiceExceptionPtr(new EventServiceException("eventHeader pointer is null", sci::cca::Unexpected));
   }
-  eventBodyList.push_back(eventBody);
+
+  if (event->getBody().isNull()) {
+    throw EventServiceExceptionPtr(new EventServiceException("eventBody pointer is null", sci::cca::Unexpected));
+  }
+
+  eventList.push_back(event);
+
 #if 0
   //std::map<std::string, sci::cca::WildcardTopic::pointer>::iterator wildcardTopicIter;
   // for(wildcardTopicIter = wildcardTopicMap.begin(); wildcardTopicIter != wildcardTopicMap.end(); wildcardTopicIter++){
@@ -92,9 +98,9 @@ void Topic::processEvents()
        eventListenerIter != eventListenerMap.end();
        eventListenerIter++) {
     // Call processEvent() for each Listener
-    for (unsigned int i = 0; i < eventBodyList.size(); i++) {
+    for (unsigned int i = 0; i < eventList.size(); i++) {
       // Call processEvent() for each event
-      eventListenerIter->second->processEvent(topicName, eventBodyList[i]);
+      eventListenerIter->second->processEvent(topicName, eventList[i]);
     }
   }
 
@@ -106,10 +112,10 @@ void Topic::processEvents()
     if (wildcardTopicPtr == 0) {
         throw EventServiceExceptionPtr(new EventServiceException("WildcardTopic pointer is null"));
     }
-    wildcardTopicPtr->processEvents(eventBodyList);
+    wildcardTopicPtr->processEvents(eventList);
     // how to cope with null pointer?
   }
-  eventBodyList.clear();
+  eventList.clear();
 }
 
 void Topic::addWildcardTopic(const std::string& topicName, const sci::cca::WildcardTopic::pointer &theWildcardTopic)
