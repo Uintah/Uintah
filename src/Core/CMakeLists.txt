@@ -1,4 +1,3 @@
-#SUBDIRS(Exceptions Thread Containers Util Persistent OS)
 SUBDIRS(
   Exceptions 
   Thread
@@ -9,5 +8,8 @@ SUBDIRS(
   XMLUtil 
   Geometry 
   Basis
+  OS
 )
+#  TkExtensions
+#  GuiInterface
 
