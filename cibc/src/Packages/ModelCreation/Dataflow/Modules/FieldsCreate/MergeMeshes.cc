@@ -26,56 +26,71 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/Matrix.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
-#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
-#include <Core/Algorithms/Converter/ConverterAlgo.h>
+#include <Core/Datatypes/Field.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+
 #include <Dataflow/Network/Module.h>
+
+#include <sgi_stl_warnings_off.h>
+#include <vector>
+#include <sgi_stl_warnings_on.h>
 
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-class FindClosestNodeIndexByValue : public Module {
+class MergeMeshes : public Module {
 public:
-  FindClosestNodeIndexByValue(GuiContext*);
+  MergeMeshes(GuiContext*);
   virtual void execute();
+
+private:
+  GuiDouble guitolerance_;
+  GuiInt    guimergenodes_;
+  GuiInt    guiforcepointcloud_;
+  GuiInt    guimatchval_;
+
 };
 
 
-DECLARE_MAKER(FindClosestNodeIndexByValue)
-FindClosestNodeIndexByValue::FindClosestNodeIndexByValue(GuiContext* ctx)
-  : Module("FindClosestNodeIndexByValue", ctx, Source, "FieldsGeometry", "ModelCreation")
+DECLARE_MAKER(MergeMeshes)
+MergeMeshes::MergeMeshes(GuiContext* ctx)
+  : Module("MergeMeshes", ctx, Source, "FieldsCreate", "ModelCreation"),
+  guitolerance_(get_ctx()->subVar("tolerance")),
+  guimergenodes_(get_ctx()->subVar("force-nodemerge")),
+  guiforcepointcloud_(get_ctx()->subVar("force-pointcloud")),
+  guimatchval_(get_ctx()->subVar("matchval"))
 {
 }
 
-void FindClosestNodeIndexByValue::execute()
+void MergeMeshes::execute()
 {
-  FieldHandle field, points;
-  MatrixHandle value;
-  
-  if (!(get_input_handle("Field",field,true))) return;
-  if (!(get_input_handle("Points",points,true))) return;
-  if (!(get_input_handle("Value",value,true))) return;
-  
-  if (inputs_changed_ || !oport_cached("Indices"))
+  // Define local handles of data objects:
+  std::vector<SCIRun::FieldHandle> fields;
+  FieldHandle output;
+
+  // Get the new input data:  
+  if(!(get_dynamic_input_handles("Field",fields,true))) return;
+
+  // Only reexecute if the input changed. SCIRun uses simple scheduling
+  // that executes every module downstream even if no data has changed: 
+  if (inputs_changed_ ||  guitolerance_.changed() || guimergenodes_.changed()  || !oport_cached("Field"))
   {
-    MatrixHandle indices;
-    double val;
-    
-    SCIRunAlgo::FieldsAlgo algo(this);
-    SCIRunAlgo::ConverterAlgo calgo(this);
-    
-    
-    std::vector<unsigned int> idxs;
-    if (!(algo.FindClosestNodeByValue(field,idxs,points,val))) return;
-    if (!(calgo.UnsignedIntVectorToMatrix(idxs,indices))) return;    
-    
-    send_output_handle("Indices",indices,false);
+    double tolerance = 0.0;
+    bool   mergenodes = false;
+  
+    tolerance = guitolerance_.get();
+    if (guimergenodes_.get()) mergenodes = true;
+
+    SCIRunAlgo::FieldsAlgo algo(this);  
+    if (!(algo.MergeMeshes(fields,output,tolerance,mergenodes,true))) return;
+
+    // send new output if there is any:        
+    send_output_handle("Field",output,false);
   }
 }
+
 
 } // End namespace ModelCreation
 

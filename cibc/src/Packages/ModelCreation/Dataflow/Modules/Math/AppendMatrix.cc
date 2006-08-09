@@ -26,54 +26,66 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
-#include <Dataflow/Network/Ports/MatrixPort.h>
-#include <Core/Algorithms/Fields/FieldsAlgo.h>
-#include <Core/Algorithms/Converter/ConverterAlgo.h>
+#include <Core/Algorithms/Math/MathAlgo.h>
 #include <Dataflow/Network/Module.h>
-
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#
 namespace ModelCreation {
 
 using namespace SCIRun;
 
-class FindClosestNodeIndexByValue : public Module {
+class AppendMatrix : public Module {
 public:
-  FindClosestNodeIndexByValue(GuiContext*);
+  AppendMatrix(GuiContext*);
   virtual void execute();
+  
+private:
+  GuiString guiroc_;
 };
 
 
-DECLARE_MAKER(FindClosestNodeIndexByValue)
-FindClosestNodeIndexByValue::FindClosestNodeIndexByValue(GuiContext* ctx)
-  : Module("FindClosestNodeIndexByValue", ctx, Source, "FieldsGeometry", "ModelCreation")
+DECLARE_MAKER(AppendMatrix)
+AppendMatrix::AppendMatrix(GuiContext* ctx)
+  : Module("AppendMatrix", ctx, Source, "Math", "ModelCreation"),
+    guiroc_(ctx->subVar("row-or-column"))
 {
 }
 
-void FindClosestNodeIndexByValue::execute()
+void AppendMatrix::execute()
 {
-  FieldHandle field, points;
-  MatrixHandle value;
+  MatrixHandle base;
+  std::vector<MatrixHandle> matrices;
   
-  if (!(get_input_handle("Field",field,true))) return;
-  if (!(get_input_handle("Points",points,true))) return;
-  if (!(get_input_handle("Value",value,true))) return;
+  get_input_handle("BaseMatrix",base,false);
+  get_dynamic_input_handles("AppendMatrix",matrices,false);
   
-  if (inputs_changed_ || !oport_cached("Indices"))
+  if (inputs_changed_ || guiroc_.changed() || !oport_cached("Matrix"))
   {
-    MatrixHandle indices;
-    double val;
+    std::string roc = guiroc_.get();
+    SCIRunAlgo::MathAlgo malgo(this);
+    MatrixHandle matrix;
     
-    SCIRunAlgo::FieldsAlgo algo(this);
-    SCIRunAlgo::ConverterAlgo calgo(this);
-    
-    
-    std::vector<unsigned int> idxs;
-    if (!(algo.FindClosestNodeByValue(field,idxs,points,val))) return;
-    if (!(calgo.UnsignedIntVectorToMatrix(idxs,indices))) return;    
-    
-    send_output_handle("Indices",indices,false);
+    if (roc == "column")
+    {
+      std::vector<unsigned int> dummy;
+      matrix = base;
+      for (int p=0; p<static_cast<int>(matrices.size());p++)
+      { 
+        if (!(malgo.MatrixAppendColumns(matrix,matrix,matrices[p],dummy))) return;
+      }
+    }
+    else
+    {
+      std::vector<unsigned int> dummy;
+      matrix = base;
+      for (int p=0; p<static_cast<int>(matrices.size());p++)
+      { 
+        if (!(malgo.MatrixAppendRows(matrix,matrix,matrices[p],dummy))) return;
+      }    
+    }
+  
+    send_output_handle("Matrix",matrix,false);
   }
 }
 
