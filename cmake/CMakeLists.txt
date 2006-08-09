@@ -47,6 +47,158 @@ IF(WIN32)
 ENDIF(WIN32)
 
 #-----------------------------------------------------------------------------
+# Thread library
+FIND_PACKAGE( Threads )
+SET(THREAD_LIBRARY ${CMAKE_THREAD_LIBS} CACHE INTERNAL "Thread library.")
+# DV Define DEF_THREAD?
+
+IF(CMAKE_USE_PTHREADS)
+  # Check for sempahore libs w/in pthread library
+  # DV can I scale down the lib like configure.ac for loop
+  TRY_COMPILE(HAS_SEMAPHORE_LIBS
+    ${PROJECT_BINARY_DIR}/CMakeTmp
+    ${PROJECT_SOURCE_DIR}/CMake/testSemaphore.cc
+      COMPILE_DEFINITIONS
+      -l${THREAD_LIBRARY}
+      -I/usr/local/include -I/usr/include -I/include
+    )
+    IF(HAS_SEMAPHORE_LIBS)
+      SET(SEMAPHORE_LIBRARY ${THREAD_LIBRARY} CACHE INTERNAL "Semaphore library in pthreads.")
+    ENDIF(HAS_SEMAPHORE_LIBS) 
+ENDIF(CMAKE_USE_PTHREADS)
+
+#-----------------------------------------------------------------------------
+# Socket library
+# DV Not sure if socket library needs to be defined for cygwin
+IF(WIN32 AND NOT CYGWIN)
+  SET(SOCKET_LIBRARY ws2_32 CACHE INTERNAL "Socket library ws2_32")
+ENDIF(WIN32 AND NOT CYGWIN)
+
+#-----------------------------------------------------------------------------
+# dlopen library
+IF(CMAKE_SYSTEM_NAME MATCHES Darwin)
+  FIND_LIBRARY(DL_LIBRARY dlopen
+             ${SCIRUN_THIRDPARTY_PATH}/lib
+             /usr/local/lib
+             /usr/lib
+             /lib)
+ENDIF(CMAKE_SYSTEM_NAME MATCHES Darwin)
+
+#-----------------------------------------------------------------------------
+# math library
+IF(UNIX)
+  FIND_LIBRARY(M_LIBRARY m
+             /usr/local/lib
+             /usr/lib 
+             /lib)
+ENDIF(UNIX)
+
+#-----------------------------------------------------------------------------
+# lapack library
+OPTION(WITH_LAPACK "Build with lapack library" OFF)
+MARK_AS_ADVANCED(WITH_LAPACK)		   
+IF(WITH_LAPACK)		   
+  FIND_LIBRARY(LAPACK_LIBRARY lapack clapack
+    /usr/local/lib
+    /usr/lib
+    /lib)
+
+   IF(LAPACK_LIBRARY)
+     SET(HAVE_LAPACK "YES")
+   ELSE(LAPACK_LIBRARY)
+     SET(HAVE_LAPACK "NO")
+   ENDIF(LAPACK_LIBRARY)
+ELSE(WITH_LAPACK)
+  SET(HAVE_LAPACK "NO")
+ENDIF(WITH_LAPACK)
+
+#-----------------------------------------------------------------------------
+# blas library
+# DV Fix finding blas/atlas stuff
+SET(DEF_BLAS "#define HAVE_BLAS 0")
+
+# DV Fix these libraries!
+# blas, f, 
+
+#-----------------------------------------------------------------------------
+# Search for SGI's or Win32's traceback library
+# traceback_lib exc_lib_dir_flag exc_lib_flag
+# DV Make required and look for it, also fix for SGI
+INCLUDE (${CMAKE_ROOT}/Modules/CheckIncludeFile.cmake)
+IF(WIN32)
+  CHECK_INCLUDE_FILE("windows.h"       HAVE_WINDOWS_H)
+  CHECK_INCLUDE_FILE("imagehlp"       HAVE_IMAGEHLP_H)
+  IF(HAVE_WINDOWS_H)
+      IF(HAVE_IMAGEHLP_H)
+        SET(TRACEBACK_LIB imagehlp psapi CACHE INTERNAL "Trace back library.")
+        SET(HAVE_TRACEBACK 1)
+        SET(DEF_TRACEBACK "#define HAVE_TRACEBACK 1")
+      ELSE(HAVE_IMAGEHELP_H)
+        MESSAGE(SEND_ERROR "Trace back library requires imagehlp.h for Windows.")
+      ENDIF(HAVE_IMAGEHLP_H)
+  ELSE(HAVE_WINDOWS_H)
+     MESSAGE(SEND_ERROR "Trace back library requires windows.h for Windows.")
+  ENDIF(HAVE_WINDOWS_H)
+ELSE(WIN32)
+  CHECK_INCLUDE_FILE("libexc.h"       HAVE_TRACEBACK_H)
+  IF(HAVE_TRACEBACK_H)
+    SET(TRACEBACK_LIB exc CACHE INTERNAL "Trace back library.")
+    SET(HAVE_TRACEBACK 1)
+    SET(DEF_TRACEBACK "#define HAVE_TRACEBACK 1")
+  ENDIF(HAVE_TRACEBACK_H)
+ENDIF(WIN32)
+
+#-----------------------------------------------------------------------------
+# Tcl/Tk
+SET(TK_VERSION 8.3)
+
+#-----------------------------------------------------------------------------
+# Z lib
+IF(WIN32 AND NOT CYGWIN)
+  SET(ZLIB_LIBRARY ${SCI_THIRDPARTY_DIR}/lib/z)
+  SET(ZLIB_INCLUDE ${SCI_THIRDPARTY_DIR}/include)
+ELSE(WIN32 AND NOT CYGWIN)
+  FIND_PACKAGE( ZLIB )
+ENDIF(WIN32 AND NOT CYGWIN)
+SET(SCIRUN_INCLUDE_THIRDPARTY ${SCIRUN_INCLUDE_THIRDPARTY} ${ZLIB_INCLUDE_DIR})
+
+#-----------------------------------------------------------------------------
+# png lib
+OPTION(WITH_PNG "Build SCIRun with PNG subbport." OFF)
+IF(WITH_PNG)
+  FIND_PACKAGE( PNG )
+  IF(PNG_LIBRARY)
+    SET(HAVE_PNG "YES")
+  ENDIF(PNG_LIBRARY)
+ENDIF(WITH_PNG)
+
+#-----------------------------------------------------------------------------
+# DV XML2 FROM 3P FOR NOW
+FIND_LIBRARY(XML2_LIBRARY xml2
+            ${SCI_THIRDPARTY_DIR}/lib/xml2
+            /usr/local/lib
+            /usr/lib
+            /lib)
+
+#-----------------------------------------------------------------------------
+# blt lib
+
+
+#-----------------------------------------------------------------------------
+# Teem
+SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake)
+FIND_PACKAGE( Teem )
+IF (TEEM_LIBRARY)
+  IF (TEEM_INCLUDE_DIR)
+    SET(SCIRUN_INCLUDE_THIRDPARTY ${SCIRUN_INCLUDE_THIRDPARTY} ${TEEM_INCLUDE_DIR})
+  ENDIF(TEEM_INCLUDE_DIR)
+ENDIF(TEEM_LIBRARY)
+
+# DV Fix hard coding of HAVE_GDCM
+SET(DEF_GDCM "#define HAVE_GDCM 0")
+
+
+#-----------------------------------------------------------------------------
 # SCIRUN build configuration options.
 # OPTION(ENABLE_SCI_MALLOC "Use SCI memory allocation/deallocation checks." OFF)
 # SET(SCIRUN_ENABLE_SCI_MALLOC ${ENABLE_SCI_MALLOC})
@@ -55,6 +207,7 @@ ENDIF(WIN32)
 # DV clean up (if user tries to configure 64 bit machine to 32, flag error?)
 # DV also maybe need to add binary flags here
 # Set NBITS (64 or 32) based on the size of a void pointer.
+# Handle if machine defaults to one bit size but user is trying to do another
 IF(CMAKE_SIZEOF_VOID_P MATCHES  8)
   SET(NBITS 64 CACHE INTERNAL "64 or 32 bit build")
 ELSE(CMAKE_SIZEOF_VOID_P MATCHES 8)
@@ -136,7 +289,11 @@ SET(ASSERTION_LEVEL 3 CACHE STRING "Set assertion level N(0-3)")
 
 # sci_defs/lapack_defs.h
 # DV FIX hard coding of lapack library
-SET(DEF_LAPACK "#define HAVE_LAPACK 0" CACHE INTERNAL "Have Lapack")
+IF(HAVE_LAPACK)
+  SET(DEF_LAPACK "#define HAVE_LAPACK 1" CACHE INTERNAL "Have Lapack")
+ELSE(HAVE_LAPACK)
+  SET(DEF_LAPACK "#define HAVE_LAPACK 0" CACHE INTERNAL "Have Lapack")
+ENDIF(HAVE_LAPACK)
 
 # sci_defs/hashmap_defs.h
 SET(DEF_HASHMAP "None" CACHE STRING "Determining hash map")
@@ -254,77 +411,6 @@ SET(HAVE_SYS_UUID_H 0)
 SET(HAVE_UUID_UUID_H 0)
 
 
-#-----------------------------------------------------------------------------
-# Thread library
-FIND_PACKAGE( Threads )
-SET(THREAD_LIBRARY ${CMAKE_THREAD_LIBS_INIT} CACHE INTERNAL "Thread library.")
-# DV Check for sempahore libs w/in thread library
-
-#-----------------------------------------------------------------------------
-# Search for SGI's or Win32's traceback library
-# traceback_lib exc_lib_dir_flag exc_lib_flag
-# DV Make required and look for it, also fix for SGI
-INCLUDE (${CMAKE_ROOT}/Modules/CheckIncludeFile.cmake)
-IF(WIN32)
-  CHECK_INCLUDE_FILE("windows.h"       HAVE_WINDOWS_H)
-  CHECK_INCLUDE_FILE("imagehlp"       HAVE_IMAGEHLP_H)
-  IF(HAVE_WINDOWS_H)
-      IF(HAVE_IMAGEHLP_H)
-        SET(TRACEBACK_LIB imagehlp psapi CACHE INTERNAL "Trace back library.")
-        SET(HAVE_EXC 1)
-        SET(DEF_EXC "#define HAVE_EXC 1")
-      ELSE(HAVE_IMAGEHELP_H)
-        MESSAGE(SEND_ERROR "Trace back library requires imagehlp.h for Windows.")
-      ENDIF(HAVE_IMAGEHLP_H)
-  ELSE(HAVE_WINDOWS_H)
-     MESSAGE(SEND_ERROR "Trace back library requires windows.h for Windows.")
-  ENDIF(HAVE_WINDOWS_H)
-ELSE(WIN32)
-  CHECK_INCLUDE_FILE("libexc.h"       HAVE_EXC_H)
-  IF(HAVE_EXC_H)
-    SET(TRACEBACK_LIB exc CACHE INTERNAL "Trace back library.")
-    SET(HAVE_EXC 1)
-    SET(DEF_EXC "#define HAVE_EXC 1")
-  ENDIF(HAVE_EXC_H)
-ENDIF(WIN32)
-
-#-----------------------------------------------------------------------------
-# Tcl/Tk
-SET(TK_VERSION 8.3)
-
-#-----------------------------------------------------------------------------
-# Z lib
-IF(WIN32 AND NOT CYGWIN)
-  SET(ZLIB_LIBRARY ${SCI_THIRDPARTY_DIR}/lib/z)
-  SET(ZLIB_INCLUDE ${SCI_THIRDPARTY_DIR}/include)
-ELSE(WIN32 AND NOT CYGWIN)
-  FIND_PACKAGE( ZLIB )
-ENDIF(WIN32 AND NOT CYGWIN)
-SET(SCIRUN_INCLUDE_THIRDPARTY ${SCIRUN_INCLUDE_THIRDPARTY} ${ZLIB_INCLUDE_DIR})
-
-
-#-----------------------------------------------------------------------------
-# DV XML2 FROM 3P FOR NOW
-SET(XML2_LIBRARY ${SCI_THIRDPARTY_DIR}/lib/xml2)
-
-#-----------------------------------------------------------------------------
-# Teem
-SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake)
-FIND_PACKAGE( Teem )
-IF (TEEM_LIBRARY)
-  IF (TEEM_INCLUDE_DIR)
-    SET(SCIRUN_INCLUDE_THIRDPARTY ${SCIRUN_INCLUDE_THIRDPARTY} ${TEEM_INCLUDE_DIR})
-  ENDIF(TEEM_INCLUDE_DIR)
-ENDIF(TEEM_LIBRARY)
-SET(DEF_GDCM "#define HAVE_GDCM 0")
-
-#-----------------------------------------------------------------------------
-# Math library
-IF(UNIX)
-  SET(M_LIBRARY -lm)
-ELSE(UNIX)
-  SET(M_LIBRARY)
-ENDIF(UNIX)
 
 
 #-----------------------------------------------------------------------------
@@ -351,5 +437,6 @@ INCLUDE_DIRECTORIES(
   ${SCIRUN_INCLUDE_THIRDPARTY}
 )
 
-SUBDIRS(src)
+SUBDIRS(src Testing)
+
 

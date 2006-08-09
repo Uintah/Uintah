@@ -1,0 +1,6 @@
+IF(TEEM_FOUND)
+  # Test Teem
+  ADD_EXECUTABLE(testTeem ${CMAKE_SOURCE_DIR}/Testing/Thirdparty/TestTeem.cc)
+  TARGET_LINK_LIBRARIES(testTeem ${TEEM_LIBRARY})
+  ADD_TEST(Teem_Test ${EXECUTABLE_OUTPUT_PATH}/testTeem)
+ENDIF(TEEM_FOUND)
