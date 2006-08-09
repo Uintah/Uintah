@@ -44,6 +44,7 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Algorithms/Converter \
         Core/Algorithms/DataIO \
         Core/Algorithms/Math \
+        Core/Algorithms/Regression \
                 
   LIBS := $(TEEM_LIBRARY)
 

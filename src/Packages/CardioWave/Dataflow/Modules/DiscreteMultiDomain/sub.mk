@@ -13,6 +13,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/CardioWave/Dataflow/Modules/DiscreteMultiDomain
 
 SRCS     += \
+	$(SRCDIR)/DMDAddDomainElectrodes.cc\
+	$(SRCDIR)/DMDAddMembraneElectrodes.cc\
 	$(SRCDIR)/DMDAddMembrane.cc\
 	$(SRCDIR)/DMDAddStimulus.cc\
 	$(SRCDIR)/DMDAddStimulusSeries.cc\
@@ -21,7 +23,6 @@ SRCS     += \
 	$(SRCDIR)/DMDCreateSimulation.cc\
 	$(SRCDIR)/DMDBuildSimulation.cc\
 	$(SRCDIR)/DMDConductionVelocity.cc\
-	$(SRCDIR)/DMDCreateElectrodes.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

@@ -6,6 +6,7 @@
 # element name is the name of a command and the value is
 # a script that loads the command.
 
+set auto_index(CardioWave_DiscreteMultiDomain_DMDAddDomainElectrodes) [list source [file join $dir DMDAddDomainElectrodes.tcl]]
 set auto_index(CardioWave_DiscreteMultiDomain_DMDAddMembrane) [list source [file join $dir DMDAddMembrane.tcl]]
 set auto_index(CardioWave_DiscreteMultiDomain_DMDAddStimulus) [list source [file join $dir DMDAddStimulus.tcl]]
 set auto_index(CardioWave_DiscreteMultiDomain_DMDAddStimulusSeries) [list source [file join $dir DMDAddStimulusSeries.tcl]]
@@ -19,4 +20,3 @@ set auto_index(CardioWave_ContinuousBiDomain_CBDAddReference) [list source [file
 set auto_index(CardioWave_ContinuousBiDomain_CBDCreateSimulation) [list source [file join $dir CBDCreateSimulation.tcl]]
 set auto_index(CardioWave_ContinuousBiDomain_CBDBuildSimulation) [list source [file join $dir CBDBuildSimulation.tcl]]
 set auto_index(CardioWave_TissueModel_RegularBundle) [list source [file join $dir RegularBundle.tcl]]
-set auto_index(CardioWave_DiscreteMultiDomain_DMDCreateElectrodes) [list source [file join $dir DMDCreateElectrodes.tcl]]
