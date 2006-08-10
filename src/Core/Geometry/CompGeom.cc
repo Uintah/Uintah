@@ -151,7 +151,7 @@ RayPlaneIntersection(const Point &p,  const Vector &dir,
 }
 
 
-#define EPSILON 1.0e-6
+#define EPSILON 1.0e-12
 
 
 bool
