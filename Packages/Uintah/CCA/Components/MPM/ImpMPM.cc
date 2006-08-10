@@ -999,11 +999,15 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
   t->requires(Task::OldDW,lb->pXLabel,              Ghost::AroundNodes,1);
   t->requires(Task::OldDW,lb->pMassLabel,           Ghost::AroundNodes,1);
   t->requires(Task::NewDW,lb->pStressLabel_preReloc,Ghost::AroundNodes,1);
+  t->requires(Task::NewDW,lb->gMassLabel,           Ghost::None);
   t->requires(Task::NewDW,lb->gMassAllLabel,        Ghost::None);
   t->requires(Task::NewDW,lb->gVolumeLabel,         Ghost::None);
   t->requires(Task::NewDW,lb->gInternalForceLabel,  Ghost::None);
 
   t->computes(lb->gStressForSavingLabel);
+  t->computes(lb->gStressForSavingLabel, d_sharedState->getAllInOneMatl(),
+              Task::OutOfDomain);
+
   if (!d_bndy_traction_faces.empty()) {
                                                                                 
     for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
@@ -2792,15 +2796,15 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         disp = Vector(0.0,0.0,0.0);
         acc = Vector(0.0,0.0,0.0);
         double tempRate = 0.;
-        double ptemp = 0.;
+        //double ptemp = 0.;
         
         // Accumulate the contribution from each surrounding vertex
         for (int k = 0; k < 8; k++) {
           disp      += dispNew[ni[k]]       * S[k];
           acc       += gacceleration[ni[k]] * S[k];
-          //  tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]])* S[k];
-          tempRate +=  dTdt[ni[k]]* S[k];
-          ptemp += gTemperature[ni[k]] * S[k];
+          tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]])* S[k];
+          //tempRate +=  dTdt[ni[k]]* S[k];
+          //ptemp += gTemperature[ni[k]] * S[k];
         }
 
         // Update the particle's position and velocity
@@ -2815,8 +2819,8 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         paccNew[idx]         = acc;
         pmassNew[idx]        = pmass[idx];
         pvolumeNew[idx]      = pvolume[idx];
-        //  pTemp[idx]           = pTempOld[idx] + tempRate*delT;
-        pTemp[idx]           = ptemp + tempRate*delT;
+        pTemp[idx]           = pTempOld[idx] + tempRate*delT;
+        //pTemp[idx]           = ptemp + tempRate*delT;
         //        cout << "pTemp[" << idx << "]= " << pTemp[idx] << endl;
 
         if(pmassNew[idx] <= 0.0){
@@ -2890,10 +2894,12 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
     int numMatls = d_sharedState->getNumMPMMatls();
 
     NCVariable<Matrix3>       GSTRESS;
-    new_dw->allocateTemporary(GSTRESS, patch, Ghost::None,0);
+    new_dw->allocateAndPut(GSTRESS, lb->gStressForSavingLabel,
+                           d_sharedState->getAllInOneMatl()->get(0), patch);
     GSTRESS.initialize(Matrix3(0.));
     StaticArray<NCVariable<Matrix3> >         gstress(numMatls);
     StaticArray<constNCVariable<double> >     gmass(numMatls);
+    StaticArray<constNCVariable<double> >     gmassall(numMatls);
     StaticArray<constNCVariable<double> >     gvolume(numMatls);
     StaticArray<constNCVariable<Vector> >     gintforce(numMatls);
 
@@ -2912,7 +2918,8 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
                                               Ghost::AroundNodes,1,lb->pXLabel);
       old_dw->get(px,          lb->pXLabel,    pset);
       old_dw->get(pmass,       lb->pMassLabel, pset);
-      new_dw->get(gmass[m],    lb->gMassAllLabel,dwi, patch,Ghost::None,0);
+      new_dw->get(gmass[m],    lb->gMassLabel,   dwi, patch,Ghost::None,0);
+      new_dw->get(gmassall[m], lb->gMassAllLabel,dwi, patch,Ghost::None,0);
       new_dw->get(gvolume[m],  lb->gVolumeLabel, dwi, patch,Ghost::None,0);
       new_dw->get(gintforce[m],lb->gInternalForceLabel,
                                                  dwi, patch,Ghost::None,0);
@@ -2950,10 +2957,16 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
      if(!mpm_matl->getIsRigid()){
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         IntVector c = *iter;
-        gstress[m][c] = GSTRESS[c]/(gmass[m][c]+1.e-200);
+        gstress[m][c] /= (gmass[m][c]+1.e-200);
       }
      }
     }  // Loop over matls
+
+    // Fill in the value for the all in one material
+    for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+      IntVector c = *iter;
+      GSTRESS[c] /= (gmassall[0][c]+1.e-200);
+    }
 
 
     // save boundary forces before apply symmetry boundary condition.
