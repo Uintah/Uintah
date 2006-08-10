@@ -98,7 +98,7 @@ IntersectTriAlgoT<FIELD>::execute(ProgressReporter *reporter,
   
   while (abi != aei)
   {
-    reporter->update_progress(prcounter++, prsize);
+    reporter->update_progress(prcounter++, prsize * 2);
 
     typename FIELD::mesh_type::Node::array_type anodes;
     tmesh->get_nodes(anodes, *abi);
@@ -142,10 +142,13 @@ IntersectTriAlgoT<FIELD>::execute(ProgressReporter *reporter,
     ++abi;
   }      
 
+  prcounter = 0;
   typename FIELD::mesh_type::Node::index_type newnode;
   typename FIELD::mesh_type::Elem::array_type newelems;
   for (unsigned int i = 0; i < newpoints.size(); i++)
   {
+    reporter->update_progress(prcounter++, newpoints.size());
+
     Point closest;
     vector<typename FIELD::mesh_type::Elem::index_type> elem;
     tmesh->find_closest_elems(closest, elem, newpoints[i]);
