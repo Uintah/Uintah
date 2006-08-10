@@ -94,6 +94,8 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
   vector< vector<PseudoPatch> > patch_sets(oldGrid->numLevels());
   //create flags sets
   
+  vector<bool> regrid(oldGrid->numLevels()+1,false);
+
   //For each level Fine to Coarse
   for(int l=oldGrid->numLevels()-1; l >= 0;l--)
   {
@@ -126,6 +128,65 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
     }
     vector<IntVector> coarse_flag_vector(coarse_flag_sets[l].size());
     coarse_flag_vector.assign(coarse_flag_sets[l].begin(),coarse_flag_sets[l].end());
+#if 1
+  regrid.assign(oldGrid->numLevels(),true);
+  regrid[0]=false;
+#else
+    if (oldGrid->numLevels() > l+1) 
+    {
+      const LevelP fineLevel = oldGrid->getLevel(l+1);
+      for(unsigned int f=0;f<coarse_flag_vector.size();f++)
+      {
+        //if(coarse flag is not bounded by old grid finer level)
+        
+        Level::selectType n;
+        IntVector low=coarse_flag_vector[f]*d_minPatchSize;
+        IntVector high=low+IntVector(1,1,1);
+        fineLevel->selectPatches(low,high,n);
+        if(n.size()==0)
+        {
+          regrid[l+1]=true;
+          break;
+        }
+      }
+        
+      int total_flags=coarse_flag_vector.size();;
+      if(d_myworld->size()>1)
+      {
+        int recvs[2];
+        int sends[2] = { (int) regrid[l+1], coarse_flag_vector.size() };
+        MPI_Allreduce(sends,recvs,2,MPI_INT,MPI_SUM,d_myworld->getComm());
+        regrid[l+1]=(bool)recvs[0];
+        total_flags=recvs[1];
+      }
+      
+      if(!regrid[l+1])
+      {
+
+        //calculate volume of level
+        int volume = 0;
+        for (Level::const_patchIterator iter = fineLevel->patchesBegin(); iter != fineLevel->patchesEnd(); iter++)
+        {
+          IntVector range = (*iter)->getInteriorCellHighIndex() - (*iter)->getInteriorCellLowIndex();
+          volume += range.x() * range.y() * range.z();
+        }
+
+        if( (total_flags*d_minPatchSize[0]*d_minPatchSize[1]*d_minPatchSize[2])/(float)volume<.8)
+        {
+          regrid[l+1]=true;
+        }
+      }
+    }
+    else
+    {        
+      regrid[l+1] = true;
+    }
+    if(!regrid[l+1])   
+    {
+      continue;   //do not regrid this level
+    }
+#endif
+
     ctotal+=MPI_Wtime()-start;
     start=MPI_Wtime(); 
     //Parallel BR over coarse flags
@@ -139,7 +200,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
     if(l>0)
     {
       start=MPI_Wtime();
-      AddSafetyLayer(patch_sets[l], coarse_flag_sets[l-1], lb->getPerProcessorPatchSet(oldGrid->getLevel(l))->getSubset(d_myworld->myrank())->getVector(), l);
+      AddSafetyLayer(patch_sets[l], coarse_flag_sets[l-1], lb->getPerProcessorPatchSet(oldGrid->getLevel(l-1))->getSubset(d_myworld->myrank())->getVector(), l);
       sltotal+=MPI_Wtime()-start;
     }
     //Fixup patchlist:  this forces neighbor constraints
@@ -154,60 +215,59 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
 
   //Create the grid
   start=MPI_Wtime(); 
-  // create level 0
-  Point anchor = oldGrid->getLevel(0)->getAnchor();
+
   Vector spacing = oldGrid->getLevel(0)->dCell();
+  Point anchor = oldGrid->getLevel(0)->getAnchor();
   IntVector extraCells = oldGrid->getLevel(0)->getExtraCells();
   IntVector periodic = oldGrid->getLevel(0)->getPeriodicBoundaries();
-  LevelP level0 = newGrid->addLevel(anchor, spacing);
-  level0->setExtraCells(extraCells);
-  for (Level::const_patchIterator iter = oldGrid->getLevel(0)->patchesBegin(); iter != oldGrid->getLevel(0)->patchesEnd(); iter++)
-  {
-    const Patch* p = *iter;
-    IntVector inlow = p->getInteriorCellLowIndex();
-    IntVector low = p->getCellLowIndex();
-    IntVector inhigh = p->getInteriorCellHighIndex();
-    IntVector high = p->getCellHighIndex();
-    level0->addPatch(low, high, inlow, inhigh);
-  }
-  crtotal+=MPI_Wtime()-start;
-  start=MPI_Wtime();
-  level0->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
-  ftotal+=MPI_Wtime()-start;
-  start=MPI_Wtime();
-  level0->assignBCS(grid_ps);
-  atotal+=MPI_Wtime()-start;
-  start=MPI_Wtime();
-
+  
   //For each level Coarse -> Fine
-  for(int l=0; l < oldGrid->numLevels() && l < d_maxLevels-1;l++)
+  for(int l=-1; l < oldGrid->numLevels() && l < d_maxLevels-1;l++)
   {
-    // if there are no patches on this level, don't create any more levels
-    if (patch_sets[l].size() == 0)
-      break;
+    // if level is not needed, don't create any more levels
+    if(regrid[l+1] && patch_sets[l].size()==0)
+       break;
 
     // parameters based on next-fine level.
-    spacing = spacing / d_cellRefinementRatio[l];
-    
-    LevelP newLevel = newGrid->addLevel(anchor, spacing);
-    newLevel->setExtraCells(extraCells);
+    if(l!=-1)
+      spacing = spacing / d_cellRefinementRatio[l];
+  
+    LevelP level = newGrid->addLevel(anchor, spacing);
+    level->setExtraCells(extraCells);
 
-    //for each patch
-    for(unsigned int p=0;p<patch_sets[l].size();p++)
+    if(l+1 < oldGrid->numLevels() && !regrid[l+1])
     {
-      //uncoarsen
-      IntVector low = patch_sets[l][p].low = patch_sets[l][p].low*d_minPatchSize;
-      IntVector high = patch_sets[l][p].high = patch_sets[l][p].high*d_minPatchSize;
-      //create patch
-      newLevel->addPatch(low, high, low, high);
+      //cout << "Copying level " << l+1 << endl;
+      for (Level::const_patchIterator iter = oldGrid->getLevel(l+1)->patchesBegin(); iter != oldGrid->getLevel(l+1)->patchesEnd(); iter++)
+      {
+        const Patch* p = *iter;
+        IntVector inlow = p->getInteriorCellLowIndex();
+        IntVector low = p->getCellLowIndex();
+        IntVector inhigh = p->getInteriorCellHighIndex();
+        IntVector high = p->getCellHighIndex();
+        level->addPatch(low, high, inlow, inhigh);
+      }
     }
-    
+    else
+    {
+      //cout << "New level " << l+1 << " num patches " << patch_sets[l].size() << endl;
+      //for each patch
+      for(unsigned int p=0;p<patch_sets[l].size();p++)
+      {
+        //uncoarsen
+        IntVector low = patch_sets[l][p].low = patch_sets[l][p].low*d_minPatchSize;
+        IntVector high = patch_sets[l][p].high = patch_sets[l][p].high*d_minPatchSize;
+        //create patch
+        level->addPatch(low, high, low, high);
+      }
+    }
+
     crtotal+=MPI_Wtime()-start;
     start=MPI_Wtime();
-    newLevel->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
+    level->finalizeLevel(periodic.x(), periodic.y(), periodic.z());
     ftotal+=MPI_Wtime()-start;
     start=MPI_Wtime();
-    newLevel->assignBCS(grid_ps);
+    level->assignBCS(grid_ps);
     atotal+=MPI_Wtime()-start;
     start=MPI_Wtime();
   }
@@ -221,10 +281,10 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
 
   d_newGrid = true;
   d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
-/*
+ /* 
   if(d_myworld->myrank()==0)
     cout << *newGrid;
-*/
+//*/
   if (dbgpatches.active())
   {
      if(d_myworld->myrank()==0)
@@ -624,33 +684,37 @@ void BNRRegridder::PostFixup(vector<PseudoPatch> &patches, IntVector min_patch_s
 void BNRRegridder::AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVector> &coarse_flags, 
                                   const vector<const Patch*>& coarse_patches, int level)
 {
-  
   if (coarse_patches.size() == 0)
     return;
   //create a range tree out of my patches
   PatchRangeTree prt(coarse_patches);
-  //for each patch (padded with 1 cell) 
+  //for each patch (padded with saftey layer) 
+  
   for(unsigned p=0;p<patches.size();p++)
   {
-    // convert from coarse coordinates to real coordinates on the coarser level, with a safety layer
-    IntVector low = patches[p].low*d_minPatchSize/d_cellRefinementRatio[level] - d_minBoundaryCells;
-    IntVector high = patches[p].high*d_minPatchSize/d_cellRefinementRatio[level] + d_minBoundaryCells;
-    
+    //add saftey layer and convert from coarse coordinates to real coordinates on the coarser level
+    IntVector low = (patches[p].low*d_minPatchSize-d_minBoundaryCells)/d_cellRefinementRatio[level]/d_cellRefinementRatio[level-1];
+    IntVector high;
+    high[0] = ceil((patches[p].high[0]*d_minPatchSize[0]+d_minBoundaryCells[0])/(float)d_cellRefinementRatio[level][0]/d_cellRefinementRatio[level-1][0]);
+    high[1] = ceil((patches[p].high[1]*d_minPatchSize[1]+d_minBoundaryCells[1])/(float)d_cellRefinementRatio[level][1]/d_cellRefinementRatio[level-1][1]);
+    high[2] = ceil((patches[p].high[2]*d_minPatchSize[2]+d_minBoundaryCells[2])/(float)d_cellRefinementRatio[level][2]/d_cellRefinementRatio[level-1][2]);
+     
+    //clamp low and high points to domain boundaries 
     for(int d=0;d<3;d++)
     {
       if(low[d]<0)
       {
          low[d]=0;
       }
-      if(high[d]>d_cellNum[level][d])
+      if(high[d]>d_cellNum[level-1][d])
       {
-          high[d]=d_cellNum[level][d];
+          high[d]=d_cellNum[level-1][d];
       }
     }
     Level::selectType intersecting_patches;
     //intersect range tree
     prt.query(low, high, intersecting_patches);
-    
+     
     //for each intersecting patch
     for (int i = 0; i < intersecting_patches.size(); i++)
     {
@@ -660,12 +724,12 @@ void BNRRegridder::AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVect
       IntVector int_high = Min(patch->getCellHighIndex(), high);
       
       //round low coordinate down
-      int_low=int_low/d_minPatchSize;
+      int_low=int_low*d_cellRefinementRatio[level-1]/d_minPatchSize;
       //round high coordinate up
-      int_high[0]=(int)ceil(int_high[0]/(float)d_minPatchSize[0]);
-      int_high[1]=(int)ceil(int_high[1]/(float)d_minPatchSize[1]);
-      int_high[2]=(int)ceil(int_high[2]/(float)d_minPatchSize[2]);
-      
+      int_high[0]=(int)ceil(int_high[0]*d_cellRefinementRatio[level-1][0]/(float)d_minPatchSize[0]);
+      int_high[1]=(int)ceil(int_high[1]*d_cellRefinementRatio[level-1][1]/(float)d_minPatchSize[1]);
+      int_high[2]=(int)ceil(int_high[2]*d_cellRefinementRatio[level-1][2]/(float)d_minPatchSize[2]);
+
       //for overlapping cells
       for (CellIterator iter(int_low, int_high); !iter.done(); iter++)
       {
