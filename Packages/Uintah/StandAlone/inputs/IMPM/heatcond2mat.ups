@@ -39,6 +39,7 @@
         <convergence_criteria_disp>1.e-6</convergence_criteria_disp>
         <convergence_criteria_energy>4.e-6</convergence_criteria_energy>
         <do_grid_reset>true</do_grid_reset>
+        <DoImplicitHeatConduction>true</DoImplicitHeatConduction>
    </MPM>
 
 
@@ -100,19 +101,13 @@
     <Grid>
       <BoundaryConditions>
              <Face side = "x-">
-         <BCType id = "0" var = "Dirichlet" label = "Temperature">
+         <BCType id = "all" var = "Dirichlet" label = "Temperature">
                 <value> 300. </value>
-         </BCType>
-         <BCType id = "1" var = "Neumann" label = "Temperature">
-                <value> 0. </value>
          </BCType>
        </Face>
        <Face side = "x+">
-         <BCType id = "1" var = "Dirichlet" label = "Temperature">
+         <BCType id = "all" var = "Dirichlet" label = "Temperature">
               <value> 600. </value>
-         </BCType>
-         <BCType id = "0" var = "Neumann" label = "Temperature">
-              <value> 0. </value>
          </BCType>
        </Face>
        <Face side = "y-">
