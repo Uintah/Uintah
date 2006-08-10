@@ -88,10 +88,17 @@ IntersectTriAlgoT<FIELD>::execute(ProgressReporter *reporter,
   tmesh->begin(abi);
   tmesh->end(aei);
 
+  typename FIELD::mesh_type::Elem::size_type prsizetmp;
+  tmesh->size(prsizetmp);
+  const unsigned int prsize = (unsigned int)prsizetmp;
+  unsigned int prcounter = 0;
+
   vector<Point> newpoints;
   
   while (abi != aei)
   {
+    reporter->update_progress(prcounter++, prsize);
+
     typename FIELD::mesh_type::Node::array_type anodes;
     tmesh->get_nodes(anodes, *abi);
     Point apoints[3];
