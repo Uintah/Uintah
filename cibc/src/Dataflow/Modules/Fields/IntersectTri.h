@@ -70,6 +70,7 @@ public:
                        vector<unsigned int> &new_elems);
 };
 
+#define EPSILON 1.0e-6
 
 template <class FIELD>
 void
@@ -102,21 +103,30 @@ IntersectTriAlgoT<FIELD>::execute(ProgressReporter *reporter,
     typename FIELD::mesh_type::Node::array_type anodes;
     tmesh->get_nodes(anodes, *abi);
     Point apoints[3];
+    BBox tribox;
     for (int i = 0; i < 3; i++)
     {
       tmesh->get_point(apoints[i], anodes[i]);
+      tribox.extend(apoints[i]);
     }
+    
+    const Point padmin(tribox.min() - Vector(EPSILON, EPSILON, EPSILON));
+    const Point padmax(tribox.max() + Vector(EPSILON, EPSILON, EPSILON));
+    tribox.extend(padmin);
+    tribox.extend(padmax);
+    
+    typedef std::set<typename FIELD::mesh_type::under_type> eset_type;
+    eset_type candidates;
+    tmesh->locate_bbox(candidates, tribox);
 
-    typename FIELD::mesh_type::Elem::iterator bbi, bei;
-    tmesh->begin(bbi);
-    tmesh->end(bei);
-
-    while (bbi != bei)
+    typename eset_type::const_iterator bbi = candidates.begin();
+    while (bbi != candidates.end())
     {
-      if (abi != bbi)
+      if (*abi != *bbi)
       {
         typename FIELD::mesh_type::Node::array_type bnodes;
-        tmesh->get_nodes(bnodes, *bbi);
+        tmesh->get_nodes(bnodes,
+                         typename FIELD::mesh_type::Elem::index_type(*bbi));
         Point bpoints[3];
         for (int i = 0; i < 3; i++)
         {

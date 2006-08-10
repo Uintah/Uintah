@@ -302,6 +302,10 @@ public:
   bool locate(typename Face::index_type &loc, const Point &p) const;
   bool locate(typename Cell::index_type &loc, const Point &p) const;
 
+  // Return all the element indices that fall within the box.
+  // (Only near in the grid, not a strict intersection).
+  void locate_bbox(std::set<under_type> &candidates, const BBox &box) const;
+
   virtual bool get_search_grid_info(int &i, int &j, int &k, Transform &trans)
   {
     synchronize(LOCATE_E);
@@ -1060,6 +1064,19 @@ TriSurfMesh<Basis>::locate(typename Cell::index_type &loc, const Point &) const
 {
   loc = 0;
   return false;
+}
+
+
+
+template <class Basis>
+void
+TriSurfMesh<Basis>::locate_bbox(std::set<under_type> &candidates,
+                                const BBox &box) const
+{
+  ASSERTMSG(synchronized_ & LOCATE_E,
+            "TriSurfMesh::locate requires synchronization.");
+  
+  grid_->lookup_bbox(candidates, box);
 }
 
 

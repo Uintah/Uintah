@@ -48,6 +48,7 @@
 #include <Core/Geometry/Transform.h>
 #include <list>
 #include <vector>
+#include <set>
 
 #include <Core/Datatypes/share.h>
 
@@ -109,6 +110,7 @@ public:
   bool lookup(const std::list<under_type> *&candidates, const Point &p) const;
   void lookup_ijk(const std::list<under_type> *&candidates,
                   int i, int j, int k) const;
+  void lookup_bbox(std::set<under_type> &candidates, const BBox &bbox);
   double min_distance_squared(const Point &p, int i, int j, int k) const;
 
   virtual void io(Piostream&) {}
