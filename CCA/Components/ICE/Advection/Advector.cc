@@ -1,4 +1,5 @@
 #include <Packages/Uintah/CCA/Components/ICE/Advection/Advector.h>
+#include <Packages/Uintah/Core/Parallel/Parallel.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Endian.h>
 #include <Core/Util/FancyAssert.h>
@@ -46,18 +47,20 @@ namespace Uintah {
                                  const Patch* patch,
                                  DataWarehouse* new_dw)
   {
-    cout << "ERROR: ICE Advection operator: "
+    cout << Parallel::getMPIRank() << " ERROR: ICE Advection operator: "
          << " Influx_outflux error detected, "
          << " patch " << patch->getID()
          << ", Level " << patch->getLevel()->getIndex()
-         << ", matl indx "<< indx << endl;
+         << ", matl indx "<< indx << " " << badCells.size() << " bad cells "
+         << endl;
          
     for (int i = 0; i<(int) badCells.size(); i++) {
-      cout << " cell " << badCells[i] 
+      cout << Parallel::getMPIRank() << "  cell " << badCells[i] 
            << " \t\t total_outflux (" << badOutFlux[i]<< ") > cellVol (" 
            << vol << ")" << endl;
+      break;
     }
-    cout << " A timestep restart has been requested \n " << endl;
+    //cout << " A timestep restart has been requested \n " << endl;
     new_dw->restartTimestep();
   }
   
