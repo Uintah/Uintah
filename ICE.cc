@@ -1694,7 +1694,12 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
   // immediately after advecton
   if(levelIndex + 1 == numLevels && where ==  "finalizeTimestep")
     return;
-    
+
+  // from another taskgraph
+  bool fat = false;
+  if (where == "finalizeTimestep")
+    fat = true;
+
   //---------------------------  
   cout_doing << d_myworld->myrank() << " ICE::scheduleConservedtoPrimitive_Vars" 
              << "\t\t\tL-"<< levelIndex << endl;
@@ -1708,25 +1713,25 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
   task->requires(Task::NewDW, lb->eng_advLabel,       gn,0);
   task->requires(Task::NewDW, lb->sp_vol_advLabel,    gn,0);
   
-  task->requires(Task::NewDW, lb->specific_heatLabel, gn,0);   
-  task->requires(Task::NewDW, lb->speedSound_CCLabel, gn, 0);
-  task->requires(Task::NewDW, lb->vol_frac_CCLabel,   gn, 0);
-  task->requires(Task::NewDW, lb->gammaLabel,         gn, 0);
+  task->requires(Task::NewDW, lb->specific_heatLabel, gn, 0, fat);
+  task->requires(Task::NewDW, lb->speedSound_CCLabel, gn, 0, fat);
+  task->requires(Task::NewDW, lb->vol_frac_CCLabel,   gn, 0, fat);
+  task->requires(Task::NewDW, lb->gammaLabel,         gn, 0, fat);
     
   computesRequires_CustomBCs(task, "Advection", lb, ice_matlsub, 
                              d_customBC_var_basket);
                              
-  task->modifies(lb->rho_CCLabel);
-  task->modifies(lb->sp_vol_CCLabel);               
+  task->modifies(lb->rho_CCLabel, fat);
+  task->modifies(lb->sp_vol_CCLabel, fat);               
   if( where == "afterAdvection"){
     task->computes(lb->temp_CCLabel);
     task->computes(lb->vel_CCLabel);
     task->computes(lb->machLabel);
   }
   if( where == "finalizeTimestep"){
-    task->modifies(lb->temp_CCLabel);
-    task->modifies(lb->vel_CCLabel);
-    task->modifies(lb->machLabel);
+    task->modifies(lb->temp_CCLabel, fat);
+    task->modifies(lb->vel_CCLabel, fat);
+    task->modifies(lb->machLabel, fat);
   } 
   
   //__________________________________
@@ -1743,7 +1748,7 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
         task->computes(tvar->var,   tvar->matls);
       }
       if( where == "finalizeTimestep"){
-        task->modifies(tvar->var,   tvar->matls);
+        task->modifies(tvar->var,   tvar->matls, fat);
       }
       
     }
@@ -4227,7 +4232,7 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
          ostringstream warn;
          int idx = level->getIndex();
          warn<<"ICE:(L-"<<idx<<"):computeLagrangianValues, mat "<<indx<<" cell "
-             <<neg_cell<<" Negative int_eng_L \n";
+             <<neg_cell<<" Negative int_eng_L: " << int_eng_L[neg_cell] <<  "\n";
          throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
       }  // if (ice_matl)
