@@ -148,9 +148,6 @@ ELSE(WIN32)
   ENDIF(HAVE_TRACEBACK_H)
 ENDIF(WIN32)
 
-#-----------------------------------------------------------------------------
-# Tcl/Tk
-SET(TK_VERSION 8.3)
 
 #-----------------------------------------------------------------------------
 # Z lib
@@ -160,7 +157,7 @@ IF(WIN32 AND NOT CYGWIN)
 ELSE(WIN32 AND NOT CYGWIN)
   FIND_PACKAGE( ZLIB )
 ENDIF(WIN32 AND NOT CYGWIN)
-SET(SCIRUN_INCLUDE_THIRDPARTY ${SCIRUN_INCLUDE_THIRDPARTY} ${ZLIB_INCLUDE_DIR})
+SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${ZLIB_INCLUDE_DIR})
 
 #-----------------------------------------------------------------------------
 # png lib
@@ -169,19 +166,123 @@ IF(WITH_PNG)
   FIND_PACKAGE( PNG )
   IF(PNG_LIBRARY)
     SET(HAVE_PNG "YES")
+    SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${PNG_INCLUDE_DIR})
   ENDIF(PNG_LIBRARY)
 ENDIF(WITH_PNG)
 
 #-----------------------------------------------------------------------------
 # DV XML2 FROM 3P FOR NOW
 FIND_LIBRARY(XML2_LIBRARY xml2
-            ${SCI_THIRDPARTY_DIR}/lib/xml2
+            ${SCI_THIRDPARTY_DIR}/lib/
             /usr/local/lib
             /usr/lib
             /lib)
+FIND_PATH(XML2_INCLUDE libxml2/libxml/
+           ${SCIRUN_THIRDPARTY_PATH}/include
+           /usr/local/include
+           /usr/include
+           /include)
+SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${XML2_INCLUDE})
+
+
+#-----------------------------------------------------------------------------
+# Tcl/Tk
+SET(TK_VERSION 8.3)
+
+#-----------------------------------------------------------------------------
+# ITK library
+FIND_LIBRARY(ITK_LIBRARY itk
+             ${SCI_THIRDPARTY_DIR}/lib/
+             /usr/local/lib
+             /usr/lib
+             /lib)
+FIND_PATH(ITK_INCLUDE itk.h
+           ${SCIRUN_THIRDPARTY_PATH}/include
+           /usr/local/include
+           /usr/include
+           /include)
+SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${ITK_INCLUDE})
+#-----------------------------------------------------------------------------
+# ITCL library
+FIND_LIBRARY(ITCL_LIBRARY itcl
+             ${SCI_THIRDPARTY_DIR}/lib/
+             /usr/local/lib
+             /usr/lib
+             /lib)
+FIND_PATH(ITCL_INCLUDE itcl.h
+           ${SCIRUN_THIRDPARTY_PATH}/include
+           /usr/local/include
+           /usr/include
+           /include)
+SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${ITCL_INCLUDE})
+
+#-----------------------------------------------------------------------------
+# TK library
+FIND_LIBRARY(TK_LIBRARY tk
+             ${SCI_THIRDPARTY_DIR}/lib/
+             /usr/local/lib
+             /usr/lib
+             /lib)
+FIND_PATH(TK_INCLUDE tk.h
+           ${SCIRUN_THIRDPARTY_PATH}/include
+           /usr/local/include
+           /usr/include
+           /include)
+SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${TK_INCLUDE})
+#-----------------------------------------------------------------------------
+# TCL library
+FIND_LIBRARY(TCL_LIBRARY tcl
+             ${SCI_THIRDPARTY_DIR}/lib/
+             /usr/local/lib
+             /usr/lib
+             /lib)
+FIND_PATH(TCL_INCLUDE tcl.h
+           ${SCIRUN_THIRDPARTY_PATH}/include
+           /usr/local/include
+           /usr/include
+           /include)
+SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${TCL_INCLUDE})
 
 #-----------------------------------------------------------------------------
 # blt lib
+FIND_LIBRARY(BLT_LIBRARY blt
+             ${SCI_THIRDPARTY_DIR}/lib/
+             /usr/local/lib
+             /usr/lib
+             /lib)
+FIND_PATH(BLT_INCLUDE blt.h
+           ${SCIRUN_THIRDPARTY_PATH}/include
+           /usr/local/include
+           /usr/include
+           /include)
+SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${BLT_INCLUDE})
+
+IF(WIN32)
+  SET(BLT_LIBRARY ${BLT_LIBRARY} gdi32 winspool comdlg32 user32 advapi32)
+ENDIF(WIN32)
+
+#-----------------------------------------------------------------------------
+# OpenGL library
+FIND_PACKAGE( OpenGL )
+IF(OPENGL_LIBRARIES AND OPENGL_INCLUDE_DIR)
+  SET(GL_LIBRARY ${OPENGL_gl_LIBRARY})
+  SET(GL_INCLUDE ${OPENGL_INCLUDE_DIR})
+  SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${GL_INCLUDE})
+ENDIF(OPENGL_LIBRARIES AND OPENGL_INCLUDE_DIR)
+
+#-----------------------------------------------------------------------------
+# Freetype
+FIND_LIBRARY(FREETYPE_LIBRARY freetype
+             ${SCI_THIRDPARTY_DIR}/lib/
+             /usr/local/lib
+             /usr/lib
+             /lib)
+FIND_PATH(FREETYPE_INCLUDE freetype.h
+           ${SCIRUN_THIRDPARTY_PATH}/include/freetype2
+           /usr/local/include
+           /usr/include
+           /include)
+SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${FREETYPE_INCLUDE})
 
 
 #-----------------------------------------------------------------------------
@@ -190,7 +291,7 @@ SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake)
 FIND_PACKAGE( Teem )
 IF (TEEM_LIBRARY)
   IF (TEEM_INCLUDE_DIR)
-    SET(SCIRUN_INCLUDE_THIRDPARTY ${SCIRUN_INCLUDE_THIRDPARTY} ${TEEM_INCLUDE_DIR})
+    SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${TEEM_INCLUDE_DIR})
   ENDIF(TEEM_INCLUDE_DIR)
 ENDIF(TEEM_LIBRARY)
 
@@ -202,7 +303,7 @@ SET(DEF_GDCM "#define HAVE_GDCM 0")
 # SCIRUN build configuration options.
 # OPTION(ENABLE_SCI_MALLOC "Use SCI memory allocation/deallocation checks." OFF)
 # SET(SCIRUN_ENABLE_SCI_MALLOC ${ENABLE_SCI_MALLOC})
-
+# DV Fix checking bit of thirdparty with size of pointer check
 # sci_defs/bits_defs.h
 # DV clean up (if user tries to configure 64 bit machine to 32, flag error?)
 # DV also maybe need to add binary flags here
@@ -243,8 +344,6 @@ SCIRUN_THIRDPARTY_OPTION(
 IF(SCIRUN_THIRDPARTY_FOUND)
   SET(SCIRUN_INCLUDE_THIRDPARTY 
     ${SCIRUN_THIRDPARTY_PATH}/include
-    ${SCIRUN_THIRDPARTY_PATH}/include/libxml2
-    ${SCIRUN_THIRDPARTY_PATH}/include/freetype2
   )	
 ELSE(SCIRUN_THIRDPARTY_FOUND)
   MESSAGE(FATAL_ERROR
@@ -410,8 +509,19 @@ ENDIF(HAVE_INTTYPES)
 SET(HAVE_SYS_UUID_H 0)
 SET(HAVE_UUID_UUID_H 0)
 
+# sci_defs/oogl_defs.h
+INCLUDE (${CMAKE_ROOT}/Modules/CheckIncludeFile.cmake)
+INCLUDE (${CMAKE_ROOT}/Modules/CheckLibraryExists.cmake)
+CHECK_INCLUDE_FILE(oogl/basicTexture.h HAVE_BASIC_TEXTURE)
+CHECK_INCLUDE_FILE(oogl/shadedPrim.h HAVE_SHADED_PRIM)
+#CHECK_LIBRARY_EXISTS(oogl )
+SET(DEF_OOGL "")
+#SET(DEF_GLEW)
+#SET(DEF_FTGL)
+#SET(DEF_FREETYPE)
+#SET(DEF_OGL_EXT_HDRS)
 
-
+#SET(OGL_ERR_MACRO)
 
 #-----------------------------------------------------------------------------
 # The entire SCIRun tree should use the same include path
@@ -432,9 +542,10 @@ SET(SCIRUN_INCLUDE_DIRS_BUILD_TREE
 )
 
 INCLUDE_DIRECTORIES(
-  ${SCIRUN_INCLUDE_DIRS_SYSTEM}
-  ${SCIRUN_INCLUDE_DIRS_BUILD_TREE}
   ${SCIRUN_INCLUDE_THIRDPARTY}
+  ${SCIRUN_INCLUDE_DIRS_BUILD_TREE}
+  ${SCIRUN_INCLUDE_DIRS_SYSTEM}
+  ${SCIRUN_INCLUDE_ADDITIONAL}
 )
 
 SUBDIRS(src Testing)

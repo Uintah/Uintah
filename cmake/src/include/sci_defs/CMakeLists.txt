@@ -45,6 +45,11 @@ CONFIGURE_FILE (
 )
 
 CONFIGURE_FILE (
+  "${PROJECT_SOURCE_DIR}/src/include/sci_defs/ogl_testdefs.h.in"
+  "${PROJECT_BINARY_DIR}/include/sci_defs/ogl_defs.h"
+)
+
+CONFIGURE_FILE (
   "${PROJECT_SOURCE_DIR}/src/include/sci_defs/template_testdefs.h.in"
   "${PROJECT_BINARY_DIR}/include/sci_defs/template_defs.h"
 )

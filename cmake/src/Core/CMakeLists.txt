@@ -9,7 +9,8 @@ SUBDIRS(
   Geometry 
   Basis
   OS
+  TkExtensions
 )
-#  TkExtensions
+
 #  GuiInterface
 
