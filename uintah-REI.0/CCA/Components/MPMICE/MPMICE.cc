@@ -1135,6 +1135,10 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
         pressNC[*iter]  += .125*pressCC[cIdx[in]];
       }
     }
+
+    // Apply grid boundary conditions to the pressure before storing the data
+    MPMBoundCond bc;
+    bc.setBoundaryCondition(patch,0,"Pressure",   pressNC,   d_8or27);
   }
 }
 
