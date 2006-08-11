@@ -10,7 +10,6 @@ SUBDIRS(
   Basis
   OS
   TkExtensions
+  GuiInterface
 )
-
-#  GuiInterface
 
