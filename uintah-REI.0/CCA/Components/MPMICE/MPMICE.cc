@@ -8,6 +8,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/FractureMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMBoundCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Packages/Uintah/Core/Labels/ICELabel.h>
