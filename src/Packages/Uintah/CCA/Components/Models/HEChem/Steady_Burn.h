@@ -130,16 +130,17 @@ WARNING
     MPMLabel* Mlb;
     MaterialSet* mymatls;
     
-    double Ac; /* PreExpCondPh       */
-    double Ec; /* ActEnergyCondPh in unit of Temperature    */
-    double Bg; /* PreExpGasPh        */
-    double Qc; /* CondPhaseHeat      */
-    double Qg; /* GasPhaseHeat       */
-    double Kg; /* HeatConductGasPh   */
-    double Kc; /* HeatConductCondPh  */
-    double Cp; /* SpecificHeatCondPh */
-    double MW; /* MoleWeightGasPh    */
-    double BP; /* Number of Particles at Boundary           */
+    double R ;  /* IdealGasConst      */
+    double Ac;  /* PreExpCondPh       */
+    double Ec;  /* ActEnergyCondPh in unit of Temperature    */
+    double Bg;  /* PreExpGasPh        */
+    double Qc;  /* CondPhaseHeat      */
+    double Qg;  /* GasPhaseHeat       */
+    double Kg;  /* HeatConductGasPh   */
+    double Kc;  /* HeatConductCondPh  */
+    double Cp;  /* SpecificHeatCondPh */
+    double MW;  /* MoleWeightGasPh    */
+    double BP;  /* Number of Particles at Boundary           */
     double ThresholdPressure; /*Threshold Press for burning */
     double ignitionTemp;      /* IgnitionTemp               */
     
@@ -172,8 +173,7 @@ WARNING
     void SetInterval(double x);
     double Bisection(double l, double r);
     double BisectionSecant();
-    
-    static const double R;
+
     static const double EPS;
     static const double UNDEFINED;
     #define d_SMALL_NUM 1e-100

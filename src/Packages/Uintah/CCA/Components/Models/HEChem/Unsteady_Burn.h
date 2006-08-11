@@ -124,6 +124,7 @@ WARNING
     MPMLabel* Mlb;
     MaterialSet* mymatls;
     
+    double R ;   /* IdealGasConst      */
     double Ac;   /* PreExpCondPh          */
     double Ec;   /* ActEnergyCondPh in unit of Temperature */
     double Bg;   /* PreExpGasPh           */
@@ -177,7 +178,6 @@ WARNING
     double Bisection(double l, double r);
     double BisectionSecant();
 
-    static const double R;
     static const double EPS;
     static const double UNDEFINED;
     static const double INIT_TS;

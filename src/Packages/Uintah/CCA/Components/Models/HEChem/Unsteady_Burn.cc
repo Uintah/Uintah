@@ -30,7 +30,6 @@ static DebugStream cout_doing("MPMICE_DOING_COUT", false);
 
 const double Unsteady_Burn::INIT_TS = 300.0;    /* initial surface temperature          */
 const double Unsteady_Burn::INIT_BETA = 1.0e12; /* initial surface temperature gradient */
-const double Unsteady_Burn::R = 8.314;      
 const double Unsteady_Burn::EPS = 1.e-5;        /* iteration stopping criterion */
 const double Unsteady_Burn::UNDEFINED = -10; 
 
@@ -70,6 +69,8 @@ void Unsteady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSet
   d_sharedState = sharedState;
   matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
   matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");  
+
+  params->require("IdealGasConst",     R );
   params->require("PreExpCondPh",      Ac);
   params->require("ActEnergyCondPh",   Ec);
   params->require("PreExpGasPh",       Bg);
@@ -122,6 +123,8 @@ void Unsteady_Burn::outputProblemSpec(ProblemSpecP& ps)
 
   model_ps->appendElement("fromMaterial",      matl0->getName());
   model_ps->appendElement("toMaterial",        matl1->getName());
+
+  model_ps->appendElement("IdealGasConst",     R );
   model_ps->appendElement("PreExpCondPh",      Ac);
   model_ps->appendElement("ActEnergyCondPh",   Ec);
   model_ps->appendElement("PreExpGasPh",       Bg);
