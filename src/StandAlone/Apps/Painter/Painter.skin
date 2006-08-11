@@ -306,21 +306,7 @@
             <var name="row">5</var>
             <var name="col">1</var>
             <var name="cell-height">$Animation::variable-4</var>
-            <var name="ToolDialog::Button1::text" propagate="yes">Set Seed Layer</var>
-            <var name="ToolDialog::Button1::color" propagate="yes">#EEFFEEFF</var>
 
-            <signal name="ToolDialog::Cancel" 
-                    target="Painter::SetLayer"></signal>
-
-            <signal name="ToolDialog::Execute" 
-                    target="Painter::FinishTool">
-              <var name="threaded">1</var>
-            </signal>
-
-<!--            <signal name="ToolDialog::Execute" 
-                    target="Animation::AnimateVariableDescending">3</signal>
--->
-            
           </object>
          
           <object class="Box">
