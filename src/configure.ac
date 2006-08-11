@@ -4948,7 +4948,7 @@ _sci_inc=
 _sci_lib=
 _sci_optional=optional
 
-if test "$enable_scirun2" = "yes" ; then
+if test "$sci_required_wx" = "yes" -a "$enable_scirun2" = "yes" ; then
 
  if test "$with_wx" = "yes"; then
    _sci_optional=required
@@ -4981,7 +4981,6 @@ if test "$enable_scirun2" = "yes" ; then
      _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^I]][[^ ]]*/ /g" | sed "s/^-[[^I]][[^ ]]*//g"`
      _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^D]][[^ ]]*/ /g" | sed "s/^-[[^D]][[^ ]]*//g"`
 
-     SCI_TRY_LINK(WX,wxWidgets libraries,wx/wxprec.h,$_wx_inc_flags,$_wx_lib_flags,$_wx_lib_dir_flags,$_wx_def_flags,,$_sci_optional)
      ;;
    *-darwin*)
      _wx_lib_dir_flags=$WX_LIBS
@@ -4989,13 +4988,12 @@ if test "$enable_scirun2" = "yes" ; then
      _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^I]][[^ ]]*/ /g" | sed "s/^-[[^I]][[^ ]]*//g"`
      _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^D]][[^ ]]*/ /g" | sed "s/^-[[^D]][[^ ]]*//g"`
 
-     SCI_TRY_LINK(WX,wxWidgets libraries,wx/wxprec.h,$_wx_inc_flags,$_wx_lib_flags,$_wx_lib_dir_flags,$_wx_def_flags,,$_sci_optional)
      ;;
    *)
      #assume there is no specific version
      ;;
  esac
-
+ SCI_TRY_LINK(WX,wxWidgets libraries,wx/wxprec.h,$_wx_inc_flags,$_wx_lib_flags,$_wx_lib_dir_flags,$_wx_def_flags,,$_sci_optional)
  # Restore the previous settings.
  ac_ext="$ext"
 
@@ -5008,11 +5006,17 @@ AC_SUBST(HAVE_WX)
 AC_SUBST(DEF_WX)
 AC_SUBST(WX_CXXFLAGS)
 AC_SUBST(WX_LIBS)
+AC_SUBST(INC_WX_H)
+AC_SUBST(WX_LIB_FLAG)
+AC_SUBST(WX_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/wx_testdefs.h"
 
 ##  --  search for ruby  ------------------------------------------------
+_sci_inc=
+_sci_lib=
+_sci_optional=optional
+
 if test "$sci_required_ruby" = "yes"; then
-  _sci_optional=optional
 
   if test "$with_ruby" = "yes"; then
     # --with-ruby has been specified without a parameter.
