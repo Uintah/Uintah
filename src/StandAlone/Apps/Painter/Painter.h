@@ -494,6 +494,7 @@ private:
   private:
     void                finish();
     void                cont();
+    void                set_vars();
     Painter *           painter_;
     NrrdVolume *        seed_volume_;
     typedef itk::ThresholdSegmentationLevelSetImageFilter

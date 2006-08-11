@@ -49,7 +49,7 @@ namespace SCIRun {
       inside_(false),
       numeric_(variables->get_bool("numeric"))
     { 
-      
+      flags_ &= ~TextRenderer::CURSOR;      
     }
 
     TextEntry::~TextEntry()
@@ -101,8 +101,13 @@ namespace SCIRun {
     {
       const RectRegion &region = get_region();
       PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
-      if (pointer && region.inside(pointer->get_x(), pointer->get_y())) {
-        inside_ = true;
+      if (pointer) {
+        if (region.inside(pointer->get_x(), pointer->get_y()) &&
+            get_vars()->get_bool("cursor")) {
+          flags_ |= TextRenderer::CURSOR;
+        } else {
+          flags_ &= ~TextRenderer::CURSOR;
+        }
       }
 
       KeyEvent *key = dynamic_cast<KeyEvent *>(event.get_rep());
