@@ -136,7 +136,7 @@
                    propagate="yes"
                    overwrite="no">40</var>
               
-              <var name="row">3</var>
+              <var name="row">4</var>
               <var name="col">1</var>
               <var name="cell-height">$ToolDialog::button_height</var>
               
@@ -147,44 +147,43 @@
               <object class="Button">
                 <var name="row">1</var>
                 <var name="col">1</var>
-                <var name="ToolDialog::Button1::color"
-                     propagate="yes"
-                     overwrite="no">#FFEEEEFF</var>
-                <var name="ToolDialog::Button1::text"
-                     propagate="yes"
-                   overwrite="no">Cancel</var>
-
               
-                <var name="Button::color" propagate="yes" overwrite="no">$ToolDialog::Button1::color</var>
-                <var name="Button::Text::text" propagate="yes">$ToolDialog::Button1::text</var>
+                <var name="Button::color" propagate="yes">#EEEEEEFF</var>
+                <var name="Button::Text::text" propagate="yes">Set Seed Layer</var>
+
                 <signal name="Button::clicked" 
-                        target="ToolDialog::Cancel"/>
+                        target="Painter::SetLayer"></signal>
+
+
               </object>
               
               <object class="VCRControls">
                 <var name="row">1</var>
-                <var name="col">2</var>
+                <var name="col">3</var>
                 <var name="cell-width">120</var>
                 <signal name="VCRControls::play"
-                        target="ToolDialog::Execute"/>
+                        target="Painter::FinishTool">
+                  <var name="threaded">1</var>
+                </signal>
+
                 <signal name="VCRControls::stop"
                         target="Painter::AbortFilterOn"/>
                 
               </object>
+
+              <object class="Button">
+                <var name="row">1</var>
+                <var name="col">5</var>
               
-<!--
-    <object class="Button">
-    <var name="row">1</var>
-    <var name="col">4</var>
-    <var name="Button2::color" propagate="yes" overwrite="no">#EEFFEEFF</var>
-    <var name="Button::Text::text" propagate="yes">Execute</var>
-    <signal name="Button::clicked" 
-    target="ToolDialog::Execute"/>
-    </object>
--->
+                <var name="Button::color" propagate="yes">#EEEEEEFF</var>
+                <var name="Button::Text::text" propagate="yes">Done</var>
 
+                <signal name="Button::clicked" 
+                        target="Animation::AnimateVariableDescending">
+                  <var name="varnum">4</var>
+                </signal>
 
-
+              </object>
             </object>
           </object>
         </object>
