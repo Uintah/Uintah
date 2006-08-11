@@ -285,6 +285,13 @@ FIND_PATH(FREETYPE_INCLUDE freetype.h
 SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${FREETYPE_INCLUDE})
 
 
+#----------------------------------------------------------------------------
+# X11
+FIND_PACKAGE( X11 )
+IF(X11_FOUND)
+  SET(X_LIBRARY ${X11_LIBRARIES})
+ENDIF(X11_FOUND)
+
 #-----------------------------------------------------------------------------
 # Teem
 SET (CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/CMake)
