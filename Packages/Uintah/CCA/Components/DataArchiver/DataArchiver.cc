@@ -1996,10 +1996,6 @@ DataArchiver::initCheckpoints(SchedulerP& sched)
          label_map[dep->var->getName()][*liter];
        unionedVarMatls = unionedVarMatls.unioned(matls);
      }
-     if (dep->var->getName() == "p.x" && *levels.begin() == 0) {
-       cout << *dep << endl;
-       cout << *dep->task << endl;
-     }
      
      //cout << "  Adding checkpoint var " << *dep->var << " levels " << levels << " matls " << matls << endl;
    }
