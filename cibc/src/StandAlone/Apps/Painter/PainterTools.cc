@@ -941,8 +941,37 @@ Painter::ITKThresholdTool::cont()
   filter_->ManualReinitializationOn();
   filter_->Modified();
   NrrdDataHandle temp = 0;
+  set_vars();
   painter_->do_itk_filter<Painter::ITKImageFloat3D>(filter_, temp);
 }
+
+
+void
+Painter::ITKThresholdTool::set_vars()
+{
+  ASSERT(filter_);
+  string scope = "ITKThresholdTool::";
+  Skinner::Variables *vars = painter_->get_vars();
+  filter_->SetCurvatureScaling(vars->get_double(scope+"curvatureScaling"));
+  filter_->SetPropagationScaling(vars->get_double(scope+"propagationScaling"));
+  filter_->SetEdgeWeight(vars->get_double(scope+"edgeWeight"));
+  filter_->SetNumberOfIterations(vars->get_int(scope+"numberOfIterations"));
+  filter_->SetMaximumRMSError(vars->get_double(scope+"maximumRMSError"));
+  if (vars->get_bool(scope+"reverseExpansionDirection")) 
+    filter_->ReverseExpansionDirectionOn();
+  else 
+    filter_->ReverseExpansionDirectionOff();
+  filter_->SetIsoSurfaceValue(vars->get_double(scope+"isoSurfaceValue"));
+  filter_->SetSmoothingIterations(vars->get_int(scope+"smoothingIterations"));
+  filter_->SetSmoothingTimeStep(vars->get_double(scope+"smoothingTimeStep"));
+  filter_->SetSmoothingConductance(vars->get_double(scope+"smoothingConductance"));
+
+  cerr << "curvature: " << filter_->GetCurvatureScaling() << std::endl;
+  cerr << "propagation: " << filter_->GetPropagationScaling() << std::endl;
+  
+}
+  
+
 
 
 void
@@ -990,28 +1019,13 @@ Painter::ITKThresholdTool::finish()
   filter_->SetUpperThreshold(max);
 
 
-  string minmaxstr = "Threshold min: " + to_string(min) +
-    " Threshold max: " + to_string(max);
+  string minmaxstr = ("Threshold min: " + to_string(min) +
+                      " Threshold max: " + to_string(max));
   
   painter_->get_vars()->insert("Painter::status_text",
                                minmaxstr, "string", true);
 
-
-  string scope = "ITKThresholdTool::";
-  Skinner::Variables *vars = painter_->get_vars();
-  filter_->SetCurvatureScaling(vars->get_double(scope+"curvatureScaling"));
-  filter_->SetPropagationScaling(vars->get_double(scope+"propagationScaling"));
-  filter_->SetEdgeWeight(vars->get_double(scope+"edgeWeight"));
-  filter_->SetNumberOfIterations(vars->get_int(scope+"numberOfIterations"));
-  filter_->SetMaximumRMSError(vars->get_double(scope+"maximumRMSError"));
-  if (vars->get_bool(scope+"reverseExpansionDirection")) 
-    filter_->ReverseExpansionDirectionOn();
-  else 
-    filter_->ReverseExpansionDirectionOff();
-  filter_->SetIsoSurfaceValue(vars->get_double(scope+"isoSurfaceValue"));
-  filter_->SetSmoothingIterations(vars->get_int(scope+"smoothingIterations"));
-  filter_->SetSmoothingTimeStep(vars->get_double(scope+"smoothingTimeStep"));
-  filter_->SetSmoothingConductance(vars->get_double(scope+"smoothingConductance"));
+  set_vars();
 
   ITKDatatypeHandle img_handle = painter_->nrrd_to_itk_image(source_nrrdh);
   Painter::ITKImageFloat3D *imgp = 

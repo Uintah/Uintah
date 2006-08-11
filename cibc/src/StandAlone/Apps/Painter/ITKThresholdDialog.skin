@@ -21,116 +21,157 @@
         
 
 
-
         <object class="Grid">
-          <var name="rows">7</var>
-          <var name="cols">1</var>
+          <var name="rows">1</var>
+          <var name="cols">2</var>
 
-
-          <object class="Text">
-            <var name="row">2</var>
-            <var name="col">1</var>
-            <var name="text">$ToolDialog::text</var>
-            <var name="size">30</var>
-            <var name="fgcolor">#000000FF</var>
-            <var name="bgcolor">#FFFFFF80</var>
-            <var name="anchor">W</var>
-            <var name="offsetx">-2</var>
-            <var name="offsety">2</var>
-            <var name="shadow">1</var>
-          </object>
-
-          <object class="Grid">
-            <var name="ProgressBar::bar_height" 
-                 propagate="yes"
-                 overwrite="no">50</var>
-            <var name="row">4</var>
-            <var name="col">1</var>
-
-            <var name="rows">1</var>
-            <var name="cols">3</var>
-            <object class="Frame">
-              <var name="row">1</var>
-              <var name="col">2</var>
-              <var name="cell-width">$Painter::progress_bar_total_width</var>
-              <var name="cell-height">$ProgressBar::bar_height</var>
-
-              <var name="width">3</var>
-              <var name="height">3</var>
-
-
-              
-              <object class="Grid">
-                <var name="rows">1</var>
-                <var name="cols">2</var>
-                <object class="Frame">
-                  <var name="row">1</var>
-                  <var name="col">1</var>
-                  <var name="color1">#22CC22A0</var>
-                  <var name="color2">#77FF77C0</var>
-                  <var name="cell-width">$Painter::progress_bar_done_width</var>
-                  <object class="Box">
-                    <var name="color">#44ff44A0</var>
-                  </object>
-                </object>
-              </object>
-              
-              <object class="Text">
-                <var name="fgcolor">#000000FF</var>
-                <var name="bgcolor">#FFFFFFFF</var>
-                <var name="text">$Painter::progress_bar_text</var>
-                <var name="size">24</var>
-                <var name="offsetx">-2</var>
-                <var name="offsety">2</var>
-                
-                <var name="shadow">1</var>
-                <var name="anchor">C</var>
-              </object>
-
-            </object>
-          </object>
           
           <object class="Grid">
-            <var name="ToolDialog::button_height" 
-                 propagate="yes"
-                 overwrite="no">40</var>
+            <var name="rows">5</var>
+            <var name="cols">1</var>
 
-            <var name="row">6</var>
+            <var name="cell-width">300</var>
+            
+            <var name="row">1</var>
+            <var name="col">2</var>
+            
+            <object class="LabeledSpinnerBox">                
+              <var name="row">2</var>
+              <var name="col">1</var>
+              <var name="LabeledSpinnerBox::text" propagate="yes">Curvature Scaling:</var>
+              <var name="LabeledSpinnerBox::variable" propagate="yes">ITKThresholdTool::curvatureScaling</var>
+            </object>
+            
+            <object class="LabeledSpinnerBox">                
+              <var name="row">3</var>
+              <var name="col">1</var>
+              <var name="LabeledSpinnerBox::text" propagate="yes">Propagation Scaling:</var>
+              <var name="LabeledSpinnerBox::variable" propagate="yes">ITKThresholdTool::propagationScaling</var>
+            </object>
+            
+            <object class="LabeledSpinnerBox">                
+              <var name="row">4</var>
+              <var name="col">1</var>
+              <var name="LabeledSpinnerBox::text" propagate="yes">Edge Weight:</var>
+              <var name="LabeledSpinnerBox::variable" propagate="yes">ITKThresholdTool::edgeWeight</var>
+            </object>
+          </object>
+
+          <object class="Grid">
+            <var name="row">1</var>
             <var name="col">1</var>
-            <var name="cell-height">$ToolDialog::button_height</var>
-
-            <var name="rows">1</var>
-            <var name="cols">5</var>
-
-
-            <object class="Button">
+            
+            <var name="rows">4</var>
+            <var name="cols">1</var>
+            
+            
+            <object class="Text">
               <var name="row">1</var>
               <var name="col">1</var>
-              <var name="ToolDialog::Button1::color"
+              <var name="text">$ToolDialog::text</var>
+              <var name="size">30</var>
+              <var name="fgcolor">#000000FF</var>
+              <var name="bgcolor">#FFFFFF80</var>
+              <var name="anchor">W</var>
+              <var name="offsetx">-2</var>
+              <var name="offsety">2</var>
+              <var name="shadow">1</var>
+            </object>
+            
+<!--
+            <object class="Grid">
+              <var name="ProgressBar::bar_height" 
                    propagate="yes"
-                   overwrite="no">#FFEEEEFF</var>
-              <var name="ToolDialog::Button1::text"
+                   overwrite="no">50</var>
+              <var name="row">4</var>
+              <var name="col">1</var>
+              
+              <var name="rows">1</var>
+              <var name="cols">3</var>
+              <object class="Frame">
+                <var name="row">1</var>
+                <var name="col">2</var>
+                <var name="cell-width">$Painter::progress_bar_total_width</var>
+                <var name="cell-height">$ProgressBar::bar_height</var>
+                
+                <var name="width">3</var>
+                <var name="height">3</var>
+                
+                
+                
+                <object class="Grid">
+                  <var name="rows">1</var>
+                  <var name="cols">2</var>
+                  <object class="Frame">
+                    <var name="row">1</var>
+                    <var name="col">1</var>
+                    <var name="color1">#22CC22A0</var>
+                    <var name="color2">#77FF77C0</var>
+                    <var name="cell-width">$Painter::progress_bar_done_width</var>
+                    <object class="Box">
+                      <var name="color">#44ff44A0</var>
+                    </object>
+                  </object>
+                </object>
+              
+                <object class="Text">
+                  <var name="fgcolor">#000000FF</var>
+                  <var name="bgcolor">#FFFFFFFF</var>
+                  <var name="text">$Painter::progress_bar_text</var>
+                  <var name="size">24</var>
+                  <var name="offsetx">-2</var>
+                  <var name="offsety">2</var>
+                  
+                  <var name="shadow">1</var>
+                  <var name="anchor">C</var>
+                </object>
+                
+              </object>
+            </object>
+-->
+
+
+            <object class="Grid">
+              <var name="ToolDialog::button_height" 
                    propagate="yes"
+                   overwrite="no">40</var>
+              
+              <var name="row">3</var>
+              <var name="col">1</var>
+              <var name="cell-height">$ToolDialog::button_height</var>
+              
+              <var name="rows">1</var>
+              <var name="cols">5</var>
+              
+              
+              <object class="Button">
+                <var name="row">1</var>
+                <var name="col">1</var>
+                <var name="ToolDialog::Button1::color"
+                     propagate="yes"
+                     overwrite="no">#FFEEEEFF</var>
+                <var name="ToolDialog::Button1::text"
+                     propagate="yes"
                    overwrite="no">Cancel</var>
 
               
-              <var name="Button::color" propagate="yes" overwrite="no">$ToolDialog::Button1::color</var>
-              <var name="Button::Text::text" propagate="yes">$ToolDialog::Button1::text</var>
-              <signal name="Button::clicked" 
-                      target="ToolDialog::Cancel"/>
-            </object>
-            
-            <object class="VCRControls">
-              <var name="row">1</var>
-              <var name="col">2</var>
-              <var name="cell-width">120</var>
-              <signal name="VCRControls::play"
-                      target="ToolDialog::Execute"/>
-              <signal name="VCRControls::stop"
-                      target="Painter::AbortFilterOn"/>
+                <var name="Button::color" propagate="yes" overwrite="no">$ToolDialog::Button1::color</var>
+                <var name="Button::Text::text" propagate="yes">$ToolDialog::Button1::text</var>
+                <signal name="Button::clicked" 
+                        target="ToolDialog::Cancel"/>
+              </object>
               
-            </object>
-
+              <object class="VCRControls">
+                <var name="row">1</var>
+                <var name="col">2</var>
+                <var name="cell-width">120</var>
+                <signal name="VCRControls::play"
+                        target="ToolDialog::Execute"/>
+                <signal name="VCRControls::stop"
+                        target="Painter::AbortFilterOn"/>
+                
+              </object>
+              
 <!--
     <object class="Button">
     <var name="row">1</var>
@@ -141,31 +182,6 @@
     target="ToolDialog::Execute"/>
     </object>
 -->
-
-
-
-            <object class="Grid">
-              <var name="rows">1</var>
-              <var name="cols">3</var>
-
-              <var name="row">1</var>
-              <var name="col">3</var>
-
-              <object class="SpinnerBox">                
-                <var name="row">1</var>
-                <var name="col">1</var>
-              </object>
-
-              <object class="SpinnerBox">                
-                <var name="row">1</var>
-                <var name="col">2</var>
-              </object>
-
-              <object class="SpinnerBox">                
-                <var name="row">1</var>
-                <var name="col">3</var>
-              </object>
-
 
 
 

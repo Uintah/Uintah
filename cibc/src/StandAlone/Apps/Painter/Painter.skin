@@ -16,7 +16,7 @@
   <var name="ITKBinaryDilateErode::erodeValue" propagate="yes">1</var>
 
   <var name="ITKThresholdTool::curvatureScaling" 
-       propagate="yes">1</var>
+       propagate="yes">1.1</var>
 
   <var name="ITKThresholdTool::propagationScaling" 
        propagate="yes">1</var>
@@ -86,8 +86,7 @@
   <xi:include href="LabeledGradientBackground.skin" parse="xml"/>
   <xi:include href="Tools.skin" parse="xml"/>
   <xi:include href="Splash.skin" parse="xml"/>
-     
-  
+       
   
   <definition class="NicePainterWindow">
     <object class="Collection">
@@ -511,7 +510,6 @@
         <object class="Tools"/>
       </object>
       
-<!--      
       <object class="Root::GLWindow" id="Splash">
         <var name="id">Splash</var>
         <var name="width" type="int">800</var>
@@ -525,24 +523,8 @@
 
         <object class="Splash"/>
       </object>
--->
     </object>
   </object>
-
-  <object class="Root::GLWindow"> 
-    <object class="Box">
-      <var name="color">#FF88CCFF</var>
-      <object class="Grid">
-        <var name="rows">3</var>
-        <var name="cols">3</var>
-        <object class="LabeledSpinnerBox">
-          <var name="row">2</var>
-          <var name="col">2</var>
-        </object>
-      </object>
-    </object>
-  </object>
-
 
 </skinner>
 

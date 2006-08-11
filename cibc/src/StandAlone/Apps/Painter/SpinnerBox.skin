@@ -2,6 +2,7 @@
   <object class="ShadowedBox">
     <var name="SpinnerBox::value" propagate="yes" overwrite="no">3.2</var>
     <var name="SpinnerBox::text_size" propagate="yes" overwrite="no">20</var>
+    <var name="SpinnerBox::variable" propagate="yes" overwrite="no">SpinnerBox::value</var>
     
     <definition class="ShadowedBox::child">
       <object class="Root::Arithmetic">
@@ -30,7 +31,7 @@
               <var name="Button::Text::text" propagate="yes">A</var>
               <signal name="Button::clicked" 
                       target="Arithmetic::increment">
-                <var name="variable">SpinnerBox::value</var>
+                <var name="variable">$SpinnerBox::variable</var>
               </signal>
               <signal name="Button::clicked" 
                       target="Root::Redraw"/>
@@ -47,7 +48,7 @@
               <var name="Button::Text::text" propagate="yes">V</var>
               <signal name="Button::clicked" 
                       target="Arithmetic::decrement">
-                <var name="variable">SpinnerBox::value</var>
+                <var name="variable">$SpinnerBox::variable</var>
               </signal>
               <signal name="Button::clicked" 
                       target="Root::Redraw"/>
@@ -61,7 +62,7 @@
             
             <var name="color">#FFFFFFFF</var>
             <object class="TextEntry">
-              <var name="variable">SpinnerBox::value</var>
+              <var name="variable">$SpinnerBox::variable</var>
               <var name="size">$SpinnerBox::text_size</var>
               <var name="anchor">E</var>
               <var name="cursor">1</var>

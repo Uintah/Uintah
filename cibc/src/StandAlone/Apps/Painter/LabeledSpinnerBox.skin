@@ -7,6 +7,7 @@
     <var name="LabeledSpinnerBox::text_size" propagate="yes" overwrite="no">20</var>
     <var name="SpinnerBox::value" propagate="yes" overwrite="no">$LabeledSpinnerBox::value</var>
     <var name="SpinnerBox::text_size" propagate="yes">$LabeledSpinnerBox::text_size</var>
+    <var name="SpinnerBox::variable" propagate="yes">$LabeledSpinnerBox::variable</var>
 
     <var name="border-size1" propagate="yes" overwrite="no">5</var>
     <var name="border-size1" propagate="yes" overwrite="no">5</var>
