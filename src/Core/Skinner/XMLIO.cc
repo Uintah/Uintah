@@ -97,14 +97,16 @@ namespace SCIRun {
        * apply the XInclude process, this should trigger the I/O just
        * registered.
        */
-      int inc = xmlXIncludeProcess(doc);
+      int inc;
+      inc = xmlXIncludeProcess(doc);
       if (inc < 0) {
         cerr << "XInclude processing failed\n";
-	return 0;
-      }
+        return 0;
+        }
+      cerr << "Xinc: " << inc << std::endl;
 
       int flags = XML_PARSE_DTDATTR | XML_PARSE_DTDVALID | XML_PARSE_PEDANTIC;
-      int options = xmlCtxtUseOptions(ctxt, flags);
+      xmlCtxtUseOptions(ctxt, flags);
 
       //doc = xmlReadMemory(
 
@@ -123,9 +125,9 @@ namespace SCIRun {
       //      else 
       //        xmlAddPrevSibling(doc->children, (xmlNodePtr)xmldtd);
 
-      xmlXPathContextPtr xi_ctx = xmlXPathNewContext(doc);
+      //      xmlXPathContextPtr xi_ctx = xmlXPathNewContext(doc);
 
-      int xi_result = 0;
+      //      int xi_result = 0;
 
       /*
         xmlXPathRegisterNs
@@ -138,7 +140,7 @@ namespace SCIRun {
 
 
       xmlValidCtxtPtr valid_ctx = xmlNewValidCtxt();
-      int valid = xmlValidateDtdFinal(valid_ctx, doc);
+      xmlValidateDtdFinal(valid_ctx, doc);
       
       //      xmlCtxtUseOptions(ctxt, XML_PARSE_PEDANTIC);
       //      if (!ctxt->valid) {
@@ -533,27 +535,19 @@ namespace SCIRun {
       ASSERT(XMLUtil::node_is_element(node, "signal"));
       string signalname = XMLUtil::node_att_as_string(node, "name");
       string signaltarget = XMLUtil::node_att_as_string(node, "target");
-      string str;
-      XMLUtil::maybe_get_att_as_string(node, "threaded", str);
-      bool threaded = (str == "yes");
-      if (threaded) cerr << signalname << "Threaded=yes\n";
-      
 
-      SignalThrower::SignalToAllCatchers_t::iterator cpos = allcatchers.find(signaltarget);
+      SignalThrower::SignalToAllCatchers_t::iterator cpos = 
+        allcatchers.find(signaltarget);
       if (cpos == allcatchers.end()) {
-        cerr << "Signal " << signalname 
-             << " cannot find target " << signaltarget << std::endl;
+        if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
+          cerr << "Signal " << signalname 
+               << " cannot find target " << signaltarget << std::endl;
+        }
         return;
       }
 
-      string signaldata = "";
-      const char *node_contents = 0;
-      if (node->children) { 
-        node_contents = XMLUtil::xmlChar_to_char(node->children->content);
-        if (node_contents) {
-          signaldata = node_contents;
-        }
-      }
+      // Valid signal callbacks have their own variable context
+      // Spin through the xml var nodes and set their values
       
       SignalThrower::AllSignalCatchers_t &catchers = cpos->second;
       SignalThrower::AllSignalCatchers_t::iterator citer = catchers.begin();
@@ -563,24 +557,34 @@ namespace SCIRun {
         SignalCatcher::CatcherTargetInfo_t &callback = *citer;
         ASSERT(callback.catcher_);
         ASSERT(callback.function_);
-        if (callback.data_.empty()) callback.data_ = signaldata;
-        if (threaded) callback.threaded_ = true;
+
+
+        if (!callback.variables_) {
+          callback.variables_ = new Variables(signalname, object->get_vars());
+        }
+
+        for (xmlNode *cnode = node->children; cnode; cnode = cnode->next) {
+          if (XMLUtil::node_is_element(cnode, "var")) {
+            eval_var_node(cnode, callback.variables_);
+          }
+        }
+       
         if (object->get_signal_id(signalname)) {
           if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
             cerr << " signalname: " << signalname 
-                 << " connecting to " << signaltarget 
-                 << " with data: " << signaldata << std::endl;
+                 << " connecting to " << signaltarget << std::endl;
           }
-            
+          
           object->all_catchers_[signalname].push_back(callback);
-
+          
         } else {
           if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
             cerr << object->get_id() << " aliasing: " << signalname 
-                 << " to " << signaltarget << " of " << ((Drawable *)(callback.catcher_))->get_id() << std::endl;
+                 << " to " << signaltarget << " of " 
+                 << ((Drawable *)(callback.catcher_))->get_id() << std::endl;
           }
 
-          SignalCatcher::CatcherTargetInfo_t newcallback = callback;
+          SignalCatcher::CatcherTargetInfo_t newcallback(callback);
           newcallback.targetname_ = signalname;
           catcher_tree.back().push_back(newcallback);
           allcatchers[signalname].push_back(newcallback);

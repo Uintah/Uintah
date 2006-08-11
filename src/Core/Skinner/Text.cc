@@ -36,30 +36,63 @@
 
 namespace SCIRun {
   namespace Skinner {
-    Text::Text(Variables *variables,
-               const string &font,
-               double size,
-               const Color &fgcolor,
-               const Color &bgcolor,
-               unsigned int anchor,
-               bool vertical,
-               bool shadow,
-               bool extruded,
-               bool reverse,
-               int offsetx,
-               int offsety) :
-      Drawable(variables),
-      fgcolor_(fgcolor),
-      bgcolor_(bgcolor),
-      flags_(anchor),
-      renderer_(FontManager::get_renderer(size, font)),
-      offsetx_(offsetx),
-      offsety_(offsety)
+
+    Drawable *
+    Text::maker(Variables *vars)
     {
-      flags_ |= vertical ? TextRenderer::VERTICAL : 0;
-      flags_ |= shadow   ? TextRenderer::SHADOW   : 0;
-      flags_ |= extruded ? TextRenderer::EXTRUDED : 0;
-      flags_ |= reverse  ? TextRenderer::REVERSE  : 0;
+      return new Text(vars);
+    }
+
+    Text::Text(Variables *vars) :
+      Drawable(vars),
+      fgcolor_(1., 1., 1., 1.),
+      bgcolor_(0., 0., 0., 1.),
+      flags_(0),
+      renderer_(0),
+      offsetx_(0),
+      offsety_(0)
+    {
+      vars->maybe_get_color("color", fgcolor_);
+      vars->maybe_get_color("fgcolor", fgcolor_);
+      vars->maybe_get_color("bgcolor", bgcolor_);
+
+      double size = 20.0;
+      vars->maybe_get_double("size", size);
+      
+      string font = "scirun.ttf";
+      vars->maybe_get_string("font", font);
+
+      renderer_ = FontManager::get_renderer(size, font);
+      
+      vars->maybe_get_int("offset", offsetx_);
+      vars->maybe_get_int("offsetx", offsetx_);
+
+      vars->maybe_get_int("offset", offsety_);
+      vars->maybe_get_int("offsety", offsety_);
+      
+      
+      string anchorstr = "SW";
+      vars->maybe_get_string("anchor", anchorstr);
+      anchorstr = string_toupper(anchorstr);
+
+      flags_ = TextRenderer::SW;
+      if      (anchorstr ==  "N") { flags_ = TextRenderer::N;  }
+      else if (anchorstr ==  "E") { flags_ = TextRenderer::E;  }
+      else if (anchorstr ==  "S") { flags_ = TextRenderer::S;  }
+      else if (anchorstr ==  "W") { flags_ = TextRenderer::W;  }
+      else if (anchorstr == "NE") { flags_ = TextRenderer::NE; }
+      else if (anchorstr == "SE") { flags_ = TextRenderer::SE; }
+      else if (anchorstr == "SW") { flags_ = TextRenderer::SW; }
+      else if (anchorstr == "NW") { flags_ = TextRenderer::NW; }
+      else if (anchorstr ==  "C") { flags_ = TextRenderer::C;  }
+      else { cerr << vars->get_id() << " anchor invalid: " 
+                  << anchorstr << "\n"; }
+      
+      flags_ |= vars->get_bool("vertical") ? TextRenderer::VERTICAL : 0;
+      flags_ |= vars->get_bool("shadow")   ? TextRenderer::SHADOW   : 0;
+      flags_ |= vars->get_bool("extruded") ? TextRenderer::EXTRUDED : 0;
+      flags_ |= vars->get_bool("reverse")  ? TextRenderer::REVERSE  : 0;
+      flags_ |= vars->get_bool("cursor") ? TextRenderer::CURSOR : 0;
       
       //      REGISTER_CATCHER_TARGET(Text::redraw);
     }
@@ -69,41 +102,9 @@ namespace SCIRun {
     BaseTool::propagation_state_e
     Text::process_event(event_handle_t event)
     {
-      const RectRegion &region = get_region();
       WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
       if (window && window->get_window_state() == WindowEvent::REDRAW_E) {
-        string text = "";
-        get_vars()->maybe_get_string("text", text);
-          
-        if (renderer_->height(text) > region.height()) {
-          return CONTINUE_E;
-        }
-
-        renderer_->set_shadow_offset(offsetx_, offsety_);
-        renderer_->set_color(fgcolor_.r, fgcolor_.g, fgcolor_.b, fgcolor_.a);
-        renderer_->set_shadow_color(bgcolor_.r, bgcolor_.g, bgcolor_.b, bgcolor_.a);
-
-        float mx = (region.x2() + region.x1())/2.0;
-        float my = (region.y2() + region.y1())/2.0;
-
-        float x = mx;
-        float y = my;
-        
-        switch (flags_ & TextRenderer::ANCHOR_MASK) {
-        case TextRenderer::N:  x = mx; y = region.y2(); break;
-        case TextRenderer::S:  x = mx; y = region.y1(); break;
-
-        case TextRenderer::E:  x = region.x2(); y = my; break;
-        case TextRenderer::W:  x = region.x1(); y = my; break;
-
-        case TextRenderer::NE: x = region.x2(); y = region.y2(); break;
-        case TextRenderer::SE: x = region.x2(); y = region.y1(); break;
-        case TextRenderer::SW: x = region.x1(); y = region.y1(); break;
-        case TextRenderer::NW: x = region.x1(); y = region.y2(); break;
-
-        case TextRenderer::C:  x = mx; y = my; break;
-        }
-        renderer_->render(text, x, y, flags_);
+        redraw(0);
       }
       return CONTINUE_E;
     }
@@ -115,7 +116,7 @@ namespace SCIRun {
       string text = "";
       get_vars()->maybe_get_string("text", text);
       
-      if (renderer_->height(text) > region.height()) {
+      if (region.height() < 1 || renderer_->height(text) > region.height()) {
         return CONTINUE_E;
       }
       
@@ -148,63 +149,6 @@ namespace SCIRun {
       return CONTINUE_E;
     }
 
-
-    Drawable *
-    Text::maker(Variables *vars)
-    {
-
-      Color fgcolor(1.0, 1.0, 1.0, 1.0);
-      vars->maybe_get_color("color", fgcolor);
-      vars->maybe_get_color("fgcolor", fgcolor);
-
-      Color bgcolor(0.0, 0.0, 0.0, 1.0); 
-      vars->maybe_get_color("bgcolor", bgcolor);
-
-      double size = 20.0;
-      vars->maybe_get_double("size", size);
-      
-      string font = "scirun.ttf";
-      vars->maybe_get_string("font", font);
-      
-      int offsetx = 1;
-      vars->maybe_get_int("offset", offsetx);
-      vars->maybe_get_int("offsetx", offsetx);
-
-      int offsety = -1;
-      vars->maybe_get_int("offset", offsety);
-      vars->maybe_get_int("offsety", offsety);
-      
-      unsigned int anchor = TextRenderer::SW;
-      string anchorstr = "SW";
-      vars->maybe_get_string("anchor", anchorstr);
-      anchorstr = string_toupper(anchorstr);
-      if      (anchorstr ==  "N") { anchor = TextRenderer::N;  }
-      else if (anchorstr ==  "E") { anchor = TextRenderer::E;  }
-      else if (anchorstr ==  "S") { anchor = TextRenderer::S;  }
-      else if (anchorstr ==  "W") { anchor = TextRenderer::W;  }
-      else if (anchorstr == "NE") { anchor = TextRenderer::NE; }
-      else if (anchorstr == "SE") { anchor = TextRenderer::SE; }
-      else if (anchorstr == "SW") { anchor = TextRenderer::SW; }
-      else if (anchorstr == "NW") { anchor = TextRenderer::NW; }
-      else if (anchorstr ==  "C") { anchor = TextRenderer::C;  }
-      else { cerr << vars->get_id() << " anchor invalid: " 
-                  << anchorstr << "\n"; }
-      
-
-      return new Text(vars, 
-                      font,
-                      size,
-                      fgcolor, 
-                      bgcolor,
-                      anchor,
-                      vars->get_bool("vertical"),
-                      vars->get_bool("shadow"),
-                      vars->get_bool("extruded"),
-                      vars->get_bool("reverse"),
-                      offsetx,
-                      offsety);
-
-    }
 
   }
 }

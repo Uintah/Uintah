@@ -193,7 +193,7 @@ Skinner::Gradient::render_radial_gl()
   glVertex3d(x,y,0);
 
   // Need at least 2 radial points to produce tri-fan
-  int divisions = Max(2, int(Min(region.width(), region.height())));
+  int divisions = Max(3, int(Min(region.width(), region.height()))/2);
   double delta_rad = (end-start) / double(divisions-1);
   double rad = start;
   for (int i = 0; i < divisions; ++i) {

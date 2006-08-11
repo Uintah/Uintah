@@ -56,6 +56,14 @@ namespace SCIRun {
       }
     }
 
+
+    Variables::Variables(const Variables &copy) 
+      : variables_(copy.variables_),
+        parent_(copy.parent_),
+        children_(copy.children_)
+    {
+    }
+
     Variables::~Variables() 
     {
       children_t::iterator citer = children_.begin();

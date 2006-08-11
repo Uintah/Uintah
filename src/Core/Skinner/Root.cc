@@ -33,6 +33,7 @@
 #include <Core/Skinner/Variables.h>
 #include <Core/Skinner/Window.h>
 #include <Core/Skinner/Graph2D.h>
+#include <Core/Skinner/Arithmetic.h>
 #include <Core/Events/Tools/FilterRedrawEventsTool.h>
 #include <iostream>
 
@@ -45,6 +46,8 @@ namespace SCIRun {
       Parent(variables),
       windows_()
     {
+      REGISTER_CATCHER_TARGET(Root::Redraw);
+      REGISTER_CATCHER_TARGET(Root::Arithmetic_Maker);
       REGISTER_CATCHER_TARGET(Root::GLWindow_Maker);
       REGISTER_CATCHER_TARGET(Root::GLWindow_Destructor);
       REGISTER_CATCHER_TARGET(Root::Graph2D_Maker);
@@ -61,6 +64,18 @@ namespace SCIRun {
 
 
     Root::~Root() {
+    }
+
+    BaseTool::propagation_state_e
+    Root::Arithmetic_Maker(event_handle_t event) {
+      MakerSignal *maker_signal = 
+        dynamic_cast<Skinner::MakerSignal *>(event.get_rep());
+      ASSERT(maker_signal);
+      
+      Drawable *obj = new Arithmetic(maker_signal->get_vars());
+      maker_signal->set_signal_thrower(obj);
+      maker_signal->set_signal_name(maker_signal->get_signal_name()+"_Done");
+      return MODIFIED_E;
     }
 
     BaseTool::propagation_state_e
@@ -139,6 +154,14 @@ namespace SCIRun {
       EventManager::add_event(new QuitEvent());
       return STOP_E;
     }
+
+    BaseTool::propagation_state_e 
+    Root::Redraw(event_handle_t event) {
+      EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
+      return CONTINUE_E;
+    }
+    
+
     
     void
     Root::spawn_redraw_threads() {

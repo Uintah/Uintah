@@ -99,13 +99,13 @@ namespace SCIRun {
           (pointer->get_pointer_state() & PointerEvent::BUTTON_PRESS_E) &&
           (pointer->get_pointer_state() & PointerEvent::BUTTON_1_E)) 
       {
-        throw_signal("button_1_clicked", get_vars());
+        throw_signal("button_1_clicked");
       } 
 
       if (pointer && 
           (pointer->get_pointer_state() & PointerEvent::BUTTON_RELEASE_E) &&
           (pointer->get_pointer_state() & PointerEvent::BUTTON_1_E)) {
-        throw_signal("button_1_released", get_vars());
+        throw_signal("button_1_released");
       }
 
 

@@ -42,14 +42,15 @@ using std::endl;
 
 namespace SCIRun {
   namespace Skinner {
-    Persistent *make_Signal() { return new Signal("",0); }
+    Persistent *make_Signal() { return new Signal("",0,0); }
     PersistentTypeID Signal::type_id("Signal", "BaseEvent", &make_Signal);
 
-    Signal::Signal(const string &name, SignalThrower *thrower, 
-                   const string &data) :
+    Signal::Signal(const string &name, 
+                   SignalThrower *thrower, 
+                   Variables *vars) :
       BaseEvent("", 0),
       signal_name_(name),
-      signal_data_(data),
+      variables_(vars),
       thrower_(thrower)      
     {
     }
@@ -72,10 +73,27 @@ namespace SCIRun {
     SignalCatcher::CatcherTargetInfo_t::CatcherTargetInfo_t() :
       catcher_(0),
       function_(0),
-      data_(""),
       targetname_(""),
-      threaded_(false)
+      variables_(0)
     {
+    }
+
+    SignalCatcher::CatcherTargetInfo_t::CatcherTargetInfo_t
+    (const CatcherTargetInfo_t &copy) :
+      catcher_(copy.catcher_),
+      function_(copy.function_),
+      targetname_(copy.targetname_),
+      variables_(copy.variables_)
+    {
+    }
+
+
+    SignalCatcher::CatcherTargetInfo_t::~CatcherTargetInfo_t()
+    {
+      //      if (variables_) {
+      //        delete variables_;
+      //        variables_ = 0;
+      //      }
     }
       
 
@@ -88,8 +106,8 @@ namespace SCIRun {
       CatcherTargetInfo_t callback;
       callback.catcher_ = this;
       callback.function_ = function;
-      callback.data_ = "";
       callback.targetname_ = targetname;
+      callback.variables_ = 0;
 
       catcher_targets_.push_back(callback);
     }
@@ -106,15 +124,15 @@ namespace SCIRun {
 
     event_handle_t
     SignalThrower::throw_signal(const string &signalname, Variables *vars) {
-      event_handle_t signal = new Signal(signalname, this);
-      return throw_signal(all_catchers_, signal, vars);
+      event_handle_t signal = new Signal(signalname, this, vars);
+      return throw_signal(all_catchers_, signal);
     }
 
 
     class ThreadedCallback : public Runnable {
     public:     
       ThreadedCallback() : callback_(0), signal_(0), state_(BaseTool::STOP_E){}
-      virtual ~ThreadedCallback() { cerr << "threaded callback done\n"; }
+      virtual ~ThreadedCallback() { cerr << "Threadedcallback done\n";  }
 
       void      set_callback(SignalCatcher::CatcherTargetInfo_t *callback) {
         callback_ = callback;
@@ -147,14 +165,12 @@ namespace SCIRun {
 
     event_handle_t
     SignalThrower::throw_signal(SignalToAllCatchers_t &catchers,
-                                event_handle_t &signalh,
-                                Variables *vars)
+                                event_handle_t &signalh)
     {
 
       Signal *signal = dynamic_cast<Signal *>(signalh.get_rep());
       ASSERT(signal);
       const string &signalname = signal->get_signal_name();
-      //      cerr << "Throw signal2: " <<  signalname << std::endl;
 
       if (catchers.find(signalname) == catchers.end()) return signalh;
       BaseTool::propagation_state_e state = BaseTool::CONTINUE_E;
@@ -167,21 +183,17 @@ namespace SCIRun {
 
           ASSERT(callback.catcher_);
           ASSERT(callback.function_);
-
-          string signaldata = callback.data_;
-          if (vars) {
-            signaldata = vars->dereference(signaldata);
-          }
-          signal->set_signal_data(signaldata);
-          
-          if (!callback.threaded_) {
+          signal->set_vars(callback.variables_);
+          bool threaded = false;
+          callback.variables_->maybe_get_bool("threaded", threaded);
+          if (!threaded) {
             state = (callback.catcher_->*callback.function_)(signal);
           } else {
-            cerr << "threading: " << signalname << std::endl;
             ThreadedCallback *threaded_callback = new ThreadedCallback();
             threaded_callback->set_callback(&callback);
             threaded_callback->set_signal(signal);
-            new Thread(threaded_callback, signalname.c_str());
+            cerr << "Threading " << callback.targetname_ << std::endl;
+            (new Thread(threaded_callback, signalname.c_str()))->detach();
           }
           if (state == BaseTool::STOP_E) break;
         }

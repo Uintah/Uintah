@@ -1,0 +1,20 @@
+  <definition class="LabeledGradientBackground">
+    <object class="Collection">
+
+      <definition class="GradientBackground::child">
+        <object class="LabeledGradientBackground::child"/>
+      </definition>
+
+      <object class="GradientBackground"/>
+
+      <object class="Text">
+        <var name="text">$LabeledGradientBackground::text</var>  
+        <var name="size">40</var>  
+        <var name="anchor">S</var>
+        <var name="shadow" >1</var>
+        <var name="offsetx" >-5</var>
+        <var name="offsety" >5</var>
+
+      </object>
+    </object>
+  </definition>

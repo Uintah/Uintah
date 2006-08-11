@@ -56,11 +56,10 @@
           class CDATA #REQUIRED
           state CDATA #IMPLIED>
 
-<!ELEMENT signal (#PCDATA)>
+<!ELEMENT signal (var*)>
 <!ATTLIST signal 
           name CDATA #REQUIRED
-          target CDATA #REQUIRED
-          threaded (yes | no) "no">
+          target CDATA #REQUIRED>
 
 <!ELEMENT xi:include EMPTY>
 <!ATTLIST xi:include

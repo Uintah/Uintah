@@ -442,9 +442,9 @@ Painter::Painter(Skinner::Variables *variables, GuiContext* ctx) :
 
   InitializeSignalCatcherTargets(0);
   Skinner::Signal *signal = new Skinner::Signal("LoadColorMap1D",
-                                                this, "LoadColorMap1D");
+                                                this, get_vars());
   string srcdir = sci_getenv("SCIRUN_SRCDIR")+string("/Core/Skinner/Data/");
-  signal->set_signal_data(srcdir+"Rainbow.cmap");
+  get_vars()->insert("filename", srcdir+"Rainbow.cmap");
   LoadColorMap1D(signal);
 }
 

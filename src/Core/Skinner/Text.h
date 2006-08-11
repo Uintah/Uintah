@@ -41,24 +41,13 @@ namespace SCIRun {
   namespace Skinner {
     class Text : public Drawable {
     public:
-      Text (Variables *variables,
-            const string & font,
-            double size,
-            const Color &fgcolor,
-            const Color &bgcolor,
-            unsigned int anchor,
-            bool vertical,
-            bool shadow,
-            bool extrude,
-            bool reverse,
-            int offsetx = 1,
-            int offsety = 1);
+      Text (Variables *variables);
       virtual ~Text();
       virtual propagation_state_e       process_event(event_handle_t);
       static string                     class_name() { return "Text"; }
       static DrawableMakerFunc_t        maker;
 
-    private:
+    protected:
       CatcherFunction_t                 redraw;
       Color                             fgcolor_;
       Color                             bgcolor_;
@@ -66,7 +55,7 @@ namespace SCIRun {
       TextRenderer *                    renderer_;
       int                               offsetx_;
       int                               offsety_;
-      string                            variable_;
+      unsigned int                      cursor_position_;
     };
   }
 }
