@@ -46,155 +46,157 @@ namespace SCIRun {
 
 // Create a new socket
 IComSocket::IComSocket(std::string protocol) :
-	socket_(0),
-	protocol_(protocol)
+  socket_(0),
+  protocol_(protocol)
 {
-	error_.error = "";		// no error has been reported yet
-	error_.errnr = 0;		// no error
+  error_.error = "";		// no error has been reported yet
+  error_.errnr = 0;		// no error
 }
 
 // Remove the socket
 IComSocket::~IComSocket()
 {
-	clear();				// clear up the socket
+  clear();				// clear up the socket
 } 
 
 // copy constructor
 IComSocket::IComSocket(const IComSocket &s) :
-	socket_(0)
+  socket_(0)
 {
-	protocol_ = s.protocol_;	// copy the protocol 
-	error_ = s.error_;			// copy the last error
-	if (s.socket_)
-	{
-		s.socket_->dolock();
-		s.socket_->ref_cnt++;
-		socket_ = s.socket_;
-		s.socket_->unlock();
-	}
+  protocol_ = s.protocol_;	// copy the protocol 
+  error_ = s.error_;			// copy the last error
+  if (s.socket_)
+  {
+    s.socket_->dolock();
+    s.socket_->ref_cnt++;
+    socket_ = s.socket_;
+    s.socket_->unlock();
+  }
 } 
 
 
 IComSocket& IComSocket::operator=(const IComSocket &s)
 {
-	if (this != &s)
-	{
-		if (socket_) clear();
-		socket_ = 0;
-		protocol_ = s.protocol_;
-		error_ = s.error_;
-		if (s.socket_)
-		{
-			s.socket_->dolock();
-			s.socket_->ref_cnt++;
-			socket_ = s.socket_;
-			s.socket_->unlock();
-		}
-	}
-	return(*this);
+  if (this != &s)
+  {
+    if (socket_) clear();
+    socket_ = 0;
+    protocol_ = s.protocol_;
+    error_ = s.error_;
+    if (s.socket_)
+    {
+      s.socket_->dolock();
+      s.socket_->ref_cnt++;
+      socket_ = s.socket_;
+      s.socket_->unlock();
+    }
+  }
+  return(*this);
 }
 
 // create a socket and overrule the type setting
 bool IComSocket::create(std::string protocol)
 {
-	if (socket_) clear();
-	protocol_ = protocol;
-	return(create());
+  if (socket_) clear();
+  protocol_ = protocol;
+  return(create());
 }
 
 bool IComSocket::create()
 {
-	if (socket_) clear();
+  if (socket_) clear();
 
-	if (protocol_ == "scirun")
-	{
-		try
-		{
-			socket_ = static_cast<IComVirtualSocket *>(new IComINetSocket());
-			socket_->ref_cnt = 1;
-			return(true);
-		}
-		catch(...)
-		{
-			socket_ = 0;
-			error_.error = "Could not allocate socket";
-			error_.errnr = EBADF;
-			return(false);
-		}
-	}
+  if (protocol_ == "scirun")
+  {
+    try
+    {
+      socket_ = static_cast<IComVirtualSocket *>(new IComINetSocket());
+      socket_->ref_cnt = 1;
+      return(true);
+    }
+    catch(...)
+    {
+      socket_ = 0;
+      error_.error = "Could not allocate socket";
+      error_.errnr = EBADF;
+      return(false);
+    }
+  }
 
-	if (protocol_ == "sciruns")
-	{
-		try
-		{
-			socket_ = static_cast<IComVirtualSocket *>(new IComSslSocket());
-			socket_->ref_cnt = 1;
-			return(true);
-		}
-		catch(...)
-		{
-			socket_ = 0;
-			error_.error = "Could not allocate socket";
-			error_.errnr = EBADF;
-			return(false);
-		}
-	}
+  if (protocol_ == "sciruns")
+  {
+    try
+    {
+      socket_ = static_cast<IComVirtualSocket *>(new IComSslSocket());
+      socket_->ref_cnt = 1;
+      return(true);
+    }
+    catch(...)
+    {
+      socket_ = 0;
+      error_.error = "Could not allocate socket";
+      error_.errnr = EBADF;
+      return(false);
+    }
+  }
 	
-	if (protocol_ == "internal")
-	{
-		try
-		{
-			socket_ = static_cast<IComVirtualSocket *>(new IComInternalSocket());
-			socket_->ref_cnt = 1;
-			return(true);
-		}
-		catch(...)
-		{
-			socket_ = 0;
-			error_.error = "Could not allocate socket";
-			error_.errnr = EBADF;
-			return(false);
-		}
-	}
+  if (protocol_ == "internal")
+  {
+    try
+    {
+      socket_ = static_cast<IComVirtualSocket *>(new IComInternalSocket());
+      socket_->ref_cnt = 1;
+      return(true);
+    }
+    catch(...)
+    {
+      socket_ = 0;
+      error_.error = "Could not allocate socket";
+      error_.errnr = EBADF;
+      return(false);
+    }
+  }
 
-	// The algorithm should not get here, unless the protocol is not an existing one
-	error_.error = "Unknown socket protocol has been specified";
-	error_.errnr = EBADF;
+  // The algorithm should not get here, unless the protocol 
+  // is not an existing one
+  error_.error = "Unknown socket protocol has been specified";
+  error_.errnr = EBADF;
 
-	std::cerr << "Socket creation failed as the socket type (" << protocol_ << ") is an unknown type" << std::endl;
-	return(false);
+  std::cerr << "Socket creation failed as the socket type (" 
+	    << protocol_ << ") is an unknown type" << std::endl;
+  return(false);
 }
 
 
 void IComSocket::clear()
 {
-	if (socket_)
-	{
-		IComVirtualSocket* oldsocket = 0;
-		socket_->dolock();
-		socket_->ref_cnt--;
-		oldsocket = socket_;
-		socket_->unlock();
-		socket_ = 0;
-		if (oldsocket->ref_cnt == 0) 
-		{
-			IComSocketError err;
-			if (oldsocket) oldsocket->close(err);
-			if (oldsocket) delete oldsocket;
-		}
+  if (socket_)
+  {
+    IComVirtualSocket* oldsocket = 0;
+    socket_->dolock();
+    socket_->ref_cnt--;
+    oldsocket = socket_;
+    socket_->unlock();
+    socket_ = 0;
+    if (oldsocket->ref_cnt == 0) 
+    {
+      IComSocketError err;
+      if (oldsocket) oldsocket->close(err);
+      if (oldsocket) delete oldsocket;
+    }
 		
-	}
+  }
 	
-	// reset error, socket is gone so we do not want to know about it anymore
-	error_.error = "";
-	error_.errnr = 0;
+  // reset error, socket is gone so we do not want to know about it anymore
+  error_.error = "";
+  error_.errnr = 0;
 }
 
 bool IComSocket::nosocketerror()
 {
-		error_.error = "No socket has yet been created";
-		error_.errnr = EBADF;
-		return(false); 
+  error_.error = "No socket has yet been created";
+  error_.errnr = EBADF;
+  return(false); 
 }
 
-}
+} // namespace SCIRun
