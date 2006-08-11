@@ -29,8 +29,6 @@ using namespace std;
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
-
-const double Steady_Burn::R = 8.314;
 const double Steady_Burn::EPS = 1.e-5;/* iteration stopping criterion */ 
 const double Steady_Burn::UNDEFINED = -10; 
 
@@ -59,6 +57,8 @@ void Steady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup
   d_sharedState = sharedState;
   matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
   matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");  
+  
+  params->require("IdealGasConst",     R );
   params->require("PreExpCondPh",      Ac);
   params->require("ActEnergyCondPh",   Ec);
   params->require("PreExpGasPh",       Bg);
@@ -106,7 +106,9 @@ void Steady_Burn::outputProblemSpec(ProblemSpecP& ps)
   model_ps->setAttribute("type","Steady_Burn");
 
   model_ps->appendElement("fromMaterial",matl0->getName());
-  model_ps->appendElement("toMaterial",matl1->getName());
+  model_ps->appendElement("toMaterial",  matl1->getName());
+
+  model_ps->appendElement("IdealGasConst",     R );
   model_ps->appendElement("PreExpCondPh",      Ac);
   model_ps->appendElement("ActEnergyCondPh",   Ec);
   model_ps->appendElement("PreExpGasPh",       Bg);
