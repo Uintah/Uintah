@@ -380,7 +380,8 @@
       <Model type = "Unsteady_Burn">
         <fromMaterial>         PBX9501      </fromMaterial>
         <toMaterial>           product      </toMaterial>
-
+        
+        <IdealGasConst>        8.314        </IdealGasConst>
         <PreExpCondPh>         1.637e15     </PreExpCondPh>
         <ActEnergyCondPh>      1.76e5       </ActEnergyCondPh>
         <PreExpGasPh>          1.6e-3       </PreExpGasPh>
