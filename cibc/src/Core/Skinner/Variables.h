@@ -52,6 +52,7 @@ namespace SCIRun {
     public:
       //      Variables         (const string &id);
       Variables         (const string &id, Variables *parent=0);
+      Variables         (const Variables &copy);
       virtual           ~Variables();
 
       //      Variables *       spawn(const string &id);

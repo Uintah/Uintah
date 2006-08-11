@@ -883,7 +883,8 @@ Painter::FloodfillTool::do_floodfill()
 Painter::ITKThresholdTool::ITKThresholdTool(Painter *painter) :
   BaseTool("ITK Threshold"),
   painter_(painter),
-  seed_volume_(0)
+  seed_volume_(0),
+  filter_(0)
 {
 }
 
@@ -918,7 +919,11 @@ Painter::ITKThresholdTool::process_event
       return STOP_E;
     }
 
-    finish();
+    if (filter_.IsNull()) 
+      finish();
+    else 
+      cont();
+    return CONTINUE_E;
   }
 
   if (dynamic_cast<QuitEvent *>(event.get_rep())) {
@@ -928,15 +933,24 @@ Painter::ITKThresholdTool::process_event
   return CONTINUE_E;
 }
 
+void
+Painter::ITKThresholdTool::cont()
+{
+  cerr << "CONT\n";
+  //  filter_->ReverseExpansionDirectionOff();
+  filter_->ManualReinitializationOn();
+  filter_->Modified();
+  NrrdDataHandle temp = 0;
+  painter_->do_itk_filter<Painter::ITKImageFloat3D>(filter_, temp);
+}
+
 
 void
 Painter::ITKThresholdTool::finish()
 {
 #if HAVE_INSIGHT
   NrrdDataHandle source_nrrdh = painter_->current_volume_->nrrd_handle_;
-  typedef itk::ThresholdSegmentationLevelSetImageFilter
-    < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D > FilterType;
-  FilterType::Pointer filter = FilterType::New();
+  filter_ = FilterType::New();
   painter_->get_vars()->insert("ToolDialog::text", "ITK Threshold Segmentation Level Set Running...", "string", true);  
   painter_->get_vars()->unset("ProgressBar::bar_height");
   //  painter_->get_vars()->insert("ToolDialog::button_height", "0", "string", true);
@@ -972,8 +986,8 @@ Painter::ITKThresholdTool::finish()
   double max = mean.first + factor*mean.second;
 
 
-  filter->SetLowerThreshold(min);
-  filter->SetUpperThreshold(max);
+  filter_->SetLowerThreshold(min);
+  filter_->SetUpperThreshold(max);
 
 
   string minmaxstr = "Threshold min: " + to_string(min) +
@@ -985,30 +999,30 @@ Painter::ITKThresholdTool::finish()
 
   string scope = "ITKThresholdTool::";
   Skinner::Variables *vars = painter_->get_vars();
-  filter->SetCurvatureScaling(vars->get_double(scope+"curvatureScaling"));
-  filter->SetPropagationScaling(vars->get_double(scope+"propagationScaling"));
-  filter->SetEdgeWeight(vars->get_double(scope+"edgeWeight"));
-  filter->SetNumberOfIterations(vars->get_int(scope+"numberOfIterations"));
-  filter->SetMaximumRMSError(vars->get_double(scope+"maximumRMSError"));
+  filter_->SetCurvatureScaling(vars->get_double(scope+"curvatureScaling"));
+  filter_->SetPropagationScaling(vars->get_double(scope+"propagationScaling"));
+  filter_->SetEdgeWeight(vars->get_double(scope+"edgeWeight"));
+  filter_->SetNumberOfIterations(vars->get_int(scope+"numberOfIterations"));
+  filter_->SetMaximumRMSError(vars->get_double(scope+"maximumRMSError"));
   if (vars->get_bool(scope+"reverseExpansionDirection")) 
-    filter->ReverseExpansionDirectionOn();
+    filter_->ReverseExpansionDirectionOn();
   else 
-    filter->ReverseExpansionDirectionOff();
-  filter->SetIsoSurfaceValue(vars->get_double(scope+"isoSurfaceValue"));
-  filter->SetSmoothingIterations(vars->get_int(scope+"smoothingIterations"));
-  filter->SetSmoothingTimeStep(vars->get_double(scope+"smoothingTimeStep"));
-  filter->SetSmoothingConductance(vars->get_double(scope+"smoothingConductance"));
+    filter_->ReverseExpansionDirectionOff();
+  filter_->SetIsoSurfaceValue(vars->get_double(scope+"isoSurfaceValue"));
+  filter_->SetSmoothingIterations(vars->get_int(scope+"smoothingIterations"));
+  filter_->SetSmoothingTimeStep(vars->get_double(scope+"smoothingTimeStep"));
+  filter_->SetSmoothingConductance(vars->get_double(scope+"smoothingConductance"));
 
   ITKDatatypeHandle img_handle = painter_->nrrd_to_itk_image(source_nrrdh);
   Painter::ITKImageFloat3D *imgp = 
     dynamic_cast<Painter::ITKImageFloat3D *>(img_handle->data_.GetPointer());
-  filter->SetFeatureImage(imgp);
+  filter_->SetFeatureImage(imgp);
 
 
   painter_->filter_volume_ = new_layer;
   painter_->filter_update_img_ = painter_->nrrd_to_itk_image(seed_nrrdh);
 
-  painter_->do_itk_filter<Painter::ITKImageFloat3D>(filter, seed_nrrdh);
+  painter_->do_itk_filter<Painter::ITKImageFloat3D>(filter_, seed_nrrdh);
   new_layer->nrrd_handle_ = seed_nrrdh;
 
   painter_->set_all_slices_tex_dirty();

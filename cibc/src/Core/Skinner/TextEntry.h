@@ -32,13 +32,13 @@
 #ifndef SKINNER_TEXTENTRY_H
 #define SKINNER_TEXTENTRY_H
 
-#include <Core/Skinner/Parent.h>
+#include <Core/Skinner/Text.h>
 #include <string>
 using std::string;
 
 namespace SCIRun {
   namespace Skinner {
-    class TextEntry : public Parent {
+    class TextEntry : public Text {
     public:
       TextEntry (Variables *);
       virtual ~TextEntry();
@@ -50,6 +50,7 @@ namespace SCIRun {
       void                              autocomplete();
       string                            str_;
       bool                              inside_;
+      bool                              numeric_;
     };
   }
 }

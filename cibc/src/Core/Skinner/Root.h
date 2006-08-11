@@ -46,11 +46,13 @@ namespace SCIRun {
       virtual ~Root();
       void spawn_redraw_threads();
     private:
+      CatcherFunction_t Arithmetic_Maker;
       CatcherFunction_t GLWindow_Maker;
       CatcherFunction_t GLWindow_Destructor;
       CatcherFunction_t ColorMap2D_Maker;
       CatcherFunction_t Graph2D_Maker;
       CatcherFunction_t Quit;
+      CatcherFunction_t Redraw;
       typedef vector<GLWindow *> GLWindows_t;
       GLWindows_t windows_;
     };

@@ -72,10 +72,10 @@ public:
                  SHADOW = 32,
                  REVERSE = 64,
                  EXTRUDED = 128,
-                 DEFAULT = 256 };
+                 CURSOR = 256};
 
-  int                   width(const string &text, int flags = DEFAULT);
-  int                   height(const string &text, int flags = DEFAULT);
+  int                   width(const string &text, int flags = 0);
+  int                   height(const string &text, int flags = 0);
 
   void                  set_color(float, float, float, float);
   void                  set_color(float color[4]);
@@ -89,7 +89,10 @@ public:
 
   void			render(const string &,
                                float x, float y, 
-                               int flags = DEFAULT);
+                               int flags = 0);
+
+  void                  set_cursor_position(unsigned int pos);
+  
 private:
   // Info for glyphs rendered to texture
   struct GlyphInfo {
@@ -118,6 +121,7 @@ private:
   float                 color_[4];
   float                 shadow_color_[4];
   pair<int, int>        shadow_offset_;  
+  unsigned int          cursor_position_;
 
   // Textures of all glyphs
   typedef set<TextureObj *> TextureSet;
@@ -138,7 +142,7 @@ private:
                                     const Point &,
                                     const Vector &,
                                     const Vector &,
-                                    int);
+                                    int &);
 };
   
 }

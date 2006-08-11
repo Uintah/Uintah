@@ -171,7 +171,7 @@ namespace SCIRun {
     Animation::AnimateVariable(event_handle_t e) {
       Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(e.get_rep());
       ASSERT(signal);
-      string varnum = signal->get_signal_data();
+      string varnum = signal->get_vars()->get_string("varnum");
       curvar_ = 0;
       if (!string_to_int(varnum, curvar_) || !curvar_) {
         return STOP_E;

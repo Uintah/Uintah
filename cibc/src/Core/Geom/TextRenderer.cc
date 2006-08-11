@@ -61,6 +61,7 @@ TextRenderer::TextRenderer(FreeTypeFace *face) :
   face_(face),
   glyphs_(),
   shadow_offset_(make_pair(1,-1)),
+  cursor_position_(0),
   textures_(),
   texture_(0),
   x_(0),
@@ -160,7 +161,7 @@ TextRenderer::layout_text(const string &text,
                           const Point &anchor, 
                           const Vector &left, 
                           const Vector &up, 
-                          int flags) 
+                          int &flags) 
 {
 #ifdef HAVE_FREETYPE
   unsigned int passes = 1;
@@ -174,14 +175,17 @@ TextRenderer::layout_text(const string &text,
                  Abs(shadow_offset_.second))+1;
   }
 
-  unsigned total_glyphs = text.size()*passes;
-  if (layout_.size() < total_glyphs) {
-    layout_.resize(total_glyphs);
+  unsigned total_glyphs = text.size()*passes ; 
+  if (layout_.size() < total_glyphs+1) {
+    layout_.resize(total_glyphs+1);
   }
 
   Vector left_pt = left / 64.0;
   Vector up_pt = up / 64.0;
   Vector nextline = (face_->ft_face_->size->metrics.height + passes*64)*up_pt;
+
+  Vector cursor_up = (face_->ft_face_->size->metrics.ascender)*up_pt;
+  Vector cursor_down = (face_->ft_face_->size->metrics.descender)*up_pt;
 
   float delta_color[4] = {0.0, 0.0, 0.0, 0.0};
   Vector delta_position(0.0, 0.0, 0.0);
@@ -194,6 +198,10 @@ TextRenderer::layout_text(const string &text,
   }
 
   BBox bbox;
+  bool disable_cursor_flag = true;
+  bool do_cursor_layout = false;
+  Point cursor_ll;
+  
   for (unsigned int pass = 0; pass < passes; ++pass) {
     Point position = (pass * delta_position).asPoint();
     int linenum = 0;
@@ -238,10 +246,54 @@ TextRenderer::layout_text(const string &text,
           position += left_pt * kerning.x;
           // position += up_pt * kerning.y;
         }
+
+
         
         ll = (position + 
               up_pt * (metrics.horiBearingY - metrics.height) +
               left_pt * metrics.horiBearingX);
+
+
+        if (pass == (passes - 1)) {
+          // expand bbox by a a phantom cursor 
+          // This fixes the layout from jumping around when 
+          // using different strings and anchor combinations
+          // ie, the string 'gpq' with its descenders
+          // will have a different bounding box than 'ABC'... 
+          // creating a phantom cursor that has a descender and ascender
+          // at least as large as any glyph in the font fixes this.
+          
+          if (c == (text.size()-1)) {
+            Point temp = position + 
+              left_pt * (metrics.horiAdvance);
+            //              left_pt * (metrics.horiBearingX + metrics.width);
+            bbox.extend(temp + cursor_down);
+            bbox.extend(temp + 2*left + cursor_down);
+            bbox.extend(temp + 2*left + cursor_up);
+            bbox.extend(temp + cursor_up);
+          }
+            
+              
+            
+          // Cursor is in current layout position
+          if (c == cursor_position_) {
+            do_cursor_layout = true;
+            cursor_ll = position + left_pt * metrics.horiBearingX;
+            if (c) 
+              cursor_ll = cursor_ll - left;
+          }
+
+          // Cursor is at end of string
+          if (cursor_position_ == text.size() && (c == text.size()-1)) {
+            do_cursor_layout = true;
+            cursor_ll = position + 
+              left_pt * (metrics.horiAdvance);
+            //              left_pt * (metrics.horiBearingX + metrics.width);
+          }
+                         
+        }
+
+
         position = position + left_pt * metrics.horiAdvance;
       } else {
         int halfwidth = (metrics.width) >> 1;
@@ -259,7 +311,32 @@ TextRenderer::layout_text(const string &text,
       for (int v = 0; v < 4; ++v) {
         bbox.extend(layout.vertices_[v]);
       }
-    }    
+    }
+  }
+
+  if (!(flags & VERTICAL) && 
+      !do_cursor_layout && !cursor_position_) {
+
+    cursor_ll = Point(0.0, 0.0, 0.0);
+    do_cursor_layout = true;
+  }
+
+  if (do_cursor_layout) {
+    // Cursor layout is now valid, dont turn off the cursor flag
+    disable_cursor_flag = false; 
+    layout_.back().vertices_[0] = cursor_ll + cursor_down;
+    layout_.back().vertices_[1] = cursor_ll + 2 * left + cursor_down ;
+    layout_.back().vertices_[2] = cursor_ll + 2 * left + cursor_up;
+    layout_.back().vertices_[3] = cursor_ll + cursor_up;
+    for (int v = 0; v < 4; ++v) {
+      layout_.back().color_[v] = color_[v];
+      bbox.extend(layout_.back().vertices_[v]);
+    }
+  }
+
+
+  if (disable_cursor_flag) {
+    flags &= ~CURSOR;
   }
 
   if (!bbox.valid()) {
@@ -348,6 +425,22 @@ TextRenderer::render(const string &text, float x, float y, int flags)
     glyph->texture_->set_color(layout.color_);
     glyph->texture_->draw(4, layout.vertices_, glyph->tex_coords_);
   }
+
+  glDisable(GL_TEXTURE_2D);
+
+  if ((flags & CURSOR) && layout_.size()) {
+    glColor4fv(layout_.back().color_);
+    //    glColor4f(1.0, 0.0, 0.0, 1.0);
+    glBegin(GL_QUADS);
+    for (int v = 0; v < 4; ++v) {
+      glVertex3d(layout_.back().vertices_[v](0),
+                 layout_.back().vertices_[v](1),
+                 layout_.back().vertices_[v](2));
+    }
+    glEnd();
+  }
+               
+               
   glMatrixMode(GL_MODELVIEW);
   glPopMatrix();
   glMatrixMode(GL_PROJECTION);
@@ -479,6 +572,12 @@ TextRenderer::render_glyph_to_texture(const wchar_t &character) {
 #else
   return 0;
 #endif
+}
+
+
+void
+TextRenderer::set_cursor_position(unsigned int pos) {
+  cursor_position_ = pos;
 }
 
 }

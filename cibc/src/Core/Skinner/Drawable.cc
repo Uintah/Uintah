@@ -98,6 +98,14 @@ namespace SCIRun {
     {
       return variables_;
     }
+
+    event_handle_t
+    Drawable::throw_signal(const string &signal) {
+      SignalThrower *thrower = dynamic_cast<SignalThrower *>(this);
+      ASSERT(thrower);
+      return thrower->throw_signal(signal, get_vars());
+    }
+
   }
 }
     

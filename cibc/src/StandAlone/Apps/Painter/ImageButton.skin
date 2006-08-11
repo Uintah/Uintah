@@ -1,0 +1,40 @@
+  <definition class="ImageButton" state="normal">
+    <object class="Frame">
+      <var name="ImageButton::color" propagate="yes" overwrite="no">#AAAAAAFF</var>
+      <var name="ImageButton::color1" propagate="yes" overwrite="no">#EEEEEEFF</var>
+      <var name="ImageButton::color2" propagate="yes" overwrite="no">#777777FF</var>
+      <var name="ImageButton::Text::fgcolor" propagate="yes" overwrite="no">#000000FF</var>
+      <var name="ImageButton::Text::bgcolor" propagate="yes" overwrite="no">#FFFFFFFF</var>
+      
+      <var name="width">4</var>
+      <var name="height">4</var>
+      <var name="color1">$ImageButton::color1</var>
+      <var name="color2">$ImageButton::color2</var>
+      <var name="invert">1</var>
+      <object class="Collection">
+        <object class="Box" id="TargetBox">
+          <var name="color">$ImageButton::color</var>
+          <signal name="button_1_clicked" target="ImageButton::clicked"/>
+          <signal name="button_1_released" target="ImageButton::released"></signal>
+          <object class="Texture">
+            <var name="file">$ImageButton::image_file</var>
+          </object>
+        </object>
+<!--
+        <object class="Text"> 
+          <var name="text">$ImageButton::Text::text</var>
+          <var name="row">1</var>
+          <var name="col">1</var>
+          <var name="cell-height">30</var>
+          <var name="size">$ImageButton::Text::size</var>
+          <var name="fgcolor">$ImageButton::Text::fgcolor</var>
+          <var name="bgcolor">$ImageButton::Text::bgcolor</var>
+          <var name="shadow">1</var>
+          <var name="offsetx">-1</var>
+          <var name="offsety">1</var>
+          <var name="anchor">C</var>
+        </object>
+-->
+      </object>
+    </object>
+  </definition>

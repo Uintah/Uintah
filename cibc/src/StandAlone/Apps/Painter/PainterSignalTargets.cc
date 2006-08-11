@@ -260,7 +260,7 @@ BaseTool::propagation_state_e
 Painter::NrrdFileRead(event_handle_t event) {
   Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
   ASSERT(signal);
-  const string &filename = signal->get_signal_data();
+  const string &filename = signal->get_vars()->get_string("filename");
   if (!validFile(filename)) {
     return STOP_E;
   }
@@ -292,7 +292,7 @@ BaseTool::propagation_state_e
 Painter::MemMapFileRead(event_handle_t event) {
   Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
   ASSERT(signal);
-  const string &filename = signal->get_signal_data();
+  const string &filename = signal->get_vars()->get_string("filename");
   //  if (!validFile(filename)) {
   //    return STOP_E;
   //  }
@@ -377,7 +377,7 @@ Painter::ITKImageFileRead(event_handle_t event) {
   Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
   ASSERT(signal);
 
-  const string &filename = signal->get_signal_data();
+  const string &filename = signal->get_vars()->get_string("filename");
   if (!validFile(filename)) {
     return STOP_E;
   }
@@ -433,7 +433,7 @@ Painter::ITKImageFileWrite(event_handle_t event) {
   Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
   ASSERT(signal);
 
-  const string &filename = signal->get_signal_data();
+  const string &filename = signal->get_vars()->get_string("filename");
 
   typedef itk::ImageFileWriter<itk::Image<float, 3> > FileWriterType;
   
@@ -749,7 +749,7 @@ BaseTool::propagation_state_e
 Painter::LoadColorMap1D(event_handle_t event) {   
   Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
   ASSERT(signal);
-  const string &fn = signal->get_signal_data();
+  const string &fn = signal->get_vars()->get_string("filename");
   Piostream *stream = auto_istream(fn, 0);
   if (!stream) {
     cerr << "Error reading file '" + fn + "'." << std::endl;

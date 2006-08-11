@@ -36,15 +36,20 @@
 #include <Core/Util/Assert.h>
 #include <Core/Events/keysyms.h>
 #include <Core/Util/FileUtils.h>
+#include <Core/Math/MinMax.h>
+#include <Core/Geom/TextRenderer.h>
+#include <Core/Containers/StringUtil.h>
 
 
 namespace SCIRun {
   namespace Skinner {
     TextEntry::TextEntry(Variables *variables) :
-      Parent(variables),
+      Text(variables),
       str_(),
-      inside_(false)
+      inside_(false),
+      numeric_(variables->get_bool("numeric"))
     { 
+      
     }
 
     TextEntry::~TextEntry()
@@ -59,9 +64,10 @@ namespace SCIRun {
 
     void
     TextEntry::autocomplete() {
+
       pair<string, string> dirfile = split_filename(str_);
       if (!validDir(dirfile.first)) return;
-      
+
       vector<string> files = 
         GetFilenamesStartingWith(dirfile.first, dirfile.second);
 
@@ -79,12 +85,14 @@ namespace SCIRun {
           for (unsigned int i = 1; i < files.size(); ++i) {
             if ((j == files[i].size()) || (files[i][j] != files[i-1][j])) {
               str_ = str_ + files[i].substr(j0, j-j0);
+              cursor_position_ = str_.length();
               return;
             }
           }
           ++j;
         } while (1);
       }
+      cursor_position_ = str_.length();
     }
 
 
@@ -101,6 +109,7 @@ namespace SCIRun {
       if (key && (key->get_key_state() & KeyEvent::KEY_PRESS_E)) {
         int code = key->get_keyval();
         bool shift = (key->get_modifiers() & EventModifiers::SHIFT_E);
+        string character = "";
         if ((code >= SCIRun_a) && (code <= SCIRun_z)) {
           code -= SCIRun_a; 
           
@@ -109,7 +118,7 @@ namespace SCIRun {
           } else {
             code += char_traits<wchar_t>::to_int_type('a');
           }
-          str_ = str_ + string(1, char_traits<wchar_t>::to_char_type(code));
+          character = string(1, char_traits<wchar_t>::to_char_type(code));
         } else if ((code >= SCIRun_0) && (code <= SCIRun_9)) {
           code -= SCIRun_0; 
 
@@ -119,30 +128,60 @@ namespace SCIRun {
           } else {
             code += char_traits<wchar_t>::to_int_type('0');
           }
-          str_ = str_ + string(1, char_traits<wchar_t>::to_char_type(code));
+          character = string(1, char_traits<wchar_t>::to_char_type(code));
         } else if (code == SCIRun_slash) {
-          str_ = str_ + string("/");
+          character = string("/");
         } else if (code == SCIRun_period) {
-          str_ = str_ + string(".");
+          character = string(".");
         } else if (code == SCIRun_minus && !shift) {
-          str_ = str_ + string("-");
+          character = string("-");
         } else if (code == SCIRun_minus && shift) {
-          str_ = str_ + string("_");
+          character = string("_");
         } else if (code == SCIRun_space) {
-          str_ = str_ + string(" ");
+          character = string(" ");
         } else if (code == SCIRun_Tab) {
           autocomplete();
         } else if (code == SCIRun_BackSpace) {
-          str_ = str_.substr(0, str_.length()-1);
+          if (cursor_position_) {
+            cursor_position_--;
+            str_.erase(cursor_position_, 1);
+          }
+        } else if (code == SCIRun_Left) {
+          cursor_position_ = Max(int(cursor_position_-1), 0);
+        } else if (code == SCIRun_Right) {
+          cursor_position_ = Min(int(cursor_position_+1), str_.length());
         } else {
           //          cerr << get_id() << " cannot handle keycode: " << code << std::endl;
         }
-                
+        
+        if (character.length()) {
+          string temp = str_;
+          temp.insert(cursor_position_, character);
+          if (numeric_) {
+            string temp = str_;
+            temp.insert(cursor_position_, character);
+            double val;
+            if (string_to_double(temp, val)) {
+              str_ = temp;
+              cursor_position_++;
+            }
+          } else {            
+            str_.insert(cursor_position_, character);
+            cursor_position_++;
+          }
+        }
+        renderer_->set_cursor_position(cursor_position_);                
         EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
         
-        get_vars()->change_parent("TextEntry::value", str_, "string", true);
+        get_vars()->change_parent(get_vars()->get_string("variable"), str_, "string", true);
+        get_vars()->insert("text", str_, "string", false);
+      } else {
+        get_vars()->maybe_get_string(get_vars()->get_string("variable"), str_);
+        get_vars()->insert("text", str_, "string", false);
       }
-      return Parent::process_event(event);
+        
+
+      return Text::process_event(event);
     }
 
 

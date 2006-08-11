@@ -58,13 +58,16 @@ namespace SCIRun {
     class Signal : public SCIRun::BaseEvent
     {
     public:
-      Signal(const string &name, SignalThrower *, const string &data = "");
+      Signal(const string &name, SignalThrower *, Variables *);
       ~Signal();
       string              get_signal_name() { return signal_name_; }
       void                set_signal_name(const string &n) { signal_name_=n; }
 
-      const string &      get_signal_data() { return signal_data_; }
-      void                set_signal_data(const string &d) { signal_data_=d; }
+      //      const string &      get_signal_data() { return signal_data_; }
+      //      void                set_signal_data(const string &d) { signal_data_=d; }
+
+      Variables *         get_vars() { return variables_; }
+      void                set_vars(Variables *vars) { variables_ = vars;}
 
       SignalThrower *     get_signal_thrower() { return thrower_; }
       void                set_signal_thrower(SignalThrower *t) { thrower_=t; }
@@ -74,7 +77,8 @@ namespace SCIRun {
       static PersistentTypeID type_id;
     private:
       string              signal_name_;
-      string              signal_data_;
+      Variables *         variables_; 
+      //      string              signal_data_;
       SignalThrower *     thrower_;
     };
     
@@ -94,11 +98,12 @@ namespace SCIRun {
 
       struct CatcherTargetInfo_t { 
         CatcherTargetInfo_t();
+        CatcherTargetInfo_t(const CatcherTargetInfo_t &copy);
+        ~CatcherTargetInfo_t();
         SignalCatcher *         catcher_;
         CatcherFunctionPtr      function_;
-        string                  data_;
         string                  targetname_;
-        bool                    threaded_;
+        Variables *             variables_;
       };
 
       typedef vector<CatcherTargetInfo_t> NodeCatchers_t;
@@ -127,12 +132,11 @@ namespace SCIRun {
 
 
       event_handle_t                    throw_signal(const string &,
-                                                     Variables *vars = 0);
+                                                     Variables *vars);
       
       
       static event_handle_t             throw_signal(SignalToAllCatchers_t &,
-                                                     event_handle_t &signal,
-                                                     Variables *vars = 0);
+                                                     event_handle_t &signal);
 
       static SignalToAllCatchers_t      collapse_tree(SignalCatcher::TreeOfCatchers_t &);
 
@@ -155,7 +159,7 @@ namespace SCIRun {
       Variables * variables_;
     public:
       MakerSignal(const string &name, Variables *vars) : 
-        Signal(name, 0), variables_(vars) {}
+        Signal(name, 0, vars), variables_(vars) {}
       Variables * get_vars() { return variables_; }
     };
   }

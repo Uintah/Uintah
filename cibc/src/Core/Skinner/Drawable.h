@@ -74,6 +74,8 @@ namespace SCIRun {
       const RectRegion &                get_region() const;
       void                              set_region(const RectRegion &);
 
+    protected:
+      virtual event_handle_t            throw_signal(const string &);
     private:
       RectRegion                        region_;
       Variables *                       variables_;

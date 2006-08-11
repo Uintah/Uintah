@@ -95,6 +95,7 @@
 #  include <Packages/Insight/Core/Datatypes/ITKDatatype.h>
 #  include <itkImageToImageFilter.h>
 #  include <itkCommand.h>
+#  include <itkThresholdSegmentationLevelSetImageFilter.h>
 #endif
 
 #ifdef _WIN32
@@ -110,6 +111,7 @@ using Insight::ITKDatatypeHandle;
 
 class Painter : public Skinner::Parent
 {
+  typedef               itk::Image<float,3> ITKImageFloat3D;
 public:
   class SliceWindow;
 private:
@@ -491,8 +493,13 @@ private:
     propagation_state_e process_event(event_handle_t);
   private:
     void                finish();
+    void                cont();
     Painter *           painter_;
     NrrdVolume *        seed_volume_;
+    typedef itk::ThresholdSegmentationLevelSetImageFilter
+    < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D > FilterType;
+    FilterType::Pointer filter_;
+    
   };
 
 
@@ -680,7 +687,7 @@ private:
   //itk::Object::Pointer  nrrd_to_itk_image(NrrdDataHandle &nrrd);
   
   NrrdDataHandle        itk_image_to_nrrd(ITKDatatypeHandle &);
-  typedef               itk::Image<float,3> ITKImageFloat3D;
+
 
   template <class ImageT>
   bool                  do_itk_filter(itk::ImageToImageFilter<ImageT,ImageT> *,
@@ -945,13 +952,15 @@ Painter::do_itk_filter(itk::ImageToImageFilter<ImageType, ImageType> *filter,
   filter->AddObserver(itk::ProgressEvent(), callback);
   filter->AddObserver(itk::IterationEvent(), callback);
   
-  ITKDatatypeHandle img_handle = nrrd_to_itk_image(nrrd_handle);  
-  ImageType *imgp = dynamic_cast<ImageType *>(img_handle->data_.GetPointer());
-
-  if (imgp == 0) 
-    return false;
-
-  filter->SetInput(imgp);
+  if (nrrd_handle.get_rep()) {
+    ITKDatatypeHandle img_handle = nrrd_to_itk_image(nrrd_handle);  
+    ImageType *imgp = dynamic_cast<ImageType *>(img_handle->data_.GetPointer());
+    
+    if (imgp == 0) 
+      return false;
+    
+    filter->SetInput(imgp);
+  }
 
   try {
     filter->Update();
@@ -973,13 +982,14 @@ Painter::do_itk_filter(itk::ImageToImageFilter<ImageType, ImageType> *filter,
 
   nrrd_handle = itk_image_to_nrrd(output_img);
 
+#if 0
   get_vars()->insert("ProgressBar::bar_height","0","string", true);
   get_vars()->insert("Painter::progress_bar_total_width","0","string", true);
   get_vars()->insert("Painter::progress_bar_text","F","string", true);
   get_vars()->insert("Painter::progress_bar_done_width","0","string", true);
   get_vars()->insert("ToolDialog::button_height","0","string", true);
   get_vars()->insert("ToolDialog::text","","string", true);
-
+#endif
 
   return true;
 }

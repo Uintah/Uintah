@@ -79,8 +79,14 @@ itcl_class SCIRun_FieldsGeometry_MeshSmoother {
 	frame $w.style
 	radiobutton $w.style.smartlaplacian -text "Smart Laplacian" \
 	    -variable $this-smoothscheme -value "SmartLaplacian"
+
 	radiobutton $w.style.shapeimprovement -text "Shape Improvement" \
 	    -variable $this-smoothscheme -value "ShapeImprovement"
+
+	radiobutton $w.style.none -text "None" \
+	    -variable $this-smoothscheme -value "None"
+
+
 	pack $w.style.smartlaplacian $w.style.shapeimprovement \
 	    -side left -anchor nw -padx 3
 	pack $w.style
