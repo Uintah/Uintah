@@ -1556,14 +1556,10 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       Vector pmom, pmassacc;
 
       double Cp=mpm_matl->getSpecificHeat();
-      ParticleVariable<double> pSpecificHeat;
-      new_dw->allocateTemporary(pSpecificHeat,pset);
 
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
         particleIndex idx = *iter;
-
-        pSpecificHeat[idx] = Cp;
 
         // Get the node indices that surround the cell
         
@@ -1581,7 +1577,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             gmass[m][ni[k]]          += pmass[idx]          * S[k];
             gvolume[m][ni[k]]        += pvolume[idx]        * S[k];
             gextforce[m][ni[k]]      += pexternalforce[idx] * S[k];
-            gSpecificHeat[ni[k]]     += pSpecificHeat[idx]  * S[k];
+            gSpecificHeat[ni[k]]     += Cp * S[k];
             if (d_temp_solve == false)
               gTemperature[ni[k]]   +=  pTemperature[idx]  * pmass[idx]* S[k];
             gvel_old[m][ni[k]]       += pmom                * S[k];
@@ -2738,7 +2734,6 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
   
       // Get the arrays of grid data on which the new part. values depend
       constNCVariable<Vector> dispNew, gacceleration;
-      constNCVariable<double> gTemperatureNoBC;
       constNCVariable<double> dTdt;
 
       delt_vartype delT;
@@ -2855,6 +2850,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       pids_new.copyData(pids);
 
     }
+
     // DON'T MOVE THESE!!!
     new_dw->put(sum_vartype(ke),     lb->KineticEnergyLabel);
     new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
