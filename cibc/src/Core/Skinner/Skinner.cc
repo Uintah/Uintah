@@ -42,8 +42,6 @@
 #include <Core/Skinner/Gradient.h>
 #include <Core/Skinner/Grid.h>
 #include <Core/Skinner/SceneGraph.h>
-#include <Core/Skinner/Text.h>
-#include <Core/Skinner/Text.h>
 #include <Core/Skinner/Texture.h>
 #include <Core/Skinner/TextEntry.h>
 #include <Core/Skinner/Root.h>
@@ -67,7 +65,6 @@ namespace SCIRun {
       XMLIO::register_maker<Grid>();
       XMLIO::register_maker<Layout>();
       XMLIO::register_maker<SceneGraph>();
-      XMLIO::register_maker<Text>();
       XMLIO::register_maker<TextEntry>();
       XMLIO::register_maker<Texture>();
 

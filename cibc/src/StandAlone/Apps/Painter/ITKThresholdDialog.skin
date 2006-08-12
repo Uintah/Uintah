@@ -65,7 +65,7 @@
             <var name="cols">1</var>
             
             
-            <object class="Text">
+            <object class="Root::Text">
               <var name="row">1</var>
               <var name="col">1</var>
               <var name="text">$ToolDialog::text</var>
@@ -114,7 +114,7 @@
                   </object>
                 </object>
               
-                <object class="Text">
+                <object class="Root::Text">
                   <var name="fgcolor">#000000FF</var>
                   <var name="bgcolor">#FFFFFFFF</var>
                   <var name="text">$Painter::progress_bar_text</var>

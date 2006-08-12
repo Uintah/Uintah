@@ -46,16 +46,37 @@ namespace SCIRun {
       virtual ~Root();
       void spawn_redraw_threads();
     private:
+      template <class T>
+      Drawable *          construct_class_from_maker_signal(event_handle_t);
       CatcherFunction_t Arithmetic_Maker;
       CatcherFunction_t GLWindow_Maker;
       CatcherFunction_t GLWindow_Destructor;
       CatcherFunction_t ColorMap2D_Maker;
       CatcherFunction_t Graph2D_Maker;
+      CatcherFunction_t Text_Maker;
       CatcherFunction_t Quit;
       CatcherFunction_t Redraw;
       typedef vector<GLWindow *> GLWindows_t;
       GLWindows_t windows_;
     };
+
+    template <class T>
+    Drawable *
+    Root::construct_class_from_maker_signal(event_handle_t event) {
+      MakerSignal *maker_signal = 
+        dynamic_cast<Skinner::MakerSignal *>(event.get_rep());
+      ASSERT(maker_signal);
+      T *obj = new T(maker_signal->get_vars());
+      maker_signal->set_signal_thrower(obj);
+      maker_signal->set_signal_name(maker_signal->get_signal_name()+"_Done");
+      return obj;
+    }
+      
+
+
+
+
+
   }
 }
 

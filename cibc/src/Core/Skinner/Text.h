@@ -44,9 +44,6 @@ namespace SCIRun {
       Text (Variables *variables);
       virtual ~Text();
       virtual propagation_state_e       process_event(event_handle_t);
-      static string                     class_name() { return "Text"; }
-      static DrawableMakerFunc_t        maker;
-
     protected:
       CatcherFunction_t                 redraw;
       Color                             fgcolor_;

@@ -163,7 +163,7 @@
         <var name="color2">#555555FF</var>
         <var name="invert">0</var>
 
-        <object class="Text">
+        <object class="Root::Text">
           <var name="text">U</var>
           <var name="font">UofU.ttf</var>
           <var name="size">55</var>
@@ -177,7 +177,7 @@
         </object>
 
 
-        <object class="Text">
+        <object class="Root::Text">
           <var name="text">U</var>
           <var name="font">UofU.ttf</var>
           <var name="size">55</var>
@@ -201,7 +201,7 @@
         <var name="col">1</var>
         <var name="cell-height">125</var>
 
-        <object class="Text">            
+        <object class="Root::Text">            
           <var name="text">$program_name</var>
           <var name="font">Crass.ttf</var>
           <var name="font">Machinegun.ttf</var>
@@ -219,7 +219,7 @@
 
         </object>
 
-        <object class="Text">            
+        <object class="Root::Text">            
           <var name="text">$program_name</var>
           <var name="font">Crass.ttf</var>
           <var name="font">Machinegun.ttf</var>
@@ -238,7 +238,7 @@
       <object class="Collection">
         <var name="row">2</var>
         <var name="col">1</var>
-        <object class="Text">
+        <object class="Root::Text">
           <var name="text">$full_program_name</var>
           <var name="font">Crass.ttf</var>
           <var name="font">Caslon.ttf</var>
@@ -252,7 +252,7 @@
           <var name="offsetx">-6</var>
           <var name="offsety">9</var>
         </object>
-        <object class="Text">
+        <object class="Root::Text">
           <var name="text">$full_program_name</var>
           <var name="font">Crass.ttf</var>
           <var name="font">Caslon.ttf</var>

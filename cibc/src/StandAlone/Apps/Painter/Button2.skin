@@ -31,7 +31,7 @@
           <signal name="button_1_released" target="Button::released"></signal>
         </object>
 
-        <object class="Text"> 
+        <object class="Root::Text"> 
           <var name="text">$Button::Text::text</var>
           <var name="size">$Button::Text::size</var>
           <var name="fgcolor">$Button::Text::fgcolor</var>

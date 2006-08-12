@@ -165,7 +165,7 @@
           <signal name="button_1_clicked" target="Button::clicked"></signal>
         </object>
 
-        <object class="Text"> 
+        <object class="Root::Text"> 
           <var name="text">$Button::Text::text</var>
           <var name="size">$Button::Text::size</var>
           <var name="fgcolor">$Button::Text::fgcolor</var>
@@ -205,7 +205,7 @@
           <var name="color">$grey2</var>
           <signal name="button_1_clicked" target="Button::clicked"/>
         </object>
-        <object class="Text"> 
+        <object class="Root::Text"> 
           <var name="text">$Button::Text::text</var>
           <var name="row">1</var>
           <var name="col">1</var>
@@ -257,7 +257,7 @@
 
       <object class="GradientBackground"/>
 
-      <object class="Text">
+      <object class="Root::Text">
         <var name="text">$LabeledGradientBackground::text</var>  
         <var name="size">40</var>  
         <var name="anchor">S</var>
@@ -356,7 +356,7 @@
             <var name="cols">5</var>
 
 
-            <object class="Text">
+            <object class="Root::Text">
               <var name="row">1</var>
               <var name="col">1</var>
               <var name="text">$FilterDialog::text</var>
@@ -419,7 +419,7 @@
             <var name="rows">3</var>
             <var name="cols">3</var>
             
-            <object class="Text">
+            <object class="Root::Text">
               <var name="row">1</var>
               <var name="col">1</var>
               <var name="text">$FileLoadBox::text</var>
@@ -456,7 +456,7 @@
                   
                   
                   
-                  <object class="Text">
+                  <object class="Root::Text">
                     <var name="text">$TextEntry::value</var>
                     <var name="size">30</var>
                     <var name="anchor">W</var>
@@ -678,7 +678,7 @@
                   <object class="Box">
                     <var name="color">#808080A0</var>
                   </object>
-                  <object class="Text">
+                  <object class="Root::Text">
                     <var name="row">1</var>
                     <var name="col">3</var>
                     <var name="text">$Painter::status_text</var>
@@ -1140,7 +1140,7 @@
               <var name="color2">#555555FF</var>
               <var name="invert">0</var>
 
-              <object class="Text">
+              <object class="Root::Text">
                 <var name="text">U</var>
                 <var name="font">UofU.ttf</var>
                 <var name="size">55</var>
@@ -1154,7 +1154,7 @@
               </object>
 
 
-              <object class="Text">
+              <object class="Root::Text">
                 <var name="text">U</var>
                 <var name="font">UofU.ttf</var>
                 <var name="size">55</var>
@@ -1178,7 +1178,7 @@
               <var name="col">1</var>
               <var name="cell-height">125</var>
 
-              <object class="Text">            
+              <object class="Root::Text">            
                 <var name="text">$program_name</var>
                 <var name="font">Crass.ttf</var>
                 <var name="font">Machinegun.ttf</var>
@@ -1195,7 +1195,7 @@
                 <var name="offsety">33</var>
               </object>
 
-              <object class="Text">            
+              <object class="Root::Text">            
                 <var name="text">$program_name</var>
                 <var name="font">Crass.ttf</var>
                 <var name="font">Machinegun.ttf</var>
@@ -1214,7 +1214,7 @@
             <object class="Collection">
               <var name="row">2</var>
               <var name="col">1</var>
-              <object class="Text">
+              <object class="Root::Text">
                 <var name="text">$full_program_name</var>
                 <var name="font">Crass.ttf</var>
                 <var name="font">Caslon.ttf</var>
@@ -1228,7 +1228,7 @@
                 <var name="offsetx">-6</var>
                 <var name="offsety">9</var>
               </object>
-              <object class="Text">
+              <object class="Root::Text">
                 <var name="text">$full_program_name</var>
                 <var name="font">Crass.ttf</var>
                 <var name="font">Caslon.ttf</var>
@@ -1266,7 +1266,7 @@
 <var name="rows">15</var>
 <var name="cols">1</var>
 
-<object class="Text">
+<object class="Root::Text">
 <var name="row">11</var>
 <var name="col">1</var>
 <var name="text">$clut_ww_wl</var>
@@ -1274,7 +1274,7 @@
 <var name="size">20</var>
 </object>
 
-<object class="Text">
+<object class="Root::Text">
 <var name="row">12</var>
 <var name="col">1</var>
 <var name="text">$clut_min_max</var>
@@ -1282,7 +1282,7 @@
 <var name="size">20</var>
 </object>
 
-<object class="Text">
+<object class="Root::Text">
 <var name="row">13</var>
 <var name="col">1</var>
 <var name="text">$value</var>
@@ -1290,7 +1290,7 @@
 <var name="size">20</var>
 </object>
 
-<object class="Text">
+<object class="Root::Text">
 <var name="row">14</var>
 <var name="col">1</var>
 <var name="text">$sca_pos</var>
@@ -1298,7 +1298,7 @@
 <var name="size">20</var>
 </object>
 
-<object class="Text">
+<object class="Root::Text">
 <var name="row">15</var>
 <var name="col">1</var>
 <var name="text">$xyz_pos</var>

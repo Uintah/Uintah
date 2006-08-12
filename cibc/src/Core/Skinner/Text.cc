@@ -36,13 +36,6 @@
 
 namespace SCIRun {
   namespace Skinner {
-
-    Drawable *
-    Text::maker(Variables *vars)
-    {
-      return new Text(vars);
-    }
-
     Text::Text(Variables *vars) :
       Drawable(vars),
       fgcolor_(1., 1., 1., 1.),
@@ -50,7 +43,8 @@ namespace SCIRun {
       flags_(0),
       renderer_(0),
       offsetx_(0),
-      offsety_(0)
+      offsety_(0),
+      cursor_position_(0)
     {
       vars->maybe_get_color("color", fgcolor_);
       vars->maybe_get_color("fgcolor", fgcolor_);
