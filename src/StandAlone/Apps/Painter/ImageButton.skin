@@ -21,7 +21,7 @@
           </object>
         </object>
 <!--
-        <object class="Text"> 
+        <object class="Root::Text"> 
           <var name="text">$ImageButton::Text::text</var>
           <var name="row">1</var>
           <var name="col">1</var>

@@ -28,7 +28,7 @@
 
       
 
-      <object class="Text">        
+      <object class="Root::Text">        
         <var name="text">$Graph2D::title</var>
         <var name="size">$Graph2D::title_font_size</var>
         <var name="anchor">n</var>

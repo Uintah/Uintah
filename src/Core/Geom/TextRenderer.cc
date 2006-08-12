@@ -106,7 +106,8 @@ TextRenderer::height(const string &text, int flags) {
   render_string_glyphs_to_texture(text);
   int hei = 0;
   for (unsigned int c = 0; c < text.size(); ++c)
-    hei = Max(hei, (int)glyphs_[text[c]]->ft_metrics_.horiBearingY);
+    if (glyphs_[text[c]]) 
+      hei = Max(hei, (int)(glyphs_[text[c]]->ft_metrics_.horiBearingY));
   return hei / 64;
 #else
   return 0;

@@ -106,7 +106,7 @@
           <signal name="button_1_clicked" target="Button::clicked"/>
         </object>
 
-        <object class="Text"> 
+        <object class="Root::Text"> 
           <var name="text">$button_text</var>
           <var name="size">24.0</var>
           <var name="fgcolor">$text_fgcolor</var>
@@ -145,7 +145,7 @@
           <var name="color">$grey2</var>
           <signal name="button_1_clicked" target="Button::clicked"/>
         </object>
-        <object class="Text"> 
+        <object class="Root::Text"> 
           <var name="text">$button_text</var>
           <var name="row">1</var>
           <var name="col">1</var>
@@ -197,7 +197,7 @@
         <object class="LabeledGradientBackground::child"/>
       </definition>
 
-      <object class="Text">
+      <object class="Root::Text">
         <var name="text">$LabeledGradientBackground::text</var>  
         <var name="size">40</var>  
         <var name="anchor">S</var>
@@ -236,7 +236,7 @@
 <var name="rows">15</var>
 <var name="cols">1</var>
 
-<object class="Text">
+<object class="Root::Text">
 <var name="row">11</var>
 <var name="col">1</var>
 <var name="text">$clut_ww_wl</var>
@@ -244,7 +244,7 @@
 <var name="size">20</var>
 </object>
 
-<object class="Text">
+<object class="Root::Text">
 <var name="row">12</var>
 <var name="col">1</var>
 <var name="text">$clut_min_max</var>
@@ -252,7 +252,7 @@
 <var name="size">20</var>
 </object>
 
-<object class="Text">
+<object class="Root::Text">
 <var name="row">13</var>
 <var name="col">1</var>
 <var name="text">$value</var>
@@ -260,7 +260,7 @@
 <var name="size">20</var>
 </object>
 
-<object class="Text">
+<object class="Root::Text">
 <var name="row">14</var>
 <var name="col">1</var>
 <var name="text">$sca_pos</var>
@@ -268,7 +268,7 @@
 <var name="size">20</var>
 </object>
 
-<object class="Text">
+<object class="Root::Text">
 <var name="row">15</var>
 <var name="col">1</var>
 <var name="text">$xyz_pos</var>
@@ -343,7 +343,7 @@
                 <var name="rows">1</var>
                 <var name="cols">5</var>
 
-                <object class="Text">
+                <object class="Root::Text">
                   <var name="row">1</var>
                   <var name="col">3</var>
                   <var name="text">$painter_status</var>
@@ -474,7 +474,7 @@
                    </object>
                    <object class="SceneGraph"/> 
                    
-                   <object class="Text">
+                   <object class="Root::Text">
                    <var name="text">3D Viewer</var>
                    <var name="size">60.0</var>
                    <var name="fgcolor">#FFFFFFFF</var>
@@ -506,7 +506,7 @@
         <object class="Grid">
         <var name="rows" type="int">8</var>
         <var name="cols" type="int">1</var>
-        <object class="Text">
+        <object class="Root::Text">
         <var name="row" type="int">1</var>
         <var name="col" type="int">1</var>
         <var name="text"> Open...</var>
@@ -605,7 +605,7 @@
           <var name="rows">2</var>
           <var name="cols">1</var>
 
-          <object class="Text">
+          <object class="Root::Text">
             <var name="row">1</var>
             <var name="col">1</var>
             <var name="cell-height">133</var>
@@ -625,7 +625,7 @@
             <var name="offsety">15</var>
           </object>
 
-          <object class="Text">
+          <object class="Root::Text">
             <var name="row">2</var>
             <var name="col">1</var>
             <var name="cell-height">150</var>

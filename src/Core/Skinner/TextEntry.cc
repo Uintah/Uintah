@@ -62,6 +62,12 @@ namespace SCIRun {
       return SPRING_MINMAX;
     }
 
+    int
+    TextEntry::get_signal_id(const string &id) const {
+      if (id == "TextEntry::return") return 1;
+      return 0;
+    }
+
     void
     TextEntry::autocomplete() {
 
@@ -115,7 +121,9 @@ namespace SCIRun {
         int code = key->get_keyval();
         bool shift = (key->get_modifiers() & EventModifiers::SHIFT_E);
         string character = "";
-        if ((code >= SCIRun_a) && (code <= SCIRun_z)) {
+        if (code == SCIRun_Return) {
+          throw_signal("TextEntry::enter");
+        } else  if ((code >= SCIRun_a) && (code <= SCIRun_z)) {
           code -= SCIRun_a; 
           
           if (shift) {

@@ -7,7 +7,7 @@
 
       <object class="GradientBackground"/>
 
-      <object class="Text">
+      <object class="Root::Text">
         <var name="text">$LabeledGradientBackground::text</var>  
         <var name="size">40</var>  
         <var name="anchor">S</var>

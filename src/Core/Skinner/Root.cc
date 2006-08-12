@@ -33,6 +33,7 @@
 #include <Core/Skinner/Variables.h>
 #include <Core/Skinner/Window.h>
 #include <Core/Skinner/Graph2D.h>
+#include <Core/Skinner/Text.h>
 #include <Core/Skinner/Arithmetic.h>
 #include <Core/Events/Tools/FilterRedrawEventsTool.h>
 #include <iostream>
@@ -52,6 +53,7 @@ namespace SCIRun {
       REGISTER_CATCHER_TARGET(Root::GLWindow_Destructor);
       REGISTER_CATCHER_TARGET(Root::Graph2D_Maker);
       REGISTER_CATCHER_TARGET(Root::ColorMap2D_Maker);
+      REGISTER_CATCHER_TARGET(Root::Text_Maker);
       register_target
         ("Quit",
          static_cast<SCIRun::Skinner::SignalCatcher::CatcherFunctionPtr>
@@ -68,26 +70,34 @@ namespace SCIRun {
 
     BaseTool::propagation_state_e
     Root::Arithmetic_Maker(event_handle_t event) {
-      MakerSignal *maker_signal = 
-        dynamic_cast<Skinner::MakerSignal *>(event.get_rep());
-      ASSERT(maker_signal);
-      
-      Drawable *obj = new Arithmetic(maker_signal->get_vars());
-      maker_signal->set_signal_thrower(obj);
-      maker_signal->set_signal_name(maker_signal->get_signal_name()+"_Done");
+      construct_class_from_maker_signal<Arithmetic>(event);
+      return MODIFIED_E;
+    }
+
+    BaseTool::propagation_state_e
+    Root::Text_Maker(event_handle_t event) {
+      construct_class_from_maker_signal<Text>(event);
+      return MODIFIED_E;
+    }
+
+    BaseTool::propagation_state_e
+    Root::Graph2D_Maker(event_handle_t event) {
+      construct_class_from_maker_signal<Graph2D>(event);
+      return MODIFIED_E;
+    }
+
+    BaseTool::propagation_state_e
+    Root::ColorMap2D_Maker(event_handle_t event) {
+      //      construct_class_from_maker_signal<ColorMap2D>(event);
       return MODIFIED_E;
     }
 
     BaseTool::propagation_state_e
     Root::GLWindow_Maker(event_handle_t event) {
-      MakerSignal *maker_signal = 
-        dynamic_cast<Skinner::MakerSignal *>(event.get_rep());
-      ASSERT(maker_signal);
-      
-      windows_.push_back(new GLWindow(maker_signal->get_vars()));
-
-      maker_signal->set_signal_thrower(windows_.back());
-      maker_signal->set_signal_name(maker_signal->get_signal_name()+"_Done");
+      GLWindow *window = dynamic_cast<GLWindow *>
+        (construct_class_from_maker_signal<GLWindow>(event));
+      ASSERT(window);
+      windows_.push_back(window);
       return MODIFIED_E;
     }
 
@@ -115,35 +125,6 @@ namespace SCIRun {
 
 
 
-      return MODIFIED_E;
-    }
-
-
-    BaseTool::propagation_state_e
-    Root::ColorMap2D_Maker(event_handle_t event) {
-#if 0
-      MakerSignal *maker_signal = 
-        dynamic_cast<Skinner::MakerSignal *>(event.get_rep());
-      ASSERT(maker_signal);
-      
-      windows_.push_back();
-      Drawable *obj = new ColorMap2D(maker_signal->get_vars());
-      maker_signal->set_signal_thrower(obj);
-      maker_signal->set_signal_name(maker_signal->get_signal_name()+"_Done");
-#endif
-      return MODIFIED_E;
-    }
-
-
-    BaseTool::propagation_state_e
-    Root::Graph2D_Maker(event_handle_t event) {
-      MakerSignal *maker_signal = 
-        dynamic_cast<Skinner::MakerSignal *>(event.get_rep());
-      ASSERT(maker_signal);
-      
-      Drawable *obj = new Graph2D(maker_signal->get_vars());
-      maker_signal->set_signal_thrower(obj);
-      maker_signal->set_signal_name(maker_signal->get_signal_name()+"_Done");
       return MODIFIED_E;
     }
 
