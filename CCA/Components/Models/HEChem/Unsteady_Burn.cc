@@ -226,7 +226,7 @@ void Unsteady_Burn::scheduleComputeModelSources(SchedulerP& sched, const LevelP&
   t->requires(Task::NewDW, MIlb->gMassLabel,       react_matl, gac,1);
   t->requires(Task::OldDW, Mlb->pXLabel,           react_matl, gac,1);
   /*     Misc      */
-  t->requires(Task::NewDW, Ilb->press_equil_CCLabel, one_matl, gn);
+  t->requires(Task::NewDW, Ilb->press_equil_CCLabel, one_matl, gac, 1);
   t->requires(Task::OldDW, MIlb->NC_CCweightLabel,   one_matl, gac, 1);  
 
   t->requires(Task::OldDW, BurningCellLabel,       react_matl, gac, 1);     
