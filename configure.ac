@@ -1521,6 +1521,16 @@ case $host in
     CPPFLAGS="$CPPFLAGS $WOFF"
     CFLAGS="$CFLAGS $extra_cflags"
 
+    case `hostname` in
+      alc*)
+        # LLNL's ALC computer is doing something strange with its g77
+        # fortran underscore policy to make it compatible with other compilers.
+	# We don't need this, so this flag just turns their 'hack' off.
+	AC_MSG_WARN(Turning off ALC's fortran underscore compatibility hack.)
+        FFLAGS="$FFLAGS -funderscoring"
+        ;;
+    esac
+
     case $F77 in
       *g77*)
          # extra_fflags has array checking if in debug mode.
@@ -1757,6 +1767,9 @@ if test "$sci_required_tools" = "yes" ; then
      G77=0
   fi
 fi
+
+AC_MSG_CHECKING(fortran underscore policy)
+AC_MSG_RESULT($FORTRAN_UNDERSCORE)
 
 AC_SUBST(FORTRAN_UNDERSCORE)
 AC_SUBST(G77)
