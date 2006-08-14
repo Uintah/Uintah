@@ -143,8 +143,10 @@ void ImplicitHeatConduction::scheduleFormHCStiffnessMatrix(SchedulerP& sched,
                         &ImplicitHeatConduction::formHCStiffnessMatrix);
 
   t->requires(Task::OldDW,d_sharedState->get_delt_label());
+  t->requires(Task::OldDW,lb->pXLabel,                    Ghost::AroundNodes,1);
+  t->requires(Task::OldDW,lb->pVolumeLabel,               Ghost::AroundNodes,1);
+  t->requires(Task::OldDW,lb->pTemperatureLabel,          Ghost::AroundNodes,1);
   sched->addTask(t, patches, matls);
-
  }
 }
 
@@ -157,10 +159,11 @@ void ImplicitHeatConduction::scheduleFormHCQ(SchedulerP& sched,
                         &ImplicitHeatConduction::formHCQ);
                                                                                 
   t->requires(Task::OldDW,      d_sharedState->get_delt_label());
-  t->requires(Task::NewDW,lb->gTemperatureLabel, one_matl,Ghost::AroundCells,
-              1);
-  t->requires(Task::NewDW,lb->gExternalHeatRateLabel, Ghost::AroundCells,1);
-                                                                                
+  t->requires(Task::NewDW,lb->gTemperatureLabel, one_matl,Ghost::AroundCells,1);
+  t->requires(Task::NewDW,lb->gExternalHeatRateLabel,     Ghost::AroundCells,1);
+  t->requires(Task::OldDW,lb->pXLabel,                    Ghost::AroundNodes,1);
+  t->requires(Task::OldDW,lb->pVolumeLabel,               Ghost::AroundNodes,1);
+
   sched->addTask(t, patches, matls);
  }
 }
