@@ -55,6 +55,10 @@ MPMICELabel::MPMICELabel()
                      CCVariable<double>::getTypeDescription());
   aveSurfTempLabel     = VarLabel::create("aveSurfTemp",
                      CCVariable<double>::getTypeDescription());
+
+  // Soil & Foam
+  csv_minLabel         = VarLabel::create( "c.sv_min",
+                     CCVariable<double>::getTypeDescription() );
 } 
 
 MPMICELabel::~MPMICELabel()

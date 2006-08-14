@@ -29,7 +29,9 @@ namespace Uintah {
       const VarLabel* gMassLabel;
       const VarLabel* gVelocityLabel;
       const VarLabel* TempGradLabel;      // Needed by burn model --- temporary 
-      const VarLabel* aveSurfTempLabel;    
+      const VarLabel* aveSurfTempLabel;  
+      
+      const VarLabel* csv_minLabel; // Soil & Foam
     };
 
 } // end namespace Uintah
