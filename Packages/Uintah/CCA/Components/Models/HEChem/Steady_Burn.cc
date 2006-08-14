@@ -306,7 +306,7 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
       patch->findCell(px[idx],c);
       pFlag[c] += 1.0;
     }    
-    setBC(pFlag, "set_if_sym_BC", patch, d_sharedState, m0, new_dw);
+    setBC(pFlag, "zeroNeumann", patch, d_sharedState, m0, new_dw);
  
     Vector dx = patch->dCell();
 

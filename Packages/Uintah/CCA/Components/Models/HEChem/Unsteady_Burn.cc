@@ -385,7 +385,7 @@ void Unsteady_Burn::computeModelSources(const ProcessorGroup*,
       patch->findCell(px_gac[idx],c);
       pFlag[c] += 1.0;
     }
-    setBC(pFlag, "set_if_sym_BC", patch, d_sharedState, m0, new_dw);
+    setBC(pFlag, "zeroNeumann", patch, d_sharedState, m0, new_dw);
 
     /* Initialize Cell-centered Ts and Beta with OLD particle centered beta value, 
        The CC value takes the largest particle beta value in the cell that
