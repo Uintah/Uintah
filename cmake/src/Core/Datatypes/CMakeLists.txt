@@ -1,6 +1,6 @@
 # Sources of Core/Datatypes classes
 SET(Core_Datatypes_SRCS
-        Clipper.cc		    	
+        Clipper.cc
 	Color.cc		    	
 	ColumnMatrix.cc	    	
 	Datatype.cc		    	
@@ -28,7 +28,22 @@ SET(Core_Datatypes_SRCS
 	cd_templates_fields_6.cc	
 )
 
-
-
 ADD_LIBRARY(Core_Datatypes ${Core_Datatypes_SRCS})
-TARGET_LINK_LIBRARIES(Core_Datatypes Core_Persistent)
+
+TARGET_LINK_LIBRARIES(Core_Datatypes 
+  Core/Basis        
+  Core/Containers   
+  Core/Exceptions   
+  Core/Geometry     
+  Core/GuiInterface 
+  Core/Math         
+  Core/Persistent   
+  Core/Thread       
+  Core/Util
+  ${GL_LIBRARY} ${M_LIBRARY} ${BLAS_LIBRARY} ${F_LIBRARY} 
+  ${TEEM_LIBRARY} ${PNG_LIBRARY} ${Z_LIBRARY}
+)
+
+IF(NOT BUILD_SHARED_LIBS)
+  ADD_DEFINITIONS(-DBUILD_Core_Datatypes)
+ENDIF(NOT BUILD_SHARED_LIBS)

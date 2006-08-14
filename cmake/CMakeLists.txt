@@ -53,6 +53,7 @@ SET(THREAD_LIBRARY ${CMAKE_THREAD_LIBS} CACHE INTERNAL "Thread library.")
 # DV Define DEF_THREAD?
 
 IF(CMAKE_USE_PTHREADS)
+  SET(DEF_THREAD "#define SCI_PTHREAD 1")
   # Check for sempahore libs w/in pthread library
   # DV can I scale down the lib like configure.ac for loop
   TRY_COMPILE(HAS_SEMAPHORE_LIBS
@@ -64,7 +65,9 @@ IF(CMAKE_USE_PTHREADS)
     )
     IF(HAS_SEMAPHORE_LIBS)
       SET(SEMAPHORE_LIBRARY ${THREAD_LIBRARY} CACHE INTERNAL "Semaphore library in pthreads.")
-    ENDIF(HAS_SEMAPHORE_LIBS) 
+    ENDIF(HAS_SEMAPHORE_LIBS)
+  ELSE(CMAKE_USE_PTHREADS)
+    SET(DEF_THREAD "") 
 ENDIF(CMAKE_USE_PTHREADS)
 
 #-----------------------------------------------------------------------------
@@ -116,6 +119,7 @@ ENDIF(WITH_LAPACK)
 # blas library
 # DV Fix finding blas/atlas stuff
 SET(DEF_BLAS "#define HAVE_BLAS 0")
+SET(DEF_CBLAS "#define HAVE_CLBLAS 0")
 
 # DV Fix these libraries!
 # blas, f, 
@@ -452,6 +456,8 @@ ELSE("${DEF_HASHMAP}" STREQUAL "TRUE")
   MESSAGE(STATUS "Cannot find hash_map, will use map instead") 
 ENDIF("${DEF_HASHMAP}" STREQUAL "TRUE")
 
+# DV Hack
+SET(DEF_HASHMAP "#define HAVE_GNU_HASHMAP 1")
 
 # DV Figure out how to make these not even configurable
 # sci_defs/template_defs.h
@@ -517,18 +523,29 @@ SET(HAVE_SYS_UUID_H 0)
 SET(HAVE_UUID_UUID_H 0)
 
 # sci_defs/oogl_defs.h
-INCLUDE (${CMAKE_ROOT}/Modules/CheckIncludeFile.cmake)
-INCLUDE (${CMAKE_ROOT}/Modules/CheckLibraryExists.cmake)
-CHECK_INCLUDE_FILE(oogl/basicTexture.h HAVE_BASIC_TEXTURE)
-CHECK_INCLUDE_FILE(oogl/shadedPrim.h HAVE_SHADED_PRIM)
+#INCLUDE (${CMAKE_ROOT}/Modules/CheckIncludeFile.cmake)
+#INCLUDE (${CMAKE_ROOT}/Modules/CheckLibraryExists.cmake)
+#CHECK_INCLUDE_FILE(oogl/basicTexture.h HAVE_BASIC_TEXTURE)
+#CHECK_INCLUDE_FILE(oogl/shadedPrim.h HAVE_SHADED_PRIM)
 #CHECK_LIBRARY_EXISTS(oogl )
 SET(DEF_OOGL "")
 #SET(DEF_GLEW)
 #SET(DEF_FTGL)
-#SET(DEF_FREETYPE)
+
+# Freetype in 3p
+SET(DEF_FREETYPE "#define HAVE_FREETYPE 1")
+
 #SET(DEF_OGL_EXT_HDRS)
 
 #SET(OGL_ERR_MACRO)
+
+OPTION(ENABLE_SCI_MALLOC "Enable sci malloc system" OFF)
+IF(ENABLE_SCI_MALLOC)
+  SET(DEF_MALLOC "")
+ELSE(ENABLE_SCI_MALLOC)
+  SET(DEF_MALLOC "#define DISABLE_SCI_MALLOC 1")
+ENDIF(ENABLE_SCI_MALLOC)
+SET(DEF_MALLOC_LINENUMBERS "")
 
 #-----------------------------------------------------------------------------
 # The entire SCIRun tree should use the same include path

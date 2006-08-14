@@ -5,6 +5,11 @@
 
 
 CONFIGURE_FILE (
+  "${PROJECT_SOURCE_DIR}/src/include/sci_defs/blas_testdefs.h.in"
+  "${PROJECT_BINARY_DIR}/include/sci_defs/blas_defs.h"
+)
+
+CONFIGURE_FILE (
   "${PROJECT_SOURCE_DIR}/src/include/sci_defs/bits_testdefs.h.in"
   "${PROJECT_BINARY_DIR}/include/sci_defs/bits_defs.h"
 )
@@ -45,6 +50,11 @@ CONFIGURE_FILE (
 )
 
 CONFIGURE_FILE (
+  "${PROJECT_SOURCE_DIR}/src/include/sci_defs/malloc_testdefs.h.in"
+  "${PROJECT_BINARY_DIR}/include/sci_defs/malloc_defs.h"
+)
+
+CONFIGURE_FILE (
   "${PROJECT_SOURCE_DIR}/src/include/sci_defs/ogl_testdefs.h.in"
   "${PROJECT_BINARY_DIR}/include/sci_defs/ogl_defs.h"
 )
@@ -52,6 +62,11 @@ CONFIGURE_FILE (
 CONFIGURE_FILE (
   "${PROJECT_SOURCE_DIR}/src/include/sci_defs/template_testdefs.h.in"
   "${PROJECT_BINARY_DIR}/include/sci_defs/template_defs.h"
+)
+
+CONFIGURE_FILE (
+  "${PROJECT_SOURCE_DIR}/src/include/sci_defs/thread_testdefs.h.in"
+  "${PROJECT_BINARY_DIR}/include/sci_defs/thread_defs.h"
 )
 
 #---------------------------------------------------------------------
