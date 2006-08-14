@@ -11,5 +11,9 @@ SUBDIRS(
   OS
   TkExtensions
   GuiInterface
+  Malloc
+  Datatypes
+  Geom
 )
+
 
