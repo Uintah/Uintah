@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Variables/CellIterator.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
@@ -13,6 +14,7 @@
 #include <Core/Util/DebugStream.h>
 #include <iostream>
 #include <sstream>
+#include <deque>
 
 using namespace std;
 using namespace Uintah;
@@ -478,6 +480,31 @@ void RegridderCommon::Dilate(const ProcessorGroup*,
     IntVector flagLow = patch->getLowIndex();
     IntVector flagHigh = patch->getHighIndex();
 
+    if (patch->getLevel()->getIndex() > 0 && ((d_filterType == FILTER_STAR && ngc > 2) || ngc > 1)) {
+      // if we go diagonally along a patch corner where there is no patch, we will need to initialize those cells
+      // (see OnDemandDataWarehouse comment about dead cells)
+      deque<Box> b1, b2, difference;
+      IntVector low = flaggedCells.getLowIndex(), high = flaggedCells.getHighIndex();
+      b1.push_back(Box(Point(low(0), low(1), low(2)), 
+                       Point(high(0), high(1), high(2))));
+      Level::selectType n;
+      patch->getLevel()->selectPatches(low, high, n);
+      for (int i = 0; i < n.size(); i++) {
+        const Patch* p = n[i];
+        IntVector low = p->getLowIndex(Patch::CellBased, IntVector(0,0,0));
+        IntVector high = p->getHighIndex(Patch::CellBased, IntVector(0,0,0));
+        b2.push_back(Box(Point(low(0), low(1), low(2)), Point(high(0), high(1), high(2))));
+      }
+      difference = Box::difference(b1, b2);
+      for (unsigned i = 0; i < difference.size(); i++) {
+        Box b = difference[i];
+        IntVector low((int)b.lower()(0), (int)b.lower()(1), (int)b.lower()(2));
+        IntVector high((int)b.upper()(0), (int)b.upper()(1), (int)b.upper()(2));
+        for (CellIterator iter(low, high); !iter.done(); iter++)
+          flaggedCells.castOffConst()[*iter] = 0;
+      }
+    }
+
     IntVector low, high;
     for(CellIterator iter(flagLow, flagHigh); !iter.done(); iter++) {
       IntVector idx(*iter);
@@ -487,6 +514,8 @@ void RegridderCommon::Dilate(const ProcessorGroup*,
       int temp = 0;
       for(CellIterator local_iter(low, high + IntVector(1,1,1)); !local_iter.done(); local_iter++) {
         IntVector local_idx(*local_iter);
+        if (idx == IntVector(143, 96, 0) && flaggedCells[local_idx]*(*filter)[local_idx-idx+depth] > 0)
+          cout << "  Marking " << idx << " because of cell " << local_idx << " ( flag val: " << flaggedCells[local_idx]*(*filter)[local_idx-idx+depth] << endl;
         temp += flaggedCells[local_idx]*(*filter)[local_idx-idx+depth];
       }
       dilatedFlaggedCells[idx] = static_cast<int>(temp > 0);
@@ -494,7 +523,7 @@ void RegridderCommon::Dilate(const ProcessorGroup*,
     }
 
   rdbg << "G\n";
-    if (dilate_dbg.active()) {
+    if (dilate_dbg.active() && patch->getLevel()->getIndex() == 1) {
       IntVector low  = patch->getInteriorCellLowIndex();
       IntVector high = patch->getInteriorCellHighIndex();
       
