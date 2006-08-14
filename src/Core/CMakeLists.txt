@@ -14,6 +14,7 @@ SUBDIRS(
   Malloc
   Datatypes
   Geom
+  Events
 )
 
 

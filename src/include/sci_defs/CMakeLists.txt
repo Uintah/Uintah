@@ -45,6 +45,11 @@ CONFIGURE_FILE (
 )
 
 CONFIGURE_FILE (
+  "${PROJECT_SOURCE_DIR}/src/include/sci_defs/image_testdefs.h.in"
+  "${PROJECT_BINARY_DIR}/include/sci_defs/image_defs.h"
+)
+
+CONFIGURE_FILE (
   "${PROJECT_SOURCE_DIR}/src/include/sci_defs/lapack_testdefs.h.in"
   "${PROJECT_BINARY_DIR}/include/sci_defs/lapack_defs.h"
 )
