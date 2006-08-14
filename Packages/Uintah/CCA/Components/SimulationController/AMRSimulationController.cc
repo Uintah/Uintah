@@ -490,7 +490,8 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
         // so we can initially regrid
         d_regridder->scheduleInitializeErrorEstimate(d_scheduler, grid->getLevel(i));
         d_sim->scheduleInitialErrorEstimate(grid->getLevel(i), d_scheduler);
-	d_regridder->scheduleDilation(d_scheduler, grid->getLevel(i));
+        if (i < d_regridder->maxLevels()-1) // we don't use error estimates if we don't make another level, so don't dilate
+          d_regridder->scheduleDilation(d_scheduler, grid->getLevel(i));
       }
     }
   }
@@ -548,7 +549,8 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
     if (d_regridder) {
       d_regridder->scheduleInitializeErrorEstimate(d_scheduler, currentGrid->getLevel(i));
       d_sim->scheduleInitialErrorEstimate(currentGrid->getLevel(i), d_scheduler);
-      d_regridder->scheduleDilation(d_scheduler, currentGrid->getLevel(i));
+      if (i < d_regridder->maxLevels()-1) // we don't use error estimates if we don't make another level, so don't dilate
+        d_regridder->scheduleDilation(d_scheduler, currentGrid->getLevel(i));
     }
   }
   d_scheduler->compile();
@@ -666,7 +668,8 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
     if (d_regridder) {
       d_regridder->scheduleInitializeErrorEstimate(d_scheduler, currentGrid->getLevel(i));
       d_sim->scheduleErrorEstimate(currentGrid->getLevel(i), d_scheduler);
-      d_regridder->scheduleDilation(d_scheduler, currentGrid->getLevel(i));
+      if (i < d_regridder->maxLevels()-1) // we don't use error estimates if we don't make another level, so don't dilate
+        d_regridder->scheduleDilation(d_scheduler, currentGrid->getLevel(i));
     }    
     d_sim->scheduleComputeStableTimestep(currentGrid->getLevel(i), d_scheduler);
   }
