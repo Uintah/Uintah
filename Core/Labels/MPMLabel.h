@@ -238,6 +238,11 @@ using std::vector;
       // particle Debugging Labels
       const VarLabel* pColorLabel;
       const VarLabel* pColorLabel_preReloc;
+
+      // Labels for Soil & Foam
+      const VarLabel *sv_minLabel;
+      const VarLabel *sv_minLabel_preReloc;
+      const VarLabel *gsv_minLabel;
       
 
     };

@@ -568,6 +568,12 @@ MPMLabel::MPMLabel()
   gNormalRotAccLabel = VarLabel::create( "g.normalRotAcc",
 		     NCVariable<Vector>::getTypeDescription());
 
+  sv_minLabel = VarLabel::create("p.sv_minLabel",
+                ParticleVariable<double>::getTypeDescription());
+  sv_minLabel_preReloc = VarLabel::create("p.sv_minLabel+",
+                ParticleVariable<double>::getTypeDescription());
+  gsv_minLabel = VarLabel::create("g.sv_minLabel",
+                NCVariable<double>::getTypeDescription());
 } 
 
 MPMLabel::~MPMLabel()
@@ -780,4 +786,9 @@ MPMLabel::~MPMLabel()
    // particle Debugging labels
   VarLabel::destroy(pColorLabel);
   VarLabel::destroy(pColorLabel_preReloc); 
+
+  // Soil & Foam labels
+  VarLabel::destroy(sv_minLabel);
+  VarLabel::destroy(sv_minLabel_preReloc);
+  VarLabel::destroy(gsv_minLabel);
 }
