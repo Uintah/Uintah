@@ -1,7 +1,7 @@
 # This is the root ITK CMakeLists file.
 CMAKE_MINIMUM_REQUIRED(VERSION 2.0)
 
-PROJECT(SCIRUN)
+PROJECT(CIBC)
 
 #-----------------------------------------------------------------------------
 # SCIRUN version number.  Must reflect the value of SCIRUN_RCFILE_VERSION 
