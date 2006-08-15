@@ -226,7 +226,7 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
   }
 
   // TO DO:
-  // Need to check whether bounding box is already available in al meshes..
+  // Need to check whether bounding box is already available in all meshes..
   // It is a small overhead but may help reduce computational times
 
   // Define multipliers for the grid we are putting on top
@@ -663,6 +663,8 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
                 membranetablelisttemp[k+q].node0 = nodes[s];
                 membranetablelisttemp[k+q].surface = surfaces[s];
               }
+              
+              
               foundsurf2 = true;
               k += enodes.size();
             }
@@ -790,10 +792,15 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
   for (int r=0; r < nummembranenodes; r++)
   {
     mrr[r] = 2*r;
-    mcc[2*r] = membranetablelist[r].node2;
-    mcc[2*r+1] = membranetablelist[r].node1;
-    mvv[2*r] = 1.0;
-    mvv[2*r] = -1.0;
+  }
+  
+  for (int r=0; r < nummembranenodes; r++)
+  {
+    int q = membranetablelist[r].node0; 
+    mcc[2*q] = membranetablelist[r].node2;
+    mcc[2*q+1] = membranetablelist[r].node1;
+    mvv[2*q] = 1.0;
+    mvv[2*q+1] = -1.0;
   }
  
   mrr[nummembranenodes] = 2*nummembranenodes; // An extra entry goes on the end of rr.
@@ -810,7 +817,7 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
     pr->error("LinkToCompGrid: Could build geometry to computational mesh mapping matrix");
     return (false);
   }
-
+  
   // Success:
   return (true);
 }

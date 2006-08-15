@@ -192,7 +192,7 @@ void DMDCreateSimulation::execute()
     SimulationBundle->merge(MembraneBundle);
     SimulationBundle->merge(StimulusBundle);
     SimulationBundle->merge(ReferenceBundle);
-    SimulationBundle->merge(ElectrodeBundle);
+    if (ElectrodeBundle.get_rep()) SimulationBundle->merge(ElectrodeBundle);
 
     std::string solvername = guisolvername_.get();
     std::string tstepname  = guitstepname_.get();
@@ -332,9 +332,6 @@ void DMDCreateSimulation::execute()
         fieldname = oss.str();
       }
     }
-
-
-
 
     if (ExtParameters.get_rep())
     {
