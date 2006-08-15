@@ -17,6 +17,7 @@ SUBDIRS(
   Events
   Volume
   Bundle
+  Algorithms
 )
 
 
