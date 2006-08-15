@@ -33,6 +33,10 @@
         <datatype>SCIRun::Bundle</datatype>
       </port>
       <port>
+        <name>ElectrodeBundle</name>
+        <datatype>SCIRun::Bundle</datatype>
+      </port>
+      <port>
         <name>Parameters</name>
         <datatype>SCIRun::String</datatype>
       </port>      

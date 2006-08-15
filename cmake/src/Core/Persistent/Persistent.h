@@ -115,6 +115,7 @@ protected:
   ProgressReporter *reporter_;
   bool own_reporter_;
   bool backwards_compat_id_;
+  bool disable_pointer_hashing_;
   virtual void emit_pointer(int& have_data, int& pointer_id);
   static bool readHeader(ProgressReporter *pr,
                          const string& filename, char* hdr,
@@ -147,18 +148,22 @@ public:
   virtual void io(double&) = 0;
   virtual void io(float&) = 0;
   virtual void io(string& str) = 0;
+  virtual bool eof() { return false; }
 
   void io(Persistent*&, const PersistentTypeID&);
 
   bool reading() const { return dir == Read; }
   bool writing() const { return dir == Write; }
   bool error() const { return err; }
+
   int version() const { return version_; }
   bool backwards_compat_id() const { return backwards_compat_id_; }
   void set_backwards_compat_id(bool p) { backwards_compat_id_ = p; }
   virtual bool supports_block_io() { return false; } // deprecated, redundant.
   // Returns true if bkock_io was supported (even on error).
   virtual bool block_io(void*, size_t, size_t) { return false; }
+  
+  void disable_pointer_hashing() { disable_pointer_hashing_ = true; }
 
   SCISHARE friend Piostream* auto_istream(const string& filename,
                                  ProgressReporter *pr);

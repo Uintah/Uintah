@@ -97,28 +97,20 @@ void
 TransformData2::execute()
 {
   // Get input field 0.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field 0");
   FieldHandle fHandle0;
-  if (!(ifp->get(fHandle0) && fHandle0.get_rep())) {
-    error("Input field 0 is empty.");
-    return;
-  }
+  if (!get_input_handle("Input Field 0", fHandle0)) return;
 
   if (fHandle0->basis_order() == -1) {
-    warning("Field 0 contains no data to transform.");
+    error("Field 0 contains no data to transform.");
     return;
   }
 
   // Get input field 1.
-  ifp = (FieldIPort *)get_iport("Input Field 1");
   FieldHandle fHandle1;
-  if (!(ifp->get(fHandle1) && fHandle1.get_rep())) {
-    error("Input field 1 is empty.");
-    return;
-  }
+  if (!get_input_handle("Input Field 1", fHandle1)) return;
 
   if (fHandle1->basis_order() == -1) {
-    warning("Field 1 contains no data to transform.");
+    error("Field 1 contains no data to transform.");
     return;
   }
 
@@ -233,11 +225,7 @@ TransformData2::execute()
     fHandle_ = algo->execute(fHandle0, fHandle1);
   }
 
-  if( fHandle_.get_rep() )
-  {
-    FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-    ofield_port->send_and_dereference(fHandle_, true);
-  }
+  send_output_handle("Output Field", fHandle_, true);
 }
 
 

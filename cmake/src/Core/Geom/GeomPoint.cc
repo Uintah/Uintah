@@ -111,7 +111,7 @@ COLOR_FTOB(double v)
 
 
 void
-GeomPoints::add(const Point &p, const MaterialHandle &m)
+GeomPoints::add(const Point &p, const MaterialHandle &m, unsigned int idx)
 {
   add(p);
   
@@ -119,6 +119,7 @@ GeomPoints::add(const Point &p, const MaterialHandle &m)
   colors_.push_back(COLOR_FTOB(m->diffuse.g()));
   colors_.push_back(COLOR_FTOB(m->diffuse.b()));
   colors_.push_back(COLOR_FTOB(m->transparency));
+  item_idx_.push_back(idx);
 }
 
 

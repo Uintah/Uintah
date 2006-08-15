@@ -1,4 +1,5 @@
 
+#include <sci_gl.h>
 #include <sci_glu.h>
 #include <sci_glx.h>
 
@@ -59,7 +60,7 @@ TextureObj::set_nrrd(NrrdDataHandle &nrrd_handle) {
 TextureObj::~TextureObj()
 {
   if (glIsTexture(texture_id_)) {
-    glDeleteTextures(1, &texture_id_);
+    glDeleteTextures(1, (const GLuint*)&texture_id_);
     glBindTexture(GL_TEXTURE_2D, 0);
   }
   nrrd_handle_ = 0;
@@ -170,7 +171,7 @@ TextureObj::bind()
   const bool bound = glIsTexture(texture_id_);
 
   if (!bound)
-    glGenTextures(1, &texture_id_);
+    glGenTextures(1, (GLuint*)&texture_id_);
 
   glBindTexture(GL_TEXTURE_2D, texture_id_);
   CHECK_OPENGL_ERROR();

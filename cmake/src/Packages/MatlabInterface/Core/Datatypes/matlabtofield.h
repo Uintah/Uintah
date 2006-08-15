@@ -136,14 +136,14 @@ class MatlabToFieldAlgo : public SCIRun::DynamicAlgoBase, public matfilebase
 
     //////// ANALYZE INPUT FUNCTIONS //////////////////////
 
-    long analyze_iscompatible(matlabarray mlarray, std::string& infotext, bool postremark = true);
-    long analyze_fieldtype(matlabarray mlarray, std::string& fielddesc);
+    int analyze_iscompatible(matlabarray mlarray, std::string& infotext, bool postremark = true);
+    int analyze_fieldtype(matlabarray mlarray, std::string& fielddesc);
 
     inline void setreporter(SCIRun::ProgressReporter* pr);
     
   protected:
 
-    long mlanalyze(matlabarray mlarray, bool postremark);  
+    int mlanalyze(matlabarray mlarray, bool postremark);  
     matlabarray findfield(matlabarray mlarray,std::string fieldnames);
   
     matlabarray mlnode; 
@@ -189,13 +189,13 @@ class MatlabToFieldAlgo : public SCIRun::DynamicAlgoBase, public matfilebase
     std::string meshbasistype;
     std::string fieldbasistype;
 
-    std::vector<long> numnodesvec;
-    std::vector<long> numelementsvec;
+    std::vector<int> numnodesvec;
+    std::vector<int> numelementsvec;
     
-    long              numnodes;
-    long              numelements;
-    long              numfield;
-    long              datasize;
+    int              numnodes;
+    int              numelements;
+    int              numfield;
+    int              datasize;
 
     //////// FUNCTIONS FOR BUIDLIGN THE MESH //////////////
 
@@ -453,7 +453,7 @@ bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::ScanlineMesh<BA
     return (false);
   }
   
-  std::vector<long> dims; 
+  std::vector<int> dims; 
   mldims.getnumericarray(dims);
 
   SCIRun::Point PointO(0.0,0.0,0.0);
@@ -478,7 +478,7 @@ bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::ImageMesh<BASIS
     return (false);
   }
 
-  std::vector<long> dims; 
+  std::vector<int> dims; 
   mldims.getnumericarray(dims);
 
   SCIRun::Point PointO(0.0,0.0,0.0);
@@ -502,7 +502,7 @@ bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::LatVolMesh<BASI
     return (false);
   }
 
-  std::vector<long> dims; 
+  std::vector<int> dims; 
   mldims.getnumericarray(dims);
 
   SCIRun::Point PointO(0.0,0.0,0.0);
@@ -515,13 +515,13 @@ bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::LatVolMesh<BASI
 
 template <class BASIS> bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::StructCurveMesh<BASIS> >& handle)
 {
-  std::vector<long> dims;
+  std::vector<int> dims;
   std::vector<unsigned int> mdims;
-  long numdim = mlx.getnumdims();
+  int numdim = mlx.getnumdims();
   dims = mlx.getdims();
         
   mdims.resize(numdim); 
-  for (long p=0; p < numdim; p++)  mdims[p] = static_cast<unsigned int>(dims[p]); 
+  for (int p=0; p < numdim; p++)  mdims[p] = static_cast<unsigned int>(dims[p]); 
         
   if ((numdim == 2)&&(mlx.getn() == 1))
   {
@@ -531,7 +531,7 @@ template <class BASIS> bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<
   }
 
   handle = dynamic_cast<SCIRun::StructCurveMesh<BASIS>* >(scinew SCIRun::StructCurveMesh<BASIS>);
-  long numnodes = mlx.getnumelements();
+  int numnodes = mlx.getnumelements();
         
   std::vector<double> X;
   std::vector<double> Y;
@@ -541,7 +541,7 @@ template <class BASIS> bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<
   mlz.getnumericarray(Z);
         
   handle->set_dim(mdims);
-  long p;
+  int p;
   for (p = 0; p < numnodes; p++)
   {
     handle->set_point(SCIRun::Point(X[p],Y[p],Z[p]),static_cast<typename SCIRun::StructCurveMesh<BASIS>::Node::index_type>(p));
@@ -553,13 +553,13 @@ template <class BASIS> bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<
 template <class BASIS> 
 bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::StructQuadSurfMesh<BASIS> >& handle)
 {
-  std::vector<long> dims;
+  std::vector<int> dims;
   std::vector<unsigned int> mdims;
-  long numdim = mlx.getnumdims();
+  int numdim = mlx.getnumdims();
   dims = mlx.getdims();
         
   mdims.resize(numdim); 
-  for (long p=0; p < numdim; p++)  mdims[p] = static_cast<unsigned int>(dims[p]); 
+  for (int p=0; p < numdim; p++)  mdims[p] = static_cast<unsigned int>(dims[p]); 
 
   handle = dynamic_cast<SCIRun::StructQuadSurfMesh<BASIS>* >(scinew SCIRun::StructQuadSurfMesh<BASIS>);
         
@@ -586,13 +586,13 @@ bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::StructQuadSurfM
 
 template <class BASIS> bool MatlabToFieldAlgo::createmesh(SCIRun::LockingHandle<SCIRun::StructHexVolMesh<BASIS> >& handle)
 {
-  std::vector<long> dims;
+  std::vector<int> dims;
   std::vector<unsigned int> mdims;
-  long numdim = mlx.getnumdims();
+  int numdim = mlx.getnumdims();
   dims = mlx.getdims();
         
   mdims.resize(numdim); 
-  for (long p=0; p < numdim; p++)  mdims[p] = static_cast<unsigned int>(dims[p]); 
+  for (int p=0; p < numdim; p++)  mdims[p] = static_cast<unsigned int>(dims[p]); 
 
   handle = dynamic_cast<SCIRun::StructHexVolMesh<BASIS>* >(scinew SCIRun::StructHexVolMesh<BASIS>);
         
@@ -652,10 +652,10 @@ bool MatlabToFieldAlgo::addnodes(SCIRun::LockingHandle<MESH>& handle)
 	// Again the data is copied but now reorganised into
 	// a vector of Point objects
 	
-	long numnodes = mlnode.getn();	
+	int numnodes = mlnode.getn();	
 	handle->node_reserve(numnodes);
 	
-	long p,q;
+	int p,q;
 	for (p = 0, q = 0; p < numnodes; p++, q+=3)
 	{ 
     handle->add_point(SCIRun::Point(mldata[q],mldata[q+1],mldata[q+2]));
@@ -685,10 +685,10 @@ bool MatlabToFieldAlgo::addedges(SCIRun::LockingHandle<MESH>& handle)
 	// based numbering right ??
 	// If not we assume one based numbering
 	
-	long p,q;
+	int p,q;
 	
 	bool zerobased = false;  
-	long size = static_cast<long>(mldata.size());
+	int size = static_cast<int>(mldata.size());
 	for (p = 0; p < size; p++) { if (mldata[p] == 0) {zerobased = true; break;} }
 	
 	if (zerobased == false)
@@ -696,7 +696,7 @@ bool MatlabToFieldAlgo::addedges(SCIRun::LockingHandle<MESH>& handle)
 		for (p = 0; p < size; p++) { mldata[p]--;}
 	}
 	
-  long m,n;
+  int m,n;
    m = mledge.getm();
    n = mledge.getn();
   
@@ -704,12 +704,12 @@ bool MatlabToFieldAlgo::addedges(SCIRun::LockingHandle<MESH>& handle)
 	
   typename MESH::Node::array_type edge(m); 
   
-  long r;
+  int r;
   r = 0;
      
 	for (p = 0, q = 0; p < n; p++)
 	{
-     for (long q = 0 ; q < m; q++)
+     for (int q = 0 ; q < m; q++)
      {
        edge[q] = mldata[r]; r++; 
      }
@@ -742,15 +742,15 @@ bool MatlabToFieldAlgo::addfaces(SCIRun::LockingHandle<MESH>& handle)
   // If not we assume one based numbering
 
   bool zerobased = false;  
-  long size = static_cast<long>(mldata.size());
-  for (long p = 0; p < size; p++) { if (mldata[p] == 0) {zerobased = true; break;} }
+  int size = static_cast<int>(mldata.size());
+  for (int p = 0; p < size; p++) { if (mldata[p] == 0) {zerobased = true; break;} }
 
   if (zerobased == false)
   {   // renumber to go from matlab indexing to C++ indexing
-    for (long p = 0; p < size; p++) { mldata[p]--;}
+    for (int p = 0; p < size; p++) { mldata[p]--;}
   }
 
-  long m,n;
+  int m,n;
   m = mlface.getm();
   n = mlface.getn();
 
@@ -758,12 +758,12 @@ bool MatlabToFieldAlgo::addfaces(SCIRun::LockingHandle<MESH>& handle)
           
   typename MESH::Node::array_type face(m);  
 
-  long r;
+  int r;
   r = 0;
 
-  for (long p = 0; p < n; p++)
+  for (int p = 0; p < n; p++)
   {
-    for (long q = 0 ; q < m; q++)
+    for (int q = 0 ; q < m; q++)
     {
       face[q] = mldata[r]; r++; 
     }
@@ -795,15 +795,15 @@ bool MatlabToFieldAlgo::addcells(SCIRun::LockingHandle<MESH>& handle)
   // If not we assume one based numbering
 
   bool zerobased = false;  
-  long size = static_cast<long>(mldata.size());
-  for (long p = 0; p < size; p++) { if (mldata[p] == 0) {zerobased = true; break;} }
+  int size = static_cast<int>(mldata.size());
+  for (int p = 0; p < size; p++) { if (mldata[p] == 0) {zerobased = true; break;} }
 
   if (zerobased == false)
   {   // renumber to go from matlab indexing to C++ indexing
-    for (long p = 0; p < size; p++) { mldata[p]--;}
+    for (int p = 0; p < size; p++) { mldata[p]--;}
   }
 
-  long m,n;
+  int m,n;
   m = mlcell.getm();
   n = mlcell.getn();
 
@@ -811,12 +811,12 @@ bool MatlabToFieldAlgo::addcells(SCIRun::LockingHandle<MESH>& handle)
           
   typename MESH::Node::array_type cell(m);  
 
-  long r;
+  int r;
   r = 0;
 
-  for (long p = 0; p < n; p++)
+  for (int p = 0; p < n; p++)
   {
-    for (long q = 0 ; q < m; q++)
+    for (int q = 0 ; q < m; q++)
     {
       cell[q] = mldata[r]; r++; 
     }

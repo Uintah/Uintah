@@ -88,20 +88,11 @@ CreateMesh::~CreateMesh()
 void
 CreateMesh::execute()
 {
-  MatrixIPort *elements_port = (MatrixIPort *)get_iport("Mesh Elements");
   MatrixHandle elementshandle;
-  if (!(elements_port->get(elementshandle) && elementshandle.get_rep()))
-  {
-    error("No input elements connected, unable to build mesh.");
-    return;
-  }
+  if (!get_input_handle("Mesh Elements", elementshandle)) return;
 
-  MatrixIPort *positions_port = (MatrixIPort *)get_iport("Mesh Positions");
   MatrixHandle positionshandle;
-  if (!(positions_port->get(positionshandle) && positionshandle.get_rep()))
-  {
-    remark("No positions matrix connected, using zeros'.");
-  }
+  if (!get_input_handle("Mesh Positions", positionshandle)) return;
 
   MatrixIPort *normals_port = (MatrixIPort *)get_iport("Mesh Normals");
   MatrixHandle normalshandle;
@@ -129,8 +120,7 @@ CreateMesh::execute()
     return;
   }
 
-  FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");
-  ofp->send_and_dereference(result_field);
+  send_output_handle("Output Field", result_field);
 }
 
 

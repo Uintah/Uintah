@@ -32,7 +32,7 @@ namespace SCIRunAlgo {
 
 using namespace SCIRun;
 
-bool IsInsideFieldAlgo::IsInsideField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, FieldHandle objfield)
+bool IsInsideFieldAlgo::IsInsideField(ProgressReporter *pr, FieldHandle input, FieldHandle& output, FieldHandle objfield, double newval, double defval, std::string output_type, std::string basis_type, bool partial_inside)
 {
   if (input.get_rep() == 0)
   {
@@ -58,10 +58,22 @@ bool IsInsideFieldAlgo::IsInsideField(ProgressReporter *pr, FieldHandle input, F
     return (false);
   }
     
-  fo.set_data_type("double");
+  if (output_type != "same as input")
+  {  
+    fo.set_data_type(output_type);
+  }
+ 
+  if (fo.is_vector()) fo.set_data_type("double");
+  if (fo.is_tensor()) fo.set_data_type("double");
+    
+  if ((basis_type == "linear")||(basis_type == "Linear")) fo.make_lineardata();
+  else if ((basis_type == "constant")||(basis_type == "Constant")) fo.make_constantdata();
+  
+  // In case no data location is present, make one.
+  if (fo.is_nodata()) fo.make_lineardata();
   
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "ALGOIsInsideField."+fi.get_field_filename()+"."+fobj.get_field_filename()+".",
+    "ALGOIsInsideField."+fi.get_field_filename()+"."+fo.get_field_filename()+"."+fobj.get_field_filename()+".",
     "IsInsideFieldAlgo","IsInsideFieldAlgoT",
     fi.get_field_name() + "," + fo.get_field_name() + "," + fobj.get_field_name() );
 
@@ -80,11 +92,11 @@ bool IsInsideFieldAlgo::IsInsideField(ProgressReporter *pr, FieldHandle input, F
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
     pr->compile_error(ci->filename_);
-//    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
     return(false);
   }
 
-  return(algo->IsInsideField(pr,input,output,objfield));
+  return(algo->IsInsideField(pr,input,output,objfield,newval,defval,output_type,basis_type,partial_inside));
 }
 
 } // End namespace SCIRunAlgo

@@ -35,8 +35,8 @@
  */
 
 // Include all code for the dynamic engine
-#include <Packages/ModelCreation/Core/Algorithms/ArrayObject.h>
-#include <Packages/ModelCreation/Core/Algorithms/ArrayEngine.h>
+#include <Core/Algorithms/ArrayMath/ArrayObject.h>
+#include <Core/Algorithms/ArrayMath/ArrayEngine.h>
 
 // TensorVectorMath (TVM) is my namespace in which all Scalar, Vector, and Tensor math is defined.
 // The classes in this namespace have a definition which is more in line with
@@ -48,17 +48,15 @@
 // not need to update the GUI, but the module dynamically looks up the available
 // functions when it is created.
 
-#include <Packages/ModelCreation/Core/Algorithms/TVMHelp.h>
-#include <Packages/ModelCreation/Core/Algorithms/TVMMath.h>
+#include <Core/Algorithms/ArrayMath/ArrayEngineHelp.h>
+#include <Core/Algorithms/ArrayMath/ArrayEngineMath.h>
 
 
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/String.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Malloc/Allocator.h>
-#include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/StringPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Module.h>
 
 namespace ModelCreation {
 
@@ -67,11 +65,7 @@ using namespace SCIRun;
 class ComputeDataArray : public Module {
 public:
   ComputeDataArray(GuiContext*);
-
-  virtual ~ComputeDataArray();
-
   virtual void execute();
-
   virtual void tcl_command(GuiArgs&, void*);
   
 private:
@@ -88,90 +82,66 @@ ComputeDataArray::ComputeDataArray(GuiContext* ctx)
 {
 }
 
-ComputeDataArray::~ComputeDataArray(){
-}
-
 void ComputeDataArray::execute()
 {
-  size_t numinputs = (num_input_ports()-3);
-  
-  ArrayObjectList inputlist(numinputs+1,ArrayObject(this));
-  ArrayObjectList outputlist(1,ArrayObject(this));
-  
-  StringIPort* function_iport = dynamic_cast<StringIPort *>(get_input_port(1));
-  if(function_iport == 0)
-  {
-    error("Could not locate function input port");
-    return;
-  }
-
+  // Define handles for input
+  MatrixHandle data;
   StringHandle func;
+  std::vector<MatrixHandle> matrices;
   
-  if (function_iport->get(func))
+  // Get latest handles from ports
+  get_input_handle("Function",func,false);
+  get_input_handle("DataArray",data,false);
+  get_dynamic_input_handles("Array",matrices,false);
+
+  get_gui()->lock();
+  get_gui()->eval(get_id()+" update_text");
+  get_gui()->unlock();
+
+
+  // Do something if data changed
+  if (inputs_changed_ || guifunction_.changed() || guiformat_.changed() ||
+      !oport_cached("DataArray"))
   {
+
+    size_t mstart = 2;
+    if (data.get_rep() == 0) mstart--;
+
+    // Check the size of the inputs
+    size_t numinputs = matrices.size();
+    if (numinputs > 26)
+    {
+      error("This module cannot handle more than 26 input matrices");
+      return;
+    }
+    
+    // Define input aray
+    SCIRunAlgo::ArrayObjectList inputlist(numinputs+mstart,SCIRunAlgo::ArrayObject(this));
+    SCIRunAlgo::ArrayObjectList outputlist(1,SCIRunAlgo::ArrayObject(this));
+  
+
     if (func.get_rep())
     {
       guifunction_.set(func->get());
       get_ctx()->reset();
     }
-  }
 
-  if (numinputs > 26)
-  {
-    error("This module cannot handle more than 26 input matrices");
-    return;
-  }
-  
-  char mname = 'A';
-  std::string matrixname("A");
-  
-  int n = 1;
-
-  MatrixIPort *size_iport = dynamic_cast<MatrixIPort *>(get_input_port(0));
-  MatrixHandle size;
-  size_iport->get(size);
-  if (size.get_rep())
-  {
-    if ((size->ncols() != 1)&&(size->nrows()!=1))
-    {
-      error("Size input needs to be a 1 by 1 matrix");
-      return;
-    }
-    n = static_cast<int>(size->get(0,0));
-    if (n == 0) n = 1;
-  }
-  
-  // Add an object for getting the index and size of the array.
-  if(!(inputlist[0].create_inputindex("INDEX","SIZE")))
-  {
-    error("Internal error in module");
-    return;
-  } 
-   
-  for (size_t p = 0; p < numinputs; p++)
-  {
-    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(get_input_port(p+2));
-    MatrixHandle handle;
-    iport->get(handle);
     
-    if (handle.get_rep())
+    char mname = 'A';
+    std::string matrixname("A");
+    
+    int n = 1;
+
+    if (data.get_rep())
     {
-      if ((handle->ncols()==1)||(handle->ncols()==3)||(handle->ncols()==6)||(handle->ncols()==9))
+      if ((data->ncols()==1)||(data->ncols()==3)||(data->ncols()==6)||(data->ncols()==9))
       {
-        matrixname[0] = mname++;
-        inputlist[p+1].create_inputdata(handle,matrixname);
-      }
-      else
-      {
-        std::ostringstream oss;
-        oss << "Input matrix " << p+1 << "is not a valid ScalarArray, VectorArray, or TensorArray";
-        error(oss.str());
-        return;
+        inputlist[0].create_inputdata(data,"DATA");
       }
       
       if (n > 1) 
       {
-        if (n != handle->nrows()&&(handle->nrows() != 1))
+        if (n != data->nrows()&&(data->nrows() != 1))
         {
           std::ostringstream oss;
           oss << "The number of elements in each ScalarArray, VectorArray, or TensorArray is not equal";
@@ -181,38 +151,69 @@ void ComputeDataArray::execute()
       }
       else
       {
-        n = handle->nrows();
+        n = data->nrows();
+      }    
+    }
+    
+    // Add an object for getting the index and size of the array.
+    if(!(inputlist[mstart-1].create_inputindex("INDEX","SIZE")))
+    {
+      error("Internal error in module");
+      return;
+    } 
+   
+    for (size_t p = 0; p < numinputs; p++)
+    {      
+      if (matrices[p].get_rep())
+      {
+        if ((matrices[p]->ncols()==1)||(matrices[p]->ncols()==3)||(matrices[p]->ncols()==6)||(matrices[p]->ncols()==9))
+        {
+          matrixname[0] = mname++;
+          inputlist[p+mstart].create_inputdata(matrices[p],matrixname);
+        }
+        else
+        {
+          std::ostringstream oss;
+          oss << "Input matrix " << p+1 << "is not a valid ScalarArray, VectorArray, or TensorArray";
+          error(oss.str());
+          return;
+        }
+        
+        if (n > 1) 
+        {
+          if (n != matrices[p]->nrows()&&(matrices[p]->nrows() != 1))
+          {
+            std::ostringstream oss;
+            oss << "The number of elements in each ScalarArray, VectorArray, or TensorArray is not equal";
+            error(oss.str());
+            return;          
+          }
+        }
+        else
+        {
+          n = matrices[p]->nrows();
+        }
       }
     }
-  }
   
-  std::string format = guiformat_.get();
+    std::string format = guiformat_.get();
+      
+    MatrixHandle omatrix;  
+    outputlist[0].create_outputdata(n,format,"RESULT",omatrix);
+  
+    std::string function = guifunction_.get();
     
-  MatrixHandle omatrix;  
-  outputlist[0].create_outputdata(n,format,"RESULT",omatrix);
-    
-  get_gui()->lock();
-  get_gui()->eval(get_id()+" update_text");
-  get_gui()->unlock();
-  
-  std::string function = guifunction_.get();
-  
-  ArrayEngine engine(this);
-  if (!engine.engine(inputlist,outputlist,function))
-  {
-    error("An error occured while executing function");
-    return;
+    SCIRunAlgo::ArrayEngine engine(this);
+    if (!engine.engine(inputlist,outputlist,function))
+    {
+      error("An error occured while executing function");
+      return;
+    }
+
+    send_output_handle("DataArray",omatrix,false);
   }
-  
-  MatrixOPort *oport = dynamic_cast<MatrixOPort *>(get_oport(0));
-  if (oport)
-  {
-    oport->send(omatrix);
-  }
-  
 }
 
-extern std::string tvm_help_matrix;
 
 void ComputeDataArray::tcl_command(GuiArgs& args, void* userdata)
 {
@@ -224,12 +225,13 @@ void ComputeDataArray::tcl_command(GuiArgs& args, void* userdata)
 
   if( args[1] == "gethelp" )
   {
+    TensorVectorMath::ArrayEngineHelp Help;
     get_gui()->lock();
     get_gui()->eval("global " + get_id() +"-help");
-    get_gui()->eval("set " + get_id() + "-help {" + tvm_help_matrix +"}");
+    get_gui()->eval("set " + get_id() + "-help {" + Help.gethelp(true) +"}");
     get_gui()->unlock();
+    return;
   }
-
   else
   {
     Module::tcl_command(args, userdata);

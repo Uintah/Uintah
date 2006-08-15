@@ -89,13 +89,17 @@ TransformData::execute()
   FieldHandle field_input_handle;
   if( !get_input_handle( "Input Field", field_input_handle, true ) ) return;
 
+  if (field_input_handle->basis_order() == -1) {
+    error("Field 0 contains no data to transform.");
+    return;
+  }
   get_gui()->execute(get_id() + " update_text"); // update gFunction_ before get.
   // Check to see if the input field has changed.
   if( inputs_changed_ ||
       gui_function_.changed( true ) ||
       gui_output_data_type_.changed( true ) ||
-      !field_output_handle_.get_rep() ) {
-
+      !field_output_handle_.get_rep() )
+  {
     update_state(Executing);
 
     string function = gui_function_.get();

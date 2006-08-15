@@ -27,8 +27,6 @@
 */
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
@@ -56,11 +54,14 @@ void ConvertToTriSurf::execute()
   FieldHandle ifield, ofield;
   if (!(get_input_handle("Field",ifield,true))) return;
   
-  SCIRunAlgo::FieldsAlgo algo(this);
+  if (inputs_changed_ || !oport_cached("Field"))
+  {
+    SCIRunAlgo::FieldsAlgo algo(this);
 
-  if (!(algo.ConvertToTriSurf(ifield,ofield))) return;
+    if (!(algo.ConvertToTriSurf(ifield,ofield))) return;
   
-  send_output_handle("Field",ofield,true);
+    send_output_handle("Field",ofield,false);
+  }
 }
 
 

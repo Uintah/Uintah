@@ -52,9 +52,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-
   GuiDouble       major_weight_;
   GuiDouble       medium_weight_;
   GuiDouble       minor_weight_;
@@ -83,18 +80,11 @@ TendNorm::~TendNorm()
 void 
 TendNorm::execute()
 {
-  NrrdDataHandle nrrd_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("nin");
-  onrrd_ = (NrrdOPort *)get_oport("nout");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("nin", nrrd_handle)) return;
 
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
   reset_vars();
 
   Nrrd *nin = nrrd_handle->nrrd_;
@@ -105,7 +95,9 @@ TendNorm::execute()
   weights[1]=medium_weight_.get();
   weights[2]=minor_weight_.get();
 
-  if (tenSizeNormalize(nout, nin, weights, (float)amount_.get(), target_.get())) {
+  if (tenSizeNormalize(nout, nin, weights,
+                       (float)amount_.get(), target_.get()))
+  {
     char *err = biffGetDone(TEN);
     error(string("Error in TendNorm: ") + err);
     free(err);
@@ -113,7 +105,9 @@ TendNorm::execute()
   }
 
   NrrdDataHandle ntmp(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(ntmp);
+
+  send_output_handle("nout", ntmp);
 }
+
 
 } // End namespace SCITeem

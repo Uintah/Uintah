@@ -54,9 +54,6 @@ public:
 
   virtual void execute();
 
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-
   GuiString       sz_;
 };
 
@@ -64,29 +61,23 @@ public:
 DECLARE_MAKER(UnuReshape)
 UnuReshape::UnuReshape(GuiContext* ctx)
   : Module("UnuReshape", ctx, Source, "UnuNtoZ", "Teem"),
-    inrrd_(0), onrrd_(0),
     sz_(get_ctx()->subVar("sz"), "0")
 {
 }
 
-UnuReshape::~UnuReshape(){
+
+UnuReshape::~UnuReshape()
+{
 }
 
+
 void
- UnuReshape::execute(){
-  NrrdDataHandle nrrd_handle;
-
+UnuReshape::execute()
+{
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty InputNrrd.");
-    return;
-  }
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
   reset_vars();
 
@@ -172,7 +163,7 @@ void
     nout->axis[i].kind = nin->axis[i].kind;
   }
 
-  onrrd_->send(out);
+  send_output_handle("OutputNrrd", out);
 }
 
 } // End namespace Teem

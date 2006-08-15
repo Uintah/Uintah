@@ -52,9 +52,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-
   GuiDouble       scale_;
 };
 
@@ -74,18 +71,11 @@ TendAnscale::~TendAnscale()
 void 
 TendAnscale::execute()
 {
-  NrrdDataHandle nrrd_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("nin");
-  onrrd_ = (NrrdOPort *)get_oport("nout");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("nin", nrrd_handle)) return;
 
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
   reset_vars();
 
   Nrrd *nin = nrrd_handle->nrrd_;
@@ -99,7 +89,8 @@ TendAnscale::execute()
   }
 
   NrrdDataHandle nrrd(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(nrrd);
+
+  send_output_handle("nout", nrrd);
 }
 
 } // End namespace SCITeem

@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE definition PUBLIC "-//Skinner/Drawable DTD" "skinner.dtd">
+
+<definition class="ShadowedBox"> 
+  <object class="Box"> 
+    <var name="color">#00000000</var>
+    <var name="focus_mode">1</var>
+    
+    <var name="outside" propagate="yes">#00000000</var>
+    <var name="inside" propagate="yes">#000000FF</var>
+    <var name="inside" propagate="yes">#000000D0</var>
+    <var name="inside" propagate="yes">#333333FF</var>
+
+    <var name="border-size1" propagate="yes" overwrite="no">10</var>
+    <var name="border-size2" propagate="yes" overwrite="no">10</var>
+    <object class="Collection">
+
+
+      <object class="Grid">
+        <var name="rows">3</var>
+        <var name="cols">3</var>
+        
+        <object class="Gradient">
+          <var name="row">1</var>
+          <var name="col">1</var>
+          <var name="cell-height">$border-size2</var>
+          <var name="cell-width">$border-size2</var>
+          <var name="anchor">SE</var>
+          <var name="ne-color">$outside</var>
+          <var name="se-color">$inside</var>
+          <var name="nw-color">$outside</var>
+          <var name="sw-color">$outside</var>
+          <var name="backslash">0</var>
+        </object>
+        
+        
+        <object class="Gradient">
+          <var name="row">1</var>
+          <var name="col">2</var>
+          <var name="cell-height">$border-size2</var>
+          <var name="top-color">$outside</var>
+          <var name="bottom-color">$inside</var>
+        </object>
+        
+        <object class="Gradient">
+          <var name="row">1</var>
+          <var name="col">3</var>
+          <var name="cell-height">$border-size2</var>
+          <var name="cell-width">$border-size1</var>
+          <var name="anchor">SW</var>
+          <var name="ne-color">$outside</var>
+          <var name="sw-color">$inside</var>
+          <var name="nw-color">$outside</var>
+          <var name="se-color">$outside</var>
+          <var name="backslash">1</var>
+        </object>
+        
+        
+        
+        <object class="Gradient">
+          <var name="row">2</var>
+          <var name="col">1</var>
+          <var name="cell-width">$border-size2</var>
+          <var name="left-color">$outside</var>
+          <var name="right-color">$inside</var>
+        </object>
+
+        <object class="Box">
+          <var name="row">2</var>
+          <var name="col">2</var>
+          <var name="color">$inside</var>
+        </object>
+
+        
+        
+        <object class="Gradient">
+          <var name="row">2</var>
+          <var name="col">3</var>
+          <var name="cell-width">$border-size1</var>
+          <var name="right-color">$outside</var>
+          <var name="left-color">$inside</var>
+        </object>
+
+        
+        <object class="Gradient">
+          <var name="row">3</var>
+          <var name="col">1</var>
+
+          <var name="cell-height">$border-size1</var>
+          <var name="cell-width">$border-size2</var>
+          <var name="anchor">NE</var>
+          <var name="sw-color">$outside</var>
+          <var name="ne-color">$inside</var>
+          <var name="nw-color">$outside</var>
+          <var name="se-color">$outside</var>
+          <var name="backslash">1</var>
+        </object>
+
+        <object class="Gradient">
+          <var name="row">3</var>
+          <var name="col">2</var>
+          <var name="cell-height">$border-size1</var>
+          <var name="bottom-color">$outside</var>
+          <var name="top-color">$inside</var>
+        </object>
+        
+        <object class="Gradient">
+          <var name="row">3</var>
+          <var name="col">3</var>
+
+          <var name="cell-height">$border-size1</var>
+          <var name="cell-width">$border-size1</var>
+          <var name="anchor">NW</var>
+          <var name="se-color">$outside</var>
+          <var name="nw-color">$inside</var>
+          <var name="ne-color">$outside</var>
+          <var name="sw-color">$outside</var>
+          <var name="backslash">0</var>
+        </object>
+      </object>
+
+      <object class="Grid">
+        <var name="rows">3</var>
+        <var name="cols">3</var>
+
+        <object class="Collection">
+          <var name="row">1</var>
+          <var name="col">1</var>
+
+          <var name="cell-height">3</var>
+          <var name="cell-width">4</var>
+        </object>          
+
+        <object class="Collection">
+          <var name="row">3</var>
+          <var name="col">3</var>
+
+          <var name="cell-height">9</var>
+          <var name="cell-width">4</var>
+        </object>          
+
+        <object class="ShadowedBox::child">
+          <var name="row">2</var>
+          <var name="col">2</var>
+        </object>
+      </object>
+      
+    </object>
+  </object>
+</definition>
+

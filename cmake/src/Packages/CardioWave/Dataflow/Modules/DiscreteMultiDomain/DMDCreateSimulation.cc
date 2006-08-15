@@ -28,7 +28,6 @@
 
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 #include <Core/Bundle/Bundle.h>
 #include <Core/Datatypes/Field.h>
@@ -149,11 +148,13 @@ DMDCreateSimulation::DMDCreateSimulation(GuiContext* ctx)
 
 void DMDCreateSimulation::execute()
 {
+  // Define input handles:
   BundleHandle SimulationBundle;
   BundleHandle MembraneBundle;
   BundleHandle DomainBundle;
   BundleHandle StimulusBundle;
   BundleHandle ReferenceBundle;
+  BundleHandle ElectrodeBundle;
   StringHandle ExtParameters;
   
   // required ones
@@ -162,20 +163,9 @@ void DMDCreateSimulation::execute()
   if (!(get_input_handle("StimulusBundle",StimulusBundle,true))) return;
   if (!(get_input_handle("ReferenceBundle",ReferenceBundle,true))) return;
 
+  get_input_handle("ElectrodeBundle",ElectrodeBundle,false);
   get_input_handle("Parameters",ExtParameters,false);
   
-  SimulationBundle = scinew Bundle();
-  if (SimulationBundle.get_rep() == 0)
-  {
-    error("Could not allocate new simulation bundle");
-    return;
-  }   
-
-  // start merging everything together
-  SimulationBundle->merge(DomainBundle);
-  SimulationBundle->merge(MembraneBundle);
-  SimulationBundle->merge(StimulusBundle);
-  SimulationBundle->merge(ReferenceBundle);
 
   // get all input from GUI 
   std::string cmd;
@@ -184,223 +174,297 @@ void DMDCreateSimulation::execute()
   get_gui()->eval(cmd);
   get_gui()->unlock();
   get_ctx()->reset();
-  
-  std::string solvername = guisolvername_.get();
-  std::string tstepname  = guitstepname_.get();
-  std::string outputname = guioutputname_.get();
-  
-  NWSolverItem solveritem = solverxml_.get_nwsolver(solvername);
-  OutputItem outputitem = outputxml_.get_output(outputname);
-  NWTimeStepItem tstepitem = tstepxml_.get_nwtimestep(tstepname);
-    
-  std::string paramstr = guisolverparam_.get();
-  paramstr += "# Parameters for timestepper\n\n";
-  paramstr += guitstepparam_.get();
-  paramstr += "# Parameters for output module\n\n";
-  paramstr += guioutputparam_.get();
-  paramstr += "# Parameters for solver\n\n";
-  paramstr += guicwaveparam_.get();
 
-  DomainBundle = SimulationBundle->getBundle("Domain");
-  if (DomainBundle.get_rep() == 0)
+  if (inputs_changed_  || guisolvername_.changed() || guisolverparam_.changed() || 
+      guitstepname_.changed() || guitstepparam_.changed() || guioutputname_.changed() || 
+      guioutputparam_.changed() || guicwaveparam_.changed() || !oport_cached("SimulationBundle") )
   {
-    error("DomainBundle does not contain a sub bundle called Domain");
-    return;
-  }
-  StringHandle DomainParam = DomainBundle->getString("Parameters");
-  if (DomainParam.get_rep())
-  {
-    paramstr += "# Parameters for domain\n\n";
-    paramstr += DomainParam->get() + "\n";
-  }
-  
-  int membrane_num;
-  int reference_num;
-  int stimulus_num;
-  std::string fieldname;
-  membrane_num = 0;
 
-  {
-    std::ostringstream oss;
-    oss << "Membrane_" << membrane_num;
-    fieldname = oss.str();
-  }
-  
-  while (SimulationBundle->isBundle(fieldname))
-  {
-    MembraneBundle = SimulationBundle->getBundle(fieldname);
-    StringHandle MembraneParam = MembraneBundle->getString("Parameters");
-    if (MembraneParam.get_rep())
+    SimulationBundle = scinew Bundle();
+    if (SimulationBundle.get_rep() == 0)
     {
-      std::ostringstream oss;
-      oss << membrane_num;
-      paramstr += "# Parameters for membrane " + oss.str() + "\n\n";
-      paramstr += MembraneParam->get() + "\n";
+      error("Could not allocate new simulation bundle");
+      return;
+    }   
+
+    // start merging everything together
+    SimulationBundle->merge(DomainBundle);
+    SimulationBundle->merge(MembraneBundle);
+    SimulationBundle->merge(StimulusBundle);
+    SimulationBundle->merge(ReferenceBundle);
+    SimulationBundle->merge(ElectrodeBundle);
+
+    std::string solvername = guisolvername_.get();
+    std::string tstepname  = guitstepname_.get();
+    std::string outputname = guioutputname_.get();
+    
+    NWSolverItem solveritem = solverxml_.get_nwsolver(solvername);
+    OutputItem outputitem = outputxml_.get_output(outputname);
+    NWTimeStepItem tstepitem = tstepxml_.get_nwtimestep(tstepname);
+      
+    std::string paramstr = guisolverparam_.get();
+    paramstr += "# Parameters for timestepper\n\n";
+    paramstr += guitstepparam_.get();
+    paramstr += "# Parameters for output module\n\n";
+    paramstr += guioutputparam_.get();
+    paramstr += "# Parameters for solver\n\n";
+    paramstr += guicwaveparam_.get();
+
+    DomainBundle = SimulationBundle->getBundle("Domain");
+    if (DomainBundle.get_rep() == 0)
+    {
+      error("DomainBundle does not contain a sub bundle called Domain");
+      return;
     }
-    membrane_num++;
+    StringHandle DomainParam = DomainBundle->getString("Parameters");
+    if (DomainParam.get_rep())
+    {
+      paramstr += "# Parameters for domain\n\n";
+      paramstr += DomainParam->get() + "\n";
+    }
+    
+    int membrane_num;
+    int reference_num;
+    int stimulus_num;
+    int electrode_num;
+    std::string fieldname;
+    membrane_num = 1;
+
     {
       std::ostringstream oss;
       oss << "Membrane_" << membrane_num;
       fieldname = oss.str();
     }
-  }
-
-
-  stimulus_num = 0;
-
-  {
-    std::ostringstream oss;
-    oss << "Stimulus_" << stimulus_num;
-    fieldname = oss.str();
-  }
-
-  while (SimulationBundle->isBundle(fieldname))
-  {
-    StimulusBundle = SimulationBundle->getBundle(fieldname);
-    StringHandle StimulusParam = StimulusBundle->getString("Parameters");
-    if (StimulusParam.get_rep())
+    
+    while (SimulationBundle->isBundle(fieldname))
     {
-      std::ostringstream oss;
-      oss << stimulus_num;
-      paramstr += "# Parameters for stimulus " + oss.str() + "\n\n";
-      paramstr += StimulusParam->get() + "\n";
+      MembraneBundle = SimulationBundle->getBundle(fieldname);
+      StringHandle MembraneParam = MembraneBundle->getString("Parameters");
+      if (MembraneParam.get_rep())
+      {
+        std::ostringstream oss;
+        oss << membrane_num;
+        paramstr += "# Parameters for membrane " + oss.str() + "\n\n";
+        paramstr += MembraneParam->get() + "\n";
+      }
+      membrane_num++;
+      {
+        std::ostringstream oss;
+        oss << "Membrane_" << membrane_num;
+        fieldname = oss.str();
+      }
     }
-    stimulus_num++;
+
+
+    stimulus_num = 0;
+
     {
       std::ostringstream oss;
       oss << "Stimulus_" << stimulus_num;
       fieldname = oss.str();
     }
-  }
 
-  reference_num = 0;
-  {
-    std::ostringstream oss;
-    oss << "Reference_" << reference_num;
-    fieldname = oss.str();
-  }
-  while (SimulationBundle->isBundle(fieldname))
-  {
-    ReferenceBundle = SimulationBundle->getBundle(fieldname);
-    StringHandle ReferenceParam = ReferenceBundle->getString("Parameters");
-    if (ReferenceParam.get_rep())
+    while (SimulationBundle->isBundle(fieldname))
     {
-      std::ostringstream oss;
-      oss << reference_num;
-      paramstr += "# Parameters for reference " + oss.str() + "\n\n";
-      paramstr += ReferenceParam->get() + "\n";
+      StimulusBundle = SimulationBundle->getBundle(fieldname);
+      StringHandle StimulusParam = StimulusBundle->getString("Parameters");
+      if (StimulusParam.get_rep())
+      {
+        std::ostringstream oss;
+        oss << stimulus_num;
+        paramstr += "# Parameters for stimulus " + oss.str() + "\n\n";
+        paramstr += StimulusParam->get() + "\n";
+      }
+      stimulus_num++;
+      {
+        std::ostringstream oss;
+        oss << "Stimulus_" << stimulus_num;
+        fieldname = oss.str();
+      }
     }
-    reference_num++;
+
+    reference_num = 0;
     {
       std::ostringstream oss;
       oss << "Reference_" << reference_num;
       fieldname = oss.str();
     }
-  }
-
-  if (ExtParameters.get_rep())
-  {
-    paramstr += "# Parameters from module input port\n";
-    paramstr += ExtParameters->get() + "\n";
-  }
-
-  StringHandle Parameters = scinew String(paramstr);
-  if (Parameters.get_rep() == 0)
-  {
-    error("Could not create parameter string");
-    return;
-  } 
-  SimulationBundle->setString("Parameters",Parameters);
-     
-     
-  std::string sourcefiles = "NeuroKernel.c VectorOps.c CWaveKernel.c ";
-  sourcefiles += solveritem.file + " ";  
-  sourcefiles += tstepitem.file + " ";  
-  sourcefiles += outputitem.file + " ";  
-
-  DomainBundle = SimulationBundle->getBundle("Domain");
-  if (DomainBundle.get_rep() == 0)
-  {
-    error("DomainBundle does not contain a sub bundle called Domain");
-    return;
-  }
-  StringHandle DomainSourceFile = DomainBundle->getString("SourceFile");
-  if (DomainSourceFile.get_rep())
-  {
-    sourcefiles += DomainSourceFile->get() + " ";
-  }
-
-  membrane_num = 0;
-  {
-    std::ostringstream oss;
-    oss << "Membrane_" << membrane_num;
-    fieldname = oss.str();
-  }
-  
-  while (SimulationBundle->isBundle(fieldname))
-  {
-    MembraneBundle = SimulationBundle->getBundle(fieldname);
-    StringHandle MembraneSourceFile = MembraneBundle->getString("SourceFile");
-    if (MembraneSourceFile.get_rep())
+    while (SimulationBundle->isBundle(fieldname))
     {
-      sourcefiles += MembraneSourceFile->get() + " ";
+      ReferenceBundle = SimulationBundle->getBundle(fieldname);
+      StringHandle ReferenceParam = ReferenceBundle->getString("Parameters");
+      if (ReferenceParam.get_rep())
+      {
+        std::ostringstream oss;
+        oss << reference_num;
+        paramstr += "# Parameters for reference " + oss.str() + "\n\n";
+        paramstr += ReferenceParam->get() + "\n";
+      }
+      reference_num++;
+      {
+        std::ostringstream oss;
+        oss << "Reference_" << reference_num;
+        fieldname = oss.str();
+      }
     }
-    membrane_num++;
+
+    electrode_num = 0;
+    {
+      std::ostringstream oss;
+      oss << "Electrode_" << electrode_num;
+      fieldname = oss.str();
+    }
+    while (SimulationBundle->isBundle(fieldname))
+    {
+      ElectrodeBundle = SimulationBundle->getBundle(fieldname);
+      StringHandle ElectrodeParam = ElectrodeBundle->getString("Parameters");
+      if (ElectrodeParam.get_rep())
+      {
+        std::ostringstream oss;
+        oss << electrode_num;
+        paramstr += "# Parameters for electrode " + oss.str() + "\n\n";
+        paramstr += ElectrodeParam->get() + "\n";
+      }
+      electrode_num++;
+      {
+        std::ostringstream oss;
+        oss << "Electrode_" << electrode_num;
+        fieldname = oss.str();
+      }
+    }
+
+
+
+
+    if (ExtParameters.get_rep())
+    {
+      paramstr += "# Parameters from module input port\n";
+      paramstr += ExtParameters->get() + "\n";
+    }
+
+    StringHandle Parameters = scinew String(paramstr);
+    if (Parameters.get_rep() == 0)
+    {
+      error("Could not create parameter string");
+      return;
+    } 
+    SimulationBundle->setString("Parameters",Parameters);
+       
+       
+    std::string sourcefiles = "NeuroKernel.c VectorOps.c CWaveKernel.c ";
+    sourcefiles += solveritem.file + " ";  
+    sourcefiles += tstepitem.file + " ";  
+    sourcefiles += outputitem.file + " ";  
+
+    DomainBundle = SimulationBundle->getBundle("Domain");
+    if (DomainBundle.get_rep() == 0)
+    {
+      error("DomainBundle does not contain a sub bundle called Domain");
+      return;
+    }
+    StringHandle DomainSourceFile = DomainBundle->getString("SourceFile");
+    if (DomainSourceFile.get_rep())
+    {
+      sourcefiles += DomainSourceFile->get() + " ";
+    }
+
+    membrane_num = 0;
     {
       std::ostringstream oss;
       oss << "Membrane_" << membrane_num;
       fieldname = oss.str();
-    }  
-  }
-
-  stimulus_num = 0;
-  {
-    std::ostringstream oss;
-    oss << "Stimulus_" << stimulus_num;
-    fieldname = oss.str();
-  }
-    
-  while (SimulationBundle->isBundle(fieldname))
-  {
-    StimulusBundle = SimulationBundle->getBundle(fieldname);
-    StringHandle StimulusSourceFile = StimulusBundle->getString("SourceFile");
-    if (StimulusSourceFile.get_rep())
-    {
-      sourcefiles += StimulusSourceFile->get() + " ";
     }
-    stimulus_num++;
+    
+    while (SimulationBundle->isBundle(fieldname))
+    {
+      MembraneBundle = SimulationBundle->getBundle(fieldname);
+      StringHandle MembraneSourceFile = MembraneBundle->getString("SourceFile");
+      if (MembraneSourceFile.get_rep())
+      {
+        sourcefiles += MembraneSourceFile->get() + " ";
+      }
+      membrane_num++;
+      {
+        std::ostringstream oss;
+        oss << "Membrane_" << membrane_num;
+        fieldname = oss.str();
+      }  
+    }
+
+    stimulus_num = 0;
     {
       std::ostringstream oss;
       oss << "Stimulus_" << stimulus_num;
       fieldname = oss.str();
     }
-  }
-
-  reference_num = 0;
-  {
-    std::ostringstream oss;
-    oss << "Reference_" << reference_num;
-    fieldname = oss.str();
-  }
-  while (SimulationBundle->isBundle(fieldname))
-  {
-    ReferenceBundle = SimulationBundle->getBundle(fieldname);
-    StringHandle ReferenceSourceFile = ReferenceBundle->getString("SourceFile");
-    if (ReferenceSourceFile.get_rep())
+      
+    while (SimulationBundle->isBundle(fieldname))
     {
-      sourcefiles += ReferenceSourceFile->get() + " ";
+      StimulusBundle = SimulationBundle->getBundle(fieldname);
+      StringHandle StimulusSourceFile = StimulusBundle->getString("SourceFile");
+      if (StimulusSourceFile.get_rep())
+      {
+        sourcefiles += StimulusSourceFile->get() + " ";
+      }
+      stimulus_num++;
+      {
+        std::ostringstream oss;
+        oss << "Stimulus_" << stimulus_num;
+        fieldname = oss.str();
+      }
     }
-    reference_num++;
+
+    reference_num = 0;
     {
       std::ostringstream oss;
       oss << "Reference_" << reference_num;
       fieldname = oss.str();
     }
+    while (SimulationBundle->isBundle(fieldname))
+    {
+      ReferenceBundle = SimulationBundle->getBundle(fieldname);
+      StringHandle ReferenceSourceFile = ReferenceBundle->getString("SourceFile");
+      if (ReferenceSourceFile.get_rep())
+      {
+        sourcefiles += ReferenceSourceFile->get() + " ";
+      }
+      reference_num++;
+      {
+        std::ostringstream oss;
+        oss << "Reference_" << reference_num;
+        fieldname = oss.str();
+      }
+    }
+
+    electrode_num = 0;
+    {
+      std::ostringstream oss;
+      oss << "Electrode_" << electrode_num;
+      fieldname = oss.str();
+    }
+    while (SimulationBundle->isBundle(fieldname))
+    {
+      ElectrodeBundle = SimulationBundle->getBundle(fieldname);
+      StringHandle ElectrodeSourceFile = ElectrodeBundle->getString("SourceFile");
+      if (ElectrodeSourceFile.get_rep())
+      {
+        sourcefiles += ElectrodeSourceFile->get() + " ";
+      }
+      electrode_num++;
+      {
+        std::ostringstream oss;
+        oss << "Electrode_" << electrode_num;
+        fieldname = oss.str();
+      }
+    }
+
+
+
+    
+    StringHandle SourceFile = scinew String(sourcefiles);
+    SimulationBundle->setString("SourceFile",SourceFile);
+    send_output_handle("SimulationBundle",SimulationBundle,false);
   }
-  
-  StringHandle SourceFile = scinew String(sourcefiles);
-  SimulationBundle->setString("SourceFile",SourceFile);
-  send_output_handle("SimulationBundle",SimulationBundle,true);
 }
 
 void

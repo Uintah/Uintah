@@ -189,27 +189,18 @@ GenericReader<HType>::execute()
       delete stream;
     }
   }
-
-  // Send the data downstream.
+  
   SimpleOPort<HType> *outport = (SimpleOPort<HType> *)get_output_port(0);
   if (!outport) {
     error("Unable to initialize oport.");
     return;
   }
-  outport->send(handle_);
-  
+  outport->send_and_dereference(handle_,true);
+
   // CODE FOR FILENAME OUTPUT PORT ////
-  StringOPort* filenameoport;
-  if (filenameoport = dynamic_cast<StringOPort *>(get_output_port("Filename")))
-  {
-    StringHandle filenameH = scinew String(filename_.get());
-    filenameoport->send(filenameH);
-  }
+  StringHandle filenameH = scinew String(filename_.get());
+  send_output_handle("Filename",filenameH,false);
   ////////////////////////////////////
-  
-  
-  
-  
 }
 
 } // End namespace SCIRun

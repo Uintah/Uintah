@@ -52,9 +52,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-
   GuiInt       major_;
   GuiInt       medium_;
   GuiInt       minor_;
@@ -72,24 +69,19 @@ TendEvec::TendEvec(SCIRun::GuiContext *ctx) :
 {
 }
 
-TendEvec::~TendEvec() {
+
+TendEvec::~TendEvec()
+{
 }
+
 
 void 
 TendEvec::execute()
 {
-  NrrdDataHandle nrrd_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("nin");
-  onrrd_ = (NrrdOPort *)get_oport("nout");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("nin", nrrd_handle)) return;
 
   Nrrd *nin = nrrd_handle->nrrd_;
 
@@ -146,7 +138,8 @@ TendEvec::execute()
   nrrdAxisInfoCopy(nout->nrrd_, nin, NULL, NRRD_AXIS_INFO_SIZE_BIT);
 
   NrrdDataHandle ntmp(nout);
-  onrrd_->send_and_dereference(ntmp);
+  
+  send_output_handle("nout", ntmp);
 }
 
 } // End namespace SCITeem

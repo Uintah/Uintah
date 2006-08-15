@@ -114,6 +114,7 @@ SRCS := \
         $(SRCDIR)/GenClock.tcl \
         $(SRCDIR)/GenStandardColorMaps.tcl \
         $(SRCDIR)/GenTitle.tcl \
+        $(SRCDIR)/Graph.tcl \
         $(SRCDIR)/ToolTipText.tcl \
 	$(SRCDIR)/InsertHexSheet.tcl \
         $(SRCDIR)/Isosurface.tcl \

@@ -72,6 +72,17 @@ int IsoRefineAlgo::hex_reorder_table[14][8] = {
 };
 
 
+double IsoRefineAlgo::hcoords_double[8][3] = {
+  { 0.0, 0.0, 0.0},
+  { 1.0, 0.0, 0.0},
+  { 1.0, 1.0, 0.0},
+  { 0.0, 1.0, 0.0},
+  { 0.0, 0.0, 1.0},
+  { 1.0, 0.0, 1.0},
+  { 1.0, 1.0, 1.0},
+  { 0.0, 1.0, 1.0}
+};
+
 class IsoRefine : public Module
 {
 private:
@@ -114,13 +125,9 @@ void
 IsoRefine::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input");
   FieldHandle ifieldhandle;
-  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
-    return;
-  }
-
+  if (!get_input_handle("Input", ifieldhandle)) return;
+  
   MatrixIPort *imp = (MatrixIPort *)get_iport("Optional Isovalue");
   MatrixHandle isomat;
   if (imp->get(isomat) && isomat.get_rep() &&
@@ -147,7 +154,8 @@ IsoRefine::execute()
 
   string ext = "";
   const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
-  if (mtd->get_name().find("HexVolMesh") != string::npos)
+  if (mtd->get_name().find("HexVolMesh") != string::npos ||
+      mtd->get_name().find("LatVolMesh") != string::npos)
   {
     ext = "Hex";
   }
@@ -155,18 +163,6 @@ IsoRefine::execute()
   {
     ext = "Quad";
   }
-#if 0
-  else if (mtd->get_name().find("LatVolMesh") != string::npos)
-  {
-    error("LatVolFields are not directly supported in this module.  Please first convert it into a TetVolField by inserting an upstream SCIRun::FieldsGeometry::Unstructure module, followed by a SCIRun::FieldsGeometry::HexToTet module.");
-    return;
-  }
-  else if (mtd->get_name().find("ImageMesh") != string::npos)
-  {
-    error("ImageFields are not supported in this module.  Please first convert it into a TriSurfField by inserting an upstream SCIRun::FieldsGeometry::Unstructure module, followed by a SCIRun::FieldsGeometry::QuadToTri module.");
-    return;
-  }
-#endif
   else
   {
     error("Unsupported mesh type.  This module only works on HexVolMeshes and QuadSurfMeshes.");
@@ -179,10 +175,33 @@ IsoRefine::execute()
     return;
   }
   
+  // Make the field linear if it has a constant basis.  Push the
+  // constant values from the elements out to the nodes.
   if (ifieldhandle->basis_order() != 1)
   {
-    error("Isoclipping can only be done for fields with data at nodes.  Note: you can insert a ChangeFieldDataAt module (and an ApplyInterpMatrix module) upstream to push element data to the nodes.");
-    return;
+    const TypeDescription *ftd = ifieldhandle->get_type_description();
+    CompileInfoHandle ci = IRMakeLinearAlgo::get_compile_info(ftd);
+    Handle<IRMakeLinearAlgo> algo;
+    if (!DynamicCompilation::compile(ci, algo, false, this))
+    {
+      error("Unable to compile IRMakeLinear algorithm.");
+      return;
+    }
+    ifieldhandle = algo->execute(this, ifieldhandle);
+  }
+
+  if (ext == "Hex")
+  {
+    const TypeDescription *ftd = ifieldhandle->get_type_description();
+    CompileInfoHandle ci = IRMakeConvexAlgo::get_compile_info(ftd);
+    Handle<IRMakeConvexAlgo> algo;
+    if (!DynamicCompilation::compile(ci, algo, false, this))
+    {
+      error("Unable to compile IRMakeConvex algorithm.");
+      return;
+    }
+    ifieldhandle.detach();
+    algo->execute(this, ifieldhandle, isoval, gui_lte_.get());
   }
 
   const TypeDescription *ftd = ifieldhandle->get_type_description();
@@ -206,9 +225,10 @@ IsoRefine::execute()
   omatrix_port->send_and_dereference(interp);
 }
 
+
 CompileInfoHandle
 IsoRefineAlgo::get_compile_info(const TypeDescription *fsrc,
-			      string ext)
+                                string ext)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));
@@ -224,8 +244,63 @@ IsoRefineAlgo::get_compile_info(const TypeDescription *fsrc,
 
   // Add in the include path to compile this obj
   rval->add_include(include_path);
-  rval->add_mesh_include("../src/Core/Datatypes/TriSurfMesh.h");
-  rval->add_basis_include("../src/Core/Basis/TriLinearLgn.h");
+  rval->add_mesh_include("../src/Core/Datatypes/HexVolMesh.h");
+  rval->add_basis_include("../src/Core/Basis/HexTrilinearLgn.h");
+  fsrc->fill_compile_info(rval);
+
+  return rval;
+}
+
+
+CompileInfoHandle
+IRMakeLinearAlgo::get_compile_info(const TypeDescription *fsrc)
+{
+  // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  const string template_class_name("IRMakeLinearAlgoT");
+  static const string base_class_name("IRMakeLinearAlgo");
+
+  const string fsrcstr = fsrc->get_name();
+  const string::size_type loc = fsrcstr.find("Point");
+  const string fdststr = fsrcstr.substr(0, loc) +
+    "Point> > ,HexTrilinearLgn<double>, vector<double> > ";
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       fsrc->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name,
+                       fsrcstr + ", " + fdststr);
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  rval->add_mesh_include("../src/Core/Datatypes/HexVolMesh.h");
+  rval->add_basis_include("../src/Core/Basis/HexTrilinearLgn.h");
+  fsrc->fill_compile_info(rval);
+
+  return rval;
+}
+
+
+CompileInfoHandle
+IRMakeConvexAlgo::get_compile_info(const TypeDescription *fsrc)
+{
+  // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  const string template_class_name("IRMakeConvexAlgoT");
+  static const string base_class_name("IRMakeConvexAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       fsrc->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       fsrc->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  rval->add_mesh_include("../src/Core/Datatypes/HexVolMesh.h");
+  rval->add_basis_include("../src/Core/Basis/HexTrilinearLgn.h");
   fsrc->fill_compile_info(rval);
 
   return rval;

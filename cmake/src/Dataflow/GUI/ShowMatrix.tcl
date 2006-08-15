@@ -143,7 +143,7 @@ itcl_class SCIRun_Visualization_ShowMatrix {
 	    bind $f.min <Return> "$this-c needexecute"
 	    # MIP slab range widget
 	    upvar \#0 $this-${dim}s max
-	    range $f.s -from 0 -to 100 -orient horizontal -showvalue false \
+	    range $f.s -from 0 -to $max -orient horizontal -showvalue false \
 		-rangecolor "#830101" -width 16 -command "$this-c needexecute"\
 		-varmin $this-${dim}_begin -varmax $this-${dim}_end
 	    # max range value label

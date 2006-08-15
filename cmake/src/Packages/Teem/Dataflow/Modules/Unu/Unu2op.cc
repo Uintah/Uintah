@@ -48,7 +48,6 @@ public:
 private:
   NrrdIPort*      inrrd1_;
   NrrdIPort*      inrrd2_;
-  NrrdOPort*      onrrd_;
 
   GuiString    operator_;
   GuiDouble    float_input_;
@@ -72,8 +71,11 @@ Unu2op::Unu2op(SCIRun::GuiContext *ctx) :
 {
 }
 
-Unu2op::~Unu2op() {
+
+Unu2op::~Unu2op()
+{
 }
+
 
 void 
 Unu2op::execute()
@@ -88,7 +90,6 @@ Unu2op::execute()
 
   inrrd1_ = (NrrdIPort *)get_iport("InputNrrd1");
   inrrd2_ = (NrrdIPort *)get_iport("InputNrrd2");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
   if (!inrrd1_->get(nrrd_handle1)) 
     first_nrrd_ = false;
@@ -104,6 +105,8 @@ Unu2op::execute()
     error("Empty InputNrrd2.");
     return;
   }
+
+  reset_vars();
 
   Nrrd *nin1 = 0;
   Nrrd *nin2 = 0;
@@ -182,11 +185,13 @@ Unu2op::execute()
   nrrdKeyValueCopy(nout, nin2);
 
   NrrdDataHandle out(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(out);
+  send_output_handle("OutputNrrd", out);
 }
 
+
 unsigned int
-Unu2op::get_op(const string &op) {
+Unu2op::get_op(const string &op)
+{
   if (op == "+") 
     return nrrdBinaryOpAdd;
   else if (op == "-")

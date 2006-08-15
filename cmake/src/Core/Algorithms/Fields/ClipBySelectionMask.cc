@@ -53,17 +53,33 @@ ClipBySelectionMaskAlgo::ClipBySelectionMask(ProgressReporter *pr,
   }
 
   FieldInformation fi(input);
+  FieldInformation fo(input);
+
+  std::string mesh_type = fi.get_mesh_type();
+  if ((mesh_type == "LatVolMesh")||(mesh_type == "StructHexVolMesh"))
+  {
+    fo.set_mesh_type("HexVolMesh");
+  }
+  else if ((mesh_type == "ImageMesh")||(mesh_type == "StructQuadSurfMesh"))
+  {
+    fo.set_mesh_type("QuadSurfMesh");
+  }
+  else if ((mesh_type == "ScanlineMesh")||(mesh_type == "StructCurveMesh"))
+  {
+    fo.set_mesh_type("CurveMesh");
+  }
   
   CompileInfoHandle ci = 
-    scinew CompileInfo("ALGOClipBySelectionMask." + fi.get_field_filename() + ".",
+    scinew CompileInfo("ALGOClipBySelectionMask." + fi.get_field_filename() + "." + fo.get_field_filename() + ".",
                        "ClipBySelectionMaskAlgo","ClipBySelectionMaskAlgoT",
-                       fi.get_field_name());
+                       fi.get_field_name()+","+fo.get_field_name());
 
   // Add in the include path to compile this obj
   ci->add_include(TypeDescription::cc_to_h(__FILE__));
   ci->add_namespace("SCIRunAlgo");
   ci->add_namespace("SCIRun");
   fi.fill_compile_info(ci);
+  fo.fill_compile_info(ci);
 
   if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;
 
@@ -72,7 +88,7 @@ ClipBySelectionMaskAlgo::ClipBySelectionMask(ProgressReporter *pr,
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
     pr->compile_error(ci->filename_);
-    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+    // SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
     return(false);
   }
 

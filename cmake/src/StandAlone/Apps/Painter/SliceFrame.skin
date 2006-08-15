@@ -1,0 +1,14 @@
+  <definition class="SliceFrame" state="normal">
+    <object class="Frame">
+      <var name="width">5</var>
+      <var name="height">5</var>
+      <var name="color1">$grey</var>
+      <var name="color2">$grey2</var>
+      <object class="Frame"> 
+        <var name="color1">$grey2</var>
+        <var name="color2">$grey</var>
+        <object class="Frame1-child"/>
+      </object>
+    </object>
+  </definition>
+

@@ -903,10 +903,11 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     // since there is a mutual exclusion between using
     // the min, max and spacing and the spaceDirection vectors
     // verify that this is a valid nrrd
-    if (nrrdCheck(data)) {
-      error("Error: Invalid NRRD.  Cannot compute transform.");
-      return false;
-    }
+//     if (nrrdCheck(data)) {
+//       cerr << "Error is: " << biffGet(NRRD) << endl;
+//       error("Error: Invalid NRRD.  Cannot compute transform.");
+//       return false;
+//     }
 
     // initialize the transform to the identity matrix
     double trans[16];
@@ -1236,6 +1237,34 @@ NrrdToFieldMeshAlgo::get_compile_info( const string topoStr,
   // Add in the include path to compile this obj
   rval->add_include(include_path);
   rval->add_namespace("SCITeem");
+
+  rval->add_data_include("../src/Core/Geometry/Vector.h");
+  rval->add_data_include("../src/Core/Geometry/Tensor.h");
+
+  rval->add_basis_include("../src/Core/Basis/Constant.h");
+  rval->add_basis_include("../src/Core/Basis/CrvLinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/TriLinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/QuadBilinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/TetLinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/PrismLinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/HexTrilinearLgn.h");
+
+  rval->add_mesh_include("../src/Core/Datatypes/PointCloudMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/CurveMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/TriSurfMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/QuadSurfMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/TetVolMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/PrismVolMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/HexVolMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/LatVolMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/ImageMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/ScanlineMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/StructHexVolMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/StructQuadSurfMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/StructCurveMesh.h");
+  rval->add_container_include("../src/Core/Containers/FData.h");
+  rval->add_field_include("../src/Core/Datatypes/GenericField.h");
+
   mtd->fill_compile_info(rval);
   return rval;
 }
@@ -1312,6 +1341,9 @@ NrrdToFieldFieldAlgo::get_compile_info(const TypeDescription *mtd,
   // Add in the include path to compile this obj
   rval->add_include(include_path);
   rval->add_namespace("SCITeem");
+
+  rval->add_data_include("../src/Core/Geometry/Vector.h");
+  rval->add_data_include("../src/Core/Geometry/Tensor.h");
 
   rval->add_basis_include("../src/Core/Basis/Constant.h");
   rval->add_basis_include("../src/Core/Basis/CrvLinearLgn.h");

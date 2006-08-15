@@ -133,6 +133,8 @@ public:
   //void eigenvalues(ColumnMatrix&, ColumnMatrix&);
   //void eigenvectors(ColumnMatrix&, ColumnMatrix&, DenseColMajMatrix&);
 
+  static DenseColMajMatrix *identity(int size);
+
   virtual void    print() const;
   virtual void    print(ostream&) const;
   

@@ -14,6 +14,7 @@
 #include <Core/Events/Tools/ViewScaleTool.h>
 #include <Core/Events/Tools/ViewTranslateTool.h>
 #include <Core/Events/Tools/AutoviewTool.h>
+#include <Core/Events/Tools/FrameBufferPickTool.h>
 #include <Core/Geom/Pbuffer.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/GuiInterface/TCLTask.h>
@@ -132,6 +133,7 @@ public:
       sg_->addObj(si, ids_);
       visible_[ev->get_geom_obj_name()] = true;
       //ev->set_scene_graph_id(ids_++);
+      cerr << "added scene graph obj" << endl;
       return STOP_E;
     } 
     return CONTINUE_E;
@@ -140,6 +142,42 @@ private:
   int                    ids_;
   GeomIndexedGroup      *sg_;
   map<string, bool>	&visible_;
+};
+
+
+class ToolManip : public TMNotificationTool
+{
+public:
+  ToolManip(OpenGLViewer *oglv) :
+    TMNotificationTool("OpenGLViewer:ToolManager:ToolManip"),
+    oglv_(oglv)
+  {}
+
+  virtual propagation_state_e start_tool(string id, unsigned int time)
+  {
+    cerr << "start_tool(string id, unsigned int time)" << endl;
+    return CONTINUE_E;
+  }
+
+  virtual propagation_state_e stop_tool(string id, unsigned int time)
+  {
+    cerr << "stop_tool(string id, unsigned int time)" << endl;
+    return CONTINUE_E;
+  }
+
+  virtual propagation_state_e suspend_tool(string id, unsigned int time)
+  {
+    cerr << "suspend_tool(string id, unsigned int time)" << endl;
+    return CONTINUE_E;
+  }
+
+  virtual propagation_state_e resume_tool(string id, unsigned int time)
+  {
+    cerr << "resume_tool(string id, unsigned int time)" << endl;
+    return CONTINUE_E;
+  }
+private:
+  OpenGLViewer *oglv_;
 };
 
 
@@ -196,6 +234,7 @@ OpenGLViewer::OpenGLViewer(OpenGLContext *oglc) :
   fog_start_(0.0),
   fog_end_(0.714265),
   fog_visibleonly_(true),
+  fbpick_(false),
   focus_sphere_(scinew GeomSphere),
   scene_graph_(new GeomIndexedGroup()),
   visible_(),
@@ -232,25 +271,8 @@ OpenGLViewer::OpenGLViewer(OpenGLContext *oglc) :
   default_material_ =
     scinew Material(Color(.1,.1,.1), Color(.6,0,0), Color(.7,.7,.7), 50);
 
-  MyViewToolInterface* vti = new MyViewToolInterface(view_, this);
-  tool_handle_t rot = new ViewRotateTool("OpenGLViewer Rotate Tool", vti);
-  tm_.add_tool(rot, 1);
-
-  tool_handle_t scale = new ViewScaleTool("OpenGLViewer Scale Tool", vti);
-  tm_.add_tool(scale, 2);
-
-  tool_handle_t trans = new ViewTranslateTool("OpenGLViewer Translate Tool", 
-					      vti);
-  tm_.add_tool(trans, 3);
-  
-  SGTool *sgt = new SGTool("OpenGLViewer Scene Graph Tool", 
-			   scene_graph_, visible_);
-  tool_handle_t sgtool(sgt);
-  tm_.add_tool(sgtool, 10);
-
-  AVI* ati = new AVI(view_, this);
-  tool_handle_t av = new AutoviewTool("OpenGLViewer Autoview Tool", ati);
-  tm_.add_tool(av, 30);  
+  // Setup the tools in the right slots.
+  init_tool_manager();
 }
 
 
@@ -280,6 +302,44 @@ OpenGLViewer::~OpenGLViewer()
     pbuffer_ = 0;
   }
 }
+
+void
+OpenGLViewer::init_tool_manager()
+{
+
+  // viewer tools (always on the priority queue)
+  unsigned int view_pri = VIEWER_TOOLS_E;
+  MyViewToolInterface* vti = new MyViewToolInterface(view_, this);
+  tool_handle_t rot = new ViewRotateTool("OpenGLViewer Rotate Tool", vti);
+  tm_.add_tool(rot, view_pri++);
+
+  tool_handle_t scale = new ViewScaleTool("OpenGLViewer Scale Tool", vti);
+  tm_.add_tool(scale, view_pri++);
+
+  tool_handle_t trans = new ViewTranslateTool("OpenGLViewer Translate Tool", 
+					      vti);
+  tm_.add_tool(trans, view_pri++);
+
+  AVI* ati = new AVI(view_, this);
+  tool_handle_t av = new AutoviewTool("OpenGLViewer Autoview Tool", ati);
+  tm_.add_tool(av, view_pri++);  
+
+
+  // data tools (always on the queue)
+  unsigned int data_pri = DATA_TOOLS_E;
+  SGTool *sgt = new SGTool("OpenGLViewer Scene Graph Tool", 
+			   scene_graph_, visible_);
+  tool_handle_t sgtool(sgt);
+  tm_.add_tool(sgtool, data_pri++);
+
+
+  // tool modifiers
+  unsigned int tm_pri = TOOL_MODIFIERS_E;
+  ToolManip *tm = new ToolManip(this);
+  tool_handle_t tmnotify(tm);
+  tm_.add_tool(tmnotify, tm_pri++);
+} 
+
 
 GeomHandle
 OpenGLViewer::create_viewer_axes() 
@@ -998,6 +1058,15 @@ OpenGLViewer::redraw_frame()
 	glReadPixels(0, 0, xres_, yres_, GL_DEPTH_COMPONENT, GL_FLOAT,
 		     &depth_buffer_[0]);
       }
+
+      if (do_fbpick_p())
+      {
+	// Save frame buffer pick data.
+	glReadBuffer(GL_BACK);
+	fbpick_image_.resize(xres_ * yres_ * 4);
+	glReadPixels(0, 0, xres_, yres_, GL_RGBA, GL_UNSIGNED_BYTE,
+		     &fbpick_image_[0]);
+      }
         
       // Wait for the right time before swapping buffers
       const double realtime = t * frametime;
@@ -1415,17 +1484,17 @@ OpenGLViewer::real_get_pick(int x, int y,
 void
 OpenGLViewer::draw_visible_scene_graph()
 {
-  // Do internal objects first...
-  unsigned int i;
-  for (i = 0; i < internal_objs_.size(); i++){
-    if (internal_objs_visible_p_[i] == 1) {
-      if (do_picking_p()) {
-	pick_draw_obj(default_material_, internal_objs_[i].get_rep());
-      } else {
-	redraw_obj(default_material_, internal_objs_[i].get_rep());
-      }
-    }
-  }
+//   // Do internal objects first...
+//   unsigned int i;
+//   for (i = 0; i < internal_objs_.size(); i++){
+//     if (internal_objs_visible_p_[i] == 1) {
+//       if (do_picking_p()) {
+// 	pick_draw_obj(default_material_, internal_objs_[i].get_rep());
+//       } else {
+// 	redraw_obj(default_material_, internal_objs_[i].get_rep());
+//       }
+//     }
+//   }
   
   if (!scene_graph_) return;
   for (int pass=0; pass < 4; pass++)
@@ -1453,6 +1522,7 @@ OpenGLViewer::draw_visible_scene_graph()
 	  if (do_picking_p()) {
 	    pick_draw_obj(default_material_, si);
 	  } else {
+	    cerr << "drawing visible item: " << si->getString() << endl;
 	    redraw_obj(default_material_, si);
 	  }
 	    
@@ -1684,8 +1754,13 @@ OpenGLViewer::redraw_obj(MaterialHandle def, GeomHandle obj)
     // if found
     set_state(drawinfo_);
   }
-  obj->draw(drawinfo_, def.get_rep(), current_time_);
+  if (do_fbpick_p()) {
+    obj->fbpick_draw(drawinfo_, def.get_rep(), current_time_);
+  } else {
+    obj->draw(drawinfo_, def.get_rep(), current_time_);
+  }
 }
+
 
 void
 OpenGLViewer::deriveFrustum()

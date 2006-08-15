@@ -32,7 +32,7 @@ namespace SCIRunAlgo {
 
 using namespace SCIRun;
 
-bool DomainBoundaryAlgo::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
+bool DomainBoundaryAlgo::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary)
 {
   if (input.get_rep() == 0)
   {
@@ -107,12 +107,12 @@ bool DomainBoundaryAlgo::DomainBoundary(ProgressReporter *pr, FieldHandle input,
     return(false);
   }
 
-  return(algo->DomainBoundary(pr,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
+  return(algo->DomainBoundary(pr,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly,noinnerboundary));
 }
 
 
 
-bool DomainBoundary2Algo::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
+bool DomainBoundary2Algo::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary)
 {
   if (input.get_rep() == 0)
   {
@@ -187,11 +187,11 @@ bool DomainBoundary2Algo::DomainBoundary(ProgressReporter *pr, FieldHandle input
     return(false);
   }
 
-  return(algo->DomainBoundary(pr,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
+  return(algo->DomainBoundary(pr,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly,noinnerboundary));
 }
 
 
-bool DomainBoundary3Algo::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
+bool DomainBoundary3Algo::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary)
 {
   if (input.get_rep() == 0)
   {
@@ -267,12 +267,12 @@ bool DomainBoundary3Algo::DomainBoundary(ProgressReporter *pr, FieldHandle input
     return(false);
   }
 
-  return(algo->DomainBoundary(pr,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
+  return(algo->DomainBoundary(pr,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly,noinnerboundary));
 }
 
 
 
-bool DomainBoundary4Algo::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly)
+bool DomainBoundary4Algo::DomainBoundary(ProgressReporter *pr, FieldHandle input, FieldHandle& output, MatrixHandle DomainLink, double minrange, double maxrange, bool userange, bool addouterboundary, bool innerboundaryonly, bool noinnerboundary)
 {
   if (input.get_rep() == 0)
   {
@@ -348,7 +348,7 @@ bool DomainBoundary4Algo::DomainBoundary(ProgressReporter *pr, FieldHandle input
     return(false);
   }
 
-  return(algo->DomainBoundary(pr,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly));
+  return(algo->DomainBoundary(pr,input,output,DomainLink,minrange,maxrange,userange,addouterboundary,innerboundaryonly,noinnerboundary));
 }
 
 

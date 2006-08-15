@@ -107,6 +107,18 @@ IPort::IPort(Module* module, const string& type_name,
 {
 }
 
+void
+IPort::attach(Connection* conn)
+{
+  // Maybe this should be more user friendly?  You have to edit a .svn
+  // by hand to add multiple connections this way, but it's possible
+  // to have someone hand you a bad network and have it ASSERT out on
+  // the command line.
+  ASSERTMSG(connections.size() == 0,
+            "TOO MANY CONNECTIONS ON IPORT.");
+  Port::attach(conn);
+}
+
 OPort::OPort(Module* module, const string& type_name,
 	     const string& port_name, const string& color_name)
   : Port(module, type_name, port_name, color_name)

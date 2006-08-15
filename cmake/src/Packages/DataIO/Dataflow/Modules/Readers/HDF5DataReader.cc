@@ -706,6 +706,8 @@ HDF5DataReader::parseAnimateDatasets( vector<string>& pathList,
 				      vector< vector<string> >& frame_paths,
 				      vector< vector<string> >& frame_datasets )
 {
+  //  cerr << "parseAnimateDatasets" << endl;
+
   frame_paths.clear();
   frame_datasets.clear();
 
@@ -720,6 +722,9 @@ HDF5DataReader::parseAnimateDatasets( vector<string>& pathList,
   string comp = pathList[0];
 
   for( i=1; i<pathList.size(); i++ ) {
+
+    //    cerr << "pathList[" << i << "] " << pathList[i] << endl;
+
     unsigned int len = pathList[i].length();
 
     // Reduce the size of the comparison to the smallest string.
@@ -745,6 +750,8 @@ HDF5DataReader::parseAnimateDatasets( vector<string>& pathList,
 
   string root = pathList[0].substr( 0, d1 );
 
+  //  cerr << "root " << root << endl;
+
   vector <string> times;
 
   // Get all of the times.
@@ -755,6 +762,8 @@ HDF5DataReader::parseAnimateDatasets( vector<string>& pathList,
       if( time == times[j] )
 	break;
     }
+
+    //cerr << "time " << i << "  " << time << endl;
 
     if( j==times.size() )
       times.push_back( time );

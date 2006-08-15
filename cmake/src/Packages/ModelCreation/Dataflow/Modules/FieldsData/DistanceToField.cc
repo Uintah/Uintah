@@ -27,13 +27,10 @@
 */
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-
-#include <Dataflow/Network/Ports/FieldPort.h>
-#include <Dataflow/Network/Ports/MatrixPort.h>
-
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
@@ -56,17 +53,26 @@ DistanceToField::DistanceToField(GuiContext* ctx)
 
 void DistanceToField::execute()
 {
+  // define data handles:
   FieldHandle input, output;
   FieldHandle object;
   
+  // get input from ports:
   if (!(get_input_handle("Field",input,true))) return;
   if (!(get_input_handle("ObjectField",object,true))) return;
   
-  SCIRunAlgo::FieldsAlgo algo(this);
+  // only compute output if inputs changed:
+  if (inputs_changed_ || !oport_cached("DistanceField"))
+  {
+    // Entry point to core of SCIRun:
+    SCIRunAlgo::FieldsAlgo algo(this);
 
-  if(!(algo.DistanceField(input,output,object))) return;
+    // Actual algorithm:
+    if(!(algo.DistanceField(input,output,object))) return;
 
-  send_output_handle("DistanceField",output,true);
+    // Send data downstream:
+    send_output_handle("DistanceField",output,false);
+  }
 }
 
 } // End namespace ModelCreation

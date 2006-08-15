@@ -70,8 +70,6 @@ bool FieldDataElemToNodeAlgoT<FIELD,OFIELD>::FieldDataElemToNode(ProgressReporte
                               FieldHandle& output,
                               std::string method)
 {     
-  output = 0;
-  
   FIELD* field = dynamic_cast<FIELD* >(input.get_rep());
   if (field == 0)
   {
@@ -93,10 +91,23 @@ bool FieldDataElemToNodeAlgoT<FIELD,OFIELD>::FieldDataElemToNode(ProgressReporte
   }
 
   // Create the field with the new mesh and data location.
-  OFIELD *ofield = scinew OFIELD(field->get_typed_mesh());
+  OFIELD *ofield = scinew OFIELD(field->get_typed_mesh().get_rep());
+  if (ofield == 0)
+  {
+     pr->error("FieldDataElemToNode: Could not allocate output field");
+     return(false);     
+  }
+  output = dynamic_cast<SCIRun::Field *>(ofield);
+  
   ofield->resize_fdata();
   
   typename FIELD::mesh_handle_type mesh = field->get_typed_mesh();
+  if (mesh == 0)
+  {
+     pr->error("FieldDataElemToNode: No mesh associated with input field");
+     return(false);       
+  }
+  
   typename FIELD::mesh_type::Elem::array_type elems;
   typename FIELD::mesh_type::Node::iterator it, eit;
 
@@ -104,7 +115,7 @@ bool FieldDataElemToNodeAlgoT<FIELD,OFIELD>::FieldDataElemToNode(ProgressReporte
   mesh->begin(it);
   mesh->end(eit);
 
-  if ((method == "Interpolate")||(method == "Average"))
+  if ((method == "Interpolate")||(method == "Average")||(method == "interpolate")||(method == "average"))
   {
     while (it != eit)
     {
@@ -121,7 +132,7 @@ bool FieldDataElemToNodeAlgoT<FIELD,OFIELD>::FieldDataElemToNode(ProgressReporte
     }
   }
   
-  if (method == "Max")
+  if ((method == "Max")||(method=="max")||(method=="maximum")||(method=="Maximum"))
   {
     while (it != eit)
     {
@@ -143,7 +154,7 @@ bool FieldDataElemToNodeAlgoT<FIELD,OFIELD>::FieldDataElemToNode(ProgressReporte
     }
   }
   
-  if (method == "Min")
+  if ((method == "Min")||(method=="min")||(method=="minimum")||(method=="Minimum"))
   {
     while (it != eit)
     {
@@ -165,7 +176,7 @@ bool FieldDataElemToNodeAlgoT<FIELD,OFIELD>::FieldDataElemToNode(ProgressReporte
     }    
   }
 
-  if (method == "Sum")
+  if ((method == "Sum")||(method=="sum"))
   {
     while (it != eit)
     {
@@ -181,7 +192,7 @@ bool FieldDataElemToNodeAlgoT<FIELD,OFIELD>::FieldDataElemToNode(ProgressReporte
     }
   }
 
-  if (method == "Median")
+  if ((method == "Median")||(method == "median"))
   {
     while (it != eit)
     {
@@ -199,7 +210,6 @@ bool FieldDataElemToNodeAlgoT<FIELD,OFIELD>::FieldDataElemToNode(ProgressReporte
     }
   }
 
-  output = dynamic_cast<SCIRun::Field *>(ofield);
   return(true);
 }
 

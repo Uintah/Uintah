@@ -201,7 +201,16 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
     update_axis_var("center", i, locstr, "Center");
 
     update_axis_var("spacing", i, to_string(nh->nrrd_->axis[i].spacing), "Spacing");
-    update_axis_var("spaceDir", i, "---", "Spacing Direction");
+    
+    string spacedir = "[ ";
+    for (int p=0; p<nh->nrrd_->spaceDim; p++)
+    {
+      std::ostringstream oss;
+      oss << nh->nrrd_->axis[i].spaceDirection[p];
+      spacedir += oss.str();
+      if (p == nh->nrrd_->dim-1) spacedir += " ]"; else spacedir += ", ";
+    }
+    update_axis_var("spaceDir", i, spacedir, "Spacing Direction");
   }
 
   get_gui()->execute(get_id() + " add_tabs");
@@ -211,11 +220,8 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
 void
 NrrdInfo::execute()
 {
-  NrrdIPort *iport = (NrrdIPort*)get_iport("Query Nrrd"); 
-  
-  // The input port (with data) is required.
   NrrdDataHandle nh;
-  if (!iport->get(nh) || !nh.get_rep())
+  if (!get_input_handle("Query Nrrd", nh))
   {
     clear_vals();
     generation_ = -1;

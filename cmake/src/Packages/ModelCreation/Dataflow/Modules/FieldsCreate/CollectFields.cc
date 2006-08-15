@@ -70,34 +70,49 @@ CollectFields::CollectFields(GuiContext* ctx)
 
 void CollectFields::execute()
 {
+  // Define local handles of data objects:
   FieldHandle Input, Output;
   MatrixHandle BufferSize;
+  
+  // Get the new input data:  
   if (!(get_input_handle("Field",Input,true))) return;
   get_input_handle("BufferSize",BufferSize,false);
   
-  SCIRunAlgo::ConverterAlgo calgo(this);
-  
-  if (BufferSize.get_rep())
+  // Only reexecute if the input changed. SCIRun uses simple scheduling
+  // that executes every module downstream even if no data has changed:  
+  if (inputs_changed_ || buffersizegui_.changed() || !oport_cached("Fields"))
   {
-    calgo.MatrixToInt(BufferSize,buffersize_);
-    buffersizegui_.set(buffersize_);
-    get_ctx()->reset(); 
+    SCIRunAlgo::ConverterAlgo calgo(this);
+    
+    // Push back data to the GUI if it was overruled by the dataflow input:
+    if (BufferSize.get_rep())
+    {
+      calgo.MatrixToInt(BufferSize,buffersize_);
+      buffersizegui_.set(buffersize_);
+      get_ctx()->reset(); 
+    }
+    
+    // Get parameters
+    buffersize_ = buffersizegui_.get();
+    
+    bufferlock_.lock();
+    buffer_.push_back(Input);
+    while (buffer_.size() > buffersize_) buffer_.pop_front();
+    bufferlock_.unlock();
+    
+    // Innerworks of module:
+    SCIRunAlgo::FieldsAlgo algo(this);
+    
+    // The lock here protects us from the user wiping out the buffer
+    // through the GUI while executing. This could cause a segmentation
+    // fault and hence it needs to be protected b y a lock.
+    bufferlock_.lock();
+    algo.GatherFields(buffer_,Output);
+    bufferlock_.unlock();
+
+    // send new output if there is any:      
+    send_output_handle("Fields",Output,false);
   }
-  
-  buffersize_ = buffersizegui_.get();
-  
-  bufferlock_.lock();
-  buffer_.push_back(Input);
-  while (buffer_.size() > buffersize_) buffer_.pop_front();
-  bufferlock_.unlock();
-  
-  SCIRunAlgo::FieldsAlgo algo(this);
-
-  bufferlock_.lock();
-  algo.GatherFields(buffer_,Output);
-  bufferlock_.unlock();
-
-  send_output_handle("Fields",Output,true);
 }
 
 
@@ -111,6 +126,7 @@ void CollectFields::tcl_command(GuiArgs& args, void* userdata)
 
   if( args[1] == "reset" )
   {
+    // Only clear buffer if module is not running 
     bufferlock_.lock();
     buffer_.clear();
     bufferlock_.unlock();

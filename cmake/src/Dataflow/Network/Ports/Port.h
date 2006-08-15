@@ -110,6 +110,9 @@ public:
   IPort(Module* module, const std::string& type_name,
 	const std::string& port_name, const std::string& color_name);
   virtual ~IPort();
+
+  virtual void attach(Connection* conn);
+
 private:
   IPort(const IPort&);
   IPort& operator=(const IPort&);

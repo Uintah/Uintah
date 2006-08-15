@@ -340,7 +340,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW DEF_PTOLEMY_PACKAGE HAVE_PTOLEMY_PACKAGE DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX IS_WIN IS_AIX ac_ct_CC EXEEXT OBJEXT EGREP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL DEBUG OGL_ERR_MACRO AS LD PATH_TO_VC PATH_TO_PSDK PATH_TO_MSYS_BIN NEED_OSX_SYSTEMSTUBS NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS WIN_OTFFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP LIB_DIR_TCL TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H LIB_DIR_ITCL ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION ITCL_WIDGETS XML2_LIB_FLAG XML2_LIB_DIR_FLAG INC_XML2_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG HAVE_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG HAVE_JAVA DEF_JAVA JAVA MESQUITE_LIB_FLAG INC_MESQUITE_H MESQUITE_LIB_DIR_FLAG DEF_MESQUITE HAVE_MESQUITE VERDICT_LIB_FLAG INC_VERDICT_H VERDICT_LIB_DIR_FLAG DEF_VERDICT HAVE_VERDICT CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL TETGEN_LIB_FLAG INC_TETGEN_H TETGEN_LIB_DIR_FLAG DEF_TETGEN HAVE_TETGEN HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG HAVE_GDCM DEF_GDCM INC_GDCM_H GDCM_LIB_FLAG GDCM_LIB_DIR_FLAG HAVE_PTOLEMY DEF_PTOLEMY PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG HAVE_NCURSES DEF_NCURSES INC_NCURSES_H NCURSES_LIB_FLAG NCURSES_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE HAVE_HYPRE_1_9 DEF_HYPRE_1_9 DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_TENA DEF_TENA TENA_BIN_DIR INC_TENA_H TENA_LIB_DIR TENA_LIB_DIR_FLAG TENA_VERSION TENA_PLATFORM TENA_OMC_VERSION TENA_DEFINES HAVE_TENA_OM DEF_TENA_OM TENA_OM_DEF_DIR TENA_OM_IMPL_DIR BUILD_SCIRUN2 WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS CC CFLAGS LDFLAGS CXX CPPFLAGS CXXFLAGS F77 FFLAGS CPP CXXCPP build build_cpu build_vendor build_os host host_cpu host_vendor host_os DEF_CHROMIUM DEF_NO_DYNAMIC_CAST DEF_BUILD_DATAFLOW BUILD_DATAFLOW DEF_PTOLEMY_PACKAGE HAVE_PTOLEMY_PACKAGE DEF_COLLAB_VIS HAVE_COLLAB_VIS IS_OSX IS_WIN IS_AIX ac_ct_CC EXEEXT OBJEXT EGREP ac_ct_CXX ac_ct_F77 SO_OR_ARCHIVE_EXTENSION NOPRINTDIR PACKAGE_DIRS LOAD_PACKAGE EXENAME LARGESOS TIME_IMPL DEF_MALLOC DEF_MALLOC_LINENUMBERS ASSERTION_LEVEL THROW_LEVEL DEBUG OGL_ERR_MACRO AS LD PATH_TO_VC PATH_TO_PSDK PATH_TO_MSYS_BIN NEED_OSX_SYSTEMSTUBS NEED_OSX_HACK DEF_NEED_OSX_HACK NBITS WIN_DLLFLAGS WIN_OTFFLAGS CC_DEPEND_MODE CC_DEPEND_REGEN CC_DEPEND_EXT F77_DEPEND_MODE F77_DEPEND_REGEN F77_DEPEND_EXT MAKE GMAKE AWK BUILD_PLUME YACC LEX LEXLIB LEX_OUTPUT_ROOT LEX_LIB_FLAG ETAGS PERL FORTRAN_UNDERSCORE G77 SOFLAGS ASFLAGS LDRUN_PREFIX extra_cflags MAKE_PARALLELISM NEED_SONAME REPOSITORY_FLAGS TEMPLATE_TAG TEMPLATE_BOX SCI_THIRDPARTY_DIR INC_SCI_THIRDPARTY_H SCI_THIRDPARTY_LIB_DIR SCI_THIRDPARTY_LIB_DIR_FLAG M_LIB_FLAG M_LIB_DIR_FLAG X_LIB_FLAG X_LIB_DIR_FLAG THREAD_IMPL THREAD_LIB_FLAG SOCKET_LIB_FLAG DEF_THREAD SEMAPHORE_LIB_FLAG GL_LIB_FLAG GL_LIB_DIR_FLAG INC_GL_H DEF_OGL_EXT_HDRS DL_LIB_FLAG DL_LIB_DIR_FLAG DEF_STAT64 DEF_IEEEFP DEF_HASHMAP TCL_LIB_DIR TCL_LIB_FLAG TCL_LIB_DIR_FLAG INC_TCL_H TK_LIB_DIR TK_LIB_FLAG TK_LIB_DIR_FLAG INC_TK_H ITCL_LIB_DIR ITCL_LIB_FLAG ITCL_LIB_DIR_FLAG INC_ITCL_H ITK_LIB_FLAG ITK_LIB_DIR_FLAG INC_ITK_H BLT_LIB_FLAG BLT_LIB_DIR_FLAG INC_BLT_H TCL_PREFIX TCL_VERSION TK_VERSION XML2_LIB_FLAG XML2_LIB_DIR_FLAG INC_XML2_H SSTREAM_COMPAT EXC_LIB_FLAG EXC_LIB_DIR_FLAG DEF_EXC Z_LIB_FLAG Z_LIB_DIR_FLAG INC_Z_H DEF_Z JPEG_LIB_FLAG JPEG_LIB_DIR_FLAG TIFF_LIB_FLAG TIFF_LIB_DIR_FLAG PNG_LIB_FLAG PNG_LIB_DIR_FLAG INC_PNG_H DEF_PNG HAVE_PNG EXCEPTIONS_CRASH_DEF MPEGE_LIB_FLAG MPEGE_LIB_DIR_FLAG DEF_MPEG SCISOCK_LIB_FLAG SCISOCK_LIB_DIR_FLAG INC_SCISOCK_H UNP_LIB_FLAG UNP_LIB_DIR_FLAG INC_UNP_H F_LIB_FLAG F_LIB_DIR_FLAG HAVE_JAVA DEF_JAVA JAVA MESQUITE_LIB_FLAG INC_MESQUITE_H MESQUITE_LIB_DIR_FLAG DEF_MESQUITE HAVE_MESQUITE VERDICT_LIB_FLAG INC_VERDICT_H VERDICT_LIB_DIR_FLAG DEF_VERDICT HAVE_VERDICT CAMAL_LIB_FLAG INC_CAMAL_H CAMAL_LIB_DIR_FLAG DEF_CAMAL HAVE_CAMAL TETGEN_LIB_FLAG INC_TETGEN_H TETGEN_LIB_DIR_FLAG DEF_TETGEN HAVE_TETGEN PYDEV_LIB_FLAG INC_PYDEV_H PYDEV_LIB_DIR_FLAG DEF_PYDEV HAVE_PYDEV HAVE_CBLAS DEF_CBLAS HAVE_BLAS INC_BLAS_H BLAS_LIB_FLAG BLAS_LIB_DIR_FLAG DEF_BLAS HAVE_LAPACK DEF_LAPACK LAPACK_LIB_FLAG LAPACK_LIB_DIR_FLAG HAVE_LAPACKMP LAPACKMP_LIB_FLAG LAPACKMP_LIB_DIR_FLAG HAVE_MPI DEF_MPI INC_MPI_H MPI_LIB_FLAG MPI_LIB_DIR_FLAG DEF_MPI_UNI INC_MPI_UNI_H MPI_UNI_LIB_FLAG MPI_UNI_LIB_DIR_FLAG HAVE_PETSC PETSC_LIB_FLAG PETSC_LIB_DIR_FLAG DEF_PETSC INC_PETSC_H HAVE_PETSC_UNI PETSC_UNI_LIB_FLAG PETSC_UNI_LIB_DIR_FLAG DEF_PETSC_UNI INC_PETSC_UNI_H HAVE_INSIGHT DEF_INSIGHT INC_INSIGHT_H INSIGHT_LIB_FLAG INSIGHT_LIB_DIR_FLAG HAVE_GDCM DEF_GDCM INC_GDCM_H GDCM_LIB_FLAG GDCM_LIB_DIR_FLAG HAVE_PTOLEMY DEF_PTOLEMY PTOLEMY_PATH PTOLEMY_CLASSPATH XALAN_PATH TAU_MAKEFILE BABEL_BIN HAVE_BABEL DEF_BABEL INC_SIDL_H SIDL_LIB_FLAG SIDL_LIB_DIR_FLAG NETSOLVE_LIB_FLAG NETSOLVE_LIB_DIR_FLAG INC_GLUT_H GLUT_LIB_FLAG GLUT_LIB_DIR_FLAG INC_GLUI_H GLUI_LIB_FLAG GLUI_LIB_DIR_FLAG DEF_OOGL INC_OOGL_H OOGL_LIB_FLAG OOGL_LIB_DIR_FLAG DEF_GLEW INC_GLEW_H GLEW_LIB_FLAG GLEW_LIB_DIR_FLAG FREETYPE_LIB_FLAG FREETYPE_LIB_DIR_FLAG DEF_FREETYPE INC_FREETYPE_H FTGL_LIB_FLAG FTGL_LIB_DIR_FLAG DEF_FTGL INC_FTGL_H DEF_AUDIO HAVE_AUDIO AUDIO_LIB_FLAG AUDIO_LIB_DIR_FLAG HAVE_TEEM DEF_TEEM INC_TEEM_H TEEM_LIB_FLAG TEEM_LIB_DIR_FLAG DEF_MDSPLUS INC_MDSPLUS_H MDSPLUS_LIB_FLAG MDSPLUS_LIB_DIR_FLAG DEF_HDF5 INC_HDF5_H HDF5_LIB_FLAG HDF5_LIB_DIR_FLAG DEF_PERFEX PERFEX_LIB_FLAG PERFEX_LIB_DIR_FLAG DEF_CRYPTO CRYPTO_LIB_FLAG CRYPTO_LIB_DIR_FLAG DEF_SSL SSL_LIB_FLAG SSL_LIB_DIR_FLAG HAVE_GLOBUS DEF_GLOBUS INC_GLOBUS_H GLOBUS_LIB_FLAG GLOBUS_LIB_DIR_FLAG HAVE_NCURSES DEF_NCURSES INC_NCURSES_H NCURSES_LIB_FLAG NCURSES_LIB_DIR_FLAG QT_MOC_BIN HAVE_QT DEF_QT INC_QT_MT_H QT_MT_LIB_FLAG QT_MT_LIB_DIR_FLAG HAVE_RUBY DEF_RUBY INC_RUBY_H RUBY_LIB_FLAG RUBY_LIB_DIR_FLAG HAVE_TAO DEF_TAO INC_TAO_H TAO_LIB_FLAG TAO_LIB_DIR_FLAG HAVE_VTK DEF_VTK INC_VTK_H VTK_LIB_FLAG VTK_LIB_DIR_FLAG DEF_VDT INC_VDT_H VDT_LIB_FLAG VDT_LIB_DIR_FLAG HAVE_HYPRE HAVE_HYPRE_1_9 DEF_HYPRE_1_9 DEF_HYPRE INC_HYPRE_H HYPRE_LIB_FLAG HYPRE_LIB_DIR_FLAG BOOST_LIB_FLAG BOOST_LIB_DIR_FLAG DEF_BOOST INC_BOOST_H LOKI_LIB_FLAG LOKI_LIB_DIR_FLAG DEF_LOKI INC_LOKI_H HAVE_TENA DEF_TENA TENA_BIN_DIR INC_TENA_H TENA_LIB_DIR TENA_LIB_DIR_FLAG TENA_VERSION TENA_PLATFORM TENA_OMC_VERSION TENA_DEFINES HAVE_TENA_OM DEF_TENA_OM TENA_OM_DEF_DIR TENA_OM_IMPL_DIR BUILD_SCIRUN2 WOFF_STRING scirun_obj_dir scirun_src_dir LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -899,6 +899,8 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
 --enable-verbosity      Turn on verbose configure output
 --enable-threads        Specify a thread implementation (pthreads or irix)
+--enable-pysci          Build python interface for certain SCIRun
+                          functionality. example: --enable-pysci
 --enable-debug          Turn on debugging (default is -g) or specify your
                           own. example: --enable-debug='-O0 -g'
 --enable-optimize       Turn on optimize (default is -O2) or specify your
@@ -1104,7 +1106,7 @@ esac
     else
       echo "$as_me: WARNING: no configuration information is in $ac_dir" >&2
     fi
-    cd $ac_popdir
+    cd "$ac_popdir"
   done
 fi
 
@@ -2627,6 +2629,16 @@ else
   threads=${threads='unknown'}
 fi;
   sci_arg_enable_list="$sci_arg_enable_list --enable-threads --disable-threads"
+
+
+  # Check whether --enable-pysci or --disable-pysci was given.
+if test "${enable_pysci+set}" = set; then
+  enableval="$enable_pysci"
+  pysci="$enableval"
+else
+  pysci="no"
+fi;
+  sci_arg_enable_list="$sci_arg_enable_list --enable-pysci --disable-pysci"
 
 
   # Check whether --enable-debug or --disable-debug was given.
@@ -4538,8 +4550,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -4597,8 +4608,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -4714,8 +4724,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -4769,8 +4778,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -4815,8 +4823,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -4860,8 +4867,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -5184,8 +5190,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -5355,8 +5360,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -5421,8 +5425,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -5484,8 +5487,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -5525,8 +5527,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -5582,8 +5583,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -5623,8 +5623,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -5688,8 +5687,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -5720,10 +5718,8 @@ See \`config.log' for more details." >&2;}
 esac
 else
   if test "$cross_compiling" = yes; then
-  { { echo "$as_me:$LINENO: error: cannot run test program while cross compiling
-See \`config.log' for more details." >&5
-echo "$as_me: error: cannot run test program while cross compiling
-See \`config.log' for more details." >&2;}
+  { { echo "$as_me:$LINENO: error: internal error: not reached in cross-compile" >&5
+echo "$as_me: error: internal error: not reached in cross-compile" >&2;}
    { (exit 1); exit 1; }; }
 else
   cat >conftest.$ac_ext <<_ACEOF
@@ -6024,8 +6020,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6083,8 +6078,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6200,8 +6194,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6255,8 +6248,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6301,8 +6293,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6346,8 +6337,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6580,8 +6570,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6639,8 +6628,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6711,8 +6699,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6756,8 +6743,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6892,7 +6878,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:6895:" \
+echo "$as_me:6881:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -6938,8 +6924,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_f77_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_f77_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -6988,8 +6973,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_f77_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_f77_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -7320,6 +7304,12 @@ fi
 echo "$as_me: error: Could not find the specified C++ compiler (CC)" >&2;}
    { (exit 1); exit 1; }; }
 
+fi
+
+if test "$IS_WIN" = "yes"; then
+  # don't require fortran on windows yet
+  # (Uintah disables fortran compilation on windows for the moment...)
+  sci_required_fortran="no"
 fi
 
 if test $sci_required_fortran = "yes"; then
@@ -10157,8 +10147,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -10224,8 +10213,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -10314,8 +10302,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -10587,7 +10574,7 @@ fi
 ##  if thirdparty not set use defaults
 
 if test -z "$thirdparty"; then
-  sci_tp_version=1.25.3
+  sci_tp_version=1.25.4
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
 
@@ -10657,32 +10644,37 @@ echo "$as_me: error: $sci_thirdparty_dir does not exist." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
-# This is where the lib actually lives:
-if test ! -d "$sci_thirdparty_dir/lib"; then
-  { { echo "$as_me:$LINENO: error: SCI Thirdparty invalid.  $sci_thirdparty_dir/lib does not exist." >&5
-echo "$as_me: error: SCI Thirdparty invalid.  $sci_thirdparty_dir/lib does not exist." >&2;}
-   { (exit 1); exit 1; }; }
-fi
+SCI_THIRDPARTY_DIR="$sci_thirdparty_dir"
+
+
+
+# This is where the include and lib actually lives:
 if test ! -d "$sci_thirdparty_dir/include"; then
   { { echo "$as_me:$LINENO: error: SCI Thirdparty invalid.  $sci_thirdparty_dir/include does not exist." >&5
 echo "$as_me: error: SCI Thirdparty invalid.  $sci_thirdparty_dir/include does not exist." >&2;}
    { (exit 1); exit 1; }; }
 fi
 
+if test ! -d "$sci_thirdparty_dir/lib"; then
+  { { echo "$as_me:$LINENO: error: SCI Thirdparty invalid.  $sci_thirdparty_dir/lib does not exist." >&5
+echo "$as_me: error: SCI Thirdparty invalid.  $sci_thirdparty_dir/lib does not exist." >&2;}
+   { (exit 1); exit 1; }; }
+fi
 
-sci_thirdparty_lib="$sci_thirdparty_dir/lib"
 sci_thirdparty_include="$sci_thirdparty_dir/include"
+sci_thirdparty_lib="$sci_thirdparty_dir/lib"
+
+INC_SCI_THIRDPARTY_H=-I"$sci_thirdparty_include"
 SCI_THIRDPARTY_LIB_DIR="$sci_thirdparty_lib"
+
 if test "$IS_VC" != "yes"; then
   SCI_THIRDPARTY_LIB_DIR_FLAG="$LDRUN_PREFIX$sci_thirdparty_lib -L$sci_thirdparty_lib"
 else
   SCI_THIRDPARTY_LIB_DIR_FLAG="$LDRUN_PREFIX$sci_thirdparty_lib"
 fi
-INC_SCI_THIRDPARTY_H=-I"$sci_thirdparty_include"
-SCI_THIRDPARTY_DIR="$sci_thirdparty_dir"
 
-echo "$as_me:$LINENO: result: Thirdparty library directory $SCI_THIRDPARTY_LIB_DIR" >&5
-echo "${ECHO_T}Thirdparty library directory $SCI_THIRDPARTY_LIB_DIR" >&6
+echo "$as_me:$LINENO: result: Thirdparty directory is $SCI_THIRDPARTY_DIR" >&5
+echo "${ECHO_T}Thirdparty directory is $SCI_THIRDPARTY_DIR" >&6
 
 
 ##
@@ -10697,6 +10689,20 @@ echo "${ECHO_T}Thirdparty library directory $SCI_THIRDPARTY_LIB_DIR" >&6
   _new_path=`echo $_new_path | sed 's%'${_fulldir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
   _new_path=`echo $_new_path | sed 's%'${sci_thirdparty_dir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
   eval INC_SCI_THIRDPARTY_H='"$_new_path"'
+
+
+##
+## SCI_SUBST_THIRDPARTY_DIR:
+##
+## arguments mean:
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
+##
+  _new_path=${SCI_THIRDPARTY_LIB_DIR}
+  _fulldir=`cd ${sci_thirdparty_dir}; pwd`
+  _new_path=`echo $_new_path | sed 's%'${_fulldir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
+  _new_path=`echo $_new_path | sed 's%'${sci_thirdparty_dir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
+  eval SCI_THIRDPARTY_LIB_DIR='"$_new_path"'
 
 
 ##
@@ -10811,8 +10817,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -10995,7 +11000,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_M        => lib path
+##      M_LIB_DIR        => lib path
 ##      M_LIB_DIR_FLAG   => all the -L's
 ##      M_LIB_FLAG       => all the -l's
 ##      HAVE_M           => yes or no
@@ -11238,8 +11243,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -11257,7 +11261,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_M='""'
+eval M_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -11312,7 +11316,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_M=''
+eval M_LIB_DIR=''
 eval M_LIB_DIR_FLAG=''
 eval M_LIB_FLAG=''
 eval HAVE_M="no"
@@ -11510,7 +11514,7 @@ else
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_X        => lib path
+##      X_LIB_DIR        => lib path
 ##      X_LIB_DIR_FLAG   => all the -L's
 ##      X_LIB_FLAG       => all the -l's
 ##      HAVE_X           => yes or no
@@ -11791,8 +11795,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -11810,7 +11813,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_X='"$_x_lib_dir"'
+eval X_LIB_DIR='"$_x_lib_dir"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -11865,7 +11868,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_X=''
+eval X_LIB_DIR=''
 eval X_LIB_DIR_FLAG=''
 eval X_LIB_FLAG=''
 eval HAVE_X="no"
@@ -12113,7 +12116,7 @@ case $threads in
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_FETCHOP        => lib path
+##      FETCHOP_LIB_DIR        => lib path
 ##      FETCHOP_LIB_DIR_FLAG   => all the -L's
 ##      FETCHOP_LIB_FLAG       => all the -l's
 ##      HAVE_FETCHOP           => yes or no
@@ -12354,8 +12357,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -12373,7 +12375,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_FETCHOP='""'
+eval FETCHOP_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -12428,7 +12430,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_FETCHOP=''
+eval FETCHOP_LIB_DIR=''
 eval FETCHOP_LIB_DIR_FLAG=''
 eval FETCHOP_LIB_FLAG=''
 eval HAVE_FETCHOP="no"
@@ -12576,7 +12578,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_PTHREAD        => lib path
+##      PTHREAD_LIB_DIR        => lib path
 ##      PTHREAD_LIB_DIR_FLAG   => all the -L's
 ##      PTHREAD_LIB_FLAG       => all the -l's
 ##      HAVE_PTHREAD           => yes or no
@@ -12817,8 +12819,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -12836,7 +12837,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_PTHREAD='""'
+eval PTHREAD_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -12891,7 +12892,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_PTHREAD=''
+eval PTHREAD_LIB_DIR=''
 eval PTHREAD_LIB_DIR_FLAG=''
 eval PTHREAD_LIB_FLAG=''
 eval HAVE_PTHREAD="no"
@@ -13028,8 +13029,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -13271,7 +13271,7 @@ if test "$IS_WIN" = "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_GL        => lib path
+##      GL_LIB_DIR        => lib path
 ##      GL_LIB_DIR_FLAG   => all the -L's
 ##      GL_LIB_FLAG       => all the -l's
 ##      HAVE_GL           => yes or no
@@ -13552,8 +13552,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -13571,7 +13570,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_GL='"$_sci_lib"'
+eval GL_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -13626,7 +13625,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_GL=''
+eval GL_LIB_DIR=''
 eval GL_LIB_DIR_FLAG=''
 eval GL_LIB_FLAG=''
 eval HAVE_GL="no"
@@ -13768,7 +13767,7 @@ else
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_GL        => lib path
+##      GL_LIB_DIR        => lib path
 ##      GL_LIB_DIR_FLAG   => all the -L's
 ##      GL_LIB_FLAG       => all the -l's
 ##      HAVE_GL           => yes or no
@@ -14049,8 +14048,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -14068,7 +14066,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_GL='"$_sci_lib"'
+eval GL_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -14123,7 +14121,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_GL=''
+eval GL_LIB_DIR=''
 eval GL_LIB_DIR_FLAG=''
 eval GL_LIB_FLAG=''
 eval HAVE_GL="no"
@@ -14250,7 +14248,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_EXT_HDRS        => lib path
+##      EXT_HDRS_LIB_DIR        => lib path
 ##      EXT_HDRS_LIB_DIR_FLAG   => all the -L's
 ##      EXT_HDRS_LIB_FLAG       => all the -l's
 ##      HAVE_EXT_HDRS           => yes or no
@@ -14339,8 +14337,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -14353,7 +14350,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
 
-eval LIB_DIR_EXT_HDRS='"$_sci_lib"'
+eval EXT_HDRS_LIB_DIR='"$_sci_lib"'
 
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval EXT_HDRS_LIB_DIR_FLAG=''
@@ -14379,7 +14376,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_EXT_HDRS=''
+eval EXT_HDRS_LIB_DIR=''
 eval EXT_HDRS_LIB_DIR_FLAG=''
 eval EXT_HDRS_LIB_FLAG=''
 eval HAVE_EXT_HDRS="no"
@@ -14498,7 +14495,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_DL        => lib path
+##      DL_LIB_DIR        => lib path
 ##      DL_LIB_DIR_FLAG   => all the -L's
 ##      DL_LIB_FLAG       => all the -l's
 ##      HAVE_DL           => yes or no
@@ -14741,8 +14738,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -14760,7 +14756,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_DL='""'
+eval DL_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -14815,7 +14811,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_DL=''
+eval DL_LIB_DIR=''
 eval DL_LIB_DIR_FLAG=''
 eval DL_LIB_FLAG=''
 eval HAVE_DL="no"
@@ -14962,7 +14958,7 @@ else
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_DL        => lib path
+##      DL_LIB_DIR        => lib path
 ##      DL_LIB_DIR_FLAG   => all the -L's
 ##      DL_LIB_FLAG       => all the -l's
 ##      HAVE_DL           => yes or no
@@ -15245,8 +15241,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -15264,7 +15259,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_DL='"$sci_thirdparty_lib"'
+eval DL_LIB_DIR='"$sci_thirdparty_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -15319,7 +15314,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_DL=''
+eval DL_LIB_DIR=''
 eval DL_LIB_DIR_FLAG=''
 eval DL_LIB_FLAG=''
 eval HAVE_DL="no"
@@ -15467,7 +15462,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_DL        => lib path
+##      DL_LIB_DIR        => lib path
 ##      DL_LIB_DIR_FLAG   => all the -L's
 ##      DL_LIB_FLAG       => all the -l's
 ##      HAVE_DL           => yes or no
@@ -15710,8 +15705,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -15729,7 +15723,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_DL='""'
+eval DL_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -15784,7 +15778,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_DL=''
+eval DL_LIB_DIR=''
 eval DL_LIB_DIR_FLAG=''
 eval DL_LIB_FLAG=''
 eval HAVE_DL="no"
@@ -15939,7 +15933,7 @@ ac_ext="cc"
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_STAT64        => lib path
+##      STAT64_LIB_DIR        => lib path
 ##      STAT64_LIB_DIR_FLAG   => all the -L's
 ##      STAT64_LIB_FLAG       => all the -l's
 ##      HAVE_STAT64           => yes or no
@@ -16182,8 +16176,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -16201,7 +16194,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_STAT64='""'
+eval STAT64_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -16256,7 +16249,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_STAT64=''
+eval STAT64_LIB_DIR=''
 eval STAT64_LIB_DIR_FLAG=''
 eval STAT64_LIB_FLAG=''
 eval HAVE_STAT64="no"
@@ -16409,7 +16402,7 @@ sci_defs_files="$sci_defs_files include/sci_defs/stat64_testdefs.h"
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_STD_HDRS        => lib path
+##      STD_HDRS_LIB_DIR        => lib path
 ##      STD_HDRS_LIB_DIR_FLAG   => all the -L's
 ##      STD_HDRS_LIB_FLAG       => all the -l's
 ##      HAVE_STD_HDRS           => yes or no
@@ -16650,8 +16643,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -16669,7 +16661,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_STD_HDRS='""'
+eval STD_HDRS_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -16724,7 +16716,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_STD_HDRS=''
+eval STD_HDRS_LIB_DIR=''
 eval STD_HDRS_LIB_DIR_FLAG=''
 eval STD_HDRS_LIB_FLAG=''
 eval HAVE_STD_HDRS="no"
@@ -16870,7 +16862,7 @@ case $host in
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_STD_HDRS        => lib path
+##      STD_HDRS_LIB_DIR        => lib path
 ##      STD_HDRS_LIB_DIR_FLAG   => all the -L's
 ##      STD_HDRS_LIB_FLAG       => all the -l's
 ##      HAVE_STD_HDRS           => yes or no
@@ -17111,8 +17103,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -17130,7 +17121,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_STD_HDRS='""'
+eval STD_HDRS_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -17185,7 +17176,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_STD_HDRS=''
+eval STD_HDRS_LIB_DIR=''
 eval STD_HDRS_LIB_DIR_FLAG=''
 eval STD_HDRS_LIB_FLAG=''
 eval HAVE_STD_HDRS="no"
@@ -17329,7 +17320,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_STD_HDRS        => lib path
+##      STD_HDRS_LIB_DIR        => lib path
 ##      STD_HDRS_LIB_DIR_FLAG   => all the -L's
 ##      STD_HDRS_LIB_FLAG       => all the -l's
 ##      HAVE_STD_HDRS           => yes or no
@@ -17570,8 +17561,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -17589,7 +17579,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_STD_HDRS='""'
+eval STD_HDRS_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -17644,7 +17634,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_STD_HDRS=''
+eval STD_HDRS_LIB_DIR=''
 eval STD_HDRS_LIB_DIR_FLAG=''
 eval STD_HDRS_LIB_FLAG=''
 eval HAVE_STD_HDRS="no"
@@ -17792,7 +17782,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_STD_HDRS        => lib path
+##      STD_HDRS_LIB_DIR        => lib path
 ##      STD_HDRS_LIB_DIR_FLAG   => all the -L's
 ##      STD_HDRS_LIB_FLAG       => all the -l's
 ##      HAVE_STD_HDRS           => yes or no
@@ -18033,8 +18023,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -18052,7 +18041,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_STD_HDRS='""'
+eval STD_HDRS_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -18107,7 +18096,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_STD_HDRS=''
+eval STD_HDRS_LIB_DIR=''
 eval STD_HDRS_LIB_DIR_FLAG=''
 eval STD_HDRS_LIB_FLAG=''
 eval HAVE_STD_HDRS="no"
@@ -18264,7 +18253,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_STL_HEADERS        => lib path
+##      STL_HEADERS_LIB_DIR        => lib path
 ##      STL_HEADERS_LIB_DIR_FLAG   => all the -L's
 ##      STL_HEADERS_LIB_FLAG       => all the -l's
 ##      HAVE_STL_HEADERS           => yes or no
@@ -18508,8 +18497,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -18527,7 +18515,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_STL_HEADERS='""'
+eval STL_HEADERS_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -18582,7 +18570,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_STL_HEADERS=''
+eval STL_HEADERS_LIB_DIR=''
 eval STL_HEADERS_LIB_DIR_FLAG=''
 eval STL_HEADERS_LIB_FLAG=''
 eval HAVE_STL_HEADERS="no"
@@ -18706,8 +18694,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -18752,8 +18739,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -18800,8 +18786,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -18847,8 +18832,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_compile\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -18976,7 +18960,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_TCL        => lib path
+##      TCL_LIB_DIR        => lib path
 ##      TCL_LIB_DIR_FLAG   => all the -L's
 ##      TCL_LIB_FLAG       => all the -l's
 ##      HAVE_TCL           => yes or no
@@ -19257,8 +19241,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -19276,7 +19259,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_TCL='"$_sci_lib"'
+eval TCL_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -19331,7 +19314,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_TCL=''
+eval TCL_LIB_DIR=''
 eval TCL_LIB_DIR_FLAG=''
 eval TCL_LIB_FLAG=''
 eval HAVE_TCL="no"
@@ -19429,22 +19412,8 @@ _sci_includes=''
 
 # if test "$IS_WIN" = "yes"; then
   # change the unix-style dir to a windows-style dir for tclsh to read
-  # LIB_DIR_TCL=`echo "$LIB_DIR_TCL" | sed 's,/,,' | sed 's,/,:/,'`
+  # TCL_LIB_DIR=`echo "$TCL_LIB_DIR" | sed 's,/,,' | sed 's,/,:/,'`
 # fi
-
-
-##
-## SCI_SUBST_THIRDPARTY_DIR:
-##
-## arguments mean:
-## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
-## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
-##
-  _new_path=${LIB_DIR_TCL}
-  _fulldir=`cd ${sci_thirdparty_dir}; pwd`
-  _new_path=`echo $_new_path | sed 's%'${_fulldir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
-  _new_path=`echo $_new_path | sed 's%'${sci_thirdparty_dir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
-  eval LIB_DIR_TCL='"$_new_path"'
 
 
 ##
@@ -19535,7 +19504,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_TK        => lib path
+##      TK_LIB_DIR        => lib path
 ##      TK_LIB_DIR_FLAG   => all the -L's
 ##      TK_LIB_FLAG       => all the -l's
 ##      HAVE_TK           => yes or no
@@ -19816,8 +19785,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -19835,7 +19803,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_TK='"$_sci_lib"'
+eval TK_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -19890,7 +19858,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_TK=''
+eval TK_LIB_DIR=''
 eval TK_LIB_DIR_FLAG=''
 eval TK_LIB_FLAG=''
 eval HAVE_TK="no"
@@ -20019,6 +19987,7 @@ _sci_includes=''
 
 
 
+
 # -- itcl --
 
 ##
@@ -20066,7 +20035,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_ITCL        => lib path
+##      ITCL_LIB_DIR        => lib path
 ##      ITCL_LIB_DIR_FLAG   => all the -L's
 ##      ITCL_LIB_FLAG       => all the -l's
 ##      HAVE_ITCL           => yes or no
@@ -20347,8 +20316,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -20366,7 +20334,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_ITCL='"$_sci_lib"'
+eval ITCL_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -20421,7 +20389,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_ITCL=''
+eval ITCL_LIB_DIR=''
 eval ITCL_LIB_DIR_FLAG=''
 eval ITCL_LIB_FLAG=''
 eval HAVE_ITCL="no"
@@ -20519,7 +20487,7 @@ _sci_includes=''
 
 # if test "$IS_WIN" = "yes"; then
   # change the unix-style dir to a windows-style dir for tclsh to read
-  # LIB_DIR_ITCL=`echo "$LIB_DIR_ITCL" | sed 's,/,,' | sed 's,/,:/,'`
+  # ITCL_LIB_DIR=`echo "$ITCL_LIB_DIR" | sed 's,/,,' | sed 's,/,:/,'`
 # fi
 
 
@@ -20530,11 +20498,11 @@ _sci_includes=''
 ## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
 ## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
-  _new_path=${LIB_DIR_ITCL}
+  _new_path=${ITCL_LIB_DIR}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
   _new_path=`echo $_new_path | sed 's%'${_fulldir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
   _new_path=`echo $_new_path | sed 's%'${sci_thirdparty_dir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
-  eval LIB_DIR_ITCL='"$_new_path"'
+  eval ITCL_LIB_DIR='"$_new_path"'
 
 
 ##
@@ -20544,11 +20512,11 @@ _sci_includes=''
 ## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
 ## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
-  _new_path=${ITCL_LIB_DIR_FLAG_H}
+  _new_path=${ITCL_LIB_DIR_FLAG}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
   _new_path=`echo $_new_path | sed 's%'${_fulldir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
   _new_path=`echo $_new_path | sed 's%'${sci_thirdparty_dir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
-  eval ITCL_LIB_DIR_FLAG_H='"$_new_path"'
+  eval ITCL_LIB_DIR_FLAG='"$_new_path"'
 
 
 ##
@@ -20617,7 +20585,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_ITK        => lib path
+##      ITK_LIB_DIR        => lib path
 ##      ITK_LIB_DIR_FLAG   => all the -L's
 ##      ITK_LIB_FLAG       => all the -l's
 ##      HAVE_ITK           => yes or no
@@ -20898,8 +20866,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -20917,7 +20884,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_ITK='"$_sci_lib"'
+eval ITK_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -20972,7 +20939,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_ITK=''
+eval ITK_LIB_DIR=''
 eval ITK_LIB_DIR_FLAG=''
 eval ITK_LIB_FLAG=''
 eval HAVE_ITK="no"
@@ -21076,20 +21043,6 @@ _sci_includes=''
 ## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
 ## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
 ##
-  _new_path=${ITK_LIB_DIR_FLAG_H}
-  _fulldir=`cd ${sci_thirdparty_dir}; pwd`
-  _new_path=`echo $_new_path | sed 's%'${_fulldir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
-  _new_path=`echo $_new_path | sed 's%'${sci_thirdparty_dir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
-  eval ITK_LIB_DIR_FLAG_H='"$_new_path"'
-
-
-##
-## SCI_SUBST_THIRDPARTY_DIR:
-##
-## arguments mean:
-## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
-## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
-##
   _new_path=${INC_ITK_H}
   _fulldir=`cd ${sci_thirdparty_dir}; pwd`
   _new_path=`echo $_new_path | sed 's%'${_fulldir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
@@ -21148,7 +21101,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_BLT        => lib path
+##      BLT_LIB_DIR        => lib path
 ##      BLT_LIB_DIR_FLAG   => all the -L's
 ##      BLT_LIB_FLAG       => all the -l's
 ##      HAVE_BLT           => yes or no
@@ -21429,8 +21382,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -21448,7 +21400,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_BLT='"$_sci_lib"'
+eval BLT_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -21503,7 +21455,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_BLT=''
+eval BLT_LIB_DIR=''
 eval BLT_LIB_DIR_FLAG=''
 eval BLT_LIB_FLAG=''
 eval HAVE_BLT="no"
@@ -21840,8 +21792,6 @@ echo "${ECHO_T}no ($_SCI_REPORT_)" >&6
 
 
 
-
-
 ##  --  search for libxml2 --
 _sci_optional=required
 _sci_lib="$sci_thirdparty_lib"
@@ -21981,7 +21931,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_XML2        => lib path
+##      XML2_LIB_DIR        => lib path
 ##      XML2_LIB_DIR_FLAG   => all the -L's
 ##      XML2_LIB_FLAG       => all the -l's
 ##      HAVE_XML2           => yes or no
@@ -22282,8 +22232,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -22301,7 +22250,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_XML2='"$XML2_LIB_PATH"'
+eval XML2_LIB_DIR='"$XML2_LIB_PATH"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -22356,7 +22305,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_XML2=''
+eval XML2_LIB_DIR=''
 eval XML2_LIB_DIR_FLAG=''
 eval XML2_LIB_FLAG=''
 eval HAVE_XML2="no"
@@ -22552,7 +22501,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_SSTREAM        => lib path
+##      SSTREAM_LIB_DIR        => lib path
 ##      SSTREAM_LIB_DIR_FLAG   => all the -L's
 ##      SSTREAM_LIB_FLAG       => all the -l's
 ##      HAVE_SSTREAM           => yes or no
@@ -22793,8 +22742,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -22812,7 +22760,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_SSTREAM='""'
+eval SSTREAM_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -22867,7 +22815,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_SSTREAM=''
+eval SSTREAM_LIB_DIR=''
 eval SSTREAM_LIB_DIR_FLAG=''
 eval SSTREAM_LIB_FLAG=''
 eval HAVE_SSTREAM="no"
@@ -23038,7 +22986,7 @@ if test "$IS_WIN" = "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_EXC        => lib path
+##      EXC_LIB_DIR        => lib path
 ##      EXC_LIB_DIR_FLAG   => all the -L's
 ##      EXC_LIB_FLAG       => all the -l's
 ##      HAVE_EXC           => yes or no
@@ -23319,8 +23267,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -23338,7 +23285,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_EXC='"$_sci_lib"'
+eval EXC_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -23393,7 +23340,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_EXC=''
+eval EXC_LIB_DIR=''
 eval EXC_LIB_DIR_FLAG=''
 eval EXC_LIB_FLAG=''
 eval HAVE_EXC="no"
@@ -23535,7 +23482,7 @@ else
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_EXC        => lib path
+##      EXC_LIB_DIR        => lib path
 ##      EXC_LIB_DIR_FLAG   => all the -L's
 ##      EXC_LIB_FLAG       => all the -l's
 ##      HAVE_EXC           => yes or no
@@ -23816,8 +23763,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -23835,7 +23781,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_EXC='"$_sci_lib"'
+eval EXC_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -23890,7 +23836,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_EXC=''
+eval EXC_LIB_DIR=''
 eval EXC_LIB_DIR_FLAG=''
 eval EXC_LIB_FLAG=''
 eval HAVE_EXC="no"
@@ -24070,7 +24016,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_Z        => lib path
+##      Z_LIB_DIR        => lib path
 ##      Z_LIB_DIR_FLAG   => all the -L's
 ##      Z_LIB_FLAG       => all the -l's
 ##      HAVE_Z           => yes or no
@@ -24351,8 +24297,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -24370,7 +24315,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_Z='"$_sci_lib"'
+eval Z_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -24425,7 +24370,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_Z=''
+eval Z_LIB_DIR=''
 eval Z_LIB_DIR_FLAG=''
 eval Z_LIB_FLAG=''
 eval HAVE_Z="no"
@@ -24601,7 +24546,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_JPEG        => lib path
+##      JPEG_LIB_DIR        => lib path
 ##      JPEG_LIB_DIR_FLAG   => all the -L's
 ##      JPEG_LIB_FLAG       => all the -l's
 ##      HAVE_JPEG           => yes or no
@@ -24882,8 +24827,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -24901,7 +24845,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_JPEG='"$_sci_lib"'
+eval JPEG_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -24956,7 +24900,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_JPEG=''
+eval JPEG_LIB_DIR=''
 eval JPEG_LIB_DIR_FLAG=''
 eval JPEG_LIB_FLAG=''
 eval HAVE_JPEG="no"
@@ -25115,7 +25059,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_TIFF        => lib path
+##      TIFF_LIB_DIR        => lib path
 ##      TIFF_LIB_DIR_FLAG   => all the -L's
 ##      TIFF_LIB_FLAG       => all the -l's
 ##      HAVE_TIFF           => yes or no
@@ -25396,8 +25340,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -25415,7 +25358,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_TIFF='"$_sci_lib"'
+eval TIFF_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -25470,7 +25413,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_TIFF=''
+eval TIFF_LIB_DIR=''
 eval TIFF_LIB_DIR_FLAG=''
 eval TIFF_LIB_FLAG=''
 eval HAVE_TIFF="no"
@@ -25671,7 +25614,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_PNG        => lib path
+##      PNG_LIB_DIR        => lib path
 ##      PNG_LIB_DIR_FLAG   => all the -L's
 ##      PNG_LIB_FLAG       => all the -l's
 ##      HAVE_PNG           => yes or no
@@ -25952,8 +25895,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -25971,7 +25913,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_PNG='"$_sci_lib"'
+eval PNG_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -26026,7 +25968,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_PNG=''
+eval PNG_LIB_DIR=''
 eval PNG_LIB_DIR_FLAG=''
 eval PNG_LIB_FLAG=''
 eval HAVE_PNG="no"
@@ -26252,7 +26194,7 @@ if test "$HAVE_PNG" = "no"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_PNG        => lib path
+##      PNG_LIB_DIR        => lib path
 ##      PNG_LIB_DIR_FLAG   => all the -L's
 ##      PNG_LIB_FLAG       => all the -l's
 ##      HAVE_PNG           => yes or no
@@ -26533,8 +26475,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -26552,7 +26493,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_PNG='"$png_lib_dir"'
+eval PNG_LIB_DIR='"$png_lib_dir"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -26607,7 +26548,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_PNG=''
+eval PNG_LIB_DIR=''
 eval PNG_LIB_DIR_FLAG=''
 eval PNG_LIB_FLAG=''
 eval HAVE_PNG="no"
@@ -26826,7 +26767,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_MPEGE        => lib path
+##      MPEGE_LIB_DIR        => lib path
 ##      MPEGE_LIB_DIR_FLAG   => all the -L's
 ##      MPEGE_LIB_FLAG       => all the -l's
 ##      HAVE_MPEGE           => yes or no
@@ -27067,8 +27008,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -27086,7 +27026,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_MPEGE='"$_sci_lib"'
+eval MPEGE_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -27141,7 +27081,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_MPEGE=''
+eval MPEGE_LIB_DIR=''
 eval MPEGE_LIB_DIR_FLAG=''
 eval MPEGE_LIB_FLAG=''
 eval HAVE_MPEGE="no"
@@ -27264,6 +27204,20 @@ fi
   eval MPEGE_LIB_DIR_FLAG='"$_new_path"'
 
 
+##
+## SCI_SUBST_THIRDPARTY_DIR:
+##
+## arguments mean:
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
+##
+  _new_path=${INC_MPEGE_H}
+  _fulldir=`cd ${sci_thirdparty_dir}; pwd`
+  _new_path=`echo $_new_path | sed 's%'${_fulldir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
+  _new_path=`echo $_new_path | sed 's%'${sci_thirdparty_dir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
+  eval INC_MPEGE_H='"$_new_path"'
+
+
 
 
 
@@ -27341,7 +27295,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_UNP        => lib path
+##      UNP_LIB_DIR        => lib path
 ##      UNP_LIB_DIR_FLAG   => all the -L's
 ##      UNP_LIB_FLAG       => all the -l's
 ##      HAVE_UNP           => yes or no
@@ -27624,8 +27578,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -27643,7 +27596,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_UNP='"$_sci_lib"'
+eval UNP_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -27698,7 +27651,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_UNP=''
+eval UNP_LIB_DIR=''
 eval UNP_LIB_DIR_FLAG=''
 eval UNP_LIB_FLAG=''
 eval HAVE_UNP="no"
@@ -27868,7 +27821,7 @@ case $host in
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_F        => lib path
+##      F_LIB_DIR        => lib path
 ##      F_LIB_DIR_FLAG   => all the -L's
 ##      F_LIB_FLAG       => all the -l's
 ##      HAVE_F           => yes or no
@@ -28109,8 +28062,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -28128,7 +28080,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_F='"$_sci_lib"'
+eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -28183,7 +28135,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_F=''
+eval F_LIB_DIR=''
 eval F_LIB_DIR_FLAG=''
 eval F_LIB_FLAG=''
 eval HAVE_F="no"
@@ -28327,7 +28279,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_F        => lib path
+##      F_LIB_DIR        => lib path
 ##      F_LIB_DIR_FLAG   => all the -L's
 ##      F_LIB_FLAG       => all the -l's
 ##      HAVE_F           => yes or no
@@ -28568,8 +28520,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -28587,7 +28538,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_F='"$_sci_lib"'
+eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -28642,7 +28593,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_F=''
+eval F_LIB_DIR=''
 eval F_LIB_DIR_FLAG=''
 eval F_LIB_FLAG=''
 eval HAVE_F="no"
@@ -28787,7 +28738,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_F        => lib path
+##      F_LIB_DIR        => lib path
 ##      F_LIB_DIR_FLAG   => all the -L's
 ##      F_LIB_FLAG       => all the -l's
 ##      HAVE_F           => yes or no
@@ -29028,8 +28979,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -29047,7 +28997,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_F='"$_sci_lib"'
+eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -29102,7 +29052,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_F=''
+eval F_LIB_DIR=''
 eval F_LIB_DIR_FLAG=''
 eval F_LIB_FLAG=''
 eval HAVE_F="no"
@@ -29244,7 +29194,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_F        => lib path
+##      F_LIB_DIR        => lib path
 ##      F_LIB_DIR_FLAG   => all the -L's
 ##      F_LIB_FLAG       => all the -l's
 ##      HAVE_F           => yes or no
@@ -29485,8 +29435,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -29504,7 +29453,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_F='"$_sci_lib"'
+eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -29559,7 +29508,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_F=''
+eval F_LIB_DIR=''
 eval F_LIB_DIR_FLAG=''
 eval F_LIB_FLAG=''
 eval HAVE_F="no"
@@ -29701,7 +29650,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_F        => lib path
+##      F_LIB_DIR        => lib path
 ##      F_LIB_DIR_FLAG   => all the -L's
 ##      F_LIB_FLAG       => all the -l's
 ##      HAVE_F           => yes or no
@@ -29942,8 +29891,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -29961,7 +29909,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_F='"$_sci_lib"'
+eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -30016,7 +29964,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_F=''
+eval F_LIB_DIR=''
 eval F_LIB_DIR_FLAG=''
 eval F_LIB_FLAG=''
 eval HAVE_F="no"
@@ -30158,7 +30106,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_F        => lib path
+##      F_LIB_DIR        => lib path
 ##      F_LIB_DIR_FLAG   => all the -L's
 ##      F_LIB_FLAG       => all the -l's
 ##      HAVE_F           => yes or no
@@ -30399,8 +30347,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -30418,7 +30365,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_F='"$_sci_lib"'
+eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -30473,7 +30420,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_F=''
+eval F_LIB_DIR=''
 eval F_LIB_DIR_FLAG=''
 eval F_LIB_FLAG=''
 eval HAVE_F="no"
@@ -30617,7 +30564,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_F        => lib path
+##      F_LIB_DIR        => lib path
 ##      F_LIB_DIR_FLAG   => all the -L's
 ##      F_LIB_FLAG       => all the -l's
 ##      HAVE_F           => yes or no
@@ -30858,8 +30805,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -30877,7 +30823,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_F='"$_sci_lib"'
+eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -30932,7 +30878,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_F=''
+eval F_LIB_DIR=''
 eval F_LIB_DIR_FLAG=''
 eval F_LIB_FLAG=''
 eval HAVE_F="no"
@@ -31077,7 +31023,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_F        => lib path
+##      F_LIB_DIR        => lib path
 ##      F_LIB_DIR_FLAG   => all the -L's
 ##      F_LIB_FLAG       => all the -l's
 ##      HAVE_F           => yes or no
@@ -31358,8 +31304,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -31377,7 +31322,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_F='"$_sci_lib"'
+eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -31432,7 +31377,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_F=''
+eval F_LIB_DIR=''
 eval F_LIB_DIR_FLAG=''
 eval F_LIB_FLAG=''
 eval HAVE_F="no"
@@ -31574,7 +31519,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_F        => lib path
+##      F_LIB_DIR        => lib path
 ##      F_LIB_DIR_FLAG   => all the -L's
 ##      F_LIB_FLAG       => all the -l's
 ##      HAVE_F           => yes or no
@@ -31855,8 +31800,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -31874,7 +31818,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_F='"$_sci_lib"'
+eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -31929,7 +31873,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_F=''
+eval F_LIB_DIR=''
 eval F_LIB_DIR_FLAG=''
 eval F_LIB_FLAG=''
 eval HAVE_F="no"
@@ -32071,7 +32015,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_F        => lib path
+##      F_LIB_DIR        => lib path
 ##      F_LIB_DIR_FLAG   => all the -L's
 ##      F_LIB_FLAG       => all the -l's
 ##      HAVE_F           => yes or no
@@ -32352,8 +32296,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -32371,7 +32314,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_F='"$_sci_lib"'
+eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -32426,7 +32369,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_F=''
+eval F_LIB_DIR=''
 eval F_LIB_DIR_FLAG=''
 eval F_LIB_FLAG=''
 eval HAVE_F="no"
@@ -32572,7 +32515,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_F        => lib path
+##      F_LIB_DIR        => lib path
 ##      F_LIB_DIR_FLAG   => all the -L's
 ##      F_LIB_FLAG       => all the -l's
 ##      HAVE_F           => yes or no
@@ -32813,8 +32756,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -32832,7 +32774,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_F='"$_sci_lib"'
+eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -32887,7 +32829,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_F=''
+eval F_LIB_DIR=''
 eval F_LIB_DIR_FLAG=''
 eval F_LIB_FLAG=''
 eval HAVE_F="no"
@@ -33030,7 +32972,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_F        => lib path
+##      F_LIB_DIR        => lib path
 ##      F_LIB_DIR_FLAG   => all the -L's
 ##      F_LIB_FLAG       => all the -l's
 ##      HAVE_F           => yes or no
@@ -33271,8 +33213,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -33290,7 +33231,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_F='"$_sci_lib"'
+eval F_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -33345,7 +33286,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_F=''
+eval F_LIB_DIR=''
 eval F_LIB_DIR_FLAG=''
 eval F_LIB_FLAG=''
 eval HAVE_F="no"
@@ -33554,7 +33495,7 @@ if test "$_sci_optional" = "required"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_JAVA        => lib path
+##      JAVA_LIB_DIR        => lib path
 ##      JAVA_LIB_DIR_FLAG   => all the -L's
 ##      JAVA_LIB_FLAG       => all the -l's
 ##      HAVE_JAVA           => yes or no
@@ -33835,8 +33776,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -33854,7 +33794,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_JAVA='"$_sci_lib"'
+eval JAVA_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -33909,7 +33849,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_JAVA=''
+eval JAVA_LIB_DIR=''
 eval JAVA_LIB_DIR_FLAG=''
 eval JAVA_LIB_FLAG=''
 eval HAVE_JAVA="no"
@@ -34093,7 +34033,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_MESQUITE        => lib path
+##      MESQUITE_LIB_DIR        => lib path
 ##      MESQUITE_LIB_DIR_FLAG   => all the -L's
 ##      MESQUITE_LIB_FLAG       => all the -l's
 ##      HAVE_MESQUITE           => yes or no
@@ -34179,8 +34119,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -34193,7 +34132,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); }; }; then
 
-eval LIB_DIR_MESQUITE='"$_sci_lib"'
+eval MESQUITE_LIB_DIR='"$_sci_lib"'
 
 if test "$_sci_lib" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval MESQUITE_LIB_DIR_FLAG=''
@@ -34219,7 +34158,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_MESQUITE=''
+eval MESQUITE_LIB_DIR=''
 eval MESQUITE_LIB_DIR_FLAG=''
 eval MESQUITE_LIB_FLAG=''
 eval HAVE_MESQUITE="no"
@@ -34375,7 +34314,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_VERDICT        => lib path
+##      VERDICT_LIB_DIR        => lib path
 ##      VERDICT_LIB_DIR_FLAG   => all the -L's
 ##      VERDICT_LIB_FLAG       => all the -l's
 ##      HAVE_VERDICT           => yes or no
@@ -34658,8 +34597,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -34677,7 +34615,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_VERDICT='"$_sci_lib"'
+eval VERDICT_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -34732,7 +34670,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_VERDICT=''
+eval VERDICT_LIB_DIR=''
 eval VERDICT_LIB_DIR_FLAG=''
 eval VERDICT_LIB_FLAG=''
 eval HAVE_VERDICT="no"
@@ -34921,7 +34859,7 @@ if test "$IS_OSX" = "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_CAMAL        => lib path
+##      CAMAL_LIB_DIR        => lib path
 ##      CAMAL_LIB_DIR_FLAG   => all the -L's
 ##      CAMAL_LIB_FLAG       => all the -l's
 ##      HAVE_CAMAL           => yes or no
@@ -35202,8 +35140,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -35221,7 +35158,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_CAMAL='"$_sci_lib"'
+eval CAMAL_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -35276,7 +35213,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_CAMAL=''
+eval CAMAL_LIB_DIR=''
 eval CAMAL_LIB_DIR_FLAG=''
 eval CAMAL_LIB_FLAG=''
 eval HAVE_CAMAL="no"
@@ -35421,7 +35358,7 @@ else
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_CAMAL        => lib path
+##      CAMAL_LIB_DIR        => lib path
 ##      CAMAL_LIB_DIR_FLAG   => all the -L's
 ##      CAMAL_LIB_FLAG       => all the -l's
 ##      HAVE_CAMAL           => yes or no
@@ -35702,8 +35639,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -35721,7 +35657,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_CAMAL='"$_sci_lib"'
+eval CAMAL_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -35776,7 +35712,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_CAMAL=''
+eval CAMAL_LIB_DIR=''
 eval CAMAL_LIB_DIR_FLAG=''
 eval CAMAL_LIB_FLAG=''
 eval HAVE_CAMAL="no"
@@ -35954,7 +35890,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_TETGEN        => lib path
+##      TETGEN_LIB_DIR        => lib path
 ##      TETGEN_LIB_DIR_FLAG   => all the -L's
 ##      TETGEN_LIB_FLAG       => all the -l's
 ##      HAVE_TETGEN           => yes or no
@@ -36235,8 +36171,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -36254,7 +36189,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_TETGEN='"$_sci_lib"'
+eval TETGEN_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -36309,7 +36244,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_TETGEN=''
+eval TETGEN_LIB_DIR=''
 eval TETGEN_LIB_DIR_FLAG=''
 eval TETGEN_LIB_FLAG=''
 eval HAVE_TETGEN="no"
@@ -36424,6 +36359,218 @@ fi
 
 
 
+##  --  enable-pysci  ------------------------
+
+# if pysci is enabled, find the python dev info
+HAVE_PYDEV="unknown"
+if test "$pysci" = "yes"; then
+
+  _sci_inc="/usr/include/python2.4"
+
+## arguments mean:
+## arg 1 : variable base name i.e. MATH
+## arg 2 : checking message
+## arg 3 : includes that arg 6 needs to compile
+## arg 4 : include paths -I
+## arg 5 : list of libs to link against -l
+## arg 6 : lib paths -L
+## arg 7 : extra link flags
+## arg 8 : body of code to compile. can be empty
+## arg 9 : optional or not-optional required argument
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      PYDEV_LIB_DIR        => lib path
+##      PYDEV_LIB_DIR_FLAG   => all the -L's
+##      PYDEV_LIB_FLAG       => all the -l's
+##      HAVE_PYDEV           => yes or no
+##      INC_PYDEV_H          => all the -I's
+##      HAVE_PYDEV_H         => yes or no
+
+
+
+echo "$as_me:$LINENO: checking for python developement environment (2.4) (not-optional)" >&5
+echo $ECHO_N "checking for python developement environment (2.4) (not-optional)... $ECHO_C" >&6
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+for i in $_sci_inc; do
+  # make sure it exists
+  if test -d $i; then
+    if test -z "$_sci_includes"; then
+      _sci_includes=-I$i
+    else
+      _sci_includes="$_sci_includes -I$i"
+    fi
+  fi
+done
+
+
+for i in python2.4; do
+  if test -z "$_sci_libs"; then
+    _sci_libs=-l$i
+  else
+    _sci_libs="$_sci_libs -l$i"
+  fi
+done
+
+_sci_lib_path=
+
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+LDFLAGS="$_sci_lib_path $LDFLAGS"
+LIBS="$_sci_libs  $LIBS"
+
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+
+    #include <Python.h>
+
+int
+main ()
+{
+
+    /*some basic python dev calls...*/
+    PyObject *type = 0;
+    Py_XINCREF(type);
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+
+eval PYDEV_LIB_DIR='""'
+
+if test "" = "$SCI_THIRDPARTY_LIB_DIR"; then
+  eval PYDEV_LIB_DIR_FLAG=''
+else
+  eval PYDEV_LIB_DIR_FLAG='"$_sci_lib_path"'
+fi
+
+eval PYDEV_LIB_FLAG='"$_sci_libs"'
+eval HAVE_PYDEV="yes"
+
+if test "$_sci_includes" = "$INC_SCI_THIRDPARTY_H"; then
+  eval INC_PYDEV_H=''
+else
+  eval INC_PYDEV_H='"$_sci_includes"'
+fi
+
+eval HAVE_PYDEV_H="yes"
+echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+eval PYDEV_LIB_DIR=''
+eval PYDEV_LIB_DIR_FLAG=''
+eval PYDEV_LIB_FLAG=''
+eval HAVE_PYDEV="no"
+eval INC_PYDEV_H=''
+eval HAVE_PYDEV_H="no"
+echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+if test "not-optional" = "not-optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { echo "$as_me:$LINENO: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&5
+echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+{ { echo "$as_me:$LINENO: error: Test for required PYDEV failed.
+    To see the failed compile information, look in config.log,
+    search for PYDEV. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&5
+echo "$as_me: error: Test for required PYDEV failed.
+    To see the failed compile information, look in config.log,
+    search for PYDEV. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+
+
+
+  if test "$HAVE_PYDEV" = "yes"; then
+    DEF_PYDEV="#define HAVE_PYDEV"
+  fi
+
+fi
+
+
+
+
+
+
+
 ##  --  search for atlas stuff  -------------------------------------------
 
 if test "$with_blas" && test "$with_atlas"; then
@@ -36497,7 +36644,7 @@ echo "$as_me: error: Don't specify a path for atlas when on a Mac (we use vecLib
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_BLAS        => lib path
+##      BLAS_LIB_DIR        => lib path
 ##      BLAS_LIB_DIR_FLAG   => all the -L's
 ##      BLAS_LIB_FLAG       => all the -l's
 ##      HAVE_BLAS           => yes or no
@@ -36778,8 +36925,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -36797,7 +36943,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_BLAS='""'
+eval BLAS_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -36852,7 +36998,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_BLAS=''
+eval BLAS_LIB_DIR=''
 eval BLAS_LIB_DIR_FLAG=''
 eval BLAS_LIB_FLAG=''
 eval HAVE_BLAS="no"
@@ -36995,7 +37141,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_BLAS        => lib path
+##      BLAS_LIB_DIR        => lib path
 ##      BLAS_LIB_DIR_FLAG   => all the -L's
 ##      BLAS_LIB_FLAG       => all the -l's
 ##      HAVE_BLAS           => yes or no
@@ -37276,8 +37422,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -37295,7 +37440,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_BLAS='"$_sci_lib"'
+eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -37350,7 +37495,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_BLAS=''
+eval BLAS_LIB_DIR=''
 eval BLAS_LIB_DIR_FLAG=''
 eval BLAS_LIB_FLAG=''
 eval HAVE_BLAS="no"
@@ -37521,7 +37666,7 @@ if test "$HAVE_BLAS" != "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_BLAS        => lib path
+##      BLAS_LIB_DIR        => lib path
 ##      BLAS_LIB_DIR_FLAG   => all the -L's
 ##      BLAS_LIB_FLAG       => all the -l's
 ##      HAVE_BLAS           => yes or no
@@ -37762,8 +37907,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -37781,7 +37925,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_BLAS='"$_sci_lib"'
+eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -37836,7 +37980,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_BLAS=''
+eval BLAS_LIB_DIR=''
 eval BLAS_LIB_DIR_FLAG=''
 eval BLAS_LIB_FLAG=''
 eval HAVE_BLAS="no"
@@ -37979,7 +38123,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_BLAS        => lib path
+##      BLAS_LIB_DIR        => lib path
 ##      BLAS_LIB_DIR_FLAG   => all the -L's
 ##      BLAS_LIB_FLAG       => all the -l's
 ##      HAVE_BLAS           => yes or no
@@ -38220,8 +38364,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -38239,7 +38382,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_BLAS='"$_sci_lib"'
+eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -38294,7 +38437,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_BLAS=''
+eval BLAS_LIB_DIR=''
 eval BLAS_LIB_DIR_FLAG=''
 eval BLAS_LIB_FLAG=''
 eval HAVE_BLAS="no"
@@ -38439,7 +38582,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_BLAS        => lib path
+##      BLAS_LIB_DIR        => lib path
 ##      BLAS_LIB_DIR_FLAG   => all the -L's
 ##      BLAS_LIB_FLAG       => all the -l's
 ##      HAVE_BLAS           => yes or no
@@ -38720,8 +38863,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -38739,7 +38881,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_BLAS='"$_sci_lib"'
+eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -38794,7 +38936,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_BLAS=''
+eval BLAS_LIB_DIR=''
 eval BLAS_LIB_DIR_FLAG=''
 eval BLAS_LIB_FLAG=''
 eval HAVE_BLAS="no"
@@ -38941,7 +39083,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_BLAS        => lib path
+##      BLAS_LIB_DIR        => lib path
 ##      BLAS_LIB_DIR_FLAG   => all the -L's
 ##      BLAS_LIB_FLAG       => all the -l's
 ##      HAVE_BLAS           => yes or no
@@ -39222,8 +39364,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -39241,7 +39382,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_BLAS='"$_sci_lib"'
+eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -39296,7 +39437,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_BLAS=''
+eval BLAS_LIB_DIR=''
 eval BLAS_LIB_DIR_FLAG=''
 eval BLAS_LIB_FLAG=''
 eval HAVE_BLAS="no"
@@ -39441,7 +39582,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_BLAS        => lib path
+##      BLAS_LIB_DIR        => lib path
 ##      BLAS_LIB_DIR_FLAG   => all the -L's
 ##      BLAS_LIB_FLAG       => all the -l's
 ##      HAVE_BLAS           => yes or no
@@ -39722,8 +39863,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -39741,7 +39881,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_BLAS='"$_sci_lib"'
+eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -39796,7 +39936,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_BLAS=''
+eval BLAS_LIB_DIR=''
 eval BLAS_LIB_DIR_FLAG=''
 eval BLAS_LIB_FLAG=''
 eval HAVE_BLAS="no"
@@ -39943,7 +40083,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_BLAS        => lib path
+##      BLAS_LIB_DIR        => lib path
 ##      BLAS_LIB_DIR_FLAG   => all the -L's
 ##      BLAS_LIB_FLAG       => all the -l's
 ##      HAVE_BLAS           => yes or no
@@ -40184,8 +40324,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -40203,7 +40342,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_BLAS='"$_sci_lib"'
+eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -40258,7 +40397,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_BLAS=''
+eval BLAS_LIB_DIR=''
 eval BLAS_LIB_DIR_FLAG=''
 eval BLAS_LIB_FLAG=''
 eval HAVE_BLAS="no"
@@ -40400,7 +40539,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_BLAS        => lib path
+##      BLAS_LIB_DIR        => lib path
 ##      BLAS_LIB_DIR_FLAG   => all the -L's
 ##      BLAS_LIB_FLAG       => all the -l's
 ##      HAVE_BLAS           => yes or no
@@ -40641,8 +40780,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -40660,7 +40798,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_BLAS='"$_sci_lib"'
+eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -40715,7 +40853,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_BLAS=''
+eval BLAS_LIB_DIR=''
 eval BLAS_LIB_DIR_FLAG=''
 eval BLAS_LIB_FLAG=''
 eval HAVE_BLAS="no"
@@ -40859,7 +40997,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_BLAS        => lib path
+##      BLAS_LIB_DIR        => lib path
 ##      BLAS_LIB_DIR_FLAG   => all the -L's
 ##      BLAS_LIB_FLAG       => all the -l's
 ##      HAVE_BLAS           => yes or no
@@ -41100,8 +41238,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -41119,7 +41256,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_BLAS='"$_sci_lib"'
+eval BLAS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -41174,7 +41311,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_BLAS=''
+eval BLAS_LIB_DIR=''
 eval BLAS_LIB_DIR_FLAG=''
 eval BLAS_LIB_FLAG=''
 eval HAVE_BLAS="no"
@@ -41357,7 +41494,7 @@ case $host in
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_LAPACK        => lib path
+##      LAPACK_LIB_DIR        => lib path
 ##      LAPACK_LIB_DIR_FLAG   => all the -L's
 ##      LAPACK_LIB_FLAG       => all the -l's
 ##      HAVE_LAPACK           => yes or no
@@ -41598,8 +41735,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -41617,7 +41753,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_LAPACK='""'
+eval LAPACK_LIB_DIR='""'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -41672,7 +41808,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_LAPACK=''
+eval LAPACK_LIB_DIR=''
 eval LAPACK_LIB_DIR_FLAG=''
 eval LAPACK_LIB_FLAG=''
 eval HAVE_LAPACK="no"
@@ -41818,7 +41954,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_LAPACK        => lib path
+##      LAPACK_LIB_DIR        => lib path
 ##      LAPACK_LIB_DIR_FLAG   => all the -L's
 ##      LAPACK_LIB_FLAG       => all the -l's
 ##      HAVE_LAPACK           => yes or no
@@ -42059,8 +42195,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -42078,7 +42213,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_LAPACK='"$_sci_lib"'
+eval LAPACK_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -42133,7 +42268,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_LAPACK=''
+eval LAPACK_LIB_DIR=''
 eval LAPACK_LIB_DIR_FLAG=''
 eval LAPACK_LIB_FLAG=''
 eval HAVE_LAPACK="no"
@@ -42278,7 +42413,7 @@ if test "$HAVE_LAPACK" != "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_LAPACK        => lib path
+##      LAPACK_LIB_DIR        => lib path
 ##      LAPACK_LIB_DIR_FLAG   => all the -L's
 ##      LAPACK_LIB_FLAG       => all the -l's
 ##      HAVE_LAPACK           => yes or no
@@ -42519,8 +42654,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -42538,7 +42672,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_LAPACK='"$_sci_lib"'
+eval LAPACK_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -42593,7 +42727,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_LAPACK=''
+eval LAPACK_LIB_DIR=''
 eval LAPACK_LIB_DIR_FLAG=''
 eval LAPACK_LIB_FLAG=''
 eval HAVE_LAPACK="no"
@@ -42746,7 +42880,7 @@ if test "$HAVE_LAPACK" != "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_LAPACK        => lib path
+##      LAPACK_LIB_DIR        => lib path
 ##      LAPACK_LIB_DIR_FLAG   => all the -L's
 ##      LAPACK_LIB_FLAG       => all the -l's
 ##      HAVE_LAPACK           => yes or no
@@ -42987,8 +43121,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -43006,7 +43139,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_LAPACK='"$_sci_lib"'
+eval LAPACK_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -43061,7 +43194,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_LAPACK=''
+eval LAPACK_LIB_DIR=''
 eval LAPACK_LIB_DIR_FLAG=''
 eval LAPACK_LIB_FLAG=''
 eval HAVE_LAPACK="no"
@@ -43205,7 +43338,7 @@ echo "$as_me: WARNING: Using complib for lapack" >&2;}
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_LAPACKMP        => lib path
+##      LAPACKMP_LIB_DIR        => lib path
 ##      LAPACKMP_LIB_DIR_FLAG   => all the -L's
 ##      LAPACKMP_LIB_FLAG       => all the -l's
 ##      HAVE_LAPACKMP           => yes or no
@@ -43446,8 +43579,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -43465,7 +43597,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_LAPACKMP='"$_sci_lib"'
+eval LAPACKMP_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -43520,7 +43652,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_LAPACKMP=''
+eval LAPACKMP_LIB_DIR=''
 eval LAPACKMP_LIB_DIR_FLAG=''
 eval LAPACKMP_LIB_FLAG=''
 eval HAVE_LAPACKMP="no"
@@ -43773,7 +43905,7 @@ echo "$as_me: checking for required MPI components......" >&6;}
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_MPI        => lib path
+##      MPI_LIB_DIR        => lib path
 ##      MPI_LIB_DIR_FLAG   => all the -L's
 ##      MPI_LIB_FLAG       => all the -l's
 ##      HAVE_MPI           => yes or no
@@ -44054,8 +44186,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -44073,7 +44204,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_MPI='"$_sci_lib"'
+eval MPI_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -44128,7 +44259,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_MPI=''
+eval MPI_LIB_DIR=''
 eval MPI_LIB_DIR_FLAG=''
 eval MPI_LIB_FLAG=''
 eval HAVE_MPI="no"
@@ -44284,7 +44415,7 @@ echo "$as_me: WARNING: Found libmpi but not in requested directory: $_sci_lib" >
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_MPI        => lib path
+##      MPI_LIB_DIR        => lib path
 ##      MPI_LIB_DIR_FLAG   => all the -L's
 ##      MPI_LIB_FLAG       => all the -l's
 ##      HAVE_MPI           => yes or no
@@ -44565,8 +44696,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -44584,7 +44714,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_MPI='"$_sci_lib"'
+eval MPI_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -44639,7 +44769,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_MPI=''
+eval MPI_LIB_DIR=''
 eval MPI_LIB_DIR_FLAG=''
 eval MPI_LIB_FLAG=''
 eval HAVE_MPI="no"
@@ -44793,7 +44923,7 @@ echo "$as_me: WARNING: Found libmpi but not in requested directory: $_sci_lib" >
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_MPI        => lib path
+##      MPI_LIB_DIR        => lib path
 ##      MPI_LIB_DIR_FLAG   => all the -L's
 ##      MPI_LIB_FLAG       => all the -l's
 ##      HAVE_MPI           => yes or no
@@ -45074,8 +45204,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -45093,7 +45222,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_MPI='"$_sci_lib"'
+eval MPI_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -45148,7 +45277,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_MPI=''
+eval MPI_LIB_DIR=''
 eval MPI_LIB_DIR_FLAG=''
 eval MPI_LIB_FLAG=''
 eval HAVE_MPI="no"
@@ -45301,7 +45430,7 @@ echo "$as_me: WARNING: Found libmpi but not in the requested directory: $_sci_li
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_MPI        => lib path
+##      MPI_LIB_DIR        => lib path
 ##      MPI_LIB_DIR_FLAG   => all the -L's
 ##      MPI_LIB_FLAG       => all the -l's
 ##      HAVE_MPI           => yes or no
@@ -45582,8 +45711,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -45601,7 +45729,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_MPI='"$_sci_lib"'
+eval MPI_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -45656,7 +45784,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_MPI=''
+eval MPI_LIB_DIR=''
 eval MPI_LIB_DIR_FLAG=''
 eval MPI_LIB_FLAG=''
 eval HAVE_MPI="no"
@@ -45809,7 +45937,7 @@ echo "$as_me: WARNING: Found libmpi but not in requested directory: $_sci_lib" >
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_MPI        => lib path
+##      MPI_LIB_DIR        => lib path
 ##      MPI_LIB_DIR_FLAG   => all the -L's
 ##      MPI_LIB_FLAG       => all the -l's
 ##      HAVE_MPI           => yes or no
@@ -46090,8 +46218,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -46109,7 +46236,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_MPI='"$_sci_lib"'
+eval MPI_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -46164,7 +46291,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_MPI=''
+eval MPI_LIB_DIR=''
 eval MPI_LIB_DIR_FLAG=''
 eval MPI_LIB_FLAG=''
 eval HAVE_MPI="no"
@@ -46308,7 +46435,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_MPI        => lib path
+##      MPI_LIB_DIR        => lib path
 ##      MPI_LIB_DIR_FLAG   => all the -L's
 ##      MPI_LIB_FLAG       => all the -l's
 ##      HAVE_MPI           => yes or no
@@ -46589,8 +46716,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -46608,7 +46734,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_MPI='"$_sci_lib"'
+eval MPI_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -46663,7 +46789,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_MPI=''
+eval MPI_LIB_DIR=''
 eval MPI_LIB_DIR_FLAG=''
 eval MPI_LIB_FLAG=''
 eval HAVE_MPI="no"
@@ -46865,6 +46991,7 @@ sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 #fi
 PETSC_VERSION_DIR=petsc-2.2.1
 
+if test -z "$PETSC_ARCH"; then
 case $host in
   *-irix*)
     if test "$enable_64bit" = "yes"; then
@@ -46934,7 +47061,7 @@ echo "$as_me: error: PETSC ARCH not set for Tru64.  Need to fix this." >&2;}
     PETSC_ARCH=""
     ;;
 esac
-
+fi
 # check for mpi-uni if either --with-unipetsc or --with-mpiuni,
 #   check here to look in petsc's subdirs.
 #  --  search for mpi-uni  --------------------------------------------
@@ -47016,7 +47143,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_MPI_UNI        => lib path
+##      MPI_UNI_LIB_DIR        => lib path
 ##      MPI_UNI_LIB_DIR_FLAG   => all the -L's
 ##      MPI_UNI_LIB_FLAG       => all the -l's
 ##      HAVE_MPI_UNI           => yes or no
@@ -47297,8 +47424,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -47316,7 +47442,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_MPI_UNI='"$_sci_lib"'
+eval MPI_UNI_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -47371,7 +47497,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_MPI_UNI=''
+eval MPI_UNI_LIB_DIR=''
 eval MPI_UNI_LIB_DIR_FLAG=''
 eval MPI_UNI_LIB_FLAG=''
 eval HAVE_MPI_UNI="no"
@@ -47514,7 +47640,7 @@ if test "$HAVE_MPI_UNI" != "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_MPI_UNICH        => lib path
+##      MPI_UNICH_LIB_DIR        => lib path
 ##      MPI_UNICH_LIB_DIR_FLAG   => all the -L's
 ##      MPI_UNICH_LIB_FLAG       => all the -l's
 ##      HAVE_MPI_UNICH           => yes or no
@@ -47795,8 +47921,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -47814,7 +47939,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_MPI_UNICH='"$_sci_lib"'
+eval MPI_UNICH_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -47869,7 +47994,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_MPI_UNICH=''
+eval MPI_UNICH_LIB_DIR=''
 eval MPI_UNICH_LIB_DIR_FLAG=''
 eval MPI_UNICH_LIB_FLAG=''
 eval HAVE_MPI_UNICH="no"
@@ -48087,7 +48212,7 @@ if (test "$HAVE_MPI" = "yes" || test "$HAVE_MPI_UNI" = "yes") && test "$HAVE_BLA
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_PETSC        => lib path
+##      PETSC_LIB_DIR        => lib path
 ##      PETSC_LIB_DIR_FLAG   => all the -L's
 ##      PETSC_LIB_FLAG       => all the -l's
 ##      HAVE_PETSC           => yes or no
@@ -48368,8 +48493,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -48387,7 +48511,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_PETSC='"$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG"'
+eval PETSC_LIB_DIR='"$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -48442,7 +48566,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_PETSC=''
+eval PETSC_LIB_DIR=''
 eval PETSC_LIB_DIR_FLAG=''
 eval PETSC_LIB_FLAG=''
 eval HAVE_PETSC="no"
@@ -48589,7 +48713,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_PETSC        => lib path
+##      PETSC_LIB_DIR        => lib path
 ##      PETSC_LIB_DIR_FLAG   => all the -L's
 ##      PETSC_LIB_FLAG       => all the -l's
 ##      HAVE_PETSC           => yes or no
@@ -48870,8 +48994,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -48889,7 +49012,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_PETSC='"$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG"'
+eval PETSC_LIB_DIR='"$_sci_lib_dir $F_LIB_DIR_FLAG $LAPACK_LIB_DIR_FLAG $BLAS_LIB_DIR_FLAG $MPI_LIB_DIR_FLAG"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -48944,7 +49067,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_PETSC=''
+eval PETSC_LIB_DIR=''
 eval PETSC_LIB_DIR_FLAG=''
 eval PETSC_LIB_FLAG=''
 eval HAVE_PETSC="no"
@@ -49115,7 +49238,7 @@ echo "$as_me: error: One or more of the PETSc components is missing." >&2;}
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_PETSC_UNI        => lib path
+##      PETSC_UNI_LIB_DIR        => lib path
 ##      PETSC_UNI_LIB_DIR_FLAG   => all the -L's
 ##      PETSC_UNI_LIB_FLAG       => all the -l's
 ##      HAVE_PETSC_UNI           => yes or no
@@ -49396,8 +49519,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -49415,7 +49537,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_PETSC_UNI='"$_sci_lib"'
+eval PETSC_UNI_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -49470,7 +49592,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_PETSC_UNI=''
+eval PETSC_UNI_LIB_DIR=''
 eval PETSC_UNI_LIB_DIR_FLAG=''
 eval PETSC_UNI_LIB_FLAG=''
 eval HAVE_PETSC_UNI="no"
@@ -49616,7 +49738,7 @@ _sci_includes=''
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_PETSC_UNI        => lib path
+##      PETSC_UNI_LIB_DIR        => lib path
 ##      PETSC_UNI_LIB_DIR_FLAG   => all the -L's
 ##      PETSC_UNI_LIB_FLAG       => all the -l's
 ##      HAVE_PETSC_UNI           => yes or no
@@ -49897,8 +50019,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -49916,7 +50037,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_PETSC_UNI='"$_sci_lib"'
+eval PETSC_UNI_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -49971,7 +50092,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_PETSC_UNI=''
+eval PETSC_UNI_LIB_DIR=''
 eval PETSC_UNI_LIB_DIR_FLAG=''
 eval PETSC_UNI_LIB_FLAG=''
 eval HAVE_PETSC_UNI="no"
@@ -50130,15 +50251,15 @@ echo $ECHO_N "checking for Insight.... $ECHO_C" >&6
     INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g' | tr -d '\r'`"
     insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g' | tr -d '\r'`"
     INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"
-    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon -lITKniftiio -lITKznz -litkvnl -litkvnl_algo -litkvcl -litknetlib -litksys -lITKDICOMParser"
+    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKNumerics -lITKStatistics -lITKBasicFilters -lITKSpatialObject -lITKEXPAT -lITKCommon -lITKniftiio -litkgdcm -lITKznz -litkvnl -litkvnl_inst -litkvnl_algo -litkvcl -litknetlib -litksys -lITKDICOMParser"
 
     if test "$IS_WIN" = "yes"; then
-	  libBegin=""
-	  ext="lib" #windows's so is dll, not lib, but we link against the lib
-	else
-	  libBegin="lib"
-	  ext="$SO_OR_ARCHIVE_EXTENSION"
-	fi
+	libBegin=""
+	ext="lib" #windows's so is dll, not lib, but we link against the lib
+    else
+	libBegin="lib"
+	ext="$SO_OR_ARCHIVE_EXTENSION"
+    fi
 
     if test -a "$insight_libs_dir/"$libBegin"itkzlib.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkzlib"
@@ -50173,6 +50294,14 @@ echo $ECHO_N "checking for Insight.... $ECHO_C" >&6
 
     if test -a "$insight_libs_dir/"$libBegin"itkjpeg16.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg16"
+       INSIGHT_JPEG_LINKED=yes
+    elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
+       INSIGHT_JPEG_LINKED=yes
+    fi
+
+    if test -a "$insight_libs_dir/"$libBegin"itkopenjpeg.$ext"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkopenjpeg"
        INSIGHT_JPEG_LINKED=yes
     elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
@@ -50376,7 +50505,7 @@ echo "$as_me: error: Cannot find GDCM configure files." >&2;}
        GDCM_JPEG_LINKED=yes
      fi
 
-     DEF_GDCM="#define HAVE_GDCM"
+     DEF_GDCM="#define HAVE_GDCM 1"
      HAVE_GDCM="yes"
 
      echo "$as_me:$LINENO: result: $dir" >&5
@@ -50635,7 +50764,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_SIDL        => lib path
+##      SIDL_LIB_DIR        => lib path
 ##      SIDL_LIB_DIR_FLAG   => all the -L's
 ##      SIDL_LIB_FLAG       => all the -l's
 ##      HAVE_SIDL           => yes or no
@@ -50916,8 +51045,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -50935,7 +51063,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_SIDL='"$_sci_lib"'
+eval SIDL_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -50990,7 +51118,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_SIDL=''
+eval SIDL_LIB_DIR=''
 eval SIDL_LIB_DIR_FLAG=''
 eval SIDL_LIB_FLAG=''
 eval HAVE_SIDL="no"
@@ -51268,7 +51396,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_NETSOLVE        => lib path
+##      NETSOLVE_LIB_DIR        => lib path
 ##      NETSOLVE_LIB_DIR_FLAG   => all the -L's
 ##      NETSOLVE_LIB_FLAG       => all the -l's
 ##      HAVE_NETSOLVE           => yes or no
@@ -51509,8 +51637,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -51528,7 +51655,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_NETSOLVE='"$_sci_lib"'
+eval NETSOLVE_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -51583,7 +51710,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_NETSOLVE=''
+eval NETSOLVE_LIB_DIR=''
 eval NETSOLVE_LIB_DIR_FLAG=''
 eval NETSOLVE_LIB_FLAG=''
 eval HAVE_NETSOLVE="no"
@@ -51867,7 +51994,7 @@ if test "$sci_required_glut" = "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_GLUT        => lib path
+##      GLUT_LIB_DIR        => lib path
 ##      GLUT_LIB_DIR_FLAG   => all the -L's
 ##      GLUT_LIB_FLAG       => all the -l's
 ##      HAVE_GLUT           => yes or no
@@ -52148,8 +52275,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -52167,7 +52293,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_GLUT='"$_sci_lib"'
+eval GLUT_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -52222,7 +52348,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_GLUT=''
+eval GLUT_LIB_DIR=''
 eval GLUT_LIB_DIR_FLAG=''
 eval GLUT_LIB_FLAG=''
 eval HAVE_GLUT="no"
@@ -52569,7 +52695,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_GLUI        => lib path
+##      GLUI_LIB_DIR        => lib path
 ##      GLUI_LIB_DIR_FLAG   => all the -L's
 ##      GLUI_LIB_FLAG       => all the -l's
 ##      HAVE_GLUI           => yes or no
@@ -52850,8 +52976,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -52869,7 +52994,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_GLUI='"$_sci_lib"'
+eval GLUI_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -52924,7 +53049,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_GLUI=''
+eval GLUI_LIB_DIR=''
 eval GLUI_LIB_DIR_FLAG=''
 eval GLUI_LIB_FLAG=''
 eval HAVE_GLUI="no"
@@ -53123,7 +53248,7 @@ ac_compiler_gnu=$ac_cv_cxx_compiler_gnu
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_OOGL        => lib path
+##      OOGL_LIB_DIR        => lib path
 ##      OOGL_LIB_DIR_FLAG   => all the -L's
 ##      OOGL_LIB_FLAG       => all the -l's
 ##      HAVE_OOGL           => yes or no
@@ -53404,8 +53529,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_cxx_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_cxx_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -53423,7 +53547,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_OOGL='"$_sci_lib"'
+eval OOGL_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -53478,7 +53602,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_OOGL=''
+eval OOGL_LIB_DIR=''
 eval OOGL_LIB_DIR_FLAG=''
 eval OOGL_LIB_FLAG=''
 eval HAVE_OOGL="no"
@@ -53609,38 +53733,68 @@ fi # end sci_required_oogl
 
 
 ##  --  search for glew  -----------------------------------------------
-if test "$sci_required_glew" = "yes"; then
-  if test "$with_glew"; then
-    # first find the opengl headers and libraries
-    if test "$with_opengl"; then
-      _sci_lib="$with_glew/lib $with_opengl/lib"
-      _sci_inc="$with_glew/include $with_opengl/include"
-    else
-      _sci_lib="$with_glew/lib /usr/X11R6/lib"
-      _sci_inc="$with_glew/include /usr/X11R6/include"
+_sci_optional=optional
+_sci_lib="$sci_thirdparty_lib"
+_sci_inc="$sci_thirdparty_include"
+
+if test "$with_glew"; then
+  if test "$with_glew" = "yes"; then
+    { echo "$as_me:$LINENO: WARNING: GLEW is already required - you do not need to specify --with-glew." >&5
+echo "$as_me: WARNING: GLEW is already required - you do not need to specify --with-glew." >&2;}
+  else
+    _sci_lib="$with_glew"
+    _sci_lib="$with_glew/include"
+
+##
+## BASE_LIB_PATH:
+##
+## This macro takes the base path of a library and determines
+## if there is a lib32, lib64, or just plain lib that is
+## associated with it.  It sets the full path to the value of
+## the first argument.
+##
+## eg:  if arg 2 is /usr/sci/local, and the machine has a
+## /usr/sci/local/lib64, and configure is in 64 bit mode, then
+## /sur/sci/local/lib64 is set as the value of arg 1.
+##
+## arguments mean:
+## arg 1 : This argument will be written with the result
+## arg 2 : library base.  I.e. /usr, /usr/local, /usr/X11R6
+##
+## This function assums the enable_64bit variable is in scope
+##
+
+  _new_lib_path=$_sci_lib/lib
+
+  ## if 64 bit is enabled, check for lib64 first, otherwise use lib
+  if test "$enable_64bit" = "yes"; then
+    _new_lib_path=$_sci_lib/lib64
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$_sci_lib/lib
     fi
   else
-    if test "$with_opengl"; then
-      _sci_lib="/usr/X11R6/lib $with_opengl/lib"
-      _sci_inc="/usr/X11R6/include $with_opengl/include"
-    else
-      _sci_lib="/usr/X11R6/lib"
-      _sci_inc="/usr/X11R6/include"
+  ## We should look for lib32 (IRIX), then default to lib
+    _new_lib_path=$_sci_lib/lib32
+    if test ! -e $_new_lib_path; then
+      _new_lib_path=$_sci_lib/lib
     fi
   fi
+  eval _sci_lib='"$_new_lib_path"'
 
-# Was:
-#    #include<GL/glew.h>
-#
-#    #ifndef GLAPIENTRY
-#      #define GLAPIENTRY
-#    #endif
-#
-#    #ifndef GLEWAPI
-#      #define GLEWAPI
-#    #endif
-#    #include<GL/glxew.h>
+    _sci_optional=specific
+  fi
+fi
 
+# First find the opengl headers and libraries
+if test "$with_opengl"; then
+  _sci_lib="$_sci_lib $with_opengl/lib"
+  _sci_inc="$_sci_inc $with_opengl/include"
+else
+  _sci_lib="$_sci_lib /usr/X11R6/lib"
+  _sci_inc="$_sci_inc /usr/X11R6/include"
+fi
+
+if test "$IS_WIN" = "yes"; then
 
 ##
 ## SCI_TRY_LINK (GLEW):  glew libraries and headers
@@ -53676,9 +53830,9 @@ if test "$sci_required_glew" = "yes"; then
 ##
 ## arg 1 : GLEW
 ## arg 2 : glew libraries and headers
-## arg 3 : GL/glew.h GL/glxew.h
+## arg 3 : GL/glew.h GL/wglew.h
 ## arg 4 : $_sci_inc
-## arg 5 : GLEW
+## arg 5 : glew32
 ## arg 6 : $_sci_lib
 ## arg 7 :
 ## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
@@ -53687,7 +53841,7 @@ if test "$sci_required_glew" = "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_GLEW        => lib path
+##      GLEW_LIB_DIR        => lib path
 ##      GLEW_LIB_DIR_FLAG   => all the -L's
 ##      GLEW_LIB_FLAG       => all the -l's
 ##      HAVE_GLEW           => yes or no
@@ -53761,10 +53915,10 @@ done
 
 ### Take care of arg 5 (the list of libs)
 
-if test -n "GLEW"; then
+if test -n "glew32"; then
 
    found_framework=no
-   for lib in "" GLEW; do
+   for lib in "" glew32; do
 
       if test -z "$lib"; then
          # SGI sh needs the "" in the for statement... so skip it here.
@@ -53924,7 +54078,7 @@ LIBS="$_sci_libs  $LIBS"
 __extern_c="no"
 __sci_pound_includes=""
 
-for inc in "" GL/glew.h GL/glxew.h; do
+for inc in "" GL/glew.h GL/wglew.h; do
     if test "$inc" = "extern_C"; then
        __sci_pound_includes="extern \"C\" {"
        __extern_c=yes
@@ -53968,8 +54122,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -53987,7 +54140,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_GLEW='"$_sci_lib"'
+eval GLEW_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -54042,7 +54195,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_GLEW=''
+eval GLEW_LIB_DIR=''
 eval GLEW_LIB_DIR_FLAG=''
 eval GLEW_LIB_FLAG=''
 eval HAVE_GLEW="no"
@@ -54097,6 +54250,502 @@ rm -f conftest.err conftest.$ac_objext \
 if test "optional" = "specific"; then
   #echo specific
   # Make sure the exact includes were found
+  for i in "" GL/glew.h GL/wglew.h; do
+    #echo looking for $_sci_inc/$i
+    if test ! -e $_sci_inc/$i; then
+     { { echo "$as_me:$LINENO: error: Specifically requested GLEW include file '$_sci_inc/$i' was not found" >&5
+echo "$as_me: error: Specifically requested GLEW include file '$_sci_inc/$i' was not found" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  done
+  # Make sure the exact libraries were found
+  for i in "" glew32; do
+    if test -z "$i"; then
+       continue
+    fi
+    has_minus=`echo $i | sed 's/-.*//'`
+    if test -z "$has_minus"; then
+       i=`echo $i | sed 's/-l//g'`
+    fi
+    if test ! -e $_sci_lib/lib$i.so && test ! -e $_sci_lib/lib$i.a && test ! -e $_sci_lib/$i.lib; then
+     { { echo "$as_me:$LINENO: error: Specifically requested GLEW library file '$_sci_lib/$i' (.so or .a) was not found" >&5
+echo "$as_me: error: Specifically requested GLEW library file '$_sci_lib/$i' (.so or .a) was not found" >&2;}
+   { (exit 1); exit 1; }; }
+    fi
+  done
+fi
+
+
+#restore variables
+CFLAGS=$_sci_savecflags
+CXXFLAGS=$_sci_savecxxflags
+LDFLAGS=$_sci_saveldflags
+LIBS=$_sci_savelibs
+_sci_lib_path=''
+_sci_libs=''
+_sci_includes=''
+
+##
+## END of SCI_TRY_LINK (GLEW):  glew libraries and headers
+##
+
+
+else
+
+##
+## SCI_TRY_LINK (GLEW):  glew libraries and headers
+##
+## arguments mean:
+## arg 1 : variable base name (e.g., MATH)
+## arg 2 : checking message
+## arg 3 : includes that arg 8 needs to compile (e.g., math.h)
+##           If the first arg is "extern_C", then extern "C" is added around includes.
+## arg 4 : include path(s). -I is appended to each path (unless it already has a -I).
+##           Any other -? args are removed.  (-faltivec is ok on mac)
+##           (Only one may be given if "Specific" (arg9) is chosen.)
+## arg 5 : list of libs to link against
+##           If the libraries do not have a '-l' on them, it is appeneded.
+##           If the arg has any prefix besides '-l' (eg: -L or -D), then the arg
+##           is removed completely.  (-framework is also allowed for Mac support.)
+##           All the libs specified in arg 5 will be part of the <VAR>_LIB_FLAG
+##           if the link is successful.
+## arg 6 : lib paths
+##           If the arg does not have -L on it, then -L will be added.
+##           If it has any other -?, then the arg is removed.
+##           (only one may be givein if "Specific" (arg9) is chosen.)
+## arg 7 : extra link flags
+##           This is where to put anything else you need for the compilation
+##           line.  NOTE, none of these args propagate anywhere.
+## arg 8 : body of code to compile. May be EMPTY, in which case a dummy routine is tried.
+## arg 9 : 'optional' or 'required' or 'specific' required argument
+##             If specific, then SCI_TRY_LINK will take only one lib
+##             path and one include path and will verify that the
+##             libs/includes are in that path.
+##
+## Here are the specific values for this invocation:
+##
+## arg 1 : GLEW
+## arg 2 : glew libraries and headers
+## arg 3 : GL/glew.h GL/glxew.h
+## arg 4 : $_sci_inc
+## arg 5 : GLEW
+## arg 6 : $_sci_lib
+## arg 7 :
+## arg 8 : <Can't expand it here as it may be multiple lines and cause sh problems.>
+## arg 9 : $_sci_optional
+##
+## after execution of macro, the following will be defined:
+##      Variable            Value
+##      --------            -----
+##      GLEW_LIB_DIR        => lib path
+##      GLEW_LIB_DIR_FLAG   => all the -L's
+##      GLEW_LIB_FLAG       => all the -l's
+##      HAVE_GLEW           => yes or no
+##      INC_GLEW_H          => all the -I's
+##      HAVE_GLEW_H         => yes or no
+
+if test 9 != 9; then
+     { { echo "$as_me:$LINENO: error: Wrong number of parameters (9) for SCI-TRY-LINK for glew libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Wrong number of parameters (9) for SCI-TRY-LINK for glew libraries and headers.  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+
+echo "$as_me:$LINENO: checking for glew libraries and headers ($_sci_optional)" >&5
+echo $ECHO_N "checking for glew libraries and headers ($_sci_optional)... $ECHO_C" >&6
+_sci_savelibs=$LIBS
+_sci_saveldflags=$LDFLAGS
+_sci_savecflags=$CFLAGS
+_sci_savecxxflags=$CXXFLAGS
+
+_sci_includes=
+
+if test "$_sci_optional" != "optional" -a "$_sci_optional" != "required" -a "$_sci_optional" != "specific"; then
+     echo
+     { { echo "$as_me:$LINENO: error: Last parameter of SCI-TRY-LINK for glew libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: Last parameter of SCI-TRY-LINK for glew libraries and headers must be: optional or required or specific.  (You had $_sci_optional.)  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+fi
+
+# If $_sci_inc (the -I paths) is blank, do nothing, else do the for statement.
+
+for inc in $_sci_inc; do
+
+  if test "$inc" = "/usr/include" || test "$inc" = "-I/usr/include"; then
+     echo ""
+     { { echo "$as_me:$LINENO: error: Please do not specify /usr/include as the location for GLEW include files." >&5
+echo "$as_me: error: Please do not specify /usr/include as the location for GLEW include files." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+
+  # Make sure it doesn't have any thing but -I
+  #   The following "sed" replaces anything that starts with a '-' with nothing (blank).
+  has_minus_faltivec=no
+  has_minus=`echo $inc | sed 's/-.*//'`
+  if test -z "$has_minus"; then
+     has_minus_i=`echo $inc | sed 's/-I.*//'`
+     has_minus_faltivec=`echo $inc | sed 's/-faltivec//'`
+     if test -n "$has_minus_i" && test -n "$has_minus_faltivec"; then
+        # Has some other -?.
+        if test "$debugging" = "yes"; then
+          echo
+          { echo "$as_me:$LINENO: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GLEW check.  Skipping $inc." >&5
+echo "$as_me: WARNING: Only -I options are allowed in arg 4 ($_sci_inc) of GLEW check.  Skipping $inc." >&2;}
+        fi
+        continue
+     fi
+  fi
+
+  the_inc=`echo $inc | grep "\-I"`
+  if test -z "$the_inc" && test "$has_minus_faltivec" = "no"; then
+     # If the include arg does not already have -I on it.
+     if test -d $inc; then
+        # If the directory exists
+        _sci_includes="$_sci_includes -I$inc"
+     fi
+  else
+     # It already has -I so just add it directly.
+     _sci_includes="$_sci_includes $inc"
+  fi
+done
+
+### Take care of arg 5 (the list of libs)
+
+if test -n "GLEW"; then
+
+   found_framework=no
+   for lib in "" GLEW; do
+
+      if test -z "$lib"; then
+         # SGI sh needs the "" in the for statement... so skip it here.
+         continue
+      fi
+
+      if test "$found_framework" = "one"; then
+         found_framework=two
+      else
+         found_framework=no
+      fi
+
+      # Make sure it doesn't have any thing but -l
+      has_minus=`echo $lib | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_l=`echo $lib | sed 's/-l.*//'`
+         has_minus_framework=`echo $lib | sed 's/-framework.*//'`
+
+         if test -z "$has_minus_framework"; then
+            # Two rounds for this loop with respect to frameworks.
+            # First round is to skip adding -l to the beginning of -framework.
+            # Second round is to not add -l to the framework lib.
+            found_framework=one
+         fi
+
+         if test -n "$has_minus_l" && test -n "$has_minus_framework"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { echo "$as_me:$LINENO: WARNING: Only -l options are allowed in arg 5 of GLEW check (disregarding $lib)." >&5
+echo "$as_me: WARNING: Only -l options are allowed in arg 5 of GLEW check (disregarding $lib)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      the_lib=`echo $lib | grep "\-l"`
+      if test -z "$the_lib" && test "$found_framework" = "no"; then
+         # If the lib arg does not have -l on it, then add -l.
+         if test "$IS_VC" = "yes"; then
+           if test -n "`echo $lib | sed 's,.*\.lib,,'`"; then
+             final_lib=$lib.lib
+           else
+             final_lib=$lib
+           fi
+         else
+           final_lib=-l$lib
+         fi
+      else
+         # It already has -l so just add it directly.
+         final_lib=$lib
+      fi
+      _sci_libs="$_sci_libs $final_lib"
+   done
+fi
+
+### Take care of arg 6 (the list of lib paths)
+
+if test -n "$_sci_lib"; then
+
+   for path in "" $_sci_lib; do
+
+      if test -z "$path"; then
+         # SGI sh needs the "" in the for statement... so skip it here.
+         continue
+      fi
+
+      # Make sure it doesn't have any thing but -L
+      has_minus=`echo $path | sed 's/-.*//'`
+      if test -z "$has_minus"; then
+         has_minus_L=`echo $path | sed 's/-L.*//'`
+         if test -n "$has_minus_L"; then
+            # Has some other -?.
+            if test "$debugging" = "yes"; then
+              echo
+              { echo "$as_me:$LINENO: WARNING: Only -L options are allowed in arg 6 of GLEW check (disregarding $path)." >&5
+echo "$as_me: WARNING: Only -L options are allowed in arg 6 of GLEW check (disregarding $path)." >&2;}
+            fi
+            continue
+         fi
+      fi
+
+      # Remove the '-L' (if it has one).
+      the_path=`echo $path | sed 's/-L//'`
+      if test -d "$the_path"; then
+         _sci_lib_path="$_sci_lib_path $LDRUN_PREFIX$the_path -L$the_path"
+      else
+         echo
+         { echo "$as_me:$LINENO: WARNING: The path given $the_path is not a valid directory... ignoring." >&5
+echo "$as_me: WARNING: The path given $the_path is not a valid directory... ignoring." >&2;}
+      fi
+   done
+fi
+
+if test "$_sci_optional" = "specific"; then
+  # If 'specific' then only one lib is allowed:
+  ### Determine if there is only one item in $_sci_lib (I don't know of a better way to do this.)
+  __sci_pass=false
+  __sci_first_time=true
+
+  # Must have the "" for the SGI sh.
+  for value in "" $_sci_lib; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test $__sci_pass != "true"; then
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for GLEW only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for GLEW only one library path may be specified for arg 6 (you had: $_sci_lib).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+  # and only one include path:
+  ### Determine if there is only one item in $_sci_inc
+  __sci_pass=false
+  __sci_first_time=true
+  for value in "" $_sci_inc; do
+    if test "$value" = ""; then
+      continue
+    fi
+    if test $__sci_first_time = "true"; then
+      __sci_first_time=false
+      __sci_pass=true
+    else
+      __sci_pass=false
+    fi
+  done
+  if test -n "$_sci_inc" && test $__sci_pass != "true"; then
+       { { echo "$as_me:$LINENO: error: For specific SCI-TRY-LINK test for GLEW only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&5
+echo "$as_me: error: For specific SCI-TRY-LINK test for GLEW only one include path may be specified for arg 4 (you had: $_sci_inc).  This is an internal SCIRun configure error and should be reported to scirun-develop@sci.utah.edu." >&2;}
+   { (exit 1); exit 1; }; }
+  fi
+fi
+
+### Debug messages:
+#echo "sci_includes: $_sci_includes"
+#echo "sci_libs: $_sci_libs"
+#echo "sci_lib_path: $_sci_lib_path"
+
+CFLAGS="$_sci_includes $CFLAGS"
+CXXFLAGS="$_sci_includes $CXXFLAGS"
+if test "$IS_VC" = "yes"; then
+  oldLIB=$LIB
+  export LIB="`echo $_sci_lib_path | sed 's, -LIBPATH:,;,g' | sed 's,-LIBPATH:,,g' | sed 's, -L,;,g' | sed 's,-L,,g'`;$LIB"
+else
+  LDFLAGS="$_sci_lib_path $LDFLAGS"
+fi
+
+LIBS="$_sci_libs  $LIBS"
+
+# Build up a list of the #include <file> lines for use in compilation:
+__extern_c="no"
+__sci_pound_includes=""
+
+for inc in "" GL/glew.h GL/glxew.h; do
+    if test "$inc" = "extern_C"; then
+       __sci_pound_includes="extern \"C\" {"
+       __extern_c=yes
+    else
+      # Have to have the "" for the SGI sh.
+      if test "$inc" = ""; then
+        continue
+      fi
+      __sci_pound_includes="$__sci_pound_includes
+#include <$inc>"
+    fi
+done
+
+if test "$__extern_c" = "yes"; then
+    __sci_pound_includes="$__sci_pound_includes
+}"
+fi
+
+
+cat >conftest.$ac_ext <<_ACEOF
+/* confdefs.h.  */
+_ACEOF
+cat confdefs.h >>conftest.$ac_ext
+cat >>conftest.$ac_ext <<_ACEOF
+/* end confdefs.h.  */
+$__sci_pound_includes
+int
+main ()
+{
+
+  ;
+  return 0;
+}
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+
+
+if test "$IS_VC" = "yes"; then
+  LIB=$oldLIB
+fi
+
+eval GLEW_LIB_DIR='"$_sci_lib"'
+
+# Remove any bad (/usr/lib) lib paths and the thirdparty lib path
+_final_dirs=
+for _dir in "" $_sci_lib_path; do
+  if test -n "$_dir" && test "$_dir" != "-L/usr/lib" && test "$_dir" != "-L$SCI_THIRDPARTY_LIB_DIR"; then
+    _final_dirs="$_final_dirs $_dir"
+  fi
+done
+
+# Remove the thirdparty rpath stuff (if it exists) (and /usr/lib rpath)
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX$SCI_THIRDPARTY_LIB_DIR%%g"`
+_final_dirs=`echo "$_final_dirs" | sed "s%$LDRUN_PREFIX/usr/lib %%g"`
+
+# Remove leading spaces
+_final_dirs=`echo "$_final_dirs" | sed "s/^ *//"`
+
+eval GLEW_LIB_DIR_FLAG="'$_final_dirs'"
+
+# Remove any -L from the list of libs.  (-L's should only be in the dir path.)
+final_libs=
+for _lib in "" $LIBS; do
+  bad_l_arg=`echo "$_lib" | grep "\-L"`
+  bad_i_arg=`echo "$_lib" | grep "\-I"`
+  if test -n "$_lib" && test "$_lib" != "/usr/lib" && test -z "$bad_l_arg" && test -z "$bad_i_arg"; then
+    final_libs="$final_libs $_lib"
+  fi
+done
+
+# Remove leading spaces
+final_libs=`echo $final_libs | sed "s/^ *//"`
+eval GLEW_LIB_FLAG="'$final_libs'"
+eval HAVE_GLEW="yes"
+
+final_incs=
+for inc in "" $_sci_includes; do
+   if test "$inc" != "$INC_SCI_THIRDPARTY_H"; then
+      final_incs="$final_incs $inc"
+   fi
+done
+
+# Remove leading spaces
+final_incs=`echo $final_incs | sed "s/^ *//"`
+
+eval INC_GLEW_H="'$final_incs'"
+eval HAVE_GLEW_H="yes"
+
+echo "$as_me:$LINENO: result: yes" >&5
+echo "${ECHO_T}yes" >&6
+
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+
+eval GLEW_LIB_DIR=''
+eval GLEW_LIB_DIR_FLAG=''
+eval GLEW_LIB_FLAG=''
+eval HAVE_GLEW="no"
+eval INC_GLEW_H=''
+eval HAVE_GLEW_H="no"
+echo "$as_me:$LINENO: result: not found" >&5
+echo "${ECHO_T}not found" >&6
+if test "$_sci_optional" != "optional"; then
+
+## SCI_MSG_ERROR
+if test -z "$debugging"; then
+  { echo "$as_me:$LINENO: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&5
+echo "$as_me: WARNING:
+    Adding '--enable-verbosity' to configure line
+    _may_ give more information about what is breaking.
+    IF YOU KNOW WHAT YOU ARE DOING - TRY THIS:
+    Digging through the config.log file is your best option
+    for determining what went wrong.  Search for the specific lib/file
+    that configured failed to find.  There should be a compile line
+    and source code near that check.  If you cut the source code into
+    a test.cc and then use the compile line to compile it - the true
+    error most likely will show up.
+  " >&2;}
+fi
+
+{ { echo "$as_me:$LINENO: error: Test for required GLEW failed.
+    To see the failed compile information, look in config.log,
+    search for GLEW. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&5
+echo "$as_me: error: Test for required GLEW failed.
+    To see the failed compile information, look in config.log,
+    search for GLEW. Please install the relevant libraries
+     or specify the correct paths and try to configure again." >&2;}
+   { (exit 1); exit 1; }; }
+
+fi
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+
+if test "$_sci_optional" = "specific"; then
+  #echo specific
+  # Make sure the exact includes were found
   for i in "" GL/glew.h GL/glxew.h; do
     #echo looking for $_sci_inc/$i
     if test ! -e $_sci_inc/$i; then
@@ -54137,28 +54786,56 @@ _sci_includes=''
 ##
 
 
+fi
 
-  if test "$HAVE_GLEW" = "yes"; then
-    DEF_GLEW="#define HAVE_GLEW 1"
-  fi
+if test "$HAVE_GLEW" = "yes"; then
+  DEF_GLEW="#define HAVE_GLEW 1"
+fi
 
-  if test "$with_glew" && test ! "$DEF_GLEW"; then
-    echo
-    { { echo "$as_me:$LINENO: error: One or more of the GLEW components is missing." >&5
+if test "$with_glew" && test ! "$DEF_GLEW"; then
+  echo
+  { { echo "$as_me:$LINENO: error: One or more of the GLEW components is missing." >&5
 echo "$as_me: error: One or more of the GLEW components is missing." >&2;}
    { (exit 1); exit 1; }; }
-    echo
-  fi
+  echo
+fi
 
-  if test "$GLEW_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
-    { echo "$as_me:$LINENO: WARNING: \"$GLEW_LIB_DIR_FLAG\"" >&5
+if test "$GLEW_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
+  { echo "$as_me:$LINENO: WARNING: \"$GLEW_LIB_DIR_FLAG\"" >&5
 echo "$as_me: WARNING: \"$GLEW_LIB_DIR_FLAG\"" >&2;}
-    { echo "$as_me:$LINENO: WARNING: \"flag for GLEW has been removed.\"" >&5
+  { echo "$as_me:$LINENO: WARNING: \"flag for GLEW has been removed.\"" >&5
 echo "$as_me: WARNING: \"flag for GLEW has been removed.\"" >&2;}
-    GLEW_LIB_DIR_FLAG=""
-  fi
+  GLEW_LIB_DIR_FLAG=""
+fi
 
-fi # end sci_required_glew
+
+##
+## SCI_SUBST_THIRDPARTY_DIR:
+##
+## arguments mean:
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
+##
+  _new_path=${GLEW_LIB_DIR_FLAG}
+  _fulldir=`cd ${sci_thirdparty_dir}; pwd`
+  _new_path=`echo $_new_path | sed 's%'${_fulldir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
+  _new_path=`echo $_new_path | sed 's%'${sci_thirdparty_dir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
+  eval GLEW_LIB_DIR_FLAG='"$_new_path"'
+
+
+##
+## SCI_SUBST_THIRDPARTY_DIR:
+##
+## arguments mean:
+## arg 1 : This variable will searched for the substring of the expansion of $sci_thirdparty_dir
+## and that substring will be replaced with $(SCIRUN_THIRDPARTY_DIR)
+##
+  _new_path=${INC_GLEW_H}
+  _fulldir=`cd ${sci_thirdparty_dir}; pwd`
+  _new_path=`echo $_new_path | sed 's%'${_fulldir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
+  _new_path=`echo $_new_path | sed 's%'${sci_thirdparty_dir}'%\$(SCIRUN_THIRDPARTY_DIR)%g'`
+  eval INC_GLEW_H='"$_new_path"'
+
 
 
 
@@ -54259,7 +54936,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_FREETYPE        => lib path
+##      FREETYPE_LIB_DIR        => lib path
 ##      FREETYPE_LIB_DIR_FLAG   => all the -L's
 ##      FREETYPE_LIB_FLAG       => all the -l's
 ##      HAVE_FREETYPE           => yes or no
@@ -54540,8 +55217,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -54559,7 +55235,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_FREETYPE='"$_sci_lib"'
+eval FREETYPE_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -54614,7 +55290,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_FREETYPE=''
+eval FREETYPE_LIB_DIR=''
 eval FREETYPE_LIB_DIR_FLAG=''
 eval FREETYPE_LIB_FLAG=''
 eval HAVE_FREETYPE="no"
@@ -54797,7 +55473,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_FTGL        => lib path
+##      FTGL_LIB_DIR        => lib path
 ##      FTGL_LIB_DIR_FLAG   => all the -L's
 ##      FTGL_LIB_FLAG       => all the -l's
 ##      HAVE_FTGL           => yes or no
@@ -55078,8 +55754,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -55097,7 +55772,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_FTGL='"$_sci_lib"'
+eval FTGL_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -55152,7 +55827,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_FTGL=''
+eval FTGL_LIB_DIR=''
 eval FTGL_LIB_DIR_FLAG=''
 eval FTGL_LIB_FLAG=''
 eval HAVE_FTGL="no"
@@ -55318,7 +55993,7 @@ if test "$sci_required_audio" = "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_AUDIO        => lib path
+##      AUDIO_LIB_DIR        => lib path
 ##      AUDIO_LIB_DIR_FLAG   => all the -L's
 ##      AUDIO_LIB_FLAG       => all the -l's
 ##      HAVE_AUDIO           => yes or no
@@ -55559,8 +56234,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -55578,7 +56252,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_AUDIO='"$_sci_lib"'
+eval AUDIO_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -55633,7 +56307,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_AUDIO=''
+eval AUDIO_LIB_DIR=''
 eval AUDIO_LIB_DIR_FLAG=''
 eval AUDIO_LIB_FLAG=''
 eval HAVE_AUDIO="no"
@@ -55871,7 +56545,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_TEEM        => lib path
+##      TEEM_LIB_DIR        => lib path
 ##      TEEM_LIB_DIR_FLAG   => all the -L's
 ##      TEEM_LIB_FLAG       => all the -l's
 ##      HAVE_TEEM           => yes or no
@@ -56156,8 +56830,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -56175,7 +56848,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_TEEM='"$_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG"'
+eval TEEM_LIB_DIR='"$_sci_lib $PNG_LIB_DIR_FLAG $Z_LIB_DIR_FLAG"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -56230,7 +56903,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_TEEM=''
+eval TEEM_LIB_DIR=''
 eval TEEM_LIB_DIR_FLAG=''
 eval TEEM_LIB_FLAG=''
 eval HAVE_TEEM="no"
@@ -56451,7 +57124,7 @@ if test "$sci_required_mdsplus" = "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_MDSPLUS        => lib path
+##      MDSPLUS_LIB_DIR        => lib path
 ##      MDSPLUS_LIB_DIR_FLAG   => all the -L's
 ##      MDSPLUS_LIB_FLAG       => all the -l's
 ##      HAVE_MDSPLUS           => yes or no
@@ -56732,8 +57405,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -56751,7 +57423,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_MDSPLUS='"$_sci_lib"'
+eval MDSPLUS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -56806,7 +57478,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_MDSPLUS=''
+eval MDSPLUS_LIB_DIR=''
 eval MDSPLUS_LIB_DIR_FLAG=''
 eval MDSPLUS_LIB_FLAG=''
 eval HAVE_MDSPLUS="no"
@@ -56988,7 +57660,7 @@ if test "$sci_required_hdf5" = "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_HDF5        => lib path
+##      HDF5_LIB_DIR        => lib path
 ##      HDF5_LIB_DIR_FLAG   => all the -L's
 ##      HDF5_LIB_FLAG       => all the -l's
 ##      HAVE_HDF5           => yes or no
@@ -57269,8 +57941,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -57288,7 +57959,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_HDF5='"$_sci_lib"'
+eval HDF5_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -57343,7 +58014,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_HDF5=''
+eval HDF5_LIB_DIR=''
 eval HDF5_LIB_DIR_FLAG=''
 eval HDF5_LIB_FLAG=''
 eval HAVE_HDF5="no"
@@ -57505,7 +58176,7 @@ if test "$sci_required_perfex" = "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_PERFEX        => lib path
+##      PERFEX_LIB_DIR        => lib path
 ##      PERFEX_LIB_DIR_FLAG   => all the -L's
 ##      PERFEX_LIB_FLAG       => all the -l's
 ##      HAVE_PERFEX           => yes or no
@@ -57746,8 +58417,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -57765,7 +58435,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_PERFEX='"$_sci_lib"'
+eval PERFEX_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -57820,7 +58490,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_PERFEX=''
+eval PERFEX_LIB_DIR=''
 eval PERFEX_LIB_DIR_FLAG=''
 eval PERFEX_LIB_FLAG=''
 eval HAVE_PERFEX="no"
@@ -57981,7 +58651,7 @@ if test "$sci_required_crypto" = "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_CRYPTO        => lib path
+##      CRYPTO_LIB_DIR        => lib path
 ##      CRYPTO_LIB_DIR_FLAG   => all the -L's
 ##      CRYPTO_LIB_FLAG       => all the -l's
 ##      HAVE_CRYPTO           => yes or no
@@ -58222,8 +58892,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -58241,7 +58910,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_CRYPTO='"$_sci_lib"'
+eval CRYPTO_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -58296,7 +58965,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_CRYPTO=''
+eval CRYPTO_LIB_DIR=''
 eval CRYPTO_LIB_DIR_FLAG=''
 eval CRYPTO_LIB_FLAG=''
 eval HAVE_CRYPTO="no"
@@ -58468,7 +59137,7 @@ if test "$sci_required_ssl" = "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_SSL        => lib path
+##      SSL_LIB_DIR        => lib path
 ##      SSL_LIB_DIR_FLAG   => all the -L's
 ##      SSL_LIB_FLAG       => all the -l's
 ##      HAVE_SSL           => yes or no
@@ -58709,8 +59378,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -58728,7 +59396,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_SSL='"$_sci_lib"'
+eval SSL_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -58783,7 +59451,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_SSL=''
+eval SSL_LIB_DIR=''
 eval SSL_LIB_DIR_FLAG=''
 eval SSL_LIB_FLAG=''
 eval HAVE_SSL="no"
@@ -58968,7 +59636,7 @@ echo "$as_me: error: CRYPTO library not found.  This will cause globus check to 
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_GLOBUS        => lib path
+##      GLOBUS_LIB_DIR        => lib path
 ##      GLOBUS_LIB_DIR_FLAG   => all the -L's
 ##      GLOBUS_LIB_FLAG       => all the -l's
 ##      HAVE_GLOBUS           => yes or no
@@ -59249,8 +59917,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -59268,7 +59935,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_GLOBUS='"$_sci_lib"'
+eval GLOBUS_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -59323,7 +59990,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_GLOBUS=''
+eval GLOBUS_LIB_DIR=''
 eval GLOBUS_LIB_DIR_FLAG=''
 eval GLOBUS_LIB_FLAG=''
 eval HAVE_GLOBUS="no"
@@ -59769,7 +60436,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_NCURSES        => lib path
+##      NCURSES_LIB_DIR        => lib path
 ##      NCURSES_LIB_DIR_FLAG   => all the -L's
 ##      NCURSES_LIB_FLAG       => all the -l's
 ##      HAVE_NCURSES           => yes or no
@@ -60050,8 +60717,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -60069,7 +60735,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_NCURSES='"$_sci_lib"'
+eval NCURSES_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -60124,7 +60790,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_NCURSES=''
+eval NCURSES_LIB_DIR=''
 eval NCURSES_LIB_DIR_FLAG=''
 eval NCURSES_LIB_FLAG=''
 eval HAVE_NCURSES="no"
@@ -60302,7 +60968,7 @@ qt_bin=$_sci_lib/../bin
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_QT_MT        => lib path
+##      QT_MT_LIB_DIR        => lib path
 ##      QT_MT_LIB_DIR_FLAG   => all the -L's
 ##      QT_MT_LIB_FLAG       => all the -l's
 ##      HAVE_QT_MT           => yes or no
@@ -60583,8 +61249,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -60602,7 +61267,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_QT_MT='"$_sci_lib /usr/X11R6/lib"'
+eval QT_MT_LIB_DIR='"$_sci_lib /usr/X11R6/lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -60657,7 +61322,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_QT_MT=''
+eval QT_MT_LIB_DIR=''
 eval QT_MT_LIB_DIR_FLAG=''
 eval QT_MT_LIB_FLAG=''
 eval HAVE_QT_MT="no"
@@ -60883,7 +61548,7 @@ if test "$sci_required_ruby" = "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_RUBY        => lib path
+##      RUBY_LIB_DIR        => lib path
 ##      RUBY_LIB_DIR_FLAG   => all the -L's
 ##      RUBY_LIB_FLAG       => all the -l's
 ##      HAVE_RUBY           => yes or no
@@ -61164,8 +61829,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -61183,7 +61847,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_RUBY='"$_sci_lib"'
+eval RUBY_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -61238,7 +61902,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_RUBY=''
+eval RUBY_LIB_DIR=''
 eval RUBY_LIB_DIR_FLAG=''
 eval RUBY_LIB_FLAG=''
 eval HAVE_RUBY="no"
@@ -61414,7 +62078,7 @@ if test "$sci_required_tao" = "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_TAO        => lib path
+##      TAO_LIB_DIR        => lib path
 ##      TAO_LIB_DIR_FLAG   => all the -L's
 ##      TAO_LIB_FLAG       => all the -l's
 ##      HAVE_TAO           => yes or no
@@ -61695,8 +62359,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -61714,7 +62377,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_TAO='"$_sci_lib"'
+eval TAO_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -61769,7 +62432,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_TAO=''
+eval TAO_LIB_DIR=''
 eval TAO_LIB_DIR_FLAG=''
 eval TAO_LIB_FLAG=''
 eval HAVE_TAO="no"
@@ -61946,7 +62609,7 @@ if test "$sci_required_vtk" = "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_VTK        => lib path
+##      VTK_LIB_DIR        => lib path
 ##      VTK_LIB_DIR_FLAG   => all the -L's
 ##      VTK_LIB_FLAG       => all the -l's
 ##      HAVE_VTK           => yes or no
@@ -62227,8 +62890,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -62246,7 +62908,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_VTK='"$_sci_lib"'
+eval VTK_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -62301,7 +62963,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_VTK=''
+eval VTK_LIB_DIR=''
 eval VTK_LIB_DIR_FLAG=''
 eval VTK_LIB_FLAG=''
 eval HAVE_VTK="no"
@@ -62500,7 +63162,7 @@ if test "$sci_required_vdt" = "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_VDT        => lib path
+##      VDT_LIB_DIR        => lib path
 ##      VDT_LIB_DIR_FLAG   => all the -L's
 ##      VDT_LIB_FLAG       => all the -l's
 ##      HAVE_VDT           => yes or no
@@ -62783,8 +63445,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -62802,7 +63463,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_VDT='"$_vdt_lib_path"'
+eval VDT_LIB_DIR='"$_vdt_lib_path"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -62857,7 +63518,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_VDT=''
+eval VDT_LIB_DIR=''
 eval VDT_LIB_DIR_FLAG=''
 eval VDT_LIB_FLAG=''
 eval HAVE_VDT="no"
@@ -63037,7 +63698,7 @@ fi
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_HYPRE        => lib path
+##      HYPRE_LIB_DIR        => lib path
 ##      HYPRE_LIB_DIR_FLAG   => all the -L's
 ##      HYPRE_LIB_FLAG       => all the -l's
 ##      HAVE_HYPRE           => yes or no
@@ -63318,8 +63979,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -63337,7 +63997,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_HYPRE='"$_sci_lib"'
+eval HYPRE_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -63392,7 +64052,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_HYPRE=''
+eval HYPRE_LIB_DIR=''
 eval HYPRE_LIB_DIR_FLAG=''
 eval HYPRE_LIB_FLAG=''
 eval HAVE_HYPRE="no"
@@ -63491,9 +64151,9 @@ _sci_includes=''
 if test "$HAVE_HYPRE" = "yes" ; then
   DEF_HYPRE="#define HAVE_HYPRE 1"
 
-  if test -f $LIB_DIR_HYPRE/../include/HYPRE_config.h; then
+  if test -f $HYPRE_LIB_DIR/../include/HYPRE_config.h; then
     # Determine the version of hypre.
-    found_it=`grep "PACKAGE_VERSION" $LIB_DIR_HYPRE/../include/HYPRE_config.h | grep 1.9`
+    found_it=`grep "PACKAGE_VERSION" $HYPRE_LIB_DIR/../include/HYPRE_config.h | grep 1.9`
     DEF_HYPRE_1_9="#define HAVE_HYPRE_1_9 0"
     HAVE_HYPRE_1_9="no"
     if test -n "$found_it"; then
@@ -63607,7 +64267,7 @@ if test "$sci_required_boost" = "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_BOOST        => lib path
+##      BOOST_LIB_DIR        => lib path
 ##      BOOST_LIB_DIR_FLAG   => all the -L's
 ##      BOOST_LIB_FLAG       => all the -l's
 ##      HAVE_BOOST           => yes or no
@@ -63888,8 +64548,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -63907,7 +64566,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_BOOST='"$_sci_lib"'
+eval BOOST_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -63962,7 +64621,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_BOOST=''
+eval BOOST_LIB_DIR=''
 eval BOOST_LIB_DIR_FLAG=''
 eval BOOST_LIB_FLAG=''
 eval HAVE_BOOST="no"
@@ -64149,7 +64808,7 @@ if test "$sci_required_loki" = "yes"; then
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_LOKI        => lib path
+##      LOKI_LIB_DIR        => lib path
 ##      LOKI_LIB_DIR_FLAG   => all the -L's
 ##      LOKI_LIB_FLAG       => all the -l's
 ##      HAVE_LOKI           => yes or no
@@ -64430,8 +65089,7 @@ if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
   cat conftest.err >&5
   echo "$as_me:$LINENO: \$? = $ac_status" >&5
   (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_c_werror_flag"
-			 || test ! -s conftest.err'
+	 { ac_try='test -z "$ac_c_werror_flag"			 || test ! -s conftest.err'
   { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
   (eval $ac_try) 2>&5
   ac_status=$?
@@ -64449,7 +65107,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_LOKI='"$_sci_lib"'
+eval LOKI_LIB_DIR='"$_sci_lib"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -64504,7 +65162,7 @@ else
 sed 's/^/| /' conftest.$ac_ext >&5
 
 
-eval LIB_DIR_LOKI=''
+eval LOKI_LIB_DIR=''
 eval LOKI_LIB_DIR_FLAG=''
 eval LOKI_LIB_FLAG=''
 eval HAVE_LOKI="no"
@@ -65561,14 +66219,15 @@ s,@DL_LIB_DIR_FLAG@,$DL_LIB_DIR_FLAG,;t t
 s,@DEF_STAT64@,$DEF_STAT64,;t t
 s,@DEF_IEEEFP@,$DEF_IEEEFP,;t t
 s,@DEF_HASHMAP@,$DEF_HASHMAP,;t t
-s,@LIB_DIR_TCL@,$LIB_DIR_TCL,;t t
+s,@TCL_LIB_DIR@,$TCL_LIB_DIR,;t t
 s,@TCL_LIB_FLAG@,$TCL_LIB_FLAG,;t t
 s,@TCL_LIB_DIR_FLAG@,$TCL_LIB_DIR_FLAG,;t t
 s,@INC_TCL_H@,$INC_TCL_H,;t t
+s,@TK_LIB_DIR@,$TK_LIB_DIR,;t t
 s,@TK_LIB_FLAG@,$TK_LIB_FLAG,;t t
 s,@TK_LIB_DIR_FLAG@,$TK_LIB_DIR_FLAG,;t t
 s,@INC_TK_H@,$INC_TK_H,;t t
-s,@LIB_DIR_ITCL@,$LIB_DIR_ITCL,;t t
+s,@ITCL_LIB_DIR@,$ITCL_LIB_DIR,;t t
 s,@ITCL_LIB_FLAG@,$ITCL_LIB_FLAG,;t t
 s,@ITCL_LIB_DIR_FLAG@,$ITCL_LIB_DIR_FLAG,;t t
 s,@INC_ITCL_H@,$INC_ITCL_H,;t t
@@ -65581,7 +66240,6 @@ s,@INC_BLT_H@,$INC_BLT_H,;t t
 s,@TCL_PREFIX@,$TCL_PREFIX,;t t
 s,@TCL_VERSION@,$TCL_VERSION,;t t
 s,@TK_VERSION@,$TK_VERSION,;t t
-s,@ITCL_WIDGETS@,$ITCL_WIDGETS,;t t
 s,@XML2_LIB_FLAG@,$XML2_LIB_FLAG,;t t
 s,@XML2_LIB_DIR_FLAG@,$XML2_LIB_DIR_FLAG,;t t
 s,@INC_XML2_H@,$INC_XML2_H,;t t
@@ -65637,6 +66295,11 @@ s,@INC_TETGEN_H@,$INC_TETGEN_H,;t t
 s,@TETGEN_LIB_DIR_FLAG@,$TETGEN_LIB_DIR_FLAG,;t t
 s,@DEF_TETGEN@,$DEF_TETGEN,;t t
 s,@HAVE_TETGEN@,$HAVE_TETGEN,;t t
+s,@PYDEV_LIB_FLAG@,$PYDEV_LIB_FLAG,;t t
+s,@INC_PYDEV_H@,$INC_PYDEV_H,;t t
+s,@PYDEV_LIB_DIR_FLAG@,$PYDEV_LIB_DIR_FLAG,;t t
+s,@DEF_PYDEV@,$DEF_PYDEV,;t t
+s,@HAVE_PYDEV@,$HAVE_PYDEV,;t t
 s,@HAVE_CBLAS@,$HAVE_CBLAS,;t t
 s,@DEF_CBLAS@,$DEF_CBLAS,;t t
 s,@HAVE_BLAS@,$HAVE_BLAS,;t t
@@ -65974,11 +66637,6 @@ esac
 
 
 
-  if test x"$ac_file" != x-; then
-    { echo "$as_me:$LINENO: creating $ac_file" >&5
-echo "$as_me: creating $ac_file" >&6;}
-    rm -f "$ac_file"
-  fi
   # Let's still pretend it is `configure' which instantiates (i.e., don't
   # use $as_me), people would be surprised to read:
   #    /* config.h.  Generated by config.status.  */
@@ -66017,6 +66675,12 @@ echo "$as_me: error: cannot find input file: $f" >&2;}
 	 fi;;
       esac
     done` || { (exit 1); exit 1; }
+
+  if test x"$ac_file" != x-; then
+    { echo "$as_me:$LINENO: creating $ac_file" >&5
+echo "$as_me: creating $ac_file" >&6;}
+    rm -f "$ac_file"
+  fi
 _ACEOF
 cat >>$CONFIG_STATUS <<_ACEOF
   sed "$ac_vpsub

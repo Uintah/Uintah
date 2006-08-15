@@ -28,7 +28,6 @@
 
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 #include <Core/Bundle/Bundle.h>
 #include <Core/Datatypes/Field.h>
@@ -89,78 +88,18 @@ DMDAddMembrane::DMDAddMembrane(GuiContext* ctx)
 
 void DMDAddMembrane::execute()
 {
+  // Define input handles:
   BundleHandle MembraneBundle;
   BundleHandle Membrane;
   FieldHandle  Geometry;
   StringHandle Parameters_from_port;
   
-  // required ones
-  if (!(get_input_handle("Geometry",Geometry,true))) return;
-  // optional ones
-  
-  SCIRunAlgo::FieldsAlgo algo(this);
-  if (!(algo.ClearAndChangeFieldBasis(Geometry,Geometry,"Linear")))
-  {
-    error("DMDAddMembrane: Could not build a linear field for the membrane");
-    return;        
-  }
-
+  // Obtain the input from the ports:
+  if (!(get_input_handle("Geometry",Geometry,true))) return;  
   get_input_handle("MembraneBundle",MembraneBundle,false);
   get_input_handle("Parameters",Parameters_from_port,false);
-  
-  
-  if (MembraneBundle.get_rep() == 0)
-  {
-    MembraneBundle = scinew Bundle();
-    if (MembraneBundle.get_rep() == 0)
-    {
-      error("Could not allocate new membrane bundle");
-      return;
-    }   
-  }
-  else
-  {
-    MembraneBundle.detach();    
-  }
 
-  int membrane_num = 0;
-  std::string fieldname;
-  {
-    std::ostringstream oss;
-    oss << "Membrane_" << membrane_num;
-    fieldname = oss.str(); 
-  }
-  while (MembraneBundle->isBundle(fieldname))
-  {
-    membrane_num++;
-    {
-      std::ostringstream oss;
-      oss << "Membrane_" << membrane_num;
-      fieldname = oss.str(); 
-    }
-  }
-
-  SCIRunAlgo::ConverterAlgo mc(this);
-
-  
-  // Add a new bundle to the bundle with the data
-  // from this module
-  Membrane = scinew Bundle();
-  if (Membrane.get_rep() == 0)
-  {
-    error("Could not allocate new membrane bundle");
-    return;
-  }
-  
-  {
-    std::ostringstream oss;
-    oss << "Membrane_" << membrane_num;
-    fieldname = oss.str(); 
-  }
-  MembraneBundle->setBundle(fieldname,Membrane);
-  
-  Membrane->setField("Geometry",Geometry);
- 
+  // Make sure we have the latest from TCL
   std::string cmd;
   cmd = get_id() + " get_param";
   get_gui()->lock();
@@ -168,38 +107,118 @@ void DMDAddMembrane::execute()
   get_gui()->unlock();
   get_ctx()->reset();
   
-  std::string paramstr; 
-  paramstr = guimembraneparam_.get();
-  if (Parameters_from_port.get_rep()) 
+  // Only execute if something has changed:
+  if (inputs_changed_  || guimembranename_.changed() || 
+      guimembraneparam_.changed() || !oport_cached("MembraneBundle"))
   {
-    paramstr += "\n";
-    paramstr += Parameters_from_port->get();
-    paramstr += "\n";
-  }
+    // Create access point to field algorithms
+    SCIRunAlgo::FieldsAlgo algo(this);
 
-  std::string membranename = guimembranename_.get();
-  StringHandle MembraneName = scinew String(membranename);
-  Membrane->setString("Name",MembraneName);
-  
-  SynapseItem item = synapsexml_.get_synapse(membranename);
-  {
-    std::ostringstream oss;
-    oss << "\n" << item.nodetype << " = " << membrane_num << "\n";
-    paramstr += oss.str();
-  }
-  
-  StringHandle Parameters = scinew String(paramstr);
-  if (Parameters.get_rep() == 0)
-  {
-    error("Could not create parameter string");
-    return;
-  } 
-  Membrane->setString("Parameters",Parameters);
+    // Empty the geometry and make it linear, we need a linear version
+    // to project data on:
+    if (!(algo.ClearAndChangeFieldBasis(Geometry,Geometry,"Linear")))
+    {
+      error("DMDAddMembrane: Could not build a linear field for the membrane");
+      return;        
+    }
     
-  StringHandle SourceFile = scinew String(item.sourcefile);
-  Membrane->setString("SourceFile",SourceFile);
-  
-  send_output_handle("MembraneBundle",MembraneBundle,true);
+    // If we have an input bundle use that one otherwise create a new one:
+    if (MembraneBundle.get_rep() == 0)
+    {
+      MembraneBundle = scinew Bundle();
+      if (MembraneBundle.get_rep() == 0)
+      {
+        error("Could not allocate new membrane bundle");
+        return;
+      }   
+    }
+    else
+    {
+      // We use the old one, but need to create a new copy for the data flow:
+      // Luckily we are using bundles and only the bundle wrapper changes and
+      // not the underlying objects:
+      MembraneBundle.detach();    
+    }
+
+    // Find what the next index will be for the membranes
+    // We start with 1, so 0 means no membrane:
+    int membrane_num = 1;
+    std::string fieldname;
+    {
+      std::ostringstream oss;
+      oss << "Membrane_" << membrane_num;
+      fieldname = oss.str(); 
+    }
+    while (MembraneBundle->isBundle(fieldname))
+    {
+      membrane_num++;
+      {
+        std::ostringstream oss;
+        oss << "Membrane_" << membrane_num;
+        fieldname = oss.str(); 
+      }
+    }
+
+    // Entry point for the converter library:
+    SCIRunAlgo::ConverterAlgo mc(this);
+
+    
+    // Add a new bundle to the bundle with the data
+    // from this module
+    Membrane = scinew Bundle();
+    if (Membrane.get_rep() == 0)
+    {
+      error("Could not allocate new membrane bundle");
+      return;
+    }
+    
+    {
+      std::ostringstream oss;
+      oss << "Membrane_" << membrane_num;
+      fieldname = oss.str(); 
+    }
+    MembraneBundle->setBundle(fieldname,Membrane);
+    
+    Membrane->setField("Geometry",Geometry);
+   
+    // Get parameters from GUI:
+    std::string paramstr; 
+    paramstr = guimembraneparam_.get();
+    // Add the ones from the input port:
+    if (Parameters_from_port.get_rep()) 
+    {
+      paramstr += "\n";
+      paramstr += Parameters_from_port->get();
+      paramstr += "\n";
+    }
+
+    std::string membranename = guimembranename_.get();
+    StringHandle MembraneName = scinew String(membranename);
+    Membrane->setString("Name",MembraneName);
+    
+    // Figure out how the membrane needs to be assigned this number
+    // in cardiowave and add it to the parameters:
+    SynapseItem item = synapsexml_.get_synapse(membranename);
+    {
+      std::ostringstream oss;
+      oss << "\n" << item.nodetype << " = " << membrane_num << "\n";
+      paramstr += oss.str();
+    }
+    
+    StringHandle Parameters = scinew String(paramstr);
+    if (Parameters.get_rep() == 0)
+    {
+      error("Could not create parameter string");
+      return;
+    } 
+    Membrane->setString("Parameters",Parameters);
+      
+    StringHandle SourceFile = scinew String(item.sourcefile);
+    Membrane->setString("SourceFile",SourceFile);
+    
+    // Send the data downstream:
+    send_output_handle("MembraneBundle",MembraneBundle,false);
+  }
 }
 
 

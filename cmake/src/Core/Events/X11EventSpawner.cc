@@ -200,21 +200,23 @@ namespace SCIRun {
 
 
   event_handle_t
-  X11EventSpawner::xlat_Leave(XEvent *)
+  X11EventSpawner::xlat_Leave(XEvent *xevent)
   {
     if (sci_getenv_p("SCI_DEBUG")) {
       cerr << target_ << ": Leave\n";
     }
-    return new WindowEvent(WindowEvent::LEAVE_E);
+    return new WindowEvent(WindowEvent::LEAVE_E, target_, 
+                           xevent->xcrossing.time);
   }
 
   event_handle_t
-  X11EventSpawner::xlat_Enter(XEvent *)
+  X11EventSpawner::xlat_Enter(XEvent *xevent)
   {
     if (sci_getenv_p("SCI_DEBUG")) {
       cerr << target_ << ": Enter\n";
     }
-    return new WindowEvent(WindowEvent::ENTER_E);
+    return new WindowEvent(WindowEvent::ENTER_E, target_, 
+                           xevent->xcrossing.time);
   }
 
   event_handle_t

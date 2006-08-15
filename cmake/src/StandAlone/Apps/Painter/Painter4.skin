@@ -1,0 +1,651 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE skinner PUBLIC "-//Skinner/Drawable DTD" "skinner.dtd">
+
+<skinner version="1.0">
+  <var name="program_name" propagate="yes">SCI-RENDER 0.4</var>
+  <var name="full_program_name" propagate="yes">SCI - Raster Editor and N-Dimensional Explorer Revision 0.4</var>
+  <var name="grey" propagate="yes">#444444FF</var>
+  <var name="grey2" propagate="yes">#777777FF</var>
+  <var name="grey3" propagate="yes">#AAAAAAFF</var>
+  <var name="light_red" propagate="yes">#996666DD</var>
+  <var name="light_green" propagate="yes">#446644DD</var>
+  <var name="dark_blue" propagate="yes">#444466FF</var>
+  <var name="light_blue" propagate="yes">#AAAAE0DD</var>
+
+  <var name="button_color" propagate="yes">#BBBBFFFF</var>
+  <var name="button_color" propagate="yes">#FFFFFFFF</var>
+  <var name="main-color" propagate="yes">#EEEEEEDD</var>
+
+  <var name="grey" propagate="yes">$main-color</var>
+  <var name="grey2" propagate="yes">$main-color</var>
+  <var name="grey3" propagate="yes">$main-color</var>
+
+  <var name="clear" propagate="yes">#00000000</var>
+  <var name="black50" propagate="yes">#00000080</var>
+  <var name="black90" propagate="yes">#000000BB</var>
+
+
+
+  <definition class="ShadowedBox"> 
+    <object class="Collection"> 
+      <var name="border-size1" propagate="yes">15</var>
+      <var name="border-size2" propagate="yes">5</var>
+      <object class="Grid">
+        <var name="rows">3</var>
+        <var name="cols">3</var>
+        <object class="Gradient">
+          <var name="row">1</var>
+          <var name="col">2</var>
+          <var name="cell-height">$border-size2</var>
+          <var name="top-color">$clear</var>
+          <var name="bottom-color">$black50</var>
+        </object>
+        
+        <object class="Gradient">
+          <var name="row">2</var>
+          <var name="col">1</var>
+          <var name="cell-width">$border-size2</var>
+          <var name="left-color">$clear</var>
+          <var name="right-color">$black50</var>
+        </object>
+        
+        <object class="ShadowedBoxChild">
+          <var name="row">2</var>
+          <var name="col">2</var>
+        </object>
+        
+        <object class="Gradient">
+          <var name="row">2</var>
+          <var name="col">3</var>
+          <var name="cell-width">$border-size1</var>
+          <var name="right-color">$clear</var>
+          <var name="left-color">$black90</var>
+        </object>
+        
+        <object class="Gradient">
+          <var name="row">3</var>
+          <var name="col">2</var>
+          <var name="cell-height">$border-size1</var>
+          <var name="bottom-color">$clear</var>
+          <var name="top-color">$black90</var>
+        </object>
+        <object class="Gradient">
+          <var name="row">3</var>
+          <var name="col">3</var>
+          <var name="se-color">$clear</var>
+          <var name="nw-color">$black90</var>
+          <var name="ne-color">$clear</var>
+          <var name="sw-color">$clear</var>
+        </object>
+
+      </object>
+    </object>
+  </definition>
+  
+
+
+  <definition class="Button" state="normal">
+    <object class="Grid">
+      <var name="rows">1</var>
+      <var name="cols">3</var>
+      <object class="Texture">
+        <var name="row">1</var>
+        <var name="col">1</var>
+        <var name="cell-width">12</var>
+        <var name="cell-height">25</var>
+        <var name="file">button-left-transparent-greyscale-01.png</var>
+        <var name="color">$button_color</var>
+      </object>
+      
+      <object class="Collection">
+        <var name="row">1</var>
+        <var name="col">2</var>
+
+        <object class="Box">
+          <var name="color">$button_color</var>
+          <signal name="button_1_clicked" target="Button::clicked"/>
+        </object>
+
+        <object class="Root::Text"> 
+          <var name="text">$button_text</var>
+          <var name="size">24.0</var>
+          <var name="fgcolor">$text_fgcolor</var>
+          <var name="bgcolor">$text_bgcolor</var>
+          <var name="extruded">1</var>
+          <var name="offsetx">-1</var>
+          <var name="offsety">1</var>
+          <var name="reverse">0</var>
+          <var name="anchor">c</var>
+        </object>
+        
+        <object class="Texture">
+          <var name="file">button-background-transparent-greyscale-01.png</var>
+        </object>        
+      </object>
+      
+      <object class="Texture">
+        <var name="row">1</var>
+        <var name="col">3</var>
+        <var name="cell-width">12</var>
+        <var name="file">button-right-transparent-greyscale-01.png</var>
+        <var name="color">$button_color</var>
+      </object>
+    </object>
+  </definition>  
+  
+  <definition class="Button" state="normal">
+    <object class="Frame">
+      <var name="width">4</var>
+      <var name="height">4</var>
+      <var name="color1">$grey3</var>
+      <var name="color2">$grey</var>
+      <var name="invert">1</var>
+      <object class="Collection">
+        <object class="Box" id="TargetBox">
+          <var name="color">$grey2</var>
+          <signal name="button_1_clicked" target="Button::clicked"/>
+        </object>
+        <object class="Root::Text"> 
+          <var name="text">$button_text</var>
+          <var name="row">1</var>
+          <var name="col">1</var>
+          <var name="cell-height">30</var>
+          <var name="size">25.0</var>
+          <var name="fgcolor">$text_color</var>
+          <var name="shadow">1</var>
+          <var name="reverse">1</var>
+          <var name="offsetx">1</var>
+          <var name="offsety">1</var>
+          <var name="anchor">C</var>
+        </object>
+      </object>
+    </object>
+  </definition>
+
+
+  <definition class="SliceFrame" state="normal">
+    <object class="Frame">
+      <var name="width">5</var>
+      <var name="height">5</var>
+      <var name="color1">$grey</var>
+      <var name="color2">$grey2</var>
+      <object class="Frame"> 
+        <var name="color1">$grey2</var>
+        <var name="color2">$grey</var>
+        <object class="Frame1-child"/>
+      </object>
+    </object>
+  </definition>
+
+
+
+
+  <definition class="GradientBackground">
+    <object class="Collection">
+      <object class="Gradient">
+        <var name="bottom-color">$slice-background-color</var>
+        <var name="top-color" type="color">$grey</var>
+      </object>
+      <object class="GradientBackground::child"/>
+    </object>
+  </definition>
+
+  <definition class="LabeledGradientBackground">
+    <object class="Collection">
+
+      <definition class="GradientBackGround::child">
+        <object class="LabeledGradientBackground::child"/>
+      </definition>
+
+      <object class="Root::Text">
+        <var name="text">$LabeledGradientBackground::text</var>  
+        <var name="size">40</var>  
+        <var name="anchor">S</var>
+      </object>
+    </object>
+  </definition>
+
+
+  
+  <definition class="NicePainterWindow">
+    <object class="Collection">
+      <definition class="LabeledGradientBackground::child">        
+        
+        <object class="Painter::SliceWindow">
+          <var name="LabeledGradientBackground::text">$NicePainterWindow::name</var>
+        </object>
+      </definition>
+    </object>
+  </definition>
+
+
+  <!--
+
+
+<object class="Grid">
+<var name="rows">2</var>
+<var name="cols">2</var>      
+<var name="shadow" propagate="yes">1</var>
+<var name="offsetx" propagate="yes">2</var>
+<var name="offsety" propagate="yes">-2</var>
+<var name="bgcolor" propagate="yes">#000000FF</var>
+<var name="fgcolor" propagate="yes">#FFFFFFFF</var>
+<object class="Grid">
+<var name="row">2</var>
+<var name="col">1</var>
+<var name="rows">15</var>
+<var name="cols">1</var>
+
+<object class="Root::Text">
+<var name="row">11</var>
+<var name="col">1</var>
+<var name="text">$clut_ww_wl</var>
+<var name="shadow">1</var>
+<var name="size">20</var>
+</object>
+
+<object class="Root::Text">
+<var name="row">12</var>
+<var name="col">1</var>
+<var name="text">$clut_min_max</var>
+<var name="shadow">1</var>
+<var name="size">20</var>
+</object>
+
+<object class="Root::Text">
+<var name="row">13</var>
+<var name="col">1</var>
+<var name="text">$value</var>
+<var name="shadow">1</var>
+<var name="size">20</var>
+</object>
+
+<object class="Root::Text">
+<var name="row">14</var>
+<var name="col">1</var>
+<var name="text">$sca_pos</var>
+<var name="shadow">1</var>
+<var name="size">20</var>
+</object>
+
+<object class="Root::Text">
+<var name="row">15</var>
+<var name="col">1</var>
+<var name="text">$xyz_pos</var>
+<var name="shadow">1</var>
+<var name="size">20</var>
+</object>
+</object>
+</object>
+</object>
+</definition>
+
+<definition class="ShadowedBoxInterior"> 
+<object class="Frame1-child"/>
+</definition>
+
+
+  -->
+
+  <object class="Painter">
+    <object class="Root::GLWindow" id="SCI-RENDER">
+      <var name="id">$program_name</var>
+      <var name="width" type="int">800</var>
+      <var name="height" type="int">800</var>
+      <var name="posx" type="int">220</var>
+      <var name="posy" type="int">20</var>
+      <var name="border" type="int">0</var>
+
+
+      <object class="Box">
+        <var name="color">#FFFFFF</var>
+      </object>
+
+      <object class="Texture">
+        <var name="file">BackgroundTile03.png</var>
+        <var name="color">#DDDDE0FF</var>
+        <var name="repeatx">1</var>
+        <var name="repeaty">1</var>
+      </object>
+
+      <object class="Grid">
+        <var name="rows">3</var>
+        <var name="cols">1</var>
+        
+        <object class="Button">
+          <var name="row">1</var>
+          <var name="col">1</var>
+          <var name="cell-height">50</var>
+          <var name="button_text" propagate="yes">CTHead</var>
+          <var name="text_bgcolor" propagate="yes">#FFFFFF00</var>
+          <var name="text_fgcolor" propagate="yes">#000000FF</var>
+          <var name="reverse" propagate="yes">1</var>
+        </object>
+
+
+        <object class="Frame">
+          <var name="row">3</var>
+          <var name="col">1</var>
+          <var name="width">2</var>
+          <var name="height">2</var>   
+          <var name="invert">true</var>
+          <var name="cell-height">40</var>
+          <object class="Frame">
+            <var name="invert">0</var>
+            <var name="width">2</var>
+            <var name="height">2</var>   
+
+            <object class="Collection">
+              <object class="Box">
+                <var name="color">#808080A0</var>
+              </object>
+              <object class="Grid">
+                <var name="rows">1</var>
+                <var name="cols">5</var>
+
+                <object class="Root::Text">
+                  <var name="row">1</var>
+                  <var name="col">3</var>
+                  <var name="text">$painter_status</var>
+                  <var name="size">25</var>
+                  <var name="shadow">1</var>
+                  <var name="offsetx">-3</var>
+                  <var name="offsety">3</var>
+                </object>
+              </object>
+            </object>
+          </object>
+        </object>
+        
+        <object class="Collection">
+          <var name="row">2</var>
+          <var name="col">1</var>
+          
+          <object class="Grid">
+            <var name="width">5</var>
+            <var name="height">5</var>
+            
+            <var name="rows">5</var>
+            <var name="cols">5</var>
+            
+
+            <var name="window-gap" propagate="yes">5</var>
+
+
+
+            <object class="Collection">
+              <var name="row">1</var>
+              <var name="col">1</var>
+              <var name="cell-width">$window-gap</var>
+              <var name="cell-height">$window-gap</var>
+            </object>
+
+            <object class="Collection">
+              <var name="row">1</var>
+              <var name="col">3</var>
+              <var name="cell-width">$window-gap</var>
+            </object>
+
+            <object class="Collection">
+              <var name="row">1</var>
+              <var name="col">5</var>
+              <var name="cell-width">$window-gap</var>
+            </object>
+
+            <object class="Collection">
+              <var name="row">3</var>
+              <var name="col">1</var>
+              <var name="cell-height">$window-gap</var>
+            </object>
+
+            <object class="Collection">
+              <var name="row">5</var>
+              <var name="col">1</var>
+              <var name="cell-height">$window-gap</var>
+            </object>
+
+
+            <object class="NicePainterWindow">
+              <var name="row">2</var>
+              <var name="col">2</var>
+              <var name="axis" propagate="yes">0</var>
+              <var name="slice-background-color" type="color" propagate="yes">$light_red</var>
+              <var name="name" propagate="yes">Sagittal</var>
+<!--
+              <definition class="ShadowedBoxChild">
+                <object class="Painter::SliceWindow"/>
+              </definition>
+-->
+            </object>
+            
+            <!--
+                <object class="SliceFrame" id="Sagittal">
+                <var name="row">1</var>
+                <var name="col">1</var>
+                <var name="axis" propagate="yes">0</var>
+                <var name="slice-background-color" type="color" propagate="yes">$light_red</var>
+                <var name="name" propagate="yes">Sagittal</var>
+                </object>
+
+            
+            <object class="ShadowedBox2" id="Coronal">
+              
+
+              <var name="row">4</var>
+              <var name="col">2</var>
+              <var name="axis" propagate="yes">2</var>
+              <var name="slice-background-color" type="color" propagate="yes">$light_green</var>
+              <var name="name" propagate="yes">Coronal</var>
+              <definition class="ShadowedBoxChild">
+                <object class="Painter::SliceWindow"/>
+              </definition>
+
+            </object>
+
+            
+            <object class="ShadowedBox2" id="Axial">
+              <var name="row">2</var>
+              <var name="col">4</var>
+              <var name="axis" propagate="yes">1</var>
+              <var name="slice-background-color" type="color" propagate="yes">$light_blue</var>
+              <var name="name" propagate="yes">Axial</var>
+              <definition class="ShadowedBoxChild">
+                <object class="Painter::SliceWindow"/>
+              </definition>
+
+            </object>
+            -->
+
+            <object class="ShadowedBox2">
+              <var name="row">4</var>
+              <var name="col">4</var>
+              
+              <var name="color1" propagate="yes">$grey</var>
+              <var name="color2" propagate="yes">$grey2</var>
+              <definition class="ShadowedBoxChild">
+                <object class="SceneGraph"/>
+              </definition>
+
+              <!--            
+                   <object class="Collection">
+                   <object class="Gradient">
+                   <var name="bottom-color" type="color" propagate="yes">$grey2</var>
+                   <var name="top-color" type="color" propagate="yes">$grey</var>
+                   </object>
+                   <object class="SceneGraph"/> 
+                   
+                   <object class="Root::Text">
+                   <var name="text">3D Viewer</var>
+                   <var name="size">60.0</var>
+                   <var name="fgcolor">#FFFFFFFF</var>
+                   <var name="bgcolor">#222222AA</var>
+                   <var name="shadow">True</var>
+                   <var name="extruded">0</var>
+                   <var name="anchor">S</var>
+                   <var name="offsetx">-10</var>
+                   <var name="offsety">10</var>
+                   </object>
+                   </object>
+              -->
+            </object>
+          </object>
+        </object>
+      </object>
+    </object>
+    <!--
+        <object class="GLWindow">
+        <var name="width" type="int">150</var>
+        <var name="height" type="int">200</var>
+        <var name="posx" type="int">1200</var>
+        <var name="posy" type="int">50</var>
+        <var name="border">0</var>
+        <object class="Collection">
+        <object class="Box">
+        <var name="color">#AAAAAAFF</var>
+        </object>
+        <object class="Grid">
+        <var name="rows" type="int">8</var>
+        <var name="cols" type="int">1</var>
+        <object class="Root::Text">
+        <var name="row" type="int">1</var>
+        <var name="col" type="int">1</var>
+        <var name="text"> Open...</var>
+        <var name="size">20</var>
+        <var name="reverse">1</var>
+        <var name="shadow">1</var>
+        </object>
+        </object>
+        </object>
+        </object>
+    -->
+
+
+
+    <object class="Root::GLWindow">
+      <var name="width" type="int">200</var>
+      <var name="height" type="int">800</var>
+      <var name="posx" type="int">0</var>
+      <var name="posy" type="int">20</var>
+      <var name="border">0</var>
+      <object class="Grid">
+        <var name="rows">10</var>
+        <var name="cols">1</var>
+        <var name="text_bgcolor" propagate="yes">#FFFFFFFF</var>
+        <var name="text_fgcolor" propagate="yes">#000000FF</var>
+
+        <object class="Button">
+          <var name="row">1</var>
+          <var name="col">1</var>
+          <var name="button_text" propagate="yes">Quit</var>
+          <var name="text_color" propagate="yes">#FFFFFFFF</var>
+          <signal name="Button::clicked" 
+                  target="Painter::quit"/>
+          
+        </object>
+
+        <object class="Button">
+          <var name="row">2</var>
+          <var name="col">1</var>
+          <var name="button_text" propagate="yes">CTHead</var>
+          <var name="text_color" propagate="yes">#FFFFFFFF</var>
+          <signal name="Button::clicked" 
+                  target="Painter::load_CThead"/>
+          
+        </object>
+        
+        <object class="Button">
+          <var name="row">3</var>
+          <var name="col">1</var>
+          <var name="text" propagate="yes">File</var>
+          <var name="button_text" propagate="yes">Load Volume...</var>
+          <var name="text_color" propagate="yes">#FFFFFFFF</var>
+          <signal name="Button::clicked" 
+                  target="Painter::start_brush_tool"/>
+          
+        </object>
+        <object class="Button">
+          <var name="row">4</var>
+          <var name="col">1</var>
+          <var name="button_text" propagate="yes">Quit</var>
+
+          <signal name="Button::clicked" 
+                  target="Painter::quit"/>
+          
+        </object>
+
+
+      </object>
+    </object>
+
+    <object class="Root::GLWindow" id="Splash">
+      <var name="width" type="int">800</var>
+      <var name="height" type="int">200</var>
+      <var name="posx" type="int">100</var>
+      <var name="posy" type="int">300</var>
+      <var name="border">0</var>
+      <object class="Frame">
+        <var name="width">15</var>
+        <var name="height">15</var>
+        <var name="color1">#AAAAAAFF</var>
+        <var name="color2">#555555FF</var>
+        <var name="invert">1</var>
+
+        <object class="Box">
+          <var name="color">$clear</var>
+          <signal name="button_1_clicked" 
+                  target="GLWindow::close"/>
+        </object>
+        
+        <object class="Gradient">
+          <var name="bottom-color">#333333FF</var>
+          <var name="top-color">#CCCCCCFF</var>
+        </object>
+        
+        <object class="Grid">
+          <var name="rows">2</var>
+          <var name="cols">1</var>
+
+          <object class="Root::Text">
+            <var name="row">1</var>
+            <var name="col">1</var>
+            <var name="cell-height">133</var>
+            
+            <var name="text">$program_name</var>
+            <var name="font">Crass.ttf</var>
+            <var name="font">Machinegun.ttf</var>
+            <var name="font">test.ttf</var>
+            <var name="font">LCD.ttf</var>
+            <var name="size">125</var>
+            <var name="anchor">S</var>
+            <var name="extruded">1</var>
+            <var name="extruded">1</var>
+            <var name="fgcolor">#aaaaEEa0</var>
+            <var name="bgcolor">$clear</var>
+            <var name="offsetx">-10</var>
+            <var name="offsety">15</var>
+          </object>
+
+          <object class="Root::Text">
+            <var name="row">2</var>
+            <var name="col">1</var>
+            <var name="cell-height">150</var>
+            
+            <var name="text">$full_program_name</var>
+            <var name="font">Crass.ttf</var>
+            <var name="font">Neuralnomicon.ttf</var>
+            <var name="size">25</var>
+            <var name="anchor">N</var>
+            <var name="extruded">1</var>
+            <var name="extruded">1</var>
+            <var name="fgcolor">#bbbbEEFF</var>
+            <var name="bgcolor">$black</var>
+            <var name="offsetx">-2</var>
+            <var name="offsety">2</var>
+          </object>
+        </object>
+      </object>
+    </object>
+  </object>
+
+</skinner>
+

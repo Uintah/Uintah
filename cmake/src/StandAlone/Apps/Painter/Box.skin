@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE skinner PUBLIC "-//Skinner/Drawable DTD" "skinner.dtd">
+
+<skinner version="1.0" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <xi:include href="Button.skin" parse="xml"/>
+
+  <object class="Root::GLWindow">
+    <object class="Box">
+      <var name="color">#FFFFFFFF</var>
+      <signal name="Button::released"
+              target="Parent::make_red">1</signal>
+
+      <object class="Grid">
+        <var name="rows">3</var>
+        <var name="cols">3</var>
+        <object class="Box">
+          <var name="color">#FF00FFFF</var>
+          <var name="row">2</var>
+          <var name="col">2</var>
+          <object class="Grid">
+            <var name="rows">3</var>
+            <var name="cols">3</var>          
+            <object class="Button">
+              <var name="row">2</var>
+              <var name="col">2</var>
+              <var name="Button::Text::text" propagate="yes">Make Red</var>
+              <var name="text_color" propagate="yes">#FFFFFFFF</var>
+              <signal name="Button::clicked" 
+                      target="Box::make_red">1</signal>
+              <signal name="Button::released" 
+                      target="Box::make_blue">1</signal>
+              
+            </object>
+          </object>
+        </object>
+      </object>
+    </object>
+    </object>
+</skinner>

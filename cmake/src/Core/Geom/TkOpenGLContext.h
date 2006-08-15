@@ -38,6 +38,7 @@
 #ifndef SCIRun_Core_2d_TkOpenGLContext_h
 #define SCIRun_Core_2d_TkOpenGLContext_h
 
+#include <sci_gl.h>
 #include <sci_glx.h>
 #include <stdio.h>
 #include <tk.h>

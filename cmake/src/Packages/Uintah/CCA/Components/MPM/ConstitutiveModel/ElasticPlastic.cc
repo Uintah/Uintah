@@ -683,10 +683,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(patchIndex);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
     
     //cerr << getpid() << " patch = " << patch->getID() << endl;
     // Get grid size
@@ -1567,10 +1565,8 @@ ElasticPlastic::computeStressTensorImplicit(const PatchSubset* patches,
     const Patch* patch = patches->get(p);
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     // Get grid size
     Vector dx = patch->dCell();
@@ -1944,10 +1940,8 @@ ElasticPlastic::computeStressTensor(const PatchSubset* patches,
 
     // Get interpolation functions
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     // Get patch indices for parallel solver
     IntVector lowIndex = patch->getInteriorNodeLowIndex();

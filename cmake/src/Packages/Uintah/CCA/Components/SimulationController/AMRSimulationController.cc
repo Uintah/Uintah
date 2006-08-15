@@ -119,7 +119,7 @@ void AMRSimulationController::run()
    // the number of levels the regridder can handle .
    // Only do if not restarting
 
-   if (d_doAMR && !d_restarting && d_regridder->isAdaptive()){
+   if (d_regridder && !d_restarting && d_regridder->isAdaptive()){
      while (currentGrid->numLevels() < d_regridder->maxLevels() &&
             d_regridder->flaggedCellsOnFinestLevel(currentGrid, d_scheduler)) {
        if (!doInitialTimestepRegridding(currentGrid)) {
@@ -144,7 +144,7 @@ void AMRSimulationController::run()
    }
    while( t < d_timeinfo->maxTime && iterations < max_iterations) {
 
-     if (d_doAMR && d_regridder->needsToReGrid() && !first) {
+     if (d_regridder && d_regridder->needsToReGrid() && !first) {
        doRegridding(currentGrid);
      }
 
@@ -287,76 +287,73 @@ void AMRSimulationController::run()
 }
 
 //______________________________________________________________________
-void AMRSimulationController::subCycleCompile(GridP& grid, int startDW, int dwStride, int numLevel, bool rootCycle)
+void AMRSimulationController::subCycleCompile(GridP& grid, int startDW, int dwStride, int step, int numLevel)
 {
   //amrout << "Start AMRSimulationController::subCycleCompile, level=" << numLevel << '\n';
   // We are on (the fine) level numLevel
   LevelP fineLevel = grid->getLevel(numLevel);
-  LevelP coarseLevel = grid->getLevel(numLevel-1);
-
+  LevelP coarseLevel;
+  int coarseStartDW;
+  int coarseDWStride;
   int numSteps = d_sharedState->timeRefinementRatio(); 
-  int newDWStride = dwStride/numSteps;
+  if (numLevel > 0) {
+    coarseLevel = grid->getLevel(numLevel-1);
+    coarseDWStride = dwStride * numSteps;
+    coarseStartDW = (startDW/coarseDWStride)*coarseDWStride;
+  }
+  else {
+    coarseDWStride = dwStride;
+    coarseStartDW = startDW;
+  }
 
-  ASSERT((newDWStride > 0 && numLevel+1 < grid->numLevels()) || (newDWStride == 0 || numLevel+1 == grid->numLevels()));
-  int curDW = startDW;
-  for(int step=0;step < numSteps;step++){
+  ASSERT(dwStride > 0 && numLevel < grid->numLevels())
+  d_scheduler->clearMappings();
+  d_scheduler->mapDataWarehouse(Task::OldDW, startDW);
+  d_scheduler->mapDataWarehouse(Task::NewDW, startDW+dwStride);
+  d_scheduler->mapDataWarehouse(Task::CoarseOldDW, coarseStartDW);
+  d_scheduler->mapDataWarehouse(Task::CoarseNewDW, coarseStartDW+coarseDWStride);
+  
+  d_sim->scheduleTimeAdvance(fineLevel, d_scheduler);
+
+  if(numLevel+1 < grid->numLevels()){
+    int newStride = dwStride/numSteps;
+    for(int substep=0;substep < numSteps;substep++){
+      subCycleCompile(grid, startDW+substep*newStride, newStride, substep, numLevel+1);
+    }
+    // Coarsen and then refine_CFI at the end of the W-cycle
     d_scheduler->clearMappings();
-    d_scheduler->mapDataWarehouse(Task::OldDW, curDW);
-    d_scheduler->mapDataWarehouse(Task::NewDW, curDW+newDWStride);
+    d_scheduler->mapDataWarehouse(Task::OldDW, 0);
+    d_scheduler->mapDataWarehouse(Task::NewDW, startDW+dwStride);
     d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
     d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
-
-    d_sim->scheduleTimeAdvance(fineLevel, d_scheduler);
-
-    if(numLevel+1 < grid->numLevels()){
-      ASSERT(newDWStride > 0);
-      subCycleCompile(grid, curDW, newDWStride, numLevel+1, false);
-    }
-    // do refineInterface after the freshest data we can get; after the finer
-    // level's coarsen completes
-    // do all the levels at this point in time as well, so all the coarsens go in order,
-    // and then the refineInterfaces
-    if (d_doAMR && step < numSteps -1) {
-      
-      for (int i = fineLevel->getIndex(); i < fineLevel->getGrid()->numLevels(); i++) {
-        if (i == fineLevel->getIndex()) {
-          d_scheduler->clearMappings();
-          d_scheduler->mapDataWarehouse(Task::OldDW, curDW);
-          d_scheduler->mapDataWarehouse(Task::NewDW, curDW+newDWStride);
-          d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
-          d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
-          d_sim->scheduleRefineInterface(fineLevel, d_scheduler, true, true);
-        }
-        else {
-          // look in the NewDW all the way down
-          d_scheduler->clearMappings();
-          d_scheduler->mapDataWarehouse(Task::OldDW, 0);
-          d_scheduler->mapDataWarehouse(Task::NewDW, curDW+newDWStride);
-          d_scheduler->mapDataWarehouse(Task::CoarseOldDW, 0);
-          d_scheduler->mapDataWarehouse(Task::CoarseNewDW, curDW+newDWStride);
-          d_sim->scheduleRefineInterface(fineLevel->getGrid()->getLevel(i), d_scheduler, false, true);
-        }
-      }
-    
-    }
-
-    curDW += newDWStride;
+    d_sim->scheduleCoarsen(fineLevel, d_scheduler);
   }
-  // Coarsen and then refine_CFI at the end of the W-cycle
-  d_scheduler->clearMappings();
-  d_scheduler->mapDataWarehouse(Task::OldDW, 0);
-  d_scheduler->mapDataWarehouse(Task::NewDW, curDW);
-  d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
-  d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
-  if (d_doAMR){
-    d_sim->scheduleCoarsen(coarseLevel, d_scheduler);
-     // For clarity this belongs outside of the W-cycle after we've coarsened and done the error estimation and are
-     // about to start a new timestep.  see ICE/Docs/W-cycle.pdf
 
-    if (rootCycle) {
-      // if we're called from the coarsest level, then refineInterface all the way down
-      for (int i = fineLevel->getIndex(); i < fineLevel->getGrid()->numLevels(); i++) {
-        d_sim->scheduleRefineInterface(fineLevel->getGrid()->getLevel(i), d_scheduler, false, true); 
+  d_scheduler->clearMappings();
+  d_scheduler->mapDataWarehouse(Task::OldDW, startDW);
+  d_scheduler->mapDataWarehouse(Task::NewDW, startDW+dwStride);
+  d_scheduler->mapDataWarehouse(Task::CoarseOldDW, coarseStartDW);
+  d_scheduler->mapDataWarehouse(Task::CoarseNewDW, coarseStartDW+coarseDWStride);
+  d_sim->scheduleFinalizeTimestep(fineLevel, d_scheduler);
+  // do refineInterface after the freshest data we can get; after the finer
+  // level's coarsen completes
+  // do all the levels at this point in time as well, so all the coarsens go in order,
+  // and then the refineInterfaces
+  if (d_doAMR && (step < numSteps -1 || numLevel == 0)) {
+    
+    for (int i = fineLevel->getIndex(); i < fineLevel->getGrid()->numLevels(); i++) {
+      if (i == 0)
+        continue;
+      if (i == fineLevel->getIndex() && numLevel != 0) {
+        d_scheduler->mapDataWarehouse(Task::CoarseOldDW, coarseStartDW);
+        d_scheduler->mapDataWarehouse(Task::CoarseNewDW, coarseStartDW+coarseDWStride);
+        d_sim->scheduleRefineInterface(fineLevel, d_scheduler, true, true);
+      }
+      else {
+        // look in the NewDW all the way down
+        d_scheduler->mapDataWarehouse(Task::CoarseOldDW, 0);
+        d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
+        d_sim->scheduleRefineInterface(fineLevel->getGrid()->getLevel(i), d_scheduler, false, true);
       }
     }
   }
@@ -485,18 +482,15 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
     d_sharedState->setCurrentTopLevelTimeStep( 0 );
     t = d_timeinfo->initTime;
     // Initialize the CFD and/or MPM data
-    for(int i=0;i<grid->numLevels();i++) {
+    for(int i=grid->numLevels()-1; i >= 0; i--) {
       d_sim->scheduleInitialize(grid->getLevel(i), d_scheduler);
       d_sim->scheduleComputeStableTimestep(grid->getLevel(i),d_scheduler);
       
-      if (d_doAMR) {
+      if (d_regridder) {
         // so we can initially regrid
         d_regridder->scheduleInitializeErrorEstimate(d_scheduler, grid->getLevel(i));
         d_sim->scheduleInitialErrorEstimate(grid->getLevel(i), d_scheduler);
 	d_regridder->scheduleDilation(d_scheduler, grid->getLevel(i));
-        if (i > 0) {
-          d_sim->scheduleRefineInterface(grid->getLevel(i), d_scheduler, false, true);
-        }
       }
     }
   }
@@ -548,10 +542,10 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
   // for dynamic lb's, set up patch config after changing grid
   d_lb->possiblyDynamicallyReallocate(currentGrid, true); 
   
-  for(int i=0;i<currentGrid->numLevels();i++) {
+  for(int i=currentGrid->numLevels()-1; i >= 0; i--) {
     d_sim->scheduleInitialize(currentGrid->getLevel(i), d_scheduler);
     d_sim->scheduleComputeStableTimestep(currentGrid->getLevel(i),d_scheduler);
-    if (d_doAMR) {
+    if (d_regridder) {
       d_regridder->scheduleInitializeErrorEstimate(d_scheduler, currentGrid->getLevel(i));
       d_sim->scheduleInitialErrorEstimate(currentGrid->getLevel(i), d_scheduler);
       d_regridder->scheduleDilation(d_scheduler, currentGrid->getLevel(i));
@@ -645,6 +639,7 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
           for (int j = currentGrid->numLevels()-2; j >= i; j--) {
             dbg << d_myworld->myrank() << "   schedule coarsen on level " << j << endl;
             d_sim->scheduleCoarsen(currentGrid->getLevel(j), d_scheduler);
+            d_sim->scheduleFinalizeTimestep(currentGrid->getLevel(j), d_scheduler);
           }
           // schedule a refineInterface from this level to the finest level
           for (int j = i; j < currentGrid->numLevels(); j++) {
@@ -659,13 +654,7 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
       d_scheduler->addTaskGraph(Scheduler::IntermediateTaskGraph);
     }
     else {
-      
-      d_sim->scheduleTimeAdvance(currentGrid->getLevel(0), d_scheduler);
-      
-      if(currentGrid->numLevels() > 1 && !d_combinePatches){
-        subCycleCompile(currentGrid, 0, totalFine, 1, true);
-      }
-      
+      subCycleCompile(currentGrid, 0, totalFine, 0, 0);
       d_scheduler->clearMappings();
       d_scheduler->mapDataWarehouse(Task::OldDW, 0);
       d_scheduler->mapDataWarehouse(Task::NewDW, totalFine);
@@ -674,7 +663,7 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
     
   for(int i = currentGrid->numLevels()-1; i >= 0; i--){
     dbg << d_myworld->myrank() << "   final TG " << i << endl;
-    if (d_doAMR) {
+    if (d_regridder) {
       d_regridder->scheduleInitializeErrorEstimate(d_scheduler, currentGrid->getLevel(i));
       d_sim->scheduleErrorEstimate(currentGrid->getLevel(i), d_scheduler);
       d_regridder->scheduleDilation(d_scheduler, currentGrid->getLevel(i));

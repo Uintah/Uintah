@@ -32,7 +32,7 @@ namespace SCIRunAlgo {
 
 using namespace SCIRun;
 
-bool ScaleFieldAlgo::ScaleField(ProgressReporter *pr, FieldHandle input, FieldHandle& output,double datascale, double meshscale)
+bool ScaleFieldAlgo::ScaleField(ProgressReporter *pr, FieldHandle input, FieldHandle& output,double datascale, double meshscale, bool scale_from_center)
 {
   if (input.get_rep() == 0)
   {
@@ -74,7 +74,7 @@ bool ScaleFieldAlgo::ScaleField(ProgressReporter *pr, FieldHandle input, FieldHa
     return(false);
   }
 
-  return(algo->ScaleField(pr,input,output,datascale,meshscale));
+  return(algo->ScaleField(pr,input,output,datascale,meshscale,scale_from_center));
 }
 
 } // End namespace SCIRunAlgo

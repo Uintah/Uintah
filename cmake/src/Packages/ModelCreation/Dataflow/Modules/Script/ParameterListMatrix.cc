@@ -26,19 +26,11 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- * FILE: ParameterListMatrix.cc
- * AUTH: Jeroen G Stinstra
- * DATE: 17 SEP 2005
- */ 
-
 #include <Core/Bundle/Bundle.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
-
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 namespace ModelCreation {
 
@@ -47,12 +39,7 @@ using namespace SCIRun;
 class ParameterListMatrix : public Module {
 public:
   ParameterListMatrix(GuiContext*);
-
-  virtual ~ParameterListMatrix();
-
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
   
 private:
 
@@ -69,89 +56,51 @@ ParameterListMatrix::ParameterListMatrix(GuiContext* ctx)
 {
 }
 
-ParameterListMatrix::~ParameterListMatrix()
-{
-}
-
 void ParameterListMatrix::execute()
 {
-  string matrixname = guimatrixname_.get();
-  string matrixlist;
-        
-  BundleHandle handle;
-  BundleIPort  *iport;
-  BundleOPort  *oport;
+  BundleHandle bundle;
+  MatrixHandle matrix;
   
-  MatrixHandle fhandle;
-  MatrixIPort *ifport;
-  MatrixOPort *ofport;
+  get_input_handle("ParameterList",bundle,false);
+  get_input_handle("Matrix",matrix,false);
+
+  if (inputs_changed_ || guimatrixname_.changed()  || !oport_cached("ParameterList") || !oport_cached("Matrix"))
+  {
+    std::string matrixname = guimatrixname_.get();
+    std::string matrixlist;
         
-  if(!(iport = static_cast<BundleIPort *>(get_iport("ParameterList"))))
-  {
-    error("Cannot not find ParameterList input port");
-    return;
+    if (bundle.get_rep() == 0)
+    {   
+      bundle = dynamic_cast<Bundle *>(scinew Bundle());
+    }
+
+    if (matrix.get_rep() != 0)
+    {
+      bundle = bundle->clone();
+      bundle->setMatrix(matrixname,matrix);
+      matrix = 0;
+    }
+
+    // Update the GUI with all the matrix names
+    // So the can select which one he or she wants
+    // to extract
+    
+    size_t nummatrices = bundle->numMatrices();
+    for (size_t p = 0; p < nummatrices; p++)
+    {
+      matrixlist += "{" + bundle->getMatrixName(p) + "} ";
+    }
+    guimatrices_.set(matrixlist);
+    get_ctx()->reset();
+
+    if (bundle->isMatrix(matrixname))
+    {
+      matrix = bundle->getMatrix(matrixname);
+      send_output_handle("Matrix",matrix,false);
+    }        
+
+    send_output_handle("ParameterList",bundle,false);
   }
-
-  if(!(ifport = static_cast<MatrixIPort *>(get_iport("Matrix"))))
-  {
-    error("Cannot not find Matrix input port");
-    return;
-  }
-
-  // If no input bundle is found, create a new one
-
-  iport->get(handle);
-  if (handle.get_rep() == 0)
-  {   
-    handle = dynamic_cast<Bundle *>(scinew Bundle());
-  }
-
-  ifport->get(fhandle);
-  if (fhandle.get_rep() != 0)
-  {
-    handle = handle->clone();
-    handle->setMatrix(matrixname,fhandle);
-    fhandle = 0;
-  }
-
-  // Update the GUI with all the matrix names
-  // So the can select which one he or she wants
-  // to extract
-  
-  size_t nummatrices = handle->numMatrices();
-  for (size_t p = 0; p < nummatrices; p++)
-  {
-    matrixlist += "{" + handle->getMatrixName(p) + "} ";
-  }
-  guimatrices_.set(matrixlist);
-  get_ctx()->reset();
-
-
-  if (!(ofport = static_cast<MatrixOPort *>(get_oport("Matrix"))))
-  {
-    error("Could not find Matrix output port");
-    return; 
-  }
-  if (!(oport = static_cast<BundleOPort *>(get_oport("ParameterList"))))
-  {
-    error("Could not find ParameterList output port");
-    return; 
-  }
- 
-  if (handle->isMatrix(matrixname))
-  {
-    fhandle = handle->getMatrix(matrixname);
-    ofport->send(fhandle);
-  }        
-          
-  oport->send(handle);
-
-}
-
-void
- ParameterListMatrix::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace ModelCreation

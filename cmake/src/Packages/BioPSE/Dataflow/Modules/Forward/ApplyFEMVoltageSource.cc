@@ -77,31 +77,17 @@ ApplyFEMVoltageSource::~ApplyFEMVoltageSource()
 void
 ApplyFEMVoltageSource::execute()
 {
-  FieldIPort *iportField_ = (FieldIPort *)get_iport("Mesh");
-  MatrixIPort *iportMatrix_ = (MatrixIPort *)get_iport("Stiffness Matrix");
-  MatrixIPort *iportRhs_ = (MatrixIPort *)get_iport("RHS");
-  MatrixOPort *oportMatrix_ = (MatrixOPort *)get_oport("Forward Matrix");
-  MatrixOPort *oportRhs_ = (MatrixOPort *)get_oport("RHS");
-  
   //! Obtaining handles to computation objects
   FieldHandle hField;
-  
-  if (!iportField_->get(hField) || !hField.get_rep()) {
-    error("Can't get handle to mesh.");
-    return;
-  }
+  if (!get_input_handle("Mesh", hField)) return;
   
   vector<pair<int, double> > dirBC;
   if (bcFlag_.get() == "DirSub") 
     if (!hField->get_property("dirichlet", dirBC))
       warning("The input field doesn't contain Dirichlet boundary conditions.");
-  
+  MatrixHandle hMatIn;
+  if (!get_input_handle("Stiffness Matrix", hMatIn)) return;
 
-  MatrixHandle  hMatIn;
-  if (!iportMatrix_->get(hMatIn) || !hMatIn.get_rep()) {
-    error("Need a stiffness matrix.");
-    return;
-  }
   SparseRowMatrix *matIn;
   if (!(matIn = dynamic_cast<SparseRowMatrix*>(hMatIn.get_rep()))) {
     error("Input stiffness matrix wasn't sparse.");
@@ -121,6 +107,7 @@ ApplyFEMVoltageSource::execute()
   ColumnMatrix* rhsIn = NULL;
   
   // -- if the user passed in a vector the right size, copy it into ours 
+  MatrixIPort *iportRhs_ = (MatrixIPort *)get_iport("RHS");
   if (iportRhs_->get(hRhsIn) && 
       (rhsIn=dynamic_cast<ColumnMatrix*>(hRhsIn.get_rep())) && 
       ((unsigned int)(rhsIn->nrows()) == nsize))
@@ -151,8 +138,11 @@ ApplyFEMVoltageSource::execute()
   algo->execute(hField, rhsIn, matIn, bcFlag_.get(), mat, rhs);
 
   //! Sending result
-  oportMatrix_->send(MatrixHandle(mat)); 
-  oportRhs_->send(MatrixHandle(rhs)); 
+  MatrixHandle mat_tmp(mat);
+  send_output_handle("Forward Matrix", mat_tmp);
+
+  MatrixHandle rhs_tmp(rhs);
+  send_output_handle("RHS", rhs_tmp);
 }
 
 

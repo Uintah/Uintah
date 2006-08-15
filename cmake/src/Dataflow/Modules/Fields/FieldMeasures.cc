@@ -97,12 +97,8 @@ FieldMeasures::~FieldMeasures()
 void
 FieldMeasures::execute()
 {
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle fieldhandle;
-  if (!(ifp->get(fieldhandle) && fieldhandle.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("Input Field", fieldhandle)) return;
 
   MeshHandle mesh = fieldhandle->mesh();
 
@@ -163,7 +159,6 @@ FieldMeasures::execute()
   }
 
   // Execute and Send (ha, no extraneous local variables here!)
-  MatrixOPort *omp = (MatrixOPort *)get_oport("Output Measures Matrix");
   MatrixHandle mh(algo->execute(this, mesh,
                                 xFlag_.get(),
                                 yFlag_.get(),
@@ -171,7 +166,8 @@ FieldMeasures::execute()
                                 idxFlag_.get(), 
                                 sizeFlag_.get(), 
                                 nNbrsFlag_.get()));
-  omp->send_and_dereference(mh);
+
+  send_output_handle("Output Measures Matrix", mh);
 }
 
 

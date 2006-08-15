@@ -49,9 +49,9 @@
 namespace SCIRun {
 
   SCISHARE void create_sci_environment(char **env, char *execname);
-  SCISHARE void find_and_parse_scirunrc();
+  SCISHARE void find_and_parse_rcfile(const std::string &rcfile);
+  SCISHARE bool parse_rcfile(const std::string &);
   SCISHARE void copy_and_parse_scirunrc();
-  SCISHARE bool parse_scirunrc(const std::string &);
 
   // Use the following functions to get/put environment variables.
   SCISHARE void sci_putenv( const std::string & key, const std::string & val );

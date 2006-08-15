@@ -122,10 +122,8 @@ Crack::MoveCracks(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<double> S;
-    S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
 
     int pid,patch_size;
     MPI_Comm_rank(mpi_crack_comm, &pid);

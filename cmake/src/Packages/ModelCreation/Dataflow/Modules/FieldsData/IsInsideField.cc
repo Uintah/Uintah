@@ -54,28 +54,49 @@ class IsInsideField : public Module {
   public:
     IsInsideField(GuiContext*);
     virtual void execute();   
+  
+  private:
+    GuiString outputbasis_;
+    GuiString outputtype_;
+    GuiDouble outval_;
+    GuiDouble inval_;
+    GuiInt    partial_inside_;
 };
 
 
 DECLARE_MAKER(IsInsideField)
 IsInsideField::IsInsideField(GuiContext* ctx)
-  : Module("IsInsideField", ctx, Source, "FieldsData", "ModelCreation")
+  : Module("IsInsideField", ctx, Source, "FieldsData", "ModelCreation"),
+    outputbasis_(ctx->subVar("outputbasis")),
+    outputtype_(ctx->subVar("outputtype")),
+    outval_(ctx->subVar("outval")),
+    inval_(ctx->subVar("inval")),
+    partial_inside_(ctx->subVar("partial_inside"))
 {
 }
 
 void IsInsideField::execute()
 {
+  // Define local handles of data objects:
   FieldHandle input, output;
   FieldHandle object;
 
+  // Get the new input data:  
   if (!(get_input_handle("Field",input,true))) return;
   if (!(get_input_handle("ObjectField",object,true))) return;
   
-  SCIRunAlgo::FieldsAlgo algo(this);
-  
-  if(!(algo.IsInsideField(input,output,object))) return;
- 
-  send_output_handle("Field",output,true);
+    // Only reexecute if the input changed. SCIRun uses simple scheduling
+  // that executes every module downstream even if no data has changed: 
+  if (inputs_changed_ || outputbasis_.changed() || outputtype_.changed() || 
+      outval_.changed() || inval_.changed() || partial_inside_.changed() ||
+      !oport_cached("Field"))
+  {
+    SCIRunAlgo::FieldsAlgo algo(this);
+    if(!(algo.IsInsideField(input,output,object,outputtype_.get(),outputbasis_.get(),partial_inside_.get(),outval_.get(),inval_.get()))) return;
+
+    // send new output if there is any:    
+    send_output_handle("Field",output,false);
+  }
 }
 
 } // End namespace ModelCreation

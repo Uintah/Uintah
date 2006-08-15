@@ -122,6 +122,14 @@ class SCISHARE FieldInformation {
     bool        is_surface();
     bool        is_volume();
     
+    bool        is_pnt_element();
+    bool        is_crv_element();
+    bool        is_tri_element();
+    bool        is_quad_element();
+    bool        is_tet_element();
+    bool        is_prism_element();
+    bool        is_hex_element();
+    
     bool        make_nodata();
     bool        make_constantdata();
     bool        make_lineardata();

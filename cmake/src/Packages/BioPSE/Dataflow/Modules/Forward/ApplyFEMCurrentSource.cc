@@ -89,16 +89,9 @@ ApplyFEMCurrentSource::execute()
   else
     error("Unreachable code, bad mode.");
 
-  MatrixOPort *oportRhs = (MatrixOPort *)get_oport("Output RHS");
-  MatrixOPort *oportWeights = (dipole ? (MatrixOPort *)get_oport("Output Weights") : NULL);
-
   // Get the input mesh.
-  FieldIPort *iportField = (FieldIPort *)get_iport("Mesh");
   FieldHandle hField;
-  if (!iportField->get(hField) || !hField.get_rep()) {
-    error("Can't get handle to input mesh.");
-    return;
-  }
+  if (!get_input_handle("Mesh", hField)) return;
 
   // Get the input dipoles.
   FieldIPort *iportSource = (FieldIPort *)get_iport("Sources");
@@ -145,8 +138,14 @@ ApplyFEMCurrentSource::execute()
   algo->execute((ProgressReporter *)this, hField, hSource, hMapping, dipole, Max(sourceNodeTCL_.get(),0), Max(sinkNodeTCL_.get(),0), &rhs, &w);
 
   //! Sending result
-  oportRhs->send(MatrixHandle(rhs));
-  if (w && oportWeights) oportWeights->send(MatrixHandle(w));
+  MatrixHandle rhs_tmp(rhs);
+  send_output_handle("Output RHS", rhs_tmp);
+
+  if (w)
+  {
+    MatrixHandle wtmp(w);
+    send_output_handle("Output Weights", wtmp);
+  }
 }
 
 

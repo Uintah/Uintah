@@ -108,6 +108,8 @@ private:
 
   static bool save_image_callback(void *stuff);
   static bool check_autoview_on_load(void *stuff);
+  
+  bool delete_check_autoview_on_load_;
 };
 
 

@@ -74,7 +74,9 @@ private:
   FieldHandle field_output_handle_;
 };
 
+
 DECLARE_MAKER(DirectMapping)
+
 DirectMapping::DirectMapping(GuiContext* ctx) : 
   Module("DirectMapping", ctx, Filter, "FieldsData", "SCIRun"),
   gui_interpolation_basis_(get_ctx()->subVar("interpolation_basis"), "linear"),
@@ -86,9 +88,11 @@ DirectMapping::DirectMapping(GuiContext* ctx) :
 {
 }
 
+
 DirectMapping::~DirectMapping()
 {
 }
+
 
 void
 DirectMapping::execute()

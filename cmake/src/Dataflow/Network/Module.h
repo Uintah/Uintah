@@ -308,6 +308,9 @@ protected:
   //! Get the handle for a single port.
   template<class DH>
   bool get_input_handle(std::string name, DH& handle, bool required = true);
+  template<class DH>
+  bool get_input_handle(int num, DH& handle, bool required = true);
+
 
   //! Get the handles for dynamic ports.
   template<class DH>
@@ -433,6 +436,57 @@ Module::get_input_handle(std::string name,
 
   return return_state;
 }
+
+
+//! Used to get handles with error checking.
+template<class DH>
+bool
+Module::get_input_handle(int num,
+			 DH& handle,
+			 bool required)
+{
+  update_state(NeedData);
+
+  bool return_state = false;
+
+  SimpleIPort<DH> *dataport;
+
+  handle = 0;
+
+  //! We always require the port to be there.
+  if( !(dataport = dynamic_cast<SimpleIPort<DH>*>(get_iport(num))) )
+  {
+    std::ostringstream oss;
+    oss << "port " << num;
+    throw "Incorrect data type sent to input port '" + oss.str() +
+      "' (dynamic_cast failed).";
+  }
+ 
+  //! Get the handle and check for data.
+  else if (dataport->get(handle) && handle.get_rep())
+  {
+    //! See if the data has changed. Note only change the boolean if
+    //! it is false this way it can be cascaded with other handle gets.
+    if( inputs_changed_ == false ) {
+      inputs_changed_ = dataport->changed();
+    }
+    //! we have a valid handle, return true.
+    return_state = true;
+  }
+
+  else if( required )
+  {
+    std::string name = dataport->get_portname();
+    //! The first input on the port was required to have a valid
+    //! handle and data so report an error.
+    error( "No handle or representation for input port '" +
+           name + "'."  );
+  }
+
+  return return_state;
+}
+
+
 
 
 //! Used to get handles with error checking.

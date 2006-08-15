@@ -76,8 +76,6 @@ class CreateDisAnisoSpheres : public Module {
   MatrixIPort *hInConductivities;
   FieldOPort  *hOutField;
 
-  FieldHandle  field_;
-
   DenseMatrix  *conductivity;
   ColumnMatrix *radius;
 
@@ -89,8 +87,8 @@ class CreateDisAnisoSpheres : public Module {
 
   void assignCompartment(Point center, double distance, vector<double> &tensor);
   void getCondTensor(Point center, int compartment, vector<double> &tensor);
-  void processHexField();
-  void processTetField();
+  void processHexField(FieldHandle field_);
+  void processTetField(FieldHandle field_);
 
 public:
 
@@ -115,29 +113,15 @@ CreateDisAnisoSpheres::~CreateDisAnisoSpheres()
 void
 CreateDisAnisoSpheres::execute()
 {
-  // get input ports
-  hInField = (FieldIPort*)get_iport("Mesh");
-  hInRadii = (MatrixIPort*)get_iport("SphereRadii");
-  hInConductivities = (MatrixIPort*)get_iport("AnisoConductivities");
-
-  // get output port
-  hOutField = (FieldOPort*)get_oport("Mesh");
-
   // get input handles
-  if(!hInField->get(field_) || !field_.get_rep()) {
-    error("impossible to get input field handle.");
-    return;
-  }
+  FieldHandle field_;
+  if (!get_input_handle("Mesh", field_)) return;
+
   MatrixHandle radii_;
-  if(!hInRadii->get(radii_) || !radii_.get_rep()) {
-    error("impossible to get radii handle.");
-    return;
-  }
+  if (!get_input_handle("SphereRadii", radii_)) return;
+
   MatrixHandle cond_;
-  if(!hInConductivities->get(cond_) || !cond_.get_rep()) {
-    error("impossible to get conductivity handle.");
-    return;
-  }
+  if (!get_input_handle("AnisoConductivities", cond_)) return;
 
   // get radii and conductivities
   int numRad = radii_->nrows();
@@ -168,7 +152,7 @@ CreateDisAnisoSpheres::execute()
       return;
     }
     tet = false;
-    processHexField();
+    processHexField(field_);
   }
   else {
     if(mtd->get_name().find("TetVolMesh") != string::npos) {
@@ -177,7 +161,7 @@ CreateDisAnisoSpheres::execute()
 	return;
       }
       tet = true;
-      processTetField();
+      processTetField(field_);
     }
     else {
       error("input field is neither HexVol int nor TetVol int");
@@ -195,12 +179,13 @@ CreateDisAnisoSpheres::execute()
   {
     ftmp->set_property("units", units, false);
   }
-  hOutField->send_and_dereference(ftmp);
+
+  send_output_handle("Mesh", ftmp);
 }
 
 
 void
-CreateDisAnisoSpheres::processHexField()
+CreateDisAnisoSpheres::processHexField(FieldHandle field_)
 {
   LockingHandle<HVField > hexField = dynamic_cast<HVField* >(field_.get_rep());
   HVMesh::handle_type mesh_ = hexField->get_typed_mesh();
@@ -252,7 +237,7 @@ CreateDisAnisoSpheres::processHexField()
 
 
 void
-CreateDisAnisoSpheres::processTetField()
+CreateDisAnisoSpheres::processTetField(FieldHandle field_)
 {
   LockingHandle<TVField > tetField = dynamic_cast<TVField* >(field_.get_rep());
   TVMesh::handle_type mesh_ = tetField->get_typed_mesh();

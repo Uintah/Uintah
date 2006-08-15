@@ -199,11 +199,14 @@ VolumeRenderer::draw(DrawInfoOpenGL* di, Material* mat, double)
 void
 VolumeRenderer::draw_volume()
 {
+  Ray view_ray = compute_view();
+  double length = view_ray.direction().length2();
+  if (!(length > 0)) return;
+
   tex_->lock_bricks();
 
   const int levels = tex_->nlevels();
 
-  Ray view_ray = compute_view();
   vector<vector<TextureBrickHandle> > bricks(levels);
   int total_brick_size = 0;
   int firstlevel = -1;
@@ -257,13 +260,13 @@ VolumeRenderer::draw_volume()
     return;
   }
 
-  const bool use_shading = true;
+  const bool use_shading = shading_;
   const GLboolean use_fog = glIsEnabled(GL_FOG);
   GLfloat light_pos[4];
   glGetLightfv(GL_LIGHT0+light_, GL_POSITION, light_pos);
   GLfloat clear_color[4];
   glGetFloatv(GL_COLOR_CLEAR_VALUE, clear_color);
-  int vp[4];
+  GLint vp[4];
   glGetIntegerv(GL_VIEWPORT, vp);
 
   //--------------------------------------------------------------------------
@@ -423,7 +426,7 @@ VolumeRenderer::draw_volume()
       }
     }
   }
-  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0,
+  shader = vol_shader_factory_->shader(use_cmap2 ? 2 : 1, nb0, tex_->nc(),
                                        use_shading, false,
                                        use_fog, blend_mode, cmap2_.size());
   if (shader)
@@ -504,6 +507,7 @@ VolumeRenderer::draw_volume()
     vector<TextureBrickHandle>& bs  = bricks[0];
     for (unsigned int i=0; i < bs.size(); i++) {
       TextureBrickHandle b = bs[i];
+      if (!test_against_view(b->bbox())) continue; // Clip against view.
       vertex.clear();
       texcoord.clear();
       mask.clear();
@@ -778,6 +782,8 @@ VolumeRenderer::draw_wireframe()
     glColor4f(0.8*(i+1.0)/bricks.size(), 0.8*(i+1.0)/bricks.size(), 0.8, 1.0);
 
     TextureBrickHandle b = bricks[i];
+    if (!test_against_view(b->bbox())) continue;
+
     const Point &pmin(b->bbox().min());
     const Point &pmax(b->bbox().max());
     Point corner[8];

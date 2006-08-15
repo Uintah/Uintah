@@ -63,6 +63,9 @@ class SCISHARE MathAlgo : public AlgoLibrary {
     // Build the FEMMatrix using a variable number of processes
     bool BuildFEMatrix(FieldHandle field, MatrixHandle& matrix, int num_proc, MatrixHandle ConductivityTable = 0, MatrixHandle GeomToComp = 0, MatrixHandle CompToGeom = 0);
     
+    // CreateFEDirichletBC()
+    bool CreateFEDirichletBC(MatrixHandle FEin, MatrixHandle RHSin, MatrixHandle BC, MatrixHandle& FEout, MatrixHandle& RHSout);
+    
     // Resize a matrix, Dense or Sparse
     bool ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int n);
     
@@ -81,7 +84,19 @@ class SCISHARE MathAlgo : public AlgoLibrary {
     // Apply an operation on a column by column basis
     bool ApplyColumnOperation(MatrixHandle input, MatrixHandle& output, std::string operation); 
     
+    bool IdentityMatrix(int n,MatrixHandle& output); 
     
+    bool MatrixSelectRows(MatrixHandle input, MatrixHandle& output, std::vector<unsigned int> rows);
+    bool MatrixSelectColumns(MatrixHandle input, MatrixHandle& output, std::vector<unsigned int> columns);
+    bool MatrixSelectSubMatrix(MatrixHandle input, MatrixHandle& output, std::vector<unsigned int> rows, std::vector<unsigned int> columns);
+    
+    bool MatrixNonZeroRows(MatrixHandle input, std::vector<unsigned int>& rows);
+    bool MatrixNonZeroColumns(MatrixHandle input, std::vector<unsigned int>& columns);
+    bool MatrixZeroRows(MatrixHandle input, std::vector<unsigned int>& rows);
+    bool MatrixZeroColumns(MatrixHandle input, std::vector<unsigned int>& columns);
+    
+    bool MatrixAppendRows(MatrixHandle input,MatrixHandle& output,MatrixHandle Rows,std::vector<unsigned int>& newrows);
+    bool MatrixAppendColumns(MatrixHandle input,MatrixHandle& output,MatrixHandle Columns,std::vector<unsigned int>& newcolumns);
 };
 
 

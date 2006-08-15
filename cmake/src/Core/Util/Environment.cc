@@ -50,6 +50,7 @@
 #else
 #define MAXPATHLEN 256
 #include <direct.h>
+#include <windows.h>
 #endif
 
 
@@ -140,6 +141,54 @@ SCIRun::sci_putenv( const string &key, const string &val )
   scirun_env[key] = val;
 }  
 
+
+#ifdef _WIN32
+void getWin32RegistryValues(string& obj, string& src, string& thirdparty, string& packages)
+{
+  // on an installed version of SCIRun, query these values from the registry, overwriting the compiled version
+  // if not an installed version, return the compiled values unchanged
+  HKEY software, company, scirun, pack;
+  if (RegOpenKeyEx(HKEY_LOCAL_MACHINE, "SOFTWARE", 0, KEY_READ, &software) == ERROR_SUCCESS) {
+    if (RegOpenKeyEx(software, "SCI Institute", 0, KEY_READ, &company) == ERROR_SUCCESS) {
+      if (RegOpenKeyEx(company, "SCIRun", 0, KEY_READ, &scirun) == ERROR_SUCCESS) {
+        char data[512];
+        DWORD size = 512;
+        DWORD type;
+        int code = RegQueryValueEx(scirun, "InstallPath", 0, &type, (LPBYTE) data, &size);
+        if (type == REG_SZ && code == ERROR_SUCCESS) {
+          obj = string(data)+"\bin";
+          src = string(data)+"\src";
+          thirdparty = data;
+          cout << "Data: " << data << endl;
+        }
+
+        if (RegOpenKeyEx(scirun, "Packages", 0, KEY_READ, &pack) == ERROR_SUCCESS) {
+          packages = "";
+          int code = ERROR_SUCCESS;
+          char name[128];
+          DWORD nameSize = 128;
+          FILETIME filetime;
+          int index = 0;
+          for (; code == ERROR_SUCCESS; index++) {
+            if (index > 0)
+              packages = packages + name + ",";
+            code = RegEnumKeyEx(pack, index, name, &nameSize, 0, 0, 0, &filetime);
+          }
+          // lose trailing comma
+          if (index > 0 && packages[packages.length()-1] == ',')
+            packages[packages.length()-1] = 0;
+          cout << "Packages: " << packages << endl;
+          RegCloseKey(pack);
+        }
+        RegCloseKey(scirun);
+      }
+      RegCloseKey(company);
+    }
+    RegCloseKey(software);
+  }
+
+}
+#endif
 // get_existing_env() will fill up the SCIRun::existing_env string set
 // with all the currently set environment variable keys, but not their values
 void
@@ -156,10 +205,20 @@ SCIRun::create_sci_environment(char **env, char *execname)
     }
   }
 
+  string executable_name = "scirun";
+  string objdir = SCIRUN_OBJDIR;
+  string srcdir = SCIRUN_SRCDIR;
+  string thirdpartydir = SCIRUN_THIRDPARTY_DIR;
+  string packages = LOAD_PACKAGE;
+
+#ifdef _WIN32
+  getWin32RegistryValues(objdir, srcdir, thirdpartydir, packages);
+#endif
+
   if (!sci_getenv("SCIRUN_OBJDIR")) 
   {
     if (!execname)
-      sci_putenv("SCIRUN_OBJDIR", SCIRUN_OBJDIR);
+      sci_putenv("SCIRUN_OBJDIR", objdir);
     else {
       string objdir(execname);
       if (execname[0] != '/') {
@@ -167,26 +226,30 @@ SCIRun::create_sci_environment(char **env, char *execname)
 	getcwd(cwd,MAXPATHLEN);
 	objdir = cwd+string("/")+objdir;
       }
-      int pos = objdir.length()-1;
-      while (pos >= 0 && objdir[pos] != '/') --pos;
-      ASSERT(pos >= 0);
+
+      string::size_type pos = objdir.find_last_of('/');
+
+      executable_name = objdir.substr(pos+1, objdir.size()-pos-1);;
       objdir.erase(objdir.begin()+pos+1, objdir.end());
+
       sci_putenv("SCIRUN_OBJDIR", objdir);
     }
   }
 
   if (!sci_getenv("SCIRUN_SRCDIR"))
-      sci_putenv("SCIRUN_SRCDIR", SCIRUN_SRCDIR);
+      sci_putenv("SCIRUN_SRCDIR", srcdir);
   if (!sci_getenv("SCIRUN_THIRDPARTY_DIR"))
-      sci_putenv("SCIRUN_THIRDPARTY_DIR", SCIRUN_THIRDPARTY_DIR);
+      sci_putenv("SCIRUN_THIRDPARTY_DIR", thirdpartydir);
   if (!sci_getenv("SCIRUN_LOAD_PACKAGE"))
-    sci_putenv("SCIRUN_LOAD_PACKAGE", LOAD_PACKAGE);
+    sci_putenv("SCIRUN_LOAD_PACKAGE", packages);
   if (!sci_getenv("SCIRUN_ITCL_WIDGETS"))
     sci_putenv("SCIRUN_ITCL_WIDGETS", ITCL_WIDGETS);
   sci_putenv("SCIRUN_ITCL_WIDGETS", 
 	     MacroSubstitute(sci_getenv("SCIRUN_ITCL_WIDGETS")));
 
-  find_and_parse_scirunrc();
+  sci_putenv("EXECUTABLE_NAME", executable_name);
+  string rcfile = "." + executable_name + "rc";
+  find_and_parse_rcfile(rcfile);
 }
 
 // emptryOrComment returns true if the 'line' passed in is a comment
@@ -208,11 +271,11 @@ emptyOrComment( const char * line )
   return true;
 }
 
-// parse_scirunrc reads the .scirunrc file 'rcfile' into the SCIRuns enviroment
+// parse_rcfile reads the file 'rcfile' into SCIRuns enviroment mechanism
 // It uses sci_putenv to set variables in the environment. 
 // Returns true if the file was opened and parsed.  False otherwise.
 bool
-SCIRun::parse_scirunrc( const string &rcfile )
+SCIRun::parse_rcfile( const string &rcfile )
 {
   FILE* filein = fopen(rcfile.c_str(),"r");
   if (!filein) return false;
@@ -229,10 +292,10 @@ SCIRun::parse_scirunrc( const string &rcfile )
 
     char line[1024];
     // If we get to the EOF:
-    if( !fgets( line, 1024, filein ) ) break;
+    if( !fgets( line, 1023, filein ) ) break;
 
     int length = (int)strlen(line);
-    if( length > 0 ) {
+    if( line[length-1] == '\n' ) {
       // Replace CR with EOL.
       line[length-1] = 0;
     }
@@ -246,8 +309,6 @@ SCIRun::parse_scirunrc( const string &rcfile )
 	removeLTWhiteSpace(var);
 	removeLTWhiteSpace(var_val);
 	char* sub = MacroSubstitute(var_val);
-
-
 
 	// Only put the var into the environment if it is not already there.
 	if(!SCIRun::sci_getenv( var ) || 
@@ -269,42 +330,45 @@ SCIRun::parse_scirunrc( const string &rcfile )
   return true;
 }
 
-// find_and_parse_scirunrc will search for the users .scirunrc file in 
+// find_and_parse_rcfile will search for the rcfile file in 
 // default locations and read it into the environemnt if possible.
 void
-SCIRun::find_and_parse_scirunrc()
+SCIRun::find_and_parse_rcfile(const string &rcfile)
 {
-  // Tell the user that we are searching for the .scirunrc file...
-  std::cout << "Parsing .scirunrc... ";
+  // Tell the user that we are searching for the rcfile...
+  std::cout << "Parsing " << rcfile << "... ";
   bool foundrc=false;
+  const string slash("/");
 
   // 1. check the local directory
-  string filename(".scirunrc");
-  foundrc = parse_scirunrc(filename);
-
+  string filename(rcfile);
+  foundrc = parse_rcfile(filename);
+  
   // 2. check the BUILD_DIR
   if (!foundrc) {
-    filename = SCIRUN_OBJDIR+string("/.scirunrc");
-    foundrc = parse_scirunrc(filename);
+    filename = SCIRUN_OBJDIR + slash + string(rcfile);
+    foundrc = parse_rcfile(filename);
   }
   
   // 3. check the user's home directory
   const char *HOME;
   if (!foundrc && (HOME = sci_getenv("HOME"))) {
-      filename = HOME+string("/.scirunrc");
-      foundrc = parse_scirunrc(filename);
+      filename = HOME + slash + string(rcfile);
+      foundrc = parse_rcfile(filename);
   }
   
   // 4. check the source code directory
   if (!foundrc) {
-    filename = SCIRUN_SRCDIR+string("/.scirunrc");
-    foundrc = parse_scirunrc(filename);
+    filename = SCIRUN_SRCDIR + slash + string(rcfile);
+    foundrc = parse_rcfile(filename);
   }
 
-  // The .scirunrc file wasn't found.
-  if(!foundrc) filename = string("not found.");
+  // The rcfile wasn't found.
+  if(!foundrc) { 
+    filename = string("not found.");
+  }
   
-  // print location of .scirunrc
+  // print location of the rcfile
   cout << filename << std::endl;
 }
 
@@ -347,7 +411,7 @@ SCIRun::copy_and_parse_scirunrc()
   else
   { 
     // If the scirunrc file was copied, then parse it.
-    parse_scirunrc(homerc);
+    parse_rcfile(homerc);
   }
 }
 

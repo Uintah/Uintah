@@ -130,8 +130,6 @@ class GatherFieldsAlgoT : public GatherFieldsAlgo
 #else
   typedef hash_map<unsigned, unsigned, hash<unsigned>, equint> idx_ht;
 #endif
-  idx_ht node_table_;
-
 
 protected:
   FieldHandle append_fields(vector<FIELD *> fields,
@@ -166,9 +164,10 @@ GatherFieldsAlgoT<FIELD>::append_fields(vector<FIELD *> fields,
   pnts_table_.clear();
   unsigned int offset = 0;
   unsigned int i;
+  vector<idx_ht> node_table_(fields.size());
   for (i=0; i < fields.size(); i++)
   {
-    node_table_.clear();
+    node_table_[i].clear();
     typename FIELD::mesh_handle_type imesh = fields[i]->get_typed_mesh();
     typename FIELD::mesh_type::Node::iterator nitr, nitr_end;
     imesh->begin(nitr);
@@ -193,7 +192,7 @@ GatherFieldsAlgoT<FIELD>::append_fields(vector<FIELD *> fields,
 	// p already existed in the table
 	out_node_idx = (*ins).second;
       }
-      node_table_[input_field_node_idx] = out_node_idx;
+      node_table_[i][input_field_node_idx] = out_node_idx;
       ++nitr; ++input_field_node_idx;
     }
 
@@ -209,7 +208,7 @@ GatherFieldsAlgoT<FIELD>::append_fields(vector<FIELD *> fields,
       {
 	// set the indeces to the matching output node indeces.
 	typename idx_ht::iterator nt_iter = 
-	  node_table_.find((unsigned int)nodes[j]);
+	  node_table_[i].find((unsigned int)nodes[j]);
 	nodes[j] = (*nt_iter).second;
       }
       omesh->add_elem(nodes);
@@ -264,7 +263,7 @@ GatherFieldsAlgoT<FIELD>::append_fields(vector<FIELD *> fields,
           fields[i]->value(val, *nitr);
 
 	  typename idx_ht::iterator nt_iter = 
-	    node_table_.find((unsigned int)*nitr);
+	    node_table_[i].find((unsigned int)*nitr);
           typename FIELD::mesh_type::Node::index_type 
 	    new_index((*nt_iter).second);
           ofield->set_value(val, new_index);

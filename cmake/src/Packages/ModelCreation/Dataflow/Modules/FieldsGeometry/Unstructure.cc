@@ -26,10 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Module.h>
-
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
@@ -55,12 +52,16 @@ Unstructure::Unstructure(GuiContext* ctx)
 void Unstructure::execute()
 {
   FieldHandle ifield, ofield;
+  
   if (!(get_input_handle("Field",ifield,true))) return;
   
-  SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
-  if (!(algo.Unstructure(ifield,ofield))) return;
-  
-  send_output_handle("Field",ofield,true);
+  if (inputs_changed_ || !oport_cached("Field"))
+  {
+    SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
+    if (!(algo.Unstructure(ifield,ofield))) return;
+    
+    send_output_handle("Field",ofield,false);
+  }
 }
 
 } // End namespace ModelCreation

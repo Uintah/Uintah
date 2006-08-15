@@ -26,14 +26,12 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
-
-#include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 namespace ModelCreation {
 
@@ -54,14 +52,24 @@ GetFieldData::GetFieldData(GuiContext* ctx)
 
 void GetFieldData::execute()
 {
+  // define input handles:
   FieldHandle Input;
   MatrixHandle Data;
+  
+  // Get data from ports:
   if(!(get_input_handle("Field",Input,true))) return;
   
-  SCIRunAlgo::FieldsAlgo algo(this);
-  if(!(algo.GetFieldData(Input,Data))) return;
+  // Only do work if inputs changed:
+  if (inputs_changed_ || !oport_cached("Data"))
+  {
+    SCIRunAlgo::FieldsAlgo algo(this);
+    
+    // Actual algorithm:
+    if(!(algo.GetFieldData(Input,Data))) return;
   
-  send_output_handle("Data",Data,true);
+    // Send output downstream:
+    send_output_handle("Data",Data,false);
+  }
 }
 
 } // End namespace ModelCreation

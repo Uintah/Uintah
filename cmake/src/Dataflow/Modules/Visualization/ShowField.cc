@@ -114,8 +114,7 @@ class ShowField : public Module
   GuiInt                   bidirectional_;
   GuiInt                   vectors_usedefcolor_;
   bool                     data_dirty_;
-  string                   cur_field_data_type_;
-  int                      cur_field_basis_order_;
+  string                   cur_field_data_basis_type_;
 
   GuiInt                   tensors_on_;
   GuiInt                   has_tensor_data_;
@@ -253,8 +252,7 @@ ShowField::ShowField(GuiContext* ctx) :
   bidirectional_(get_ctx()->subVar("bidirectional")),
   vectors_usedefcolor_(get_ctx()->subVar("vectors-usedefcolor")),
   data_dirty_(true),
-  cur_field_data_type_("none"),
-  cur_field_basis_order_(-1),
+  cur_field_data_basis_type_("none"),
   tensors_on_(get_ctx()->subVar("tensors-on")),
   has_tensor_data_(get_ctx()->subVar("has_tensor_data")),
   tensors_usedefcolor_(get_ctx()->subVar("tensors-usedefcolor")),
@@ -397,8 +395,8 @@ ShowField::fetch_typed_algorithm(FieldHandle fld_handle,
   const TypeDescription *ftd = fld_handle->get_type_description();
   const TypeDescription *ltd = fld_handle->order_type_description();
   // description for just the data in the field
-  cur_field_data_type_ = fld_handle->get_type_description(Field::MESH_TD_E)->get_name();
-  cur_field_basis_order_ = fld_handle->basis_order();
+  cur_field_data_basis_type_ = 
+    fld_handle->get_type_description(Field::BASIS_TD_E)->get_name();
 
   if (recompile_nonvector)
   {
@@ -504,13 +502,11 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     }
 
     const TypeDescription *data_type_description =
-      fld_handle->get_type_description(Field::MESH_TD_E);
+      fld_handle->get_type_description(Field::BASIS_TD_E);
     const string fdt = data_type_description->get_name();
-    int basis_order = fld_handle->basis_order();
     if (!fetch_typed_algorithm(fld_handle, vfld_handle,
 			       mesh_new ||
-			       (cur_field_data_type_ != fdt) ||
-			       (cur_field_basis_order_ != basis_order)))
+			       (cur_field_data_basis_type_ != fdt)))
     {
       return false;
     }
@@ -543,7 +539,8 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     text_id_ = 0;
 
     // set new scale defaults based on input.
-    Vector diag = fld_handle->mesh()->get_bounding_box().diagonal();
+    BBox bbox = fld_handle->mesh()->get_bounding_box();
+    Vector diag = bbox.diagonal();
     cur_mesh_scale_factor_ = diag.length();
     gui_use_defaults_.reset();
     if (gui_use_defaults_.get() || 
@@ -877,6 +874,7 @@ ShowField::execute()
   {
     data_dirty_ = false;
     if (vfld_handle.get_rep() &&
+        vfld_handle->query_vector_interface().get_rep() &&
 	data_vector_renderer_.get_rep() &&
 	vectors_on_.get())
     {
@@ -902,6 +900,7 @@ ShowField::execute()
       data_id_ = ogeom_->addObj(geom, fname + vdname);
     }
     else if (vfld_handle.get_rep() &&
+             vfld_handle->query_tensor_interface().get_rep() &&
 	     data_tensor_renderer_.get_rep() &&
 	     tensors_on_.get())
     {
@@ -918,6 +917,7 @@ ShowField::execute()
       data_id_ = ogeom_->addObj(data, fname + "Tensors");
     }
     else if (vfld_handle.get_rep() &&
+             vfld_handle->query_scalar_interface().get_rep() &&
 	     data_scalar_renderer_.get_rep() &&
 	     scalars_on_.get())
     {

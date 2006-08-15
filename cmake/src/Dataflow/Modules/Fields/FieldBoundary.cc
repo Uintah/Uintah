@@ -58,7 +58,6 @@ public:
 private:
   
   //! Input should be a volume field.
-  FieldIPort*              infield_;
   int                      infield_gen_;
 
   //! BoundaryField field output.
@@ -91,18 +90,14 @@ FieldBoundary::~FieldBoundary()
 void 
 FieldBoundary::execute()
 {
-  infield_ = (FieldIPort *)get_iport("Field");
   osurf_ = (FieldOPort *)get_oport("BoundaryField");
   ointerp_ = (MatrixOPort *)get_oport("Mapping");
 
   FieldHandle input;
-  if (!(infield_->get(input) && input.get_rep()))
-  {
-    error("No input field data.");
-    return;
-  }
-  else if (infield_gen_ != input->generation ||
-           !osurf_->have_data() || !ointerp_->have_data())
+  if (!get_input_handle("Field", input)) return;
+  
+  if (infield_gen_ != input->generation ||
+      !osurf_->have_data() || !ointerp_->have_data())
   {
     infield_gen_ = input->generation;
     MeshHandle mesh = input->mesh();
@@ -151,13 +146,8 @@ FieldBoundary::execute()
     warning("Use the DirectInterpolate module if interpolation is required.");
   }
 
-  osurf_->send(tri_fh_);
-  ointerp_->send(interp_mh_);
-  if (!osurf_->have_data() || !ointerp_->have_data())
-  {
-    tri_fh_ = 0;
-    interp_mh_ = 0;
-  }
+  send_output_handle("BoundaryField", tri_fh_, true);
+  send_output_handle("Mapping", interp_mh_, true);
 }
 
 

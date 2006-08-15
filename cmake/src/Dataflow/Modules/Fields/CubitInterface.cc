@@ -73,7 +73,6 @@ typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
 typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
 
 private:
-  FieldIPort *		iport1_;
   FieldIPort *		iport2_;
   FieldOPort *		oport_;
   int			field1_generation_;
@@ -345,27 +344,19 @@ CubitInterface::read_netcdf_file(string filename, TVMesh::handle_type &mesh)
 void
 CubitInterface::execute()
 {
-  iport1_ = (FieldIPort *)get_iport("Field");
   iport2_ = (FieldIPort *)get_iport("PointCloudField");
-  oport_  = (FieldOPort *)get_oport("Field");
-
 
   FieldHandle field1;
-  iport1_->get(field1);
-  if (!field1.get_rep()) {
-    error("No input field to port 1.");
-    return;
-  }
-
-  // Get the PointCloudField from the seco port
-  FieldHandle pcf;
-  iport2_->get(pcf);
-
+  if (!get_input_handle("Field", field1)) return;
 
   if (field1->get_type_description()->get_name().find("TriSurfField")) {
     error("Field connected to port 1 must be TriSurfField.");
     return;
   }
+
+  // Get the PointCloudField from the second port.
+  FieldHandle pcf;
+  iport2_->get(pcf);
 
   // Make sure the second input field is of type PointCloudField
   if (pcf.get_rep() && 
@@ -429,7 +420,8 @@ CubitInterface::execute()
   typedef ConstantBasis<double> CBF;
   typedef GenericField<TVMesh, CBF, vector<double> > TVField;
   FieldHandle f = scinew TVField(mesh);
-  oport_->send_and_dereference(f);
+
+  send_output_handle("Field", f);
 }
 
 

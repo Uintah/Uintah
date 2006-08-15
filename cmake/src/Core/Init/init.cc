@@ -43,7 +43,7 @@
 #include <Core/Util/soloader.h>
 #include <Core/Util/Environment.h>
 #include <Core/Containers/StringUtil.h>
-#include <Dataflow/Network/PackageDB.h>
+//#include <Dataflow/Network/PackageDB.h>
 
 using namespace SCIRun;
 using std::string;
@@ -56,59 +56,6 @@ using std::string;
   static string lib_ext = ".so";
 #endif
 
-
-
-#if defined(__APPLE__)  
-
-  namespace SCIRun {
-    extern void macImportExportForceLoad();
-  }
-
-#  include <iostream>
-
-
-  //  The Macintosh does not run static object constructors when loading a 
-  //  dynamic library until a symbol from that library is referenced.  See:
-  //
-  //  http://wwwlapp.in2p3.fr/~buskulic/static_constructors_in_Darwin.html
-  //
-  //  We use this function to force Core/Datatypes to load and run constructors
-  //  (but only for Macs.)
-  void
-  macForceLoad()
-  {
-#if 0
-    std::cout << "Forcing load of Core/Datatypes (for Macintosh)\n";
-
-  PointCloudField<double> pcfd;
-  PersistentTypeID temp = pcfd.type_id;
-
-  GenericField< PointCloudMesh,vector<double> > gfpvd;
-  temp = gfpvd.type_id;
-
-  PointCloudField<Vector> pcfv;
-  temp = pcfv.type_id;
-
-  GenericField< PointCloudMesh,vector<Vector> > gfpvv;
-  temp = gfpvv.type_id;
-
-  GenericField< TriSurfMesh,vector<double> > gftvd;
-  temp = gftvd.type_id;
-
-  TriSurfField<double> tsfd;
-  temp = tsfd.type_id;
-
-  StructQuadSurfField<double> sqsfd;
-  temp = sqsfd.type_id;
-
-  TriSurfMesh tsmd;
-  temp = tsmd.type_id;
-
-  StructHexVolField<double> shvfd;
-  temp = shvfd.type_id;
-#endif
-}
-#endif
 
 // SCIRunInit is called from from main() (and from stantalone converters).
 //
@@ -129,14 +76,8 @@ using std::string;
 
 
 void
-SCIRunInit(string packages) {
-#if 0
-  // defined(__APPLE__)  
-  macImportExportForceLoad(); // Attempting to force load (and thus
-                              // instantiation of static constructors) 
-  macForceLoad();             // of Core/Datatypes and Core/ImportExport.
-
-#endif
+SCIRunInit(string packages) 
+{
   string package_list = packages;
 
   if( package_list.empty() ) {

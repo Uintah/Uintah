@@ -1115,7 +1115,7 @@ MPIRelocate::relocateParticles(const ProcessorGroup* pg,
     int alltotal[3];
 
     // don't reduce if number of patches on this level is < num procs.  Will wait forever in reduce.
-    if (level->getGrid()->numLevels() == 1 && level->numPatches() >= pg->size()) {
+    if (!lb->isDynamic() && level->getGrid()->numLevels() == 1 && level->numPatches() >= pg->size()) {
       mpidbg << pg->myrank() << " Relocate reduce\n";
 
       MPI_Reduce(total_reloc, &alltotal, 3, MPI_INT, MPI_SUM, 0,

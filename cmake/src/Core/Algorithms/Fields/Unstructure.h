@@ -128,7 +128,7 @@ bool UnstructureAlgoT<FSRC, FDST>::Unstructure(ProgressReporter *pr, FieldHandle
     imesh->begin(bn);
     imesh->end(en);
 
-    ofield->fdata().reserve(numnodes);
+    ofield->fdata().resize(numnodes);
     while (bn != en) 
     {
       typename FSRC::value_type val;
@@ -142,7 +142,7 @@ bool UnstructureAlgoT<FSRC, FDST>::Unstructure(ProgressReporter *pr, FieldHandle
     imesh->begin(bi);
     imesh->end(ei);
 
-    ofield->fdata().reserve(numelems);
+    ofield->fdata().resize(numelems);
     while (bi != ei) 
     {
       typename FSRC::value_type val;

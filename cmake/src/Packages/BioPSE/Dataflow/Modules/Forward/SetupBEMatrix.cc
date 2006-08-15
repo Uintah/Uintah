@@ -64,7 +64,6 @@ SetupBEMatrix::~SetupBEMatrix()
 void
 SetupBEMatrix::execute()
 {
-  MatrixOPort* oportMatrix_ = (MatrixOPort *)get_oport("BEM Forward Matrix");
   port_range_type range = get_iports("Surface");
   if (range.first == range.second)
   {
@@ -171,7 +170,7 @@ SetupBEMatrix::execute()
 
    // -- sending handles to cloned objects
    MatrixHandle hzoi(hZoi_->clone());
-   oportMatrix_->send_and_dereference(hzoi);
+   send_output_handle("BEM Forward Matrix", hzoi);
 
    return;
 }

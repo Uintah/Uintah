@@ -53,13 +53,15 @@ namespace Uintah {
 
     inline void fillMatrix(int,int[],int,int j[],double v[]);
 
-    void fillVector(int, double);
+    void fillVector(int, double,bool add = false);
 
     void fillTemporaryVector(int, double);
 
     void copyL2G(Array3<int>& l2g, const Patch* patch);
 
     void removeFixedDOF(int num_nodes);
+
+    void removeFixedDOFHeat(int num_nodes);
 
     void finalizeMatrix();
 
@@ -86,7 +88,7 @@ namespace Uintah {
 
     // Petsc matrix and vectors
 #ifdef HAVE_PETSC
-    Mat d_A;
+    Mat d_A,d_C;
     Vec d_B;
     Vec d_diagonal;
     Vec d_x;
@@ -104,10 +106,11 @@ namespace Uintah {
 
 #ifdef HAVE_PETSC
   inline void MPMPetscSolver::fillMatrix(int numi,int i[],int numj,
-                                       int j[],double value[])
+                                         int j[],double value[])
   {
     MatSetValues(d_A,numi,i,numj,j,value,ADD_VALUES);
   }
+
 #endif
 
 }

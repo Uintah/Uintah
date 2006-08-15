@@ -26,23 +26,12 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  MappingMatrixToField.cc:
- *
- *  Written by:
- *   jeroen
- *   TODAY'S DATE HERE
- *
- */
-
-#include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
-
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
 
@@ -72,10 +61,13 @@ void MappingMatrixToField::execute()
   if (!(get_input_handle("Field",input,true))) return;
   if (!(get_input_handle("MappingMatrix",matrix,true))) return;
 
-  SCIRunAlgo::FieldsAlgo fieldmath(this);  
-  if(!(fieldmath.MappingMatrixToField(input,output,matrix))) return;
+  if (inputs_changed_ || !oport_cached("IndicesField"))
+  {
+    SCIRunAlgo::FieldsAlgo fieldmath(this);  
+    if(!(fieldmath.MappingMatrixToField(input,output,matrix))) return;
   
-  send_output_handle("IndicesField",output,true);
+    send_output_handle("IndicesField",output,false);
+  }
 }
 
 } // End namespace ModelCreation

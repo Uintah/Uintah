@@ -27,7 +27,7 @@
 SRCDIR := Packages/CardioWave/Dataflow/GUI
 
 SRCS := \
-	$(SRCDIR)/TimeDataReader.tcl\
+	$(SRCDIR)/DMDAddDomainElectrodes.tcl\
 	$(SRCDIR)/DMDAddMembrane.tcl\
 	$(SRCDIR)/DMDAddStimulus.tcl\
 	$(SRCDIR)/DMDAddStimulusSeries.tcl\
@@ -40,6 +40,7 @@ SRCS := \
 	$(SRCDIR)/CBDAddReference.tcl\
 	$(SRCDIR)/CBDCreateSimulation.tcl\
 	$(SRCDIR)/CBDBuildSimulation.tcl\
+	$(SRCDIR)/RegularBundle.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

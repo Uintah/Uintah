@@ -84,24 +84,11 @@ IntegrateCurrent::~IntegrateCurrent()
 void
 IntegrateCurrent::execute()
 {
-  FieldIPort* efield_port = (FieldIPort *) get_iport("TetMesh EField");
-  FieldIPort* sigmas_port = (FieldIPort *) get_iport("TetMesh Sigmas");
-  FieldIPort* trisurf_port = (FieldIPort *) get_iport("TriSurf");
-
   FieldHandle efieldH, sigmasH, trisurfH;
+  if (!get_input_handle("TetMesh EField", efieldH)) return;
+  if (!get_input_handle("TetMesh Sigmas", sigmasH)) return;
+  if (!get_input_handle("TriSurf", trisurfH)) return;
 
-  if (!efield_port->get(efieldH) || !efieldH.get_rep()) {
-    error("Empty input E Field.");
-    return;
-  }
-  if (!sigmas_port->get(sigmasH) || !sigmasH.get_rep()) {
-    error("Empty input Sigmas.");
-    return;
-  }
-  if (!trisurf_port->get(trisurfH) || !trisurfH.get_rep()) {
-    error("Empty input trisurf.");
-    return;
-  }
   if (efieldH->mesh().get_rep() != sigmasH->mesh().get_rep()) {
     error("EField and Sigma Field need to have the same mesh.");
     return;

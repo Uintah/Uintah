@@ -68,6 +68,7 @@ public:
 
 #ifdef SCI_OPENGL
     virtual void draw(DrawInfoOpenGL*, Material*, double time);
+    virtual void fbpick_draw(DrawInfoOpenGL*, Material*, double time);
 #endif
     virtual void get_triangles( Array1<float> &);
     virtual void io(Piostream&);

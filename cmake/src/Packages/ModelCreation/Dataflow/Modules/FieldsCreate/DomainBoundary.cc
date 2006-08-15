@@ -27,9 +27,8 @@
 */
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
@@ -46,8 +45,11 @@ private:
   GuiInt    guiuserange_;
   GuiDouble guiminrange_;
   GuiDouble guimaxrange_;
+  GuiInt    guiusevalue_;
+  GuiDouble guivalue_;
   GuiInt    guiincludeouterboundary_;
   GuiInt    guiinnerboundaryonly_;
+  GuiInt    guinoinnerboundary_;
   GuiInt    guidisconnect_;
   
   
@@ -60,36 +62,77 @@ DomainBoundary::DomainBoundary(GuiContext* ctx)
     guiuserange_(get_ctx()->subVar("userange")),
     guiminrange_(get_ctx()->subVar("minrange")),
     guimaxrange_(get_ctx()->subVar("maxrange")),
+    guiusevalue_(get_ctx()->subVar("usevalue")),
+    guivalue_(get_ctx()->subVar("value")),
     guiincludeouterboundary_(get_ctx()->subVar("includeouterboundary")),
     guiinnerboundaryonly_(get_ctx()->subVar("innerboundaryonly")),    
+    guinoinnerboundary_(get_ctx()->subVar("noinnerboundary")),    
     guidisconnect_(get_ctx()->subVar("disconnect"))    
 {
 }
 
 void DomainBoundary::execute()
 {
+  // Define local handles of data objects:
   FieldHandle ifield, ofield;
   MatrixHandle ElemLink;
-  SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
+  MatrixHandle MinValue, MaxValue;
  
+  // Get the new input data: 
   if(!(get_input_handle("Field",ifield,true))) return;
+  get_input_handle("MinValue/Value",MinValue,false);
+  get_input_handle("MaxValue",MaxValue,false);
+  
   if (ifield->is_property("ElemLink")) ifield->get_property("ElemLink",ElemLink);
   
-  double minrange, maxrange;
-  bool   userange, includeouterboundary;
-  bool   innerboundaryonly;
-  bool   disconnect;
+  // Only reexecute if the input changed. SCIRun uses simple scheduling
+  // that executes every module downstream even if no data has changed:    
+  if (inputs_changed_ || guiminrange_.changed() ||  guimaxrange_.changed() ||
+      guivalue_.changed() || guiuserange_.changed() || guiincludeouterboundary_.changed() ||
+      guiinnerboundaryonly_.changed() || guinoinnerboundary_.changed() || guidisconnect_.changed() ||
+      !oport_cached("Field"))
+  {
+    double minrange, maxrange, value;
+    bool   userange, usevalue, includeouterboundary;
+    bool   innerboundaryonly, noinnerboundary;
+    bool   disconnect;
 
-  minrange = guiminrange_.get();
-  maxrange = guimaxrange_.get();
-  userange = static_cast<bool>(guiuserange_.get());
-  includeouterboundary = static_cast<bool>(guiincludeouterboundary_.get());
-  innerboundaryonly = static_cast<bool>(guiinnerboundaryonly_.get());
-  disconnect = static_cast<bool>(guidisconnect_.get());
-  
-  if(!(algo.DomainBoundary(ifield,ofield,ElemLink,minrange,maxrange,userange,includeouterboundary,innerboundaryonly,disconnect))) return;
-  
-  send_output_handle("Field",ofield,true);
+    SCIRunAlgo::ConverterAlgo calgo(dynamic_cast<ProgressReporter *>(this));
+    if (MinValue.get_rep())
+    {
+      calgo.MatrixToDouble(MinValue,minrange);
+      guiminrange_.set(minrange);
+      guivalue_.set(minrange);
+      get_ctx()->reset();
+    }
+    if (MaxValue.get_rep())
+    {
+      calgo.MatrixToDouble(MaxValue,maxrange);
+      guimaxrange_.set(maxrange);
+      get_ctx()->reset();
+    }
+
+    // Get all the new input variables:
+    minrange = guiminrange_.get();
+    maxrange = guimaxrange_.get();
+    value    = guivalue_.get();
+    userange = static_cast<bool>(guiuserange_.get());
+    usevalue = static_cast<bool>(guiusevalue_.get());
+    includeouterboundary = static_cast<bool>(guiincludeouterboundary_.get());
+    innerboundaryonly = static_cast<bool>(guiinnerboundaryonly_.get());
+    noinnerboundary = static_cast<bool>(guinoinnerboundary_.get());
+    disconnect = static_cast<bool>(guidisconnect_.get());
+    
+    // In case we have a one value range, use the range code but for one value:
+    if (usevalue) { userange = true; minrange = value; maxrange = value; }
+    
+    // The innerworks of the module:
+    SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
+    if(!(algo.DomainBoundary(ifield,ofield,ElemLink,minrange,maxrange,userange,includeouterboundary,innerboundaryonly,noinnerboundary,disconnect))) return;
+    
+    // send new output if there is any:        
+    send_output_handle("Field",ofield,false);
+  }
 }
 
 } // End namespace ModelCreation

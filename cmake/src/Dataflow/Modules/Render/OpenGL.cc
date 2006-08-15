@@ -501,9 +501,8 @@ OpenGL::render_and_save_image( int x, int y,
                                const string & fname, const string & ftype )
                                
 {
-  bool use_convert = false;
-
 #if defined(HAVE_PNG) && HAVE_PNG
+  bool use_convert = false;
   bool write_png = false;
   // Either the user specified the type to be ppm or raw (in that case
   // we create that type of image), or they specified the "by_extension"
@@ -608,6 +607,7 @@ OpenGL::render_and_save_image( int x, int y,
       return;
     }
   }
+  FILE *fp = NULL;
 #endif
 
   ASSERT(sci_getenv("SCIRUN_TMP_DIR"));
@@ -618,7 +618,6 @@ OpenGL::render_and_save_image( int x, int y,
 
 
   int channel_bytes, num_channels;
-  FILE *fp = NULL;
 
   if (ftype == "ppm" || ftype == "raw")
   {
@@ -1674,10 +1673,21 @@ OpenGL::dump_image(const string& fname, const string& ftype)
   else
 #endif
   {
-    ofstream dumpfile(fname.c_str());
+    string fnamecopy = fname;
+    if (ftype == "png")
+    {
+      static bool firsttime = true;
+      if (firsttime)
+      {
+        view_window_->setMovieMessage(" ERROR - No PNG support in this build, saving PPM images.", true);
+        firsttime = false;
+      }
+      fnamecopy = fname.substr(0, fname.find("png")) + "ppm";
+    }
+    ofstream dumpfile(fnamecopy.c_str());
     if ( !dumpfile )
     {
-      string errorMsg = "ERROR opening file: " + fname;
+      string errorMsg = "ERROR opening file: " + fnamecopy;
       view_window_->setMovieMessage( errorMsg, true );
       cerr << errorMsg << "\n";
       return;

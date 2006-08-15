@@ -56,9 +56,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-
   GuiInt       dir_;
   GuiInt       maxsize_;
   GuiInt       maxneigh_;
@@ -76,24 +73,19 @@ UnuCCmerge::UnuCCmerge(GuiContext* ctx)
 {
 }
 
-UnuCCmerge::~UnuCCmerge(){
+
+UnuCCmerge::~UnuCCmerge()
+{
 }
 
+
 void
- UnuCCmerge::execute(){
-  NrrdDataHandle nrrd_handle;
-
+UnuCCmerge::execute()
+{
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty InputNrrd.");
-    return;
-  }
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
   reset_vars();
 
@@ -101,14 +93,16 @@ void
   Nrrd *nout = nrrdNew();
 
   if (nrrdCCMerge(nout, nin, 0, dir_.get(), maxsize_.get(), maxneigh_.get(), 
-		  connectivity_.get())) {
+		  connectivity_.get()))
+  {
     char *err = biffGetDone(NRRD);
     error(string("Error perfomring CC merge nrrd: ") + err);
     free(err);
   }
 
   NrrdDataHandle out(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(out);
+
+  send_output_handle("OutputNrrd", out);
 }
 
 

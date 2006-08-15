@@ -31,13 +31,15 @@
 
 #include <Core/Events/EventManager.h>
 #include <Core/Util/Environment.h>
+#include <Core/Util/Timer.h>
 #include <iostream>
 
 namespace SCIRun {
 
 EventManager::id_tm_map_t EventManager::mboxes_;
 Mutex EventManager::mboxes_lock_("EventManager mboxes_ lock");
-Mailbox<event_handle_t> EventManager::mailbox_("EventManager", 1024);
+Mailbox<event_handle_t> EventManager::mailbox_("EventManager", 8024);
+Piostream * EventManager::stream_ = 0;
 
 EventManager::EventManager() :
   tm_("EventManager tools")
@@ -49,6 +51,7 @@ EventManager::EventManager() :
 
 EventManager::~EventManager()
 {
+  mailbox_.send(new QuitEvent());
   mboxes_lock_.lock();
   bool empty = mboxes_.empty();
   mboxes_lock_.unlock();
@@ -87,6 +90,70 @@ EventManager::~EventManager()
   }
 }
 
+
+
+
+void
+EventManager::add_event(event_handle_t event) 
+{
+  if (stream_ && stream_->reading()) return;
+
+  KeyEvent *ke = dynamic_cast<KeyEvent*>(event.get_rep());
+  if (ke && !ke->get_key_state() )
+  {
+    cerr << "Invalid key event\n";
+  }
+
+
+  mailbox_.send(event);
+}
+
+bool
+EventManager::record_trail_file(const string &filename)
+{
+  if (stream_) {
+    return false;
+  }
+
+  stream_ = auto_ostream(filename, "Text", 0);
+
+  if (stream_ && stream_->error()) {
+    delete stream_;
+    return false;
+  }
+  stream_->disable_pointer_hashing();
+
+  return stream_;
+}
+
+bool
+EventManager::play_trail_file(const string &filename)
+{
+  if (stream_) {
+    return false;
+  }
+
+  stream_ = auto_istream(filename, 0);
+  
+  if (stream_ && stream_->error()) {
+    delete stream_;
+    return false;
+  }
+
+  return stream_;
+
+}
+
+
+void
+EventManager::stop_trail_file()
+{
+  if (!stream_) return;
+  delete stream_;
+  stream_ = 0;
+}
+  
+
 EventManager::event_mailbox_t*
 EventManager::register_event_messages(string id)
 {
@@ -101,7 +168,7 @@ EventManager::register_event_messages(string id)
     cerr << "Mailbox id \"" << id << "\" registered\n";
   }
   string mbox_name = "event_mailbox_" + id;
-  event_mailbox_t* mbox = new event_mailbox_t(mbox_name.c_str(), 1024);
+  event_mailbox_t* mbox = new event_mailbox_t(mbox_name.c_str(), 8024);
   mboxes_.insert(make_pair(id, mbox));
   mboxes_lock_.unlock();
   return mbox;
@@ -156,12 +223,72 @@ EventManager::unregister_mailbox(event_mailbox_t *mailbox)
 
 
 void
+EventManager::play_trail() {
+  ASSERT(stream_ && stream_->reading());
+
+  event_handle_t event;
+  unsigned long event_time = 0;
+  unsigned long last_event_time = 0;
+  double last_timer_time = 0;
+  const double millisecond = 1.0 / 1000.0;
+  TimeThrottle timer;
+  timer.start();
+  sci_putenv("SCIRUN_TRAIL_PLAYBACK", "1");
+  while (stream_ && !stream_->eof()) {
+    event = 0;
+    Pio(*stream_, event);
+  
+    if (!event.get_rep()) {
+      stop_trail_file();
+      continue;
+    }   
+    if ((event_time = event->get_time())) {
+      if (last_event_time) {
+        double diff = (event_time-last_event_time) * millisecond;
+        if (diff > 10) diff = 10;
+        if (diff < 0) diff = 0;
+        timer.wait_for_time(last_timer_time + diff);
+      }           
+      last_event_time = event_time;
+      last_timer_time = timer.time();
+    }
+    
+    mailbox_.send(event);
+  }
+  timer.stop();
+  sci_putenv("SCIRUN_TRAIL_PLAYBACK", "0");
+} 
+  
+
+void
 EventManager::run() 
 {
   bool done = false;
   event_handle_t event;
   do {
     event = tm_.propagate_event(mailbox_.receive());
+
+#if 1
+    static unsigned long last_event_time = 0;
+    static double last_timer_time = 0;
+    static ::TimeThrottle timer;
+    if (timer.current_state() == Timer::Stopped) {
+      timer.start();
+    }
+    
+    if (event->get_time()) {
+      last_event_time = event->get_time();
+    } else if (last_event_time) {
+      last_event_time += (timer.time() - last_timer_time)*100.0;
+      event->set_time(last_event_time);
+    }
+    last_timer_time = timer.time();
+#endif
+
+
+    if (stream_ && stream_->writing()) {
+      Pio(*stream_, event);
+    }
 
     if (dynamic_cast<QuitEvent*>(event.get_rep()) != 0 &&
         event->get_target().empty()) {
@@ -176,29 +303,31 @@ EventManager::run()
       mbox_range_t range = mboxes_.equal_range(target);
       if (range.first == range.second) {
         if (sci_getenv_p("SCI_DEBUG")) {
-          cerr << "Event target mailbox id """ << target << """ not found.\n";
+          cerr << "Event target mailbox id """ << target 
+	       << """ not found." << endl;
         }
       } else {
-        for (;range.first != range.second; ++range.first) {
+        while(range.first != range.second) 
+	{
           if (sci_getenv_p("SCI_DEBUG")) {
-            cerr << "Event target mailbox id """ << target << """\n";
-          }
-
-          if (sci_getenv_p("SCI_DEBUG")) {
-            cerr << range.first->first << " size: " << range.first->second->numItems() << "\n";
+            cerr << "Event target mailbox id " << target 
+		 << " found, sending." << endl;
+            cerr << range.first->first << ": mailbox numItems: " 
+                 << range.first->second->numItems() << endl;
           }
           range.first->second->send(event);
+	  ++range.first;
         }
       }
     } else {
       if (sci_getenv_p("SCI_DEBUG")) {
-        cerr << "Event target mailbox id """"\n";
+        cerr << "Event target mailbox id empty, broadcasting." << endl;
       }
 
       id_tm_map_t::iterator it = mboxes_.begin();
       for (;it != mboxes_.end(); ++it) {
         if (sci_getenv_p("SCI_DEBUG")) {
-          cerr << it->first << " size: " << it->second->numItems() << "\n";
+          cerr << it->first << " size: " << it->second->numItems() << endl;
         }
         it->second->send(event);
       }

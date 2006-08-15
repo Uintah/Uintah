@@ -158,11 +158,40 @@ ToolManager::send_window_event(tool_handle_t tool, event_handle_t event) const
   return rstate;
 }
 
+BaseTool::propagation_state_e
+ToolManager::send_tm_notify_event(tool_handle_t tool, 
+				  event_handle_t event) const
+{
+  TMNotificationTool *nt = dynamic_cast<TMNotificationTool *>(tool.get_rep());
+  TMNotifyEvent *ne = dynamic_cast<TMNotifyEvent *>(event.get_rep());
+  ASSERT(ne);
+  ASSERT(nt);
+
+  BaseTool::propagation_state_e rstate = BaseTool::CONTINUE_E;
+  unsigned int s = ne->get_notify_state();
+  if (s == TMNotifyEvent::START_E) {
+    rstate = nt->start_tool(ne->get_tool_id(), ne->get_time());
+    
+  } else if (s == TMNotifyEvent::STOP_E) {
+    rstate = nt->stop_tool(ne->get_tool_id(), ne->get_time());
+    
+  } else if (s == TMNotifyEvent::SUSPEND_E) {
+    rstate = nt->suspend_tool(ne->get_tool_id(), ne->get_time());
+    
+  } else if (s == TMNotifyEvent::RESUME_E) {
+    rstate = nt->resume_tool(ne->get_tool_id(), ne->get_time());
+    
+  } else {
+    ASSERTFAIL("ERROR: unknown tm notify state");
+  }
+
+  return rstate;
+}
+
 
 event_handle_t 
 ToolManager::propagate_event(event_handle_t event)
 {
-
   ps_map_t::iterator iter = stacks_.begin();
   while (iter != stacks_.end()) {
     ts_stack_t &s = (*iter).second; ++iter;
@@ -172,18 +201,17 @@ ToolManager::propagate_event(event_handle_t event)
 
     if (event->is_pointer_event() && 
         dynamic_cast<PointerTool*>(t.get_rep())) {
-      //      cerr << "propagating pointer event to tool: " << t->get_name() << endl;
       rstate = send_pointer_event(t, event);
     } else if (event->is_key_event() &&
                dynamic_cast<KeyTool*>(t.get_rep())) {
-      //      cerr << "propagating key event to tool: " << t->get_name() << endl;
       rstate = send_key_event(t, event);
     } else if (event->is_window_event() && 
                dynamic_cast<WindowTool*>(t.get_rep())) {
-      //      cerr << "propagating window event to tool: " << t->get_name() << endl;
       rstate = send_window_event(t, event);
+    } else if (event->is_tm_notify_event() &&
+               dynamic_cast<TMNotificationTool*>(t.get_rep())) {
+      rstate = send_tm_notify_event(t, event);
     } else {
-      //      cerr << "propagating unknown event to tool: " << t->get_name() << endl;
       rstate = t->process_event(event);
     }
     // if NULL return_event, then the event was consumed.

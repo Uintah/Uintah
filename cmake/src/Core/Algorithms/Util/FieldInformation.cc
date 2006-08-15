@@ -702,6 +702,49 @@ FieldInformation::is_unstructuredmesh()
 }
 
 bool
+FieldInformation::is_pnt_element()
+{
+  return((mesh_type=="PointCloud"));
+}
+
+bool
+FieldInformation::is_crv_element()
+{
+  return((mesh_type=="CurveMesh")||(mesh_type=="StructCurveMesh")||(mesh_type=="ScanlineMesh"));
+}
+
+bool
+FieldInformation::is_tri_element()
+{
+  return((mesh_type=="TriSurfMesh"));
+}
+
+bool
+FieldInformation::is_quad_element()
+{
+  return((mesh_type=="QuadSurfMesh")||(mesh_type=="ImageMesh")||(mesh_type=="StructQuadSurfMesh"));
+}
+
+bool
+FieldInformation::is_tet_element()
+{
+  return((mesh_type=="TetVolMesh"));
+}
+
+bool
+FieldInformation::is_prism_element()
+{
+  return((mesh_type=="PrismVolMesh"));
+}
+
+bool
+FieldInformation::is_hex_element()
+{
+  return((mesh_type=="HexVolMesh")||(mesh_type=="StructHexVolMesh")||(mesh_type=="LatVolMesh")||(mesh_type=="MaskedLatVolMesh"));
+}
+
+
+bool
 FieldInformation::make_nodata()
 {
   set_basis_type("NoDataBasis");
@@ -778,35 +821,35 @@ FieldInformation::make_cubichmtdata()
 bool
 FieldInformation::make_scalar()
 {
-  data_type = "double";
+  set_data_type("double");
   return (true);
 }
 
 bool
 FieldInformation::make_float()
 {
-  data_type = "float";
+  set_data_type("float");
   return (true);
 }
 
 bool
 FieldInformation::make_double()
 {
-  data_type = "double";
+  set_data_type("double");
   return (true);
 }
 
 bool
 FieldInformation::make_vector()
 {
-  data_type = "Vector";
+  set_data_type("Vector");
   return (true);
 }
 
 bool
 FieldInformation::make_tensor()
 {
-  data_type = "Tensor";
+  set_data_type("Tensor");
   return (true);
 }
 

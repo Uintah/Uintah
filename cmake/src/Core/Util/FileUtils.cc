@@ -43,6 +43,9 @@ typedef unsigned short mode_t;
 #include <sys/stat.h>
 #include <Core/Util/FileUtils.h>
 #include <Core/OS/Dir.h>
+#include <Core/Util/Assert.h>
+
+
 namespace SCIRun {
 
 
@@ -164,6 +167,51 @@ std::map<int,char*>* GetFilenamesEndingWith(char* d, char* ext)
   closedir(dir);
   return newmap;
 }
+
+
+vector<string>
+GetFilenamesStartingWith(const string &dirstr,
+                         const string &prefix)
+{
+  vector<string> files(0);
+  DIR* dir = opendir(dirstr.c_str());
+  if (!dir) {
+    return files;
+  }
+
+  dirent* file = readdir(dir);
+  while (file) {
+    ASSERT(file->d_name);
+    string dname = file->d_name;
+    string::size_type pos = dname.find(prefix);
+    if (pos == 0) {
+      files.push_back(dname);
+    }
+    file = readdir(dir);
+  }
+
+  closedir(dir);
+  return files;
+}
+
+
+std::pair<string, string>
+split_filename(string fname) {
+  if (fname[fname.size()-1] == '/') {
+    fname = fname.substr(0, fname.size()-1);
+  }
+  
+  if (validDir(fname)) {
+    return make_pair(fname, string(""));
+  }
+    
+  string::size_type pos = fname.find_last_of("/");
+  std::pair<string, string> dirfile = std::make_pair
+    (fname.substr(0, pos+1), fname.substr(pos+1, fname.length()-pos-1));
+
+  return dirfile;
+}
+
 
 
 bool

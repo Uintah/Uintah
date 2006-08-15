@@ -4,19 +4,23 @@
 
    <Meta>
        <title></title>
-   </Meta>    
+   </Meta>
+   <SimulationComponent>
+        <type> ice </type>
+   </SimulationComponent> 
+   <doAMR>true</doAMR>   
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <Time>
-       <maxTime>            2           </maxTime>
+       <maxTime>            2            </maxTime>
        <initTime>           0.0          </initTime>
        <delt_min>           0.0          </delt_min>
        <delt_max>           0.1          </delt_max>
        <delt_init>          1.0e-6       </delt_init>
        <max_delt_increase>  1.0          </max_delt_increase>
        <timestep_multiplier> 1           </timestep_multiplier>
-       <max_iterations>      20          </max_iterations>
+       <!--<max_iterations>      1          </max_iterations> -->
        <override_restart_delt> 1e-6      </override_restart_delt>
    </Time>
     <!--____________________________________________________________________-->
@@ -70,7 +74,7 @@
                               <value> 0.0  </value>
         </BCType>
         <BCType id = "0" label = "Velocity"     var = "Dirichlet">
-                              <value> [0.0,0.0,0.0] </value>
+                              <value> [0.0,50.0,0.0] </value>
         </BCType>
         <BCType id = "0" label = "Temperature"  var = "Dirichlet">
                               <value> 300.0  </value>
@@ -130,7 +134,6 @@
         <BCType id = "0" label = "Symmetric" var = "symmetry">
         </BCType>
       </Face>   
-<!-- 2D -->          
       <Face side = "z+">
         <BCType id = "0" label = "Symmetric" var = "symmetry">
         </BCType>
@@ -167,34 +170,31 @@
               <lower>        [-3,0.0,0]       </lower>
               <upper>        [ 3,6.0,0.1]     </upper>         
               <extraCells>   [1,1,1]          </extraCells>
-              <patches>      [5,1,1]          </patches>    
+              <patches>      [5,5,1]          </patches>    
            </Box>
            <spacing>         [0.1,0.1,0.1]    </spacing>
         </Level>
 <!--
         <Level>
-            <Box label = "2"> 
-              <lower>        [-2,0,0]         </lower>
-              <upper>        [ 2,4,0.1]       </upper>         
+           <Box label = "1">
+              <lower>        [-1.5,0.0,0]       </lower>
+              <upper>        [ 1.5,3.0,0.1]     </upper>         
               <extraCells>   [1,1,1]          </extraCells>
-              <patches>      [1,1,1]          </patches>
+              <patches>      [1,1,1]          </patches>    
            </Box>
-           <spacing>         [0.05,0.05,0.1]  </spacing>
-       </Level>
+           <spacing>         [0.05,0.05,0.1]    </spacing>
+        </Level>
 -->
     </Grid>
-    <!--____________________________________________________________________-->
-    <!--    A M R   G R I D                                                 -->
-    <!--____________________________________________________________________-->  
 
  
     <!--____________________________________________________________________-->
     <!--   O  U  P  U  T     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
    <DataArchiver>
-      <filebase>scalarJet.uda</filebase>
-      <!--<outputInterval>0.1</outputInterval> -->
-      <outputTimestepInterval> 1</outputTimestepInterval>
+      <filebase>impScalarJet_AMR.uda</filebase>
+      <outputInterval>0.01</outputInterval>
+      <!--<outputTimestepInterval> 1</outputTimestepInterval>-->
       <save label = "delP_Dilatate"/>
       <save label = "press_CC"/>
       <save label = "press_equil_CC"/>
@@ -202,32 +202,20 @@
       <save label = "rho_CC"/>
       <save label = "sp_vol_CC"/>
       <save label = "temp_CC"/>
-      <save label = "scalar-f"/>
+      <!--
       <save label = "CenterOfMassVelocity"/>
       <save label = "TotalMass"/>
       <save label = "TotalIntEng"/>
-      <save label = "sum_scalar_f"/>
+      <save label = "sum_scalar_f"/> 
       <save label = "mag_grad_scalar-f"/>
-      <save label = "refineFlag"/>
+      <save label = "scalar-f"/>
+      <save label = "refineFlag"/>-->
       
       <compression>gzip</compression>
       <checkpoint cycle = "2" interval = "0.01"/>
       <outputInitTimestep/>
    </DataArchiver>
 
-<!--
-   <Scheduler>
-     <VarTracker>
-       <start_time> 0 </start_time>
-       <end_time> 1 </end_time>
-       <start_index> [49, 0, -1] </start_index>
-       <end_index>   [50,1,0] </end_index>
-      <level>1</level>
-      <var label="rho_CC" dw="NewDW" />
-
-     </VarTracker>
-   </Scheduler>
--->
 
    
    <Debug>
@@ -248,27 +236,25 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-      <cfl>0.2</cfl>
+      <cfl>0.1</cfl>
       <ICE>
         <advection type = "FirstOrder"/>
-
-<!--       
+        
         <TimeStepControl>
-          <Scheme_for_delT_calc> conservative   </Scheme_for_delT_calc>
-          <knob_for_speedSound>  0.00           </knob_for_speedSound>
+          <Scheme_for_delT_calc> aggressive   </Scheme_for_delT_calc>
+          <knob_for_speedSound>  0.00         </knob_for_speedSound>
         </TimeStepControl>
-       
          
-        <ImplicitSolver>
-           <max_outer_iterations>      20    </max_outer_iterations>
-           <outer_iteration_tolerance> 1e-6  </outer_iteration_tolerance>
-           <iters_before_timestep_restart> 10 </iters_before_timestep_restart>
+        <ImplicitSolver>      <!-- no outer iteratiion-->
+           <max_outer_iterations>          1   </max_outer_iterations>
+           <outer_iteration_tolerance>    1.0  </outer_iteration_tolerance>
+           <iters_before_timestep_restart> 5    </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
-              <tolerance>     1.e-8   </tolerance>
-              <norm>     LInfinity    </norm>
-              <criteria> Absolute     </criteria>
-            <solver>         cg      </solver>
-            <preconditioner> pfmg    </preconditioner>
+            <tolerance>1.e-8    </tolerance>
+
+            <!-- Hypre options -->
+            <solver>         amg     </solver>
+             <preconditioner> none    </preconditioner>
             <maxiterations>  7500    </maxiterations>
             <npre>           1       </npre>
             <npost>          1       </npost>
@@ -276,25 +262,28 @@
             <jump>           0       </jump>
            </Parameters>
         </ImplicitSolver>
--->
       </ICE>       
     </CFD>
+    <!--____________________________________________________________________-->
+    <!--    A M R   G R I D                                                 -->
+    <!--____________________________________________________________________-->  
     <AMR>
       <ICE>
-        <orderOfInterpolation>0 </orderOfInterpolation>
-        <do_Refluxing>  true    </do_Refluxing>
-        <regridderTest>  false    </regridderTest>
+        <orderOfInterpolation>1         </orderOfInterpolation>
+        <useLockStep>         true      </useLockStep>
+        <do_Refluxing>        false     </do_Refluxing>
         <Refinement_Criteria_Thresholds> 
             <!-- none defined -->
         </Refinement_Criteria_Thresholds>
       </ICE>
+      <time_refinement_ratio>       1         </time_refinement_ratio> 
       <Regridder>
-        <max_levels>2</max_levels>
+        <max_levels>                3         </max_levels>
         <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
         <lattice_refinement_ratio> [[1,1,1]]  </lattice_refinement_ratio>
-        <cell_creation_dilation>   [2,2,0]   </cell_creation_dilation>   
-        <cell_deletion_dilation>   [1,1,0]   </cell_deletion_dilation>   
-        <min_boundary_cells>       [1,1,0]   </min_boundary_cells>
+        <cell_creation_dilation>   [2,2,0]    </cell_creation_dilation>   
+        <cell_deletion_dilation>   [1,1,0]    </cell_deletion_dilation>   
+        <min_boundary_cells>       [1,1,0]    </min_boundary_cells>
       </Regridder>   
     </AMR>
 
@@ -302,7 +291,7 @@
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
     <!--____________________________________________________________________-->   
     <PhysicalConstants>
-       <gravity>            [0,-981,0]   </gravity>
+       <gravity>            [0,-9.81,0]   </gravity>
        <reference_pressure> 101325.0      </reference_pressure>
     </PhysicalConstants>
     <!--____________________________________________________________________-->
@@ -319,30 +308,30 @@
            <gamma>                      1.4             </gamma>
            <geom_object>
               <box label = "world">
-                <min>       [ -10, -10, -10 ]    </min>
-                <max>       [  10,  10,  10 ]   </max>
+                <min>       [ -10, -10, -10 ]           </min>
+                <max>       [  10,  10,  10 ]           </max>
               </box>
-              <res>                [2,2,2]             </res>
-              <velocity>           [.0,0.01,.0]        </velocity>
-              <density>            1.1784717376136     </density>
-              <pressure>           101325.0            </pressure>     
-              <temperature>        300.0               </temperature>
+              <res>                [2,2,2]              </res>
+              <velocity>           [.0,0.0,.0]          </velocity>
+              <density>            1.1784717376136      </density>
+              <pressure>           101325.0             </pressure>     
+              <temperature>        300.0                </temperature>
            </geom_object>
          </material>
       </ICE>       
       
     
     </MaterialProperties>
-    <!--__________________________________-->
+    <!--_________________________________-->
     <Models>
        <Model type="PassiveScalar">
         <material>BackgroundGas</material>
         <scalar name="f">
-        <test_conservation> true </test_conservation>
+        <test_conservation> false </test_conservation>
         <constants>
           <diffusivity>              0.0    </diffusivity>                      
           <initialize_diffusion_knob>  0    </initialize_diffusion_knob>         
-          <AMR_Refinement_Criteria>    7    </AMR_Refinement_Criteria>          
+          <AMR_Refinement_Criteria>    2    </AMR_Refinement_Criteria>          
         </constants>       
         
           <geom_object>

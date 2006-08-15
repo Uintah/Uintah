@@ -78,7 +78,7 @@ void MergeNodes::execute()
   fields[0] = input;
   if (!(algo.MergeFields(fields,output,tolerance,true,true,matchval))) return;
 
-  send_output_handle("Field",output,true);
+  send_output_handle("Field",output,false);
 }
 
 } // End namespace ModelCreation

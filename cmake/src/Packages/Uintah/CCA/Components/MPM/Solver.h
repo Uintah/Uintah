@@ -39,14 +39,16 @@ namespace Uintah {
     virtual void destroyMatrix(bool recursion) = 0;
     
     virtual void fillMatrix(int, int[], int, int j[],double v[]) = 0;
-    
-    virtual void fillVector(int, double) = 0;
+
+    virtual void fillVector(int, double,bool add = false) = 0;
 
     virtual void fillTemporaryVector(int, double) = 0;
     
     virtual void copyL2G(Array3<int>& l2g, const Patch* patch) = 0;
 
     virtual void removeFixedDOF(int num_nodes) = 0;
+
+    virtual void removeFixedDOFHeat(int num_nodes) = 0;
 
     virtual void flushMatrix() = 0;
 
@@ -63,6 +65,7 @@ namespace Uintah {
     virtual void applyBCSToRHS() = 0;
 
     set<int> d_DOF;
+    map<int,vector<int> > d_DOFNeighbors;
   };
 
 }

@@ -106,6 +106,11 @@ void SimpleSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
 
 void SimpleSolver::solve()
 {
+#if 0
+  printMatrix();
+  printRHS();
+#endif
+
   double Qtot=0.;
   for (int i = 0; i < (int)Q.size(); i++){
     Qtot += fabs(Q[i]);
@@ -123,6 +128,10 @@ void SimpleSolver::solve()
     int conflag = 0;
     d_x = cgSolve(KK,Q,conflag);
   }
+#if 0
+  for (int i=0;i< d_x.size();i++)
+    cout << "T[" << i << "]= " << d_x[i] << endl;
+#endif
 }
 
 void SimpleSolver::createMatrix(const ProcessorGroup* d_myworld,
@@ -148,24 +157,30 @@ void SimpleSolver::fillMatrix(int numi,int i[],int numj,
 {
    for(int ii=0;ii<numi;ii++){
      for(int jj=0;jj<numj;jj++){
-       KK[i[ii]][j[jj]] = KK[i[ii]][j[jj]] + value[ii*jj + jj];
+       KK[i[ii]][j[jj]] = KK[i[ii]][j[jj]] + value[ii*numi + jj];
      }
    }
 }
+
 
 void SimpleSolver::flushMatrix()
 {
 
 }
 
-void SimpleSolver::fillVector(int i,double v)
+void SimpleSolver::fillVector(int i,double v,bool add)
 {
-  Q[i] = v;
+  if (add)
+    Q[i] += v;
+  else
+    Q[i] = v;
 }
 
 void SimpleSolver::assembleVector()
 {
-
+#if 0
+  printRHS();
+#endif
 }
 
 void SimpleSolver::fillTemporaryVector(int i,double v)
@@ -192,6 +207,56 @@ void SimpleSolver::applyBCSToRHS()
 void SimpleSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
 {
   mapping.copy(d_petscLocalToGlobal[patch]);
+}
+
+
+void SimpleSolver::removeFixedDOFHeat(int num_nodes)
+{
+
+  SparseMatrix<double,int> KKK(KK.Rows(),KK.Columns());
+  for (SparseMatrix<double,int>::iterator itr = KK.begin(); 
+       itr != KK.end(); itr++) {
+    int i = KK.Index1(itr);
+    int j = KK.Index2(itr);
+    set<int>::iterator find_itr_j = d_DOF.find(j);
+    set<int>::iterator find_itr_i = d_DOF.find(i);
+    
+    if (find_itr_j != d_DOF.end()) {
+      Q[j] = 0.;
+      if (i == j) {
+	KKK[i][j] = 1.;
+      }
+    }
+    else if (find_itr_i != d_DOF.end()) {
+      Q[i] = 0.;
+      if (i == j) {
+	KKK[i][j] = 1.;
+      }
+    }
+    else {
+      KKK[i][j] = KK[i][j];
+    }
+  }
+  // Make sure the nodes that are outside of the material have values 
+  // assigned and solved for.  The solutions will be 0.
+  
+  for (int j = 0; j < num_nodes; j++) {
+    if (compare(KK[j][j],0.)) {
+      KKK[j][j] = 1.;
+      Q[j] = 0.;
+    }
+  }
+  KK.clear();
+  KK = KKK;
+  KKK.clear();
+
+  for (set<int>::iterator iter = d_DOF.begin(); iter != d_DOF.end(); 
+       iter++) {
+    // Take care of the right hand side
+    Q[*iter] = -d_t[*iter];
+  }    
+
+
 }
 
 void SimpleSolver::removeFixedDOF(int num_nodes)
@@ -242,6 +307,9 @@ void SimpleSolver::removeFixedDOF(int num_nodes)
 
 void SimpleSolver::finalizeMatrix()
 {
+#if 0
+  printMatrix();
+#endif
 
 }
 
@@ -261,4 +329,31 @@ int SimpleSolver::getRHS(vector<double>& QSimple)
 
   int begin = 0;
   return begin;
+}
+
+void SimpleSolver::printMatrix()
+{
+  cout << "KK" << endl;
+  for (int i = 0; i < d_totalNodes; i++) {
+    for (int j = 0; j < 7; j++) {
+      cout << " " << KK[i][j];
+    }
+    cout << endl;
+  }
+  cout << endl;
+  for (int i = 0; i < d_totalNodes; i++) {
+    for (int j = 7; j < d_totalNodes; j++) {
+      cout << " " << KK[i][j];
+    }
+    cout << endl;
+  }
+  cout << endl;
+
+}
+
+
+void SimpleSolver::printRHS()
+{
+  for (int i = 0; i < (int)Q.size(); i++)
+    cout << "Q[" << i << "]=" << Q[i] << endl;;
 }

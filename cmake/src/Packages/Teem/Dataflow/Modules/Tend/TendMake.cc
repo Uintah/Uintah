@@ -45,12 +45,6 @@ public:
   TendMake(SCIRun::GuiContext *ctx);
   virtual ~TendMake();
   virtual void execute();
-
-private:
-  NrrdIPort*      inconfidence_;
-  NrrdIPort*      inevals_;
-  NrrdIPort*      inevecs_;
-  NrrdOPort*      onrrd_;
 };
 
 
@@ -61,49 +55,33 @@ TendMake::TendMake(SCIRun::GuiContext *ctx) :
 {
 }
 
-TendMake::~TendMake() {
+
+TendMake::~TendMake()
+{
 }
 
 
 void 
 TendMake::execute()
 {
-  NrrdDataHandle conf_handle;
-  NrrdDataHandle eval_handle;
-  NrrdDataHandle evec_handle;
   update_state(NeedData);
-  inconfidence_ = (NrrdIPort *)get_iport("Confidence");
-  inevals_ = (NrrdIPort *)get_iport("Evals");
-  inevecs_ = (NrrdIPort *)get_iport("Evecs");
 
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
+  NrrdDataHandle conf_handle;
+  if (!get_input_handle("Confidence", conf_handle)) return;
 
-  if (!inconfidence_->get(conf_handle))
-    return;
-  if (!inevals_->get(eval_handle))
-    return;
-  if (!inevecs_->get(evec_handle))
-    return;
+  NrrdDataHandle eval_handle;
+  if (!get_input_handle("Evals", eval_handle)) return;
 
-  if (!conf_handle.get_rep()) {
-    error("Empty input Confidence Nrrd.");
-    return;
-  }
-  if (!eval_handle.get_rep()) {
-    error("Empty input Evals Nrrd.");
-    return;
-  }
-  if (!evec_handle.get_rep()) {
-    error("Empty input Evecs Nrrd.");
-    return;
-  }
+  NrrdDataHandle evec_handle;
+  if (!get_input_handle("Evecs", evec_handle)) return;
 
   Nrrd *confidence = conf_handle->nrrd_;
   Nrrd *eval = eval_handle->nrrd_;
   Nrrd *evec = evec_handle->nrrd_;
   Nrrd *nout = nrrdNew();
 
-  if (tenMake(nout, confidence, eval, evec)) {
+  if (tenMake(nout, confidence, eval, evec))
+  {
     char *err = biffGetDone(TEN);
     error(string("Error creating DT volume: ") + err);
     free(err);
@@ -111,7 +89,8 @@ TendMake::execute()
   }
 
   NrrdDataHandle out(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(out);
+
+  send_output_handle("OutputNrrd", out);
 }
 
 

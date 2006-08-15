@@ -59,12 +59,13 @@ X11OpenGLContext::X11OpenGLContext(int visual,
                                    int x, 
                                    int y,
                                    unsigned int width, 
-                                   unsigned int height) : 
+                                   unsigned int height,
+                                   bool border) : 
   OpenGLContext(),
   mutex_("GL lock")
 {
   // Sepeate functions so we can set gdb breakpoints in constructor
-  create_context(visual, x, y, width, height);
+  create_context(visual, x, y, width, height, border);
 }
 
 
@@ -72,7 +73,8 @@ X11OpenGLContext::X11OpenGLContext(int visual,
 void
 X11OpenGLContext::create_context(int visual, int x, int y,
                                  unsigned int width, 
-                                 unsigned int height)
+                                 unsigned int height,
+                                 bool border)
 {
   X11Lock::lock();
   display_ = XOpenDisplay((char *)0);
@@ -102,7 +104,7 @@ X11OpenGLContext::create_context(int visual, int x, int y,
 
   attributes_.colormap = XCreateColormap(display_, root_window_, 
                                          vi_->visual, AllocNone);
-  attributes_.override_redirect = false;
+  attributes_.override_redirect = border ? false : true;
   //  unsigned int valuemask = (CWX | CWY | CWWidth | CWHeight | 
   //                            CWBorderWidth | CWSibling | CWStackMode);
 
@@ -124,9 +126,11 @@ X11OpenGLContext::create_context(int visual, int x, int y,
     X11Lock::unlock();
   }
 
-  XMapRaised(display_, window_);
-  XMoveResizeWindow(display_, window_, x, y, width, height);
-  XSync(display_, False);
+  if (first_context_) {
+    XMapRaised(display_, window_);
+    XMoveResizeWindow(display_, window_, x, y, width, height);
+    XSync(display_, False);
+  }
 
   context_ = glXCreateContext(display_, vi_, first_context_, 1);
   if (!context_) {

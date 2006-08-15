@@ -22,6 +22,9 @@ SRCS     += \
 	$(SRCDIR)/LinkFieldBoundary.cc\
 	$(SRCDIR)/Unstructure.cc\
 	$(SRCDIR)/ScaleField.cc\
+	$(SRCDIR)/GetBoundingBox.cc\
+	$(SRCDIR)/FindClosestNodeIndex.cc\
+	$(SRCDIR)/FindClosestNodeIndexByValue.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \
@@ -29,10 +32,10 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/GeomInterface Core/TkExtensions \
-        Packages/ModelCreation/Core/Algorithms \
         Packages/ModelCreation/Core/Datatypes \
         Core/Algorithms/Fields \
         Core/Algorithms/Converter \
+        Core/Algorithms/ArrayMath \
         
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

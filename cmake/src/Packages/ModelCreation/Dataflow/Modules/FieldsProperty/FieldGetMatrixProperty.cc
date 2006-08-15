@@ -26,19 +26,11 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  FieldGetMatrixPropertyProperty.cc:
- *
- *  Written by:
- *  Jeroen Stinstra
- *
- */
-
+#include <Core/Datatypes/Field.h>
+#include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
-#include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 namespace ModelCreation {
 
@@ -48,8 +40,6 @@ using namespace std;
 class FieldGetMatrixProperty : public Module {
 public:
   FieldGetMatrixProperty(GuiContext*);
-
-  virtual ~FieldGetMatrixProperty();
 
   virtual void execute();
   virtual void tcl_command(GuiArgs&, void*);
@@ -72,8 +62,6 @@ DECLARE_MAKER(FieldGetMatrixProperty)
 {
 }
 
-FieldGetMatrixProperty::~FieldGetMatrixProperty(){
-}
 
 void
 FieldGetMatrixProperty::execute()

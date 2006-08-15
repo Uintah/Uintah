@@ -16,7 +16,8 @@ SRCS     += \
 	$(SRCDIR)/AnimatedStreams.cc\
 	$(SRCDIR)/VariablePlotter.cc \
 	$(SRCDIR)/NodeHedgehog.cc \
-	$(SRCDIR)/SubFieldHistogram.cc 
+	$(SRCDIR)/SubFieldHistogram.cc \
+	$(SRCDIR)/UTextureBuilder.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \

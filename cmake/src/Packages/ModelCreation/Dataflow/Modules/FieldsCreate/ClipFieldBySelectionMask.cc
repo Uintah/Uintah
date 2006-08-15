@@ -57,19 +57,29 @@ ClipFieldBySelectionMask::ClipFieldBySelectionMask(GuiContext* ctx)
 
 void ClipFieldBySelectionMask::execute()
 {
+  // Define local handles of data objects:
   FieldHandle input;
   FieldHandle output;
   MatrixHandle selmask;
   MatrixHandle interpolant;
   
+  // Get the new input data:    
   if (!(get_input_handle("Field",input,true))) return;
   if (!(get_input_handle("SelectionMask",selmask,true))) return;
 
-  SCIRunAlgo::FieldsAlgo algo(this);
-  if(!(algo.ClipFieldBySelectionMask(input,output,selmask,interpolant))) return;
-  
-  send_output_handle("ClippedField",output,true);
-  send_output_handle("MappingMatrix",interpolant, true);
+  // Only reexecute if the input changed. SCIRun uses simple scheduling
+  // that executes every module downstream even if no data has changed:  
+  if (inputs_changed_ || !oport_cached("ClippedField") || !oport_cached("MappingMatrix"))
+  {
+
+    // Innerworks of module:
+    SCIRunAlgo::FieldsAlgo algo(this);
+    if(!(algo.ClipFieldBySelectionMask(input,output,selmask,interpolant))) return;
+
+    // send new output if there is any:          
+    send_output_handle("ClippedField",output,false);
+    send_output_handle("MappingMatrix",interpolant,false);
+  }
 }
 
 } // End namespace ModelCreation

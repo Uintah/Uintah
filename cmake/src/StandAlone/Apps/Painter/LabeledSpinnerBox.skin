@@ -1,0 +1,37 @@
+<definition class="LabeledSpinnerBox" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <object class="Grid">
+    <var name="rows">1</var>
+    <var name="cols">2</var>        
+    <var name="LabeledSpinnerBox::value" propagate="yes" overwrite="no">1.0</var>
+    <var name="LabeledSpinnerBox::text" propagate="yes" overwrite="no">Label:</var>
+    <var name="LabeledSpinnerBox::text_size" propagate="yes" overwrite="no">20</var>
+    <var name="SpinnerBox::value" propagate="yes" overwrite="no">$LabeledSpinnerBox::value</var>
+    <var name="SpinnerBox::text_size" propagate="yes">$LabeledSpinnerBox::text_size</var>
+    <var name="SpinnerBox::variable" propagate="yes">$LabeledSpinnerBox::variable</var>
+
+    <var name="border-size1" propagate="yes" overwrite="no">5</var>
+    <var name="border-size1" propagate="yes" overwrite="no">5</var>
+
+    <xi:include href="SpinnerBox.skin" parse="xml"/>
+
+    <object class="Root::Text">
+      <var name="row">1</var>
+      <var name="col">1</var>        
+
+      <var name="text">$LabeledSpinnerBox::text</var>
+      <var name="size">$LabeledSpinnerBox::text_size</var>
+
+      <var name="anchor">E</var>
+      <var name="fgcolor">#000000FF</var>
+      <var name="bgcolor">#00000080</var>
+      <var name="offsetx">-3</var>
+      <var name="offsety">3</var>
+      <var name="extrude">1</var>
+    </object>
+
+    <object class="SpinnerBox">
+      <var name="row">1</var>
+      <var name="col">2</var>        
+    </object>
+  </object>
+</definition>

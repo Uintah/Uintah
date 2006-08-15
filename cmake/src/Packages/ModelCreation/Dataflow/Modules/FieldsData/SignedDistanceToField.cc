@@ -26,24 +26,11 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  SignedDistanceToField.cc:
- *
- *  Written by:
- *   jeroen
- *   TODAY'S DATE HERE
- *
- */
-
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-
-#include <Dataflow/Network/Ports/FieldPort.h>
-#include <Dataflow/Network/Ports/MatrixPort.h>
-
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
-
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 namespace ModelCreation {
@@ -72,11 +59,13 @@ void SignedDistanceToField::execute()
   if (!(get_input_handle("Field",input,true))) return;
   if (!(get_input_handle("ObjectField",object,true))) return;
  
-  SCIRunAlgo::FieldsAlgo algo(this);
-  
-  if(!(algo.SignedDistanceField(input,output,object))) return;
+  if (inputs_changed_ || !oport_cached("SignedDistanceField"))
+  {
+    SCIRunAlgo::FieldsAlgo algo(this);
+    if(!(algo.SignedDistanceField(input,output,object))) return;
    
-  send_output_handle("SignedDistanceField",output,true); 
+    send_output_handle("SignedDistanceField",output,false); 
+  }
 }
 
 

@@ -94,16 +94,9 @@ SegFieldOps::~SegFieldOps()
 void
 SegFieldOps::execute()
 {
-  // Make sure the ports exist.
-  FieldIPort *ifp = (FieldIPort *)get_iport("LatVol or SegField");
-  FieldOPort *ofp = (FieldOPort *)get_oport("SegField");
-
   // Make sure the input data exists.
   FieldHandle ifieldH;
-  if (!ifp->get(ifieldH) || !ifieldH.get_rep()) {
-    error("No input data");
-    return;
-  }
+  if (!get_input_handle("LatVol or SegField", ifieldH)) return;
 
   if (ifieldH->generation != lastGen_) 
     // new field -- doesn't matter what user requested, we're just gonna load
@@ -113,7 +106,7 @@ SegFieldOps::execute()
     // same field as last time, no new command -- just send same data (if we
     //   have any)
     if (currFldH_.get_rep())
-      ofp->send(currFldH_);
+      send_output_handle("SegField", currFldH_, true);
     return;
   }
 
@@ -133,12 +126,12 @@ SegFieldOps::execute()
       cerr << "reseting to original field\n";
       currFldH_ = origFldH_;
       currFld_ = origFld_;
-      ofp->send(currFldH_);
+      send_output_handle("SegField", currFldH_, true);
     } else if (tclCmd_ == "absorb") {
       currFldH_.detach();
       currFld_ = dynamic_cast<SegLatVolField *>(currFldH_.get_rep());
       currFld_->absorbSmallComponents(minCompSize_.get());
-      ofp->send(currFldH_);
+      send_output_handle("SegField", currFldH_, true);
     } else {
       error("Unknown command");
     }
@@ -170,7 +163,7 @@ SegFieldOps::execute()
   currFld_ = slvf;
   origFldH_ = slvf;
   origFld_ = slvf;
-  ofp->send(currFldH_);
+  send_output_handle("SegField", currFldH_, true);
 }
 
 

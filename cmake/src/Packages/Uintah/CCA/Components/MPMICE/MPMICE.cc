@@ -241,7 +241,7 @@ void MPMICE::outputProblemSpec(ProblemSpecP& root_ps)
 void MPMICE::scheduleInitialize(const LevelP& level,
                             SchedulerP& sched)
 {
-  printSchedule(level,"MPMICE::scheduleInitialize\t\t\t");
+  printSchedule(level,"MPMICE::scheduleInitialize\t\t\t\t\t");
 
   d_mpm->scheduleInitialize(level, sched);
   d_ice->scheduleInitialize(level, sched);
@@ -267,10 +267,7 @@ void MPMICE::scheduleInitialize(const LevelP& level,
   }
     
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
-  if (cout_doing.active()) {
-    cout_doing << "Done with Initialization \t\t\t MPMICE" <<endl;
-    cout_norm << "--------------------------------\n"<<endl;   
-  }
+
   if (one_matl->removeReference())
     delete one_matl; // shouln't happen, but...  
 }
@@ -322,9 +319,9 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   const MaterialSubset* mpm_matls_sub = mpm_matls->getUnion();
   cout_doing << "---------------------------------------------------------Level ";
   if(do_mlmpmice){
-    cout_doing << inlevel->getIndex() << " (ICE) " << mpm_level->getIndex() << " (MPM)";
+    cout_doing << inlevel->getIndex() << " (ICE) " << mpm_level->getIndex() << " (MPM)"<< endl;;
   } else {
-    cout_doing << inlevel->getIndex();
+    cout_doing << inlevel->getIndex()<< endl;
   }
 
  //__________________________________
@@ -344,6 +341,9 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
 
   // Fracture
   d_mpm->scheduleAdjustCrackContactInterpolated(sched,mpm_patches,  mpm_matls);
+
+  d_mpm->scheduleExMomInterpolated(           sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
 
   // schedule the interpolation of mass and volume to the cell centers
   scheduleInterpolateNCToCC_0(                sched, mpm_patches, one_matl, 
@@ -429,9 +429,6 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
     }
   } 
   
-  d_mpm->scheduleExMomInterpolated(           sched, mpm_patches, mpm_matls);
-  d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
-
   for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
     const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
     const PatchSet* ice_patches = ice_level->eachPatch();
@@ -537,44 +534,71 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
     d_ice->scheduleMaxMach_on_Lodi_BC_Faces(sched, ice_level,ice_matls,
                                                              maxMach_PSS);
                                    
-    d_ice->scheduleAdvectAndAdvanceInTime(  sched, ice_patches, ice_matls_sub,
-                                                                mpm_matls_sub,
-                                                                press_matl,
+    d_ice->scheduleAdvectAndAdvanceInTime(   sched, ice_patches,ice_matls_sub,
                                                                 ice_matls);
-                                                                  
-    d_ice->scheduleTestConservation(        sched, ice_patches, ice_matls_sub,
-                                                                all_matls); 
+                                                                
+    d_ice->scheduleConservedtoPrimitive_Vars(sched, ice_patches,ice_matls_sub,
+                                                                ice_matls,
+                                                                "afterAdvection");
   }
-
   if(d_ice->d_canAddICEMaterial){
-    for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
-      const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
+     for (int l = 0; l < inlevel->getGrid()->numLevels(); l++) {
+       const LevelP& ice_level = inlevel->getGrid()->getLevel(l);
 
-      //  This checks to see if the model on THIS patch says that it's
-      //  time to add a new material
-      d_ice->scheduleCheckNeedAddMaterial(  sched, ice_level,   all_matls);
-                                                                                
-      //  This one checks to see if the model on ANY patch says that it's
-      //  time to add a new material
-      d_ice->scheduleSetNeedAddMaterialFlag(sched, ice_level,   all_matls);
-    }
-  }
+       //  This checks to see if the model on THIS patch says that it's
+       //  time to add a new material
+       d_ice->scheduleCheckNeedAddMaterial(  sched, ice_level,   all_matls);
 
-  if(d_mpm->flags->d_canAddMPMMaterial){
-    //  This checks to see if the model on THIS patch says that it's
-    //  time to add a new material
-    d_mpm->scheduleCheckNeedAddMPMMaterial( sched, mpm_patches, mpm_matls);
-                                                                                
-    //  This one checks to see if the model on ANY patch says that it's
-    //  time to add a new material
-    d_mpm->scheduleSetNeedAddMaterialFlag(  sched, mpm_level,   mpm_matls);
-  }
+       //  This one checks to see if the model on ANY patch says that it's
+       //  time to add a new material
+       d_ice->scheduleSetNeedAddMaterialFlag(sched, ice_level,   all_matls);
+     }
+   }
 
-  sched->scheduleParticleRelocation(mpm_level,
-                                Mlb->pXLabel_preReloc, 
-                                d_sharedState->d_particleState_preReloc,
-                                Mlb->pXLabel, d_sharedState->d_particleState,
-                                Mlb->pParticleIDLabel, mpm_matls);
+   if(d_mpm->flags->d_canAddMPMMaterial){
+     //  This checks to see if the model on THIS patch says that it's
+     //  time to add a new material
+     d_mpm->scheduleCheckNeedAddMPMMaterial( sched, mpm_patches, mpm_matls);
+
+     //  This one checks to see if the model on ANY patch says that it's
+     //  time to add a new material
+     d_mpm->scheduleSetNeedAddMaterialFlag(  sched, mpm_level,   mpm_matls);
+   }
+
+   sched->scheduleParticleRelocation(mpm_level,
+                                 Mlb->pXLabel_preReloc, 
+                                 d_sharedState->d_particleState_preReloc,
+                                 Mlb->pXLabel, d_sharedState->d_particleState,
+                                 Mlb->pParticleIDLabel, mpm_matls);
+} // end scheduleTimeAdvance()
+
+
+/* _____________________________________________________________________
+MPMICE::scheduleFinalizeTimestep--
+This task called at the very bottom of the timestep,
+after scheduleTimeAdvance and the scheduleCoarsen.  
+
+This is scheduled on every level.
+_____________________________________________________________________*/
+void
+MPMICE::scheduleFinalizeTimestep( const LevelP& level, SchedulerP& sched)
+{
+  cout_doing << "----------------------------"<<endl;
+  cout_doing << d_myworld->myrank() << " MPMICE::scheduleFinalizeTimestep\t\t\t\tL-" <<level->getIndex()<< endl;
+  
+  const PatchSet* ice_patches = level->eachPatch();
+  const MaterialSet* ice_matls = d_sharedState->allICEMaterials();
+  const MaterialSet* all_matls = d_sharedState->allMaterials();
+  const MaterialSubset* ice_matls_sub = ice_matls->getUnion();
+
+  vector<PatchSubset*> maxMach_PSS(Patch::numFaces);
+                                                          
+  d_ice->scheduleConservedtoPrimitive_Vars(sched, ice_patches,ice_matls_sub,
+                                                              ice_matls,
+                                                              "finalizeTimestep");
+
+  d_ice->scheduleTestConservation(        sched, ice_patches, ice_matls_sub,
+                                                              all_matls);
 
   //__________________________________
   // clean up memory
@@ -586,7 +610,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
     }
   }
   cout_doing << "---------------------------------------------------------"<<endl;
-} // end scheduleTimeAdvance()
+}
 
 
 //______________________________________________________________________
@@ -704,10 +728,6 @@ void MPMICE::scheduleCoarsenCC_0(SchedulerP& sched,
                                     const PatchSet* patches,
                                     const MaterialSet* mpm_matls)
 {
-  if(!d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
-                          getLevel(patches)->getGrid()->numLevels()))
-    return;
-
   printSchedule(patches, "MPMICE::scheduleCoarsenCC_0\t\t\t\t\t");
  
   bool modifies = false;
@@ -734,10 +754,6 @@ void MPMICE::scheduleCoarsenNCMass(SchedulerP& sched,
                                    const PatchSet* patches,
                                    const MaterialSet* mpm_matls)
 {
-  if(!d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
-                          getLevel(patches)->getGrid()->numLevels()))
-    return;
-                                                                                
   printSchedule(patches, "MPMICE::scheduleCoarsenNCMass\t\t\t\t\t");
                                                                                 
   bool modifies = false;
@@ -797,10 +813,6 @@ void MPMICE::scheduleCoarsenLagrangianValuesMPM(SchedulerP& sched,
                                                 const PatchSet* patches,
                                                 const MaterialSet* mpm_matls)
 {
-  if(!d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
-                          getLevel(patches)->getGrid()->numLevels()))
-    return;
-
   printSchedule(patches,"MPMICE:scheduleCoarsenLagrangianValues mpm_matls\t\t");
 
   scheduleCoarsenVariableCC(sched, patches, mpm_matls, Ilb->rho_CCLabel,
@@ -819,10 +831,6 @@ void MPMICE::scheduleComputeCCVelAndTempRates(SchedulerP& sched,
                                               const PatchSet* patches,
                                               const MaterialSet* mpm_matls)
 {
-  if(!d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
-                          getLevel(patches)->getGrid()->numLevels()))
-    return;
-
   printSchedule(patches, "MPMICE::scheduleComputeCCVelAndTempRates\t\t\t");
 
   Task* t=scinew Task("MPMICE::computeCCVelAndTempRates",
@@ -908,9 +916,6 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
                                      const MaterialSubset* press_matl,
                                      const MaterialSet* all_matls)
 {
-  if(!d_ice->doICEOnLevel(getLevel(patches)->getIndex(),
-                          getLevel(patches)->getGrid()->numLevels()))
-    return;
   Task* t = NULL;
 
   printSchedule(patches, "MPMICE::scheduleComputeEquilibrationPressure\t\t\t");
@@ -981,7 +986,7 @@ void MPMICE::actuallyInitialize(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){ 
     const Patch* patch = patches->get(p);
-    printTask(patches, patch, "Doing actuallyInitialize");
+    printTask(patches, patch, "Doing actuallyInitialize \t\t\t\t");
 
     NCVariable<double> NC_CCweight;
     new_dw->allocateAndPut(NC_CCweight, MIlb->NC_CCweightLabel,    0, patch);
@@ -2482,24 +2487,16 @@ void MPMICE::scheduleRefine(const PatchSet* patches,
   d_ice->scheduleRefine(patches, sched);
   d_mpm->scheduleRefine(patches, sched);
 
-  const Level* fineLevel = getLevel(patches);
-  int L_indx = fineLevel->getIndex();
-  int num_levels = fineLevel->getGrid()->numLevels();
-
   printSchedule(patches,"MPMICE::scheduleRefine\t\t\t\t");
 
   Task* task = scinew Task("MPMICE::refine", this, &MPMICE::refine);
   
   task->computes(MIlb->NC_CCweightLabel);
+  task->computes(Mlb->heatRate_CCLabel);
+  task->computes(Ilb->sp_vol_CCLabel);
+  task->computes(MIlb->vel_CCLabel);
+  task->computes(Ilb->temp_CCLabel);
 
-  if(d_ice->doICEOnLevel(L_indx, num_levels)) {
-    task->computes(Mlb->heatRate_CCLabel);
-  }
-  //if(d_mpm->flags->doMPMOnLevel(L_indx, num_levels)) {
-    task->computes(Ilb->sp_vol_CCLabel);
-    task->computes(MIlb->vel_CCLabel);
-    task->computes(Ilb->temp_CCLabel);
-    //}
   sched->addTask(task, patches, d_sharedState->allMPMMaterials());
 }
 
@@ -2646,7 +2643,6 @@ void MPMICE::scheduleErrorEstimate(const LevelP& coarseLevel,
 }
 
 //______________________________________________________________________
-//
 void
 MPMICE::refine(const ProcessorGroup*,
                const PatchSubset* patches,
@@ -2654,10 +2650,6 @@ MPMICE::refine(const ProcessorGroup*,
                DataWarehouse*,
                DataWarehouse* new_dw)
 {
-  const Level* fineLevel = getLevel(patches);
-  int L_indx = fineLevel->getIndex();
-  int num_levels = fineLevel->getGrid()->numLevels();
-
   for (int p = 0; p<patches->size(); p++) {
     const Patch* patch = patches->get(p);
     printTask(patches,patch,"Doing refine\t\t\t\t\t");
@@ -2689,62 +2681,56 @@ MPMICE::refine(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
 
-      //if (cout_doing.active()) {
       cout <<"Doing refine on patch "
            << patch->getID() << " material # = " << dwi << endl;
-      //}
       
-      if(d_ice->doICEOnLevel(L_indx, num_levels)) {
-        // for now, create 0 heat flux
-        CCVariable<double> heatFlux;
-        new_dw->allocateAndPut(heatFlux, Mlb->heatRate_CCLabel, dwi, patch);
-        heatFlux.initialize(0.0);
+      // for now, create 0 heat flux
+      CCVariable<double> heatFlux;
+      new_dw->allocateAndPut(heatFlux, Mlb->heatRate_CCLabel, dwi, patch);
+      heatFlux.initialize(0.0);
+
+      CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC;
+      CCVariable<Vector> vel_CC;
+
+      new_dw->allocateTemporary(rho_micro, patch);
+      new_dw->allocateTemporary(rho_CC,    patch);
+
+      new_dw->allocateAndPut(sp_vol_CC,   Ilb->sp_vol_CCLabel,    dwi,patch);
+      new_dw->allocateAndPut(Temp_CC,     MIlb->temp_CCLabel,     dwi,patch);
+      new_dw->allocateAndPut(vel_CC,      MIlb->vel_CCLabel,      dwi,patch);
+
+      mpm_matl->initializeDummyCCVariables(rho_micro,   rho_CC,
+                                           Temp_CC,     vel_CC,  
+                                          d_sharedState->getNumMatls(),patch);  
+      //__________________________________
+      //  Set boundary conditions                                     
+      setBC(rho_micro, "Density",      patch, d_sharedState, dwi, new_dw);    
+      setBC(Temp_CC,   "Temperature",  patch, d_sharedState, dwi, new_dw);    
+      setBC(vel_CC,    "Velocity",     patch, d_sharedState, dwi, new_dw);
+      for (CellIterator iter = patch->getExtraCellIterator();
+           !iter.done();iter++){
+        sp_vol_CC[*iter] = 1.0/rho_micro[*iter];
       }
 
-      //if(d_mpm->flags->doMPMOnLevel(L_indx, num_levels)) {
-        CCVariable<double> rho_micro, sp_vol_CC, rho_CC, Temp_CC;
-        CCVariable<Vector> vel_CC;
-
-        new_dw->allocateTemporary(rho_micro, patch);
-        new_dw->allocateTemporary(rho_CC,    patch);
-
-        new_dw->allocateAndPut(sp_vol_CC,   Ilb->sp_vol_CCLabel,    dwi,patch);
-        new_dw->allocateAndPut(Temp_CC,     MIlb->temp_CCLabel,     dwi,patch);
-        new_dw->allocateAndPut(vel_CC,      MIlb->vel_CCLabel,      dwi,patch);
-        
-        mpm_matl->initializeDummyCCVariables(rho_micro,   rho_CC,
-                                             Temp_CC,     vel_CC,  
-                                            d_sharedState->getNumMatls(),patch);  
-        //__________________________________
-        //  Set boundary conditions                                     
-        setBC(rho_micro, "Density",      patch, d_sharedState, dwi, new_dw);    
-        setBC(Temp_CC,   "Temperature",  patch, d_sharedState, dwi, new_dw);    
-        setBC(vel_CC,    "Velocity",     patch, d_sharedState, dwi, new_dw);
-        for (CellIterator iter = patch->getExtraCellIterator();
-             !iter.done();iter++){
-          sp_vol_CC[*iter] = 1.0/rho_micro[*iter];
-        }
-      
-        //__________________________________
-        //    B U L L E T   P R O O F I N G
-        IntVector neg_cell;
-        ostringstream warn;
-        if( !d_ice->areAllValuesPositive(rho_CC, neg_cell) ) {
-          warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
-              <<neg_cell << " rho_CC is negative\n";
-          throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
-        }
-        if( !d_ice->areAllValuesPositive(Temp_CC, neg_cell) ) {
-          warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
-              <<neg_cell << " Temp_CC is negative\n";
-          throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
-        }
-        if( !d_ice->areAllValuesPositive(sp_vol_CC, neg_cell) ) {
-          warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
-              <<neg_cell << " sp_vol_CC is negative\n";
-          throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
-        }
-        //}  //on mpmLevel
+      //__________________________________
+      //    B U L L E T   P R O O F I N G
+      IntVector neg_cell;
+      ostringstream warn;
+      if( !d_ice->areAllValuesPositive(rho_CC, neg_cell) ) {
+        warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
+            <<neg_cell << " rho_CC is negative\n";
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+      }
+      if( !d_ice->areAllValuesPositive(Temp_CC, neg_cell) ) {
+        warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
+            <<neg_cell << " Temp_CC is negative\n";
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+      }
+      if( !d_ice->areAllValuesPositive(sp_vol_CC, neg_cell) ) {
+        warn<<"ERROR MPMICE::actuallyInitialize, mat "<<dwi<< " cell "
+            <<neg_cell << " sp_vol_CC is negative\n";
+        throw ProblemSetupException(warn.str(), __FILE__, __LINE__ );
+      }
     }  //mpmMatls
   }  //patches
 }

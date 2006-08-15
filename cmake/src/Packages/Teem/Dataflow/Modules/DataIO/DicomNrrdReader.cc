@@ -415,7 +415,7 @@ DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
 
     string dir = args[2];
 
-#if ((GDCM_MAJOR_VERSION == 1) && (GDCM_MINOR_VERSION >= 2)) || (GDCM_MAJOR_VERSION > 1)
+#if ((GDCM_MAJOR_VERSION == 1) && (GDCM_MINOR_VERSION > 2)) || (GDCM_MAJOR_VERSION > 1)
     gdcm::SerieHelper *reader = gdcm::SerieHelper::New();
     reader->SetLoadMode(gdcm::LD_ALL);
 
@@ -470,7 +470,7 @@ DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
     string all_suids = "{} ";
     std::vector<string> suids;
 
-#if ((GDCM_MAJOR_VERSION == 1) && (GDCM_MINOR_VERSION >= 2)) || (GDCM_MAJOR_VERSION > 1) 
+#if ((GDCM_MAJOR_VERSION == 1) && (GDCM_MINOR_VERSION > 2)) || (GDCM_MAJOR_VERSION > 1) 
     gdcm::FileList *l = reader->GetFirstSingleSerieUIDFileSet();
     
     while (l) 
@@ -515,7 +515,7 @@ DicomNrrdReader::tcl_command(GuiArgs& args, void* userdata)
     std::vector<std::string> files;
 
 
-#if ((GDCM_MAJOR_VERSION == 1) && (GDCM_MINOR_VERSION >= 2)) || (GDCM_MAJOR_VERSION > 1) 
+#if ((GDCM_MAJOR_VERSION == 1) && (GDCM_MINOR_VERSION > 2)) || (GDCM_MAJOR_VERSION > 1) 
     gdcm::SerieHelper *reader = gdcm::SerieHelper::New();
     reader->SetLoadMode(gdcm::LD_ALL);
     reader->SetDirectory(dir, false);
@@ -703,7 +703,7 @@ Nrrd* DicomNrrdReader::load_single_file( const string &file )
   size_t nrrd_size = 0;
   unsigned char *source = 0;
 
-#if ((GDCM_MAJOR_VERSION == 1) && (GDCM_MINOR_VERSION >= 2)) || (GDCM_MAJOR_VERSION > 1) 
+#if ((GDCM_MAJOR_VERSION == 1) && (GDCM_MINOR_VERSION > 2)) || (GDCM_MAJOR_VERSION > 1) 
   gdcm::File *f = gdcm::File::New();
   f->SetLoadMode(gdcm::LD_ALL);
   f->SetFileName( file );

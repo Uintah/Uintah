@@ -328,12 +328,7 @@ DenseMatrix::getRowNonzerosNoCopy(int r, int &size, int &stride,
 void
 DenseMatrix::zero()
 {
-  for (int r=0; r<nrows_; r++){
-    double* row=data[r];
-    for (int c=0; c<ncols_; c++){
-      row[c]=0.0;
-    }
-  }
+  memset(dataptr_, 0, sizeof(double) * nrows_ * ncols_);
 }
 
 
@@ -632,6 +627,20 @@ DenseMatrix::mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
   }
   flops+=(end-beg)*nrows_*2;
   memrefs+=(end-beg)*nrows_*2*sizeof(double)+(end-beg)*sizeof(double);
+}
+
+
+DenseMatrix *
+DenseMatrix::identity(int size)
+{
+  DenseMatrix *result = scinew DenseMatrix(size, size);
+  result->zero();
+  for (int i = 0; i < size; i++)
+  {
+    (*result)[i][i] = 1.0;
+  }
+
+  return result;
 }
 
 
