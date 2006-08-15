@@ -99,10 +99,6 @@ void
 ScalarFieldStatsAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
 					   ScalarFieldStats *sfs)
 {
-  //static int old_min = 0;
-  //static int old_max = 0;
-  static bool old_fixed = false;
-
   FIELD *ifield = dynamic_cast<FIELD *>(field_h.get_rep());
   typename FIELD::mesh_handle_type mesh = ifield->get_typed_mesh();
 
@@ -117,14 +113,16 @@ ScalarFieldStatsAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
   int counter = 0;
   vector<typename FIELD::value_type> values;
 
+  sfs->update_progress(0.3);
   double mean = 0;
-  if( sfs->is_fixed_.get() == 1 ) {
-    
+  if ( sfs->is_fixed_.get() == 1 )
+  {
     while (itr != eitr)
     {
       typename FIELD::value_type val;
       ifield->value(val, *itr);
-      if( val >= sfs->min_.get() && val <= sfs->max_.get() ) {
+      if ( val >= sfs->min_.get() && val <= sfs->max_.get() )
+      {
 	values.push_back( val );
 	value += val;
 	++counter;
@@ -133,18 +131,22 @@ ScalarFieldStatsAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
     }
     mean = value/double(counter);
     sfs->mean_.set( mean );
-  } else {
-    old_fixed = false;
+  }
+  else
+  {
     while (itr != eitr)
     {
       typename FIELD::value_type val;
       ifield->value(val, *itr);
       values.push_back( val );
       value += val;
-      if( !init ) {
+      if ( !init )
+      {
 	min = max = val;
 	init = true;
-      } else {
+      }
+      else
+      {
 	min = (val < min) ? val:min;
 	max = (val > max) ? val:max;
       }
@@ -154,13 +156,15 @@ ScalarFieldStatsAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
     mean = value/double(counter);
     sfs->mean_.set( mean );
 
-    
     sfs->min_.set( double( min ) );
     sfs->max_.set( double( max ) );
   }
 
+  sfs->update_progress(0.6);
+
   sfs->local_reset_vars();
-  if((sfs->max_.get() - sfs->min_.get()) > 1e-16 && values.size() > 0){
+  if ((sfs->max_.get() - sfs->min_.get()) > 1e-16 && values.size() > 0)
+  {
     int nbuckets = sfs->nbuckets_.get();
     vector<int> hits(nbuckets, 0);
     
@@ -170,8 +174,10 @@ ScalarFieldStatsAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
     double sigma = 0.0;
     typename vector<typename FIELD::value_type>::iterator vit = values.begin();
     typename vector<typename FIELD::value_type>::iterator vit_end = values.end();
-    for(; vit != vit_end; ++vit) {
-      if( *vit >= sfs->min_.get() && *vit <= sfs->max_.get()){
+    for(; vit != vit_end; ++vit)
+    {
+      if( *vit >= sfs->min_.get() && *vit <= sfs->max_.get())
+      {
 	double value = (*vit - sfs->min_.get())*frac;
 	hits[int(value)]++;
       }
@@ -180,10 +186,12 @@ ScalarFieldStatsAlgoT<FIELD, LOC>::execute(FieldHandle field_h,
     sfs->sigma_.set( sqrt( sigma / double(values.size()) ));
     
     vit = values.begin();
-    sort(vit, vit_end);
+    nth_element(vit, vit+values.size()/2, vit_end);
     sfs->median_.set( double ( values[ values.size()/2] ) );
     sfs->fill_histogram( hits );
-  } else {
+  }
+  else
+  {
     sfs->warning("min - max < precision or no values in range; clearing histogram");
     sfs->clear_histogram();
   }
