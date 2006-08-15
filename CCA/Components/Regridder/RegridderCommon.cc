@@ -514,8 +514,6 @@ void RegridderCommon::Dilate(const ProcessorGroup*,
       int temp = 0;
       for(CellIterator local_iter(low, high + IntVector(1,1,1)); !local_iter.done(); local_iter++) {
         IntVector local_idx(*local_iter);
-        if (idx == IntVector(143, 96, 0) && flaggedCells[local_idx]*(*filter)[local_idx-idx+depth] > 0)
-          cout << "  Marking " << idx << " because of cell " << local_idx << " ( flag val: " << flaggedCells[local_idx]*(*filter)[local_idx-idx+depth] << endl;
         temp += flaggedCells[local_idx]*(*filter)[local_idx-idx+depth];
       }
       dilatedFlaggedCells[idx] = static_cast<int>(temp > 0);
