@@ -122,7 +122,7 @@ bool TissueModel_RegularBundle::create_mesh(FieldHandle& output)
         if (k >= numelems_bath_start_ && k < numelems_bath_end_ + (numcellsz_*(numelems_z_))) ze = (k-numelems_bath_start_)/numelems_z_ + 1;
         if (ze && xe[i] && ye[j])
         {
-          ofield->set_value(xe[i]+((numcellsx_-1)*ye[j])+(numcellsx_*numcellsy_)*(ze-1),LatVolMesh<HexTrilinearLgn<Point> >::Elem::index_type(omesh,i,j,k));
+          ofield->set_value(xe[i]+((numcellsx_)*(ye[j]-1))+(numcellsx_*numcellsy_)*(ze-1),LatVolMesh<HexTrilinearLgn<Point> >::Elem::index_type(omesh,i,j,k));
         }
         else
         {
@@ -197,7 +197,7 @@ bool TissueModel_RegularBundle::create_mesh(FieldHandle& output)
 
         for (int p = xstart+numelems_x_ecs_+i*(2*numelems_x_ecs_+numelems_x_ics_); p < xend+numelems_x_ecs_+i*(2*numelems_x_ecs_+numelems_x_ics_); p++)
         {
-          for (int q= (numelems_y_ecs_+numelems_y_ics_)*(j+1)+j*numelems_y_ecs_; q < (2*numelems_y_ecs_+numelems_y_ics_)*(j+1);q++)
+          for (int q= (2*numelems_y_ecs_+numelems_y_ics_)*(j+1); q < (2*numelems_y_ecs_+numelems_y_ics_)*(j+1)+numelems_y_ecs_;q++)
           {
             for (int r= numelems_bath_start_+zstart+k*(numelems_z_); r < numelems_bath_start_+zend+k*(numelems_z_); r++)
             {
