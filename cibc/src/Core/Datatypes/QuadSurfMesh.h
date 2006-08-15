@@ -928,6 +928,8 @@ QuadSurfMesh<Basis>::locate(typename Face::index_type &face,
             "QuadSurfMesh::locate requires synchronization.");
 
   unsigned int *iter, *end;
+  if (grid_.get_rep() == 0) return false;
+  
   if (grid_->lookup(&iter, &end, p))
   {
     while (iter != end)
