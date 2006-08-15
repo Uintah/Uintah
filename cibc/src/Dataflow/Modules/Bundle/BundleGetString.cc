@@ -27,30 +27,17 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  BundleGetString.cc:
- *
- *  Written by:
- *   jeroen
- *
- */
-
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Ports/StringPort.h>
 #include <Core/Datatypes/String.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
-using namespace std;
 
 class BundleGetString : public Module {
 public:
   BundleGetString(GuiContext*);
-
-  virtual ~BundleGetString();
-
   virtual void execute();
   
 private:
@@ -72,99 +59,55 @@ BundleGetString::BundleGetString(GuiContext* ctx)
 {
 }
 
-
-BundleGetString::~BundleGetString()
-{
-}
-
-
 void
 BundleGetString::execute()
 {
-  string string1name = guistring1name_.get();
-  string string2name = guistring2name_.get();
-  string string3name = guistring3name_.get();
-  string stringlist;
-        
+  // Define input handle:
   BundleHandle handle;
-  BundleIPort  *iport;
-  BundleOPort *oport;
-  StringHandle fhandle;
-  StringOPort *ofport;
-        
-  if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
-  {
-    error("Could not find bundle input port");
-    return;
-  }
-
-  if (!(iport->get(handle)))
-  {   
-    warning("No bundle connected to the input port");
-    return;
-  }
-
-  int numStrings = handle->numStrings();
-  for (int p = 0; p < numStrings; p++)
-  {
-    stringlist += "{" + handle->getStringName(p) + "} ";
-  }
-
-
-  if (handle.get_rep() == 0)
-  {   
-    warning("Empty bundle connected to the input port");
-    return;
-  }
-
-
-  guistrings_.set(stringlist);
-  get_ctx()->reset();
-
- 
-  if (!(ofport = static_cast<StringOPort *>(get_oport("string1"))))
-  {
-    error("Could not find string 1 output port");
-    return; 
-  }
   
-  if (handle->isString(string1name))
+  // Get data from input port:
+  if (!(get_input_handle("bundle",handle,true))) return;
+  
+  if (inputs_changed_ || guistring1name_.changed() || guistring2name_.changed() ||
+      guistring3name_.changed() || !oport_cached("bundle") || !oport_cached("string1") ||
+       !oport_cached("string2") || !oport_cached("string3"))
   {
-    fhandle = handle->getString(string1name);
-    ofport->send(fhandle);
-  }
-      
- 
-  if (!(ofport = static_cast<StringOPort *>(get_oport("string2"))))
-  {
-    error("Could not find string 2 output port");
-    return; 
-  }
- 
-  if (handle->isString(string2name))
-  {
-    fhandle = handle->getString(string2name);
-    ofport->send(fhandle);
-  }
-      
- 
-  if (!(ofport = static_cast<StringOPort *>(get_oport("string3"))))
-  {
-    error("Could not find string 3 output port");
-    return; 
-  }
-
-  if (handle->isString(string3name))
-  {
-    fhandle = handle->getString(string3name);
-    ofport->send(fhandle);
-  }
+    StringHandle fhandle;
+    std::string string1name = guistring1name_.get();
+    std::string string2name = guistring2name_.get();
+    std::string string3name = guistring3name_.get();
+    std::string stringlist;
         
-  if ((oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-  {
-    oport->send(handle);
-  }
-  update_state(Completed);        
+    int numStrings = handle->numStrings();
+    for (int p = 0; p < numStrings; p++)
+    {
+      stringlist += "{" + handle->getStringName(p) + "} ";
+    }
+
+    guistrings_.set(stringlist);
+    get_ctx()->reset();
+ 
+    // Send string1 if we found one that matches the name:
+    if (handle->isString(string1name))
+    {
+      fhandle = handle->getString(string1name);
+      send_output_handle("string1",fhandle,false);
+    } 
+
+    // Send string2 if we found one that matches the name:
+    if (handle->isString(string2name))
+    {
+      fhandle = handle->getString(string2name);
+      send_output_handle("string2",fhandle,false);
+    } 
+
+    // Send string3 if we found one that matches the name:
+    if (handle->isString(string3name))
+    {
+      fhandle = handle->getString(string3name);
+      send_output_handle("string3",fhandle,false);
+    } 
+  }      
 }
 
 

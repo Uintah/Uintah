@@ -26,31 +26,17 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  BundleGetNrrd.cc:
- *
- *  Written by:
- *   Jeroen Stinstra
- *
- */
-
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Datatypes/NrrdData.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-
 
 using namespace SCIRun;
-using namespace std;
 
 class BundleGetNrrd : public Module {
 public:
   BundleGetNrrd(GuiContext*);
-
-  virtual ~BundleGetNrrd();
-
   virtual void execute();
   
 private:
@@ -79,104 +65,68 @@ BundleGetNrrd::BundleGetNrrd(GuiContext* ctx)
 }
 
 
-BundleGetNrrd::~BundleGetNrrd()
-{
-}
-
-
 void
 BundleGetNrrd::execute()
 {
-  string nrrd1name = guinrrd1name_.get();
-  string nrrd2name = guinrrd2name_.get();
-  string nrrd3name = guinrrd3name_.get();
-  int transposenrrd1 = guitransposenrrd1_.get();
-  int transposenrrd2 = guitransposenrrd2_.get();
-  int transposenrrd3 = guitransposenrrd3_.get();
-  string nrrdlist;
-        
   BundleHandle handle;
-  BundleIPort  *iport;
-  BundleOPort *oport;
-  NrrdDataHandle fhandle;
-  NrrdOPort *ofport;
-        
-  if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
+  
+  // Get data from input port:
+  if (!(get_input_handle("bundle",handle,true))) return; 
+  
+  if (inputs_changed_ || guinrrd1name_.changed() || guinrrd2name_.changed() ||
+      guinrrd3name_.changed() || guitransposenrrd1_.changed() ||
+      guitransposenrrd2_.changed() || guitransposenrrd3_.changed() ||
+      !oport_cached("bundle") || !oport_cached("nrrd1") ||
+      !oport_cached("nrrd2") || !oport_cached("nrrd3"))
   {
-    error("Could not find bundle input port");
-    return;
-  }
-
-  if (!(iport->get(handle)))
-  {   
-    warning("No bundle connected to the input port");
-    return;
-  }
-
-  if (handle.get_rep() == 0)
-  {   
-    warning("Empty bundle connected to the input port");
-    return;
-  }
-
-
-  int numNrrds = handle->numNrrds();
-  for (int p = 0; p < numNrrds; p++)
-  {
-    nrrdlist += "{" + handle->getNrrdName(p) + "} ";
-  }
-
-  guinrrds_.set(nrrdlist);
-  get_ctx()->reset();
- 
-  if (!(ofport = static_cast<NrrdOPort *>(get_oport("nrrd1"))))
-  {
-    error("Could not find nrrd 1 output port");
-    return; 
-  }
- 
-  if (handle->isNrrd(nrrd1name))
-  {
-    handle->transposeNrrd(false);
-    if (transposenrrd1) handle->transposeNrrd(true);    
-    fhandle = handle->getNrrd(nrrd1name);
-    ofport->send(fhandle);
-  }
-      
-
-  if (!(ofport = static_cast<NrrdOPort *>(get_oport("nrrd2"))))
-  {
-    error("Could not find nrrd 2 output port");
-    return; 
-  }
+    NrrdDataHandle fhandle;
     
-  if (handle->isNrrd(nrrd2name))
-  {
-    handle->transposeNrrd(false);
-    if (transposenrrd2) handle->transposeNrrd(true);
-    fhandle = handle->getNrrd(nrrd2name);
-    ofport->send(fhandle);
-  }
+    std::string nrrd1name = guinrrd1name_.get();
+    std::string nrrd2name = guinrrd2name_.get();
+    std::string nrrd3name = guinrrd3name_.get();
+    int transposenrrd1 = guitransposenrrd1_.get();
+    int transposenrrd2 = guitransposenrrd2_.get();
+    int transposenrrd3 = guitransposenrrd3_.get();
+    std::string nrrdlist;
         
- 
-  if (!(ofport = static_cast<NrrdOPort *>(get_oport("nrrd3"))))
-  {
-    error("Could not find nrrd 3 output port");
-    return; 
+    int numNrrds = handle->numNrrds();
+    for (int p = 0; p < numNrrds; p++)
+    {
+      nrrdlist += "{" + handle->getNrrdName(p) + "} ";
+    }
+
+    guinrrds_.set(nrrdlist);
+    get_ctx()->reset();
+  
+    // We need to set bundle properties hence we need to detach
+    handle.detach();
+    
+    // Send nrrd1 if we found one that matches the name:
+    if (handle->isNrrd(nrrd1name))
+    {
+      handle->transposeNrrd(false);
+      if (transposenrrd1) handle->transposeNrrd(true);    
+      fhandle = handle->getNrrd(nrrd1name);
+      send_output_handle("nrrd1",fhandle,false);
+    } 
+
+    // Send nrrd2 if we found one that matches the name:
+    if (handle->isNrrd(nrrd2name))
+    {
+      handle->transposeNrrd(false);
+      if (transposenrrd2) handle->transposeNrrd(true);    
+      fhandle = handle->getNrrd(nrrd2name);
+      send_output_handle("nrrd2",fhandle,false);
+    } 
+
+    // Send matrix3 if we found one that matches the name:
+    if (handle->isNrrd(nrrd3name))
+    {
+      handle->transposeNrrd(false);
+      if (transposenrrd3) handle->transposeNrrd(true);    
+      fhandle = handle->getNrrd(nrrd3name);
+      send_output_handle("nrrd3",fhandle,false);
+    } 
   }
- 
-  if (handle->isNrrd(nrrd3name))
-  {
-    handle->transposeNrrd(false);
-    if (transposenrrd3) handle->transposeNrrd(true);    
-    fhandle = handle->getNrrd(nrrd3name);
-    ofport->send(fhandle);
-  }
-        
-  if ((oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-  {
-    oport->send(handle);
-  }
-  update_state(Completed);        
 }
 

@@ -27,31 +27,18 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  BundleGetField.cc:
- *
- *  Written by:
- *   jeroen
- *
- */
-
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
-using namespace std;
 
 class BundleGetField : public Module {
 
 public:
   BundleGetField(GuiContext*);
-
-  virtual ~BundleGetField();
-
   virtual void execute();
   
 private:
@@ -70,97 +57,58 @@ DECLARE_MAKER(BundleGetField)
       guifield3name_(get_ctx()->subVar("field3-name"), "field3"),
       guifields_(get_ctx()->subVar("field-selection"), "")
 {
-
 }
 
-BundleGetField::~BundleGetField(){
-}
 
 
 void BundleGetField::execute()
 {
-  string field1name = guifield1name_.get();
-  string field2name = guifield2name_.get();
-  string field3name = guifield3name_.get();
-  string fieldlist;
-        
+  // Define input handle:
   BundleHandle handle;
-  BundleIPort  *iport;
-  BundleOPort *oport;
-  SCIRun::FieldHandle fhandle;
-  SCIRun::FieldOPort *ofport;
-        
-  if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
+  
+  // Get data from input port:
+  if (!(get_input_handle("bundle",handle,true))) return;
+  
+  if (inputs_changed_ || guifield1name_.changed() || guifield2name_.changed() ||
+      guifield3name_.changed() || !oport_cached("bundle") || !oport_cached("field1") ||
+       !oport_cached("field2") || !oport_cached("field3"))
   {
-    error("Could not find bundle input port");
-    return;
-  }
+    FieldHandle fhandle;
+    std::string field1name = guifield1name_.get();
+    std::string field2name = guifield2name_.get();
+    std::string field3name = guifield3name_.get();
+    std::string fieldlist;
+    
+    int numFields = handle->numFields();
+    for (int p = 0; p < numFields; p++)
+    {
+      fieldlist += "{" + handle->getFieldName(p) + "} ";
+    }
 
-  if (!(iport->get(handle)))
-  {   
-    warning("No bundle connected to the input port");
-    return;
-  }
+    guifields_.set(fieldlist);
+    get_ctx()->reset();  
+  
+    // Send field1 if we found one that matches the name:
+    if (handle->isField(field1name))
+    {
+      fhandle = handle->getField(field1name);
+      send_output_handle("field1",fhandle,false);
+    } 
 
-  if (handle.get_rep() == 0)
-  {   
-    warning("Empty bundle connected to the input port");
-    return;
-  }
+    // Send field2 if we found one that matches the name:
+    if (handle->isField(field2name))
+    {
+      fhandle = handle->getField(field2name);
+      send_output_handle("field2",fhandle,false);
+    } 
 
-  int numfields = handle->numFields();
-  for (int p = 0; p < numfields; p++)
-  {
-    fieldlist += "{" + handle->getFieldName(p) + "} ";
+    // Send field3 if we found one that matches the name:
+    if (handle->isField(field3name))
+    {
+      fhandle = handle->getField(field3name);
+      send_output_handle("field3",fhandle,false);
+    } 
   }
-
-  guifields_.set(fieldlist);
-  get_ctx()->reset();
-
- 
-  if (!(ofport = static_cast<FieldOPort *>(get_oport("field1"))))
-  {
-    error("Could not find field 1 output port");
-    return; 
-  }
-
-  if (handle->isField(field1name))
-  {
-    fhandle = handle->getField(field1name);
-    ofport->send(fhandle);
-  }
-      
- 
-  if (!(ofport = static_cast<FieldOPort *>(get_oport("field2"))))
-  {
-    error("Could not find field 2 output port");
-    return; 
-  }
- 
-  if (handle->isField(field2name))
-  {
-    fhandle = handle->getField(field2name);
-    ofport->send(fhandle);
-  }
-      
- 
-  if (!(ofport = static_cast<FieldOPort *>(get_oport("field3"))))
-  {
-    error("Could not find field 3 output port");
-    return; 
-  }
- 
-  if (handle->isField(field3name))
-  {
-    fhandle = handle->getField(field3name);
-    ofport->send(fhandle);
-  }
-        
-  if ((oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-  {
-    oport->send(handle);
-  }
-  update_state(Completed);
 }
 
 

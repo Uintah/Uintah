@@ -26,30 +26,17 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  BundleSetNrrd.cc:
- *
- *  Written by:
- *   jeroen
- *
- */
-
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Core/Datatypes/NrrdData.h>
 #include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
-using namespace std;
 
 class BundleSetNrrd : public Module {
 public:
   BundleSetNrrd(GuiContext*);
-
-  virtual ~BundleSetNrrd();
-
   virtual void execute();
 
 private:
@@ -71,96 +58,51 @@ BundleSetNrrd::BundleSetNrrd(GuiContext* ctx)
 {
 }
 
-
-BundleSetNrrd::~BundleSetNrrd()
-{
-}
-
-
 void
 BundleSetNrrd::execute()
 {
-  string nrrd1name = guinrrd1name_.get();
-  string nrrd2name = guinrrd2name_.get();
-  string nrrd3name = guinrrd3name_.get();
-  string bundlename = guibundlename_.get();
-    
-  BundleHandle handle, oldhandle;
-  BundleIPort  *iport;
-  BundleOPort *oport;
-  NrrdDataHandle fhandle;
-  NrrdIPort *ifport;
-        
-  if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
-  {
-    error("Could not find bundle input port");
-    return;
-  }
-        
-  // Create a new bundle
-  // Since a bundle consists of only handles we can copy
-  // it several times without too much memory overhead
-  if (iport->get(oldhandle))
-  {   // Copy all the handles from the existing bundle
-    handle = oldhandle->clone();
-  }
-  else
-  {   // Create a brand new bundle
-    handle = scinew Bundle;
-  }
-        
-  // Scan bundle input port 1
-  if (!(ifport = static_cast<NrrdIPort *>(get_iport("nrrd1"))))
-  {
-    error("Could not find nrrd 1 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
-  {
-    handle->setNrrd(nrrd1name,fhandle);
-  }
+  BundleHandle  handle;
+  NrrdDataHandle nrrd1, nrrd2, nrrd3;
 
-  // Scan nrrd input port 2     
-  if (!(ifport = static_cast<NrrdIPort *>(get_iport("nrrd2"))))
-  {
-    error("Could not find nrrd 2 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
-  {
-    handle->setNrrd(nrrd2name,fhandle);
-  }
-
-  // Scan nrrd input port 3     
-  if (!(ifport = static_cast<NrrdIPort *>(get_iport("nrrd3"))))
-    {
-      error("Could not find nrrd 3 input port");
-      return;
-    }
-        
-  if (ifport->get(fhandle))
-  {
-    handle->setNrrd(nrrd3name,fhandle);
-  }
-        
-  // Now post the output
-        
-  if (!(oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-  {
-    error("Could not find bundle output port");
-    return;
-  }
-    
-  if (bundlename != "")
-  {
-    handle->set_property("name",bundlename,false);
-  }
-        
-  oport->send_and_dereference(handle);
+  get_input_handle("bundle",handle,false);
+  get_input_handle("nrrd1",nrrd1,false);
+  get_input_handle("nrrd2",nrrd2,false);
+  get_input_handle("nrrd3",nrrd3,false);
   
-  update_state(Completed);  
+  if (inputs_changed_ || guinrrd1name_.changed() || guinrrd2name_.changed() ||
+      guinrrd3name_.changed() || guibundlename_.changed() || !oport_cached("bundle"))
+  {
+  
+    std::string nrrd1name = guinrrd1name_.get();
+    std::string nrrd2name = guinrrd2name_.get();
+    std::string nrrd3name = guinrrd3name_.get();
+    std::string bundlename = guibundlename_.get();
+
+    if (handle.get_rep())
+    {
+      handle.detach();
+    }
+    else
+    {
+      handle = scinew Bundle();
+      if (handle.get_rep() == 0)
+      {
+        error("Could not allocate new bundle");
+        return;
+      }
+    }
+                
+    if (nrrd1.get_rep()) handle->setNrrd(nrrd1name,nrrd1);
+    if (nrrd2.get_rep()) handle->setNrrd(nrrd2name,nrrd2);
+    if (nrrd3.get_rep()) handle->setNrrd(nrrd3name,nrrd3);
+    if (bundlename != "")
+    {
+      handle->set_property("name",bundlename,false);
+    }
+
+    send_output_handle("bundle",handle,false);
+  }
+
 }
 
 

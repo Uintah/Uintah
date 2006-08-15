@@ -26,30 +26,17 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  BundleSetMatrix.cc:
- *
- *  Written by:
- *   jeroen
- *
- */
-
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
-using namespace std;
 
 class BundleSetMatrix : public Module {
 public:
   BundleSetMatrix(GuiContext*);
-
-  virtual ~BundleSetMatrix();
-
   virtual void execute();
 
 private:
@@ -71,95 +58,49 @@ BundleSetMatrix::BundleSetMatrix(GuiContext* ctx)
 {
 }
 
-
-BundleSetMatrix::~BundleSetMatrix()
+void BundleSetMatrix::execute()
 {
-}
+  BundleHandle  handle;
+  MatrixHandle matrix1, matrix2, matrix3;
 
-
-void
-BundleSetMatrix::execute()
-{
-  string matrix1name = guimatrix1name_.get();
-  string matrix2name = guimatrix2name_.get();
-  string matrix3name = guimatrix3name_.get();
-  string bundlename = guibundlename_.get();
-    
-  BundleHandle handle, oldhandle;
-  BundleIPort  *iport;
-  BundleOPort *oport;
-  MatrixHandle fhandle;
-  MatrixIPort *ifport;
-        
-  if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
-  {
-    error("Could not find bundle input port");
-    return;
-  }
-        
-  // Create a new bundle
-  // Since a bundle consists of only handles we can copy
-  // it several times without too much memory overhead
-  if (iport->get(oldhandle))
-  {   // Copy all the handles from the existing bundle
-    handle = oldhandle->clone();
-  }
-  else
-  {   // Create a brand new bundle
-    handle = scinew Bundle;
-  }
-        
-  // Scan bundle input port 1
-  if (!(ifport = static_cast<MatrixIPort *>(get_iport("matrix1"))))
-  {
-    error("Could not find matrix 1 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
-  {
-    handle->setMatrix(matrix1name,fhandle);
-  }
-
-  // Scan matrix input port 2     
-  if (!(ifport = static_cast<MatrixIPort *>(get_iport("matrix2"))))
-  {
-    error("Could not find matrix 2 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
-  {
-    handle->setMatrix(matrix2name,fhandle);
-  }
-
-  // Scan matrix input port 3     
-  if (!(ifport = static_cast<MatrixIPort *>(get_iport("matrix3"))))
-  {
-    error("Could not find matrix 3 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
-  {
-    handle->setMatrix(matrix3name,fhandle);
-  }
-        
-  // Now post the output
-        
-  if (!(oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-  {
-    error("Could not find bundle output port");
-    return;
-  }
+  get_input_handle("bundle",handle,false);
+  get_input_handle("matrix1",matrix1,false);
+  get_input_handle("matrix2",matrix2,false);
+  get_input_handle("matrix3",matrix3,false);
   
-  if (bundlename != "")
+  if (inputs_changed_ || guimatrix1name_.changed() || guimatrix2name_.changed() ||
+      guimatrix3name_.changed() || guibundlename_.changed() || !oport_cached("bundle"))
   {
-    handle->set_property("name",bundlename,false);
-  }
-        
-  oport->send_and_dereference(handle);
   
-  update_state(Completed);  
+    std::string matrix1name = guimatrix1name_.get();
+    std::string matrix2name = guimatrix2name_.get();
+    std::string matrix3name = guimatrix3name_.get();
+    std::string bundlename = guibundlename_.get();
+
+    if (handle.get_rep())
+    {
+      handle.detach();
+    }
+    else
+    {
+      handle = scinew Bundle();
+      if (handle.get_rep() == 0)
+      {
+        error("Could not allocate new bundle");
+        return;
+      }
+    }
+                
+    if (matrix1.get_rep()) handle->setMatrix(matrix1name,matrix1);
+    if (matrix2.get_rep()) handle->setMatrix(matrix2name,matrix2);
+    if (matrix3.get_rep()) handle->setMatrix(matrix3name,matrix3);
+    if (bundlename != "")
+    {
+      handle->set_property("name",bundlename,false);
+    }
+
+    send_output_handle("bundle",handle,false);
+  }
+
 }
 
