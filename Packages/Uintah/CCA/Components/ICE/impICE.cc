@@ -690,7 +690,14 @@ void ICE::setupRHS(const ProcessorGroup*,
       IntVector c = *iter;
       rhs[c] = -term1[c] + massExchTerm[c] + sumAdvection[c];
     }
-    
+
+    // Renormalize massExchangeTerm to be consistent with the rest of ICE
+    if(d_models.size() > 0){
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+        IntVector c = *iter;
+        massExchTerm[c] /= vol;
+      }
+    }
     //__________________________________
     // set rhs = 0 under all fine patches
     // For a composite grid we ignore what's happening
