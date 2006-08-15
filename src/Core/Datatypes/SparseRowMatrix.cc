@@ -625,10 +625,30 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
   int *brows = b.rows;
   int *bcolumns = b.columns;
   double* ba = b.a;  
+
+  if (brows==0 || bcolumns == 0 || ba == 0)
+  {
+    std:cerr << "Encountered an invalid sparse matrix" << std::endl;
+    return (false);
+  }
   
-  // Rough estimate
-  std::vector<SparseSparseElement> elems;
+  int k = 0;
+  for (int r =0; r<nrows_; r++)
+  {
+    int ps = rows[r];
+    int pe = rows[r+1];   
+    for (int p = ps; p < pe; p++)
+    {
+      int s = columns[p];
+      int qs = brows[s];
+      int qe = brows[s+1];
+      k += qe-qs;
+    }
+  }
+
+  std::vector<SparseSparseElement> elems(k);
   
+  k = 0;
   for (int r =0; r<nrows_; r++)
   {
     int ps = rows[r];
@@ -641,15 +661,14 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
       int qe = brows[s+1];
       for (int q=qs; q<qe; q++)
       {
-        SparseSparseElement el;
-        el.row = r;
-        el.col = bcolumns[q];
-        el.val = v*ba[q];
-        elems.push_back(el);
+        elems[k].row = r;
+        elems[k].col = bcolumns[q];
+        elems[k].val = v*ba[q];
+        k++;
       }
     }
   }
-  
+    
   std::sort(elems.begin(),elems.end());
   
   int s = 0;
@@ -668,6 +687,7 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
       s = r;
     }
   }
+
   
   int *rr = scinew int[nrows_+1];
   int *cc = scinew int[nnz];
@@ -680,10 +700,10 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
     if (vv) delete[] vv;
     return (output);  
   }
-  
+
   rr[0] = 0;
   int q = 0;
-  unsigned int k = 0;
+  k = 0;
   for( int p=0; p < nrows_; p++ )
   {
     while ((k < elems.size())&&(elems[k].row == p)) { 
@@ -694,7 +714,7 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
     }
     rr[p+1] = q;
   }   
-  
+    
   output = dynamic_cast<Matrix *>(scinew SparseRowMatrix(nrows_,bncols,rr,cc,nnz,vv));
   
   return (output);
