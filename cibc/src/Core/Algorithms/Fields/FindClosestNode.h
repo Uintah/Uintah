@@ -122,6 +122,7 @@ bool FindClosestNodeAlgoT<FSRC, FPNT>::FindClosestNode(ProgressReporter *pr, Fie
   while (pit != pit_end)
   {
     pmesh->get_center(p,*pit);
+    dist = DBL_MAX;
     
     if (imesh->locate(cidx,p))
     {

@@ -111,6 +111,8 @@ MathAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int n)
       }
     }
  
+    std::cout << "newnnz = " << newnnz << "\n";
+ 
     double* newval = scinew double[newnnz];  
     int* newcol = scinew int[newnnz];
     int* newrow = scinew int[m+1];
@@ -125,36 +127,23 @@ MathAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int n)
     }
     
     int k = 0;
-
+    newrow[0] = 0;
+    
     for (int p=1; p<(m+1); p++)
     {
       if (p <= sm)
       {
         for (int q = row[p-1]; q < row[p]; q++)
         {
-          if (col[p] < n) 
+          if (col[q] < n) 
           {
-            newval[k] = val[p];
-            newcol[k] = col[p];
+            newval[k] = val[q];
+            newcol[k] = col[q];
             k++;
           }        
         }
       }
-    }
-    
-            
-    int r=0;
-    newrow[0] = 0;
-    for (int p=1; p<(m+1); p++)
-    {
-      if (p <= sm)
-      {
-        for (int q = row[p-1]; q < row[p]; q++)
-        {
-          if (col[q] < n) r++;
-        }
-      }
-      newrow[p] = r;
+      newrow[p] = k;
     }
     
     output = scinew SparseRowMatrix(m,n,newrow,newcol,newnnz,newval);
@@ -1483,7 +1472,7 @@ MathAlgo::MatrixAppendRows(MatrixHandle input,MatrixHandle& output,MatrixHandle 
     }   
   
     int newnnz = rr[m]+arr[am];
-    int *nrr = scinew int[newm];
+    int *nrr = scinew int[newm+1];
     int *ncc = scinew int[newnnz];
     double *nvv = scinew double[newnnz];
     

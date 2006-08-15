@@ -122,6 +122,7 @@ bool FindClosestNodeByValueAlgoT<FSRC, FPNT>::FindClosestNodeByValue(ProgressRep
     pmesh->end(pit_end);
     while (pit != pit_end)
     {
+      dist = DBL_MAX;
       pmesh->get_center(p,*pit);
       imesh->begin(it);
       imesh->end(it_end);
@@ -154,6 +155,7 @@ bool FindClosestNodeByValueAlgoT<FSRC, FPNT>::FindClosestNodeByValue(ProgressRep
     pmesh->end(pit_end);
     while (pit != pit_end)
     {
+      dist = DBL_MAX;
       pmesh->get_center(p,*pit);
       imesh->begin(it);
       imesh->end(it_end);
