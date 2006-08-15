@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<component name="CreateFEDirichletBC" category="FiniteElements" optional="false">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+    <summary>
+      This module creates a Dirichlet boundary condition.
+
+    </summary>
+    <description>
+      <p>        This module creates a Dirichlet boundary condition.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>BCField</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
+      <port>
+        <name>FEMatrix</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>RHS</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </inputs>
+    <outputs>
+      <port>
+        <name>FEMatrix</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+      <port>
+        <name>RHS</name>
+        <datatype>SCIRun::Matrix</datatype>
+      </port>
+    </outputs>
+  </io>
+</component>

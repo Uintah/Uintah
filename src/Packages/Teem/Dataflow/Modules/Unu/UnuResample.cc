@@ -63,8 +63,6 @@ public:
   virtual void tcl_command(GuiArgs&, void*);
 
 private:
-  NrrdIPort          *inrrd_;
-  NrrdOPort          *onrrd_;
   GuiString           filtertype_;
   GuiInt              dim_;
   GuiInt              uis_;
@@ -139,33 +137,28 @@ UnuResample::getint(const char *str, size_t *n, int *none)
 void 
 UnuResample::execute()
 {
-  NrrdDataHandle nrrdH;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("Nrrd");
-  onrrd_ = (NrrdOPort *)get_oport("Nrrd");
 
-  if (!inrrd_->get(nrrdH))
-    return;
-  if (!nrrdH.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
-  dim_.reset();
-  uis_.reset();
+  NrrdDataHandle nrrdH;
+  if (!get_input_handle("Nrrd", nrrdH)) return;
+
+  reset_vars();
 
   bool new_dataset = (last_generation_ != nrrdH->generation);
   bool first_time = (last_generation_ == -1);
 
-  // create any resample axes that might have been saved
-  if (first_time) {
+  // Create any resample axes that might have been saved.
+  if (first_time)
+  {
     uis_.reset();
-    for(int i=4; i<uis_.get(); i++) {
+    for (int i=4; i<uis_.get(); i++)
+    {
       ostringstream str, str2;
       str << "resampAxis" << i;
       str2 << i;
       resampAxes_.push_back(new GuiString(get_ctx()->subVar(str.str())));
       last_RA_.push_back(resampAxes_[i]->get());
-      get_gui()->execute(get_id().c_str() + string(" make_min_max " + str2.str()));
+      get_gui()->execute(get_id() +" make_min_max " + str2.str());
     }
   }
 
@@ -218,7 +211,7 @@ UnuResample::execute()
   }
 
   if (!changed && !new_dataset && last_nrrdH_.get_rep()) {
-    onrrd_->send_and_dereference(last_nrrdH_, true);
+    send_output_handle("Nrrd", last_nrrdH_, true);
     return;
   }
   
@@ -295,8 +288,10 @@ UnuResample::execute()
   nrrdResampleInfoNix(info); 
   //nrrd->copy_sci_data(*nrrdH.get_rep());
   last_nrrdH_ = nrrd;
-  onrrd_->send_and_dereference(last_nrrdH_, true);
+
+  send_output_handle("Nrrd", last_nrrdH_, true);
 }
+
 
 void 
 UnuResample::tcl_command(GuiArgs& args, void* userdata)

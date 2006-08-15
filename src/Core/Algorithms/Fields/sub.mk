@@ -14,30 +14,38 @@ SRCDIR   := Core/Algorithms/Fields
 
 
 SRCS     += $(SRCDIR)/ApplyMappingMatrix.cc\
+            $(SRCDIR)/GetBoundingBox.cc\
             $(SRCDIR)/ClearAndChangeFieldBasis.cc\
             $(SRCDIR)/ConvertToTetVol.cc\
             $(SRCDIR)/ConvertToTriSurf.cc\
             $(SRCDIR)/DomainBoundary.cc\
             $(SRCDIR)/ClipBySelectionMask.cc\
+            $(SRCDIR)/IndicesToData.cc\
             $(SRCDIR)/DistanceField.cc\
             $(SRCDIR)/FieldsAlgo.cc\
             $(SRCDIR)/FieldBoundary.cc\
             $(SRCDIR)/FieldDataNodeToElem.cc\
             $(SRCDIR)/FieldDataElemToNode.cc\
+            $(SRCDIR)/FindClosestNode.cc\
+            $(SRCDIR)/FindClosestNodeByValue.cc\
             $(SRCDIR)/GetFieldData.cc\
             $(SRCDIR)/GetFieldDataMinMax.cc\
             $(SRCDIR)/GetFieldInfo.cc\
+            $(SRCDIR)/GetFieldMeasure.cc\
             $(SRCDIR)/IsInsideField.cc\
             $(SRCDIR)/LinkFieldBoundary.cc\
             $(SRCDIR)/LinkToCompGrid.cc\
             $(SRCDIR)/LinkToCompGridByDomain.cc\
             $(SRCDIR)/GatherFields.cc\
             $(SRCDIR)/MergeFields.cc\
+            $(SRCDIR)/MergeMeshes.cc\
             $(SRCDIR)/ScaleField.cc\
             $(SRCDIR)/SplitByConnectedRegion.cc\
             $(SRCDIR)/SplitFieldByDomain.cc\
             $(SRCDIR)/SetFieldData.cc\
             $(SRCDIR)/MappingMatrixToField.cc\
+            $(SRCDIR)/Mapping.cc\
+            $(SRCDIR)/CurrentDensityMapping.cc\
             $(SRCDIR)/TransformField.cc\
             $(SRCDIR)/ToPointCloud.cc\
             $(SRCDIR)/Unstructure.cc\

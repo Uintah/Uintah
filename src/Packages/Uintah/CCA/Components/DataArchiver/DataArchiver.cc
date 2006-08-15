@@ -21,8 +21,6 @@
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
 
-//#include <Core/XMLUtil/SimpleErrorHandler.h>
-
 #include <Core/Util/DebugStream.h>
 #include <Core/Exceptions/ErrnoException.h>
 #include <Core/Exceptions/InternalError.h>
@@ -66,6 +64,10 @@
 //       problem and needs a way to turn it off.
 
 #define PVFS_FIX
+
+#define OUTPUT 0
+#define CHECKPOINT 1
+#define CHECKPOINT_REDUCTION 2
 
 using namespace Uintah;
 using namespace std;
@@ -847,13 +849,13 @@ DataArchiver::finalizeTimestep(double time, double delt,
     
     dbg << "Created reduction variable output task" << endl;
     if (delt != 0 || d_outputInitTimestep)
-      scheduleOutputTimestep(d_dir, d_saveLabels, grid, sched, false);
+      scheduleOutputTimestep(d_saveLabels, grid, sched, false);
   }
     
   if (delt != 0) {
     // output checkpoint timestep
-    Task* t = scinew Task("DataArchiver::outputCheckpointReduction",
-                          this, &DataArchiver::outputCheckpointReduction);
+    Task* t = scinew Task("DataArchiver::output (CheckpointReduction)",
+                          this, &DataArchiver::output, CHECKPOINT_REDUCTION);
     
     for(int i=0;i<(int)d_checkpointReductionLabels.size();i++) {
       SaveItem& saveItem = d_checkpointReductionLabels[i];
@@ -869,8 +871,7 @@ DataArchiver::finalizeTimestep(double time, double delt,
     
     dbg << "Created checkpoint reduction variable output task" << endl;
     
-    scheduleOutputTimestep(d_checkpointsDir, d_checkpointLabels,
-                           grid, sched, true);
+    scheduleOutputTimestep(d_checkpointLabels,  grid, sched, true);
   }
 }
 
@@ -1085,38 +1086,68 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
   tname << "t" << setw(5) << setfill('0') << timestep;
 
   for (int i = 0; i < static_cast<int>(baseDirs.size()); i++) {
+    // to save the list of vars. up to 2, since in checkpoints, there are two types of vars
+    vector<vector<SaveItem>*> savelist; 
     
     // Reference this timestep in index.xml
     if(d_writeMeta){
       string iname = baseDirs[i]->getName()+"/index.xml";
 
-#ifdef PVFS_FIX
-      // RNJ - If we already have the XML Index Doc
-      //       loaded, don't load it again.
-
       ProblemSpecP indexDoc;
       bool hasGlobals = false;
 
       if ( baseDirs[i] == &d_dir ) {
-        indexDoc = d_XMLIndexDoc;
-        d_XMLIndexDoc = NULL;
+        savelist.push_back(&d_saveLabels);
       }
       else if ( baseDirs[i] == &d_checkpointsDir ) {
-        indexDoc = d_CheckpointXMLIndexDoc;
-        d_CheckpointXMLIndexDoc = NULL;
         hasGlobals = d_checkpointReductionLabels.size() > 0;
+        savelist.push_back(&d_checkpointLabels);
+        savelist.push_back(&d_checkpointReductionLabels);
       }
       else {
         throw "DataArchiver::executedTimestep(): Unknown directory!";
       }
-#else
-      ProblemSpecP indexDoc = loadDocument(iname);
-#endif
+      indexDoc = loadDocument(iname);
 
       // if this timestep isn't already in index.xml, add it in
       if (indexDoc == 0)
         continue; // output timestep but no variables scheduled to be saved.
       ASSERT(indexDoc != 0);
+
+      // output data pointers
+      for (unsigned j = 0; j < savelist.size(); j++) {
+        string variableSection = savelist[j] == &d_checkpointReductionLabels ? "globals" : "variables";
+        ProblemSpecP vs = indexDoc->findBlock(variableSection);
+        if(vs == 0){
+          vs = indexDoc->appendChild(variableSection.c_str());
+        }
+        for (unsigned k = 0; k < savelist[j]->size(); k++) {
+          const VarLabel* var = (*savelist[j])[k].label_;
+          bool found=false;
+          for(ProblemSpecP n = vs->getFirstChild(); n != 0; n=n->getNextSibling()){
+            if(n->getNodeName() == "variable") {
+              map<string,string> attributes;
+              n->getAttributes(attributes);
+              string varname = attributes["name"];
+              if(varname == "")
+                throw InternalError("varname not found", __FILE__, __LINE__);
+              if(varname == var->getName()){
+                found=true;
+                break;
+              }
+            }
+          }
+          if(!found){
+            ProblemSpecP newElem = vs->appendChild("variable");
+            newElem->setAttribute("type", TranslateVariableType( var->typeDescription()->getName(), 
+                                                                 baseDirs[i] != &d_dir ) );
+            newElem->setAttribute("name", var->getName());
+          }
+        }
+      }
+      
+      
+      
       ProblemSpecP ts = indexDoc->findBlock("timesteps");
       if(ts == 0){
         ts = indexDoc->appendChild("timesteps");
@@ -1167,8 +1198,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
       int numLevels = grid->numLevels();
       
       // in amr, we're not guaranteed that a proc do work on a given level
-      //   quick check to see that, so DataArchive won't crash on loading
-      //   a file that won't be written
+      //   quick check to see that, so we don't create a node that points to no data
       vector<vector<int> > procOnLevel(numLevels);
 
       ProblemSpecP gridElem = rootElem->appendChild("Grid");
@@ -1195,7 +1225,9 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
         for(iter=level->patchesBegin(); iter != level->patchesEnd(); iter++){
           const Patch* patch=*iter;
 
-          procOnLevel[l][lb->getPatchwiseProcessorAssignment(patch)] = 1;
+          // mark the nth proc 
+          int n = lb->getNthProc();
+          procOnLevel[l][(lb->getPatchwiseProcessorAssignment(patch)/n)*n] = 1;
 
           Box box = patch->getBox();
           ProblemSpecP patchElem = levelElem->appendChild("Patch");
@@ -1379,18 +1411,22 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
 }
 
 void
-DataArchiver::scheduleOutputTimestep(Dir& baseDir,
-                                     vector<DataArchiver::SaveItem>& saveLabels,
+DataArchiver::scheduleOutputTimestep(vector<DataArchiver::SaveItem>& saveLabels,
                                      const GridP& grid, SchedulerP& sched,
                                      bool isThisCheckpoint )
 {
   // Schedule a bunch o tasks - one for each variable, for each patch
   int n=0;
+  LoadBalancer* lb = dynamic_cast<LoadBalancer*>(getPort("load balancer")); 
   for(int i=0;i<grid->numLevels();i++){
     const LevelP& level = grid->getLevel(i);
     vector< SaveItem >::iterator saveIter;
-    const PatchSet* patches = level->eachPatch();
+    const PatchSet* patches = lb->getOutputPerProcessorPatchSet(level);
     
+    string taskName = "DataArchiver::output";
+    if (isThisCheckpoint) taskName += "(checkpoint)";
+
+    Task* t = scinew Task(taskName, this, &DataArchiver::output, isThisCheckpoint?CHECKPOINT:OUTPUT);
     for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end();
         saveIter++) {
       // check to see if the input file requested to save on this level.
@@ -1404,20 +1440,17 @@ DataArchiver::scheduleOutputTimestep(Dir& baseDir,
         iter = saveIter->matlSet_.find(ALL_LEVELS);
       if (iter != saveIter->matlSet_.end()) {
         
-        const MaterialSet* matls = iter->second.get_rep();
+        const MaterialSubset* matls = iter->second.get_rep()->getUnion();
 
-        string taskName = string(isThisCheckpoint ? "DataArchiver::checkpoint: " : "DataArchiver::output: ") + saveIter->label_->getName();
-
-        Task* t = scinew Task(taskName, this, &DataArchiver::output,
-                              &baseDir, (*saveIter).label_, isThisCheckpoint);
-        t->requires(Task::NewDW, (*saveIter).label_, Ghost::None, 0, true);
-        t->setType(Task::Output);
-        sched->addTask(t, patches, matls);
+        // out of domain really is only there to handle the "all-in-one material", but doesn't break anything else
+        t->requires(Task::NewDW, (*saveIter).label_, matls, Task::OutOfDomain, Ghost::None, 0, true);
         n++;
       }
     }
+    t->setType(Task::Output);
+    sched->addTask(t, patches, d_sharedState->allMaterials());
   }
-  dbg << "Created " << n << " output tasks\n";
+  dbg << "Created output task for " << n << " variables\n";
 }
 
 // be sure to call releaseDocument on the value returned
@@ -1521,79 +1554,56 @@ DataArchiver::outputReduction(const ProcessorGroup*,
 }
 
 void
-DataArchiver::outputCheckpointReduction(const ProcessorGroup* world,
-                                        const PatchSubset*,
-                                        const MaterialSubset* /*matls*/,
-                                        DataWarehouse* old_dw,
-                                        DataWarehouse* new_dw)
-{
-  // Dump the stuff in the reduction saveset into files in the uda
-  // only on checkpoint timesteps
-
-  if (!d_wasCheckpointTimestep)
-    return;
-  dbg << "DataArchiver::outputCheckpointReduction called\n";
-  PatchSubset* patches = scinew PatchSubset(0);
-  patches->add(0);
-
-  for(int i=0;i<(int)d_checkpointReductionLabels.size();i++) {
-    SaveItem& saveItem = d_checkpointReductionLabels[i];
-    const VarLabel* var = saveItem.label_;
-
-    map<int, MaterialSetP>::iterator liter;
-    for (liter = saveItem.matlSet_.begin(); liter != saveItem.matlSet_.end(); liter++) {
-      const MaterialSubset* matls = saveItem.getMaterialSet(liter->first)->getUnion();
-      output(world, patches, matls, old_dw, new_dw, &d_checkpointsDir, var, true);
-    }
-  }
-  delete patches;
-}
-
-void
 DataArchiver::output(const ProcessorGroup*,
                      const PatchSubset* patches,
                      const MaterialSubset* matls,
                      DataWarehouse* /*old_dw*/,
                      DataWarehouse* new_dw,
-                     Dir* p_dir,
-                     const VarLabel* var,
-                     bool isThisCheckpoint )
+                     int type)
 {
   // return if not an outpoint/checkpoint timestep
-  if ((!d_wasOutputTimestep && !isThisCheckpoint) || 
-      (!d_wasCheckpointTimestep && isThisCheckpoint)) {
+  if ((!d_wasOutputTimestep && type == OUTPUT) || 
+      (!d_wasCheckpointTimestep && type != OUTPUT)) {
     return;
   }
 
-  bool isReduction = var->typeDescription()->isReductionVariable();
+  vector< SaveItem >& saveLabels = (type == OUTPUT ? d_saveLabels :
+                                    type == CHECKPOINT ? d_checkpointLabels : 
+                                    d_checkpointReductionLabels);
 
   // this task should be called once per variable (per patch/matl subset).
-  dbg << "output called ";
-  if(patches->size() == 1 && !patches->get(0)){
-    dbg << "for reduction";
-  } else {
-    dbg << "on patches: ";
-    for(int p=0;p<patches->size();p++){
-      if(p != 0)
-        dbg << ", ";
-      if (patches->get(p) == 0)
-        dbg << -1;
-      else
-        dbg << patches->get(p)->getID();
+  if (dbg.active()) {
+    dbg << "output called ";
+    if(type == CHECKPOINT_REDUCTION){
+      dbg << "for reduction";
+    } else {
+      if (type == CHECKPOINT)
+        dbg << "(checkpoint) ";
+      dbg << "on patches: ";
+      for(int p=0;p<patches->size();p++){
+        if(p != 0)
+          dbg << ", ";
+        if (patches->get(p) == 0)
+          dbg << -1;
+        else
+          dbg << patches->get(p)->getID();
+      }
     }
+    dbg << " at time: " << d_sharedState->getCurrentTopLevelTimeStep() << "\n";
   }
-  dbg << ", variable: " << var->getName() << ", materials: ";
-  for(int m=0;m<matls->size();m++){
-    if(m != 0)
-      dbg << ", ";
-    dbg << matls->get(m);
-  }
-  dbg << " at time: " << d_sharedState->getCurrentTopLevelTimeStep() << "\n";
+    
   
   ostringstream tname;
+
+  Dir dir;
+  if (type == OUTPUT)
+    dir = d_dir;
+  else
+    dir = d_checkpointsDir;
+
   tname << "t" << setw(5) << setfill('0') << d_sharedState->getCurrentTopLevelTimeStep();
   
-  Dir tdir = p_dir->getSubdir(tname.str());
+  Dir tdir = dir.getSubdir(tname.str());
   
   string xmlFilename;
   string dataFilebase;
@@ -1603,7 +1613,7 @@ DataArchiver::output(const ProcessorGroup*,
   // find the xml filename and data filename that we will write to
   // Normal reductions will be handled by outputReduction, but checkpoint
   // reductions call this function, and we handle them differently.
-  if (!isReduction) {
+  if (type != CHECKPOINT_REDUCTION) {
     // find the level and level number associated with this patch
     ostringstream lname;
     ASSERT(patches->size() != 0);
@@ -1642,7 +1652,7 @@ DataArchiver::output(const ProcessorGroup*,
 #endif
 
 #ifdef PVFS_FIX
-    if ( isReduction )
+    if ( type == CHECKPOINT_REDUCTION )
 #endif
     {
       ifstream test(xmlFilename.c_str());
@@ -1658,7 +1668,7 @@ DataArchiver::output(const ProcessorGroup*,
       map< int, ProblemSpecP >* currentXMLDataDocMap;
       map< int, ProblemSpecP >::iterator currentXMLDataDoc;
 
-      if ( isThisCheckpoint ) {
+      if ( type == CHECKPOINT ) {
         currentXMLDataDocMap = &d_CheckpointXMLDataDocs;
       }
       else {
@@ -1699,7 +1709,7 @@ DataArchiver::output(const ProcessorGroup*,
     int fd;
     char* filename;
 #ifdef PVFS_FIX
-    if ( isReduction )
+    if ( type == CHECKPOINT_REDUCTION )
 #endif
     {
       // Open the data file
@@ -1718,7 +1728,7 @@ DataArchiver::output(const ProcessorGroup*,
       map< int, pair<int, char*> >* currentDataFileHandleMap;
       map< int, pair<int, char*> >::iterator currentDataFileHandle;
 
-      if ( isThisCheckpoint ) {
+      if ( type == CHECKPOINT ) {
         currentDataFileHandleMap = &d_CheckpointDataFileHandles;
       }
       else {
@@ -1733,7 +1743,7 @@ DataArchiver::output(const ProcessorGroup*,
       if ( currentDataFileHandle == currentDataFileHandleMap->end() ) {
         filename = (char*) dataFilename.c_str();
         fd = open(filename, flags, 0666);
-
+        
         if ( fd == -1 ) {
           cerr << "Cannot open dataFile: " << dataFilename << '\n';
           throw ErrnoException("DataArchiver::output (open call)", errno, __FILE__, __LINE__);
@@ -1749,159 +1759,138 @@ DataArchiver::output(const ProcessorGroup*,
     }
 #endif    
 
-#if SCI_ASSERTION_LEVEL >= 1
-    struct stat st;
-    int s = fstat(fd, &st);
-    if(s == -1){
-      cerr << "Cannot fstat: " << dataFilename << '\n';
-      throw ErrnoException("DataArchiver::output (stat call)", errno, __FILE__, __LINE__);
-    }
-    if (cur != st.st_size)
-      cerr << "Cannot fstat: " << dataFilename << '\n';
-      
-    ASSERTEQ(cur, st.st_size);
-#endif
+    // loop over variables
+    vector<SaveItem>::iterator saveIter;
+    for(saveIter = saveLabels.begin(); saveIter!= saveLabels.end(); saveIter++) {
+      const VarLabel* var = saveIter->label_;
+      // check to see if we need to save on this level
+      // check is done by absolute level, or relative to end of levels (-1 finest, -2 second finest,...)
+      // find the materials to output on that level
+      map<int, MaterialSetP>::iterator iter = saveIter->matlSet_.end();
+      const MaterialSubset* var_matls = 0;
+
+      if (level) {
+        iter = saveIter->matlSet_.find(level->getIndex());
+        if (iter == saveIter->matlSet_.end())
+          iter = saveIter->matlSet_.find(level->getIndex() - level->getGrid()->numLevels());
+        if (iter == saveIter->matlSet_.end())
+          iter = saveIter->matlSet_.find(ALL_LEVELS);
+        if (iter != saveIter->matlSet_.end()) {
+          var_matls = iter->second.get_rep()->getUnion();
+        }
+      }
+      else { // checkpoint reductions
+        map<int, MaterialSetP>::iterator liter;
+        for (liter = saveIter->matlSet_.begin(); liter != saveIter->matlSet_.end(); liter++) {
+          var_matls = saveIter->getMaterialSet(liter->first)->getUnion();
+          break;
+        }
+      }
+      if (var_matls == 0)
+        continue;
     
-    // loop through patches and materials
-    for(int p=0;p<patches->size();p++){
-      const Patch* patch = patches->get(p);
-      int patchID = patch?patch->getID():-1;
-      for(int m=0;m<matls->size();m++){
 
-        // add info for this variable to the current xml file
-        int matlIndex = matls->get(m);
-        // Variables may not exist when we get here due to something whacky with weird AMR stuff...
-        ProblemSpecP pdElem = doc->appendChild("Variable");
+      dbg << ", variable: " << var->getName() << ", materials: ";
+      for(int m=0;m<var_matls->size();m++){
+        if(m != 0)
+          dbg << ", ";
+        dbg << var_matls->get(m);
+      }
+
+      // loop through patches and materials
+      for(int p=0;p<(type==CHECKPOINT_REDUCTION?1:patches->size());p++){
+        const Patch* patch;
+        int patchID;
+        if (type == CHECKPOINT_REDUCTION) {
+          // to consolidate into this function, force patch = 0
+          patch = 0;
+          patchID = -1;
+        }
+        else {
+          patch = patches->get(p);
+          patchID = patch->getID();
+        }
         
-        pdElem->appendElement("variable", var->getName());
-        pdElem->appendElement("index", matlIndex);
-        pdElem->appendElement("patch", patchID);
-        pdElem->setAttribute("type",TranslateVariableType( var->typeDescription()->getName().c_str(), isThisCheckpoint ) );
-        if (var->getBoundaryLayer() != IntVector(0,0,0))
-          pdElem->appendElement("boundaryLayer", var->getBoundaryLayer());
-        
+        for(int m=0;m<var_matls->size();m++){
+          
+          // add info for this variable to the current xml file
+          int matlIndex = var_matls->get(m);
+          // Variables may not exist when we get here due to something whacky with weird AMR stuff...
+          ProblemSpecP pdElem = doc->appendChild("Variable");
+          
+          pdElem->appendElement("variable", var->getName());
+          pdElem->appendElement("index", matlIndex);
+          pdElem->appendElement("patch", patchID);
+          pdElem->setAttribute("type",TranslateVariableType( var->typeDescription()->getName().c_str(), type != OUTPUT ) );
+          if (var->getBoundaryLayer() != IntVector(0,0,0))
+            pdElem->appendElement("boundaryLayer", var->getBoundaryLayer());
+
+#if 0          
 #ifdef __sgi
-        off64_t ls = lseek64(fd, cur, SEEK_SET);
+          off64_t ls = lseek64(fd, cur, SEEK_SET);
 #else
-        off_t ls = lseek(fd, cur, SEEK_SET);
+          off_t ls = lseek(fd, cur, SEEK_SET);
 #endif
-        if(ls == -1) {
-          cerr << "lseek error - file: " << filename << ", errno=" << errno << '\n';
-          throw ErrnoException("DataArchiver::output (lseek call)", errno, __FILE__, __LINE__);
-        }
-        // Pad appropriately
-        if(cur%PADSIZE != 0){
-          long pad = PADSIZE-cur%PADSIZE;
-          char* zero = scinew char[pad];
-          memset(zero, 0, pad);
-          int err = (int)write(fd, zero, pad);
-          if (err != pad) {
-            cerr << "Error writing to file: " << filename << ", errno=" << errno << '\n';
-            SCI_THROW(ErrnoException("DataArchiver::output (write call)", errno, __FILE__, __LINE__));
+          if(ls == -1) {
+            cerr << "lseek error - file: " << filename << ", errno=" << errno << '\n';
+            throw ErrnoException("DataArchiver::output (lseek call)", errno, __FILE__, __LINE__);
           }
-          cur+=pad;
-          delete[] zero;
-        }
-        ASSERTEQ(cur%PADSIZE, 0);
-        pdElem->appendElement("start", cur);
-
-        // output data to data file
-        OutputContext oc(fd, filename, cur, pdElem, d_outputDoubleAsFloat && !isThisCheckpoint);
-        new_dw->emit(oc, var, matlIndex, patch);
-        pdElem->appendElement("end", oc.cur);
-        pdElem->appendElement("filename", dataFilebase.c_str());
-
-#if SCI_ASSERTION_LEVEL >= 1
-        s = fstat(fd, &st);
-        if(s == -1) {
-          cerr << "fstat error - file: " << filename << ", errno=" << errno << '\n';
-          throw ErrnoException("DataArchiver::output (stat call)", errno, __FILE__, __LINE__);
-        }
-        ASSERTEQ(oc.cur, st.st_size);
 #endif
+          // Pad appropriately
+          if(cur%PADSIZE != 0){
+            long pad = PADSIZE-cur%PADSIZE;
+            char* zero = scinew char[pad];
+            memset(zero, 0, pad);
+            int err = (int)write(fd, zero, pad);
+            if (err != pad) {
+              cerr << "Error writing to file: " << filename << ", errno=" << errno << '\n';
+              SCI_THROW(ErrnoException("DataArchiver::output (write call)", errno, __FILE__, __LINE__));
+            }
+            cur+=pad;
+            delete[] zero;
+          }
+          ASSERTEQ(cur%PADSIZE, 0);
+          pdElem->appendElement("start", cur);
+          
+          // output data to data file
+          OutputContext oc(fd, filename, cur, pdElem, d_outputDoubleAsFloat && type != CHECKPOINT);
+          new_dw->emit(oc, var, matlIndex, patch);
+          pdElem->appendElement("end", oc.cur);
+          pdElem->appendElement("filename", dataFilebase.c_str());
+          
+#if SCI_ASSERTION_LEVEL >= 1
+          struct stat st;
+          int s = fstat(fd, &st);
 
-        cur=oc.cur;
+          if(s == -1) {
+            cerr << "fstat error - file: " << filename << ", errno=" << errno << '\n';
+            throw ErrnoException("DataArchiver::output (stat call)", errno, __FILE__, __LINE__);
+          }
+          ASSERTEQ(oc.cur, st.st_size);
+#endif
+          
+          cur=oc.cur;
+        }
       }
     }
-
     // close files and handles (with pvfs fix, only do this with reductions).
 #ifdef PVFS_FIX
-    if ( isReduction )
+    if ( type == CHECKPOINT_REDUCTION )
 #endif
-    {
-      int s = close(fd);
-      if(s == -1) {
-        cerr << "Error closing file: " << filename << ", errno=" << errno << '\n';
-        throw ErrnoException("DataArchiver::output (close call)", errno, __FILE__, __LINE__);
+      {
+        int s = close(fd);
+        if(s == -1) {
+          cerr << "Error closing file: " << filename << ", errno=" << errno << '\n';
+          throw ErrnoException("DataArchiver::output (close call)", errno, __FILE__, __LINE__);
+        }
       }
-    }
-
+    
 #ifdef PVFS_FIX
-    if ( isReduction )
+    if ( type == CHECKPOINT_REDUCTION )
 #endif
     {
       doc->output(xmlFilename.c_str());
       doc->releaseDocument();
-    }
-
-    if(d_writeMeta){
-      // Rewrite the index if necessary...
-      string iname = p_dir->getName()+"/index.xml";
-      ProblemSpecP indexDoc;
-
-#ifdef PVFS_FIX
-      // grab the corresponding index.xml and open it if necessary
-      if ( isThisCheckpoint ) {
-        if ( !d_CheckpointXMLIndexDoc ) {
-          d_CheckpointXMLIndexDoc = loadDocument(iname);
-        }
-
-        indexDoc = d_CheckpointXMLIndexDoc;
-      }
-      else {
-        if ( !d_XMLIndexDoc ) {
-          d_XMLIndexDoc = loadDocument(iname);
-        }
-
-        indexDoc = d_XMLIndexDoc;
-      }
-#else
-      indexDoc = loadDocument(iname);
-#endif
-
-      // add variable (as global or variable) to index.xml if not already there.
-      ProblemSpecP vs;
-      string variableSection = (isReduction) ? "globals" : "variables";
-         
-      vs = indexDoc->findBlock(variableSection);
-      if(vs == 0){
-        vs = indexDoc->appendChild(variableSection.c_str());
-      }
-      bool found=false;
-      for(ProblemSpecP n = vs->getFirstChild(); n != 0; n=n->getNextSibling()){
-        if(n->getNodeName() == "variable") {
-          map<string,string> attributes;
-          n->getAttributes(attributes);
-          string varname = attributes["name"];
-          if(varname == "")
-            throw InternalError("varname not found", __FILE__, __LINE__);
-          if(varname == var->getName()){
-            found=true;
-            break;
-          }
-        }
-      }
-      if(!found){
-        ProblemSpecP newElem = vs->appendChild("variable");
-        newElem->setAttribute("type", TranslateVariableType( var->typeDescription()->getName(), isThisCheckpoint ) );
-        newElem->setAttribute("name", var->getName());
-      }
-
-#ifndef PVFS_FIX
-      indexDoc->output(iname.c_str());
-      indexDoc->releaseDocument();
-#endif
-
     }
   }
   d_outputLock.unlock(); 

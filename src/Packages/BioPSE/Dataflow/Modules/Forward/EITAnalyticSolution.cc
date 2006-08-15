@@ -196,18 +196,11 @@ EITAnalyticSolution::execute()
   bool tet;
 
   iportCurrentPatternIndex_ = (MatrixIPort *)get_iport("CurrentPatternIndex");
-  iportField_ = (FieldIPort *)get_iport("Mesh");
   iportElectrodeParams_ = (MatrixIPort *)get_iport("Electrode Parameters");
-
-  oportPotentialVector_ = (MatrixOPort *)get_oport("PotentialVector");
 
   //! Obtaining handles to computation objects
   FieldHandle hField;
-  
-  if (!iportField_->get(hField) || !hField.get_rep()) {
-    error("Can't get handle to input mesh.");
-    return;
-  }
+  if (!get_input_handle("Mesh", hField)) return;
 
   TVField::handle_type hCondTetField;
   TSField::handle_type hCondTriField;
@@ -391,7 +384,7 @@ EITAnalyticSolution::execute()
 
   //! Sending result
   MatrixHandle pmatrix(potential);
-  oportPotentialVector_->send_and_dereference(pmatrix);
+  send_output_handle("PotentialVector", pmatrix);
 }
 
 

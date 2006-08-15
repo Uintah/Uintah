@@ -79,13 +79,8 @@ void
 ManageFieldMesh::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!(ifp->get(ifieldhandle) && (ifieldhandle.get_rep())))
-  {
-    error( "No handle or representation." );
-    return;
-  }
+  if (!get_input_handle("Input Field", ifieldhandle)) return;
   
   // Extract the output matrix.
   const TypeDescription *mtd = ifieldhandle->mesh()->get_type_description();
@@ -96,15 +91,13 @@ ManageFieldMesh::execute()
   {
     return;
   }
-  MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
   MatrixHandle mtmp(algo_extract->execute(ifieldhandle->mesh()));
-  omp->send_and_dereference(mtmp);
+  send_output_handle("Output Matrix", mtmp);
 
   // Compute output field.
   FieldHandle result_field;
-  MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Input Matrix");
   MatrixHandle imatrixhandle;
-  if (!(imatrix_port->get(imatrixhandle) && imatrixhandle.get_rep()))
+  if (!get_input_handle("Input Matrix", imatrixhandle, false))
   {
     remark("No input matrix connected, sending field as is.");
     result_field = ifieldhandle;
@@ -133,8 +126,7 @@ ManageFieldMesh::execute()
     result_field->copy_properties(ifieldhandle.get_rep());
   }
 
-  FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");
-  ofp->send_and_dereference(result_field);
+  send_output_handle("Output Field", result_field);
 }
 
 

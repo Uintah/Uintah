@@ -266,10 +266,8 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
     Vector deformed_fiber_vector;
 
     LinearInterpolator* interpolator = new LinearInterpolator(patch);
-    vector<IntVector> ni;
-    ni.reserve(8);
-    vector<Vector> d_S;
-    d_S.reserve(8);
+    vector<IntVector> ni(8);
+    vector<Vector> d_S(8);
 
     Matrix3 Identity;
     Identity.Identity();
@@ -914,10 +912,8 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
      Vector deformed_fiber_vector;
 
      LinearInterpolator* interpolator = new LinearInterpolator(patch);
-     vector<IntVector> ni;
-     ni.reserve(interpolator->size());
-     vector<Vector> d_S;
-     d_S.reserve(interpolator->size());
+     vector<IntVector> ni(interpolator->size());
+     vector<Vector> d_S(interpolator->size());
 
      Vector dx = patch->dCell();
 

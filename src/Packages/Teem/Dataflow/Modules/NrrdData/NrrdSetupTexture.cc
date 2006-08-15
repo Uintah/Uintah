@@ -89,6 +89,7 @@ NrrdSetupTexture::NrrdSetupTexture(SCIRun::GuiContext *ctx) :
   ix = useinputmax_.get();
 }
 
+
 NrrdSetupTexture::~NrrdSetupTexture()
 {
 }
@@ -217,16 +218,10 @@ compute_data(T *nindata, unsigned char *nvoutdata, float *gmoutdata,
 void 
 NrrdSetupTexture::execute()
 {
-  NrrdDataHandle nin_handle;
   update_state(NeedData);
-  NrrdIPort *inrrd_ = (NrrdIPort *)get_iport("Value");
-  if (!inrrd_->get(nin_handle))
-    return;
 
-  if (!nin_handle.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
+  NrrdDataHandle nin_handle;
+  if (!get_input_handle("Value", nin_handle)) return;
 
   Nrrd *nin = nin_handle->nrrd_;
 
@@ -510,9 +505,9 @@ NrrdSetupTexture::execute()
     // Copy the properties
     nvout_handle->copy_properties(nin_handle.get_rep());
 
-    NrrdOPort *onvnrrd = (NrrdOPort *)get_oport("Normal/Value");
     last_nvnrrd_ = nvout_handle;
-    onvnrrd->send_and_dereference(nvout_handle);
+
+    send_output_handle("Normal/Value", nvout_handle);
   }
 
   if (gmout)
@@ -523,8 +518,7 @@ NrrdSetupTexture::execute()
     // Copy the properties
     gmout_handle->copy_properties(nin_handle.get_rep());
 
-    NrrdOPort *ogmnrrd = (NrrdOPort *)get_oport("Gradient Magnitude");
-    ogmnrrd->send_and_dereference(gmout_handle);
+    send_output_handle("Gradient Magnitude", gmout_handle);
   }
 }
 

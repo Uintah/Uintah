@@ -183,7 +183,7 @@ class matlabconverter : public matfilebase {
     // Data type sets the export type of the data
     inline void setdatatype(matlabarray::mitype dataformat);
     // Index base sets the index base used for indices in for example geometries
-    inline void setindexbase(long indexbase);
+    inline void setindexbase(int indexbase);
     // In a numericmatrix all data will be stripped and the data will be saved as
     // a plain dense or sparse matrix.
     inline void setdisabletranspose(bool dt);
@@ -212,31 +212,31 @@ class matlabconverter : public matfilebase {
     inline void prefersciobjects();
 
     // SCIRun STRINGS
-    long sciStringCompatible(matlabarray &mlarray, std::string &infostring, bool postremarks = true);
+    int sciStringCompatible(matlabarray &mlarray, std::string &infostring, bool postremarks = true);
     void mlArrayTOsciString(matlabarray &mlmat,SCIRun::StringHandle &scistr);
     void sciStringTOmlArray(SCIRun::StringHandle &scistr,matlabarray &mlmat);
 
     // SCIRun MATRICES
-    long sciMatrixCompatible(matlabarray &mlarray, std::string &infostring, bool postremarks = true);
+    int sciMatrixCompatible(matlabarray &mlarray, std::string &infostring, bool postremarks = true);
     void mlArrayTOsciMatrix(matlabarray &mlmat,SCIRun::MatrixHandle &scimat);
     void sciMatrixTOmlArray(SCIRun::MatrixHandle &scimat,matlabarray &mlmat);
 
     // SCIRun NRRDS
-    long sciNrrdDataCompatible(matlabarray &mlarray, std::string &infostring, bool postremarks = true);
+    int sciNrrdDataCompatible(matlabarray &mlarray, std::string &infostring, bool postremarks = true);
     void mlArrayTOsciNrrdData(matlabarray &mlmat,SCIRun::NrrdDataHandle &scinrrd);
     void sciNrrdDataTOmlArray(SCIRun::NrrdDataHandle &scinrrd, matlabarray &mlmat);
 
     // SCIRun BUNDLES 
-    long sciBundleCompatible(matlabarray &mlarray, std::string &infostring, bool postremarks = true);
+    int sciBundleCompatible(matlabarray &mlarray, std::string &infostring, bool postremarks = true);
     void mlArrayTOsciBundle(matlabarray &mlmat, SCIRun::BundleHandle &scibundle);
     void sciBundleTOmlArray(SCIRun::BundleHandle &scibundle, matlabarray &mlmat);
 
     // SCIRun ColorMaps (Reader only)
-    long sciColorMapCompatible(matlabarray &mlarray, std::string &infostring, bool postremarks = true);
+    int sciColorMapCompatible(matlabarray &mlarray, std::string &infostring, bool postremarks = true);
     void mlArrayTOsciColorMap(matlabarray &mlmat,SCIRun::ColorMapHandle &scinrrd);
 
     // SCIRun Fields/Meshes
-    long sciFieldCompatible(matlabarray mlarray,std::string &infostring, bool postremarks = true);
+    int sciFieldCompatible(matlabarray mlarray,std::string &infostring, bool postremarks = true);
     void mlArrayTOsciField(matlabarray mlarray,SCIRun::FieldHandle &scifield);
     void sciFieldTOmlArray(SCIRun::FieldHandle &scifield,matlabarray &mlarray);
 
@@ -270,7 +270,7 @@ class matlabconverter : public matfilebase {
     // Matrix should be translated as a numeric matrix directly
     bool numericarray_;
     // Specify the indexbase for the output
-    long indexbase_;
+    int indexbase_;
     // Specify the data of output data
     matlabarray::mitype datatype_;
     // Disable transposing matrices from Fortran format to C++ format
@@ -303,7 +303,7 @@ inline void matlabconverter::setdatatype(matlabarray::mitype dataformat)
   datatype_ = dataformat;
 }
 
-inline void matlabconverter::setindexbase(long indexbase)
+inline void matlabconverter::setindexbase(int indexbase)
 {
   indexbase_ = indexbase;
 }

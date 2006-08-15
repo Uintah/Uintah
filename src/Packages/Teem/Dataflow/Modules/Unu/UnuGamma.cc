@@ -46,9 +46,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-
   GuiDouble    gamma_;
   GuiDouble    min_;
   GuiInt       useinputmin_;
@@ -68,27 +65,19 @@ UnuGamma::UnuGamma(SCIRun::GuiContext *ctx) :
 {
 }
 
-UnuGamma::~UnuGamma() {
+
+UnuGamma::~UnuGamma()
+{
 }
+
 
 void 
 UnuGamma::execute()
 {
-  NrrdDataHandle nrrd_handle;
-  NrrdDataHandle weight_handle;
-
   update_state(NeedData);
 
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
-
-  if (!inrrd_->get(nrrd_handle)) 
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty InputNrrd.");
-    return;
-  }
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
   reset_vars();
 
@@ -115,7 +104,7 @@ UnuGamma::execute()
   nrrdKeyValueCopy(nout, nin);
 
   NrrdDataHandle out(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(out);
+  send_output_handle("OutputNrrd", out);
 }
 
 

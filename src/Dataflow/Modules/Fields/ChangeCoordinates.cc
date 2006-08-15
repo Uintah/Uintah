@@ -74,18 +74,12 @@ ChangeCoordinates::~ChangeCoordinates()
 void
 ChangeCoordinates::execute()
 {
-  FieldIPort *iport = (FieldIPort*)get_iport("Input Field"); 
-  
   // The input port (with data) is required.
   FieldHandle field;
-  if (!iport->get(field) || !field.get_rep())
-  {
-    error("No input data");
-    return;
-  }
+  if (!get_input_handle("Input Field", field)) return;
 
-  string oldsystem=gui_oldsystem_.get();
-  string newsystem=gui_newsystem_.get();
+  string oldsystem = gui_oldsystem_.get();
+  string newsystem = gui_newsystem_.get();
   field.detach();
   field->mesh_detach();
   const TypeDescription *meshtd = field->mesh()->get_type_description();
@@ -94,8 +88,7 @@ ChangeCoordinates::execute()
   if (!DynamicCompilation::compile(ci, algo, this)) return;
   algo->execute(this, field->mesh(), oldsystem, newsystem);
 
-  FieldOPort *ofld = (FieldOPort *)get_oport("Output Field");
-  ofld->send_and_dereference(field);
+  send_output_handle("Output Field", field);
 }
 
 CompileInfo *

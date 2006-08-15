@@ -57,13 +57,15 @@ public:
                    int x = 0,
                    int y = 0,
                    unsigned int width = 640, 
-                   unsigned int height = 480);
+                   unsigned int height = 480,
+                   bool border = true);
 
   virtual ~X11OpenGLContext();
 private:  
   void                  create_context(int id, int w, int h, 
                                        unsigned int width, 
-                                       unsigned int height);
+                                       unsigned int height,
+                                       bool border);
 
   static void		listvisuals();
 

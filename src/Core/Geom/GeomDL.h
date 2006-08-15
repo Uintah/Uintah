@@ -72,6 +72,7 @@ public:
 
 #ifdef SCI_OPENGL
   virtual void draw(DrawInfoOpenGL*, Material*, double time);
+  virtual void fbpick_draw(DrawInfoOpenGL*, Material*, double time);
 #endif
 
   virtual void io(Piostream&);

@@ -100,6 +100,39 @@ bool NrrdToFieldAlgoT::NrrdToField(ProgressReporter* pr,NrrdDataHandle input, Fi
     }
   }  
 
+  Transform tf;
+  tf.load_identity();
+  bool use_tf = false;
+
+  if (nrrd->spaceDim > 0)
+  {
+    
+    Vector Origin;
+    std::vector<Vector> SpaceDir(3);
+    
+    int sd = nrrd->spaceDim;
+    for (int q=0 ; q<sd && q < 3; q++)
+    {
+      if (airExists(nrrd->spaceOrigin[q])) Origin[q] = nrrd->spaceOrigin[q]; else Origin[q] = 0.0;
+      for (size_t p=0; p<dim && p < 3;p++)
+        if (airExists(nrrd->axis[p].spaceDirection[q])) SpaceDir[p][q] = nrrd->axis[p].spaceDirection[q]; else SpaceDir[p][q] = 0.0;
+    }
+  
+    if (dim == 1) 
+    {
+      SpaceDir[0].find_orthogonal(SpaceDir[1],SpaceDir[2]);
+    }
+    else if (dim == 2)
+    {
+      SpaceDir[2] = Cross(SpaceDir[0],SpaceDir[1]);
+    }
+
+
+    tf.load_basis(Point(Origin),SpaceDir[0],SpaceDir[1],SpaceDir[2]);
+  
+    use_tf = true;
+  }
+
   T* dataptr = static_cast<T*>(nrrd->data);
  
   if (dim == 2)
@@ -119,6 +152,8 @@ bool NrrdToFieldAlgoT::NrrdToField(ProgressReporter* pr,NrrdDataHandle input, Fi
         field->set_value(dataptr[k++],*it);
         ++it;
       }
+      
+      if (use_tf) mesh_handle->set_transform(tf);
     }
     else if (datalocation == "Element")
     {
@@ -133,6 +168,7 @@ bool NrrdToFieldAlgoT::NrrdToField(ProgressReporter* pr,NrrdDataHandle input, Fi
         field->set_value(dataptr[k++],*it);
         ++it;
       }  
+      if (use_tf) mesh_handle->set_transform(tf);
     }
     else
     {
@@ -157,6 +193,7 @@ bool NrrdToFieldAlgoT::NrrdToField(ProgressReporter* pr,NrrdDataHandle input, Fi
         field->set_value(dataptr[k++],*it);
         ++it;
       }
+      if (use_tf) mesh_handle->set_transform(tf);      
     }
     else if (datalocation == "Element")
     {
@@ -171,6 +208,7 @@ bool NrrdToFieldAlgoT::NrrdToField(ProgressReporter* pr,NrrdDataHandle input, Fi
         field->set_value(dataptr[k++],*it);
         ++it;
       }  
+      if (use_tf) mesh_handle->set_transform(tf);      
     }
     else
     {

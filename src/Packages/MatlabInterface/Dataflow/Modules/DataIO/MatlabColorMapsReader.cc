@@ -95,7 +95,7 @@ class MatlabColorMapsReader : public Module
     //   retrieves the current filename and the colormap selected in this
     //   file and returns an object containing the full colormap
     
-    matlabarray readmatlabarray(long p);
+    matlabarray readmatlabarray(int p);
 
     // displayerror()
     //   Relay an error during the colormapselection process directly to
@@ -183,7 +183,7 @@ void MatlabColorMapsReader::execute()
 
   try
   {
-    for (long p=0;p<NUMPORTS;p++)
+    for (int p=0;p<NUMPORTS;p++)
     {
 
       // Find the output port the scheduler has created 
@@ -291,7 +291,7 @@ void MatlabColorMapsReader::tcl_command(GuiArgs& args, void* userdata)
 }
 
 
-matlabarray MatlabColorMapsReader::readmatlabarray(long p)
+matlabarray MatlabColorMapsReader::readmatlabarray(int p)
 {
   matlabarray marray;
   std::string filename = guifilename_.get();
@@ -368,7 +368,7 @@ void MatlabColorMapsReader::indexmatlabfile(bool postmsg)
   std::vector<std::string> colormapnamelist(NUMPORTS);
   bool foundcolormapname[NUMPORTS];
   
-  for (long p=0;p<NUMPORTS;p++)
+  for (int p=0;p<NUMPORTS;p++)
   {
           // TCL Dependent code
           std::ostringstream oss;
@@ -390,15 +390,15 @@ void MatlabColorMapsReader::indexmatlabfile(bool postmsg)
     
     // all matlab data is stored in a matlabarray object
     matlabarray ma;
-    long cindex = 0;		// compability index, which matlab array fits the SCIRun colormap best? 
-    long maxindex = 0;		// highest index found so far
+    int cindex = 0;		// compability index, which matlab array fits the SCIRun colormap best? 
+    int maxindex = 0;		// highest index found so far
             
     // Scan the file and see which matrices are compatible
     // Only those will be shown (you cannot select incompatible matrices).
             
     std::string infotext;
           
-    for (long p=0;p<mfile.getnummatlabarrays();p++)
+    for (int p=0;p<mfile.getnummatlabarrays();p++)
     {
       ma = mfile.getmatlabarrayinfo(p); // do not load all the data fields
       if ((cindex = translate.sciColorMapCompatible(ma,infotext)))
@@ -411,7 +411,7 @@ void MatlabColorMapsReader::indexmatlabfile(bool postmsg)
         
         colormapinfotexts += std::string("{" + infotext + "} ");
         colormapnames += std::string("{" + ma.getname() + "} "); 
-        for (long q=0;q<NUMPORTS;q++)
+        for (int q=0;q<NUMPORTS;q++)
         {
           if (ma.getname() == colormapnamelist[q]) foundcolormapname[q] = true;
         }
@@ -427,7 +427,7 @@ void MatlabColorMapsReader::indexmatlabfile(bool postmsg)
     // cannot be found or if no colormapname has been specified
     
     colormapname = "";
-    for (long p=0;p<NUMPORTS;p++)
+    for (int p=0;p<NUMPORTS;p++)
     {
       if (foundcolormapname[p] == false) 
       {   

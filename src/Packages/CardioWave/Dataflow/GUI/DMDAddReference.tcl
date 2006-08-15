@@ -37,7 +37,7 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDAddReference {
       entry $ref.en2 -textvariable $this-referencedomain
 
       checkbutton $ref.cb1 -text "Use data in field as reference potential" -variable $this-usefieldvalue
-      checkbutton $ref.cb2 -text "Define reference only for elements contained with geometry"
+      checkbutton $ref.cb2 -text "Define reference only for elements contained with geometry" -variable $this-useelements
 
 	    grid $ref.lab1 -row 0 -column 0
       grid $ref.en1 -row 0 -column 1

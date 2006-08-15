@@ -37,14 +37,27 @@ namespace SCIRun {
     
 using namespace std;
 
-static int count = 0;
+Persistent *make_PointerEvent() { return new PointerEvent(); }
+Persistent *make_WindowEvent() { return new WindowEvent(); }
+Persistent *make_KeyEvent() { return new KeyEvent(); }
+Persistent *make_QuitEvent() { return new QuitEvent(); }
+
+
+PersistentTypeID BaseEvent::type_id("BaseEvent", "", 0);
+PersistentTypeID PointerEvent::type_id("PointerEvent", "BaseEvent", 
+                                       &make_PointerEvent);
+PersistentTypeID WindowEvent::type_id("WindowEvent", "BaseEvent", 
+                                      &make_WindowEvent);
+PersistentTypeID QuitEvent::type_id("QuitEvent", "BaseEvent",
+                                    make_QuitEvent);
+PersistentTypeID KeyEvent::type_id("KeyEvent", "BaseEvent",
+                                   &make_KeyEvent);
+PersistentTypeID EventModifiers::type_id("EventModifiers", "", 0);
 
 BaseEvent::BaseEvent(const string &target, 
-                     unsigned int time) :
+                     long int time) :
   Datatype(),
-  //  ref_cnt(0),
-  //  lock("BaseEvent lock"),
-  time_(time ? time : count++),
+  time_(time),
   target_(target)
 {
 }
@@ -53,13 +66,17 @@ BaseEvent::~BaseEvent()
 {
 }
 
-BaseEvent& 
-BaseEvent::operator=(const BaseEvent& rhs)
-{
-  time_ = rhs.time_;
-  target_ = rhs.target_;
-  return *this;
+const int BASEEVENT_VERSION = 1;
+void
+BaseEvent::io(Piostream &stream) {
+  stream.begin_class(type_id.type, BASEEVENT_VERSION);
+  SCIRun::Pio(stream, target_);
+  SCIRun::Pio(stream, time_);
+  stream.end_class();
 }
+  
+  
+
 
 EventModifiers::EventModifiers() :
   modifiers_(0)
@@ -70,12 +87,19 @@ EventModifiers::~EventModifiers()
 {
 }
 
+void
+EventModifiers::io(Piostream &stream) {
+  stream.begin_class(type_id.type, 1);
+  SCIRun::Pio(stream, modifiers_);
+  stream.end_class();
+}
+
 
 PointerEvent::PointerEvent(unsigned int state,
                            int x,
                            int y,
                            const string &target,
-                           unsigned int time) :
+                           unsigned long time) :
   BaseEvent(target, time),
   p_state_(state),
   x_(x),
@@ -87,12 +111,25 @@ PointerEvent::~PointerEvent()
 {
 }
 
+const int POINTEREVENT_VERSION = 1;
+void
+PointerEvent::io(Piostream &stream) {
+  stream.begin_class(type_id.type, POINTEREVENT_VERSION);
+  BaseEvent::io(stream);
+  EventModifiers::io(stream);
+  SCIRun::Pio(stream, p_state_);
+  SCIRun::Pio(stream, x_);
+  SCIRun::Pio(stream, y_);
+  stream.end_class();
+}
+
+
 KeyEvent::KeyEvent(unsigned int key_state,
                    unsigned int modifiers,
                    int keyval,
                    const string &key_string,
                    const string &target,
-                   unsigned int time) :
+                   unsigned long time) :
   BaseEvent(target, time),
   k_state_(key_state),
   keyval_(keyval),
@@ -104,9 +141,22 @@ KeyEvent::~KeyEvent()
 {
 }
 
+const int KEYEVENT_VERSION = 1;
+void
+KeyEvent::io(Piostream &stream) {
+  stream.begin_class(type_id.type, KEYEVENT_VERSION);
+  BaseEvent::io(stream);
+  EventModifiers::io(stream);
+  SCIRun::Pio(stream, k_state_);
+  SCIRun::Pio(stream, keyval_);
+  SCIRun::Pio(stream, key_str_);
+  stream.end_class();
+}
+
+
 WindowEvent::WindowEvent(unsigned int state,
                          const string &target,
-                         unsigned int time) :
+                         unsigned long time) :
   BaseEvent(target, time),
   w_state_(state)
 {
@@ -115,6 +165,75 @@ WindowEvent::WindowEvent(unsigned int state,
 WindowEvent::~WindowEvent()
 {
 }   
+
+const int WINDOWEVENT_VERSION = 1;
+void
+WindowEvent::io(Piostream &stream) {
+  stream.begin_class(type_id.type, WINDOWEVENT_VERSION);
+  BaseEvent::io(stream);
+  SCIRun::Pio(stream, w_state_);
+  stream.end_class();
+}
+
+RedrawEvent::RedrawEvent()
+{
+
+}
+
+RedrawEvent::~RedrawEvent()
+{
+
+}
+
+const int REDRAWEVENT_VERSION = 1;
+void
+RedrawEvent::io(Piostream &stream) {
+  stream.begin_class(type_id.type, REDRAWEVENT_VERSION);
+  BaseEvent::io(stream);
+  stream.end_class();
+}
+
+QuitEvent::QuitEvent()
+{
+
+}
+
+QuitEvent::~QuitEvent() 
+{
+
+}
+const int QUITEVENT_VERSION = 1;
+void
+QuitEvent::io(Piostream &stream) {
+  stream.begin_class(type_id.type, QUITEVENT_VERSION);
+  BaseEvent::io(stream);
+  stream.end_class();
+}
+
+
+TMNotifyEvent::TMNotifyEvent(const string &id,
+			     unsigned int s,
+			     const string &target,
+			     unsigned long time) :
+  BaseEvent(target, time),
+  tool_id_(id),
+  notify_state_(s)
+{
+}
+
+TMNotifyEvent::~TMNotifyEvent()
+{
+}
+
+const int TMNOTIFYEVENT_VERSION = 1;
+void
+TMNotifyEvent::io(Piostream &stream) {
+  stream.begin_class(type_id.type, TMNOTIFYEVENT_VERSION);
+  BaseEvent::io(stream);
+  SCIRun::Pio(stream, tool_id_);
+  SCIRun::Pio(stream, notify_state_);
+  stream.end_class();
+}
 
 } // namespace SCIRun
 

@@ -44,6 +44,7 @@
 #include <stdlib.h>
 #include <string>
 #include <sstream>
+#include <iostream>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <errno.h>
@@ -55,205 +56,231 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 
-
-#include <iostream>
 #include <Core/CCA/Comm/CommError.h>
 #include <Core/CCA/Comm/SocketMessage.h>
 #include <Core/CCA/Comm/SocketEpChannel.h>
 #include <Core/CCA/Comm/SocketSpChannel.h>
-#include <Core/CCA/Comm/DT/DTMessage.h>
-#include <Core/CCA/Comm/DT/DataTransmitter.h>
+#include <Core/CCA/DT/DTMessage.h>
+#include <Core/CCA/DT/DataTransmitter.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/CCA/PIDL/Warehouse.h>
 #include <Core/CCA/PIDL/URL.h>
 
-using namespace std;
 using namespace SCIRun;
 
 //TODO: handle network byte order and local byte order compitablility.
 
-
-SocketMessage::SocketMessage(DTMessage *dtmsg)
+SocketMessage::SocketMessage(DTMessage *dtmsg) : msg(dtmsg->buf), spchan(NULL)
 {
-  msg=dtmsg->buf;
-  if(dtmsg->autofree) dtmsg->buf=NULL;
-  else{
-    msg=malloc(dtmsg->length);
+  if (dtmsg->autofree) {
+    dtmsg->buf = NULL;
+  } else {
+    msg = malloc(dtmsg->length);
     memcpy(msg, dtmsg->buf, dtmsg->length);
   }
-  this->dtmsg=dtmsg;
-  msg_size=sizeof(int); //skip handler_id
-  spchan=NULL;
+  this->dtmsg = dtmsg;
+  msg_size = sizeof(int); //skip handler_id
 }
 
-SocketMessage::SocketMessage(SocketSpChannel *spchan)
+SocketMessage::SocketMessage(SocketSpChannel *spchan) : dtmsg(NULL), msg(NULL), spchan(spchan)
 {
-  this->dtmsg=NULL;
-  this->msg=NULL;
-  msg_size=sizeof(int); //skip handler_id
-  this->spchan=spchan;
+  msg_size = sizeof(int); //skip handler_id
 }
 
-SocketMessage::~SocketMessage() {
-  if(dtmsg!=NULL)  delete dtmsg;
-  if(msg!=NULL) free(msg);
+SocketMessage::~SocketMessage()
+{
+  if (dtmsg != NULL) {
+    delete dtmsg;
+  }
+  if (msg != NULL) {
+    free(msg);
+  }
 }
 
-void 
-SocketMessage::createMessage()  { 
-  msg=realloc(msg, INIT_SIZE);
-  capacity=INIT_SIZE;
-  msg_size=sizeof(int); //reserve for handler_id
+void
+SocketMessage::createMessage()
+{
+  msg = realloc(msg, INIT_SIZE);
+  capacity = INIT_SIZE;
+  msg_size = sizeof(int); //reserve for handler_id
 }
 
-void 
-SocketMessage::marshalInt(const int *buf, int size){
-  marshalBuf(buf, size*sizeof(int));
+void
+SocketMessage::marshalInt(const int *buf, int size)
+{
+  marshalBuf(buf, size * sizeof(int));
 }
 
-void 
-SocketMessage::marshalByte(const char *buf, int size){
-  marshalBuf(buf, size*sizeof(char));
+void
+SocketMessage::marshalByte(const char *buf, int size)
+{
+  marshalBuf(buf, size * sizeof(char));
 }
 
-void 
-SocketMessage::marshalChar(const char *buf, int size){
-  marshalBuf(buf, size*sizeof(char));
+void
+SocketMessage::marshalChar(const char *buf, int size)
+{
+  marshalBuf(buf, size * sizeof(char));
 }
 
-void 
-SocketMessage::marshalFloat(const float *buf, int size){
-  marshalBuf(buf, size*sizeof(float));
-}
-void 
-SocketMessage::marshalDouble(const double *buf, int size){
-  marshalBuf(buf, size*sizeof(double));
+void
+SocketMessage::marshalFloat(const float *buf, int size)
+{
+  marshalBuf(buf, size * sizeof(float));
 }
 
-void 
-SocketMessage::marshalLong(const long *buf, int size){
-  marshalBuf(buf, size*sizeof(long));
+void
+SocketMessage::marshalDouble(const double *buf, int size)
+{
+  marshalBuf(buf, size * sizeof(double));
 }
 
-void 
-SocketMessage::marshalSpChannel(SpChannel* channel){
-  SocketSpChannel * chan = dynamic_cast<SocketSpChannel*>(channel);
+void
+SocketMessage::marshalLong(const long *buf, int size)
+{
+  marshalBuf(buf, size * sizeof(long));
+}
+
+void
+SocketMessage::marshalSpChannel(SpChannel* channel)
+{
+  SocketSpChannel *chan = dynamic_cast<SocketSpChannel*>(channel);
   marshalBuf(&(chan->ep_addr), sizeof(DTAddress));
   marshalBuf(&(chan->ep), sizeof(void *));
 }
 
-void 
-SocketMessage::marshalOpaque(void **buf, int size){
-  DTAddress addr=PIDL::getDT()->getAddress();
+void
+SocketMessage::marshalOpaque(void **buf, int size)
+{
+  DTAddress addr = PIDL::getDT()->getAddress();
   marshalBuf(&addr, sizeof(DTAddress));
-  marshalBuf(buf, size*sizeof(void*));
+  marshalBuf(buf, size * sizeof(void*));
 }
 
 
-void 
-SocketMessage::sendMessage(int handler){
+void
+SocketMessage::sendMessage(int handler)
+{
   memcpy(msg, &handler, sizeof(int));
-  DTMessage *wmsg=new DTMessage;
-  wmsg->buf=(char*)msg;
-  wmsg->length=msg_size;
-  wmsg->autofree=true;
-  msg=NULL;   //DT is responsible to delete it.
-  if(dtmsg!=NULL){
-    wmsg->tag=dtmsg->tag;  //reply
-    wmsg->recver=dtmsg->sender;
-    wmsg->to_addr=dtmsg->fr_addr;
+  DTMessage *wmsg = new DTMessage;
+  wmsg->buf = (char*)msg;
+  wmsg->length = msg_size;
+  wmsg->autofree = true;
+  msg = NULL; //DT is responsible to delete it.
+  if (dtmsg != NULL) {
+    wmsg->tag = dtmsg->tag;  //reply
+    wmsg->recver = dtmsg->sender;
+    wmsg->to_addr = dtmsg->fr_addr;
     dtmsg->recver->putReplyMessage(wmsg);
-  }
-  else{
-    wmsg->recver=spchan->ep;
+  } else {
+    wmsg->recver = spchan->ep;
     wmsg->to_addr= spchan->ep_addr;
-    tag=spchan->sp->putInitialMessage(wmsg);//initial message, save the tag
+    tag = spchan->sp->putInitialMessage(wmsg);//initial message, save the tag
   }
 }
 
-void 
-SocketMessage::waitReply(){
-  DTMessage *wmsg=spchan->sp->getMessage(tag);
-  msg_length=wmsg->length;
-  wmsg->autofree=false;
-  if(msg!=NULL) free(msg);
-  msg=wmsg->buf;
+void
+SocketMessage::waitReply()
+{
+  DTMessage *wmsg = spchan->sp->getMessage(tag);
+  msg_length = wmsg->length;
+  wmsg->autofree = false;
+  if (msg != NULL) {
+    free(msg);
+  }
+  msg = wmsg->buf;
   delete wmsg;
-  msg_size=sizeof(int);//skip handler_id
+  msg_size = sizeof(int);//skip handler_id
 }
 
-void 
-SocketMessage::unmarshalReply(){
+void
+SocketMessage::unmarshalReply()
+{
   //do nothing
 }
 
-void 
-SocketMessage::unmarshalInt(int *buf, int size){
-  unmarshalBuf(buf, size*sizeof(int));
+void
+SocketMessage::unmarshalInt(int *buf, int size)
+{
+  unmarshalBuf(buf, size * sizeof(int));
 }
 
-void 
-SocketMessage::unmarshalByte(char *buf, int size){
-  unmarshalBuf(buf, size*sizeof(char));
+void
+SocketMessage::unmarshalByte(char *buf, int size)
+{
+  unmarshalBuf(buf, size * sizeof(char));
 }
-void 
-SocketMessage::unmarshalChar(char *buf, int size){
-  unmarshalBuf(buf, size*sizeof(char));
-}
-
-void 
-SocketMessage::unmarshalFloat(float *buf, int size){
-  unmarshalBuf(buf, size*sizeof(float));
+void
+SocketMessage::unmarshalChar(char *buf, int size)
+{
+  unmarshalBuf(buf, size * sizeof(char));
 }
 
-void 
-SocketMessage::unmarshalDouble(double *buf, int size){
-  unmarshalBuf(buf, size*sizeof(double));
+void
+SocketMessage::unmarshalFloat(float *buf, int size)
+{
+  unmarshalBuf(buf, size * sizeof(float));
 }
 
-void 
-SocketMessage::unmarshalLong(long *buf, int size){
-  unmarshalBuf(buf, size*sizeof(long));
+void
+SocketMessage::unmarshalDouble(double *buf, int size)
+{
+  unmarshalBuf(buf, size * sizeof(double));
 }
 
-void 
-SocketMessage::unmarshalSpChannel(SpChannel* channel){
-  SocketSpChannel * chan = dynamic_cast<SocketSpChannel*>(channel);
+void
+SocketMessage::unmarshalLong(long *buf, int size)
+{
+  unmarshalBuf(buf, size * sizeof(long));
+}
+
+void
+SocketMessage::unmarshalSpChannel(SpChannel* channel)
+{
+  SocketSpChannel *chan = dynamic_cast<SocketSpChannel*>(channel);
 
   unmarshalBuf(&(chan->ep_addr), sizeof(DTAddress));
   unmarshalBuf(&(chan->ep), sizeof(void *));
 }
 
 
-void 
-SocketMessage::unmarshalOpaque(void **buf, int size){
+void
+SocketMessage::unmarshalOpaque(void **buf, int size)
+{
   DTAddress dtaddr;
   unmarshalBuf(&dtaddr, sizeof(DTAddress));
-  unmarshalBuf(buf, size*sizeof(void*));
-  if(! (dtaddr==PIDL::getDT()->getAddress()) ){
-    for(int i=0; i<size; i++){
-      buf[i]=NULL;
+  unmarshalBuf(buf, size * sizeof(void*));
+  if (! (dtaddr == PIDL::getDT()->getAddress())) {
+    for (int i = 0; i < size; i++) {
+      buf[i] = NULL;
     }
   }
 }
 
 
-void* 
-SocketMessage::getLocalObj(){
-  if(dtmsg!=NULL){
+void*
+SocketMessage::getLocalObj()
+{
+  if (dtmsg != NULL) {
     return dtmsg->recver->object;
-  }
-  else{
-    if(!PIDL::getDT()->isLocal(spchan->ep_addr)) return NULL;
+  } else {
+    if (!PIDL::getDT()->isLocal(spchan->ep_addr)) {
+      return NULL;
+    }
     return spchan->ep->object;
   }
 }
 
-void SocketMessage::destroyMessage() {
-  if(dtmsg!=NULL)  delete dtmsg;
-  if(msg!=NULL) free(msg);
-  dtmsg=NULL;
-  msg=NULL;
+void SocketMessage::destroyMessage()
+{
+  if (dtmsg != NULL) {
+    delete dtmsg;
+  }
+  if (msg != NULL) {
+    free(msg);
+  }
+  dtmsg = NULL;
+  msg = NULL;
   delete this;
 }
 
@@ -271,34 +298,39 @@ int SocketMessage::getSendBufferCopy(void* buf)
 
 void SocketMessage::setRecvBuffer(void* buf, int len)
 {
-  if(msg!=NULL) free(msg);
-  msg=buf;
-  msg_length=len;
-  msg_size=sizeof(int); //skip the handler id.
+  if (msg != NULL) {
+    free(msg);
+  }
+  msg = buf;
+  msg_length = len;
+  msg_size = sizeof(int); //skip the handler id.
 }
 
 void SocketMessage::setSendBuffer(void* buf, int len)
 {
-  if(msg!=NULL) free(msg);
-  msg=buf;
-  msg_size=len;
+  if (msg != NULL) {
+    free(msg);
+  }
+  msg = buf;
+  msg_size = len;
 }
 
 
 //private methods
-void 
-SocketMessage::marshalBuf(const void *buf, int fullsize){
-  msg_size+=fullsize;
-  if(msg_size>capacity){
-    capacity=msg_size+INIT_SIZE;
-    msg=realloc(msg, capacity);
+void
+SocketMessage::marshalBuf(const void *buf, int fullsize)
+{
+  msg_size += fullsize;
+  if (msg_size > capacity) {
+    capacity = msg_size+INIT_SIZE;
+    msg = realloc(msg, capacity);
   }
-  memcpy((char*)msg+msg_size-fullsize, buf, fullsize); 
+  memcpy((char*)msg+msg_size-fullsize, buf, fullsize);
 }
 
-void 
-SocketMessage::unmarshalBuf(void *buf, int fullsize){
-  memcpy(buf, (char*)msg+msg_size, fullsize); 
-  msg_size+=fullsize;
+void
+SocketMessage::unmarshalBuf(void *buf, int fullsize)
+{
+  memcpy(buf, (char*)msg+msg_size, fullsize);
+  msg_size += fullsize;
 }
-

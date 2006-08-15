@@ -228,6 +228,8 @@ void SerialMPM::outputProblemSpec(ProblemSpecP& root_ps)
 void SerialMPM::scheduleInitialize(const LevelP& level,
                                    SchedulerP& sched)
 {
+  if (!flags->doMPMOnLevel(level->getIndex(), level->getGrid()->numLevels()))
+    return;
   Task* t = scinew Task("MPM::actuallyInitialize",
                         this, &SerialMPM::actuallyInitialize);
 
@@ -1219,18 +1221,7 @@ void SerialMPM::scheduleErrorEstimate(const LevelP& coarseLevel,
 void SerialMPM::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                              SchedulerP& sched)
 {
-  if (amr_doing.active())
-    amr_doing << "SerialMPM::scheduleInitialErrorEstimate on level " << coarseLevel->getIndex() << '\n';
-    
-  // The simulation controller should not schedule it every time step
-  Task* task = scinew Task("initialErrorEstimate", 
-          this, &SerialMPM::initialErrorEstimate);
-          
-  task->requires(Task::NewDW, lb->pXLabel,  Ghost::AroundCells, 0);
-
-  task->modifies(d_sharedState->get_refineFlag_label(),      d_sharedState->refineFlagMaterials());
-  task->modifies(d_sharedState->get_refinePatchFlag_label(), d_sharedState->refineFlagMaterials());
-  sched->addTask(task, coarseLevel->eachPatch(), d_sharedState->allMPMMaterials());
+  scheduleErrorEstimate(coarseLevel, sched);
 }
 
 void SerialMPM::scheduleSwitchTest(const LevelP& level, SchedulerP& sched)
@@ -1494,10 +1485,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
     int numMatls = d_sharedState->getNumMPMMatls();
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<double> S;
-    S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
 
 
     NCVariable<double> gmassglobal,gtempglobal,gvolumeglobal;
@@ -1778,10 +1767,8 @@ void SerialMPM::computeArtificialViscosity(const ProcessorGroup*,
 
     int numMatls = d_sharedState->getNumMPMMatls();
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -1949,12 +1936,9 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
     Id.Identity();
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<double> S;
-    S.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
 
     int numMPMMatls = d_sharedState->getNumMPMMatls();
@@ -2468,12 +2452,9 @@ void SerialMPM::calculateDampingRate(const ProcessorGroup*,
       int numMPMMatls=d_sharedState->getNumMPMMatls();
 
       ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-      vector<IntVector> ni;
-      ni.reserve(interpolator->size());
-      vector<double> S;
-      S.reserve(interpolator->size());
-      vector<Vector> d_S;
-      d_S.reserve(interpolator->size());
+      vector<IntVector> ni(interpolator->size());
+      vector<double> S(interpolator->size());
+      vector<Vector> d_S(interpolator->size());
 
       for(int m = 0; m < numMPMMatls; m++){
         MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
@@ -2816,12 +2797,9 @@ void SerialMPM::computeParticleTempFromGrid(const ProcessorGroup*,
     printTask(patches, patch,"Doing computeParticleTempFromGrid\t\t\t");
 	
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    vector<IntVector> ni; 
-    ni.reserve(interpolator->size());
-    vector<double> S;
-    S.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     int numMPMMatls=d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMPMMatls; m++){
@@ -2874,12 +2852,9 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     printTask(patches, patch,"Doing interpolateToParticlesAndUpdate\t\t\t");
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<double> S;
-    S.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     // Performs the interpolation from the cell vertices of the grid
     // acceleration and velocity to the particles to update their

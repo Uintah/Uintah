@@ -43,6 +43,7 @@ SRCS     += $(SRCDIR)/AnisoSphereModel.cc\
             $(SRCDIR)/ApplyFEMCurrentSource.cc\
             $(SRCDIR)/ApplyFEMElectrodeSource.cc\
             $(SRCDIR)/ApplyFEMVoltageSource.cc\
+            $(SRCDIR)/BEMTransferSrcToInf.cc\
             $(SRCDIR)/ComputeCurrent.cc\
             $(SRCDIR)/ConfigureElectrode.cc\
             $(SRCDIR)/ConfigureWireElectrode.cc\
@@ -50,6 +51,7 @@ SRCS     += $(SRCDIR)/AnisoSphereModel.cc\
             $(SRCDIR)/DipoleInSphere.cc\
             $(SRCDIR)/DipoleInAnisoSpheres.cc\
             $(SRCDIR)/ForwardMagneticField.cc\
+            $(SRCDIR)/GetActivationTimes.cc\
             $(SRCDIR)/IndicesToTensors.cc\
             $(SRCDIR)/InsertElectrodes.cc\
             $(SRCDIR)/InsertVoltageSource.cc\

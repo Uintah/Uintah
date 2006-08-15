@@ -471,19 +471,9 @@ InsertElectrodes::insertContourIntoTetMesh(vector<pair<int, double> > &dirichlet
 void
 InsertElectrodes::execute()
 {
-  FieldIPort* imesh = (FieldIPort *) get_iport("TetMesh");
-  FieldOPort* omesh = (FieldOPort *) get_oport("TetMesh");
-  FieldOPort* oelec = (FieldOPort *) get_oport("ElectrodeElements");
-  
   FieldHandle imeshH, ielecH;
+  if (!get_input_handle("TetMesh", imeshH)) return;
 
-  if (!imesh->get(imeshH))
-    return;
-  if (!imeshH.get_rep())
-  {
-    error("Empty input mesh.");
-    return;
-  }
   if (!(dynamic_cast<TVFieldI*>(imeshH.get_rep())))
   {
     error("Input FEM wasn't a TVFieldI.");
@@ -582,18 +572,20 @@ InsertElectrodes::execute()
                         //  because nodes have been moved
     imeshH->set_property("dirichlet", dirichlet_nodes, false);
     imeshH->set_property("conductivity_table", conds, false);
-    omesh->send(imeshH);
+    
+    send_output_handle("TetMesh", imeshH);
+
     if (elecElemsH.get_rep())
     {
       TVFieldD* elec = scinew TVFieldD(elecElemsH);
       FieldHandle elecH(elec);
-      oelec->send(elecH);
+      send_output_handle("ElectrodeElements", elecH);
     }
   }
   else
   {
     error("Unable to get electrode.");
-    omesh->send(imeshH);
+    send_output_handle("TetMesh", imeshH);
   }
 }
 

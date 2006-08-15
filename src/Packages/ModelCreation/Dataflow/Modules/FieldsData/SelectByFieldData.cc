@@ -26,18 +26,9 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  SelectByFieldData.cc:
- *
- *  Written by:
- *   jeroen
- *   TODAY'S DATE HERE
- *
- */
-
 // Include all code for the dynamic engine
-#include <Packages/ModelCreation/Core/Algorithms/ArrayObject.h>
-#include <Packages/ModelCreation/Core/Algorithms/ArrayEngine.h>
+#include <Core/Algorithms/ArrayMath/ArrayObject.h>
+#include <Core/Algorithms/ArrayMath/ArrayEngine.h>
 
 // TensorVectorMath (TVM) is my namespace in which all Scalar, Vector, and Tensor math is defined.
 // The classes in this namespace have a definition which is more in line with
@@ -49,20 +40,17 @@
 // not need to update the GUI, but the module dynamically looks up the available
 // functions when it is created.
 
-#include <Packages/ModelCreation/Core/Algorithms/TVMHelp.h>
-#include <Packages/ModelCreation/Core/Algorithms/TVMMath.h>
-
-#include <Packages/ModelCreation/Core/Fields/SelectionMask.h>
+#include <Core/Algorithms/ArrayMath/ArrayEngineHelp.h>
+#include <Core/Algorithms/ArrayMath/ArrayEngineMath.h>
 
 #include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/String.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Malloc/Allocator.h>
-#include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/String.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/StringPort.h>
+#include <Dataflow/Network/Module.h>
+#include <Packages/ModelCreation/Core/Fields/SelectionMask.h>
 
 namespace ModelCreation {
 
@@ -72,10 +60,7 @@ class SelectByFieldData : public Module {
   public:
     SelectByFieldData(GuiContext*);
 
-    virtual ~SelectByFieldData();
-
     virtual void execute();
-
     virtual void tcl_command(GuiArgs&, void*);
 
   private:
@@ -90,192 +75,148 @@ SelectByFieldData::SelectByFieldData(GuiContext* ctx)
 {
 }
 
-SelectByFieldData::~SelectByFieldData(){
-}
-
 void SelectByFieldData::execute()
 {
-  // Get number of matrix ports with data (the last one is always empty)
-  size_t numinputs = num_input_ports()-3;
-  
-  if (numinputs > 23)
-  {
-    error("This module cannot handle more than 23 input matrices");
-    return;
-  }
-  
-  ArrayObjectList inputlist(numinputs+4,ArrayObject(this));
-  ArrayObjectList outputlist(1,ArrayObject(this));
-  
-  FieldIPort* field_iport = dynamic_cast<FieldIPort *>(get_input_port(0));
-  if(field_iport == 0)
-  {
-    error("Could not locate field input port");
-    return;
-  }
-
-  // Get the inpuit field
   FieldHandle field;
-  field_iport->get(field);
-  if (field.get_rep() == 0)
-  {
-    error("No field was found on input port");
-    return;
-  }
-  
-  // The function can be scripted. If a string is found on the input
-  // use this one. It will be set in the GIU, after which it is retrieved the
-  // normal way.
-  StringIPort* function_iport = dynamic_cast<StringIPort *>(get_input_port(1));
-  if(function_iport == 0)
-  {
-    error("Could not locate function input port");
-    return;
-  }
-
   StringHandle func;
-  
-  if (function_iport->get(func))
+  std::vector<MatrixHandle> matrices;
+
+  get_gui()->lock();
+  get_gui()->eval(get_id()+" update_text");
+  get_gui()->unlock();
+
+  if (!(get_input_handle("Field",field,true))) return;
+  get_input_handle("Function",func,false);
+  get_dynamic_input_handles("Array",matrices,false);
+
+  if (inputs_changed_ || guifunction_.changed() || !oport_cached("SelectionMask") || !oport_cached("SelectionIndices"))
   {
+    // Get number of matrix ports with data (the last one is always empty)
+    size_t numinputs = matrices.size();
+    
+    if (numinputs > 23)
+    {
+      error("This module cannot handle more than 23 input matrices");
+      return;
+    }
+  
+    SCIRunAlgo::ArrayObjectList inputlist(numinputs+4,SCIRunAlgo::ArrayObject(this));
+    SCIRunAlgo::ArrayObjectList outputlist(1,SCIRunAlgo::ArrayObject(this));
+   
     if (func.get_rep())
     {
       guifunction_.set(func->get());
       get_ctx()->reset();
     }
-  }
 
-  // Create the DATA object for the function
-  // DATA is the data on the field
-  if(!(inputlist[0].create_inputdata(field,"DATA")))
-  {
-    error("Failed to read field data");
-    return;
-  }
-
-  // Create the POS, X,Y,Z, data location objects.  
-  if(!(inputlist[1].create_inputlocation(field,"POS","X","Y","Z")))
-  {
-    error("Failed to read node/element location data");
-    return;
-  }
-
-  // Create the ELEMENT object describing element properties
-  if(!(inputlist[2].create_inputelement(field,"ELEMENT")))
-  {
-    error("Failed to read element data");
-    return;
-  }
-
-  // Add an object for getting the index and size of the array.
-  if(!(inputlist[3].create_inputindex("INDEX","SIZE")))
-  {
-    error("Internal error in module");
-    return;
-  }
-
-  // Loop through all matrices and add them to the engine as well
-  char mname = 'A';
-  std::string matrixname("A");
-  
-  for (size_t p = 0; p < numinputs; p++)
-  {
-    MatrixIPort *iport = dynamic_cast<MatrixIPort *>(get_input_port(p+2));
-    if(iport == 0)
+    // Create the DATA object for the function
+    // DATA is the data on the field
+    if(!(inputlist[0].create_inputdata(field,"DATA")))
     {
-      error("Could not locate matrix input port");
+      error("Failed to read field data");
       return;
     }
+
+    // Create the POS, X,Y,Z, data location objects.  
+    if(!(inputlist[1].create_inputlocation(field,"POS","X","Y","Z")))
+    {
+      error("Failed to read node/element location data");
+      return;
+    }
+
+    // Create the ELEMENT object describing element properties
+    if(!(inputlist[2].create_inputelement(field,"ELEMENT")))
+    {
+      error("Failed to read element data");
+      return;
+    }
+
+    // Add an object for getting the index and size of the array.
+    if(!(inputlist[3].create_inputindex("INDEX","SIZE")))
+    {
+      error("Internal error in module");
+      return;
+    }
+
+    // Loop through all matrices and add them to the engine as well
+    char mname = 'A';
+    std::string matrixname("A");
     
-    MatrixHandle matrix;
-    iport->get(matrix);
-    if (matrix.get_rep() == 0)
+    for (size_t p = 0; p < numinputs; p++)
     {
-      error("No matrix was found on input port");
-      return;      
-    }
-
-    matrixname[0] = mname++;    
-    if (!(inputlist[p+4].create_inputdata(matrix,matrixname)))
-    {
-      std::ostringstream oss;
-      oss << "Input matrix " << p+1 << "is not a valid ScalarArray, VectorArray, or TensorArray";
-      error(oss.str());
-      return;
-    }
-  }
-
-  // Check the validity of the input
-  int n = 1;
-  for (size_t r=0; r<inputlist.size();r++)
-  {
-    if (n == 1) n = inputlist[r].size();
-    if ((inputlist[r].size() != n)&&(inputlist[r].size() != 1))
-    {
-      if (r < 4)
+      if (matrices[p].get_rep() == 0)
       {
-        error("Number of data entries does not seem to match number of elements/nodes");
-        return;
+        error("No matrix was found on input port");
+        return;      
       }
-      else
+
+      matrixname[0] = mname++;    
+      if (!(inputlist[p+4].create_inputdata(matrices[p],matrixname)))
       {
         std::ostringstream oss;
-        oss << "The number of rows in matrix " << r-2 << "does not seem to match the number of datapoints in the field";
+        oss << "Input matrix " << p+1 << "is not a valid ScalarArray, VectorArray, or TensorArray";
         error(oss.str());
+        return;
       }
     }
-  }
 
-  // Create the engine to compute new data
-  ArrayEngine engine(this);
-    
-  // Add as well the output object
-  MatrixHandle omatrix;
-  
-  if(!(outputlist[0].create_outputdata(n,"Scalar","SELECT",omatrix)))
-  {
-    return;
-  }
-  
-  get_gui()->lock();
-  get_gui()->eval(get_id()+" update_text");
-  get_gui()->unlock();
-  
-  std::string function = guifunction_.get();
-  
-  // Actual engine call, which does the dynamic compilation, the creation of the
-  // code for all the objects, as well as inserting the function and looping 
-  // over every data point
-  if (!engine.engine(inputlist,outputlist,function))
-  {
-    error("An error occured while executing function");
-    return;
-  }
-  
-  // If engine succeeded we have a new field at ofield.
-  MatrixOPort *oport = dynamic_cast<MatrixOPort *>(get_output_port(0));
-  if (oport)
-  {
-    oport->send(omatrix);
-  }
-
-  SelectionMask mask(omatrix); 
-  if (mask.isvalid())
-  {
-    MatrixHandle idxmatrix;
-    mask.get_indices(idxmatrix);
-
-    oport = dynamic_cast<MatrixOPort *>(get_output_port(1));
-    if (oport)
+    // Check the validity of the input
+    int n = 1;
+    for (size_t r=0; r<inputlist.size();r++)
     {
-      oport->send(idxmatrix);
+      if (n == 1) n = inputlist[r].size();
+      if ((inputlist[r].size() != n)&&(inputlist[r].size() != 1))
+      {
+        if (r < 4)
+        {
+          error("Number of data entries does not seem to match number of elements/nodes");
+          return;
+        }
+        else
+        {
+          std::ostringstream oss;
+          oss << "The number of rows in matrix " << r-2 << "does not seem to match the number of datapoints in the field";
+          error(oss.str());
+        }
+      }
+    }
+
+    // Create the engine to compute new data
+    SCIRunAlgo::ArrayEngine engine(this);
+      
+    // Add as well the output object
+    MatrixHandle omatrix;
+  
+    if(!(outputlist[0].create_outputdata(n,"Scalar","SELECT",omatrix)))
+    {
+      return;
+    }
+  
+  
+    std::string function = guifunction_.get();
+    
+    // Actual engine call, which does the dynamic compilation, the creation of the
+    // code for all the objects, as well as inserting the function and looping 
+    // over every data point
+    if (!engine.engine(inputlist,outputlist,function))
+    {
+      error("An error occured while executing function");
+      return;
+    }
+    
+    send_output_handle("SelectionMask",omatrix,false);
+    SelectionMask mask(omatrix); 
+    if (mask.isvalid())
+    {
+      MatrixHandle idxmatrix;
+      mask.get_indices(idxmatrix);
+      send_output_handle("SelectionIndices",idxmatrix,false);
     }
   }
 }
 
-extern std::string tvm_help_field;
 
-void
- SelectByFieldData::tcl_command(GuiArgs& args, void* userdata)
+void SelectByFieldData::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {
@@ -285,11 +226,12 @@ void
 
   if( args[1] == "gethelp" )
   {
-    TensorVectorMath::TVMHelp Help;
+    TensorVectorMath::ArrayEngineHelp Help;
     get_gui()->lock();
     get_gui()->eval("global " + get_id() +"-help");
-    get_gui()->eval("set " + get_id() + "-help {" + tvm_help_field +"}");
+    get_gui()->eval("set " + get_id() + "-help {" + Help.gethelp(true) +"}");
     get_gui()->unlock();
+
     return;
   }
   else

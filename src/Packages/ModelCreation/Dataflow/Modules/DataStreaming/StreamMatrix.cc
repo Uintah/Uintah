@@ -26,19 +26,14 @@
   DEALINGS IN THE SOFTWARE.
 */
 
+
+#include <Core/Datatypes/String.h>
+#include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/StringPort.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Datatypes/String.h>
+#include <Core/Algorithms/DataStreaming/StreamMatrix.h>
 
-#include <Packages/ModelCreation/Core/DataStreaming/StreamMatrix.h>
-
-#include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 namespace ModelCreation {
 
@@ -71,7 +66,7 @@ private:
   bool      didrun_;
 
   GuiString guifilename_;
-  StreamMatrixAlgo datafile_; 
+  SCIRunAlgo::StreamMatrixAlgo datafile_; 
   
   void send_selection(int which, int amount);
   int increment(int which, int lower, int upper);  
@@ -107,21 +102,19 @@ void StreamMatrix::execute()
 {
   // Deal with String input port
   StringHandle FileName;
-  get_input_handle("Filename",FileName,false);
-  
-  if (FileName.get_rep()) 
+  MatrixHandle Indices;
+  MatrixHandle Weights;
+  std::string filename;
+
+  if (get_input_handle("Filename",FileName,false))
   {
     guifilename_.set(FileName->get());
     get_ctx()->reset();
-  }
-  
-  std::string filename = guifilename_.get();
-
+  }  
+  filename = guifilename_.get();
   if (filename == "") return;
 
   // Get Indices or Weights 
-  MatrixHandle Indices;
-  MatrixHandle Weights;
   get_input_handle("Indices",Indices,false);
   get_input_handle("Weights",Weights,false);
   
@@ -174,7 +167,7 @@ void StreamMatrix::execute()
       inc_ = (start>end)?-1:1;
     }
 
-    // Cash execmode and reset it in case we bail out early.
+    // Catch execmode and reset it in case we bail out early.
     std::string execmode = execmode_.get();
 
     int current = current_.get();
@@ -268,6 +261,9 @@ void StreamMatrix::execute()
     current_.set(current);
     current_.reset();
   }
+
+
+
 
   MatrixHandle Output;
   MatrixHandle ScaledIndices;

@@ -25,11 +25,9 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : QuitMainWindow.h
-//    Author : McKay Davis
+//    File   : ViewRotateTool.h
+//    Author : Martin Cole
 //    Date   : Thu Jun  8 15:34:34 MDT 2006
-
-
 
 #if !defined(ViewRotateTool_h)
 #define ViewRotateTool_h

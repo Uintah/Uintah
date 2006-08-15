@@ -77,26 +77,21 @@ InsertHexSheet::InsertHexSheet(GuiContext* ctx)
 {
 }
 
+
 InsertHexSheet::~InsertHexSheet()
 {
 }
 
-void InsertHexSheet::execute()
-{
-    // Get input fields.
-  FieldIPort *hexfp = (FieldIPort *)get_iport("HexField");
-  FieldHandle hexfieldhandle;
-  if (!(hexfp->get(hexfieldhandle) && hexfieldhandle.get_rep()))
-  {
-    return;
-  }
 
-  FieldIPort *trifp = (FieldIPort *)get_iport("TriField");
+void
+InsertHexSheet::execute()
+{
+  // Get input fields.
+  FieldHandle hexfieldhandle;
+  if (!get_input_handle("HexField", hexfieldhandle)) return;
+
   FieldHandle trifieldhandle;
-  if (!(trifp->get(trifieldhandle) && trifieldhandle.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("TriField", trifieldhandle)) return;
 
   bool changed = false;
   add_to_side_.reset();
@@ -165,10 +160,8 @@ void InsertHexSheet::execute()
   algo->execute( this, hexfieldhandle, trifieldhandle, 
                  side1field, side2field, add_to_side1, add_layer );
   
-  FieldOPort *ofield_port2 = (FieldOPort *)get_oport("Side1Field");
-  ofield_port2->send_and_dereference(side1field);
-  FieldOPort *ofield_port3 = (FieldOPort *)get_oport("Side2Field");
-  ofield_port3->send_and_dereference(side2field);
+  send_output_handle("Side1Field", side1field);
+  send_output_handle("Side2Field", side2field);
 }
 
 CompileInfoHandle

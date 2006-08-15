@@ -47,11 +47,7 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-
   GuiDouble          value_;
-
 };
 
 DECLARE_MAKER(TendEvalAdd)
@@ -71,20 +67,10 @@ TendEvalAdd::~TendEvalAdd()
 void 
 TendEvalAdd::execute()
 {
-  NrrdDataHandle nrrd_handle;
-
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
 
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
-
-  if (!inrrd_->get(nrrd_handle))
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input InputNrrd.");
-    return;
-  }
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
   Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
@@ -97,7 +83,8 @@ TendEvalAdd::execute()
   }
 
   NrrdDataHandle out(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(out);
+  
+  send_output_handle("OutputNrrd", out);
 }
 
 } // End namespace SCITeem

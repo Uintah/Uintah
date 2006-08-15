@@ -88,7 +88,10 @@ public:
   
   // scheduleTimeAdvance version called by the AMR simulation controller.
   virtual void scheduleTimeAdvance( const LevelP& level, 
-				    SchedulerP&);
+				        SchedulerP&);
+ 
+  virtual void scheduleFinalizeTimestep(const LevelP& level, 
+                                        SchedulerP&);
                             
   void scheduleInterpolateNCToCC_0(SchedulerP&, 
                                   const PatchSet*,

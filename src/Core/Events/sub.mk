@@ -43,7 +43,15 @@ SRCS     += \
 SUBDIRS := $(SRCDIR)/Tools
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
-PSELIBS := Core/Exceptions Core/Thread Core/Math Core/Geom Core/Util Core/Geometry Core/Containers Core/Datatypes
+PSELIBS := Core/Containers  \
+           Core/Datatypes \
+           Core/Exceptions \
+	   Core/Geom  \
+	   Core/Geometry  \
+	   Core/Math  \
+	   Core/Persistent  \
+	   Core/Thread \
+	   Core/Util
 
 ifeq ($(IS_WIN),yes)
   PSELIBS += Core_OS

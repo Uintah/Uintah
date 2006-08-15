@@ -29,6 +29,13 @@ SRCS     += \
 	$(SRCDIR)/MappingMatrixToField.cc\
 	$(SRCDIR)/GetFieldData.cc\
   $(SRCDIR)/SetFieldData.cc\
+	$(SRCDIR)/IndicesToData.cc\
+	$(SRCDIR)/NodalMapping.cc\
+	$(SRCDIR)/ModalMapping.cc\
+	$(SRCDIR)/CurrentDensityMapping.cc\
+	$(SRCDIR)/IsInsideFields.cc\
+	$(SRCDIR)/GradientModalMapping.cc\
+	$(SRCDIR)/FieldDataMeasure.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \
@@ -36,11 +43,11 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/GeomInterface Core/TkExtensions \
-        Packages/ModelCreation/Core/Algorithms \
         Packages/ModelCreation/Core/Datatypes \
         Packages/ModelCreation/Core/Fields \
         Core/Algorithms/Converter \
-        Core/Algorithms/Fields 
+        Core/Algorithms/Fields \
+        Core/Algorithms/ArrayMath 
         
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

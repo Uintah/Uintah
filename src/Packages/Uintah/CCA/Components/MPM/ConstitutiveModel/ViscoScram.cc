@@ -464,10 +464,8 @@ ViscoScram::computeStressTensor(const PatchSubset* patches,
     const Patch* patch = patches->get(p);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
 
     // initialize strain energy and wavespeed to zero

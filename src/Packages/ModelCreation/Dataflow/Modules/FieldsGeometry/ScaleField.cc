@@ -26,13 +26,12 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/Algorithms/Fields/FieldsAlgo.h>
-#include <Core/Algorithms/Converter/ConverterAlgo.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
-
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 #include <Dataflow/Network/Module.h>
 
 namespace ModelCreation {
@@ -48,7 +47,7 @@ public:
 private:
   GuiDouble guidatascale_;
   GuiDouble guigeomscale_;   
-  
+  GuiInt    guiusegeomcenter_;  
 };
 
 
@@ -56,7 +55,8 @@ DECLARE_MAKER(ScaleField)
 ScaleField::ScaleField(GuiContext* ctx)
   : Module("ScaleField", ctx, Source, "FieldsGeometry", "ModelCreation"),
     guidatascale_(ctx->subVar("datascale")),
-    guigeomscale_(ctx->subVar("geomscale"))
+    guigeomscale_(ctx->subVar("geomscale")),
+    guiusegeomcenter_(ctx->subVar("usegeomcenter"))
 {
 }
 
@@ -65,37 +65,41 @@ void ScaleField::execute()
 {
   FieldHandle input, output;
   MatrixHandle DataScale,GeomScale;
-  if (!(get_input_handle("Field",input,true))) return;
   
+  if (!(get_input_handle("Field",input,true))) return;
   get_input_handle("DataScaleFactor",DataScale,false);
   get_input_handle("GeomScaleFactor",GeomScale,false);
   
-  double datascale, geomscale;
-  SCIRunAlgo::ConverterAlgo calgo(this);
-  SCIRunAlgo::FieldsAlgo    falgo(this);
-  
-  if (DataScale.get_rep()) 
+  if (inputs_changed_ || guidatascale_.changed() || guigeomscale_.changed() || 
+      guiusegeomcenter_.changed() || !oport_cached("Field"))
   {
-    datascale = 1.0;
-    calgo.MatrixToDouble(DataScale,datascale); 
-    guidatascale_.set(datascale);
-    get_ctx()->reset();
+    double datascale, geomscale;
+    SCIRunAlgo::ConverterAlgo calgo(this);
+    SCIRunAlgo::FieldsAlgo    falgo(this);
+    
+    if (DataScale.get_rep()) 
+    {
+      datascale = 1.0;
+      calgo.MatrixToDouble(DataScale,datascale); 
+      guidatascale_.set(datascale);
+      get_ctx()->reset();
+    }
+
+    if (GeomScale.get_rep()) 
+    {
+      geomscale = 1.0;
+      calgo.MatrixToDouble(GeomScale,geomscale); 
+      guigeomscale_.set(geomscale);
+      get_ctx()->reset();
+    }
+
+    geomscale = guigeomscale_.get();
+    datascale = guidatascale_.get();
+
+    if(!(falgo.ScaleField(input, output, datascale, geomscale,guiusegeomcenter_.get()))) return;
+    
+    send_output_handle("Field",output,false);
   }
-
-  if (GeomScale.get_rep()) 
-  {
-    geomscale = 1.0;
-    calgo.MatrixToDouble(GeomScale,geomscale); 
-    guigeomscale_.set(geomscale);
-    get_ctx()->reset();
-  }
-
-  geomscale = guigeomscale_.get();
-  datascale = guidatascale_.get();
-
-  if(!(falgo.ScaleField(input, output, datascale, geomscale))) return;
-  
-  send_output_handle("Field",output,true);
 }
 
 

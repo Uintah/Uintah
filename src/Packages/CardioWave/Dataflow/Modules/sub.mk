@@ -28,9 +28,10 @@ SRCDIR := Packages/CardioWave/Dataflow/Modules
 
 SUBDIRS := \
 	$(SRCDIR)/ContinuousBiDomain\
-	$(SRCDIR)/DataIO\
 	$(SRCDIR)/DiscreteMultiDomain\
 	$(SRCDIR)/Model\
+	$(SRCDIR)/Tools\
+	$(SRCDIR)/TissueModel\
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

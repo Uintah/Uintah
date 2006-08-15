@@ -66,33 +66,40 @@ MergeFields::MergeFields(GuiContext* ctx)
 
 void MergeFields::execute()
 {
+  // Define local handles of data objects:
   std::vector<SCIRun::FieldHandle> fields;
-  if(!(get_dynamic_input_handles("Field",fields,true))) return;
-
   FieldHandle output;
 
-  double tolerance = 0.0;
-  bool   mergenodes = false;
-  bool   forcepointcloud = false;
-  bool   matchval = false;
-  
-  tolerance = guitolerance_.get();
-  if (guimergenodes_.get()) mergenodes = true;
-  if (guiforcepointcloud_.get()) forcepointcloud = true;
-  if (guimatchval_.get()) matchval = true;
+  // Get the new input data:  
+  if(!(get_dynamic_input_handles("Field",fields,true))) return;
 
-  SCIRunAlgo::FieldsAlgo algo(this);  
-
-  if (!(algo.MergeFields(fields,output,tolerance,mergenodes,true,matchval))) return;
-
-  if (forcepointcloud)
+  // Only reexecute if the input changed. SCIRun uses simple scheduling
+  // that executes every module downstream even if no data has changed: 
+  if (inputs_changed_ ||  guitolerance_.changed() || guimergenodes_.changed() || guiforcepointcloud_.changed() || guimatchval_.changed() || !oport_cached("Field"))
   {
-    FieldHandle temp;
-    if (!(algo.ToPointCloud(output,temp))) return;
-    output = temp;
-  }
+    double tolerance = 0.0;
+    bool   mergenodes = false;
+    bool   forcepointcloud = false;
+    bool   matchval = false;
   
-  send_output_handle("Field",output,true);
+    tolerance = guitolerance_.get();
+    if (guimergenodes_.get()) mergenodes = true;
+    if (guiforcepointcloud_.get()) forcepointcloud = true;
+    if (guimatchval_.get()) matchval = true;
+
+    SCIRunAlgo::FieldsAlgo algo(this);  
+    if (!(algo.MergeFields(fields,output,tolerance,mergenodes,true,matchval))) return;
+
+    // This option is here to be compatible with the old GatherFields module:
+    // This is a separate algorithm now
+    if (forcepointcloud)
+    {
+      if (!(algo.ToPointCloud(output,output))) return;
+    }
+
+    // send new output if there is any:        
+    send_output_handle("Field",output,false);
+  }
 }
 
 

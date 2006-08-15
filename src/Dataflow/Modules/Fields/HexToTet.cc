@@ -85,21 +85,14 @@ HexToTet::~HexToTet()
 void
 HexToTet::execute()
 {
-  FieldIPort *ifieldport = (FieldIPort *)get_iport("HexVol");
   FieldHandle ifieldhandle;
-  if(!(ifieldport->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
-    error("Can't get field.");
-    return;
-  }
-
-  FieldOPort *ofp = (FieldOPort *)get_oport("TetVol");
+  if (!get_input_handle("HexVol", ifieldhandle)) return;
 
   // Cache generation.
   if (ofieldhandle_.get_rep() &&
       ifieldhandle->generation == last_generation_)
   {
-    ofp->send_and_dereference(ofieldhandle_, true);
+    send_output_handle("TetVol", ofieldhandle_, true);
     return;
   }
   last_generation_ = ifieldhandle->generation;
@@ -133,7 +126,8 @@ HexToTet::execute()
       return;
     }
   }
-  ofp->send_and_dereference(ofieldhandle_, true);
+
+  send_output_handle("TetVol", ofieldhandle_, true);
 }
 
 

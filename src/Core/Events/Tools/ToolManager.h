@@ -69,6 +69,8 @@ private:
                                                event_handle_t) const;
   BaseTool::propagation_state_e send_window_event(tool_handle_t,
                                                   event_handle_t) const;
+  BaseTool::propagation_state_e send_tm_notify_event(tool_handle_t, 
+						     event_handle_t) const;
   
   typedef stack<tool_handle_t>                                      ts_stack_t;
   typedef map<unsigned, ts_stack_t, less<unsigned> >                ps_map_t;

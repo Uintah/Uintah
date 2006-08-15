@@ -165,14 +165,45 @@ bool DataIOAlgo::ReadNrrd(std::string filename, NrrdDataHandle& nrrd, std::strin
     return (false);
   }
   
+  
+  // Somehow we do not have support in the wrapper class for reading and writing nrrds
+  
+  if (filename.size() > 4)
+  {
+    if (filename.substr(filename.size()-5,5) == std::string(".nhdr") ||  
+        filename.substr(filename.size()-5,5) == std::string(".nrrd"))
+    {
+      nrrd = scinew NrrdData;
+      if (nrrd.get_rep() == 0) return (false);
+      
+      if (nrrdLoad(nrrd->nrrd_, airStrdup(filename.c_str()), 0)) 
+      {
+        char *err = biffGetDone(NRRD);
+        error("Could not read nrrd '" + filename + "' because teem crashed for the following reason: " + err);
+        free(err);
+        return (false);
+      }
+      
+      // We need to fix the nrrd as it might not be proper every time 
+      for (int i = 0; i < nrrd->nrrd_->dim; i++) 
+      {
+        if (!(airExists(nrrd->nrrd_->axis[i].min) && 
+              airExists(nrrd->nrrd_->axis[i].max)))
+                nrrdAxisInfoMinMaxSet(nrrd->nrrd_, i, nrrdCenterNode);
+      }
+      return (true); 
+    }
+  }
+
+
   Piostream *stream = auto_istream(filename, pr_);
   if (!stream)
   {
     error("Error reading file '" + filename + "'.");
     return (false);
   }
-    
-  // Read the file
+
+  // Read the file through Pio
   Pio(*stream, nrrd);
   if (!nrrd.get_rep() || stream->error())
   {
@@ -433,7 +464,7 @@ bool DataIOAlgo::WriteBundle(std::string filename, BundleHandle& bundle, std::st
 bool DataIOAlgo::WriteNrrd(std::string filename, NrrdDataHandle& nrrd, std::string exporter)
 {
   if (nrrd.get_rep() == 0) return (false);
-
+  
   if ((exporter == "text")||(exporter == "Text"))
   {
     Piostream* stream;
@@ -452,6 +483,8 @@ bool DataIOAlgo::WriteNrrd(std::string filename, NrrdDataHandle& nrrd, std::stri
   }
   else if (exporter == "")
   {
+  
+    // DO TO: ADD THE NERD CODE
     Piostream* stream;
     stream = auto_ostream(filename, "Binary", pr_);
     if (stream->error())

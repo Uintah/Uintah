@@ -56,15 +56,21 @@ public:
   //! Trigger the shared mailbox for the unique string id to be destroyed.
   static void                           unregister_event_messages(string);
   static void                           unregister_mailbox(event_mailbox_t *);
-  static void                           add_event(event_handle_t e) 
-  {
-    mailbox_.send(e);
-  }
-  
+  static void                           add_event(event_handle_t e);
+
   virtual void                          run();
   ToolManager &                         tm() { return tm_; };
+
+  static bool                           record_trail_file(const string &);
+  static bool                           play_trail_file(const string &);
+  static void                           stop_trail_file();
+  static void                           play_trail();
+
+
 private:
   typedef multimap<string, event_mailbox_t*> id_tm_map_t;
+
+  static  Piostream *                   stream_;
 
   //! all of the threads who need to know about events.
   static id_tm_map_t                    mboxes_;

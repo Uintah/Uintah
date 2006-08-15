@@ -103,7 +103,7 @@ SUBMAKEFILES := $(patsubst %,%/Makefile,$(MAKEFILEDIRS))
 CREATETCLINDEX := $(OBJTOP)/createTclIndex
 TCLSH          := @TCL_PREFIX@/bin/tclsh@TCL_VERSION@
 TCL_VERSION    := @TCL_VERSION@
-LIB_DIR_ITCL   := @LIB_DIR_ITCL@
+ITCL_LIB_DIR   := @ITCL_LIB_DIR@
 
 ifeq ($(IS_WIN),yes)
   VCDIR=projects
@@ -125,7 +125,12 @@ CTAGS := ctags
 
 SCIRUN_APP_DIR := $(OBJTOP_ABS)/../SCIRun/
 
-all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM BioImage FusionViewer LevelSetSegmenter
+PYTARG =
+ifeq ($(HAVE_PYDEV),yes)
+  PYTARG := lnpysci
+endif
+
+all:: prereqs packmaker $(ALLTARGETS) ontheflylibs BioTensor BioFEM BioImage FusionViewer LevelSetSegmenter $(PYTARG)
 
 .PHONY: prereqs
 prereqs: $(MAKEFILEDIRS) $(CREATETCLINDEX) $(LIBDIR) $(SUBMAKEFILES) $(ALLGEN) $(VCDIR) $(VCDEPS)
@@ -137,10 +142,16 @@ $(MAKEFILEDIRS):
 $(CREATETCLINDEX): $(SRCTOP)/scripts/createTclIndex.in $(OBJTOP)/Makefile
 	@echo creating createTclIndex
 	-@sed -e 's,TCLSH,$(TCLSH),g' \
-	      -e 's,LIB_DIR_ITCL,$(LIB_DIR_ITCL),g' \
+	      -e 's,ITCL_LIB_DIR,$(ITCL_LIB_DIR),g' \
               -e 's,TCL_INIT_DIR,$(TCL_INIT_DIR),g' \
               $(SRCTOP)/scripts/createTclIndex.in > $(CREATETCLINDEX)
 	-@chmod a+x $(CREATETCLINDEX)
+
+lnpysci: $(SRCTOP)/pysci/pysci.py $(OBJTOP)/lib/libpysci.so	
+	ln -sf ../../src/pysci/pysci.py pysci/pysci.py
+	ln -sf ../lib/libpysci.so pysci/_pysci.so
+	touch lnpysci
+
 
 packmaker: $(SRCTOP)/scripts/packmaker.in $(OBJTOP)/Makefile
 	@echo creating packmaker

@@ -692,7 +692,7 @@ execute(MeshHandle& mHandle,
   if (dataH != 0 ) {
     // determine if nrrd is unknown, node or cell centered
     int data_center = nrrdCenterUnknown;
-    for (int a = 0; a<dataH->nrrd_->dim; a++) {
+    for (unsigned int a = 0; a<dataH->nrrd_->dim; a++) {
       if (dataH->nrrd_->axis[a].center != nrrdCenterUnknown)
 	data_center = dataH->nrrd_->axis[a].center;
     }
@@ -1116,7 +1116,7 @@ execute(MeshHandle& mHandle,
   if (dataH != 0) {
     // determine if nrrd is unknown, node or cell centered
     int data_center = nrrdCenterUnknown;
-    for (int a = 0; a<dataH->nrrd_->dim; a++) {
+    for (unsigned int a = 0; a<dataH->nrrd_->dim; a++) {
       if (dataH->nrrd_->axis[a].center != nrrdCenterUnknown)
 	data_center = dataH->nrrd_->axis[a].center;
     }

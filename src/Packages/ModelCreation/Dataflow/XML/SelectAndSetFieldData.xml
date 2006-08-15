@@ -116,7 +116,7 @@
         <datatype>SCIRun::Field</datatype>
       </port>     
       <port>
-        <name>DataArray</name>
+        <name>Array</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>

@@ -76,6 +76,7 @@ namespace Uintah {
     //! Returns the patchset of all patches that have work done on this processor.
     virtual const PatchSet* getPerProcessorPatchSet(const LevelP& level) { return levelPerProcPatchSets[level->getIndex()].get_rep(); }
     virtual const PatchSet* getPerProcessorPatchSet(const GridP& grid) { return gridPerProcPatchSet.get_rep(); }
+    virtual const PatchSet* getOutputPerProcessorPatchSet(const LevelP& level) { return outputPatchSets[level->getIndex()].get_rep(); };
 
    private:
      LoadBalancerCommon(const LoadBalancerCommon&);
@@ -90,6 +91,7 @@ namespace Uintah {
      //      - Version 1 (for Level 1) will create {{3},{6}}
      //      - Version 2 (for all levels) will create {{1,2,3},{4,5,6}}
      virtual const PatchSet* createPerProcessorPatchSet(const LevelP& level);
+     virtual const PatchSet* createOutputPatchSet(const LevelP& level);
      virtual const PatchSet* createPerProcessorPatchSet(const GridP& grid);
 
      SimulationStateP d_sharedState; ///< to keep track of timesteps
@@ -102,6 +104,7 @@ namespace Uintah {
 
      vector<Handle<const PatchSet> > levelPerProcPatchSets;
      Handle<const PatchSet> gridPerProcPatchSet;
+     vector<Handle<const PatchSet> > outputPatchSets;
 
    };
 

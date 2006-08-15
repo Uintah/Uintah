@@ -52,12 +52,12 @@
 #endif
 
 #ifdef HAVE_GLEW
-int sci_glew_init()
+SCISHARE int sci_glew_init()
 {
   static int glew_init = 0;
   if(!glew_init) {
-    glewExperimental = GL_TRUE;
     GLenum err = glewInit();
+    glewExperimental = GL_TRUE;
     if (GLEW_OK != err )
     {
 	/* problem: glewInit failed, something is seriously wrong */

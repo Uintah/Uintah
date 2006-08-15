@@ -15,6 +15,7 @@
    <Solver>
         <type> hypreamr </type>
    </Solver>
+   <doAMR>true</doAMR>
      
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->

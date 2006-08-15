@@ -438,14 +438,15 @@ void
 Module::update_progress(int current, int maxpr)
 {
   if (state_ != Executing) { update_state(Executing); }
-  const int crp = progress_current_ * PROGRESS_GRANULARITY / progress_max_;
-  const int nrp = current * PROGRESS_GRANULARITY / maxpr;
-  if (crp != nrp || maxpr != progress_max_)
-  {
-    progress_max_ = maxpr;
-    progress_current_.set(current);
-    string str = to_string(((double)nrp) / PROGRESS_GRANULARITY);
-    gui_->execute(id_+" set_progress "+str+" "+to_string(timer_.time()));
+  if( maxpr ) {
+    const int crp = progress_current_ * PROGRESS_GRANULARITY / progress_max_;
+    const int nrp = current * PROGRESS_GRANULARITY / maxpr;
+    if (crp != nrp || maxpr != progress_max_) {
+      progress_max_ = maxpr;
+      progress_current_.set(current);
+      string str = to_string(((double)nrp) / PROGRESS_GRANULARITY);
+      gui_->execute(id_+" set_progress "+str+" "+to_string(timer_.time()));
+    }
   }
 }
 

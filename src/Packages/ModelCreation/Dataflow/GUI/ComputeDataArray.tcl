@@ -11,7 +11,7 @@ itcl_class ModelCreation_TensorVectorMath_ComputeDataArray {
       global $this-help
       global $this-format
 
-      set $this-function "RESULT = abs(A);"
+      set $this-function "RESULT = abs(DATA);"
       set $this-help ""
       set $this-format "Scalar"
       
@@ -38,8 +38,8 @@ itcl_class ModelCreation_TensorVectorMath_ComputeDataArray {
         frame $infoframe.info
         pack $infoframe.info -side left
         set info $infoframe.info
-        label $info.info1 -text "Function: RESULT = function(A,B,C,...)"
-        label $info.info2 -text "Input array: A, B, C, ... (scalar,vector, or tensor)"
+        label $info.info1 -text "Function: RESULT = function(DATA,A,B,C,...)"
+        label $info.info2 -text "Input array: DATA, A, B, C, ... (scalar,vector, or tensor)"
         label $info.info3 -text "Output array: RESULT (scalar)"
         label $info.info4 -text "Element index: INDEX (scalar)"
         label $info.info5 -text "Number of elements: SIZE (scalar)"
@@ -63,6 +63,8 @@ itcl_class ModelCreation_TensorVectorMath_ComputeDataArray {
         option add *textBackground white	
         iwidgets::scrolledtext $function.function -height 60 -hscrollmode dynamic
         $function.function insert end [set $this-function]
+        bind $function.function <Leave> "$this update_text"
+
         pack $w.ff -side top -anchor w -fill both 
         pack $function.function -side top -fill both 
 

@@ -46,15 +46,13 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-
   GuiString    operator_;
   GuiString    type_;
   GuiInt       usetype_;
 
   unsigned int get_op(const string &op);
 };
+
 
 DECLARE_MAKER(Unu1op)
 
@@ -66,26 +64,19 @@ Unu1op::Unu1op(SCIRun::GuiContext *ctx) :
 {
 }
 
-Unu1op::~Unu1op() {
+
+Unu1op::~Unu1op()
+{
 }
+
 
 void 
 Unu1op::execute()
 {
-  NrrdDataHandle nrrd_handle;
-
   update_state(NeedData);
 
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
-
-  if (!inrrd_->get(nrrd_handle)) 
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty InputNrrd.");
-    return;
-  }
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
   reset_vars();
 
@@ -93,22 +84,28 @@ Unu1op::execute()
   Nrrd *nout = nrrdNew();
   Nrrd *ntmp = NULL;
 
-  if (!usetype_.get()) {
+  if (!usetype_.get())
+  {
     ntmp = nrrdNew();
-    if (nrrdConvert(ntmp, nin, string_to_nrrd_type(type_.get()))) {
+    if (nrrdConvert(ntmp, nin, string_to_nrrd_type(type_.get())))
+    {
       char *err = biffGetDone(NRRD);
       error(string("Error converting nrrd: ") + err);
       free(err);
       return;
     }
-    if (nrrdArithUnaryOp(nout, get_op(operator_.get()), ntmp)) {
+    if (nrrdArithUnaryOp(nout, get_op(operator_.get()), ntmp))
+    {
       char *err = biffGetDone(NRRD);
       error(string("Error performing 1op to nrrd: ") + err);
       free(err);
       return;
     }
-  } else {
-    if (nrrdArithUnaryOp(nout, get_op(operator_.get()), nin)) {
+  }
+  else
+  {
+    if (nrrdArithUnaryOp(nout, get_op(operator_.get()), nin))
+    {
       char *err = biffGetDone(NRRD);
       error(string("Error performing 1op to nrrd: ") + err);
       free(err);
@@ -119,12 +116,14 @@ Unu1op::execute()
   nrrdKeyValueCopy(nout, nin);
 
   NrrdDataHandle out(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(out);
+
+  send_output_handle("OutputNrrd", out);
 }
 
 
 unsigned int
-Unu1op::get_op(const string &op) {
+Unu1op::get_op(const string &op)
+{
   if (op == "-")
     return nrrdUnaryOpNegative;
   else if (op == "r") 

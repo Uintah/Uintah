@@ -100,7 +100,7 @@ class MatlabFieldsReader : public Module
     //   retrieves the current filename and the matrix selected in this
     //   file and returns an object containing the full matrix
     
-    matlabarray readmatlabarray(long p);
+    matlabarray readmatlabarray(int p);
 
     // displayerror()
     //   Relay an error during the matrixselection process directly to
@@ -180,7 +180,7 @@ void MatlabFieldsReader::execute()
 
   try
   {
-    for (long p=0;p<NUMPORTS;p++)
+    for (int p=0;p<NUMPORTS;p++)
     {
 
       // Find the output port the scheduler has created 
@@ -290,7 +290,7 @@ void MatlabFieldsReader::tcl_command(GuiArgs& args, void* userdata)
 }
 
 
-matlabarray MatlabFieldsReader::readmatlabarray(long p)
+matlabarray MatlabFieldsReader::readmatlabarray(int p)
 {
   matlabarray marray;
   std::string filename = guifilename_.get();
@@ -367,7 +367,7 @@ void MatlabFieldsReader::indexmatlabfile(bool postmsg)
   std::vector<std::string> matrixnamelist(NUMPORTS);
   bool foundmatrixname[NUMPORTS];
 
-  for (long p=0;p<NUMPORTS;p++)
+  for (int p=0;p<NUMPORTS;p++)
   {
     // TCL Dependent code
     std::ostringstream oss;
@@ -389,15 +389,15 @@ void MatlabFieldsReader::indexmatlabfile(bool postmsg)
     
     // all matlab data is stored in a matlabarray object
     matlabarray ma;
-    long cindex = 0;		// compability index, which matlab array fits the SCIRun matrix best? 
-    long maxindex = 0;		// highest index found so far
+    int cindex = 0;		// compability index, which matlab array fits the SCIRun matrix best? 
+    int maxindex = 0;		// highest index found so far
             
     // Scan the file and see which matrices are compatible
     // Only those will be shown (you cannot select incompatible matrices).
             
     std::string infotext;
     
-    for (long p=0;p<mfile.getnummatlabarrays();p++)
+    for (int p=0;p<mfile.getnummatlabarrays();p++)
     {
       ma = mfile.getmatlabarrayinfo(p); // do not load all the data fields
       if ((cindex = translate.sciFieldCompatible(ma,infotext)))
@@ -410,7 +410,7 @@ void MatlabFieldsReader::indexmatlabfile(bool postmsg)
         
         matrixinfotexts += std::string("{" + infotext + "} ");
         matrixnames += std::string("{" + ma.getname() + "} "); 
-        for (long q=0;q<NUMPORTS;q++)
+        for (int q=0;q<NUMPORTS;q++)
         {
           if (ma.getname() == matrixnamelist[q]) foundmatrixname[q] = true;
         }
@@ -426,7 +426,7 @@ void MatlabFieldsReader::indexmatlabfile(bool postmsg)
     // cannot be found or if no matrixname has been specified
     
     matrixname = "";
-    for (long p=0;p<NUMPORTS;p++)
+    for (int p=0;p<NUMPORTS;p++)
     {
       if (foundmatrixname[p] == false) 
       {   

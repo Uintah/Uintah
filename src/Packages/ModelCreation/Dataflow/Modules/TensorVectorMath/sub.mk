@@ -13,6 +13,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/ModelCreation/Dataflow/Modules/TensorVectorMath
 
 SRCS     += \
+        $(SRCDIR)/CreateDataArray.cc\
         $(SRCDIR)/ComputeDataArray.cc\
         $(SRCDIR)/ComposeTensorArray.cc\
         $(SRCDIR)/ComposeVectorArray.cc\
@@ -29,9 +30,9 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/GeomInterface Core/TkExtensions \
-        Packages/ModelCreation/Core/Algorithms \
-        Packages/ModelCreation/Core/Datatypes      
-
+        Core/Algorithms/ArrayMath 
+        
+        
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

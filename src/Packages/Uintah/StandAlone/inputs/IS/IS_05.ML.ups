@@ -273,9 +273,9 @@
       <save label = "sp_vol_CC"        levels = "0"/>
       <save label = "modelEng_src"     levels = "0"/>
 
-      <save label="p.x"           levels = "1"/>
-      <save label="p.particleID"  levels = "1"/>
-      <save label="p.temperature" levels = "1"/>
+      <save label="p.x"           levels = "-1"/>
+      <save label="p.particleID"  levels = "-1"/>
+      <save label="p.temperature" levels = "-1"/>
       
       <compression>gzip</compression>
       <checkpoint cycle = "4" interval = "0.1"/>

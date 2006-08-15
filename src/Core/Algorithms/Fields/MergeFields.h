@@ -81,7 +81,7 @@ bool MergeFieldsAlgoT<FIELD>::MergeFields(SCIRun::ProgressReporter *pr, std::vec
     
     if (!(ifield->mesh()->is_editable()))
     {
-      pr->error("GatheFields: Field type is not editable");
+      pr->error("MergeFields: Field type is not editable");
       return (false);
     }
 

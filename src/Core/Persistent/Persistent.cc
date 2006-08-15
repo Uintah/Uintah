@@ -194,6 +194,7 @@ Piostream::Piostream(Direction dir, int version, const string &name,
     reporter_(pr),
     own_reporter_(false),
     backwards_compat_id_(false),
+    disable_pointer_hashing_(false),
     file_name(name)
 {
   if (reporter_ == NULL)
@@ -500,7 +501,8 @@ Piostream::io(Persistent*& data, const PersistentTypeID& pid)
       have_data = 0;
       pointer_id = 0;
     }
-    else if (outpointers && outiter != outpointers->end())
+    else if (outpointers && outiter != outpointers->end() && 
+             !disable_pointer_hashing_)
     {
       // Already emitted, pointer id fetched from hashtable.
       have_data = 0;

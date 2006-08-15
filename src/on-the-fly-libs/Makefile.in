@@ -113,9 +113,16 @@ endif
 all: $(OTF_LIBS)
 
 %.d: %.cc
+ifeq ($(SCI_MAKE_BE_QUIET),true)
+	@echo "Building .d file for: $<"
+	@set -e; $(CXX) -M $(CFLAGS) $(INCLUDES) $< \
+          | sed 's/\($*\)\.o[ :]*/\1.o $@ : /g' > $@; \
+          [ -s $@ ] || rm -f $@
+else
 	set -e; $(CXX) -M $(CFLAGS) $(INCLUDES) $< \
           | sed 's/\($*\)\.o[ :]*/\1.o $@ : /g' > $@; \
           [ -s $@ ] || rm -f $@
+endif
 
 %.o : %.cc %.d
 ifeq ($(SCI_MAKE_BE_QUIET),true)
@@ -135,9 +142,9 @@ endif
 %.so : %.o 
 ifeq ($(SCI_MAKE_BE_QUIET),true)
 	@echo "Linking: $@"
-	@$(CXX) $(CFLAGS) $(LIBRARY) $(SOFLAGS) $< -o $@ -L$(LIBDIR) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY) $(CONDITIONAL_LIBS)
+	@$(CXX) $(CFLAGS) $(LIBRARY) $(SOFLAGS) $< -o $@ $(LIBRPATH) $(LIBS) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY) $(CONDITIONAL_LIBS)
 else
-	$(CXX) $(CFLAGS) $(LIBRARY) $(SOFLAGS) $< -o $@ -L$(LIBDIR) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY) $(CONDITIONAL_LIBS)
+	$(CXX) $(CFLAGS) $(LIBRARY) $(SOFLAGS) $< -o $@ $(LIBRPATH) $(LIBS) $(SCI_THIRDPARTY_LIBRARY) $(BABEL_LIBRARY) $(TAU_LIBRARY) $(MPI_LIBRARY) $(GL_LIBRARY) $(INSIGHT_LIBRARY) $(TEEM_LIBRARY) $(CONDITIONAL_LIBS)
 endif
 
 %.dylib : %.o 

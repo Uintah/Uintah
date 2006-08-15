@@ -696,10 +696,10 @@ bool FieldToMatlabAlgo::mladdnodes(MESH* mesh,matlabarray mlarray)
     // The MatlabIO does not use SCIRun style iterators hence we need to extract
     // the data first. 
     std::vector<double> nodes(3*numnodes);
-    std::vector<long> dims(2);
+    std::vector<int> dims(2);
 
     // Setup the dimensions of the matlab array
-    dims[0] = 3; dims[1] = static_cast<long>(numnodes);
+    dims[0] = 3; dims[1] = static_cast<int>(numnodes);
 
     // Extracting data from the SCIRun classes is a painfull process.
     // I'd like to change this, but hey a lot of code should be rewritten
@@ -762,8 +762,8 @@ bool FieldToMatlabAlgo::mladdedges(MESH *mesh,matlabarray mlarray)
 
     typename MESH::Node::array_type a;
     std::vector<typename MESH::Node::index_type> edges(num*numedges);
-    std::vector<long> dims(2);	
-    dims[0] = static_cast<long>(num); dims[1] = static_cast<long>(numedges);
+    std::vector<int> dims(2);	
+    dims[0] = static_cast<int>(num); dims[1] = static_cast<int>(numedges);
   
     
     // SCIRun iterators are limited in supporting any index management
@@ -829,8 +829,8 @@ bool FieldToMatlabAlgo::mladdfaces(MESH *mesh,matlabarray mlarray)
 
     typename MESH::Node::array_type a;
     std::vector<typename MESH::Node::index_type> faces(num*numfaces);
-    std::vector<long> dims(2);	
-    dims[0] = static_cast<long>(num); dims[1] = static_cast<long>(numfaces);
+    std::vector<int> dims(2);	
+    dims[0] = static_cast<int>(num); dims[1] = static_cast<int>(numfaces);
       
     size_t q = 0;
     typename MESH::Face::iterator it, it_end;
@@ -890,8 +890,8 @@ bool FieldToMatlabAlgo::mladdcells(MESH* mesh,matlabarray mlarray)
 
     typename MESH::Node::array_type a;
     std::vector<typename MESH::Node::index_type> cells(num*numcells);
-    std::vector<long> dims(2);	
-    dims[0] = static_cast<long>(num); dims[1] = static_cast<long>(numcells);
+    std::vector<int> dims(2);	
+    dims[0] = static_cast<int>(num); dims[1] = static_cast<int>(numcells);
 
           
     typename MESH::Cell::iterator it, it_end;
@@ -1038,9 +1038,9 @@ bool FieldToMatlabAlgo::mladdxyzmesh1d(MESH* mesh,matlabarray mlarray)
 
     mesh->size(size);
     unsigned int numnodes = static_cast<unsigned int>(size);
-    x.createdensearray(static_cast<long>(numnodes),1,matlabarray::miDOUBLE);
-    y.createdensearray(static_cast<long>(numnodes),1,matlabarray::miDOUBLE);
-    z.createdensearray(static_cast<long>(numnodes),1,matlabarray::miDOUBLE);
+    x.createdensearray(static_cast<int>(numnodes),1,matlabarray::miDOUBLE);
+    y.createdensearray(static_cast<int>(numnodes),1,matlabarray::miDOUBLE);
+    z.createdensearray(static_cast<int>(numnodes),1,matlabarray::miDOUBLE);
           
     std::vector<double> xbuffer(numnodes);
     std::vector<double> ybuffer(numnodes);
@@ -1087,9 +1087,9 @@ bool FieldToMatlabAlgo::mladdxyzmesh2d(MESH* mesh,matlabarray mlarray)
         
     // Note: the dimensions are in reverse order as SCIRun uses C++
     // ordering
-    x.createdensearray(static_cast<long>(dim2),static_cast<long>(dim1),matlabarray::miDOUBLE);
-    y.createdensearray(static_cast<long>(dim2),static_cast<long>(dim1),matlabarray::miDOUBLE);
-    z.createdensearray(static_cast<long>(dim2),static_cast<long>(dim1),matlabarray::miDOUBLE);
+    x.createdensearray(static_cast<int>(dim2),static_cast<int>(dim1),matlabarray::miDOUBLE);
+    y.createdensearray(static_cast<int>(dim2),static_cast<int>(dim1),matlabarray::miDOUBLE);
+    z.createdensearray(static_cast<int>(dim2),static_cast<int>(dim1),matlabarray::miDOUBLE);
         
     // We use temp buffers to store all the values before committing them to the matlab
     // classes, this takes up more memory, but should decrease the number of actual function
@@ -1144,8 +1144,8 @@ bool FieldToMatlabAlgo::mladdxyzmesh3d(MESH* mesh,matlabarray mlarray)
         
     // Note: the dimensions are in reverse order as SCIRun uses C++
     // ordering
-    std::vector<long> dims(3); dims[0] = static_cast<long>(dim3); 
-    dims[1] = static_cast<long>(dim2); dims[2] = static_cast<long>(dim1);    
+    std::vector<int> dims(3); dims[0] = static_cast<int>(dim3); 
+    dims[1] = static_cast<int>(dim2); dims[2] = static_cast<int>(dim1);    
     x.createdensearray(dims,matlabarray::miDOUBLE);
     y.createdensearray(dims,matlabarray::miDOUBLE);
     z.createdensearray(dims,matlabarray::miDOUBLE);
@@ -1238,7 +1238,7 @@ bool FieldToMatlabAlgo::mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vect
     }
     
     std::vector<T> &fdata = field->fdata();
-    mlfield.createdensearray(1,static_cast<long>(fdata.size()),type);
+    mlfield.createdensearray(1,static_cast<int>(fdata.size()),type);
     mlfield.setnumericarray(fdata);   
     mlarray.setfield(0,"field",mlfield);
     return (true);
@@ -1269,7 +1269,7 @@ bool FieldToMatlabAlgo::mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vect
   if (islinear(basis)||ishermitian(basis)||isconstant(basis))
   {
     std::vector<SCIRun::Vector> &fdata = field->fdata(); 
-    mlfield.createdensearray(3,static_cast<long>(fdata.size()),matlabarray::miDOUBLE);
+    mlfield.createdensearray(3,static_cast<int>(fdata.size()),matlabarray::miDOUBLE);
                 
     unsigned int size = fdata.size();
     unsigned int p,q;
@@ -1309,7 +1309,7 @@ bool FieldToMatlabAlgo::mladdfielddata(SCIRun::GenericField<MESH,BASIS,std::vect
   if (islinear(basis)||ishermitian(basis)||(isconstant(basis)))
   {
     std::vector<SCIRun::Tensor> &fdata = field->fdata(); 
-    mlfield.createdensearray(9,static_cast<long>(fdata.size()),matlabarray::miDOUBLE);
+    mlfield.createdensearray(9,static_cast<int>(fdata.size()),matlabarray::miDOUBLE);
                 
     unsigned int size = fdata.size();
     unsigned int p,q;
@@ -1364,7 +1364,7 @@ bool FieldToMatlabAlgo::mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun:
 
     SCIRun::FData2d<T,MESH> &fdata = field->fdata(); 
     
-    std::vector<long> dims(2);
+    std::vector<int> dims(2);
     // Note: the dimensions are in reverse order as SCIRun uses C++
     // ordering
     dims[0] = fdata.dim2(); dims[1] = fdata.dim1();
@@ -1413,7 +1413,7 @@ bool FieldToMatlabAlgo::mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun:
   {
     SCIRun::FData2d<SCIRun::Vector,MESH> &fdata = field->fdata(); 
     
-    std::vector<long> dims(3);
+    std::vector<int> dims(3);
     // Note: the dimensions are in reverse order as SCIRun uses C++
     // ordering
     dims[0] = 3; dims[1] = fdata.dim2(); dims[2] = fdata.dim1();
@@ -1463,7 +1463,7 @@ bool FieldToMatlabAlgo::mladdfielddata2d(SCIRun::GenericField<MESH,BASIS,SCIRun:
   {
     SCIRun::FData2d<SCIRun::Tensor,MESH> &fdata = field->fdata(); 
     
-  std::vector<long> dims(3);
+  std::vector<int> dims(3);
   // Note: the dimensions are in reverse order as SCIRun uses C++
   // ordering
   dims[0] = 9; dims[1] = fdata.dim2(); dims[2] = fdata.dim1();
@@ -1528,7 +1528,7 @@ bool FieldToMatlabAlgo::mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun:
 
     SCIRun::FData3d<T,MESH> &fdata = field->fdata(); 
     
-    std::vector<long> dims(3);
+    std::vector<int> dims(3);
     // Note: the dimensions are in reverse order as SCIRun uses C++
     // ordering
     dims[0] = fdata.dim3(); dims[1] = fdata.dim2(); dims[2] = fdata.dim1();
@@ -1580,7 +1580,7 @@ bool FieldToMatlabAlgo::mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun:
   {
     SCIRun::FData3d<SCIRun::Vector,MESH> &fdata = field->fdata(); 
     
-    std::vector<long> dims(4);
+    std::vector<int> dims(4);
     // Note: the dimensions are in reverse order as SCIRun uses C++
     // ordering
     dims[0] = 3; dims[1] = fdata.dim3(); dims[2] = fdata.dim2(); dims[3] = fdata.dim1();
@@ -1633,7 +1633,7 @@ bool FieldToMatlabAlgo::mladdfielddata3d(SCIRun::GenericField<MESH,BASIS,SCIRun:
   {
     SCIRun::FData3d<SCIRun::Tensor,MESH> &fdata = field->fdata(); 
     
-    std::vector<long> dims(4);
+    std::vector<int> dims(4);
     // Note: the dimensions are in reverse order as SCIRun uses C++
     // ordering
     dims[0] = 9; dims[1] = fdata.dim3(); dims[2] = fdata.dim2(); dims[1] = fdata.dim1();
@@ -1704,7 +1704,7 @@ bool FieldToMatlabAlgo::mladdfieldedges(FIELD *field,MESH *mesh,matlabarray mlar
   if (isconstant(basis))
   {
     std::vector<typename FIELD::value_type> &fdata = field->fdata(); 
-    fieldedge.createdensearray(1,static_cast<long>(fdata.size()),matlabarray::miUINT32);
+    fieldedge.createdensearray(1,static_cast<int>(fdata.size()),matlabarray::miUINT32);
     std::vector<unsigned int> mapping(fdata.size());
     for (size_t p = 0; p < fdata.size(); p++)
     {
@@ -1729,8 +1729,8 @@ bool FieldToMatlabAlgo::mladdfieldedges(FIELD *field,MESH *mesh,matlabarray mlar
 
     typename MESH::Node::array_type a;
     std::vector<typename MESH::Node::index_type> edges(num*numedges);
-    std::vector<long> dims(2);	
-    dims[0] = static_cast<long>(num); dims[1] = static_cast<long>(numedges);
+    std::vector<int> dims(2);	
+    dims[0] = static_cast<int>(num); dims[1] = static_cast<int>(numedges);
     fieldedge.createdensearray(dims,matlabarray::miUINT32);
         
     // SCIRun iterators are limited in supporting any index management
@@ -1788,7 +1788,7 @@ bool FieldToMatlabAlgo::mladdfieldfaces(FIELD *field,MESH *mesh,matlabarray mlar
   if (isconstant(basis))
   {
     std::vector<typename FIELD::value_type> &fdata = field->fdata(); 
-    fieldface.createdensearray(1,static_cast<long>(fdata.size()),matlabarray::miUINT32);
+    fieldface.createdensearray(1,static_cast<int>(fdata.size()),matlabarray::miUINT32);
     std::vector<unsigned int> mapping(fdata.size());
     for (size_t p = 0; p < fdata.size(); p++)
     {
@@ -1813,8 +1813,8 @@ bool FieldToMatlabAlgo::mladdfieldfaces(FIELD *field,MESH *mesh,matlabarray mlar
 
     typename MESH::Node::array_type a;
     std::vector<typename MESH::Node::index_type> faces(num*numfaces);
-    std::vector<long> dims(2);	
-    dims[0] = static_cast<long>(num); dims[1] = static_cast<long>(numfaces);
+    std::vector<int> dims(2);	
+    dims[0] = static_cast<int>(num); dims[1] = static_cast<int>(numfaces);
     fieldface.createdensearray(dims,matlabarray::miUINT32);    
     
     // SCIRun iterators are limited in supporting any index management
@@ -1873,7 +1873,7 @@ bool FieldToMatlabAlgo::mladdfieldcells(FIELD *field,MESH *mesh,matlabarray mlar
   if (isconstant(basis))
   {
     std::vector<typename FIELD::value_type> &fdata = field->fdata(); 
-    fieldcell.createdensearray(1,static_cast<long>(fdata.size()),matlabarray::miUINT32);
+    fieldcell.createdensearray(1,static_cast<int>(fdata.size()),matlabarray::miUINT32);
     std::vector<unsigned int> mapping(fdata.size());
     for (size_t p = 0; p < fdata.size(); p++)
     {
@@ -1898,8 +1898,8 @@ bool FieldToMatlabAlgo::mladdfieldcells(FIELD *field,MESH *mesh,matlabarray mlar
 
     typename MESH::Node::array_type a;
     std::vector<typename MESH::Node::index_type> cells(num*numcells);
-    std::vector<long> dims(2);	
-    dims[0] = static_cast<long>(num); dims[1] = static_cast<long>(numcells);
+    std::vector<int> dims(2);	
+    dims[0] = static_cast<int>(num); dims[1] = static_cast<int>(numcells);
     fieldcell.createdensearray(dims,matlabarray::miUINT32);    
     
     // SCIRun iterators are limited in supporting any index management

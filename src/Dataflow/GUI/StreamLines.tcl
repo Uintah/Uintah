@@ -34,17 +34,6 @@ itcl_class SCIRun_Visualization_StreamLines {
         set name StreamLines
     }
 
-    method set_defaults {} {
-	setGlobal $this-tolerance 0.0001
-	setGlobal $this-stepsize 0.01
-	setGlobal $this-maxsteps 2000
-	setGlobal $this-direction 1
-	setGlobal $this-value 1
-	setGlobal $this-remove-colinear 1
-	setGlobal $this-method 4
-	setGlobal $this-np 1
-    }
-
     method ui {} {
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -62,13 +51,19 @@ itcl_class SCIRun_Visualization_StreamLines {
 	label $w.e.labs.maxsteps -text "Maximum Steps" -just left
 	entry $w.e.ents.maxsteps -textvariable $this-maxsteps
 	label $w.e.labs.nthreads -text "Number of Threads" -just left
-	entry $w.e.ents.nthreads -textvariable $this-np
+	iwidgets::spinint $w.e.ents.nthreads \
+	    -range {1 256} -step 1 \
+	    -textvariable $this-nthreads \
+	    -width 10 -fixed 10 -justify left
+
 
 	pack $w.e.labs.tolerance $w.e.labs.stepsize $w.e.labs.maxsteps \
 	    $w.e.labs.nthreads -side top -anchor w
 	pack $w.e.ents.tolerance $w.e.ents.stepsize $w.e.ents.maxsteps \
-	    $w.e.ents.nthreads -side top -anchor e
+	    $w.e.ents.nthreads -side top -anchor w
+
 	pack $w.e.labs $w.e.ents -side left
+
 
 	frame $w.direction -relief groove -borderwidth 2
 	label $w.direction.label -text "Direction"
@@ -131,7 +126,7 @@ itcl_class SCIRun_Visualization_StreamLines {
 
 
 	checkbutton $w.filter -text "Filter Colinear Points" \
-		-variable $this-remove-colinear -justify left
+		-variable $this-remove-colinear-pts -justify left
 
 	pack $w.meth $w.e $w.direction $w.value $w.filter \
 	    -side top -e y -f both -padx 5 -pady 5

@@ -55,8 +55,9 @@ fi
 do_mpm=0
 do_mpmf=0
 do_ice=0
-do_amr=0
+do_ice_amr=0
 do_mpmice=0
+do_mpmice_amr=0
 do_models=0
 do_impm=0
 do_smpm=0
@@ -76,7 +77,7 @@ usage () {
     echo "  -main          run the mpm,ice,mpmice,arches and mpmarches tests"
     echo "  -all           run all tests (overrides other tests flags)"
     echo "  -ar            run the arches tests"
-    echo "  -amr           run the tests involving AMR"
+    echo "  -ice_amr       run the tests ice amr tests"
     echo "  -e             run the example tests"
     echo "  -m             run the mpm tests"
     echo "  -models        run the Models tests"
@@ -84,6 +85,7 @@ usage () {
     echo "  -sm            run the smpm tests"
     echo "  -i             run the ice tests"
     echo "  -mi            run the mpmice tests"
+    echo "  -mpmice_amr    run the mpmice amr tests"
     echo "  -im            run the implicit mpm tests"
     echo "  -dbg           use the dbg TestData"
     echo "  -opt           use the opt TestData"
@@ -114,9 +116,9 @@ for arg in $*; do
 	-ar)
 	    echo; echo "Running the arches tests . . ."
 	    do_arches=1;;
-	-amr)
-	    echo; echo "Running the AMR tests . . ."
-	    do_amr=1;;
+	-ice_amr)
+	    echo; echo "Running the ICE AMR tests . . ."
+	    do_ice_amr=1;;
 	-e)
 	    echo; echo "Running the examples tests . . ."
 	    do_examples=1;;
@@ -141,6 +143,9 @@ for arg in $*; do
 	-mi)
 	    echo; echo "Running the mpmice tests . . ."
 	    do_mpmice=1;;
+	-mpmice_amr)
+	    echo; echo "Running the MPMICE AMR tests . . ."
+	    do_mpmice_amr=1;;
 	-im)
 	    echo; echo "Running the implicit mpm tests . . ."
 	    do_impm=1;;
@@ -177,9 +182,15 @@ echo;echo "Using the "$DIR "gold standard directory"
 
 mpm_test_cases="disks2mat4patch heatcond2mat inclined_plane_sphere foam_crush const_test_hypo const_test_cmr const_test_nhp const_test_vs adiCuJC4000s696K adiCuMTS4000s696K adiCuPTW4000s696K adiCuSCG4000s696K adiCuZA4000s696K test_corrug_plate test_cyl_pene_no_ero test_gurson_beckerdrucker_mts testConvert1MAdd"
 mpmf_test_cases="regressionFMPM"
+<<<<<<< .working
 ice_test_cases="advect rieman_sm impHotBlob hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch"
 amr_test_cases="hotBlob_AMR advect2matAMR"
+=======
+ice_test_cases="advect rieman_sm impHotBlob hotBlob2mat hotBlob2mat_sym hotBlob2mat8patch"
+ice_amr_test_cases="hotBlob_AMR advect2matAMR"
+>>>>>>> .merge-right.r34859
 mpmice_test_cases="advect massX guni2dRT TRWnoz testConvertMPMICEAdd"
+mpmice_amr_test_cases="advect_2L_MI"
 model_test_cases="HePlume JP8_Radiation"
 smpm_test_cases="test_plane_shell_punch test_sphere_shell_compress"
 impm_test_cases="4disks_2d.1mat billet.static adiCuJC01s296K adiCuMTS01s296K adiCuPTW01s296K adiCuSCG01s296K adiCuZA01s296K"
@@ -414,10 +425,10 @@ ice_test () {
         MPI=""
     done
 }
-amr_test () {
-    echo; echo "Testing $amr_test_cases"
+ice_amr_test () {
+    echo; echo "Testing $ice_amr_test_cases"
     
-    for n in $amr_test_cases; do
+    for n in $ice_amr_test_cases; do
 	run_test
 	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
 	compare_results
@@ -425,7 +436,17 @@ amr_test () {
         MPI=""
     done
 }
-
+mpmice_amr_test () {
+    echo; echo "Testing $mpmice_amr_test_cases"
+    
+    for n in $mpmice_amr_test_cases; do
+	run_test
+	uda=`grep filebase $INPUTS/$CASE/$n.ups | sed s/\<//g | sed s/filebase//g | sed s/\>//g  | sed 's/^[ ^t]*//'  `
+	compare_results
+        run_restart
+        MPI=""
+    done
+}
 
 arches_test () {
     echo; echo "Testing $arches_test_cases"
@@ -503,9 +524,10 @@ if test -n "$ALL"; then
     mpm_test;
     mpmf_test;
     ice_test;
-    amr_test;
+    ice_amr_test;
     smpm_test;
     mpmice_test;
+    mpmice_amr_test;
     model_test;
     arches_test;
     mpmarches_test;
@@ -536,15 +558,20 @@ if test $do_ice -eq 1; then
     opts=-ice
     ice_test
 fi
-if test $do_amr -eq 1; then
+if test $do_ice_amr -eq 1; then
     CASE=ICE    # this won't work when we have MPMICE AMR
     opts=-ice
-    amr_test
+    ice_amr_test
 fi
 if test $do_mpmice -eq 1; then
     CASE=MPMICE
     opts=-mpmice
     mpmice_test
+fi
+if test $do_mpmice_amr -eq 1; then
+    CASE=MPMICE
+    opts=-mpmice
+    mpmice_amr_test
 fi
 if test $do_models -eq 1; then 
     CASE=Models

@@ -68,10 +68,6 @@ private:
   unsigned get_fibertype(const string &s);
   unsigned get_integration(const string &s);
 
-  NrrdIPort*      inrrd_;
-  FieldIPort*     iseeds_;
-  FieldOPort*     ofibers_;
-
   GuiString    fibertype_;
   GuiDouble    puncture_;
   GuiDouble    neighborhood_;
@@ -223,34 +219,21 @@ TendFiber::execute()
 {
   NrrdDataHandle nrrd_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("nin");
-  iseeds_ = (FieldIPort *)get_iport("SeedPoints");
-  ofibers_ = (FieldOPort *)get_oport("Fibers");
+  if (!get_input_handle("nin", nrrd_handle)) return;
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
   Nrrd *nin = nrrd_handle->nrrd_;
 
   FieldHandle fldH;
-  if (!iseeds_->get(fldH))
-    return;
-  if (!fldH.get_rep()) {
-    error("Empty field.");
-    return;
-  }
+  if (!get_input_handle("SeedPoints", fldH)) return;
+
   PCMesh *pcm = dynamic_cast<PCMesh*>(fldH->mesh().get_rep());
   if (!pcm) {
-    error("Input field wasn't a PointCloudField -- use GatherPoints");
+    error("Input SeedPoints wasn't a PointCloudField -- use GatherPoints");
     return;
   }
 
   unsigned fibertype = get_fibertype(fibertype_.get());
   double puncture = puncture_.get();
-//  double neighborhood = neighborhood_.get();
   double stepsize = stepsize_.get();
   int integration = get_integration(integration_.get());
   bool use_aniso = use_aniso_.get();
@@ -384,7 +367,8 @@ TendFiber::execute()
   }
   
   FieldHandle ftmp(scinew CField(cm));
-  ofibers_->send_and_dereference(ftmp);
+
+  send_output_handle("Fibers", ftmp);
 }
 
 

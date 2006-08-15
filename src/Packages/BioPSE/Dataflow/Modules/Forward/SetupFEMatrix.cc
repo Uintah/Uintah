@@ -92,14 +92,7 @@ SetupFEMatrix::execute()
 {
   SetupFEMatrixParam SFP;
 
-  FieldIPort* iportField = (FieldIPort *)get_iport("Mesh");
-  MatrixOPort* oportMtrx = (MatrixOPort *)get_oport("Stiffness Matrix");
-
-   if (!(iportField->get(SFP.fieldH_) && SFP.fieldH_.get_rep()))
-  {
-    error( "No handle or representation in input field." );
-    return;
-  }
+  if (!get_input_handle("Mesh", SFP.fieldH_)) return;
 
   const TypeDescription *ftd = SFP.fieldH_->get_type_description(Field::FIELD_NAME_ONLY_E);
   const TypeDescription *mtd = SFP.fieldH_->get_type_description(Field::MESH_TD_E);
@@ -118,18 +111,16 @@ SetupFEMatrix::execute()
   SFP.UseBasis_=uiUseBasis_.get();
   SFP.nprocessors_=atoi(uiNProcessors_.get().c_str());
 
- 
   CompileInfoHandle ci =
     SetupFEMatrixAlgo::get_compile_info(ftd, mtd, btd, dtd);
   Handle<SetupFEMatrixAlgo> algo;
   if (!module_dynamic_compile(ci, algo)) 
     return;
   
-  MatrixHandle hGblMtrx_= algo->execute(SFP);
+  MatrixHandle hGblMtrx = algo->execute(SFP);
   
   // Send the data downstream
-  if ( hGblMtrx_.get_rep() )
-    oportMtrx->send(hGblMtrx_);
+  send_output_handle("Stiffness Matrix", hGblMtrx);
 }
 
 CompileInfoHandle

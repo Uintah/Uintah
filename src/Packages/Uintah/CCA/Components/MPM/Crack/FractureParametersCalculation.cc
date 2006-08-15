@@ -85,10 +85,8 @@ void Crack::GetNodalSolutions(const ProcessorGroup*,
     const Patch* patch = patches->get(p);
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<double> S;
-    S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
 
     double time = d_sharedState->getElapsedTime();
 
@@ -259,10 +257,8 @@ void Crack::CalculateFractureParameters(const ProcessorGroup*,
     double dx_max=Max(dx.x(),dx.y(),dx.z());
 
     ParticleInterpolator* interpolator = flag->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<double> S;
-    S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
     
     int pid,patch_size;
     MPI_Comm_size(mpi_crack_comm,&patch_size);

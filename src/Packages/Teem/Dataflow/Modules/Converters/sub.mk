@@ -70,11 +70,13 @@ PSELIBS := \
         Core/Volume        \
         Dataflow/Network   
 
+LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(MAGICK_LIBRARY)
+
 ifeq ($(HAVE_INSIGHT),yes)
   PSELIBS += Core/Algorithms/DataIO
-endif
 
-LIBS := $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(MAGICK_LIBRARY)
+  LIBS += $(INSIGHT_LIBRARY)
+endif
 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

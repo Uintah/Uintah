@@ -26,6 +26,7 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/ComputeFieldsData.tcl\
 	$(SRCDIR)/ComputeFieldNodes.tcl\
 	$(SRCDIR)/ComputeFieldsNodes.tcl\
+	$(SRCDIR)/CreateDataArray.tcl\
 	$(SRCDIR)/CreateFieldData.tcl\
 	$(SRCDIR)/DataArrayInfo.tcl\
 	$(SRCDIR)/FieldDataElemToNode.tcl\
@@ -37,12 +38,15 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/FieldGetStringProperty.tcl\
 	$(SRCDIR)/FieldSetMatrixProperty.tcl\
 	$(SRCDIR)/FieldSetStringProperty.tcl\
+  $(SRCDIR)/IsInsideField.tcl\
+  $(SRCDIR)/IsInsideFields.tcl\
 	$(SRCDIR)/LinkFieldBoundary.tcl\
 	$(SRCDIR)/MatrixInfo.tcl\
 	$(SRCDIR)/MatrixReader.tcl\
 	$(SRCDIR)/MatrixToField.tcl\
 	$(SRCDIR)/MatrixWriter.tcl\
 	$(SRCDIR)/MergeFields.tcl\
+	$(SRCDIR)/MergeMeshes.tcl\
 	$(SRCDIR)/MergeNodes.tcl\
 	$(SRCDIR)/NrrdToField.tcl\
 	$(SRCDIR)/ParameterList.tcl\
@@ -67,6 +71,16 @@ $(SRCDIR)/tclIndex: \
 	$(SRCDIR)/CollectFields.tcl\
 	$(SRCDIR)/SetFieldData.tcl\
   $(SRCDIR)/TimeToWeights.tcl\
+	$(SRCDIR)/NodalMapping.tcl\
+	$(SRCDIR)/ModalMapping.tcl\
+	$(SRCDIR)/CurrentDensityMapping.tcl\
+	$(SRCDIR)/GradientModalMapping.tcl\
+	$(SRCDIR)/FieldDataMeasure.tcl\
+	$(SRCDIR)/BundleBreakPoint.tcl\
+	$(SRCDIR)/FieldBreakPoint.tcl\
+	$(SRCDIR)/MatrixBreakPoint.tcl\
+	$(SRCDIR)/StringBreakPoint.tcl\
+	$(SRCDIR)/AppendMatrix.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 	$(OBJTOP)/createTclIndex $(SRCTOP)/Packages/ModelCreation/Dataflow/GUI

@@ -154,12 +154,9 @@ void HeatConduction::computeInternalHeatRate(const ProcessorGroup*,
       cout_heat << " Patch = " << patch->getID() << endl;
 
     ParticleInterpolator* interpolator = d_flag->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<double> S;
-    S.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
     Vector dx = patch->dCell();
     double oodx[3];

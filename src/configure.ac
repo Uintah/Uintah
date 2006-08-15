@@ -502,6 +502,12 @@ SCI_ARG_ENABLE(threads,
                  Specify a thread implementation (pthreads or irix)),
   [threads="$enableval"],
   [threads=${threads='unknown'}])
+SCI_ARG_ENABLE(pysci,
+  AC_HELP_STRING(--enable-pysci,
+                 Build python interface for certain SCIRun functionality.
+                 example: --enable-pysci),
+  [pysci="$enableval"],
+  [pysci="no"])
 SCI_ARG_ENABLE(debug,
   AC_HELP_STRING(--enable-debug,
                  Turn on debugging (default is -g) or specify your own.
@@ -1136,6 +1142,12 @@ if test ! -e "`type $CC | sed 's%^.* /%/%'`"; then
 fi
 if test ! -e "`type $CXX | sed 's%^.* /%/%'`"; then
   SCI_MSG_ERROR(Could not find the specified C++ compiler (CC))
+fi
+
+if test "$IS_WIN" = "yes"; then
+  # don't require fortran on windows yet 
+  # (Uintah disables fortran compilation on windows for the moment...)
+  sci_required_fortran="no"
 fi
 
 if test $sci_required_fortran = "yes"; then
@@ -1808,7 +1820,7 @@ fi
 ##  if thirdparty not set use defaults
 
 if test -z "$thirdparty"; then
-  sci_tp_version=1.25.3
+  sci_tp_version=1.25.4
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
 
@@ -1873,31 +1885,37 @@ if test ! -d "$sci_thirdparty_dir"; then
   AC_MSG_ERROR($sci_thirdparty_dir does not exist.)
 fi
 
-# This is where the lib actually lives:
-if test ! -d "$sci_thirdparty_dir/lib"; then
-  AC_MSG_ERROR(SCI Thirdparty invalid.  $sci_thirdparty_dir/lib does not exist.)
-fi
+SCI_THIRDPARTY_DIR="$sci_thirdparty_dir"
+AC_SUBST(SCI_THIRDPARTY_DIR)
+
+
+# This is where the include and lib actually lives:
 if test ! -d "$sci_thirdparty_dir/include"; then
   AC_MSG_ERROR(SCI Thirdparty invalid.  $sci_thirdparty_dir/include does not exist.)
 fi
 
+if test ! -d "$sci_thirdparty_dir/lib"; then
+  AC_MSG_ERROR(SCI Thirdparty invalid.  $sci_thirdparty_dir/lib does not exist.)
+fi
 
-sci_thirdparty_lib="$sci_thirdparty_dir/lib"
 sci_thirdparty_include="$sci_thirdparty_dir/include"
+sci_thirdparty_lib="$sci_thirdparty_dir/lib"
+
+INC_SCI_THIRDPARTY_H=-I"$sci_thirdparty_include"
 SCI_THIRDPARTY_LIB_DIR="$sci_thirdparty_lib"
+
 if test "$IS_VC" != "yes"; then
   SCI_THIRDPARTY_LIB_DIR_FLAG="$LDRUN_PREFIX$sci_thirdparty_lib -L$sci_thirdparty_lib"
 else
   SCI_THIRDPARTY_LIB_DIR_FLAG="$LDRUN_PREFIX$sci_thirdparty_lib"
 fi
-INC_SCI_THIRDPARTY_H=-I"$sci_thirdparty_include"
-SCI_THIRDPARTY_DIR="$sci_thirdparty_dir"
 
-AC_MSG_RESULT(Thirdparty library directory $SCI_THIRDPARTY_LIB_DIR)
+AC_MSG_RESULT(Thirdparty directory is $SCI_THIRDPARTY_DIR)
 
 SCI_SUBST_THIRDPARTY_DIR(INC_SCI_THIRDPARTY_H)
+SCI_SUBST_THIRDPARTY_DIR(SCI_THIRDPARTY_LIB_DIR)
 SCI_SUBST_THIRDPARTY_DIR(SCI_THIRDPARTY_LIB_DIR_FLAG)
-AC_SUBST(SCI_THIRDPARTY_DIR)
+
 AC_SUBST(INC_SCI_THIRDPARTY_H)
 AC_SUBST(SCI_THIRDPARTY_LIB_DIR)
 AC_SUBST(SCI_THIRDPARTY_LIB_DIR_FLAG)
@@ -2362,14 +2380,13 @@ SCI_TRY_LINK(TCL,tcl library and headers,tcl.h tclPort.h tclMath.h tclInt.h,
 
 # if test "$IS_WIN" = "yes"; then
   # change the unix-style dir to a windows-style dir for tclsh to read
-  # LIB_DIR_TCL=`echo "$LIB_DIR_TCL" | sed 's,/,,' | sed 's,/,:/,'`
+  # TCL_LIB_DIR=`echo "$TCL_LIB_DIR" | sed 's,/,,' | sed 's,/,:/,'`
 # fi
 
-SCI_SUBST_THIRDPARTY_DIR(LIB_DIR_TCL)
 SCI_SUBST_THIRDPARTY_DIR(TCL_LIB_DIR_FLAG)
 SCI_SUBST_THIRDPARTY_DIR(INC_TCL_H)
 
-AC_SUBST(LIB_DIR_TCL)
+AC_SUBST(TCL_LIB_DIR)
 AC_SUBST(TCL_LIB_FLAG)
 AC_SUBST(TCL_LIB_DIR_FLAG)
 AC_SUBST(INC_TCL_H)
@@ -2389,6 +2406,7 @@ SCI_TRY_LINK(TK,tk library and headers, tk.h tk3d.h tkPort.h,
 SCI_SUBST_THIRDPARTY_DIR(TK_LIB_DIR_FLAG)
 SCI_SUBST_THIRDPARTY_DIR(INC_TK_H)
 
+AC_SUBST(TK_LIB_DIR)
 AC_SUBST(TK_LIB_FLAG)
 AC_SUBST(TK_LIB_DIR_FLAG)
 AC_SUBST(INC_TK_H)
@@ -2399,14 +2417,14 @@ SCI_TRY_LINK(ITCL,itcl library and headers, itcl.h,
 
 # if test "$IS_WIN" = "yes"; then
   # change the unix-style dir to a windows-style dir for tclsh to read
-  # LIB_DIR_ITCL=`echo "$LIB_DIR_ITCL" | sed 's,/,,' | sed 's,/,:/,'`
+  # ITCL_LIB_DIR=`echo "$ITCL_LIB_DIR" | sed 's,/,,' | sed 's,/,:/,'`
 # fi
 
-SCI_SUBST_THIRDPARTY_DIR(LIB_DIR_ITCL)
-SCI_SUBST_THIRDPARTY_DIR(ITCL_LIB_DIR_FLAG_H)
+SCI_SUBST_THIRDPARTY_DIR(ITCL_LIB_DIR)
+SCI_SUBST_THIRDPARTY_DIR(ITCL_LIB_DIR_FLAG)
 SCI_SUBST_THIRDPARTY_DIR(INC_ITCL_H)
 
-AC_SUBST(LIB_DIR_ITCL)
+AC_SUBST(ITCL_LIB_DIR)
 AC_SUBST(ITCL_LIB_FLAG)
 AC_SUBST(ITCL_LIB_DIR_FLAG)
 AC_SUBST(INC_ITCL_H)
@@ -2414,7 +2432,6 @@ AC_SUBST(INC_ITCL_H)
 # -- itk --
 SCI_TRY_LINK(ITK,itk library and headers, itk.h, $_x_inc_dir $_sci_inc,itk,$_sci_lib,$ITCL_LIB_DIR_FLAG $ITCL_LIB_FLAG $TK_LIB_DIR_FLAG $TK_LIB_FLAG $TCL_LIB_DIR_FLAG $TCL_LIB_FLAG,,$_sci_optional)
 
-SCI_SUBST_THIRDPARTY_DIR(ITK_LIB_DIR_FLAG_H)
 SCI_SUBST_THIRDPARTY_DIR(INC_ITK_H)
 
 AC_SUBST(ITK_LIB_FLAG)
@@ -2465,8 +2482,6 @@ SCI_CHECK_VAR_VERSION(equal Tcl and Tk, $TCL_VERSION$TCL_PATCH_LEVEL,
 AC_SUBST(TCL_PREFIX)
 AC_SUBST(TCL_VERSION)
 AC_SUBST(TK_VERSION)
-
-AC_SUBST(ITCL_WIDGETS)
 
 ##  --  search for libxml2 --
 _sci_optional=required
@@ -2837,6 +2852,7 @@ if test "$with_mpeg" && test ! "$DEF_MPEG"; then
 fi
 
 SCI_SUBST_THIRDPARTY_DIR(MPEGE_LIB_DIR_FLAG)
+SCI_SUBST_THIRDPARTY_DIR(INC_MPEGE_H)
 
 AC_SUBST(MPEGE_LIB_FLAG)
 AC_SUBST(MPEGE_LIB_DIR_FLAG)
@@ -3182,6 +3198,37 @@ AC_SUBST(INC_TETGEN_H)
 AC_SUBST(TETGEN_LIB_DIR_FLAG)
 AC_SUBST(DEF_TETGEN)
 AC_SUBST(HAVE_TETGEN)
+
+##  --  enable-pysci  ------------------------
+
+# if pysci is enabled, find the python dev info
+HAVE_PYDEV="unknown"
+if test "$pysci" = "yes"; then
+  
+  _sci_inc="/usr/include/python2.4" 
+  SCI_COMPILE_LINK_TEST(PYDEV, python developement environment (2.4),
+  [
+    #include <Python.h>
+  ],
+  $_sci_inc, python2.4,,,
+  [
+    /*some basic python dev calls...*/
+    PyObject *type = 0;
+    Py_XINCREF(type);
+  ],not-optional)
+  
+  
+  if test "$HAVE_PYDEV" = "yes"; then
+    DEF_PYDEV="#define HAVE_PYDEV"
+  fi
+  
+fi
+
+AC_SUBST(PYDEV_LIB_FLAG)
+AC_SUBST(INC_PYDEV_H)
+AC_SUBST(PYDEV_LIB_DIR_FLAG)
+AC_SUBST(DEF_PYDEV)
+AC_SUBST(HAVE_PYDEV)
 
 ##  --  search for atlas stuff  -------------------------------------------
 
@@ -3559,6 +3606,7 @@ sci_defs_files="$sci_defs_files include/sci_defs/mpi_testdefs.h"
 #fi
 PETSC_VERSION_DIR=petsc-2.2.1
 
+if test -z "$PETSC_ARCH"; then
 case $host in
   *-irix*)
     if test "$enable_64bit" = "yes"; then
@@ -3598,7 +3646,7 @@ case $host in
     PETSC_ARCH=""
     ;;
 esac
-
+fi
 # check for mpi-uni if either --with-unipetsc or --with-mpiuni,
 #   check here to look in petsc's subdirs.
 #  --  search for mpi-uni  --------------------------------------------
@@ -3832,15 +3880,15 @@ if test "$sci_required_insight" = "yes"; then
     INC_INSIGHT_H="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_INCLUDE_DIRS' | sed 's/SET(ITK_INCLUDE_DIRS \"/;/' | sed 's/\")//' | sed 's/;/ -I/g' | tr -d '\r'`"
     insight_libs_dir="`cat $dir/ITKConfig.cmake | grep 'SET(ITK_LIBRARY_DIRS' | sed 's/SET(ITK_LIBRARY_DIRS \"/;/' | sed 's/\")//' | sed 's/;//g' | tr -d '\r'`"
     INSIGHT_LIB_DIR_FLAG="$LDRUN_PREFIX$insight_libs_dir -L$insight_libs_dir"
-    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKStatistics -lITKBasicFilters -lITKCommon -lITKniftiio -lITKznz -litkvnl -litkvnl_algo -litkvcl -litknetlib -litksys -lITKDICOMParser"
+    INSIGHT_LIB_FLAG="-lITKFEM -lITKIO -lITKMetaIO -lITKAlgorithms -lITKNumerics -lITKStatistics -lITKBasicFilters -lITKSpatialObject -lITKEXPAT -lITKCommon -lITKniftiio -litkgdcm -lITKznz -litkvnl -litkvnl_inst -litkvnl_algo -litkvcl -litknetlib -litksys -lITKDICOMParser"
 
     if test "$IS_WIN" = "yes"; then
-	  libBegin=""
-	  ext="lib" #windows's so is dll, not lib, but we link against the lib
-	else
-	  libBegin="lib"
-	  ext="$SO_OR_ARCHIVE_EXTENSION"
-	fi
+	libBegin=""
+	ext="lib" #windows's so is dll, not lib, but we link against the lib
+    else
+	libBegin="lib"
+	ext="$SO_OR_ARCHIVE_EXTENSION"
+    fi
 
     if test -a "$insight_libs_dir/"$libBegin"itkzlib.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkzlib"
@@ -3875,6 +3923,14 @@ if test "$sci_required_insight" = "yes"; then
 
     if test -a "$insight_libs_dir/"$libBegin"itkjpeg16.$ext"; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkjpeg16"
+       INSIGHT_JPEG_LINKED=yes
+    elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
+       INSIGHT_JPEG_LINKED=yes
+    fi
+
+    if test -a "$insight_libs_dir/"$libBegin"itkopenjpeg.$ext"; then
+       INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG -litkopenjpeg"
        INSIGHT_JPEG_LINKED=yes
     elif test "$HAVE_JPEG" = "yes" && test "$INSIGHT_JPEG_LINKED" = "no" ; then
        INSIGHT_LIB_FLAG="$INSIGHT_LIB_FLAG $JPEG_LIB_DIR_FLAG $JPEG_LIB_FLAG"
@@ -4071,7 +4127,7 @@ if test "$sci_required_gdcm" = "yes" || (test -a "/usr/local/include/gdcm" && te
        GDCM_JPEG_LINKED=yes
      fi
 
-     DEF_GDCM="#define HAVE_GDCM"
+     DEF_GDCM="#define HAVE_GDCM 1"
      HAVE_GDCM="yes"
 
      echo "$as_me:$LINENO: result: $dir" >&5
@@ -4413,58 +4469,56 @@ AC_SUBST(OOGL_LIB_FLAG)
 AC_SUBST(OOGL_LIB_DIR_FLAG)
 
 ##  --  search for glew  -----------------------------------------------
-if test "$sci_required_glew" = "yes"; then
-  if test "$with_glew"; then
-    # first find the opengl headers and libraries
-    if test "$with_opengl"; then
-      _sci_lib="$with_glew/lib $with_opengl/lib"
-      _sci_inc="$with_glew/include $with_opengl/include"
-    else
-      _sci_lib="$with_glew/lib /usr/X11R6/lib"
-      _sci_inc="$with_glew/include /usr/X11R6/include"
-    fi
+_sci_optional=optional
+_sci_lib="$sci_thirdparty_lib"
+_sci_inc="$sci_thirdparty_include"
+
+if test "$with_glew"; then
+  if test "$with_glew" = "yes"; then
+    AC_MSG_WARN(GLEW is already required - you do not need to specify --with-glew.)
   else
-    if test "$with_opengl"; then
-      _sci_lib="/usr/X11R6/lib $with_opengl/lib"
-      _sci_inc="/usr/X11R6/include $with_opengl/include"
-    else
-      _sci_lib="/usr/X11R6/lib"
-      _sci_inc="/usr/X11R6/include"
-    fi        
-  fi
+    _sci_lib="$with_glew"
+    _sci_lib="$with_glew/include"
+    BASE_LIB_PATH(_sci_lib,$_sci_lib)
+    _sci_optional=specific
+  fi 
+fi
 
-# Was:
-#    #include<GL/glew.h>
-#
-#    #ifndef GLAPIENTRY
-#      #define GLAPIENTRY
-#    #endif
-#
-#    #ifndef GLEWAPI
-#      #define GLEWAPI
-#    #endif
-#    #include<GL/glxew.h>
+# First find the opengl headers and libraries
+if test "$with_opengl"; then
+  _sci_lib="$_sci_lib $with_opengl/lib"
+  _sci_inc="$_sci_inc $with_opengl/include"
+else
+  _sci_lib="$_sci_lib /usr/X11R6/lib"
+  _sci_inc="$_sci_inc /usr/X11R6/include"
+fi
 
+if test "$IS_WIN" = "yes"; then
+  SCI_TRY_LINK(GLEW,glew libraries and headers,GL/glew.h GL/wglew.h,
+                $_sci_inc, glew32,$_sci_lib,,,optional)
+else
   SCI_TRY_LINK(GLEW,glew libraries and headers,GL/glew.h GL/glxew.h,
-               $_sci_inc, GLEW,$_sci_lib,,,optional)
+                $_sci_inc, GLEW,$_sci_lib,,,$_sci_optional)
+fi
 
-  if test "$HAVE_GLEW" = "yes"; then
-    DEF_GLEW="#define HAVE_GLEW 1"
-  fi  
+if test "$HAVE_GLEW" = "yes"; then
+  DEF_GLEW="#define HAVE_GLEW 1"
+fi  
 
-  if test "$with_glew" && test ! "$DEF_GLEW"; then
-    echo
-    AC_MSG_ERROR(One or more of the GLEW components is missing.)
-    echo
-  fi
+if test "$with_glew" && test ! "$DEF_GLEW"; then
+  echo
+  AC_MSG_ERROR(One or more of the GLEW components is missing.)
+  echo
+fi
 
-  if test "$GLEW_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
-    AC_MSG_WARN("$GLEW_LIB_DIR_FLAG")
-    AC_MSG_WARN("flag for GLEW has been removed.")
-    GLEW_LIB_DIR_FLAG=""
-  fi
+if test "$GLEW_LIB_DIR_FLAG" && test "$enable_rpath" = "no"; then
+  AC_MSG_WARN("$GLEW_LIB_DIR_FLAG")
+  AC_MSG_WARN("flag for GLEW has been removed.")
+  GLEW_LIB_DIR_FLAG=""
+fi
 
-fi # end sci_required_glew
+SCI_SUBST_THIRDPARTY_DIR(GLEW_LIB_DIR_FLAG)
+SCI_SUBST_THIRDPARTY_DIR(INC_GLEW_H)
 
 AC_SUBST(DEF_GLEW)
 AC_SUBST(INC_GLEW_H)
@@ -5143,9 +5197,9 @@ SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
 if test "$HAVE_HYPRE" = "yes" ; then
   DEF_HYPRE="#define HAVE_HYPRE 1"
 
-  if test -f $LIB_DIR_HYPRE/../include/HYPRE_config.h; then
+  if test -f $HYPRE_LIB_DIR/../include/HYPRE_config.h; then
     # Determine the version of hypre.
-    found_it=`grep "PACKAGE_VERSION" $LIB_DIR_HYPRE/../include/HYPRE_config.h | grep 1.9`
+    found_it=`grep "PACKAGE_VERSION" $HYPRE_LIB_DIR/../include/HYPRE_config.h | grep 1.9`
     DEF_HYPRE_1_9="#define HAVE_HYPRE_1_9 0"
     HAVE_HYPRE_1_9="no"
     if test -n "$found_it"; then

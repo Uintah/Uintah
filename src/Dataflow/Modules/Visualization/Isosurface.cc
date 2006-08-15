@@ -49,8 +49,6 @@
 #include <Core/Algorithms/Visualization/TetMC.h>
 #include <Core/Algorithms/Visualization/HexMC.h>
 
-#include <Dataflow/Modules/Visualization/share.h>
-
 namespace SCIRun {
 
 DECLARE_MAKER(Isosurface)

@@ -31,6 +31,6 @@
 
 SRCDIR := StandAlone/Apps
 SUBDIRS := \
-#	$(SRCDIR)/Painter \
+	$(SRCDIR)/Painter \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

@@ -91,139 +91,39 @@ public:
 
 
 template <class T>
-void fill_data(T &, double *) {
+inline void fill_data(T &, float *)
+{
   ASSERTFAIL("should be only be called with Tensor or Vector types");
 }
 
-template <class T>
-void fill_data(T &, double *);
 
 template <>
-void fill_data<Tensor>(Tensor &t, double *p); 
+inline void
+fill_data<Tensor>(Tensor &t, float *p)
+{
+  p[0] = 1.0;
+  p[1] = t.mat_[0][0];
+  p[2] = t.mat_[0][1];
+  p[3] = t.mat_[0][2];
+  p[4] = t.mat_[1][1];
+  p[5] = t.mat_[1][2];
+  p[6] = t.mat_[2][2];
+}
 
-template <>
-void fill_data<Vector>(Vector &v, double *p);
-
-template <class Fdata>
-void* get_raw_data_ptr(Fdata &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData2d<char> >(FData2d<char> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData2d<unsigned char> >(FData2d<unsigned char> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData2d<short> >(FData2d<short> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData2d<unsigned short> >(FData2d<unsigned short> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData2d<int> >(FData2d<int> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData2d<unsigned int> >(FData2d<unsigned int> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData2d<long long> >(FData2d<long long> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData2d<unsigned long long> >(FData2d<unsigned long long> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData2d<float> >(FData2d<float> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData2d<double> >(FData2d<double> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData2d<Vector> >(FData2d<Vector> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData2d<Tensor> >(FData2d<Tensor> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData3d<char> >(FData3d<char> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData3d<unsigned char> >(FData3d<unsigned char> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData3d<short> >(FData3d<short> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData3d<unsigned short> >(FData3d<unsigned short> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData3d<int> >(FData3d<int> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData3d<unsigned int> >(FData3d<unsigned int> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData3d<long long> >(FData3d<long long> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData3d<unsigned long long> >(FData3d<unsigned long long> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData3d<float> >(FData3d<float> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData3d<double> >(FData3d<double> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData3d<double> >(FData3d<double> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData3d<Vector> >(FData3d<Vector> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<FData3d<Tensor> >(FData3d<Tensor> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<vector<Vector> >(vector<Vector> &, int);
-
-// template <>
-// void* 
-// get_raw_data_ptr<vector<Tensor> >(vector<Tensor> &, int);
 
 template <class Fdata>
-void* get_raw_data_ptr(Fdata &data, int pad) {
-
-  if (pad > 3) {
-    int sz = data.size() * pad;
-    double *new_data = new double[sz];
-    double *p = new_data;
+inline void *
+get_raw_data_ptr(Fdata &data, int pad)
+{
+  if (pad > 3)
+  {
+    // We have to copy tensors from Tensor into masked symetric matrix.
+    const size_t sz = data.size() * pad;
+    float *new_data = new float[sz];
+    float *p = new_data;
     typename Fdata::iterator iter = data.begin();
-    while (iter != data.end()) {
+    while (iter != data.end())
+    {
       fill_data(*iter, p);
       ++iter;
       p += pad;
@@ -232,7 +132,6 @@ void* get_raw_data_ptr(Fdata &data, int pad) {
   }
   return &(*data.begin()); // no copy just wrap this pointer
 }
-
 
 
 template <class Fld>

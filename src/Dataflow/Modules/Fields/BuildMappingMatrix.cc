@@ -90,24 +90,18 @@ BuildMappingMatrix::~BuildMappingMatrix()
 void
 BuildMappingMatrix::execute()
 {
-  FieldIPort *dst_port = (FieldIPort *)get_iport("Destination");
   FieldHandle fdst_h;
-  if (!(dst_port->get(fdst_h) && fdst_h.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("Destination", fdst_h)) return;
+
   if (fdst_h->basis_order() == -1)
   {
     warning("No data location in destination to interpolate to.");
     return;
   }
 
-  FieldIPort *src_port = (FieldIPort *)get_iport("Source");
   FieldHandle fsrc_h;
-  if (!(src_port->get(fsrc_h) && fsrc_h.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("Source", fsrc_h)) return;
+
   if (fsrc_h->basis_order() == -1)
   {
     warning("No data location in Source field to interpolate from.");
@@ -125,13 +119,13 @@ BuildMappingMatrix::execute()
 
   fsrc_h->mesh()->synchronize(Mesh::LOCATE_E);
   const int interp_basis = (interpolation_basis_.get() == "linear")?1:0;
-  MatrixOPort *omp = (MatrixOPort *)get_oport("Mapping");
   MatrixHandle mh(algo->execute(this,
                                 fsrc_h->mesh(), fdst_h->mesh(), interp_basis,
                                 map_source_to_single_dest_.get(),
                                 exhaustive_search_.get(),
                                 exhaustive_search_max_dist_.get(), np_.get()));
-  omp->send_and_dereference(mh);
+
+  send_output_handle("Mapping", mh);
 }
 
 CompileInfoHandle

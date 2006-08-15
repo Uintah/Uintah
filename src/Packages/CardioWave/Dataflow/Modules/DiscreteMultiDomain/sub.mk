@@ -13,6 +13,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/CardioWave/Dataflow/Modules/DiscreteMultiDomain
 
 SRCS     += \
+	$(SRCDIR)/DMDAddDomainElectrodes.cc\
+	$(SRCDIR)/DMDAddMembraneElectrodes.cc\
 	$(SRCDIR)/DMDAddMembrane.cc\
 	$(SRCDIR)/DMDAddStimulus.cc\
 	$(SRCDIR)/DMDAddStimulusSeries.cc\

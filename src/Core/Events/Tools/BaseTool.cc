@@ -75,5 +75,14 @@ WindowTool::~WindowTool()
 {
 }
 
+TMNotificationTool::TMNotificationTool(string name) :
+  BaseTool(name)
+{
+}
+
+TMNotificationTool::~TMNotificationTool()
+{
+}
+
 } // namespace SCIRun
 

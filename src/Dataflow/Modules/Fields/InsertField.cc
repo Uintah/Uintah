@@ -88,13 +88,8 @@ InsertField::~InsertField()
 void
 InsertField::execute()
 {
-  // Get input field 0.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Container Mesh");
   FieldHandle tet_field;
-  if (!(ifp->get(tet_field) && tet_field.get_rep())) {
-    error("Required input Container Mesh is empty.");
-    return;
-  }
+  if (!get_input_handle("Container Mesh", tet_field)) return;
 
   bool tri = false;
   const TypeDescription *ftd0 = tet_field->get_type_description();
@@ -108,12 +103,8 @@ InsertField::execute()
   }
 
   // Get input field 1.
-  ifp = (FieldIPort *)get_iport("Insert Field");
   FieldHandle insert_field;
-  if (!(ifp->get(insert_field) && insert_field.get_rep())) {
-    error("Required input Insert Field is empty.");
-    return;
-  }
+  if (!get_input_handle("Insert Field", insert_field)) return;
 
   bool update = false;
 
@@ -170,24 +161,9 @@ InsertField::execute()
     algo2->extract(extended_, mapping_, combined_, added_nodes, added_elems);
   }
 
-  if( combined_.get_rep() )
-  {
-    FieldOPort *ofield_port = (FieldOPort *)get_oport("Combined Field");
-    ofield_port->send_and_dereference(combined_, true);
-  }
-
-  if( extended_.get_rep() )
-  {
-    FieldOPort *ofield_port = (FieldOPort *)get_oport("Extended Insert Field");
-    ofield_port->send_and_dereference(extended_, true);
-  }
-
-  if( mapping_.get_rep() )
-  {
-    MatrixOPort *oport =
-      (MatrixOPort *)get_oport("Combined To Extended Mapping");
-    oport->send_and_dereference(mapping_, true);
-  }
+  send_output_handle("Combined Field", combined_, true);
+  send_output_handle("Extended Insert Field", extended_, true);
+  send_output_handle("Combined To Extended Mapping", mapping_, true);
 }
 
 

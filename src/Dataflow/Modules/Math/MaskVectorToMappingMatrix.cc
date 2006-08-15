@@ -74,7 +74,6 @@ MaskVectorToMappingMatrix::execute()
 {
   update_state(Module::JustStarted);
   NrrdIPort * nrrd_iport_ = (NrrdIPort *)get_iport("MaskVector");
-  MatrixOPort * matrix_oport_ = (MatrixOPort *)get_oport("MappingMatrix");
   update_state(Module::NeedData);
   
   NrrdDataHandle nrrdH;
@@ -104,7 +103,7 @@ MaskVectorToMappingMatrix::execute()
   rr[dim] = dim;  
 
   MatrixHandle mtmp(scinew SparseRowMatrix(dim, dim, rr, cc, dim, data));
-  matrix_oport_->send_and_dereference(mtmp);
+  send_output_handle("MappingMatrix", mtmp);
 }
 
 } // End namespace SCIRun

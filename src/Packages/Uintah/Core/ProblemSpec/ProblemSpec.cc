@@ -305,7 +305,7 @@ ProblemSpec::get(const string& name, bool &value)
     else if  (nospace_cmp == "true") {
       value = true;
     } else {
-      string error = name + "Must be either true or false";
+      string error = name + " Must be either true or false";
       throw ProblemSetupException(error, __FILE__, __LINE__);
     }
   }
@@ -338,9 +338,12 @@ ProblemSpec::get(const string& name, string &value)
       out_string += *it + ' ';
     }
 
-    string::iterator begin = out_string.end() - 1;
-    string::iterator end = out_string.end();
-    out_string.erase(begin,end);
+    if (out_string.length() > 0) {
+      // if user accidentally leaves out value, this will crash with an ugly exception
+      string::iterator begin = out_string.end() - 1;
+      string::iterator end = out_string.end();
+      out_string.erase(begin,end);
+    }
 
     value = out_string;
 

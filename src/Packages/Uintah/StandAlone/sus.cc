@@ -369,7 +369,8 @@ main( int argc, char** argv )
     Regridder* reg = 0;
     if(do_AMR) {
       reg = RegridderFactory::create(ups, world);
-      ctl->attachPort("regridder", reg);
+      if (reg)
+        ctl->attachPort("regridder", reg);
     }
 
     // Solver

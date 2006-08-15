@@ -494,13 +494,9 @@ InverseIPM::write_pebbles_file(string filename)
 void
 InverseIPM::execute()
 {
-  FieldIPort *condmesh_port = (FieldIPort *)get_iport("CondMesh");
   FieldHandle condmesh;
-  if (!(condmesh_port->get(condmesh) && condmesh.get_rep()))
-  {
-    warning("CondMesh field required to continue.");
-    return;
-  }
+  if (!get_input_handle("CondMesh", condmesh)) return;
+
   string mesh_type = condmesh->get_type_description(Field::MESH_TD_E)->get_name();
   if (mesh_type.find("TetVolMesh") != string::npos &&
       mesh_type.find("HexVolMesh") != string::npos)
@@ -519,22 +515,11 @@ InverseIPM::execute()
     return;
   }
 
-  FieldIPort *electrodes_port = (FieldIPort *)get_iport("Electrodes");
   FieldHandle electrodes;
-  if (!(electrodes_port->get(electrodes) && electrodes.get_rep()))
-  {
-    warning("Electrodes field required to continue.");
-    return;
-  }
-  
-  MatrixIPort *potential_port = (MatrixIPort *)get_iport("ElectrodePotentials");
+  if (!get_input_handle("Electrodes", electrodes)) return;
+
   MatrixHandle potentials;
-  
-  if (!(potential_port->get(potentials) && potentials.get_rep()))
-  {
-    warning("Potentials required to continue.");
-    return;
-  }
+  if (!get_input_handle("ElectrodePotentials", potentials)) return;
 
   // Make our tmp directory
   //const string tmpdir = "/tmp/InverseIPM" + to_string(getpid()) +"/";

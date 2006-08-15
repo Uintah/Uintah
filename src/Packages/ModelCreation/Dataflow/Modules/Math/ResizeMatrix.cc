@@ -28,12 +28,9 @@
 
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
-
 #include <Core/Algorithms/Math/MathAlgo.h>
 #include <Core/Algorithms/Converter/ConverterAlgo.h>
-
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 namespace ModelCreation {
 
@@ -62,34 +59,38 @@ ResizeMatrix::ResizeMatrix(GuiContext* ctx)
 
 void ResizeMatrix::execute()
 {
- MatrixHandle Mat, M, N;
- 
- if(!(get_input_handle("Matrix",Mat,true))) return;
- get_input_handle("M",M,false);
- get_input_handle("N",N,false);
- 
- SCIRunAlgo::MathAlgo nalgo(this);
- SCIRunAlgo::ConverterAlgo calgo(this);
- int n,m;
- 
- if (M.get_rep())
- {
-  if(calgo.MatrixToInt(M,m)) guim_.set(m);
-  get_ctx()->reset();
- }
+  MatrixHandle Mat, M, N;
 
- if (N.get_rep())
- {
-  if(calgo.MatrixToInt(N,n)) guin_.set(n);
-  get_ctx()->reset();
- }
+  if(!(get_input_handle("Matrix",Mat,true))) return;
+  get_input_handle("M",M,false);
+  get_input_handle("N",N,false);
 
- m = guim_.get();
- n = guin_.get();
- 
- if(!(nalgo.ResizeMatrix(Mat,Mat,m,n))) return;
- 
- send_output_handle("Matrix",Mat,true);
+  if (inputs_changed_ || guim_.changed() || guin_.changed() ||
+      !oport_cached("Matrix"))
+  {
+    SCIRunAlgo::MathAlgo nalgo(this);
+    SCIRunAlgo::ConverterAlgo calgo(this);
+    int n,m;
+
+    if (M.get_rep())
+    {
+    if(calgo.MatrixToInt(M,m)) guim_.set(m);
+    get_ctx()->reset();
+    }
+
+    if (N.get_rep())
+    {
+    if(calgo.MatrixToInt(N,n)) guin_.set(n);
+    get_ctx()->reset();
+    }
+
+    m = guim_.get();
+    n = guin_.get();
+
+    if(!(nalgo.ResizeMatrix(Mat,Mat,m,n))) return;
+
+    send_output_handle("Matrix",Mat,true);
+  }
 }
 
 

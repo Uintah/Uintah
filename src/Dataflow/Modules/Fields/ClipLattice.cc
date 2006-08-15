@@ -155,12 +155,9 @@ void
 ClipLattice::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("Input Field", ifieldhandle)) return;
+
   if (ifieldhandle->mesh()->get_type_description()->get_name() !=
 	LVMesh::type_name())
   {
@@ -274,11 +271,8 @@ ClipLattice::execute()
     NrrdDataHandle nrrdh = scinew NrrdData();
     FieldHandle ofield = algo->execute(ifieldhandle, top, bottom, nrrdh);
 
-    FieldOPort *ofield_port = (FieldOPort *)get_oport("Output Field");
-    ofield_port->send_and_dereference(ofield);
-
-    NrrdOPort *nrrd_oport = (NrrdOPort *)get_oport("MaskVector");
-    nrrd_oport->send_and_dereference(nrrdh);
+    send_output_handle("Output Field", ofield);
+    send_output_handle("MaskVector", nrrdh);
   }
 }
 

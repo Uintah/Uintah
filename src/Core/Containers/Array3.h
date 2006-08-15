@@ -150,7 +150,7 @@ public:
   //Returns the number of spaces in dim3
   inline int dim3() const {return dm3;}
   
-  inline long get_datasize() const { return dm1*dm2*dm3*long(sizeof(T)); }
+  inline long get_datasize() const { return dm1*long(dm2*dm3*sizeof(T)); }
     
   //////////
   //Re-size the Array
@@ -201,7 +201,7 @@ void Array3<T>::allocate()
   if( dm1 && dm2 && dm3 ){
     objs=new T**[dm1];
     T** p=new T*[dm1*dm2];
-    T* pp=new T[dm1*dm2*dm3];
+    T* pp=new T[dm1*long(dm2*dm3)];
     for(int i=0;i<dm1;i++){
       objs[i]=p;
       p+=dm2;
@@ -274,7 +274,7 @@ template<class T>
 T* Array3<T>::get_onedim()
 {
   int i,j,k, index;
-  T* a = new T[dm1*dm2*dm3];
+  T* a = new T[dm1*long(dm2*dm3)];
   
   index=0;
   for( i=0; i<dm1; i++)
@@ -383,7 +383,7 @@ Array3<T>::input( const std::string &filename )
   }
   
   int maxiosz=1024*1024;
-  long size = dm1*dm2*dm3*long(sizeof(T));
+  long size = dm1*long(dm2*dm3*sizeof(T));
   int n = int(size / maxiosz);
   std::cerr << "grid size = " << size << std::endl;
   char *p = (char *) objs[0][0];
@@ -418,7 +418,7 @@ Array3<T>::output( const std::string &filename )
   
   int maxiosz=1024*1024;
 
-  int size = dm1*dm2*dm3*sizeof(T);
+  long size = dm1*long(dm2*dm3*sizeof(T));
   int n = size / maxiosz;
   char *p = (char *)objs[0][0];
 

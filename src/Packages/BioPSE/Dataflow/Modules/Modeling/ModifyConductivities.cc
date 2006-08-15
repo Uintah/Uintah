@@ -228,12 +228,8 @@ ModifyConductivities::different_tensors(const vector<pair<string, Tensor> > &a,
 void
 ModifyConductivities::execute()
 {
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input");
   FieldHandle field;
-  if (!(ifp->get(field) && field.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("Input", field)) return;
 
   bool new_field_p = false;
   if (field->generation != last_field_generation_)
@@ -439,13 +435,11 @@ ModifyConductivities::execute()
   omatrix->set_property("tensor-names", tensor_names, false);
 
   // Forward the matrix results.
-  MatrixOPort *omp = (MatrixOPort *)get_oport("Output Matrix");
   MatrixHandle omatrix_handle(omatrix);
-  omp->send_and_dereference(omatrix_handle);
+  send_output_handle("Output Matrix", omatrix_handle);
 
   // Forward the field results.
-  FieldOPort *ofp = (FieldOPort *)get_oport("Output Field");
-  ofp->send_and_dereference(field);
+  send_output_handle("Output Field", field);
 }
 
 

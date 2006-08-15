@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE skinner PUBLIC "-//Skinner/Drawable DTD" "skinner.dtd">
+
+<skinner version="1.0">
+  <object class="Root::GLWindow">
+    <signal name="GLWindow::Destructor"
+            target="Root::GLWindow_Destructor"/>
+    <object class="Frame">
+      <var name="width">10</var>
+      <var name="height">10</var>
+      <var name="invert">1</var>
+
+      <object class="Box">
+        <var name="color">#999999FF</var>
+        <object class="Root::Graph2D">
+          
+          <var name="Graph2D::title_font_size" 
+               overwrite="no"
+               propagate="yes">55</var>
+          
+          <var name="font_size">35.0</var>
+          
+          <var name="axis_line_width" type ="double">3.0</var>
+          <var name="axis_line_color" type="color">#FFFFFFFF</var>
+          
+          <var name="data_line_width" type="double">2.0</var>
+          <var name="data_point_size" type="double">3.0</var>
+          
+          <var name="grid_line_width" type="double">1.0</var>
+          <var name="grid_line_color" type="color">#88888888</var>
+          <var name="grid_line_color" type="color">#66666680</var>
+          <var name="grid_divisions_x" type="int">10</var>
+          <var name="grid_divisions_y" type="int">10</var>
+          
+          
+          <object class="Text">        
+            <var name="text">$Graph2D::title</var>
+            <var name="size">$Graph2D::title_font_size</var>
+            <var name="anchor">n</var>
+            <var name="shadow">1</var>
+            <var name="offsetx">-5</var>
+            <var name="offsety">5</var>
+          </object>        
+        </object>
+      </object>
+    </object>
+  </object>
+</skinner>
+
+

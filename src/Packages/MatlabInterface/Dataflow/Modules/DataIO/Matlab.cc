@@ -525,7 +525,7 @@ std::vector<std::string> Matlab::converttcllist(std::string str)
 {
 	std::string result;
 	std::vector<std::string> list(0);
-	long lengthlist = 0;
+	int lengthlist = 0;
 	
 	// Yeah, it is TCL dependent:
 	// TCL::llength determines the length of the list
@@ -538,7 +538,7 @@ std::vector<std::string> Matlab::converttcllist(std::string str)
 	
 	list.resize(lengthlist);
 	get_gui()->lock();
-	for (long p = 0;p<lengthlist;p++)
+	for (int p = 0;p<lengthlist;p++)
 	{
 		ostringstream oss;
 		// TCL dependency:

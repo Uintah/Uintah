@@ -34,11 +34,14 @@
 #if !defined(_STREAMLINES_H_)
 #define _STREAMLINES_H_
 
-#include <Core/Geometry/Point.h>
+#include <Dataflow/Network/Module.h>
+
+#include <Core/Geometry/CompGeom.h>
+#include <Core/Algorithms/Math/BasicIntegrators.h>
 #include <Core/Basis/CrvLinearLgn.h>
 #include <Core/Datatypes/CurveMesh.h>
+#include <Core/Datatypes/FieldInterface.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/Geometry/CompGeom.h>
 #include <Core/Thread/Thread.h>
 #include <algorithm>
 #include <sstream>
@@ -61,22 +64,19 @@ typedef struct _SLData {
   int maxsteps;
   int direction;
   int value;
-  bool rcp;
-  int met;
-  int np;
-  ProgressReporter *pr;
+  bool remove_colinear_pts;
+  int method;
+  int nthreads;
+  ProgressReporter *reporter;
 
   _SLData() : lock("StreamLines Lock") {}
 } SLData;
 
 
-SCISHARE vector<Point>::iterator
-StreamLinesCleanupPoints(vector<Point> &input, double e2);
-
 class SCISHARE StreamLinesAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(ProgressReporter *pr,
+  virtual FieldHandle execute(ProgressReporter *reporter,
                               FieldHandle seed_field_h,
 			      VectorFieldInterfaceHandle vfi,
 			      double tolerance,
@@ -84,21 +84,17 @@ public:
 			      int maxsteps,
 			      int direction,
 			      int value,
-			      bool remove_colinear_p,
+			      bool remove_colinear_pts,
 			      int method, 
-			      int np) = 0;
+			      int nthreads) = 0;
 
   //! support the dynamically compiled algorithm concept
   static CompileInfoHandle get_compile_info(const TypeDescription *fsrc,
 					    const string &dsrc,
 					    const TypeDescription *sloc,
 					    int value);
-protected:
 
-  //! This particular implementation uses Runge-Kutta-Fehlberg.
-  void FindNodes(vector<Point>&, Point, double, double, int, 
-		 const VectorFieldInterfaceHandle &,
-		 bool remove_colinear_p, int method);
+  static vector<Point>::iterator CleanupPoints(vector<Point> &in, double e2);
 };
 
 
@@ -107,9 +103,7 @@ class StreamLinesAlgoT : public StreamLinesAlgo
 {
 public:
   //! virtual interface. 
-  void parallel_generate(int proc, SLData *d);
-
-  virtual FieldHandle execute(ProgressReporter *pr,
+  virtual FieldHandle execute(ProgressReporter *reporter,
                               FieldHandle seed_field_h,
 			      VectorFieldInterfaceHandle vfi,
 			      double tolerance,
@@ -117,9 +111,11 @@ public:
 			      int maxsteps,
 			      int direction,
 			      int value,
-			      bool remove_colinear_p,
+			      bool remove_colinear_pts,
 			      int method,
-			      int np);
+			      int nthreads);
+
+  void parallel_generate(int proc, SLData *d);
 
   virtual void set_result_value(Field *cf,
                                 CMesh::Node::index_type di,
@@ -130,8 +126,60 @@ public:
 
 
 template <class FSRC, class STYPE, class SLOC>
-void
+FieldHandle
 StreamLinesAlgoT<FSRC, STYPE, SLOC>::
+execute(ProgressReporter *reporter,
+        FieldHandle seed_field_h,
+	VectorFieldInterfaceHandle vfi,
+	double tolerance,
+	double stepsize,
+	int maxsteps,
+	int direction,
+	int value,
+	bool remove_colinear_pts,
+	int method,
+	int nthreads)
+{
+  SLData d;
+  d.seed_field_h=seed_field_h;
+  d.vfi=vfi;
+  d.tolerance=tolerance;
+  d.stepsize=stepsize;
+  d.maxsteps=maxsteps;
+  d.direction=direction;
+  d.value=value;
+  d.remove_colinear_pts=remove_colinear_pts;
+  d.method=method;
+  d.nthreads=nthreads;
+  d.reporter=reporter;
+
+  typedef CrvLinearLgn<STYPE> DatBasisL;
+  typedef GenericField<CMesh, DatBasisL, vector<STYPE> > CFieldL;
+
+  CMesh::handle_type cmesh = scinew CMesh();
+  CFieldL *cf = scinew CFieldL(cmesh);
+  
+  d.fh = FieldHandle(cf);
+
+  typename SLOC::size_type prsize_tmp;
+  FSRC *sfield = (FSRC *) seed_field_h.get_rep();
+  typename FSRC::mesh_handle_type smesh = sfield->get_typed_mesh();
+  smesh->size(prsize_tmp);
+  const unsigned int prsize = (unsigned int)prsize_tmp;
+  reporter->update_progress(0, prsize);
+
+  Thread::parallel(this,
+                   &StreamLinesAlgoT<FSRC, STYPE, SLOC>::parallel_generate,
+                   nthreads, &d);
+
+  cf->freeze();
+
+  return cf;
+}
+
+
+template <class FSRC, class STYPE, class SLOC>
+void StreamLinesAlgoT<FSRC, STYPE, SLOC>::
 parallel_generate( int proc, SLData *d)
 {
   FSRC *sfield = (FSRC *) d->seed_field_h.get_rep();
@@ -142,15 +190,17 @@ parallel_generate( int proc, SLData *d)
 
   CFieldL *cfield = (CFieldL *) d->fh.get_rep();
 
-  const double tolerance2 = d->tolerance * d->tolerance;
+  CMesh::Node::index_type n1, n2;
 
-  Point seed;
   Vector test;
-  vector<Point> nodes;
-  nodes.reserve(d->maxsteps);
+
+  BasicIntegrators BI;
+  BI.nodes_.reserve(d->maxsteps);                   // storage for points
+  BI.tolerance2_  = d->tolerance * d->tolerance;    // square error tolerance
+  BI.maxsteps_    = d->maxsteps;                    // max number of steps
+  BI.vfi_         = d->vfi;                         // the vector field
 
   vector<Point>::iterator node_iter;
-  CMesh::Node::index_type n1, n2;
 
   // Try to find the streamline for each seed point.
   typename SLOC::iterator siter, siter_end;
@@ -163,58 +213,65 @@ parallel_generate( int proc, SLData *d)
   {
     // If this seed doesn't "belong" to this parallel thread,
     // ignore it and continue on the next seed.
-    if (count%d->np != proc) {
+    if (count%d->nthreads != proc) {
       ++siter;
       ++count;
       continue;
     }
 
-    d->pr->increment_progress();
+    d->reporter->increment_progress();
 
-    smesh->get_point(seed, *siter);
+    smesh->get_point(BI.seed_, *siter);
 
     // Is the seed point inside the field?
-    if (!d->vfi->interpolate(test, seed))
+    if (!d->vfi->interpolate(test, BI.seed_))
     {
       ++siter;
       ++count;
       continue;
     }
 
-    nodes.clear();
-    nodes.push_back(seed);
+    BI.nodes_.clear();
+    BI.nodes_.push_back(BI.seed_);
 
     int cc = 0;
 
     // Find the negative streamlines.
-    if( d->direction <= 1 )
-    {
-      FindNodes(nodes, seed, tolerance2, -d->stepsize, d->maxsteps,
-		d->vfi, d->rcp, d->met);
-      if ( d->direction == 1 )
-      {
-	reverse(nodes.begin(), nodes.end());
-	cc = nodes.size();
+    if( d->direction <= 1 ) {
+      BI.stepsize_ = -d->stepsize;   // initial step size
+      BI.integrate( d->method );
+
+      if ( d->direction == 1 ) {
+
+	BI.seed_ = BI.nodes_[0];  // Reset the seed
+
+	reverse(BI.nodes_.begin(), BI.nodes_.end());
+	cc = BI.nodes_.size() - 1;
 	cc = -(cc - 1);
       }
     }
+
     // Append the positive streamlines.
-    if( d->direction >= 1 ){
-      FindNodes(nodes, seed, tolerance2, d->stepsize, d->maxsteps,
-		d->vfi, d->rcp, d->met);
+    if( d->direction >= 1 ) {
+      BI.stepsize_ = d->stepsize;   // initial step size
+      BI.integrate( d->method );
     }
+
+    if (d->remove_colinear_pts)
+      BI.nodes_.erase(CleanupPoints(BI.nodes_, BI.tolerance2_),
+		      BI.nodes_.end());
 
     double length = 0;
 
     Point p1;
 
     if( d->value == 4 ) {
-      node_iter = nodes.begin();
-      if (node_iter != nodes.end()) {
+      node_iter = BI.nodes_.begin();
+      if (node_iter != BI.nodes_.end()) {
 	p1 = *node_iter;	
 	++node_iter;
 
-	while (node_iter != nodes.end()) {
+	while (node_iter != BI.nodes_.end()) {
 	  length += Vector( *node_iter-p1 ).length();
 	  p1 = *node_iter;
 	  ++node_iter;
@@ -222,9 +279,9 @@ parallel_generate( int proc, SLData *d)
       }
     }
 
-    node_iter = nodes.begin();
+    node_iter = BI.nodes_.begin();
 
-    if (node_iter != nodes.end()) {
+    if (node_iter != BI.nodes_.end()) {
       d->lock.lock();
       n1 = cfield->get_typed_mesh()->add_node(*node_iter);
       p1 = *node_iter;
@@ -250,7 +307,7 @@ parallel_generate( int proc, SLData *d)
 
       cc++;
 
-      while (node_iter != nodes.end()) {
+      while (node_iter != BI.nodes_.end()) {
 	n2 = cfield->get_typed_mesh()->add_node(*node_iter);
 	cfield->resize_fdata();
 
@@ -285,59 +342,6 @@ parallel_generate( int proc, SLData *d)
   }
 
   d->fh->set_property( "Streamline Count", count, false );
-}
-
-
-template <class FSRC, class STYPE, class SLOC>
-FieldHandle
-StreamLinesAlgoT<FSRC, STYPE, SLOC>::
-execute(ProgressReporter *pr,
-        FieldHandle seed_field_h,
-	VectorFieldInterfaceHandle vfi,
-	double tolerance,
-	double stepsize,
-	int maxsteps,
-	int direction,
-	int value,
-	bool rcp,
-	int met,
-	int np)
-{
-  SLData d;
-  d.seed_field_h=seed_field_h;
-  d.vfi=vfi;
-  d.tolerance=tolerance;
-  d.stepsize=stepsize;
-  d.maxsteps=maxsteps;
-  d.direction=direction;
-  d.value=value;
-  d.rcp=rcp;
-  d.met=met;
-  d.np=np;
-  d.pr=pr;
-
-  typedef CrvLinearLgn<STYPE> DatBasisL;
-  typedef GenericField<CMesh, DatBasisL, vector<STYPE> > CFieldL;
-
-  CMesh::handle_type cmesh = scinew CMesh();
-  CFieldL *cf = scinew CFieldL(cmesh);
-  
-  d.fh = FieldHandle(cf);
-
-  typename SLOC::size_type prsize_tmp;
-  FSRC *sfield = (FSRC *) seed_field_h.get_rep();
-  typename FSRC::mesh_handle_type smesh = sfield->get_typed_mesh();
-  smesh->size(prsize_tmp);
-  const unsigned int prsize = (unsigned int)prsize_tmp;
-  pr->update_progress(0, prsize);
-
-  Thread::parallel(this,
-                   &StreamLinesAlgoT<FSRC, STYPE, SLOC>::parallel_generate,
-                   np, &d);
-
-  cf->freeze();
-
-  return cf;
 }
 
 
@@ -381,10 +385,11 @@ public:
 
 
 
+
 class StreamLinesAccAlgo : public DynamicAlgoBase
 {
 public:
-  virtual FieldHandle execute(ProgressReporter *pr,
+  virtual FieldHandle execute(ProgressReporter *reporter,
                               FieldHandle seed_field_h,
 			      FieldHandle vfield_h,
 			      int maxsteps,
@@ -407,12 +412,7 @@ template <class FSRC, class SLOC, class VFLD, class FDST>
 class StreamLinesAccAlgoT : public StreamLinesAccAlgo
 {
 public:
-
-  void FindNodes(vector<Point>& nodes, Point seed, int maxsteps, 
-		 VFLD *vfield, bool remove_colinear_p, bool back);
-
-
-  virtual FieldHandle execute(ProgressReporter *pr,
+  virtual FieldHandle execute(ProgressReporter *reporter,
                               FieldHandle seed_field_h,
 			      FieldHandle vfield_h,
 			      int maxsteps,
@@ -420,12 +420,148 @@ public:
 			      int value,
 			      bool remove_colinear_p);
 
+  void FindNodes(vector<Point>& nodes, Point seed, int maxsteps, 
+		 VFLD *vfield, bool remove_colinear_p, bool back);
+
   virtual void set_result_value(FDST *cf,
                                 typename FDST::mesh_type::Node::index_type di,
                                 FSRC *sfield,
                                 typename SLOC::index_type si,
                                 double data) = 0;
+
 };
+
+
+template <class FSRC, class SLOC, class VFLD, class FDST>
+FieldHandle
+StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::execute(ProgressReporter *reporter,
+                                                     FieldHandle seed_field_h,
+                                                     FieldHandle vfield_h,
+                                                     int maxsteps,
+                                                     int direction,
+                                                     int value,
+                                                     bool remove_colinear_p)
+{
+  FSRC *sfield = (FSRC *) seed_field_h.get_rep();
+  typename FSRC::mesh_handle_type smesh = sfield->get_typed_mesh();
+
+  VFLD *vfield = (VFLD *) vfield_h.get_rep();
+
+  vfield->mesh()->synchronize(Mesh::FACE_NEIGHBORS_E);
+
+  typename FDST::mesh_handle_type cmesh = scinew typename FDST::mesh_type();
+  FDST *cf = scinew FDST(cmesh);
+
+  Point seed;
+  typename VFLD::mesh_type::Elem::index_type elem;
+  vector<Point> nodes;
+  nodes.reserve(maxsteps);
+
+  vector<Point>::iterator node_iter;
+  typename FDST::mesh_type::Node::index_type n1, n2;
+
+  // Try to find the streamline for each seed point.
+  typename SLOC::iterator siter, siter_end;
+  smesh->begin(siter);
+  smesh->end(siter_end);
+
+  typename SLOC::size_type prsize_tmp;
+  smesh->size(prsize_tmp);
+  const unsigned int prsize = (unsigned int)prsize_tmp;
+
+  int count = 0;
+
+  while (siter != siter_end)
+  {
+    smesh->get_point(seed, *siter);
+
+    // Is the seed point inside the field?
+    if (!vfield->get_typed_mesh()->locate(elem, seed))
+    {
+      ++siter;
+      ++count;
+      continue;
+    }
+
+    reporter->update_progress(count, prsize);
+
+    nodes.clear();
+    nodes.push_back(seed);
+
+    int cc = 0;
+
+    // Find the negative streamlines.
+    if( direction <= 1 )
+    {
+      FindNodes(nodes, seed, maxsteps, vfield, remove_colinear_p, true);
+
+      if ( direction == 1 )
+      {
+	std::reverse(nodes.begin(), nodes.end());
+	cc = nodes.size();
+	cc = -(cc - 1);
+      }
+    }
+    // Append the positive streamlines.
+    if( direction >= 1 )
+    {
+      FindNodes(nodes, seed, maxsteps, vfield, remove_colinear_p, false);
+    }
+
+    node_iter = nodes.begin();
+
+    if (node_iter != nodes.end())
+    {
+      n1 = cf->get_typed_mesh()->add_node(*node_iter);
+
+      ostringstream str;
+      str << "Streamline " << count << " Node Index";      
+      cf->set_property( str.str(), n1, false );
+
+      cf->resize_fdata();
+
+      if (value == 0)
+        set_result_value(cf, n1, sfield, *siter, 0);
+      else if( value == 1)
+        set_result_value(cf, n1, sfield, *siter, (double)*siter);
+      else if (value == 2)
+        set_result_value(cf, n1, sfield, *siter, (double)abs(cc));
+
+      ++node_iter;
+
+      cc++;
+
+      while (node_iter != nodes.end())
+      {
+	n2 = cf->get_typed_mesh()->add_node(*node_iter);
+	cf->resize_fdata();
+        
+        if (value == 0)
+          set_result_value(cf, n2, sfield, *siter, 0);
+        else if( value == 1)
+          set_result_value(cf, n2, sfield, *siter, (double)*siter);
+        else if (value == 2)
+          set_result_value(cf, n2, sfield, *siter, (double)abs(cc));
+
+	cf->get_typed_mesh()->add_edge(n1, n2);
+
+	n1 = n2;
+	++node_iter;
+
+	cc++;
+      }
+    }
+
+    ++siter;
+    ++count;
+  }
+
+  cf->set_property( "Streamline Count", count, false );
+
+  cf->freeze();
+
+  return FieldHandle(cf);
+}
 
 
 template <class FSRC, class SLOC, class VFLD, class FDST>
@@ -496,140 +632,10 @@ StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::FindNodes(vector<Point> &v,
 
   if (remove_colinear_p)
   {
-    v.erase(StreamLinesCleanupPoints(v, 1.0e-6), v.end());
+    v.erase(StreamLinesAlgo::CleanupPoints(v, 1.0e-6), v.end());
   }
 }
 
-
-template <class FSRC, class SLOC, class VFLD, class FDST>
-FieldHandle
-StreamLinesAccAlgoT<FSRC, SLOC, VFLD, FDST>::execute(ProgressReporter *pr,
-                                                     FieldHandle seed_field_h,
-                                                     FieldHandle vfield_h,
-                                                     int maxsteps,
-                                                     int direction,
-                                                     int value,
-                                                     bool remove_colinear_p)
-{
-  FSRC *sfield = (FSRC *) seed_field_h.get_rep();
-  typename FSRC::mesh_handle_type smesh = sfield->get_typed_mesh();
-
-  VFLD *vfield = (VFLD *) vfield_h.get_rep();
-
-  vfield->mesh()->synchronize(Mesh::FACE_NEIGHBORS_E);
-
-  typename FDST::mesh_handle_type cmesh = scinew typename FDST::mesh_type();
-  FDST *cf = scinew FDST(cmesh);
-
-  Point seed;
-  typename VFLD::mesh_type::Elem::index_type elem;
-  vector<Point> nodes;
-  nodes.reserve(maxsteps);
-
-  vector<Point>::iterator node_iter;
-  typename FDST::mesh_type::Node::index_type n1, n2;
-
-  // Try to find the streamline for each seed point.
-  typename SLOC::iterator siter, siter_end;
-  smesh->begin(siter);
-  smesh->end(siter_end);
-
-  typename SLOC::size_type prsize_tmp;
-  smesh->size(prsize_tmp);
-  const unsigned int prsize = (unsigned int)prsize_tmp;
-
-  int count = 0;
-
-  while (siter != siter_end)
-  {
-    smesh->get_point(seed, *siter);
-
-    // Is the seed point inside the field?
-    if (!vfield->get_typed_mesh()->locate(elem, seed))
-    {
-      ++siter;
-      ++count;
-      continue;
-    }
-
-    pr->update_progress(count, prsize);
-
-    nodes.clear();
-    nodes.push_back(seed);
-
-    int cc = 0;
-
-    // Find the negative streamlines.
-    if( direction <= 1 )
-    {
-      FindNodes(nodes, seed, maxsteps, vfield, remove_colinear_p, true);
-      if ( direction == 1 )
-      {
-	std::reverse(nodes.begin(), nodes.end());
-	cc = nodes.size();
-	cc = -(cc - 1);
-      }
-    }
-    // Append the positive streamlines.
-    if( direction >= 1 )
-    {
-      FindNodes(nodes, seed, maxsteps, vfield, remove_colinear_p, false);
-    }
-
-    node_iter = nodes.begin();
-
-    if (node_iter != nodes.end())
-    {
-      n1 = cf->get_typed_mesh()->add_node(*node_iter);
-
-      ostringstream str;
-      str << "Streamline " << count << " Node Index";      
-      cf->set_property( str.str(), n1, false );
-
-      cf->resize_fdata();
-
-      if (value == 0)
-        set_result_value(cf, n1, sfield, *siter, 0);
-      else if( value == 1)
-        set_result_value(cf, n1, sfield, *siter, (double)*siter);
-      else if (value == 2)
-        set_result_value(cf, n1, sfield, *siter, (double)abs(cc));
-
-      ++node_iter;
-
-      cc++;
-
-      while (node_iter != nodes.end())
-      {
-	n2 = cf->get_typed_mesh()->add_node(*node_iter);
-	cf->resize_fdata();
-        
-        if (value == 0)
-          set_result_value(cf, n2, sfield, *siter, 0);
-        else if( value == 1)
-          set_result_value(cf, n2, sfield, *siter, (double)*siter);
-        else if (value == 2)
-          set_result_value(cf, n2, sfield, *siter, (double)abs(cc));
-
-	cf->get_typed_mesh()->add_edge(n1, n2);
-
-	n1 = n2;
-	++node_iter;
-
-	cc++;
-      }
-    }
-
-    ++siter;
-    ++count;
-  }
-
-  cf->set_property( "Streamline Count", count, false );
-
-  cf->freeze();
-
-  return FieldHandle(cf);
-}
 
 
 template <class FSRC, class SLOC, class VFLD, class FDST>

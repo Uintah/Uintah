@@ -1,0 +1,66 @@
+# For more information, please see: http://software.sci.utah.edu
+# 
+# The MIT License
+# 
+# Copyright (c) 2004 Scientific Computing and Imaging Institute,
+# University of Utah.
+# 
+# License for the specific language governing rights and limitations under
+# Permission is hereby granted, free of charge, to any person obtaining a
+# copy of this software and associated documentation files (the "Software"),
+# to deal in the Software without restriction, including without limitation
+# the rights to use, copy, modify, merge, publish, distribute, sublicense,
+# and/or sell copies of the Software, and to permit persons to whom the
+# Software is furnished to do so, subject to the following conditions:
+# 
+# The above copyright notice and this permission notice shall be included
+# in all copies or substantial portions of the Software.
+# 
+# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+# OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+# THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+# FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+# DEALINGS IN THE SOFTWARE.
+# 
+# File   : skinner.dtd 
+# Author : McKay Davis
+# Date   : Tue April 18 2006
+# Description : The dtd that describes the valid grammar for Skinner files
+# 
+#
+
+namespace a = "http://relaxng.org/ns/compatibility/annotations/1.0"
+namespace xi = "http://www.w3.org/2001/XInclude"
+
+skinner =
+  element skinner {
+    attlist.skinner, var*, \include*, definition*, object*
+  }
+attlist.skinner &= attribute version { text }
+var = element var { attlist.var, text }
+attlist.var &=
+  attribute name { text },
+  [ a:defaultValue = "string" ]
+  attribute type { "string" | "int" | "double" | "bool" | "color" }?,
+  [ a:defaultValue = "yes" ] attribute overwrite { "yes" | "no" }?,
+  [ a:defaultValue = "no" ] attribute propagate { "yes" | "no" }?
+object =
+  element object { attlist.object, var*, signal*, definition*, object* }
+attlist.object &=
+  attribute class { text },
+  attribute id { text }?
+definition = element definition { attlist.definition, object }
+attlist.definition &=
+  attribute class { text },
+  attribute state { text }?
+signal = element signal { attlist.signal, text }
+attlist.signal &=
+  attribute name { text },
+  attribute target { text }
+\include = element xi:include { attlist.include, empty }
+attlist.include &=
+  attribute href { text },
+  attribute parse { text }
+start = skinner

@@ -54,9 +54,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-  NrrdOPort*      onrrd_;
-
   GuiString       ordering_;
   GuiInt          axis_;
   GuiInt          inverse_;
@@ -66,8 +63,6 @@ private:
 DECLARE_MAKER(UnuShuffle)
 UnuShuffle::UnuShuffle(GuiContext* ctx)
   : Module("UnuShuffle", ctx, Source, "UnuNtoZ", "Teem"),
-    inrrd_(0),
-    onrrd_(0),
     ordering_(get_ctx()->subVar("ordering"), "0"),
     axis_(get_ctx()->subVar("axis"), 0),
     inverse_(get_ctx()->subVar("inverse"), 0)
@@ -83,19 +78,10 @@ UnuShuffle::~UnuShuffle()
 void
 UnuShuffle::execute()
 {
-  NrrdDataHandle nrrd_handle;
-
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty InputNrrd.");
-    return;
-  }
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
   reset_vars();
 
@@ -210,7 +196,7 @@ UnuShuffle::execute()
     nout->axis[i].kind = nin->axis[i].kind;
   }
 
-  onrrd_->send_and_dereference(out);
+  send_output_handle("OutputNrrd", out);
 }
 
 } // End namespace Teem

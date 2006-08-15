@@ -26,14 +26,12 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
-
-#include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 namespace ModelCreation {
 
@@ -59,14 +57,18 @@ void SetFieldData::execute()
 {
   FieldHandle Input, Output;
   MatrixHandle Data;
+  
   if(!(get_input_handle("Field",Input,true))) return;
   if(!(get_input_handle("Data",Data,true))) return;
   
-  bool keepscalartype = keepscalartypegui_.get();
-  SCIRunAlgo::FieldsAlgo algo(this);
-  if(!(algo.SetFieldData(Input,Output,Data,keepscalartype))) return;
-  
-  send_output_handle("Field",Output,true);
+  if (inputs_changed_ || keepscalartypegui_.changed() || !oport_cached("Field"))
+  {
+    bool keepscalartype = keepscalartypegui_.get();
+    SCIRunAlgo::FieldsAlgo algo(this);
+    if(!(algo.SetFieldData(Input,Output,Data,keepscalartype))) return;
+    
+    send_output_handle("Field",Output,false);
+  }
 }
 
 } // End namespace ModelCreation

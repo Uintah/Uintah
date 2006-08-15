@@ -510,6 +510,7 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
     Point p;
     mesh->get_point(p, *niter);
 
+    unsigned int n_idx = *niter;
     // val is double because the color index field must be scalar.
     Vector vec(0,0,0);
     double val;
@@ -532,30 +533,30 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
     case 0: // Points
       if (def_color)
       {
-	points->add(p);
+	points->add(p, n_idx);
       }
       else if (vec_color)
       {
-	points->add(p, vcol);
+	points->add(p, vcol, n_idx);
       }
       else
       {
-	points->add(p, val);
+	points->add(p, val, n_idx);
       }
       break;
 
     case 1: // Spheres
       if (def_color)
       {
-	spheres->add(p);
+	spheres->add(p, n_idx);
       }
       else if (vec_color)
       {
-	spheres->add(p, vcol);
+	spheres->add(p, vcol, n_idx);
       }
       else
       {
-	spheres->add(p, val);
+	spheres->add(p, val, n_idx);
       }
       break;
 
@@ -580,15 +581,15 @@ RenderField<Fld, Loc>::render_nodes(Fld *sfld,
       {
 	if (def_color)
 	{
-	  spheres->add(p);
+	  spheres->add(p, n_idx);
 	}
 	else if (vec_color)
 	{
-	  spheres->add(p, vcol);
+	  spheres->add(p, vcol, n_idx);
 	}
 	else
 	{
-	  spheres->add(p, val);
+	  spheres->add(p, val, n_idx);
 	}
       }
       else
@@ -1442,6 +1443,10 @@ RenderField<Fld, Loc>::render_faces_linear(Fld *sfld,
     tmp->add(faces);
     tmp->add(qfaces);
     face_switch = tmp;
+    if (sfld->basis_order() == 0 && mesh->dimensionality() == 3)
+    {
+      def_color = true;
+    }
   }
   else if ((sfld->basis_order() == 0) && (mesh->dimensionality() == 3) && !def_color)
   {
@@ -2877,7 +2882,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	    cfld->value(ctmp, *iter);
 	    double ctmpd;
 	    to_double(ctmp, ctmpd);
-	    spheres->add(p, ctmpd);
+	    spheres->add(p, (float)ctmpd);
 	  }
 	}
       }
@@ -2979,7 +2984,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	    cfld->value(ctmp, *iter);
 	    double ctmpd;
 	    to_double(ctmp, ctmpd);
-	    spheres->add(p, ctmpd);
+	    spheres->add(p, (float)ctmpd);
 	  }
 	}
       }
@@ -3131,7 +3136,7 @@ RenderVectorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
 	    cfld->value(ctmp, *iter);
 	    double ctmpd;
 	    to_double(ctmp, ctmpd);
-	    spheres->add(p, ctmpd);
+	    spheres->add(p, (float)ctmpd);
 	  }
 	}
       }
@@ -3348,7 +3353,7 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   {
     colorstyle = 1;
   }
-  else if (cfld->query_vector_interface().get_rep())
+  else if (cfld && cfld->query_vector_interface().get_rep())
   {
     colorstyle = 2;
   }
@@ -3360,7 +3365,7 @@ RenderTensorField<VFld, CFld, Loc>::render_data(FieldHandle vfld_handle,
   // Use a default color?
   bool def_color = !(cmap.get_rep()) || force_def_color;
   bool vec_color = false;
-  if (def_color && cfld->query_vector_interface().get_rep()
+  if (def_color && cfld && cfld->query_vector_interface().get_rep()
       && !force_def_color)
   {
     def_color = false;
@@ -3547,7 +3552,7 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
   bool def_color = !(cmap.get_rep()) || force_def_color;
   bool vec_color = false;
   MaterialHandle vcol(0);
-  if (def_color && cfld->query_vector_interface().get_rep()
+  if (def_color && cfld && cfld->query_vector_interface().get_rep()
       && !force_def_color)
   {
     def_color = false;
@@ -3649,7 +3654,7 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
 	  }
 	  else
 	  {
-	    spheres->add(p, ctmpd);
+	    spheres->add(p, (float)ctmpd);
 	  }
 	}
       }

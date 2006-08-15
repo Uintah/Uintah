@@ -951,11 +951,11 @@ void AdiabaticTable::scheduleErrorEstimate(const LevelP& coarseLevel,
  Function~  AdiabaticTable::errorEstimate--
 ______________________________________________________________________*/
 void AdiabaticTable::errorEstimate(const ProcessorGroup*,
-                                     const PatchSubset* patches,
-                                     const MaterialSubset*,
-                                     DataWarehouse*,
-                                     DataWarehouse* new_dw,
-                                  bool)
+                                   const PatchSubset* patches,
+                                   const MaterialSubset*,
+                                   DataWarehouse*,
+                                   DataWarehouse* new_dw,
+                                   bool)
 {
   cout_doing << "Doing errorEstimate \t\t\t\t\t AdiabaticTable"<< endl;
   for(int p=0;p<patches->size();p++){
@@ -986,10 +986,11 @@ void AdiabaticTable::errorEstimate(const ProcessorGroup*,
     
     for(CellIterator iter = patch->getCellIterator();!iter.done();iter++){
       IntVector c = *iter;
-      IntVector r = c;
-      IntVector l = c;
+      
       Vector grad_f;
       for(int dir = 0; dir <3; dir ++ ) { 
+        IntVector r = c;
+        IntVector l = c;
         double inv_dx = 0.5 /dx[dir];
         r[dir] += 1;
         l[dir] -= 1;

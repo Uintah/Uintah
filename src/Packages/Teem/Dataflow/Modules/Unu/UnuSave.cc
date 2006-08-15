@@ -55,8 +55,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort*      inrrd_;
-
   GuiString       format_;
   GuiString       encoding_;
   GuiString       endian_;
@@ -67,7 +65,6 @@ private:
 DECLARE_MAKER(UnuSave)
 UnuSave::UnuSave(GuiContext* ctx)
   : Module("UnuSave", ctx, Source, "UnuNtoZ", "Teem"),
-    inrrd_(0), 
     format_(get_ctx()->subVar("format"), "nrrd"),
     encoding_(get_ctx()->subVar("encoding"), "raw"),
     endian_(get_ctx()->subVar("endian"), "little"),
@@ -84,19 +81,10 @@ UnuSave::~UnuSave()
 void
 UnuSave::execute()
 {
-  NrrdDataHandle nrrd_handle;
-
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("InputNrrd");
 
-  if (!inrrd_->get(nrrd_handle))
-    return;
-
-  if (!nrrd_handle.get_rep()) {
-    error("Empty InputNrrd.");
-    return;
-  }
-
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
   reset_vars();
 

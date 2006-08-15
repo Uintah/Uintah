@@ -53,7 +53,7 @@ namespace MatlabIO {
 
 
 
-template<class T> void matfiledata::getandcast(T *dataptr,long dsize)
+template<class T> void matfiledata::getandcast(T *dataptr,int dsize)
 {
     // This function copies and casts the data in the matfilebuffer into
     // a new buffer specified by dataptr (address of this new buffer) with
@@ -69,36 +69,36 @@ template<class T> void matfiledata::getandcast(T *dataptr,long dsize)
     {
 	case miINT8: 
 	   { signed char *ptr = static_cast<signed char *>(databuffer());
-	     for(long p=0;p<dsize;p++) {dataptr[p] = static_cast<T>(ptr[p]); }}
+	     for(int p=0;p<dsize;p++) {dataptr[p] = static_cast<T>(ptr[p]); }}
 	   break;
 	case miUINT8: 
 	   { unsigned char *ptr = static_cast<unsigned char *>(databuffer());
-	     for(long p=0;p<dsize;p++) {dataptr[p] = static_cast<T>(ptr[p]); }}
+	     for(int p=0;p<dsize;p++) {dataptr[p] = static_cast<T>(ptr[p]); }}
 	   break;
 	case miINT16: 
 	   { signed short *ptr = static_cast<signed short *>(databuffer());
-	     for(long p=0;p<dsize;p++) {dataptr[p] = static_cast<T>(ptr[p]); }}
+	     for(int p=0;p<dsize;p++) {dataptr[p] = static_cast<T>(ptr[p]); }}
 	   break;
 	case miUINT16: 
 	   { unsigned short *ptr = static_cast<unsigned short *>(databuffer());
-	     for(long p=0;p<dsize;p++) {dataptr[p] = static_cast<T>(ptr[p]); }}
+	     for(int p=0;p<dsize;p++) {dataptr[p] = static_cast<T>(ptr[p]); }}
 	   break;   
 	case miINT32: 
-	   { signed long *ptr = static_cast<signed long *>(databuffer());
-	     for(long p=0;p<dsize;p++) {dataptr[p] = static_cast<T>(ptr[p]); }}
+	   { signed int *ptr = static_cast<signed int *>(databuffer());
+	     for(int p=0;p<dsize;p++) {dataptr[p] = static_cast<T>(ptr[p]); }}
 	   break;   
 	case miUINT32: 
-	   { unsigned long *ptr = static_cast<unsigned long *>(databuffer());
-	     for(long p=0;p<dsize;p++) {dataptr[p] = static_cast<T>(ptr[p]); }}
+	   { unsigned int *ptr = static_cast<unsigned int *>(databuffer());
+	     for(int p=0;p<dsize;p++) {dataptr[p] = static_cast<T>(ptr[p]); }}
 	   break;		
 #ifdef JGS_MATLABIO_USE_64INTS
 	case miINT64: 
 	   { int64 *ptr = static_cast<int64 *>(databuffer());
-	     for(long p=0;p<dsize;p++) {dataptr[p] = static_cast<T>(ptr[p]); }}
+	     for(int p=0;p<dsize;p++) {dataptr[p] = static_cast<T>(ptr[p]); }}
 	   break;   
 	case miUINT64: 
 	   { uint64 *ptr = static_cast<uint64 *>(databuffer());
-	     for(long p=0;p<dsize;p++) {dataptr[p] = static_cast<T>(ptr[p]); }}
+	     for(int p=0;p<dsize;p++) {dataptr[p] = static_cast<T>(ptr[p]); }}
 	   break;	
 #endif
 	case miSINGLE: 
@@ -122,7 +122,7 @@ template<class T> void matfiledata::getandcastvector(std::vector<T> &vec)
 
     // This function copies and casts the data into a vector container
    
-    long dsize = size();
+    int dsize = size();
     vec.resize(dsize);
 	
 	if (databuffer() == 0) { vec.resize(0); return; }
@@ -132,45 +132,45 @@ template<class T> void matfiledata::getandcastvector(std::vector<T> &vec)
     {
 	case miINT8: 
 	   { signed char *ptr = static_cast<signed char *>(databuffer());
-	     for(long p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
+	     for(int p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
 	   break;
 	case miUINT8: 
 	   { unsigned char *ptr = static_cast<unsigned char *>(databuffer());
-	     for(long p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
+	     for(int p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
 	   break;
 	case miINT16: 
 	   { signed short *ptr = static_cast<signed short *>(databuffer());
-	     for(long p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
+	     for(int p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
 	   break;
 	case miUINT16: 
 	   { unsigned short *ptr = static_cast<unsigned short *>(databuffer());
-	     for(long p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
+	     for(int p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
 	   break;   
 	case miINT32: 
-	   { signed long *ptr = static_cast<signed long *>(databuffer());
-	     for(long p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
+	   { signed int *ptr = static_cast<signed int *>(databuffer());
+	     for(int p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
 	   break;   
 	case miUINT32: 
-	   { unsigned long *ptr = static_cast<unsigned long *>(databuffer());
-	     for(long p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
+	   { unsigned int *ptr = static_cast<unsigned int *>(databuffer());
+	     for(int p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
 	   break;		
 #ifdef JGS_MATLABIO_USE_64INTS
 	case miINT64: 
 	   { int64 *ptr = static_cast<int64 *>(databuffer());
-	     for(long p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
+	     for(int p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
 	   break;   
 	case miUINT64: 
 	   { uint64 *ptr = static_cast<uint64*>(databuffer());
-	     for(long p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
+	     for(int p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
 	   break;	
 #endif
 	case miSINGLE: 
 	   { float *ptr = static_cast<float *>(databuffer());
-	     for(long p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
+	     for(int p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
 	   break;   	
 	case miDOUBLE: 
 	   { double *ptr = static_cast<double *>(databuffer());
-	     for(long p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
+	     for(int p=0;p<dsize;p++) {vec[p] = static_cast<T>(ptr[p]); }}
 	   break;
         default:
            throw unknown_type();           	   
@@ -178,7 +178,7 @@ template<class T> void matfiledata::getandcastvector(std::vector<T> &vec)
 }
 
 
-template<class T> T matfiledata::getandcastvalue(long index)
+template<class T> T matfiledata::getandcastvalue(int index)
 {
     // direct access to the data
 
@@ -201,10 +201,10 @@ template<class T> T matfiledata::getandcastvalue(long index)
 	   { unsigned short *ptr = static_cast<unsigned short *>(databuffer()); val = static_cast<T>(ptr[index]);}
 	   break;
 	case miINT32: 
-	   { signed long *ptr = static_cast<signed long *>(databuffer()); val = static_cast<T>(ptr[index]);}
+	   { signed int *ptr = static_cast<signed int *>(databuffer()); val = static_cast<T>(ptr[index]);}
 	   break;
 	case miUINT32: 
-	   { unsigned long *ptr = static_cast<unsigned long *>(databuffer()); val = static_cast<T>(ptr[index]);}
+	   { unsigned int *ptr = static_cast<unsigned int *>(databuffer()); val = static_cast<T>(ptr[index]);}
 	   break;
 #ifdef JGS_MATLABIO_USE_64INTS	   
 	case miINT64: 
@@ -231,7 +231,7 @@ template<class T> T matfiledata::getandcastvalue(long index)
 // functions inserting data
 
 
-template<class T> void matfiledata::putandcast(const T *dataptr,long dsize,mitype dtype)
+template<class T> void matfiledata::putandcast(const T *dataptr,int dsize,mitype dtype)
 {
     // This function copies and casts the data in the matfilebuffer into
     // a new buffer specified by dataptr (address of this new buffer) with
@@ -246,36 +246,36 @@ template<class T> void matfiledata::putandcast(const T *dataptr,long dsize,mityp
     {
 	case miINT8: 
 	   { signed char *ptr = static_cast<signed char *>(databuffer());
-	     for(long p=0;p<dsize;p++) { ptr[p] = static_cast<signed char>(dataptr[p]); }}
+	     for(int p=0;p<dsize;p++) { ptr[p] = static_cast<signed char>(dataptr[p]); }}
 	   break;
 	case miUINT8: 
 	   { unsigned char *ptr = static_cast<unsigned char *>(databuffer());
-	     for(long p=0;p<dsize;p++) { ptr[p] = static_cast<unsigned char>(dataptr[p]); }}
+	     for(int p=0;p<dsize;p++) { ptr[p] = static_cast<unsigned char>(dataptr[p]); }}
 	   break;
 	case miINT16: 
 	   { signed short *ptr = static_cast<signed short *>(databuffer());
-	     for(long p=0;p<dsize;p++) { ptr[p] = static_cast<signed short>(dataptr[p]); }}
+	     for(int p=0;p<dsize;p++) { ptr[p] = static_cast<signed short>(dataptr[p]); }}
 	   break;
 	case miUINT16: 
 	   { unsigned short *ptr = static_cast<unsigned short *>(databuffer());
-	     for(long p=0;p<dsize;p++) { ptr[p] = static_cast<unsigned short>(dataptr[p]); }}
+	     for(int p=0;p<dsize;p++) { ptr[p] = static_cast<unsigned short>(dataptr[p]); }}
 	   break;   
 	case miINT32: 
-	   { signed long *ptr = static_cast<signed long *>(databuffer());
-	     for(long p=0;p<dsize;p++) { ptr[p] = static_cast<signed long>(dataptr[p]); }}
+	   { signed int *ptr = static_cast<signed int *>(databuffer());
+	     for(int p=0;p<dsize;p++) { ptr[p] = static_cast<signed int>(dataptr[p]); }}
 	   break;   
 	case miUINT32: 
-	   { unsigned long *ptr = static_cast<unsigned long *>(databuffer());
-	     for(long p=0;p<dsize;p++) { ptr[p] = static_cast<unsigned long>(dataptr[p]); }}
+	   { unsigned int *ptr = static_cast<unsigned int *>(databuffer());
+	     for(int p=0;p<dsize;p++) { ptr[p] = static_cast<unsigned int>(dataptr[p]); }}
 	   break;
 #ifdef JGS_MATLABIO_USE_64INTS	   		
 	case miINT64: 
 	   { int64 *ptr = static_cast<int64 *>(databuffer());
-	     for(long p=0;p<dsize;p++) { ptr[p] = static_cast<int64>(dataptr[p]); }}
+	     for(int p=0;p<dsize;p++) { ptr[p] = static_cast<int64>(dataptr[p]); }}
 	   break;   
 	case miUINT64: 
 	   { uint64 *ptr = static_cast<uint64 *>(databuffer());
-	     for(long p=0;p<dsize;p++) { ptr[p] = static_cast<uint64>(dataptr[p]); }}
+	     for(int p=0;p<dsize;p++) { ptr[p] = static_cast<uint64>(dataptr[p]); }}
 	   break;	
 #endif	   
 	case miSINGLE: 
@@ -296,7 +296,7 @@ template<class T> void matfiledata::putandcastvector(const std::vector<T> &vec,m
 {
     clear();
     
-    long dsize = static_cast<long>(vec.size());
+    int dsize = static_cast<int>(vec.size());
 	
 	if (dsize == 0) return;
     newdatabuffer(dsize*elsize(type),type);
@@ -305,36 +305,36 @@ template<class T> void matfiledata::putandcastvector(const std::vector<T> &vec,m
     {
 	case miINT8: 
 	   { signed char *ptr = static_cast<signed char *>(databuffer());
-	     for(long p=0;p<dsize;p++) {ptr[p] = static_cast<signed char>(vec[p]); }}
+	     for(int p=0;p<dsize;p++) {ptr[p] = static_cast<signed char>(vec[p]); }}
 	   break;
 	case miUINT8: 
 	   { unsigned char *ptr = static_cast<unsigned char *>(databuffer());
-	     for(long p=0;p<dsize;p++) {ptr[p] = static_cast<unsigned char>(vec[p]); }}
+	     for(int p=0;p<dsize;p++) {ptr[p] = static_cast<unsigned char>(vec[p]); }}
 	   break;
 	case miINT16: 
 	   { signed short *ptr = static_cast<signed short *>(databuffer());
-	     for(long p=0;p<dsize;p++) {ptr[p] = static_cast<signed short>(vec[p]); }}
+	     for(int p=0;p<dsize;p++) {ptr[p] = static_cast<signed short>(vec[p]); }}
 	   break;
 	case miUINT16: 
 	   { unsigned short *ptr = static_cast<unsigned short *>(databuffer());
-	     for(long p=0;p<dsize;p++) {ptr[p] = static_cast<unsigned short>(vec[p]); }}
+	     for(int p=0;p<dsize;p++) {ptr[p] = static_cast<unsigned short>(vec[p]); }}
 	   break;   
 	case miINT32: 
-	   { signed long *ptr = static_cast<signed long *>(databuffer());
-	     for(long p=0;p<dsize;p++) {ptr[p] = static_cast<signed long>(vec[p]); }}
+	   { signed int *ptr = static_cast<signed int *>(databuffer());
+	     for(int p=0;p<dsize;p++) {ptr[p] = static_cast<signed int>(vec[p]); }}
 	   break;   
 	case miUINT32: 
-	   { unsigned long *ptr = static_cast<unsigned long *>(databuffer());
-	     for(long p=0;p<dsize;p++) {ptr[p] = static_cast<unsigned long>(vec[p]); }}
+	   { unsigned int *ptr = static_cast<unsigned int *>(databuffer());
+	     for(int p=0;p<dsize;p++) {ptr[p] = static_cast<unsigned int>(vec[p]); }}
 	   break;	
 #ifdef JGS_MATLABIO_USE_64INTS	   	
 	case miINT64: 
 	   { int64 *ptr = static_cast<int64 *>(databuffer());
-	     for(long p=0;p<dsize;p++) {ptr[p] = static_cast<int64>(vec[p]); }}
+	     for(int p=0;p<dsize;p++) {ptr[p] = static_cast<int64>(vec[p]); }}
 	   break;   
 	case miUINT64: 
 	   { uint64 *ptr = static_cast<uint64 *>(databuffer());
-	     for(long p=0;p<dsize;p++) {ptr[p] = static_cast<uint64>(vec[p]); }}
+	     for(int p=0;p<dsize;p++) {ptr[p] = static_cast<uint64>(vec[p]); }}
 	   break;	
 #endif	   
 	case miSINGLE: 
@@ -351,7 +351,7 @@ template<class T> void matfiledata::putandcastvector(const std::vector<T> &vec,m
 }
 
 
-template<class T> void matfiledata::putandcastvalue(const T val,long index)
+template<class T> void matfiledata::putandcastvalue(const T val,int index)
 {
     if (index >= size()) throw out_of_range();
     
@@ -370,10 +370,10 @@ template<class T> void matfiledata::putandcastvalue(const T val,long index)
 	   { unsigned short *ptr = static_cast<unsigned short *>(databuffer()); ptr[index] = static_cast<unsigned short>(val);}
 	   break;
 	case miINT32: 
-	   { signed long *ptr = static_cast<signed long *>(databuffer()); ptr[index] = static_cast<signed long>(val);}
+	   { signed int *ptr = static_cast<signed int *>(databuffer()); ptr[index] = static_cast<signed int>(val);}
 	   break;
 	case miUINT32: 
-	   { unsigned long *ptr = static_cast<unsigned long *>(databuffer()); ptr[index] = static_cast<unsigned long>(val);}
+	   { unsigned int *ptr = static_cast<unsigned int *>(databuffer()); ptr[index] = static_cast<unsigned int>(val);}
 	   break;
 #ifdef JGS_MATLABIO_USE_64INTS	   
 	case miINT64: 

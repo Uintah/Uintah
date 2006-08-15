@@ -152,6 +152,7 @@ public:
   bool                fog_visibleonly_p()  { return fog_visibleonly_; }
   bool                do_rotation_axis_p() { return true; }
   bool                do_picking_p()       { return false; }
+  bool                do_fbpick_p() const  { return fbpick_; }
   bool                do_bbox_p()          { return false; }
 
   const Color&          bgcolor() { return bgcolor_; }
@@ -164,6 +165,19 @@ public:
 
 protected:
 
+  //! the following enum defines the stack priorities for the tool manager,
+  //! and classifies the priority ranges. For now leave room for 100 stacks 
+  //! in each range.  See init_tool_manager() for use of these ranges.
+  enum {
+    EVENT_MODIFIERS_E = 0, // Tools to modify incoming events.
+    TOOL_MODIFIERS_E = 100, // Tools to manipulate the set of active tools.
+    DATA_TOOLS_E = 200, // Tools that handle data, 
+    VIEWER_TOOLS_E = 300,  // Tools to manipulate the current view.
+                           // always on the stack (so last)
+    LAST_CHANCE_E = 500
+  };
+
+  void                  init_tool_manager();
   void                  redraw_frame();
   GeomHandle            create_viewer_axes() ;
   void                  draw_visible_scene_graph();
@@ -217,6 +231,7 @@ protected:
   double                current_time_;
   unsigned int          frame_count_;
   vector<float>         depth_buffer_;
+  vector<unsigned char> fbpick_image_;
   GLdouble              modelview_matrix_[16];
   GLdouble              projection_matrix_[16];
   GLint                 viewport_matrix_[4];
@@ -259,6 +274,7 @@ protected:
   double                 fog_start_;
   double                 fog_end_;
   bool                   fog_visibleonly_;
+  bool                   fbpick_;
   vector<GeomHandle>	 internal_objs_;
   vector<bool>		 internal_objs_visible_p_;   
   GeomSphere            *focus_sphere_;

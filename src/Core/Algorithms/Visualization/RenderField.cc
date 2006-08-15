@@ -307,7 +307,7 @@ RenderTensorFieldBase::add_item(GeomGroup *g,
   ecolor = e1;
   if (colorize)
   {
-    ecolor.normalize();
+    ecolor.safe_normalize();
     double rr = fabs(ecolor.x());
     double gg = fabs(ecolor.y());
     double bb = fabs(ecolor.z());

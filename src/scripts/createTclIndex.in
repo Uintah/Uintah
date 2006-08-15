@@ -32,6 +32,6 @@
 TCLSH << END
 source TCL_INIT_DIR/init.tcl
 package require Itcl 3.1
-source LIB_DIR_ITCL/itcl/itcl.tcl
+source ITCL_INIT_DIR/itcl.tcl
 auto_mkindex $1 $2
 END

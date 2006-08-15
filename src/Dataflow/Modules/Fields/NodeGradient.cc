@@ -78,14 +78,8 @@ NodeGradient::~NodeGradient()
 void
 NodeGradient::execute()
 {
-  FieldIPort* ifp = (FieldIPort *)get_iport("Input Field");
-
   FieldHandle fieldin;
-  if (!(ifp->get(fieldin) && fieldin.get_rep()))
-  {
-    error( "No handle or representation in input field." );
-    return;
-  }
+  if (!get_input_handle("Input Field", fieldin)) return;
 
   if (!fieldin->query_scalar_interface(this).get_rep() )
   {
@@ -119,12 +113,7 @@ NodeGradient::execute()
     fieldout_ = algo->execute(fieldin);
   }
 
-  // Send the data downstream
-  if ( fieldout_.get_rep() )
-  {
-    FieldOPort* ofp = (FieldOPort *) get_oport("Output Gradient");
-    ofp->send_and_dereference(fieldout_, true);
-  }
+  send_output_handle("Output Gradient", fieldout_, true);
 }
 
 

@@ -109,21 +109,10 @@ DipoleInSphere::execute()
 {
   update_state(NeedData);
   
-  FieldIPort *iportGeom_ = (FieldIPort *)get_iport("Sphere");
   FieldIPort *iportDip_ = (FieldIPort *)get_iport("Dipole Sources");
-  FieldOPort *oportPot_ = (FieldOPort *)get_oport("SphereWithPots");
-  FieldOPort *oportMag_ = (FieldOPort *)get_oport("SphereWithMagneticField");
-  FieldHandle field_handle;
 
-  if (!iportGeom_->get(field_handle)){
-    error("Can't get input mesh data.");
-    return;
-  }
-  
-  if (!field_handle.get_rep()) {
-    error("Empty input mesh.");
-    return;
-  }
+  FieldHandle field_handle;
+  if (!get_input_handle("Sphere", field_handle)) return;
  
   const TypeDescription *mtd = field_handle->mesh()->get_type_description();
   const string &mtdn = mtd->get_name();
@@ -175,9 +164,9 @@ DipoleInSphere::execute()
       update_state(JustStarted);
       fillOneSphere(dip_mtrx, hNewSurf, hBSurf);
       FieldHandle pfield(hNewSurf);
-      oportPot_->send_and_dereference(pfield);
+      send_output_handle("SphereWithPots", pfield);
       FieldHandle mfield(hBSurf);
-      oportMag_->send_and_dereference(mfield);
+      send_output_handle("SphereWithMagneticField", mfield);
     }
     else {
       warning("No dipole info found in the mesh supplied or supplied field is not of type PointCloudField<Vector>.");

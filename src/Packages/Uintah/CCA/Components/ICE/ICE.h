@@ -83,6 +83,8 @@ namespace Uintah {
       virtual void scheduleTimeAdvance( const LevelP& level, 
                                         SchedulerP&);
                                              
+      virtual void scheduleFinalizeTimestep(const LevelP& level, SchedulerP&);
+
       virtual void scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched);
 
       void scheduleComputePressure(SchedulerP&, 
@@ -175,9 +177,13 @@ namespace Uintah {
       void scheduleAdvectAndAdvanceInTime(SchedulerP&, 
                                           const PatchSet*,
                                           const MaterialSubset*,
-                                          const MaterialSubset*,
-                                          const MaterialSubset*,
-                                          const MaterialSet*); 
+                                          const MaterialSet*);
+                                          
+      void scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
+                                             const PatchSet* patch_set,
+                                             const MaterialSubset* ice_matlsub,
+                                             const MaterialSet* ice_matls,
+                                             const string& where);
                              
       void scheduleTestConservation(SchedulerP&, 
                                     const PatchSet*,
@@ -487,6 +493,14 @@ namespace Uintah {
                                   const MaterialSubset* matls,
                                   DataWarehouse*,
                                   DataWarehouse*);
+                                  
+                                  
+      void conservedtoPrimitive_Vars(const ProcessorGroup*,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset*,
+                                     DataWarehouse* old_dw,
+                                     DataWarehouse* new_dw);
+                                  
                                   
 //__________________________________
 //   RF TASKS    
@@ -811,6 +825,7 @@ namespace Uintah {
       bool switchDebug_MomentumExchange_CC;
       bool switchDebug_Source_Sink;
       bool switchDebug_advance_advect;
+      bool switchDebug_conserved_primitive;
       bool switchDebug_AMR_refine;
       bool switchDebug_AMR_refineInterface;
       bool switchDebug_AMR_coarsen;
@@ -836,10 +851,6 @@ namespace Uintah {
       int d_max_iter_implicit;
       int d_iters_before_timestep_restart;
       double d_outer_iter_tolerance;
-
-      bool doICEOnLevel(int level, int numLevels);
-      int d_minGridLevel;
-      int d_maxGridLevel;
       
       // ADD HEAT VARIABLES
       vector<int>    d_add_heat_matls;
@@ -1014,10 +1025,11 @@ namespace Uintah {
        const VarLabel* var;
        const VarLabel* src;
        const VarLabel* var_Lagrangian;
+       const VarLabel* var_adv;
       };
       struct AMR_refluxVariable {
        const MaterialSubset* matls;
-       const VarLabel* var_CC;
+       const VarLabel* var_adv;
        const VarLabel* var_X_FC_flux;
        const VarLabel* var_Y_FC_flux;
        const VarLabel* var_Z_FC_flux;

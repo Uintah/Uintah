@@ -190,7 +190,7 @@ AC_DEFUN([SCI_COMPILE_LINK_TEST], [
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_$1        => lib path
+##      $1_LIB_DIR        => lib path
 ##      $1_LIB_DIR_FLAG   => all the -L's
 ##      $1_LIB_FLAG       => all the -l's
 ##      HAVE_$1           => yes or no
@@ -252,7 +252,7 @@ LDFLAGS="$_sci_lib_path $LDFLAGS"
 LIBS="$_sci_libs $7 $LIBS"
 
 AC_TRY_LINK([$3],[$8],[
-eval LIB_DIR_$1='"$6"'
+eval $1_LIB_DIR='"$6"'
 
 if test "$6" = "$SCI_THIRDPARTY_LIB_DIR"; then
   eval $1_LIB_DIR_FLAG=''
@@ -273,7 +273,7 @@ eval HAVE_$1_H="yes"
 AC_MSG_RESULT(yes)
 ], 
 [
-eval LIB_DIR_$1=''
+eval $1_LIB_DIR=''
 eval $1_LIB_DIR_FLAG=''
 eval $1_LIB_FLAG=''
 eval HAVE_$1="no"
@@ -346,7 +346,7 @@ AC_DEFUN([SCI_TRY_LINK], [
 ## after execution of macro, the following will be defined:
 ##      Variable            Value
 ##      --------            -----
-##      LIB_DIR_$1        => lib path
+##      $1_LIB_DIR        => lib path
 ##      $1_LIB_DIR_FLAG   => all the -L's
 ##      $1_LIB_FLAG       => all the -l's
 ##      HAVE_$1           => yes or no
@@ -596,7 +596,7 @@ if test "$IS_VC" = "yes"; then
   LIB=$oldLIB
 fi
 
-eval LIB_DIR_$1='"$6"'
+eval $1_LIB_DIR='"$6"'
 
 # Remove any bad (/usr/lib) lib paths and the thirdparty lib path
 _final_dirs=
@@ -646,7 +646,7 @@ eval HAVE_$1_H="yes"
 AC_MSG_RESULT(yes)
 ], 
 [
-eval LIB_DIR_$1=''
+eval $1_LIB_DIR=''
 eval $1_LIB_DIR_FLAG=''
 eval $1_LIB_FLAG=''
 eval HAVE_$1="no"

@@ -36,7 +36,7 @@ bool FieldDataElemToNodeAlgo::FieldDataElemToNode(ProgressReporter *pr,
                               FieldHandle input,
                               FieldHandle& output,
                               std::string method)
-{
+{  
   if (input.get_rep() == 0)
   {
     pr->error("FieldDataNodeToElem: No input source field");
@@ -44,7 +44,7 @@ bool FieldDataElemToNodeAlgo::FieldDataElemToNode(ProgressReporter *pr,
   }
 
   FieldInformation fi(input);
-  FieldInformation fo(output);
+  FieldInformation fo(input);
   
   fo.make_lineardata();
 
@@ -87,7 +87,7 @@ bool FieldDataElemToNodeAlgo::FieldDataElemToNode(ProgressReporter *pr,
   if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
   {
     pr->compile_error(ci->filename_);
-    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
+//    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
     return(false);
   }
 

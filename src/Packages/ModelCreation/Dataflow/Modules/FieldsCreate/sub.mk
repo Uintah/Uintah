@@ -17,9 +17,13 @@ SRCS     += \
 	$(SRCDIR)/ClipFieldByFunction.cc\
 	$(SRCDIR)/SplitFieldByDomain.cc\
   $(SRCDIR)/MergeFields.cc\
+  $(SRCDIR)/MergeMeshes.cc\
 	$(SRCDIR)/DomainBoundary.cc\
+	$(SRCDIR)/IndexedDomainBoundary.cc\
 	$(SRCDIR)/SplitFieldByConnectedRegion.cc\
 	$(SRCDIR)/CollectFields.cc\
+	$(SRCDIR)/ClipFieldByField.cc\
+	$(SRCDIR)/FieldBoundary.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \
@@ -27,7 +31,7 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
         Core/GeomInterface Core/TkExtensions \
-        Packages/ModelCreation/Core/Algorithms \
+        Core/Algorithms/ArrayMath \
         Core/Algorithms/Converter \
         Core/Algorithms/Fields 
                  

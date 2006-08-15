@@ -211,6 +211,34 @@ SearchGridConstructor::lookup_ijk(const list<under_type> *&candidates,
 }
 
 
+void
+SearchGridConstructor::lookup_bbox(std::set<under_type> &candidates,
+                                   const BBox &bbox)
+{
+  int mini, minj, mink, maxi, maxj, maxk;
+
+  locate(mini, minj, mink, bbox.min());
+  locate(maxi, maxj, maxk, bbox.max());
+
+  for (int i = mini; i <= maxi; i++)
+  {
+    for (int j = minj; j <= maxj; j++)
+    {
+      for (int k = mink; k <= maxk; k++)
+      {
+        const std::list<under_type> &stuff = bin_[linearize(i, j, k)];
+        std::list<under_type>::const_iterator itr = stuff.begin();
+        while (itr != stuff.end())
+        {
+          candidates.insert(*itr);
+          ++itr;
+        }
+      }
+    }
+  }
+}
+
+
 double
 SearchGridConstructor::min_distance_squared(const Point &p,
                                             int i, int j, int k) const

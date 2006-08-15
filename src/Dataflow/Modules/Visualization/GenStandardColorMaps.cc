@@ -236,6 +236,14 @@ GenStandardColorMaps::genMap(const string& s, int res, double gamma, bool faux)
       alphas[i] = 1.0 - y / h;
     }
     
+    //! Correct for not being able to perfectly align the
+    //! widgets
+    if (alphaT.size() > 0)
+    {
+      if ( fabs(alphaT[0]) < 0.005) alphaT[0] = 0.0;
+      if ( fabs(alphaT[alphaT.size()-1]-1.0) < 0.005) alphaT[alphaT.size()-1] = 1.0;
+    }
+    
     //! The screen space curve may not contain the default endpoints.
     //! Add them in here if needed.
     if (alphaT.empty() || alphaT.front() != 0.0) {

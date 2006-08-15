@@ -33,9 +33,15 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Core/Init
 
-SRCS     += $(SRCDIR)/init.cc
-
+SRCS     += $(SRCDIR)/init.cc \
+            $(SRCDIR)/NrrdToField_Plugin.cc \
+            $(SRCDIR)/NrrdToMatrix_Plugin.cc \
+            $(SRCDIR)/SimpleTextFileToMatrix_Plugin.cc \
+            
+            
 PSELIBS := \
+  Core/Algorithms/DataIO \
+  Core/Algorithms/Converter \
 	Core/Containers   \
 	Core/Datatypes    \
 	Core/Exceptions   \

@@ -112,7 +112,7 @@
   <io>
     <inputs lastportdynamic="yes">
       <port>
-        <name>Size</name>
+        <name>DataArray</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
       <port>
@@ -120,7 +120,7 @@
         <datatype>SCIRun::String</datatype>
       </port>      
       <port>
-        <name>DataArray</name>
+        <name>Array</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>

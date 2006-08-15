@@ -1,0 +1,15 @@
+Until the build system (eventually cmake) creates the following links, please do so by hand.
+
+cd SCIRun/dbg/pysci
+ln -s ../lib/libpysci.so _pysci.so
+ln -s ../../src/pysci/pysci.py pysci.py
+
+
+
+You must set the following env var to the location of your builds on-the-fly-libs dir
+
+SCIRUN_ON_THE_FLY_LIBS_DIR=<full path to your SCIRun/dbg/on-the-fly-libs/>
+
+You must set your PYTHONPATH env var to your builds pysci dir
+
+PYTHONPATH=<full path to your SCIRun/dbg/pysci/>

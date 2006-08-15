@@ -251,12 +251,9 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     }
 
     ParticleInterpolator* interpolator = flags->d_interpolator->clone(patch);
-    vector<IntVector> ni;
-    ni.reserve(interpolator->size());
-    vector<double> S;
-    S.reserve(interpolator->size());
-    vector<Vector> d_S;
-    d_S.reserve(interpolator->size());
+    vector<IntVector> ni(interpolator->size());
+    vector<double> S(interpolator->size());
+    vector<Vector> d_S(interpolator->size());
 
 
     // Performs the interpolation from the cell vertices of the grid

@@ -601,26 +601,25 @@ void ExtractSepSurfs::buildSurfs(SegLatVolField &field, SepSurf &surf) {
   surf.bldNodeInfo();
 }
 
-void ExtractSepSurfs::execute()
-{
-  FieldIPort *ifp = (FieldIPort *)get_iport("SegField");
-  FieldOPort *ofp = (FieldOPort *)get_oport("SepSurf");
 
+void
+ExtractSepSurfs::execute()
+{
   FieldHandle ifieldH;
-  if (!ifp->get(ifieldH) || !ifieldH.get_rep()) {
-    error("No input data");
-    return;
-  }
+  if (!get_input_handle("SegField", ifieldH)) return;
+
   SegLatVolField *slvf = dynamic_cast<SegLatVolField *>(ifieldH.get_rep());
   if (!slvf) {
     error("Input field was not a SegLatVolField");
     return;
   }
+
   SSQSMesh::handle_type qsmH = new SSQSMesh;
   SepSurf *surf = new SepSurf(qsmH);
   buildSurfs(*slvf, *surf);
   FieldHandle fH(surf);
-  ofp->send_and_dereference(fH);
+
+  send_output_handle("SepSurf", fH);
 }
 
 } // End namespace BioPSE

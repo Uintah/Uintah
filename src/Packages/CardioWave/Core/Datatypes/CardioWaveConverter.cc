@@ -37,6 +37,11 @@
 #include <sstream>
 #include <iostream>
 
+#include <sci_defs/teem_defs.h>
+
+#ifdef HAVE_TEEM
+#include <teem/air.h>
+#endif
 
 using namespace std;
 using namespace SCIRun;
@@ -97,7 +102,7 @@ bool CardioWaveConverter::byteswapmachine()
 bool CardioWaveConverter::cwFileTOsciMatrix(std::string filename,MatrixHandle& mh,ProgressReporter *pr)
 {
   FILE* fid;
-  std::string header(' ',128);
+  std::string header(128,' ');
   
   // Make sure that we set a default value
   mh = 0;
@@ -219,6 +224,8 @@ bool CardioWaveConverter::cwFileTOsciMatrix(std::string filename,MatrixHandle& m
         int  bwn;   iss >> bwn;
         int  dummy; iss >> dummy;
         int  nz;    iss >> nz;
+        
+        std::cout << "dummy= " << dummy << "nz= " << nz <<"\n";
         
         int *jcoef = scinew int[nz*nrows];
         double *coef = scinew double[nz*nrows];
@@ -879,7 +886,7 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
 
     header[0] = 'V';
     header[1] = 'B';
-    header[2] = '8'; // We do not yet support byte vectors of size 2
+    header[2] = '8'; // We do not yet support vectors of size 4
     header[3] = ':';
     header[4] = ' ';
     if (byteswapmachine() == true) header[1] = 'L';
@@ -966,7 +973,7 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
     
     std::ostringstream oss;
     oss << nrows << " " << ncols << " " << bwp << " " << bwn << " " << "1" << " " << nz;
-    
+
     std::string ssize = oss.str();
     header.replace(6,ssize.size(),ssize);
     
@@ -990,7 +997,11 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
         s = cc[r];
         if (s == p)
         {
+#ifdef HAVE_TEEM
+          if (AIR_EXISTS_D(d[r])) coef[p] = d[r]; else coef[p] = 0.0;
+#else
           coef[p] = d[r];
+#endif
         }
         else
         {
@@ -999,7 +1010,11 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
             if (jcoef[p+t*nrows] == p+1)
             {
               jcoef[p+t*nrows] = s+1;
+#ifdef HAVE_TEEM
+              if (AIR_EXISTS_D(d[r])) coef[p+t*nrows] = d[r]; else coef[p+t*nrows] = 0.0; 
+#else              
               coef[p+t*nrows] = d[r];
+#endif
               break;
             }
           }  

@@ -26,16 +26,13 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/String.h>
 
 #include <Dataflow/Network/Module.h>
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/String.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/StringPort.h>
-
-#include <Core/Malloc/Allocator.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 
 namespace ModelCreation {
 
@@ -56,54 +53,23 @@ MatrixToString::MatrixToString(GuiContext* ctx)
 
 void MatrixToString::execute()
 {
+  // Define local handles of data objects:
   MatrixHandle Mat;
   StringHandle Str;
-  
+
+  // Get the new input data:  
   if(!(get_input_handle("Matrix",Mat,true))) return;
   
-  std::ostringstream oss;
-  
-  if (Mat->is_sparse())
+  // Only reexecute if the input changed. SCIRun uses simple scheduling
+  // that executes every module downstream even if no data has changed:  
+  if (inputs_changed_ || !oport_cached("String"))
   {
-    SparseRowMatrix* spr = dynamic_cast<SparseRowMatrix*>(Mat.get_rep());
-    int *rr = spr->rows;
-    int *cc = spr->columns;
-    double *d  = spr->a;
-    int m   = spr->nrows();
-    int n   = spr->ncols();
-    
-    oss << "Sparse Matrix ("<<m<<"x"<<n<<"):\n";
-    if ((rr)&&(cc)&&(d))
-    {
-      for (int r = 0; r < m; r++)
-      {
-        for (int c=rr[r]; c<rr[r+1];c++)
-        {
-          oss << "["<<r<<","<<cc[c]<<"] = " << d[c] << "\n";
-        }
-      }
-    }
+    SCIRunAlgo::ConverterAlgo algo(dynamic_cast<ProgressReporter *>(this));
+    if (!(algo.MatrixToString(Mat,Str))) return;
+
+    // send new output if there is any:    
+    send_output_handle("String",Str,false);
   }
-  else
-  {
-    Mat = Mat->dense();
-    int m = Mat->nrows();
-    int n = Mat->ncols();
-    double* d = Mat->get_data_pointer();
-    oss << "Dense Matrix ("<<m<<"x"<<n<<"):\n";
-    int k = 0;
-    for (int r=0; r<m;r++)
-    {
-      for (int c=0; c<n;c++)
-      {
-        oss << d[k++] << " ";
-      }
-      oss << "\n";
-    }
-  }
-  
-  Str = scinew String(oss.str());
-  send_output_handle("String",Str,true);
 }
 
 

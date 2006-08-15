@@ -60,7 +60,7 @@ void MPMPetscSolver::flushMatrix()
 }
 
 
-void MPMPetscSolver::fillVector(int i,double v)
+void MPMPetscSolver::fillVector(int i,double v,bool add)
 {
  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::fillVector()!", __FILE__, __LINE__ );
 }
@@ -99,6 +99,11 @@ void MPMPetscSolver::copyL2G(Array3<int>& mapping,const Patch* patch)
 void MPMPetscSolver::removeFixedDOF(int num_nodes)
 {
  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::removeFixedDOF()!", __FILE__, __LINE__ );
+}
+
+void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
+{
+ throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::removeFixedDOFHeat()!", __FILE__, __LINE__ );
 }
 
 

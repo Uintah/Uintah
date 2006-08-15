@@ -59,6 +59,7 @@ protected:
   vector<float> points_;
   vector<unsigned char> colors_;
   vector<float> indices_;
+  vector<unsigned int> item_idx_;
 
   bool pickable;  // hack so we don't draw non-pickable pts during a pick
 
@@ -71,17 +72,19 @@ public:
 
   virtual void get_bounds(BBox&);
 
-  inline void add(const Point& p) {
+  inline void add(const Point& p, unsigned int idx = 0) {
     points_.push_back(p.x());
     points_.push_back(p.y());
     points_.push_back(p.z());
+    item_idx_.push_back(idx);
   }
 
-  void add(const Point& p, const MaterialHandle &c);
-  void add(const Point& p, double index)
+  void add(const Point& p, const MaterialHandle &c, unsigned int idx = 0);
+  void add(const Point& p, double index, unsigned int idx = 0)
   {
     add(p);
     indices_.push_back(index);
+    item_idx_.push_back(idx);
   }
 
 #ifdef SCI_OPENGL

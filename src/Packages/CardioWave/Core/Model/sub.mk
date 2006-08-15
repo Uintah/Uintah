@@ -44,12 +44,9 @@ PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Algorithms/Converter \
         Core/Algorithms/DataIO \
         Core/Algorithms/Math \
+        Core/Algorithms/Regression \
                 
-LIBS :=
-
-ifeq ($(HAVE_INSIGHT),yes)
-  LIBS += $(INSIGHT_LIBRARY) $(GDCM_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) 
-endif
+  LIBS := $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -272,7 +272,6 @@ void HierarchicalRegridder::MarkPatches2(const ProcessorGroup*,
                                          DataWarehouse* old_dw,
                                          DataWarehouse* new_dw)
 {
-  
   rdbg << "MarkPatches2 BGN\n";
   const Level* oldLevel = getLevel(patches);
   int levelIdx = oldLevel->getIndex();

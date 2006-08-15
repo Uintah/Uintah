@@ -65,16 +65,12 @@ using std::pair;
 
 namespace SCIRun {
 
-static void
+GLvoid
 quad_error(GLenum code)
 {
   cerr << "WARNING: Quadric Error (" << (char*)gluErrorString(code) << ")" << endl;
 }
 
-
-// May need to do this for really old GCC compilers?
-//typedef void (*gluQuadricCallbackType)(...);
-typedef void (*gluQuadricCallbackType)();
 
 DrawInfoOpenGL::DrawInfoOpenGL() :
   polycount_(0),
@@ -121,10 +117,12 @@ DrawInfoOpenGL::DrawInfoOpenGL() :
     printf( "Error in GeomOpenGL.cc: DrawInfoOpenGL(): gluNewQuadric()\n" );
   }
 
-#ifdef _WIN32
+#if defined(_WIN32)
   gluQuadricCallback(qobj_, /* FIX (GLenum)GLU_ERROR*/ 0, (void (__stdcall*)())quad_error);
+#elif defined(__APPLE__)
+  gluQuadricCallback(qobj_, (GLenum)GLU_ERROR, (GLvoid (*)(...))quad_error);
 #else
-  gluQuadricCallback(qobj_, (GLenum)GLU_ERROR, (gluQuadricCallbackType)quad_error);
+  gluQuadricCallback(qobj_, (GLenum)GLU_ERROR, (void(*)())quad_error);
 #endif
 }
 

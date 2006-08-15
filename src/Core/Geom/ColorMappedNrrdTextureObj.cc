@@ -116,7 +116,7 @@ ColorMappedNrrdTextureObj::~ColorMappedNrrdTextureObj()
   if (own_data_ && data_) delete[] data_;
   for (unsigned int t = 0; t < texture_id_.size(); ++t) 
     if (glIsTexture(texture_id_[t]))
-        glDeleteTextures(1,&texture_id_[t]);
+        glDeleteTextures(1,(const GLuint *)&texture_id_[t]);
 }
 
 void
@@ -175,16 +175,7 @@ ColorMappedNrrdTextureObj::apply_colormap(int x1, int y1, int x2, int y2,
   y1 = Clamp(y1-border,   0, nrrd_handle_->nrrd_->axis[2].size);
   y2 = Clamp(y2+border+1, 0, nrrd_handle_->nrrd_->axis[2].size);
 
-  const float range = (clut_max_ - clut_min_);
-  const float scale = (range > 0.00001) ? (1.0 / range) : 1.0;
-  const float bias =  (range > 0.00001) ? -clut_min_*scale : 0.0;
-
-  const int row_width = nrrd_handle_->nrrd_->axis[1].size;
-  const int region_start = row_width * y1 + x1;
-  const int region_wid = x2 - x1;
-  const int region_hei = y2 - y1;
-
-
+  double clut_min = clut_min_;
   int ncolors;  
   const float *rgba;
   if (!colormap_.get_rep()) {
@@ -193,11 +184,23 @@ ColorMappedNrrdTextureObj::apply_colormap(int x1, int y1, int x2, int y2,
     for (int c = 0; c < 256*4; ++c) 
       nrgba[c] = (c % 4 == 3) ? 1.0 : (c/4)/255.0;
     nrgba[3] = 0.0;
+    clut_min -= (clut_max_ - clut_min_)/255.0;
     rgba = nrgba;
   } else {
     ncolors = colormap_->resolution();
     rgba = colormap_->get_rgba();
   }
+
+  const float range = (clut_max_ - clut_min);
+  const float scale = (range > 0.00001) ? (1.0 / range) : 1.0;
+  const float bias =  (range > 0.00001) ? -clut_min*scale : 0.0;
+
+  const int row_width = nrrd_handle_->nrrd_->axis[1].size;
+  const int region_start = row_width * y1 + x1;
+  const int region_wid = x2 - x1;
+  const int region_hei = y2 - y1;
+
+
 
   switch (nrrd_handle_->nrrd_->type) {
   case nrrdTypeChar: {
@@ -296,7 +299,7 @@ ColorMappedNrrdTextureObj::bind(int x, int y)
   const bool bound = glIsTexture(texture_id_[pos]);
 
   if (!bound) {
-    glGenTextures(1, &texture_id_[pos]);
+    glGenTextures(1, (GLuint *)&texture_id_[pos]);
     CHECK_OPENGL_ERROR();  
   }
 

@@ -49,6 +49,10 @@ to be linked over the boundary. This mapping matrix is automatically generated b
         <name>ConductivityTable</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
+      <port>
+        <name>Initial Potential</name>
+        <datatype>SCIRun::Field</datatype>
+      </port>
     </inputs>
     <outputs>
       <port>

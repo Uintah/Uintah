@@ -27,13 +27,11 @@
 */
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-
-#include <Core/Algorithms/Converter/ConverterAlgo.h>
 #include <Core/Datatypes/Field.h>
-#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/Matrix.h>
+#include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 
 
 namespace ModelCreation {
@@ -60,16 +58,24 @@ MatrixToField::MatrixToField(GuiContext* ctx)
 
 void MatrixToField::execute()
 {
+  // Define local handles of data objects:
   MatrixHandle imatrix;
   FieldHandle ofield;
-  std::string datalocation = guidatalocation_.get();
   
+  // Get the new input data:  
   if (!(get_input_handle("Matrix",imatrix,true))) return;
-  SCIRunAlgo::ConverterAlgo algo(dynamic_cast<ProgressReporter *>(this));
-
-  if (!(algo.MatrixToField(imatrix,ofield,datalocation))) return;
+    
+  // Only reexecute if the input changed. SCIRun uses simple scheduling
+  // that executes every module downstream even if no data has changed:    
+  if (inputs_changed_ || guidatalocation_.changed() || !oport_cached("Field"))
+  {
+    std::string datalocation = guidatalocation_.get();
+    SCIRunAlgo::ConverterAlgo algo(dynamic_cast<ProgressReporter *>(this));
+    if (!(algo.MatrixToField(imatrix,ofield,datalocation))) return;
   
-  send_output_handle("Field",ofield,true);
+    // send new output if there is any:  
+    send_output_handle("Field",ofield,false);
+  }
 }
 
 

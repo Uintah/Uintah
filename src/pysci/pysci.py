@@ -1,9 +1,9 @@
-# This file was created automatically by SWIG.
+# This file was created automatically by SWIG 1.3.27.
 # Don't modify this file, modify the SWIG interface instead.
-# This file is compatible with both classic and new-style classes.
 
 import _pysci
 
+# This file is compatible with both classic and new-style classes.
 def _swig_setattr_nondynamic(self,class_type,name,value,static=1):
     if (name == "this"):
         if isinstance(value, class_type):
@@ -59,7 +59,7 @@ class OpenGLContextPtr(OpenGLContext):
     def __init__(self, this):
         _swig_setattr(self, OpenGLContext, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, OpenGLContext, 'thisown', 0)
-        _swig_setattr(self, OpenGLContext,self.__class__,OpenGLContext)
+        self.__class__ = OpenGLContext
 _pysci.OpenGLContext_swigregister(OpenGLContextPtr)
 
 class CallbackOpenGLContext(OpenGLContext):
@@ -99,7 +99,7 @@ class CallbackOpenGLContextPtr(CallbackOpenGLContext):
     def __init__(self, this):
         _swig_setattr(self, CallbackOpenGLContext, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, CallbackOpenGLContext, 'thisown', 0)
-        _swig_setattr(self, CallbackOpenGLContext,self.__class__,CallbackOpenGLContext)
+        self.__class__ = CallbackOpenGLContext
 _pysci.CallbackOpenGLContext_swigregister(CallbackOpenGLContextPtr)
 
 class Mutex(_object):
@@ -125,24 +125,213 @@ class MutexPtr(Mutex):
     def __init__(self, this):
         _swig_setattr(self, Mutex, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, Mutex, 'thisown', 0)
-        _swig_setattr(self, Mutex,self.__class__,Mutex)
+        self.__class__ = Mutex
 _pysci.Mutex_swigregister(MutexPtr)
 
-class BaseEvent(_object):
+class ProgressReporter(_object):
     __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, ProgressReporter, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, ProgressReporter, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ SCIRun::ProgressReporter instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    Starting = _pysci.ProgressReporter_Starting
+    Compiling = _pysci.ProgressReporter_Compiling
+    CompilationDone = _pysci.ProgressReporter_CompilationDone
+    Done = _pysci.ProgressReporter_Done
+    def __init__(self, *args):
+        _swig_setattr(self, ProgressReporter, 'this', _pysci.new_ProgressReporter(*args))
+        _swig_setattr(self, ProgressReporter, 'thisown', 1)
+    def __del__(self, destroy=_pysci.delete_ProgressReporter):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    def error(*args): return _pysci.ProgressReporter_error(*args)
+    def warning(*args): return _pysci.ProgressReporter_warning(*args)
+    def remark(*args): return _pysci.ProgressReporter_remark(*args)
+    def compile_error(*args): return _pysci.ProgressReporter_compile_error(*args)
+    def add_raw_message(*args): return _pysci.ProgressReporter_add_raw_message(*args)
+    def msg_stream(*args): return _pysci.ProgressReporter_msg_stream(*args)
+    def msg_stream_flush(*args): return _pysci.ProgressReporter_msg_stream_flush(*args)
+    def report_progress(*args): return _pysci.ProgressReporter_report_progress(*args)
+    def update_progress(*args): return _pysci.ProgressReporter_update_progress(*args)
+    def increment_progress(*args): return _pysci.ProgressReporter_increment_progress(*args)
+
+class ProgressReporterPtr(ProgressReporter):
+    def __init__(self, this):
+        _swig_setattr(self, ProgressReporter, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, ProgressReporter, 'thisown', 0)
+        self.__class__ = ProgressReporter
+_pysci.ProgressReporter_swigregister(ProgressReporterPtr)
+
+SCI_project_Persistent_h = _pysci.SCI_project_Persistent_h
+class PersistentTypeID(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, PersistentTypeID, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, PersistentTypeID, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ SCIRun::PersistentTypeID instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    __swig_setmethods__["type"] = _pysci.PersistentTypeID_type_set
+    __swig_getmethods__["type"] = _pysci.PersistentTypeID_type_get
+    if _newclass:type = property(_pysci.PersistentTypeID_type_get, _pysci.PersistentTypeID_type_set)
+    __swig_setmethods__["parent"] = _pysci.PersistentTypeID_parent_set
+    __swig_getmethods__["parent"] = _pysci.PersistentTypeID_parent_get
+    if _newclass:parent = property(_pysci.PersistentTypeID_parent_get, _pysci.PersistentTypeID_parent_set)
+    __swig_setmethods__["maker"] = _pysci.PersistentTypeID_maker_set
+    __swig_getmethods__["maker"] = _pysci.PersistentTypeID_maker_get
+    if _newclass:maker = property(_pysci.PersistentTypeID_maker_get, _pysci.PersistentTypeID_maker_set)
+    def __init__(self, *args):
+        _swig_setattr(self, PersistentTypeID, 'this', _pysci.new_PersistentTypeID(*args))
+        _swig_setattr(self, PersistentTypeID, 'thisown', 1)
+    def __del__(self, destroy=_pysci.delete_PersistentTypeID):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    __swig_setmethods__["bc_maker1"] = _pysci.PersistentTypeID_bc_maker1_set
+    __swig_getmethods__["bc_maker1"] = _pysci.PersistentTypeID_bc_maker1_get
+    if _newclass:bc_maker1 = property(_pysci.PersistentTypeID_bc_maker1_get, _pysci.PersistentTypeID_bc_maker1_set)
+    __swig_setmethods__["bc_maker2"] = _pysci.PersistentTypeID_bc_maker2_set
+    __swig_getmethods__["bc_maker2"] = _pysci.PersistentTypeID_bc_maker2_get
+    if _newclass:bc_maker2 = property(_pysci.PersistentTypeID_bc_maker2_get, _pysci.PersistentTypeID_bc_maker2_set)
+
+class PersistentTypeIDPtr(PersistentTypeID):
+    def __init__(self, this):
+        _swig_setattr(self, PersistentTypeID, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, PersistentTypeID, 'thisown', 0)
+        self.__class__ = PersistentTypeID
+_pysci.PersistentTypeID_swigregister(PersistentTypeIDPtr)
+
+class Piostream(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, Piostream, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, Piostream, name)
+    def __init__(self): raise RuntimeError, "No constructor defined"
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ SCIRun::Piostream instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    Read = _pysci.Piostream_Read
+    Write = _pysci.Piostream_Write
+    Big = _pysci.Piostream_Big
+    Little = _pysci.Piostream_Little
+    PERSISTENT_VERSION = _pysci.cvar.Piostream_PERSISTENT_VERSION
+    def flag_error(*args): return _pysci.Piostream_flag_error(*args)
+    __swig_setmethods__["file_name"] = _pysci.Piostream_file_name_set
+    __swig_getmethods__["file_name"] = _pysci.Piostream_file_name_get
+    if _newclass:file_name = property(_pysci.Piostream_file_name_get, _pysci.Piostream_file_name_set)
+    def __del__(self, destroy=_pysci.delete_Piostream):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    def peek_class(*args): return _pysci.Piostream_peek_class(*args)
+    def begin_class(*args): return _pysci.Piostream_begin_class(*args)
+    def end_class(*args): return _pysci.Piostream_end_class(*args)
+    def begin_cheap_delim(*args): return _pysci.Piostream_begin_cheap_delim(*args)
+    def end_cheap_delim(*args): return _pysci.Piostream_end_cheap_delim(*args)
+    def eof(*args): return _pysci.Piostream_eof(*args)
+    def io(*args): return _pysci.Piostream_io(*args)
+    def reading(*args): return _pysci.Piostream_reading(*args)
+    def writing(*args): return _pysci.Piostream_writing(*args)
+    def error(*args): return _pysci.Piostream_error(*args)
+    def version(*args): return _pysci.Piostream_version(*args)
+    def backwards_compat_id(*args): return _pysci.Piostream_backwards_compat_id(*args)
+    def set_backwards_compat_id(*args): return _pysci.Piostream_set_backwards_compat_id(*args)
+    def supports_block_io(*args): return _pysci.Piostream_supports_block_io(*args)
+    def block_io(*args): return _pysci.Piostream_block_io(*args)
+    def disable_pointer_hashing(*args): return _pysci.Piostream_disable_pointer_hashing(*args)
+
+class PiostreamPtr(Piostream):
+    def __init__(self, this):
+        _swig_setattr(self, Piostream, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, Piostream, 'thisown', 0)
+        self.__class__ = Piostream
+_pysci.Piostream_swigregister(PiostreamPtr)
+cvar = _pysci.cvar
+
+class Persistent(_object):
+    __swig_setmethods__ = {}
+    __setattr__ = lambda self, name, value: _swig_setattr(self, Persistent, name, value)
+    __swig_getmethods__ = {}
+    __getattr__ = lambda self, name: _swig_getattr(self, Persistent, name)
+    def __init__(self): raise RuntimeError, "No constructor defined"
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ SCIRun::Persistent instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __del__(self, destroy=_pysci.delete_Persistent):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    def io(*args): return _pysci.Persistent_io(*args)
+
+class PersistentPtr(Persistent):
+    def __init__(self, this):
+        _swig_setattr(self, Persistent, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, Persistent, 'thisown', 0)
+        self.__class__ = Persistent
+_pysci.Persistent_swigregister(PersistentPtr)
+
+auto_istream = _pysci.auto_istream
+
+auto_ostream = _pysci.auto_ostream
+
+SCI_project_Datatype_h = _pysci.SCI_project_Datatype_h
+class Datatype(Persistent):
+    __swig_setmethods__ = {}
+    for _s in [Persistent]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, Datatype, name, value)
+    __swig_getmethods__ = {}
+    for _s in [Persistent]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, Datatype, name)
+    def __init__(self): raise RuntimeError, "No constructor defined"
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ SCIRun::Datatype instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    __swig_setmethods__["ref_cnt"] = _pysci.Datatype_ref_cnt_set
+    __swig_getmethods__["ref_cnt"] = _pysci.Datatype_ref_cnt_get
+    if _newclass:ref_cnt = property(_pysci.Datatype_ref_cnt_get, _pysci.Datatype_ref_cnt_set)
+    __swig_getmethods__["lock"] = _pysci.Datatype_lock_get
+    if _newclass:lock = property(_pysci.Datatype_lock_get)
+    __swig_setmethods__["generation"] = _pysci.Datatype_generation_set
+    __swig_getmethods__["generation"] = _pysci.Datatype_generation_get
+    if _newclass:generation = property(_pysci.Datatype_generation_get, _pysci.Datatype_generation_set)
+    def __del__(self, destroy=_pysci.delete_Datatype):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    __swig_getmethods__["compute_new_generation"] = lambda x: _pysci.Datatype_compute_new_generation
+    if _newclass:compute_new_generation = staticmethod(_pysci.Datatype_compute_new_generation)
+
+class DatatypePtr(Datatype):
+    def __init__(self, this):
+        _swig_setattr(self, Datatype, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, Datatype, 'thisown', 0)
+        self.__class__ = Datatype
+_pysci.Datatype_swigregister(DatatypePtr)
+
+Pio = _pysci.Pio
+
+Datatype_compute_new_generation = _pysci.Datatype_compute_new_generation
+
+class BaseEvent(Datatype):
+    __swig_setmethods__ = {}
+    for _s in [Datatype]: __swig_setmethods__.update(_s.__swig_setmethods__)
     __setattr__ = lambda self, name, value: _swig_setattr(self, BaseEvent, name, value)
     __swig_getmethods__ = {}
+    for _s in [Datatype]: __swig_getmethods__.update(_s.__swig_getmethods__)
     __getattr__ = lambda self, name: _swig_getattr(self, BaseEvent, name)
+    def __init__(self): raise RuntimeError, "No constructor defined"
     def __repr__(self):
         return "<%s.%s; proxy of C++ SCIRun::BaseEvent instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
-    def __init__(self, *args):
-        _swig_setattr(self, BaseEvent, 'this', _pysci.new_BaseEvent(*args))
-        _swig_setattr(self, BaseEvent, 'thisown', 1)
     def __del__(self, destroy=_pysci.delete_BaseEvent):
         try:
             if self.thisown: destroy(self)
         except: pass
 
+    def clone(*args): return _pysci.BaseEvent_clone(*args)
+    def io(*args): return _pysci.BaseEvent_io(*args)
     def get_time(*args): return _pysci.BaseEvent_get_time(*args)
     def get_target(*args): return _pysci.BaseEvent_get_target(*args)
     def set_time(*args): return _pysci.BaseEvent_set_time(*args)
@@ -151,17 +340,13 @@ class BaseEvent(_object):
     def is_key_event(*args): return _pysci.BaseEvent_is_key_event(*args)
     def is_window_event(*args): return _pysci.BaseEvent_is_window_event(*args)
     def is_scene_graph_event(*args): return _pysci.BaseEvent_is_scene_graph_event(*args)
-    __swig_setmethods__["ref_cnt"] = _pysci.BaseEvent_ref_cnt_set
-    __swig_getmethods__["ref_cnt"] = _pysci.BaseEvent_ref_cnt_get
-    if _newclass:ref_cnt = property(_pysci.BaseEvent_ref_cnt_get, _pysci.BaseEvent_ref_cnt_set)
-    __swig_getmethods__["lock"] = _pysci.BaseEvent_lock_get
-    if _newclass:lock = property(_pysci.BaseEvent_lock_get)
+    def is_tm_notify_event(*args): return _pysci.BaseEvent_is_tm_notify_event(*args)
 
 class BaseEventPtr(BaseEvent):
     def __init__(self, this):
         _swig_setattr(self, BaseEvent, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, BaseEvent, 'thisown', 0)
-        _swig_setattr(self, BaseEvent,self.__class__,BaseEvent)
+        self.__class__ = BaseEvent
 _pysci.BaseEvent_swigregister(BaseEventPtr)
 
 class EventModifiers(_object):
@@ -179,6 +364,7 @@ class EventModifiers(_object):
             if self.thisown: destroy(self)
         except: pass
 
+    def io(*args): return _pysci.EventModifiers_io(*args)
     SHIFT_E = _pysci.EventModifiers_SHIFT_E
     CAPS_LOCK_E = _pysci.EventModifiers_CAPS_LOCK_E
     CONTROL_E = _pysci.EventModifiers_CONTROL_E
@@ -194,7 +380,7 @@ class EventModifiersPtr(EventModifiers):
     def __init__(self, this):
         _swig_setattr(self, EventModifiers, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, EventModifiers, 'thisown', 0)
-        _swig_setattr(self, EventModifiers,self.__class__,EventModifiers)
+        self.__class__ = EventModifiers
 _pysci.EventModifiers_swigregister(EventModifiersPtr)
 
 class PointerEvent(BaseEvent,EventModifiers):
@@ -222,6 +408,8 @@ class PointerEvent(BaseEvent,EventModifiers):
             if self.thisown: destroy(self)
         except: pass
 
+    def io(*args): return _pysci.PointerEvent_io(*args)
+    def clone(*args): return _pysci.PointerEvent_clone(*args)
     def is_pointer_event(*args): return _pysci.PointerEvent_is_pointer_event(*args)
     def get_pointer_state(*args): return _pysci.PointerEvent_get_pointer_state(*args)
     def get_x(*args): return _pysci.PointerEvent_get_x(*args)
@@ -234,7 +422,7 @@ class PointerEventPtr(PointerEvent):
     def __init__(self, this):
         _swig_setattr(self, PointerEvent, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, PointerEvent, 'thisown', 0)
-        _swig_setattr(self, PointerEvent,self.__class__,PointerEvent)
+        self.__class__ = PointerEvent
 _pysci.PointerEvent_swigregister(PointerEventPtr)
 
 class KeyEvent(BaseEvent,EventModifiers):
@@ -256,6 +444,8 @@ class KeyEvent(BaseEvent,EventModifiers):
             if self.thisown: destroy(self)
         except: pass
 
+    def clone(*args): return _pysci.KeyEvent_clone(*args)
+    def io(*args): return _pysci.KeyEvent_io(*args)
     def is_key_event(*args): return _pysci.KeyEvent_is_key_event(*args)
     def get_key_state(*args): return _pysci.KeyEvent_get_key_state(*args)
     def get_keyval(*args): return _pysci.KeyEvent_get_keyval(*args)
@@ -268,7 +458,7 @@ class KeyEventPtr(KeyEvent):
     def __init__(self, this):
         _swig_setattr(self, KeyEvent, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, KeyEvent, 'thisown', 0)
-        _swig_setattr(self, KeyEvent,self.__class__,KeyEvent)
+        self.__class__ = KeyEvent
 _pysci.KeyEvent_swigregister(KeyEventPtr)
 
 class WindowEvent(BaseEvent):
@@ -286,6 +476,8 @@ class WindowEvent(BaseEvent):
     LEAVE_E = _pysci.WindowEvent_LEAVE_E
     EXPOSE_E = _pysci.WindowEvent_EXPOSE_E
     CONFIGURE_E = _pysci.WindowEvent_CONFIGURE_E
+    FOCUSIN_E = _pysci.WindowEvent_FOCUSIN_E
+    FOCUSOUT_E = _pysci.WindowEvent_FOCUSOUT_E
     REDRAW_E = _pysci.WindowEvent_REDRAW_E
     def __init__(self, *args):
         _swig_setattr(self, WindowEvent, 'this', _pysci.new_WindowEvent(*args))
@@ -295,6 +487,8 @@ class WindowEvent(BaseEvent):
             if self.thisown: destroy(self)
         except: pass
 
+    def clone(*args): return _pysci.WindowEvent_clone(*args)
+    def io(*args): return _pysci.WindowEvent_io(*args)
     def is_window_event(*args): return _pysci.WindowEvent_is_window_event(*args)
     def get_window_state(*args): return _pysci.WindowEvent_get_window_state(*args)
     def set_window_state(*args): return _pysci.WindowEvent_set_window_state(*args)
@@ -303,7 +497,7 @@ class WindowEventPtr(WindowEvent):
     def __init__(self, this):
         _swig_setattr(self, WindowEvent, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, WindowEvent, 'thisown', 0)
-        _swig_setattr(self, WindowEvent,self.__class__,WindowEvent)
+        self.__class__ = WindowEvent
 _pysci.WindowEvent_swigregister(WindowEventPtr)
 
 class QuitEvent(BaseEvent):
@@ -323,13 +517,78 @@ class QuitEvent(BaseEvent):
             if self.thisown: destroy(self)
         except: pass
 
+    def io(*args): return _pysci.QuitEvent_io(*args)
+    def clone(*args): return _pysci.QuitEvent_clone(*args)
 
 class QuitEventPtr(QuitEvent):
     def __init__(self, this):
         _swig_setattr(self, QuitEvent, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, QuitEvent, 'thisown', 0)
-        _swig_setattr(self, QuitEvent,self.__class__,QuitEvent)
+        self.__class__ = QuitEvent
 _pysci.QuitEvent_swigregister(QuitEventPtr)
+
+class RedrawEvent(BaseEvent):
+    __swig_setmethods__ = {}
+    for _s in [BaseEvent]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, RedrawEvent, name, value)
+    __swig_getmethods__ = {}
+    for _s in [BaseEvent]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, RedrawEvent, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ SCIRun::RedrawEvent instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
+        _swig_setattr(self, RedrawEvent, 'this', _pysci.new_RedrawEvent(*args))
+        _swig_setattr(self, RedrawEvent, 'thisown', 1)
+    def __del__(self, destroy=_pysci.delete_RedrawEvent):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    def io(*args): return _pysci.RedrawEvent_io(*args)
+    def clone(*args): return _pysci.RedrawEvent_clone(*args)
+
+class RedrawEventPtr(RedrawEvent):
+    def __init__(self, this):
+        _swig_setattr(self, RedrawEvent, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, RedrawEvent, 'thisown', 0)
+        self.__class__ = RedrawEvent
+_pysci.RedrawEvent_swigregister(RedrawEventPtr)
+
+class TMNotifyEvent(BaseEvent):
+    __swig_setmethods__ = {}
+    for _s in [BaseEvent]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, TMNotifyEvent, name, value)
+    __swig_getmethods__ = {}
+    for _s in [BaseEvent]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, TMNotifyEvent, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ SCIRun::TMNotifyEvent instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    START_E = _pysci.TMNotifyEvent_START_E
+    STOP_E = _pysci.TMNotifyEvent_STOP_E
+    SUSPEND_E = _pysci.TMNotifyEvent_SUSPEND_E
+    RESUME_E = _pysci.TMNotifyEvent_RESUME_E
+    def __init__(self, *args):
+        _swig_setattr(self, TMNotifyEvent, 'this', _pysci.new_TMNotifyEvent(*args))
+        _swig_setattr(self, TMNotifyEvent, 'thisown', 1)
+    def __del__(self, destroy=_pysci.delete_TMNotifyEvent):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    def io(*args): return _pysci.TMNotifyEvent_io(*args)
+    def clone(*args): return _pysci.TMNotifyEvent_clone(*args)
+    def is_tm_notify_event(*args): return _pysci.TMNotifyEvent_is_tm_notify_event(*args)
+    def get_tool_id(*args): return _pysci.TMNotifyEvent_get_tool_id(*args)
+    def get_notify_state(*args): return _pysci.TMNotifyEvent_get_notify_state(*args)
+    def set_tool_id(*args): return _pysci.TMNotifyEvent_set_tool_id(*args)
+    def set_notify_state(*args): return _pysci.TMNotifyEvent_set_notify_state(*args)
+
+class TMNotifyEventPtr(TMNotifyEvent):
+    def __init__(self, this):
+        _swig_setattr(self, TMNotifyEvent, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, TMNotifyEvent, 'thisown', 0)
+        self.__class__ = TMNotifyEvent
+_pysci.TMNotifyEvent_swigregister(TMNotifyEventPtr)
 
 class vector_string(_object):
     __swig_setmethods__ = {}
@@ -374,7 +633,7 @@ class vector_stringPtr(vector_string):
     def __init__(self, this):
         _swig_setattr(self, vector_string, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, vector_string, 'thisown', 0)
-        _swig_setattr(self, vector_string,self.__class__,vector_string)
+        self.__class__ = vector_string
 _pysci.vector_string_swigregister(vector_stringPtr)
 
 class vector_double(_object):
@@ -420,7 +679,7 @@ class vector_doublePtr(vector_double):
     def __init__(self, this):
         _swig_setattr(self, vector_double, 'this', this)
         if not hasattr(self,"thisown"): _swig_setattr(self, vector_double, 'thisown', 0)
-        _swig_setattr(self, vector_double,self.__class__,vector_double)
+        self.__class__ = vector_double
 _pysci.vector_double_swigregister(vector_doublePtr)
 
 
@@ -441,4 +700,7 @@ run_viewer_thread = _pysci.run_viewer_thread
 add_pointer_event = _pysci.add_pointer_event
 
 add_key_event = _pysci.add_key_event
+
+add_tm_notify_event = _pysci.add_tm_notify_event
+
 

@@ -51,26 +51,27 @@ namespace SCIRun {
 
 class SCISHARE GeomContainer : public GeomObj {
 protected:
-    GeomHandle child_;
+  GeomHandle child_;
 
 public:
-    GeomContainer(GeomHandle);
-    GeomContainer(const GeomContainer&);
-    virtual ~GeomContainer();
-    virtual void get_bounds(BBox&);
-    virtual void reset_bbox();
+  GeomContainer(GeomHandle);
+  GeomContainer(const GeomContainer&);
+  virtual ~GeomContainer();
+  virtual void get_bounds(BBox&);
+  virtual void reset_bbox();
 
-    virtual GeomHandle get_child() { return child_; }
+  virtual GeomHandle get_child() { return child_; }
 
-    // For OpenGL
+  // For OpenGL
 #ifdef SCI_OPENGL
-    virtual void draw(DrawInfoOpenGL*, Material*, double time);
+  virtual void draw(DrawInfoOpenGL*, Material*, double time);
+  virtual void fbpick_draw(DrawInfoOpenGL*, Material*, double time);
 #endif
 
-    virtual void get_triangles( Array1<float> &);
+  virtual void get_triangles( Array1<float> &);
 
-    virtual void io(Piostream&);
-    static PersistentTypeID type_id;
+  virtual void io(Piostream&);
+  static PersistentTypeID type_id;
 };    
 
 } // End namespace SCIRun

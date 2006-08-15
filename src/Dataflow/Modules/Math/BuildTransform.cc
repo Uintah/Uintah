@@ -147,7 +147,6 @@ void
 BuildTransform::execute()
 {
   imatrix_ = (MatrixIPort *)get_iport("Matrix");
-  omatrix_ = (MatrixOPort *)get_oport("Matrix");
   ogeom_ = (GeometryOPort *)get_oport("Geometry");
   string which_transform=which_transform_gui_.get();
 
@@ -253,9 +252,8 @@ BuildTransform::execute()
     local_transform.pre_trans(input_transform);
   }
 
-  DenseMatrix *dm = scinew DenseMatrix(local_transform);
-  MatrixHandle mtmp(dm);
-  omatrix_->send_and_dereference(mtmp);
+  MatrixHandle mtmp = scinew DenseMatrix(local_transform);
+  send_output_handle("Matrix", mtmp);
 }
 
 
