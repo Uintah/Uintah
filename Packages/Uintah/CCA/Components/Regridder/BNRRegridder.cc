@@ -104,7 +104,6 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
 
     start=MPI_Wtime();
     const LevelP level=oldGrid->getLevel(l);
-   
     //create coarse flag set 
     const PatchSubset *ps=lb->getPerProcessorPatchSet(level)->getSubset(d_myworld->myrank());
     for(int p=0;p<ps->size();p++)
@@ -329,21 +328,20 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
     dbgstats << " Grid Statistics:\n";
     for (int l = 0; l < newGrid->numLevels()-1; l++) 
     {
-      int total_vol=0;
-      int sum_of_vol_squared=0;
+      double total_vol=0;
+      double sum_of_vol_squared=0;
       int n = patch_sets[l].size();
       //calculate total volume and volume squared
-      int vol_mult=d_minPatchSize[0]*d_minPatchSize[1]*d_minPatchSize[2];
+      double vol_mult=double(d_minPatchSize[0]*d_minPatchSize[1]*d_minPatchSize[2]);
       for(int p=0;p<n;p++)
       {
-        int vol=patch_sets[l][p].volume*vol_mult;
+        double vol=double(patch_sets[l][p].volume*vol_mult);
         total_vol+=vol;
         sum_of_vol_squared+=vol*vol;
       }
       //calculate mean
       double mean = total_vol /(double) n;
       double stdv = sqrt((sum_of_vol_squared-total_vol*total_vol/(double)n)/(double)n);
-      
       dbgstats << left << "  L" << setw(8) << l+1 << ": Patches: " << setw(8) << n << " Volume: " << setw(8) << total_vol<< " Mean Volume: " << setw(8) << mean << " stdv: " << setw(8) << stdv << " relative stdv: " << setw(8) << stdv/mean << endl;
     }
   }
