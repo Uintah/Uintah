@@ -771,6 +771,7 @@ Painter::LoadColorMap1D(event_handle_t event) {
   Bundle *bundle = new Bundle();
   bundle->setColorMap(fn, cmaph);
   add_bundle(bundle);
+  return CONTINUE_E;
 }
 
 

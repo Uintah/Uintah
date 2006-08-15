@@ -111,7 +111,7 @@ using Insight::ITKDatatypeHandle;
 
 class Painter : public Skinner::Parent
 {
-  typedef               itk::Image<float,3> ITKImageFloat3D;
+
 public:
   class SliceWindow;
 private:
@@ -486,7 +486,7 @@ private:
     Point               start_pos_;
   };
 
-
+#ifdef HAVE_INSIGHT
   class ITKThresholdTool : public BaseTool {
   public:
     ITKThresholdTool(Painter *painter);
@@ -497,12 +497,14 @@ private:
     void                set_vars();
     Painter *           painter_;
     NrrdVolume *        seed_volume_;
+    
+    typedef             itk::Image<float,3> ITKImageFloat3D;
     typedef itk::ThresholdSegmentationLevelSetImageFilter
     < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D > FilterType;
     FilterType::Pointer filter_;
     
   };
-
+#endif
 
   class ITKConfidenceConnectedImageFilterTool : public virtual BaseTool,
                                                 public PainterPointerTool
