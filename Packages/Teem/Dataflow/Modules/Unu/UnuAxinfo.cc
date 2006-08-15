@@ -121,7 +121,7 @@ UnuAxinfo::execute()
   if (nrrdCopy(nout, nin)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble copying input nrrd: ") +  err);
-    msg_stream_ << "  input Nrrd: nin->dim=" << nin->dim << "\n";
+    remark("  Input Nrrd: nin->dim=" + to_string(nin->dim));
     free(err);
     return;
   }

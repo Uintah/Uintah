@@ -3573,7 +3573,7 @@ MRITissueClassifier::gaussian(const NrrdDataHandle &data, double sigma)
   if (nrrdSpatialResample(nrrd->nrrd_, data->nrrd_, info)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble resampling: ") +  err);
-    msg_stream_ << "  input Nrrd: data->nrrd_->dim=" << data->nrrd_->dim << "\n";
+    remark("  Input Nrrd: data->nrrd_->dim=" + to_string(data->nrrd_->dim));
     free(err);
   }
   nrrdResampleInfoNix(info); 
