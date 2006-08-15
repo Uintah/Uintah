@@ -383,8 +383,9 @@ void
        norm = sqrt(e11*e11+e12*e12+e13*e13);
        if (norm == 0)  
        {
-        error("One of the EigenVectors is (0,0,0)");
-        return;
+//        error("One of the EigenVectors is (0,0,0)");
+//        return;
+          norm = 1.0;
        }
        e11 = e11/norm; e12 = e12/norm; e13 = e13/norm;
              

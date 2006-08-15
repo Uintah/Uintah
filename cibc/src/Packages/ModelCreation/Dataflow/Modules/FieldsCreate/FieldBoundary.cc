@@ -53,19 +53,24 @@ FieldBoundary::FieldBoundary(GuiContext* ctx)
 
 void FieldBoundary::execute()
 {
+  // Declare dataflow object
   FieldHandle field;
   
+  // Get data from ports
   if (!(get_input_handle("Field",field,true))) return;
   
+  // If parameters changed, do algorithm
   if (inputs_changed_ || !oport_cached("Boundary") || !oport_cached("Mapping"))
   {
     FieldHandle ofield;
     MatrixHandle mapping;
     
+    // Entry point to algorithm
     SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
     
     if (!(algo.FieldBoundary(field,ofield,mapping))) return;
 
+    // Send Data flow objects downstream
     send_output_handle("Boundary",ofield,false);
     send_output_handle("Mapping",mapping,false);
   }
