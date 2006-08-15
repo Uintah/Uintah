@@ -879,6 +879,7 @@ Painter::FloodfillTool::do_floodfill()
   painter_->redraw_all();
 }
 
+#ifdef HAVE_INSIGHT
 
 Painter::ITKThresholdTool::ITKThresholdTool(Painter *painter) :
   BaseTool("ITK Threshold"),
@@ -1043,6 +1044,8 @@ Painter::ITKThresholdTool::finish()
   painter_->redraw_all();
 #endif
 }
+
+#endif
  
 
 Painter::StatisticsTool::StatisticsTool(Painter *painter) :
