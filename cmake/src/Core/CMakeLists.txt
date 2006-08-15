@@ -15,6 +15,8 @@ SUBDIRS(
   Datatypes
   Geom
   Events
+  Volume
+  Bundle
 )
 
 
