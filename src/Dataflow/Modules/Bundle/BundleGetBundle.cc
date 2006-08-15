@@ -26,28 +26,16 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  BundleGetBundle.cc:
- *
- *  Written by:
- *   jeroen
- *
- */
-
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
-using namespace std;
 
 class BundleGetBundle : public Module {
 public:
   BundleGetBundle(GuiContext*);
-
-  virtual ~BundleGetBundle();
-
   virtual void execute();
   
 private:
@@ -69,99 +57,54 @@ BundleGetBundle::BundleGetBundle(GuiContext* ctx)
 {
 }
 
-
-BundleGetBundle::~BundleGetBundle()
+void BundleGetBundle::execute()
 {
-}
-
-
-void
-BundleGetBundle::execute()
-{
-  string bundle1name = guibundle1name_.get();
-  string bundle2name = guibundle2name_.get();
-  string bundle3name = guibundle3name_.get();
-  string bundlelist;
-        
+  // Define input handle:
   BundleHandle handle;
-  BundleIPort  *iport;
-  BundleOPort *oport;
-  BundleHandle fhandle;
-  BundleOPort *ofport;
-        
-  if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
-    {
-      error("Could not find bundle input port");
-      return;
-    }
-
-  if (!(iport->get(handle)))
-    {   
-      warning("No bundle connected to the input port");
-      return;
-    }
-
-  if (handle.get_rep() == 0)
-    {   
-      warning("Empty bundle connected to the input port");
-      return;
-    }
-
-
-  int numBundles = handle->numBundles();
-  for (int p = 0; p < numBundles; p++)
+  
+  // Get data from input port:
+  if (!(get_input_handle("bundle",handle,true))) return;
+  
+  if (inputs_changed_ || guibundle1name_.changed() || guibundle2name_.changed() ||
+      guibundle3name_.changed() || !oport_cached("bundle") || !oport_cached("bundle1") ||
+       !oport_cached("bundle2") || !oport_cached("bundle3"))
+  {
+    BundleHandle fhandle;
+    std::string bundle1name = guibundle1name_.get();
+    std::string bundle2name = guibundle2name_.get();
+    std::string bundle3name = guibundle3name_.get();
+    std::string bundlelist;
+    
+    int numBundles = handle->numBundles();
+    for (int p = 0; p < numBundles; p++)
     {
       bundlelist += "{" + handle->getBundleName(p) + "} ";
     }
 
-  guibundles_.set(bundlelist);
-  get_ctx()->reset();
+    guibundles_.set(bundlelist);
+    get_ctx()->reset();  
+  
+    // Send bundle1 if we found one that matches the name:
+    if (handle->isBundle(bundle1name))
+    {
+      fhandle = handle->getBundle(bundle1name);
+      send_output_handle("bundle1",fhandle,false);
+    } 
 
- 
-  if (!(ofport = static_cast<BundleOPort *>(get_oport("bundle1"))))
-  {
-    error("Could not find bundle 1 output port");
-    return; 
-  }
- 
-  if (handle->isBundle(bundle1name))
-  {
-    fhandle = handle->getBundle(bundle1name);
-    ofport->send(fhandle);
-  }
-        
- 
-  if (!(ofport = static_cast<BundleOPort *>(get_oport("bundle2"))))
-  {
-    error("Could not find bundle 2 output port");
-    return; 
-  }
+    // Send bundle2 if we found one that matches the name:
+    if (handle->isBundle(bundle2name))
+    {
+      fhandle = handle->getBundle(bundle2name);
+      send_output_handle("bundle2",fhandle,false);
+    } 
 
- 
-  if (handle->isBundle(bundle2name))
-  {
-    fhandle = handle->getBundle(bundle2name);
-    ofport->send(fhandle);
+    // Send bundle3 if we found one that matches the name:  
+    if (handle->isBundle(bundle3name))
+    {
+      fhandle = handle->getBundle(bundle3name);
+      send_output_handle("bundle3",fhandle,false);
+    } 
   }
-        
- 
-  if (!(ofport = static_cast<BundleOPort *>(get_oport("bundle3"))))
-  {
-    error("Could not find bundle 3 output port");
-    return; 
-  }
- 
-  if (handle->isBundle(bundle3name))
-  {
-    fhandle = handle->getBundle(bundle3name);
-    ofport->send(fhandle);
-  }
-        
-  if ((oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-  {
-    oport->send(handle);
-  }
-  update_state(Completed);            
 }
 
 
