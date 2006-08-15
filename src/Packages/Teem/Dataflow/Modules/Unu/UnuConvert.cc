@@ -104,7 +104,9 @@ UnuConvert::execute()
 
   Nrrd *nin = nrrdH->nrrd_;
   Nrrd *nout = nrrdNew();
-  msg_stream_ << "New type is "<<type<<endl;
+  string name, cname;
+  get_nrrd_compile_type(type, name, cname);
+  remark("New type is " + name + ".");
 
   if (nrrdConvert(nout, nin, type)) {
     char *err = biffGetDone(NRRD);

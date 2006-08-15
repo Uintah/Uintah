@@ -118,8 +118,8 @@ UnuQuantize::execute()
     useinputmax_.reset();
   }
 
-  double minf=minf_.get();
-  double maxf=maxf_.get();
+  double minf = minf_.get();
+  double maxf = maxf_.get();
 
   // use input min/max if specified
   if (useinputmin_.get()) {
@@ -130,7 +130,7 @@ UnuQuantize::execute()
     maxf = realmax_.get();
   }
   
-  int nbits=nbits_.get();
+  const int nbits = nbits_.get();
   if (last_generation_ == nrrdH->generation &&
       last_minf_ == minf &&
       last_maxf_ == maxf &&
@@ -147,11 +147,12 @@ UnuQuantize::execute()
 
   Nrrd *nin = nrrdH->nrrd_;
 
-  msg_stream_ << "Quantizing -- min="<<minf<<
-    " max="<<maxf<<" nbits="<<nbits<<endl;
+  remark("Quantizing -- min=" + to_string(minf) +
+         " max=" + to_string(maxf) + " nbits=" + to_string(nbits));
   NrrdRange *range = nrrdRangeNew(minf, maxf);
   NrrdData *nrrd = scinew NrrdData;
-  if (nrrdQuantize(nrrd->nrrd_, nin, range, nbits)) {
+  if (nrrdQuantize(nrrd->nrrd_, nin, range, nbits))
+  {
     char *err = biffGetDone(NRRD);
     error(string("Trouble quantizing: ") + err);
     free(err);

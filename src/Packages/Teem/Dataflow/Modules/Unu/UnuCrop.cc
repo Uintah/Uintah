@@ -333,7 +333,7 @@ UnuCrop::execute()
     if (nrrdCrop(nout, nin, min, max)) {
       char *err = biffGetDone(NRRD);
       error(string("Trouble cropping: ") + err + "\nOutputting input Nrrd");
-      msg_stream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
+      remark("  Input Nrrd: nin->dim=" + to_string(nin->dim));
       free(err);
       for(unsigned int a=0; a<nin->dim; a++) {
 	mins_[a]->set(to_string(0));
