@@ -1495,6 +1495,10 @@ ImageCM2Widget::rasterize(Array3<float>& array)
   {
     nout = resize(array.dim2(), array.dim1());
   }
+  else
+  {
+    nout = pixels_->nrrd_;
+  }
 
   // return if resample fails.
   if (!nout) return;
@@ -1511,6 +1515,11 @@ ImageCM2Widget::rasterize(Array3<float>& array)
       array(j,i,2) = trans * *dat++;
       array(j,i,3) = trans * *dat;
     }
+  }
+
+  if (nout != pixels_->nrrd_)
+  {
+    nrrdNuke(nout);
   }
 }
 
