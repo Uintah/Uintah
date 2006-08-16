@@ -31,10 +31,13 @@
 
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/Internal/EventService.h>
+#include <SCIRun/SCIRunFramework.h>
 
 namespace SCIRun {
 
+
 class Topic;
+class SCIRunFramework;
 typedef SSIDL::array1<sci::cca::Event::pointer> EventPtrList;
 
 /**
@@ -48,7 +51,7 @@ class Event : public sci::cca::Event {
 public:
   Event() {}
   Event(const sci::cca::TypeMap::pointer& theHeader, const sci::cca::TypeMap::pointer& theBody)
-    : header(theHeader), body(theBody) {}
+     : header(theHeader), body(theBody) {}
 
   virtual void setHeader(const sci::cca::TypeMap::pointer& h) { header = h; }
   virtual void setBody(const sci::cca::TypeMap::pointer& b) { body = b; }
@@ -72,6 +75,7 @@ private:
 class Topic : public sci::cca::Topic {
 public:
   virtual ~Topic();
+  //sci::cca::Event::pointer createEvent(const sci::cca::TypeMap::pointer& theHeader, const sci::cca::TypeMap::pointer& theBody);
 
   /**
    * Sends an Event with the specified \em eventBody.
@@ -96,11 +100,11 @@ public:
   /**  Returns the \em topicName for this Topic. */
   virtual std::string getTopicName() { return topicName; }
 
-private:
+ private:
   friend class EventService;
 
   // private constructor used only by EventService
-  Topic(const std::string& name);
+  Topic(const std::string& name,SCIRunFramework *fwk);
 
   /**
    * The following methods should be called only by the EventService.
@@ -123,6 +127,7 @@ private:
   EventPtrList eventList;
   EventListenerMap eventListenerMap;
   WildcardTopicMap wildcardTopicMap;
+  SCIRunFramework *framework;
 };
 
 

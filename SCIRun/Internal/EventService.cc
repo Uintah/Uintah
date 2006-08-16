@@ -53,7 +53,8 @@ EventService::createInstance(const std::string& instanceName,
 {
   if (instanceName.size()) {
     if (framework->lookupComponent(instanceName) != 0) {
-      throw CCAExceptionPtr(new CCAException("Component instance name " + instanceName + " is not unique"));
+      //throw CCAExceptionPtr(new CCAException("Component instance name " + instanceName + " is not unique"));
+      throw sci::cca::CCAException::pointer (new CCAException("Component instance name " + instanceName + " is not unique"));
     }
     return framework->createComponentInstance(instanceName, className, properties);
   }
@@ -72,10 +73,15 @@ sci::cca::Topic::pointer EventService::createTopic(const std::string &topicName)
     throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
   }
 
+  //Check if Topic Name has '*'
+  for(unsigned int i=0;i<topicName.size();i++)
+    if(topicName.at(i) == '*')
+      throw EventServiceExceptionPtr(new EventServiceException("Topic Name format not supported:'*' not allowed", sci::cca::Unexpected));
+
   sci::cca::Topic::pointer topicPtr;
   TopicMap::iterator iter = topicMap.find(topicName);
   if (iter == topicMap.end()) { // new Topic
-    topicPtr = new Topic(topicName);
+    topicPtr = new Topic(topicName,framework);
     topicMap[topicName] = topicPtr;
   } else { // Topic already present
     topicPtr = iter->second;
@@ -116,6 +122,20 @@ sci::cca::WildcardTopic::pointer EventService::createWildcardTopic(const std::st
 {
   if (topicName.empty()) {
     throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
+  }
+
+  //Check if the last charecter is a '*'
+  if(topicName.at(topicName.size()-1)!= '*'){
+    throw EventServiceExceptionPtr(new EventServiceException("WildcardTopic Name format not supported: No character allowed after '*", sci::cca::Unexpected));
+  }
+  
+  //Check if topicName has more than one '*' s
+  int countStars = 0;
+  for(unsigned int i=0;i<topicName.size();i++)
+    if(topicName.at(i) == '*')
+      countStars++;
+  if(countStars > 1){
+    throw EventServiceExceptionPtr(new EventServiceException("WildcardTopic Name format not supported: More than one '*' not allowed", sci::cca::Unexpected));
   }
 
   sci::cca::WildcardTopic::pointer wildcardTopicPtr;
@@ -210,6 +230,7 @@ void EventService::processEvents()
 
 
 // TODO: check wildcardTopicName for correct formatting?
+// Note: WildcadTopic format needs to decided.
 bool EventService::isMatch(const std::string& topicName, const std::string& wildcardTopicName)
 {
   std::string::size_type wildcardTokenPos = wildcardTopicName.rfind('*');
