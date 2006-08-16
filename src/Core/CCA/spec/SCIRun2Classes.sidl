@@ -76,7 +76,7 @@ interface Builder extends sci.cca.Component {
   void getPortInfo(in cca.ComponentID cid, in string portName, out string model, out string type);
 
   // manage component creation/destruction
-  ComponentID createInstance(in string className, in sci.cca.TypeMap properties);
+  ComponentID createInstance(in ComponentClassDescription classDesc);
   void destroyInstance(in cca.ComponentID cid, in float timeout);
   int destroyInstances(in array<cca.ComponentID> cidArray, in float timeout);
 
@@ -106,9 +106,8 @@ interface Builder extends sci.cca.Component {
   void disconnectGoPort(in string goPortName);
   int go(in string goPortName);
 
-  // test saving files
+  bool applicationFileExists();
   void saveApplication();
-  // test saving files
 }
 
 // text builder also should have an implementing class
@@ -136,7 +135,12 @@ class GUIBuilder implements-all sci.cca.Builder {
   opaque getPortColor(in string portName);
 }
 
-// stores event header and event body
+/**
+ * Stores event header and event body:
+ * Header: should not be empty, may contain delivery metadata
+ *         about the event, framework, component etc.
+ * Body: may be empty, may contain event data
+ */
 interface Event {
   void setHeader(in cca.TypeMap header);
   void setBody(in cca.TypeMap body);
@@ -145,21 +149,36 @@ interface Event {
   cca.TypeMap getBody();
 }
 
+/** Interface implemented by components interested in events. */
 interface EventListener {
+  /** This is where event processing by a listener takes place. */
   void processEvent(in string topicName, in Event theEvent);
-} //end interface EventListener
+}
 
-
+/** Topics are channels in which events are sent. */
 interface AbstractTopic {
+  /**
+   * Register an EventListener on a Topic or a group of Topics (through WildcardTopic).
+   * @exception if listenerKey is null or empty or if listener is null
+   */
   void registerEventListener(in string listenerKey, in EventListener theListener) throws EventServiceException;
+
+  /**
+   * Unregister an EventListener on a Topic or a group of Topics (through WildcardTopic).
+   * @exception if listenerKey is null or empty
+   */
   void unregisterEventListener(in string listenerKey);
+  /**
+   * @return Topic name (from EventService.createTopic)
+   */
   string getTopicName();
 }
 
 interface Topic extends AbstractTopic {
-  // allow empty headers and body or not (only check for null currently)?
+  /** Publish an event. */
   void sendEvent(in Event theEvent) throws EventServiceException;
 }
 
+/** Mechanism for grouping hierarchically related Topics for subscribers. */
 interface WildcardTopic extends AbstractTopic {
 }
