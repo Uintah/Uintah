@@ -109,7 +109,6 @@ namespace SCIRun {
       KeyEvent *key = dynamic_cast<KeyEvent *>(event.get_rep());
       if (key && (key->get_key_state() & KeyEvent::KEY_PRESS_E)) {
         int code = key->get_keyval();
-        cerr << " TextEntry: " << get_vars()->get_string("cursor") << std::endl;
         bool shift = (key->get_modifiers() & EventModifiers::SHIFT_E);
         string character = "";
         if (code == SCIRun_Return) {

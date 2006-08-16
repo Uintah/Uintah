@@ -12,8 +12,8 @@
 
           <signal name="FocusRegion::focus"
                   target="Arithmetic::set_value">
-            <var name="variable">ShadowedBox::inside</var>
-            <var name="value">#DDDD88AA</var>
+            <var name="variable">ShadowedBox::outside</var>
+            <var name="value">#DDDD88FF</var>
           </signal>
 
           <signal name="FocusRegion::focus"
@@ -22,8 +22,9 @@
 
           <signal name="FocusRegion::unfocus"
                   target="Arithmetic::set_value">
-            <var name="variable">ShadowedBox::inside</var>
+            <var name="variable">ShadowedBox::outside</var>
             <var name="value">#333333FF</var>
+            <var name="value">#00000000</var>
           </signal>
 
           <signal name="FocusRegion::unfocus"
