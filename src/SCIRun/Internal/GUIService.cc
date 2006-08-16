@@ -3,12 +3,13 @@
 #include <SCIRun/Internal/GUIService.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/CCA/CCAException.h>
+#include <Core/Thread/Guard.h>
 
 namespace SCIRun {
 
 
 GUIService::GUIService(SCIRunFramework* framework)
-  : InternalFrameworkServiceInstance(framework, "internal:GUIService")
+  : InternalFrameworkServiceInstance(framework, "internal:GUIService"), lock("GUIService lock")
 {
 }
 
@@ -34,11 +35,15 @@ InternalFrameworkServiceInstance* GUIService::create(SCIRunFramework* framework)
 sci::cca::Port::pointer
 GUIService::getService(const std::string&)
 {
-    return sci::cca::Port::pointer(this);
+  return sci::cca::Port::pointer(this);
 }
 
 void GUIService::addBuilder(const std::string& builderName, const sci::cca::GUIBuilder::pointer& builder)
 {
+  Guard g(&lock);
+#if DEBUG
+  std::cerr << "GUIService::AddBuilder(..): from thread " << Thread::self()->getThreadName() << std::endl;
+#endif
   GUIBuilderMap::iterator iter = builders.find(builderName);
   if (iter != builders.end()) {
     // TODO: need exception!
@@ -49,6 +54,7 @@ void GUIService::addBuilder(const std::string& builderName, const sci::cca::GUIB
 
 void GUIService::removeBuilder(const std::string& builderName)
 {
+  Guard g(&lock);
   GUIBuilderMap::iterator iter = builders.find(builderName);
   if (iter != builders.end()) {
     builders.erase(iter);
@@ -59,6 +65,7 @@ void GUIService::removeBuilder(const std::string& builderName)
 // TODO: update SIDL with throws clause
 void GUIService::updateProgress(const sci::cca::ComponentID::pointer& cid, int progressPercent)
 {
+  Guard g(&lock);
   if (progressPercent > 100) {
     throw sci::cca::CCAException::pointer(new CCAException("Progress percent cannot be > 100"));
   } else if (progressPercent < 0) {

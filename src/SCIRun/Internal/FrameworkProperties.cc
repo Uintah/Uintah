@@ -41,6 +41,7 @@
 #include <sci_metacomponents.h>
 
 #include <SCIRun/Internal/FrameworkProperties.h>
+#include <SCIRun/Internal/ApplicationLoader.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/PortInstance.h>
 
@@ -70,11 +71,11 @@ FrameworkProperties::FrameworkProperties(SCIRunFramework* framework)
   // Not setting up the environment in the main loop is a serious error.
   std::string name;
   const char *home = getenv("HOME");
+  const char *objdir = sci_getenv("SCIRUN_OBJDIR");
+  ASSERT(objdir);
   if (home) {
     name = home + CONFIG_DIR;
   } else {
-    const char *objdir = sci_getenv("SCIRUN_OBJDIR");
-    ASSERT(objdir);
     name = objdir + CONFIG_DIR;
   }
   dir = Dir(name);
@@ -84,7 +85,7 @@ FrameworkProperties::FrameworkProperties(SCIRunFramework* framework)
     Dir::create(name);
   }
   frameworkProperties->putString("config dir", dir.getName());
-  frameworkProperties->putString("network file", "application.app");
+  frameworkProperties->putString("app file", objdir + DIR_SEP + "application." + ApplicationLoader::APP_EXT);
 
   getLogin();
   initSidlPaths();

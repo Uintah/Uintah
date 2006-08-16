@@ -46,11 +46,12 @@ SRCS     += \
              $(SRCDIR)/InternalServiceInstance.cc \
              $(SRCDIR)/InternalFrameworkServiceInstance.cc \
              $(SRCDIR)/InternalServiceDescription.cc \
-	     $(SRCDIR)/InternalFrameworkServiceDescription.cc \
-	     $(SRCDIR)/EventService.cc \
-	     $(SRCDIR)/EventServiceException.cc \
-	     $(SRCDIR)/Topic.cc \
-	     $(SRCDIR)/WildcardTopic.cc
+             $(SRCDIR)/InternalFrameworkServiceDescription.cc \
+             $(SRCDIR)/ApplicationLoader.cc \
+             $(SRCDIR)/EventService.cc \
+             $(SRCDIR)/EventServiceException.cc \
+             $(SRCDIR)/Topic.cc \
+             $(SRCDIR)/WildcardTopic.cc
 
 ifeq ($(HAVE_WX),yes)
  SRCS += \

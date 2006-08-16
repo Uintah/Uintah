@@ -50,6 +50,7 @@
 #include <SCIRun/Internal/ComponentRegistry.h>
 #include <SCIRun/Internal/FrameworkProperties.h>
 #include <SCIRun/Internal/FrameworkProxyService.h>
+#include <SCIRun/Internal/ApplicationLoader.h>
 #include <SCIRun/Internal/GUIService.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/Internal/EventService.h>
@@ -77,6 +78,7 @@ InternalComponentModel::InternalComponentModel(SCIRunFramework* framework)
 #endif
     addService(new InternalFrameworkServiceDescription(this, "cca.FrameworkProperties", &FrameworkProperties::create));
     addService(new InternalFrameworkServiceDescription(this, "cca.FrameworkProxyService", &FrameworkProxyService::create));
+    addService(new InternalFrameworkServiceDescription(this, "cca.ApplicationLoaderService", &ApplicationLoader::create));
     addService(new InternalFrameworkServiceDescription(this, "cca.EventService", &EventService::create));
 #if HAVE_WX
     addService(new InternalFrameworkServiceDescription(this, "cca.GUIService", &GUIService::create));
@@ -100,6 +102,8 @@ void InternalComponentModel::addService(InternalFrameworkServiceDescription* des
   frameworkServices[desc->getType()] = desc;
 }
 
+// TODO: componentName arg not used?
+// TODO: return null port vs. throwing an exception on error
 sci::cca::Port::pointer
 InternalComponentModel::getFrameworkService(const std::string& type,
 					    const std::string& componentName)

@@ -36,7 +36,8 @@
 <!ELEMENT components (component*)>
 
 <!ELEMENT component (name, position)>
-<!ATTLIST component name CDATA #REQUIRED>
+<!ATTLIST component name CDATA #REQUIRED
+                    builder CDATA #IMPLIED>
 <!-- <!ATTLIST component id CDATA #REQUIRED package CDATA #REQUIRED category CDATA #REQUIRED name CDATA #REQUIRED> -->
 
 <!ELEMENT position EMPTY>

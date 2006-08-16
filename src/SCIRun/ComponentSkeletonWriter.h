@@ -99,7 +99,6 @@ private:
 
   void writeLicense(std::ofstream& fileStream);
   void writeMakefileLicense(std::ofstream& fileStream);
-  
 
   // generate header file
   void writeHeaderInit(std::ofstream& fileStream);
@@ -132,7 +131,10 @@ private:
   std::ofstream componentSourceFile;
   std::ofstream componentHeaderFile;
   std::ofstream componentMakefile;
-  
+
+  // does the component have it's own sidl file
+  // (will have to be changed when Babel is used as
+  // SIDL compiler)
   bool isWithSidl;
 };
 

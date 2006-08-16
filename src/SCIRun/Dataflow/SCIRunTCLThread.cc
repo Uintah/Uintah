@@ -100,7 +100,7 @@ SCIRunTCLThread::wait(Tcl_Interp *interp)
 {
   the_interp = interp;
   ASSERT(init_ptr_);
-  init_ptr_->startTCL();
+  return init_ptr_->startTCL();
 }
 
 SCIRunTCLThread::SCIRunTCLThread(Network* net)

@@ -151,12 +151,13 @@ main(int argc, char *argv[]) {
       std::cerr << "Not finished: pass url to existing framework\n";
     }
 
-    sci::cca::Services::pointer main_services
-      = sr->getServices("SCIRun main", "main", sci::cca::TypeMap::pointer(0));
+    sci::cca::TypeMap::pointer mainProperties = sr->createTypeMap();
+    mainProperties->putBool("internal component", true);
+    sci::cca::Services::pointer mainServices = sr->getServices("SCIRun main", "main", mainProperties);
 
     sci::cca::ports::FrameworkProperties::pointer fwkProperties =
       pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
-                                                               main_services->getPort("cca.FrameworkProperties"));
+                                                               mainServices->getPort("cca.FrameworkProperties"));
     if (fwkProperties.isNull()) {
       std::cerr << "Fatal Error: Cannot find framework properties service\n";
       Thread::exitAll(1);
@@ -164,7 +165,7 @@ main(int argc, char *argv[]) {
 
     sci::cca::ports::BuilderService::pointer builder
       = pidl_cast<sci::cca::ports::BuilderService::pointer>(
-                                                            main_services->getPort("cca.BuilderService"));
+                                                            mainServices->getPort("cca.BuilderService"));
     if(builder.isNull()) {
       std::cerr << "Fatal Error: Cannot find builder service\n";
       Thread::exitAll(1);
@@ -181,8 +182,10 @@ main(int argc, char *argv[]) {
 #endif
 
     if (defaultBuilder == "gui") {
+      sci::cca::TypeMap::pointer guiProperties = sr->createTypeMap();
+      guiProperties->putBool("internal component", true);
       ComponentID::pointer gui_id =
-        builder->createInstance("SCIRun.GUIBuilder", "cca:SCIRun.GUIBuilder", sci::cca::TypeMap::pointer(0));
+        builder->createInstance("SCIRun.GUIBuilder", "cca:SCIRun.GUIBuilder", guiProperties);
       if (gui_id.isNull()) {
         std::cerr << "Cannot create component: cca:SCIRun.GUIBuilder\n";
         Thread::exitAll(1);
@@ -196,12 +199,12 @@ main(int argc, char *argv[]) {
         Thread::exitAll(1);
       }
     }
-    main_services->releasePort("cca.FrameworkProperties");
-    main_services->releasePort("cca.BuilderService");
+    mainServices->releasePort("cca.FrameworkProperties");
+    mainServices->releasePort("cca.BuilderService");
     std::cout << "SCIRun " << SR2_VERSION << " started..." << std::endl;
 
     //broadcast, listen to URL periodically
-    //sr->share(main_services);
+    //sr->share(mainServices);
 
     PIDL::serveObjects();
     std::cout << "serveObjects done!\n";

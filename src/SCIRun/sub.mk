@@ -45,7 +45,6 @@ SRCS     += \
             $(SRCDIR)/resourceReference.cc \
             $(SRCDIR)/TypeMap.cc \
             $(SRCDIR)/SCIRunLoader.cc \
-            $(SRCDIR)/ApplicationLoader.cc \
             $(SRCDIR)/ComponentSkeletonWriter.cc
 
 SUBDIRS := \
