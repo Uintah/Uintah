@@ -223,7 +223,7 @@ SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${XML2_INCLUDE})
 
 #-----------------------------------------------------------------------------
 # Tcl/Tk
-SET(TK_VERSION 8.3)
+SET(TK_VERSION 8.3.4)
 
 #-----------------------------------------------------------------------------
 # ITK library
@@ -259,12 +259,16 @@ FIND_LIBRARY(TK_LIBRARY tk
              /usr/local/lib
              /usr/lib
              /lib)
-FIND_PATH(TK_INCLUDE tk.h
-           ${SCIRUN_THIRDPARTY_PATH}/include
-           /usr/local/include
-           /usr/include
-           /include)
-SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${TK_INCLUDE})
+SET(TK_SRC_PATH ${SCIRUN_THIRDPARTY_PATH}/src/tk CACHE PATH "Path to tk source")
+
+SET(TK_INCLUDE1 ${TK_SRC_PATH}/generic)
+SET(TK_INCLUDE2 ${TK_SRC_PATH}/unix)
+#FIND_PATH(TK_INCLUDE tk.h
+#           ${SCIRUN_THIRDPARTY_PATH}/include
+#           /usr/local/include
+#           /usr/include
+#           /include)
+SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${TK_INCLUDE1} ${TK_INCLUDE2})
 #-----------------------------------------------------------------------------
 # TCL library
 FIND_LIBRARY(TCL_LIBRARY tcl
@@ -272,12 +276,19 @@ FIND_LIBRARY(TCL_LIBRARY tcl
              /usr/local/lib
              /usr/lib
              /lib)
-FIND_PATH(TCL_INCLUDE tcl.h
+FIND_PATH(TCL_INCLUDE1 tcl.h
            ${SCIRUN_THIRDPARTY_PATH}/include
            /usr/local/include
            /usr/include
            /include)
-SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${TCL_INCLUDE})
+
+FIND_PATH(TCL_INCLUDE2 tclMath.h
+           ${SCIRUN_THIRDPARTY_PATH}/src/tk8.3.4/generic
+           /usr/local/include
+           /usr/include
+           /include)
+
+SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${TCL_INCLUDE1} ${TCL_INCLUDE2})
 
 #-----------------------------------------------------------------------------
 # blt lib
