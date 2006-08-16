@@ -1441,8 +1441,8 @@ ImageCM2Widget::resize(int width, int height)
   info->samples[1]= width;
   info->samples[2]= height;
 
-  for (int a = 0; a < 3; a++) {
-
+  for (int a = 0; a < 3; a++)
+  {
     if (nrrdKindSize(nin->axis[a].kind) > 1) {
       std::cerr << "Trying to resample along axis " << a 
                 << " which is not of nrrdKindDomain or nrrdKindUnknown." 
