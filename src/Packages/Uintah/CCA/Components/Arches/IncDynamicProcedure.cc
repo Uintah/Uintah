@@ -83,8 +83,19 @@ void
 IncDynamicProcedure::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("Turbulence");
-  if (d_calcVariance)
+  if (d_calcVariance) {
+    cout << "Scale similarity type model with Reynolds filter will be used" << endl;
+    cout << "to model variance" << endl;
     db->require("variance_coefficient",d_CFVar); // const reqd by variance eqn
+    db->getWithDefault("filter_variance_limit_scalar",
+		       d_filter_var_limit_scalar,true);
+    if (d_filter_var_limit_scalar)
+      cout << "Scalar for variance limit will be Reynolds filtered" << endl;
+    else {
+      cout << "WARNING! Scalar for variance limit will NOT be filtered" << endl;
+      cout << "possibly causing high variance values" << endl;
+    }
+  }
   db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
   db->getWithDefault("filter_cs_squared",d_filter_cs_squared,false);
 
@@ -2103,10 +2114,14 @@ IncDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // Computes
-  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
      tsk->computes(d_lab->d_scalarVarSPLabel);
-  else
+     tsk->computes(d_lab->d_normalizedScalarVarLabel);
+  }
+  else {
      tsk->modifies(d_lab->d_scalarVarSPLabel);
+     tsk->modifies(d_lab->d_normalizedScalarVarLabel);
+  }
 
   sched->addTask(tsk, patches, matls);
 }
@@ -2127,17 +2142,25 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     // Variables
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
+    CCVariable<double> normalizedScalarVar;
     // Get the velocity, density and viscosity from the old data warehouse
     new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
     	new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
 			       patch);
-    else
+    	new_dw->allocateAndPut(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, matlIndex,
+			       patch);
+    }
+    else {
     	new_dw->getModifiable(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
 			       patch);
+    	new_dw->getModifiable(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, matlIndex,
+			       patch);
+    }
     scalarVar.initialize(0.0);
+    normalizedScalarVar.initialize(0.0);
 
     constCCVariable<int> cellType;
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
@@ -2207,6 +2230,8 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
       }
     }
 #endif
+    double small = 1.0e-10;
+    double var_limit = 0.0;
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
@@ -2216,6 +2241,19 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 	  // compute scalar variance
 	  scalarVar[currCell] = d_CFVar*(filterPhiSqr[currCell]-
 					 (filterPhi[currCell]*filterPhi[currCell]));
+
+	  // now, check variance bounds and normalize
+	  if (d_filter_var_limit_scalar)
+	    var_limit = filterPhi[currCell] * (1.0 - filterPhi[currCell]);
+	  else
+	    var_limit = scalar[currCell] * (1.0 - scalar[currCell]);
+
+          if(scalarVar[currCell] < small)
+            scalarVar[currCell] = 0.0;
+          if(scalarVar[currCell] > var_limit)
+            scalarVar[currCell] = var_limit;
+
+          normalizedScalarVar[currCell] = scalarVar[currCell]/(var_limit+small);
 	}
       }
     }
@@ -2237,8 +2275,11 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 	  IntVector currCell(colX-1, colY, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
 	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	      normalizedScalarVar[currCell] = 
+		          normalizedScalarVar[IntVector(colX,colY,colZ)];
+	    }
 	}
       }
     }
@@ -2249,8 +2290,11 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 	  IntVector currCell(colX+1, colY, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
 	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	      normalizedScalarVar[currCell] = 
+		          normalizedScalarVar[IntVector(colX,colY,colZ)];
+	    }
 	}
       }
     }
@@ -2261,8 +2305,11 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 	  IntVector currCell(colX, colY-1, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
 	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	      normalizedScalarVar[currCell] = 
+		          normalizedScalarVar[IntVector(colX,colY,colZ)];
+	    }
 	}
       }
     }
@@ -2273,8 +2320,11 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 	  IntVector currCell(colX, colY+1, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
 	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	      normalizedScalarVar[currCell] = 
+		          normalizedScalarVar[IntVector(colX,colY,colZ)];
+	    }
 	}
       }
     }
@@ -2285,8 +2335,11 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 	  IntVector currCell(colX, colY, colZ-1);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
 	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	      normalizedScalarVar[currCell] = 
+		          normalizedScalarVar[IntVector(colX,colY,colZ)];
+	    }
 	}
       }
     }
@@ -2297,8 +2350,11 @@ IncDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 	  IntVector currCell(colX, colY, colZ+1);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
 	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	      normalizedScalarVar[currCell] = 
+		          normalizedScalarVar[IntVector(colX,colY,colZ)];
+	    }
 	}
       }
     }
@@ -2378,14 +2434,7 @@ IncDynamicProcedure::computeScalarDissipation(const ProcessorGroup*,
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    //  if (old_dw->exists(d_cellInfoLabel, patch)) 
-    //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-    //else {
-    //  cellInfoP.setData(scinew CellInformation(patch));
-    //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-    //}
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // compatible with fortran index

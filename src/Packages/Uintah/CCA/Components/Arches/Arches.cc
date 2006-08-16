@@ -412,6 +412,7 @@ Arches::sched_paramInit(const LevelP& level,
       tsk->computes(d_lab->d_scalarSPLabel); // only work for 1 scalar
     if (d_calcVariance) {
       tsk->computes(d_lab->d_scalarVarSPLabel); // only work for 1 scalarVar
+      tsk->computes(d_lab->d_normalizedScalarVarLabel); // only work for 1 scalarVar
       tsk->computes(d_lab->d_scalarDissSPLabel); // only work for 1 scalarVar
     }
     if (d_calcReactingScalar)
@@ -480,6 +481,7 @@ Arches::paramInit(const ProcessorGroup* ,
     CCVariable<double> pressureInterm;
     CCVariable<double> scalar;
     CCVariable<double> scalarVar_new;
+    CCVariable<double> normalizedScalarVar_new;
     CCVariable<double> scalarDiss_new;
     CCVariable<double> enthalpy;
     CCVariable<double> density;
@@ -528,6 +530,8 @@ Arches::paramInit(const ProcessorGroup* ,
     if (d_calcVariance) {
       new_dw->allocateAndPut(scalarVar_new, d_lab->d_scalarVarSPLabel, matlIndex, patch);
       scalarVar_new.initialize(0.0);
+      new_dw->allocateAndPut(normalizedScalarVar_new, d_lab->d_normalizedScalarVarLabel, matlIndex, patch);
+      normalizedScalarVar_new.initialize(0.0);
       new_dw->allocateAndPut(scalarDiss_new, d_lab->d_scalarDissSPLabel, matlIndex, patch);
       scalarDiss_new.initialize(0.0);  
     }

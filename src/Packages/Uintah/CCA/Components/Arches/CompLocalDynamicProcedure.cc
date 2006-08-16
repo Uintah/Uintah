@@ -89,6 +89,8 @@ CompLocalDynamicProcedure::getMolecularViscosity() const {
 void 
 CompLocalDynamicProcedure::problemSetup(const ProblemSpecP& params)
 {
+  cout << "WARNING!!!!! This model is a mess. It has been out of sync" << endl;
+  cout << "with the rest of things for a while. Use at your own risk !!!" << endl;
   ProblemSpecP db = params->findBlock("Turbulence");
   db->require("cf", d_CF);
   db->require("fac_mesh", d_factorMesh);
