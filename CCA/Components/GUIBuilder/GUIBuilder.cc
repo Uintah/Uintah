@@ -43,8 +43,10 @@
 #include <SCIRun/Vtk/VtkPortInstance.h>
 #endif
 #include <SCIRun/CCA/CCAComponentModel.h>
+#include <SCIRun/Internal/ApplicationLoader.h>
 
 #include <Core/Util/Environment.h>
+#include <Core/OS/Dir.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Runnable.h>
@@ -74,6 +76,7 @@ const std::string GUIBuilder::GOPORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_
 const std::string GUIBuilder::UIPORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "UIPort");
 const std::string GUIBuilder::PROGRESS_PORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "Progress");
 const std::string GUIBuilder::COMPONENTICON_PORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "ComponentIcon");
+const std::string GUIBuilder::APP_EXT_WILDCARD("(*." + ApplicationLoader::APP_EXT + ")");
 
 Mutex GUIBuilder::builderLock("GUIBuilder class lock");
 wxSCIRunApp* GUIBuilder::app = 0;
@@ -123,7 +126,6 @@ DestroyInstancesThread::run()
 
 GUIBuilder::GUIBuilder()
 {
-  
 
 #if DEBUG
   std::cerr << "GUIBuilder::GUIBuilder(): from thread " << Thread::self()->getThreadName() << std::endl;
@@ -144,10 +146,6 @@ GUIBuilder::~GUIBuilder()
   }
   catch (const sci::cca::CCAException::pointer &e) {
     std::cerr << "Error: GUI service is not available; " <<  e->getNote() << std::endl;
-  }
-
-  if (appLoader) {
-    delete appLoader;
   }
 }
 
@@ -176,20 +174,25 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
     services->releasePort("cca.FrameworkProperties");
   }
   catch (const sci::cca::CCAException::pointer &e) {
-    std::cerr << "Error: Framework properties service is not available (fatal error); " <<  e->getNote() << std::endl;
+    std::cerr << "Error: Framework properties service error (fatal); " <<  e->getNote() << std::endl;
     return;
   }
   frameworkURL = tm->getString("url", "NO URL AVAILABLE");
-
-  // set up application loading
-  std::string file = tm->getString("network file", "");
-  appLoader = new ApplicationLoader(file);
-  if (! file.empty()) {
-    // load application here?
-  }
-
+  std::string file = tm->getString("app file", "");
   // get config dir
   configDir = tm->getString("config dir", "");
+
+  sci::cca::ports::ApplicationLoaderService::pointer appLoader;
+  try {
+    appLoader =
+      pidl_cast<sci::cca::ports::ApplicationLoaderService::pointer>(services->getPort("cca.ApplicationLoaderService"));
+    appLoader->setFileName(file);
+    services->releasePort("cca.ApplicationLoaderService");
+  } catch (const sci::cca::CCAException::pointer &pe) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    bw->DisplayErrorMessage("Error: application loader service error; " + pe->getNote());
+    return;
+  }
 
   if (! wxTheApp) {
     Thread *t = new Thread(new wxGUIThread(sci::cca::GUIBuilder::pointer(this)), GUI_THREAD_NAME.c_str(), 0, Thread::NotActivated);
@@ -202,16 +205,15 @@ GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
     std::cerr << "GUIBuilder::setServices(..) try to add top window." << std::endl;
 #endif
     if (Thread::self()->getThreadName() == GUI_THREAD_NAME) {
-      app->AddBuilder(sci::cca::GUIBuilder::pointer(this));
+//       app->AddBuilder(sci::cca::GUIBuilder::pointer(this));
     } else {
-      // add to wx event queue???
       std::cerr << "Builders can only be created in the GUI thread...Aborting!" << std::endl;
       abort();
     }
   }
 
   try {
-    // get framework properties
+    // add this builder to the GUI service
     sci::cca::ports::GUIService::pointer guiService =
       pidl_cast<sci::cca::ports::GUIService::pointer>(services->getPort("cca.GUIService"));
     guiService->addBuilder(services->getComponentID()->getInstanceName(), sci::cca::GUIBuilder::pointer(this));
@@ -271,14 +273,17 @@ GUIBuilder::getPortInfo(const sci::cca::ComponentID::pointer& cid, const std::st
 }
 
 sci::cca::ComponentID::pointer
-GUIBuilder::createInstance(const std::string& className, const sci::cca::TypeMap::pointer& properties)
+GUIBuilder::createInstance(const sci::cca::ComponentClassDescription::pointer& cd)
 {
-  sci::cca::TypeMap::pointer tm = services->createTypeMap();
   sci::cca::ComponentID::pointer cid;
   try {
+    sci::cca::TypeMap::pointer tm = services->createTypeMap();
+    tm->putString("LOADER NAME", cd->getLoaderName());
+    tm->putString("builder name", services->getComponentID()->getInstanceName());
+
     sci::cca::ports::BuilderService::pointer bs =
       pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
-    cid = bs->createInstance(std::string(), className, tm);
+    cid = bs->createInstance(std::string(), cd->getComponentClassName(), tm);
     services->releasePort("cca.BuilderService");
   }
   catch (const sci::cca::CCAException::pointer &e) {
@@ -773,19 +778,27 @@ void* GUIBuilder::getPortColor(const std::string& portType)
 }
 
 // test ApplicationLoader
+
+bool GUIBuilder::applicationFileExists()
+{
+  //Dir d();
+  return false;
+}
+
 void GUIBuilder::saveApplication()
 {
-  sci::cca::ports::BuilderService::pointer bs;
+  sci::cca::ports::ApplicationLoaderService::pointer appLoader;
   try {
-    bs =
-      pidl_cast<sci::cca::ports::BuilderService::pointer>(services->getPort("cca.BuilderService"));
-    appLoader->saveNetworkFile(bs, sci::cca::GUIBuilder::pointer(this));
-    services->releasePort("cca.BuilderService");
+    appLoader =
+      pidl_cast<sci::cca::ports::ApplicationLoaderService::pointer>(services->getPort("cca.ApplicationLoaderService"));
+    appLoader->saveNetworkFile();
+    services->releasePort("cca.ApplicationLoaderService");
   } catch (const sci::cca::CCAException::pointer &pe) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
-    bw->DisplayErrorMessage("Error: builder service not found; " + pe->getNote());
+    bw->DisplayErrorMessage("Error: application loader service error; " + pe->getNote());
     return;
   }
+
 }
 // test ApplicationLoader
 

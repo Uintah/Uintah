@@ -404,7 +404,7 @@ void BuilderWindow::OnLoad(wxCommandEvent& event)
   wxBusyCursor wait;
 
   wxString wildcard(wxT("SCIRun2 application files"));
-  wildcard += wxT("(*.") + wxT(ApplicationLoader::APPLICATION_FILE_EXTENSION) + wxT(")");
+  wildcard += wxT(GUIBuilder::APP_EXT_WILDCARD);
   wxFileDialog fDialog(this, wxT("Open application file"), wxT(GUIBuilder::DEFAULT_OBJ_DIR), wxT(wxEmptyString), wxT(wildcard), wxOPEN|wxFILE_MUST_EXIST|wxCHANGE_DIR);
   statusBar->SetStatusText("Loading application file", 0);
   if (fDialog.ShowModal() == wxID_OK) {
@@ -482,10 +482,7 @@ void BuilderWindow::InstantiateComponent(const sci::cca::ComponentClassDescripti
   wxBusyCursor wait;
   statusBar->SetStatusText("Build component", 0);
 
-  TypeMap *tm = new TypeMap;
-  tm->putString("LOADER NAME", cd->getLoaderName());
-
-  sci::cca::ComponentID::pointer cid = builder->createInstance(cd->getComponentClassName(), sci::cca::TypeMap::pointer(tm));
+  sci::cca::ComponentID::pointer cid = builder->createInstance(cd);
   // Assumes that the GUI builder component class will be named "SCIRun.GUIBuilder".
   // Is there a better way to check if this is a GUI builder?
   if (! cid.isNull() && cd->getComponentClassName() != "SCIRun.GUIBuilder") {
@@ -494,7 +491,6 @@ void BuilderWindow::InstantiateComponent(const sci::cca::ComponentClassDescripti
 #endif
     networkCanvas->AddIcon(cid);
   }
-
   statusBar->SetStatusText("Component built", 0);
 }
 

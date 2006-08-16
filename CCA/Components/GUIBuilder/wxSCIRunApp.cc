@@ -47,7 +47,7 @@ using namespace SCIRun;
 Mutex wxSCIRunApp::appLock("GUI application lock");
 Semaphore wxSCIRunApp::sem("wxWidgets GUI Thread startup wait", 0);
 sci::cca::GUIBuilder::pointer wxSCIRunApp::topBuilder(0);
-std::vector<sci::cca::GUIBuilder::pointer> wxSCIRunApp::activeBuilders(5);
+// std::vector<sci::cca::GUIBuilder::pointer> wxSCIRunApp::activeBuilders(5);
 
 // Don't automatically create main function (see wx/app.h).
 // Initializes global application object.
@@ -83,23 +83,6 @@ wxSCIRunApp::OnInit()
   return true;
 }
 
-void
-wxSCIRunApp::AddBuilder(const sci::cca::GUIBuilder::pointer& bc)
-{
-#if DEBUG
-  std::cerr << "wxSCIRunApp::AddBuilder(): from thread " << Thread::self()->getThreadName() << std::endl;
-#endif
-
-  // set the "main" top level window as parent
-  appLock.lock();
-  wxWindow *top = GetTopWindow();
-  appLock.unlock();
-
-  BuilderWindow *window = new BuilderWindow(bc, top);
-  activeBuilders.push_back(bc);
-  window->Show(true);
-}
-
 BuilderWindow*
 wxSCIRunApp::GetTopBuilderWindow() const
 {
@@ -110,5 +93,29 @@ wxSCIRunApp::GetTopBuilderWindow() const
   BuilderWindow *bw = dynamic_cast<BuilderWindow*>(top);
   return bw;
 }
+
+void wxSCIRunApp::SetTopBuilder(const sci::cca::GUIBuilder::pointer& bc)
+{
+  if (topBuilder.isNull()) {
+    topBuilder = bc;
+  }
+}
+
+// void
+// wxSCIRunApp::AddBuilder(const sci::cca::GUIBuilder::pointer& bc)
+// {
+// #if DEBUG
+//   std::cerr << "wxSCIRunApp::AddBuilder(): from thread " << Thread::self()->getThreadName() << std::endl;
+// #endif
+
+//   // set the "main" top level window as parent
+//   appLock.lock();
+//   wxWindow *top = GetTopWindow();
+//   appLock.unlock();
+
+//   BuilderWindow *window = new BuilderWindow(bc, top);
+//   activeBuilders.push_back(bc);
+//   window->Show(true);
+// }
 
 }
