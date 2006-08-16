@@ -14,10 +14,12 @@
 #include <sgi_stl_warnings_off.h>
 #include <vector>
 #include <map>
+#include <fstream>
 #include <sgi_stl_warnings_on.h>
 
 namespace Uintah {
 using std::vector;
+using std::ofstream;
 
 class Task;
 class SendState;
@@ -134,7 +136,8 @@ WARNING
     double           d_lasttime;
     vector<char*>    d_labels;
     vector<double>   d_times;
-    bool             d_logTimes;
+    ofstream         timingStats, avgStats, maxStats;
+
 
     void emitTime(char* label);
     void emitTime(char* label, double time);
