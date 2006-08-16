@@ -329,6 +329,22 @@ IF(X11_FOUND)
 ENDIF(X11_FOUND)
 
 #-----------------------------------------------------------------------------
+# Glew
+FIND_LIBRARY(GLEW_LIBRARY GLEW
+             ${SCI_THIRDPARTY_DIR}/lib/
+             /usr/local/lib
+             /usr/lib
+             /lib)
+FIND_PATH(GLEW_INCLUDE glew.h
+           ${SCIRUN_THIRDPARTY_PATH}/include/GL
+           /usr/local/include
+           /usr/include
+           /include)
+SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${GLEW_INCLUDE})
+
+SET(DEF_GLEW "#define HAVE_GLEW 1")
+
+#-----------------------------------------------------------------------------
 # DV MPEG FROM 3P FOR NOW
 FIND_LIBRARY(MPEG_LIBRARY mpeg
             ${SCI_THIRDPARTY_DIR}/lib/
@@ -547,7 +563,7 @@ SET(HAVE_UUID_UUID_H 0)
 #CHECK_INCLUDE_FILE(oogl/shadedPrim.h HAVE_SHADED_PRIM)
 #CHECK_LIBRARY_EXISTS(oogl )
 SET(DEF_OOGL "")
-#SET(DEF_GLEW)
+
 #SET(DEF_FTGL)
 
 # Freetype in 3p
