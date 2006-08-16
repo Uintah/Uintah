@@ -143,6 +143,10 @@ ImageImporter::execute()
 	}
 	fp = fopen(tmp_file.c_str(), "rb");
       }
+      else
+      {
+        fp = fopen(fn.c_str(), "rb");
+      }
 
       png_structp png;
       png_infop info;
