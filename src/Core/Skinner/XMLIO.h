@@ -115,7 +115,8 @@ namespace SCIRun {
       //                                          SignalThrower::SignalCatchers_t &);
 
       static void        eval_var_node(const xmlNodePtr,
-                                       Variables *);
+                                       Variables *,
+                                       bool override_propagate=false);
 
       static DrawableMakerMap_t makers_;
     

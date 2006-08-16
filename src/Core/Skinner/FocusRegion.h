@@ -25,36 +25,35 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//  
-//    File   : Text.h
+//    File   : FocusRegion.h
 //    Author : McKay Davis
-//    Date   : Tue Jun 27 13:00:37 2006
-#ifndef SKINNER_TEXT_H
-#define SKINNER_TEXT_H
+//    Date   : Tue Aug 15 22:11:28 2006
 
-#include <Core/Skinner/Drawable.h>
-#include <Core/Skinner/Color.h>
+#ifndef SKINNER_FOCUSREGION_H
+#define SKINNER_FOCUSREGION_H
+
+#include <Core/Skinner/Parent.h>
 
 namespace SCIRun {
-  class TextRenderer;
-
   namespace Skinner {
-    class Text : public Drawable {
-    public:
-      Text (Variables *variables);
-      virtual ~Text();
-      //      virtual propagation_state_e       process_event(event_handle_t);
-      CatcherFunction_t                 redraw;
-    protected:
 
-      Color                             fgcolor_;
-      Color                             bgcolor_;
-      unsigned int                      flags_;
-      TextRenderer *                    renderer_;
-      int                               offsetx_;
-      int                               offsety_;
-      unsigned int                      cursor_position_;
+    class FocusRegion : public Parent {
+    public:
+      FocusRegion(Variables *variables);
+      virtual ~FocusRegion();
+      CatcherFunction_t                 process_event;
+      virtual int                       get_signal_id(const string &) const;
+    protected:
+      void                              set_focus(bool);
+      CatcherFunction_t                 FocusRegion_Maker;
+      CatcherFunction_t                 do_PointerEvent;
+      CatcherFunction_t                 do_KeyEvent;
+      typedef vector<FocusRegion *>     FocusRegions_t;
+      FocusRegions_t                    focus_regions_;
+      bool                              focus_;
     };
+
+
   }
 }
 

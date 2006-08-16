@@ -25,37 +25,39 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//  
-//    File   : Text.h
+//    File   : ViewSubRegion.cc
 //    Author : McKay Davis
-//    Date   : Tue Jun 27 13:00:37 2006
-#ifndef SKINNER_TEXT_H
-#define SKINNER_TEXT_H
+//    Date   : Sat Aug 12 12:57:50 2006
 
-#include <Core/Skinner/Drawable.h>
-#include <Core/Skinner/Color.h>
+
+#include <Core/Skinner/ViewSubRegion.h>
+#include <Core/Skinner/Variables.h>
+#include <sci_gl.h>
 
 namespace SCIRun {
-  class TextRenderer;
-
   namespace Skinner {
-    class Text : public Drawable {
-    public:
-      Text (Variables *variables);
-      virtual ~Text();
-      //      virtual propagation_state_e       process_event(event_handle_t);
-      CatcherFunction_t                 redraw;
-    protected:
+    ViewSubRegion::ViewSubRegion(Variables *vars) :
+      Parent(vars)
+    {
+      //      REGISTER_CATCHER_TARGET(ViewSubRegion::redraw);
+    }
 
-      Color                             fgcolor_;
-      Color                             bgcolor_;
-      unsigned int                      flags_;
-      TextRenderer *                    renderer_;
-      int                               offsetx_;
-      int                               offsety_;
-      unsigned int                      cursor_position_;
-    };
+    ViewSubRegion::~ViewSubRegion() {}
+  
+    BaseTool::propagation_state_e
+    ViewSubRegion::process_event(event_handle_t event)
+    {
+      WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
+      if (window && window->get_window_state() == WindowEvent::REDRAW_E) {
+        RectRegion rect = get_region();
+        glEnable(GL_SCISSOR_TEST);
+        glScissor(rect.x1(), rect.y1(), rect.width(), rect.height());        
+        Parent::process_event(event);
+        glDisable(GL_SCISSOR_TEST);
+      } else {
+        Parent::process_event(event);
+      }
+      return CONTINUE_E;
+    }
   }
 }
-
-#endif

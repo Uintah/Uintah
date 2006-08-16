@@ -25,35 +25,25 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//  
-//    File   : Text.h
+//    File   : MenuList.h
 //    Author : McKay Davis
-//    Date   : Tue Jun 27 13:00:37 2006
-#ifndef SKINNER_TEXT_H
-#define SKINNER_TEXT_H
+//    Date   : Sat Aug 12 12:36:19 2006
 
-#include <Core/Skinner/Drawable.h>
-#include <Core/Skinner/Color.h>
+#ifndef SKINNER_MENULIST_H
+#define SKINNER_MENULIST_H
+
+#include <Core/Skinner/Parent.h>
 
 namespace SCIRun {
-  class TextRenderer;
-
   namespace Skinner {
-    class Text : public Drawable {
+    class MenuList : public Parent {
     public:
-      Text (Variables *variables);
-      virtual ~Text();
+      MenuList (Variables *variables);
+      virtual ~MenuList();
       //      virtual propagation_state_e       process_event(event_handle_t);
-      CatcherFunction_t                 redraw;
+      //      CatcherFunction_t                 MenuManager_redraw;
     protected:
-
-      Color                             fgcolor_;
-      Color                             bgcolor_;
-      unsigned int                      flags_;
-      TextRenderer *                    renderer_;
-      int                               offsetx_;
-      int                               offsety_;
-      unsigned int                      cursor_position_;
+      //      CatcherFunction_t                 redraw;
     };
   }
 }

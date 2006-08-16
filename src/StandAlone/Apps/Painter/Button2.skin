@@ -1,4 +1,31 @@
   <definition class="Button" state="normal">
+
+      <object class="Root::Arithmetic">
+        <var name="Button::color" propagate="yes" overwrite="no">#333333FF</var>
+
+        <object class="Root::FocusRegion">
+
+          <signal name="FocusRegion::focus"
+                  target="Arithmetic::set_value">
+            <var name="variable">Button::color</var>
+            <var name="value">#DDDD88AA</var>
+          </signal>
+
+          <signal name="FocusRegion::focus"
+                  target="Root::Redraw"/>
+
+
+          <signal name="FocusRegion::unfocus"
+                  target="Arithmetic::set_value">
+            <var name="variable">Button::color</var>
+            <var name="value">#333333FF</var>
+          </signal>
+
+          <signal name="FocusRegion::unfocus"
+                  target="Root::Redraw"/>
+
+          
+
     <object class="Grid">
       <var name="rows">1</var>
       <var name="cols">3</var>
@@ -56,4 +83,7 @@
         <var name="color">$Button::color</var>
       </object>
     </object>
+      </object>
+    </object>
+
   </definition>  

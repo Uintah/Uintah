@@ -737,6 +737,7 @@ private:
 
   CatcherFunction_t     ShowVolumeRendering;
   CatcherFunction_t     AbortFilterOn;
+  CatcherFunction_t     ResampleVolume;
 
   
 

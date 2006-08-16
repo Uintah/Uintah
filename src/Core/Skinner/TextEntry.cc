@@ -49,6 +49,7 @@ namespace SCIRun {
       inside_(false),
       numeric_(variables->get_bool("numeric"))
     { 
+      REGISTER_CATCHER_TARGET_BY_NAME(TextEntry::redraw, Text::redraw);
       flags_ &= ~TextRenderer::CURSOR;      
     }
 
@@ -105,20 +106,10 @@ namespace SCIRun {
     BaseTool::propagation_state_e
     TextEntry::process_event(event_handle_t event)
     {
-      const RectRegion &region = get_region();
-      PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
-      if (pointer) {
-        if (region.inside(pointer->get_x(), pointer->get_y()) &&
-            get_vars()->get_bool("cursor")) {
-          flags_ |= TextRenderer::CURSOR;
-        } else {
-          flags_ &= ~TextRenderer::CURSOR;
-        }
-      }
-
       KeyEvent *key = dynamic_cast<KeyEvent *>(event.get_rep());
       if (key && (key->get_key_state() & KeyEvent::KEY_PRESS_E)) {
         int code = key->get_keyval();
+        cerr << " TextEntry: " << get_vars()->get_string("cursor") << std::endl;
         bool shift = (key->get_modifiers() & EventModifiers::SHIFT_E);
         string character = "";
         if (code == SCIRun_Return) {

@@ -3,8 +3,9 @@
     <var name="FileLoadBox::filename" propagate="yes"></var>
     <definition class="ShadowedBox::child">
       <object class="Box">
+        <var name="visible" type="int">1</var>
         <var name="focus_mode">1</var>
-        <var name="color">#AAAAAAAA</var>
+        <var name="color">#AAAAFFAA</var>
         
         <object class="Texture">
           <var name="file">BackgroundTile04.png</var>
@@ -15,7 +16,7 @@
         
         <object class="Texture">
           <var name="file">BackgroundTile04.png</var>
-          <var name="color">#000000</var>
+          <var name="color">#00000000</var>
           <var name="repeatx">1</var>
           <var name="repeaty">1</var>
         </object>
@@ -58,18 +59,19 @@
                 </object>
                 
                 
-                
-                <object class="TextEntry">
-                  <var name="variable">FileLoadBox::filename</var>
-                  <var name="size">28</var>
-                  <var name="anchor">W</var>
-                  <var name="fgcolor">#000000FF</var>
-                  <var name="bgcolor">#FFFFFFFF</var>
-                  <var name="bgcolor">#00000080</var>
-                  <var name="offsetx">-1</var>
-                  <var name="cursor">1</var>
-                  <var name="offsety">1</var>
-                  <var name="shadow">0</var>
+                <object class="Root::ViewSubRegion">
+                  <object class="TextEntry">
+                    <var name="variable">FileLoadBox::filename</var>
+                    <var name="size">28</var>
+                    <var name="anchor">W</var>
+                    <var name="fgcolor">#000000FF</var>
+                    <var name="bgcolor">#FFFFFFFF</var>
+                    <var name="bgcolor">#00000080</var>
+                    <var name="offsetx">-1</var>
+                    <var name="cursor">1</var>
+                    <var name="offsety">1</var>
+                    <var name="shadow">0</var>
+                  </object>
                 </object>
               </object>
             </definition>

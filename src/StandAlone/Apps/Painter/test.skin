@@ -22,10 +22,10 @@
   <object class="GLWindow">
     <var name="width" type="int">350</var>
     <var name="height" type="int">300</var>
-    <var name="posx" type="int">1200</var>
+    <var name="posx" type="int">50</var>
     <var name="posy" type="int">50</var>
     <var name="border">1</var>
-    <object class="test"/>
+    <object class=""/>
   </object>
 
 </skinner>

@@ -126,6 +126,8 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::ShowVolumeRendering);
 
   REGISTER_CATCHER_TARGET(Painter::AbortFilterOn);
+
+  REGISTER_CATCHER_TARGET(Painter::ResampleVolume);
    
   return STOP_E;
 }
@@ -172,7 +174,7 @@ Painter::StartCropTool(event_handle_t event) {
 
 BaseTool::propagation_state_e 
 Painter::StartFloodFillTool(event_handle_t event) {
-  tm_.add_tool(new CropTool(this),25);
+  tm_.add_tool(new FloodfillTool(this),25);
   return CONTINUE_E;
 }
 
@@ -591,13 +593,16 @@ Painter::ITKCurvatureAnisotropic(event_handle_t event) {
   FilterType::Pointer filter = FilterType::New();  
 
   string name = "ITKCurvatureAnisotropic";
+  string prefix = "ITKCurvatureAnisotropicDiffusionImageFilterTool::";
   filter->SetNumberOfIterations
-    (get_vars()->get_int(name+"::numberOfIterations"));
+    (get_vars()->get_int(prefix+"numberOfIterations"));
   filter->SetTimeStep
-    (get_vars()->get_double(name+"::timeStep"));
+    (get_vars()->get_double(prefix+"timeStep"));
   filter->SetConductanceParameter
-    (get_vars()->get_double(name+"::conductanceParameter"));
+    (get_vars()->get_double(prefix+"conductanceParameter"));
   
+  cerr << "iterations: " << filter->GetNumberOfIterations() << std::endl;
+
   NrrdVolume *vol = new NrrdVolume(current_volume_, name, 2);
   volume_map_[name] = vol;
   show_volume(name);
@@ -730,6 +735,7 @@ Painter::ShowVolumeRendering(event_handle_t event) {
                                            *cmap2v, 
                                            *planes,
                                            Round(card_mem*1024*1024*0.8));
+  vol->set_shading(true);
   vol->set_slice_alpha(-0.5);
   vol->set_slice_alpha(0.1);
   vol->set_interactive_rate(4.0);
@@ -773,6 +779,112 @@ Painter::LoadColorMap1D(event_handle_t event) {
   add_bundle(bundle);
   return CONTINUE_E;
 }
+
+
+
+BaseTool::propagation_state_e 
+Painter::ResampleVolume(event_handle_t event) {   
+  Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
+  ASSERT(signal);
+
+  NrrdResampleInfo *info = nrrdResampleInfoNew();
+
+  NrrdKernel *kern = 0;;
+  double p[NRRD_KERNEL_PARMS_NUM];
+  memset(p, 0, NRRD_KERNEL_PARMS_NUM * sizeof(double));
+  p[0] = 1.0;
+  
+#if 0
+  string last_filtertype_ = "gaussian";
+
+  if (last_filtertype_ == "box") {
+    kern = nrrdKernelBox;
+  } else if (last_filtertype_ == "tent") {
+    kern = nrrdKernelTent;
+  } else if (last_filtertype_ == "cubicCR") { 
+    kern = nrrdKernelBCCubic; 
+    p[1] = 0; 
+    p[2] = 0.5; 
+  } else if (last_filtertype_ == "cubicBS") { 
+    kern = nrrdKernelBCCubic; 
+    p[1] = 1; 
+    p[2] = 0; 
+  } else if (last_filtertype_ == "gaussian") { 
+    kern = nrrdKernelGaussian; 
+    //    p[0] = sigma_.get(); 
+    //    p[1] = extent_.get(); 
+  } else  { // default is quartic
+#endif
+    {
+      kern = nrrdKernelAQuartic; 
+      p[1] = 0.0834; // most accurate as per Teem documenation
+    }
+
+  Nrrd *nin = current_volume_->nrrd_handle_->nrrd_;
+
+  vector<string> samples;
+  samples.push_back("1");
+  samples.push_back(get_vars()->get_string("Resample::x"));
+  samples.push_back(get_vars()->get_string("Resample::y"));
+  samples.push_back(get_vars()->get_string("Resample::z"));
+
+  for (int a = 0; a < 4; a++) {
+    if (a == 0)
+      info->kernel[a] = 0;
+    else 
+      info->kernel[a] = kern;
+
+    info->samples[a] = nin->axis[a].size;
+    int temp;
+    bool convert = string_to_int(samples[a], temp);
+    ASSERT(convert);
+    info->samples[a] = size_t(temp);
+           
+    memcpy(info->parm[a], p, NRRD_KERNEL_PARMS_NUM * sizeof(double));
+
+    
+    if (info->kernel[a] && 
+    	(!(airExists(nin->axis[a].min) && airExists(nin->axis[a].max)))) {
+      nrrdAxisInfoMinMaxSet(nin, a, nin->axis[a].center ? 
+                            nin->axis[a].center : nrrdDefaultCenter);
+
+    
+    }
+    
+
+    info->min[a] = nin->axis[a].min;
+    info->max[a] = nin->axis[a].max;
+  }    
+  info->boundary = nrrdBoundaryBleed;
+  info->type = nin->type;
+  info->renormalize = AIR_TRUE;
+
+  NrrdDataHandle nrrd_handle = scinew NrrdData;
+  Nrrd *nout = nrrd_handle->nrrd_;
+  if (nrrdSpatialResample(nout, nin, info)) {
+    char *err = biffGetDone(NRRD);
+    string errstr(err);
+    free(err);
+    throw "Trouble resampling: " + errstr;
+
+  }
+  nrrdResampleInfoNix(info); 
+
+  //  current_volume_->nrrd_handle_ = nrrd_handle;
+
+  //  NrrdDataHandle nrrd_handle = scinew NrrdData;
+  string newname = current_volume_->name_.get()+" - Resampled";
+  NrrdVolume *vol = new NrrdVolume(0, newname, nrrd_handle);
+  volume_map_[newname] = vol;
+  show_volume(newname);
+  recompute_volume_list();
+
+  //  recompute_volume_list();
+
+  return CONTINUE_E;
+
+}
+  
 
 
 
