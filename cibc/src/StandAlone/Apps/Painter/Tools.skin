@@ -1,5 +1,7 @@
 <definition class="Tools">
   <object class="Frame">
+    <object class="Root::FocusRegion">
+
     <var name="invert">1</var>
     <object class="Texture">
       <var name="file">BackgroundTile04.png</var>
@@ -295,6 +297,7 @@
             <var name="size">20</var>
           </object>
         </object>
+      </object>
       </object>
     </object>
   </object>

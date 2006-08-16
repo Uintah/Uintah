@@ -94,11 +94,16 @@ namespace SCIRun {
         FocusRegions_t::size_type num = focus_regions_.size();
         for (unsigned int i = 0; i < num; ++i) {
           if (focus_regions_[i]->focus_ && 
-              focus_regions_[i]->focus_regions_.empty()) {
+              focus_regions_[i]->focus_regions_.empty()) 
+          {
+            if (!backward && 
+                focus_regions_[i]->get_vars()->get_bool("ignore_tab")) {
+              break;
+            }
             focus_regions_[i]->set_focus(false);
-            //            int delta = backward ? focus_regions_.size() - 1 : 1;
             int next = (int(i) + (backward ? ( int(num) - 1) : 1)) % num;
-            focus_regions_[next]->set_focus(true);            break;
+            focus_regions_[next]->set_focus(true);
+            break;
           }
         }
       }
