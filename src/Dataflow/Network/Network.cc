@@ -139,7 +139,7 @@ Network::connect(Module* m1, int p1, Module* m2, int p2)
 
   ostringstream ids;
   ids << m1->id_ << "_p" << p1 << "_to_" << m2->id_ << "_p" << p2;
-  Connection* conn=scinew Connection(m1, p1, m2, p2, ids.str());
+  Connection* conn = scinew Connection(m1, p1, m2, p2, ids.str());
   connections.push_back(conn);
 
   // Reschedule next time we can.
