@@ -98,14 +98,15 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
   double mixFracVars = 0.0;
   if (d_calcVariance) {
     mixFracVars = inStream.d_mixVarVariance[0];
-
-    double var_limit = (mixFrac*(1.0-mixFrac));
+    // Variance bounds check and normalization is done at the model level,
+    // so no need to do it here
+    /*double var_limit = (mixFrac*(1.0-mixFrac));
     if(mixFracVars < small)
       mixFracVars=0.0;
     if(mixFracVars > var_limit)
       mixFracVars = var_limit;
 
-    mixFracVars = mixFracVars/(var_limit+small);
+    mixFracVars = mixFracVars/(var_limit+small);*/
   }
   // Heat loss for adiabatic case
   double current_heat_loss=0.0;
@@ -186,7 +187,6 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
     outStream.d_ch4=tableLookUp(mixFrac, mixFracVars, current_heat_loss, ch4_index);
   }
 
-  outStream.d_normalizedScalarVar = mixFracVars;
   outStream.d_heatLoss = current_heat_loss;
 
   /*if((outStream.d_temperature - 293.0) <= -0.01 || (outStream.d_density - 1.20002368329336) >= 0.001){

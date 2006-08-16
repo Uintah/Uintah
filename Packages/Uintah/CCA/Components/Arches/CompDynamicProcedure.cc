@@ -90,11 +90,21 @@ void
 CompDynamicProcedure::problemSetup(const ProblemSpecP& params)
 {
   ProblemSpecP db = params->findBlock("Turbulence");
-  if (d_calcVariance)
+  if (d_calcVariance) {
+    cout << "Scale similarity type model with Favre filter will be used" << endl;
+    cout << "to model variance" << endl;
     db->require("variance_coefficient",d_CFVar); // const reqd by variance eqn
+    db->getWithDefault("filter_variance_limit_scalar",
+		       d_filter_var_limit_scalar,true);
+    if (d_filter_var_limit_scalar)
+      cout << "Scalar for variance limit will be Favre filtered" << endl;
+    else {
+      cout << "WARNING! Scalar for variance limit will NOT be filtered" << endl;
+      cout << "possibly causing high variance values" << endl;
+    }
+  }
   // actually, Shmidt number, not Prandtl number
   db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
-  d_lower_limit = d_turbPrNo;
   db->getWithDefault("dynamicScalarModel",d_dynScalarModel,false);
   if (d_dynScalarModel)
    d_turbPrNo = 1.0; 
@@ -2795,15 +2805,25 @@ CompDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched,
   //           required. For multiple scalars this will be put in a loop
   tsk->requires(Task::NewDW, d_lab->d_scalarSPLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  tsk->requires(Task::NewDW, d_lab->d_densityCPLabel, 
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   tsk->requires(Task::NewDW, d_lab->d_cellTypeLabel, 
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
+  int mmWallID = d_boundaryCondition->getMMWallId();
+  if (mmWallID > 0)
+    tsk->requires(Task::NewDW, timelabels->ref_density);
+
   // Computes
-  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
      tsk->computes(d_lab->d_scalarVarSPLabel);
-  else
+     tsk->computes(d_lab->d_normalizedScalarVarLabel);
+  }
+  else {
      tsk->modifies(d_lab->d_scalarVarSPLabel);
+     tsk->modifies(d_lab->d_normalizedScalarVarLabel);
+  }
 
   sched->addTask(tsk, patches, matls);
 }
@@ -2823,18 +2843,29 @@ CompDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
     // Variables
     constCCVariable<double> scalar;
+    constCCVariable<double> density;
     CCVariable<double> scalarVar;
+    CCVariable<double> normalizedScalarVar;
     // Get the velocity, density and viscosity from the old data warehouse
     new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    new_dw->get(density, d_lab->d_densityCPLabel, matlIndex, patch,
+		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
     	new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
 			       patch);
-    else
+    	new_dw->allocateAndPut(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, matlIndex,
+			       patch);
+    }
+    else {
     	new_dw->getModifiable(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
 			       patch);
+    	new_dw->getModifiable(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, matlIndex,
+			       patch);
+    }
     scalarVar.initialize(0.0);
+    normalizedScalarVar.initialize(0.0);
 
     constCCVariable<int> cellType;
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
@@ -2843,40 +2874,73 @@ CompDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     
     IntVector idxLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
     IntVector idxHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
-    Array3<double> phiSqr(idxLo, idxHi);
-    phiSqr.initialize(0.0);
+    Array3<double> rhoPhi(idxLo, idxHi);
+    Array3<double> rhoPhiSqr(idxLo, idxHi);
+    rhoPhi.initialize(0.0);
+    rhoPhiSqr.initialize(0.0);
 
     for (int colZ = idxLo.z(); colZ < idxHi.z(); colZ ++) {
       for (int colY = idxLo.y(); colY < idxHi.y(); colY ++) {
 	for (int colX = idxLo.x(); colX < idxHi.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
-	  phiSqr[currCell] = scalar[currCell]*scalar[currCell];
+	  rhoPhi[currCell] = density[currCell]*scalar[currCell];
+	  rhoPhiSqr[currCell] = density[currCell]*
+		                scalar[currCell]*scalar[currCell];
 	}
       }
     }
 
-    Array3<double> filterPhi(patch->getLowIndex(), patch->getHighIndex());
-    Array3<double> filterPhiSqr(patch->getLowIndex(), patch->getHighIndex());
-    filterPhi.initialize(0.0);
-    filterPhiSqr.initialize(0.0);
+    Array3<double> filterRho(patch->getLowIndex(), patch->getHighIndex());
+    Array3<double> filterRhoPhi(patch->getLowIndex(), patch->getHighIndex());
+    Array3<double> filterRhoPhiSqr(patch->getLowIndex(), patch->getHighIndex());
+    filterRho.initialize(0.0);
+    filterRhoPhi.initialize(0.0);
+    filterRhoPhiSqr.initialize(0.0);
 
     IntVector indexLow = patch->getCellFORTLowIndex();
     IntVector indexHigh = patch->getCellFORTHighIndex();
 
 #ifdef PetscFilter
-    d_filter->applyFilter(pc, patch, scalar, filterPhi);
-    d_filter->applyFilter(pc, patch, phiSqr, filterPhiSqr);
+    d_filter->applyFilter(pc, patch, density, filterRho);
+    d_filter->applyFilter(pc, patch, rhoPhi, filterRhoPhi);
+    d_filter->applyFilter(pc, patch, rhoPhiSqr, filterRhoPhiSqr);
 #endif
 
+    // making filterRho nonzero 
+    sum_vartype den_ref_var;
+    int mmWallID = d_boundaryCondition->getMMWallId();
+    if (mmWallID > 0) {
+      new_dw->get(den_ref_var, timelabels->ref_density);
+    }
+
+    double small = 1.0e-10;
+    double var_limit = 0.0;
+    double filterPhi = 0.0;
     for (int colZ = indexLow.z(); colZ <= indexHigh.z(); colZ ++) {
       for (int colY = indexLow.y(); colY <= indexHigh.y(); colY ++) {
 	for (int colX = indexLow.x(); colX <= indexHigh.x(); colX ++) {
 	  IntVector currCell(colX, colY, colZ);
 
+	  if ((mmWallID > 0)&&(filterRho[currCell] < 1.0e-15))
+	    filterRho[currCell]=den_ref_var;
 	  // compute scalar variance
-	  scalarVar[currCell] = d_CFVar*(filterPhiSqr[currCell]-
-					 filterPhi[currCell]*
-					 filterPhi[currCell]);
+	  filterPhi = filterRhoPhi[currCell]/filterRho[currCell];
+	  scalarVar[currCell] = d_CFVar*
+			        (filterRhoPhiSqr[currCell]/filterRho[currCell]-
+				 filterPhi*filterPhi);
+
+	  // now, check variance bounds and normalize
+	  if (d_filter_var_limit_scalar)
+	    var_limit = filterPhi * (1.0 - filterPhi);
+	  else
+	    var_limit = scalar[currCell] * (1.0 - scalar[currCell]);
+
+          if(scalarVar[currCell] < small)
+            scalarVar[currCell] = 0.0;
+          if(scalarVar[currCell] > var_limit)
+            scalarVar[currCell] = var_limit;
+
+          normalizedScalarVar[currCell] = scalarVar[currCell]/(var_limit+small);
 	}
       }
     }
@@ -2898,8 +2962,11 @@ CompDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 	  IntVector currCell(colX-1, colY, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
 	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	      normalizedScalarVar[currCell] = 
+		          normalizedScalarVar[IntVector(colX,colY,colZ)];
+	    }
 	}
       }
     }
@@ -2910,8 +2977,11 @@ CompDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 	  IntVector currCell(colX+1, colY, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
 	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	      normalizedScalarVar[currCell] = 
+		          normalizedScalarVar[IntVector(colX,colY,colZ)];
+	    }
 	}
       }
     }
@@ -2922,8 +2992,11 @@ CompDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 	  IntVector currCell(colX, colY-1, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
 	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	      normalizedScalarVar[currCell] = 
+		          normalizedScalarVar[IntVector(colX,colY,colZ)];
+	    }
 	}
       }
     }
@@ -2934,8 +3007,11 @@ CompDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 	  IntVector currCell(colX, colY+1, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
 	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	      normalizedScalarVar[currCell] = 
+		          normalizedScalarVar[IntVector(colX,colY,colZ)];
+	    }
 	}
       }
     }
@@ -2946,8 +3022,11 @@ CompDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 	  IntVector currCell(colX, colY, colZ-1);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
 	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	      normalizedScalarVar[currCell] = 
+		          normalizedScalarVar[IntVector(colX,colY,colZ)];
+	    }
 	}
       }
     }
@@ -2958,8 +3037,11 @@ CompDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
 	  IntVector currCell(colX, colY, colZ+1);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
 	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	      normalizedScalarVar[currCell] = 
+		          normalizedScalarVar[IntVector(colX,colY,colZ)];
+	    }
 	}
       }
     }
