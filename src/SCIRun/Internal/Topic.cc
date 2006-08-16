@@ -32,16 +32,21 @@
 
 namespace SCIRun {
 
-Topic::Topic(const std::string& name) : topicName(name) {}
+Topic::Topic(const std::string& name,SCIRunFramework *fwk) : topicName(name),framework(fwk) {}
 
 Topic::~Topic()
 {
   eventList.clear();
   eventListenerMap.clear();
 }
-
 void Topic::sendEvent(const sci::cca::Event::pointer& event)
 {
+  std::string fwkURL = framework->getURL().getString();
+//   std::string name = framework->getUniqueName(fwkURL);
+//   std::cout << "Unique name : " << name << std::endl;
+//   std::cout << "Fwk URL : " << fwkURL << std::endl;
+  sci::cca::TypeMap::pointer eventHeader = event->getHeader();
+  sci::cca::TypeMap::pointer eventBody = event->getBody();
   if (event->getHeader().isNull()) {
     throw EventServiceExceptionPtr(new EventServiceException("eventHeader pointer is null", sci::cca::Unexpected));
   }
@@ -49,16 +54,20 @@ void Topic::sendEvent(const sci::cca::Event::pointer& event)
   if (event->getBody().isNull()) {
     throw EventServiceExceptionPtr(new EventServiceException("eventBody pointer is null", sci::cca::Unexpected));
   }
-
+  SSIDL::array1<std::string> allKeys = eventHeader->getAllKeys(sci::cca::None);
+  bool isURLPresent = false;
+  for (unsigned int i = 0; i < allKeys.size(); i++){
+    if(allKeys[i]  == "FrameworkURL"){
+      //std::cout << "Framework data present in Event Header\n";
+      isURLPresent = true;
+      break;
+    }
+  }
+  if(!isURLPresent){
+    //std::cout << "Framework data not present in Event Header, so adding one\n";
+    eventHeader->putString(std::string("FrameworkURL"),fwkURL);
+  }
   eventList.push_back(event);
-
-#if 0
-  //std::map<std::string, sci::cca::WildcardTopic::pointer>::iterator wildcardTopicIter;
-  // for(wildcardTopicIter = wildcardTopicMap.begin(); wildcardTopicIter != wildcardTopicMap.end(); wildcardTopicIter++){
-  //     wildcardTopicIter->second->addEvent(eventBody);
-  //     wildcardTopicIter->second->eventBodyList.push_back(eventBody);
-  //   }
-#endif
 }
 
 void Topic::registerEventListener(const std::string &listenerKey, const sci::cca::EventListener::pointer &theListener)
@@ -93,8 +102,7 @@ void Topic::unregisterEventListener(const std::string &listenerKey)
 
 void Topic::processEvents()
 {
-  EventListenerMap::iterator eventListenerIter;
-  for (eventListenerIter = eventListenerMap.begin();
+  for (EventListenerMap::iterator eventListenerIter = eventListenerMap.begin();
        eventListenerIter != eventListenerMap.end();
        eventListenerIter++) {
     // Call processEvent() for each Listener
@@ -113,7 +121,6 @@ void Topic::processEvents()
         throw EventServiceExceptionPtr(new EventServiceException("WildcardTopic pointer is null"));
     }
     wildcardTopicPtr->processEvents(eventList);
-    // how to cope with null pointer?
   }
   eventList.clear();
 }

@@ -49,7 +49,6 @@ void WildcardTopic::registerEventListener(const std::string &listenerKey, const 
   if (theListener.isNull()) {
     throw EventServiceExceptionPtr(new EventServiceException("Listener pointer is null", sci::cca::Unexpected));
   }
-
   EventListenerMap::iterator iter =  eventListenerMap.find(listenerKey);
   if (iter != eventListenerMap.end()) {
     throw EventServiceExceptionPtr(new EventServiceException("Listener key already present", sci::cca::Unexpected));
