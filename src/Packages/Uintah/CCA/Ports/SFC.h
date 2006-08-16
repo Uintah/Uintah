@@ -62,7 +62,7 @@ public:
 	SFC(int dir[][DIM], const ProcessorGroup *d_myworld) : dir(dir),set(0), locsv(0), locs(0), orders(0), sendbuf(0), recievebuf(0), mergebuf(0), d_myworld(d_myworld), block_size(3000), blocks_in_transit(3), sample_percent(.1), cleanup(BATCHERS) {};
 	virtual ~SFC() {};
 	void GenerateCurve(int mode=0);
-	void SetRefinements(unsigned int refinements);
+	void SetRefinements(int refinements);
 	void SetLocalSize(unsigned int n);
 	void SetLocations(vector<LOCS> *locs);
 	void SetOutputVector(vector<unsigned int> *orders);
@@ -71,8 +71,6 @@ public:
 	void SetBlocksInTransit(unsigned int b) {blocks_in_transit=b;};
 	void SetSamplePercent(float p) {sample_percent=p;};
 	void SetCleanup(CleanupType cleanup) {this->cleanup=cleanup;};
-	void Balance();
-	void Profile();
 
 protected:
 	
@@ -87,7 +85,7 @@ protected:
 	//curve parameters
 	REAL dimensions[DIM];
 	REAL center[DIM];
-	unsigned int refinements;
+	int refinements;
 	unsigned int n;
 	
 	//byte variable used to determine what curve parameters are set
@@ -121,7 +119,7 @@ protected:
 	void SerialR(unsigned int* orders,vector<unsigned int> *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o=0);
 
 	template<class BITS> void SerialH();
-	template<class BITS> void SerialHR(unsigned int* orders,History<BITS>* corders,vector<unsigned int > *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o=0, unsigned int r=0, BITS history=0);
+	template<class BITS> void SerialHR(unsigned int* orders,History<BITS>* corders,vector<unsigned int > *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o=0, int r=0, BITS history=0);
 	template<class BITS> void Parallel();
 	template<class BITS> int MergeExchange(int to);	
 	template<class BITS> void PrimaryMerge();
@@ -199,80 +197,6 @@ const char errormsg[6][30]={
 	"Refinements not set\n",
 					 };
 
-template<int DIM, class LOCS> 
-void SFC<DIM,LOCS>::Balance()
-{
-	//for each edge of the hypercube
-	
-		//exchange size
-		//if balance needed
-			//exchange locs
-			//set n
-}
-
-
-template<int DIM, class LOCS> 
-void SFC<DIM,LOCS>::Profile()
-{
-	double start, finish;
-	int  starti;
-	rank=d_myworld->myrank(); P=d_myworld->size(), Comm=d_myworld->getComm();
-	vector<unsigned int> n_per_proc(P);
-	this->n_per_proc=&n_per_proc[0];	
-	n=65000;
-	
-
-	//initialize list
-	vector<History<unsigned int> > sbuf, rbuf, mbuf;
-	for(int i=0;i<P;i++)
-		n_per_proc[i]=n;
-
-	sbuf.resize(n);
-	rbuf.resize(n);
-	mbuf.resize(n);
-
-	sendbuf=(void*)&(sbuf[0]);
-	recievebuf=(void*)&(rbuf[0]);
-	mergebuf=(void*)&(mbuf[0]);
-	
-	starti=rank;
-	for(unsigned i=0;i<n;i++)
-	{
-		mbuf[i].bits=sbuf[i].bits=starti;
-		starti+=P;
-		//starti+=rand()%(2*P)+1;
-	}
-
-	for(int b=25;b<65000;b+=100)
-	{
-		block_size=b;
-		double ptime=0;
-		int r;
-		MPI_Barrier(Comm);
-#ifdef _TIMESFC_
-		start=timer->currentSeconds();
-#endif
-		for(r=0;r<250;r++)
-		{
-			
-			PrimaryMerge<unsigned int>();
-			Cleanup<unsigned int>();
-			swap(sendbuf,mergebuf);
-		
-		}
-#ifdef _TIMESFC_
-		finish=timer->currentSeconds();
-#endif
-		ptime=finish-start;	
-		double sum,sum2;
-		MPI_Reduce(&ptime,&sum,1,MPI_DOUBLE,MPI_SUM,0,Comm);
-		if(rank==0)
-			cout << b << " " << ptime/P/r <<endl;
-
-	}
-
-}
-
 template<int DIM, class LOCS>
 void SFC<DIM,LOCS>::GenerateCurve(int mode)
 {
@@ -314,14 +238,14 @@ void SFC<DIM,LOCS>::GenerateCurve(int mode)
 	else if(mode==2)
 	{
 										 
-		if(refinements*DIM<=sizeof(unsigned int)*8)
+		if((int)refinements*DIM<=(int)sizeof(unsigned int)*8)
 		{
 		 	vector<History<unsigned int> > sbuf;
 			sbuf.resize(n);
 			sendbuf=(void*)&(sbuf[0]);
 			SerialH<unsigned int>();
 		}
-		else if(refinements*DIM<=sizeof(unsigned long long)*8)
+		else if((int)refinements*DIM<=(int)sizeof(unsigned long long)*8)
 		{
 		 	vector<History<unsigned long long> > sbuf;
 			sbuf.resize(n);
@@ -339,11 +263,11 @@ void SFC<DIM,LOCS>::GenerateCurve(int mode)
 		rank=d_myworld->myrank();
 		Comm=d_myworld->getComm();
 		//Pick which generate to use
-		if(refinements*DIM<=sizeof(unsigned int)*8)
+		if((int)refinements*DIM<=(int)sizeof(unsigned int)*8)
 		{
 			Parallel<unsigned int>();
 		}
-		else if(refinements*DIM<=sizeof(unsigned long long)*8)
+		else if((int)refinements*DIM<=(int)sizeof(unsigned long long)*8)
 		{
 			Parallel<unsigned long long>();
 		}
@@ -400,7 +324,6 @@ void SFC<DIM,LOCS>::SerialH()
 	  {
 		  bin[b].reserve(n/BINS);
 	  }
-
 	  //Recursive call
 	  SerialHR<BITS>(o,sbuf,bin,n,center,dimensions);
   }
@@ -486,7 +409,7 @@ void SFC<DIM,LOCS>::SerialR(unsigned int* orders,vector<unsigned int> *bin, unsi
 }
 
 template<int DIM, class LOCS> template<class BITS> 
-void SFC<DIM,LOCS>::SerialHR(unsigned int* orders, History<BITS>* corders,vector<unsigned int> *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o, unsigned int r, BITS history)
+void SFC<DIM,LOCS>::SerialHR(unsigned int* orders, History<BITS>* corders,vector<unsigned int> *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o, int r, BITS history)
 {
 	REAL newcenter[BINS][DIM], newdimension[DIM];
 	unsigned int size[BINS];
@@ -562,7 +485,7 @@ void SFC<DIM,LOCS>::SerialHR(unsigned int* orders, History<BITS>* corders,vector
 				dims[d]=newdimension[d];
 			}
 			
-			unsigned int ref=r;
+			int ref=r;
 			int b;
 			for(;ref<refinements;ref++)
 			{
@@ -643,7 +566,16 @@ void SFC<DIM,LOCS>::Parallel()
 	
 	//make two pointers to internal buffers for a fast copy	
 	History<BITS> *c=(History<BITS>*)sendbuf;
-	
+
+  for(i=1;i<n;i++)
+  {
+    if(c[i].bits<c[i-1].bits)
+    {
+      cout << "Error forming local curve: " << c[i].i << ":" << c[i].bits << " is less than " << c[i-1].i << ":" << c[i-1].bits << endl;
+      exit(0);
+    }
+  }
+  
 	//increment indexies 
 	for(i=0;i<n;i++)
 	{
@@ -686,7 +618,6 @@ void SFC<DIM,LOCS>::Parallel()
 
 	//make pointer to internal buffers for a fast copy	
 	unsigned int* o=&(*orders)[0];
-	c=(History<BITS>*)sendbuf;
 		
 	//copy permutation to orders
 	for(i=0;i<n;i++)
@@ -886,7 +817,6 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 //			cout << rank << " recieved block of size\n";
 			while(b>0 && merged<n)
 			{
-				
 				if(mrbuf[0].bits<msbuf[0].bits)
 				{
 					//pull from recieve buffer
@@ -1014,7 +944,6 @@ int SFC<DIM,LOCS>::MergeExchange(int to)
 			MPI_Get_count(&status,MPI_BYTE,&b);
 			b=int(b*inv_denom);
 //			cout << rank << " recieved block of size\n";
-
 			while(b>0 && merged<n)
 			{
 				if(mrbuf[0].bits>msbuf[0].bits) //merge from recieve buff
@@ -1275,7 +1204,7 @@ void SFC<DIM,LOCS>::SetMergeParameters(unsigned int block_size, unsigned int blo
 	this->sample_percent=sample_percent;
 }
 template<int DIM, class LOCS>
-void SFC<DIM,LOCS>::SetRefinements(unsigned int refinements)
+void SFC<DIM,LOCS>::SetRefinements(int refinements)
 {
 	this->refinements=refinements;
 	set=set|32;
@@ -1357,9 +1286,8 @@ void SFC2D<LOCS>::SetRefinementsByDelta(REAL deltax, REAL deltay)
 	{
 		cout << "SFC Error: Cannot set refinements by delta until dimensions have been set\n";
 	}
-
-	SFC<2,LOCS>::refinements=(unsigned int)ceil(log(SFC<2,LOCS>::dimensions[0]/deltax)/log(2.0));
-	SFC<2,LOCS>::refinements=max(SFC<2,LOCS>::refinements,(unsigned int)ceil(log(SFC<2,LOCS>::dimensions[1]/deltay)/log(2.0)));
+	SFC<2,LOCS>::refinements=(int)ceil(log(SFC<2,LOCS>::dimensions[0]/deltax)/log(2.0));
+	SFC<2,LOCS>::refinements=max(SFC<2,LOCS>::refinements,(int)ceil(log(SFC<2,LOCS>::dimensions[1]/deltay)/log(2.0)));
 	SFC<2,LOCS>::set=SFC<2,LOCS>::set|32;
 }
 	
@@ -1427,9 +1355,9 @@ void SFC3D<LOCS>::SetRefinementsByDelta(REAL deltax, REAL deltay, REAL deltaz)
 		cout << "SFC Error: Cannot set refinements by delta until dimensions have been set\n";
 	}
 
-	SFC<3,LOCS>::refinements=(unsigned int)ceil(log(SFC<3,LOCS>::dimensions[0]/deltax)/log(2.0));
-	SFC<3,LOCS>::refinements=max(SFC<3,LOCS>::refinements,(unsigned int)ceil(log(SFC<3,LOCS>::dimensions[1]/deltay)/log(2.0)));
-	SFC<3,LOCS>::refinements=max(SFC<3,LOCS>::refinements,(unsigned int)ceil(log(SFC<3,LOCS>::dimensions[2]/deltaz)/log(2.0)));
+	SFC<3,LOCS>::refinements=(int)ceil(log(SFC<3,LOCS>::dimensions[0]/deltax)/log(2.0));
+	SFC<3,LOCS>::refinements=max(SFC<3,LOCS>::refinements,(int)ceil(log(SFC<3,LOCS>::dimensions[1]/deltay)/log(2.0)));
+	SFC<3,LOCS>::refinements=max(SFC<3,LOCS>::refinements,(int)ceil(log(SFC<3,LOCS>::dimensions[2]/deltaz)/log(2.0)));
 	SFC<3,LOCS>::set=SFC<3,LOCS>::set|32;
 }
 template<class LOCS>
