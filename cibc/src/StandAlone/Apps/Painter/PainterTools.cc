@@ -149,7 +149,7 @@ Painter::KeyToolSelectorTool::key_press(string, int keyval,
   case SCIRun_p:        painter_->opacity_up();break;
   case SCIRun_o:        painter_->opacity_down();break;
 
-  case SCIRun_u:            
+  case SCIRun_u:
     if (painter_->current_volume_) {
       painter_->current_volume_->colormap_.set(Max(0,painter_->current_volume_->colormap_.get()-1));
       painter_->set_all_slices_tex_dirty();
@@ -1186,10 +1186,12 @@ Painter::ITKConfidenceConnectedImageFilterTool::finish() {
     seed_point[i] = seed_[i+1];
   }
   
-  filter->SetNumberOfIterations(3);
-  filter->SetMultiplier(2.0);
+  string prefix = "ITKConfidenceConnectedImageFilterTool::";
+  Skinner::Variables *vars = painter_->get_vars();
+  filter->SetNumberOfIterations(vars->get_int(prefix+"numberOfIterations"));
+  filter->SetMultiplier(vars->get_double(prefix+"multiplier"));
   filter->SetSeed(seed_point);
-  filter->SetReplaceValue(1.0);
+  filter->SetReplaceValue(vars->get_double(prefix+"replaceValue"));
   filter->SetInitialNeighborhoodRadius(1);
 
   string name = "Confidence Connected";
@@ -1200,10 +1202,8 @@ Painter::ITKConfidenceConnectedImageFilterTool::finish() {
   temp->clut_max_ = temp->data_max_ = 1.0;
   painter_->current_volume_ = temp;
 
-  cerr << "starting\n";
   painter_->do_itk_filter<Painter::ITKImageFloat3D>(filter, 
                                                     temp->nrrd_handle_);
-  cerr << "done\n";
   painter_->show_volume(name);
   painter_->recompute_volume_list();
 

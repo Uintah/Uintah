@@ -25,35 +25,24 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//  
-//    File   : Text.h
+//    File   : Arrow.h
 //    Author : McKay Davis
-//    Date   : Tue Jun 27 13:00:37 2006
-#ifndef SKINNER_TEXT_H
-#define SKINNER_TEXT_H
+//    Date   : Sat Aug 12 12:37:40 2006
+
+
+#ifndef SKINNER_ARROW_H
+#define SKINNER_ARROW_H
 
 #include <Core/Skinner/Drawable.h>
-#include <Core/Skinner/Color.h>
 
 namespace SCIRun {
-  class TextRenderer;
-
   namespace Skinner {
-    class Text : public Drawable {
+    class Arrow : public Drawable {
     public:
-      Text (Variables *variables);
-      virtual ~Text();
-      //      virtual propagation_state_e       process_event(event_handle_t);
-      CatcherFunction_t                 redraw;
+      Arrow(Variables *variables);
+      virtual ~Arrow();
     protected:
-
-      Color                             fgcolor_;
-      Color                             bgcolor_;
-      unsigned int                      flags_;
-      TextRenderer *                    renderer_;
-      int                               offsetx_;
-      int                               offsety_;
-      unsigned int                      cursor_position_;
+      CatcherFunction_t                 redraw;
     };
   }
 }

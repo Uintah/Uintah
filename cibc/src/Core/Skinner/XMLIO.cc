@@ -273,7 +273,6 @@ namespace SCIRun {
       // Create a new Variables context with our Unique ID
       // This creates new memory that needs to be freed by the object
       variables = new Variables(unique_id, variables);
-      
 
       // The classname could refer to a previously parsed <definition> node
       // in that case, we instance the contained single object node as it were 
@@ -364,12 +363,21 @@ namespace SCIRun {
       
       // At this point, the if the object is uninstantiatable, return
       if (!object) {
-        delete variables;
-        cerr << "Skinner::XMLIO::eval_object_node - object class=\"" 
+        
+        cerr << variables->get_id() 
+             << " - Skinner::XMLIO::eval_object_node - object class=\"" 
              << classname << "\" cannot find maker\n";
+        delete variables;
         return 0;
       }
 
+      string unscoped_classname = classname;
+      string::size_type pos = classname.find_last_of(":");
+      if (pos != string::npos) {
+        ++pos;
+        unscoped_classname = classname.substr(pos,classname.length()-pos);
+      }
+      variables->insert("class", unscoped_classname, "string", true);
 
       catcher_tree.push_back(object->get_all_targets());
 
@@ -491,7 +499,8 @@ namespace SCIRun {
 
     void
     XMLIO::eval_var_node(const xmlNodePtr node,
-                         Variables *variables) 
+                         Variables *variables,
+                         bool override_propagate) 
     {
       ASSERT(XMLUtil::node_is_element(node, "var"));
       ASSERT(variables);
@@ -509,6 +518,8 @@ namespace SCIRun {
 
       bool propagate =
         XMLUtil::maybe_get_att_as_string(node,"propagate",str) && str == "yes";
+      if (override_propagate)
+        propagate = true;
                  
 
       const char *contents = 0;
@@ -561,11 +572,13 @@ namespace SCIRun {
 
         if (!callback.variables_) {
           callback.variables_ = new Variables(signalname, object->get_vars());
-        }
+        } else {
+          callback.variables_ = new Variables(signalname, callback.variables_);}
+
 
         for (xmlNode *cnode = node->children; cnode; cnode = cnode->next) {
           if (XMLUtil::node_is_element(cnode, "var")) {
-            eval_var_node(cnode, callback.variables_);
+            eval_var_node(cnode, callback.variables_, true);
           }
         }
        

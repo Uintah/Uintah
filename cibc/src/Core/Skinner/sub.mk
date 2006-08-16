@@ -35,6 +35,7 @@ SRCDIR   := Core/Skinner
 
 SRCS     += \
 	$(SRCDIR)/Animation.cc	    	\
+	$(SRCDIR)/Arrow.cc	    	\
 	$(SRCDIR)/Arithmetic.cc	    	\
 	$(SRCDIR)/Box.cc		\
 	$(SRCDIR)/Collection.cc	    	\
@@ -42,10 +43,13 @@ SRCS     += \
 	$(SRCDIR)/Colormap1D.cc	    	\
 	$(SRCDIR)/Drawable.cc    	\
 	$(SRCDIR)/Frame.cc	    	\
+	$(SRCDIR)/FocusRegion.cc    	\
 	$(SRCDIR)/Gradient.cc	    	\
 	$(SRCDIR)/Graph2D.cc	    	\
 	$(SRCDIR)/Grid.cc	    	\
 	$(SRCDIR)/Layout.cc	    	\
+	$(SRCDIR)/MenuList.cc	    	\
+	$(SRCDIR)/MenuManager.cc	\
 	$(SRCDIR)/Parent.cc	    	\
 	$(SRCDIR)/RectRegion.cc    	\
 	$(SRCDIR)/Root.cc        	\
@@ -57,7 +61,15 @@ SRCS     += \
 	$(SRCDIR)/Texture.cc    	\
 	$(SRCDIR)/Window.cc      	\
 	$(SRCDIR)/Variables.cc      	\
-	$(SRCDIR)/XMLIO.cc    
+	$(SRCDIR)/XMLIO.cc              \
+	$(SRCDIR)/ViewSubRegion.cc    	\
+#	$(SRCDIR)/Colormap2D.cc	    	\
+
+
+#	$(SRCDIR)/Histogram.cc	    	\
+#	$(SRCDIR)/MenuItem.cc	    	\
+
+
 
 PSELIBS := Core/Containers  \
            Core/Datatypes \

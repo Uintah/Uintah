@@ -32,9 +32,13 @@
 #include <Core/Skinner/Root.h>
 #include <Core/Skinner/Variables.h>
 #include <Core/Skinner/Window.h>
+#include <Core/Skinner/FocusRegion.h>
+#include <Core/Skinner/Arrow.h>
 #include <Core/Skinner/Graph2D.h>
 #include <Core/Skinner/Text.h>
 #include <Core/Skinner/Arithmetic.h>
+#include <Core/Skinner/MenuManager.h>
+#include <Core/Skinner/ViewSubRegion.h>
 #include <Core/Events/Tools/FilterRedrawEventsTool.h>
 #include <iostream>
 
@@ -48,49 +52,31 @@ namespace SCIRun {
       windows_()
     {
       REGISTER_CATCHER_TARGET(Root::Redraw);
+      REGISTER_CATCHER_TARGET(Root::Arrow_Maker);
       REGISTER_CATCHER_TARGET(Root::Arithmetic_Maker);
       REGISTER_CATCHER_TARGET(Root::GLWindow_Maker);
       REGISTER_CATCHER_TARGET(Root::GLWindow_Destructor);
+      REGISTER_CATCHER_TARGET(Root::FocusRegion_Maker);
       REGISTER_CATCHER_TARGET(Root::Graph2D_Maker);
-      REGISTER_CATCHER_TARGET(Root::ColorMap2D_Maker);
+      //      REGISTER_CATCHER_TARGET(Root::ColorMap2D_Maker);
+      REGISTER_CATCHER_TARGET(Root::MenuManager_Maker);
       REGISTER_CATCHER_TARGET(Root::Text_Maker);
-      register_target
-        ("Quit",
-         static_cast<SCIRun::Skinner::SignalCatcher::CatcherFunctionPtr>
-         (&Root::Quit));
-      register_target
-        ("QUIT",
-         static_cast<SCIRun::Skinner::SignalCatcher::CatcherFunctionPtr>
-         (&Root::Quit));
+      REGISTER_CATCHER_TARGET(Root::ViewSubRegion_Maker);
+      REGISTER_CATCHER_TARGET_BY_NAME(Quit, Root::Quit);
     }
 
 
     Root::~Root() {
     }
 
-    BaseTool::propagation_state_e
-    Root::Arithmetic_Maker(event_handle_t event) {
-      construct_class_from_maker_signal<Arithmetic>(event);
-      return MODIFIED_E;
-    }
-
-    BaseTool::propagation_state_e
-    Root::Text_Maker(event_handle_t event) {
-      construct_class_from_maker_signal<Text>(event);
-      return MODIFIED_E;
-    }
-
-    BaseTool::propagation_state_e
-    Root::Graph2D_Maker(event_handle_t event) {
-      construct_class_from_maker_signal<Graph2D>(event);
-      return MODIFIED_E;
-    }
-
-    BaseTool::propagation_state_e
-    Root::ColorMap2D_Maker(event_handle_t event) {
-      //      construct_class_from_maker_signal<ColorMap2D>(event);
-      return MODIFIED_E;
-    }
+    DECLARE_SKINNER_MAKER(Root, Arithmetic);
+    DECLARE_SKINNER_MAKER(Root, Arrow);
+    DECLARE_SKINNER_MAKER(Root, Text);
+    DECLARE_SKINNER_MAKER(Root, Graph2D);
+    DECLARE_SKINNER_MAKER(Root, ViewSubRegion);
+    DECLARE_SKINNER_MAKER(Root, MenuManager);
+    DECLARE_SKINNER_MAKER(Root, FocusRegion);
+    //    DECLARE_SKINNER_MAKER(Root, ColorMap2D);
 
     BaseTool::propagation_state_e
     Root::GLWindow_Maker(event_handle_t event) {
@@ -98,12 +84,11 @@ namespace SCIRun {
         (construct_class_from_maker_signal<GLWindow>(event));
       ASSERT(window);
       windows_.push_back(window);
-      return MODIFIED_E;
+      return STOP_E;
     }
 
     BaseTool::propagation_state_e
     Root::GLWindow_Destructor(event_handle_t event) {
-
       Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
       ASSERT(signal);
       
@@ -123,8 +108,6 @@ namespace SCIRun {
         children_.erase(citer);
       }
 
-
-
       return MODIFIED_E;
     }
 
@@ -143,8 +126,7 @@ namespace SCIRun {
     }
     
 
-    
-    void
+        void
     Root::spawn_redraw_threads() {
       BaseTool *event_tool = new FilterRedrawEventsTool("Redraw Filter", 1);
 #if 0

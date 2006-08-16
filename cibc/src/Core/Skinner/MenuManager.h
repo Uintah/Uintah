@@ -25,35 +25,38 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//  
-//    File   : Text.h
+//    File   : MenuManager.cc
 //    Author : McKay Davis
-//    Date   : Tue Jun 27 13:00:37 2006
-#ifndef SKINNER_TEXT_H
-#define SKINNER_TEXT_H
+//    Date   : Fri Aug 11 20:34:34 2006
 
-#include <Core/Skinner/Drawable.h>
-#include <Core/Skinner/Color.h>
+#ifndef SKINNER_MENUMANAGER_H
+#define SKINNER_MENUMANAGER_H
+
+#include <Core/Skinner/Parent.h>
+#include <map>
+#include <set>
+#include <vector>
 
 namespace SCIRun {
-  class TextRenderer;
+  class MenuManager;
+  class MenuList;
 
   namespace Skinner {
-    class Text : public Drawable {
+    class MenuManager : public Parent {
     public:
-      Text (Variables *variables);
-      virtual ~Text();
-      //      virtual propagation_state_e       process_event(event_handle_t);
-      CatcherFunction_t                 redraw;
+      MenuManager (Variables *variables);
+      virtual ~MenuManager();
+      virtual propagation_state_e       process_event(event_handle_t);
     protected:
+      CatcherFunction_t                 MenuList_Maker;
+      CatcherFunction_t                 show_MenuList;
+      CatcherFunction_t                 hide_MenuList;
+      CatcherFunction_t                 redraw;
+      typedef vector<MenuList *>        MenuLists_t;
+      MenuLists_t                       menu_lists_;
+      typedef map<string, MenuList *>   VisibleMenuLists_t;
+      VisibleMenuLists_t                visible_;
 
-      Color                             fgcolor_;
-      Color                             bgcolor_;
-      unsigned int                      flags_;
-      TextRenderer *                    renderer_;
-      int                               offsetx_;
-      int                               offsety_;
-      unsigned int                      cursor_position_;
     };
   }
 }
