@@ -171,6 +171,7 @@ private:
       double d_turbPrNo; // turbulent prandtl number
       bool d_filter_cs_squared; //option for filtering Cs^2 in IncDynamic Procedure
       bool d_3d_periodic;
+      bool d_filter_var_limit_scalar;
 
 
  private:

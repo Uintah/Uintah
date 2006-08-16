@@ -71,8 +71,13 @@ SmagorinskyModel::problemSetup(const ProblemSpecP& params)
   db->require("cf", d_CF);
   db->require("fac_mesh", d_factorMesh);
   db->require("filterl", d_filterl);
-  if (d_calcVariance)
+  if (d_calcVariance) {
+    cout << "Smagorinsky type model will be used to model variance" << endl;
     db->require("variance_coefficient",d_CFVar); // const reqd by variance eqn
+    
+    cout << "WARNING! Scalar filtering for variance limit is not supported" << endl;
+    cout << "by this model. Possibly high variance values would be generated" << endl;
+  }
   db->getWithDefault("turbulentPrandtlNumber",d_turbPrNo,0.4);
 
 }
@@ -314,10 +319,14 @@ SmagorinskyModel::sched_computeScalarVariance(SchedulerP& sched,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   // Computes
-  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+  if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
      tsk->computes(d_lab->d_scalarVarSPLabel);
-  else
+     tsk->computes(d_lab->d_normalizedScalarVarLabel);
+  }
+  else {
      tsk->modifies(d_lab->d_scalarVarSPLabel);
+     tsk->modifies(d_lab->d_normalizedScalarVarLabel);
+  }
 
   sched->addTask(tsk, patches, matls);
 }
@@ -339,17 +348,25 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
     // Variables
     constCCVariable<double> scalar;
     CCVariable<double> scalarVar;
+    CCVariable<double> normalizedScalarVar;
     // Get the velocity, density and viscosity from the old data warehouse
     new_dw->get(scalar, d_lab->d_scalarSPLabel, matlIndex, patch,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First)
+    if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First){
     	new_dw->allocateAndPut(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
 			       patch);
-    else
+    	new_dw->allocateAndPut(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, matlIndex,
+			       patch);
+    }
+    else {
     	new_dw->getModifiable(scalarVar, d_lab->d_scalarVarSPLabel, matlIndex,
 			       patch);
+    	new_dw->getModifiable(normalizedScalarVar, d_lab->d_normalizedScalarVarLabel, matlIndex,
+			       patch);
+    }
     scalarVar.initialize(0.0);
+    normalizedScalarVar.initialize(0.0);
 
     constCCVariable<int> cellType;
     new_dw->get(cellType, d_lab->d_cellTypeLabel, matlIndex, patch,
@@ -380,6 +397,26 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 			cellinfo->sns, cellinfo->stb, CFVar, d_factorMesh,
 			d_filterl);
 
+    double small = 1.0e-10;
+    double var_limit = 0.0;
+    for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
+      for (int colY = idxLo.y(); colY <= idxHi.y(); colY ++) {
+	for (int colX = idxLo.x(); colX <= idxHi.x(); colX ++) {
+	  IntVector currCell(colX, colY, colZ);
+
+	  // check variance bounds and normalize
+	  var_limit = scalar[currCell] * (1.0 - scalar[currCell]);
+
+          if(scalarVar[currCell] < small)
+            scalarVar[currCell] = 0.0;
+          if(scalarVar[currCell] > var_limit)
+            scalarVar[currCell] = var_limit;
+
+          normalizedScalarVar[currCell] = scalarVar[currCell]/(var_limit+small);
+	}
+      }
+    }
+
     
     // boundary conditions
     bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
@@ -397,8 +434,11 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 	  IntVector currCell(colX-1, colY, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
 	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	      normalizedScalarVar[currCell] = 
+		          normalizedScalarVar[IntVector(colX,colY,colZ)];
+	    }
 	}
       }
     }
@@ -409,8 +449,11 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 	  IntVector currCell(colX+1, colY, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
 	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	      normalizedScalarVar[currCell] = 
+		          normalizedScalarVar[IntVector(colX,colY,colZ)];
+	    }
 	}
       }
     }
@@ -421,8 +464,11 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 	  IntVector currCell(colX, colY-1, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
 	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	      normalizedScalarVar[currCell] = 
+		          normalizedScalarVar[IntVector(colX,colY,colZ)];
+	    }
 	}
       }
     }
@@ -433,8 +479,11 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 	  IntVector currCell(colX, colY+1, colZ);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
 	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	      normalizedScalarVar[currCell] = 
+		          normalizedScalarVar[IntVector(colX,colY,colZ)];
+	    }
 	}
       }
     }
@@ -445,8 +494,11 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 	  IntVector currCell(colX, colY, colZ-1);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
 	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	      normalizedScalarVar[currCell] = 
+		          normalizedScalarVar[IntVector(colX,colY,colZ)];
+	    }
 	}
       }
     }
@@ -457,8 +509,11 @@ SmagorinskyModel::computeScalarVariance(const ProcessorGroup*,
 	  IntVector currCell(colX, colY, colZ+1);
           if ((cellType[currCell] == outlet_celltypeval)||
             (cellType[currCell] == pressure_celltypeval))
-	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)])
+	    if (scalar[currCell] == scalar[IntVector(colX,colY,colZ)]) {
 	      scalarVar[currCell] = scalarVar[IntVector(colX,colY,colZ)];
+	      normalizedScalarVar[currCell] = 
+		          normalizedScalarVar[IntVector(colX,colY,colZ)];
+	    }
 	}
       }
     }
@@ -539,14 +594,7 @@ SmagorinskyModel::computeScalarDissipation(const ProcessorGroup*,
     
     // Get the PerPatch CellInformation data
     PerPatch<CellInformationP> cellInfoP;
-    //  old_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
     new_dw->get(cellInfoP, d_lab->d_cellInfoLabel, matlIndex, patch);
-    //  if (old_dw->exists(d_cellInfoLabel, patch)) 
-    //  old_dw->get(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-    //else {
-    //  cellInfoP.setData(scinew CellInformation(patch));
-    //  old_dw->put(cellInfoP, d_cellInfoLabel, matlIndex, patch);
-    //}
     CellInformation* cellinfo = cellInfoP.get().get_rep();
     
     // compatible with fortran index
