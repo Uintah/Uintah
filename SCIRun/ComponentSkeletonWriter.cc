@@ -38,8 +38,8 @@
  */
 
 
-#include<iostream>
-#include<fstream>
+#include <iostream>
+#include <fstream>
 #include <sstream>
 
 #include <SCIRun/ComponentSkeletonWriter.h>
@@ -131,6 +131,7 @@ void ComponentSkeletonWriter::generate(std::string headerFilename, std::string s
   ComponentMakefileCode(makeFile);
   makeFile.close();
 }
+
 void ComponentSkeletonWriter::GenerateWithSidl(std::string headerFilename, std::string sourceFilename, std::string makeFilename, std::string sidlFilename)
 {
   std::ofstream sidlFile;
@@ -176,10 +177,10 @@ void ComponentSkeletonWriter::writeLicense(std::ofstream& fileStream)
 #endif
   } else {
     std::string line;
-    fileStream << OPEN_C_COMMENT << std::endl;
+    fileStream << OPEN_C_COMMENT << NEWLINE;
     while (!lt.eof()) {
       std::getline (lt,line);
-      fileStream << SP << line << std::endl;
+      fileStream << SP << line << NEWLINE;
     }
     fileStream << CLOSE_C_COMMENT << std::endl;
     lt.close();
@@ -200,57 +201,60 @@ void ComponentSkeletonWriter::writeMakefileLicense(std::ofstream& fileStream)
     std::string line;
     while (!lt.eof()) {
       std::getline (lt,line);
-      fileStream << UNIX_SHELL_COMMENT << SP << line << std::endl;
+      fileStream << UNIX_SHELL_COMMENT << SP << line << NEWLINE;
     }
-    fileStream << std::endl;
+    fileStream << NEWLINE;
     lt.close();
   }
 }
 
 void ComponentSkeletonWriter::writeHeaderInit(std::ofstream& fileStream)
 {
-  fileStream << std::endl;
-  fileStream << std::endl;
-  fileStream << "#ifndef SCIRun_Framework_" << compName << "_h" << std::endl;
-  fileStream << "#define SCIRun_Framework_" << compName << "_h" << std::endl;
-  fileStream << std::endl << "#include <Core/CCA/spec/cca_sidl.h>" << std::endl;
+  fileStream << NEWLINE << NEWLINE;
+  fileStream << "#ifndef SCIRun_Framework_" << compName << "_h" << NEWLINE;
+  fileStream << "#define SCIRun_Framework_" << compName << "_h" << NEWLINE;
+  fileStream << NEWLINE << "#include <Core/CCA/spec/cca_sidl.h>" << NEWLINE;
   if(isWithSidl)
-    fileStream  << "#include <CCA/Components/" << compName << DIR_SEP << compName << "_sidl.h>" << std::endl;
-  fileStream << std::endl;
+    fileStream  << "#include <CCA/Components/" << compName << DIR_SEP << compName << "_sidl.h>" << NEWLINE;
+  fileStream << NEWLINE;
   fileStream << "using namespace SCIRun;" << std::endl;
 }
 
 void ComponentSkeletonWriter::writeComponentDefinitionCode(std::ofstream& fileStream)
 {
-  fileStream << std::endl;
-  if (isWithSidl)
-    fileStream << "class " << compName << ": public " << DEFAULT_NAMESPACE << compName << " {" << std::endl;
-  else
-    fileStream << "class " << compName << ": public " << DEFAULT_NAMESPACE << "Component {" << std::endl;
+  fileStream << NEWLINE;
+  if (isWithSidl) {
+    fileStream << "class " << compName << ": public " << DEFAULT_NAMESPACE << compName << " {" << NEWLINE;
+  } else {
+    fileStream << "class " << compName << ": public " << DEFAULT_NAMESPACE << "Component {" << NEWLINE;
+  }
   // public members
-  fileStream << "public:" << std::endl;
-  fileStream << SP << compName << "();" << std::endl;
-  fileStream << SP << "virtual ~"<< compName << "();" << std::endl;
-  fileStream << SP << "virtual void setServices(const " << SERVICES_POINTER << "& svc);" << std::endl;
-  fileStream << SP << SERVICES_POINTER << "&  getServices() { return services; }" << std::endl;
-  
+  fileStream << "public:" << NEWLINE;
+  fileStream << SP << compName << "();" << NEWLINE;
+  fileStream << SP << "virtual ~"<< compName << "();" << NEWLINE;
+  fileStream << SP << "virtual void setServices(const " << SERVICES_POINTER << "& svc);" << NEWLINE;
+  fileStream << SP << SERVICES_POINTER << "&  getServices() { return services; }" << NEWLINE;
+
   //If With Sidl
-  if(isWithSidl){
-    for (unsigned int i = 0; i < providesPortsList.size(); i++) 
-      if ((providesPortsList[i])->GetType() == "GoPort")
-        fileStream << SP << "virtual int go();" << std::endl;
+  if (isWithSidl) {
+    for (unsigned int i = 0; i < providesPortsList.size(); i++) {
+      if ((providesPortsList[i])->GetType() == "GoPort") {
+        fileStream << SP << "virtual int go();" << NEWLINE;
+      }
+    }
   }
 
   // private members
-  fileStream << std::endl;
-  fileStream << "private:" << std::endl;
-  fileStream << SP << compName << "(const " << compName << "&);" << std::endl;
-  fileStream << SP << compName << "& operator=(const " << compName << "&);" << std::endl;
+  fileStream << NEWLINE;
+  fileStream << "private:" << NEWLINE;
+  fileStream << SP << compName << "(const " << compName << "&);" << NEWLINE;
+  fileStream << SP << compName << "& operator=(const " << compName << "&);" << NEWLINE;
   // services handle
-  fileStream << SP << SERVICES_POINTER << " services;" << std::endl;
-  fileStream << "};" << std::endl;
-  if(isWithSidl)
-    fileStream << "#endif" << std::endl;
+  fileStream << SP << SERVICES_POINTER << " services;" << NEWLINE;
+  fileStream << "};" << NEWLINE;
+  if (isWithSidl) {
+    fileStream << "#endif" << NEWLINE;
+  }
   fileStream << std::endl;
 }
 
@@ -258,52 +262,51 @@ void ComponentSkeletonWriter::writeComponentDefinitionCode(std::ofstream& fileSt
 void ComponentSkeletonWriter::writePortClassDefinitionCode(std::ofstream& fileStream)
 {
   for (unsigned int i = 0; i < providesPortsList.size(); i++) {
-
-    fileStream << std::endl;
+    fileStream << NEWLINE;
     fileStream << "class " << (providesPortsList[i])->GetClassName() << " : public "
                << DEFAULT_PORT_NAMESPACE << (providesPortsList[i])->GetType() << " {"
-               << std::endl;
+               << NEWLINE;
 
     //public  members
-    fileStream << "public:" << std::endl;
-    fileStream << SP << "virtual ~"<< (providesPortsList[i])->GetClassName() << "() {}" << std::endl;
+    fileStream << "public:" << NEWLINE;
+    fileStream << SP << "virtual ~"<< (providesPortsList[i])->GetClassName() << "() {}" << NEWLINE;
     fileStream << SP << "void setParent(" << compName << " *com)" << " { this->com = com; }";
     if ((providesPortsList[i])->GetType() == "GoPort") {
-      fileStream <<std::endl<< SP << "virtual int go();";
+      fileStream <<NEWLINE<< SP << "virtual int go();";
     }
 
     if ((providesPortsList[i])->GetType() == "UIPort") {
-      fileStream <<std::endl << SP << "virtual int ui();";
+      fileStream <<NEWLINE << SP << "virtual int ui();";
     }
     // private  members
-    fileStream << std::endl;
-    fileStream << std::endl << "private:" << std::endl;
-    fileStream << SP << compName << " *com;" << std::endl;
-    fileStream << std::endl << "};" << std::endl;
+    fileStream << NEWLINE;
+    fileStream << NEWLINE << "private:" << NEWLINE;
+    fileStream << SP << compName << " *com;" << NEWLINE;
+    fileStream << NEWLINE << "};" << NEWLINE;
   }
-  fileStream << std::endl;
+  fileStream << NEWLINE;
   fileStream << "#endif" << std::endl;
 }
 
 
 void ComponentSkeletonWriter::writeSourceInit(std::ofstream& fileStream)
 {
-  fileStream << std::endl << std::endl;
+  fileStream << NEWLINE << NEWLINE;
 
   //Header files
-  fileStream << "#include<CCA/Components" << DIR_SEP << compName << DIR_SEP << compName << ".h>" << std::endl;
-  fileStream << "#include <SCIRun" << DIR_SEP << "TypeMap.h>" << std::endl;
-  fileStream << std::endl;
+  fileStream << "#include<CCA/Components" << DIR_SEP << compName << DIR_SEP << compName << ".h>" << NEWLINE;
+  fileStream << "#include <SCIRun" << DIR_SEP << "TypeMap.h>" << NEWLINE;
+  fileStream << NEWLINE;
   fileStream << "using namespace SCIRun;" << std::endl;
 }
 
 void ComponentSkeletonWriter::writeLibraryHandle(std::ofstream& fileStream)
 {
-  fileStream << std::endl;
-  fileStream << "extern " << QT<< "C" << QT << " " << DEFAULT_NAMESPACE << "Component::pointer make_SCIRun_" << compName << "()" << std::endl;
-  fileStream << "{" << std::endl;
-  fileStream << SP << "return " << DEFAULT_NAMESPACE << "Component::pointer(new " << compName << "());" << std::endl;
-  fileStream << "}" << std::endl;
+  fileStream << NEWLINE;
+  fileStream << "extern " << QT<< "C" << QT << " " << DEFAULT_NAMESPACE << "Component::pointer make_SCIRun_" << compName << "()" << NEWLINE;
+  fileStream << "{" << NEWLINE;
+  fileStream << SP << "return " << DEFAULT_NAMESPACE << "Component::pointer(new " << compName << "());" << NEWLINE;
+  fileStream << "}" << NEWLINE;
   fileStream << std::endl;
 }
 
@@ -319,20 +322,20 @@ void ComponentSkeletonWriter::writeSourceClassImpl(std::ofstream& fileStream)
 void ComponentSkeletonWriter::writeConstructorandDestructorCode(std::ofstream& fileStream)
 {
   //Constructor code
-  fileStream << std::endl << compName << "::" << compName << "()" << std::endl
-             << "{" << std::endl
-             << "}" << std::endl;
+  fileStream << NEWLINE << compName << "::" << compName << "()" << NEWLINE
+             << "{" << NEWLINE
+             << "}" << NEWLINE;
   //Destructor code
-  fileStream << std::endl << compName << "::~" << compName << "()" << std::endl
-             << "{" << std::endl;
+  fileStream << NEWLINE << compName << "::~" << compName << "()" << NEWLINE
+             << "{" << NEWLINE;
   for (unsigned int i = 0; i < providesPortsList.size(); i++) {
     fileStream << SP << "services->removeProvidesPort("
-               << QT << providesPortsList[i]->GetUniqueName() <<  QT << ");" << std::endl;
+               << QT << providesPortsList[i]->GetUniqueName() <<  QT << ");" << NEWLINE;
   }
 
   for (unsigned int i = 0; i < usesPortsList.size(); i++) {
     fileStream << SP << "services->unregisterUsesPort("
-               << QT << usesPortsList[i]->GetUniqueName() << QT << ");" << std::endl;
+               << QT << usesPortsList[i]->GetUniqueName() << QT << ");" << NEWLINE;
   }
   fileStream << "}" << std::endl;
 }
@@ -340,10 +343,10 @@ void ComponentSkeletonWriter::writeConstructorandDestructorCode(std::ofstream& f
 
 void ComponentSkeletonWriter::writeSetServicesCode(std::ofstream& fileStream)
 {
-  fileStream << std::endl
-             << "void " << compName << "::setServices(const " << SERVICES_POINTER << "& svc)"<< std::endl;
-  fileStream << "{" << std::endl;
-  fileStream << SP << "services = svc;" << std::endl;
+  fileStream << NEWLINE
+             << "void " << compName << "::setServices(const " << SERVICES_POINTER << "& svc)"<< NEWLINE;
+  fileStream << "{" << NEWLINE;
+  fileStream << SP << "services = svc;" << NEWLINE;
   //fileStream << std::endl << SP << "svc->registerForRelease(sci::cca::ComponentRelease::pointer(this)); ";
 
   for (unsigned int i = 0; i < providesPortsList.size(); i++) {
@@ -351,42 +354,41 @@ void ComponentSkeletonWriter::writeSetServicesCode(std::ofstream& fileStream)
     std::string portType(providesPortsList[i]->GetType());
     std::string tempPortInstance, tempPortPtr, tempPortCategory;
     tempPortCategory = (std::string) providesPortsList[i]->GetUniqueName();
-    if(!isWithSidl){
-         for (unsigned int j = 0; j < portType.length(); j++) {
-           char tmp = portType.at(j);
+    if (!isWithSidl) {
+      for (unsigned int j = 0; j < portType.length(); j++) {
+        char tmp = portType.at(j);
 
-           // TODO: Unicode safe?
-           if ((tmp >= 'A') && (tmp <= 'Z')) {
-             tempPortInstance.append(1, (char) tolower(tmp));
-           }
-         }
-         std::stringstream appendCount;
-         appendCount << i;
-         tempPortInstance = "provides" + tempPortInstance + appendCount.str();
-         
-         tempPortPtr = portName + "::pointer(" + tempPortInstance + ")";
+        // TODO: Unicode safe?
+        if ((tmp >= 'A') && (tmp <= 'Z')) {
+          tempPortInstance.append(1, (char) tolower(tmp));
+        }
+      }
+      std::stringstream appendCount;
+      appendCount << i;
+      tempPortInstance = "provides" + tempPortInstance + appendCount.str();
 
-         fileStream << SP << portName << " *" << tempPortInstance
-                    << " = new " << portName << "();" << std::endl;
-         fileStream << SP << tempPortInstance << "->setParent(this);" << std::endl;
+      tempPortPtr = portName + "::pointer(" + tempPortInstance + ")";
 
-         std::string propertiesMap("pProps");
-         fileStream << SP << TYPEMAP_POINTER << " " << propertiesMap << i << " = svc->createTypeMap();" << std::endl;
+      fileStream << SP << portName << " *" << tempPortInstance
+                 << " = new " << portName << "();" << NEWLINE;
+      fileStream << SP << tempPortInstance << "->setParent(this);" << NEWLINE;
 
-         fileStream << SP << "svc->addProvidesPort(" << tempPortPtr
-                    << ", " << QT << tempPortCategory << QT
-                    << ", " << QT << DEFAULT_SIDL_PORT_NAMESPACE << portType << QT
-                    << ", " << propertiesMap << i << ");" << std::endl;
-
-    }
-    else{
       std::string propertiesMap("pProps");
-      fileStream << SP << TYPEMAP_POINTER << " " << propertiesMap << i << " = svc->createTypeMap();" << std::endl;
-      fileStream << SP << "svc->addProvidesPort(" << DEFAULT_PORT_NAMESPACE
-                 << portType << "::pointer(this)" 
+      fileStream << SP << TYPEMAP_POINTER << " " << propertiesMap << i << " = svc->createTypeMap();" << NEWLINE;
+
+      fileStream << SP << "svc->addProvidesPort(" << tempPortPtr
                  << ", " << QT << tempPortCategory << QT
                  << ", " << QT << DEFAULT_SIDL_PORT_NAMESPACE << portType << QT
-                 << ", " << propertiesMap << i << ");" << std::endl;
+                 << ", " << propertiesMap << i << ");" << NEWLINE;
+
+    } else {
+      std::string propertiesMap("pProps");
+      fileStream << SP << TYPEMAP_POINTER << " " << propertiesMap << i << " = svc->createTypeMap();" << NEWLINE;
+      fileStream << SP << "svc->addProvidesPort(" << DEFAULT_PORT_NAMESPACE
+                 << portType << "::pointer(this)"
+                 << ", " << QT << tempPortCategory << QT
+                 << ", " << QT << DEFAULT_SIDL_PORT_NAMESPACE << portType << QT
+                 << ", " << propertiesMap << i << ");" << NEWLINE;
     }
     fileStream << std::endl;
   }
@@ -401,11 +403,11 @@ void ComponentSkeletonWriter::writeSetServicesCode(std::ofstream& fileStream)
     tempPortCategory = "uses" + tempPortCategory.insert(0, 1, (char) tolower(tmp));
 
     std::string propertiesMap("uProps");
-    fileStream << SP << TYPEMAP_POINTER << " " << propertiesMap << i << " = svc->createTypeMap();" << std::endl;
+    fileStream << SP << TYPEMAP_POINTER << " " << propertiesMap << i << " = svc->createTypeMap();" << NEWLINE;
 
     fileStream << SP << "svc->registerUsesPort(" << QT << tempPortCategory << QT
                << ", " << QT << DEFAULT_SIDL_PORT_NAMESPACE << portType << QT
-               << ", " << propertiesMap << i << ");" << std::endl;
+               << ", " << propertiesMap << i << ");" << NEWLINE;
   }
 
   fileStream << "}" << std::endl;
@@ -419,24 +421,24 @@ void ComponentSkeletonWriter::writeGoAndUIFunctionsCode(std::ofstream& fileStrea
     string portname(providesPortsList[i]->GetType());
     string porttype(providesPortsList[i]->GetType());
     if (porttype.compare(string("UIPort")) == 0) {
-      fileStream << std::endl <<"int " << providesPortsList[i]->GetClassName() << "::ui()"
-                 << std::endl
+      fileStream << NEWLINE <<"int " << providesPortsList[i]->GetClassName() << "::ui()"
+                 << NEWLINE
                  << "{"
-                 << std::endl << SP << "return 0;"
-                 << std::endl
-                 << "}" << std::endl;
+                 << NEWLINE << SP << "return 0;"
+                 << NEWLINE
+                 << "}" << NEWLINE;
     }
 
     if (porttype.compare(string("GoPort")) == 0) {
       if(isWithSidl)
-        fileStream << std::endl <<"int " << compName << "::go()";
+        fileStream << NEWLINE <<"int " << compName << "::go()";
       else
-        fileStream << std::endl <<"int " << providesPortsList[i]->GetClassName() << "::go()";
-      fileStream << std::endl
+        fileStream << NEWLINE <<"int " << providesPortsList[i]->GetClassName() << "::go()";
+      fileStream << NEWLINE
                  << "{"
-                 << std::endl << SP << "return 0;"
-                 << std::endl
-                 << "}" << std::endl;
+                 << NEWLINE << SP << "return 0;"
+                 << NEWLINE
+                 << "}" << NEWLINE;
     }
   }
   fileStream << std::endl;
@@ -445,48 +447,49 @@ void ComponentSkeletonWriter::writeGoAndUIFunctionsCode(std::ofstream& fileStrea
 void ComponentSkeletonWriter::ComponentMakefileCode(std::ofstream& fileStream)
 {
   writeMakefileLicense(fileStream);
-  fileStream << "include $(SCIRUN_SCRIPTS)/smallso_prologue.mk" << std::endl;
-  fileStream << std::endl
-             << "SRCDIR := CCA/Components/" << compName << std::endl;
-  fileStream << std::endl
-             << "SRCS += " << "$(SRCDIR)/" << compName << ".cc \\" << std::endl;
-  if(isWithSidl){
-    fileStream << SP << SP << "$(SRCDIR)/" << compName << "_sidl.cc" << std::endl;
-    fileStream <<  "$(SRCDIR)/" << compName << "_sidl.o: $(SRCDIR)/" << compName << "_sidl.cc $(SRCDIR)/" 
-                 <<  compName << "_sidl.h" << std::endl;
-    fileStream << std::endl << "$(SRCDIR)/" << compName << "_sidl.cc: $(SRCDIR)/" << compName 
-               << ".sidl $(SIDL_EXE)" << std::endl; 
-    fileStream << "\t" << "\t" << "$(SIDL_EXE) -I $(SRCTOP_ABS)/Core/CCA/spec/cca.sidl -o $@ $<" << std::endl;
-    fileStream << std::endl <<  "$(SRCDIR)/" << compName << "_sidl.h: $(SRCDIR)/" << compName 
-               << ".sidl $(SIDL_EXE)" << std::endl;
-    fileStream << "\t" << "\t" << "$(SIDL_EXE) -I $(SRCTOP_ABS)/Core/CCA/spec/cca.sidl -h -o $@ $<" << std::endl;
-    fileStream << std::endl << "GENHDRS := $(SRCDIR)/" << compName << "_sidl.h" << std::endl;
-    
+  fileStream << "include $(SCIRUN_SCRIPTS)/smallso_prologue.mk" << NEWLINE;
+  fileStream << NEWLINE
+             << "SRCDIR := CCA/Components/" << compName << NEWLINE;
+  fileStream << NEWLINE
+             << "SRCS += " << "$(SRCDIR)/" << compName << ".cc \\" << NEWLINE;
+  if (isWithSidl) {
+    fileStream << SP << SP << "$(SRCDIR)/" << compName << "_sidl.cc" << NEWLINE;
+    fileStream <<  "$(SRCDIR)/" << compName << "_sidl.o: $(SRCDIR)/" << compName << "_sidl.cc $(SRCDIR)/"
+               <<  compName << "_sidl.h" << NEWLINE;
+    fileStream << NEWLINE << "$(SRCDIR)/" << compName << "_sidl.cc: $(SRCDIR)/" << compName
+               << ".sidl $(SIDL_EXE)" << NEWLINE;
+    fileStream << "\t" << "\t" << "$(SIDL_EXE) -I $(SRCTOP_ABS)/Core/CCA/spec/cca.sidl -o $@ $<" << NEWLINE;
+    fileStream << NEWLINE <<  "$(SRCDIR)/" << compName << "_sidl.h: $(SRCDIR)/" << compName
+               << ".sidl $(SIDL_EXE)" << NEWLINE;
+    fileStream << "\t" << "\t" << "$(SIDL_EXE) -I $(SRCTOP_ABS)/Core/CCA/spec/cca.sidl -h -o $@ $<" << NEWLINE;
+    fileStream << NEWLINE << "GENHDRS := $(SRCDIR)/" << compName << "_sidl.h" << NEWLINE;
   }
-  fileStream << std::endl
-             << "PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm \\" << std::endl;
-  fileStream << SP << "Core/CCA/spec Core/Thread Core/Containers Core/Exceptions" << std::endl;
-  fileStream << std::endl
-             << "CFLAGS += $(WX_CXXFLAGS)" << std::endl
-             << "CXXFLAGS += $(WX_CXXFLAGS)" << std::endl
-             << "LIBS := $(WX_LIBRARY)" << std::endl;
-  fileStream << std::endl << "include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk" << std::endl;
-  fileStream << std::endl << "$(SRCDIR)/" << compName << ".o: Core/CCA/spec/cca_sidl.h" << std::endl;
+  fileStream << NEWLINE
+             << "PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm \\" << NEWLINE;
+  fileStream << SP << "Core/CCA/spec Core/Thread Core/Containers Core/Exceptions" << NEWLINE;
+  fileStream << NEWLINE
+             << "ifeq ($(HAVE_GUI),yes)" << NEWLINE
+             << SP << "LIBS := $(WX_LIBRARY)" << NEWLINE
+             << "endif" << NEWLINE;
+  fileStream << NEWLINE << "include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk" << NEWLINE;
+  fileStream << NEWLINE << "$(SRCDIR)/" << compName << ".o: Core/CCA/spec/cca_sidl.h" << NEWLINE;
   fileStream << std::endl;
 }
+
 void ComponentSkeletonWriter::writeSidlFile(std::ofstream& fileStream)
 {
   writeLicense(fileStream);
-  fileStream << "package sci {" << std::endl;
-  fileStream << SP << "package cca {" << std::endl;
+  fileStream << "package sci {" << NEWLINE;
+  fileStream << SP << "package cca {" << NEWLINE;
   fileStream << SP << SP << "class " << compName << " implements-all " << DEFAULT_SIDL_NAMESPACE << "Component";
   for (unsigned int i = 0; i < providesPortsList.size(); i++) {
     string porttype(providesPortsList[i]->GetType());
     fileStream << "," << DEFAULT_SIDL_PORT_NAMESPACE << porttype;
   }
-  fileStream << "{" << std::endl;
-  fileStream << SP << SP << "}" << std::endl;
-  fileStream << SP << "}" << std::endl;
+  fileStream << "{" << NEWLINE;
+  fileStream << SP << SP << "}" << NEWLINE;
+  fileStream << SP << "}" << NEWLINE;
   fileStream << "}" << std::endl;
 }
+
 }

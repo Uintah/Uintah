@@ -53,6 +53,9 @@
 
 namespace SCIRun {
 
+typedef SSIDL::array1<sci::cca::ComponentID::pointer> ComponentIDPtrList;
+typedef SSIDL::array1<sci::cca::ConnectionID::pointer> ConnectionIDPtrList;
+
 class SCIRunFramework;
 class ConnectionEvent;
 
@@ -76,7 +79,7 @@ class ConnectionEvent;
  * \sa InternalComponentModel
  */
 class BuilderService : public sci::cca::ports::BuilderService,
-		       public InternalFrameworkServiceInstance
+                       public InternalFrameworkServiceInstance
 {
 public:
   virtual ~BuilderService();
@@ -99,7 +102,7 @@ public:
 
   /** Returns a list (array) of CCA ComponentIDs that exist in the
       BuilderService's framework. */
-  virtual SSIDL::array1<sci::cca::ComponentID::pointer> getComponentIDs();
+  virtual ComponentIDPtrList getComponentIDs();
 
   /** Returns a CCA TypeMap (i.e. a map) that represents any properties
    *  associated with component \em cid.
@@ -169,9 +172,8 @@ public:
 	  const ::std::string &providesPortName);
 
   /** */
-  virtual SSIDL::array1<sci::cca::ConnectionID::pointer>
-  getConnectionIDs(const SSIDL::array1<sci::cca::ComponentID::pointer>
-		       &componentList);
+  virtual ConnectionIDPtrList
+  getConnectionIDs(const ComponentIDPtrList &componentList);
 
 
   /** Returns a CCA TypeMap that represents any properties associated
