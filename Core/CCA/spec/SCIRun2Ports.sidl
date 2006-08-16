@@ -249,35 +249,57 @@ interface ComponentEventService extends Port {
 }
 
 /**
- * Proposed EventService
- *
- * Put something descriptive here...
- *
- * link: https://www.cca-forum.org/wiki/tiki-index.php?page=Event+Specification+Proposal
+ * The proposed event service is based on a publish-subscribe model:
+ * events are organized into a namespace of topics.
+ * This service is responsible for organizing the namespace of topics,
+ * setting and enforcing event policies,
+ * and maintaining the resources needed for event distribution.
  */
 interface EventService extends cca.Port {
 
-  // Should return a pointer to the Topic if it already exists
-  // exception if casting to C++ pointer fails, Topic.addWildcardTopic throws exception
+  /**
+   * @return the Topic if it already exists,
+   * @exception EventServiceException if creating Topic fails
+   */
   cca.Topic createTopic(in string topicName) throws EventServiceException;
 
+  /**
+   * Get a Topic by name.
+   * @return Topic,
+   * @exception EventServiceException if topicName is empty or if not found
+   */
   cca.Topic getTopic(in string topicName) throws EventServiceException;
 
-  // Should return a pointer to the Topic if it already exists
-  // exception if casting to C++ pointer fails, Topic.addWildcardTopic throws exception
+  /**
+   * @return the WildcardTopic if it already exists,
+   * @exception EventServiceException if creating WildcardTopic fails
+   */
   cca.WildcardTopic createWildcardTopic(in string topicName) throws EventServiceException;
 
+
+  /**
+   * Get a Topic by name.
+   * @return WildcardTopic,
+   * @exception EventServiceException if topicName is empty or if not found
+   */
   // throws exception if topicName is empty or if not found
   cca.WildcardTopic getWildcardTopic(in string topicName) throws EventServiceException;
 
-  // throws exception if topicName is empty or if not found
+  /**
+   * Notifies the EventService that this Topic is no longer used.
+   * @exception EventServiceException if topicName is empty or if not found
+   */
   void releaseTopic(in string topicName) throws EventServiceException;
 
-  // throws exception if topicName is empty or if not found
+  /**
+   * Notifies the EventService that this WildcardTopic is no longer used.
+   * @exception EventServiceException if topicName is empty or if not found
+   */
   void releaseWildcardTopic(in string topicName) throws EventServiceException;
 
+  /** Process published events. */
   void processEvents();
 
-}// end interface EventService
+}
 
 // END proposed - sparker
