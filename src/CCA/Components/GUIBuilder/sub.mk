@@ -53,8 +53,6 @@ PSELIBS := \
            SCIRun Core/CCA/spec Core/CCA/PIDL \
            Core/OS Core/Thread Core/Exceptions
 
-CFLAGS += $(WX_CXXFLAGS)
-CXXFLAGS += $(WX_CXXFLAGS)
 LIBS := $(WX_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

@@ -32,7 +32,6 @@
 #include <CCA/Components/GUIBuilder/wxSCIRunApp.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Core/Thread/Mutex.h>
-#include <SCIRun/ApplicationLoader.h>
 #include <SCIRun/StandAlone/sr2_version.h>
 
 #include <wx/gdicmn.h>
@@ -58,7 +57,7 @@ public:
   virtual void getComponentClassDescriptions(SSIDL::array1<sci::cca::ComponentClassDescription::pointer>& descArray);
 
   virtual sci::cca::ComponentID::pointer
-  createInstance(const std::string& className, const sci::cca::TypeMap::pointer& properties);
+  createInstance(const sci::cca::ComponentClassDescription::pointer& cd);
   virtual void destroyInstance(const sci::cca::ComponentID::pointer& cid, float timeout);
   virtual int destroyInstances(const SSIDL::array1<sci::cca::ComponentID::pointer>& cidArray, float timeout);
 
@@ -106,13 +105,8 @@ public:
   virtual void disconnectUIPort(const std::string& uiPortName);
   virtual int ui(const std::string& uiPortName);
 
-//   // progress
-//   virtual bool connectProgress(const std::string& providesName, const std::string& usesPortName, const sci::cca::ComponentID::pointer &cid, std::string& providesPortName);
-//   virtual void disconnectProgress(const std::string& progessPortName);
-
+  // progress
   virtual void updateProgress(const sci::cca::ComponentID::pointer& cid, int progressPercent);
-
-//   // progress
 
   virtual bool connectComponentIcon(const std::string& usesName, const std::string& providesPortName,
                                     const sci::cca::ComponentID::pointer &cid, std::string& usesPortName);
@@ -140,6 +134,7 @@ public:
   void* getPortColor(const std::string& portName);
 
   // test ApplicationLoader
+  virtual bool applicationFileExists();
   virtual void saveApplication();
 
   static void setApp(wxSCIRunApp& a) { app = &a; }
@@ -151,6 +146,7 @@ public:
   static const std::string UIPORT;
   static const std::string PROGRESS_PORT;
   static const std::string COMPONENTICON_PORT;
+  static const std::string APP_EXT_WILDCARD;
 
 private:
   GUIBuilder(const GUIBuilder &);
@@ -168,7 +164,6 @@ private:
   sci::cca::Services::pointer services;
   std::string frameworkURL;
   std::string configDir;
-  SCIRun::ApplicationLoader* appLoader;
 
   // Uses port names will be unique since they are generated from unique component instance names.
   ConnectionMap connectionMap;
