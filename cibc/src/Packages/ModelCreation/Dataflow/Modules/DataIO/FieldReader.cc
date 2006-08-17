@@ -48,8 +48,6 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-template class GenericReader<FieldHandle>;
-
 class FieldReader : public GenericReader<FieldHandle> {
 protected:
   GuiString gui_types_;

@@ -49,8 +49,6 @@
 namespace ModelCreation {
 using namespace SCIRun;
 
-template class GenericWriter<MatrixHandle>;
-
 class MatrixWriter : public GenericWriter<MatrixHandle> {
 protected:
   GuiString gui_types_;

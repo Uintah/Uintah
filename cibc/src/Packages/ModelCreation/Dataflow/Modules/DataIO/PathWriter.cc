@@ -47,8 +47,6 @@
 namespace ModelCreation {
 using namespace SCIRun;
 
-template class GenericWriter<PathHandle>;
-
 class PathWriter : public GenericWriter<PathHandle> {
 public:
   PathWriter(GuiContext* ctx);

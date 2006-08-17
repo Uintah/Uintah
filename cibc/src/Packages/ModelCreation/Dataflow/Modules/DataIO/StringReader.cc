@@ -47,8 +47,6 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-template class GenericReader<StringHandle>;
-
 class StringReader : public GenericReader<StringHandle> {
 public:
   StringReader(GuiContext*);
