@@ -21,6 +21,8 @@ double ptime=0, cleantime=0, sertime=0, gtime=0;
 enum Curve {HILBERT, MORTON, GREY};
 enum CleanupType{BATCHERS,LINEAR};
 
+#define SERIAL 1
+#define PARALLEL 2
 template<class BITS>
 struct History
 {
@@ -576,11 +578,14 @@ void SFC<DIM,LOCS>::Parallel()
     }
   }
   
-	//increment indexies 
+	//cout << rank << ": curve after serial:";
+  //increment indexies 
 	for(i=0;i<n;i++)
 	{
 		c[i].i+=istart;	
+  //  cout << c[i].i << ":" << c[i].bits << " ";
 	}
+//  cout << endl;
 	
 
 	//resize buffers
@@ -600,7 +605,15 @@ void SFC<DIM,LOCS>::Parallel()
 	finish=timer->currentSeconds();
 	ptime+=finish-start;
 #endif
-	
+  /*
+	c=(History<BITS>*)sendbuf;
+  cout << rank << ": curve after primary:";
+  for(int i=0;i<n;i++)
+  {
+    cout << c[i].i << ":" << c[i].bits << " ";
+  }
+  cout << endl;
+	*/
 	History<BITS> *ssbuf=(History<BITS>*)sendbuf;
 
 #ifdef _TIMESFC_
@@ -611,6 +624,15 @@ void SFC<DIM,LOCS>::Parallel()
 	finish=timer->currentSeconds();
 	cleantime+=finish-start;
 #endif
+  /*
+	c=(History<BITS>*)sendbuf;
+  cout << rank << ": curve after cleanup:";
+  for(int i=0;i<n;i++)
+  {
+    cout << c[i].i << ":" << c[i].bits << " ";
+  }
+  cout << endl;
+	*/
 
 	ssbuf=(History<BITS>*)sendbuf;
 	
