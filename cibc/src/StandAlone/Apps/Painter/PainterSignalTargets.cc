@@ -739,7 +739,7 @@ Painter::ShowVolumeRendering(event_handle_t event) {
   vol->set_slice_alpha(-0.5);
   vol->set_slice_alpha(0.1);
   vol->set_interactive_rate(4.0);
-  vol->set_sampling_rate(4.0);
+  vol->set_sampling_rate(3.5);
   vol->set_material(0.322, 0.868, 1.0, 18);
   vol->set_interp(0);
   scene_event = new SceneGraphEvent(vol, "FOO");

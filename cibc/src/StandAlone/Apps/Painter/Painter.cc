@@ -2545,8 +2545,8 @@ setup_volume_rendering() {
 					   *planes,
 					   Round(card_mem*1024*1024*0.8));
   vol->set_slice_alpha(-0.5);
-  vol->set_interactive_rate(4.0);
-  vol->set_sampling_rate(4.0);
+  vol->set_interactive_rate(3.0);
+  vol->set_sampling_rate(3.0);
   vol->set_material(0.322, 0.868, 1.0, 18);
   scene_event = new SceneGraphEvent(vol, "FOO");  
   //  if (!sci_getenv_p("PAINTER_NOSCENE")) 
