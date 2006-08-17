@@ -175,7 +175,8 @@ Module::Module(const string& name, GuiContext* ctx,
   // execpt those whose datatype tag has contents that start with '*'.
   ModuleInfo* info = packageDB->GetModuleInfo(module_name_, category_name_,
 					      package_name_);
-  if (info) {
+  if (info) 
+  {
     oport_maker maker;
     vector<OPortInfo*>::iterator i2 = info->oports_.begin();
     while (i2 < info->oports_.end())
@@ -186,13 +187,14 @@ Module::Module(const string& name, GuiContext* ctx,
       char* datatype = new char[strlength+1];
       sscanf(op->datatype.c_str(),"%[^:]::%s",package,datatype);
       if (package[0]=='*')
-	maker = FindOPort(&package[1],datatype);
+        maker = FindOPort(&package[1],datatype);
       else
-	maker = FindOPort(package,datatype);	
-      if (maker && package[0]!='*') {
-	oport = maker(this, op->name);
-	if (oport)
-	  add_oport(oport);
+        maker = FindOPort(package,datatype);	
+      if (maker && package[0]!='*') 
+      {
+        oport = maker(this, op->name);
+        if (oport)
+        add_oport(oport);
       }
       delete[] package;
       delete[] datatype;
@@ -206,15 +208,15 @@ Module::Module(const string& name, GuiContext* ctx,
       char* datatype = new char[strlength+1];
       sscanf(ip->datatype.c_str(),"%[^:]::%s",package,datatype);
       if (package[0]=='*')
-	dynamic_port_maker_ = FindIPort(&package[1],datatype);
+        dynamic_port_maker_ = FindIPort(&package[1],datatype);
       else
-	dynamic_port_maker_ = FindIPort(package,datatype);	
+        dynamic_port_maker_ = FindIPort(package,datatype);	
       if (dynamic_port_maker_ && package[0]!='*') {
-	iport = dynamic_port_maker_(this, ip->name);
-	if (iport) {
-	  lastportname_ = ip->name;
-	  add_iport(iport);
-	}
+        iport = dynamic_port_maker_(this, ip->name);
+        if (iport) {
+          lastportname_ = ip->name;
+          add_iport(iport);
+        }
       } else {
 	cerr << "Cannot create port: " << datatype << '\n';
 	dynamic_port_maker_ = 0;
