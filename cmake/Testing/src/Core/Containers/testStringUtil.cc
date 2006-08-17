@@ -24,13 +24,13 @@ int main() {
     return -1;
   }
 
-  const std::string unsigned_long_string = "4294967294";
+  const std::string unsigned_long_string = "429496729";
   unsigned long unsigned_long_result = 0;
   if (!SCIRun::string_to_unsigned_long(unsigned_long_string, 
 				       unsigned_long_result)) {
     std::cerr << "StringUtil string_to_unsigned_long failed\n";
     return -1;
-  } else if (unsigned_long_result != 4294967294) {
+  } else if (unsigned_long_result != 429496729) {
     std::cerr << "StringUtil string_to_unsigned_long returned ";
     std::cerr << "incorrect results: " << unsigned_long_result << "\n";
     return -1;
