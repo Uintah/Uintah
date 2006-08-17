@@ -1918,7 +1918,7 @@ HexVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
 
   if (!(synchronized_ & LOCATE_E))
     synchronize(LOCATE_E);
-  if(grid_.get_rep()) return (false);
+  if(grid_.get_rep() == 0) return (false);
 
   unsigned int *iter, *end;
   if (grid_->lookup(&iter, &end, p))
