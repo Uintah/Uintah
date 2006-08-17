@@ -110,13 +110,13 @@ ENDIF(WIN32 AND NOT CYGWIN)
 
 #-----------------------------------------------------------------------------
 # dlopen library
-IF(CMAKE_SYSTEM_NAME MATCHES Darwin)
-  FIND_LIBRARY(DL_LIBRARY dlopen
-             ${SCIRUN_THIRDPARTY_PATH}/lib
-             /usr/local/lib
-             /usr/lib
-             /lib)
-ENDIF(CMAKE_SYSTEM_NAME MATCHES Darwin)
+#IF(CMAKE_SYSTEM_NAME MATCHES Darwin)
+#  FIND_LIBRARY(DL_LIBRARY dlopen
+#             ${SCIRUN_THIRDPARTY_PATH}/lib
+#             /usr/local/lib
+#             /usr/lib
+#             /lib)
+#ENDIF(CMAKE_SYSTEM_NAME MATCHES Darwin)
 
 #-----------------------------------------------------------------------------
 # math library
