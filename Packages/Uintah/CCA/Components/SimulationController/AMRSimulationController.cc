@@ -12,6 +12,7 @@
 #include <Packages/Uintah/Core/Grid/Level.h>
 #include <Packages/Uintah/Core/Grid/SimulationTime.h>
 #include <Packages/Uintah/Core/Grid/Patch.h>
+#include <Packages/Uintah/Core/Grid/Box.h>
 #include <Packages/Uintah/Core/Grid/Variables/ReductionVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/SoleVariable.h>
 #include <Packages/Uintah/Core/Grid/Variables/PerPatch.h>
@@ -517,14 +518,31 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
   GridP oldGrid = currentGrid;      
  
   currentGrid = d_regridder->regrid(oldGrid.get_rep(), d_scheduler, d_ups);
-  if (d_myworld->myrank() == 0) {
-        cout << "  DOING ANOTHER INITIALIZATION REGRID!!!!\n";
-        //cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
-        amrout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
-  }
-  double regridTime = Time::currentSeconds() - start;
   if (currentGrid == oldGrid)
     return false;
+  // for dynamic lb's, set up patch config after changing grid
+ 
+  d_lb->possiblyDynamicallyReallocate(currentGrid, true); 
+  if (d_myworld->myrank() == 0 && amrout.active()) {
+    cout << "  DOING ANOTHER INITIALIZATION REGRID!!!!\n";
+    //cout << "---------- OLD GRID ----------" << endl << *(oldGrid.get_rep());
+    amrout << "---------- NEW GRID ----------" << endl;
+    amrout << "Grid has " << currentGrid->numLevels() << " level(s)" << endl;
+    for ( int levelIndex = 0; levelIndex < currentGrid->numLevels(); levelIndex++ ) {
+      LevelP level = currentGrid->getLevel( levelIndex );
+      amrout << "  Level " << level->getID()
+          << ", indx: "<< level->getIndex()
+          << " has " << level->numPatches() << " patch(es)" << endl;
+      for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
+        const Patch* patch = *patchIter;
+	amrout << "(Patch " << patch->getID() << " proc " << d_lb->getPatchwiseProcessorAssignment(patch)
+	       << ": box=" << patch->getBox()
+	       << ", lowIndex=" << patch->getCellLowIndex() << ", highIndex="
+	       << patch->getCellHighIndex() << ")" << endl;
+      }
+    }
+  }
+  double regridTime = Time::currentSeconds() - start;
   
   if (d_myworld->myrank() == 0) {
     cout << "  ADDING ANOTHER LEVEL TO THE GRID:";
@@ -539,10 +557,7 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
   // as we're going to have to recompile the TG anyway.
   d_scheduler->initialize(1, 1);
   d_scheduler->advanceDataWarehouse(currentGrid);
-  
-  // for dynamic lb's, set up patch config after changing grid
-  d_lb->possiblyDynamicallyReallocate(currentGrid, true); 
-  
+    
   for(int i=currentGrid->numLevels()-1; i >= 0; i--) {
     d_sim->scheduleInitialize(currentGrid->getLevel(i), d_scheduler);
     d_sim->scheduleComputeStableTimestep(currentGrid->getLevel(i),d_scheduler);
@@ -576,6 +591,7 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
   d_sharedState->setRegridTimestep(false);
   
   if (currentGrid != oldGrid) {
+    d_lb->possiblyDynamicallyReallocate(currentGrid, true); 
     if (d_myworld->myrank() == 0) {
       cout << "  REGRIDDING:";
       d_sharedState->setRegridTimestep(true);
@@ -585,11 +601,24 @@ void AMRSimulationController::doRegridding(GridP& currentGrid)
       }
       cout << endl;
       if (amrout.active()) {
-        amrout << "---------- NEW GRID ----------" << endl << *(currentGrid.get_rep());
+	amrout << "---------- NEW GRID ----------" << endl;
+	amrout << "Grid has " << currentGrid->numLevels() << " level(s)" << endl;
+	for ( int levelIndex = 0; levelIndex < currentGrid->numLevels(); levelIndex++ ) {
+	  LevelP level = currentGrid->getLevel( levelIndex );
+	  amrout << "  Level " << level->getID()
+		 << ", indx: "<< level->getIndex()
+		 << " has " << level->numPatches() << " patch(es)" << endl;
+	  for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
+	    const Patch* patch = *patchIter;
+	    amrout << "(Patch " << patch->getID() << " proc " << d_lb->getPatchwiseProcessorAssignment(patch)
+		   << ": box=" << patch->getBox()
+		   << ", lowIndex=" << patch->getCellLowIndex() << ", highIndex="
+		   << patch->getCellHighIndex() << ")" << endl;
+	  }
+	}
       }
     }
-         
-    d_lb->possiblyDynamicallyReallocate(currentGrid, true); 
+
     double scheduleTime = Time::currentSeconds();
     d_scheduler->scheduleAndDoDataCopy(currentGrid, d_sim);
     scheduleTime = Time::currentSeconds() - scheduleTime;
