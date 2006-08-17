@@ -19,6 +19,7 @@ SRCS     += \
 	$(SRCDIR)/TensorToTensorConvertor.cc \
 	$(SRCDIR)/VectorFieldOperator.cc \
 	$(SRCDIR)/VectorParticlesOperator.cc \
+	$(SRCDIR)/UdaScale.cc\
 #[INSERT NEW CODE FILE HERE]
 
 SUBDIRS := $(SRCDIR)/MMS
