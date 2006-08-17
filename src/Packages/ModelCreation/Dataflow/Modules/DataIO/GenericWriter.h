@@ -126,35 +126,15 @@ template <class HType>
 void
 GenericWriter<HType>::execute()
 {
-  SimpleIPort<HType> *inport = (SimpleIPort<HType> *)get_input_port(0);
-  if (!inport) {
-    error("Unable to initialize iport.");
-    return;
-  }
-
-  // Read data from the input port
-  if (!inport->get(handle_) || !handle_.get_rep())
+  if (!(get_input_handle(0,handle_,true))) return;
+  
+  StringHandle filename;
+  if (get_input_handle("Filename",filename,false)) 
   {
-    remark("No data on input port.");
-    return;
+    filename_.set(filename->get());
+    get_ctx()->reset();
   }
-
-
-
-  // CODE FOR FILENAME INPUT PORT ////
-  StringIPort* filenameport;
-  if (filenameport = dynamic_cast<StringIPort *>(get_input_port("Filename")))
-  {
-    StringHandle filenameH;
-    filenameport->get(filenameH);
-    if (filenameH.get_rep())
-    {
-      filename_.set(filenameH->get());
-      get_ctx()->reset();
-    }
-  }
-  ////////////////////////////////////
-
+  
 
   // If no name is provided, return.
 
