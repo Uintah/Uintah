@@ -326,6 +326,10 @@ public:
   Mutex lock;
 
   const ProblemSpecP getTimestep(double time);
+
+  // This is added to allow simple geometric scaling of the entire domain
+  void setCellScale( Vector& s ){ d_cell_scale = s; }
+
 protected:
   DataArchive();
   
@@ -372,6 +376,8 @@ private:
   bool d_simRestart;
   bool d_swapBytes;
   int d_nBytes;
+
+  Vector d_cell_scale; //used for scaling the physical data size
   
   bool have_timesteps;
   std::vector<int> d_tsindex;
