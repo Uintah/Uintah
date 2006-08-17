@@ -587,7 +587,6 @@ MPIScheduler::processMPIRecvs( DetailedTask *, CommRecMPI& recvs,
 void
 MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 {
-
   TAU_PROFILE("MPIScheduler::execute()", " ", TAU_USER); 
   
   TAU_PROFILE_TIMER(reducetimer, "Reductions", "[MPIScheduler::execute()] " , TAU_USER); 
@@ -760,7 +759,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     //MPI_Buffer_attach(old_mpibuffer, old_mpibuffersize);
 
   log.finishTimestep();
-  if(timeout.active()){
+  if(timeout.active() && !parentScheduler){ // only do on toplevel scheduler
     //emitTime("finalize");
 
     // add number of cells, patches, and particles
@@ -790,6 +789,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     vector<double> d_avgtimes(d_times.size());
     double maxTask = -1, avgTask = -1;
     double maxComm = -1, avgComm = -1;
+    double maxCell = -1, avgCell = -1;
     MPI_Reduce(&d_times[0], &d_totaltimes[0], (int)d_times.size(), MPI_DOUBLE,
                MPI_SUM, 0, d_myworld->getComm());
     MPI_Reduce(&d_times[0], &d_maxtimes[0], (int)d_times.size(), MPI_DOUBLE,
@@ -806,9 +806,14 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
         avgComm = d_avgtimes[i];
         maxComm = d_maxtimes[i];
       }
-      else if (strncmp(d_labels[i], "Num", 3) == 0)
+      else if (strncmp(d_labels[i], "Num", 3) == 0) {
+        if (strcmp(d_labels[i], "NumCells") == 0) {
+          avgCell = d_avgtimes[i];
+          maxCell = d_maxtimes[i];
+        }
         // these are independent stats - not to be summed
         continue;
+      }
 
       total+= d_times[i];
       avgTotal += d_avgtimes[i];
@@ -847,8 +852,9 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     }
 
     if (me == 0) {
-      timeout << "  Avg. exec: " << avgTask << ", max exec: " << maxTask << " = " << 100-avgTask/maxTask*100 << " load imbalance (exec)%\n";
-      timeout << "  Avg. comm: " << avgComm << ", max comm: " << maxComm << " = " << 100-avgComm/maxComm*100 << " load imbalance (comm)%\n";
+      timeout << "  Avg. exec: " << avgTask << ", max exec: " << maxTask << " = " << (1-avgTask/maxTask)*100 << " load imbalance (exec)%\n";
+      timeout << "  Avg. comm: " << avgComm << ", max comm: " << maxComm << " = " << (1-avgComm/maxComm)*100 << " load imbalance (comm)%\n";
+      timeout << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1-avgCell/maxCell)*100 << " load imbalance (theoretical)%\n";
     }
     double time = Time::currentSeconds();
     double rtime=time-d_lasttime;
@@ -860,7 +866,6 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   }
 
   dbg << me << " MPIScheduler finished\n";
-
   //pg_ = 0;
 }
 
