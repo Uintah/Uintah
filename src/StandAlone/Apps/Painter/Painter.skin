@@ -106,7 +106,9 @@
       <var name="LabeledGradientBackground::text" propagate="yes">$NicePainterWindow::name</var>
 
       <definition class="LabeledGradientBackground::child">                
-        <object class="Painter::SliceWindow"/>
+        <object class="Root::FocusRegion">
+          <object class="Painter::SliceWindow"/>
+        </object>
       </definition>
 
       <object class="LabeledGradientBackground"/>
@@ -178,7 +180,7 @@
     
 
     <object class="Painter">
-      <object class="Root::FocusRegion">
+    <object class="Root::FocusRegion">
       <var name="Painter::status_text" propagate="yes"> </var>
       <var name="Painter::progress_bar_text"
            propagate="yes"></var>
@@ -381,7 +383,7 @@
             <object class="Collection">
               <var name="row">1</var>
               <var name="col">2</var>
-              <var name="cell-width">40</var>
+              <var name="cell-width">50</var>
               <object class="HelpButton"/>
             </object>
 
@@ -529,15 +531,15 @@
 
       <object class="Root::GLWindow" id="Tools">
         <var name="id">Tools</var>
-        <var name="width" type="int">250</var>
+        <var name="width" type="int">275</var>
         <var name="height" type="int">800</var>
         <var name="posx" type="int">1150</var>
-        <var name="posy" type="int">50</var>
+        <var name="posy" type="int">0</var>
         <var name="border" type="int">$Window::borders</var>
 
         <object class="Tools"/>
       </object>
-      
+<!--      
       <object class="Root::GLWindow" id="Splash">
         <var name="id">Splash</var>
         <var name="width" type="int">800</var>
@@ -551,9 +553,10 @@
 
         <object class="Splash"/>
       </object>
+-->
     </object>
   </object>
-</object>
+  </object>
 
 </skinner>
 

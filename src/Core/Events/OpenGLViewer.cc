@@ -1522,7 +1522,6 @@ OpenGLViewer::draw_visible_scene_graph()
 	  if (do_picking_p()) {
 	    pick_draw_obj(default_material_, si);
 	  } else {
-	    cerr << "drawing visible item: " << si->getString() << endl;
 	    redraw_obj(default_material_, si);
 	  }
 	    
