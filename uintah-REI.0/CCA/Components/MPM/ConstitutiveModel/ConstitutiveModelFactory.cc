@@ -10,7 +10,9 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/TransIsoHyperImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoTransIsoHyper.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoTransIsoHyperImplicit.h>
+*/
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookPlas.h>
+/*
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScram.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScramImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoSCRAMHotSpot.h>
@@ -62,7 +64,6 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type == "comp_mooney_rivlin")
     return(scinew CompMooneyRivlin(child,flags));
-   
   else if (mat_type ==  "comp_neo_hook") {
     if (flags->d_integrator_type == "explicit" || 
         flags->d_integrator_type == "fracture")
@@ -97,7 +98,7 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type == "comp_neo_hook_plastic")
     return(scinew CompNeoHookPlas(child,flags));
-   
+
   else if (mat_type ==  "visco_scram"){
     if (flags->d_integrator_type == "explicit" || 
         flags->d_integrator_type == "fracture")
@@ -132,12 +133,14 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (mat_type ==  "elastic_plastic")
     return(scinew ElasticPlastic(child,flags));
 */
-  if (mat_type ==  "soil_foam"){
+  if (mat_type ==  "soil_foam")
     return(scinew SoilFoam(child,flags));
-  }else 
+
+  else if (mat_type == "comp_neo_hook_plastic")
+    return (scinew CompNeoHookPlas(child,flags));
+
+  else 
     throw ProblemSetupException("Unknown Material Type R ("+mat_type+")", __FILE__, __LINE__);
 
   return 0;
 }
-
-
