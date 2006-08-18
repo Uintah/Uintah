@@ -111,7 +111,7 @@ interface Builder extends sci.cca.Component {
 }
 
 // text builder also should have an implementing class
-class GUIBuilder implements-all sci.cca.Builder {
+class GUIBuilder implements-all sci.cca.Builder,sci.cca.EventListener {
   // manage UI ports for the GUI
   // note: no UI handling for TxtBuilder
   bool connectUIPort(in string usesName, in string providesPortName, in cca.ComponentID cid, out string usesPortName);
