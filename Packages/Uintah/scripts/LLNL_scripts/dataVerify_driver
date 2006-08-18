@@ -11,7 +11,13 @@ TAR_FILES  := $(wildcard *.tar)
 
           
 SRCS =   $(shell for i in $(FILES) ; do \
-              echo $$i ;\
+              if \
+                test -d $$i ;\
+              then \
+                echo "$$i/" ;\
+              else \
+                echo $$i ;\
+              fi \
           done) 
           
 DESTS := $(patsubst %,../stamp/%,$(SRCS))
@@ -23,4 +29,4 @@ all: $(DESTS)
 
 ../stamp/%: % ../stamp
 	@echo "verifying $<"
-	@rsync -aIz --progress --rsh=/usr/bin/ssh $< $(LOGIN):$(REMOTEDIR)$<
+	@rsync -rl --size-only --log-format="missing file %f bytes transferred %b" --rsh=/usr/bin/ssh $< $(LOGIN):$(REMOTEDIR)/
