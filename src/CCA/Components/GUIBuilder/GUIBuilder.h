@@ -114,7 +114,7 @@ public:
 
 
   // events
-  virtual void processEvent(const std::string& topicName, const sci::cca::TypeMap::pointer& eventBody);
+  virtual void processEvent(const std::string& topicName, const sci::cca::Event::pointer& theEvent);
 
 
   // Note: make both setPortColor functions static when support for static functions is available

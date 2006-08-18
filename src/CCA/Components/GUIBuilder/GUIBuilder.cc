@@ -130,6 +130,10 @@ GUIBuilder::GUIBuilder()
 #if DEBUG
   std::cerr << "GUIBuilder::GUIBuilder(): from thread " << Thread::self()->getThreadName() << std::endl;
 #endif
+
+ 
+
+
 }
 
 GUIBuilder::~GUIBuilder()
@@ -157,6 +161,17 @@ GUIBuilder::~GUIBuilder()
 void
 GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
 {
+  sci::cca::EventListener::pointer evptr(this);
+  sci::cca::Port::pointer pp  = svc->getPort("cca.EventService");
+  sci::cca::ports::EventService::pointer ptr =  pidl_cast<sci::cca::ports::EventService::pointer>(pp);
+  if(ptr.isNull()){
+    std::cout << "Pointer returned is Null!!!\n";
+  }
+  sci::cca::WildcardTopic::pointer topicPtr = ptr->createWildcardTopic("scirun2.services.builderservice.component.*");
+  topicPtr->registerEventListener(std::string("GUIBuilder"),evptr);
+
+
+
 #if DEBUG
   std::cerr << "GUIBuilder::setServices(..) from thread " << Thread::self()->getThreadName() << std::endl;
 #endif
@@ -808,9 +823,14 @@ void GUIBuilder::saveApplication()
 //
 
 
-void GUIBuilder::processEvent(const std::string& topicName, const sci::cca::TypeMap::pointer& eventBody)
+void GUIBuilder::processEvent(const std::string& topicName, const sci::cca::Event::pointer& theEvent)
 {
-  // process events
+  //process events
+  sci::cca::TypeMap::pointer eventBody = theEvent->getBody();
+  SSIDL::array1<std::string> allKeys = eventBody->getAllKeys(sci::cca::None);
+  for (unsigned int i = 0; i < allKeys.size(); i++)
+    std::cout << "Topic Name: " << topicName << "\tEvent Body: " << allKeys[i] << "\t" << eventBody->getString(allKeys[i],std::string("default")) << std::endl; 
+
 }
 
 
