@@ -48,7 +48,8 @@ SRCS     += \
 	$(SRCDIR)/RWS.cc                \
 	$(SRCDIR)/sci_system.cc         \
 	$(SRCDIR)/soloader.cc           \
- 	$(SRCDIR)/Signals.cc            \
+	$(SRCDIR)/Signals.cc            \
+	$(SRCDIR)/Socket.cc             \
 	$(SRCDIR)/Timer.cc              \
 	$(SRCDIR)/TypeDescription.cc    \
   $(SRCDIR)/ProgressiveWarning.cc
