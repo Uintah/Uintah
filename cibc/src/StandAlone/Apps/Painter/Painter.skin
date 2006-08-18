@@ -6,6 +6,10 @@
   <var name="program_name" propagate="yes">V.A.S.T.</var>
   <var name="full_program_name" propagate="yes">Visualization And Segmentation Tool 0.3</var>
 
+  <var name="Painter::brush_radius" propagate="yes">5.0</var>
+  <var name="Painter::brush_softness" propagate="yes">0.0</var>
+  <var name="Painter::brush_value" propagate="yes">256.0</var>
+
 
   <var name="ITKCurvatureAnisotropicDiffusionImageFilterTool::numberOfIterations" propagate="yes">5</var>
   <var name="ITKCurvatureAnisotropicDiffusionImageFilterTool::timeStep" propagate="yes">0.0625</var>
@@ -94,9 +98,11 @@
   <xi:include href="VCRControls.skin" parse="xml"/>
   <xi:include href="ITKThresholdDialog.skin" parse="xml"/>
   <xi:include href="LabeledGradientBackground.skin" parse="xml"/>
+  <xi:include href="BrushToolDialog.skin" parse="xml"/>
   <xi:include href="Tools.skin" parse="xml"/>
   <xi:include href="Splash.skin" parse="xml"/>
   <xi:include href="ResampleDialog.skin" parse="xml"/>
+  <xi:include href="CropToolDialog.skin" parse="xml"/>
   <xi:include href="ITKCurvatureAnisotropicDiffusionImageFilterToolDialog.skin" parse="xml"/>
   <xi:include href="ITKConfidenceConnectedImageFilterToolDialog.skin" parse="xml"/>
        
@@ -177,6 +183,11 @@
     <var name="variable-9-begin">0</var>
     <var name="variable-9-end">225</var>      
     <var name="Animation::variable-9" propagate="yes">0</var>
+
+    <var name="variable-10-seconds">0.25</var>
+    <var name="variable-10-begin">0</var>
+    <var name="variable-10-end">225</var>      
+    <var name="Animation::variable-10" propagate="yes">0</var>
     
 
     <object class="Painter">
@@ -258,7 +269,7 @@
 
 
         <object class="Grid" id="MainGrid">
-          <var name="rows">10</var>
+          <var name="rows">11</var>
           <var name="cols">1</var>
 
 
@@ -363,15 +374,22 @@
             <var name="cell-height">$Animation::variable-7</var>
           </object>
 
-          <object class="ResampleDialog">
+          <object class="BrushToolDialog">
             <var name="row">9</var>
             <var name="col">1</var>
             <var name="cell-height">$Animation::variable-9</var>
           </object>
+
+          <object class="CropToolDialog">
+            <var name="row">10</var>
+            <var name="col">1</var>
+            <var name="cell-height">$Animation::variable-10</var>
+          </object>
+          
           
 
           <object class="Grid">
-            <var name="row">10</var>
+            <var name="row">11</var>
             <var name="col">1</var>
 
             <var name="rows">1</var>

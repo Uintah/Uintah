@@ -93,7 +93,7 @@
                 target="Painter::StartBrushTool"/>
         <signal name="Button::clicked"
                 target="Animation::AnimateVariableAscending">
-          <var name="varnum">3</var>
+          <var name="varnum">9</var>
         </signal>                        
       </object>
 
@@ -107,7 +107,7 @@
         
         <signal name="Button::clicked"
                 target="Animation::AnimateVariableAscending">
-          <var name="varnum">3</var>
+          <var name="varnum">10</var>
         </signal>
         
       </object>

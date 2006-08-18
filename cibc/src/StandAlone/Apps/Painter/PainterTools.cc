@@ -467,6 +467,7 @@ Painter::CropTool::CropTool(Painter *painter) :
   minmax_[0] = vector<int>(minmax_[1].size(), 0);
   pick_minmax_[0] = minmax_[0];
   pick_minmax_[1] = minmax_[1];
+  update_to_gui();
 }
 
 Painter::CropTool::~CropTool() {}
@@ -507,7 +508,7 @@ Painter::CropTool::pointer_motion
       }
     }
   }
-  
+  update_to_gui();
   painter_->redraw_all();
   return STOP_E;
 }
@@ -554,6 +555,7 @@ Painter::CropTool::pointer_up
         SWAP(minmax_[0][a],minmax_[1][a]);
     
     pick_ = 0;
+    update_to_gui();
     return STOP_E;
   }
   return CONTINUE_E;
@@ -580,6 +582,19 @@ Painter::CropTool::process_event(event_handle_t event)
   return CONTINUE_E;
 }
 
+
+void
+Painter::CropTool::update_to_gui()
+{
+  Skinner::Variables *vars = painter_->get_vars();
+  vars->insert("Painter::crop::min::x", to_string(minmax_[0][1]), "string", true);
+  vars->insert("Painter::crop::min::y", to_string(minmax_[0][2]), "string", true);
+  vars->insert("Painter::crop::min::z", to_string(minmax_[0][3]), "string", true);
+
+  vars->insert("Painter::crop::max::x", to_string(minmax_[1][1]), "string", true);
+  vars->insert("Painter::crop::max::y", to_string(minmax_[1][2]), "string", true);
+  vars->insert("Painter::crop::max::z", to_string(minmax_[1][3]), "string", true);
+}
 
 
 int
