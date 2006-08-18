@@ -429,6 +429,8 @@ private:
     void                finish();
     //    void                pick_mouse_motion(Event &);
     void                set_window_cursor(SliceWindow &window, int cursor);
+    void                update_to_gui();
+    void                update_from_gui();
     Painter *           painter_;
     int                 pick_;
     vector<int>         minmax_[2];

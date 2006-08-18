@@ -99,7 +99,11 @@ Painter::BrushTool::BrushTool(Painter *painter) :
   radius_(5.0),
   draw_cursor_(0)
 {
-  painter_->create_undo_volume();  
+  painter_->create_undo_volume();
+  if (painter_->current_volume_) {
+    value_ = painter_->current_volume_->clut_max_;
+    painter_->get_vars()->insert("Painter::brush_value", to_string(value_), "string", true);
+  }
 }
 
 
@@ -133,16 +137,16 @@ Painter::BrushTool::pointer_down(int b, int x, int y, unsigned int m, int t)
     return CONTINUE_E;
   }
 
+  if (m == EventModifiers::SHIFT_E) {
+    return CONTINUE_E;
+  }
 
   if (b == 1) {
+    radius_ = painter_->get_vars()->get_double("Painter::brush_radius");
     window_ = painter_->cur_window_;
     slice_ = window_->slice_map_[vol];
     if (!slice_) {
       return CONTINUE_E;
-    }
-
-    if (airIsNaN(value_)) {
-      value_ = painter_->current_volume_->clut_max_;
     }
 
     last_index_ = vol->world_to_index(painter_->pointer_pos_);
@@ -161,16 +165,22 @@ Painter::BrushTool::pointer_down(int b, int x, int y, unsigned int m, int t)
     vector<int> index = vol->world_to_index(painter_->pointer_pos_);
     if (vol->index_valid(index)) {
       vol->get_value(index, value_);
+      painter_->get_vars()->insert("Painter::brush_value", to_string(value_), "string", true);
     }
     painter_->redraw_all();    
     return STOP_E;
   } else if (b == 4) {
+    radius_ = painter_->get_vars()->get_double("Painter::brush_radius");
     radius_ *= 1.1;
+    painter_->get_vars()->insert("Painter::brush_radius", to_string(radius_), "string", true);
     draw_cursor_ = true;
     painter_->redraw_all();    
     return STOP_E;
   } else if (b == 5) {
+    radius_ = painter_->get_vars()->get_double("Painter::brush_radius");
     radius_ /= 1.1;
+    painter_->get_vars()->insert("Painter::brush_radius", to_string(radius_), "string", true);
+
     draw_cursor_ = true;
     painter_->redraw_all();
     return STOP_E;

@@ -1,7 +1,7 @@
 <definition class="SpinnerBox" xmlns:xi="http://www.w3.org/2001/XInclude">
 <object class="Root::Arithmetic">
-  <var name="ShadowedBox::inside" propagate="yes" overwrite="no">#333333FF</var>
   <object class="ShadowedBox">
+    <var name="ShadowedBox::inside" propagate="yes" overwrite="no">#333333FF</var>
     <var name="SpinnerBox::value" propagate="yes" overwrite="no">20</var>
     <var name="SpinnerBox::text_size" propagate="yes" overwrite="no">20</var>
     <var name="SpinnerBox::variable" propagate="yes" overwrite="no">SpinnerBox::value</var>
@@ -9,7 +9,7 @@
     <definition class="ShadowedBox::child">
       <object class="Root::Arithmetic">
         <object class="Root::FocusRegion">
-
+          <var name="FocusRegion::focused" propagate="yes">0</var>
           <signal name="FocusRegion::focus"
                   target="Arithmetic::set_value">
             <var name="variable">ShadowedBox::outside</var>
