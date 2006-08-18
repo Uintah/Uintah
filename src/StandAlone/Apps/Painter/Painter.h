@@ -89,6 +89,7 @@
 #include <Core/Skinner/Variables.h>
 #include <Core/Events/Tools/BaseTool.h>
 #include <Core/Events/Tools/ToolManager.h>
+#include <Core/Volume/Texture.h>
 
 #include <include/sci_defs/insight_defs.h>
 #ifdef HAVE_INSIGHT
@@ -644,6 +645,7 @@ private:
   typedef vector<BundleHandle> Bundles;
   Bundles               bundles_;
 
+  TextureHandle         volume_texture_;
   // Methods for drawing to the GL window
   void			redraw_all();
 

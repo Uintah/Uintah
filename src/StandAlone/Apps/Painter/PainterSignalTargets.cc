@@ -673,6 +673,14 @@ Painter::SetLayer(event_handle_t event) {
   return CONTINUE_E;
 }
 
+#if 0
+BaseTool::propagation_state_e 
+Painter::ReloadVolumeTexture(event_handle_t event) {
+  if (volume_texture_.get_rep())
+    volume_texture_->set_dirty(true);
+  return CONTINUE_E;
+}
+#endif
 
 
 BaseTool::propagation_state_e 
@@ -690,15 +698,11 @@ Painter::ShowVolumeRendering(event_handle_t event) {
 
   Nrrd *nrrd = volnrrd->nrrd_;
   
-  CompileInfoHandle ci =
-    NrrdTextureBuilderAlgo::get_compile_info(nrrd->type,nrrd->type);
-    
   const int card_mem = 128;
-  TextureHandle texture = new Texture;
-  NrrdTextureBuilderAlgo::build_static(texture, 
+  volume_texture_ = new Texture;
+  NrrdTextureBuilderAlgo::build_static(volume_texture_,
                                        nrrd_handle, 0, 255,
                                        0, 0, 255, card_mem);
-  
 
     
   const char *colormap = sci_getenv("PAINTER_CMAP2");
@@ -730,7 +734,7 @@ Painter::ShowVolumeRendering(event_handle_t event) {
   cmap2v->push_back(icmap);
 
   vector<Plane *> *planes = new vector<Plane *>;
-  VolumeRenderer *vol = new VolumeRenderer(texture, 
+  VolumeRenderer *vol = new VolumeRenderer(volume_texture_, 
                                            cmap, 
                                            *cmap2v, 
                                            *planes,
