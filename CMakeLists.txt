@@ -47,6 +47,27 @@ IF(WIN32)
 ENDIF(WIN32)
 
 #-----------------------------------------------------------------------------
+# SCIRUN build configuration options.
+# OPTION(ENABLE_SCI_MALLOC "Use SCI memory allocation/deallocation checks." OFF)
+# SET(SCIRUN_ENABLE_SCI_MALLOC ${ENABLE_SCI_MALLOC})
+# DV Fix checking bit of thirdparty with size of pointer check
+# sci_defs/bits_defs.h
+# DV clean up (if user tries to configure 64 bit machine to 32, flag error?)
+# DV also maybe need to add binary flags here
+# Set NBITS (64 or 32) based on the size of a void pointer.
+# Handle if machine defaults to one bit size but user is trying to do another
+IF(CMAKE_SIZEOF_VOID_P MATCHES  8)
+  SET(NBITS 64 CACHE INTERNAL "64 or 32 bit build")
+ELSE(CMAKE_SIZEOF_VOID_P MATCHES 8)
+  SET(NBITS 32 CACHE INTERNAL "64 or 32 bit build")
+ENDIF(CMAKE_SIZEOF_VOID_P MATCHES 8)
+SET (SCIRUN_ENABLE_64BIT 0 CACHE BOOL "Enable 64 bit build.")
+IF(${SCIRUN_ENABLE_64BIT})
+  SET(NBITS 64 CACHE INTERNAL "64 bit build")
+ENDIF(${SCIRUN_ENABLE_64BIT})
+MARK_AS_ADVANCED(SCIRUN_ENABLE_64BIT)
+
+#-----------------------------------------------------------------------------
 # SCIRun Thirdparty location
 INCLUDE(${PROJECT_SOURCE_DIR}/CMake/sciThirdparty.cmake)
 
@@ -223,7 +244,7 @@ SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${XML2_INCLUDE})
 
 #-----------------------------------------------------------------------------
 # Tcl/Tk
-SET(TK_VERSION 8.3.4)
+SET(TK_VERSION 8.3)
 
 #-----------------------------------------------------------------------------
 # ITK library
@@ -341,7 +362,7 @@ ENDIF(X11_FOUND)
 
 #-----------------------------------------------------------------------------
 # Glew
-FIND_LIBRARY(GLEW_LIBRARY GLEW
+FIND_LIBRARY(GLEW_LIBRARY GLEW glew32
              ${SCI_THIRDPARTY_DIR}/lib/
              /usr/local/lib
              /usr/lib
@@ -357,19 +378,22 @@ SET(DEF_GLEW "#define HAVE_GLEW 1")
 
 #-----------------------------------------------------------------------------
 # DV MPEG FROM 3P FOR NOW
-FIND_LIBRARY(MPEG_LIBRARY mpeg
-            ${SCI_THIRDPARTY_DIR}/lib/
-            /usr/local/lib
-            /usr/lib
-            /lib)
-FIND_PATH(MPEG_INCLUDE mpeg.h
-           ${SCIRUN_THIRDPARTY_PATH}/include
-           /usr/local/include
-           /usr/include
-           /include)
-SET(DEF_MPEG "#define HAVE_MPEG 1")
+# DV need to make this optional (at least for windows)
+IF(NOT WIN32)
+  FIND_LIBRARY(MPEG_LIBRARY mpeg
+              ${SCI_THIRDPARTY_DIR}/lib/
+              /usr/local/lib
+              /usr/lib
+              /lib)
+  FIND_PATH(MPEG_INCLUDE mpeg.h
+             ${SCIRUN_THIRDPARTY_PATH}/include
+             /usr/local/include
+             /usr/include
+             /include)
+  SET(DEF_MPEG "#define HAVE_MPEG 1")
 
-SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${MPEG_INCLUDE})
+  SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${MPEG_INCLUDE})
+ENDIF(NOT WIN32)
 
 #-----------------------------------------------------------------------------
 # Teem
@@ -384,27 +408,6 @@ ENDIF(TEEM_LIBRARY)
 # DV Fix hard coding of HAVE_GDCM
 SET(DEF_GDCM "#define HAVE_GDCM 0")
 
-
-#-----------------------------------------------------------------------------
-# SCIRUN build configuration options.
-# OPTION(ENABLE_SCI_MALLOC "Use SCI memory allocation/deallocation checks." OFF)
-# SET(SCIRUN_ENABLE_SCI_MALLOC ${ENABLE_SCI_MALLOC})
-# DV Fix checking bit of thirdparty with size of pointer check
-# sci_defs/bits_defs.h
-# DV clean up (if user tries to configure 64 bit machine to 32, flag error?)
-# DV also maybe need to add binary flags here
-# Set NBITS (64 or 32) based on the size of a void pointer.
-# Handle if machine defaults to one bit size but user is trying to do another
-IF(CMAKE_SIZEOF_VOID_P MATCHES  8)
-  SET(NBITS 64 CACHE INTERNAL "64 or 32 bit build")
-ELSE(CMAKE_SIZEOF_VOID_P MATCHES 8)
-  SET(NBITS 32 CACHE INTERNAL "64 or 32 bit build")
-ENDIF(CMAKE_SIZEOF_VOID_P MATCHES 8)
-SET (SCIRUN_ENABLE_64BIT 0 CACHE BOOL "Enable 64 bit build.")
-IF(${SCIRUN_ENABLE_64BIT})
-  SET(NBITS 64 CACHE INTERNAL "64 bit build")
-ENDIF(${SCIRUN_ENABLE_64BIT})
-MARK_AS_ADVANCED(SCIRUN_ENABLE_64BIT)
 
 # sci_defs/compile_defs.h
 # DV Not needed eventually?
