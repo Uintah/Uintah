@@ -498,7 +498,8 @@ CompNeoHookPlas::addComputesAndRequires(Task* ,
 
 double CompNeoHookPlas::computeRhoMicroCM(double pressure,
                                      const double p_ref,
-                                          const MPMMaterial* matl)
+                                     const MPMMaterial* matl,
+                                     const double maxvolstrain)
 {
   double rho_orig = matl->getInitialDensity();
   double bulk = d_initialData.Bulk;
@@ -520,7 +521,8 @@ double CompNeoHookPlas::computeRhoMicroCM(double pressure,
 void CompNeoHookPlas::computePressEOSCM(double rho_cur,double& pressure,
                                         double p_ref,  
                                         double& dp_drho, double& tmp,
-                                        const MPMMaterial* matl)
+                                        const MPMMaterial* matl,
+                                        const double maxvolstrain)
 {
   double bulk = d_initialData.Bulk;
   double rho_orig = matl->getInitialDensity();

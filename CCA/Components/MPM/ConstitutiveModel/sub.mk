@@ -10,6 +10,7 @@ SRCS     += \
 	$(SRCDIR)/ImplicitCM.cc 	       	\
 	$(SRCDIR)/MPMMaterial.cc              	\
         $(SRCDIR)/ShellMaterial.cc              \
+	$(SRCDIR)/CompNeoHookPlas.cc            \
 	$(SRCDIR)/SoilFoam.cc
 
 SUBDIRS := $(SRCDIR)/PlasticityModels
