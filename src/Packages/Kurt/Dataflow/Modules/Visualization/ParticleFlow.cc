@@ -62,6 +62,7 @@ private:
   GuiDouble gui_time_;
   GuiInt gui_nsteps_;
   GuiDouble gui_step_size_;
+  GuiInt gui_n_particles_;
   GuiInt gui_recompute_points_;
   GuiInt gui_freeze_particles_;
 
@@ -94,6 +95,7 @@ ParticleFlow::ParticleFlow(GuiContext* ctx)
     gui_time_(ctx->subVar("time"), -0.05),
     gui_nsteps_(ctx->subVar("nsteps"), 32),
     gui_step_size_(ctx->subVar("step-size"), 1.0),
+    gui_n_particles_(ctx->subVar("nparticles"), 1),
     gui_recompute_points_(ctx->subVar("recompute-points"), 0),
     gui_freeze_particles_(ctx->subVar("freeze-particles"), 0),
     gui_center_(ctx->subVar("center"), Point(0,0,0)),
@@ -247,6 +249,7 @@ void
   flow_ren_->set_step_size( gui_step_size_.get());
   flow_ren_->recompute_points( bool(gui_recompute_points_.get()));
   flow_ren_->freeze( bool( gui_freeze_particles_.get()));
+  flow_ren_->set_particle_exponent( gui_n_particles_.get() );
   gui_recompute_points_.set(0);  // default to false
   ColorMapHandle cmap;
   bool have_cmap = (icmap->get(cmap) && cmap.get_rep());

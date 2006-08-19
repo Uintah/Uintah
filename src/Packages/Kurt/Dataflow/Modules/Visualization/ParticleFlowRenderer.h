@@ -69,6 +69,7 @@ public:
   void set_nsteps( unsigned int n) { nsteps_ = n; }
   void set_step_size( double d ) { step_size_ = d; }
   void recompute_points( bool r ){ recompute_ = r; }
+  void set_particle_exponent( int e );
   void freeze( bool f ){ frozen_ = f; }
   void create_points(GLint w, GLint h);
   void reset(){ reset_ = true; }
@@ -120,6 +121,7 @@ private:
   GLSLShader *vshader_;
   
 
+  int particle_power_;
   GLint array_width_, array_height_; // 2D point array size...
 
   GLfloat *start_verts_; //orginal vertices
