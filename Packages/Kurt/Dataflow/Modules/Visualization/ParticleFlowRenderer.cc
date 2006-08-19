@@ -92,6 +92,7 @@ ParticleFlowRenderer::ParticleFlowRenderer() :
   fh_(0),
   di_(0),
   shader_(0),
+  particle_power_(4),
   array_width_(16),
   array_height_(16),
   start_verts_(0),
@@ -149,6 +150,7 @@ ParticleFlowRenderer::ParticleFlowRenderer(const ParticleFlowRenderer& copy):
   fh_(copy.fh_),
   di_(copy.di_),
   shader_(copy.shader_),
+  particle_power_(copy.particle_power_),
   array_width_(copy.array_width_),
   array_height_(copy.array_height_),
   start_verts_(copy.start_verts_),
@@ -238,6 +240,17 @@ ParticleFlowRenderer::update_time( double time )
 {
   time_ = time;
 }
+
+void 
+ParticleFlowRenderer::set_particle_exponent( int e )
+{ 
+  if( particle_power_ != e) {
+    recompute_ = true;
+    array_width_ = int( pow(2.0, e) );
+    array_height_ = int( pow(2.0, e) );
+    particle_power_ = e;
+  }
+}
  
 #ifdef SCI_OPENGL
 void 
@@ -267,7 +280,11 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
       // make sure there is an frame buffer object
       if( fb_ == 0) {
         fb_ = scinew Fbuffer(int(array_width_), int(array_height_));
+      } else {
+        delete fb_;
+        fb_ = scinew Fbuffer(int(array_width_), int(array_height_));
       }
+        
       CHECK_OPENGL_ERROR("");
       
       if ( !Fbuffer_configure() ){
@@ -283,6 +300,7 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
       
       // create_points for rendering
       create_points(array_width_, array_height_);
+      CHECK_OPENGL_ERROR("");
       
       //       cerr<<"Starting array values are:  \n";
       //       print_array(array_width_*array_height_, 4, start_verts_);
@@ -297,15 +315,18 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
         load_part_texture( 0, start_verts_);
         load_part_texture( 1, current_verts_);
         part_tex_dirty_ = false;
+      CHECK_OPENGL_ERROR("");
       }
       else {
         load_part_texture( 1, current_verts_);
+      CHECK_OPENGL_ERROR("");
       }
 
 
 
       if( flow_tex_dirty_ ){
         reload_flow_texture();
+      CHECK_OPENGL_ERROR("");
       }
       
 
@@ -702,11 +723,11 @@ ParticleFlowRenderer::create_points(GLint w, GLint h)
   GLfloat i, j;
 
   if (start_verts_ != 0) 
-    delete start_verts_;
+    delete [] start_verts_;
   if (current_verts_ != 0)
-    delete current_verts_;
+    delete [] current_verts_;
   if ( colors_ != 0 )
-    delete colors_;
+    delete [] colors_;
 
   start_verts_  = scinew GLfloat[w * h * 4];
   current_verts_  = scinew GLfloat[w * h * 4];
@@ -722,7 +743,7 @@ ParticleFlowRenderer::create_points(GLint w, GLint h)
       *vptr       = i;
       *(vptr + 1) = 0;
       *(vptr + 2) = j;
-      *(vptr + 3) = 0.75 + ((float) rand() / RAND_MAX) * 0.5;
+      *(vptr + 3) = 0.75 + ((float) rand() / RAND_MAX);// * 0.5;
       vptr += 4;
 
       *cvptr       = 0.0;
@@ -737,7 +758,7 @@ ParticleFlowRenderer::create_points(GLint w, GLint h)
       cptr += 3;
     }
   }
-  
+  part_tex_dirty_ = true;
 }
 
 
