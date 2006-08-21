@@ -39,7 +39,8 @@ WARNING
 
   class Simple_Burn : public ModelInterface {
   public:
-    Simple_Burn(const ProcessorGroup* myworld, ProblemSpecP& params);
+    Simple_Burn(const ProcessorGroup* myworld, const ProblemSpecP& params,
+                const ProblemSpecP& prob_spec);
     virtual ~Simple_Burn();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
@@ -106,8 +107,11 @@ WARNING
 
     const VarLabel* onSurfaceLabel;   // diagnostic labels
     const VarLabel* surfaceTempLabel;
+    const VarLabel* totalMassBurnedLabel;
+    const VarLabel* totalHeatReleasedLabel;
 
-    ProblemSpecP params;
+    ProblemSpecP d_params;
+    ProblemSpecP d_prob_spec;
     const Material* matl0;
     const Material* matl1;
     SimulationStateP d_sharedState;   
@@ -126,6 +130,16 @@ WARNING
           
     bool d_is_mpm_matl;  // Is matl 0 a mpm_matl?
     double d_cv_0;      //specific heat
+    // flags for the conservation test
+    
+    struct saveConservedVars{
+      bool onOff;
+      bool mass;
+      bool energy;
+     };
+     saveConservedVars* d_saveConservedVars;
+     
+     
     #define d_SMALL_NUM 1e-100
     #define d_TINY_RHO 1e-12
   };
