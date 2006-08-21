@@ -30,10 +30,10 @@
  * ComponentWizardDialog.cc
  *
  * Written by:
- *  <author>
+ *  Ashwin Deepak Swaminathan
  *  Scientific Computing and Imaging Institute
  *  University of Utah
- *  <date>
+ *  August 2006
  *
  */
 
@@ -167,7 +167,6 @@ void ComponentWizardDialog::Generate()
     }
   }
   std::string compName(componentName->GetValue());
-  //std::string compDir(std::string(GetLocation()) + compName);
   std::string compDir(GetLocation().c_str() + compName);
   ComponentWizardHelper newHelper(builder, compName, compDir, pp, up, isWithSidl);
   newHelper.createComponent();
@@ -197,7 +196,6 @@ bool ComponentWizardDialog::Validate()
       if (!(listofPorts->GetCellValue(i,1).empty() &&
             listofPorts->GetCellValue(i,2).empty() &&
             listofPorts->GetCellValue(i,3).empty())) {
-        //std::cout << "Incomplete entries\n";
         wxMessageBox(wxT("Incomplete Entries"), wxT("Create Component"),
                      wxOK | wxICON_INFORMATION, this);
         return FALSE;
@@ -208,7 +206,6 @@ bool ComponentWizardDialog::Validate()
       if (listofPorts->GetCellValue(i,1).empty() ||
           listofPorts->GetCellValue(i,2).empty() ||
           listofPorts->GetCellValue(i,3).empty()) {
-        //std::cout << "Incomplete Entries\n";
         wxMessageBox(wxT("Incomplete Entries"), wxT("Create Component"),
                      wxOK | wxICON_INFORMATION, this);
         return FALSE;
@@ -231,36 +228,20 @@ bool ComponentWizardDialog::Validate()
 // TODO: would it make sense to put common functionality from
 // OnAddProvidesPort and OnAddUsesPort in a helper funtion?
 
+
 void ComponentWizardDialog::OnAddProvidesPort(wxCommandEvent& event)
 {
-  AddPortDialog addpport(this,  wxID_ANY, "Add provides port", wxPoint(10, 20), wxSize(600, 600), wxRESIZE_BORDER);
-  if (addpport.ShowModal() == wxID_OK) {
-    bool emptyRowFlag = true;
-    // To find the number of rows - Checking for the first non empty row from the last
-    for (int i = listofPorts->GetNumberRows() - 1; (i >= 0) && (emptyRowFlag == true); i--) {
-      if (!(listofPorts->GetCellValue(i,0).empty() &&
-            listofPorts->GetCellValue(i,1).empty() &&
-            listofPorts->GetCellValue(i,2).empty() &&
-            listofPorts->GetCellValue(i,3).empty())) {
-        emptyRowFlag = false;
-        count_table = i+1;
-      }
-    }
-    count_table++;
-    int row = count_table - 1;
-    listofPorts->InsertRows(row,1);
-    listofPorts->SetCellValue(row,0,addpport.GetPortNameText());
-    listofPorts->SetCellValue(row,1,addpport.GetDataTypeText());
-    listofPorts->SetCellValue(row,2,addpport.GetDescriptionText());
-    listofPorts->SetCellValue(row,3,"ProvidesPort");
-  }
-
+  std::string portType("ProvidesPort");
+  addPort(portType);
 }
-
-
 void ComponentWizardDialog::OnAddUsesPort(wxCommandEvent& event)
 {
-  AddPortDialog addpport(this, wxID_ANY, "Add uses port", wxPoint(10, 20), wxSize(600, 600), wxRESIZE_BORDER);
+  std::string portType("UsesPort");
+  addPort(portType);
+}
+void ComponentWizardDialog::addPort(const std::string &portType)
+{
+  AddPortDialog addpport(this, wxID_ANY, std::string("Add")+portType, wxPoint(10, 20), wxSize(600, 600), wxRESIZE_BORDER);
   if (addpport.ShowModal() == wxID_OK) {
     bool emptyRowFlag = true;
     // To find the number of rows - Checking for the first non empty row from the last
@@ -279,10 +260,10 @@ void ComponentWizardDialog::OnAddUsesPort(wxCommandEvent& event)
     listofPorts->SetCellValue(row, 0, addpport.GetPortNameText());
     listofPorts->SetCellValue(row, 1, addpport.GetDataTypeText());
     listofPorts->SetCellValue(row, 2, addpport.GetDescriptionText());
-    listofPorts->SetCellValue(row, 3, "UsesPort");
+    listofPorts->SetCellValue(row, 3, portType);
   }
-}
 
+}
 // TODO: would it make sense to put common functionality from
 // OnRemoveProvidesPort and OnRemoveUsesPort in a helper funtion?
 
@@ -367,7 +348,7 @@ wxString ComponentWizardDialog::GetLocation()
   std::string path = location->GetValue();
   int end = path.length()-1;
   if (path.at(end) != '/') {
-    path.append(end,'/');
+    path.append(std::string("/"));
   }
   return path;
 }

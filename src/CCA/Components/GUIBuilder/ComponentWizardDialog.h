@@ -30,10 +30,10 @@
  * ComponentWizardDialog.h
  *
  * Written by:
- *  <author>
+ *  Ashwin Deepak Swaminathan  
  *  Scientific Computing and Imaging Institute
  *  University of Utah
- *  <date>
+ *  August 2006
  *
  */
 
@@ -92,6 +92,8 @@ public:
 private:
   std::string getTempDirName();
   std::string getCompDirName();
+  //Helper function to add a Provides port or Uses port
+  void addPort(const std::string &portType);
   wxTextCtrl  *componentName;
   wxTextCtrl *location;
   wxGrid *listofPorts;
