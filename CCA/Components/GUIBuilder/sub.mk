@@ -47,7 +47,7 @@ SRCS    += \
            $(SRCDIR)/XMLPathDialog.cc \
            $(SRCDIR)/FrameworkProxyDialog.cc \
            $(SRCDIR)/CodePreviewDialog.cc \
-           $(SRCDIR)/ComponentWizardHelper.cc
+           $(SRCDIR)/ComponentWizardHelper.cc 
 
 PSELIBS := \
            SCIRun Core/CCA/spec Core/CCA/PIDL \
