@@ -658,7 +658,6 @@ void MPMICE::scheduleInterpolatePAndGradP(SchedulerP& sched,
   Task* t=scinew Task("MPMICE::interpolatePAndGradP",
                       this, &MPMICE::interpolatePAndGradP);
   Ghost::GhostType  gac = Ghost::AroundCells;
-  t->requires(Task::OldDW, d_sharedState->get_delt_label());
   
   t->requires(Task::NewDW, MIlb->press_NCLabel,       press_matl,gac, NGN);
   t->requires(Task::NewDW, MIlb->cMassLabel,          mpm_matl,  gac, 1);
@@ -1127,9 +1126,6 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches,patch,"Doing interpolatePressureToParticles\t\t\t");
-
-    delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
 
     ParticleInterpolator* interpolator = d_mpm->flags->d_interpolator->clone(patch);
     vector<IntVector> ni(interpolator->size());
