@@ -405,14 +405,15 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  Load Model info.
   // If we are doing a restart, then use the "timestep.xml" 
-  if (materials_ps)
+  if (materials_ps){
     mat_ps = materials_ps;
-  else
+  }else{
     mat_ps = prob_spec;
+  }
   ModelMaker* modelMaker = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
   if(modelMaker){
 
-    modelMaker->makeModels(mat_ps, grid, sharedState, d_doAMR);
+    modelMaker->makeModels(mat_ps, prob_spec, grid, sharedState, d_doAMR);
     d_models = modelMaker->getModels();
     releasePort("ModelMaker");
     d_modelSetup = scinew ICEModelSetup();

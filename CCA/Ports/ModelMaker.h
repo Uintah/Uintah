@@ -52,7 +52,8 @@ WARNING
      virtual std::vector<ModelInterface*> getModels() = 0;
      //////////
      // Insert Documentation Here:
-     virtual void makeModels(const ProblemSpecP& params, 
+     virtual void makeModels(const ProblemSpecP& restart_ps, 
+                             const ProblemSpecP& prob_spec,
                              GridP& grid,
                              SimulationStateP& sharedState,
                              const bool doAMR) = 0;
