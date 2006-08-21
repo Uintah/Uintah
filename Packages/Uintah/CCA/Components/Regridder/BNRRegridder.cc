@@ -18,6 +18,7 @@ using namespace std;
 static DebugStream dbgpatches("BNRPatches",false);
 static DebugStream dbgstats("BNRStats",false);
 static DebugStream dbgtimes("BNRTimes",false);
+static DebugStream dbgflags("BNRFlags",false);
 
 BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task_count_(0),tola_(1),tolb_(1), patchfixer_(pg)
 {
@@ -63,6 +64,12 @@ BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task
   if(dbgpatches.active() && rank==0)
   {
      fout.open("patches.bin");
+     int flags;
+     if(dbgflags.active())
+      flags=1;
+     else
+      flags=0;
+     fout.write((char*)&flags,sizeof(int));
   }
 }
 
@@ -86,7 +93,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
   vector<set<IntVector> > coarse_flag_sets(oldGrid->numLevels());
   vector<vector <IntVector> > flag_sets;
 
-  if(dbgpatches.active())
+  if(dbgpatches.active() && dbgflags.active())
   {
     flag_sets.resize(oldGrid->numLevels());
   }
@@ -118,7 +125,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
         {
          coarse_flag_sets[l].insert(*ci*d_cellRefinementRatio[l]/d_minPatchSize);
          
-         if(dbgpatches.active())
+         if(dbgpatches.active() && dbgflags.active())
          {
             flag_sets[l].push_back(*ci);
          }
@@ -288,24 +295,27 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
   {
      if(d_myworld->myrank()==0)
      { 
-         //gather flags
-        //for each processors
-        for(int p=1;p<d_myworld->size();p++)
-        {
-           //for each level
-           for(unsigned int l=0;l<flag_sets.size();l++)
-           {
-              int numFlags;
-              MPI_Status status;
-              //recieve the number of flags they have
-              MPI_Recv(&numFlags,1,MPI_INT,p,0,MPI_COMM_WORLD,&status);
-              int size=flag_sets[l].size();
-              //resize vector
-              flag_sets[l].resize(size+numFlags);
-              //recieve the flags
-              MPI_Recv(&flag_sets[l][size],sizeof(IntVector)*numFlags,MPI_BYTE,p,1,MPI_COMM_WORLD,&status);
-           }
-         }
+        if(dbgflags.active())
+        { 
+          //gather flags
+          //for each processors
+          for(int p=1;p<d_myworld->size();p++)
+          {
+            //for each level
+            for(unsigned int l=0;l<flag_sets.size();l++)
+            {
+                int numFlags;
+                MPI_Status status;
+                //recieve the number of flags they have
+                MPI_Recv(&numFlags,1,MPI_INT,p,0,MPI_COMM_WORLD,&status);
+                int size=flag_sets[l].size();
+                //resize vector
+                flag_sets[l].resize(size+numFlags);
+                //recieve the flags
+                MPI_Recv(&flag_sets[l][size],sizeof(IntVector)*numFlags,MPI_BYTE,p,1,MPI_COMM_WORLD,&status);
+             }
+          }
+        }
         writeGrid(newGrid,flag_sets);
      }
      else
@@ -693,9 +703,9 @@ void BNRRegridder::AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVect
     //add saftey layer and convert from coarse coordinates to real coordinates on the coarser level
     IntVector low = (patches[p].low*d_minPatchSize-d_minBoundaryCells)/d_cellRefinementRatio[level]/d_cellRefinementRatio[level-1];
     IntVector high;
-    high[0] = ceil((patches[p].high[0]*d_minPatchSize[0]+d_minBoundaryCells[0])/(float)d_cellRefinementRatio[level][0]/d_cellRefinementRatio[level-1][0]);
-    high[1] = ceil((patches[p].high[1]*d_minPatchSize[1]+d_minBoundaryCells[1])/(float)d_cellRefinementRatio[level][1]/d_cellRefinementRatio[level-1][1]);
-    high[2] = ceil((patches[p].high[2]*d_minPatchSize[2]+d_minBoundaryCells[2])/(float)d_cellRefinementRatio[level][2]/d_cellRefinementRatio[level-1][2]);
+    high[0] = (int)ceil((patches[p].high[0]*d_minPatchSize[0]+d_minBoundaryCells[0])/(float)d_cellRefinementRatio[level][0]/d_cellRefinementRatio[level-1][0]);
+    high[1] = (int)ceil((patches[p].high[1]*d_minPatchSize[1]+d_minBoundaryCells[1])/(float)d_cellRefinementRatio[level][1]/d_cellRefinementRatio[level-1][1]);
+    high[2] = (int)ceil((patches[p].high[2]*d_minPatchSize[2]+d_minBoundaryCells[2])/(float)d_cellRefinementRatio[level][2]/d_cellRefinementRatio[level-1][2]);
      
     //clamp low and high points to domain boundaries 
     for(int d=0;d<3;d++)
@@ -763,12 +773,15 @@ void BNRRegridder::writeGrid(Grid* grid,vector<vector<IntVector> > flag_sets)
       fout.write((char*)&high,sizeof(IntVector));
 
     }
-    int numFlags=flag_sets[l].size();
-    //write number of flags
-    fout.write((char*)&numFlags,sizeof(int));
-    //write flags
-    if(numFlags>0)
-      fout.write((char*)&flag_sets[l][0],sizeof(IntVector)*numFlags);
+    if(dbgflags.active())
+    {
+      int numFlags=flag_sets[l].size();
+      //write number of flags
+      fout.write((char*)&numFlags,sizeof(int));
+      //write flags
+      if(numFlags>0)
+        fout.write((char*)&flag_sets[l][0],sizeof(IntVector)*numFlags);
+    }
   }
   fout.flush();
 }
