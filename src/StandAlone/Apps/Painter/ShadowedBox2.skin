@@ -18,7 +18,7 @@
         <var name="rows">3</var>
         <var name="cols">3</var>
         
-        <object class="Gradient">
+        <object class="Root::Arc">
           <var name="row">1</var>
           <var name="col">1</var>
           <var name="cell-height">$border-size2</var>
@@ -28,7 +28,6 @@
           <var name="se-color">$ShadowedBox::inside</var>
           <var name="nw-color">$ShadowedBox::outside</var>
           <var name="sw-color">$ShadowedBox::outside</var>
-          <var name="backslash">0</var>
         </object>
         
         
@@ -40,17 +39,17 @@
           <var name="bottom-color">$ShadowedBox::inside</var>
         </object>
         
-        <object class="Gradient">
+        <object class="Root::Arc">
           <var name="row">1</var>
           <var name="col">3</var>
           <var name="cell-height">$border-size2</var>
           <var name="cell-width">$border-size1</var>
+
           <var name="anchor">SW</var>
           <var name="ne-color">$ShadowedBox::outside</var>
           <var name="sw-color">$ShadowedBox::inside</var>
           <var name="nw-color">$ShadowedBox::outside</var>
           <var name="se-color">$ShadowedBox::outside</var>
-          <var name="backslash">1</var>
         </object>
         
         
@@ -80,7 +79,7 @@
         </object>
 
         
-        <object class="Gradient">
+        <object class="Root::Arc">
           <var name="row">3</var>
           <var name="col">1</var>
 
@@ -91,7 +90,6 @@
           <var name="ne-color">$ShadowedBox::inside</var>
           <var name="nw-color">$ShadowedBox::outside</var>
           <var name="se-color">$ShadowedBox::outside</var>
-          <var name="backslash">1</var>
         </object>
 
         <object class="Gradient">
@@ -102,7 +100,7 @@
           <var name="top-color">$ShadowedBox::inside</var>
         </object>
         
-        <object class="Gradient">
+        <object class="Root::Arc">
           <var name="row">3</var>
           <var name="col">3</var>
 
@@ -113,7 +111,6 @@
           <var name="nw-color">$ShadowedBox::inside</var>
           <var name="ne-color">$ShadowedBox::outside</var>
           <var name="sw-color">$ShadowedBox::outside</var>
-          <var name="backslash">0</var>
         </object>
       </object>
 
