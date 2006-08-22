@@ -36,7 +36,7 @@
 #include <Core/Skinner/Animation.h>
 #include <Core/Skinner/Box.h>
 #include <Core/Skinner/Collection.h>
-#include <Core/Skinner/Colormap1D.h>
+#include <Core/Skinner/ColorMap1D.h>
 #include <Core/Skinner/Frame.h>
 #include <Core/Skinner/Window.h>
 #include <Core/Skinner/Gradient.h>
