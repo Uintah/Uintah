@@ -69,9 +69,9 @@ void ModelFactory::makeModels(const ProblemSpecP& restart_prob_spec,
     else if(type == "Simple_Burn")
       d_models.push_back(scinew Simple_Burn(d_myworld, model_ps, prob_spec));
     else if(type == "Steady_Burn")
-      d_models.push_back(scinew Steady_Burn(d_myworld, model_ps));
+      d_models.push_back(scinew Steady_Burn(d_myworld, model_ps, prob_spec));
     else if(type == "Unsteady_Burn")
-      d_models.push_back(scinew Unsteady_Burn(d_myworld, model_ps));
+      d_models.push_back(scinew Unsteady_Burn(d_myworld, model_ps, prob_spec));
     else if(type == "IandG")
       d_models.push_back(scinew IandG(d_myworld, model_ps));
     else if(type == "JWLpp")
