@@ -31,7 +31,7 @@
 
 
 #include <Core/Skinner/Variables.h>
-#include <Core/Skinner/Colormap1D.h>
+#include <Core/Skinner/ColorMap1D.h>
 #include <Core/Events/EventManager.h>
 #include <sci_gl.h>
 

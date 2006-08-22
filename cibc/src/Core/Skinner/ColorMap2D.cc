@@ -31,18 +31,11 @@
 //    Author : McKay Davis (Skinner Drawable conversion)
 //    Date   : Thu Jul  8 01:50:58 2004
 
-#include <Dataflow/Network/Module.h>
+#include <Core/Skinner/ColorMap2D.h>
 #include <Core/Containers/StringUtil.h>
-
-#include <sci_defs/ogl_defs.h>
-#include <sci_gl.h>
-#include <sci_glu.h>
-#include <sci_glx.h>
-
-#include <Core/Volume/CM2Shader.h>
-#include <Core/Volume/CM2Widget.h>
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Geom/ColorMap.h>
+#include <sci_gl.h>
 
 #include <stack>
 #include <set>
@@ -62,7 +55,6 @@ namespace SCIRun {
     ColorMap2D::ColorMap2D(Variables *variables)
       : Parent(variables),        
         widgets_(),
-        colormap_widgets_(),
         undo_stack_(),
         shader_factory_(0),
         colormap_texture_(256, 512, 4),
@@ -70,18 +62,17 @@ namespace SCIRun {
         histo_dirty_(true), 
         histogram_texture_id_(0),
         cmap_dirty_(true), 
-        colormap_texture_id_(0),
         mouse_widget_(-1),
         mouse_object_(0),
         paint_widget_(0),
         first_motion_(true),
         mouse_last_x_(0),
         mouse_last_y_(0),
-        pan_x_(get_ctx()->subVar("panx")),
-        pan_y_(get_ctx()->subVar("pany")),
-        scale_(get_ctx()->subVar("scale_factor")),
+        pan_x_(0),
+        pan_y_(0),
+        scale_(1),
         updating_(false),
-        value_range_(0.0, -1.0),
+        value_range_(0.0, -1.0)
     {
     }
 
@@ -90,13 +81,6 @@ namespace SCIRun {
     {
       if (shader_factory_) 
         delete shader_factory_;
-    }
-
-    void
-    ColorMap2D::force_execute()
-    {
-      force_execute_ = true;
-      want_to_execute();
     }
 
     void

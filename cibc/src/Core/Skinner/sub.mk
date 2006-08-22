@@ -41,7 +41,7 @@ SRCS     += \
 	$(SRCDIR)/Box.cc		\
 	$(SRCDIR)/Collection.cc	    	\
 	$(SRCDIR)/Color.cc	    	\
-	$(SRCDIR)/Colormap1D.cc	    	\
+	$(SRCDIR)/ColorMap1D.cc	    	\
 	$(SRCDIR)/Drawable.cc    	\
 	$(SRCDIR)/Frame.cc	    	\
 	$(SRCDIR)/FocusRegion.cc    	\
