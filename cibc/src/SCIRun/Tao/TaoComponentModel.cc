@@ -53,7 +53,7 @@
 
 namespace SCIRun {
 
-const std::string TaoComponentModel::DEFAULT_PATH("/CCA/Components/TAO/xml");
+const std::string TaoComponentModel::DEFAULT_XML_PATH("/CCA/Components/TAO/xml");
 
 
 TaoComponentModel::TaoComponentModel(SCIRunFramework* framework,

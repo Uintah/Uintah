@@ -30,7 +30,7 @@ GENERAL INFORMATION
    Copyright (C) 2000 SCI Group
 
 KEYWORDS
-   NormalForceBC
+p   NormalForceBC
 
 DESCRIPTION
    Long description...

@@ -274,8 +274,8 @@ void SpecificationList::emit(std::ostream& out, std::ostream& hdr,
   out << "#include <Core/CCA/PIDL/TypeInfo.h>\n";
   out << "#include <Core/CCA/PIDL/TypeInfo_internal.h>\n";
   out << "#include <Core/CCA/PIDL/PIDL.h>\n";
-  out << "#include <Core/CCA/Comm/Message.h>\n";
-  out << "#include <Core/CCA/Comm/PRMI.h>\n";
+  out << "#include <Core/CCA/PIDL/Message.h>\n";
+  out << "#include <Core/CCA/PIDL/PRMI.h>\n";
   out << "#include <Core/CCA/PIDL/MxNScheduler.h>\n";
   out << "#include <Core/CCA/PIDL/MxNArrSynch.h>\n";
   out << "#include <Core/CCA/PIDL/MxNMetaSynch.h>\n";

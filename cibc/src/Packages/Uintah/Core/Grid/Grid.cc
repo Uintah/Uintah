@@ -274,7 +274,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
               Vector newspacing = (upper-lower)/resolution;
               if(have_patchspacing){
                 Vector diff = spacing-newspacing;
-                if(diff.length() > 1.e-6)
+                if(diff.length() > 1.e-15)
                    throw ProblemSetupException("Using patch resolution, and the patch spacings are inconsistent",
                                                __FILE__, __LINE__);
               } else {
@@ -289,8 +289,8 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         throw ProblemSetupException("Box resolution is not specified", __FILE__, __LINE__);
 
       LevelP level = addLevel(anchor, spacing);
-      IntVector anchorCell(level->getCellIndex(levelAnchor + Vector(1.e-6,1.e-6,1.e-6)));
-      IntVector highPointCell(level->getCellIndex(levelHighPoint + Vector(1.e-6,1.e-6,1.e-6)));
+      IntVector anchorCell(level->getCellIndex(levelAnchor + Vector(1.e-15,1.e-15,1.e-15)));
+      IntVector highPointCell(level->getCellIndex(levelHighPoint + Vector(1.e-15,1.e-15,1.e-15)));
 
       // second pass - set up patches and cells
       for(ProblemSpecP box_ps = level_ps->findBlock("Box");
@@ -300,13 +300,13 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         Point upper;
         box_ps->require("upper", upper);
         
-        IntVector lowCell = level->getCellIndex(lower+Vector(1.e-6,1.e-6,1.e-6));
-        IntVector highCell = level->getCellIndex(upper+Vector(1.e-6,1.e-6,1.e-6));
+        IntVector lowCell = level->getCellIndex(lower+Vector(1.e-15,1.e-15,1.e-15));
+        IntVector highCell = level->getCellIndex(upper+Vector(1.e-15,1.e-15,1.e-15));
         Point lower2 = level->getNodePosition(lowCell);
         Point upper2 = level->getNodePosition(highCell);
         double diff_lower = (lower2-lower).length();
         double diff_upper = (upper2-upper).length();
-        if(diff_lower > 1.e-6) {
+        if(diff_lower > 1.e-15) {
           cerr << "lower=" << lower << '\n';
           cerr << "lowCell =" << lowCell << '\n';
           cerr << "highCell =" << highCell << '\n';
@@ -315,7 +315,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
           
           throw ProblemSetupException("Box lower corner does not coincide with grid", __FILE__, __LINE__);
         }
-        if(diff_upper > 1.e-6){
+        if(diff_upper > 1.e-15){
           cerr << "upper=" << upper << '\n';
           cerr << "lowCell =" << lowCell << '\n';
           cerr << "highCell =" << highCell << '\n';

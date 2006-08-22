@@ -55,20 +55,21 @@ namespace SCIRun {
 
 /** \class BabelCCAGoPort
  *
- *
+ * Intermediary between a Babel component model GoPort and a CCA component model GoPort.
  */
 class BabelCCAGoPort : public virtual sci::cca::ports::GoPort
 {
 public:
   BabelCCAGoPort(const UCXX ::gov::cca::ports::GoPort &port);
   virtual int go();
+
 private:
   UCXX ::gov::cca::ports::GoPort port;
 };
 
 /** \class BabelCCAUIPort
  *
- *
+ * Intermediary between a Babel component model UIPort and a CCA component model UIPort.
  */
 class BabelCCAUIPort : public virtual sci::cca::ports::UIPort
 {
@@ -105,9 +106,11 @@ public:
       SCIRunFramework::Services. */
   UCXX ::gov::cca::Port getPort(const std::string& name);
 
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   UCXX ::gov::cca::Port getPortNonblocking(const std::string& name);
+
 
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
@@ -117,10 +120,12 @@ public:
       SCIRunFramework::Services. */
   UCXX ::gov::cca::TypeMap createTypeMap();
 
+
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
   void registerUsesPort(const std::string& name, const std::string& type,
 			const UCXX ::gov::cca::TypeMap& properties);
+
 
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
@@ -137,10 +142,6 @@ public:
 
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
-  UCXX ::gov::cca::TypeMap getPortProperties(const std::string& portName);
-
-  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
-      SCIRunFramework::Services. */
   UCXX ::gov::cca::ComponentID getComponentID();
 
   /** ? */
@@ -148,6 +149,14 @@ public:
 
   /** ? */
   virtual PortInstanceIterator* getPorts();
+
+
+  /** A proxy method for gov::cca::Services.  Calls the corresponding method in
+      SCIRunFramework::Services. */
+//   UCXX ::gov::cca::TypeMap getPortProperties(const std::string& portName);
+  // these do nothing at the moment - implement after compiler changeover
+  virtual sci::cca::TypeMap::pointer getPortProperties(const std::string& /*portName*/);
+  virtual void setPortProperties(const std::string& /*portName*/, const sci::cca::TypeMap::pointer& /*tm*/) {}
 
 private:
   UCXX ::framework::Services svc;
@@ -168,8 +177,8 @@ private:
     Iterator& operator=(const Iterator&);
     //sci::cca::ComponentID::pointer cid;
   };
-
   UCXX ::gov::cca::Component component;
+
   BabelComponentInstance(const BabelComponentInstance&);
   BabelComponentInstance& operator=(const BabelComponentInstance&);
 };

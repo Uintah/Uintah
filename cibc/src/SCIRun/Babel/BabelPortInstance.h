@@ -94,10 +94,10 @@ public:
 
 private:
   //friend class BabelComponentInstance;
-
   PortType porttype;
   std::vector<PortInstance*> connections;
   SCIRun::Mutex lock_connections;
+
   std::string name;
   std::string type;
   UCXX ::gov::cca::TypeMap properties;
@@ -107,6 +107,10 @@ private:
 
   BabelPortInstance(const BabelPortInstance&);
   BabelPortInstance& operator=(const BabelPortInstance&);
+
+  // this will have to be updated
+  virtual sci::cca::TypeMap::pointer getProperties() { return sci::cca::TypeMap::pointer(0); }
+  virtual void setProperties(const sci::cca::TypeMap::pointer& tm) {}
 };
 
 } //namespace SCIRun

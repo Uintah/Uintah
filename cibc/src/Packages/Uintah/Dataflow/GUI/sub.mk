@@ -37,6 +37,7 @@ SRCS := \
 	$(SRCDIR)/VariablePlotter.tcl\
 	$(SRCDIR)/TensorToTensorConvertor.tcl\
 	$(SRCDIR)/UTextureBuilder.tcl\
+	$(SRCDIR)/UdaScale.tcl\
 #[INSERT NEW TCL FILE HERE]
 #	$(SRCDIR)/EigenEvaluator.tcl\
 #	$(SRCDIR)/ParticleEigenEvaluator.tcl\

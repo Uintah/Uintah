@@ -28,7 +28,7 @@
 
 
 /*
- *  ComponentInstance.h: 
+ *  ComponentInstance.h:
  *
  *  Written by:
  *   Steven G. Parker
@@ -66,9 +66,9 @@ class ComponentInstance
 {
 public:
   ComponentInstance(SCIRunFramework* framework,
-                    const std::string& instanceName,
-                    const std::string& className,
-                    const sci::cca::TypeMap::pointer& tm);
+		    const std::string& instanceName,
+		    const std::string& className,
+		    const sci::cca::TypeMap::pointer& tm);
   virtual ~ComponentInstance();
 
   /** The framework to which this component instance belongs, i.e. the
@@ -82,6 +82,21 @@ public:
   /** Returns the list of ports associated with this component. */
   virtual PortInstanceIterator* getPorts() = 0;
 
+  /** Returns the complete list of the properties for a Port.
+   * These may include properties set when the port is registered and
+   * properties set by the framework.
+   * Properties will include the following:
+   * <pre>
+   *     key             standard values
+   * cca.portName      port registration name (string)
+   * cca.portType      port registration type (string)
+   * </pre>
+   */
+  virtual sci::cca::TypeMap::pointer getPortProperties(const std::string& portName) = 0;
+
+  /** Sets the port properties associated with this component. */
+  virtual void setPortProperties(const std::string& portName, const sci::cca::TypeMap::pointer&) = 0;
+
   inline void
   setInstanceName(const std::string &name) { instanceName = name; }
 
@@ -90,10 +105,10 @@ public:
 
   inline std::string
   getClassName() const { return className; }
-        
+
   inline sci::cca::TypeMap::pointer&
   getComponentProperties() { return properties; }
-        
+
   void
   setComponentProperties(const sci::cca::TypeMap::pointer &tm);
 

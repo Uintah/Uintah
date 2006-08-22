@@ -91,7 +91,7 @@ using namespace SCIRun;
 
 
 
-void
+static void
 bubble_sort (float *list, int n)
 {
   float tmp;
@@ -109,7 +109,8 @@ bubble_sort (float *list, int n)
     }
 }
 
-int
+
+static int
 distmap_4ssed( int *map, int n[2] )
 {
   /*=======================================================================
@@ -284,6 +285,27 @@ distmap_4ssed( int *map, int n[2] )
 
 
 
+MRITissueClassifier::MRITissueClassifier (GuiContext *ctx) :
+  Module("MRITissueClassifier",ctx,Filter,"Segmentation","Teem"),
+  gui_max_iter_(get_ctx()->subVar("maxIter")),
+  gui_min_change_(get_ctx()->subVar("minChange")),
+  gui_pixel_dim_(get_ctx()->subVar("pixelDim")),
+  gui_slice_thickness_(get_ctx()->subVar("sliceThickness")),
+  gui_top_(get_ctx()->subVar("top")),
+  gui_anterior_(get_ctx()->subVar("anterior")),
+  gui_eyes_visible_(get_ctx()->subVar("eyesVisible")),
+  generation_(4)
+    
+{
+}
+
+
+
+MRITissueClassifier::~MRITissueClassifier()
+{
+}
+
+
 /*
  * We use ParameterFile classin vispack to read arguments. This is passed 
  * on to the constructor for the class MRITissueClassifier. The 
@@ -302,21 +324,13 @@ void
 MRITissueClassifier::execute()
 {
   update_state(Module::Executing);
-  NrrdIPort *T1port = (NrrdIPort*)get_iport("T1"); 
-  NrrdIPort *T2port = (NrrdIPort*)get_iport("T2"); 
-  NrrdIPort *PDport = (NrrdIPort*)get_iport("PD"); 
-  NrrdIPort *FSport = (NrrdIPort*)get_iport("FATSAT");
-  NrrdOPort *OutPort = (NrrdOPort *)get_oport("Tissue");
 
   update_state(Module::NeedData);
-  if (!T1port->get(m_T1_Data) || !m_T1_Data.get_rep() ||
-      !T2port->get(m_T2_Data) || !m_T2_Data.get_rep() ||
-      !PDport->get(m_PD_Data) || !m_PD_Data.get_rep())
-  {
-    return;
-  }
 
-  m_FatSat = (FSport->get(m_FATSAT_Data) && m_FATSAT_Data.get_rep())?1:0;
+  if (!get_input_handle("T1", m_T1_Data)) return;
+  if (!get_input_handle("T2", m_T2_Data)) return;
+  if (!get_input_handle("PD", m_PD_Data)) return;
+  m_FatSat = get_input_handle("FATSAT", m_FATSAT_Data, false);
 
   if (generation_[0] != m_T1_Data.get_rep()->generation ||
       generation_[1] != m_T2_Data.get_rep()->generation ||
@@ -438,31 +452,11 @@ MRITissueClassifier::execute()
       m_Label = temp;
     }
   }
-  OutPort->send(m_Label);
+  
+  send_output_handle("Tissue", m_Label, true);
 
   update_state(Module::Completed);
 }
-
-
-MRITissueClassifier::~MRITissueClassifier()
-{
-}
-
-
-MRITissueClassifier::MRITissueClassifier (GuiContext *ctx) :
-  Module("MRITissueClassifier",ctx,Filter,"Segmentation","Teem"),
-  gui_max_iter_(get_ctx()->subVar("maxIter")),
-  gui_min_change_(get_ctx()->subVar("minChange")),
-  gui_pixel_dim_(get_ctx()->subVar("pixelDim")),
-  gui_slice_thickness_(get_ctx()->subVar("sliceThickness")),
-  gui_top_(get_ctx()->subVar("top")),
-  gui_anterior_(get_ctx()->subVar("anterior")),
-  gui_eyes_visible_(get_ctx()->subVar("eyesVisible")),
-  generation_(4)
-    
-{
-}
-
 
 
 void
@@ -869,6 +863,7 @@ MRITissueClassifier::EyeDetection()
   free (maxr);
 }
 
+
 float
 MRITissueClassifier::Compute2ClassThreshold (float *p, float *v, int n)
 {
@@ -890,12 +885,12 @@ MRITissueClassifier::Compute2ClassThreshold (float *p, float *v, int n)
     }
 }
 
+
 void
 MRITissueClassifier::Clear1DHistogram (int *hist, int n)
 {
   for (int i = 0; i<n; i++) hist[i]=0;
 }
-
 
 
 // data is assumed to be a 3d nrrd of floats
@@ -921,10 +916,12 @@ MRITissueClassifier::Accumulate1DHistogram (float *upperlims, int *hist,
 }
 
 void
-MRITissueClassifier::Accumulate1DHistogramWithLabel (float *upperlims, int *hist,
+MRITissueClassifier::Accumulate1DHistogramWithLabel (float *upperlims,
+                                                     int *hist,
 						     int n, int m,
 						     int lx, int ly, int lz,
-						     int hx, int hy, int hz, int label)
+						     int hx, int hy, int hz,
+                                                     int label)
 {
   ASSERT(0);
   // n is the size of hist
@@ -947,7 +944,8 @@ MRITissueClassifier::Accumulate1DHistogramWithLabel (float *upperlims, int *hist
 
 // data is assumed to be a 3d nrrd of floats
 void
-MRITissueClassifier::Accumulate1DHistogramWithLabel (float *upperlims, int *hist,
+MRITissueClassifier::Accumulate1DHistogramWithLabel (float *upperlims,
+                                                     int *hist,
 						     int n,
 						     NrrdDataHandle data,
 						     int lx, int ly, int lz,
@@ -968,9 +966,11 @@ MRITissueClassifier::Accumulate1DHistogramWithLabel (float *upperlims, int *hist
 	}
 }
 
+
 float*
 MRITissueClassifier::EM1DWeighted (float *data, float *weight, int n,
-				   int c, float *mean, float *prior, float *var)
+				   int c, float *mean, float *prior,
+                                   float *var)
 {
   // n is length of data
   // c is number of classes
@@ -1071,10 +1071,15 @@ MRITissueClassifier::EM1DWeighted (float *data, float *weight, int n,
   return prob;
 }
 
-float *MRITissueClassifier::EM_CSF_GM_WM (ColumnMatrix &CSF_mean, DenseMatrix &CSF_cov, float *CSF_prior,
-					  ColumnMatrix &GM_mean, DenseMatrix &GM_cov, float *GM_prior,
-					  ColumnMatrix &WM_mean, DenseMatrix &WM_cov, float *WM_prior,
-					  int label)
+
+float *
+MRITissueClassifier::EM_CSF_GM_WM (ColumnMatrix &CSF_mean,
+                                   DenseMatrix &CSF_cov, float *CSF_prior,
+                                   ColumnMatrix &GM_mean, DenseMatrix &GM_cov,
+                                   float *GM_prior,
+                                   ColumnMatrix &WM_mean, DenseMatrix &WM_cov,
+                                   float *WM_prior,
+                                   int label)
 {
   int x, y, z, n, flag, it, j, k, flops, memrefs;    
   ColumnMatrix CSF_meanp, GM_meanp, WM_meanp;
@@ -1260,9 +1265,13 @@ float *MRITissueClassifier::EM_CSF_GM_WM (ColumnMatrix &CSF_mean, DenseMatrix &C
   return prob;
 }
 
+
 float *
-MRITissueClassifier::EM_Muscle_Fat (ColumnMatrix &Muscle_mean, DenseMatrix &Muscle_cov, float *Muscle_prior,
-				    ColumnMatrix &Fat_mean, DenseMatrix &Fat_cov, float *Fat_prior,
+MRITissueClassifier::EM_Muscle_Fat (ColumnMatrix &Muscle_mean,
+                                    DenseMatrix &Muscle_cov,
+                                    float *Muscle_prior,
+				    ColumnMatrix &Fat_mean,
+                                    DenseMatrix &Fat_cov, float *Fat_prior,
 				    int label, int dim)
 {
   int x, y, z, n, flag, it, j, k, flops, memrefs;    
@@ -1441,6 +1450,7 @@ MRITissueClassifier::EM_Muscle_Fat (ColumnMatrix &Muscle_mean, DenseMatrix &Musc
   
   return prob;
 }
+
 
 void
 MRITissueClassifier::BackgroundDetection ()
@@ -1677,6 +1687,7 @@ MRITissueClassifier::BackgroundDetection ()
   }
 }
 
+
 void
 MRITissueClassifier::ComputeForegroundCenter ()
 {
@@ -1742,6 +1753,7 @@ MRITissueClassifier::ComputeForegroundCenter ()
   free(meanx);
   free(meany);
 }
+
 
 void
 MRITissueClassifier::FatDetection_NOFATSAT (float maskr)
@@ -1941,6 +1953,7 @@ MRITissueClassifier::FatDetection_NOFATSAT (float maskr)
     }
 }
 
+
 void
 MRITissueClassifier::FatDetection_FATSAT ()
 {
@@ -2061,6 +2074,7 @@ MRITissueClassifier::FatDetection_FATSAT ()
 	    set_nrrd_int(m_Label, T_FAT, x,y,z);
     }
 }
+
 
 void
 MRITissueClassifier::BrainDetection (float maskr, float maskr2)
@@ -2587,6 +2601,7 @@ MRITissueClassifier::BrainDetection (float maskr, float maskr2)
   FindTemporalLobes(); 
 }
 
+
 void
 MRITissueClassifier::FindTemporalSlice ()
 {
@@ -2641,6 +2656,7 @@ MRITissueClassifier::FindTemporalSlice ()
       }
     }
 }
+
 
 void
 MRITissueClassifier::FindTemporalLobes ()
@@ -2735,6 +2751,7 @@ MRITissueClassifier::FindTemporalLobes ()
     }
 }
 
+
 void
 MRITissueClassifier::BoneDetection_PDthreshold (float *th_low, float *th_high)
 {
@@ -2820,6 +2837,7 @@ MRITissueClassifier::BoneDetection_PDthreshold (float *th_low, float *th_high)
   std::cout<<"low threshold = "<<(*th_low)<<" , high threshold = "<<(*th_high)<<std::endl;
 }
 
+
 void
 MRITissueClassifier::BoneDetection (float maskr)
 {
@@ -2834,6 +2852,7 @@ MRITissueClassifier::BoneDetection (float maskr)
   BoneDetection_ThirdSection (th_low);               // the rest
   AirDetection(2.0);
 }
+
 
 void
 MRITissueClassifier::BoneDetection_TopSection (float maskr, float th_low, float th_high)
@@ -2993,8 +3012,8 @@ MRITissueClassifier::BoneDetection_TopSection (float maskr, float th_low, float 
 	    set_nrrd_int(m_Label,T_FOREGROUND,x,y,z);
 	}
   }
- 
 }
+
 
 void
 MRITissueClassifier::BoneDetection_SecondSection (float th)
@@ -3117,6 +3136,7 @@ MRITissueClassifier::BoneDetection_ThirdSection (float th)
         
 }
 
+
 float
 MRITissueClassifier::BackgroundNoiseLevel ()
 {
@@ -3139,6 +3159,7 @@ MRITissueClassifier::BackgroundNoiseLevel ()
 
   return sqrt(var);
 }
+
 
 void
 MRITissueClassifier::AirDetection (float maskr)
@@ -3258,6 +3279,7 @@ MRITissueClassifier::AirDetection (float maskr)
         if (get_nrrd_int(vol,x,y,z)==2)
           set_nrrd_int(m_Label,T_AIR,x,y,z);
 }
+
 
 void
 MRITissueClassifier::BrainClassification ()
@@ -3517,6 +3539,7 @@ MRITissueClassifier::BrainClassification ()
   //  write_flat_volume(m_Label, "/tmp/final.ppm");
 }
 
+
 NrrdDataHandle
 MRITissueClassifier::gaussian(const NrrdDataHandle &data, double sigma)
 {
@@ -3550,7 +3573,7 @@ MRITissueClassifier::gaussian(const NrrdDataHandle &data, double sigma)
   if (nrrdSpatialResample(nrrd->nrrd_, data->nrrd_, info)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble resampling: ") +  err);
-    msg_stream_ << "  input Nrrd: data->nrrd_->dim=" << data->nrrd_->dim << "\n";
+    remark("  Input Nrrd: data->nrrd_->dim=" + to_string(data->nrrd_->dim));
     free(err);
   }
   nrrdResampleInfoNix(info); 
@@ -3558,8 +3581,9 @@ MRITissueClassifier::gaussian(const NrrdDataHandle &data, double sigma)
 }
 
 
-
-float *MRITissueClassifier::SmoothProbabilities (float *prob, int c, int l, int n, float sigma)
+float *
+MRITissueClassifier::SmoothProbabilities (float *prob, int c, int l,
+                                          int n, float sigma)
 {
   int x, y, z, k, j, m;
   float sum;
@@ -3788,6 +3812,7 @@ MRITissueClassifier::opening(NrrdDataHandle data, NrrdDataHandle mask)
   return dilate(temp,mask);
 }
 
+
 // 2d nrrd of ints
 NrrdDataHandle
 MRITissueClassifier::closing(NrrdDataHandle data, NrrdDataHandle mask)
@@ -3836,10 +3861,9 @@ MRITissueClassifier::closing(NrrdDataHandle data, NrrdDataHandle mask)
 }
 
 
-
-
 void
-MRITissueClassifier::floodFill(NrrdDataHandle data, int label_from, int label_to, unsigned int x, unsigned int y)
+MRITissueClassifier::floodFill(NrrdDataHandle data, int label_from,
+                               int label_to, unsigned int x, unsigned int y)
 {
   // these are the neighbors
   int N[4][2];
@@ -3893,13 +3917,12 @@ MRITissueClassifier::floodFill(NrrdDataHandle data, int label_from, int label_to
 }
 
 
-
-
-
 //3d floodfill
 // assumes data is a volume of ints
 void
-MRITissueClassifier::floodFill(NrrdDataHandle data, int label_from, int label_to, unsigned int x, unsigned int y, unsigned int z)
+MRITissueClassifier::floodFill(NrrdDataHandle data,
+                               int label_from, int label_to,
+                               unsigned int x, unsigned int y, unsigned int z)
 {
   // these are the neighbors
   int N[6][3];
@@ -3992,6 +4015,7 @@ MRITissueClassifier::create_nrrd_of_ints(int x, int y, int z)
   return data;
 }
 
+
 NrrdDataHandle
 MRITissueClassifier::create_nrrd_of_floats(int x, int y, int z) 
 {
@@ -4001,6 +4025,7 @@ MRITissueClassifier::create_nrrd_of_floats(int x, int y, int z)
   nrrdAlloc_nva(data->nrrd_, nrrdTypeFloat, 3, size);
   return data;
 }
+
 
 bool
 MRITissueClassifier::nrrd_check_bounds(NrrdDataHandle data, 
@@ -4022,6 +4047,7 @@ MRITissueClassifier::create_nrrd_of_ints(int x, int y)
   return data;
 }
 
+
 NrrdDataHandle
 MRITissueClassifier::create_nrrd_of_floats(int x, int y) 
 {
@@ -4032,12 +4058,14 @@ MRITissueClassifier::create_nrrd_of_floats(int x, int y)
   return data;
 }
 
+
 bool
 MRITissueClassifier::nrrd_check_bounds(NrrdDataHandle data, int x, int y) 
 {
   return (x >= 0 && x < (int) data->nrrd_->axis[X_AXIS].size &&
 	  y >= 0 && y < (int) data->nrrd_->axis[Y_AXIS].size);
 }
+
 
 ColumnMatrix
 MRITissueClassifier::get_m_Data(int x, int y, int z)
@@ -4054,7 +4082,6 @@ MRITissueClassifier::get_m_Data(int x, int y, int z)
   
   return m_data;
 }
-
 
 
 void
@@ -4113,7 +4140,6 @@ MRITissueClassifier::write_flat_volume(NrrdDataHandle data, string filename)
     std::cerr << "Count of colors in " << filename << ": " << cnt << std::endl;
   }
 
-
   const int num_col_tiles = (int)ceil(::sqrt((double)dz));
   const int num_row_tiles = (int)ceil((float)dz/
 				      (float)num_col_tiles);
@@ -4166,7 +4192,6 @@ MRITissueClassifier::write_flat_volume(NrrdDataHandle data, string filename)
   fclose (out);
   std::cerr << "Wrote: " << filename << "." << std::endl;
 } 
-
 
 
 void

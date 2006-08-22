@@ -24,16 +24,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+
 // 
 // File:          who_IDPort_Impl.cxx
 // Symbol:        who.IDPort-v1.0
 // Symbol Type:   class
-// Babel Version: 0.11.0
+// Babel Version: 0.99.2
 // Description:   Server-side implementation for who.IDPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.11.0
 // 
 #include "who_IDPort_Impl.hxx"
 
@@ -46,9 +46,20 @@
 #ifndef included_sidl_ClassInfo_hxx
 #include "sidl_ClassInfo.hxx"
 #endif
+#ifndef included_sidl_NotImplementedException_hxx
+#include "sidl_NotImplementedException.hxx"
+#endif
 // DO-NOT-DELETE splicer.begin(who.IDPort._includes)
 // Insert-Code-Here {who.IDPort._includes} (additional includes or code)
 // DO-NOT-DELETE splicer.end(who.IDPort._includes)
+
+// speical constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
+who::IDPort_impl::IDPort_impl() : StubBase(reinterpret_cast< 
+  void*>(::who::IDPort::_wrapObj(this)),false) , _wrapped(true){ 
+  // DO-NOT-DELETE splicer.begin(who.IDPort._ctor2)
+  // Insert-Code-Here {who.IDPort._ctor2} (ctor2)
+  // DO-NOT-DELETE splicer.end(who.IDPort._ctor2)
+}
 
 // user defined constructor
 void who::IDPort_impl::_ctor() {
@@ -75,13 +86,14 @@ void who::IDPort_impl::_load() {
 
 // user defined non-static methods:
 /**
- * Test prot. Return a string as an ID for Hello component
+ *  Test prot. Return a string as an ID for Hello component
  */
 ::std::string
 who::IDPort_impl::getID_impl () 
 
 {
   // DO-NOT-DELETE splicer.begin(who.IDPort.getID)
+  // Insert-Code-Here {who.IDPort.getID} (getID method)
   return ::std::string("World (in C++)");
   // DO-NOT-DELETE splicer.end(who.IDPort.getID)
 }

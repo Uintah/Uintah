@@ -78,7 +78,7 @@ public:
   virtual void
   listAllComponentTypes(std::vector<ComponentDescription*>&, bool);
 
-  static const std::string DEFAULT_PATH;
+  static const std::string DEFAULT_XML_PATH;
 
 private:
   typedef std::map<std::string, BridgeComponentDescription*> componentDB_type;

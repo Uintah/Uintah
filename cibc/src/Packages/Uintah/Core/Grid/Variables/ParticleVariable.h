@@ -287,7 +287,7 @@ private:
   template<class T>
     void ParticleVariable<T>::copyData(const ParticleVariable<T>& src)
   {
-    ASSERT(d_pset == src.d_pset);
+    ASSERT(*d_pset == *src.d_pset);
     *d_pdata = *src.d_pdata;
   }
 

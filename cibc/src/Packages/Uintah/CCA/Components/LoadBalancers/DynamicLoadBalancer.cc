@@ -14,6 +14,7 @@
 #include <Core/Util/FancyAssert.h>
 #include <Core/Util/DebugStream.h>
 #include <Core/Thread/Time.h>
+#include <Core/Exceptions/InternalError.h>
 
 #include <iostream> // debug only
 
@@ -235,7 +236,6 @@ void DynamicLoadBalancer::collectParticles(const GridP& grid, std::vector<PatchI
 void DynamicLoadBalancer::useSFC(const LevelP& level, unsigned* output)
 {
   // output needs to be at least the number of patches in the level
-  SFC3f curve(HILBERT, d_myworld);
 
   vector<unsigned> indices; //output
   vector<int> recvcounts(d_myworld->size(), 0);
@@ -243,69 +243,188 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, unsigned* output)
   // positions will be in float triplets
   vector<float> positions;
 
-  // get the overall range in all dimensions from all patches
-  IntVector high(-999,-999,-999);
-  IntVector low(9999,9999,9999);
 
-  // go through the patches, to place them on processors and to calculate the high
-  for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
+  // get the overall range in all dimensions from all patches
+  IntVector high(INT_MIN,INT_MIN,INT_MIN);
+  IntVector low(INT_MAX,INT_MAX,INT_MAX);
+  
+  for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) 
+  {
+    const Patch* patch = *iter;
+    
+    high = Max(high, patch->getInteriorCellHighIndex());
+    low = Min(low, patch->getInteriorCellLowIndex());
+
+  }
+  IntVector range = high-low;
+  Vector center;
+  center[0]=low[0]+range[0]/2.0;
+  center[1]=low[1]+range[1]/2.0;
+  center[2]=low[2]+range[2]/2.0;
+  IntVector dimensions;
+  int dim=0;
+  for(int d=0;d<3;d++)
+  {
+     if(range[d]>1)
+     {
+        dimensions[dim]=d;
+        dim++;
+     }
+  }
+#if 1
+  for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) 
+  {
     // use center*2, like PatchRangeTree
     const Patch* patch = *iter;
 
-    high = Max(high, patch->getInteriorCellHighIndex());
-    low = Min(low, patch->getInteriorCellLowIndex());
+    IntVector ipos = patch->getInteriorCellLowIndex()+patch->getInteriorCellHighIndex();
+    Vector pos(ipos[0]/ 2.0, ipos[1] / 2.0, ipos[2] / 2.0);
+    //cout << d_myworld->myrank() << "  Adding pos: (" << patch->getID() << ") " << pos << endl;
+
+    for(int d=0;d<dim;d++)
+    {
+      positions.push_back(pos[dimensions[d]]);
+    }
+   }
+
+   if(dim==3)
+   {
+     SFC3f curve(HILBERT, d_myworld);
+     curve.SetLocalSize(level->numPatches());
+     curve.SetDimensions(range.x(), range.y(), range.z());
+     curve.SetLocations(&positions);
+     curve.SetOutputVector(&indices);
+     curve.SetCenter(center.x(),center.y(), center.z());
+     curve.GenerateCurve(SERIAL);
+   }
+   else if (dim==2)
+   {
+      SFC2f curve(HILBERT, d_myworld);   
+      curve.SetLocalSize(level->numPatches());
+      curve.SetDimensions(range[dimensions[0]], range[dimensions[1]]);
+      curve.SetLocations(&positions);
+      curve.SetOutputVector(&indices);
+      curve.SetCenter(center[dimensions[0]],center[dimensions[1]]);
+      curve.GenerateCurve(SERIAL);
+   }
+   else
+   {
+       cout << "1D SFC not impelemented\n";
+       exit(0);
+   }
+   memcpy(output,&indices[0],sizeof(unsigned int)*level->numPatches());
+
+#elif
+
+  IntVector min_patch_size(INT_MAX,INT_MAX,INT_MAX);  
+  // go through the patches, to place them on processors and to calculate the high
+  for (Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) 
+  {
+    // use center*2, like PatchRangeTree
+    const Patch* patch = *iter;
     
+    IntVector size=patch->getInteriorCellHighIndex()-patch->getInteriorCellLowIndex();
+    for(int d=0;d<3;d++)
+    {
+      if(size[d]<min_patch_size[d])
+      {
+         min_patch_size[d]=size[d];
+      }
+    }
     // since the new levels and patches haven't been assigned processors yet, go through the
     // patches and determine processor base this way.
     int proc = (patch->getLevelIndex()*d_myworld->size())/level->numPatches();
     recvcounts[proc]++;
-    if (d_myworld->myrank() == proc) {
-      IntVector pos = patch->getInteriorCellLowIndex()+patch->getInteriorCellHighIndex();
-      pos[0] /= 2; pos[1] /= 2; pos[2] /= 2;
+    if (d_myworld->myrank() == proc) 
+    {
+      IntVector ipos = patch->getInteriorCellLowIndex()+patch->getInteriorCellHighIndex();
+      Vector pos(ipos[0]/ 2.0, ipos[1] / 2.0, ipos[2] / 2.0);
+
       //cout << d_myworld->myrank() << "  Adding pos: (" << patch->getID() << ") " << pos << endl;
-      positions.push_back(pos.x());
-      positions.push_back(pos.y());
-      positions.push_back(pos.z());
+      for(int d=0;d<dim;d++)
+      {
+        positions.push_back(pos[dimensions[d]]);
+      }
     }
   }
 
-  
-  IntVector range = high-low;
-  IntVector center = low + IntVector(range.x()/2, range.y()/2, range.z()/2);
-
-  curve.SetLocalSize(positions.size()/3);
-  curve.SetRefinements(10);  // should be good enough to cover 2048 resolution with 4-cell patch alignment
-  curve.SetLocations(&positions);
-  curve.SetOutputVector(&indices);
-  curve.SetCenter(center.x(),center.y(), center.z());
-  curve.SetDimensions(range.x(), range.y(), range.z());
-  //if (d_myworld->myrank() == 0) cout << d_myworld->myrank() << " center: " << center << " range " << range << endl;
-  curve.SetMergeParameters(3000,2,.15);
-  //cout << d_myworld->myrank() << "   Calling generate" << endl;
-  curve.GenerateCurve();
-  
-  //cout << d_myworld->myrank() << "   Returning from generate" << endl;
-
-  for (unsigned i = 0; i < positions.size()/3; i++) {
-    //cout << d_myworld->myrank() << "  local index " << i << " " << indices[i] << endl;
+  if(dim==3)
+  {
+    SFC3f curve(HILBERT, d_myworld);
+    curve.SetLocalSize(positions.size()/3);
+    curve.SetDimensions(range.x(), range.y(), range.z());
+    curve.SetRefinementsByDelta(min_patch_size.x(),min_patch_size.y(),min_patch_size.z()); 
+    curve.SetLocations(&positions);
+    curve.SetOutputVector(&indices);
+    curve.SetCenter(center.x(),center.y(), center.z());
+    curve.SetCleanup(BATCHERS);
+    curve.SetMergeParameters(3000,2,.15);
+    curve.GenerateCurve();
+  }
+  else if(dim==2)
+  {
+    SFC2f curve(HILBERT, d_myworld);
+    curve.SetLocalSize(positions.size()/2);
+    curve.SetDimensions(range[dimensions[0]],range[dimensions[1]]);
+    curve.SetRefinementsByDelta(min_patch_size[dimensions[0]],min_patch_size[dimensions[1]]); 
+    curve.SetLocations(&positions);
+    curve.SetOutputVector(&indices);
+    curve.SetCenter(center[dimensions[0]],center[dimensions[1]]);
+    curve.SetCleanup(BATCHERS);
+    curve.SetMergeParameters(3000,2,.15);
+    curve.GenerateCurve();
+  }
+  else
+  {
+    cout << "1D SFC not impemented\n";
+    exit(0);
   }
 
   //indices comes back in the size of each proc's patch set, pointing to the index
   // gather it all into one array
   vector<int> displs(d_myworld->size(), 0);
 
-  for (unsigned i = 1; i < recvcounts.size(); i++) {
+  cout << d_myworld->myrank() << ":";
+  for(unsigned int i=0;i<indices.size();i++)
+  {
+    cout << indices[i] << " "; 
+  }
+  cout << endl;
+  for (unsigned i = 1; i < recvcounts.size(); i++) 
+  {
     displs[i] = recvcounts[i-1] + displs[i-1];
   }
   MPI_Allgatherv(&indices[0], positions.size()/3, MPI_UNSIGNED, output, &recvcounts[0], 
                  &displs[0], MPI_UNSIGNED, d_myworld->getComm());
-  //cout << d_myworld->myrank() << "  Returnung from ghater\n";
-
-  if (d_myworld->myrank() == 0) 
-    for (int i = 0; i < level->numPatches(); i++) {
-      //cout << "  Patch " << output[i] << endl;
+  //cout << d_myworld->myrank() << "  Returning from gather\n";
+#endif
+/*
+  for (int i = 0; i < level->numPatches(); i++) 
+  {
+//    if (d_myworld->myrank() == 0)
+//      cout << "  SFC Index " << i << " " << output[i] << endl;
+    for (int j = i+1; j < level->numPatches(); j++)
+    {
+      if (output[i] == output[j]) 
+      {
+        cout << "Rank:" << d_myworld->myrank() <<  ":   ALERT!!!!!! index done twice: index " << i << " has the same value as index " << j << " " << output[i] << endl;
+        throw InternalError("SFC unsuccessful", __FILE__, __LINE__);
+      }
     }
-  
+  }
+*/
+/*
+  if(d_myworld->myrank()==0)
+  {
+    cout << "SFC CURVE:" ;
+    for(int i=0;i< level->numPatches();i++)
+    {
+      int index=output[i];
+      cout << index << ":[" << positions[index*3] << "," << positions[index*3+1] << "," << positions[index*3+2] << "]" << " ";
+    }
+    cout << endl;
+  }
+*/
 }
 
 
@@ -360,7 +479,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       timeWeight *= d_sharedState->timeRefinementRatio();
 
     if (d_doSpaceCurve) {
-      cout << d_myworld->myrank() << "   Doing SFC level " << l << endl;
+      //cout << d_myworld->myrank() << "   Doing SFC level " << l << endl;
       useSFC(level, &sfc[startingPatch]);
     }
 

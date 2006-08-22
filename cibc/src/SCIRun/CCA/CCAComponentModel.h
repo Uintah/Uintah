@@ -128,6 +128,7 @@ public:
   void setSidlDLLPath( const std::string& s) { sidlDLLPath = s; }
 
   static const std::string DEFAULT_PATH;
+  static const std::string DEFAULT_XML_PATH;
 
 protected:
   virtual void setComponentDescription(const std::string& type, const std::string& library);

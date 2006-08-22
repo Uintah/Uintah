@@ -1,29 +1,29 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
 
 
@@ -39,22 +39,22 @@
  */
 
 #include <SCIRun/Bridge/BridgeComponentInstance.h>
-#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/TypeMap.h>
 #include <SCIRun/CCA/CCAException.h>
 #include <SCIRun/Dataflow/SCIRunComponentModel.h>
-#include <SCIRun/Tao/TaoPortInstance.h>
-#include <iostream>
+#include <SCIRun/SCIRunFramework.h>
+#include <SCIRun/TypeMap.h>
 #include <Core/Thread/Mutex.h>
+
+#include <iostream>
 
 using namespace std;
 using namespace SCIRun;
 
 BridgeComponentInstance::BridgeComponentInstance(SCIRunFramework* framework,
-		       const std::string& instanceName,
-		       const std::string& typeName,
-		       const sci::cca::TypeMap::pointer &tm,
-		       BridgeComponent* component)
+                                                 const std::string& instanceName,
+                                                 const std::string& typeName,
+                                                 const sci::cca::TypeMap::pointer &tm,
+                                                 BridgeComponent* component)
   : ComponentInstance(framework, instanceName, typeName, tm),
     lock_ports("BridgeComponentInstance::ports lock"), component(component)
 {
@@ -91,6 +91,54 @@ BridgeComponentInstance::getPortInstance(const std::string& portname)
     }
   } else {
     return iter->second;
+  }
+}
+
+sci::cca::TypeMap::pointer
+BridgeComponentInstance::getPortProperties(const std::string& portname)
+{
+  SCIRun::Guard g1(&lock_ports);
+  map<string, PortInstance*>::iterator iter = ports.find(portname);
+  if (iter == ports.end()) {
+    //!!!!! Check if it is a dataflow port:
+    // SCIRun ports can potentially have the same name for both, so
+    // SCIRunPortInstance tags them with a prefix of "Input: " or
+    // "Output: ", so we need to check that first.
+    if (portname.substr(0, 7) == "Input: ") {
+      map<string, PortInstance*>::iterator iter = ports.find(portname.substr(7));
+      return iter->second->getProperties();
+    } else if (portname.substr(0,8) == "Output: ") {
+      map<string, PortInstance*>::iterator iter = ports.find(portname.substr(8));
+      return iter->second->getProperties();
+    } else {
+      return sci::cca::TypeMap::pointer(new TypeMap);
+    }
+  } else {
+    return iter->second->getProperties();
+  }
+}
+
+void
+BridgeComponentInstance::setPortProperties(const std::string& portname, const sci::cca::TypeMap::pointer& tm)
+{
+  SCIRun::Guard g1(&lock_ports);
+  map<string, PortInstance*>::iterator iter = ports.find(portname);
+  if (iter == ports.end()) {
+    //!!!!! Check if it is a dataflow port:
+    // SCIRun ports can potentially have the same name for both, so
+    // SCIRunPortInstance tags them with a prefix of "Input: " or
+    // "Output: ", so we need to check that first.
+    if (portname.substr(0, 7) == "Input: ") {
+      map<string, PortInstance*>::iterator iter = ports.find(portname.substr(7));
+      return iter->second->setProperties(tm);
+    } else if (portname.substr(0,8) == "Output: ") {
+      map<string, PortInstance*>::iterator iter = ports.find(portname.substr(8));
+      iter->second->setProperties(tm);
+    } else {
+      return;
+    }
+  } else {
+    iter->second->setProperties(tm);
   }
 }
 
@@ -142,7 +190,7 @@ UCXX ::gov::cca::Port BridgeComponentInstance::getBabelPort(const std::string& n
     throw sci::cca::CCAException::pointer(new CCAException("Cannot call getPort on a Provides port", sci::cca::BadPortType));
   }
   if (pr->getConnectionCount() != 1) {
-      return 0;
+    return 0;
   }
 
   pr->incrementUseCount();
@@ -167,8 +215,8 @@ Port* BridgeComponentInstance::getDataflowOPort(const std::string& name)
   if (!op) {
     cerr << "Unable to initialize iport: "<< name << "\n";
     return 0;
-   }
-   return static_cast<Port*>(op);
+  }
+  return static_cast<Port*>(op);
 }
 
 #if HAVE_VTK
@@ -201,7 +249,7 @@ void BridgeComponentInstance::addVtkPort(vtk::Port* vtkport, VtkPortInstance::VT
     throw sci::cca::CCAException::pointer(new CCAException("port name conflicts with another one", sci::cca::BadPortName));
   }
 
-  ports.insert(make_pair(portName, new VtkPortInstance(0, vtkport, portT)));
+  ports.insert(make_pair(portName, new VtkPortInstance(0, vtkport, sci::cca::TypeMap::pointer(new TypeMap), portT)));
 }
 #endif
 
@@ -255,7 +303,7 @@ void BridgeComponentInstance::releasePort(const std::string& name, const modelT 
 
   case Dataflow:
     ::std::cerr << "Don't know how to release a dataflow port\n";
-    break;
+  break;
 
   case Vtk:
   case Tao:
@@ -267,14 +315,16 @@ void BridgeComponentInstance::releasePort(const std::string& name, const modelT 
 }
 
 void BridgeComponentInstance::registerUsesPort(const std::string& portName,
-			const std::string& portType,
-			const modelT model)
+                                               const std::string& portType,
+                                               const modelT model)
 {
   SCIRun::Guard g1(&lock_ports);
 
   CCAPortInstance* cpr;
   BabelPortInstance* bpr;
+#if HAVE_TAO
   TaoPortInstance* tpr;
+#endif // HAVE_TAO
   PortInstanceMap::iterator iter;
 
   Port* dflowport;
@@ -286,15 +336,15 @@ void BridgeComponentInstance::registerUsesPort(const std::string& portName,
     if (iter != ports.end()) {
       cpr = dynamic_cast<CCAPortInstance*>(iter->second);
       if (cpr == 0) {
-	throw sci::cca::CCAException::pointer(new CCAException("Trying to register a port of the wrong type", sci::cca::BadPortType));
+        throw sci::cca::CCAException::pointer(new CCAException("Trying to register a port of the wrong type", sci::cca::BadPortType));
       }
       if (cpr->portType() == PortInstance::Provides) {
-	throw sci::cca::CCAException::pointer(new CCAException("name conflict between uses and provides ports", sci::cca::BadPortName));
+        throw sci::cca::CCAException::pointer(new CCAException("name conflict between uses and provides ports", sci::cca::BadPortName));
       } else {
-	throw sci::cca::CCAException::pointer(new CCAException("registerUsesPort called twice for " + portName + " " + portType + " " + instanceName, sci::cca::BadPortName));
+        throw sci::cca::CCAException::pointer(new CCAException("registerUsesPort called twice for " + portName + " " + portType + " " + instanceName, sci::cca::BadPortName));
       }
     }
-    ports.insert(make_pair(portName, new CCAPortInstance(portName, portType, sci::cca::TypeMap::pointer(0), PortInstance::Uses)));
+    ports.insert(make_pair(portName, new CCAPortInstance(portName, portType, sci::cca::TypeMap::pointer(new TypeMap), CCAPortInstance::Uses)));
     break;
 
   case Babel:
@@ -302,13 +352,13 @@ void BridgeComponentInstance::registerUsesPort(const std::string& portName,
     if (iter != ports.end()) {
       bpr = dynamic_cast<BabelPortInstance*>(iter->second);
       if (bpr == 0) {
-	throw sci::cca::CCAException::pointer(new CCAException("Trying to register a port of the wrong type", sci::cca::BadPortType));
+        throw sci::cca::CCAException::pointer(new CCAException("Trying to register a port of the wrong type", sci::cca::BadPortType));
       }
       if (bpr->portType() == PortInstance::Provides) {
-	throw sci::cca::CCAException::pointer(new CCAException("name conflict between uses and provides ports", sci::cca::BadPortType));
+        throw sci::cca::CCAException::pointer(new CCAException("name conflict between uses and provides ports", sci::cca::BadPortType));
       } else {
-	//cerr << "registerUsesPort called twice, instance=" << instanceName << ", portName = " << portName << ", portType = " << portType << '\n';
-	throw sci::cca::CCAException::pointer(new CCAException("registerUsesPort called twice for " + portName + " " + portType + " " + instanceName, sci::cca::BadPortName));
+        //cerr << "registerUsesPort called twice, instance=" << instanceName << ", portName = " << portName << ", portType = " << portType << '\n';
+        throw sci::cca::CCAException::pointer(new CCAException("registerUsesPort called twice for " + portName + " " + portType + " " + instanceName, sci::cca::BadPortName));
       }
     }
     ports.insert(make_pair(portName, new BabelPortInstance(portName, portType, 0, PortInstance::Uses)));
@@ -328,26 +378,28 @@ void BridgeComponentInstance::registerUsesPort(const std::string& portName,
       throw sci::cca::CCAException::pointer(new CCAException("Wrong port model for addProvidesPort", sci::cca::BadPortType));
     }
 
-    //NO SCIRunComponentInstance to pass into SCIRunPortInstance, hopefully 0 is okay
-    ports.insert(make_pair(portName, new SCIRunPortInstance(0, dflowport, portT)));
+    // NO SCIRunComponentInstance to pass into SCIRunPortInstance, hopefully 0 is okay
+    ports.insert(make_pair(portName, new SCIRunPortInstance(0, dflowport, sci::cca::TypeMap::pointer(new TypeMap), portT)));
     break;
 
+#if HAVE_TAO
   case Tao:
     iter = ports.find(portName);
     if (iter != ports.end()) {
       tpr = dynamic_cast<TaoPortInstance*>(iter->second);
       if (tpr == 0) {
-	throw sci::cca::CCAException::pointer(new CCAException("Trying to register a port of the wrong type", sci::cca::BadPortType));
+        throw sci::cca::CCAException::pointer(new CCAException("Trying to register a port of the wrong type", sci::cca::BadPortType));
       }
       if (tpr->portType() == PortInstance::Provides) {
-	throw sci::cca::CCAException::pointer(new CCAException("name conflict between uses and provides ports", sci::cca::BadPortType));
+        throw sci::cca::CCAException::pointer(new CCAException("name conflict between uses and provides ports", sci::cca::BadPortType));
       } else {
-	//cerr << "registerUsesPort called twice, instance=" << instanceName << ", portName = " << portName << ", portType = " << portType << '\n';
-	throw sci::cca::CCAException::pointer(new CCAException("registerUsesPort called twice for " + portName + " " + portType + " " + instanceName, sci::cca::BadPortName));
+        //cerr << "registerUsesPort called twice, instance=" << instanceName << ", portName = " << portName << ", portType = " << portType << '\n';
+        throw sci::cca::CCAException::pointer(new CCAException("registerUsesPort called twice for " + portName + " " + portType + " " + instanceName, sci::cca::BadPortName));
       }
     }
-    ports.insert(make_pair(portName, new TaoPortInstance(portName, portType, PortInstance::Uses)));
+    ports.insert(make_pair(portName, new TaoPortInstance(portName, portType, sci::cca::TypeMap::pointer(new TypeMap), TaoPortInstance::Uses)));
     break;
+#endif // HAVE_TAO
 
   case Vtk:
     throw sci::cca::CCAException::pointer(new CCAException("Use addVtkPort for Vtk component model"));
@@ -371,12 +423,12 @@ void BridgeComponentInstance::unregisterUsesPort(const std::string& portName, co
     if (iter != ports.end()) {
       cpr = dynamic_cast<CCAPortInstance*>(iter->second);
       if (cpr == 0) {
-	throw sci::cca::CCAException::pointer(new CCAException("Trying to unregister a port of the wrong type", sci::cca::BadPortType));
+        throw sci::cca::CCAException::pointer(new CCAException("Trying to unregister a port of the wrong type", sci::cca::BadPortType));
       }
       if (cpr->portType() == PortInstance::Provides) {
-	throw sci::cca::CCAException::pointer(new CCAException("name conflict between uses and provides ports", sci::cca::BadPortName));
+        throw sci::cca::CCAException::pointer(new CCAException("name conflict between uses and provides ports", sci::cca::BadPortName));
       } else {
-	ports.erase(portName);
+        ports.erase(portName);
       }
     } else {
       throw sci::cca::CCAException::pointer(new CCAException("port name " + portName + " not found, cannot unregister uses port", sci::cca::BadPortName));
@@ -388,12 +440,12 @@ void BridgeComponentInstance::unregisterUsesPort(const std::string& portName, co
     if (iter != ports.end()) {
       bpr = dynamic_cast<BabelPortInstance*>(iter->second);
       if (bpr == 0) {
-	throw sci::cca::CCAException::pointer(new CCAException("Trying to unregister a port of the wrong type", sci::cca::BadPortType));
+        throw sci::cca::CCAException::pointer(new CCAException("Trying to unregister a port of the wrong type", sci::cca::BadPortType));
       }
       if (bpr->portType() == PortInstance::Provides) {
-	throw sci::cca::CCAException::pointer(new CCAException("name conflict between uses and provides ports", sci::cca::BadPortName));
+        throw sci::cca::CCAException::pointer(new CCAException("name conflict between uses and provides ports", sci::cca::BadPortName));
       } else {
-	ports.erase(portName);
+        ports.erase(portName);
       }
     }
     else{
@@ -414,15 +466,17 @@ void BridgeComponentInstance::unregisterUsesPort(const std::string& portName, co
 }
 
 void BridgeComponentInstance::addProvidesPort(void* port,
-		       const std::string& portName,
-		       const std::string& portType,
-		       const modelT model)
+                                              const std::string& portName,
+                                              const std::string& portType,
+                                              const modelT model)
 {
   SCIRun::Guard g1(&lock_ports);
 
   CCAPortInstance* cpr;
   BabelPortInstance* bpr;
+#if HAVE_TAO
   TaoPortInstance* tpr;
+#endif // HAVE_TAO
   PortInstanceMap::iterator iter;
 
   sci::cca::Port::pointer* ccaport;
@@ -437,12 +491,12 @@ void BridgeComponentInstance::addProvidesPort(void* port,
     if (iter != ports.end()) {
       cpr = dynamic_cast<CCAPortInstance*>(iter->second);
       if (cpr == 0) {
-	throw sci::cca::CCAException::pointer(new CCAException("port name conflicts with another one of a different type", sci::cca::BadPortName));
+        throw sci::cca::CCAException::pointer(new CCAException("port name conflicts with another one of a different type", sci::cca::BadPortName));
       }
       if (cpr->portType() == PortInstance::Uses) {
-	throw sci::cca::CCAException::pointer(new CCAException("name conflict between uses and provides ports", sci::cca::BadPortName));
+        throw sci::cca::CCAException::pointer(new CCAException("name conflict between uses and provides ports", sci::cca::BadPortName));
       } else {
-	throw sci::cca::CCAException::pointer(new CCAException("addProvidesPort called twice for " + portName, sci::cca::BadPortName));
+        throw sci::cca::CCAException::pointer(new CCAException("addProvidesPort called twice for " + portName, sci::cca::BadPortName));
       }
     }
 
@@ -450,7 +504,7 @@ void BridgeComponentInstance::addProvidesPort(void* port,
     if (!ccaport) {
       throw sci::cca::CCAException::pointer(new CCAException("Wrong port model for addProvidesPort", sci::cca::BadPortType));
     }
-    ports.insert(make_pair(portName, new CCAPortInstance(portName, portType, sci::cca::TypeMap::pointer(0), *ccaport, PortInstance::Provides)));
+    ports.insert(make_pair(portName, new CCAPortInstance(portName, portType, sci::cca::TypeMap::pointer(new TypeMap), *ccaport, CCAPortInstance::Provides)));
     break;
 
   case Babel:
@@ -458,12 +512,12 @@ void BridgeComponentInstance::addProvidesPort(void* port,
     if (iter != ports.end()) {
       bpr = dynamic_cast<BabelPortInstance*>(iter->second);
       if (bpr == 0) {
-	throw sci::cca::CCAException::pointer(new CCAException("port name conflicts with another one of a different type", sci::cca::BadPortName));
+        throw sci::cca::CCAException::pointer(new CCAException("port name conflicts with another one of a different type", sci::cca::BadPortName));
       }
       if (bpr->portType() == PortInstance::Uses) {
-	throw sci::cca::CCAException::pointer(new CCAException("name conflict between uses and provides ports", sci::cca::BadPortName));
+        throw sci::cca::CCAException::pointer(new CCAException("name conflict between uses and provides ports", sci::cca::BadPortName));
       } else {
-	throw sci::cca::CCAException::pointer(new CCAException("addProvidesPort called twice for " + portName, sci::cca::BadPortName));
+        throw sci::cca::CCAException::pointer(new CCAException("addProvidesPort called twice for " + portName, sci::cca::BadPortName));
       }
     }
     babelport = reinterpret_cast<UCXX ::gov::cca::Port*>(port);
@@ -488,31 +542,32 @@ void BridgeComponentInstance::addProvidesPort(void* port,
       throw sci::cca::CCAException::pointer(new CCAException("Wrong port model for addProvidesPort", sci::cca::BadPortType));
     }
 
-    //NO SCIRunComponentInstance to pass into SCIRunPortInstance, hopefully 0 is okay
-    ports.insert(make_pair(portName, new SCIRunPortInstance(0, dflowport, portT)));
-
+    // NO SCIRunComponentInstance to pass into SCIRunPortInstance, hopefully 0 is okay
+    ports.insert(make_pair(portName, new SCIRunPortInstance(0, dflowport, sci::cca::TypeMap::pointer(new TypeMap), portT)));
     break;
 
   case Vtk:
     throw sci::cca::CCAException::pointer(new CCAException("Use addVtkPort for Vtk component model"));
     break;
 
+#if HAVE_TAO
   case Tao:
     iter = ports.find(portName);
     if (iter != ports.end()) {
       tpr = dynamic_cast<TaoPortInstance*>(iter->second);
       if (tpr == 0)
-	throw sci::cca::CCAException::pointer(new CCAException("Trying to register a port of the wrong type", sci::cca::BadPortType));
+        throw sci::cca::CCAException::pointer(new CCAException("Trying to register a port of the wrong type", sci::cca::BadPortType));
       if (tpr->portType() == PortInstance::Provides)
-	throw sci::cca::CCAException::pointer(new CCAException("name conflict between uses and provides ports", sci::cca::BadPortName));
+        throw sci::cca::CCAException::pointer(new CCAException("name conflict between uses and provides ports", sci::cca::BadPortName));
       else {
-	cerr << "registerUsesPort called twice, instance=" << instanceName
-	     << ", portName = " << portName << ", portType = " << portType << '\n';
-	throw sci::cca::CCAException::pointer(new CCAException("registerUsesPort called twice for " + portName, sci::cca::BadPortName));
+        cerr << "registerUsesPort called twice, instance=" << instanceName
+             << ", portName = " << portName << ", portType = " << portType << '\n';
+        throw sci::cca::CCAException::pointer(new CCAException("registerUsesPort called twice for " + portName, sci::cca::BadPortName));
       }
     }
-    ports.insert(make_pair(portName, new TaoPortInstance(portName, portType, PortInstance::Uses)));
+    ports.insert(make_pair(portName, new TaoPortInstance(portName, portType, sci::cca::TypeMap::pointer(new TypeMap), TaoPortInstance::Uses)));
     break;
+#endif // HAVE_TAO
 
   }
   return;

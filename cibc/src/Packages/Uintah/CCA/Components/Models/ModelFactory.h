@@ -43,7 +43,8 @@ WARNING
     virtual ~ModelFactory();
 
     std::vector<ModelInterface*> getModels();
-    virtual void makeModels(const ProblemSpecP& params, 
+    virtual void makeModels(const ProblemSpecP& restart_prob_spec, 
+                            const ProblemSpecP& prob_spec,
                             GridP& grid,
                             SimulationStateP& sharedState,
                             const bool doAMR);

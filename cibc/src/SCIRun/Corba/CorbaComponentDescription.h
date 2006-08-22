@@ -28,7 +28,7 @@
 
 
 /*
- *  CorbaComponentDescription.h: 
+ *  CorbaComponentDescription.h:
  *
  *  Written by:
  *   Keming Zhang
@@ -44,8 +44,8 @@
 #include <SCIRun/ComponentDescription.h>
 #include <string>
 
-namespace SCIRun
-{
+namespace SCIRun {
+
 class ComponentModel;
 class CorbaComponentModel;
 
@@ -61,7 +61,9 @@ class CorbaComponentModel;
  */
 class CorbaComponentDescription : public ComponentDescription {
 public:
-  CorbaComponentDescription(CorbaComponentModel* model, const std::string& type, const std::string& execPath="");
+  CorbaComponentDescription(CorbaComponentModel* model,
+                            const std::string& type,
+                            const std::string& execPath = "");
   virtual ~CorbaComponentDescription();
 
   /** Returns the type name (a string) described by this class. */

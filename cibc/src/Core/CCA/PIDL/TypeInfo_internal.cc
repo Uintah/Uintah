@@ -43,6 +43,7 @@
 #include <Core/CCA/PIDL/TypeInfo_internal.h>
 #include <Core/CCA/PIDL/TypeInfo.h>
 #include <Core/Exceptions/InternalError.h>
+
 using namespace SCIRun;
 
 TypeInfo_internal::TypeInfo_internal(const std::string& fullclassname,

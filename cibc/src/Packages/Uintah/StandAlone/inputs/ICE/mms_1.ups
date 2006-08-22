@@ -41,7 +41,7 @@
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0" label = "scalar-f" var = "Neumann">
+        <BCType id = "0" label = "scalar-f"       var = "Neumann">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -58,7 +58,7 @@
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0" label = "scalar-f" var = "Neumann">
+        <BCType id = "0" label = "scalar-f"       var = "Neumann">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -75,7 +75,7 @@
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>
         </BCType>
-        <BCType id = "0" label = "scalar-f" var = "Neumann">
+        <BCType id = "0" label = "scalar-f"       var = "Neumann">
                               <value> 0.0</value>
         </BCType>
       </Face>                  
@@ -92,7 +92,7 @@
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>       
         </BCType>
-        <BCType id = "0" label = "scalar-f" var = "Neumann">
+        <BCType id = "0" label = "scalar-f"       var = "Neumann">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -109,7 +109,7 @@
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>       
         </BCType>
-        <BCType id = "0" label = "scalar-f" var = "Neumann">
+        <BCType id = "0" label = "scalar-f"       var = "Neumann">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -126,7 +126,7 @@
         <BCType id = "0"   label = "Density"      var = "Neumann">
                               <value> 0.0 </value>       
         </BCType>
-        <BCType id = "0" label = "scalar-f" var = "Neumann">
+        <BCType id = "0" label = "scalar-f"       var = "Neumann">
                               <value> 0.0</value>
         </BCType>
       </Face>
@@ -204,9 +204,8 @@
            <iters_before_timestep_restart> 5 </iters_before_timestep_restart>
            <Parameters variable="implicitPressure">
 
-
-              <norm>     LInfinity  </norm>
-              <criteria> Absolute   </criteria>
+            <norm>     LInfinity     </norm>
+            <criteria> Absolute      </criteria>
 
             <solver>         cg      </solver>
             <preconditioner> pfmg    </preconditioner>
@@ -267,10 +266,7 @@
          </constants>
          <geom_object>
             <difference>
-            <box label="wholeDomain">
-                <min>       [ -1., -1., -1. ]       </min>
-                <max>       [  1.,  1.,  1. ]       </max>
-            </box>
+            <box label="wholeDomain">             </box>
             <box label="scalarSlug">
               <min>         [-0.1,-0.1,-0.1]       </min>
               <max>         [ 0.1, 0.1, 0.1]       </max>
@@ -279,10 +275,7 @@
             <scalar>    0.00   </scalar>
          </geom_object>
           <geom_object>
-            <box label="scalarSlug">
-              <min>          [-0.1,-0.1,-0.1]     </min>
-              <max>          [0.1, 0.1, 0.1]      </max>
-            </box>
+            <box label="scalarSlug">              </box>
             <scalar>    1.00   </scalar>
          </geom_object>
        </scalar>

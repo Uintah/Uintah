@@ -24,23 +24,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+
 // 
 // File:          who_Com_Impl.hxx
 // Symbol:        who.Com-v1.0
 // Symbol Type:   class
-// Babel Version: 0.11.0
+// Babel Version: 0.99.2
 // Description:   Server-side implementation for who.Com
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.11.0
 // 
 
 #ifndef included_who_Com_Impl_hxx
 #define included_who_Com_Impl_hxx
 
-#ifndef included_sidl_ucxx_hxx
-#include "sidl_ucxx.hxx"
+#ifndef included_sidl_cxx_hxx
+#include "sidl_cxx.hxx"
 #endif
 #ifndef included_who_Com_IOR_h
 #include "who_Com_IOR.h"
@@ -74,7 +74,7 @@ namespace who {
   /**
    * Symbol "who.Com" (version 1.0)
    */
-  class Com_impl : public virtual UCXX ::who::Com 
+  class Com_impl : public virtual ::who::Com 
   // DO-NOT-DELETE splicer.begin(who.Com._inherits)
   // Insert-Code-Here {who.Com._inherits} (optional inheritance here)
   // DO-NOT-DELETE splicer.end(who.Com._inherits)
@@ -85,62 +85,66 @@ namespace who {
   protected:
 
     // DO-NOT-DELETE splicer.begin(who.Com._implementation)
-    UCXX ::gov::cca::Services svc;
+    ::gov::cca::Services svc;
     // DO-NOT-DELETE splicer.end(who.Com._implementation)
 
+    bool _wrapped;
   public:
-    // default constructor, shouldn't be used (required)
-    Com_impl() : StubBase(0,true) { } 
+    // default constructor, used for data wrapping(required)
+    Com_impl();
+    // sidl constructor (required)
+    // Note: alternate Skel constructor doesn't call addref()
+    // (fixes bug #275)
+    Com_impl( struct who_Com__object * s ) : StubBase(s,true),
+      _wrapped(false) { _ctor(); }
 
-      // sidl constructor (required)
-      // Note: alternate Skel constructor doesn't call addref()
-      // (fixes bug #275)
-      Com_impl( struct who_Com__object * s ) : StubBase(s,true) { _ctor(); }
+    // user defined construction
+    void _ctor();
 
-      // user defined construction
-      void _ctor();
+    // virtual destructor (required)
+    virtual ~Com_impl() { _dtor(); }
 
-      // virtual destructor (required)
-      virtual ~Com_impl() { _dtor(); }
+    // user defined destruction
+    void _dtor();
 
-      // user defined destruction
-      void _dtor();
+    // true if this object was created by a user newing the impl
+    inline bool _isWrapped() {return _wrapped;}
 
-      // static class initializer
-      static void _load();
+    // static class initializer
+    static void _load();
 
-    public:
+  public:
 
 
-      /**
-       * Starts up a component presence in the calling framework.
-       * @param Svc the component instance's handle on the framework world.
-       * Contracts concerning Svc and setServices:
-       * 
-       * The component interaction with the CCA framework
-       * and Ports begins on the call to setServices by the framework.
-       * 
-       * This function is called exactly once for each instance created
-       * by the framework.
-       * 
-       * The argument Svc will never be nil/null.
-       * 
-       * Those uses ports which are automatically connected by the framework
-       * (so-called service-ports) may be obtained via getPort during
-       * setServices.
-       */
-      void
-      setServices_impl (
-        /* in */UCXX ::gov::cca::Services services
-      )
-      ;
+    /**
+     *  Starts up a component presence in the calling framework.
+     * @param Svc the component instance's handle on the framework world.
+     * Contracts concerning Svc and setServices:
+     * 
+     * The component interaction with the CCA framework
+     * and Ports begins on the call to setServices by the framework.
+     * 
+     * This function is called exactly once for each instance created
+     * by the framework.
+     * 
+     * The argument Svc will never be nil/null.
+     * 
+     * Those uses ports which are automatically connected by the framework
+     * (so-called service-ports) may be obtained via getPort during
+     * setServices.
+     */
+    void
+    setServices_impl (
+      /* in */::gov::cca::Services services
+    )
+    ;
 
-    };  // end class Com_impl
+  };  // end class Com_impl
 
-  } // end namespace who
+} // end namespace who
 
-  // DO-NOT-DELETE splicer.begin(who.Com._misc)
-  // Insert-Code-Here {who.Com._misc} (miscellaneous things)
-  // DO-NOT-DELETE splicer.end(who.Com._misc)
+// DO-NOT-DELETE splicer.begin(who.Com._misc)
+// Insert-Code-Here {who.Com._misc} (miscellaneous things)
+// DO-NOT-DELETE splicer.end(who.Com._misc)
 
-  #endif
+#endif

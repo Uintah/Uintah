@@ -31,7 +31,7 @@
  *  MainWindow.h
  *
  *  Written by:
- *   Keming Zhang 
+ *   Keming Zhang
  *   Department of Computer Science
  *   University of Utah
  *   June 2002
@@ -41,19 +41,40 @@
 #ifndef SCIRun_Viewer_MainWindow_h
 #define SCIRun_Viewer_MainWindow_h
 
+#include <sci_wx.h>
 #include <Core/CCA/spec/cca_sidl.h>
 
-#include <qwidget.h>
-#include <vector>
+namespace Viewer {
 
-class MainWindow: public QWidget{
- public:
-  MainWindow(QWidget *parent, const char *name, 
-	     const SSIDL::array1<double> nodes1d, 
-	     const SSIDL::array1<int> triangles, 
-	     const SSIDL::array1<double> solution );
+class Colormap;
+class ViewerWindow;
+
+class MainWindow: public wxFrame {
+public:
+  enum {
+    ID_CHECKBOX_MESH = wxID_HIGHEST,
+    ID_CHECKBOX_COORDS = ID_CHECKBOX_MESH + 1,
+  };
+  MainWindow(wxWindow *parent,
+             const char *name,
+             const SSIDL::array1<double> nodes1d,
+             const SSIDL::array1<int> triangles,
+             const SSIDL::array1<double> solution);
+  virtual ~MainWindow();
+
+private:
+  const static int X = 200;
+  const static int Y = 200;
+  const static int WIDTH = 500;
+  const static int HEIGHT = 500;
+
+  Colormap* cmap;
+  ViewerWindow* viewer;
+  wxCheckBox* meshCheckBox;
+  wxCheckBox* coordsCheckBox;
 };
 
+}
 
 #endif
 

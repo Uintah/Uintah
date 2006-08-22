@@ -52,6 +52,7 @@ CCAPortInstance::CCAPortInstance(const std::string& name,
     lock_connections("CCAPortInstance::connections lock"), 
     porttype(porttype), useCount(0)
 {
+  setDefaultProperties();
 }
 
 CCAPortInstance::CCAPortInstance(const std::string& name,
@@ -63,6 +64,7 @@ CCAPortInstance::CCAPortInstance(const std::string& name,
     lock_connections("CCAPortInstance::connections lock"), port(port),
     porttype(porttype), useCount(0)
 {
+  setDefaultProperties();
 }
 
 CCAPortInstance::~CCAPortInstance()
@@ -196,6 +198,22 @@ bool CCAPortInstance::decrementUseCount()
 bool CCAPortInstance::portInUse()
 {
     return useCount > 0;
+}
+
+void CCAPortInstance::setProperties(const sci::cca::TypeMap::pointer& tm)
+{
+  properties = tm;
+  setDefaultProperties();
+}
+
+void CCAPortInstance::setDefaultProperties()
+{
+  if (properties.isNull()) {
+    properties = sci::cca::TypeMap::pointer(new TypeMap);
+  }
+  properties->putString(PortInstance::NAME, name);
+  properties->putString(PortInstance::TYPE, type);
+  properties->putString(PortInstance::MODEL, this->getModel());
 }
 
 } // end namespace SCIRun

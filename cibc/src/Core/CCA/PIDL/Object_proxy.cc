@@ -38,12 +38,12 @@
 #include <Core/CCA/PIDL/TypeInfo.h>
 #include <Core/CCA/PIDL/URL.h>
 #include <Core/CCA/PIDL/PIDL.h>
-#include <Core/CCA/Comm/SocketMessage.h>
+#include <Core/CCA/PIDL/SocketMessage.h>
+
 #include <unistd.h>
 #include <iostream>
 #include <string>
 
-using namespace std;
 using namespace SCIRun;
 
 Object_proxy::Object_proxy(const Reference& ref)

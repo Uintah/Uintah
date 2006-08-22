@@ -67,7 +67,7 @@ extern "C" {
 
 namespace SCIRun {
 
-const std::string CorbaComponentModel::DEFAULT_PATH("/CCA/Components/CORBA/xml");
+const std::string CorbaComponentModel::DEFAULT_XML_PATH("/CCA/Components/CORBA/xml");
 
 CorbaComponentModel::CorbaComponentModel(SCIRunFramework* framework,
 				     const StringVector& xmlPaths)

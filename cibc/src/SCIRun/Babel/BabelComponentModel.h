@@ -119,7 +119,7 @@ public:
   /** ? */
   virtual void setComponentDescription(const std::string& type, const std::string& library);
 
-  static const std::string DEFAULT_PATH;
+  static const std::string DEFAULT_XML_PATH;
 
 
 private:

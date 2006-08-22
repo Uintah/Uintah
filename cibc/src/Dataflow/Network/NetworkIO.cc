@@ -122,6 +122,15 @@ NetworkIO::gui_add_module_at_position(const string &mod_id,
 							 category, 
 							 module);
 
+  // TODO: Fix crash bug here when package is not available.
+  // Invoke nice gui for not loading this network rather than crash to
+  // command line.
+  if (!mod)
+  {
+    // add_module already outputs a message.
+    Thread::exitAll(0);
+  }
+
   // Now tell tcl about the module.
   GuiInterface *gui = GuiInterface::getSingleton();
 
@@ -150,6 +159,12 @@ NetworkIO::gui_add_connection(const string &con_id,
     Network *net = NetworkEditor::get_network();
     Module* omod = net->get_module_by_id(from);
     Module* imod = net->get_module_by_id(to);
+
+    if (omod == 0 || imod == 0)
+    {
+      cerr << "Bad connection made, one or more modules not available.\n";
+      return;
+    }
   
     int owhich = atoi(from_port.c_str());
     int iwhich = atoi(to_port.c_str());

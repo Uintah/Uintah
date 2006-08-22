@@ -214,7 +214,7 @@ UnuPad::execute()
     {
 	char *err = biffGetDone(NRRD);
 	error(string("Trouble resampling: ") + err);
-	msg_stream_ << "  input Nrrd: nin->dim="<<nin->dim<<"\n";
+	remark("  Input Nrrd: nin->dim=" + to_string(nin->dim));
 	free(err);
     }
 

@@ -218,7 +218,7 @@ UnuResample::execute()
   NrrdResampleInfo *info = nrrdResampleInfoNew();
 
   Nrrd *nin = nrrdH->nrrd_;
-  msg_stream_ << "Resampling with a " << last_filtertype_ << " filter." << endl;
+  remark("Resampling with a " + last_filtertype_ + " filter.");
   NrrdKernel *kern;
   double p[NRRD_KERNEL_PARMS_NUM];
   memset(p, 0, NRRD_KERNEL_PARMS_NUM * sizeof(double));

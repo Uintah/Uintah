@@ -28,7 +28,7 @@
 
 
 /*
- *  VtkComponentInstance.h: 
+ *  VtkComponentInstance.h:
  *
  *  Written by:
  *   Keming Zhang
@@ -70,24 +70,28 @@ public:
       (\em fwk), the unique \em instanceName of the component instance, and a
       pointer to an allocated vtk::Component object.*/
   VtkComponentInstance(SCIRunFramework *fwk,
-                       const std::string &instanceName,
-                       const std::string &className,
-                       const sci::cca::TypeMap::pointer &tm,
-                       vtk::Component *component);
+		       const std::string &instanceName,
+		       const std::string &className,
+		       const sci::cca::TypeMap::pointer &tm,
+		       vtk::Component *component);
   virtual ~VtkComponentInstance();
-  
+
   // Methods from ComponentInstance
   /** Returns a pointer to the port named \em name.  If no such port exists in
       this component, returns a null pointer. */
   virtual PortInstance* getPortInstance(const std::string& name);
+
   /** Returns the list of ports associated with this component. */
   virtual PortInstanceIterator* getPorts();
 
+  // does nothing at the moment -> implement!
+  virtual sci::cca::TypeMap::pointer getPortProperties(const std::string& /*portName*/);
+  virtual void setPortProperties(const std::string& /*portName*/, const sci::cca::TypeMap::pointer& /*tm*/) {}
+
   /** Returns a pointer to the vtk::Component referenced by this class */
-  vtk::Component* getComponent() {
-    return component;
-    }
-  private:
+  vtk::Component* getComponent() { return component; }
+
+private:
     class Iterator : public PortInstanceIterator {
     public:
       Iterator(VtkComponentInstance*);
