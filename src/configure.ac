@@ -1522,11 +1522,11 @@ case $host in
     CFLAGS="$CFLAGS $extra_cflags"
 
     case `hostname` in
-      alc*)
-        # LLNL's ALC computer is doing something strange with its g77
+      alc* | mcr*)
+        # LLNL's ALC (or MCR) computer is doing something strange with its g77
         # fortran underscore policy to make it compatible with other compilers.
 	# We don't need this, so this flag just turns their 'hack' off.
-	AC_MSG_WARN(Turning off ALC's fortran underscore compatibility hack.)
+	AC_MSG_WARN(Turning off ALC/MCR's fortran underscore compatibility hack.)
         FFLAGS="$FFLAGS -funderscoring"
         ;;
     esac
@@ -2720,7 +2720,7 @@ if test "$with_png" = "yes"; then
 else 
   if test "$with_png"; then
     # If --with-png has a parameter, then use it
-    _sci_lib="$with_png"
+    _sci_lib="$with_png/lib"
     _sci_inc="$with_png/include"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
     _sci_optional=specific
