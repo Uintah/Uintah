@@ -34,6 +34,7 @@
 #include <Core/Skinner/Window.h>
 #include <Core/Skinner/FocusRegion.h>
 #include <Core/Skinner/Arrow.h>
+#include <Core/Skinner/Arc.h>
 #include <Core/Skinner/Graph2D.h>
 #include <Core/Skinner/Text.h>
 #include <Core/Skinner/Arithmetic.h>
@@ -52,6 +53,7 @@ namespace SCIRun {
       windows_()
     {
       REGISTER_CATCHER_TARGET(Root::Redraw);
+      REGISTER_CATCHER_TARGET(Root::Arc_Maker);
       REGISTER_CATCHER_TARGET(Root::Arrow_Maker);
       REGISTER_CATCHER_TARGET(Root::Arithmetic_Maker);
       REGISTER_CATCHER_TARGET(Root::GLWindow_Maker);
@@ -69,6 +71,7 @@ namespace SCIRun {
     Root::~Root() {
     }
 
+    DECLARE_SKINNER_MAKER(Root, Arc);
     DECLARE_SKINNER_MAKER(Root, Arithmetic);
     DECLARE_SKINNER_MAKER(Root, Arrow);
     DECLARE_SKINNER_MAKER(Root, Text);
@@ -112,7 +115,6 @@ namespace SCIRun {
     }
 
 
-
     BaseTool::propagation_state_e 
     Root::Quit(event_handle_t event) {
       EventManager::add_event(new QuitEvent());
@@ -126,7 +128,7 @@ namespace SCIRun {
     }
     
 
-        void
+    void
     Root::spawn_redraw_threads() {
       BaseTool *event_tool = new FilterRedrawEventsTool("Redraw Filter", 1);
 #if 0
