@@ -66,7 +66,7 @@ extern int printOglError(char *file, int line);
 #define printOpenGLError() printOglError(__FILE__, __LINE__)
 #endif
 
-
+#define PB 0
 
 // static members
 bool ParticleFlowRenderer::functions_initialized_(false);
@@ -253,6 +253,8 @@ ParticleFlowRenderer::set_particle_exponent( int e )
 }
  
 #ifdef SCI_OPENGL
+
+#define BUFFER_OFFSET(i)((char *)NULL + (i))
 void 
 ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
 {
@@ -301,6 +303,21 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
       // create_points for rendering
       create_points(array_width_, array_height_);
       CHECK_OPENGL_ERROR("");
+
+#if PB
+      // create the "current" pixel buffer using pixel_buffer_objects
+      if( glIsBuffer( vb_ ) ){
+        glDeleteBuffers( 1, &vb_);
+      } 
+      glGenBuffers(1, &vb_);
+      CHECK_OPENGL_ERROR("");
+      glBindBuffer(GL_PIXEL_PACK_BUFFER_ARB, vb_);
+      CHECK_OPENGL_ERROR("");
+      glBufferData(GL_PIXEL_PACK_BUFFER_ARB,
+                   array_width_ * array_height_ * 4,
+                   BUFFER_OFFSET(0), GL_DYNAMIC_DRAW);
+      CHECK_OPENGL_ERROR("");
+#endif        
       
       //       cerr<<"Starting array values are:  \n";
       //       print_array(array_width_*array_height_, 4, start_verts_);
@@ -319,6 +336,9 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
       }
       else {
         load_part_texture( 1, current_verts_);
+#if PB
+        glBindBuffer(GL_PIXEL_PACK_BUFFER_ARB, vb_);
+#endif
       CHECK_OPENGL_ERROR("");
       }
 
@@ -337,6 +357,8 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
       
       // save the current draw buffer
       glGetIntegerv(GL_DRAW_BUFFER, &current_draw_buffer_);
+      int current_read_buffer;
+      glGetIntegerv(GL_READ_BUFFER, &current_read_buffer);
       
       // render to the frame buffer object
       fb_->enable();
@@ -441,10 +463,11 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
         shader_->initialize_uniform( "Step", GLfloat( step_size_));
 
       }
-      printOpenGLError();
+      CHECK_OPENGL_ERROR("");    
 
       // use shader_ to move points in framebuffer object
       glUseProgram(shader_->program_object());
+      CHECK_OPENGL_ERROR("");    
 
       glBegin(GL_QUADS);
       {
@@ -454,7 +477,7 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
         glMultiTexCoord2f(GL_TEXTURE0, 0, 1); glVertex2f(0, 1);
       }
       glEnd();
-      printOpenGLError();
+      CHECK_OPENGL_ERROR("");    
       glPopMatrix(); //MODELVIEW
       CHECK_OPENGL_ERROR("");    
       glMatrixMode(GL_PROJECTION);
@@ -479,15 +502,29 @@ ParticleFlowRenderer::draw(DrawInfoOpenGL* di, Material* mat, double /* time */)
       CHECK_OPENGL_ERROR(""); 
 
       // read the pixels from the framebuffer object
+      CHECK_OPENGL_ERROR("");    
+#if PB
+      // BUT PUT THEM IN THE PIXELBUFFER OBJECT
+      glReadBuffer(GL_COLOR_ATTACHMENT0_EXT);  
+      CHECK_OPENGL_ERROR("");         
+      glReadPixels(0,0, array_width_, array_height_,
+                   GL_RGBA, GL_FLOAT, BUFFER_OFFSET(0));
+#else
       glReadPixels(0,0, array_width_, array_height_,
                    GL_RGBA, GL_FLOAT, current_verts_);
-      //     cerr<<"Current array values are now: \n";
-      //     print_array(array_width_*array_height_, 4, current_verts_);
+#endif
+      CHECK_OPENGL_ERROR("");         
+//           cerr<<"Current array values are now: \n";
+//           print_array(array_width_*array_height_, 4, current_verts_);
 
       // disable the framebuffer object
       fb_->disable();
+      CHECK_OPENGL_ERROR("");    
       // reset the draw buffer parameters
       glDrawBuffer( current_draw_buffer_);
+      CHECK_OPENGL_ERROR("");    
+      glReadBuffer( current_read_buffer);
+      CHECK_OPENGL_ERROR("");    
       glViewport(vp[0], vp[1], vp[2], vp[3]);
       CHECK_OPENGL_ERROR("");    
       // Prepare to render points.
@@ -743,7 +780,7 @@ ParticleFlowRenderer::create_points(GLint w, GLint h)
       *vptr       = i;
       *(vptr + 1) = 0;
       *(vptr + 2) = j;
-      *(vptr + 3) = 0.75 + ((float) rand() / RAND_MAX);// * 0.5;
+      *(vptr + 3) = 0.75 + ((float) rand() / RAND_MAX) * 0.5;
       vptr += 4;
 
       *cvptr       = 0.0;
@@ -752,9 +789,9 @@ ParticleFlowRenderer::create_points(GLint w, GLint h)
       *(cvptr + 3) = 0.0;      
       cvptr += 4;
 
-      *cptr       = ((float) rand() / RAND_MAX) * 0.5 + 0.5;
-      *(cptr + 1) = ((float) rand() / RAND_MAX) * 0.5 + 0.5;
-      *(cptr + 2) = ((float) rand() / RAND_MAX) * 0.5 + 0.5;
+      *cptr       = ((float) rand() / RAND_MAX) * 0.5 + 0.25;
+      *(cptr + 1) = ((float) rand() / RAND_MAX) * 0.5 + 0.25;
+      *(cptr + 2) = ((float) rand() / RAND_MAX) * 0.5 + 0.25;
       cptr += 3;
     }
   }
@@ -972,9 +1009,16 @@ CHECK_OPENGL_ERROR("");
 
   
   glPointSize(2.0);
+  // reading from current_verts
+#if PB
+  // reading from pixel buffer
+  glBindBuffer(GL_ARRAY_BUFFER, vb_);
+  glVertexPointer(3, GL_FLOAT, 4* sizeof(GLfloat), NULL);
+// CHECK_OPENGL_ERROR("");
 
-  glVertexPointer(3, GL_FLOAT, 4* sizeof(GLfloat), current_verts_);
-CHECK_OPENGL_ERROR("");
+#else
+   glVertexPointer(3, GL_FLOAT, 4* sizeof(GLfloat), current_verts_);
+#endif
 
   glColorPointer(3, GL_FLOAT, 0, colors_);
 CHECK_OPENGL_ERROR("");

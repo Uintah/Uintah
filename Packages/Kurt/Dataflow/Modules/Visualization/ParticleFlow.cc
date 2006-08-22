@@ -264,8 +264,8 @@ void
     cmap_dirty = true;
   }
 
-  
- ogeom->flushViews();
+  ogeom->flushViews();
+
 
 }
 

@@ -108,8 +108,10 @@ private:
   unsigned int nsteps_;
   double step_size_;
 
+  
   GLuint flow_tex_;
   GLuint part_tex_[2];
+  GLuint vb_;
   GLfloat *vfield_;
   
   
