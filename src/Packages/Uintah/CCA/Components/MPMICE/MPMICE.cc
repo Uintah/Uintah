@@ -8,6 +8,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/FractureMPM.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
 #include <Packages/Uintah/CCA/Components/MPM/ThermalContact/ThermalContact.h>
+#include <Packages/Uintah/CCA/Components/MPM/MPMBoundCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/BoundaryCond.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfState.h>
 #include <Packages/Uintah/Core/Labels/ICELabel.h>
@@ -142,23 +143,6 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   if (d_switchCriteria) {
     d_switchCriteria->problemSetup(prob_spec,materials_ps,d_sharedState);
   }
-
-#if 0
-    
-  // Get the PBX matl id
-  int matl_id = 0;
-  for (ProblemSpecP child = prob_spec->findBlock("material"); child != 0;
-       child = child->findNextBlock("material")) {
-    string name_type;
-    if (!child->getAttribute("name",name_type))
-      throw ProblemSetupException("No name for material", __FILE__, __LINE__);
-    
-    if (name_type == "reactant")
-      pbx_matl_num = matl_id; 
-    
-    matl_id++;
-  }
-#endif
 
   //__________________________________
   //  I C E
@@ -343,6 +327,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   d_mpm->scheduleAdjustCrackContactInterpolated(sched,mpm_patches,  mpm_matls);
 
   d_mpm->scheduleExMomInterpolated(           sched, mpm_patches, mpm_matls);
+  d_mpm->scheduleSetBCsInterpolated(          sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
 
   // schedule the interpolation of mass and volume to the cell centers
@@ -673,7 +658,6 @@ void MPMICE::scheduleInterpolatePAndGradP(SchedulerP& sched,
   Task* t=scinew Task("MPMICE::interpolatePAndGradP",
                       this, &MPMICE::interpolatePAndGradP);
   Ghost::GhostType  gac = Ghost::AroundCells;
-  t->requires(Task::OldDW, d_sharedState->get_delt_label());
   
   t->requires(Task::NewDW, MIlb->press_NCLabel,       press_matl,gac, NGN);
   t->requires(Task::NewDW, MIlb->cMassLabel,          mpm_matl,  gac, 1);
@@ -1125,6 +1109,10 @@ void MPMICE::interpolatePressCCToPressNC(const ProcessorGroup*,
         pressNC[*iter]  += .125*pressCC[cIdx[in]];
       }
     }
+
+    // Apply grid boundary conditions to the pressure before storing the data
+    MPMBoundCond bc;
+    bc.setBoundaryCondition(patch,0,"Pressure",   pressNC,   d_8or27);
   }
 }
 
@@ -1139,9 +1127,6 @@ void MPMICE::interpolatePAndGradP(const ProcessorGroup*,
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
     printTask(patches,patch,"Doing interpolatePressureToParticles\t\t\t");
-
-    delt_vartype delT;
-    old_dw->get(delT, d_sharedState->get_delt_label());
 
     ParticleInterpolator* interpolator = d_mpm->flags->d_interpolator->clone(patch);
     vector<IntVector> ni;
@@ -1216,7 +1201,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       CCVariable<double> cmass,Temp_CC, sp_vol_CC, rho_CC;
       CCVariable<Vector> vel_CC;
       constCCVariable<double> Temp_CC_ice, sp_vol_CC_ice;
-      constCCVariable<Vector> vel_CC_ice;
 
       new_dw->allocateAndPut(cmass,    MIlb->cMassLabel,     indx, patch);  
       new_dw->allocateAndPut(vel_CC,   MIlb->vel_CCLabel,    indx, patch);  
@@ -1309,23 +1293,26 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         d_ice->printVector( indx, patch, 1,desc.str(), "vel_CC", 0, vel_CC);
       }
       //---- B U L L E T   P R O O F I N G------
+      // ignore BP if timestep restart has already been requested
       IntVector neg_cell;
       ostringstream warn;
+      bool tsr = new_dw->timestepRestarted();
+      
       int L = getLevel(patches)->getIndex();
       if(d_testForNegTemps_mpm){
-        if (!d_ice->areAllValuesPositive(Temp_CC, neg_cell)) {
+        if (!d_ice->areAllValuesPositive(Temp_CC, neg_cell) && !tsr) {
           warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx 
                <<" cell "
                << neg_cell << " Temp_CC " << Temp_CC[neg_cell] << "\n ";
           throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
       }
-      if (!d_ice->areAllValuesPositive(rho_CC, neg_cell)) {
+      if (!d_ice->areAllValuesPositive(rho_CC, neg_cell) && !tsr) {
         warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx 
              <<" cell " << neg_cell << " rho_CC " << rho_CC[neg_cell]<< "\n ";
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
-      if (!d_ice->areAllValuesPositive(sp_vol_CC, neg_cell)) {
+      if (!d_ice->areAllValuesPositive(sp_vol_CC, neg_cell) && !tsr) {
         warn <<"ERROR MPMICE:("<< L<<"):interpolateNCToCC_0, mat "<< indx 
              <<" cell "
              << neg_cell << " sp_vol_CC " << sp_vol_CC[neg_cell]<<"\n ";
@@ -1504,10 +1491,13 @@ void MPMICE::computeLagrangianValuesMPM(const ProcessorGroup*,
       }
       
       //---- B U L L E T   P R O O F I N G------
+      // ignore BP if timestep restart has already been requested
       IntVector neg_cell;
       ostringstream warn;
+      bool tsr = new_dw->timestepRestarted();
+      
       if(d_testForNegTemps_mpm){
-        if (!d_ice->areAllValuesPositive(int_eng_L, neg_cell)) {
+        if (!d_ice->areAllValuesPositive(int_eng_L, neg_cell) && !tsr) {
           int L = getLevel(patches)->getIndex();
           warn <<"ERROR MPMICE:("<< L<<"):computeLagrangianValuesMPM, mat "
                << indx<<" cell "
@@ -1948,7 +1938,10 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
 
       //__________________________________
       //      BULLET PROOFING
-      if(test_max_iter == d_ice->d_max_iter_equilibration) 
+      // ignore BP if timestep restart has already been requested
+      bool tsr = new_dw->timestepRestarted();
+      
+      if(test_max_iter == d_ice->d_max_iter_equilibration && !tsr) 
        throw MaxIteration(c,count,n_passes,L_indx,
                          "MaxIterations reached", __FILE__, __LINE__);
 
@@ -1956,11 +1949,11 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
            ASSERT(( vol_frac[m][c] > 0.0 ) ||
                   ( vol_frac[m][c] < 1.0));
       }
-      if ( fabs(sum - 1.0) > convergence_crit) {  
+      if ( fabs(sum - 1.0) > convergence_crit && !tsr) {  
          throw MaxIteration(c,count,n_passes, L_indx,
                          "MaxIteration reached vol_frac != 1", __FILE__, __LINE__);
       }
-      if ( press_new[c] < 0.0 ) {
+      if ( press_new[c] < 0.0 && !tsr) {
          throw MaxIteration(c,count,n_passes, L_indx,
                          "MaxIteration reached press_new < 0", __FILE__, __LINE__);
       }
@@ -2274,67 +2267,7 @@ void MPMICE::scheduleInitializeAddedMaterial(const LevelP& level,
       delete add_matl; // shouln't happen, but...
   }
 }
-/*______________________________________________________________________
- Function~  setBC_rho_micro
- Purpose: set the boundary conditions for the microscopic density in 
- MPMICE computeEquilibration Press
-______________________________________________________________________*/
-void MPMICE::setBC_rho_micro(const Patch* patch,
-                             MPMMaterial* mpm_matl,
-                             ICEMaterial* ice_matl,
-                             const int indx,
-                             const CCVariable<double>& cv,
-                             const CCVariable<double>& gamma,
-                             const CCVariable<double>& press_new,
-                             const CCVariable<double>& Temp,
-                             const double press_ref,
-                             CCVariable<double>& rho_micro)
-{
-  //__________________________________
-  //  loop over faces on the boundary
-  vector<Patch::FaceType>::const_iterator f;
-  for (f  = patch->getBoundaryFaces()->begin(); 
-       f != patch->getBoundaryFaces()->end(); ++f){
-    Patch::FaceType face = *f;
-    
-    int numChildren = patch->getBCDataArray(face)->getNumberChildren(indx);
-    for (int child = 0;  child < numChildren; child++) {
-      double bc_value = -9;
-      string bc_kind = "NotSet";
-      vector<IntVector> bound;
-      
-      bool foundIterator =
-        getIteratorBCValueBCKind<double>( patch, face, child, "Density", indx,
-                                          bc_value, bound, bc_kind); 
-      
-      //cout << " face " << face << " bc_kind " << bc_kind << " \t indx " << indx
-      //     <<"\t bound limits = "<< *bound.begin()<< " "<< *(bound.end()-1) << endl;
-      
-      if (foundIterator && bc_kind == "Dirichlet") { 
-        // what do you put here?
-      }
-      if (foundIterator && bc_kind != "Dirichlet") {      // Everything else
-        vector<IntVector>::const_iterator iter;
-        
-        if(ice_matl){             //  I C E
-          for (iter=bound.begin(); iter != bound.end(); iter++) {
-            IntVector c = *iter;
-            rho_micro[c] = 
-              ice_matl->getEOS()->computeRhoMicro(press_new[c],gamma[c],
-                                           cv[c],Temp[c],rho_micro[c]);
-          }
-        } else if(mpm_matl){     //  M P M
-          for (iter=bound.begin(); iter != bound.end(); iter++) {
-            IntVector c = *iter;
-            rho_micro[c] =  
-              mpm_matl->getConstitutiveModel()->computeRhoMicroCM(
-                                         press_new[c],press_ref,mpm_matl);
-          }
-        }  // mpm
-      } // if not
-    } // child loop
-  } // face loop
-}
+
 //______________________________________________________________________
 void MPMICE::actuallyInitializeAddedMPMMaterial(const ProcessorGroup*, 
                                                 const PatchSubset* patches,

@@ -43,8 +43,8 @@ SRCS     += \
             $(SRCDIR)/TxtConnection.cc \
             $(SRCDIR)/TxtMessage.cc
 
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL  Core/CCA/Comm \
-           Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/spec \
+           Core/Thread Core/Containers Core/Exceptions
 
 LIBS := $(NCURSES_LIBRARY) $(LIBS)
 

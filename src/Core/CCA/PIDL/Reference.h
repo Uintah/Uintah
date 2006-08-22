@@ -43,7 +43,7 @@
 #ifndef CCA_PIDL_Reference_h
 #define CCA_PIDL_Reference_h
 
-#include <Core/CCA/Comm/SpChannel.h>
+#include <Core/CCA/PIDL/SpChannel.h>
 
 namespace SCIRun {
 /**************************************

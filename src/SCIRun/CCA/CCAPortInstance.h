@@ -44,7 +44,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
 #include <SCIRun/PortInstance.h>
-#include <Core/CCA/spec/cca_sidl.h>
+
 #include <map>
 #include <string>
 #include <vector>
@@ -74,22 +74,31 @@ public:
    *         false otherwise
    */
   virtual bool connect(PortInstance *pi);
+
   /** */
   virtual PortInstance::PortType portType();
+
   /** */
   virtual std::string getType();
+
   /** */
   virtual std::string getModel();
+
   /** */
   virtual std::string getUniqueName();
+
   /** */
   virtual bool disconnect(PortInstance*);
+
   /** */
   virtual bool canConnectTo(PortInstance*);
+
   /** */
   virtual bool available();
+
   /** */
   virtual PortInstance *getPeer();
+
   /** */
   std::string getName();
   int getConnectionCount() { return connections.size(); }
@@ -110,19 +119,27 @@ public:
   /** Test use counter. */
   bool portInUse();
 
+  // move this to PortInstance after Babel compiler changeover
+  virtual sci::cca::TypeMap::pointer getProperties() { return properties; }
+  virtual void setProperties(const sci::cca::TypeMap::pointer& tm);
+
 private:
   friend class CCAComponentInstance;
   friend class BridgeComponentInstance;
+
+  void setDefaultProperties();
+
   std::string name;
   std::string type;
   sci::cca::TypeMap::pointer properties;
   std::vector<PortInstance*> connections;
+
   SCIRun::Mutex lock_connections;
 
   sci::cca::Port::pointer port;
   PortType porttype;
   int useCount;
-  
+
   CCAPortInstance(const CCAPortInstance&);
   CCAPortInstance& operator=(const CCAPortInstance&);
 };

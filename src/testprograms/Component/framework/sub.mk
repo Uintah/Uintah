@@ -38,7 +38,7 @@ ifeq ($(LARGESOS),yes)
  PSELIBS := Core
 else
  PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/Thread \
-            Core/Exceptions Core/CCA/Comm Core/Containers
+            Core/Exceptions Core/Containers
 endif
 
 ifeq ($(HAVE_GLOBUS),yes)

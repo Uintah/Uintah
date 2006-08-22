@@ -34,15 +34,13 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := CCA/Components/LinSolver
 
 SRCS     += \
-	$(SRCDIR)/LinSolver.cc
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm\
-	Core/CCA/spec Core/Thread Core/Containers Core/Exceptions
-#QT_LIBDIR := /home/sparker/SCIRun/SCIRun_Thirdparty_32_linux/lib
-LIBS := $(QT_LIBRARY)
+            $(SRCDIR)/LinSolver.cc
+
+PSELIBS  := \
+            Core/CCA/PIDL Core/CCA/spec \
+            Core/Thread Core/Containers Core/Exceptions
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
-#include $(SCIRUN_SCRIPTS)/program.mk
 
 $(SRCDIR)/LinSolver.o: Core/CCA/spec/cca_sidl.h
 #$(SRCDIR)/Matrix.o: Core/CCA/spec/cca_sidl.h

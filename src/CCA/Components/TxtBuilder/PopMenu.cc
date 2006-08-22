@@ -44,7 +44,7 @@
 using namespace SCIRun;
 
 PopMenu::PopMenu(char** choices, int cnt){
-  items = (ITEM **)new (ITEM*)[cnt + 1];
+  items = (ITEM **) new ITEM* [cnt + 1];
   int w=0;
   for(int i = 0; i < cnt; ++i){
     items[i] = new_item(choices[i], NULL);
@@ -55,9 +55,9 @@ PopMenu::PopMenu(char** choices, int cnt){
   menu = new_menu(items);
 
   w++; //leave space for menu item indicator
-  win = newwin(cnt+2,w+2, 0, 0); 
+  win = newwin(cnt+2,w+2, 0, 0);
   WINDOW *dwin = derwin(win,cnt,w, 1, 1);
-  panel= new_panel(win); 	
+  panel= new_panel(win);
   set_menu_win(menu,win);
   set_menu_sub(menu,dwin);
   box(win,'|','-');
@@ -70,7 +70,7 @@ PopMenu::PopMenu(char** choices, int cnt){
 
 PopMenu::PopMenu(std::vector<std::string> choices){
   int cnt=choices.size();
-  items = (ITEM **)new (ITEM*)[cnt + 1];
+  items = (ITEM **) new ITEM* [cnt + 1];
   int w=0;
   for(int i = 0; i < cnt; ++i){
     items[i] = new_item(choices[i].c_str(), NULL);
@@ -81,9 +81,9 @@ PopMenu::PopMenu(std::vector<std::string> choices){
   menu = new_menu(items);
 
   w++; //leave space for menu item indicator
-  win = newwin(cnt+2,w+2, 0, 0); 
+  win = newwin(cnt+2,w+2, 0, 0);
   WINDOW *dwin = derwin(win,cnt,w, 1, 1);
-  panel= new_panel(win); 	
+  panel= new_panel(win);
   set_menu_win(menu,win);
   set_menu_sub(menu,dwin);
   box(win,'|','-');
@@ -111,10 +111,10 @@ PopMenu::enter(int lines, int cols, int &flag){
   update_panels();
   doupdate();
   int selection=-1;
-  
+
   bool quit=false;
   while(!quit){
-    switch(wgetch(stdscr)){	
+    switch(wgetch(stdscr)){
     case KEY_DOWN:
       mv_down();
       break;
@@ -153,7 +153,7 @@ PopMenu::select(int lines, int cols){
   int selection=-1;
   bool quit=false;
   while(!quit){
-    switch(wgetch(stdscr)){	
+    switch(wgetch(stdscr)){
     case KEY_DOWN:
       mv_down();
       break;

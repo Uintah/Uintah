@@ -197,6 +197,10 @@ ArchesLabel::ArchesLabel()
 				  CCVariable<double>::getTypeDescription() );
   d_co2INLabel = VarLabel::create("co2IN",
 				  CCVariable<double>::getTypeDescription() );
+  d_normalizedScalarVarLabel = VarLabel::create("normalizedScalarVar",
+				  CCVariable<double>::getTypeDescription() );
+  d_heatLossLabel = VarLabel::create("heatLoss",
+				  CCVariable<double>::getTypeDescription() );
   d_h2oINLabel = VarLabel::create("h2oIN",
 				  CCVariable<double>::getTypeDescription() );
   d_h2sINLabel = VarLabel::create("h2sIN",
@@ -623,6 +627,8 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_cpINLabel);
   VarLabel::destroy(d_co2INLabel);
   VarLabel::destroy(d_h2oINLabel);
+  VarLabel::destroy(d_normalizedScalarVarLabel);
+  VarLabel::destroy(d_heatLossLabel);
   VarLabel::destroy(d_h2sINLabel);
   VarLabel::destroy(d_so2INLabel);
   VarLabel::destroy(d_so3INLabel);

@@ -110,7 +110,7 @@ public:
   std::string getSidlDLLPath() const { return sidlDLLPath; }
   void setSidlDLLPath( const std::string& s) { sidlDLLPath = s; }
 
-  static const std::string DEFAULT_PATH;
+  static const std::string DEFAULT_XML_PATH;
 
 private:
   typedef std::map<std::string, VtkComponentDescription*> componentDB_type;

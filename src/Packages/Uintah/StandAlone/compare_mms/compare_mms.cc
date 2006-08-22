@@ -89,6 +89,8 @@ usage( const std::string & message,
       cerr << "-mms <linear, sine or exp> \n";
       cerr << "-uda <archive file>\n";
       cerr << "-v,--variable <variable name>\n";
+//      cerr << "-o <output_file_name>\n";
+      cerr << "-L Compute global error for the last time step only\n";
       
       exit(1);
 }
@@ -100,6 +102,9 @@ main( int argc, char *argv[] )
 	string whichMMS;
 	bool do_arches=false;
 	bool do_ice=false;
+	FILE *outFile = stdout;
+	bool last_time_step  = false;
+
   for(int i=1;i<argc;i++){
     string s=argv[i];
     if( (s == "-help") || (s == "-h") ) {
@@ -126,7 +131,22 @@ main( int argc, char *argv[] )
               s, argv[0]);
       }
       varName = argv[i];
-    } else {
+    } else if(s == "-o") {
+      if(++i == argc) {
+	usage("You must provide an output filename for -o",
+	      s, argv[0]);
+      }
+      outFile = fopen(argv[i],"w");
+      
+      if(!outFile) { // Checking success of file creation
+	cerr << "The outputfile cannot be created\n";
+	exit (1);
+      }
+      
+    } else if(s == "-L") {
+      last_time_step = true;
+    }
+    else {
 	    ;
     }
   }
@@ -314,10 +334,22 @@ main( int argc, char *argv[] )
     vartypes1.resize(vars.size());
     printf( "Number of vars: %d\n", vars.size() );
 
+    unsigned int loopLowerBound;
+    
+    if (true == last_time_step) {
+      loopLowerBound = index.size() -1 ;
+    } else {
+      loopLowerBound = 0;
+    }
+
+
+
+
+
     ////////////////////////////
     // Iterate over TIME
     //
-    for( unsigned int timeIndex = 0; timeIndex < index.size(); timeIndex++ ) {
+    for( unsigned int timeIndex = loopLowerBound; timeIndex < index.size(); timeIndex++ ) {
         printf( "here: %d, %lf\n", index[timeIndex], times[timeIndex] );
 
         GridP grid = da1->queryGrid( times[timeIndex] );
@@ -338,9 +370,13 @@ main( int argc, char *argv[] )
 	        int i=0;
 	        double total_error=0.0, total_errorU=0.0, total_errorV=0.0;
 //		Vector total_errVector = (0,0,0); 
-                printf("variable %s is a %s\n", vars[varIndex].c_str(), types[varIndex]->getName().c_str() );
 
                 if( (vars[varIndex] != varName) ) continue;
+		  
+
+                printf("variable %s is a %s\n", vars[varIndex].c_str(), types[varIndex]->getName().c_str() );
+
+
 		////////////////////////////
 		// Iterate over the patches
 		for(Level::const_patchIterator iter = level->patchesBegin(); iter != level->patchesEnd(); iter++) {
@@ -489,11 +525,20 @@ main( int argc, char *argv[] )
                 } // end patch iteration
 		
 		if (varName=="pressurePS"||varName=="press_CC"||varName=="newCCUVelocity"||varName=="newCCVVelocity") {
-                    cout << "i= " << i << ", L2norm of error= " << sqrt(total_error/i) << "\n";
+		  cout << "i= " << i << endl << "L2norm of error: " << endl << sqrt(total_error/i) << "\n";
 		}
 		if (varName=="vel_CC"||varName=="newCCVelocity") {
-                    cout << "i= " << i << ", L2norm of error= " << sqrt(total_errorU/i) << " " << sqrt(total_errorV/i) << "\n";
+		  cout << "i= " << i << ", L2norm of error= " << sqrt(total_errorU/i) << " " << sqrt(total_errorV/i) << "\n";
 		}
+
+		if (varName=="pressurePS"||varName=="press_CC"||varName=="newCCUVelocity"||varName=="newCCVVelocity") {
+		  fprintf(outFile, "%le\n",sqrt(total_error/i)) ;
+		}
+		if (varName=="vel_CC"||varName=="newCCVelocity") {
+		 fprintf(outFile,"%le,%le\n", sqrt(total_errorU/i), sqrt(total_errorV/i));
+		}
+
+
 		
             } // end variable iteration
 

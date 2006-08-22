@@ -24,16 +24,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+
 // 
 // File:          NewPort_StringPort_Impl.cxx
 // Symbol:        NewPort.StringPort-v1.0
 // Symbol Type:   class
-// Babel Version: 0.11.0
+// Babel Version: 0.99.2
 // Description:   Server-side implementation for NewPort.StringPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.11.0
 // 
 #include "NewPort_StringPort_Impl.hxx"
 
@@ -46,9 +46,20 @@
 #ifndef included_sidl_ClassInfo_hxx
 #include "sidl_ClassInfo.hxx"
 #endif
+#ifndef included_sidl_NotImplementedException_hxx
+#include "sidl_NotImplementedException.hxx"
+#endif
 // DO-NOT-DELETE splicer.begin(NewPort.StringPort._includes)
 // Insert-Code-Here {NewPort.StringPort._includes} (additional includes or code)
 // DO-NOT-DELETE splicer.end(NewPort.StringPort._includes)
+
+// speical constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
+NewPort::StringPort_impl::StringPort_impl() : StubBase(reinterpret_cast< 
+  void*>(::NewPort::StringPort::_wrapObj(this)),false) , _wrapped(true){ 
+  // DO-NOT-DELETE splicer.begin(NewPort.StringPort._ctor2)
+  // Insert-Code-Here {NewPort.StringPort._ctor2} (ctor2)
+  // DO-NOT-DELETE splicer.end(NewPort.StringPort._ctor2)
+}
 
 // user defined constructor
 void NewPort::StringPort_impl::_ctor() {
@@ -82,6 +93,7 @@ NewPort::StringPort_impl::getString_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(NewPort.StringPort.getString)
+  // Insert-Code-Here {NewPort.StringPort.getString} (getString method)
   return "NewPort::StringPort_impl::getString CALLED";
   // DO-NOT-DELETE splicer.end(NewPort.StringPort.getString)
 }

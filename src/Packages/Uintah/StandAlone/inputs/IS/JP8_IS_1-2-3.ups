@@ -47,17 +47,19 @@
            </SimulationComponent>
            <input_file> Explode_IS.ups</input_file>
        </subcomponent>
-       <carry_over var="vol_frac_CC" />
        <carry_over var="press_CC" />
        <carry_over var="temp_CC" />
        <carry_over var="rho_CC" />
        <carry_over var="sp_vol_CC" />
        <carry_over var="vel_CC" />
-       <carry_over var="delP_Dilatate" />
        <carry_over var="scalar-f" />
        <carry_over var="cumulativeEnergyReleased" />
        <carry_over var="NC_CCweight" />
        <carry_over var="heatRate_CC" />
+<!--
+       <carry_over var="vol_frac_CC" />
+       <carry_over var="delP_Dilatate" />
+-->
 
  </SimulationComponent>
 
@@ -452,12 +454,12 @@
         </constitutive_model>
         <geom_object>
           <difference>
-            <cylinder label = "outer cylinder">
+            <cylinder>
               <bottom>           [0.0,0.0,-.06985]   </bottom>
               <top>              [0.0,0.0, .06985]   </top>
               <radius>           0.05715             </radius>
             </cylinder>
-            <cylinder label = "inner cylinder">
+            <cylinder>
               <bottom>           [0.0,0.0,-.0508]   </bottom>
               <top>              [0.0,0.0, .0508]   </top>
               <radius>           0.0508             </radius>

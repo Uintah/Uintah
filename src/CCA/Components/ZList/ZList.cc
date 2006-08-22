@@ -39,11 +39,7 @@
  */
 
 #include <CCA/Components/ZList/ZList.h>
-
 #include <iostream>
-#include <qapplication.h>
-#include <qpushbutton.h>
-#include <qmessagebox.h>
 
 extern "C" sci::cca::Component::pointer make_SCIRun_ZList()
 {
@@ -78,7 +74,7 @@ void ZList::setServices(const sci::cca::Services::pointer& svc)
 int ImUIPort::ui()
 {
   ListForm *w = new ListForm(com);
-  w->show();
+  w->Show();
   return 0;
 }
 

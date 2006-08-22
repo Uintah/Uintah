@@ -28,7 +28,7 @@
 
 
 /*
- *  TaoPortInstance.h: 
+ *  TaoPortInstance.h:
  *
  *  Written by:
  *   Steven G. Parker
@@ -57,48 +57,67 @@ class TaoPortInstance : public PortInstance
 {
 public:
   TaoPortInstance(const std::string& portname, const std::string& classname,
-                  PortType porttype);
+                  const sci::cca::TypeMap::pointer& properties, PortType porttype);
   TaoPortInstance(const std::string& portname, const std::string& classname,
-                  const sci::cca::Port::pointer& port,
-                  PortType porttype);
+                  const sci::cca::TypeMap::pointer& properties,
+                  const sci::cca::Port::pointer& port, PortType porttype);
   ~TaoPortInstance();
+
   /** */
   virtual bool connect(PortInstance*);
+
   /** */
   virtual PortInstance::PortType portType();
+
   /** */
   virtual std::string getType();
+
   /** */
   virtual std::string getModel();
+
   /** */
   virtual std::string getUniqueName();
+
   /** */
   virtual bool disconnect(PortInstance*);
+
   /** */
   virtual bool canConnectTo(PortInstance*);
+
   /** */
   virtual bool available();
+
   /** */
   virtual PortInstance *getPeer();
+
+  virtual sci::cca::TypeMap::pointer getProperties() { return properties; }
+  virtual void setProperties(const sci::cca::TypeMap::pointer& tm);
+
   /** */
   std::string getName();
+
   /** */
   void incrementUseCount();
+
   /** */
   bool decrementUseCount();
+
 private:
   friend class TaoComponentInstance;
   friend class BridgeComponentInstance;
+
+  TaoPortInstance(const TaoPortInstance&);
+  TaoPortInstance& operator=(const TaoPortInstance&);
+  void setDefaultProperties();
+
   std::string name;
   std::string type;
+
   sci::cca::TypeMap::pointer properties;
   std::vector<PortInstance*> connections;
   sci::cca::Port::pointer port;
   PortType porttype;
   int useCount;
-  
-  TaoPortInstance(const TaoPortInstance&);
-  TaoPortInstance& operator=(const TaoPortInstance&);
 };
 
 } // end namespace SCIRun

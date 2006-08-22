@@ -29,24 +29,27 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := testprograms/Component/Jacobi
+SRCDIR  := testprograms/Component/Jacobi
 
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/Thread \
-	Core/Exceptions Core/CCA/Comm
+PSELIBS := \
+           Core/CCA/SSIDL Core/CCA/PIDL \
+           Core/Thread Core/Exceptions
 endif
 
 ifeq ($(HAVE_GLOBUS),yes)
-PSELIBS+=Core/globus_threads
+PSELIBS += Core/globus_threads
 endif
 
-LIBS := $(MPI_LIBRARY) 
+LIBS    := $(MPI_LIBRARY) 
 
 PROGRAM := $(SRCDIR)/Jacobi
-SRCS := $(SRCDIR)/Jacobi.cc $(SRCDIR)/Jacobi_sidl.cc \
-	$(SRCDIR)/Jacobi_impl.cc
+SRCS    := \
+           $(SRCDIR)/Jacobi.cc \
+           $(SRCDIR)/Jacobi_sidl.cc \
+           $(SRCDIR)/Jacobi_impl.cc
 GENHDRS := $(SRCDIR)/Jacobi_sidl.h
 
 include $(SCIRUN_SCRIPTS)/program.mk

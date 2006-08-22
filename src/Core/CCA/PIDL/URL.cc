@@ -40,30 +40,31 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include "URL.h"
+#include <Core/CCA/PIDL/URL.h>
 #include <Core/CCA/PIDL/MalformedURL.h>
+
 #include <iostream>
 #include <sstream>
 #include <netdb.h>
-using namespace std;
+
 using namespace SCIRun;
 
-URL::URL(const string& protocol,
-	 const string& hostname,
-	 int portno, const string& spec)
+URL::URL(const std::string& protocol,
+	 const std::string& hostname,
+	 int portno, const std::string& spec)
     : d_protocol(protocol), d_hostname(hostname),
       d_portno(portno), d_spec(spec)
 {
 }   
 
-URL::URL(const string& str)
+URL::URL(const std::string& str)
 {
     // This is pretty simple minded, but it works for now
     int s=str.find("://");
     if(s == -1)
 	throw MalformedURL(str, "No ://");
     d_protocol=str.substr(0, s);
-    string rest=str.substr(s+3);
+    std::string rest=str.substr(s+3);
     s=rest.find(":");
     if(s == -1){
 	s=rest.find("/");
@@ -78,7 +79,7 @@ URL::URL(const string& str)
     } else {
 	d_hostname=rest.substr(0, s);
 	rest=rest.substr(s+1);
-	istringstream i(rest);
+	std::istringstream i(rest);
 	i >> d_portno;
 	if(!i)
 	  throw MalformedURL(str, "Error parsing port number");
@@ -95,9 +96,9 @@ URL::~URL()
 {
 }
 
-string URL::getString() const
+std::string URL::getString() const
 {
-    ostringstream o;
+    std::ostringstream o;
     o << d_protocol << "://" << d_hostname;
     if(d_portno > 0)
 	o << ":" << d_portno;
@@ -107,12 +108,12 @@ string URL::getString() const
     return o.str();
 }
 
-string URL::getProtocol() const
+std::string URL::getProtocol() const
 {
     return d_protocol;
 }
 
-string URL::getHostname() const
+std::string URL::getHostname() const
 {
     return d_hostname;
 }
@@ -122,7 +123,7 @@ int URL::getPortNumber() const
     return d_portno;
 }
 
-string URL::getSpec() const
+std::string URL::getSpec() const
 {
     return d_spec;
 }

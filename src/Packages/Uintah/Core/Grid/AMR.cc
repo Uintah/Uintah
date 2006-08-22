@@ -237,6 +237,7 @@ void fineLevel_CFI_Iterator(Patch::FaceType patchFace,
   c_hi_patch = coarseLevel->mapCellToFiner(c_hi_patch); 
 
   IntVector dir = finePatch->faceAxes(patchFace);        // face axes
+  int pdir = dir[0];
   int y = dir[1];  // tangential directions
   int z = dir[2];
 
@@ -259,8 +260,30 @@ void fineLevel_CFI_Iterator(Patch::FaceType patchFace,
   
   if ( coarsePatch->containsCell(f_l) && coarsePatch->containsCell(f_h) ){
     isRight_CP_FP_pair = true;
+  }
+  
+#if 0  
+  //__________________________________
+  // This is a special case test
+  // Imagine if the face of the fine patch is on the border of a coarse patch face
+  // For example fine patch face y- and coarse patch face y+ share share a border in physical space
+  string name = finePatch->getFaceName(patchFace);
+  if(name == "xminus" || name == "yminus" || name == "zminus"){
+    if(f_low_face[pdir] == c_hi_patch[pdir]){
+      isRight_CP_FP_pair = true;
+    }
+  }
+  if(name == "xplus" || name == "yplus" || name == "zplus"){
+    if(f_hi_face[pdir] == c_lo_patch[pdir]){
+      isRight_CP_FP_pair = true;
+    }
+  }  
+#endif  
+  
+  if (isRight_CP_FP_pair){
     iter=CellIterator(l,h);
   }
+
   
 #if 0
   // debugging

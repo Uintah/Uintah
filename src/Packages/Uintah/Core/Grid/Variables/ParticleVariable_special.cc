@@ -50,8 +50,14 @@ using namespace std;
       delete d_pset;
 
 #if SCI_ASSERTION_LEVEL >= 2
+    // a null patch means that there is no patch center for the pset
+    // (probably on an AMR copy data timestep)
+    const Patch* patch = pset->getPatch();
+    if (!patch)
+      patch = srcPatches[0];
+
     IntVector lowIndex(pset->getLow()), highIndex(pset->getHigh());
-    Box box = pset->getPatch()->getLevel()->getBox(lowIndex, highIndex);
+    Box box = patch->getLevel()->getBox(lowIndex, highIndex);
 #endif
     
     d_pset = pset;

@@ -26,49 +26,35 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/****************************************************************************
-** Form interface generated from reading ui file 'ListPlotterForm.ui'
-**
-** Created: Tue Apr 9 18:07:16 2002
-**      by:  The User Interface Compiler (uic)
-**
-** WARNING! All changes made in this file will be lost!
-****************************************************************************/
 #ifndef LISTPLOTTERFORM_H
 #define LISTPLOTTERFORM_H
 
-#include <qvariant.h>
-#include <qdialog.h>
-class QVBoxLayout; 
-class QHBoxLayout; 
-class QGridLayout; 
-class QCheckBox;
-class QPushButton;
+#include <sci_wx.h>
+
 class ZGraph;
 
-class ListPlotterForm : public QDialog
-{ 
-    Q_OBJECT
-
+class ListPlotterForm : public wxDialog
+{
 public:
-    ListPlotterForm( QWidget* parent = 0, const char* name = 0, bool modal = TRUE, WFlags fl = 0 );
-    ~ListPlotterForm();
+  ListPlotterForm(wxWindow* parent = 0, const wxString& name = wxString("ListPlotterForm"));
+  ~ListPlotterForm();
 
-    ZGraph* listZGraph;
-    QCheckBox* connectedCheckBox;
-    QPushButton* closeQuitPushButton;
+  ZGraph* listZGraph;
+  // need to refresh graph after this is called
+  void setData(const double * val, int size);
 
+//     QCheckBox* connectedCheckBox;
+//     QPushButton* closeQuitPushButton;
 
-signals:
-    void dataChanged(const double*, int);
-
-public slots:
-    virtual void setData( const double * val, int size );
+// signals:
+//     void dataChanged(const double*, int);
+// public slots:
+//     virtual void setData( const double * val, int size );
 
 protected:
-    QHBoxLayout* ListPlotterFormLayout;
-    QVBoxLayout* Layout8;
-    QHBoxLayout* Layout4;
+//     QHBoxLayout* ListPlotterFormLayout;
+//     QVBoxLayout* Layout8;
+//     QHBoxLayout* Layout4;
 };
 
 #endif // LISTPLOTTERFORM_H

@@ -24,16 +24,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+
 // 
 // File:          BridgeTest_GoPort_Impl.cxx
 // Symbol:        BridgeTest.GoPort-v1.0
 // Symbol Type:   class
-// Babel Version: 0.11.0
+// Babel Version: 0.99.2
 // Description:   Server-side implementation for BridgeTest.GoPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.11.0
 // 
 #include "BridgeTest_GoPort_Impl.hxx"
 
@@ -49,10 +49,21 @@
 #ifndef included_sidl_ClassInfo_hxx
 #include "sidl_ClassInfo.hxx"
 #endif
+#ifndef included_sidl_NotImplementedException_hxx
+#include "sidl_NotImplementedException.hxx"
+#endif
 // DO-NOT-DELETE splicer.begin(BridgeTest.GoPort._includes)
 #include "BridgeTest.hxx"
 #include <iostream>
 // DO-NOT-DELETE splicer.end(BridgeTest.GoPort._includes)
+
+// speical constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
+BridgeTest::GoPort_impl::GoPort_impl() : StubBase(reinterpret_cast< 
+  void*>(::BridgeTest::GoPort::_wrapObj(this)),false) , _wrapped(true){ 
+  // DO-NOT-DELETE splicer.begin(BridgeTest.GoPort._ctor2)
+  // Insert-Code-Here {BridgeTest.GoPort._ctor2} (ctor2)
+  // DO-NOT-DELETE splicer.end(BridgeTest.GoPort._ctor2)
+}
 
 // user defined constructor
 void BridgeTest::GoPort_impl::_ctor() {
@@ -83,9 +94,10 @@ void BridgeTest::GoPort_impl::_load() {
  */
 void
 BridgeTest::GoPort_impl::setServices_impl (
-  /* in */UCXX ::gov::cca::Services svc ) 
+  /* in */::gov::cca::Services services ) 
 {
   // DO-NOT-DELETE splicer.begin(BridgeTest.GoPort.setServices)
+  // Insert-Code-Here {BridgeTest.GoPort.setServices} (setServices method)
   this->svc = services;
   // DO-NOT-DELETE splicer.end(BridgeTest.GoPort.setServices)
 }
@@ -101,14 +113,14 @@ BridgeTest::GoPort_impl::go_impl ()
 
 {
   // DO-NOT-DELETE splicer.begin(BridgeTest.GoPort.go)
-  UCXX ::gov::cca::Port p = svc.getPort("btport");
-  UCXX ::BridgeTest::BridgeTestPort s = UCXX ::sidl::babel_cast<UCXX ::BridgeTest::BridgeTestPort>(p);
-  std::cerr << "Got the port" << std::endl;
-  if(!s._is_nil()) {
-    std::cerr << "Sent " << std::endl;//<< s.m2(13) <<"\n";
-  } else {
+  // Insert-Code-Here {BridgeTest.GoPort.go} (go method)
+  ::gov::cca::Port p = svc.getPort("btport");
+  ::BridgeTest::BridgeTestPort s = ::sidl::babel_cast< ::BridgeTest::BridgeTestPort>(p);
+  if(s._is_nil()) {
     std::cerr << "getPort() returns null" << std::endl;
+    return -1;
   }
+  std::cerr << "Sent " << std::endl;//<< s.m2(13) <<"\n";
   return 0;
   // DO-NOT-DELETE splicer.end(BridgeTest.GoPort.go)
 }

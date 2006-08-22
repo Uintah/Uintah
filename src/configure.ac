@@ -233,7 +233,7 @@ SCI_ARG_WITH(ptolemyII,
   [with_ptolemyII=""])
 SCI_ARG_WITH(java,
   AC_HELP_STRING(--with-java=DIR,
-                 Use the Java distribution in DIR (Ptolemy package only)),
+                 Use the Java distribution in DIR),
   [with_java="$withval"
    sci_required_java=yes],
   [with_java=""])
@@ -360,12 +360,12 @@ SCI_ARG_WITH(babel,
   [with_babel="$withval"
    sci_required_babel=yes],
   [with_babel=""])
-SCI_ARG_WITH(qt,
-  AC_HELP_STRING(--with-qt=DIR,
-                 Use the Qt installation in DIR),
-  [with_qt="$withval"
-   sci_required_qt=yes],
-  [with_qt=""])
+SCI_ARG_WITH(wxwidgets,
+  AC_HELP_STRING(--with-wxwidgets=DIR,
+                 Use the wxWidgets installation in DIR),
+  [with_wx="$withval"
+   sci_required_wx=yes],
+  [with_wx=""])
 SCI_ARG_WITH(ruby,
   AC_HELP_STRING(--with-ruby=DIR,
                  Use the ruby installation in DIR where DIR points to the --prefix option specified when installing ruby.  A standard ruby install defaults to --prefix=/usr/local),
@@ -1527,6 +1527,16 @@ case $host in
     CPPFLAGS="$CPPFLAGS $WOFF"
     CFLAGS="$CFLAGS $extra_cflags"
 
+    case `hostname` in
+      alc*)
+        # LLNL's ALC computer is doing something strange with its g77
+        # fortran underscore policy to make it compatible with other compilers.
+	# We don't need this, so this flag just turns their 'hack' off.
+	AC_MSG_WARN(Turning off ALC's fortran underscore compatibility hack.)
+        FFLAGS="$FFLAGS -funderscoring"
+        ;;
+    esac
+
     case $F77 in
       *g77*)
          # extra_fflags has array checking if in debug mode.
@@ -1763,6 +1773,9 @@ if test "$sci_required_tools" = "yes" ; then
      G77=0
   fi
 fi
+
+AC_MSG_CHECKING(fortran underscore policy)
+AC_MSG_RESULT($FORTRAN_UNDERSCORE)
 
 AC_SUBST(FORTRAN_UNDERSCORE)
 AC_SUBST(G77)
@@ -2998,6 +3011,7 @@ if test "$with_java" = "yes"; then
     fi
   done
 elif test "$with_java"; then
+  ## need to link more than one library
   _sci_optional=required
   _sci_inc="$with_java/include"
   _java_top=$with_java
@@ -3021,6 +3035,18 @@ if test "$_sci_optional" = "required"; then
   fi
 
   SCI_TRY_LINK(JAVA, java JNI libraries, jni.h, $_sci_inc, java jvm, $_sci_lib,,,$_sci_optional)
+
+  AC_ARG_VAR(JAVAC,Java compiler)
+  AC_PATH_PROG(JAVAC,javac,NOT_FOUND,$_java_top $PATH)
+  if test "$JAVAC" = "NOT_FOUND"; then
+    SCI_MSG_ERROR(java not found)
+  fi
+
+  AC_ARG_VAR(JAR,Java archive tool)
+  AC_PATH_PROG(JAR,jar,NOT_FOUND,$_java_top $PATH)
+  if test "$JAR" = "NOT_FOUND"; then
+    SCI_MSG_ERROR(jar not found)
+  fi
 fi
 
 if test "$HAVE_JAVA" = "yes"; then
@@ -4153,6 +4179,7 @@ AC_SUBST(GDCM_LIB_DIR_FLAG)
 
 
 ##  --  search for Ptolemy II ---------------------------------------------------
+
 if test "$sci_required_ptolemyII" = "yes"; then
   AC_MSG_CHECKING(for Ptolemy II.)
   if test "$HAVE_JAVA" != "yes"; then
@@ -4168,8 +4195,7 @@ if test "$sci_required_ptolemyII" = "yes"; then
     AC_MSG_RESULT($pdir)
 
     PTOLEMY_PATH="$pdir"
-    #PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar:$JAVA_PATH/jre:/lib/rt.jar"
-    PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar:/lib/rt.jar"
+    PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar"
     HAVE_PTOLEMY="yes"
     HAVE_PTOLEMY_PACKAGE="yes"
     DEF_PTOLEMY="#define HAVE_PTOLEMY 1"
@@ -4256,40 +4282,50 @@ AC_SUBST(TAU_MAKEFILE)
 
 ##  --  search for Babel  ----------------------------------------------------
 
+## add Thirdparty path
 _sci_lib=
 _sci_inc=
 _sci_optional=optional
 
-if test "$with_babel" = "yes"; then
+if test "$enable_scirun2" = "yes" -a "$with_babel" = "yes"; then
   _sci_optional=required
-elif test "$with_babel"; then
+elif test "$enable_scirun2" = "yes" -a "$with_babel"; then
   _sci_lib="$with_babel/lib"
-  _sci_inc="$with_babel/include"
-  _sci_optional=specific
+  _sci_inc="$with_babel/include $with_babel/include/cxx $with_babel/include/f77"
+  _sci_optional=required
 fi
 
-SCI_TRY_LINK(SIDL,sidl library and headers,sidl.h,$_sci_inc,sidl,$_sci_lib,,,$_sci_optional)
+## should try to link with C++ header?
+_babel_libs="-lsidl -lsidlx -lsidlstub_cxx -lsidlstub_f77 -lsidlstub_java"
+SCI_TRY_LINK(SIDL,sidl library and headers,sidl.h,$_sci_inc,sidl,$_sci_lib,$_babel_libs,,$_sci_optional)
 
 BABEL_BIN=
-AC_CHECKING(for babel in $LIB_DIR_SIDL/../bin)
-AC_CHECK_PROG(BABEL_BIN,babel,$LIB_DIR_SIDL/../bin/babel,NONE,$LIB_DIR_SIDL/../bin)
+AC_CHECKING(for babel in $SIDL_LIB_DIR/../bin)
+AC_CHECK_PROG(BABEL_BIN,babel,$SIDL_LIB_DIR/../bin/babel,NONE,$SIDL_LIB_DIR/../bin)
 
 if test "$HAVE_SIDL" = "yes" && test $BABEL_BIN != "NONE"; then
-  ## check for compatible version (0.11.0 or greater)
-  SCI_CHECK_VERSION($BABEL_BIN,--version,0.11.0,,echo configure: error: wrong Babel version.; exit)
+  ## check for compatible version (0.99.0 or greater)
+  SCI_CHECK_VERSION($BABEL_BIN,--version,0.99.0,,echo configure: error: wrong Babel version.; exit)
   DEF_BABEL="#define HAVE_BABEL 1"
   HAVE_BABEL="yes"
 fi
 
 ## make missing babel an error!
+BABEL_CLASSPATH=
 if test "$with_babel" && test ! "$DEF_BABEL"; then
   echo
   AC_MSG_ERROR(One or more of the Babel components is missing.)
 fi
 
+if test "$HAVE_JAVA" = "yes"; then
+  BABEL_CLASSPATH=`find $LIB_DIR_SIDL -follow -name "*.jar" 2> /dev/null | tr -d "\n"`
+  AS_MESSAGE(Babel classpath=$BABEL_CLASSPATH)
+fi
+
 AC_SUBST(HAVE_BABEL)
 AC_SUBST(DEF_BABEL)
 AC_SUBST(BABEL_BIN)
+AC_SUBST(BABEL_CLASSPATH)
 
 AC_SUBST(INC_SIDL_H)
 AC_SUBST(SIDL_LIB_FLAG)
@@ -4925,86 +4961,112 @@ AC_SUBST(GLOBUS_LIB_DIR_FLAG)
 sci_defs_files="$sci_defs_files include/sci_defs/globus_testdefs.h"
 
 ##  --  search for ncurses  ----------------------------------------------
-                                                                                                 
 _sci_lib=
 _sci_inc=
 _sci_optional=optional
-                                                                                                 
+
 if test "$enable_scirun2" = "yes" -o "$sci_required_ncurses" = "yes"; then
   _sci_optional=required
 fi
-                                                                                                 
+
 if test "$with_ncurses"; then
   _sci_lib="$with_ncurses/lib"
   _sci_inc="$with_ncurses/include"
   _sci_optional=specific
 fi
-                                                                                                 
+
 SCI_TRY_LINK(NCURSES,ncurses library,curses.h menu.h,$_sci_inc,ncurses panel menu,$_sci_lib,,,$_sci_optional)
-                                                                                                 
+
 if test "$HAVE_NCURSES" = "yes"; then
    DEF_NCURSES="#define HAVE_NCURSES 1"
 fi
-                                                                                                 
+
 if test "$with_ncurses" && test ! "$DEF_NCURSES"; then
   echo
   AC_MSG_ERROR(One or more of the ncurses components is missing.)
 fi
-                                                                                                 
+
 AC_SUBST(HAVE_NCURSES)
 AC_SUBST(DEF_NCURSES)
 AC_SUBST(INC_NCURSES_H)
 AC_SUBST(NCURSES_LIB_FLAG)
 AC_SUBST(NCURSES_LIB_DIR_FLAG)
 
-##  --  search for Qt  ----------------------------------------------------
+##  --  search for wxWidgets  --------------------------------------------
 
-_sci_lib=
 _sci_inc=
+_sci_lib=
 _sci_optional=optional
 
-if test "$with_qt" = "yes"; then
-  _sci_optional=required
-elif test "$with_qt"; then
-  _sci_lib="$with_qt/lib"
-  _sci_inc="$with_qt/include"
-  _sci_optional=required
+if test "$sci_required_wx" = "yes" -a "$enable_scirun2" = "yes" ; then
+
+ if test "$with_wx" = "yes"; then
+   _sci_optional=required
+ elif test "$with_wx"; then
+   ## can't use 'specific' setting because we'll try to link more than 1 library later
+   _sci_optional=required
+   _sci_lib="$with_wx/lib"
+   _sci_inc="$with_wx/include"
+ fi
+
+ _wx_bin=$_sci_lib/../bin
+ WX_CONFIG=
+ AC_PATH_PROG(WX_CONFIG,wx-config,NOT_FOUND,$_wx_bin $PATH)
+
+ if test $_sci_optional != "optional" && test "$WX_CONFIG" = "NOT_FOUND"; then
+   SCI_MSG_ERROR(wx-config not found)
+ fi
+
+ SCI_CHECK_VERSION($WX_CONFIG,--version,2.6.0,,echo configure: error: wrong wxWidgets version.; exit)
+ WX_LIBS=`$WX_CONFIG --libs`
+ WX_CXXFLAGS=`$WX_CONFIG --cxxflags`
+
+ ext="$ac_ext"
+ ac_ext="cc"
+
+ case $host in
+   *linux*)
+     _wx_lib_dir_flags=`echo $WX_LIBS | sed "s/ -[[^L]][[^ ]]*/ /g" | sed "s/^-[[^L]][[^ ]]*//g"`
+     _wx_lib_flags=`echo $WX_LIBS | sed "s/ -[[^l]][[^ ]]*/ /g" | sed "s/^-[[^l]][[^ ]]*//g"`
+     _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^I]][[^ ]]*/ /g" | sed "s/^-[[^I]][[^ ]]*//g"`
+     _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^D]][[^ ]]*/ /g" | sed "s/^-[[^D]][[^ ]]*//g"`
+
+     ;;
+   *-darwin*)
+     _wx_lib_dir_flags=$WX_LIBS
+     _wx_lib_flags=$WX_LIBS
+     _wx_inc_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^I]][[^ ]]*/ /g" | sed "s/^-[[^I]][[^ ]]*//g"`
+     _wx_def_flags=`echo $WX_CXXFLAGS | sed "s/ -[[^D]][[^ ]]*/ /g" | sed "s/^-[[^D]][[^ ]]*//g"`
+
+     ;;
+   *)
+     #assume there is no specific version
+     ;;
+ esac
+ SCI_TRY_LINK(WX,wxWidgets libraries,wx/wxprec.h,$_wx_inc_flags,$_wx_lib_flags,$_wx_lib_dir_flags,$_wx_def_flags,,$_sci_optional)
+ # Restore the previous settings.
+ ac_ext="$ext"
+
+ if test "$HAVE_WX" = "yes"; then
+   DEF_WX="#define HAVE_WX 1"
+ fi
 fi
 
-ext="$ac_ext"
-ac_ext="cc"
+AC_SUBST(HAVE_WX)
+AC_SUBST(DEF_WX)
+AC_SUBST(WX_CXXFLAGS)
+AC_SUBST(WX_LIBS)
+AC_SUBST(INC_WX_H)
+AC_SUBST(WX_LIB_FLAG)
+AC_SUBST(WX_LIB_DIR_FLAG)
+sci_defs_files="$sci_defs_files include/sci_defs/wx_testdefs.h"
 
-qt_bin=$_sci_lib/../bin
-# Only looking for one .h file... assuming all the rest are in the same place.
-SCI_TRY_LINK(QT_MT,qt library,qapplication.h,$_sci_inc,qt-mt Xxf86vm,$_sci_lib /usr/X11R6/lib,-DQT_THREAD_SUPPORT -DQT_NO_XIM,,$_sci_optional)
-QT_MOC_BIN=""
-AS_MESSAGE(checking for moc in $qt_bin...)
-AC_CHECK_PROG(QT_MOC_BIN,moc,$qt_bin/moc,NOMOC,)
+##  --  search for ruby  ------------------------------------------------
+_sci_inc=
+_sci_lib=
+_sci_optional=optional
 
-# Restore the previous settings.
-ac_ext="$ext"
-  
-if test "$HAVE_QT_MT" = "yes" && test $QT_MOC_BIN != "NOMOC"; then
-   DEF_QT="#define HAVE_QT 1"
-   HAVE_QT="yes"
-fi
-
-if test "$with_qt" && test ! "$DEF_QT"; then
-  echo
-  AC_MSG_ERROR(One or more of the QT components is missing.)
-fi
-
-AC_SUBST(HAVE_QT)
-AC_SUBST(DEF_QT)
-AC_SUBST(INC_QT_MT_H)
-AC_SUBST(QT_MT_LIB_FLAG)
-AC_SUBST(QT_MT_LIB_DIR_FLAG)
-AC_SUBST(QT_MOC_BIN)
-sci_defs_files="$sci_defs_files include/sci_defs/qt_testdefs.h"
-
-##  --  search for ruby  ----------------------------------------------------
 if test "$sci_required_ruby" = "yes"; then
-  _sci_optional=optional
 
   if test "$with_ruby" = "yes"; then
     # --with-ruby has been specified without a parameter.
@@ -5022,14 +5084,14 @@ if test "$sci_required_ruby" = "yes"; then
     _ruby_inc=`find $with_ruby -name "ruby.h" -print | sed 's/ruby.h//'`
     _sci_optional=specific
   fi
-  
+
   # Only looking for one .h file... assuming all the rest are in the same place.
   SCI_TRY_LINK(RUBY,ruby library,ruby.h,$_ruby_inc,ruby-static,$_sci_lib,,,$_sci_optional)
 
   if test "$HAVE_RUBY" = "yes"; then
      DEF_RUBY="#define HAVE_RUBY 1"
   fi
-  
+
   if test "$with_ruby" && test ! "$DEF_RUBY"; then
     echo
     AC_MSG_ERROR(One or more of the ruby components are missing.)
@@ -5091,10 +5153,8 @@ if test "$sci_required_vtk" = "yes"; then
 
   ext="$ac_ext"
   ac_ext="cc"
-  
   # Only looking for one .h file... assuming all the rest are in the same place.
   SCI_TRY_LINK(VTK,vtk library, vtkImageData.h,$_vtk_inc,vtkCommon vtkFiltering vtkGraphics vtkImaging vtkRendering vtkIO vtkjpeg vtkpng vtkzlib,$_sci_lib,,,optional)
-
   # Restore the previous settings.
   ac_ext="$ext"
 
@@ -5191,27 +5251,11 @@ fi
 # so we aren't going to check for it in any version.  If the other 3
 # libs exist, we will assume that HYPRE_blas is there if it is needed.
 SCI_TRY_LINK(HYPRE,HYPRE libraries and headers,HYPRE.h,$_sci_inc,
-                         HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI,
+                         HYPRE_struct_mv HYPRE_struct_ls HYPRE_sstruct_mv HYPRE_sstruct_ls HYPRE_LSI HYPRE_superlu,
                          $_sci_lib,,,$_sci_optional)
 
 if test "$HAVE_HYPRE" = "yes" ; then
   DEF_HYPRE="#define HAVE_HYPRE 1"
-
-  if test -f $HYPRE_LIB_DIR/../include/HYPRE_config.h; then
-    # Determine the version of hypre.
-    found_it=`grep "PACKAGE_VERSION" $HYPRE_LIB_DIR/../include/HYPRE_config.h | grep 1.9`
-    DEF_HYPRE_1_9="#define HAVE_HYPRE_1_9 0"
-    HAVE_HYPRE_1_9="no"
-    if test -n "$found_it"; then
-       DEF_HYPRE_1_9="#define HAVE_HYPRE_1_9 1"
-       HAVE_HYPRE_1_9="yes"
-       # Hypre 1.9 added the 'superlu' lib... can't check for it above as 1.7 doesn't have it.
-       # Once we force an upgrade to 1.9 for everyone, then we will check for it, but for now
-       # I just hardcode it here.
-       HYPRE_LIB_FLAG="$HYPRE_LIB_FLAG -lHYPRE_superlu"
-    fi
-  fi
-
 fi
 
 if test "$with_hypre" && test ! "$DEF_HYPRE"; then
@@ -5220,8 +5264,6 @@ if test "$with_hypre" && test ! "$DEF_HYPRE"; then
 fi
 
 AC_SUBST(HAVE_HYPRE)
-AC_SUBST(HAVE_HYPRE_1_9)
-AC_SUBST(DEF_HYPRE_1_9)
 AC_SUBST(DEF_HYPRE)
 AC_SUBST(INC_HYPRE_H)
 AC_SUBST(HYPRE_LIB_FLAG)
@@ -5439,7 +5481,6 @@ case $host in
   *)
     ;;
 esac
-
 
 ##  --  See if we have everything needed for SCIRun2 ----------------------
 

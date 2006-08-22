@@ -45,7 +45,7 @@
 #define CCA_PIDL_ServerContext_h
 
 #include <Core/CCA/PIDL/Object.h>
-#include <Core/CCA/Comm/EpChannel.h>
+#include <Core/CCA/PIDL/EpChannel.h>
 #include <Core/CCA/PIDL/Reference.h>
 #include <Core/CCA/PIDL/HandlerStorage.h>
 //#include <Core/CCA/PIDL/HandlerGateKeeper.h>

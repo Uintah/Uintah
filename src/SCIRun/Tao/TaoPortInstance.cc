@@ -46,17 +46,19 @@ namespace SCIRun {
 
 TaoPortInstance::TaoPortInstance(const std::string& name,
                                  const std::string& type,
+				 const sci::cca::TypeMap::pointer& properties,
                                  PortType porttype)
-  : name(name), type(type), porttype(porttype),
+  : name(name), type(type), properties(properties), porttype(porttype),
     useCount(0)
 {
 }
 
 TaoPortInstance::TaoPortInstance(const std::string& name,
                                  const std::string& type,
+				 const sci::cca::TypeMap::pointer& properties,
                                  const sci::cca::Port::pointer& port,
                                  PortType porttype)
-  : name(name), type(type), port(port),
+  : name(name), type(type), properties(properties), port(port),
     porttype(porttype), useCount(0)
 {
 }
@@ -175,6 +177,19 @@ bool TaoPortInstance::decrementUseCount()
     }
     useCount--;
     return true;
+}
+
+void TaoPortInstance::setProperties(const sci::cca::TypeMap::pointer& tm)
+{
+  properties = tm;
+  setDefaultProperties();
+}
+
+void TaoPortInstance::setDefaultProperties()
+{
+  properties->putString(PortInstance::NAME, name);
+  properties->putString(PortInstance::TYPE, type);
+  properties->putString(PortInstance::MODEL, this->getModel());
 }
 
 } // end namespace SCIRun

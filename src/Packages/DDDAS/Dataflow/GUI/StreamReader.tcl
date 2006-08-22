@@ -23,16 +23,14 @@ itcl_class DDDAS_DataIO_StreamReader {
     }
 
     method set_defaults {} {
-	global $this-hostname
-	global $this-port
-	global $this-file-read
-	global $this-file-write
-        global $this-stop-sr
-	set $this-hostname "arthur.ccs.uky.edu"
-	set $this-port 8000
-	set $this-file-read "solver_data_2.mp3"
-	set $this-file-write "sample.txt"
-	set $this-stop-sr 0
+	global $this-brokerip
+	global $this-brokerport
+	global $this-groupname
+	global $this-listenport
+	set $this-brokerip "localhost"
+	set $this-brokerport 8831
+	set $this-groupname "wildfire"
+	set $this-listenport "8832"
     }
 
     method ui {} {
@@ -57,26 +55,22 @@ itcl_class DDDAS_DataIO_StreamReader {
         pack $w.row5 $w.row6 $w.row7 $w.row8  $w.which $w.row4 $w.row9 \
              -side top -e y -f both -padx 5 -pady 5
 	
-	label $w.row5.hostname_label -text "Hostname   "
-	entry $w.row5.hostname -textvariable $this-hostname
-	label $w.row6.port_label -text "Port Number   "
-	entry $w.row6.port -textvariable $this-port
-	label $w.row7.file-read_label -text "File to Read   "
-	entry $w.row7.file-read -textvariable $this-file-read
-	label $w.row8.file-write_label -text "Save As   "
-	entry $w.row8.file-write -textvariable $this-file-write
+	label $w.row5.brokerip_label -text "Broker IP:"
+	entry $w.row5.brokerip -textvariable $this-brokerip
+	label $w.row6.brokerport_label -text "Broker Port:"
+	entry $w.row6.brokerport -textvariable $this-brokerport
+	label $w.row7.groupname_label -text "Group Name:"
+	entry $w.row7.groupname -textvariable $this-groupname
+	label $w.row8.listenport_label -text "Listening Port:"
+	entry $w.row8.listenport -textvariable $this-listenport
 
-	pack $w.row5.hostname_label $w.row5.hostname -side left
-	pack $w.row6.port_label $w.row6.port -side left
-	pack $w.row7.file-read_label $w.row7.file-read -side left	
-        pack $w.row8.file-write_label $w.row8.file-write -side left
+	pack $w.row5.brokerip_label $w.row5.brokerip -side left
+	pack $w.row6.brokerport_label $w.row6.brokerport -side left
+	pack $w.row7.groupname_label $w.row7.groupname -side left	
+        pack $w.row8.listenport_label $w.row8.listenport -side left
 
-	button $w.row4.execute -text "Execute" -command "set $this-stop-sr 0; $this-c needexecute"
+	button $w.row4.execute -text "Execute" -command "$this-c needexecute"
 	pack $w.row4.execute -side top -e n -f both
-
-	button $w.row9.stop-sr_button -text "Stop" -command "set $this-stop-sr 1"
-	entry $w.row9.stop-sr -textvariable $this-stop-sr
-	pack $w.row9.stop-sr_button -side top -e n -f both
 
     }
 }

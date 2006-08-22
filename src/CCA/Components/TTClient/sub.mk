@@ -1,11 +1,10 @@
-
 #  For more information, please see: http://software.sci.utah.edu
-# 
+#
 #  The MIT License
-# 
+#
 #  Copyright (c) 2004 Scientific Computing and Imaging Institute,
 #  University of Utah.
-# 
+#
 #  License for the specific language governing rights and limitations under
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -13,10 +12,10 @@
 #  the rights to use, copy, modify, merge, publish, distribute, sublicense,
 #  and/or sell copies of the Software, and to permit persons to whom the
 #  Software is furnished to do so, subject to the following conditions:
-# 
+#
 #  The above copyright notice and this permission notice shall be included
 #  in all copies or substantial portions of the Software.
-# 
+#
 #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 #  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 #  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -36,15 +35,15 @@ SRCDIR   := CCA/Components/TTClient
 SRCS     += \
             $(SRCDIR)/TTClient.cc
 
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/Comm \
-           Core/CCA/spec Core/Thread Core/Containers \
-           Core/Exceptions CCA/Components/TableTennis
+PSELIBS  := \
+            Core/CCA/PIDL Core/CCA/spec \
+            Core/Thread Core/Containers Core/Exceptions \
+            CCA/Components/TableTennis
 
-ifeq ($(HAVE_QT),yes)
- LIBS := $(QT_LIBRARY)
+ifeq ($(HAVE_GUI),yes)
+ LIBS := $(WX_LIBRARY)
 endif
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 $(SRCDIR)/TTClient.o: CCA/Components/TableTennis/TableTennis_sidl.h Core/CCA/spec/cca_sidl.h
-#$(SRCDIR)/TTClient.o: Core/CCA/spec/cca_sidl.h

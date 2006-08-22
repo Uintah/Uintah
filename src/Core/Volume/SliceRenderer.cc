@@ -209,6 +209,10 @@ SliceRenderer::draw_slice()
   glColor4f(1.0, 1.0, 1.0, 1.0);
   glDepthMask(GL_TRUE);
 
+  glEnable(GL_BLEND);
+  glBlendEquation(GL_FUNC_ADD);
+  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+
   //--------------------------------------------------------------------------
   // set up shaders
   FragmentProgramARB* shader = 0;
@@ -345,6 +349,8 @@ SliceRenderer::draw_slice()
     shader->release();
 
   //--------------------------------------------------------------------------
+
+  glDisable(GL_BLEND);
   
   glDisable(GL_ALPHA_TEST);
   glDepthMask(GL_TRUE);

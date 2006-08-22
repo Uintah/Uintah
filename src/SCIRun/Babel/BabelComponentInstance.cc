@@ -43,8 +43,8 @@
 #include <SCIRun/Babel/BabelComponentInstance.h>
 #include <SCIRun/CCA/CCAPortInstance.h>
 #include <SCIRun/CCA/CCAException.h>
-
 #include <Core/CCA/spec/cca_sidl.h>
+#include <SCIRun/TypeMap.h>
 
 #include <iostream>
 
@@ -56,7 +56,7 @@ namespace SCIRun {
 
 BabelCCAGoPort::BabelCCAGoPort(const UCXX ::gov::cca::ports::GoPort& port)
 {
-  this->port=port;
+  this->port = port;
 }
 
 int BabelCCAGoPort::go()
@@ -66,7 +66,7 @@ int BabelCCAGoPort::go()
 
 BabelCCAUIPort::BabelCCAUIPort(const UCXX ::gov::cca::ports::UIPort& port)
 {
-  this->port=port;
+  this->port = port;
 }
 
 int BabelCCAUIPort::ui()
@@ -86,33 +86,43 @@ BabelComponentInstance::BabelComponentInstance(SCIRunFramework* framework,
   // Babel component properties are ignored for now.
   this->component = component;
   this->svc = svc;
+
   BabelPortInstance *go = dynamic_cast<BabelPortInstance*>(getPortInstance("go"));
   if (go != 0) {
+    // locate a GoPort provided by the Babel component instance
     PortInstanceMap *pports = (PortInstanceMap*) (this->svc.getData());
-
     UCXX ::gov::cca::ports::GoPort g = UCXX ::sidl::babel_cast<UCXX ::gov::cca::ports::GoPort>(go->getPort());
     sci::cca::ports::GoPort::pointer goPort(new BabelCCAGoPort(g));
-    CCAPortInstance *piGo = new CCAPortInstance("sci.go",
+    CCAPortInstance *piGo = new CCAPortInstance("go",
 						"sci.cca.ports.GoPort",
 						sci::cca::TypeMap::pointer(0),
 						goPort,
 						CCAPortInstance::Provides);
 
-    pports->insert(std::make_pair("sci.go", piGo));
+    // Override the original gov.cca.GoPort in the pports map
+    // (the original port is stored in a BabelCCAGoPort) instantiated above.
+    // This is needed to connect GoPorts with CCA UI components such as the GUIBuilder.
+    (*pports)["go"] = (PortInstance*) piGo;
   }
 
+  // locate a UIPort provided by the Babel component instance
   BabelPortInstance *ui = dynamic_cast<BabelPortInstance*>(getPortInstance("ui"));
   if (ui != 0) {
     PortInstanceMap *pports= (PortInstanceMap*) (this->svc.getData());
 
+    // If there is a UIPort, create a corresponding CCAPortInstance
     UCXX ::gov::cca::ports::UIPort u = UCXX ::sidl::babel_cast<UCXX ::gov::cca::ports::UIPort>(ui->getPort());
     sci::cca::ports::UIPort::pointer uiPort(new BabelCCAUIPort(u));
-    CCAPortInstance *piUI = new CCAPortInstance("sci.ui",
+    CCAPortInstance *piUI = new CCAPortInstance("ui",
 						"sci.cca.ports.UIPort",
 						sci::cca::TypeMap::pointer(0),
 						uiPort,
 						CCAPortInstance::Provides);
-    pports->insert(std::make_pair("sci.ui", piUI));
+
+    // Override the original gov.cca.UIPort in the pports map
+    // (the original port is stored in a BabelCCAUIPort) instantiated above.
+    // This is needed to connect UIPorts with CCA UI components such as the GUIBuilder.
+    (*pports)["ui"] = (PortInstance*) piUI;
   }
 }
 
@@ -193,10 +203,15 @@ void BabelComponentInstance::removeProvidesPort(const std::string& name)
   return;
 }
 
-UCXX ::gov::cca::TypeMap
+// gov::cca::TypeMap BabelComponentInstance::getPortProperties(const std::string& portName)
+// {
+//   return svc.getPortProperties(portName);
+// }
+// these do nothing at the moment - implement after compiler changeover
+sci::cca::TypeMap::pointer
 BabelComponentInstance::getPortProperties(const std::string& portName)
 {
-  return svc.getPortProperties(portName);
+  return sci::cca::TypeMap::pointer(new TypeMap);
 }
 
 UCXX ::gov::cca::ComponentID

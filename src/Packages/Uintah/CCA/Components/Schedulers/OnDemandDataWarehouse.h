@@ -6,6 +6,7 @@
 #include <Packages/Uintah/CCA/Ports/DataWarehouse.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouseP.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DWDatabase.h>
+#include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
 #include <Packages/Uintah/Core/Grid/Variables/VarLabelMatl.h>
 #include <Packages/Uintah/Core/Grid/Variables/PSPatchMatlGhost.h>
 #include <Packages/Uintah/Core/Grid/Grid.h>
@@ -420,6 +421,11 @@ private:
    psetDBType                        d_psetDB;
    psetDBType                        d_delsetDB;
    psetAddDBType d_addsetDB;
+
+   // On a timestep restart, sometimes (when an entire patch is sent) on the
+   // first try of the timestep the receiving DW creates and stores ParticleSubset
+   // which throws off the sending on the next iteration.  This will compensate.
+   SendState                         d_timestepRestartPsets;
 
    // Record of which DataWarehouse has the data for each variable...
    //  Allows us to look up the DW to which we will send a data request.
