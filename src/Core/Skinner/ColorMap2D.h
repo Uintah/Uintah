@@ -32,14 +32,11 @@
 //    Date   : Thu Jul  8 01:50:58 2004
 
 #include <Core/Skinner/Parent.h>
-#include <Core/Containers/StringUtil.h>
-#include <Core/Volume/CM2Shader.h>
-#include <Core/Volume/CM2Widget.h>
-#include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Geom/ColorMap.h>
-#include <Core/Util/Endian.h>
+#include <Core/Volume/CM2Widget.h>
+#include <Core/Volume/CM2Shader.h>
+#include <sci_gl.h>
 
-#include <stdio.h>
 #include <stack>
 #include <set>
 #include <sstream>
@@ -58,17 +55,15 @@ namespace SCIRun {
     class ColorMap2D : public Parent {
     public:
       ColorMap2D(Variables *variables);
-      virtual ~ColorMap2D();
+      virtual ~ColorMap2D();      
       CatcherFunction_t                 process_event;
-
     private:
       CatcherFunction_t                 redraw;
-#if 0
+
       void				add_triangle_widget();
       void				add_rectangle_widget();
       void				add_paint_widget();
       void				delete_selected_widget();
-#endif
       struct UndoItem
       {
         enum Action { UNDO_CHANGE, UNDO_ADD, UNDO_DELETE };
@@ -114,9 +109,11 @@ namespace SCIRun {
       void				scale_motion(int x, int y);
       void				scale_end(int x, int y);
       // functions for changing state via GUI
+#if 0
       void				gui_color_change(GuiArgs &args);
       void				gui_shade_change(GuiArgs &args);
       void				gui_toggle_change(GuiArgs &args);
+#endif
       
       int				button_;
       std::vector<CM2WidgetHandle>      widgets_;
