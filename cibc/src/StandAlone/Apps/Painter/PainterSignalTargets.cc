@@ -684,7 +684,8 @@ Painter::ReloadVolumeTexture(event_handle_t event) {
 
 
 BaseTool::propagation_state_e 
-Painter::ShowVolumeRendering(event_handle_t event) {   
+Painter::ShowVolumeRendering(event_handle_t event)
+{
   event_handle_t scene_event = 0;
 
   if (!current_volume_) return STOP_E;
@@ -696,8 +697,6 @@ Painter::ShowVolumeRendering(event_handle_t event) {
   nrrdQuantize(volnrrd->nrrd_, nrrd_handle->nrrd_, range, 8);
   nrrdRangeNix(range);
 
-  Nrrd *nrrd = volnrrd->nrrd_;
-  
   const int card_mem = 128;
   volume_texture_ = new Texture;
   NrrdTextureBuilderAlgo::build_static(volume_texture_,
