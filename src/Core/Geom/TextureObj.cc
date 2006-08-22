@@ -95,10 +95,10 @@ TextureObj::pad_to_power_of_2()
       IsPowerOf2(nrrd_handle_->nrrd_->axis[2].size)) 
     return;
   NrrdDataHandle nout_handle = scinew NrrdData();
-  ptrdiff_t minp[3] = { 0, 0, 0 };
-  ptrdiff_t maxp[3] = { nrrd_handle_->nrrd_->axis[0].size-1, 
-			Pow2(nrrd_handle_->nrrd_->axis[1].size)-1, 
-			Pow2(nrrd_handle_->nrrd_->axis[2].size)-1 };
+  //  ptrdiff_t minp[3] = { 0, 0, 0 };
+  //  ptrdiff_t maxp[3] = { nrrd_handle_->nrrd_->axis[0].size-1, 
+  //			Pow2(nrrd_handle_->nrrd_->axis[1].size)-1, 
+  //			Pow2(nrrd_handle_->nrrd_->axis[2].size)-1 };
 
   NrrdResampleInfo *info = nrrdResampleInfoNew();
   double p[NRRD_KERNEL_PARMS_NUM];
@@ -120,7 +120,7 @@ TextureObj::pad_to_power_of_2()
 
   Nrrd * nin = nrrd_handle_->nrrd_;
 
-  for (int a = 0; a < nin->dim; ++a) {
+  for (unsigned int a = 0; a < nin->dim; ++a) {
     nrrdAxisInfoMinMaxSet(nin, a, nin->axis[a].center ? 
                           nin->axis[a].center : nrrdDefaultCenter);
     

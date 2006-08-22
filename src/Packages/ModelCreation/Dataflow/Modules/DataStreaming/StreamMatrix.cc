@@ -59,13 +59,13 @@ private:
   GuiInt    delay_;
   GuiInt    inc_amount_;
   GuiInt    send_amount_;
+  GuiString guifilename_;
 
   int       inc_;
   bool      loop_;
   bool      use_row_;
   bool      didrun_;
 
-  GuiString guifilename_;
   SCIRunAlgo::StreamMatrixAlgo datafile_; 
   
   void send_selection(int which, int amount);
@@ -278,9 +278,9 @@ void StreamMatrix::execute()
       ScaledIndices.detach();
       double* data = ScaledIndices->get_data_pointer();
       double spacing = datafile_.get_rowspacing();
-      for (int p=0;p<ScaledIndices->get_data_size();p++)
+      for (unsigned int p=0; p<ScaledIndices->get_data_size(); p++)
       {
-        data[p] = spacing*data[p];
+        data[p] = spacing * data[p];
       }
     }
     else if (Weights.get_rep())
@@ -298,9 +298,9 @@ void StreamMatrix::execute()
       ScaledIndices.detach();
       double* data = ScaledIndices->get_data_pointer();
       double spacing = datafile_.get_colspacing();
-      for (int p=0;p<ScaledIndices->get_data_size();p++)
+      for (unsigned int p=0; p<ScaledIndices->get_data_size(); p++)
       {
-        data[p] = spacing*data[p];
+        data[p] = spacing * data[p];
       }
     }
     else if (Weights.get_rep())

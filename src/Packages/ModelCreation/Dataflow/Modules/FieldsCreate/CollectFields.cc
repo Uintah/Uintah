@@ -61,9 +61,9 @@ private:
 DECLARE_MAKER(CollectFields)
 CollectFields::CollectFields(GuiContext* ctx)
   : Module("CollectFields", ctx, Source, "FieldsCreate", "ModelCreation"),
-  buffersizegui_(ctx->subVar("buffersize")),
-  bufferlock_("Lock for internal buffer of module"),
-  buffersize_(0)
+    bufferlock_("Lock for internal buffer of module"),
+    buffersize_(0),
+    buffersizegui_(ctx->subVar("buffersize"))
 {
 }
 

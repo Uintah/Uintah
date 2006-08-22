@@ -185,7 +185,7 @@ bool DataIOAlgo::ReadNrrd(std::string filename, NrrdDataHandle& nrrd, std::strin
       }
       
       // We need to fix the nrrd as it might not be proper every time 
-      for (int i = 0; i < nrrd->nrrd_->dim; i++) 
+      for (unsigned int i = 0; i < nrrd->nrrd_->dim; i++) 
       {
         if (!(airExists(nrrd->nrrd_->axis[i].min) && 
               airExists(nrrd->nrrd_->axis[i].max)))

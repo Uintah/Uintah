@@ -628,7 +628,7 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
 
   if (brows==0 || bcolumns == 0 || ba == 0)
   {
-    std:cerr << "Encountered an invalid sparse matrix" << std::endl;
+    std::cerr << "Encountered an invalid sparse matrix" << std::endl;
     return (false);
   }
   
