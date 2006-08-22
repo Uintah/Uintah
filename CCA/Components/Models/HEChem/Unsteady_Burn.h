@@ -44,7 +44,8 @@ WARNING
 
   class Unsteady_Burn : public ModelInterface {
   public:
-    Unsteady_Burn(const ProcessorGroup* myworld, ProblemSpecP& params);
+    Unsteady_Burn(const ProcessorGroup* myworld, ProblemSpecP& params,
+                  const ProblemSpecP& prob_spec);
     virtual ~Unsteady_Burn();
 
     virtual void outputProblemSpec(ProblemSpecP& ps);
@@ -113,8 +114,11 @@ WARNING
     const VarLabel* BetaLabel;
     const VarLabel* PartBetaLabel;
     const VarLabel* PartTsLabel;
+    const VarLabel* totalMassBurnedLabel;
+    const VarLabel* totalHeatReleasedLabel;
     
-    ProblemSpecP params;
+    ProblemSpecP d_params;
+    ProblemSpecP d_prob_spec;
     const Material* matl0;
     const Material* matl1;
     SimulationStateP d_sharedState;   
@@ -123,6 +127,14 @@ WARNING
     ICELabel* Ilb;
     MPMLabel* Mlb;
     MaterialSet* mymatls;
+
+    // flags for the conservation test
+    struct saveConservedVars{
+      bool onOff;
+      bool mass;
+      bool energy;
+      };
+    saveConservedVars* d_saveConservedVars;
     
     double R ;   /* IdealGasConst      */
     double Ac;   /* PreExpCondPh          */
