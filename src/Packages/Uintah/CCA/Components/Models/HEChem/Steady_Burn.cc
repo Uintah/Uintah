@@ -32,14 +32,24 @@ static DebugStream cout_doing("MODELS_DOING_COUT", false);
 const double Steady_Burn::EPS = 1.e-5;/* iteration stopping criterion */ 
 const double Steady_Burn::UNDEFINED = -10; 
 
-Steady_Burn::Steady_Burn(const ProcessorGroup* myworld, ProblemSpecP& params)
-  : ModelInterface(myworld), params(params) { 
+Steady_Burn::Steady_Burn(const ProcessorGroup* myworld, 
+                         ProblemSpecP& params,
+                         const ProblemSpecP& prob_spec)
+  : ModelInterface(myworld), d_params(params), d_prob_spec(prob_spec) { 
   mymatls = 0;
   Mlb  = scinew MPMLabel();
   Ilb  = scinew ICELabel();
   MIlb = scinew MPMICELabel();
-
+  d_saveConservedVars = scinew saveConservedVars();
+  //__________________________________
+  //  diagnostic labels
   BurningCellLabel = VarLabel::create("SteadyBurn.BurningCell", CCVariable<double>::getTypeDescription());
+  
+  totalMassBurnedLabel  = VarLabel::create( "totalMassBurned",
+                   sum_vartype::getTypeDescription() );
+                   
+  totalHeatReleasedLabel= VarLabel::create( "totalHeatReleased",
+                   sum_vartype::getTypeDescription() );
 }
 
 
@@ -47,6 +57,8 @@ Steady_Burn::~Steady_Burn(){
   delete Ilb;
   //delete Mlb; /* don't delete it here, or complain "double free or corruption" */ 
   delete MIlb;
+  delete d_saveConservedVars;
+  
   VarLabel::destroy(BurningCellLabel);
   if(mymatls && mymatls->removeReference())
     delete mymatls;
@@ -55,22 +67,22 @@ Steady_Burn::~Steady_Burn(){
 //______________________________________________________________________
 void Steady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup*){
   d_sharedState = sharedState;
-  matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
-  matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");  
+  matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
+  matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");  
   
-  params->require("IdealGasConst",     R );
-  params->require("PreExpCondPh",      Ac);
-  params->require("ActEnergyCondPh",   Ec);
-  params->require("PreExpGasPh",       Bg);
-  params->require("CondPhaseHeat",     Qc);
-  params->require("GasPhaseHeat",      Qg);
-  params->require("HeatConductGasPh",  Kg);
-  params->require("HeatConductCondPh", Kc);
-  params->require("SpecificHeatBoth",  Cp);
-  params->require("MoleWeightGasPh",   MW);
-  params->require("BoundaryParticles", BP);
-  params->require("ThresholdPressure", ThresholdPressure);
-  params->require("IgnitionTemp",      ignitionTemp);
+  d_params->require("IdealGasConst",     R );
+  d_params->require("PreExpCondPh",      Ac);
+  d_params->require("ActEnergyCondPh",   Ec);
+  d_params->require("PreExpGasPh",       Bg);
+  d_params->require("CondPhaseHeat",     Qc);
+  d_params->require("GasPhaseHeat",      Qg);
+  d_params->require("HeatConductGasPh",  Kg);
+  d_params->require("HeatConductCondPh", Kc);
+  d_params->require("SpecificHeatBoth",  Cp);
+  d_params->require("MoleWeightGasPh",   MW);
+  d_params->require("BoundaryParticles", BP);
+  d_params->require("ThresholdPressure", ThresholdPressure);
+  d_params->require("IgnitionTemp",      ignitionTemp);
 
   /* initialize constants */
   CC1 = Ac*R*Kc/Ec/Cp;        
@@ -78,6 +90,21 @@ void Steady_Burn::problemSetup(GridP&, SimulationStateP& sharedState, ModelSetup
   CC3 = 4*Kg*Bg*MW*MW/Cp/R/R;  
   CC4 = Qc/Cp;                
   CC5 = Qg/Cp;                
+  
+  //__________________________________
+  //  Are we saving the total burned mass and total burned energy
+  ProblemSpecP DA_ps = d_prob_spec->findBlock("DataArchiver");
+  for (ProblemSpecP child = DA_ps->findBlock("save"); child != 0;
+                    child = child->findNextBlock("save")) {
+    map<string,string> var_attr;
+    child->getAttributes(var_attr);
+    if (var_attr["label"] == "totalMassBurned"){
+      d_saveConservedVars->mass  = true;
+    }
+    if (var_attr["label"] == "totalHeatReleased"){
+      d_saveConservedVars->energy = true;
+    }
+  }
   
   /*  define the materialSet */
   vector<int> m_tmp(2);
@@ -201,6 +228,13 @@ void Steady_Burn::scheduleComputeModelSources(SchedulerP& sched,
 
   t->computes(BurningCellLabel, react_matl);  
    
+  if(d_saveConservedVars->mass ){
+    t->computes(Steady_Burn::totalMassBurnedLabel);
+  }
+  if(d_saveConservedVars->energy){
+    t->computes(Steady_Burn::totalHeatReleasedLabel);
+  } 
+    
   sched->addTask(t, level->eachPatch(), mymatls);
   if(one_matl->removeReference())
     delete one_matl;
@@ -236,6 +270,8 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
   //ASSERT(matls->size() == 2);
   int m0 = matl0->getDWIndex(); /* reactant material */
   int m1 = matl1->getDWIndex(); /* product material */
+  double totalBurnedMass = 0;
+  double totalHeatReleased = 0;
   
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
@@ -383,18 +419,20 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
 #endif
 
 	/* conservation of mass, momentum and energy   */
-	mass_src_0[c]  -= burnedMass;
-	mass_src_1[c]    += burnedMass;
-	
+	 mass_src_0[c]   -= burnedMass;
+	 mass_src_1[c]   += burnedMass;
+	 totalBurnedMass += burnedMass;
+       
         Vector momX = vel_CC[c] * burnedMass;
         momentum_src_0[c]  -= momX;
         momentum_src_1[c]    += momX;
 	
         double energyX   = Cp*solidTemp[c]*burnedMass; 
         double releasedHeat = burnedMass * (Qc + Qg);
-        energy_src_0[c]  -= energyX;
-        energy_src_1[c]    += energyX + releasedHeat;
-
+        energy_src_0[c]   -= energyX;
+        energy_src_1[c]   += energyX + releasedHeat;
+        totalHeatReleased += releasedHeat;
+        
         double createdVolx = burnedMass * solidSp_vol[c];
         sp_vol_src_0[c]  -= createdVolx;
         sp_vol_src_1[c]    += createdVolx;
@@ -413,6 +451,15 @@ void Steady_Burn::computeModelSources(const ProcessorGroup*,
     setBC(mass_src_0, "set_if_sym_BC",patch, d_sharedState, m0, new_dw);
     setBC(mass_src_1, "set_if_sym_BC",patch, d_sharedState, m1, new_dw); 
   }
+  //__________________________________
+  //save total quantities
+  if(d_saveConservedVars->mass ){
+    new_dw->put(sum_vartype(totalBurnedMass),  Steady_Burn::totalMassBurnedLabel);
+  }
+  if(d_saveConservedVars->energy){
+    new_dw->put(sum_vartype(totalHeatReleased),Steady_Burn::totalHeatReleasedLabel);
+  }
+  
 }
 
 //______________________________________________________________________
