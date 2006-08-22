@@ -58,6 +58,7 @@ namespace SCIRun {
       CatcherFunction_t MenuManager_Maker;
       CatcherFunction_t Text_Maker;
       CatcherFunction_t ViewSubRegion_Maker;
+      CatcherFunction_t Arc_Maker;
       CatcherFunction_t Quit;
       CatcherFunction_t Redraw;
       typedef vector<GLWindow *> GLWindows_t;

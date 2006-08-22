@@ -35,6 +35,7 @@ SRCDIR   := Core/Skinner
 
 SRCS     += \
 	$(SRCDIR)/Animation.cc	    	\
+	$(SRCDIR)/Arc.cc	    	\
 	$(SRCDIR)/Arrow.cc	    	\
 	$(SRCDIR)/Arithmetic.cc	    	\
 	$(SRCDIR)/Box.cc		\
