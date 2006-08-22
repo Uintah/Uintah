@@ -31,6 +31,6 @@
 
 int main()
 {
-  __gnu_css::hash_map<int, int> xx;
+  __gnu_cxx::hash_map<int, int> xx;
   return 0;
 }
