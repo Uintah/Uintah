@@ -18,6 +18,7 @@ SUBDIRS(
   Volume
   Bundle
   Algorithms
+  Skinner
 )
 
 
