@@ -44,11 +44,9 @@ $(COMPONENT)_LANGUAGE := $(BABEL_LANGUAGE)
 # existing implementation code.
 
 ${OUTDIR}/${COMPONENT}.make: ${SRCDIR}/${COMPONENT}.sidl Core/Babel/timestamp
-  ifeq ($(IS_OSX),yes)
 	if ! test -d $(dir $@); then mkdir -p $(dir $@); fi
 	$(BABEL) --server=$($(basename $(notdir $@))_LANGUAGE) --include-referenced --output-directory=$(dir $@) --repository-path=${BABEL_REPOSITORY} --vpath=$(dir $<) $<
 	mv  $(dir $@)babel.make $@
-  endif
 
 ${OUTDIR}/${COMPONENT}_stub.make: ${SRCDIR}/${COMPONENT}.sidl Core/Babel/timestamp
 	$(BABEL) --client=C++ --output-directory=$(dir $@) --repository-path=${BABEL_REPOSITORY} $<
