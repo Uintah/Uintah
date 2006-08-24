@@ -578,14 +578,11 @@ void SFC<DIM,LOCS>::Parallel()
     }
   }
   
-	//cout << rank << ": curve after serial:";
   //increment indexies 
 	for(i=0;i<n;i++)
 	{
 		c[i].i+=istart;	
-  //  cout << c[i].i << ":" << c[i].bits << " ";
 	}
-//  cout << endl;
 	
 
 	//resize buffers
@@ -605,15 +602,7 @@ void SFC<DIM,LOCS>::Parallel()
 	finish=timer->currentSeconds();
 	ptime+=finish-start;
 #endif
-  /*
-	c=(History<BITS>*)sendbuf;
-  cout << rank << ": curve after primary:";
-  for(int i=0;i<n;i++)
-  {
-    cout << c[i].i << ":" << c[i].bits << " ";
-  }
-  cout << endl;
-	*/
+	
 	History<BITS> *ssbuf=(History<BITS>*)sendbuf;
 
 #ifdef _TIMESFC_
@@ -624,22 +613,14 @@ void SFC<DIM,LOCS>::Parallel()
 	finish=timer->currentSeconds();
 	cleantime+=finish-start;
 #endif
-  /*
-	c=(History<BITS>*)sendbuf;
-  cout << rank << ": curve after cleanup:";
-  for(int i=0;i<n;i++)
-  {
-    cout << c[i].i << ":" << c[i].bits << " ";
-  }
-  cout << endl;
-	*/
-
+  
 	ssbuf=(History<BITS>*)sendbuf;
 	
 	orders->resize(n);
 
 	//make pointer to internal buffers for a fast copy	
 	unsigned int* o=&(*orders)[0];
+  c=(History<BITS>*)sendbuf;
 		
 	//copy permutation to orders
 	for(i=0;i<n;i++)
@@ -1311,7 +1292,9 @@ void SFC2D<LOCS>::SetRefinementsByDelta(REAL deltax, REAL deltay)
 	SFC<2,LOCS>::refinements=(int)ceil(log(SFC<2,LOCS>::dimensions[0]/deltax)/log(2.0));
 	SFC<2,LOCS>::refinements=max(SFC<2,LOCS>::refinements,(int)ceil(log(SFC<2,LOCS>::dimensions[1]/deltay)/log(2.0)));
 	SFC<2,LOCS>::set=SFC<2,LOCS>::set|32;
+
 }
+
 	
 template<class LOCS>
 unsigned char  SFC2D<LOCS>::Bin(LOCS *point, REAL *center)
