@@ -219,15 +219,15 @@
 
 <!-- Hierarchical-specific -->
         <lattice_refinement_ratio> [[5,5,1]]  </lattice_refinement_ratio>
-<!--
         <type>BNR</type>
+<!--
 -->
 <!-- BNR-specific - to toggle, uncomment or comment the <type>BNR</type> as
      Hierarchical is the default (and will ignore these) -->
-        <min_patch_size>           [8,8,1] </min_patch_size>
+        <min_patch_size>           [10,10,1] </min_patch_size>
         <patch_split_tolerance>    1        </patch_split_tolerance>
         <patch_combine_tolerance>  1        </patch_combine_tolerance>
-        <patches_per_level_per_proc> 6       </patches_per_level_per_proc>
+        <patches_per_level_per_proc> 8       </patches_per_level_per_proc>
       </Regridder>
     </AMR>
     <!--____________________________________________________________________-->
