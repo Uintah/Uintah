@@ -174,7 +174,7 @@
         
 <!--
         <type>BNR</type>
-        <min_patch_size>           [8,8,1] </min_patch_size>
+        <min_patch_size>           [20,20,1] </min_patch_size>
         <patch_split_tolerance>    1       </patch_split_tolerance>
         <patch_combine_tolerance>  1       </patch_combine_tolerance>
         <patches_per_level_per_proc> 6     </patches_per_level_per_proc> -->
