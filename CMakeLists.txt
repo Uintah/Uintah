@@ -1,6 +1,7 @@
 # This is the root ITK CMakeLists file.  
-CMAKE_MINIMUM_REQUIRED(VERSION 2.0)
+CMAKE_MINIMUM_REQUIRED(VERSION 2.2)
 
+# DV Change to SCIRun Core or something?
 PROJECT(CIBC)
 
 #-----------------------------------------------------------------------------
@@ -613,5 +614,27 @@ INCLUDE_DIRECTORIES(
 )
 
 SUBDIRS(src Testing)
+
+#----------------------------------------------------------------------------
+# Help other projects use SCIRun Core
+
+# Copy the UseSCIRUN.cmake file to the binary tree for backward compatability.
+CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/UseSCIRUN.cmake.in
+               ${PROJECT_BINARY_DIR}/UseSCIRUN.cmake COPYONLY IMMEDIATE)
+
+# Save the compiler settings so another project can import them.
+INCLUDE(${CMAKE_ROOT}/Modules/CMakeExportBuildSettings.cmake)
+CMAKE_EXPORT_BUILD_SETTINGS(${PROJECT_BINARY_DIR}/SCIRUNBuildSettings.cmake)
+INSTALL_FILES(/lib/SCIRun .cmake SCIRUNBuildSettings)
+
+# Save library dependencies.
+EXPORT_LIBRARY_DEPENDENCIES(${PROJECT_BINARY_DIR}/SCIRUNLibraryDepends.cmake)
+
+# Create the SCIRUNConfig.cmake file containing the SCIRUN configuration.
+INCLUDE (${PROJECT_SOURCE_DIR}/sciGenerateSCIRUNConfig.cmake)
+
+# Install some files.
+INSTALL_FILES(/include/SCIRun .h sciConfigure)
+INSTALL_FILES(/lib/SCIRun .cmake UseSCIRUN SCIRUNLibraryDepends)
 
 
