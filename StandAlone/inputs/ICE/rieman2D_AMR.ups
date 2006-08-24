@@ -16,6 +16,14 @@
         <type> ice </type>
    </SimulationComponent>
    <doAMR>true</doAMR>
+   <LoadBalancer>
+     <type>DLB</type>
+     <dynamicAlgorithm>patchFactor</dynamicAlgorithm>
+     <levelIndependent>true</levelIndependent>
+     <doSpaceCurve>true</doSpaceCurve>
+     <timestepInterval>200</timestepInterval>
+   </LoadBalancer>
+
     <!--____________________________________________________________________-->
     <!--      T  I  M  E     V  A  R  I  A  B  L  E  S                      -->
     <!--____________________________________________________________________-->
