@@ -712,12 +712,6 @@ Properties::sched_computePropsFirst_mm(SchedulerP& sched, const PatchSet* patche
   tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel, 
 		Ghost::None, Arches::ZEROGHOSTCELLS);
   
-  // Require densityIN from old_dw for consistency with
-  // gets/requires of nonlinearSolve (we don't do anything 
-  // with this densityIN)
-  tsk->requires(Task::OldDW, d_lab->d_densityCPLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-
   if (d_bc->getIfCalcEnergyExchange()) 
     if (d_DORadiationCalc)
       tsk->requires(Task::NewDW, d_MAlab->integTemp_CCLabel,
@@ -870,13 +864,6 @@ Properties::computePropsFirst_mm(const ProcessorGroup*,
     CCVariable<double> density;
     new_dw->getModifiable(density, d_lab->d_densityCPLabel, 
 			   matlIndex, patch);
-
-    // Get densityIN from old_dw for consistency with
-    // gets/requires of nonlinearSolve (we don't do 
-    // anything with this densityIN)
-
-    CCVariable<double> densityCP_old;
-    old_dw->getModifiable(densityCP_old, d_lab->d_densityCPLabel, matlIndex, patch);
 
     CCVariable<double> denMicro_new;
     new_dw->allocateAndPut(denMicro_new, d_lab->d_densityMicroLabel, 
