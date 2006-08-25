@@ -238,7 +238,7 @@ __declspec(dllexport) HANDLE main_sema;
 Semaphore::Semaphore(const char* name,int count)
 {
 	priv_ = scinew Semaphore_private;
-	priv_->hSema = CreateSemaphore(NULL,count,MAX(10,MIN(2*count,100)),0);
+	priv_->hSema = CreateSemaphore(NULL,count,MAX(1000,MIN(2*count,100)),0);
 	if (priv_->hSema == 0)
 	{
 	  throw ThreadError(std::string("CreateSemaphore failed")

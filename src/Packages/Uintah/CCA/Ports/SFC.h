@@ -11,6 +11,8 @@ using namespace std;
 #include<Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include<Core/Thread/Time.h>
 
+#include <Packages/Uintah/CCA/Ports/share.h>
+
 namespace Uintah{
 
 #ifdef _TIMESFC_
@@ -30,27 +32,27 @@ struct History
 	BITS bits;
 };
 
-extern int dir3[8][3];
-extern int dir2[4][2];
+extern SCISHARE int dir3[8][3];
+extern SCISHARE int dir2[4][2];
 
-extern int hinv3[][8];
-extern int ginv3[][8];
-extern int hinv2[][4];
-extern int ginv2[][4];
+extern SCISHARE int hinv3[][8];
+extern SCISHARE int ginv3[][8];
+extern SCISHARE int hinv2[][4];
+extern SCISHARE int ginv2[][4];
 
-extern int horder3[][8];
-extern int gorder3[][8];
-extern int morder3[][8];
-extern int horder2[][4];
-extern int gorder2[][4];
-extern int morder2[][4];
+extern SCISHARE int horder3[][8];
+extern SCISHARE int gorder3[][8];
+extern SCISHARE int morder3[][8];
+extern SCISHARE int horder2[][4];
+extern SCISHARE int gorder2[][4];
+extern SCISHARE int morder2[][4];
 
-extern int horient3[][8];
-extern int gorient3[][8];
-extern int morient3[][8];
-extern int horient2[][4];
-extern int gorient2[][4];
-extern int morient2[][4];
+extern SCISHARE int horient3[][8];
+extern SCISHARE int gorient3[][8];
+extern SCISHARE int morient3[][8];
+extern SCISHARE int horient2[][4];
+extern SCISHARE int gorient2[][4];
+extern SCISHARE int morient2[][4];
 
 
 #define REAL double

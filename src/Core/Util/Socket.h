@@ -36,13 +36,17 @@
 #if !defined(Socket_h)
 #define Socket_h
 
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <unistd.h>
+#ifdef _WIN32
+#  include <winsock2.h>
+#else
+#  include <sys/types.h>
+#  include <sys/socket.h>
+#  include <netinet/in.h>
+#  include <netdb.h>
+#  include <unistd.h>
+#  include <arpa/inet.h>
+#endif
 #include <string>
-#include <arpa/inet.h>
 
 namespace SCIRun {
 

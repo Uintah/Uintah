@@ -31,9 +31,15 @@
 
 
 #include <Core/Util/Socket.h>
-#include <string>
 #include <errno.h>
-#include <fcntl.h>
+
+#ifndef _WIN32
+#  include <fcntl.h>
+#else
+#  define socklen_t int
+#  define close closesocket
+#  define MSG_NOSIGNAL 0
+#endif
 #include <iostream>
 
 const int MAXCONNECTIONS = 25;
@@ -137,7 +143,14 @@ Socket::write(const std::string s) const
 bool 
 Socket::write(const void *buf, size_t bytes) const
 {
+#ifdef _WIN32
+  // windows wants a char buffer
+  const char* charbuf = (const char*) buf;
+  bytes *= (sizeof(void*)/sizeof(char*));
+  int sent = ::send(sock_, charbuf, bytes, MSG_NOSIGNAL);
+#else
   int sent = ::send(sock_, buf, bytes, MSG_NOSIGNAL);
+#endif
 
   if (sent == -1) { 
     perror("ERROR in write(const void *buf, size_t bytes)");
@@ -203,10 +216,15 @@ Socket::connect(const std::string host, const int port)
   addr_.sin_family = AF_INET;
   addr_.sin_port = htons(port);
 
-  if (inet_pton(AF_INET, host.c_str(), &addr_.sin_addr) < 0) {
+  struct hostent* hostentry;
+  hostentry = gethostbyname(host.c_str());
+  if (hostentry == 0) {
     perror("ERROR in connect()");
     return false;
   }
+  addr_.sin_addr.s_addr = *((u_long*)(hostentry->h_addr_list[0]));
+
+
 
   int status = ::connect(sock_, (sockaddr*)&addr_, sizeof(addr_));
 
@@ -217,6 +235,7 @@ Socket::connect(const std::string host, const int port)
 void 
 Socket::set_blocking(const bool b)
 {
+#ifndef _WIN32
   int opts;
   opts = fcntl(sock_, F_GETFL);
   
@@ -234,6 +253,12 @@ Socket::set_blocking(const bool b)
   if (fcntl(sock_, F_SETFL, opts) < 0) {
     perror("ERROR in set_non_blocking() set");
   }
+#else
+  unsigned long val = !b;
+  if (ioctlsocket(sock_, FIONBIO, &val) < 0) {
+    perror("ERROR in set_non_blocking() set");
+  }
+#endif
 }
 
 } //namespace SCIRun

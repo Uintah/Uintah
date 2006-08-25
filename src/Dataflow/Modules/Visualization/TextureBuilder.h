@@ -6,9 +6,11 @@
 #include <Core/Volume/Texture.h>
 #include <Dataflow/Network/Module.h>
 
+#include <Dataflow/Modules/Visualization/share.h>
+
 namespace SCIRun {
 
-class TextureBuilder : public Module
+class SCISHARE TextureBuilder : public Module
 {
 public:
   TextureBuilder(GuiContext* ctx, const std::string& name="TextureBuilder",
