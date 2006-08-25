@@ -364,7 +364,7 @@ Painter::BrushTool::splat(Nrrd *nrrd, double radius, int x0, int y0)
             //            dist += painter_->current_volume_->clut_min_;
             //            float val;
             //            nrrd_get_value(nrrd, index, val);
-            nrrd_set_value(nrrd, index, Max(dist, value_));//nrrd_get_value(nrrd,index);
+            nrrd_set_value(nrrd, index, value_);//nrrd_get_value(nrrd,index);
           }
         }
 }
