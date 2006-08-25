@@ -642,9 +642,9 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   rs_ = scinew SendState;
   // We do not use many Bsends, so this doesn't need to be
   // big.  We make it moderately large anyway - memory is cheap.
-  //void* old_mpibuffer;
-  //int old_mpibuffersize;
-  //MPI_Buffer_detach(&old_mpibuffer, &old_mpibuffersize);
+  void* old_mpibuffer;
+  int old_mpibuffersize;
+  MPI_Buffer_detach(&old_mpibuffer, &old_mpibuffersize);
 #define MPI_BUFSIZE (10000+MPI_BSEND_OVERHEAD)
   char* mpibuffer = scinew char[MPI_BUFSIZE];
   MPI_Buffer_attach(mpibuffer, MPI_BUFSIZE);
@@ -755,8 +755,8 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   int junk;
   MPI_Buffer_detach(&mpibuffer, &junk);
   delete[] mpibuffer;
-  //if(old_mpibuffersize)
-    //MPI_Buffer_attach(old_mpibuffer, old_mpibuffersize);
+  if(old_mpibuffersize)
+    MPI_Buffer_attach(old_mpibuffer, old_mpibuffersize);
 
   log.finishTimestep();
   if(timeout.active() && !parentScheduler){ // only do on toplevel scheduler
