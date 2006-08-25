@@ -19,7 +19,8 @@ uniform mat4 MeshTrans;
 uniform float Time;
 uniform float Step;
 
-varying vec2 TexCoord;
+varying vec2 TexCoord0;
+varying vec2 TexCoord1;
 
 bool out_of_bounds( vec4 pos )
 {
@@ -40,7 +41,7 @@ bool out_of_bounds( vec4 pos )
 void main (void)
 {
     // get the stored position value
-    vec4 pos = texture2D(Positions, TexCoord);
+    vec4 pos = texture2D(Positions, TexCoord1);
 
     // transform this to get the flow texture index
     vec3 flow_pos = (MeshTrans * vec4(pos.xyz, 1.0)).xyz;
@@ -48,7 +49,7 @@ void main (void)
     pos += vec4(dir.xyz, Time)*Step;
 
     if (pos.w <= 0.0 || out_of_bounds( vec4( vec3(pos), 1.0) ) ) {   
-        vec4 start_pos =  texture2D( StartPositions, TexCoord );
+        vec4 start_pos =  texture2D( StartPositions, TexCoord0 );
         pos = ParticleTrans * vec4(start_pos.xyz, 1.0);
         pos.w = start_pos.w;
     }
