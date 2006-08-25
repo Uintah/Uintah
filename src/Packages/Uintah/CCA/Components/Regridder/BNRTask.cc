@@ -323,6 +323,10 @@ void BNRTask::continueTask()
     {
       my_patches_.push_back(patch_);
     }
+    //signature is no longer needed so free memory
+    count_[0].clear();
+    count_[1].clear();
+    count_[2].clear();
   }
   else
   {
@@ -331,6 +335,11 @@ void BNRTask::continueTask()
       ctasks_.split=FindSplit();
       ctasks_.left=ctasks_.right=patch_;
       ctasks_.left.high[ctasks_.split.d]=ctasks_.right.low[ctasks_.split.d]=ctasks_.split.index;
+    
+      //signature is no longer needed so free memory
+      count_[0].clear();
+      count_[1].clear();
+      count_[2].clear();
 
       //check if tags are available
       if(controller_->tags_.size()<2)
@@ -348,6 +357,13 @@ void BNRTask::continueTask()
       ctasks_.rtag=controller_->tags_.front();
       controller_->task_count_++;
       controller_->tags_.pop();
+    }
+    else
+    {
+      //signature is no longer needed so free memory
+      count_[0].clear();
+      count_[1].clear();
+      count_[2].clear();
     }
 
     if(p_group_.size()>1)
@@ -429,10 +445,6 @@ void BNRTask::continueTask()
   TERMINATE:
   
   status_=TERMINATED;
-  //deallocate waisted space
-  count_[0].clear();
-  count_[1].clear();
-  count_[2].clear();
   
   //if parent is waiting activiate parent 
   if(parent_!=0 && sibling_->status_==TERMINATED )
@@ -488,10 +500,21 @@ void BNRTask::continueTaskSerial()
   if(acceptable_)
   {
     my_patches_.push_back(patch_);
+      
+    //signature is no longer needed so free memory
+    count_[0].clear();
+    count_[1].clear();
+    count_[2].clear();
   }
   else
   {
     ctasks_.split=FindSplit();
+     
+    //signature is no longer needed so free memory
+    count_[0].clear();
+    count_[1].clear();
+    count_[2].clear();
+
     ctasks_.left=ctasks_.right=patch_;
     ctasks_.left.high[ctasks_.split.d]=ctasks_.right.low[ctasks_.split.d]=ctasks_.split.index;
     ctasks_.ltag=0;
@@ -544,10 +567,6 @@ void BNRTask::continueTaskSerial()
   }
   
   status_=TERMINATED;
-  //deallocate waisted space
-  count_[0].clear();
-  count_[1].clear();
-  count_[2].clear();
   
   //if parent is waiting activiate parent 
   if(parent_!=0 && sibling_->status_==TERMINATED )
