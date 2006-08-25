@@ -48,6 +48,10 @@
 #include <map>
 #include <string>
 
+#ifndef DEBUG
+#  define DEBUG 0
+#endif
+
 namespace SCIRun
 {
 class ComponentDescription;
@@ -65,14 +69,11 @@ public:
     virtual ~InternalComponentModel();
 
   /** */
-  virtual bool haveComponent(const std::string& type);
+  virtual const std::string getName() const { return "Internal"; }
 
   /** */
-  virtual ComponentInstance* createInstance(const std::string& name,
-					    const std::string& type);
-
-  /** */
-  virtual bool destroyInstance(ComponentInstance *ci);
+  virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
+				     bool);
 
   /** */
   sci::cca::Port::pointer getFrameworkService(const std::string& type,
@@ -81,19 +82,6 @@ public:
   /** */
   bool releaseFrameworkService(const std::string& type,
 			       const std::string& componentName);
-
-  /** */
-  virtual const std::string getName() const;
-
-  /** */
-  virtual void listAllComponentTypes(std::vector<ComponentDescription*>&,
-				     bool);
-
-  /** ? */
-  virtual void destroyComponentList();
-
-  /** ? */
-  virtual void buildComponentList(const StringVector& files=StringVector());
 
 private:
   typedef std::map<std::string, InternalFrameworkServiceDescription*> FrameworkServicesMap;
@@ -104,7 +92,54 @@ private:
   void addService(InternalFrameworkServiceDescription* cd);
   //void addService(InternalComponenServicetDescription* cd);
 
-  virtual void setComponentDescription(const std::string& type, const std::string& library);
+  // Inherited ComponentModel functions that don't make sense for the
+  // internal component model to implement:
+  virtual void setComponentDescription(const std::string& type, const std::string& library)
+  {
+#if DEBUG
+    std::cerr << "Warning: InternalComponentModel does not implement setComponentDescription"
+              << std::endl;
+#endif
+  }
+  virtual void destroyComponentList()
+  {
+#if DEBUG
+    std::cerr << "Warning: InternalComponentModel does not implement destroyComponentList"
+              << std::endl;
+#endif
+  }
+  virtual void buildComponentList(const StringVector& files=StringVector())
+  {
+#if DEBUG
+  std::cerr << "Warning: InternalComponentModel does not implement buildComponentList"
+	    << std::endl;
+#endif
+  }
+  virtual bool haveComponent(const std::string& type)
+  {
+#if DEBUG
+  std::cerr << "Warning: InternalComponentModel does not implement haveComponent"
+	<< std::endl;
+#endif
+    return false;
+  }
+  virtual ComponentInstance* createInstance(const std::string& name,
+                                            const std::string& type,
+                                            const sci::cca::TypeMap::pointer &tm)
+  {
+#if DEBUG
+    std::cerr << "InternalComponentModel does not implement ComponentModel::createInstance(..)." << std::endl;
+#endif
+    return 0;
+  }
+  virtual bool destroyInstance(ComponentInstance *ci)
+  {
+#if DEBUG
+    std::cerr << "InternalComponentModel does not implement ComponentModel::destroyInstance(..)." << std::endl;
+#endif
+    return true;
+  }
+
 
   InternalComponentModel(const InternalComponentModel&);
   InternalComponentModel& operator=(const InternalComponentModel&);

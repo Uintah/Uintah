@@ -51,6 +51,10 @@
 #include <string>
 #include <map>
 
+#ifndef DEBUG
+#  define DEBUG 1
+#endif
+
 namespace SCIRun {
 
 class SCIRunFramework;
@@ -93,7 +97,8 @@ public:
    * Remote components are currently NOT supported.
    */
   virtual ComponentInstance* createInstance(const std::string& name,
-                                            const std::string& type);
+                                            const std::string& type,
+                                            const sci::cca::TypeMap::pointer& tm);
 
   /** ? */
   virtual std::string createComponent(const std::string& name,
@@ -104,7 +109,7 @@ public:
   virtual bool destroyInstance(ComponentInstance *ci);
 
   /**  Returns the name (as a string) of this component model. */
-  virtual const std::string getName() const;
+  virtual const std::string getName() const { return "babel"; }
 
   /** Creates a list of all the available components (as ComponentDescriptions)
       registered in this ComponentModel. */
@@ -120,7 +125,6 @@ public:
   virtual void setComponentDescription(const std::string& type, const std::string& library);
 
   static const std::string DEFAULT_XML_PATH;
-
 
 private:
   typedef std::map<std::string, BabelComponentDescription*> componentDB_type;

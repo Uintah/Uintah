@@ -275,11 +275,6 @@ bool BridgeComponentModel::destroyInstance(ComponentInstance *ci)
   return true;
 }
 
-const string BridgeComponentModel::getName() const
-{
-  return "Bridge";
-}
-
 void BridgeComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
 						 bool /*listInternal*/)
 {

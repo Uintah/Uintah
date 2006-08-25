@@ -68,6 +68,33 @@ include $(SCIRUN_SCRIPTS)/program.mk
 
 ########################################################################
 #
+# EventService test executable
+# (temporary - will need to be integrated into testing framework)
+#
+
+ifeq ($(LARGESOS),yes)
+  PSELIBS := Core/CCA
+else
+  PSELIBS := \
+             SCIRun Core/CCA/PIDL Core/CCA/spec Core/CCA/SSIDL \
+             Core/Containers Core/Exceptions Core/Thread Core/Util
+  ifeq ($(HAVE_GLOBUS),yes)
+        PSELIBS += Core/globus_threads
+  endif
+endif
+
+LIBS := $(GLOBUS_LIBRARY)
+
+ifeq ($(HAVE_MPI),yes)
+  LIBS += $(MPI_LIBRARY)
+endif
+
+PROGRAM := test_events
+SRCS := $(SRCDIR)/test_events.cc
+include $(SCIRUN_SCRIPTS)/program.mk
+
+########################################################################
+#
 # ploader
 #
 

@@ -41,11 +41,15 @@
 #ifndef SCIRun_Framework_ComponentModel_h
 #define SCIRun_Framework_ComponentModel_h
 
+#include <SCIRun/resourceReference.h>
+#include <SCIRun/CCA/CCAComponentDescription.h>
+#include <Core/CCA/spec/cca_sidl.h>
+#include <Core/Thread/Mutex.h>
+#include <Core/Util/soloader.h>
+
 #include <string>
 #include <vector>
 #include <map>
-#include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/resourceReference.h>
 
 #include <libxml/xmlreader.h>
 
@@ -86,7 +90,7 @@ public:
   virtual ComponentInstance*
   createInstance(const std::string &name,
 		 const std::string &type,
-		 const sci::cca::TypeMap::pointer &tm);
+		 const sci::cca::TypeMap::pointer &tm) = 0;
 
   /** Deallocates the component instance \em ci.  Returns \code true on success and
       \code false on failure. */
@@ -112,14 +116,34 @@ public:
 
   const std::string getPrefixName() const { return prefixName; }
 
+  /**
+   * Get/set the directory path to component DLLs.
+   * By default, the sidlDLLPath is initialized to the environment variable
+   * SIDL_DLL_PATH.
+   * Babel processes SIDL_DLL_PATH differently, so these functions and the
+   * sidlDLLPath member are ignored by the Babel component model.
+   */
+  const StringVector& getSidlDLLPaths() const { return sidlDLLPaths; }
 
 protected:
   std::string prefixName;
+  // not the most efficient data structure for lookups...
+  StringVector sidlDLLPaths;
   SCIRunFramework* framework;
+
+  void setSidlDLLPath(const std::string& s);
+  void* getMakerAddress(const std::string& type, const ComponentDescription& desc);
 
 private:
   ComponentModel(const ComponentModel&);
   ComponentModel& operator=(const ComponentModel&);
+  /*
+   * Breaks a concatenated list of paths into a vector of paths. Splits on
+   * the ';' character.
+   */
+  void splitPathString(const std::string& path);
+
+  Mutex pathsLock;
 };
 
 
@@ -129,9 +153,6 @@ private:
 bool parseComponentModelXML(const std::string& filexml, ComponentModel* model);
 bool getXMLPaths(SCIRunFramework* fwk, StringVector& xmlPaths);
 
-/* Breaks a concatenated list of paths into a vector of paths. Splits on
- * the ';' character. */
-StringVector splitPathString(const std::string& path);
 
 } // end namespace SCIRun
 

@@ -85,7 +85,7 @@ public:
   destroyInstance(ComponentInstance * ic);
 
   /** Returns the name (as a string) of this component model. */
-  virtual const std::string getName() const;
+  virtual const std::string getName() const { return "Dataflow"; }
 
   /** Creates a list of all the available components (as ComponentDescriptions)
       registered in this ComponentModel. */

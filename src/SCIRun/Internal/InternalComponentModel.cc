@@ -54,14 +54,11 @@
 #include <SCIRun/Internal/GUIService.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/Internal/EventService.h>
+
 #if BUILD_DATAFLOW
- #include <SCIRun/Dataflow/DataflowScheduler.h>
+# include <SCIRun/Dataflow/DataflowScheduler.h>
 #endif
 #include <iostream>
-
-#ifndef DEBUG
- #define DEBUG 0
-#endif
 
 namespace SCIRun {
 
@@ -209,57 +206,6 @@ InternalComponentModel::releaseFrameworkService(const std::string& type,
 /////////////////////////////////////////////////////////////////////////////
 #endif
 
-bool InternalComponentModel::haveComponent(const std::string& /*name*/)
-{
-#if DEBUG
-  std::cerr << "Warning: InternalComponentModel does not implement haveComponent"
-	<< std::endl;
-#endif
-    return false;
-}
-
-void InternalComponentModel::destroyComponentList()
-{
-#if DEBUG
-  std::cerr << "Warning: InternalComponentModel does not implement destroyComponentList"
-	    << std::endl;
-#endif
-}
-
-void InternalComponentModel::buildComponentList(const StringVector& files)
-{
-#if DEBUG
-  std::cerr << "Warning: InternalComponentModel does not implement buildComponentList"
-	    << std::endl;
-#endif
-}
-
-void InternalComponentModel::setComponentDescription(const std::string& type, const std::string& library)
-{
-#if DEBUG
-  std::cerr << "Warning: InternalComponentModel does not implement setComponentDescription"
-	    << std::endl;
-#endif
-}
-
-ComponentInstance* InternalComponentModel::createInstance(const std::string&,
-							  const std::string&)
-{
-    return 0;
-}
-
-bool InternalComponentModel::destroyInstance(ComponentInstance *ic)
-{
-#if DEBUG
-    std::cerr << "Warning: I don't know how to destroy a internal component instance!" << std::endl;
-#endif
-    return true;
-}
-
-const std::string InternalComponentModel::getName() const
-{
-    return "Internal";
-}
 
 void
 InternalComponentModel::listAllComponentTypes(

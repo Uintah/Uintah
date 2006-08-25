@@ -167,12 +167,6 @@ SCIRunComponentModel::destroyInstance(ComponentInstance * ic)
   return true;
 }
 
-const std::string
-SCIRunComponentModel::getName() const
-{
-  return "Dataflow";
-}
-
 void
 SCIRunComponentModel::destroyComponentList()
 {

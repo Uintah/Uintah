@@ -87,23 +87,16 @@ public:
 
   /** */
   virtual sci::cca::Port::pointer getService(const std::string &) { return sci::cca::Port::pointer(this); }
-
   // internal service methods
 
   virtual std::string getFileName() { return fileName; }
   virtual void setFileName(const std::string& fn);
 
-//   bool loadNetworkFile();
-//   bool saveNetworkFileAs(const sci::cca::ports::BuilderService::pointer& bs, const sci::cca::GUIBuilder::pointer& gs, const std::string& fn);
-//   //bool saveNetworkFileAs(const sci::cca::ports::BuilderService::pointer& bs, const std::string& fn) { return false; }
-//   bool saveNetworkFile(const sci::cca::ports::BuilderService::pointer& bs, const sci::cca::GUIBuilder::pointer& gs);
-//   //bool saveNetworkFile(const sci::cca::ports::BuilderService::pointer& bs) { return false; }
+  virtual void loadFile();
+  virtual void loadFile(const std::string& filename);
 
-  virtual void loadNetworkFile();
-  virtual void loadNetworkFile(const std::string& filename);
-
-  virtual void saveNetworkFile();
-  virtual void saveNetworkFile(const std::string& filename);
+  virtual void saveFile();
+  virtual void saveFile(const std::string& filename);
 
   static const std::string APP_EXT;
 

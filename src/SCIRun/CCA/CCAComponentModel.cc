@@ -1,29 +1,29 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
 
 
@@ -39,12 +39,9 @@
  */
 
 #include <SCIRun/CCA/CCAComponentModel.h>
-#include <SCIRun/CCA/CCAComponentDescription.h>
 #include <SCIRun/CCA/CCAComponentInstance.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/resourceReference.h>
-#include <Core/Util/soloader.h>
-#include <Core/Util/Environment.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/Thread/Guard.h>
 
@@ -60,20 +57,11 @@ const std::string CCAComponentModel::DEFAULT_XML_PATH("/CCA/Components/xml");
 
 
 CCAComponentModel::CCAComponentModel(SCIRunFramework* framework,
-				     const StringVector& xmlPaths)
+                                     const StringVector& xmlPaths)
   : ComponentModel("cca", framework),
     lock_components("CCAComponentModel::components lock"),
     lock_loaderList("CCAComponentModel::loaderList lock")
 {
-  // move to framework properties
-  // Record the path containing DLLs for components.
-  const char *dll_path = getenv("SIDL_DLL_PATH");
-  if (dll_path != 0) {
-    this->setSidlDLLPath(std::string(dll_path));
-  } else {
-    this->setSidlDLLPath(sci_getenv("SCIRUN_OBJDIR") + std::string("/lib"));
-  }
-
   buildComponentList(xmlPaths);
 }
 
@@ -86,7 +74,7 @@ void CCAComponentModel::destroyComponentList()
 {
   SCIRun::Guard g1(&lock_components);
   for (componentDB_type::iterator iter = components.begin();
-      iter != components.end(); iter++) {
+       iter != components.end(); iter++) {
     delete iter->second;
   }
   components.clear();
@@ -125,13 +113,13 @@ CCAComponentModel::setComponentDescription(const std::string& type, const std::s
 
 sci::cca::Services::pointer
 CCAComponentModel::createServices(const std::string& instanceName,
-		  const std::string& className,
-		  const sci::cca::TypeMap::pointer& properties)
+                                  const std::string& className,
+                                  const sci::cca::TypeMap::pointer& properties)
 {
 #if DEBUG
   std::cout << "CCAComponentModel::createServices: " << instanceName << ", " << className << std::endl;
 #endif
-// get unique name?
+  // get unique name?
   CCAComponentInstance* ci = new CCAComponentInstance(framework, instanceName, className, properties, sci::cca::Component::pointer(0));
   framework->registerComponent(ci, instanceName);
   ci->addReference();
@@ -140,14 +128,14 @@ CCAComponentModel::createServices(const std::string& instanceName,
 
 bool CCAComponentModel::destroyServices(const sci::cca::Services::pointer& svc)
 {
-    CCAComponentInstance *ci =
+  CCAComponentInstance *ci =
     dynamic_cast<CCAComponentInstance*>(svc.getPointer());
-    if (ci == 0) {
-	return false;
-    }
-    framework->unregisterComponent(ci->getInstanceName());
-    ci->deleteReference();
-    return true;
+  if (ci == 0) {
+    return false;
+  }
+  framework->unregisterComponent(ci->getInstanceName());
+  ci->deleteReference();
+  return true;
 }
 
 bool CCAComponentModel::haveComponent(const std::string& type)
@@ -162,8 +150,8 @@ bool CCAComponentModel::haveComponent(const std::string& type)
 
 ComponentInstance*
 CCAComponentModel::createInstance(const std::string& name,
-				  const std::string& type,
-				  const sci::cca::TypeMap::pointer& properties)
+                                  const std::string& type,
+                                  const sci::cca::TypeMap::pointer& properties)
 
 {
   std::string loaderName;
@@ -174,61 +162,36 @@ CCAComponentModel::createInstance(const std::string& name,
   }
 #if DEBUG
   std::cout <<"creating cca component <" << name << "," << type << "> with loader:"
-	    << loaderName << std::endl;
+            << loaderName << std::endl;
 #endif
   sci::cca::Component::pointer component;
   if (loaderName.empty()) {  //local component
-     Guard g1(&lock_components);
+    Guard g1(&lock_components);
     componentDB_type::iterator iter = components.find(type);
     if (iter == components.end()) {
       std::cerr << "Error: could not locate any cca components.  Make sure paths set in environment variables \"SIDL_XML_PATH\" and \"SIDL_DLL_PATH\" are correct." << std::endl;
       return 0;
     }
 
-    // Get the list of DLL paths to search for the appropriate component library
-    StringVector possible_paths =
-	splitPathString(this->getSidlDLLPath());
-    LIBRARY_HANDLE handle;
-
-    for (StringVector::iterator it = possible_paths.begin();
-	 it != possible_paths.end(); it++) {
-      std::string so_name = *it + "/" + iter->second->getLibrary();
-      handle = GetLibraryHandle(so_name.c_str());
-      if (handle) { break; }
-    }
-
-    if (!handle) {
-      std::cerr << "Cannot load component " << type << std::endl;
-      std::cerr << SOError() << std::endl;
+    void* maker_v = getMakerAddress(type, *(iter->second));
+    if (! maker_v) {
+      // should probably throw exception here
+      std::cerr << "CCAComponentModel::createInstance failed." << std::endl;
       return 0;
     }
-
-    std::string makername = "make_"+type;
-    for (int i = 0; i < (int)makername.size(); i++) {
-	if (makername[i] == '.') {
-	    makername[i] = '_';
-	}
-    }
-    void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
-    if (!maker_v) {
-      std::cerr <<"Cannot load component " << type << std::endl;
-      std::cerr << SOError() << std::endl;
-      return 0;
-    }
-    sci::cca::Component::pointer (*maker)() =
-	(sci::cca::Component::pointer (*)())(maker_v);
+    sci::cca::Component::pointer (*maker)() = (sci::cca::Component::pointer (*)())(maker_v);
     component = (*maker)();
- } else {
+  } else {
     //use loader to load the component
     resourceReference* loader = getLoader(loaderName);
     std::vector<int> nodes;
     nodes.push_back(0);
     Object::pointer comObj = loader->createInstance(name, type, nodes);
     component = pidl_cast<sci::cca::Component::pointer>(comObj);
-    properties->putInt("np",loader->getSize() );
+    properties->putInt("np", loader->getSize() );
   }
   CCAComponentInstance* ci =
-	new CCAComponentInstance(framework, name, type, properties, component);
+    new CCAComponentInstance(framework, name, type, properties, component);
   component->setServices(sci::cca::Services::pointer(ci));
   return ci;
 }
@@ -294,7 +257,7 @@ int CCAComponentModel::addLoader(resourceReference *rr)
   lock_loaderList.unlock();
 #if DEBUG
   std::cerr << "Loader " << rr->getName()
-	    << " is added into cca component model" << std::endl;
+            << " is added into cca component model" << std::endl;
 #endif
   return 0;
 }

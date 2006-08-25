@@ -69,7 +69,6 @@ SCIRunFramework::SCIRunFramework()
     lock_activeInstances("SCIRunFramework::activeInstances lock")
 {
   models.push_back(internalServices = new InternalComponentModel(this));
-  std::vector<std::string> xmlPaths_;
   // get initial SIDL environment paths
   getXMLPaths(this, xmlPaths_);
   models.push_back(cca = new CCAComponentModel(this, xmlPaths_));
@@ -167,7 +166,7 @@ SCIRunFramework::createComponentInstance(const std::string& name,
 #if HAVE_BABEL
   if (mod->getName() == "babel") {
     // create gov.cca.TypeMap from Babel Component Model?
-    ci = ((BabelComponentModel*) mod)->createInstance(name, type);
+    ci = ((BabelComponentModel*) mod)->createInstance(name, type, sci::cca::TypeMap::pointer(0));
     if (! ci) {
       std::cerr << "Error: failed to create BabelComponentInstance"
 		<< std::endl;
