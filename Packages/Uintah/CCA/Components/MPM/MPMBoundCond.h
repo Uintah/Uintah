@@ -4,12 +4,13 @@
 #include <Core/Geometry/Vector.h>
 #include <Packages/Uintah/Core/Grid/Variables/NCVariable.h>
 
+#include <Packages/Uintah/CCA/Components/MPM/share.h>
 
 namespace Uintah {
 
 using namespace SCIRun;
 
-  class MPMBoundCond {
+  class SCISHARE MPMBoundCond {
 
   public:
     

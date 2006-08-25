@@ -100,19 +100,10 @@ void DynamicLoadBalancer::collectParticles(const GridP& grid, std::vector<PatchI
 
         if (dw) {
           //loop through the materials and add up the particles
-          //        const MaterialSet *matls = sc->getMaterialSet();
-          const MaterialSet *matls = d_sharedState->allMPMMaterials();
-          const MaterialSubset *ms;
-          if (matls) {
-            ms = matls->getSubset(0);
-            int size = ms->size();
-            for (int matl = 0; matl < size; matl++) {
-              ParticleSubset* psubset = 0;
-              if (dw->haveParticleSubset(matl, patch))
-                psubset = dw->getParticleSubset(matl, patch);
-              if (psubset)
-                thisPatchParticles += psubset->numParticles();
-            }
+          //   go through all materials since getting an MPMMaterial correctly would depend on MPM
+          for (int m = 0; m < d_sharedState->getNumMatls(); m++) {
+            if (dw->haveParticleSubset(m, patch))
+              thisPatchParticles += dw->getParticleSubset(m, patch)->numParticles();
           }
         }
         // add to particle list

@@ -123,7 +123,7 @@ TCLInterface::TCLInterface() :
   const std::string itcl(itcl_dir);
 
   eval("set scirun2 0");
-  eval("lappend auto_path "+src+"/Core/GUI "+src+"/Dataflow/GUI "+itcl);
+  eval("lappend auto_path {" + src + "/Core/GUI} {" + src + "/Dataflow/GUI} {" + itcl + "}");
 }
 
 TCLInterface::~TCLInterface()
@@ -285,7 +285,7 @@ namespace SCIRun {
 void TCLInterface::source_once(const string& filename)
 {
   string result;
-  if(!eval("source " + filename, result)) {
+  if(!eval("source {" + filename + "}", result)) {
     char* msg = ccast_unsafe("Couldn't source file '" + filename + "'");
     Tcl_AddErrorInfo(the_interp,msg);
     Tk_BackgroundError(the_interp);

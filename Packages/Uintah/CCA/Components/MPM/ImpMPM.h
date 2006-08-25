@@ -186,7 +186,7 @@ private:
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw,
-                                       const bool recursion);
+                                       bool recursion);
 
   void createMatrix(                   const ProcessorGroup*,
                                        const PatchSubset* patches,
@@ -218,7 +218,7 @@ private:
                                        const MaterialSubset* matls,
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw,
-                                       const bool recursion);
+                                       bool recursion);
 
   // No matrix calculations are performed.
   void computeStressTensor(            const ProcessorGroup*,
