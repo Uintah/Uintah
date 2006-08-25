@@ -111,9 +111,8 @@ private:
   
   GLuint flow_tex_;
   GLuint part_tex_[2];
-  GLuint vb_;
   GLfloat *vfield_;
-  
+  GLuint vb_;
   
   ColorMapHandle cmap_h_;
   FieldHandle fh_;
