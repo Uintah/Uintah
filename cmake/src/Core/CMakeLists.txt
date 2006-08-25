@@ -19,6 +19,8 @@ SUBDIRS(
   Bundle
   Algorithms
   Skinner
+  Init
+  ImportExport
 )
 
 
