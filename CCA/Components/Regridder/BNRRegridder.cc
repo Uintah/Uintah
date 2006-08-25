@@ -365,7 +365,6 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
   int rank=d_myworld->myrank();
   int numprocs=d_myworld->size();
   
-  tasks_.clear();
   vector<int> procs(numprocs);
   for(int p=0;p<numprocs;p++)
     procs[p]=p;
@@ -511,6 +510,9 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
     //broadcast patches
     MPI_Bcast(&patches[0],size*sizeof(PseudoPatch),MPI_BYTE,tasks_.front().p_group_[0],d_myworld->getComm());
   }
+  
+  tasks_.clear();
+
 }
 
 void BNRRegridder::problemSetup(const ProblemSpecP& params, 
