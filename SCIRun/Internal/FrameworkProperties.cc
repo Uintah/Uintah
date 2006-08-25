@@ -132,7 +132,9 @@ void FrameworkProperties::initSidlPaths()
   } else if (readPropertiesFromFile()) {
     return;
   } else {
-    std::string srcDir(sci_getenv("SCIRUN_SRCDIR"));
+    const char *sd = sci_getenv("SCIRUN_SRCDIR");
+    ASSERT(sd);
+    std::string srcDir(sd);
     sArray.push_back(srcDir + CCAComponentModel::DEFAULT_XML_PATH);
 #if HAVE_BABEL
     sArray.push_back(srcDir + BabelComponentModel::DEFAULT_XML_PATH);
@@ -147,7 +149,7 @@ void FrameworkProperties::initSidlPaths()
 #endif
     frameworkProperties->putStringArray("sidl_xml_path", sArray);
   }
-  // SIDL_DLL_PATH env. variable is read and parsed in VtkComponentModel etc.
+  // SIDL_DLL_PATH env. variable is read and parsed in ComponentModel and Babel
 }
 
 void FrameworkProperties::parseEnvVariable(std::string& input,

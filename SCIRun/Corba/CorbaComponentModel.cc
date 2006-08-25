@@ -45,7 +45,6 @@
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/soloader.h>
 #include <Core/Util/sci_system.h>
-#include <Core/Util/Environment.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/OS/Dir.h>
@@ -74,15 +73,6 @@ CorbaComponentModel::CorbaComponentModel(SCIRunFramework* framework,
   : ComponentModel("corba", framework),
     lock_components("CorbaComponentModel::components lock")
 {
-  // move to framework properties
-  // Record the path containing DLLs for components.
-  const char *dll_path = getenv("SIDL_DLL_PATH");
-  if (dll_path != 0) {
-    this->setSidlDLLPath(std::string(dll_path));
-  } else {
-    this->setSidlDLLPath(sci_getenv("SCIRUN_OBJDIR") + std::string("/lib"));
-  }
-
   buildComponentList(xmlPaths);
 }
 

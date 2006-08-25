@@ -77,15 +77,15 @@ void ApplicationLoader::setFileName(const std::string& fn)
   }
 }
 
-void ApplicationLoader::loadNetworkFile(const std::string& fn)
+void ApplicationLoader::loadFile(const std::string& fn)
 {
   fileName = fn;
-  loadNetworkFile();
+  loadFile();
 }
 
 // options: get builder as argument or use GUIService to get any and all builders?
 // OR call ApplicationLoader from GUIService?
-void ApplicationLoader::loadNetworkFile()
+void ApplicationLoader::loadFile()
 {
   if (fileName.empty()) {
     throw CCAExceptionPtr(new CCAException("Empty file name"));
@@ -147,14 +147,14 @@ void ApplicationLoader::loadNetworkFile()
   xmlFreeParserCtxt(ctxt);
 }
 
-void ApplicationLoader::saveNetworkFile(const std::string& fn)
+void ApplicationLoader::saveFile(const std::string& fn)
 {
   fileName = fn;
-  return saveNetworkFile();
+  return saveFile();
 }
 
 // component ids, names from builder service, component positions from GUI builder
-void ApplicationLoader::saveNetworkFile()
+void ApplicationLoader::saveFile()
 {
   if (fileName.empty()) {
     throw CCAExceptionPtr(new CCAException("Empty file name"));

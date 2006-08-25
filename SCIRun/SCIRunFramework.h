@@ -284,6 +284,7 @@ private:
   // Put these in a private structure to avoid #include bloat?
   /** A list of component models available in this framework. */
   std::vector<ComponentModel*> models;
+  std::vector<std::string> xmlPaths_;
 
   /** ? */
   std::vector<sci::cca::ConnectionID::pointer> connIDs;

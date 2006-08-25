@@ -100,7 +100,7 @@ public:
   virtual bool destroyInstance(ComponentInstance *ci);
 
   /** Returns the name (as a string) of this component model. */
-  virtual const std::string getName() const;
+  virtual const std::string getName() const { return "Tao"; }
 
   /** Creates a list of all the available components (as ComponentDescriptions)
       registered in this ComponentModel. */
@@ -116,14 +116,7 @@ public:
   /** ? */
   virtual void setComponentDescription(const std::string& type, const std::string& library);
 
-  /** Get/set the directory path to component DLLs.  By default,
-   * the sidlDLLPath is initialized to the environment variable
-   * SIDL_DLL_PATH. */
-  std::string getSidlDLLPath() const { return sidlDLLPath; }
-  void setSidlDLLPath( const std::string& s) { sidlDLLPath = s; }
-
   static const std::string DEFAULT_XML_PATH;
-
 
 private:
   typedef std::map<std::string, TaoComponentDescription*> componentDB_type;
@@ -132,8 +125,6 @@ private:
 
   TaoComponentModel(const TaoComponentModel&);
   TaoComponentModel& operator=(const TaoComponentModel&);
-
-  std::string sidlDLLPath;
 };
 
 } // end namespace SCIRun

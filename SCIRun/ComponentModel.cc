@@ -43,6 +43,8 @@
 #include <Core/OS/Dir.h>
 #include <Core/Thread/Guard.h>
 #include <Core/XMLUtil/XMLUtil.h>
+#include <Core/Util/Environment.h>
+#include <Core/Util/Assert.h>
 
 #include <iostream>
 
@@ -55,42 +57,133 @@ namespace SCIRun {
 static Mutex parserLock("parser lock");
 
 ComponentModel::ComponentModel(const std::string& prefixName, SCIRunFramework* framework)
-  : prefixName(prefixName), framework(framework)
+  : prefixName(prefixName), framework(framework), pathsLock("sidl paths lock")
 {
+  // TODO: move to framework properties?
+  // Record the path containing DLLs for components.
+  const char *dll_path = getenv("SIDL_DLL_PATH");
+  if (dll_path != 0) {
+    setSidlDLLPath(std::string(dll_path));
+  } else {
+    setSidlDLLPath(std::string());
+  }
 }
 
 ComponentModel::~ComponentModel()
 {
 }
 
-bool ComponentModel::haveComponent(const std::string& type)
-{
-  std::cerr << "Error: this component model does not implement haveComponent, name="
-            << type << std::endl;
-  return false;
-}
+#if 0
+// bool ComponentModel::haveComponent(const std::string& type)
+// {
+//   std::cerr << "Error: this component model does not implement haveComponent, name="
+//             << type << std::endl;
+//   return false;
+// }
 
-ComponentInstance*
-ComponentModel::createInstance(const std::string& name,
-                               const std::string& type,
-                               const sci::cca::TypeMap::pointer &tm)
-{
-  std::cerr << "Error: this component model does not implement createInstance"
-            << std::endl;
-  return 0;
-}
+// ComponentInstance*
+// ComponentModel::createInstance(const std::string& name,
+//                                const std::string& type,
+//                                const sci::cca::TypeMap::pointer &tm)
+// {
+//   std::cerr << "Error: this component model does not implement createInstance"
+//             << std::endl;
+//   return 0;
+// }
 
-bool ComponentModel::destroyInstance(ComponentInstance* ic)
-{
-  std::cerr << "Error: this component model does not implement destroyInstance"
-            << std::endl;
-  return false;
-}
-
-
+// bool
+// ComponentModel::destroyInstance(ComponentInstance* ic)
+// {
+//   std::cerr << "Error: this component model does not implement destroyInstance"
+//             << std::endl;
+//   return false;
+// }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////
-// convenience functions
+// protected and private member functions
+// (used as convenience functions in component models)
+
+void
+ComponentModel::setSidlDLLPath(const std::string& s)
+{
+  Guard g(&pathsLock);
+  sidlDLLPaths.clear();
+  splitPathString(s);
+}
+
+void*
+ComponentModel::getMakerAddress(const std::string& type, const ComponentDescription& desc)
+{
+  LIBRARY_HANDLE handle;
+  bool handleFound = false;
+  for (StringVector::iterator it = sidlDLLPaths.begin();
+       it != sidlDLLPaths.end() && handleFound; it++) {
+    std::string so_name = *it + "/" + desc.getLibrary();
+    handle = GetLibraryHandle(so_name.c_str());
+    if (handle) {
+      handleFound = true;
+    }
+  }
+
+  if (! handleFound) {
+    const char *od = sci_getenv("SCIRUN_OBJDIR");
+    ASSERT(od);
+    std::string lib(od);
+    lib += "/lib/" + desc.getLibrary();
+    handle = GetLibraryHandle(lib.c_str());
+
+    if (! handle) {
+      std::cerr << "Could not find component library " << desc.getLibrary()
+                << " for " << type << std::endl;
+      std::cerr << SOError() << std::endl;
+      return 0;
+    }
+  }
+
+  std::string makername = "make_" + type;
+  for (int i = 0; i < (int) makername.size(); i++) {
+    if (makername[i] == '.') {
+      makername[i] = '_';
+    }
+  }
+#if DEBUG
+  std::cerr << "looking for symbol:" << makername << std::endl;
+#endif
+  void* makerPtr = GetHandleSymbolAddress(handle, makername.c_str());
+  if (! makerPtr) {
+    std::cerr <<"Cannot load component symbol " << makername << std::endl;
+    std::cerr << SOError() << std::endl;
+    return 0;
+  }
+  return makerPtr;
+}
+
+void
+ComponentModel::splitPathString(const std::string& path)
+{
+  if (path.empty()) {
+    return;
+  }
+
+  // TODO: check for bad tokens? (':' for example)
+
+  // Split the PATH string into a list of paths.  Key on ';' token.
+  std::string::size_type start = 0;
+  std::string::size_type end = path.find(';', start);
+  while (end != path.npos) {
+    std::string substring = path.substr(start, end - start);
+    sidlDLLPaths.push_back(substring);
+    start = end + 1;
+    end = path.find(';', start);
+  }
+  // grab the remaining path (or the only one)
+  std::string substring = path.substr(start, end - start);
+  sidlDLLPaths.push_back(substring);
+}
+
+///////////////////////////////////////////////////////////////////////////
+// convenience functions for reading XML component description files
 
 bool parseComponentModelXML(const std::string& file, ComponentModel* model)
 {
@@ -189,7 +282,7 @@ getXMLPaths(SCIRunFramework* fwk, StringVector& xmlPaths)
 
   sci::cca::ports::FrameworkProperties::pointer fwkProperties =
     pidl_cast<sci::cca::ports::FrameworkProperties::pointer>(
-                                                             fwk->getFrameworkService("cca.FrameworkProperties", ""));
+      fwk->getFrameworkService("cca.FrameworkProperties", ""));
   if (fwkProperties.isNull()) {
     std::cerr << "Error: Cannot find framework properties" ;
     return false;
@@ -214,28 +307,5 @@ getXMLPaths(SCIRunFramework* fwk, StringVector& xmlPaths)
   return true;
 }
 
-StringVector
-splitPathString(const std::string& path)
-{
-  StringVector ans;
-  if (path.empty()) {
-    return ans;
-  }
-
-  // Split the PATH string into a list of paths.  Key on ';' token.
-  std::string::size_type start = 0;
-  std::string::size_type end = path.find(';', start);
-  while (end != path.npos) {
-    std::string substring = path.substr(start, end - start);
-    ans.push_back(substring);
-    start = end + 1;
-    end = path.find(';', start);
-  }
-  // grab the remaining path
-  std::string substring = path.substr(start, end - start);
-  ans.push_back(substring);
-
-  return ans;
-}
 
 } // end namespace SCIRun

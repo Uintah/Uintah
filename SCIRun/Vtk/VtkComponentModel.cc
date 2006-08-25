@@ -45,7 +45,6 @@
 #include <SCIRun/Vtk/Component.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <Core/Util/soloader.h>
-#include <Core/Util/Environment.h>
 #include <Core/CCA/PIDL/PIDL.h>
 
 #include <iostream>
@@ -68,14 +67,6 @@ VtkComponentModel::VtkComponentModel(SCIRunFramework* framework,
   : ComponentModel("vtk", framework),
     lock_components("VtkComponentModel::components lock")
 {
-  // move to framework properties
-  // Record the path containing DLLs for components.
-  const char *dll_path = getenv("SIDL_DLL_PATH");
-  if (dll_path != 0) {
-    this->setSidlDLLPath(std::string(dll_path));
-  } else {
-    this->setSidlDLLPath(sci_getenv("SCIRUN_OBJDIR") + std::string("/lib"));
-  }
   buildComponentList(xmlPaths);
 }
 
@@ -143,36 +134,9 @@ VtkComponentModel::createInstance(const std::string& name,
     return 0;
   }
 
-  // Get the list of DLL paths to search for the appropriate component library
-  std::vector<std::string> possible_paths = splitPathString(this->getSidlDLLPath());
-  LIBRARY_HANDLE handle;
-
-  for (std::vector<std::string>::iterator it = possible_paths.begin();
-       it != possible_paths.end(); it++) {
-    std::string so_name = *it + "/" + iter->second->getLibrary();
-    handle = GetLibraryHandle(so_name.c_str());
-    if (handle)  {  break;   }
-  }
-
-  if ( !handle ) {
-    std::cerr << "Could not find component DLL: " << iter->second->getLibrary()
-	      << " for type " << type << std::endl;
-    std::cerr << SOError() << std::endl;
-    return 0;
-  }
-
-  std::string makername = "make_"+type;
-  for(int i = 0; i < static_cast<int>(makername.size()); i++) {
-    if (makername[i] == '.') { makername[i]='_'; }
-  }
-
-#if DEBUG
-  std::cerr << "looking for symbol:" << makername << std::endl;
-#endif
-  void* maker_v = GetHandleSymbolAddress(handle, makername.c_str());
-  if(!maker_v) {
-    std::cerr <<"Cannot load component symbol " << makername << std::endl;
-    std::cerr << SOError() << std::endl;
+  void* maker_v = getMakerAddress(type, *(iter->second));
+  if (!maker_v) {
+    std::cerr << "VtkComponentModel::createInstance failed." << std::endl;
     return 0;
   }
   vtk::Component* (*maker)() = (vtk::Component* (*)())(maker_v);

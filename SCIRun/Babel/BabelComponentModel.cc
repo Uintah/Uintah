@@ -58,10 +58,6 @@ extern "C" {
 
 #include <iostream>
 
-#ifndef DEBUG
-#  define DEBUG 0
-#endif
-
 namespace SCIRun {
 
 const std::string BabelComponentModel::DEFAULT_XML_PATH("/CCA/Components/BabelTest/xml");
@@ -171,7 +167,9 @@ bool BabelComponentModel::haveComponent(const std::string& type)
   return components.find(type) != components.end();
 }
 
-ComponentInstance* BabelComponentModel::createInstance(const std::string &name, const std::string &type)
+ComponentInstance* BabelComponentModel::createInstance(const std::string& name,
+                                                       const std::string& type,
+                                                       const sci::cca::TypeMap::pointer&)
 {
 #if DEBUG
   std::cerr << "BabelComponentModel::createInstance: attempt to create "
@@ -270,11 +268,6 @@ bool BabelComponentModel::destroyInstance(ComponentInstance *ci)
   return false;
 }
 
-const std::string BabelComponentModel::getName() const
-{
-  return "babel";
-}
-
 void BabelComponentModel::listAllComponentTypes(std::vector<ComponentDescription*>& list,
                                                 bool /*listInternal*/)
 {
@@ -285,8 +278,7 @@ void BabelComponentModel::listAllComponentTypes(std::vector<ComponentDescription
   }
 }
 
-
-
+// TODO: This returns an empty string only - should this return a URI???
 std::string BabelComponentModel::createComponent(const std::string& name, const std::string& type)
 {
 #if DEBUG
