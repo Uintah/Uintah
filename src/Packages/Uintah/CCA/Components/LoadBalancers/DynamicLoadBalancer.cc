@@ -301,8 +301,13 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, unsigned* output)
     }
     else
     {
-      cout << "1D SFC not impelemented\n";
-      exit(0);
+      SFC1f curve(d_myworld);
+      curve.SetLocalSize(level->numPatches());
+      curve.SetDimensions(range[dimensions[0]]);
+      curve.SetLocations(&positions);
+      curve.SetOutputVector(&indices);
+      curve.SetCenter(center[dimensions[0]]);
+      curve.GenerateCurve(SERIAL);
     }
     memcpy(output,&indices[0],sizeof(unsigned int)*level->numPatches());
   }
@@ -367,8 +372,16 @@ void DynamicLoadBalancer::useSFC(const LevelP& level, unsigned* output)
     }
     else
     {
-      cout << "1D SFC not impemented\n";
-      exit(0);
+      SFC1f curve(d_myworld);
+      curve.SetLocalSize(positions.size());
+      curve.SetDimensions(range[dimensions[0]]);
+      curve.SetRefinementsByDelta(min_patch_size[dimensions[0]]); 
+      curve.SetLocations(&positions);
+      curve.SetOutputVector(&indices);
+      curve.SetCenter(center[dimensions[0]]);
+      curve.SetCleanup(BATCHERS);
+      curve.SetMergeParameters(3000,2,.15);
+      curve.GenerateCurve();
     }
 
     //indices comes back in the size of each proc's patch set, pointing to the index

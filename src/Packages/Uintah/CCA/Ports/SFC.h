@@ -34,6 +34,7 @@ struct History
 
 extern SCISHARE int dir3[8][3];
 extern SCISHARE int dir2[4][2];
+extern SCISHARE int dir1[2][1];
 
 extern SCISHARE int hinv3[][8];
 extern SCISHARE int ginv3[][8];
@@ -54,6 +55,8 @@ extern SCISHARE int horient2[][4];
 extern SCISHARE int gorient2[][4];
 extern SCISHARE int morient2[][4];
 
+extern SCISHARE int orient1[][2];
+extern SCISHARE int order[1][2];
 
 #define REAL double
 #define EPSILON 1e-6
@@ -122,7 +125,7 @@ protected:
 	void Serial();
 	void SerialR(unsigned int* orders,vector<unsigned int> *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o=0);
 
-	template<class BITS> void SerialH();
+  template<class BITS> void SerialH();
 	template<class BITS> void SerialHR(unsigned int* orders,History<BITS>* corders,vector<unsigned int > *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o=0, int r=0, BITS history=0);
 	template<class BITS> void Parallel();
 	template<class BITS> int MergeExchange(int to);	
@@ -132,6 +135,18 @@ protected:
 	template<class BITS> void Linear();
 
 	virtual unsigned char Bin(LOCS *point, REAL *center)=0;
+};
+
+template<class LOCS>
+class SFC1D : public SFC<1,LOCS>
+{
+  public:
+    SFC1D(const ProcessorGroup *d_myworld) : SFC<1,LOCS>(dir1,d_myworld) {};
+		void SetDimensions(REAL wx);
+		void SetCenter(REAL x);
+		void SetRefinementsByDelta(REAL deltax);
+  private:
+    inline unsigned char Bin(LOCS *point, REAL *center);
 };
 
 template<class LOCS>
@@ -166,6 +181,18 @@ private:
 		inline unsigned char Bin(LOCS *point, REAL *center);
 };
 
+class SFC1f : public SFC1D<float>
+{
+	public:
+		SFC1f(const ProcessorGroup *d_myworld) : SFC1D<float>(d_myworld) {};
+};
+
+class SFC1d : public SFC1D<double>
+{
+	public:
+		SFC1d(const ProcessorGroup *d_myworld) : SFC1D<double>(d_myworld) {};
+};
+
 class SFC2f : public SFC2D<float>
 {
 	public:
@@ -193,11 +220,11 @@ class SFC3d : public SFC3D<double>
 
 /***********SFC**************************/
 const char errormsg[6][30]={
-	"Dimensions not set\n",
-	"Center not set\n", 
 	"Locations vector not set\n",
 	"Output vector not set\n", 
 	"Local size not set\n",
+	"Dimensions not set\n",
+	"Center not set\n", 
 	"Refinements not set\n",
 					 };
 
@@ -221,45 +248,23 @@ void SFC<DIM,LOCS>::GenerateCurve(int mode)
 	char res=mask&set;
 	if(res!=mask)
 	{	
-		cout << "Error(s) forming SFC:\n************************\n";
+		cerr << "Error(s) forming SFC:\n************************\n";
 		mask=1;
 		for(int i=0;i<errors;i++)
 		{
 			res=mask&set;
 			if(res!=mask)
 			{
-				cout << "  " << errormsg[i];
+				cerr << "  " << errormsg[i];
 			}
 			mask=mask<<1;
 		}
-		cout << "************************\n";	
+		cerr << "************************\n";	
 		return;
 	}
-	if( mode!=2 && (P==1 || mode==1) )
+	if(P==1 || mode==1 )
 	{
 		Serial();
-	}
-	else if(mode==2)
-	{
-										 
-		if((int)refinements*DIM<=(int)sizeof(unsigned int)*8)
-		{
-		 	vector<History<unsigned int> > sbuf;
-			sbuf.resize(n);
-			sendbuf=(void*)&(sbuf[0]);
-			SerialH<unsigned int>();
-		}
-		else if((int)refinements*DIM<=(int)sizeof(unsigned long long)*8)
-		{
-		 	vector<History<unsigned long long> > sbuf;
-			sbuf.resize(n);
-			sendbuf=(void*)&(sbuf[0]);
-			SerialH<unsigned long long>();
-		}
-		else
-		{
-			cout << "SFC Error not enough bits for histories.... need to design a larger history class or lower refinements\n";
-		}
 	}
 	else
 	{
@@ -267,21 +272,29 @@ void SFC<DIM,LOCS>::GenerateCurve(int mode)
 		rank=d_myworld->myrank();
 		Comm=d_myworld->getComm();
 		//Pick which generate to use
-		if((int)refinements*DIM<=(int)sizeof(unsigned int)*8)
+    if((int)refinements*DIM<=(int)sizeof(unsigned char)*8)
+    {
+      Parallel<unsigned char>();
+    }
+    else if((int)refinements*DIM<=(int)sizeof(unsigned short)*8)
+    {
+      Parallel<unsigned short>();
+    }
+    else if((int)refinements*DIM<=(int)sizeof(unsigned int)*8)
 		{
 			Parallel<unsigned int>();
 		}
-		else if((int)refinements*DIM<=(int)sizeof(unsigned long long)*8)
-		{
-			Parallel<unsigned long long>();
-		}
 		else
 		{
-			cout << "SFC Error not enough bits for histories.... need to design a larger history class or lower refinements\n";
+      if((int)refinements*DIM>(int)sizeof(unsigned long long)*8)
+      {
+        refinements=sizeof(unsigned long long)*8/DIM;
+        cerr << "Warning: Not enough bits to form full SFC lowering refinements to: " << refinements << endl;
+      }		 	
+			Parallel<unsigned long long>();
 		}
 	}
 }
-
 
 template<int DIM, class LOCS>
 void SFC<DIM,LOCS>::Serial()
@@ -306,7 +319,6 @@ void SFC<DIM,LOCS>::Serial()
 	  SerialR(o,bin,n,center,dimensions);
   }
 }
-
 
 template<int DIM, class LOCS> template<class BITS>
 void SFC<DIM,LOCS>::SerialH()
@@ -1219,7 +1231,7 @@ template<int DIM, class LOCS>
 void SFC<DIM,LOCS>::SetLocalSize(unsigned int n)
 {
 	this->n=n;
-	set=set|16;
+	set=set|4;
 }
 
 
@@ -1230,7 +1242,7 @@ void SFC<DIM,LOCS>::SetLocations(vector<LOCS> *locsv)
 	{
 		this->locsv=locsv;
 		this->locs=&(*locsv)[0];
-		set=set|4;
+		set=set|1;
 	}
 }
 
@@ -1240,10 +1252,35 @@ void SFC<DIM,LOCS>::SetOutputVector(vector<unsigned int> *orders)
 	if(orders!=0)
 	{
 		this->orders=orders;
-		set=set|8;
+		set=set|2;
 	}
 }
 
+template<class LOCS>
+void SFC1D<LOCS>::SetDimensions(REAL wx)
+{
+  SFC<1,LOCS>::dimensions[0]=wx;
+  SFC<1,LOCS>::set|=8;
+}
+
+template<class LOCS>
+void SFC1D<LOCS>::SetCenter(REAL x)
+{
+  SFC<1,LOCS>::center[0]=x;
+  SFC<1,LOCS>::set|=16;
+}
+
+template<class LOCS>
+void SFC1D<LOCS>::SetRefinementsByDelta(REAL deltax)
+{
+	char mask=8;
+	if( (mask&SFC<1,LOCS>::set) != mask)
+	{
+		cout << "SFC Error: Cannot set refinements by delta until dimensions have been set\n";
+	}
+	SFC<1,LOCS>::refinements=(int)ceil(log(SFC<1,LOCS>::dimensions[0]/deltax)/log(2.0));
+	SFC<1,LOCS>::set|=32;
+}
 template<class LOCS>
 void SFC2D<LOCS>::SetCurve(Curve curve)
 {
@@ -1272,7 +1309,7 @@ void SFC2D<LOCS>::SetDimensions(REAL wx, REAL wy)
 {
 	SFC<2,LOCS>::dimensions[0]=wx;
 	SFC<2,LOCS>::dimensions[1]=wy;
-	SFC<2,LOCS>::set=SFC<2,LOCS>::set|1;
+	SFC<2,LOCS>::set|=8;
 }
 
 template<class LOCS>
@@ -1280,13 +1317,13 @@ void SFC2D<LOCS>::SetCenter(REAL x, REAL y)
 {
 	SFC<2,LOCS>::center[0]=x;
 	SFC<2,LOCS>::center[1]=y;
-	SFC<2,LOCS>::set=SFC<2,LOCS>::set|2;
+	SFC<2,LOCS>::set|=16;
 }
 
 template<class LOCS>
 void SFC2D<LOCS>::SetRefinementsByDelta(REAL deltax, REAL deltay)
 {
-	char mask=1;
+	char mask=8;
 	if( (mask&SFC<2,LOCS>::set) != mask)
 	{
 		cout << "SFC Error: Cannot set refinements by delta until dimensions have been set\n";
@@ -1297,6 +1334,11 @@ void SFC2D<LOCS>::SetRefinementsByDelta(REAL deltax, REAL deltay)
 
 }
 
+template<class LOCS>
+unsigned char SFC1D<LOCS>::Bin(LOCS *point, REAL *center)
+{
+  return point[0]<center[0];
+} 
 	
 template<class LOCS>
 unsigned char  SFC2D<LOCS>::Bin(LOCS *point, REAL *center)
@@ -1342,7 +1384,7 @@ void SFC3D<LOCS>::SetDimensions(REAL wx, REAL wy, REAL wz)
 	SFC<3,LOCS>::dimensions[0]=wx;
 	SFC<3,LOCS>::dimensions[1]=wy;
 	SFC<3,LOCS>::dimensions[2]=wz;
-	SFC<3,LOCS>::set=SFC<3,LOCS>::set|1;
+	SFC<3,LOCS>::set=SFC<3,LOCS>::set|8;
 }
 template<class LOCS>
 void SFC3D<LOCS>::SetCenter(REAL x, REAL y, REAL z)
@@ -1351,12 +1393,12 @@ void SFC3D<LOCS>::SetCenter(REAL x, REAL y, REAL z)
 	SFC<3,LOCS>::center[1]=y;
 	SFC<3,LOCS>::center[2]=z;
 
-	SFC<3,LOCS>::set=SFC<3,LOCS>::set|2;
+	SFC<3,LOCS>::set=SFC<3,LOCS>::set|16;
 }
 template<class LOCS>
 void SFC3D<LOCS>::SetRefinementsByDelta(REAL deltax, REAL deltay, REAL deltaz)
 {
-	char mask=1;
+	char mask=8;
 	if( (mask&SFC<3,LOCS>::set) != mask)
 	{
 		cout << "SFC Error: Cannot set refinements by delta until dimensions have been set\n";
