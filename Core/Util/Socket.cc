@@ -31,6 +31,7 @@
 
 
 #include <Core/Util/Socket.h>
+#include <string>
 #include <errno.h>
 
 #ifndef _WIN32
@@ -38,9 +39,16 @@
 #else
 #  define socklen_t int
 #  define close closesocket
-#  define MSG_NOSIGNAL 0
 #endif
 #include <iostream>
+
+#if defined(__APPLE__)
+#  define SOCKET_NOSIGNAL SO_NOSIGPIPE
+#elif defined(_WIN32)
+#  define SOCKET_NOSIGNAL 0
+#else
+#  define SOCKET_NOSIGNAL MSG_NOSIGNAL
+#endif
 
 const int MAXCONNECTIONS = 25;
 const int MAXRECV = 1024;
@@ -131,7 +139,7 @@ Socket::accept(Socket& new_socket) const
 bool 
 Socket::write(const std::string s) const
 {
-  int sent = ::send(sock_, s.c_str(), s.size(), MSG_NOSIGNAL);
+  int sent = ::send(sock_, s.c_str(), s.size(), SOCKET_NOSIGNAL);
 
   if (sent == -1) { 
     perror("ERROR in write(const std::string s)");
@@ -147,9 +155,9 @@ Socket::write(const void *buf, size_t bytes) const
   // windows wants a char buffer
   const char* charbuf = (const char*) buf;
   bytes *= (sizeof(void*)/sizeof(char*));
-  int sent = ::send(sock_, charbuf, bytes, MSG_NOSIGNAL);
+  int sent = ::send(sock_, charbuf, bytes, SOCKET_NOSIGNAL);
 #else
-  int sent = ::send(sock_, buf, bytes, MSG_NOSIGNAL);
+  int sent = ::send(sock_, buf, bytes, SOCKET_NOSIGNAL);
 #endif
 
   if (sent == -1) { 
@@ -223,8 +231,6 @@ Socket::connect(const std::string host, const int port)
     return false;
   }
   addr_.sin_addr.s_addr = *((u_long*)(hostentry->h_addr_list[0]));
-
-
 
   int status = ::connect(sock_, (sockaddr*)&addr_, sizeof(addr_));
 
