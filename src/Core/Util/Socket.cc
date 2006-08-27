@@ -33,8 +33,22 @@
 #include <Core/Util/Socket.h>
 #include <string>
 #include <errno.h>
-#include <fcntl.h>
+
+#ifndef _WIN32
+#  include <fcntl.h>
+#else
+#  define socklen_t int
+#  define close closesocket
+#endif
 #include <iostream>
+
+#if defined(__APPLE__)
+#  define SOCKET_NOSIGNAL SO_NOSIGPIPE
+#elif defined(_WIN32)
+#  define SOCKET_NOSIGNAL 0
+#else
+#  define SOCKET_NOSIGNAL MSG_NOSIGNAL
+#endif
 
 const int MAXCONNECTIONS = 25;
 const int MAXRECV = 1024;
@@ -125,7 +139,7 @@ Socket::accept(Socket& new_socket) const
 bool 
 Socket::write(const std::string s) const
 {
-  int sent = ::send(sock_, s.c_str(), s.size(), MSG_NOSIGNAL);
+  int sent = ::send(sock_, s.c_str(), s.size(), SOCKET_NOSIGNAL);
 
   if (sent == -1) { 
     perror("ERROR in write(const std::string s)");
@@ -137,7 +151,14 @@ Socket::write(const std::string s) const
 bool 
 Socket::write(const void *buf, size_t bytes) const
 {
-  int sent = ::send(sock_, buf, bytes, MSG_NOSIGNAL);
+#ifdef _WIN32
+  // windows wants a char buffer
+  const char* charbuf = (const char*) buf;
+  bytes *= (sizeof(void*)/sizeof(char*));
+  int sent = ::send(sock_, charbuf, bytes, SOCKET_NOSIGNAL);
+#else
+  int sent = ::send(sock_, buf, bytes, SOCKET_NOSIGNAL);
+#endif
 
   if (sent == -1) { 
     perror("ERROR in write(const void *buf, size_t bytes)");
@@ -217,6 +238,7 @@ Socket::connect(const std::string host, const int port)
 void 
 Socket::set_blocking(const bool b)
 {
+#ifndef _WIN32
   int opts;
   opts = fcntl(sock_, F_GETFL);
   
@@ -234,6 +256,12 @@ Socket::set_blocking(const bool b)
   if (fcntl(sock_, F_SETFL, opts) < 0) {
     perror("ERROR in set_non_blocking() set");
   }
+#else
+  unsigned long val = !b;
+  if (ioctlsocket(sock_, FIONBIO, &val) < 0) {
+    perror("ERROR in set_non_blocking() set");
+  }
+#endif
 }
 
 } //namespace SCIRun
