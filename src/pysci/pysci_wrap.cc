@@ -11814,6 +11814,29 @@ static PyObject *_wrap_add_tm_notify_event(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_selection_target_changed(PyObject *, PyObject *args) {
+    PyObject *resultobj = NULL;
+    int arg1 ;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:selection_target_changed",&obj0)) goto fail;
+    {
+        arg1 = static_cast<int >(SWIG_As_int(obj0)); 
+        if (SWIG_arg_fail(1)) SWIG_fail;
+    }
+    {
+        Py_BEGIN_ALLOW_THREADS
+        SCIRun::selection_target_changed(arg1);
+        
+        Py_END_ALLOW_THREADS
+    }
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyMethodDef SwigMethods[] = {
 	 { (char *)"delete_OpenGLContext", _wrap_delete_OpenGLContext, METH_VARARGS, NULL},
 	 { (char *)"OpenGLContext_make_current", _wrap_OpenGLContext_make_current, METH_VARARGS, NULL},
@@ -12040,6 +12063,7 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"add_pointer_event", _wrap_add_pointer_event, METH_VARARGS, NULL},
 	 { (char *)"add_key_event", _wrap_add_key_event, METH_VARARGS, NULL},
 	 { (char *)"add_tm_notify_event", _wrap_add_tm_notify_event, METH_VARARGS, NULL},
+	 { (char *)"selection_target_changed", _wrap_selection_target_changed, METH_VARARGS, NULL},
 	 { NULL, NULL, 0, NULL }
 };
 

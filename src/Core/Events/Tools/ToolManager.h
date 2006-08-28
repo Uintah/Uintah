@@ -54,9 +54,22 @@ public:
   ToolManager(string name);
   ~ToolManager();
 
+  //! return the tool name at the specified priority
+  string query_tool_id(unsigned pri) {
+    ps_map_t::const_iterator iter = stacks_.find(pri);
+    if (iter == stacks_.end()) {
+      return "";
+    }
+    const ts_stack_t &s = (*iter).second;
+    return s.top()->get_name(); 
+  }
+
   //! add the tool t on the stack with the specified priority.
   //! the ToolManager takes ownership of the added, tool, calling delete
   void add_tool(tool_handle_t t, unsigned priority);
+
+  //! remove the top tool on the stack with the specified priority.
+  void rm_tool(unsigned priority);
 
   //! propagate the event to each top() tool on all the stacks in 
   //! priority order, returning the possibly modified event.
@@ -72,8 +85,8 @@ private:
   BaseTool::propagation_state_e send_tm_notify_event(tool_handle_t, 
 						     event_handle_t) const;
   
-  typedef stack<tool_handle_t>                                      ts_stack_t;
-  typedef map<unsigned, ts_stack_t, less<unsigned> >                ps_map_t;
+  typedef stack<tool_handle_t>                            ts_stack_t;
+  typedef map<unsigned, ts_stack_t, less<unsigned> >      ps_map_t;
 
   ps_map_t            stacks_;
   string              name_;

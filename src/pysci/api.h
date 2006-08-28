@@ -23,5 +23,6 @@ void run_viewer_thread(CallbackOpenGLContext *ogl);
 void add_pointer_event(PointerEvent *p);
 void add_key_event(KeyEvent *k);
 void add_tm_notify_event(TMNotifyEvent *t);
+void selection_target_changed(int fid);
 
 }

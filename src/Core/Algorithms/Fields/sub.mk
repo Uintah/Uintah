@@ -19,6 +19,7 @@ SRCS     += $(SRCDIR)/ApplyMappingMatrix.cc\
             $(SRCDIR)/ConvertToTetVol.cc\
             $(SRCDIR)/ConvertToTriSurf.cc\
             $(SRCDIR)/DomainBoundary.cc\
+            $(SRCDIR)/ClipAtIndeces.cc\
             $(SRCDIR)/ClipBySelectionMask.cc\
             $(SRCDIR)/IndicesToData.cc\
             $(SRCDIR)/DistanceField.cc\

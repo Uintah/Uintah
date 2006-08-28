@@ -58,6 +58,16 @@ ToolManager::add_tool(tool_handle_t t, unsigned priority)
   s.push(t);
 }
 
+void 
+ToolManager::rm_tool(unsigned priority) 
+{  
+  ts_stack_t &s  = stacks_[priority];
+  if (sci_getenv_p("SCI_DEBUG")) {
+    cerr << "remove tool: " << s.top()->get_name() << endl;
+  }
+  s.pop();
+}
+
 BaseTool::propagation_state_e
 ToolManager::send_pointer_event(tool_handle_t tool, event_handle_t event) const 
 {
