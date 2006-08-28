@@ -18,6 +18,10 @@ RegridderCommon* RegridderFactory::create(ProblemSpecP& ps,
     string regridder = "Hierarchical";
     reg_ps->get("type",regridder);
 
+    if (world->myrank() == 0)
+      cout << "Using Regridder " << regridder << endl;
+
+
     if(regridder == "Hierarchical") {
       regrid = new HierarchicalRegridder(world);
     } else if(regridder == "BNR") {

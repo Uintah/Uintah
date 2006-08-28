@@ -38,7 +38,7 @@ SchedulerCommon* SchedulerFactory::create(ProblemSpecP& ps,
   }
 
   if (world->myrank() == 0)
-    cout << "Using scheduler " << scheduler << endl;
+    cout << "Using Scheduler " << scheduler << endl;
 
   if(scheduler == "SingleProcessorScheduler"){
     sch = scinew SingleProcessorScheduler(world, output);
