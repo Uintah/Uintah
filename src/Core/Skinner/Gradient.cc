@@ -37,7 +37,7 @@
 #include <Core/Math/MinMax.h>
 
 #include <sci_gl.h>
-
+#include <sci_glu.h>
 
 namespace SCIRun {
 
