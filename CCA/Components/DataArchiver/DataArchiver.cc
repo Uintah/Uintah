@@ -1411,6 +1411,9 @@ DataArchiver::outputReduction(const ProcessorGroup*,
                               DataWarehouse* /*old_dw*/,
                               DataWarehouse* new_dw)
 {
+
+  if (new_dw->timestepRestarted())
+    return;
   // Dump the stuff in the reduction saveset into files in the uda
   // at every timestep
   dbg << "DataArchiver::outputReduction called\n";
