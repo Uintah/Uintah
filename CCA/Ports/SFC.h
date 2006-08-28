@@ -56,7 +56,7 @@ extern SCISHARE int gorient2[][4];
 extern SCISHARE int morient2[][4];
 
 extern SCISHARE int orient1[][2];
-extern SCISHARE int order[1][2];
+extern SCISHARE int order1[][2];
 
 #define REAL double
 #define EPSILON 1e-6
@@ -141,7 +141,13 @@ template<class LOCS>
 class SFC1D : public SFC<1,LOCS>
 {
   public:
-    SFC1D(const ProcessorGroup *d_myworld) : SFC<1,LOCS>(dir1,d_myworld) {};
+    SFC1D(const ProcessorGroup *d_myworld) : SFC<1,LOCS>(dir1,d_myworld) 
+    {
+      SFC<1,LOCS>::order=order1;
+      SFC<1,LOCS>::orientation=orient1;
+      SFC<1,LOCS>::inverse=order1;
+    }
+                        
 		void SetDimensions(REAL wx);
 		void SetCenter(REAL x);
 		void SetRefinementsByDelta(REAL deltax);
@@ -1290,17 +1296,17 @@ void SFC2D<LOCS>::SetCurve(Curve curve)
 			SFC<2,LOCS>::order=horder2;
 			SFC<2,LOCS>::orientation=horient2;
 			SFC<2,LOCS>::inverse=hinv2;
-		      	break;
+		  break;
 		case MORTON:
 			SFC<2,LOCS>::order=morder2;
-		        SFC<2,LOCS>::orientation=morient2;
+		  SFC<2,LOCS>::orientation=morient2;
 			SFC<2,LOCS>::inverse=morder2;
 			break;
 		case GREY:
 			SFC<2,LOCS>::order=gorder2;
-		        SFC<2,LOCS>::orientation=gorient2;
+		  SFC<2,LOCS>::orientation=gorient2;
 			SFC<2,LOCS>::inverse=ginv2;
-		      	break;
+		  break;
 	}
 }
 		 
@@ -1337,7 +1343,7 @@ void SFC2D<LOCS>::SetRefinementsByDelta(REAL deltax, REAL deltay)
 template<class LOCS>
 unsigned char SFC1D<LOCS>::Bin(LOCS *point, REAL *center)
 {
-  return point[0]<center[0];
+  return point[0]>center[0];
 } 
 	
 template<class LOCS>
