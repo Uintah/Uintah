@@ -41,6 +41,9 @@ UintahParallelComponent* ComponentFactory::create(ProblemSpecP& ps, const Proces
       sim_ps->get("type",sim_comp);
   }
 
+  if (world->myrank() == 0)
+    cout << "Using Simulation Component " << sim_comp << endl;
+
   if (sim_comp == "mpm" || sim_comp == "MPM") {
     return scinew SerialMPM(world);
   } else if (sim_comp == "mpmf" || sim_comp == "fracturempm" || sim_comp == "FRACTUREMPM") {
