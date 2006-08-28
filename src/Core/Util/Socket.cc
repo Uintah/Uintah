@@ -224,10 +224,13 @@ Socket::connect(const std::string host, const int port)
   addr_.sin_family = AF_INET;
   addr_.sin_port = htons(port);
 
-  if (inet_pton(AF_INET, host.c_str(), &addr_.sin_addr) < 0) {
+  struct hostent* hostentry;
+  hostentry = gethostbyname(host.c_str());
+  if (hostentry == 0) {
     perror("ERROR in connect()");
     return false;
   }
+  addr_.sin_addr.s_addr = *((u_long*)(hostentry->h_addr_list[0]));
 
   int status = ::connect(sock_, (sockaddr*)&addr_, sizeof(addr_));
 
