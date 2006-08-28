@@ -240,7 +240,7 @@ bool CardioWaveConverter::cwFileTOsciMatrix(std::string filename,MatrixHandle& m
         }
    
         buffer = reinterpret_cast<void *>(jcoef);
-        if ((fread(buffer,1,idxsize*nz*nrows,fid)!=(idxsize*nz*nrows)))
+        if ((fread(buffer,1,idxsize*nz*nrows,fid)!=static_cast<size_t>(idxsize*nz*nrows)))
         {
           fclose(fid);
           delete[] jcoef;
@@ -252,7 +252,7 @@ bool CardioWaveConverter::cwFileTOsciMatrix(std::string filename,MatrixHandle& m
         if (doswapbytes) swapbytes(buffer,idxsize,nz*nrows);
       
         buffer = reinterpret_cast<void *>(coef);
-        if ((fread(buffer,1,elsize*nz*nrows,fid)!=(elsize*nz*nrows)))
+        if ((fread(buffer,1,elsize*nz*nrows,fid)!=static_cast<size_t>(elsize*nz*nrows)))
         {
           fclose(fid);
           delete[] jcoef;
@@ -320,7 +320,6 @@ bool CardioWaveConverter::cwFileTOsciMatrix(std::string filename,MatrixHandle& m
         for (int p=0;p<nrows;p++) t[p] = 0;
 
         k = 0;
-        int m = 0;
         s = 0;
         for (int q=0;q<nz;q++)
           for (int r=0 ;r<nrows;r++,s++)
@@ -403,7 +402,7 @@ bool CardioWaveConverter::cwFileTOsciMatrix(std::string filename,MatrixHandle& m
         }
 
         buffer = reinterpret_cast<void *>(colmat->get_data());
-        if ((fread(buffer,1,elsize*size,fid)!=(elsize*size)))
+        if ((fread(buffer,1,elsize*size,fid)!=static_cast<size_t>(elsize*size)))
         {
           fclose(fid);
           delete[] colmat;
@@ -470,7 +469,7 @@ bool CardioWaveConverter::cwFileTOsciMatrix(std::string filename,MatrixHandle& m
         }
 
         buffer = reinterpret_cast<void *>(colmat->get_data());
-        if ((fread(buffer,1,elsize*size,fid)!=(elsize*size)))
+        if ((fread(buffer,1,elsize*size,fid)!=static_cast<size_t>(elsize*size)))
         {
           fclose(fid);
           delete[] colmat;
@@ -537,7 +536,7 @@ bool CardioWaveConverter::cwFileTOsciMatrix(std::string filename,MatrixHandle& m
         }
 
         buffer = reinterpret_cast<void *>(colmat->get_data());
-        if ((fread(buffer,1,elsize*size,fid)!=(elsize*size)))
+        if ((fread(buffer,1,elsize*size,fid)!=static_cast<size_t>(elsize*size)))
         {
           fclose(fid);
           delete[] colmat;
@@ -628,7 +627,7 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
     try
     {
       memfile.open(filename.c_str(),std::ofstream::out);
-      for (size_t p=0; p < mh->nrows(); p++)
+      for (int p=0; p < mh->nrows(); p++)
       { 
         ss = static_cast<int>(data[r++]);
         ii = static_cast<int>(data[r++]);
@@ -687,7 +686,7 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
     try
     {
       stimfile.open(filename.c_str(),std::ofstream::out);
-      for (size_t p=0; p < mh->nrows(); p++)
+      for (int p=0; p < mh->nrows(); p++)
       { 
         nn = static_cast<int>(data[r++]);
         start = data[r++];
@@ -753,7 +752,7 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
     
     char *buffer = scinew char[size];
     
-    for (int p=0;p<size;p++) buffer[p] = static_cast<char>(data[p]);
+    for (size_t p=0;p<size;p++) buffer[p] = static_cast<char>(data[p]);
 
     
     FILE *fid =fopen(filename.c_str(),"w");
@@ -827,7 +826,7 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
     
     int *buffer = scinew int[size];
     
-    for (int p=0;p<size;p++) buffer[p] = static_cast<int>(data[p]);
+    for (size_t p=0;p<size;p++) buffer[p] = static_cast<int>(data[p]);
     
     FILE *fid =fopen(filename.c_str(),"w");
     if (fid == 0)
@@ -943,7 +942,6 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
     int *rr = sp->rows;
     int *cc = sp->columns;
     double *d = sp->a;
-    int nnz = sp->nnz;
     int nrows = sp->nrows();
     int ncols = sp->ncols();
     
@@ -1042,7 +1040,7 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
        return(false);      
     }
 
-    if ( fwrite(static_cast<void *>(jcoef),4,nrows*nz,fid) != nrows*nz )
+    if ( fwrite(static_cast<void *>(jcoef),4,nrows*nz,fid) != static_cast<size_t>(nrows*nz) )
     {
        posterror(pr,"Could not write to file");
        delete[] coef;
@@ -1051,7 +1049,7 @@ bool CardioWaveConverter::sciMatrixTOcwFile(MatrixHandle mh,std::string filename
        return(false);      
     }
 
-    if ( fwrite(static_cast<void *>(coef),8,nrows*nz,fid) != nrows*nz )
+    if ( fwrite(static_cast<void *>(coef),8,nrows*nz,fid) != static_cast<size_t>(nrows*nz) )
     {
        posterror(pr,"Could not write to file");
        delete[] coef;

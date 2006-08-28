@@ -97,9 +97,9 @@ bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable
   int synnum = num_volumenodes;
   SparseElementVector sev(num_synnodes*7);
   int k = 0;
-  for (int p=0; p<membranetable.size();p++)
+  for (size_t p=0; p<membranetable.size();p++)
   {
-    for (int q=0; q< membranetable[p].size(); q++)
+    for (size_t q=0; q< membranetable[p].size(); q++)
     { 
       membranetable[p][q].snode = synnum;
       sev[k].row = synnum;
@@ -210,7 +210,7 @@ bool ModelAlgo::DMDMembraneTableToMatrix(MembraneTable MembraneTable,MatrixHandl
   double *dataptr = M->get_data_pointer();
   
   int p =0;
-  for (int k=0; k <MembraneTable.size(); k++)
+  for (size_t k=0; k <MembraneTable.size(); k++)
   {
     dataptr[p++] = static_cast<double>(MembraneTable[k].snode);
     dataptr[p++] = static_cast<double>(MembraneTable[k].node1);
@@ -456,7 +456,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   // components of the model. Next to the volume each piece of membrane has its
   // own geometry. Similarly every electrode (stimulus and reference has its own geometry)
   
-  for (size_t p=0; p < SimulationBundle->numBundles(); p++)
+  for (size_t p=0; p < static_cast<size_t>(SimulationBundle->numBundles()); p++)
   {
     // Do we have a membrane definition
     std::string bundlename = SimulationBundle->getBundleName(p);
@@ -620,7 +620,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
 
 
   
-  for (size_t p=0; p < SimulationBundle->numBundles(); p++)
+  for (size_t p=0; p < static_cast<size_t>(SimulationBundle->numBundles()); p++)
   {
     // Do we have a membrane definition
     std::string bundlename = SimulationBundle->getBundleName(p);
@@ -1025,9 +1025,9 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   int* renumber = spr->columns;
   
   // Build membrane table
-  for (int p=0; p<membranetable.size();p++)
+  for (size_t p=0; p<membranetable.size();p++)
   {
-    for (int q=0; q< membranetable[p].size(); q++)
+    for (size_t q=0; q< membranetable[p].size(); q++)
     { 
       membranetable[p][q].snode = renumber[membranetable[p][q].snode];
       membranetable[p][q].node1 = renumber[membranetable[p][q].node1];
@@ -1036,17 +1036,17 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   }
   
   
-  for (int p=0; p<stimulustable.size(); p++)
+  for (size_t p=0; p<stimulustable.size(); p++)
   {
-    for (int q=0; q< stimulustable[p].size(); q++)
+    for (size_t q=0; q< stimulustable[p].size(); q++)
     {
       stimulustable[p][q].node = renumber[stimulustable[p][q].node];
     }
   }
 
-  for (int p=0; p<referencetable.size(); p++)
+  for (size_t p=0; p<referencetable.size(); p++)
   {
-    for (int q=0; q< referencetable[p].size(); q++)
+    for (size_t q=0; q< referencetable[p].size(); q++)
     {
       referencetable[p][q].node = renumber[referencetable[p][q].node];
     }
@@ -1060,9 +1060,9 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   {
     std::ofstream memfile;
     memfile.open(filename_membrane.c_str());
-    for (int p=0; p<membranetable.size();p++)
+    for (size_t p=0; p<membranetable.size();p++)
     {
-      for (int q=0; q< membranetable[p].size(); q++)
+      for (size_t q=0; q< membranetable[p].size(); q++)
       { 
       memfile << membranetable[p][q].snode << " " << membranetable[p][q].node2 << " " << membranetable[p][q].node1 << "\n";
       }
@@ -1079,9 +1079,9 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   {
     std::ofstream stimfile;
     stimfile.open(filename_stimulus.c_str());
-    for (int p=0; p<stimulustable.size();p++)
+    for (size_t p=0; p<stimulustable.size();p++)
     {
-      for (int q=0; q< stimulustable[p].size(); q++)
+      for (size_t q=0; q< stimulustable[p].size(); q++)
       { 
         if (stimulusduration[p] == -1.0)
         { 
@@ -1104,9 +1104,9 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   {
     std::ofstream reffile;
     reffile.open(filename_reference.c_str());
-    for (int p=0; p<referencetable.size();p++)
+    for (size_t p=0; p<referencetable.size();p++)
     {
-      for (int q=0; q< referencetable[p].size(); q++)
+      for (size_t q=0; q< referencetable[p].size(); q++)
       { 
         reffile << referencetable[p][q].node <<  " " << referencevalues[p] << ", I\n";
       }
@@ -1123,7 +1123,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   
   if (!(mathalgo.ResizeMatrix(imapping,imapping,num_volumenodes,num_totalnodes)))
   {
-    error("DMDBuildDomain: Could not resize mapping matrix");
+    error("DMDBuildSimulation: Could not resize mapping matrix");
     return (false);        
   }  
 
@@ -1133,19 +1133,25 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
 
   VolumeField->setMatrix("Mapping",imapping);
   VisualizationBundle->setBundle("Tissue",VolumeField);
-    
+   
+          
   for (size_t p=0; p <num_membranes; p++)
   {
     std::ostringstream oss;
     oss << "Membrane_" << p;
-
     membranemapping[p] = membranemapping[p]*imapping;
     
     BundleHandle MembraneBundle = scinew Bundle;
+    if (MembraneBundle.get_rep() == 0)
+    { 
+      error("DMDBuildSimulation: Could not allocate new output bundle");
+      return (false);
+    }
     MembraneBundle->setField("Field",Membranes[p]);
     MembraneBundle->setMatrix("Mapping",membranemapping[p]);
     VisualizationBundle->setBundle(oss.str(),MembraneBundle);
   }
+
   
   MatrixHandle Mapping;
   std::vector<unsigned int> columnselection;
@@ -1200,6 +1206,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
       } 
     }
   }
+
 
   if (num_electrodes >0)
   {
@@ -1257,7 +1264,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   {
     std::ofstream electrodefile;
     electrodefile.open(filename_electrode.c_str());
-    for (int p=0; p<columnselection.size();p++)
+    for (size_t p=0; p<columnselection.size();p++)
     {
       electrodefile << columnselection[p] << ", I\n";
     }
@@ -1269,7 +1276,6 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   }
 
   remark("Wrote electrode table");   
-   
   return (true);
 }
   

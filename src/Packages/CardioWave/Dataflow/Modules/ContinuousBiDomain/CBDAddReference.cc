@@ -56,10 +56,10 @@ public:
   virtual void execute();
 
 private:  
-  GuiInt    guiuseelements_;
   GuiInt    guiusefieldvalue_;
   GuiDouble guireferencevalue_;
   GuiString guireferencedomain_;
+  GuiInt    guiuseelements_;
 };
 
 

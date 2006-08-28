@@ -107,6 +107,7 @@ void DMDBuildSimulation::execute()
     if(!(algo.DMDBuildSimulation(SimulationBundle,FileName,VisualizationBundle,SimulationScript))) return;
     
     // Send output downstream:
+    std::cout << "sending data downstream\n";
     send_output_handle("SimulationScript",SimulationScript,false);
     if (build_visualization_bundle) send_output_handle("VisualizationBundle",VisualizationBundle,false);
   }

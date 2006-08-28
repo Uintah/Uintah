@@ -55,11 +55,11 @@ public:
     numelems_z_(8),
     numelems_bath_start_(6),
     numelems_bath_end_(6),
+    numconnectionx_(2),
+    numconnectiony_(2),
     cell_length_(100e-6),
     cell_crosssection_(300e-12),
-    ics_vol_frac_(0.8),
-    numconnectionx_(2),
-    numconnectiony_(2)
+    ics_vol_frac_(0.8)
   {
   }
   
