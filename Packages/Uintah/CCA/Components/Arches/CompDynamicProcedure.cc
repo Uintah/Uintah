@@ -2813,7 +2813,7 @@ CompDynamicProcedure::sched_computeScalarVariance(SchedulerP& sched,
 
   int mmWallID = d_boundaryCondition->getMMWallId();
   if (mmWallID > 0)
-    tsk->requires(Task::OldDW, timelabels->ref_density);
+    tsk->requires(Task::OldDW, d_lab->d_refDensity_label);
 
   // Computes
   if (timelabels->integrator_step_number == TimeIntegratorStepNumber::First) {
@@ -2910,7 +2910,7 @@ CompDynamicProcedure::computeScalarVariance(const ProcessorGroup* pc,
     sum_vartype den_ref_var;
     int mmWallID = d_boundaryCondition->getMMWallId();
     if (mmWallID > 0) {
-      old_dw->get(den_ref_var, timelabels->ref_density);
+      old_dw->get(den_ref_var, d_lab->d_refDensity_label);
     }
 
     double small = 1.0e-10;
