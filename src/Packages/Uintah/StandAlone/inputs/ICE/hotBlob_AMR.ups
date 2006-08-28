@@ -226,8 +226,8 @@
 
 <!-- Hierarchical-specific -->
         <lattice_refinement_ratio> [[5,5,1]]  </lattice_refinement_ratio>
-        <type>BNR</type>
 <!--
+        <type>BNR</type>
 -->
 <!-- BNR-specific - to toggle, uncomment or comment the <type>BNR</type> as
      Hierarchical is the default (and will ignore these) -->
