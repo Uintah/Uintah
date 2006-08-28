@@ -76,7 +76,6 @@ void UnpackState::execute()
   
   int s,e;
   int idx = static_cast<int>(iptr[0]);
-  int sidx;
   
   for (int p=0; p<numo; p++)
   {
