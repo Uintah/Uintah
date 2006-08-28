@@ -78,7 +78,9 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       mkdir(outputpath)
       system("chmod -R 775 %s" % outputpath)
     except Exception:
-      pass
+      # if it exists, erase its contents
+      system("rm -rf %s/*" % outputpath)
+
   except Exception:
     outputpath = startpath
     weboutputpath = startpath
@@ -136,7 +138,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
   chdir(resultsdir)
 
-
+  if outputpath != startpath:
+    mkdir("%s/%s-results" % (outputpath, ALGO))
 
   environ['MPI_TYPE_MAX'] = '10000'
 
@@ -242,7 +245,11 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
     environ['WEBLOG'] = "%s/%s-results/%s" % (weboutputpath, ALGO, testname)
     rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, mode, max_parallelism, tests_to_do, "no")
     system("rm inputs")
-    
+
+    # copy results to web server
+    if outputpath != startpath:
+      mkdir("%s/%s-results/%s" % (outputpath, ALGO, testname))
+      system("cp `ls -1 | grep -v uda` %s/%s-results/%s/" % (outputpath, ALGO, testname))
     # rc of 2 means it failed comparison or memory test, so try to run restart
     # anyway
     if rc == 0 or rc == 2:
@@ -251,6 +258,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
           failcode = 1
       mkdir("restart")
       chdir("restart")
+
       # call the callback function before running each test
       callback(test, susdir, inputsdir, compare_root, mode, max_parallelism);
 
@@ -259,9 +267,16 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
         symlink(inputpath, "inputs")
         environ['WEBLOG'] = "%s/%s-results/%s/restart" % (weboutputpath, ALGO, testname)
         rc = runSusTest(test, susdir, inputxml, compare_root, ALGO, mode, max_parallelism, tests_to_do, "yes")
+
         if rc > 0:
           failcode = 1
         system("rm inputs")
+
+        # copy results to web server
+        if outputpath != startpath:
+          mkdir("%s/%s-results/%s/restart" % (outputpath, ALGO, testname))
+          system("cp `ls -1 | grep -v uda` %s/%s-results/%s/restart/" % (outputpath, ALGO, testname))
+
       chdir("..")
     elif rc == 1: # negative one means skipping -- not a failure
       failcode = 1
@@ -272,12 +287,9 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
   system("chgrp -R csafe %s > /dev/null 2>&1" % resultsdir)
   system("chmod -R g+rwX %s > /dev/null 2>&1" % resultsdir)
 
-  # copy results to web server.
+  # copied results - permissions
   if outputpath != startpath:
-    system("cp -r %s %s/" % (resultsdir, outputpath))
     system("chmod -R gu+rwX,a+rX %s/%s-results > /dev/null 2>&1" % (outputpath, ALGO))
-    # remove uda dirs from web server
-    system("find %s -name '*.uda*' | xargs rm -rf " % outputpath)
 
   if solotest != "" and solotest_found == 0:
     print "unknown test: %s" % solotest
