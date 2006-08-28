@@ -3462,14 +3462,19 @@ void
 idx2rgba(unsigned int idx, unsigned char &r, unsigned char &g, 
 	 unsigned char &b, unsigned char &a)
 {
-  const unsigned int rmask = 0xff000000;
-  const unsigned int gmask = 0x00ff0000;
-  const unsigned int bmask = 0x0000ff00;
-  const unsigned int amask = 0x000000ff;
-  r = (idx & rmask) >> 24;
-  g = (idx & gmask) >> 16;
-  b = (idx & bmask) >> 8;
-  a = (idx & amask);
+  //just encode the index in the rgb channels
+  // this type of encoding can only handle indeces 2^24
+  if ((unsigned int)(idx & 0xff000000) != 0) { 
+    cerr << "Error: encoded index is > 2^24: " << idx << endl;
+    cerr << "       Picking may fail." << endl;
+  }
+  const unsigned int rmask = 0x00ff0000;
+  const unsigned int gmask = 0x0000ff00;
+  const unsigned int bmask = 0x000000ff;
+  r = (idx & rmask) >> 16;
+  g = (idx & gmask) >> 8;
+  b = (idx & bmask);
+  a = 255;
 }
 
 
@@ -4300,7 +4305,31 @@ GeomFastTrianglesTwoSided::draw(DrawInfoOpenGL* di, Material* matl, double)
 void
 GeomTranspTriangles::fbpick_draw(DrawInfoOpenGL* di, Material* matl, double)
 {
+
+  if (!pre_draw(di, matl, 1)) return;
   cerr << "GeomTranspTriangles::fbpick_draw(...)" << endl;
+  glDisable(GL_LIGHTING);
+  glDisable(GL_TEXTURE_1D);
+  glDisable(GL_TEXTURE_2D);
+  glDisable(GL_TEXTURE_3D);
+  glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
+  glShadeModel(GL_FLAT);
+  unsigned int nverts = points_.size();  // number of vertices.
+  vector<unsigned char> cols(nverts * 4); // 4 bytes per vertex.
+  for (unsigned int v = 0; v < nverts * 4; v+=4) {
+    unsigned int face_idx = v / 12;
+    unsigned char r, g, b, a;
+    idx2rgba(face_idx, r, g, b, a);
+    cols[v] = r;
+    cols[v+1] = g;
+    cols[v+2] = b;
+    cols[v+3] = a;
+  }
+  glColorPointer(4, GL_UNSIGNED_BYTE, 0, &(cols.front()));
+  glEnableClientState(GL_COLOR_ARRAY);
+  glVertexPointer(3, GL_FLOAT, 0, &(points_.front()));
+  glEnableClientState(GL_VERTEX_ARRAY);
+  glDrawArrays(GL_TRIANGLES, 0, points_.size()/3);
 }
 
 void

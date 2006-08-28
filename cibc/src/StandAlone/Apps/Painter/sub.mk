@@ -35,7 +35,8 @@ ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
 
-PSELIBS := Core/Algorithms/Visualization \
+PSELIBS := Core/Algorithms/Fields \
+           Core/Algorithms/Visualization \
            Core/Basis \
            Core/Bundle \
 	   Core/Containers \

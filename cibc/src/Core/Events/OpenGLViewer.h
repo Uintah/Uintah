@@ -45,6 +45,7 @@
 #include <fstream>
 #include <string>
 #include <map>
+#include <set>
 #include <vector>
 
 #include <Core/Malloc/Allocator.h>
@@ -82,6 +83,7 @@ namespace SCIRun {
 using std::ostringstream;
 using std::ofstream;
 using std::vector;
+using std::set;
 
 class Pbuffer;
 
@@ -135,6 +137,9 @@ public:
 				   const string& type = "ppm",
 				   int x=640, int y=512);
 
+  void                   do_fbpick_draw();
+  vector<unsigned char> &get_fbpick_image() { return fbpick_image_; }
+  ToolManager           &get_tm() { return tm_; }
   
   // Compute world space point under cursor (x,y).  If successful,
   // set 'p' to that value & return true.  Otherwise, return false.
@@ -163,7 +168,26 @@ public:
   void                update_mode_string(string) {}
   void                get_bounds(BBox &bbox, bool check_visible = true);
 
-protected:
+  set<unsigned int>&  get_selection_set() { return selection_set_; }
+
+  void                add_selection(unsigned int idx) {
+    selection_set_.insert(idx);
+  }
+  void                remove_selection(unsigned int idx) {
+    selection_set_.erase(idx);
+  }
+
+  void                set_selection_geom(GeomHandle geom) {
+    GeomViewerItem* si = scinew GeomViewerItem(geom, 
+					       "Selection Geom", 
+					       0);  
+    selection_geom_ = si;
+  }
+
+  void                set_selection_set_visible(bool b) {
+    selection_set_visible_ = b;
+  }
+
 
   //! the following enum defines the stack priorities for the tool manager,
   //! and classifies the priority ranges. For now leave room for 100 stacks 
@@ -172,11 +196,14 @@ protected:
     EVENT_MODIFIERS_E = 0, // Tools to modify incoming events.
     TOOL_MODIFIERS_E = 100, // Tools to manipulate the set of active tools.
     DATA_TOOLS_E = 200, // Tools that handle data, 
+    SELECTION_TOOL_E = 298,  // Tool that gets pushed used and popped...
+    ACTIVE_TOOL_E = 299,  // Tool that gets pushed used and popped...
     VIEWER_TOOLS_E = 300,  // Tools to manipulate the current view.
                            // always on the stack (so last)
     LAST_CHANCE_E = 500
   };
 
+protected:
   void                  init_tool_manager();
   void                  redraw_frame();
   GeomHandle            create_viewer_axes() ;
@@ -285,6 +312,10 @@ protected:
   draw_type_e            draw_type_;
   bool                   capture_z_data_;
   bool                   need_redraw_;
+  set<unsigned int>      selection_set_;
+  bool                   selection_set_visible_;
+  GeomHandle             selection_geom_;
+  tool_handle_t          selection_set_tool_;
 };
 
 } // End namespace SCIRun

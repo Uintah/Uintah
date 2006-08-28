@@ -86,7 +86,6 @@ sciVectorToColor(Color &c, const Vector &v)
   c = Color(fabs(v.x()), fabs(v.y()), fabs(v.z()));
 }
 
-
 //! RenderFieldBase supports the dynamically loadable algorithm concept.
 //! when dynamically loaded the user will dynamically cast to a 
 //! RenderFieldBase from the DynamicAlgoBase they will have a pointer to.
@@ -3664,6 +3663,91 @@ RenderScalarField<SFld, CFld, Loc>::render_data(FieldHandle sfld_handle,
   return data_switch;
 }
 
+
+struct RenderParams 
+{
+  void defaults() {
+    do_nodes_ = true;
+    do_edges_ = false;
+    do_faces_ = false;
+    do_text_ = false;
+    color_map_ = 0;
+    def_material_ = new Material(Color(0.3, 0.7, 0.3)); 
+    def_material_->transparency = .93;
+    ndt_ = "Spheres";
+    edt_ = "Lines";
+    ns_ = 0.3;
+    es_ = 0.3;
+    vscale_ = 0.3;
+    normalize_vectors_  = true;
+    node_resolution_  = 6;
+    edge_resolution_ = 6;
+    faces_normals_ = true;
+    nodes_transparency_ = false;
+    edges_transparency_ = false;
+    faces_transparency_ = false;
+    nodes_usedefcolor_ = true;
+    edges_usedefcolor_ = true;
+    faces_usedefcolor_ = true;
+    approx_div_ = 1;
+    faces_usetexture_ = false;
+    text_material_ = new Material(Color(0.25, 0.25, 0.45));
+    text_use_default_color_ = true;
+    text_backface_cull_ = false;
+    text_fontsize_ = 1;
+    text_precision_ = 3;
+    text_render_locations_ = false;
+    text_show_data_ = false;
+    text_show_nodes_ = false;
+    text_show_edges_ = false;
+    text_show_faces_ = true;
+    text_show_cells_ = false;
+    text_geometry_ = 0;
+  }
+
+
+  bool           do_nodes_;           //! show nodes or not.
+  bool           do_edges_;           //! show edges or not.
+  bool           do_faces_;           //! show faces or not.
+  bool           do_text_;            //! render text for indeces?
+  ColorMapHandle color_map_;          //! mapping data values to colors 
+  MaterialHandle def_material_;       //! color when no color_map.
+  string         ndt_;                //! "Points" or "Spheres" or "Axes"  
+  string         edt_;                //! "Lines" or "Cylinders" 
+  double         ns_;                 //! node scale factor. 
+  double         es_;                 //! edge scale factor.
+  double         vscale_;             //! Vectors scale factor. 
+  bool           normalize_vectors_;  //! normalize vectors before rendering?
+  int            node_resolution_;    //! node glpyh resolution.
+  int            edge_resolution_;    //! edge glyph resolution.
+  bool           faces_normals_;      //! use face normals?
+  bool           nodes_transparency_; //! render transparent nodes?
+  bool           edges_transparency_; //! render transparent edges?
+  bool           faces_transparency_; //! render transparent faces?
+  bool           nodes_usedefcolor_;  //! always use default color for nodes?
+  bool           edges_usedefcolor_;  //! always use default color for edges?
+  bool           faces_usedefcolor_;  //! always use default color for faces?
+  int            approx_div_;         //! high order approximation sub level
+  bool           faces_usetexture_;   //! use face texture rendering?
+  MaterialHandle text_material_;      //! default text color.
+  bool           text_use_default_color_;
+  bool           text_backface_cull_;
+  int            text_fontsize_;
+  int            text_precision_;
+  bool           text_render_locations_;  //! render the points not indeces?
+  bool           text_show_data_;
+  bool           text_show_nodes_;
+  bool           text_show_edges_;
+  bool           text_show_faces_;
+  bool           text_show_cells_;
+  
+  DynamicAlgoHandle  dalgo_;         //! the algorithm instance (return data)
+  RenderFieldBase   *renderer_;      //! same cast to the correct type.
+  GeomHandle         text_geometry_;
+};
+
+//! interface that does the dynamic compilation for you.
+bool render_field(FieldHandle fld_handle, RenderParams &params);
 
 } // end namespace SCIRun
 

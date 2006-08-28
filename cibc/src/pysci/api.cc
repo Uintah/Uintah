@@ -1,3 +1,35 @@
+//  
+//  For more information, please see: http://software.sci.utah.edu
+//  
+//  The MIT License
+//  
+//  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+//  University of Utah.
+//  
+//  License for the specific language governing rights and limitations under
+//  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following conditions:
+//  
+//  The above copyright notice and this permission notice shall be included
+//  in all copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+//  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+//  DEALINGS IN THE SOFTWARE.
+//  
+//    File   : api.cc
+//    Author : Martin Cole
+//    Date   : Mon Aug  7 15:21:20 2006
+
+
 #include <pysci/api.h>
 #include <Core/Init/init.h>
 #include <Core/Persistent/Pstreams.h>
@@ -9,6 +41,7 @@
 #include <Core/Events/EventManager.h>
 #include <Core/Events/BaseEvent.h>
 #include <Core/Events/SceneGraphEvent.h>
+#include <Core/Events/SelectionTargetEvent.h>
 #include <Core/Events/OpenGLViewer.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Basis/Constant.h>
@@ -21,6 +54,7 @@
 #include <Dataflow/Modules/Fields/TetGen.h>
 #include <Core/Algorithms/Visualization/RenderField.h>
 #include <iostream>
+#include <sstream>
 
 namespace SCIRun {
 
@@ -180,6 +214,19 @@ void add_tm_notify_event(TMNotifyEvent *te)
   EventManager::add_event(event);
 }
 
+void selection_target_changed(int fid)
+{
+  FieldHandle fld;
+  fld = fields_[fid];
+
+  SelectionTargetEvent *t = new SelectionTargetEvent();
+  t->set_selection_target(fld);
+
+  event_handle_t event = t;
+  cerr << "adding selection target event" << endl;
+  EventManager::add_event(event);
+}
+
 void terminate() 
 {
   // send a NULL event to terminate...
@@ -201,115 +248,80 @@ void run_viewer_thread(CallbackOpenGLContext *ogl)
 bool show_field(int fld_id) 
 {
   FieldHandle fld_handle = fields_[fld_id];
-  // input parameters to RenderField::render
-  // fld_handle - the field to render
-  bool do_nodes = true; // show nodes or not.
-  bool do_edges = false; // show edges or not.
-  bool do_faces = true; // show faces or not.
-
-//   ColorMap(const vector<Color>& rgb,
-// 	   const vector<float>& rgbT,
-// 	   const vector<float>& alphas,
-// 	   const vector<float>& alphaT,
-// 	   unsigned int resolution = 256);
-  ColorMapHandle color_map = 0; // mapping data values to colors 
-  //color when no color_map.
-  MaterialHandle def_material = new Material(Color(0.3, 0.7, 0.3)); 
-  string ndt = "Spheres"; // "Points" or "Spheres" or "Axes"  
-  string edt = "Lines"; // "Lines" or "Cylinders" 
-  double ns = 0.3; // node scale factor. 
-  double es = 0.3; // edge scale factor.
-  double vscale = 0.3; // Vectors scale factor. 
-    bool normalize_vectors  = true; // normalize vectors before rendering?
-  // gluSphere resolution when rendering spheres for nodes.
-  int node_resolution  = 6;
-  // gluCylinder resolution when rendering spheres for nodes.
-  int edge_resolution = 6;
-  bool faces_normals = true; //use face normals (gouraud shading, not flat)
-  bool nodes_transparency = false; // render transparent nodes?
-  bool edges_transparency = false; // render transparent edges?
-  bool faces_transparency = false; // render transparent faces?
-  bool nodes_usedefcolor = true; // always use default color for nodes?
-  bool edges_usedefcolor = true; // always use default color for edges?
-  bool faces_usedefcolor = true; // always use default color for faces?
-  int approx_div = 1; // divisions per simplex (high order field rendering)
-  bool faces_usetexture = false; //use face texture rendering?
-
-
-  const TypeDescription *ftd = fld_handle->get_type_description();
-  const TypeDescription *ltd = fld_handle->order_type_description();
-  // description for just the data in the field
-
-  // Get the Algorithm.
-  CompileInfoHandle ci = RenderFieldBase::get_compile_info(ftd, ltd);
-
-  DynamicAlgoHandle dalgo;
-  if (!DynamicCompilation::compile(ci, dalgo)) {
-    return false;
-  }
+  static RenderParams p;
+  p.defaults();
+  p.faces_transparency_ = true;
+  p.do_nodes_ = false;
+  p.do_faces_ = true;
+  p.do_edges_ = true;
+  p.do_text_ = true;
   
-  RenderFieldBase *renderer = (RenderFieldBase*)dalgo.get_rep();
-  if (!renderer) {
-    cerr << "WTF!" << endl;
+  if (! render_field(fld_handle, p)) {
+    cerr << "Error: render_field failed." << endl;
     return false;
   }
 
-  if (faces_normals) fld_handle->mesh()->synchronize(Mesh::NORMALS_E);
-  renderer->render(fld_handle,
-		   do_nodes, do_edges, do_faces,
-		   color_map, def_material,
-		   ndt, edt, ns, es, vscale, normalize_vectors,
-		   node_resolution, edge_resolution,
-		   faces_normals,
-		   nodes_transparency,
-		   edges_transparency,
-		   faces_transparency,
-		   nodes_usedefcolor,
-		   edges_usedefcolor,
-		   faces_usedefcolor,
-		   approx_div,
-		   faces_usetexture);
-  
+  // for now make this field the selection target as well.
+  SelectionTargetEvent *ste = new SelectionTargetEvent();
+  event_handle_t event = ste;
+  ste->set_selection_target(fld_handle);
+  EventManager::add_event(event);
+   
+  ostringstream str;
+  str << "-" << fld_id;
 
-  string fname = "myfield";
-  if (do_nodes) 
+  string fname;
+  if (! fld_handle->get_property("name", fname)) {
+    fname = "Field";
+  }
+  fname = fname + str.str();
+
+  if (p.do_nodes_) 
   {
-    GeomHandle gmat = scinew GeomMaterial(renderer->node_switch_, 
-					  def_material);
-    GeomHandle geom = scinew GeomSwitch(scinew GeomColorMap(gmat, color_map));
-    const char *name = nodes_transparency?"Transparent Nodes":"Nodes";
+    GeomHandle gmat = scinew GeomMaterial(p.renderer_->node_switch_, 
+					  p.def_material_);
+    GeomHandle geom = scinew GeomSwitch(new GeomColorMap(gmat, 
+							 p.color_map_));
+    const char *name = p.nodes_transparency_ ? "Transparent Nodes" : "Nodes";
     SceneGraphEvent* sge = new SceneGraphEvent(geom, fname + name);
     event_handle_t event = sge;
     EventManager::add_event(event);
-    //node_id = ogeom_->addObj(geom, fname + name);
   }
 
-  if (do_edges) 
+  if (p.do_edges_) 
   { 
-    GeomHandle gmat = scinew GeomMaterial(renderer->edge_switch_, 
-					  def_material);
-    GeomHandle geom = scinew GeomSwitch(scinew GeomColorMap(gmat, color_map));
-    const char *name = edges_transparency?"Transparent Edges":"Edges";
+    GeomHandle gmat = scinew GeomMaterial(p.renderer_->edge_switch_, 
+					  p.def_material_);
+    GeomHandle geom = scinew GeomSwitch(new GeomColorMap(gmat, 
+							 p.color_map_));
+    const char *name = p.edges_transparency_ ? "Transparent Edges" : "Edges";
     SceneGraphEvent* sge = new SceneGraphEvent(geom, fname + name);
     event_handle_t event = sge;
     EventManager::add_event(event);
-    //edge_id = ogeom_->addObj(geom, fname + name);
   }
 
-  if (do_faces)
+  if (p.do_faces_)
   {
-    GeomHandle gmat = scinew GeomMaterial(renderer->face_switch_, 
-					  def_material);
-    GeomHandle geom = scinew GeomSwitch(scinew GeomColorMap(gmat, color_map));
-    const char *name = faces_transparency?"Transparent Faces":"Faces";
+    GeomHandle gmat = scinew GeomMaterial(p.renderer_->face_switch_, 
+					  p.def_material_);
+    GeomHandle geom = scinew GeomSwitch(new GeomColorMap(gmat, 
+							    p.color_map_));
+    const char *name = p.faces_transparency_ ? "Transparent Faces" : "Faces";
     SceneGraphEvent* sge = new SceneGraphEvent(geom, fname + name);
     event_handle_t event = sge;
     EventManager::add_event(event);
-
-    //face_id = ogeom_->addObj(geom, fname + name);
   }
-  return true;
-  
+  if (p.do_text_) 
+  {
+    GeomHandle gmat = scinew GeomMaterial(p.text_geometry_, p.text_material_);
+    GeomHandle geom = scinew GeomSwitch(new GeomColorMap(gmat, p.color_map_));
+    const char *name = p.text_backface_cull_ ? "Culled Text Data":"Text Data";
+    SceneGraphEvent* sge = new SceneGraphEvent(geom, fname + name);
+    event_handle_t event = sge;
+    EventManager::add_event(event);
+  }
+
+  return true;  
 }
 
 }
