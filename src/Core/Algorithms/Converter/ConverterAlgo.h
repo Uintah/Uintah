@@ -56,6 +56,7 @@ class SCISHARE ConverterAlgo : public AlgoLibrary {
     bool MatrixToInt(MatrixHandle matrix, int &val);
     bool MatrixToUnsignedInt(MatrixHandle matrix, unsigned int &val);
     bool MatrixToVector(MatrixHandle matrix, Vector& vec);
+    bool MatrixToPoint(MatrixHandle matrix, Point& point);
     bool MatrixToDoubleVector(MatrixHandle matrix, std::vector<double>& vec);
     bool MatrixToIntVector(MatrixHandle matrix, std::vector<int>& vec);
     bool MatrixToUnsignedIntVector(MatrixHandle matrix, std::vector<unsigned int>& vec);
@@ -69,6 +70,7 @@ class SCISHARE ConverterAlgo : public AlgoLibrary {
     bool IntToMatrix(int val, MatrixHandle& matrix);
     bool UnsignedIntToMatrix(unsigned int val, MatrixHandle& matrix);
     bool VectorToMatrix(Vector& vec, MatrixHandle& matrix);
+    bool PointToMatrix(Point& point, MatrixHandle& matrix);
     bool TensorToMatrix(Tensor& ten, MatrixHandle matrix);
     bool TransformToMatrix(Transform& trans, MatrixHandle& matrix);
     

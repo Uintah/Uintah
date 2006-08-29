@@ -225,6 +225,50 @@ bool ConverterAlgo::MatrixToVector(MatrixHandle matrix, Vector& vec)
   return (false);
 }
 
+
+
+bool ConverterAlgo::MatrixToPoint(MatrixHandle matrix, Point& point)
+{
+  if (matrix.get_rep() == 0) return (false);
+
+  MatrixHandle mat = dynamic_cast<Matrix*>(matrix->dense());
+  if (mat.get_rep() == 0)
+  {
+    error("MatrixToVector: Matrix could not be translated into a dense matrix");
+    return (false);    
+  }
+  
+  double* data = mat->get_data_pointer();
+  if (data == 0)
+  {
+    error("MatrixToVector: Could not access the matrix data");
+    return (false);      
+  }
+  
+  if ((mat->nrows() * mat->ncols()) == 1)
+  {
+    point = Point(data[0],data[0],data[0]);
+    return (true);
+  }
+  
+  if ((mat->nrows() * mat->ncols()) == 2)
+  {  
+    point = Point(data[0],data[1],data[1]);
+    return (true);  
+  }
+
+  if ((mat->nrows() * mat->ncols()) == 3)
+  {    
+    point = Point(data[0],data[1],data[2]);
+    return (true);
+  }
+  
+  error("MatrixToVector: Improper matrix dimensions");
+  return (false);
+}
+
+
+
 bool ConverterAlgo::MatrixToTensor(MatrixHandle matrix, Tensor& ten)
 {
   if (matrix.get_rep() == 0) return (false);
@@ -391,6 +435,21 @@ bool ConverterAlgo::VectorToMatrix(Vector& vec, MatrixHandle& matrix)
   matrix->put(0,0,vec.x());
   matrix->put(1,0,vec.y());
   matrix->put(2,0,vec.z());
+  return (true);
+}
+
+
+bool ConverterAlgo::PointToMatrix(Point& point, MatrixHandle& matrix)
+{
+  matrix = dynamic_cast<Matrix*>(scinew DenseMatrix(3,1));
+  if (matrix.get_rep() == 0) 
+  {
+    error("VectorToMatrix: Could not allocate memory");
+    return (false);
+  }
+  matrix->put(0,0,point.x());
+  matrix->put(1,0,point.y());
+  matrix->put(2,0,point.z());
   return (true);
 }
 
