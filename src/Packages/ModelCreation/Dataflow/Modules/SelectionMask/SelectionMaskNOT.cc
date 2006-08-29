@@ -37,7 +37,6 @@
 
 #include <Packages/ModelCreation/Core/Fields/SelectionMask.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 
 namespace ModelCreation {
@@ -47,9 +46,6 @@ using namespace SCIRun;
 class SelectionMaskNOT : public Module {
 public:
   SelectionMaskNOT(GuiContext*);
-
-  virtual ~SelectionMaskNOT();
-
   virtual void execute();
 
   virtual void tcl_command(GuiArgs&, void*);
@@ -59,10 +55,6 @@ public:
 DECLARE_MAKER(SelectionMaskNOT)
 SelectionMaskNOT::SelectionMaskNOT(GuiContext* ctx)
   : Module("SelectionMaskNOT", ctx, Source, "SelectionMask", "ModelCreation")
-{
-}
-
-SelectionMaskNOT::~SelectionMaskNOT()
 {
 }
 
