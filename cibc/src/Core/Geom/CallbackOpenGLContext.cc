@@ -70,7 +70,7 @@ int
 CallbackOpenGLContext::width()
 {
   ASSERT(width_func_ && w_cdata_);
-  (*width_func_)(w_cdata_);
+  return (*width_func_)(w_cdata_);
 }
 
 int			
