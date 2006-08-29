@@ -26,18 +26,12 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-
-#include <Core/Containers/Handle.h>
-#include <Core/Geometry/BBox.h>
-#include <Dataflow/Network/Ports/MatrixPort.h>
-#include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Dataflow/Network/NetworkEditor.h>
+#include <Core/Datatypes/Matrix.h>
 #include <Core/Containers/StringUtil.h>
-#include <map>
-#include <iostream>
+#include <Core/Datatypes/SparseRowMatrix.h>
+#include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 
 namespace ModelCreation {
 
@@ -52,28 +46,30 @@ private:
   GuiString gui_cols_;
   GuiString gui_elements_;
 
-  int generation_;
-
   void clear_vals();
   void update_input_attributes(MatrixHandle);
 
 public:
   MatrixInfo(GuiContext* ctx);
-  virtual ~MatrixInfo();
   virtual void execute();
 };
 
-  DECLARE_MAKER(MatrixInfo)
+
+DECLARE_MAKER(MatrixInfo)
 
 MatrixInfo::MatrixInfo(GuiContext* ctx)
   : Module("MatrixInfo", ctx, Sink, "DataInfo", "ModelCreation"),
-    gui_matrixname_(get_ctx()->subVar("matrixname", false)),
-    gui_generation_(get_ctx()->subVar("generation", false)),
-    gui_typename_(get_ctx()->subVar("typename", false)),
-    gui_rows_(get_ctx()->subVar("rows", false)),
-    gui_cols_(get_ctx()->subVar("cols", false)),
-    gui_elements_(get_ctx()->subVar("elements", false)),
-    generation_(-1)
+    gui_matrixname_(get_ctx()->subVar("matrixname", false),"---"),
+    gui_generation_(get_ctx()->subVar("generation", false),"---"),
+    gui_typename_(get_ctx()->subVar("typename", false),"---"),
+    gui_rows_(get_ctx()->subVar("rows", false),"---"),
+    gui_cols_(get_ctx()->subVar("cols", false),"---"),
+    gui_elements_(get_ctx()->subVar("elements", false),"---")
+{
+}
+
+
+void MatrixInfo::clear_vals()
 {
   gui_matrixname_.set("---");
   gui_generation_.set("---");
@@ -84,28 +80,9 @@ MatrixInfo::MatrixInfo(GuiContext* ctx)
 }
 
 
-MatrixInfo::~MatrixInfo()
+void MatrixInfo::update_input_attributes(MatrixHandle m)
 {
-}
-
-
-
-void
-MatrixInfo::clear_vals()
-{
-  gui_matrixname_.set("---");
-  gui_generation_.set("---");
-  gui_typename_.set("---");
-  gui_rows_.set("---");
-  gui_cols_.set("---");
-  gui_elements_.set("---");
-}
-
-
-void
-MatrixInfo::update_input_attributes(MatrixHandle m)
-{
-  string matrixname;
+  std::string matrixname;
   if (m->get_property("name", matrixname))
   {
     gui_matrixname_.set(matrixname);
@@ -146,93 +123,43 @@ MatrixInfo::update_input_attributes(MatrixHandle m)
 
   gui_rows_.set(to_string(m->nrows()));
   gui_cols_.set(to_string(m->ncols()));
-  
 }
 
 
-void
-MatrixInfo::execute()
+void MatrixInfo::execute()
 {
-  // The input port (with data) is required.
-  MatrixIPort *iport = (MatrixIPort*)get_iport("Input");
   MatrixHandle mh;
-  if (!iport->get(mh) || !mh.get_rep())
+  SCIRunAlgo::ConverterAlgo calgo(this);
+  
+  if(!(get_input_handle("Input",mh,true))) 
   {
     clear_vals();
-    generation_ = -1;
     return;
   }
-
-  if (generation_ != mh.get_rep()->generation)
+  
+  if (inputs_changed_ || !oport_cached("NumRows") || !oport_cached("NumCols") || !oport_cached("NumElements"))
   {
-    generation_ = mh.get_rep()->generation;
     update_input_attributes(mh);
-  }
-  
-  MatrixOPort *oport;
-  
-  if (oport = dynamic_cast<MatrixOPort *>(get_oport("NumRows")))
-  {
-    MatrixHandle nrows = dynamic_cast<Matrix *>(scinew DenseMatrix(1,1));
-    if(nrows.get_rep() == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }
-    double* dataptr = nrows->get_data_pointer();
-    if (dataptr == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }    
-    dataptr[0] = static_cast<double>(mh->nrows());
-    oport->send(nrows);
-  }
 
-  if (oport = dynamic_cast<MatrixOPort *>(get_oport("NumCols")))
-  {
-    MatrixHandle ncols = dynamic_cast<Matrix *>(scinew DenseMatrix(1,1));
-    if(ncols.get_rep() == 0)
+    MatrixHandle NumRows, NumCols, NumElements;
+    if (!(calgo.IntToMatrix(mh->nrows(),NumRows))) return;
+    if (!(calgo.IntToMatrix(mh->ncols(),NumCols))) return;
+    
+    int numelems;
+    if (mh->is_sparse()) 
     {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }
-    double* dataptr = ncols->get_data_pointer();
-    if (dataptr == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }    
-    dataptr[0] = static_cast<double>(mh->ncols());
-    oport->send(ncols);
-  }
-
-
-  if (oport = dynamic_cast<MatrixOPort *>(get_oport("NumElements")))
-  {
-    MatrixHandle nelements = dynamic_cast<Matrix *>(scinew DenseMatrix(1,1));
-    if(nelements.get_rep() == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }
-    double* dataptr = nelements->get_data_pointer();
-    if (dataptr == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }    
-    if (mh->is_sparse())
-    {
-      dataptr[0] = static_cast<double>(mh->sparse()->get_nnz());
+      numelems = static_cast<int>(mh->sparse()->get_nnz());
     }
     else
     {
-      dataptr[0] = static_cast<double>(mh->nrows()*mh->ncols());
+      numelems = static_cast<int>(mh->nrows()*mh->ncols());
     }
-    oport->send(nelements);
-  }
+    if (!(calgo.IntToMatrix(numelems,NumElements))) return;
 
+    send_output_handle("NumRows",NumRows,false);
+    send_output_handle("NumCols",NumCols,false);
+    send_output_handle("NuMElements",NumElements,false);
+  }
 }
 
 
