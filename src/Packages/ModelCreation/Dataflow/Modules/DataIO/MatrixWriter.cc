@@ -147,7 +147,7 @@ MatrixWriter::execute()
 
   // CODE FOR FILENAME INPUT PORT ////
   StringIPort* filenameport;
-  if (filenameport = dynamic_cast<StringIPort *>(get_input_port("Filename")))
+  if ((filenameport = dynamic_cast<StringIPort *>(get_input_port("Filename"))))
   {
     StringHandle filenameH;
     filenameport->get(filenameH);
