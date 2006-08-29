@@ -26,21 +26,15 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#include <Core/Algorithms/Converter/ConverterAlgo.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
-#include <Core/Containers/Handle.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/Datatypes/FieldInterface.h>
+#include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
-#include <Core/Datatypes/DenseMatrix.h>
-#include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/BBox.h>
 #include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
-#include <map>
-#include <iostream>
-#include <sstream>
 
 namespace ModelCreation {
 
@@ -64,7 +58,6 @@ private:
   GuiString gui_sizey_;
   GuiString gui_sizez_;
 
-  int generation_;
   double min_;
   double max_;
   Point  center_;
@@ -78,58 +71,36 @@ private:
 
 public:
   FieldInfo(GuiContext* ctx);
-  virtual ~FieldInfo();
   virtual void execute();
 };
 
-  DECLARE_MAKER(FieldInfo)
+
+DECLARE_MAKER(FieldInfo)
 
 FieldInfo::FieldInfo(GuiContext* ctx)
   : Module("FieldInfo", ctx, Sink, "DataInfo", "ModelCreation"),
-    gui_fldname_(get_ctx()->subVar("fldname", false)),
-    gui_generation_(get_ctx()->subVar("generation", false)),
-    gui_typename_(get_ctx()->subVar("typename", false)),
-    gui_datamin_(get_ctx()->subVar("datamin", false)),
-    gui_datamax_(get_ctx()->subVar("datamax", false)),
-    gui_numnodes_(get_ctx()->subVar("numnodes", false)),
-    gui_numelems_(get_ctx()->subVar("numelems", false)),
-    gui_numdata_(get_ctx()->subVar("numdata", false)),
-    gui_dataat_(get_ctx()->subVar("dataat", false)),
-    gui_cx_(get_ctx()->subVar("cx", false)),
-    gui_cy_(get_ctx()->subVar("cy", false)),
-    gui_cz_(get_ctx()->subVar("cz", false)),
-    gui_sizex_(get_ctx()->subVar("sizex", false)),
-    gui_sizey_(get_ctx()->subVar("sizey", false)),
-    gui_sizez_(get_ctx()->subVar("sizez", false)),
-    generation_(-1),
+    gui_fldname_(get_ctx()->subVar("fldname", false),"---"),
+    gui_generation_(get_ctx()->subVar("generation", false),"---"),
+    gui_typename_(get_ctx()->subVar("typename", false),"---"),
+    gui_datamin_(get_ctx()->subVar("datamin", false),"---"),
+    gui_datamax_(get_ctx()->subVar("datamax", false),"---"),
+    gui_numnodes_(get_ctx()->subVar("numnodes", false),"---"),
+    gui_numelems_(get_ctx()->subVar("numelems", false),"---"),
+    gui_numdata_(get_ctx()->subVar("numdata", false),"---"),
+    gui_dataat_(get_ctx()->subVar("dataat", false),"---"),
+    gui_cx_(get_ctx()->subVar("cx", false),"---"),
+    gui_cy_(get_ctx()->subVar("cy", false),"---"),
+    gui_cz_(get_ctx()->subVar("cz", false),"---"),
+    gui_sizex_(get_ctx()->subVar("sizex", false),"---"),
+    gui_sizey_(get_ctx()->subVar("sizey", false),"---"),
+    gui_sizez_(get_ctx()->subVar("sizez", false),"---"),
     min_(0.0),
     max_(0.0),
     numelems_(0),
     numnodes_(0),
     numdata_(0)
 {
-  gui_fldname_.set("---");
-  gui_generation_.set("---");
-  gui_typename_.set("---");
-  gui_datamin_.set("---");
-  gui_datamax_.set("---");
-  gui_numnodes_.set("---");
-  gui_numelems_.set("---");
-  gui_numdata_.set("---");
-  gui_dataat_.set("---");
-  gui_cx_.set("---");
-  gui_cy_.set("---");
-  gui_cz_.set("---");
-  gui_sizex_.set("---");
-  gui_sizey_.set("---");
-  gui_sizez_.set("---");
 }
-
-
-FieldInfo::~FieldInfo()
-{
-}
-
 
 
 void
@@ -157,7 +128,7 @@ void
 FieldInfo::update_input_attributes(FieldHandle f)
 {
   // Name
-  string fldname;
+  std::string fldname;
   if (f->get_property("name",fldname))
   {
     gui_fldname_.set(fldname);
@@ -171,7 +142,7 @@ FieldInfo::update_input_attributes(FieldHandle f)
   gui_generation_.set(to_string(f->generation));
 
   // Typename
-  const string &tname = f->get_type_description()->get_name();
+  const std::string &tname = f->get_type_description()->get_name();
   gui_typename_.set(tname);
 
   // Basis
@@ -258,8 +229,6 @@ FieldInfo::update_input_attributes(FieldHandle f)
     break;
   }
 
-  //string num_nodes, num_elems;
-  //int num_nodes, num_elems;
   std::ostringstream num_nodes; num_nodes << numnodes_;
   std::ostringstream num_elems; num_elems << numelems_;
   std::ostringstream num_data;  num_data  << numdata_;
@@ -273,160 +242,42 @@ FieldInfo::update_input_attributes(FieldHandle f)
 void
 FieldInfo::execute()
 {  
-  FieldIPort *iport = (FieldIPort*)get_iport("Input Field");
-
-  // The input port (with data) is required.
   FieldHandle fh;
-  if (!iport->get(fh) || !fh.get_rep())
+  
+  if (!(get_input_handle("Input Field",fh,true)))
   {
     clear_vals();
-    generation_ = -1;
     return;
   }
 
-  if (generation_ != fh.get_rep()->generation)
+  if (inputs_changed_ || !oport_cached("NumNodes") || 
+      !oport_cached("NumElements") || !oport_cached("NumData") ||
+      !oport_cached("DataMin") || !oport_cached("DataMax") ||
+      !oport_cached("FieldSize") || !oport_cached("FieldCenter") )
   {
-    generation_ = fh.get_rep()->generation;
     update_input_attributes(fh);
+
+    MatrixHandle NumNodes, NumElements, NumData, DataMin, DataMax, FieldSize, FieldCenter;
+    
+    SCIRunAlgo::ConverterAlgo calgo(this);
+
+    if (!(calgo.IntToMatrix(numnodes_,NumNodes))) return;
+    if (!(calgo.IntToMatrix(numelems_,NumElements))) return;
+    if (!(calgo.IntToMatrix(numdata_,NumData))) return;
+    if (!(calgo.DoubleToMatrix(min_,DataMin))) return;
+    if (!(calgo.DoubleToMatrix(max_,DataMax))) return;
+    if (!(calgo.VectorToMatrix(size_,FieldSize))) return;
+    if (!(calgo.PointToMatrix(center_,FieldCenter))) return;
+    
+    send_output_handle("NumNodes",NumNodes,false);
+    send_output_handle("NumElements",NumElements,false);
+    send_output_handle("NumData",NumData,false);
+    send_output_handle("DataMin",DataMin,false);
+    send_output_handle("DataMax",DataMax,false);
+    send_output_handle("FieldSize",FieldSize,false);
+    send_output_handle("FieldCenter",FieldCenter,false);
   }
-
-  MatrixOPort* oport;
-
-  if (oport = dynamic_cast<MatrixOPort *>(get_oport("NumNodes")))
-  {
-    MatrixHandle nnodes = dynamic_cast<Matrix *>(scinew DenseMatrix(1,1));
-    if(nnodes.get_rep() == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }
-    double* dataptr = nnodes->get_data_pointer();
-    if (dataptr == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }    
-    dataptr[0] = static_cast<double>(numnodes_);
-    oport->send(nnodes);
-  }
-
-  if (oport = dynamic_cast<MatrixOPort *>(get_oport("NumElements")))
-  {
-    MatrixHandle nelems = dynamic_cast<Matrix *>(scinew DenseMatrix(1,1));
-    if(nelems.get_rep() == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }
-    double* dataptr = nelems->get_data_pointer();
-    if (dataptr == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }    
-    dataptr[0] = static_cast<double>(numelems_);
-    oport->send(nelems);
-  }
-
-  if (oport = dynamic_cast<MatrixOPort *>(get_oport("NumData")))
-  {
-    MatrixHandle ndata = dynamic_cast<Matrix *>(scinew DenseMatrix(1,1));
-    if(ndata.get_rep() == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }
-    double* dataptr = ndata->get_data_pointer();
-    if (dataptr == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }    
-    dataptr[0] = static_cast<double>(numdata_);
-    oport->send(ndata);
-  }
-
-  if (oport = dynamic_cast<MatrixOPort *>(get_oport("DataMin")))
-  {
-    MatrixHandle data = dynamic_cast<Matrix *>(scinew DenseMatrix(1,1));
-    if(data.get_rep() == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }
-    double* dataptr = data->get_data_pointer();
-    if (dataptr == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }    
-    dataptr[0] = static_cast<double>(min_);
-    oport->send(data);
-  }
-
-  if (oport = dynamic_cast<MatrixOPort *>(get_oport("DataMax")))
-  {
-    MatrixHandle data = dynamic_cast<Matrix *>(scinew DenseMatrix(1,1));
-    if(data.get_rep() == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }
-    double* dataptr = data->get_data_pointer();
-    if (dataptr == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }    
-    dataptr[0] = static_cast<double>(max_);
-    oport->send(data);
-  }
-
-  if (oport = dynamic_cast<MatrixOPort *>(get_oport("FieldSize")))
-  {
-    MatrixHandle data = dynamic_cast<Matrix *>(scinew DenseMatrix(1,3));
-    if(data.get_rep() == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }
-    double* dataptr = data->get_data_pointer();
-    if (dataptr == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }    
-    dataptr[0] = static_cast<double>(size_.x());
-    dataptr[1] = static_cast<double>(size_.y());
-    dataptr[2] = static_cast<double>(size_.z());
-    oport->send(data);
-  }
-
-  if (oport = dynamic_cast<MatrixOPort *>(get_oport("FieldCenter")))
-  {
-    MatrixHandle data = dynamic_cast<Matrix *>(scinew DenseMatrix(1,3));
-    if(data.get_rep() == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }
-    double* dataptr = data->get_data_pointer();
-    if (dataptr == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }    
-    dataptr[0] = static_cast<double>(center_.x());
-    dataptr[1] = static_cast<double>(center_.y());
-    dataptr[2] = static_cast<double>(center_.z());
-    oport->send(data);
-  }
-
-
 }
-
-
-
 
 } // end SCIRun namespace
 
