@@ -45,6 +45,7 @@ SUBDIRS := $(SRCDIR)/Tools
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
 PSELIBS := Core/Algorithms/Fields \
+           Core/Algorithms/Visualization \
 	   Core/Containers  \
            Core/Datatypes \
            Core/Exceptions \
