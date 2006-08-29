@@ -237,9 +237,11 @@ bool FieldsAlgo::IsInsideFields(FieldHandle input, FieldHandle& output, std::vec
 {
   IsInsideFieldAlgo algo;
   output = 0;
-  for (int p=1; p<=objectfields.size(); p++)
+  for (unsigned int p = 1; p <= objectfields.size(); p++)
   {
-    if (!(algo.IsInsideField(pr_,input,output,objectfields[p-1],static_cast<double>(p),outval,output_type,basis_type,partial_inside)))
+    if (!(algo.IsInsideField(pr_, input, output, objectfields[p-1],
+                             static_cast<double>(p), outval, output_type,
+                             basis_type, partial_inside)))
     {
       output = 0;
       return (false);

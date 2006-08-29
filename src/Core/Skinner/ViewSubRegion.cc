@@ -51,7 +51,8 @@ namespace SCIRun {
       if (window && window->get_window_state() == WindowEvent::REDRAW_E) {
         RectRegion rect = get_region();
         glEnable(GL_SCISSOR_TEST);
-        glScissor(rect.x1(), rect.y1(), rect.width(), rect.height());        
+        glScissor((GLint)rect.x1(), (GLint)rect.y1(),
+                  (GLint)rect.width(), (GLint)rect.height());        
         Parent::process_event(event);
         glDisable(GL_SCISSOR_TEST);
       } else {

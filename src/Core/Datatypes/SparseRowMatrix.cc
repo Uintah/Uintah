@@ -619,8 +619,6 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
   // Compute A*B=C
   ASSERT(b.nrows() == ncols_);
   
-  MatrixHandle output = 0;
-  
   int bncols = b.ncols_;
   int *brows = b.rows;
   int *bcolumns = b.columns;
@@ -632,7 +630,7 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
     return (false);
   }
   
-  int k = 0;
+  unsigned int k = 0;
   for (int r =0; r<nrows_; r++)
   {
     int ps = rows[r];
@@ -687,18 +685,18 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
       s = r;
     }
   }
-
   
   int *rr = scinew int[nrows_+1];
   int *cc = scinew int[nnz];
   double *vv = scinew double[nnz];
   
-  if ((rr == 0)||(cc == 0)||(vv == 0))
+  if ((rr == 0) || (cc == 0) || (vv == 0))
   {
     if (rr) delete[] rr;
     if (cc) delete[] cc;
     if (vv) delete[] vv;
-    return (output);  
+    MatrixHandle none(0);
+    return none;
   }
 
   rr[0] = 0;
@@ -706,8 +704,10 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
   k = 0;
   for( int p=0; p < nrows_; p++ )
   {
-    while ((k < elems.size())&&(elems[k].row == p)) { 
-      if (elems[k].val) { 
+    while ((k < elems.size()) && (elems[k].row == p))
+    {
+      if (elems[k].val)
+      {
         cc[q] = elems[k].col; vv[q] = elems[k].val; q++;
       } 
       k++; 
@@ -715,9 +715,8 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
     rr[p+1] = q;
   }   
     
-  output = dynamic_cast<Matrix *>(scinew SparseRowMatrix(nrows_,bncols,rr,cc,nnz,vv));
-  
-  return (output);
+  MatrixHandle output = scinew SparseRowMatrix(nrows_,bncols,rr,cc,nnz,vv);
+  return output;
 }
 
 

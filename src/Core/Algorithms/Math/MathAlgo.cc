@@ -1060,7 +1060,7 @@ MathAlgo::MatrixSelectColumns(MatrixHandle input, MatrixHandle& output, std::vec
       return (false);      
     }
    
-    std::vector<unsigned int> s(n,n);
+    std::vector<unsigned int> s(n, n);
     for (unsigned int r=0; r< columns.size(); r++) s[columns[r]] = r;
       
     int k =0;
@@ -1068,7 +1068,7 @@ MathAlgo::MatrixSelectColumns(MatrixHandle input, MatrixHandle& output, std::vec
     {
       for (int q=rr[r]; q<rr[r+1]; q++)
       {
-        if (s[cc[q]] < n) k++;
+        if (s[cc[q]] < (unsigned int)n) k++;
       }
     }
     
@@ -1098,7 +1098,7 @@ MathAlgo::MatrixSelectColumns(MatrixHandle input, MatrixHandle& output, std::vec
       nrr[r] =k;
       for (int q=rr[r]; q<rr[r+1]; q++)
       {
-        if (s[cc[q]] < n) 
+        if (s[cc[q]] < (unsigned int)n)
         {
           ncc[k] = s[cc[q]];
           nvv[k] = vv[q];
@@ -1672,7 +1672,6 @@ MathAlgo::MatrixAppendColumns(MatrixHandle input,MatrixHandle& output,MatrixHand
       return (false);      
     }    
     
-    int k = 0;
     for (int r=0; r<m; r++)
     {
       for (int q=0;q<n;q++) 
@@ -1761,7 +1760,7 @@ MathAlgo::MatrixSelectSubMatrix(MatrixHandle input, MatrixHandle& output, std::v
     {
       for (int q=rr[rows[r]]; q<rr[rows[r]+1]; q++)
       {
-        if (s[cc[q]] < n) k++;
+        if (s[cc[q]] < (unsigned int)n) k++;
       }
     }
     
@@ -1791,7 +1790,7 @@ MathAlgo::MatrixSelectSubMatrix(MatrixHandle input, MatrixHandle& output, std::v
       nrr[r] = k;
       for (int q=rr[rows[r]]; q<rr[rows[r+1]]; q++)
       {
-        if (s[cc[q]] < n) 
+        if (s[cc[q]] < (unsigned int)n) 
         {
           ncc[k] = s[cc[q]];
           nvv[k] = vv[q];
