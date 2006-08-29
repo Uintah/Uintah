@@ -63,12 +63,11 @@ bool ExampleFields::SphericalSurface(FieldHandle &output, MatrixHandle disc)
   SCIRunAlgo::ConverterAlgo mc(pr_);
   mc.MatrixToInt(disc,n);
   
-  double r  = 1.0;
   double dr = 1.0/n;
   
   std::vector<double> Z(2*n+1);
   double Rval = -1.0;
-  for (int p=0; p < Z.size(); p++, Rval += dr) Z[p] = sin(Rval*M_PI/2); 
+  for (size_t p=0; p < Z.size(); p++, Rval += dr) Z[p] = sin(Rval*M_PI/2); 
   
   int k = 0;
   int m = 0;
@@ -76,7 +75,7 @@ bool ExampleFields::SphericalSurface(FieldHandle &output, MatrixHandle disc)
   std::vector<std::vector<int> > Slices(Z.size());
   std::vector<std::vector<Point> > Nodes(Z.size());
   
-  for (int p=0; p < Z.size(); p++)
+  for (size_t p=0; p < Z.size(); p++)
   {
     double Rxy = sqrt(1-Z[p]*Z[p]);
     int no = static_cast<int>(ceil(2*M_PI*Rxy/dr));
@@ -87,7 +86,7 @@ bool ExampleFields::SphericalSurface(FieldHandle &output, MatrixHandle disc)
   
     Nodes[p].resize(no);
     Slices[p].resize(no);
-    for (int q=0; q < Slices[p].size(); q++, phi += (2*M_PI/no)) 
+    for (size_t q=0; q < Slices[p].size(); q++, phi += (2*M_PI/no)) 
     {  
       Nodes[p][q] = Point(Rxy*cos(phi),Rxy*sin(phi),Z[p]);
       Slices[p][q] = k;
@@ -98,9 +97,9 @@ bool ExampleFields::SphericalSurface(FieldHandle &output, MatrixHandle disc)
   std::vector<Point> Node(k);
   
   k = 0;
-  for (int p=0; p < Nodes.size(); p++)
+  for (size_t p=0; p < Nodes.size(); p++)
   {
-    for (int q=0; q< Nodes[p].size(); q++)
+    for (size_t q=0; q< Nodes[p].size(); q++)
     {
       Node[k] = Nodes[p][q];
       k++;
@@ -121,7 +120,7 @@ bool ExampleFields::SphericalSurface(FieldHandle &output, MatrixHandle disc)
   }
   
   omesh->node_reserve(Node.size());
-  for (int p = 0; p < Node.size(); p++) omesh->add_point(Node[p]);
+  for (size_t p = 0; p < Node.size(); p++) omesh->add_point(Node[p]);
   
   int N = Z.size();
   std::vector<int> H1;
