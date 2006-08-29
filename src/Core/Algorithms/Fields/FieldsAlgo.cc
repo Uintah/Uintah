@@ -56,6 +56,7 @@
 #include <Core/Algorithms/Fields/Mapping.h>
 #include <Core/Algorithms/Fields/MergeFields.h>
 #include <Core/Algorithms/Fields/MergeMeshes.h>
+#include <Core/Algorithms/Fields/RemoveUnusedNodes.h>
 #include <Core/Algorithms/Fields/ScaleField.h>
 #include <Core/Algorithms/Fields/SetFieldData.h>
 #include <Core/Algorithms/Fields/SplitFieldByDomain.h>
@@ -520,6 +521,18 @@ bool FieldsAlgo::SignedDistanceField(FieldHandle input, FieldHandle& output, Fie
     error("SignedDistanceField: This function is only available for surface meshes");
     return (false);
   }
+}
+
+
+bool FieldsAlgo::RemoveUnusedNodes(FieldHandle input, FieldHandle& output)
+{
+  RemoveUnusedNodesAlgo algo;
+  return(algo.RemoveUnusedNodes(pr_,input,output));
+}
+
+bool FieldsAlgo::CleanMesh(FieldHandle input, FieldHandle& output, bool removeunusednodes, bool removeunusedelems, bool reorientelems, bool mergenodes, bool mergeelems)
+{
+  return (false);
 }
 
 } // end namespace SCIRunAlgo
