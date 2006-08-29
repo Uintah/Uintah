@@ -120,7 +120,7 @@ void StreamMatrix::execute()
   
   if (!(datafile_.open(filename)))
   {
-    error("Could not open hea der file: " + filename);
+    error("Could not open header file: " + filename);
     return;
   }
   
@@ -278,7 +278,8 @@ void StreamMatrix::execute()
       ScaledIndices.detach();
       double* data = ScaledIndices->get_data_pointer();
       double spacing = datafile_.get_rowspacing();
-      for (unsigned int p=0; p<ScaledIndices->get_data_size(); p++)
+
+      for (size_t p=0;p<ScaledIndices->get_data_size();p++)
       {
         data[p] = spacing * data[p];
       }
@@ -298,7 +299,8 @@ void StreamMatrix::execute()
       ScaledIndices.detach();
       double* data = ScaledIndices->get_data_pointer();
       double spacing = datafile_.get_colspacing();
-      for (unsigned int p=0; p<ScaledIndices->get_data_size(); p++)
+
+      for (size_t p=0;p<ScaledIndices->get_data_size();p++)
       {
         data[p] = spacing * data[p];
       }
