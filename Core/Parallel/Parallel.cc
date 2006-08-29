@@ -205,14 +205,37 @@ Parallel::initializeManager(int& argc, char**& argv, const string & scheduler)
        throw InternalError( msg.str(), __FILE__, __LINE__ );
      }
 #endif
-
-     worldComm=MPI_COMM_WORLD;
+//YANG[
+/*	     // original code
+     
+ 	 worldComm=MPI_COMM_WORLD;
      int worldSize;
      if((status=MPI_Comm_size(worldComm, &worldSize)) != MPI_SUCCESS)
        MpiError("MPI_Comm_size", status);
 
      if((status=MPI_Comm_rank(worldComm, &worldRank)) != MPI_SUCCESS)
        MpiError("MPI_Comm_rank", status);
+*/
+     
+
+	 int worldSize;
+
+	 if((status=MPI_Comm_rank(MPI_COMM_WORLD, &worldRank)) != MPI_SUCCESS)
+       MpiError("MPI_Comm_rank", status);
+ 	 
+     MPI_Comm_split(MPI_COMM_WORLD, 1, 0, &worldComm); //0 is an abitar number, but this works because ties are broken according to their old rank
+     if((status=MPI_Comm_size(worldComm, &worldSize)) != MPI_SUCCESS)
+       MpiError("MPI_Comm_size", status);
+     
+     if((status=MPI_Comm_rank(worldComm, &worldRank)) != MPI_SUCCESS)
+       MpiError("MPI_Comm_rank", status);
+     
+     //split the worldComm out to be just containing the part that has the MPMICE
+     
+
+//YANG]
+
+	 
 #ifndef _WIN32
      AllocatorSetDefaultTagMalloc(oldtag);
      AllocatorMallocStatsAppendNumber(worldRank);

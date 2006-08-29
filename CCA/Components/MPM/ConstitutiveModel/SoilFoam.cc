@@ -567,12 +567,25 @@ double SoilFoam::computeRhoMicroCM(double pressure,
                                     const MPMMaterial* matl,
                                     const double maxvolstrain)
 {
+  if(pressure<d_initialData.pc) pressure = d_initialData.pc;
+
   int i1 = 0, i;
   for(i=1; i<9; i++){
     if(d_initialData.eps[i+1]<d_initialData.eps[i])
-      if(pressure>d_initialData.p[i]) i1 = i;
+      if(maxvolstrain<d_initialData.eps[i]) i1 = i;
   }
-  double vol_strain = (pressure - d_initialData.p[i1])/slope[i1] + d_initialData.eps[i1];
+  double pressmax = d_initialData.p[i1] + slope[i1]*(maxvolstrain - d_initialData.eps[i1]);
+  double vol_strain;
+  if(pressure>pressmax){
+     i1 = 0;
+     for(i=1; i<9; i++){
+       if(d_initialData.eps[i+1]<d_initialData.eps[i])
+         if(pressure>d_initialData.p[i]) i1 = i;
+     }
+     vol_strain = (pressure - d_initialData.p[i1])/slope[i1] + d_initialData.eps[i1];
+  }else{
+     vol_strain = maxvolstrain + (pressmax - pressure)/d_initialData.bulk;
+  }
   double rho_orig = matl->getInitialDensity();
   double rho_cur= rho_orig/exp(vol_strain);
 
@@ -585,18 +598,35 @@ void SoilFoam::computePressEOSCM(double rho_cur,double& pressure,
                                          const MPMMaterial* matl,
                                          const double maxvolstrain)
 {
-  double rho_orig = matl->getInitialDensity();
-  double vol_strain = log(rho_orig/rho_cur);
-
   int i1 = 0, i;
   for(i=1; i<9; i++){
     if(d_initialData.eps[i+1]<d_initialData.eps[i])
-      if(vol_strain<d_initialData.eps[i]) i1 = i;
+      if(maxvolstrain<d_initialData.eps[i]) i1 = i;
   }
-  pressure = d_initialData.p[i1] + slope[i1]*(vol_strain - d_initialData.eps[i1]);
-  dp_drho = -slope[i1]/rho_cur;
+  double pressmax = d_initialData.p[i1] + slope[i1]*(maxvolstrain - d_initialData.eps[i1]);
+
+  double rho_orig = matl->getInitialDensity();
+  double vol_strain = log(rho_orig/rho_cur);
+
+  double slope1 = 0.0;
+
+  if(vol_strain>maxvolstrain){
+     pressure = pressmax - d_initialData.bulk*(vol_strain - maxvolstrain);
+     slope1 = d_initialData.bulk;
+  }else{
+     i1 = 0;
+     for(i=1; i<9; i++){
+        if(d_initialData.eps[i+1]<d_initialData.eps[i])
+        if(vol_strain<d_initialData.eps[i]) i1 = i;
+     }
+     pressure = d_initialData.p[i1] + slope[i1]*(vol_strain - d_initialData.eps[i1]);
+     slope1 = -slope[i1];
+  }
+
+  if(pressure<d_initialData.pc) pressure = d_initialData.pc;
+  dp_drho = slope1/rho_cur;
   //cout <<" load "<<vol_strain<<" "<<sv_min[idx]<<" "<<pres<<endl;
-  tmp = (-slope[i1] + 4.*d_initialData.G/3.)/rho_cur;  // speed of sound squared
+  tmp = (slope1 + 4.*d_initialData.G/3.)/rho_cur;  // speed of sound squared
 }
 
 double SoilFoam::getCompressibility()

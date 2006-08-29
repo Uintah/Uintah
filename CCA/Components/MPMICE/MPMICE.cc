@@ -32,6 +32,11 @@
 #include <float.h>
 #include <stdio.h>
 #include <Core/Util/DebugStream.h>
+/*//[YANG
+#include <Packages/Uintah/CCA/Components/MPM/ParticleCreator/Coupling.h>
+extern Coupling coupling;
+//YANG]
+*/
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -51,6 +56,11 @@ MPMICE::MPMICE(const ProcessorGroup* myworld,
                MPMType mpmtype, const bool doAMR)
   : UintahParallelComponent(myworld)
 {
+/*
+//[YANG
+  coupling.Initialize(false);
+//YANG]
+*/
   Mlb  = scinew MPMLabel();
   Ilb  = scinew ICELabel();
   MIlb = scinew MPMICELabel();
@@ -728,6 +738,11 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
     t->computes(MIlb->temp_CCLabel);
     t->computes(Ilb->sp_vol_CCLabel, mss);
     t->computes(Ilb->rho_CCLabel, mss); 
+
+    if(d_mpm->flags->d_usingSoilFoam_CM){
+       t->requires(Task::NewDW, Mlb->gsv_minLabel,  Ghost::AroundCells, 1);
+       t->computes(MIlb->csv_minLabel);
+    }
    
     sched->addTask(t, patches, mpm_matls);
   }
@@ -949,6 +964,8 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->requires(Task::NewDW,MIlb->cMassLabel,        mpm_matls, gn);  
   t->requires(Task::OldDW, MIlb->NC_CCweightLabel, press_matl,gac,1);
   //MARTIN:  3.  Require max vol strain from CC
+  if(d_mpm->flags->d_usingSoilFoam_CM)
+    t->requires(Task::NewDW,MIlb->csv_minLabel,    mpm_matls, gn);  
  
   t->requires(Task::OldDW,Ilb->press_CCLabel,      press_matl, gn);
   t->requires(Task::OldDW,Ilb->vel_CCLabel,        ice_matls,  gn);
@@ -1224,9 +1241,9 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int indx = mpm_matl->getDWIndex();
       // Create arrays for the grid data
-      constNCVariable<double> gmass, gvolume, gtemperature, gSp_vol;
+      constNCVariable<double> gmass, gvolume, gtemperature, gSp_vol, gsv_min;
       constNCVariable<Vector> gvelocity;
-      CCVariable<double> cmass,Temp_CC, sp_vol_CC, rho_CC;
+      CCVariable<double> cmass,Temp_CC, sp_vol_CC, rho_CC, csv_min;
       CCVariable<Vector> vel_CC;
       constCCVariable<double> Temp_CC_ice, sp_vol_CC_ice;
       constCCVariable<Vector> vel_CC_ice;
@@ -1236,9 +1253,16 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,   indx, patch);  
       new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel, indx, patch); 
       new_dw->allocateAndPut(rho_CC,    Ilb->rho_CCLabel,    indx, patch);
+      if(d_mpm->flags->d_usingSoilFoam_CM)
+      new_dw->allocateAndPut(csv_min,  MIlb->csv_minLabel,   indx, patch);  
       
       double very_small_mass = d_TINY_RHO * cell_vol;
       cmass.initialize(very_small_mass);
+
+      if(d_mpm->flags->d_usingSoilFoam_CM){
+         csv_min.initialize(very_small_mass);
+         new_dw->get(gsv_min,   Mlb->gsv_minLabel,      indx, patch,gac, 1);
+      }
 
       new_dw->get(gmass,        Mlb->gMassLabel,        indx, patch,gac, 1);
       new_dw->get(gvolume,      Mlb->gVolumeLabel,      indx, patch,gac, 1);
@@ -1271,6 +1295,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         double Temp_CC_mpm = 0.0;  
         double sp_vol_mpm = 0.0;   
         Vector vel_CC_mpm  = Vector(0.0, 0.0, 0.0);
+        double sv_min_CC_mpm = 0.0;
         
         for (int in=0;in<8;in++){
           double NC_CCw_mass = NC_CCweight[nodeIdx[in]] * gmass[nodeIdx[in]];
@@ -1278,11 +1303,14 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
           sp_vol_mpm  += gSp_vol[nodeIdx[in]]      * NC_CCw_mass;
           vel_CC_mpm  += gvelocity[nodeIdx[in]]    * NC_CCw_mass;
           Temp_CC_mpm += gtemperature[nodeIdx[in]] * NC_CCw_mass;
+          if(d_mpm->flags->d_usingSoilFoam_CM)
+          sv_min_CC_mpm += gsv_min[nodeIdx[in]]    * NC_CCw_mass;
         }
         double inv_cmass = 1.0/cmass[c];
         vel_CC_mpm  *= inv_cmass;    
         Temp_CC_mpm *= inv_cmass;
         sp_vol_mpm  *= inv_cmass;
+        sv_min_CC_mpm *= inv_cmass;
 
         //__________________________________
         // set *_CC = to either vel/Temp_CC_mpm or some safe values
@@ -1300,6 +1328,9 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
 
         vel_CC[c]   =vel_CC_mpm;
         rho_CC[c]   = cmass[c]/cell_vol;
+
+        if(d_mpm->flags->d_usingSoilFoam_CM)
+        csv_min[c]  =(1.0-one_or_zero)*0.0  + one_or_zero*sv_min_CC_mpm;
       }
 
       //  Set BC's
@@ -1577,8 +1608,10 @@ void MPMICE::computeCCVelAndTempRates(const ProcessorGroup*,
       for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
          IntVector c = *iter;
          if(!d_rigidMPM){
+	   if(m!=0){
            dVdt_CC[c] = (mom_L_ME_CC[c] - (old_mom_L_CC[c]-mom_source[c]))
                                                       /(mass_L_CC[c]*delT);
+	   }
          }
          dTdt_CC[c]   = (eng_L_ME_CC[c] - (old_int_eng_L_CC[c]-int_eng_src[c]))
                            /(mass_L_CC[c] * cv * delT);
@@ -1738,6 +1771,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > mass_CC(numALLMatls);
     StaticArray<constCCVariable<Vector> > vel_CC(numALLMatls);
     // MARTIN 4.  Declare MaxVolStrainCC as above
+    StaticArray<constCCVariable<double> > sv_min_CC(numALLMatls);
+
     constCCVariable<double> press;    
     CCVariable<double> press_new, delPress_tmp,sumKappa, TMV_CC;
     CCVariable<double> sum_imp_delP;    
@@ -1783,6 +1818,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         new_dw->get(rho_CC_old[m],Ilb->rho_CCLabel,  indx,patch,gn,0);
         new_dw->allocateTemporary(rho_CC_new[m],  patch);
         // MARTIN 5.  Get MaxVolStrainCC as above
+        if(d_mpm->flags->d_usingSoilFoam_CM)
+        new_dw->get(sv_min_CC[m],  MIlb->csv_minLabel,   indx,patch,gn,0);
       }
       new_dw->allocateTemporary(rho_micro[m],  patch);
       new_dw->allocateAndPut(vol_frac[m],   Ilb->vol_frac_CCLabel,  indx,patch);
@@ -1799,7 +1836,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     // see Docs/MPMICE.txt for explaination of why we ONlY
     // use eos evaulations for rho_micro_mpm
 
-    double maxvolstrain;
+    double maxvolstrain = 0.0;
     for (CellIterator iter = patch->getExtraCellIterator();!iter.done();iter++){
       const IntVector& c = *iter;
       double total_mat_vol = 0.0;
@@ -1807,6 +1844,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         if(ice_matl[m]){                // I C E
          rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
         } else if(mpm_matl[m]){                //  M P M
+          if(d_mpm->flags->d_usingSoilFoam_CM) maxvolstrain = sv_min_CC[m][c];
+          else maxvolstrain = 0.0;
           rho_micro[m][c] =  mpm_matl[m]->getConstitutiveModel()->
             computeRhoMicroCM(press_new[c],press_ref, mpm_matl[m],maxvolstrain); 
         }
@@ -1860,6 +1899,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                                                    press_eos[m],
                                                    dp_drho[m],dp_de[m]);
           } else if(mpm_matl[m]){    // MPM
+            if(d_mpm->flags->d_usingSoilFoam_CM) maxvolstrain = sv_min_CC[m][c];
+            else maxvolstrain = 0.0;
             mpm_matl[m]->getConstitutiveModel()->
               computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
                                 dp_drho[m], c_2,mpm_matl[m],maxvolstrain);
