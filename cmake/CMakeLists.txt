@@ -621,7 +621,7 @@ SUBDIRS(src Testing)
 # Copy the UseSCIRUN.cmake file to the binary tree for backward compatability.
 CONFIGURE_FILE(${PROJECT_SOURCE_DIR}/UseSCIRUN.cmake.in
                ${PROJECT_BINARY_DIR}/UseSCIRUN.cmake COPYONLY IMMEDIATE)
-
+ 
 # Save the compiler settings so another project can import them.
 INCLUDE(${CMAKE_ROOT}/Modules/CMakeExportBuildSettings.cmake)
 CMAKE_EXPORT_BUILD_SETTINGS(${PROJECT_BINARY_DIR}/SCIRUNBuildSettings.cmake)
