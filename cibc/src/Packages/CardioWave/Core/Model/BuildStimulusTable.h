@@ -283,12 +283,17 @@ bool BuildStimulusTableCellAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
     }
     if (p == nodes.size())
     {
-      for (p = 0; p < nodes.size(); p++)
+      elementtypemesh->get_center(point,*cit);
+      if (stimmesh->locate(ci,point))
       {
-        stimulusparam_type stimitem;
-        stimitem.node = static_cast<unsigned int>(nodes[p]);
-        stimitem.weight = weight_factor(elementtypemesh.get_rep(),*cit, nodes[p]);     
-        stimulustablelist.push_back(stimitem);
+      
+        for (p = 0; p < nodes.size(); p++)
+        {
+          stimulusparam_type stimitem;
+          stimitem.node = static_cast<unsigned int>(nodes[p]);
+          stimitem.weight = weight_factor(elementtypemesh.get_rep(),*cit, nodes[p]);     
+          stimulustablelist.push_back(stimitem);
+        }
       }
     }
     ++cit;    
@@ -312,7 +317,8 @@ bool BuildStimulusTableCellAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
     {
       if (stimulustablelist[p].node == stimulustablelist[k].node)
       {
-        stimulustablelist[p].weight += stimulustablelist[k].weight;
+      stimulustablelist[k].weight += stimulustablelist[p].weight;
+      stimulustablelist[p].weight = 0.0;
       }
       else
       {
@@ -453,12 +459,16 @@ bool BuildStimulusTableFaceAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
     }
     if (p == nodes.size())
     {
-      for (p = 0; p < nodes.size(); p++)
+      elementtypemesh->get_center(point,*cit);
+      if (stimmesh->locate(ci,point))
       {
-        stimulusparam_type stimitem;
-        stimitem.node = static_cast<unsigned int>(nodes[p]);
-        stimitem.weight = weight_factor(elementtypemesh.get_rep(),*cit, nodes[p]);     
-        stimulustablelist.push_back(stimitem);
+        for (p = 0; p < nodes.size(); p++)
+        {
+          stimulusparam_type stimitem;
+          stimitem.node = static_cast<unsigned int>(nodes[p]);
+          stimitem.weight = weight_factor(elementtypemesh.get_rep(),*cit, nodes[p]);     
+          stimulustablelist.push_back(stimitem);
+        }
       }
     }
     ++cit;
@@ -480,7 +490,8 @@ bool BuildStimulusTableFaceAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
   {
     if (stimulustablelist[p].node == stimulustablelist[k].node)
     {
-      stimulustablelist[p].weight += stimulustablelist[k].weight;
+      stimulustablelist[k].weight += stimulustablelist[p].weight;
+      stimulustablelist[p].weight = 0.0;
     }
     else
     {
@@ -623,12 +634,16 @@ bool BuildStimulusTableEdgeAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
     }
     if (p == nodes.size())
     {
-      for (p = 0; p < nodes.size(); p++)
-      {
-        stimulusparam_type stimitem;
-        stimitem.node = static_cast<unsigned int>(nodes[p]);
-        stimitem.weight = weight_factor(elementtypemesh.get_rep(),*cit, nodes[p]);     
-        stimulustablelist.push_back(stimitem);
+      elementtypemesh->get_center(point,*cit);
+      if (stimmesh->locate(ci,point))
+      {    
+        for (p = 0; p < nodes.size(); p++)
+        {
+          stimulusparam_type stimitem;
+          stimitem.node = static_cast<unsigned int>(nodes[p]);
+          stimitem.weight = weight_factor(elementtypemesh.get_rep(),*cit, nodes[p]);     
+          stimulustablelist.push_back(stimitem);
+        }
       }
     }
     ++cit;
@@ -649,7 +664,8 @@ bool BuildStimulusTableEdgeAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
   {
     if (stimulustablelist[p].node == stimulustablelist[k].node)
     {
-      stimulustablelist[p].weight += stimulustablelist[k].weight;
+      stimulustablelist[k].weight += stimulustablelist[p].weight;
+      stimulustablelist[p].weight = 0.0;
     }
     else
     {
@@ -812,7 +828,8 @@ bool BuildStimulusTableNodeAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
   {
     if (stimulustablelist[p].node == stimulustablelist[k].node)
     {
-      stimulustablelist[p].weight += stimulustablelist[k].weight;
+      stimulustablelist[k].weight += stimulustablelist[p].weight;
+      stimulustablelist[p].weight = 0.0;
     }
     else
     {
