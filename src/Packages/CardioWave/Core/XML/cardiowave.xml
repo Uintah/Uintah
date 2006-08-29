@@ -279,10 +279,6 @@ autorestart=false
 ckptfile=check
 ckptinterval=1.0
 useauxvars=no
-ecs_domaintype=0
-ics_domaintype=1
-vi0=-84
-ve0=0
 </parameters>
 <description>Default parameters for neurowave application.
 </description>
