@@ -22,6 +22,13 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
+/*//[YANG
+#include "Coupling.h"
+Coupling coupling;
+//YANG]*/
+
+
+
 using namespace Uintah;
 using std::vector;
 using std::cerr;
@@ -36,6 +43,7 @@ ParticleCreator::ParticleCreator(MPMMaterial* matl,
   d_ref_temp = flags->d_ref_temp; // for thermal stress 
 
   registerPermanentParticleState(matl);
+
 }
 
 ParticleCreator::~ParticleCreator()
@@ -125,7 +133,7 @@ ParticleCreator::createParticles(MPMMaterial* matl,
  
       initializeParticle(patch,obj,matl,*itr,cell_idx,pidx,cellNAPID);
       
-      if (volumes) {
+	  if (volumes) {
         if (!volumes->empty()) {
           pvolume[pidx] = *voliter;
           pmass[pidx] = matl->getInitialDensity()*pvolume[pidx];
@@ -168,6 +176,25 @@ ParticleCreator::createParticles(MPMMaterial* matl,
     }
     start += count;
   }
+
+  /*//[YANG
+ 
+  
+
+  //now start has total number of particles
+  
+  //start has the total number of particles in this patch
+  //the second param is the number of doubles, for position x, y, z this is going to be 3
+  coupling.InitPackSize(start, 3);
+  int i;
+  for (i=0; i<start; i++) 
+  	  coupling.AddParticleCord(pparticleID[i], position[i].x(), position[i].y(), position[i].z());
+	  //
+  
+  coupling.GatherParts();
+  printf("Don with Dyna initialize!\n");
+  //YANG]*/
+
   return subset;
 }
 

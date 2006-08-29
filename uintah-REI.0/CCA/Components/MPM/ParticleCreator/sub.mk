@@ -17,3 +17,4 @@ PSELIBS := Packages/Uintah/Core/Grid \
 	Core/Datatypes \
 	Core/Util
 
+#MPI_LIBRARY+=-llammpi++
