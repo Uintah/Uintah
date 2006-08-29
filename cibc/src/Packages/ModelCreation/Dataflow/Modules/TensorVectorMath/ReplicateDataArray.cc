@@ -26,21 +26,10 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  ReplicateDataArray.cc:
- *
- *  Written by:
- *   jeroen
- *   TODAY'S DATE HERE
- *
- */
-
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
-
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 namespace ModelCreation {
 
@@ -49,13 +38,7 @@ using namespace SCIRun;
 class ReplicateDataArray : public Module {
   public:
     ReplicateDataArray(GuiContext*);
-
-    virtual ~ReplicateDataArray();
-
     virtual void execute();
-
-    virtual void tcl_command(GuiArgs&, void*);
-  
   private:
     GuiInt  guisize_;
 };
@@ -68,118 +51,93 @@ ReplicateDataArray::ReplicateDataArray(GuiContext* ctx)
 {
 }
 
-ReplicateDataArray::~ReplicateDataArray(){
-}
 
 void
  ReplicateDataArray::execute()
 {
   MatrixHandle Input,Size,Output, temp;
-  MatrixIPort* iport;
-  MatrixOPort* oport;
+
+  if (!(get_input_handle("DataArray",Input,false))) return;
+  get_input_handle("Size",Size,false);
+
+  // this widget has trouble updating properly
+  // hence force it to update
+  get_gui()->lock();
+  get_gui()->eval(get_id()+" update_size");
+  get_gui()->unlock();
+
+  if (inputs_changed_ || guisize_.changed() ||
+      !oport_cached("Array"))  
+  {
   
-  if (!(iport = dynamic_cast<MatrixIPort *>(get_iport("DataArray"))))
-  {
-    error("Could not locate input port 'Array'");
-    return;
-  }
-  iport->get(Input);
-  if(Input.get_rep() == 0)
-  {
-    error("No matrix was found on input port 'Array'");
-    return;
-  }
-  
-  if (!(iport = dynamic_cast<MatrixIPort *>(get_iport("Size"))))
-  {
-    error("Could not locate input port 'Size'");
-    return;
-  }
-  iport->get(Size);
-  
-  
-  int n = 0;  
-  if(Size.get_rep() == 0)
-  {
-    // this widget has trouble updating properly
-    // hence force it to update
-    get_gui()->lock();
-    get_gui()->eval(get_id()+" update_size");
-    get_gui()->unlock();
-    n = guisize_.get();
-  }
-  else
-  {
-    if((Size->ncols() != 1)||(Size->ncols() != 1))
+    int n = 0;  
+    if(Size.get_rep() == 0)
     {
-      error("Size needs to be a scalar (1 by 1 matrix)");
+      n = guisize_.get();
+    }
+    else
+    {
+      if((Size->ncols() != 1)||(Size->ncols() != 1))
+      {
+        error("Size needs to be a scalar (1 by 1 matrix)");
+        return;
+      }
+      n = static_cast<int>(Size->get(0,0));
+     
+      guisize_.set(n);
+      get_ctx()->reset(); 
+    }
+
+    int rows = 0;
+    int cols = 0;
+    
+    if (n<1)
+    {
+      error("Size is negative or zero");
       return;
     }
-    n = static_cast<int>(Size->get(0,0));
-   
-    guisize_.set(n);
-    get_ctx()->reset(); 
-  }
 
-  int rows = 0;
-  int cols = 0;
-  
-  if (n<1)
-  {
-    error("Size is negative or zero");
-    return;
-  }
+    rows = Input->nrows();
+    cols = Input->ncols();
 
-  rows = Input->nrows();
-  cols = Input->ncols();
-
-  if ((rows == 0)||(cols == 0))
-  {
-    error("Array is empty, there is nothing to replicate");
-    return;
-  }
-  
-  Output = dynamic_cast<Matrix *>(scinew DenseMatrix(rows*n,cols));
-  temp = dynamic_cast<Matrix *>(Input->dense());
-  Input = temp;
- 
-  if ((Output.get_rep() == 0)||(Input.get_rep()==0))
-  {
-    error("Could not allocate enough memory");
-    return;
-  }
-   
-  double* outputptr = Output->get_data_pointer();      
-  double* inputptr = Input->get_data_pointer(); 
-  if ((inputptr==0)||(outputptr==0))
-  {
-    error("Could not allocate enough memory");
-    return;
-  }
-   
-  outputptr = Output->get_data_pointer(); 
-  for (int p =0; p < n; p++)
-  {
-    inputptr = Input->get_data_pointer();
-    for (int q = 0; q < rows*cols; q++)
+    if ((rows == 0)||(cols == 0))
     {
-      *outputptr = *inputptr;
-      outputptr++;
-      inputptr++;
+      error("Array is empty, there is nothing to replicate");
+      return;
     }
+    
+    Output = dynamic_cast<Matrix *>(scinew DenseMatrix(rows*n,cols));
+    temp = dynamic_cast<Matrix *>(Input->dense());
+    Input = temp;
+   
+    if ((Output.get_rep() == 0)||(Input.get_rep()==0))
+    {
+      error("Could not allocate enough memory");
+      return;
+    }
+     
+    double* outputptr = Output->get_data_pointer();      
+    double* inputptr = Input->get_data_pointer(); 
+    if ((inputptr==0)||(outputptr==0))
+    {
+      error("Could not allocate enough memory");
+      return;
+    }
+     
+    outputptr = Output->get_data_pointer(); 
+    for (int p =0; p < n; p++)
+    {
+      inputptr = Input->get_data_pointer();
+      for (int q = 0; q < rows*cols; q++)
+      {
+        *outputptr = *inputptr;
+        outputptr++;
+        inputptr++;
+      }
+    }
+    
+    send_output_handle("Array",Output,false);
   }
-  
-  if (oport = dynamic_cast<MatrixOPort *>(get_oport("Array")))
-  {
-    oport->send(Output);
-  }      
-}
-
-
-void
- ReplicateDataArray::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace ModelCreation

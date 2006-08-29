@@ -26,14 +26,6 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  ComputeDataArray.cc:
- *
- *  Written by:
- *   Jeroen Stinstra
- *
- */
-
 // Include all code for the dynamic engine
 #include <Core/Algorithms/ArrayMath/ArrayObject.h>
 #include <Core/Algorithms/ArrayMath/ArrayEngine.h>
@@ -50,7 +42,6 @@
 
 #include <Core/Algorithms/ArrayMath/ArrayEngineHelp.h>
 #include <Core/Algorithms/ArrayMath/ArrayEngineMath.h>
-
 
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/String.h>
@@ -98,10 +89,9 @@ void ComputeDataArray::execute()
   get_gui()->eval(get_id()+" update_text");
   get_gui()->unlock();
 
-
   // Do something if data changed
-  if (inputs_changed_ || guifunction_.changed() || guiformat_.changed() ||
-      !oport_cached("DataArray"))
+  if (inputs_changed_ || guifunction_.changed() || 
+      guiformat_.changed() || !oport_cached("DataArray"))
   {
 
     size_t mstart = 2;

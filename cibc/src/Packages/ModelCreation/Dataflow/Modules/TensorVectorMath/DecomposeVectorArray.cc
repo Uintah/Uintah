@@ -26,21 +26,10 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  DecomposeVectorArray.cc:
- *
- *  Written by:
- *   jeroen
- *   TODAY'S DATE HERE
- *
- */
-
-#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
-
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 namespace ModelCreation {
 
@@ -49,12 +38,7 @@ using namespace SCIRun;
 class DecomposeVectorArray : public Module {
 public:
   DecomposeVectorArray(GuiContext*);
-
-  virtual ~DecomposeVectorArray();
-
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
@@ -64,114 +48,83 @@ DecomposeVectorArray::DecomposeVectorArray(GuiContext* ctx)
 {
 }
 
-DecomposeVectorArray::~DecomposeVectorArray(){
-}
 
 void DecomposeVectorArray::execute()
 {
   MatrixHandle X,Y,Z,V, temp;
-  MatrixOPort *oport;
-  MatrixIPort *iport;
   
-  if (!(iport = dynamic_cast<MatrixIPort *>(get_iport("VectorArray"))))
+  if (!(get_input_handle("VectorArray",V,true)));
+  
+  if (inputs_changed_ || !oport_cached("X") ||
+      !oport_cached("Y") || !oport_cached("Z"))
   {
-    error("Could not locate input port VectorArray");
-    return;
-  }
-  
-  iport->get(V);
-  if (V.get_rep() == 0)
-  {
-    error("The input matrix is empty");
-    return;
-  }
-  
-  int n;
-  n = V->nrows();
-  
-  if (n==0)
-  {
-    error("The input matrix is empty");
-    return;
-  }
-  
-  if (V->ncols() != 3)
-  {
-    error("Input matrix is not a VectorArray: number of columns is not 3");
-    return;
-  }
-  
-  temp = dynamic_cast<Matrix *>(V->dense());
-  V = temp;
-  
-  X = dynamic_cast<Matrix *>(scinew DenseMatrix(n,1));
-  if (X.get_rep() == 0)
-  {
-    error("Could allocate memory for output matrix");
-    return;
-  }
-  
-  Y = dynamic_cast<Matrix *>(scinew DenseMatrix(n,1));
-  if (Y.get_rep() == 0)
-  {
-    error("Could allocate memory for output matrix");
-    return;
-  }
-  
-  Z = dynamic_cast<Matrix *>(scinew DenseMatrix(n,1));
-  if (Z.get_rep() == 0)
-  {
-    error("Could allocate memory for output matrix");
-    return;
-  }
-  
-  double* vptr = V->get_data_pointer();
-  double* xptr = X->get_data_pointer();
-  double* yptr = Y->get_data_pointer();
-  double* zptr = Z->get_data_pointer();
-  
-  if ((vptr==0)||(xptr==0)||(yptr==0)||(zptr==0))
-  {
-    error("Could not allocate enough memory");
-    return;
-  }
-  
-  for (int p=0; p<n ;p++)
-  {
-    *xptr = vptr[0];
-    *yptr = vptr[1];
-    *zptr = vptr[2];
+    int n;
+    n = V->nrows();
     
-    vptr += 3;
-    xptr++;
-    yptr++;
-    zptr++;
+    if (n==0)
+    {
+      error("The input matrix is empty");
+      return;
+    }
+    
+    if (V->ncols() != 3)
+    {
+      error("Input matrix is not a VectorArray: number of columns is not 3");
+      return;
+    }
+    
+    temp = dynamic_cast<Matrix *>(V->dense());
+    V = temp;
+    
+    X = dynamic_cast<Matrix *>(scinew DenseMatrix(n,1));
+    if (X.get_rep() == 0)
+    {
+      error("Could allocate memory for output matrix");
+      return;
+    }
+    
+    Y = dynamic_cast<Matrix *>(scinew DenseMatrix(n,1));
+    if (Y.get_rep() == 0)
+    {
+      error("Could allocate memory for output matrix");
+      return;
+    }
+    
+    Z = dynamic_cast<Matrix *>(scinew DenseMatrix(n,1));
+    if (Z.get_rep() == 0)
+    {
+      error("Could allocate memory for output matrix");
+      return;
+    }
+    
+    double* vptr = V->get_data_pointer();
+    double* xptr = X->get_data_pointer();
+    double* yptr = Y->get_data_pointer();
+    double* zptr = Z->get_data_pointer();
+    
+    if ((vptr==0)||(xptr==0)||(yptr==0)||(zptr==0))
+    {
+      error("Could not allocate enough memory");
+      return;
+    }
+    
+    for (int p=0; p<n ;p++)
+    {
+      *xptr = vptr[0];
+      *yptr = vptr[1];
+      *zptr = vptr[2];
+      
+      vptr += 3;
+      xptr++;
+      yptr++;
+      zptr++;
+    }
+    
+    send_output_handle("X",X,false);
+    send_output_handle("Y",Y,false);
+    send_output_handle("Z",Z,false);
   }
-  
-  if (oport = dynamic_cast<MatrixOPort *>(get_oport("X")))
-  {
-    oport->send(X);
-  }
-  
-  if (oport = dynamic_cast<MatrixOPort *>(get_oport("Y")))
-  {
-    oport->send(Y);
-  }
-
-  if (oport = dynamic_cast<MatrixOPort *>(get_oport("Z")))
-  {
-    oport->send(Z);
-  }
-
-  
-}
-
-void
- DecomposeVectorArray::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace CardioWave
-
 
