@@ -321,6 +321,10 @@ class SCISHARE FieldsAlgo : public AlgoLibrary {
     bool NodalMapping( FieldHandle src, FieldHandle dst, FieldHandle& output, std::string mappingmethod, double def_value = 0.0);
  
  
+    // RemoveUnusedNodes:
+    // Remove any nodes that are not connected to an element
+    bool RemoveUnusedNodes(FieldHandle input, FieldHandle& output);
+ 
     // ScaleField:
     // Scales FieldData and MeshData, used to change units properly both in
     // geometry and in data space. 
@@ -355,7 +359,15 @@ class SCISHARE FieldsAlgo : public AlgoLibrary {
     // Unstructure a mesh from a regular or structured mesh into
     // an unstructured mesh. This is often needed to make a mesh editable
     bool Unstructure(FieldHandle input,FieldHandle& output);
-    
+
+    // CleanMesh:
+    // Cleanup a mesh:
+    //  removeunusednodes   -> remove nodes from mesh that are not used
+    //  removeunusedelems   -> remove elements with zero volume/area/length
+    //  reorientelems       -> reorient elements (maximize internal volume/area/length)
+    //  mergenodes          -> merge identical nodes
+    //  mergeelems          -> merge identical elements
+    bool CleanMesh(FieldHandle input, FieldHandle& output, bool removeunusednodes, bool removeunusedelems, bool reorientelems, bool mergenodes, bool mergeelems);    
 };
 
 

@@ -111,8 +111,6 @@ MathAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int n)
       }
     }
  
-    std::cout << "newnnz = " << newnnz << "\n";
- 
     double* newval = scinew double[newnnz];  
     int* newcol = scinew int[newnnz];
     int* newrow = scinew int[m+1];
