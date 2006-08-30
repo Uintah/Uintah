@@ -14,6 +14,7 @@ itcl_class ModelCreation_FieldsData_CurrentDensityMapping {
       set $this-integrationmethod "Gaussian2"
       set $this-integrationfilter "Integrate"
       set $this-multiply-with-normal 0
+      set $this-calcnorm 0
     }
 
     method ui {} {
@@ -38,7 +39,9 @@ itcl_class ModelCreation_FieldsData_CurrentDensityMapping {
         myselectionbutton $w.f.sel2 1 1 { Gaussian1 Gaussian2 Gaussian3 Regular1 Regular2 Regular3 Regular4 Regular5 } $this-integrationmethod
         myselectionbutton $w.f.sel3 2 1 { Integrate Average WeightedAverage Sum Median Minimum Maximum MostCommon} $this-integrationfilter
         checkbutton $w.f.mwn -text "Multiply current density vector with surface normal" -variable $this-multiply-with-normal
-        grid $w.f.mwn -row 3 -column 1 -sticky news -columnspan 2
+        checkbutton $w.f.cn -text "Calculate current density" -variable $this-calcnorm
+        grid $w.f.mwn -row 3 -column 0 -sticky w -columnspan 2
+        grid $w.f.cn -row 4 -column 0 -sticky w -columnspan 2
         
         makeSciButtonPanel $w $w $this
         moveToCursor $w
