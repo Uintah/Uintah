@@ -278,17 +278,17 @@ bool FieldsAlgo::LinkToCompGridByDomain(FieldHandle Geometry, MatrixHandle NodeL
 
 
 bool FieldsAlgo::CurrentDensityMapping(int numproc, FieldHandle pot, FieldHandle con, FieldHandle dst, FieldHandle& output, std::string mappingmethod,
-                       std::string integrationmethod, std::string integrationfilter, bool multiply_with_normal)
+                       std::string integrationmethod, std::string integrationfilter, bool multiply_with_normal, bool calcnorm)
 {
   CurrentDensityMappingAlgo algo;
-  return (algo.CurrentDensityMapping(pr_,numproc,pot,con,dst,output,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal));
+  return (algo.CurrentDensityMapping(pr_,numproc,pot,con,dst,output,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal,calcnorm));
 }
 
 bool FieldsAlgo::CurrentDensityMapping(FieldHandle pot, FieldHandle con, FieldHandle dst,  FieldHandle& output, std::string mappingmethod,
-                       std::string integrationmethod, std::string integrationfilter, bool multiply_with_normal)
+                       std::string integrationmethod, std::string integrationfilter, bool multiply_with_normal, bool calcnorm)
 {
   CurrentDensityMappingAlgo algo;
-  return (algo.CurrentDensityMapping(pr_,0,pot,con,dst,output,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal));
+  return (algo.CurrentDensityMapping(pr_,0,pot,con,dst,output,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal,calcnorm));
 }
 
 

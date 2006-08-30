@@ -1557,8 +1557,6 @@ class GaussianIntegration
         {
           vol_ = 0.0;
         }
-        
-        
       }
     }
 
@@ -1576,13 +1574,11 @@ class GaussianIntegration
         
     void get_nodes_and_iweights(typename FIELD::mesh_type::Elem::index_type idx, std::vector<Point>& gpoints, std::vector<double>& gweights)
     {    
-      
       gpoints.resize(gauss_.GaussianNum);
       gweights.resize(gauss_.GaussianNum);
       
       for (int k=0; k < coords_.size(); k++)
       {
-
         mesh_->interpolate(gpoints[k],coords_[k],idx);
         mesh_->derivate(coords_[k],idx,Jv_);
 
