@@ -31,15 +31,15 @@ SET(Core_Datatypes_SRCS
 ADD_LIBRARY(Core_Datatypes ${Core_Datatypes_SRCS})
 
 TARGET_LINK_LIBRARIES(Core_Datatypes 
-  Core/Basis        
-  Core/Containers   
-  Core/Exceptions   
-  Core/Geometry     
-  Core/GuiInterface 
-  Core/Math         
-  Core/Persistent   
-  Core/Thread       
-  Core/Util
+  Core_Basis        
+  Core_Containers   
+  Core_Exceptions   
+  Core_Geometry     
+  Core_GuiInterface 
+  Core_Math         
+  Core_Persistent   
+  Core_Thread       
+  Core_Util
   ${GL_LIBRARY} ${M_LIBRARY} ${BLAS_LIBRARY} ${F_LIBRARY} 
   ${TEEM_LIBRARY} ${PNG_LIBRARY} ${Z_LIBRARY}
 )

@@ -6,7 +6,7 @@ SET(Core_Bundle_SRCS
 ADD_LIBRARY(Core_Bundle ${Core_Bundle_SRCS})
 
 TARGET_LINK_LIBRARIES( Core_Bundle 
-  Core_Persitent
+  Core_Persistent
   Core_Exceptions
   Core_Containers 
   Core_Thread

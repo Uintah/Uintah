@@ -81,7 +81,7 @@ SET(Core_Geom_SRCS
 ADD_LIBRARY(Core_Geom ${Core_Geom_SRCS})
 
 TARGET_LINK_LIBRARIES( Core_Geom 
-  Core_Persitent
+  Core_Persistent
   Core_Geometry
   Core_Containers 
   Core_Exceptions
