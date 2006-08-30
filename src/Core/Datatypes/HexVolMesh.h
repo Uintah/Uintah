@@ -804,7 +804,6 @@ private:
   vector<vector<typename Node::index_type> > node_neighbors_;
 
   LockingHandle<SearchGrid>     grid_;
-  typename Cell::index_type     locate_cache_;
 
   Mutex                         synchronize_lock_;
   unsigned int                  synchronized_;
@@ -898,7 +897,6 @@ HexVolMesh<Basis>::HexVolMesh() :
   edges_(0),
   edge_table_(),
   grid_(0),
-  locate_cache_(0),
   synchronize_lock_("HexVolMesh synchronize_lock_"),
   synchronized_(NODES_E | CELLS_E)
 {
@@ -914,7 +912,6 @@ HexVolMesh<Basis>::HexVolMesh(const HexVolMesh &copy):
   edges_(0),
   edge_table_(),
   grid_(0),
-  locate_cache_(0),
   synchronize_lock_("HexVolMesh synchronize_lock_"),
   synchronized_(NODES_E | CELLS_E)
 {
@@ -1904,20 +1901,19 @@ bool
 HexVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
 {
   if (basis_.polynomial_order() > 1) return elem_locate(cell, *this, p);
-  // Check last cell found first.  Copy cache to cell first so that we
-  // don't care about thread safeness, such that worst case on
-  // context switch is that cache is not found.
-  cell = locate_cache_;
-  if (cell > typename Cell::index_type(0) &&
+
+  // Previous value was cached, which was not really useful when doing
+  // searches in parallel as they share the same cache and hence parallel
+  // searches could make things slow down :(
+  // Now one can cache previous one by supplying a value on cell
+  if (cell >= typename Cell::index_type(0) &&
       cell < typename Cell::index_type(cells_.size()/8) &&
       inside8_p(cell, p))
   {
       return true;
   }
 
-
-  if (!(synchronized_ & LOCATE_E))
-    synchronize(LOCATE_E);
+  if (!(synchronized_ & LOCATE_E)) synchronize(LOCATE_E);
   if(grid_.get_rep() == 0) return (false);
 
   unsigned int *iter, *end;
@@ -1928,7 +1924,6 @@ HexVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
       if (inside8_p(typename Cell::index_type(*iter), p))
       {
         cell = typename Cell::index_type(*iter);
-        locate_cache_ = cell;
         return true;
       }
       ++iter;
@@ -1937,6 +1932,7 @@ HexVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
 
   return false;
 }
+
 
 
 template <class Basis>
