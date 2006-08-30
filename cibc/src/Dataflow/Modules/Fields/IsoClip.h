@@ -1175,7 +1175,7 @@ IsoClipAlgoHex<FIELD>::execute( ProgressReporter *reporter, FieldHandle fieldh,
   if( !mc_alg.get_rep() )
   {
  	  CompileInfoHandle ci = MarchingCubesAlg::get_compile_info(td);
- 	  if( !DynamicCompilation::compile( ci, mc_alg )) 
+ 	  if( !DynamicCompilation::compile( ci, mc_alg, reporter )) 
     {
  	    reporter->error( "Marching Cubes can not work with this field.");
  	    return fieldh;
