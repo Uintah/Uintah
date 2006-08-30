@@ -78,8 +78,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
       mkdir(outputpath)
       system("chmod -R 775 %s" % outputpath)
     except Exception:
-      # if it exists, erase its contents
-      system("rm -rf %s/*" % outputpath)
+      pass
 
   except Exception:
     outputpath = startpath
@@ -138,7 +137,7 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
   chdir(resultsdir)
 
-  if outputpath != startpath:
+  if outputpath != startpath and path.exists("%s/%s-results" % (outputpath, ALGO)) != True:
     mkdir("%s/%s-results" % (outputpath, ALGO))
 
   environ['MPI_TYPE_MAX'] = '10000'
@@ -248,7 +247,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
     # copy results to web server
     if outputpath != startpath:
-      mkdir("%s/%s-results/%s" % (outputpath, ALGO, testname))
+      if path.exists("%s/%s-results/%s" % (outputpath, ALGO, testname)) != True:
+        mkdir("%s/%s-results/%s" % (outputpath, ALGO, testname))
       system("cp `ls -1 | grep -v uda` %s/%s-results/%s/" % (outputpath, ALGO, testname))
     # rc of 2 means it failed comparison or memory test, so try to run restart
     # anyway
@@ -274,7 +274,8 @@ def runSusTests(argv, TESTS, ALGO, callback = nullCallback):
 
         # copy results to web server
         if outputpath != startpath:
-          mkdir("%s/%s-results/%s/restart" % (outputpath, ALGO, testname))
+          if path.exists("%s/%s-results/%s/restart" % (outputpath, ALGO, testname)) != True:
+            mkdir("%s/%s-results/%s/restart" % (outputpath, ALGO, testname))
           system("cp `ls -1 | grep -v uda` %s/%s-results/%s/restart/" % (outputpath, ALGO, testname))
 
       chdir("..")
