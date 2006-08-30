@@ -327,14 +327,19 @@ template <class INTEGRATOR, class FPOT, class FCON, class FDST, class FOUT>
 void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int procnum,IData* idata)
 {
   typename FOUT::mesh_type::Elem::iterator it, eit;
+  typename FOUT::mesh_type::Elem::size_type s;
   typename FOUT::mesh_type* omesh = idata->omesh;
   typename FOUT::value_type val, val2;
   FOUT* ofield = idata->ofield;
   
   int numproc = idata->numproc;
+  ProgressReporter *pr = idata->pr;
   
   omesh->begin(it);
   omesh->end(eit);
+  omesh->size(s);
+  
+  int cnt = 0;
   
   InterpolatedGradient<FPOT> pmapping(idata->pfield);
   InterpolatedData<FCON> cmapping(idata->cfield);
@@ -375,6 +380,7 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
       ofield->set_value(valarray[idx],*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }
   }
   else if ((filter == "minimum")||(filter == "Minimum"))
@@ -414,6 +420,7 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
       ofield->set_value(val,*it);
       
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }  
   }
   else if ((filter == "maximum")||(filter == "Maximum"))
@@ -453,6 +460,7 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
       ofield->set_value(val,*it);
       
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }
   }
   else if ((filter == "mostcommon")||(filter == "Mostcommon")||(filter == "MostCommon"))
@@ -499,6 +507,7 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
       ofield->set_value(rval,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }  
   }
   else if ((filter == "integrate")||(filter == "Integrate"))
@@ -526,6 +535,7 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }
   }
   else if ((filter == "weightedaverage")||(filter == "WeightedAverage"))
@@ -553,6 +563,7 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }
   }
   else if ((filter == "average")||(filter == "Average"))
@@ -579,6 +590,7 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }
   }
   else if ((filter == "sum")||(filter == "Sum"))
@@ -605,6 +617,7 @@ void CurrentDensityMappingAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int pr
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }
   }
   else
@@ -631,14 +644,19 @@ template <class INTEGRATOR, class FPOT, class FCON, class FDST, class FOUT>
 void CurrentDensityMappingNormAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int procnum,IData* idata)
 {
   typename FOUT::mesh_type::Elem::iterator it, eit;
+  typename FOUT::mesh_type::Elem::size_type s;
   typename FOUT::mesh_type* omesh = idata->omesh;
   typename FOUT::value_type val, val2;
   FOUT* ofield = idata->ofield;
   
   int numproc = idata->numproc;
+  ProgressReporter *pr = idata->pr;
   
   omesh->begin(it);
   omesh->end(eit);
+  omesh->size(s);
+  
+  int cnt = 0;
   
   InterpolatedGradient<FPOT> pmapping(idata->pfield);
   InterpolatedData<FCON> cmapping(idata->cfield);
@@ -652,6 +670,8 @@ void CurrentDensityMappingNormAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(in
   double con;
   Vector grad;
   Vector g;
+  
+  
   
   // Determine the filter and loop over nodes
   if ((filter == "median")||(filter == "Median"))
@@ -680,6 +700,7 @@ void CurrentDensityMappingNormAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(in
       ofield->set_value(valarray[idx],*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }
   }
   else if ((filter == "minimum")||(filter == "Minimum"))
@@ -720,7 +741,8 @@ void CurrentDensityMappingNormAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(in
       }
       ofield->set_value(val,*it);
       
-      for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      for (int p =0; p < numproc; p++) if (it != eit) ++it;
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }  
   }
   else if ((filter == "maximum")||(filter == "Maximum"))
@@ -762,6 +784,7 @@ void CurrentDensityMappingNormAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(in
       ofield->set_value(val,*it);
       
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }
   }
   else if ((filter == "mostcommon")||(filter == "Mostcommon")||(filter == "MostCommon"))
@@ -809,6 +832,7 @@ void CurrentDensityMappingNormAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(in
       ofield->set_value(rval,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }  
   }
   else if ((filter == "integrate")||(filter == "Integrate"))
@@ -837,6 +861,7 @@ void CurrentDensityMappingNormAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(in
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }
   }
   else if ((filter == "weightedaverage")||(filter == "WeightedAverage"))
@@ -865,6 +890,7 @@ void CurrentDensityMappingNormAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(in
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }
   }
   else if ((filter == "average")||(filter == "Average"))
@@ -892,6 +918,7 @@ void CurrentDensityMappingNormAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(in
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }
   }
   else if ((filter == "sum")||(filter == "Sum"))
@@ -920,6 +947,7 @@ void CurrentDensityMappingNormAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(in
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }
   }
   else
@@ -1030,14 +1058,19 @@ template <class INTEGRATOR, class FPOT, class FCON, class FDST, class FOUT>
 void CurrentDensityMappingNormalAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(int procnum,IData* idata)
 {
   typename FOUT::mesh_type::Elem::iterator it, eit;
+  typename FOUT::mesh_type::Elem::size_type s;
   typename FOUT::mesh_type* omesh = idata->omesh;
   typename FOUT::value_type val, val2;
   FOUT* ofield = idata->ofield;
   
   int numproc = idata->numproc;
+  ProgressReporter *pr = idata->pr;
   
   omesh->begin(it);
   omesh->end(eit);
+  omesh->size(s);
+  
+  int cnt = 0;
   
   InterpolatedGradient<FPOT> pmapping(idata->pfield);
   InterpolatedData<FCON> cmapping(idata->cfield);
@@ -1079,7 +1112,8 @@ void CurrentDensityMappingNormalAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(
       int idx = static_cast<int>((valarray.size()/2));
       ofield->set_value(valarray[idx],*it);
 
-      for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      for (int p =0; p < numproc; p++) if (it != eit) ++it; 
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }       
     }
   }
   else if ((filter == "minimum")||(filter == "Minimum"))
@@ -1119,6 +1153,7 @@ void CurrentDensityMappingNormalAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(
       ofield->set_value(val,*it);
       
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }  
   }
   else if ((filter == "maximum")||(filter == "Maximum"))
@@ -1159,6 +1194,7 @@ void CurrentDensityMappingNormalAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(
       ofield->set_value(val,*it);
       
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }
   }
   else if ((filter == "mostcommon")||(filter == "Mostcommon")||(filter == "MostCommon"))
@@ -1205,6 +1241,7 @@ void CurrentDensityMappingNormalAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(
       ofield->set_value(rval,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }  
   }
   else if ((filter == "integrate")||(filter == "Integrate"))
@@ -1232,6 +1269,7 @@ void CurrentDensityMappingNormalAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }
   }
   else if ((filter == "weightedaverage")||(filter == "WeightedAverage"))
@@ -1259,6 +1297,7 @@ void CurrentDensityMappingNormalAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }
   }
   else if ((filter == "average")||(filter == "Average"))
@@ -1285,6 +1324,7 @@ void CurrentDensityMappingNormalAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }
   }
   else if ((filter == "sum")||(filter == "Sum"))
@@ -1312,6 +1352,7 @@ void CurrentDensityMappingNormalAlgoT<INTEGRATOR,FPOT,FCON,FDST,FOUT>::parallel(
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }
   }
   else
