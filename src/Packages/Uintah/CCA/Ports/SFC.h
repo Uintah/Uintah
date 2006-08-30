@@ -5,6 +5,7 @@
 #include <vector>
 #include <queue>
 #include <iostream>
+#include <fstream>
 #include <math.h>
 using namespace std;
 
@@ -593,7 +594,37 @@ void SFC<DIM,LOCS>::Parallel()
   {
     if(c[i].bits<c[i-1].bits)
     {
+      char filename[100];
+      sprintf(filename,"sfcdebug%d.txt",rank);
       cout << "Error forming local curve: " << c[i].i << ":" << c[i].bits << " is less than " << c[i-1].i << ":" << c[i-1].bits << endl;
+      cout << "Please email the file '" << filename << "' to luitjens@cs.utah.edu\n'";
+
+      ofstream sfcdebug(filename);
+     
+      sfcdebug << "Error forming local curve: " << c[i].i << ":" << c[i].bits << " is less than " << c[i-1].i << ":" << c[i-1].bits << endl;
+      sfcdebug << "DIM:" << DIM << endl;
+      sfcdebug << "Local Size:" << n << endl;
+      sfcdebug << "Dimensions:";
+      for(int d=0;d<DIM;d++)
+              sfcdebug << dimensions[d] << " ";
+      sfcdebug << endl;
+      sfcdebug << "Center:";
+      for(int d=0;d<DIM;d++)
+              sfcdebug << center[d] << " ";
+      sfcdebug << endl;
+      sfcdebug << "Refinements:" << refinements << endl;
+      
+      sfcdebug << "LOCS:";
+      for(unsigned int i=0;i<n;i++)
+      {
+        sfcdebug << "[";
+        for(int d=0;d<DIM-1;d++)
+        {
+         sfcdebug << locs[i*DIM+d] << ", ";
+        }
+        sfcdebug << locs[i*DIM+DIM-1] << "] ";
+      }
+      sfcdebug << endl;
       exit(0);
     }
   }
@@ -1343,7 +1374,7 @@ void SFC2D<LOCS>::SetRefinementsByDelta(REAL deltax, REAL deltay)
 template<class LOCS>
 unsigned char SFC1D<LOCS>::Bin(LOCS *point, REAL *center)
 {
-  return point[0]>center[0];
+  return point[0]<center[0];
 } 
 	
 template<class LOCS>
