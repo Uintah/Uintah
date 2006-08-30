@@ -602,6 +602,7 @@ SET(SCIRUN_INCLUDE_DIRS_SYSTEM
 
 # Set include directories for sci_defs
 SET(SCIRUN_INCLUDE_DIRS_BUILD_TREE 
+  ${PROJECT_BINARY_DIR}/
   ${PROJECT_BINARY_DIR}/include/
   ${PROJECT_BINARY_DIR}/include/sci_defs/
 )

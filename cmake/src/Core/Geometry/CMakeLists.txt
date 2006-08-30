@@ -17,7 +17,7 @@ SET(Core_Geometry_SRCS
 ADD_LIBRARY(Core_Geometry ${Core_Geometry_SRCS})
 
 TARGET_LINK_LIBRARIES( Core_Geometry 
-  Core_Persitent
+  Core_Persistent
   Core_Containers 
   Core_Exceptions
   Core_Util

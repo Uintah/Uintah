@@ -81,3 +81,8 @@ CONFIGURE_FILE (
       "${PROJECT_BINARY_DIR}/include/sci_defs/teem_defs.h"
 )
 
+CONFIGURE_FILE (
+      "${PROJECT_SOURCE_DIR}/src/include/sci_defs/insight_testdefs.h.in"
+      "${PROJECT_BINARY_DIR}/include/sci_defs/insight_defs.h"
+)
+

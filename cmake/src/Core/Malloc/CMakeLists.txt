@@ -9,5 +9,5 @@ SET(Core_Malloc_SRCS
 ADD_LIBRARY(Core_Malloc ${Core_Malloc_SRCS})
 
 TARGET_LINK_LIBRARIES(Core_Malloc 
-  Core/Thread       
+  Core_Thread       
 )

@@ -20,7 +20,7 @@ TARGET_LINK_LIBRARIES( Core_Volume
   Core_Exceptions
   Core_Geom
   Core_Geometry
-  Core_Persitent
+  Core_Persistent
   Core_Thread
   Core_Util
   ${GL_LIBRARY}
