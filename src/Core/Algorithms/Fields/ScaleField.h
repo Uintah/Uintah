@@ -74,24 +74,26 @@ bool ScaleFieldAlgoT<FIELD>::ScaleField(ProgressReporter *pr, FieldHandle input,
   BBox box = input->mesh()->get_bounding_box();
   Vector center = 0.5*(box.min()+box.max());
   
+  // scale mesh, only when needed
+  if (scale_from_center || (meshscale != 1.0))
+  {
+    ofield->mesh_detach();
+    Transform tf;
+    tf.load_identity();
+    if (scale_from_center) tf.pre_translate(-center);
+    tf.pre_scale(Vector(meshscale,meshscale,meshscale));
+    if (scale_from_center) tf.pre_translate(center);
+    ofield->mesh()->transform(tf);
+  }
   
-  
-  // scale mesh
-  ofield->mesh_detach();
-  Transform tf;
-  tf.load_identity();
-  if (scale_from_center) tf.pre_translate(-center);
-  tf.pre_scale(Vector(meshscale,meshscale,meshscale));
-  if (scale_from_center) tf.pre_translate(center);
-  ofield->mesh()->transform(tf);
-
   typename FIELD::mesh_handle_type omesh = ofield->get_typed_mesh();
 
   // scale data
   if (ofield->basis_order() == 0)
   {
     typename FIELD::mesh_type::Elem::iterator it, it_end;
-    typename FIELD::value_type val = 0;
+    typename FIELD::value_type val;
+    val = 0;
     
     omesh->begin(it);
     omesh->end(it_end);
@@ -106,7 +108,8 @@ bool ScaleFieldAlgoT<FIELD>::ScaleField(ProgressReporter *pr, FieldHandle input,
   else if (ofield->basis_order() == 1)
   {
     typename FIELD::mesh_type::Node::iterator it, it_end;
-    typename FIELD::value_type val = 0;
+    typename FIELD::value_type val;
+    val = 0;
     
     omesh->begin(it);
     omesh->end(it_end);

@@ -302,9 +302,9 @@ class SCISHARE FieldsAlgo : public AlgoLibrary {
     // This method can be used with any sampling of output mesh, although the best results
     // are probably obtained when using a mesh that is a slice of the volumetric mesh.
     bool CurrentDensityMapping(int numproc, FieldHandle pot, FieldHandle con, FieldHandle dst, FieldHandle& output, std::string mappingmethod,
-                       std::string integrationmethod, std::string integrationfilter, bool multiply_with_normal);
+                       std::string integrationmethod, std::string integrationfilter, bool multiply_with_normal, bool calcnorm);
     bool CurrentDensityMapping(FieldHandle pot, FieldHandle con, FieldHandle dst, FieldHandle& output, std::string mappingmethod,
-                       std::string integrationmethod, std::string integrationfilter, bool multiply_with_normal);
+                       std::string integrationmethod, std::string integrationfilter, bool multiply_with_normal, bool calcnorm);
     
 
     // NodalMapping:
