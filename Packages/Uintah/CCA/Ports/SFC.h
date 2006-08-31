@@ -13,6 +13,7 @@ using namespace std;
 #include<Core/Thread/Time.h>
 
 #include <Packages/Uintah/CCA/Ports/share.h>
+#include<Core/Exceptions/InternalError.h>
 
 namespace Uintah{
 
@@ -63,6 +64,31 @@ extern SCISHARE int order1[][2];
 #define EPSILON 1e-6
 
 #define BINS (1<<DIM)
+
+template<int DIM,class BITS>
+void outputhistory(BITS history)
+{
+        BITS mask=0;
+        BITS val;
+        unsigned int bits;
+
+        bits=sizeof(BITS)*8;
+        //output bucket history
+        for(int i=0;i<DIM;i++)
+        {
+            mask<<=1;
+            mask|=1;
+        }
+        mask<<=(bits-DIM);
+        while(bits>0)
+        {
+                val=history&mask;
+                val>>=(bits-2);
+                cout << val;
+                mask>>=DIM;
+                bits-=DIM;
+        }
+}
 template<int DIM, class LOCS>
 class SFC
 {
@@ -127,7 +153,7 @@ protected:
 	void SerialR(unsigned int* orders,vector<unsigned int> *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o=0);
 
   template<class BITS> void SerialH();
-	template<class BITS> void SerialHR(unsigned int* orders,History<BITS>* corders,vector<unsigned int > *bin, unsigned int n, REAL *center, REAL *dimension, unsigned int o=0, int r=0, BITS history=0);
+	template<class BITS> void SerialHR(unsigned int* orders,History<BITS>* corders,vector<unsigned int > *bin, unsigned int n, REAL *center, REAL *dimension,                                     unsigned int o=0, int r=1, BITS history=0);
 	template<class BITS> void Parallel();
 	template<class BITS> int MergeExchange(int to);	
 	template<class BITS> void PrimaryMerge();
@@ -440,8 +466,8 @@ void SFC<DIM,LOCS>::SerialHR(unsigned int* orders, History<BITS>* corders,vector
 	unsigned char b;
 	unsigned int i;
 	unsigned int index=0;
-
-	//Empty bins
+	
+  //Empty bins
 	for(b=0;b<BINS;b++)
 	{
 		bin[b].clear();
@@ -487,7 +513,7 @@ void SFC<DIM,LOCS>::SerialHR(unsigned int* orders, History<BITS>* corders,vector
 				corders[j].i=orders[j];
 			}
 		}
-		else if( size[b]>1)
+		else if(size[b]>1)
 		{
 			NextHistory= ((history<<DIM)|b);
 			SerialHR<BITS>(orders,corders,bin,size[b],newcenter[b],newdimension,orientation[o][b],r+1,NextHistory);
@@ -597,8 +623,7 @@ void SFC<DIM,LOCS>::Parallel()
       char filename[100];
       sprintf(filename,"sfcdebug%d.txt",rank);
       cout << "Error forming local curve: " << c[i].i << ":" << c[i].bits << " is less than " << c[i-1].i << ":" << c[i-1].bits << endl;
-      cout << "Please email the file '" << filename << "' to luitjens@cs.utah.edu\n'";
-
+      cout << "Please email the file '" << filename << "' to luitjens@cs.utah.edu\n";
       ofstream sfcdebug(filename);
      
       sfcdebug << "Error forming local curve: " << c[i].i << ":" << c[i].bits << " is less than " << c[i-1].i << ":" << c[i-1].bits << endl;
@@ -625,7 +650,7 @@ void SFC<DIM,LOCS>::Parallel()
         sfcdebug << locs[i*DIM+DIM-1] << "] ";
       }
       sfcdebug << endl;
-      exit(0);
+      throw InternalError("Error forming local curve\n",__FILE__,__LINE__);
     }
   }
   
