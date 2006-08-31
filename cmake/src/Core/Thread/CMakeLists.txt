@@ -2,6 +2,7 @@
 SET(Core_Thread_SRCS
   CleanupManager.cc 
   Guard.cc 
+  Mutex.h
   MutexPool.cc 
   ParallelBase.cc 
   Runnable.cc 
