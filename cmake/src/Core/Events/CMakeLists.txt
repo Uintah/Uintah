@@ -5,9 +5,19 @@ SET(Core_Events_SRCS
   OpenGLViewer.cc	
   SceneGraphEvent.cc	
   X11EventSpawner.cc	
+  Tools/AutoviewTool.cc	
+  Tools/Ball.cc		
+  Tools/BallAux.cc		
+  Tools/BallMath.cc		
+  Tools/BaseTool.cc		
+  Tools/ToolManager.cc	
+  Tools/ViewRotateTool.cc	
+  Tools/ViewScaleTool.cc	
+  Tools/ViewTranslateTool.cc	
 )
 
-SUBDIRS(Tools)
+# DV Fix should do subdirectory tools instead of adding tools files above
+#SUBDIRS(Tools)
 
 ADD_LIBRARY(Core_Events ${Core_Events_SRCS})
 
