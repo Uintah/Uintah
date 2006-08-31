@@ -5,15 +5,18 @@ SET(Core_Util_SRCS
   DynamicCompilation.cc 
   Endian.cc             
   Environment.cc        
-  FileUtils.cc          
+  FileUtils.cc 
+  LogFile.cc         
   ProgressReporter.cc   
+  RegressionReporter.cc
   SimpleProfiler.cc     
   SizeTypeConvert.cc    
   RWS.cc                
   sci_system.cc         
   soloader.cc           
   Signals.cc            
-  Timer.cc              
+  Timer.cc             
+  ThrottledRunnable.cc 
   TypeDescription.cc    
   ProgressiveWarning.cc
 )
