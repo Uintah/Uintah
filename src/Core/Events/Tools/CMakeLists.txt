@@ -1,5 +1,5 @@
 # Sources of Core/Events/Tools classes
-SET(Core_Events_SRCS 
+SET(Core_Events_SRCS ${Core_Events_SRCS}
   AutoviewTool.cc	
   Ball.cc		
   BallAux.cc		
