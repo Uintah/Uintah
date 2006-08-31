@@ -209,7 +209,7 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
     update_axis_var("spacing", i, to_string(nh->nrrd_->axis[i].spacing), "Spacing");
     
     string spacedir = "[ ";
-    for (int p=0; p<nh->nrrd_->spaceDim; p++)
+    for (unsigned int p=0; p<nh->nrrd_->spaceDim; p++)
     {
       std::ostringstream oss;
       oss << nh->nrrd_->axis[i].spaceDirection[p];
