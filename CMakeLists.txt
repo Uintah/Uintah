@@ -165,7 +165,7 @@ IF(WITH_LAPACK)
      SET(HAVE_LAPACK "NO")
    ENDIF(LAPACK_LIBRARY)
 ELSE(WITH_LAPACK)
-  SET(HAVE_LAPACK "NO")
+   SET(HAVE_LAPACK "NO")
 ENDIF(WITH_LAPACK)
 
 #-----------------------------------------------------------------------------
@@ -450,9 +450,10 @@ SET(ASSERTION_LEVEL 3 CACHE STRING "Set assertion level N(0-3)")
 # DV FIX hard coding of lapack library
 IF(HAVE_LAPACK)
   SET(DEF_LAPACK "#define HAVE_LAPACK 1" CACHE INTERNAL "Have Lapack")
-ELSE(HAVE_LAPACK)
-  SET(DEF_LAPACK "#define HAVE_LAPACK 0" CACHE INTERNAL "Have Lapack")
 ENDIF(HAVE_LAPACK)
+#ELSE(HAVE_LAPACK)
+#  SET(DEF_LAPACK "#define HAVE_LAPACK 0" CACHE INTERNAL "Have Lapack")
+
 
 # sci_defs/hashmap_defs.h
 SET(DEF_HASHMAP "None" CACHE INTERNAL "Determining hash map")
