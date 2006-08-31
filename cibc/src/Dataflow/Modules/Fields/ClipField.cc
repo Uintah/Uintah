@@ -207,10 +207,8 @@ ClipField::execute()
 
   bool do_clip_p = false;
 
-  // Maybe get clip field.
-  FieldIPort *cfp = (FieldIPort *)get_iport("Clip Field");
   FieldHandle cfieldhandle;
-  if (cfp->get(cfieldhandle) && cfieldhandle.get_rep() &&
+  if (get_input_handle("Clip Field", cfieldhandle) &&
       cfieldhandle->generation != last_clip_generation_)
   {
     last_clip_generation_ = cfieldhandle->generation;
@@ -379,10 +377,7 @@ ClipField::execute()
     }
   }
 
-  if (ofield_.get_rep())
-  {
-    send_output_handle("Output Field", ofield_, true);
-  }
+  send_output_handle("Output Field", ofield_, true);
 }
 
 
