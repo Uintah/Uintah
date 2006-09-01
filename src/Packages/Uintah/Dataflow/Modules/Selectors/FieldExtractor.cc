@@ -284,8 +284,8 @@ FieldExtractor::execute()
     range = hi - low;
   }
   
-//   IntVector cellHi, cellLo;
-//   level->findCellIndexRange(cellLo, cellHi);
+  IntVector cellHi, cellLo;
+  level->findCellIndexRange(cellLo, cellHi);
   
 //   cerr<<"before anything data range is:  "<<range.x()<<"x"<<range.y()<<"x"<<
 //      range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
@@ -428,8 +428,8 @@ bool FieldExtractor::update_mesh_handle( LevelP& level,
           mesh_handle = scinew LVMesh(range.x(), range.y(),
                                           range.z(), box.min(),
                                           box.max());
-          //      cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
-          //        range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+//                cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
+//                  range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
         }
       } else if(mesh_handle->get_ni() != (unsigned int) range.x() ||
                 mesh_handle->get_nj() != (unsigned int) range.y() ||
@@ -444,8 +444,8 @@ bool FieldExtractor::update_mesh_handle( LevelP& level,
           mesh_handle = scinew LVMesh(range.x(), range.y(),
                                           range.z(), box.min(),
                                           box.max());
-          //      cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
-          //        range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+//                cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
+//                  range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
         }
       } 
       return true;
@@ -456,61 +456,133 @@ bool FieldExtractor::update_mesh_handle( LevelP& level,
         mesh_handle = scinew LVMesh(range.x(), range.y(),
                                         range.z(), box.min(),
                                         box.max());
-        //      cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
-        //        range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+//              cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
+//                range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
       }else if(mesh_handle->get_ni() != (unsigned int) range.x() ||
                mesh_handle->get_nj() != (unsigned int) range.y() ||
                mesh_handle->get_nk() != (unsigned int) range.z() ){
         mesh_handle = scinew LVMesh(range.x(), range.y(),
                                         range.z(), box.min(),
                                         box.max());
-        //      cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
-        //        range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
+//              cerr<<"mesh built:  "<<range.x()<<"x"<<range.y()<<"x"<<
+//                range.z()<<"  size:  "<<box.min()<<", "<<box.max()<<"\n";
       }
       return true;
     }
   case TypeDescription::SFCXVariable:
     {
+      IntVector cellHi, cellLo, levelHi, levelLo;
+      if( remove_boundary == 1){
+        level->findInteriorCellIndexRange(cellLo, cellHi);
+        level->findInteriorIndexRange( levelLo, levelHi);
+      } else {
+        level->findCellIndexRange(cellLo, cellHi);
+        level->findIndexRange( levelLo, levelHi);
+      }
       if( mesh_handle.get_rep() == 0 ){
-        mesh_handle = scinew LVMesh(range.x(), range.y() - 1,
-                                        range.z() - 1, box.min(),
-                                        box.max());
+        if(is_periodic_bcs(cellHi, hi) && is_periodic_bcs(cellHi, levelHi)){
+          IntVector newrange(0,0,0);
+          get_periodic_bcs_range( cellHi, hi, range, newrange);
+          mesh_handle = scinew LVMesh(newrange.x(),newrange.y() - 1,
+                                          newrange.z() - 1, box.min(),
+                                          box.max());
+        } else {
+          mesh_handle = scinew LVMesh(range.x(), range.y() - 1,
+                                      range.z() - 1, box.min(),
+                                      box.max());
+        }
       } else if(mesh_handle->get_ni() != (unsigned int) range.x() ||
                 mesh_handle->get_nj() != (unsigned int) range.y() -1 ||
                 mesh_handle->get_nk() != (unsigned int) range.z() -1 ){
-        mesh_handle = scinew LVMesh(range.x(), range.y() - 1,
-                                        range.z()-1, box.min(),
-                                        box.max());
+        if(is_periodic_bcs(cellHi, hi) && is_periodic_bcs(cellHi, levelHi)){
+          IntVector newrange(0,0,0);
+          get_periodic_bcs_range( cellHi, hi, range, newrange);
+          mesh_handle = scinew LVMesh(newrange.x(),newrange.y() - 1,
+                                          newrange.z() - 1, box.min(),
+                                          box.max());
+        } else {
+          mesh_handle = scinew LVMesh(range.x(), range.y() - 1,
+                                      range.z()-1, box.min(),
+                                      box.max());
+        }
       }
       return true;
     }
   case TypeDescription::SFCYVariable:
     {
+      IntVector cellHi, cellLo, levelHi, levelLo;
+      if( remove_boundary == 1){
+        level->findInteriorCellIndexRange(cellLo, cellHi);
+        level->findInteriorIndexRange( levelLo, levelHi);
+      } else {
+        level->findCellIndexRange(cellLo, cellHi);
+        level->findIndexRange( levelLo, levelHi);
+      }
       if( mesh_handle.get_rep() == 0 ){
-        mesh_handle = scinew LVMesh(range.x()-1, range.y(),
-                                        range.z()-1, box.min(),
-                                        box.max());
+        if(is_periodic_bcs(cellHi, hi) && is_periodic_bcs(cellHi, levelHi)){
+          IntVector newrange(0,0,0);
+          get_periodic_bcs_range( cellHi, hi, range, newrange);
+          mesh_handle = scinew LVMesh(newrange.x() - 1,newrange.y(),
+                                          newrange.z() - 1, box.min(),
+                                          box.max());
+        } else {
+          mesh_handle = scinew LVMesh(range.x()-1, range.y(),
+                                      range.z()-1, box.min(),
+                                      box.max());
+        }
       } else if(mesh_handle->get_ni() != (unsigned int) range.x() -1 ||
                 mesh_handle->get_nj() != (unsigned int) range.y() ||
                 mesh_handle->get_nk() != (unsigned int) range.z() -1 ){
-        mesh_handle = scinew LVMesh(range.x()-1, range.y(),
-                                        range.z()-1, box.min(),
-                                        box.max());
+        if(is_periodic_bcs(cellHi, hi) && is_periodic_bcs(cellHi, levelHi)){
+          IntVector newrange(0,0,0);
+          get_periodic_bcs_range( cellHi, hi, range, newrange);
+          mesh_handle = scinew LVMesh(newrange.x() - 1,newrange.y(),
+                                          newrange.z() - 1, box.min(),
+                                          box.max());
+        } else {
+          mesh_handle = scinew LVMesh(range.x()-1, range.y(),
+                                      range.z()-1, box.min(),
+                                      box.max());
+        }
       }
       return true;
     }
   case TypeDescription::SFCZVariable:
-    {
+     {
+      IntVector cellHi, cellLo, levelHi, levelLo;
+      if( remove_boundary == 1){
+        level->findInteriorCellIndexRange(cellLo, cellHi);
+        level->findInteriorIndexRange( levelLo, levelHi);
+      } else {
+        level->findCellIndexRange(cellLo, cellHi);
+        level->findIndexRange( levelLo, levelHi);
+      }
       if( mesh_handle.get_rep() == 0 ){
-        mesh_handle = scinew LVMesh(range.x()-1, range.y()-1,
-                                        range.z(), box.min(),
-                                        box.max());
+        if(is_periodic_bcs(cellHi, hi) && is_periodic_bcs(cellHi, levelHi)){
+          IntVector newrange(0,0,0);
+          get_periodic_bcs_range( cellHi, hi, range, newrange);
+          mesh_handle = scinew LVMesh(newrange.x() - 1,newrange.y() - 1,
+                                          newrange.z(), box.min(),
+                                          box.max());
+        } else {
+          mesh_handle = scinew LVMesh(range.x()-1, range.y()-1,
+                                      range.z(), box.min(),
+                                      box.max());
+        }
       } else if(mesh_handle->get_ni() != (unsigned int) range.x() -1 ||
                 mesh_handle->get_nj() != (unsigned int) range.y() -1 ||
                 mesh_handle->get_nk() != (unsigned int) range.z() ){
-        mesh_handle = scinew LVMesh(range.x()-1, range.y()-1,
-                                        range.z(), box.min(),
-                                        box.max());
+        if(is_periodic_bcs(cellHi, hi) && is_periodic_bcs(cellHi, levelHi)){
+          IntVector newrange(0,0,0);
+          get_periodic_bcs_range( cellHi, hi, range, newrange);
+          mesh_handle = scinew LVMesh(newrange.x() - 1,newrange.y() - 1,
+                                          newrange.z(), box.min(),
+                                          box.max());
+        } else {
+          mesh_handle = scinew LVMesh(range.x()-1, range.y()-1,
+                                      range.z(), box.min(),
+                                      box.max());
+        }
       }     
       return true;
     }
