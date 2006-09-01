@@ -21,7 +21,7 @@ puda -varsummary $f | grep -A 12 $var | grep -A 5 "Level: 0" | grep max | cut -d
 puda -varsummary $f | grep -A 12 $var | grep -A 5 "Level: 1" | grep min | cut -d " " -f 3 | cut -d "[" -f1 >& L-1_min
 puda -varsummary $f | grep -A 12 $var | grep -A 5 "Level: 1" | grep max | cut -d " " -f 3 | cut -d "[" -f1 >& L-1_max
 
-puda -timesteps $f | tr ":" " " >& timestep
+puda -timesteps $f | tr ":" " " |sed '1D' >& timestep
 
 paste -d " " timestep L-0_min L-0_max L-1_min L-1_max > data
 
