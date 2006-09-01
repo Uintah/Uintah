@@ -283,8 +283,10 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     t->computes(lb->pDampingRateLabel); 
     t->computes(lb->pDampingCoeffLabel); 
   }
-  if(flags->d_usingSoilFoam_CM) t->computes(lb->sv_minLabel);
-
+  if(flags->d_usingSoilFoam_CM) {
+    t->computes(lb->sv_minLabel);
+  }
+  
   int numMPM = d_sharedState->getNumMPMMatls();
   const PatchSet* patches = level->eachPatch();
   for(int m = 0; m < numMPM; m++){
@@ -341,9 +343,9 @@ void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
   if(!flags->d_doGridReset){
     t->computes(lb->gDisplacementLabel);
   }
-  if(flags->d_usingSoilFoam_CM)
-  t->computes(lb->sv_minLabel,             add_matl);
-  
+  if(flags->d_usingSoilFoam_CM){
+    t->computes(lb->sv_minLabel,           add_matl);
+  }
 
   if (flags->d_accStrainEnergy) {
     // Computes accumulated strain energy
@@ -518,9 +520,10 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSizeLabel,             gan,NGP);
     
   //t->requires(Task::OldDW, lb->pExternalHeatRateLabel, gan,NGP);
-  if(flags->d_usingSoilFoam_CM)
-  t->requires(Task::OldDW, lb->sv_minLabel,             gan,NGP);
-
+  if(flags->d_usingSoilFoam_CM){
+    t->requires(Task::OldDW,lb->sv_minLabel,           gan,NGP);
+  }
+  
   t->computes(lb->gMassLabel);
   t->computes(lb->gMassLabel,        d_sharedState->getAllInOneMatl(),
               Task::OutOfDomain);
@@ -1556,8 +1559,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
       old_dw->get(psize,          lb->pSizeLabel,          pset);
       old_dw->get(pErosion,       lb->pErosionLabel,       pset);
-      if(flags->d_usingSoilFoam_CM)
+      if(flags->d_usingSoilFoam_CM){
         old_dw->get(sv_min,       lb->sv_minLabel,         pset);
+      }
       new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
 
       // Create arrays for the grid data
@@ -1587,12 +1591,11 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                              dwi,patch);
       new_dw->allocateAndPut(gnumnearparticles,lb->gNumNearParticlesLabel,
                              dwi,patch);
-      if(flags->d_usingSoilFoam_CM)
+      if(flags->d_usingSoilFoam_CM){
         new_dw->allocateAndPut(gsv_min,        lb->gsv_minLabel,       dwi,patch);
-
+        gsv_min.initialize(d_SMALL_NUM_MPM);
+      }
       gmass.initialize(d_SMALL_NUM_MPM);
-      if(flags->d_usingSoilFoam_CM)
-      gsv_min.initialize(d_SMALL_NUM_MPM);
       gvolume.initialize(d_SMALL_NUM_MPM);
       gvelocity.initialize(Vector(0,0,0));
       gexternalforce.initialize(Vector(0,0,0));
@@ -1640,8 +1643,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             gSp_vol[node]        += pSp_vol           * pmass[idx] * S[k];
             gnumnearparticles[node] += 1.0;
             //  gexternalheatrate[node] += pexternalheatrate[idx]      * S[k];
-            if(flags->d_usingSoilFoam_CM)
-            gsv_min[node]        += sv_min[idx]                    * S[k];
+            if(flags->d_usingSoilFoam_CM){
+              gsv_min[node]      += sv_min[idx]                    * S[k];
+            }
           }
         }
       } // End of particle loop
