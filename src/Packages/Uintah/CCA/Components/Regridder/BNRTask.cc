@@ -49,7 +49,7 @@ MPI_Request* BNRTask::getRequest()
   else
   {
     //get a free request
-    int index=controller_->free_requests_.front();
+    int index=controller_->free_requests_.top();
     
     //assign request
     controller_->free_requests_.pop();
@@ -350,11 +350,11 @@ void BNRTask::continueTask()
       }
       WAIT_FOR_TAGS:
       
-      ctasks_.ltag= controller_->tags_.front();
+      ctasks_.ltag= controller_->tags_.top();
       controller_->task_count_++;
       controller_->tags_.pop();
       
-      ctasks_.rtag=controller_->tags_.front();
+      ctasks_.rtag=controller_->tags_.top();
       controller_->task_count_++;
       controller_->tags_.pop();
     }
@@ -529,7 +529,12 @@ void BNRTask::continueTaskSerial()
     return;
     
     WAIT_FOR_CHILDREN:
-      
+    
+    if(left_->tag_!=0 || right_->tag_!=0)
+    {
+      controller_->tags_.push(left_->tag_);    //reclaim tag
+      controller_->tags_.push(right_->tag_);    //reclaim tag
+    }  
     //copy patches from left children
     for(unsigned int p=0;p<left_->my_patches_.size();p++)
     {

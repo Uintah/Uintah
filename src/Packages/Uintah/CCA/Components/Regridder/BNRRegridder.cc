@@ -5,6 +5,7 @@
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
+#include <Core/Exceptions/InternalError.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Core/Util/DebugStream.h>
 using namespace Uintah;
@@ -80,7 +81,6 @@ BNRRegridder::~BNRRegridder()
     fout.close();
   }
 }
-
 Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP& ups)
 {
   double start;
@@ -218,7 +218,6 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
     PostFixup(patch_sets[l],d_minPatchSize);
     pfutotal+=MPI_Wtime()-start;
   }
-
   //Create the grid
   start=MPI_Wtime(); 
 
@@ -280,7 +279,8 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
   crtotal+=MPI_Wtime()-start;
   if(dbgtimes.active() && d_myworld->myrank()==0)
           cout << "BRTime:" << brtotal << " SLTime:" << sltotal << " FUTime:" << futotal << " PFUTime:" << pfutotal << " CoarsenTime: " << ctotal << " CRTime:" << crtotal << " FTime: " << ftotal << " ATime: " << atotal << endl; 
-  if (*newGrid == *oldGrid) {
+  if (*newGrid == *oldGrid) 
+  {
     delete newGrid;
     return oldGrid;
   }
@@ -447,10 +447,12 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
   //place on immediate_q_
   immediate_q_.push(root);                  
   //control loop
+ 
   while(true)
   {
     BNRTask *task;
     //check tag_q for processors waiting for tags
+
     if(!tag_q_.empty() && tags_.size()>1)
     {
         //2 tags are available continue the task
@@ -460,7 +462,7 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
     }
     else if(!immediate_q_.empty())  //check for tasks that are able to make progress
     {
-      task=immediate_q_.front();
+      task=immediate_q_.top();
       immediate_q_.pop();
       //runable task found, continue task
       //cout << "rank:" << rank << ": starting from immediate_q_ with status: " << task->status_ << endl;
@@ -488,9 +490,17 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
         }
       }
     }
-    else  //no tasks remaining, no communication waiting, algorithm is done
+    else if(tag_q_.empty())  //no tasks remaining, no communication waiting, algorithm is done
     {
       break; 
+    }
+    else
+    {
+      //no tasks on the immediate_q, tasks are on the taq_q
+      if(tags_.size()<2) 
+      {
+        throw InternalError("Not enough tags",__FILE__,__LINE__);
+      }
     }
   }
  
@@ -510,7 +520,7 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
     //broadcast patches
     MPI_Bcast(&patches[0],size*sizeof(PseudoPatch),MPI_BYTE,tasks_.front().p_group_[0],d_myworld->getComm());
   }
-  
+ 
   tasks_.clear();
 
 }
