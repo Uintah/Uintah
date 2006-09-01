@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Components/Regridder/BNRTask.h>
 #include <Packages/Uintah/CCA/Components/Regridder/PatchFixer.h>
 #include <queue>
+#include <stack>
 #include <list>
 #include <set>
 #include <fstream>
@@ -72,9 +73,9 @@ WARNING
     
     //queues for tasks
     list<BNRTask> tasks_;				    //list of tasks created throughout the run
-    queue<BNRTask*> immediate_q_;   //tasks that are always ready to run
+    stack<BNRTask*> immediate_q_;   //tasks that are always ready to run
     queue<BNRTask*> tag_q_;				  //tasks that are waiting for tags to continue
-    queue<int> tags_;							  //available tags
+    stack<int> tags_;							  //available tags
     PatchFixer patchfixer_;         //Fixup class
     IntVector d_minPatchSize;       //minimum patch size in each dimension
 
@@ -82,7 +83,7 @@ WARNING
     vector<MPI_Request> requests_;    //MPI requests
     vector<int> indicies_;            //return value from waitsome
     vector<BNRTask*> request_to_task_;//maps requests to tasks using the indicies returned from waitsome
-    queue<int>  free_requests_;       //list of free requests
+    stack<int>  free_requests_;       //list of free requests
 
     ofstream fout;                    //debug stream for outputing patches. should be moved into the debug stream.
   };
