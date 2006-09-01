@@ -316,9 +316,6 @@ FieldExtractorAlgoT<Var, T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
 //       warning("patch data thinks it needs reallocation, this will fail.");
     }
   } else {
-    if( sfield->basis_order() == 0) {
-      patch_low = patch->getCellLowIndex();
-      patch_high = patch->getCellHighIndex();
 #if 0
       cerr<<"patch_data.getLowIndex() = "<<patch_data.getLowIndex()<<"\n";
       cerr<<"patch_data.getHighIndex() = "<<patch_data.getHighIndex()<<"\n";
@@ -331,17 +328,20 @@ FieldExtractorAlgoT<Var, T>::getPatchData(QueryInfo& qinfo, IntVector& offset,
       cerr<<"getInteriorNodeLowIndex() = "<< patch->getInteriorNodeLowIndex()<<"\n";
       cerr<<"getInteriorNodeHighIndex() = "<< patch->getInteriorNodeHighIndex()<<"\n\n";
 #endif
+    if( sfield->basis_order() == 0) {
+      patch_low = patch->getCellLowIndex();
+      patch_high = patch->getCellHighIndex();
     } else if(sfield->get_property("vartype", vartype)){
       patch_low = patch->getNodeLowIndex();
       switch (vartype) {
       case TypeDescription::SFCXVariable:
-        patch_high = patch->getSFCXHighIndex();
+        patch_high = patch->getHighIndex(Patch::XFaceBased,IntVector(0,0,0));
         break;
       case TypeDescription::SFCYVariable:
-        patch_high = patch->getSFCYHighIndex();
+        patch_high = patch->getHighIndex(Patch::YFaceBased,IntVector(0,0,0));
         break;
       case TypeDescription::SFCZVariable:
-        patch_high = patch->getSFCZHighIndex();
+        patch_high = patch->getHighIndex(Patch::ZFaceBased,IntVector(0,0,0));
         break;
       default:
         patch_high = patch->getNodeHighIndex();   
@@ -405,6 +405,7 @@ FieldExtractorAlgoT<Var, T>::build_field(QueryInfo& qinfo, IntVector& offset,
   // Initialize the data
   field->fdata().initialize(T(0));
 
+
   //  WallClockTimer my_timer;
   //  my_timer.start();
   
@@ -435,6 +436,7 @@ FieldExtractorAlgoT<Var, T>::build_multi_level_field( QueryInfo& qinfo,
   // eventually return the map rather than have it as a member
   // variable to map with all the other parameters that aren't being
   // used by the class.
+  IntVector offset;
   GridP grid_minimal = build_minimal_patch_grid( qinfo.grid );
   
   if(basis_order == 0){
@@ -448,6 +450,7 @@ FieldExtractorAlgoT<Var, T>::build_multi_level_field( QueryInfo& qinfo,
       for(Level::const_patchIterator patch_it = level->patchesBegin();
           patch_it != level->patchesEnd(); ++patch_it){
       
+        
         IntVector patch_low, patch_high, range;
         BBox pbox;
         if( remove_boundary ==1 ){
@@ -467,10 +470,11 @@ FieldExtractorAlgoT<Var, T>::build_multi_level_field( QueryInfo& qinfo,
 
 
       
-        //      cerr<<"before mesh update: range is "<<range.x()<<"x"<<
-        //      range.y()<<"x"<< range.z()<<",  low index is "<<patch_low<<
-        //      "high index is "<<patch_high<<" , size is  "<<
-        //      pbox.min()<<", "<<pbox.max()<<"\n";
+//         cerr<<"before mesh update: range is "<<range.x()<<"x"<<
+//           range.y()<<"x"<< range.z()<<",  low index is "<<patch_low<<
+//           "high index is "<<patch_high<<" , size is  "<<
+//           pbox.min()<<", "<<pbox.max()<<" for Patch address "<<
+//           (*patch_it)<<"\n";
       
         LVMeshHandle mh = 0;
         FieldExtractor::update_mesh_handle(qinfo.level, patch_high, 
