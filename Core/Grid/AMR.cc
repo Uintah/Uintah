@@ -255,29 +255,48 @@ void fineLevel_CFI_Iterator(Patch::FaceType patchFace,
   const Level* fineLevel = finePatch->getLevel();
   IntVector f_l = fineLevel->mapCellToCoarser(l);     
   IntVector f_h = fineLevel->mapCellToCoarser(h) - IntVector(1,1,1);
+
+  string name = finePatch->getFaceName(patchFace);
+  if(name == "xminus" || name == "yminus" || name == "zminus"){
+    // the coarse cells we want are really one beneath the coarse cell.  This matters when 
+    // the face of the fine patch is on the border of a coarse patch face
+    f_l[pdir]--; 
+  }
+  else {
+    // same thing, but add instead of subtract (add high too, since on the high end
+    // f_l and f_h will have the same value)
+    f_l[pdir]++;
+    f_h[pdir]++;
+  }
     
   isRight_CP_FP_pair = false;
-  
+
   if ( coarsePatch->containsCell(f_l) && coarsePatch->containsCell(f_h) ){
     isRight_CP_FP_pair = true;
   }
   
-#if 0  
+#if 0
   //__________________________________
   // This is a special case test
-  // Imagine if the face of the fine patch is on the border of a coarse patch face
+  // Imagine if 
   // For example fine patch face y- and coarse patch face y+ share share a border in physical space
-  string name = finePatch->getFaceName(patchFace);
-  if(name == "xminus" || name == "yminus" || name == "zminus"){
-    if(f_low_face[pdir] == c_hi_patch[pdir]){
-      isRight_CP_FP_pair = true;
+  else {
+    if(name == "xminus" || name == "yminus" || name == "zminus"){
+      f_l[pdir]--; // the original f_l will be in the patch above this one
+      if(f_lo_face[pdir] == c_hi_patch[pdir] && coarsePatch->containsCell(f_l) && coarsePatch->containsCell(f_h) ){
+        cout << " Counting boundary patch low face " << name << " coarse: " << coarsePatch->getID() << " " << coarsePatch->getLowIndex() << " " << coarsePatch->getHighIndex() << " FP: " << finePatch->getID() << " " << finePatch->getLowIndex() << " " << finePatch->getHighIndex()<< endl;
+        isRight_CP_FP_pair = true;
+      }
     }
+    if(name == "xplus" || name == "yplus" || name == "zplus"){
+      f_l[pdir]++; // the original f_l and f_h will be in the patch beneath this one
+      f_h[pdir]++;
+      if(f_hi_face[pdir] == c_lo_patch[pdir] && coarsePatch->containsCell(f_l) && coarsePatch->containsCell(f_h) ){
+        cout << " Counting boundary patch high face " << name << " coarse: " << coarsePatch->getID() << " " << coarsePatch->getLowIndex() << " " << coarsePatch->getHighIndex() << " FP: " << finePatch->getID() << " " << finePatch->getLowIndex() << " " << finePatch->getHighIndex()<< endl;
+        isRight_CP_FP_pair = true;
+      }
+    }  
   }
-  if(name == "xplus" || name == "yplus" || name == "zplus"){
-    if(f_hi_face[pdir] == c_lo_patch[pdir]){
-      isRight_CP_FP_pair = true;
-    }
-  }  
 #endif  
   
   if (isRight_CP_FP_pair){
