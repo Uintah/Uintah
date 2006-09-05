@@ -13,7 +13,7 @@ using namespace std;
 #include<Core/Thread/Time.h>
 
 #include <Packages/Uintah/CCA/Ports/share.h>
-#include<Core/Exceptions/InternalError.h>
+#include <Core/Exceptions/InternalError.h>
 
 namespace Uintah{
 
@@ -650,7 +650,7 @@ void SFC<DIM,LOCS>::Parallel()
         sfcdebug << locs[i*DIM+DIM-1] << "] ";
       }
       sfcdebug << endl;
-      throw InternalError("Error forming local curve\n",__FILE__,__LINE__);
+      throw SCIRun::InternalError("Error forming local curve\n",__FILE__,__LINE__);
     }
   }
   
