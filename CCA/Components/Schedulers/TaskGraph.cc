@@ -1057,7 +1057,10 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
         else {
           TAU_PROFILE_START(selecttimer);
           origPatch = patch;
-          patch->getLevel()->selectPatches(low, high, neighbors);
+          if (req->numGhostCells > 0)
+            patch->getLevel()->selectPatches(low, high, neighbors);
+          else
+            neighbors.push_back(patch);
           TAU_PROFILE_STOP(selecttimer);
         }
 	ASSERT(is_sorted(neighbors.begin(), neighbors.end(),
@@ -1113,7 +1116,6 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
               from_l = Max(fromNeighbor->getLowIndex(basis, req->var->getBoundaryLayer()), l);
               from_h = Min(fromNeighbor->getHighIndex(basis, req->var->getBoundaryLayer()), h);
             }
-
             if (patch->getLevel()->getIndex() > 0 && patch != fromNeighbor && req->patches_dom == Task::NormalDomain) {
               // cull annoying overlapping AMR patch dependencies
               patch->cullIntersection(basis, req->var->getBoundaryLayer(), fromNeighbor, from_l, from_h);
@@ -1156,7 +1158,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
                          << "\n";
                     if (creator)
                       cout << "creator=" << *creator << '\n';
-                    cout << "neighbor=" << *neighbor << ", matl=" << matl << '\n';
+                    cout << "neighbor=" << *fromNeighbor << ", matl=" << matl << '\n';
                     cout << "me=" << me << '\n';
                     SCI_THROW(InternalError("Failed to find comp for dep!", __FILE__, __LINE__));
                   }
