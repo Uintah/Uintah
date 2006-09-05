@@ -1649,7 +1649,7 @@ void AMRICE::reflux_BP_zero_CFI_cells(const ProcessorGroup*,
     const Patch* coarsePatch = coarsePatches->get(c_p);
     
     Level::selectType finePatches;
-    coarsePatch->getFineLevelPatches(finePatches);
+    coarsePatch->getOtherLevelPatches(1, finePatches, 1);
 
     cout_doing << d_myworld->myrank() 
              << " Doing reflux_BP_zero_CFI_cells \t\t\t AMRICE L-"
@@ -1690,7 +1690,7 @@ void AMRICE::reflux_BP_count_CFI_cells(const ProcessorGroup*,
     const Patch* coarsePatch = coarsePatches->get(c_p);
     
     Level::selectType finePatches;
-    coarsePatch->getFineLevelPatches(finePatches);
+    coarsePatch->getOtherLevelPatches(1, finePatches, 1);
 
     cout_doing << d_myworld->myrank() 
              << " Doing reflux_BP_count_CFI_cells \t\t\t AMRICE L-"
@@ -1751,7 +1751,7 @@ void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
     const Patch* coarsePatch = coarsePatches->get(c_p);
     
     Level::selectType finePatches;
-    coarsePatch->getFineLevelPatches(finePatches);
+    coarsePatch->getOtherLevelPatches(1, finePatches, 1);
 
     cout_doing << d_myworld->myrank() 
              << " Doing reflux_BP_check_CFI_cells \t\t\t AMRICE L-"

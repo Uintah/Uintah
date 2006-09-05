@@ -731,7 +731,7 @@ void ICE::compute_refluxFluxes_RHS(const ProcessorGroup*,
       int indx = matls->get(m);
 
       Level::selectType finePatches;
-      coarsePatch->getFineLevelPatches(finePatches);
+      coarsePatch->getOtherLevelPatches(1, finePatches, 1);
       //__________________________________
       //   compute the correction
       // one_zero:  used to increment the CFI counter.
@@ -781,7 +781,7 @@ void ICE::apply_refluxFluxes_RHS(const ProcessorGroup*,
       int indx = matls->get(m);
 
       Level::selectType finePatches;
-      coarsePatch->getFineLevelPatches(finePatches); 
+      coarsePatch->getOtherLevelPatches(1, finePatches, 1); 
 
       for(int i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i];

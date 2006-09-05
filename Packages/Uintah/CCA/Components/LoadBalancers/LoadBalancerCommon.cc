@@ -27,7 +27,6 @@ using namespace Uintah;
 extern SCISHARE SCIRun::Mutex       cerrLock;
 DebugStream lbDebug( "LoadBalancer", false );
 DebugStream neiDebug("Neighborhood", false );
-DebugStream clusterDebug("Clustering", false);
 
 LoadBalancerCommon::LoadBalancerCommon(const ProcessorGroup* myworld)
    : UintahParallelComponent(myworld)
@@ -214,9 +213,6 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
   int maxGhost = 2;
   d_neighbors.clear();
 
-  if (d_myworld->myrank() == 0 && clusterDebug.active())
-    clusterDebug << *(grid.get_rep()) << endl;
-
   // go through all patches on all levels, and if the patchwise
   // processor assignment equals the current processor, then store the 
   // patch's neighbors in the load balancer array
@@ -237,19 +233,26 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
       int outputproc = (proc / d_outputNthProc)*d_outputNthProc;
       
       if(proc == me || oldproc == me || outputproc == me) {
-        Patch::selectType n, coarse, fine;
+        // one for current level, coarse level, find level, old level
+        // each call to level->selectPatches must be done with an empty patch set
+        // or otherwise it will conflict with the sorted order of the cached patches
+        Patch::selectType neighbor, coarse, fine, old;
+        vector<Patch::selectType*> n; // shortcut to not have to use the same code 4 times
+        n.push_back(&neighbor);
         IntVector ghost(maxGhost,maxGhost,maxGhost);
         
         IntVector low(patch->getLowIndex(Patch::CellBased, IntVector(0,0,0)));
         IntVector high(patch->getHighIndex(Patch::CellBased, IntVector(0,0,0)));
-        if (!d_sharedState->isCopyDataTimestep()) {
-          level->selectPatches(low-ghost, high+ghost, n);
-        }
-        else if (proc == me) {
-          // treat copy data timesteps a little differently.  We don't need neighbor patches
-          // on the same level, or anything from the new grid from the oldproc.  Then we do a 
-          // postprocess from the old grid at the end of this...
-          n.push_back(patch);
+        level->selectPatches(low-ghost, high+ghost, neighbor);
+
+        if (d_sharedState->isCopyDataTimestep() && proc == me) {
+          if (oldGrid->numLevels() > l) {
+            // on copy data timestep we need old patches that line up with this proc's patches,
+            // get the other way around at the end
+            const LevelP& oldLevel = oldGrid->getLevel(l);
+            oldLevel->selectPatches(patch->getCellLowIndex()-ghost, patch->getCellHighIndex()+ghost, old);
+            n.push_back(&old);
+          }
         }
         
         // add amr stuff - so the patch will know about coarsening and refining
@@ -262,6 +265,7 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
           IntVector ghost(ngc,ngc,ngc);
           coarseLevel->selectPatches(level->mapCellToCoarser(low) - ghost, 
                                      level->mapCellToCoarser(high) + ghost, coarse);
+          n.push_back(&coarse);
         }
         if (l < grid->numLevels()-1 && (proc == me || (oldproc == me && !d_sharedState->isCopyDataTimestep()))) {
           // we don't use ghost cells from fine patches
@@ -269,37 +273,22 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
           const LevelP& fineLevel = level->getFinerLevel();
           fineLevel->selectPatches(level->mapCellToFiner(low)-ghost, 
                                    level->mapCellToFiner(high)+ghost, fine);
+          n.push_back(&fine);
           
         }
-        for(int i=0;i<(int)n.size();i++){
-          const Patch* neighbor = n[i]->getRealPatch();
-          if(d_neighbors.find(neighbor) == d_neighbors.end())
-            d_neighbors.insert(neighbor);
-        }
-        for(int i=0;i<(int)coarse.size();i++){
-          const Patch* neighbor = coarse[i]->getRealPatch();
-          if(d_neighbors.find(neighbor) == d_neighbors.end())
-            d_neighbors.insert(neighbor);
-        }
-        for(int i=0;i<(int)fine.size();i++){
-          const Patch* neighbor = fine[i]->getRealPatch();
-          if(d_neighbors.find(neighbor) == d_neighbors.end())
-            d_neighbors.insert(neighbor);
-        }
-        if (d_myworld->myrank() == 0 && clusterDebug.active()) {
-          clusterDebug << patch->getID() << " ";
-          for (int i = 0; i < n.size(); i++)
-            if (n[i]->getID() >= 0)
-              clusterDebug << n[i]->getID() << " ";
-          clusterDebug << endl;
+        for (unsigned i = 0; i < n.size(); i++) {
+          for(int j=0;j<(*n[i]).size();j++)
+            d_neighbors.insert((*n[i])[j]->getRealPatch());
         }
       }
     }
   }
 
   if (d_sharedState->isCopyDataTimestep()) {
-    // Regrid timestep postprocess - go through the old grid and 
-    // find which patches used to be on this proc 
+    IntVector ghost(maxGhost, maxGhost, maxGhost);
+    // Regrid timestep postprocess 
+    // 1)- go through the old grid and 
+    //     find which patches used to be on this proc 
     for(int l=0;l<oldGrid->numLevels();l++){
       if (grid->numLevels() <= l)
         continue;
@@ -314,36 +303,20 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
         // it used to be (in the case of a dynamic reallocation)
         int oldproc = getOldProcessorAssignment(NULL, oldPatch, 0);
 
-        if (1||oldproc == me) {
+        if (oldproc == me) {
           // don't get extra cells or ghost cells
 	  Patch::selectType n;
-          IntVector low(oldPatch->getCellLowIndex());
-          IntVector high(oldPatch->getCellHighIndex());
-          newLevel->selectPatches(low, high, n);
+          newLevel->selectPatches(oldPatch->getCellLowIndex()-ghost, oldPatch->getCellHighIndex()+ghost, n);
+          d_neighbors.insert(oldPatch);
 
 	  for(int i=0;i<(int)n.size();i++){
-	    const Patch* neighbor = n[i]->getRealPatch();
-	    if(d_neighbors.find(neighbor) == d_neighbors.end())
-	      d_neighbors.insert(neighbor);
+            d_neighbors.insert(n[i]->getRealPatch());
 	  }
         }
       }
     }
   }
-
-  if (d_myworld->myrank() == 0 && clusterDebug.active()) {
-
-    for(int l=0;l<grid->numLevels();l++){
-      LevelP level = grid->getLevel(l);
-      
-      for(Level::const_patchIterator iter = level->patchesBegin();
-          iter != level->patchesEnd(); iter++){
-        //const Patch* patch = *iter;
-        //clusterDebug << " Patch " << patch->getID() - low_patch << ": proc " <<getPatchwiseProcessorAssignment(patch) << endl;
-      }
-    }
-  }
-  if (neiDebug.active())
+  if (neiDebug.active() && d_myworld->myrank() == 0)
     for (std::set<const Patch*>::iterator iter = d_neighbors.begin(); iter != d_neighbors.end(); iter++)
       cout << d_myworld->myrank() << "  Neighborhood: " << (*iter)->getID() << " Proc " << getPatchwiseProcessorAssignment(*iter) << endl;
 

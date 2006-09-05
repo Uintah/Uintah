@@ -1894,7 +1894,12 @@ getGridVar(GridVariable& var, const VarLabel* label, int matlIndex, const Patch*
     IntVector lowIndex, highIndex;
     patch->computeVariableExtents(basis, label->getBoundaryLayer(),
 				  gtype, numGhostCells,
-                                  neighbors, lowIndex, highIndex);
+                                  lowIndex, highIndex);
+
+    if (numGhostCells > 0)
+      patch->getLevel()->selectPatches(lowIndex, highIndex, neighbors);
+    else
+      neighbors.push_back(patch);
     if (!var.rewindow(lowIndex, highIndex)) {
       // reallocation needed
       // Ignore this if this is the initialization dw in its old state.
