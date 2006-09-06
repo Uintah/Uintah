@@ -36,7 +36,7 @@
 #include <Core/Util/Timer.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Semaphore.h>
-#include <Core/GuiInterface/TCLInterface.h>
+#include <Dataflow/GuiInterface/TCLInterface.h>
 #include <Dataflow/Network/Network.h>
 
 

@@ -18,7 +18,7 @@
 #include <Core/Datatypes/SurfTree.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Persistent/Pstreams.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 
 #include <iostream>
 using std::cerr;

@@ -51,7 +51,7 @@ SRCS     += $(SRCDIR)/ITKDatatype.cc \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
-	Core/Thread Core/Geometry Core/GuiInterface \
+	Core/Thread Core/Geometry Dataflow/GuiInterface \
 	Core/Math Core/Geom Core/Util Core/Datatypes \
   Core/Basis
 

@@ -31,7 +31,7 @@
 
 
 #include <Core/Geom/ShaderProgramARB.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/ImageMesh.h>
 

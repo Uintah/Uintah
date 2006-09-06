@@ -44,7 +44,7 @@
 #ifndef SCIRun_src_Core_GuiInterface_UIvar_h
 #define SCIRun_src_Core_GuiInterface_UIvar_h 1
 
-#include <Core/GuiInterface/GuiContext.h>
+#include <Dataflow/GuiInterface/GuiContext.h>
 #include <Core/Util/Assert.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>

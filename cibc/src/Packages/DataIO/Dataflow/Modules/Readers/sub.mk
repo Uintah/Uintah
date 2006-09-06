@@ -50,9 +50,9 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Persistent Core/Containers Core/Util \
-        Core/Exceptions Core/Thread Core/GuiInterface \
+        Core/Exceptions Core/Thread Dataflow/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry Core/GeomInterface \
-        Core/TkExtensions Dataflow/Network \
+        Dataflow/TkExtensions Dataflow/Network \
 	Packages/DataIO/Core/ThirdParty
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(HDF5_LIBRARY) $(MDSPLUS_LIBRARY) $(TEEM_LIBRARY)

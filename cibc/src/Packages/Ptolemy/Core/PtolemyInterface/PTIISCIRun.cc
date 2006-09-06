@@ -14,16 +14,16 @@
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/TCLInterface.h>
+#include <Dataflow/GuiInterface/TCLTask.h>
+#include <Dataflow/GuiInterface/TCLInterface.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>
 #include <Core/Comm/StringSocket.h>
 #include <Core/Thread/Thread.h>
 
-#include <Core/GuiInterface/GuiCallback.h>
-#include <Core/GuiInterface/GuiInterface.h>
+#include <Dataflow/GuiInterface/GuiCallback.h>
+#include <Dataflow/GuiInterface/GuiInterface.h>
 
 #include <Core/Services/ServiceLog.h>
 #include <Core/Services/ServiceDB.h>

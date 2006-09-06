@@ -16,7 +16,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Persistent/Pstreams.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 
 namespace DaveW {
 using namespace DaveW;

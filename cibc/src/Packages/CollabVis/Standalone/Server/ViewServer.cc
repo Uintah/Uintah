@@ -41,7 +41,7 @@
 #include <Dataflow/Ports/GeometryPort.h>
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Packages/CollabVis/Standalone/Server/Rendering/ZTex/Image.h>
-#include <Core/GuiInterface/TCLInterface.h>
+#include <Dataflow/GuiInterface/TCLInterface.h>
 #include <Core/Containers/StringUtil.h>
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/Connection.h>

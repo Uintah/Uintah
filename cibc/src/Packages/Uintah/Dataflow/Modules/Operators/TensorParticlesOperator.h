@@ -7,7 +7,7 @@
 #include <Uintah/Dataflow/Ports/ScalarParticlesPort.h>
 #include <Uintah/Core/Grid/Variables/ShareAssignParticleVariable.h>
 
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
 
 #include <sgi_stl_warnings_off.h>

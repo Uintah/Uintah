@@ -52,7 +52,7 @@
 #include <Core/Datatypes/QuadSurfMesh.h>
 #include <Packages/BioPSE/Core/Datatypes/SegLatVolField.h>
 #include <Packages/BioPSE/Core/Datatypes/SepSurf.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <map>
 #include <queue>
 #include <iostream>

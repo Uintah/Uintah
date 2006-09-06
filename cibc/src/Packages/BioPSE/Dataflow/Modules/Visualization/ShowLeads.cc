@@ -39,7 +39,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 
 namespace BioPSE {
 

@@ -42,7 +42,7 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Util/Timer.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/GuiInterface/UIvar.h>
+#include <Dataflow/GuiInterface/UIvar.h>
 #include <Core/Geom/Material.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>

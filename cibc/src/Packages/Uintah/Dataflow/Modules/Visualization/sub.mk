@@ -29,7 +29,7 @@ PSELIBS := \
         Core/Thread                    \
 	Core/Persistent                \
 	Core/Exceptions                \
-        Core/GuiInterface              \
+        Dataflow/GuiInterface              \
 	Core/Containers                \
 	Core/Datatypes                 \
         Core/Geom                      \

@@ -39,7 +39,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/GuiInterface/UIvar.h>
+#include <Dataflow/GuiInterface/UIvar.h>
 using namespace SCIRun;
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)

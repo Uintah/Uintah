@@ -45,7 +45,7 @@
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Containers/Array1.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <iostream>
 #include <sstream>
 

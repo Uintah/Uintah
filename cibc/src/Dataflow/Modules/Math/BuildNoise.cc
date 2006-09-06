@@ -44,7 +44,7 @@
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Core/Math/Expon.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/Math/Trig.h> // for M_PI
 #include <iostream>

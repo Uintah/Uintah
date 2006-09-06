@@ -29,39 +29,34 @@
 
 
 /*
- *  TCLTask.cc
+ *  GuiInterface.cc:
  *
  *  Written by:
- *   Michael Callahan
+ *   Steven G. Parker
  *   Department of Computer Science
  *   University of Utah
- *   March 2006
+ *   April 2002
  *
- *  Copyright (C) 2006 SCI Group
+ *  Copyright (C) 2002 SCI Group
  */
 
-#include <Core/GuiInterface/TCLTask.h>
-#include <Core/Thread/ThreadLock.h>
+#include <Dataflow/GuiInterface/GuiInterface.h>
 
 using namespace SCIRun;
 
-SCIRun::ThreadLock SCIRun::TCLTask::tcl_lock_("TCL Thread Lock");
+GuiInterface* singleton = 0;
 
-void
-TCLTask::lock()
+GuiInterface::GuiInterface()
 {
-  tcl_lock_.lock();
+  if(!singleton)
+    singleton=this;
 }
 
-void
-TCLTask::unlock()
+GuiInterface::~GuiInterface()
 {
-  tcl_lock_.unlock();
 }
 
-
-int
-TCLTask::try_lock()
+GuiInterface* GuiInterface::getSingleton()
 {
-  return tcl_lock_.try_lock();
+  return singleton;
 }

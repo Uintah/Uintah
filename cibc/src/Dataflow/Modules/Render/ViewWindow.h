@@ -43,8 +43,8 @@
 
 #include <Dataflow/Modules/Render/BallAux.h>
 #include <Dataflow/Comm/MessageBase.h>
-#include <Core/GuiInterface/GuiCallback.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiCallback.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Datatypes/Color.h>
 #include <Core/Geometry/BBox.h>

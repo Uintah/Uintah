@@ -47,7 +47,7 @@
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
-#include <Core/GuiInterface/TCLInterface.h>
+#include <Dataflow/GuiInterface/TCLInterface.h>
 #include <SCIRun/Dataflow/SCIRunComponentDescription.h>
 #include <SCIRun/Dataflow/SCIRunComponentInstance.h>
 #include <SCIRun/SCIRunFramework.h>

@@ -32,7 +32,7 @@ LOG
 #include <Dataflow/Network/Module.h> 
 #include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
-#include <Core/GuiInterface/GuiVar.h> 
+#include <Dataflow/GuiInterface/GuiVar.h> 
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <vector>

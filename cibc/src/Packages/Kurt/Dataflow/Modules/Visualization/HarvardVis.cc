@@ -29,8 +29,8 @@
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/GuiInterface/GuiContext.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiContext.h>
 #include <Core/Datatypes/CurveField.h>
 #include <Core/Datatypes/CurveMesh.h>
 

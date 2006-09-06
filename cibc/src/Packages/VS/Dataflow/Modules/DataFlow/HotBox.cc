@@ -37,7 +37,7 @@
 #include <Core/Geom/GeomTransform.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Geom/GeomSticky.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Pstreams.h>
 

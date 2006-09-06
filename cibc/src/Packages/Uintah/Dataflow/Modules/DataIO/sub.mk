@@ -21,7 +21,7 @@ PSELIBS := \
 	Core/Exceptions    \
 	Core/Geom          \
 	Core/GeomInterface \
-	Core/GuiInterface  \
+	Dataflow/GuiInterface  \
 	Core/Persistent    \
 	Core/Thread       
 

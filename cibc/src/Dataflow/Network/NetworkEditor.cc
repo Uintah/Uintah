@@ -62,9 +62,9 @@
 #include <Core/XMLUtil/XMLUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/GuiInterface/GuiCallback.h>
-#include <Core/GuiInterface/GuiInterface.h>
-#include <Core/GuiInterface/TCLTask.h>
+#include <Dataflow/GuiInterface/GuiCallback.h>
+#include <Dataflow/GuiInterface/GuiInterface.h>
+#include <Dataflow/GuiInterface/TCLTask.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/sci_system.h>

@@ -46,7 +46,7 @@
  *   Input port must be of type SimpleIPort
  */
 
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Persistent/Pstreams.h>

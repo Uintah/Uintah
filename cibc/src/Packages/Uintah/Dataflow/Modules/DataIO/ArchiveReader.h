@@ -33,7 +33,7 @@ LOG
 #include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 #include <Dataflow/Network/Module.h> 
-#include <Core/GuiInterface/GuiVar.h> 
+#include <Dataflow/GuiInterface/GuiVar.h> 
 
 namespace Uintah {
 

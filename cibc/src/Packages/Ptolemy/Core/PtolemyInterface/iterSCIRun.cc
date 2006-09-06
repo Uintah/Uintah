@@ -32,8 +32,8 @@
 
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Runnable.h>
-#include <Core/GuiInterface/GuiCallback.h>
-#include <Core/GuiInterface/GuiInterface.h>
+#include <Dataflow/GuiInterface/GuiCallback.h>
+#include <Dataflow/GuiInterface/GuiInterface.h>
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/Module.h>

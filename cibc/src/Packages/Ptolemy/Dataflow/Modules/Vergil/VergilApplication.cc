@@ -32,7 +32,7 @@
  */
 
 #include <Dataflow/Network/Module.h>     // module base class
-#include <Core/GuiInterface/GuiVar.h>    // GUI data interface
+#include <Dataflow/GuiInterface/GuiVar.h>    // GUI data interface
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/Assert.h>

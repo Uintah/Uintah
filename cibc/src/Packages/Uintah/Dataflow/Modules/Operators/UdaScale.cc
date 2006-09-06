@@ -10,7 +10,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/GuiInterface/GuiVar.h> 
+#include <Dataflow/GuiInterface/GuiVar.h> 
 #include <Packages/Uintah/Core/Datatypes/Archive.h>
 #include <Packages/Uintah/Core/DataArchive/DataArchive.h>
 #include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>

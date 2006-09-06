@@ -46,7 +46,6 @@ SUBDIRS := \
 	$(SRCDIR)/Geom \
 	$(SRCDIR)/GeomInterface \
 	$(SRCDIR)/Geometry \
-	$(SRCDIR)/GuiInterface \
 	$(SRCDIR)/ImportExport \
 	$(SRCDIR)/Init \
 	$(SRCDIR)/Malloc \
@@ -57,7 +56,6 @@ SUBDIRS := \
 	$(SRCDIR)/Skinner \
 	$(SRCDIR)/SystemCall \
 	$(SRCDIR)/Thread \
-	$(SRCDIR)/TkExtensions \
 	$(SRCDIR)/Util \
 	$(SRCDIR)/Volume \
 	$(SRCDIR)/ICom \

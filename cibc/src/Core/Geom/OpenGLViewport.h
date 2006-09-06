@@ -49,11 +49,11 @@ using std::string;
 
 namespace SCIRun {
 
-class TkOpenGLContext;
+class OpenGLContext;
 
 class SCISHARE OpenGLViewport {
 private:
-  TkOpenGLContext *	context_;
+  OpenGLContext *	context_;
   float			x_;
   float			y_;
   float			width_;

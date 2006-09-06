@@ -27,36 +27,58 @@
 */
 
 
-
 /*
- *  GuiInterface.cc:
+ *  GuiVar.cc: Interface to TCL variables
  *
  *  Written by:
  *   Steven G. Parker
  *   Department of Computer Science
  *   University of Utah
- *   April 2002
+ *   September 1994
  *
- *  Copyright (C) 2002 SCI Group
+ *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/GuiInterface/GuiInterface.h>
-
+#include <Dataflow/GuiInterface/GuiVar.h>
+#include <Core/Geometry/Point.h>
+#include <Core/Geometry/Vector.h>
 using namespace SCIRun;
 
-GuiInterface* singleton = 0;
+#include <iostream>
+using namespace std;
 
-GuiInterface::GuiInterface()
-{
-  if(!singleton)
-    singleton=this;
-}
-
-GuiInterface::~GuiInterface()
+GuiVar::GuiVar(GuiContext* ctx)
+  : ctx(ctx)
 {
 }
 
-GuiInterface* GuiInterface::getSingleton()
+GuiVar::~GuiVar()
 {
-  return singleton;
+  if (ctx) delete ctx;
 }
+
+void GuiVar::reset()
+{
+  ASSERT(ctx);
+  ctx->reset();
+}
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+/*
+cc-1468 CC: REMARK File = ../src/Core/Datatypes/cd_templates_fields_0.cc, Line = 11
+  Inline function "SCIRun::FData3d<SCIRun::Tensor>::end" cannot be explicitly
+          instantiated.
+*/
+#pragma set woff 1468
+#endif
+
+template class GuiSingle<string>;
+template class GuiSingle<double>;
+template class GuiSingle<int>;
+template class GuiTriple<Point>;
+template class GuiTriple<Vector>;
+
+
+#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
+#pragma reset woff 1468
+#endif

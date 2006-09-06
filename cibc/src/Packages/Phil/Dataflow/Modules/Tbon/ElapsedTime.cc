@@ -9,7 +9,7 @@
 */
 
 #include <Core/Util/NotFinished.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
 
 #include <unistd.h>

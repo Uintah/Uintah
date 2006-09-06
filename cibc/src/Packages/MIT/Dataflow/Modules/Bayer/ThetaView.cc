@@ -17,8 +17,8 @@
 #include <Core/Containers/Array2.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/TCL.h>
+#include <Dataflow/GuiInterface/TCLTask.h>
+#include <Dataflow/GuiInterface/TCL.h>
 #include <Packages/MIT/Core/Datatypes/MetropolisData.h>
 #include <Packages/MIT/Dataflow/Ports/MetropolisPorts.h>
 

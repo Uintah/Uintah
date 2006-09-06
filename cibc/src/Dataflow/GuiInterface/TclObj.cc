@@ -40,9 +40,9 @@
  *  Copyright (C) 2001 SCI Group
  */
 
-#include <Core/GuiInterface/TclObj.h>
+#include <Dataflow/GuiInterface/TclObj.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiInterface.h>
+#include <Dataflow/GuiInterface/GuiInterface.h>
 
 #include <stdio.h>
 #include <iostream>

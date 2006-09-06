@@ -43,7 +43,7 @@ SUBDIRS := \
 	$(SRCDIR)/Nrrd
 
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
-	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
+	Core/Thread Core/Geometry Core/Geom Dataflow/GuiInterface \
 	Core/Math Core/Util Core/Datatypes
 
 LIBS := $(BLT_LIBRARY) $(ITCL_LIBRARY) $(TCL_LIBRARY) $(TK_LIBRARY) \

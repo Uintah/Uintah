@@ -37,8 +37,10 @@ SUBDIRS := \
 	$(SRCDIR)/Comm \
 	$(SRCDIR)/Constraints \
 	$(SRCDIR)/GUI \
+	$(SRCDIR)/GuiInterface \
 	$(SRCDIR)/Modules \
 	$(SRCDIR)/Network \
+	$(SRCDIR)/TkExtensions \
 	$(SRCDIR)/TCLThread \
 	$(SRCDIR)/Widgets \
 #	$(SRCDIR)/XMLUtil \

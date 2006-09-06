@@ -33,7 +33,7 @@
 // all the module stuff
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Packages/rtrt/Dataflow/Ports/ScenePort.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 

@@ -33,7 +33,7 @@
 #define TKOPENGLEVENTSPAWNER_H
 
 
-#include <Core/GuiInterface/GuiCallback.h>
+#include <Dataflow/GuiInterface/GuiCallback.h>
 #include <Core/Events/EventSpawner.h>
 
 namespace SCIRun {

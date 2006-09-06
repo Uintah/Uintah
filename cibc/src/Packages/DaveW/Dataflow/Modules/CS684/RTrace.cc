@@ -35,9 +35,9 @@
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/GuiInterface/TCL.h>
+#include <Dataflow/GuiInterface/TCLTask.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/TCL.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/Timer.h>

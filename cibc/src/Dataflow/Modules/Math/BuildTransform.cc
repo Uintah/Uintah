@@ -49,7 +49,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Expon.h>
 #include <Core/Math/Trig.h> // for M_PI
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <iostream>

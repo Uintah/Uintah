@@ -52,7 +52,7 @@
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Geometry/BBox.h>
-#include <Core/GuiInterface/UIvar.h>
+#include <Dataflow/GuiInterface/UIvar.h>
 #include <vector>
 #include <map>
 

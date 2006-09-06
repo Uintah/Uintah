@@ -47,7 +47,7 @@
 #include <Dataflow/Network/Scheduler.h>
 #include <Dataflow/TCLThread/TCLThread.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/GuiInterface/TCLInterface.h>
+#include <Dataflow/GuiInterface/TCLInterface.h>
 #include <Core/Init/init.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>

@@ -37,7 +37,7 @@ LOG
 #include <Core/Datatypes/MultiLevelField.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Geometry/Point.h>
-#include <Core/GuiInterface/GuiVar.h> 
+#include <Dataflow/GuiInterface/GuiVar.h> 
 #include <Core/Math/MinMax.h>
 #include <Core/Util/Timer.h>
 #include <Core/Util/TypeDescription.h>

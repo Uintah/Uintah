@@ -35,7 +35,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <vector>
 #include <string>
 #include <fstream>

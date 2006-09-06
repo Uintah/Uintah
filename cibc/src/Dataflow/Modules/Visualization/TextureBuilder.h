@@ -1,8 +1,8 @@
 #if !defined(TEXTURE_BUILDER_H)
 #define TEXTURE_BUILDER_H
 
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/GuiInterface/GuiContext.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiContext.h>
 #include <Core/Volume/Texture.h>
 #include <Dataflow/Network/Module.h>
 

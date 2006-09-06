@@ -37,7 +37,7 @@
 #include <Dataflow/Modules/Fields/SelectField.h>
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <Core/Datatypes/Clipper.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 
 #include <iostream>
 #include <stdio.h>

@@ -41,8 +41,8 @@
  */
 
 #include <Core/Geom/GuiGeom.h>
-#include <Core/GuiInterface/GuiContext.h>
-#include <Core/GuiInterface/GuiInterface.h>
+#include <Dataflow/GuiInterface/GuiContext.h>
+#include <Dataflow/GuiInterface/GuiInterface.h>
 #include <Core/Datatypes/Color.h>
 #include <Core/Geom/Material.h>
 using namespace SCIRun;

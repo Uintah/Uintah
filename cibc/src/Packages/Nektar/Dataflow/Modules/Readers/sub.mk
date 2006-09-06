@@ -17,7 +17,7 @@ SRCS     += \
 
 PSELIBS := Dataflow/Network Core/Datatypes Core/Datatypes \
 	Core/Persistent Core/Exceptions Core/Thread \
-	Core/Containers Core/GuiInterface Core/Geom
+	Core/Containers Dataflow/GuiInterface Core/Geom
 LIBS := $(NEKTAR_LIBRARY)  
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

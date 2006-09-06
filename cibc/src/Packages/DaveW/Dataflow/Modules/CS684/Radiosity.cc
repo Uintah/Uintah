@@ -34,7 +34,7 @@
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MinMax.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 
 #include <map.h>
 #include <iostream>

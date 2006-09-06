@@ -35,14 +35,14 @@
  *
  */
 
-#include <Core/Geom/TkOpenGLContext.h>
+#include <Dataflow/TkExtensions/TkOpenGLContext.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/Color.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Core/GuiInterface/GuiInterface.h>
-#include <Core/GuiInterface/TCLInterface.h>
-#include <Core/GuiInterface/TclObj.h>
-#include <Core/GuiInterface/TCLTask.h>
+#include <Dataflow/GuiInterface/GuiInterface.h>
+#include <Dataflow/GuiInterface/TCLInterface.h>
+#include <Dataflow/GuiInterface/TclObj.h>
+#include <Dataflow/GuiInterface/TCLTask.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h> // for SWAP
 #include <Core/Thread/Mutex.h>

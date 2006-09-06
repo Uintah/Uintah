@@ -47,7 +47,7 @@
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/QuadSurfMesh.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <map>
 #include <queue>
 #include <iostream>

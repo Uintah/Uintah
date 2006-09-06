@@ -51,7 +51,7 @@
 #include <Core/Geom/GeomSwitch.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <iostream>
 #include <vector>

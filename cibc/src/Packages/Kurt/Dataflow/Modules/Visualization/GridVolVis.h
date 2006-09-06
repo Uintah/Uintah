@@ -25,7 +25,7 @@
 
 #include <Packages/Kurt/Core/Geom/BrickGrid.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>

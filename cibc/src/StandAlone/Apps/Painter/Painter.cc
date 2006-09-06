@@ -62,10 +62,10 @@
 #include <Core/Geom/GeomCull.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/TexSquare.h>
-#include <Core/Geom/TkOpenGLContext.h>
+#include <Dataflow/TkExtensions/TkOpenGLContext.h>
 #include <Core/Geom/OpenGLViewport.h>
 #include <Core/Geom/FreeType.h>
-#include <Core/GuiInterface/UIvar.h>
+#include <Dataflow/GuiInterface/UIvar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
@@ -77,7 +77,7 @@
 #include <Core/Geom/TextRenderer.h>
 #include <Core/Geom/FontManager.h>
 #include <Core/Util/SimpleProfiler.h>
-#include <Core/GuiInterface/TCLKeysyms.h>
+#include <Dataflow/GuiInterface/TCLKeysyms.h>
 #include <Core/Skinner/Variables.h>
 #include <Core/Events/EventManager.h>
 #include <Core/Util/FileUtils.h>

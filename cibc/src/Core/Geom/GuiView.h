@@ -47,7 +47,7 @@
 
 #include <Core/Geom/View.h>
 #include <Core/Geom/GuiGeom.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 
 #include <Core/Geom/share.h>
 

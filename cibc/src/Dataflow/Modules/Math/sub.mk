@@ -67,11 +67,11 @@ PSELIBS := \
 	Core/GeomInterface \
 	Core/Geometry      \
 	Core/Containers    \
-	Core/GuiInterface  \
+	Dataflow/GuiInterface  \
 	Core/Math          \
 	Core/Persistent    \
 	Core/Thread        \
-	Core/TkExtensions  \
+	Dataflow/TkExtensions  \
 	Core/Util          \
 	Dataflow/Network   \
 	Dataflow/Widgets

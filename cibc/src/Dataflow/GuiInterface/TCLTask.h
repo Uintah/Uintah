@@ -27,30 +27,22 @@
 */
 
 
-
+ 
 /*
- *  GuiCallback.h: Interface to user interface
+ *  TCLTask.h:  Handle TCL
  *
  *  Written by:
  *   Steven G. Parker
  *   Department of Computer Science
  *   University of Utah
- *   April 2002
+ *   August 1994
  *
  *  Copyright (C) 1994 SCI Group
  */
 
-#ifndef SCIRun_Core_GuiInterface_GuiCallback_h
-#define SCIRun_Core_GuiInterface_GuiCallback_h
+#ifndef SCI_project_TCLTask_h
+#define SCI_project_TCLTask_h 1
 
-#include <Core/GuiInterface/TCLTask.h> // for TCLCONST
-
-#include <sgi_stl_warnings_off.h>
-#include <vector>
-#include <string>
-#include <sgi_stl_warnings_on.h>
-
-// find a more 'consolidated' place to put this...
 #include <tcl.h>
 #if (TCL_MINOR_VERSION >= 4)
 #define TCLCONST const
@@ -58,46 +50,21 @@
 #define TCLCONST
 #endif
 
-#include <Core/GuiInterface/share.h>
+#include <Dataflow/GuiInterface/share.h>
 
 namespace SCIRun {
 
-  using std::string;
-  using std::vector;
+class ThreadLock;
 
-  class GuiVar;
-
-  class SCISHARE GuiArgs {
-    vector<string> args_;
-  public:
-    bool have_error_;
-    bool have_result_;
-    string string_;
-    
-    GuiArgs(int argc, TCLCONST char* argv[]);
-    ~GuiArgs();
-    int count();
-    string operator[](int i);
-    string get_string(int i);
-    int get_int(int i);
-    double get_double(int i);
-    
-    void error(const string&);
-    void result(const string&);
-    void append_result(const string&);
-    void append_element(const string&);
-
-    static string make_list(const string&, const string&);
-    static string make_list(const string&, const string&, const string&);
-    static string make_list(const vector<string>&);
-  };
-
-  class SCISHARE GuiCallback {
-  public:
-    GuiCallback();
-    virtual ~GuiCallback();
-    virtual void tcl_command(GuiArgs&, void*)=0;
-  };
+class SCISHARE TCLTask {
+private:
+    static ThreadLock           tcl_lock_;
+public:
+    static void lock();
+    static void unlock();
+    static int  try_lock();
+};
+  
 } // End namespace SCIRun
 
 

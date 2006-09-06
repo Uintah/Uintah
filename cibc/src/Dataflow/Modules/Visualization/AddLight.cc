@@ -37,7 +37,7 @@
 
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/CrowdMonitor.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Core/Geom/PointLight.h>

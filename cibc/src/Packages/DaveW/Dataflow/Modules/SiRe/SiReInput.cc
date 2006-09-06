@@ -17,7 +17,7 @@
 #include <Core/Datatypes/VoidStar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Persistent/Pstreams.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Tester/RigorousTest.h>
 
 #include <iostream>

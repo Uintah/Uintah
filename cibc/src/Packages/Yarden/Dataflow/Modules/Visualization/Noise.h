@@ -23,7 +23,7 @@
 #include <Dataflow/Network/Ports/ScalarFieldPort.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/Thread.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Geom/Material.h>
 
 #include <Packages/Yarden/Dataflow/Ports/SpanPort.h>

@@ -16,8 +16,8 @@ SRCS     += \
 PSELIBS := Dataflow/Network Core/Datatypes Dataflow/Comm \
 	Core/Persistent Core/Exceptions Core/Geometry \
 	Core/Geom Core/Thread Core/Containers \
-	Core/GuiInterface Core/TkExtensions Core/Util \
-	Core/TkExtensions Core/Datatypes \
+	Dataflow/GuiInterface Dataflow/TkExtensions Core/Util \
+	Dataflow/TkExtensions Core/Datatypes \
 	Dataflow/Modules/Salmon SCICore/OS Remote/Tools
 
 LIBS := $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY)

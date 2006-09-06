@@ -44,7 +44,7 @@
 
 #include <Dataflow/Network/Ports/MatrixPort.h>
 
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 
 #include <Packages/DataIO/share/share.h>
 

@@ -53,8 +53,8 @@ SRCS     += \
 ifeq ($(LARGESOS),yes)
     PSELIBS := Dataflow Core
 else
-    PSELIBS := Core/Datatypes Dataflow/Network Core/Containers Core/GuiInterface \
-               Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
+    PSELIBS := Core/Datatypes Dataflow/Network Core/Containers Dataflow/GuiInterface \
+               Core/Thread Core/Exceptions Core/Util Dataflow/TkExtensions Core/Comm \
                Core/Malloc Core/Services Core/XMLUtil Core/SystemCall \
                Dataflow/Modules/Render \
                Packages/Ptolemy/Core/Datatypes

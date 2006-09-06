@@ -48,7 +48,7 @@
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/PointCloudMesh.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <iostream>
 
 namespace SCIRun {

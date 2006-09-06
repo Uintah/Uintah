@@ -45,7 +45,7 @@
 #define _MRITissueClassifier_h_
 
 #include <Dataflow/Network/Module.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Dataflow/Network/Ports/NrrdPort.h>

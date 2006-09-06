@@ -37,7 +37,7 @@
  */
 
 #include <Dataflow/Network/ComponentNode.h>
-#include <Core/GuiInterface/GuiInterface.h>
+#include <Dataflow/GuiInterface/GuiInterface.h>
 #include <Core/XMLUtil/XMLUtil.h>
 #include <libxml/xmlreader.h>
 #include <Core/Util/RWS.h>

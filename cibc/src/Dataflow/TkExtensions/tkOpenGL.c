@@ -35,7 +35,7 @@
  */
 
 
-#include <Core/TkExtensions/tkOpenGL.h>
+#include <Dataflow/TkExtensions/tkOpenGL.h>
 #include <string.h>
 
 #if (TCL_MINOR_VERSION >= 4)

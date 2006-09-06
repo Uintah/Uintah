@@ -44,7 +44,7 @@
 #define SCIRun_Dataflow_Network_Scheduler_h
 
 #include <Dataflow/Comm/MessageBase.h>
-#include <Core/GuiInterface/GuiCallback.h>
+#include <Dataflow/GuiInterface/GuiCallback.h>
 #include <Core/Thread/Mailbox.h>
 #include <Core/Thread/Runnable.h>
 #include <string>

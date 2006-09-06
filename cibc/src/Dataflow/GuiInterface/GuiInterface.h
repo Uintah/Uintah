@@ -48,7 +48,7 @@
 #include <vector>
 #include <sgi_stl_warnings_on.h>
 
-#include <Core/GuiInterface/share.h>
+#include <Dataflow/GuiInterface/share.h>
 
 namespace SCIRun {
   using namespace std;

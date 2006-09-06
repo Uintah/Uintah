@@ -53,7 +53,7 @@
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/GuiInterface/GuiInterface.h>
+#include <Dataflow/GuiInterface/GuiInterface.h>
 #include <Core/Util/NotFinished.h>
 #include <Core/Geom/GeomStippleOccluded.h>
 #include <iostream>

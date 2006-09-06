@@ -43,7 +43,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Dataflow/Modules/Fields/MapDataToMeshCoord.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Geometry/Transform.h>

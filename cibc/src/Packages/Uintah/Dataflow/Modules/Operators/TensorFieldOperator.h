@@ -7,7 +7,7 @@
 #include <Core/Containers/FData.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Geometry/IntVector.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>

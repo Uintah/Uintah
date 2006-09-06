@@ -43,7 +43,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Packages/BioPSE/Core/Datatypes/SepSurf.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <map>
 #include <queue>
 #include <iostream>

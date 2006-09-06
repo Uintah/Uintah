@@ -11,7 +11,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Geom/ColorMap.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>

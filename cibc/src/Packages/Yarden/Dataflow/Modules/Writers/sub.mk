@@ -17,7 +17,7 @@ SRCS     += \
 
 PSELIBS := Packages/Yarden/Core Packages/Yarden/Dataflow \
 	Core/Persistent Core/Exceptions Core/Containers \
-	Core/GuiInterface Core/Thread 
+	Dataflow/GuiInterface Core/Thread 
 LIBS := 
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk
