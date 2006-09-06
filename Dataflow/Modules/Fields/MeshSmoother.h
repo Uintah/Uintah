@@ -48,6 +48,7 @@
 #include <MeshWriter.hpp>
 #include <MsqError.hpp>
 #include <InstructionQueue.hpp>
+#include <LaplacianSmoother.hpp>
 #include <SmartLaplacianSmoother.hpp>
 #include <TerminationCriterion.hpp>
 #include <TopologyInfo.hpp>
@@ -97,6 +98,8 @@ protected:
                                        FieldHandle fieldh,
                                        FieldHandle &ofieldh);
 
+  FieldHandle laplacian_smoother( ProgressReporter *reporter,
+                                  FieldHandle fieldh );  
   FieldHandle smart_laplacian_smoother( ProgressReporter *reporter,
                                         FieldHandle fieldh );
   FieldHandle shape_improvement_wrapper( ProgressReporter *reporter,
@@ -129,6 +132,10 @@ MeshSmootherAlgoShared<FIELD>::execute( ProgressReporter *reporter,
   {
     return fieldh;
   }
+  else if( scheme == "Laplacian" )
+  { 
+    return laplacian_smoother( reporter, fieldh );
+  }
   else if( scheme == "SmartLaplacian" )
   { 
     return smart_laplacian_smoother( reporter, fieldh );
@@ -145,7 +152,6 @@ MeshSmootherAlgoShared<FIELD>::execute( ProgressReporter *reporter,
 }
 
 
-
 template <class FIELD>
 bool
 MeshSmootherAlgoShared<FIELD>::compute_domain_surface( ProgressReporter *mod,
@@ -154,6 +160,81 @@ MeshSmootherAlgoShared<FIELD>::compute_domain_surface( ProgressReporter *mod,
 {
   ofieldh = 0;
   return true;
+}
+
+
+template <class FIELD>
+FieldHandle
+MeshSmootherAlgoShared<FIELD>::laplacian_smoother( ProgressReporter *mod,
+                                                   FieldHandle fieldh )
+{
+  // Need to make a copy of the field, so that the previous one is not damaged.
+  FIELD *field = dynamic_cast<FIELD*>( fieldh.get_rep() );
+  FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
+  ofield->copy_properties( fieldh.get_rep() );
+  ofield->mesh_detach();
+  
+  Mesquite::MsqError err;
+  Mesquite::IdealWeightInverseMeanRatio inverse_mean_ratio( err );
+
+  Mesquite::LaplacianSmoother* lapl1 = new Mesquite::LaplacianSmoother( err );
+
+//  Mesquite::QualityAssessor mQA( inverse_mean_ratio, Mesquite::QualityAssessor::MAXIMUM, err );
+//  Mesquite::QualityAssessor *mQA = new MeshQualityAssessor( inverse_mean_ratio, 4, err );
+  
+  // Set stopping criterion.
+  Mesquite::TerminationCriterion *m_term = new Mesquite::TerminationCriterion();
+  m_term->add_criterion_type_with_int( Mesquite::TerminationCriterion::NUMBER_OF_ITERATES, 10, err );
+  lapl1->set_outer_termination_criterion( m_term );
+  
+  Mesquite::InstructionQueue iqueue;
+//  iqueue.add_quality_assessor( mQA, err ); 
+//  MSQ_CHKERR(err);
+  iqueue.set_master_quality_improver( lapl1, err );
+//  MSQ_CHKERR(err);
+//  iqueue.add_quality_assessor( mQA, err ); 
+//  MSQ_CHKERR(err);  
+
+  if ( err )
+  {
+    cout << err << endl;
+    mod->error( "Unexpected error from Mesquite code." );
+    return field;
+  }
+
+  MesquiteMesh<FIELD> entity_mesh( ofield, mod );  
+
+  FieldHandle domain_field_h;
+  if (!compute_domain_surface( mod, fieldh, domain_field_h ))
+  {
+    return false;
+  }
+  TriSurfMesh<TriLinearLgn<Point> > *domain_mesh = 0;
+  if (domain_field_h.get_rep())
+  {
+    domain_mesh = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(domain_field_h->mesh().get_rep());
+  }
+
+  if( domain_mesh )
+  {
+    domain_mesh->synchronize(Mesh::EDGES_E | Mesh::NORMALS_E | Mesh::LOCATE_E);
+    MesquiteDomain domain( domain_mesh );
+    iqueue.run_instructions( &entity_mesh, &domain, err ); 
+  }
+  else
+  {
+    iqueue.run_instructions( &entity_mesh, err ); 
+  }
+
+  MSQ_CHKERR(err);
+  if (err)
+  {
+    mod->error( "Error occurred during Mesquite Laplacian smoothing." );
+    cout << err << endl;
+    return field;
+  }
+
+  return ofield;
 }
 
 
