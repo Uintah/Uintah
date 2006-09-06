@@ -107,6 +107,8 @@ BundleGetString::execute()
       fhandle = handle->getString(string3name);
       send_output_handle("string3",fhandle,false);
     } 
+    
+    send_output_handle("bundle",handle,false);    
   }      
 }
 

@@ -126,5 +126,7 @@ BundleGetMatrix::execute()
       fhandle = handle->getMatrix(matrix3name);
       send_output_handle("matrix3",fhandle,false);
     } 
+    
+    send_output_handle("bundle",handle,false);
   }
 }
