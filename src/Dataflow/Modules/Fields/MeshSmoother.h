@@ -164,8 +164,8 @@ MeshSmootherAlgoShared<FIELD>::smart_laplacian_smoother( ProgressReporter *mod,
 {
   // Need to make a copy of the field, so that the previous one is not damaged.
   FIELD *field = dynamic_cast<FIELD*>( fieldh.get_rep() );
-  FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
-  ofield->copy_properties( fieldh.get_rep() );
+  FIELD *ofield = field->clone();
+  ofield->copy_properties( field );
   ofield->mesh_detach();
   
   double cull_eps = 1e-4;
@@ -244,8 +244,8 @@ MeshSmootherAlgoShared<FIELD>::shape_improvement_wrapper(ProgressReporter *mod,
 {
   // Need to make a copy of the field so that this one is not damaged.
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
-  FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
-  ofield->copy_properties( fieldh.get_rep() );
+  FIELD *ofield = field->clone();
+  ofield->copy_properties( field );
   ofield->mesh_detach();
 
   // Arbitrary defined variables.
