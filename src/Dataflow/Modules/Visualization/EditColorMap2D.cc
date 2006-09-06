@@ -48,7 +48,7 @@
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Geom/ColorMap.h>
-#include <Dataflow/TkExtensions/TkOpenGLContext.h>
+#include <Dataflow/GuiInterface/TkOpenGLContext.h>
 #include <Core/Util/Endian.h>
 #include <stdio.h>
 #include <stack>

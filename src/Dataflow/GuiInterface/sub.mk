@@ -43,11 +43,15 @@ SRCS     += $(SRCDIR)/GuiCallback.cc \
 	$(SRCDIR)/TCLInterface.cc \
 	$(SRCDIR)/TclObj.cc \
 	$(SRCDIR)/TCLTask.cc \
-	$(SRCDIR)/UIvar.cc
+	$(SRCDIR)/UIvar.cc \
+	$(SRCDIR)/TkOpenGLContext.cc	    		\
+	$(SRCDIR)/TkOpenGLEventSpawner.cc    		\
+
 
 PSELIBS := Core/Exceptions Core/Util Core/Thread \
-		Core/Containers Dataflow/TkExtensions Core/Math
-LIBS := $(ITK_LIBRARY) $(ITCL_LIBRARY) $(TCL_LIBRARY) $(X_LIBRARY) $(TEEM_LIBRARY)
+	   Core/Containers Dataflow/TkExtensions \
+	   Core/Math Core/Geom Core/Datatypes
+LIBS := $(ITK_LIBRARY) $(ITCL_LIBRARY) $(TCL_LIBRARY) $(X_LIBRARY) $(TEEM_LIBRARY) $(GL_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

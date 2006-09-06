@@ -44,7 +44,7 @@
 #include <Core/Datatypes/Color.h>
 #include <Core/Math/MinMax.h>
 
-#include <Dataflow/TkExtensions/TkOpenGLContext.h>
+#include <Dataflow/GuiInterface/TkOpenGLContext.h>
 #include <tcl.h>
 #include <tk.h>
 
