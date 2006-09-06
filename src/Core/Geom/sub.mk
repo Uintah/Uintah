@@ -91,6 +91,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/Material.cc		    		\
 	$(SRCDIR)/NrrdTextureObj.cc	    		\
 	$(SRCDIR)/OpenGLContext.cc	    		\
+	$(SRCDIR)/OpenGLViewport.cc	    		\
 	$(SRCDIR)/Path.cc		    		\
 	$(SRCDIR)/Pbuffer.cc		    		\
 	$(SRCDIR)/PointLight.cc		    		\

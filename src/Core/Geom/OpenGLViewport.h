@@ -62,7 +62,7 @@ private:
 
   void			check_bounds();
 public:
-  OpenGLViewport(TkOpenGLContext *ctx=0, 
+  OpenGLViewport(OpenGLContext *ctx=0, 
 		 float x = 0.0, float y = 0.0, 
 		 float w = 1.0, float h = 1.0);
 
