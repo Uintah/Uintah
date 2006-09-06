@@ -52,8 +52,8 @@
 #include <Core/Thread/FutureValue.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomPick.h>
-#include <Core/Geom/GuiGeom.h>
-#include <Core/Geom/GuiView.h>
+#include <Dataflow/GuiInterface/GuiGeom.h>
+#include <Dataflow/GuiInterface/GuiView.h>
 #include <Core/Geom/View.h>
 #include <map>
 

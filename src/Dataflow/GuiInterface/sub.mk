@@ -35,8 +35,10 @@ SRCDIR   := Dataflow/GuiInterface
 
 SRCS     += $(SRCDIR)/GuiCallback.cc \
 	$(SRCDIR)/GuiContext.cc \
+	$(SRCDIR)/GuiGeom.cc \
 	$(SRCDIR)/GuiInterface.cc \
 	$(SRCDIR)/GuiVar.cc \
+	$(SRCDIR)/GuiView.cc \
 	$(SRCDIR)/MemStats.cc \
 	$(SRCDIR)/TCLInterface.cc \
 	$(SRCDIR)/TclObj.cc \

@@ -53,7 +53,7 @@
 #include <Core/GeomInterface/Pickable.h>
 #include <Core/Geom/GeomPick.h>
 #include <Core/Geom/GeomSwitch.h>
-#include <Core/Geom/GuiGeom.h>
+#include <Dataflow/GuiInterface/GuiGeom.h>
 #include <Dataflow/GuiInterface/GuiCallback.h>
 #include <Dataflow/GuiInterface/GuiVar.h>
 

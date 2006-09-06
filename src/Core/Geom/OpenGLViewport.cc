@@ -41,8 +41,6 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/Color.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Dataflow/GuiInterface/GuiInterface.h>
-#include <Dataflow/GuiInterface/TclObj.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Thread/Mutex.h>

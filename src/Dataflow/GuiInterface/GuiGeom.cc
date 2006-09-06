@@ -40,7 +40,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/Geom/GuiGeom.h>
+#include <Dataflow/GuiInterface/GuiGeom.h>
 #include <Dataflow/GuiInterface/GuiContext.h>
 #include <Dataflow/GuiInterface/GuiInterface.h>
 #include <Core/Datatypes/Color.h>
