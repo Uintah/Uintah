@@ -209,8 +209,8 @@ ENDIF(WIN32)
 #-----------------------------------------------------------------------------
 # Z lib
 IF(WIN32 AND NOT CYGWIN)
-  SET(ZLIB_LIBRARY ${SCI_THIRDPARTY_DIR}/lib/z)
-  SET(ZLIB_INCLUDE ${SCI_THIRDPARTY_DIR}/include)
+  SET(ZLIB_LIBRARY ${SCIRUN_THIRDPARTY_PATH}/lib/z)
+  SET(ZLIB_INCLUDE ${SCIRUN_THIRDPARTY_PATH}/include)
 ELSE(WIN32 AND NOT CYGWIN)
   FIND_PACKAGE( ZLIB )
 ENDIF(WIN32 AND NOT CYGWIN)
@@ -231,13 +231,13 @@ ENDIF(WITH_PNG)
 #-----------------------------------------------------------------------------
 # DV XML2 FROM 3P FOR NOW
 FIND_LIBRARY(XML2_LIBRARY xml2
-            ${SCI_THIRDPARTY_DIR}/lib/
+            ${SCIRUN_THIRDPARTY_PATH}/lib/
             /usr/local/lib
             /usr/lib
             /lib)
-FIND_PATH(XML2_INCLUDE libxml2/libxml/
-           ${SCIRUN_THIRDPARTY_PATH}/include
-           /usr/local/include
+FIND_PATH(XML2_INCLUDE libxml/xmlreader.h
+           ${SCIRUN_THIRDPARTY_PATH}/include/libxml2/
+           /usr/local/include/libxml2
            /usr/include
            /include)
 SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${XML2_INCLUDE})
@@ -250,7 +250,7 @@ SET(TK_VERSION 8.3)
 #-----------------------------------------------------------------------------
 # ITK library
 FIND_LIBRARY(ITK_LIBRARY itk
-             ${SCI_THIRDPARTY_DIR}/lib/
+             ${SCIRUN_THIRDPARTY_PATH}/lib/
              /usr/local/lib
              /usr/lib
              /lib)
@@ -263,7 +263,7 @@ SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${ITK_INCLUDE})
 #-----------------------------------------------------------------------------
 # ITCL library
 FIND_LIBRARY(ITCL_LIBRARY itcl
-             ${SCI_THIRDPARTY_DIR}/lib/
+             ${SCIRUN_THIRDPARTY_PATH}/lib/
              /usr/local/lib
              /usr/lib
              /lib)
@@ -277,7 +277,7 @@ SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${ITCL_INCLUDE})
 #-----------------------------------------------------------------------------
 # TK library
 FIND_LIBRARY(TK_LIBRARY tk
-             ${SCI_THIRDPARTY_DIR}/lib/
+             ${SCIRUN_THIRDPARTY_PATH}/lib/
              /usr/local/lib
              /usr/lib
              /lib)
@@ -294,7 +294,7 @@ SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${TK_INCLUDE1} ${TK_I
 #-----------------------------------------------------------------------------
 # TCL library
 FIND_LIBRARY(TCL_LIBRARY tcl
-             ${SCI_THIRDPARTY_DIR}/lib/
+             ${SCIRUN_THIRDPARTY_PATH}/lib/
              /usr/local/lib
              /usr/lib
              /lib)
@@ -305,7 +305,7 @@ FIND_PATH(TCL_INCLUDE1 tcl.h
            /include)
 
 FIND_PATH(TCL_INCLUDE2 tclMath.h
-           ${SCIRUN_THIRDPARTY_PATH}/src/tk8.3.4/generic
+           ${SCIRUN_THIRDPARTY_PATH}/src/tcl/generic
            /usr/local/include
            /usr/include
            /include)
@@ -314,8 +314,8 @@ SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${TCL_INCLUDE1} ${TCL
 
 #-----------------------------------------------------------------------------
 # blt lib
-FIND_LIBRARY(BLT_LIBRARY blt
-             ${SCI_THIRDPARTY_DIR}/lib/
+FIND_LIBRARY(BLT_LIBRARY BLT
+             ${SCIRUN_THIRDPARTY_PATH}/lib/
              /usr/local/lib
              /usr/lib
              /lib)
@@ -342,12 +342,12 @@ ENDIF(OPENGL_LIBRARIES AND OPENGL_INCLUDE_DIR)
 #-----------------------------------------------------------------------------
 # Freetype
 FIND_LIBRARY(FREETYPE_LIBRARY freetype
-             ${SCI_THIRDPARTY_DIR}/lib/
+             ${SCIRUN_THIRDPARTY_PATH}/lib/
              /usr/local/lib
              /usr/lib
              /lib)
-FIND_PATH(FREETYPE_INCLUDE freetype.h
-           ${SCIRUN_THIRDPARTY_PATH}/include/freetype2
+FIND_PATH(FREETYPE_INCLUDE freetype/freetype.h
+           ${SCIRUN_THIRDPARTY_PATH}/include/freetype2/
            /usr/local/include
            /usr/include
            /include)
@@ -364,7 +364,7 @@ ENDIF(X11_FOUND)
 #-----------------------------------------------------------------------------
 # Glew
 FIND_LIBRARY(GLEW_LIBRARY GLEW glew32
-             ${SCI_THIRDPARTY_DIR}/lib/
+             ${SCIRUN_THIRDPARTY_PATH}/lib/
              /usr/local/lib
              /usr/lib
              /lib)
@@ -381,12 +381,12 @@ SET(DEF_GLEW "#define HAVE_GLEW 1")
 # DV MPEG FROM 3P FOR NOW
 # DV need to make this optional (at least for windows)
 IF(NOT WIN32)
-  FIND_LIBRARY(MPEG_LIBRARY mpeg
-              ${SCI_THIRDPARTY_DIR}/lib/
+  FIND_LIBRARY(MPEG_LIBRARY mpege
+              ${SCIRUN_THIRDPARTY_PATH}/lib/
               /usr/local/lib
               /usr/lib
               /lib)
-  FIND_PATH(MPEG_INCLUDE mpeg.h
+  FIND_PATH(MPEG_INCLUDE mpege.h
              ${SCIRUN_THIRDPARTY_PATH}/include
              /usr/local/include
              /usr/include
@@ -436,11 +436,11 @@ IF(PACKAGES)
 ELSE(PACKAGES)
   SET(LOAD_PACKAGE "SCIRun" CACHE STRING "Just loading SCIRun")
 ENDIF(PACKAGES)
-SET(ITCL_WIDGETS ${SCI_THIRDPARTY_DIR}/iwidgets/scripts CACHE INTERNAL "Path to iwidgets scripts")
+SET(ITCL_WIDGETS ${SCIRUN_THIRDPARTY_PATH}/iwidgets/scripts CACHE INTERNAL "Path to iwidgets scripts")
 
 # DV maybe this shouldn't be alterable?
 MARK_AS_ADVANCED(LOAD_PACKAGE)
-SET(LIB_DIR_ITCL ${SCI_THIRDPARTY_DIR})
+SET(LIB_DIR_ITCL ${SCIRUN_THIRDPARTY_PATH})
 
 # sci_defs/error_defs.h
 SET(THROW_LEVEL 0 CACHE STRING "Set throw level N(0-3)")
