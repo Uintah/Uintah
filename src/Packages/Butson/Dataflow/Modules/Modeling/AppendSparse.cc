@@ -29,7 +29,7 @@
 
 #include <Core/Datatypes/SparseRowMatrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <iostream>
 #include <sstream>
 

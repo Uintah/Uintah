@@ -33,8 +33,8 @@
 #include	<Packages/Ptolemy/Core/Comm/NetworkHelper.h>
 #include <Packages/Ptolemy/Core/Comm/PTstring.h>
 
-#include <Core/GuiInterface/GuiCallback.h>
-#include <Core/GuiInterface/GuiInterface.h>
+#include <Dataflow/GuiInterface/GuiCallback.h>
+#include <Dataflow/GuiInterface/GuiInterface.h>
 #include <Core/Thread/Thread.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/NetworkEditor.h>

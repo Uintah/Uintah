@@ -32,7 +32,7 @@
 #include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 
 namespace SCIRun{

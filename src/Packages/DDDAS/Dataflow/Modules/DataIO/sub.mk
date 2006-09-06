@@ -18,8 +18,8 @@ SRCS     += \
 
 PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Persistent Core/Containers Core/Util \
-        Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/Geometry Core/TkExtensions \
+        Core/Exceptions Core/Thread Dataflow/GuiInterface \
+        Core/Geom Core/Geometry Dataflow/TkExtensions \
 	Packages/DDDAS/Core/Datatypes Packages/DDDAS/Core/Utils \
 
 #INCLUDES += $(SCISOCK_INCLUDE)

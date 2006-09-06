@@ -48,7 +48,7 @@
 
 #include <Dataflow/Network/Ports/StringPort.h>
 #include <Core/Datatypes/String.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 #include <sys/stat.h>

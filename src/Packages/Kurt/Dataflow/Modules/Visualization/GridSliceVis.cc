@@ -37,7 +37,7 @@
 #include <Core/Geometry/Vector.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Containers/StringUtil.h>

@@ -40,12 +40,12 @@ PSELIBS := \
 	Core/Util          \
 	Core/Exceptions    \
 	Core/Thread        \
-	Core/GuiInterface  \
+	Dataflow/GuiInterface  \
         Core/Geom          \
 	Core/Datatypes     \
 	Core/Geometry      \
         Core/GeomInterface \
-	Core/TkExtensions  \
+	Dataflow/TkExtensions  \
         Core/Volume        \
 	Core/Bundle
 

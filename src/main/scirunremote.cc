@@ -45,8 +45,8 @@
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/TCLInterface.h>
+#include <Dataflow/GuiInterface/TCLTask.h>
+#include <Dataflow/GuiInterface/TCLInterface.h>
 #include <Core/Init/init.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/sci_system.h>

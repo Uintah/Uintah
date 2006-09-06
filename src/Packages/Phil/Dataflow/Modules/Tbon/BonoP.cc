@@ -14,7 +14,7 @@
 #include "TriGroup.h"
 
 #include <Core/Util/NotFinished.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomGroup.h>

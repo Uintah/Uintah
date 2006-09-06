@@ -13,8 +13,8 @@
 #include <Packages/Yarden/Dataflow/Ports/TensorFieldPort.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/TCLTask.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 
 namespace Yarden {
 using namespace SCIRun;

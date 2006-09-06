@@ -45,7 +45,7 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Dataflow/Modules/Fields/BuildMappingMatrix.h>
 #include <Core/Containers/Handle.h>
 #include <Core/Util/DynamicCompilation.h>

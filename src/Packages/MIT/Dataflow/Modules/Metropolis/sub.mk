@@ -46,7 +46,7 @@ PSELIBS := \
 	Core/PartsGui \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions \
-        Core/Geom Core/Geometry Core/Thread Core/GuiInterface
+        Core/Geom Core/Geometry Core/Thread Dataflow/GuiInterface
 
 LIBS := -L/usr/local/lib \
 	$(LAPACK_LIBRARY) \

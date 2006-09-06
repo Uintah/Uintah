@@ -42,7 +42,7 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomSwitch.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Core/Algorithms/Visualization/RenderField.h>
 

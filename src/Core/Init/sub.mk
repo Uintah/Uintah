@@ -46,7 +46,7 @@ PSELIBS := \
 	Core/Datatypes    \
 	Core/Exceptions   \
 	Core/Geometry     \
-	Core/GuiInterface \
+	Dataflow/GuiInterface \
 	Core/ImportExport \
 	Core/Persistent   \
 	Core/Thread       \

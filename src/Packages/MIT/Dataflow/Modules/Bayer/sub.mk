@@ -46,9 +46,9 @@ PSELIBS := Packages/MIT/Core/Datatypes \
 	Core/2d \
 	Core/Datatypes \
         Core/Persistent Core/Containers Core/Util \
-        Core/Exceptions Core/Thread Core/GuiInterface \
+        Core/Exceptions Core/Thread Dataflow/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
-        Core/TkExtensions
+        Dataflow/TkExtensions
 LIBS := $(GL_LIBRARY) $(TK_LIBRARY) \
         -L/usr/local/lib \
 	$(LAPACK_LIBRARY)  $(BLAS_LIBRARY) -lcvode -lunuran $(F_LIBRARY) $(M_LIBRARY)

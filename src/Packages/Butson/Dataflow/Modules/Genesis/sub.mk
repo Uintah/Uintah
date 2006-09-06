@@ -19,7 +19,7 @@ SRCS     += \
 
 PSELIBS := Dataflow/Network \
 	Dataflow/Ports Core/Persistent Core/Exceptions Core/Thread \
-	Core/Datatypes Core/GuiInterface Core/Containers \
+	Core/Datatypes Dataflow/GuiInterface Core/Containers \
 	Core/Geom
 LIBS := 
 

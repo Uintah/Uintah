@@ -23,11 +23,11 @@ PSELIBS := \
         Core/Geom          \
         Core/GeomInterface \
         Core/Geometry      \
-        Core/GuiInterface  \
+        Dataflow/GuiInterface  \
         Core/Persistent    \
         Core/Thread        \
         Core/Util          \
-        Core/TkExtensions  \
+        Dataflow/TkExtensions  \
         Dataflow/Network   
 
 LIBS := $(TEEM_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)

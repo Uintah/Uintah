@@ -37,7 +37,7 @@ LOG
 #include <Packages/Uintah/Dataflow/Ports/VectorParticlesPort.h>
 #include <Packages/Uintah/Dataflow/Ports/TensorParticlesPort.h>
 #include <Dataflow/Network/Module.h> 
-#include <Core/GuiInterface/GuiVar.h> 
+#include <Dataflow/GuiInterface/GuiVar.h> 
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Thread/Runnable.h>
 #include <sgi_stl_warnings_off.h>

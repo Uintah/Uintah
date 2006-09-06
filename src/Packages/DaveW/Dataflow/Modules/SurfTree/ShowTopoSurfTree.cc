@@ -21,7 +21,7 @@
 #include <Core/Geom/Material.h>
 #include <Core/Geom/Pt.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <iostream>
 using std::cerr;
 

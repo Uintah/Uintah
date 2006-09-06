@@ -10,7 +10,7 @@
 
 #include <Core/Containers/Array2.h>
 #include <Core/Datatypes/NrrdData.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;

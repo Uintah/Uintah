@@ -36,9 +36,9 @@ SRCS     += \
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Persistent Core/Containers Core/Util \
-        Core/Exceptions Core/Thread Core/GuiInterface \
+        Core/Exceptions Core/Thread Dataflow/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
-        Core/GeomInterface Core/TkExtensions
+        Core/GeomInterface Dataflow/TkExtensions
 LIBS := $(VDT_LIBRARY) $(LEX_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

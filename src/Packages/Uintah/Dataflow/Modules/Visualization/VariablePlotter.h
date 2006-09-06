@@ -3,7 +3,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Geometry/IntVector.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 // needs to be included here so Array3 knows about swapbytes(Matrix3)
 #include <Packages/Uintah/Core/Math/Matrix3.h>
 #include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>

@@ -31,7 +31,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Core/GuiInterface
+SRCDIR   := Dataflow/GuiInterface
 
 SRCS     += $(SRCDIR)/GuiCallback.cc \
 	$(SRCDIR)/GuiContext.cc \
@@ -44,7 +44,7 @@ SRCS     += $(SRCDIR)/GuiCallback.cc \
 	$(SRCDIR)/UIvar.cc
 
 PSELIBS := Core/Exceptions Core/Util Core/Thread \
-		Core/Containers Core/TkExtensions Core/Math
+		Core/Containers Dataflow/TkExtensions Core/Math
 LIBS := $(ITK_LIBRARY) $(ITCL_LIBRARY) $(TCL_LIBRARY) $(X_LIBRARY) $(TEEM_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

@@ -125,12 +125,12 @@ PSELIBS := \
 	Core/Geometry            \
 	Core/GeomInterface       \
 	Core/Containers          \
-	Core/GuiInterface        \
+	Dataflow/GuiInterface        \
 	Core/ImportExport        \
 	Core/Math                \
 	Core/Persistent          \
 	Core/Thread              \
-	Core/TkExtensions        \
+	Dataflow/TkExtensions        \
 	Core/Util              
 
 

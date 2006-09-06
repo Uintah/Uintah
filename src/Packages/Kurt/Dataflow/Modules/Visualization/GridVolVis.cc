@@ -34,8 +34,8 @@
 #include <Core/Datatypes/Field.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/GuiInterface/GuiContext.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiContext.h>
 
 #include <iostream>
 #ifdef __sgi

@@ -21,7 +21,7 @@ SRCS     += \
 
 PSELIBS := Packages/DaveW/Core/Datatypes/General Dataflow/Network \
 	Dataflow/Ports Core/Exceptions Core/Thread Core/Containers \
-	Core/GuiInterface Core/Persistent Core/Datatypes
+	Dataflow/GuiInterface Core/Persistent Core/Datatypes
 LIBS := 
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

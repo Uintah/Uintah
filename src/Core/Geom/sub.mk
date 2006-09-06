@@ -92,7 +92,6 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/Lighting.cc		    		\
 	$(SRCDIR)/Material.cc		    		\
 	$(SRCDIR)/NrrdTextureObj.cc	    		\
-	$(SRCDIR)/OpenGLViewport.cc	    		\
 	$(SRCDIR)/OpenGLContext.cc	    		\
 	$(SRCDIR)/Path.cc		    		\
 	$(SRCDIR)/Pbuffer.cc		    		\
@@ -104,8 +103,6 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/TextureObj.cc 	    		\
 	$(SRCDIR)/TexSquare.cc		    		\
 	$(SRCDIR)/TimeGrid.cc		    		\
-	$(SRCDIR)/TkOpenGLContext.cc	    		\
-	$(SRCDIR)/TkOpenGLEventSpawner.cc    		\
 	$(SRCDIR)/View.cc		    		\
 	$(SRCDIR)/X11Lock.cc		    		\
 	$(SRCDIR)/X11OpenGLContext.cc		        \
@@ -114,9 +111,9 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 
 PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
 	Core/Datatypes Core/Math Core/Containers Core/Thread \
-	Core/GuiInterface Core/Util Core/TkExtensions
+	Core/Util 
 
-LIBS := $(FTGL_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(TK_LIBRARY) $(FREETYPE_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY)
+LIBS := $(FTGL_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(FREETYPE_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY)
 
 INCLUDES += $(FTGL_INCLUDE) $(FREETYPE_INCLUDE) $(TEEM_INCLUDE)
 

@@ -17,7 +17,7 @@
 #include <Packages/Uintah/Dataflow/Modules/Visualization/VariablePlotter.h>
 
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Containers/StringUtil.h>
 #include <Packages/Uintah/Dataflow/Ports/ArchivePort.h>

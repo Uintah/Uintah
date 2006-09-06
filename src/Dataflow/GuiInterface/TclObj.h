@@ -27,45 +27,58 @@
 */
 
 
- 
+
 /*
- *  TCLTask.h:  Handle TCL
+ *  TclObj.h: C++ & TCL object
  *
  *  Written by:
- *   Steven G. Parker
+ *   Yarden Livnat
  *   Department of Computer Science
  *   University of Utah
- *   August 1994
+ *   July 2001
  *
- *  Copyright (C) 1994 SCI Group
+ *  Copyright (C) 2001 SCI Group
  */
 
-#ifndef SCI_project_TCLTask_h
-#define SCI_project_TCLTask_h 1
+#ifndef SCI_TclObj_h
+#define SCI_TclObj_h 
 
-#include <tcl.h>
-#if (TCL_MINOR_VERSION >= 4)
-#define TCLCONST const
-#else
-#define TCLCONST
-#endif
-
-#include <Core/GuiInterface/share.h>
+#include <sstream>
+#include <Dataflow/GuiInterface/GuiCallback.h>
 
 namespace SCIRun {
-
-class ThreadLock;
-
-class SCISHARE TCLTask {
-private:
-    static ThreadLock           tcl_lock_;
+  class GuiInterface;
+class TclObj : public GuiCallback {
 public:
-    static void lock();
-    static void unlock();
-    static int  try_lock();
+  std::ostringstream tcl_;
+private:
+  string id_;
+  string window_;
+  string script_;
+
+  bool has_window_;
+protected:
+  GuiInterface* gui;
+public:
+  TclObj( GuiInterface* gui, const string &script);
+  TclObj( GuiInterface* gui, const string &script, const string &id);
+  virtual ~TclObj();
+
+  bool has_window() { return has_window_; }
+  string id() { return id_; }
+  string window() { return window_; }
+  std::ostream &to_tcl() { return tcl_; }
+  void command( const string &s);
+  int tcl_eval( const string &s, string &);
+  void tcl_exec();
+
+  virtual void set_id( const string &);
+  virtual void set_window( const string&, const string &args, bool =true );
+  virtual void set_window( const string&s ) { set_window(s,""); }
+  virtual void tcl_command( GuiArgs &, void *) {}
 };
-  
-} // End namespace SCIRun
 
 
-#endif
+} // namespace SCIRun
+
+#endif // SCI_TclObj_h

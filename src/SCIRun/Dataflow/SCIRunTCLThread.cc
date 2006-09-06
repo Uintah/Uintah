@@ -28,8 +28,8 @@
 
 #include <SCIRun/Dataflow/SCIRunTCLThread.h>
 
-#include <Core/GuiInterface/TCLInterface.h>
-#include <Core/GuiInterface/TCLTask.h>
+#include <Dataflow/GuiInterface/TCLInterface.h>
+#include <Dataflow/GuiInterface/TCLTask.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Util/soloader.h>
 #include <Core/Util/Environment.h>

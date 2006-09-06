@@ -41,10 +41,10 @@
  */
 
 #include <sci_defs/bits_defs.h>
-#include <Core/GuiInterface/MemStats.h>
+#include <Dataflow/GuiInterface/MemStats.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/GuiInterface/GuiInterface.h>
+#include <Dataflow/GuiInterface/GuiInterface.h>
 #include <stdio.h>
 
 namespace SCIRun {

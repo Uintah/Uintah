@@ -40,7 +40,7 @@
  *  Copyright (C) 1994 SCI Group
  */
 
-#include <Core/GuiInterface/GuiCallback.h>
+#include <Dataflow/GuiInterface/GuiCallback.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Exceptions/GuiException.h>
 #include <Core/Malloc/Allocator.h>

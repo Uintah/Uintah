@@ -43,7 +43,7 @@
 #ifndef SCI_Geom_GuiGeom_h
 #define SCI_Geom_GuiGeom_h 1
 
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 
 #include <Core/Geom/share.h>
 

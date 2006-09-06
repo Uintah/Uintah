@@ -20,9 +20,9 @@ SRCS     += \
 
 PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
         Core/Persistent Core/Containers Core/Util \
-        Core/Exceptions Core/Thread Core/GuiInterface \
+        Core/Exceptions Core/Thread Dataflow/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
-        Core/TkExtensions Core/2d Core/Parts Core/PartsGui
+        Dataflow/TkExtensions Core/2d Core/Parts Core/PartsGui
 LIBS := $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

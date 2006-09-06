@@ -18,8 +18,8 @@ SRCS     += \
 
 PSELIBS := Dataflow/Network Dataflow/Ports \
         Core/Datatypes Core/Persistent Core/Containers \
-	Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
-        Core/Geom Core/Geometry Core/TkExtensions
+	Core/Util Core/Exceptions Core/Thread Dataflow/GuiInterface \
+        Core/Geom Core/Geometry Dataflow/TkExtensions
 
 LIBS := $(TK_LIBRARY) $(GL_LIBS) $(M_LIBRARY)
 

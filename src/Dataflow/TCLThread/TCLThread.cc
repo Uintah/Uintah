@@ -28,8 +28,8 @@
 
 #include <Dataflow/TCLThread/TCLThread.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/GuiInterface/TCLInterface.h>
-#include <Core/GuiInterface/TCLTask.h>
+#include <Dataflow/GuiInterface/TCLInterface.h>
+#include <Dataflow/GuiInterface/TCLTask.h>
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Comm/StringSocket.h>
 #include <Core/Util/Environment.h>

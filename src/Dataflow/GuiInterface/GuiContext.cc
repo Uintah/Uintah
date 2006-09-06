@@ -39,8 +39,8 @@
  */
 
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiContext.h>
-#include <Core/GuiInterface/GuiInterface.h>
+#include <Dataflow/GuiInterface/GuiContext.h>
+#include <Dataflow/GuiInterface/GuiInterface.h>
 #include <Core/Util/Assert.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Containers/StringUtil.h>

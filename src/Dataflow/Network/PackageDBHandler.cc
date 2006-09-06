@@ -30,7 +30,7 @@
 #include <Dataflow/Network/PackageDBHandler.h>
 
 #include <Core/Containers/StringUtil.h>
-#include <Core/GuiInterface/GuiInterface.h>
+#include <Dataflow/GuiInterface/GuiInterface.h>
 #include <Core/XMLUtil/XMLUtil.h>
 #include <Dataflow/Network/NetworkEditor.h>
 

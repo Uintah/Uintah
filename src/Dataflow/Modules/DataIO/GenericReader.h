@@ -45,7 +45,7 @@
  *   Output port must be of type SimpleOPort
  */
 
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Module.h>
 #include <sys/stat.h>

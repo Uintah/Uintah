@@ -43,12 +43,12 @@
 #ifndef SCIRun_Core_GuiInterface_TCLInterface_h
 #define SCIRun_Core_GuiInterface_TCLInterface_h
 
-#include <Core/GuiInterface/GuiInterface.h>
+#include <Dataflow/GuiInterface/GuiInterface.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
-#include <Core/GuiInterface/share.h>
+#include <Dataflow/GuiInterface/share.h>
 
 namespace SCIRun {
   using namespace std;

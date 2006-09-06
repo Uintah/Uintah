@@ -42,8 +42,8 @@
  *  Copyright (C) 1996 SCI Group
  */
 
-#include <Core/GuiInterface/GuiContext.h>
-#include <Core/GuiInterface/GuiInterface.h>
+#include <Dataflow/GuiInterface/GuiContext.h>
+#include <Dataflow/GuiInterface/GuiInterface.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geom/GuiView.h>

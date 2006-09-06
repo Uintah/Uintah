@@ -45,7 +45,7 @@ SRCS     += \
 	$(SRCDIR)/DavsModule.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS	:= Core/GuiInterface Core/GeomInterface Dataflow/Network 
+PSELIBS	:= Dataflow/GuiInterface Core/GeomInterface Dataflow/Network 
 LIBS := 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

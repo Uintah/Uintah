@@ -24,7 +24,7 @@
  */
 
 #include <Packages/Kurt/Core/Geom/SCIRexRenderer.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/GLTexture3DPort.h>

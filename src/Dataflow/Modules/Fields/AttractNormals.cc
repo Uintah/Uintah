@@ -46,7 +46,7 @@
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Basis/Constant.h>
 #include <Core/Datatypes/PointCloudMesh.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Util/DynamicCompilation.h>
 
 #include <iostream>

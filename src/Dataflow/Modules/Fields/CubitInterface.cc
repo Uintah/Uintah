@@ -53,7 +53,7 @@
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/BBox.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/ImportExport/ExecConverter.h>
 #include <string>
 #include <vector>

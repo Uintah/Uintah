@@ -43,7 +43,7 @@
 #ifndef SCI_project_MemStats_h
 #define SCI_project_MemStats_h 1
 
-#include <Core/GuiInterface/GuiCallback.h>
+#include <Dataflow/GuiInterface/GuiCallback.h>
 #ifndef _WIN32
 #include <unistd.h>
 #endif

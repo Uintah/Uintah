@@ -20,7 +20,7 @@ PSELIBS := Packages/Yarden/Core/Algorithms/Visualization \
 	Packages/Yarden/Dataflow/Ports \
 	Dataflow/Network Core/Datatypes \
 	Core/Exceptions Core/Thread Core/Containers \
-	Core/GuiInterface Core/Persistent
+	Dataflow/GuiInterface Core/Persistent
 LIBS := 
 
 include $(SRCTOP)/scripts/smallso_epilogue.mk

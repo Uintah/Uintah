@@ -25,9 +25,9 @@
 #include <Core/Geom/Material.h>
 #include <Core/Geom/GeomTriangles.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/GuiInterface/TCL.h>
+#include <Dataflow/GuiInterface/TCLTask.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/TCL.h>
 #include <Core/Tester/RigorousTest.h>
 
 namespace DaveW {

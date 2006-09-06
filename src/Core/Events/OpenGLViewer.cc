@@ -50,7 +50,7 @@
 #include <Core/Events/Tools/FrameBufferPickTool.h>
 #include <Core/Geom/Pbuffer.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/GuiInterface/TCLTask.h>
+#include <Dataflow/GuiInterface/TCLTask.h>
 #include <Core/Util/Environment.h>
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geom/Material.h>

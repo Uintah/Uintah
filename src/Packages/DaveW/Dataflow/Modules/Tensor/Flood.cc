@@ -30,7 +30,7 @@
 #include <Core/Math/Expon.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/Math/Trig.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <iostream>
 using std::cerr;
 #include <values.h>

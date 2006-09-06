@@ -15,8 +15,8 @@
 #include <Packages/DaveW/Core/Datatypes/General/ContourSet.h>
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/TCLTask.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 
 namespace DaveW {
 using namespace DaveW;

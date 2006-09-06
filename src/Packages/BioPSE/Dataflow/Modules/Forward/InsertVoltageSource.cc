@@ -45,7 +45,7 @@
 #include <Core/Basis/TetLinearLgn.h>
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Packages/BioPSE/Dataflow/Modules/Forward/InsertVoltageSource.h>
 #include <iostream>
 #include <sstream>

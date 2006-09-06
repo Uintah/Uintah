@@ -45,8 +45,8 @@ SRCS     += \
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Core/Persistent Core/Containers \
-           Core/Util Core/Exceptions Core/Thread Core/GuiInterface \
-           Core/Geom Core/Geometry Core/GeomInterface Core/TkExtensions \
+           Core/Util Core/Exceptions Core/Thread Dataflow/GuiInterface \
+           Core/Geom Core/Geometry Core/GeomInterface Dataflow/TkExtensions \
            Dataflow/Network Core/Volume \
            Dataflow/Modules/Render \
            Packages/Ptolemy/Core/Datatypes

@@ -2,7 +2,7 @@
 #define __OPERATORS_VECTORPARTICLESOPERATOR_H__
 
 #include "VectorOperatorFunctors.h"
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Module.h>
 #include <Uintah/Dataflow/Ports/VectorParticlesPort.h>
 #include <Uintah/Dataflow/Ports/ScalarParticlesPort.h>

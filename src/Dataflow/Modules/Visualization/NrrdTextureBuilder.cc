@@ -31,7 +31,7 @@
 
 #include <sci_defs/ogl_defs.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 
 #include <Dataflow/Network/Module.h>

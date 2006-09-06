@@ -56,7 +56,7 @@ using std::endl;
 #include <Dataflow/Network/Ports/Port.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/GuiInterface/GuiContext.h>
+#include <Dataflow/GuiInterface/GuiContext.h>
 #include <Core/Containers/StringUtil.h>
 
 using namespace SCIRun;

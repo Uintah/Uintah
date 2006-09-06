@@ -40,11 +40,11 @@
  *  Copyright (C) 2002 SCI Group
  */
 
-#include <Core/GuiInterface/TCLInterface.h>
-#include <Core/GuiInterface/TCLTask.h>
-#include <Core/GuiInterface/MemStats.h>
-#include <Core/GuiInterface/GuiCallback.h>
-#include <Core/GuiInterface/GuiContext.h>
+#include <Dataflow/GuiInterface/TCLInterface.h>
+#include <Dataflow/GuiInterface/TCLTask.h>
+#include <Dataflow/GuiInterface/MemStats.h>
+#include <Dataflow/GuiInterface/GuiCallback.h>
+#include <Dataflow/GuiInterface/GuiContext.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Util/Assert.h>

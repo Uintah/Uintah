@@ -30,9 +30,9 @@
 //    Date   : Fri Jun  2 13:37:16 MDT 2006
 
 #include <Core/Events/BaseEvent.h>
-#include <Core/GuiInterface/TCLInterface.h>
-#include <Core/Geom/TkOpenGLEventSpawner.h>
-#include <Core/Geom/TkOpenGLContext.h>
+#include <Dataflow/GuiInterface/TCLInterface.h>
+#include <Dataflow/TkExtensions/TkOpenGLEventSpawner.h>
+#include <Dataflow/TkExtensions/TkOpenGLContext.h>
 
 namespace SCIRun {
   TkOpenGLEventSpawner::TkOpenGLEventSpawner(TkOpenGLContext *context) :

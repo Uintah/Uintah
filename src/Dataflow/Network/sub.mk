@@ -57,7 +57,7 @@ PSELIBS := \
         Core/Geom          \
         Core/GeomInterface \
         Core/Geometry      \
-        Core/GuiInterface  \
+        Dataflow/GuiInterface  \
         Core/Util          \
         Core/Thread        \
         Core/Volume        \

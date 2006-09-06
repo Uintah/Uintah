@@ -35,7 +35,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <VS/Dataflow/Modules/Render/EinthovenLeads.h>
 #include <Core/Geom/GeomSwitch.h>
 #include <Core/Geom/GeomText.h>

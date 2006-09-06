@@ -35,7 +35,6 @@
 
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Thread/Mutex.h>
-#include <Core/Geom/TkOpenGLContext.h>
 #include <Core/Geom/X11OpenGLContext.h>
 #include <Core/Util/Assert.h>
 #include <Core/Util/Environment.h>

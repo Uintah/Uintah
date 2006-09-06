@@ -24,9 +24,9 @@ SRCS     += \
 
 PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Persistent Core/Containers Core/Util \
-        Core/Exceptions Core/Thread Core/GuiInterface \
+        Core/Exceptions Core/Thread Dataflow/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
-        Core/GeomInterface Core/TkExtensions \
+        Core/GeomInterface Dataflow/TkExtensions \
         Core/Algorithms/Math \
         Core/Algorithms/Converter \
 

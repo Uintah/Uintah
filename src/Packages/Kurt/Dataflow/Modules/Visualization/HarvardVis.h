@@ -24,7 +24,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Containers/Array1.h>
 

@@ -38,7 +38,7 @@
 
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
 #include <Packages/DDDAS/share/share.h>
 #include <Core/Thread/Runnable.h>

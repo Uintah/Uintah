@@ -31,7 +31,7 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Core/TkExtensions
+SRCDIR   := Dataflow/TkExtensions
 
 SRCS     += \
 	$(SRCDIR)/tk3d2.c \
@@ -42,13 +42,16 @@ SRCS     += \
 	$(SRCDIR)/tk3daux.c \
 	$(SRCDIR)/tkRange.c \
 	$(SRCDIR)/tkUnixRange.c \
+	$(SRCDIR)/TkOpenGLContext.cc	    		\
+	$(SRCDIR)/TkOpenGLEventSpawner.cc    		\
+
 
 ifneq ($(IS_WIN),yes) 
  SRCS += $(SRCDIR)/tclUnixNotify-$(TK_VERSION).c
 endif
 
 
-PSELIBS := Core/Thread
+PSELIBS := Core/Thread Core/Geom
 LIBS := $(BLT_LIBRARY) \
 	$(PLPLOT_LIBRARY) \
 	$(ITK_LIBRARY) \

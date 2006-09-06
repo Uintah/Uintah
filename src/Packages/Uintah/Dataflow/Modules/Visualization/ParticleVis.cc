@@ -26,7 +26,7 @@
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomEllipsoid.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Geom/ColorMap.h>
 #include <Core/Datatypes/PropertyManager.h>
 #include <Core/Math/MinMax.h>

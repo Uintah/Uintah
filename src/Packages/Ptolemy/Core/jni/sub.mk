@@ -50,7 +50,7 @@ SRCS     += \
 PSELIBS := Core/Datatypes Core/Persistent \
            Core/Containers Core/Util \
            Core/Exceptions Core/Thread \
-           Core/GuiInterface
+           Dataflow/GuiInterface
 
 # JAVA_PATH set by configure
 JAVA_LIB := $(JAVA_PATH)/jre/lib/i386

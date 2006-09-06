@@ -20,7 +20,7 @@
 #include <Core/Datatypes/ScalarFieldRGchar.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <iostream>
 
 namespace DaveW {

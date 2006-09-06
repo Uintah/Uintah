@@ -30,7 +30,7 @@
 #include <Packages/rtrt/Dataflow/Ports/ScenePort.h>
 
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Thread/Parallel.h>
 #include <Dataflow/Network/Module.h>
