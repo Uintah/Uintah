@@ -4,6 +4,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/NormalForceBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PressureBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Core/Malloc/Allocator.h>
 #include <Packages/Uintah/Core/Exceptions/ProblemSetupException.h>
@@ -44,6 +45,12 @@ void MPMPhysicalBCFactory::create(const ProblemSpecP& ps)
         child = child->findNextBlock("crack") )
     {
        mpmPhysicalBCs.push_back(scinew CrackBC(child));
+    }
+
+    for(ProblemSpecP child = current_ps->findBlock("heat_flux"); child != 0;
+        child = child->findNextBlock("heat_flux") )
+    {
+       mpmPhysicalBCs.push_back(scinew HeatFluxBC(child));
     }
   }
 }

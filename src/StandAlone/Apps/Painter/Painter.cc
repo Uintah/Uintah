@@ -81,6 +81,8 @@
 #include <Core/Skinner/Variables.h>
 #include <Core/Events/EventManager.h>
 #include <Core/Util/FileUtils.h>
+#include <Core/Algorithms/Visualization/NrrdTextureBuilderAlgo.h>
+
 
 #ifdef HAVE_INSIGHT
 #  include <itkImportImageFilter.h>
@@ -430,6 +432,7 @@ Painter::Painter(Skinner::Variables *variables, GuiContext* ctx) :
   show_text_((!ctx) ? 0 : ctx->subVar("show_text"), 1),
   volume_lock_("Volume"),
   bundles_(),
+  volume_texture_(0),
   filter_volume_(0),
   abort_filter_(false)
 {
@@ -2348,7 +2351,6 @@ Painter::itk_image_to_nrrd(ITKDatatypeHandle &img_handle) {
 }
 
 
-
 void
 Painter::filter_callback(itk::Object *object,
                          const itk::EventObject &event)
@@ -2380,6 +2382,14 @@ Painter::filter_callback(itk::Object *object,
       //filter_update_img_->data_ = filter->GetFeatureImage();
       filter_volume_->nrrd_handle_ = itk_image_to_nrrd(filter_update_img_);
       volume_lock_.unlock();
+      if (volume_texture_.get_rep()) {
+        NrrdTextureBuilderAlgo::build_static(volume_texture_,
+                                             current_volume_->nrrd_handle_, 0, 255,
+                                             0, 0, 255, 128);
+      }
+
+      //        volume_texture_->set_dirty(true);
+
       set_all_slices_tex_dirty();
       redraw_all();
     }
@@ -2545,8 +2555,8 @@ setup_volume_rendering() {
 					   *planes,
 					   Round(card_mem*1024*1024*0.8));
   vol->set_slice_alpha(-0.5);
-  vol->set_interactive_rate(4.0);
-  vol->set_sampling_rate(4.0);
+  vol->set_interactive_rate(3.0);
+  vol->set_sampling_rate(3.0);
   vol->set_material(0.322, 0.868, 1.0, 18);
   scene_event = new SceneGraphEvent(vol, "FOO");  
   //  if (!sci_getenv_p("PAINTER_NOSCENE")) 

@@ -98,7 +98,7 @@ namespace SCIRun {
       
 
 
-    void
+    SignalCatcher::CatcherTargetInfo_t
     SignalCatcher::register_target(const string &targetname,
                                    CatcherFunctionPtr function) 
     {
@@ -110,6 +110,7 @@ namespace SCIRun {
       callback.variables_ = 0;
 
       catcher_targets_.push_back(callback);
+      return callback;
     }
 
 
@@ -121,6 +122,13 @@ namespace SCIRun {
     SignalThrower::~SignalThrower() {
     }
       
+    void
+    SignalThrower::register_default_thrower(const SignalCatcher::CatcherTargetInfo_t &callback)
+    {
+      all_catchers_[callback.targetname_].push_back(callback);
+    }
+    
+
 
     event_handle_t
     SignalThrower::throw_signal(const string &signalname, Variables *vars) {
@@ -128,16 +136,20 @@ namespace SCIRun {
       return throw_signal(all_catchers_, signal);
     }
 
-
+    event_handle_t
+    SignalThrower::throw_signal(event_handle_t &signal) {
+      return throw_signal(all_catchers_, signal);
+    }
+    
     class ThreadedCallback : public Runnable {
     public:     
       ThreadedCallback() : callback_(0), signal_(0), state_(BaseTool::STOP_E){}
       virtual ~ThreadedCallback() { cerr << "Threadedcallback done\n";  }
-
+      
       void      set_callback(SignalCatcher::CatcherTargetInfo_t *callback) {
         callback_ = callback;
       }
-
+      
       void      set_signal(const event_handle_t &signal) {
         signal_ = signal;
       }
@@ -145,20 +157,20 @@ namespace SCIRun {
       event_handle_t get_signal() {
         return signal_;
       }
-
+      
       virtual void run() {
         ASSERT(callback_);
         state_ = (callback_->catcher_->*callback_->function_)(signal_);
         signal_ = 0;
       }
-
+      
       BaseTool::propagation_state_e     get_state() { return state_; }
     private:
       SignalCatcher::CatcherTargetInfo_t *      callback_;
       event_handle_t                            signal_;
       BaseTool::propagation_state_e             state_;
     };
-      
+    
       
       
 
@@ -171,7 +183,7 @@ namespace SCIRun {
       Signal *signal = dynamic_cast<Signal *>(signalh.get_rep());
       ASSERT(signal);
       const string &signalname = signal->get_signal_name();
-
+      signal->set_signal_result(BaseTool::CONTINUE_E);
       if (catchers.find(signalname) == catchers.end()) return signalh;
       BaseTool::propagation_state_e state = BaseTool::CONTINUE_E;
       SignalToAllCatchers_t::iterator iter = catchers.find(signalname);
@@ -198,6 +210,7 @@ namespace SCIRun {
           if (state == BaseTool::STOP_E) break;
         }
       }
+      signal->set_signal_result(state);
       return signalh;
     }
 

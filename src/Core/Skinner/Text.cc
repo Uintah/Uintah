@@ -46,6 +46,8 @@ namespace SCIRun {
       offsety_(0),
       cursor_position_(0)
     {
+      REGISTER_CATCHER_TARGET(Text::redraw);
+
       vars->maybe_get_color("color", fgcolor_);
       vars->maybe_get_color("fgcolor", fgcolor_);
       vars->maybe_get_color("bgcolor", bgcolor_);
@@ -81,7 +83,6 @@ namespace SCIRun {
       else if (anchorstr ==  "C") { flags_ = TextRenderer::C;  }
       else { cerr << vars->get_id() << " anchor invalid: " 
                   << anchorstr << "\n"; }
-      
       flags_ |= vars->get_bool("vertical") ? TextRenderer::VERTICAL : 0;
       flags_ |= vars->get_bool("shadow")   ? TextRenderer::SHADOW   : 0;
       flags_ |= vars->get_bool("extruded") ? TextRenderer::EXTRUDED : 0;
@@ -92,7 +93,7 @@ namespace SCIRun {
     }
 
     Text::~Text() {}
-  
+#if 0
     BaseTool::propagation_state_e
     Text::process_event(event_handle_t event)
     {
@@ -102,6 +103,7 @@ namespace SCIRun {
       }
       return CONTINUE_E;
     }
+#endif
 
     BaseTool::propagation_state_e
     Text::redraw(event_handle_t)
@@ -111,9 +113,18 @@ namespace SCIRun {
       get_vars()->maybe_get_string("text", text);
       
       if (region.height() < 1 || renderer_->height(text) > region.height()) {
-        return CONTINUE_E;
+        return STOP_E;
       }
       
+      int newflags = flags_;
+      if (get_vars()->get_bool("cursor")) {
+        newflags |= TextRenderer::CURSOR;
+      } else {
+        newflags &= ~TextRenderer::CURSOR;
+      }
+
+      flags_ = newflags;
+
       renderer_->set_shadow_offset(offsetx_, offsety_);
       renderer_->set_color(fgcolor_.r, fgcolor_.g, fgcolor_.b, fgcolor_.a);
       renderer_->set_shadow_color(bgcolor_.r, bgcolor_.g, bgcolor_.b, bgcolor_.a);

@@ -43,6 +43,7 @@ namespace SCIRun {
     {
       REGISTER_CATCHER_TARGET(Arithmetic::increment);
       REGISTER_CATCHER_TARGET(Arithmetic::decrement);
+      REGISTER_CATCHER_TARGET(Arithmetic::set_value);
     }
 
     Arithmetic::~Arithmetic()
@@ -55,8 +56,12 @@ namespace SCIRun {
         dynamic_cast<Skinner::Signal *>(event.get_rep());
       ASSERT(signal);
       const string &varname = signal->get_vars()->get_string("variable");
-      const double val = signal->get_vars()->get_double(varname) + 1.0;
-      signal->get_vars()->change_parent(varname, to_string(val), "string", true);
+      double val = 0.0;
+      if (signal->get_vars()->maybe_get_double(varname, val)) {
+        val += 1.0;
+        signal->get_vars()->change_parent(varname, 
+                                          to_string(val), "string", true);
+      }
       return BaseTool::CONTINUE_E;
     }
 
@@ -66,8 +71,23 @@ namespace SCIRun {
         dynamic_cast<Skinner::Signal *>(event.get_rep());
       ASSERT(signal);
       const string &varname = signal->get_vars()->get_string("variable");
-      const double val = signal->get_vars()->get_double(varname) - 1.0;
-      signal->get_vars()->change_parent(varname, to_string(val),"string",true);
+      double val = 0.0;
+      if (signal->get_vars()->maybe_get_double(varname, val)) {
+        val -= 1.0;
+        signal->get_vars()->change_parent(varname, 
+                                          to_string(val), "string", true);
+      }
+      return BaseTool::CONTINUE_E;
+    }
+
+    BaseTool::propagation_state_e
+    Arithmetic::set_value(event_handle_t event) {
+      Skinner::Signal *signal = 
+        dynamic_cast<Skinner::Signal *>(event.get_rep());
+      ASSERT(signal);
+      const string &varname = signal->get_vars()->get_string("variable");
+      const string &value = signal->get_vars()->get_string("value");
+      get_vars()->insert(varname, value, "string", true);
       return BaseTool::CONTINUE_E;
     }
 

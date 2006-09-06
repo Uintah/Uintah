@@ -166,6 +166,8 @@ bool NWTimeStepXML::add_file(std::string filename)
   xmlFreeDoc(doc);
   xmlFreeParserCtxt(ctxt);  
   xmlCleanupParser();
+  
+  return (true);
 }
 
 std::vector<std::string> NWTimeStepXML::get_names()

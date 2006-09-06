@@ -87,6 +87,12 @@ bool FieldDataNodeToElemAlgoT<FIELD,OFIELD>::FieldDataNodeToElem(ProgressReporte
 
   // Create the field with the new mesh and data location.
   OFIELD *ofield = scinew OFIELD(field->get_typed_mesh());
+  if (ofield == 0)
+  {
+     pr->error("FieldDataNodeToElem: Could not allocate output field");
+     return(false);   
+  
+  }
   ofield->resize_fdata();
 
   typename FIELD::mesh_handle_type mesh = field->get_typed_mesh();

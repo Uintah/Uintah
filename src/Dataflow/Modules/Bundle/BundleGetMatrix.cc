@@ -26,30 +26,17 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  BundleGetMatrix.cc:
- *
- *  Written by:
- *   jeroen
- *
- */
-
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
-using namespace std;
 
 class BundleGetMatrix : public Module {
 public:
   BundleGetMatrix(GuiContext*);
-
-  virtual ~BundleGetMatrix();
-
   virtual void execute();
   
 private:
@@ -59,7 +46,7 @@ private:
   GuiInt                guitransposenrrd1_;
   GuiInt                guitransposenrrd2_;
   GuiInt                guitransposenrrd3_;
-  GuiString             guimatrixs_;
+  GuiString             guimatrices_;
 };
 
 
@@ -73,106 +60,71 @@ BundleGetMatrix::BundleGetMatrix(GuiContext* ctx)
     guitransposenrrd1_(get_ctx()->subVar("transposenrrd1"), 0),
     guitransposenrrd2_(get_ctx()->subVar("transposenrrd2"), 0),
     guitransposenrrd3_(get_ctx()->subVar("transposenrrd3"), 0),
-    guimatrixs_(get_ctx()->subVar("matrix-selection"), "")
+    guimatrices_(get_ctx()->subVar("matrix-selection"), "")
 {
 }
-
-
-BundleGetMatrix::~BundleGetMatrix()
-{
-}
-
 
 void
 BundleGetMatrix::execute()
 {
-  string matrix1name = guimatrix1name_.get();
-  string matrix2name = guimatrix2name_.get();
-  string matrix3name = guimatrix3name_.get();
-  int transposenrrd1 = guitransposenrrd1_.get();
-  int transposenrrd2 = guitransposenrrd2_.get();
-  int transposenrrd3 = guitransposenrrd3_.get();
-  string matrixlist;
-        
+  // Define input handle:
   BundleHandle handle;
-  BundleIPort  *iport;
-  BundleOPort *oport;
-  MatrixHandle fhandle;
-  MatrixOPort *ofport;
-        
-  if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
+  
+  // Get data from input port:
+  if (!(get_input_handle("bundle",handle,true))) return;
+  
+  if (inputs_changed_ || guimatrix1name_.changed() || guimatrix2name_.changed() ||
+      guimatrix3name_.changed() || guitransposenrrd1_.changed() ||
+      guitransposenrrd2_.changed() || guitransposenrrd3_.changed() ||
+      !oport_cached("bundle") || !oport_cached("matrix1") ||
+      !oport_cached("matrix2") || !oport_cached("matrix3"))
   {
-    error("Could not find bundle input port");
-    return;
-  }
+    MatrixHandle fhandle;
+    std::string matrix1name = guimatrix1name_.get();
+    std::string matrix2name = guimatrix2name_.get();
+    std::string matrix3name = guimatrix3name_.get();
+    int transposenrrd1 = guitransposenrrd1_.get();
+    int transposenrrd2 = guitransposenrrd2_.get();
+    int transposenrrd3 = guitransposenrrd3_.get();
+    std::string matrixlist;
+    
+    int nummatrixs = handle->numMatrices();
+    for (int p = 0; p < nummatrixs; p++)
+    {
+      matrixlist += "{" + handle->getMatrixName(p) + "} ";
+    }
 
-  if (!(iport->get(handle)))
-  {   
-    warning("No bundle connected to the input port");
-    return;
-  }
+    guimatrices_.set(matrixlist);
+    get_ctx()->reset();
+  
+    // We need to set bundle properties hence we need to detach
+    handle.detach();
+    
+    // Send matrix1 if we found one that matches the name:
+    if (handle->isMatrix(matrix1name))
+    {
+      handle->transposeNrrd(false);
+      if (transposenrrd1) handle->transposeNrrd(true);    
+      fhandle = handle->getMatrix(matrix1name);
+      send_output_handle("matrix1",fhandle,false);
+    } 
 
-  if (handle.get_rep() == 0)
-  {   
-    warning("Empty bundle connected to the input port");
-    return;
-  }
+    // Send matrix2 if we found one that matches the name:
+    if (handle->isMatrix(matrix2name))
+    {
+      handle->transposeNrrd(false);
+      if (transposenrrd2) handle->transposeNrrd(true);    
+      fhandle = handle->getMatrix(matrix2name);
+      send_output_handle("matrix2",fhandle,false);
+    } 
 
-
-  int nummatrixs = handle->numMatrices();
-  for (int p = 0; p < nummatrixs; p++)
-  {
-    matrixlist += "{" + handle->getMatrixName(p) + "} ";
+    // Send matrix3 if we found one that matches the name:
+    if (handle->isMatrix(matrix3name))
+    {
+      handle->transposeNrrd(false);
+      if (transposenrrd3) handle->transposeNrrd(true);    
+      fhandle = handle->getMatrix(matrix3name);
+      send_output_handle("matrix3",fhandle,false);
+    } 
   }
-
-  guimatrixs_.set(matrixlist);
-  get_ctx()->reset();
-
-  if (!(ofport = static_cast<MatrixOPort *>(get_oport("matrix1"))))
-  {
-    error("Could not find matrix 1 output port");
-    return; 
-  }
- 
-  if (handle->isMatrix(matrix1name))
-  {
-    handle->transposeNrrd(false);
-    if (transposenrrd1) handle->transposeNrrd(true);
-    fhandle = handle->getMatrix(matrix1name);
-    ofport->send(fhandle);
-  }        
- 
-  if (!(ofport = static_cast<MatrixOPort *>(get_oport("matrix2"))))
-  {
-    error("Could not find matrix 2 output port");
-    return; 
-  }
- 
-  if (handle->isMatrix(matrix2name))
-  {
-    handle->transposeNrrd(false);
-    if (transposenrrd2) handle->transposeNrrd(true);
-    fhandle = handle->getMatrix(matrix2name);
-    ofport->send(fhandle);
-  }
-        
-  if (!(ofport = static_cast<MatrixOPort *>(get_oport("matrix3"))))
-  {
-    error("Could not find matrix 3 output port");
-    return; 
-  }
-   
-  if (handle->isMatrix(matrix3name))
-  {
-    handle->transposeNrrd(false);
-    if (transposenrrd3) handle->transposeNrrd(true);    
-    fhandle = handle->getMatrix(matrix3name);
-    ofport->send(fhandle);
-  }
-        
-  if ((oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-  {
-    oport->send(handle);
-  }
-  update_state(Completed);        
 }

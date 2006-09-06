@@ -90,16 +90,13 @@ ColorMapToNrrd::execute()
     size_t s[NRRD_DIM_MAX];
     s[0] = 4; s[1] = size;
     nrrdAlloc_nva(nd->nrrd_, nrrdTypeFloat, 2, s);
-    nd->nrrd_->axis[0].kind = nrrdKind4Color;
+    nd->nrrd_->axis[0].kind = nrrdKindScalar;
     nd->nrrd_->axis[1].kind = nrrdKindDomain;
 
     float *val = (float *)nd->nrrd_->data;
     const float *data = cmapH->get_rgba();
 
-    const int range = size*4;
-    for(unsigned int start=0; start<size; start++) 
-      for(int cur=0; cur<range; cur+=size, ++data) 
-	val[start+cur] = *data;
+    memcpy(val, data, sizeof(float) * 4 * size);
 
     // Send the data nrrd.
     nd->nrrd_->axis[0].label = airStrdup("Colors");

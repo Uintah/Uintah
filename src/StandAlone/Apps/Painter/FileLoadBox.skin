@@ -1,10 +1,12 @@
 <definition class="FileLoadBox">
-  <object class="ShadowedBox">
+  <object class="Root::FocusRegion">
     <var name="FileLoadBox::filename" propagate="yes"></var>
+  <object class="ShadowedBox">
     <definition class="ShadowedBox::child">
       <object class="Box">
+        <var name="visible" type="int">1</var>
         <var name="focus_mode">1</var>
-        <var name="color">#AAAAAAAA</var>
+        <var name="color">#AAAAFFAA</var>
         
         <object class="Texture">
           <var name="file">BackgroundTile04.png</var>
@@ -15,7 +17,7 @@
         
         <object class="Texture">
           <var name="file">BackgroundTile04.png</var>
-          <var name="color">#000000</var>
+          <var name="color">#00000000</var>
           <var name="repeatx">1</var>
           <var name="repeaty">1</var>
         </object>
@@ -44,11 +46,13 @@
             <var name="cell-width">50</var>
           </object>
           
-          <object class="ShadowedBox">
+          <object class="Root::Arithmetic">
             <var name="row">2</var>
             <var name="col">2</var>        
             <var name="cell-height">40</var>
             <var name="cell-width">600</var>
+
+          <object class="ShadowedBox">
             
             <definition class="ShadowedBox::child">
               <object class="Collection">
@@ -57,22 +61,47 @@
                   <var name="color">#FFFFFFFF</var>
                 </object>
                 
-                
-                
-                <object class="TextEntry">
-                  <var name="variable">FileLoadBox::filename</var>
-                  <var name="size">28</var>
-                  <var name="anchor">W</var>
-                  <var name="fgcolor">#000000FF</var>
-                  <var name="bgcolor">#FFFFFFFF</var>
-                  <var name="bgcolor">#00000080</var>
-                  <var name="offsetx">-1</var>
-                  <var name="cursor">1</var>
-                  <var name="offsety">1</var>
-                  <var name="shadow">0</var>
+                <object class="Root::FocusRegion">
+                  <var name="ignore_tab">1</var>
+
+                  <signal name="FocusRegion::focus"
+                          target="Arithmetic::set_value">
+                    <var name="variable">ShadowedBox::outside</var>
+                    <var name="value">#DDDD88FF</var>
+                  </signal>
+                  
+                  <signal name="FocusRegion::focus"
+                          target="Root::Redraw"/>
+                  
+                  
+                  <signal name="FocusRegion::unfocus"
+                          target="Arithmetic::set_value">
+                    <var name="variable">ShadowedBox::outside</var>
+                    <var name="value">#00000000</var>
+                  </signal>
+                  
+                  <signal name="FocusRegion::unfocus"
+                          target="Root::Redraw"/>
+
+
+                  <object class="Root::ViewSubRegion">
+                    <object class="TextEntry">
+                      <var name="variable">FileLoadBox::filename</var>
+                      <var name="size">28</var>
+                      <var name="anchor">W</var>
+                      <var name="fgcolor">#000000FF</var>
+                      <var name="bgcolor">#FFFFFFFF</var>
+                      <var name="bgcolor">#00000080</var>
+                      <var name="offsetx">-1</var>
+                      <var name="cursor">1</var>
+                      <var name="offsety">1</var>
+                      <var name="shadow">0</var>
+                    </object>
+                  </object>
                 </object>
               </object>
             </definition>
+          </object>
           </object>
           
           <object class="Grid"> 
@@ -112,5 +141,6 @@
         </object>
       </object>
     </definition>
+  </object>
   </object>
 </definition>

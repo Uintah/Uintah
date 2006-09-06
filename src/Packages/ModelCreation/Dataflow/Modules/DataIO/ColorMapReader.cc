@@ -47,8 +47,6 @@
 namespace ModelCreation {
 using namespace SCIRun;
 
-template class GenericReader<ColorMapHandle>;
-
 class ColorMapReader : public GenericReader<ColorMapHandle> {
 protected:
   GuiString gui_types_;

@@ -1041,6 +1041,8 @@ TriSurfMesh<Basis>::locate(typename Face::index_type &loc,
             "TriSurfMesh::locate requires synchronization.");
 
   const list<unsigned int> *candidates;
+  if (grid_.get_rep() == 0) return (false);
+  
   if (grid_->lookup(candidates, p))
   {
     list<unsigned int>::const_iterator iter = candidates->begin();

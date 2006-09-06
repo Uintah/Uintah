@@ -47,8 +47,6 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-template class GenericWriter<StringHandle>;
-
 class StringWriter : public GenericWriter<StringHandle> {
 public:
   StringWriter(GuiContext*);

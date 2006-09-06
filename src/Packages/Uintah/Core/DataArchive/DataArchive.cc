@@ -38,7 +38,9 @@ DataArchive::DataArchive(const std::string& filebase,
                          int processor /* = 0 */, int numProcessors /* = 1 */,
                          bool verbose /* = true */ ) :
   ref_cnt(0), lock("DataArchive ref_cnt lock"),
-  d_filebase(filebase), d_varHashMaps(NULL),
+  d_filebase(filebase), 
+  d_cell_scale( Vector(1.0,1.0,1.0) ),
+  d_varHashMaps(NULL),
   d_processor(processor), d_numProcessors(numProcessors),
   d_lock("DataArchive lock")
 {
@@ -258,6 +260,7 @@ DataArchive::queryGrid( double time, const ProblemSpec* ups)
       if(!n->get("cellspacing", dcell))
         throw InternalError("DataArchive::queryGrid:Error parsing level cellspacing",
                             __FILE__, __LINE__);
+      dcell *= d_cell_scale;
       IntVector extraCells(0,0,0);
       n->get("extraCells", extraCells);
       

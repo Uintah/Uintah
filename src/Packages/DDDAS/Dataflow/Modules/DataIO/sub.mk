@@ -13,19 +13,14 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/DDDAS/Dataflow/Modules/DataIO
 
 SRCS     += \
-	$(SRCDIR)/Reader.cc\
 	$(SRCDIR)/StreamReader.cc\
-	$(SRCDIR)/SendIntermediateTest.cc\
-	$(SRCDIR)/Mesh3dReader.cc\
-#	$(SRCDIR)/NetConnector.cc\
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Datatypes Dataflow/Network Dataflow/Ports \
+PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Core/GuiInterface \
         Core/Geom Core/Geometry Core/TkExtensions \
 	Packages/DDDAS/Core/Datatypes Packages/DDDAS/Core/Utils \
-#        Core/Util/Comm \
 
 #INCLUDES += $(SCISOCK_INCLUDE)
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) #$(SCISOCK_LIBRARY)

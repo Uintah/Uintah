@@ -30,23 +30,26 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := testprograms/Component/mxnargtest
+SRCDIR  := testprograms/Component/mxnargtest
 
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/Thread \
-	Core/Exceptions Core/CCA/Comm
+PSELIBS := \
+           Core/CCA/SSIDL Core/CCA/PIDL \
+           Core/Thread Core/Exceptions
 endif
 
 ifeq ($(HAVE_GLOBUS),yes)
-PSELIBS+=Core/globus_threads
+PSELIBS += Core/globus_threads
 endif
 
-LIBS := $(MPI_LIBRARY) 
+LIBS    := $(MPI_LIBRARY) 
 
 PROGRAM := $(SRCDIR)/argtest
-SRCS := $(SRCDIR)/argtest.cc $(SRCDIR)/argtest_sidl.cc
+SRCS    := \
+           $(SRCDIR)/argtest.cc \
+           $(SRCDIR)/argtest_sidl.cc
 GENHDRS := $(SRCDIR)/argtest_sidl.h
 
 include $(SCIRUN_SCRIPTS)/program.mk

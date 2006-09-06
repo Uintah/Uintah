@@ -703,4 +703,6 @@ add_key_event = _pysci.add_key_event
 
 add_tm_notify_event = _pysci.add_tm_notify_event
 
+selection_target_changed = _pysci.selection_target_changed
+
 

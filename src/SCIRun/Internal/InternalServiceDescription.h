@@ -61,7 +61,7 @@ public:
   /** */
   virtual std::string getType() const;
   /** */
-  virtual ComponentModel* getModel() const;
+  virtual const ComponentModel* getModel() const;
 
 protected:
   // duplicates type, but leave this alone for now

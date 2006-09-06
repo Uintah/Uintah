@@ -275,15 +275,12 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   
     d_recompileSubsched = true;
 
-#if 1
     if(d_doAMR  && solver->getName() != "hypreamr"){
       ostringstream msg;
       msg << "\n ERROR: " << solver->getName()
           << " cannot be used with an AMR grid \n";
       throw ProblemSetupException(msg.str(),__FILE__, __LINE__);
     }
-#endif
-
   }
 
   //__________________________________
@@ -408,14 +405,15 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   //__________________________________
   //  Load Model info.
   // If we are doing a restart, then use the "timestep.xml" 
-  if (materials_ps)
+  if (materials_ps){
     mat_ps = materials_ps;
-  else
+  }else{
     mat_ps = prob_spec;
+  }
   ModelMaker* modelMaker = dynamic_cast<ModelMaker*>(getPort("modelmaker"));
   if(modelMaker){
 
-    modelMaker->makeModels(mat_ps, grid, sharedState, d_doAMR);
+    modelMaker->makeModels(mat_ps, prob_spec, grid, sharedState, d_doAMR);
     d_models = modelMaker->getModels();
     releasePort("ModelMaker");
     d_modelSetup = scinew ICEModelSetup();
@@ -1697,7 +1695,12 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
   // immediately after advecton
   if(levelIndex + 1 == numLevels && where ==  "finalizeTimestep")
     return;
-    
+
+  // from another taskgraph
+  bool fat = false;
+  if (where == "finalizeTimestep")
+    fat = true;
+
   //---------------------------  
   cout_doing << d_myworld->myrank() << " ICE::scheduleConservedtoPrimitive_Vars" 
              << "\t\t\tL-"<< levelIndex << endl;
@@ -1711,25 +1714,25 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
   task->requires(Task::NewDW, lb->eng_advLabel,       gn,0);
   task->requires(Task::NewDW, lb->sp_vol_advLabel,    gn,0);
   
-  task->requires(Task::NewDW, lb->specific_heatLabel, gn,0);   
-  task->requires(Task::NewDW, lb->speedSound_CCLabel, gn, 0);
-  task->requires(Task::NewDW, lb->vol_frac_CCLabel,   gn, 0);
-  task->requires(Task::NewDW, lb->gammaLabel,         gn, 0);
+  task->requires(Task::NewDW, lb->specific_heatLabel, gn, 0, fat);
+  task->requires(Task::NewDW, lb->speedSound_CCLabel, gn, 0, fat);
+  task->requires(Task::NewDW, lb->vol_frac_CCLabel,   gn, 0, fat);
+  task->requires(Task::NewDW, lb->gammaLabel,         gn, 0, fat);
     
   computesRequires_CustomBCs(task, "Advection", lb, ice_matlsub, 
                              d_customBC_var_basket);
                              
-  task->modifies(lb->rho_CCLabel);
-  task->modifies(lb->sp_vol_CCLabel);               
+  task->modifies(lb->rho_CCLabel, fat);
+  task->modifies(lb->sp_vol_CCLabel, fat);               
   if( where == "afterAdvection"){
     task->computes(lb->temp_CCLabel);
     task->computes(lb->vel_CCLabel);
     task->computes(lb->machLabel);
   }
   if( where == "finalizeTimestep"){
-    task->modifies(lb->temp_CCLabel);
-    task->modifies(lb->vel_CCLabel);
-    task->modifies(lb->machLabel);
+    task->modifies(lb->temp_CCLabel, fat);
+    task->modifies(lb->vel_CCLabel, fat);
+    task->modifies(lb->machLabel, fat);
   } 
   
   //__________________________________
@@ -1746,7 +1749,7 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
         task->computes(tvar->var,   tvar->matls);
       }
       if( where == "finalizeTimestep"){
-        task->modifies(tvar->var,   tvar->matls);
+        task->modifies(tvar->var,   tvar->matls, fat);
       }
       
     }
@@ -2494,7 +2497,10 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
 
       //__________________________________
       //      BULLET PROOFING
-      if(test_max_iter == d_max_iter_equilibration) {
+      // ignore BP if a timestep restart has already been requested
+      bool tsr = new_dw->timestepRestarted();
+      
+      if(test_max_iter == d_max_iter_equilibration && !tsr) {
 	throw MaxIteration(c,count,n_passes, L_indx,
                           "MaxIterations reached", __FILE__, __LINE__);
       }
@@ -2503,18 +2509,18 @@ void ICE::computeEquilibrationPressure(const ProcessorGroup*,
         ASSERT(( vol_frac[m][c] > 0.0 ) ||
                ( vol_frac[m][c] < 1.0));
       }
-      if ( fabs(sum - 1.0) > convergence_crit) {  
+      if ( fabs(sum - 1.0) > convergence_crit && !tsr) {  
         throw MaxIteration(c,count,n_passes, L_indx,
              "MaxIteration reached vol_frac != 1", __FILE__, __LINE__);
       }
        
-      if ( press_new[c] < 0.0 ){ 
+      if ( press_new[c] < 0.0 && !tsr ){ 
         throw MaxIteration(c,count,n_passes, L_indx,
              "MaxIteration reached press_new < 0", __FILE__, __LINE__);
       }
 
       for (int m = 0; m < numMatls; m++){
-        if ( rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0) { 
+        if ( rho_micro[m][c] < 0.0 || vol_frac[m][c] < 0.0 && !tsr) { 
           cout << "m = " << m << endl;
           throw MaxIteration(c,count,n_passes, L_indx,
                "MaxIteration reached rho_micro < 0 || vol_frac < 0",
@@ -4219,12 +4225,15 @@ void ICE::computeLagrangianValues(const ProcessorGroup*,
         }
         //____ B U L L E T   P R O O F I N G----
         // catch negative internal energies
+        // ignore BP if timestep restart has already been requested
         IntVector neg_cell;
-        if (!areAllValuesPositive(int_eng_L, neg_cell) ) {
+        bool tsr = new_dw->timestepRestarted();
+        
+        if (!areAllValuesPositive(int_eng_L, neg_cell) && !tsr ) {
          ostringstream warn;
          int idx = level->getIndex();
          warn<<"ICE:(L-"<<idx<<"):computeLagrangianValues, mat "<<indx<<" cell "
-             <<neg_cell<<" Negative int_eng_L \n";
+             <<neg_cell<<" Negative int_eng_L: " << int_eng_L[neg_cell] <<  "\n";
          throw InvalidValue(warn.str(), __FILE__, __LINE__);
         }
       }  // if (ice_matl)
@@ -4410,15 +4419,20 @@ void ICE::computeLagrangianSpecificVolume(const ProcessorGroup*,
         }
       }
       //____ B U L L E T   P R O O F I N G----
+      // ignore BP if timestep restart has already been requested
       IntVector neg_cell;
-      if (!areAllValuesPositive(sp_vol_L, neg_cell)) {
+      bool tsr = new_dw->timestepRestarted();
+      
+      if (!areAllValuesPositive(sp_vol_L, neg_cell) && !tsr) {
+        cout << "\nICE:WARNING......Negative specific Volume"<< endl;
+        cout << "cell              "<< neg_cell << " level " <<  level->getIndex() << endl;
         cout << "matl              "<< indx << endl;
-        cout << "cell              "<< neg_cell << endl;
         cout << "sum_thermal_exp   "<< sum_therm_exp[neg_cell] << endl;
         cout << "sp_vol_src        "<< sp_vol_src[neg_cell] << endl;
         cout << "mass sp_vol_L     "<< sp_vol_L[neg_cell] << endl;
         cout << "mass sp_vol_L_old "
              << (rho_CC[neg_cell]*vol*sp_vol_CC[neg_cell]) << endl;
+        cout << "-----------------------------------"<<endl;
 //        ostringstream warn;
 //        int L = level->getIndex();
 //        warn<<"ERROR ICE:("<<L<<"):computeLagrangianSpecificVolumeRF, mat "<<indx
@@ -5315,19 +5329,21 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
        printVector( indx, patch,1, desc.str(), "vel_CC", 0,   vel_CC);
       }
       //____ B U L L E T   P R O O F I N G----
+      // ignore BP if timestep restart has already been requested
       IntVector neg_cell;
+      bool tsr = new_dw->timestepRestarted();
+      
       ostringstream base, warn;
       base <<"ERROR ICE:(L-"<<L_indx<<"):conservedtoPrimitive_Vars, mat "<< indx <<" cell ";
-      
-      if (!areAllValuesPositive(rho_CC, neg_cell)) {
+      if (!areAllValuesPositive(rho_CC, neg_cell) && !tsr) {
         warn << base.str() << neg_cell << " negative rho_CC\n ";
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
-      if (!areAllValuesPositive(temp_CC, neg_cell)) {
+      if (!areAllValuesPositive(temp_CC, neg_cell) && !tsr) {
         warn << base.str() << neg_cell << " negative temp_CC\n ";
         throw InvalidValue(warn.str(), __FILE__, __LINE__);
       }
-      if (!areAllValuesPositive(sp_vol_CC, neg_cell)) {
+      if (!areAllValuesPositive(sp_vol_CC, neg_cell) && !tsr) {
        warn << base.str() << neg_cell << " negative sp_vol_CC\n ";        
        throw InvalidValue(warn.str(), __FILE__, __LINE__);
       } 

@@ -89,18 +89,25 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
   double small=1.0e-10;
   // Extracting the independent variables from the in stream 
   double mixFrac = inStream.d_mixVars[0];
-  double mixFracVars = 0.0;
-  if (d_calcVariance)
-    mixFracVars = inStream.d_mixVarVariance[0];
-  if(mixFrac > 1.0)
+  // Scalar bounds are checked in ScalarSolver, so no need to do it here
+  /*if(mixFrac > 1.0)
 	mixFrac=1.0;
   else if (mixFrac < small)
-	mixFrac=0.0;
-  if(mixFracVars < small)
-	mixFracVars=0.0;
-  double var_limit=(mixFrac*(1.0-mixFrac));
-  if(mixFracVars > var_limit)
-  	mixFracVars=var_limit;
+	mixFrac=0.0;*/
+
+  double mixFracVars = 0.0;
+  if (d_calcVariance) {
+    mixFracVars = inStream.d_mixVarVariance[0];
+    // Variance bounds check and normalization is done at the model level,
+    // so no need to do it here
+    /*double var_limit = (mixFrac*(1.0-mixFrac));
+    if(mixFracVars < small)
+      mixFracVars=0.0;
+    if(mixFracVars > var_limit)
+      mixFracVars = var_limit;
+
+    mixFracVars = mixFracVars/(var_limit+small);*/
+  }
   // Heat loss for adiabatic case
   double current_heat_loss=0.0;
   double zero_heat_loss=0.0;
@@ -180,6 +187,8 @@ NewStaticMixingTable::computeProps(const InletStream& inStream,
     outStream.d_ch4=tableLookUp(mixFrac, mixFracVars, current_heat_loss, ch4_index);
   }
 
+  outStream.d_heatLoss = current_heat_loss;
+
   /*if((outStream.d_temperature - 293.0) <= -0.01 || (outStream.d_density - 1.20002368329336) >= 0.001){
   	cout<<"Temperature for properties outbound is:  "<<outStream.d_temperature<<endl;
   	cout<<"Density for properties outbound is:  "<<outStream.d_density<<endl;
@@ -254,15 +263,13 @@ double NewStaticMixingTable::tableLookUp(double mixfrac, double mixfracVars, dou
 
   
   // Supports non-uniform normalized variance lookup  
-  double max_curr_Zvar = mixfrac*(1.0-mixfrac);
-  double max_Zvar = min(mixfracVars,max_curr_Zvar);
   // Normalized variance
   double g=0.0;
   //Index for variances
   int k1=0,k2=0;
   //Weighing factors for variance
   double dk1=0.0,dk2=0.0;
-  if(max_Zvar <= small){
+  if(mixfracVars <= small){
 	// Set the values to get the first entry
 	g=0.0;
         k1=0;
@@ -271,7 +278,7 @@ double NewStaticMixingTable::tableLookUp(double mixfrac, double mixfracVars, dou
 	dk2=1.0;
   }
   else{
-	g=max_Zvar/(max_curr_Zvar+small);
+	g=mixfracVars;
 	// Finding the table entry
   	for(int index=0; index < d_mixvarcount-1; index++){
 		dk1 = variance[index]-g;

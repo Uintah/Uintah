@@ -48,8 +48,6 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-template class GenericReader<MatrixHandle>;
-
 class MatrixReader : public GenericReader<MatrixHandle> {
 protected:
   GuiString gui_types_;

@@ -49,13 +49,13 @@ namespace SCIRun {
       static DrawableMakerFunc_t        maker;
       virtual int                       get_signal_id(const string &) const;
 
+    private:
+      CatcherFunction_t                 redraw;
       CatcherFunction_t                 make_red;
       CatcherFunction_t                 make_blue;
       CatcherFunction_t                 make_green;      
-    private:
       
 
-      void                              draw_gl();
       Color                             color_;
       bool                              focus_mode_;
       bool                              focus_;

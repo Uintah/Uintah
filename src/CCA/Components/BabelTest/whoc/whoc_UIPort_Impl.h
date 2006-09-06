@@ -30,12 +30,11 @@
  * File:          whoc_UIPort_Impl.h
  * Symbol:        whoc.UIPort-v1.0
  * Symbol Type:   class
- * Babel Version: 0.11.0
+ * Babel Version: 0.99.2
  * Description:   Server-side implementation for whoc.UIPort
  * 
  * WARNING: Automatically generated; only changes within splicers preserved
  * 
- * babel-version = 0.11.0
  */
 
 #ifndef included_whoc_UIPort_Impl_h
@@ -67,7 +66,7 @@
 #endif
 
 /* DO-NOT-DELETE splicer.begin(whoc.UIPort._includes) */
-/* Put additional include files here... */
+/* Insert-Code-Here {whoc.UIPort._includes} (include files) */
 /* DO-NOT-DELETE splicer.end(whoc.UIPort._includes) */
 
 /*
@@ -76,7 +75,7 @@
 
 struct whoc_UIPort__data {
   /* DO-NOT-DELETE splicer.begin(whoc.UIPort._data) */
-  /* Put private data members here... */
+  /* Insert-Code-Here {whoc.UIPort._data} (private data members) */
   int ignore; /* dummy to force non-empty struct; remove if you add data */
   /* DO-NOT-DELETE splicer.end(whoc.UIPort._data) */
 };
@@ -107,6 +106,13 @@ extern
 void
 impl_whoc_UIPort__ctor(
   /* in */ whoc_UIPort self,
+  /* out */ sidl_BaseInterface *_ex);
+
+extern
+void
+impl_whoc_UIPort__ctor2(
+  /* in */ whoc_UIPort self,
+  /* in */ void* private_data,
   /* out */ sidl_BaseInterface *_ex);
 
 extern

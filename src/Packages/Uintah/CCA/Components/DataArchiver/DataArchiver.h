@@ -6,6 +6,7 @@
 #include <Packages/Uintah/Core/Grid/Variables/MaterialSetP.h>
 #include <Packages/Uintah/Core/Grid/SimulationState.h>
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
+#include <Core/Util/Assert.h>
 #include <Core/OS/Dir.h>
 #include <Core/Containers/ConsecutiveRangeSet.h>
 #include <Core/Thread/Mutex.h>
@@ -392,7 +393,13 @@ using std::pair;
       //! The number of levels the DA knows about.  If this changes, we need to 
       //! redo output and Checkpoint tasks.
       int d_numLevelsInOutput;
-
+      
+#if SCI_ASSERTION_LEVEL >= 2
+      //! double-check to make sure that DA::output is only called once per level per processor per type
+      vector<bool> d_outputCalled;
+      vector<bool> d_checkpointCalled;
+      bool d_checkpointReductionCalled;
+#endif
       Mutex d_outputLock;
 
       DataArchiver(const DataArchiver&);

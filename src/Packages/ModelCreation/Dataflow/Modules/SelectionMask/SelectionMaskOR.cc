@@ -103,7 +103,7 @@ void SelectionMaskOR::execute()
   }
   
   int portnum = 1;
-  while(iport = dynamic_cast<MatrixIPort *>(get_input_port(portnum)))
+  while((iport = dynamic_cast<MatrixIPort *>(get_input_port(portnum))))
   {
     
     if (!(iport->get(input)))

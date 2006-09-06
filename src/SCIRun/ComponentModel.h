@@ -49,8 +49,8 @@
 
 #include <libxml/xmlreader.h>
 
-namespace SCIRun
-{
+namespace SCIRun {
+
 class ComponentDescription;
 class ComponentInstance;
 class SCIRunFramework;

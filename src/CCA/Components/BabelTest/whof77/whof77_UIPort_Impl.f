@@ -24,22 +24,17 @@ C       THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTH
 C       LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 C       FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 C       DEALINGS IN THE SOFTWARE.
-C 
+C
 
 C       
 C       File:          whof77_UIPort_Impl.f
 C       Symbol:        whof77.UIPort-v1.0
 C       Symbol Type:   class
-C       Babel Version: 0.7.4
-C       SIDL Created:  20030915 14:58:51 MST
-C       Generated:     20030915 14:58:55 MST
+C       Babel Version: 0.99.2
 C       Description:   Server-side implementation for whof77.UIPort
 C       
 C       WARNING: Automatically generated; only changes within splicers preserved
 C       
-C       babel-version = 0.7.4
-C       source-line   = 10
-C       source-url    = file:/home/sci/damevski/SCIRun/src/CCA/Components/BabelTest/whof77/whof77.sidl
 C       
 
 
@@ -49,35 +44,138 @@ C
 
 
 C       DO-NOT-DELETE splicer.begin(_miscellaneous_code_start)
-C       Insert extra code here...
+C       Insert-Code-Here {_miscellaneous_code_start} (extra code)
 C       DO-NOT-DELETE splicer.end(_miscellaneous_code_start)
 
 
 
 
 C       
+C       Method:  _ctor[]
 C       Class constructor called when the class is created.
 C       
 
-        subroutine whof77_UIPort__ctor_impl(self)
+        subroutine whof77_UIPort__ctor_fi(self, exception)
         implicit none
+C        in whof77.UIPort self
         integer*8 self
+C        out sidl.BaseInterface exception
+        integer*8 exception
+
 C       DO-NOT-DELETE splicer.begin(whof77.UIPort._ctor)
-C       Insert the implementation here...
+C       Insert-Code-Here {whof77.UIPort._ctor} (_ctor method)
+C       
+C       This method has not been implemented
+C       
+
+        integer*8 throwaway
+        call sidl_NotImplementedException__create_f
+     $      (exception, throwaway)
+        if (exception .ne. 0) then
+           call sidl_NotImplementedException_setNote_f(
+     $         exception,
+     $         'This method has not been implemented',
+     $         throwaway)
+        endif
+        return
 C       DO-NOT-DELETE splicer.end(whof77.UIPort._ctor)
         end
 
 
 C       
+C       Method:  _ctor2[]
+C       Special Class constructor called when the user wants to wrap his own private data.
+C       
+
+        subroutine whof77_UIPort__ctor2_fi(self, private_data,
+     &     exception)
+        implicit none
+C        in whof77.UIPort self
+        integer*8 self
+C        in opaque private_data
+        integer*8 private_data
+C        out sidl.BaseInterface exception
+        integer*8 exception
+
+C       DO-NOT-DELETE splicer.begin(whof77.UIPort._ctor2)
+C       Insert-Code-Here {whof77.UIPort._ctor2} (_ctor2 method)
+C       
+C       This method has not been implemented
+C       
+
+        integer*8 throwaway
+        call sidl_NotImplementedException__create_f
+     $      (exception, throwaway)
+        if (exception .ne. 0) then
+           call sidl_NotImplementedException_setNote_f(
+     $         exception,
+     $         'This method has not been implemented',
+     $         throwaway)
+        endif
+        return
+C       DO-NOT-DELETE splicer.end(whof77.UIPort._ctor2)
+        end
+
+
+C       
+C       Method:  _dtor[]
 C       Class destructor called when the class is deleted.
 C       
 
-        subroutine whof77_UIPort__dtor_impl(self)
+        subroutine whof77_UIPort__dtor_fi(self, exception)
         implicit none
+C        in whof77.UIPort self
         integer*8 self
+C        out sidl.BaseInterface exception
+        integer*8 exception
+
 C       DO-NOT-DELETE splicer.begin(whof77.UIPort._dtor)
-C       Insert the implementation here...
+C       Insert-Code-Here {whof77.UIPort._dtor} (_dtor method)
+C       
+C       This method has not been implemented
+C       
+
+        integer*8 throwaway
+        call sidl_NotImplementedException__create_f
+     $      (exception, throwaway)
+        if (exception .ne. 0) then
+           call sidl_NotImplementedException_setNote_f(
+     $         exception,
+     $         'This method has not been implemented',
+     $         throwaway)
+        endif
+        return
 C       DO-NOT-DELETE splicer.end(whof77.UIPort._dtor)
+        end
+
+
+C       
+C       Method:  _load[]
+C       Static class initializer called exactly once before any user-defined method is dispatched
+C       
+
+        subroutine whof77_UIPort__load_fi(exception)
+        implicit none
+C        out sidl.BaseInterface exception
+        integer*8 exception
+
+C       DO-NOT-DELETE splicer.begin(whof77.UIPort._load)
+C       Insert-Code-Here {whof77.UIPort._load} (_load method)
+C       
+C       This method has not been implemented
+C       
+
+        integer*8 throwaway
+        call sidl_NotImplementedException__create_f
+     $      (exception, throwaway)
+        if (exception .ne. 0) then
+           call sidl_NotImplementedException_setNote_f(
+     $         exception,
+     $         'This method has not been implemented',
+     $         throwaway)
+        endif
+        return
+C       DO-NOT-DELETE splicer.end(whof77.UIPort._load)
         end
 
 
@@ -85,16 +183,35 @@ C
 C       Method:  ui[]
 C       
 
-        subroutine whof77_UIPort_ui_impl(self, retval)
+        subroutine whof77_UIPort_ui_fi(self, retval, exception)
         implicit none
+C        in whof77.UIPort self
         integer*8 self
+C        out int retval
         integer*4 retval
+C        out sidl.BaseInterface exception
+        integer*8 exception
+
 C       DO-NOT-DELETE splicer.begin(whof77.UIPort.ui)
-C       Insert the implementation here...
+C       Insert-Code-Here {whof77.UIPort.ui} (ui method)
+C       
+C       This method has not been implemented
+C       
+
+        integer*8 throwaway
+        call sidl_NotImplementedException__create_f
+     $      (exception, throwaway)
+        if (exception .ne. 0) then
+           call sidl_NotImplementedException_setNote_f(
+     $         exception,
+     $         'This method has not been implemented',
+     $         throwaway)
+        endif
+        return
 C       DO-NOT-DELETE splicer.end(whof77.UIPort.ui)
         end
 
 
 C       DO-NOT-DELETE splicer.begin(_miscellaneous_code_end)
-C       Insert extra code here...
+C       Insert-Code-Here {_miscellaneous_code_end} (extra code)
 C       DO-NOT-DELETE splicer.end(_miscellaneous_code_end)

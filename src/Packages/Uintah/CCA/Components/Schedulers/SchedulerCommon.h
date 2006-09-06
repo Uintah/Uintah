@@ -172,6 +172,8 @@ WARNING
     int numTasks_;
     int d_generation;
 
+    const VarLabel * reloc_new_posLabel_;
+
     SimulationStateP d_sharedState;
 
     std::vector<OnDemandDataWarehouseP> dws;
@@ -215,7 +217,7 @@ WARNING
     //! These are to store which vars we have to copy to the new grid
     //! in a copy data task.  Set in scheduleDataCopy and used in
     //! copyDataToNewGrid.
-    typedef map<const VarLabel*, MaterialSubset*> label_matl_map;
+    typedef map<const VarLabel*, MaterialSubset*, VarLabel::Compare> label_matl_map;
     vector<label_matl_map> label_matls_;
 
     //! set in addTask - can be used until initialize is called...

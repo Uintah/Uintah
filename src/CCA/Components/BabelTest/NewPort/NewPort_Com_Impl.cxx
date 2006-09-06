@@ -24,16 +24,16 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+
 // 
 // File:          NewPort_Com_Impl.cxx
 // Symbol:        NewPort.Com-v1.0
 // Symbol Type:   class
-// Babel Version: 0.11.0
+// Babel Version: 0.99.2
 // Description:   Server-side implementation for NewPort.Com
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.11.0
 // 
 #include "NewPort_Com_Impl.hxx"
 
@@ -49,10 +49,21 @@
 #ifndef included_sidl_ClassInfo_hxx
 #include "sidl_ClassInfo.hxx"
 #endif
+#ifndef included_sidl_NotImplementedException_hxx
+#include "sidl_NotImplementedException.hxx"
+#endif
 // DO-NOT-DELETE splicer.begin(NewPort.Com._includes)
 #include "NewPort.hxx"
 #include <SCIRun/Babel/framework_TypeMap.hxx>
 // DO-NOT-DELETE splicer.end(NewPort.Com._includes)
+
+// speical constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!
+NewPort::Com_impl::Com_impl() : StubBase(reinterpret_cast< 
+  void*>(::NewPort::Com::_wrapObj(this)),false) , _wrapped(true){ 
+  // DO-NOT-DELETE splicer.begin(NewPort.Com._ctor2)
+  // Insert-Code-Here {NewPort.Com._ctor2} (ctor2)
+  // DO-NOT-DELETE splicer.end(NewPort.Com._ctor2)
+}
 
 // user defined constructor
 void NewPort::Com_impl::_ctor() {
@@ -79,7 +90,7 @@ void NewPort::Com_impl::_load() {
 
 // user defined non-static methods:
 /**
- * Starts up a component presence in the calling framework.
+ *  Starts up a component presence in the calling framework.
  * @param Svc the component instance's handle on the framework world.
  * Contracts concerning Svc and setServices:
  * 
@@ -97,21 +108,22 @@ void NewPort::Com_impl::_load() {
  */
 void
 NewPort::Com_impl::setServices_impl (
-  /* in */UCXX ::gov::cca::Services services ) 
+  /* in */::gov::cca::Services services ) 
 {
   // DO-NOT-DELETE splicer.begin(NewPort.Com.setServices)
+  // Insert-Code-Here {NewPort.Com.setServices} (setServices method)
   svc = services;
-  UCXX ::NewPort::GoPort gp = UCXX ::NewPort::GoPort::_create();
+  ::NewPort::GoPort gp = ::NewPort::GoPort::_create();
   gp.setServices(svc);
 
-  UCXX ::gov::cca::Port goPort = UCXX ::sidl::babel_cast<UCXX ::gov::cca::Port>(gp);
-  UCXX ::framework::TypeMap tm = UCXX ::framework::TypeMap::_create();
+  ::gov::cca::Port goPort = ::sidl::babel_cast< ::gov::cca::Port>(gp);
+  ::framework::TypeMap tm = ::framework::TypeMap::_create();
   if (goPort._not_nil()) {
     svc.addProvidesPort(goPort, std::string("go"), std::string("gov.cca.ports.GoPort"), tm);
   }
 
-  UCXX ::NewPort::StringPort sp = UCXX ::NewPort::StringPort::_create();
-  UCXX ::gov::cca::Port strPort = UCXX ::sidl::babel_cast<UCXX ::gov::cca::Port>(sp);
+  ::NewPort::StringPort sp = ::NewPort::StringPort::_create();
+  ::gov::cca::Port strPort = ::sidl::babel_cast< ::gov::cca::Port>(sp);
   if (strPort._not_nil()) {
     svc.addProvidesPort(strPort, "pstrport", "gov.cca.ports.StringPort", tm);
   }

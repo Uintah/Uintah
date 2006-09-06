@@ -26,28 +26,16 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  BundleSetColorMap2.cc:
- *
- *  Written by:
- *   jeroen
- *
- */
-
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Ports/ColorMap2Port.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
-using namespace std;
 
 class BundleSetColorMap2 : public Module {
 public:
   BundleSetColorMap2(GuiContext*);
-
-  virtual ~BundleSetColorMap2();
   virtual void execute();
 
 private:
@@ -69,96 +57,49 @@ BundleSetColorMap2::BundleSetColorMap2(GuiContext* ctx)
 {
 }
 
-
-BundleSetColorMap2::~BundleSetColorMap2()
+void BundleSetColorMap2::execute()
 {
-}
+  BundleHandle  handle;
+  ColorMap2Handle colormap21, colormap22, colormap23;
 
-
-void
-BundleSetColorMap2::execute()
-{
-  string colormap21name = guicolormap21name_.get();
-  string colormap22name = guicolormap22name_.get();
-  string colormap23name = guicolormap23name_.get();
-  string bundlename = guibundlename_.get();
-    
-  BundleHandle handle, oldhandle;
-  BundleIPort  *iport;
-  BundleOPort *oport;
-  ColorMap2Handle fhandle;
-  ColorMap2IPort *ifport;
-        
-  if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
-    {
-      error("Could not find bundle input port");
-      return;
-    }
-        
-  // Create a new bundle
-  // Since a bundle consists of only handles we can copy
-  // it several times without too much memory overhead
-  if (iport->get(oldhandle))
-  {   // Copy all the handles from the existing bundle
-    handle = oldhandle->clone();
-  }
-  else
-  {   // Create a brand new bundle
-    handle = scinew Bundle;
-  }
-        
-  // Scan bundle input port 1
-  if (!(ifport = static_cast<ColorMap2IPort *>(get_iport("colormap21"))))
-  {
-    error("Could not find colormap2 1 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
-  {
-    handle->setColorMap2(colormap21name,fhandle);
-  }
-
-  // Scan colormap2 input port 2  
-  if (!(ifport = static_cast<ColorMap2IPort *>(get_iport("colormap22"))))
-  {
-    error("Could not find colormap2 2 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
-  {
-    handle->setColorMap2(colormap22name,fhandle);
-  }
-
-  // Scan colormap2 input port 3  
-  if (!(ifport = static_cast<ColorMap2IPort *>(get_iport("colormap23"))))
-  {
-    error("Could not find colormap2 3 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
-  {
-    handle->setColorMap2(colormap23name,fhandle);
-  }
-        
-  // Now post the output
-        
-  if (!(oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-  {
-    error("Could not find bundle output port");
-    return;
-  }
-    
-  if (bundlename != "")
-  {
-    handle->set_property("name",bundlename,false);
-  }
-        
-  oport->send_and_dereference(handle);
+  get_input_handle("bundle",handle,false);
+  get_input_handle("colormap21",colormap21,false);
+  get_input_handle("colormap22",colormap22,false);
+  get_input_handle("colormap23",colormap23,false);
   
-  update_state(Completed);  
+  if (inputs_changed_ || guicolormap21name_.changed() || guicolormap22name_.changed() ||
+      guicolormap23name_.changed() || guibundlename_.changed() || !oport_cached("bundle"))
+  {
+  
+    std::string colormap21name = guicolormap21name_.get();
+    std::string colormap22name = guicolormap22name_.get();
+    std::string colormap23name = guicolormap23name_.get();
+    std::string bundlename = guibundlename_.get();
+
+    if (handle.get_rep())
+    {
+      handle.detach();
+    }
+    else
+    {
+      handle = scinew Bundle();
+      if (handle.get_rep() == 0)
+      {
+        error("Could not allocate new bundle");
+        return;
+      }
+    }
+                
+    if (colormap21.get_rep()) handle->setColorMap2(colormap21name,colormap21);
+    if (colormap22.get_rep()) handle->setColorMap2(colormap22name,colormap22);
+    if (colormap23.get_rep()) handle->setColorMap2(colormap23name,colormap23);
+    if (bundlename != "")
+    {
+      handle->set_property("name",bundlename,false);
+    }
+
+    send_output_handle("bundle",handle,false);
+  }
 }
 
 

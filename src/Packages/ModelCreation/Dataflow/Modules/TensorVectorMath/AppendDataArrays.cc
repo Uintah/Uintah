@@ -26,16 +26,10 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-
-#include <sgi_stl_warnings_off.h>
-#include <vector>
-#include <sgi_stl_warnings_on.h>
-
-
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
-#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Module.h>
+#include <Dataflow/Network/Ports/MatrixPort.h>
 
 namespace ModelCreation {
 
@@ -55,87 +49,71 @@ AppendDataArrays::AppendDataArrays(GuiContext* ctx)
 
 void AppendDataArrays::execute()
 {
-  MatrixIPort *iport;
-  MatrixOPort *oport;
-  
-  size_t numinputs = (num_input_ports()-1);
-  
   std::vector<MatrixHandle> matrixlist;
-  int n, m;
+
+  if (!(get_dynamic_input_handles("Array",matrixlist,true)));
   
-  m = 0;
-  n = 0;
-  for (size_t p=0;p<numinputs; p++)
+  if (inputs_changed_ || !oport_cached("Array"))
   {
-    if(!(iport = dynamic_cast<MatrixIPort *>(get_input_port(p))))
+    size_t numinputs = matrixlist.size();
+  
+    int m = 0;
+    int n = 0;
+    for (size_t p=0;p<numinputs; p++)
     {
-      error("Could not locate matrix input port");
-      return;
-    }
-    
-    iport->get(matrixlist[p]);
-    
-    if (matrixlist[p].get_rep() == 0)
-    {
-      error("One of the input ports has no matrix");
-      return;
-    }
-    
-    if (matrixlist[p]->nrows() > 0)
-    {
-      if (n == 0)
+      if (matrixlist[p]->nrows() > 0)
       {
-        n = matrixlist[p]->ncols();
-      }
-      else
-      {
-        if (n != matrixlist[p]->ncols())
+        if (n == 0)
         {
-          error("Not every matrix has the same number of columns");
-          return;
+          n = matrixlist[p]->ncols();
+        }
+        else
+        {
+          if (n != matrixlist[p]->ncols())
+          {
+            error("Not every matrix has the same number of columns");
+            return;
+          }
         }
       }
+      m += matrixlist[p]->nrows();
     }
-    m += matrixlist[p]->nrows();
-  }
   
-  MatrixHandle omatrix = dynamic_cast<Matrix *>(scinew DenseMatrix(m,n));
-  
-  if (omatrix.get_rep() == 0)
-  {
-    error("Could not allocate destination matrix");
-    return;
-  }
-  
-  if (omatrix->get_data_pointer() == 0)
-  {
-    error("Could not allocate destination matrix");
-    return;
-  }
-
-  double *dataptr = omatrix->get_data_pointer();
-
-  for (size_t p=0;p<numinputs; p++)
-  {
-    MatrixHandle imatrix = dynamic_cast<Matrix *>(matrixlist[p]->dense());
-    if (imatrix.get_rep() == 0)
+    MatrixHandle omatrix = dynamic_cast<Matrix *>(scinew DenseMatrix(m,n));
+    
+    if (omatrix.get_rep() == 0)
     {
-      error("Could not convert matrix into dense matrix");
+      error("Could not allocate destination matrix");
       return;
     }
-    double *sdataptr = imatrix->get_data_pointer();
-    int ssize = imatrix->nrows()*imatrix->ncols();
-    for ( size_t q = 0; q < ssize; q++)
+    
+    if (omatrix->get_data_pointer() == 0)
     {
-      *dataptr = *sdataptr;
-      dataptr++;
-      sdataptr++;
+      error("Could not allocate destination matrix");
+      return;
     }
-  }
-  
-  if (oport = dynamic_cast<MatrixOPort *>(get_output_port(0)))
-  {
-    oport->send(omatrix);
+
+    double *dataptr = omatrix->get_data_pointer();
+
+    for (size_t p=0;p<numinputs; p++)
+    {
+      MatrixHandle imatrix = dynamic_cast<Matrix *>(matrixlist[p]->dense());
+      if (imatrix.get_rep() == 0)
+      {
+        error("Could not convert matrix into dense matrix");
+        return;
+      }
+      double *sdataptr = imatrix->get_data_pointer();
+      int ssize = imatrix->nrows()*imatrix->ncols();
+      for ( int q = 0; q < ssize; q++)
+      {
+        *dataptr = *sdataptr;
+        dataptr++;
+        sdataptr++;
+      }
+    }
+   
+    send_output_handle("Array",omatrix,false);
   }
 }
 

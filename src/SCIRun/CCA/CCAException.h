@@ -28,7 +28,7 @@
 
 
 /*
- *  CCAException.h: 
+ *  CCAException.h:
  *
  *  Written by:
  *   Steven G. Parker
@@ -38,13 +38,15 @@
  *
  */
 
-#ifndef SCIRun_Framework_CCAException_h
-#define SCIRun_Framework_CCAException_h
+#ifndef SCIRun_CCA_CCAException_h
+#define SCIRun_CCA_CCAException_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 #include <string>
 
 namespace SCIRun {
+
+typedef sci::cca::CCAException::pointer CCAExceptionPtr;
 
 /**
  * \class CCAException

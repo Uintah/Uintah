@@ -49,6 +49,7 @@ namespace SCIRun {
       inside_(false),
       numeric_(variables->get_bool("numeric"))
     { 
+      REGISTER_CATCHER_TARGET_BY_NAME(TextEntry::redraw, Text::redraw);
       flags_ &= ~TextRenderer::CURSOR;      
     }
 
@@ -105,17 +106,6 @@ namespace SCIRun {
     BaseTool::propagation_state_e
     TextEntry::process_event(event_handle_t event)
     {
-      const RectRegion &region = get_region();
-      PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
-      if (pointer) {
-        if (region.inside(pointer->get_x(), pointer->get_y()) &&
-            get_vars()->get_bool("cursor")) {
-          flags_ |= TextRenderer::CURSOR;
-        } else {
-          flags_ &= ~TextRenderer::CURSOR;
-        }
-      }
-
       KeyEvent *key = dynamic_cast<KeyEvent *>(event.get_rep());
       if (key && (key->get_key_state() & KeyEvent::KEY_PRESS_E)) {
         int code = key->get_keyval();
@@ -162,7 +152,7 @@ namespace SCIRun {
         } else if (code == SCIRun_Left) {
           cursor_position_ = Max(int(cursor_position_-1), 0);
         } else if (code == SCIRun_Right) {
-          cursor_position_ = Min(int(cursor_position_+1), int(str_.length()));
+          cursor_position_ = Min(int(cursor_position_+1),int(str_.length()));
         } else {
           //          cerr << get_id() << " cannot handle keycode: " << code << std::endl;
         }

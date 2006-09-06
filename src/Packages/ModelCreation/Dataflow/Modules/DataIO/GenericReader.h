@@ -106,21 +106,13 @@ template <class HType>
 void
 GenericReader<HType>::execute()
 {
-
-  // CODE FOR FILENAME INPUT PORT ////
-  StringIPort* filenameport;
-  if (filenameport = dynamic_cast<StringIPort *>(get_input_port("Filename")))
+  StringHandle filename;
+  if (get_input_handle("Filename",filename,false))
   {
-    StringHandle filenameH;
-    filenameport->get(filenameH);
-    if (filenameH.get_rep())
-    {
-      filename_.set(filenameH->get());
-      get_ctx()->reset();
-    }
+    filename_.set(filename->get());
+    get_ctx()->reset();
   }
-  ////////////////////////////////////
-
+  
   const string fn(filename_.get());
 
   // Read the status of this file so we can compare modification timestamps
@@ -189,18 +181,10 @@ GenericReader<HType>::execute()
       delete stream;
     }
   }
-  
-  SimpleOPort<HType> *outport = (SimpleOPort<HType> *)get_output_port(0);
-  if (!outport) {
-    error("Unable to initialize oport.");
-    return;
-  }
-  outport->send_and_dereference(handle_,true);
-
-  // CODE FOR FILENAME OUTPUT PORT ////
-  StringHandle filenameH = scinew String(filename_.get());
-  send_output_handle("Filename",filenameH,false);
-  ////////////////////////////////////
+ 
+  send_output_handle(0,handle_,true);
+  filename = scinew String(filename_.get());
+  send_output_handle("Filename",filename,false);
 }
 
 } // End namespace SCIRun

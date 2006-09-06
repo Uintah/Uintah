@@ -50,13 +50,16 @@ namespace SCIRun {
 
     BaseTool::propagation_state_e
     Parent::process_event(event_handle_t e) {
-      for (Drawables_t::iterator citer = children_.begin(); 
-           citer != children_.end(); ++citer)
-      {
-        (*citer)->set_region(get_region());
-        (*citer)->process_event(e);
+      BaseTool::propagation_state_e state = Drawable::process_event(e);
+      if (state != STOP_E) {
+        for (Drawables_t::iterator citer = children_.begin(); 
+             citer != children_.end(); ++citer)
+        {
+          (*citer)->set_region(get_region());
+          (*citer)->process_event(e);
+        }
       }
-      return Drawable::process_event(e);
+      return state;
     }
 
     int

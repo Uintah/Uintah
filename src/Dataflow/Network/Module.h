@@ -325,6 +325,12 @@ protected:
 			  bool cache_in_module = false,
 			  bool send_intermediate = false);
 
+  template<class DH>
+  bool send_output_handle(int numport, DH& handle,
+			  bool cache_in_module = false,
+			  bool send_intermediate = false);
+
+
   //! Specialization for geometry ports.
   bool send_output_handle(string port_name,
 			  GeomHandle& handle,
@@ -600,6 +606,38 @@ Module::send_output_handle(string name, DH& handle,
 
   return true;
 }
+
+
+template<class DH>
+bool
+Module::send_output_handle(int portnum, DH& handle,
+			   bool cache, bool send_intermediate)
+{
+  //! Don't send on empty, assume cached version is more valid instead.
+  //! Dunno if false return value is correct.  We don't check returns
+  //! on this one.
+  if (!handle.get_rep()) return false;
+
+  SimpleOPort<DH> *dataport;
+
+  //! We always require the port to be there.
+  if ( !(dataport = dynamic_cast<SimpleOPort<DH>*>(get_oport(portnum))) )
+  {
+    std::ostringstream oss;
+    oss << portnum;
+    throw "Incorrect data type sent to output port number '" + oss.str() +
+      "' (dynamic_cast failed).";
+    return false;
+  }
+
+  if( send_intermediate )
+    dataport->send_intermediate( handle );
+  else
+    dataport->send_and_dereference( handle, cache );
+
+  return true;
+}
+
 
 
 }

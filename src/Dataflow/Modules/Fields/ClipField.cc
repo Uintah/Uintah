@@ -207,10 +207,8 @@ ClipField::execute()
 
   bool do_clip_p = false;
 
-  // Maybe get clip field.
-  FieldIPort *cfp = (FieldIPort *)get_iport("Clip Field");
   FieldHandle cfieldhandle;
-  if (cfp->get(cfieldhandle) && cfieldhandle.get_rep() &&
+  if (get_input_handle("Clip Field", cfieldhandle, false) &&
       cfieldhandle->generation != last_clip_generation_)
   {
     last_clip_generation_ = cfieldhandle->generation;
@@ -249,7 +247,8 @@ ClipField::execute()
     // Force clipper to sync with new widget.
     if (clipper_.get_rep() && !clipper_->mesh_p()) { clipper_ = 0; }
     first_pass_ = false;
-  }  else if (!bbox_similar_to(last_bounds_, bbox) || exec_mode_.get() == "reset")
+  }
+  else if (!bbox_similar_to(last_bounds_, bbox) || exec_mode_.get() == "reset")
   {
     Point bmin = bbox.min();
     Point bmax = bbox.max();
@@ -262,7 +261,7 @@ ClipField::execute()
       bmax.x(bmax.x() + size_estimate);
     }
     if (fabs(bmax.y() - bmin.y()) < 1.0e-6) 
-   {
+    {
       bmin.y(bmin.y() - size_estimate);
       bmax.y(bmax.y() + size_estimate);
     }
@@ -379,10 +378,7 @@ ClipField::execute()
     }
   }
 
-  if (ofield_.get_rep())
-  {
-    send_output_handle("Output Field", ofield_, true);
-  }
+  send_output_handle("Output Field", ofield_, true);
 }
 
 

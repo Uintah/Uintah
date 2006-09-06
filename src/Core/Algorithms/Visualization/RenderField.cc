@@ -413,4 +413,72 @@ RenderScalarFieldBase::get_compile_info(const TypeDescription *vftd,
   return rval;
 }
 
+
+bool 
+render_field(FieldHandle fld_handle, RenderParams &params) 
+{
+  const TypeDescription *ftd = fld_handle->get_type_description();
+  const TypeDescription *ltd = fld_handle->order_type_description();
+  // description for just the data in the field
+
+  // Get the Algorithm.
+  CompileInfoHandle ci = RenderFieldBase::get_compile_info(ftd, ltd);
+
+  if (!DynamicCompilation::compile(ci, params.dalgo_)) {
+    return false;
+  }
+  
+  params.renderer_ = (RenderFieldBase*)params.dalgo_.get_rep();
+  if (! params.renderer_) {
+    cerr << "Error: could not get algorithm in render_field" 
+	 << endl;
+    return false;
+  }
+
+  if (params.faces_normals_) {
+    fld_handle->mesh()->synchronize(Mesh::NORMALS_E);
+  }
+
+  params.renderer_->render(fld_handle,
+			   params.do_nodes_, 
+			   params.do_edges_, 
+			   params.do_faces_, 
+			   params.color_map_, 
+			   params.def_material_,
+			   params.ndt_, 
+			   params.edt_, 
+			   params.ns_, 
+			   params.es_, 
+			   params.vscale_, 
+			   params.normalize_vectors_,
+			   params.node_resolution_, 
+			   params.edge_resolution_,
+			   params.faces_normals_,
+			   params.nodes_transparency_,
+			   params.edges_transparency_,
+			   params.faces_transparency_,
+			   params.nodes_usedefcolor_,
+			   params.edges_usedefcolor_,
+			   params.faces_usedefcolor_,
+			   params.approx_div_,
+			   params.faces_usetexture_);
+
+  if (params.do_text_) {
+    params.text_geometry_ = 
+      params.renderer_->render_text(fld_handle,
+				    params.color_map_.get_rep(),
+				    params.text_use_default_color_,
+				    params.text_backface_cull_,
+				    params.text_fontsize_,
+				    params.text_precision_,
+				    params.text_render_locations_,
+				    params.text_show_data_,
+				    params.text_show_nodes_,
+				    params.text_show_edges_,
+				    params.text_show_faces_,
+				    params.text_show_cells_);
+  }
+  return true;
+}
+
 } // end namespace SCIRun

@@ -1441,8 +1441,8 @@ ImageCM2Widget::resize(int width, int height)
   info->samples[1]= width;
   info->samples[2]= height;
 
-  for (int a = 0; a < 3; a++) {
-
+  for (int a = 0; a < 3; a++)
+  {
     if (nrrdKindSize(nin->axis[a].kind) > 1) {
       std::cerr << "Trying to resample along axis " << a 
                 << " which is not of nrrdKindDomain or nrrdKindUnknown." 
@@ -1495,6 +1495,10 @@ ImageCM2Widget::rasterize(Array3<float>& array)
   {
     nout = resize(array.dim2(), array.dim1());
   }
+  else
+  {
+    nout = pixels_->nrrd_;
+  }
 
   // return if resample fails.
   if (!nout) return;
@@ -1511,6 +1515,11 @@ ImageCM2Widget::rasterize(Array3<float>& array)
       array(j,i,2) = trans * *dat++;
       array(j,i,3) = trans * *dat;
     }
+  }
+
+  if (nout != pixels_->nrrd_)
+  {
+    nrrdNuke(nout);
   }
 }
 

@@ -186,10 +186,7 @@ EITAnalyticSolution::execute()
 {
   //! Input ports
   MatrixIPort*  iportCurrentPatternIndex_;
-  FieldIPort*   iportField_;
   MatrixIPort*  iportElectrodeParams_;
-  //! Output ports
-  MatrixOPort*  oportPotentialVector_;
 
   // This module is currently able to process only TetVols and
   // TriSurfs - the following flag used is to indicate which

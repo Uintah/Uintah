@@ -26,30 +26,15 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  BundleMerge.cc:
- *
- *  Written by:
- *   jeroen
- *   ~Tue Dec 28 11:53:06 MST 2004
- *
- */
-
-
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
-using namespace std;
 
 class BundleMerge : public Module {
 public:
   BundleMerge(GuiContext*);
-
-  virtual ~BundleMerge();
-
   virtual void execute();
 };
 
@@ -60,31 +45,30 @@ DECLARE_MAKER(BundleMerge)
 {
 }
 
-BundleMerge::~BundleMerge(){
-}
+void BundleMerge::execute()
+{
+  std::vector<BundleHandle> inputs;
+  
+  get_dynamic_input_handles("bundle",inputs,false);
 
-void
-BundleMerge::execute(){
- 
-  BundleHandle ch, mh;
-  ch = scinew Bundle;
-  BundleOPort *oport;
-  BundleIPort *iport;
- 
- 
-  for( int p = 0; p < num_input_ports(); p++)
+  if (inputs_changed_ || !oport_cached("bundle"))
+  {
+    BundleHandle output;
+    output = scinew Bundle;
+  
+    if (output.get_rep() == 0)
     {
-      iport = static_cast<BundleIPort *>(get_iport(p));
-      if (iport->get(mh))
-        {
-          ch->merge(mh);
-        }
+      error("Could not allocate new bundle");
+      return;
     }
- 
-  if ((oport = static_cast<BundleOPort *>(get_oport("bundle"))))
+
+
+    for (size_t p=0; p<inputs.size();p++)
     {
-      oport->send(ch);
+      output->merge(inputs[p]);
     }
- 
+    
+    send_output_handle("bundle",output,false);
+  }
 }
 

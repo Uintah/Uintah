@@ -164,7 +164,8 @@ exitaterror=true
 <nwtimestep>
 <name>Semi-Implicit Timestepper</name>
 <file>TstepSBmicro.c</file>
-<parameters>dt=0.005
+<parameters>adaptive=no
+dt=0.005
 tfinal=5
 </parameters>
 <description>This is currently the only timestepper for the discrete multidomain available.
@@ -191,18 +192,19 @@ tfinal=1500
 <output>
 <name>SCIRun output</name>
 <file>OutputSCIRun.c</file>
-<parameters>dumpspacing=0.005
-dumpvm=yes
-dumpvi=no
-dumpve=no
-dumpvb=no
-dumpq=no
-dumpaux=no
-dumpr=no
-dumpb=no
-dumptime=yes
-dumpstep=100
-dumpsize=20
+<parameters># Parameters OutputSCIRun
+scirun_dump_vm=yes
+scirun_dump_vi=no
+scirun_dump_ve=no
+scirun_dump_vb=no
+scirun_dump_q=no
+scirun_dump_r=no
+scirun_dump_b=no
+scirun_dump_time=yes
+# number of steps between recordings
+scirun_dump_step=100
+# numer of steps in one file
+scirun_dump_size=20
 </parameters>
 <description>The configuration writes a series of output files with a header file that can be read into SCIRun. The 'dumpstep' parameter can be used to set the number of timeframes in a single file. All the separate files are linked by one NRRD header file.
 </description>
@@ -211,18 +213,21 @@ dumpsize=20
 <output>
 <name>SCIRun/Text output</name>
 <file>OutputSCIRun.c OutputText.c</file>
-<parameters>dumpspacing=0.005
-dumpvm=yes
-dumpvi=no
-dumpve=no
-dumpvb=no
-dumpq=no
-dumpr=no
-dumpb=no
-dumpaux=no
-dumptime=yes
-dumpstep=100
-dumpsize=20
+<parameters># Parameters OutputSCIRun
+scirun_dump_vm=yes
+scirun_dump_vi=no
+scirun_dump_ve=no
+scirun_dump_vb=no
+scirun_dump_q=no
+scirun_dump_r=no
+scirun_dump_b=no
+scirun_dump_time=yes
+# Number of steps between recordings
+scirun_dump_step=100
+# Number of steps in one file
+scirun_dump_size=20
+
+# Parameters OutputText
 printspacing=0.005
 printnodes=0
 printvm=yes
@@ -239,7 +244,8 @@ printtime=no
 <output>
 <name>Dump/Text output</name>
 <file>OutputDump.c OutputText.c</file>
-<parameters>dumpspacing=0.005
+<parameters># Parameters OutputDump
+dumpspacing=0.005
 dumpvm=yes
 dumpvi=no
 dumpve=no
@@ -247,6 +253,8 @@ dumpvb=no
 dumpq=no
 dumpaux=no
 dumptime=no
+
+# Parameters OutputText
 printspacing=0.005
 printnodes=0
 printvm=yes
@@ -271,10 +279,6 @@ autorestart=false
 ckptfile=check
 ckptinterval=1.0
 useauxvars=no
-ecs_domaintype=0
-ics_domaintype=1
-vi0=-84
-ve0=0
 </parameters>
 <description>Default parameters for neurowave application.
 </description>

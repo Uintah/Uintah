@@ -42,12 +42,20 @@ using std::deque;
 using std::vector;
 
 #define REGISTER_CATCHER_TARGET(catcher_target_function_name) \
-  this->register_target(#catcher_target_function_name, \
-    static_cast<SCIRun::Skinner::SignalCatcher::CatcherFunctionPtr> \
-      (&catcher_target_function_name));
+  this->register_default_thrower \
+    (this->register_target(#catcher_target_function_name, \
+     static_cast<SCIRun::Skinner::SignalCatcher::CatcherFunctionPtr> \
+       (&catcher_target_function_name)));
+
+#define REGISTER_CATCHER_TARGET_BY_NAME(target_name, function_name) \
+  this->register_default_thrower \
+    (this->register_target(#target_name, \
+      static_cast<SCIRun::Skinner::SignalCatcher::CatcherFunctionPtr> \
+        (&function_name)));
 
 
 namespace SCIRun {
+  class PointerEvent;
   namespace Skinner {
 
     class Signal; 
@@ -69,8 +77,12 @@ namespace SCIRun {
       Variables *         get_vars() { return variables_; }
       void                set_vars(Variables *vars) { variables_ = vars;}
 
+
       SignalThrower *     get_signal_thrower() { return thrower_; }
       void                set_signal_thrower(SignalThrower *t) { thrower_=t; }
+
+      BaseTool::propagation_state_e get_signal_result() { return result_; }
+      void  set_signal_result(BaseTool::propagation_state_e r) { result_ = r; }
       
       virtual Signal *    clone() { return new Signal(*this); }
       virtual void        io(Piostream&);
@@ -80,6 +92,7 @@ namespace SCIRun {
       Variables *         variables_; 
       //      string              signal_data_;
       SignalThrower *     thrower_;
+      BaseTool::propagation_state_e result_;
     };
     
     class SignalCatcher {
@@ -113,7 +126,7 @@ namespace SCIRun {
       // Only method
       NodeCatchers_t            get_all_targets() { return catcher_targets_; }
     protected:
-      void                      register_target(const string &targetname,
+      CatcherTargetInfo_t       register_target(const string &targetname,
                                                 CatcherFunctionPtr function);
 
     private:
@@ -130,13 +143,17 @@ namespace SCIRun {
       typedef vector<SignalCatcher::CatcherTargetInfo_t> AllSignalCatchers_t;
       typedef map<string, AllSignalCatchers_t> SignalToAllCatchers_t;
 
-
       event_handle_t                    throw_signal(const string &,
                                                      Variables *vars);
-      
-      
+
+      event_handle_t                    throw_signal(event_handle_t &);
+
       static event_handle_t             throw_signal(SignalToAllCatchers_t &,
                                                      event_handle_t &signal);
+
+
+      
+      void                              register_default_thrower(const SignalCatcher::CatcherTargetInfo_t &);
 
       static SignalToAllCatchers_t      collapse_tree(SignalCatcher::TreeOfCatchers_t &);
 
@@ -162,6 +179,31 @@ namespace SCIRun {
         Signal(name, 0, vars), variables_(vars) {}
       Variables * get_vars() { return variables_; }
     };
+
+    class PointerSignal : public Signal
+    {
+      PointerEvent *pointer_;
+    public:
+      PointerSignal(const string &name, PointerEvent *pointer) :
+        Signal(name, 0, 0), 
+        pointer_(pointer)
+      {}
+
+      PointerEvent *get_pointer_event() { return pointer_; }
+    };
+
+    class KeySignal : public Signal
+    {
+      KeyEvent *key_;
+    public:
+      KeySignal(const string &name, KeyEvent *key) :
+        Signal(name, 0, 0), 
+        key_(key)
+      {}
+
+      KeyEvent *get_key_event() { return key_; }
+    };
+
   }
 }
 

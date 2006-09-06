@@ -45,5 +45,10 @@ PSELIBS := Core/Containers Core/Exceptions Core/Thread \
 
 LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY)
 
+ifeq ($(HAVE_INSIGHT), yes)   
+        LIBS += $(INSIGHT_LIBRARY)
+endif
+
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

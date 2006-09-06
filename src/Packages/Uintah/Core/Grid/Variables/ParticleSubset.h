@@ -71,6 +71,14 @@ WARNING
     ParticleSet* getParticleSet() const {
       return d_pset;
     }
+
+    bool operator==(const ParticleSubset& ps) const {
+      return d_numParticles == ps.d_numParticles && 
+        // a null patch means that there is no patch center for the pset
+        // (probably on an AMR copy data timestep)
+        (!d_patch || !ps.d_patch || d_patch == ps.d_patch) && 
+        d_matlIndex == ps.d_matlIndex && d_low == ps.d_low && d_high == ps.d_high;
+    }
       
     //////////
     // Insert Documentation Here:

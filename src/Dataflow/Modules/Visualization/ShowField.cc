@@ -540,8 +540,17 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
 
     // set new scale defaults based on input.
     BBox bbox = fld_handle->mesh()->get_bounding_box();
-    Vector diag = bbox.diagonal();
-    cur_mesh_scale_factor_ = diag.length();
+   
+    if (bbox.valid()) 
+    {  
+      Vector diag = bbox.diagonal(); 
+      cur_mesh_scale_factor_ = diag.length();
+    } 
+    else 
+    {
+      cur_mesh_scale_factor_ = 1.0;
+    }
+    
     gui_use_defaults_.reset();
     if (gui_use_defaults_.get() || 
 	sci_getenv_p("SCIRUN_USE_DEFAULT_SETTINGS")) 

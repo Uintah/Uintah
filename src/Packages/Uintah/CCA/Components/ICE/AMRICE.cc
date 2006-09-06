@@ -1144,6 +1144,9 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
   
   Ghost::GhostType gn  = Ghost::None;
   Ghost::GhostType gac = Ghost::AroundCells;
+  Ghost::GhostType gx  = Ghost::AroundFacesX;
+  Ghost::GhostType gy  = Ghost::AroundFacesY;
+  Ghost::GhostType gz  = Ghost::AroundFacesZ;
   bool  fat = true;  // possibly (F)rom (A)nother (T)askgraph
   
   
@@ -1154,32 +1157,32 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
   // Fluxes from the fine level            
                                       // MASS
   task->requires(Task::NewDW, lb->mass_X_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gx, 1, fat);
   task->requires(Task::NewDW, lb->mass_Y_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gy, 1, fat);
   task->requires(Task::NewDW, lb->mass_Z_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gz, 1, fat);
                                       // MOMENTUM
   task->requires(Task::NewDW, lb->mom_X_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gx, 1, fat);
   task->requires(Task::NewDW, lb->mom_Y_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gy, 1, fat);
   task->requires(Task::NewDW, lb->mom_Z_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gz, 1, fat);
                                       // INT_ENG
   task->requires(Task::NewDW, lb->int_eng_X_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gx, 1, fat);
   task->requires(Task::NewDW, lb->int_eng_Y_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gy, 1, fat);
   task->requires(Task::NewDW, lb->int_eng_Z_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gz, 1, fat);
                                       // SPECIFIC VOLUME
   task->requires(Task::NewDW, lb->sp_vol_X_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gx, 1, fat);
   task->requires(Task::NewDW, lb->sp_vol_Y_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+               0,Task::FineLevel, 0, Task::NormalDomain, gy, 1, fat);
   task->requires(Task::NewDW, lb->sp_vol_Z_FC_fluxLabel,
-               0,Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);             
+               0,Task::FineLevel, 0, Task::NormalDomain, gz, 1, fat);             
 
   //__________________________________
   // Model Variables.
@@ -1190,11 +1193,11 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
       AMR_refluxVariable* rvar = *iter;
       
       task->requires(Task::NewDW, rvar->var_X_FC_flux,
-                  0, Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+                  0, Task::FineLevel, 0, Task::NormalDomain, gx, 1, fat);
       task->requires(Task::NewDW, rvar->var_Y_FC_flux,
-                  0, Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+                  0, Task::FineLevel, 0, Task::NormalDomain, gy, 1, fat);
       task->requires(Task::NewDW, rvar->var_Z_FC_flux,
-                  0, Task::FineLevel, 0, Task::NormalDomain, gn, 0, fat);
+                  0, Task::FineLevel, 0, Task::NormalDomain, gz, 1, fat);
                   
       task->modifies(rvar->var_X_FC_flux, fat);
       task->modifies(rvar->var_Y_FC_flux, fat);
@@ -1253,7 +1256,7 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
       new_dw->get(cv,    lb->specific_heatLabel,indx,coarsePatch, gac,1);
       
       Level::selectType finePatches;
-      coarsePatch->getFineLevelPatches(finePatches);
+      coarsePatch->getOtherLevelPatches(1, finePatches, 1); // get with a ghost cell to make sure you get all patches 
       
       
       
@@ -1264,8 +1267,8 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
         //   compute the correction
         // one_zero:  used to increment the CFI counter.
         if(finePatch->hasCoarseFineInterfaceFace() ){
-          cout_doing << d_myworld->myrank() 
-                     << "  coarsePatch " << coarsePatch->getID() 
+          cout_doing << d_myworld->myrank()
+                     << "  coarsePatch " << coarsePatch->getID()
                      <<" finepatch " << finePatch->getID()<< endl;
 
 /*`==========TESTING==========*/
@@ -1428,7 +1431,7 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
        l[y] != h[y] && l[z] != h[z] ){
     isRight_CP_FP_pair = true;
   }
-  
+
   
  /*`==========TESTING==========*/
 #if 0
@@ -1446,8 +1449,7 @@ void ICE::refluxCoarseLevelIterator(Patch::FaceType patchFace,
 /*===========TESTING==========`*/  
 
   
-  //__________________________________
-  //bulletproofing
+  //____ B U L L E T   P R O O F I N G----  
   if (isRight_CP_FP_pair ){
     IntVector diff = Abs(l - h);
     if( ( l.x() >= h.x() || l.y() >= h.y() || l.z() >= h.z() ) || diff[p_dir] > 1) {
@@ -1562,7 +1564,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
       new_dw->get(cv,                   lb->specific_heatLabel,indx,coarsePatch, gn,0);
       
       Level::selectType finePatches;
-      coarsePatch->getFineLevelPatches(finePatches); 
+      coarsePatch->getOtherLevelPatches(1, finePatches, 1); // get with a ghost cell to make sure you get all patches 
       
       for(int i=0; i < finePatches.size();i++){  
         const Patch* finePatch = finePatches[i];        
@@ -1739,7 +1741,7 @@ void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
                                        const PatchSubset* coarsePatches,
                                        const MaterialSubset*,
                                        DataWarehouse*,
-                                       DataWarehouse*,
+                                       DataWarehouse* new_dw,
                                        string description)
 {
   const Level* coarseLevel = getLevel(coarsePatches);
@@ -1787,7 +1789,10 @@ void AMRICE::reflux_BP_check_CFI_cells(const ProcessorGroup*,
               int n_CFI_cells     =  finePatch->getFaceMark(1, patchFace);
               //__________________________________
               //  If the number of "marked" cells/numICEMatls != n_CFI_cells
-              if ( n_touched_cells != n_CFI_cells){
+              // ignore if a timestep restart has already been requested
+              bool tsr = new_dw->timestepRestarted();
+              
+              if ( n_touched_cells != n_CFI_cells && !tsr){
                 ostringstream warn;
                 warn << d_myworld->myrank() << " AMRICE:refluxing_" << description
                      << " \n CFI face: "

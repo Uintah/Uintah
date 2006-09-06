@@ -19,6 +19,7 @@ SRCS     += $(SRCDIR)/ApplyMappingMatrix.cc\
             $(SRCDIR)/ConvertToTetVol.cc\
             $(SRCDIR)/ConvertToTriSurf.cc\
             $(SRCDIR)/DomainBoundary.cc\
+            $(SRCDIR)/ClipAtIndeces.cc\
             $(SRCDIR)/ClipBySelectionMask.cc\
             $(SRCDIR)/IndicesToData.cc\
             $(SRCDIR)/DistanceField.cc\
@@ -39,6 +40,7 @@ SRCS     += $(SRCDIR)/ApplyMappingMatrix.cc\
             $(SRCDIR)/GatherFields.cc\
             $(SRCDIR)/MergeFields.cc\
             $(SRCDIR)/MergeMeshes.cc\
+            $(SRCDIR)/RemoveUnusedNodes.cc\
             $(SRCDIR)/ScaleField.cc\
             $(SRCDIR)/SplitByConnectedRegion.cc\
             $(SRCDIR)/SplitFieldByDomain.cc\

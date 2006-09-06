@@ -279,7 +279,8 @@ EventManager::run()
     if (event->get_time()) {
       last_event_time = event->get_time();
     } else if (last_event_time) {
-      last_event_time += (timer.time() - last_timer_time)*100.0;
+      last_event_time +=
+        (unsigned long)((timer.time() - last_timer_time) * 100.0);
       event->set_time(last_event_time);
     }
     last_timer_time = timer.time();

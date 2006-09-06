@@ -30,12 +30,11 @@
  * File:          whoc_Com_Impl.h
  * Symbol:        whoc.Com-v1.0
  * Symbol Type:   class
- * Babel Version: 0.11.0
+ * Babel Version: 0.99.2
  * Description:   Server-side implementation for whoc.Com
  * 
  * WARNING: Automatically generated; only changes within splicers preserved
  * 
- * babel-version = 0.11.0
  */
 
 #ifndef included_whoc_Com_Impl_h
@@ -67,7 +66,7 @@
 #endif
 
 /* DO-NOT-DELETE splicer.begin(whoc.Com._includes) */
-/* Put additional include files here... */
+/* Insert-Code-Here {whoc.Com._includes} (include files) */
 /* DO-NOT-DELETE splicer.end(whoc.Com._includes) */
 
 /*
@@ -106,6 +105,13 @@ extern
 void
 impl_whoc_Com__ctor(
   /* in */ whoc_Com self,
+  /* out */ sidl_BaseInterface *_ex);
+
+extern
+void
+impl_whoc_Com__ctor2(
+  /* in */ whoc_Com self,
+  /* in */ void* private_data,
   /* out */ sidl_BaseInterface *_ex);
 
 extern

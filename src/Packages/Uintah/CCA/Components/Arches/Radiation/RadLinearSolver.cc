@@ -486,7 +486,7 @@ RadLinearSolver::radLinearSolve()
     if(ierr)
       throw PetscError(ierr, "KSPSetType", __FILE__, __LINE__);
   }
-  ierr = KSPSetTolerances(solver,PETSC_DEFAULT, d_tolerance, PETSC_DEFAULT, PETSC_DEFAULT);
+  ierr = KSPSetTolerances(solver,1.0e-50, d_tolerance, PETSC_DEFAULT, PETSC_DEFAULT);
   if(ierr)
     throw PetscError(ierr, "KSPSetTolerances", __FILE__, __LINE__);
 

@@ -84,9 +84,6 @@ AttributeTrf::~AttributeTrf()
 void
 AttributeTrf::execute()
 {
-  FieldIPort *iportGeomF = (FieldIPort *)get_iport("InputFld");
-  MatrixOPort *oportAttrib = (MatrixOPort *)get_oport("OutputMat");
-
   // Getting input field.
   FieldHandle hFieldGeomF;
   if (!get_input_handle("InputFld", hFieldGeomF)) return;
