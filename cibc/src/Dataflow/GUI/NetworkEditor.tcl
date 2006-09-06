@@ -970,6 +970,7 @@ proc popupLoadMenu {} {
     if { $netedit_loadnet == ""} return
     #dont ask user before clearing canvas
     ClearCanvas 0
+    set inserting 0
     if {[string match *.srn $netedit_loadnet]} {
         # compensate for spaces in the filename (windows)
 	after 500 uplevel \#0 netedit load_srn \{\{$netedit_loadnet\}\}
