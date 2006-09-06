@@ -27,40 +27,13 @@
 #
 
 
-# *** NOTE ***
-#
-# Do not remove or modify the comment line:
-#
-# #[INSERT NEW ?????? HERE]
-#
-# It is required by the Component Wizard to properly edit this file.
-# if you want to edit this file by hand, see the "Create A New Component"
-# documentation on how to do it correctly.
+include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+SRCDIR := Packages/Kepler/Core
 
-SRCDIR   := Packages/Ptolemy/Core/Comm
+SUBDIRS := \
+           $(SRCDIR)/Comm
 
-SRCS     += \
-            $(SRCDIR)/PtolemyServer.cc \
-            $(SRCDIR)/NetworkHelper.cc
-	         
-#[INSERT NEW CODE FILE HERE]
+include $(SCIRUN_SCRIPTS)/recurse.mk
 
-ifeq ($(LARGESOS),yes)
-    PSELIBS := Dataflow Core
-else
-    PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
-               Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
-               Core/Malloc Core/Services Core/XMLUtil Core/SystemCall \
-               Dataflow/Modules/Render \
-
-endif
-   
-LIBS :=  $(LIBS) $(XML_LIBRARY) $(THREAD_LIBRARY) $(SEMAPHORE_LIBRARY)
-
-SOFLAGS := \
-            -shared -L$(LIBDIR) $(CFLAGS)
-
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
+include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
