@@ -26,7 +26,7 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-//this file will include some helper functions that will enable us to 
+//this file will include some helper functions that will enable us to
 //process the strings that are sent to the SCIRun server by the
 //SPA workflow.
 //by oscar barney
@@ -34,24 +34,27 @@
 
 #include <Core/Containers/StringUtil.h>
 
-/*  turns input characters into a vector of strings
-    and returns the vector. sets size to be the number
-    of things that are in the vector.
-*/
-vector<string> processCstr(char *input, int *size){
-	//change the input into a string then vector 
-	string temp = string(input);
-	vector<string> v = split_string(temp,';');
-	if(temp == "\n"){
-		*size = 0;	//case where we do not do anything
-	}	else {
-		*size = (int)v.size();	
-		//cut \n off the end of the last string
-		v[*size-1] = v[*size-1].substr(0,v[*size-1].size()-1);
-	}	
-	return v;
+/**
+ * Turns input characters into a vector of strings
+ * and returns the vector. sets size to be the number
+ * of things that are in the vector.
+ */
+std::vector<std::string> processCString(const char* input, int& size)
+{
+  if (input == 0) {
+    size = 0;
+    return std::vector<std::string>();
+  }
+
+  // change the input into a string then vector
+  std::string temp(input);
+  std::vector<std::string> v = SCIRun::split_string(temp,';');
+  if (temp == "\n") {
+    size = 0;  //case where we do not do anything
+  } else {
+    size = (int) v.size();
+    // cut \n off the end of the last string
+    v[size - 1] = v[size - 1].substr(0, v[size - 1].size() - 1);
+  }
+  return v;
 }
-
-
-
-
