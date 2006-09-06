@@ -31,8 +31,8 @@
 
 #include <Core/Events/BaseEvent.h>
 #include <Dataflow/GuiInterface/TCLInterface.h>
-#include <Dataflow/TkExtensions/TkOpenGLEventSpawner.h>
-#include <Dataflow/TkExtensions/TkOpenGLContext.h>
+#include <Dataflow/GuiInterface/TkOpenGLEventSpawner.h>
+#include <Dataflow/GuiInterface/TkOpenGLContext.h>
 
 namespace SCIRun {
   TkOpenGLEventSpawner::TkOpenGLEventSpawner(TkOpenGLContext *context) :

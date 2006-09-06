@@ -74,7 +74,7 @@
 #include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
-#include <Dataflow/TkExtensions/TkOpenGLContext.h>
+#include <Dataflow/GuiInterface/TkOpenGLContext.h>
 #include <Core/Geom/OpenGLViewport.h>
 #include <Core/Geom/FreeType.h>
 #include <Core/Volume/CM2Widget.h>

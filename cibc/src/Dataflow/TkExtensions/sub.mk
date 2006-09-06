@@ -41,17 +41,14 @@ SRCS     += \
 	$(SRCDIR)/tkOpenGL.c \
 	$(SRCDIR)/tk3daux.c \
 	$(SRCDIR)/tkRange.c \
-	$(SRCDIR)/tkUnixRange.c \
-	$(SRCDIR)/TkOpenGLContext.cc	    		\
-	$(SRCDIR)/TkOpenGLEventSpawner.cc    		\
-
+	$(SRCDIR)/tkUnixRange.c
 
 ifneq ($(IS_WIN),yes) 
  SRCS += $(SRCDIR)/tclUnixNotify-$(TK_VERSION).c
 endif
 
 
-PSELIBS := Core/Thread Core/Geom
+PSELIBS := Core/Thread
 LIBS := $(BLT_LIBRARY) \
 	$(PLPLOT_LIBRARY) \
 	$(ITK_LIBRARY) \
