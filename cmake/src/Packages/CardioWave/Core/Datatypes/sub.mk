@@ -28,8 +28,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Packages/CardioWave/Core/Datatypes
 
-SRCS     += $(SRCDIR)/TimeDataFile.cc\
-            $(SRCDIR)/CardioWaveConverter.cc\
+SRCS     += $(SRCDIR)/CardioWaveConverter.cc\
             $(SRCDIR)/Startup.cc\
             $(SRCDIR)/cardiowaveIEplugin.cc\
 #[INSERT NEW CODE FILE HERE]

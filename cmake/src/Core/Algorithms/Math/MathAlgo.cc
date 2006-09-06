@@ -125,36 +125,23 @@ MathAlgo::ResizeMatrix(MatrixHandle input, MatrixHandle& output, int m, int n)
     }
     
     int k = 0;
-
+    newrow[0] = 0;
+    
     for (int p=1; p<(m+1); p++)
     {
       if (p <= sm)
       {
         for (int q = row[p-1]; q < row[p]; q++)
         {
-          if (col[p] < n) 
+          if (col[q] < n) 
           {
-            newval[k] = val[p];
-            newcol[k] = col[p];
+            newval[k] = val[q];
+            newcol[k] = col[q];
             k++;
           }        
         }
       }
-    }
-    
-            
-    int r=0;
-    newrow[0] = 0;
-    for (int p=1; p<(m+1); p++)
-    {
-      if (p <= sm)
-      {
-        for (int q = row[p-1]; q < row[p]; q++)
-        {
-          if (col[q] < n) r++;
-        }
-      }
-      newrow[p] = r;
+      newrow[p] = k;
     }
     
     output = scinew SparseRowMatrix(m,n,newrow,newcol,newnnz,newval);
@@ -1073,7 +1060,7 @@ MathAlgo::MatrixSelectColumns(MatrixHandle input, MatrixHandle& output, std::vec
       return (false);      
     }
    
-    std::vector<unsigned int> s(n,n);
+    std::vector<unsigned int> s(n, n);
     for (unsigned int r=0; r< columns.size(); r++) s[columns[r]] = r;
       
     int k =0;
@@ -1081,7 +1068,7 @@ MathAlgo::MatrixSelectColumns(MatrixHandle input, MatrixHandle& output, std::vec
     {
       for (int q=rr[r]; q<rr[r+1]; q++)
       {
-        if (s[cc[q]] < n) k++;
+        if (s[cc[q]] < (unsigned int)n) k++;
       }
     }
     
@@ -1111,7 +1098,7 @@ MathAlgo::MatrixSelectColumns(MatrixHandle input, MatrixHandle& output, std::vec
       nrr[r] =k;
       for (int q=rr[r]; q<rr[r+1]; q++)
       {
-        if (s[cc[q]] < n) 
+        if (s[cc[q]] < (unsigned int)n)
         {
           ncc[k] = s[cc[q]];
           nvv[k] = vv[q];
@@ -1483,7 +1470,7 @@ MathAlgo::MatrixAppendRows(MatrixHandle input,MatrixHandle& output,MatrixHandle 
     }   
   
     int newnnz = rr[m]+arr[am];
-    int *nrr = scinew int[newm];
+    int *nrr = scinew int[newm+1];
     int *ncc = scinew int[newnnz];
     double *nvv = scinew double[newnnz];
     
@@ -1685,7 +1672,6 @@ MathAlgo::MatrixAppendColumns(MatrixHandle input,MatrixHandle& output,MatrixHand
       return (false);      
     }    
     
-    int k = 0;
     for (int r=0; r<m; r++)
     {
       for (int q=0;q<n;q++) 
@@ -1774,7 +1760,7 @@ MathAlgo::MatrixSelectSubMatrix(MatrixHandle input, MatrixHandle& output, std::v
     {
       for (int q=rr[rows[r]]; q<rr[rows[r]+1]; q++)
       {
-        if (s[cc[q]] < n) k++;
+        if (s[cc[q]] < (unsigned int)n) k++;
       }
     }
     
@@ -1804,7 +1790,7 @@ MathAlgo::MatrixSelectSubMatrix(MatrixHandle input, MatrixHandle& output, std::v
       nrr[r] = k;
       for (int q=rr[rows[r]]; q<rr[rows[r+1]]; q++)
       {
-        if (s[cc[q]] < n) 
+        if (s[cc[q]] < (unsigned int)n) 
         {
           ncc[k] = s[cc[q]];
           nvv[k] = vv[q];

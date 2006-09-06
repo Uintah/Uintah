@@ -53,6 +53,10 @@ namespace SCIRun {
       timer_(new TimeThrottle())
     {
       //      REGISTER_CATCHER_TARGET(Animation::AnimateHeight);
+      //      register_default_thrower
+      // (this->register_target("blah",
+      //                       static_cast<SCIRun::Skinner::SignalCatcher::CatcherFunctionPtr> (&Animation::AnimateVariableAscending)));
+
       REGISTER_CATCHER_TARGET(Animation::AnimateVariableAscending);
       REGISTER_CATCHER_TARGET(Animation::AnimateVariableDescending);
     }

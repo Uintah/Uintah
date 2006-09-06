@@ -43,7 +43,7 @@ namespace SCIRun {
       focus_mode_(false),
       focus_(true)
     {
-
+      REGISTER_CATCHER_TARGET(Box::redraw);
       REGISTER_CATCHER_TARGET(Box::make_red);
       REGISTER_CATCHER_TARGET(Box::make_blue);
       REGISTER_CATCHER_TARGET(Box::make_green);
@@ -62,9 +62,10 @@ namespace SCIRun {
       return SPRING_MINMAX;
     }
 
-    void
-    Box::draw_gl()
+    BaseTool::propagation_state_e
+    Box::redraw(event_handle_t)
     {
+      get_vars()->maybe_get_color("color", color_);
       glColor4dv(&color_.r);
       glBegin(GL_QUADS);
 
@@ -74,19 +75,17 @@ namespace SCIRun {
       glVertex2dv(coords+4);
       glVertex2dv(coords+6);
       glEnd();
+      return CONTINUE_E;
     }
 
     
     BaseTool::propagation_state_e
     Box::process_event(event_handle_t event)
     {
+      //      Drawable::process_event(event);
+
       WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
-      bool draw = (window && window->get_window_state() == WindowEvent::REDRAW_E);
-
-      if (draw) {
-        draw_gl();
-      }
-
+      bool draw = window && window->get_window_state() == WindowEvent::REDRAW_E;
       PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
       KeyEvent *key = dynamic_cast<KeyEvent *>(event.get_rep());
 
@@ -116,7 +115,7 @@ namespace SCIRun {
       
       propagate = (propagate || !focus_mode_ || draw || focus_) ;
         
-      if (propagate) {
+      if (1 || propagate) {
         return Parent::process_event(event);
       } 
 

@@ -30,12 +30,11 @@
  * File:          whoc_Com_Impl.c
  * Symbol:        whoc.Com-v1.0
  * Symbol Type:   class
- * Babel Version: 0.11.0
+ * Babel Version: 0.99.2
  * Description:   Server-side implementation for whoc.Com
  * 
  * WARNING: Automatically generated; only changes within splicers preserved
  * 
- * babel-version = 0.11.0
  */
 
 /*
@@ -48,16 +47,18 @@
  */
 
 #include "whoc_Com_Impl.h"
+#include "sidl_NotImplementedException.h"
+#include "sidl_Exception.h"
 
 /* DO-NOT-DELETE splicer.begin(whoc.Com._includes) */
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "whoc_IDPort.h"
-#include "sidl_Exception.h"
-
 /* DO-NOT-DELETE splicer.end(whoc.Com._includes) */
 
+#define SIDL_IOR_MAJOR_VERSION 0
+#define SIDL_IOR_MINOR_VERSION 10
 /*
  * Static class initializer called exactly once before any user-defined method is dispatched
  */
@@ -73,9 +74,17 @@ impl_whoc_Com__load(
   /* out */ sidl_BaseInterface *_ex)
 {
   *_ex = 0;
-  /* DO-NOT-DELETE splicer.begin(whoc.Com._load) */
-  /* Insert-Code-Here {whoc.Com._load} (static class initializer method) */
-  /* DO-NOT-DELETE splicer.end(whoc.Com._load) */
+  {
+    /* DO-NOT-DELETE splicer.begin(whoc.Com._load) */
+    /* Insert-Code-Here {whoc.Com._load} (static class initializer method) */
+    /*
+     * This method has not been implemented
+     */
+
+    SIDL_THROW(*_ex, sidl_NotImplementedException,     "This method has not been implemented");
+  EXIT:;
+    /* DO-NOT-DELETE splicer.end(whoc.Com._load) */
+  }
 }
 /*
  * Class constructor called when the class is created.
@@ -93,14 +102,45 @@ impl_whoc_Com__ctor(
   /* out */ sidl_BaseInterface *_ex)
 {
   *_ex = 0;
-  /* DO-NOT-DELETE splicer.begin(whoc.Com._ctor) */
-  struct whoc_Com__data* data = (struct whoc_Com__data*) malloc(sizeof(struct whoc_Com__data));
-  data->services = NULL;
+  {
+    /* DO-NOT-DELETE splicer.begin(whoc.Com._ctor) */
+    struct whoc_Com__data* data = (struct whoc_Com__data*) malloc(sizeof(struct whoc_Com__data));
+    data->services = NULL;
 
-  whoc_Com__set_data(self, data);
-  /* DO-NOT-DELETE splicer.end(whoc.Com._ctor) */
+    whoc_Com__set_data(self, data);
+    /* DO-NOT-DELETE splicer.end(whoc.Com._ctor) */
+  }
 }
 
+/*
+ * Special Class constructor called when the user wants to wrap his own private data.
+ */
+
+#undef __FUNC__
+#define __FUNC__ "impl_whoc_Com__ctor2"
+
+#ifdef __cplusplus
+extern "C"
+#endif
+void
+impl_whoc_Com__ctor2(
+  /* in */ whoc_Com self,
+  /* in */ void* private_data,
+  /* out */ sidl_BaseInterface *_ex)
+{
+  *_ex = 0;
+  {
+    /* DO-NOT-DELETE splicer.begin(whoc.Com._ctor2) */
+    /* Insert-Code-Here {whoc.Com._ctor2} (special constructor method) */
+    /*
+     * This method has not been implemented
+     */
+
+    SIDL_THROW(*_ex, sidl_NotImplementedException,     "This method has not been implemented");
+  EXIT:;
+    /* DO-NOT-DELETE splicer.end(whoc.Com._ctor2) */
+  }
+}
 /*
  * Class destructor called when the class is deleted.
  */
@@ -117,20 +157,24 @@ impl_whoc_Com__dtor(
   /* out */ sidl_BaseInterface *_ex)
 {
   *_ex = 0;
-  /* DO-NOT-DELETE splicer.begin(whoc.Com._dtor) */
-  struct whoc_Com__data* data = whoc_Com__get_data(self);
+  {
+    /* DO-NOT-DELETE splicer.begin(whoc.Com._dtor) */
+    struct whoc_Com__data* data = whoc_Com__get_data(self);
 
-  if (data->services != NULL) {
-    gov_cca_Services_deleteRef(data->services, _ex);
+    if (data->services != NULL) {
+      gov_cca_Services_deleteRef(data->services, _ex);
+    }
+
+    if (data) {
+      free((void*) data);
+      whoc_Com__set_data(self, NULL);
+    }
+    /* DO-NOT-DELETE splicer.end(whoc.Com._dtor) */
   }
-
-  free((void*) data);
-  whoc_Com__set_data(self, NULL);
-  /* DO-NOT-DELETE splicer.end(whoc.Com._dtor) */
 }
 
 /*
- * Starts up a component presence in the calling framework.
+ *  Starts up a component presence in the calling framework.
  * @param Svc the component instance's handle on the framework world.
  * Contracts concerning Svc and setServices:
  * 
@@ -160,7 +204,8 @@ impl_whoc_Com_setServices(
   /* out */ sidl_BaseInterface *_ex)
 {
   *_ex = 0;
-  /* DO-NOT-DELETE splicer.begin(whoc.Com.setServices) */
+  {
+    /* DO-NOT-DELETE splicer.begin(whoc.Com.setServices) */
   struct whoc_Com__data* data = whoc_Com__get_data(self);
   sidl_BaseInterface ex;
   gov_cca_Port ip;
@@ -177,7 +222,8 @@ impl_whoc_Com_setServices(
   gov_cca_Services_addRef(services, _ex);
   SIDL_CHECK(*_ex);
  EXIT:;
-  /* DO-NOT-DELETE splicer.end(whoc.Com.setServices) */
+    /* DO-NOT-DELETE splicer.end(whoc.Com.setServices) */
+  }
 }
 /* Babel internal methods, Users should not edit below this line. */
 struct gov_cca_Component__object* 

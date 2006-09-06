@@ -37,7 +37,7 @@
 #include <Core/Math/MinMax.h>
 
 #include <sci_gl.h>
-
+#include <sci_glu.h>
 
 namespace SCIRun {
 
@@ -94,6 +94,7 @@ Skinner::Gradient::Gradient(Variables *vars)
 void
 Skinner::Gradient::render_gl()
 {
+
   const RectRegion &region = get_region();
   const double x = region.x1();
   const double y = region.y1();
@@ -214,6 +215,22 @@ BaseTool::propagation_state_e
 Skinner::Gradient::process_event(event_handle_t event) {
   WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
   if (window && window->get_window_state() == WindowEvent::REDRAW_E) {
+  get_vars()->maybe_get_color("bottom-color",colors_[SW]);
+  get_vars()->maybe_get_color("left-color",colors_[SW]);
+  get_vars()->maybe_get_color("sw-color",colors_[SW]);
+
+  get_vars()->maybe_get_color("bottom-color", colors_[SE]);
+  get_vars()->maybe_get_color("right-color",colors_[SE]);
+  get_vars()->maybe_get_color("se-color",colors_[SE]);
+
+  get_vars()->maybe_get_color("top-color", colors_[NE]);
+  get_vars()->maybe_get_color("right-color", colors_[NE]);
+  get_vars()->maybe_get_color("ne-color", colors_[NE]);
+
+  get_vars()->maybe_get_color("top-color", colors_[NW]);
+  get_vars()->maybe_get_color("left-color", colors_[NW]);
+  get_vars()->maybe_get_color("nw-color", colors_[NW]);
+
     if (anchor_ == -1)
       render_gl();
     else 

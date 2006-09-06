@@ -27,30 +27,17 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  BundleGetPath.cc:
- *
- *  Written by:
- *   Jeroen Stinstra
- *
- */
-
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Ports/PathPort.h>
 #include <Core/Geom/Path.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
-using namespace std;
 
 class BundleGetPath : public Module {
 public:
   BundleGetPath(GuiContext*);
-
-  virtual ~BundleGetPath();
-
   virtual void execute();
   
 private:
@@ -69,97 +56,55 @@ DECLARE_MAKER(BundleGetPath)
       guipath3name_(get_ctx()->subVar("path3-name"), "path3"),
       guipaths_(get_ctx()->subVar("path-selection"), "")
 {
-
-}
-
-BundleGetPath::~BundleGetPath(){
 }
 
 void BundleGetPath::execute()
 {
-  string path1name = guipath1name_.get();
-  string path2name = guipath2name_.get();
-  string path3name = guipath3name_.get();
-  string pathlist;
-        
+  // Define input handle:
   BundleHandle handle;
-  BundleIPort  *iport;
-  BundleOPort *oport;
-  PathHandle fhandle;
-  PathOPort *ofport;
-        
-  if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
+  
+  // Get data from input port:
+  if (!(get_input_handle("bundle",handle,true))) return;
+  
+  if (inputs_changed_ || guipath1name_.changed() || guipath2name_.changed() ||
+      guipath3name_.changed() || !oport_cached("bundle") || !oport_cached("path1") ||
+       !oport_cached("path2") || !oport_cached("path3"))
   {
-    error("Could not find bundle input port");
-    return;
-  }
-
-  if (!(iport->get(handle)))
-  {   
-    warning("No bundle connected to the input port");
-    return;
-  }
-
-  int numPaths = handle->numPaths();
-  for (int p = 0; p < numPaths; p++)
-  {
-    pathlist += "{" + handle->getPathName(p) + "} ";
-  }
-
-
-  if (handle.get_rep() == 0)
-  {   
-    warning("Empty bundle connected to the input port");
-    return;
-  }
-
-
-  guipaths_.set(pathlist);
-  get_ctx()->reset();
-
- 
-  if (!(ofport = static_cast<PathOPort *>(get_oport("path1"))))
-  {
-    error("Could not find path 1 output port");
-    return; 
-  }
- 
-   if (handle->isPath(path1name))
-  {
-    fhandle = handle->getPath(path1name);
-    ofport->send(fhandle);
-  }
+    PathHandle fhandle;
+    std::string path1name = guipath1name_.get();
+    std::string path2name = guipath2name_.get();
+    std::string path3name = guipath3name_.get();
+    std::string pathlist;
       
- 
-  if (!(ofport = static_cast<PathOPort *>(get_oport("path2"))))
-  {
-    error("Could not find path 2 output port");
-    return; 
+    int numPaths = handle->numPaths();
+    for (int p = 0; p < numPaths; p++)
+    {
+      pathlist += "{" + handle->getPathName(p) + "} ";
+    }
+
+    guipaths_.set(pathlist);
+    get_ctx()->reset();
+
+    // Send path1 if we found one that matches the name:
+    if (handle->isPath(path1name))
+    {
+      fhandle = handle->getPath(path1name);
+      send_output_handle("path1",fhandle,false);
+    } 
+
+    // Send path2 if we found one that matches the name:
+    if (handle->isPath(path2name))
+    {
+      fhandle = handle->getPath(path2name);
+      send_output_handle("path2",fhandle,false);
+    } 
+
+    // Send path3 if we found one that matches the name:
+    if (handle->isPath(path3name))
+    {
+      fhandle = handle->getPath(path3name);
+      send_output_handle("path3",fhandle,false);
+    } 
   }
- 
-  if (handle->isPath(path2name))
-  {
-    fhandle = handle->getPath(path2name);
-    ofport->send(fhandle);
-  }
-      
- 
-  if (!(ofport = static_cast<PathOPort *>(get_oport("path3"))))
-  {
-    error("Could not find path 3 output port");
-    return; 
-  }
-    
-  if (handle->isPath(path3name))
-  {
-    fhandle = handle->getPath(path3name);
-    ofport->send(fhandle);
-  }
-        
-  if ((oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-  {
-    oport->send(handle);
-  }
-  update_state(Completed);        
 }
 

@@ -68,7 +68,7 @@
             <object class="Root::Text">
               <var name="row">1</var>
               <var name="col">1</var>
-              <var name="text">$ToolDialog::text</var>
+              <var name="text">ITK Threshold Levelset Image Filter: </var>
               <var name="size">30</var>
               <var name="fgcolor">#000000FF</var>
               <var name="bgcolor">#FFFFFF80</var>

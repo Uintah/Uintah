@@ -880,7 +880,7 @@ ImageMesh<Basis>::get_elems(typename Elem::array_type &result,
   const unsigned int i1 = idx.i_ < ni_-1 ? idx.i_+1 : ni_-1;
   const unsigned int j1 = idx.j_ < nj_-1 ? idx.j_+1 : nj_-1;
 
-  unsigned int i, j, k;
+  unsigned int i, j;
   for (j = j0; j < j1; j++)
     for (i = i0; i < i1; i++)
       result.push_back(typename Face::index_type(this, i, j));

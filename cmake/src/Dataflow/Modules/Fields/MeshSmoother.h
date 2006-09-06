@@ -125,7 +125,11 @@ MeshSmootherAlgoShared<FIELD>::execute( ProgressReporter *reporter,
     fieldh = compute_boundary( reporter, fieldh, scheme );
   }
   
-  if( scheme == "SmartLaplacian" )
+  if( scheme == "None" )
+  {
+    return fieldh;
+  }
+  else if( scheme == "SmartLaplacian" )
   { 
     return smart_laplacian_smoother( reporter, fieldh );
   }

@@ -28,13 +28,17 @@ using namespace std;
 //  MODELS_DOING_COUT:   dumps when tasks are scheduled and performed
 static DebugStream cout_doing("MODELS_DOING_COUT", false);
 
-Simple_Burn::Simple_Burn(const ProcessorGroup* myworld, ProblemSpecP& params)
-  : ModelInterface(myworld), params(params)
+Simple_Burn::Simple_Burn(const ProcessorGroup* myworld, 
+                         const ProblemSpecP& params,
+                         const ProblemSpecP& prob_spec)
+  : ModelInterface(myworld), d_params(params), d_prob_spec(prob_spec)
 {
   mymatls = 0;
   Mlb  = scinew MPMLabel();
   Ilb  = scinew ICELabel();
   MIlb  = scinew MPMICELabel();
+  
+  d_saveConservedVars = scinew saveConservedVars();
   //__________________________________
   //  diagnostic labels
   onSurfaceLabel   = VarLabel::create("Simple_Burn::onSurface",
@@ -42,6 +46,12 @@ Simple_Burn::Simple_Burn(const ProcessorGroup* myworld, ProblemSpecP& params)
                      
   surfaceTempLabel = VarLabel::create("Simple_Burn::surfaceTemp",
                      CCVariable<double>::getTypeDescription());
+                     
+  totalMassBurnedLabel  = VarLabel::create( "totalMassBurned",
+                     sum_vartype::getTypeDescription() );
+                     
+  totalHeatReleasedLabel= VarLabel::create( "totalHeatReleased",
+                     sum_vartype::getTypeDescription() );
                 
 }
 
@@ -50,6 +60,7 @@ Simple_Burn::~Simple_Burn()
   delete Ilb;
   delete Mlb;
   delete MIlb;
+  delete d_saveConservedVars;
   
   VarLabel::destroy(surfaceTempLabel);
   VarLabel::destroy(onSurfaceLabel);
@@ -63,15 +74,15 @@ void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
 {
   d_sharedState = sharedState;
   bool defaultActive=true;
-  params->getWithDefault("Active", d_active, defaultActive);
-  params->require("ThresholdTemp",    d_thresholdTemp);
-  params->require("ThresholdPressure",d_thresholdPress);
-  matl0 = sharedState->parseAndLookupMaterial(params, "fromMaterial");
+  d_params->getWithDefault("Active",    d_active, defaultActive);
+  d_params->require("ThresholdTemp",    d_thresholdTemp);
+  d_params->require("ThresholdPressure",d_thresholdPress);
+  matl0 = sharedState->parseAndLookupMaterial(d_params, "fromMaterial");
   if(d_active){
-    matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
-    params->require("Enthalpy",         d_Enthalpy);
-    params->require("BurnCoeff",        d_BurnCoeff);
-    params->require("refPressure",      d_refPress);
+    matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");
+    d_params->require("Enthalpy",         d_Enthalpy);
+    d_params->require("BurnCoeff",        d_BurnCoeff);
+    d_params->require("refPressure",      d_refPress);
 
     //__________________________________
     //  define the materialSet
@@ -109,6 +120,21 @@ void Simple_Burn::problemSetup(GridP&, SimulationStateP& sharedState,
     }
     mymatls->addReference();
   }
+  
+  //__________________________________
+  //  Are we saving the total burned mass and total burned energy
+  ProblemSpecP DA_ps = d_prob_spec->findBlock("DataArchiver");
+  for (ProblemSpecP child = DA_ps->findBlock("save"); child != 0;
+                    child = child->findNextBlock("save")) {
+    map<string,string> var_attr;
+    child->getAttributes(var_attr);
+    if (var_attr["label"] == "totalMassBurned"){
+      d_saveConservedVars->mass  = true;
+    }
+    if (var_attr["label"] == "totalHeatReleased"){
+      d_saveConservedVars->energy = true;
+    }
+  }
 }
 //______________________________________________________________________
 //
@@ -132,12 +158,11 @@ void Simple_Burn::outputProblemSpec(ProblemSpecP& ps)
 void Simple_Burn::activateModel(GridP&, SimulationStateP& sharedState,
 			        ModelSetup*)
 {
-  cout << "I'm in activateModel" << endl;
   d_active=true;
-  matl1 = sharedState->parseAndLookupMaterial(params, "toMaterial");
-  params->require("Enthalpy",         d_Enthalpy);
-  params->require("BurnCoeff",        d_BurnCoeff);
-  params->require("refPressure",      d_refPress);
+  matl1 = sharedState->parseAndLookupMaterial(d_params, "toMaterial");
+  d_params->require("Enthalpy",         d_Enthalpy);
+  d_params->require("BurnCoeff",        d_BurnCoeff);
+  d_params->require("refPressure",      d_refPress);
                                                                               
   //__________________________________
   //  REdefine the materialSet
@@ -221,6 +246,14 @@ void Simple_Burn::scheduleComputeModelSources(SchedulerP& sched,
   t->computes(Simple_Burn::onSurfaceLabel,     one_matl);
   t->computes(Simple_Burn::surfaceTempLabel,   one_matl);
   
+  if(d_saveConservedVars->mass ){
+    t->computes(Simple_Burn::totalMassBurnedLabel);
+  }
+  if(d_saveConservedVars->energy){
+    t->computes(Simple_Burn::totalHeatReleasedLabel);
+  }
+  
+  
   t->modifies(mi->mass_source_CCLabel);
   t->modifies(mi->momentum_source_CCLabel);
   t->modifies(mi->energy_source_CCLabel);
@@ -246,6 +279,8 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
 
   int m0 = matl0->getDWIndex();
   int m1 = matl1->getDWIndex();
+  double totalBurnedMass = 0;
+  double totalHeatReleased = 0;
  
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);  
@@ -365,6 +400,7 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
         // conservation of mass, momentum and energy                           
         mass_src_0[c] -= burnedMass;
         mass_src_1[c] += burnedMass;
+        totalBurnedMass += burnedMass;
            
         Vector momX        = vel_CC[c] * burnedMass;
         momentum_src_0[c] -= momX;
@@ -374,6 +410,7 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
         double releasedHeat = burnedMass * d_Enthalpy;
         energy_src_0[c] -= energyX;
         energy_src_1[c] += energyX + releasedHeat;
+        totalHeatReleased += releasedHeat;
 
         double createdVolx  = burnedMass * solidSp_vol[c];
         sp_vol_src_0[c] -= createdVolx;
@@ -387,6 +424,15 @@ void Simple_Burn::computeModelSources(const ProcessorGroup*,
     setBC(mass_src_1, "set_if_sym_BC",patch, d_sharedState, m1, new_dw);
    
   }
+  //__________________________________
+  //save total quantities
+  if(d_saveConservedVars->mass ){
+   new_dw->put(sum_vartype(totalBurnedMass),  Simple_Burn::totalMassBurnedLabel);
+  }
+  if(d_saveConservedVars->energy){
+   new_dw->put(sum_vartype(totalHeatReleased),Simple_Burn::totalHeatReleasedLabel);
+  }
+  
 }
 
 void Simple_Burn::scheduleCheckNeedAddMaterial(SchedulerP& sched,

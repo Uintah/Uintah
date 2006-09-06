@@ -21,7 +21,6 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 SRCDIR := Packages/CardioWave/Core
 
 SUBDIRS := \
-        $(SRCDIR)/Algorithms \
         $(SRCDIR)/Datatypes \
         $(SRCDIR)/Model \
         $(SRCDIR)/TissueModels \

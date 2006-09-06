@@ -690,7 +690,14 @@ void ICE::setupRHS(const ProcessorGroup*,
       IntVector c = *iter;
       rhs[c] = -term1[c] + massExchTerm[c] + sumAdvection[c];
     }
-    
+
+    // Renormalize massExchangeTerm to be consistent with the rest of ICE
+    if(d_models.size() > 0){
+      for(CellIterator iter=patch->getCellIterator(); !iter.done();iter++) {
+        IntVector c = *iter;
+        massExchTerm[c] /= vol;
+      }
+    }
     //__________________________________
     // set rhs = 0 under all fine patches
     // For a composite grid we ignore what's happening
@@ -842,8 +849,11 @@ void ICE::updatePressure(const ProcessorGroup*,
       printData( 0, patch, 1,desc.str(), "Press_CC",      press_CC);
     }
     //____ B U L L E T   P R O O F I N G----
+    // ignore BP if a timestep restart has already been requested
     IntVector neg_cell;
-    if(!areAllValuesPositive(press_CC, neg_cell)) {
+    bool tsr = new_dw->timestepRestarted();
+    
+    if(!areAllValuesPositive(press_CC, neg_cell) && !tsr) {
       ostringstream warn;
       warn <<"ERROR ICE::updatePressure cell "
            << neg_cell << " negative pressure\n ";        

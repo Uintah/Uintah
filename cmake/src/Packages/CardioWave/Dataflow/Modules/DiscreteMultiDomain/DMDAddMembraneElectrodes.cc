@@ -35,6 +35,7 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Algorithms/Converter/ConverterAlgo.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <sstream>
@@ -56,7 +57,7 @@ public:
 
 DECLARE_MAKER(DMDAddMembraneElectrodes)
 DMDAddMembraneElectrodes::DMDAddMembraneElectrodes(GuiContext* ctx)
-  : Module("DMDAddMembraneElectrodes", ctx, Source, "DiscreteMultiMembrane", "CardioWave")
+  : Module("DMDAddMembraneElectrodes", ctx, Source, "DiscreteMultiDomain", "CardioWave")
 {
 }
 
@@ -70,7 +71,7 @@ void DMDAddMembraneElectrodes::execute()
   // Get the input from the ports:
   if (!(get_input_handle("Electrodes",Electrodes,true))) return;
   get_input_handle("ElectrodeBundle",ElectrodeBundle,false);
-  get_input_handle("Membrane",Membrane,false);
+  if(!(get_input_handle("Membrane",Membrane,false))) return;
 
  // Test whether we need to execute:
   if (inputs_changed_ || !oport_cached("ElectrodeBundle"))
@@ -129,14 +130,23 @@ void DMDAddMembraneElectrodes::execute()
 
     // Get entry point to converter library
     SCIRunAlgo::ConverterAlgo mc(this);
+    SCIRunAlgo::FieldsAlgo falgo(this);
+
+    if (!(falgo.ClearAndChangeFieldBasis(Membrane,Membrane,"Linear")))
+    {
+      error("DMDAddMembraneElectrodes: Could not build a linear field for the membrane");
+      return;        
+    }
 
     // fill out bundle with data
     Electrode->setField("Electrodes",Electrodes);
+    Electrode->setField("Membrane",Membrane);
+
     
     StringHandle SourceFile = scinew String("OutputSCIRun.cc ");
     Electrode->setString("SourceFile",SourceFile);
 
-    StringHandle Parameters = scinew String("");
+    StringHandle Parameters = scinew String("scirun_dump_electrode=yes\nscirun_dump_electrode_time=yes\n");
     Electrode->setString("Parameters",Parameters);
 
     // Send data downstream:

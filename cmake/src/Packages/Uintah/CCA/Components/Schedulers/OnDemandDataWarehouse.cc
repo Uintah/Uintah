@@ -13,7 +13,6 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/OnDemandDataWarehouse.h>
 #include <Packages/Uintah/CCA/Ports/Scheduler.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
-#include <Packages/Uintah/CCA/Components/Schedulers/SendState.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/DependencyException.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/IncorrectAllocation.h>
@@ -332,6 +331,10 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, SendState& rs, DependencyBatch* ba
         sendset = ss.find_sendset(dest, patch, matlIndex, low, high, old_dw->d_generation);
       ssLock.unlock();  // Dd: ??
 
+      // See comment for d_timestepRestartPsets
+      if (!sendset && patch->getLowIndex() == low && patch->getHighIndex() == high)
+        sendset = d_timestepRestartPsets.find_sendset(dest, patch, matlIndex, low, high, old_dw->d_generation);
+
       if(!sendset){
 
         mixedDebug << "sendset is NULL\n";
@@ -369,9 +372,11 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, SendState& rs, DependencyBatch* ba
         int tag = PARTICLESET_TAG;
         particles << d_myworld->myrank() << " " << getID() << " Sending PARTICLE message " << tag << ", to " << dest << ", patch " << patch->getID() << ", matl " << matlIndex << ", length: " << 1 << "(" << numParticles << ") " << sendset->getLow() << " " << sendset->getHigh() << " GI " << patch->getGridIndex() << " tag " << batch->messageTag << endl; cerrLock.unlock();
         MPI_Bsend(&numParticles, 1, MPI_INT, dest, tag, d_myworld->getComm());
-        mpidbg << d_myworld->myrank() << " Done Sending PARTICLE message " << tag << ", to " << dest << ", patch " << patch->getID() << ", matl " << matlIndex << ", length: " << 1 << "(" << numParticles << ")\n"; cerrLock.unlock();
         ssLock.lock();  // Dd: ??       
         ss.add_sendset(sendset, dest, patch, matlIndex, low, high, old_dw->d_generation);
+        if (patch->getLowIndex() == low && patch->getHighIndex() == high) {
+          d_timestepRestartPsets.add_sendset(sendset, dest, patch, matlIndex, low, high, old_dw->d_generation);
+        }
         ssLock.unlock();  // Dd: ??
       }
         
@@ -442,14 +447,16 @@ OnDemandDataWarehouse::recvMPI(SendState& rs, BufferInfo& buffer,
       // if we already have a subset for the entire patch, there's little point 
       // in getting another one (and if we did, it would cause problems - see
       // comment in sendMPI)
+
       ParticleSubset* recvset;
       if (old_dw->haveParticleSubset(matlIndex, patch, patch->getLowIndex(), patch->getHighIndex())) {
         recvset = old_dw->getParticleSubset(matlIndex, patch, patch->getLowIndex(), patch->getHighIndex());
         low = patch->getLowIndex();
         high = patch->getHighIndex();
       }
-      else
+      else {
         recvset = rs.find_sendset(from, patch, matlIndex, low, high, old_dw->d_generation);
+      }
 
       if(!recvset){
         int numParticles;
@@ -460,7 +467,7 @@ OnDemandDataWarehouse::recvMPI(SendState& rs, BufferInfo& buffer,
 
         particles << d_myworld->myrank() << " " << getID() << " Posting PARTICLES receive for message " << tag << " from " << from << ", patch " << patch->getID() << ", matl " << matlIndex << ", length=" << 1 << " " << low << " " << high << " GI " << patch->getGridIndex() << " tag " << batch->messageTag << "\n";      
         MPI_Recv(&numParticles, 1, MPI_INT, from, tag, d_myworld->getComm(), &status);
-        particles << d_myworld->myrank() << "   recved " << numParticles << " particles " << endl;
+        //particles << d_myworld->myrank() << "   recved " << numParticles << " particles " << endl;
         
         // sometime we have to force a receive to match a send.
         // in these cases just ignore this new subset
@@ -954,8 +961,18 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
     const Patch* neighbor = neighbors[i];
     const Patch* realNeighbor = neighbor->getRealPatch();
     if(neighbor){
-      IntVector newLow = Max(lowIndex, neighbor->getLowIndex());
-      IntVector newHigh = Min(highIndex, neighbor->getHighIndex());
+      IntVector newLow; 
+      IntVector newHigh; 
+
+      if (level->getIndex() == 0) {
+        newLow = Max(lowIndex, neighbor->getLowIndex());
+        newHigh = Min(highIndex, neighbor->getHighIndex());
+      }
+      else {
+        // if in a copy-data timestep, only grab extra cells if on domain boundary
+        newLow = Max(lowIndex, neighbor->getInteriorLowIndexWithBoundary(Patch::CellBased));
+        newHigh = Min(highIndex, neighbor->getInteriorHighIndexWithBoundary(Patch::CellBased));
+      }
 
       Box adjustedBox = box;
       if (neighbor->isVirtual()) {
@@ -976,6 +993,7 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
           continue;
         }
       }
+
       pset = getParticleSubset(matlIndex, neighbor, newLow, newHigh);
 
       constParticleVariable<Point> pos;
@@ -1033,7 +1051,9 @@ OnDemandDataWarehouse::get(constParticleVariableBase& constVar,
   int matlIndex = pset->getMatlIndex();
   const Patch* patch = pset->getPatch();
 
-  if((pset->getLow() == patch->getLowIndex() && pset->getHigh() == patch->getHighIndex()) ||
+  // a null patch means that there is no patch center for the pset
+  // (probably on an AMR copy data timestep)
+  if((patch && pset->getLow() == patch->getLowIndex() && pset->getHigh() == patch->getHighIndex()) ||
      pset->getNeighbors().size() == 0){
     get(constVar, label, matlIndex, patch);
   }
@@ -1389,7 +1409,7 @@ OnDemandDataWarehouse::getRegionGridVar(GridVariable& var,
     cout << d_myworld->myrank() << "  Unknown Variable " << *label << " matl " << matlIndex << " for patch(es): ";
     for (unsigned i = 0; i < missing_patches.size(); i++) 
       cout << missing_patches[i]->getID() << " ";
-    cout << endl;
+    cout << endl << " Original region: " << low << high << endl;
     throw InternalError("Missing patches in getRegion", __FILE__, __LINE__);
   }
 
@@ -2770,7 +2790,9 @@ bool OnDemandDataWarehouse::timestepRestarted()
 
 void OnDemandDataWarehouse::abortTimestep()
 {
-  aborted=true;
+  // BJW - timestep aborting does not work in MPI - disabling until we get fixed.
+  if (d_myworld->size() == 0)
+    aborted=true;
 }
 
 void OnDemandDataWarehouse::restartTimestep()

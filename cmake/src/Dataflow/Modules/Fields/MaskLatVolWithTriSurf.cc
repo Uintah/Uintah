@@ -81,9 +81,6 @@ MaskLatVolWithTriSurf::~MaskLatVolWithTriSurf()
 void
 MaskLatVolWithTriSurf::execute()
 {
-  FieldIPort *latvol = (FieldIPort *) get_iport("LatVolField");
-  FieldIPort *trisurf = (FieldIPort *) get_iport("TriSurfField");
-
   FieldHandle latvolH, trisurfH;
   if (!get_input_handle("LatVolField", latvolH)) return;
   if (!get_input_handle("TriSurfField", trisurfH)) return;

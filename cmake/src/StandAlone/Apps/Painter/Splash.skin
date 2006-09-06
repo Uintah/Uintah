@@ -26,7 +26,9 @@
     <object class="Gradient">
       <var name="nw-color">$topcolor</var>
       <var name="ne-color">#BB7777C0</var>
+      <var name="ne-color">#66666666</var>
       <var name="sw-color">#776666C0</var>
+      <var name="sw-color">#66666666</var>
       <var name="se-color">$botcolor</var>
       <var name="backslash">1</var>
 
@@ -207,14 +209,17 @@
           <var name="font">Machinegun.ttf</var>
           <var name="font">test.ttf</var>
           <var name="font">LCD.ttf</var>
-          <var name="size">100</var>
+          <var name="font">Ariendesse.ttf</var>
+          <var name="font">AtomicClockRadio.ttf</var>
+          <var name="font">AustralianSunset.ttf</var>
+          <var name="size">120</var>
           <var name="anchor">S</var>
           <var name="extruded">1</var>
           <var name="extruded">1</var>
           <var name="fgcolor">#aaaaEEa0</var>
           <var name="fgcolor">#FF444480</var>
           <var name="bgcolor">$clear</var>
-          <var name="offsetx">-18</var>
+          <var name="offsetx">-8</var>
           <var name="offsety">33</var>
 
         </object>
@@ -225,12 +230,16 @@
           <var name="font">Machinegun.ttf</var>
           <var name="font">test.ttf</var>
           <var name="font">LCD.ttf</var>
-          <var name="size">100</var>
+          <var name="font">AramisRegular.ttf</var>
+          <var name="font">Ariendesse.ttf</var>
+          <var name="font">AtomicClockRadio.ttf</var>
+          <var name="font">AustralianSunset.ttf</var>
+          <var name="size">120</var>
           <var name="anchor">S</var>
           <var name="shadow">1</var>
           <var name="fgcolor">#FFFFFFFF</var>
           <var name="bgcolor">$clear</var>
-          <var name="offsetx">-16</var>
+          <var name="offsetx">-5</var>
           <var name="offsety">31</var>
         </object>
       </object>

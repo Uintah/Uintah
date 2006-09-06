@@ -1,34 +1,34 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
 
 
 /*
- *  Port.cc: 
+ *  Port.cc:
  *
  *  Written by:
  *   Keming Zhang
@@ -39,32 +39,35 @@
  */
 
 #include <SCIRun/Corba/Port.h>
-using namespace std;
-using namespace SCIRun;
-using namespace corba;
 
-Port::Port(){
-  com=0;
+namespace SCIRun {
+namespace corba {
+
+Port::Port(bool is_uses) : is_uses(is_uses), com(0)
+{
 }
-      
-Port::~Port(){
+
+Port::~Port()
+{
 };
 
 void
-Port::setName(const std::string &name){
-  this->name=name;
+Port::setName(const std::string &name)
+{
+  this->name = name;
 }
 
-void 
+void
 Port::addConnectedPort(Port *port){
   connPortList.push_back(port);
 }
 
-void 
-Port::delConnectedPort(Port *port){
-  std::vector<Port*>::iterator iter=connPortList.begin();
-  while(iter!=connPortList.end()){
-    if(*iter==port){
+void
+Port::delConnectedPort(Port *port)
+{
+  std::vector<Port*>::iterator iter = connPortList.begin();
+  while (iter!=connPortList.end()) {
+    if (*iter == port) {
       connPortList.erase(iter);
       return;
     }
@@ -73,27 +76,34 @@ Port::delConnectedPort(Port *port){
 }
 
 void
-Port::setComponent(Component *com){
-  this->com=com;
+Port::setComponent(Component *com)
+{
+  this->com = com;
 }
 
-std::string 
-Port::getName(){
+std::string
+Port::getName()
+{
   return name;
 }
 
 void
-Port::setType(const std::string& type){
-  this->type=type;
+Port::setType(const std::string& type)
+{
+  this->type = type;
 }
 
-std::string 
-Port::getType(){
+std::string
+Port::getType()
+{
   return type;
 }
 
 bool
-Port::isUses(){
+Port::isUses()
+{
   return is_uses;
 }
 
+}
+}

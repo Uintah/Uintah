@@ -47,14 +47,17 @@
 
 using namespace SCIRun;
 
-DropMenu::DropMenu(){
-
+DropMenu::DropMenu()
+{
 }
 
-DropMenu::DropMenu(char** choices, int cnt){
-  items = (ITEM **)new (ITEM*)[cnt + 1];
-  for(int i = 0; i < cnt; ++i)
+DropMenu::DropMenu(char** choices, int cnt)
+{
+  //items = (ITEM **) new (ITEM*)[cnt + 1];
+  items = (ITEM **) new ITEM* [cnt + 1];
+  for (int i = 0; i < cnt; ++i) {
     items[i] = new_item(choices[i], NULL);
+  }
   items[cnt] = (ITEM *)NULL;
   menu = new_menu(items);
 
@@ -64,7 +67,7 @@ DropMenu::DropMenu(char** choices, int cnt){
   scale_menu(menu, &rows, &cols);
   win = newwin(rows+2, cols+2, 0, 0);
   WINDOW *dwin = derwin(win,rows, cols, 1, 1);
-  panel= new_panel(win); 	
+  panel= new_panel(win);
   set_menu_win(menu,win);
   set_menu_sub(menu,dwin);
   box(win,'|','-');
@@ -76,16 +79,20 @@ DropMenu::DropMenu(char** choices, int cnt){
   doupdate();
 }
 
-DropMenu::~DropMenu(){
+DropMenu::~DropMenu()
+{
   del_panel(panel);
   delwin(win);
-  int cnt=item_count(menu);
-  for(int i = 0; i < cnt; ++i) free_item(items[i]);
-  delete []items;
+  const int cnt = item_count(menu);
+  for (int i = 0; i < cnt; ++i) {
+    free_item(items[i]);
+  }
+  delete [] items;
 }
 
 void
-DropMenu::show(int lines, int cols){
+DropMenu::show(int lines, int cols)
+{
   move_panel(panel, lines, cols);
   post_menu(menu);
   wrefresh(win);
@@ -95,7 +102,8 @@ DropMenu::show(int lines, int cols){
 }
 
 void
-DropMenu::hide(){
+DropMenu::hide()
+{
   unpost_menu(menu);
   hide_panel(panel);
   update_panels();
@@ -103,27 +111,31 @@ DropMenu::hide(){
 }
 
 void
-DropMenu::mv_up(){
+DropMenu::mv_up()
+{
   menu_driver(menu, REQ_UP_ITEM);
   wrefresh(win);
 }
 
 void
-DropMenu::mv_down(){
+DropMenu::mv_down()
+{
   menu_driver(menu, REQ_DOWN_ITEM);
   wrefresh(win);
 }
 
-void 
-DropMenu::addItem(const sci::cca::ComponentClassDescription::pointer &cd, string name){
+void
+DropMenu::addItem(const sci::cca::ComponentClassDescription::pointer &cd, string name)
+{
   item_map[name]=cd;
 }
 
-void 
-DropMenu::build(){
-  int cnt=item_map.size();
-  items = (ITEM **)new (ITEM*)[cnt + 1];
-  int i=0;
+void
+DropMenu::build()
+{
+  int cnt = item_map.size();
+  items = (ITEM **) new ITEM* [cnt + 1];
+  int i = 0;
   for(map<string, sci::cca::ComponentClassDescription::pointer>::iterator iter=item_map.begin();
       iter!=item_map.end(); iter++, i++){
     items[i] = new_item(iter->first.c_str(), NULL);
@@ -136,7 +148,7 @@ DropMenu::build(){
   scale_menu(menu, &rows, &cols);
   win = newwin(rows+2, cols+2, 0, 0);
   WINDOW *dwin = derwin(win,rows, cols, 1, 1);
-  panel= new_panel(win); 	
+  panel= new_panel(win);
   set_menu_win(menu,win);
   set_menu_sub(menu,dwin);
   box(win,'|','-');
@@ -148,9 +160,10 @@ DropMenu::build(){
   doupdate();
 }
 
-int 
-DropMenu::exec(){
-  if(item_map.size()>0){
+int
+DropMenu::exec()
+{
+  if (item_map.size() > 0) {
     //instantiate a component
     sci::cca::ComponentClassDescription::pointer cd=item_map[item_name(current_item(menu))];
 
@@ -162,45 +175,40 @@ DropMenu::exec(){
     try {
       sci::cca::ports::BuilderService::pointer builder =
         pidl_cast<sci::cca::ports::BuilderService::pointer>(
-							    TxtBuilder::getService()->getPort("cca.BuilderService")
-							    );
+                                                            TxtBuilder::getService()->getPort("cca.BuilderService")
+                                                            );
       if (builder.isNull()) {
         std::cerr << "Fatal Error: Cannot find builder service" << std::endl;
         //unsetCursor();
         return 1;
       }
       cid = builder->createInstance(cd->getComponentClassName(),
-				    cd->getComponentClassName(), sci::cca::TypeMap::pointer(tm));
-      
+                                    cd->getComponentClassName(), sci::cca::TypeMap::pointer(tm));
+
       TxtNetwork::addModule(new TxtModule(cid,cd->getComponentClassName()));
 
       if (cid.isNull()) {
-	//displayMsg("Error: could not instantiate component of type " +
-	//   cd->getComponentClassName());
-	//statusBar()->message("Instantiate failed.", 2000);
-	return 1;
+        //displayMsg("Error: could not instantiate component of type " +
+        //   cd->getComponentClassName());
+        //statusBar()->message("Instantiate failed.", 2000);
+        return 1;
       } else {
-	//statusBar()->clear();
+        //statusBar()->clear();
       }
       TxtBuilder::getService()->releasePort("cca.BuilderService");
     }
-    //    catch(CCAException e) {
-      //displayMsg(e.message());
-    //    }
-    //    catch(const Exception& e) {
-      //displayMsg(e.message());
-    //    }
     catch(...) {
       //  displayMsg("Caught unexpected exception while instantiating " +
-      //	 cd->getComponentClassName());
+      //   cd->getComponentClassName());
     }
-    
+
   }
 
   return 0;
 }
 
 int
-DropMenu::item_index(){
+DropMenu::item_index()
+{
   return ::item_index(current_item(menu));
 }

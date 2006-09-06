@@ -206,13 +206,11 @@ namespace SCIRun {
         str = string_toupper(str);
         if (str=="0" || str=="F" || str=="OFF" || str=="FALSE" || str=="NO") {
           val = false;
-        } else {
-          // If the string exists, and is not one of the strings above,
-          // assume it is true...similar to C assumes anything not 0
-          // is true
+          return true;
+        } else if (str=="1" || str=="T" || str=="ON" || str=="TRUE" || str=="YES") {          
           val = true;
+          return true;
         }
-        return true;
       }
 
       return false;

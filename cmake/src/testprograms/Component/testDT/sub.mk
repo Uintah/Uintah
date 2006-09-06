@@ -29,28 +29,29 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := testprograms/Component/testDT
+SRCDIR  := testprograms/Component/testDT
 
 ifeq ($(LARGESOS),yes)
 PSELIBS := Core
 else
-PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/Thread \
-	Core/Exceptions Core/CCA/Comm/DT Core/CCA/Comm
+PSELIBS := \
+           Core/CCA/SSIDL Core/CCA/PIDL Core/CCA/DT \
+           Core/Thread Core/Exceptions
 endif
 
 ifeq ($(HAVE_GLOBUS),yes)
-PSELIBS+=Core/globus_threads
-LIBS := $(GLOBUS_LIBRARY)
+PSELIBS += Core/globus_threads
+LIBS    := $(GLOBUS_LIBRARY)
 else
-LIBS :=
+LIBS    :=
 endif
 
 
 PROGRAM := $(SRCDIR)/testDT
-SRCS := $(SRCDIR)/main.cc
+SRCS    := $(SRCDIR)/main.cc
 GENHDRS :=
 
-LIBS += $(MPI_LIBRARY) 
+LIBS    += $(MPI_LIBRARY) 
 
 include $(SCIRUN_SCRIPTS)/program.mk
 

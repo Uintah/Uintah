@@ -39,15 +39,30 @@
 #include <Core/Events/Tools/BallMath.h>
 #include <Core/Geometry/Transform.h>
 #include <vector>
+#include <set>
 
 namespace SCIRun {
 
 using std::vector;
+using std::set;
+
+class FBInterface
+{
+public:
+  FBInterface() {}
+  virtual ~FBInterface() {}
+  virtual int width() = 0;
+  virtual int height() = 0;
+  virtual vector<unsigned char> &img() = 0;
+  virtual void do_pick_draw() = 0;
+  virtual void add_selection(unsigned int) = 0;
+  virtual void remove_selection(unsigned int) = 0;
+};
 
 class FrameBufferPickTool : public PointerTool
 {
 public:
-  FrameBufferPickTool(string name, vector<unsigned char> &fb_img);
+  FrameBufferPickTool(string name, FBInterface *fbi);
   virtual ~FrameBufferPickTool();
 
   //! which == button number, x,y in window at event time 
@@ -63,9 +78,14 @@ public:
                                          unsigned int modifiers,
                                          int time);
 
+  virtual propagation_state_e process_event(event_handle_t e);
+
 private:
-  //FBPickInterface                 *fbp_interface_;
-  vector<unsigned char>           &fb_img_;
+  void add_pick_to_selection(int x, int y);
+  void remove_pick_from_selection(int x, int y);
+  bool get_index_at_selection(int x, int y, unsigned int &idx);
+
+  FBInterface                      *fbi_;
 };
 
 } // namespace SCIRun

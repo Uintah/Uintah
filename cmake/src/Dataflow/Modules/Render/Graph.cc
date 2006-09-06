@@ -42,80 +42,87 @@
 
 namespace SCIRun {
 
-  class Graph : public Module {
-  public:
-    Graph(GuiContext *);
-    virtual ~Graph();
-    virtual void execute();
-    virtual void tcl_command(GuiArgs &, void *);
-  private:
-    virtual void set_data();
-    MatrixEvent::MatrixVector_t data_;
-    Skinner::Drawables_t        graphs_;
-    string                      title_;
+class Graph : public Module {
+public:
+  Graph(GuiContext *);
+  virtual ~Graph();
+  virtual void execute();
+  virtual void tcl_command(GuiArgs &, void *);
+private:
+  virtual void set_data();
+  MatrixEvent::MatrixVector_t data_;
+  Skinner::Drawables_t        graphs_;
+  string                      title_;
 
-  };
+};
 
-  DECLARE_MAKER(Graph)
+
+DECLARE_MAKER(Graph)
   
-  Graph::Graph(GuiContext *gui) :
-    Module("Graph", gui, Sink, "Render", "SCIRun"),
-    data_(0),
-    graphs_(0),
-    title_("Title")
-  {
-    (new Thread(new EventManager(), "Event Manager"))->detach();
+Graph::Graph(GuiContext *gui) :
+  Module("Graph", gui, Sink, "Render", "SCIRun"),
+  data_(0),
+  graphs_(0),
+  title_("Title")
+{
+  (new Thread(new EventManager(), "Event Manager"))->detach();
+}
+
+
+Graph::~Graph()
+{
+}
+
+void
+Graph::execute()
+{
+  StringHandle string_handle;
+  title_ = "Title";
+  if (get_input_handle("Title", string_handle, false)) {
+    title_ = string_handle->get();
   }
 
-  Graph::~Graph()
-  {
-  }
-
-  void
-  Graph::execute() {
-    StringHandle string_handle;
-    title_ = "Title";
-    if (get_input_handle("Title", string_handle, false)) {
-      title_ = string_handle->get();
-    }
-
-    data_.clear();
-    port_range_type range = get_iports("Input");
-    if (range.first != range.second) {
-      port_map_type::iterator pi = range.first;
-      while (pi != range.second) {
-        MatrixIPort *iport = (MatrixIPort *)get_iport(pi++->second);
-        ASSERT(iport);
-        MatrixHandle matrix = 0;
-        iport->get(matrix);
-        if (matrix.get_rep()) {
-          data_.push_back(matrix);
-        }
+  data_.clear();
+  port_range_type range = get_iports("Input");
+  if (range.first != range.second) {
+    port_map_type::iterator pi = range.first;
+    while (pi != range.second) {
+      MatrixIPort *iport = (MatrixIPort *)get_iport(pi++->second);
+      ASSERT(iport);
+      MatrixHandle matrix = 0;
+      iport->get(matrix);
+      if (matrix.get_rep()) {
+        data_.push_back(matrix);
       }
     }
+  }
+  set_data();
+}
+
+
+void
+Graph::tcl_command(GuiArgs &args, void *userdata)
+{
+  if (args[1] == "ui")
+  {
+    graphs_.push_back(Skinner::load_skin(string(sci_getenv("SCIRUN_SRCDIR"))+
+                                         "/Core/Skinner/Data/Graph2D.skin"));
     set_data();
   }
+  else Module::tcl_command(args, userdata);
+}
 
 
-  void
-  Graph::tcl_command(GuiArgs &args, void *userdata) {
-    if (args[1] == "ui") {
-      graphs_.push_back(Skinner::load_skin(string(sci_getenv("SCIRUN_SRCDIR"))+
-                                           "/Core/Skinner/Data/Graph2D.skin"));
-      set_data();
-    }
-    else Module::tcl_command(args, userdata);
-  }
-
-  void
-  Graph::set_data()
+void
+Graph::set_data()
+{
+  event_handle_t set_matrix_event = new MatrixEvent(data_);
+  for (unsigned int i = 0; i < graphs_.size(); ++i)
   {
-    event_handle_t set_matrix_event = new MatrixEvent(data_);
-    for (unsigned int i = 0; i < graphs_.size(); ++i) {
-      graphs_[i]->process_event(set_matrix_event);
-      graphs_[i]->get_vars()->insert("Graph2D::title", title_, "string", true);
-      graphs_[i]->get_vars()->insert("blah", title_, "string", true);
-    }    
-  }
+    graphs_[i]->process_event(set_matrix_event);
+    graphs_[i]->get_vars()->insert("Graph2D::title", title_, "string", true);
+    graphs_[i]->get_vars()->insert("blah", title_, "string", true);
+  }    
+}
 }
 

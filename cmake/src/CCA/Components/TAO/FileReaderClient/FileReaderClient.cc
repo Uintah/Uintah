@@ -5,6 +5,8 @@
 #include <iostream>
 #include <fstream>
 
+#include <SCIRun/TypeMap.h>
+
 const char *ior = "file://test.ior";
 
 FileReaderClient::FileReaderClient(CORBA::ORB_ptr orb)
@@ -17,13 +19,13 @@ extern "C" SCIRun::tao::Component* make_Tao_FileReaderClient()
   int argc = 0;
   CORBA::ORB_var orb =
     CORBA::ORB_init(argc, NULL, "" ACE_ENV_ARG_PARAMETER);
-  return new FileReaderClient(orb);  
+  return new FileReaderClient(orb);
 }
 
-void FileReaderClient::setServices(sci::cca::TaoServices::pointer services) 
+void FileReaderClient::setServices(sci::cca::TaoServices::pointer services)
 {
-  services->registerUsesPort("hello", "corba.FileReader");
-  services->addProvidesPort("go", "corba.Go");
+  services->registerUsesPort("hello", "corba.FileReader", sci::cca::TypeMap::pointer(new SCIRun::TypeMap));
+  services->addProvidesPort("go", "corba.Go", sci::cca::TypeMap::pointer(new SCIRun::TypeMap));
 }
 
 int FileReaderClient::go()
@@ -31,11 +33,11 @@ int FileReaderClient::go()
   CORBA::Object_var tmp =
   orb_->string_to_object(ior ACE_ENV_ARG_PARAMETER);
   ACE_TRY_CHECK;
-                                                                                                                               
+
   Test::FileReader_var hello =
    Test::FileReader::_narrow(tmp.in () ACE_ENV_ARG_PARAMETER);
   ACE_TRY_CHECK;
-                                                                                                                               
+
   if (CORBA::is_nil (hello.in ()))
   {
     ACE_ERROR_RETURN ((LM_DEBUG,
@@ -48,14 +50,14 @@ int FileReaderClient::go()
   Test::FileReader::long_array_var boundaries=new Test::FileReader::long_array;
   Test::FileReader::long_array_var dirichletNodes=new Test::FileReader::long_array;
   Test::FileReader::double_array_var dirichletValues=new Test::FileReader::double_array;
-                                                                                                                                       
+
   hello->getPDEdescription(nodes, boundaries, dirichletNodes, dirichletValues ACE_ENV_ARG_DECL_WITH_DEFAULTS);
   ACE_TRY_CHECK;
 
   for(unsigned int i=0; i< nodes->length(); i++){
     std::cout<<"nodes["<<i<<"]="<<nodes[i]<<std::endl;
   }
-                                                                                                                               
+
   orb_->destroy (ACE_ENV_SINGLE_ARG_PARAMETER);
   ACE_TRY_CHECK;
   return 0;

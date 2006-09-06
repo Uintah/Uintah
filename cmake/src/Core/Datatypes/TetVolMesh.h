@@ -1961,7 +1961,7 @@ TetVolMesh<Basis>::locate(typename Cell::index_type &cell, const Point &p)
 
   if (!(synchronized_ & LOCATE_E))
     synchronize(LOCATE_E);
-  ASSERT(grid_.get_rep());
+  ASSERTMSG(grid_.get_rep(), "synchronize(LOCATE) failed to build a grid.");
 
   const list<unsigned int> *candidates;
   if (grid_->lookup(candidates, p))

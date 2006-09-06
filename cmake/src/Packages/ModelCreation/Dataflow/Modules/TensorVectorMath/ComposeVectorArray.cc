@@ -26,21 +26,10 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  ComposeVectorArray.cc:
- *
- *  Written by:
- *   jeroen
- *   TODAY'S DATE HERE
- *
- */
-
-#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/Matrix.h>
 #include <Core/Datatypes/DenseMatrix.h>
-
+#include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 namespace ModelCreation {
 
@@ -49,12 +38,7 @@ using namespace SCIRun;
 class ComposeVectorArray : public Module {
 public:
   ComposeVectorArray(GuiContext*);
-
-  virtual ~ComposeVectorArray();
-
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
@@ -64,136 +48,97 @@ ComposeVectorArray::ComposeVectorArray(GuiContext* ctx)
 {
 }
 
-ComposeVectorArray::~ComposeVectorArray(){
-}
 
 void ComposeVectorArray::execute()
 {
-  MatrixIPort* iport;
-  MatrixOPort* oport;
   MatrixHandle X,Y,Z,V;
   
-  if (!(iport = dynamic_cast<MatrixIPort *>(get_iport("X"))))
-  {
-    error("Could not locate X input port");
-    return;
-  }
-  iport->get(X);
-  if (X.get_rep() == 0)
-  {
-    error("No input matrix on port X");
-    return;
-  }
+  if (!(get_input_handle("X",X,true))) return;
+  if (!(get_input_handle("Y",Y,true))) return;
+  if (!(get_input_handle("Z",Z,true))) return;
 
-  if (!(iport = dynamic_cast<MatrixIPort *>(get_iport("Y"))))
+  if (inputs_changed_ || !oport_cached("VectorArray"))
   {
-    error("Could not locate Y input port");
-    return;
-  }
-  iport->get(Y);
-  if (Y.get_rep() == 0)
-  {
-    error("No input matrix on port Y");
-    return;
-  }
-
-  if (!(iport = dynamic_cast<MatrixIPort *>(get_iport("Z"))))
-  {
-    error("Could not locate Z input port");
-    return;
-  }
-  iport->get(Z);
-  if (Z.get_rep() == 0)
-  {
-    error("No input matrix on port Z");
-    return;
-  }
-
-  int n;
-  int Xn, Yn, Zn;
-  Xn = X->nrows();
-  Yn = Y->nrows();
-  Zn = Z->nrows();
-  
-  n = Xn;
-  if (Yn > n) n = Yn;
-  if (Zn > n) n = Zn;
-  
-  if (((Xn!=1)&&(Yn!=1)&&(Xn!=Yn))||((Yn!=1)&&(Zn!=1)&&(Yn!=Zn))||(Xn==0)||(Yn==0)||(Zn==0))
-  {
-    error("Improper matrix dimensions: all the matrices should have the same number of rows");
-    return;
-  }
-
-  if (X->ncols()!=1)
-  {
-    error("X matrix should have only one column");
-    return;
-  }
-
-  if (Y->ncols()!=1)
-  {
-    error("Y matrix should have only one column");
-    return;
-  }
-
-  if (Z->ncols()!=1)
-  {
-    error("Z matrix should have only one column");
-    return;
-  }
-
-  MatrixHandle temp;
-  temp = dynamic_cast<Matrix *>(X->dense()); 
-  X = temp;
-  temp = dynamic_cast<Matrix *>(Y->dense());
-  Y = temp;
-  temp = dynamic_cast<Matrix *>(Z->dense());
-  Z = temp;
-  
-  V = dynamic_cast<Matrix *>(scinew DenseMatrix(n,3));
-  
-  if (V.get_rep() == 0)
-  {
-    error("Could not allocate memory for matrix");
-    return;
-  }
-  
-  double* xptr = X->get_data_pointer();
-  double* yptr = Y->get_data_pointer();
-  double* zptr = Z->get_data_pointer();
-  double* vptr = V->get_data_pointer();
-  
-  if ((vptr==0)||(xptr==0)||(yptr==0)||(zptr==0))
-  {
-    error("Could not allocate enough memory");
-    return;
-  }
-  
-  for (int p=0;p<n;p++)
-  {
-    vptr[0] = *xptr;
-    vptr[1] = *yptr;
-    vptr[2] = *zptr;
+    // This needs to go to algorithms
+    int n;
+    int Xn, Yn, Zn;
+    Xn = X->nrows();
+    Yn = Y->nrows();
+    Zn = Z->nrows();
     
-    if (Xn > 1) xptr++;
-    if (Yn > 1) yptr++;
-    if (Zn > 1) zptr++;
+    n = Xn;
+    if (Yn > n) n = Yn;
+    if (Zn > n) n = Zn;
     
-    vptr += 3;
-  }
+    if (((Xn!=1)&&(Yn!=1)&&(Xn!=Yn))||((Yn!=1)&&(Zn!=1)&&(Yn!=Zn))||(Xn==0)||(Yn==0)||(Zn==0))
+    {
+      error("Improper matrix dimensions: all the matrices should have the same number of rows");
+      return;
+    }
 
-  if(oport = dynamic_cast<MatrixOPort *>(get_oport("VectorArray")))
-  {
-    oport->send(V);
+    if (X->ncols()!=1)
+    {
+      error("X matrix should have only one column");
+      return;
+    }
+
+    if (Y->ncols()!=1)
+    {
+      error("Y matrix should have only one column");
+      return;
+    }
+
+    if (Z->ncols()!=1)
+    {
+      error("Z matrix should have only one column");
+      return;
+    }
+
+    MatrixHandle temp;
+    temp = dynamic_cast<Matrix *>(X->dense()); 
+    X = temp;
+    temp = dynamic_cast<Matrix *>(Y->dense());
+    Y = temp;
+    temp = dynamic_cast<Matrix *>(Z->dense());
+    Z = temp;
+    
+    V = dynamic_cast<Matrix *>(scinew DenseMatrix(n,3));
+    
+    if (V.get_rep() == 0)
+    {
+      error("Could not allocate memory for matrix");
+      return;
+    }
+    
+    double* xptr = X->get_data_pointer();
+    double* yptr = Y->get_data_pointer();
+    double* zptr = Z->get_data_pointer();
+    double* vptr = V->get_data_pointer();
+    
+    if ((vptr==0)||(xptr==0)||(yptr==0)||(zptr==0))
+    {
+      error("Could not allocate enough memory");
+      return;
+    }
+    
+    for (int p=0;p<n;p++)
+    {
+      vptr[0] = *xptr;
+      vptr[1] = *yptr;
+      vptr[2] = *zptr;
+      
+      if (Xn > 1) xptr++;
+      if (Yn > 1) yptr++;
+      if (Zn > 1) zptr++;
+      
+      vptr += 3;
+    }
+
+    send_output_handle("VectorArray",V,false);
   }
 }
 
-void
- ComposeVectorArray::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
+
 
 } // End namespace CardioWave
 

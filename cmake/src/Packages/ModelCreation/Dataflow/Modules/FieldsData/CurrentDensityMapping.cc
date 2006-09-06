@@ -49,6 +49,7 @@ public:
     GuiString integrationmethod_;
     GuiString integrationfilter_;
     GuiInt multiply_with_normal_;
+    GuiInt calcnorm_;
 
 };
 
@@ -59,7 +60,8 @@ CurrentDensityMapping::CurrentDensityMapping(GuiContext* ctx)
     mappingmethod_(ctx->subVar("mappingmethod")),
     integrationmethod_(ctx->subVar("integrationmethod")),
     integrationfilter_(ctx->subVar("integrationfilter")),
-    multiply_with_normal_(ctx->subVar("multiply-with-normal"))
+    multiply_with_normal_(ctx->subVar("multiply-with-normal")),
+    calcnorm_(ctx->subVar("calcnorm"))
 {
 }
 
@@ -82,10 +84,11 @@ void CurrentDensityMapping::execute()
     std::string integrationmethod = integrationmethod_.get();
     std::string integrationfilter = integrationfilter_.get();
     bool multiply_with_normal = multiply_with_normal_.get();
+    bool calcnorm = calcnorm_.get();
     
     // Entry point to fields algo library:
     SCIRunAlgo::FieldsAlgo algo(this);
-    if (!(algo.CurrentDensityMapping(fpot,fcon,fdst,fout,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal))) return;
+    if (!(algo.CurrentDensityMapping(fpot,fcon,fdst,fout,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal,calcnorm))) return;
     
     // Send output downstream:
     send_output_handle("Destination",fout,false);

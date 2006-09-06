@@ -1,29 +1,29 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
 
 
@@ -68,14 +68,14 @@ typedef std::map<std::string, CCAPortInstance*> CCAPortInstanceMap;
  * instantiation that is used by the framework.
  */
 class CCAComponentInstance : public ComponentInstance,
-			     public sci::cca::Services
+                             public sci::cca::Services
 {
 public:
   CCAComponentInstance(SCIRunFramework* framework,
-		       const std::string& instanceName,
-		       const std::string& className,
-		       const sci::cca::TypeMap::pointer& typemap,
-		       const sci::cca::Component::pointer& component);
+                       const std::string& instanceName,
+                       const std::string& className,
+                       const sci::cca::TypeMap::pointer& typemap,
+                       const sci::cca::Component::pointer& component);
   virtual ~CCAComponentInstance();
 
   /**
@@ -87,11 +87,11 @@ public:
 
   /**
    * @return The named port, if it exists and is connected or self-provided,
-   *	      or NULL if it is registered and is not yet connected. Does not
-   *	      return if the Port is neither registered nor provided, but rather
-   *	      throws an exception.
+   *        or NULL if it is registered and is not yet connected. Does not
+   *        return if the Port is neither registered nor provided, but rather
+   *        throws an exception.
    * @param portName previously registered or provided port that
-   *	     the component now wants to use.
+   *       the component now wants to use.
    * @throws CCAException with the following types: PortNotConnected,
    *         PortNotDefined, NetworkError, OutOfMemory.
    */
@@ -127,8 +127,8 @@ public:
    *   framework not to use network proxy for for this port
    */
   void registerUsesPort(const std::string& name,
-			const std::string& type,
-			const sci::cca::TypeMap::pointer& properties);
+                        const std::string& type,
+                        const sci::cca::TypeMap::pointer& properties);
 
   /** A proxy method for gov::cca::Services.  Calls the corresponding method in
       SCIRunFramework::Services. */
@@ -156,25 +156,13 @@ public:
    * OutOfMemory, Nonstandard (null port argument)
    */
   void addProvidesPort(const sci::cca::Port::pointer& port,
-		       const std::string& name,
-		       const std::string& type,
-		       const sci::cca::TypeMap::pointer& properties);
+                       const std::string& name,
+                       const std::string& type,
+                       const sci::cca::TypeMap::pointer& properties);
 
   /** A proxy method for gov::cca::Services.  Calls the corresponding
       method in SCIRunFramework::Services. */
   void removeProvidesPort(const std::string& name);
-
-  /** Returns the complete list of the properties for a Port.
-   * These may include properties set when the port is registered and
-   * properties set by the framework.
-   * Properties will include the following:
-   * <pre>
-   *     key             standard values
-   * cca.portName      port registration name (string)
-   * cca.portType      port registration type (string)
-   * </pre>
-   */
-  sci::cca::TypeMap::pointer getPortProperties(const std::string& portName);
 
   /** A proxy method for gov::cca::Services.  Calls the corresponding
       method in SCIRunFramework::Services. */
@@ -183,12 +171,16 @@ public:
   // Methods from ComponentInstance
   virtual PortInstance* getPortInstance(const std::string& name);
   virtual PortInstanceIterator* getPorts();
+
+  virtual sci::cca::TypeMap::pointer getPortProperties(const std::string& portName);
+  virtual void setPortProperties(const std::string& portName, const sci::cca::TypeMap::pointer& tm);
+
   virtual void registerForRelease(const sci::cca::ComponentRelease::pointer &compRel);
 
 private:
   class Iterator : public PortInstanceIterator
   {
-    CCAPortInstanceMap::iterator iter;
+    std::map<std::string, CCAPortInstance*>::iterator iter;
     CCAComponentInstance* comp;
   public:
     Iterator(CCAComponentInstance*);
@@ -201,9 +193,9 @@ private:
     Iterator& operator=(const Iterator&);
   };
 
+  typedef std::map<std::string, CCAPortInstance*> PortInstanceMap;
   typedef std::map<std::string, std::vector<Object::pointer> > PreportMap;
-
-  CCAPortInstanceMap ports;
+  PortInstanceMap ports;
   PreportMap preports;
   SCIRun::Mutex lock_ports;
   SCIRun::Mutex lock_preports;

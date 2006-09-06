@@ -43,9 +43,10 @@ namespace SCIRun {
     public:
       Text (Variables *variables);
       virtual ~Text();
-      virtual propagation_state_e       process_event(event_handle_t);
-    protected:
+      //      virtual propagation_state_e       process_event(event_handle_t);
       CatcherFunction_t                 redraw;
+    protected:
+
       Color                             fgcolor_;
       Color                             bgcolor_;
       unsigned int                      flags_;

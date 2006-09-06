@@ -27,14 +27,6 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  BundleGetColorMap.cc:
- *
- *  Written by:
- *   jeroen
- *
- */
-
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>
@@ -43,14 +35,10 @@
 #include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
-using namespace std;
 
 class BundleGetColorMap : public Module {
 public:
   BundleGetColorMap(GuiContext*);
-
-  virtual ~BundleGetColorMap();
-
   virtual void execute();
   
 private:
@@ -71,90 +59,53 @@ DECLARE_MAKER(BundleGetColorMap)
 {
 }
 
-BundleGetColorMap::~BundleGetColorMap(){
-}
-
 void BundleGetColorMap::execute()
 {
-  string colormap1name = guicolormap1name_.get();
-  string colormap2name = guicolormap2name_.get();
-  string colormap3name = guicolormap3name_.get();
-  string colormaplist;
-        
+  // Define input handle:
   BundleHandle handle;
-  BundleIPort  *iport;
-  BundleOPort *oport;
-  ColorMapHandle fhandle;
-  ColorMapOPort *ofport;
-        
-  if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
-  {
-    error("Could not find bundle input port");
-    return;
-  }
-
-  if (!(iport->get(handle)))
-  {   
-    warning("No bundle connected to the input port");
-    return;
-  }
-
-  if (handle.get_rep() == 0)
-  {   
-    warning("Empty bundle connected to the input port");
-    return;
-  }
-
-
-  int numColorMaps = handle->numColorMaps();
-  for (int p = 0; p < numColorMaps; p++)
-  {
-    colormaplist += "{" + handle->getColorMapName(p) + "} ";
-  }
-
-  guicolormaps_.set(colormaplist);
-  get_ctx()->reset();
-
-  if (!(ofport = static_cast<ColorMapOPort *>(get_oport("colormap1"))))
-  {
-    error("Could not find colormap 1 output port");
-    return; 
-  }
- 
-  if (handle->isColorMap(colormap1name))
-  {
-    fhandle = handle->getColorMap(colormap1name);
-    ofport->send(fhandle);
-  }
-         
-  if (!(ofport = static_cast<ColorMapOPort *>(get_oport("colormap2"))))
-  {
-    error("Could not find colormap 2 output port");
-    return; 
-  }
   
-  if (handle->isColorMap(colormap2name))
+  // Get data from input port:
+  if (!(get_input_handle("bundle",handle,true))) return;
+  
+  if (inputs_changed_ || guicolormap1name_.changed() || guicolormap2name_.changed() ||
+      guicolormap3name_.changed() || !oport_cached("bundle") || !oport_cached("colormap1") ||
+       !oport_cached("colormap2") || !oport_cached("colormap3"))
   {
-    fhandle = handle->getColorMap(colormap2name);
-    ofport->send(fhandle);
-  }
-      
-  if (!(ofport = static_cast<ColorMapOPort *>(get_oport("colormap3"))))
-  {
-    error("Could not find colormap 3 output port");
-    return; 
-  }
+    ColorMapHandle fhandle;
+    std::string colormap1name = guicolormap1name_.get();
+    std::string colormap2name = guicolormap2name_.get();
+    std::string colormap3name = guicolormap3name_.get();
+    std::string colormaplist;
+    
+    int numColorMaps = handle->numColorMaps();
+    for (int p = 0; p < numColorMaps; p++)
+    {
+      colormaplist += "{" + handle->getColorMapName(p) + "} ";
+    }
 
-  if (handle->isColorMap(colormap3name))
-  {
-    fhandle = handle->getColorMap(colormap3name);
-    ofport->send(fhandle);
+    guicolormaps_.set(colormaplist);
+    get_ctx()->reset();  
+  
+    // Send colormap1 if we found one that matches the name:
+    if (handle->isColorMap(colormap1name))
+    {
+      fhandle = handle->getColorMap(colormap1name);
+      send_output_handle("colormap1",fhandle,false);
+    } 
+
+    // Send colormap2 if we found one that matches the name:
+    if (handle->isColorMap(colormap2name))
+    {
+      fhandle = handle->getColorMap(colormap2name);
+      send_output_handle("colormap2",fhandle,false);
+    } 
+
+    // Send colormap3 if we found one that matches the name:
+    if (handle->isColorMap(colormap3name))
+    {
+      fhandle = handle->getColorMap(colormap3name);
+      send_output_handle("colormap3",fhandle,false);
+    } 
   }
-        
-  if ((oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-  {
-    oport->send(handle);
-  }        
-  update_state(Completed);  
 }
 

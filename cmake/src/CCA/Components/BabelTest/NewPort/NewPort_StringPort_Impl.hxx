@@ -24,23 +24,23 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 // FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 // DEALINGS IN THE SOFTWARE.
+
 // 
 // File:          NewPort_StringPort_Impl.hxx
 // Symbol:        NewPort.StringPort-v1.0
 // Symbol Type:   class
-// Babel Version: 0.11.0
+// Babel Version: 0.99.2
 // Description:   Server-side implementation for NewPort.StringPort
 // 
 // WARNING: Automatically generated; only changes within splicers preserved
 // 
-// babel-version = 0.11.0
 // 
 
 #ifndef included_NewPort_StringPort_Impl_hxx
 #define included_NewPort_StringPort_Impl_hxx
 
-#ifndef included_sidl_ucxx_hxx
-#include "sidl_ucxx.hxx"
+#ifndef included_sidl_cxx_hxx
+#include "sidl_cxx.hxx"
 #endif
 #ifndef included_NewPort_StringPort_IOR_h
 #include "NewPort_StringPort_IOR.h"
@@ -71,7 +71,7 @@ namespace NewPort {
   /**
    * Symbol "NewPort.StringPort" (version 1.0)
    */
-  class StringPort_impl : public virtual UCXX ::NewPort::StringPort 
+  class StringPort_impl : public virtual ::NewPort::StringPort 
   // DO-NOT-DELETE splicer.begin(NewPort.StringPort._inherits)
   // Insert-Code-Here {NewPort.StringPort._inherits} (optional inheritance here)
   // DO-NOT-DELETE splicer.end(NewPort.StringPort._inherits)
@@ -85,41 +85,44 @@ namespace NewPort {
     // Insert-Code-Here {NewPort.StringPort._implementation} (additional details)
     // DO-NOT-DELETE splicer.end(NewPort.StringPort._implementation)
 
+    bool _wrapped;
   public:
-    // default constructor, shouldn't be used (required)
-    StringPort_impl() : StubBase(0,true) { } 
+    // default constructor, used for data wrapping(required)
+    StringPort_impl();
+    // sidl constructor (required)
+    // Note: alternate Skel constructor doesn't call addref()
+    // (fixes bug #275)
+    StringPort_impl( struct NewPort_StringPort__object * s ) : StubBase(s,true),
+      _wrapped(false) { _ctor(); }
 
-      // sidl constructor (required)
-      // Note: alternate Skel constructor doesn't call addref()
-      // (fixes bug #275)
-      StringPort_impl( struct NewPort_StringPort__object * s ) : StubBase(s,
-        true) { _ctor(); }
+    // user defined construction
+    void _ctor();
 
-      // user defined construction
-      void _ctor();
+    // virtual destructor (required)
+    virtual ~StringPort_impl() { _dtor(); }
 
-      // virtual destructor (required)
-      virtual ~StringPort_impl() { _dtor(); }
+    // user defined destruction
+    void _dtor();
 
-      // user defined destruction
-      void _dtor();
+    // true if this object was created by a user newing the impl
+    inline bool _isWrapped() {return _wrapped;}
 
-      // static class initializer
-      static void _load();
+    // static class initializer
+    static void _load();
 
-    public:
+  public:
 
-      /**
-       * user defined non-static method.
-       */
-      ::std::string
-      getString_impl() ;
-    };  // end class StringPort_impl
+    /**
+     * user defined non-static method.
+     */
+    ::std::string
+    getString_impl() ;
+  };  // end class StringPort_impl
 
-  } // end namespace NewPort
+} // end namespace NewPort
 
-  // DO-NOT-DELETE splicer.begin(NewPort.StringPort._misc)
-  // Insert-Code-Here {NewPort.StringPort._misc} (miscellaneous things)
-  // DO-NOT-DELETE splicer.end(NewPort.StringPort._misc)
+// DO-NOT-DELETE splicer.begin(NewPort.StringPort._misc)
+// Insert-Code-Here {NewPort.StringPort._misc} (miscellaneous things)
+// DO-NOT-DELETE splicer.end(NewPort.StringPort._misc)
 
-  #endif
+#endif

@@ -75,8 +75,16 @@ public:
   GuiString		inputsizey_;
   GuiString		inputsizez_;
 
-  GuiInt                box_mode_;
+  // NOTE: box_scale_ isn't actually the scale of the box.  It keeps
+  // track of whether or not the box has been edited by hand or was
+  // automatically generated.  It will have a negative value if the
+  // box was automatically generated and a positive value if it was
+  // edited by hand (widget_moved called).  The name has been
+  // preserved for backwards compatability.
   GuiDouble             box_scale_;
+
+  GuiInt                box_mode_;
+  GuiDouble             box_real_scale_;
   GuiPoint              box_center_;
   GuiPoint              box_right_;
   GuiPoint              box_down_;
@@ -118,8 +126,9 @@ ChangeFieldBounds::ChangeFieldBounds(GuiContext* ctx)
     inputsizex_(get_ctx()->subVar("inputsizex", false), "---"),
     inputsizey_(get_ctx()->subVar("inputsizey", false), "---"),
     inputsizez_(get_ctx()->subVar("inputsizez", false), "---"),
-    box_mode_(get_ctx()->subVar("box-mode"), 0),
     box_scale_(get_ctx()->subVar("box-scale"), -1.0),
+    box_mode_(get_ctx()->subVar("box-mode"), 0),
+    box_real_scale_(get_ctx()->subVar("box-real_scale"), -1.0),
     box_center_(get_ctx()->subVar("box-center"), Point(0.0, 0.0, 0.0)),
     box_right_(get_ctx()->subVar("box-right"), Point(0.0, 0.0, 0.0)),
     box_down_(get_ctx()->subVar("box-down"), Point(0.0, 0.0, 0.0)),
@@ -244,7 +253,7 @@ ChangeFieldBounds::build_widget(FieldHandle f, bool reset)
     box_initial_transform_.pre_translate(center.asVector());
 
     const double newscale = size.length() * 0.015;
-    double bscale = box_scale_.get();
+    double bscale = box_real_scale_.get();
     if (bscale < newscale * 1e-2 || bscale > newscale * 1e2)
     {
       bscale = newscale;
@@ -256,6 +265,7 @@ ChangeFieldBounds::build_widget(FieldHandle f, bool reset)
     box_right_.set(right);
     box_down_.set(down);
     box_in_.set(in);
+    box_scale_.set(-1.0);
   }
   else
   {
@@ -263,7 +273,7 @@ ChangeFieldBounds::build_widget(FieldHandle f, bool reset)
 			   box_down_.get().vector() +
 			   box_in_.get().vector()).length();
     const double newscale = l2norm * 0.015;
-    double bscale = box_scale_.get();
+    double bscale = box_real_scale_.get();
     if (bscale < newscale * 1e-2 || bscale > newscale * 1e2)
     {
       bscale = newscale;
@@ -433,9 +443,10 @@ ChangeFieldBounds::widget_moved(bool last, BaseWidget*)
     box_right_.set(right);
     box_down_.set(down);
     box_in_.set(in);
+    box_scale_.set(1.0);
     want_to_execute();
   }
-  box_scale_.set(box_->GetScale());
+  box_real_scale_.set(box_->GetScale());
 }
 
 

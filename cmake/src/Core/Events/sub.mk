@@ -34,16 +34,19 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/Events
 
 SRCS     += \
-	$(SRCDIR)/BaseEvent.cc		\
-	$(SRCDIR)/EventManager.cc	\
-	$(SRCDIR)/OpenGLViewer.cc	\
-	$(SRCDIR)/SceneGraphEvent.cc	\
-	$(SRCDIR)/X11EventSpawner.cc	\
+	$(SRCDIR)/BaseEvent.cc			\
+	$(SRCDIR)/EventManager.cc		\
+	$(SRCDIR)/OpenGLViewer.cc		\
+	$(SRCDIR)/SceneGraphEvent.cc		\
+	$(SRCDIR)/SelectionTargetEvent.cc	\
+	$(SRCDIR)/X11EventSpawner.cc		\
 
 SUBDIRS := $(SRCDIR)/Tools
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
-PSELIBS := Core/Containers  \
+PSELIBS := Core/Algorithms/Fields \
+           Core/Algorithms/Visualization \
+	   Core/Containers  \
            Core/Datatypes \
            Core/Exceptions \
 	   Core/Geom  \

@@ -55,6 +55,11 @@ int ShaderProgramARB::max_texture_size_1_ = 64;
 int ShaderProgramARB::max_texture_size_4_ = 64;
 static Mutex ShaderProgramARB_init_Mutex("ShaderProgramARB Init Lock");  
 
+
+// GLEW SUPPORTED, we can check for shader support sanely.
+#if HAVE_GLEW
+
+
 ShaderProgramARB::ShaderProgramARB(const string& program)
   : type_(0), id_(0), program_(program)
 {}
@@ -300,5 +305,116 @@ FragmentProgramARB::FragmentProgramARB(const string& program)
 FragmentProgramARB::~FragmentProgramARB()
 {
 }
+
+
+#else  // NO GLEW, No shader support. (SGI)
+
+
+ShaderProgramARB::ShaderProgramARB(const string& program)
+  : type_(0), id_(0), program_(program)
+{}
+
+ShaderProgramARB::~ShaderProgramARB ()
+{}
+
+bool
+ShaderProgramARB::valid()
+{
+  return false;
+}
+
+
+void
+ShaderProgramARB::init_shaders_supported()
+{
+  if (!init_)
+  {
+    ShaderProgramARB_init_Mutex.lock();
+    if (!init_)
+    {
+      supported_ = false;
+      max_texture_size_1_ = 256; // TODO: Just a guess, should verify this.
+      max_texture_size_4_ = 256; // TODO: Just a guess, should verify this.
+      non_2_textures_ = false;
+      init_ = true;
+    }
+    ShaderProgramARB_init_Mutex.unlock();
+  }
+}
+  
+
+bool
+ShaderProgramARB::shaders_supported()
+{
+  ASSERTMSG(init_, "shaders_supported called before init_shaders_supported.");
+  return supported_;
+}
+
+
+int
+ShaderProgramARB::max_texture_size_1()
+{
+  return max_texture_size_1_;
+}
+
+int
+ShaderProgramARB::max_texture_size_4()
+{
+  return max_texture_size_4_;
+}
+
+bool
+ShaderProgramARB::texture_non_power_of_two()
+{
+  return non_2_textures_;
+}
+
+bool
+ShaderProgramARB::create()
+{
+  return true;
+}
+
+
+void
+ShaderProgramARB::destroy ()
+{
+}
+
+void
+ShaderProgramARB::bind ()
+{
+}
+
+void
+ShaderProgramARB::release ()
+{
+}
+
+void
+ShaderProgramARB::setLocalParam(int i, float x, float y, float z, float w)
+{
+}
+
+VertexProgramARB::VertexProgramARB(const string& program)
+  : ShaderProgramARB(program)
+{
+}
+
+VertexProgramARB::~VertexProgramARB()
+{
+}
+
+FragmentProgramARB::FragmentProgramARB(const string& program)
+  : ShaderProgramARB(program)
+{
+}
+
+FragmentProgramARB::~FragmentProgramARB()
+{
+}
+
+#endif // no shader support.
+
 
 } // end namespace SCIRun

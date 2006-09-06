@@ -26,30 +26,17 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  BundleSetColorMap.cc:
- *
- *  Written by:
- *   jeroen
- *
- */
-
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Core/Geom/ColorMap.h>
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
-using namespace std;
 
 class BundleSetColorMap : public Module {
 public:
   BundleSetColorMap(GuiContext*);
-
-  virtual ~BundleSetColorMap();
-
   virtual void execute();
 
 private:
@@ -71,99 +58,47 @@ BundleSetColorMap::BundleSetColorMap(GuiContext* ctx)
 {
 }
 
-
-BundleSetColorMap::~BundleSetColorMap()
+void BundleSetColorMap::execute()
 {
-}
+  BundleHandle  handle;
+  ColorMapHandle colormap1, colormap2, colormap3;
 
-
-void
-BundleSetColorMap::execute()
-{
-  string colormap1name = guicolormap1name_.get();
-  string colormap2name = guicolormap2name_.get();
-  string colormap3name = guicolormap3name_.get();
-  string bundlename = guibundlename_.get();
-    
-  BundleHandle handle, oldhandle;
-  BundleIPort  *iport;
-  BundleOPort *oport;
-  ColorMapHandle fhandle;
-  ColorMapIPort *ifport;
-        
-  if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
-  {
-    error("Could not find bundle input port");
-    return;
-  }
-        
-  // Create a new bundle
-  // Since a bundle consists of only handles we can copy
-  // it several times without too much memory overhead
-  if (iport->get(oldhandle))
-  {   // Copy all the handles from the existing bundle
-    handle = oldhandle->clone();
-  }
-  else
-  {   // Create a brand new bundle
-    handle = scinew Bundle;
-  }
-        
-  // Scan bundle input port 1
-  if (!(ifport = static_cast<ColorMapIPort *>(get_iport("colormap1"))))
-  {
-    error("Could not find colormap 1 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle)) 
-  {
-    handle->setColorMap(colormap1name,fhandle);
-  }
-
-  // Scan colormap input port 2   
-  if (!(ifport = static_cast<ColorMapIPort *>(get_iport("colormap2"))))
-  {
-    error("Could not find colormap 2 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
-  {
-    handle->setColorMap(colormap2name,fhandle);
-  }
-
-  // Scan colormap input port 3   
-  if (!(ifport = static_cast<ColorMapIPort *>(get_iport("colormap3"))))
-  {
-    error("Could not find colormap 3 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
-  {
-    handle->setColorMap(colormap3name,fhandle);
-  }
-        
-  // Now post the output
-        
-  if (!(oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-  {
-    error("Could not find bundle output port");
-    return;
-  }
-    
-  if (bundlename != "")
-  {
-    handle->set_property("name",bundlename,false);
-  }
-        
-  oport->send_and_dereference(handle);
+  get_input_handle("bundle",handle,false);
+  get_input_handle("colormap1",colormap1,false);
+  get_input_handle("colormap2",colormap2,false);
+  get_input_handle("colormap3",colormap3,false);
   
-  update_state(Completed);  
+  if (inputs_changed_ || guicolormap1name_.changed() || guicolormap2name_.changed() ||
+      guicolormap3name_.changed() || guibundlename_.changed() || !oport_cached("bundle"))
+  {
+  
+    std::string colormap1name = guicolormap1name_.get();
+    std::string colormap2name = guicolormap2name_.get();
+    std::string colormap3name = guicolormap3name_.get();
+    std::string bundlename = guibundlename_.get();
+
+    if (handle.get_rep())
+    {
+      handle.detach();
+    }
+    else
+    {
+      handle = scinew Bundle();
+      if (handle.get_rep() == 0)
+      {
+        error("Could not allocate new bundle");
+        return;
+      }
+    }
+                
+    if (colormap1.get_rep()) handle->setColorMap(colormap1name,colormap1);
+    if (colormap2.get_rep()) handle->setColorMap(colormap2name,colormap2);
+    if (colormap3.get_rep()) handle->setColorMap(colormap3name,colormap3);
+    if (bundlename != "")
+    {
+      handle->set_property("name",bundlename,false);
+    }
+
+    send_output_handle("bundle",handle,false);
+  }
 }
-
-
-
-
-

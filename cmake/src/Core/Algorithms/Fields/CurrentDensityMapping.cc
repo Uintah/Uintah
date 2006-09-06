@@ -39,8 +39,15 @@ bool CurrentDensityMappingAlgo::CurrentDensityMapping(ProgressReporter *pr,
                        std::string mappingmethod,
                        std::string integrationmethod,
                        std::string integrationfilter,
-                       bool multiply_with_normal)
+                       bool multiply_with_normal,
+                       bool calcnorm)
 {
+  if (calcnorm && multiply_with_normal)
+  {
+    pr->error("CurrentDensityMapping: Cannot multiply with normal and calculate norm at the same time");
+    return (false);
+  }
+
   if (pot.get_rep() == 0)
   {
     pr->error("CurrentDensityMapping: No input potential field");
@@ -101,12 +108,19 @@ bool CurrentDensityMappingAlgo::CurrentDensityMapping(ProgressReporter *pr,
     }
     fi_out.set_data_type(fi_pot.get_data_type());  
   }
-  else
+  else 
   {
-    fi_out.set_data_type("Vector");
+    if (!calcnorm)
+    {
+      fi_out.set_data_type("Vector");
+    }
+    else
+    {
+      fi_out.set_data_type("double");
+    }
   }
   
-  // We are doing nodal mapping
+  // We are doing modal mapping
   fi_out.make_constantdata();
 
   // we take in mapping method, but it is not used yet as there is only one method available
@@ -205,6 +219,10 @@ bool CurrentDensityMappingAlgo::CurrentDensityMapping(ProgressReporter *pr,
     algotype = "Normal";
     integrator = "Normal" + integrator;
   }
+  else if (calcnorm)
+  {
+    algotype = "Norm";
+  }
 
   SCIRun::CompileInfoHandle ci = scinew CompileInfo(
     "ALGOCurrentDensity"+algotype+"Mapping."+integrationmethod+"."+fi_pot.get_field_filename()+"."+fi_con.get_field_filename()+"."+fi_dst.get_field_filename()+".",
@@ -239,7 +257,7 @@ bool CurrentDensityMappingAlgo::CurrentDensityMapping(ProgressReporter *pr,
     return(false);
   }
 
-  return(algo->CurrentDensityMapping(pr,numproc,pot,con,fdst,fout,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal)); 
+  return(algo->CurrentDensityMapping(pr,numproc,pot,con,fdst,fout,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal,calcnorm)); 
 }
 
 

@@ -43,6 +43,8 @@
 #include <SCIRun/Dataflow/SCIRunUIPort.h>
 #include <SCIRun/Dataflow/SCIRunGoPort.h>
 #include <SCIRun/CCA/CCAPortInstance.h>
+#include <SCIRun/TypeMap.h>
+
 #include <Dataflow/Network/Module.h>
 
 namespace SCIRun {
@@ -89,13 +91,15 @@ PortInstance* SCIRunComponentInstance::getPortInstance(const std::string& name)
         if (!port) {
             return 0;
         }
-        return new SCIRunPortInstance(this, port, SCIRunPortInstance::Input);
+	sci::cca::TypeMap::pointer tm(new TypeMap);
+        return new SCIRunPortInstance(this, port, tm, SCIRunPortInstance::Input);
     } else if (name.substr(0, OUTPUT_LEN) == "Output: ") {
         OPort* port = module->get_output_port(name.substr(OUTPUT_LEN));
         if (!port) {
             return 0;
         }
-        return new SCIRunPortInstance(this, port, SCIRunPortInstance::Output);
+	sci::cca::TypeMap::pointer tm(new TypeMap);
+        return new SCIRunPortInstance(this, port, tm, SCIRunPortInstance::Output);
     } else {
         for (unsigned int i = 0; i < specialPorts.size(); i++) {
             if (specialPorts[i]->getName() == name) {
@@ -104,6 +108,11 @@ PortInstance* SCIRunComponentInstance::getPortInstance(const std::string& name)
         }
         return 0;
     }
+}
+
+sci::cca::TypeMap::pointer SCIRunComponentInstance::getPortProperties(const std::string& /*portName*/)
+{
+  return sci::cca::TypeMap::pointer(new TypeMap);
 }
 
 PortInstanceIterator* SCIRunComponentInstance::getPorts()
@@ -134,12 +143,18 @@ PortInstance* SCIRunComponentInstance::Iterator::get()
     if (idx < spsize) {
         return component->specialPorts[idx];
     } else if (idx < spsize + module->num_output_ports()) {
+	sci::cca::TypeMap::pointer tm(new TypeMap);
+	// TODO: check memory leak
         return new SCIRunPortInstance(component,
                                       module->get_output_port(idx - spsize),
+				      tm,
                                       SCIRunPortInstance::Output);
     } else if (idx < spsize + module->num_output_ports() + module->num_input_ports()) {
+	sci::cca::TypeMap::pointer tm(new TypeMap);
+	// TODO: check memory leak
         return new SCIRunPortInstance(component,
                                       module->get_input_port(idx - spsize - module->num_output_ports()),
+				      tm,
                                       SCIRunPortInstance::Input);
     } else {
         return 0; // Illegal

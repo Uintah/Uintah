@@ -96,6 +96,7 @@ public:
 
   virtual void reset();
   virtual void finish();
+  virtual void do_not_send();
   virtual void detach(Connection *conn, bool blocked);
 
   void send(const T&);
@@ -201,6 +202,13 @@ SimpleOPort<T>::reset()
 
 template<class T>
 void
+SimpleOPort<T>::do_not_send()
+{
+  sent_something_ = true;
+}
+
+template<class T>
+void
 SimpleOPort<T>::finish()
 {
   if (!sent_something_ && nconnections() > 0)
@@ -215,7 +223,7 @@ SimpleOPort<T>::finish()
     }
     turn_off_light();
   }
-
+  
   sent_something_ = true;
 }
 

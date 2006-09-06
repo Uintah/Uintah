@@ -27,29 +27,16 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  BundleGetColorMap2.cc:
- *
- *  Written by:
- *   jeroen
- *
- */
-
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Ports/ColorMap2Port.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
-using namespace std;
 
 class BundleGetColorMap2 : public Module {
 public:
   BundleGetColorMap2(GuiContext*);
-
-  virtual ~BundleGetColorMap2();
-
   virtual void execute();
   
 private:
@@ -71,95 +58,54 @@ BundleGetColorMap2::BundleGetColorMap2(GuiContext* ctx)
 {
 }
 
-
-BundleGetColorMap2::~BundleGetColorMap2()
-{
-}
-
-
 void
 BundleGetColorMap2::execute()
 {
-  string colormap21name = guicolormap21name_.get();
-  string colormap22name = guicolormap22name_.get();
-  string colormap23name = guicolormap23name_.get();
-  string colormap2list;
-        
+  // Define input handle:
   BundleHandle handle;
-  BundleIPort  *iport;
-  BundleOPort *oport;
-  ColorMap2Handle fhandle;
-  ColorMap2OPort *ofport;
-        
-  if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
+  
+  // Get data from input port:
+  if (!(get_input_handle("bundle",handle,true))) return;
+  
+  if (inputs_changed_ || guicolormap21name_.changed() || guicolormap22name_.changed() ||
+      guicolormap23name_.changed() || !oport_cached("bundle") || !oport_cached("colormap21") ||
+       !oport_cached("colormap22") || !oport_cached("colormap23"))
   {
-    error("Could not find bundle input port");
-    return;
-  }
+    ColorMapHandle fhandle;
+    std::string colormap21name = guicolormap21name_.get();
+    std::string colormap22name = guicolormap22name_.get();
+    std::string colormap23name = guicolormap23name_.get();
+    std::string colormap2list;
+    
+    int numColorMap2s = handle->numColorMap2s();
+    for (int p = 0; p < numColorMap2s; p++)
+    {
+      colormap2list += "{" + handle->getColorMap2Name(p) + "} ";
+    }
 
-  if (!(iport->get(handle)))
-  {   
-    warning("No bundle connected to the input port");
-    return;
-  }
+    guicolormap2s_.set(colormap2list);
+    get_ctx()->reset();  
+  
+    // Send colormap1 if we found one that matches the name:
+    if (handle->isColorMap(colormap21name))
+    {
+      fhandle = handle->getColorMap(colormap21name);
+      send_output_handle("colormap21",fhandle,false);
+    } 
 
+    // Send colormap2 if we found one that matches the name:
+    if (handle->isColorMap(colormap22name))
+    {
+      fhandle = handle->getColorMap(colormap22name);
+      send_output_handle("colormap22",fhandle,false);
+    } 
 
-  if (handle.get_rep() == 0)
-  {   
-    warning("Empty bundle connected to the input port");
-    return;
+    // Send colormap3 if we found one that matches the name:
+    if (handle->isColorMap(colormap23name))
+    {
+      fhandle = handle->getColorMap(colormap23name);
+      send_output_handle("colormap23",fhandle,false);
+    } 
   }
-
-  int numColorMap2s = handle->numColorMap2s();
-  for (int p = 0; p < numColorMap2s; p++)
-  {
-    colormap2list += "{" + handle->getColorMap2Name(p) + "} ";
-  }
-
-  guicolormap2s_.set(colormap2list);
-  get_ctx()->reset();
-
- 
-  if (!(ofport = static_cast<ColorMap2OPort *>(get_oport("colormap21"))))
-  {
-    error("Could not find colormap2 1 output port");
-    return; 
-  }
-
-  if (handle->isColorMap2(colormap21name))
-  {
-    fhandle = handle->getColorMap2(colormap21name);
-    ofport->send(fhandle);
-  }
-        
-  if (!(ofport = static_cast<ColorMap2OPort *>(get_oport("colormap22"))))
-  {
-    error("Could not find colormap2 2 output port");
-    return; 
-  }
- 
-  if (handle->isColorMap2(colormap22name))
-  {
-    fhandle = handle->getColorMap2(colormap22name);
-    ofport->send(fhandle);
-  }
-        
-  if (!(ofport = static_cast<ColorMap2OPort *>(get_oport("colormap23"))))
-  {
-    error("Could not find colormap2 3 output port");
-    return; 
-  }
- 
-  if (handle->isColorMap2(colormap23name))
-  {
-    fhandle = handle->getColorMap2(colormap23name);
-    ofport->send(fhandle);
-  }
-      
-  if ((oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-  {
-    oport->send(handle);
-  }
-  update_state(Completed);      
 }
 

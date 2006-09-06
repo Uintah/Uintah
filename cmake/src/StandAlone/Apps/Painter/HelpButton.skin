@@ -20,7 +20,7 @@
         <object class="Button">
           <var name="row">1</var>
           <var name="col">2</var>
-          <var name="cell-width">35</var>
+          <var name="cell-width">45</var>
           <signal name="Button::clicked"
                   target="Quit"/>
         </object>

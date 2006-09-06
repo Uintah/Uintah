@@ -41,9 +41,10 @@
  *  Copyright (C) 1999 SCI Group
  */
 
-#include "ServerContext.h"
+#include <Core/CCA/PIDL/ServerContext.h>
 #include <Core/CCA/PIDL/TypeInfo.h>
 #include <Core/CCA/PIDL/TypeInfo_internal.h>
+
 using namespace SCIRun;
 
 void

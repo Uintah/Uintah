@@ -40,7 +40,9 @@
 
 #include <Core/CCA/PIDL/ReferenceMgr.h>
 #include <Core/CCA/PIDL/PIDL.h>
+
 #include <iostream>
+
 using namespace SCIRun;
 
 ReferenceMgr::ReferenceMgr()

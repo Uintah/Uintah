@@ -26,29 +26,15 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  BundleInfo.cc:
- *
- *  Written by:
- *   jeroen
- *   TODAY'S DATE HERE
- *
- */
-
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 #include <Dataflow/Network/Ports/BundlePort.h>
 
 using namespace SCIRun;
-using namespace std;
 
 class BundleInfo : public Module {
 public:
   BundleInfo(GuiContext*);
-
-  virtual ~BundleInfo();
-
   virtual void execute();
 
 private:
@@ -64,46 +50,27 @@ BundleInfo::BundleInfo(GuiContext* ctx)
 {
 }
 
-
-BundleInfo::~BundleInfo()
+void BundleInfo::execute()
 {
-}
-
-
-void
-BundleInfo::execute()
-{
-
-  BundleIPort *iport = static_cast<BundleIPort *>(get_iport("bundle"));
-  if (iport == 0)
-    {
-      error("Could not locate bundle input port");
-      return;
-    }
-    
   BundleHandle bundle;
-    
-  iport->get(bundle);
-  if (bundle.get_rep() == 0)
-    {
-      error("No bundle found on input port");
-      return;
-    }
-    
-  string tclinfostring;
-  int numhandles = bundle->getNumHandles();
-  string name;
-  string type;
-    
-  for (int p=0; p < numhandles; p++)
+
+  if(!(get_input_handle("bundle",bundle,true))) return;
+
+  if (inputs_changed_)
+  {
+    std::string tclinfostring;
+    int numhandles = bundle->getNumHandles();
+    std::string name;
+    std::string type;
+      
+    for (int p=0; p < numhandles; p++)
     {
       name = bundle->getHandleName(p);
       type = bundle->getHandleType(p);
       tclinfostring += " {" + name + " (" + type + ") }";
     }
-    
-  tclInfoString_.set(tclinfostring);
-  
-  update_state(Completed);  
+      
+    tclInfoString_.set(tclinfostring);
+  }
 }
 

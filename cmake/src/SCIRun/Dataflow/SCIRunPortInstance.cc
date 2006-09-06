@@ -46,9 +46,9 @@
 
 namespace SCIRun {
 
-SCIRunPortInstance::SCIRunPortInstance(SCIRunComponentInstance* component,
-                                       Port* port, DataflowPortType porttype)
-  : component(component), port(port), porttype(porttype)
+SCIRunPortInstance::SCIRunPortInstance(SCIRunComponentInstance* component, Port* port,
+                                       const sci::cca::TypeMap::pointer& properties, DataflowPortType porttype)
+  : component(component), port(port), porttype(porttype), properties(properties)
 {
 }
 
@@ -58,34 +58,33 @@ SCIRunPortInstance::~SCIRunPortInstance()
 
 std::string SCIRunPortInstance::getUniqueName()
 {
-  return (porttype==Input?"Input: ":"Output: ")+port->get_portname();
+  return (porttype == Input ? "Input: " : "Output: ") + port->get_portname();
 }
 
 PortInstance::PortType SCIRunPortInstance::portType()
 {
-  if(porttype == Output)
+  if (porttype == Output) {
     return PortInstance::Uses;
-  else
+  } else {
     return PortInstance::Provides;
+  }
 }
 
 bool SCIRunPortInstance::connect(PortInstance* to)
 {
   // TODO - follow inheritance somehow...
-  if(!canConnectTo(to))
+  if (!canConnectTo(to)) {
     return false;
+  }
   SCIRunPortInstance* p2 = dynamic_cast<SCIRunPortInstance*>(to);
   Network* net = port->get_module()->get_network();
-  if(porttype == Output)
-    {
+  if(porttype == Output) {
     net->connect(port->get_module(), port->get_which_port(),
                  p2->port->get_module(), p2->port->get_which_port());
-    }
-  else
-    {
+  } else {
     net->connect(p2->port->get_module(), p2->port->get_which_port(),
                  port->get_module(), port->get_which_port());
-    }
+ }
   return true;
 }
 
@@ -117,7 +116,20 @@ std::string SCIRunPortInstance::getType() {
 }
 
 std::string SCIRunPortInstance::getModel() {
-  return "dataflow";	
+  return "dataflow";
+}
+
+void SCIRunPortInstance::setProperties(const sci::cca::TypeMap::pointer& tm)
+{
+  properties = tm;
+  setDefaultProperties();
+}
+
+void SCIRunPortInstance::setDefaultProperties()
+{
+  properties->putString(PortInstance::NAME, this->getUniqueName());
+  properties->putString(PortInstance::TYPE, port->get_typename());
+  properties->putString(PortInstance::MODEL, this->getModel());
 }
 
 } // end namespace SCIRun

@@ -167,6 +167,8 @@ bool CWSolverXML::add_file(std::string filename)
   xmlFreeDoc(doc);
   xmlFreeParserCtxt(ctxt);  
   xmlCleanupParser();
+  
+  return (true);
 }
 
 std::vector<std::string> CWSolverXML::get_names()

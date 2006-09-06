@@ -149,7 +149,7 @@ void DMDAddDomainElectrodes::execute()
     StringHandle SourceFile = scinew String("OutputSCIRun.cc ");
     Electrode->setString("SourceFile",SourceFile);
 
-    StringHandle Parameters = scinew String("");
+    StringHandle Parameters = scinew String("scirun_dump_electrode=yes\nscirun_dump_electrode_time=yes\n");
     Electrode->setString("Parameters",Parameters);
 
     // Send data downstream:

@@ -38,11 +38,11 @@
  *
  */
 
-#include <sci_defs/mpi_defs.h> // For MPIPP_H 
+#include <sci_defs/mpi_defs.h> // For MPIPP_H
 #include <mpi.h>
 #include <CCA/Components/PWorld/PWorld.h>
 #include <Core/CCA/PIDL/PIDL.h>
-#include <Core/CCA/Comm/PRMI.h>
+#include <Core/CCA/PIDL/PRMI.h>
 #include <iostream>
 #include <sstream>
 

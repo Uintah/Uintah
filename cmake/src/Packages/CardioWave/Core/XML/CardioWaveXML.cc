@@ -167,6 +167,8 @@ bool CardioWaveXML::add_file(std::string filename)
   xmlFreeDoc(doc);
   xmlFreeParserCtxt(ctxt);  
   xmlCleanupParser();
+  
+  return (true);
 }
 
 std::vector<std::string> CardioWaveXML::get_names()

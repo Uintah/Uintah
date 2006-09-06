@@ -2,16 +2,21 @@
 SET(Core_Skinner_SRCS
   Animation.cc
   Arithmetic.cc
+  Arrow.cc
+  Arc.cc
   Box.cc
   Collection.cc
   Color.cc
-  Colormap1D.cc
+  ColorMap1D.cc
   Drawable.cc
+  FocusRegion.cc
   Frame.cc
   Gradient.cc
   Graph2D.cc
   Grid.cc
   Layout.cc
+  MenuManager.cc
+  MenuList.cc
   Parent.cc
   RectRegion.cc
   Root.cc
@@ -23,6 +28,7 @@ SET(Core_Skinner_SRCS
   Texture.cc
   Window.cc
   Variables.cc
+  ViewSubRegion.cc
   XMLIO.cc    
 )
 

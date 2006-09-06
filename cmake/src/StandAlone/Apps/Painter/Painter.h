@@ -89,6 +89,7 @@
 #include <Core/Skinner/Variables.h>
 #include <Core/Events/Tools/BaseTool.h>
 #include <Core/Events/Tools/ToolManager.h>
+#include <Core/Volume/Texture.h>
 
 #include <include/sci_defs/insight_defs.h>
 #ifdef HAVE_INSIGHT
@@ -429,6 +430,8 @@ private:
     void                finish();
     //    void                pick_mouse_motion(Event &);
     void                set_window_cursor(SliceWindow &window, int cursor);
+    void                update_to_gui();
+    void                update_from_gui();
     Painter *           painter_;
     int                 pick_;
     vector<int>         minmax_[2];
@@ -642,6 +645,7 @@ private:
   typedef vector<BundleHandle> Bundles;
   Bundles               bundles_;
 
+  TextureHandle         volume_texture_;
   // Methods for drawing to the GL window
   void			redraw_all();
 
@@ -737,6 +741,7 @@ private:
 
   CatcherFunction_t     ShowVolumeRendering;
   CatcherFunction_t     AbortFilterOn;
+  CatcherFunction_t     ResampleVolume;
 
   
 

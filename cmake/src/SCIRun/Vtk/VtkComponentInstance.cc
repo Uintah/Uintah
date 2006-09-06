@@ -42,6 +42,7 @@
 #include <SCIRun/Vtk/VtkPortInstance.h>
 #include <SCIRun/Vtk/VtkUIPort.h>
 #include <SCIRun/Vtk/Component.h>
+#include <SCIRun/TypeMap.h>
 #include <SCIRun/CCA/CCAPortInstance.h>
 
 namespace SCIRun {
@@ -70,21 +71,27 @@ VtkComponentInstance::~VtkComponentInstance()
 PortInstance* VtkComponentInstance::getPortInstance(const std::string& name)
 {
   //if the port is CCA port, find it from the specialPorts
-  if(name=="ui" || name=="go"){
-  for(unsigned int i=0;i<specialPorts.size();i++)
-    if(specialPorts[i]->getName() == name)
-      return specialPorts[i];
-  return 0;
+  if (name=="ui" || name=="go") {
+    for (unsigned int i=0;i<specialPorts.size();i++) {
+      if (specialPorts[i]->getName() == name) {
+	return specialPorts[i];
+      }
+      return 0;
+    }
   }
 
   //otherwise it is vtk port
   vtk::Port* port = component->getPort(name);
-  if(!port){
-  return 0;
+  if (!port) {
+    return 0;
   }
+  sci::cca::TypeMap::pointer tm(new TypeMap);
   //TODO: check memory leak
-  return new VtkPortInstance(this, port, port->isInput()?VtkPortInstance::Input:VtkPortInstance::Output);
+  return new VtkPortInstance(this, port, tm,
+                             port->isInput() ? VtkPortInstance::Input : VtkPortInstance::Output);
 }
+
+sci::cca::TypeMap::pointer VtkComponentInstance::getPortProperties(const std::string& /*portName*/) { return sci::cca::TypeMap::pointer(new TypeMap); }
 
 PortInstanceIterator* VtkComponentInstance::getPorts()
 {
@@ -107,30 +114,34 @@ void VtkComponentInstance::Iterator::next()
 
 bool VtkComponentInstance::Iterator::done()
 {
-  return index >= (int)ci->specialPorts.size()
-    +ci->component->numOPorts()
-    +ci->component->numIPorts();
+  return index >= (int) ci->specialPorts.size() +
+                  ci->component->numOPorts() +
+                  ci->component->numIPorts();
 }
 
 PortInstance* VtkComponentInstance::Iterator::get()
 {
-  
   vtk::Component* component = ci->component;
   int spsize = static_cast<int>(ci->specialPorts.size());
-  if(index < spsize)
+  if (index < spsize) {
     return ci->specialPorts[index];
-  else if(index < spsize+component->numOPorts())
+  } else if (index < spsize + component->numOPorts()) {
+    sci::cca::TypeMap::pointer tm(new TypeMap);
     //TODO: check memory leak
     return new VtkPortInstance(ci,
-                               component->getOPort(index-spsize),
+                               component->getOPort(index - spsize),
+                               tm,
                                VtkPortInstance::Output);
-  else if(index < spsize+component->numOPorts()
-          +component->numIPorts())
+  } else if (index < spsize + component->numOPorts() + component->numIPorts()) {
+    sci::cca::TypeMap::pointer tm(new TypeMap);
+    //TODO: check memory leak
     return new VtkPortInstance(ci,
                                component->getIPort(index-spsize-component->numOPorts()),
+                               tm,
                                VtkPortInstance::Input);
-  else
+  } else {
     return 0; // Illegal
+  }
 }
 
 } // end namespace SCIRun

@@ -26,27 +26,15 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-/*
- *  BundleSetBundle.cc:
- *
- *  Written by:
- *   jeroen
- *
- */
-
 #include <Core/Bundle/Bundle.h>
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
 
 using namespace SCIRun;
-using namespace std;
 
 class BundleSetBundle : public Module {
 public:
   BundleSetBundle(GuiContext*);
-
-  virtual ~BundleSetBundle();
   virtual void execute();
 
 private:
@@ -69,94 +57,47 @@ BundleSetBundle::BundleSetBundle(GuiContext* ctx)
 }
 
 
-BundleSetBundle::~BundleSetBundle()
+void BundleSetBundle::execute()
 {
-}
+  BundleHandle  handle, bundle1, bundle2, bundle3;
 
-
-void
-BundleSetBundle::execute()
-{
-  string bundle1Name = guiBundle1Name_.get();
-  string bundle2Name = guiBundle2Name_.get();
-  string bundle3Name = guiBundle3Name_.get();
-  string bundleName = guiBundleName_.get();
-    
-  BundleHandle  handle, oldhandle;
-  BundleIPort  *iport;
-  BundleOPort  *oport;
-  BundleHandle  fhandle;
-  BundleIPort  *ifport;
-        
-  if(!(iport = static_cast<BundleIPort *>(get_iport("bundle"))))
-  {
-    error("Could not find bundle input port");
-    return;
-  }
-        
-  // Create a new bundle
-  // Since a bundle consists of only handles we can copy
-  // it several times without too much memory overhead
-  if (iport->get(oldhandle))
-  {   // Copy all the handles from the existing bundle
-    handle = oldhandle->clone();
-  }
-  else
-  {   // Create a brand new bundle
-    handle = scinew Bundle;
-  }
-        
-  // Scan bundle input port 1
-  if (!(ifport = static_cast<BundleIPort *>(get_iport("bundle1"))))
-  {
-    error("Could not find bundle 1 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
-  {
-    handle->setBundle(bundle1Name,fhandle);
-  }
-
-  // Scan bundle input port 2     
-  if (!(ifport = static_cast<BundleIPort *>(get_iport("bundle2"))))
-  {
-    error("Could not find bundle 2 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
-  {
-    handle->setBundle(bundle2Name,fhandle);
-  }
-
-  // Scan bundle input port 3     
-  if (!(ifport = static_cast<BundleIPort *>(get_iport("bundle3"))))
-  {
-    error("Could not find bundle 3 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
-  {
-    handle->setBundle(bundle3Name,fhandle);
-  }
-        
-  // Now post the output
-        
-  if (!(oport = static_cast<BundleOPort *>(get_oport("bundle"))))
-  {
-    error("Could not find bundle output port");
-    return;
-  }
-    
-  if (bundleName != "")
-  {
-    handle->set_property("name",bundleName,false);
-  }
-        
-  oport->send_and_dereference(handle);
+  get_input_handle("bundle",handle,false);
+  get_input_handle("bundle1",bundle1,false);
+  get_input_handle("bundle2",bundle2,false);
+  get_input_handle("bundle3",bundle3,false);
   
-  update_state(Completed);
+  if (inputs_changed_ || guiBundle1Name_.changed() || guiBundle2Name_.changed() ||
+      guiBundle3Name_.changed() || guiBundleName_.changed() || !oport_cached("bundle"))
+  {
+  
+    std::string bundle1Name = guiBundle1Name_.get();
+    std::string bundle2Name = guiBundle2Name_.get();
+    std::string bundle3Name = guiBundle3Name_.get();
+    std::string bundleName = guiBundleName_.get();
+
+    if (handle.get_rep())
+    {
+      handle.detach();
+    }
+    else
+    {
+      handle = scinew Bundle();
+      if (handle.get_rep() == 0)
+      {
+        error("Could not allocate new bundle");
+        return;
+      }
+    }
+                
+    if (bundle1.get_rep()) handle->setBundle(bundle1Name,bundle1);
+    if (bundle2.get_rep()) handle->setBundle(bundle2Name,bundle2);
+    if (bundle3.get_rep()) handle->setBundle(bundle3Name,bundle3);
+    if (bundleName != "")
+    {
+      handle->set_property("name",bundleName,false);
+    }
+
+    send_output_handle("bundle",handle,false);
+  }
 }
 

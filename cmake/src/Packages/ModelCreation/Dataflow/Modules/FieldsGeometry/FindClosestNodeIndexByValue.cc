@@ -70,6 +70,7 @@ void FindClosestNodeIndexByValue::execute()
     
     
     std::vector<unsigned int> idxs;
+    if (!(calgo.MatrixToDouble(value,val))) return;
     if (!(algo.FindClosestNodeByValue(field,idxs,points,val))) return;
     if (!(calgo.UnsignedIntVectorToMatrix(idxs,indices))) return;    
     

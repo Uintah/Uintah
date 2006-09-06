@@ -12,7 +12,7 @@ SRCDIR := Packages/DDDAS/Dataflow/Modules
 
 SUBDIRS := \
 	$(SRCDIR)/DataIO\
-#	$(SRCDIR)/PDESolver\
+
 #[INSERT NEW CATEGORY DIR HERE]
 
 include $(SCIRUN_SCRIPTS)/recurse.mk

@@ -41,7 +41,7 @@ $(SRCDIR)/cca_sidl.h: Core/CCA/SSIDL/sidl_sidl.h $(SRCDIR)/SCIRun2Ports.sidl $(S
 SRCS := $(SRCS) $(SRCDIR)/cca.sidl $(SRCDIR)/cca_sidl.cc
 GENHDRS := $(GENHDRS) $(SRCDIR)/cca_sidl.h
 
-PSELIBS := Core/CCA/SSIDL Core/CCA/Comm Core/CCA/PIDL
+PSELIBS := Core/CCA/SSIDL Core/CCA/PIDL Core/Exceptions
 LIBS :=
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

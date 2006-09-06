@@ -28,7 +28,7 @@
 
 
 /*
- *  UsesPort.h: 
+ *  UsesPort.h:
  *
  *  Written by:
  *   Keming Zhang
@@ -44,27 +44,29 @@
 #include <SCIRun/Corba/Port.h>
 
 namespace SCIRun {
-  namespace corba {
-    class ProvidesPort;
-    /**
-     * \class UsesPort
-     *
-     * A virtual class that defines the interface for a SCIRun::corba input port. An
-     * input port is a component port that uses, or accepts, data.
-     */
-    class UsesPort: public Port
-      {
-      public:
-	UsesPort();
-	virtual ~UsesPort();
+namespace corba {
 
-	ProvidesPort* getConnectedProvidesPort();
-  
-	/** Returns \em true if a connection can be made with the output port \em
-	    port.  Must be defined by a subclass. */
-      };
+class ProvidesPort;
 
-  }
+/**
+ * \class UsesPort
+ *
+ * A virtual class that defines the interface for a SCIRun::corba input port. An
+ * input port is a component port that uses, or accepts, data.
+ */
+class UsesPort : public SCIRun::corba::Port
+{
+public:
+  UsesPort();
+  virtual ~UsesPort();
+
+  ProvidesPort* getConnectedProvidesPort();
+
+  /** Returns \em true if a connection can be made with the output port \em
+      port.  Must be defined by a subclass. */
+};
+
+}
 }
 
 #endif

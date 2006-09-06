@@ -65,10 +65,9 @@
 namespace SCIRun {
 
 SCIRunFramework::SCIRunFramework()
-  :lock_compIDs("SCIRunFramework::compIDs lock"),
-   lock_activeInstances("SCIRunFramework::activeInstances lock")
+  : lock_compIDs("SCIRunFramework::compIDs lock"),
+    lock_activeInstances("SCIRunFramework::activeInstances lock")
 {
-
   models.push_back(internalServices = new InternalComponentModel(this));
   std::vector<std::string> xmlPaths_;
   // get initial SIDL environment paths
@@ -92,7 +91,8 @@ SCIRunFramework::SCIRunFramework()
 #endif
 
 #if HAVE_TAO
-  models.push_back(corba = new CorbaComponentModel(this, xmlPaths_));
+  // disable Corba for now
+  //models.push_back(corba = new CorbaComponentModel(this, xmlPaths_));
   models.push_back(tao = new TaoComponentModel(this, xmlPaths_));
 #endif
 }
@@ -207,7 +207,7 @@ SCIRunFramework::destroyComponentInstance(const sci::cca::ComponentID::pointer &
   // get component properties...
   emitComponentEvent(
     new ComponentEvent(sci::cca::ports::DestroyPending,
-		       cid, sci::cca::TypeMap::pointer(0)));
+		       cid, sci::cca::TypeMap::pointer(new TypeMap)));
 
   {
     Guard g1(&lock_compIDs);
@@ -274,7 +274,7 @@ SCIRunFramework::destroyComponentInstance(const sci::cca::ComponentID::pointer &
 
   emitComponentEvent(
     new ComponentEvent(sci::cca::ports::ComponentDestroyed,
-		       cid, sci::cca::TypeMap::pointer(0)));
+		       cid, sci::cca::TypeMap::pointer(new TypeMap)));
 }
 
 std::string
@@ -304,7 +304,7 @@ SCIRunFramework::registerComponent(ComponentInstance *ci,
   // TODO: get some properties
   emitComponentEvent(
      new ComponentEvent(sci::cca::ports::InstantiatePending,
-                        cid, sci::cca::TypeMap::pointer(0)));
+                        cid, sci::cca::TypeMap::pointer(new TypeMap)));
   ci->framework = this;
 
   lock_activeInstances.lock();

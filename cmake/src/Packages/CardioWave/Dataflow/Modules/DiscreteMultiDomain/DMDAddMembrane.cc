@@ -114,6 +114,19 @@ void DMDAddMembrane::execute()
     // Create access point to field algorithms
     SCIRunAlgo::FieldsAlgo algo(this);
 
+    int numnodes, numelems;
+    if (!(algo.GetFieldInfo(Geometry,numnodes,numelems)))
+    {
+      error("DMDAddMembrane: Could not determine number of elements/nodes in the field");
+      return;        
+    }
+    
+    if ((numnodes == 0) || (numelems == 0))
+    {
+      send_output_handle("MembraneBundle",MembraneBundle,false);
+      return;    
+    } 
+    
     // Empty the geometry and make it linear, we need a linear version
     // to project data on:
     if (!(algo.ClearAndChangeFieldBasis(Geometry,Geometry,"Linear")))

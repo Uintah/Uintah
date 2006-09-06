@@ -42,15 +42,42 @@
 using std::vector;
 using std::string;
 
+
+#define DECLARE_SKINNER_MAKER(parentname, childname) \
+  BaseTool::propagation_state_e \
+  parentname::childname##_Maker (event_handle_t event) { \
+    construct_child_from_maker_signal<childname>(event); \
+    return STOP_E; \
+  }
+
+
 namespace SCIRun {
   namespace Skinner {
     class Variables;
+    class Drawable;
+
+
+    
     typedef pair<double, double> MinMax;
 
     class Drawable : public BaseTool, 
                      public SignalCatcher, 
                      public SignalThrower {
     public:
+
+    // This is called from XMLO.cc to construct new objects that this
+    // type of drawable is capable of making
+    template <class T>
+    T * 
+    construct_child_from_maker_signal(event_handle_t event) {
+      MakerSignal *maker_signal = dynamic_cast<MakerSignal *>(event.get_rep());
+      ASSERT(maker_signal);
+      T *obj = new T(maker_signal->get_vars());
+      maker_signal->set_signal_thrower(obj);
+      maker_signal->set_signal_name(maker_signal->get_signal_name()+"_Done");
+      return obj;
+    }
+
       Drawable (Variables *);
       virtual ~Drawable();
 
@@ -76,7 +103,10 @@ namespace SCIRun {
 
     protected:
       virtual event_handle_t            throw_signal(const string &);
+      //virtual propagation_state_e       throw_signal(const string &);
+      CatcherFunction_t                 check_visibile;
     private:
+
       RectRegion                        region_;
       Variables *                       variables_;
     };

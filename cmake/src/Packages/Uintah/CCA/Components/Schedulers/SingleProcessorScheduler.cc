@@ -159,6 +159,7 @@ SingleProcessorScheduler::scheduleParticleRelocation(const LevelP& level,
 						     const VarLabel* particleIDLabel,
 						     const MaterialSet* matls)
 {
+  reloc_new_posLabel_ = new_posLabel;
   reloc_.scheduleParticleRelocation(this, d_myworld, 0, level,
 				   old_posLabel, old_labels,
 				   new_posLabel, new_labels,

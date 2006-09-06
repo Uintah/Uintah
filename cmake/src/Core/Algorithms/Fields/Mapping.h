@@ -304,15 +304,20 @@ template <class MAPPING, class FSRC, class FDST, class FOUT>
 void NodalMappingAlgoT<MAPPING,FSRC,FDST,FOUT>::parallel(int procnum,IData* idata)
 {
   typename FOUT::mesh_type::Node::iterator it, eit;
+  typename FOUT::mesh_type::Node::size_type s;
   typename FOUT::mesh_type* omesh = idata->omesh;
   FOUT* ofield = idata->ofield;
   typename FOUT::value_type val;
   
+  ProgressReporter *pr = idata->pr;
   int numproc = idata->numproc;
   
   // loop over all the output nodes
   omesh->begin(it);
   omesh->end(eit);
+  omesh->size(s);
+  
+  int cnt = 1;
   
   // Define class that defines how we find data from the source mesh
   MAPPING mapping(idata->ifield);
@@ -336,6 +341,7 @@ void NodalMappingAlgoT<MAPPING,FSRC,FDST,FOUT>::parallel(int procnum,IData* idat
     // Skip to the next one, but disregard the nodes the other 
     // processes are working on.
     for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+    if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
   }
 }
 
@@ -418,14 +424,19 @@ template <class MAPPING, class INTEGRATOR, class FSRC, class FDST, class FOUT>
 void ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,IData* idata)
 {
   typename FOUT::mesh_type::Elem::iterator it, eit;
+  typename FOUT::mesh_type::Elem::size_type s;
   typename FOUT::mesh_type* omesh = idata->omesh;
   typename FOUT::value_type val, val2;
   FOUT* ofield = idata->ofield;
+  ProgressReporter *pr = idata->pr;
   
   int numproc = idata->numproc;
   
+  omesh->size(s);
   omesh->begin(it);
   omesh->end(eit);
+  
+  int cnt = 1;
   
   MAPPING mapping(idata->ifield);
   INTEGRATOR integrator(idata->ofield);
@@ -454,6 +465,7 @@ void ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,
       ofield->set_value(valarray[idx],*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }
   }
   else if ((filter == "minimum")||(filter == "Minimum"))
@@ -477,6 +489,7 @@ void ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,
       ofield->set_value(val,*it);
       
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }  
   }
   else if ((filter == "maximum")||(filter == "Maximum"))
@@ -500,6 +513,7 @@ void ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,
       ofield->set_value(val,*it);
       
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }
   }
   else if ((filter == "mostcommon")||(filter == "Mostcommon")||(filter == "MostCommon"))
@@ -541,6 +555,7 @@ void ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,
       ofield->set_value(rval,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }  
   }
   else if ((filter == "integrate")||(filter == "Integrate"))
@@ -560,6 +575,7 @@ void ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }
   }
   else if ((filter == "weightedaverage")||(filter == "WeightedAverage"))
@@ -579,6 +595,7 @@ void ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }
   }
   else if ((filter == "average")||(filter == "Average"))
@@ -597,6 +614,7 @@ void ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }
     }
   }
   else if ((filter == "sum")||(filter == "Sum"))
@@ -615,6 +633,7 @@ void ModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }
   }
   else
@@ -707,14 +726,19 @@ template <class MAPPING, class INTEGRATOR, class FSRC, class FDST, class FOUT>
 void GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,IData* idata)
 {
   typename FOUT::mesh_type::Elem::iterator it, eit;
+  typename FOUT::mesh_type::Elem::size_type s;
   typename FOUT::mesh_type* omesh = idata->omesh;
   typename FOUT::value_type val, val2;
   FOUT* ofield = idata->ofield;
+  ProgressReporter *pr = idata->pr;
   
   int numproc = idata->numproc;
   
+  omesh->size(s);
   omesh->begin(it);
   omesh->end(eit);
+  
+  int cnt = 1;
   
   MAPPING mapping(idata->ifield);
   INTEGRATOR integrator(idata->ofield);
@@ -743,6 +767,7 @@ void GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int 
       ofield->set_value(valarray[idx],*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }
   }
   else if ((filter == "minimum")||(filter == "Minimum"))
@@ -766,6 +791,7 @@ void GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int 
       ofield->set_value(val,*it);
       
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }  
   }
   else if ((filter == "maximum")||(filter == "Maximum"))
@@ -789,6 +815,7 @@ void GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int 
       ofield->set_value(val,*it);
       
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }
   }
   else if ((filter == "mostcommon")||(filter == "Mostcommon")||(filter == "MostCommon"))
@@ -828,6 +855,7 @@ void GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int 
       ofield->set_value(rval,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }  
   }
   else if ((filter == "integrate")||(filter == "Integrate"))
@@ -847,6 +875,7 @@ void GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int 
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }
   }
   else if ((filter == "weightedaverage")||(filter == "WeightedAverage"))
@@ -866,6 +895,7 @@ void GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int 
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }
   }
   else if ((filter == "average")||(filter == "Average"))
@@ -884,6 +914,7 @@ void GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int 
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }
   }
   else if ((filter == "sum")||(filter == "Sum"))
@@ -902,6 +933,7 @@ void GradientModalMappingAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int 
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }
   }
   else
@@ -994,15 +1026,20 @@ template <class MAPPING, class INTEGRATOR, class FSRC, class FDST, class FOUT>
 void GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(int procnum,IData* idata)
 {
   typename FOUT::mesh_type::Elem::iterator it, eit;
+  typename FOUT::mesh_type::Elem::size_type s;
   typename FOUT::mesh_type* omesh = idata->omesh;
   typename FOUT::value_type val; 
   Vector val2;
   FOUT* ofield = idata->ofield;
+  ProgressReporter *pr = idata->pr;
   
   int numproc = idata->numproc;
   
+  omesh->size(s);
   omesh->begin(it);
   omesh->end(eit);
+  
+  int cnt;
   
   MAPPING mapping(idata->ifield);
   INTEGRATOR integrator(idata->ofield);
@@ -1032,6 +1069,7 @@ void GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(
       ofield->set_value(valarray[idx],*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }
   }
   else if ((filter == "minimum")||(filter == "Minimum"))
@@ -1057,6 +1095,7 @@ void GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(
       ofield->set_value(val,*it);
       
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }  
   }
   else if ((filter == "maximum")||(filter == "Maximum"))
@@ -1082,6 +1121,7 @@ void GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(
       ofield->set_value(val,*it);
       
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }
   }
   else if ((filter == "mostcommon")||(filter == "Mostcommon")||(filter == "MostCommon"))
@@ -1121,6 +1161,7 @@ void GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(
       ofield->set_value(rval,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }            
     }  
   }
   else if ((filter == "integrate")||(filter == "Integrate"))
@@ -1140,6 +1181,7 @@ void GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }
   }
   else if ((filter == "weightedaverage")||(filter == "WeightedAverage"))
@@ -1159,6 +1201,7 @@ void GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }
   }
   else if ((filter == "average")||(filter == "Average"))
@@ -1177,6 +1220,7 @@ void GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }
   }
   else if ((filter == "sum")||(filter == "Sum"))
@@ -1195,6 +1239,7 @@ void GradientModalMappingNormAlgoT<MAPPING,INTEGRATOR,FSRC,FDST,FOUT>::parallel(
       ofield->set_value(val,*it);
 
       for (int p =0; p < numproc; p++) if (it != eit) ++it;  
+      if (procnum == 0) { cnt++; if (cnt == 100) { pr->update_progress(static_cast<int>(*it),static_cast<int>(s)); cnt = 1; } }      
     }
   }
   else
@@ -1557,8 +1602,6 @@ class GaussianIntegration
         {
           vol_ = 0.0;
         }
-        
-        
       }
     }
 
@@ -1576,13 +1619,11 @@ class GaussianIntegration
         
     void get_nodes_and_iweights(typename FIELD::mesh_type::Elem::index_type idx, std::vector<Point>& gpoints, std::vector<double>& gweights)
     {    
-      
       gpoints.resize(gauss_.GaussianNum);
       gweights.resize(gauss_.GaussianNum);
       
       for (int k=0; k < coords_.size(); k++)
       {
-
         mesh_->interpolate(gpoints[k],coords_[k],idx);
         mesh_->derivate(coords_[k],idx,Jv_);
 

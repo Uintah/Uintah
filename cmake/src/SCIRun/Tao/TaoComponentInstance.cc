@@ -39,13 +39,15 @@
  */
 
 #include <SCIRun/Tao/TaoComponentInstance.h>
-#include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/Tao/TaoPortInstance.h>
 #include <SCIRun/CCA/CCAPortInstance.h>
 #include <SCIRun/Tao/TaoException.h>
 #include <SCIRun/Tao/TaoGoPort.h>
-#include <iostream>
+#include <SCIRun/SCIRunFramework.h>
+#include <SCIRun/TypeMap.h>
 #include <Core/Thread/Mutex.h>
+
+#include <iostream>
 
 namespace SCIRun {
 
@@ -78,9 +80,9 @@ TaoComponentInstance::getPortInstance(const std::string& portname)
   } else {
     if(portname == "go") {
       return new CCAPortInstance("go", "sci.cca.ports.GoPort",
-                                 sci::cca::TypeMap::pointer(0),
-                                 sci::cca::Port::pointer(new TaoGoPort(this)),
-                                 CCAPortInstance::Provides);
+				 sci::cca::TypeMap::pointer(0),
+				 sci::cca::Port::pointer(new TaoGoPort(this)),
+				 CCAPortInstance::Provides);
 
     }
     return iter->second;
@@ -88,18 +90,20 @@ TaoComponentInstance::getPortInstance(const std::string& portname)
 }
 
 void TaoComponentInstance::registerUsesPort(const std::string& portName,
-                                            const std::string& portType)
+					    const std::string& portType,
+					    const sci::cca::TypeMap::pointer& properties)
 {
     SCIRun::Guard g1(&lock_ports);
     std::map<std::string, TaoPortInstance*>::iterator iter = ports.find(portName);
     if (iter != ports.end()) {
-        if (iter->second->porttype == TaoPortInstance::Provides) {
-            throw TaoException("name conflict between uses and provides ports for " + portName + " " + portType + " " + instanceName);
-        } else {
-            throw TaoException("registerUsesPort called twice for " + portName + " " + portType + " " + instanceName);
-        }
+	if (iter->second->porttype == TaoPortInstance::Provides) {
+	    throw TaoException("name conflict between uses and provides ports for " + portName + " " + portType + " " + instanceName);
+	} else {
+	    throw TaoException("registerUsesPort called twice for " + portName + " " + portType + " " + instanceName);
+	}
     }
-    ports.insert(make_pair(portName, new TaoPortInstance(portName, portType, TaoPortInstance::Uses)));
+    ports.insert(make_pair(portName,
+			   new TaoPortInstance(portName, portType, properties, TaoPortInstance::Uses)));
 }
 
 void TaoComponentInstance::unregisterUsesPort(const std::string& portName)
@@ -108,32 +112,32 @@ std::cerr << "TaoComponentInstance::unregisterUsesPort: " << portName << std::en
     SCIRun::Guard g1(&lock_ports);
     std::map<std::string, TaoPortInstance*>::iterator iter = ports.find(portName);
     if (iter != ports.end()) {
-        if (iter->second->porttype == TaoPortInstance::Provides) {
-            throw TaoException("name conflict between uses and provides ports for " + portName);
-        } else {
-            ports.erase(portName);
-        }
+	if (iter->second->porttype == TaoPortInstance::Provides) {
+	    throw TaoException("name conflict between uses and provides ports for " + portName);
+	} else {
+	    ports.erase(portName);
+	}
     } else {
-        throw TaoException("port name not found for " + portName);
+	throw TaoException("port name not found for " + portName);
     }
 }
 
 void TaoComponentInstance::addProvidesPort(const std::string& portName,
-                                           const std::string& portType)
+					   const std::string& portType,
+					   const sci::cca::TypeMap::pointer& properties)
 {
   SCIRun::Guard g1(&lock_ports);
   std::map<std::string, TaoPortInstance*>::iterator iter = ports.find(portName);
   if (iter != ports.end()) {
     if (iter->second->porttype == TaoPortInstance::Uses) {
-      throw TaoException("name conflict between uses and provides ports for " + portName); 
+      throw TaoException("name conflict between uses and provides ports for " + portName);
     } else {
-      throw TaoException("addProvidesPort called twice for " + portName); 
+      throw TaoException("addProvidesPort called twice for " + portName);
     }
   }
 
   ports.insert(make_pair(portName,
-                         new TaoPortInstance(portName, portType, 
-                                             TaoPortInstance::Provides)));
+			 new TaoPortInstance(portName, portType, properties, TaoPortInstance::Provides)));
 }
 
 void TaoComponentInstance::removeProvidesPort(const std::string& name)
@@ -149,6 +153,33 @@ sci::cca::ComponentID::pointer TaoComponentInstance::getComponentID()
 PortInstanceIterator* TaoComponentInstance::getPorts()
 {
   return new Iterator(this);
+}
+
+sci::cca::TypeMap::pointer
+TaoComponentInstance::getPortProperties(const std::string& portName)
+{
+  lock_ports.lock();
+  std::map<std::string, TaoPortInstance*>::iterator iter = ports.find(portName);
+  lock_ports.unlock();
+  if (iter == ports.end()) {
+    return sci::cca::TypeMap::pointer(new TypeMap);
+  }
+
+  return iter->second->getProperties();
+}
+
+void
+TaoComponentInstance::setPortProperties(const std::string& portName, const sci::cca::TypeMap::pointer& tm)
+{
+  lock_ports.lock();
+  std::map<std::string, TaoPortInstance*>::iterator iter = ports.find(portName);
+  lock_ports.unlock();
+  if (iter == ports.end()) {
+    // with warning?
+    return;
+  }
+
+  iter->second->setProperties(tm);
 }
 
 TaoComponentInstance::Iterator::Iterator(TaoComponentInstance* comp)

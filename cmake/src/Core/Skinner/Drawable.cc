@@ -55,15 +55,46 @@ namespace SCIRun {
       return SPRING_MINMAX;
     }
 
+
     BaseTool::propagation_state_e
     Drawable::process_event(event_handle_t event)
     {
-      WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
-      if (window && window->get_window_state() == WindowEvent::REDRAW_E) {
-        throw_signal("redraw");
+      bool visible = true;
+      get_vars()->maybe_get_bool("visible", visible);
+      if (!visible) {
+        return STOP_E;
+      } 
+      string signalname = "";
+      Signal *signal = 0;
+      PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
+      if (pointer) {
+        signalname = get_vars()->get_string("class")+"::do_PointerEvent";
+        event_handle_t psignal = new PointerSignal(signalname, pointer);
+        signal = dynamic_cast<Signal *>(SignalThrower::throw_signal(psignal).get_rep());
+        ASSERT(signal);
+      } else {
+        KeyEvent *key = dynamic_cast<KeyEvent *>(event.get_rep());
+        if (key) {
+          signalname = get_vars()->get_string("class")+"::do_KeyEvent";
+          event_handle_t ksignal = new KeySignal(signalname, key);
+          signal = dynamic_cast<Signal *>(SignalThrower::throw_signal(ksignal).get_rep());
+          ASSERT(signal);
+        } else {         
+          WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
+          if (window && window->get_window_state() == WindowEvent::REDRAW_E) {
+            signalname = get_vars()->get_string("class")+"::redraw";
+            signal = dynamic_cast<Signal *>(throw_signal(signalname).get_rep());
+            ASSERT(signal);
+          }
+        }
       }
-      return STOP_E;
+
+      if (signal) {
+        return signal->get_signal_result();
+      }
+      return CONTINUE_E;
     }
+
 
     void
     Drawable::get_modified_event(event_handle_t &)
@@ -105,6 +136,9 @@ namespace SCIRun {
       ASSERT(thrower);
       return thrower->throw_signal(signal, get_vars());
     }
+
+
+
 
   }
 }

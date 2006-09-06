@@ -47,7 +47,7 @@
 #include <Core/Math/MiscMath.h>
 #include <iostream>
 
-static int counter = 0;
+//static int counter = 0;
 
 namespace SCIRun {  
 

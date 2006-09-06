@@ -65,7 +65,7 @@ inline bool operator==(const membraneparam_type& p1,const membraneparam_type& p2
 }    
 
 inline bool operator<(const membraneparam_type& p1, const membraneparam_type& p2)
-{
+{  
   if (p1.node1 < p2.node1) return(true); 
   if (p1.node1 == p2.node1) if (p1.node2 < p2.node2) return(true);
   return (false);
@@ -226,7 +226,7 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
   }
 
   // TO DO:
-  // Need to check whether bounding box is already available in al meshes..
+  // Need to check whether bounding box is already available in all meshes..
   // It is a small overhead but may help reduce computational times
 
   // Define multipliers for the grid we are putting on top
@@ -608,6 +608,16 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
                         membranetablelisttemp[k+q].node2 = membranetablelisttemp[k+q].node1;
                         membranetablelisttemp[k+q].node1 = temp;
                       }
+                      else if (classvalue1 == classvalue2)
+                      {
+                        if (membranetablelisttemp[k+q].node2 < membranetablelisttemp[k+q].node1)
+                        {
+                          unsigned int temp;
+                          temp = membranetablelisttemp[k+q].node1;
+                          membranetablelisttemp[k+q].node1 = membranetablelisttemp[k+q].node2;
+                          membranetablelisttemp[k+q].node2 = temp;                        
+                        }
+                      }
                     }
                     
                     // finish by saying that we do not need to process second surface
@@ -655,6 +665,17 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
                 {
                   membranetablelisttemp[k+q].node2 = enodes[t];
                 }
+                else if (classvalue1 == classvalue2)
+                {
+                  membranetablelisttemp[k+q].node2 = enodes[t];
+                  if (membranetablelisttemp[k+q].node2 < membranetablelisttemp[k+q].node1)
+                  {
+                    unsigned int temp;
+                    temp = membranetablelisttemp[k+q].node1;
+                    membranetablelisttemp[k+q].node1 = membranetablelisttemp[k+q].node2;
+                    membranetablelisttemp[k+q].node2 = temp;
+                  }
+                }
                 else
                 {
                   membranetablelisttemp[k+q].node2 = membranetablelisttemp[k+q].node1;
@@ -663,6 +684,8 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
                 membranetablelisttemp[k+q].node0 = nodes[s];
                 membranetablelisttemp[k+q].surface = surfaces[s];
               }
+              
+              
               foundsurf2 = true;
               k += enodes.size();
             }
@@ -672,11 +695,11 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
       ++(lit.first);
     }
       
-//    if ((foundsurf1 == false)||(foundsurf2 == false))
-//    {
-//      pr->error("BuildMembraneTable: Not every surface/curve in the membrane model can be found in the element type mesh");
-//      return (false);
-//    }
+    if ((foundsurf1 == false)||(foundsurf2 == false))
+    {
+      pr->error("BuildMembraneTable: Not every surface/curve in the membrane model can be found in the element type mesh");
+      return (false); 
+   }
     ++eit;
   }
   
@@ -745,6 +768,10 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
         q = p;
         tablesize++;
       }
+      else
+      {
+        std:cerr << "Detected synapse with surface area equal to zero\n";
+      }
     } 
 
 
@@ -780,6 +807,7 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
         q++;
       }    
     }
+
   }
   else
   {
@@ -790,10 +818,24 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
   for (int r=0; r < nummembranenodes; r++)
   {
     mrr[r] = 2*r;
-    mcc[2*r] = membranetablelist[r].node2;
-    mcc[2*r+1] = membranetablelist[r].node1;
-    mvv[2*r] = 1.0;
-    mvv[2*r] = -1.0;
+    mcc[2*r] = 0;
+    mcc[2*r+1] = 0;
+    mvv[2*r] = 0.0;
+    mvv[2*r+1] = 0.0;
+   }
+  
+  for (int r=0; r < nummembranenodes; r++)
+  {
+    int q = membranetablelist[r].node0; 
+    mcc[2*q] = membranetablelist[r].node2;
+    mcc[2*q+1] = membranetablelist[r].node1;
+    mvv[2*q] = 1.0;
+    mvv[2*q+1] = -1.0;
+  }
+ 
+  for (int r=0; r < nummembranenodes; r++)
+  {
+    if (mvv[2*r] == 0.0) std::cerr << "Membrane node " << r << "does not have any potentials assigned to it\n";
   }
  
   mrr[nummembranenodes] = 2*nummembranenodes; // An extra entry goes on the end of rr.
@@ -810,7 +852,7 @@ bool BuildMembraneTableAlgoT<FVOL,FSURF>::BuildMembraneTable(ProgressReporter *p
     pr->error("LinkToCompGrid: Could build geometry to computational mesh mapping matrix");
     return (false);
   }
-
+  
   // Success:
   return (true);
 }

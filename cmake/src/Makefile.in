@@ -142,7 +142,7 @@ $(MAKEFILEDIRS):
 $(CREATETCLINDEX): $(SRCTOP)/scripts/createTclIndex.in $(OBJTOP)/Makefile
 	@echo creating createTclIndex
 	-@sed -e 's,TCLSH,$(TCLSH),g' \
-	      -e 's,ITCL_LIB_DIR,$(ITCL_LIB_DIR),g' \
+	      -e 's,ITCL_INIT_DIR,$(ITCL_INIT_DIR),g' \
               -e 's,TCL_INIT_DIR,$(TCL_INIT_DIR),g' \
               $(SRCTOP)/scripts/createTclIndex.in > $(CREATETCLINDEX)
 	-@chmod a+x $(CREATETCLINDEX)

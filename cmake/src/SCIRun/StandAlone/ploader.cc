@@ -1,29 +1,29 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
 
 
@@ -39,20 +39,24 @@
  */
 
 #include <sci_defs/mpi_defs.h>
-#include <Core/CCA/PIDL/PIDL.h>
-#include <Core/CCA/Comm/DT/DataTransmitter.h>
-#include <Core/CCA/Comm/PRMI.h>
-#include <Core/CCA/spec/cca_sidl.h>
-#include <Core/CCA/PIDL/MalformedURL.h>
-#include <Core/Thread/Thread.h>
-#include <SCIRun/SCIRunLoader.h>
-#include <iostream>
-#include <sys/stat.h>
 #include <sci_mpi.h>
 
-using namespace std;
+#include <Core/CCA/PIDL/PIDL.h>
+#include <Core/CCA/PIDL/MalformedURL.h>
+#include <Core/CCA/PIDL/PRMI.h>
+
+#include <Core/CCA/DT/DataTransmitter.h>
+#include <Core/CCA/spec/cca_sidl.h>
+#include <SCIRun/SCIRunLoader.h>
+
+#include <Core/Thread/Thread.h>
+
+#include <iostream>
+#include <sys/stat.h>
+
 using namespace SCIRun;
 using namespace sci::cca;
+
 #define VERSION "2.0.0" // this needs to be synced with the contents of
                         // SCIRun/doc/edition.xml
 
@@ -70,19 +74,18 @@ usage()
 int
 main(int argc, char *argv[] )
 {
-    if (argc < 3) {
-	usage();
-    }
- /*Loader is MPI enabled*/
- MPI_Init(&argc,&argv);
- int mpi_size, mpi_rank;
- MPI_Comm_size(MPI_COMM_WORLD,&mpi_size);
- MPI_Comm_rank(MPI_COMM_WORLD,&mpi_rank);
-
+  if (argc < 3) {
+    usage();
+  }
+  /*Loader is MPI enabled*/
+  MPI_Init(&argc, &argv);
+  int mpi_size, mpi_rank;
+  MPI_Comm_size(MPI_COMM_WORLD, &mpi_size);
+  MPI_Comm_rank(MPI_COMM_WORLD, &mpi_rank);
 
   try {
     PIDL::initialize(mpi_rank, mpi_size);
-  } 
+  }
   catch(const Exception& e) {
     std::cerr << "Caught exception:\n";
     std::cerr << e.message() << '\n';
@@ -92,13 +95,13 @@ main(int argc, char *argv[] )
     abort();
   }
 
-  std::string loaderName=argv[1];
-  std::string frameworkURL=argv[2];
+  std::string loaderName = argv[1];
+  std::string frameworkURL = argv[2];
   try {
     sci::cca::Loader::pointer ploader;
     SCIRunLoader *sl=new SCIRunLoader(loaderName, frameworkURL);
     ploader=sci::cca::Loader::pointer(sl);
-    
+
     //allowing the framework to access ploader by URL anytime
     ploader->addReference();
 
@@ -110,48 +113,54 @@ main(int argc, char *argv[] )
     //--------------------------------------
     //initialize MPI lock manager
     PRMI::init(mpi_rank, mpi_size);
-    
+
     //   MPI_Comm_dup(MPI_COMM_WORLD, &MPI_COMM_WORLD_Dup);
-    
+
     DTAddress dtAddr=PIDL::getDT()->getAddress();
-    if(mpi_rank==0){
-      PRMI::orderSvc_ep=PRMI::orderSvcEp.getEP();
-      PRMI::orderSvc_addr.ip=dtAddr.ip;
-      PRMI::orderSvc_addr.port=dtAddr.port;
+    if (mpi_rank == 0) {
+      PRMI::orderSvc_ep = PRMI::orderSvcEp.getEP();
+      PRMI::orderSvc_addr.setIP(dtAddr.getIP());
+      PRMI::orderSvc_addr.setPort(dtAddr.getPort());
     }
     //root broadcasts its orderSvc_ep and orderSvc_addr
     int* int_buf;
     short* short_buf;
-    if(mpi_rank==0){
-      PRMI::lockSvc_ep_list=new DTPoint*[mpi_size];
-      PRMI::lockSvc_addr_list=new DTAddress[mpi_size];
-      int_buf=new int[mpi_size];
-      short_buf=new short[mpi_size];
+    if (mpi_rank == 0) {
+      PRMI::lockSvc_ep_list = new DTPoint*[mpi_size];
+      PRMI::lockSvc_addr_list = new DTAddress[mpi_size];
+      int_buf = new int[mpi_size];
+      short_buf = new short[mpi_size];
     }
-    DTPoint* lockSvc_ep=PRMI::lockSvcEp.getEP();
 
 #if defined (HAVE_MPI) || defined (HAVE_MPICH)
+    DTPoint* lockSvc_ep = PRMI::lockSvcEp.getEP();
+
     //root broadcast order service ep and DT address
+    int _bcast_ip = PRMI::orderSvc_addr.getIP();
+    int _bcast_port = PRMI::orderSvc_addr.getPort();
     MPI_Bcast(&PRMI::orderSvc_ep, 1, MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&PRMI::orderSvc_addr.ip, 1, MPI_INT,0,MPI_COMM_WORLD);
-    MPI_Bcast(&PRMI::orderSvc_addr.port, 1, MPI_SHORT,0,MPI_COMM_WORLD);
-    //root gatheres lockSvc_ep and lockSvc_addr
+    MPI_Bcast(&_bcast_ip, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast(&_bcast_port, 1, MPI_SHORT, 0, MPI_COMM_WORLD);
+
+    //root gathers lockSvc_ep and lockSvc_addr
+    int _gather_ip = dtAddr.getIP();
+    int _gather_port = dtAddr.getPort();
     MPI_Gather(&lockSvc_ep, 1, MPI_INT, PRMI::lockSvc_ep_list, 1, MPI_INT,
-	     0, MPI_COMM_WORLD);
-    MPI_Gather(&dtAddr.ip, 1, MPI_INT, int_buf, 1, MPI_INT,
-	       0, MPI_COMM_WORLD);
-    MPI_Gather(&dtAddr.port, 1, MPI_SHORT, short_buf, 1, MPI_SHORT,
-	       0, MPI_COMM_WORLD);
+               0, MPI_COMM_WORLD);
+    MPI_Gather(&_gather_ip, 1, MPI_INT, int_buf, 1, MPI_INT,
+               0, MPI_COMM_WORLD);
+    MPI_Gather(&_gather_port, 1, MPI_SHORT, short_buf, 1, MPI_SHORT,
+               0, MPI_COMM_WORLD);
 #else
     //TODO: need do the broadcasting somehow....
 #endif
-    if(mpi_rank==0){
-      for(int i=0; i<mpi_size; i++){
-	PRMI::lockSvc_addr_list[i].ip=int_buf[i];
-	PRMI::lockSvc_addr_list[i].port=short_buf[i];
+    if (mpi_rank == 0) {
+      for (int i = 0; i < mpi_size; i++) {
+        PRMI::lockSvc_addr_list[i].setIP(int_buf[i]);
+        PRMI::lockSvc_addr_list[i].setPort(short_buf[i]);
       }
-      delete []int_buf;
-      delete []short_buf;
+      delete [] int_buf;
+      delete [] short_buf;
     }
     //=================================================
 
@@ -161,31 +170,32 @@ main(int argc, char *argv[] )
     dr[0] = new Index((sl->mpi_rank),(sl->mpi_rank)+1,1);  //first, last, stride
     MxNArrayRep* arrr = new MxNArrayRep(1,dr);
     sl->setCalleeDistribution("dURL",arrr);   //server is callee
-   
-    Object::pointer obj=PIDL::objectFrom(frameworkURL);
-    if(obj.isNull()){
+
+    Object::pointer obj = PIDL::objectFrom(frameworkURL);
+    if (obj.isNull()) {
       std::cerr << "Cannot get framework from url=" << frameworkURL << std::endl;
       return 0;
     }
 
     sci::cca::AbstractFramework::pointer framework=pidl_cast<sci::cca::AbstractFramework::pointer>(obj);
-  
+    // get GUIService attached to the remote framework and refresh it's associated GUIBuilders
+
     typedef char urlString[100] ;
     urlString s;
     std::strcpy(s, ploader->getURL().getString().c_str());
 
 #if defined (HAVE_MPI) || defined (HAVE_MPICH)
     urlString *buf;
-    if(sl->mpi_rank==0){
-      buf=new urlString[sl->mpi_size];
+    if (sl->mpi_rank == 0) {
+      buf = new urlString[sl->mpi_size];
     }
-    MPI_Gather(  s, 100, MPI_CHAR,    buf, 100, MPI_CHAR,   0, MPI_COMM_WORLD);
-    if(sl->mpi_rank==0){
+    MPI_Gather(s, 100, MPI_CHAR, buf, 100, MPI_CHAR, 0, MPI_COMM_WORLD);
+    if (sl->mpi_rank == 0) {
       SSIDL::array1< std::string> URLs;
-      for(int i=0; i<sl->mpi_size; i++){
-	std::string url(buf[i]);
-	URLs.push_back(url);
-	std::cerr << "ploader URLs["<<i<<"]=" << url << std::endl;
+      for (int i = 0; i < sl->mpi_size; i++) {
+        std::string url(buf[i]);
+        URLs.push_back(url);
+        std::cerr << "ploader URLs[" << i << "]=" << url << std::endl;
       }
       framework->registerLoader(loaderName, URLs);
       delete buf;
@@ -196,16 +206,15 @@ main(int argc, char *argv[] )
     URLs.push_back(url);
     framework->registerLoader(loaderName, URLs);
 #endif
-  }catch(const MalformedURL& e) {
-	std::cerr << "slaveTest.cc: Caught MalformedURL exception:\n";
-	std::cerr << e.message() << '\n';
+  }
+  catch(const MalformedURL& e) {
+    std::cerr << "Caught MalformedURL exception:\n" << e.message() << std::endl;
   }
   catch(const Exception& e) {
-    std::cerr << "Caught exception:\n";
-    std::cerr << e.message() << '\n';
+    std::cerr << "Caught exception:\n" << e.message() << std::endl;
     abort();
   } catch(...) {
-    std::cerr << "Caught unexpected exception!\n";
+    std::cerr << "Caught unexpected exception!" << std::endl;
     abort();
   }
 

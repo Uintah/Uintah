@@ -60,7 +60,9 @@
 	typedef signed long long int64;
 	typedef unsigned long long uint64;
 
-  #define __USE_LARGEFILE64
+  #ifndef __USE_LARGEFILE64
+    #define __USE_LARGEFILE64
+  #endif
 
   #ifdef HAVE_UNISTD_H
     #include <unistd.h>
@@ -748,8 +750,8 @@ bool StreamMatrixAlgo::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandl
         return (false);
       }    
 
-      size_t ret = ::read(datafile_uni,reinterpret_cast<void*>(buffer),static_cast<size_t>(elemsize_*sizes_[0]));
-      if (static_cast<size_t>(elemsize_*sizes_[0]) != ret)
+      ssize_t ret = ::read(datafile_uni,reinterpret_cast<void*>(buffer),static_cast<size_t>(elemsize_*sizes_[0]));
+      if (static_cast<ssize_t>(elemsize_*sizes_[0]) != ret)
       {
         ::close(datafile_uni);
         pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
@@ -984,8 +986,8 @@ bool StreamMatrixAlgo::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::Mat
         return (false);
       }    
 
-      size_t ret = ::read(datafile_uni,reinterpret_cast<void*>(buffer),static_cast<size_t>(elemsize_*sizes_[0]));
-      if (static_cast<size_t>(elemsize_*sizes_[0]) != ret)
+      ssize_t ret = ::read(datafile_uni,reinterpret_cast<void*>(buffer),static_cast<size_t>(elemsize_*sizes_[0]));
+      if (static_cast<ssize_t>(elemsize_*sizes_[0]) != ret)
       {
         ::close(datafile_uni);
         pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
@@ -1244,7 +1246,7 @@ bool StreamMatrixAlgo::getrowmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandl
         }
         oldidx = idx[p]+1;
 
-        if (::read(datafile_uni,buffer+(elemsize_*(j+p*sizes_[1])),static_cast<size_t>(elemsize_)) != static_cast<size_t>(elemsize_))
+        if (::read(datafile_uni,buffer+(elemsize_*(j+p*sizes_[1])),static_cast<size_t>(elemsize_)) != static_cast<ssize_t>(elemsize_))
         {
           ::close(datafile_uni);
           pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
@@ -1514,7 +1516,7 @@ bool StreamMatrixAlgo::getrowmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::Mat
         }
         oldidx = cols[p]+1;
 
-        if (::read(datafile_uni,buffer+(elemsize_*(j+p*sizes_[1])),static_cast<size_t>(elemsize_)) != static_cast<size_t>(elemsize_))
+        if (::read(datafile_uni,buffer+(elemsize_*(j+p*sizes_[1])),static_cast<size_t>(elemsize_)) != static_cast<ssize_t>(elemsize_))
         {
           ::close(datafile_uni);
           pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");

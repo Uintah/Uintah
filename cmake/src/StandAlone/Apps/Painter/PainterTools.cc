@@ -149,7 +149,7 @@ Painter::KeyToolSelectorTool::key_press(string, int keyval,
   case SCIRun_p:        painter_->opacity_up();break;
   case SCIRun_o:        painter_->opacity_down();break;
 
-  case SCIRun_u:            
+  case SCIRun_u:
     if (painter_->current_volume_) {
       painter_->current_volume_->colormap_.set(Max(0,painter_->current_volume_->colormap_.get()-1));
       painter_->set_all_slices_tex_dirty();
@@ -467,6 +467,7 @@ Painter::CropTool::CropTool(Painter *painter) :
   minmax_[0] = vector<int>(minmax_[1].size(), 0);
   pick_minmax_[0] = minmax_[0];
   pick_minmax_[1] = minmax_[1];
+  update_to_gui();
 }
 
 Painter::CropTool::~CropTool() {}
@@ -507,7 +508,7 @@ Painter::CropTool::pointer_motion
       }
     }
   }
-  
+  update_to_gui();
   painter_->redraw_all();
   return STOP_E;
 }
@@ -554,6 +555,7 @@ Painter::CropTool::pointer_up
         SWAP(minmax_[0][a],minmax_[1][a]);
     
     pick_ = 0;
+    update_to_gui();
     return STOP_E;
   }
   return CONTINUE_E;
@@ -580,6 +582,19 @@ Painter::CropTool::process_event(event_handle_t event)
   return CONTINUE_E;
 }
 
+
+void
+Painter::CropTool::update_to_gui()
+{
+  Skinner::Variables *vars = painter_->get_vars();
+  vars->insert("Painter::crop::min::x", to_string(minmax_[0][1]), "string", true);
+  vars->insert("Painter::crop::min::y", to_string(minmax_[0][2]), "string", true);
+  vars->insert("Painter::crop::min::z", to_string(minmax_[0][3]), "string", true);
+
+  vars->insert("Painter::crop::max::x", to_string(minmax_[1][1]), "string", true);
+  vars->insert("Painter::crop::max::y", to_string(minmax_[1][2]), "string", true);
+  vars->insert("Painter::crop::max::z", to_string(minmax_[1][3]), "string", true);
+}
 
 
 int
@@ -1186,10 +1201,12 @@ Painter::ITKConfidenceConnectedImageFilterTool::finish() {
     seed_point[i] = seed_[i+1];
   }
   
-  filter->SetNumberOfIterations(3);
-  filter->SetMultiplier(2.0);
+  string prefix = "ITKConfidenceConnectedImageFilterTool::";
+  Skinner::Variables *vars = painter_->get_vars();
+  filter->SetNumberOfIterations(vars->get_int(prefix+"numberOfIterations"));
+  filter->SetMultiplier(vars->get_double(prefix+"multiplier"));
   filter->SetSeed(seed_point);
-  filter->SetReplaceValue(1.0);
+  filter->SetReplaceValue(vars->get_double(prefix+"replaceValue"));
   filter->SetInitialNeighborhoodRadius(1);
 
   string name = "Confidence Connected";
@@ -1200,10 +1217,8 @@ Painter::ITKConfidenceConnectedImageFilterTool::finish() {
   temp->clut_max_ = temp->data_max_ = 1.0;
   painter_->current_volume_ = temp;
 
-  cerr << "starting\n";
   painter_->do_itk_filter<Painter::ITKImageFloat3D>(filter, 
                                                     temp->nrrd_handle_);
-  cerr << "done\n";
   painter_->show_volume(name);
   painter_->recompute_volume_list();
 

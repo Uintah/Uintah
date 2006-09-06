@@ -56,6 +56,7 @@
 #include <Core/Algorithms/Fields/Mapping.h>
 #include <Core/Algorithms/Fields/MergeFields.h>
 #include <Core/Algorithms/Fields/MergeMeshes.h>
+#include <Core/Algorithms/Fields/RemoveUnusedNodes.h>
 #include <Core/Algorithms/Fields/ScaleField.h>
 #include <Core/Algorithms/Fields/SetFieldData.h>
 #include <Core/Algorithms/Fields/SplitFieldByDomain.h>
@@ -236,9 +237,11 @@ bool FieldsAlgo::IsInsideFields(FieldHandle input, FieldHandle& output, std::vec
 {
   IsInsideFieldAlgo algo;
   output = 0;
-  for (int p=1; p<=objectfields.size(); p++)
+  for (unsigned int p = 1; p <= objectfields.size(); p++)
   {
-    if (!(algo.IsInsideField(pr_,input,output,objectfields[p-1],static_cast<double>(p),outval,output_type,basis_type,partial_inside)))
+    if (!(algo.IsInsideField(pr_, input, output, objectfields[p-1],
+                             static_cast<double>(p), outval, output_type,
+                             basis_type, partial_inside)))
     {
       output = 0;
       return (false);
@@ -275,17 +278,17 @@ bool FieldsAlgo::LinkToCompGridByDomain(FieldHandle Geometry, MatrixHandle NodeL
 
 
 bool FieldsAlgo::CurrentDensityMapping(int numproc, FieldHandle pot, FieldHandle con, FieldHandle dst, FieldHandle& output, std::string mappingmethod,
-                       std::string integrationmethod, std::string integrationfilter, bool multiply_with_normal)
+                       std::string integrationmethod, std::string integrationfilter, bool multiply_with_normal, bool calcnorm)
 {
   CurrentDensityMappingAlgo algo;
-  return (algo.CurrentDensityMapping(pr_,numproc,pot,con,dst,output,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal));
+  return (algo.CurrentDensityMapping(pr_,numproc,pot,con,dst,output,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal,calcnorm));
 }
 
 bool FieldsAlgo::CurrentDensityMapping(FieldHandle pot, FieldHandle con, FieldHandle dst,  FieldHandle& output, std::string mappingmethod,
-                       std::string integrationmethod, std::string integrationfilter, bool multiply_with_normal)
+                       std::string integrationmethod, std::string integrationfilter, bool multiply_with_normal, bool calcnorm)
 {
   CurrentDensityMappingAlgo algo;
-  return (algo.CurrentDensityMapping(pr_,0,pot,con,dst,output,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal));
+  return (algo.CurrentDensityMapping(pr_,0,pot,con,dst,output,mappingmethod,integrationmethod,integrationfilter,multiply_with_normal,calcnorm));
 }
 
 
@@ -520,6 +523,18 @@ bool FieldsAlgo::SignedDistanceField(FieldHandle input, FieldHandle& output, Fie
     error("SignedDistanceField: This function is only available for surface meshes");
     return (false);
   }
+}
+
+
+bool FieldsAlgo::RemoveUnusedNodes(FieldHandle input, FieldHandle& output)
+{
+  RemoveUnusedNodesAlgo algo;
+  return(algo.RemoveUnusedNodes(pr_,input,output));
+}
+
+bool FieldsAlgo::CleanMesh(FieldHandle input, FieldHandle& output, bool removeunusednodes, bool removeunusedelems, bool reorientelems, bool mergenodes, bool mergeelems)
+{
+  return (false);
 }
 
 } // end namespace SCIRunAlgo

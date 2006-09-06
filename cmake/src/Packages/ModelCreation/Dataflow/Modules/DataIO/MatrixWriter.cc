@@ -49,8 +49,6 @@
 namespace ModelCreation {
 using namespace SCIRun;
 
-template class GenericWriter<MatrixHandle>;
-
 class MatrixWriter : public GenericWriter<MatrixHandle> {
 protected:
   GuiString gui_types_;
@@ -149,7 +147,7 @@ MatrixWriter::execute()
 
   // CODE FOR FILENAME INPUT PORT ////
   StringIPort* filenameport;
-  if (filenameport = dynamic_cast<StringIPort *>(get_input_port("Filename")))
+  if ((filenameport = dynamic_cast<StringIPort *>(get_input_port("Filename"))))
   {
     StringHandle filenameH;
     filenameport->get(filenameH);

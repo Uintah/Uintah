@@ -1,4 +1,33 @@
-
+//  
+//  For more information, please see: http://software.sci.utah.edu
+//  
+//  The MIT License
+//  
+//  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+//  University of Utah.
+//  
+//  License for the specific language governing rights and limitations under
+//  Permission is hereby granted, free of charge, to any person obtaining a
+//  copy of this software and associated documentation files (the "Software"),
+//  to deal in the Software without restriction, including without limitation
+//  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+//  and/or sell copies of the Software, and to permit persons to whom the
+//  Software is furnished to do so, subject to the following conditions:
+//  
+//  The above copyright notice and this permission notice shall be included
+//  in all copies or substantial portions of the Software.
+//  
+//  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+//  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+//  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+//  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+//  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+//  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+//  DEALINGS IN THE SOFTWARE.
+//  
+//    File   : OpenGLViewer.cc
+//    Author : Martin Cole
+//    Date   : Sat May 27 08:51:31 2006
 
 #include <sci_gl.h>
 #include <sci_glu.h>
@@ -8,8 +37,12 @@
 #include <sci_defs/bits_defs.h>
 #include <sci_defs/image_defs.h>
 
+#include <Core/Algorithms/Visualization/RenderField.h>
+#include <Core/Algorithms/Fields/ClipAtIndeces.h>
 #include <Core/Events/SceneGraphEvent.h>
+#include <Core/Events/SelectionTargetEvent.h>
 #include <Core/Events/OpenGLViewer.h>
+#include <Core/Events/Tools/BaseTool.h>
 #include <Core/Events/Tools/ViewRotateTool.h>
 #include <Core/Events/Tools/ViewScaleTool.h>
 #include <Core/Events/Tools/ViewTranslateTool.h>
@@ -130,10 +163,9 @@ public:
       GeomViewerItem* si = scinew GeomViewerItem(ev->get_geom_obj(), 
 						 ev->get_geom_obj_name(), 
 						 0);     
-      sg_->addObj(si, ids_);
+      sg_->addObj(si, ids_++);
       visible_[ev->get_geom_obj_name()] = true;
-      //ev->set_scene_graph_id(ids_++);
-      cerr << "added scene graph obj" << endl;
+      cerr << "added scene graph obj: " << ev->get_geom_obj_name() << endl;
       return STOP_E;
     } 
     return CONTINUE_E;
@@ -145,6 +177,150 @@ private:
 };
 
 
+class FBI : public FBInterface 
+{
+public:
+  FBI(OpenGLViewer *v) :
+    oglv_(v)
+  {}
+
+  virtual int width() { return oglv_->width(); }
+  virtual int height() { return oglv_->height(); }
+  virtual vector<unsigned char> &img() { return oglv_->get_fbpick_image(); }
+  virtual void do_pick_draw() { oglv_->do_fbpick_draw(); }
+  virtual void add_selection(unsigned int id) 
+  {
+    oglv_->add_selection(id);
+  }
+  virtual void remove_selection(unsigned int id)
+  {
+    oglv_->remove_selection(id);
+  }
+
+private:
+  OpenGLViewer *oglv_;
+};
+
+class SelectionSetTool : public BaseTool
+{
+public:
+  enum selection_mode_e {
+    NODES_E,
+    EDGES_E,
+    FACES_E,
+    CELLS_E
+  };
+
+  SelectionSetTool(string name, OpenGLViewer *oglv) :
+    BaseTool(name),
+    mode_(FACES_E),
+    sel_fld_(0),
+    oglv_(oglv)
+  {}
+  
+  propagation_state_e process_event(event_handle_t e) 
+  {
+    SelectionTargetEvent *st = 
+      dynamic_cast<SelectionTargetEvent*>(e.get_rep());
+    if (st) {
+      cerr << "handling a selection changed event" << endl;
+      sel_fld_ = st->get_selection_target();
+      cerr << "sel_fld_(1): " << sel_fld_.get_rep() << endl;
+      oglv_->set_selection_set_visible(true);
+      return STOP_E;
+    }
+    return CONTINUE_E;
+  }
+  
+  void render_selection_set(bool edges = false) 
+  {
+    //create a new field with the selection items in it;
+    if (! sel_fld_.get_rep()) { return; }
+
+    static RenderParams p;
+    p.defaults();
+    p.def_material_ = new Material(Color(0.9, 0.1, 0.1)); 
+      
+
+    FieldHandle sel_vis;
+    switch (mode_) {
+
+    case NODES_E:
+      p.do_nodes_ = true;
+      //      sel_vis = clip_nodes(sel_fld_, oglv_->get_selection_set());
+      break;
+    case EDGES_E:
+      p.do_edges_ = true;
+      break;
+    default:
+    case FACES_E:
+      p.do_faces_ = true;
+      //      sel_vis = clip_faces(sel_fld_, oglv_->get_selection_set());
+      break;
+    case CELLS_E:
+
+      break;
+    };
+      
+
+    if (!sel_vis.get_rep() || !render_field(sel_vis, p)) {
+      cerr << "Error: render_field failed." << endl;
+      return;
+    }
+
+    GeomHandle gmat;
+    GeomHandle geom;
+    string name;
+    switch (mode_) {
+
+    case NODES_E:
+      {
+	gmat = scinew GeomMaterial(p.renderer_->node_switch_, 
+				   p.def_material_);
+	geom = scinew GeomSwitch(scinew GeomColorMap(gmat, 
+						     p.color_map_));
+	name = p.nodes_transparency_ ? "Transparent Nodes" : "Nodes";
+      }
+      break;
+    case EDGES_E:
+      {
+	gmat = scinew GeomMaterial(p.renderer_->edge_switch_, 
+				   p.def_material_);
+	geom = scinew GeomSwitch(scinew GeomColorMap(gmat, 
+						     p.color_map_));
+	name = p.edges_transparency_ ? "Transparent Edges" : "Edges";
+      }
+      break;
+    default:
+    case FACES_E:
+      {
+	gmat = scinew GeomMaterial(p.renderer_->face_switch_, 
+				   p.def_material_);
+	geom = scinew GeomSwitch(scinew GeomColorMap(gmat, 
+						     p.color_map_));
+	name = p.faces_transparency_ ? "Transparent Faces" : "Faces";
+      }
+      break;
+    };
+
+    oglv_->set_selection_geom(geom);    
+
+  }
+
+  void add_selection(unsigned int idx) {
+    oglv_->add_selection(idx);
+  }
+
+  void remove_selection(unsigned int idx) {
+    oglv_->remove_selection(idx);
+  }
+
+private:
+  selection_mode_e        mode_;
+  FieldHandle             sel_fld_;
+  OpenGLViewer           *oglv_;
+};
+
 class ToolManip : public TMNotificationTool
 {
 public:
@@ -155,7 +331,44 @@ public:
 
   virtual propagation_state_e start_tool(string id, unsigned int time)
   {
-    cerr << "start_tool(string id, unsigned int time)" << endl;
+    cerr << "want to start tool: " << id << endl;
+    const string fbpick_name("FBPickTool");
+    const string rmfaces_name("RMFacesTool");
+    if (id == fbpick_name) {
+      if (! fbpt_) {
+	fbpt_ = new FrameBufferPickTool(fbpick_name, 
+					new FBI(oglv_));
+      }
+      ToolManager &tm = oglv_->get_tm();
+      if (tm.query_tool_id(OpenGLViewer::SELECTION_TOOL_E) == fbpick_name)
+      {
+	//Already active, tell the tool to reset.
+	cerr << "resetting pick tool" << endl;
+	fbpt_->reset();
+      } else {
+	cerr << "adding pick tool" << endl;
+	tm.add_tool(fbpt_, OpenGLViewer::SELECTION_TOOL_E);
+      }
+      return STOP_E;
+    } else if (id == rmfaces_name) {
+      cerr << "want to start rmfaces tool: " << id << endl;
+//       if (! fbpt_) {
+// 	fbpt_ = new FrameBufferPickTool(fbpick_name, 
+// 					new FBI(oglv_));
+//       }
+//       ToolManager &tm = oglv_->get_tm();
+//       if (tm.query_tool_id(OpenGLViewer::ACTIVE_TOOL_E) == fbpick_name)
+//       {
+// 	//Already active, tell the tool to reset.
+// 	cerr << "resetting pick tool" << endl;
+// 	fbpt_->reset();
+//       } else {
+// 	cerr << "adding pick tool" << endl;
+// 	tm.add_tool(fbpt_, OpenGLViewer::ACTIVE_TOOL_E);
+//       }
+      return STOP_E;
+    }
+
     return CONTINUE_E;
   }
 
@@ -167,17 +380,33 @@ public:
 
   virtual propagation_state_e suspend_tool(string id, unsigned int time)
   {
+    if (! fbpt_) { return STOP_E; }
+    ToolManager &tm = oglv_->get_tm();
     cerr << "suspend_tool(string id, unsigned int time)" << endl;
-    return CONTINUE_E;
+
+    tool_handle_t th = new BaseTool("suspend selection");
+    
+    tm.add_tool(th, OpenGLViewer::SELECTION_TOOL_E);
+    return STOP_E;
   }
 
   virtual propagation_state_e resume_tool(string id, unsigned int time)
   {
-    cerr << "resume_tool(string id, unsigned int time)" << endl;
-    return CONTINUE_E;
+    ToolManager &tm = oglv_->get_tm();
+    if (! fbpt_) { 
+      start_tool(id, time); 
+    } else if (tm.query_tool_id(OpenGLViewer::SELECTION_TOOL_E) == 
+	       "suspend selection") 
+    {
+      cerr << "resume_tool(string id, unsigned int time)" << endl;
+      tm.rm_tool(OpenGLViewer::SELECTION_TOOL_E);
+    }
+    return STOP_E;
   }
+
 private:
-  OpenGLViewer *oglv_;
+  OpenGLViewer                    *oglv_;
+  FrameBufferPickTool             *fbpt_;
 };
 
 
@@ -240,7 +469,11 @@ OpenGLViewer::OpenGLViewer(OpenGLContext *oglc) :
   visible_(),
   obj_tag_(),
   draw_type_(GOURAUD_E),
-  need_redraw_(true)
+  need_redraw_(true),
+  selection_set_(),
+  selection_set_visible_(false),
+  selection_geom_(0),
+  selection_set_tool_(0)
 {
   if (gl_context_) {
     events_ = EventManager::register_event_messages("OpenGLViewer");
@@ -331,6 +564,10 @@ OpenGLViewer::init_tool_manager()
 			   scene_graph_, visible_);
   tool_handle_t sgtool(sgt);
   tm_.add_tool(sgtool, data_pri++);
+
+  selection_set_tool_ = new SelectionSetTool("OpenGLViewer Selection Set Tool",
+					     this);
+  tm_.add_tool(selection_set_tool_, data_pri++);  
 
 
   // tool modifiers
@@ -444,6 +681,12 @@ OpenGLViewer::run()
   } // end while(!dead_)
 }
 
+void
+OpenGLViewer::do_fbpick_draw()
+{
+  fbpick_ = true;
+  redraw_frame();
+}
 
 void
 OpenGLViewer::render_and_save_image()
@@ -1066,6 +1309,8 @@ OpenGLViewer::redraw_frame()
 	fbpick_image_.resize(xres_ * yres_ * 4);
 	glReadPixels(0, 0, xres_, yres_, GL_RGBA, GL_UNSIGNED_BYTE,
 		     &fbpick_image_[0]);
+	fbpick_ = false;  // just do the draw once.
+	return;
       }
         
       // Wait for the right time before swapping buffers
@@ -1484,17 +1729,17 @@ OpenGLViewer::real_get_pick(int x, int y,
 void
 OpenGLViewer::draw_visible_scene_graph()
 {
-//   // Do internal objects first...
-//   unsigned int i;
-//   for (i = 0; i < internal_objs_.size(); i++){
-//     if (internal_objs_visible_p_[i] == 1) {
-//       if (do_picking_p()) {
-// 	pick_draw_obj(default_material_, internal_objs_[i].get_rep());
-//       } else {
-// 	redraw_obj(default_material_, internal_objs_[i].get_rep());
-//       }
-//     }
-//   }
+  // Do internal objects first...
+  unsigned int i;
+  for (i = 0; i < internal_objs_.size(); i++){
+    if (internal_objs_visible_p_[i] == 1) {
+      if (do_picking_p()) {
+	pick_draw_obj(default_material_, internal_objs_[i].get_rep());
+      } else {
+	redraw_obj(default_material_, internal_objs_[i].get_rep());
+      }
+    }
+  }
   
   if (!scene_graph_) return;
   for (int pass=0; pass < 4; pass++)
@@ -1503,6 +1748,7 @@ OpenGLViewer::draw_visible_scene_graph()
     for ( ; iter.first != iter.second; iter.first++) {
       GeomViewerItem *si = (GeomViewerItem*)((*iter.first).second.get_rep());
       // Look up the name to see if it should be drawn...
+
       if (item_visible_p(si))
       {
 	const bool transparent =
@@ -1522,7 +1768,6 @@ OpenGLViewer::draw_visible_scene_graph()
 	  if (do_picking_p()) {
 	    pick_draw_obj(default_material_, si);
 	  } else {
-	    cerr << "drawing visible item: " << si->getString() << endl;
 	    redraw_obj(default_material_, si);
 	  }
 	    
@@ -1534,6 +1779,22 @@ OpenGLViewer::draw_visible_scene_graph()
 	cerr << "Warning: Object " << si->getString() 
 	     <<" not in visibility database." << endl;
       }
+    }
+  }
+
+  // Render the selected geometry last.
+  if (selection_set_visible_) 
+  {
+    // make sure the selection_geom_ is up to date.
+    SelectionSetTool *sst = 
+      (SelectionSetTool*)(selection_set_tool_.get_rep());
+    if (!sst) {
+      cerr << "null selection set tool" << endl;
+      return;
+    }
+    sst->render_selection_set();
+    if (selection_geom_.get_rep()) {
+      redraw_obj(default_material_, selection_geom_.get_rep());
     }
   }
 }
@@ -1755,7 +2016,11 @@ OpenGLViewer::redraw_obj(MaterialHandle def, GeomHandle obj)
     set_state(drawinfo_);
   }
   if (do_fbpick_p()) {
-    obj->fbpick_draw(drawinfo_, def.get_rep(), current_time_);
+    // for now only draw faces
+    if (name.find("Face") != string::npos) {
+      cerr << "fbpick draw for : " << name << endl;
+      obj->fbpick_draw(drawinfo_, def.get_rep(), current_time_);
+    }
   } else {
     obj->draw(drawinfo_, def.get_rep(), current_time_);
   }

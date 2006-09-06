@@ -177,7 +177,7 @@ private:
       bool d_filter_cs_squared; //option for filtering Cs^2 in CompDynamic Procedure
       bool d_3d_periodic;
       bool d_dynScalarModel;
-      double d_lower_limit;
+      bool d_filter_var_limit_scalar;
 
 
  private:

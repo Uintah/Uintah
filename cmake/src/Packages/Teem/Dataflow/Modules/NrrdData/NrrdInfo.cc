@@ -104,6 +104,46 @@ NrrdInfo::update_axis_var(const char *name, int axis, const string &val,
   }
 }
 
+const char *nrrd_kind_strings[] = { // nrrdKinds, Matches teem 1.9!
+  "nrrdKindUnknown",
+  "nrrdKindDomain",            //  1: any image domain
+  "nrrdKindSpace",             //  2: a spatial domain
+  "nrrdKindTime",              //  3: a temporal domain
+  // -------------------------- end domain kinds
+  // -------------------------- begin range kinds
+  "nrrdKindList",              //  4: any list of values, non-resample-able
+  "nrrdKindPoint",             //  5: coords of a point
+  "nrrdKindVector",            //  6: coeffs of (contravariant) vector
+  "nrrdKindCovariantVector",   //  7: coeffs of covariant vector (eg gradient)
+  "nrrdKindNormal",            //  8: coeffs of unit-length covariant vector
+  // -------------------------- end arbitrary size kinds
+  // -------------------------- begin size-specific kinds
+  "nrrdKindStub",              //  9: axis with one sample (a placeholder)
+  "nrrdKindScalar",            // 10: effectively, same as a stub
+  "nrrdKindComplex",           // 11: real and imaginary components
+  "nrrdKind2Vector",           // 12: 2 component vector
+  "nrrdKind3Color",            // 13: ANY 3-component color value
+  "nrrdKindRGBColor",          // 14: RGB, no colorimetry
+  "nrrdKindHSVColor",          // 15: HSV, no colorimetry
+  "nrrdKindXYZColor",          // 16: perceptual primary colors
+  "nrrdKind4Color",            // 17: ANY 4-component color value
+  "nrrdKindRGBAColor",         // 18: RGBA, no colorimetry
+  "nrrdKind3Vector",           // 19: 3-component vector
+  "nrrdKind3Gradient",         // 20: 3-component covariant vector
+  "nrrdKind3Normal",           // 21: 3-component covector, assumed normalized
+  "nrrdKind4Vector",           // 22: 4-component vector
+  "nrrdKindQuaternion",        // 23: (w,x,y,z), not necessarily normalized
+  "nrrdKind2DSymMatrix",       // 24: Mxx Mxy Myy
+  "nrrdKind2DMaskedSymMatrix", // 25: mask Mxx Mxy Myy
+  "nrrdKind2DMatrix",          // 26: Mxx Mxy Myx Myy
+  "nrrdKind2DMaskedMatrix",    // 27: mask Mxx Mxy Myx Myy
+  "nrrdKind3DSymMatrix",       // 28: Mxx Mxy Mxz Myy Myz Mzz
+  "nrrdKind3DMaskedSymMatrix", // 29: mask Mxx Mxy Mxz Myy Myz Mzz
+  "nrrdKind3DMatrix",          // 30: Mxx Mxy Mxz Myx Myy Myz Mzx Mzy Mzz
+  "nrrdKind3DMaskedMatrix",    // 31: mask Mxx Mxy Mxz Myx Myy Myz Mzx Mzy Mzz
+  "nrrdKindLast"
+};
+
 
 void
 NrrdInfo::update_input_attributes(NrrdDataHandle nh) 
@@ -142,43 +182,9 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
     }
     update_axis_var("label", i, labelstr, "Label");
 
-    string kindstr;
-    switch(nh->nrrd_->axis[i].kind) {
-    case nrrdKindDomain:
-      kindstr = "nrrdKindDomain";
-      break;
-    case nrrdKindScalar:
-      kindstr = "nrrdKindScalar";
-      break;
-    case nrrdKind3Color:
-      kindstr = "nrrdKind3Color";
-      break;
-    case nrrdKind3Vector:
-      kindstr = "nrrdKind3Vector";
-      break;
-    case nrrdKind3Normal:
-      kindstr = "nrrdKind3Normal";
-      break;
-    case nrrdKind3DSymMatrix:
-      kindstr = "nrrdKind3DSymMatrix";
-      break;
-    case nrrdKind3DMaskedSymMatrix:
-      kindstr = "nrrdKind3DMaskedSymMatrix";
-      break;
-    case nrrdKind3DMatrix:
-      kindstr = "nrrdKind3DMatrix";
-      break;
-    case nrrdKindList:
-      kindstr = "nrrdKindList";
-      break;
-    case nrrdKindStub:
-      kindstr = "nrrdKindStub";
-      break;	
-    default:
-      nh->nrrd_->axis[i].kind = nrrdKindUnknown;
-      kindstr = "nrrdKindUnknown";
-      break;
-    }
+    int k = nh->nrrd_->axis[i].kind;
+    if (k < 0 || k >= nrrdKindLast) k = 0;
+    const char *kindstr = nrrd_kind_strings[k];
     update_axis_var("kind", i, kindstr, "Kind");
 
     update_axis_var("size", i, to_string(nh->nrrd_->axis[i].size), "Size");
@@ -203,7 +209,7 @@ NrrdInfo::update_input_attributes(NrrdDataHandle nh)
     update_axis_var("spacing", i, to_string(nh->nrrd_->axis[i].spacing), "Spacing");
     
     string spacedir = "[ ";
-    for (int p=0; p<nh->nrrd_->spaceDim; p++)
+    for (unsigned int p=0; p<nh->nrrd_->spaceDim; p++)
     {
       std::ostringstream oss;
       oss << nh->nrrd_->axis[i].spaceDirection[p];

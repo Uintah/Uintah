@@ -422,6 +422,7 @@ SerialMPM::scheduleTimeAdvance(const LevelP & level,
   scheduleInterpolateParticlesToGrid(     sched, patches, matls);
   scheduleComputeHeatExchange(            sched, patches, matls);
   scheduleExMomInterpolated(              sched, patches, matls);
+  scheduleSetBCsInterpolated(             sched, patches, matls);
   scheduleComputeStressTensor(            sched, patches, matls);
   scheduleComputeContactArea(             sched, patches, matls);
   scheduleComputeInternalForce(           sched, patches, matls);
@@ -535,6 +536,25 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gNumNearParticlesLabel);
   t->computes(lb->TotalMassLabel);
   
+  sched->addTask(t, patches, matls);
+}
+
+void SerialMPM::scheduleSetBCsInterpolated(SchedulerP& sched,
+                                           const PatchSet* patches,
+                                           const MaterialSet* matls)
+{
+  if (!flags->doMPMOnLevel(getLevel(patches)->getIndex(), 
+                           getLevel(patches)->getGrid()->numLevels()))
+    return;
+
+  printSchedule(patches,"MPM::scheduleSetBCsInterpolated\t\t\t");
+
+  Task* t = scinew Task("MPM::setBCsInterpolated",
+                        this,&SerialMPM::setBCsInterpolated);
+
+  t->modifies(lb->gVelocityLabel);
+  t->modifies(lb->gVelocityInterpLabel);
+
   sched->addTask(t, patches, matls);
 }
 
@@ -1620,12 +1640,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gvelocityInterp[c]=gvelocity[c];
       }
 
-      // Apply grid boundary conditions to the velocity before storing the data
-
+      // Apply grid boundary conditions to the temperature
+      // velocity BCs are set after exMomInterpolated in setBCsInterpolated
       MPMBoundCond bc;
-      bc.setBoundaryCondition(patch,dwi,"Velocity",   gvelocity,       n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocity,       n8or27);
-      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocityInterp, n8or27);
       bc.setBoundaryCondition(patch,dwi,"Temperature",gTemperature,    n8or27);
 
       new_dw->put(sum_vartype(totalmass), lb->TotalMassLabel);
@@ -1638,6 +1655,44 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       gvelglobal[c] /= gmassglobal[c];
     }
     delete interpolator;
+  }  // End loop over patches
+}
+
+void SerialMPM::setBCsInterpolated(const ProcessorGroup*,
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* ,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw)
+{
+  for(int p=0;p<patches->size();p++){
+    const Patch* patch = patches->get(p);
+
+    printTask(patches, patch,"Doing setBCsInterpolated\t\t\t");
+
+    int numMatls = d_sharedState->getNumMPMMatls();
+    for(int m = 0; m < numMatls; m++){
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+      int dwi = mpm_matl->getDWIndex();
+
+      NCVariable<Vector> gvelocity,gvelocityInterp;
+      new_dw->getModifiable(gvelocity,      lb->gVelocityLabel,      dwi,patch);
+      new_dw->getModifiable(gvelocityInterp,lb->gVelocityInterpLabel,dwi,patch);
+      int n8or27=flags->d_8or27;
+
+      gvelocityInterp.copyData(gvelocity);
+/*
+      for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+        IntVector c = *iter;
+        gvelocityInterp[c]=gvelocity[c];
+      }
+*/
+
+      // Apply grid boundary conditions to the velocity before storing the data
+      MPMBoundCond bc;
+      bc.setBoundaryCondition(patch,dwi,"Velocity",   gvelocity,       n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocity,       n8or27);
+      bc.setBoundaryCondition(patch,dwi,"Symmetric",  gvelocityInterp, n8or27);
+    }
   }  // End loop over patches
 }
 

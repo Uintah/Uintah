@@ -129,7 +129,10 @@ void FirstOrderAdvector::inFluxOutFluxVolume(
   // -find the cell, 
   // -set the outflux slab vol in all cells = 0.0,
   // -request that the timestep be restarted.
-  if (error && bulletProof_test) {
+  // -ignore if a timestep restart has already been requested
+  bool tsr = new_dw->timestepRestarted();
+  
+  if (error && bulletProof_test && !tsr) {
     vector<IntVector> badCells;
     vector<double>  badOutflux;
     

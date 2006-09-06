@@ -51,19 +51,19 @@ public:
 
 private:
   std::list<FieldHandle> buffer_;
+  GuiInt buffersizegui_;
   Mutex bufferlock_;
   int buffersize_;
   
-  GuiInt buffersizegui_;
 };
 
 
 DECLARE_MAKER(CollectFields)
 CollectFields::CollectFields(GuiContext* ctx)
   : Module("CollectFields", ctx, Source, "FieldsCreate", "ModelCreation"),
-  buffersizegui_(ctx->subVar("buffersize")),
-  bufferlock_("Lock for internal buffer of module"),
-  buffersize_(0)
+    bufferlock_("Lock for internal buffer of module"),
+    buffersize_(0),
+    buffersizegui_(ctx->subVar("buffersize"))
 {
 }
 
@@ -97,7 +97,7 @@ void CollectFields::execute()
     
     bufferlock_.lock();
     buffer_.push_back(Input);
-    while (buffer_.size() > buffersize_) buffer_.pop_front();
+    while (buffer_.size() > static_cast<size_t>(buffersize_)) buffer_.pop_front();
     bufferlock_.unlock();
     
     // Innerworks of module:

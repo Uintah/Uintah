@@ -47,8 +47,6 @@ namespace ModelCreation {
 
 using namespace SCIRun;
 
-template class GenericReader<PathHandle>;
-
 class PathReader : public GenericReader<PathHandle> {
 public:
   PathReader(GuiContext* ctx);

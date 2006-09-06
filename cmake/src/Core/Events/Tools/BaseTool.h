@@ -58,6 +58,9 @@ public:
   
   string get_name() const { return name_; }
 
+  //! tools can get restarted and should reset to thier 'starting' state.
+  virtual void reset() {}
+
   virtual propagation_state_e process_event(event_handle_t event) 
   { 
     return CONTINUE_E;

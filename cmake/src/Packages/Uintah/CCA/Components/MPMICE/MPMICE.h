@@ -396,16 +396,6 @@ public:
                                    DataWarehouse* fine_new_dw);
 
 private:
-  void setBC_rho_micro(const Patch* patch,
-                       MPMMaterial* mpm_matl,
-                       ICEMaterial* ice_matl,
-                       const int indx,
-                       const CCVariable<double>& cv,
-                       const CCVariable<double>& gamma,
-                       const CCVariable<double>& press_new,
-                       const CCVariable<double>& Temp,
-                       const double press_ref,
-                       CCVariable<double>& rho_micro);
                         
   void printSchedule(const PatchSet* patches,
                      const string& where);

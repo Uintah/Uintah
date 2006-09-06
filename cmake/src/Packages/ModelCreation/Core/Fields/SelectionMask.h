@@ -42,13 +42,13 @@ class SelectionMask {
     SelectionMask();
     
     // Create an empty SelectionMask of a certain size
-    SelectionMask(size_t size);
+    SelectionMask(int size);
     
     // Create a SelectionMask based on a boolean matrix
     SelectionMask(SCIRun::MatrixHandle& handle);
     
     // Create a SelectionMask based on indices
-    SelectionMask(SCIRun::MatrixHandle& handle, size_t size);
+    SelectionMask(SCIRun::MatrixHandle& handle, int size);
     
     // Destructor
     virtual ~SelectionMask();
@@ -57,13 +57,13 @@ class SelectionMask {
     SelectionMask(const SelectionMask& mask);
     
     // Create a SelectionMask of a certain length
-    bool create(size_t size);
+    bool create(int size);
 
     // Create a SelectionMask from a boolean matrix
     bool create(SCIRun::MatrixHandle& matrix);
     
     // Create selection from index vector
-    bool create(SCIRun::MatrixHandle& handle, size_t size); 
+    bool create(SCIRun::MatrixHandle& handle, int size); 
     
     // Clear() the vector
     void clear();
@@ -93,7 +93,7 @@ class SelectionMask {
     
     // We also get the physical pointer of where the data is stored
     double* data_;
-    size_t  size_;
+    int     size_;
     
     // In case we do not have a SelectionMask we have something to return
     double  zero_;
@@ -101,7 +101,7 @@ class SelectionMask {
 
 inline size_t SelectionMask::size() 
 { 
-  return(size_); 
+  return(static_cast<size_t>(size_)); 
 }
 
 inline bool SelectionMask::isvalid() 

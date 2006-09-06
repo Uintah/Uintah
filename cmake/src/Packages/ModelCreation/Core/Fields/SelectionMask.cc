@@ -45,13 +45,13 @@ SelectionMask::SelectionMask() :
 {
 }
 
-SelectionMask::SelectionMask(size_t size) :
+SelectionMask::SelectionMask(int size) :
   handle_(0), data_(0), size_(0), zero_(0.0)
 {
   create(size);
 }
 
-bool SelectionMask::create(size_t size)
+bool SelectionMask::create(int size)
 {
   handle_ = 0;
   data_ = 0;
@@ -62,7 +62,7 @@ bool SelectionMask::create(size_t size)
   
   data_ = handle_->get_data_pointer(); 
   size_ = size;
-  for (size_t j=0;j<size;j++) data_[j] = 0.0;
+  for (int j=0;j<size;j++) data_[j] = 0.0;
   
   return(true);
 }
@@ -73,12 +73,12 @@ SelectionMask::SelectionMask(SCIRun::MatrixHandle& handle) :
   create(handle);
 }
 
-SelectionMask::SelectionMask(SCIRun::MatrixHandle& handle,size_t size)
+SelectionMask::SelectionMask(SCIRun::MatrixHandle& handle,int size)
 {
   create(handle,size);
 }
 
-bool SelectionMask::create(SCIRun::MatrixHandle& handle,size_t size)
+bool SelectionMask::create(SCIRun::MatrixHandle& handle,int size)
 {
   handle_ = 0;
   data_ = 0;
@@ -102,16 +102,16 @@ bool SelectionMask::create(SCIRun::MatrixHandle& handle,size_t size)
     size = static_cast<int>(maxind)+1;
   }
   
-  create(static_cast<size_t>(size));
+  create(size);
   
   int idx;  
   for (int i=0; i<s; i++)
   {
-      idx = static_cast<int>(data[i]);
-      if ((idx>=0)&&(idx<(size+1))) data_[idx] = 1.0;
+    idx = static_cast<int>(data[i]);
+    if ((idx>=0)&&(idx<(size+1))) data_[idx] = 1.0;
   }
   
-  return(true);
+  return (true);
 }
 
 
@@ -128,7 +128,7 @@ bool SelectionMask::create(SCIRun::MatrixHandle& handle)
   
   handle_ = handle->dense();
   data_   = handle->get_data_pointer();
-  size_   = handle->get_data_size();
+  size_   = static_cast<int>(handle->get_data_size());
   
   return(true);
 }
@@ -306,7 +306,7 @@ SelectionMask SelectionMask::NOT()
   if (!newmask.isvalid()) return(newmask);
   
   double* newdata = newmask.getdataptr();
-  for (size_t j=0;j<size_; j++) 
+  for (int j=0;j<size_; j++) 
   {
     if (data_[j]) {newdata[j] = 0.0;} else {newdata[j] = 1.0;}
   }
