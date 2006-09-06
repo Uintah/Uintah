@@ -1,8 +1,0 @@
-void areain(IntVector domainLow, IntVector domainHigh,
-     IntVector indexLow, IntVector indexHigh,
-     OffsetArray1<double> sew, OffsetArray1<double> sns,
-     OffsetArray1<double> stb, double areapr, constCCVariable<int> pcell,
-     int pfield, int ffield, bool xminus, bool xplus, bool yminus, bool yplus,
-     bool zminus, bool zplus);
-
-     
