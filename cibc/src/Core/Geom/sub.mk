@@ -83,8 +83,6 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/GeomTube.cc		                \
 	$(SRCDIR)/GeomVertexPrim.cc	                \
 	$(SRCDIR)/GeomViewerItem.cc			\
-	$(SRCDIR)/GuiGeom.cc		    		\
-	$(SRCDIR)/GuiView.cc		    		\
 	$(SRCDIR)/HeadLight.cc		    		\
 	$(SRCDIR)/HistogramTex.cc	    		\
 	$(SRCDIR)/IndexedGroup.cc	    		\

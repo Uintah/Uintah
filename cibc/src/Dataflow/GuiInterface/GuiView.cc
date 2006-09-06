@@ -46,7 +46,7 @@
 #include <Dataflow/GuiInterface/GuiInterface.h>
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
-#include <Core/Geom/GuiView.h>
+#include <Dataflow/GuiInterface/GuiView.h>
 #include <Core/Thread/Time.h>
 using namespace SCIRun;
 

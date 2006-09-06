@@ -46,7 +46,7 @@
 #define SCI_project_GuiView_h 1
 
 #include <Core/Geom/View.h>
-#include <Core/Geom/GuiGeom.h>
+#include <Dataflow/GuiInterface/GuiGeom.h>
 #include <Dataflow/GuiInterface/GuiVar.h>
 
 #include <Core/Geom/share.h>
