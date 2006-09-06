@@ -615,7 +615,8 @@ Properties::reComputeProps(const ProcessorGroup* pc,
 	    heatLoss[currCell] = outStream.getheatLoss();
 	    enthalpyRXN[currCell] = outStream.getEnthalpy();
 // Uncomment the next line to check enthalpy transport in adiabatic case
-	    enthalpyRXN[currCell] -= enthalpy[currCell];
+	    if (d_calcEnthalpy)
+	      enthalpyRXN[currCell] -= enthalpy[currCell];
 	    if (d_calcReactingScalar)
 	      reactscalarSRC[currCell] = outStream.getRxnSource();
 	  }
