@@ -127,6 +127,7 @@ BundleGetNrrd::execute()
       fhandle = handle->getNrrd(nrrd3name);
       send_output_handle("nrrd3",fhandle,false);
     } 
+    send_output_handle("bundle",handle,false);    
   }
 }
 

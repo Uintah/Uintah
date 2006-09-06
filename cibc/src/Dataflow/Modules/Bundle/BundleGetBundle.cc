@@ -104,6 +104,8 @@ void BundleGetBundle::execute()
       fhandle = handle->getBundle(bundle3name);
       send_output_handle("bundle3",fhandle,false);
     } 
+    
+    send_output_handle("bundle",handle,false);
   }
 }
 

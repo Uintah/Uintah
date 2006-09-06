@@ -108,6 +108,8 @@ void BundleGetField::execute()
       fhandle = handle->getField(field3name);
       send_output_handle("field3",fhandle,false);
     } 
+
+    send_output_handle("bundle",handle,false);
   }
 }
 
