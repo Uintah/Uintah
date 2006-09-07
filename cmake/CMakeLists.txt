@@ -259,7 +259,9 @@ FIND_PATH(ITK_INCLUDE itk.h
            /usr/local/include
            /usr/include
            /include)
-SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${ITK_INCLUDE})
+
+#SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${ITK_INCLUDE})
+
 #-----------------------------------------------------------------------------
 # ITCL library
 FIND_LIBRARY(ITCL_LIBRARY itcl
@@ -272,7 +274,7 @@ FIND_PATH(ITCL_INCLUDE itcl.h
            /usr/local/include
            /usr/include
            /include)
-SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${ITCL_INCLUDE})
+#SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${ITCL_INCLUDE})
 
 #-----------------------------------------------------------------------------
 # TK library
@@ -281,16 +283,19 @@ FIND_LIBRARY(TK_LIBRARY tk
              /usr/local/lib
              /usr/lib
              /lib)
-SET(TK_SRC_PATH ${SCIRUN_THIRDPARTY_PATH}/src/tk CACHE PATH "Path to tk source")
+#SET(TK_SRC_PATH ${SCIRUN_THIRDPARTY_PATH}/src/tk CACHE PATH "Path to tk source")
 
-SET(TK_INCLUDE1 ${TK_SRC_PATH}/generic)
-SET(TK_INCLUDE2 ${TK_SRC_PATH}/unix)
+#SET(TK_INCLUDE1 ${TK_SRC_PATH}/generic)
+#SET(TK_INCLUDE2 ${TK_SRC_PATH}/unix)
+
 #FIND_PATH(TK_INCLUDE tk.h
 #           ${SCIRUN_THIRDPARTY_PATH}/include
 #           /usr/local/include
 #           /usr/include
 #           /include)
-SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${TK_INCLUDE1} ${TK_INCLUDE2})
+
+#SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${TK_INCLUDE1} ${TK_INCLUDE2})
+
 #-----------------------------------------------------------------------------
 # TCL library
 FIND_LIBRARY(TCL_LIBRARY tcl
@@ -298,6 +303,7 @@ FIND_LIBRARY(TCL_LIBRARY tcl
              /usr/local/lib
              /usr/lib
              /lib)
+
 FIND_PATH(TCL_INCLUDE1 tcl.h
            ${SCIRUN_THIRDPARTY_PATH}/include
            /usr/local/include
@@ -310,7 +316,7 @@ FIND_PATH(TCL_INCLUDE2 tclMath.h
            /usr/include
            /include)
 
-SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${TCL_INCLUDE1} ${TCL_INCLUDE2})
+#SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${TCL_INCLUDE1} ${TCL_INCLUDE2})
 
 #-----------------------------------------------------------------------------
 # blt lib
@@ -324,7 +330,8 @@ FIND_PATH(BLT_INCLUDE blt.h
            /usr/local/include
            /usr/include
            /include)
-SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${BLT_INCLUDE})
+
+#SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${BLT_INCLUDE})
 
 IF(WIN32)
   SET(BLT_LIBRARY ${BLT_LIBRARY} gdi32 winspool comdlg32 user32 advapi32)

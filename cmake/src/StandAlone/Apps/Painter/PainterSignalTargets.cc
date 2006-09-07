@@ -222,7 +222,7 @@ Painter::MergeLayer(event_handle_t event) {
   NrrdVolumeOrder::iterator volname = 
     std::find(volume_order_.begin(), 
               volume_order_.end(), 
-              current_volume_->name_.get());
+              current_volume_->name_);
   
   if (volname == volume_order_.begin()) return STOP_E;
   NrrdVolume *vol1 = volume_map_[*volname];
@@ -876,7 +876,7 @@ Painter::ResampleVolume(event_handle_t event) {
   //  current_volume_->nrrd_handle_ = nrrd_handle;
 
   //  NrrdDataHandle nrrd_handle = scinew NrrdData;
-  string newname = current_volume_->name_.get()+" - Resampled";
+  string newname = current_volume_->name_+" - Resampled";
   NrrdVolume *vol = new NrrdVolume(0, newname, nrrd_handle);
   volume_map_[newname] = vol;
   show_volume(newname);

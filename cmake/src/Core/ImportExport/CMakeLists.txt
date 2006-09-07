@@ -25,8 +25,6 @@ TARGET_LINK_LIBRARIES(Core_ImportExport
   Core_Math 
   Core_Util 
   Core_Datatypes
-  ${BLT_LIBRARY} 
-  ${GL_LIBRARY} 
   ${THREAD_LIBRARY} 
   ${Z_LIBRARY} 
   ${M_LIBRARY}
