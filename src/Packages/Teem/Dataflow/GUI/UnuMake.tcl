@@ -84,8 +84,9 @@ itcl_class Teem_UnuAtoM_UnuMake {
 	set $this-val3 ""
 	set $this-kind "nrrdKindUnknown"
 
+	trace variable $this-kind      w "$this set_kind"
 	trace variable $this-data_type w "$this set_data_type"
-	trace variable $this-encoding w "$this set_encoding"
+	trace variable $this-encoding  w "$this set_encoding"
     }
 
     # Method for browsing to the data file
@@ -201,11 +202,15 @@ itcl_class Teem_UnuAtoM_UnuMake {
 	return $w
     }
 
-    # Method called when encoding changed
-    method update_encoding {om} {
- 	global $this-encoding
- 	set which [$om get]
-	 set $this-encoding $which
+    # Method called when $this-encoding value changes.
+    # This helps when loading a saved network to sync
+    # the optionmenu.
+    method set_kind { name1 name2 op } {
+	set window .ui[modname]
+	if {[winfo exists $window]} {
+	    set opt [$window.inf childsite]
+	    $opt.kind select [set $this-kind]
+	}
     }
 
     # Method called when $this-encoding value changes.
@@ -217,15 +222,6 @@ itcl_class Teem_UnuAtoM_UnuMake {
 	    set opt [$window.inf childsite]
 	    $opt.a.enc select [set $this-encoding]
 	}
-    }
-
-
-    # Method called when optionmenu for data
-    # type changes
-    method update_data_type {menu} {
-	global $this-data_type
-	set which [$menu get]
-	set $this-data_type $which
     }
 
     # Method called when $this-data_type value changes.
@@ -241,7 +237,9 @@ itcl_class Teem_UnuAtoM_UnuMake {
 
     # Method to create the data file info box
     method make_data_info_box {w} {
+	global $this-kind
 	global $this-data_type
+	global $this-encoding
 	global $this-write_header
 
 	iwidgets::labeledframe $w \
@@ -262,27 +260,34 @@ itcl_class Teem_UnuAtoM_UnuMake {
 	Tooltip $inf.h.browse "Specify the header file to write out."
 
 	iwidgets::optionmenu $inf.kind -labeltext "nrrdKind of First Axis:" \
-	    -labelpos w -command "$this update_kind $inf.kind"
+	    -labelpos w \
+	    -command "$this update_optionmenu $inf.kind $this-kind"
 	$inf.kind insert end nrrdKindUnknown nrrdKindDomain nrrdKindScalar \
 	    nrrdKind3Color nrrdKind3Vector nrrdKind3Normal \
 	    nrrdKind3DSymMatrix nrrdKind3DMaskedSymMatrix nrrdKind3DMatrix \
 	    nrrdKindList nrrdKindStub
+	$inf.kind select  [set $this-kind]
 	pack $inf.kind -side top -anchor nw -padx 3 -pady 3
-	$inf.kind select nrrdKindUnknown
+
+	Tooltip $inf.kind "Specify the kind of axis\n(e.g. domain, scalar, vector, etc.)"
+
 
 	frame $inf.a
 	pack $inf.a -side top -anchor nw -fill x -expand 1
 
 	iwidgets::optionmenu $inf.a.dtype -labeltext "Data Type:" \
-	    -labelpos w -command "$this update_data_type $inf.a.dtype"
+	    -labelpos w \
+	    -command "$this update_optionmenu $inf.a.dtype $this-data_type"
 	$inf.a.dtype insert end char "unsigned char" short "unsigned short" \
 	    int "unsigned int" "long long" "unsigned long long" float double
 	$inf.a.dtype select [set $this-data_type]
 	pack $inf.a.dtype -anchor nw -side left
+
 	Tooltip $inf.a.dtype "Specify the type of data\n(e.g. uchar, int, float, double, etc.)"
 
 	iwidgets::optionmenu $inf.a.enc -labeltext "Encoding:" \
-	    -labelpos w -command "$this update_encoding $inf.a.enc"
+	    -labelpos w \
+	    -command "$this update_optionmenu $inf.a.enc $this-encoding"
 	$inf.a.enc insert end Raw ASCII Hex Gzip Bzip2
 	pack $inf.a.enc -side left -anchor nw -padx 3
 	$inf.a.enc select [set $this-encoding]
@@ -378,12 +383,6 @@ itcl_class Teem_UnuAtoM_UnuMake {
 	pack $w -fill x -expand yes -side top
     }
 
-    method update_kind {op} {
-	set which [$op get]
-	set $this-kind $which
-    }
-
-
     method ui {} {
 	set w .ui[modname]
 
@@ -413,6 +412,12 @@ itcl_class Teem_UnuAtoM_UnuMake {
 
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
+    }
+
+    # Method called when optionmenu changes to update the variable
+    method update_optionmenu {w var} {
+	global $var
+	set $var [$w get]
     }
 }
 
