@@ -72,7 +72,6 @@ TARGET_LINK_LIBRARIES(painter
   Core_Exceptions 
   Core_Geom 
   Core_Geometry 
-  Core_GuiInterface 
   Core_Init 
   Core_Math 
   Core_Persistent 

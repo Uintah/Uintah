@@ -91,7 +91,7 @@ public:
 protected:
   virtual FieldHandle compute_boundary( ProgressReporter *reporter,
                                         FieldHandle fieldh,
-                                        string scheme ) = 0;
+                                        const string &scheme );
 
   virtual bool compute_domain_surface( ProgressReporter *reporter,
                                        FieldHandle fieldh,
@@ -147,6 +147,18 @@ MeshSmootherAlgoShared<FIELD>::execute( ProgressReporter *reporter,
 
 
 template <class FIELD>
+FieldHandle
+MeshSmootherAlgoShared<FIELD>::compute_boundary( ProgressReporter *reporter,
+                                                 FieldHandle fieldh,
+                                                 const string &scheme )
+{
+  reporter->warning( "Currently unable to smooth the boundary of this mesh." );
+  reporter->remark( "Proceeding with smoothing of the interior elements." );
+  return fieldh;
+}
+
+
+template <class FIELD>
 bool
 MeshSmootherAlgoShared<FIELD>::compute_domain_surface( ProgressReporter *mod,
                                                        FieldHandle fieldh,
@@ -164,8 +176,8 @@ MeshSmootherAlgoShared<FIELD>::smart_laplacian_smoother( ProgressReporter *mod,
 {
   // Need to make a copy of the field, so that the previous one is not damaged.
   FIELD *field = dynamic_cast<FIELD*>( fieldh.get_rep() );
-  FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
-  ofield->copy_properties( fieldh.get_rep() );
+  FIELD *ofield = field->clone();
+  ofield->copy_properties( field );
   ofield->mesh_detach();
   
   double cull_eps = 1e-4;
@@ -244,8 +256,8 @@ MeshSmootherAlgoShared<FIELD>::shape_improvement_wrapper(ProgressReporter *mod,
 {
   // Need to make a copy of the field so that this one is not damaged.
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
-  FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
-  ofield->copy_properties( fieldh.get_rep() );
+  FIELD *ofield = field->clone();
+  ofield->copy_properties( field );
   ofield->mesh_detach();
 
   // Arbitrary defined variables.
@@ -417,7 +429,7 @@ protected:
   //! virtual interface. 
   virtual FieldHandle compute_boundary( ProgressReporter *reporter,
                                         FieldHandle fieldh,
-                                        string scheme );
+                                        const string &scheme );
 };
 
 
@@ -425,7 +437,7 @@ template <class FIELD>
 FieldHandle
 MeshSmootherAlgoTet<FIELD>::compute_boundary( ProgressReporter *mod,
                                               FieldHandle fieldh,
-                                              string scheme )
+                                              const string &scheme )
 {
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
@@ -486,7 +498,7 @@ protected:
   //! virtual interface. 
   virtual FieldHandle compute_boundary( ProgressReporter *reporter,
                                         FieldHandle fieldh,
-                                        string scheme );
+                                        const string &scheme );
 };
 
 
@@ -494,7 +506,7 @@ template <class FIELD>
 FieldHandle
 MeshSmootherAlgoHex<FIELD>::compute_boundary( ProgressReporter *mod,
                                               FieldHandle fieldh,
-                                              string scheme )
+                                              const string &scheme )
 { 
   FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
   FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
@@ -553,26 +565,10 @@ template <class FIELD>
 class MeshSmootherAlgoTri : public MeshSmootherAlgoShared<FIELD>
 {
 protected:
-  virtual FieldHandle compute_boundary( ProgressReporter *reporter,
-                                        FieldHandle fieldh,
-                                        string scheme );
-
   virtual bool compute_domain_surface( ProgressReporter *reporter,
                                        FieldHandle fieldh,
                                        FieldHandle &ofieldh );
 };
-
-
-template <class FIELD>
-FieldHandle
-MeshSmootherAlgoTri<FIELD>::compute_boundary( ProgressReporter *reporter,
-                                              FieldHandle fieldh,
-                                              string scheme )
-{
-  reporter->warning( "Currently unable to smooth the boundary of triangle meshes." );
-  reporter->remark( "Proceeding with smoothing of the interior elements." );
-  return fieldh;
-}
 
 
 template <class FIELD>
@@ -590,26 +586,10 @@ template <class FIELD>
 class MeshSmootherAlgoQuad : public MeshSmootherAlgoShared<FIELD>
 {
 protected:
-  virtual FieldHandle compute_boundary( ProgressReporter *reporter,
-                                        FieldHandle fieldh,
-                                        string scheme );
-
   virtual bool compute_domain_surface( ProgressReporter *reporter,
                                        FieldHandle fieldh,
                                        FieldHandle &ofieldh );
 };
-
-
-template <class FIELD>
-FieldHandle
-MeshSmootherAlgoQuad<FIELD>::compute_boundary( ProgressReporter *reporter,
-                                               FieldHandle fieldh,
-                                               string scheme )
-{
-  reporter->warning( "Currently unable to smooth the boundary of quadrilateral meshes." );
-  reporter->remark( "Proceeding with smoothing of the interior elements." );
-  return fieldh;
-}
 
 
 template <class FIELD>

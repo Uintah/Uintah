@@ -34,7 +34,7 @@ SRCS     += $(SRCDIR)/CardioWaveConverter.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Core/Persistent Core/Exceptions Core/Containers \
-	Core/Thread Core/Geometry Core/Geom Core/GuiInterface \
+	Core/Thread Core/Geometry Core/Geom Dataflow/GuiInterface \
 	Core/Math Core/Util Core/Thread Core/ImportExport
 
 LIBS :=	$(TEEM_LIBRARY)

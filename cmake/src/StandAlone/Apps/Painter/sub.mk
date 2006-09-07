@@ -45,7 +45,7 @@ PSELIBS := Core/Algorithms/Fields \
 	   Core/Exceptions \
            Core/Geom \
 	   Core/Geometry \
-           Core/GuiInterface \
+           Dataflow/GuiInterface \
 	   Core/Init \
            Core/Math \
 	   Core/Persistent \

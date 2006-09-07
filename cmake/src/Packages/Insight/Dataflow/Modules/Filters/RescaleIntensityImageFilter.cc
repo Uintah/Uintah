@@ -36,7 +36,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 
 #include <itkVector.h>

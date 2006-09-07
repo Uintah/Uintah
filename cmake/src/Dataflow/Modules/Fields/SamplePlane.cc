@@ -53,7 +53,7 @@
 #include <Core/Datatypes/LatVolMesh.h>
 #include <Core/Containers/FData.h>
 #include <Core/Datatypes/GenericField.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Math/Trig.h> // for M_PI
 #include <iostream>
 

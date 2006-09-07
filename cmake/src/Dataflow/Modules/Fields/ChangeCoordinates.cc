@@ -44,7 +44,7 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Containers/Handle.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Util/DynamicCompilation.h>
 #include <iostream>
 

@@ -45,7 +45,7 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/MatrixOperations.h>
 #include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Containers/Handle.h>
 #include <iostream>
 #include <stdio.h>

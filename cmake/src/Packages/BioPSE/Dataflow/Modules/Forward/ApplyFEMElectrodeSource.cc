@@ -58,7 +58,7 @@
 #include <Core/Math/MinMax.h>
 #include <Core/Math/Trig.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <iostream>
 
 namespace BioPSE {

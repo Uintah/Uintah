@@ -48,7 +48,7 @@
 #include <Core/Datatypes/CurveMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Geometry/Plane.h>
 #include <Core/Geometry/Transform.h>
 #include <Core/Containers/StringUtil.h>

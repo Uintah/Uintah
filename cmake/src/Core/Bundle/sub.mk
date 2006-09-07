@@ -36,7 +36,7 @@ SRCDIR   := Core/Bundle
 SRCS += $(SRCDIR)/Bundle.cc		    	
 	
 PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
-	Core/Thread Core/Geometry Core/GuiInterface \
+	Core/Thread Core/Geometry Dataflow/GuiInterface \
 	Core/Math Core/Util Core/Geom Core/Datatypes Core/Volume
 LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) \
 	$(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)

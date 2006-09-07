@@ -42,7 +42,7 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/NrrdPort.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <sci_defs/image_defs.h>
 
 #if defined HAVE_PNG && HAVE_PNG

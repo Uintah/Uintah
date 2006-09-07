@@ -57,9 +57,9 @@ SRCS     += \
 PSELIBS := Packages/Insight/Core/Datatypes \
 	Core/Datatypes Dataflow/Network \
         Core/Persistent Core/Containers Core/Util \
-        Core/Exceptions Core/Thread Core/GuiInterface \
+        Core/Exceptions Core/Thread Dataflow/GuiInterface \
         Core/GeomInterface Core/Geom Core/Datatypes Core/Geometry \
-        Core/TkExtensions Core/Basis
+        Dataflow/TkExtensions Core/Basis
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(INSIGHT_LIBRARY) $(GDCM_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) 
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk

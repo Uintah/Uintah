@@ -18,9 +18,9 @@ SRCS     += \
 
 PSELIBS := Core/Datatypes Dataflow/Network \
         Core/Persistent Core/Containers Core/Util \
-        Core/Exceptions Core/Thread Core/GuiInterface \
+        Core/Exceptions Core/Thread Dataflow/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \
-        Core/GeomInterface Core/TkExtensions \
+        Core/GeomInterface Dataflow/TkExtensions \
         Packages/CardioWave/Core/TissueModels
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)
 

@@ -106,6 +106,8 @@ void BundleGetColorMap::execute()
       fhandle = handle->getColorMap(colormap3name);
       send_output_handle("colormap3",fhandle,false);
     } 
+
+    send_output_handle("bundle",handle,false);
   }
 }
 

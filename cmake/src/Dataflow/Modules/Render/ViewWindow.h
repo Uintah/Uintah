@@ -43,8 +43,8 @@
 
 #include <Dataflow/Modules/Render/BallAux.h>
 #include <Dataflow/Comm/MessageBase.h>
-#include <Core/GuiInterface/GuiCallback.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiCallback.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Containers/Array1.h>
 #include <Core/Datatypes/Color.h>
 #include <Core/Geometry/BBox.h>
@@ -52,8 +52,8 @@
 #include <Core/Thread/FutureValue.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/GeomPick.h>
-#include <Core/Geom/GuiGeom.h>
-#include <Core/Geom/GuiView.h>
+#include <Dataflow/GuiInterface/GuiGeom.h>
+#include <Dataflow/GuiInterface/GuiView.h>
 #include <Core/Geom/View.h>
 #include <map>
 

@@ -35,9 +35,9 @@ SRCDIR   := Dataflow/TCLThread
 
 SRCS     += $(SRCDIR)/TCLThread.cc
 
-PSELIBS := Core/Thread Core/GuiInterface Core/TkExtensions Core/Comm \
+PSELIBS := Core/Thread Dataflow/GuiInterface Dataflow/TkExtensions Core/Comm \
            Core/Containers Core/Exceptions Dataflow/Network \
-	   Core/Util Core/Geom Core/TkExtensions
+	   Core/Util Core/Geom Dataflow/TkExtensions
 
 LIBS := $(TK_LIBRARY) \
 	$(TCL_LIBRARY) \

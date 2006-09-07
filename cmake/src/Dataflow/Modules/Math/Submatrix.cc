@@ -40,7 +40,7 @@
  */
 
 #include <Dataflow/Network/Ports/MatrixPort.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
 
 namespace SCIRun {

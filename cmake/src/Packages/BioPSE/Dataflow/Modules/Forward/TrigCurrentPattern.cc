@@ -41,7 +41,7 @@
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Math/Trig.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <iostream>
 
 namespace BioPSE {

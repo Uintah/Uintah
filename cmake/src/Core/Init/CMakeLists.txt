@@ -15,7 +15,6 @@ TARGET_LINK_LIBRARIES(Core_Init
   Core_Datatypes    
   Core_Exceptions   
   Core_Geometry     
-  Core_GuiInterface 
   Core_ImportExport 
   Core_Persistent   
   Core_Thread       

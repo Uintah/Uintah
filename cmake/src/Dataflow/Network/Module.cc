@@ -51,8 +51,8 @@
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/GuiInterface/GuiContext.h>
-#include <Core/GuiInterface/GuiInterface.h>
+#include <Dataflow/GuiInterface/GuiContext.h>
+#include <Dataflow/GuiInterface/GuiInterface.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>

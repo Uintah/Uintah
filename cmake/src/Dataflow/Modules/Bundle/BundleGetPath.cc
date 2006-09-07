@@ -105,6 +105,7 @@ void BundleGetPath::execute()
       fhandle = handle->getPath(path3name);
       send_output_handle("path3",fhandle,false);
     } 
+    send_output_handle("bundle",handle,false);
   }
 }
 

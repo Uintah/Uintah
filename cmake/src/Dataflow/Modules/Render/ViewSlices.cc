@@ -50,12 +50,12 @@
 
 #include <Core/Exceptions/GuiException.h>
 #include <Core/Containers/Array3.h>
-#include <Core/GuiInterface/TCLTask.h>
+#include <Dataflow/GuiInterface/TCLTask.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Util/Timer.h>
 #include <Core/Datatypes/Field.h>
-#include <Core/GuiInterface/UIvar.h>
+#include <Dataflow/GuiInterface/UIvar.h>
 #include <Core/Geom/Material.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
@@ -74,7 +74,7 @@
 #include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
-#include <Core/Geom/TkOpenGLContext.h>
+#include <Dataflow/GuiInterface/TkOpenGLContext.h>
 #include <Core/Geom/OpenGLViewport.h>
 #include <Core/Geom/FreeType.h>
 #include <Core/Volume/CM2Widget.h>

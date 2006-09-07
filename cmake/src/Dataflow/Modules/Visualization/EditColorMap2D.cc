@@ -31,7 +31,7 @@
 //    Date   : Thu Jul  8 01:50:58 2004
 
 #include <Dataflow/Network/Module.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Persistent/Pstreams.h>
@@ -48,7 +48,7 @@
 #include <Dataflow/Network/Ports/ColorMapPort.h>
 #include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Geom/ColorMap.h>
-#include <Core/Geom/TkOpenGLContext.h>
+#include <Dataflow/GuiInterface/TkOpenGLContext.h>
 #include <Core/Util/Endian.h>
 #include <stdio.h>
 #include <stack>

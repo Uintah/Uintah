@@ -59,8 +59,8 @@ SRCS     += \
 
 PSELIBS := Dataflow/Network Core/Datatypes \
 	Core/Persistent Core/Exceptions Core/Thread Core/Containers \
-	Core/GuiInterface Core/Geometry Core/Datatypes Core/Volume \
-	Core/Util Core/Geom Core/TkExtensions Core/GeomInterface \
+	Dataflow/GuiInterface Core/Geometry Core/Datatypes Core/Volume \
+	Core/Util Core/Geom Dataflow/TkExtensions Core/GeomInterface \
 	Dataflow/Widgets Core/ImportExport Core/Bundle
 
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY)

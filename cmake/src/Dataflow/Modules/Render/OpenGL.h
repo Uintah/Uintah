@@ -73,7 +73,7 @@
 #include <Core/Geom/GeomSphere.h>
 #include <Core/Geom/GeomTri.h>
 #include <Core/Geom/GeomText.h>
-#include <Core/Geom/TkOpenGLContext.h>
+#include <Dataflow/GuiInterface/TkOpenGLContext.h>
 #include <Core/Math/Trig.h>
 #include <Core/Util/Timer.h>
 

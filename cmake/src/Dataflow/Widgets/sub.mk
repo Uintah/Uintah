@@ -53,7 +53,7 @@ PSELIBS := \
 	Core/Geometry        \
 	Core/GeomInterface   \
 	Core/Containers      \
-	Core/GuiInterface    \
+	Dataflow/GuiInterface    \
 	Core/Thread          \
 	Dataflow/Constraints \
 	Dataflow/Network

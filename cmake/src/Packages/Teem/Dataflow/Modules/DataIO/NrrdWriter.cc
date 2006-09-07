@@ -43,7 +43,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Malloc/Allocator.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <sstream>
 #include <fstream>
 using std::ifstream;

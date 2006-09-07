@@ -49,7 +49,7 @@
 #include <Core/Datatypes/FieldAlgo.h>
 #include <Core/Math/MusilRNG.h>
 #include <Core/Math/Gaussian.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Basis/TetLinearLgn.h>
 #include <Core/Datatypes/TetVolMesh.h>

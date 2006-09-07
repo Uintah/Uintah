@@ -72,8 +72,8 @@
 #include <Core/Geom/GeomViewerItem.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/Trig.h>
-#include <Core/GuiInterface/GuiVar.h>
-#include <Core/GuiInterface/TCLTask.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/TCLTask.h>
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/FutureValue.h>
 #include <Core/Thread/Time.h>
