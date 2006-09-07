@@ -225,7 +225,7 @@ SCI_ARG_WITH(fortran,
    sci_required_fortran=yes],
   [with_fortran=""])
 SCI_ARG_WITH(ptolemyII,
-  AC_HELP_STRING(--with-ptolemyII=DIR, 
+  AC_HELP_STRING(--with-ptolemyII=DIR,
                  Use the Ptolemy II (eg: ptII4.0.1) installation in DIR (Ptolemy package only)),
   [with_ptolemyII="$withval"
    sci_required_ptolemyII=yes
@@ -581,14 +581,14 @@ SCI_ARG_ENABLE(throw-level,
   [enable_throw_level=${enable_throw_level=0}])
 SCI_ARG_ENABLE(scirun2,
   AC_HELP_STRING(--enable-scirun2,
-                 Build experimental SCIRun 2),
+                 Build experimental SCIRun2),
   [enable_scirun2="$enableval"
    [SCI_SET_PACKAGE_CHECKS(SCIRun2, $host)]
   ],
   [enable_scirun2=${enable_scirun2='no'}])
 SCI_ARG_ENABLE(plume,
   AC_HELP_STRING(--enable-plume,
-                 Build Plume (based on SCIRun 2)),
+                 Build Plume (based on SCIRun2)),
   [enable_plume="$enableval"
    [SCI_SET_PACKAGE_CHECKS(Plume, $host)]
    ],
@@ -716,20 +716,12 @@ if test "$pkg_Fusion" = "yes"; then
 fi
 
 if test "$pkg_Ptolemy" = "yes"; then
-  # check versions?
+  ## check PtolemyII version?
   if test -z "$with_ptolemyII"; then
     AC_MSG_WARN(The Ptolemy II JNI interface requires Java bindings in the Ptolemy package.)
     AC_MSG_WARN(Use the --with-ptolemyII=DIR option to set the installation directory.)
-
-    SCI_SET_PACKAGE_CHECKS(Ptolemy, $host)
-
-    DEF_PTOLEMY_PACKAGE="#define HAVE_PTOLEMY_PACKAGE 1"
-    HAVE_PTOLEMY_PACKAGE="yes"
-    AC_SUBST(DEF_PTOLEMY_PACKAGE)
-    AC_SUBST(HAVE_PTOLEMY_PACKAGE)
-    sci_defs_files="$sci_defs_files include/sci_defs/ptolemy_testdefs.h"
-  else
-    SCI_SET_PACKAGE_CHECKS(Ptolemy, $host)
+    sci_required_ptolemyII=yes
+    sci_required_java=yes
   fi
 fi
 
@@ -773,6 +765,16 @@ fi
 AC_SUBST(DEF_COLLAB_VIS)
 AC_SUBST(HAVE_COLLAB_VIS)
 sci_defs_files="$sci_defs_files include/sci_defs/collab_vis_testdefs.h"
+
+# Set the Kepler vars.
+if test "$pkg_Kepler" = "yes"; then
+  DEF_KEPLER="#define HAVE_KEPLER 1"
+  HAVE_KEPLER="yes"
+fi
+
+AC_SUBST(DEF_KEPLER)
+AC_SUBST(HAVE_KEPLER)
+sci_defs_files="$sci_defs_files include/sci_defs/kepler_testdefs.h"
 
 LOAD_PACKAGE="SCIRun"
 for i in $package; do
@@ -4157,12 +4159,11 @@ if test "$sci_required_ptolemyII" = "yes"; then
   if test -d "$pdir"; then
     AC_MSG_RESULT($pdir)
 
-    PTOLEMY_PATH="$pdir"
-    PTOLEMY_CLASSPATH="$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar"
+    PTOLEMY_PATH="#define PTOLEMY_PATH \"$pdir\""
+    ## this could be handled better in env?
+    PTOLEMY_CLASSPATH="#define PTOLEMY_CLASSPATH \"$PTOLEMY_PATH:/lib/diva.jar:/lib/java_cup.jar:/lib/sootclasses.jar:/lib/jasminclasses.jar:/lib/ptCal.jar:/lib/ptjacl.jar:/lib/jython.jar:/lib/mapss.jar:/lib/saxon7.jar:/ptolemy/ptolemy.jar:/ptolemy/ptsupport.jar:/ptolemy/vergil/vergil.jar\""
     HAVE_PTOLEMY="yes"
-    HAVE_PTOLEMY_PACKAGE="yes"
     DEF_PTOLEMY="#define HAVE_PTOLEMY 1"
-    DEF_PTOLEMY_PACKAGE="#define HAVE_PTOLEMY_PACKAGE 1"
   else
     AC_MSG_ERROR(Ptolemy II directory is missing.)
   fi
@@ -4170,8 +4171,6 @@ fi
 
 AC_SUBST(HAVE_PTOLEMY)
 AC_SUBST(DEF_PTOLEMY)
-AC_SUBST(HAVE_PTOLEMY_PACKAGE)
-AC_SUBST(DEF_PTOLEMY_PACKAGE)
 AC_SUBST(PTOLEMY_PATH)
 AC_SUBST(PTOLEMY_CLASSPATH)
 sci_defs_files="$sci_defs_files include/sci_defs/ptolemy_testdefs.h"
