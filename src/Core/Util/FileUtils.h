@@ -71,7 +71,8 @@ SCISHARE vector<string> GetFilenamesStartingWith(const string & dir,
 
 SCISHARE std::pair<string, string> split_filename(string fname);
 
-
+SCISHARE std::string findFileInPath(const std::string &filename, 
+                                    const std::string &path);
 SCISHARE bool validFile(std::string filename);
 SCISHARE bool validDir(std::string filename);
 
