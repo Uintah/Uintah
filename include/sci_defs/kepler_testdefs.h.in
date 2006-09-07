@@ -3,7 +3,7 @@
 
    The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   Copyright (c) 2006 Scientific Computing and Imaging Institute,
    University of Utah.
 
    License for the specific language governing rights and limitations under
@@ -26,13 +26,9 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef SCI_PTOLEMY_DEFS_H
-#define SCI_PTOLEMY_DEFS_H
+#ifndef SCI_KEPLER_DEFS_H
+#define SCI_KEPLER_DEFS_H
 
-@DEF_PTOLEMY@
-@DEF_PTOLEMY_PACKAGE@
-
-@PTOLEMY_PATH@
-@PTOLEMY_CLASSPATH@
+@DEF_KEPLER@
 
 #endif
