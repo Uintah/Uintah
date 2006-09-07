@@ -62,7 +62,7 @@
 
 #include <TauProfilerForSCIRun.h>
 
-#include <sci_defs/ptolemy_defs.h>
+#include <sci_defs/kepler_defs.h>
 #include <sys/stat.h>
 #include <fcntl.h>
 
@@ -79,8 +79,8 @@ using std::cout;
 #  pragma set woff 1424
 #endif
 
-#ifdef HAVE_PTOLEMY_PACKAGE
-#  include <Packages/Ptolemy/Core/Comm/PtolemyServer.h>
+#ifdef HAVE_KEPLER
+#  include <Packages/Kepler/Core/Comm/KeplerServer.h>
 #endif
 
 using namespace SCIRun;
@@ -96,8 +96,8 @@ usage()
   cout << "    [-]-v[ersion]       : prints out version information\n";
   cout << "    [-]-h[elp]          : prints usage information\n";
   cout << "    [-]-p[ort] [PORT]   : start remote services port on port number PORT\n";
-#ifdef HAVE_PTOLEMY_PACKAGE
-  cout << "    [-]-SPAs[erver]     : start the S.P.A. server thread\n";
+#ifdef HAVE_KEPLER
+  cout << "    [-]-SPAs[erver]     : start the Kepler/SPA server thread\n";
 #endif
   //  cout << "    [-]-eai             : enable external applications interface\n";
   cout << "    [--nosplash]        : disable the splash screen\n";
@@ -189,13 +189,13 @@ parse_args( int argc, char *argv[] )
       sci_putenv("SCIRUN_SERVICE_PORT",to_string(port));
       sci_putenv("SCIRUN_EXTERNAL_APPLICATION_INTERFACE","1");
     }
-#ifdef HAVE_PTOLEMY_PACKAGE
+#ifdef HAVE_KEPLER
     else if ( ( arg == "--SPAserver" ) || ( arg == "-SPAserver" ) ||
 	      ( arg == "-SPAs" ) || ( arg == "--SPAs" ) || ( arg == "-spas" ) )
     {
-      sci_putenv("PTOLEMY_CLIENT_PORT","1");
+      sci_putenv("KEPLER_CLIENT_PORT", "1");
     }
-#endif   
+#endif
     else
     {
       struct stat buf;
@@ -394,18 +394,17 @@ main(int argc, char *argv[], char **environment) {
   }
 
 
-#ifdef HAVE_PTOLEMY_PACKAGE
+#ifdef HAVE_KEPLER
   //get gui pointer
-  GuiInterface *gui = GuiInterface::getSingleton();
-  //start the Ptolemy/spa server socket
-  const char *pt_str = sci_getenv("PTOLEMY_CLIENT_PORT");
-  if (pt_str){ //if we want to specify the port someday && string_to_int(pt_str, port)) {
-    cerr << "Starting SPA server thread" << std::endl;
-    PtolemyServer *ptserv = new PtolemyServer(gui,net);
-    Thread *pt = new Thread(ptserv, "Ptolemy/SPA Server", 0,
-                            Thread::Activated, 1024*1024);
-    pt->detach();
-    PtolemyServer::servSem().up();
+  //GuiInterface *gui = GuiInterface::getSingleton();
+  //start the Kepler/spa server socket
+  const char *portString = sci_getenv("KEPLER_CLIENT_PORT");
+  if (portString) { //if we want to specify the port someday && string_to_int(portString, port)) {
+    std::cerr << "Starting SPA server thread" << std::endl;
+    KeplerServer *keplerServer = new KeplerServer(net);
+    Thread *kt = new Thread(keplerServer, "Kepler/SPA Server", 0, Thread::Activated, 1024*1024);
+    kt->detach();
+    KeplerServer::servSem().up();
   }
 #endif
 
