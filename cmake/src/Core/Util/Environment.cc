@@ -214,7 +214,6 @@ SCIRun::create_sci_environment(char **env, char *execname)
 #ifdef _WIN32
   getWin32RegistryValues(objdir, srcdir, thirdpartydir, packages);
 #endif
-
   if (!sci_getenv("SCIRUN_OBJDIR")) 
   {
     if (!execname)
@@ -222,9 +221,14 @@ SCIRun::create_sci_environment(char **env, char *execname)
     else {
       string objdir(execname);
       if (execname[0] != '/') {
-	char cwd[MAXPATHLEN];
-	getcwd(cwd,MAXPATHLEN);
-	objdir = cwd+string("/")+objdir;
+        if (string(execname).find("/") == string::npos) {
+          objdir = findFileInPath(execname, sci_getenv("PATH"));
+          ASSERT(objdir.length());
+        } else {
+          char cwd[MAXPATHLEN];
+          getcwd(cwd,MAXPATHLEN);
+          objdir = cwd+string("/")+objdir;
+        }
       }
 
       string::size_type pos = objdir.find_last_of('/');
