@@ -376,7 +376,12 @@ main( int argc, char** argv )
     if (!do_AMR)
       do_AMR = (bool) ups->findBlock("AMR");
 
+    // don't do AMR on combine-patches or reduce-uda
+    if (reduce_uda || combine_patches)
+      do_AMR = false;
+
     const ProcessorGroup* world = Uintah::Parallel::getRootProcessorGroup();
+
     SimulationController* ctl = 
       scinew AMRSimulationController(world, do_AMR, ups);
 
