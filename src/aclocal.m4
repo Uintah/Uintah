@@ -1193,6 +1193,8 @@ case $1 in
   ;;
   Ptolemy)
   ;;
+  Kepler)
+  ;;
   *)
     AC_MSG_WARN(In aclocal.m4: No known dependencies for Package $1)
   ;;
