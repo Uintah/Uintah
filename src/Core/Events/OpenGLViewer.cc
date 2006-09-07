@@ -234,6 +234,7 @@ public:
   
   void render_selection_set(bool edges = false) 
   {
+#if 0
     //create a new field with the selection items in it;
     if (! sel_fld_.get_rep()) { return; }
 
@@ -247,7 +248,7 @@ public:
 
     case NODES_E:
       p.do_nodes_ = true;
-      //      sel_vis = clip_nodes(sel_fld_, oglv_->get_selection_set());
+      sel_vis = clip_nodes(sel_fld_, oglv_->get_selection_set());
       break;
     case EDGES_E:
       p.do_edges_ = true;
@@ -255,7 +256,7 @@ public:
     default:
     case FACES_E:
       p.do_faces_ = true;
-      //      sel_vis = clip_faces(sel_fld_, oglv_->get_selection_set());
+      sel_vis = clip_faces(sel_fld_, oglv_->get_selection_set());
       break;
     case CELLS_E:
 
@@ -304,7 +305,7 @@ public:
     };
 
     oglv_->set_selection_geom(geom);    
-
+#endif
   }
 
   void add_selection(unsigned int idx) {

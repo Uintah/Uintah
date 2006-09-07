@@ -39,8 +39,13 @@ TARGET_LINK_LIBRARIES(Core_Datatypes
   Core_Persistent   
   Core_Thread       
   Core_Util
-  ${GL_LIBRARY} ${M_LIBRARY} ${BLAS_LIBRARY} ${F_LIBRARY} 
-  ${TEEM_LIBRARY} ${PNG_LIBRARY} ${Z_LIBRARY}
+  ${GL_LIBRARY}
+  ${M_LIBRARY}
+  ${BLAS_LIBRARY}
+  ${F_LIBRARY} 
+  ${TEEM_LIBRARY}
+  ${PNG_LIBRARY}
+  ${Z_LIBRARY}
 )
 
 IF(NOT BUILD_SHARED_LIBS)

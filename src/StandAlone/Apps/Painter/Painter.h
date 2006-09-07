@@ -44,8 +44,6 @@
 #define SCIRun_Dataflow_Modules_Render_Painter_h
 
 #include <sci_comp_warn_fixes.h>
-#include <tcl.h>
-#include <tk.h>
 #include <stdlib.h>
 #include <math.h>
 #include <map>
@@ -54,10 +52,9 @@
 #include <sci_gl.h>
 #include <sci_glu.h>
 #include <sci_glx.h>
-#include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/Ports/BundlePort.h>
-#include <Dataflow/Network/Ports/GeometryPort.h>
-#include <Dataflow/Network/Ports/NrrdPort.h>
+
+#include <StandAlone/Apps/Painter/UIvar.h>
+
 #include <Core/Algorithms/Visualization/RenderField.h>
 #include <Core/Bundle/Bundle.h>
 #include <Core/Containers/Array3.h>
@@ -70,12 +67,9 @@
 #include <Core/Geom/GeomCull.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/TexSquare.h>
-#include <Dataflow/GuiInterface/TkOpenGLContext.h>
 #include <Core/Geom/OpenGLViewport.h>
 #include <Core/Geom/FreeType.h>
 #include <Core/Geometry/Plane.h>
-#include <Dataflow/GuiInterface/TCLTask.h>
-#include <Dataflow/GuiInterface/UIvar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
@@ -92,6 +86,7 @@
 #include <Core/Volume/Texture.h>
 
 #include <include/sci_defs/insight_defs.h>
+
 #ifdef HAVE_INSIGHT
 #  include <Packages/Insight/Core/Datatypes/ITKDatatype.h>
 #  include <itkImageToImageFilter.h>
@@ -118,7 +113,7 @@ public:
 private:
 
   struct Event {
-    void                update_state(GuiArgs &args, Painter &painter);
+    void                update_state(Painter &painter);
     bool                button(unsigned int) { return 0; }
     bool                shift() { return false; }
     bool                control() { return false; };
@@ -554,7 +549,7 @@ private:
   class NrrdVolume { 
   public:
     // Constructor
-    NrrdVolume		(GuiContext *ctx, 
+    NrrdVolume		(VarContext *ctx, 
                          const string &name,
                          NrrdDataHandle &);
     // Copy Constructor
@@ -590,8 +585,9 @@ private:
 
     bool                inside_p(const Point &p);
     NrrdDataHandle	nrrd_handle_;
-    GuiContext *        gui_context_;
-    GuiString           name_;
+    VarContext *        gui_context_;
+    //    GuiString           name_;
+    string              name_;
     string              name_prefix_;
     UIdouble		opacity_;
     UIdouble            clut_min_;
@@ -599,7 +595,7 @@ private:
     Mutex               mutex_;
     float               data_min_;
     float               data_max_;
-    GuiInt              colormap_;
+    int                 colormap_;
     vector<int>         stub_axes_;
     DenseMatrix         transform_;
     bool                keep_;
@@ -752,7 +748,7 @@ public:
   virtual int           get_signal_id(const string &signalname);
 
 
-  Painter(Skinner::Variables *, GuiContext* ctx);
+  Painter(Skinner::Variables *, VarContext* ctx);
   virtual ~Painter();
   //  virtual void		tcl_command(GuiArgs& args, void*);
   void			add_bundle(BundleHandle);  
