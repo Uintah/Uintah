@@ -11,7 +11,6 @@ TARGET_LINK_LIBRARIES( Core_Bundle
   Core_Containers 
   Core_Thread
   Core_Geometry
-  Core_GuiInterface
   Core_Math
   Core_Util
   Core_Geom

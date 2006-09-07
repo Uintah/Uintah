@@ -44,7 +44,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/ColumnMatrix.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Math/Mat.h>
 
 #include <iostream>

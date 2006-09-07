@@ -35,7 +35,6 @@ TARGET_LINK_LIBRARIES(Core_Datatypes
   Core_Containers   
   Core_Exceptions   
   Core_Geometry     
-  Core_GuiInterface 
   Core_Math         
   Core_Persistent   
   Core_Thread       

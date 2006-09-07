@@ -46,13 +46,13 @@ else
         Core/Containers    \
         Core/Exceptions    \
         Core/Geom          \
-        Core/GuiInterface  \
+        Dataflow/GuiInterface  \
         Core/ICom          \
         Core/Init          \
         Core/Services      \
         Core/SystemCall    \
         Core/Thread        \
-        Core/TkExtensions  \
+        Dataflow/TkExtensions  \
         Core/Util          \
         Core/Volume        \
         Core/XMLUtil       \
@@ -96,8 +96,8 @@ SRCS     := $(SRCDIR)/scirunremote.cc
 ifeq ($(LARGESOS),yes)
   PSELIBS := Dataflow Core
 else
-  PSELIBS := Dataflow/Network Core/Containers Core/GuiInterface \
-        Core/Thread Core/Exceptions Core/Util Core/TkExtensions Core/Comm \
+  PSELIBS := Dataflow/Network Core/Containers Dataflow/GuiInterface \
+        Core/Thread Core/Exceptions Core/Util Dataflow/TkExtensions Core/Comm \
         Core/ICom Core/Services Core/XMLUtil Core/SystemCall Core/Init Core/Volume
   ifeq ($(OS_NAME),Darwin)
     PSELIBS += Core/Datatypes Core/ImportExport

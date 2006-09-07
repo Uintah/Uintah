@@ -79,7 +79,7 @@ POSSIBLE REVISIONS:
 #include <Core/Math/Expon.h>
 #include <Core/Math/MinMax.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
 #include <iostream>
 #include <sstream>

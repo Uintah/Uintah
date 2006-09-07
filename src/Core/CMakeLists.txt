@@ -9,8 +9,6 @@ SUBDIRS(
   Geometry 
   Basis
   OS
-  TkExtensions
-  GuiInterface
   Malloc
   Datatypes
   Geom

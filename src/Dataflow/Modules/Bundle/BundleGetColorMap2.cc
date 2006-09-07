@@ -105,7 +105,9 @@ BundleGetColorMap2::execute()
     {
       fhandle = handle->getColorMap(colormap23name);
       send_output_handle("colormap23",fhandle,false);
-    } 
+    }
+    
+    send_output_handle("bundle",handle,false);     
   }
 }
 

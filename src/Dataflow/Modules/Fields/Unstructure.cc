@@ -46,7 +46,7 @@
 #include <Core/Datatypes/StructHexVolMesh.h>
 #include <Core/Datatypes/StructQuadSurfMesh.h>
 #include <Core/Datatypes/StructCurveMesh.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Containers/Handle.h>
 
 #include <iostream>

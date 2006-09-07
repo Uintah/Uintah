@@ -41,7 +41,7 @@
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Core/Datatypes/DenseMatrix.h>
 #include <Core/Datatypes/SparseRowMatrix.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
 #include <Dataflow/Modules/Math/LinAlgUnary.h>
 #include <Core/Containers/HashTable.h>

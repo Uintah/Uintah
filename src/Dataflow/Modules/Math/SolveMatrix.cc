@@ -51,7 +51,7 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Thread/Parallel.h>
 #include <Core/Thread/SimpleReducer.h>
 #include <Core/Thread/Thread.h>

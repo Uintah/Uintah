@@ -77,16 +77,16 @@ include $(SCIRUN_SCRIPTS)/recurse.mk
 
 ifeq ($(HAVE_GLOBUS),yes)
   PSELIBS := Core/OS Core/Containers Core/Util Core/XMLUtil \
-             Core/GuiInterface Core/CCA/spec \
+             Dataflow/GuiInterface Core/CCA/spec \
              Core/CCA/PIDL Core/CCA/SSIDL \
-             Core/Exceptions Core/TkExtensions Core/Init Core/Thread \
+             Core/Exceptions Dataflow/TkExtensions Core/Init Core/Thread \
              Core/globus_threads
 else
   PSELIBS := Core/OS Core/Containers Core/Util Core/XMLUtil \
-             Core/GuiInterface Core/CCA/spec \
+             Dataflow/GuiInterface Core/CCA/spec \
              Core/CCA/PIDL Core/CCA/SSIDL \
              Core/Exceptions Core/Thread \
-             Core/TkExtensions Core/Init
+             Dataflow/TkExtensions Core/Init
 endif
 
 LIBS := $(XML2_LIBRARY)

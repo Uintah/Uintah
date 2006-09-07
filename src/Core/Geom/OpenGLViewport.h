@@ -49,11 +49,11 @@ using std::string;
 
 namespace SCIRun {
 
-class TkOpenGLContext;
+class OpenGLContext;
 
 class SCISHARE OpenGLViewport {
 private:
-  TkOpenGLContext *	context_;
+  OpenGLContext *	context_;
   float			x_;
   float			y_;
   float			width_;
@@ -62,7 +62,7 @@ private:
 
   void			check_bounds();
 public:
-  OpenGLViewport(TkOpenGLContext *ctx=0, 
+  OpenGLViewport(OpenGLContext *ctx=0, 
 		 float x = 0.0, float y = 0.0, 
 		 float w = 1.0, float h = 1.0);
 

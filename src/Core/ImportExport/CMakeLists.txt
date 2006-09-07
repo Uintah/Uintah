@@ -22,15 +22,10 @@ TARGET_LINK_LIBRARIES(Core_ImportExport
   Core_Thread 
   Core_Geometry 
   Core_Geom 
-  Core_GuiInterface 
   Core_Math 
   Core_Util 
   Core_Datatypes
   ${BLT_LIBRARY} 
-  ${ITCL_LIBRARY} 
-  ${TCL_LIBRARY} 
-  ${TK_LIBRARY} 
-  ${ITK_LIBRARY} 
   ${GL_LIBRARY} 
   ${THREAD_LIBRARY} 
   ${Z_LIBRARY} 

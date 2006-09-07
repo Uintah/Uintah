@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/GuiInterface/GuiInterface.h>
+#include <Dataflow/GuiInterface/GuiInterface.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/Assert.h>
 #include <libxml/catalog.h>

@@ -17,7 +17,7 @@ SRCS     += \
 
 PSELIBS :=  Core/ImportExport\
             Core/Datatypes Core/Util Core/Containers \
-            Core/Exceptions Core/Thread Core/GuiInterface \
+            Core/Exceptions Core/Thread Dataflow/GuiInterface \
             Core/Geom Core/Geometry Dataflow/Network \
             
 LIBS :=

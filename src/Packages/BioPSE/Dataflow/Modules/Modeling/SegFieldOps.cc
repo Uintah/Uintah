@@ -48,7 +48,7 @@
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Geometry/Point.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
 #include <iostream>
 

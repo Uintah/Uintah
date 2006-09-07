@@ -43,7 +43,7 @@
 #ifndef SCI_project_NetworkEditor_h
 #define SCI_project_NetworkEditor_h 1
 
-#include <Core/GuiInterface/GuiCallback.h>
+#include <Dataflow/GuiInterface/GuiCallback.h>
 
 #include <Dataflow/Network/share.h>
 

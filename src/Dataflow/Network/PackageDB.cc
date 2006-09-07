@@ -38,7 +38,7 @@
 #include <Dataflow/Network/NetworkEditor.h>
 #include <Core/XMLUtil/XMLUtil.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/GuiInterface/GuiInterface.h>
+#include <Dataflow/GuiInterface/GuiInterface.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/soloader.h>
 #include <Core/Util/FileUtils.h>

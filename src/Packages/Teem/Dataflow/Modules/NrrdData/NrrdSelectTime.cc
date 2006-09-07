@@ -33,7 +33,7 @@
 #include <Core/Datatypes/ColumnMatrix.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/NrrdPort.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Thread/Time.h>
 #include <iostream>
 #include <sstream>

@@ -31,7 +31,7 @@
 
 #include <Dataflow/Network/Ports/TimePort.h>
 #include <Dataflow/Network/Module.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>

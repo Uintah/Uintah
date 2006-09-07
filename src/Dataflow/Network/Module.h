@@ -48,9 +48,9 @@
 #include <Core/GeomInterface/Pickable.h>
 #include <Core/Thread/Mailbox.h>
 #include <Core/Thread/FutureValue.h>
-#include <Core/GuiInterface/GuiCallback.h>
-#include <Core/GuiInterface/GuiInterface.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiCallback.h>
+#include <Dataflow/GuiInterface/GuiInterface.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Util/TypeDescription.h>
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Util/DynamicCompilation.h>

@@ -53,9 +53,9 @@
 #include <Core/GeomInterface/Pickable.h>
 #include <Core/Geom/GeomPick.h>
 #include <Core/Geom/GeomSwitch.h>
-#include <Core/Geom/GuiGeom.h>
-#include <Core/GuiInterface/GuiCallback.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiGeom.h>
+#include <Dataflow/GuiInterface/GuiCallback.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 
 #include <Dataflow/Widgets/share.h>
 

@@ -75,7 +75,7 @@ POSSIBLE REVISIONS
 #include <Core/Geom/View.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/HashTable.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Geom/Path.h>
 
 #include <Core/Util/Timer.h>

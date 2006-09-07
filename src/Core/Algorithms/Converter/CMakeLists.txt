@@ -14,7 +14,6 @@ TARGET_LINK_LIBRARIES(Core_Algorithms_Converter
   Core_Containers 
   Core_Exceptions 
   Core_Thread 
-  Core_GuiInterface             
   Core_Geom 
   Core_Geometry 
   Core_Algorithms_Util            

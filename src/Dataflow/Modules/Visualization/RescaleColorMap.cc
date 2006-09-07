@@ -46,7 +46,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <iostream>
 #include <sci_values.h>
 

@@ -36,13 +36,11 @@
  */
 
 #include <Core/Geom/OpenGLViewport.h>
-#include <Core/Geom/TkOpenGLContext.h>
+#include <Core/Geom/OpenGLContext.h>
 
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/Color.h>
 #include <Core/Exceptions/InternalError.h>
-#include <Core/GuiInterface/GuiInterface.h>
-#include <Core/GuiInterface/TclObj.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Thread/Mutex.h>
@@ -63,7 +61,7 @@
 using namespace SCIRun;
 using namespace std;
 
-OpenGLViewport::OpenGLViewport(TkOpenGLContext *ctx, 
+OpenGLViewport::OpenGLViewport(OpenGLContext *ctx, 
 			       float x, float y, float w, float h)
   : context_(ctx), // defaults to 0
     x_(x), // defaults to 0

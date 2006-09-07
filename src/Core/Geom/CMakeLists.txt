@@ -50,8 +50,6 @@ SET(Core_Geom_SRCS
   GeomTube.cc		                
   GeomVertexPrim.cc	                
   GeomViewerItem.cc			
-  GuiGeom.cc		    		
-  GuiView.cc		    		
   HeadLight.cc		    		
   HistogramTex.cc	    		
   IndexedGroup.cc	    		
@@ -70,7 +68,6 @@ SET(Core_Geom_SRCS
   TextureObj.cc 	    		
   TexSquare.cc		    		
   TimeGrid.cc		    		
-  TkOpenGLContext.cc	    		
   View.cc		    		
   X11Lock.cc		    		
   X11OpenGLContext.cc		        
@@ -89,8 +86,6 @@ TARGET_LINK_LIBRARIES( Core_Geom
   Core_Math
   Core_Util
   Core_Thread
-  Core_GuiInterface
-  Core_TkExtensions 
   ${FTGL_LIBRARY}
   ${GL_LIBRARY}
   ${TK_LIBRARY}

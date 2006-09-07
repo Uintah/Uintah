@@ -39,7 +39,7 @@
  */
 
 #include <Dataflow/Network/Module.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Containers/StringUtil.h>
 

@@ -40,7 +40,7 @@
  */
 
 #include <Dataflow/Network/Ports/FieldPort.h>
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Dataflow/Modules/Fields/ReplaceScalarDataValue.h>
 #include <Core/Containers/Handle.h>
 #include <iostream>

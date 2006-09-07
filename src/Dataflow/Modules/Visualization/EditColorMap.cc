@@ -39,12 +39,12 @@
 #include <Core/Math/CatmullRomSpline.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Core/GuiInterface/GuiVar.h>
+#include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/Color.h>
 #include <Core/Math/MinMax.h>
 
-#include <Core/Geom/TkOpenGLContext.h>
+#include <Dataflow/GuiInterface/TkOpenGLContext.h>
 #include <tcl.h>
 #include <tk.h>
 
