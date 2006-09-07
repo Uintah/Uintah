@@ -39,6 +39,7 @@
 #include <Core/Thread/Time.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/DebugStream.h>
+#include <Core/Util/Environment.h>
 
 #include <sci_defs/ieeefp_defs.h>
 #include <sci_defs/hypre_defs.h>
@@ -142,6 +143,7 @@ usage( const std::string & message,
       cerr << "-reduce_uda          : Reads <uda-dir>/input.xml file and removes unwanted labels (see FAQ).\n";
       cerr << "-uda_suffix <number> : Make a new uda dir with <number> as the default suffix\n";      
       cerr << "-t <timestep>        : Restart timestep (last checkpoint is default,\n\t\t\tyou can use -t 0 for the first checkpoint)\n";
+      cerr << "-svnDiff             : runs svn diff <src/...../Packages/Uintah \n";
       cerr << "-copy                : Copy from old uda when restarting\n";
       cerr << "-move                : Move from old uda when restarting\n";
       cerr << "-nocopy              : Default: Don't copy or move old uda timestep when\n\t\t\trestarting\n";
@@ -185,6 +187,7 @@ main( int argc, char** argv )
   bool   restart=false;
   bool   combine_patches=false;
   bool   reduce_uda=false;
+  bool   do_svnDiff = false;
   int    restartTimestep = -1;
   int    udaSuffix = -1;
   string udaDir; // for restart or combine_patches
@@ -278,7 +281,9 @@ main( int argc, char** argv )
       if(sscanf(argv[i], "%dx%dx%d", &ii, &jj, &kk) != 3)
         usage("Error parsing -layout", argv[i], argv[0]);
       layout = IntVector(ii,jj,kk);
-    } else if (s[0] == '-') {
+    } else if(s == "-svnDiff") {
+      do_svnDiff = true;
+    }else if (s[0] == '-') {
       // component name - must be the only remaining option with a hyphen
       if (component.length() > 0) {
         char errorMsg[256];
@@ -348,6 +353,16 @@ main( int argc, char** argv )
     gethostname(name, 256);
     cerr << "Date:    " << time_string; // has its own newline
     cerr << "Machine: " << name << endl;
+
+    // Run svn diff on Packages/Uintah 
+    if (do_svnDiff){
+      cerr << "____SVN_____________________________________________________________"<< endl;
+      create_sci_environment( NULL, 0 );
+      string sdir = string(sci_getenv("SCIRUN_SRCDIR")) + "/Packages/Uintah";
+      string cmd = "svn diff " + sdir;
+      system(cmd.c_str());
+      cerr << "____SVN_______________________________________________________________"<< endl;
+    }
   }
   
   //______________________________________________________________________
