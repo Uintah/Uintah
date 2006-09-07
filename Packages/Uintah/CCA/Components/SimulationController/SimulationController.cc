@@ -423,8 +423,8 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
     unsigned long highwater = highwater_mmap;
 #else
     unsigned long memuse = 0;
-    if ( ProcessInfo::IsSupported( ProcessInfo::MEM_RSS ) ) {
-      memuse = ProcessInfo::GetMemoryResident();
+    if ( ProcessInfo::IsSupported( ProcessInfo::MEM_SIZE ) ) {
+      memuse = ProcessInfo::GetMemoryUsed();
     } else {
       memuse = (char*)sbrk(0)-start_addr;
     }
