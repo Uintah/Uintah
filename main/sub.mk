@@ -59,8 +59,8 @@ else
         Dataflow/Network   \
         Dataflow/TCLThread 
 
-  ifeq ($(HAVE_PTOLEMY_PACKAGE), yes)   
-        PSELIBS += Packages/Ptolemy/Core/Comm
+  ifeq ($(HAVE_KEPLER), yes)
+    PSELIBS += Packages/Kepler/Core/Comm
   endif
 
   ifeq ($(OS_NAME),Darwin)
