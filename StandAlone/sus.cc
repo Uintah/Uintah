@@ -303,7 +303,8 @@ main( int argc, char** argv )
       }
     }
   }
-
+ 
+  
   if(filename == ""){
     usage("No input file specified", "", argv[0]);
   }
@@ -337,9 +338,16 @@ main( int argc, char** argv )
 
   bool thrownException = false;
   
-  /*
-    * Create the components
-    */
+  
+ if( Uintah::Parallel::getMPIRank() == 0 ) {
+    cerr << "Date:    ";
+    system("date");         // helpful for cleaning out old stale udas
+    cerr << "Machine: ";
+    system("hostname");
+  }
+  
+  //______________________________________________________________________
+  // Create the components
   try {
 
     char * st = getenv( "INITIAL_SLEEP_TIME" );
@@ -351,6 +359,7 @@ main( int argc, char** argv )
       Time::waitFor( (double)sleepTime );
     }
 
+    //__________________________________
     // Read input file
     ProblemSpecInterface* reader = scinew ProblemSpecReader(filename);
     ProblemSpecP ups = reader->readInputFile();
@@ -358,6 +367,7 @@ main( int argc, char** argv )
       throw ProblemSetupException("Input file is not a Uintah specification", __FILE__, __LINE__);
 
 
+    //__________________________________
     // grab AMR from the ups file if not specified on the command line
     if (!do_AMR)
       do_AMR = (bool) ups->findBlock("AMR");
@@ -373,10 +383,13 @@ main( int argc, char** argv )
         ctl->attachPort("regridder", reg);
     }
 
+    //__________________________________
     // Solver
     SolverInterface* solve = 0;
     solve = SolverFactory::create(ups, world, solver);
 
+    //__________________________________
+    // Component
     // try to make it from the command line first, then look in ups file
     UintahParallelComponent* comp = ComponentFactory::create(ups, world, do_AMR, component, udaDir);
     SimulationInterface* sim = dynamic_cast<SimulationInterface*>(comp);
@@ -389,9 +402,12 @@ main( int argc, char** argv )
     ctl->attachPort("sim", sim);
     comp->attachPort("solver", solve);
     
+    //__________________________________
+    //  Model
     ModelMaker* modelmaker = scinew ModelFactory(world);
     comp->attachPort("modelmaker", modelmaker);
 
+    //__________________________________
     // Load balancer
     LoadBalancer* bal;
     UintahParallelComponent* lb; // to add scheduler as a port
@@ -400,6 +416,7 @@ main( int argc, char** argv )
     lb->attachPort("sim", sim);
     bal = lbc;
     
+    //__________________________________
     // Output
     DataArchiver* dataarchiver = scinew DataArchiver(world, udaSuffix);
     Output* output = dataarchiver;
@@ -408,6 +425,7 @@ main( int argc, char** argv )
     comp->attachPort("output", output);
     dataarchiver->attachPort("sim", sim);
     
+    //__________________________________
     // Scheduler
     SchedulerCommon* sched = SchedulerFactory::create(ups, world, output);
     Scheduler* sch = sched;
