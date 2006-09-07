@@ -138,7 +138,8 @@ usage( const std::string & message,
       cerr << "                           of boxes you are using.\n";
       cerr << "-emit_taskgraphs     : Output taskgraph information\n";
       cerr << "-restart             : Give the checkpointed uda directory as the input file\n";
-      cerr << "-combine_patches     : Give a uda directory as the input file\n";      
+      cerr << "-combine_patches     : Give a uda directory as the input file\n";  
+      cerr << "-reduce_uda          : Reads <uda-dir>/input.xml file and removes unwanted labels (see FAQ).\n";
       cerr << "-uda_suffix <number> : Make a new uda dir with <number> as the default suffix\n";      
       cerr << "-t <timestep>        : Restart timestep (last checkpoint is default,\n\t\t\tyou can use -t 0 for the first checkpoint)\n";
       cerr << "-copy                : Copy from old uda when restarting\n";
