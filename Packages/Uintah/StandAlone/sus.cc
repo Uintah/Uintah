@@ -340,10 +340,13 @@ main( int argc, char** argv )
   
   
  if( Uintah::Parallel::getMPIRank() == 0 ) {
-    cerr << "Date:    ";
-    system("date");         // helpful for cleaning out old stale udas
-    cerr << "Machine: ";
-    system("hostname");
+    // helpful for cleaning out old stale udas
+    time_t t = time(NULL) ;
+    string time_string(ctime(&t));
+    char name[256];
+    gethostname(name, 256);
+    cerr << "Date:    " << time_string; // has its own newline
+    cerr << "Machine: " << name << endl;
   }
   
   //______________________________________________________________________
@@ -376,7 +379,7 @@ main( int argc, char** argv )
     SimulationController* ctl = 
       scinew AMRSimulationController(world, do_AMR, ups);
 
-    Regridder* reg = 0;
+    RegridderCommon* reg = 0;
     if(do_AMR) {
       reg = RegridderFactory::create(ups, world);
       if (reg)
@@ -433,6 +436,7 @@ main( int argc, char** argv )
     ctl->attachPort("scheduler", sched);
     lb->attachPort("scheduler", sched);
     comp->attachPort("scheduler", sched);
+    if (reg) reg->attachPort("scheduler", sched);
     sch->addReference();
     
     if (emit_graphs) sch->doEmitTaskGraphDocs();
