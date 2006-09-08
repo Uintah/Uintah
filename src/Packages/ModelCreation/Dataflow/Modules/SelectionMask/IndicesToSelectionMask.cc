@@ -72,28 +72,14 @@ IndicesToSelectionMask::~IndicesToSelectionMask()
 void
 IndicesToSelectionMask::execute()
 {
-  SCIRun::MatrixIPort *indices_iport;
-  SCIRun::MatrixIPort *length_iport;
-  
-  SCIRun::MatrixHandle output;
-  SCIRun::MatrixHandle lenmat;
   SCIRun::MatrixHandle idxmat;
-  
-  if (!(indices_iport = dynamic_cast<SCIRun::MatrixIPort *>(get_input_port(0))))
-  {
-    error("Could not find input port for indices matrix");
-    return;
-  }
+  if (!get_input_handle("Indices", idxmat)) return;
 
+  SCIRun::MatrixIPort *length_iport;
+  SCIRun::MatrixHandle lenmat;
   if (!(length_iport = dynamic_cast<SCIRun::MatrixIPort *>(get_input_port(1))))
   {
     error("Could not find input port for length matrix");
-    return;
-  }
-
-  if (!(indices_iport->get(idxmat)))
-  {
-    warning("No data could be found on the indices input port");
     return;
   }
 
@@ -102,12 +88,6 @@ IndicesToSelectionMask::execute()
     warning("No data could be found on the length input port, using maximum index as size of selection vector");
   }
 
-  if (idxmat.get_rep() == 0)
-  {
-    error("Empty matrix on indices input");
-    return;
-  }
-  
   int size = -1;
 
   if (lenmat.get_rep())
@@ -118,7 +98,7 @@ IndicesToSelectionMask::execute()
     }
   }
 
-  SelectionMask mask(idxmat,size);
+  SelectionMask mask(idxmat, size);
   
   if (!mask.isvalid())
   {
@@ -126,7 +106,7 @@ IndicesToSelectionMask::execute()
     return;
   }
   
-  output = mask.gethandle();
+  MatrixHandle output = mask.gethandle();
   send_output_handle("SelectionMask", output);
 }
 

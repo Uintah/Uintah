@@ -74,33 +74,16 @@ FieldSetStringProperty::~FieldSetStringProperty()
 void
 FieldSetStringProperty::execute()
 {
-  std::string string1name = guistring1name_.get();
-  std::string string2name = guistring2name_.get();
-  std::string string3name = guistring3name_.get();
+  string string1name = guistring1name_.get();
+  string string2name = guistring2name_.get();
+  string string3name = guistring3name_.get();
     
   FieldHandle  handle;
-  FieldIPort   *iport;
-  StringHandle fhandle;
-  std::string  fstring;
-  StringIPort  *ifport;
-        
-  if(!(iport = static_cast<FieldIPort *>(get_input_port("Field"))))
-  {
-    error("Could not find 'Field' input port");
-    return;
-  }
-      
-  if (!(iport->get(handle)))
-  {   
-    error("No field on input port");
-  }
-   
-  if (handle.get_rep() == 0)
-  {
-    error("No field on input port");
-  }
+  if (!get_input_handle("Field", handle)) return;
   
   // Scan field input port 1
+  StringHandle fhandle;
+  StringIPort  *ifport;
   if (!(ifport = static_cast<StringIPort *>(get_input_port("String1"))))
   {
     error("Could not find String 1 input port");
@@ -109,8 +92,8 @@ FieldSetStringProperty::execute()
         
   if (ifport->get(fhandle))
   {
-    fstring = fhandle->get();
-    handle->set_property(string1name,fstring,false);
+    string fstring = fhandle->get();
+    handle->set_property(string1name, fstring, false);
   }
 
   // Scan field input port 2     
@@ -122,8 +105,8 @@ FieldSetStringProperty::execute()
         
   if (ifport->get(fhandle))
   {
-    fstring = fhandle->get();  
-    handle->set_property(string2name,fstring,false);
+    string fstring = fhandle->get();  
+    handle->set_property(string2name, fstring, false);
   }
 
   // Scan field input port 3     
@@ -135,8 +118,8 @@ FieldSetStringProperty::execute()
         
   if (ifport->get(fhandle))
   {
-    fstring = fhandle->get();  
-    handle->set_property(string3name,fstring,false);
+    string fstring = fhandle->get();  
+    handle->set_property(string3name, fstring, false);
   }
         
   // Now post the output
