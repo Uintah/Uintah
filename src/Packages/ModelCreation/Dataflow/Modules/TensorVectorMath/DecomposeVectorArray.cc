@@ -84,12 +84,6 @@ DecomposeVectorArray::execute()
     double* yptr = Y->get_data_pointer();
     double* zptr = Z->get_data_pointer();
     
-    if ((vptr==0)||(xptr==0)||(yptr==0)||(zptr==0))
-    {
-      error("Could not allocate enough memory");
-      return;
-    }
-    
     for (int p=0; p<n ;p++)
     {
       *xptr = vptr[0];

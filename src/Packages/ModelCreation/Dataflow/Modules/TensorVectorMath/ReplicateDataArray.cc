@@ -108,20 +108,9 @@ ReplicateDataArray::execute()
     
     Output = scinew DenseMatrix(rows*n, cols);
     Input = Input->dense();
-   
-    if ((Output.get_rep() == 0)||(Input.get_rep()==0))
-    {
-      error("Could not allocate enough memory");
-      return;
-    }
-     
+
     double* outputptr = Output->get_data_pointer();      
     double* inputptr = Input->get_data_pointer(); 
-    if ((inputptr==0)||(outputptr==0))
-    {
-      error("Could not allocate enough memory");
-      return;
-    }
      
     outputptr = Output->get_data_pointer(); 
     for (int p =0; p < n; p++)

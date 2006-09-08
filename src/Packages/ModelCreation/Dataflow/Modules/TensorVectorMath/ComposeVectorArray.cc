@@ -101,22 +101,10 @@ ComposeVectorArray::execute()
 
     V = scinew DenseMatrix(n,3);
     
-    if (V.get_rep() == 0)
-    {
-      error("Could not allocate memory for matrix");
-      return;
-    }
-    
     double* xptr = X->get_data_pointer();
     double* yptr = Y->get_data_pointer();
     double* zptr = Z->get_data_pointer();
     double* vptr = V->get_data_pointer();
-    
-    if ((vptr==0)||(xptr==0)||(yptr==0)||(zptr==0))
-    {
-      error("Could not allocate enough memory");
-      return;
-    }
     
     for (int p=0;p<n;p++)
     {

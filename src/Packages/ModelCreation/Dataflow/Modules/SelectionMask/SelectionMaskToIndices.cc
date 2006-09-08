@@ -82,11 +82,6 @@ SelectionMaskToIndices::execute()
   }
   
   SCIRun::MatrixHandle lenmat = scinew SCIRun::DenseMatrix(1, 1);
-  if (lenmat.get_rep() == 0)
-  {
-    error("Could not allocate enough memory");
-    return;
-  }
   lenmat->put(0, 0, static_cast<double>(mask.size()));
   
   SCIRun::MatrixHandle idxmat;

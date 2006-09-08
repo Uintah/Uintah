@@ -81,30 +81,12 @@ AppendDataArrays::execute()
       m += matrixlist[p]->nrows();
     }
   
-    MatrixHandle omatrix = scinew DenseMatrix(m,n);
-    
-    if (omatrix.get_rep() == 0)
-    {
-      error("Could not allocate destination matrix");
-      return;
-    }
-    
-    if (omatrix->get_data_pointer() == 0)
-    {
-      error("Could not allocate destination matrix");
-      return;
-    }
-
+    MatrixHandle omatrix = scinew DenseMatrix(m, n);
     double *dataptr = omatrix->get_data_pointer();
 
     for (size_t p=0;p<numinputs; p++)
     {
       MatrixHandle imatrix = matrixlist[p]->dense();
-      if (imatrix.get_rep() == 0)
-      {
-        error("Could not convert matrix into dense matrix");
-        return;
-      }
       double *sdataptr = imatrix->get_data_pointer();
       int ssize = imatrix->nrows()*imatrix->ncols();
       for ( int q = 0; q < ssize; q++)
