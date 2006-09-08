@@ -47,8 +47,6 @@ class SelectionMaskNOT : public Module {
 public:
   SelectionMaskNOT(GuiContext*);
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
@@ -102,10 +100,6 @@ void SelectionMaskNOT::execute()
   oport->send(output);
 }
 
-void SelectionMaskNOT::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace 
 

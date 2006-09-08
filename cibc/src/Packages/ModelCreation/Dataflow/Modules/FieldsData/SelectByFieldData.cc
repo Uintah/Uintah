@@ -216,7 +216,8 @@ void SelectByFieldData::execute()
 }
 
 
-void SelectByFieldData::tcl_command(GuiArgs& args, void* userdata)
+void
+SelectByFieldData::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {

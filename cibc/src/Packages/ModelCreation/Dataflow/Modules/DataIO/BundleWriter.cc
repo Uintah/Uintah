@@ -55,7 +55,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
 protected:
   GuiString guiTypes_;
   GuiString guiFileType_;
@@ -76,8 +75,11 @@ BundleWriter::BundleWriter(GuiContext* ctx)
   guiTypes_.set(exporttypes);
 }
 
-BundleWriter::~BundleWriter(){
+
+BundleWriter::~BundleWriter()
+{
 }
+
 
 void
 BundleWriter::execute()
@@ -90,11 +92,6 @@ BundleWriter::execute()
   GenericWriter<BundleHandle>::execute();
 }
 
-void
-BundleWriter::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // end namespace
 

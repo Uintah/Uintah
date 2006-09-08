@@ -95,10 +95,14 @@ SelectAndSetFieldData::SelectAndSetFieldData(GuiContext* ctx)
 {
 }
 
-SelectAndSetFieldData::~SelectAndSetFieldData(){
+
+SelectAndSetFieldData::~SelectAndSetFieldData()
+{
 }
 
-void SelectAndSetFieldData::execute()
+
+void
+SelectAndSetFieldData::execute()
 {
   FieldHandle field;
   std::vector<MatrixHandle> matrices;
@@ -257,8 +261,9 @@ void SelectAndSetFieldData::execute()
 
 extern std::string tvm_help_field;
 
+
 void
- SelectAndSetFieldData::tcl_command(GuiArgs& args, void* userdata)
+SelectAndSetFieldData::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {

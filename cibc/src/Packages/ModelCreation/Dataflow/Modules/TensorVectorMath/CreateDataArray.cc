@@ -201,7 +201,8 @@ void CreateDataArray::execute()
 }
 
 
-void CreateDataArray::tcl_command(GuiArgs& args, void* userdata)
+void
+CreateDataArray::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {
@@ -223,6 +224,7 @@ void CreateDataArray::tcl_command(GuiArgs& args, void* userdata)
     Module::tcl_command(args, userdata);
   }
 }
+
 
 } // End namespace ModelCreation
 

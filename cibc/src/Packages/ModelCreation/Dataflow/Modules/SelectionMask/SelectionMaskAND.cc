@@ -54,8 +54,6 @@ public:
   virtual ~SelectionMaskAND();
 
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
@@ -65,11 +63,14 @@ SelectionMaskAND::SelectionMaskAND(GuiContext* ctx)
 {
 }
 
+
 SelectionMaskAND::~SelectionMaskAND()
 {
 }
 
-void SelectionMaskAND::execute()
+
+void
+SelectionMaskAND::execute()
 {
   MatrixIPort *iport;
   MatrixOPort *oport;
@@ -142,10 +143,6 @@ void SelectionMaskAND::execute()
   oport->send(output);
 }
 
-void SelectionMaskAND::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace CardioWave
 

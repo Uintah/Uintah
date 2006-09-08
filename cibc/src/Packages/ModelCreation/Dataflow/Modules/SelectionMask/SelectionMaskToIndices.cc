@@ -52,8 +52,6 @@ public:
   virtual ~SelectionMaskToIndices();
 
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
@@ -63,10 +61,14 @@ SelectionMaskToIndices::SelectionMaskToIndices(GuiContext* ctx)
 {
 }
 
-SelectionMaskToIndices::~SelectionMaskToIndices(){
+
+SelectionMaskToIndices::~SelectionMaskToIndices()
+{
 }
 
-void SelectionMaskToIndices::execute()
+
+void
+SelectionMaskToIndices::execute()
 {
   SCIRun::MatrixIPort *selection_iport;
   SCIRun::MatrixOPort *indices_oport;
@@ -121,11 +123,6 @@ void SelectionMaskToIndices::execute()
   length_oport->send(lenmat);
 }
 
-void
- SelectionMaskToIndices::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace CardioWave
 

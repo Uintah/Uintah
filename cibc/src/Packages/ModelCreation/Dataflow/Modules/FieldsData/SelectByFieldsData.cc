@@ -250,7 +250,9 @@ void SelectByFieldsData::execute()
   }
 }
 
-void SelectByFieldsData::tcl_command(GuiArgs& args, void* userdata)
+
+void
+SelectByFieldsData::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {
@@ -272,6 +274,7 @@ void SelectByFieldsData::tcl_command(GuiArgs& args, void* userdata)
     Module::tcl_command(args, userdata);
   }
 }
+
 
 } // End namespace ModelCreation
 
