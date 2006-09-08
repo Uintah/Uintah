@@ -123,7 +123,7 @@ FieldSetStringProperty::execute()
   }
         
   // Now post the output
-  handle->generation++;
+  handle->generation = handle->compute_new_generation();
   send_output_handle("Field", handle);
 }
 
