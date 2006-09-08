@@ -39,7 +39,7 @@
 #include <Core/Malloc/Allocator.h>
 
 #include <sci_gl.h>
-#include <GL/glu.h>
+#include <sci_glu.h>
 
 #include <sci_comp_warn_fixes.h>
 
