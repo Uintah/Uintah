@@ -84,24 +84,15 @@ DataArrayInfo::execute()
     update_input_attributes(mh);
   }
   
-  MatrixHandle nrows = scinew DenseMatrix(1,1);
-  if(nrows.get_rep() == 0)
-  {
-    error("Could not allocate enough memory for output matrix");
-    return;
-  }
+  MatrixHandle nrows = scinew DenseMatrix(1, 1);
   double* dataptr = nrows->get_data_pointer();
-  if (dataptr == 0)
-  {
-    error("Could not allocate enough memory for output matrix");
-    return;
-  }    
   dataptr[0] = mh->nrows();
   send_output_handle("NumElements", nrows);
 }
 
 
-void DataArrayInfo::clear_vals()
+void
+DataArrayInfo::clear_vals()
 {
   gui_matrixname_.set("---");
   gui_generation_.set("---");
@@ -110,7 +101,8 @@ void DataArrayInfo::clear_vals()
 }
 
 
-void DataArrayInfo::update_input_attributes(MatrixHandle m)
+void
+DataArrayInfo::update_input_attributes(MatrixHandle m)
 {
   string matrixname;
   if (m->get_property("name", matrixname))

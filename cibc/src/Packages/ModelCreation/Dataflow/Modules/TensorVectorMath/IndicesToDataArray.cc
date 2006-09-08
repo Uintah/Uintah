@@ -116,19 +116,7 @@ IndicesToDataArray::execute()
     }
       
     Array = scinew DenseMatrix(indices_m,temp_n);
-    if (Array.get_rep() == 0)
-    {
-      error("Could not allocate matrix");
-      return;
-    }    
-      
     double* array_data = Array->get_data_pointer();
-    
-    if (array_data == 0)
-    {
-      error("Could not allocate matrix");
-      return;
-    }  
     
     for (int p = 0; p < indices_m; p++)
     {

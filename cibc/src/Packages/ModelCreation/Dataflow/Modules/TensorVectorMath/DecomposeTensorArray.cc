@@ -79,49 +79,15 @@ void DecomposeTensorArray::execute()
     temp = tensor->dense();
     tensor = temp;
 
-    int n = tensor->nrows();
+    const int n = tensor->nrows();
     
-    eigvec1 = scinew DenseMatrix(n,3);
-    if (eigvec1.get_rep()==0)
-    {
-      error("Could not allocate enough memory for output");
-      return;
-    }
-
-    eigvec2 = scinew DenseMatrix(n,3);
-    if (eigvec2.get_rep()==0)
-    {
-      error("Could not allocate enough memory for output");
-      return;
-    }
+    eigvec1 = scinew DenseMatrix(n, 3);
+    eigvec2 = scinew DenseMatrix(n, 3);
+    eigvec3 = scinew DenseMatrix(n, 3);
     
-    eigvec3 = scinew DenseMatrix(n,3);
-    if (eigvec3.get_rep()==0)
-    {
-      error("Could not allocate enough memory for output");
-      return;
-    }
-    
-    eigval1 = scinew DenseMatrix(n,1);
-    if (eigval1.get_rep()==0)
-    {
-      error("Could not allocate enough memory for output");
-      return;
-    }
-
-    eigval2 = scinew DenseMatrix(n,1);
-    if (eigval2.get_rep()==0)
-    {
-      error("Could not allocate enough memory for output");
-      return;
-    }
-    
-    eigval3 = scinew DenseMatrix(n,1);
-    if (eigval3.get_rep()==0)
-    {
-      error("Could not allocate enough memory for output");
-      return;
-    }
+    eigval1 = scinew DenseMatrix(n, 1);
+    eigval2 = scinew DenseMatrix(n, 1);
+    eigval3 = scinew DenseMatrix(n, 1);
     
     double* eigvec1ptr = eigvec1->get_data_pointer();
     double* eigvec2ptr = eigvec2->get_data_pointer();

@@ -53,7 +53,8 @@ ComposeTensorArray::ComposeTensorArray(GuiContext* ctx)
 }
 
 
-void ComposeTensorArray::execute()
+void
+ComposeTensorArray::execute()
 {
   MatrixHandle eigvec1, eigvec2, eigval1, eigval2, eigval3, tensor;
 
@@ -201,40 +202,22 @@ void ComposeTensorArray::execute()
 
     if(!eigval1.get_rep())
     {
-      eigval1 = scinew DenseMatrix(1,1);
-      if (eigval1.get_rep() == 0)
-      {
-        error("Could not allocate matrix");
-        return;
-      }
-      double* dataptr = eigval1->get_data_pointer();
-      dataptr[0] = 0.0;
+      eigval1 = scinew DenseMatrix(1, 1);
+      eigval1->put(0, 0, 0.0);
       eigval1n = 1;
     }
 
     if(!eigval2.get_rep())
     {
-      eigval2 = scinew DenseMatrix(1,1);
-      if (eigval2.get_rep() == 0)
-      {
-        error("Could not allocate matrix");
-        return;
-      }
-      double* dataptr = eigval2->get_data_pointer();
-      dataptr[0] = 0.0;
+      eigval2 = scinew DenseMatrix(1, 1);
+      eigval2->put(0, 0, 0.0);
       eigval2n = 1;
     }
 
     if(!eigval3.get_rep())
     {
       eigval3 = scinew DenseMatrix(1,1);
-      if (eigval3.get_rep() == 0)
-      {
-        error("Could not allocate matrix");
-        return;
-      }
-      double* dataptr = eigval3->get_data_pointer();
-      dataptr[0] = 0.0;
+      eigval3->put(0, 0, 0.0);
       eigval3n = 1;    
     }
 

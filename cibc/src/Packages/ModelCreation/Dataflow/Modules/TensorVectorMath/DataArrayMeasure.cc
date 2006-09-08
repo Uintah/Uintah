@@ -77,13 +77,7 @@ DataArrayMeasure::execute()
     
     std::string method = guimeasure_.get();
     
-    Measure = scinew DenseMatrix(1,n);
-    if (Measure.get_rep() == 0)
-    {
-      error("DataArrayMeasure: Could not allocate output matrix");
-      return;
-    }
-    
+    Measure = scinew DenseMatrix(1, n);
     double* dest = Measure->get_data_pointer();
     
     if (method == "Sum")
