@@ -49,7 +49,9 @@ ConvertToTriSurf::ConvertToTriSurf(GuiContext* ctx)
 {
 }
 
-void ConvertToTriSurf::execute()
+
+void
+ConvertToTriSurf::execute()
 {
   FieldHandle ifield, ofield;
   if (!(get_input_handle("Field",ifield,true))) return;
@@ -60,7 +62,7 @@ void ConvertToTriSurf::execute()
 
     if (!(algo.ConvertToTriSurf(ifield,ofield))) return;
   
-    send_output_handle("Field",ofield,false);
+    send_output_handle("Field", ofield);
   }
 }
 

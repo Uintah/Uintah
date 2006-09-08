@@ -52,7 +52,9 @@ ApplyColumnOperation::ApplyColumnOperation(GuiContext* ctx)
 {
 }
 
-void ApplyColumnOperation::execute()
+
+void
+ApplyColumnOperation::execute()
 {
   MatrixHandle input, output;
   
@@ -65,7 +67,7 @@ void ApplyColumnOperation::execute()
     SCIRunAlgo::MathAlgo algo(this);
   
     if (!(algo.ApplyColumnOperation(input,output,method))) return;
-    send_output_handle("Vector",output,false);
+    send_output_handle("Vector", output);
   }
 }
 

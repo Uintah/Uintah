@@ -234,8 +234,8 @@ void ClipFieldByFunction::execute()
       return;
     }
 
-    send_output_handle("Field",output,false);
-    send_output_handle("Mapping",interpolant,false);
+    send_output_handle("Field", output);
+    send_output_handle("Mapping", interpolant);
   }
 }
 

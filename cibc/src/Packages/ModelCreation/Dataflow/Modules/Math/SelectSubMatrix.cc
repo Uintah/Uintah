@@ -49,7 +49,9 @@ SelectSubMatrix::SelectSubMatrix(GuiContext* ctx)
 {
 }
 
-void SelectSubMatrix::execute()
+
+void
+SelectSubMatrix::execute()
 {
   MatrixHandle matrix, rows, columns;
   
@@ -89,7 +91,7 @@ void SelectSubMatrix::execute()
       if (!(malgo.MatrixSelectRows(matrix,output,ri))) return;        
     }
   
-    send_output_handle("Matrix",output,false);
+    send_output_handle("Matrix", output);
   }
 }
 

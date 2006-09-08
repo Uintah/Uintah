@@ -111,7 +111,7 @@ CollectFields::execute()
     bufferlock_.unlock();
 
     // send new output if there is any:      
-    send_output_handle("Fields",Output,false);
+    send_output_handle("Fields", Output);
   }
 }
 

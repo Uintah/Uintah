@@ -124,7 +124,7 @@ ReplicateDataArray::execute()
       }
     }
     
-    send_output_handle("Array",Output,false);
+    send_output_handle("Array", Output);
   }
 }
 

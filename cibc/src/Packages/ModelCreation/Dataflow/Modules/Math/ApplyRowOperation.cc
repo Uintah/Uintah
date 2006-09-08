@@ -52,7 +52,8 @@ ApplyRowOperation::ApplyRowOperation(GuiContext* ctx)
 {
 }
 
-void ApplyRowOperation::execute()
+void
+ApplyRowOperation::execute()
 {
   MatrixHandle input, output;
   
@@ -65,7 +66,7 @@ void ApplyRowOperation::execute()
     std::string method = guimethod_.get();
     if (!(algo.ApplyRowOperation(input,output,method))) return;
     
-    send_output_handle("Vector",output,false);
+    send_output_handle("Vector", output);
   }
 }
 

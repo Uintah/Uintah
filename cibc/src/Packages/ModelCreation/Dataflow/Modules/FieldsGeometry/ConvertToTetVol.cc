@@ -59,7 +59,7 @@ void ConvertToTetVol::execute()
     SCIRunAlgo::FieldsAlgo algo(this);
     if (!(algo.ConvertToTetVol(ifield,ofield))) return;
 
-    send_output_handle("Field",ofield,false);
+    send_output_handle("Field", ofield);
   }
 }
 
