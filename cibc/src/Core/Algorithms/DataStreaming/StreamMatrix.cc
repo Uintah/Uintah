@@ -1030,10 +1030,10 @@ bool StreamMatrixAlgo::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::Mat
   double* dataptr = mh->get_data_pointer();
   for (int p=0; p<nrows;p++)
   {
-    for (int q = 0; q < sizes_[0]; q++) dataptr[q*nrows+p] += 0.0;
+    for (int q = 0; q < sizes_[0]; q++) dataptr[q*nrows+p] = 0.0;
     for (int r = rows[p]; r<rows[p+1]; r++)
     {
-      for (int q = 0; q < sizes_[0]; q++) dataptr[q*nrows+p] += vals[r]*dbuffer[s++];
+      for (int q = 0; q < sizes_[0]; q++) { dataptr[q*nrows+p] += vals[r]*dbuffer[s]; s++; }
     }
   }
 
@@ -1341,11 +1341,11 @@ bool StreamMatrixAlgo::getrowmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::Mat
   
   if (mat == 0)
   {
-    pr_->error("Could not allocate matrix");
+    pr_->error("StreamMatrixAlgo: Could not allocate matrix");
     return (false);
   }
   
-  // Get the buffer when output data needs to be written
+  // Get the buffer where output data needs to be written
   double* dbuffer = mat->get_data_pointer();
   char* buffer = reinterpret_cast<char *>(mat->get_data_pointer());  
 
@@ -1374,7 +1374,7 @@ bool StreamMatrixAlgo::getrowmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::Mat
     }
     else
     {
-      // incase we have one file
+      // in case we have one file
       if (k > 0) break; // done
       k++; //add one so next time we will break out of the loop
     }
@@ -1562,11 +1562,11 @@ bool StreamMatrixAlgo::getrowmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::Mat
   double* dataptr = mh->get_data_pointer();
   for (int p=0; p<nrows;p++)
   {
-    for (int q = 0; q < sizes_[1]; q++) dataptr[p*nrows+q] += 0.0;
+    for (int q = 0; q < sizes_[1]; q++) dataptr[p*nrows+q] = 0.0;
  
     for (int r = rows[p]; r<rows[p+1]; r++)
     {
-      for (int q = 0; q < sizes_[1]; q++) dataptr[p*nrows+q] += vals[r]*dbuffer[s++];
+      for (int q = 0; q < sizes_[1]; q++) { dataptr[p*nrows+q] += vals[r]*dbuffer[s]; s++; }
     }
   }
   
