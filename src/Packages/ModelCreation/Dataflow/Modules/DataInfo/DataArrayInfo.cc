@@ -60,15 +60,18 @@ DataArrayInfo::DataArrayInfo(GuiContext* ctx)
   gui_elements_.set("---");
 }
 
-DataArrayInfo::~DataArrayInfo(){
+
+DataArrayInfo::~DataArrayInfo()
+{
 }
 
-void DataArrayInfo::execute()
+
+void
+DataArrayInfo::execute()
 {
   // The input port (with data) is required.
-  MatrixIPort *iport = (MatrixIPort*)get_iport("DataArray");
   MatrixHandle mh;
-  if (!iport->get(mh) || !mh.get_rep())
+  if (!get_input_handle("DataArray", mh))
   {
     clear_vals();
     generation_ = -1;
