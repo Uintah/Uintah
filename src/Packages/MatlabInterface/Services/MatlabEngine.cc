@@ -445,10 +445,8 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
       gettimeofday(&tv,0);
       tm.tv_nsec = 0;
       tm.tv_sec = tv.tv_sec + secondstowait;
-                
-      bool succ = matlab_handle_->wait_test_.timedWait(matlab_handle_->lock,&tm);
-
 #endif
+
       if (!(matlab_handle_->passed_test_))
         {
           matlab_handle_->unlock();

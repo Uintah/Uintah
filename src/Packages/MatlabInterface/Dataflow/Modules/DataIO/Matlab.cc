@@ -430,6 +430,7 @@ Matlab::Matlab(GuiContext *context) :
   output_field_name_(context->subVar("output-field-name")),
   output_nrrd_name_(context->subVar("output-nrrd-name")),
   output_string_name_(context->subVar("output-string-name")),
+  configfile_(context->subVar("configfile")),
   inet_address_(context->subVar("inet-address")),
   inet_port_(context->subVar("inet-port")),
   inet_passwd_(context->subVar("inet-passwd")),
@@ -439,7 +440,6 @@ Matlab::Matlab(GuiContext *context) :
   matlab_var_(context->subVar("matlab-var")),
   matlab_add_output_(context->subVar("matlab-add-output")),
   matlab_update_status_(context->subVar("matlab-update-status")),
-  configfile_(context->subVar("configfile")),
   need_file_transfer_(false)
 {
 
