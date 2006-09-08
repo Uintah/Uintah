@@ -43,13 +43,15 @@ using std::deque;
 
 using std::string;
 
+#include <Core/Skinner/share.h>
+
 namespace SCIRun {
   class BaseTool;
   class Root;
   namespace Skinner {
     class Drawable;
 
-    Drawable * load_skin(const string&filename);
+    SCISHARE Drawable * load_skin(const string&filename);
   
     class ThrottledRunnableToolManager : public ThrottledRunnable{
     public:

@@ -565,20 +565,17 @@ namespace SCIRun {
       SignalThrower::AllSignalCatchers_t::iterator cend = catchers.end();
       
       for (;citer != cend; ++citer) {
-        SignalCatcher::CatcherTargetInfo_t &callback = *citer;
-        ASSERT(callback.catcher_);
-        ASSERT(callback.function_);
+        SignalCatcher::CatcherTargetInfoBase* callback = *citer;
 
-
-        if (!callback.variables_) {
-          callback.variables_ = new Variables(signalname, object->get_vars());
+        if (!callback->variables_) {
+          callback->variables_ = new Variables(signalname, object->get_vars());
         } else {
-          callback.variables_ = new Variables(signalname, callback.variables_);}
+          callback->variables_ = new Variables(signalname, callback->variables_);}
 
 
         for (xmlNode *cnode = node->children; cnode; cnode = cnode->next) {
           if (XMLUtil::node_is_element(cnode, "var")) {
-            eval_var_node(cnode, callback.variables_, true);
+            eval_var_node(cnode, callback->variables_, true);
           }
         }
        
@@ -594,11 +591,12 @@ namespace SCIRun {
           if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
             cerr << object->get_id() << " aliasing: " << signalname 
                  << " to " << signaltarget << " of " 
-                 << ((Drawable *)(callback.catcher_))->get_id() << std::endl;
+                 << callback->getDrawable()->get_id() << std::endl;
           }
 
-          SignalCatcher::CatcherTargetInfo_t newcallback(callback);
-          newcallback.targetname_ = signalname;
+          // TODO - who owns this memory????
+          SignalCatcher::CatcherTargetInfoBase* newcallback = callback->clone();
+          newcallback->targetname_ = signalname;
           catcher_tree.back().push_back(newcallback);
           allcatchers[signalname].push_back(newcallback);
         }

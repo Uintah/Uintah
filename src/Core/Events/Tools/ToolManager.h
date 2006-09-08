@@ -37,6 +37,7 @@
 #include <stack>
 #include <map>
 
+#include <Core/Events/share.h>
 namespace SCIRun {
 
 class BaseEvent;
@@ -47,7 +48,7 @@ using namespace std;
 //! top() tools on the stacks recieve the events in priority order.  Tools 
 //! deeper down the stack do not recieve events.  
 
-class ToolManager 
+class SCISHARE ToolManager 
 {
 public:  
 

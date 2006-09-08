@@ -42,6 +42,10 @@
 #include <sci_gl.h>
 #include <sci_glu.h>
 
+#ifdef _WIN32
+#include <Core/OS/Rand.h>
+#endif
+
 
 namespace SCIRun {
   namespace Skinner{

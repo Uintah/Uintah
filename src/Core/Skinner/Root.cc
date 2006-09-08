@@ -43,6 +43,8 @@
 #include <Core/Events/Tools/FilterRedrawEventsTool.h>
 #include <iostream>
 
+#include <algorithm>
+
 using std::cerr;
 using std::endl;
 

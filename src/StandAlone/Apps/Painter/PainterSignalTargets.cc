@@ -72,7 +72,9 @@
 #include <Core/Util/DynamicCompilation.h>
 #include <Core/Algorithms/Visualization/NrrdTextureBuilderAlgo.h>
 
+#ifndef _WIN32
 #include <sys/mman.h>
+#endif
 
 #ifdef HAVE_INSIGHT
 
@@ -292,6 +294,12 @@ Painter::NrrdFileRead(event_handle_t event) {
 
 BaseTool::propagation_state_e 
 Painter::MemMapFileRead(event_handle_t event) {
+#ifdef _WIN32
+  // no mmap on windows
+  cerr << "  MMap not available\n";
+  return STOP_E;
+#endif
+
   Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
   ASSERT(signal);
   const string &filename = signal->get_vars()->get_string("filename");
@@ -321,8 +329,9 @@ Painter::MemMapFileRead(event_handle_t event) {
 
   struct stat buf;
   fstat(fd, &buf);
+#ifndef _WIN32
   nrrd->data = mmap(0, buf.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
-  
+#endif
   pair<string, string> dirfile = split_filename(filename);
   BundleHandle bundle = new Bundle();
   bundle->setNrrd(dirfile.second, nrrd_handle);

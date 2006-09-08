@@ -25,19 +25,62 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : X11Lock.h
+//    File   : Win32OpenGLContext.h
 //    Author : McKay Davis
-//    Date   : Thu Jun  1 19:28 MDT 2006
+//    Date   : May 30 2006
 
-#include <Core/Thread/ThreadLock.h>
+
+#ifndef CORE_WIN32OPENGLCONTEXT_H
+#define CORE_WIN32OPENGLCONTEXT_H
+
+#include <windows.h>
+#include <sci_gl.h>
+#include <sci_glx.h>
+
+#include <Core/Thread/Mutex.h>
+#include <Core/Geom/OpenGLContext.h>
 
 #include <Core/Geom/share.h>
+
 namespace SCIRun {
-  class SCISHARE X11Lock {
-  public:
-    static void         lock();
-    static void         unlock();
-  private:
-    static ThreadLock   lock_;
-  };
-}
+
+class SCISHARE Win32OpenGLContext : public OpenGLContext 
+{
+public:
+  Win32OpenGLContext(int visualid=0, 
+                   int x = 0,
+                   int y = 0,
+                   unsigned int width = 640, 
+                   unsigned int height = 480,
+                   bool border = true);
+
+  virtual ~Win32OpenGLContext();
+private:  
+  void                  create_context(int id, int w, int h, 
+                                       unsigned int width, 
+                                       unsigned int height,
+                                       bool border);
+
+  static void		listvisuals();
+
+public:
+  virtual bool		make_current();
+  virtual void		release();
+  virtual int		width();
+  virtual int		height();
+  virtual void		swap();
+
+  HWND                  window_;
+private:
+  static vector<int>	valid_visuals_;  
+  static HGLRC          first_context_;
+  HGLRC                 context_;
+  HDC                   hDC_;
+  Mutex                 mutex_;
+  int                   width_;
+  int                   height_;
+};
+
+} // End namespace SCIRun
+
+#endif // SCIRun_Core_2d_OpenGLContext_h

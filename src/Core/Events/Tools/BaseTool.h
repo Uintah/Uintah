@@ -37,11 +37,12 @@
 #include <Core/Events/BaseEvent.h>
 #include <string>
 
+#include <Core/Events/share.h>
 namespace SCIRun {
 
 using namespace std;
 
-class BaseTool
+class SCISHARE BaseTool
 {
 public:
   enum propagation_state_e {
@@ -81,7 +82,7 @@ private:
 
 typedef Handle<BaseTool> tool_handle_t;
 
-class PointerTool : public virtual BaseTool
+class SCISHARE PointerTool : public virtual BaseTool
 {
 public:
   PointerTool(string name);
@@ -114,7 +115,7 @@ public:
 private:
 };
 
-class KeyTool :  public virtual BaseTool
+class SCISHARE KeyTool :  public virtual BaseTool
 {
 public:
   KeyTool(string name);
