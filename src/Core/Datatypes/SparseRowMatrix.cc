@@ -636,8 +636,7 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
     return (false);
   }
   
-  
-  int k = 0;
+  unsigned int k = 0;
 
   for (int r =0; r<nrows_; r++)
   {
