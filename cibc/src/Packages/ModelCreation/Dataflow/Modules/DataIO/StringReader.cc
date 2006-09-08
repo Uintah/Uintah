@@ -110,13 +110,8 @@ StringReader::call_importer(const string &filename)
     return(false);
   }
   
-  handle_ = dynamic_cast<String*>(scinew String(input));
-  if (handle_.get_rep() == 0)
-  {
-    error("Could not allocate string");
-    return(false);
-  }
-  return(true);
+  handle_ = scinew String(input);
+  return true;
 }
 
 

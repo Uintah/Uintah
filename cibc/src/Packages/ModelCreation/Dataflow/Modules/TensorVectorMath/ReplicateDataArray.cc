@@ -53,9 +53,9 @@ ReplicateDataArray::ReplicateDataArray(GuiContext* ctx)
 
 
 void
- ReplicateDataArray::execute()
+ReplicateDataArray::execute()
 {
-  MatrixHandle Input,Size,Output, temp;
+  MatrixHandle Input, Size, Output;
 
   if (!(get_input_handle("DataArray",Input,false))) return;
   get_input_handle("Size",Size,false);
@@ -106,9 +106,8 @@ void
       return;
     }
     
-    Output = dynamic_cast<Matrix *>(scinew DenseMatrix(rows*n,cols));
-    temp = dynamic_cast<Matrix *>(Input->dense());
-    Input = temp;
+    Output = scinew DenseMatrix(rows*n, cols);
+    Input = Input->dense();
    
     if ((Output.get_rep() == 0)||(Input.get_rep()==0))
     {

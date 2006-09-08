@@ -49,7 +49,8 @@ ComposeVectorArray::ComposeVectorArray(GuiContext* ctx)
 }
 
 
-void ComposeVectorArray::execute()
+void
+ComposeVectorArray::execute()
 {
   MatrixHandle X,Y,Z,V;
   
@@ -94,15 +95,11 @@ void ComposeVectorArray::execute()
       return;
     }
 
-    MatrixHandle temp;
-    temp = dynamic_cast<Matrix *>(X->dense()); 
-    X = temp;
-    temp = dynamic_cast<Matrix *>(Y->dense());
-    Y = temp;
-    temp = dynamic_cast<Matrix *>(Z->dense());
-    Z = temp;
-    
-    V = dynamic_cast<Matrix *>(scinew DenseMatrix(n,3));
+    X = X->dense();
+    Y = Y->dense();
+    Z = Z->dense();
+
+    V = scinew DenseMatrix(n,3);
     
     if (V.get_rep() == 0)
     {

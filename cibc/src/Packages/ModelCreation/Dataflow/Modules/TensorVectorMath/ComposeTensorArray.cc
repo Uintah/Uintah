@@ -55,7 +55,7 @@ ComposeTensorArray::ComposeTensorArray(GuiContext* ctx)
 
 void ComposeTensorArray::execute()
 {
-  MatrixHandle eigvec1, eigvec2, eigval1, eigval2, eigval3, tensor, temp;
+  MatrixHandle eigvec1, eigvec2, eigval1, eigval2, eigval3, tensor;
 
   get_input_handle("EigenVector1",eigvec1,false);
   get_input_handle("EigenVector2",eigvec2,false);
@@ -71,8 +71,7 @@ void ComposeTensorArray::execute()
     eigvec1n = 0;
     if (eigvec1.get_rep())
     {
-      temp = dynamic_cast<Matrix *>(eigvec1->dense());
-      eigvec1 = temp;
+      eigvec1 = eigvec1->dense();
       if (eigvec1->ncols() != 3)
       {
         error("The EigenVector1 matrix needs to have three columns");
@@ -97,8 +96,7 @@ void ComposeTensorArray::execute()
     eigvec2n = 0;
     if (eigvec2.get_rep())
     {
-      temp = dynamic_cast<Matrix *>(eigvec2->dense());
-      eigvec2 = temp;
+      eigvec2 = eigvec2->dense();
       if (eigvec2->ncols() != 3)
       {
         error("The EigenVector2 matrix needs to have three columns");
@@ -123,8 +121,7 @@ void ComposeTensorArray::execute()
     eigval1n = 0;
     if (eigval1.get_rep())
     {
-      temp = dynamic_cast<Matrix *>(eigval1->dense());
-      eigval1 = temp;
+      eigval1 = eigval1->dense();
       if (eigval1->ncols() != 1)
       {
         error("The EigenValue1 matrix needs to have only one columns");
@@ -149,8 +146,7 @@ void ComposeTensorArray::execute()
     eigval2n = 0;
     if (eigval2.get_rep())
     {
-      temp = dynamic_cast<Matrix *>(eigval2->dense());
-      eigval2 = temp;
+      eigval2 = eigval2->dense();
       if (eigval2->ncols() != 1)
       {
         error("The EigenValue2 matrix needs to have only one columns");
@@ -175,8 +171,7 @@ void ComposeTensorArray::execute()
     eigval3n = 0;
     if (eigval3.get_rep())
     {
-      temp = dynamic_cast<Matrix *>(eigval3->dense());
-      eigval3 = temp;
+      eigval3 = eigval3->dense();
       if (eigval3->ncols() != 1)
       {
         error("The EigenValue3 matrix needs to have only one columns");
@@ -206,7 +201,7 @@ void ComposeTensorArray::execute()
 
     if(!eigval1.get_rep())
     {
-      eigval1 = dynamic_cast<Matrix *>(scinew DenseMatrix(1,1));
+      eigval1 = scinew DenseMatrix(1,1);
       if (eigval1.get_rep() == 0)
       {
         error("Could not allocate matrix");
@@ -219,7 +214,7 @@ void ComposeTensorArray::execute()
 
     if(!eigval2.get_rep())
     {
-      eigval2 = dynamic_cast<Matrix *>(scinew DenseMatrix(1,1));
+      eigval2 = scinew DenseMatrix(1,1);
       if (eigval2.get_rep() == 0)
       {
         error("Could not allocate matrix");
@@ -232,7 +227,7 @@ void ComposeTensorArray::execute()
 
     if(!eigval3.get_rep())
     {
-      eigval3 = dynamic_cast<Matrix *>(scinew DenseMatrix(1,1));
+      eigval3 = scinew DenseMatrix(1,1);
       if (eigval3.get_rep() == 0)
       {
         error("Could not allocate matrix");
@@ -245,11 +240,11 @@ void ComposeTensorArray::execute()
 
     if (use_9tensor_)
     {
-      tensor = dynamic_cast<Matrix *>(scinew DenseMatrix(n,9));
+      tensor = scinew DenseMatrix(n, 9);
     }
     else
     {
-      tensor = dynamic_cast<Matrix *>(scinew DenseMatrix(n,6));  
+      tensor = scinew DenseMatrix(n, 6);
     }
 
     if (tensor.get_rep() == 0)
