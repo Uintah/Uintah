@@ -59,8 +59,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
 private:
 
   // For extracting the parameters out of the the GUI
@@ -236,24 +234,13 @@ void ParameterList::execute()
       bundle->setString(parname,str);
     }    
   } 
-  
-  BundleOPort* oport = dynamic_cast<BundleOPort *>(get_oport("ParameterList"));
-  if (oport == 0)
-  {
-    error("Could not locate ParameterList port");
-    return;
-  }
-  
-  oport->send(bundle);
+
+  send_output_handle("ParameterList", bundle);
 }
 
-void
- ParameterList::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
-std::vector<std::string> ParameterList::converttcllist(std::string str)
+std::vector<std::string>
+ParameterList::converttcllist(std::string str)
 {
   std::string result;
   std::vector<std::string> list(0);

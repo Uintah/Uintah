@@ -31,8 +31,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
 private:
   GuiString gui_matrixname_;
   GuiString gui_generation_;
@@ -83,31 +81,20 @@ void DataArrayInfo::execute()
     update_input_attributes(mh);
   }
   
-  MatrixOPort *oport;
-  
-  if (oport = dynamic_cast<MatrixOPort *>(get_oport("NumElements")))
+  MatrixHandle nrows = scinew DenseMatrix(1,1);
+  if(nrows.get_rep() == 0)
   {
-    MatrixHandle nrows = dynamic_cast<Matrix *>(scinew DenseMatrix(1,1));
-    if(nrows.get_rep() == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }
-    double* dataptr = nrows->get_data_pointer();
-    if (dataptr == 0)
-    {
-      error("Could not allocate enough memory for output matrix");
-      return;
-    }    
-    dataptr[0] = static_cast<double>(mh->nrows());
-    oport->send(nrows);
+    error("Could not allocate enough memory for output matrix");
+    return;
   }
-}
-
-void
- DataArrayInfo::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
+  double* dataptr = nrows->get_data_pointer();
+  if (dataptr == 0)
+  {
+    error("Could not allocate enough memory for output matrix");
+    return;
+  }    
+  dataptr[0] = mh->nrows();
+  send_output_handle("NumElements", nrows);
 }
 
 
@@ -118,6 +105,7 @@ void DataArrayInfo::clear_vals()
   gui_typename_.set("---");
   gui_elements_.set("---");
 }
+
 
 void DataArrayInfo::update_input_attributes(MatrixHandle m)
 {

@@ -42,7 +42,6 @@ public:
   FieldGetMatrixProperty(GuiContext*);
 
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
   
 private:
   GuiString             guimatrix1name_;
@@ -73,7 +72,6 @@ FieldGetMatrixProperty::execute()
         
   FieldHandle handle;
   FieldIPort  *iport;
-  MatrixOPort *ofport;
   MatrixHandle fhandle;
         
   if(!(iport = static_cast<FieldIPort *>(get_input_port("Field"))))
@@ -105,50 +103,24 @@ FieldGetMatrixProperty::execute()
   guimatrixs_.set(matrixlist);
   get_ctx()->reset();
  
- 
-  if (!(ofport = static_cast<MatrixOPort *>(get_oport("Matrix1"))))
-  {
-    error("Could not find matrix 1 output port");
-    return; 
-  }
-  
   if (handle->is_property(matrix1name))
   {
-    handle->get_property(matrix1name,fhandle);
-    if (handle.get_rep()) ofport->send(fhandle);
+    handle->get_property(matrix1name, fhandle);
+    send_output_handle("Matrix1", fhandle);
   }
 
- 
-  if (!(ofport = static_cast<MatrixOPort *>(get_oport("Matrix2"))))
-  {
-    error("Could not find matrix 2 output port");
-    return; 
-  }
- 
   if (handle->is_property(matrix2name))
   {
     handle->get_property(matrix2name,fhandle);
-    if (handle.get_rep()) ofport->send(fhandle);
+    send_output_handle("Matrix2", fhandle);
   }
         
- 
-  if (!(ofport = static_cast<MatrixOPort *>(get_oport("Matrix3"))))
-  {
-    error("Could not find matrix 3 output port");
-    return; 
-  }
-  
   if (handle->is_property(matrix3name))
   {
     handle->get_property(matrix3name,fhandle);
-    if (handle.get_rep()) ofport->send(fhandle);
+    send_output_handle("Matrix3", fhandle);
   }        
 }
 
-void
-FieldGetMatrixProperty::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // end namespace

@@ -51,7 +51,6 @@ public:
   FieldSetStringProperty(GuiContext*);
   virtual ~FieldSetStringProperty();
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
   
 private:
   GuiString     guistring1name_;
@@ -81,7 +80,6 @@ FieldSetStringProperty::execute()
     
   FieldHandle  handle;
   FieldIPort   *iport;
-  FieldOPort   *oport;
   StringHandle fhandle;
   std::string  fstring;
   StringIPort  *ifport;
@@ -142,21 +140,8 @@ FieldSetStringProperty::execute()
   }
         
   // Now post the output
-        
-  if (!(oport = static_cast<FieldOPort *>(get_oport("Field"))))
-    {
-      error("Could not find 'Field' output port");
-      return;
-    }
-
-  handle->generation++;                    
-  oport->send(handle);
-}
-
-void
-FieldSetStringProperty::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
+  handle->generation++;
+  send_output_handle("Field", handle);
 }
 
 } //end namespace

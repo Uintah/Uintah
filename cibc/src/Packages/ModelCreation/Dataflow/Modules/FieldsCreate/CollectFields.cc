@@ -54,21 +54,21 @@ private:
   GuiInt buffersizegui_;
   Mutex bufferlock_;
   int buffersize_;
-  
 };
 
 
 DECLARE_MAKER(CollectFields)
 CollectFields::CollectFields(GuiContext* ctx)
   : Module("CollectFields", ctx, Source, "FieldsCreate", "ModelCreation"),
+    buffersizegui_(ctx->subVar("buffersize")),
     bufferlock_("Lock for internal buffer of module"),
-    buffersize_(0),
-    buffersizegui_(ctx->subVar("buffersize"))
+    buffersize_(0)
 {
 }
 
 
-void CollectFields::execute()
+void
+CollectFields::execute()
 {
   // Define local handles of data objects:
   FieldHandle Input, Output;
@@ -116,7 +116,8 @@ void CollectFields::execute()
 }
 
 
-void CollectFields::tcl_command(GuiArgs& args, void* userdata)
+void
+CollectFields::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {
