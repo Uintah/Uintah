@@ -624,13 +624,21 @@ SparseRowMatrix::sparse_sparse_mult(const SparseRowMatrix &b) const
   int *bcolumns = b.columns;
   double* ba = b.a;  
 
-  if (brows==0 || bcolumns == 0 || ba == 0)
+  if (brows==0 || bcolumns == 0 || ba == 0 || bncols == 0)
   {
-    std::cerr << "Encountered an invalid sparse matrix" << std::endl;
+    std::cerr << "Encountered an invalid sparse matrix (B)" << std::endl;
     return (false);
   }
   
-  unsigned int k = 0;
+  if (rows == 0 ||columns == 0 || a == 0)
+  {
+    std::cerr << "Encountered an invalid sparse matrix (A)" << std::endl;
+    return (false);
+  }
+  
+  
+  int k = 0;
+
   for (int r =0; r<nrows_; r++)
   {
     int ps = rows[r];
