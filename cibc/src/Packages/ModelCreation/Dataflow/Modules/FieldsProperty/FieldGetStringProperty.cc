@@ -71,7 +71,9 @@ DECLARE_MAKER(FieldGetStringProperty)
 {
 }
 
-FieldGetStringProperty::~FieldGetStringProperty(){
+
+FieldGetStringProperty::~FieldGetStringProperty()
+{
 }
 
 
