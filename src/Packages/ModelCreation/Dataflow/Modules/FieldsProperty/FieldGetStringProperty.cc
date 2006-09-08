@@ -78,36 +78,18 @@ FieldGetStringProperty::~FieldGetStringProperty(){
 void
 FieldGetStringProperty::execute()
 {
-  std::string string1name = guistring1name_.get();
-  std::string string2name = guistring2name_.get();
-  std::string string3name = guistring3name_.get();
-  std::string stringlist;
+  const string string1name = guistring1name_.get();
+  const string string2name = guistring2name_.get();
+  const string string3name = guistring3name_.get();
+  string stringlist;
         
   FieldHandle handle;
-  FieldIPort  *iport;
+  if (!get_input_handle("Field", handle)) return;
+
   StringHandle fhandle;
   std::string fstring;
-          
-  if(!(iport = static_cast<FieldIPort *>(get_input_port("Field"))))
-  {
-    error("Could not find 'Field' input port");
-    return;
-  }
 
-  if (!(iport->get(handle)))
-  {   
-    warning("No field was found on input port");
-    return;
-  }
-
-  if (handle.get_rep() == 0)
-  {   
-    warning("Input field is empty");
-    return;
-  }
-
-  size_t nprop = handle->nproperties();
-
+  const size_t nprop = handle->nproperties();
   for (size_t p=0;p<nprop;p++)
   {
     if(handle->get_property(handle->get_property_name(p),fhandle))

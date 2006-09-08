@@ -75,22 +75,9 @@ IndicesToSelectionMask::execute()
   SCIRun::MatrixHandle idxmat;
   if (!get_input_handle("Indices", idxmat)) return;
 
-  SCIRun::MatrixIPort *length_iport;
   SCIRun::MatrixHandle lenmat;
-  if (!(length_iport = dynamic_cast<SCIRun::MatrixIPort *>(get_input_port(1))))
-  {
-    error("Could not find input port for length matrix");
-    return;
-  }
-
-  if (!(length_iport->get(lenmat)))
-  {
-    warning("No data could be found on the length input port, using maximum index as size of selection vector");
-  }
-
   int size = -1;
-
-  if (lenmat.get_rep())
+  if (get_input_handle("Size", lenmat, false))
   {
     if (lenmat->get_data_size() > 0)
     {

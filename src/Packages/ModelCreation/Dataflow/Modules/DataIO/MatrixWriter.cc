@@ -137,20 +137,13 @@ MatrixWriter::execute()
   // Read data from the input port
   if (!get_input_handle("Input Data", handle_)) return;
 
-  // CODE FOR FILENAME INPUT PORT ////
-  StringIPort* filenameport;
-  if ((filenameport = dynamic_cast<StringIPort *>(get_input_port("Filename"))))
+  // CODE FOR FILENAME INPUT PORT
+  StringHandle filenameH;
+  if (get_input_handle("Filename", filenameH, false))
   {
-    StringHandle filenameH;
-    filenameport->get(filenameH);
-    if (filenameH.get_rep())
-    {
-      filename_.set(filenameH->get());
-      get_ctx()->reset();
-    }
+    filename_.set(filenameH->get());
+    get_ctx()->reset();
   }
-  ////////////////////////////////////
-
 
   // If no name is provided, return.
   const string fn(filename_.get());
