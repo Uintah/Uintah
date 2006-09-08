@@ -1,29 +1,29 @@
 /*
-   For more information, please see: http://software.sci.utah.edu
+  For more information, please see: http://software.sci.utah.edu
 
-   The MIT License
+  The MIT License
 
-   Copyright (c) 2004 Scientific Computing and Imaging Institute,
-   University of Utah.
+  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  University of Utah.
 
-   License for the specific language governing rights and limitations under
-   Permission is hereby granted, free of charge, to any person obtaining a
-   copy of this software and associated documentation files (the "Software"),
-   to deal in the Software without restriction, including without limitation
-   the rights to use, copy, modify, merge, publish, distribute, sublicense,
-   and/or sell copies of the Software, and to permit persons to whom the
-   Software is furnished to do so, subject to the following conditions:
+  License for the specific language governing rights and limitations under
+  Permission is hereby granted, free of charge, to any person obtaining a
+  copy of this software and associated documentation files (the "Software"),
+  to deal in the Software without restriction, including without limitation
+  the rights to use, copy, modify, merge, publish, distribute, sublicense,
+  and/or sell copies of the Software, and to permit persons to whom the
+  Software is furnished to do so, subject to the following conditions:
 
-   The above copyright notice and this permission notice shall be included
-   in all copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included
+  in all copies or substantial portions of the Software.
 
-   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
-   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
-   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
-   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
-   DEALINGS IN THE SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+  THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+  DEALINGS IN THE SOFTWARE.
 */
 
 /*
@@ -56,13 +56,13 @@
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
 #include <fstream>
-#include <sgi_stl_warnings_on.h> 
- 
+#include <sgi_stl_warnings_on.h>
+
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1424
-#pragma set woff 1209 
-#endif 
- 
+#pragma set woff 1209
+#endif
+
 namespace MatlabIO {
 
 using namespace SCIRun;
@@ -73,206 +73,215 @@ class MatlabBundleEngineThread;
 
 typedef LockingHandle<MatlabBundleEngineThreadInfo> MatlabBundleEngineThreadInfoHandle;
 
-class MatlabBundleEngineThread : public Runnable, public ServiceBase 
-{
-  public:
-	MatlabBundleEngineThread(ServiceClientHandle serv_handle,MatlabBundleEngineThreadInfoHandle info_handle);
-  virtual ~MatlabBundleEngineThread();
-	void run();
 
-  private:
-	ServiceClientHandle serv_handle_;
-	MatlabBundleEngineThreadInfoHandle info_handle_;
+class MatlabBundleEngineThread : public Runnable, public ServiceBase
+{
+public:
+  MatlabBundleEngineThread(ServiceClientHandle serv_handle,MatlabBundleEngineThreadInfoHandle info_handle);
+  virtual ~MatlabBundleEngineThread();
+  void run();
+
+private:
+  ServiceClientHandle serv_handle_;
+  MatlabBundleEngineThreadInfoHandle info_handle_;
 };
 
-class MatlabBundleEngineThreadInfo 
-{
-  public:
-	MatlabBundleEngineThreadInfo();
-	virtual ~MatlabBundleEngineThreadInfo();
 
-	void dolock();
-	void unlock();
+class MatlabBundleEngineThreadInfo
+{
+public:
+  MatlabBundleEngineThreadInfo();
+  virtual ~MatlabBundleEngineThreadInfo();
+
+  void dolock();
+  void unlock();
 	
-  public:
-	Mutex         lock;
-	int           ref_cnt;
+public:
+  Mutex         lock;
+  int           ref_cnt;
 
   std::string   output_cmd_;
   GuiInterface* gui_;
 
-	ConditionVariable   wait_code_done_;
-	bool                code_done_;
-	bool                code_success_;
-	std::string         code_error_;
+  ConditionVariable   wait_code_done_;
+  bool                code_done_;
+  bool                code_success_;
+  std::string         code_error_;
 	
-	ConditionVariable   wait_exit_;
-	bool                exit_;
-	bool                passed_test_;
-
+  ConditionVariable   wait_exit_;
+  bool                exit_;
+  bool                passed_test_;
 };
 
 
-class MatlabBundle : public Module, public ServiceBase 
+class MatlabBundle : public Module, public ServiceBase
 {
-  
-  public:
-    // Constructor
-    MatlabBundle(GuiContext* ctx);
+public:
+  // Constructor
+  MatlabBundle(GuiContext* ctx);
 
-      // Destructor
-    virtual ~MatlabBundle();
-    
-    // Std functions for each module
-    // execute():
-    //   Execute the module and put data on the output port
-    
-    virtual void execute();
-    virtual void presave();
-          
-    virtual void tcl_command(GuiArgs& args, void* userdata);
+  // Destructor
+  virtual ~MatlabBundle();
 
-    static std::string totclstring(std::string &instring);
-    std::vector<std::string>	converttcllist(std::string str);
-    void	update_status(std::string text);
-  
-  private:
-  
-    bool  open_matlab_engine();
-    bool  close_matlab_engine();
-    bool  create_temp_directory();
-    bool  delete_temp_directory();
+  // Std functions for each module
+  // execute():
+  //   Execute the module and put data on the output port
 
-    bool  save_input_matrices();
-    bool  load_output_matrices();
+  virtual void execute();
+  virtual void presave();
 
-    bool  generate_matlab_code();
-    bool  send_matlab_job();
-    bool  send_input(std::string str);
+  virtual void tcl_command(GuiArgs& args, void* userdata);
 
-    bool  synchronise_input();
+  static std::string to_tcl_string(std::string &instring);
+  std::vector<std::string>	converttcllist(std::string str);
+  void	update_status(std::string text);
+
+private:
+
+  bool  open_matlab_engine();
+  bool  close_matlab_engine();
+  bool  create_temp_directory();
+  bool  delete_temp_directory();
+
+  bool  save_input_matrices();
+  bool  load_output_matrices();
+
+  bool  generate_matlab_code();
+  bool  send_matlab_job();
+  bool  send_input(std::string str);
+
+  bool  synchronise_input();
 	
-  private:
+private:
 
-     enum { NUM_BUNDLE_PORTS = 5 };
+  enum { NUM_BUNDLE_PORTS = 5 };
 
-    // Temp directory for writing files coming from the 
-    // the matlab engine
+  // Temp directory for writing files coming from the
+  // the matlab engine
 
-    std::string temp_directory_;
+  std::string temp_directory_;
 
-    // GUI variables
+  // GUI variables
 
-    // Names of matrices
-    GuiString   input_bundle_name_;
-    GuiString   input_bundle_array_;
-    GuiString   output_bundle_name_;
-    GuiString   output_bundle_pnrrds_;
-    GuiString   output_bundle_pbundles_;
-    GuiString   configfile_;
-  
-    // Fields per port
-    std::vector<std::string>   input_bundle_name_list_;
-    std::vector<std::string>   input_bundle_name_list_old_;
-    std::vector<std::string>   input_bundle_array_list_;
-    std::vector<std::string>   output_bundle_name_list_;
-    std::vector<std::string>   output_bundle_pnrrds_list_;
-    std::vector<std::string>   output_bundle_pbundles_list_;
+  // Names of matrices
+  GuiString   input_bundle_name_;
+  GuiString   input_bundle_array_;
+  GuiString   output_bundle_name_;
+  GuiString   output_bundle_pnrrds_;
+  GuiString   output_bundle_pbundles_;
+  GuiString   configfile_;
 
-    std::vector<int> input_bundle_generation_old_;
+  // Fields per port
+  std::vector<std::string>   input_bundle_name_list_;
+  std::vector<std::string>   input_bundle_name_list_old_;
+  std::vector<std::string>   input_bundle_array_list_;
+  std::vector<std::string>   output_bundle_name_list_;
+  std::vector<std::string>   output_bundle_pnrrds_list_;
+  std::vector<std::string>   output_bundle_pbundles_list_;
 
-    std::string	matlab_code_list_;
+  std::vector<int> input_bundle_generation_old_;
 
-    // Ports for input and output
-    BundleIPort*  bundle_iport_[NUM_BUNDLE_PORTS];
-    BundleOPort*  bundle_oport_[NUM_BUNDLE_PORTS];
+  std::string	matlab_code_list_;
 
-    std::string input_bundle_matfile_[NUM_BUNDLE_PORTS];
-    std::string output_bundle_matfile_[NUM_BUNDLE_PORTS];
+  // Ports for input and output
+  BundleIPort*  bundle_iport_[NUM_BUNDLE_PORTS];
+  BundleOPort*  bundle_oport_[NUM_BUNDLE_PORTS];
 
-    // Internet connectivity stuff
-    GuiString   inet_address_;
-    GuiString   inet_port_;
-    GuiString   inet_passwd_;
-    GuiString   inet_session_;
+  std::string input_bundle_matfile_[NUM_BUNDLE_PORTS];
+  std::string output_bundle_matfile_[NUM_BUNDLE_PORTS];
 
-    std::string inet_address_old_;
-    std::string inet_port_old_;
-    std::string inet_passwd_old_;
-    std::string inet_session_old_;
+  // Internet connectivity stuff
+  GuiString   inet_address_;
+  GuiString   inet_port_;
+  GuiString   inet_passwd_;
+  GuiString   inet_session_;
 
-    // The tempfilemanager
-    TempFileManager tfmanager_;
+  std::string inet_address_old_;
+  std::string inet_port_old_;
+  std::string inet_passwd_old_;
+  std::string inet_session_old_;
 
-    std::string mfile_;
+  // The tempfilemanager
+  TempFileManager tfmanager_;
 
-    GuiString   matlab_code_;
-    GuiString   matlab_code_file_;
-    GuiString   matlab_var_;
-    GuiString   matlab_add_output_;
-    GuiString   matlab_update_status_;
+  std::string mfile_;
 
-    ServiceClientHandle                 matlab_engine_;
-    FileTransferClientHandle            file_transfer_;
-    MatlabBundleEngineThreadInfoHandle	thread_info_;
+  GuiString   matlab_code_;
+  GuiString   matlab_code_file_;
+  GuiString   matlab_var_;
+  GuiString   matlab_add_output_;
+  GuiString   matlab_update_status_;
 
-    bool            need_file_transfer_;
-    std::string     remote_tempdir_;
-    std::string     inputstring_;
+  ServiceClientHandle                 matlab_engine_;
+  FileTransferClientHandle            file_transfer_;
+  MatlabBundleEngineThreadInfoHandle	thread_info_;
 
-  public:
-    static void cleanup_callback(void *data);
+  bool            need_file_transfer_;
+  std::string     remote_tempdir_;
+  std::string     inputstring_;
+
+public:
+  static void cleanup_callback(void *data);
 };
 
 
 MatlabBundleEngineThreadInfo::MatlabBundleEngineThreadInfo() :
-	lock("MatlabBundleEngineInfo lock"),
-	ref_cnt(0),
+  lock("MatlabBundleEngineInfo lock"),
+  ref_cnt(0),
   gui_(0),
-	wait_code_done_("MatlabBundleEngineInfo condition variable code"),
-	code_done_(false),
-	code_success_(false),
-	wait_exit_("MatlabBundleEngineInfo condition variable exit"),
-	exit_(false),
-	passed_test_(false)
+  wait_code_done_("MatlabBundleEngineInfo condition variable code"),
+  code_done_(false),
+  code_success_(false),
+  wait_exit_("MatlabBundleEngineInfo condition variable exit"),
+  exit_(false),
+  passed_test_(false)
 {
 }
+
 
 MatlabBundleEngineThreadInfo::~MatlabBundleEngineThreadInfo()
 {
 }
 
-inline void MatlabBundleEngineThreadInfo::dolock()
+
+inline void
+MatlabBundleEngineThreadInfo::dolock()
 {
   lock.lock();
 }
 
-inline void MatlabBundleEngineThreadInfo::unlock()
+
+inline void
+MatlabBundleEngineThreadInfo::unlock()
 {
   lock.unlock();
 }
 
+
 MatlabBundleEngineThread::MatlabBundleEngineThread(ServiceClientHandle serv_handle, MatlabBundleEngineThreadInfoHandle info_handle) :
-	serv_handle_(serv_handle),
-	info_handle_(info_handle)
+  serv_handle_(serv_handle),
+  info_handle_(info_handle)
 {
 }
+
 
 MatlabBundleEngineThread::~MatlabBundleEngineThread()
 {
 }
 
-void MatlabBundleEngineThread::run()
+
+void
+MatlabBundleEngineThread::run()
 {
   IComPacketHandle packet;
   bool done = false;
-  
+
   while(!done)
   {
     if(!(serv_handle_->recv(packet)))
     {
       info_handle_->dolock();
-      if (info_handle_->exit_ == true) 
+      if (info_handle_->exit_ == true)
       {
         // It crashed as result of closing of connection
         // Anyway, the module was destroyed so it should not
@@ -293,43 +302,43 @@ void MatlabBundleEngineThread::run()
       continue;
     }
 
-    info_handle_->dolock();       
+    info_handle_->dolock();
 
     if (info_handle_->exit_ == true)
     {
       info_handle_->wait_exit_.conditionBroadcast();
       info_handle_->unlock();
       return;
-    } 
-          
+    }
+
     switch (packet->gettag())
     {
-      case TAG_STDO:
+    case TAG_STDO:
       {
         std::string str;
         if (packet->getparam1() < 0) str = "STDOUT END";
         else str = packet->getstring();
-        std::string cmd = info_handle_->output_cmd_ + " \"" + MatlabBundle::totclstring(str) + "\""; 
-        info_handle_->unlock();       
+        std::string cmd = info_handle_->output_cmd_ + " \"" + MatlabBundle::to_tcl_string(str) + "\"";
+        info_handle_->unlock();
         info_handle_->gui_->lock();
-        info_handle_->gui_->execute(cmd);                     
+        info_handle_->gui_->execute(cmd);
         info_handle_->gui_->unlock();
       }
       break;
-      case TAG_STDE:
+    case TAG_STDE:
       {
         std::string str;
         if (packet->getparam1() < 0) str = "STDERR END";
         else str = packet->getstring();
-        std::string cmd = info_handle_->output_cmd_ + " \"STDERR: " + MatlabBundle::totclstring(str) + "\""; 
-        info_handle_->unlock();       
+        std::string cmd = info_handle_->output_cmd_ + " \"STDERR: " + MatlabBundle::to_tcl_string(str) + "\"";
+        info_handle_->unlock();
         info_handle_->gui_->lock();
-        info_handle_->gui_->execute(cmd);                     
+        info_handle_->gui_->execute(cmd);
         info_handle_->gui_->unlock();
       }
       break;
-      case TAG_END_:
-      case TAG_EXIT:
+    case TAG_END_:
+    case TAG_EXIT:
       {
         info_handle_->code_done_ = true;
         info_handle_->code_success_ = false;
@@ -337,41 +346,43 @@ void MatlabBundleEngineThread::run()
         info_handle_->exit_ = true;
         info_handle_->wait_exit_.conditionBroadcast();
         done = true;
-        info_handle_->unlock();       
+        info_handle_->unlock();
       }
       break;
-      case TAG_MCODE_SUCCESS:
+    case TAG_MCODE_SUCCESS:
       {
         info_handle_->code_done_ = true;
         info_handle_->code_success_ = true;
         info_handle_->wait_code_done_.conditionBroadcast();				
-        info_handle_->unlock();       
+        info_handle_->unlock();
       }
       break;
-      case TAG_MCODE_ERROR:
+    case TAG_MCODE_ERROR:
       {
         info_handle_->code_done_ = true;
         info_handle_->code_success_ = false;
         info_handle_->code_error_ = packet->getstring();
         info_handle_->wait_code_done_.conditionBroadcast();				
-        info_handle_->unlock();       
+        info_handle_->unlock();
       }
       break;
-      default:
-        info_handle_->unlock();       
+    default:
+      info_handle_->unlock();
     }
   }
 }
 
+
 DECLARE_MAKER(MatlabBundle)
 
 MatlabBundle::MatlabBundle(GuiContext *context) :
-  Module("MatlabBundle", context, Filter, "DataIO", "MatlabInterface"), 
+  Module("MatlabBundle", context, Filter, "DataIO", "MatlabInterface"),
   input_bundle_name_(context->subVar("input-bundle-name")),
   input_bundle_array_(context->subVar("input-bundle-array")),
   output_bundle_name_(context->subVar("output-bundle-name")),
   output_bundle_pnrrds_(context->subVar("output-bundle-pnrrds")),
   output_bundle_pbundles_(context->subVar("output-bundle-pbundles")),
+  configfile_(context->subVar("configfile")),
   inet_address_(context->subVar("inet-address")),
   inet_port_(context->subVar("inet-port")),
   inet_passwd_(context->subVar("inet-passwd")),
@@ -381,10 +392,9 @@ MatlabBundle::MatlabBundle(GuiContext *context) :
   matlab_var_(context->subVar("matlab-var")),
   matlab_add_output_(context->subVar("matlab-add-output")),
   matlab_update_status_(context->subVar("matlab-update-status")),
-  configfile_(context->subVar("configfile")),
   need_file_transfer_(false)
 {
-  // find the input and output ports  
+  // Find the input and output ports.
   int portnum = 0;
   for (int p = 0; p<NUM_BUNDLE_PORTS; p++)  bundle_iport_[p] = static_cast<BundleIPort *>(get_iport(portnum++));
 
@@ -403,14 +413,16 @@ MatlabBundle::MatlabBundle(GuiContext *context) :
 
 // Function for cleaning up
 // matlab modules
-void MatlabBundle::cleanup_callback(void *data)
-{ 
+void
+MatlabBundle::cleanup_callback(void *data)
+{
   MatlabBundle* ptr = reinterpret_cast<MatlabBundle *>(data);
-  // We just want to make sure that the matlab engine is released and 
+  // We just want to make sure that the matlab engine is released and
   // any temp dirs are cleaned up
   ptr->close_matlab_engine();
   ptr->delete_temp_directory();
 }
+
 
 MatlabBundle::~MatlabBundle()
 {
@@ -421,22 +433,25 @@ MatlabBundle::~MatlabBundle()
 }
 
 
-void	MatlabBundle::update_status(std::string text)
+void
+MatlabBundle::update_status(std::string text)
 {
-  std::string cmd = matlab_update_status_.get() + " \"" + totclstring(text) + "\"";
+  std::string cmd = matlab_update_status_.get() + " \"" + to_tcl_string(text) + "\"";
   get_gui()->execute(cmd);
 }
+
 
 // converttcllist:
 // converts a TCL formatted list into a STL array
 // of strings
 
-std::vector<std::string> MatlabBundle::converttcllist(std::string str)
+std::vector<std::string>
+MatlabBundle::converttcllist(std::string str)
 {
   std::string result;
   std::vector<std::string> list(0);
   int lengthlist = 0;
-  
+
   // Yeah, it is TCL dependent:
   // TCL::llength determines the length of the list
   get_gui()->lock();
@@ -445,7 +460,7 @@ std::vector<std::string> MatlabBundle::converttcllist(std::string str)
   iss >> lengthlist;
   get_gui()->unlock();
   if (lengthlist < 0) return(list);
-  
+
   list.resize(lengthlist);
   get_gui()->lock();
   for (int p = 0;p<lengthlist;p++)
@@ -462,7 +477,8 @@ std::vector<std::string> MatlabBundle::converttcllist(std::string str)
 }
 
 
-bool MatlabBundle::synchronise_input()
+bool
+MatlabBundle::synchronise_input()
 {
   get_gui()->execute(get_id()+" Synchronise");
   get_ctx()->reset();
@@ -476,13 +492,14 @@ bool MatlabBundle::synchronise_input()
   str = output_bundle_pbundles_.get(); output_bundle_pbundles_list_ = converttcllist(str);
 
   get_gui()->execute(get_id() + " update_text"); // update matlab_code_ before use.
-  matlab_code_list_ = matlab_code_.get(); 
-  
+  matlab_code_list_ = matlab_code_.get();
+
   return(true);
 }
 
 
-void MatlabBundle::execute()
+void
+MatlabBundle::execute()
 {
   // Synchronise input: translate TCL lists into C++ STL lists
   if (!(synchronise_input()))
@@ -519,10 +536,10 @@ void MatlabBundle::execute()
 
   if (!send_matlab_job())
   {
-     error("MatlabBundle: MatlabBundle returned an error or Matlab could not be launched");
-     return;
+    error("MatlabBundle: MatlabBundle returned an error or Matlab could not be launched");
+    return;
   }
-  
+
   if (!load_output_matrices())
   {
     error("MatlabBundle: Could not load matrices that matlab generated");
@@ -530,10 +547,12 @@ void MatlabBundle::execute()
   }
 }
 
-bool MatlabBundle::send_matlab_job()
+
+bool
+MatlabBundle::send_matlab_job()
 {
   IComPacketHandle packet = scinew IComPacket;
-  
+
   if (packet.get_rep() == 0)
   {
     error("MatlabBundle: Could not create packet");
@@ -543,7 +562,7 @@ bool MatlabBundle::send_matlab_job()
   thread_info_->dolock();
   thread_info_->code_done_ = false;
   thread_info_->unlock();
-  
+
   packet->settag(TAG_MCODE);
   std::string mfilename = mfile_.substr(0,mfile_.size()-2);
   packet->setstring(file_transfer_->remote_file(mfilename)); // strip the .m
@@ -556,7 +575,7 @@ bool MatlabBundle::send_matlab_job()
   }
   bool success = thread_info_->code_success_;
   bool exitcond = thread_info_->exit_;
-  if (!success) 
+  if (!success)
   {
     if (exitcond)
     {
@@ -571,7 +590,7 @@ bool MatlabBundle::send_matlab_job()
     {
       error("MatlabBundle: matlab code failed: "+thread_info_->code_error_);
       error("MatlabBundle: Detected an error in the Matlab code, the matlab engine is still running and caught the exception");
-      error("MatlabBundle: Please check the matlab code in the GUI and try again. The output window in the GUI should contain the reported error message generated by matlab");            
+      error("MatlabBundle: Please check the matlab code in the GUI and try again. The output window in the GUI should contain the reported error message generated by matlab");
     }
     thread_info_->code_done_ = false;
     thread_info_->unlock();
@@ -579,42 +598,44 @@ bool MatlabBundle::send_matlab_job()
   }
   thread_info_->code_done_ = false;
   thread_info_->unlock();
-  
+
   return(success);
 }
 
 
-
-void MatlabBundle::presave()
+void
+MatlabBundle::presave()
 {
-  get_gui()->execute(get_id() + " update_text"); // update matlab_code_ before use.
+  // update matlab_code_ before use.
+  get_gui()->execute(get_id() + " update_text");
 }
 
 
-
-bool MatlabBundle::send_input(std::string str)
+bool
+MatlabBundle::send_input(std::string str)
 {
   IComPacketHandle packet = scinew IComPacket;
 	
   if (matlab_engine_.get_rep() == 0) return(true);
-  
+
   if (packet.get_rep() == 0)
   {
     error("MatlabBundle: Could not create packet");
     return(false);
   }
-  
+
   packet->settag(TAG_INPUT);
-  packet->setstring(str); 
+  packet->setstring(str);
 
   matlab_engine_->send(packet);
-  
+
   return(true);
 }
 
-bool MatlabBundle::open_matlab_engine()
-{
 
+bool
+MatlabBundle::open_matlab_engine()
+{
   std::string inetaddress = inet_address_.get();
   std::string inetport = inet_port_.get();
   std::string passwd = inet_passwd_.get();
@@ -643,14 +664,14 @@ bool MatlabBundle::open_matlab_engine()
     {
       address.setaddress("scirun",inetaddress,inetport);
     }
-    
+
     int sessionnum = 0;
     std::istringstream iss(session);
     iss >> sessionnum;
 
     // Inform the impatient user we are still working for him
     update_status("Please wait while launching matlab, this may take a few minutes ....\n");
-    
+
     matlab_engine_ = scinew ServiceClient();
     if(!(matlab_engine_->open(address,"matlabengine",sessionnum,passwd)))
     {
@@ -658,11 +679,11 @@ bool MatlabBundle::open_matlab_engine()
       error(std::string("MatlabBundle: Make sure the matlab engine has not been disabled in $HOME/SCIRun/services/matlabengine.rc"));
       error(std::string("MatlabBundle: Check remote address information, or leave all fields except 'session' blank to connect to local matlab engine"));
       error(std::string("MatlabBundle: If using matlab engine on local machine start engine with '-eai' option"));
-      
+
       matlab_engine_ = 0;
       return(false);
     }
-    
+
     file_transfer_ = scinew FileTransferClient();
     if(!(file_transfer_->open(address,"matlabenginefiletransfer",sessionnum,passwd)))
     {
@@ -677,7 +698,7 @@ bool MatlabBundle::open_matlab_engine()
       file_transfer_ = 0;
       return(false);
     }
-        
+
     IComPacketHandle packet;
     if(!(matlab_engine_->recv(packet)))
     {
@@ -755,9 +776,9 @@ bool MatlabBundle::open_matlab_engine()
       file_transfer_->set_remote_dir(tempdir);
     }
 
-    
+
     thread_info_->gui_ = get_gui();
-    thread_info_->output_cmd_ = matlab_add_output_.get(); 
+    thread_info_->output_cmd_ = matlab_add_output_.get();
     // By cloning the object, it will have the same fields and sockets, but the socket
     // and error handling will be separate. As the thread will invoke its own instructions
     // it is better to have a separate copy. Besides, the socket obejct will point to the
@@ -775,7 +796,7 @@ bool MatlabBundle::open_matlab_engine()
       error(std::string("MatlabBundle: Could not create thread object"));
       return(false);
     }
-    
+
     Thread* thread = scinew Thread(enginethread,"MatlabBundle module thread");
     if (thread == 0)
     {
@@ -793,10 +814,10 @@ bool MatlabBundle::open_matlab_engine()
 
     int sessionn = packet->getparam1();
     matlab_engine_->setsession(sessionn);
-    
+
     std::string sharehomedir = "yes";
     if (need_file_transfer_) sharehomedir = "no";
-           
+
     std::string status = "Matlab engine running\n\nmatlabengine version: " + matlab_engine_->getversion() + "\nmatlabengine address: " +
       matlab_engine_->getremoteaddress() + "\nmatlabengine session: " + matlab_engine_->getsession() + "\nmatlabengine filetransfer version :" +
       file_transfer_->getversion() + "\nshared home directory: " + sharehomedir + "\nlocal temp directory: " + file_transfer_->local_file("") +
@@ -808,15 +829,16 @@ bool MatlabBundle::open_matlab_engine()
 }
 
 
-bool MatlabBundle::close_matlab_engine()
+bool
+MatlabBundle::close_matlab_engine()
 {
-  if (matlab_engine_.get_rep()) 
+  if (matlab_engine_.get_rep())
   {
     matlab_engine_->close();
     matlab_engine_ = 0;
   }
 
-  if (file_transfer_.get_rep()) 
+  if (file_transfer_.get_rep())
   {
     file_transfer_->close();
     file_transfer_ = 0;
@@ -834,16 +856,16 @@ bool MatlabBundle::close_matlab_engine()
     thread_info_->unlock();
     thread_info_ = 0;
   }
-    
+
   return(true);
 }
 
 
-bool MatlabBundle::load_output_matrices()
+bool
+MatlabBundle::load_output_matrices()
 {
   try
   {
-
     for (int p = 0; p < NUM_BUNDLE_PORTS; p++)
     {
       // Test whether the bundle port exists
@@ -867,16 +889,16 @@ bool MatlabBundle::load_output_matrices()
         error("MatlabBundle: Could not read output matrix");
         continue;
       }
-      
+
       if (ma.isempty())
       {
         error("MatlabBundle: Could not read output matrix");
         continue;
       }
-      
+
       BundleHandle handle;
       std::string info;
-      
+
       matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter *>(this));
       translate.prefersciobjects();
       translate.prefermatrices();
@@ -894,14 +916,14 @@ bool MatlabBundle::load_output_matrices()
 }
 
 
-
-bool MatlabBundle::generate_matlab_code()
+bool
+MatlabBundle::generate_matlab_code()
 {
   try
   {
     std::ofstream m_file;
     mfile_ = std::string("scirun_code.m");
-    
+
     std::string filename = file_transfer_->local_file(mfile_);
     m_file.open(filename.c_str(),std::ios::app);
 
@@ -933,13 +955,12 @@ bool MatlabBundle::generate_matlab_code()
 }
 
 
-
-bool MatlabBundle::save_input_matrices()
+bool
+MatlabBundle::save_input_matrices()
 {
-
   try
   {
-    std::ofstream m_file; 
+    std::ofstream m_file;
     std::string loadcmd;
 
     mfile_ = std::string("scirun_code.m");
@@ -952,11 +973,11 @@ bool MatlabBundle::save_input_matrices()
       // Test whether the matrix port exists
       if (bundle_iport_[p] == 0) continue;
       if (bundle_iport_[p]->nconnections() == 0) continue;
-      
+
       BundleHandle	handle = 0;
       bundle_iport_[p]->get(handle);
       // if there is no data
-      if (handle.get_rep() == 0) 
+      if (handle.get_rep() == 0)
       {
         // we do not need the old file any more so delete it
         input_bundle_matfile_[p] = "";
@@ -974,12 +995,12 @@ bool MatlabBundle::save_input_matrices()
 
         continue;
       }
-      
+
       // Create a new filename for the input matrix
       ostringstream oss;
       oss << "input_bundle" << p << ".mat";
       input_bundle_matfile_[p] = oss.str();
-      
+
       matlabfile mf;
       matlabarray ma;
 
@@ -990,14 +1011,14 @@ bool MatlabBundle::save_input_matrices()
       translate.converttostructmatrix();
       if (input_bundle_array_list_[p] == "numeric array") translate.converttonumericmatrix();
       translate.sciBundleTOmlArray(handle,ma);
-      
+
       mf.putmatlabarray(ma,input_bundle_name_list_[p]);
       mf.close();
-      
+
       loadcmd = "load " + file_transfer_->remote_file(input_bundle_matfile_[p]) + ";\n";
       m_file << loadcmd;
-            
-      if (need_file_transfer_) 
+
+      if (need_file_transfer_)
       {
         if(!(file_transfer_->put_file(file_transfer_->local_file(input_bundle_matfile_[p]),file_transfer_->remote_file(input_bundle_matfile_[p]))))
         {
@@ -1005,10 +1026,10 @@ bool MatlabBundle::save_input_matrices()
           std::string err = "Error :" + file_transfer_->geterror();
           error(err);
           return(false);
-        }          
+        }
       }
       input_bundle_name_list_old_[p] = input_bundle_name_list_[p];
-      input_bundle_generation_old_[p] = handle->generation;            
+      input_bundle_generation_old_[p] = handle->generation;
     }
   }
   catch (matlabfile::could_not_open_file)
@@ -1021,19 +1042,20 @@ bool MatlabBundle::save_input_matrices()
     error("MatlabBundle: IO error");
     return(false);		
   }
-  catch (matlabfile::matfileerror) 
+  catch (matlabfile::matfileerror)
   { // All other errors are classified as internal
     // matfileerrror is the base class on which all
     // other exceptions are based.
     error("MatlabBundle: Internal error in writer");
     return(false);		
   }
-  
+
   return(true);
 }
 
 
-bool MatlabBundle::create_temp_directory()
+bool
+MatlabBundle::create_temp_directory()
 {
   if (temp_directory_ == "")
   {
@@ -1043,20 +1065,23 @@ bool MatlabBundle::create_temp_directory()
 }
 
 
-bool MatlabBundle::delete_temp_directory()
+bool
+MatlabBundle::delete_temp_directory()
 {
   if(temp_directory_ != "") tfmanager_.delete_tempdir(temp_directory_);
   temp_directory_ = "";
   return(true);
 }
 
-std::string MatlabBundle::totclstring(std::string &instring)
+
+std::string
+MatlabBundle::to_tcl_string(std::string &instring)
 {
   int strsize = instring.size();
   int specchar = 0;
   for (int p = 0; p < strsize; p++)
     if ((instring[p]=='\n')||(instring[p]=='\t')||(instring[p]=='\b')||(instring[p]=='\r')||(instring[p]=='{')||(instring[p]=='}')
-                    ||(instring[p]=='[')||(instring[p]==']')||(instring[p]=='\\')||(instring[p]=='$')||(instring[p]=='"')) specchar++;
+        ||(instring[p]=='[')||(instring[p]==']')||(instring[p]=='\\')||(instring[p]=='$')||(instring[p]=='"')) specchar++;
 	
   std::string newstring;
   newstring.resize(strsize+specchar);
@@ -1076,11 +1101,13 @@ std::string MatlabBundle::totclstring(std::string &instring)
     if (instring[p]=='"')  { newstring[q++] = '\\'; newstring[q++] = '"'; continue; }
     newstring[q++] = instring[p];
   }
-  
+
   return(newstring);
 }
 
-void MatlabBundle::tcl_command(GuiArgs& args, void* userdata)
+
+void
+MatlabBundle::tcl_command(GuiArgs& args, void* userdata)
 {
   if (args.count() > 1)
   {
@@ -1090,16 +1117,16 @@ void MatlabBundle::tcl_command(GuiArgs& args, void* userdata)
       if (str.size() == 1)
       {
         if (str[0] == '\r') str[0] = '\n';
-        
+
         if (str[0] == '\b')
         {
-          inputstring_ = inputstring_.substr(0,(inputstring_.size()-1));            
+          inputstring_ = inputstring_.substr(0,(inputstring_.size()-1));
         }
         else
         {
           inputstring_ += str;
         }
-        
+
         if (str[0] == '\n')
         {
           if(!(send_input(inputstring_)))
@@ -1113,18 +1140,18 @@ void MatlabBundle::tcl_command(GuiArgs& args, void* userdata)
       else
       {
         std::string key = args[3];
-        if (key == "Enter") 
+        if (key == "Enter")
         {
           str = "\n";
           inputstring_ += str;
         }
-        else if (key == "BackSpace") 
+        else if (key == "BackSpace")
         {
           inputstring_ = inputstring_.substr(0,(inputstring_.size()-1));
         }
         else if (key == "Tab") str = "\t";
         else if (key == "Return") str ="\r";
-        
+
         if (str.size() == 1)
         {
           if (str[0] == '\n')
@@ -1136,7 +1163,7 @@ void MatlabBundle::tcl_command(GuiArgs& args, void* userdata)
             }
             inputstring_ = "";
           }
-        }      
+        }
       }
       return;
     }
@@ -1187,10 +1214,10 @@ void MatlabBundle::tcl_command(GuiArgs& args, void* userdata)
     }
     if (args[1] == "configfile")
     {
-      ServiceDBHandle servicedb = scinew ServiceDB;     
+      ServiceDBHandle servicedb = scinew ServiceDB;
       // load all services and find all makers
       servicedb->loadpackages();
-      
+
       ServiceInfo *si = servicedb->getserviceinfo("matlabengine");
       configfile_.set(si->rcfile);
       reset_vars();
@@ -1200,9 +1227,10 @@ void MatlabBundle::tcl_command(GuiArgs& args, void* userdata)
   Module::tcl_command(args, userdata);
 }
 
+
 } // End namespace MatlabBundleInterface
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 1424
-#pragma reset woff 1209 
+#pragma reset woff 1209
 #endif
