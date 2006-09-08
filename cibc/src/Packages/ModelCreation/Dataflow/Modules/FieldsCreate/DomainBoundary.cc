@@ -97,7 +97,7 @@ void DomainBoundary::execute()
     bool   innerboundaryonly, noinnerboundary;
     bool   disconnect;
 
-    SCIRunAlgo::ConverterAlgo calgo(dynamic_cast<ProgressReporter *>(this));
+    SCIRunAlgo::ConverterAlgo calgo(this);
     if (MinValue.get_rep())
     {
       calgo.MatrixToDouble(MinValue,minrange);
@@ -116,18 +116,18 @@ void DomainBoundary::execute()
     minrange = guiminrange_.get();
     maxrange = guimaxrange_.get();
     value    = guivalue_.get();
-    userange = static_cast<bool>(guiuserange_.get());
-    usevalue = static_cast<bool>(guiusevalue_.get());
-    includeouterboundary = static_cast<bool>(guiincludeouterboundary_.get());
-    innerboundaryonly = static_cast<bool>(guiinnerboundaryonly_.get());
-    noinnerboundary = static_cast<bool>(guinoinnerboundary_.get());
-    disconnect = static_cast<bool>(guidisconnect_.get());
+    userange = guiuserange_.get();
+    usevalue = guiusevalue_.get();
+    includeouterboundary = guiincludeouterboundary_.get();
+    innerboundaryonly = guiinnerboundaryonly_.get();
+    noinnerboundary = guinoinnerboundary_.get();
+    disconnect = guidisconnect_.get();
     
     // In case we have a one value range, use the range code but for one value:
     if (usevalue) { userange = true; minrange = value; maxrange = value; }
     
     // The innerworks of the module:
-    SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
+    SCIRunAlgo::FieldsAlgo algo(this);
     if(!(algo.DomainBoundary(ifield,ofield,ElemLink,minrange,maxrange,userange,includeouterboundary,innerboundaryonly,noinnerboundary,disconnect))) return;
     
     // send new output if there is any:        

@@ -66,7 +66,7 @@ void SplitFieldByDomain::execute()
   // that executes every module downstream even if no data has changed:  
   if (inputs_changed_ || !oport_cached("SplitField"))
   {
-    SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));  
+    SCIRunAlgo::FieldsAlgo algo(this);
     if(!(algo.SplitFieldByDomain(input,output))) return;
 
     // send new output if there is any:   

@@ -61,14 +61,17 @@ GradientModalMapping::GradientModalMapping(GuiContext* ctx)
 {
 }
 
-void GradientModalMapping::execute()
+
+void
+GradientModalMapping::execute()
 {
   FieldHandle fsrc, fdst, fout;
   
   if (!(get_input_handle("Source",fsrc,true))) return;
   if (!(get_input_handle("Destination",fdst,true))) return;
   
-  if (inputs_changed_ || mappingmethod_.changed() || integrationmethod_.changed() ||
+  if (inputs_changed_ || mappingmethod_.changed() ||
+      integrationmethod_.changed() ||
       integrationfilter_.changed() || !oport_cached("Destination"))
   {
     std::string mappingmethod = mappingmethod_.get();
@@ -76,7 +79,7 @@ void GradientModalMapping::execute()
     std::string integrationfilter = integrationfilter_.get();
     
     SCIRunAlgo::FieldsAlgo algo(this);
-    bool calcnorm = static_cast<bool>(calcnorm_.get());
+    const bool calcnorm = calcnorm_.get();
     
     if (!(algo.GradientModalMapping(fsrc,fdst,fout,mappingmethod,integrationmethod,integrationfilter,calcnorm))) return;
     
