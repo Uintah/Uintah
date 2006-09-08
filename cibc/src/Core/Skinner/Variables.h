@@ -45,9 +45,11 @@ using std::vector;
 using std::set;
 
 
+#include <Core/Skinner/share.h>
+
 namespace SCIRun {
   namespace Skinner {
-    class Variables {
+    class SCISHARE Variables {
 
     public:
       //      Variables         (const string &id);

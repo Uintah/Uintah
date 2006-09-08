@@ -48,6 +48,12 @@
 
 #include <Core/Geom/share.h>
 
+#ifdef rad1
+// some windows file defines this
+#  undef rad1
+#  undef rad2
+#endif
+
 namespace SCIRun {
 
 class SCISHARE GeomTorus : public GeomObj {

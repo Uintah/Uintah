@@ -36,9 +36,14 @@
 #include <Core/Util/ThrottledRunnable.h>
 #include <Core/Util/Assert.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/Geom/X11OpenGLContext.h>
 #include <Core/Geom/X11Lock.h>
+#ifdef _WIN32
+#include <Core/Geom/Win32OpenGLContext.h>
+#include <Core/Events/Win32EventSpawner.h>
+#else
+#include <Core/Geom/X11OpenGLContext.h>
 #include <Core/Events/X11EventSpawner.h>
+#endif
 #include <Core/Util/Environment.h>
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Events/BaseEvent.h>
@@ -69,19 +74,30 @@ namespace SCIRun {
 
 
       ShaderProgramARB::init_shaders_supported();
-      X11OpenGLContext *x11_context = 
+      string tname = get_id()+" Event Spawner";
+#ifdef _WIN32
+        
+      Win32GLContextRunnable* cr = 
+        scinew Win32GLContextRunnable(get_id(), 0, posx_, posy_,
+                               (unsigned)width_,(unsigned)height_,
+                                border_);
+      spawner_runnable_ = cr;
+      spawner_thread_ = new Thread(spawner_runnable_, tname.c_str());
+      context_ = cr->getContext();
+         
+
+#else
+      X11OpenGLContext* x11_context;
+      x11_context = 
         new X11OpenGLContext(0, posx_, posy_, 
                              (unsigned)width_,(unsigned)height_,
                              border_);
-      context_ = x11_context;
-
-      string tname = get_id()+" Event Spawner";
       spawner_runnable_ = new X11EventSpawner(get_id(), 
                                               x11_context->display_,
                                               x11_context->window_);
+      context_ = x11_context;
       spawner_thread_ = new Thread(spawner_runnable_, tname.c_str());
-
-
+#endif
       tname = get_id()+" Redraw";
       draw_runnable_ = new ThrottledRedraw(this, 120.0);
       draw_thread_ = new Thread(draw_runnable_, tname.c_str());
@@ -119,7 +135,7 @@ namespace SCIRun {
 
       PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
       if (pointer) {
-# if 1
+# ifndef _WIN32
         if ((pointer->get_pointer_state() & PointerEvent::MOTION_E) &&
             sci_getenv_p("SCIRUN_TRAIL_PLAYBACK")) {
           const char *trailmode = sci_getenv("SCIRUN_TRAIL_MODE");

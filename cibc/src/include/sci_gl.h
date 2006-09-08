@@ -70,8 +70,8 @@
 
 /* <wingdi.h> and <winnt.h> */
 #ifndef WINGDIAPI
-#define GLEW_WINGDIAPI_DEFINED
-#define WINGDIAPI __declspec(dllimport)
+#  define GLEW_WINGDIAPI_DEFINED
+#  define WINGDIAPI __declspec(dllimport)
 #endif
 
 /* <ctype.h> */
@@ -98,8 +98,9 @@ typedef unsigned short wchar_t;
 #endif
 
 #ifndef GLAPIENTRY
-#define GLAPIENTRY APIENTRY
+#  define GLAPIENTRY APIENTRY
 #endif
+#undef SCISHARE
 #define SCISHARE __declspec(dllimport)
 #else // ! _WIN32
 #define SCISHARE

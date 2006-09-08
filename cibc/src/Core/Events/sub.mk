@@ -34,12 +34,18 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Core/Events
 
 SRCS     += \
-	$(SRCDIR)/BaseEvent.cc			\
-	$(SRCDIR)/EventManager.cc		\
-	$(SRCDIR)/OpenGLViewer.cc		\
-	$(SRCDIR)/SceneGraphEvent.cc		\
-	$(SRCDIR)/SelectionTargetEvent.cc	\
-	$(SRCDIR)/X11EventSpawner.cc		\
+	$(SRCDIR)/BaseEvent.cc		        \
+	$(SRCDIR)/EventManager.cc	        \
+	$(SRCDIR)/OpenGLViewer.cc	        \
+	$(SRCDIR)/SceneGraphEvent.cc            \
+	$(SRCDIR)/SelectionTargetEvent.cc	
+
+ifeq ($(IS_WIN),yes)
+  SRCS +=$(SRCDIR)/Win32EventSpawner.cc
+else
+  SRCS +=$(SRCDIR)/X11EventSpawner.cc	
+endif
+
 
 SUBDIRS := $(SRCDIR)/Tools
 include $(SCIRUN_SCRIPTS)/recurse.mk

@@ -34,9 +34,11 @@
 
 #include <Core/Skinner/Drawable.h>
 
+#include <Core/Skinner/share.h>
+
 namespace SCIRun {
   namespace Skinner {
-    class Parent : public Drawable {
+    class SCISHARE Parent : public Drawable {
     public:
       Parent(Variables *);
       virtual ~Parent();

@@ -78,6 +78,7 @@
 #  include <X11/extensions/SGIStereo.h>
 #endif // __sgi
 
+#include <Core/Events/share.h>
 namespace SCIRun {
 
 using std::ostringstream;
@@ -108,7 +109,7 @@ struct HiRes {
 };
 
 
-class OpenGLViewer : public Runnable 
+class SCISHARE OpenGLViewer : public Runnable 
 {
 public:
   enum draw_type_e {

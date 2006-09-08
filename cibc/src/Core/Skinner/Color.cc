@@ -32,6 +32,11 @@
 #include <math.h>
 #include <stdlib.h>
 #include <Core/Skinner/Color.h>
+
+#ifdef _WIN32
+#include <Core/OS/Rand.h>
+#endif
+
 #include <iostream>
 
 namespace SCIRun {
