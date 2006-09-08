@@ -53,6 +53,7 @@ private:
   GuiString gui_filename_;
   GuiInt    gui_enable_debug_;
   GuiInt    gui_build_visualization_bundle_;
+  GuiInt    gui_optimize_;
 
 };
 
@@ -62,7 +63,8 @@ DMDBuildSimulation::DMDBuildSimulation(GuiContext* ctx)
   : Module("DMDBuildSimulation", ctx, Source, "DiscreteMultiDomain", "CardioWave"),
     gui_filename_(ctx->subVar("filename")),
     gui_enable_debug_(ctx->subVar("usedebug")),
-    gui_build_visualization_bundle_(ctx->subVar("buildvisbundle"))
+    gui_build_visualization_bundle_(ctx->subVar("buildvisbundle")),
+    gui_optimize_(ctx->subVar("optimize"))
 {
 }
 
@@ -96,11 +98,14 @@ void DMDBuildSimulation::execute()
     FileName = scinew String(filename);
     bool enable_debug = gui_enable_debug_.get();
     bool build_visualization_bundle = gui_build_visualization_bundle_.get();
+    bool optimize_system = gui_optimize_.get();
     
     // Add the last details to the simulation bundle:
     SimulationBundle = SimulationBundle->clone();
     SimulationBundle->set_property("enable_debug",enable_debug,false);
     SimulationBundle->set_property("build_visualization_bundle",build_visualization_bundle,false);
+    SimulationBundle->set_property("optimize-system",optimize_system,false);
+    
     
     // Actual algorithm:
     ModelAlgo algo(this);  

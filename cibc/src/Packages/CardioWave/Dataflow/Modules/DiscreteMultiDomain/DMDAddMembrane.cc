@@ -153,6 +153,9 @@ void DMDAddMembrane::execute()
       MembraneBundle.detach();    
     }
 
+    std::string membranename = guimembranename_.get();
+    StringHandle MembraneName = scinew String(membranename);
+
     // Find what the next index will be for the membranes
     // We start with 1, so 0 means no membrane:
     int membrane_num = 1;
@@ -164,6 +167,16 @@ void DMDAddMembrane::execute()
     }
     while (MembraneBundle->isBundle(fieldname))
     {
+      BundleHandle MBundle = MembraneBundle->getBundle(fieldname);
+      if (MBundle->isString("Name"))
+      {
+        StringHandle MName = MBundle->getString("Name");
+        if (MName->get() == membranename)
+        {
+          error("A Membrane model cannot be used twice: CardioWave does not support this");
+          return;
+        }
+      }
       membrane_num++;
       {
         std::ostringstream oss;
@@ -205,8 +218,7 @@ void DMDAddMembrane::execute()
       paramstr += "\n";
     }
 
-    std::string membranename = guimembranename_.get();
-    StringHandle MembraneName = scinew String(membranename);
+
     Membrane->setString("Name",MembraneName);
     
     // Figure out how the membrane needs to be assigned this number

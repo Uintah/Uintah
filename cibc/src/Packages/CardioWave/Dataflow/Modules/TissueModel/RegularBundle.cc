@@ -63,6 +63,7 @@ private:
 
   GuiInt connection_x_;
   GuiInt connection_y_;
+  GuiInt disable_center_;
 };
 
 
@@ -83,7 +84,8 @@ RegularBundle::RegularBundle(GuiContext* ctx)
   cell_crosssection_(ctx->subVar("cell-crosssection")),
   ics_vol_frac_(ctx->subVar("ics-vol-frac")),
   connection_x_(ctx->subVar("lateral-connection-x")),
-  connection_y_(ctx->subVar("lateral-connection-y"))
+  connection_y_(ctx->subVar("lateral-connection-y")),
+  disable_center_(ctx->subVar("disable-center"))
 {
 }
 
@@ -105,6 +107,7 @@ void RegularBundle::execute()
   Tissue.set_cell_length(cell_length_.get());
   Tissue.set_cell_crosssection(cell_crosssection_.get());
   Tissue.set_ics_vol_frac(ics_vol_frac_.get());
+  Tissue.set_disable_center(disable_center_.get());
   
   if(!(Tissue.create_mesh(Output))) return;
 

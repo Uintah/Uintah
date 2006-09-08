@@ -69,7 +69,7 @@ bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable
   Volume = dynamic_cast<Matrix*>(scinew DenseMatrix(num_totalnodes,1));
   if (Volume.get_rep() == 0)
   {
-    error("DMDBuildDomain: Could not allocate Volume Vector Matrix");
+    error("DMDBuildSimulation: Could not allocate Volume Vector Matrix");
     return (false);
   }
   double* volumeptr = Volume->get_data_pointer();
@@ -78,7 +78,7 @@ bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable
   NodeType = dynamic_cast<Matrix*>(scinew DenseMatrix(num_totalnodes,1));
   if (NodeType.get_rep() == 0)
   {
-    error("DMDBuildDomain: Could not allocate Volume Vector Matrix");
+    error("DMDBuildSimulation: Could not allocate Volume Vector Matrix");
     return (false);
   }
   double* nodetypeptr = NodeType->get_data_pointer();
@@ -138,7 +138,7 @@ bool ModelAlgo::DMDBuildMembraneMatrix(std::vector<MembraneTable>& membranetable
 
   if(!(mathalgo.CreateSparseMatrix(sev, MembraneMatrix, num_totalnodes, num_totalnodes)))
   {
-    error("DMDBuildDomain: Could not build synapse sparse matrix");
+    error("DMDBuildSimulation: Could not build synapse sparse matrix");
     return (false);
   }    
 
@@ -354,7 +354,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   }
   catch (...)
   {
-    error("DMDBuildDomain: Could not write input file");
+    error("DMDBuildSimulation: Could not write input file");
     return (false);  
   }   
 
@@ -378,7 +378,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   }
   catch (...)
   {
-    error("DMDBuildDomain: Could not write script");
+    error("DMDBuildSimulation: Could not write script");
     return (false);  
   } 
 
@@ -393,7 +393,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   BundleHandle Domain = SimulationBundle->getBundle("Domain");
   if (Domain.get_rep() == 0)
   {
-    error("DMDBuildSimulator: Domain is not defined");
+    error("DMDBuildSimulation: Domain is not defined");
     return (false);        
   }
   
@@ -412,13 +412,13 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   
   if (ElementType.get_rep() == 0)
   {
-    error("DMDBuildDomain: No field called 'ElementType' was defined");
+    error("DMDBuildSimulation: No field called 'ElementType' was defined");
     return (false);
   }
 
   if (Conductivity.get_rep() == 0)
   {
-    error("DMDBuildDomain: No field called 'Conductivity' was defined");
+    error("DMDBuildSimulation: No field called 'Conductivity' was defined");
     return (false);
   }
 
@@ -486,7 +486,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
       }
       else
       {
-        warning("DMDBuildDomain: One of the membrane fields misses a Geometry or a NodeType");
+        warning("DMDBuildSimulation: One of the membrane fields misses a Geometry or a NodeType");
       }
     }
 
@@ -538,7 +538,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
       }
       else
       {
-        warning("DMDBuildDomain: One of the reference fields misses a Geometry or a Domain");
+        warning("DMDBuildSimulation: One of the reference fields misses a Geometry or a Domain");
       }
     }
 
@@ -562,8 +562,6 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
         
         if (numnodes != 0)
         {
-        
-        
           double domain;
           double start;
           double end;
@@ -613,11 +611,10 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
       }
       else
       {
-        warning("DMDBuildDomain: One of the stimulus fields misses a Geometry or a stimulation Domain, or a Starting time or a Ending time");
+        warning("DMDBuildSDimulation: One of the stimulus fields misses a Geometry or a stimulation Domain, or a Starting time or a Ending time");
       }
     }
   }
-
 
   
   for (size_t p=0; p < static_cast<size_t>(SimulationBundle->numBundles()); p++)
@@ -657,12 +654,12 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
         }
         else
         {
-          warning("DMDBuildDomain: Membrane Electrode is defined for a membrane not part of the model");        
+          warning("DMDBuildSimulation: Membrane Electrode is defined for a membrane not part of the model");        
         }
       }
       else
       {
-        warning("DMDBuildDomain: One of the electrode fields misses a Membrane or a Domain");
+        warning("DMDBuildSimulation: One of the electrode fields misses a Membrane or a Domain");
       }      
     }    
   }
@@ -690,7 +687,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   {
     if(!(fieldsalgo.LinkToCompGridByDomain(ElementType,NodeLink,GeomToComp,CompToGeom)))
     {
-      error("DMDBuildDomain: Could not build computational grid to geometrical mesh linkage matrices");
+      error("DMDBuildSimulation: Could not build computational grid to geometrical mesh linkage matrices");
       return (false);  
     }
     remark("Created Computational grid");
@@ -708,6 +705,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   // visualization bundle
   std::vector<MembraneTable>     membranetable(num_membranes);
   std::vector<MatrixHandle>      membranemapping(num_membranes);
+  std::vector<MatrixHandle>      membranemapping2(num_membranes);
   std::vector<int>               membranenumnodes(num_membranes);
   std::vector<int>               membranenumelems(num_membranes);
   
@@ -727,7 +725,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     // This function will dynamically compile if needed
     if (!(fieldsalgo.GetFieldInfo(Membranes[p],membranenumnodes[p],membranenumelems[p])))
     {
-      error("DMDBuildDomain: Could get information from membrane field");
+      error("DMDBuildSimulation: Could get information from membrane field");
       return(false);    
     }
       
@@ -738,13 +736,14 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     // change, as they all change the node numbering.
     if (!(DMDBuildMembraneTable(ElementType,Membranes[p],CompToGeom,NodeLink,ElemLink,membranetable[p],membranemapping[p])))
     {
-      error("DMDBuildDomain: Could build membrane model");
+      error("DMDBuildSimulation: Could build membrane model");
       return(false);
     }
     
     // Figure out how many synapse nodes are needed.
     num_synnodes += membranetable[p].size();
   }
+  
   
   remark("Located nodes that form the membranes in volume");
 
@@ -758,7 +757,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     {
       if(!(DMDBuildStimulusTableByElement(ElementType, Stimulus[p], CompToGeom,stimulusdomain[p], stimulustable[p], stimulusmapping[p])))
       {
-        error("DMDBuildDomain: Could build stimulus model");
+        error("DMDBuildSimulation: Could build stimulus model");
         return(false);   
       }    
     }
@@ -766,12 +765,11 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     {
       if(!(DMDBuildStimulusTable(ElementType, Stimulus[p], CompToGeom,stimulusdomain[p], stimulustable[p], stimulusmapping[p])))
       {
-        error("DMDBuildDomain: Could build stimulus model");
+        error("DMDBuildSimulation: Could build stimulus model");
         return(false);   
       }
     }
- 
-   }
+  }
   
   remark("Located nodes that form the stimulus nodes");  
   
@@ -784,7 +782,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     { 
       if(!(DMDBuildReferenceTableByElement(ElementType, References[p], CompToGeom,referencedomain[p], referencetable[p], referencemapping[p])))
       {
-        error("DMDBuildDomain: Could build reference model");
+        error("DMDBuildSimulation: Could build reference model");
         return(false);   
       }
     }
@@ -792,7 +790,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     {
       if(!(DMDBuildReferenceTable(ElementType, References[p], CompToGeom,referencedomain[p], referencetable[p], referencemapping[p])))
       {
-        error("DMDBuildDomain: Could build reference model");
+        error("DMDBuildSimulation: Could build reference model");
         return(false);   
       }
     }
@@ -809,7 +807,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   MatrixHandle synmatrix;
   if(!(mathalgo.BuildFEMatrix(Conductivity,fematrix,-1,ConductivityTable,GeomToComp,CompToGeom)))
   {
-    error("DMDBuildDomain: Could not build FE Matrix");
+    error("DMDBuildSimulation: Could not build FE Matrix");
     return(false);
   }
   
@@ -822,7 +820,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   // Resize the matrix so we can use it to store the synapse nodes as well
   if(!(mathalgo.ResizeMatrix(fematrix,fematrix,num_totalnodes,num_totalnodes)))
   {
-    error("DMDBuildDomain: Could not resize FE matrix");
+    error("DMDBuildSimulation: Could not resize FE matrix");
     return (false);
   }
 
@@ -834,7 +832,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
 
   if(!(fieldsalgo.FieldDataElemToNode(ElementType,ElementType,"Max")))
   {
-    error("DMDBuildDomain: Could not move elementtype to nodes");
+    error("DMDBuildSimulation: Could not move elementtype to nodes");
     return (false);   
   }
 
@@ -842,7 +840,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   {
     if(!(fieldsalgo.GetFieldData(InitialPotential,Potential0)))
     {
-      error("DMDBuildDomain: Could not extract InitialPotential");
+      error("DMDBuildSimulation: Could not extract InitialPotential");
       return (false);   
     }
 
@@ -851,7 +849,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
       SparseRowMatrix* spr = CompToGeom->as_sparse();
       if (spr == 0)
       {
-        error("DMDBuildDomain: Could not obtain pointer to CompToGeom matrix");
+        error("DMDBuildSimulation: Could not obtain pointer to CompToGeom matrix");
         return (false);       
       }
       
@@ -860,7 +858,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
       MatrixHandle Temp = dynamic_cast<Matrix *>(scinew DenseMatrix(num_totalnodes,1));
       if (Temp.get_rep() == 0)
       {
-        error("DMDBuildDomain: Could not resize DomainType Matrix");
+        error("DMDBuildSimulation: Could not resize DomainType Matrix");
         return (false);       
       }
       
@@ -878,7 +876,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     {
       if(!(mathalgo.ResizeMatrix(Potential0,Potential0,num_totalnodes,1)))
       {
-        error("DMDBuildDomain: Could not resize DomainType matrix");
+        error("DMDBuildSimulation: Could not resize DomainType matrix");
         return (false);   
       }
     }
@@ -887,38 +885,18 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   
   if (!(DMDBuildMembraneMatrix(membranetable,nodetypes,num_volumenodes,num_synnodes,NodeType,VolumeVec,synmatrix)))
   {
-    error("DMDBuildDomain: Could not build Synapse matrix");
+    error("DMDBuildSimulation: Could not build Synapse matrix");
     return (false); 
   }
   
 
-  // Somehow CardioWave uses the negative matrix for its
+  // Somehow CardioWave uses the negative matrix
   MatrixHandle sysmatrix = synmatrix - fematrix;
   if (sysmatrix.get_rep() == 0)
   {
-    error("DMDBuildDomain: Could not build system sparse matrix");
+    error("DMDBuildSimulation: Could not build system sparse matrix");
     return (false);  
   }
-
-
-  if (!(dataioalgo.WriteMatrix("fe_matrix.mat",fematrix)))
-  {
-    error("DMDBuildDomain: Could not write matrix");  
-    return (false);
-  }
-
-  if (!(dataioalgo.WriteMatrix("syn_matrix.mat",synmatrix)))
-  {
-    error("DMDBuildDomain: Could not write matrix");  
-    return (false);
-  }
-
-  if (!(dataioalgo.WriteMatrix("sys_matrix.mat",sysmatrix)))
-  {
-    error("DMDBuildDomain: Could not write matrix");  
-    return (false);
-  }
-
   
   synmatrix = 0;
   fematrix = 0;
@@ -940,17 +918,44 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
 
   remark("Created the full linear system");  
 
+
+  for (size_t p=0; p<membranetable.size();p++)
+  {
+    size_t nrows = membranetable[p].size();
+    size_t ncols = num_totalnodes;
+    int *rr = scinew int[nrows+1];
+    int *cc = scinew int[nrows];
+    double *vv = scinew double[nrows];
+
+    if ((rr == 0)||(cc==0)||(vv==0))
+    {
+      error("DMDBuildSimulation: Could build membrane mapping matrix");
+      return(false);      
+    }
+
+    for (size_t r=0; r<nrows+1;r++) rr[r] = r;
+    for (size_t r=0; r<nrows;r++) cc[static_cast<int>(membranetable[p][r].node0)] = static_cast<int>(membranetable[p][r].snode); 
+    for (size_t r=0; r<nrows;r++) vv[r] = 1.0;
+    
+    membranemapping2[p] = dynamic_cast<Matrix *>(scinew SparseRowMatrix(nrows,ncols,rr,cc,nrows,vv));
+    if (membranemapping2[p].get_rep() == 0)
+    {
+      error("DMDBuildSimulation: Could not build membrane mapping matrix");
+      return (false);
+    }     
+  }
+
+  remark("DMDBuildSimulation: Created membrane mapping matrices");
+
   // Step 5:
   // Now optimize the system:
-  
-
   MatrixHandle mapping;
   
   if (optimizesystem)
   {
     if(!(mathalgo.ReverseCuthillmcKee(sysmatrix,sysmatrix,mapping)))
     {
-      error("DMDBuildDomain: Matrix reordering failed");
+      error("DMDBuildSimulation: Matrix reordering failed");
       return (false);    
     }
   }
@@ -958,7 +963,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   {
     if(!(mathalgo.IdentityMatrix(num_totalnodes,mapping)))
     {
-      error("DMDBuildDomain: Matrix reordering failed");
+      error("DMDBuildSimulation: Matrix reordering failed");
       return (false);    
     }
   }
@@ -972,32 +977,32 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
 
   if (!(dataioalgo.WriteMatrix(filename_mapping,mapping,"CardioWave Sparse Matrix")))
   {
-    error("DMDBuildDomain: Could not write mapping");  
+    error("DMDBuildSimulation: Could not write mapping");  
     return (false);
   }
   
   if (!(dataioalgo.WriteMatrix(filename_sysmatrix,sysmatrix,"CardioWave Sparse Matrix")))
   {
-    error("DMDBuildDomain: Could not write system matrix");  
+    error("DMDBuildSimulation: Could not write system matrix");  
     return (false);
   }
   if (!(dataioalgo.WriteMatrix(filename_surface,VolumeVec,"CardioWave FP Vector")))
   {
-    error("DMDBuildDomain: Could not write volume vector");  
+    error("DMDBuildSimulation: Could not write volume vector");  
     return (false);
   }
 
   if (!(dataioalgo.WriteMatrix(filename_nodetype,NodeType,"CardioWave Byte Vector")))
   {
-    error("DMDBuildDomain: Could not write nodetype vector");  
+    error("DMDBuildSimulation: Could not write nodetype vector");  
     return (false);
   }
 
   if (Potential0.get_rep())
   {
-    if (!(dataioalgo.WriteMatrix(filename_potential0,Potential0,"CardioWave Byte Vector")))
+    if (!(dataioalgo.WriteMatrix(filename_potential0,Potential0,"CardioWave FP Vector")))
     {
-      error("DMDBuildDomain: Could not write initial potential vector");  
+      error("DMDBuildSimulation: Could not write initial potential vector");  
       return (false);
     }
   }
@@ -1011,14 +1016,14 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   MatrixHandle imapping = mapping->transpose();
   if (imapping.get_rep() == 0)
   {
-    error("DMDBuildDomain: Could not build mapping matrix");
+    error("DMDBuildSimulation: Could not build mapping matrix");
     return (false);      
   }
 
   SparseRowMatrix* spr = dynamic_cast<SparseRowMatrix *>(imapping.get_rep());
   if (spr == 0)
   {
-    error("DMDBuildDomain: Could not build mapping matrix");
+    error("DMDBuildSimulation: Could not build mapping matrix");
     return (false);     
   }
 
@@ -1064,13 +1069,13 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     {
       for (size_t q=0; q< membranetable[p].size(); q++)
       { 
-      memfile << membranetable[p][q].snode << " " << membranetable[p][q].node2 << " " << membranetable[p][q].node1 << "\n";
+        memfile << membranetable[p][q].snode << " " << membranetable[p][q].node2 << " " << membranetable[p][q].node1 << "\n";
       }
     }
   }
   catch (...)
   {
-    error("DMDBuildDomain: Could not write membrane connection file");
+    error("DMDBuildSimulation: Could not write membrane connection file");
     return (false);  
   }
 
@@ -1096,7 +1101,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   }
   catch (...)
   {
-    error("DMDBuildDomain: Could not write stimulus file");
+    error("DMDBuildSimulation: Could not write stimulus file");
     return (false);  
   }
 
@@ -1104,6 +1109,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   {
     std::ofstream reffile;
     reffile.open(filename_reference.c_str());
+    
     for (size_t p=0; p<referencetable.size();p++)
     {
       for (size_t q=0; q< referencetable[p].size(); q++)
@@ -1114,11 +1120,16 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   }
   catch (...)
   {
-    error("DMDBuildDomain: Could not write reference file");
+    error("DMDBuildSimulation: Could not write reference file");
     return (false);  
   }
 
   remark("Wrote stimulus, reference and membrane table"); 
+
+  for (size_t p=0; p <num_membranes; p++)
+  {
+    membranemapping2[p] = membranemapping2[p]*imapping;
+  }
 
   
   if (!(mathalgo.ResizeMatrix(imapping,imapping,num_volumenodes,num_totalnodes)))
@@ -1149,10 +1160,10 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
     }
     MembraneBundle->setField("Field",Membranes[p]);
     MembraneBundle->setMatrix("Mapping",membranemapping[p]);
+    MembraneBundle->setMatrix("MappingFromMemNode",membranemapping2[p]);
     VisualizationBundle->setBundle(oss.str(),MembraneBundle);
   }
 
-  
   MatrixHandle Mapping;
   std::vector<unsigned int> columnselection;
   std::vector<std::vector<unsigned int> > indices(num_electrodes);   
@@ -1198,6 +1209,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
         error("DMDBuildSimulation: Could not select rows from mapping matrix for electrodes of "+oss.str());
         return (false);
       }      
+
       
       if(!(mathalgo.MatrixAppendRows(Mapping,Mapping,LocalMapping,indices[p])))
       {
@@ -1224,7 +1236,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
 
     if (!(dataioalgo.WriteMatrix("MappingMatrix.mat",Mapping)))
     {
-      error("DMDBuildDomain: Could not write mapping matrix");  
+      error("DMDBuildSimulation: Could not write mapping matrix");  
       return (false);
     }
 
@@ -1232,7 +1244,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
 
   if (!(fieldsalgo.ClearAndChangeFieldBasis(ElementType,ElementType,"Linear")))
   {
-    error("DMDBuildDomain: Could not clear field");
+    error("DMDBuildSimulation: Could not clear field");
     return (false);            
   }
   VolumeField->setField("Field",ElementType);
@@ -1254,7 +1266,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
 
   if (!(dataioalgo.WriteBundle(filename_visbundle,VisualizationBundle)))
   {
-    error("DMDBuildDomain: Could not write visualization information");
+    error("DMDBuildSimulation: Could not write visualization information");
     return (false);     
   }
 
@@ -1271,7 +1283,7 @@ bool ModelAlgo::DMDBuildSimulation(BundleHandle SimulationBundle, StringHandle F
   }
   catch (...)
   {
-    error("DMDBuildDomain: Could not write electrodes file");
+    error("DMDBuildSimulation: Could not write electrodes file");
     return (false);  
   }
 

@@ -59,7 +59,8 @@ public:
     numconnectiony_(2),
     cell_length_(100e-6),
     cell_crosssection_(300e-12),
-    ics_vol_frac_(0.8)
+    ics_vol_frac_(0.8),
+    disable_center_(false)
   {
   }
   
@@ -84,6 +85,8 @@ public:
 
   inline void set_connection_x(int x) {numconnectionx_ = x;}
   inline void set_connection_y(int y) {numconnectiony_ = y;}
+  
+  inline void set_disable_center(bool b) {disable_center_ = b;}
 
   bool create_mesh(FieldHandle& output);
 
@@ -106,6 +109,7 @@ private:
   double cell_length_;
   double cell_crosssection_;
   double ics_vol_frac_;  
+  bool disable_center_;
 };
 
 }

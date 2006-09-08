@@ -15,6 +15,7 @@ itcl_class CardioWave_ContinuousBiDomain_CBDCreateSimulation {
       set $this-solver-names {}
       set $this-solver-param ""
       set $this-solver-desc ""
+      set $this-solver-name ""
 
       global $this-tstep-names
       global $this-tstep-name
@@ -24,6 +25,7 @@ itcl_class CardioWave_ContinuousBiDomain_CBDCreateSimulation {
       set $this-tstep-names {}
       set $this-tstep-param ""
       set $this-tstep-desc ""
+      set $this-tstep-name ""
 
       global $this-output-names
       global $this-output-name
@@ -33,6 +35,7 @@ itcl_class CardioWave_ContinuousBiDomain_CBDCreateSimulation {
       set $this-output-names {}
       set $this-output-param ""
       set $this-output-desc ""
+      set $this-output-name ""
 
       global $this-cwave-param
       global $this-cwave-desc
@@ -47,13 +50,8 @@ itcl_class CardioWave_ContinuousBiDomain_CBDCreateSimulation {
             return
         }
 
-        $this-c get_solver_names
-        $this-c set_solver [set $this-solver-name]
-        $this-c get_tstep_names
-        $this-c set_tstep [set $this-tstep-name]
-        $this-c get_output_names
-        $this-c set_output [set $this-output-name]
-        $this-c set_cwave
+        puts "test"
+        $this-c c_set_defaults
 
         toplevel $w
         wm minsize $w 100 150
@@ -160,7 +158,7 @@ itcl_class CardioWave_ContinuousBiDomain_CBDCreateSimulation {
       if {[winfo exists $w]} {
  
         set mf [$w.mainframe childsite]
-        set solver [$mf.solver childsite]   
+        set cwave [$mf.cwave childsite]   
         $cwave.param clear
         $cwave.param insert end [set $this-cwave-param]
       }    
