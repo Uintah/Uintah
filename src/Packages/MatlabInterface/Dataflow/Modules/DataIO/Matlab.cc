@@ -201,6 +201,11 @@ class Matlab : public Module, public ServiceBase
     std::vector<std::string>   input_field_array_list_;
     std::vector<std::string>   input_nrrd_array_list_;
     std::vector<std::string>   input_string_array_list_;
+    std::vector<std::string>   input_matrix_type_list_old_;
+    std::vector<std::string>   input_nrrd_type_list_old_;
+    std::vector<std::string>   input_matrix_array_list_old_;
+    std::vector<std::string>   input_field_array_list_old_;
+    std::vector<std::string>   input_nrrd_array_list_old_;
     std::vector<std::string>   output_matrix_name_list_;
     std::vector<std::string>   output_field_name_list_;
     std::vector<std::string>   output_nrrd_name_list_;
@@ -461,6 +466,13 @@ Matlab::Matlab(GuiContext *context) :
 	input_string_name_list_.resize(NUM_STRING_PORTS);
 	input_string_name_list_old_.resize(NUM_STRING_PORTS);
 
+	input_matrix_array_list_old_.resize(NUM_MATRIX_PORTS);
+	input_field_array_list_old_.resize(NUM_FIELD_PORTS);
+	input_nrrd_array_list_old_.resize(NUM_NRRD_PORTS);
+
+	input_matrix_type_list_old_.resize(NUM_MATRIX_PORTS);
+	input_nrrd_type_list_old_.resize(NUM_NRRD_PORTS);
+
 	input_matrix_generation_old_.resize(NUM_MATRIX_PORTS);
   for (int p = 0; p<NUM_MATRIX_PORTS; p++)  input_matrix_generation_old_[p] = -1;
 	input_field_generation_old_.resize(NUM_FIELD_PORTS);
@@ -478,19 +490,18 @@ Matlab::Matlab(GuiContext *context) :
 // matlab modules
 void Matlab::cleanup_callback(void *data)
 { 
-    Matlab* ptr = reinterpret_cast<Matlab *>(data);
-    // We just want to make sure that the matlab engine is released and 
-    // any temp dirs are cleaned up
-    ptr->close_matlab_engine();
-    ptr->delete_temp_directory();
+  Matlab* ptr = reinterpret_cast<Matlab *>(data);
+  // We just want to make sure that the matlab engine is released and 
+  // any temp dirs are cleaned up
+  ptr->close_matlab_engine();
+  ptr->delete_temp_directory();
 }
 
 Matlab::~Matlab()
 {
-    // Again if we registered a module for destruction and we are removing it
-    // we need to unregister
-    CleanupManager::invoke_remove_callback(Matlab::cleanup_callback,
-					   reinterpret_cast<void *>(this));
+  // Again if we registered a module for destruction and we are removing it
+  // we need to unregister
+  CleanupManager::invoke_remove_callback(Matlab::cleanup_callback,reinterpret_cast<void *>(this));
 }
 
 
@@ -710,7 +721,6 @@ bool Matlab::send_input(std::string str)
 
 bool Matlab::open_matlab_engine()
 {
-
 	std::string inetaddress = inet_address_.get();
 	std::string inetport = inet_port_.get();
 	std::string passwd = inet_passwd_.get();
@@ -907,7 +917,6 @@ bool Matlab::open_matlab_engine()
 
 bool Matlab::close_matlab_engine()
 {
-
 	if (matlab_engine_.get_rep()) 
 	{
 		matlab_engine_->close();
@@ -932,8 +941,7 @@ bool Matlab::close_matlab_engine()
 		thread_info_->unlock();
 		thread_info_ = 0;
 	}
-	
-	
+		
 	return(true);
 }
 
@@ -1170,7 +1178,6 @@ bool Matlab::generate_matlab_code()
 		m_file.close();
 		
     if (need_file_transfer_) file_transfer_->put_file(file_transfer_->local_file(mfile_),file_transfer_->remote_file(mfile_));
-        
 	}
 	catch(...)
 	{
@@ -1181,10 +1188,8 @@ bool Matlab::generate_matlab_code()
 }
 
 
-
 bool Matlab::save_input_matrices()
 {
-
 	try
 	{
 
@@ -1198,10 +1203,10 @@ bool Matlab::save_input_matrices()
 
 		for (int p = 0; p < NUM_MATRIX_PORTS; p++)
 		{
-				
+    
 			// Test whether the matrix port exists
-			if (matrix_iport_[p] == 0) continue;
-			if (matrix_iport_[p]->nconnections() == 0) continue;
+			if (matrix_iport_[p] == 0)  { continue; }
+			if (matrix_iport_[p]->nconnections() == 0) { continue; }
 
 			MatrixHandle	handle = 0;
 			matrix_iport_[p]->get(handle);
@@ -1210,22 +1215,20 @@ bool Matlab::save_input_matrices()
 			{
 				// we do not need the old file any more so delete it
 				input_matrix_matfile_[p] = "";
-				continue;
+        continue;
 			}
 			// if the data as the same before
 			// do nothing
-			if ((input_matrix_name_list_[p]==input_matrix_name_list_old_[p])&&(handle->generation == input_matrix_generation_old_[p]))
+			if ((input_matrix_name_list_[p]==input_matrix_name_list_old_[p])&&(input_matrix_type_list_[p]==input_matrix_type_list_old_[p])&&(input_matrix_array_list_[p]==input_matrix_array_list_old_[p])&&(handle->generation == input_matrix_generation_old_[p]))
 			{
 				// this one was not created again
 				// hence we do not need to translate it again
 				// with big datasets this should improve performance
 				loadcmd = "load " + file_transfer_->remote_file(input_matrix_matfile_[p]) + ";\n";
-				m_file << loadcmd;
-				
+				m_file << loadcmd;		
 				continue;
 			}
-			
-		
+					
 			// Create a new filename for the input matrix
 			ostringstream oss;
 			oss << "input_matrix" << p << ".mat";
@@ -1259,8 +1262,10 @@ bool Matlab::save_input_matrices()
             error(err);
             return(false);
         }
-          
       }
+      
+      input_matrix_type_list_old_[p] = input_matrix_type_list_[p];      
+      input_matrix_array_list_old_[p] = input_matrix_array_list_[p];      
       input_matrix_name_list_old_[p] = input_matrix_name_list_[p];
       input_matrix_generation_old_[p] = handle->generation;
 
@@ -1278,12 +1283,12 @@ bool Matlab::save_input_matrices()
 			if (handle.get_rep() == 0) 
 			{
 				// we do not need the old file any more so delete it
-                                input_field_matfile_[p] = "";
+        input_field_matfile_[p] = "";
 				continue;
 			}
 			// if the data as the same before
 			// do nothing
-			if ((input_field_name_list_[p]==input_field_name_list_old_[p])&&(handle->generation == input_field_generation_old_[p]))
+			if ((input_field_name_list_[p]==input_field_name_list_old_[p])&&(input_field_array_list_[p]==input_field_array_list_old_[p])&&(handle->generation == input_field_generation_old_[p]))
 			{
 				// this one was not created again
 				// hence we do not need to translate it again
@@ -1307,8 +1312,12 @@ bool Matlab::save_input_matrices()
 
       matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter *>(this));
 			translate.converttostructmatrix();
-			if (input_field_array_list_[p] == "numeric array") translate.converttonumericmatrix();
-			translate.sciFieldTOmlArray(handle,ma);
+
+			if (input_field_array_list_[p] == "numeric array") 
+      {
+        translate.converttonumericmatrix();
+      }
+      translate.sciFieldTOmlArray(handle,ma);
 			
 			mf.putmatlabarray(ma,input_field_name_list_[p]);
 			mf.close();
@@ -1326,6 +1335,7 @@ bool Matlab::save_input_matrices()
           return(false);
         }
       }
+      input_field_array_list_old_[p] = input_field_array_list_[p];
       input_field_name_list_old_[p] = input_field_name_list_[p];
       input_field_generation_old_[p] = handle->generation;            
     }
@@ -1347,7 +1357,7 @@ bool Matlab::save_input_matrices()
 			}
 			// if the data as the same before
 			// do nothing
-			if ((input_nrrd_name_list_[p]==input_nrrd_name_list_old_[p])&&(handle->generation == input_nrrd_generation_old_[p]))
+			if ((input_nrrd_name_list_[p]==input_nrrd_name_list_old_[p])&&(input_nrrd_type_list_[p]==input_nrrd_type_list_old_[p])&&(input_nrrd_array_list_[p]==input_nrrd_array_list_old_[p])&&(handle->generation == input_nrrd_generation_old_[p]))
 			{
 				// this one was not created again
 				// hence we do not need to translate it again
@@ -1390,6 +1400,8 @@ bool Matlab::save_input_matrices()
             return(false);
         }
       }  
+      input_nrrd_type_list_old_[p] = input_nrrd_type_list_[p];
+      input_nrrd_array_list_old_[p] = input_nrrd_array_list_[p];
       input_nrrd_name_list_old_[p] = input_nrrd_name_list_[p];       
       input_nrrd_generation_old_[p] = handle->generation;       
 		}

@@ -40,8 +40,8 @@
 #pragma set woff 3201
 #endif
 
-using namespace MatlabIO;
-using namespace std;
+namespace MatlabIO {
+
 using namespace SCIRun;
 
 // Currently the property converter only manages strings
@@ -1767,7 +1767,7 @@ void matlabconverter::sciFieldTOmlArray(FieldHandle &scifield,matlabarray &mlarr
     {
       // strip the whole data structure
       mlarray = mlarray.getfield(0,"field");
-      return; // leave since we are no inter dealing with a struct
+      return; // leave since we are not dealing with a struct
     }
     else
     {
@@ -2016,6 +2016,7 @@ void matlabconverter::sciBundleTOmlArray(BundleHandle &scibundle, matlabarray &m
   }
 }
 
+}
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma reset woff 3201
