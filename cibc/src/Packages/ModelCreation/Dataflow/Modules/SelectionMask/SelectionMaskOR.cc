@@ -63,14 +63,17 @@ SelectionMaskOR::SelectionMaskOR(GuiContext* ctx)
 {
 }
 
+
 SelectionMaskOR::~SelectionMaskOR()
 {
 }
 
-void SelectionMaskOR::execute()
+
+void
+SelectionMaskOR::execute()
 {
   MatrixIPort *iport;
-  MatrixHandle input, output;
+  MatrixHandle input;
   
   if (!(iport = dynamic_cast<MatrixIPort *>(get_input_port(0))))
   {
@@ -102,7 +105,6 @@ void SelectionMaskOR::execute()
   int portnum = 1;
   while((iport = dynamic_cast<MatrixIPort *>(get_input_port(portnum))))
   {
-    
     if (!(iport->get(input)))
     {
       break;
@@ -128,7 +130,7 @@ void SelectionMaskOR::execute()
     portnum++;
   }
   
-  output = newmask.gethandle();
+  MatrixHandle output = newmask.gethandle();
   send_output_handle("SelectionMask", output);
 }
 

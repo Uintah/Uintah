@@ -70,21 +70,8 @@ SelectionMaskToIndices::~SelectionMaskToIndices()
 void
 SelectionMaskToIndices::execute()
 {
-  SCIRun::MatrixIPort *selection_iport;
-  
   SCIRun::MatrixHandle input;
-  
-  if (!(selection_iport = dynamic_cast<SCIRun::MatrixIPort *>(get_input_port(0))))
-  {
-    error("Could not find input port for selection mask");
-    return;
-  }
-
-  if (!(selection_iport->get(input)))
-  {
-    warning("No data could be found on the input ports");
-    return;
-  }
+  if (!get_input_handle("SelectionMask", input)) return;
 
   SelectionMask mask(input);
   
@@ -94,13 +81,13 @@ SelectionMaskToIndices::execute()
     return;
   }
   
-  SCIRun::MatrixHandle lenmat = dynamic_cast<SCIRun::Matrix *>(scinew SCIRun::DenseMatrix(1,1));
+  SCIRun::MatrixHandle lenmat = scinew SCIRun::DenseMatrix(1, 1);
   if (lenmat.get_rep() == 0)
   {
     error("Could not allocate enough memory");
     return;
   }
-  lenmat->put(0,0,static_cast<double>(mask.size()));
+  lenmat->put(0, 0, static_cast<double>(mask.size()));
   
   SCIRun::MatrixHandle idxmat;
   mask.get_indices(idxmat);

@@ -70,8 +70,11 @@ DECLARE_MAKER(FieldSetMatrixProperty)
 {
 }
 
-FieldSetMatrixProperty::~FieldSetMatrixProperty(){
+
+FieldSetMatrixProperty::~FieldSetMatrixProperty()
+{
 }
+
 
 void
 FieldSetMatrixProperty::execute()
@@ -80,28 +83,12 @@ FieldSetMatrixProperty::execute()
   std::string matrix2name = guimatrix2name_.get();
   std::string matrix3name = guimatrix3name_.get();
     
-  FieldHandle  handle;
-  FieldIPort   *iport;
-  MatrixHandle fhandle;
-  MatrixIPort  *ifport;
-        
-  if(!(iport = static_cast<FieldIPort *>(get_input_port("Field"))))
-  {
-    error("Could not find 'Field' input port");
-    return;
-  }
-      
-  if (!(iport->get(handle)))
-  {   
-    error("Could not retrieve 'Field' from input port");
-  }
-   
-  if (handle.get_rep() == 0)
-  {
-    error("No field on input port");
-  }
+  FieldHandle handle;
+  if (!get_input_handle("Field", handle)) return;
   
   // Scan matrix input port 1
+  MatrixHandle fhandle;
+  MatrixIPort  *ifport;
   if (!(ifport = static_cast<MatrixIPort *>(get_input_port("Matrix1"))))
   {
     error("Could not find matrix 1 input port");

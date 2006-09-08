@@ -71,33 +71,18 @@ FieldGetMatrixProperty::execute()
   string matrixlist;
         
   FieldHandle handle;
-  FieldIPort  *iport;
+  if (!get_input_handle("Field", handle)) return;
+
   MatrixHandle fhandle;
-        
-  if(!(iport = static_cast<FieldIPort *>(get_input_port("Field"))))
+
+  const size_t nprop = handle->nproperties();
+  for (size_t p=0; p<nprop; p++)
   {
-    error("Could not find 'Field' input port");
-    return;
-  }
-
-  if (!(iport->get(handle)))
-  {   
-    warning("No field connected to the input port");
-    return;
-  }
-
-  if (handle.get_rep() == 0)
-  {   
-    warning("Input field is empty");
-    return;
-  }
-
-  size_t nprop = handle->nproperties();
-
-  for (size_t p=0;p<nprop;p++)
-  {
-    handle->get_property(handle->get_property_name(p),fhandle);
-    if (fhandle.get_rep()) matrixlist += "{" + handle->get_property_name(p) + "} ";
+    handle->get_property(handle->get_property_name(p), fhandle);
+    if (fhandle.get_rep())
+    {
+      matrixlist += "{" + handle->get_property_name(p) + "} ";
+    }
   }
 
   guimatrixs_.set(matrixlist);

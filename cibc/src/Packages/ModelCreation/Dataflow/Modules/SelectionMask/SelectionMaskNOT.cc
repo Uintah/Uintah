@@ -60,20 +60,8 @@ SelectionMaskNOT::SelectionMaskNOT(GuiContext* ctx)
 void
 SelectionMaskNOT::execute()
 {
-  MatrixIPort *iport;
-  MatrixHandle input, output;
-  
-  if (!(iport = dynamic_cast<MatrixIPort *>(get_input_port(0))))
-  {
-    // nothing to do no ports available
-    return;
-  }
-  
-  if (!(iport->get(input)))
-  {
-    warning("No data could be found on the input ports");
-    return;
-  }
+  MatrixHandle input;
+  if (!get_input_handle("SelectionMask", input)) return;
 
   SelectionMask mask(input);
   if (!mask.isvalid())
@@ -90,7 +78,7 @@ SelectionMaskNOT::execute()
     error("Cannot NOT selection mask");
   }
   
-  output = newmask.gethandle();
+  MatrixHandle output = newmask.gethandle();
   send_output_handle("SelectionMask", output);
 }
 

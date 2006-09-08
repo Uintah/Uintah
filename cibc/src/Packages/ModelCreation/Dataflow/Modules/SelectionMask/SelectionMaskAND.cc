@@ -73,8 +73,7 @@ void
 SelectionMaskAND::execute()
 {
   MatrixIPort *iport;
-  MatrixHandle input, output;
-  
+  MatrixHandle input;
   if (!(iport = dynamic_cast<MatrixIPort *>(get_input_port(0))))
   {
     // nothing to do no ports available
@@ -131,7 +130,7 @@ SelectionMaskAND::execute()
     portnum++;
   }
   
-  output = newmask.gethandle();
+  MatrixHandle output = newmask.gethandle();
   send_output_handle("SelectionMask", output);
 }
 
