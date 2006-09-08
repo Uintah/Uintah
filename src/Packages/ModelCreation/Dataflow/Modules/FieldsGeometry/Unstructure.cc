@@ -57,7 +57,7 @@ void Unstructure::execute()
   
   if (inputs_changed_ || !oport_cached("Field"))
   {
-    SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
+    SCIRunAlgo::FieldsAlgo algo(this);
     if (!(algo.Unstructure(ifield,ofield))) return;
     
     send_output_handle("Field",ofield,false);

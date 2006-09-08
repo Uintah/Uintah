@@ -65,7 +65,7 @@ void SplitFieldByConnectedRegion::execute()
   // that executes every module downstream even if no data has changed:         
   if (inputs_changed_  || !oport_cached("Fields"))
   {
-    SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));  
+    SCIRunAlgo::FieldsAlgo algo(this);
     
     std::vector<FieldHandle> ofields;
     if(!(algo.SplitFieldByConnectedRegion(input,ofields))) return;
