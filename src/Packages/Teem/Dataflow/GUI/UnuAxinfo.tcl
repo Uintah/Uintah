@@ -39,6 +39,9 @@ itcl_class Teem_UnuAtoM_UnuAxinfo {
 	setGlobal $this-firstwidth 15
 	setGlobal $this-spaceDir "0,0,0"
 	setGlobal $this-use_spaceDir 0
+
+	trace variable $this-kind   w "$this update_kind_menu"
+	trace variable $this-center w "$this update_center_menu"
     }
     
     method ui {} {
@@ -48,93 +51,102 @@ itcl_class Teem_UnuAtoM_UnuAxinfo {
         }
         toplevel $w
 
-	makelabelentry $w.ax "Axis" $this-axis
+	make_labelentry $w.ax "Axis" $this-axis 0
 	Tooltip $w.ax "Axis to modify\n(integer index)."
 
-	makelabelentry $w.l "Label" $this-label
+	make_labelentry $w.l "Label" $this-label $this-use_label
 	Tooltip $w.l "Label to associate\nwith this axis"
-	checkbutton $w.l.ch -variable $this-use_label
-	pack $w.l.ch -side left -before $w.l.l
 	Tooltip $w.l.ch "Use new label for output NRRD"
 
-	make_kind_optionmenu $w.k $this-kind
- 	checkbutton $w.k.ch -variable $this-use_kind
- 	pack $w.k.ch -side left -before $w.k.om
+	make_optionmenu $w.k "Kind" $this-kind $this-use_kind nrrdKindUnknown \
+	    "nrrdKindUnknown nrrdKindDomain nrrdKindScalar nrrdKind3Color nrrdKind3Vector nrrdKind3Normal nrrdKind3DSymMatrix nrrdKind3DMaskedSymMatrix nrrdKind3DMatrix nrrdKindList nrrdKindStub"
+	Tooltip $w.k "Kind to associate\nwith this axis"
 	Tooltip $w.k.ch "Use new axis kind for output NRRD"
 
-	makelabelentry $w.sp "Spacing" $this-spacing
+	make_labelentry $w.sp "Spacing" $this-spacing $this-use_spacing
 	Tooltip $w.sp "Change spacing between\nsamples. This should be\nexpressed as a double."
-	checkbutton $w.sp.ch -variable $this-use_spacing
-	pack $w.sp.ch -side left -before $w.sp.l
 	Tooltip $w.sp.ch "Use new spacing for output NRRD"
 
-	makelabelentry $w.mn "Min" $this-min
+	make_labelentry $w.mn "Min" $this-min $this-use_min
 	Tooltip $w.mn "Change the minimum value\n. This should be expressed\nas a double."
-	checkbutton $w.mn.ch -variable $this-use_min
-	pack $w.mn.ch -side left -before $w.mn.l
 	Tooltip $w.mn.ch "Use new min for output NRRD"
 
-	makelabelentry $w.mx "Max" $this-max
+	make_labelentry $w.mx "Max" $this-max $this-use_max
 	Tooltip $w.mx "Change the maximum value\n. This should be expressed\nas a double."
-	checkbutton $w.mx.ch -variable $this-use_max
-	pack $w.mx.ch -side left -before $w.mx.l
 	Tooltip $w.mx.ch "Use new max for output NRRD"
 
-	makelabelentry $w.sd "Space Direction" $this-spaceDir
+	make_optionmenu $w.c "Kind" $this-center $this-use_center nrrdCenterUnknown \
+	    "nrrdCenterUnknown nrrdCenterNode nrrdCenterCell"
+	Tooltip $w.c "Center to associate\nwith this axis"
+	Tooltip $w.c.ch "Use new axis center for output NRRD"
+
+	make_labelentry $w.sd "Space Direction" $this-spaceDir $this-use_spaceDir
 	Tooltip $w.sd "Change the spaceDirection vector.  This should be values separated by commas. NOTE: cannot set spaceDirection and min/max/spacing."
-	checkbutton $w.sd.ch -variable $this-use_spaceDir
-	pack $w.sd.ch -side left -before $w.sd.l
 	Tooltip $w.sd.ch "Use spaceDirection vector for output NRRD.  NOTE: cannot set spaceDirection and min/max/spacing."
 	
-	pack $w.ax $w.l $w.k $w.sp $w.mn $w.mx $w.sd -side top
+	pack $w.ax $w.l $w.k $w.sp $w.mn $w.mx $w.c $w.sd -side top
 	
 	makeSciButtonPanel $w $w $this
 	moveToCursor $w
     }
     
-    method makelabelentry { win l var} {
+    method make_labelentry {win l var use_var} {
 	global $var
 	
 	frame $win
 	pack $win -side left -padx 5 -pady 1 -fill x
+
+	if { $use_var != 0 } {
+	    checkbutton $win.ch -variable $use_var
+	} else {
+	    label $win.ch -text "   " -width 3 -anchor w -just left
+	}
+
 	label $win.l -text "$l" -width [set $this-firstwidth] \
 	    -anchor w -just left
 	label $win.colon -text ":" -width 2 -anchor w -just left
 	entry $win.e -textvar $var \
 	    -foreground darkred
 	
-	pack $win.l $win.colon -side left
+	pack $win.ch $win.l $win.colon -side left
 	pack $win.e -side left -fill x -expand 1
     } 
     
-    method make_kind_optionmenu { win var} {
+    method make_optionmenu {win l var use_var intial_val values} {
 	global $var
+
+	puts stderr $values
 
 	frame $win
 	pack $win -side left -padx 5 -pady 1 -fill x
-	iwidgets::optionmenu $win.om -labeltext "Kind:" \
-	    -labelpos w -command "$this update_kind $win.om $var"
-	$win.om insert end nrrdKindUnknown nrrdKindDomain nrrdKindScalar \
-	    nrrdKind3Color nrrdKind3Vector nrrdKind3Normal \
-	    nrrdKind3DSymMatrix nrrdKind3DMaskedSymMatrix nrrdKind3DMatrix \
-	    nrrdKindList nrrdKindStub
+
+ 	checkbutton $win.ch -variable $use_var
+
+	label $win.l -text "$l" -width [set $this-firstwidth] \
+	    -anchor w -just left
+
+	label $win.colon -text ":" -width 2 -anchor w -just left
+
+	iwidgets::optionmenu $win.om \
+	    -command "$this update_optionmenu $win.om $var"
+
+ 	foreach value $values {
+ 	    $win.om insert end $value
+ 	}
+
 	if {[info exists $var] && [set $var] != ""} {
 	    $win.om select [set $var]
 	} else {
-	    $win.om select nrrdKindUnknown
+	    $win.om select $intial_val
 	}
-	pack $win.om -side left -anchor nw -padx 3 -pady 3
 
-	trace variable $var w "$this update_kind_menu"
-    }
-    
-    method update_kind {w var} {
-	global $var
-	set which [$w get]
-	
-	set $var $which
+	pack $win.ch $win.l $win.colon -side left
+	pack $win.om -side left -fill x -expand 1
     }
 
+    # Method called when $this-kind value changes.
+    # This helps when loading a saved network to sync
+    # the optionmenu.
     method update_kind_menu {name1 name2 op} {
 	set window .ui[modname]
 	
@@ -142,6 +154,24 @@ itcl_class Teem_UnuAtoM_UnuAxinfo {
 	    set op $window.k.om
 	    $op select [set $this-kind]
 	}
+    }
+
+    # Method called when $this-center value changes.
+    # This helps when loading a saved network to sync
+    # the optionmenu.
+    method update_center_menu {name1 name2 op} {
+	set window .ui[modname]
+	
+	if {[winfo exists $window]} {
+	    set op $window.c.om
+	    $op select [set $this-center]
+	}
+    }
+
+    # Method called when optionmenu changes to update the variable
+    method update_optionmenu {w var} {
+	global $var
+	set $var [$w get]
     }
 
 }

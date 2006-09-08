@@ -39,8 +39,8 @@
  *  Copyright (C) 2000 SCI Group
  */
 
-#include <Dataflow/Network/Module.h>
 #include <Dataflow/GuiInterface/GuiVar.h>
+#include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/NrrdPort.h>
 
 namespace SCITeem {
@@ -56,11 +56,13 @@ public:
   GuiInt              axis_;
   GuiString           label_;
   GuiString           kind_;
+  GuiString           center_;
   GuiDouble           min_;
   GuiDouble           max_;
   GuiDouble           spacing_;
   GuiInt              use_label_;
   GuiInt              use_kind_;
+  GuiInt              use_center_;
   GuiInt              use_min_;
   GuiInt              use_max_;
   GuiInt              use_spacing_;
@@ -75,11 +77,13 @@ UnuAxinfo::UnuAxinfo(GuiContext* ctx)
     axis_(get_ctx()->subVar("axis"), 0),
     label_(get_ctx()->subVar("label"), "---"),
     kind_(get_ctx()->subVar("kind"), "nrrdKindUnknown"),
+    center_(get_ctx()->subVar("center"), "nrrdCenterUnknown"),
     min_(get_ctx()->subVar("min"), 0.0),
     max_(get_ctx()->subVar("max"), 1.0),
     spacing_(get_ctx()->subVar("spacing"), 1.0),
     use_label_(get_ctx()->subVar("use_label"), 1),
     use_kind_(get_ctx()->subVar("use_kind"), 1),
+    use_center_(get_ctx()->subVar("use_center"), 1),
     use_min_(get_ctx()->subVar("use_min"), 1),
     use_max_(get_ctx()->subVar("use_max"), 1),
     use_spacing_(get_ctx()->subVar("use_spacing"), 1),
@@ -117,7 +121,7 @@ UnuAxinfo::execute()
   Nrrd *nin = nh->nrrd_;
   Nrrd *nout = nrrdNew();
   
-  // copy input nrrd and modify its label, kind, min, max and spacing
+  // copy input nrrd and modify its label, kind, center, min, max and spacing
   if (nrrdCopy(nout, nin)) {
     char *err = biffGetDone(NRRD);
     error(string("Trouble copying input nrrd: ") +  err);
@@ -155,6 +159,17 @@ UnuAxinfo::execute()
       nout->axis[axis].kind = nrrdKindStub;
     } else {
       nout->axis[axis].kind = nrrdKindUnknown;
+    }
+  }
+    
+  if (use_center_.get()) {
+    string center = center_.get();
+    if (center == "nrrdCenterCell") {
+      nout->axis[axis].center = nrrdCenterCell;
+    } else if (center == "nrrdCenterNode") {
+      nout->axis[axis].center = nrrdCenterNode;
+    } else {
+      nout->axis[axis].center = nrrdCenterUnknown;
     }
   }
     
