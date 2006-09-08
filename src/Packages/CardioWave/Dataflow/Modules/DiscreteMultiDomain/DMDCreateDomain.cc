@@ -27,10 +27,9 @@
 */
 
 #include <Dataflow/Network/Module.h>
-#include <Core/Malloc/Allocator.h>
-
 #include <Core/Bundle/Bundle.h>
 #include <Core/Datatypes/Field.h>
+#include <Core/Algorithms/Fields/FieldsAlgo.h>
 #include <Dataflow/Network/Ports/BundlePort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 
@@ -68,11 +67,26 @@ void DMDCreateDomain::execute()
   get_input_handle("Initial Potential",InitialPotential,false);
   get_input_handle("ConductivityTable",ConductivityTable,false); 
 
-
   // A module should only execute when data has changed otherwise it should return
   // the cached values:
   if (inputs_changed_ || !oport_cached("DomainBundle"))
   {
+
+    SCIRunAlgo::FieldsAlgo falgo(this);
+
+    if (InitialPotential.get_rep())
+    {
+      if (InitialPotential->basis_order() == 0) 
+      {
+        falgo.FieldDataElemToNode(InitialPotential,InitialPotential,"average");
+      }
+      else if (InitialPotential->basis_order() == -1)
+      {
+        error("The initial potential field does not have any values assigned to it");
+        return;
+      }
+    }
+    
     if(ElementType->is_property("NodeLink")) ElementType->get_property("NodeLink",NodeLink);
     if(ElementType->is_property("ElemLink")) ElementType->get_property("ElemLink",ElemLink);
 

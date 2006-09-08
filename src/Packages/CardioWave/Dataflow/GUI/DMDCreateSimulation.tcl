@@ -13,7 +13,7 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDCreateSimulation {
       global $this-solver-desc
       
       set $this-solver-names {}
-#      set $this-solver-name "NONE"
+      set $this-solver-name ""
       set $this-solver-param ""
       set $this-solver-desc ""
 
@@ -23,7 +23,7 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDCreateSimulation {
       global $this-tstep-desc
       
       set $this-tstep-names {}
-#      set $this-tstep-name "NONE"
+      set $this-tstep-name ""
       set $this-tstep-param ""
       set $this-tstep-desc ""
 
@@ -33,7 +33,7 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDCreateSimulation {
       global $this-output-desc
       
       set $this-output-names {}
-#      set $this-output-name "NONE"
+      set $this-output-name ""
       set $this-output-param ""
       set $this-output-desc ""
 
@@ -50,13 +50,7 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDCreateSimulation {
             return
         }
 
-        $this-c get_solver_names
-        $this-c set_solver [set $this-solver-name]
-        $this-c get_tstep_names
-        $this-c set_tstep [set $this-tstep-name]
-        $this-c get_output_names
-        $this-c set_output [set $this-output-name]
-        $this-c set_cwave
+        $this-c c_set_defaults
 
         toplevel $w
         wm minsize $w 100 150
@@ -74,11 +68,11 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDCreateSimulation {
         grid $solver.select -row 0 -column 0 -sticky w
         option add *textBackground white	
         iwidgets::scrolledtext $solver.param -vscrollmode dynamic \
-              -labeltext "Parameters" -height 150 -width 400 
+              -labeltext "Parameters" -height 150 -width 540 
         $solver.param insert end [set $this-solver-param]
         grid $solver.param -row 1 -column 0 -sticky news
         iwidgets::scrolledtext $solver.desc -vscrollmode dynamic \
-              -labeltext "Description" -height 100 -width 400
+              -labeltext "Description" -height 100 -width 540
         grid $solver.desc -row 2 -column 0 -sticky news
         $solver.desc insert end [set $this-solver-desc]
 
@@ -92,11 +86,11 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDCreateSimulation {
         grid $tstep.select -row 0 -column 0 -sticky w
         option add *textBackground white	
         iwidgets::scrolledtext $tstep.param -vscrollmode dynamic \
-              -labeltext "Parameters" -height 150 -width 400 
+              -labeltext "Parameters" -height 150 -width 540 
         $tstep.param insert end [set $this-tstep-param]
         grid $tstep.param -row 1 -column 0 -sticky news
         iwidgets::scrolledtext $tstep.desc -vscrollmode dynamic \
-              -labeltext "Description" -height 100 -width 400
+              -labeltext "Description" -height 100 -width 540
         grid $tstep.desc -row 2 -column 0 -sticky news
         $tstep.desc insert end [set $this-tstep-desc]
 
@@ -110,11 +104,11 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDCreateSimulation {
         grid $output.select -row 0 -column 0 -sticky w
         option add *textBackground white	
         iwidgets::scrolledtext $output.param -vscrollmode dynamic \
-              -labeltext "Parameters" -height 150 -width 400 
+              -labeltext "Parameters" -height 150 -width 540 
         $output.param insert end [set $this-output-param]
         grid $output.param -row 1 -column 0 -sticky news
         iwidgets::scrolledtext $output.desc -vscrollmode dynamic \
-              -labeltext "Description" -height 100 -width 400
+              -labeltext "Description" -height 100 -width 540
         grid $output.desc -row 2 -column 0 -sticky news
         $output.desc insert end [set $this-output-desc]
 
@@ -125,12 +119,12 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDCreateSimulation {
 
         option add *textBackground white	
         iwidgets::scrolledtext $cwave.param -vscrollmode dynamic \
-              -labeltext "Parameters" -height 150 -width 400 
+              -labeltext "Parameters" -height 150 -width 540 
         $cwave.param insert end [set $this-cwave-param]
         pack $cwave.param -fill both -expand yes
 
         iwidgets::scrolledtext $cwave.desc -vscrollmode dynamic \
-              -labeltext "Description" -height 100 -width 400
+              -labeltext "Description" -height 100 -width 540
         $cwave.desc insert end [set $this-cwave-desc]
         pack $cwave.desc -fill both -expand yes
  

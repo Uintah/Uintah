@@ -61,6 +61,8 @@ public:
   virtual void tcl_command(GuiArgs&, void*);
   
 private:  
+  void set_defaults();
+
   // TCL tools
   std::string totclstring(std::string &instring);
   std::string convertclist(std::vector<std::string> list);
@@ -83,10 +85,16 @@ private:
   GuiString guicwaveparam_;
   GuiString guicwavedesc_;
 
+  std::string oldsolvername_;
+  std::string oldtstepname_;
+  std::string oldoutputname_;
+
   NWSolverXML    solverxml_;  
   NWTimeStepXML  tstepxml_;  
   OutputXML      outputxml_;    
   NeuroWaveXML   neurowavexml_;  
+  
+  bool gui_changed_;
   
 };
 
@@ -107,47 +115,73 @@ DMDCreateSimulation::DMDCreateSimulation(GuiContext* ctx)
     guioutputparam_(get_ctx()->subVar("output-param")),
     guioutputdesc_(get_ctx()->subVar("output-desc")),
     guicwaveparam_(get_ctx()->subVar("cwave-param")),
-    guicwavedesc_(get_ctx()->subVar("cwave-desc"))
+    guicwavedesc_(get_ctx()->subVar("cwave-desc")),
+    gui_changed_(false)
 {
-    std::string defaultname;
-    std::string param;
-    std::string desc;
-    defaultname = solverxml_.get_default_name();
+}
+
+
+void DMDCreateSimulation::set_defaults()
+{
+  std::string defaultname;
+  std::string param;
+  std::string desc;
+  defaultname = solverxml_.get_default_name();
+  get_ctx()->reset();    
+  
+  if (guisolvername_.changed() || guitstepname_.changed() || guioutputname_.changed() || guicwaveparam_.changed()) gui_changed_ = true;
+
+  if (guisolvername_.get() == "") 
+  {
     guisolvername_.set(defaultname);
     NWSolverItem solveritem = solverxml_.get_nwsolver(defaultname);
     param = solveritem.parameters;
     desc  = solveritem.description;
     guisolverparam_.set(param);
     guisolverdesc_.set(desc);
-
-    defaultname = tstepxml_.get_default_name();
+  }
+  oldsolvername_ = guisolvername_.get();
+  
+  defaultname = tstepxml_.get_default_name();
+  if (guitstepname_.get() == "")
+  {
     guitstepname_.set(defaultname);
     NWTimeStepItem tstepitem = tstepxml_.get_nwtimestep(defaultname);
     param = tstepitem.parameters;
     desc  = tstepitem.description;
     guitstepparam_.set(param);
     guitstepdesc_.set(desc);
- 
-    defaultname = outputxml_.get_default_name();
+  }
+  oldtstepname_ = guitstepname_.get();
+  
+  defaultname = outputxml_.get_default_name();
+  if (guioutputname_.get() == "")
+  {
     guioutputname_.set(defaultname);
     OutputItem outputitem = outputxml_.get_output(defaultname);
     param = outputitem.parameters;
     desc  = outputitem.description;
     guioutputparam_.set(param);
     guioutputdesc_.set(desc);
-    
-    NeuroWaveItem cwaveitem = neurowavexml_.get_neurowave();
-    param = cwaveitem.parameters;
-    desc  = cwaveitem.description;
+  }
+  oldoutputname_ = guioutputname_.get();    
+  
+  NeuroWaveItem cwaveitem = neurowavexml_.get_neurowave();
+  param = cwaveitem.parameters;
+  desc  = cwaveitem.description;
+  if (guicwaveparam_.get() == "")
+  {
     guicwaveparam_.set(param);
     guicwavedesc_.set(desc);
-    
-    ctx->reset();    
+  }
+  get_ctx()->reset();    
 }
 
 
 void DMDCreateSimulation::execute()
 {
+  set_defaults();
+
   // Define input handles:
   BundleHandle SimulationBundle;
   BundleHandle MembraneBundle;
@@ -175,10 +209,11 @@ void DMDCreateSimulation::execute()
   get_gui()->unlock();
   get_ctx()->reset();
 
-  if (inputs_changed_  || guisolvername_.changed() || guisolverparam_.changed() || 
+  if (inputs_changed_  || gui_changed_ || guisolvername_.changed() || guisolverparam_.changed() || 
       guitstepname_.changed() || guitstepparam_.changed() || guioutputname_.changed() || 
       guioutputparam_.changed() || guicwaveparam_.changed() || !oport_cached("SimulationBundle") )
   {
+    gui_changed_ = false;
 
     SimulationBundle = scinew Bundle();
     if (SimulationBundle.get_rep() == 0)
@@ -467,6 +502,8 @@ void DMDCreateSimulation::execute()
 void
  DMDCreateSimulation::tcl_command(GuiArgs& args, void* userdata)
 {
+  get_ctx()->reset();
+
   if (args.count() > 1)
   {
     if (args[1] == "get_solver_names")
@@ -476,7 +513,7 @@ void
     }
     else if (args[1] == "set_solver")
     {
-      if (args[2] != "")
+      if (args[2] != "" && oldsolvername_ != guisolvername_.get())
       {
         NWSolverItem item = solverxml_.get_nwsolver(args[2]);
         std::string param = item.parameters;
@@ -485,6 +522,7 @@ void
         guisolverparam_.set(param);
         guisolverdesc_.set(desc);
         get_ctx()->reset();
+        oldsolvername_ = guisolvername_.get();
       }
     }
     else if (args[1] == "get_tstep_names")
@@ -494,7 +532,7 @@ void
     }
     else if (args[1] == "set_tstep")
     {
-      if (args[2] != "")
+      if (args[2] != "" && oldtstepname_ != guitstepname_.get())
       {
         NWTimeStepItem item = tstepxml_.get_nwtimestep(args[2]);
         std::string param = item.parameters;
@@ -503,6 +541,7 @@ void
         guitstepparam_.set(param);
         guitstepdesc_.set(desc);
         get_ctx()->reset();
+        oldtstepname_ = guitstepname_.get();
       }
     }
     else if (args[1] == "get_output_names")
@@ -512,7 +551,7 @@ void
     }
     else if (args[1] == "set_output")
     {
-      if (args[2] != "")
+      if (args[2] != "" && oldoutputname_ != guioutputname_.get())
       {
         OutputItem item = outputxml_.get_output(args[2]);
         std::string param = item.parameters;
@@ -521,9 +560,10 @@ void
         guioutputparam_.set(param);
         guioutputdesc_.set(desc);
         get_ctx()->reset();
+        oldoutputname_ = guioutputname_.get();        
       }
     }
-    else if (args[1] == "set_cwave")
+    else if (args[1] == "set_cwave" )
     {
       NeuroWaveItem item = neurowavexml_.get_neurowave();
       std::string param = item.parameters;
@@ -531,6 +571,16 @@ void
       std::string desc = item.description;
       guicwavedesc_.set(desc);
       get_ctx()->reset();
+    }
+    else if (args[1] == "c_set_defaults")
+    { 
+      std::vector<std::string> names = solverxml_.get_names(); 
+      guisolvernames_.set(convertclist(names));    
+      names = tstepxml_.get_names(); 
+      guitstepnames_.set(convertclist(names));    
+      names = outputxml_.get_names(); 
+      guioutputnames_.set(convertclist(names));      
+      set_defaults();
     }
     else
     {
