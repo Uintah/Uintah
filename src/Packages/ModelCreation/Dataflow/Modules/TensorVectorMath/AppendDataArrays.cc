@@ -47,7 +47,9 @@ AppendDataArrays::AppendDataArrays(GuiContext* ctx)
 {
 }
 
-void AppendDataArrays::execute()
+
+void
+AppendDataArrays::execute()
 {
   std::vector<MatrixHandle> matrixlist;
 
@@ -79,7 +81,7 @@ void AppendDataArrays::execute()
       m += matrixlist[p]->nrows();
     }
   
-    MatrixHandle omatrix = dynamic_cast<Matrix *>(scinew DenseMatrix(m,n));
+    MatrixHandle omatrix = scinew DenseMatrix(m,n);
     
     if (omatrix.get_rep() == 0)
     {
@@ -97,7 +99,7 @@ void AppendDataArrays::execute()
 
     for (size_t p=0;p<numinputs; p++)
     {
-      MatrixHandle imatrix = dynamic_cast<Matrix *>(matrixlist[p]->dense());
+      MatrixHandle imatrix = matrixlist[p]->dense();
       if (imatrix.get_rep() == 0)
       {
         error("Could not convert matrix into dense matrix");

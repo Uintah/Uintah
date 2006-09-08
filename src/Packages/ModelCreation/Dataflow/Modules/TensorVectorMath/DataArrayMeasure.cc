@@ -57,7 +57,9 @@ DataArrayMeasure::DataArrayMeasure(GuiContext* ctx)
 {
 }
 
-void DataArrayMeasure::execute()
+
+void
+DataArrayMeasure::execute()
 {
   MatrixHandle ArrayData;
   MatrixHandle Measure;
@@ -67,7 +69,7 @@ void DataArrayMeasure::execute()
   if (inputs_changed_ || guimeasure_.changed() ||
       !oport_cached("Measure"))
   {
-    DenseMatrix* mat = dynamic_cast<DenseMatrix *>(ArrayData->dense());
+    DenseMatrix* mat = ArrayData->dense();
     
     int m = mat->nrows();
     int n = mat->ncols();
@@ -75,7 +77,7 @@ void DataArrayMeasure::execute()
     
     std::string method = guimeasure_.get();
     
-    Measure = dynamic_cast<Matrix *>(scinew DenseMatrix(1,n));
+    Measure = scinew DenseMatrix(1,n);
     if (Measure.get_rep() == 0)
     {
       error("DataArrayMeasure: Could not allocate output matrix");

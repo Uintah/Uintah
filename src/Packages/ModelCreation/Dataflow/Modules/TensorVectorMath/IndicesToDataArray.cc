@@ -49,7 +49,8 @@ IndicesToDataArray::IndicesToDataArray(GuiContext* ctx)
 {
 }
 
-void IndicesToDataArray::execute()
+void
+IndicesToDataArray::execute()
 {
   MatrixHandle Index, Template, Array;
   
@@ -114,7 +115,7 @@ void IndicesToDataArray::execute()
       return;
     }
       
-    Array = dynamic_cast<SCIRun::Matrix *>(scinew DenseMatrix(indices_m,temp_n));
+    Array = scinew DenseMatrix(indices_m,temp_n);
     if (Array.get_rep() == 0)
     {
       error("Could not allocate matrix");
