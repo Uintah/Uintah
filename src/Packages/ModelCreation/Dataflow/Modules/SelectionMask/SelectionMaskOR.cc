@@ -54,8 +54,6 @@ public:
   virtual ~SelectionMaskOR();
 
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
@@ -72,7 +70,6 @@ SelectionMaskOR::~SelectionMaskOR()
 void SelectionMaskOR::execute()
 {
   MatrixIPort *iport;
-  MatrixOPort *oport;
   MatrixHandle input, output;
   
   if (!(iport = dynamic_cast<MatrixIPort *>(get_input_port(0))))
@@ -132,19 +129,7 @@ void SelectionMaskOR::execute()
   }
   
   output = newmask.gethandle();
-  
-  if (!(oport = dynamic_cast<MatrixOPort *>(get_output_port(0))))
-  {
-    error("No output port is defined");
-    return;
-  }
-  
-  oport->send(output);
-}
-
-void SelectionMaskOR::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
+  send_output_handle("SelectionMask", output);
 }
 
 } // End namespace CardioWave

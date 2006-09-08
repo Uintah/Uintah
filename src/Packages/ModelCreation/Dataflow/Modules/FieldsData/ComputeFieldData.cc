@@ -212,7 +212,7 @@ void ComputeFieldData::execute()
 }
 
 void
- ComputeFieldData::tcl_command(GuiArgs& args, void* userdata)
+ComputeFieldData::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {

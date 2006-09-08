@@ -239,8 +239,9 @@ void ClipFieldByFunction::execute()
   }
 }
 
+
 void
- ClipFieldByFunction::tcl_command(GuiArgs& args, void* userdata)
+ClipFieldByFunction::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {
@@ -262,6 +263,7 @@ void
     Module::tcl_command(args, userdata);
   }
 }
+
 
 } // End namespace ModelCreation
 

@@ -51,8 +51,6 @@ public:
   virtual ~SelectionMaskXOR();
 
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
@@ -128,11 +126,6 @@ void SelectionMaskXOR::execute()
   }
   
   oport->send(output);
-}
-
-void SelectionMaskXOR::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace CardioWave

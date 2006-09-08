@@ -44,7 +44,6 @@ public:
   StreamMatrix(GuiContext*);
 
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
   
 private:
   GuiString row_or_col_;
@@ -359,11 +358,6 @@ int StreamMatrix::increment(int current, int lower, int upper)
   return current;
 }
 
-
-void StreamMatrix::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace ModelCreation
 

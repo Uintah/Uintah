@@ -53,7 +53,6 @@ public:
   virtual ~StringReader();
 
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
   
 protected:
   GuiString gui_types_;
@@ -71,15 +70,19 @@ StringReader::StringReader(GuiContext* ctx)
   gui_types_.set("{ {{textfile} {.txt .asc .doc}} {{all files} {.*}} }");
 }
 
-StringReader::~StringReader(){
+
+StringReader::~StringReader()
+{
 }
 
+
 void
- StringReader::execute()
+StringReader::execute()
 {
   importing_ = true;
   GenericReader<StringHandle>::execute();
 }
+
 
 // Simple text reader
 bool
@@ -116,11 +119,6 @@ StringReader::call_importer(const string &filename)
   return(true);
 }
 
-void
- StringReader::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace ModelCreation
 
