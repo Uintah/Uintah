@@ -54,8 +54,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-  
 private:
   GuiString     guimatrix1name_;
   GuiString     guimatrix2name_;
@@ -84,7 +82,6 @@ FieldSetMatrixProperty::execute()
     
   FieldHandle  handle;
   FieldIPort   *iport;
-  FieldOPort   *oport;
   MatrixHandle fhandle;
   MatrixIPort  *ifport;
         
@@ -141,23 +138,9 @@ FieldSetMatrixProperty::execute()
   }
         
   // Now post the output
-        
-  if (!(oport = static_cast<FieldOPort *>(get_oport("Field"))))
-  {
-    error("Could not find field output port");
-    return;
-  }
-  
   handle->generation++;            
-  oport->send(handle);
+  send_output_handle("Field", handle);
 }
-
-void
-FieldSetMatrixProperty::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
-
 
 } // end namespace
 

@@ -62,15 +62,8 @@ SphericalSurface::SphericalSurface(GuiContext* ctx)
 }
 
 void
- SphericalSurface::execute()
+SphericalSurface::execute()
 {
-  FieldOPort* oport = dynamic_cast<FieldOPort*>(get_oport(0));
-  if (oport == 0) 
-  {
-    error("Could not find output port");
-    return;
-  }
-
   MatrixIPort* disc_port = dynamic_cast<MatrixIPort*>(get_iport(0));
   MatrixIPort* radius_port = dynamic_cast<MatrixIPort*>(get_iport(1));
   
@@ -103,8 +96,7 @@ void
     mc.MatrixToDouble(radius,r);
     TF.pre_scale(Vector(r,r,r));
     algo.TransformField(ofield,ofield,TF);
-    oport->send(ofield);
-    
+    send_output_handle("Field", ofield);
   }
 }
 
