@@ -79,47 +79,26 @@ FieldSetMatrixProperty::~FieldSetMatrixProperty()
 void
 FieldSetMatrixProperty::execute()
 {
-  std::string matrix1name = guimatrix1name_.get();
-  std::string matrix2name = guimatrix2name_.get();
-  std::string matrix3name = guimatrix3name_.get();
+  const string matrix1name = guimatrix1name_.get();
+  const string matrix2name = guimatrix2name_.get();
+  const string matrix3name = guimatrix3name_.get();
     
   FieldHandle handle;
   if (!get_input_handle("Field", handle)) return;
   
   // Scan matrix input port 1
   MatrixHandle fhandle;
-  MatrixIPort  *ifport;
-  if (!(ifport = static_cast<MatrixIPort *>(get_input_port("Matrix1"))))
+  if (get_input_handle("Matrix1", fhandle, false))
   {
-    error("Could not find matrix 1 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
-  {
-    handle->set_property(matrix1name,fhandle,false);
+    handle->set_property(matrix1name, fhandle, false);
   }
 
-  // Scan matrix input port 2     
-  if (!(ifport = static_cast<MatrixIPort *>(get_input_port("Matrix2"))))
-  {
-    error("Could not find matrix 2 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
+  if (get_input_handle("Matrix2", fhandle, false))
   {
     handle->set_property(matrix2name,fhandle,false);
   }
 
-  // Scan matrix input port 3     
-  if (!(ifport = static_cast<MatrixIPort *>(get_input_port("Matrix3"))))
-  {
-    error("Could not find matrix 3 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
+  if (get_input_handle("Matrix3", fhandle, false))
   {
     handle->set_property(matrix3name,fhandle,false);
   }

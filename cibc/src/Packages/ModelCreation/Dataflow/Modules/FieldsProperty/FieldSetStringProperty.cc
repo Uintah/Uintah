@@ -74,51 +74,32 @@ FieldSetStringProperty::~FieldSetStringProperty()
 void
 FieldSetStringProperty::execute()
 {
-  string string1name = guistring1name_.get();
-  string string2name = guistring2name_.get();
-  string string3name = guistring3name_.get();
+  const string string1name = guistring1name_.get();
+  const string string2name = guistring2name_.get();
+  const string string3name = guistring3name_.get();
     
-  FieldHandle  handle;
+  FieldHandle handle;
   if (!get_input_handle("Field", handle)) return;
   
   // Scan field input port 1
-  StringHandle fhandle;
-  StringIPort  *ifport;
-  if (!(ifport = static_cast<StringIPort *>(get_input_port("String1"))))
+  StringHandle shandle;
+  if (get_input_handle("String1", shandle, false))
   {
-    error("Could not find String 1 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
-  {
-    string fstring = fhandle->get();
+    const string fstring = shandle->get();
     handle->set_property(string1name, fstring, false);
   }
 
-  // Scan field input port 2     
-  if (!(ifport = static_cast<StringIPort *>(get_input_port("String2"))))
-    {
-      error("Could not find String 2 input port");
-      return;
-    }
-        
-  if (ifport->get(fhandle))
+  // Scan field input port 2
+  if (get_input_handle("String2", shandle, false))
   {
-    string fstring = fhandle->get();  
+    const string fstring = shandle->get();  
     handle->set_property(string2name, fstring, false);
   }
 
-  // Scan field input port 3     
-  if (!(ifport = static_cast<StringIPort *>(get_input_port("String3"))))
-    {
-      error("Could not find String 3 input port");
-      return;
-    }
-        
-  if (ifport->get(fhandle))
+  // Scan field input port 3
+  if (get_input_handle("String3", shandle, false))
   {
-    string fstring = fhandle->get();  
+    const string fstring = shandle->get();  
     handle->set_property(string3name, fstring, false);
   }
         
