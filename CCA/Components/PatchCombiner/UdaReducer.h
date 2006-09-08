@@ -10,9 +10,11 @@
 #include <Packages/Uintah/Core/Grid/SimulationStateP.h>
 
 #include <Packages/Uintah/CCA/Components/PatchCombiner/share.h>
+
+#include <vector>
+
 namespace Uintah {
   class LoadBalancer;
-  using namespace std;
 
 /**************************************
 
@@ -102,13 +104,14 @@ WARNING
 
      string udaDir_;
      DataArchive* dataArchive_;
-     vector<int> timesteps_;
-     vector<double> times_;
+     std::vector<int> timesteps_;
+     std::vector<double> times_;
      int timeIndex_;
+     std::vector<int> numMaterials_;
      GridP oldGrid_;
      LoadBalancer* lb;
      VarLabel* delt_label;
-     vector<VarLabel*> labels_;
+     std::vector<VarLabel*> labels_;
      SimulationStateP d_sharedState;
    };
 } // End namespace Uintah
