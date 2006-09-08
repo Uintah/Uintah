@@ -49,7 +49,9 @@ Unstructure::Unstructure(GuiContext* ctx)
 {
 }
 
-void Unstructure::execute()
+
+void
+Unstructure::execute()
 {
   FieldHandle ifield, ofield;
   
@@ -60,7 +62,7 @@ void Unstructure::execute()
     SCIRunAlgo::FieldsAlgo algo(this);
     if (!(algo.Unstructure(ifield,ofield))) return;
     
-    send_output_handle("Field",ofield,false);
+    send_output_handle("Field", ofield);
   }
 }
 

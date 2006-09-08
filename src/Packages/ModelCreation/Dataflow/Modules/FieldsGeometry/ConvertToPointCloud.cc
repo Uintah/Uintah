@@ -50,7 +50,8 @@ ConvertToPointCloud::ConvertToPointCloud(GuiContext* ctx)
 }
 
 
-void ConvertToPointCloud::execute()
+void
+ConvertToPointCloud::execute()
 {
   FieldHandle ifield, ofield;
   if (!(get_input_handle("Field",ifield,true))) return;
@@ -60,7 +61,7 @@ void ConvertToPointCloud::execute()
     SCIRunAlgo::FieldsAlgo algo(this);
     if (!(algo.ToPointCloud(ifield,ofield))) return;
 
-    send_output_handle("Field",ofield,false);
+    send_output_handle("Field", ofield);
   }
 }
 

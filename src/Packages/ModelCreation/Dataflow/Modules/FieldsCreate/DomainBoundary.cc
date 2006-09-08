@@ -131,7 +131,7 @@ void DomainBoundary::execute()
     if(!(algo.DomainBoundary(ifield,ofield,ElemLink,minrange,maxrange,userange,includeouterboundary,innerboundaryonly,noinnerboundary,disconnect))) return;
     
     // send new output if there is any:        
-    send_output_handle("Field",ofield,false);
+    send_output_handle("Field", ofield);
   }
 }
 

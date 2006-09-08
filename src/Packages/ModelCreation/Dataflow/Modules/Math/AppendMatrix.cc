@@ -52,7 +52,9 @@ AppendMatrix::AppendMatrix(GuiContext* ctx)
 {
 }
 
-void AppendMatrix::execute()
+
+void
+AppendMatrix::execute()
 {
   MatrixHandle base;
   std::vector<MatrixHandle> matrices;
@@ -85,7 +87,7 @@ void AppendMatrix::execute()
       }    
     }
   
-    send_output_handle("Matrix",matrix,false);
+    send_output_handle("Matrix", matrix);
   }
 }
 

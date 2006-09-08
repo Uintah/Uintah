@@ -86,9 +86,9 @@ LinkFieldBoundary::execute()
     output->set_property("NodeLink",NodeLink,false);
     output->set_property("ElemLink",ElemLink,false);
     
-    send_output_handle("Field",output,false);
-    send_output_handle("NodeLink",NodeLink,false);
-    send_output_handle("ElemLink",ElemLink,false);  
+    send_output_handle("Field", output);
+    send_output_handle("NodeLink", NodeLink);
+    send_output_handle("ElemLink", ElemLink);
   }
 }
 

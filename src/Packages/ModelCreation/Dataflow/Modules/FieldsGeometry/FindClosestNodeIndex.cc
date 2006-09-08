@@ -51,7 +51,8 @@ FindClosestNodeIndex::FindClosestNodeIndex(GuiContext* ctx)
 {
 }
 
-void FindClosestNodeIndex::execute()
+void
+FindClosestNodeIndex::execute()
 {
   FieldHandle field, points;
   
@@ -69,7 +70,7 @@ void FindClosestNodeIndex::execute()
     if (!(algo.FindClosestNode(field,idxs,points))) return;
     if (!(calgo.UnsignedIntVectorToMatrix(idxs,indices))) return;
     
-    send_output_handle("Indices",indices,false);
+    send_output_handle("Indices", indices);
   }
 }
 
