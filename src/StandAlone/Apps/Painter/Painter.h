@@ -88,7 +88,7 @@
 #include <include/sci_defs/insight_defs.h>
 
 #ifdef HAVE_INSIGHT
-#  include <Packages/Insight/Core/Datatypes/ITKDatatype.h>
+#  include <Core/Datatypes/ITKDatatype.h>
 #  include <itkImageToImageFilter.h>
 #  include <itkCommand.h>
 #  include <itkThresholdSegmentationLevelSetImageFilter.h>
@@ -102,7 +102,7 @@
 namespace SCIRun {
 
 #ifdef HAVE_INSIGHT
-using Insight::ITKDatatypeHandle;
+using SCIRun::ITKDatatypeHandle;
 #endif
 
 class Painter : public Skinner::Parent
@@ -982,7 +982,7 @@ Painter::do_itk_filter(itk::ImageToImageFilter<ImageType, ImageType> *filter,
     return false;
   }
   
-  Insight::ITKDatatypeHandle output_img = new Insight::ITKDatatype();
+  SCIRun::ITKDatatypeHandle output_img = new SCIRun::ITKDatatype();
   output_img->data_ = filter->GetOutput();
 
   nrrd_handle = itk_image_to_nrrd(output_img);

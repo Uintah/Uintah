@@ -2272,12 +2272,12 @@ Painter::nrrd_to_itk_image(NrrdDataHandle &nrrd) {
   importFilter->SetImportPointer((PixType *)n->data, count, false);
   importFilter->Update();
 
-  Insight::ITKDatatype* result = new Insight::ITKDatatype();  
+  SCIRun::ITKDatatype* result = new SCIRun::ITKDatatype();  
   result->data_ = importFilter->GetOutput();
   return result;
   //  return importFilter->GetOutput();
 
-  // Insight::ITKDatatype* result = new Insight::ITKDatatype();  
+  // SCIRun::ITKDatatype* result = new SCIRun::ITKDatatype();  
   //  result->data_ = importFilter->GetOutput();
   //  return result;
 }
@@ -2296,7 +2296,7 @@ Painter::itk_image_to_nrrd(ITKDatatypeHandle &img_handle) {
     return 0;
   }
 
-  //  Insight::ITKDatatype* result = new Insight::ITKDatatype();  
+  //  SCIRun::ITKDatatype* result = new SCIRun::ITKDatatype();  
   //  result->data_ = img;//importFilter->GetOutput();
   
   //  LockingHandle<SCIRun::Datatype> *blah = dynamic_cast<LockingHandle<SCIRun::Datatype> *> (&img_handle);
