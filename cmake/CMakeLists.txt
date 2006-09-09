@@ -426,23 +426,28 @@ IF(WIN32 AND NOT CYGWIN)
 ENDIF(WIN32 AND NOT CYGWIN)
 
 #-----------------------------------------------------------------------------
-# SCIRun Packages to enable
+# SCIRun Packages to enable (just SCIRun for now)
+SET(LOAD_PACKAGE "SCIRun" CACHE STRING "Just loading SCIRun")
+
 # DV fix enabling more packages
-SET (PACKAGES "" CACHE STRING "SCIRun packages to enable (separated by white space).")
+#SET (PACKAGES "" CACHE STRING "SCIRun packages to enable (separated by white space).")
+
+#IF(PACKAGES)
+#  # Always load SCIRun
+#  SET(PKGS "SCIRun")
+#  FOREACH(p ${PACKAGES})
+#    SET(PKGS "${PKGS},${p}")
+#  ENDFOREACH(p ${PACKAGES})
+#  SET(LOAD_PACKAGE ${PKGS} CACHE STRING "Packages to load")
+#ELSE(PACKAGES)
+#  SET(LOAD_PACKAGE "SCIRun" CACHE STRING "Just loading SCIRun")
+#ENDIF(PACKAGES)
+
 
 # sci_defs/environment_defs.h
 SET(scirun_src_dir "${CMAKE_SOURCE_DIR}/src" CACHE INTERNAL "Path to SCIRun's src directory")
 SET(scirun_obj_dir ${CMAKE_BINARY_DIR} CACHE INTERNAL "Path to SCIRun's binary directory")
-# DV Fix iterating over packages in case no packages selected, there 
-# won't be dangling comma
-IF(PACKAGES)
-  SET(LOAD_PACKAGE "SCIRun," CACHE STRING "Packages to load")
-  FOREACH(p ${PACKAGES})
-    SET(LOAD_PACKAGE "${LOAD_PACKAGE},${p}" CACHE STRING "Packages to load")
-  ENDFOREACH(p)
-ELSE(PACKAGES)
-  SET(LOAD_PACKAGE "SCIRun" CACHE STRING "Just loading SCIRun")
-ENDIF(PACKAGES)
+
 SET(ITCL_WIDGETS ${SCIRUN_THIRDPARTY_PATH}/iwidgets/scripts CACHE INTERNAL "Path to iwidgets scripts")
 
 # DV maybe this shouldn't be alterable?
@@ -595,6 +600,20 @@ ELSE(ENABLE_SCI_MALLOC)
   SET(DEF_MALLOC "#define DISABLE_SCI_MALLOC 1")
 ENDIF(ENABLE_SCI_MALLOC)
 SET(DEF_MALLOC_LINENUMBERS "")
+
+#----------------------------------------------------------------------------
+# ITK
+OPTION(WITH_ITK "Build SCIRun with support for the Insight Toolkit." OFF)
+IF(WITH_ITK)
+  FIND_PACKAGE( ITK )
+  IF(ITK_FOUND)
+    INCLUDE(${ITK_USE_FILE})
+    SET(DEF_INSIGHT "#define HAVE_INSIGHT 1" CACHE INTERNAL "Have insight")
+    SET(HAVE_INSIGHT "yes" CACHE INTERNAL "Linking against ITK")
+  ELSE(ITK_FOUND)
+    MESSAGE(FATAL_ERROR "Cannot find ITK. Please set ITK_DIR.")
+  ENDIF(ITK_FOUND)
+ENDIF(WITH_ITK)
 
 #-----------------------------------------------------------------------------
 # The entire SCIRun tree should use the same include path

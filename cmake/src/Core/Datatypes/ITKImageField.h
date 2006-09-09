@@ -48,8 +48,8 @@
 // I just put the missing ones here, to make the Insight Package compile properly.
 // -- jeroen
 
-#include <Packages/Insight/Core/Datatypes/share.h>
-namespace Insight {
+#include <Core/Datatypes/share.h>
+namespace SCIRun {
 
 template <class Data> class ITKFData2d;
 template <class Data> class ITKImageField;
@@ -58,18 +58,18 @@ template <class Data> class ITKImageField;
 
 namespace SCIRun {
 
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<SCIRun::Tensor>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<SCIRun::Vector>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<double>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<float>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<int>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<long>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<short>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<char>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned int>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned short>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned char>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned long>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<SCIRun::Tensor>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<SCIRun::Vector>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<double>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<float>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<int>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<long>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<short>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<char>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<unsigned int>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<unsigned short>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<unsigned char>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<unsigned long>*);
 
 }
 
@@ -91,10 +91,9 @@ namespace SCIRun {
 
 #include <Core/Geometry/BBox.h>
 
-namespace Insight {
+namespace SCIRun {
 
 using std::string;
-using namespace SCIRun;
 
 typedef ImageMesh<QuadBilinearLgn<Point> > IMesh_;
 
@@ -616,7 +615,7 @@ void Pio(Piostream& stream, ITKFData2d<T>& data)
   stream.end_class();
 }
 
-} // end namespace Insight
+} // end namespace SCIRun
 
 
 #endif // Datatypes_ITKImageField_h

@@ -90,8 +90,9 @@ TARGET_LINK_LIBRARIES(painter
 
 IF(${HAVE_INSIGHT})   
   TARGET_LINK_LIBRARY(painter 
-    Packages_Insight_Core_Datatypes
-    ${INSIGHT_LIBRARY}
+    Core_Datatypes
+    ITKCommon
+    ITKBasicFilters
   )
 ENDIF(${HAVE_INSIGHT})
 

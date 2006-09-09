@@ -49,27 +49,24 @@
 // -- jeroen
 
 
-#include <Packages/Insight/Core/Datatypes/share.h>
-namespace Insight {
+#include <Core/Datatypes/share.h>
+namespace SCIRun {
 
 template <class Data> class ITKFData3d;
 template <class Data> class ITKLatVolField;
 
-}
-
-namespace SCIRun {
   
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<SCIRun::Tensor>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<SCIRun::Vector>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<double>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<float>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<int>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<short>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<char>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned int>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned short>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned char>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned long>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<SCIRun::Tensor>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<SCIRun::Vector>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<double>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<float>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<int>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<short>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<char>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<unsigned int>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<unsigned short>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<unsigned char>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<unsigned long>*);
 }
 
 #include <Core/Containers/LockingHandle.h>
@@ -90,10 +87,9 @@ namespace SCIRun {
 
 #include <Core/Geometry/BBox.h>
 
-namespace Insight {
+namespace SCIRun {
 
 using std::string;
-using namespace SCIRun;
 
 typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh_;
 
@@ -559,7 +555,7 @@ ITKLatVolField<T>::get_type_description(int n) const
 
   TypeDescription* td = 0;
   static string name( type_name(0) );
-  static string namesp("Insight");
+  static string namesp("SCIRun");
   static string path(__FILE__);
 
   if(!td){
@@ -770,7 +766,7 @@ void Pio(Piostream& stream, ITKFData3d<T>& data)
 
 }
 
-} // end namespace Insight
+} // end namespace SCIRun
 
 
 #endif // Datatypes_ITKLatVolField_h

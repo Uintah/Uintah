@@ -43,12 +43,11 @@ find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
 #include <Core/Containers/LockingHandle.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Packages/Insight/Core/Datatypes/ITKLatVolField.h>
-#include <Packages/Insight/Core/Datatypes/ITKImageField.h>
+#include <Core/Datatypes/ITKLatVolField.h>
+#include <Core/Datatypes/ITKImageField.h>
 #include <Core/Persistent/PersistentSTL.h>
 #include <Core/Datatypes/PropertyManager.h>
 
-using namespace Insight;
 using namespace SCIRun;
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
