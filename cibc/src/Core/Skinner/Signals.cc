@@ -73,7 +73,7 @@ namespace SCIRun {
         delete catcher_targets_[i];
     } 
 
-
+    SignalCatcher::CatcherTargetInfoBase::~CatcherTargetInfoBase() {}
       
 
     SignalThrower::SignalThrower() :
