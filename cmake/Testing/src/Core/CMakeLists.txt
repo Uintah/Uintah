@@ -1,1 +1,0 @@
-SUBDIRS(Containers Exceptions Math Thread)
