@@ -20,7 +20,7 @@ CONFIGURE_FILE (
 )
 
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/src/include/sci_defs/config_testdefs.h.in"
+  "${PROJECT_SOURCE_DIR}/src/include/sci_defs/cmake_config_testdefs.h.in"
   "${PROJECT_BINARY_DIR}/include/sci_defs/config_defs.h"
 )
 
