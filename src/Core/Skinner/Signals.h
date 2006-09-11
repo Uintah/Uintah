@@ -106,9 +106,7 @@ namespace SCIRun {
       BaseTool::propagation_state_e CatcherFunction_t(event_handle_t);
 
       struct SCISHARE CatcherTargetInfoBase {
-#if 0
         virtual ~CatcherTargetInfoBase();
-#endif
         CatcherTargetInfoBase() {}
         CatcherTargetInfoBase(string target, Variables* vars) : targetname_(target), variables_(vars) {}
         string targetname_;
@@ -169,18 +167,18 @@ namespace SCIRun {
 
     template <class T>
     SignalCatcher::CatcherTargetInfo_t<T>::CatcherTargetInfo_t() :
+      SignalCatcher::CatcherTargetInfoBase("", 0),
       catcher_(0),
-      function_(0),
-      SignalCatcher::CatcherTargetInfoBase("", 0)
+      function_(0)
     {
     }
 
     template <class T>
     SignalCatcher::CatcherTargetInfo_t<T>::CatcherTargetInfo_t
     (const CatcherTargetInfo_t &copy) :
+      SignalCatcher::CatcherTargetInfoBase(copy.targetname_, copy.variables_),
       catcher_(copy.catcher_),
-      function_(copy.function_), 
-      SignalCatcher::CatcherTargetInfoBase(copy.targetname_, copy.variables_)
+      function_(copy.function_) 
     {
     }
 
