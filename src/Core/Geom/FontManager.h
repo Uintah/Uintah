@@ -53,7 +53,7 @@ using namespace std;
 #include <Core/Geom/share.h>
 namespace SCIRun {
 
-class FontManager {
+class SCISHARE FontManager {
 public:
   FontManager();
   ~FontManager();

@@ -269,13 +269,13 @@ FieldInfo::execute()
     if (!(calgo.VectorToMatrix(size_,FieldSize))) return;
     if (!(calgo.PointToMatrix(center_,FieldCenter))) return;
     
-    send_output_handle("NumNodes",NumNodes,false);
-    send_output_handle("NumElements",NumElements,false);
-    send_output_handle("NumData",NumData,false);
-    send_output_handle("DataMin",DataMin,false);
-    send_output_handle("DataMax",DataMax,false);
-    send_output_handle("FieldSize",FieldSize,false);
-    send_output_handle("FieldCenter",FieldCenter,false);
+    send_output_handle("NumNodes", NumNodes);
+    send_output_handle("NumElements", NumElements);
+    send_output_handle("NumData", NumData);
+    send_output_handle("DataMin", DataMin);
+    send_output_handle("DataMax", DataMax);
+    send_output_handle("FieldSize", FieldSize);
+    send_output_handle("FieldCenter", FieldCenter);
   }
 }
 

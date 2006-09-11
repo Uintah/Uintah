@@ -39,6 +39,8 @@
 #  endif
 #else
 #  if defined(HAVE_GLEW)
+#    include <windows.h>
+#    include <GL/glew.h>
 #    include <GL/wglew.h>
 #  endif
 #endif

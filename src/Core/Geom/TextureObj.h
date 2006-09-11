@@ -49,7 +49,8 @@ namespace SCIRun {
 
 using std::string;
 
-class TextureObj {
+#include <Core/Geom/share.h>
+class SCISHARE TextureObj {
 public:
   TextureObj(NrrdDataHandle &nrrd_handle);
   TextureObj(int, int, int);

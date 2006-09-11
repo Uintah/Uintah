@@ -37,11 +37,12 @@
 #include <string>
 
 
+#include <Core/Events/share.h>
 namespace SCIRun {
 
 using namespace std;
 
-class SceneGraphEvent : public BaseEvent 
+class SCISHARE SceneGraphEvent : public BaseEvent 
 {
 public:
   SceneGraphEvent();

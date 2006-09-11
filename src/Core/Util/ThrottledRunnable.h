@@ -40,8 +40,8 @@
 #ifndef Core_Util_Throttled_Runnable_h
 #define Core_Util_Throttled_Runnable_h
 
-#include <Core/Thread/share.h>
 #include <Core/Thread/Runnable.h>
+#include <Core/Util/share.h>
 
 namespace SCIRun {
   

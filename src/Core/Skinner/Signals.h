@@ -34,6 +34,7 @@
 
 #include <Core/Events/BaseEvent.h>
 #include <Core/Events/Tools/BaseTool.h>
+#include <Core/Malloc/Allocator.h>
 #include <string>
 #include <deque>
 #include <vector>
@@ -43,16 +44,15 @@ using std::vector;
 
 #define REGISTER_CATCHER_TARGET(catcher_target_function_name) \
   this->register_default_thrower \
-    (this->register_target(#catcher_target_function_name, \
-     static_cast<SCIRun::Skinner::SignalCatcher::CatcherFunctionPtr> \
-       (&catcher_target_function_name)));
+    (this->register_target(#catcher_target_function_name, this, \
+       &catcher_target_function_name));
 
 #define REGISTER_CATCHER_TARGET_BY_NAME(target_name, function_name) \
   this->register_default_thrower \
-    (this->register_target(#target_name, \
-      static_cast<SCIRun::Skinner::SignalCatcher::CatcherFunctionPtr> \
-        (&function_name)));
+    (this->register_target(#target_name, this, &function_name));
 
+
+#include <Core/Skinner/share.h>
 
 namespace SCIRun {
   class PointerEvent;
@@ -62,8 +62,9 @@ namespace SCIRun {
     class SignalThrower;
     class SignalCatcher;
     class Variables;
+    class Drawable;
 
-    class Signal : public SCIRun::BaseEvent
+    class SCISHARE Signal : public SCIRun::BaseEvent
     {
     public:
       Signal(const string &name, SignalThrower *, Variables *);
@@ -95,52 +96,109 @@ namespace SCIRun {
       BaseTool::propagation_state_e result_;
     };
     
-    class SignalCatcher {
+    class SCISHARE SignalCatcher {
     public:
       SignalCatcher();
       ~SignalCatcher();
 
       // Typedefs 
       typedef 
-      BaseTool::propagation_state_e 
-      (SCIRun::Skinner::SignalCatcher::* CatcherFunctionPtr)(event_handle_t);
-
-      typedef 
       BaseTool::propagation_state_e CatcherFunction_t(event_handle_t);
 
-
-      struct CatcherTargetInfo_t { 
-        CatcherTargetInfo_t();
-        CatcherTargetInfo_t(const CatcherTargetInfo_t &copy);
-        ~CatcherTargetInfo_t();
-        SignalCatcher *         catcher_;
-        CatcherFunctionPtr      function_;
-        string                  targetname_;
-        Variables *             variables_;
+      struct SCISHARE CatcherTargetInfoBase {
+        virtual ~CatcherTargetInfoBase();
+        CatcherTargetInfoBase() {}
+        CatcherTargetInfoBase(string target, Variables* vars) : targetname_(target), variables_(vars) {}
+        string targetname_;
+        Variables* variables_;
+        virtual BaseTool::propagation_state_e doCallback(event_handle_t signal) = 0;
+        virtual Drawable* getDrawable() = 0;
+        virtual CatcherTargetInfoBase* clone() = 0;
       };
 
-      typedef vector<CatcherTargetInfo_t> NodeCatchers_t;
+      template <class T>
+      struct CatcherTargetInfo_t : public CatcherTargetInfoBase { 
+
+        typedef BaseTool::propagation_state_e (T::*FuncPtr)(event_handle_t);
+
+        CatcherTargetInfo_t();
+        CatcherTargetInfo_t(const CatcherTargetInfo_t &copy);
+        T*                      catcher_;
+        FuncPtr function_;
+        virtual Drawable* getDrawable() { return (Drawable*) catcher_; }
+        virtual BaseTool::propagation_state_e doCallback(event_handle_t signal) {  
+          ASSERT(catcher_); 
+          ASSERT(function_);
+          return (catcher_->*function_)(signal); 
+        }
+        virtual CatcherTargetInfoBase* clone() { return scinew CatcherTargetInfo_t<T>(*this); }
+      };
+
+      typedef vector<CatcherTargetInfoBase*> NodeCatchers_t;
       typedef vector<NodeCatchers_t> TreeOfCatchers_t;
 
 
       // Only method
       NodeCatchers_t            get_all_targets() { return catcher_targets_; }
     protected:
-      CatcherTargetInfo_t       register_target(const string &targetname,
-                                                CatcherFunctionPtr function);
+      template <class T>
+      CatcherTargetInfoBase*    register_target(const string &targetname, T* caller, 
+                                                typename CatcherTargetInfo_t<T>::FuncPtr function);
 
     private:
       NodeCatchers_t            catcher_targets_;            
     };
   
+    template <class T>
+    SignalCatcher::CatcherTargetInfoBase*
+    SignalCatcher::register_target(const string &targetname, T* caller,
+                                   typename SignalCatcher::CatcherTargetInfo_t<T>::FuncPtr function) 
+    {
+      ASSERT(function);
+      CatcherTargetInfo_t<T>* callback = new CatcherTargetInfo_t<T>;
+      callback->catcher_ = caller;
+      callback->function_ = function;
+      callback->targetname_ = targetname;
+      callback->variables_ = 0;
+
+      catcher_targets_.push_back(callback);
+      return callback;
+    }
+
+    template <class T>
+    SignalCatcher::CatcherTargetInfo_t<T>::CatcherTargetInfo_t() :
+      SignalCatcher::CatcherTargetInfoBase("", 0),
+      catcher_(0),
+      function_(0)
+    {
+    }
+
+    template <class T>
+    SignalCatcher::CatcherTargetInfo_t<T>::CatcherTargetInfo_t
+    (const CatcherTargetInfo_t &copy) :
+      SignalCatcher::CatcherTargetInfoBase(copy.targetname_, copy.variables_),
+      catcher_(copy.catcher_),
+      function_(copy.function_) 
+    {
+    }
+
+#if 0
+    SignalCatcher::CatcherTargetInfoBase::~CatcherTargetInfoBase()
+    {
+      //      if (variables_) {
+      //        delete variables_;
+      //        variables_ = 0;
+      //      }
+    }
+#endif
   
-    class SignalThrower {
+    class SCISHARE SignalThrower {
     public:      
       SignalThrower();
       virtual ~SignalThrower();
 
       // Typedefs
-      typedef vector<SignalCatcher::CatcherTargetInfo_t> AllSignalCatchers_t;
+      typedef vector<SignalCatcher::CatcherTargetInfoBase*> AllSignalCatchers_t;
       typedef map<string, AllSignalCatchers_t> SignalToAllCatchers_t;
 
       event_handle_t                    throw_signal(const string &,
@@ -153,25 +211,26 @@ namespace SCIRun {
 
 
       
-      void                              register_default_thrower(const SignalCatcher::CatcherTargetInfo_t &);
+      void                              register_default_thrower(SignalCatcher::CatcherTargetInfoBase*);
 
       static SignalToAllCatchers_t      collapse_tree(SignalCatcher::TreeOfCatchers_t &);
 
                                    
       virtual int     get_signal_id(const string &) const = 0;
 
+#if 0
       bool            hookup_signal_to_catcher_target(const string &,
                                                       const string &,
                                                       SignalCatcher *,
                                                       SignalCatcher::CatcherFunctionPtr);
-
+#endif
       // Should be private
       SignalToAllCatchers_t all_catchers_;
     };
 
     class Variables;
 
-    class MakerSignal : public Signal
+    class SCISHARE MakerSignal : public Signal
     {
       Variables * variables_;
     public:
@@ -180,7 +239,7 @@ namespace SCIRun {
       Variables * get_vars() { return variables_; }
     };
 
-    class PointerSignal : public Signal
+    class SCISHARE PointerSignal : public Signal
     {
       PointerEvent *pointer_;
     public:
@@ -192,7 +251,7 @@ namespace SCIRun {
       PointerEvent *get_pointer_event() { return pointer_; }
     };
 
-    class KeySignal : public Signal
+    class SCISHARE KeySignal : public Signal
     {
       KeyEvent *key_;
     public:

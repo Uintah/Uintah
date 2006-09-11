@@ -82,6 +82,7 @@ class Transform;
 class Matrix;
 class NrrdData;
 class Field;
+class String;
 
 template<> SCISHARE const string find_type_name(float*);
 template<> SCISHARE const string find_type_name(double*);
@@ -106,6 +107,7 @@ template<> SCISHARE const string find_type_name(string*);
 template<> SCISHARE const string find_type_name(LockingHandle<Matrix> *);
 template<> SCISHARE const string find_type_name(LockingHandle<NrrdData> *);
 template<> SCISHARE const string find_type_name(LockingHandle<Field> *);
+template<> SCISHARE const string find_type_name(LockingHandle<String> *);
 
 //////////
 // Function overloading for templates 

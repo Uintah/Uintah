@@ -80,7 +80,8 @@ void MatrixInfo::clear_vals()
 }
 
 
-void MatrixInfo::update_input_attributes(MatrixHandle m)
+void
+MatrixInfo::update_input_attributes(MatrixHandle m)
 {
   std::string matrixname;
   if (m->get_property("name", matrixname))
@@ -156,9 +157,9 @@ void MatrixInfo::execute()
     }
     if (!(calgo.IntToMatrix(numelems,NumElements))) return;
 
-    send_output_handle("NumRows",NumRows,false);
-    send_output_handle("NumCols",NumCols,false);
-    send_output_handle("NuMElements",NumElements,false);
+    send_output_handle("NumRows", NumRows);
+    send_output_handle("NumCols", NumCols);
+    send_output_handle("NuMElements", NumElements);
   }
 }
 

@@ -285,8 +285,9 @@ void SelectAndSetFieldsData::execute()
   }
 }
 
+
 void
- SelectAndSetFieldsData::tcl_command(GuiArgs& args, void* userdata)
+SelectAndSetFieldsData::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {
@@ -309,6 +310,7 @@ void
     Module::tcl_command(args, userdata);
   }
 }
+
 
 } // End namespace ModelCreation
 

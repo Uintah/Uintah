@@ -17,6 +17,7 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDBuildSimulation {
       set $this-filename-entry ""
       set $this-usedebug 1
       set $this-buildvisbundle 1
+      set $this-optimize 0
     }
 
     method ui {} {
@@ -51,9 +52,11 @@ itcl_class CardioWave_DiscreteMultiDomain_DMDBuildSimulation {
   
         checkbutton $opt.enabledebug -text "Enable CardioWave Debug mode" -variable $this-usedebug
         checkbutton $opt.buildvisualization -text "Build Visualization bundle" -variable $this-buildvisbundle
+        checkbutton $opt.optimize -text "Optimize linear system for parallel solver" -variable $this-optimize
   
-        grid $opt.enabledebug -row 0 -column 0
-        grid $opt.buildvisualization -row 1 -column 0
+        grid $opt.enabledebug -row 0 -column 0 -sticky w
+        grid $opt.buildvisualization -row 1 -column 0 -sticky w
+        grid $opt.optimize -row 2 -column 0 -sticky w
         
         makeSciButtonPanel $w $w $this
         moveToCursor $w

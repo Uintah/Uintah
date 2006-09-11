@@ -54,44 +54,36 @@ itcl_class SCIRun_FieldsGeometry_MeshSmoother {
         }
 
         toplevel $w
-        wm minsize $w 150 80
+        #wm minsize $w 80 130
 
-	frame $w.bound1
-	label $w.bound1.t1 -text "Smooth Boundary?"
-	pack $w.bound1.t1
-	pack $w.bound1
+	frame $w.bound -relief groove -borderwidth 2
+	label $w.bound.t1 -text "Smooth Boundary"
+	pack $w.bound.t1 
 
-	frame $w.bound
 	radiobutton $w.bound.smoothboundaryon -text "On" \
 	    -variable $this-smoothboundary -value "On"
 	radiobutton $w.bound.smoothboundaryoff -text "Off" \
 	    -variable $this-smoothboundary -value "Off"
 	pack $w.bound.smoothboundaryon $w.bound.smoothboundaryoff \
-	    -side left -anchor nw -padx 3
-	pack $w.bound -side top
+	    -side left -anchor n
 
-	frame $w.sep
-	label $w.sep.t1
- 	label $w.sep.t2 -text "Smoothing Scheme"
-	pack $w.sep.t1 $w.sep.t2
-	pack $w.sep
+	frame $w.style -relief groove -borderwidth 2
+ 	label $w.style.t1 -text "Smoothing Scheme"
+	pack $w.style.t1
 
-	frame $w.style
 	radiobutton $w.style.none -text "None" \
 	    -variable $this-smoothscheme -value "None"
+	radiobutton $w.style.laplacian -text "Laplacian" \
+	    -variable $this-smoothscheme -value "Laplacian"
 	radiobutton $w.style.smartlaplacian -text "Smart Laplacian" \
 	    -variable $this-smoothscheme -value "SmartLaplacian"
-
 	radiobutton $w.style.shapeimprovement -text "Shape Improvement" \
 	    -variable $this-smoothscheme -value "ShapeImprovement"
-	pack $w.style.none $w.style.smartlaplacian $w.style.shapeimprovement \
-	    -side left -anchor nw -padx 3
-	pack $w.style
+	pack $w.style.none $w.style.laplacian $w.style.smartlaplacian $w.style.shapeimprovement \
+	    -side top -anchor w
 
-        frame $w.f
-	frame $w.fb
-        pack $w.f $w.fb -padx 2 -pady 2 -side top -expand yes
-
+        pack $w.bound $w.style -side top -e y -f both -padx 5 -pady 5
+        
         makeSciButtonPanel $w $w $this
 	moveToCursor $w
     }

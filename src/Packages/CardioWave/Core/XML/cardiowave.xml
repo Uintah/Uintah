@@ -35,7 +35,7 @@ Gsi=0.09
 <name>Resistive Gap Junction 2</name>
 <file>SynPassiveGJ.c</file>
 <nodetype>sPassiveGJ_NodeType2</nodetype>
-<parameters>sPassiveGJ_resistance2=0.0045
+<parameters>sPassiveGJ_resistance2=0.0015
 </parameters>
 <description>This is a simple resistive gap junction model.
 </description>
@@ -45,7 +45,7 @@ Gsi=0.09
 <name>Resistive Gap Junction 3</name>
 <file>SynPassiveGJ.c</file>
 <nodetype>sPassiveGJ_NodeType3</nodetype>
-<parameters>sPassiveGJ_resistance3=0.0025
+<parameters>sPassiveGJ_resistance3=0.0015
 </parameters>
 <description>This is a simple resistive gap junction model.
 </description>
@@ -55,7 +55,7 @@ Gsi=0.09
 <name>Resistive Gap Junction 4</name>
 <file>SynPassiveGJ.c</file>
 <nodetype>sPassiveGJ_NodeType4</nodetype>
-<parameters>sPassiveGJ_resistance4=0.0045
+<parameters>sPassiveGJ_resistance4=0.0015
 </parameters>
 <description>This is a simple resistive gap junction model.
 </description>
@@ -165,8 +165,8 @@ exitaterror=true
 <name>Semi-Implicit Timestepper</name>
 <file>TstepSBmicro.c</file>
 <parameters>adaptive=no
-dt=0.005
-tfinal=5
+dt=5e-5
+tfinal=10
 </parameters>
 <description>This is currently the only timestepper for the discrete multidomain available.
 </description>
@@ -176,8 +176,8 @@ tfinal=5
 <name>Adaptive Semi-Implicit Timestepper</name>
 <file>TstepSBmicro.c</file>
 <parameters>adaptive=yes
-dt=0.005
-dt0=0.0005
+dt=5e-5
+dt0=5e-5
 dtmax=0.05
 dtmin=5e-05
 dtstim=5e-05
@@ -201,10 +201,20 @@ scirun_dump_q=no
 scirun_dump_r=no
 scirun_dump_b=no
 scirun_dump_time=yes
+# Get activation and recovery
+# Times are recorded when transmembrane potential is
+# over a certain threshold. Detection for crossing threshold
+# is reactivated after inactivation time. 
+scirun_dump_act=yes
+act_threshold=0.0
+act_inactivation=100.00
+scirun_dump_rec=no
+rec_threshold=0.0
+rec_inactivation=100.00
 # number of steps between recordings
-scirun_dump_step=100
+scirun_dump_step=200
 # numer of steps in one file
-scirun_dump_size=20
+scirun_dump_size=100
 </parameters>
 <description>The configuration writes a series of output files with a header file that can be read into SCIRun. The 'dumpstep' parameter can be used to set the number of timeframes in a single file. All the separate files are linked by one NRRD header file.
 </description>
@@ -222,10 +232,21 @@ scirun_dump_q=no
 scirun_dump_r=no
 scirun_dump_b=no
 scirun_dump_time=yes
+# Get activation and recovery
+# Times are recorded when transmembrane potential is
+# over a certain threshold. Detection for crossing threshold
+# is reactivated after inactivation time. 
+scirun_dump_act=yes
+act_threshold=0.0
+act_inactivation=100.00
+scirun_dump_rec=no
+rec_threshold=0.0
+rec_inactivation=100.00
+
 # Number of steps between recordings
-scirun_dump_step=100
+scirun_dump_step=200
 # Number of steps in one file
-scirun_dump_size=20
+scirun_dump_size=100
 
 # Parameters OutputText
 printspacing=0.005

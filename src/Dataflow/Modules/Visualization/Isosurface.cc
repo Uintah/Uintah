@@ -49,6 +49,12 @@
 #include <Core/Algorithms/Visualization/TetMC.h>
 #include <Core/Algorithms/Visualization/HexMC.h>
 
+#ifdef _WIN32
+#define SCISHARE __declspec(dllexport)
+#else
+#define SCISHARE
+#endif
+
 namespace SCIRun {
 
 DECLARE_MAKER(Isosurface)

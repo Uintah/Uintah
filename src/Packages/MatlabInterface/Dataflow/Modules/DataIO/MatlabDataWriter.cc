@@ -268,7 +268,7 @@ void MatlabDataWriter::execute()
           
   // Check the validity of the matrixnames
 
-  for (int p=0;p<matrixname.size();p++)
+  for (unsigned int p=0; p<matrixname.size(); p++)
   {
     if (porthasdata[p] == false) continue; // Do not check not used ports
     if (!translate.isvalidmatrixname(matrixname[p]))
@@ -276,7 +276,7 @@ void MatlabDataWriter::execute()
       error("MatlabDataWriter: The matrix name specified is invalid");
       return;
     }
-    for (int q=0;q<p;q++)
+    for (unsigned int q=0; q<p; q++)
     {
       if (porthasdata[q] == false) continue;
       if (matrixname[q] == matrixname[p])

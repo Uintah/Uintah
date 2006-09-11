@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE component SYSTEM "component.dtd">
+<component name="BasicInput" category="Examples" optional="false">
+  <overview>
+    <authors>
+      <author>Martin Cole</author>
+    </authors>
+    <summary>
+      Most basic example of Field Input in a SCIRun module.
+    </summary>
+    <description>
+      <p>Get a Field from the input port and print out the pointer to
+the field when executed.</p>
+    </description>
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+	<name>InField</name>
+	<datatype>SCIRun::Field</datatype>
+      </port>
+    </inputs>
+  </io>
+</component>

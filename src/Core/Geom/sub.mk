@@ -104,9 +104,14 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/TimeGrid.cc		    		\
 	$(SRCDIR)/View.cc		    		\
 	$(SRCDIR)/X11Lock.cc		    		\
-	$(SRCDIR)/X11OpenGLContext.cc		        \
 	$(SRCDIR)/tGrid.cc		    		\
 	$(SRCDIR)/templates.cc
+
+ifeq ($(IS_WIN),yes)
+  SRCS +=$(SRCDIR)/Win32OpenGLContext.cc
+else
+  SRCS +=$(SRCDIR)/X11OpenGLContext.cc
+endif
 
 PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
 	Core/Datatypes Core/Math Core/Containers Core/Thread \

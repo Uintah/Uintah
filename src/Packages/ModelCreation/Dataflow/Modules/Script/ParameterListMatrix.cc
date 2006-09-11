@@ -71,7 +71,7 @@ void ParameterListMatrix::execute()
         
     if (bundle.get_rep() == 0)
     {   
-      bundle = dynamic_cast<Bundle *>(scinew Bundle());
+      bundle = scinew Bundle();
     }
 
     if (matrix.get_rep() != 0)

@@ -118,8 +118,8 @@ DECLARE_MAKER(MatlabMatricesWriter)
 MatlabMatricesWriter::MatlabMatricesWriter(GuiContext* ctx)
   : Module("MatlabMatricesWriter", ctx, Sink, "DataIO", "MatlabInterface"),
     guifilename_(get_ctx()->subVar("filename")),
-    guimatrixname_(get_ctx()->subVar("matrixname")),   
     guifilenameset_(get_ctx()->subVar("filename-set")),
+    guimatrixname_(get_ctx()->subVar("matrixname")),   
     guidataformat_(get_ctx()->subVar("dataformat")),    
     guimatrixformat_(get_ctx()->subVar("matrixformat"))
 {

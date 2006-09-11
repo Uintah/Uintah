@@ -52,7 +52,6 @@ public:
   virtual ~FieldGetStringProperty();
 
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
   
 private:
   GuiString             guistring1name_;
@@ -72,44 +71,27 @@ DECLARE_MAKER(FieldGetStringProperty)
 {
 }
 
-FieldGetStringProperty::~FieldGetStringProperty(){
+
+FieldGetStringProperty::~FieldGetStringProperty()
+{
 }
 
 
 void
 FieldGetStringProperty::execute()
 {
-  std::string string1name = guistring1name_.get();
-  std::string string2name = guistring2name_.get();
-  std::string string3name = guistring3name_.get();
-  std::string stringlist;
+  const string string1name = guistring1name_.get();
+  const string string2name = guistring2name_.get();
+  const string string3name = guistring3name_.get();
+  string stringlist;
         
   FieldHandle handle;
-  FieldIPort  *iport;
-  StringOPort *ofport;
+  if (!get_input_handle("Field", handle)) return;
+
   StringHandle fhandle;
   std::string fstring;
-          
-  if(!(iport = static_cast<FieldIPort *>(get_input_port("Field"))))
-  {
-    error("Could not find 'Field' input port");
-    return;
-  }
 
-  if (!(iport->get(handle)))
-  {   
-    warning("No field was found on input port");
-    return;
-  }
-
-  if (handle.get_rep() == 0)
-  {   
-    warning("Input field is empty");
-    return;
-  }
-
-  size_t nprop = handle->nproperties();
-
+  const size_t nprop = handle->nproperties();
   for (size_t p=0;p<nprop;p++)
   {
     if(handle->get_property(handle->get_property_name(p),fhandle))
@@ -126,69 +108,45 @@ FieldGetStringProperty::execute()
   guistrings_.set(stringlist);
   get_ctx()->reset();
   
-  if (!(ofport = static_cast<StringOPort *>(get_oport("String1"))))
-  {
-    error("Could not find string 1 output port");
-    return; 
-  }
- 
   if (handle->is_property(string1name))
   {
-    if(handle->get_property(string1name,fhandle))
+    if (handle->get_property(string1name, fstring))
     {
-      if (fhandle.get_rep()) ofport->send(fhandle);
+      fhandle = scinew String(fstring);
     }
-    else if (handle->get_property(string1name,fstring))
+    else
     {
-      fhandle = dynamic_cast<String *>(scinew String(fstring));
-      if (fhandle.get_rep()) ofport->send(fhandle);
+      handle->get_property(string1name, fhandle);
     }
-  }
- 
-  if (!(ofport = static_cast<StringOPort *>(get_oport("String2"))))
-  {
-    error("Could not find string 2 output port");
-    return; 
+    send_output_handle("String1", fhandle);
   }
  
   if (handle->is_property(string2name))
   {
-    if(handle->get_property(string2name,fhandle))
+    if (handle->get_property(string2name, fstring))
     {
-      if (fhandle.get_rep()) ofport->send(fhandle);
+      fhandle = scinew String(fstring);
     }
-    else if (handle->get_property(string2name,fstring))
+    else
     {
-      fhandle = dynamic_cast<String *>(scinew String(fstring));
-      if (fhandle.get_rep()) ofport->send(fhandle);
+      handle->get_property(string2name,fhandle);
     }
-  }
- 
-  if (!(ofport = static_cast<StringOPort *>(get_oport("String3"))))
-  {
-    error("Could not find string 3 output port");
-    return; 
+    send_output_handle("String2", fhandle);
   }
  
   if (handle->is_property(string3name))
   {
-    if(handle->get_property(string3name,fhandle))
+    if (handle->get_property(string3name,fstring))
     {
-      if (fhandle.get_rep()) ofport->send(fhandle);
+      fhandle = scinew String(fstring);
     }
-    else if (handle->get_property(string3name,fstring))
+    else
     {
-      fhandle = dynamic_cast<String *>(scinew String(fstring));
-      if (fhandle.get_rep()) ofport->send(fhandle);
+      handle->get_property(string3name, fhandle);
     }
+    send_output_handle("String3", fhandle);
   }
-
 }
 
-void
-FieldGetStringProperty::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // end namespace

@@ -842,8 +842,6 @@ bool BuildStimulusTableNodeAlgoT<FNODE,FIELD>::BuildStimulusTable(ProgressReport
   {
     stimulustablelist.resize(k+1);
   }
-
-
                  
   // Success:
   return (true);

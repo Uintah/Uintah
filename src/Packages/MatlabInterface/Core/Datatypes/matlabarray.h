@@ -101,10 +101,11 @@
 #pragma set woff 1209 
 #endif 
  
+#include "share.h"
  
 namespace MatlabIO {
 
-class matlabarray : public matfilebase {
+class SCISHARE matlabarray : public matfilebase {
 private:
   
   class mxarray {

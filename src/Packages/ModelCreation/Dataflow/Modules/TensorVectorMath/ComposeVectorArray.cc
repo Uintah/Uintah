@@ -49,7 +49,8 @@ ComposeVectorArray::ComposeVectorArray(GuiContext* ctx)
 }
 
 
-void ComposeVectorArray::execute()
+void
+ComposeVectorArray::execute()
 {
   MatrixHandle X,Y,Z,V;
   
@@ -94,32 +95,16 @@ void ComposeVectorArray::execute()
       return;
     }
 
-    MatrixHandle temp;
-    temp = dynamic_cast<Matrix *>(X->dense()); 
-    X = temp;
-    temp = dynamic_cast<Matrix *>(Y->dense());
-    Y = temp;
-    temp = dynamic_cast<Matrix *>(Z->dense());
-    Z = temp;
-    
-    V = dynamic_cast<Matrix *>(scinew DenseMatrix(n,3));
-    
-    if (V.get_rep() == 0)
-    {
-      error("Could not allocate memory for matrix");
-      return;
-    }
+    X = X->dense();
+    Y = Y->dense();
+    Z = Z->dense();
+
+    V = scinew DenseMatrix(n,3);
     
     double* xptr = X->get_data_pointer();
     double* yptr = Y->get_data_pointer();
     double* zptr = Z->get_data_pointer();
     double* vptr = V->get_data_pointer();
-    
-    if ((vptr==0)||(xptr==0)||(yptr==0)||(zptr==0))
-    {
-      error("Could not allocate enough memory");
-      return;
-    }
     
     for (int p=0;p<n;p++)
     {

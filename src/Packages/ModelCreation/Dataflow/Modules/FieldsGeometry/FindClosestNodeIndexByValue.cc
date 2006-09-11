@@ -51,7 +51,9 @@ FindClosestNodeIndexByValue::FindClosestNodeIndexByValue(GuiContext* ctx)
 {
 }
 
-void FindClosestNodeIndexByValue::execute()
+
+void
+FindClosestNodeIndexByValue::execute()
 {
   FieldHandle field, points;
   MatrixHandle value;
@@ -74,7 +76,7 @@ void FindClosestNodeIndexByValue::execute()
     if (!(algo.FindClosestNodeByValue(field,idxs,points,val))) return;
     if (!(calgo.UnsignedIntVectorToMatrix(idxs,indices))) return;    
     
-    send_output_handle("Indices",indices,false);
+    send_output_handle("Indices", indices);
   }
 }
 

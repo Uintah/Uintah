@@ -54,8 +54,6 @@ public:
   virtual ~IndicesToSelectionMask();
 
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
@@ -65,57 +63,21 @@ IndicesToSelectionMask::IndicesToSelectionMask(GuiContext* ctx)
 {
 }
 
-IndicesToSelectionMask::~IndicesToSelectionMask(){
+
+IndicesToSelectionMask::~IndicesToSelectionMask()
+{
 }
 
-void IndicesToSelectionMask::execute()
+
+void
+IndicesToSelectionMask::execute()
 {
-  SCIRun::MatrixOPort *selection_oport;
-  SCIRun::MatrixIPort *indices_iport;
-  SCIRun::MatrixIPort *length_iport;
-  
-  SCIRun::MatrixHandle output;
-  SCIRun::MatrixHandle lenmat;
   SCIRun::MatrixHandle idxmat;
-  
-  if (!(selection_oport = dynamic_cast<SCIRun::MatrixOPort *>(get_output_port(0))))
-  {
-    error("Could not find output port for selection mask");
-    return;
-  }
+  if (!get_input_handle("Indices", idxmat)) return;
 
-  if (!(indices_iport = dynamic_cast<SCIRun::MatrixIPort *>(get_input_port(0))))
-  {
-    error("Could not find input port for indices matrix");
-    return;
-  }
-
-  if (!(length_iport = dynamic_cast<SCIRun::MatrixIPort *>(get_input_port(1))))
-  {
-    error("Could not find input port for length matrix");
-    return;
-  }
-
-  if (!(indices_iport->get(idxmat)))
-  {
-    warning("No data could be found on the indices input port");
-    return;
-  }
-
-  if (!(length_iport->get(lenmat)))
-  {
-    warning("No data could be found on the length input port, using maximum index as size of selection vector");
-  }
-
-  if (idxmat.get_rep() == 0)
-  {
-    error("Empty matrix on indices input");
-    return;
-  }
-  
+  SCIRun::MatrixHandle lenmat;
   int size = -1;
-
-  if (lenmat.get_rep())
+  if (get_input_handle("Size", lenmat, false))
   {
     if (lenmat->get_data_size() > 0)
     {
@@ -123,7 +85,7 @@ void IndicesToSelectionMask::execute()
     }
   }
 
-  SelectionMask mask(idxmat,size);
+  SelectionMask mask(idxmat, size);
   
   if (!mask.isvalid())
   {
@@ -131,15 +93,10 @@ void IndicesToSelectionMask::execute()
     return;
   }
   
-  output = mask.gethandle();
-  selection_oport->send(output);
+  MatrixHandle output = mask.gethandle();
+  send_output_handle("SelectionMask", output);
 }
 
-void
- IndicesToSelectionMask::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace CardioWave
 

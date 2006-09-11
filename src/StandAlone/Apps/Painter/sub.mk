@@ -59,11 +59,12 @@ LIBS := $(LAPACK_LIBRARY) \
         $(XML_LIBRARY) \
         $(M_LIBRARY) \
         $(GL_LIBRARY) \
-        $(TEEM_LIBRARY)
+        $(TEEM_LIBRARY) \
+        $(SOCKET_LIBRARY)
 
 ifeq ($(HAVE_INSIGHT), yes)   
         PSELIBS += Packages/Insight/Core/Datatypes
-        LIBS += $(INSIGHT_LIBRARY)
+        LIBS += $(INSIGHT_LIBRARY) $(GDCM_LIBRARY)
 endif
 
 

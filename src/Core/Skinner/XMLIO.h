@@ -48,6 +48,7 @@ using std::list;
 using std::vector;
 
 
+#include <Core/Skinner/share.h>
 namespace SCIRun {
   namespace Skinner {
     class Variables;
@@ -92,7 +93,7 @@ namespace SCIRun {
       
 
       
-      static void        register_maker(const string &,
+      SCISHARE static void        register_maker(const string &,
                                         DrawableMakerFunc_t *);
       static Root *      eval_skinner_node(const xmlNodePtr,
                                            const string &id);

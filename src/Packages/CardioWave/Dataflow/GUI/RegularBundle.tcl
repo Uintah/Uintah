@@ -41,6 +41,8 @@ itcl_class CardioWave_TissueModel_RegularBundle {
 
        set $this-lateral-connection-x 10
        set $this-lateral-connection-y 10
+       
+       set $this-disable-center 0
              
     }
 
@@ -92,6 +94,8 @@ itcl_class CardioWave_TissueModel_RegularBundle {
 
         entry $w.f.e14 -textvariable $this-lateral-connection-x
         entry $w.f.e15 -textvariable $this-lateral-connection-y
+        
+        checkbutton $w.f.c16 -variable $this-disable-center -text "Remove center fiber"
 
         grid $w.f.l1 -row 0 -column 0 -sticky e
         grid $w.f.l2 -row 1 -column 0 -sticky e
@@ -124,6 +128,8 @@ itcl_class CardioWave_TissueModel_RegularBundle {
         grid $w.f.e13 -row 12 -column 1 -sticky news
         grid $w.f.e14 -row 13 -column 1 -sticky news
         grid $w.f.e15 -row 14 -column 1 -sticky news
+
+        grid $w.f.c16 -row 15 -column 0 -columnspan 2 -sticky e
 
         makeSciButtonPanel $w $w $this
         moveToCursor $w

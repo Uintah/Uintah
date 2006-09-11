@@ -301,8 +301,9 @@ void ComputeFieldsNodes::execute()
   }
 }
 
+
 void
- ComputeFieldsNodes::tcl_command(GuiArgs& args, void* userdata)
+ComputeFieldsNodes::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {

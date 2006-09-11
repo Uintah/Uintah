@@ -232,25 +232,21 @@ void SelectByFieldsData::execute()
       return;
     }
     
-    // If engine succeeded we have a new field at ofield.
-    MatrixOPort *oport = dynamic_cast<MatrixOPort *>(get_output_port(0));
-    if (oport)
-    {
-      oport->send(omatrix);
-    }
+    send_output_handle("SelectionMask", omatrix);
 
-    send_output_handle("SelectionMask",omatrix,false);
     SelectionMask mask(omatrix); 
     if (mask.isvalid())
     {
       MatrixHandle idxmatrix;
       mask.get_indices(idxmatrix);
-      send_output_handle("SelectionIndices",idxmatrix,false);
+      send_output_handle("SelectionIndices", idxmatrix);
     }
   }
 }
 
-void SelectByFieldsData::tcl_command(GuiArgs& args, void* userdata)
+
+void
+SelectByFieldsData::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {
@@ -272,6 +268,7 @@ void SelectByFieldsData::tcl_command(GuiArgs& args, void* userdata)
     Module::tcl_command(args, userdata);
   }
 }
+
 
 } // End namespace ModelCreation
 

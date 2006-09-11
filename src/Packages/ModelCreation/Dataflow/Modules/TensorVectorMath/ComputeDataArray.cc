@@ -205,7 +205,8 @@ void ComputeDataArray::execute()
 }
 
 
-void ComputeDataArray::tcl_command(GuiArgs& args, void* userdata)
+void
+ComputeDataArray::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {
@@ -227,6 +228,7 @@ void ComputeDataArray::tcl_command(GuiArgs& args, void* userdata)
     Module::tcl_command(args, userdata);
   }
 }
+
 
 } // End namespace ModelCreation
 

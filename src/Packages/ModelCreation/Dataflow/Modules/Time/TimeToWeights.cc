@@ -85,21 +85,22 @@ TimeToWeights::TimeToWeights(GuiContext* ctx)
 {
 }
 
-void TimeToWeights::execute()
+
+void
+TimeToWeights::execute()
 {
   MatrixHandle TimeVector;
   MatrixHandle Time;
   MatrixHandle Weights;
   
   if (!(get_input_handle("TimeVector",TimeVector,true))) return;
-  get_input_handle("Time",Time,false);
+  get_input_handle("Time", Time, false);
   
   if ((TimeVector->ncols() != 1)&&(TimeVector->nrows() != 1))
   {
     error("TimeToWeights: TimeVector needs to be vector (one of the dimesnions needs to be 1)");
     return;
   }
-  
   
   double* times = TimeVector->get_data_pointer();
   int     size  = TimeVector->get_data_size();
@@ -301,7 +302,7 @@ void TimeToWeights::execute()
     }
 
     rr[0] = 0; rr[1] = 1; cc[0] = o1; vv[0] = w1;
-    Weights = dynamic_cast<Matrix *>(scinew SparseRowMatrix(1,size,rr,cc,1,vv));
+    Weights = scinew SparseRowMatrix(1,size,rr,cc,1,vv);
   }
   else
   {
@@ -320,12 +321,12 @@ void TimeToWeights::execute()
     }
 
     rr[0] = 0; rr[1] = 2; cc[0] = o1; cc[1] = o2; vv[0] = w1; vv[1] = w2;
-    Weights = dynamic_cast<Matrix *>(scinew SparseRowMatrix(1,size,rr,cc,2,vv));  
+    Weights = scinew SparseRowMatrix(1,size,rr,cc,2,vv);
   }
 
   if (Time.get_rep() == 0)
   {
-    Time = dynamic_cast<Matrix *>(scinew DenseMatrix(1,1));
+    Time = scinew DenseMatrix(1, 1);
     if (Time.get_rep()) Time->put(0,0,time);
   }
   
@@ -334,8 +335,8 @@ void TimeToWeights::execute()
 }
 
 
-
-double TimeToWeights::increment(double current, double lower, double upper)
+double
+TimeToWeights::increment(double current, double lower, double upper)
 {
   // Do nothing if no range.
   if (upper == lower) {

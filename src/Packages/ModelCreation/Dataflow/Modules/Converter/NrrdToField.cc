@@ -70,7 +70,7 @@ void NrrdToField::execute()
   // that executes every module downstream even if no data has changed:  
   if (inputs_changed_ || guidatalocation_.changed() || !oport_cached("Field"))
   {
-    SCIRunAlgo::ConverterAlgo algo(dynamic_cast<ProgressReporter *>(this));
+    SCIRunAlgo::ConverterAlgo algo(this);
     std::string datalocation = guidatalocation_.get();
     if (!(algo.NrrdToField(nrrd,ofield,datalocation))) return;
 

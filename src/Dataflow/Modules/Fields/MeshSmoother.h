@@ -439,11 +439,8 @@ MeshSmootherAlgoTet<FIELD>::compute_boundary( ProgressReporter *mod,
                                               FieldHandle fieldh,
                                               const string &scheme )
 {
-  FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
-  FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
-  ofield->copy_properties( fieldh.get_rep() );
-  ofield->mesh_detach();
-  FieldHandle ofh = ofield;
+  FieldHandle ofh = fieldh->clone();
+  ofh->copy_properties( fieldh.get_rep() );
   
   const TypeDescription *mtd = ofh->mesh()->get_type_description();
   CompileInfoHandle ci_boundary = FieldBoundaryAlgo::get_compile_info( mtd );
@@ -467,7 +464,12 @@ MeshSmootherAlgoTet<FIELD>::compute_boundary( ProgressReporter *mod,
     return ofh;
   }
 
-  FieldHandle smoothfield = bound_smooth_algo->execute( mod, boundary_field_h, false, scheme );
+  ofh->mesh_detach();
+  typename FIELD::mesh_type *omesh =
+    dynamic_cast<typename FIELD::mesh_type *>(ofh->mesh().get_rep());
+
+  FieldHandle smoothfield =
+    bound_smooth_algo->execute( mod, boundary_field_h, false, scheme );
 
   TriSurfMesh<TriLinearLgn<Point> > *smooth_boundary = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >*>(smoothfield->mesh().get_rep());
   TriSurfMesh<TriLinearLgn<Point> >::Node::iterator bound_iter;
@@ -485,7 +487,7 @@ MeshSmootherAlgoTet<FIELD>::compute_boundary( ProgressReporter *mod,
       
     Point p;
     smooth_boundary->get_point( p, bi );
-    ofield->get_typed_mesh()->set_point( p, *cols );
+    omesh->set_point( p, *cols );
   }
   return ofh;
 }
@@ -508,11 +510,9 @@ MeshSmootherAlgoHex<FIELD>::compute_boundary( ProgressReporter *mod,
                                               FieldHandle fieldh,
                                               const string &scheme )
 { 
-  FIELD *field = dynamic_cast<FIELD*>(fieldh.get_rep());
-  FIELD *ofield = scinew FIELD( field->get_typed_mesh() );
-  ofield->copy_properties( fieldh.get_rep() );
-  ofield->mesh_detach();
-  FieldHandle ofh = ofield;
+  FieldHandle ofh = fieldh->clone();
+  ofh->copy_properties( fieldh.get_rep() );
+  ofh->mesh_detach();
 
   const TypeDescription *mtd = ofh->mesh()->get_type_description();
   CompileInfoHandle ci_boundary = FieldBoundaryAlgo::get_compile_info( mtd );
@@ -536,7 +536,12 @@ MeshSmootherAlgoHex<FIELD>::compute_boundary( ProgressReporter *mod,
     return ofh;
   }
 
-  FieldHandle smoothfield = bound_smooth_algo->execute( mod, boundary_field_h, false, scheme );
+  ofh->mesh_detach();
+  typename FIELD::mesh_type *omesh =
+    dynamic_cast<typename FIELD::mesh_type *>(ofh->mesh().get_rep());
+
+  FieldHandle smoothfield =
+    bound_smooth_algo->execute( mod, boundary_field_h, false, scheme );
 
   QuadSurfMesh<QuadBilinearLgn<Point> > *smooth_boundary = dynamic_cast<QuadSurfMesh<QuadBilinearLgn<Point> >*>(smoothfield->mesh().get_rep());
   QuadSurfMesh<QuadBilinearLgn<Point> >::Node::iterator bound_iter; 
@@ -554,7 +559,7 @@ MeshSmootherAlgoHex<FIELD>::compute_boundary( ProgressReporter *mod,
       
     Point p;
     smooth_boundary->get_point( p, bi );
-    ofield->get_typed_mesh()->set_point( p, *cols );
+    omesh->set_point( p, *cols );
   }
 
   return ofh;

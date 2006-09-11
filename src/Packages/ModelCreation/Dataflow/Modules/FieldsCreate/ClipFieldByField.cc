@@ -53,7 +53,9 @@ ClipFieldByField::ClipFieldByField(GuiContext* ctx)
 {
 }
 
-void ClipFieldByField::execute()
+
+void
+ClipFieldByField::execute()
 {
   // Define local handles of data objects:
   FieldHandle input;
@@ -73,8 +75,8 @@ void ClipFieldByField::execute()
     if(!(algo.ClipFieldByField(input,output,object,interpolant))) return;
 
     // send new output if there is any:      
-    send_output_handle("Field",output,false);
-    send_output_handle("Mapping",interpolant,false);
+    send_output_handle("Field", output);
+    send_output_handle("Mapping", interpolant);
   }
 }
 

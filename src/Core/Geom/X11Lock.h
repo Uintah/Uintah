@@ -31,8 +31,9 @@
 
 #include <Core/Thread/ThreadLock.h>
 
+#include <Core/Geom/share.h>
 namespace SCIRun {
-  class X11Lock {
+  class SCISHARE X11Lock {
   public:
     static void         lock();
     static void         unlock();

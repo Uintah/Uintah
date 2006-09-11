@@ -64,7 +64,7 @@ void MatrixToString::execute()
   // that executes every module downstream even if no data has changed:  
   if (inputs_changed_ || !oport_cached("String"))
   {
-    SCIRunAlgo::ConverterAlgo algo(dynamic_cast<ProgressReporter *>(this));
+    SCIRunAlgo::ConverterAlgo algo(this);
     if (!(algo.MatrixToString(Mat,Str))) return;
 
     // send new output if there is any:    

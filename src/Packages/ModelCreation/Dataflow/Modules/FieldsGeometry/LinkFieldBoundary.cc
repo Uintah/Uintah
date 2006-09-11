@@ -61,7 +61,9 @@ LinkFieldBoundary::LinkFieldBoundary(GuiContext* ctx)
 {
 }
 
-void LinkFieldBoundary::execute()
+
+void
+LinkFieldBoundary::execute()
 {
   FieldHandle input, output;
   MatrixHandle NodeLink, ElemLink;
@@ -72,10 +74,10 @@ void LinkFieldBoundary::execute()
       guilinkz_.changed() || guitol_.changed() || !oport_cached("Field") ||
       !oport_cached("NodeLink") || !oport_cached("ElemLink"))
   {
-    double tol = guitol_.get();
-    bool   linkx = static_cast<bool>(guilinkx_.get());
-    bool   linky = static_cast<bool>(guilinky_.get());
-    bool   linkz = static_cast<bool>(guilinkz_.get());
+    const double tol = guitol_.get();
+    const bool   linkx = guilinkx_.get();
+    const bool   linky = guilinky_.get();
+    const bool   linkz = guilinkz_.get();
 
     SCIRunAlgo::FieldsAlgo fieldsalgo(this);
     if(!(fieldsalgo.LinkFieldBoundary(input,NodeLink,ElemLink,tol,linkx,linky,linkz))) return;
@@ -84,9 +86,9 @@ void LinkFieldBoundary::execute()
     output->set_property("NodeLink",NodeLink,false);
     output->set_property("ElemLink",ElemLink,false);
     
-    send_output_handle("Field",output,false);
-    send_output_handle("NodeLink",NodeLink,false);
-    send_output_handle("ElemLink",ElemLink,false);  
+    send_output_handle("Field", output);
+    send_output_handle("NodeLink", NodeLink);
+    send_output_handle("ElemLink", ElemLink);
   }
 }
 

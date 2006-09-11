@@ -51,6 +51,8 @@
 #include <map>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/ImportExport/share.h>
+
 namespace SCIRun {
 
 using std::string;
@@ -58,7 +60,7 @@ using std::map;
 
 
 //----------------------------------------------------------------------
-class NrrdIEPlugin {
+class SCISHARE NrrdIEPlugin {
 public:
   const string pluginname_;
 

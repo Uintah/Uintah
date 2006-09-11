@@ -100,7 +100,16 @@ bool TissueModel_RegularBundle::create_mesh(FieldHandle& output)
   for (int p=0; p<numelems_y_ics_;p++, m++) { y[m] = y[m-1]+dy_ics; ye[m-1] = n; }
   for (int p=0; p<numelems_y_ecs_; p++, m++) { y[m] = y[m-1]+dy_ecs; ye[m-1] = 0; }
 
+  int cx, cy;
+  if (disable_center_)
+  {
+    cx = numcellsx_/2;
+    cy = numcellsy_/2;
     
+    std::cout << "cx=" << cx << "\n"; 
+    std::cout << "cy=" << cy << "\n"; 
+  }  
+        
   for (int i=0; i<numnodes_x; i++)
   {
     for (int j=0; j<numnodes_y; j++)
@@ -118,8 +127,17 @@ bool TissueModel_RegularBundle::create_mesh(FieldHandle& output)
     {
       for (int k=0; k<numnodes_z-1; k++)
       {
+        
         int ze = 0;
         if (k >= numelems_bath_start_ && k < numelems_bath_end_ + (numcellsz_*(numelems_z_))) ze = (k-numelems_bath_start_)/numelems_z_ + 1;
+        if (disable_center_)
+        {
+          if ((j >= numelems_y_ecs_+(numelems_y_ics_+2*numelems_y_ecs_)*cy)&& (j < (-numelems_y_ecs_)+(numelems_y_ics_+2*numelems_y_ecs_)*(cy+1)) &&
+              (i >= numelems_x_ecs_+(numelems_x_ics_+2*numelems_x_ecs_)*cx)&& (i < (-numelems_x_ecs_)+(numelems_x_ics_+2*numelems_x_ecs_)*(cx+1)))
+          {
+            ze = 0;
+          }
+        }
         if (ze && xe[i] && ye[j])
         {
           ofield->set_value(xe[i]+((numcellsx_)*(ye[j]-1))+(numcellsx_*numcellsy_)*(ze-1),LatVolMesh<HexTrilinearLgn<Point> >::Elem::index_type(omesh,i,j,k));
@@ -137,6 +155,7 @@ bool TissueModel_RegularBundle::create_mesh(FieldHandle& output)
    
   int ystart = static_cast<int>((numelems_y_ics_/2))-static_cast<int>(((numconnectionx_)/2));
   int yend = static_cast<int>((numelems_y_ics_/2))+static_cast<int>(((numconnectionx_+1)/2));
+  
      
   for (int i=0; i < numcellsx_-1; i++)
   {
@@ -144,6 +163,11 @@ bool TissueModel_RegularBundle::create_mesh(FieldHandle& output)
     {
       for (int k=0; k < numcellsz_; k++)
       {
+        if (disable_center_)
+        {
+          if ((i==cx)||(i==(cx-1)) && j==cy) continue;
+        }
+
         for (int p= (numelems_x_ecs_+numelems_x_ics_)*(i+1)+i*numelems_x_ecs_; p < (2*numelems_x_ecs_+numelems_x_ics_)*(i+1);p++)
         {
           for (int q = ystart+numelems_y_ecs_+j*(2*numelems_y_ecs_+numelems_y_ics_); q < yend+numelems_y_ecs_+j*(2*numelems_y_ecs_+numelems_y_ics_); q++)
@@ -165,7 +189,6 @@ bool TissueModel_RegularBundle::create_mesh(FieldHandle& output)
             }
           }
         }
- 
       }
     }
   }
@@ -184,6 +207,11 @@ bool TissueModel_RegularBundle::create_mesh(FieldHandle& output)
     {
       for (int k=0; k < numcellsz_; k++)
       {
+        if (disable_center_)
+        {
+          if ((j==cy)||(j==(cy-1)) && i==cx) continue;
+        }
+
         for (int p = xstart+numelems_x_ecs_+i*(2*numelems_x_ecs_+numelems_x_ics_); p < xend+numelems_x_ecs_+i*(2*numelems_x_ecs_+numelems_x_ics_); p++)
         {
           for (int q= (numelems_y_ecs_+numelems_y_ics_)*(j+1)+j*numelems_y_ecs_; q < (2*numelems_y_ecs_+numelems_y_ics_)*(j+1);q++)
@@ -210,7 +238,6 @@ bool TissueModel_RegularBundle::create_mesh(FieldHandle& output)
     }
   }
 
-        
   return (true); 
 }
 

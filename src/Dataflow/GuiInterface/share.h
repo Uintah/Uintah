@@ -1,7 +1,7 @@
 #undef SCISHARE
 
 #ifdef _WIN32
-#ifdef BUILD_Core_GuiInterface
+#ifdef BUILD_Dataflow_GuiInterface
 #define SCISHARE __declspec(dllexport)
 #else
 #define SCISHARE __declspec(dllimport)

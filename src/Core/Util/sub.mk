@@ -61,7 +61,7 @@ ifeq ($(IS_WIN),yes)
   PSELIBS += Core_OS
 endif
 
-LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY)
+LIBS := $(DL_LIBRARY) $(THREAD_LIBRARY) $(SOCKET_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

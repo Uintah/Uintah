@@ -34,9 +34,11 @@
 
 #include <teem/air.h>
 
+#include <Core/Skinner/share.h>
+
 namespace SCIRun {
   namespace Skinner {
-    struct RectRegion {
+    struct SCISHARE RectRegion {
     private:
       double            coords_[4];   // x1, y1, x2, y2
       double            coords_2D_[8];

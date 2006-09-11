@@ -135,30 +135,15 @@ MatrixWriter::execute()
   filetype_.set(ab);
 
   // Read data from the input port
-  SimpleIPort<MatrixHandle> *inport = 
-    (SimpleIPort<MatrixHandle> *)get_iport("Input Data");
+  if (!get_input_handle("Input Data", handle_)) return;
 
-  if(!inport->get(handle_) || !handle_.get_rep())
+  // CODE FOR FILENAME INPUT PORT
+  StringHandle filenameH;
+  if (get_input_handle("Filename", filenameH, false))
   {
-    remark("No data on input port.");
-    return;
+    filename_.set(filenameH->get());
+    get_ctx()->reset();
   }
-
-
-  // CODE FOR FILENAME INPUT PORT ////
-  StringIPort* filenameport;
-  if ((filenameport = dynamic_cast<StringIPort *>(get_input_port("Filename"))))
-  {
-    StringHandle filenameH;
-    filenameport->get(filenameH);
-    if (filenameH.get_rep())
-    {
-      filename_.set(filenameH->get());
-      get_ctx()->reset();
-    }
-  }
-  ////////////////////////////////////
-
 
   // If no name is provided, return.
   const string fn(filename_.get());
