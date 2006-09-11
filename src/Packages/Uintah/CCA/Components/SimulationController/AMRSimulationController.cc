@@ -214,6 +214,9 @@ void AMRSimulationController::run()
        d_scheduler->execute();
      }
 
+     // Yes, I know this is kind of hacky, but this is the only way to get a new grid from UdaReducer
+     //   Needs to be done before advanceDataWarehouse
+     if (d_reduceUda) currentGrid = static_cast<UdaReducer*>(d_sim)->getGrid();
      // After one step (either timestep or initialization) and correction
      // the delta we can finally, finalize our old timestep, eg. 
      // finalize and advance the Datawarehouse
@@ -240,8 +243,6 @@ void AMRSimulationController::run()
          // writes to the DW in the next section below
          delt = new_init_delt;
        }
-       // this is the only way to get a new grid from UdaReducer
-       if (d_reduceUda) currentGrid = static_cast<UdaReducer*>(d_sim)->getGrid();
        first=false;
        recompile(t, delt, currentGrid, totalFine);
      }
