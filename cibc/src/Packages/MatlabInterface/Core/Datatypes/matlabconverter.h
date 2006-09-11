@@ -103,6 +103,8 @@ namespace SCIRun {
 #include <Packages/MatlabInterface/Core/Datatypes/matlabtofield.h>
 #include <Packages/MatlabInterface/Core/Datatypes/fieldtomatlab.h>
 
+#include <Packages/MatlabInterface/Core/Datatypes/share.h>
+
 /*
  * CLASS DESCRIPTION
  * Class for dealing with the conversion of "matlab" objects into
@@ -129,7 +131,7 @@ namespace SCIRun {
 namespace MatlabIO {
 
 
-class matlabconverter : public matfilebase {
+class SCISHARE matlabconverter : public matfilebase {
 
   public:
 

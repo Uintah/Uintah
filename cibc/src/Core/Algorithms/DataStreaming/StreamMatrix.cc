@@ -43,17 +43,11 @@
 #ifdef _WIN32
 
   // Windows includes
-	typedef signed __int64 int64;
-	typedef unsigned __int64 uint64;
-
-  #include <stdint.h>
-  typedef uint32_t u_int32_t;
-
-  #ifdef HAVE_UNISTD_H
-    #include <unistd.h>
-    #include <fcntl.h>
-  #endif
-
+  typedef signed __int64 int64;
+  typedef unsigned __int64 uint64;
+  typedef long ssize_t;    
+  typedef unsigned int u_int32_t;
+# include <fcntl.h>
 #else
   
   // Unix includes
@@ -68,13 +62,13 @@
     #include <unistd.h>
     #include <fcntl.h>
   #endif
+#endif
   
 
-  #ifndef O_LARGEFILE
-    #define O_LARGEFILE 0
-  #endif
-
+#ifndef O_LARGEFILE
+  #define O_LARGEFILE 0
 #endif
+
 
 
 #include <sstream>
@@ -429,7 +423,11 @@ bool StreamMatrixAlgo::open(std::string filename)
     
     for (int p=start_;((p<=end_)||(end_ == -1))&&(!foundend);p+=step_)
     {
+#ifndef _WIN32
       ::snprintf(&(buffer[0]),datafilename_.size()+39,datafilename_.c_str(),p);
+#else
+      ::_snprintf(&(buffer[0]),datafilename_.size()+39,datafilename_.c_str(),p);
+#endif
       buffer[datafilename_.size()+39] = 0;
       newfilename = buffer;
 
@@ -636,7 +634,7 @@ bool StreamMatrixAlgo::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandl
       fn = datafilename_;    
     }
     
-    #ifndef HAVE_UNISTD_H 
+    #if (!defined(HAVE_UNISTD_H) || HAVE_UNISTD_H == 0) && !defined(_WIN32)
       FILE* datafile;
     
       // Use normal C functions (for files upto 2Gb)

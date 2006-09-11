@@ -32,14 +32,14 @@
 #include <Core/SystemCall/SystemCall.h>
 #include <Packages/MatlabInterface/Services/MatlabEngine.h>
 #include <Core/Util/Environment.h>
+#ifndef _WIN32
 #include <sys/time.h>
+#endif
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1424
 #pragma set woff 1209 
 #endif
-
-#include <sys/time.h>
 
 namespace SCIRun {
 

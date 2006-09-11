@@ -56,6 +56,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Geom/OpenGLContext.h>
 
+#include <Dataflow/GuiInterface/share.h>
 namespace SCIRun {
 
 class SCISHARE TkOpenGLContext : public OpenGLContext 

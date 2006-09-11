@@ -83,7 +83,12 @@ namespace SCIRun {
                                 border_);
       spawner_runnable_ = cr;
       spawner_thread_ = new Thread(spawner_runnable_, tname.c_str());
-      context_ = cr->getContext();
+
+      // this waits for the context to be created...
+      Win32OpenGLContext* cxt = cr->getContext();
+      context_ = cxt;
+      width_ = cxt->width_;
+      height_ = cxt->height_;
          
 
 #else

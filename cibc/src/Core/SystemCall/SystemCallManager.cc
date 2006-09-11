@@ -936,9 +936,10 @@ void SystemCallManager::killall()
 }
 
 #ifdef _WIN32
-  #define SCISHARE __declspec(dllexport)
+#  undef SCISHARE
+#  define SCISHARE __declspec(dllexport)
 #else
-  #define SCISHARE
+#  define SCISHARE
 #endif
 
 SCISHARE SystemCallManager*    systemcallmanager_;

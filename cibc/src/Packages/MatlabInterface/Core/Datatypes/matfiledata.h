@@ -91,6 +91,8 @@
 #pragma set woff 1209 
 #endif
  
+#include "share.h"
+
 namespace MatlabIO {
 
 // The matfiledata class is a helper class for the
@@ -106,7 +108,7 @@ namespace MatlabIO {
 class matfile;
 class matfiledata;
 
-class matfiledata : public matfilebase {
+class SCISHARE matfiledata : public matfilebase {
 
 	// make matfile a friend class so it can directly read and write
 	// data into the memory managed by this object.

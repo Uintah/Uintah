@@ -54,9 +54,11 @@
 #include <string>
 #include "matfiledefs.h"
 
+#include "share.h"
+
 namespace MatlabIO {
 
-class matfilebase {
+class SCISHARE matfilebase {
   public:
 
     // all functions for reading and writing matfiles are based on

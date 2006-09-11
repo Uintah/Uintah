@@ -36,6 +36,7 @@
 #include <Core/SystemCall/SystemCall.h>
 #include <Core/ICom/IComSocket.h>
 
+#include <Core/Services/share.h>
 namespace SCIRun {
 
 class	SimpleService;
@@ -144,7 +145,7 @@ typedef LockingHandle<SimpleServiceOutputHandler> SimpleServiceOutputHandlerHand
 
 ///////////////////////////////////////////////////////////
 
-class SimpleService : public Service {
+class SCISHARE SimpleService : public Service {
 
   public:
 	SimpleService(ServiceContext &ctx);

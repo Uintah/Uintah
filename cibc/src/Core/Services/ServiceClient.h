@@ -44,9 +44,11 @@
 #include <string>
 #include <sgi_stl_warnings_on.h>
 
+#include <Core/Services/share.h>
+
 namespace SCIRun {
 
-class ServiceClient: public ServiceBase {
+class SCISHARE ServiceClient: public ServiceBase {
   public:
 
     // Constructor/destructor

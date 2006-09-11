@@ -244,9 +244,10 @@ inline void    SystemCallManager::unlock()
 // classes making use of this class.
 
 #ifdef _WIN32
-  #define SCISHARE __declspec(dllimport)
+#  undef SCISHARE
+#  define SCISHARE __declspec(dllimport)
 #else
-  #define SCISHARE
+#  define SCISHARE
 #endif
 
 extern SCISHARE SystemCallManager* systemcallmanager_;
