@@ -33,7 +33,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Field.h>
-#include <Dataflow/Network/Ports/SimpleIPort.h">
+#include <Dataflow/Network/Ports/SimplePort.h>
 #include <iostream>
 
 namespace SCIRun {
