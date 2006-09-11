@@ -107,7 +107,8 @@ public:
   virtual int  dimensionality() const = 0;
   virtual int  topology_geometry() const = 0;
   virtual bool get_dim(vector<unsigned int>&) const { return false;  }
-  virtual bool get_search_grid_info(int &i, int &j, int &k, Transform &trans) { return false; }
+  virtual bool get_search_grid_info(int &/*i*/, int &/*j*/, int &/*k*/,
+                                    Transform &/*trans*/) { return false; }
   // Required interfaces
   
   //! Persistent I/O.

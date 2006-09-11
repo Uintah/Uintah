@@ -1833,6 +1833,11 @@ if test -z "$thirdparty"; then
   sci_tp_arch=`uname -s`
   sci_compiler_vers=gcc-3.0.4
 
+  if test "$sci_tp_arch" = "Darwin"; then
+     # Add on to the path info on whether it is a PPC or Intel Processor
+     sci_tp_arch=$sci_tp_arch-`uname -p`
+  fi
+
   # Try to figure out the compilers version (as it is used in the thirdparty directory name.)
   ac_try="$CC -v > /dev/null 2> conftest.out"
   (eval $ac_try) 2>&5
@@ -2429,6 +2434,7 @@ SCI_TRY_LINK(ITCL,itcl library and headers, itcl.h,
   # ITCL_LIB_DIR=`echo "$ITCL_LIB_DIR" | sed 's,/,,' | sed 's,/,:/,'`
 # fi
 
+SCI_SUBST_THIRDPARTY_DIR(ITCL_LIB_DIR)
 SCI_SUBST_THIRDPARTY_DIR(ITCL_LIB_DIR_FLAG)
 SCI_SUBST_THIRDPARTY_DIR(INC_ITCL_H)
 
@@ -3152,7 +3158,6 @@ else
     # If --with-camal has a parameter, then use it
     _sci_lib="$with_camal"
     _sci_inc="$with_camal/include"
-    BASE_LIB_PATH(_sci_lib,$_sci_lib)
     _sci_optional=specific
   fi 
 fi
@@ -3624,11 +3629,11 @@ case $host in
     PETSC_ARCH=aix5.1.0.0
     ;;
   *-darwin*)
-  	if test `uname -p` = "i386"; then
-    	PETSC_ARCH=i386
-    else 
-    	PETSC_ARCH=ppc
-    fi
+      if test `uname -p` = "i386"; then
+        PETSC_ARCH=i386
+      else 
+        PETSC_ARCH=ppc
+      fi
     ;;
   *-pc-mingw*)
     PETSC_ARCH=win
