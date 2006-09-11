@@ -6,6 +6,7 @@ SET(Core_Persistent_SRCS
 )
 
 ADD_LIBRARY(Core_Persistent ${Core_Persistent_SRCS})
+
 TARGET_LINK_LIBRARIES( Core_Persistent 
   Core_Containers 
   Core_Exceptions 

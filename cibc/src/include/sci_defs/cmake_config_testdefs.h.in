@@ -26,51 +26,34 @@
    DEALINGS IN THE SOFTWARE.
 */
 
+#ifndef SCI_CONFIG_DEFS_H
+#define SCI_CONFIG_DEFS_H
 
-/*
- * Manual template instantiations
- */
+/* The following system variables are updated by configure, via this line:
 
+AC_CONFIG_HEADER(include/sci_defs/config_testdefs.h)
 
-/*
- * These aren't used by Datatypes directly, but since they are used in
- * a lot of different modules, we instantiate them here to avoid bloat
- *
- * Find the bloaters with:
-find . -name "*.ii" -print | xargs cat | sort | uniq -c | sort -nr | more
- */
+(While we aren't certain exactly how, the AC_CONFIG_HEADER macro will
+parse the config_testdefs.h.in file [this file] and replace the
+'#define VARIABLE value' with the correct value by testing to see if
+the associated include header file exists/compiles on your system.
+This apparently only works for certain system defined variables.)
 
-#include <Core/Containers/LockingHandle.h>
-#include <Core/Malloc/Allocator.h>
+If you are looking at this file on the src side (ie, it is named
+'config_testdefs.h.in'), you will see these variables set to '0'.  But
+if you are looking at the already configured file (config_defs.h on
+the binary side), they will have the correct '0' or '1' value.
 
-#include <Packages/Insight/Core/Datatypes/ITKLatVolField.h>
-#include <Packages/Insight/Core/Datatypes/ITKImageField.h>
-#include <Core/Persistent/PersistentSTL.h>
-#include <Core/Datatypes/PropertyManager.h>
+*/
 
-using namespace Insight;
-using namespace SCIRun;
+#define HAVE_LIMITS_H @HAVE_LIMITS_H@
+#define HAVE_SYS_SELECT_H @HAVE_SYS_SELECT_H@
+#define HAVE_UNISTD_H @HAVE_UNISTD_H@
+#define HAVE_SYS_TIME_H @HAVE_SYS_TIME_H@
+#define HAVE_SYS_UUID_H @HAVE_SYS_UUID_H@
+#define HAVE_UUID_UUID_H @HAVE_UUID_UUID_H@
+#define HAVE_EXT_ALGORITHM @HAVE_EXT_ALGORITHM_H@
+#define HAVE_STDINT_H @HAVE_STDINT_H@
+#define HAVE_INTTYPES_H @HAVE_INTTYPES_H@
 
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1468
-#endif
-
-#if !defined(__sgi)
-// Needed for optimized linux build only
-#endif
-
-template <> bool ITKLatVolField<Vector>::get_gradient(Vector &, const Point &/*p*/)
-{
-  ASSERT(type_name(1) != "Vector");  // redundant, useful error message
-  return false;
-}
-
-template <> bool ITKLatVolField<Tensor>::get_gradient(Vector &, const Point &/*p*/)
-{
-  ASSERT(type_name(1) != "Tensor");  // redundant, useful error message
-  return false;
-}
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1468
 #endif

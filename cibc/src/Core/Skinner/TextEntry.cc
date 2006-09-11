@@ -152,7 +152,7 @@ namespace SCIRun {
         } else if (code == SCIRun_Left) {
           cursor_position_ = Max(int(cursor_position_-1), 0);
         } else if (code == SCIRun_Right) {
-          cursor_position_ = Min(int(cursor_position_+1),static_cast<int>(str_.length()));
+          cursor_position_ = Min(int(cursor_position_+1),int(str_.length()));
         } else {
           //          cerr << get_id() << " cannot handle keycode: " << code << std::endl;
         }

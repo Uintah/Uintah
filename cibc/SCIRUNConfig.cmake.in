@@ -1,0 +1,63 @@
+#-----------------------------------------------------------------------------
+#
+# SCIRUNConfig.cmake - SCIRUN CMake configuration file for external projects.
+#
+# This file is configured by SCIRUN and used by the UseSCIRUN.cmake module
+# to load SCIRUN's settings for an external project.
+
+# The SCIRUN source tree.
+SET(SCIRUN_SOURCE_DIR "@SCIRUN_SOURCE_DIR@")
+
+# The SCIRUN include file directories.
+SET(SCIRUN_INCLUDE_DIRS "@SCIRUN_INCLUDE_DIRS_CONFIG@")
+
+# The SCIRUN library directories.
+SET(SCIRUN_LIBRARY_DIRS "@SCIRUN_LIBRARY_DIRS_CONFIG@")
+
+# The SCIRUN version number
+SET(SCIRUN_VERSION_MAJOR "@SCIRUN_VERSION_MAJOR@")
+SET(SCIRUN_VERSION_MINOR "@SCIRUN_VERSION_MINOR@")
+SET(SCIRUN_VERSION_PATCH "@SCIRUN_VERSION_PATCH@")
+
+# The location of the UseSCIRUN.cmake file.
+SET(SCIRUN_USE_FILE "@SCIRUN_USE_FILE@")
+
+# The build settings file.
+SET(SCIRUN_BUILD_SETTINGS_FILE "@SCIRUN_BUILD_SETTINGS_FILE@")
+
+# Whether SCIRUN was built with shared libraries.
+SET(SCIRUN_BUILD_SHARED "@BUILD_SHARED_LIBS@")
+
+
+# A list of all libraries for SCIRun.  Those listed here should
+# automatically pull in their dependencies.
+SET(SCIRUN_LIBRARIES   
+  Core_Exceptions 
+  Core_Thread
+  Core_Containers 
+  Core_Util 
+  Core_Math 
+  Core_Persistent 
+  Core_XMLUtil 
+  Core_Geometry 
+  Core_Basis
+  Core_OS
+  Core_TkExtensions
+  Core_GuiInterface
+  Core_Malloc
+  Core_Datatypes
+  Core_Geom
+  Core_Events
+  Core_Volume
+  Core_Bundle
+  Core_Algorithms
+  Core_Skinner
+)
+
+# The SCIRUN library dependencies.
+IF(NOT SCIRUN_NO_LIBRARY_DEPENDS AND
+    EXISTS "@SCIRUN_LIBRARY_DEPENDS_FILE@")
+  INCLUDE("@SCIRUN_LIBRARY_DEPENDS_FILE@")
+ENDIF(NOT SCIRUN_NO_LIBRARY_DEPENDS AND
+  EXISTS "@SCIRUN_LIBRARY_DEPENDS_FILE@")
+
