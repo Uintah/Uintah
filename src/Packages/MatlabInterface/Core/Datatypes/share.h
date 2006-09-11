@@ -1,7 +1,7 @@
 #undef SCISHARE
 
 #ifdef _WIN32
-#ifdef BUILD_Dataflow_GuiInterface
+#ifdef BUILD_Packages_MatlabInterface_Core_Datatypes
 #define SCISHARE __declspec(dllexport)
 #else
 #define SCISHARE __declspec(dllimport)

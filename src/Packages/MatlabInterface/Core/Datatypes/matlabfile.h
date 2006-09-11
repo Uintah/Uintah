@@ -78,9 +78,11 @@
 #include <string>
 #include <iostream>
  
+#include "share.h"
+
 namespace MatlabIO {
 
-  class matlabfile : public matfile {
+  class SCISHARE matlabfile : public matfile {
   
   private:
     // matrixaddress is a vector of offsets

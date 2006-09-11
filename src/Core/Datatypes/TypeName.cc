@@ -203,4 +203,10 @@ template<> const string find_type_name(LockingHandle<Field> *)
   return name;
 }
 
+template<> const string find_type_name(LockingHandle<String> *)
+{
+  static const string name = string("LockingHandle") + FTNS + string("String") + FTNE;
+  return name;
+}
+
 } // namespace SCIRun

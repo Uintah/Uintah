@@ -81,7 +81,7 @@ class SCISHARE SystemCallBase {
 };
 
 
-class SystemCallError : public SystemCallBase {
+class SCISHARE SystemCallError : public SystemCallBase {
 
   public:
 	SystemCallError(std::string error, int errnr, sce_error = SCE_IOERROR);
