@@ -88,7 +88,7 @@ FieldFrenet::execute()
   FieldHandle field_input_handle;
   if( !get_input_handle( "Input Field", field_input_handle, true  ) ) return;
 
-  if( field_input_handle->mesh()->topology_geometry() ==
+  if( field_input_handle->mesh()->topology_geometry() !=
       (Mesh::STRUCTURED | Mesh::IRREGULAR) ) {
 
     error( field_input_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() );

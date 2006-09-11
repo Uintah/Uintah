@@ -112,7 +112,7 @@ FieldFrenetAlgoT_1D<IFIELD, OFIELD>::execute(FieldHandle& ifield_h,
   omesh->set_dim( dim );
   omesh->set_min( min );
 
-  OFIELD *ofield = scinew OFIELD(omesh, ifield->basis_order());
+  OFIELD *ofield = scinew OFIELD(omesh);
   ofield->copy_properties(ifield);
 
   FieldHandle ofield_h = ofield;
@@ -378,8 +378,8 @@ FieldFrenetAlgoT_2D<IFIELD, OFIELD>::execute(FieldHandle& ifield_h,
 template< class IFIELD, class OFIELD >
 FieldHandle
 FieldFrenetAlgoT_3D<IFIELD, OFIELD>::execute(FieldHandle& ifield_h,
-					      int direction,
-					      int axis)
+					     int direction,
+					     int axis)
 {
   IFIELD *ifield = (IFIELD *) ifield_h.get_rep();
   typename IFIELD::mesh_handle_type imesh = ifield->get_typed_mesh();
