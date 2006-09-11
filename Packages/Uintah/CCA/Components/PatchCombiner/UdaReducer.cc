@@ -79,7 +79,7 @@ UdaReducer::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
   const PatchSet* perProcPatches = lb->getPerProcessorPatchSet(grid);
 
-  cout << "   STA: passed level: " << level.get_rep() << "  stored level " << oldGrid_->getLevel(0).get_rep() << endl;
+  cout << d_myworld->myrank() << "  Calling DA::QuearyMaterials a bunch of times " << endl;
 
   double time = times_[timeIndex_];
 
@@ -121,10 +121,12 @@ UdaReducer::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
       prevMatlSet = matls;
     }
 
-    for (int l = 0; l < grid->numLevels(); l++)
+    for (int l = 0; l < grid->numLevels(); l++) {
       t->computes(label, grid->getLevel(l)->allPatches()->getUnion(), matls->getUnion());
+    }
   }
 
+  cout << d_myworld->myrank() << "  Done Calling DA::QuearyMaterials a bunch of times " << endl;
   MaterialSubsetP globalMatl = scinew MaterialSubset();
   t->setType(Task::OncePerProc);
   sched->addTask(t, perProcPatches, allMatls.get_rep());
@@ -154,6 +156,7 @@ void UdaReducer::readAndSetVars(const ProcessorGroup*,
                                 DataWarehouse* /*old_dw*/,
                                 DataWarehouse* new_dw)
 {
+  cout << d_myworld->myrank() << "   readAndSetVArs\n";
   double time = times_[timeIndex_];
   int timestep = timesteps_[timeIndex_];
 
@@ -175,7 +178,9 @@ void UdaReducer::readAndSetVars(const ProcessorGroup*,
   cout << "   Incrementing time " << timeIndex_ << " and time " << time << endl;
 
   //cerr << "deleted and recreated dw\n";
+  cout << d_myworld->myrank() << "  Calling DA::restartInitialize " << endl;
   dataArchive_->restartInitialize(timestep, oldGrid_, new_dw, lb, &time);
+  cout << d_myworld->myrank() << "  Done Calling DA::restartInitialize " << endl;
   //cerr << "restartInitialize done\n";
 }
 
@@ -191,6 +196,7 @@ void UdaReducer::readAndSetDelT(const ProcessorGroup*,
   cout << "   Putting delt " << delt << endl;
   delt_vartype delt_var = delt;
   new_dw->put(delt_var, delt_label);
+  cout << d_myworld->myrank() << "  Done Calling readAndSetDelt " << endl;
   //cerr << "done with reading\n";
 }
 
@@ -205,20 +211,29 @@ double UdaReducer::getMaxTime()
 bool UdaReducer::needRecompile(double time, double dt,
                                const GridP& grid)
 {
-  bool recompile = false;
-  GridP newGrid = dataArchive_->queryGrid(times_[timeIndex_]);
-  if (newGrid != oldGrid_) {
-    oldGrid_ = newGrid;
-    lb->possiblyDynamicallyReallocate(newGrid, true);
-    recompile =  true;
-  }
+  bool recompile = gridChanged;
+  gridChanged = false;
 
-  vector<int> newNumMatls(newGrid->numLevels());
-  for (int i = 0; i < newGrid->numLevels(); i++) {
-    newNumMatls[i] = dataArchive_->queryNumMaterials(*newGrid->getLevel(i)->patchesBegin(), times_[timeIndex_]);
+  vector<int> newNumMatls(oldGrid_->numLevels());
+  for (int i = 0; i < oldGrid_->numLevels(); i++) {
+    newNumMatls[i] = dataArchive_->queryNumMaterials(*oldGrid_->getLevel(i)->patchesBegin(), times_[timeIndex_]);
     if (i >=(int) numMaterials_.size() || numMaterials_[i] != newNumMatls[i])
       recompile = true;
   }
   numMaterials_ = newNumMatls;
   return recompile;
+}
+
+// called by the SimController once per timestep
+GridP UdaReducer::getGrid() 
+{ 
+  GridP newGrid = dataArchive_->queryGrid(times_[timeIndex_]);
+  
+  if (newGrid != oldGrid_) {
+    gridChanged = true;
+    if (d_myworld->myrank() == 0) cout << "     NEW GRID!!!!\n";
+    oldGrid_ = newGrid;
+    lb->possiblyDynamicallyReallocate(newGrid, true);
+  }
+  return oldGrid_; 
 }
