@@ -113,8 +113,8 @@ namespace Uintah {
     d_timeinfo = scinew SimulationTime(d_ups);
     
     if (d_timeinfo->max_delt_increase < 1e99 && d_timeinfo->delt_max < 1e99 && d_reduceUda && d_myworld->myrank() == 0) {
-      cout << "  WARNING: Trying to do reduce_uda with max_delt_increase or low delt_max (set to 1e99 in input.xml)."
-           << "\n this can cause times to not line up between old and new udas\n";
+      throw InternalError("Trying to do reduce_uda with max_delt_increase or low delt_max (set to 1e99 in input.xml)."
+           "\n this can cause times to not line up between old and new udas", __FILE__, __LINE__);
     }
       
 
