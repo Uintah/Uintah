@@ -104,7 +104,7 @@ cc-1375 CC: REMARK File = ../../Core/Geom/View.h, Line = 71
 #pragma set woff 1375
 #endif
 
-class ExtendedView : public View
+class SCISHARE ExtendedView : public View
 {
   int xres_, yres_;
   Color bg_;

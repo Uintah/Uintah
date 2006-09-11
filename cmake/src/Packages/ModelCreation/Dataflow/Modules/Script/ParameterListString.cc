@@ -56,7 +56,9 @@ ParameterListString::ParameterListString(GuiContext* ctx)
 {
 }
 
-void ParameterListString::execute()
+
+void
+ParameterListString::execute()
 {
   BundleHandle bundle;
   StringHandle handle;
@@ -71,7 +73,7 @@ void ParameterListString::execute()
         
     if (bundle.get_rep() == 0)
     {   
-      bundle = dynamic_cast<Bundle *>(scinew Bundle());
+      bundle = scinew Bundle();
     }
 
     if (handle.get_rep() != 0)

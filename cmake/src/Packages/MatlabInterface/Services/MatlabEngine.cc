@@ -32,14 +32,14 @@
 #include <Core/SystemCall/SystemCall.h>
 #include <Packages/MatlabInterface/Services/MatlabEngine.h>
 #include <Core/Util/Environment.h>
+#ifndef _WIN32
 #include <sys/time.h>
+#endif
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #pragma set woff 1424
 #pragma set woff 1209 
 #endif
-
-#include <sys/time.h>
 
 namespace SCIRun {
 
@@ -445,10 +445,8 @@ bool MatlabEngine::init_service(IComPacketHandle &packet)
       gettimeofday(&tv,0);
       tm.tv_nsec = 0;
       tm.tv_sec = tv.tv_sec + secondstowait;
-                
-      bool succ = matlab_handle_->wait_test_.timedWait(matlab_handle_->lock,&tm);
-
 #endif
+
       if (!(matlab_handle_->passed_test_))
         {
           matlab_handle_->unlock();

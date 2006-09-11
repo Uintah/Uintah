@@ -214,12 +214,13 @@ void ComputeFieldNodes::execute()
       return;
     }
     
-    send_output_handle("Field",ofield,false);
+    send_output_handle("Field", ofield);
   }
 }
 
+
 void
- ComputeFieldNodes::tcl_command(GuiArgs& args, void* userdata)
+ComputeFieldNodes::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {

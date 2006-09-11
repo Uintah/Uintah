@@ -51,6 +51,8 @@ using std::string;
   }
 
 
+#include <Core/Skinner/share.h>
+
 namespace SCIRun {
   namespace Skinner {
     class Variables;
@@ -60,7 +62,7 @@ namespace SCIRun {
     
     typedef pair<double, double> MinMax;
 
-    class Drawable : public BaseTool, 
+    class SCISHARE Drawable : public BaseTool, 
                      public SignalCatcher, 
                      public SignalThrower {
     public:

@@ -51,8 +51,6 @@ public:
   virtual ~SelectionMaskXOR();
 
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
@@ -62,27 +60,17 @@ SelectionMaskXOR::SelectionMaskXOR(GuiContext* ctx)
 {
 }
 
+
 SelectionMaskXOR::~SelectionMaskXOR()
 {
 }
 
-void SelectionMaskXOR::execute()
+
+void
+SelectionMaskXOR::execute()
 {
-  MatrixIPort *iport;
-  MatrixOPort *oport;
-  MatrixHandle input, output;
-  
-  if (!(iport = dynamic_cast<MatrixIPort *>(get_input_port(0))))
-  {
-    // nothing to do no ports available
-    return;
-  }
-  
-  if (!(iport->get(input)))
-  {
-    warning("No data could be found on the input ports");
-    return;
-  }
+  MatrixHandle input;
+  if (!get_input_handle("SelectionMask1", input)) return;
 
   SelectionMask mask(input);
   if (!mask.isvalid())
@@ -91,17 +79,7 @@ void SelectionMaskXOR::execute()
     return;
   }
   
-  if (!(iport = dynamic_cast<MatrixIPort *>(get_input_port(1))))
-  {
-    // nothing to do no ports available
-    return;
-  }
-  
-  if (!(iport->get(input)))
-  {
-    warning("No data could be found on the second input port");
-    return;
-  }
+  if (!get_input_handle("SelectionMask2", input)) return;
 
   SelectionMask mask2(input);
   if (!mask2.isvalid())
@@ -119,21 +97,10 @@ void SelectionMaskXOR::execute()
     error("Cannot perform an XOR operation on the two selection vectors, mask sure they are of the same length");
   }
   
-  output = newmask.gethandle();
-  
-  if (!(oport = dynamic_cast<MatrixOPort *>(get_output_port(0))))
-  {
-    error("No output port is defined");
-    return;
-  }
-  
-  oport->send(output);
+  MatrixHandle output = newmask.gethandle();
+  send_output_handle("SelectionMask", output);
 }
 
-void SelectionMaskXOR::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace CardioWave
 

@@ -45,7 +45,7 @@
 
 #include <Dataflow/GuiInterface/GuiVar.h>
 
-#include <Core/Geom/share.h>
+#include <Dataflow/GuiInterface/share.h>
 
 namespace SCIRun {
   class Color;

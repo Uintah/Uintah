@@ -52,7 +52,6 @@ public:
   StringWriter(GuiContext*);
   virtual ~StringWriter();
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
   
 protected:
   GuiString gui_types_;
@@ -76,8 +75,11 @@ StringWriter::StringWriter(GuiContext* ctx)
   gui_types_.set("{ {{textfile} {.txt .asc .doc}} {{all files} {.*}} }");
 }
 
-StringWriter::~StringWriter(){
+
+StringWriter::~StringWriter()
+{
 }
+
 
 bool
 StringWriter::call_exporter(const string &filename)
@@ -129,11 +131,6 @@ StringWriter::execute()
   filename_.set(oldfilename);
 }
 
-void
- StringWriter::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace ModelCreation
 

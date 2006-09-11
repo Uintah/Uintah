@@ -62,51 +62,36 @@ SphericalSurface::SphericalSurface(GuiContext* ctx)
 }
 
 void
- SphericalSurface::execute()
+SphericalSurface::execute()
 {
-  FieldOPort* oport = dynamic_cast<FieldOPort*>(get_oport(0));
-  if (oport == 0) 
+  SCIRunAlgo::ConverterAlgo mc(this);
+  
+  MatrixHandle disc;
+  if (!get_input_handle("Discretization", disc, false))
   {
-    error("Could not find output port");
-    return;
+    mc.DoubleToMatrix(guidiscretization_.get(), disc);
+  }
+  
+  MatrixHandle radius;
+  if (!get_input_handle("Radius", radius, false))
+  {
+    mc.DoubleToMatrix(guiradius_.get(), radius);
   }
 
-  MatrixIPort* disc_port = dynamic_cast<MatrixIPort*>(get_iport(0));
-  MatrixIPort* radius_port = dynamic_cast<MatrixIPort*>(get_iport(1));
-  
-  if (disc_port == 0)
-  {
-    error("Could not find discretization input port");
-    return;  
-  }
-  if (radius_port == 0)
-  {
-    error("Could not find radius input port");
-    return;  
-  }
-  
-  MatrixHandle radius, disc;
-
-  SCIRunAlgo::ConverterAlgo mc(dynamic_cast<ProgressReporter *>(this));
-  
-  if (!(disc_port->get(disc))) mc.DoubleToMatrix(guidiscretization_.get(),disc);
-  if (!(radius_port->get(radius))) mc.DoubleToMatrix(guiradius_.get(),radius);
-  
-  ExampleFields sphere_algo(dynamic_cast<ProgressReporter *>(this));
-  SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
+  ExampleFields sphere_algo(this);
+  SCIRunAlgo::FieldsAlgo algo(this);
   FieldHandle ofield;
-
-  if(sphere_algo.SphericalSurface(ofield,disc))
+  if (sphere_algo.SphericalSurface(ofield, disc))
   {
     Transform TF;
     double r;
     mc.MatrixToDouble(radius,r);
     TF.pre_scale(Vector(r,r,r));
     algo.TransformField(ofield,ofield,TF);
-    oport->send(ofield);
-    
+    send_output_handle("Field", ofield);
   }
 }
+
 
 } // End namespace ModelCreation
 

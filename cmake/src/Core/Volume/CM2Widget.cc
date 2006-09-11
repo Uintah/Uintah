@@ -38,6 +38,10 @@
 #include <Core/Math/MiscMath.h>
 #include <Core/Malloc/Allocator.h>
 
+#ifdef _WIN32
+#include <Core/OS/Rand.h>
+#endif
+
 #include <sci_gl.h>
 #include <sci_glu.h>
 
@@ -68,25 +72,6 @@ using namespace SCIRun;
 #    define glActiveTexture(x) glActiveTextureARB(x)
 #    define glMultiTexCoord1f(t,x) glMultiTexCoord1fARB(t,x)
 #  endif
-#endif
-
-
-#ifdef _WIN32
-  // windows doesn't have drand48
-  // we can make a better solution if it becomes necessary
-  // (i.e., more files use it than this one)
-#include <Core/Thread/Time.h>
-
-double drand48()
-{
-  static bool initialized = false;
-  if (!initialized) {
-    srand((int) Time::currentTicks());
-    initialized = true;
-  }
-  return ((double) rand())/ RAND_MAX;
-}
-
 #endif
 
 PersistentTypeID CM2Widget::type_id("CM2Widget", "Datatype", 0);

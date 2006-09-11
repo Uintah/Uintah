@@ -49,9 +49,10 @@ DecomposeVectorArray::DecomposeVectorArray(GuiContext* ctx)
 }
 
 
-void DecomposeVectorArray::execute()
+void
+DecomposeVectorArray::execute()
 {
-  MatrixHandle X,Y,Z,V, temp;
+  MatrixHandle X,Y,Z,V;
   
   if (!(get_input_handle("VectorArray",V,true)));
   
@@ -73,40 +74,15 @@ void DecomposeVectorArray::execute()
       return;
     }
     
-    temp = dynamic_cast<Matrix *>(V->dense());
-    V = temp;
-    
-    X = dynamic_cast<Matrix *>(scinew DenseMatrix(n,1));
-    if (X.get_rep() == 0)
-    {
-      error("Could allocate memory for output matrix");
-      return;
-    }
-    
-    Y = dynamic_cast<Matrix *>(scinew DenseMatrix(n,1));
-    if (Y.get_rep() == 0)
-    {
-      error("Could allocate memory for output matrix");
-      return;
-    }
-    
-    Z = dynamic_cast<Matrix *>(scinew DenseMatrix(n,1));
-    if (Z.get_rep() == 0)
-    {
-      error("Could allocate memory for output matrix");
-      return;
-    }
+    V = V->dense();
+    X = scinew DenseMatrix(n, 1);
+    Y = scinew DenseMatrix(n, 1);
+    Z = scinew DenseMatrix(n, 1);
     
     double* vptr = V->get_data_pointer();
     double* xptr = X->get_data_pointer();
     double* yptr = Y->get_data_pointer();
     double* zptr = Z->get_data_pointer();
-    
-    if ((vptr==0)||(xptr==0)||(yptr==0)||(zptr==0))
-    {
-      error("Could not allocate enough memory");
-      return;
-    }
     
     for (int p=0; p<n ;p++)
     {

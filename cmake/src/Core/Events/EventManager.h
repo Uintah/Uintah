@@ -39,11 +39,12 @@
 #if !defined(EventManager_h)
 #define EventManager_h
 
+#include <Core/Events/share.h>
 namespace SCIRun {
 
 using namespace std;
 
-class EventManager : public Runnable {
+class SCISHARE EventManager : public Runnable {
 public:
   typedef Mailbox<event_handle_t> event_mailbox_t;
 

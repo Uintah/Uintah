@@ -54,6 +54,12 @@
 #include FT_MODULE_ERRORS_H
 #endif
 
+#ifdef min
+#undef min
+#undef max
+#endif
+
+
 namespace SCIRun {  
 
 

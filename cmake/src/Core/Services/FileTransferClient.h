@@ -35,10 +35,12 @@
 #include <Core/SystemCall/TempFileManager.h>
 #include <stdio.h>
 
+#include <Core/Services/share.h>
+
 namespace SCIRun {
 
 
-class FileTransferClient : public ServiceClient
+class SCISHARE FileTransferClient : public ServiceClient
 {
 
   public:

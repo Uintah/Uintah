@@ -85,7 +85,7 @@
 #include <Core/Events/Tools/ToolManager.h>
 #include <Core/Volume/Texture.h>
 
-#include <include/sci_defs/insight_defs.h>
+#include <sci_defs/insight_defs.h>
 
 #ifdef HAVE_INSIGHT
 #  include <Core/Datatypes/ITKDatatype.h>

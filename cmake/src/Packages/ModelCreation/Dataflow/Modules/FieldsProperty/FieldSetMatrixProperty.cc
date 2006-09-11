@@ -54,8 +54,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-  
 private:
   GuiString     guimatrix1name_;
   GuiString     guimatrix2name_;
@@ -72,92 +70,43 @@ DECLARE_MAKER(FieldSetMatrixProperty)
 {
 }
 
-FieldSetMatrixProperty::~FieldSetMatrixProperty(){
+
+FieldSetMatrixProperty::~FieldSetMatrixProperty()
+{
 }
+
 
 void
 FieldSetMatrixProperty::execute()
 {
-  std::string matrix1name = guimatrix1name_.get();
-  std::string matrix2name = guimatrix2name_.get();
-  std::string matrix3name = guimatrix3name_.get();
+  const string matrix1name = guimatrix1name_.get();
+  const string matrix2name = guimatrix2name_.get();
+  const string matrix3name = guimatrix3name_.get();
     
-  FieldHandle  handle;
-  FieldIPort   *iport;
-  FieldOPort   *oport;
-  MatrixHandle fhandle;
-  MatrixIPort  *ifport;
-        
-  if(!(iport = static_cast<FieldIPort *>(get_input_port("Field"))))
-  {
-    error("Could not find 'Field' input port");
-    return;
-  }
-      
-  if (!(iport->get(handle)))
-  {   
-    error("Could not retrieve 'Field' from input port");
-  }
-   
-  if (handle.get_rep() == 0)
-  {
-    error("No field on input port");
-  }
+  FieldHandle handle;
+  if (!get_input_handle("Field", handle)) return;
   
   // Scan matrix input port 1
-  if (!(ifport = static_cast<MatrixIPort *>(get_input_port("Matrix1"))))
+  MatrixHandle fhandle;
+  if (get_input_handle("Matrix1", fhandle, false))
   {
-    error("Could not find matrix 1 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
-  {
-    handle->set_property(matrix1name,fhandle,false);
+    handle->set_property(matrix1name, fhandle, false);
   }
 
-  // Scan matrix input port 2     
-  if (!(ifport = static_cast<MatrixIPort *>(get_input_port("Matrix2"))))
-  {
-    error("Could not find matrix 2 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
+  if (get_input_handle("Matrix2", fhandle, false))
   {
     handle->set_property(matrix2name,fhandle,false);
   }
 
-  // Scan matrix input port 3     
-  if (!(ifport = static_cast<MatrixIPort *>(get_input_port("Matrix3"))))
-  {
-    error("Could not find matrix 3 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
+  if (get_input_handle("Matrix3", fhandle, false))
   {
     handle->set_property(matrix3name,fhandle,false);
   }
         
   // Now post the output
-        
-  if (!(oport = static_cast<FieldOPort *>(get_oport("Field"))))
-  {
-    error("Could not find field output port");
-    return;
-  }
-  
-  handle->generation++;            
-  oport->send(handle);
+  handle->generation = handle->compute_new_generation();
+  send_output_handle("Field", handle);
 }
-
-void
-FieldSetMatrixProperty::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
-
 
 } // end namespace
 

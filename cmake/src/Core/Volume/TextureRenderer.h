@@ -83,11 +83,11 @@ public:
   virtual void draw(DrawInfoOpenGL*, Material*, double time) = 0;
 #endif
   
+  bool saveobj(std::ostream&, const std::string& format, GeomSave*);
   virtual GeomObj* clone() = 0;
   virtual void get_bounds(BBox& bb) { tex_->get_bounds(bb); }
   virtual void io(Piostream&);
   static PersistentTypeID type_id;
-  virtual bool saveobj(std::ostream&, const std::string& format, GeomSave*);
 
 protected:
   TextureHandle tex_;

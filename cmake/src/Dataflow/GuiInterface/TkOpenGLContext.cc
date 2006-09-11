@@ -65,13 +65,7 @@
 using namespace SCIRun;
 using namespace std;
   
-#ifdef _WIN32
-#define SCISHARE __declspec(dllimport)
-#else
-#define SCISHARE
-#endif
-
-extern "C" SCISHARE Tcl_Interp* the_interp;
+extern "C" Tcl_Interp* the_interp;
 
 vector<int> TkOpenGLContext::valid_visuals_ = vector<int>();
 

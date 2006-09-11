@@ -487,12 +487,27 @@ inline double atan(double d)
 
 inline double asinh(double d)
 {
+#ifndef _WIN32
   return(::asinh(d));
+#else
+  // asinh and acosh aren't ANSI C, and thus aren't defined on windows
+  // according to 'man asinh', this is equivalent to 
+  //   sgn(X) * log(abs(X) + sqrt(1+X*X))
+  // trinary operator: return -1,0,1 depending on whether less than, equal to, or greater than 0
+  return (d==0?0:(d>0?1:-1)) * log(abs(d) + sqrt(1+d*d));
+#endif
 }
 
 inline double acosh(double d)
 {
+#ifndef _WIN32
   return(::acosh(d));
+#else
+  // asinh and acosh aren't ANSI C, and thus aren't defined on windows
+  // according to 'man acosh' this is equivalent to
+  //   log(X + sqrt(X*X-1))
+  return log(d + sqrt(d*d-1));
+#endif
 }
 
 

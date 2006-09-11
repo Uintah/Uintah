@@ -35,7 +35,11 @@
 
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Thread/Mutex.h>
+#ifdef _WIN32
+#include <Core/Geom/Win32OpenGLContext.h>
+#else
 #include <Core/Geom/X11OpenGLContext.h>
+#endif
 #include <Core/Util/Assert.h>
 #include <Core/Util/Environment.h>
 
@@ -90,8 +94,11 @@ ShaderProgramARB::init_shaders_supported()
       {
 	// Create a test context.
 	OpenGLContext *context =
+#ifdef _WIN32
+          new Win32OpenGLContext(0,0,0,100, 100);
+#else
           new X11OpenGLContext(0,0,100, 100);
-
+#endif
         //	  new TkOpenGLContext(".testforshadersupport", 0, 0,0);
 
 	context->make_current();
@@ -160,7 +167,9 @@ ShaderProgramARB::init_shaders_supported()
 	supported_ = GLEW_ARB_vertex_program && GLEW_ARB_fragment_program;
 
         context->release();
-        //delete context;
+#ifdef _WIN32
+        delete context;
+#endif
       }
       init_ = true;
     }

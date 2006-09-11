@@ -84,11 +84,13 @@
 #include <Core/Thread/Mutex.h>
 #include <vector>
 
+#include <Core/Thread/share.h>
+
 namespace SCIRun {
 
 typedef void (*CleanupManagerCallback)(void *);
 
-class CleanupManager {
+class SCISHARE CleanupManager {
 public:
   
   // Initializes the mutex lock for the cleanup manager.  Initialize

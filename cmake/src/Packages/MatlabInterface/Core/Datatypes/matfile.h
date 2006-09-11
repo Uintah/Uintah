@@ -93,9 +93,11 @@
 #include "matfilebase.h"
 #include "matfiledata.h" 
  
+#include "share.h"
+
 namespace MatlabIO {
        
-class matfile : public matfilebase {
+class SCISHARE matfile : public matfilebase {
 
   private:
   

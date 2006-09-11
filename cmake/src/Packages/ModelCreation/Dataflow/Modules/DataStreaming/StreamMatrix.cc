@@ -44,7 +44,6 @@ public:
   StreamMatrix(GuiContext*);
 
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
   
 private:
   GuiString row_or_col_;
@@ -98,7 +97,8 @@ StreamMatrix::StreamMatrix(GuiContext* ctx)
 }
 
 
-void StreamMatrix::execute()
+void
+StreamMatrix::execute()
 {
   // Deal with String input port
   StringHandle FileName;
@@ -249,21 +249,13 @@ void StreamMatrix::execute()
     }
 
     // Put the input from the GUI in the matrix Indices
-    Indices = dynamic_cast<Matrix *>(scinew DenseMatrix(1,amount));
-    if (Indices.get_rep() == 0)
-    {
-      error("Could not allocate memory for indices");
-      return;
-    }
+    Indices = scinew DenseMatrix(1, amount);
     double* dataptr = Indices->get_data_pointer();
     for (int p=0; p <amount;p++) dataptr[p] = static_cast<double>(current+p);
 
     current_.set(current);
     current_.reset();
   }
-
-
-
 
   MatrixHandle Output;
   MatrixHandle ScaledIndices;
@@ -318,7 +310,8 @@ void StreamMatrix::execute()
 }
 
 
-int StreamMatrix::increment(int current, int lower, int upper)
+int
+StreamMatrix::increment(int current, int lower, int upper)
 {
   // Do nothing if no range.
   if (upper == lower) {
@@ -359,11 +352,6 @@ int StreamMatrix::increment(int current, int lower, int upper)
   return current;
 }
 
-
-void StreamMatrix::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace ModelCreation
 

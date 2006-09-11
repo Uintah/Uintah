@@ -59,8 +59,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
 private:
 
   // For extracting the parameters out of the the GUI
@@ -102,7 +100,7 @@ void ParameterList::execute()
   // Split the data in pieces for each parameter
   std::vector<std::string> datalist = converttcllist(data);
 
-  BundleHandle bundle = dynamic_cast<Bundle *>(scinew Bundle());
+  BundleHandle bundle = scinew Bundle();
 
   std::string parname, partype, pardata;
    
@@ -118,12 +116,7 @@ void ParameterList::execute()
     
     if (partype == "boolean")
     {
-      MatrixHandle matrix = dynamic_cast<Matrix *>(scinew DenseMatrix(1,1));
-      if (matrix.get_rep() == 0)
-      {
-        error("Could not allocate enough memory");
-        return;
-      }
+      MatrixHandle matrix = scinew DenseMatrix(1, 1);
       double *dataptr = matrix->get_data_pointer();
       dataptr[0] = 0.0;
       if (pardata == "true") dataptr[0] = 1.0;
@@ -132,12 +125,7 @@ void ParameterList::execute()
 
     if (partype == "scalar")
     {
-      MatrixHandle matrix = dynamic_cast<Matrix *>(scinew DenseMatrix(1,1));
-      if (matrix.get_rep() == 0)
-      {
-        error("Could not allocate enough memory");
-        return;
-      }
+      MatrixHandle matrix = scinew DenseMatrix(1, 1);
       double *dataptr = matrix->get_data_pointer();
       std::istringstream iss(pardata);
       iss >> dataptr[0];
@@ -146,12 +134,7 @@ void ParameterList::execute()
     
     if (partype == "vector")
     {
-      MatrixHandle matrix = dynamic_cast<Matrix *>(scinew DenseMatrix(1,3));
-      if (matrix.get_rep() == 0)
-      {
-        error("Could not allocate enough memory");
-        return;
-      }
+      MatrixHandle matrix = scinew DenseMatrix(1, 3);
       std::vector<std::string> subdata = converttcllist(pardata);
       double *dataptr = matrix->get_data_pointer();
       
@@ -165,15 +148,9 @@ void ParameterList::execute()
     
     if (partype == "tensor")
     {
-      MatrixHandle matrix = dynamic_cast<Matrix *>(scinew DenseMatrix(1,9));
-      if (matrix.get_rep() == 0)
-      {
-        error("Could not allocate enough memory");
-        return;
-      }
+      MatrixHandle matrix = scinew DenseMatrix(1, 9);
       std::vector<std::string> subdata = converttcllist(pardata);
       double *dataptr = matrix->get_data_pointer();
-      
       {
         std::istringstream iss1(subdata[0]);
         iss1 >> dataptr[0];
@@ -198,12 +175,7 @@ void ParameterList::execute()
     if (partype == "array")
     {
       std::vector<std::string> subdata = converttcllist(pardata);
-      MatrixHandle matrix = dynamic_cast<Matrix *>(scinew DenseMatrix(1,subdata.size()));
-      if (matrix.get_rep() == 0)
-      {
-        error("Could not allocate enough memory");
-        return;
-      }
+      MatrixHandle matrix = scinew DenseMatrix(1, subdata.size());
       double *dataptr = matrix->get_data_pointer();
       
       for (size_t r=0; r<subdata.size(); r++ )
@@ -216,44 +188,23 @@ void ParameterList::execute()
     
     if (partype == "string")
     {
-      StringHandle str = dynamic_cast<String *>(scinew String(pardata));
-      if (str.get_rep() == 0)
-      {
-        error("Could not allocate enough memory");
-        return;
-      }
+      StringHandle str = scinew String(pardata);
       bundle->setString(parname,str);
     }    
     
     if (partype == "filename")
     {
-      StringHandle str = dynamic_cast<String *>(scinew String(pardata));
-      if (str.get_rep() == 0)
-      {
-        error("Could not allocate enough memory");
-        return;
-      }
+      StringHandle str = scinew String(pardata);
       bundle->setString(parname,str);
     }    
   } 
-  
-  BundleOPort* oport = dynamic_cast<BundleOPort *>(get_oport("ParameterList"));
-  if (oport == 0)
-  {
-    error("Could not locate ParameterList port");
-    return;
-  }
-  
-  oport->send(bundle);
+
+  send_output_handle("ParameterList", bundle);
 }
 
-void
- ParameterList::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
-std::vector<std::string> ParameterList::converttcllist(std::string str)
+std::vector<std::string>
+ParameterList::converttcllist(std::string str)
 {
   std::string result;
   std::vector<std::string> list(0);

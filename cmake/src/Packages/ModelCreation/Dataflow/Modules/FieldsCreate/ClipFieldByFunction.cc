@@ -234,13 +234,14 @@ void ClipFieldByFunction::execute()
       return;
     }
 
-    send_output_handle("Field",output,false);
-    send_output_handle("Mapping",interpolant,false);
+    send_output_handle("Field", output);
+    send_output_handle("Mapping", interpolant);
   }
 }
 
+
 void
- ClipFieldByFunction::tcl_command(GuiArgs& args, void* userdata)
+ClipFieldByFunction::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {
@@ -262,6 +263,7 @@ void
     Module::tcl_command(args, userdata);
   }
 }
+
 
 } // End namespace ModelCreation
 

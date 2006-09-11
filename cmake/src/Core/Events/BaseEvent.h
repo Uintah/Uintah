@@ -41,13 +41,14 @@
 #include <Core/Thread/Mutex.h>
 #include <string>
 
+#include <Core/Events/share.h>
 
 namespace SCIRun {
 
 using namespace std;
 
 
-class BaseEvent : public Datatype
+class SCISHARE BaseEvent : public Datatype
 {
 public:
   //! target is the id of the mailbox given by EventManager, 
@@ -82,7 +83,7 @@ private:
   string                target_;
 };
 
-class EventModifiers 
+class SCISHARE EventModifiers 
 {
 public: 
   EventModifiers();
@@ -109,7 +110,7 @@ protected:
   unsigned int         modifiers_;
 };
 
-class PointerEvent : public BaseEvent, public EventModifiers
+class SCISHARE PointerEvent : public BaseEvent, public EventModifiers
 {
 public:
   enum {
@@ -154,7 +155,7 @@ private:
 };
 
 
-class KeyEvent : public BaseEvent, public EventModifiers
+class SCISHARE KeyEvent : public BaseEvent, public EventModifiers
 {
 public:
   //! Key state
@@ -193,7 +194,7 @@ private:
   string               key_str_;
 };
 
-class WindowEvent : public BaseEvent 
+class SCISHARE WindowEvent : public BaseEvent 
 {
 public:
   enum {
@@ -229,7 +230,7 @@ private:
   unsigned int          w_state_;
 };
 
-class QuitEvent : public BaseEvent {
+class SCISHARE QuitEvent : public BaseEvent {
 public:
   QuitEvent();
   virtual ~QuitEvent();
@@ -240,7 +241,7 @@ public:
 };
 
 
-class RedrawEvent : public BaseEvent {
+class SCISHARE RedrawEvent : public BaseEvent {
 public:
   RedrawEvent();
   virtual ~RedrawEvent();
@@ -248,7 +249,7 @@ public:
   virtual RedrawEvent * clone() { return new RedrawEvent(*this); }
 };
 
-class TMNotifyEvent : public BaseEvent {
+class SCISHARE TMNotifyEvent : public BaseEvent {
 public:
   enum {
     START_E,

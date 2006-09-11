@@ -58,7 +58,7 @@ void GetBoundingBox::execute()
     SCIRunAlgo::FieldsAlgo algo(this);
     if (!(algo.GetBoundingBox(ifield,ofield))) return;
 
-    send_output_handle("BoundingBox",ofield,false);
+    send_output_handle("BoundingBox", ofield);
   }
 }
 

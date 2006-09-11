@@ -43,6 +43,8 @@
 #include <Core/Datatypes/GenericField.h>
 #include <vector>
 
+#include <Core/Algorithms/Fields/share.h>
+
 namespace SCIRun {
 
 using std::vector;
@@ -171,8 +173,8 @@ ClipAtIndecesAlgo<Field>::clip_faces(FieldHandle field,
 }
 
 
-FieldHandle clip_nodes(FieldHandle fld, const set<unsigned int>& indeces);
-FieldHandle clip_faces(FieldHandle fld, const set<unsigned int>& indeces);
+SCISHARE FieldHandle clip_nodes(FieldHandle fld, const set<unsigned int>& indeces);
+SCISHARE FieldHandle clip_faces(FieldHandle fld, const set<unsigned int>& indeces);
 
 } // namespace SCIRun
 

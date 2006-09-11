@@ -67,52 +67,14 @@ namespace SCIRun {
     {
     }
 
-    SignalCatcher::~SignalCatcher() {  } 
+    SignalCatcher::~SignalCatcher() 
+    {  
+      for (unsigned i = 0; i < catcher_targets_.size(); i++)
+        delete catcher_targets_[i];
+    } 
 
-
-    SignalCatcher::CatcherTargetInfo_t::CatcherTargetInfo_t() :
-      catcher_(0),
-      function_(0),
-      targetname_(""),
-      variables_(0)
-    {
-    }
-
-    SignalCatcher::CatcherTargetInfo_t::CatcherTargetInfo_t
-    (const CatcherTargetInfo_t &copy) :
-      catcher_(copy.catcher_),
-      function_(copy.function_),
-      targetname_(copy.targetname_),
-      variables_(copy.variables_)
-    {
-    }
-
-
-    SignalCatcher::CatcherTargetInfo_t::~CatcherTargetInfo_t()
-    {
-      //      if (variables_) {
-      //        delete variables_;
-      //        variables_ = 0;
-      //      }
-    }
+    SignalCatcher::CatcherTargetInfoBase::~CatcherTargetInfoBase() {}
       
-
-
-    SignalCatcher::CatcherTargetInfo_t
-    SignalCatcher::register_target(const string &targetname,
-                                   CatcherFunctionPtr function) 
-    {
-      ASSERT(function);
-      CatcherTargetInfo_t callback;
-      callback.catcher_ = this;
-      callback.function_ = function;
-      callback.targetname_ = targetname;
-      callback.variables_ = 0;
-
-      catcher_targets_.push_back(callback);
-      return callback;
-    }
-
 
     SignalThrower::SignalThrower() :
       all_catchers_()
@@ -123,9 +85,9 @@ namespace SCIRun {
     }
       
     void
-    SignalThrower::register_default_thrower(const SignalCatcher::CatcherTargetInfo_t &callback)
+    SignalThrower::register_default_thrower(SignalCatcher::CatcherTargetInfoBase* callback)
     {
-      all_catchers_[callback.targetname_].push_back(callback);
+      all_catchers_[callback->targetname_].push_back(callback);
     }
     
 
@@ -146,7 +108,7 @@ namespace SCIRun {
       ThreadedCallback() : callback_(0), signal_(0), state_(BaseTool::STOP_E){}
       virtual ~ThreadedCallback() { cerr << "Threadedcallback done\n";  }
       
-      void      set_callback(SignalCatcher::CatcherTargetInfo_t *callback) {
+      void      set_callback(SignalCatcher::CatcherTargetInfoBase *callback) {
         callback_ = callback;
       }
       
@@ -160,13 +122,13 @@ namespace SCIRun {
       
       virtual void run() {
         ASSERT(callback_);
-        state_ = (callback_->catcher_->*callback_->function_)(signal_);
+        state_ = callback_->doCallback(signal_);
         signal_ = 0;
       }
       
       BaseTool::propagation_state_e     get_state() { return state_; }
     private:
-      SignalCatcher::CatcherTargetInfo_t *      callback_;
+      SignalCatcher::CatcherTargetInfoBase *    callback_;
       event_handle_t                            signal_;
       BaseTool::propagation_state_e             state_;
     };
@@ -191,20 +153,20 @@ namespace SCIRun {
         AllSignalCatchers_t::iterator riter = iter->second.begin();
         AllSignalCatchers_t::iterator rend = iter->second.end();
         for(;riter != rend; ++riter) {
-          SignalCatcher::CatcherTargetInfo_t &callback = *riter;
+          SignalCatcher::CatcherTargetInfoBase* callback = *riter;
 
-          ASSERT(callback.catcher_);
-          ASSERT(callback.function_);
-          signal->set_vars(callback.variables_);
+          //ASSERT(callback->catcher_);
+          //ASSERT(callback->function_);
+          signal->set_vars(callback->variables_);
           bool threaded = false;
-          callback.variables_->maybe_get_bool("threaded", threaded);
+          callback->variables_->maybe_get_bool("threaded", threaded);
           if (!threaded) {
-            state = (callback.catcher_->*callback.function_)(signal);
+            state = callback->doCallback(signal);
           } else {
             ThreadedCallback *threaded_callback = new ThreadedCallback();
-            threaded_callback->set_callback(&callback);
+            threaded_callback->set_callback(callback);
             threaded_callback->set_signal(signal);
-            cerr << "Threading " << callback.targetname_ << std::endl;
+            cerr << "Threading " << callback->targetname_ << std::endl;
             (new Thread(threaded_callback, signalname.c_str()))->detach();
           }
           if (state == BaseTool::STOP_E) break;
@@ -226,10 +188,10 @@ namespace SCIRun {
         SignalCatcher::NodeCatchers_t::iterator nriter = node_catchers.begin();
         SignalCatcher::NodeCatchers_t::iterator nrend = node_catchers.end();
         for (;nriter != nrend; ++nriter) {
-          SignalCatcher::CatcherTargetInfo_t &callback = *nriter;
-          ASSERT(callback.catcher_);
-          ASSERT(callback.function_);
-          allcatchers[callback.targetname_].push_back(callback);
+          SignalCatcher::CatcherTargetInfoBase* callback = *nriter;
+          //ASSERT(callback.catcher_);
+          //ASSERT(callback.function_);
+          allcatchers[callback->targetname_].push_back(callback);
         }
       }
       return allcatchers;

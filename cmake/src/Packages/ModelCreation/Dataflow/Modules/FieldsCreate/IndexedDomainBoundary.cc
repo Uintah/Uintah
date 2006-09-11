@@ -65,7 +65,7 @@ void IndexedDomainBoundary::execute()
   // that executes every module downstream even if no data has changed: 
   if (inputs_changed_ || !oport_cached("Field"))
   {  
-    SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));  
+    SCIRunAlgo::FieldsAlgo algo(this);
     if(!(algo.IndexedDomainBoundary(ifield,ofield,ElemLink,0.0,0.0,false,true,false,false,false))) return;
 
     // send new output if there is any:        

@@ -90,7 +90,9 @@ CreateFieldData::CreateFieldData(GuiContext* ctx)
 {
 }
 
-void CreateFieldData::execute()
+
+void
+CreateFieldData::execute()
 {
   FieldHandle field;
   StringHandle func;
@@ -110,7 +112,6 @@ void CreateFieldData::execute()
   get_gui()->lock();
   get_gui()->eval(get_id()+" update_text");
   get_gui()->unlock();
-
   
   // Get number of matrix ports with data (the last one is always empty)
   size_t numinputs = matrices.size();
@@ -120,7 +121,6 @@ void CreateFieldData::execute()
     error("This module cannot handle more than 23 input matrices");
     return;
   }
-  
   
   if (inputs_changed_ || guiformat_.changed() || guibasis_.changed() || guifunction_.changed() || !oport_cached("Field"))
   {
@@ -224,7 +224,7 @@ void CreateFieldData::execute()
 }
 
 void
- CreateFieldData::tcl_command(GuiArgs& args, void* userdata)
+CreateFieldData::tcl_command(GuiArgs& args, void* userdata)
 {
   if(args.count() < 2)
   {

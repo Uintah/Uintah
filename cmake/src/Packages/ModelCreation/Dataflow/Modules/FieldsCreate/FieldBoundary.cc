@@ -51,7 +51,9 @@ FieldBoundary::FieldBoundary(GuiContext* ctx)
 {
 }
 
-void FieldBoundary::execute()
+
+void
+FieldBoundary::execute()
 {
   // Declare dataflow object
   FieldHandle field;
@@ -66,8 +68,7 @@ void FieldBoundary::execute()
     MatrixHandle mapping;
     
     // Entry point to algorithm
-    SCIRunAlgo::FieldsAlgo algo(dynamic_cast<ProgressReporter *>(this));
-    
+    SCIRunAlgo::FieldsAlgo algo(this);
     if (!(algo.FieldBoundary(field,ofield,mapping))) return;
 
     // Send Data flow objects downstream

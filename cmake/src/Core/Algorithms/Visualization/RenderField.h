@@ -3747,7 +3747,7 @@ struct RenderParams
 };
 
 //! interface that does the dynamic compilation for you.
-bool render_field(FieldHandle fld_handle, RenderParams &params);
+SCISHARE bool render_field(FieldHandle fld_handle, RenderParams &params);
 
 } // end namespace SCIRun
 

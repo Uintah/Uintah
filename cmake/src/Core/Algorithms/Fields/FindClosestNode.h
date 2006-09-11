@@ -111,7 +111,7 @@ bool FindClosestNodeAlgoT<FSRC, FPNT>::FindClosestNode(ProgressReporter *pr, Fie
   typename FSRC::mesh_type::Node::iterator it, it_end;
   typename FSRC::mesh_type::Node::index_type idx;
   typename FSRC::mesh_type::Node::array_type nodes;
-  typename FSRC::mesh_type::Elem::index_type cidx;
+  typename FSRC::mesh_type::Elem::index_type cidx = 0;
   double dist = DBL_MAX;
   double dist2;
   Point p, q;

@@ -51,7 +51,6 @@ public:
   FieldSetStringProperty(GuiContext*);
   virtual ~FieldSetStringProperty();
   virtual void execute();
-  virtual void tcl_command(GuiArgs&, void*);
   
 private:
   GuiString     guistring1name_;
@@ -75,88 +74,38 @@ FieldSetStringProperty::~FieldSetStringProperty()
 void
 FieldSetStringProperty::execute()
 {
-  std::string string1name = guistring1name_.get();
-  std::string string2name = guistring2name_.get();
-  std::string string3name = guistring3name_.get();
+  const string string1name = guistring1name_.get();
+  const string string2name = guistring2name_.get();
+  const string string3name = guistring3name_.get();
     
-  FieldHandle  handle;
-  FieldIPort   *iport;
-  FieldOPort   *oport;
-  StringHandle fhandle;
-  std::string  fstring;
-  StringIPort  *ifport;
-        
-  if(!(iport = static_cast<FieldIPort *>(get_input_port("Field"))))
-  {
-    error("Could not find 'Field' input port");
-    return;
-  }
-      
-  if (!(iport->get(handle)))
-  {   
-    error("No field on input port");
-  }
-   
-  if (handle.get_rep() == 0)
-  {
-    error("No field on input port");
-  }
+  FieldHandle handle;
+  if (!get_input_handle("Field", handle)) return;
   
   // Scan field input port 1
-  if (!(ifport = static_cast<StringIPort *>(get_input_port("String1"))))
+  StringHandle shandle;
+  if (get_input_handle("String1", shandle, false))
   {
-    error("Could not find String 1 input port");
-    return;
-  }
-        
-  if (ifport->get(fhandle))
-  {
-    fstring = fhandle->get();
-    handle->set_property(string1name,fstring,false);
+    const string fstring = shandle->get();
+    handle->set_property(string1name, fstring, false);
   }
 
-  // Scan field input port 2     
-  if (!(ifport = static_cast<StringIPort *>(get_input_port("String2"))))
-    {
-      error("Could not find String 2 input port");
-      return;
-    }
-        
-  if (ifport->get(fhandle))
+  // Scan field input port 2
+  if (get_input_handle("String2", shandle, false))
   {
-    fstring = fhandle->get();  
-    handle->set_property(string2name,fstring,false);
+    const string fstring = shandle->get();  
+    handle->set_property(string2name, fstring, false);
   }
 
-  // Scan field input port 3     
-  if (!(ifport = static_cast<StringIPort *>(get_input_port("String3"))))
-    {
-      error("Could not find String 3 input port");
-      return;
-    }
-        
-  if (ifport->get(fhandle))
+  // Scan field input port 3
+  if (get_input_handle("String3", shandle, false))
   {
-    fstring = fhandle->get();  
-    handle->set_property(string3name,fstring,false);
+    const string fstring = shandle->get();  
+    handle->set_property(string3name, fstring, false);
   }
         
   // Now post the output
-        
-  if (!(oport = static_cast<FieldOPort *>(get_oport("Field"))))
-    {
-      error("Could not find 'Field' output port");
-      return;
-    }
-
-  handle->generation++;                    
-  oport->send(handle);
-}
-
-void
-FieldSetStringProperty::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
+  handle->generation = handle->compute_new_generation();
+  send_output_handle("Field", handle);
 }
 
 } //end namespace

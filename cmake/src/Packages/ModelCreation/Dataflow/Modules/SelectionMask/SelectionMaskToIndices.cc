@@ -52,8 +52,6 @@ public:
   virtual ~SelectionMaskToIndices();
 
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
@@ -63,40 +61,17 @@ SelectionMaskToIndices::SelectionMaskToIndices(GuiContext* ctx)
 {
 }
 
-SelectionMaskToIndices::~SelectionMaskToIndices(){
+
+SelectionMaskToIndices::~SelectionMaskToIndices()
+{
 }
 
-void SelectionMaskToIndices::execute()
+
+void
+SelectionMaskToIndices::execute()
 {
-  SCIRun::MatrixIPort *selection_iport;
-  SCIRun::MatrixOPort *indices_oport;
-  SCIRun::MatrixOPort *length_oport;
-  
   SCIRun::MatrixHandle input;
-  
-  if (!(selection_iport = dynamic_cast<SCIRun::MatrixIPort *>(get_input_port(0))))
-  {
-    error("Could not find input port for selection mask");
-    return;
-  }
-
-  if (!(indices_oport = dynamic_cast<SCIRun::MatrixOPort *>(get_output_port(0))))
-  {
-    error("Could not find output port for indices matrix");
-    return;
-  }
-
-  if (!(length_oport = dynamic_cast<SCIRun::MatrixOPort *>(get_output_port(1))))
-  {
-    error("Could not find output port for length matrix");
-    return;
-  }
-
-  if (!(selection_iport->get(input)))
-  {
-    warning("No data could be found on the input ports");
-    return;
-  }
+  if (!get_input_handle("SelectionMask", input)) return;
 
   SelectionMask mask(input);
   
@@ -106,26 +81,16 @@ void SelectionMaskToIndices::execute()
     return;
   }
   
-  SCIRun::MatrixHandle lenmat = dynamic_cast<SCIRun::Matrix *>(scinew SCIRun::DenseMatrix(1,1));
-  if (lenmat.get_rep() == 0)
-  {
-    error("Could not allocate enough memory");
-    return;
-  }
-  lenmat->put(0,0,static_cast<double>(mask.size()));
+  SCIRun::MatrixHandle lenmat = scinew SCIRun::DenseMatrix(1, 1);
+  lenmat->put(0, 0, static_cast<double>(mask.size()));
   
   SCIRun::MatrixHandle idxmat;
   mask.get_indices(idxmat);
   
-  indices_oport->send(idxmat);
-  length_oport->send(lenmat);
+  send_output_handle("Indices", idxmat);
+  send_output_handle("Size", lenmat);
 }
 
-void
- SelectionMaskToIndices::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace CardioWave
 

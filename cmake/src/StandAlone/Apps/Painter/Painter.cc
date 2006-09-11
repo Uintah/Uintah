@@ -80,6 +80,10 @@
 #include <Core/Util/FileUtils.h>
 #include <Core/Algorithms/Visualization/NrrdTextureBuilderAlgo.h>
 
+#ifdef _WIN32
+#  define round(x) ((int) x+.5)
+#endif
+
 
 #ifdef HAVE_INSIGHT
 #  include <itkImportImageFilter.h>
