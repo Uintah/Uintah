@@ -1001,7 +1001,7 @@ Painter::ITKThresholdTool::finish()
 
   string name = "ITK Threshold Result";
   Painter::NrrdVolume *new_layer = new NrrdVolume(seed_volume_, name, 0);
-  new_layer->colormap_.set(1);
+  new_layer->colormap_ = 1;
   new_layer->data_min_ = -4.0;
   new_layer->data_max_ = 4.0;
   new_layer->clut_min_ = 4.0/255.0;
@@ -1209,7 +1209,7 @@ Painter::ITKConfidenceConnectedImageFilterTool::finish() {
   string name = "Confidence Connected";
   NrrdVolume *temp = new NrrdVolume(volume_, name, 2);
   painter_->volume_map_[name] = temp;
-  temp->colormap_.set(1);
+  temp->colormap_ = 1;
   temp->clut_min_ = temp->data_min_ = 0.5;
   temp->clut_max_ = temp->data_max_ = 1.0;
   painter_->current_volume_ = temp;
