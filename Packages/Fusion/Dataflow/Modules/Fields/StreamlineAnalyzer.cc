@@ -108,22 +108,25 @@ StreamlineAnalyzer::~StreamlineAnalyzer()
 void
 StreamlineAnalyzer::execute()
 {
+  // The streamline or poincare field input is required.
   FieldHandle sl_field_input_handle;
 
-  if( !get_input_handle( "Input Streamlines", sl_field_input_handle, true ) ) return;
+  if( get_input_handle( "Input Streamlines", sl_field_input_handle, true ) )
+  {
+    string if_name =
+      sl_field_input_handle->get_type_description(Field::MESH_TD_E)->get_name();
 
-  string if_name =
-    sl_field_input_handle->get_type_description(Field::MESH_TD_E)->get_name();
+    if (if_name.find("CurveMesh")       != string::npos &&
+	if_name.find("StructCurveMesh") != string::npos &&
+	if_name.find("CloudPointMesh")  != string::npos ) {
+      error("Only available for (Struct)CurveFields or PointCloudFields.");
+      return;
+    }
 
-  if (if_name.find("CurveMesh")       != string::npos &&
-      if_name.find("StructCurveMesh") != string::npos ) {
-    error("Only available for (Struct)CurveFields.");
-    return;
-  }
-
-  if (!sl_field_input_handle->query_scalar_interface(this).get_rep()) {
-    error("Only available for Scalar data.");
-    return;
+    if (!sl_field_input_handle->query_scalar_interface(this).get_rep()) {
+      error("Only available for Scalar data.");
+      return;
+    }
   }
 
   // The centroid field input is optional.
