@@ -333,6 +333,10 @@ void HDF5DataReader::execute() {
 	gui_selectable_max_.reset();
       }
 
+      if( gui_current_.changed( true ) ) {
+	inputs_changed_ = true;
+      }
+
       resend = animate_execute( filename, frame_paths, frame_datasets );
     }
   } else if( execute_error_ ||
@@ -1323,62 +1327,19 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   }
 
   size_t sz[NRRD_DIM_MAX];
-  sz[0] = count[0];
   unsigned int centers[NRRD_DIM_MAX];
-  centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
-  centers[2] = nrrdCenterNode; centers[3] = nrrdCenterNode;
-  centers[4] = nrrdCenterNode; centers[5] = nrrdCenterNode;
-  switch(ndims) {
-  case 1: 
-    nrrdWrap_nva(nout->nrrd_, data,
-	     nrrd_type, ndims, sz);
-    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
-    break;
-      
-  case 2: 
-    sz[1] = count[1];
-    nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, sz);
-    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
-    break;
-      
-  case 3: 
-    sz[1] = count[1];
-    sz[2] = count[2];
-    nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, sz);  
-    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
-    break;
-      
-  case 4: 
-    sz[1] = count[1];
-    sz[2] = count[2];
-    sz[3] = count[3];
-    nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, sz);  
-    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
-    break;
-      
-  case 5: 
-    sz[1] = count[1];
-    sz[2] = count[2];
-    sz[3] = count[3];
-    sz[4] = count[4];
-    nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, sz);
-    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
-    break;
-      
-  case 6: 
-    sz[1] = count[1];
-    sz[2] = count[2];
-    sz[3] = count[3];
-    sz[4] = count[4];
-    sz[5] = count[5];
-    nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, sz);
-    nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
-    break;
+
+  for( unsigned int i=0; i<ndims; i++ ) {
+    sz[i] = count[i];
+    centers[i] = nrrdCenterNode;
   }
-   
-  string nrrdName = group + "-" + dataset;
+
+  nrrdWrap_nva(nout->nrrd_, data, nrrd_type, ndims, sz);
+  nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
   // Remove all of the tcl special characters.
+  string nrrdName = group + "-" + dataset;
+
   std::string::size_type pos;
   while( (pos = nrrdName.find(":")) != string::npos )
     nrrdName.replace( pos, 1, "-" );
@@ -1946,6 +1907,7 @@ HDF5DataReader::animate_execute( string new_filename,
 
     if( inputs_changed_ ||
 	which != gui_current_.get() ) {
+
       ReadandSendData( new_filename, frame_paths[which],
 		       frame_datasets[which], cache, which );
     }

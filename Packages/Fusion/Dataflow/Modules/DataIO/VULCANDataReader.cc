@@ -282,8 +282,8 @@ VULCANDataReader::execute(){
     nrrdWrap_nva(nout->nrrd_, pdata, nrrdTypeDouble, ndims+1, size);
 
     nout->nrrd_->axis[0].kind  = nrrdKind3Vector;
-    nout->nrrd_->axis[0].label = strdup("ZR");
-    nout->nrrd_->axis[1].label = strdup("Domain");
+    nout->nrrd_->axis[0].label = airStrdup("ZR");
+    nout->nrrd_->axis[1].label = airStrdup("Domain");
 
     unsigned int centers[NRRD_DIM_MAX];
     centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
@@ -310,8 +310,8 @@ VULCANDataReader::execute(){
     nrrdWrap_nva(nout->nrrd_, vdata, nrrdTypeDouble, ndims+1, size);
 
     nout->nrrd_->axis[0].kind  = nrrdKind3Vector;
-    nout->nrrd_->axis[0].label = strdup("ZR");
-    nout->nrrd_->axis[1].label = strdup("Domain");
+    nout->nrrd_->axis[0].label = airStrdup("ZR");
+    nout->nrrd_->axis[1].label = airStrdup("Domain");
     
     nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
@@ -376,8 +376,8 @@ VULCANDataReader::execute(){
     con_size[1] = ncon;
     nrrdWrap_nva(nout->nrrd_, cdata, nrrdTypeDouble, ndims+1, con_size);
 
-    nout->nrrd_->axis[0].label = strdup("Connections");
-    nout->nrrd_->axis[1].label = strdup("Domain");
+    nout->nrrd_->axis[0].label = airStrdup("Connections");
+    nout->nrrd_->axis[1].label = airStrdup("Domain");
     
     nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
@@ -404,7 +404,7 @@ VULCANDataReader::execute(){
 
       nrrdWrap_nva(nout->nrrd_, data[i], nrrdTypeDouble, ndims, data_size);
 
-      nout->nrrd_->axis[0].label = strdup("Domain");
+      nout->nrrd_->axis[0].label = airStrdup("Domain");
     
       nout->set_property( "DataSpace",         string("REALSPACE"), false );
       nout->set_property( "Coordinate System", string("Cylindrical - VULCAN"), false );
