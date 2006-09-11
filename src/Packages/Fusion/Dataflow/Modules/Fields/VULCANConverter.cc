@@ -144,9 +144,11 @@ VULCANConverter::execute(){
     get_gui()->execute(str.str().c_str());
   }
 
-  if( nrrd_input_handles.size() != 1 && nrrd_input_handles.size() != 2 &&
+  if( nrrd_input_handles.size() != 1 &&
+      nrrd_input_handles.size() != 2 &&
       nrrd_input_handles.size() != 3 &&
-      nrrd_input_handles.size() != 4 && nrrd_input_handles.size() != 8 ){
+      nrrd_input_handles.size() != 4 &&
+      nrrd_input_handles.size() != 8 ){
     error( "Not enough or too many handles or representations" );
     return;
   }
@@ -336,9 +338,7 @@ VULCANConverter::execute(){
     str << get_id() << " set_modes " << nmodes_ << " 1";
 
     get_gui()->execute(str.str().c_str());
-    
   }
-
 
   bool updateMode = false;
 
@@ -416,6 +416,7 @@ VULCANConverter::execute(){
     }
 
     if( conversion_ ) {
+
       remark( "Converting the " + convertStr );
     
       CompileInfoHandle ci_mesh =
@@ -432,6 +433,7 @@ VULCANConverter::execute(){
 
       nrrd_output_handle_ =
 	algo_mesh->execute( nrrd_input_handles, mesh_, data_, modes_ );
+
     } else {
       error( "Nothing to convert." );
       execute_error_ = true;
