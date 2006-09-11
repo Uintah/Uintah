@@ -29,14 +29,14 @@
 
 # Makefile fragment for this subdirectory
 
-  include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-  SRCDIR   := Core/Algorithms/DataIO
+SRCDIR   := Core/Algorithms/DataIO
 
-  SRCS     += \
-	  $(SRCDIR)/DataIOAlgo.cc \
+SRCS += \
+	$(SRCDIR)/DataIOAlgo.cc \
 
-  LIBS := $(M_LIBRARY) $(TEEM_LIBRARY) $(Z_LIBRARY)
+LIBS := $(M_LIBRARY) $(TEEM_LIBRARY) $(Z_LIBRARY) 
 
 ifeq ($(HAVE_INSIGHT),yes)
   INCLUDES += $(INSIGHT_INCLUDE)
@@ -48,9 +48,9 @@ ifeq ($(HAVE_INSIGHT),yes)
   LIBS += $(INSIGHT_LIBRARY) $(GDCM_LIBRARY) $(TK_LIBRARY) $(GL_LIBRARY) 
 endif
 
-  PSELIBS := Core/Datatypes Core/Containers Core/Thread \
+PSELIBS := Core/Datatypes Core/Containers Core/Thread \
 	Core/Exceptions Core/Geometry Core/Util Core/Math Core/Persistent \
-  Core/Geom Core/Bundle Core/ImportExport Core/Volume
+	Core/Geom Core/Bundle Core/ImportExport Core/Volume
 
-  include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
   
