@@ -316,18 +316,20 @@ void AMRSimulationController::subCycleCompile(GridP& grid, int startDW, int dwSt
   
   d_sim->scheduleTimeAdvance(fineLevel, d_scheduler);
 
-  if(numLevel+1 < grid->numLevels()){
-    int newStride = dwStride/numSteps;
-    for(int substep=0;substep < numSteps;substep++){
-      subCycleCompile(grid, startDW+substep*newStride, newStride, substep, numLevel+1);
+  if (d_doAMR) {
+    if(numLevel+1 < grid->numLevels()){
+      int newStride = dwStride/numSteps;
+      for(int substep=0;substep < numSteps;substep++){
+        subCycleCompile(grid, startDW+substep*newStride, newStride, substep, numLevel+1);
+      }
+      // Coarsen and then refine_CFI at the end of the W-cycle
+      d_scheduler->clearMappings();
+      d_scheduler->mapDataWarehouse(Task::OldDW, 0);
+      d_scheduler->mapDataWarehouse(Task::NewDW, startDW+dwStride);
+      d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
+      d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
+      d_sim->scheduleCoarsen(fineLevel, d_scheduler);
     }
-    // Coarsen and then refine_CFI at the end of the W-cycle
-    d_scheduler->clearMappings();
-    d_scheduler->mapDataWarehouse(Task::OldDW, 0);
-    d_scheduler->mapDataWarehouse(Task::NewDW, startDW+dwStride);
-    d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
-    d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
-    d_sim->scheduleCoarsen(fineLevel, d_scheduler);
   }
 
   d_scheduler->clearMappings();
