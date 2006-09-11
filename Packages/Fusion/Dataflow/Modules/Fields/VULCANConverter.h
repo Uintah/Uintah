@@ -95,7 +95,7 @@ VULCANMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 
   register int i, kj, cc = 0;
 
-  NTYPE *ptrZR  = (NTYPE *)(nHandles[mesh[ZR]]->nrrd_->data);
+  NTYPE *ptrZR  = (NTYPE *)(nHandles[mesh[ZR ]]->nrrd_->data);
   NTYPE *ptrPhi = (NTYPE *)(nHandles[mesh[PHI]]->nrrd_->data);
   
   int nPhi = nHandles[mesh[PHI]]->nrrd_->axis[0].size; // Phi
@@ -109,7 +109,7 @@ VULCANMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
   if( modes[0] ) {
     for( i=0; i<nPhi; i++ ) {
       for( kj=0; kj<nZR; kj++ ) {
-      	  // Mesh
+	// Mesh
 	ndata[cc*3  ] = ptrPhi[i];           // Phi
 	ndata[cc*3+1] = ptrZR[kj*rank + 1];  // R
 	ndata[cc*3+2] = ptrZR[kj*rank + 0];  // Z
@@ -138,15 +138,15 @@ VULCANMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
   size[0] = 3;
   size[1] = nPhi*nZR;
   nrrdWrap_nva(nout->nrrd_, ndata, nHandles[mesh[ZR]]->nrrd_->type,
-	   ndims+1, size);
+	       ndims+1, size);
 
   unsigned int centers[NRRD_DIM_MAX];
   centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
   nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
   nout->nrrd_->axis[0].kind  = nrrdKind3Vector;
-  nout->nrrd_->axis[0].label = nHandles[mesh[ZR]]->nrrd_->axis[0].label;
-  nout->nrrd_->axis[1].label = nHandles[mesh[ZR]]->nrrd_->axis[1].label;
+  nout->nrrd_->axis[0].label = airStrdup( nHandles[mesh[ZR]]->nrrd_->axis[0].label );
+  nout->nrrd_->axis[1].label = airStrdup( nHandles[mesh[ZR]]->nrrd_->axis[1].label );
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[mesh[ZR]].get_rep()));
@@ -184,10 +184,11 @@ public:
 
 template< class NTYPE >
 NrrdDataHandle
-VULCANConnectionConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
-					   vector< int >& mesh,
-					   vector< int >& data,
-					   vector< int >& modes)
+VULCANConnectionConverterAlgoT< NTYPE >::
+execute(vector< NrrdDataHandle >& nHandles,
+	vector< int >& mesh,
+	vector< int >& data,
+	vector< int >& modes)
 {
   int ndims = 1;
   int hex = 8;
@@ -262,15 +263,15 @@ VULCANConnectionConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHand
   size[0] = hex;
   size[1] = cc;
   nrrdWrap_nva(nout->nrrd_, ndata, nHandles[mesh[LIST]]->nrrd_->type,
-	   ndims+1, size);
+	       ndims+1, size);
 
   unsigned int centers[NRRD_DIM_MAX];
   centers[0] = nrrdCenterNode; centers[1] = nrrdCenterNode;
   nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
   nout->nrrd_->axis[0].kind  = nrrdKindUnknown;
-  nout->nrrd_->axis[0].label = nHandles[mesh[LIST]]->nrrd_->axis[0].label;
-  nout->nrrd_->axis[1].label = nHandles[mesh[LIST]]->nrrd_->axis[1].label;
+  nout->nrrd_->axis[0].label = airStrdup( nHandles[mesh[LIST]]->nrrd_->axis[0].label );
+  nout->nrrd_->axis[1].label = airStrdup( nHandles[mesh[LIST]]->nrrd_->axis[1].label );
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[mesh[LIST]].get_rep()));
@@ -313,7 +314,8 @@ private:
 
 template< class NTYPE >
 int
-VULCANScalarConverterAlgoT< NTYPE >::get_weights(Point &p, Point *pts, double *w)
+VULCANScalarConverterAlgoT< NTYPE >::
+get_weights(Point &p, Point *pts, double *w)
 {
   const Point &p0 = pts[0];
   const Point &p1 = pts[1];
@@ -422,6 +424,7 @@ execute(vector< NrrdDataHandle >& nHandles,
     int c1 = (int) ptrCon[kj*rank+1];
     int c2 = (int) ptrCon[kj*rank+2];
     int c3 = (int) ptrCon[kj*rank+3];
+
     /*
     pts[0] = Point( ptrZR[c0+1], 0, ptrZR[c0] );
     pts[1] = Point( ptrZR[c1+1], 0, ptrZR[c1] );
@@ -448,7 +451,6 @@ execute(vector< NrrdDataHandle >& nHandles,
     wt[ c3 ] += w[3];
   }
 
-
   cc = 0;
   for( i=0; i<nPhi; i++ ) {
     for( kj=0; kj<nZR; kj++ ) {
@@ -462,17 +464,19 @@ execute(vector< NrrdDataHandle >& nHandles,
     }
   }
 
+  delete wt;
+
   size_t size[NRRD_DIM_MAX];
   size[0] = nPhi*nZR;
   nrrdWrap_nva(nout->nrrd_, ndata, nHandles[data[0]]->nrrd_->type,
-	   ndims, size);
+	       ndims, size);
 
   unsigned int centers[NRRD_DIM_MAX];
   centers[0] = nrrdCenterNode;
   nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
   nout->nrrd_->axis[0].kind  = nrrdKindUnknown;
-  nout->nrrd_->axis[0].label = nHandles[mesh[LIST]]->nrrd_->axis[0].label;
+  nout->nrrd_->axis[0].label = airStrdup( nHandles[mesh[LIST]]->nrrd_->axis[0].label );
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[mesh[LIST]].get_rep()));
@@ -539,7 +543,7 @@ execute(vector< NrrdDataHandle >& nHandles,
   size[0] = 3;
   size[1] = nPhi*nZR;
   nrrdWrap_nva(nout->nrrd_, ndata, nHandles[data[ZR]]->nrrd_->type,
-	   ndims+1, size);
+	       ndims+1, size);
 
   unsigned int centers[NRRD_DIM_MAX];
   centers[0] = nrrdCenterNode;
@@ -547,8 +551,8 @@ execute(vector< NrrdDataHandle >& nHandles,
   nrrdAxisInfoSet_nva(nout->nrrd_, nrrdAxisInfoCenter, centers);
 
   nout->nrrd_->axis[0].kind  = nrrdKind3Vector;
-  nout->nrrd_->axis[0].label = nHandles[data[ZR]]->nrrd_->axis[0].label;
-  nout->nrrd_->axis[1].label = nHandles[data[ZR]]->nrrd_->axis[1].label;
+  nout->nrrd_->axis[0].label = airStrdup( nHandles[data[ZR]]->nrrd_->axis[0].label );
+  nout->nrrd_->axis[1].label = airStrdup( nHandles[data[ZR]]->nrrd_->axis[1].label );
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[data[ZR]].get_rep()));

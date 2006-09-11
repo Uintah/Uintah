@@ -171,10 +171,10 @@ NIMRODMeshConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
 
 
   nout->nrrd_->axis[0].kind  = nrrdKind3Vector;
-  nout->nrrd_->axis[0].label = strdup("Mesh Points");
-  nout->nrrd_->axis[1].label = strdup("Radial");
-  nout->nrrd_->axis[2].label = strdup("Theta");
-  nout->nrrd_->axis[3].label = strdup("Phi");
+  nout->nrrd_->axis[0].label = airStrdup("Mesh Points");
+  nout->nrrd_->axis[1].label = airStrdup("Radial");
+  nout->nrrd_->axis[2].label = airStrdup("Theta");
+  nout->nrrd_->axis[3].label = airStrdup("Phi");
 
 
   *((PropertyManager *)nout) =
@@ -256,9 +256,9 @@ NIMRODScalarConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles,
   nHandles[data[0]]->get_property( "Name", nrrdName );
 
   nout->nrrd_->axis[0].kind  = nrrdKindDomain;
-  nout->nrrd_->axis[0].label = strdup("Radial");
-  nout->nrrd_->axis[1].label = strdup("Theta");
-  nout->nrrd_->axis[2].label = strdup("Phi");
+  nout->nrrd_->axis[0].label = airStrdup("Radial");
+  nout->nrrd_->axis[1].label = airStrdup("Theta");
+  nout->nrrd_->axis[2].label = airStrdup("Phi");
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[data[0]].get_rep()));
@@ -417,10 +417,10 @@ NIMRODRealSpaceConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandl
 
   nout->nrrd_->axis[0].kind = nrrdKind3Vector;
 
-  nout->nrrd_->axis[0].label = strdup("Vector Data");
-  nout->nrrd_->axis[1].label = strdup("Radial");
-  nout->nrrd_->axis[2].label = strdup("Theta");
-  nout->nrrd_->axis[3].label = strdup("Phi");
+  nout->nrrd_->axis[0].label = airStrdup("Vector Data");
+  nout->nrrd_->axis[1].label = airStrdup("Radial");
+  nout->nrrd_->axis[2].label = airStrdup("Theta");
+  nout->nrrd_->axis[3].label = airStrdup("Phi");
 
   *((PropertyManager *)nout) =
     *((PropertyManager *)(nHandles[data[0]].get_rep()));
@@ -620,15 +620,15 @@ NIMRODComplexConverterAlgoT< NTYPE >::execute(vector< NrrdDataHandle >& nHandles
 
   if( rank == 1 ) {
     nout->nrrd_->axis[0].kind  = nrrdKindDomain;
-    nout->nrrd_->axis[0].label = strdup("Radial");
-    nout->nrrd_->axis[1].label = strdup("Theta");
-    nout->nrrd_->axis[2].label = strdup("Phi");
+    nout->nrrd_->axis[0].label = airStrdup("Radial");
+    nout->nrrd_->axis[1].label = airStrdup("Theta");
+    nout->nrrd_->axis[2].label = airStrdup("Phi");
   } else {
     nout->nrrd_->axis[0].kind  = nrrdKind3Vector; 
-    nout->nrrd_->axis[0].label = strdup("Vector Data");
-    nout->nrrd_->axis[1].label = strdup("Radial");
-    nout->nrrd_->axis[2].label = strdup("Theta");
-    nout->nrrd_->axis[3].label = strdup("Phi");
+    nout->nrrd_->axis[0].label = airStrdup("Vector Data");
+    nout->nrrd_->axis[1].label = airStrdup("Radial");
+    nout->nrrd_->axis[2].label = airStrdup("Theta");
+    nout->nrrd_->axis[3].label = airStrdup("Phi");
   }
 
   *((PropertyManager *)nout) =
