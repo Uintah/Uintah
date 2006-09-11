@@ -25,7 +25,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : HelloWorld.cc
+//    File   : BasicInput.cc
 //    Author : Martin Cole
 //    Date   : Mon Sep 11 11:22:14 2006
 
