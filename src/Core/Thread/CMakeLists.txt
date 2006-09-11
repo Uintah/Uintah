@@ -15,6 +15,15 @@ SET(Core_Thread_SRCS
   WorkQueue.cc 
 )
 
+# DV Fix for all cases
+IF(${CMAKE_SYSTEM_NAME} MATCHES IRIX)
+  SET(Core_Thread_SRCS ${Core_Thread_SRCS} Thread_irix.cc Time_irix.cc)
+ENDIF(${CMAKE_SYSTEM_NAME} MATCHES IRIX)
+
+IF(CMAKE_USE_PTHREADS)
+  SET(Core_Thread_SRCS ${Core_Thread_SRCS} Thread_pthreads.cc Time_unix.cc)
+ENDIF(CMAKE_USE_PTHREADS)
+
 IF(NOT BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Core_Thread)
 ENDIF(NOT BUILD_SHARED_LIBS)
@@ -27,10 +36,3 @@ TARGET_LINK_LIBRARIES(Core_Thread
   ${TRACEBACK_LIB} 
   ${SEMAPHORE_LIBRARY}
 )
-
-# Testing class instantiations
-#ADD_EXECUTABLE(testThread ${CMAKE_SOURCE_DIR}/Testing/src/Core/Thread/TestThread.cc)
-
-#TARGET_LINK_LIBRARIES(testThread Core_Thread)
-
-#ADD_TEST(Core_Thread_Thread_Test ${EXECUTABLE_OUTPUT_PATH}/testThread)

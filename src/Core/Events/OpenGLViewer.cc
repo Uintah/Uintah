@@ -234,6 +234,7 @@ public:
   
   void render_selection_set(bool edges = false) 
   {
+#if 0
     //create a new field with the selection items in it;
     if (! sel_fld_.get_rep()) { return; }
 
@@ -304,7 +305,7 @@ public:
     };
 
     oglv_->set_selection_geom(geom);    
-
+#endif
   }
 
   void add_selection(unsigned int idx) {

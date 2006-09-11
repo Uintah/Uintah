@@ -62,10 +62,8 @@
 #include <Core/Geom/GeomCull.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/TexSquare.h>
-#include <Dataflow/GuiInterface/TkOpenGLContext.h>
 #include <Core/Geom/OpenGLViewport.h>
 #include <Core/Geom/FreeType.h>
-#include <Dataflow/GuiInterface/UIvar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
@@ -77,7 +75,6 @@
 #include <Core/Geom/TextRenderer.h>
 #include <Core/Geom/FontManager.h>
 #include <Core/Util/SimpleProfiler.h>
-#include <Dataflow/GuiInterface/TCLKeysyms.h>
 #include <Core/Skinner/Variables.h>
 #include <Core/Events/EventManager.h>
 #include <Core/Util/FileUtils.h>
@@ -176,15 +173,15 @@ Painter::SliceWindow::SliceWindow(Skinner::Variables *variables,
   paint_layer_(0),
   center_(0,0,0),
   normal_(0,0,0),
-  slice_num_(0,0), //(!ctx) ? 0 : (!ctx) ? 0 : ctx->subVar("slice"), 0),
+  slice_num_(0,0), 
   axis_(2),
-  zoom_(0,100.0),//!ctx) ? 0 : ctx->subVar("zoom"), 100.0),
-  slab_min_(0,0),//(!ctx) ? 0 : ctx->subVar("slab_min"), 0),
-  slab_max_(0,0),//(!ctx) ? 0 : ctx->subVar("slab_max"), 0),
+  zoom_(0,100.0),
+  slab_min_(0,0),
+  slab_max_(0,0),
   redraw_(true),
   autoview_(true),
-  mode_(0,0),//(!ctx) ? 0 : ctx->subVar("mode"),0),
-  show_guidelines_(0,1),//(!ctx) ? 0 : ctx->subVar("show_guidelines"),1),
+  mode_(0,0),
+  show_guidelines_(0,1),
   cursor_pixmap_(-1)
 {
   int axis = 2;
@@ -195,25 +192,23 @@ Painter::SliceWindow::SliceWindow(Skinner::Variables *variables,
 
 
 
-Painter::NrrdVolume::NrrdVolume(GuiContext *ctx,
+Painter::NrrdVolume::NrrdVolume(VarContext *ctx,
                                 const string &name,
                                 NrrdDataHandle &nrrd) :
   nrrd_handle_(0),
-  gui_context_(ctx),
-  name_((!ctx) ? 0 : ctx->subVar("name"), name),
+  name_(name),
   name_prefix_(""),
-  opacity_((!ctx) ? 0 : ctx->subVar("opacity"), 1.0),
-  clut_min_((!ctx) ? 0 : ctx->subVar("clut_min"), 0.0),
-  clut_max_((!ctx) ? 0 : ctx->subVar("clut_max"), 1.0),
-  mutex_((!ctx) ? 0 : ctx->getfullname().c_str()),
+  opacity_(0, 1.0),
+  clut_min_(0, 0.0),
+  clut_max_(0, 1.0),
+  mutex_(0),
   data_min_(0),
   data_max_(1.0),
-  colormap_((!ctx) ? 0 : ctx->subVar("colormap")),
+  colormap_(0),
   stub_axes_(),
   transform_(),
   keep_(true)
 {
-  if (!colormap_.valid()) colormap_.set(0);
   set_nrrd(nrrd);
 }
 
@@ -264,16 +259,15 @@ Painter::NrrdVolume::NrrdVolume(NrrdVolume *copy,
                                 const string &name,
                                 int clear) :
   nrrd_handle_(0),
-  gui_context_(0),
-  name_((!gui_context_) ? 0 : gui_context_->subVar("name"), name),
+  name_(name),
   name_prefix_(copy->name_prefix_),
-  opacity_((!gui_context_) ? 0 : gui_context_->subVar("opacity"), copy->opacity_.get()),
-  clut_min_((!gui_context_) ? 0 : gui_context_->subVar("clut_min"), copy->clut_min_.get()),
-  clut_max_((!gui_context_) ? 0 : gui_context_->subVar("clut_max"), copy->clut_max_.get()),
-  mutex_((!gui_context_) ? 0 : gui_context_->getfullname().c_str()),
+  opacity_(0, copy->opacity_.get()),
+  clut_min_(0, copy->clut_min_.get()),
+  clut_max_(0, copy->clut_max_.get()),
+  mutex_(name.c_str()),
   data_min_(copy->data_min_),
   data_max_(copy->data_max_),
-  colormap_((!gui_context_) ? 0 : gui_context_->subVar("colormap"), copy->colormap_.get()),
+  colormap_(copy->colormap_),
   stub_axes_(copy->stub_axes_),
   transform_(),
   keep_(copy->keep_)
@@ -417,7 +411,7 @@ Painter::NrrdVolume::get_nrrd()
 }
 
 
-Painter::Painter(Skinner::Variables *variables, GuiContext* ctx) :
+Painter::Painter(Skinner::Variables *variables, VarContext* ctx) :
   //  Module("Painter", ctx, Filter, "Render", "SCIRun"),
   Parent(variables),
   cur_window_(0),
@@ -431,9 +425,9 @@ Painter::Painter(Skinner::Variables *variables, GuiContext* ctx) :
   undo_volume_(0),
   colormaps_(),
   tools_(),
-  anatomical_coordinates_((!ctx) ? 0 : ctx->subVar("anatomical_coordinates"), 1),
-  show_grid_((!ctx) ? 0 : ctx->subVar("show_grid"), 1),
-  show_text_((!ctx) ? 0 : ctx->subVar("show_text"), 1),
+  anatomical_coordinates_(0, 1),
+  show_grid_(0, 1),
+  show_text_(0, 1),
   volume_lock_("Volume"),
   bundles_(),
   volume_texture_(0),
@@ -1147,7 +1141,7 @@ Painter::NrrdSlice::bind()
 
   if (texture_ && tex_dirty_) {
     texture_->set_clut_minmax(volume_->clut_min_, volume_->clut_max_);
-    ColorMapHandle cmap = painter_->get_colormap(volume_->colormap_.get());
+    ColorMapHandle cmap = painter_->get_colormap(volume_->colormap_);
     texture_->set_colormap(cmap);
   }
 
@@ -1297,7 +1291,7 @@ Painter::SliceWindow::render_text()
   const int y_pos = renderer->height("X")+2;
   for (unsigned int s = 0; s < slices_.size(); ++s) {
     string str = slices_[s]->volume_->name_prefix_ + 
-      slices_[s]->volume_->name_.get();
+      slices_[s]->volume_->name_;
     if (slices_[s]->volume_ == vol) {
       renderer->set_color(240/255.0, 1.0, 0.0, 1.0);
       str = "->" + str;
@@ -1512,12 +1506,12 @@ Painter::move_layer_up()
 
   NrrdVolumeOrder::iterator voiter1 = std::find(volume_order_.begin(), 
                                                 volume_order_.end(), 
-                                                volumes_[i]->name_.get());
+                                                volumes_[i]->name_);
 
   //    volume_order_.find();
   NrrdVolumeOrder::iterator voiter2 =std::find(volume_order_.begin(),
                                                volume_order_.end(),
-                                               volumes_[i+1]->name_.get());
+                                               volumes_[i+1]->name_);
   //    volume_order_.find(volumes_[i+1]->name_.get());
   ASSERT(voiter1 != volume_order_.end());
   ASSERT(voiter2 != volume_order_.end());
@@ -1546,11 +1540,11 @@ Painter::move_layer_down()
 
 
   NrrdVolumeOrder::iterator voiter1 = 
-    std::find(volume_order_.begin(), volume_order_.end(), volumes_[i]->name_.get());
+    std::find(volume_order_.begin(), volume_order_.end(), volumes_[i]->name_);
 
   //    volume_order_.find();
   NrrdVolumeOrder::iterator voiter2 =
-    std::find(volume_order_.begin(),volume_order_.end(),volumes_[i-1]->name_.get());
+    std::find(volume_order_.begin(),volume_order_.end(),volumes_[i-1]->name_);
 
   ASSERT(voiter1 != volume_order_.end());
   ASSERT(voiter2 != volume_order_.end());
@@ -1980,7 +1974,7 @@ Painter::set_all_slices_tex_dirty() {
 void
 Painter::copy_current_layer() {
   if (current_volume_) {
-    string base = current_volume_->name_.get();
+    string base = current_volume_->name_;
     string::size_type pos = base.find_last_not_of(" 0123456789");
     base = base.substr(0, pos+1);
     int i = 0;
@@ -2015,7 +2009,7 @@ Painter::new_current_layer() {
 
 
 void
-Painter::Event::update_state(GuiArgs &args, Painter &painter) {
+Painter::Event::update_state(Painter &painter) {
   ASSERT(0);
 }
 
@@ -2073,14 +2067,14 @@ Painter::create_undo_volume() {
   return;
   if (undo_volume_) 
     delete undo_volume_;
-  string newname = current_volume_->name_.get();
+  string newname = current_volume_->name_;
   undo_volume_ = scinew NrrdVolume(current_volume_, newname, 0);
 }
 
 void
 Painter::undo_volume() {
   if (!undo_volume_) return;
-  NrrdVolume *vol = volume_map_[undo_volume_->name_.get()];
+  NrrdVolume *vol = volume_map_[undo_volume_->name_];
   if (!vol) return;
   vol->nrrd_handle_ = undo_volume_->nrrd_handle_;
   vol->nrrd_handle_.detach();
@@ -2097,7 +2091,7 @@ Painter::recompute_volume_list()
   volume_lock_.lock();
   string currentname = "";
   if (current_volume_)
-    currentname = current_volume_->name_.get();
+    currentname = current_volume_->name_;
 
   NrrdVolumeMap newmap;
   vector<NrrdVolume *> todelete;
@@ -2282,12 +2276,12 @@ Painter::nrrd_to_itk_image(NrrdDataHandle &nrrd) {
   importFilter->SetImportPointer((PixType *)n->data, count, false);
   importFilter->Update();
 
-  Insight::ITKDatatype* result = new Insight::ITKDatatype();  
+  SCIRun::ITKDatatype* result = new SCIRun::ITKDatatype();  
   result->data_ = importFilter->GetOutput();
   return result;
   //  return importFilter->GetOutput();
 
-  // Insight::ITKDatatype* result = new Insight::ITKDatatype();  
+  // SCIRun::ITKDatatype* result = new SCIRun::ITKDatatype();  
   //  result->data_ = importFilter->GetOutput();
   //  return result;
 }
@@ -2306,7 +2300,7 @@ Painter::itk_image_to_nrrd(ITKDatatypeHandle &img_handle) {
     return 0;
   }
 
-  //  Insight::ITKDatatype* result = new Insight::ITKDatatype();  
+  //  SCIRun::ITKDatatype* result = new SCIRun::ITKDatatype();  
   //  result->data_ = img;//importFilter->GetOutput();
   
   //  LockingHandle<SCIRun::Datatype> *blah = dynamic_cast<LockingHandle<SCIRun::Datatype> *> (&img_handle);

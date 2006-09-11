@@ -27,7 +27,7 @@
 */
 
 #include <Core/Persistent/PersistentSTL.h>
-#include <Packages/Insight/Core/Datatypes/ITKImageField.h>
+#include <Core/Datatypes/ITKImageField.h>
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 /*
@@ -39,7 +39,6 @@ cc-1468 CC: REMARK File = ../src/Core/Datatypes/cd_templates_fields_0.cc, Line =
 #endif
 
 using namespace SCIRun;
-using namespace Insight;
 
 typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
 
@@ -106,72 +105,71 @@ const TypeDescription* get_type_description(ITKImageField<unsigned char> *);
 const TypeDescription* get_type_description(ITKImageField<unsigned long> *);
 
 namespace SCIRun {
-  using namespace Insight;
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData2d<SCIRun::Tensor>*) {
+  get_type_description(SCIRun::ITKFData2d<SCIRun::Tensor>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData2d<SCIRun::Tensor>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData2d<SCIRun::Tensor>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData2d<SCIRun::Vector>*) {
+  get_type_description(SCIRun::ITKFData2d<SCIRun::Vector>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData2d<SCIRun::Vector>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData2d<SCIRun::Vector>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData2d<double>*) {
+  get_type_description(SCIRun::ITKFData2d<double>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData2d<double>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData2d<double>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData2d<float>*) {
+  get_type_description(SCIRun::ITKFData2d<float>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData2d<float>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData2d<float>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData2d<int>*) {
+  get_type_description(SCIRun::ITKFData2d<int>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData2d<int>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData2d<int>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData2d<short>*) {
+  get_type_description(SCIRun::ITKFData2d<short>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData2d<short>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData2d<short>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData2d<char>*) {
+  get_type_description(SCIRun::ITKFData2d<char>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData2d<char>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData2d<char>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData2d<unsigned int>*) {
+  get_type_description(SCIRun::ITKFData2d<unsigned int>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData2d<unsigned int>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData2d<unsigned int>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData2d<unsigned short>*) {
+  get_type_description(SCIRun::ITKFData2d<unsigned short>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData2d<unsigned short>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData2d<unsigned short>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData2d<unsigned char>*) {
+  get_type_description(SCIRun::ITKFData2d<unsigned char>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData2d<unsigned char>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData2d<unsigned char>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData2d<unsigned long>*) {
+  get_type_description(SCIRun::ITKFData2d<unsigned long>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData2d<unsigned long>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData2d<unsigned long>*)0);
   }
 
 } // end of namespace SCIRun

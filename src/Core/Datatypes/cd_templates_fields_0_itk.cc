@@ -27,7 +27,7 @@
 */
 
 #include <Core/Persistent/PersistentSTL.h>
-#include <Packages/Insight/Core/Datatypes/ITKLatVolField.h>
+#include <Core/Datatypes/ITKLatVolField.h>
 
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
@@ -40,7 +40,6 @@ cc-1468 CC: REMARK File = ../src/Core/Datatypes/cd_templates_fields_0.cc, Line =
 #endif
 
 using namespace SCIRun;
-using namespace Insight;
 
 typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
 
@@ -127,72 +126,71 @@ template class ITKLatVolField<unsigned long>;
 
 
 namespace SCIRun {
-using namespace Insight;
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData3d<SCIRun::Tensor>*) {
+  get_type_description(SCIRun::ITKFData3d<SCIRun::Tensor>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData3d<SCIRun::Tensor>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData3d<SCIRun::Tensor>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData3d<SCIRun::Vector>*) {
+  get_type_description(SCIRun::ITKFData3d<SCIRun::Vector>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData3d<SCIRun::Vector>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData3d<SCIRun::Vector>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData3d<double>*) {
+  get_type_description(SCIRun::ITKFData3d<double>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData3d<double>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData3d<double>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData3d<float>*) {
+  get_type_description(SCIRun::ITKFData3d<float>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData3d<float>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData3d<float>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData3d<int>*) {
+  get_type_description(SCIRun::ITKFData3d<int>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData3d<int>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData3d<int>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData3d<short>*) {
+  get_type_description(SCIRun::ITKFData3d<short>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData3d<short>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData3d<short>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData3d<char>*) {
+  get_type_description(SCIRun::ITKFData3d<char>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData3d<char>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData3d<char>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData3d<unsigned int>*) {
+  get_type_description(SCIRun::ITKFData3d<unsigned int>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData3d<unsigned int>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData3d<unsigned int>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData3d<unsigned short>*) {
+  get_type_description(SCIRun::ITKFData3d<unsigned short>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData3d<unsigned short>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData3d<unsigned short>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData3d<unsigned char>*) {
+  get_type_description(SCIRun::ITKFData3d<unsigned char>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData3d<unsigned char>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData3d<unsigned char>*)0);
   }
 
   const TypeDescription*
-  get_type_description(Insight::ITKFData3d<unsigned long>*) {
+  get_type_description(SCIRun::ITKFData3d<unsigned long>*) {
     return 
-      Insight::get_type_description((Insight::ITKFData3d<unsigned long>*)0);
+      SCIRun::get_type_description((SCIRun::ITKFData3d<unsigned long>*)0);
   }
 
 } // end of namespace SCIRun

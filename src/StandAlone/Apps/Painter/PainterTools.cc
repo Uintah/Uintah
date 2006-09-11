@@ -68,8 +68,6 @@
 #include <Dataflow/GuiInterface/TkOpenGLContext.h>
 #include <Core/Geom/OpenGLViewport.h>
 #include <Core/Geom/FreeType.h>
-#include <Dataflow/GuiInterface/TCLTask.h>
-#include <Dataflow/GuiInterface/UIvar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>
@@ -151,14 +149,16 @@ Painter::KeyToolSelectorTool::key_press(string, int keyval,
 
   case SCIRun_u:
     if (painter_->current_volume_) {
-      painter_->current_volume_->colormap_.set(Max(0,painter_->current_volume_->colormap_.get()-1));
+      painter_->current_volume_->colormap_ = 
+        Max(0,painter_->current_volume_->colormap_-1);
       painter_->set_all_slices_tex_dirty();
       painter_->redraw_all();
     } break;
   case SCIRun_i:
     if (painter_->current_volume_) {
-      painter_->current_volume_->colormap_.set(Min(int(painter_->colormap_names_.size()), 
-                                         painter_->current_volume_->colormap_.get()+1));
+      painter_->current_volume_->colormap_ = 
+        Min(int(painter_->colormap_names_.size()), 
+            painter_->current_volume_->colormap_+1);
       painter_->set_all_slices_tex_dirty();
       painter_->redraw_all();
     } break;    
@@ -847,9 +847,6 @@ Painter::FloodfillTool::do_floodfill()
       cerr << todo.size() << std::endl;
       painter_->set_all_slices_tex_dirty();
       painter_->redraw_all();
-      TCLTask::unlock();
-      Thread::yield();
-      TCLTask::lock();
     }
       
     oldtodo = todo;
@@ -1004,7 +1001,7 @@ Painter::ITKThresholdTool::finish()
 
   string name = "ITK Threshold Result";
   Painter::NrrdVolume *new_layer = new NrrdVolume(seed_volume_, name, 0);
-  new_layer->colormap_.set(1);
+  new_layer->colormap_ = 1;
   new_layer->data_min_ = -4.0;
   new_layer->data_max_ = 4.0;
   new_layer->clut_min_ = 4.0/255.0;
@@ -1212,7 +1209,7 @@ Painter::ITKConfidenceConnectedImageFilterTool::finish() {
   string name = "Confidence Connected";
   NrrdVolume *temp = new NrrdVolume(volume_, name, 2);
   painter_->volume_map_[name] = temp;
-  temp->colormap_.set(1);
+  temp->colormap_ = 1;
   temp->clut_min_ = temp->data_min_ = 0.5;
   temp->clut_max_ = temp->data_max_ = 1.0;
   painter_->current_volume_ = temp;
@@ -1362,7 +1359,7 @@ Painter::LayerMergeTool::LayerMergeTool(Painter *painter):
   NrrdVolumeOrder::iterator volname = 
     std::find(painter_->volume_order_.begin(), 
               painter_->volume_order_.end(), 
-              painter_->current_volume_->name_.get());
+              painter_->current_volume_->name_);
   
   if (volname == painter_->volume_order_.begin()) return;
   NrrdVolume *vol1 = painter_->volume_map_[*volname];

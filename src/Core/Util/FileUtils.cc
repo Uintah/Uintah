@@ -45,6 +45,7 @@ typedef unsigned short mode_t;
 #include <Core/OS/Dir.h>
 #include <Core/Util/Assert.h>
 
+#include <iostream>
 
 namespace SCIRun {
 
@@ -241,7 +242,47 @@ validDir(std::string dirname)
 }
     
 
-  
+// findFileInPath
+// Searches the colon-seperated 'path' string variable for a file named
+// 'file'.  From left to right in the path string each directory is
+// tested to see if the file named 'file' is in it.
+// 
+// If the file is found, it returns the DIRECTORY that the file is located in
+// Otherwise if the file is not found in the path, returns an empty string
+//
+// If the file is found in multiple directories in the 'path', only
+// the first matching directory is returned
+std::string
+findFileInPath(const std::string &file, const std::string &path)
+{
+  string::size_type beg = 0;
+  string::size_type end = 0;
+
+  while (beg < path.length()) {
+
+    end = path.find(":",beg);
+    if (end == string::npos) end = path.size();
+
+    string dir(path, beg, end-beg);
+    ASSERT(!dir.empty());
+    // Append a slash if there isn't one
+    // TODO: fix for Windows
+    if (dir[dir.length()-1] != '/') dir = dir + "/";
+    if (validDir(dir)) {
+      string filename = dir + file;
+      if (validFile(filename)) {
+        // see comments at function start
+        return dir;
+      }
+    }
+
+    beg = end+1;
+  }
+  return "";
+}
+    
+    
+    
 
 
 } // End namespace SCIRun
