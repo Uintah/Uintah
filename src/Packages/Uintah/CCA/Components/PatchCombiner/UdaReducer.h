@@ -79,7 +79,7 @@ WARNING
                                 const GridP& grid);
      double getMaxTime();
 
-     GridP getGrid() { return oldGrid_; }
+     GridP getGrid();
    private:
      UdaReducer(const UdaReducer&);
      UdaReducer& operator=(const UdaReducer&);
@@ -109,6 +109,7 @@ WARNING
      int timeIndex_;
      std::vector<int> numMaterials_;
      GridP oldGrid_;
+     bool gridChanged;
      LoadBalancer* lb;
      VarLabel* delt_label;
      std::vector<VarLabel*> labels_;
