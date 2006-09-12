@@ -1,24 +1,24 @@
 SUBDIRS(
-  Exceptions 
-  Thread
-  Containers 
-  Util 
-  Math 
-  Persistent 
-  XMLUtil 
-  Geometry 
-  Basis
-  OS
-  Malloc
-  Datatypes
-  Geom
-  Events
-  Volume
-  Bundle
   Algorithms
-  Skinner
-  Init
+  Basis
+  Bundle
+  Containers 
+  Datatypes
+  Events
+  Exceptions 
+  Geom
+  Geometry 
   ImportExport
+  Init 
+  Malloc
+  Math 
+  OS
+  Persistent 
+  Skinner
+  Thread
+  Util 
+  Volume
+  XMLUtil 
 )
 
 
