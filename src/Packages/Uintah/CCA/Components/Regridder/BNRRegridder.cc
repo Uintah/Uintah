@@ -33,14 +33,14 @@ bool BNRRegridder::getTags(int &tag1, int &tag2)
     tag1=tags_.top(); 
     tags_.pop();
     tag2=tags_.top();
-    tags_.pop();  
+    tags_.pop(); 
     return true;  
   }
   //check if tags can be allocated 
   else if(free_tags>1)
   {
-    tag1=free_tag_start_++; 
-    tag2=free_tag_start_++; 
+    tag1=free_tag_start_<<1; free_tag_start_++;
+    tag2=free_tag_start_<<1; free_tag_start_++;
     return true;
   }
   //check if 1 tag is on the queue and 1 avialable at the end
@@ -48,7 +48,7 @@ bool BNRRegridder::getTags(int &tag1, int &tag2)
   {
     tag1=tags_.top();
     tags_.pop();
-    tag2=free_tag_start_++;
+    tag2=free_tag_start_<<1; free_tag_start_++;
     return true;
   }
   //no more tags available
@@ -92,7 +92,6 @@ BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task
     //don't have zero in the tag list  
     if(rank==0)
       free_tag_start_++;
-
   }
   
   if(dbgpatches.active() && rank==0)
