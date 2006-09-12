@@ -79,7 +79,7 @@ UdaReducer::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
 
   const PatchSet* perProcPatches = lb->getPerProcessorPatchSet(grid);
 
-  cout << d_myworld->myrank() << "  Calling DA::QuearyMaterials a bunch of times " << endl;
+  //cout << d_myworld->myrank() << "  Calling DA::QuearyMaterials a bunch of times " << endl;
 
   double time = times_[timeIndex_];
 
@@ -126,7 +126,7 @@ UdaReducer::scheduleTimeAdvance( const LevelP& level, SchedulerP& sched)
     }
   }
 
-  cout << d_myworld->myrank() << "  Done Calling DA::QuearyMaterials a bunch of times " << endl;
+  //cout << d_myworld->myrank() << "  Done Calling DA::QuearyMaterials a bunch of times " << endl;
   MaterialSubsetP globalMatl = scinew MaterialSubset();
   t->setType(Task::OncePerProc);
   sched->addTask(t, perProcPatches, allMatls.get_rep());
@@ -156,7 +156,7 @@ void UdaReducer::readAndSetVars(const ProcessorGroup*,
                                 DataWarehouse* /*old_dw*/,
                                 DataWarehouse* new_dw)
 {
-  cout << d_myworld->myrank() << "   readAndSetVArs\n";
+  //cout << d_myworld->myrank() << "   readAndSetVArs\n";
   double time = times_[timeIndex_];
   int timestep = timesteps_[timeIndex_];
 
@@ -175,12 +175,13 @@ void UdaReducer::readAndSetVars(const ProcessorGroup*,
   
   timeIndex_++;
 
-  cout << "   Incrementing time " << timeIndex_ << " and time " << time << endl;
+  if (d_myworld->myrank() == 0)
+    cout << "   Incrementing time " << timeIndex_ << " and time " << time << endl;
 
   //cerr << "deleted and recreated dw\n";
-  cout << d_myworld->myrank() << "  Calling DA::restartInitialize " << endl;
+  //cout << d_myworld->myrank() << "  Calling DA::restartInitialize " << endl;
   dataArchive_->restartInitialize(timestep, oldGrid_, new_dw, lb, &time);
-  cout << d_myworld->myrank() << "  Done Calling DA::restartInitialize " << endl;
+  //cout << d_myworld->myrank() << "  Done Calling DA::restartInitialize " << endl;
   //cerr << "restartInitialize done\n";
 }
 
@@ -193,10 +194,10 @@ void UdaReducer::readAndSetDelT(const ProcessorGroup*,
 {
   // don't use the delt produced in restartInitialize.
   double delt = times_[timeIndex_] - times_[timeIndex_-1];
-  cout << "   Putting delt " << delt << endl;
+  //cout << "   Putting delt " << delt << endl;
   delt_vartype delt_var = delt;
   new_dw->put(delt_var, delt_label);
-  cout << d_myworld->myrank() << "  Done Calling readAndSetDelt " << endl;
+  //cout << d_myworld->myrank() << "  Done Calling readAndSetDelt " << endl;
   //cerr << "done with reading\n";
 }
 
