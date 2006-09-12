@@ -143,7 +143,8 @@ void AMRSimulationController::run()
    if (d_timeinfo->maxTimestep - d_sharedState->getCurrentTopLevelTimeStep() < max_iterations) {
      max_iterations = d_timeinfo->maxTimestep - d_sharedState->getCurrentTopLevelTimeStep();
    }
-   while( t < d_timeinfo->maxTime && iterations < max_iterations) {
+   while( t < d_timeinfo->maxTime && iterations < max_iterations && 
+          (d_timeinfo->max_wall_time==0 || getWallTime()<d_timeinfo->max_wall_time)  ) {
 
      if (d_regridder && d_regridder->needsToReGrid() && !first) {
        doRegridding(currentGrid);
