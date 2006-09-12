@@ -101,8 +101,8 @@ namespace SCIRun {
 #include <Core/Containers/FData.h>
 
 
-#include <Packages/Insight/Core/Datatypes/ITKImageField.h>
-#include <Packages/Insight/Core/Datatypes/ITKLatVolField.h>
+#include <Core/Datatypes/ITKImageField.h>
+#include <Core/Datatypes/ITKLatVolField.h>
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 

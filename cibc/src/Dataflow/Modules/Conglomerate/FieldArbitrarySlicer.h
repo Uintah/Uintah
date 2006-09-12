@@ -60,8 +60,8 @@
 #include <Core/Util/TypeDescription.h>
 
 #ifdef HAVE_INSIGHT
-#include "Packages/Insight/Core/Datatypes/ITKLatVolField.h"
-#include "Packages/Insight/Core/Datatypes/ITKImageField.h"
+#include "Core/Datatypes/ITKLatVolField.h"
+#include "Core/Datatypes/ITKImageField.h"
 #endif
 
 namespace SCIRun {
