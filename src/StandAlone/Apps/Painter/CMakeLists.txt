@@ -88,13 +88,12 @@ TARGET_LINK_LIBRARIES(painter
   ${GLEW_LIBRARY}
 )
 
-IF(${HAVE_INSIGHT})   
-  TARGET_LINK_LIBRARY(painter 
-    Core_Datatypes
+IF(HAVE_INSIGHT)   
+  TARGET_LINK_LIBRARIES(painter 
     ITKCommon
     ITKBasicFilters
-  )
-ENDIF(${HAVE_INSIGHT})
+    ITKIO)
+ENDIF(HAVE_INSIGHT)
 
 
 
