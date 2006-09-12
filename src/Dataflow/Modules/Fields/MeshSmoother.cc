@@ -154,12 +154,10 @@ MeshSmoother::execute()
     return;
   }
 
-  bool sb = false;
-  if( last_smooth_boundary_ == "On" )
-      sb = true;
+  const bool sb = (last_smooth_boundary_ == "On");
 
-  FieldHandle ofield = algo->execute(this, ifieldhandle, 
-                                     sb, last_smooth_scheme_ );
+  FieldHandle ofield =
+    algo->execute(this, ifieldhandle, sb, last_smooth_scheme_);
   
   send_output_handle("Smoothed", ofield);
 }
@@ -167,7 +165,7 @@ MeshSmoother::execute()
 
 CompileInfoHandle
 MeshSmootherAlgo::get_compile_info(const TypeDescription *fsrc,
-			      string ext)
+                                   string ext)
 {
   // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
   static const string include_path(TypeDescription::cc_to_h(__FILE__));

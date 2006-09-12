@@ -362,6 +362,9 @@ MesquiteMesh<FIELD>::MesquiteMesh( FIELD* field, ProgressReporter* mod )
   {
     bytes_[i] = 0;
     fixed_[i] = false;
+    //typename FIELD::value_type v;
+    //field->value(v, typename FIELD::mesh_type::Node::index_type(i));
+    //fixed_[i] = (v > 0.5);
   }
 
   const TypeDescription *mtd = mOwner->mesh()->get_type_description();
