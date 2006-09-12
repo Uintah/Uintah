@@ -45,7 +45,7 @@
     <inputs lastportdynamic="no">
       <port>
         <name>Image</name>
-        <datatype>Insight::ITKDatatype</datatype>
+        <datatype>SCIRun::ITKDatatype</datatype>
       </port>
     </inputs>
     <outputs>

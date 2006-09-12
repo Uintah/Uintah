@@ -57,13 +57,13 @@ NOTE: the lower and upper threshold are restricted to lie within the valid numer
     <inputs lastportdynamic="no">  
       <port>
         <name>InputImage</name>
-        <datatype>Insight::ITKDatatype</datatype>
+        <datatype>SCIRun::ITKDatatype</datatype>
       </port>
     </inputs>
     <outputs>  
       <port>
         <name>OutputImge</name>
-        <datatype>Insight::ITKDatatype</datatype>
+        <datatype>SCIRun::ITKDatatype</datatype>
       </port>
     </outputs>
   </io>

@@ -47,21 +47,21 @@
    <inputs lastportdynamic="no">
       <port>
         <name>SeedImage</name>
-        <datatype>Insight::ITKDatatype</datatype>
+        <datatype>SCIRun::ITKDatatype</datatype>
       </port>
       <port>
         <name>FeatureImage</name>
-        <datatype>Insight::ITKDatatype</datatype>
+        <datatype>SCIRun::ITKDatatype</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
         <name>OutputImage</name>
-        <datatype>Insight::ITKDatatype</datatype>
+        <datatype>SCIRun::ITKDatatype</datatype>
       </port>
       <port>
         <name>SpeedImage</name>
-        <datatype>Insight::ITKDatatype</datatype>
+        <datatype>SCIRun::ITKDatatype</datatype>
       </port>
     </outputs>
   </io>

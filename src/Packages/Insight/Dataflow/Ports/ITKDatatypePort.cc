@@ -58,7 +58,7 @@ extern "C" {
 } // End namespace Insight
 
 namespace SCIRun {
-template<> string SimpleIPort<Insight::ITKDatatypeHandle>::port_type_("ITKDatatype");
-template<> string SimpleIPort<Insight::ITKDatatypeHandle>::port_color_("pink");
+template<> string SimpleIPort<SCIRun::ITKDatatypeHandle>::port_type_("ITKDatatype");
+template<> string SimpleIPort<SCIRun::ITKDatatypeHandle>::port_color_("pink");
 } // End namespace SCIRun
 
