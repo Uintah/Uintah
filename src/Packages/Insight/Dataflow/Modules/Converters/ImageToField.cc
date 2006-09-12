@@ -44,17 +44,6 @@
 #include <Core/Geometry/Tensor.h>
 #include <Core/Geometry/Vector.h>
 
-// Making sure classes are defined in an order so that the compiler will not fail.
-
-namespace Insight {
-
-template <class Data> class ITKFData3d;
-template <class Data> class ITKFData2d;
-template <class Data> class ITKImageField;
-template <class Data> class ITKLatVolField;
-
-}
-
 // gotta put here (instead of in one of the .h files that also declare them)
 // to satisfy templating issues in gcc3.4+
 #undef SCISHARE
@@ -65,32 +54,39 @@ template <class Data> class ITKLatVolField;
 #endif
 
 namespace SCIRun {
-  
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<SCIRun::Tensor>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<SCIRun::Vector>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<double>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<float>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<int>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<long>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<short>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<char>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned int>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned short>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned char>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData3d<unsigned long>*);
 
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<SCIRun::Tensor>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<SCIRun::Vector>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<double>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<float>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<int>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<long>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<short>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<char>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned int>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned short>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned char>*);
-  SCISHARE const TypeDescription* get_type_description(Insight::ITKFData2d<unsigned long>*);
+  template <class Data> class ITKFData3d;
+  template <class Data> class ITKFData2d;
+  template <class Data> class ITKImageField;
+  template <class Data> class ITKLatVolField;
+
+
+  
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<SCIRun::Tensor>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<SCIRun::Vector>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<double>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<float>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<int>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<long>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<short>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<char>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<unsigned int>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<unsigned short>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<unsigned char>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData3d<unsigned long>*);
+
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<SCIRun::Tensor>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<SCIRun::Vector>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<double>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<float>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<int>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<long>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<short>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<char>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<unsigned int>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<unsigned short>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<unsigned char>*);
+  SCISHARE const TypeDescription* get_type_description(SCIRun::ITKFData2d<unsigned long>*);
 
 }
 

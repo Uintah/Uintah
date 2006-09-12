@@ -63,7 +63,6 @@ LIBS := $(LAPACK_LIBRARY) \
         $(SOCKET_LIBRARY)
 
 ifeq ($(HAVE_INSIGHT), yes)   
-        PSELIBS += Core/Datatypes
         LIBS += $(INSIGHT_LIBRARY) $(GDCM_LIBRARY)
 endif
 

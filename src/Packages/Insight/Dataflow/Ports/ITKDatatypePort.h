@@ -47,8 +47,8 @@
 
 namespace Insight {
 
-typedef SCIRun::SimpleIPort<ITKDatatypeHandle> ITKDatatypeIPort;
-typedef SCIRun::SimpleOPort<ITKDatatypeHandle> ITKDatatypeOPort;
+typedef SCIRun::SimpleIPort<SCIRun::ITKDatatypeHandle> ITKDatatypeIPort;
+typedef SCIRun::SimpleOPort<SCIRun::ITKDatatypeHandle> ITKDatatypeOPort;
 
 } // End namespace Insight
 
