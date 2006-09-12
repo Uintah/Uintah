@@ -80,7 +80,7 @@ WARNING
   {
     Split split;                                   // location of split that created these tasks
     PseudoPatch left, right;                       // child patches
-    unsigned int ltag, rtag;                       // pcommunication tags for patches
+    int ltag, rtag;                                // communication tags for patches
   };
 
   enum Task_Status { NEW, GATHERING_FLAG_COUNT, BROADCASTING_FLAG_COUNT,
