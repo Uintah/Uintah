@@ -54,7 +54,7 @@
     <outputs>
       <port>
         <name>OutputSlice</name>
-	<datatype>Insight::ITKDatatype</datatype>
+	<datatype>SCIRun::ITKDatatype</datatype>
       </port>
     </outputs>
   </io>

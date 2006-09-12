@@ -46,7 +46,7 @@
     <outputs>
       <port>
         <name>Image1</name>
-        <datatype>Insight::ITKDatatype</datatype>
+        <datatype>SCIRun::ITKDatatype</datatype>
       </port>
     </outputs>
   </io>

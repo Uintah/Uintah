@@ -53,13 +53,13 @@ Label pixels that are connected to a seed and lie within a range of values.
     <inputs lastportdynamic="no">  
       <port>
         <name>InputImage</name>
-        <datatype>Insight::ITKDatatype</datatype>
+        <datatype>SCIRun::ITKDatatype</datatype>
       </port>
     </inputs>
     <outputs>  
       <port>
         <name>OutputImge</name>
-        <datatype>Insight::ITKDatatype</datatype>
+        <datatype>SCIRun::ITKDatatype</datatype>
       </port>
     </outputs>
   </io>
