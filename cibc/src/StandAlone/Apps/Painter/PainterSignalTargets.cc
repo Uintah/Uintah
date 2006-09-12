@@ -409,7 +409,7 @@ Painter::ITKImageFileRead(event_handle_t event) {
   }
   
 
-  Insight::ITKDatatype *img = new Insight::ITKDatatype();
+  SCIRun::ITKDatatype *img = new SCIRun::ITKDatatype();
   img->data_ = reader->GetOutput();
 
   if (!img->data_) { 

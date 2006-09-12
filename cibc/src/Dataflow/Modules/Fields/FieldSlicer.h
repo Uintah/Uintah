@@ -66,10 +66,6 @@
 
 namespace SCIRun {
 
-#ifdef HAVE_INSIGHT
-using namespace Insight;
-#endif
-
 class FieldSlicerAlgo : public DynamicAlgoBase
 {
 public:

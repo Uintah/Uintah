@@ -49,16 +49,16 @@ using namespace SCIRun;
 
 extern "C" {
   SCISHARE IPort* make_ITKImageIPort(Module* module, const string& name) {
-  return scinew SimpleIPort<ITKImageHandle>(module,name);
+  return scinew SimpleIPort<SCIRun::ITKImageHandle>(module,name);
 }
   SCISHARE OPort* make_ITKImageOPort(Module* module, const string& name) {
-  return scinew SimpleOPort<ITKImageHandle>(module,name);
+  return scinew SimpleOPort<SCIRun::ITKImageHandle>(module,name);
 }
 }
 } // End namespace Insight
 
 namespace SCIRun {
-template<> string SimpleIPort<Insight::ITKImageHandle>::port_type_("ITKImage");
-template<> string SimpleIPort<Insight::ITKImageHandle>::port_color_("pink");
+template<> string SimpleIPort<SCIRun::ITKImageHandle>::port_type_("ITKImage");
+template<> string SimpleIPort<SCIRun::ITKImageHandle>::port_color_("pink");
 } // End namespace SCIRun
 

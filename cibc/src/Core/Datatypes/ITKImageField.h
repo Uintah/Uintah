@@ -542,7 +542,7 @@ ITKImageField<T>::get_type_description(int n) const
 
   TypeDescription* td = 0;
   static string name( type_name(0) );
-  static string namesp("Insight");
+  static string namesp("SCIRun");
   static string path(__FILE__);
 
   if(!td){
