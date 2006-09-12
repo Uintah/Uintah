@@ -342,7 +342,7 @@ void BNRTask::continueTask()
       count_[2].clear();
 
       //check if tags are available
-      if(controller_->tags_.size()<2)
+      if(!controller_->getTags(ctasks_.ltag,ctasks_.rtag) )
       {
         status_=WAITING_FOR_TAGS;
         controller_->tag_q_.push(this);
@@ -350,13 +350,8 @@ void BNRTask::continueTask()
       }
       WAIT_FOR_TAGS:
       
-      ctasks_.ltag= controller_->tags_.top();
-      controller_->task_count_++;
-      controller_->tags_.pop();
+      controller_->task_count_+=2;
       
-      ctasks_.rtag=controller_->tags_.top();
-      controller_->task_count_++;
-      controller_->tags_.pop();
     }
     else
     {
@@ -519,8 +514,7 @@ void BNRTask::continueTaskSerial()
     ctasks_.left.high[ctasks_.split.d]=ctasks_.right.low[ctasks_.split.d]=ctasks_.split.index;
     ctasks_.ltag=0;
     ctasks_.rtag=0;
-    controller_->task_count_++;
-    controller_->task_count_++;
+    controller_->task_count_+=2;
       
     CreateTasks();
     

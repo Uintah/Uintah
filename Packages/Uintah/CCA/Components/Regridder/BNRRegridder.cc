@@ -21,13 +21,48 @@ static DebugStream dbgstats("BNRStats",false);
 static DebugStream dbgtimes("BNRTimes",false);
 static DebugStream dbgflags("BNRFlags",false);
 
+
+bool BNRRegridder::getTags(int &tag1, int &tag2)
+{
+
+  int free_tags=free_tag_end_-free_tag_start_;
+  
+  //check if queue has tags
+  if(tags_.size()>1)
+  {
+    tag1=tags_.top(); 
+    tags_.pop();
+    tag2=tags_.top();
+    tags_.pop();  
+    return true;  
+  }
+  //check if tags can be allocated 
+  else if(free_tags>1)
+  {
+    tag1=free_tag_start_++; 
+    tag2=free_tag_start_++; 
+    return true;
+  }
+  //check if 1 tag is on the queue and 1 avialable at the end
+  else if(tags_.size()==1 && free_tags==1)
+  {
+    tag1=tags_.top();
+    tags_.pop();
+    tag2=free_tag_start_++;
+    return true;
+  }
+  //no more tags available
+  else
+  {
+    return false;
+  }
+}
 BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task_count_(0),tola_(1),tolb_(1), patchfixer_(pg)
 {
   int numprocs=d_myworld->size();
   int rank=d_myworld->myrank();
   
   int *tag_ub, maxtag_ ,flag;
-  int tag_start, tag_end;
 
   //generate tag lists for processors
   if(numprocs>1)
@@ -42,24 +77,22 @@ BNRRegridder::BNRRegridder(const ProcessorGroup* pg) : RegridderCommon(pg), task
     int div=maxtag_/numprocs;
     int rem=maxtag_%numprocs;
   
-    tag_start=div*rank;
+    free_tag_start_=div*rank;
   
     if(rank<rem)
-      tag_start+=rank;
+      free_tag_start_+=rank;
     else
-      tag_start+=rem;
+      free_tag_start_+=rem;
   
     if(rank<rem)
-      tag_end=tag_start+div+1;
+      free_tag_end_=free_tag_start_+div+1;
     else
-      tag_end=tag_start+div;
+      free_tag_end_=free_tag_start_+div;
 
     //don't have zero in the tag list  
     if(rank==0)
-      tag_start++;
+      free_tag_start_++;
 
-    for(int i=tag_start;i<tag_end;i++)
-      tags_.push(i<<1);
   }
   
   if(dbgpatches.active() && rank==0)
@@ -453,7 +486,7 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
     BNRTask *task;
     //check tag_q for processors waiting for tags
 
-    if(!tag_q_.empty() && tags_.size()>1)
+    if(!tag_q_.empty() && tags_.size() + free_tag_end_ - free_tag_start_>1 )
     {
         //2 tags are available continue the task
         task=tag_q_.front();
@@ -497,7 +530,7 @@ void BNRRegridder::RunBR( vector<IntVector> &flags, vector<PseudoPatch> &patches
     else
     {
       //no tasks on the immediate_q, tasks are on the taq_q
-      if(tags_.size()<2) 
+      if(tags_.size() + free_tag_end_ - free_tag_start_ < 2) //this if might not be needed 
       {
         throw InternalError("Not enough tags",__FILE__,__LINE__);
       }

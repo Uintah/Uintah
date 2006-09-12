@@ -66,11 +66,15 @@ WARNING
     void problemSetup_BulletProofing(const int k);
     void AddSafetyLayer(const vector<PseudoPatch> patches, set<IntVector> &coarse_flags,
                         const vector<const Patch*>& coarse_patches, int level);
+    bool getTags(int &tag1, int &tag2);
 
     int task_count_;								//number of tasks created on this proc
     double tola_,tolb_;							//Tolerance parameters
     unsigned int target_patches_;   //Minimum number of patches the algorithm attempts to reach
-    
+   
+    //tag information
+    int free_tag_start_, free_tag_end_;
+     
     //queues for tasks
     list<BNRTask> tasks_;				    //list of tasks created throughout the run
     stack<BNRTask*> immediate_q_;   //tasks that are always ready to run
