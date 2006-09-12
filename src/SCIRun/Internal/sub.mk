@@ -51,7 +51,8 @@ SRCS     += \
              $(SRCDIR)/EventService.cc \
              $(SRCDIR)/EventServiceException.cc \
              $(SRCDIR)/Topic.cc \
-             $(SRCDIR)/WildcardTopic.cc
+             $(SRCDIR)/WildcardTopic.cc \
+	     $(SRCDIR)/Event.cc
 
 ifeq ($(HAVE_WX),yes)
  SRCS += \

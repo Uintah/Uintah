@@ -34,6 +34,7 @@
 #include <Core/CCA/spec/cca_sidl.h>
 #include <SCIRun/Internal/InternalComponentModel.h>
 #include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
+#include <Core/Thread/AtomicCounter.h>
 
 #include <map>
 
@@ -126,11 +127,16 @@ public:
   virtual void processEvents();
 
 private:
+  friend class Topic;
+  
   EventService(SCIRunFramework* fwk);
+  bool isPresent(const std::string& givenName, const std::string& topicName);
   bool isMatch(const std::string& topicName, const std::string& wildcardTopicName);
-
+  std::string getFrameworkURL();
+  int incrementCount();
   TopicMap topicMap;
   WildcardTopicMap wildcardTopicMap;
+  AtomicCounter atomicCount;
 };
 
 }

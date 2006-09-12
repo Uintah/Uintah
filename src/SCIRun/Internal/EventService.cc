@@ -32,12 +32,14 @@
 #include <SCIRun/Internal/EventServiceException.h>
 #include <SCIRun/SCIRunFramework.h>
 #include <SCIRun/CCA/CCAException.h>
+#include <Core/Thread/AtomicCounter.h>
 
 namespace SCIRun {
 
 EventService::EventService(SCIRunFramework* framework)
-  : InternalFrameworkServiceInstance(framework, "internal:EventService")
+  : InternalFrameworkServiceInstance(framework, "internal:EventService"),atomicCount("Event")
 {
+
 }
 
 EventService::~EventService()
@@ -81,7 +83,8 @@ sci::cca::Topic::pointer EventService::createTopic(const std::string &topicName)
   sci::cca::Topic::pointer topicPtr;
   TopicMap::iterator iter = topicMap.find(topicName);
   if (iter == topicMap.end()) { // new Topic
-    topicPtr = new Topic(topicName,framework);
+    sci::cca::ports::EventService::pointer eventServicePtr(this);
+    topicPtr = new Topic(topicName,eventServicePtr);
     topicMap[topicName] = topicPtr;
   } else { // Topic already present
     topicPtr = iter->second;
@@ -124,11 +127,13 @@ sci::cca::WildcardTopic::pointer EventService::createWildcardTopic(const std::st
     throw EventServiceExceptionPtr(new EventServiceException("Topic name empty", sci::cca::Unexpected));
   }
 
-  //Check if the last charecter is a '*'
-  if(topicName.at(topicName.size()-1)!= '*'){
-    throw EventServiceExceptionPtr(new EventServiceException("WildcardTopic Name format not supported: No character allowed after '*", sci::cca::Unexpected));
+
+  //Check if wildcard Topic Name doesn't have any wildcard characters
+  if((topicName.find('*')==std::string::npos)&&(topicName.find('?') == std::string::npos)){
+    std::cout << "WARNING!!! - WildcardTopicName doesn't contain any Wildcard characters\n";
   }
-  
+
+
   //Check if topicName has more than one '*' s
   int countStars = 0;
   for(unsigned int i=0;i<topicName.size();i++)
@@ -231,22 +236,52 @@ void EventService::processEvents()
 
 // TODO: check wildcardTopicName for correct formatting?
 // Note: WildcadTopic format needs to decided.
-bool EventService::isMatch(const std::string& topicName, const std::string& wildcardTopicName)
+
+bool EventService::isPresent(const std::string& givenName, const std::string& topicName)
 {
-  std::string::size_type wildcardTokenPos = wildcardTopicName.rfind('*');
-
-  // found a wildcard token at the end of the wildcard topic name
-  if (wildcardTokenPos != std::string::npos) {
-    std::string wc = wildcardTopicName.substr(0, wildcardTokenPos);
-    std::string::size_type loc = topicName.find(wc);
-
-    // found a substring matching topic name up to wildcard position
-    if (loc == 0) {
-      return true;
+  
+  for(unsigned int i=0;i< givenName.size();i++){
+    //Check if current charecter is '?' 
+    if(givenName.at(i) == '?'){
+      continue;
+    }
+    //Check if current character is equal to corresponding character in topicName
+    if (givenName.at(i) != topicName.at(i)){
+      return false;
     }
   }
+  return true;
+}
+bool EventService::isMatch(const std::string& topicName, const std::string& wildcardTopicName)
+{
+  bool match = false;
 
-  return false;
+  if(isPresent(wildcardTopicName,topicName))
+    match = true;
+  std::string::size_type wildcardTokenPos = wildcardTopicName.find('*');
+  if (wildcardTokenPos != std::string::npos){
+    //wildcardBeg is a substring of wildcardTopicName upto the location of '*'
+    std::string wildcardBeg(wildcardTopicName.substr(0, wildcardTokenPos));
+    //wildcardEnd is a substring of wildcardTopicName from the location of '*' till the end
+    std::string wildcardEnd(wildcardTopicName.substr(wildcardTokenPos+1));
+    //topicBeg is a  substring of topicName upto 'wildcardBeg.size()' characters from the beginning
+    std::string topicBeg(topicName.substr(0, wildcardTokenPos));
+    //topicEnd is a substring of topicName with 'wildcardTopicEnd.size()' characters counting from the end.
+    std::string topicEnd(topicName.substr(topicName.size()-wildcardEnd.size()));
+    if((isPresent(wildcardBeg,topicBeg))&&(isPresent(wildcardEnd,topicEnd)))
+      match = true;
+  }
+  return match;
 }
 
+std::string EventService::getFrameworkURL()
+{
+    return framework->getURL().getString();
+}
+
+int EventService::incrementCount()
+{
+  atomicCount++;
+  return atomicCount;
+}
 }
