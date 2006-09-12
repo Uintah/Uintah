@@ -51,6 +51,7 @@
 #include <SCIRun/Internal/ConnectionEvent.h>
 #include <SCIRun/Internal/ConnectionEventService.h>
 #include <SCIRun/Internal/Topic.h>
+#include <SCIRun/Internal/Event.h>
 #include <iostream>
 #include <string>
 

@@ -29,10 +29,10 @@
 #include <SCIRun/Internal/Topic.h>
 #include <SCIRun/Internal/WildcardTopic.h>
 #include <SCIRun/Internal/EventServiceException.h>
-
+#include <Core/Thread/AtomicCounter.h>
 namespace SCIRun {
 
-Topic::Topic(const std::string& name,SCIRunFramework *fwk) : topicName(name),framework(fwk) {}
+Topic::Topic(const std::string& name,const sci::cca::ports::EventService::pointer& esPtr) : topicName(name),eventServicePtr(esPtr) {}
 
 Topic::~Topic()
 {
@@ -41,10 +41,6 @@ Topic::~Topic()
 }
 void Topic::sendEvent(const sci::cca::Event::pointer& event)
 {
-  std::string fwkURL = framework->getURL().getString();
-//   std::string name = framework->getUniqueName(fwkURL);
-//   std::cout << "Unique name : " << name << std::endl;
-//   std::cout << "Fwk URL : " << fwkURL << std::endl;
   sci::cca::TypeMap::pointer eventHeader = event->getHeader();
   sci::cca::TypeMap::pointer eventBody = event->getBody();
   if (event->getHeader().isNull()) {
@@ -54,19 +50,21 @@ void Topic::sendEvent(const sci::cca::Event::pointer& event)
   if (event->getBody().isNull()) {
     throw EventServiceExceptionPtr(new EventServiceException("eventBody pointer is null", sci::cca::Unexpected));
   }
+  EventService *ptr = dynamic_cast<EventService*>(eventServicePtr.getPointer());
+  std::string fwkURL = ptr->getFrameworkURL();
+  int count = ptr->incrementCount();
   SSIDL::array1<std::string> allKeys = eventHeader->getAllKeys(sci::cca::None);
   bool isURLPresent = false;
   for (unsigned int i = 0; i < allKeys.size(); i++){
     if(allKeys[i]  == "FrameworkURL"){
-      //std::cout << "Framework data present in Event Header\n";
       isURLPresent = true;
       break;
     }
   }
   if(!isURLPresent){
-    //std::cout << "Framework data not present in Event Header, so adding one\n";
     eventHeader->putString(std::string("FrameworkURL"),fwkURL);
   }
+  eventHeader->putInt(std::string("UniqueID"),count);
   eventList.push_back(event);
 }
 
@@ -107,6 +105,30 @@ void Topic::processEvents()
        eventListenerIter++) {
     // Call processEvent() for each Listener
     for (unsigned int i = 0; i < eventList.size(); i++) {
+      //Validate Event Header and body
+      sci::cca::TypeMap::pointer eventHeader = eventList[i]->getHeader();
+      sci::cca::TypeMap::pointer eventBody = eventList[i]->getBody();
+      if(eventHeader.isNull()){
+        throw EventServiceExceptionPtr(new EventServiceException("Event Header is Null", sci::cca::Unexpected));
+      }
+      if(eventBody.isNull()){
+        throw EventServiceExceptionPtr(new EventServiceException("Event Body is Null", sci::cca::Unexpected));
+      }
+      // Check if Framework Data is present in Header
+      SSIDL::array1<std::string> allKeys = eventHeader->getAllKeys(sci::cca::None);
+      bool isURLPresent = false;
+      bool isUniqueIDPresent = false;
+      for (unsigned int j = 0; j < allKeys.size(); j++){
+        if(allKeys[j]  == "FrameworkURL"){
+          isURLPresent = true;
+        }
+        if(allKeys[j]  == "UniqueID"){
+          isUniqueIDPresent = true;
+        }
+      }
+      if((!isURLPresent)||(!isUniqueIDPresent)){
+        throw EventServiceExceptionPtr(new EventServiceException("Header Info missing", sci::cca::Unexpected));
+      }
       // Call processEvent() for each event
       eventListenerIter->second->processEvent(topicName, eventList[i]);
     }
@@ -122,7 +144,7 @@ void Topic::processEvents()
     }
     wildcardTopicPtr->processEvents(eventList);
   }
-  eventList.clear();
+ eventList.clear();
 }
 
 void Topic::addWildcardTopic(const std::string& topicName, const sci::cca::WildcardTopic::pointer &theWildcardTopic)
