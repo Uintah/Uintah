@@ -42,8 +42,8 @@
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Geometry/BBox.h>
-#include <Packages/Insight/Core/Datatypes/ITKImageField.h>
-#include <Packages/Insight/Core/Datatypes/ITKLatVolField.h>
+#include <Core/Datatypes/ITKImageField.h>
+#include <Core/Datatypes/ITKLatVolField.h>
 
 #include <Core/Datatypes/GenericField.h>
 #include <Core/Datatypes/ImageMesh.h>

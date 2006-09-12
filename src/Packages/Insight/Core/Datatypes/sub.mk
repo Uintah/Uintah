@@ -39,7 +39,7 @@
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 INCLUDES += $(INSIGHT_INCLUDE)
-SRCDIR   := Packages/Insight/Core/Datatypes
+SRCDIR   := Core/Datatypes
 
 SRCS     += $(SRCDIR)/ITKDatatype.cc \
 	$(SRCDIR)/ITKLatVolField.h \
