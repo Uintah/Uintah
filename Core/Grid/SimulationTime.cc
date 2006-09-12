@@ -26,6 +26,8 @@ SimulationTime::SimulationTime(const ProblemSpecP& params)
     initial_delt_range = 0;
   if(!time_ps->get("max_delt_increase", max_delt_increase))
     max_delt_increase=1.e99;
+  if(!time_ps->get("max_wall_time",max_wall_time))
+    max_wall_time=0;
 
   // use INT_MAX -1, for some reason SGI optimizer doesn't like INT_MAX
   // in the SimulationController while loop
