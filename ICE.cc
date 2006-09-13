@@ -5733,6 +5733,8 @@ void ICE::ICEModelSetup::registerAMR_RefluxVariable(const MaterialSubset* matls,
                                    __FILE__, __LINE__);
   }
   
+  t->var = var;
+  
   t->var_X_FC_flux = VarLabel::create(var->getName()+"_X_FC_flux", 
                                 SFCXVariable<double>::getTypeDescription());
   t->var_Y_FC_flux = VarLabel::create(var->getName()+"_Y_FC_flux", 
