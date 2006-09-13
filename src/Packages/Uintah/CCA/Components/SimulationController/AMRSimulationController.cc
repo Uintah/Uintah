@@ -145,7 +145,6 @@ void AMRSimulationController::run()
    }
    while( t < d_timeinfo->maxTime && iterations < max_iterations && 
           (d_timeinfo->max_wall_time==0 || getWallTime()<d_timeinfo->max_wall_time)  ) {
-
      if (d_regridder && d_regridder->needsToReGrid() && !first) {
        doRegridding(currentGrid);
      }
@@ -273,7 +272,6 @@ void AMRSimulationController::run()
 
      calcWallTime();
 
-     // use timestep-1 since we need to do the printouts after the incrementing
      printSimulationStats(d_sharedState->getCurrentTopLevelTimeStep()-1,delt,t);
      // Execute the current timestep, restarting if necessary
      executeTimestep(t, delt, currentGrid, totalFine);
@@ -395,15 +393,15 @@ void AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwSt
     // we really only need to pass in whether the current DW is mapped to 0
     // or not
     // TODO - fix inter-Taskgraph scrubbing
-    d_scheduler->get_dw(curDW)->setScrubbing(DataWarehouse::ScrubNone);
-    d_scheduler->get_dw(curDW+newDWStride)->setScrubbing(DataWarehouse::ScrubNone);
-    d_scheduler->get_dw(startDW)->setScrubbing(DataWarehouse::ScrubNone);
-    d_scheduler->get_dw(startDW+dwStride)->setScrubbing(DataWarehouse::ScrubNone);
+    d_scheduler->get_dw(curDW)->setScrubbing(DataWarehouse::ScrubComplete); // OldDW
+    d_scheduler->get_dw(curDW+newDWStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // NewDW
+    d_scheduler->get_dw(startDW)->setScrubbing(DataWarehouse::ScrubComplete); // CoarseOldDW
+    d_scheduler->get_dw(startDW+dwStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // CoarseNewDW
 
     if (dbg.active())
       dbg << d_myworld->myrank() << "   Executing TG on level " << levelNum << " with old DW " 
-          << curDW << " = " << d_scheduler->get_dw(curDW)->getID() << " and new " 
-          << curDW+newDWStride << " = " << d_scheduler->get_dw(curDW+newDWStride)->getID() 
+          << curDW << "=" << d_scheduler->get_dw(curDW)->getID() << " and new " 
+          << curDW+newDWStride << "=" << d_scheduler->get_dw(curDW+newDWStride)->getID() 
           << "CO-DW: " << startDW << " CNDW " << startDW+dwStride << endl;
 
     
@@ -427,6 +425,12 @@ void AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwSt
       d_scheduler->mapDataWarehouse(Task::NewDW, curDW+newDWStride);
       d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
       d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
+
+      d_scheduler->get_dw(curDW)->setScrubbing(DataWarehouse::ScrubComplete); // OldDW
+      d_scheduler->get_dw(curDW+newDWStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // NewDW
+      d_scheduler->get_dw(startDW)->setScrubbing(DataWarehouse::ScrubComplete); // CoarseOldDW
+      d_scheduler->get_dw(startDW+dwStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // CoarseNewDW
+
       if (dbg.active())
         dbg << d_myworld->myrank() << "   Executing INT TG on level " << levelNum << " with old DW " 
             << curDW << "=" << d_scheduler->get_dw(curDW)->getID() << " and new " 
@@ -539,8 +543,13 @@ bool AMRSimulationController::doInitialTimestepRegridding(GridP& currentGrid)
           << " has " << level->numPatches() << " patch(es)" << endl;
       for ( Level::patchIterator patchIter = level->patchesBegin(); patchIter < level->patchesEnd(); patchIter++ ) {
         const Patch* patch = *patchIter;
+        IntVector range = patch->getHighIndex()-patch->getLowIndex();
 	amrout << "(Patch " << patch->getID() << " proc " << d_lb->getPatchwiseProcessorAssignment(patch)
+#if 1
 	       << ": box=" << patch->getBox()
+#else
+               << ": vol=" << range.x()*range.y()*range.z()
+#endif
 	       << ", lowIndex=" << patch->getCellLowIndex() << ", highIndex="
 	       << patch->getCellHighIndex() << ")" << endl;
       }
@@ -735,7 +744,7 @@ void AMRSimulationController::executeTimestep(double t, double& delt, GridP& cur
       d_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
     
     for(int i=0;i<=totalFine;i++) {
-      if (d_doAMR || d_lb->getNthProc() > 1 || d_reduceUda)
+      if ((d_doAMR && d_sharedState->timeRefinementRatio() > 1) || d_lb->getNthProc() > 1 || d_lb->isDynamic() || d_reduceUda)
         d_scheduler->get_dw(i)->setScrubbing(DataWarehouse::ScrubNone);
       else {
         d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);

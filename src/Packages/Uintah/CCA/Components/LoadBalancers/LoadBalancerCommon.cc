@@ -43,7 +43,7 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
 
   if( lbDebug.active() ) {
     cerrLock.lock();
-    lbDebug << "Assigning Tasks to Resources!\n";
+    lbDebug << d_myworld->myrank() << " Assigning Tasks to Resources! (" << nTasks << " tasks)\n";
     cerrLock.unlock();
   }
 
@@ -66,7 +66,7 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
 
       if( lbDebug.active() ) {
 	cerrLock.lock();
-	lbDebug << "1) Task " << *(task->getTask()) << " put on resource "
+	lbDebug << d_myworld->myrank() << " Task " << *(task->getTask()) << " put on resource "
 		   << idx << "\n";
 	cerrLock.unlock();
       }
@@ -93,7 +93,7 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
 
 	if( lbDebug.active() ) {
 	  cerrLock.lock();
-	  lbDebug << "  Resource (for no patch task) is : " 
+	  lbDebug << d_myworld->myrank() << "  Resource (for no patch task) " << *task->getTask() << " is : " 
 		     << d_myworld->myrank() << "\n";
 	  cerrLock.unlock();
 	}
@@ -106,10 +106,14 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
         // once per patch subset (empty or not)
         // at least one example is the multi-level (impAMRICE) pressureSolve
         for (int i = 0; i < task->getTask()->getPatchSet()->size(); i++)
-        if (patches == task->getTask()->getPatchSet()->getSubset(i)) {
-          task->assignResource(i);
-        }
+          if (patches == task->getTask()->getPatchSet()->getSubset(i)) {
+            task->assignResource(i);
+            lbDebug << d_myworld->myrank() << " OncePerProc Task " << *(task->getTask()) << " put on resource "
+                    << i << "\n";
+          }
       } else {
+        lbDebug << d_myworld->myrank() << " Unknown-type Task " << *(task->getTask()) << " put on resource "
+                << 0 << "\n";
 	task->assignResource(0);
       }
     }
@@ -119,7 +123,7 @@ void LoadBalancerCommon::assignResources(DetailedTasks& graph)
       cerrLock.unlock();
     }
   }
-
+  
 }
 
 bool LoadBalancerCommon::possiblyDynamicallyReallocate(const GridP& grid, bool force)
@@ -316,7 +320,7 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
       }
     }
   }
-  if (neiDebug.active() && d_myworld->myrank() == 0)
+  if (neiDebug.active())
     for (std::set<const Patch*>::iterator iter = d_neighbors.begin(); iter != d_neighbors.end(); iter++)
       cout << d_myworld->myrank() << "  Neighborhood: " << (*iter)->getID() << " Proc " << getPatchwiseProcessorAssignment(*iter) << endl;
 

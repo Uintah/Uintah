@@ -949,7 +949,10 @@ OnDemandDataWarehouse::getParticleSubset(int matlIndex, IntVector lowIndex, IntV
 {
   // relPatch can be NULL if trying to get a particle subset for an arbitrary spot on the level
   Patch::selectType neighbors;
-  level->selectPatches(lowIndex, highIndex, neighbors);
+  if (relPatch && lowIndex == relPatch->getLowIndex() && highIndex == relPatch->getHighIndex())
+    neighbors.push_back(relPatch);
+  else
+    level->selectPatches(lowIndex, highIndex, neighbors);
   Box box = level->getBox(lowIndex, highIndex);
   
   particleIndex totalParticles = 0;
@@ -1759,12 +1762,13 @@ OnDemandDataWarehouse::addParticles(const Patch* patch, int matlIndex,
  d_lock.writeUnlock();
 }
 
-void
+int
 OnDemandDataWarehouse::decrementScrubCount(const VarLabel* var, int matlIndex,
 					   const Patch* patch)
 {
-  d_lock.writeLock();
 
+  d_lock.writeLock();
+  int count = 0;
   switch(var->typeDescription()->getType()){
   case TypeDescription::NCVariable:
   case TypeDescription::CCVariable:
@@ -1773,7 +1777,13 @@ OnDemandDataWarehouse::decrementScrubCount(const VarLabel* var, int matlIndex,
   case TypeDescription::SFCZVariable:
   case TypeDescription::ParticleVariable:
   case TypeDescription::PerPatch:
-    d_varDB.decrementScrubCount(var, matlIndex, patch);
+    try {
+      count = d_varDB.decrementScrubCount(var, matlIndex, patch);
+    }
+    catch (AssertionFailed& e) {
+      cout << d_myworld->myrank() << " DW " << getID() << " caught exception.\n";
+      throw e;
+    }
     break;
   case TypeDescription::SoleVariable:
   case TypeDescription::ReductionVariable:
@@ -1782,6 +1792,7 @@ OnDemandDataWarehouse::decrementScrubCount(const VarLabel* var, int matlIndex,
     SCI_THROW(InternalError("decrementScrubCount for variable of unknown type: "+var->getName(), __FILE__, __LINE__));
   }
   d_lock.writeUnlock();
+  return count;
 }
 
 DataWarehouse::ScrubMode
@@ -1844,10 +1855,10 @@ OnDemandDataWarehouse::scrub(const VarLabel* var, int matlIndex,
 
 void
 OnDemandDataWarehouse::initializeScrubs(int dwid, 
-	const FastHashTable<ScrubItem>* scrubcounts)
+	const FastHashTable<ScrubItem>* scrubcounts, bool add)
 {
   d_lock.writeLock();
-  d_varDB.initializeScrubs(dwid, scrubcounts);
+  d_varDB.initializeScrubs(dwid, scrubcounts, add);
   d_lock.writeUnlock();
 }
 
@@ -2120,8 +2131,8 @@ allocateAndPutGridVar(GridVariable& var, const VarLabel* label, int matlIndex, c
     // get more efficient way of doing this...
     for (unsigned i = 0; i < difference.size(); i++) {
       Box b = difference[i];
-      IntVector low(b.lower()(0), b.lower()(1), b.lower()(2));
-      IntVector high(b.upper()(0), b.upper()(1), b.upper()(2));
+      IntVector low((int)b.lower()(0), (int)b.lower()(1), (int)b.lower()(2));
+      IntVector high((int)b.upper()(0), (int)b.upper()(1), (int)b.upper()(2));
       if (NCVariable<double>* typedVar = dynamic_cast<NCVariable<double>*>(&var)) {
         for (CellIterator iter(low, high); !iter.done(); iter++)
           (*typedVar)[*iter] = -5.555555e256;
@@ -2289,7 +2300,7 @@ void OnDemandDataWarehouse::transferFrom(DataWarehouse* from,
       case TypeDescription::SFCZVariable:
 	{
 	  if(!fromDW->d_varDB.exists(var, matl, patch))
-	    SCI_THROW(UnknownVariable(var->getName(), getID(), patch, matl,
+	    SCI_THROW(UnknownVariable(var->getName(), fromDW->getID(), patch, matl,
 				      "in transferFrom", __FILE__, __LINE__));
 	  GridVariable* v = dynamic_cast<GridVariable*>(fromDW->d_varDB.get(var, matl, patch))->clone();
 	  d_varDB.put(var, matl, copyPatch, v, replace);

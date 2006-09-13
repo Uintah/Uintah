@@ -224,7 +224,7 @@ namespace Uintah {
   class DetailedTasks {
   public:
     DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
-		  const TaskGraph* taskgraph,
+		  DetailedTasks* first, const TaskGraph* taskgraph,
 		  bool mustConsiderInternalDependencies = false);
     ~DetailedTasks();
 
@@ -305,6 +305,8 @@ namespace Uintah {
 
     SchedulerCommon* sc_;
     const ProcessorGroup* d_myworld;
+    // store the first so we can share the scrubCountTable
+    DetailedTasks* first;
     vector<DetailedTask*> tasks_;
 #if 0
     vector<DetailedReq*> initreqs_;
