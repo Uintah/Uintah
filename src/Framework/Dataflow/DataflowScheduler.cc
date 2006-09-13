@@ -39,8 +39,8 @@
  *  Copyright (C) 2003 SCI Group
  */
 
-#include <SCIRun/Dataflow/DataflowScheduler.h>
-#include <SCIRun/SCIRunFramework.h>
+#include <Framework/Dataflow/DataflowScheduler.h>
+#include <Framework/SCIRunFramework.h>
 #include <Dataflow/Network/Network.h>
 
 namespace SCIRun {

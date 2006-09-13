@@ -38,7 +38,7 @@
  *
  */
 
-#include <SCIRun/Dataflow/SCIRunPortInstance.h>
+#include <Framework/Dataflow/SCIRunPortInstance.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Network.h>
 #include <Dataflow/Network/Ports/Port.h>

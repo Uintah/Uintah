@@ -27,8 +27,8 @@
 */
 
 
-#include <SCIRun/Dataflow/SCIRunGoPort.h>
-#include <SCIRun/Dataflow/SCIRunComponentInstance.h>
+#include <Framework/Dataflow/SCIRunGoPort.h>
+#include <Framework/Dataflow/SCIRunComponentInstance.h>
 #include <Dataflow/Network/Module.h>
 
 namespace SCIRun {

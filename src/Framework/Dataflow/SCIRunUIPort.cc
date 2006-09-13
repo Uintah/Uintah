@@ -38,8 +38,8 @@
  *
  */
 
-#include <SCIRun/Dataflow/SCIRunUIPort.h>
-#include <SCIRun/Dataflow/SCIRunComponentInstance.h>
+#include <Framework/Dataflow/SCIRunUIPort.h>
+#include <Framework/Dataflow/SCIRunComponentInstance.h>
 #include <Dataflow/Network/Module.h>
 #include <iostream>
 

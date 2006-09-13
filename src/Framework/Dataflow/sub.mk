@@ -29,7 +29,7 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := SCIRun/Dataflow
+SRCDIR   := Framework/Dataflow
 
 SRCS     += \
             $(SRCDIR)/SCIRunComponentModel.cc \

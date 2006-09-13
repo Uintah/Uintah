@@ -39,13 +39,13 @@
  *  Copyright (C) 2003 SCI Group
  */
 
-#ifndef SCIRun_DataflowScheduler_h
-#define SCIRun_DataflowScheduler_h
+#ifndef Framework_DataflowScheduler_h
+#define Framework_DataflowScheduler_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Dataflow/Network/Scheduler.h>
-#include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
+#include <Framework/Internal/InternalComponentModel.h>
+#include <Framework/Internal/InternalFrameworkServiceInstance.h>
 
 namespace SCIRun {
 

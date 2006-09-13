@@ -38,8 +38,8 @@
  *
  */
 
-#include <SCIRun/Dataflow/SCIRunComponentModel.h>
-#include <SCIRun/Dataflow/SCIRunTCLThread.h>
+#include <Framework/Dataflow/SCIRunComponentModel.h>
+#include <Framework/Dataflow/SCIRunTCLThread.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Init/init.h>
 #include <Core/Util/Environment.h>
@@ -48,9 +48,9 @@
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Scheduler.h>
 #include <Core/GuiInterface/TCLInterface.h>
-#include <SCIRun/Dataflow/SCIRunComponentDescription.h>
-#include <SCIRun/Dataflow/SCIRunComponentInstance.h>
-#include <SCIRun/SCIRunFramework.h>
+#include <Framework/Dataflow/SCIRunComponentDescription.h>
+#include <Framework/Dataflow/SCIRunComponentInstance.h>
+#include <Framework/SCIRunFramework.h>
 #include <iostream>
 
 //#include <Core/Util/sci_system.h>

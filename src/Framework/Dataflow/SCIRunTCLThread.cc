@@ -26,7 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <SCIRun/Dataflow/SCIRunTCLThread.h>
+#include <Framework/Dataflow/SCIRunTCLThread.h>
 
 #include <Core/GuiInterface/TCLInterface.h>
 #include <Core/GuiInterface/TCLTask.h>
