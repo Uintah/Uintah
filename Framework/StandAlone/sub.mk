@@ -28,7 +28,7 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR := SCIRun/StandAlone
+SRCDIR := Framework/StandAlone
 
 ########################################################################
 #
@@ -45,7 +45,7 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Core/CCA
 else
   PSELIBS := \
-             SCIRun Core/CCA/PIDL Core/CCA/spec Core/CCA/SSIDL \
+             Framework Core/CCA/PIDL Core/CCA/spec Core/CCA/SSIDL \
              Core/Containers Core/Exceptions Core/Thread Core/Util
   ifeq ($(HAVE_GLOBUS),yes)
 	  PSELIBS += Core/globus_threads
@@ -76,7 +76,7 @@ ifeq ($(LARGESOS),yes)
   PSELIBS := Core/CCA
 else
   PSELIBS := \
-             SCIRun Core/CCA/PIDL Core/CCA/spec Core/CCA/SSIDL \
+             Framework Core/CCA/PIDL Core/CCA/spec Core/CCA/SSIDL \
              Core/Containers Core/Exceptions Core/Thread Core/Util
   ifeq ($(HAVE_GLOBUS),yes)
         PSELIBS += Core/globus_threads
@@ -98,12 +98,12 @@ include $(SCIRUN_SCRIPTS)/program.mk
 # ploader
 #
 
-# build the SCIRun CCA Component Loader here
+# build the SCIRun2 CCA Component Loader here
 ifeq ($(LARGESOS),yes)
   PSELIBS := Core/CCA/Component
 else
   PSELIBS := \
-             SCIRun Core/CCA/PIDL Core/CCA/DT Core/CCA/spec Core/CCA/SSIDL \
+             Framework Core/CCA/PIDL Core/CCA/DT Core/CCA/spec Core/CCA/SSIDL \
              Core/Exceptions Core/Thread
   ifeq ($(HAVE_GLOBUS),yes)
 	PSELIBS += Core/globus_threads

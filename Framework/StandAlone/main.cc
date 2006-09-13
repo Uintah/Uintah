@@ -43,14 +43,14 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Core/Thread/Thread.h>
-#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/TypeMap.h>
+#include <Framework/SCIRunFramework.h>
+#include <Framework/TypeMap.h>
 
 
 #include <sci_defs/mpi_defs.h>
 #include <sci_mpi.h>
 #include <sci_wx.h>
-#include <SCIRun/StandAlone/sr2_version.h>
+#include <Framework/StandAlone/sr2_version.h>
 #include <iostream>
 
 using namespace SCIRun;
