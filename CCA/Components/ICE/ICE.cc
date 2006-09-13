@@ -1722,17 +1722,17 @@ void ICE::scheduleConservedtoPrimitive_Vars(SchedulerP& sched,
   computesRequires_CustomBCs(task, "Advection", lb, ice_matlsub, 
                              d_customBC_var_basket);
                              
-  task->modifies(lb->rho_CCLabel, fat);
-  task->modifies(lb->sp_vol_CCLabel, fat);               
+  task->modifies(lb->rho_CCLabel,     fat);
+  task->modifies(lb->sp_vol_CCLabel,  fat);               
   if( where == "afterAdvection"){
     task->computes(lb->temp_CCLabel);
     task->computes(lb->vel_CCLabel);
     task->computes(lb->machLabel);
   }
   if( where == "finalizeTimestep"){
-    task->modifies(lb->temp_CCLabel, fat);
-    task->modifies(lb->vel_CCLabel, fat);
-    task->modifies(lb->machLabel, fat);
+    task->modifies(lb->temp_CCLabel,  fat);
+    task->modifies(lb->vel_CCLabel,   fat);
+    task->modifies(lb->machLabel,     fat);
   } 
   
   //__________________________________
@@ -5728,6 +5728,10 @@ void ICE::ICEModelSetup::registerAMR_RefluxVariable(const MaterialSubset* matls,
   t->matls = matls;
   string var_adv_name = var->getName() + "_adv";
   t->var_adv = VarLabel::find(var_adv_name);  //Advected conserved quantity
+  if(t->var_adv==NULL){
+    throw ProblemSetupException("The refluxing variable name("+var_adv_name +") could not be found",
+                                   __FILE__, __LINE__);
+  }
   
   t->var_X_FC_flux = VarLabel::create(var->getName()+"_X_FC_flux", 
                                 SFCXVariable<double>::getTypeDescription());
