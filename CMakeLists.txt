@@ -622,7 +622,12 @@ SET(DEF_MALLOC_LINENUMBERS "")
 
 #----------------------------------------------------------------------------
 # ITK
-OPTION(WITH_ITK "Build SCIRun with support for the Insight Toolkit." OFF)
+IF(ITK_DIR)
+  OPTION(WITH_ITK "Build SCIRun with support for the Insight Toolkit." ON)
+ELSE(ITK_DIR)
+  OPTION(WITH_ITK "Build SCIRun with support for the Insight Toolkit." OFF)
+ENDIF(ITK_DIR)
+		
 IF(WITH_ITK)
   FIND_PACKAGE( ITK )
   IF(ITK_FOUND)
