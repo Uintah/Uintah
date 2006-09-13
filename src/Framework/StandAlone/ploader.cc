@@ -47,7 +47,7 @@
 
 #include <Core/CCA/DT/DataTransmitter.h>
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/SCIRunLoader.h>
+#include <Framework/SCIRunLoader.h>
 
 #include <Core/Thread/Thread.h>
 
