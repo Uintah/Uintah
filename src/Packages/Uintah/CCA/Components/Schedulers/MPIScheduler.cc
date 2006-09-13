@@ -384,7 +384,7 @@ MPIScheduler::postMPISends( DetailedTask         * task )
             << " to " << to << ": " << ostr.str() << "\n"; cerrLock.unlock();
         //dbg.setActive(false);
       }
-      mpidbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count << "\n"; cerrLock.unlock();
+      mpidbg << d_myworld->myrank() << " Sending message number " << batch->messageTag << ", to " << to << ", length: " << count << "\n"; 
 
       MPI_Request requestid;
       MPI_Isend(buf, count, datatype, to, batch->messageTag,
