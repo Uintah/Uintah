@@ -432,13 +432,15 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
   if( has_points_ && has_data_ ) {
     // Data and points must have the same number of dimensions and
     // the all but the first dimension must have the same size.
-    if (!(dataH->nrrd_->dim == pointsH->nrrd_->dim ||
-	  dataH->nrrd_->dim == (pointsH->nrrd_->dim-1))) {
+    if (dataH->nrrd_->dim != pointsH->nrrd_->dim &&
+	dataH->nrrd_->dim != pointsH->nrrd_->dim-1) {
       error ("Data and Points must have the same dimension for the domain.");
       has_error_ = true;
       return 0;
     }
-    for (int d = dataH->nrrd_->dim-1, p = pointsH->nrrd_->dim-1; p > 0; d--, p--) {
+    for (unsigned int d=dataH->nrrd_->dim-1, p=pointsH->nrrd_->dim-1;
+	 p > 0;
+	 d--, p--) {
       if (dataH->nrrd_->axis[d].size != pointsH->nrrd_->axis[p].size) {
 	error("Data and Points must have the same size for all domain axes.");
 	has_error_ = true;
@@ -448,7 +450,7 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
   }
 
 
-  ///////////// HAS ORIGINATING FIELD /////////////
+  ///////////// HAVE ORIGINATING FIELD /////////////
 
   if (has_origfield_) {
     // Attempt to use the mesh provided
@@ -879,7 +881,6 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
       algo_mesh->execute(mHandle, pointsH, idim, jdim, kdim );
     }
 
-
   } else if( has_data_ ) { // No points just data.
     Nrrd* data = dataH->nrrd_;
 
@@ -1161,20 +1162,20 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
     return 0;
   }
 
-  const TypeDescription *dtd = 0;
   //determine the basis type.
-  int data_center = nrrdCenterUnknown;
-  for (unsigned int a = 0; a<dataH->nrrd_->dim; a++) {
-    if (dataH->nrrd_->axis[a].center != nrrdCenterUnknown)
-      data_center = dataH->nrrd_->axis[a].center;
+  if (has_data_ ) {
+    for (unsigned int a = 0; a<dataH->nrrd_->dim; a++) {
+      if (dataH->nrrd_->axis[a].center == nrrdCenterCell) {
+	btd = get_type_description((ConstantBasis<double>*) 0);
+	break;
+      }
+    }
   }
-  if (data_center == nrrdCenterCell) {
-    btd = get_type_description((ConstantBasis<double>*) 0);
-  } 
 
   // Now create field based on the mesh created above and send it
   const TypeDescription *mtd = mHandle->get_type_description();
-
+  const TypeDescription *dtd = 0;
+  
   CompileInfoHandle ci;
   ASSERTMSG(btd != 0, "Basis Type Description not valid");
 
@@ -1187,12 +1188,15 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
 						pointsH->nrrd_->type, 
 						data_rank);
   }
-  
+
   Handle<NrrdToFieldFieldAlgo> algo;
   
   if (!module_dynamic_compile(ci, algo)) return 0;
   
-  if (has_data_ && (nrrdKindSize( dataH->nrrd_->axis[0].kind) == 9) && build_eigens) {
+  if (has_data_ &&
+      nrrdKindSize( dataH->nrrd_->axis[0].kind) == 9 &&
+      build_eigens) {
+
     warning("Attempting to build eigen decomposition of Tensors with non symmetric tensor");
   }
   
@@ -1203,9 +1207,8 @@ NrrdToField::create_field_from_nrrds(NrrdDataHandle dataH,
   } else  {
     ofield_handle = algo->execute( mHandle, dataH, build_eigens);
   }
-  
+
   return ofield_handle;  
-  
 }
 
 
