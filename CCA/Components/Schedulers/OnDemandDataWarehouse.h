@@ -293,10 +293,10 @@ public:
    // zero, the data is deleted
    void setScrubCount(const VarLabel* label, int matlIndex,
 		      const Patch* patch, int count);
-   void decrementScrubCount(const VarLabel* label, int matlIndex,
+   int decrementScrubCount(const VarLabel* label, int matlIndex,
 			    const Patch* patch);
    void scrub(const VarLabel* label, int matlIndex, const Patch* patch);
-   void initializeScrubs(int dwid, const FastHashTable<ScrubItem>* scrubcounts);
+   void initializeScrubs(int dwid, const FastHashTable<ScrubItem>* scrubcounts, bool add);
 
    // For timestep abort/restart
    virtual bool timestepAborted();

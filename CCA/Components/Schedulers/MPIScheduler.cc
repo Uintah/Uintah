@@ -80,7 +80,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
   reloc_new_posLabel_=0;
 
   if (timeout.active()) {    
-    char filename[64], avgfile[64], maxfile[64];
+    char filename[64];
     sprintf(filename, "timingStats.%d", d_myworld->myrank());
     timingStats.open(filename);
     if (d_myworld->myrank() == 0) {
@@ -321,7 +321,7 @@ MPIScheduler::runReductionTask( DetailedTask         * task )
 void
 MPIScheduler::postMPISends( DetailedTask         * task )
 {
-  if( dbg.active() ) {
+  if( dbg.active()) {
     cerrLock.lock();dbg << d_myworld->myrank() << " postMPISends - task " << *task << '\n';
     cerrLock.unlock();
   }
@@ -419,7 +419,7 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
 
   // Receive any of the foreign requires
 
-  if( dbg.active() ) {
+  if( dbg.active()) {
     cerrLock.lock();dbg << d_myworld->myrank() << " postMPIRecvs - task " << *task << '\n';
     cerrLock.unlock();
   }
@@ -667,7 +667,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 
   int numTasksDone = 0;
 
-  if( dbg.active() ) {
+  if( dbg.active()) {
     cerrLock.lock();
     dbg << me << " Executing " << dts->numTasks() << " tasks (" 
 	       << ntasks << " local)\n";
@@ -675,13 +675,11 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
   }
 
   bool abort=false;
-
   int abort_point = 987654;
+
   while( numTasksDone < ntasks ) {
 
     DetailedTask * task = dts->getNextInternalReadyTask();
-
-    //cerr << "Got task: " << task->getTask()->getName() << "\n";
 
     numTasksDone++;
     taskdbg << me << " Initiating task: "; printTask(taskdbg, task); taskdbg << '\n';
@@ -767,7 +765,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     OnDemandDataWarehouseP dw = dws[dws.size()-1];
     const GridP grid(const_cast<Grid*>(dw->getGrid()));
     const PatchSubset* myPatches = getLoadBalancer()->getPerProcessorPatchSet(grid)->getSubset(d_myworld->myrank());
-    for (unsigned p = 0; p < myPatches->size(); p++) {
+    for (int p = 0; p < myPatches->size(); p++) {
       const Patch* patch = myPatches->get(p);
       IntVector range = patch->getHighIndex() - patch->getLowIndex();
       numCells += range.x()*range.y()*range.z();
@@ -857,7 +855,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
       timeout << "  Avg.  vol: " << avgCell << ", max  vol: " << maxCell << " = " << (1-avgCell/maxCell)*100 << " load imbalance (theoretical)%\n";
     }
     double time = Time::currentSeconds();
-    double rtime=time-d_lasttime;
+    //double rtime=time-d_lasttime;
     d_lasttime=time;
     //timeout << "MPIScheduler: TOTAL                                    "
     //        << total << '\n';
@@ -865,7 +863,9 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
     //        << rtime << '\n';
   }
 
-  dbg << me << " MPIScheduler finished\n";
+  if( dbg.active()) {
+    dbg << me << " MPIScheduler finished\n";
+  }
   //pg_ = 0;
 }
 

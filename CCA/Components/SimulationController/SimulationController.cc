@@ -121,7 +121,11 @@ namespace Uintah {
      d_timeinfo->delt_max = 1e99;
       if (d_myworld->myrank() == 0)
         cout << "  For UdaReducer: setting delt_max to 1e99\n";
- 
+    }
+    if (d_reduceUda && d_timeinfo->max_initial_delt < 1e99) {
+     d_timeinfo->max_initial_delt = 1e99;
+      if (d_myworld->myrank() == 0)
+        cout << "  For UdaReducer: setting max_initial_delt to 1e99\n";
     }
   }
 
@@ -417,179 +421,181 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
 #ifndef DISABLE_SCI_MALLOC
   size_t nalloc,  sizealloc, nfree,  sizefree, nfillbin,
     nmmap, sizemmap, nmunmap, sizemunmap, highwater_alloc,  
-    highwater_mmap;
+    highwater_mmap, bytes_overhead, bytes_free, bytes_fragmented, bytes_inuse, bytes_inhunks;
   
   GetGlobalStats(DefaultAllocator(),
                  nalloc, sizealloc, nfree, sizefree,
                  nfillbin, nmmap, sizemmap, nmunmap,
-                 sizemunmap, highwater_alloc, highwater_mmap);
+                 sizemunmap, highwater_alloc, highwater_mmap,
+                 bytes_overhead, bytes_free, bytes_fragmented, bytes_inuse, bytes_inhunks);
   unsigned long memuse = sizealloc - sizefree;
-    unsigned long highwater = highwater_mmap;
+  unsigned long highwater = highwater_mmap;
 #else
-    unsigned long memuse = 0;
-    if ( ProcessInfo::IsSupported( ProcessInfo::MEM_SIZE ) ) {
-      memuse = ProcessInfo::GetMemoryUsed();
+  unsigned long memuse = 0;
+  if ( ProcessInfo::IsSupported( ProcessInfo::MEM_SIZE ) ) {
+    memuse = ProcessInfo::GetMemoryResident();
+  } else {
+    memuse = (char*)sbrk(0)-start_addr;
+  }
+  unsigned long highwater = 0;
+#endif
+  
+  // get memory stats for each proc if MALLOC_PERPROC is in the environent
+  if ( getenv( "MALLOC_PERPROC" ) ) {
+    ostream* mallocPerProcStream = NULL;
+    char* filenamePrefix = getenv( "MALLOC_PERPROC" );
+    if ( !filenamePrefix || strlen( filenamePrefix ) == 0 ) {
+      mallocPerProcStream = &dbg;
     } else {
-      memuse = (char*)sbrk(0)-start_addr;
-    }
-    unsigned long highwater = 0;
-#endif
-    
-    // get memory stats for each proc if MALLOC_PERPROC is in the environent
-    if ( getenv( "MALLOC_PERPROC" ) ) {
-      ostream* mallocPerProcStream = NULL;
-      char* filenamePrefix = getenv( "MALLOC_PERPROC" );
-      if ( !filenamePrefix || strlen( filenamePrefix ) == 0 ) {
-	mallocPerProcStream = &dbg;
+      char filename[MAXPATHLEN];
+      sprintf( filename, "%s.%d" ,filenamePrefix, d_myworld->myrank() );
+      if ( timestep == 0 ) {
+        mallocPerProcStream = new ofstream( filename, ios::out | ios::trunc );
       } else {
-	char filename[MAXPATHLEN];
-	sprintf( filename, "%s.%d" ,filenamePrefix, d_myworld->myrank() );
-	if ( timestep == 0 ) {
-	  mallocPerProcStream = new ofstream( filename, ios::out | ios::trunc );
-	} else {
-	  mallocPerProcStream = new ofstream( filename, ios::out | ios::app );
-	}
-	if ( !mallocPerProcStream ) {
-	  delete mallocPerProcStream;
-	  mallocPerProcStream = &dbg;
-	}
+        mallocPerProcStream = new ofstream( filename, ios::out | ios::app );
       }
-      *mallocPerProcStream << "Proc "     << d_myworld->myrank() << "   ";
-      *mallocPerProcStream << "Timestep " << timestep << "   ";
-      *mallocPerProcStream << "Size "     << ProcessInfo::GetMemoryUsed() << "   ";
-      *mallocPerProcStream << "RSS "      << ProcessInfo::GetMemoryResident() << "   ";
-      *mallocPerProcStream << "Sbrk "     << (char*)sbrk(0) - start_addr << "   ";
+      if ( !mallocPerProcStream ) {
+        delete mallocPerProcStream;
+        mallocPerProcStream = &dbg;
+      }
+    }
+    *mallocPerProcStream << "Proc "     << d_myworld->myrank() << "   ";
+    *mallocPerProcStream << "Timestep " << timestep << "   ";
+    *mallocPerProcStream << "Size "     << ProcessInfo::GetMemoryUsed() << "   ";
+    *mallocPerProcStream << "RSS "      << ProcessInfo::GetMemoryResident() << "   ";
+    *mallocPerProcStream << "Sbrk "     << (char*)sbrk(0) - start_addr << "   ";
 #ifndef DISABLE_SCI_MALLOC
-      *mallocPerProcStream << "Sci_Malloc_Memuse "    << memuse << "   ";
-      *mallocPerProcStream << "Sci_Malloc_Highwater " << highwater;
+    *mallocPerProcStream << "Sci_Malloc_Memuse "    << memuse << "   ";
+    *mallocPerProcStream << "Sci_Malloc_Highwater " << highwater;
 #endif
-      *mallocPerProcStream << endl;
-      if ( mallocPerProcStream != &dbg ) {
-	delete mallocPerProcStream;
-      }
-    }
-
-    // with the sum reduces, use double, since with memory it is possible that
-    // it will overflow
-    double tmp_double = memuse;
-    double avg_memuse = memuse;
-    unsigned long max_memuse = memuse;
-    double avg_highwater = highwater;
-    unsigned long max_highwater = highwater;
-    if (d_myworld->size() > 1) {
-      MPI_Reduce(&tmp_double, &avg_memuse, 1, MPI_DOUBLE, MPI_SUM, 0,
-		 d_myworld->getComm());
-      if(highwater){
-        tmp_double = highwater;
-	MPI_Reduce(&tmp_double, &avg_highwater, 1, MPI_DOUBLE,
-		   MPI_SUM, 0, d_myworld->getComm());
-      }
-      avg_memuse /= d_myworld->size(); // only to be used by processor 0
-      avg_highwater /= d_myworld->size();
-      MPI_Reduce(&memuse, &max_memuse, 1, MPI_UNSIGNED_LONG, MPI_MAX, 0,
-		 d_myworld->getComm());
-      if(highwater){
-	MPI_Reduce(&highwater, &max_highwater, 1, MPI_UNSIGNED_LONG,
-		   MPI_MAX, 0, d_myworld->getComm());
-      }
-    }
-#endif
-    // calculate mean/std dev
-    double stdDev = 0;
-    double mean = 0;
-    if (d_n > 2) { // ignore times 0,1,2
-      //walltimes.push_back(d_wallTime - d_prevWallTime);
-      d_sumOfWallTimes += (d_wallTime - d_prevWallTime);
-      d_sumOfWallTimeSquares += pow(d_wallTime - d_prevWallTime,2);
-    }
-    if (d_n > 3) {
-      // divide by n-2 and not n, because we wait till n>2 to keep track
-      // of our stats
-      stdDev = stdDeviation(d_sumOfWallTimes, d_sumOfWallTimeSquares, d_n-2);
-      mean = d_sumOfWallTimes / (d_n-2);
-      //         ofstream timefile("avg_elapsed_wallTime.txt");
-      //         timefile << mean << " +- " << stdDev << endl;
-    }
-
-    // output timestep statistics
-    if(d_myworld->myrank() == 0){
-      char walltime[96];
-      if (d_n > 3) {
-        sprintf(walltime, ", elap T = %.2lf, mean: %.2lf +- %.3lf", d_wallTime, mean, stdDev);
-      }
-      else {
-        sprintf(walltime, ", elap T = %.2lf", d_wallTime);
-      }
-
-      dbg << "Time="         << time
-	  << " (timestep "  << timestep 
-	   << "), delT="     << delt
-	   << walltime;
-#ifndef _WIN32
-      dbg << ", Mem Use (MB)= ";
-      if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
-	dbg << toHumanUnits((unsigned long) avg_memuse);
-	if(avg_highwater) {
-	  dbg << "/" << toHumanUnits((unsigned long) avg_highwater);
-	}
-      } else {
-	dbg << toHumanUnits((unsigned long) avg_memuse);
-	if(avg_highwater) {
-	  dbg << "/" << toHumanUnits((unsigned long)avg_highwater);
-	}
-	dbg << " (avg), " << toHumanUnits(max_memuse);
-	if(max_highwater) {
-	  dbg << "/" << toHumanUnits(max_highwater);
-	}
-	dbg << " (max)";
-      }
-#endif
-      dbg << endl;
-
-      if ( d_n > 0 ) {
-	double realSecondsNow = (d_wallTime - d_prevWallTime)/delt;
-	double realSecondsAvg = (d_wallTime - d_startTime)/(time-d_startSimTime);
-
-	dbgTime << "1 sim second takes ";
-
-	dbgTime << left << showpoint << setprecision(3) << setw(4);
-
-	if (realSecondsNow < SECONDS_PER_MINUTE) {
-	  dbgTime << realSecondsNow << " seconds (now), ";
-	} else if ( realSecondsNow < SECONDS_PER_HOUR ) {
-	  dbgTime << realSecondsNow/SECONDS_PER_MINUTE << " minutes (now), ";
-	} else if ( realSecondsNow < SECONDS_PER_DAY  ) {
-	  dbgTime << realSecondsNow/SECONDS_PER_HOUR << " hours (now), ";
-	} else if ( realSecondsNow < SECONDS_PER_WEEK ) {
-	  dbgTime << realSecondsNow/SECONDS_PER_DAY << " days (now), ";
-	} else if ( realSecondsNow < SECONDS_PER_YEAR ) {
-	  dbgTime << realSecondsNow/SECONDS_PER_WEEK << " weeks (now), ";
-	} else {
-	  dbgTime << realSecondsNow/SECONDS_PER_YEAR << " years (now), ";
-	}
-
-	dbgTime << setw(4);
-
-	if (realSecondsAvg < SECONDS_PER_MINUTE) {
-	  dbgTime << realSecondsAvg << " seconds (avg) ";
-	} else if ( realSecondsAvg < SECONDS_PER_HOUR ) {
-	  dbgTime << realSecondsAvg/SECONDS_PER_MINUTE << " minutes (avg) ";
-	} else if ( realSecondsAvg < SECONDS_PER_DAY  ) {
-	  dbgTime << realSecondsAvg/SECONDS_PER_HOUR << " hours (avg) ";
-	} else if ( realSecondsAvg < SECONDS_PER_WEEK ) {
-	  dbgTime << realSecondsAvg/SECONDS_PER_DAY << " days (avg) ";
-	} else if ( realSecondsAvg < SECONDS_PER_YEAR ) {
-	  dbgTime << realSecondsAvg/SECONDS_PER_WEEK << " weeks (avg) ";
-	} else {
-	  dbgTime << realSecondsAvg/SECONDS_PER_YEAR << " years (avg) ";
-	}
-
-	dbgTime << "to calculate." << endl;
-      }
- 
-      d_prevWallTime = d_wallTime;
-      d_n++;
+    *mallocPerProcStream << endl;
+    if ( mallocPerProcStream != &dbg ) {
+      delete mallocPerProcStream;
     }
   }
+  
+  // with the sum reduces, use double, since with memory it is possible that
+  // it will overflow
+  double tmp_double = memuse;
+  double avg_memuse = memuse;
+  unsigned long max_memuse = memuse;
+  double avg_highwater = highwater;
+  unsigned long max_highwater = highwater;
+  if (d_myworld->size() > 1) {
+    MPI_Reduce(&tmp_double, &avg_memuse, 1, MPI_DOUBLE, MPI_SUM, 0,
+               d_myworld->getComm());
+    if(highwater){
+      tmp_double = highwater;
+      MPI_Reduce(&tmp_double, &avg_highwater, 1, MPI_DOUBLE,
+                 MPI_SUM, 0, d_myworld->getComm());
+    }
+    avg_memuse /= d_myworld->size(); // only to be used by processor 0
+    avg_highwater /= d_myworld->size();
+    MPI_Reduce(&memuse, &max_memuse, 1, MPI_UNSIGNED_LONG, MPI_MAX, 0,
+               d_myworld->getComm());
+    if(highwater){
+      MPI_Allreduce(&highwater, &max_highwater, 1, MPI_UNSIGNED_LONG,
+                 MPI_MAX, d_myworld->getComm());
+    }
+  }
+#endif
+  // calculate mean/std dev
+  double stdDev = 0;
+  double mean = 0;
+  if (d_n > 2) { // ignore times 0,1,2
+    //walltimes.push_back(d_wallTime - d_prevWallTime);
+    d_sumOfWallTimes += (d_wallTime - d_prevWallTime);
+    d_sumOfWallTimeSquares += pow(d_wallTime - d_prevWallTime,2);
+  }
+  if (d_n > 3) {
+    // divide by n-2 and not n, because we wait till n>2 to keep track
+    // of our stats
+    stdDev = stdDeviation(d_sumOfWallTimes, d_sumOfWallTimeSquares, d_n-2);
+    mean = d_sumOfWallTimes / (d_n-2);
+    //         ofstream timefile("avg_elapsed_wallTime.txt");
+    //         timefile << mean << " +- " << stdDev << endl;
+  }
+  
+  // output timestep statistics
+  if(d_myworld->myrank() == 0){
+    char walltime[96];
+    if (d_n > 3) {
+      sprintf(walltime, ", elap T = %.2lf, mean: %.2lf +- %.3lf", d_wallTime, mean, stdDev);
+    }
+    else {
+      sprintf(walltime, ", elap T = %.2lf", d_wallTime);
+    }
+    
+    dbg << "Time="         << time
+        << " (timestep "  << timestep 
+        << "), delT="     << delt
+        << walltime;
+#ifndef _WIN32
+    dbg << ", Mem Use (MB)= ";
+    if (avg_memuse == max_memuse && avg_highwater == max_highwater) {
+      dbg << toHumanUnits((unsigned long) avg_memuse);
+      if(avg_highwater) {
+        dbg << "/" << toHumanUnits((unsigned long) avg_highwater);
+      }
+    } else {
+      dbg << toHumanUnits((unsigned long) avg_memuse);
+      if(avg_highwater) {
+        dbg << "/" << toHumanUnits((unsigned long)avg_highwater);
+      }
+      dbg << " (avg), " << toHumanUnits(max_memuse);
+      if(max_highwater) {
+        dbg << "/" << toHumanUnits(max_highwater);
+      }
+      dbg << " (max)";
+    }
+    
+#endif
+    dbg << endl;
+    
+    if ( d_n > 0 ) {
+      double realSecondsNow = (d_wallTime - d_prevWallTime)/delt;
+      double realSecondsAvg = (d_wallTime - d_startTime)/(time-d_startSimTime);
+      
+      dbgTime << "1 sim second takes ";
+      
+      dbgTime << left << showpoint << setprecision(3) << setw(4);
+      
+      if (realSecondsNow < SECONDS_PER_MINUTE) {
+        dbgTime << realSecondsNow << " seconds (now), ";
+      } else if ( realSecondsNow < SECONDS_PER_HOUR ) {
+        dbgTime << realSecondsNow/SECONDS_PER_MINUTE << " minutes (now), ";
+      } else if ( realSecondsNow < SECONDS_PER_DAY  ) {
+        dbgTime << realSecondsNow/SECONDS_PER_HOUR << " hours (now), ";
+      } else if ( realSecondsNow < SECONDS_PER_WEEK ) {
+        dbgTime << realSecondsNow/SECONDS_PER_DAY << " days (now), ";
+      } else if ( realSecondsNow < SECONDS_PER_YEAR ) {
+        dbgTime << realSecondsNow/SECONDS_PER_WEEK << " weeks (now), ";
+      } else {
+        dbgTime << realSecondsNow/SECONDS_PER_YEAR << " years (now), ";
+      }
+      
+      dbgTime << setw(4);
+      
+      if (realSecondsAvg < SECONDS_PER_MINUTE) {
+        dbgTime << realSecondsAvg << " seconds (avg) ";
+      } else if ( realSecondsAvg < SECONDS_PER_HOUR ) {
+        dbgTime << realSecondsAvg/SECONDS_PER_MINUTE << " minutes (avg) ";
+      } else if ( realSecondsAvg < SECONDS_PER_DAY  ) {
+        dbgTime << realSecondsAvg/SECONDS_PER_HOUR << " hours (avg) ";
+      } else if ( realSecondsAvg < SECONDS_PER_WEEK ) {
+        dbgTime << realSecondsAvg/SECONDS_PER_DAY << " days (avg) ";
+      } else if ( realSecondsAvg < SECONDS_PER_YEAR ) {
+        dbgTime << realSecondsAvg/SECONDS_PER_WEEK << " weeks (avg) ";
+      } else {
+        dbgTime << realSecondsAvg/SECONDS_PER_YEAR << " years (avg) ";
+      }
+      
+      dbgTime << "to calculate." << endl;
+    }
+ 
+    d_prevWallTime = d_wallTime;
+    d_n++;
+  }
+}
   
 } // namespace Uintah {
