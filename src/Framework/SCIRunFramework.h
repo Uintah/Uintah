@@ -38,19 +38,19 @@
  *
  */
 
-#ifndef SCIRun_Framework_SCIRunFramework_h
-#define SCIRun_Framework_SCIRunFramework_h
+#ifndef Framework_SCIRunFramework_h
+#define Framework_SCIRunFramework_h
 
 #include <include/sci_defs/dataflow_defs.h>
 
 #ifdef BUILD_DATAFLOW
-#  include <SCIRun/Dataflow/SCIRunComponentModel.h>
+#  include <Framework/Dataflow/SCIRunComponentModel.h>
 #endif
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/resourceReference.h>
+#include <Framework/resourceReference.h>
 #include <vector>
 #include <map>
 #include <string>

@@ -38,8 +38,8 @@
  *
  */
 
-#ifndef SCIRun_Framework_PortInstanceIterator_h
-#define SCIRun_Framework_PortInstanceIterator_h
+#ifndef Framework_Framework_PortInstanceIterator_h
+#define Framework_Framework_PortInstanceIterator_h
 
 namespace SCIRun
 {

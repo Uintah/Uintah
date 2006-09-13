@@ -37,11 +37,11 @@
  *
  */
 
-#ifndef SCIRun_TypeMap_h
-#define SCIRun_TypeMap_h
+#ifndef Framework_TypeMap_h
+#define Framework_TypeMap_h
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/CCA/TypeMismatchException.h>
+#include <Framework/CCA/TypeMismatchException.h>
 
 // #include <vector>
 #include <map>

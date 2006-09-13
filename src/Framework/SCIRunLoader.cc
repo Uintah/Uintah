@@ -39,12 +39,12 @@
  */
 
 #include <sci_defs/mpi_defs.h> // For MPIPP_H
-#include <SCIRun/SCIRunLoader.h>
-#include <SCIRun/CCA/CCAComponentModel.h>
-#include <SCIRun/CCA/CCAComponentDescription.h>
-#include <SCIRun/CCA/CCAComponentInstance.h>
-#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/resourceReference.h>
+#include <Framework/SCIRunLoader.h>
+#include <Framework/CCA/CCAComponentModel.h>
+#include <Framework/CCA/CCAComponentDescription.h>
+#include <Framework/CCA/CCAComponentInstance.h>
+#include <Framework/SCIRunFramework.h>
+#include <Framework/resourceReference.h>
 
 #include <Core/Containers/StringUtil.h>
 #include <Core/XMLUtil/XMLUtil.h>

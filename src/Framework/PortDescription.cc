@@ -26,7 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <SCIRun/PortDescription.h>
+#include <Framework/PortDescription.h>
 
 namespace SCIRun {
 

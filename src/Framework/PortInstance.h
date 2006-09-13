@@ -38,8 +38,8 @@
  *
  */
 
-#ifndef SCIRun_PortInstance_h
-#define SCIRun_PortInstance_h
+#ifndef Framework_PortInstance_h
+#define Framework_PortInstance_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 #include <string>

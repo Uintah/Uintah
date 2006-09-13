@@ -38,17 +38,17 @@
  *
  */
 
-#include <SCIRun/SCIRunFramework.h>
+#include <Framework/SCIRunFramework.h>
 #include <sci_metacomponents.h>
 
-#include <SCIRun/TypeMap.h>
-#include <SCIRun/Internal/ComponentEvent.h>
-#include <SCIRun/Internal/ComponentEventService.h>
-#include <SCIRun/CCA/ComponentID.h>
-#include <SCIRun/CCA/CCAException.h>
+#include <Framework/TypeMap.h>
+#include <Framework/Internal/ComponentEvent.h>
+#include <Framework/Internal/ComponentEventService.h>
+#include <Framework/CCA/ComponentID.h>
+#include <Framework/CCA/CCAException.h>
 
-#include <SCIRun/ComponentInstance.h>
-#include <SCIRun/CCACommunicator.h>
+#include <Framework/ComponentInstance.h>
+#include <Framework/CCACommunicator.h>
 #include <Core/CCA/PIDL/PIDL.h>
 #include <Core/Util/NotFinished.h>
 

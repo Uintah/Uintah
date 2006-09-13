@@ -29,7 +29,7 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := SCIRun
+SRCDIR   := Framework
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 

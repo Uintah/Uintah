@@ -42,12 +42,12 @@
 #include <fstream>
 #include <sstream>
 
-#include <SCIRun/ComponentSkeletonWriter.h>
+#include <Framework/ComponentSkeletonWriter.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/OS/Dir.h>
 #include <Core/Util/Environment.h>
-#include <SCIRun/Internal/FrameworkProperties.h>
-#include <SCIRun/CCA/CCAComponentModel.h>
+#include <Framework/Internal/FrameworkProperties.h>
+#include <Framework/CCA/CCAComponentModel.h>
 
 
 #ifndef DEBUG

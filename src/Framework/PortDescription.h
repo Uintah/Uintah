@@ -26,8 +26,8 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef SCIRun_PortDescription_h
-#define SCIRun_PortDescription_h
+#ifndef Framework_PortDescription_h
+#define Framework_PortDescription_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 

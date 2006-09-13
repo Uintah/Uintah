@@ -38,8 +38,8 @@
  *
  */
 
-#include <SCIRun/ComponentModel.h>
-#include <SCIRun/SCIRunFramework.h>
+#include <Framework/ComponentModel.h>
+#include <Framework/SCIRunFramework.h>
 #include <Core/OS/Dir.h>
 #include <Core/Thread/Guard.h>
 #include <Core/XMLUtil/XMLUtil.h>

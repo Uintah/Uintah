@@ -38,7 +38,7 @@
  *
  */
 
-#include <SCIRun/PortInstance.h>
+#include <Framework/PortInstance.h>
 #include <iostream>
 
 namespace SCIRun {

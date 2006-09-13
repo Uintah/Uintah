@@ -38,10 +38,10 @@
  *
  */
 
-#ifndef SCIRun_Framework_ComponentInstance_h
-#define SCIRun_Framework_ComponentInstance_h
+#ifndef Framework_Framework_ComponentInstance_h
+#define Framework_Framework_ComponentInstance_h
 
-#include <SCIRun/CCA/ComponentID.h>
+#include <Framework/CCA/ComponentID.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <string>
 

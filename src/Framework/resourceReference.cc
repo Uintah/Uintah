@@ -38,9 +38,9 @@
  *  Copyright (C) 2003 SCI Group
  */
 
-#include <SCIRun/resourceReference.h>
+#include <Framework/resourceReference.h>
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/TypeMap.h>
+#include <Framework/TypeMap.h>
 using namespace std;
 using namespace SCIRun;
 
