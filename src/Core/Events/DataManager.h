@@ -25,53 +25,61 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : SelectionTargetEvent.h
+//    File   : DataManager.h
 //    Author : Martin Cole
-//    Date   : Fri Jul 28 11:37:11 2006
+//    Date   : Tue Sep 12 09:55:13 2006
 
 
-#if !defined(SelectionTargetEvent_h)
-#define SelectionTargetEvent_h
+#if !defined(DataManager_h)
+#define DataManager_h
 
-#include <Core/Events/BaseEvent.h>
+#include <Core/Util/ThrottledRunnable.h>
+#include <Core/Thread/Thread.h>
 #include <Core/Datatypes/Field.h>
-#include <string>
-
+#include <Core/Datatypes/Matrix.h>
+#include <Core/Datatypes/NrrdData.h>
+#include <Core/Events/Tools/ToolManager.h>
+#include <Core/Events/EventManager.h>
 
 namespace SCIRun {
 
-using namespace std;
 
-class SelectionTargetEvent : public BaseEvent
+class SCISHARE DataManager : public ThrottledRunnable 
 {
 public:
-  //! target is the id of the mailbox given by EventManager, 
-  //! if it is an empty string then all Event Mailboxes get the event.
-  SelectionTargetEvent(const string &target = "", 
-		       long int time = 0);
+  DataManager();
+  virtual ~DataManager();
 
+  virtual bool          iterate();
 
-  virtual ~SelectionTargetEvent();
+  FieldHandle  get_field(unsigned int id);
+  MatrixHandle get_matrix(unsigned int id);
+  NrrdDataHandle   get_nrrd(unsigned int id);
 
-  virtual SelectionTargetEvent *clone() { 
-    return new SelectionTargetEvent(*this); 
-  }
-  virtual void io(Piostream&);
-  static PersistentTypeID type_id;
+  unsigned int load_field(string fname);
+  unsigned int load_matrix(string fname);
+  unsigned int load_nrrd(string fname);
 
-  
-  FieldHandle   get_selection_target() const         { return sel_targ_; }
-  int           get_selection_id()     const         { return sel_id_; }
-
-  void          set_selection_target(FieldHandle fh) { sel_targ_ = fh; }
-  void          set_selection_id(int id)             { sel_id_ = id; }
+  // sends Scene Graph event with the rendered geometry.
+  bool           show_field(unsigned int fld_id);
+  void           selection_target_changed(unsigned int fid);
+  unsigned int   get_selection_target() { return sel_fid_; }
 
 private:
-  //! The event timestamp
-  FieldHandle           sel_targ_;
-  int                   sel_id_;
+  Mutex                               lock_;
+  
+  map<unsigned int, NrrdDataHandle>   nrrds_;
+  map<unsigned int, MatrixHandle>     mats_;
+  map<unsigned int, FieldHandle>      fields_;
+  
+  unsigned int                        sel_fid_;
+
+  ToolManager                         tm_;
+  EventManager::event_mailbox_t      *events_;
+
+  static unsigned int                 next_id_;
 };
 
-} // namespace SCIRun
+}
 
-#endif // SelectionTargetEvent_h
+#endif //DataManager_h

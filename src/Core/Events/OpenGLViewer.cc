@@ -158,14 +158,24 @@ public:
   propagation_state_e process_event(event_handle_t event) 
   { 
     SceneGraphEvent *ev = 0;
-    if ((ev = dynamic_cast<SceneGraphEvent*>(event.get_rep()))) {
-
+    if ((ev = dynamic_cast<SceneGraphEvent*>(event.get_rep()))) 
+    {
+      map<string, int>::iterator iter;
+      iter = obj_ids_.find(ev->get_geom_obj_name());
+      if (iter != obj_ids_.end()) {
+	//already showing this geometry.  Delete it first
+	int id = (*iter).second;
+	visible_[ev->get_geom_obj_name()] = false;
+	sg_->delObj(id);
+	obj_ids_.erase(ev->get_geom_obj_name());
+      }
       GeomViewerItem* si = scinew GeomViewerItem(ev->get_geom_obj(), 
 						 ev->get_geom_obj_name(), 
 						 0);     
-      sg_->addObj(si, ids_++);
+
       visible_[ev->get_geom_obj_name()] = true;
-      cerr << "added scene graph obj: " << ev->get_geom_obj_name() << endl;
+      obj_ids_[ev->get_geom_obj_name()] = ids_;
+      sg_->addObj(si, ids_++);
       return STOP_E;
     } 
     return CONTINUE_E;
@@ -174,6 +184,7 @@ private:
   int                    ids_;
   GeomIndexedGroup      *sg_;
   map<string, bool>	&visible_;
+  map<string, int>       obj_ids_;
 };
 
 
@@ -201,6 +212,34 @@ private:
   OpenGLViewer *oglv_;
 };
 
+class ViewerCommandTool : public CommandTool
+{
+public:
+
+  ViewerCommandTool(string name, OpenGLViewer *oglv) :
+    CommandTool(name),
+    sel_fld_(0),
+    oglv_(oglv)
+  {}
+
+  virtual propagation_state_e issue_command(const string &cmmd, 
+					    unsigned int time) 
+  {
+    if (cmmd == "delete faces") {
+      oglv_->delete_selected_faces();
+      
+      return STOP_E;
+    } else if (cmmd == "add face") {
+
+      return STOP_E;
+    }
+    return CONTINUE_E;
+  }
+private:
+  FieldHandle             sel_fld_;
+  OpenGLViewer           *oglv_;
+};
+
 class SelectionSetTool : public BaseTool
 {
 public:
@@ -215,6 +254,7 @@ public:
     BaseTool(name),
     mode_(FACES_E),
     sel_fld_(0),
+    sel_fld_id_(0),
     oglv_(oglv)
   {}
   
@@ -223,21 +263,62 @@ public:
     SelectionTargetEvent *st = 
       dynamic_cast<SelectionTargetEvent*>(e.get_rep());
     if (st) {
-      cerr << "handling a selection changed event" << endl;
       sel_fld_ = st->get_selection_target();
-      cerr << "sel_fld_(1): " << sel_fld_.get_rep() << endl;
+      sel_fld_id_ = st->get_selection_id();
       oglv_->set_selection_set_visible(true);
       return STOP_E;
     }
     return CONTINUE_E;
   }
   
+  void delete_faces() {
+    typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
+
+    if (! sel_fld_.get_rep()) return;
+    sel_fld_->lock.lock();
+    // turn this call into a general algorithm, but for now assume trisurf.
+    MeshHandle mb = sel_fld_->mesh();
+    TSMesh *tsm = dynamic_cast<TSMesh *>(mb.get_rep());
+    if (!tsm) {
+      cerr << "Error:: not a TriSurf in SelectionSetTool::delete_faces" 
+	   << endl;
+    }
+    set<unsigned int> &sfaces = oglv_->get_selection_set();
+
+
+    vector<int> faces;
+    set<unsigned int>::iterator si = sfaces.begin();
+    while (si != sfaces.end()) {
+      faces.push_back(*si++);
+    }
+
+    bool altered = false;
+    // remove last index first.
+    sort(faces.begin(), faces.end());
+    vector<int>::reverse_iterator iter  = faces.rbegin();
+    while (iter != faces.rend()) {
+      int face = *iter++;
+      altered |= tsm->remove_face(face);
+      cout << "removed face " << face << endl;
+    }
+    
+
+    //clear the selection set.
+    sfaces.clear();
+    oglv_->set_selection_set_visible(false);
+    sel_fld_->lock.unlock();
+
+    //notify the data manager that this model has changed.
+    CommandEvent *c = new CommandEvent();
+    c->set_command("selection field modified");
+    event_handle_t event = c;
+    EventManager::add_event(event);
+  }
+
   void render_selection_set(bool edges = false) 
   {
-#if 0
     //create a new field with the selection items in it;
     if (! sel_fld_.get_rep()) { return; }
-
     static RenderParams p;
     p.defaults();
     p.def_material_ = new Material(Color(0.9, 0.1, 0.1)); 
@@ -303,9 +384,7 @@ public:
       }
       break;
     };
-
     oglv_->set_selection_geom(geom);    
-#endif
   }
 
   void add_selection(unsigned int idx) {
@@ -319,6 +398,7 @@ public:
 private:
   selection_mode_e        mode_;
   FieldHandle             sel_fld_;
+  unsigned int            sel_fld_id_;
   OpenGLViewer           *oglv_;
 };
 
@@ -327,7 +407,8 @@ class ToolManip : public TMNotificationTool
 public:
   ToolManip(OpenGLViewer *oglv) :
     TMNotificationTool("OpenGLViewer:ToolManager:ToolManip"),
-    oglv_(oglv)
+    oglv_(oglv),
+    fbpt_(0)
   {}
 
   virtual propagation_state_e start_tool(string id, unsigned int time)
@@ -350,23 +431,6 @@ public:
 	cerr << "adding pick tool" << endl;
 	tm.add_tool(fbpt_, OpenGLViewer::SELECTION_TOOL_E);
       }
-      return STOP_E;
-    } else if (id == rmfaces_name) {
-      cerr << "want to start rmfaces tool: " << id << endl;
-//       if (! fbpt_) {
-// 	fbpt_ = new FrameBufferPickTool(fbpick_name, 
-// 					new FBI(oglv_));
-//       }
-//       ToolManager &tm = oglv_->get_tm();
-//       if (tm.query_tool_id(OpenGLViewer::ACTIVE_TOOL_E) == fbpick_name)
-//       {
-// 	//Already active, tell the tool to reset.
-// 	cerr << "resetting pick tool" << endl;
-// 	fbpt_->reset();
-//       } else {
-// 	cerr << "adding pick tool" << endl;
-// 	tm.add_tool(fbpt_, OpenGLViewer::ACTIVE_TOOL_E);
-//       }
       return STOP_E;
     }
 
@@ -393,6 +457,7 @@ public:
 
   virtual propagation_state_e resume_tool(string id, unsigned int time)
   {
+    cerr << "resume for tool manip" << endl;
     ToolManager &tm = oglv_->get_tm();
     if (! fbpt_) { 
       start_tool(id, time); 
@@ -538,6 +603,16 @@ OpenGLViewer::~OpenGLViewer()
 }
 
 void
+OpenGLViewer::delete_selected_faces()
+{ 
+  SelectionSetTool* sst = 
+    dynamic_cast<SelectionSetTool*>(selection_set_tool_.get_rep());
+  if (! sst) return;
+
+  sst->delete_faces(); 
+}
+
+void
 OpenGLViewer::init_tool_manager()
 {
 
@@ -570,6 +645,10 @@ OpenGLViewer::init_tool_manager()
 					     this);
   tm_.add_tool(selection_set_tool_, data_pri++);  
 
+  tool_handle_t cmmdtool;
+  cmmdtool = new ViewerCommandTool("OpenGLViewer Command Tool",
+				   this);
+  tm_.add_tool(cmmdtool, data_pri++);  
 
   // tool modifiers
   unsigned int tm_pri = TOOL_MODIFIERS_E;

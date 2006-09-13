@@ -235,5 +235,25 @@ TMNotifyEvent::io(Piostream &stream) {
   stream.end_class();
 }
 
+CommandEvent::CommandEvent(const string &target,
+			   long int time) :
+  BaseEvent(target, time),
+  command_("")
+{
+}
+
+CommandEvent::~CommandEvent()
+{
+}
+
+const int COMMANDEVENT_VERSION = 1;
+void
+CommandEvent::io(Piostream &stream) {
+  stream.begin_class(type_id.type, COMMANDEVENT_VERSION);
+  BaseEvent::io(stream);
+  SCIRun::Pio(stream, command_);
+  stream.end_class();
+}
+
 } // namespace SCIRun
 

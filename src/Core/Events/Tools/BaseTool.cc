@@ -84,5 +84,14 @@ TMNotificationTool::~TMNotificationTool()
 {
 }
 
+CommandTool::CommandTool(string name) :
+  BaseTool(name)
+{
+}
+
+CommandTool::~CommandTool()
+{
+}
+
 } // namespace SCIRun
 

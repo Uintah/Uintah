@@ -341,6 +341,7 @@ class BaseEvent(Datatype):
     def is_window_event(*args): return _pysci.BaseEvent_is_window_event(*args)
     def is_scene_graph_event(*args): return _pysci.BaseEvent_is_scene_graph_event(*args)
     def is_tm_notify_event(*args): return _pysci.BaseEvent_is_tm_notify_event(*args)
+    def is_command_event(*args): return _pysci.BaseEvent_is_command_event(*args)
 
 class BaseEventPtr(BaseEvent):
     def __init__(self, this):
@@ -590,6 +591,36 @@ class TMNotifyEventPtr(TMNotifyEvent):
         self.__class__ = TMNotifyEvent
 _pysci.TMNotifyEvent_swigregister(TMNotifyEventPtr)
 
+class CommandEvent(BaseEvent):
+    __swig_setmethods__ = {}
+    for _s in [BaseEvent]: __swig_setmethods__.update(_s.__swig_setmethods__)
+    __setattr__ = lambda self, name, value: _swig_setattr(self, CommandEvent, name, value)
+    __swig_getmethods__ = {}
+    for _s in [BaseEvent]: __swig_getmethods__.update(_s.__swig_getmethods__)
+    __getattr__ = lambda self, name: _swig_getattr(self, CommandEvent, name)
+    def __repr__(self):
+        return "<%s.%s; proxy of C++ SCIRun::CommandEvent instance at %s>" % (self.__class__.__module__, self.__class__.__name__, self.this,)
+    def __init__(self, *args):
+        _swig_setattr(self, CommandEvent, 'this', _pysci.new_CommandEvent(*args))
+        _swig_setattr(self, CommandEvent, 'thisown', 1)
+    def __del__(self, destroy=_pysci.delete_CommandEvent):
+        try:
+            if self.thisown: destroy(self)
+        except: pass
+
+    def io(*args): return _pysci.CommandEvent_io(*args)
+    def clone(*args): return _pysci.CommandEvent_clone(*args)
+    def is_command_event(*args): return _pysci.CommandEvent_is_command_event(*args)
+    def get_command(*args): return _pysci.CommandEvent_get_command(*args)
+    def set_command(*args): return _pysci.CommandEvent_set_command(*args)
+
+class CommandEventPtr(CommandEvent):
+    def __init__(self, this):
+        _swig_setattr(self, CommandEvent, 'this', this)
+        if not hasattr(self,"thisown"): _swig_setattr(self, CommandEvent, 'thisown', 0)
+        self.__class__ = CommandEvent
+_pysci.CommandEvent_swigregister(CommandEventPtr)
+
 class vector_string(_object):
     __swig_setmethods__ = {}
     __setattr__ = lambda self, name, value: _swig_setattr(self, vector_string, name, value)
@@ -702,6 +733,8 @@ add_pointer_event = _pysci.add_pointer_event
 add_key_event = _pysci.add_key_event
 
 add_tm_notify_event = _pysci.add_tm_notify_event
+
+add_command_event = _pysci.add_command_event
 
 selection_target_changed = _pysci.selection_target_changed
 

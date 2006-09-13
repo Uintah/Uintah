@@ -64,9 +64,9 @@ FrameBufferPickTool::pointer_down(int which, int x, int y,
 
 BaseTool::propagation_state_e
 FrameBufferPickTool::pointer_motion(int which, int x, int y, 
-				    unsigned int, int time)
+				    unsigned int mod, int time)
 {
-  cerr << "FrameBufferPickTool::pointer_motion" << endl;
+  //pointer_down(which, x, y, mod, time);
   return STOP_E;
 }
 
@@ -74,7 +74,7 @@ BaseTool::propagation_state_e
 FrameBufferPickTool::pointer_up(int which, int x, int y, 
 				unsigned int, int time)
 {
-  cerr << "FrameBufferPickTool::pointer_up" << endl;
+  //cerr << "FrameBufferPickTool::pointer_up" << endl;
   return STOP_E;
 }
 

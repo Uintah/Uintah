@@ -38,6 +38,7 @@
 #include <Core/Util/ProgressReporter.h>
 #include <Core/Util/Environment.h>
 #include <Core/Geom/CallbackOpenGLContext.h>
+#include <Core/Events/DataManager.h>
 #include <Core/Events/EventManager.h>
 #include <Core/Events/BaseEvent.h>
 #include <Core/Events/SceneGraphEvent.h>
@@ -62,24 +63,8 @@ using std::cerr;
 using std::endl;
 
 EventManager *em = 0;
+DataManager *dm = 0;
 
-
-map<int, FieldHandle> fields_;
-
-int load_field(string fname)
-{
-  static int cur_field_num = 0;
-  FieldHandle fld;
-  Piostream* stream = auto_istream(fname);
-  if (!stream) {
-    cerr << "Couldn't open file: "<< fname << endl;
-    return -1;
-  }
-  Pio(*stream, fld);
-
-  fields_[cur_field_num++] = fld;
-  return cur_field_num - 1;
-}
 
 void init_pysci(char**environment)
 {
@@ -100,6 +85,13 @@ void init_pysci(char**environment)
 
     init_done = true;
     cerr << "otf:" << sci_getenv("SCIRUN_ON_THE_FLY_LIBS_DIR") << endl;
+
+    if (! dm) {
+      dm = new DataManager();
+      Thread *dmt = scinew Thread(dm, "Data Manager Thread");
+      dmt->detach();
+    }
+    
   }
 }
 
@@ -108,25 +100,24 @@ void test_function(string f1, string f2, string f3)
   cerr << "f1: " << f1 << endl;
   cerr << "f2: " << f2 << endl;
   cerr << "f3: " << f3 << endl;
-
 }
 
 bool 
 tetgen_2surf(string f1, string f2, string outfile)
 {
-  int f1_id = load_field(f1);
+  unsigned int f1_id = dm->load_field(f1);
   if (f1_id == -1) {
     cerr << "Error opening file: "<< f1 << endl;
     return false;
   }
-  int f2_id = load_field(f2);
+  unsigned int f2_id = dm->load_field(f2);
   if (f2_id == -1) {
     cerr << "Error opening file: "<< f2 << endl;
     return false;
   }
 
-  FieldHandle outer = fields_[f1_id];
-  FieldHandle inner = fields_[f2_id];
+  FieldHandle outer = dm->get_field(f1_id);
+  FieldHandle inner = dm->get_field(f2_id);
 
   cerr << "mesh scalar?: " << inner->is_scalar() << endl;
   tetgenio in, out;
@@ -200,7 +191,6 @@ void add_key_event(KeyEvent *ke)
   k->ref_cnt = 1; // workaround for assert in Datatype operator ==
   *k = *ke;
   event_handle_t event = k;
-  cerr << "adding key event" << endl;
   EventManager::add_event(event);
 }
 
@@ -210,21 +200,21 @@ void add_tm_notify_event(TMNotifyEvent *te)
   t->ref_cnt = 1; // workaround for assert in Datatype operator ==
   *t = *te;
   event_handle_t event = t;
-  cerr << "adding tm notify event" << endl;
   EventManager::add_event(event);
 }
 
-void selection_target_changed(int fid)
+void add_command_event(CommandEvent *ce)
 {
-  FieldHandle fld;
-  fld = fields_[fid];
-
-  SelectionTargetEvent *t = new SelectionTargetEvent();
-  t->set_selection_target(fld);
-
-  event_handle_t event = t;
-  cerr << "adding selection target event" << endl;
+  CommandEvent *c = new CommandEvent();
+  c->ref_cnt = 1; // workaround for assert in Datatype operator ==
+  *c = *ce;
+  event_handle_t event = c;
   EventManager::add_event(event);
+}
+
+void selection_target_changed(unsigned int fid)
+{
+  dm->selection_target_changed(fid);
 }
 
 void terminate() 
@@ -245,83 +235,18 @@ void run_viewer_thread(CallbackOpenGLContext *ogl)
   vt->detach(); // runs until thread exits.
 }
 
-bool show_field(int fld_id) 
+unsigned int load_field(string fname)
 {
-  FieldHandle fld_handle = fields_[fld_id];
-  static RenderParams p;
-  p.defaults();
-  p.faces_transparency_ = true;
-  p.do_nodes_ = false;
-  p.do_faces_ = true;
-  p.do_edges_ = true;
-  p.do_text_ = true;
-  
-  if (! render_field(fld_handle, p)) {
-    cerr << "Error: render_field failed." << endl;
-    return false;
-  }
-
-  // for now make this field the selection target as well.
-  SelectionTargetEvent *ste = new SelectionTargetEvent();
-  event_handle_t event = ste;
-  ste->set_selection_target(fld_handle);
-  EventManager::add_event(event);
-   
-  ostringstream str;
-  str << "-" << fld_id;
-
-  string fname;
-  if (! fld_handle->get_property("name", fname)) {
-    fname = "Field";
-  }
-  fname = fname + str.str();
-
-  if (p.do_nodes_) 
-  {
-    GeomHandle gmat = scinew GeomMaterial(p.renderer_->node_switch_, 
-					  p.def_material_);
-    GeomHandle geom = scinew GeomSwitch(new GeomColorMap(gmat, 
-							 p.color_map_));
-    const char *name = p.nodes_transparency_ ? "Transparent Nodes" : "Nodes";
-    SceneGraphEvent* sge = new SceneGraphEvent(geom, fname + name);
-    event_handle_t event = sge;
-    EventManager::add_event(event);
-  }
-
-  if (p.do_edges_) 
-  { 
-    GeomHandle gmat = scinew GeomMaterial(p.renderer_->edge_switch_, 
-					  p.def_material_);
-    GeomHandle geom = scinew GeomSwitch(new GeomColorMap(gmat, 
-							 p.color_map_));
-    const char *name = p.edges_transparency_ ? "Transparent Edges" : "Edges";
-    SceneGraphEvent* sge = new SceneGraphEvent(geom, fname + name);
-    event_handle_t event = sge;
-    EventManager::add_event(event);
-  }
-
-  if (p.do_faces_)
-  {
-    GeomHandle gmat = scinew GeomMaterial(p.renderer_->face_switch_, 
-					  p.def_material_);
-    GeomHandle geom = scinew GeomSwitch(new GeomColorMap(gmat, 
-							    p.color_map_));
-    const char *name = p.faces_transparency_ ? "Transparent Faces" : "Faces";
-    SceneGraphEvent* sge = new SceneGraphEvent(geom, fname + name);
-    event_handle_t event = sge;
-    EventManager::add_event(event);
-  }
-  if (p.do_text_) 
-  {
-    GeomHandle gmat = scinew GeomMaterial(p.text_geometry_, p.text_material_);
-    GeomHandle geom = scinew GeomSwitch(new GeomColorMap(gmat, p.color_map_));
-    const char *name = p.text_backface_cull_ ? "Culled Text Data":"Text Data";
-    SceneGraphEvent* sge = new SceneGraphEvent(geom, fname + name);
-    event_handle_t event = sge;
-    EventManager::add_event(event);
-  }
-
-  return true;  
+  return dm->load_field(fname);
 }
+
+bool show_field(unsigned int fld_id) 
+{
+  return dm->show_field(fld_id);  
+}
+
+
+
+
 
 }

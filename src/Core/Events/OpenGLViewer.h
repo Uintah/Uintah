@@ -170,7 +170,7 @@ public:
   void                get_bounds(BBox &bbox, bool check_visible = true);
 
   set<unsigned int>&  get_selection_set() { return selection_set_; }
-
+  void                delete_selected_faces();
   void                add_selection(unsigned int idx) {
     selection_set_.insert(idx);
   }

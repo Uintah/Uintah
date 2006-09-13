@@ -367,6 +367,9 @@ class SurfsToTets:
 
       # show the field in the viewer
       fld_id = pysci.load_field(self.file_)
+      if fld_id == 0 :
+	print "Error loading file: %s" % self.file_
+	return
       pysci.show_field(fld_id)
       ls = self.list_view_.get_model()
       ls.insert(0, (gtk.STOCK_YES, self.file_, fld_id))
@@ -376,7 +379,7 @@ class SurfsToTets:
   def on_quit_activate(self, button) :
     global vthread
     pysci.terminate();
-    time.sleep(.1)
+    time.sleep(.5)
     sys.exit(0)
 
 
@@ -500,10 +503,9 @@ class SurfsToTets:
     print "delete a model from the list"	
 
   def on_rm_faces_clicked(self, a) :
-    e = pysci.TMNotifyEvent("RMFacesTool", pysci.TMNotifyEvent.START_E,
-			    "OpenGLViewer")
-    pysci.add_tm_notify_event(e)
-    print "remove faces tool"
+    e = pysci.CommandEvent("OpenGLViewer")
+    e.set_command("delete faces")
+    pysci.add_command_event(e)
 
   def on_add_face_clicked(self, a) :
     print "add face tool"

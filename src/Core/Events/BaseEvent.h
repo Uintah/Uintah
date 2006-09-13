@@ -76,7 +76,7 @@ public:
   virtual bool          is_window_event() { return false; }
   virtual bool          is_scene_graph_event() { return false; }
   virtual bool          is_tm_notify_event() { return false; }
-
+  virtual bool          is_command_event() { return false; }
 private:
   //! The event timestamp
   long int              time_;
@@ -276,6 +276,25 @@ public:
 private:
   string                    tool_id_;
   unsigned int              notify_state_;
+};
+
+
+//! a command event is a one time command. for example a command issued
+//! from a toolbar, and has no other interaction than to do it.
+class CommandEvent : public BaseEvent {
+public:
+  CommandEvent(const string& target = "", long int time = 0);
+  virtual ~CommandEvent();
+  virtual void          io(Piostream&);
+  virtual CommandEvent * clone() { return new CommandEvent(*this); }
+
+  virtual  bool is_command_event()  { return true; }
+
+  string        get_command() const { return command_; }
+  void          set_command(const string &cmmd)   { command_ = cmmd; }
+
+private:
+  string              command_;
 };
 
 typedef LockingHandle<BaseEvent> event_handle_t;

@@ -1,4 +1,4 @@
-// swig -o pysci_wrap.cc -DSCISHARE -python -c++ pysci.i
+// swig -v -o pysci_wrap.cc -DSCISHARE -python -c++ pysci.i
 
 
 #include <string>
@@ -9,11 +9,12 @@ class CallbackOpenGLContext;
 class KeyEvent;
 class PointerEvent;
 class TMNotifyEvent;
+class CommandEvent;
 
 using std::string;
 
-int load_field(string fname);
-bool show_field(int fld_id);
+unsigned int load_field(string fname);
+bool show_field(unsigned int fld_id);
 void init_pysci(char**environment);
 void terminate();
 void test_function(string f1, string f2, string f3);
@@ -23,6 +24,7 @@ void run_viewer_thread(CallbackOpenGLContext *ogl);
 void add_pointer_event(PointerEvent *p);
 void add_key_event(KeyEvent *k);
 void add_tm_notify_event(TMNotifyEvent *t);
-void selection_target_changed(int fid);
+void add_command_event(CommandEvent *c);
+void selection_target_changed(unsigned int fid);
 
 }

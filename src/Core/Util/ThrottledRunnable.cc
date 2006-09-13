@@ -41,32 +41,34 @@
 #include <Core/Util/ThrottledRunnable.h>
 
 namespace SCIRun {
-  ThrottledRunnable::ThrottledRunnable(double hertz) :
-    Runnable(),
-    dt_(1.0/hertz),
-    quit_(0)
-  {
+
+ThrottledRunnable::ThrottledRunnable(double hertz) :
+  Runnable(),
+  dt_(1.0 / hertz),
+  quit_(0)
+{
+}
+  
+  
+ThrottledRunnable::~ThrottledRunnable()
+{
+}
+  
+void
+ThrottledRunnable::run()
+{
+  TimeThrottle throttle;
+  throttle.start();
+  while (!quit_ && iterate()) {
+    throttle.wait_for_time(throttle.time() + dt_);
   }
+  throttle.stop();
+}
   
-  
-  ThrottledRunnable::~ThrottledRunnable()
-  {
-  }
-  
-  void
-  ThrottledRunnable::run()
-  {
-    TimeThrottle throttle;
-    throttle.start();
-    while (!quit_ && iterate()) {
-      throttle.wait_for_time(throttle.time() + dt_);
-    }
-    throttle.stop();
-  }
-  
-  // Tells running thread to terminate.  
-  void
-  ThrottledRunnable::quit() {
-    quit_ = true;
-  }  
+// Tells running thread to terminate.  
+void
+ThrottledRunnable::quit() {
+  quit_ = true;
+}  
+
 } // End namespace SCIRun
