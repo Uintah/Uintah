@@ -81,9 +81,17 @@ Gradient::execute()
     return;
 
   if (!field_input_handle->query_scalar_interface(this).get_rep()) {
+    error( field_input_handle->get_type_description(Field::FDATA_TD_E)->get_name() );
     error( "This module only works on scalar data.");
     return;
   }
+
+  if( field_input_handle->mesh()->dimensionality() != 3 ) {
+    error( field_input_handle->get_type_description(Field::MESH_TD_E)->get_name() );
+    error( "Currently only availible for cell data." );
+    return;
+  }
+
 
   // If no data or a changed recalcute.
   if( inputs_changed_ ||

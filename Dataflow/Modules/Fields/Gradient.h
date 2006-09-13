@@ -87,8 +87,8 @@ GradientAlgoT<IFIELD, OFIELD>::execute(FieldHandle& field_h)
     
   OFIELD *ofield = scinew OFIELD(imesh);
 
-  typename IFIELD::mesh_type::Cell::iterator in, end;
-  typename OFIELD::mesh_type::Cell::iterator out;
+  typename IFIELD::mesh_type::Elem::iterator in, end;
+  typename OFIELD::mesh_type::Elem::iterator out;
 
   imesh->begin( in );
   imesh->end( end );
@@ -98,7 +98,7 @@ GradientAlgoT<IFIELD, OFIELD>::execute(FieldHandle& field_h)
   typename OFIELD::value_type gradient;
   while (in != end) {
     DenseMatrix *grad = 0;
-    ifield->cell_gradient(*in, grad);
+    ifield->element_gradient(*in, grad);
     gradient.x(grad->get(0, 0));
     gradient.y(grad->get(1, 0));
     gradient.z(grad->get(2, 0));
