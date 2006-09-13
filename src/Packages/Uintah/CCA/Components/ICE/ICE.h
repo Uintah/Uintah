@@ -1029,6 +1029,7 @@ namespace Uintah {
       };
       struct AMR_refluxVariable {
        const MaterialSubset* matls;
+       const VarLabel* var;
        const VarLabel* var_adv;
        const VarLabel* var_X_FC_flux;
        const VarLabel* var_Y_FC_flux;
