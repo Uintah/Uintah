@@ -38,12 +38,12 @@
  *
  */
 
-#ifndef SCIRun_Vtk_VtkPortInstance_h
-#define SCIRun_Vtk_VtkPortInstance_h
+#ifndef Framework_Vtk_VtkPortInstance_h
+#define Framework_Vtk_VtkPortInstance_h
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/Vtk/Port.h>
-#include <SCIRun/PortInstance.h>
+#include <Framework/Vtk/Port.h>
+#include <Framework/PortInstance.h>
 
 #include <map>
 #include <string>

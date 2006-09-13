@@ -38,8 +38,8 @@
  *
  */
 
-#ifndef SCIRun_Vtk_Port_h
-#define SCIRun_Vtk_Port_h
+#ifndef Framework_Vtk_Port_h
+#define Framework_Vtk_Port_h
 
 #include <string>
 #include <vector>

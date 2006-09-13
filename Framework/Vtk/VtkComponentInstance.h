@@ -38,14 +38,14 @@
  *
  */
 
-#ifndef SCIRun_Vtk_VtkComponentInstance_h
-#define SCIRun_Vtk_VtkComponentInstance_h
+#ifndef Framework_Vtk_VtkComponentInstance_h
+#define Framework_Vtk_VtkComponentInstance_h
 
-#include <SCIRun/ComponentInstance.h>
-#include <SCIRun/PortInstanceIterator.h>
-#include <SCIRun/Vtk/Port.h>
-#include <SCIRun/Vtk/Component.h>
-#include <SCIRun/Vtk/VtkPortInstance.h>
+#include <Framework/ComponentInstance.h>
+#include <Framework/PortInstanceIterator.h>
+#include <Framework/Vtk/Port.h>
+#include <Framework/Vtk/Component.h>
+#include <Framework/Vtk/VtkPortInstance.h>
 #include <string>
 #include <vector>
 

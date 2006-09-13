@@ -39,9 +39,9 @@
  */
 
 
-#include <SCIRun/Vtk/InPort.h>
-#include <SCIRun/Vtk/OutPort.h>
-#include <SCIRun/Vtk/Component.h>
+#include <Framework/Vtk/InPort.h>
+#include <Framework/Vtk/OutPort.h>
+#include <Framework/Vtk/Component.h>
 #include <iostream>
 using namespace SCIRun;
 using namespace vtk;

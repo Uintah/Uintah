@@ -29,7 +29,7 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := SCIRun/Vtk
+SRCDIR   := Framework/Vtk
 
 SRCS     += \
             $(SRCDIR)/VtkComponentModel.cc \
