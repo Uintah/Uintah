@@ -720,11 +720,6 @@ void ICE::compute_refluxFluxes_RHS(const ProcessorGroup*,
     const Patch* coarsePatch = coarsePatches->get(c_p);
     
     cout_doing <<"  patch " << coarsePatch->getID()<< endl;
-    CCVariable<double> one;
-          
-    new_dw->allocateTemporary(one, coarsePatch,Ghost::AroundCells, 1);
-    one.initialize(1.0);
-    constCCVariable<double> notUsed = one;
     int one_zero = 1;
     
     for(int m = 0;m<matls->size();m++){
@@ -739,7 +734,7 @@ void ICE::compute_refluxFluxes_RHS(const ProcessorGroup*,
         const Patch* finePatch = finePatches[i];       
 
         if(finePatch->hasCoarseFineInterfaceFace() ){
-          refluxOperator_computeCorrectionFluxes<double>( notUsed, notUsed, "vol_frac", indx, 
+          refluxOperator_computeCorrectionFluxes<double>("vol_frac", indx, 
                         coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
                         one_zero);
         }
