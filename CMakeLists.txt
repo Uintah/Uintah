@@ -1,4 +1,4 @@
-# This is the root ITK CMakeLists file.  
+# This is the root SCIRun CMakeLists file.
 CMAKE_MINIMUM_REQUIRED(VERSION 2.2)
 
 # DV Change to SCIRun Core or something?
