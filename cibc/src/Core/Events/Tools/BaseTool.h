@@ -215,6 +215,24 @@ public:
 private:
 };
 
+//! A CommandTool waits for various user defined commands, and executes
+//! the command when the command is issued. 
+class CommandTool :  public virtual BaseTool
+{
+public:
+  CommandTool(string name);
+  virtual ~CommandTool();
+
+  virtual propagation_state_e issue_command(const string &cmmd, 
+					    unsigned int time)
+  {
+    return CONTINUE_E;
+  }
+
+private:
+};
+
+
 
 } // namespace SCIRun
 

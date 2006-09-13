@@ -35,6 +35,7 @@ SRCDIR   := Core/Events
 
 SRCS     += \
 	$(SRCDIR)/BaseEvent.cc		        \
+	$(SRCDIR)/DataManager.cc	        \
 	$(SRCDIR)/EventManager.cc	        \
 	$(SRCDIR)/OpenGLViewer.cc	        \
 	$(SRCDIR)/SceneGraphEvent.cc            \

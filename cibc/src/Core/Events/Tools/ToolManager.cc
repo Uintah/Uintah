@@ -177,6 +177,7 @@ ToolManager::send_tm_notify_event(tool_handle_t tool,
   ASSERT(ne);
   ASSERT(nt);
 
+  cerr << "sending tmnotify" << endl;
   BaseTool::propagation_state_e rstate = BaseTool::CONTINUE_E;
   unsigned int s = ne->get_notify_state();
   if (s == TMNotifyEvent::START_E) {
@@ -197,6 +198,21 @@ ToolManager::send_tm_notify_event(tool_handle_t tool,
 
   return rstate;
 }
+
+BaseTool::propagation_state_e
+ToolManager::send_command_event(tool_handle_t tool, 
+				event_handle_t event) const
+{
+  CommandTool *nt = dynamic_cast<CommandTool *>(tool.get_rep());
+  CommandEvent *ne = dynamic_cast<CommandEvent *>(event.get_rep());
+  ASSERT(ne);
+  ASSERT(nt);
+
+  BaseTool::propagation_state_e rstate = BaseTool::CONTINUE_E;
+  rstate = nt->issue_command(ne->get_command(), ne->get_time());
+  return rstate;
+}
+
 
 
 event_handle_t 
@@ -221,6 +237,9 @@ ToolManager::propagate_event(event_handle_t event)
     } else if (event->is_tm_notify_event() &&
                dynamic_cast<TMNotificationTool*>(t.get_rep())) {
       rstate = send_tm_notify_event(t, event);
+    } else if (event->is_command_event() &&
+               dynamic_cast<CommandTool*>(t.get_rep())) {
+      rstate = send_command_event(t, event);
     } else {
       rstate = t->process_event(event);
     }

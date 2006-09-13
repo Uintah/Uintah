@@ -44,14 +44,14 @@ PersistentTypeID SelectionTargetEvent::type_id("SelectionTargetEvent",
 
 SelectionTargetEvent::SelectionTargetEvent(const string &target, 
 					   long int time) :
-  BaseEvent(target, time)
+  BaseEvent(target, time),
+  sel_targ_(0),
+  sel_id_(-1)
 {
-
 }
 
 SelectionTargetEvent::~SelectionTargetEvent()
 {
-
 }
 
 const int SELECTIONTARGETEVENT_VERSION = 1;
