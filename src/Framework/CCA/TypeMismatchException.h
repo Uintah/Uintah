@@ -26,10 +26,10 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef SCIRun_CCA_TypeMismatchException_h
-#define SCIRun_CCA_TypeMismatchException_h
+#ifndef Framework_CCA_TypeMismatchException_h
+#define Framework_CCA_TypeMismatchException_h
 
-#include <SCIRun/CCA/CCAException.h>
+#include <Framework/CCA/CCAException.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <string>
 

@@ -38,7 +38,7 @@
  *
  */
 
-#include <SCIRun/CCA/CCAException.h>
+#include <Framework/CCA/CCAException.h>
 #include <Core/Util/NotFinished.h>
 
 namespace SCIRun {

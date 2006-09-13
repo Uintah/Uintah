@@ -38,8 +38,8 @@
  *
  */
 
-#include <SCIRun/CCA/ComponentID.h>
-#include <SCIRun/SCIRunFramework.h>
+#include <Framework/CCA/ComponentID.h>
+#include <Framework/SCIRunFramework.h>
 #include <Core/CCA/PIDL/URL.h>
 #include <iostream>
 

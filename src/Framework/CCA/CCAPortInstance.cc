@@ -38,8 +38,8 @@
  *
  */
 
-#include <SCIRun/CCA/CCAPortInstance.h>
-#include <SCIRun/TypeMap.h>
+#include <Framework/CCA/CCAPortInstance.h>
+#include <Framework/TypeMap.h>
 #include <iostream>
 
 namespace SCIRun {

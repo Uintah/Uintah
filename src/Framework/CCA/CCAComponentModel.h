@@ -38,12 +38,12 @@
  *
  */
 
-#ifndef SCIRun_CCA_CCAComponentModel_h
-#define SCIRun_CCA_CCAComponentModel_h
+#ifndef Framework_CCA_CCAComponentModel_h
+#define Framework_CCA_CCAComponentModel_h
 
 #include <Core/Thread/Mutex.h>
-#include <SCIRun/ComponentModel.h>
-#include <SCIRun/ComponentInstance.h>
+#include <Framework/ComponentModel.h>
+#include <Framework/ComponentInstance.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <vector>
 #include <string>

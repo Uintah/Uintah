@@ -38,8 +38,8 @@
  *
  */
 
-#ifndef SCIRun_CCA_CCAException_h
-#define SCIRun_CCA_CCAException_h
+#ifndef Framework_CCA_CCAException_h
+#define Framework_CCA_CCAException_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 #include <string>
