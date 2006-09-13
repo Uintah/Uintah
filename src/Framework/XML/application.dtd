@@ -27,7 +27,7 @@
 
 -->
 
-<!-- The dtd that describes valid grammar for SCIRun2 application files (borrows from network.dtd). -->
+<!-- Valid grammar for SCIRun2 application files (borrows from network.dtd). -->
 
 <!-- Top level -->
 <!ELEMENT application (components, connections?)>
