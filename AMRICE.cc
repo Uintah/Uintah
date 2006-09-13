@@ -1142,17 +1142,11 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
   Task* task = scinew Task("AMRICE::reflux_computeCorrectionFluxes",
                            this, &AMRICE::reflux_computeCorrectionFluxes);
   
-  Ghost::GhostType gn  = Ghost::None;
-  Ghost::GhostType gac = Ghost::AroundCells;
   Ghost::GhostType gx  = Ghost::AroundFacesX;
   Ghost::GhostType gy  = Ghost::AroundFacesY;
   Ghost::GhostType gz  = Ghost::AroundFacesZ;
   bool  fat = true;  // possibly (F)rom (A)nother (T)askgraph
-  
-  
-  task->requires(Task::NewDW, lb->rho_CCLabel,        gac, 1);
-  task->requires(Task::NewDW, lb->specific_heatLabel, gac, 1, fat);
-  
+ 
   //__________________________________
   // Fluxes from the fine level            
                                       // MASS
@@ -1249,11 +1243,6 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
     
     for(int m = 0;m<matls->size();m++){
       int indx = matls->get(m);
-      constCCVariable<double> cv, rho_CC;
-
-      Ghost::GhostType  gac = Ghost::AroundCells;
-      new_dw->get(rho_CC,lb->rho_CCLabel,       indx,coarsePatch, gac,1);
-      new_dw->get(cv,    lb->specific_heatLabel,indx,coarsePatch, gac,1);
       
       Level::selectType finePatches;
       coarsePatch->getOtherLevelPatches(1, finePatches, 1); // get with a ghost cell to make sure you get all patches 
@@ -1271,25 +1260,21 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
                      << "  coarsePatch " << coarsePatch->getID()
                      <<" finepatch " << finePatch->getID()<< endl;
 
-/*`==========TESTING==========*/
-// May want to ripout rho_CC and cv from these calls 
-/*===========TESTING==========`*/
-
           int one_zero = 1;
-          refluxOperator_computeCorrectionFluxes<double>(rho_CC,  cv, "mass",   indx, 
+          refluxOperator_computeCorrectionFluxes<double>("mass",   indx, 
                         coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
                         one_zero);
           
           one_zero = 0;
-          refluxOperator_computeCorrectionFluxes<double>( rho_CC, cv, "sp_vol", indx, 
+          refluxOperator_computeCorrectionFluxes<double>("sp_vol", indx, 
                         coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
                         one_zero);
 
-          refluxOperator_computeCorrectionFluxes<Vector>( rho_CC, cv, "mom",    indx, 
+          refluxOperator_computeCorrectionFluxes<Vector>("mom",    indx, 
                         coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
                         one_zero);
 
-          refluxOperator_computeCorrectionFluxes<double>( rho_CC, cv, "int_eng", indx, 
+          refluxOperator_computeCorrectionFluxes<double>("int_eng", indx, 
                         coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
                         one_zero);
           //__________________________________
@@ -1302,7 +1287,7 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
 
               if(r_var->matls->contains(indx)){
                 string var_name = r_var->var->getName();
-                refluxOperator_computeCorrectionFluxes<double>(rho_CC, cv, var_name, indx, 
+                refluxOperator_computeCorrectionFluxes<double>(var_name, indx, 
                               coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
                               one_zero);
               }
