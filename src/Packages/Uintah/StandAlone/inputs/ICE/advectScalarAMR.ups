@@ -212,7 +212,8 @@
 
     <AMR>
       <ICE>
-        <orderOfInterpolation>1 </orderOfInterpolation>
+        <orderOfInterpolation> 1 </orderOfInterpolation>
+        <do_Refluxing>  true     </do_Refluxing>
         <Refinement_Criteria_Thresholds>
         </Refinement_Criteria_Thresholds>
       </ICE>
@@ -273,10 +274,7 @@
         </constants>
          <geom_object>
             <difference>
-            <box label="wholeDomain">
-                <min>       [ -1., -1., -1. ]        </min>
-                <max>       [  1.,  1.,  1. ]        </max>
-            </box>
+            <box label="wholeDomain">     </box>
             <box label="scalarPlug">
               <min>         [0.4,0.4,0.4]            </min>
               <max>         [ 0.6, 0.6, 0.6]         </max>
@@ -285,10 +283,7 @@
             <scalar>    0.00   </scalar>
          </geom_object>
           <geom_object>
-            <box label="scalarPlug">
-              <min>          [0.4,0.4,0.4]       </min>
-              <max>          [ 0.6, 0.6, 0.6]    </max>
-            </box>
+            <box label="scalarPlug">      </box>
             <scalar>    1.00   </scalar>
          </geom_object>
        </scalar>
