@@ -38,14 +38,14 @@
  *
  */
 
-#include <SCIRun/Tao/Component.h>
-#include <SCIRun/Tao/TaoComponentModel.h>
-#include <SCIRun/Tao/TaoComponentDescription.h>
-#include <SCIRun/Tao/TaoComponentInstance.h>
-#include <SCIRun/SCIRunFramework.h>
+#include <Framework/Tao/Component.h>
+#include <Framework/Tao/TaoComponentModel.h>
+#include <Framework/Tao/TaoComponentDescription.h>
+#include <Framework/Tao/TaoComponentInstance.h>
+#include <Framework/SCIRunFramework.h>
 #include <Core/Util/soloader.h>
 #include <Core/CCA/PIDL/PIDL.h>
-#include <SCIRun/resourceReference.h>
+#include <Framework/resourceReference.h>
 #include <string>
 
 #include <iostream>

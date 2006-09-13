@@ -38,8 +38,8 @@
  *
  */
 
-#include <SCIRun/Tao/TaoComponentDescription.h>
-#include <SCIRun/Tao/TaoComponentModel.h>
+#include <Framework/Tao/TaoComponentDescription.h>
+#include <Framework/Tao/TaoComponentModel.h>
 #include <iostream>
 
 using namespace SCIRun;

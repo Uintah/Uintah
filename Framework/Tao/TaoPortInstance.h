@@ -38,10 +38,10 @@
  *
  */
 
-#ifndef SCIRun_Tao_TaoPortInstance_h
-#define SCIRun_Tao_TaoPortInstance_h
+#ifndef Framework_Tao_TaoPortInstance_h
+#define Framework_Tao_TaoPortInstance_h
 
-#include <SCIRun/PortInstance.h>
+#include <Framework/PortInstance.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <map>
 #include <string>

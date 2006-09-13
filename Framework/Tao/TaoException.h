@@ -38,8 +38,8 @@
  *
  */
 
-#ifndef SCIRun_Framework_TaoException_h
-#define SCIRun_Framework_TaoException_h
+#ifndef Framework_Framework_TaoException_h
+#define Framework_Framework_TaoException_h
 
 #include <Core/Exceptions/Exception.h>
 #include <string>

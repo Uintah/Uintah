@@ -38,10 +38,10 @@
  *
  */
 
-#ifndef SCIRun_Tao_TaoComponentDescription_h
-#define SCIRun_Tao_TaoComponentDescription_h
+#ifndef Framework_Tao_TaoComponentDescription_h
+#define Framework_Tao_TaoComponentDescription_h
 
-#include <SCIRun/ComponentDescription.h>
+#include <Framework/ComponentDescription.h>
 #include <string>
 
 namespace SCIRun

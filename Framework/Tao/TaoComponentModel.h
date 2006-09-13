@@ -38,13 +38,13 @@
  *
  */
 
-#ifndef SCIRun_Tao_TaoComponentModel_h
-#define SCIRun_Tao_TaoComponentModel_h
+#ifndef Framework_Tao_TaoComponentModel_h
+#define Framework_Tao_TaoComponentModel_h
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
-#include <SCIRun/ComponentModel.h>
-#include <SCIRun/ComponentInstance.h>
+#include <Framework/ComponentModel.h>
+#include <Framework/ComponentInstance.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <vector>
 #include <string>

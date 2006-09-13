@@ -38,14 +38,14 @@
  *
  */
 
-#ifndef SCIRun_Framework_TaoComponentInstance_h
-#define SCIRun_Framework_TaoComponentInstance_h
+#ifndef Framework_Framework_TaoComponentInstance_h
+#define Framework_Framework_TaoComponentInstance_h
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
-#include <SCIRun/Tao/Component.h>
-#include <SCIRun/ComponentInstance.h>
-#include <SCIRun/PortInstanceIterator.h>
+#include <Framework/Tao/Component.h>
+#include <Framework/ComponentInstance.h>
+#include <Framework/PortInstanceIterator.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Core/CCA/PIDL/Object.h>
 #include <Core/Thread/ConditionVariable.h>

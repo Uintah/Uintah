@@ -38,13 +38,13 @@
  *
  */
 
-#include <SCIRun/Tao/TaoComponentInstance.h>
-#include <SCIRun/Tao/TaoPortInstance.h>
-#include <SCIRun/CCA/CCAPortInstance.h>
-#include <SCIRun/Tao/TaoException.h>
-#include <SCIRun/Tao/TaoGoPort.h>
-#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/TypeMap.h>
+#include <Framework/Tao/TaoComponentInstance.h>
+#include <Framework/Tao/TaoPortInstance.h>
+#include <Framework/CCA/CCAPortInstance.h>
+#include <Framework/Tao/TaoException.h>
+#include <Framework/Tao/TaoGoPort.h>
+#include <Framework/SCIRunFramework.h>
+#include <Framework/TypeMap.h>
 #include <Core/Thread/Mutex.h>
 
 #include <iostream>
