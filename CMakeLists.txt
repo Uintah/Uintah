@@ -134,7 +134,7 @@ ENDIF(WIN32 AND NOT CYGWIN)
 # dlopen library
 #IF(CMAKE_SYSTEM_NAME MATCHES Darwin)
 #  FIND_LIBRARY(DL_LIBRARY dlopen
-#             ${SCIRUN_THIRDPARTY_PATH}/lib
+#             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib
 #             /usr/local/lib
 #             /usr/lib
 #             /lib)
@@ -144,7 +144,7 @@ ENDIF(WIN32 AND NOT CYGWIN)
 # math library
 IF(UNIX)
   FIND_LIBRARY(M_LIBRARY m
-             /usr/local/lib
+             PATHS /usr/local/lib
              /usr/lib 
              /lib)
 ENDIF(UNIX)
@@ -154,8 +154,9 @@ ENDIF(UNIX)
 OPTION(WITH_LAPACK "Build with lapack library" OFF)
 MARK_AS_ADVANCED(WITH_LAPACK)		   
 IF(WITH_LAPACK)		   
-  FIND_LIBRARY(LAPACK_LIBRARY lapack clapack
-    /usr/local/lib
+  FIND_LIBRARY(LAPACK_LIBRARY 
+    NAMES lapack clapack
+    PATHS /usr/local/lib
     /usr/lib
     /lib)
 
@@ -231,15 +232,17 @@ ENDIF(WITH_PNG)
 #-----------------------------------------------------------------------------
 # DV XML2 FROM 3P FOR NOW
 FIND_LIBRARY(XML2_LIBRARY xml2
-            ${SCIRUN_THIRDPARTY_PATH}/lib/
+            PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
             /usr/local/lib
             /usr/lib
-            /lib)
+            /lib
+            NO_DEFAULT_PATH)
 FIND_PATH(XML2_INCLUDE libxml/xmlreader.h
            ${SCIRUN_THIRDPARTY_PATH}/include/libxml2/
            /usr/local/include/libxml2
            /usr/include
-           /include)
+           /include
+           NO_DEFAULT_PATH)
 SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${XML2_INCLUDE})
 
 
@@ -250,39 +253,44 @@ SET(TK_VERSION 8.3)
 #-----------------------------------------------------------------------------
 # ITK library
 FIND_LIBRARY(ITK_LIBRARY itk
-             ${SCIRUN_THIRDPARTY_PATH}/lib/
+             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
              /usr/local/lib
              /usr/lib
-             /lib)
+             /lib
+             NO_DEFAULT_PATH)
 FIND_PATH(ITK_INCLUDE itk.h
            ${SCIRUN_THIRDPARTY_PATH}/include
            /usr/local/include
            /usr/include
-           /include)
+           /include
+           NO_DEFAULT_PATH)
 
 #SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${ITK_INCLUDE})
 
 #-----------------------------------------------------------------------------
 # ITCL library
 FIND_LIBRARY(ITCL_LIBRARY itcl
-             ${SCIRUN_THIRDPARTY_PATH}/lib/
+             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
              /usr/local/lib
              /usr/lib
-             /lib)
+             /lib
+             NO_DEFAULT_PATH)
 FIND_PATH(ITCL_INCLUDE itcl.h
            ${SCIRUN_THIRDPARTY_PATH}/include
            /usr/local/include
            /usr/include
-           /include)
+           /include
+           NO_DEFAULT_PATH)
 #SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${ITCL_INCLUDE})
 
 #-----------------------------------------------------------------------------
 # TK library
 FIND_LIBRARY(TK_LIBRARY tk
-             ${SCIRUN_THIRDPARTY_PATH}/lib/
+             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
              /usr/local/lib
              /usr/lib
-             /lib)
+             /lib
+             NO_DEFAULT_PATH)
 #SET(TK_SRC_PATH ${SCIRUN_THIRDPARTY_PATH}/src/tk CACHE PATH "Path to tk source")
 
 #SET(TK_INCLUDE1 ${TK_SRC_PATH}/generic)
@@ -299,37 +307,42 @@ FIND_LIBRARY(TK_LIBRARY tk
 #-----------------------------------------------------------------------------
 # TCL library
 FIND_LIBRARY(TCL_LIBRARY tcl
-             ${SCIRUN_THIRDPARTY_PATH}/lib/
+             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
              /usr/local/lib
              /usr/lib
-             /lib)
+             /lib
+             NO_DEFAULT_PATH)
 
 FIND_PATH(TCL_INCLUDE1 tcl.h
            ${SCIRUN_THIRDPARTY_PATH}/include
            /usr/local/include
            /usr/include
-           /include)
+           /include
+           NO_DEFAULT_PATH)
 
 FIND_PATH(TCL_INCLUDE2 tclMath.h
            ${SCIRUN_THIRDPARTY_PATH}/src/tcl/generic
            /usr/local/include
            /usr/include
-           /include)
+           /include
+           NO_DEFAULT_PATH)
 
 #SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${TCL_INCLUDE1} ${TCL_INCLUDE2})
 
 #-----------------------------------------------------------------------------
 # blt lib
 FIND_LIBRARY(BLT_LIBRARY BLT
-             ${SCIRUN_THIRDPARTY_PATH}/lib/
+             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
              /usr/local/lib
              /usr/lib
-             /lib)
+             /lib
+             NO_DEFAULT_PATH)
 FIND_PATH(BLT_INCLUDE blt.h
            ${SCIRUN_THIRDPARTY_PATH}/include
            /usr/local/include
            /usr/include
-           /include)
+           /include
+           NO_DEFAULT_PATH)
 
 #SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${BLT_INCLUDE})
 
@@ -348,16 +361,17 @@ ENDIF(OPENGL_LIBRARIES AND OPENGL_INCLUDE_DIR)
 
 #-----------------------------------------------------------------------------
 # Freetype
-FIND_LIBRARY(FREETYPE_LIBRARY freetype
-             ${SCIRUN_THIRDPARTY_PATH}/lib/
-             /usr/local/lib
-             /usr/lib
-             /lib)
+FIND_LIBRARY(FREETYPE_LIBRARY 
+             NAMES freetype libfreetype.so libfreetype.a
+             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
+             NO_DEFAULT_PATH)
+
 FIND_PATH(FREETYPE_INCLUDE freetype/freetype.h
            ${SCIRUN_THIRDPARTY_PATH}/include/freetype2/
            /usr/local/include
            /usr/include
-           /include)
+           /include
+           NO_DEFAULT_PATH)
 SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${FREETYPE_INCLUDE})
 
 
@@ -370,16 +384,19 @@ ENDIF(X11_FOUND)
 
 #-----------------------------------------------------------------------------
 # Glew
-FIND_LIBRARY(GLEW_LIBRARY GLEW glew32
-             ${SCIRUN_THIRDPARTY_PATH}/lib/
+FIND_LIBRARY(GLEW_LIBRARY 
+             NAMES GLEW glew32
+             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
              /usr/local/lib
              /usr/lib
-             /lib)
+             /lib
+             NO_DEFAULT_PATH)
 FIND_PATH(GLEW_INCLUDE glew.h
            ${SCIRUN_THIRDPARTY_PATH}/include/GL
            /usr/local/include
            /usr/include
-           /include)
+           /include
+           NO_DEFAULT_PATH)
 SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${GLEW_INCLUDE})
 
 SET(DEF_GLEW "#define HAVE_GLEW 1")
@@ -389,15 +406,17 @@ SET(DEF_GLEW "#define HAVE_GLEW 1")
 # DV need to make this optional (at least for windows)
 IF(NOT WIN32)
   FIND_LIBRARY(MPEG_LIBRARY mpege
-              ${SCIRUN_THIRDPARTY_PATH}/lib/
+              PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
               /usr/local/lib
               /usr/lib
-              /lib)
+              /lib
+              NO_DEFAULT_PATH)
   FIND_PATH(MPEG_INCLUDE mpege.h
              ${SCIRUN_THIRDPARTY_PATH}/include
              /usr/local/include
              /usr/include
-             /include)
+             /include
+             NO_DEFAULT_PATH)
   SET(DEF_MPEG "#define HAVE_MPEG 1")
 
   SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${MPEG_INCLUDE})
