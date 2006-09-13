@@ -40,8 +40,8 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Thread.h>
-#include <SCIRun/Corba/CorbaUIPort.h>
-#include <SCIRun/Corba/CorbaComponentInstance.h>
+#include <Framework/Corba/CorbaUIPort.h>
+#include <Framework/Corba/CorbaComponentInstance.h>
 
 #include <iostream>
 

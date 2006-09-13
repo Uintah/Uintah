@@ -38,8 +38,8 @@
  *
  */
 
-#ifndef SCIRun_Corba_CorbaUIPort_h
-#define SCIRun_Corba_CorbaUIPort_h
+#ifndef Framework_Corba_CorbaUIPort_h
+#define Framework_Corba_CorbaUIPort_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 

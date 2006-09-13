@@ -38,8 +38,8 @@
  *
  */
 
-#ifndef SCIRun_Corba_Port_h
-#define SCIRun_Corba_Port_h
+#ifndef Framework_Corba_Port_h
+#define Framework_Corba_Port_h
 
 #include <string>
 #include <vector>

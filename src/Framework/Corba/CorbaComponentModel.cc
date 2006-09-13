@@ -38,10 +38,10 @@
  *
  */
 
-#include <SCIRun/Corba/CorbaComponentModel.h>
-#include <SCIRun/Corba/CorbaComponentDescription.h>
-#include <SCIRun/Corba/CorbaComponentInstance.h>
-#include <SCIRun/SCIRunFramework.h>
+#include <Framework/Corba/CorbaComponentModel.h>
+#include <Framework/Corba/CorbaComponentDescription.h>
+#include <Framework/Corba/CorbaComponentInstance.h>
+#include <Framework/SCIRunFramework.h>
 #include <Core/Exceptions/InternalError.h>
 #include <Core/Util/soloader.h>
 #include <Core/Util/sci_system.h>
@@ -56,9 +56,9 @@
 #include <errno.h>
 
 #include <iostream>
-#include <SCIRun/Corba/Port.h>
-#include <SCIRun/Corba/Component.h>
-#include <SCIRun/Corba/Services.h>
+#include <Framework/Corba/Port.h>
+#include <Framework/Corba/Component.h>
+#include <Framework/Corba/Services.h>
 
 extern "C" {
  #include <string.h>

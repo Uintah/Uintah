@@ -38,11 +38,11 @@
  *
  */
 
-#include <SCIRun/Corba/CorbaPortInstance.h>
-#include <SCIRun/Corba/Port.h>
-#include <SCIRun/Corba/UsesPort.h>
-#include <SCIRun/Corba/ProvidesPort.h>
-#include <SCIRun/Corba/CorbaComponentInstance.h>
+#include <Framework/Corba/CorbaPortInstance.h>
+#include <Framework/Corba/Port.h>
+#include <Framework/Corba/UsesPort.h>
+#include <Framework/Corba/ProvidesPort.h>
+#include <Framework/Corba/CorbaComponentInstance.h>
 #include <iostream>
 
 namespace SCIRun {

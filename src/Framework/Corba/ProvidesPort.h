@@ -38,11 +38,11 @@
  *
  */
 
-#ifndef SCIRun_Corba_ProvidesPort_h
-#define SCIRun_Corba_ProvidesPort_h
+#ifndef Framework_Corba_ProvidesPort_h
+#define Framework_Corba_ProvidesPort_h
 
-#include <SCIRun/Corba/Port.h>
-#include <SCIRun/Corba/CorbaPortInstance.h>
+#include <Framework/Corba/Port.h>
+#include <Framework/Corba/CorbaPortInstance.h>
 
 class corbaObject;
 

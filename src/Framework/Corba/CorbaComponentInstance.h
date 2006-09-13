@@ -38,14 +38,14 @@
  *
  */
 
-#ifndef SCIRun_Corba_CorbaComponentInstance_h
-#define SCIRun_Corba_CorbaComponentInstance_h
+#ifndef Framework_Corba_CorbaComponentInstance_h
+#define Framework_Corba_CorbaComponentInstance_h
 
-#include <SCIRun/ComponentInstance.h>
-#include <SCIRun/PortInstanceIterator.h>
-#include <SCIRun/Corba/Port.h>
-#include <SCIRun/Corba/Component.h>
-#include <SCIRun/Corba/CorbaPortInstance.h>
+#include <Framework/ComponentInstance.h>
+#include <Framework/PortInstanceIterator.h>
+#include <Framework/Corba/Port.h>
+#include <Framework/Corba/Component.h>
+#include <Framework/Corba/CorbaPortInstance.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <string>
 #include <vector>

@@ -39,10 +39,10 @@
  */
 
 
-#include <SCIRun/Corba/Services.h>
-#include <SCIRun/Corba/Component.h>
-#include <SCIRun/Corba/ProvidesPort.h>
-#include <SCIRun/Corba/UsesPort.h>
+#include <Framework/Corba/Services.h>
+#include <Framework/Corba/Component.h>
+#include <Framework/Corba/ProvidesPort.h>
+#include <Framework/Corba/UsesPort.h>
 
 #include <iostream>
 

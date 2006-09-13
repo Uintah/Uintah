@@ -38,10 +38,10 @@
  *
  */
 
-#ifndef SCIRun_Corba_CorbaComponentDescription_h
-#define SCIRun_Corba_CorbaComponentDescription_h
+#ifndef Framework_Corba_CorbaComponentDescription_h
+#define Framework_Corba_CorbaComponentDescription_h
 
-#include <SCIRun/ComponentDescription.h>
+#include <Framework/ComponentDescription.h>
 #include <string>
 
 namespace SCIRun {

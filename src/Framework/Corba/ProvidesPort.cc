@@ -37,8 +37,8 @@
  *   January 2004
  *
  */
-#include <SCIRun/Corba/ProvidesPort.h>
-#include <SCIRun/Corba/UsesPort.h>
+#include <Framework/Corba/ProvidesPort.h>
+#include <Framework/Corba/UsesPort.h>
 #include <iostream>
 
 class corbaObject;
