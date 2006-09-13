@@ -29,7 +29,7 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := SCIRun/Bridge
+SRCDIR   := Framework/Bridge
 
 SRCS     += \
 	$(SRCDIR)/BridgeComponentDescription.cc \

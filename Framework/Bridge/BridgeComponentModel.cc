@@ -38,10 +38,10 @@
  *
  */
 
-#include <SCIRun/Bridge/BridgeComponentModel.h>
-#include <SCIRun/Bridge/BridgeComponentDescription.h>
-#include <SCIRun/Bridge/BridgeComponentInstance.h>
-#include <SCIRun/SCIRunFramework.h>
+#include <Framework/Bridge/BridgeComponentModel.h>
+#include <Framework/Bridge/BridgeComponentDescription.h>
+#include <Framework/Bridge/BridgeComponentInstance.h>
+#include <Framework/SCIRunFramework.h>
 
 #include <Dataflow/Network/Network.h>
 #include <Core/OS/Dir.h>
@@ -49,7 +49,7 @@
 #include <Core/Util/Environment.h>
 #include <Core/XMLUtil/XMLUtil.h>
 #include <Core/CCA/PIDL/PIDL.h>
-#include <SCIRun/resourceReference.h>
+#include <Framework/resourceReference.h>
 #include <string>
 
 #include <iostream>
