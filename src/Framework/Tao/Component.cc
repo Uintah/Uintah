@@ -41,7 +41,7 @@
 
 #include <string>
 #include <iostream>
-#include <SCIRun/Tao/Component.h>
+#include <Framework/Tao/Component.h>
 
 using namespace SCIRun;
 using namespace tao;

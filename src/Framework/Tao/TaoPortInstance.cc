@@ -38,8 +38,8 @@
  *
  */
 
-#include <SCIRun/Tao/TaoPortInstance.h>
-#include <SCIRun/TypeMap.h>
+#include <Framework/Tao/TaoPortInstance.h>
+#include <Framework/TypeMap.h>
 #include <iostream>
 
 namespace SCIRun {

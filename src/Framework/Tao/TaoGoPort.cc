@@ -40,8 +40,8 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Thread.h>
-#include <SCIRun/Tao/TaoGoPort.h>
-#include <SCIRun/Tao/TaoComponentInstance.h>
+#include <Framework/Tao/TaoGoPort.h>
+#include <Framework/Tao/TaoComponentInstance.h>
 
 #include <iostream>
 

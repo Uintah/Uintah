@@ -38,7 +38,7 @@
  *
  */
 
-#include <SCIRun/Tao/TaoException.h>
+#include <Framework/Tao/TaoException.h>
 
 namespace SCIRun {
 

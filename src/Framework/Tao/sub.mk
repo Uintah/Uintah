@@ -29,7 +29,7 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := SCIRun/Tao
+SRCDIR   := Framework/Tao
 
 SRCS     += \
 	$(SRCDIR)/TaoComponentDescription.cc \

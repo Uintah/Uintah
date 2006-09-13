@@ -38,10 +38,10 @@
  *
  */
 
-#ifndef SCIRun_Tao_Component_h
-#define SCIRun_Tao_Component_h
+#ifndef Framework_Tao_Component_h
+#define Framework_Tao_Component_h
 
-#include <SCIRun/PortInstance.h>
+#include <Framework/PortInstance.h>
 #include <Core/CCA/spec/cca_sidl.h>
 
 namespace SCIRun
