@@ -38,14 +38,14 @@
  *
  */
 
-#include <SCIRun/Internal/ComponentRegistry.h>
-#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/ComponentDescription.h>
-#include <SCIRun/ComponentModel.h>
-#include <SCIRun/CCA/CCAException.h>
-#include <SCIRun/PortInstance.h>
-#include <SCIRun/CCA/ComponentID.h>
-#include <SCIRun/ComponentInstance.h>
+#include <Framework/Internal/ComponentRegistry.h>
+#include <Framework/SCIRunFramework.h>
+#include <Framework/ComponentDescription.h>
+#include <Framework/ComponentModel.h>
+#include <Framework/CCA/CCAException.h>
+#include <Framework/PortInstance.h>
+#include <Framework/CCA/ComponentID.h>
+#include <Framework/ComponentInstance.h>
 #include <iostream>
 
 namespace SCIRun {

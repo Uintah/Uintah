@@ -38,10 +38,10 @@
  *
  */
 
-#ifndef SCIRun_Internal_InternalServiceInstance_h
-#define SCIRun_Internal_InternalServiceInstance_h
+#ifndef Framework_Internal_InternalServiceInstance_h
+#define Framework_Internal_InternalServiceInstance_h
 
-#include <SCIRun/Internal/InternalComponentInstance.h>
+#include <Framework/Internal/InternalComponentInstance.h>
 
 namespace SCIRun
 {

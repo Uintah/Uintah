@@ -40,10 +40,10 @@
 
 #include <sci_metacomponents.h>
 
-#include <SCIRun/Internal/FrameworkProperties.h>
-#include <SCIRun/Internal/ApplicationLoader.h>
-#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/PortInstance.h>
+#include <Framework/Internal/FrameworkProperties.h>
+#include <Framework/Internal/ApplicationLoader.h>
+#include <Framework/SCIRunFramework.h>
+#include <Framework/PortInstance.h>
 
 #include <Core/Util/Environment.h>
 #include <Core/Util/Assert.h>

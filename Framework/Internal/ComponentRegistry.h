@@ -38,12 +38,12 @@
  *
  */
 
-#ifndef SCIRun_ComponentRegistry_h
-#define SCIRun_ComponentRegistry_h
+#ifndef Framework_ComponentRegistry_h
+#define Framework_ComponentRegistry_h
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
+#include <Framework/Internal/InternalComponentModel.h>
+#include <Framework/Internal/InternalFrameworkServiceInstance.h>
 #include <vector>
 
 namespace SCIRun

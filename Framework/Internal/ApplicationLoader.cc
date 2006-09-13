@@ -26,11 +26,11 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-#include <SCIRun/Internal/ApplicationLoader.h>
-#include <SCIRun/Internal/BuilderService.h>
-#include <SCIRun/StandAlone/sr2_version.h>
-#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/CCA/CCAException.h>
+#include <Framework/Internal/ApplicationLoader.h>
+#include <Framework/Internal/BuilderService.h>
+#include <Framework/StandAlone/sr2_version.h>
+#include <Framework/SCIRunFramework.h>
+#include <Framework/CCA/CCAException.h>
 
 #include <Core/Util/Environment.h>
 #include <Core/XMLUtil/XMLUtil.h>

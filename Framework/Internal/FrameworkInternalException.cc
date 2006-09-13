@@ -38,7 +38,7 @@
  *
  */
 
-#include <SCIRun/Internal/FrameworkInternalException.h>
+#include <Framework/Internal/FrameworkInternalException.h>
 
 namespace SCIRun {
 

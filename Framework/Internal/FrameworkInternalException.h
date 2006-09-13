@@ -38,8 +38,8 @@
  *
  */
 
-#ifndef SCIRun_Framework_FrameworkInternalException_h
-#define SCIRun_Framework_FrameworkInternalException_h
+#ifndef Framework_Framework_FrameworkInternalException_h
+#define Framework_Framework_FrameworkInternalException_h
 
 #include <Core/Exceptions/Exception.h>
 #include <string>

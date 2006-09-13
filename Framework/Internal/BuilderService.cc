@@ -38,19 +38,19 @@
  *
  */
 
-#include <SCIRun/Internal/BuilderService.h>
+#include <Framework/Internal/BuilderService.h>
 #include <Core/CCA/PIDL/PIDL.h>
-#include <SCIRun/PortInstanceIterator.h>
-#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/CCA/CCAException.h>
-#include <SCIRun/PortInstance.h>
-#include <SCIRun/CCA/ComponentID.h>
-#include <SCIRun/CCA/CCAComponentInstance.h>
-#include <SCIRun/ComponentInstance.h>
-#include <SCIRun/CCA/ConnectionID.h>
-#include <SCIRun/Internal/ConnectionEvent.h>
-#include <SCIRun/Internal/ConnectionEventService.h>
-#include <SCIRun/Internal/Topic.h>
+#include <Framework/PortInstanceIterator.h>
+#include <Framework/SCIRunFramework.h>
+#include <Framework/CCA/CCAException.h>
+#include <Framework/PortInstance.h>
+#include <Framework/CCA/ComponentID.h>
+#include <Framework/CCA/CCAComponentInstance.h>
+#include <Framework/ComponentInstance.h>
+#include <Framework/CCA/ConnectionID.h>
+#include <Framework/Internal/ConnectionEvent.h>
+#include <Framework/Internal/ConnectionEventService.h>
+#include <Framework/Internal/Topic.h>
 #include <iostream>
 #include <string>
 

@@ -26,7 +26,7 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-#include <SCIRun/Internal/EventServiceException.h>
+#include <Framework/Internal/EventServiceException.h>
 #include <Core/Util/NotFinished.h>
 
 namespace SCIRun {

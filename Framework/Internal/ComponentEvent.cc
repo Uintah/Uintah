@@ -41,8 +41,8 @@
  *
  */
 
-#include <SCIRun/Internal/ComponentEvent.h>
-#include <SCIRun/CCA/CCAException.h>
+#include <Framework/Internal/ComponentEvent.h>
+#include <Framework/CCA/CCAException.h>
 
 
 namespace SCIRun {

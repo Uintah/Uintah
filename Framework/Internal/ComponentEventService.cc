@@ -38,11 +38,11 @@
  *
  */
 
-#include <SCIRun/Internal/ComponentEventService.h>
-#include <SCIRun/Internal/ComponentEvent.h>
-#include <SCIRun/CCA/CCAComponentInstance.h>
-#include <SCIRun/CCA/CCAException.h>
-#include <SCIRun/TypeMap.h>
+#include <Framework/Internal/ComponentEventService.h>
+#include <Framework/Internal/ComponentEvent.h>
+#include <Framework/CCA/CCAComponentInstance.h>
+#include <Framework/CCA/CCAException.h>
+#include <Framework/TypeMap.h>
 #include <iostream>
 
 namespace SCIRun {

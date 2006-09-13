@@ -38,17 +38,17 @@
  *
  */
 
-#ifndef SCIRun_BuilderService_h
-#define SCIRun_BuilderService_h
+#ifndef Framework_BuilderService_h
+#define Framework_BuilderService_h
 
 #include <sci_metacomponents.h>
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
+#include <Framework/Internal/InternalComponentModel.h>
+#include <Framework/Internal/InternalFrameworkServiceInstance.h>
 
 #ifdef BUILD_BRIDGE
-  #include <SCIRun/Bridge/AutoBridge.h>
+  #include <Framework/Bridge/AutoBridge.h>
 #endif
 
 namespace SCIRun {

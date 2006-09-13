@@ -41,8 +41,8 @@
  *
  */
 
-#ifndef SCIRun_ComponentEvent_h
-#define SCIRun_ComponentEvent_h
+#ifndef Framework_ComponentEvent_h
+#define Framework_ComponentEvent_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 

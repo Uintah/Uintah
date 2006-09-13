@@ -41,22 +41,22 @@
 #include <sci_defs/dataflow_defs.h>
 #include <sci_wx.h>
 
-#include <SCIRun/Internal/FrameworkInternalException.h>
-#include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Internal/InternalFrameworkServiceDescription.h>
-#include <SCIRun/Internal/BuilderService.h>
-#include <SCIRun/Internal/ComponentEventService.h>
-#include <SCIRun/Internal/ConnectionEventService.h>
-#include <SCIRun/Internal/ComponentRegistry.h>
-#include <SCIRun/Internal/FrameworkProperties.h>
-#include <SCIRun/Internal/FrameworkProxyService.h>
-#include <SCIRun/Internal/ApplicationLoader.h>
-#include <SCIRun/Internal/GUIService.h>
-#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/Internal/EventService.h>
+#include <Framework/Internal/FrameworkInternalException.h>
+#include <Framework/Internal/InternalComponentModel.h>
+#include <Framework/Internal/InternalFrameworkServiceDescription.h>
+#include <Framework/Internal/BuilderService.h>
+#include <Framework/Internal/ComponentEventService.h>
+#include <Framework/Internal/ConnectionEventService.h>
+#include <Framework/Internal/ComponentRegistry.h>
+#include <Framework/Internal/FrameworkProperties.h>
+#include <Framework/Internal/FrameworkProxyService.h>
+#include <Framework/Internal/ApplicationLoader.h>
+#include <Framework/Internal/GUIService.h>
+#include <Framework/SCIRunFramework.h>
+#include <Framework/Internal/EventService.h>
 
 #if BUILD_DATAFLOW
-# include <SCIRun/Dataflow/DataflowScheduler.h>
+# include <Framework/Dataflow/DataflowScheduler.h>
 #endif
 #include <iostream>
 

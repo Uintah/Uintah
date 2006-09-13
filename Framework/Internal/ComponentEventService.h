@@ -38,15 +38,15 @@
  *
  */
 
-#ifndef SCIRun_ComponentEventService_h
-#define SCIRun_ComponentEventService_h
+#ifndef Framework_ComponentEventService_h
+#define Framework_ComponentEventService_h
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
+#include <Framework/SCIRunFramework.h>
+#include <Framework/Internal/InternalComponentModel.h>
+#include <Framework/Internal/InternalFrameworkServiceInstance.h>
 #include <vector>
 
 namespace SCIRun {

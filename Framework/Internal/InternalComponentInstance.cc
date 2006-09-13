@@ -38,8 +38,8 @@
  *
  */
 
-#include <SCIRun/Internal/InternalComponentInstance.h>
-#include <SCIRun/TypeMap.h>
+#include <Framework/Internal/InternalComponentInstance.h>
+#include <Framework/TypeMap.h>
 #include <iostream>
 
 namespace SCIRun {
