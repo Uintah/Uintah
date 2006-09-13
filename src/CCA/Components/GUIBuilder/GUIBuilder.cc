@@ -34,16 +34,16 @@
 #include <CCA/Components/GUIBuilder/BuilderWindow.h>
 #include <CCA/Components/GUIBuilder/ComponentIcon.h>
 // for default namespace strings - these may be moved elsewhere in the future
-#include <SCIRun/ComponentSkeletonWriter.h>
+#include <Framework/ComponentSkeletonWriter.h>
 
 #include <sci_metacomponents.h>
-#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/PortInstance.h>
+#include <Framework/SCIRunFramework.h>
+#include <Framework/PortInstance.h>
 #if HAVE_VTK
-#include <SCIRun/Vtk/VtkPortInstance.h>
+#include <Framework/Vtk/VtkPortInstance.h>
 #endif
-#include <SCIRun/CCA/CCAComponentModel.h>
-#include <SCIRun/Internal/ApplicationLoader.h>
+#include <Framework/CCA/CCAComponentModel.h>
+#include <Framework/Internal/ApplicationLoader.h>
 
 #include <Core/Util/Environment.h>
 #include <Core/OS/Dir.h>
@@ -76,7 +76,7 @@ const std::string GUIBuilder::GOPORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_
 const std::string GUIBuilder::UIPORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "UIPort");
 const std::string GUIBuilder::PROGRESS_PORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "Progress");
 const std::string GUIBuilder::COMPONENTICON_PORT(ComponentSkeletonWriter::DEFAULT_SIDL_PORT_NAMESPACE + "ComponentIcon");
-const std::string GUIBuilder::APP_EXT_WILDCARD("(*." + ApplicationLoader::APP_EXT + ")");
+const std::string GUIBuilder::APP_EXT_WILDCARD("*." + ApplicationLoader::APP_EXT);
 
 Mutex GUIBuilder::builderLock("GUIBuilder class lock");
 wxSCIRunApp* GUIBuilder::app = 0;
@@ -126,14 +126,9 @@ DestroyInstancesThread::run()
 
 GUIBuilder::GUIBuilder()
 {
-
 #if DEBUG
   std::cerr << "GUIBuilder::GUIBuilder(): from thread " << Thread::self()->getThreadName() << std::endl;
 #endif
-
- 
-
-
 }
 
 GUIBuilder::~GUIBuilder()
@@ -161,11 +156,12 @@ GUIBuilder::~GUIBuilder()
 void
 GUIBuilder::setServices(const sci::cca::Services::pointer &svc)
 {
-  sci::cca::EventListener::pointer evptr(this);
+  sci::cca::EventListener::pointer evptr(sci::cca::GUIBuilder::pointer(this));
   sci::cca::Port::pointer pp  = svc->getPort("cca.EventService");
   sci::cca::ports::EventService::pointer ptr =  pidl_cast<sci::cca::ports::EventService::pointer>(pp);
-  if(ptr.isNull()){
-    std::cout << "Pointer returned is Null!!!\n";
+  if (ptr.isNull()) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    bw->DisplayErrorMessage("Warning: event service not available.");
   }
   sci::cca::WildcardTopic::pointer topicPtr = ptr->createWildcardTopic("scirun2.services.builderservice.component.*");
   topicPtr->registerEventListener(std::string("GUIBuilder"),evptr);
@@ -792,21 +788,33 @@ void* GUIBuilder::getPortColor(const std::string& portType)
   return (void*) c;
 }
 
-// test ApplicationLoader
 
 bool GUIBuilder::applicationFileExists()
 {
-  //Dir d();
-  return false;
+  std::string fileName;
+  try {
+    sci::cca::ports::ApplicationLoaderService::pointer appLoader =
+      pidl_cast<sci::cca::ports::ApplicationLoaderService::pointer>(services->getPort("cca.ApplicationLoaderService"));
+    fileName = appLoader->getFileName();
+    services->releasePort("cca.ApplicationLoaderService");
+  } catch (const sci::cca::CCAException::pointer &pe) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    bw->DisplayErrorMessage("Error: application loader service error; " + pe->getNote());
+    return false;
+  }
+  struct stat buf;
+  if (LSTAT(fileName.c_str(), &buf) < 0) {
+    return false;
+  }
+  return true;
 }
 
 void GUIBuilder::saveApplication()
 {
-  sci::cca::ports::ApplicationLoaderService::pointer appLoader;
   try {
-    appLoader =
+    sci::cca::ports::ApplicationLoaderService::pointer appLoader =
       pidl_cast<sci::cca::ports::ApplicationLoaderService::pointer>(services->getPort("cca.ApplicationLoaderService"));
-    appLoader->saveNetworkFile();
+    appLoader->saveFile();
     services->releasePort("cca.ApplicationLoaderService");
   } catch (const sci::cca::CCAException::pointer &pe) {
     BuilderWindow *bw = app->GetTopBuilderWindow();
@@ -815,7 +823,21 @@ void GUIBuilder::saveApplication()
   }
 
 }
-// test ApplicationLoader
+
+void GUIBuilder::saveApplication(const std::string& fileName)
+{
+  try {
+    sci::cca::ports::ApplicationLoaderService::pointer appLoader =
+      pidl_cast<sci::cca::ports::ApplicationLoaderService::pointer>(services->getPort("cca.ApplicationLoaderService"));
+    appLoader->saveFile(fileName);
+    services->releasePort("cca.ApplicationLoaderService");
+  } catch (const sci::cca::CCAException::pointer &pe) {
+    BuilderWindow *bw = app->GetTopBuilderWindow();
+    bw->DisplayErrorMessage("Error: application loader service error; " + pe->getNote());
+    return;
+  }
+
+}
 
 
 //////////////////////////////////////////////////////////////////////////

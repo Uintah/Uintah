@@ -29,8 +29,8 @@
 #ifndef SCIRun_VTK_Components_ImageWriter_h
 #define SCIRun_VTK_Components_ImageWriter_h
 
-#include <SCIRun/Vtk/OutPort.h>
-#include <SCIRun/Vtk/Component.h>
+#include <Framework/Vtk/OutPort.h>
+#include <Framework/Vtk/Component.h>
 #include "vtkImageWriter.h"
 #include <vector>
 

@@ -42,7 +42,7 @@
 #include <vtkPolyDataMapper.h>
 #include <vtkPolyData.h>
 #include <vtkContourFilter.h>
-#include <SCIRun/Vtk/Port.h>
+#include <Framework/Vtk/Port.h>
 #include "PolyDataMapper.h"
 
 using namespace std;

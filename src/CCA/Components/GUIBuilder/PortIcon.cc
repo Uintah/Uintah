@@ -31,11 +31,6 @@
  *
  */
 
-
-
-//#include <wx/region.h>
-//#include <wx/dc.h>
-
 #include <wx/dcbuffer.h>
 #include <wx/gdicmn.h>
 

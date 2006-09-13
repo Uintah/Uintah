@@ -57,25 +57,41 @@ MainWindow::MainWindow(wxWindow *parent,
                        SSIDL::array1<double> solution)
   : wxFrame( parent, wxID_ANY, wxT(name), wxPoint(X, Y), wxSize(WIDTH, HEIGHT), wxMINIMIZE_BOX|wxCAPTION|wxCLOSE_BOX)
 {
+
+  std::cerr << "MainWindow::MainWindow(..)" << std::endl;
+
   //setGeometry(QRect(200,200,500,500));
   wxGridBagSizer *topSizer = new wxGridBagSizer(4, 4);
   topSizer->AddGrowableRow(1);
 
-  viewer = new ViewerWindow(this, cmap, nodes1d, triangles, solution);
-  cmap = new Colormap(this);
+  std::cerr << "MainWindow::MainWindow(..): sizer" << std::endl;
 
-  meshCheckBox = new wxCheckBox(this, ID_CHECKBOX_MESH, "Show Mesh");
-  PushEventHandler(meshCheckBox);
-  meshCheckBox->Connect(ID_CHECKBOX_MESH, wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler(ViewerWindow::OnToggleMesh));
-  topSizer->Add(meshCheckBox, wxGBPosition(0, 0), wxGBSpan(1, 1), wxALL|wxALIGN_CENTER, 2);
+//   cmap = new Colormap(this);
+//   std::cerr << "MainWindow::MainWindow(..): colormap" << std::endl;
 
-  coordsCheckBox = new wxCheckBox(this, ID_CHECKBOX_COORDS, "Show Coordinates");
-  PushEventHandler(coordsCheckBox);
-  coordsCheckBox->Connect(ID_CHECKBOX_COORDS, wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler(ViewerWindow::OnToggleCoordinates));
-  topSizer->Add(coordsCheckBox, wxGBPosition(0, 1), wxGBSpan(1, 1), wxALL|wxALIGN_CENTER, 2);
+//   viewer = new ViewerWindow(this, cmap, nodes1d, triangles, solution);
 
-  topSizer->Add(viewer, wxGBPosition(1, 0), wxGBSpan(1, 1), wxALL|wxALIGN_CENTER, 2);
-  topSizer->Add(cmap, wxGBPosition(1, 1), wxGBSpan(1, 1), wxALL|wxALIGN_CENTER, 2);
+//   std::cerr << "MainWindow::MainWindow(..): viewer" << std::endl;
+
+//   meshCheckBox = new wxCheckBox(this, ID_CHECKBOX_MESH, "Show Mesh");
+//   PushEventHandler(meshCheckBox);
+//   meshCheckBox->Connect(ID_CHECKBOX_MESH, wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler(ViewerWindow::OnToggleMesh));
+//   topSizer->Add(meshCheckBox, wxGBPosition(0, 0), wxGBSpan(1, 1), wxALL|wxALIGN_CENTER, 2);
+
+//   std::cerr << "MainWindow::MainWindow(..): meshCheckBox" << std::endl;
+
+//   coordsCheckBox = new wxCheckBox(this, ID_CHECKBOX_COORDS, "Show Coordinates");
+//   PushEventHandler(coordsCheckBox);
+//   coordsCheckBox->Connect(ID_CHECKBOX_COORDS, wxEVT_COMMAND_CHECKBOX_CLICKED, wxCommandEventHandler(ViewerWindow::OnToggleCoordinates));
+//   topSizer->Add(coordsCheckBox, wxGBPosition(0, 1), wxGBSpan(1, 1), wxALL|wxALIGN_CENTER, 2);
+
+//   std::cerr << "MainWindow::MainWindow(..): coordsCheckBox" << std::endl;
+
+//   topSizer->Add(viewer, wxGBPosition(1, 0), wxGBSpan(1, 1), wxALL|wxALIGN_CENTER, 2);
+//   std::cerr << "MainWindow::MainWindow(..): add viewer" << std::endl;
+
+//   topSizer->Add(cmap, wxGBPosition(1, 1), wxGBSpan(1, 1), wxALL|wxALIGN_CENTER, 2);
+//   std::cerr << "MainWindow::MainWindow(..): add colormap" << std::endl;
 
 //     QGridLayout *grid = new QGridLayout( this, 2, 2, 10 );
 //     //2x2, 10 pixel border
@@ -109,17 +125,20 @@ MainWindow::MainWindow(wxWindow *parent,
 
   topSizer->Fit(this);
   topSizer->SetSizeHints(this);
+
+  std::cerr << "MainWindow::MainWindow(..): done" << std::endl;
 }
 
 MainWindow::~MainWindow()
 {
-  meshCheckBox->Disconnect();
-  coordsCheckBox->Disconnect();
+//   meshCheckBox->Disconnect();
+//   coordsCheckBox->Disconnect();
   // event cleanup: pop last 2 event handlers on this window's stack
-  PopEventHandler();
-  PopEventHandler();
-  if (cmap) delete cmap;
-  if (viewer) delete viewer;
+//   PopEventHandler();
+//   PopEventHandler();
+
+//   if (cmap) delete cmap;
+//   if (viewer) delete viewer;
 }
 
 }

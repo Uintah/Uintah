@@ -32,13 +32,23 @@
 SRCDIR   := CCA/Components
 
 SUBDIRS   := \
-             $(SRCDIR)/TxtBuilder  \
-             $(SRCDIR)/Hello       \
-             $(SRCDIR)/World       \
-             $(SRCDIR)/TableTennis \
-             $(SRCDIR)/TTClient    \
-             $(SRCDIR)/FEM         \
-             $(SRCDIR)/LinSolver
+             $(SRCDIR)/TxtBuilder                   \
+             $(SRCDIR)/Hello                        \
+             $(SRCDIR)/World                        \
+             $(SRCDIR)/TableTennis                  \
+             $(SRCDIR)/TTClient                     \
+             $(SRCDIR)/FEM                          \
+             $(SRCDIR)/LinSolver                    \
+             $(SRCDIR)/TestGetTopic                 \
+             $(SRCDIR)/TestProcessEvents            \
+             $(SRCDIR)/TestRegisterEventListener    \
+             $(SRCDIR)/TestReleaseTopic             \
+             $(SRCDIR)/TestSendEvent                \
+             $(SRCDIR)/TestUnregisterEventListener  \
+             $(SRCDIR)/TestWildcardTopic            \
+             $(SRCDIR)/TestCreateTopic              \
+             $(SRCDIR)/TestEchoEvent                \
+
 
 ifeq ($(HAVE_WX),yes)
   SUBDIRS += \

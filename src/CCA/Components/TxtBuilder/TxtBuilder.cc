@@ -40,7 +40,7 @@
 
 #include <CCA/Components/TxtBuilder/TxtBuilder.h>
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/CCA/CCAException.h>
+#include <Framework/CCA/CCAException.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Thread.h>
@@ -57,7 +57,7 @@
 #include <CCA/Components/TxtBuilder/TxtNetwork.h>
 #include <CCA/Components/TxtBuilder/TxtConnection.h>
 #include <CCA/Components/TxtBuilder/TxtMessage.h>
-#include <SCIRun/TypeMap.h>
+#include <Framework/TypeMap.h>
 
 using namespace std;
 using namespace SCIRun;

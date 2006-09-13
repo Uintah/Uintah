@@ -41,7 +41,7 @@
 #define CCA_Components_GUIBuilder_CodePreviewDialog_h
 
 
-#include <SCIRun/ComponentSkeletonWriter.h>
+#include <Framework/ComponentSkeletonWriter.h>
 #include <sci_wx.h>
 #include <vector>
 

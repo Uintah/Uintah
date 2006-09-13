@@ -50,7 +50,7 @@
 #include <wx/dc.h>
 
 #ifndef DEBUG
-#  define DEBUG 0
+#  define DEBUG 1
 #endif
 
 
@@ -232,16 +232,6 @@ bool Connection::IsMouseOver(const wxPoint& position)
     wxRect pr;
 
     wxPoint pTopLeft, pBottomRight;
-//     if (position.x - tolerance <= 0) {
-//       pTopLeft.x = 0;
-//     } else {
-//       pTopLeft.x = position.x - tolerance;
-//     }
-//     if (position.y - tolerance <= 0) {
-//       pTopLeft.y = 0;
-//     } else {
-//       pTopLeft.y = position.y - tolerance;
-//     }
     pTopLeft.x = position.x - tolerance;
     pTopLeft.y = position.y - tolerance;
 
@@ -310,14 +300,13 @@ void Connection::setConnection()
     drawPoints[i] = (points[i] + points[NUM_POINTS - 1 - i]);
     drawPoints[i].x /= 2;
     drawPoints[i].y /= 2;
-#if 0
 #if DEBUG
-std::cerr << "Connection::setConnection y_i = y_i+1, x_i <= x_i+1" << std::endl
-          << "\tpoint " << i << "=(" << points[i].x << ", " << points[i].y <<  ") " << std::endl
-          << "\tpoint " << NUM_POINTS - 1 - i << "=(" << points[NUM_POINTS - 1 - i].x << ", " << points[NUM_POINTS - 1 - i].y <<  ") " << std::endl
-          << "\tdraw point " << i << "=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") "
-          << std::endl;
-#endif
+    std::cerr << "Connection::setConnection y_i = y_i+1, x_i <= x_i+1" << std::endl
+              << "\tpoint " << i << "=(" << points[i].x << ", " << points[i].y <<  ") " << std::endl
+              << "\tpoint " << NUM_POINTS - 1 - i << "=(" << points[NUM_POINTS - 1 - i].x << ", "
+              << points[NUM_POINTS - 1 - i].y <<  ") " << std::endl
+              << "\tdraw point " << i << "=(" << drawPoints[i].x << ", " << drawPoints[i].y <<  ") "
+              << std::endl;
 #endif
   }
 }

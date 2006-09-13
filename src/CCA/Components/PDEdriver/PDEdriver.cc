@@ -110,71 +110,71 @@ int PDEGoPort::go()
   }
   sci::cca::ComponentID::pointer cid = services->getComponentID();
 
-  sci::cca::ports::PDEdescriptionPort::pointer pdePort;
-  try {
-    sci::cca::Port::pointer pp = services->getPort("pde");
-    pdePort = pidl_cast<sci::cca::ports::PDEdescriptionPort::pointer>(pp);
-  }
-  catch (const sci::cca::CCAException::pointer &e) {
-    wxMessageBox(e->getNote(), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
-    return -1;
-  }
-  pdePort->getPDEdescription(nodes, boundries, dirichletNodes, dirichletValues);
-  services->releasePort("pde");
+//   sci::cca::ports::PDEdescriptionPort::pointer pdePort;
+//   try {
+//     sci::cca::Port::pointer pp = services->getPort("pde");
+//     pdePort = pidl_cast<sci::cca::ports::PDEdescriptionPort::pointer>(pp);
+//   }
+//   catch (const sci::cca::CCAException::pointer &e) {
+//     wxMessageBox(e->getNote(), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
+//     return -1;
+//   }
+//   pdePort->getPDEdescription(nodes, boundries, dirichletNodes, dirichletValues);
+//   services->releasePort("pde");
 
-  sci::cca::ports::MeshPort::pointer meshPort;
-  try {
-    sci::cca::Port::pointer pp = services->getPort("mesh");
-    meshPort = pidl_cast<sci::cca::ports::MeshPort::pointer>(pp);
-  }
-  catch (const sci::cca::CCAException::pointer &e) {
-    wxMessageBox(e->getNote(), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
-    return -1;
-  }
-  meshPort->triangulate(nodes, boundries, triangles);
-  services->releasePort("mesh");
+//   sci::cca::ports::MeshPort::pointer meshPort;
+//   try {
+//     sci::cca::Port::pointer pp = services->getPort("mesh");
+//     meshPort = pidl_cast<sci::cca::ports::MeshPort::pointer>(pp);
+//   }
+//   catch (const sci::cca::CCAException::pointer &e) {
+//     wxMessageBox(e->getNote(), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
+//     return -1;
+//   }
+//   meshPort->triangulate(nodes, boundries, triangles);
+//   services->releasePort("mesh");
 
-  sci::cca::ports::FEMmatrixPort::pointer fem_matrixPort;
-  try {
-    sci::cca::Port::pointer pp = services->getPort("fem_matrix");
-    fem_matrixPort = pidl_cast<sci::cca::ports::FEMmatrixPort::pointer>(pp);
-  }
-  catch (const sci::cca::CCAException::pointer &e) {
-    wxMessageBox(e->getNote(), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
-    return -1;
-  }
-  fem_matrixPort->makeFEMmatrices(triangles, nodes,
-				  dirichletNodes, dirichletValues,
-				  Ag, fg, size);
-  services->releasePort("fem_matrix");
+//   sci::cca::ports::FEMmatrixPort::pointer fem_matrixPort;
+//   try {
+//     sci::cca::Port::pointer pp = services->getPort("fem_matrix");
+//     fem_matrixPort = pidl_cast<sci::cca::ports::FEMmatrixPort::pointer>(pp);
+//   }
+//   catch (const sci::cca::CCAException::pointer &e) {
+//     wxMessageBox(e->getNote(), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
+//     return -1;
+//   }
+//   fem_matrixPort->makeFEMmatrices(triangles, nodes,
+// 				  dirichletNodes, dirichletValues,
+// 				  Ag, fg, size);
+//   services->releasePort("fem_matrix");
 
-  sci::cca::ports::LinSolverPort::pointer linsolverPort;
-  try {
-    sci::cca::Port::pointer pp = services->getPort("linsolver");
-    linsolverPort = pidl_cast<sci::cca::ports::LinSolverPort::pointer>(pp);
-  }
-  catch (const sci::cca::CCAException::pointer &e) {
-    wxMessageBox(e->getNote(), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
-    return -1;
-  }
-  guiService->updateProgress(cid, 30);
+//   sci::cca::ports::LinSolverPort::pointer linsolverPort;
+//   try {
+//     sci::cca::Port::pointer pp = services->getPort("linsolver");
+//     linsolverPort = pidl_cast<sci::cca::ports::LinSolverPort::pointer>(pp);
+//   }
+//   catch (const sci::cca::CCAException::pointer &e) {
+//     wxMessageBox(e->getNote(), wxT("PDEdriver"), wxOK|wxICON_ERROR, 0);
+//     return -1;
+//   }
+//   guiService->updateProgress(cid, 30);
 
-  /////////////////////////////
-  //NEED REVERSE THIS dr[0] dr[1] AFTER KOSTA CHANGES THE
-  //CONVENTION
-  Index* dr[2];
-  const int stride = 1;
-  dr[1] = new Index(0, size, stride); //row is divided into blocks
-  dr[0] = new Index(0, size, stride);  //col is not changed.
-  // unused variable:
-  //MxNArrayRep* arrr = new MxNArrayRep(2,dr);
-  delete dr[0];
-  delete dr[1];
+//   /////////////////////////////
+//   //NEED REVERSE THIS dr[0] dr[1] AFTER KOSTA CHANGES THE
+//   //CONVENTION
+//   Index* dr[2];
+//   const int stride = 1;
+//   dr[1] = new Index(0, size, stride); //row is divided into blocks
+//   dr[0] = new Index(0, size, stride);  //col is not changed.
+//   // unused variable:
+//   //MxNArrayRep* arrr = new MxNArrayRep(2,dr);
+//   delete dr[0];
+//   delete dr[1];
 
-  // linsolverPort->setCallerDistribution("DMatrix",arrr);
-  linsolverPort->jacobi(Ag, fg, x);
-  services->releasePort("linsolver");
-  guiService->updateProgress(cid, 80);
+//   // linsolverPort->setCallerDistribution("DMatrix",arrr);
+//   linsolverPort->jacobi(Ag, fg, x);
+//   services->releasePort("linsolver");
+//   guiService->updateProgress(cid, 80);
 
   sci::cca::ports::ViewPort::pointer viewPort;
   try {

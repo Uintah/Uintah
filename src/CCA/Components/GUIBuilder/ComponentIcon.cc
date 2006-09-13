@@ -91,6 +91,10 @@ ComponentIcon::ComponentIcon(const sci::cca::GUIBuilder::pointer& bc,
 
   Init();
   Create(parent, winid, wxPoint(x, y));
+#if DEBUG
+  std::cerr << "ComponentIcon " << compID->getInstanceName() << " position: "
+            << "(" << ")" << std::endl;
+#endif
 }
 
 ComponentIcon::~ComponentIcon()

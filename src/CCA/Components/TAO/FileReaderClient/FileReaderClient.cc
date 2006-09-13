@@ -5,7 +5,7 @@
 #include <iostream>
 #include <fstream>
 
-#include <SCIRun/TypeMap.h>
+#include <Framework/TypeMap.h>
 
 const char *ior = "file://test.ior";
 

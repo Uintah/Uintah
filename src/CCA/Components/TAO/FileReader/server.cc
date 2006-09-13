@@ -4,7 +4,7 @@
 #include "ace/Get_Opt.h"
 #include "ace/OS_NS_stdio.h"
 //================================================================
-#include </home/sci/damevski/SCIRun/src/SCIRun/Corba/Services.h>
+#include <Framework/Corba/Services.h>
 //================================================================
 #include <iostream>
 using namespace std;

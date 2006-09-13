@@ -62,9 +62,13 @@ class Semaphore;
 class Mutex;
 class Thread;
 
+typedef std::map<DTDestination, DTMessage*> RRMap;
+typedef std::map<DTMessageTag, DTMessage*> RVMap;
+typedef std::map<DTMessageTag, Semaphore *> SemaphoreMap;
+typedef std::map<DTAddress, int> SocketMap;
+
 class DTException {
 };
-
 
 class DataTransmitter {
 public:
@@ -100,11 +104,14 @@ public:
   // backward compatibility
   DTMessage *getMsg();
 
-  //deprecated!
-  //void registerPoint(DTPoint *pt);
-
-  //deprecated!
-  //void unregisterPoint(DTPoint *pt);
+#if 0
+//////////////////////////////////////////////////////////////////////////
+//// deprecated!
+//
+//   void registerPoint(DTPoint *pt);
+//   void unregisterPoint(DTPoint *pt);
+//////////////////////////////////////////////////////////////////////////
+#endif
 
   std::string getUrl();
 
@@ -130,17 +137,9 @@ private:
   std::vector<DTMessage*> send_msgQ;
   std::vector<DTMessage*> recv_msgQ;
 
-  typedef std::map<DTDestination, DTMessage*> RRMap;
   RRMap send_msgMap;
-
-  typedef std::map<DTMessageTag, DTMessage*> RVMap;
   RVMap recv_msgMap;
-
-
-  typedef std::map<DTMessageTag, Semaphore *> SemaphoreMap;
   SemaphoreMap semamap;
-
-  typedef std::map<DTAddress, int> SocketMap;
 
   Semaphore *defaultSema; //used for default message passing between any two DTs using default message Tag
 
@@ -158,15 +157,18 @@ private:
 
   Mutex *sendQ_mutex;
   Mutex *recvQ_mutex;
-
   Mutex *send_sockmap_mutex;
   Mutex *recv_sockmap_mutex;
 
   int newMsgCnt;
 
   ConditionVariable *sendQ_cond;
+  Thread *sending_thread;
+  Thread *recving_thread;
 
+  const static int ERROR_BUFFER_SIZE = 128;
   const static int PACKET_SIZE = 1024*32;
+  const static int STACK_SIZE = 1024*256;
 
   bool quit;
 };

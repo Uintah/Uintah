@@ -61,11 +61,11 @@ interface ApplicationLoaderService extends sci.cca.Port {
   string getFileName();
   void setFileName(in string filename);
 
-  void loadNetworkFile();
-  void loadNetworkFile[As](in string filename);
+  void loadFile();
+  void loadFile[As](in string filename);
 
-  void saveNetworkFile();
-  void saveNetworkFile[As](in string filename);
+  void saveFile();
+  void saveFile[As](in string filename);
 }
 
 //Temp test (Bridge)

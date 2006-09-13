@@ -6,7 +6,7 @@
 #include <fstream>
 
 #include <Core/Util/Environment.h>
-#include <SCIRun/TypeMap.h>
+#include <Framework/TypeMap.h>
 
 ACE_RCSID(FileReader, FileReader, "FileReader.cc,v 1.3 2002/01/29 20:21:07 okellogg Exp")
 

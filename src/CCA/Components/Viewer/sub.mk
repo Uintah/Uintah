@@ -41,11 +41,10 @@ SRCS     += \
 
 
 PSELIBS := \
-           Core/CCA/PIDL Core/CCA/spec \
+           Framework Core/CCA/PIDL Core/CCA/spec \
            Core/Thread Core/Containers Core/Exceptions
 
 LIBS := $(WX_LIBRARY) $(M_LIBRARY)
-
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
