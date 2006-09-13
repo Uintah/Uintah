@@ -1,5 +1,5 @@
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
+#include <Framework/Internal/InternalFrameworkServiceInstance.h>
 
 namespace SCIRun {
 

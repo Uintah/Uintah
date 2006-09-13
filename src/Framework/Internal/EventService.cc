@@ -26,12 +26,12 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-#include <SCIRun/Internal/EventService.h>
-#include <SCIRun/Internal/Topic.h>
-#include <SCIRun/Internal/WildcardTopic.h>
-#include <SCIRun/Internal/EventServiceException.h>
-#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/CCA/CCAException.h>
+#include <Framework/Internal/EventService.h>
+#include <Framework/Internal/Topic.h>
+#include <Framework/Internal/WildcardTopic.h>
+#include <Framework/Internal/EventServiceException.h>
+#include <Framework/SCIRunFramework.h>
+#include <Framework/CCA/CCAException.h>
 
 namespace SCIRun {
 

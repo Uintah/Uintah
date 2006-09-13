@@ -29,7 +29,7 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := SCIRun/Internal
+SRCDIR   := Framework/Internal
 
 SRCS     += \
              $(SRCDIR)/BuilderService.cc \

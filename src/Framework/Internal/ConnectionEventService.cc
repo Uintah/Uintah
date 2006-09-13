@@ -26,8 +26,8 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <SCIRun/Internal/ConnectionEventService.h>
-#include <SCIRun/SCIRunFramework.h>
+#include <Framework/Internal/ConnectionEventService.h>
+#include <Framework/SCIRunFramework.h>
 
 
 namespace SCIRun {

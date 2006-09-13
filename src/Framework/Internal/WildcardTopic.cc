@@ -26,8 +26,8 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-#include <SCIRun/Internal/WildcardTopic.h>
-#include <SCIRun/Internal/EventServiceException.h>
+#include <Framework/Internal/WildcardTopic.h>
+#include <Framework/Internal/EventServiceException.h>
 
 namespace SCIRun {
 

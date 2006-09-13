@@ -26,11 +26,11 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef SCIRun_WildcardTopic_h
-#define SCIRun_WildcardTopic_h
+#ifndef Framework_WildcardTopic_h
+#define Framework_WildcardTopic_h
 
-#include <SCIRun/Internal/EventService.h>
-#include <SCIRun/Internal/Topic.h>
+#include <Framework/Internal/EventService.h>
+#include <Framework/Internal/Topic.h>
 #include <Core/CCA/spec/cca_sidl.h>
 
 namespace SCIRun {

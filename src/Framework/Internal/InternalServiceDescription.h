@@ -38,10 +38,10 @@
  *
  */
 
-#ifndef SCIRun_Internal_InternalServiceDescription_h
-#define SCIRun_Internal_InternalServiceDescription_h
+#ifndef Framework_Internal_InternalServiceDescription_h
+#define Framework_Internal_InternalServiceDescription_h
 
-#include <SCIRun/ComponentDescription.h>
+#include <Framework/ComponentDescription.h>
 #include <string>
 
 namespace SCIRun {

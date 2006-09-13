@@ -26,14 +26,14 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef SCIRun_Internal_EventService_h
-#define SCIRun_Internal_EventService_h
+#ifndef Framework_Internal_EventService_h
+#define Framework_Internal_EventService_h
 
 #include <sci_metacomponents.h>
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
+#include <Framework/Internal/InternalComponentModel.h>
+#include <Framework/Internal/InternalFrameworkServiceInstance.h>
 
 #include <map>
 

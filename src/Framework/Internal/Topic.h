@@ -26,12 +26,12 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef SCIRun_Internal_Topic_h
-#define SCIRun_Internal_Topic_h
+#ifndef Framework_Internal_Topic_h
+#define Framework_Internal_Topic_h
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/Internal/EventService.h>
-#include <SCIRun/SCIRunFramework.h>
+#include <Framework/Internal/EventService.h>
+#include <Framework/SCIRunFramework.h>
 
 namespace SCIRun {
 

@@ -38,7 +38,7 @@
  *
  */
 
-#include <SCIRun/Internal/InternalServiceInstance.h>
+#include <Framework/Internal/InternalServiceInstance.h>
 
 #include <iostream>
 

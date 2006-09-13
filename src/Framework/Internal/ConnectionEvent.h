@@ -40,12 +40,12 @@
  *
  */
 
-#ifndef SCIRun_ConnectionEvent_h
-#define SCIRun_ConnectionEvent_h
+#ifndef Framework_ConnectionEvent_h
+#define Framework_ConnectionEvent_h
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Internal/InternalComponentInstance.h>
+#include <Framework/Internal/InternalComponentModel.h>
+#include <Framework/Internal/InternalComponentInstance.h>
 
 namespace SCIRun {
 

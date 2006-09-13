@@ -1,8 +1,8 @@
 // GUIService.cc
 
-#include <SCIRun/Internal/GUIService.h>
-#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/CCA/CCAException.h>
+#include <Framework/Internal/GUIService.h>
+#include <Framework/SCIRunFramework.h>
+#include <Framework/CCA/CCAException.h>
 #include <Core/Thread/Guard.h>
 
 namespace SCIRun {

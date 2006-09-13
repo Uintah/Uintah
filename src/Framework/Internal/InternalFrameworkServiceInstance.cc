@@ -38,7 +38,7 @@
  *
  */
 
-#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
+#include <Framework/Internal/InternalFrameworkServiceInstance.h>
 #include <iostream>
 
 namespace SCIRun {

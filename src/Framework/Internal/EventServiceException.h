@@ -27,8 +27,8 @@
 */
 
 
-#ifndef SCIRun_Internal_EventServiceException_h
-#define SCIRun_Internal_EventServiceException_h
+#ifndef Framework_Internal_EventServiceException_h
+#define Framework_Internal_EventServiceException_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 

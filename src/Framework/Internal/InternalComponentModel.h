@@ -38,12 +38,12 @@
  *
  */
 
-#ifndef SCIRun_Framework_InternalComponentModel_h
-#define SCIRun_Framework_InternalComponentModel_h
+#ifndef Framework_Framework_InternalComponentModel_h
+#define Framework_Framework_InternalComponentModel_h
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
-#include <SCIRun/ComponentModel.h>
+#include <Framework/ComponentModel.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <map>
 #include <string>

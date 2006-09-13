@@ -38,8 +38,8 @@
  *
  */
 
-#include <SCIRun/Internal/InternalServiceDescription.h>
-#include <SCIRun/Internal/InternalComponentModel.h>
+#include <Framework/Internal/InternalServiceDescription.h>
+#include <Framework/Internal/InternalComponentModel.h>
 #include <iostream>
 
 namespace SCIRun {

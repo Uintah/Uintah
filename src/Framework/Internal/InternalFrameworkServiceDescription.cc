@@ -38,11 +38,11 @@
  *
  */
 
-#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/Internal/InternalFrameworkServiceDescription.h>
-#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
-#include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Internal/FrameworkInternalException.h>
+#include <Framework/SCIRunFramework.h>
+#include <Framework/Internal/InternalFrameworkServiceDescription.h>
+#include <Framework/Internal/InternalFrameworkServiceInstance.h>
+#include <Framework/Internal/InternalComponentModel.h>
+#include <Framework/Internal/FrameworkInternalException.h>
 
 #include <iostream>
 

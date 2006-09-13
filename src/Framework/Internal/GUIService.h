@@ -1,8 +1,8 @@
 // GUIService.h
 
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/Internal/InternalComponentModel.h>
-#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
+#include <Framework/Internal/InternalComponentModel.h>
+#include <Framework/Internal/InternalFrameworkServiceInstance.h>
 #include <Core/Thread/Mutex.h>
 
 namespace SCIRun {

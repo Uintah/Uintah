@@ -40,13 +40,13 @@
  */
 
 
-#ifndef SCIRun_FrameworkProperties_h
-#define SCIRun_FrameworkProperties_h
+#ifndef Framework_FrameworkProperties_h
+#define Framework_FrameworkProperties_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Core/OS/Dir.h>
-#include <SCIRun/TypeMap.h>
-#include <SCIRun/Internal/InternalFrameworkServiceInstance.h>
+#include <Framework/TypeMap.h>
+#include <Framework/Internal/InternalFrameworkServiceInstance.h>
 
 namespace SCIRun {
 
