@@ -39,9 +39,9 @@
  */
 
 
-#include <SCIRun/Corba/UsesPort.h>
-#include <SCIRun/Corba/ProvidesPort.h>
-#include <SCIRun/Corba/Component.h>
+#include <Framework/Corba/UsesPort.h>
+#include <Framework/Corba/ProvidesPort.h>
+#include <Framework/Corba/Component.h>
 #include <iostream>
 #include <assert.h>
 

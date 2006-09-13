@@ -38,8 +38,8 @@
  *
  */
 
-#include <SCIRun/Corba/CorbaComponentDescription.h>
-#include <SCIRun/Corba/CorbaComponentModel.h>
+#include <Framework/Corba/CorbaComponentDescription.h>
+#include <Framework/Corba/CorbaComponentModel.h>
 #include <iostream>
 
 namespace SCIRun {

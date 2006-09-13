@@ -38,12 +38,12 @@
  *
  */
 
-#ifndef SCIRun_Corba_Services_h
-#define SCIRun_Corba_Services_h
+#ifndef Framework_Corba_Services_h
+#define Framework_Corba_Services_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Core/CCA/PIDL/PIDL.h>
-#include <SCIRun/Corba/Component.h>
+#include <Framework/Corba/Component.h>
 #include <map>
 #include <vector>
 #include <string>

@@ -38,14 +38,14 @@
  *
  */
 
-#ifndef SCIRun_Corba_CorbaPortInstance_h
-#define SCIRun_Corba_CorbaPortInstance_h
+#ifndef Framework_Corba_CorbaPortInstance_h
+#define Framework_Corba_CorbaPortInstance_h
 
-#include <SCIRun/PortInstance.h>
+#include <Framework/PortInstance.h>
 #include <map>
 #include <string>
 #include <vector>
-#include <SCIRun/Corba/Port.h>
+#include <Framework/Corba/Port.h>
 
 namespace SCIRun {
 

@@ -38,10 +38,10 @@
  *
  */
 
-#ifndef SCIRun_Corba_Component_h
-#define SCIRun_Corba_Component_h
+#ifndef Framework_Corba_Component_h
+#define Framework_Corba_Component_h
 
-#include <SCIRun/PortInstance.h>
+#include <Framework/PortInstance.h>
 
 #include <map>
 #include <string>

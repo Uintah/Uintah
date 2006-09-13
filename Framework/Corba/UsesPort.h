@@ -38,10 +38,10 @@
  *
  */
 
-#ifndef SCIRun_Corba_UsesPort_h
-#define SCIRun_Corba_UsesPort_h
+#ifndef Framework_Corba_UsesPort_h
+#define Framework_Corba_UsesPort_h
 
-#include <SCIRun/Corba/Port.h>
+#include <Framework/Corba/Port.h>
 
 namespace SCIRun {
 namespace corba {

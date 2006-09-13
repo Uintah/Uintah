@@ -38,7 +38,7 @@
  *
  */
 
-#include <SCIRun/Corba/Port.h>
+#include <Framework/Corba/Port.h>
 
 namespace SCIRun {
 namespace corba {

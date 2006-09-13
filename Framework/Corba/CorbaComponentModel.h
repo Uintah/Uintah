@@ -38,12 +38,12 @@
  *
  */
 
-#ifndef SCIRun_Corba_CorbaComponentModel_h
-#define SCIRun_Corba_CorbaComponentModel_h
+#ifndef Framework_Corba_CorbaComponentModel_h
+#define Framework_Corba_CorbaComponentModel_h
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
-#include <SCIRun/ComponentModel.h>
+#include <Framework/ComponentModel.h>
 #include <vector>
 #include <string>
 

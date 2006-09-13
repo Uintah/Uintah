@@ -38,12 +38,12 @@
  *
  */
 
-#include <SCIRun/Corba/CorbaComponentInstance.h>
-#include <SCIRun/Corba/CorbaPortInstance.h>
-#include <SCIRun/Corba/CorbaUIPort.h>
-#include <SCIRun/Corba/Component.h>
-#include <SCIRun/CCA/CCAPortInstance.h>
-#include <SCIRun/TypeMap.h>
+#include <Framework/Corba/CorbaComponentInstance.h>
+#include <Framework/Corba/CorbaPortInstance.h>
+#include <Framework/Corba/CorbaUIPort.h>
+#include <Framework/Corba/Component.h>
+#include <Framework/CCA/CCAPortInstance.h>
+#include <Framework/TypeMap.h>
 
 namespace SCIRun {
 

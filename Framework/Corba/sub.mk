@@ -29,7 +29,7 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := SCIRun/Corba
+SRCDIR   := Framework/Corba
 
 SRCS     += $(SRCDIR)/CorbaComponentModel.cc \
 	$(SRCDIR)/CorbaComponentDescription.cc \
