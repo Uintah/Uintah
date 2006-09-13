@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<!DOCTYPE metacomponentmodel SYSTEM "../../../../SCIRun/XML/metacomponentmodel.dtd">
+<!DOCTYPE metacomponentmodel SYSTEM "../../../../Framework/XML/metacomponentmodel.dtd">
 <!--
    For more information, please see: http://software.sci.utah.edu
 
