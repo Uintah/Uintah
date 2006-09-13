@@ -75,7 +75,6 @@ TaskGraph::initialize()
 
   d_tasks.clear();
 
-  d_initRequiredVars.clear();
   edges.clear();
   currentIteration = 0;
 }
@@ -537,13 +536,6 @@ TaskGraph::addTask(Task* task, const PatchSet* patchset,
       task->displayAll( dbg );
     }
   }
-
-  //  maintain d_initRequires and d_initRequiredVars
-  for(Task::Dependency* req = task->getRequires(); req != 0; req=req->next){
-    if(sc->isOldDW(req->mapDataWarehouse())) {
-      d_initRequiredVars.insert(req->var);
-    }
-  }
 }
 
 void
@@ -564,8 +556,8 @@ TaskGraph::createDetailedTask(Task* task, const PatchSubset* patches,
 }
 
 DetailedTasks*
-TaskGraph::createDetailedTasks( bool useInternalDeps, const GridP& grid,
-                                const GridP& oldGrid)
+TaskGraph::createDetailedTasks( bool useInternalDeps, DetailedTasks* first,
+                                const GridP& grid, const GridP& oldGrid)
 {
   TAU_PROFILE_TIMER(gentimer, "TG Compile" , "", TAU_USER);
   TAU_PROFILE_TIMER(sorttimer, "TG Compile - sort" , "", TAU_USER);
@@ -589,7 +581,7 @@ TaskGraph::createDetailedTasks( bool useInternalDeps, const GridP& grid,
 
   TAU_PROFILE_START(dttimer);
 
-  dts_ = scinew DetailedTasks(sc, d_myworld, this, useInternalDeps );
+  dts_ = scinew DetailedTasks(sc, d_myworld, first, this, useInternalDeps );
   for(int i=0;i<(int)sorted_tasks.size();i++){
     Task* task = sorted_tasks[i];
     const PatchSet* ps = task->getPatchSet();

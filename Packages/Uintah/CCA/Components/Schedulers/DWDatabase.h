@@ -74,13 +74,22 @@ using SCIRun::FastHashTable;
    void cleanForeign();
 
    // Scrub counter manipulator functions -- when the scrub count goes to
-   // zero, the data is scrubbed.
-   void decrementScrubCount(const VarLabel* label, int matlindex,
+   // zero, the data is scrubbed.  Return remaining count
+
+   // How Scrubbing works:  If a variable is in the OldDW, at the beginning of the timestep
+   // initializeScrubs will be called for each of those variables.  For each variable computed 
+   // or copied via MPI, setScrubCount will be called on it, based on the scrubCountTable in
+   // DetailedTasks.  Then, when the variable is used, decrementScrubCount is called on it
+   // and if the count reaches zero, it is scrubbed.
+   int decrementScrubCount(const VarLabel* label, int matlindex,
 			    const DomainType* dom);
    void setScrubCount(const VarLabel* label, int matlindex,
 		      const DomainType* dom, int count);
    void scrub(const VarLabel* label, int matlindex, const DomainType* dom);
-   void initializeScrubs(int dwid, const FastHashTable<ScrubItem>* scrubcounts);
+   
+   // add means increment the scrub count instead of setting it.  This is for when a DW
+   // can act as a CoarseOldDW as well as an OldDW
+   void initializeScrubs(int dwid, const FastHashTable<ScrubItem>* scrubcounts, bool add);
 
    void logMemoryUse(ostream& out, unsigned long& total,
 		     const std::string& tag, int dwid);
@@ -152,7 +161,7 @@ DWDatabase<DomainType>::cleanForeign()
 }
 
 template<class DomainType>
-void DWDatabase<DomainType>::
+int DWDatabase<DomainType>::
 decrementScrubCount(const VarLabel* label, int matlIndex, const DomainType* dom)
 {
   DataItem& data = const_cast<DataItem&>(getDataItem(label, matlIndex, dom));
@@ -164,8 +173,10 @@ decrementScrubCount(const VarLabel* label, int matlIndex, const DomainType* dom)
 
   USE_IF_ASSERTS_ON(if (data.scrubCount <= 0) { cerr << "Var: " << *label << " matl " << matlIndex << " patch " << dom->getID() << endl; })
   ASSERT(data.scrubCount > 0);
+  int count = data.scrubCount-1;
   if(!--data.scrubCount)
     scrub(label, matlIndex, dom);
+  return count;
 }
 
 template<class DomainType>
@@ -203,7 +214,7 @@ DWDatabase<DomainType>::scrub(const VarLabel* var, int matlIndex, const DomainTy
 
 template<class DomainType>
 void
-DWDatabase<DomainType>::initializeScrubs(int dwid, const FastHashTable<ScrubItem>* scrubcounts)
+DWDatabase<DomainType>::initializeScrubs(int dwid, const FastHashTable<ScrubItem>* scrubcounts, bool add)
 {
   // loop over each variable, probing the scrubcount map. Set the
   // scrubcount appropriately.  if the variable has no entry in
@@ -215,14 +226,19 @@ DWDatabase<DomainType>::initializeScrubs(int dwid, const FastHashTable<ScrubItem
       // See if it is in the scrubcounts map.
       ScrubItem key(vlm.label_, vlm.matlIndex_, vlm.domain_, dwid);
       ScrubItem* result = scrubcounts->lookup(&key);
-      if(!result){
+      if(!result && !add){
         delete variter->second.var;
         typename varDBtype::iterator deliter = variter;
         variter++;
         vars.erase(deliter);
       } else {
-        ASSERTEQ(variter->second.scrubCount, 0);
-        variter->second.scrubCount = result->count;
+        if (result){
+          if (add)
+            variter->second.scrubCount += result->count;
+          else {
+            variter->second.scrubCount = result->count;
+          }
+        }
         variter++;
       }
     }

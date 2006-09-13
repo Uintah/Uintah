@@ -194,6 +194,12 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
   initFilter(d_deletionFilter, d_filterType, d_cellDeletionDilation);
   dilate_dbg << "Initializing patch extension filter\n";
   initFilter(d_patchFilter, FILTER_BOX, d_minBoundaryCells);
+
+  Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
+  // we need these so they don't get scrubbed
+  sched->scheduleDataCopyVar("DilatedCellsCreation");
+
+
   rdbg << "RegridderCommon::problemSetup() END" << endl;
 }
 

@@ -113,12 +113,12 @@ WARNING
      /// DetailedTask for each PatchSubset and MaterialSubset in a Task, 
      /// where a Task may have many PatchSubsets and MaterialSubsets.).
      /// Sorts using topologicalSort.
-     DetailedTasks* createDetailedTasks( bool useInternalDeps, const GridP& grid,
-                                         const GridP& oldGrid);
+     DetailedTasks* createDetailedTasks( bool useInternalDeps, DetailedTasks* first,
+                                         const GridP& grid, const GridP& oldGrid);
 
      inline DetailedTasks* getDetailedTasks() { return dts_; }
 
-     inline Scheduler::tgType getType() { return type_; }
+     inline Scheduler::tgType getType() const { return type_; }
 
      /// This will go through the detailed tasks and create the 
      /// dependencies need to communicate data across separate
@@ -134,11 +134,6 @@ WARNING
      /// by each MPI process.
      void nullSort( vector<Task*>& tasks );
      
-     /// Set the requires need from the old data warehouse.
-     const set<const VarLabel*, VarLabel::Compare>&
-       getInitialRequiredVars() const
-       { return d_initRequiredVars; }
-
      int getNumTasks() const;
      Task* getTask(int i);
 
@@ -236,9 +231,6 @@ WARNING
 
      // how many times this taskgraph has executed this timestep
      int currentIteration;
-
-      // data required from old data warehouse
-     set<const VarLabel*, VarLabel::Compare> d_initRequiredVars;
 
      typedef map<const VarLabel*, DetailedTask*, VarLabel::Compare>
      ReductionTasksMap;

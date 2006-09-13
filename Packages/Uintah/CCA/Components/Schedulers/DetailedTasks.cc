@@ -33,10 +33,13 @@ static DebugStream dbg("TaskGraph", false);
 static DebugStream scrubout("Scrubbing", false);
 static DebugStream messagedbg("MessageTags", false);
 
+// for debugging - set the var name to watch one in the scrubout
+static string dbgScrubVar = "";
+
 DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
-			     const TaskGraph* taskgraph,
+			     DetailedTasks* first, const TaskGraph* taskgraph,
 			     bool mustConsiderInternalDependencies /*= false*/)
-  : sc_(sc), d_myworld(pg), taskgraph_(taskgraph),
+  : sc_(sc), d_myworld(pg), first(first), taskgraph_(taskgraph),
     mustConsiderInternalDependencies_(mustConsiderInternalDependencies),
     currentDependencyGeneration_(1),
     readyQueueMutex_("DetailedTasks Ready Queue"),
@@ -243,19 +246,33 @@ DetailedTask::doit(const ProcessorGroup* pg,
 void DetailedTasks::initializeScrubs(vector<OnDemandDataWarehouseP>& dws, int dwmap[])
 {
   vector<bool> initialized(dws.size(),false);
-  if(scrubout.active())
+  if(0&&scrubout.active())
     scrubout << Parallel::getMPIRank() << " Begin initialize scrubs\n";
   for(int i=0;i<(int)Task::TotalDWs;i++){
-    if (dwmap[i] < 0 || initialized[dwmap[i]])
+    if (dwmap[i] < 0)
       continue;
     OnDemandDataWarehouse* dw = dws[dwmap[i]].get_rep();
     if(dw != 0 && dw->getScrubMode() == DataWarehouse::ScrubComplete){
-      scrubout << Parallel::getMPIRank() << " Initializing scrubs on dw: " << dw->getID() << '\n';
-      dw->initializeScrubs(i, &scrubCountTable_);
+      // only a OldDW or a CoarseOldDW will have scrubComplete 
+      //   But we know a future taskgraph (in a w-cycle) will need the vars if there are fine dws 
+      //   between New and Old.  In this case, the scrub count needs to be complemented with CoarseOldDW
+      int tgtype = getTaskGraph()->getType();
+      if (!initialized[dwmap[i]] || tgtype == Scheduler::IntermediateTaskGraph) {
+        // if we're intermediate, we're going to need to make sure we don't scrub CoarseOld before we finish using it
+        scrubout << Parallel::getMPIRank() << " Initializing scrubs on dw: " << dw->getID() << " for DW type " << i << " ADD=" << initialized[dwmap[i]] << '\n';
+        dw->initializeScrubs(i, &(first?first->scrubCountTable_:scrubCountTable_), initialized[dwmap[i]]);
+      }
+      if (i != Task::OldDW && tgtype != Scheduler::IntermediateTaskGraph && dwmap[Task::NewDW] - dwmap[Task::OldDW] > 1) {
+        // add the CoarseOldDW's scrubs to the OldDW, so we keep it around for future task graphs
+        OnDemandDataWarehouse* olddw = dws[dwmap[Task::OldDW]].get_rep();
+        scrubout << Parallel::getMPIRank() << " Initializing scrubs on dw: " << olddw->getID() << " for DW type " << i << " ADD=" << 1 << '\n';
+        ASSERT(initialized[dwmap[Task::OldDW]]);
+        olddw->initializeScrubs(i, &(first?first->scrubCountTable_:scrubCountTable_), true);
+      }
       initialized[dwmap[i]] = true;
     }
   }
-  if(scrubout.active())
+  if(0&&scrubout.active())
     scrubout << Parallel::getMPIRank() << " End initialize scrubs\n";
 }
 
@@ -264,10 +281,10 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 {
   const Task* task = getTask();
 
-  if(scrubout.active())
+  if(0&&scrubout.active())
     scrubout << Parallel::getMPIRank() << " Starting scrub after task: " << *this << '\n';
   const set<const VarLabel*, VarLabel::Compare>& initialRequires
-    = taskGroup->getTaskGraph()->getInitialRequiredVars();
+    = taskGroup->getSchedulerCommon()->getInitialRequiredVars();
   // Decrement the scrub count for each of the required variables
   for(const Task::Dependency* req = task->getRequires();
       req != 0; req=req->next){
@@ -292,26 +309,49 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	  const Patch* patch = patches->get(i);
 	  Patch::selectType neighbors;
 	  IntVector low, high;
-	  patch->computeVariableExtents(type, req->var->getBoundaryLayer(),
-					req->gtype, req->numGhostCells,
-					neighbors, low, high);
+          
+          if (req->patches_dom == Task::CoarseLevel || req->patches_dom == Task::FineLevel) {
+            // we already have the right patches
+            neighbors.push_back(patch);
+          }
+          else {
+            patch->computeVariableExtents(type, req->var->getBoundaryLayer(),
+                                          req->gtype, req->numGhostCells,
+                                          neighbors, low, high);
+          }
 	  for(int i=0;i<neighbors.size();i++){
 	    const Patch* neighbor=neighbors[i];
-            IntVector l = low, h = high;
 
             if (patch->getLevel()->getIndex() > 0 && patch != neighbor && req->patches_dom == Task::NormalDomain) {
               // don't scrub on AMR overlapping patches...
+              IntVector l = low, h = high;
               l = Max(neighbor->getLowIndex(basis, req->var->getBoundaryLayer()), low);
               h = Min(neighbor->getHighIndex(basis, req->var->getBoundaryLayer()), high);
               patch->cullIntersection(basis, req->var->getBoundaryLayer(), neighbor, l, h);
               if (l == h)
                 continue; 
             }
+            if (req->patches_dom == Task::FineLevel) {
+              // don't count if it only overlaps extra cells
+              IntVector l = patch->getLowIndex(basis, IntVector(0,0,0)), h = patch->getHighIndex(basis, IntVector(0,0,0));
+              IntVector fl = neighbor->getInteriorLowIndex(basis), fh = neighbor->getInteriorHighIndex(basis);
+              IntVector il = Max(l, neighbor->getLevel()->mapCellToCoarser(fl));
+              IntVector ih = Min(h, neighbor->getLevel()->mapCellToCoarser(fh));
+              if (ih.x() <= il.x() || ih.y() <= il.y() || ih.z() <= il.z()) {
+                continue;
+              }
+            }
 	    for (int m=0;m<matls->size();m++){
-	      if(scrubout.active()){
-		scrubout << Parallel::getMPIRank() << "   decrementing scrub count for requires of " << dws[dw]->getID() << "/" << neighbor->getID() << "/" << matls->get(m) << "/" << req->var->getName() << '\n';
+              int count;
+              try {
+                count = dws[dw]->decrementScrubCount(req->var, matls->get(m), neighbor);
+              } catch (UnknownVariable& e) {
+                cout << "   BAD BOY FROM Task : " << *this << " scrubbing " << *req << " PATCHES: " << *patches.get_rep() << endl;
+                throw e;
+              }
+	      if(scrubout.active() && (req->var->getName() == dbgScrubVar || dbgScrubVar == "")){
+		scrubout << Parallel::getMPIRank() << "   decrementing scrub count for requires of " << dws[dw]->getID() << "/" << neighbor->getID() << "/" << matls->get(m) << "/" << req->var->getName() << ": " << count << (count == 0?" - scrubbed\n":"\n");
 	      }
-	      dws[dw]->decrementScrubCount(req->var, matls->get(m), neighbor);
 	    }
 	  }
 	}
@@ -339,11 +379,9 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	for(int i=0;i<patches->size();i++){
 	  const Patch* patch = patches->get(i);
 	  for (int m=0;m<matls->size();m++){
-            if (patch->getID() == 1123 && mod->var->getName() == "press_equil_CC")
-              cout << "  Press_eq scrubbed on 1123 by " << *this << endl;
-	    if(scrubout.active())
-	      scrubout << Parallel::getMPIRank() << "   decrementing scrub count for modifies of " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << mod->var->getName() << '\n';
-	    dws[dw]->decrementScrubCount(mod->var, matls->get(m), patch);
+	    int count = dws[dw]->decrementScrubCount(mod->var, matls->get(m), patch);
+	    if(scrubout.active() && (mod->var->getName() == dbgScrubVar || dbgScrubVar == ""))
+	      scrubout << Parallel::getMPIRank() << "   decrementing scrub count for modifies of " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << mod->var->getName() << ": " << count << (count == 0?" - scrubbed\n":"\n");
 	  }
 	}
       }
@@ -375,12 +413,12 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	    int matl = matls->get(m);
 	    int count;
 	    if(taskGroup->getScrubCount(comp->var, matl, patch, whichdw, count)){
-	      if(scrubout.active())
-		scrubout << Parallel::getMPIRank() << "   setting scrub count for computes of " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << comp->var->getName() << " to " << count << '\n';
+	      if(scrubout.active() && (comp->var->getName() == dbgScrubVar || dbgScrubVar == ""))
+		scrubout << Parallel::getMPIRank() << "   setting scrub count for computes of " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << comp->var->getName() << ": " << count << '\n';
 	      dws[dw]->setScrubCount(comp->var, matl, patch, count);
 	    } else {
 	      // Not in the scrub map, must be never needed...
-	      if(scrubout.active())
+	      if(scrubout.active() && (comp->var->getName() == dbgScrubVar || dbgScrubVar == ""))
 		scrubout << Parallel::getMPIRank() << "   trashing variable immediately after compute: " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << comp->var->getName() << '\n';
 	      dws[dw]->scrub(comp->var, matl, patch);
 	    }
@@ -400,13 +438,14 @@ void DetailedTasks::addScrubCount(const VarLabel* var, int matlindex,
     patch = patch->getRealPatch();
   ScrubItem key(var, matlindex, patch, dw);
   ScrubItem* result;
-  result = scrubCountTable_.lookup(&key);
+  result = (first?first->scrubCountTable_:scrubCountTable_).lookup(&key);
   if(!result){
     result = new ScrubItem(var, matlindex, patch, dw);
-    scrubCountTable_.insert(result);
+    (first?first->scrubCountTable_:scrubCountTable_).insert(result);
   }
-  scrubout << Parallel::getMPIRank() << " Adding Scrub count for req of " << dw << "/" << patch->getID() << "/" << matlindex << "/" << *var << endl;
   result->count++;
+  if (scrubout.active() && (var->getName() == dbgScrubVar || dbgScrubVar == ""))
+    scrubout << Parallel::getMPIRank() << " Adding Scrub count for req of " << dw << "/" << patch->getID() << "/" << matlindex << "/" << *var << ": " << result->count << endl;
 }
 
 void DetailedTasks::setScrubCount(const Task::Dependency* req, int matl, const Patch* patch,
@@ -415,7 +454,7 @@ void DetailedTasks::setScrubCount(const Task::Dependency* req, int matl, const P
   ASSERT(!patch->isVirtual());
   DataWarehouse::ScrubMode scrubmode = dws[req->mapDataWarehouse()]->getScrubMode();
   const set<const VarLabel*, VarLabel::Compare>& initialRequires
-    = getTaskGraph()->getInitialRequiredVars();
+    = getSchedulerCommon()->getInitialRequiredVars();
   if(scrubmode == DataWarehouse::ScrubComplete ||
      (scrubmode == DataWarehouse::ScrubNonPermanent &&
       initialRequires.find(req->var) == initialRequires.end())){
@@ -423,7 +462,7 @@ void DetailedTasks::setScrubCount(const Task::Dependency* req, int matl, const P
     if(!getScrubCount(req->var, matl, patch, req->whichdw, scrubcount)){
       SCI_THROW(InternalError("No scrub count for received MPIVariable: "+req->var->getName(), __FILE__, __LINE__));
     }
-    if(scrubout.active())
+    if(scrubout.active() && (req->var->getName() == dbgScrubVar || dbgScrubVar == ""))
       scrubout << Parallel::getMPIRank() << " setting scrubcount for recv of " << req->mapDataWarehouse() << "/" << patch->getID() << "/" << matl << "/" << req->var->getName() << ": " << scrubcount << '\n';
     dws[req->mapDataWarehouse()]->setScrubCount(req->var, matl, patch, scrubcount);
   }
@@ -434,7 +473,7 @@ bool DetailedTasks::getScrubCount(const VarLabel* label, int matlIndex,
 {
   ASSERT(!patch->isVirtual());
   ScrubItem key(label, matlIndex, patch, dw);
-  ScrubItem* result = scrubCountTable_.lookup(&key);
+  ScrubItem* result = (first?first->scrubCountTable_:scrubCountTable_).lookup(&key);
   if(result){
     count = result->count;
     return true;
@@ -444,7 +483,7 @@ bool DetailedTasks::getScrubCount(const VarLabel* label, int matlIndex,
 }
 void DetailedTasks::createScrubCounts()
 {
-  scrubCountTable_.remove_all();
+  (first?first->scrubCountTable_:scrubCountTable_).remove_all();
   // Go through each of the tasks and determine which variables it will require
   for(int i=0;i<(int)localtasks_.size();i++){
     DetailedTask* dtask = localtasks_[i];
@@ -487,7 +526,7 @@ void DetailedTasks::createScrubCounts()
   if(scrubout.active()){
     scrubout << Parallel::getMPIRank() << " scrub counts:\n";
     scrubout << Parallel::getMPIRank() << " DW/Patch/Matl/Label\tCount\n";
-    for(FastHashTableIter<ScrubItem> iter(&scrubCountTable_);
+    for(FastHashTableIter<ScrubItem> iter(&(first?first->scrubCountTable_:scrubCountTable_));
 	iter.ok(); ++iter){
       const ScrubItem* rec = iter.get_key();
       scrubout << rec->dw << '/' << (rec->patch?rec->patch->getID():0) << '/'
@@ -553,8 +592,9 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
 
   int toresource = to->getAssignedResourceIndex();
 
-  if (toresource == d_myworld->myrank() && fromPatch &&
-      !req->var->typeDescription()->isReductionVariable()) {
+  if ((toresource == d_myworld->myrank() || 
+       (req->patches_dom != Task::NormalDomain && from->getAssignedResourceIndex() == d_myworld->myrank())) && 
+       fromPatch && !req->var->typeDescription()->isReductionVariable()) {
     // add scrub counts for local tasks, and not for non-data deps
     addScrubCount(req->var, matl, fromPatch, req->whichdw);
   }

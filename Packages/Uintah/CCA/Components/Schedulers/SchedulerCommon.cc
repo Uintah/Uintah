@@ -490,6 +490,7 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
        dep = dep->next) {
     if(isOldDW(dep->mapDataWarehouse()) && notCopyDataVars_.find(dep->var->getName()) == notCopyDataVars_.end()) {
       d_initRequires.push_back(dep);
+      d_initRequiredVars.insert(dep->var);
     }
     // Store the ghost cell information of each of the requires
     // so we can predict the total allocation needed for each variable.
@@ -538,6 +539,7 @@ SchedulerCommon::initialize(int numOldDW /* =1 */, int numNewDW /* =1 */)
   graphs.clear();
 
   d_initRequires.clear();
+  d_initRequiredVars.clear();
   numTasks_ = 0;
 
   addTaskGraph(NormalTaskGraph);
@@ -730,10 +732,14 @@ void SchedulerCommon::compile()
 
     dbg << d_myworld->myrank() << " SchedulerCommon starting compile\n";
     
+    // pass the first to the rest, so we can share the scrubcountTable
+    DetailedTasks* first = 0;
     for (unsigned i = 0; i < graphs.size(); i++) {
       if (graphs.size() > 1)
         dbg << d_myworld->myrank() << "  Compiling graph#" << i << " of " << graphs.size() << endl;
-      graphs[i]->createDetailedTasks(useInternalDeps(), grid, oldGrid);
+      DetailedTasks* dts = graphs[i]->createDetailedTasks(useInternalDeps(), first, grid, oldGrid);
+      if (!first)
+        first = dts;
     }
     verifyChecksum();
     dbg << d_myworld->myrank() << " SchedulerCommon finished compile\n";
