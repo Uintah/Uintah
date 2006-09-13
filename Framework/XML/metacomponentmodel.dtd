@@ -37,4 +37,3 @@
 
 <!-- Relative path to the IDL file, starting at SCIRUN_SRC -->
 <!ATTLIST interface file CDATA #REQUIRED>
-
