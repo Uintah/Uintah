@@ -38,11 +38,11 @@
  *
  */
 
-#ifndef SCIRun_Bridge_AutoBridge_h
-#define SCIRun_Bridge_AutoBridge_h
+#ifndef Framework_Bridge_AutoBridge_h
+#define Framework_Bridge_AutoBridge_h
 
 #include <Core/CCA/tools/strauss/strauss.h>
-#include <SCIRun/PortInstance.h>
+#include <Framework/PortInstance.h>
 #include <set>
 
 namespace SCIRun {

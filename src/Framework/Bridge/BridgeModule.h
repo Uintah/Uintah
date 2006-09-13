@@ -38,14 +38,14 @@
  *
  */
 
-#ifndef SCIRun_Framework_BridgeModule_h
-#define SCIRun_Framework_BridgeModule_h
+#ifndef Framework_Framework_BridgeModule_h
+#define Framework_Framework_BridgeModule_h
 
 #include <Core/GuiInterface/TCLInterface.h>
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Network.h>
-#include <SCIRun/Dataflow/SCIRunComponentModel.h>
-#include <SCIRun/Bridge/BridgeComponent.h>
+#include <Framework/Dataflow/SCIRunComponentModel.h>
+#include <Framework/Bridge/BridgeComponent.h>
 
 namespace SCIRun {
   class BridgeModule : public Module {

@@ -38,8 +38,8 @@
  *
  */
 
-#include <SCIRun/Bridge/BridgeComponentDescription.h>
-#include <SCIRun/Bridge/BridgeComponentModel.h>
+#include <Framework/Bridge/BridgeComponentDescription.h>
+#include <Framework/Bridge/BridgeComponentModel.h>
 using namespace SCIRun;
 using namespace std;
 

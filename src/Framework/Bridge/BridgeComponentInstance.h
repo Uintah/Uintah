@@ -38,31 +38,31 @@
  *
  */
 
-#ifndef SCIRun_Framework_BridgeComponentInstance_h
-#define SCIRun_Framework_BridgeComponentInstance_h
+#ifndef Framework_Framework_BridgeComponentInstance_h
+#define Framework_Framework_BridgeComponentInstance_h
 
 #include <sci_metacomponents.h>
 
-#include <SCIRun/ComponentInstance.h>
-#include <SCIRun/PortInstance.h>
-#include <SCIRun/PortInstanceIterator.h>
+#include <Framework/ComponentInstance.h>
+#include <Framework/PortInstance.h>
+#include <Framework/PortInstanceIterator.h>
 
-#include <SCIRun/CCA/CCAPortInstance.h>
-#include <SCIRun/Babel/BabelPortInstance.h>
-#include <SCIRun/Dataflow/SCIRunPortInstance.h>
+#include <Framework/CCA/CCAPortInstance.h>
+#include <Framework/Babel/BabelPortInstance.h>
+#include <Framework/Dataflow/SCIRunPortInstance.h>
 
 #if HAVE_VTK
-# include <SCIRun/Vtk/VtkPortInstance.h>
-# include <SCIRun/Vtk/Component.h>
+# include <Framework/Vtk/VtkPortInstance.h>
+# include <Framework/Vtk/Component.h>
 #endif
 
 #if HAVE_TAO
-# include <SCIRun/Tao/TaoPortInstance.h>
+# include <Framework/Tao/TaoPortInstance.h>
 #endif
 
-#include <SCIRun/Bridge/BridgeModule.h>
-#include <SCIRun/Bridge/BridgeServices.h>
-#include <SCIRun/Bridge/BridgeComponent.h>
+#include <Framework/Bridge/BridgeModule.h>
+#include <Framework/Bridge/BridgeServices.h>
+#include <Framework/Bridge/BridgeComponent.h>
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>

@@ -38,11 +38,11 @@
  *
  */
 
-#include <SCIRun/Bridge/BridgeComponentInstance.h>
-#include <SCIRun/CCA/CCAException.h>
-#include <SCIRun/Dataflow/SCIRunComponentModel.h>
-#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/TypeMap.h>
+#include <Framework/Bridge/BridgeComponentInstance.h>
+#include <Framework/CCA/CCAException.h>
+#include <Framework/Dataflow/SCIRunComponentModel.h>
+#include <Framework/SCIRunFramework.h>
+#include <Framework/TypeMap.h>
 #include <Core/Thread/Mutex.h>
 
 #include <iostream>

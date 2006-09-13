@@ -38,15 +38,15 @@
  *
  */
 
-#ifndef SCIRun_CCA_BridgeComponentModel_h
-#define SCIRun_CCA_BridgeComponentModel_h
+#ifndef Framework_CCA_BridgeComponentModel_h
+#define Framework_CCA_BridgeComponentModel_h
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
-#include <SCIRun/ComponentModel.h>
-#include <SCIRun/ComponentInstance.h>
-#include <SCIRun/Bridge/BridgeServices.h>
-#include <SCIRun/Bridge/BridgeComponent.h>
+#include <Framework/ComponentModel.h>
+#include <Framework/ComponentInstance.h>
+#include <Framework/Bridge/BridgeServices.h>
+#include <Framework/Bridge/BridgeComponent.h>
 #include <string>
 #include <map>
 

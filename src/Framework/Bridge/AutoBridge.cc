@@ -27,10 +27,10 @@
 */
 
 
-#include <SCIRun/Bridge/AutoBridge.h>
-#include <SCIRun/ComponentModel.h>
-#include <SCIRun/CCA/CCAComponentModel.h>
-#include <SCIRun/Babel/BabelComponentModel.h>
+#include <Framework/Bridge/AutoBridge.h>
+#include <Framework/ComponentModel.h>
+#include <Framework/CCA/CCAComponentModel.h>
+#include <Framework/Babel/BabelComponentModel.h>
 
 #include <errno.h>
 #include <unistd.h>

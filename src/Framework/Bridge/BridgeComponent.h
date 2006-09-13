@@ -41,7 +41,7 @@
 #ifndef SCIRUN_BRIDGE_BRIDGECOMPONENT
 #define SCIRUN_BRIDGE_BRIDGECOMPONENT
 
-#include <SCIRun/Bridge/BridgeServices.h>
+#include <Framework/Bridge/BridgeServices.h>
 
 namespace SCIRun {
   

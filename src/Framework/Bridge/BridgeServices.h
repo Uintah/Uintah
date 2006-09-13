@@ -48,17 +48,17 @@
 #include <Core/CCA/spec/cca_sidl.h>
 
 //Babel:
-#include <SCIRun/Babel/framework.hxx>
-#include <SCIRun/Babel/gov_cca.hxx>
+#include <Framework/Babel/framework.hxx>
+#include <Framework/Babel/gov_cca.hxx>
 
 //Dataflow:
 #include <Dataflow/Network/Ports/Port.h>
 
 //Vtk:
 #if HAVE_VTK
- #include <SCIRun/Vtk/InPort.h>
- #include <SCIRun/Vtk/OutPort.h>
- #include <SCIRun/Vtk/VtkPortInstance.h>
+ #include <Framework/Vtk/InPort.h>
+ #include <Framework/Vtk/OutPort.h>
+ #include <Framework/Vtk/VtkPortInstance.h>
 #endif
 
 namespace SCIRun {
