@@ -32,7 +32,7 @@
 #include <CCA/Components/GUIBuilder/wxSCIRunApp.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Core/Thread/Mutex.h>
-#include <SCIRun/StandAlone/sr2_version.h>
+#include <Framework/StandAlone/sr2_version.h>
 
 #include <wx/gdicmn.h>
 
@@ -136,6 +136,7 @@ public:
   // test ApplicationLoader
   virtual bool applicationFileExists();
   virtual void saveApplication();
+  virtual void saveApplication(const std::string& fileName);
 
   static void setApp(wxSCIRunApp& a) { app = &a; }
 

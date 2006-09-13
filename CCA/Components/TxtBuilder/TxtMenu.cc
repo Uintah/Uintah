@@ -38,7 +38,7 @@
  *
  */
 
-#include <SCIRun/CCA/CCAException.h>
+#include <Framework/CCA/CCAException.h>
 #include <curses.h>
 #include <menu.h>
 #include <CCA/Components/TxtBuilder/DropMenu.h>

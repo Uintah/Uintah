@@ -44,7 +44,7 @@
 #include <vtkStructuredPoints.h>
 #include <vtkPolyData.h>
 
-#include <SCIRun/Vtk/Port.h>
+#include <Framework/Vtk/Port.h>
 #include <CCA/Components/VTK/Graphics/ContourFilter.h>
 
 using namespace std;

@@ -46,7 +46,7 @@
 #include <wx/wx.h>
 #endif
 
-#include <SCIRun/ComponentSkeletonWriter.h>
+#include <Framework/ComponentSkeletonWriter.h>
 #include <CCA/Components/GUIBuilder/GUIBuilder.h>
 #include <CCA/Components/GUIBuilder/CodePreviewDialog.h>
 #include <vector>

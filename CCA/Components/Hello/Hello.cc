@@ -41,7 +41,7 @@
 #include <sci_wx.h>
 #include <CCA/Components/Hello/Hello.h>
 #include <Core/Thread/Time.h>
-#include <SCIRun/TypeMap.h>
+#include <Framework/TypeMap.h>
 
 #include <iostream>
 #include <unistd.h>

@@ -57,9 +57,9 @@
 #include <Core/Thread/Thread.h>
 #include <Core/Containers/StringUtil.h>
 
-# include <SCIRun/TypeMap.h>
+# include <Framework/TypeMap.h>
 #if GUI_TEST
-# include <SCIRun/CCA/CCAException.h>
+# include <Framework/CCA/CCAException.h>
 #endif
 
 #include <CCA/Components/GUIBuilder/GUIBuilder.h>
@@ -401,37 +401,59 @@ void BuilderWindow::OnTest(wxCommandEvent&/* event */)
 // network file handling will have to be moved outside of GUI classes
 void BuilderWindow::OnLoad(wxCommandEvent& event)
 {
-  wxBusyCursor wait;
+  // need to save current app if user agrees and clear
 
-  wxString wildcard(wxT("SCIRun2 application files"));
-  wildcard += wxT(GUIBuilder::APP_EXT_WILDCARD);
-  wxFileDialog fDialog(this, wxT("Open application file"), wxT(GUIBuilder::DEFAULT_OBJ_DIR), wxT(wxEmptyString), wxT(wildcard), wxOPEN|wxFILE_MUST_EXIST|wxCHANGE_DIR);
-  statusBar->SetStatusText("Loading application file", 0);
-  if (fDialog.ShowModal() == wxID_OK) {
-    wxString path = fDialog.GetPath();
-    // use GUIBuilder to load file
-    statusBar->SetStatusText("Application file loaded", 0);
-  } else {
-    statusBar->SetStatusText("", 0);
-  }
+//   wxBusyCursor wait;
+
+//   wxString wildcard(wxT("SCIRun2 application files"));
+//   wildcard += wxT(GUIBuilder::APP_EXT_WILDCARD);
+//   wxFileDialog fDialog(this, wxT("Open application file"), wxT(GUIBuilder::DEFAULT_OBJ_DIR), wxT(wxEmptyString), wxT(wildcard), wxOPEN|wxFILE_MUST_EXIST|wxCHANGE_DIR);
+//   statusBar->SetStatusText("Loading application file", 0);
+//   if (fDialog.ShowModal() == wxID_OK) {
+//     wxString path = fDialog.GetPath();
+//     // use GUIBuilder to load file
+//     statusBar->SetStatusText("Application file loaded", 0);
+//   } else {
+//     statusBar->SetStatusText("", 0);
+//   }
 }
 
 void BuilderWindow::OnSave(wxCommandEvent& event)
 {
-  // need to see if a file name has been set?
-  builder->saveApplication();
+  wxBusyCursor wait;
+  bool exists = builder->applicationFileExists();
+  if (exists) {
+    // get file name?
+    int answer = wxMessageBox("Overwrite current application file?", "Confirm", wxYES_NO|wxICON_QUESTION, this);
+    if (answer == wxYES) {
+      builder->saveApplication();
+    }
+  }
 }
 
 void BuilderWindow::OnSaveAs(wxCommandEvent& event)
 {
+  wxBusyCursor wait;
 //   wxString wildcard(wxT("SCIRun2 application files"));
-//   wildcard += wxT("(*.") + wxT(ApplicationLoader::APPLICATION_FILE_EXTENSION) + wxT(")");
-//   wxFileDialog fDialog(this, wxT("Open application file"), wxT(GUIBuilder::DEFAULT_OBJ_DIR), wxT(wxEmptyString), wxT(wildcard), wxSAVE|wxOVERWRITE_PROMPT|wxCHANGE_DIR);
-//   statusBar->SetStatusText("Saving application file", 0);
-//   if (fDialog.ShowModal() == wxID_OK) {
-//     wxString path = fDialog.GetPath();
-//     // use GUIBuilder to save file
-//     statusBar->SetStatusText("Application file loaded", 0);
+//   wildcard += "(" + wxT(GUIBuilder::APP_EXT_WILDCARD) + ") | " + wxT(GUIBuilder::APP_EXT_WILDCARD);
+// std::cerr << "Default dir: " << GUIBuilder::DEFAULT_OBJ_DIR << std::endl;
+//   wxString path = wxFileSelector(wxT("Save application file"),
+//                                  wxT(GUIBuilder::DEFAULT_OBJ_DIR.c_str()),
+//                                  wxT(""),
+//                                  wxT(""),
+//                                  wildcard,
+//                                  wxSAVE|wxOVERWRITE_PROMPT|wxCHANGE_DIR);
+  wxString path = wxFileSelector(wxEmptyString,
+                                 wxEmptyString,
+                                 wxEmptyString,
+                                 wxEmptyString,
+                                 wxEmptyString,
+                                 0,
+                                 this);
+//   if (! path.empty()) {
+//     statusBar->SetStatusText("Saving application file", 0);
+//     builder->saveApplication(path.c_str());
+//     statusBar->SetStatusText("Application file saved", 0);
 //   } else {
 //     statusBar->SetStatusText("", 0);
 //   }

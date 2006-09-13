@@ -42,8 +42,8 @@
 #include <CCA/Components/TxtBuilder/TxtNetwork.h>
 #include <CCA/Components/TxtBuilder/TxtBuilder.h>
 #include <CCA/Components/TxtBuilder/TxtModule.h>
-#include <SCIRun/TypeMap.h>
-#include <SCIRun/CCA/CCAException.h>
+#include <Framework/TypeMap.h>
+#include <Framework/CCA/CCAException.h>
 
 using namespace SCIRun;
 

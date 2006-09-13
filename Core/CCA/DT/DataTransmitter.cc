@@ -71,7 +71,7 @@
 
 using namespace SCIRun;
 
-DataTransmitter::DataTransmitter() : newMsgCnt(0), quit(false)
+DataTransmitter::DataTransmitter() : newMsgCnt(0), sending_thread(0), recving_thread(0), quit(false)
 {
   struct sockaddr_in my_addr;    // my address information
   if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) == -1) {
@@ -93,7 +93,7 @@ DataTransmitter::DataTransmitter() : newMsgCnt(0), quit(false)
   }
 
   struct hostent *he;
-  if ((he = gethostbyname(hostname)) == NULL) {
+  if ((he = gethostbyname(hostname)) == 0) {
     throw CommError("gethostbyname", errno);
   }
 
@@ -145,7 +145,7 @@ DataTransmitter::putMessage(DTMessage *msg)
 
     //generate a new tag for this message
     //this is already thread-safe
-    if (pt->service != NULL) {
+    if (pt->service != 0) {
       pt->service(msg);
     } else {
       throw CommError("Client trying to send a message to a client.",-1);
@@ -204,7 +204,7 @@ DataTransmitter::putReplyMessage(DTMessage *msg)
     msg->autofree = true;
     DTPoint *pt = msg->recver;
 
-    if (pt->service != NULL) {
+    if (pt->service != 0) {
       throw CommError("Server trying to send a message to a server.", -1);
     } else {
       recvQ_mutex->lock();
@@ -227,7 +227,7 @@ DTMessage *
 DataTransmitter::getMessage(const DTMessageTag &tag)
 {
   recvQ_mutex->lock();
-  DTMessage *msg = NULL;
+  DTMessage *msg = 0;
   for (std::vector<DTMessage*>::iterator iter = recv_msgQ.begin(); iter != recv_msgQ.end(); iter++) {
     if ( (*iter)->tag == tag) {
       msg = *iter;
@@ -256,7 +256,7 @@ DataTransmitter::getMessage(const DTMessageTag &tag)
     }
   }
   throw CommError("Semaphore up but not message received",-1);
-  return NULL;
+  return 0;
 }
 
 
@@ -265,7 +265,7 @@ DTMessage *
 DataTransmitter::getMsg()
 {
   recvQ_mutex->lock();
-  DTMessage *msg = NULL;
+  DTMessage *msg = 0;
   defaultSema->down();
   for (std::vector<DTMessage*>::iterator iter = recv_msgQ.begin(); iter != recv_msgQ.end(); iter++) {
     if ( (*iter)->tag == currentTag.defaultTag()) {
@@ -276,7 +276,7 @@ DataTransmitter::getMsg()
     }
   }
   throw CommError("Semaphore up but not message received",-1);
-  return NULL;
+  return 0;
 }
 
 void
@@ -286,17 +286,17 @@ DataTransmitter::run()
   if (listen(sockfd, 10) == -1) {
     throw CommError("listen", errno);
   }
-  //cout<<"DataTransmitter is Listening: URL="<<getUrl()<<endl;
+  std::cout << "DataTransmitter is listening: URL=" << getUrl() << std::endl;
 
-  Thread *sending_thread = new Thread(new DTThread(this, 1), "Data Transmitter Sending Thread", 0, Thread::NotActivated);
-  sending_thread->setStackSize(1024*256);
+  sending_thread = new Thread(new DTThread(this, 1), "Data Transmitter Sending Thread", 0, Thread::NotActivated);
+  sending_thread->setStackSize(STACK_SIZE);
   sending_thread->activate(false);
-  sending_thread->detach();
+  //sending_thread->detach();
 
-  Thread *recving_thread = new Thread(new DTThread(this, 2), "Data Transmitter Recving Thread", 0, Thread::NotActivated);
-  recving_thread->setStackSize(1024*256);
+  recving_thread = new Thread(new DTThread(this, 2), "Data Transmitter Recving Thread", 0, Thread::NotActivated);
+  recving_thread->setStackSize(STACK_SIZE);
   recving_thread->activate(false);
-  recving_thread->detach();
+  //recving_thread->detach();
 }
 
 
@@ -422,8 +422,11 @@ DataTransmitter::runRecvingThread()
       FD_SET(iter->second, &read_fds);
       if (maxfd < iter->second) maxfd = iter->second;
     }
-    if (select(maxfd+1, &read_fds, NULL, NULL, &timeout) == -1) {
-      throw CommError("select", errno);
+    if (select(maxfd+1, &read_fds, 0, 0, &timeout) == -1) {
+      int saveErrno = errno;
+      // lock?
+      char* buf =  strerror(saveErrno);
+      throw CommError(std::string("select error: ") + buf, saveErrno);
     }
 
     // run through the existing connections looking for data to read
@@ -466,7 +469,7 @@ DataTransmitter::runRecvingThread()
             //if (id != "")
             // cout<<"===DT Recv Message: "<<msg->tag.lo<<id<<" Destination="; msg->getDestination().display();
 
-            if (pt->service != NULL) {
+            if (pt->service != 0) {
               pt->service(msg);
             } else {
               if (msg->tag == currentTag.defaultTag()) {
@@ -510,10 +513,10 @@ DataTransmitter::runRecvingThread()
       // (ie: reading the man page) this is what you are supposed to do. (Dd)
       if(protocol_id == -1) {
         struct protoent * p = getprotobyname("TCP");
-        if(p == NULL) {
+        if(p == 0) {
           std::cout << "DataTransmitter.cc: Error.  Lookup of protocol TCP failed!\n";
           exit();
-          return; 
+          return;
         }
         protocol_id = p->p_proto;
       }
@@ -579,25 +582,25 @@ DataTransmitter::sendPacket(DTMessage *msg, int packetLen)
 
     static int protocol_id = -1;
 #if defined(__sgi) || defined(__APPLE__)
-      // SGI does not have SOL_TCP defined.  To the best of my knowledge
-      // (ie: reading the man page) this is what you are supposed to do. (Dd)
-      if(protocol_id == -1) {
-        struct protoent * p = getprotobyname("TCP");
-        if(p == NULL) {
-          std::cout << "DataTransmitter.cc: Error.  Lookup of protocol TCP failed!\n";
-          exit();
-          return; 
-        }
-        protocol_id = p->p_proto;
+    // SGI does not have SOL_TCP defined.  To the best of my knowledge
+    // (ie: reading the man page) this is what you are supposed to do. (Dd)
+    if(protocol_id == -1) {
+      struct protoent * p = getprotobyname("TCP");
+      if(p == 0) {
+        std::cout << "DataTransmitter.cc: Error.  Lookup of protocol TCP failed!\n";
+        exit();
+        return;
       }
-      int yes = 1;
+      protocol_id = p->p_proto;
+    }
+    int yes = 1;
 #else
 #ifdef _WIN32
-      protocol_id = IPPROTO_TCP; 
-      char yes = 1; // the windows version of setsockopt takes a char*
+    protocol_id = IPPROTO_TCP;
+    char yes = 1; // the windows version of setsockopt takes a char*
 #else
-      protocol_id = SOL_TCP;
-      int yes = 1;
+    protocol_id = SOL_TCP;
+    int yes = 1;
 #endif
 #endif
 
@@ -658,15 +661,19 @@ DataTransmitter::recvall(int sockfd, void *buf, int len)
   }
   return total;
 }
-/*
-  void DataTransmitter::registerPoint(DTPoint * pt){
-  semamap[pt]=pt->sema;
-  }
 
-  void DataTransmitter::unregisterPoint(DTPoint * pt){
-  semamap.erase(pt);
-  }
-*/
+#if 0
+//////////////////////////////////////////////////////////////////////////
+//   void DataTransmitter::registerPoint(DTPoint * pt){
+//   semamap[pt]=pt->sema;
+//   }
+//
+//   void DataTransmitter::unregisterPoint(DTPoint * pt){
+//   semamap.erase(pt);
+//   }
+//////////////////////////////////////////////////////////////////////////
+#endif
+
 DTAddress
 DataTransmitter::getAddress()
 {
@@ -682,6 +689,13 @@ DataTransmitter::isLocal(DTAddress& addr)
 void
 DataTransmitter::exit()
 {
+std::cerr << "DataTransmitter::exit()" << std::endl;
+
   quit = true;
   sendQ_cond->conditionSignal(); //wake up the sendingThread
+
+  recving_thread->join();
+  recving_thread = 0;
+  sending_thread->join();
+  sending_thread = 0;
 }

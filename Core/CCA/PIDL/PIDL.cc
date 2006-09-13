@@ -158,9 +158,9 @@ PIDL::isFramework(){
 void
 PIDL::finalize()
 {
-  if(sampleProxy) {
+  if (sampleProxy) {
 #if defined (HAVE_MPI) || defined (HAVE_MPICH)
-    if(PIDL::size > 1) { ::std::cerr << "YOYO\n"; (*optr)->getException(); }
+    if (PIDL::size > 1) { ::std::cerr << "YOYO\n"; (*optr)->getException(); }
     delete optr;
 #endif
   }

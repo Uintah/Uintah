@@ -50,8 +50,8 @@ SRCS    += \
            $(SRCDIR)/ComponentWizardHelper.cc 
 
 PSELIBS := \
-           SCIRun Core/CCA/spec Core/CCA/PIDL \
-           Core/OS Core/Thread Core/Exceptions
+           Framework Core/CCA/spec Core/CCA/PIDL \
+           Core/OS Core/Util Core/Thread Core/Exceptions
 
 LIBS := $(WX_LIBRARY)
 

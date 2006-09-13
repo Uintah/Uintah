@@ -62,16 +62,18 @@ public:
              const SSIDL::array1<double> solution);
   virtual ~MainWindow();
 
+//   virtual bool Show(bool show = true) { std::cerr << "MainWindow::Show(..)" << std::endl; abort(); return wxWindow::Show(show); }
+
 private:
   const static int X = 200;
   const static int Y = 200;
   const static int WIDTH = 500;
   const static int HEIGHT = 500;
 
-  Colormap* cmap;
-  ViewerWindow* viewer;
-  wxCheckBox* meshCheckBox;
-  wxCheckBox* coordsCheckBox;
+//   Colormap* cmap;
+//   ViewerWindow* viewer;
+//   wxCheckBox* meshCheckBox;
+//   wxCheckBox* coordsCheckBox;
 };
 
 }

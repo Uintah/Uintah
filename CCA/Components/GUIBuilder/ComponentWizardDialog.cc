@@ -42,7 +42,7 @@
 #include <CCA/Components/GUIBuilder/ComponentWizardHelper.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/OS/Dir.h>
-#include <SCIRun/TypeMap.h>
+#include <Framework/TypeMap.h>
 #include <Core/Util/Environment.h>
 
 #include <wx/grid.h>

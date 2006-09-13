@@ -46,6 +46,7 @@
 namespace Viewer {
 
 class Viewer;
+class MainWindow;
 
 class ViewPort : public virtual sci::cca::ports::ViewPort {
 public:
@@ -53,6 +54,9 @@ public:
   virtual int view2dPDE(const SSIDL::array1<double> &nodes,
                         const SSIDL::array1<int> &triangles,
                         const SSIDL::array1<double> &solution);
+
+private:
+  MainWindow* mw;
 };
 
 // rename to 2D Viewer???

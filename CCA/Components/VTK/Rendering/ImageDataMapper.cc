@@ -39,7 +39,7 @@
  */
 
 #include <iostream>
-#include <SCIRun/Vtk/Port.h>
+#include <Framework/Vtk/Port.h>
 #include "ImageDataMapper.h"
 
 using namespace std;

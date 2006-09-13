@@ -55,7 +55,7 @@
 // DO-NOT-DELETE splicer.begin(hello.Com._includes)
 #include "hello.hxx"
 
-#include <SCIRun/Babel/framework_TypeMap.hxx>
+#include <Framework/Babel/framework_TypeMap.hxx>
 // DO-NOT-DELETE splicer.end(hello.Com._includes)
 
 // speical constructor, used for data wrapping(required).  Do not put code here unless you really know what you're doing!

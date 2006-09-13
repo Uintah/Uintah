@@ -58,6 +58,10 @@ ViewerWindow::ViewerWindow(wxWindow *parent,
                            const std::vector<double> solution)
   : wxPanel(parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxSUNKEN_BORDER|wxDOUBLE_BORDER),
     cmap(cmap),
+    minx(0.0),
+    miny(0.0),
+    maxx(1.0),
+    maxy(1.0),
     nodes1d(nodes1d),
     triangles(triangles),
     solution(solution),
@@ -70,40 +74,43 @@ ViewerWindow::ViewerWindow(wxWindow *parent,
 //   setBackground("Gray");
 //   setLineWidth(2);
 
+std::cerr << "ViewerWindow::ViewerWindow(..)" << std::endl;
+
   const int N = nodes1d.size() / 2;
 
-  if (N == 0) {
-    return;
-  }
-  minx = maxx = nodes1d[0];
-  miny = maxy = nodes1d[1];
+  if (N > 0) {
+std::cerr << "ViewerWindow::ViewerWindow(..): N > 0" << std::endl;
+    minx = maxx = nodes1d[0];
+    miny = maxy = nodes1d[1];
 
-  for (int i = 0; i < N; i++) {
-    if (minx > nodes1d[i*2]) {
-      minx = nodes1d[i*2];
+    for (int i = 0; i < N; i++) {
+      if (minx > nodes1d[i*2]) {
+        minx = nodes1d[i*2];
+      }
+      if (maxx < nodes1d[i*2]) {
+        maxx = nodes1d[i*2];
+      }
+      if (miny > nodes1d[i*2+1]) {
+        miny = nodes1d[i*2+1];
+      }
+      if (maxy < nodes1d[i*2+1]) {
+        maxy = nodes1d[i*2+1];
+      }
     }
-    if (maxx < nodes1d[i*2]) {
-      maxx = nodes1d[i*2];
-    }
-    if (miny > nodes1d[i*2+1]) {
-      miny = nodes1d[i*2+1];
-    }
-    if (maxy < nodes1d[i*2+1]) {
-      maxy = nodes1d[i*2+1];
-    }
-  }
 
-  double minVal = solution[0];
-  double maxVal = solution[0];
-  for (int i = 0; i < N; i++) {
-    if (minVal > solution[i]) {
-      minVal = solution[i];
+    double minVal = solution[0];
+    double maxVal = solution[0];
+    for (int i = 0; i < N; i++) {
+      if (minVal > solution[i]) {
+        minVal = solution[i];
+      }
+      if (maxVal < solution[i]) {
+        maxVal = solution[i];
+      }
     }
-    if (maxVal < solution[i]) {
-      maxVal = solution[i];
-    }
+    cmap->setValues(minVal, maxVal);
   }
-  cmap->setValues(minVal, maxVal);
+std::cerr << "ViewerWindow::ViewerWindow(..): done" << std::endl;
 }
 
 void ViewerWindow::refresh(const wxString &type)

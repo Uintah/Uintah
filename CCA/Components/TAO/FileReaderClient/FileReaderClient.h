@@ -5,7 +5,7 @@
 #ifndef FILEREADER_CLIENT_H
 #define FILEREADER_CLIENT_H
 #include <pre.h>
-#include <SCIRun/Tao/Component.h>
+#include <Framework/Tao/Component.h>
 #include <CCA/Components/TAO/FileReader/TestS.h>
 
 #if defined (_MSC_VER)
