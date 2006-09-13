@@ -38,11 +38,11 @@
  *
  */
 
-#ifndef SCIRun_Framework_ComponentModel_h
-#define SCIRun_Framework_ComponentModel_h
+#ifndef Framework_Framework_ComponentModel_h
+#define Framework_Framework_ComponentModel_h
 
-#include <SCIRun/resourceReference.h>
-#include <SCIRun/CCA/CCAComponentDescription.h>
+#include <Framework/resourceReference.h>
+#include <Framework/CCA/CCAComponentDescription.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/soloader.h>

@@ -38,18 +38,18 @@
  *
  */
 
-#ifndef SCIRun_SCIRunLoader_h
-#define SCIRun_SCIRunLoader_h
+#ifndef Framework_SCIRunLoader_h
+#define Framework_SCIRunLoader_h
 
 #include <Core/Thread/Mutex.h>
 #include <Core/CCA/spec/cca_sidl.h>
 #include <vector>
 #include <map>
 #include <string>
-#include <SCIRun/ComponentModel.h>
-#include <SCIRun/CCA/CCAComponentDescription.h>
-#include <SCIRun/ComponentInstance.h>
-#include <SCIRun/resourceReference.h>
+#include <Framework/ComponentModel.h>
+#include <Framework/CCA/CCAComponentDescription.h>
+#include <Framework/ComponentInstance.h>
+#include <Framework/resourceReference.h>
 
 namespace SCIRun {
 

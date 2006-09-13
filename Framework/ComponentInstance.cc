@@ -38,8 +38,8 @@
  *
  */
 
-#include <SCIRun/ComponentInstance.h>
-#include <SCIRun/SCIRunFramework.h>
+#include <Framework/ComponentInstance.h>
+#include <Framework/SCIRunFramework.h>
 #include <iostream>
 
 namespace SCIRun {

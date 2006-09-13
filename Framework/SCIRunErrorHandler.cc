@@ -38,7 +38,7 @@
  *
  */
 
-#include <SCIRun/SCIRunErrorHandler.h>
+#include <Framework/SCIRunErrorHandler.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/XMLUtil/XMLUtil.h>
 #include <iostream>

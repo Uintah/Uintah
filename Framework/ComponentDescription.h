@@ -38,8 +38,8 @@
  *
  */
 
-#ifndef SCIRun_ComponentDescription_h
-#define SCIRun_ComponentDescription_h
+#ifndef Framework_ComponentDescription_h
+#define Framework_ComponentDescription_h
 
 #include <string>
 

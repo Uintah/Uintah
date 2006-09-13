@@ -40,8 +40,8 @@
 
 
 
-#ifndef SCIRun_ComponentSkeletonWriter_h
-#define SCIRun_ComponentSkeletonWriter_h
+#ifndef Framework_ComponentSkeletonWriter_h
+#define Framework_ComponentSkeletonWriter_h
 
 #include <vector>
 #include <string>

@@ -38,8 +38,8 @@
  *
  */
 
-#ifndef SCIRun_CCACommunicator_h
-#define SCIRun_CCACommunicator_h
+#ifndef Framework_CCACommunicator_h
+#define Framework_CCACommunicator_h
 
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Semaphore.h>

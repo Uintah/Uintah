@@ -38,8 +38,8 @@
  *
  */
 
-#include <SCIRun/TypeMap.h>
-#include <SCIRun/CCA/TypeMismatchException.h>
+#include <Framework/TypeMap.h>
+#include <Framework/CCA/TypeMismatchException.h>
 
 namespace SCIRun {
 

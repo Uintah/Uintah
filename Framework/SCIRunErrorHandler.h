@@ -38,8 +38,8 @@
  *
  */
 
-#ifndef SCIRun_Framework_SCIRunErrorHandler_h
-#define SCIRun_Framework_SCIRunErrorHandler_h
+#ifndef Framework_Framework_SCIRunErrorHandler_h
+#define Framework_Framework_SCIRunErrorHandler_h
 
 #if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
 #define IRIX

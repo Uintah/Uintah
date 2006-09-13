@@ -38,7 +38,7 @@
  *
  */
 
-#include <SCIRun/ComponentDescription.h>
+#include <Framework/ComponentDescription.h>
 
 namespace SCIRun {
 
