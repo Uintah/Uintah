@@ -26,8 +26,8 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef SCIRun_Dataflow_SCIRunTCLThread
-#define SCIRun_Dataflow_SCIRunTCLThread 1
+#ifndef Framework_Dataflow_SCIRunTCLThread
+#define Framework_Dataflow_SCIRunTCLThread 1
 
 
 #include <Core/Thread/Runnable.h>

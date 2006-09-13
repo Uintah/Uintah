@@ -38,10 +38,10 @@
  *
  */
 
-#ifndef SCIRun_Framework_SCIRunComponentDescription_h
-#define SCIRun_Framework_SCIRunComponentDescription_h
+#ifndef Framework_Framework_SCIRunComponentDescription_h
+#define Framework_Framework_SCIRunComponentDescription_h
 
-#include <SCIRun/ComponentDescription.h>
+#include <Framework/ComponentDescription.h>
 #include <string>
 
 namespace SCIRun {

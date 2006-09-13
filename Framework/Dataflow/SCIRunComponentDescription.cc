@@ -38,8 +38,8 @@
  *
  */
 
-#include <SCIRun/Dataflow/SCIRunComponentDescription.h>
-#include <SCIRun/Dataflow/SCIRunComponentModel.h>
+#include <Framework/Dataflow/SCIRunComponentDescription.h>
+#include <Framework/Dataflow/SCIRunComponentModel.h>
 #include <iostream>
 
 namespace SCIRun {

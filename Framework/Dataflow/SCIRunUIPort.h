@@ -38,8 +38,8 @@
  *
  */
 
-#ifndef SCIRun_Dataflow_SCIRunUIPort_h
-#define SCIRun_Dataflow_SCIRunUIPort_h
+#ifndef Framework_Dataflow_SCIRunUIPort_h
+#define Framework_Dataflow_SCIRunUIPort_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 

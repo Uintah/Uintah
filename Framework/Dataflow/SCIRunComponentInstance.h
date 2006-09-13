@@ -38,11 +38,11 @@
  *
  */
 
-#ifndef SCIRun_Framework_SCIRunComponentInstance_h
-#define SCIRun_Framework_SCIRunComponentInstance_h
+#ifndef Framework_Framework_SCIRunComponentInstance_h
+#define Framework_Framework_SCIRunComponentInstance_h
 
-#include <SCIRun/ComponentInstance.h>
-#include <SCIRun/PortInstanceIterator.h>
+#include <Framework/ComponentInstance.h>
+#include <Framework/PortInstanceIterator.h>
 #include <string>
 #include <vector>
 

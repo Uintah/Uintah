@@ -26,8 +26,8 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#ifndef SCIRun_Dataflow_SCIRunGoPort
-#define SCIRun_Dataflow_SCIRunGoPort 1
+#ifndef Framework_Dataflow_SCIRunGoPort
+#define Framework_Dataflow_SCIRunGoPort 1
 
 #include <Core/CCA/spec/cca_sidl.h>
 
