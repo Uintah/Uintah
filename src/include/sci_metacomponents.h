@@ -43,25 +43,25 @@
 #  define BUILD_BRIDGE 1
 #endif
 
-#include <SCIRun/CCA/CCAComponentModel.h>
-#include <SCIRun/Internal/InternalComponentModel.h>
+#include <Framework/CCA/CCAComponentModel.h>
+#include <Framework/Internal/InternalComponentModel.h>
 
 #ifdef BUILD_DATAFLOW
-#  include <SCIRun/Dataflow/SCIRunComponentModel.h>
+#  include <Framework/Dataflow/SCIRunComponentModel.h>
 #endif
 
 #ifdef BUILD_BRIDGE
-#  include <SCIRun/Bridge/BridgeComponentModel.h>
+#  include <Framework/Bridge/BridgeComponentModel.h>
 #endif
 #if HAVE_BABEL
-#  include <SCIRun/Babel/BabelComponentModel.h>
+#  include <Framework/Babel/BabelComponentModel.h>
 #endif
 #if HAVE_VTK
-#  include <SCIRun/Vtk/VtkComponentModel.h>
+#  include <Framework/Vtk/VtkComponentModel.h>
 #endif
 #if HAVE_TAO
-#  include <SCIRun/Corba/CorbaComponentModel.h>
-#  include <SCIRun/Tao/TaoComponentModel.h>
+#  include <Framework/Corba/CorbaComponentModel.h>
+#  include <Framework/Tao/TaoComponentModel.h>
 #endif
 
 #endif
