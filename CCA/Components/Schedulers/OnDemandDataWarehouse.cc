@@ -370,7 +370,7 @@ OnDemandDataWarehouse::sendMPI(SendState& ss, SendState& rs, DependencyBatch* ba
         
 
         int tag = PARTICLESET_TAG;
-        particles << d_myworld->myrank() << " " << getID() << " Sending PARTICLE message " << tag << ", to " << dest << ", patch " << patch->getID() << ", matl " << matlIndex << ", length: " << 1 << "(" << numParticles << ") " << sendset->getLow() << " " << sendset->getHigh() << " GI " << patch->getGridIndex() << " tag " << batch->messageTag << endl; cerrLock.unlock();
+        particles << d_myworld->myrank() << " " << getID() << " Sending PARTICLE message " << tag << ", to " << dest << ", patch " << patch->getID() << ", matl " << matlIndex << ", length: " << 1 << "(" << numParticles << ") " << sendset->getLow() << " " << sendset->getHigh() << " GI " << patch->getGridIndex() << " tag " << batch->messageTag << endl;
         MPI_Bsend(&numParticles, 1, MPI_INT, dest, tag, d_myworld->getComm());
         ssLock.lock();  // Dd: ??       
         ss.add_sendset(sendset, dest, patch, matlIndex, low, high, old_dw->d_generation);
