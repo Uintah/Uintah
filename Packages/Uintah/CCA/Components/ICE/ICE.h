@@ -565,8 +565,6 @@ namespace Uintah {
 //  A M R I C E 
     template<class T>
     void refluxOperator_computeCorrectionFluxes( 
-                              constCCVariable<double>& rho_CC_coarse,
-                              constCCVariable<double>& cv,
                               const string& fineVarLabel,
                               const int indx,
                               const Patch* coarsePatch,

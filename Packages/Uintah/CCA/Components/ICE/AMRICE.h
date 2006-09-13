@@ -282,7 +282,8 @@ void ICE::refluxOperator_applyCorrectionFluxes(
       if(patchFace == Patch::xminus || patchFace == Patch::xplus){
         for(; !c_iter.done(); c_iter++){
           IntVector c_CC = *c_iter;
-          IntVector c_FC = c_CC + c_FC_offset;                
+          IntVector c_FC = c_CC + c_FC_offset;
+          
           q_CC_coarse[c_CC] += Q_X_coarse_flux[c_FC];
                 
           count += one_zero;                       // keep track of how that face                        
@@ -293,6 +294,7 @@ void ICE::refluxOperator_applyCorrectionFluxes(
         for(; !c_iter.done(); c_iter++){
           IntVector c_CC = *c_iter;
           IntVector c_FC = c_CC + c_FC_offset;
+          
           q_CC_coarse[c_CC] += Q_Y_coarse_flux[c_FC];
           
           count += one_zero;                              
@@ -303,6 +305,7 @@ void ICE::refluxOperator_applyCorrectionFluxes(
         for(; !c_iter.done(); c_iter++){
           IntVector c_CC = *c_iter;
           IntVector c_FC = c_CC + c_FC_offset;             
+          
           q_CC_coarse[c_CC] += Q_Z_coarse_flux[c_FC];
           
           count += one_zero;                              
@@ -529,8 +532,6 @@ void AMRICE::fineToCoarseOperator(CCVariable<T>& q_CC,
 _____________________________________________________________________*/
 template<class T>
 void ICE::refluxOperator_computeCorrectionFluxes( 
-                              constCCVariable<double>& rho_CC_coarse,
-                              constCCVariable<double>& cv,
                               const string& fineVarLabel,
                               const int indx,
                               const Patch* coarsePatch,
@@ -620,37 +621,11 @@ void ICE::refluxOperator_computeCorrectionFluxes(
   }
 
   Vector dx = coarsePatch->dCell();
-  double coarseCellVol = dx.x()*dx.y()*dx.z();
   IntVector r_Ratio = fineLevel->getRefinementRatio();
 
-  //__________________________________
-  //  switches that modify the denomiator 
-  //  depending on which quantity is being refluxed.
-  double oneZero = 0.0;     //             1 or 0
-  double switch1 = 0.0;     // denomiator = cellVol
-  double switch2 = 1.0;     //            = mass
-  double switch3 = 0.0;     //            = mass * cv
   
   // coeff accounts for the different cell sizes on the different levels
   double coeff = ( (double)r_Ratio.x() * r_Ratio.y() * r_Ratio.z() );
-  
-  if(fineVarLabel == "mass" ){
-    switch1 = 1.0;
-    switch2 = 0.0;
-    switch3 = 0.0;         
-  }
-  if(fineVarLabel == "int_eng"){
-    switch1 = 0.0;
-    switch2 = 0.0;
-    switch3 = 1.0;
-  }
-  if(fineVarLabel == "vol_frac"){
-    coeff   = 1.0;
-    oneZero = 1.0;
-    switch1 = 0.0;   // The equation for the reflux correction for volFrac
-    switch2 = 0.0;   // 
-    switch3 = 0.0;
-  }
   
   //__________________________________
   // Iterate over coarsefine interface faces
@@ -730,18 +705,8 @@ void ICE::refluxOperator_computeCorrectionFluxes(
              IntVector f_FC = fineStart + *inside;
              sum_fineLevelFlux += Q_X_fine_flux[f_FC];
            }
-           // Q_CC = mass * q_CC = cellVol * rho * q_CC
 
-           double mass_CC_coarse = rho_CC_coarse[c_CC] * coarseCellVol;
-           double denominator = oneZero
-                              + switch1 * coarseCellVol     
-                              + switch2 * mass_CC_coarse
-                              + switch3 * mass_CC_coarse * cv[c_CC]; 
-/*`==========TESTING==========*/
-           denominator = 1.0; 
-/*===========TESTING==========`*/
-
-           Q_X_coarse_flux[c_FC] = ( c_FaceNormal*Q_X_coarse_flux_org[c_FC] + coeff* f_FaceNormal*sum_fineLevelFlux) /denominator;
+           Q_X_coarse_flux[c_FC] = ( c_FaceNormal*Q_X_coarse_flux_org[c_FC] + coeff* f_FaceNormal*sum_fineLevelFlux);
 
            count += one_zero;                              
            finePatch->setFaceMark(0,patchFace,count);
@@ -749,10 +714,9 @@ void ICE::refluxOperator_computeCorrectionFluxes(
 #if SPEW
         if (c_CC.y() == half.y() && c_CC.z() == half.z() ) {
           cout << " \t c_CC " << c_CC  << " c_FC " << c_FC 
-               << " q_X_FC " << c_FaceNormal*Q_X_coarse_flux_org[c_FC]/denominator
-               << " sum_fineLevelflux " << coeff* f_FaceNormal *sum_fineLevelFlux/denominator
-               << " correction " << ( c_FaceNormal*Q_X_coarse_flux_org[c_FC] + coeff* f_FaceNormal *sum_fineLevelFlux) /denominator 
-               << " denominator " << denominator << endl;
+               << " q_X_FC " << c_FaceNormal*Q_X_coarse_flux_org[c_FC]
+               << " sum_fineLevelflux " << coeff* f_FaceNormal *sum_fineLevelFlux
+               << " correction " << ( c_FaceNormal*Q_X_coarse_flux_org[c_FC] + coeff* f_FaceNormal *sum_fineLevelFlux)<< endl;
           cout << "" << endl;
         }
 #endif 
@@ -774,18 +738,8 @@ void ICE::refluxOperator_computeCorrectionFluxes(
              IntVector f_FC = fineStart + *inside;
              sum_fineLevelFlux += Q_Y_fine_flux[f_FC];          
            }
-           // Q_CC = mass * q_CC = cellVol * rho * q_CC
-           // coeff accounts for the different cell sizes on the different levels
-           double mass_CC_coarse = rho_CC_coarse[c_CC] * coarseCellVol;
-           double denominator = oneZero
-                              + switch1 * coarseCellVol     
-                              + switch2 * mass_CC_coarse
-                              + switch3 * mass_CC_coarse * cv[c_CC];
-/*`==========TESTING==========*/
-           denominator = 1.0; 
-/*===========TESTING==========`*/
 
-           Q_Y_coarse_flux[c_FC] = (c_FaceNormal*Q_Y_coarse_flux_org[c_FC] + coeff*f_FaceNormal*sum_fineLevelFlux) /denominator;
+           Q_Y_coarse_flux[c_FC] = (c_FaceNormal*Q_Y_coarse_flux_org[c_FC] + coeff*f_FaceNormal*sum_fineLevelFlux);
 
            count += one_zero;                       // keep track of how many times              
            finePatch->setFaceMark(0,patchFace,count); // the face has been touched
@@ -795,8 +749,7 @@ void ICE::refluxOperator_computeCorrectionFluxes(
           cout << " \t c_CC " << c_CC  << " c_FC " << c_FC 
                << " q_Y_FC " << c_FaceNormal*Q_Y_coarse_flux_org[c_FC]
                << " sum_fineLevelflux " << coeff* f_FaceNormal *sum_fineLevelFlux
-               << " correction " << ( c_FaceNormal*Q_Y_coarse_flux_org[c_FC] + coeff* f_FaceNormal *sum_fineLevelFlux) /denominator 
-               << " denominator " << denominator << endl;
+               << " correction " << ( c_FaceNormal*Q_Y_coarse_flux_org[c_FC] + coeff* f_FaceNormal *sum_fineLevelFlux) << endl;
           cout << "" << endl;
         }
 #endif 
@@ -819,19 +772,8 @@ void ICE::refluxOperator_computeCorrectionFluxes(
              IntVector f_FC = fineStart + *inside;
              sum_fineLevelFlux += Q_Z_fine_flux[f_FC];
            }
-           // Q_CC = mass * q_CC = cellVol * rho * q_CC
-           // coeff accounts for the different cell sizes on the different levels
-           double mass_CC_coarse = rho_CC_coarse[c_CC] * coarseCellVol;
-           double denominator = oneZero
-                              + switch1 * coarseCellVol     
-                              + switch2 * mass_CC_coarse
-                              + switch3 * mass_CC_coarse * cv[c_CC];
                               
-/*`==========TESTING==========*/
-           denominator = 1.0; 
-/*===========TESTING==========`*/
-                              
-           Q_Z_coarse_flux[c_FC] = (c_FaceNormal*Q_Z_coarse_flux_org[c_FC] + coeff*f_FaceNormal*sum_fineLevelFlux) /denominator;
+           Q_Z_coarse_flux[c_FC] = (c_FaceNormal*Q_Z_coarse_flux_org[c_FC] + coeff*f_FaceNormal*sum_fineLevelFlux);
            
             count += one_zero;                              
            finePatch->setFaceMark(0,patchFace,count);
@@ -841,8 +783,7 @@ void ICE::refluxOperator_computeCorrectionFluxes(
           cout << " \t c_CC " << c_CC  << " c_FC " << c_FC 
                 << " q_Z_FC " << c_FaceNormal*Q_Z_coarse_flux_org[c_FC]
                << " sum_fineLevelflux " << coeff* f_FaceNormal *sum_fineLevelFlux
-               << " correction " << ( c_FaceNormal*Q_Z_coarse_flux_org[c_FC] + coeff* f_FaceNormal *sum_fineLevelFlux) /denominator
-               << " denominator " << denominator << endl;
+               << " correction " << ( c_FaceNormal*Q_Z_coarse_flux_org[c_FC] + coeff* f_FaceNormal *sum_fineLevelFlux)<< endl;
           cout << "" << endl;
         }
 #endif 
