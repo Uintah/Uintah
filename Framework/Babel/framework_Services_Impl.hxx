@@ -81,7 +81,7 @@
 
 
 // DO-NOT-DELETE splicer.begin(framework.Services._includes)
-#include <SCIRun/Babel/BabelPortInstance.h>
+#include <Framework/Babel/BabelPortInstance.h>
 #include <Core/Thread/Mutex.h>
 
 using namespace SCIRun;

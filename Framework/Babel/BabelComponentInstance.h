@@ -37,15 +37,15 @@
  *   July 2002
  *
  */
-#ifndef SCIRun_Framework_BabelComponentInstance_h
-#define SCIRun_Framework_BabelComponentInstance_h
+#ifndef Framework_Framework_BabelComponentInstance_h
+#define Framework_Framework_BabelComponentInstance_h
 
-#include <SCIRun/Babel/framework.hxx>
-#include <SCIRun/Babel/gov_cca.hxx>
+#include <Framework/Babel/framework.hxx>
+#include <Framework/Babel/gov_cca.hxx>
 
-#include <SCIRun/Babel/BabelPortInstance.h>
-#include <SCIRun/ComponentInstance.h>
-#include <SCIRun/PortInstanceIterator.h>
+#include <Framework/Babel/BabelPortInstance.h>
+#include <Framework/ComponentInstance.h>
+#include <Framework/PortInstanceIterator.h>
 #include <Core/CCA/spec/cca_sidl.h>
 
 #include <map>

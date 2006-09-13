@@ -38,7 +38,7 @@
  *
  */
 
-#include <SCIRun/Babel/BabelPortInstance.h>
+#include <Framework/Babel/BabelPortInstance.h>
 #include <iostream>
 
 namespace SCIRun {

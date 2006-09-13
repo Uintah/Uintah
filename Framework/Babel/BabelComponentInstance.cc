@@ -38,13 +38,13 @@
  *
  */
 
-#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/Babel/BabelPortInstance.h>
-#include <SCIRun/Babel/BabelComponentInstance.h>
-#include <SCIRun/CCA/CCAPortInstance.h>
-#include <SCIRun/CCA/CCAException.h>
+#include <Framework/SCIRunFramework.h>
+#include <Framework/Babel/BabelPortInstance.h>
+#include <Framework/Babel/BabelComponentInstance.h>
+#include <Framework/CCA/CCAPortInstance.h>
+#include <Framework/CCA/CCAException.h>
 #include <Core/CCA/spec/cca_sidl.h>
-#include <SCIRun/TypeMap.h>
+#include <Framework/TypeMap.h>
 
 #include <iostream>
 

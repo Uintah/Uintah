@@ -27,7 +27,7 @@
 #
 
 
-SRCDIR   := SCIRun/Babel
+SRCDIR   := Framework/Babel
 FWKSIDL := ${SRCDIR}/framework.sidl
 
 #OUTPUTDIR :=${SRCTOP_ABS}/$(SRCDIR)

@@ -65,7 +65,7 @@
 #include "sidl_RuntimeException.hxx"
 #endif
 // DO-NOT-DELETE splicer.begin(framework.Services._includes)
-#include <SCIRun/CCA/CCAException.h>
+#include <Framework/CCA/CCAException.h>
 #include <Core/Thread/Guard.h>
 
 #include "framework_TypeMap.hxx"
