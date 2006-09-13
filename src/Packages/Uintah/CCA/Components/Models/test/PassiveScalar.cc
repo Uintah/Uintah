@@ -108,12 +108,7 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   d_scalar->mag_grad_scalarLabel = 
                                VarLabel::create("mag_grad_scalar-f",td_CCdouble);                                 
   
-  //__________________________________
-  //  register the AMRrefluxing variables                               
-  if(d_doAMR){
-    setup->registerAMR_RefluxVariable(d_matl_set->getSubset(0),
-                                      d_scalar->scalar_CCLabel);
-  }                               
+                               
                                  
                                  
   Slb->lastProbeDumpTimeLabel =  VarLabel::create("lastProbeDumpTime", 
@@ -126,6 +121,13 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
   setup->registerTransportedVariable(d_matl_set->getSubset(0),
                                      d_scalar->scalar_CCLabel,
                                      d_scalar->scalar_source_CCLabel);  
+
+  //__________________________________
+  //  register the AMRrefluxing variables                               
+  if(d_doAMR){
+    setup->registerAMR_RefluxVariable(d_matl_set->getSubset(0),
+                                      d_scalar->scalar_CCLabel);
+  }
   //__________________________________
   // Read in the constants for the scalar
    ProblemSpecP child = params->findBlock("scalar");
