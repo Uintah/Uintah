@@ -38,16 +38,7 @@ SUBDIRS   := \
              $(SRCDIR)/TableTennis                  \
              $(SRCDIR)/TTClient                     \
              $(SRCDIR)/FEM                          \
-             $(SRCDIR)/LinSolver                    \
-             $(SRCDIR)/TestGetTopic                 \
-             $(SRCDIR)/TestProcessEvents            \
-             $(SRCDIR)/TestRegisterEventListener    \
-             $(SRCDIR)/TestReleaseTopic             \
-             $(SRCDIR)/TestSendEvent                \
-             $(SRCDIR)/TestUnregisterEventListener  \
-             $(SRCDIR)/TestWildcardTopic            \
-             $(SRCDIR)/TestCreateTopic              \
-             $(SRCDIR)/TestEchoEvent                \
+             $(SRCDIR)/LinSolver
 
 
 ifeq ($(HAVE_WX),yes)
