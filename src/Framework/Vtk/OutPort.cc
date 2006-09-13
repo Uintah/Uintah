@@ -37,8 +37,8 @@
  *   January 2004
  *
  */
-#include <SCIRun/Vtk/OutPort.h>
-#include <SCIRun/Vtk/InPort.h>
+#include <Framework/Vtk/OutPort.h>
+#include <Framework/Vtk/InPort.h>
 #include <iostream>
 class vtkObject;
 

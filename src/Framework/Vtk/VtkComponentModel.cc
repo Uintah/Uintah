@@ -38,12 +38,12 @@
  *
  */
 
-#include <SCIRun/Vtk/VtkComponentModel.h>
-#include <SCIRun/Vtk/VtkComponentDescription.h>
-#include <SCIRun/Vtk/VtkComponentInstance.h>
-#include <SCIRun/Vtk/Port.h>
-#include <SCIRun/Vtk/Component.h>
-#include <SCIRun/SCIRunFramework.h>
+#include <Framework/Vtk/VtkComponentModel.h>
+#include <Framework/Vtk/VtkComponentDescription.h>
+#include <Framework/Vtk/VtkComponentInstance.h>
+#include <Framework/Vtk/Port.h>
+#include <Framework/Vtk/Component.h>
+#include <Framework/SCIRunFramework.h>
 #include <Core/Util/soloader.h>
 #include <Core/CCA/PIDL/PIDL.h>
 

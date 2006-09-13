@@ -38,10 +38,10 @@
  *
  */
 
-#ifndef SCIRun_Vtk_VtkComponentDescription_h
-#define SCIRun_Vtk_VtkComponentDescription_h
+#ifndef Framework_Vtk_VtkComponentDescription_h
+#define Framework_Vtk_VtkComponentDescription_h
 
-#include <SCIRun/ComponentDescription.h>
+#include <Framework/ComponentDescription.h>
 #include <string>
 
 namespace SCIRun

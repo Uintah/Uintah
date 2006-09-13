@@ -38,8 +38,8 @@
  *
  */
 
-#include <SCIRun/Vtk/VtkComponentDescription.h>
-#include <SCIRun/Vtk/VtkComponentModel.h>
+#include <Framework/Vtk/VtkComponentDescription.h>
+#include <Framework/Vtk/VtkComponentModel.h>
 #include <iostream>
 
 namespace SCIRun {

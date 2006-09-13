@@ -38,7 +38,7 @@
  *
  */
 
-#include <SCIRun/Vtk/Port.h>
+#include <Framework/Vtk/Port.h>
 using namespace std;
 using namespace SCIRun;
 using namespace vtk;

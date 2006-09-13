@@ -40,8 +40,8 @@
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Semaphore.h>
 #include <Core/Thread/Thread.h>
-#include <SCIRun/Vtk/VtkUIPort.h>
-#include <SCIRun/Vtk/VtkComponentInstance.h>
+#include <Framework/Vtk/VtkUIPort.h>
+#include <Framework/Vtk/VtkComponentInstance.h>
 
 #include <iostream>
 

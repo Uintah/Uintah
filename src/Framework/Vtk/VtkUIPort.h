@@ -38,8 +38,8 @@
  *
  */
 
-#ifndef SCIRun_Vtk_VtkUIPort_h
-#define SCIRun_Vtk_VtkUIPort_h
+#ifndef Framework_Vtk_VtkUIPort_h
+#define Framework_Vtk_VtkUIPort_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 

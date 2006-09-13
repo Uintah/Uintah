@@ -38,12 +38,12 @@
  *
  */
 
-#ifndef SCIRun_Vtk_VtkComponentModel_h
-#define SCIRun_Vtk_VtkComponentModel_h
+#ifndef Framework_Vtk_VtkComponentModel_h
+#define Framework_Vtk_VtkComponentModel_h
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
-#include <SCIRun/ComponentModel.h>
+#include <Framework/ComponentModel.h>
 #include <vector>
 #include <string>
 

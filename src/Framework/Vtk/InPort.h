@@ -38,10 +38,10 @@
  *
  */
 
-#ifndef SCIRun_Vtk_InPort_h
-#define SCIRun_Vtk_InPort_h
+#ifndef Framework_Vtk_InPort_h
+#define Framework_Vtk_InPort_h
 
-#include <SCIRun/Vtk/Port.h>
+#include <Framework/Vtk/Port.h>
 
 namespace SCIRun {
 namespace vtk {

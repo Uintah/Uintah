@@ -38,11 +38,11 @@
  *
  */
 
-#include <SCIRun/Vtk/VtkPortInstance.h>
-#include <SCIRun/Vtk/VtkComponentInstance.h>
-#include <SCIRun/Vtk/Port.h>
-#include <SCIRun/Vtk/InPort.h>
-#include <SCIRun/Vtk/OutPort.h>
+#include <Framework/Vtk/VtkPortInstance.h>
+#include <Framework/Vtk/VtkComponentInstance.h>
+#include <Framework/Vtk/Port.h>
+#include <Framework/Vtk/InPort.h>
+#include <Framework/Vtk/OutPort.h>
 #include <iostream>
 
 namespace SCIRun {
