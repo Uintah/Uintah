@@ -1301,7 +1301,7 @@ void AMRICE::reflux_computeCorrectionFluxes(const ProcessorGroup*,
               AMR_refluxVariable* r_var = *iter;
 
               if(r_var->matls->contains(indx)){
-                string var_name = r_var->var_adv->getName();
+                string var_name = r_var->var->getName();
                 refluxOperator_computeCorrectionFluxes<double>(rho_CC, cv, var_name, indx, 
                               coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
                               one_zero);
@@ -1600,7 +1600,7 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
 
               if(r_var->matls->contains(indx)){
                 CCVariable<double> q_CC_adv;
-                string var_name = r_var->var_adv->getName();
+                string var_name = r_var->var->getName();
                 new_dw->getModifiable(q_CC_adv,  r_var->var_adv, indx, coarsePatch);
 
                 refluxOperator_applyCorrectionFluxes<double>(q_CC_adv, var_name, indx, 
