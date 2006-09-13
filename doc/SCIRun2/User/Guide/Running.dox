@@ -8,11 +8,11 @@ If you're using Lam-MPI, start \b lamd using \b lamboot.
 <!-- and MPICH? -->
 
 Start SCIRun2 from the command line.
-Specify \b qt as the builder option for the graphical interface.
+Specify \b gui as the builder option for the graphical interface.
 Optionally load a previously saved component network input file \b net_file.
 
 \code
-sr [-]-b[uilder] qt/txt net_file
+sr [-]-b[uilder] gui/txt network_file
 \endcode
 
 \section env Environment Variables
@@ -34,6 +34,8 @@ using ldconfig.
 
 This is a <b>semicolon-separated</b> list of paths where
 the shared libraries can be found for the %CCA components.
+This is also the path to find Babel SCL files for dynamic loading of Babel components.
+See the Babel user manual for more information.
 For a SCIRun2 build as described in the \ref building "build instructions",
 set your \b SIDL_DLL_PATH as follows:
 
