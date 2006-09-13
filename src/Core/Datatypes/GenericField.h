@@ -114,8 +114,8 @@ public:
   }
 
   //! creates the matrix grad, you must delete it when finished.
-  void cell_gradient(typename mesh_type::Elem::index_type ci,
-		     DenseMatrix *&grad) const;
+  void element_gradient(typename mesh_type::Elem::index_type ci,
+			DenseMatrix *&grad) const;
 
   virtual void resize_fdata();
 
@@ -764,11 +764,13 @@ load_partials(const vector<T> &grad, DenseMatrix &m)
 template <class Mesh, class Basis, class FData>
 void
 GenericField<Mesh, Basis, FData>::
-cell_gradient(typename mesh_type::Elem::index_type ci,
-	      DenseMatrix *&grad) const
+element_gradient(typename mesh_type::Elem::index_type ci,
+		 DenseMatrix *&grad) const
 {
   // supported for linear, should be expanded to support higher order.
   ASSERT(this->basis_order() == 1);
+
+  ASSERT( mesh_->dimensionality() == 3 );
 
   ElemData<field_type> fcd(*this, ci);
   // derivative is constant anywhere in the linear cell
@@ -780,7 +782,6 @@ cell_gradient(typename mesh_type::Elem::index_type ci,
   // get the mesh Jacobian for the element.
   vector<Point> Jv;
   mesh_->derivate(coords, ci, Jv);
-
 
   // load the matrix with the Jacobian
   DenseMatrix J(3, Jv.size());
