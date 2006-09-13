@@ -38,10 +38,10 @@
  *
  */
 
-#ifndef SCIRun_Framework_BabelComponentDescription_h
-#define SCIRun_Framework_BabelComponentDescription_h
+#ifndef Framework_Framework_BabelComponentDescription_h
+#define Framework_Framework_BabelComponentDescription_h
 
-#include <SCIRun/ComponentDescription.h>
+#include <Framework/ComponentDescription.h>
 
 namespace SCIRun {
 class BabelComponentModel;

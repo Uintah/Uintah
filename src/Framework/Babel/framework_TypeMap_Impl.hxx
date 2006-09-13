@@ -46,7 +46,7 @@
 
 
 // DO-NOT-DELETE splicer.begin(framework.TypeMap._includes)
-#include <SCIRun/TypeMap.h>
+#include <Framework/TypeMap.h>
 // DO-NOT-DELETE splicer.end(framework.TypeMap._includes)
 
 namespace framework { 

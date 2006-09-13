@@ -38,8 +38,8 @@
  *
  */
 
-#include <SCIRun/Babel/BabelComponentDescription.h>
-#include <SCIRun/Babel/BabelComponentModel.h>
+#include <Framework/Babel/BabelComponentDescription.h>
+#include <Framework/Babel/BabelComponentModel.h>
 
 namespace SCIRun {
 

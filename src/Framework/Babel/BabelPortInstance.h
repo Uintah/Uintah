@@ -38,12 +38,12 @@
  *
  */
 
-#ifndef SCIRun_Babel_BabelPortInstance_h
-#define SCIRun_Babel_BabelPortInstance_h
+#ifndef Framework_Babel_BabelPortInstance_h
+#define Framework_Babel_BabelPortInstance_h
 
-#include <SCIRun/Babel/gov_cca.hxx>
+#include <Framework/Babel/gov_cca.hxx>
 
-#include <SCIRun/PortInstance.h>
+#include <Framework/PortInstance.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
 #include <Core/CCA/spec/cca_sidl.h>

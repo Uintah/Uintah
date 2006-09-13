@@ -38,14 +38,14 @@
  *
  */
 
-#include <SCIRun/Babel/framework.hxx>
+#include <Framework/Babel/framework.hxx>
 #include <sidl.hxx>
 
-#include <SCIRun/Babel/BabelComponentModel.h>
-#include <SCIRun/Babel/BabelComponentDescription.h>
-#include <SCIRun/Babel/BabelComponentInstance.h>
+#include <Framework/Babel/BabelComponentModel.h>
+#include <Framework/Babel/BabelComponentDescription.h>
+#include <Framework/Babel/BabelComponentInstance.h>
 
-#include <SCIRun/SCIRunFramework.h>
+#include <Framework/SCIRunFramework.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/soloader.h>
 #include <Core/Util/NotFinished.h>

@@ -38,15 +38,15 @@
  *
  */
 
-#ifndef SCIRun_Babel_BabelComponentModel_h
-#define SCIRun_Babel_BabelComponentModel_h
+#ifndef Framework_Babel_BabelComponentModel_h
+#define Framework_Babel_BabelComponentModel_h
 
-#include <SCIRun/Babel/gov_cca.hxx>
+#include <Framework/Babel/gov_cca.hxx>
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
-#include <SCIRun/ComponentModel.h>
-#include <SCIRun/ComponentInstance.h>
+#include <Framework/ComponentModel.h>
+#include <Framework/ComponentInstance.h>
 
 #include <string>
 #include <map>
