@@ -38,8 +38,8 @@
  *
  */
 
-#ifndef SCIRun_Framework_ConnectionID_h
-#define SCIRun_Framework_ConnectionID_h
+#ifndef Framework_Framework_ConnectionID_h
+#define Framework_Framework_ConnectionID_h
 
 #include <Core/CCA/spec/cca_sidl.h>
 

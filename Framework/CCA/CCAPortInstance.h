@@ -38,12 +38,12 @@
  *
  */
 
-#ifndef SCIRun_CCA_CCAPortInstance_h
-#define SCIRun_CCA_CCAPortInstance_h
+#ifndef Framework_CCA_CCAPortInstance_h
+#define Framework_CCA_CCAPortInstance_h
 
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Guard.h>
-#include <SCIRun/PortInstance.h>
+#include <Framework/PortInstance.h>
 
 #include <map>
 #include <string>

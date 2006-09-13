@@ -29,7 +29,7 @@
 
 # Makefile fragment for this subdirectory
 
-SRCDIR   := SCIRun/CCA
+SRCDIR   := Framework/CCA
 
 SRCS     += \
             $(SRCDIR)/CCAComponentDescription.cc \

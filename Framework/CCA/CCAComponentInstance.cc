@@ -38,11 +38,11 @@
  *
  */
 
-#include <SCIRun/TypeMap.h>
-#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/CCA/CCAComponentInstance.h>
-#include <SCIRun/CCA/CCAPortInstance.h>
-#include <SCIRun/CCA/CCAException.h>
+#include <Framework/TypeMap.h>
+#include <Framework/SCIRunFramework.h>
+#include <Framework/CCA/CCAComponentInstance.h>
+#include <Framework/CCA/CCAPortInstance.h>
+#include <Framework/CCA/CCAException.h>
 #include <Core/Thread/Mutex.h>
 #include <iostream>
 

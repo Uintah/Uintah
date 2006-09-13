@@ -37,10 +37,10 @@
  *   April 2002
  *
  */
-#include <SCIRun/CCA/ConnectionID.h>
-#include <SCIRun/CCA/ComponentID.h>
-#include <SCIRun/SCIRunFramework.h>
-#include <SCIRun/TypeMap.h>
+#include <Framework/CCA/ConnectionID.h>
+#include <Framework/CCA/ComponentID.h>
+#include <Framework/SCIRunFramework.h>
+#include <Framework/TypeMap.h>
 #include <Core/CCA/PIDL/URL.h>
 
 #include <iostream>

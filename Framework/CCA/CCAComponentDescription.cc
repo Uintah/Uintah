@@ -38,8 +38,8 @@
  *
  */
 
-#include <SCIRun/CCA/CCAComponentDescription.h>
-#include <SCIRun/CCA/CCAComponentModel.h>
+#include <Framework/CCA/CCAComponentDescription.h>
+#include <Framework/CCA/CCAComponentModel.h>
 
 namespace SCIRun {
 

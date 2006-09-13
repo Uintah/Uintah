@@ -26,7 +26,7 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#include <SCIRun/CCA/TypeMismatchException.h>
+#include <Framework/CCA/TypeMismatchException.h>
 #include <Core/Util/NotFinished.h>
 
 namespace SCIRun {

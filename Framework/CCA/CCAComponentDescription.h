@@ -38,10 +38,10 @@
  *
  */
 
-#ifndef SCIRun_Framework_CCAComponentDescription_h
-#define SCIRun_Framework_CCAComponentDescription_h
+#ifndef Framework_Framework_CCAComponentDescription_h
+#define Framework_Framework_CCAComponentDescription_h
 
-#include <SCIRun/ComponentDescription.h>
+#include <Framework/ComponentDescription.h>
 #include <Core/CCA/spec/cca_sidl.h>
 
 namespace SCIRun {
