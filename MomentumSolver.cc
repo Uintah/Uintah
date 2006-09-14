@@ -100,7 +100,7 @@ MomentumSolver::solve(SchedulerP& sched,
 		      const PatchSet* patches,
 		      const MaterialSet* matls,
 		      const TimeIntegratorLabel* timelabels,
-		      int index)
+		      int index, bool extraProjection)
 {
   //computes stencil coefficients and source terms
   // require : pressureCPBC, [u,v,w]VelocityCPBC, densityIN, viscosityIN (new_dw)
@@ -108,7 +108,7 @@ MomentumSolver::solve(SchedulerP& sched,
   // compute : [u,v,w]VelCoefPBLM, [u,v,w]VelConvCoefPBLM
   //           [u,v,w]VelLinSrcPBLM, [u,v,w]VelNonLinSrcPBLM
 
-  sched_buildLinearMatrix(sched, patches, matls, timelabels, index);
+  sched_buildLinearMatrix(sched, patches, matls, timelabels, index, extraProjection);
     
 
 }
@@ -121,13 +121,14 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
 					const PatchSet* patches,
 					const MaterialSet* matls,
 		    			const TimeIntegratorLabel* timelabels,
-					int index)
+					int index,
+					bool extraProjection)
 {
   string taskname =  "MomentumSolver::BuildCoeff" +
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname,
 			  this, &MomentumSolver::buildLinearMatrix,
-			  timelabels, index);
+			  timelabels, index, extraProjection);
 
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion) parent_old_dw = Task::ParentOldDW;
@@ -140,8 +141,13 @@ MomentumSolver::sched_buildLinearMatrix(SchedulerP& sched,
   
   tsk->requires(Task::NewDW, d_lab->d_densityCPLabel,
 		Ghost::AroundCells, Arches::ONEGHOSTCELL);
-  tsk->requires(Task::NewDW, timelabels->pressure_out,
-		Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
+  if (extraProjection)
+    tsk->requires(Task::NewDW, d_lab->d_pressureExtraProjectionLabel,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
+  else
+    tsk->requires(Task::NewDW, timelabels->pressure_out,
+		  Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
   if (d_MAlab) {
     tsk->requires(Task::NewDW, d_lab->d_mmgasVolFracLabel,
@@ -195,7 +201,8 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				  DataWarehouse* old_dw,
 				  DataWarehouse* new_dw,
 		    		  const TimeIntegratorLabel* timelabels,
-				  int index)
+				  int index,
+				  bool extraProjection)
 {
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -218,8 +225,13 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
     new_dw->get(constVelocityVars.cellType, d_lab->d_cellTypeLabel,
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
-    new_dw->get(constVelocityVars.pressure, timelabels->pressure_out, 
-		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    if (extraProjection)
+      new_dw->get(constVelocityVars.pressure, d_lab->d_pressureExtraProjectionLabel, 
+		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+    else
+      new_dw->get(constVelocityVars.pressure, timelabels->pressure_out, 
+		  matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
+
     new_dw->get(constVelocityVars.density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
@@ -1626,3 +1638,76 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
   }
   }
 }
+// ****************************************************************************
+// Schedule preparation for extra projection
+// ****************************************************************************
+void 
+MomentumSolver::sched_prepareExtraProjection(SchedulerP& sched,
+					      const PatchSet* patches,
+					      const MaterialSet* matls,
+					  const TimeIntegratorLabel* timelabels)
+{
+  string taskname =  "MomentumSolver::prepareExtraProjection" +
+		     timelabels->integrator_step_name;
+  Task* tsk = scinew Task(taskname, 
+			  this, &MomentumSolver::prepareExtraProjection,
+			  timelabels);
+
+  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+
+
+  tsk->modifies(d_lab->d_uVelRhoHatLabel);
+  tsk->modifies(d_lab->d_vVelRhoHatLabel);
+  tsk->modifies(d_lab->d_wVelRhoHatLabel);
+    
+  sched->addTask(tsk, patches, matls);
+}
+
+
+
+
+// ***********************************************************************
+// Actual preparation of extra projection
+// ***********************************************************************
+
+void 
+MomentumSolver::prepareExtraProjection(const ProcessorGroup* pc,
+					const PatchSubset* patches,
+					const MaterialSubset* /*matls*/,
+					DataWarehouse* ,
+					DataWarehouse* new_dw,
+					const TimeIntegratorLabel* timelabels)
+{
+  for (int p = 0; p < patches->size(); p++) {
+
+    const Patch* patch = patches->get(p);
+    int archIndex = 0; // only one arches material
+    int matlIndex = d_lab->d_sharedState->getArchesMaterial(archIndex)->getDWIndex(); 
+
+    SFCXVariable<double> uVelRhoHat;
+    SFCYVariable<double> vVelRhoHat;
+    SFCZVariable<double> wVelRhoHat;
+
+    new_dw->getModifiable(uVelRhoHat, d_lab->d_uVelRhoHatLabel,
+			  matlIndex, patch);
+    new_dw->copyOut(uVelRhoHat, d_lab->d_uVelocitySPBCLabel,
+		          matlIndex, patch);
+
+    new_dw->getModifiable(vVelRhoHat, d_lab->d_vVelRhoHatLabel,
+			  matlIndex, patch);
+    new_dw->copyOut(vVelRhoHat, d_lab->d_vVelocitySPBCLabel,
+		          matlIndex, patch);
+
+    new_dw->getModifiable(wVelRhoHat, d_lab->d_wVelRhoHatLabel,
+			  matlIndex, patch);
+    new_dw->copyOut(wVelRhoHat, d_lab->d_wVelocitySPBCLabel,
+		          matlIndex, patch);
+
+  }
+}
+

@@ -90,6 +90,8 @@ ArchesLabel::ArchesLabel()
   // Pressure Labels
   d_pressurePSLabel = VarLabel::create("pressurePS", 
 				      CCVariable<double>::getTypeDescription() );
+  d_pressureExtraProjectionLabel = VarLabel::create("pressureExtraProjection", 
+				      CCVariable<double>::getTypeDescription() );
   // Pressure Coeff Labels
   d_presCoefPBLMLabel = VarLabel::create("presCoefPBLM", 
 				      CCVariable<double>::getTypeDescription() );
@@ -594,6 +596,7 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_enthalpyDiffusivityLabel);
   VarLabel::destroy(d_reactScalarDiffusivityLabel);
   VarLabel::destroy(d_pressurePSLabel);
+  VarLabel::destroy(d_pressureExtraProjectionLabel);
   VarLabel::destroy(d_presCoefPBLMLabel);
   VarLabel::destroy(d_presNonLinSrcPBLMLabel);
   VarLabel::destroy(d_uVelocitySPBCLabel);
