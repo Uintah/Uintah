@@ -92,6 +92,7 @@ const TypeDescription* get_type_description(vector<FaceIndex<int> >*);
 const TypeDescription* get_type_description(vector<CellIndex<int> >*);
 
 // Property types
+template class Property<bool>;
 template class Property<int>;
 template class Property<string>;
 template class Property<double>;
