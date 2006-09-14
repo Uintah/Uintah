@@ -38,7 +38,7 @@
 #  define socklen_t int
 #  define close closesocket
 #elif defined(_AIX)
-#  include <fcntl.h
+#  include <fcntl.h>
 #  define MSG_NOSIGNAL 0
 #else
 #  include <fcntl.h>
