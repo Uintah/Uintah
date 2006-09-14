@@ -25,7 +25,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : BasicInput.cc
+//    File   : ZeroTetVolScalars.cc
 //    Author : Martin Cole
 //    Date   : Mon Sep 11 11:22:14 2006
 
@@ -34,47 +34,85 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Datatypes/Field.h>
 #include <Dataflow/Network/Ports/SimplePort.h>
+
+#include <Core/Basis/TetLinearLgn.h>
+#include <Core/Datatypes/TetVolMesh.h>
+#include <Core/Datatypes/GenericField.h>
+
 #include <iostream>
 
 namespace SCIRun {
 using namespace std;
 using namespace SCIRun;
 
-class BasicInput : public Module 
+class ZeroTetVolScalars : public Module 
 {
 public:
-  BasicInput(GuiContext*);
-  virtual ~BasicInput();
+  ZeroTetVolScalars(GuiContext*);
+  virtual ~ZeroTetVolScalars();
 
   virtual void execute();
   virtual void tcl_command(GuiArgs&, void*);
 };
 
 
-DECLARE_MAKER(BasicInput)
-BasicInput::BasicInput(GuiContext* ctx) : 
-  Module("BasicInput", ctx, Source, "Examples", "SCIRun")
+DECLARE_MAKER(ZeroTetVolScalars)
+ZeroTetVolScalars::ZeroTetVolScalars(GuiContext* ctx) : 
+  Module("ZeroTetVolScalars", ctx, Source, "Examples", "SCIRun")
 {
 }
 
-BasicInput::~BasicInput()
+ZeroTetVolScalars::~ZeroTetVolScalars()
 {
 }
 
-// Print the value of the input fields data pointer when we execute.
 void
-BasicInput::execute()
+ZeroTetVolScalars::execute()
 {
+  typedef TetVolMesh<TetLinearLgn<Point> >    TVMesh;
+  typedef TetLinearLgn<double>                DataBasis;
+  typedef GenericField<TVMesh, DataBasis, vector<double> > TVField;  
+
   FieldHandle field_handle;
   if (! get_input_handle("InField", field_handle, true)) {
-    error("BasicInput must have a SCIRun::Field as input to continue.");
+    error("ZeroTetVolScalars must have a SCIRun::Field as input to continue.");
     return;
   }
-  cerr << "BasicInput module got data :" << field_handle.get_rep() << endl;
+
+  // Must detach since we will be altering the input field.
+  field_handle.detach();
+
+  TVField *in = dynamic_cast<TVField*>(field_handle.get_rep());
+
+  if (in == 0) {
+    error("This Module only accepts Linear TetVol Fields with double data.");
+    return;
+  }
+    
+  TVField::mesh_handle_type mh = in->get_typed_mesh();
+  TVMesh::Node::iterator iter;
+  TVMesh::Node::iterator end;
+  mh->begin(iter);
+  mh->end(end);
+
+  while (iter != end) {
+    TVMesh::Node::index_type ni = *iter;
+    Point node;
+    mh->get_center(node, ni);
+    TVField::value_type val;
+    in->value(val, ni);
+    cerr << "at point: " << node << "the input value is: " << val << endl;
+
+    // Set the value to be 0.0;
+    in->set_value(0.0, ni);
+    ++iter;
+  }
+
+  send_output_handle("OutField", field_handle);
 }
 
 void
-BasicInput::tcl_command(GuiArgs& args, void* userdata)
+ZeroTetVolScalars::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }
