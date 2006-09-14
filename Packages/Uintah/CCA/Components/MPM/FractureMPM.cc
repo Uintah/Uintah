@@ -114,7 +114,7 @@ FractureMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
        ps = ps->findNextBlock("material") ) {
 
     //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps, sharedState);
+    MPMMaterial *mat = scinew MPMMaterial(ps, sharedState, flags);
     sharedState->registerMPMMaterial(mat);
 
     // If new particles are to be created, create a copy of each material
