@@ -35,6 +35,7 @@ static DebugStream messagedbg("MessageTags", false);
 
 // for debugging - set the var name to watch one in the scrubout
 static string dbgScrubVar = "";
+static int dbgScrubPatch = -1;
 
 DetailedTasks::DetailedTasks(SchedulerCommon* sc, const ProcessorGroup* pg,
 			     DetailedTasks* first, const TaskGraph* taskgraph,
@@ -344,14 +345,20 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	    for (int m=0;m<matls->size();m++){
               int count;
               try {
-                count = dws[dw]->decrementScrubCount(req->var, matls->get(m), neighbor);
+                // there are a few rare cases in an AMR framework where you require from an OldDW, but only
+                // ones internal to the W-cycle (and not the previous timestep) which can have variables not exist in the OldDW.
+                if (dws[dw]->exists(req->var, matls->get(m), neighbor)) {
+                  count = dws[dw]->decrementScrubCount(req->var, matls->get(m), neighbor);
+                  if(scrubout.active() && 
+                     (req->var->getName() == dbgScrubVar || dbgScrubVar == "") && 
+                     (neighbor->getID() == dbgScrubPatch || dbgScrubPatch == -1)){
+                    scrubout << Parallel::getMPIRank() << "   decrementing scrub count for requires of " << dws[dw]->getID() << "/" << neighbor->getID() << "/" << matls->get(m) << "/" << req->var->getName() << ": " << count << (count == 0?" - scrubbed\n":"\n");
+                  }
+                }
               } catch (UnknownVariable& e) {
                 cout << "   BAD BOY FROM Task : " << *this << " scrubbing " << *req << " PATCHES: " << *patches.get_rep() << endl;
                 throw e;
               }
-	      if(scrubout.active() && (req->var->getName() == dbgScrubVar || dbgScrubVar == "")){
-		scrubout << Parallel::getMPIRank() << "   decrementing scrub count for requires of " << dws[dw]->getID() << "/" << neighbor->getID() << "/" << matls->get(m) << "/" << req->var->getName() << ": " << count << (count == 0?" - scrubbed\n":"\n");
-	      }
 	    }
 	  }
 	}
@@ -380,7 +387,9 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	  const Patch* patch = patches->get(i);
 	  for (int m=0;m<matls->size();m++){
 	    int count = dws[dw]->decrementScrubCount(mod->var, matls->get(m), patch);
-	    if(scrubout.active() && (mod->var->getName() == dbgScrubVar || dbgScrubVar == ""))
+	    if(scrubout.active() && 
+               (mod->var->getName() == dbgScrubVar || dbgScrubVar == "") && 
+               (patch->getID() == dbgScrubPatch || dbgScrubPatch == -1))
 	      scrubout << Parallel::getMPIRank() << "   decrementing scrub count for modifies of " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << mod->var->getName() << ": " << count << (count == 0?" - scrubbed\n":"\n");
 	  }
 	}
@@ -413,12 +422,16 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	    int matl = matls->get(m);
 	    int count;
 	    if(taskGroup->getScrubCount(comp->var, matl, patch, whichdw, count)){
-	      if(scrubout.active() && (comp->var->getName() == dbgScrubVar || dbgScrubVar == ""))
+	      if(scrubout.active() && 
+                 (comp->var->getName() == dbgScrubVar || dbgScrubVar == "") &&
+                 (patch->getID() == dbgScrubPatch || dbgScrubPatch == -1))
 		scrubout << Parallel::getMPIRank() << "   setting scrub count for computes of " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << comp->var->getName() << ": " << count << '\n';
 	      dws[dw]->setScrubCount(comp->var, matl, patch, count);
 	    } else {
 	      // Not in the scrub map, must be never needed...
-	      if(scrubout.active() && (comp->var->getName() == dbgScrubVar || dbgScrubVar == ""))
+	      if(scrubout.active() && 
+                 (comp->var->getName() == dbgScrubVar || dbgScrubVar == "") &&
+                 (patch->getID() == dbgScrubPatch || dbgScrubPatch == -1))
 		scrubout << Parallel::getMPIRank() << "   trashing variable immediately after compute: " << dws[dw]->getID() << "/" << patch->getID() << "/" << matls->get(m) << "/" << comp->var->getName() << '\n';
 	      dws[dw]->scrub(comp->var, matl, patch);
 	    }
@@ -444,7 +457,7 @@ void DetailedTasks::addScrubCount(const VarLabel* var, int matlindex,
     (first?first->scrubCountTable_:scrubCountTable_).insert(result);
   }
   result->count++;
-  if (scrubout.active() && (var->getName() == dbgScrubVar || dbgScrubVar == ""))
+  if (scrubout.active() && (var->getName() == dbgScrubVar || dbgScrubVar == "") && (dbgScrubPatch == patch->getID() || dbgScrubPatch == -1))
     scrubout << Parallel::getMPIRank() << " Adding Scrub count for req of " << dw << "/" << patch->getID() << "/" << matlindex << "/" << *var << ": " << result->count << endl;
 }
 
@@ -462,7 +475,7 @@ void DetailedTasks::setScrubCount(const Task::Dependency* req, int matl, const P
     if(!getScrubCount(req->var, matl, patch, req->whichdw, scrubcount)){
       SCI_THROW(InternalError("No scrub count for received MPIVariable: "+req->var->getName(), __FILE__, __LINE__));
     }
-    if(scrubout.active() && (req->var->getName() == dbgScrubVar || dbgScrubVar == ""))
+    if(scrubout.active() && (req->var->getName() == dbgScrubVar || dbgScrubVar == "") && (dbgScrubPatch == patch->getID() || dbgScrubPatch == -1))
       scrubout << Parallel::getMPIRank() << " setting scrubcount for recv of " << req->mapDataWarehouse() << "/" << patch->getID() << "/" << matl << "/" << req->var->getName() << ": " << scrubcount << '\n';
     dws[req->mapDataWarehouse()]->setScrubCount(req->var, matl, patch, scrubcount);
   }
