@@ -16,13 +16,9 @@ using namespace SCIRun;
 
 CellInformation::CellInformation(const Patch* patch)
 {
-#ifdef filter_convection_terms
-  IntVector domLo = patch->getGhostCellLowIndex(Arches::TWOGHOSTCELLS);
-  IntVector domHi = patch->getGhostCellHighIndex(Arches::TWOGHOSTCELLS);
-#else
   IntVector domLo = patch->getGhostCellLowIndex(Arches::ONEGHOSTCELL);
   IntVector domHi = patch->getGhostCellHighIndex(Arches::ONEGHOSTCELL);
-#endif
+
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex()+IntVector(1,1,1);
   IntVector idxLoU = patch->getSFCXFORTLowIndex();
