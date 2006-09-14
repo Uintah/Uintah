@@ -92,14 +92,16 @@ public:
 		 const PatchSet* patches,
 		 const MaterialSet* matls,
 		 const TimeIntegratorLabel* timelabels,
-		 int index);
+		 int index,
+		 bool extraProjection);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule the build of the linearized momentum matrix
       void sched_buildLinearMatrix(SchedulerP& sched, const PatchSet* patches,
 				   const MaterialSet* matls,
 		 		   const TimeIntegratorLabel* timelabels,
-				   int index);
+				   int index,
+				   bool extraProjection);
  
 
       void solveVelHat(const LevelP& level,
@@ -117,6 +119,10 @@ public:
 				 	const MaterialSet* matls,
 				        const TimeIntegratorLabel* timelabels);
 
+      void sched_prepareExtraProjection(SchedulerP& sched, const PatchSet* patches,
+				   const MaterialSet* matls,
+		 		   const TimeIntegratorLabel* timelabels);
+ 
 #ifdef PetscFilter
       inline void setDiscretizationFilter(Filter* filter) {
         d_discretize->setFilter(filter);
@@ -147,7 +153,8 @@ private:
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
 		 	     const TimeIntegratorLabel* timelabels,
-			     int index);
+			     int index,
+			     bool extraProjection);
 
 
       void buildLinearMatrixVelHat(const ProcessorGroup* pc,
@@ -163,6 +170,13 @@ private:
 			          DataWarehouse* old_dw,
 			          DataWarehouse* new_dw,
 				  const TimeIntegratorLabel* timelabels);
+
+      void prepareExtraProjection(const ProcessorGroup* pc,
+				   const PatchSubset* patches,
+				   const MaterialSubset* matls,
+				   DataWarehouse*,
+				   DataWarehouse*,
+				   const TimeIntegratorLabel* timelabels);
 
    
 private:

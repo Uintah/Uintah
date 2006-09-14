@@ -183,6 +183,9 @@ public:
       inline bool getMMS() const {
         return d_doMMS;
       }
+      inline void setExtraProjection(bool extraProjection) {
+        d_extraProjection=extraProjection;
+      }
 
 protected :
 
@@ -349,6 +352,7 @@ private:
     double d_H_air;
     bool d_doMMS;
     bool d_restart_on_negative_density_guess;
+    bool d_extraProjection;
     
 
 }; // End class ExplicitSolver

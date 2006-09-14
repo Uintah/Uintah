@@ -253,6 +253,7 @@ private:
       bool d_calcVariance;
       bool d_mixedModel;
       bool d_doMMS;
+      bool d_extraProjection;
       string turbModel;
       ScaleSimilarityModel* d_scaleSimilarityModel;
       CompLocalDynamicProcedure* d_initTurb;

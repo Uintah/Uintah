@@ -325,12 +325,25 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
     d_props->sched_computeDrhodt(sched, patches, matls,
 				 d_timeIntegratorLabels[curr_level]);
 
-    d_pressSolver->solve(level, sched, d_timeIntegratorLabels[curr_level]);
+    d_pressSolver->solve(level, sched, d_timeIntegratorLabels[curr_level],
+		         false);
   
     // project velocities using the projection step
     for (int index = 1; index <= Arches::NDIM; ++index) {
       d_momSolver->solve(sched, patches, matls,
-			 d_timeIntegratorLabels[curr_level], index);
+			 d_timeIntegratorLabels[curr_level], index, false);
+    }
+
+    if (d_extraProjection) {
+      d_momSolver->sched_prepareExtraProjection(sched, patches, matls,
+		                          d_timeIntegratorLabels[curr_level]);
+      d_pressSolver->solve(level, sched, d_timeIntegratorLabels[curr_level],
+		           d_extraProjection);
+      for (int index = 1; index <= Arches::NDIM; ++index) {
+        d_momSolver->solve(sched, patches, matls,
+			 d_timeIntegratorLabels[curr_level], index,
+			 d_extraProjection);
+      }
     }
     /*if ((d_boundaryCondition->getOutletBC())||
         (d_boundaryCondition->getPressureBC())) {
@@ -1751,6 +1764,12 @@ ExplicitSolver::sched_dummySolve(SchedulerP& sched,
 
 
   tsk->computes(d_lab->d_pressurePSLabel);
+  if (d_extraProjection) {
+  tsk->requires(Task::OldDW, d_lab->d_pressureExtraProjectionLabel, 
+		Ghost::None, Arches::ZEROGHOSTCELLS);
+  tsk->computes(d_lab->d_pressureExtraProjectionLabel);
+  }
+
   tsk->computes(d_lab->d_presNonLinSrcPBLMLabel);
 
   // warning **only works for one scalar
@@ -1813,6 +1832,20 @@ ExplicitSolver::dummySolve(const ProcessorGroup* ,
     new_dw->allocateAndPut(pressure_new, d_lab->d_pressurePSLabel, 
 			   matlIndex, patch);
     pressure_new.copyData(pressure); // copy old into new
+
+    constCCVariable<double> pressureExtraProjection;
+    CCVariable<double> pressureExtraProjection_new;
+    if (d_extraProjection) {
+      old_dw->get(pressureExtraProjection,
+		  d_lab->d_pressureExtraProjectionLabel, matlIndex, patch, 
+		  Ghost::None, Arches::ZEROGHOSTCELLS);
+    // allocates and puts for new dw variables
+
+      new_dw->allocateAndPut(pressureExtraProjection_new,
+		             d_lab->d_pressureExtraProjectionLabel, 
+			     matlIndex, patch);
+      pressureExtraProjection_new.copyData(pressureExtraProjection); // copy old into new
+    }
 
     CCVariable<double> pressureNLSource;
     new_dw->allocateAndPut(pressureNLSource, d_lab->d_presNonLinSrcPBLMLabel, 

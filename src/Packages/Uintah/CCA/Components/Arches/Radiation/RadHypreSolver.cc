@@ -107,7 +107,7 @@ RadHypreSolver::problemSetup(const ProblemSpecP& params)
 	}
 
   db->getWithDefault("max_iter", d_maxSweeps, 75);
-  db->getWithDefault("res_tol", d_residual, 1.0e-8);
+  db->getWithDefault("res_tol", d_stored_residual, 1.0e-8);
 }
 // ****************************************************************************
 // Set up the grid structure
@@ -413,6 +413,7 @@ RadHypreSolver::radLinearSolve()
   /*Calculating sum of RHS*/
   iprod = hypre_StructInnerProd(d_b,d_b);
   sum_b = sqrt(iprod);
+  d_residual = d_stored_residual / sum_b;
 
   
   n_pre = 1;
@@ -629,6 +630,7 @@ RadHypreSolver::radLinearSolve()
   }
 
   if(me == 0) {
+    final_res_norm *= sum_b;	  
     cerr << "hypre: final_res_norm: " << final_res_norm << ", iterations: " << num_iterations << ", solver time: " << Time::currentSeconds()-start_time << " seconds\n";
     cerr << "Init Norm: " << init_norm << " Error reduced by: " <<  final_res_norm/(init_norm+1.0e-20) << endl;
     cerr << "Sum of RHS vector: " << sum_b << endl;
