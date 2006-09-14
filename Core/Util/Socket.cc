@@ -34,11 +34,14 @@
 #include <string>
 #include <errno.h>
 
-#ifndef _WIN32
-#  include <fcntl.h>
-#else
+#ifdef _WIN32
 #  define socklen_t int
 #  define close closesocket
+#elif defined(_AIX)
+#  include <fcntl.h
+#  define MSG_NOSIGNAL 0
+#else
+#  include <fcntl.h>
 #endif
 #include <iostream>
 
