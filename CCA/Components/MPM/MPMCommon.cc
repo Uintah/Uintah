@@ -31,7 +31,7 @@ void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec,
     //cout << "Material attribute = " << index_val << endl;
 
     //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps, sharedState);
+    MPMMaterial *mat = scinew MPMMaterial(ps, sharedState, flags);
     // When doing restart, we need to make sure that we load the materials
     // in the same order that they were initially created.  Restarts will
     // ALWAYS have an index number as in <material index = "0">.
