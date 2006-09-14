@@ -120,34 +120,6 @@ C-----------------------------------------------------------------------
          kbsdw(kk) = 0
  30   continue
 
-C-----------------------------------------------------------------------
-C     CYLINDRICAL METRICS
-C-----------------------------------------------------------------------
-
-c      DO 10 J=jBegGhost,jEndGhost
-c         RONE(J) = ONE
-c 10   CONTINUE
-c      DO 100 J = jBegGhost,jEndGhost
-c       RR(J) = YY(J)
-c        IF (.NOT. LCORD) RR(J) = ONE
-c  100 CONTINUE
-c      IF (LCORD) THEN
-c        RV(jBegGhost) = (THREE*RR(jBegGhost)-RR(JST))/TWO
-c      ELSE
-c        RV(jBegGhost) = ONE
-c      END IF
-c      DO 600 J = JST,jEndGhost
-c        RV(J) = PT5*(RR(J)+RR(J-1))
-c        RCV(J) = PT5*(RV(J)+RV(J-1))
-c       RA(J-1) = RCV(J)
-c  600 CONTINUE
-c      RCV(jBegGhost) = (THREE*RV(jBegGhost)-RV(JST))/TWO
-c      RA(jEndGhost) = RR(jEndGhost)
-c
-c      DO 610 J = JST,JEND
-c         RCVA(J) = PT5*(RCV(J)+RCV(J+1))
-c 610  CONTINUE
-c      
 
 C-----------------------------------------------------------------------
 C     X-DIRECTION
@@ -233,8 +205,6 @@ C-----------------------------------------------------------------------
         if (abs(fac3u(i)).lt.local_small) fac3u(i)=0.0D0
         if (abs(fac4u(i)).lt.local_small) fac4u(i)=0.0D0
   800 CONTINUE
-c      iwsdu(ist) = 0
-c      iesdu(ist) = 0
 C-----------------------------------------------------------------------
 C     Y-DIRECTION
 C-----------------------------------------------------------------------
@@ -319,8 +289,6 @@ C-----------------------------------------------------------------------
         if (abs(fac3v(j)).lt.local_small) fac3v(j)=0.0D0
         if (abs(fac4v(j)).lt.local_small) fac4v(j)=0.0D0
   850 CONTINUE
-c        jssdv(jst) = 0
-c        jnsdv(jst) = 0
 
 C-----------------------------------------------------------------------
 C     Z-DIRECTION
@@ -334,8 +302,6 @@ C-----------------------------------------------------------------------
   250 CONTINUE
       DZPB(kBegGhost) = DZPB(KST) 
       DZTP(kEndGhost) = DZTP(KEND) 
-c      IF (LCORD) DZPB(kBegGhost) = DZPB(KEND)
-c      IF (LCORD) DZTP(kEndGhost) = DZTP(KST)
       DO 400 K = kBegGhost,kEndGhost
         STB(K) = PT5*(DZTP(K)+DZPB(K))
   400 CONTINUE
@@ -352,13 +318,9 @@ c      IF (LCORD) DZTP(kEndGhost) = DZTP(KST)
   750 CONTINUE
       DZPBW(kBegGhost) = DZTPW(kBegGhost)
       DZTPW(kEndGhost) = DZPBW(kEndGhost)
-c      IF (LCORD) DZPBW(kBegGhost) = DZPBW(KEND)
-c      IF (LCORD) DZTPW(kEndGhost) = DZTPW(KST)
       DO 775 K = kBegGhost,kEndGhost
         STBW(K) = PT5*(DZTPW(K)+DZPBW(K))
   775 CONTINUE
-c      IF (LCORD) STBW(kBegGhost) = STBW(KEND)
-c      IF (LCORD) STBW(kEndGhost) = STBW(KST)
 
 *     factors for differencing schemes: p-cell
 
@@ -414,43 +376,9 @@ C$DIR NO_RECURRENCE
         if (abs(fac2w(k)).lt.local_small) fac2w(k)=0.0D0
         if (abs(fac3w(k)).lt.local_small) fac3w(k)=0.0D0
         if (abs(fac4w(k)).lt.local_small) fac4w(k)=0.0D0
-c        KBSDW(KST) = 0
-c        ktsdw(kst) = 0
   900 CONTINUE
       FAC3W(KST) = FAC1W(KEND)
       FAC4W(KST) = FAC2W(KEND)
       RETURN
       END
 
-c*********************************************************************
-c
-c Revision 1.8  2000/10/04 16:46:29  rawat
-c Parallel solver for pressure is working
-c
-c Revision 1.7  2000/10/02 16:40:30  rawat
-c updated cellinformation for multi-patch
-c
-c Revision 1.6  2000/08/04 03:02:02  bbanerje
-c Add some inits.
-c
-c Revision 1.5  2000/07/28 02:31:04  rawat
-c moved all the labels in ArchesLabel. fixed some bugs and added matrix_dw to store matrix
-c coeffecients
-c
-c Revision 1.4  2000/07/01 05:21:01  bbanerje
-c Changed CellInformation calcs for Turbulence model requirements ..
-c CellInformation still needs work.
-c
-c Revision 1.3  2000/06/19 18:00:38  rawat
-c added function to compute velocity and density profiles and inlet bc.
-c Fixed bugs in CellInformation.cc
-c
-c Revision 1.2  2000/06/14 20:40:53  rawat
-c modified boundarycondition for physical boundaries and
-c added CellInformation class
-c
-c Revision 1.1  2000/04/12 20:31:44  rawat
-c modified PressureSolver and added fortran subroutines
-c
-c
-c*********************************************************************
