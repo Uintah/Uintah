@@ -15,6 +15,7 @@ SRCDIR   := Dataflow/Modules/Examples
 SRCS     += \
 	$(SRCDIR)/BasicInput.cc\
 	$(SRCDIR)/BasicOutput.cc\
+	$(SRCDIR)/ChangeTetVolScalars.cc\
 	$(SRCDIR)/HelloWorld.cc\
 	$(SRCDIR)/ZeroTetVolScalars.cc\
 #[INSERT NEW CODE FILE HERE]
