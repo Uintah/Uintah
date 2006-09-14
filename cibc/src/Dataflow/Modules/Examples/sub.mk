@@ -14,7 +14,9 @@ SRCDIR   := Dataflow/Modules/Examples
 
 SRCS     += \
 	$(SRCDIR)/BasicInput.cc\
+	$(SRCDIR)/BasicOutput.cc\
 	$(SRCDIR)/HelloWorld.cc\
+	$(SRCDIR)/ZeroTetVolScalars.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

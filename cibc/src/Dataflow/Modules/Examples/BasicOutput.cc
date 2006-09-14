@@ -25,7 +25,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : BasicInput.cc
+//    File   : BasicOutput.cc
 //    Author : Martin Cole
 //    Date   : Mon Sep 11 11:22:14 2006
 
@@ -40,41 +40,43 @@ namespace SCIRun {
 using namespace std;
 using namespace SCIRun;
 
-class BasicInput : public Module 
+class BasicOutput : public Module 
 {
 public:
-  BasicInput(GuiContext*);
-  virtual ~BasicInput();
+  BasicOutput(GuiContext*);
+  virtual ~BasicOutput();
 
   virtual void execute();
   virtual void tcl_command(GuiArgs&, void*);
 };
 
 
-DECLARE_MAKER(BasicInput)
-BasicInput::BasicInput(GuiContext* ctx) : 
-  Module("BasicInput", ctx, Source, "Examples", "SCIRun")
+DECLARE_MAKER(BasicOutput)
+BasicOutput::BasicOutput(GuiContext* ctx) : 
+  Module("BasicOutput", ctx, Source, "Examples", "SCIRun")
 {
 }
 
-BasicInput::~BasicInput()
+BasicOutput::~BasicOutput()
 {
 }
 
-// Print the value of the input fields data pointer when we execute.
 void
-BasicInput::execute()
+BasicOutput::execute()
 {
   FieldHandle field_handle;
   if (! get_input_handle("InField", field_handle, true)) {
-    error("BasicInput must have a SCIRun::Field as input to continue.");
+    error("BasicOutput must have a SCIRun::Field as input to continue.");
     return;
   }
-  cerr << "BasicInput module got data :" << field_handle.get_rep() << endl;
+  cerr << "BasicOutput module got data :" << field_handle.get_rep() << endl;
+
+
+  send_output_handle("OutField", field_handle);
 }
 
 void
-BasicInput::tcl_command(GuiArgs& args, void* userdata)
+BasicOutput::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }
