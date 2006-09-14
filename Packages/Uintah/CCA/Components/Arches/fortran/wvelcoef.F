@@ -15,7 +15,7 @@ c*********************************************************************
       integer ISTW, JSTW, KSTW, IENDW, JENDW, KENDW
       integer i, j, k
 
-      logical*1 L2UP, LSMPT, LCENTRAL, filtcend
+      logical*1 L2UP
 
       double precision AREAN, AREAS, AREAEW, AREATB, VOL
       double precision GE, GEB, GW, GWB, GN, GNB, GS, GSB, GT, GPB, GB
@@ -41,11 +41,8 @@ c*********************************************************************
       KENDW = idxHiW(3)
 
 c*********************************************************************
-c     Set all flags except one to false (** WARNING ** need to change)
+c     Set all flags
 c*********************************************************************
-      LSMPT = .FALSE.
-      LCENTRAL = .FALSE.
-      filtcend = .false.
       L2UP = .FALSE.
       
 
@@ -58,11 +55,6 @@ c*********************************************************************
 C-----------------------------------------------------------------------
 C     COMPUTE AREAS AND VOLUME
 C-----------------------------------------------------------------------
-c              AREAN = RV(J+1)*SEW(I)*STBW(K)
-c              AREAS = RV(J)*SEW(I)*STBW(K)
-c              AREAEW = RA(J)*SNS(J)*STBW(K)
-c              AREATB = SNS(J)*SEW(I)
-c              VOL = RA(J)*SEW(I)*SNS(J)*STBW(K)
                AREAN = SEW(I)*STBW(K)
                AREAS = SEW(I)*STBW(K)
                AREAEW = SNS(J)*STBW(K)
@@ -82,11 +74,6 @@ C-----------------------------------------------------------------------
                GT = 0.5D0*(DEN(I,J,K)+DEN(I,J,K+1))*WW(I,J,K+1)
                GPB = 0.5D0*(DEN(I,J,K-1)+DEN(I,J,K))*WW(I,J,K)
                GB = 0.5D0*(DEN(I,J,K-1)+DEN(I,J,K-2))*WW(I,J,K-1)
-c ****
-c ** WARNING ** Rawat, what does k == 2 mean in this context ?
-c ****
-c used for perodic bc               
-c               IF (K.EQ.2) GB = DEN(I,J,K-1)*WW(I,J,K-1)
                CEO = (0.5D0*GE+0.5D0*GEB)*AREAEW
                CWO = (0.5D0*GW+0.5D0*GWB)*AREAEW
                CNO = (0.5D0*GN+0.5D0*GNB)*AREAN
@@ -109,42 +96,6 @@ C-----------------------------------------------------------------------
                CTSAV(I,J,K) = CT
                CBSAV(I,J,K) = CB
 
-               if (LCENTRAL) then
-                  GE = 0.5D0*(DEN(I+1,J,K)+DEN(I,J,K))*UU(I+1,J,K)
-                 GEB = 0.5D0*(DEN(I+1,J,K-1)+DEN(I,J,K-1))*UU(I+1,J,K-1)
-                  GW = 0.5D0*(DEN(I-1,J,K)+DEN(I,J,K))*UU(I,J,K)
-                  GWB = 0.5D0*(DEN(I,J,K-1)+DEN(I-1,J,K-1))*UU(I,J,K-1)
-                  GN = 0.5D0*(DEN(I,J+1,K)+DEN(I,J,K))*VV(I,J+1,K)
-                 GNB = 0.5D0*(DEN(I,J,K-1)+DEN(I,J+1,K-1))*VV(I,J+1,K-1)
-                  GS = 0.5D0*(DEN(I,J-1,K)+DEN(I,J,K))*VV(I,J,K)
-                  GSB = 0.5D0*(DEN(I,J,K-1)+DEN(I,J-1,K-1))*VV(I,J,K-1)
-                  GT = DEN(I,J,K)*WW(I,J,K+1)
-                  GTP =  DEN(I,J,K)*WW(I,J,K)
-                  GB = DEN(I,J,K-1)*WW(I,J,K-1)
-                  GBP = DEN(I,J,K-1)*WW(I,J,K)
-                  CEO = (0.5D0*GE+0.5D0*GEB)*AREAEW
-                  CWO = (0.5D0*GW+0.5D0*GWB)*AREAEW
-                  CNO = (0.5D0*GN+0.5D0*GNB)*AREAN
-                  CSO = (0.5D0*GS+0.5D0*GSB)*AREAS
-                  CTO = 0.5D0*(GT+GTP)*AREATB
-                  CBO = 0.5D0*(GBP+GB)*AREATB
-C-----------------------------------------------------------------------
-C      NEW DIFFERENCING STUFF
-C-----------------------------------------------------------------------
-                  CE = CEO
-                  CW = CWO 
-                  CN = CNO 
-                  CS = CSO
-                  CT = CTO
-                  CB = CBO
-                  CESAV(I,J,K) = CE
-                  CWSAV(I,J,K) = CW
-                  CNSAV(I,J,K) = CN
-                  CSSAV(I,J,K) = CS
-                  CTSAV(I,J,K) = CT
-                  CBSAV(I,J,K) = CB
-               endif
-
 C-----------------------------------------------------------------------
 C      UPWIND DIFFERENCING STUFF
 C-----------------------------------------------------------------------
@@ -154,8 +105,6 @@ C-----------------------------------------------------------------------
         GVP = ENFAC(J)*(0.5D0*GN+0.5D0*GNB)+SFAC(J)*(0.5D0*GS+0.5D0*GSB)
                CPN = GVP*VOL/DYNP(J)
                CPS = GVP*VOL/DYPS(J)
-c              CPT = GPB*VOL/(RA(J)*STB(K))
-c              CPB = GPB*VOL/(RA(J)*STB(K-1))
                CPT = GPB*VOL/STB(K)
                CPB = GPB*VOL/STB(K-1)
 C-----------------------------------------------------------------------
@@ -165,18 +114,6 @@ C-----------------------------------------------------------------------
      &              0.5D0*(VIS(I,J,K-1)+VIS(I+1,J,K-1)))
                VISW = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I-1,J,K))+
      &              0.5D0*(VIS(I,J,K-1)+VIS(I-1,J,K-1)))  
-c ****
-c ** WARNING ** Rawat, why are visn, viss, vist, visb arrays here while they
-c               are not in uvelcoef ?
-c ****
-c              VISN(I) = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I,J+1,K))+
-c    &              0.5D0*(VIS(I,J,K-1)+VIS(I,J+1,K-1)))
-c              VISS(I) = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I,J-1,K))+
-c    &              0.5D0*(VIS(I,J,K-1)+VIS(I,J-1,K-1)))
-c              VIST(I) = FAC1W(K)*VIS(I,J,K)+FAC2W(K)*
-c    &              VIS(I,J,K+KTSDW(K))
-c              VISB(I) = FAC3W(K)*VIS(I,J,K-1)+FAC4W(K)*
-c    &              VIS(I,J,K+KBSDW(K))
                VISN = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I,J+1,K))+
      &              0.5D0*(VIS(I,J,K-1)+VIS(I,J+1,K-1)))
                VISS = 0.5D0*(0.5D0*(VIS(I,J,K)+VIS(I,J-1,K))+
@@ -187,10 +124,6 @@ c    &              VIS(I,J,K+KBSDW(K))
      &              VIS(I,J,K+KBSDW(K))
                DEO = VISE*AREAEW/DXEP(I)
                DWO = VISW*AREAEW/DXPW(I)
-c              DNO = VISN(I)*AREAN/DYNP(J)
-c              DSO = VISS(I)*AREAS/DYPS(J)
-c              DTO = VIST(I)*AREATB/(RA(J)*DZTPW(K))
-c              DBO = VISB(I)*AREATB/(RA(J)*DZPBW(K))
                DNO = VISN*AREAN/DYNP(J)
                DSO = VISS*AREAS/DYPS(J)
                DTO = VIST*AREATB/DZTPW(K)
@@ -226,51 +159,17 @@ c Explicit double precision stuff for the aix
                ASC = 0.5D0*CS*TNS + dMAX1(0.0D0,CPS)*(1.0D0-TNS)
                ATC = -0.5D0*CT*TTB + dMAX1(0.0D0,-CPT)*(1.0D0-TTB)
                ABC = 0.5D0*CB*TTB + dMAX1(0.0D0,CPB)*(1.0D0-TTB)
-c               DDW(I,J,K) = VOL/DZPB(K)
 
 C----------------------------------------------------------------------
 C      PROVISIONS FOR VARIOUS CONVECTION DIFFERENCING SCHEMES
 C----------------------------------------------------------------------
-               IF (LSMPT) THEN
-                  AE(I,J,K) = DE
-                  AW(I,J,K) = DW
-                  AN(I,J,K) = DN
-                  AS(I,J,K) = DS
-                  AT(I,J,K) = DT
-                  AB(I,J,K) = DB
-c                 AC(I,J,K) = AEC+AWC+ANC+ASC+ATC+ABC
-c                 SU(I,J,K) = AEC*W(I+1,J,K)+AWC*W(I-1,J,K) +
-c    &                 ANC*W(I,J+1,K)+ASC*W(I,J-1,K) +
-c    &                 ATC*W(I,J,K+1)+ABC*W(I,J,K-1)
-               ELSE IF (LCEND) THEN
+               IF (LCEND) THEN
                   AE(I,J,K) = DE-CE*0.5D0
                   AW(I,J,K) = DW+CW*0.5D0
                   AN(I,J,K) = DN-CN*0.5D0
                   AS(I,J,K) = DS+CS*0.5D0
                   AT(I,J,K) = DT-CT*0.5D0
                   AB(I,J,K) = DB+CB*0.5D0
-c                 AC(I,J,K) = 0.0
-c                 SU(I,J,K) = 0.0
-               ELSE IF (LCENTRAL) THEN
-                  AE(I,J,K) = DE
-                  AW(I,J,K) = DW
-                  AN(I,J,K) = DN
-                  AS(I,J,K) = DS
-                  AT(I,J,K) = DT
-                  AB(I,J,K) = DB
-               ELSE IF (FILTCEND) THEN
-                  AE(I,J,K) = DE
-                  AW(I,J,K) = DW
-                  AN(I,J,K) = DN
-                  AS(I,J,K) = DS
-                  AT(I,J,K) = DT
-                  AB(I,J,K) = DB
-                  CESAV(I,J,K) = 0.0D0
-                  CWSAV(I,J,K) = 0.0D0
-                  CNSAV(I,J,K) = 0.0D0
-                  CSSAV(I,J,K) = 0.0D0
-                  CTSAV(I,J,K) = 0.0D0
-                  CBSAV(I,J,K) = 0.0D0
                ELSE IF (L2UP) THEN
                   AE(I,J,K) = DE*(1.0D0-dMAX1(0.0D0,dSIGN(1.0D0,COEFE)))
      &                 + dMAX1(0.0D0,COEFE) + dMAX1(0.0D0,-CE)
@@ -284,8 +183,6 @@ c                 SU(I,J,K) = 0.0
      &                 + dMAX1(0.0D0,COEFT) + dMAX1(0.0D0,-CT)
                   AB(I,J,K) = DB*(1.0D0-dMAX1(0.0D0,dSIGN(1.0D0,COEFB)))
      &                 + dMAX1(0.0D0,COEFB) + dMAX1(0.0D0,CB)
-c                 AC(I,J,K) = 0.0
-c                 SU(I,J,K) = 0.0
                ELSE
                   AE(I,J,K) = AEC + DE
                   AW(I,J,K) = AWC + DW
@@ -293,8 +190,6 @@ c                 SU(I,J,K) = 0.0
                   AS(I,J,K) = ASC + DS
                   AT(I,J,K) = ATC + DT
                   AB(I,J,K) = ABC + DB
-c                 AC(I,J,K) = 0.0
-c                 SU(I,J,K) = 0.0
                END IF
  200        CONTINUE
  210     CONTINUE
@@ -303,32 +198,3 @@ c                 SU(I,J,K) = 0.0
       RETURN
       END
 
-c*********************************************************************
-c
-c Revision 1.8  2000/10/08 18:56:41  rawat
-c fixed the solver for multi
-c
-c Revision 1.7  2000/09/28 22:16:47  bigler
-c Changed certain functions to explicity be double precision functions.
-c
-c Revision 1.6  2000/09/26 04:35:34  rawat
-c added some more multi-patch support
-c
-c Revision 1.5  2000/08/10 21:29:15  rawat
-c fixed a bug in cellinformation
-c
-c Revision 1.4  2000/08/10 00:56:38  rawat
-c added pressure bc for scalar and changed discretization option for velocity
-c
-c Revision 1.3  2000/07/14 03:45:49  rawat
-c completed velocity bc and fixed some bugs
-c
-c Revision 1.2  2000/07/08 23:42:17  bbanerje
-c Changed AMAX1(A,B) to MAX(A,B)
-c
-c Revision 1.1  2000/07/08 23:08:56  bbanerje
-c Added vvelcoef and wvelcoef ..
-c Rawat check the ** WARNING ** tags in these files for possible problems.
-c
-c
-c*********************************************************************
