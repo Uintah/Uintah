@@ -127,6 +127,23 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
     restart_mat_ps = prob_spec;
   }
 
+
+  // MARTIN:  This determines if soil & foam is being used. 
+  ProblemSpecP mat_prop_ps = prob_spec->findBlock("MaterialProperties");
+  ProblemSpecP mpm_ps      = mat_prop_ps->findBlock("MPM");
+  
+  for (ProblemSpecP mat_ps = mpm_ps->findBlock("material"); mat_ps != 0;
+                    mat_ps = mat_ps->findNextBlock("material") ) {
+  
+    ProblemSpecP cm_ps =  mat_ps->findBlock("constitutive_model");
+    string mat_type;
+    cm_ps->getAttribute("type", mat_type);
+
+    if (mat_type ==  "soil_foam" ){
+      flags->d_usingSoilFoam_CM = true;
+    }
+  }
+
   ProblemSpecP mpm_soln_ps = prob_spec->findBlock("MPM");
 
   if(mpm_soln_ps) {
@@ -137,7 +154,6 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
       throw ProblemSetupException("Can't use implicit integration with -mpm",
                                    __FILE__, __LINE__);
     }
-
     std::vector<std::string> bndy_face_txt_list;
     mpm_soln_ps->get("boundary_traction_faces", bndy_face_txt_list);
     
@@ -283,6 +299,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     t->computes(lb->pDampingRateLabel); 
     t->computes(lb->pDampingCoeffLabel); 
   }
+  
   if(flags->d_usingSoilFoam_CM) {
     t->computes(lb->sv_minLabel);
   }
