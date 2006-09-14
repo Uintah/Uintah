@@ -59,11 +59,6 @@ WARNING
 //
 // #define ExactMPMArchesInitialize
 
-// Choices of scheme for convection of velocity
-// So far only central differencing is implemented for filtered convection terms
-
-//#define filter_convection_terms
-
 
 #ifdef HAVE_PETSC
   #define PetscFilter
