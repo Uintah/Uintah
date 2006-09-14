@@ -145,6 +145,9 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
   } else if(d_8or27==27){
     NGN=2;
   }
+  
+  cout << "MPMICE:Using soil and foam CM:"<< d_mpm->flags->d_usingSoilFoam_CM << endl;
+  
 
   d_switchCriteria = dynamic_cast<SwitchingCriteria*>
     (getPort("switch_criteria"));
@@ -356,9 +359,8 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   d_mpm->scheduleSetBCsInterpolated(          sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
   
-  
   if(d_mpm->flags->d_usingSoilFoam_CM){
-    cout << "using soil and foam"<<endl;
+    cout << "using soil and foam MPMICE"<<endl;
   // 1.  MARTIN:  if(d_cm==SoilFoam) push max vol. strain from particles to nodes
   //     see MPM::interpolateParticlesToGrid
   //     

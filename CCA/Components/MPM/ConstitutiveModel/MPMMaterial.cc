@@ -74,17 +74,17 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps)
     throw ParameterNotFound(desc.str(), __FILE__, __LINE__);
   }
 
-  // MARTIN:  This determines which material is soil & foam
+
+  // MARTIN:  This determines which material is using soil & foam
   ProblemSpecP child = ps->findBlock("constitutive_model");
   string mat_type;
   child->getAttribute("type", mat_type);
   
   d_is_soilFoam = false;
   if (mat_type ==  "soil_foam" ){
-    d_flag->d_usingSoilFoam_CM = true;
     d_is_soilFoam = true;
   }
-
+  
   // Step 2 -- get the general material properties
 
   ps->require("density",d_density);
