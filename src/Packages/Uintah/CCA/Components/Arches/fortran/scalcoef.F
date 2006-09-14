@@ -23,14 +23,10 @@ C		equation (o/p)
 C	cesav,cwsav,cnsav,cssav,ctsav,cbsaV
 C		Convection fluxes on the east,west,north,south,top,
 C		and bottom faces of the P-cell (o/p)
-C	crn	Average Cell Reynolds number (o/p)
 C	vol	Array: Volume of P-Cell (o/p)
-C	rv	Radius of V-velocity node point (i/p)
-C	ra	Radius of P-cell center (i/p)
 C	sew	Width of P-cell in x-direction (i/p)
 C	sns	Width of P-cell in y-direction (i/p)
 C	stb	Width of P-cell in z-direction (i/p)
-C	rone	Dummy radius array, = 1.0 (i/p)
 C	cee,cwe,cww
 C		Interpolation factors for interpolating from
 C		E- and W-faces of regular P-cell to artificial
@@ -74,8 +70,7 @@ C-----------------------------------------------------------------------
 *-----------------------------------------------------------------------
 *     local variables
 *
-      double precision crn
-      logical*1 l2up, lsmpt, lcend, lcentral, leno
+      logical*1 l2up, lcend, leno
       double precision vol
       double precision arean, areas, areaew, areatb
       double precision dene, denw, denn, dens, dent, denb
@@ -88,18 +83,14 @@ C-----------------------------------------------------------------------
       double precision coefe, coefw, coefn, coefs, coeft, coefb
       double precision tew, tns, ttb
       double precision aec, awc, anc, asc, atc, abc
-      double precision crn0
 
       integer i, j, k
       integer IST, JST, KST
       integer IEND, JEND, KEND
 *-----------------------------------------------------------------------
 
-      crn = zero
       l2up = .false.
       lcend = .false.
-      lsmpt = .false.
-      lcentral = .false.
       leno = .false.
       if (conv_scheme.eq.0) then
         l2up = .true.
@@ -156,20 +147,6 @@ C-----------------------------------------------------------------------
                CSSAV(I,J,K) = CS
                CTSAV(I,J,K) = CT
                CBSAV(I,J,K) = CB
-               if (lcentral) then
-                  CE = 0.5*(CEO + CWO)
-                  CW = 0.5*(CWO + CEO)
-                  CN = 0.5*(CNO + CSO)
-                  CS = 0.5*(CNO + CSO)
-                  CT = 0.5*(CTO + CBO)
-                  CB = 0.5*(CTO + CBO)
-                  CESAV(I,J,K) = CE
-                  CWSAV(I,J,K) = CW
-                  CNSAV(I,J,K) = CN
-                  CSSAV(I,J,K) = CS
-                  CTSAV(I,J,K) = CT
-                  CBSAV(I,J,K) = CB
-               endif
 
 C-----------------------------------------------------------------------
 C      UPWIND DIFFERENCING STUFF
@@ -228,32 +205,17 @@ C-----------------------------------------------------------------------
                IF (COEFE.LT.0.0D0 .OR. COEFW.LT.0.0D0) TEW = 0.0D0
                IF (COEFN.LT.0.0D0 .OR. COEFS.LT.0.0D0) TNS = 0.0D0
                IF (COEFT.LT.0.0D0 .OR. COEFB.LT.0.0D0) TTB = 0.0D0
-c === double precision stuff for aix ==               
+
                AEC = -0.5D0*CE*TEW + dMAX1(0.0D0,-CPE)*(1.0D0-TEW)
                AWC = 0.5D0*CW*TEW + dMAX1(0.0D0,CPW)*(1.0D0-TEW)
                ANC = -0.5D0*CN*TNS + dMAX1(0.0D0,-CPN)*(1.0D0-TNS)
                ASC = 0.5D0*CS*TNS + dMAX1(0.0D0,CPS)*(1.0D0-TNS)
                ATC = -0.5D0*CT*TTB + dMAX1(0.0D0,-CPT)*(1.0D0-TTB)
                ABC = 0.5D0*CB*TTB + dMAX1(0.0D0,CPB)*(1.0D0-TTB)
-c === original code ===
-c               AEC = -0.5*CE*TEW + MAX(0.0,-CPE)*(1.0-TEW)
-c               AWC = 0.5*CW*TEW + MAX(0.0,CPW)*(1.0-TEW)
-c               ANC = -0.5*CN*TNS + MAX(0.0,-CPN)*(1.0-TNS)
-c               ASC = 0.5*CS*TNS + MAX(0.0,CPS)*(1.0-TNS)
-c               ATC = -0.5*CT*TTB + MAX(0.0,-CPT)*(1.0-TTB)
-c               ABC = 0.5*CB*TTB + MAX(0.0,CPB)*(1.0-TTB)
 C----------------------------------------------------------------------
 C      PROVISIONS FOR VARIOUS DIFFERENCING SCHEMES
 C----------------------------------------------------------------------
-               IF (LSMPT) THEN
-                  AE(I,J,K) = DE
-                  AW(I,J,K) = DW
-                  AN(I,J,K) = DN
-                  AS(I,J,K) = DS
-                  AT(I,J,K) = DT
-                  AB(I,J,K) = DB
-c                  AC(I,J,K) = AEC+AWC+ANC+ASC+ATC+ABC
-               ELSE IF (LENO) THEN
+               IF (LENO) THEN
                   AE(I,J,K) = DE
                   AW(I,J,K) = DW
                   AN(I,J,K) = DN
@@ -273,17 +235,7 @@ c                  AC(I,J,K) = AEC+AWC+ANC+ASC+ATC+ABC
                   AS(I,J,K) = DS+CS*0.5D0
                   AT(I,J,K) = DT-CT*0.5D0
                   AB(I,J,K) = DB+CB*0.5D0
-c                  AC(I,J,K) = 0.0
-               ELSE IF (LCENTRAL) THEN
-                  AE(I,J,K) = DE-CE*0.5D0
-                  AW(I,J,K) = DW+CW*0.5D0
-                  AN(I,J,K) = DN-CN*0.5D0
-                  AS(I,J,K) = DS+CS*0.5D0
-                  AT(I,J,K) = DT-CT*0.5D0
-                  AB(I,J,K) = DB+CB*0.5D0
-c                  AC(I,J,K) = 0.0D0
                ELSE IF (L2UP) THEN
-c === double precision stuff for aix                  
                   AE(I,J,K) = DE*(1.0D0-dMAX1(0.0D0,dSIGN(1.0D0,COEFE)))
      &                 + dMAX1(0.0D0,COEFE) + dMAX1(0.0D0,-CE)
                   AW(I,J,K) = DW*(1.0D0-dMAX1(0.0D0,dSIGN(1.0D0,COEFW)))
@@ -296,20 +248,6 @@ c === double precision stuff for aix
      &                 + dMAX1(0.0D0,COEFT) + dMAX1(0.0D0,-CT)
                   AB(I,J,K) = DB*(1.0D0-dMAX1(0.0D0,dSIGN(1.0D0,COEFB)))
      &                 + dMAX1(0.0D0,COEFB) + dMAX1(0.0D0,CB)
-C === original code ===
-c                  AE(I,J,K) = DE*(1.0-MAX(0.0,SIGN(1.0,COEFE)))
-c     &                 + MAX(0.0,COEFE) + MAX(0.0,-CE)
-c                  AW(I,J,K) = DW*(1.0-MAX(0.0,SIGN(1.0,COEFW)))
-c     &                 + MAX(0.0,COEFW) + MAX(0.0,CW)
-c                  AN(I,J,K) = DN*(1.0-MAX(0.0,SIGN(1.0,COEFN)))
-c     &                 + MAX(0.0,COEFN) + MAX(0.0,-CN)
-c                  AS(I,J,K) = DS*(1.0-MAX(0.0,SIGN(1.0,COEFS)))
-c     &                 + MAX(0.0,COEFS) + MAX(0.0,CS)
-c                  AT(I,J,K) = DT*(1.0-MAX(0.0,SIGN(1.0,COEFT)))
-c     &                 + MAX(0.0,COEFT) + MAX(0.0,-CT)
-c                  AB(I,J,K) = DB*(1.0-MAX(0.0,SIGN(1.0,COEFB)))
-c     &                 + MAX(0.0,COEFB) + MAX(0.0,CB)
-c                  AC(I,J,K) = 0.0
                ELSE
                   AE(I,J,K) = AEC + DE
                   AW(I,J,K) = AWC + DW
@@ -317,7 +255,6 @@ c                  AC(I,J,K) = 0.0
                   AS(I,J,K) = ASC + DS
                   AT(I,J,K) = ATC + DT
                   AB(I,J,K) = ABC + DB
-c                  AC(I,J,K) = 0.0
                END IF
 
  203        continue
@@ -327,24 +264,3 @@ c                  AC(I,J,K) = 0.0
       return
       end
 
-c
-c Revision 1.6  2000/10/10 19:31:03  rawat
-c added scalarsolver
-c
-c Revision 1.5  2000/09/28 22:16:47  bigler
-c Changed certain functions to explicity be double precision functions.
-c
-c Revision 1.4  2000/08/19 16:36:40  rawat
-c fixed some bugs in scalarcoef calculations
-c
-c Revision 1.3  2000/08/09 20:19:27  rawat
-c modified scalcoef.F
-c
-c Revision 1.2  2000/08/08 23:34:20  rawat
-c fixed some bugs in profv.F and Properties.cc
-c
-c Revision 1.1  2000/07/14 05:23:52  bbanerje
-c Added scalcoef.F and updated related stuff in C++. scalcoef ==> coefs.f
-c in Kumar's code.
-c
-c
