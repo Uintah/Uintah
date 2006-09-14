@@ -1,3 +1,7 @@
+# Python script for converting sub.mk files into CMakeLists.txt files.
+#
+# usage 'python sub_to_cmake.py sub.mk > CMakeLists.txt'
+
 import sys, regex, string, regsub
 
 rex_srcdir = regex.compile('^SRCDIR.*:= \([a-zA-Z0-9/]+\)')
