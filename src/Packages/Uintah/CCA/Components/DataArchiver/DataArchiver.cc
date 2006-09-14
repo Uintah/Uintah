@@ -176,7 +176,7 @@ DataArchiver::problemSetup(const ProblemSpecP& params,
       //__________________________________
       //  bullet proofing: must save p.x 
       //  in addition to other particle variables "p.*"
-      if (saveItem.labelName == "p.x") {
+      if (saveItem.labelName == "p.x" || saveItem.labelName == "p.xx") {
          d_saveP_x = true;
       }
 
