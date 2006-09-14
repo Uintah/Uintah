@@ -82,7 +82,8 @@ typedef ConstantBasis<unsigned long>      CFDulongBasis;
 
 typedef NoDataBasis<double>             NDBasis;
 //NoData
-template class GenericField<LVMesh, NDBasis,  FData3d<double, LVMesh> >;
+template class GenericField<LVMesh, NoDataBasis<double>,  FData3d<double, LVMesh> >;
+template class GenericField<LVMesh, NoDataBasis<int>,  FData3d<int, LVMesh> >;
 
 //Constant
 template class GenericField<LVMesh, CFDTensorBasis,  FData3d<Tensor, LVMesh> >;

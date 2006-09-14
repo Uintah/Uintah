@@ -82,7 +82,8 @@ typedef QuadBilinearLgn<unsigned char>      FDucharBasis;
 typedef QuadBilinearLgn<unsigned long>      FDulongBasis;
 
 //NoData
-template class GenericField<IMesh, NDBasis, FData2d<double, IMesh> >;
+template class GenericField<IMesh, NoDataBasis<double>, FData2d<double, IMesh> >;
+template class GenericField<IMesh, NoDataBasis<int>, FData2d<int, IMesh> >;
 
 //Constant
 template class GenericField<IMesh, CFDTensorBasis, FData2d<Tensor, IMesh> >;
@@ -185,7 +186,8 @@ PersistentTypeID backwards_compat_QSM("QuadSurfMesh", "Mesh",
 				      QSMesh::maker, QSMesh::maker);
 
 //NoData
-template class GenericField<QSMesh, NDBasis, vector<double> >;
+template class GenericField<QSMesh, NoDataBasis<double>, vector<double> >;
+template class GenericField<QSMesh, NoDataBasis<int>, vector<int> >;
 
 //Constant
 template class GenericField<QSMesh, CFDTensorBasis, vector<Tensor> >;       
