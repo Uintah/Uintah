@@ -105,6 +105,7 @@ public:
 
       virtual bool getMMS() const = 0;
 
+      virtual void setExtraProjection(bool extraProjection) = 0;
 protected:
    const ProcessorGroup* d_myworld;
    string d_timeIntegratorType;

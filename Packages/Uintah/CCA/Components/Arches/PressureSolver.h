@@ -94,16 +94,19 @@ public:
       ///////////////////////////////////////////////////////////////////////
       // Schedule Solve of linearized pressure equation
       void solve(const LevelP& level, SchedulerP&,
-		 const TimeIntegratorLabel* timelabels);
+		 const TimeIntegratorLabel* timelabels,
+		 bool extraProjection);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule the build of the linearized eqn
       void sched_buildLinearMatrix(SchedulerP&, const PatchSet* patches,
 				   const MaterialSet* matls,
-		 		   const TimeIntegratorLabel* timelabels);
+		 		   const TimeIntegratorLabel* timelabels,
+				   bool extraProjection);
  
       void sched_pressureLinearSolve(const LevelP& level, SchedulerP& sched,
-		 		     const TimeIntegratorLabel* timelabels);
+		 		     const TimeIntegratorLabel* timelabels,
+				     bool ExtraProjection);
 
       ///////////////////////////////////////////////////////////////////////
       // Schedule the addition of the hydrostatic term to the relative pressure
@@ -138,14 +141,16 @@ private:
 			     const MaterialSubset* matls,
 			     DataWarehouse* new_dw,
 			     DataWarehouse* matrix_dw,
-		 	     const TimeIntegratorLabel* timelabels);
+		 	     const TimeIntegratorLabel* timelabels,
+			     bool extraProjection);
 
       void pressureLinearSolve_all(const ProcessorGroup* pc,
 				   const PatchSubset* patches,
                                    const MaterialSubset* matls,
 				   DataWarehouse* new_dw,
 				   DataWarehouse* matrix_dw,
-		 		   const TimeIntegratorLabel* timelabels);
+		 		   const TimeIntegratorLabel* timelabels,
+				   bool extraProjection);
 
       void pressureLinearSolve(const ProcessorGroup* pc,
 			       const Patch* patch,
@@ -153,7 +158,8 @@ private:
 			       DataWarehouse* new_dw,
 			       DataWarehouse* matrix_dw,
 			       ArchesVariables& pressureVars,
-		 	       const TimeIntegratorLabel* timelabels);
+		 	       const TimeIntegratorLabel* timelabels,
+			       bool extraProjection);
 
       ////////////////////////////////////////////////////////////////
       // addition of hydrostatic term to relative pressure

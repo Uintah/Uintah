@@ -515,12 +515,13 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
     d_props->sched_computeDrhodt(subsched, local_patches, local_matls,
 				 d_timeIntegratorLabels[curr_level]);
 
-    d_pressSolver->solve(level, subsched, d_timeIntegratorLabels[curr_level]);
+    d_pressSolver->solve(level, subsched, d_timeIntegratorLabels[curr_level],
+		         false);
   
     // project velocities using the projection step
     for (int index = 1; index <= Arches::NDIM; ++index) {
       d_momSolver->solve(subsched, local_patches, local_matls,
-			 d_timeIntegratorLabels[curr_level], index);
+			 d_timeIntegratorLabels[curr_level], index, false);
     }
    /* if ((d_boundaryCondition->getOutletBC())||
         (d_boundaryCondition->getPressureBC())) {

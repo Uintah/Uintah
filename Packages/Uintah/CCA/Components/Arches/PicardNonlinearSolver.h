@@ -180,6 +180,9 @@ public:
       inline bool getMMS() const {
         return d_doMMS;
       }
+      inline void setExtraProjection(bool extraProjection) {
+        d_extraProjection=extraProjection;
+      }
 
 protected :
 
@@ -344,6 +347,7 @@ private:
       bool d_dynScalarModel;
       double d_H_air;
       bool d_doMMS;
+      bool d_extraProjection;
 
 }; // End class PicardNonlinearSolver
 } // End namespace Uintah

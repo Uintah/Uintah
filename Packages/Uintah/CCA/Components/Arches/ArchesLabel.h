@@ -92,6 +92,7 @@ namespace Uintah {
 
       // for old_dw in computePressureBC
       const VarLabel* d_pressurePSLabel;
+      const VarLabel* d_pressureExtraProjectionLabel;
 
       // Pressure Coeff Labels
       // for new_dw in pressuresolver::linearizeMatrix
