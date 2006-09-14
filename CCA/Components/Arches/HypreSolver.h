@@ -105,6 +105,7 @@ private:
   int d_A_num_ghost[6];
   double d_convgTol; // convergence tolerence
   double d_residual;
+  double d_stored_residual;
   double *d_value;
   const ProcessorGroup* d_myworld;
   map<const Patch*, int> d_petscGlobalStart;

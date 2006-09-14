@@ -139,7 +139,8 @@ Arches::problemSetup(const ProblemSpecP& params,
   db->getWithDefault("turnonMixedModel",d_mixedModel,false);
   db->getWithDefault("recompileTaskgraph",d_recompile,false);
   db->getWithDefault("scalarUnderflowCheck",d_underflow,false);
-  
+  db->getWithDefault("extraProjection",d_extraProjection,false);  
+
   db->getWithDefault("doMMS", d_doMMS, false);
   if(d_doMMS) {
 	  ProblemSpecP db_mms = db->findBlock("MMS");
@@ -261,6 +262,7 @@ Arches::problemSetup(const ProblemSpecP& params,
   else
     throw InvalidValue("Nonlinear solver not supported: "+nlSolver, __FILE__, __LINE__);
 
+  d_nlSolver->setExtraProjection(d_extraProjection);
   d_nlSolver->setMMS(d_doMMS);
   d_nlSolver->problemSetup(db);
   d_timeIntegratorType = d_nlSolver->getTimeIntegratorType();
@@ -403,6 +405,8 @@ Arches::sched_paramInit(const LevelP& level,
     tsk->computes(d_lab->d_newCCVVelocityLabel);
     tsk->computes(d_lab->d_newCCWVelocityLabel);
     tsk->computes(d_lab->d_pressurePSLabel);
+    if (d_extraProjection)
+      tsk->computes(d_lab->d_pressureExtraProjectionLabel);
     if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE")))
       tsk->computes(d_lab->d_pressurePredLabel);
     if (d_timeIntegratorType == "RK3SSP")
@@ -477,6 +481,7 @@ Arches::paramInit(const ProcessorGroup* ,
     CCVariable<double> vVelocityCC;
     CCVariable<double> wVelocityCC;
     CCVariable<double> pressure;
+    CCVariable<double> pressureExtraProjection;
     CCVariable<double> pressurePred;
     CCVariable<double> pressureInterm;
     CCVariable<double> scalar;
@@ -508,6 +513,10 @@ Arches::paramInit(const ProcessorGroup* ,
     vVelRhoHat.initialize(0.0);
     wVelRhoHat.initialize(0.0);
     new_dw->allocateAndPut(pressure, d_lab->d_pressurePSLabel, matlIndex, patch);
+    if (d_extraProjection) {
+      new_dw->allocateAndPut(pressureExtraProjection, d_lab->d_pressureExtraProjectionLabel, matlIndex, patch);
+      pressureExtraProjection.initialize(0.0);
+    }
     if (!((d_timeIntegratorType == "FE")||(d_timeIntegratorType == "BE"))) {
       new_dw->allocateAndPut(pressurePred, d_lab->d_pressurePredLabel,
 			     matlIndex, patch);

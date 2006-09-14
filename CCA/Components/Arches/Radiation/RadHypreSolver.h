@@ -115,6 +115,7 @@ private:
   double d_convgTol; // convergence tolerence
   double d_initResid;
   double d_residual;
+  double d_stored_residual;
   double init_norm;
 
   double *d_value;
