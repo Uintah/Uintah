@@ -110,7 +110,7 @@ ChangeTetVolScalars::execute()
     in->value(val, ni);
     cerr << "at point: " << node << "the input value is: " << val << endl;
 
-    // Set the value to be 0.0;
+    // Set the value to be the value from the gui;
     in->set_value(newval_.get(), ni);
     ++iter;
   }
