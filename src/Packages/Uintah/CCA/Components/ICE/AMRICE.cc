@@ -167,21 +167,21 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
   //We need these variables from OldDW to use between tasks, but do not
   // schedule datacopy
   
-  sched->scheduleNotDataCopyVar("mass_X_FC_flux");
-  sched->scheduleNotDataCopyVar("mass_Y_FC_flux");
-  sched->scheduleNotDataCopyVar("mass_Z_FC_flux");
-  sched->scheduleNotDataCopyVar("mom_X_FC_flux");
-  sched->scheduleNotDataCopyVar("mom_Y_FC_flux");
-  sched->scheduleNotDataCopyVar("mom_Z_FC_flux");
-  sched->scheduleNotDataCopyVar("sp_vol_X_FC_flux");
-  sched->scheduleNotDataCopyVar("sp_vol_Y_FC_flux");
-  sched->scheduleNotDataCopyVar("sp_vol_Z_FC_flux");
-  sched->scheduleNotDataCopyVar("int_eng_X_FC_flux");
-  sched->scheduleNotDataCopyVar("int_eng_Y_FC_flux");
-  sched->scheduleNotDataCopyVar("int_eng_Z_FC_flux");
-  sched->scheduleNotDataCopyVar("vol_frac_X_FC_flux");
-  sched->scheduleNotDataCopyVar("vol_frac_Y_FC_flux");
-  sched->scheduleNotDataCopyVar("vol_frac_Z_FC_flux");
+  sched->scheduleNoScrubVar("mass_X_FC_flux");
+  sched->scheduleNoScrubVar("mass_Y_FC_flux");
+  sched->scheduleNoScrubVar("mass_Z_FC_flux");
+  sched->scheduleNoScrubVar("mom_X_FC_flux");
+  sched->scheduleNoScrubVar("mom_Y_FC_flux");
+  sched->scheduleNoScrubVar("mom_Z_FC_flux");
+  sched->scheduleNoScrubVar("sp_vol_X_FC_flux");
+  sched->scheduleNoScrubVar("sp_vol_Y_FC_flux");
+  sched->scheduleNoScrubVar("sp_vol_Z_FC_flux");
+  sched->scheduleNoScrubVar("int_eng_X_FC_flux");
+  sched->scheduleNoScrubVar("int_eng_Y_FC_flux");
+  sched->scheduleNoScrubVar("int_eng_Z_FC_flux");
+  sched->scheduleNoScrubVar("vol_frac_X_FC_flux");
+  sched->scheduleNoScrubVar("vol_frac_Y_FC_flux");
+  sched->scheduleNoScrubVar("vol_frac_Z_FC_flux");
   
   //__________________________________
   // MODELS
@@ -192,9 +192,9 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
     string varLabelX = rvar->var_X_FC_flux->getName();
     string varLabelY = rvar->var_Y_FC_flux->getName();
     string varLabelZ = rvar->var_Z_FC_flux->getName();
-    sched->scheduleNotDataCopyVar(varLabelX);
-    sched->scheduleNotDataCopyVar(varLabelY);
-    sched->scheduleNotDataCopyVar(varLabelZ);
+    sched->scheduleNoScrubVar(varLabelX);
+    sched->scheduleNoScrubVar(varLabelY);
+    sched->scheduleNoScrubVar(varLabelZ);
   } 
 }
 //___________________________________________________________________              
@@ -1146,7 +1146,7 @@ void AMRICE::scheduleReflux_computeCorrectionFluxes(const LevelP& coarseLevel,
   Ghost::GhostType gy  = Ghost::AroundFacesY;
   Ghost::GhostType gz  = Ghost::AroundFacesZ;
   bool  fat = true;  // possibly (F)rom (A)nother (T)askgraph
- 
+
   //__________________________________
   // Fluxes from the fine level            
                                       // MASS

@@ -112,6 +112,8 @@ class DataArchive;
       int d_restartTimestep;
       double d_restartTime;
 
+      int d_lastRecompileTimestep;
+
       bool d_combinePatches;
       bool d_reduceUda;
       // If d_restartFromScratch is true then don't copy or move any of
