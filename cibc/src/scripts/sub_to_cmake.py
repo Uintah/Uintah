@@ -41,6 +41,7 @@ def gen_cmake(filename):
         n = rex_pselibs.match(line)
         if n >= 0:
             libstmp = cont(file, line)
+            libstmp = regsub.gsub('/', '_', libstmp)
             llibs = string.splitfields(libstmp)
             libs = libs+'  '+string.joinfields(llibs[2:], '\n  ')
             continue
