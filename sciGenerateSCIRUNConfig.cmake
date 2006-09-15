@@ -20,12 +20,12 @@ SET(SCIRUN_LIBRARY_DIRS_CONFIG
   ${SCIRUN_THIRDPARTY_PATH}/lib
 )
 
+# Set specific libraries we may want for Dataflow or StandAlone apps
+
 IF(HAVE_INSIGHT)
   SET(SCIRUN_LIBRARY_DIRS_CONFIG ${SCIRUN_LIBRARY_DIRS_CONFIG}
     ${ITK_LIBRARY_DIRS})
 ENDIF(HAVE_INSIGHT)
-
-SET(SCIRUN_ITK_DIR_CONFIG ${ITK_DIR})
 
 # Determine the include directories needed.
 SET(SCIRUN_INCLUDE_DIRS_CONFIG
