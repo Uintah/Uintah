@@ -20,9 +20,6 @@
 #include <Core/Util/DebugStream.h>
 #include <iomanip>
 
-#define SPEW 0
-//#undef SPEW
-
 
 using namespace Uintah;
 using namespace std;
