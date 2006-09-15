@@ -8,8 +8,10 @@
 #include <Core/Util/Endian.h>
 #include <iostream>
 
-//#define SPEW
-#undef SPEW
+#define SPEW
+//#undef SPEW
+#define is_rightFace_variable(face,var) ( ((face == "xminus" || face == "xplus") && var == "scalar-f") ?1:0  )
+
 using namespace Uintah;
 using std::cerr;
 using std::endl;
@@ -450,31 +452,37 @@ void FirstOrderAdvector::q_FC_fluxes( const CCVariable<T>& q_CC,
                                            
  /*`==========TESTING==========*/    
 #ifdef SPEW                
-    cout << "AMR_subCycleProgressVar " << AMR_subCycleProgressVar << " Level " << patch->getLevel()->getID() <<endl;                        
+                        
     vector<Patch::FaceType>::const_iterator itr;  
     for (itr  = patch->getCoarseFineInterfaceFaces()->begin(); 
          itr != patch->getCoarseFineInterfaceFaces()->end(); ++itr){
       Patch::FaceType patchFace = *itr;
       string name = patch->getFaceName(patchFace);
 
-      cout << "Patch " << patch->getID()<<" patchFace " << name << " " ;
-      
-      IntVector shift = patch->faceDirection(patchFace);
-      shift = SCIRun::Max(IntVector(0,0,0), shift);  // set -1 values to 0
-      
-      CellIterator iter =patch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
-      IntVector begin = iter.begin() + shift;
-      IntVector end   = iter.end() + shift;
- 
-      IntVector half  = (end - begin)/IntVector(2,2,2) + begin;
-      if(patchFace == Patch::xminus || patchFace == Patch::xplus){
-        cout << half << " \t sum_q_flux " << q_X_FC_flux[half] <<  endl; 
-      } 
-      if(patchFace == Patch::yminus || patchFace == Patch::yplus){
-        cout << half << " \t sum_q_flux " << q_Y_FC_flux[half] <<  endl;
-      }
-      if(patchFace == Patch::zminus || patchFace == Patch::zplus){
-        cout << half << " \t sum_q_flux " << q_Z_FC_flux[half] <<  endl;
+
+      if(is_rightFace_variable(name,desc)){
+          cout << " ------------ FirstOrderAdvector::q_FC_fluxes " << desc<< endl;
+        cout << "AMR_subCycleProgressVar " << AMR_subCycleProgressVar << " Level " << patch->getLevel()->getIndex()
+              << " Patch " << patch->getGridIndex()<< endl;
+        cout <<" patchFace " << name << " " ;
+
+        IntVector shift = patch->faceDirection(patchFace);
+        shift = SCIRun::Max(IntVector(0,0,0), shift);  // set -1 values to 0
+
+        CellIterator iter =patch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
+        IntVector begin = iter.begin() + shift;
+        IntVector end   = iter.end() + shift;
+
+        IntVector half  = (end - begin)/IntVector(2,2,2) + begin;
+        if(patchFace == Patch::xminus || patchFace == Patch::xplus){
+          cout << half << " \t sum_q_flux " << q_X_FC_flux[half] <<  endl; 
+        } 
+        if(patchFace == Patch::yminus || patchFace == Patch::yplus){
+          cout << half << " \t sum_q_flux " << q_Y_FC_flux[half] <<  endl;
+        }
+        if(patchFace == Patch::zminus || patchFace == Patch::zplus){
+          cout << half << " \t sum_q_flux " << q_Z_FC_flux[half] <<  endl;
+        }
       } 
     } 
 #endif
