@@ -1589,26 +1589,9 @@ void ICE::computesRequires_AMR_Refluxing(Task* task,
   task->computes(lb->int_eng_Y_FC_fluxLabel);
   task->computes(lb->int_eng_Z_FC_fluxLabel);  
   
-
-  // originally said require if not the first task of a subcycle, but
-  // require it anyway.  It will do no extra communication since there
-  // are no ghost cells, and it will do the right thing at execute time
-  task->requires(Task::OldDW, lb->mass_X_FC_fluxLabel, gn, 0);
-  task->requires(Task::OldDW, lb->mass_Y_FC_fluxLabel, gn, 0);
-  task->requires(Task::OldDW, lb->mass_Z_FC_fluxLabel, gn, 0);
-  
-  task->requires(Task::OldDW, lb->mom_X_FC_fluxLabel, gn, 0);
-  task->requires(Task::OldDW, lb->mom_Y_FC_fluxLabel, gn, 0);
-  task->requires(Task::OldDW, lb->mom_Z_FC_fluxLabel, gn, 0);
-  
-  task->requires(Task::OldDW, lb->sp_vol_X_FC_fluxLabel, gn, 0);
-  task->requires(Task::OldDW, lb->sp_vol_Y_FC_fluxLabel, gn, 0);
-  task->requires(Task::OldDW, lb->sp_vol_Z_FC_fluxLabel, gn, 0);
-  
-  task->requires(Task::OldDW, lb->int_eng_X_FC_fluxLabel, gn, 0);
-  task->requires(Task::OldDW, lb->int_eng_Y_FC_fluxLabel, gn, 0);
-  task->requires(Task::OldDW, lb->int_eng_Z_FC_fluxLabel, gn, 0);
-  
+  // DON'T require reflux vars from the OldDW.  Since we only require it 
+  // between subcycles, we don't want to schedule it.  Otherwise it will
+  // just cause excess TG work.  The data will all get to the right place.
   //__________________________________
   // MODELS
   vector<AMR_refluxVariable*>::iterator iter;
@@ -1619,10 +1602,6 @@ void ICE::computesRequires_AMR_Refluxing(Task* task,
     task->computes(rvar->var_X_FC_flux); 
     task->computes(rvar->var_Y_FC_flux);
     task->computes(rvar->var_Z_FC_flux);
-    
-    task->requires(Task::OldDW, rvar->var_X_FC_flux, gn, 0);
-    task->requires(Task::OldDW, rvar->var_Y_FC_flux, gn, 0);
-    task->requires(Task::OldDW, rvar->var_Z_FC_flux, gn, 0);
   } 
 }
 
