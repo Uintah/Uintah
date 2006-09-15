@@ -379,6 +379,9 @@ void AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwSt
   
   int newDWStride = dwStride/numSteps;
 
+  DataWarehouse::ScrubMode oldScrubbing = (d_lb->isDynamic() || d_sim->restartableTimesteps()) ? 
+    DataWarehouse::ScrubNonPermanent : DataWarehouse::ScrubComplete;
+
   int curDW = startDW;
   for(int step=0;step < numSteps;step++){
     if (step > 0)
@@ -393,22 +396,24 @@ void AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwSt
     // we really only need to pass in whether the current DW is mapped to 0
     // or not
     // TODO - fix inter-Taskgraph scrubbing
-    d_scheduler->get_dw(curDW)->setScrubbing(DataWarehouse::ScrubComplete); // OldDW
+    d_scheduler->get_dw(curDW)->setScrubbing(oldScrubbing); // OldDW
     d_scheduler->get_dw(curDW+newDWStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // NewDW
-    d_scheduler->get_dw(startDW)->setScrubbing(DataWarehouse::ScrubComplete); // CoarseOldDW
+    d_scheduler->get_dw(startDW)->setScrubbing(oldScrubbing); // CoarseOldDW
     d_scheduler->get_dw(startDW+dwStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // CoarseNewDW
-
-    if (dbg.active())
-      dbg << d_myworld->myrank() << "   Executing TG on level " << levelNum << " with old DW " 
-          << curDW << "=" << d_scheduler->get_dw(curDW)->getID() << " and new " 
-          << curDW+newDWStride << "=" << d_scheduler->get_dw(curDW+newDWStride)->getID() 
-          << "CO-DW: " << startDW << " CNDW " << startDW+dwStride << endl;
-
     
     // we need to unfinalize because execute finalizes all new DWs, and we need to write into them still
     // (even if we finalized only the NewDW in execute, we will still need to write into that DW)
     d_scheduler->get_dw(curDW+newDWStride)->unfinalize();
-    d_scheduler->execute(levelNum, curDW);
+
+    // iteration only matters if it's zero or greater than 0
+    int iteration = curDW + (d_lastRecompileTimestep == d_sharedState->getCurrentTopLevelTimeStep() ? 0 : 1);
+    if (dbg.active())
+      dbg << d_myworld->myrank() << "   Executing TG on level " << levelNum << " with old DW " 
+          << curDW << "=" << d_scheduler->get_dw(curDW)->getID() << " and new " 
+          << curDW+newDWStride << "=" << d_scheduler->get_dw(curDW+newDWStride)->getID() 
+          << "CO-DW: " << startDW << " CNDW " << startDW+dwStride << " on iteration " << iteration << endl;
+
+    d_scheduler->execute(levelNum, iteration);
 
     if(levelNum+1 < grid->numLevels()){
       ASSERT(newDWStride > 0);
@@ -426,18 +431,18 @@ void AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwSt
       d_scheduler->mapDataWarehouse(Task::CoarseOldDW, startDW);
       d_scheduler->mapDataWarehouse(Task::CoarseNewDW, startDW+dwStride);
 
-      d_scheduler->get_dw(curDW)->setScrubbing(DataWarehouse::ScrubComplete); // OldDW
+      d_scheduler->get_dw(curDW)->setScrubbing(oldScrubbing); // OldDW
       d_scheduler->get_dw(curDW+newDWStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // NewDW
-      d_scheduler->get_dw(startDW)->setScrubbing(DataWarehouse::ScrubComplete); // CoarseOldDW
+      d_scheduler->get_dw(startDW)->setScrubbing(oldScrubbing); // CoarseOldDW
       d_scheduler->get_dw(startDW+dwStride)->setScrubbing(DataWarehouse::ScrubNonPermanent); // CoarseNewDW
 
       if (dbg.active())
         dbg << d_myworld->myrank() << "   Executing INT TG on level " << levelNum << " with old DW " 
             << curDW << "=" << d_scheduler->get_dw(curDW)->getID() << " and new " 
             << curDW+newDWStride << "=" << d_scheduler->get_dw(curDW+newDWStride)->getID() 
-            << " CO-DW: " << startDW << " CNDW " << startDW+dwStride << endl;
+            << " CO-DW: " << startDW << " CNDW " << startDW+dwStride << " on iteration " << iteration << endl;
       d_scheduler->get_dw(curDW+newDWStride)->unfinalize();
-      d_scheduler->execute(levelNum+grid->numLevels(), curDW+1);
+      d_scheduler->execute(levelNum+grid->numLevels(), iteration);
     }
   }
   if (levelNum == 0) {
@@ -447,7 +452,7 @@ void AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwSt
           << curDW << " = " << d_scheduler->get_dw(curDW)->getID() << " and new " 
           << curDW+newDWStride << " = " << d_scheduler->get_dw(curDW+newDWStride)->getID() << endl;
     d_scheduler->get_dw(curDW+newDWStride)->unfinalize();
-    d_scheduler->execute(d_scheduler->getNumTaskGraphs()-1);
+    d_scheduler->execute(d_scheduler->getNumTaskGraphs()-1, 1);
   }
 }
 
@@ -485,10 +490,10 @@ void AMRSimulationController::doInitialTimestep(GridP& grid, double& t)
     d_lb->possiblyDynamicallyReallocate(grid, true); 
     d_sim->restartInitialize();
   } else {
+    d_sharedState->setCurrentTopLevelTimeStep( 0 );
     // for dynamic lb's, set up initial patch config
     d_lb->possiblyDynamicallyReallocate(grid, true); 
 
-    d_sharedState->setCurrentTopLevelTimeStep( 0 );
     t = d_timeinfo->initTime;
     // Initialize the CFD and/or MPM data
     for(int i=grid->numLevels()-1; i >= 0; i--) {
@@ -649,6 +654,7 @@ void AMRSimulationController::recompile(double t, double delt, GridP& currentGri
 {
   if(d_myworld->myrank() == 0)
     cout << "Compiling taskgraph...\n";
+  d_lastRecompileTimestep = d_sharedState->getCurrentTopLevelTimeStep();
   double start = Time::currentSeconds();
   
   d_scheduler->initialize(1, totalFine);
@@ -752,7 +758,7 @@ void AMRSimulationController::executeTimestep(double t, double& delt, GridP& cur
     }
     
     if (d_scheduler->getNumTaskGraphs() == 1)
-      d_scheduler->execute();
+      d_scheduler->execute(0, d_lastRecompileTimestep == d_sharedState->getCurrentTopLevelTimeStep() ? 0 : 1);
     else {
       subCycleExecute(currentGrid, 0, totalFine, 0, true);
     }

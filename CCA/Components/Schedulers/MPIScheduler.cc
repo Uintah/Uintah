@@ -167,7 +167,7 @@ MPIScheduler::wait_till_all_done()
 
 void
 MPIScheduler::initiateTask( DetailedTask          * task,
-			    bool only_old_recvs, int abort_point )
+			    bool only_old_recvs, int abort_point, int iteration )
 {
   long long start_total_comm_flops = mpi_info_.totalcommflops;
   long long start_total_exec_flops = mpi_info_.totalexecflops;
@@ -179,7 +179,7 @@ MPIScheduler::initiateTask( DetailedTask          * task,
 #endif  
   CommRecMPI recvs;
   list<DependencyBatch*> externalRecvs;
-  postMPIRecvs( task, recvs, externalRecvs, only_old_recvs, abort_point );
+  postMPIRecvs( task, recvs, externalRecvs, only_old_recvs, abort_point, iteration);
   processMPIRecvs( task, recvs, externalRecvs );
   if(only_old_recvs)
     return;
@@ -194,7 +194,7 @@ MPIScheduler::initiateTask( DetailedTask          * task,
   double start_total_send = mpi_info_.totalsend;
   double start_total_task = mpi_info_.totaltask;
 
-  runTask(task);
+  runTask(task, iteration);
 
   double dsend = mpi_info_.totalsend - start_total_send;
   double dtask = mpi_info_.totaltask - start_total_task;
@@ -227,7 +227,7 @@ MPIScheduler::initiateReduction( DetailedTask          * task )
 }
 
 void
-MPIScheduler::runTask( DetailedTask         * task )
+MPIScheduler::runTask( DetailedTask         * task, int iteration)
 {
 #ifdef USE_PERFEX_COUNTERS
   long long dummy, exec_flops, send_flops;
@@ -276,7 +276,7 @@ MPIScheduler::runTask( DetailedTask         * task )
   TAU_PROFILE_STOP(doittimer);
 
   double sendstart = Time::currentSeconds();
-  postMPISends( task );
+  postMPISends( task, iteration );
   task->done(dws);
   double stop = Time::currentSeconds();
 
@@ -319,7 +319,7 @@ MPIScheduler::runReductionTask( DetailedTask         * task )
 }
 
 void
-MPIScheduler::postMPISends( DetailedTask         * task )
+MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
 {
   if( dbg.active()) {
     cerrLock.lock();dbg << d_myworld->myrank() << " postMPISends - task " << *task << '\n';
@@ -342,6 +342,12 @@ MPIScheduler::postMPISends( DetailedTask         * task )
     ostringstream ostr;
     ostr.clear();
     for(DetailedDep* req = batch->head; req != 0; req = req->next){
+      if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || 
+          (req->condition == DetailedDep::SubsequentIterations && iteration == 0)) {
+        // See comment in DetailedDep about CommCondition
+        dbg << d_myworld->myrank() << "   Ignoring conditional send for " << *req << endl;
+        continue;
+      }
       OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
 
       //dbg.setActive(req->req->lookInOldTG);
@@ -413,7 +419,7 @@ bool operator()(DependencyBatch* a, DependencyBatch* b)
 void
 MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
 			    list<DependencyBatch*>& externalRecvs,
-			    bool only_old_recvs, int abort_point)
+			    bool only_old_recvs, int abort_point, int iteration)
 {
   TAU_PROFILE("MPIScheduler::postMPIRecvs()", " ", TAU_USER); 
 
@@ -463,8 +469,9 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
 	  dbg << "posting MPI recv for pre-abort message " 
 		     << batch->messageTag << '\n';
       }
-      if(!(batch->fromTask->getTask()->getSortedOrder() <= abort_point))
+      if(!(batch->fromTask->getTask()->getSortedOrder() <= abort_point)) {
 	continue;
+      }
     }
 
     // Prepare to receive a message
@@ -484,6 +491,13 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
     for(DetailedDep* req = batch->head; req != 0; req = req->next){
       OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
       //dbg.setActive(req->req->lookInOldTG );
+      if ((req->condition == DetailedDep::FirstIteration && iteration > 0) || 
+          (req->condition == DetailedDep::SubsequentIterations && iteration == 0)) {
+        // See comment in DetailedDep about CommCondition
+
+        dbg << d_myworld->myrank() << "   Ignoring conditional receive for " << *req << endl;
+        continue;
+      }
       if (dbg.active()) {
         ostr << *req << ' ';
         dbg << d_myworld->myrank() << " <-- receiving " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells << " into dw " << dw->getID() << '\n';
@@ -689,7 +703,7 @@ MPIScheduler::execute(int tgnum /*=0*/, int iteration /*=0*/)
 	initiateReduction(task);
     }
     else {
-      initiateTask( task, abort, abort_point );
+      initiateTask( task, abort, abort_point, iteration );
     }
 
     if(!abort && dws[dws.size()-1] && dws[dws.size()-1]->timestepAborted()){

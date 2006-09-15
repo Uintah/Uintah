@@ -34,12 +34,13 @@ namespace Uintah {
   
   class DetailedDep {
   public:
+    enum CommCondition { Always, FirstIteration, SubsequentIterations };
     DetailedDep(DetailedDep* next, Task::Dependency* comp,
 		Task::Dependency* req, DetailedTask* toTask,
 		const Patch* fromPatch, int matl,
-		const IntVector& low, const IntVector& high)
+		const IntVector& low, const IntVector& high, CommCondition cond)
       : next(next), comp(comp), req(req),                  
-        fromPatch(fromPatch), low(low), high(high), matl(matl)
+        fromPatch(fromPatch), low(low), high(high), matl(matl), condition(cond)
     {
       ASSERT(Min(high - low, IntVector(1, 1, 1)) == IntVector(1, 1, 1));
 
@@ -52,6 +53,7 @@ namespace Uintah {
       toTasks.push_back(toTask);
     }
 
+
     // As an arbitrary convention, non-data dependency have a NULL fromPatch.
     // These types of dependency exist between a modifying task and any task
     // that requires the data (from ghost cells in particular) before it is
@@ -59,7 +61,7 @@ namespace Uintah {
     // used.
     bool isNonDataDependency() const
     { return (fromPatch == NULL); }
-    
+
     DetailedDep* next;
     Task::Dependency* comp;
     Task::Dependency* req;
@@ -67,6 +69,11 @@ namespace Uintah {
     const Patch* fromPatch;
     IntVector low, high;
     int matl;
+
+    // this is to satisfy a need created by the DynamicLoadBalancer.  To keep it unrestricted on when it can perform, and 
+    // to avoid a costly second recompile on the next timestep, we add a comm condition which will send/recv data based
+    // on whether some condition is met at run time - in this case whether it is the first execution or not.
+    CommCondition condition;
   };
 
   class DependencyBatch {
@@ -245,7 +252,8 @@ namespace Uintah {
 				  const Patch* fromPatch,
 				  DetailedTask* to, Task::Dependency* req,
 				  const Patch* toPatch, int matl,
-				  const IntVector& low, const IntVector& high);
+				  const IntVector& low, const IntVector& high,
+                                  DetailedDep::CommCondition cond);
 
     DetailedTask* getOldDWSendTask(int proc);
 

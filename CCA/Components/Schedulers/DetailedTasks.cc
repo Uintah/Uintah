@@ -286,6 +286,8 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
     scrubout << Parallel::getMPIRank() << " Starting scrub after task: " << *this << '\n';
   const set<const VarLabel*, VarLabel::Compare>& initialRequires
     = taskGroup->getSchedulerCommon()->getInitialRequiredVars();
+  const set<string>& unscrubbables = taskGroup->getSchedulerCommon()->getNoScrubVars();
+
   // Decrement the scrub count for each of the required variables
   for(const Task::Dependency* req = task->getRequires();
       req != 0; req=req->next){
@@ -300,7 +302,6 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	 (scrubmode == DataWarehouse::ScrubNonPermanent &&
 	  initialRequires.find(req->var) == initialRequires.end())){
 
-        set<string>& unscrubbables = taskGroup->getSchedulerCommon()->getNoScrubVars();
         if (unscrubbables.find(req->var->getName()) != unscrubbables.end())
           continue;
 
@@ -374,7 +375,6 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
        (scrubmode == DataWarehouse::ScrubNonPermanent &&
 	initialRequires.find(mod->var) == initialRequires.end())){
       
-      set<string>& unscrubbables = taskGroup->getSchedulerCommon()->getNoScrubVars();
       if (unscrubbables.find(mod->var->getName()) != unscrubbables.end())
         continue;
 
@@ -412,7 +412,6 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	constHandle<PatchSubset> patches = comp->getPatchesUnderDomain(getPatches());
 	constHandle<MaterialSubset> matls = comp->getMaterialsUnderDomain(getMaterials());
 
-        set<string>& unscrubbables = taskGroup->getSchedulerCommon()->getNoScrubVars();
         if (unscrubbables.find(comp->var->getName()) != unscrubbables.end())
           continue;
 
@@ -588,7 +587,8 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
 					const Patch */*toPatch*/,
 					int matl,
 					const IntVector& low,
-					const IntVector& high)
+					const IntVector& high,
+                                        DetailedDep::CommCondition cond)
 {
   // TODO - maybe still create internal depencies for threaded scheduler?
   // TODO - perhaps move at least some of this to TaskGraph?
@@ -654,7 +654,7 @@ DetailedTasks::possiblyCreateDependency(DetailedTask* from,
   }
   if(!dep){
     dep = scinew DetailedDep(batch->head, comp, req, to, fromPatch, matl, 
-			     low, high);
+			     low, high, cond);
     batch->head = dep;
     if(dbg.active()) {
       dbg << d_myworld->myrank() << "            ADDED " << low << " " << high << ", fromPatch = ";

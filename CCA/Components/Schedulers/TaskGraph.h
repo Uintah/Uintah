@@ -201,7 +201,7 @@ WARNING
      /// find the processor that a variable (req) is on given patch and 
      /// material.
      int findVariableLocation(Task::Dependency* req,
-			      const Patch* patch, int matl);
+			      const Patch* patch, int matl, int iteration);
 
      TaskGraph(const TaskGraph&);
      TaskGraph& operator=(const TaskGraph&);

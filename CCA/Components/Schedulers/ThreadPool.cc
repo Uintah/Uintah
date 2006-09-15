@@ -183,7 +183,7 @@ Worker::run()
 #endif
     
     try {
-      d_parent->getScheduler()->runTask(task); // calls task->doit
+      d_parent->getScheduler()->runTask(task, 0); // calls task->doit - TODO: Fix iteration when we do MixedScheduler again
     } catch (Exception& e) {
 
       cerrLock.lock(); cerr << "Worker " << proc_group_ << "-" << d_id 
@@ -298,7 +298,7 @@ Receiver::addAwaitingTasks()
     recvs_.setDefaultGroupID(slot);    
     list<DependencyBatch*> externalRecvs;
     unsigned long prevNumRequests = recvs_.numRequests();
-    d_parent->getScheduler()->postMPIRecvs(task, recvs_, externalRecvs, false, 0);
+    d_parent->getScheduler()->postMPIRecvs(task, recvs_, externalRecvs, false, 0, 0); // FIX iteration
     ASSERT(awaitingTasks_[slot] == 0);
     awaitingTasks_[slot] = scinew AwaitingTask(task, externalRecvs, d_id);
     if (recvs_.numRequests() == prevNumRequests) {
