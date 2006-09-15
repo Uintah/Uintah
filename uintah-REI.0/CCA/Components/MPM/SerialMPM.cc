@@ -560,10 +560,9 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gExternalHeatRateLabel);
   t->computes(lb->gNumNearParticlesLabel);
   t->computes(lb->TotalMassLabel);
+  
   if(flags->d_usingSoilFoam_CM){
      t->computes(lb->gsv_minLabel);
-     t->computes(lb->gsv_minLabel,        d_sharedState->getAllInOneMatl(),
-                 Task::OutOfDomain);
   }
   
   sched->addTask(t, patches, matls);
@@ -1558,6 +1557,10 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     for(int m = 0; m < numMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
+      
+      cout << " SerialMPM:InterpolateParticlesToGrid:  d_usingSoilFoam_CM:  " << flags->d_usingSoilFoam_CM << endl;
+      cout << "                                        getIsSoilFoam()   :  " << mpm_matl->getIsSoilFoam() << endl;
+
 
       // Create arrays for the particle data
       constParticleVariable<Point>  px;
@@ -1608,10 +1611,12 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                              dwi,patch);
       new_dw->allocateAndPut(gnumnearparticles,lb->gNumNearParticlesLabel,
                              dwi,patch);
+      
       if(flags->d_usingSoilFoam_CM){
         new_dw->allocateAndPut(gsv_min,        lb->gsv_minLabel,       dwi,patch);
         gsv_min.initialize(d_SMALL_NUM_MPM);
       }
+      
       gmass.initialize(d_SMALL_NUM_MPM);
       gvolume.initialize(d_SMALL_NUM_MPM);
       gvelocity.initialize(Vector(0,0,0));
@@ -1660,7 +1665,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             gSp_vol[node]        += pSp_vol           * pmass[idx] * S[k];
             gnumnearparticles[node] += 1.0;
             //  gexternalheatrate[node] += pexternalheatrate[idx]      * S[k];
-            if(flags->d_usingSoilFoam_CM){
+            if(mpm_matl->getIsSoilFoam()){
               gsv_min[node]      += sv_min[idx]                    * S[k];
             }
           }

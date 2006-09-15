@@ -742,7 +742,7 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
     t->computes(Ilb->rho_CCLabel, mss); 
     // MARTIN
     if(d_mpm->flags->d_usingSoilFoam_CM){
-       t->requires(Task::NewDW, Mlb->gsv_minLabel,  Ghost::AroundCells, 1);
+       t->requires(Task::NewDW, Mlb->gsv_minLabel, Ghost::AroundCells, 1);
        t->computes(MIlb->csv_minLabel);
     }
    
@@ -1256,17 +1256,16 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       new_dw->allocateAndPut(Temp_CC,  MIlb->temp_CCLabel,   indx, patch);  
       new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel, indx, patch); 
       new_dw->allocateAndPut(rho_CC,    Ilb->rho_CCLabel,    indx, patch);
-      //MARTIN
-      if(d_mpm->flags->d_usingSoilFoam_CM){
-        new_dw->allocateAndPut(csv_min,  MIlb->csv_minLabel,   indx, patch);  
+      
+      //MARTIN: allocateAndPut cv_min for all mpm_matls but initialize it to 
+      //         a obnoxious number
+      if(d_mpm->flags->d_usingSoilFoam_CM){  
+        new_dw->allocateAndPut(csv_min,  MIlb->csv_minLabel,   indx, patch);   
+        new_dw->get(gsv_min,   Mlb->gsv_minLabel,      indx, patch,gac, 1);
+        csv_min.initialize(d_ice->d_EVIL_NUM);
       }
       double very_small_mass = d_TINY_RHO * cell_vol;
       cmass.initialize(very_small_mass);
-
-      if(d_mpm->flags->d_usingSoilFoam_CM){
-         csv_min.initialize(very_small_mass);
-         new_dw->get(gsv_min,   Mlb->gsv_minLabel,      indx, patch,gac, 1);
-      }
 
       new_dw->get(gmass,        Mlb->gMassLabel,        indx, patch,gac, 1);
       new_dw->get(gvolume,      Mlb->gVolumeLabel,      indx, patch,gac, 1);
@@ -1307,8 +1306,11 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
           sp_vol_mpm  += gSp_vol[nodeIdx[in]]      * NC_CCw_mass;
           vel_CC_mpm  += gvelocity[nodeIdx[in]]    * NC_CCw_mass;
           Temp_CC_mpm += gtemperature[nodeIdx[in]] * NC_CCw_mass;
-          if(d_mpm->flags->d_usingSoilFoam_CM)
-          sv_min_CC_mpm += gsv_min[nodeIdx[in]]    * NC_CCw_mass;
+          
+          // MARTIN:  Only compute a if mpm_matl is using soil & foam
+          if(mpm_matl->getIsSoilFoam()){
+            sv_min_CC_mpm += gsv_min[nodeIdx[in]]  * NC_CCw_mass;
+          }
         }
         double inv_cmass = 1.0/cmass[c];
         vel_CC_mpm  *= inv_cmass;    
@@ -1333,8 +1335,10 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         vel_CC[c]   =vel_CC_mpm;
         rho_CC[c]   = cmass[c]/cell_vol;
 
-        if(d_mpm->flags->d_usingSoilFoam_CM)
-        csv_min[c]  =(1.0-one_or_zero)*0.0  + one_or_zero*sv_min_CC_mpm;
+        // MARTIN:  Only compute a if mpm_matl is using soil & foam
+        if(mpm_matl->getIsSoilFoam()){
+          csv_min[c]  =(1.0-one_or_zero)*0.0  + one_or_zero*sv_min_CC_mpm;
+        }
       }
 
       //  Set BC's
@@ -1850,7 +1854,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
           rho_micro[m][c] = 1.0/sp_vol_CC[m][c];
         } else if(mpm_matl[m]){                //  M P M
           
-          if(d_mpm->flags->d_usingSoilFoam_CM) {
+          if(mpm_matl[m]->getIsSoilFoam()) {    // only if mpm matl is using soil and foam
             maxvolstrain = sv_min_CC[m][c];
           }else {
             maxvolstrain = 0.0;
@@ -1908,7 +1912,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                                                    press_eos[m],
                                                    dp_drho[m],dp_de[m]);
           } else if(mpm_matl[m]){    // MPM
-            if(d_mpm->flags->d_usingSoilFoam_CM) {
+            if(mpm_matl[m]->getIsSoilFoam()) {      // only if mpm matl is using soil and foam
               maxvolstrain = sv_min_CC[m][c];
             }else {
               maxvolstrain = 0.0;
