@@ -9,6 +9,10 @@
 #include <Packages/Uintah/CCA/Components/Regridder/PerPatchVars.h>
 
 #include <Packages/Uintah/CCA/Components/ICE/share.h>
+
+#define REFLUX_DBG 1
+#define is_rightFace_variable(face,var) ( ((face == "xminus" || face == "xplus") && var == "scalar-f") ?1:0  )
+
 namespace Uintah {
   class SCISHARE AMRICE : public ICE{
   public:
@@ -265,14 +269,18 @@ void ICE::refluxOperator_applyCorrectionFluxes(
                                
     if (isRight_CP_FP_pair ){  // if the right coarse/fine patch pair
 
-/*`==========TESTING==========*/
-#if 0
-  cout << " ------------ refluxOperator_applyCorrectionFluxes " << varLabel<< endl; 
-  cout << "coarseLevel iterator " << c_iter.begin() << " " << c_iter.end() << endl;
-  cout << finePatch->getFaceName(patchFace)<<  " coarsePatch " << *coarsePatch << endl;
-  cout << "      finePatch   " << *finePatch << endl; 
+#ifdef REFLUX_DBG    
+      string name = finePatch->getFaceName(patchFace);
+      IntVector half  = (c_iter.end() - c_iter.begin() )/IntVector(2,2,2) + c_iter.begin();
+  
+      if(is_rightFace_variable(name,varLabel) ){
+        cout << " ------------ refluxOperator_applyCorrectionFluxes " << varLabel<< endl; 
+        cout << "coarseLevel iterator " << c_iter.begin() << " " << c_iter.end() << endl;
+        cout << finePatch->getFaceName(patchFace)<<  " coarsePatch " << *coarsePatch << endl;
+        cout << "      finePatch   " << *finePatch << endl;
+      }
 #endif 
-/*===========TESTING==========`*/
+
       //__________________________________
       // Add fine patch face fluxes correction to the coarse cells
       // c_CC:    coarse level cell center index
@@ -283,33 +291,64 @@ void ICE::refluxOperator_applyCorrectionFluxes(
         for(; !c_iter.done(); c_iter++){
           IntVector c_CC = *c_iter;
           IntVector c_FC = c_CC + c_FC_offset;
-          
+          T q_CC_coarse_org = q_CC_coarse[c_CC];
           q_CC_coarse[c_CC] += Q_X_coarse_flux[c_FC];
                 
           count += one_zero;                       // keep track of how that face                        
           finePatch->setFaceMark(0,patchFace,count); // has been touched
+          
+#ifdef REFLUX_DBG
+          if (c_CC.y() == half.y() && c_CC.z() == half.z() && is_rightFace_variable(name,varLabel) ) {
+            cout << " \t c_CC " << c_CC  << " c_FC " << c_FC 
+                 << " q_CC_org " << q_CC_coarse_org
+                 << " correction " << Q_X_coarse_flux[c_FC]
+                 << " q_CC_corrected " << q_CC_coarse[c_CC] << endl;
+            cout << "" << endl;
+          }
+#endif          
+          
         }
       }
       if(patchFace == Patch::yminus || patchFace == Patch::yplus){
         for(; !c_iter.done(); c_iter++){
           IntVector c_CC = *c_iter;
           IntVector c_FC = c_CC + c_FC_offset;
-          
+          T q_CC_coarse_org = q_CC_coarse[c_CC];
           q_CC_coarse[c_CC] += Q_Y_coarse_flux[c_FC];
           
           count += one_zero;                              
           finePatch->setFaceMark(0,patchFace,count);
+          
+#ifdef REFLUX_DBG
+          if (c_CC.y() == half.x() && c_CC.z() == half.z() && is_rightFace_variable(name,varLabel) ) {
+            cout << " \t c_CC " << c_CC  << " c_FC " << c_FC 
+                 << " q_CC_org " << q_CC_coarse_org
+                 << " correction " << Q_Y_coarse_flux[c_FC]
+                 << " q_CC_corrected " << q_CC_coarse[c_CC] << endl;
+            cout << "" << endl;
+          }
+#endif
         }
       }
       if(patchFace == Patch::zminus || patchFace == Patch::zplus){
         for(; !c_iter.done(); c_iter++){
           IntVector c_CC = *c_iter;
           IntVector c_FC = c_CC + c_FC_offset;             
-          
+          T q_CC_coarse_org = q_CC_coarse[c_CC];
           q_CC_coarse[c_CC] += Q_Z_coarse_flux[c_FC];
           
           count += one_zero;                              
           finePatch->setFaceMark(0,patchFace,count);
+          
+#ifdef REFLUX_DBG
+          if (c_CC.x() == half.x() && c_CC.y() == half.y() && is_rightFace_variable(name,varLabel) ) {
+            cout << " \t c_CC " << c_CC  << " c_FC " << c_FC 
+                 << " q_CC_org " << q_CC_coarse_org
+                 << " correction " << Q_Z_coarse_flux[c_FC]
+                 << " q_CC_corrected " << q_CC_coarse[c_CC] << endl;
+            cout << "" << endl;
+          }
+#endif
         }
       }
     }  // is the right coarse/fine patch pair
@@ -622,7 +661,7 @@ void ICE::refluxOperator_computeCorrectionFluxes(
 
   Vector dx = coarsePatch->dCell();
   IntVector r_Ratio = fineLevel->getRefinementRatio();
-
+cout << " r_Ratio " << r_Ratio << endl;
   
   // coeff accounts for the different cell sizes on the different levels
   double coeff = ( (double)r_Ratio.x() * r_Ratio.y() * r_Ratio.z() );
@@ -674,12 +713,14 @@ void ICE::refluxOperator_computeCorrectionFluxes(
 
 
 /*`==========TESTING==========*/
-#if SPEW
-  cout << " ------------ refluxOperator_computeCorrectionFluxes " << fineVarLabel<< endl; 
+#ifdef REFLUX_DBG
   IntVector half  = (c_iter.end() - c_iter.begin() )/IntVector(2,2,2) + c_iter.begin();
-  cout << "coarseLevel iterator " << c_iter.begin() << " " << c_iter.end() << endl;
-  cout <<name <<  " coarsePatch " << *coarsePatch << endl;
-  cout << "      finePatch   " << *finePatch << endl; 
+  if(is_rightFace_variable(name,fineVarLabel)){
+    cout << " ------------ refluxOperator_computeCorrectionFluxes " << fineVarLabel<< endl;   
+    cout << "coarseLevel iterator " << c_iter.begin() << " " << c_iter.end() << endl;
+    cout <<name <<  " coarsePatch " << *coarsePatch << endl;
+    cout << "      finePatch   " << *finePatch << endl;
+  }
 #endif 
 /*===========TESTING==========`*/
       //__________________________________
@@ -707,16 +748,17 @@ void ICE::refluxOperator_computeCorrectionFluxes(
            }
 
            Q_X_coarse_flux[c_FC] = ( c_FaceNormal*Q_X_coarse_flux_org[c_FC] + coeff* f_FaceNormal*sum_fineLevelFlux);
+           //Q_X_coarse_flux[c_FC] = ( Q_X_coarse_flux_org[c_FC] - coeff* sum_fineLevelFlux);
 
            count += one_zero;                              
            finePatch->setFaceMark(0,patchFace,count);
 /*`==========TESTING==========*/
-#if SPEW
-        if (c_CC.y() == half.y() && c_CC.z() == half.z() ) {
+#ifdef REFLUX_DBG
+        if (c_CC.y() == half.y() && c_CC.z() == half.z() && is_rightFace_variable(name,fineVarLabel) ) {
           cout << " \t c_CC " << c_CC  << " c_FC " << c_FC 
-               << " q_X_FC " << c_FaceNormal*Q_X_coarse_flux_org[c_FC]
+               << " coarseLevelFlux " << c_FaceNormal*Q_X_coarse_flux_org[c_FC]
                << " sum_fineLevelflux " << coeff* f_FaceNormal *sum_fineLevelFlux
-               << " correction " << ( c_FaceNormal*Q_X_coarse_flux_org[c_FC] + coeff* f_FaceNormal *sum_fineLevelFlux)<< endl;
+               << " correction " << Q_X_coarse_flux[c_FC]<< endl;
           cout << "" << endl;
         }
 #endif 
@@ -744,12 +786,12 @@ void ICE::refluxOperator_computeCorrectionFluxes(
            count += one_zero;                       // keep track of how many times              
            finePatch->setFaceMark(0,patchFace,count); // the face has been touched
 /*`==========TESTING==========*/
-#if SPEW
-        if (c_CC.x() == half.x() && c_CC.z() == half.z() ) {
+#ifdef REFLUX_DBG
+        if (c_CC.x() == half.x() && c_CC.z() == half.z() && is_rightFace_variable(name,fineVarLabel)) {
           cout << " \t c_CC " << c_CC  << " c_FC " << c_FC 
-               << " q_Y_FC " << c_FaceNormal*Q_Y_coarse_flux_org[c_FC]
+               << " coarseLevelFlux " << c_FaceNormal*Q_Y_coarse_flux_org[c_FC]
                << " sum_fineLevelflux " << coeff* f_FaceNormal *sum_fineLevelFlux
-               << " correction " << ( c_FaceNormal*Q_Y_coarse_flux_org[c_FC] + coeff* f_FaceNormal *sum_fineLevelFlux) << endl;
+               << " correction " << Q_Y_coarse_flux[c_FC] << endl;
           cout << "" << endl;
         }
 #endif 
@@ -778,12 +820,12 @@ void ICE::refluxOperator_computeCorrectionFluxes(
             count += one_zero;                              
            finePatch->setFaceMark(0,patchFace,count);
 /*`==========TESTING==========*/
-#if SPEW
-        if (c_CC.x() == half.x() && c_CC.y() == half.y() ) {
+#ifdef REFLUX_DBG
+        if (c_CC.x() == half.x() && c_CC.y() == half.y() && is_rightFace_variable(name,fineVarLabel)) {
           cout << " \t c_CC " << c_CC  << " c_FC " << c_FC 
-                << " q_Z_FC " << c_FaceNormal*Q_Z_coarse_flux_org[c_FC]
+                << " coarseLevelFlu " << c_FaceNormal*Q_Z_coarse_flux_org[c_FC]
                << " sum_fineLevelflux " << coeff* f_FaceNormal *sum_fineLevelFlux
-               << " correction " << ( c_FaceNormal*Q_Z_coarse_flux_org[c_FC] + coeff* f_FaceNormal *sum_fineLevelFlux)<< endl;
+               << " correction " << Q_Z_coarse_flux[c_FC]<< endl;
           cout << "" << endl;
         }
 #endif 
