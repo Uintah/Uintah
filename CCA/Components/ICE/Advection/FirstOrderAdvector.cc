@@ -8,8 +8,8 @@
 #include <Core/Util/Endian.h>
 #include <iostream>
 
-#define SPEW
-//#undef SPEW
+//#define SPEW
+#undef SPEW
 #define is_rightFace_variable(face,var) ( ((face == "xminus" || face == "xplus") && var == "scalar-f") ?1:0  )
 
 using namespace Uintah;

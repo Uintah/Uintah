@@ -10,7 +10,8 @@
 
 #include <Packages/Uintah/CCA/Components/ICE/share.h>
 
-#define REFLUX_DBG 1
+//#define REFLUX_DBG 
+#undef REFLUX_DBG
 #define is_rightFace_variable(face,var) ( ((face == "xminus" || face == "xplus") && var == "scalar-f") ?1:0  )
 
 namespace Uintah {
