@@ -94,13 +94,13 @@ WARNING
     
     void postMPIRecvs( DetailedTask* task, CommRecMPI& recvs,
 		       list<DependencyBatch*>& externalRecvs,
-		       bool only_old_recvs, int abort_point);
+		       bool only_old_recvs, int abort_point, int iteration);
     void processMPIRecvs( DetailedTask* task, CommRecMPI& recvs,
 		       list<DependencyBatch*>& externalRecvs );    
 
-    void postMPISends( DetailedTask* task );
+    void postMPISends( DetailedTask* task, int iteration );
 
-    void runTask( DetailedTask* task );
+    void runTask( DetailedTask* task, int iteration );
     void runReductionTask( DetailedTask* task );        
 
     // get the processor group executing with (only valid during execute())
@@ -110,7 +110,7 @@ WARNING
   protected:
     // Runs the task. (In Mixed, gives the task to a thread.)
     virtual void initiateTask( DetailedTask          * task,
-			       bool only_old_recvs, int abort_point);
+			       bool only_old_recvs, int abort_point, int iteration);
 
     // Performs the reduction task. (In Mixed, gives the task to a thread.)    
     virtual void initiateReduction( DetailedTask          * task );    

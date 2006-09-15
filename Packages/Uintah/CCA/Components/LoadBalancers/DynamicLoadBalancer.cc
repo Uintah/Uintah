@@ -570,27 +570,29 @@ bool DynamicLoadBalancer::thresholdExceeded(const vector<float>& patch_costs)
   
   // use the std dev formula:
   // sqrt((n*sum_of_squares - sum squared)/n squared)
-  float sum_of_current = 0;
-  float sum_of_current_squares = 0;
-  float sum_of_temp = 0;
-  float sum_of_temp_squares = 0;
+  double avg_current = 0;
+  double max_current = 0;
+  double avg_temp = 0;
+  double max_temp = 0;
 
   for (int i = 0; i < d_myworld->size(); i++) {
-    sum_of_current += currentProcCosts[i];
-    sum_of_current_squares += currentProcCosts[i]*currentProcCosts[i];
-    sum_of_temp += tempProcCosts[i];
-    sum_of_temp_squares += tempProcCosts[i]*tempProcCosts[i];
+    avg_current += currentProcCosts[i];
+    if (currentProcCosts[i] > max_current) max_current = currentProcCosts[i];
+    if (tempProcCosts[i] > max_temp) max_temp = currentProcCosts[i];
+    avg_temp += tempProcCosts[i];
   }
+  avg_current /= d_myworld->size();
+  avg_temp /= d_myworld->size();
   
-  float curStdDev = sqrt((numProcs*sum_of_current_squares - sum_of_current*sum_of_current)/(numProcs*numProcs));
-  float tmpStdDev = sqrt((numProcs*sum_of_temp_squares - sum_of_temp*sum_of_temp)/(numProcs*numProcs));
+  double curLB = avg_current/max_current;
+  double tmpLB = avg_temp/max_temp;
 
   if (d_myworld->myrank() == 0)
-    dbg << "CurrStdDev: " << curStdDev << " tmp " << tmpStdDev 
-        << " threshold: " << curStdDev/tmpStdDev << " minT " << d_lbThreshold << endl;
+    dbg << "CurrLB: " << curLB << " tmp " << tmpLB
+        << " threshold: " << tmpLB-curLB << " minT " << d_lbThreshold << endl;
 
-  // if cur / tmp is greater than 1, it is an improvement
-  if (curStdDev / tmpStdDev >= d_lbThreshold)
+  // if tmp - cur is positive, it is an improvement
+  if (tmpLB - curLB > d_lbThreshold)
     return true;
   else
     return false;
@@ -717,7 +719,7 @@ DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
   
   // if we check for lb every timestep, but don't, we still need to recompile
   // if we load balanced on the last timestep
-  if (possiblyDynamicallyReallocate(grid, false) || old_state == postLoadBalance) {
+  if (possiblyDynamicallyReallocate(grid, false)) {
     doing << d_myworld->myrank() << " PLB - scheduling recompile " <<endl;
     return true;
   }

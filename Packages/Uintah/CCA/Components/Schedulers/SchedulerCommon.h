@@ -147,11 +147,11 @@ WARNING
     //! override default behavior of DataCopy by copying additional variables
     virtual void scheduleDataCopyVar(string var);
 
-    //! override default behavior of DataCopy by not copying additional variables
-    virtual void scheduleNotDataCopyVar(string var);
+    //! override default behavior of DataCopy by not scrubbing certain variables
+    virtual void scheduleNoScrubVar(string var);
 
-
-    set<string>& getNoScrubVars() { return noScrubVars_;}
+    const set<string>& getNoScrubVars() { return noScrubVars_;}
+    const set<string>& getCopyDataVars() { return copyDataVars_;}
 
   protected:
     void finalizeTimestep();
@@ -199,7 +199,6 @@ WARNING
 
     // so we can manually copy vars between AMR levels
     set<string> copyDataVars_;
-    set<string> notCopyDataVars_;
 
     // vars manually set not to scrub (normally when needed between a normal taskgraph
     // and the regridding phase)

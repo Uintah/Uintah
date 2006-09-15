@@ -488,7 +488,7 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
 
   for (Task::Dependency* dep = task->getRequires(); dep != 0;
        dep = dep->next) {
-    if(isOldDW(dep->mapDataWarehouse()) && notCopyDataVars_.find(dep->var->getName()) == notCopyDataVars_.end()) {
+    if(isOldDW(dep->mapDataWarehouse())) {
       d_initRequires.push_back(dep);
       d_initRequiredVars.insert(dep->var);
     }
@@ -819,11 +819,7 @@ SchedulerCommon::scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* s
         continue;  
       for(Task::Dependency* dep = task->getRequires(); dep != 0; dep=dep->next){
         bool copyThisVar = dep->whichdw == Task::OldDW;
-        // two manual overrides - one to not copy one that would be copied...
-        if (notCopyDataVars_.find(dep->var->getName()) != notCopyDataVars_.end())
-          continue;
-        
-        // and one to copy one that would not have been.
+        // override to manually copy a var
         if (!copyThisVar)
           if (copyDataVars_.find(dep->var->getName()) != copyDataVars_.end())
             copyThisVar = true;
@@ -1204,7 +1200,8 @@ void SchedulerCommon::scheduleDataCopyVar(string var)
   noScrubVars_.insert(var);
 }
 
-void SchedulerCommon::scheduleNotDataCopyVar(string var)
+void SchedulerCommon::scheduleNoScrubVar(string var)
 {
-  notCopyDataVars_.insert(var);
+  noScrubVars_.insert(var);
 }
+

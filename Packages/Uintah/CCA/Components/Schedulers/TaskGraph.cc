@@ -948,6 +948,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
   TAU_PROFILE_TIMER(fvltimer, "CDD - findVariableLocation" , "", TAU_USER);
   TAU_PROFILE_TIMER(modifysection, "CDD - modifies portion" , "", TAU_USER);
   int me = d_myworld->myrank();
+
   for( ; req != 0; req = req->next){
     if(dbg.active())
       dbg << d_myworld->myrank() << "  req: " << *req << '\n';
@@ -1129,10 +1130,11 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 	      Task::Dependency* comp = 0;
 
               // look in old dw or in old TG.  Legal to modify across TG boundaries
+              int proc = -1;
               TAU_PROFILE_START(fvltimer);
 	      if(sc->isOldDW(req->mapDataWarehouse())) {
 	        ASSERT(!modifies);
-	        int proc = findVariableLocation(req, fromNeighbor, matl);
+	        proc = findVariableLocation(req, fromNeighbor, matl, 0);
 	        creator = dts_->getOldDWSendTask(proc);
 	        comp=0;
 	      } else {
@@ -1141,7 +1143,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
                   if (type_ == Scheduler::IntermediateTaskGraph && req->lookInOldTG) {
                     // same stuff as above - but do the check for findcomp first, as this is a "if you don't find it here, assign it
                     // from the old TG" dependency
-                    int proc = findVariableLocation(req, fromNeighbor, matl);
+                    proc = findVariableLocation(req, fromNeighbor, matl, 0);
                     creator = dts_->getOldDWSendTask(proc);
                     comp=0;
                   }
@@ -1226,7 +1228,7 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
                     }
                     TAU_PROFILE_START(pcdtimer);
 		    dts_->possiblyCreateDependency(prevReqTask, 0, 0, task, req, 0,
-					        matl, from_l, from_h);
+					        matl, from_l, from_h, DetailedDep::Always);
                     TAU_PROFILE_STOP(pcdtimer);
 		  }
 	        }
@@ -1234,9 +1236,23 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 	      }
 
               TAU_PROFILE_START(pcdtimer);
+              
+              DetailedDep::CommCondition cond = DetailedDep::Always;
+              if (proc != -1 && req->patches_dom != Task::OtherGridDomain ) {
+                // for OldDW tasks - see comment in class DetailedDep by CommCondition
+                int subsequentProc = findVariableLocation(req, fromNeighbor, matl, 1);
+                if (subsequentProc != proc) {
+                  cond = DetailedDep::FirstIteration;  // change outer cond from always to first-only
+                  DetailedTask* subsequentCreator = dts_->getOldDWSendTask(subsequentProc);
+                  dts_->possiblyCreateDependency(subsequentCreator, comp, fromNeighbor,
+                                                 task, req, fromNeighbor,
+                                                 matl, from_l, from_h, DetailedDep::SubsequentIterations);
+                  dbg << d_myworld->myrank() << "   Adding condition reqs for " << *req->var << " task : " << *creator << "  to " << *task << endl;
+                }
+              }
 	      dts_->possiblyCreateDependency(creator, comp, fromNeighbor,
 					  task, req, fromNeighbor,
-					  matl, from_l, from_h);
+					  matl, from_l, from_h, cond);
               TAU_PROFILE_STOP(pcdtimer);
               TAU_PROFILE_STOP(matlloop);
 	    }
@@ -1308,13 +1324,13 @@ TaskGraph::createDetailedDependencies(DetailedTask* task,
 }
 
 int TaskGraph::findVariableLocation(Task::Dependency* req,
-				    const Patch* patch, int matl)
+				    const Patch* patch, int matl, int iteration)
 {
   // This needs to be improved, especially for re-distribution on
   // restart from checkpoint.
   int proc;
   if ((req->task->mapDataWarehouse(Task::ParentNewDW) != -1 && req->whichdw != Task::ParentOldDW) ||
-      currentIteration > 0 || (req->lookInOldTG && type_ == Scheduler::IntermediateTaskGraph)) {
+      iteration > 0 || (req->lookInOldTG && type_ == Scheduler::IntermediateTaskGraph)) {
     // provide some accomodation for Dynamic load balancers and sub schedulers.  We need to
     // treat the requirement like a "old" dw req but it needs to be found on the current processor
     // Same goes for successive executions of the same TG

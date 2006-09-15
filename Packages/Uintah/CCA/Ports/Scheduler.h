@@ -133,11 +133,10 @@ WARNING
 
     //! override default behavior of DataCopy by copying additional variables
     virtual void scheduleDataCopyVar(string var) = 0;
-
-    //! override default behavior of DataCopy by not copying additional variables
-    virtual void scheduleNotDataCopyVar(string var) = 0;
-
     
+    //! override default behavior of DataCopy by not scrubbing certain variables
+    virtual void scheduleNoScrubVar(string var) = 0;
+
     // Get the SuperPatch (set of connected patches making a larger rectangle)
     // for the given label and patch and find the largest extents encompassing
     // the expected ghost cells (requiredLow, requiredHigh) and the requested
