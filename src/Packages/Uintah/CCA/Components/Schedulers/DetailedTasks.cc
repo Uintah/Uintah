@@ -312,7 +312,7 @@ DetailedTask::scrub(vector<OnDemandDataWarehouseP>& dws)
 	  Patch::selectType neighbors;
 	  IntVector low, high;
           
-          if (req->patches_dom == Task::CoarseLevel || req->patches_dom == Task::FineLevel) {
+          if (req->patches_dom == Task::CoarseLevel || req->patches_dom == Task::FineLevel || req->numGhostCells == 0){
             // we already have the right patches
             neighbors.push_back(patch);
           }
