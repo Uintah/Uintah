@@ -29,11 +29,7 @@
 # CMakeLists.txt for Dataflow/Modules/Conglomerate
 
 SET(Dataflow_Modules_Conglomerate_SRCS
-  FieldArbitrarySlicer.cc#[INSERT
-  NEW
-  CODE
-  FILE
-  HERE]
+  FieldArbitrarySlicer.cc
 )
 
 ADD_LIBRARY(Dataflow_Modules_Conglomerate ${Dataflow_Modules_Conglomerate_SRCS})

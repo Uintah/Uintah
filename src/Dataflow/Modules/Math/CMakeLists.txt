@@ -45,11 +45,7 @@ SET(Dataflow_Modules_Math_SRCS
   Submatrix.cc
   MaskVectorToMappingMatrix.cc
   MappingMatrixToMaskVector.cc
-  CreateMatrix.cc#[INSERT
-  NEW
-  CODE
-  FILE
-  HERE]
+  CreateMatrix.cc
 )
 
 ADD_LIBRARY(Dataflow_Modules_Math ${Dataflow_Modules_Math_SRCS})

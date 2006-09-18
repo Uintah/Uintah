@@ -40,11 +40,7 @@ SET(Dataflow_Modules_DataIO_SRCS
   MatrixReader.cc
   MatrixWriter.cc
   PathReader.cc
-  PathWriter.cc#[INSERT
-  NEW
-  CODE
-  FILE
-  HERE]
+  PathWriter.cc
 )
 
 ADD_LIBRARY(Dataflow_Modules_DataIO ${Dataflow_Modules_DataIO_SRCS})

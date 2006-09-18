@@ -614,6 +614,34 @@ SET(DEF_FREETYPE "#define HAVE_FREETYPE 1")
 
 #SET(OGL_ERR_MACRO)
 
+# sci_defs/petsc_defs.h
+# petsc library
+OPTION(WITH_PETSC "Build with petsc library" OFF)
+MARK_AS_ADVANCED(WITH_PETSC)		   
+IF(WITH_PETSC)		   
+  FIND_LIBRARY(PETSC_LIBRARY 
+    NAMES petsc petscvec petscmat petscdm petscsnes petscts petscksp
+    PATHS /usr/local/lib
+    /usr/lib
+    /lib)
+
+  FIND_PATH(PETSC_INCLUDE petsc.h
+    /usr/local/include/
+    /usr/include
+    /include)
+
+   IF(PETSC_LIBRARY)
+     SET(HAVE_PETSC "YES")
+     SET(DEF_PETSC "#define HAVE_PETSC 1")
+   ELSE(PETSC_LIBRARY)
+     SET(HAVE_PETSC "NO")
+   ENDIF(PETSC_LIBRARY)
+ELSE(WITH_PETSC)
+   SET(HAVE_PETSC "NO")
+ENDIF(WITH_PETSC)
+
+# DV FIX check for unipetsc if petsc not found
+
 OPTION(ENABLE_SCI_MALLOC "Enable sci malloc system" OFF)
 IF(ENABLE_SCI_MALLOC)
   SET(DEF_MALLOC "")

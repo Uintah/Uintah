@@ -1,4 +1,4 @@
-# NOTE: This file should be the SAME as in src/Dataflow
+# NOTE: This file should be the SAME as in src/StandAlone/Apps/Painter
 # until a better solution is implemented
 
 
