@@ -13,6 +13,7 @@ SET(Core_Events_SRCS
   Tools/BaseTool.cc	
   Tools/FrameBufferPickTool.cc	
   Tools/ToolManager.cc	
+  Tools/SelectionSetTool.cc	
   Tools/ViewRotateTool.cc	
   Tools/ViewScaleTool.cc	
   Tools/ViewTranslateTool.cc	
