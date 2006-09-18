@@ -39,6 +39,7 @@ SRCS     += \
 	$(SRCDIR)/BaseTool.cc			\
 	$(SRCDIR)/FrameBufferPickTool.cc	\
 	$(SRCDIR)/ToolManager.cc		\
+	$(SRCDIR)/SelectionSetTool.cc		\
 	$(SRCDIR)/ViewRotateTool.cc		\
 	$(SRCDIR)/ViewScaleTool.cc		\
 	$(SRCDIR)/ViewTranslateTool.cc		\

@@ -37,10 +37,7 @@
 #include <sci_defs/bits_defs.h>
 #include <sci_defs/image_defs.h>
 
-#include <Core/Algorithms/Visualization/RenderField.h>
-#include <Core/Algorithms/Fields/ClipAtIndeces.h>
 #include <Core/Events/SceneGraphEvent.h>
-#include <Core/Events/SelectionTargetEvent.h>
 #include <Core/Events/OpenGLViewer.h>
 #include <Core/Events/Tools/BaseTool.h>
 #include <Core/Events/Tools/ViewRotateTool.h>
@@ -108,14 +105,19 @@ int CAPTURE_Z_DATA_HACK = 0;
 static const int pick_buffer_size = 512;
 static const double pick_window = 10.0;
 
-class MyViewToolInterface : public ViewToolInterface
+class ToolInterface : 
+    public ViewToolInterface, public AutoviewToolInterface, 
+    public SSTInterface
 {
 public:
-  MyViewToolInterface(View &v, OpenGLViewer *ov) :
+  ToolInterface(View &v, OpenGLViewer *ov) :
     ViewToolInterface(v),
+    AutoviewToolInterface(v),
+    SSTInterface(),
     viewer_(ov)
   {}
   
+  // Viewing Tools interface
   virtual int width() const { return viewer_->width(); }
   virtual int height() const { return viewer_->height(); }
   virtual bool compute_depth(const View& view, double& near, double& far)
@@ -124,22 +126,28 @@ public:
   { viewer_->update_mode_string(s); }
   virtual void need_redraw() const { viewer_->need_redraw(); }
 
-  OpenGLViewer *viewer_;
-};
-
-class AVI : public AutoviewToolInterface
-{
-public:
-  AVI(View &v, OpenGLViewer *ov) :
-    AutoviewToolInterface(v),
-    viewer_(ov)
-  {}
-  
+  // Autoview Interface
   virtual bool get_bounds(BBox &b) const { 
     viewer_->get_bounds(b); 
     return b.valid();
   }
-  virtual void need_redraw() const { viewer_->need_redraw(); }
+
+  // Selection Set Interface
+  void set_selection_set_visible(bool b) { 
+    viewer_->set_selection_set_visible(b);
+  }
+  set<unsigned int> &get_selection_set() {
+    return viewer_->get_selection_set();
+  }
+  void set_selection_geom(GeomHandle geom) {
+    viewer_->set_selection_geom(geom);
+  }
+  void add_selection(unsigned int idx) {
+    viewer_->add_selection(idx);
+  }
+  void remove_selection(unsigned int idx) {
+    viewer_->remove_selection(idx);
+  }
 
   OpenGLViewer *viewer_;
 };
@@ -240,167 +248,6 @@ private:
   OpenGLViewer           *oglv_;
 };
 
-class SelectionSetTool : public BaseTool
-{
-public:
-  enum selection_mode_e {
-    NODES_E,
-    EDGES_E,
-    FACES_E,
-    CELLS_E
-  };
-
-  SelectionSetTool(string name, OpenGLViewer *oglv) :
-    BaseTool(name),
-    mode_(FACES_E),
-    sel_fld_(0),
-    sel_fld_id_(0),
-    oglv_(oglv)
-  {}
-  
-  propagation_state_e process_event(event_handle_t e) 
-  {
-    SelectionTargetEvent *st = 
-      dynamic_cast<SelectionTargetEvent*>(e.get_rep());
-    if (st) {
-      sel_fld_ = st->get_selection_target();
-      sel_fld_id_ = st->get_selection_id();
-      oglv_->set_selection_set_visible(true);
-      return STOP_E;
-    }
-    return CONTINUE_E;
-  }
-  
-  void delete_faces() {
-    typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
-
-    if (! sel_fld_.get_rep()) return;
-    sel_fld_->lock.lock();
-    // turn this call into a general algorithm, but for now assume trisurf.
-    MeshHandle mb = sel_fld_->mesh();
-    TSMesh *tsm = dynamic_cast<TSMesh *>(mb.get_rep());
-    if (!tsm) {
-      cerr << "Error:: not a TriSurf in SelectionSetTool::delete_faces" 
-	   << endl;
-    }
-    set<unsigned int> &sfaces = oglv_->get_selection_set();
-
-
-    vector<int> faces;
-    set<unsigned int>::iterator si = sfaces.begin();
-    while (si != sfaces.end()) {
-      faces.push_back(*si++);
-    }
-
-    bool altered = false;
-    // remove last index first.
-    sort(faces.begin(), faces.end());
-    vector<int>::reverse_iterator iter  = faces.rbegin();
-    while (iter != faces.rend()) {
-      int face = *iter++;
-      altered |= tsm->remove_face(face);
-      cout << "removed face " << face << endl;
-    }
-    
-
-    //clear the selection set.
-    sfaces.clear();
-    oglv_->set_selection_set_visible(false);
-    sel_fld_->lock.unlock();
-
-    //notify the data manager that this model has changed.
-    CommandEvent *c = new CommandEvent();
-    c->set_command("selection field modified");
-    event_handle_t event = c;
-    EventManager::add_event(event);
-  }
-
-  void render_selection_set(bool edges = false) 
-  {
-    //create a new field with the selection items in it;
-    if (! sel_fld_.get_rep()) { return; }
-    static RenderParams p;
-    p.defaults();
-    p.def_material_ = new Material(Color(0.9, 0.1, 0.1)); 
-      
-
-    FieldHandle sel_vis;
-    switch (mode_) {
-
-    case NODES_E:
-      p.do_nodes_ = true;
-      sel_vis = clip_nodes(sel_fld_, oglv_->get_selection_set());
-      break;
-    case EDGES_E:
-      p.do_edges_ = true;
-      break;
-    default:
-    case FACES_E:
-      p.do_faces_ = true;
-      sel_vis = clip_faces(sel_fld_, oglv_->get_selection_set());
-      break;
-    case CELLS_E:
-
-      break;
-    };
-      
-
-    if (!sel_vis.get_rep() || !render_field(sel_vis, p)) {
-      cerr << "Error: render_field failed." << endl;
-      return;
-    }
-
-    GeomHandle gmat;
-    GeomHandle geom;
-    string name;
-    switch (mode_) {
-
-    case NODES_E:
-      {
-	gmat = scinew GeomMaterial(p.renderer_->node_switch_, 
-				   p.def_material_);
-	geom = scinew GeomSwitch(scinew GeomColorMap(gmat, 
-						     p.color_map_));
-	name = p.nodes_transparency_ ? "Transparent Nodes" : "Nodes";
-      }
-      break;
-    case EDGES_E:
-      {
-	gmat = scinew GeomMaterial(p.renderer_->edge_switch_, 
-				   p.def_material_);
-	geom = scinew GeomSwitch(scinew GeomColorMap(gmat, 
-						     p.color_map_));
-	name = p.edges_transparency_ ? "Transparent Edges" : "Edges";
-      }
-      break;
-    default:
-    case FACES_E:
-      {
-	gmat = scinew GeomMaterial(p.renderer_->face_switch_, 
-				   p.def_material_);
-	geom = scinew GeomSwitch(scinew GeomColorMap(gmat, 
-						     p.color_map_));
-	name = p.faces_transparency_ ? "Transparent Faces" : "Faces";
-      }
-      break;
-    };
-    oglv_->set_selection_geom(geom);    
-  }
-
-  void add_selection(unsigned int idx) {
-    oglv_->add_selection(idx);
-  }
-
-  void remove_selection(unsigned int idx) {
-    oglv_->remove_selection(idx);
-  }
-
-private:
-  selection_mode_e        mode_;
-  FieldHandle             sel_fld_;
-  unsigned int            sel_fld_id_;
-  OpenGLViewer           *oglv_;
-};
 
 class ToolManip : public TMNotificationTool
 {
@@ -408,12 +255,14 @@ public:
   ToolManip(OpenGLViewer *oglv) :
     TMNotificationTool("OpenGLViewer:ToolManager:ToolManip"),
     oglv_(oglv),
+    mode_(""),
     fbpt_(0)
   {}
 
-  virtual propagation_state_e start_tool(string id, unsigned int time)
+  virtual propagation_state_e start_tool(string id, unsigned int time, 
+					 string mode)
   {
-    cerr << "want to start tool: " << id << endl;
+    mode_ = mode;
     const string fbpick_name("FBPickTool");
     const string rmfaces_name("RMFacesTool");
     if (id == fbpick_name) {
@@ -425,12 +274,16 @@ public:
       if (tm.query_tool_id(OpenGLViewer::SELECTION_TOOL_E) == fbpick_name)
       {
 	//Already active, tell the tool to reset.
-	cerr << "resetting pick tool" << endl;
 	fbpt_->reset();
       } else {
-	cerr << "adding pick tool" << endl;
 	tm.add_tool(fbpt_, OpenGLViewer::SELECTION_TOOL_E);
       }
+
+      if (mode_ == "nodes") {
+	oglv_->set_selection_mode(SelectionSetTool::NODES_E);
+      } else {
+	oglv_->set_selection_mode(SelectionSetTool::FACES_E);
+      } 
       return STOP_E;
     }
 
@@ -439,7 +292,6 @@ public:
 
   virtual propagation_state_e stop_tool(string id, unsigned int time)
   {
-    cerr << "stop_tool(string id, unsigned int time)" << endl;
     return CONTINUE_E;
   }
 
@@ -457,14 +309,12 @@ public:
 
   virtual propagation_state_e resume_tool(string id, unsigned int time)
   {
-    cerr << "resume for tool manip" << endl;
     ToolManager &tm = oglv_->get_tm();
     if (! fbpt_) { 
-      start_tool(id, time); 
+      start_tool(id, time, mode_); 
     } else if (tm.query_tool_id(OpenGLViewer::SELECTION_TOOL_E) == 
 	       "suspend selection") 
     {
-      cerr << "resume_tool(string id, unsigned int time)" << endl;
       tm.rm_tool(OpenGLViewer::SELECTION_TOOL_E);
     }
     return STOP_E;
@@ -472,6 +322,7 @@ public:
 
 private:
   OpenGLViewer                    *oglv_;
+  string                           mode_;
   FrameBufferPickTool             *fbpt_;
 };
 
@@ -602,14 +453,20 @@ OpenGLViewer::~OpenGLViewer()
   }
 }
 
+
+void                
+OpenGLViewer::set_selection_mode(SelectionSetTool::selection_mode_e m)
+{
+  SelectionSetTool *sst = 
+    dynamic_cast<SelectionSetTool*>(selection_set_tool_.get_rep());
+  if (sst) { sst->set_selection_mode(m); }
+}
 void
 OpenGLViewer::delete_selected_faces()
 { 
   SelectionSetTool* sst = 
     dynamic_cast<SelectionSetTool*>(selection_set_tool_.get_rep());
-  if (! sst) return;
-
-  sst->delete_faces(); 
+  if (sst) { sst->delete_faces(); }
 }
 
 void
@@ -618,19 +475,18 @@ OpenGLViewer::init_tool_manager()
 
   // viewer tools (always on the priority queue)
   unsigned int view_pri = VIEWER_TOOLS_E;
-  MyViewToolInterface* vti = new MyViewToolInterface(view_, this);
-  tool_handle_t rot = new ViewRotateTool("OpenGLViewer Rotate Tool", vti);
+  ToolInterface* ti = new ToolInterface(view_, this);
+  tool_handle_t rot = new ViewRotateTool("OpenGLViewer Rotate Tool", ti);
   tm_.add_tool(rot, view_pri++);
 
-  tool_handle_t scale = new ViewScaleTool("OpenGLViewer Scale Tool", vti);
+  tool_handle_t scale = new ViewScaleTool("OpenGLViewer Scale Tool", ti);
   tm_.add_tool(scale, view_pri++);
 
   tool_handle_t trans = new ViewTranslateTool("OpenGLViewer Translate Tool", 
-					      vti);
+					      ti);
   tm_.add_tool(trans, view_pri++);
 
-  AVI* ati = new AVI(view_, this);
-  tool_handle_t av = new AutoviewTool("OpenGLViewer Autoview Tool", ati);
+  tool_handle_t av = new AutoviewTool("OpenGLViewer Autoview Tool", ti);
   tm_.add_tool(av, view_pri++);  
 
 
@@ -641,8 +497,8 @@ OpenGLViewer::init_tool_manager()
   tool_handle_t sgtool(sgt);
   tm_.add_tool(sgtool, data_pri++);
 
-  selection_set_tool_ = new SelectionSetTool("OpenGLViewer Selection Set Tool",
-					     this);
+  selection_set_tool_ = new SelectionSetTool("OpenGLViewer SelectionSet Tool",
+					     ti);
   tm_.add_tool(selection_set_tool_, data_pri++);  
 
   tool_handle_t cmmdtool;

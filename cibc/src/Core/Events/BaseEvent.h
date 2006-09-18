@@ -268,13 +268,16 @@ public:
   virtual bool          is_tm_notify_event() { return true; }
 
   string       get_tool_id()      const          { return tool_id_; }
+  string       get_tool_mode()    const          { return tool_mode_; }
   unsigned int get_notify_state() const          { return notify_state_; }
 
   void         set_tool_id(string id)            { tool_id_ = id; } 
+  void         set_tool_mode(string m)           { tool_mode_ = m; } 
   void         set_notify_state(unsigned int s)  { notify_state_ = s; }
 
 private:
   string                    tool_id_;
+  string                    tool_mode_;
   unsigned int              notify_state_;
 };
 

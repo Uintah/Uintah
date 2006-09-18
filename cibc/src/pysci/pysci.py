@@ -580,8 +580,10 @@ class TMNotifyEvent(BaseEvent):
     def clone(*args): return _pysci.TMNotifyEvent_clone(*args)
     def is_tm_notify_event(*args): return _pysci.TMNotifyEvent_is_tm_notify_event(*args)
     def get_tool_id(*args): return _pysci.TMNotifyEvent_get_tool_id(*args)
+    def get_tool_mode(*args): return _pysci.TMNotifyEvent_get_tool_mode(*args)
     def get_notify_state(*args): return _pysci.TMNotifyEvent_get_notify_state(*args)
     def set_tool_id(*args): return _pysci.TMNotifyEvent_set_tool_id(*args)
+    def set_tool_mode(*args): return _pysci.TMNotifyEvent_set_tool_mode(*args)
     def set_notify_state(*args): return _pysci.TMNotifyEvent_set_notify_state(*args)
 
 class TMNotifyEventPtr(TMNotifyEvent):

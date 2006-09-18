@@ -192,7 +192,8 @@ public:
   virtual ~TMNotificationTool();
 
 
-  virtual propagation_state_e start_tool(string id, unsigned int time)
+  virtual propagation_state_e start_tool(string id, unsigned int time, 
+					 string mode)
   {
     return CONTINUE_E;
   }
