@@ -321,7 +321,7 @@ void ICE::refluxOperator_applyCorrectionFluxes(
           finePatch->setFaceMark(0,patchFace,count);
           
 #ifdef REFLUX_DBG
-          if (c_CC.y() == half.x() && c_CC.z() == half.z() && is_rightFace_variable(name,varLabel) ) {
+          if (c_CC.x() == half.x() && c_CC.z() == half.z() && is_rightFace_variable(name,varLabel) ) {
             cout << " \t c_CC " << c_CC  << " c_FC " << c_FC 
                  << " q_CC_org " << q_CC_coarse_org
                  << " correction " << Q_Y_coarse_flux[c_FC]
