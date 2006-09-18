@@ -181,7 +181,8 @@ ToolManager::send_tm_notify_event(tool_handle_t tool,
   BaseTool::propagation_state_e rstate = BaseTool::CONTINUE_E;
   unsigned int s = ne->get_notify_state();
   if (s == TMNotifyEvent::START_E) {
-    rstate = nt->start_tool(ne->get_tool_id(), ne->get_time());
+    rstate = nt->start_tool(ne->get_tool_id(), ne->get_time(), 
+			    ne->get_tool_mode());
     
   } else if (s == TMNotifyEvent::STOP_E) {
     rstate = nt->stop_tool(ne->get_tool_id(), ne->get_time());

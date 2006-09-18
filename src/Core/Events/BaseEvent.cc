@@ -217,6 +217,7 @@ TMNotifyEvent::TMNotifyEvent(const string &id,
 			     unsigned long time) :
   BaseEvent(target, time),
   tool_id_(id),
+  tool_mode_(""), // optional 
   notify_state_(s)
 {
 }

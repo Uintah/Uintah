@@ -511,7 +511,18 @@ class SurfsToTets:
     print "add face tool"
 
   def on_select_nodes_toggled(self, a) :
-    print "select nodes toggled"
+    etype = None
+    if a.get_active() :
+      etype = pysci.TMNotifyEvent.RESUME_E
+    else :
+      etype = pysci.TMNotifyEvent.SUSPEND_E
+
+
+    e = pysci.TMNotifyEvent("FBPickTool", etype,
+			    "OpenGLViewer")
+    e.set_tool_mode("nodes")
+    pysci.add_tm_notify_event(e)
+
 
   def on_select_faces_toggled(self, a) :
     etype = None
@@ -523,6 +534,7 @@ class SurfsToTets:
 
     e = pysci.TMNotifyEvent("FBPickTool", etype,
 			    "OpenGLViewer")
+    e.set_tool_mode("faces")
     pysci.add_tm_notify_event(e)
 
   #sel_cb is the check button in the menu.

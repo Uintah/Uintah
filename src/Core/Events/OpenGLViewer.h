@@ -51,6 +51,7 @@
 #include <Core/Malloc/Allocator.h>
 #include <Core/Events/EventManager.h>
 #include <Core/Events/Tools/ToolManager.h>
+#include <Core/Events/Tools/SelectionSetTool.h>
 #include <Core/Events/Tools/Ball.h>
 #include <Core/Thread/Runnable.h>
 #include <Core/Thread/Thread.h>
@@ -188,6 +189,9 @@ public:
   void                set_selection_set_visible(bool b) {
     selection_set_visible_ = b;
   }
+
+  // Set the mode for the selection tool.
+  void                set_selection_mode(SelectionSetTool::selection_mode_e m);
 
 
   //! the following enum defines the stack priorities for the tool manager,

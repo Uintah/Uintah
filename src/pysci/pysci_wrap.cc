@@ -9649,6 +9649,26 @@ static PyObject *_wrap_TMNotifyEvent_get_tool_id(PyObject *, PyObject *args) {
 }
 
 
+static PyObject *_wrap_TMNotifyEvent_get_tool_mode(PyObject *, PyObject *args) {
+    PyObject *resultobj = NULL;
+    SCIRun::TMNotifyEvent *arg1 = (SCIRun::TMNotifyEvent *) 0 ;
+    SCIRun::string result;
+    PyObject * obj0 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"O:TMNotifyEvent_get_tool_mode",&obj0)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__TMNotifyEvent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    result = ((SCIRun::TMNotifyEvent const *)arg1)->get_tool_mode();
+    
+    {
+        resultobj = SWIG_From_std_string(static_cast<std::string >(result)); 
+    }
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
 static PyObject *_wrap_TMNotifyEvent_get_notify_state(PyObject *, PyObject *args) {
     PyObject *resultobj = NULL;
     SCIRun::TMNotifyEvent *arg1 = (SCIRun::TMNotifyEvent *) 0 ;
@@ -9693,6 +9713,38 @@ static PyObject *_wrap_TMNotifyEvent_set_tool_id(PyObject *, PyObject *args) {
         if (res == SWIG_NEWOBJ) delete ptr;
     }
     (arg1)->set_tool_id(arg2);
+    
+    Py_INCREF(Py_None); resultobj = Py_None;
+    return resultobj;
+    fail:
+    return NULL;
+}
+
+
+static PyObject *_wrap_TMNotifyEvent_set_tool_mode(PyObject *, PyObject *args) {
+    PyObject *resultobj = NULL;
+    SCIRun::TMNotifyEvent *arg1 = (SCIRun::TMNotifyEvent *) 0 ;
+    SCIRun::string arg2 ;
+    PyObject * obj0 = 0 ;
+    PyObject * obj1 = 0 ;
+    
+    if(!PyArg_ParseTuple(args,(char *)"OO:TMNotifyEvent_set_tool_mode",&obj0,&obj1)) goto fail;
+    SWIG_Python_ConvertPtr(obj0, (void **)&arg1, SWIGTYPE_p_SCIRun__TMNotifyEvent, SWIG_POINTER_EXCEPTION | 0);
+    if (SWIG_arg_fail(1)) SWIG_fail;
+    {
+        std::string *ptr = (std::string *)0;
+        int res = SWIG_AsPtr_std_string(obj1, &ptr);
+        if (!res) {
+            if (!PyErr_Occurred())
+            SWIG_type_error("SCIRun::string", obj1);
+        } else if (!ptr) {
+            SWIG_null_ref("SCIRun::string");
+        }
+        if (SWIG_arg_fail(2)) SWIG_fail;
+        arg2 = *ptr;
+        if (res == SWIG_NEWOBJ) delete ptr;
+    }
+    (arg1)->set_tool_mode(arg2);
     
     Py_INCREF(Py_None); resultobj = Py_None;
     return resultobj;
@@ -12302,8 +12354,10 @@ static PyMethodDef SwigMethods[] = {
 	 { (char *)"TMNotifyEvent_clone", _wrap_TMNotifyEvent_clone, METH_VARARGS, NULL},
 	 { (char *)"TMNotifyEvent_is_tm_notify_event", _wrap_TMNotifyEvent_is_tm_notify_event, METH_VARARGS, NULL},
 	 { (char *)"TMNotifyEvent_get_tool_id", _wrap_TMNotifyEvent_get_tool_id, METH_VARARGS, NULL},
+	 { (char *)"TMNotifyEvent_get_tool_mode", _wrap_TMNotifyEvent_get_tool_mode, METH_VARARGS, NULL},
 	 { (char *)"TMNotifyEvent_get_notify_state", _wrap_TMNotifyEvent_get_notify_state, METH_VARARGS, NULL},
 	 { (char *)"TMNotifyEvent_set_tool_id", _wrap_TMNotifyEvent_set_tool_id, METH_VARARGS, NULL},
+	 { (char *)"TMNotifyEvent_set_tool_mode", _wrap_TMNotifyEvent_set_tool_mode, METH_VARARGS, NULL},
 	 { (char *)"TMNotifyEvent_set_notify_state", _wrap_TMNotifyEvent_set_notify_state, METH_VARARGS, NULL},
 	 { (char *)"TMNotifyEvent_swigregister", TMNotifyEvent_swigregister, METH_VARARGS, NULL},
 	 { (char *)"new_CommandEvent", _wrap_new_CommandEvent, METH_VARARGS, NULL},
