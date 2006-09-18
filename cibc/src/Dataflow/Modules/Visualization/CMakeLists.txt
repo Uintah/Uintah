@@ -48,11 +48,7 @@ SET(Dataflow_Modules_Visualization_SRCS
   TextureBuilder.cc
   VolumeSlicer.cc
   VolumeVisualizer.cc
-  ShowString.cc#[INSERT
-  NEW
-  CODE
-  FILE
-  HERE]
+  ShowString.cc
 )
 
 ADD_LIBRARY(Dataflow_Modules_Visualization ${Dataflow_Modules_Visualization_SRCS})

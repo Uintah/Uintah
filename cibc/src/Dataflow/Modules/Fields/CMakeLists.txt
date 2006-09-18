@@ -97,11 +97,7 @@ SET(Dataflow_Modules_Fields_SRCS
   TransformData3.cc
   TransformMesh.cc
   Unstructure.cc
-  VectorMagnitude.cc#[INSERT
-  NEW
-  CODE
-  FILE
-  HERE]
+  VectorMagnitude.cc
 )
 
 ADD_LIBRARY(Dataflow_Modules_Fields ${Dataflow_Modules_Fields_SRCS})

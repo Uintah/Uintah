@@ -35,11 +35,7 @@ SET(Dataflow_Modules_String_SRCS
   SprintfString.cc
   SprintfMatrix.cc
   GetFileName.cc
-  SplitFileName.cc#[INSERT
-  NEW
-  CODE
-  FILE
-  HERE]
+  SplitFileName.cc
 )
 
 ADD_LIBRARY(Dataflow_Modules_String ${Dataflow_Modules_String_SRCS})

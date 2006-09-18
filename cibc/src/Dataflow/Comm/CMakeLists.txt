@@ -34,11 +34,6 @@ SET(Dataflow_Comm_SRCS
 
 ADD_LIBRARY(Dataflow_Comm ${Dataflow_Comm_SRCS})
 
-TARGET_LINK_LIBRARIES(Dataflow_Comm
-  
-  
-)
-
 IF(NOT BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Dataflow_Comm)
 ENDIF(NOT BUILD_SHARED_LIBS)

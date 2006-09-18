@@ -26,37 +26,6 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-# CMakeLists.txt for Dataflow/Modules/Examples
 
-SET(Dataflow_Modules_Examples_SRCS
-  BasicInput.cc
-  BasicOutput.cc
-  ChangeTetVolScalars.cc
-  HelloWorld.cc
-  ZeroTetVolScalars.cc
-)
-
-ADD_LIBRARY(Dataflow_Modules_Examples ${Dataflow_Modules_Examples_SRCS})
-
-TARGET_LINK_LIBRARIES(Dataflow_Modules_Examples
-  Core_Datatypes
-  Dataflow_Network
-  Core_Persistent
-  Core_Containers
-  Core_Util
-  Core_Exceptions
-  Core_Thread
-  Dataflow_GuiInterface
-  Core_Geom
-  Core_Datatypes
-  Core_Geometry
-  Core_GeomInterface
-  Dataflow_TkExtensions
-  ${TK_LIBRARY}
-  ${GL_LIBRARY}
-  ${M_LIBRARY}
-)
-
-IF(NOT BUILD_SHARED_LIBS)
-  ADD_DEFINITIONS(-DBUILD_Dataflow_Modules_Examples)
-ENDIF(NOT BUILD_SHARED_LIBS)
+SUBDIRS(Bundle Conglomerate DataIO Fields Math Render Time Visualization
+        String Examples)

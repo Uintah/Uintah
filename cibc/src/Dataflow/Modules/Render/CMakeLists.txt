@@ -43,11 +43,7 @@ SET(Dataflow_Modules_Render_SRCS
   PainterTools.cc
   PainterBrushTool.cc
   Viewer.cc
-  glMath.cc#[INSERT
-  NEW
-  CODE
-  FILE
-  HERE]
+  glMath.cc
 )
 
 ADD_LIBRARY(Dataflow_Modules_Render ${Dataflow_Modules_Render_SRCS})

@@ -46,11 +46,7 @@ SET(Dataflow_Modules_Bundle_SRCS
   BundleGetColorMap2.cc
   BundleGetPath.cc
   BundleGetString.cc
-  BundleMerge.cc#[INSERT
-  NEW
-  CODE
-  FILE
-  HERE]
+  BundleMerge.cc
 )
 
 ADD_LIBRARY(Dataflow_Modules_Bundle ${Dataflow_Modules_Bundle_SRCS})
