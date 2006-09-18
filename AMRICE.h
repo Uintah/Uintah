@@ -662,7 +662,6 @@ void ICE::refluxOperator_computeCorrectionFluxes(
 
   Vector dx = coarsePatch->dCell();
   IntVector r_Ratio = fineLevel->getRefinementRatio();
-cout << " r_Ratio " << r_Ratio << endl;
   
   // coeff accounts for the different cell sizes on the different levels
   double coeff = ( (double)r_Ratio.x() * r_Ratio.y() * r_Ratio.z() );
