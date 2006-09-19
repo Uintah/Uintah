@@ -70,6 +70,11 @@ WARNING
     // Adds a level to the grid.
     Level* addLevel(const SCIRun::Point& anchor,
                     const SCIRun::Vector& dcell, int id=-1);
+   
+    // needs to be set in Grid::problemSetup, when the Regridder creates a Grid, or when 
+    // the DataArchiver loads a Grid from the uda.
+    inline void setLockstep(bool lockstep) { d_lockstepAMRGrid = lockstep; }
+    inline bool isLockstep() const { return d_lockstepAMRGrid; }
     
     void performConsistencyCheck() const;
     void printStatistics() const;
@@ -131,6 +136,11 @@ WARNING
     // patch layout exceeds this number, a warning message will be printed suggestion
     // the user run on a different number of processors.
     // static const double PATCH_TOLERANCE_ = 3;  
+
+    // whether or not this is a 'lockstep' AMR grid.  This is stored here since the time refinement
+    // ratio is to be defined by the level's refinement ratio, and the level can query this from the Grid.
+    // Can potentially change if the Switcher changes from a lockstep component to a W-cycle component
+    bool d_lockstepAMRGrid;
   };
 
 } // End namespace Uintah

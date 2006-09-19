@@ -168,17 +168,6 @@ public:
   bool isRegridTimestep() { return d_isRegridTimestep; }
   void setRegridTimestep(bool ans) { d_isRegridTimestep = ans; }
 
-  inline int timeRefinementRatio() const {
-    return d_timeRefinementRatio;
-  }
-  void setTimeRefinementRatio(int trr) {
-    d_timeRefinementRatio = trr;
-  }
-
-  //! Use this when you're done setting the delt, and this function
-  //! will compensate for whichever level you're on
-  double adjustDelt(const Level* l, double delt) const;
-
   vector<vector<const VarLabel* > > d_particleState;
   vector<vector<const VarLabel* > > d_particleState_preReloc;
 

@@ -206,6 +206,13 @@ public:
   inline IntVector getRefinementRatio() const {
     return d_refinementRatio;
   }
+  int getTimeRefinementRatio() const;
+
+  //! Use this when you're done setting the delt, and this function
+  //! will compensate for whichever level you're on
+  double adjustDelt(double delt) const;
+
+
 
 private:
   Level(const Level&);

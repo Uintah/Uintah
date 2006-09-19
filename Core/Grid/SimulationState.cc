@@ -63,13 +63,6 @@ SimulationState::SimulationState(ProblemSpecP &ps)
     }
   }
 
-  d_timeRefinementRatio = 2;
-  ProblemSpecP amr_ps = ps->findBlock("AMR");
-  if (amr_ps) {
-    amr_ps->get("time_refinement_ratio", d_timeRefinementRatio);
-  }
-
-
   all_mpm_matls = 0;
   all_ice_matls = 0;
   all_arches_matls = 0;
@@ -323,13 +316,4 @@ Material* SimulationState::parseAndLookupMaterial(ProblemSpecP& params,
     result = matls[matlidx];
   }
   return result;
-}
-
-double SimulationState::adjustDelt(const Level* l, double delt) const
-{
-  for(int i=1;i<=l->getIndex();i++) {     // REFINE
-    delt *= d_timeRefinementRatio;
-  }
-  return delt;
-
 }

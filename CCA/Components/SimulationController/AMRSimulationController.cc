@@ -153,7 +153,7 @@ void AMRSimulationController::run()
      // ratio for each level you increase
      int totalFine=1;
      for(int i=1;i<currentGrid->numLevels();i++) {
-       totalFine *= d_sharedState->timeRefinementRatio();
+       totalFine *= currentGrid->getLevel(i)->getTimeRefinementRatio();
      }
      
      if (iterations != 0) {
@@ -260,8 +260,9 @@ void AMRSimulationController::run()
      for(int i=0;i<currentGrid->numLevels();i++){
        const Level* level = currentGrid->getLevel(i).get_rep();
        if(d_doAMR && i != 0){
-	 delt_fine /= d_sharedState->timeRefinementRatio();
-	 skip /= d_sharedState->timeRefinementRatio();
+         int trr = level->getTimeRefinementRatio();
+	 delt_fine /= trr;
+	 skip /= trr;
        }
        for(int idw=0;idw<totalFine;idw+=skip){
 	 DataWarehouse* dw = d_scheduler->get_dw(idw);
@@ -296,16 +297,20 @@ void AMRSimulationController::subCycleCompile(GridP& grid, int startDW, int dwSt
   LevelP coarseLevel;
   int coarseStartDW;
   int coarseDWStride;
-  int numSteps = d_sharedState->timeRefinementRatio(); 
+  int numCoarseSteps; // how many steps between this level and the coarser
+  int numFineSteps;   // how many steps between this level and the finer
   if (numLevel > 0) {
+    numCoarseSteps = fineLevel->getTimeRefinementRatio();
     coarseLevel = grid->getLevel(numLevel-1);
-    coarseDWStride = dwStride * numSteps;
+    coarseDWStride = dwStride * numCoarseSteps;
     coarseStartDW = (startDW/coarseDWStride)*coarseDWStride;
   }
   else {
     coarseDWStride = dwStride;
     coarseStartDW = startDW;
+    numCoarseSteps = 0;
   }
+  
 
   ASSERT(dwStride > 0 && numLevel < grid->numLevels())
   d_scheduler->clearMappings();
@@ -318,8 +323,9 @@ void AMRSimulationController::subCycleCompile(GridP& grid, int startDW, int dwSt
 
   if (d_doAMR) {
     if(numLevel+1 < grid->numLevels()){
-      int newStride = dwStride/numSteps;
-      for(int substep=0;substep < numSteps;substep++){
+      numFineSteps = fineLevel->getFinerLevel()->getTimeRefinementRatio();
+      int newStride = dwStride/numFineSteps;
+      for(int substep=0;substep < numFineSteps;substep++){
         subCycleCompile(grid, startDW+substep*newStride, newStride, substep, numLevel+1);
       }
       // Coarsen and then refine_CFI at the end of the W-cycle
@@ -342,7 +348,7 @@ void AMRSimulationController::subCycleCompile(GridP& grid, int startDW, int dwSt
   // level's coarsen completes
   // do all the levels at this point in time as well, so all the coarsens go in order,
   // and then the refineInterfaces
-  if (d_doAMR && (step < numSteps -1 || numLevel == 0)) {
+  if (d_doAMR && (step < numCoarseSteps -1 || numLevel == 0)) {
     
     for (int i = fineLevel->getIndex(); i < fineLevel->getGrid()->numLevels(); i++) {
       if (i == 0)
@@ -374,7 +380,7 @@ void AMRSimulationController::subCycleExecute(GridP& grid, int startDW, int dwSt
   if (levelNum == 0)
     numSteps = 1;
   else {
-    numSteps = d_sharedState->timeRefinementRatio();
+    numSteps = grid->getLevel(levelNum)->getTimeRefinementRatio();
   }
   
   int newDWStride = dwStride/numSteps;
@@ -750,7 +756,7 @@ void AMRSimulationController::executeTimestep(double t, double& delt, GridP& cur
       d_scheduler->get_dw(0)->setScrubbing(DataWarehouse::ScrubComplete);
     
     for(int i=0;i<=totalFine;i++) {
-      if ((d_doAMR && d_sharedState->timeRefinementRatio() > 1) || d_lb->getNthProc() > 1 || d_lb->isDynamic() || d_reduceUda)
+      if ((d_doAMR && !currentGrid->isLockstep()) || d_lb->getNthProc() > 1 || d_lb->isDynamic() || d_reduceUda)
         d_scheduler->get_dw(i)->setScrubbing(DataWarehouse::ScrubNone);
       else {
         d_scheduler->get_dw(1)->setScrubbing(DataWarehouse::ScrubNonPermanent);
@@ -784,8 +790,9 @@ void AMRSimulationController::executeTimestep(double t, double& delt, GridP& cur
       for(int i=0;i<currentGrid->numLevels();i++){
         const Level* level = currentGrid->getLevel(i).get_rep();
         if(i != 0){
-          delt_fine /= d_sharedState->timeRefinementRatio();
-          skip /= d_sharedState->timeRefinementRatio();
+          int trr = level->getTimeRefinementRatio();
+          delt_fine /= trr;
+          skip /= trr;
         }
         for(int idw=0;idw<totalFine;idw+=skip){
           DataWarehouse* dw = d_scheduler->get_dw(idw);

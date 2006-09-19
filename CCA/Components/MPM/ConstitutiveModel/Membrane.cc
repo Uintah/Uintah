@@ -192,7 +192,7 @@ void Membrane::computeStableTimestep(const Patch* patch,
   }
   WaveSpeed = dx/WaveSpeed;
   double delT_new = WaveSpeed.minComponent();
-  new_dw->put(delt_vartype(d_sharedState->adjustDelt(patch->getLevel(), delT_new)), 
+  new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
               lb->delTLabel);
 }
 
@@ -522,7 +522,7 @@ void Membrane::computeStressTensor(const PatchSubset* patches,
 
     WaveSpeed = dx/WaveSpeed;
     double delT_new = WaveSpeed.minComponent();
-    new_dw->put(delt_vartype(d_sharedState->adjustDelt(patch->getLevel(), delT_new)), 
+    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                 lb->delTLabel);
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
 

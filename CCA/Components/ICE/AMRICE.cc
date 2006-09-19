@@ -140,8 +140,8 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
   // More bullet proofing
   int maxLevel = grid->numLevels();
   
-  for (int i=0; i< maxLevel; i++){
-     double trr = d_sharedState->timeRefinementRatio();
+  for (int i=1; i< maxLevel; i++){
+     double trr = grid->getLevel(i)->getTimeRefinementRatio();
 
     if( d_useLockStep && trr != 1){
       string warn;
