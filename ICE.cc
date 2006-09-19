@@ -1960,7 +1960,7 @@ void ICE::actuallyComputeStableTimestep(const ProcessorGroup*,
     const Level* level = getLevel(patches);
     GridP grid = level->getGrid();
     for(int i=1;i<=level->getIndex();i++) {     // REFINE
-      delt *= d_sharedState->timeRefinementRatio();
+      delt *= level->getTimeRefinementRatio();
     }
     
   
