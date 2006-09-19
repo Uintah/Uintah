@@ -13,6 +13,7 @@
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 
 #include <Packages/Uintah/CCA/Components/SimulationController/share.h>
+
 namespace Uintah {
 
 class SimulationInterface;
@@ -134,9 +135,11 @@ class DataArchive;
       double d_startTime;             // starting wall time
       double d_startSimTime;          // starting sim time
       double d_prevWallTime;
-      double d_sumOfWallTimes;
-      double d_sumOfWallTimeSquares;
+      //double d_sumOfWallTimes;
+      //double d_sumOfWallTimeSquares;
       
+      // this is for calculating an exponential moving average
+      double d_movingAverage;
    /*
       void problemSetup(const ProblemSpecP&, GridP&) = 0;
       bool needRecompile(double t, double delt, const LevelP& level,
