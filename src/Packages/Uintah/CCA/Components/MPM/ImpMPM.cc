@@ -3052,7 +3052,7 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
    }
 
    if(d_numIterations==0){
-     new_dw->put(delt_vartype(d_sharedState->adjustDelt(patch->getLevel(), d_initialDt)), 
+     new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(d_initialDt)), 
                  lb->delTLabel);
    }
    else{
@@ -3090,7 +3090,7 @@ void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
       }
       delT_new = min(delT_new, old_dt);
 
-      new_dw->put(delt_vartype(d_sharedState->adjustDelt(patch->getLevel(), delT_new)), 
+      new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                   lb->delTLabel);
     }
    }

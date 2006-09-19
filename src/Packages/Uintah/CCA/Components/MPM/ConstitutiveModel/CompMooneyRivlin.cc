@@ -158,7 +158,7 @@ void CompMooneyRivlin::computeStableTimestep(const Patch* patch,
       // don't use adjustDelt here because of DBL_MAX
       new_dw->put(delt_vartype(DBL_MAX), lb->delTLabel);
     else
-      new_dw->put(delt_vartype(d_sharedState->adjustDelt(patch->getLevel(), delT_new)), 
+      new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                   lb->delTLabel);
 }
 
@@ -289,7 +289,7 @@ void CompMooneyRivlin::computeStressTensor(const PatchSubset* patches,
     if(delT_new < 1.e-12)
       new_dw->put(delt_vartype(DBL_MAX), lb->delTLabel);
     else
-      new_dw->put(delt_vartype(d_sharedState->adjustDelt(patch->getLevel(), delT_new)), 
+      new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(delT_new)), 
                   lb->delTLabel);
     new_dw->put(sum_vartype(se),        lb->StrainEnergyLabel);
     delete interpolator;
@@ -312,7 +312,7 @@ void CompMooneyRivlin::carryForward(const PatchSubset* patches,
     carryForwardSharedData(pset, old_dw, new_dw, matl);
 
     // Carry forward the data local to this constitutive model 
-    new_dw->put(delt_vartype(d_sharedState->adjustDelt(patch->getLevel(), 1.e10)), 
+    new_dw->put(delt_vartype(patch->getLevel()->adjustDelt(1.e10)), 
                 lb->delTLabel);
     new_dw->put(sum_vartype(0.),     lb->StrainEnergyLabel);
   }

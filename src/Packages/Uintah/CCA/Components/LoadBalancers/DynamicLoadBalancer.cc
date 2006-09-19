@@ -461,7 +461,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
     float levelcost = 0;
 
     if (l > 0 && d_timeRefineWeight)
-      timeWeight *= d_sharedState->timeRefinementRatio();
+      timeWeight *= level->getTimeRefinementRatio();
 
     if (d_doSpaceCurve) {
       //cout << d_myworld->myrank() << "   Doing SFC level " << l << endl;

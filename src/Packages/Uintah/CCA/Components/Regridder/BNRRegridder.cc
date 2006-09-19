@@ -120,6 +120,7 @@ Grid* BNRRegridder::regrid(Grid* oldGrid, SchedulerP& sched, const ProblemSpecP&
   LoadBalancer *lb=sched->getLoadBalancer();
   
   Grid* newGrid = scinew Grid();
+  newGrid->setLockstep(oldGrid->isLockstep());
   ProblemSpecP grid_ps = ups->findBlock("Grid");
 
   vector<set<IntVector> > coarse_flag_sets(oldGrid->numLevels());
