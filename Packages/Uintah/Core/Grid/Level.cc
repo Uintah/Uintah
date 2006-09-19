@@ -97,6 +97,27 @@ Level::~Level()
 
 }
 
+int Level::getTimeRefinementRatio() const
+{
+  ASSERT(getIndex() != 0);
+
+  if (getGrid()->isLockstep())
+    return 1;
+  
+  IntVector crr = getRefinementRatio();
+  return Max(Max(crr[0], crr[1]), crr[2]);
+}
+
+double Level::adjustDelt(double delt) const
+{
+  for(int i=1;i<=getIndex();i++) {     // REFINE
+    delt *= getGrid()->getLevel(i)->getTimeRefinementRatio();
+  }
+  return delt;
+
+}
+
+
 void Level::setPatchDistributionHint(const IntVector& hint)
 {
    if(d_patchDistribution.x() == -1)

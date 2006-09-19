@@ -243,7 +243,10 @@ DataArchive::queryGrid( double time, const ProblemSpec* ups)
     throw InternalError("DataArchive::queryGrid:Cannot find Grid in timestep",
                         __FILE__, __LINE__);
   int numLevels = -1234;
+  bool lockstepGrid = false;
   GridP grid = scinew Grid;
+  gridnode->get("lockstep", lockstepGrid);
+  grid->setLockstep(lockstepGrid);
   for(ProblemSpecP n = gridnode->getFirstChild(); n != 0; n=n->getNextSibling()){
     if(n->getNodeName() == "numLevels") {
       if(!n->get(numLevels))

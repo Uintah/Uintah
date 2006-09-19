@@ -284,7 +284,7 @@ namespace Uintah {
       for(int i=0;i<grid->numLevels();i++){
         const Level* level = grid->getLevel(i).get_rep();
         if(i != 0)
-          delt_fine /= d_sharedState->timeRefinementRatio();
+          delt_fine /= level->getTimeRefinementRatio();
         d_scheduler->get_dw(1)->override(delt_vartype(delt_fine), d_sharedState->get_delt_label(),
                                          level);
       }

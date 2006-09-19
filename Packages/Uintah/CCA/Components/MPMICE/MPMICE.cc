@@ -281,7 +281,7 @@ void
 MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
 {
   // Only do scheduling on level 0 for lockstep AMR
-  if(d_sharedState->timeRefinementRatio() == 1 && inlevel->getIndex() > 0)
+  if(inlevel->getIndex() > 0 && inlevel->getTimeRefinementRatio() == 1)
     return;
 
   // If we have a finer level, then assume that we are doing multilevel MPMICE
