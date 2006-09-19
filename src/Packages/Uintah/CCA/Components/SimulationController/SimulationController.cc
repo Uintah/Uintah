@@ -33,6 +33,7 @@
 #define SECONDS_PER_WEEK   604800.0
 #define SECONDS_PER_YEAR   31536000.0
 
+#define AVERAGE_WINDOW 10
 using namespace SCIRun;
 using namespace std;
 
@@ -57,8 +58,8 @@ namespace Uintah {
     d_wallTime = 0;
     d_startTime = 0;
     d_prevWallTime = 0;
-    d_sumOfWallTimes = 0;
-    d_sumOfWallTimeSquares = 0;
+    //d_sumOfWallTimes = 0;
+    //d_sumOfWallTimeSquares = 0;
 
     d_restarting = false;
     d_combinePatches = false;
@@ -400,8 +401,8 @@ namespace Uintah {
     d_n = 0;
     d_wallTime = 0;
     d_prevWallTime = Time::currentSeconds();
-    d_sumOfWallTimes = 0; // sum of all walltimes
-    d_sumOfWallTimeSquares = 0; // sum all squares of walltimes
+    //d_sumOfWallTimes = 0; // sum of all walltimes
+    //d_sumOfWallTimeSquares = 0; // sum all squares of walltimes
   }
 
 string
@@ -500,27 +501,38 @@ SimulationController::printSimulationStats ( int timestep, double delt, double t
   }
 #endif
   // calculate mean/std dev
-  double stdDev = 0;
+  //double stdDev = 0;
   double mean = 0;
+  double walltime = d_wallTime-d_prevWallTime;
+  
   if (d_n > 2) { // ignore times 0,1,2
-    //walltimes.push_back(d_wallTime - d_prevWallTime);
-    d_sumOfWallTimes += (d_wallTime - d_prevWallTime);
-    d_sumOfWallTimeSquares += pow(d_wallTime - d_prevWallTime,2);
+    //walltimes.push_back();
+    //d_sumOfWallTimes += (walltime);
+    //d_sumOfWallTimeSquares += pow(walltime,2);
+
+    //alpha=2/(N+1)
+    float alpha=2.0/(min(d_n-2,AVERAGE_WINDOW)+1);  
+    d_movingAverage=alpha*walltime+(1-alpha)*d_movingAverage;
+    mean=d_movingAverage;
+
   }
+  /*
   if (d_n > 3) {
     // divide by n-2 and not n, because we wait till n>2 to keep track
     // of our stats
     stdDev = stdDeviation(d_sumOfWallTimes, d_sumOfWallTimeSquares, d_n-2);
-    mean = d_sumOfWallTimes / (d_n-2);
+    //mean = d_sumOfWallTimes / (d_n-2);
     //         ofstream timefile("avg_elapsed_wallTime.txt");
     //         timefile << mean << " +- " << stdDev << endl;
   }
+  */
   
   // output timestep statistics
   if(d_myworld->myrank() == 0){
     char walltime[96];
     if (d_n > 3) {
-      sprintf(walltime, ", elap T = %.2lf, mean: %.2lf +- %.3lf", d_wallTime, mean, stdDev);
+      //sprintf(walltime, ", elap T = %.2lf, mean: %.2lf +- %.3lf", d_wallTime, mean, stdDev);
+      sprintf(walltime, ", elap T = %.2lf, mean: %.2lf", d_wallTime, mean);
     }
     else {
       sprintf(walltime, ", elap T = %.2lf", d_wallTime);
