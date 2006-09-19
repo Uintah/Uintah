@@ -56,6 +56,37 @@ INCLUDE_DIRECTORIES(${TK_INCLUDE1} ${TK_INCLUDE2})
 SUBDIRS(Comm Constraints GuiInterface Modules Network TkExtensions TCLThread
 Widgets)
 
+ADD_EXECUTABLE(scirun
+/home/darbyb/projects/Experimental/SCIRun/src/main/main.cc)
+
+TARGET_LINK_LIBRARIES(scirun 
+  Core_Basis         
+  Core_Comm          
+  Core_Containers    
+  Core_Exceptions    
+  Core_Geom          
+  Dataflow_GuiInterface  
+  Core_ICom          
+  Core_Init         
+  Core_Malloc 
+  Core_Services      
+  Core_SystemCall    
+  Core_Thread        
+  Dataflow_TkExtensions  
+  Core_Util          
+  Core_Volume        
+  Core_XMLUtil       
+  Dataflow_Network   
+  Dataflow_TCLThread 
+  ${GLEW_LIBRARY}
+)
+
+
+
+IF(CMAKE_SYSTEM_NAME MATCHES Darwin)
+    TARGET_LINK_LIBRARIES(scirun Core_Datatypes Core_ImportExport Core_Persistent)
+ENDIF(CMAKE_SYSTEM_NAME MATCHES Darwin)
+
 
 IF(WIN32)
   IF(NOT BUILD_SHARED_LIBS)

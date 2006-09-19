@@ -28,6 +28,7 @@
 
 # CMakeLists.txt for Dataflow/Network
 
+
 SET(Dataflow_Network_SRCS
   ComponentNode.cc
   Connection.cc
@@ -40,6 +41,19 @@ SET(Dataflow_Network_SRCS
   PackageDB.cc
   SkeletonFiles.cc
   Scheduler.cc
+  Ports/BundlePort.cc
+  Ports/ColorMapPort.cc
+  Ports/ColorMap2Port.cc
+  Ports/FieldPort.cc
+  Ports/GeometryPort.cc
+  Ports/ImagePort.cc
+  Ports/MatrixPort.cc
+  Ports/NrrdPort.cc
+  Ports/Port.cc
+  Ports/PathPort.cc
+  Ports/StringPort.cc
+  Ports/TexturePort.cc
+  Ports/TimePort.cc
 )
 
 ADD_LIBRARY(Dataflow_Network ${Dataflow_Network_SRCS})

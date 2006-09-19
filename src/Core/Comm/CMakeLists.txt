@@ -26,44 +26,23 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-# Sources of Core/Util classes
-SET(Core_Util_SRCS
-  DebugStream.cc        
-  DynamicLoader.cc      
-  DynamicCompilation.cc 
-  Endian.cc             
-  Environment.cc        
-  FileUtils.cc 
-  LogFile.cc         
-  ProgressReporter.cc   
-  RegressionReporter.cc
-  SimpleProfiler.cc     
-  SizeTypeConvert.cc    
-  RWS.cc                
-  sci_system.cc         
-  soloader.cc           
-  Signals.cc            
-  Timer.cc             
-  ThrottledRunnable.cc 
-  TypeDescription.cc    
-  ProgressiveWarning.cc
+# Sources of Core/Comm classes
+SET(Core_Comm_SRCS
+  CommError.cc 
+  StringSocket.cc 
+  StringSocketThread.cc 
 )
 
-ADD_LIBRARY(Core_Util ${Core_Util_SRCS})
+ADD_LIBRARY(Core_Comm ${Core_Comm_SRCS})
 
-TARGET_LINK_LIBRARIES(Core_Util 
-  Core_Containers 
+TARGET_LINK_LIBRARIES(Core_Comm 
   Core_Exceptions 
-  Core_Thread
-  ${DL_LIBRARY}
-  ${THREAD_LIBRARY}
+  Core_Util 
+  Core_Thread 
+  ${SOCKET_LIBRARY}
 )
 
-IF(WIN32)
-  TARGET_LINK_LIBRARIES(Core_Util Core_OS)
-ENDIF(WIN32)	
 
 IF(NOT BUILD_SHARED_LIBS)
-  ADD_DEFINITIONS(-DBUILD_Core_Util)
+  ADD_DEFINITIONS(-DBUILD_Core_Comm)
 ENDIF(NOT BUILD_SHARED_LIBS)
-
