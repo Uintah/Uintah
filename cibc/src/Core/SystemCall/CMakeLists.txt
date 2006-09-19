@@ -26,44 +26,27 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-# Sources of Core/Util classes
-SET(Core_Util_SRCS
-  DebugStream.cc        
-  DynamicLoader.cc      
-  DynamicCompilation.cc 
-  Endian.cc             
-  Environment.cc        
-  FileUtils.cc 
-  LogFile.cc         
-  ProgressReporter.cc   
-  RegressionReporter.cc
-  SimpleProfiler.cc     
-  SizeTypeConvert.cc    
-  RWS.cc                
-  sci_system.cc         
-  soloader.cc           
-  Signals.cc            
-  Timer.cc             
-  ThrottledRunnable.cc 
-  TypeDescription.cc    
-  ProgressiveWarning.cc
+# Sources of Core/SystemCall classes
+SET(Core_SystemCall_SRCS
+  SystemCallManager.cc 
+  SystemCallError.cc 
+  SystemCall.cc 
+  TempFileManager.cc
 )
 
-ADD_LIBRARY(Core_Util ${Core_Util_SRCS})
+ADD_LIBRARY(Core_SystemCall ${Core_SystemCall_SRCS})
 
-TARGET_LINK_LIBRARIES(Core_Util 
-  Core_Containers 
+TARGET_LINK_LIBRARIES(Core_SystemCall 
+  Core_Thread 
+  Core_Util 
   Core_Exceptions 
-  Core_Thread
-  ${DL_LIBRARY}
-  ${THREAD_LIBRARY}
+  Core_Containers 
+  Core_ICom 
+  Core_OS
+  Core_Math
+ ${SOCKET_LIBRARY}
 )
-
-IF(WIN32)
-  TARGET_LINK_LIBRARIES(Core_Util Core_OS)
-ENDIF(WIN32)	
 
 IF(NOT BUILD_SHARED_LIBS)
-  ADD_DEFINITIONS(-DBUILD_Core_Util)
+  ADD_DEFINITIONS(-DBUILD_Core_SystemCall)
 ENDIF(NOT BUILD_SHARED_LIBS)
-

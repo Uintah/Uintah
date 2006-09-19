@@ -26,30 +26,30 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
+# NOTE: This file isn't being used--these Port files are being referenced
+# in the src/Dataflow/Network/CMakeLists.txt file for right now.
+
+
 # CMakeLists.txt for Dataflow/Network/Ports
 
-SET(Dataflow_Network_Ports_SRCS
-  BundlePort.cc
-  ColorMapPort.cc
-  ColorMap2Port.cc
-  FieldPort.cc
-  GeometryPort.cc
-  ImagePort.cc
-  MatrixPort.cc
-  NrrdPort.cc
-  Port.cc
-  PathPort.cc
-  StringPort.cc
-  TexturePort.cc
-  TimePort.cc
-)
+#SET(Dataflow_Network_Ports_SRCS
+#  BundlePort.cc
+#  ColorMapPort.cc
+#  ColorMap2Port.cc
+#  FieldPort.cc
+#  GeometryPort.cc
+#  ImagePort.cc
+#  MatrixPort.cc
+#  NrrdPort.cc
+#  Port.cc
+#  PathPort.cc
+#  StringPort.cc
+#  TexturePort.cc
+#  TimePort.cc
+#)
 
-ADD_LIBRARY(Dataflow_Network_Ports ${Dataflow_Network_Ports_SRCS})
+#ADD_LIBRARY(Dataflow_Network_Ports ${Dataflow_Network_Ports_SRCS})
 
-TARGET_LINK_LIBRARIES(Dataflow_Network_Ports
-
-)
-
-IF(NOT BUILD_SHARED_LIBS)
-  ADD_DEFINITIONS(-DBUILD_Dataflow_Network_Ports)
-ENDIF(NOT BUILD_SHARED_LIBS)
+#IF(NOT BUILD_SHARED_LIBS)
+#  ADD_DEFINITIONS(-DBUILD_Dataflow_Network_Ports)
+#ENDIF(NOT BUILD_SHARED_LIBS)
