@@ -34,8 +34,6 @@
 #include <sci_comp_warn_fixes.h>
 #include <iostream>
 #include <sci_gl.h>
-#include <sci_glu.h>
-#include <sci_glx.h>
 #include <Core/Bundle/Bundle.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Datatypes/Field.h> 
@@ -46,10 +44,8 @@
 #include <Core/Geom/GeomCull.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/TexSquare.h>
-#include <Dataflow/GuiInterface/TkOpenGLContext.h>
 #include <Core/Geom/OpenGLViewport.h>
 #include <Core/Geom/FreeType.h>
-#include <Dataflow/GuiInterface/UIvar.h>
 #include <Core/Malloc/Allocator.h>
 #include <Core/Math/MiscMath.h>
 #include <Core/Math/MinMax.h>

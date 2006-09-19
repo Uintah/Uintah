@@ -41,20 +41,12 @@
 
 #include <StandAlone/Apps/Painter/Painter.h>
 #include <sci_comp_warn_fixes.h>
-#include <tcl.h>
-#include <tk.h>
 #include <stdlib.h>
 #include <math.h>
 #include <map>
 #include <typeinfo>
 #include <iostream>
 #include <sci_gl.h>
-#include <sci_glu.h>
-#include <sci_glx.h>
-#include <Dataflow/Network/Module.h>
-#include <Dataflow/Network/Ports/BundlePort.h>
-#include <Dataflow/Network/Ports/GeometryPort.h>
-#include <Dataflow/Network/Ports/NrrdPort.h>
 #include <Core/Bundle/Bundle.h>
 #include <Core/Containers/Array3.h>
 #include <Core/Datatypes/Field.h> 
@@ -65,7 +57,6 @@
 #include <Core/Geom/GeomCull.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/TexSquare.h>
-#include <Dataflow/GuiInterface/TkOpenGLContext.h>
 #include <Core/Geom/OpenGLViewport.h>
 #include <Core/Geom/FreeType.h>
 #include <Core/Malloc/Allocator.h>
