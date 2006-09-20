@@ -436,12 +436,12 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   }
 
   vector<Patch*> patchset;
-  vector<float> patch_costs;
+  vector<double> patch_costs;
 
   // these variables are "groups" of costs.  If we are doing level independent, then
   // the variables will be size one, and we can share functionality
-  vector<float> groupCost(1,0);
-  vector<float> avgCostPerProc(1,0);
+  vector<double> groupCost(1,0);
+  vector<double> avgCostPerProc(1,0);
   vector<int> groupSize(1,0);
   vector<unsigned> sfc(numPatches);
 
@@ -458,7 +458,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   int startingPatch = 0;
   for(int l=0;l<grid->numLevels();l++){
     const LevelP& level = grid->getLevel(l);
-    float levelcost = 0;
+    double levelcost = 0;
 
     if (l > 0 && d_timeRefineWeight)
       timeWeight *= level->getTimeRefinementRatio();
@@ -477,7 +477,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       ASSERTEQ(id, allParticles[id].id);
       patchset.push_back(patch);
       IntVector range = patch->getHighIndex() - patch->getLowIndex();
-      float cost = allParticles[id].numParticles + d_cellFactor * 
+      double cost = allParticles[id].numParticles + d_cellFactor * 
         range.x() * range.y() * range.z();
       cost *= timeWeight;
       if ( d_myworld->myrank() == 0)
@@ -502,7 +502,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   startingPatch = 0;
   for (unsigned i = 0; i < groupCost.size(); i++) {
     int currentProc = 0;
-    float currentProcCost = 0;
+    double currentProcCost = 0;
 
     for (int p = startingPatch; p < groupSize[i] + startingPatch; p++) {
       int index;
@@ -518,7 +518,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
       
       // assign the patch to a processor.  When we advance procs,
       // re-update the cost, so we use all procs (and don't go over)
-      float patchCost = patch_costs[index];
+      double patchCost = patch_costs[index];
       if (currentProcCost > avgCostPerProc[i] ||
           (currentProcCost + patchCost > avgCostPerProc[i] *1.1&&
            currentProcCost >=  .7*avgCostPerProc[i])) {
@@ -552,7 +552,7 @@ bool DynamicLoadBalancer::assignPatchesFactor(const GridP& grid, bool force)
   return doLoadBalancing;
 }
 
-bool DynamicLoadBalancer::thresholdExceeded(const vector<float>& patch_costs)
+bool DynamicLoadBalancer::thresholdExceeded(const vector<double>& patch_costs)
 {
   // add up the costs each processor for the current assignment
   // and for the temp assignment, then calculate the standard deviation
@@ -560,8 +560,8 @@ bool DynamicLoadBalancer::thresholdExceeded(const vector<float>& patch_costs)
   // and have possiblyDynamicallyRelocate change the load balancing
   
   int numProcs = d_myworld->size();
-  vector<float> currentProcCosts(numProcs);
-  vector<float> tempProcCosts(numProcs);
+  vector<double> currentProcCosts(numProcs);
+  vector<double> tempProcCosts(numProcs);
   
   for (unsigned i = 0; i < d_tempAssignment.size(); i++) {
     currentProcCosts[d_processorAssignment[i]] += patch_costs[i];
@@ -693,8 +693,6 @@ DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
   if (d_dynamicAlgorithm == static_lb && d_state != postLoadBalance)
     // should only happen on the first timestep
     return d_state != idle; 
-
-  int old_state = d_state;
 
   double time = d_sharedState->getElapsedTime();
   int timestep = d_sharedState->getCurrentTopLevelTimeStep();
