@@ -1572,7 +1572,6 @@ void ICE::computesRequires_AMR_Refluxing(Task* task,
                                     const MaterialSet* ice_matls)
 {
   cout_doing << d_myworld->myrank() << "      computesRequires_AMR_Refluxing\n";
-  Ghost::GhostType  gn   = Ghost::None;
   task->computes(lb->mass_X_FC_fluxLabel);
   task->computes(lb->mass_Y_FC_fluxLabel);
   task->computes(lb->mass_Z_FC_fluxLabel);
