@@ -27,6 +27,7 @@
 #
 
 # Sources of Core/Init classes
+
 SET(Core_Init_SRCS
   init.cc 
   NrrdToField_Plugin.cc 
