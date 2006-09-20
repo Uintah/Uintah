@@ -112,20 +112,9 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
   IntVector idxHiV = patch->getSFCYFORTHighIndex();
   IntVector idxLoW = patch->getSFCZFORTLowIndex();
   IntVector idxHiW = patch->getSFCZFORTHighIndex();
-  // get domain size without ghost cells
-  // using ng for no ghost cell
-  IntVector domLoUng;
-  IntVector domHiUng;
-  IntVector domLoVng;
-  IntVector domHiVng;
-  IntVector domLoWng;
-  IntVector domHiWng;
-
   
   switch(index) {
   case Arches::XDIR:
-    domLoUng = vars->uVelLinearSrc.getFortLowIndex();
-    domHiUng = vars->uVelLinearSrc.getFortHighIndex();
 
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
@@ -144,8 +133,6 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
 
     break;
   case Arches::YDIR:
-    domLoVng = vars->vVelLinearSrc.getFortLowIndex();
-    domHiVng = vars->vVelLinearSrc.getFortHighIndex();
 
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
@@ -167,8 +154,6 @@ Source::calculateVelocitySource(const ProcessorGroup* ,
     break;
   case Arches::ZDIR:
 
-    domLoWng = vars->wVelLinearSrc.getFortLowIndex();
-    domHiWng = vars->wVelLinearSrc.getFortHighIndex();
     // computes remaining diffusion term and also computes 
     // source due to gravity...need to pass ipref, jpref and kpref
     fort_wvelsrc(idxLoW, idxHiW, constvars->wVelocity, constvars->old_wVelocity,
@@ -492,22 +477,12 @@ Source::computemmMomentumSource(const ProcessorGroup*,
 {
   IntVector idxLoU;
   IntVector idxHiU;
-  // for no ghost cells
-  IntVector domLoUng;
-  IntVector domHiUng;
-  IntVector domLo;
-  IntVector domHi;
   
   switch(index) {
   case 1:
   // Get the low and high index for the patch and the variables
   idxLoU = patch->getSFCXFORTLowIndex();
   idxHiU = patch->getSFCXFORTHighIndex();
-  // for no ghost cells
-  domLoUng = vars->uVelLinearSrc.getFortLowIndex();
-  domHiUng = vars->uVelLinearSrc.getFortHighIndex();
-  domLo = constvars->mmuVelSu.getFortLowIndex();
-  domHi = constvars->mmuVelSu.getFortHighIndex();
   
 
   fort_mmmomsrc(idxLoU, idxHiU, vars->uVelNonlinearSrc, vars->uVelLinearSrc,
@@ -517,11 +492,6 @@ Source::computemmMomentumSource(const ProcessorGroup*,
   // Get the low and high index for the patch and the variables
     idxLoU = patch->getSFCYFORTLowIndex();
     idxHiU = patch->getSFCYFORTHighIndex();
-  // for no ghost cells
-    domLoUng = vars->vVelLinearSrc.getFortLowIndex();
-    domHiUng = vars->vVelLinearSrc.getFortHighIndex();
-    domLo = constvars->mmvVelSu.getFortLowIndex();
-    domHi = constvars->mmvVelSu.getFortHighIndex();
 
     fort_mmmomsrc(idxLoU, idxHiU, vars->vVelNonlinearSrc, vars->vVelLinearSrc,
 		  constvars->mmvVelSu, constvars->mmvVelSp);
@@ -530,11 +500,6 @@ Source::computemmMomentumSource(const ProcessorGroup*,
   // Get the low and high index for the patch and the variables
     idxLoU = patch->getSFCZFORTLowIndex();
     idxHiU = patch->getSFCZFORTHighIndex();
-  // for no ghost cells
-    domLoUng = vars->wVelLinearSrc.getFortLowIndex();
-    domHiUng = vars->wVelLinearSrc.getFortHighIndex();
-    domLo = constvars->mmwVelSu.getFortLowIndex();
-    domHi = constvars->mmwVelSu.getFortHighIndex();
   
     fort_mmmomsrc(idxLoU, idxHiU, vars->wVelNonlinearSrc, vars->wVelLinearSrc,
 		  constvars->mmwVelSu, constvars->mmwVelSp);
