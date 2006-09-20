@@ -219,15 +219,29 @@ SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${ZLIB_INCLUDE_DIR})
 
 #-----------------------------------------------------------------------------
 # png lib
-OPTION(WITH_PNG "Build SCIRun with PNG subbport." OFF)
-IF(WITH_PNG)
-  FIND_PACKAGE( PNG )
-  IF(PNG_LIBRARY)
-    SET(HAVE_PNG "YES")
-    SET(DEF_PNG "#define HAVE_PNG 1")
-    SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${PNG_INCLUDE_DIR})
-  ENDIF(PNG_LIBRARY)
-ENDIF(WITH_PNG)
+FIND_LIBRARY(PNG_LIBRARY png
+             PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
+             /usr/local/lib
+             /usr/lib
+             /lib
+             NO_DEFAULT_PATH)
+
+FIND_PATH(PNG_INCLUDE png.h
+          ${SCIRUN_THIRDPARTY_PATH}/include/
+          /usr/local/include/
+          /usr/include
+          /include
+          NO_DEFAULT_PATH)
+
+
+IF(PNG_LIBRARY)
+   MESSAGE(STATUS "Found PNG: ${PNG_LIBRARY}")
+   SET(HAVE_PNG "YES")
+   SET(DEF_PNG "#define HAVE_PNG 1")
+ELSE(PNG_LIBRARY)
+   MESSAGE(FATAL_ERROR ": libpng required.")
+ENDIF(PNG_LIBRARY)
+
 
 #-----------------------------------------------------------------------------
 # DV XML2 FROM 3P FOR NOW
@@ -379,10 +393,15 @@ SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${FREETYPE_INCLUDE})
 
 #----------------------------------------------------------------------------
 # X11
-FIND_PACKAGE( X11 )
-IF(X11_FOUND)
-  SET(X_LIBRARY ${X11_LIBRARIES})
-ENDIF(X11_FOUND)
+OPTION(WITH_X11 "Build SCIRun with X11 support" ON)
+
+IF(WITH_X11)
+  FIND_PACKAGE( X11 )
+  IF(X11_FOUND)
+    SET(X_LIBRARY ${X11_LIBRARIES})
+    SET(DEF_X11 "#define HAVE_X11 1")
+  ENDIF(X11_FOUND)
+ENDIF(WITH_X11)
 
 #-----------------------------------------------------------------------------
 # Glew
@@ -406,6 +425,14 @@ SET(DEF_GLEW "#define HAVE_GLEW 1")
 #-----------------------------------------------------------------------------
 # DV MPEG FROM 3P FOR NOW
 # DV need to make this optional (at least for windows)
+IF(WIN32)
+  OPTION(WITH_MPEG "Build SCIRun with MPEG support" OFF)
+ELSE(WIN32)
+  OPTION(WITH_MPEG "Build SCIRun with MPEG support" ON)
+ENDIF(WIN32)
+
+
+
 IF(NOT WIN32)
   FIND_LIBRARY(MPEG_LIBRARY mpege
               PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/

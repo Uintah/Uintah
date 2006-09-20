@@ -38,6 +38,13 @@
 #include <string>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
+#include <sci_defs/x11_defs.h>
+
+#if defined(__APPLE__) && !defined(HAVE_X11)
+  namespace Carbon {
+#  include <Carbon/Carbon.h>
+  }
+#endif
 
 using std::cout;
 using namespace SCIRun;
@@ -117,7 +124,11 @@ main(int argc, char *argv[], char **environment) {
   EventManager *em = new EventManager();
   Thread *em_thread = new Thread(em, "Event Manager");
   start_trail_file();
-  //em->wait()->down();
+
+#if defined(__APPLE__) && !defined(HAVE_X11)
+  Carbon::RunApplicationEventLoop();
+#endif
+
   em_thread->join();
   EventManager::stop_trail_file();
 

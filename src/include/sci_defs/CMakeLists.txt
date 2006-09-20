@@ -101,6 +101,12 @@ CONFIGURE_FILE (
   "${PROJECT_BINARY_DIR}/include/sci_defs/thread_defs.h"
 )
 
+CONFIGURE_FILE (
+      "${PROJECT_SOURCE_DIR}/src/include/sci_defs/x11_testdefs.h.in"
+      "${PROJECT_BINARY_DIR}/include/sci_defs/x11_defs.h"
+)
+
+
 #---------------------------------------------------------------------
 # Package configure files
 CONFIGURE_FILE (

@@ -36,9 +36,7 @@
 #define OpenGLViewer_h
 
 #include <sci_defs/image_defs.h>
-#include <sci_glx.h>
-#include <tcl.h>
-#include <tk.h>
+#include <sci_gl.h>
 
 #include <iostream>
 #include <sstream>

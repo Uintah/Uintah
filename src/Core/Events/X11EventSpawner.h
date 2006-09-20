@@ -29,6 +29,10 @@
 //    Author : McKay Davis
 //    Date   : Thu Jun  1 19:28 MDT 2006
 
+#include <sci_defs/x11_defs.h>
+
+#if defined(HAVE_X11)
+
 #ifndef CORE_EVENTS_X11EVENTSPAWNER_H
 #define CORE_EVENTS_X11EVENTSPAWNER_H
 
@@ -67,4 +71,6 @@ namespace SCIRun {
   };
 }
 
-#endif
+#endif 
+
+#endif // defined(HAVE_X11)

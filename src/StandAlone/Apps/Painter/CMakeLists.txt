@@ -46,6 +46,7 @@ ELSE(ITK_FOUND)
   MESSAGE(FATAL_ERROR "Cannot build Painter without ITK. Please set ITK_DIR.")
 ENDIF(ITK_FOUND)
 
+
 #-----------------------------------------------------------------------------
 # Glew
 FIND_LIBRARY(GLEW_LIBRARY GLEW glew32
@@ -65,8 +66,21 @@ SET(PAINTER_SRCS
   main.cc 
 )
 
-ADD_EXECUTABLE(painter ${PAINTER_SRCS})
 
+ADD_EXECUTABLE(painter MACOSX_BUNDLE ${PAINTER_SRCS})
+
+IF(APPLE)
+  SET_TARGET_PROPERTIES(painter PROPERTIES LINK_FLAGS "-framework Carbon")
+#  FIND_PROGRAM(APPLE_RESOURCE Rez /Developer/Tools)
+#  IF(APPLE_RESOURCE)
+#    ADD_CUSTOM_COMMAND(SOURCE painter
+#                       COMMAND ${APPLE_RESOURCE}
+#                       ARGS Carbon.r -o 
+#                       ${EXECUTABLE_OUTPUT_PATH}/painter
+#                       TARGET painter)
+#  ENDIF(APPLE_RESOURCE)
+ENDIF(APPLE)
+                
 TARGET_LINK_LIBRARIES(painter 
   Core_Algorithms_Visualization 
   Core_Basis 
@@ -88,6 +102,7 @@ TARGET_LINK_LIBRARIES(painter
   ${XML_LIBRARY} 
   ${M_LIBRARY} 
   ${GL_LIBRARY} 
+  ${GLU_LIBRARY} 
   ${TEEM_LIBRARY}
   ${GLEW_LIBRARY}
 )

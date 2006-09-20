@@ -46,7 +46,6 @@
 #include <Core/Geom/GeomSave.h>
 #include <Core/Geometry/BBox.h>
 #include <Core/Persistent/Persistent.h>
-#include <Dataflow/Network/Module.h>
 
 #include <Core/Geom/share.h>
 
