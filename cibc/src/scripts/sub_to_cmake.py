@@ -8,7 +8,7 @@ rex_srcdir = regex.compile('^SRCDIR.*:= \([a-zA-Z0-9/]+\)')
 rex_srcs = regex.compile('^SRCS')
 rex_pselibs = regex.compile('^PSELIBS')
 rex_libs = regex.compile('^LIBS')
-
+rex_subdirs = regex.compile('^SUBDIRS')
 
 def cont(file, line):
     while line[-2:] == '\\\n':
@@ -20,6 +20,8 @@ def cont(file, line):
 def gen_cmake(filename):
     file = open(filename, 'r')
     libs = ''
+    srcs = ''
+    dirs = ''
     while 1:
         line = file.readline()
         if not line: break
@@ -34,6 +36,7 @@ def gen_cmake(filename):
         if n >= 0:
             srcs = cont(file, line)
             srcs = regsub.gsub('\$(SRCDIR)/', '', srcs)
+            srcs = regsub.gsub('#.*', '', srcs)
             lsrcs = string.splitfields(srcs)
             srcs = '  '+string.joinfields(lsrcs[2:], '\n  ')
             continue
@@ -42,6 +45,7 @@ def gen_cmake(filename):
         if n >= 0:
             libstmp = cont(file, line)
             libstmp = regsub.gsub('/', '_', libstmp)
+            libstmp = regsub.gsub('#.*', '', libstmp)
             llibs = string.splitfields(libstmp)
             libs = libs+'  '+string.joinfields(llibs[2:], '\n  ')
             continue
@@ -51,9 +55,19 @@ def gen_cmake(filename):
             libstmp = cont(file, line)
             libstmp = regsub.gsub('(', '{', libstmp)
             libstmp = regsub.gsub(')', '}', libstmp)
+            libstmp = regsub.gsub('#.*', '', libstmp)
             llibs = string.splitfields(libstmp)
             libs = libs+'\n  '+string.joinfields(llibs[2:], '\n  ')
-            
+
+        n = rex_subdirs.match(line)
+        if n >= 0:
+            dirs = cont(file, line)
+            dirs = regsub.gsub('\$(SRCDIR)/', '', dirs)
+            dirs = regsub.gsub('#.*', '', dirs)
+            ldirs = string.splitfields(dirs)
+            dirs = string.joinfields(ldirs[2:], ' ')
+            continue
+
     print '#'
     print '#  For more information, please see: http://software.sci.utah.edu'
     print '# '
@@ -84,19 +98,23 @@ def gen_cmake(filename):
     print ''
     print '# CMakeLists.txt for %s' % srcdir
     print ''
-    print 'SET(%s_SRCS' % srcdir_
-    print srcs
-    print ')'
-    print ''
-    print 'ADD_LIBRARY(%s ${%s_SRCS})' % (srcdir_, srcdir_)
-    print ''
-    print 'TARGET_LINK_LIBRARIES(%s' % srcdir_
-    print libs
-    print ')'
-    print ''
-    print 'IF(NOT BUILD_SHARED_LIBS)'
-    print '  ADD_DEFINITIONS(-DBUILD_%s)' % srcdir_
-    print 'ENDIF(NOT BUILD_SHARED_LIBS)'
+    if srcs != '':
+        print 'SET(%s_SRCS' % srcdir_
+        print srcs
+        print ')'
+        print ''
+        print 'ADD_LIBRARY(%s ${%s_SRCS})' % (srcdir_, srcdir_)
+        print ''
+        print 'TARGET_LINK_LIBRARIES(%s' % srcdir_
+        print libs
+        print ')'
+        print ''
+        print 'IF(NOT BUILD_SHARED_LIBS)'
+        print '  ADD_DEFINITIONS(-DBUILD_%s)' % srcdir_
+        print 'ENDIF(NOT BUILD_SHARED_LIBS)'
+    if dirs != '':
+        print 'SUBDIRS(%s)' % dirs
+        print ''
 
 if __name__ == '__main__':
     import sys
