@@ -451,33 +451,39 @@ SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${GLEW_INCLUDE})
 SET(DEF_GLEW "#define HAVE_GLEW 1")
 
 #-----------------------------------------------------------------------------
-# DV MPEG FROM 3P FOR NOW
-# DV need to make this optional (at least for windows)
+# MPEG
+
 IF(WIN32)
   OPTION(WITH_MPEG "Build SCIRun with MPEG support" OFF)
 ELSE(WIN32)
   OPTION(WITH_MPEG "Build SCIRun with MPEG support" ON)
 ENDIF(WIN32)
 
-
-
-IF(NOT WIN32)
+IF(WITH_MPEG)
   FIND_LIBRARY(MPEG_LIBRARY mpege
               PATHS ${SCIRUN_THIRDPARTY_PATH}/lib/
               /usr/local/lib
               /usr/lib
               /lib
               NO_DEFAULT_PATH)
+
   FIND_PATH(MPEG_INCLUDE mpege.h
              ${SCIRUN_THIRDPARTY_PATH}/include
              /usr/local/include
              /usr/include
              /include
              NO_DEFAULT_PATH)
-  SET(DEF_MPEG "#define HAVE_MPEG 1")
 
-  SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${MPEG_INCLUDE})
-ENDIF(NOT WIN32)
+  IF(MPEG_LIBRARY)
+    SET(HAVE_MPEG "1")
+    SET(DEF_MPEG "#define HAVE_MPEG 1")
+    MESSAGE(STATUS "Found MPEG: ${MPEG_LIBRARY}")
+    SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${MPEG_INCLUDE})
+  ELSE(MPEG_LIBRARY)
+    SET(HAVE_MPEG "0")
+    MESSAGE(STATUS "MPEG not found")
+  ENDIF(MPEG_LIBRARY)
+ENDIF(WITH_MPEG)
 
 #-----------------------------------------------------------------------------
 # Teem

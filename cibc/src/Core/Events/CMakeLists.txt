@@ -66,11 +66,14 @@ TARGET_LINK_LIBRARIES( Core_Events
   Core_Algorithms_Fields
   Core_Algorithms_Visualization
   ${THREAD_LIBRARY} 
-  ${MPEG_LIBRARY} 
   ${GL_LIBRARY} 
   ${GLEW_LIBRARY} 
   ${PNG_LIBRARY} 
 )
+
+IF(HAVE_MPEG)
+  TARGET_LINK_LIBRARIES( Core_Events ${MPEG_LIBRARY} )
+ENDIF(HAVE_MPEG)
 
 IF(WIN32)
   TARGET_LINK_LIBRARIES( Core_Events Core_OS)
