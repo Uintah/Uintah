@@ -1666,7 +1666,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             gnumnearparticles[node] += 1.0;
             //  gexternalheatrate[node] += pexternalheatrate[idx]      * S[k];
             if(mpm_matl->getIsSoilFoam()){
-              gsv_min[node]      += sv_min[idx]                    * S[k];
+              gsv_min[node]      += sv_min[idx] * pmass[idx]       * S[k];
               //if(node.x()==9&&node.y()==1&&node.z()==9) std::cout<<" "<<sv_min[idx]<<" "<<k<<" "<<S[k]<<std::endl;
             }
           }
@@ -1685,6 +1685,9 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
         gTemperatureNoBC[c] = gTemperature[c];
         gSp_vol[c]      /= gmass[c];
         gvelocityInterp[c]=gvelocity[c];
+        if(mpm_matl->getIsSoilFoam()){
+          gsv_min[c] /= gmass[c];
+        }
       }
 
       // Apply grid boundary conditions to the temperature
