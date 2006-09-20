@@ -1667,6 +1667,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             //  gexternalheatrate[node] += pexternalheatrate[idx]      * S[k];
             if(mpm_matl->getIsSoilFoam()){
               gsv_min[node]      += sv_min[idx]                    * S[k];
+              //if(node.x()==9&&node.y()==1&&node.z()==9) std::cout<<" "<<sv_min[idx]<<" "<<k<<" "<<S[k]<<std::endl;
             }
           }
         }

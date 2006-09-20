@@ -85,6 +85,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps)
     d_is_soilFoam = true;
   }
   
+
   // Step 2 -- get the general material properties
 
   ps->require("density",d_density);

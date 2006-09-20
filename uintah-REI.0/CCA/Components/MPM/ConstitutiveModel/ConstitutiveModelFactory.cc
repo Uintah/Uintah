@@ -2,15 +2,15 @@
 /*
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/RigidMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompMooneyRivlin.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHook.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CNHDamage.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CNHPDamage.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/TransIsoHyper.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/TransIsoHyperImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoTransIsoHyper.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoTransIsoHyperImplicit.h>
 */
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHook.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookPlas.h>
 /*
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScram.h>
@@ -64,13 +64,6 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
 
   else if (mat_type == "comp_mooney_rivlin")
     return(scinew CompMooneyRivlin(child,flags));
-  else if (mat_type ==  "comp_neo_hook") {
-    if (flags->d_integrator_type == "explicit" || 
-        flags->d_integrator_type == "fracture")
-      return(scinew CompNeoHook(child,flags));
-    else if (flags->d_integrator_type == "implicit")
-      return(scinew CompNeoHookImplicit(child,flags));
-  }
   else if (mat_type ==  "cnh_damage") 
     return(scinew CNHDamage(child,flags));
 
@@ -139,6 +132,13 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
   else if (mat_type == "comp_neo_hook_plastic")
     return (scinew CompNeoHookPlas(child,flags));
 
+  else if (mat_type ==  "comp_neo_hook") {
+    if (flags->d_integrator_type == "explicit" || 
+        flags->d_integrator_type == "fracture")
+      return(scinew CompNeoHook(child,flags));
+    else if (flags->d_integrator_type == "implicit")
+      return(scinew CompNeoHookImplicit(child,flags));
+  }
   else 
     throw ProblemSetupException("Unknown Material Type R ("+mat_type+")", __FILE__, __LINE__);
 

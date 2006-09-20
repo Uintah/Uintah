@@ -354,9 +354,14 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     double G    = d_initialData.G;
     double bulk = d_initialData.bulk;
 
+    int cnt=0;
     for(ParticleSubset::iterator iter = pset->begin();
                                         iter != pset->end(); iter++){
+      cnt++;
       particleIndex idx = *iter;
+      //if(px[idx].x()>0.40&&px[idx].x()<0.55
+      //&&px[idx].y()>0.00&&px[idx].y()<0.10
+      //&&px[idx].z()>0.50&&px[idx].z()<0.55) cout<<px[idx].x()<<" "<<px[idx].y()<<" "<<px[idx].z()<<endl;
 
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
@@ -395,15 +400,18 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
       double J = deformationGradient[idx].Determinant();
       pvolume_deformed[idx]=Jinc*pvolume[idx];
       double vol_strain = log(pvolume_deformed[idx]/(pmass[idx]/rho_orig));
-      double pres;
+      double pres_guage;
       double rho_cur = rho_orig/J;
 
       // Traditional method for mat5
       if(vol_strain>sv_min[idx]){
-         pres = p_sv_min[idx] - bulk*(vol_strain - sv_min[idx]);
+         pres_guage = p_sv_min[idx] - bulk*(vol_strain - sv_min[idx]);
+         if(pres_guage<d_initialData.pc) pres_guage = d_initialData.pc;
          p_sv_min_new[idx] = p_sv_min[idx];
          sv_min_new[idx] = sv_min[idx];
-	 //cout <<" unload "<<vol_strain<<" "<<sv_min[idx]<<" "<<pres<<endl;
+	 //if(px[idx].x()>0.40&&px[idx].x()<0.55
+	 //&&px[idx].y()>0.00&&px[idx].y()<0.10
+	 //&&px[idx].z()>0.50&&px[idx].z()<0.55) cout <<" unload "<<vol_strain<<" "<<sv_min[idx]<<" "<<pres_guage<<endl;
 
          // Compute the local sound speed
          c_dil = sqrt((bulk + 4.*G/3.)/rho_cur);
@@ -413,14 +421,16 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
             if(d_initialData.eps[i+1]<d_initialData.eps[i])
             if(vol_strain<d_initialData.eps[i]) i1 = i;
          }
-         pres = d_initialData.p[i1] + slope[i1]*(vol_strain - d_initialData.eps[i1]);
-	 //cout <<" load "<<vol_strain<<" "<<sv_min[idx]<<" "<<pres<<endl;
-         p_sv_min_new[idx] = pres;
+         pres_guage = d_initialData.p[i1] + slope[i1]*(vol_strain - d_initialData.eps[i1]);
+         if(pres_guage<d_initialData.pc) pres_guage = d_initialData.pc;
+	 //if(px[idx].x()>0.40&&px[idx].x()<0.55
+	 //&&px[idx].y()>0.00&&px[idx].y()<0.10
+	 //&&px[idx].z()>0.50&&px[idx].z()<0.55) cout <<" load "<<vol_strain<<" "<<sv_min[idx]<<" "<<pres_guage<<endl;
+         p_sv_min_new[idx] = pres_guage;
          sv_min_new[idx] = vol_strain;
          // Compute the local sound speed
          c_dil = sqrt((-slope[i1] + 4.*G/3.)/rho_cur);
       }
-      if(pres<d_initialData.pc) pres = d_initialData.pc;
       // 
       // This is the (updated) Cauchy stress
     //pstress_new[idx] = pstress[idx] + 
@@ -435,17 +445,21 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
                         pstress_new[idx](0,1)*pstress_new[idx](0,1) +
                         pstress_new[idx](0,2)*pstress_new[idx](0,2) +
                         pstress_new[idx](1,2)*pstress_new[idx](1,2);
-      double g0 = d_initialData.a0 + (d_initialData.a1 + d_initialData.a2*pres)*pres;
+      double g0 = d_initialData.a0 + (d_initialData.a1 + d_initialData.a2*pres_guage)*pres_guage;
       if(g0<0.0) g0 = 0.0;
 
       double ratio;
       if(aj2<g0) ratio = 1.0;
       else ratio = sqrt(g0/(aj2+1.0e-10));
 
-      //cout<<" aj2 "<<aj2<<" g0 "<<g0<<" ratio "<<ratio<<" pres "<<pres<<endl;
+      //cout<<" aj2 "<<aj2<<" g0 "<<g0<<" ratio "<<ratio<<" pres_guage "<<pres_guage<<endl;
 
-      pstress_new[idx] = pstress_new[idx]*ratio - Identity*pres;
+      pstress_new[idx] = pstress_new[idx]*ratio - Identity*pres_guage;
 
+      //if(px[idx].x()>0.40&&px[idx].x()<0.55
+      //&&px[idx].y()>0.00&&px[idx].y()<0.10
+      //&&px[idx].z()>0.50&&px[idx].z()<0.55) cout<<"stress "<<pstress_new[idx](0,0)<<" "<<pstress_new[idx](0,1)<<" "<<pstress_new[idx](0,2)
+      //		<<" "<<pstress_new[idx](1,1)<<" "<<pstress_new[idx](1,2)<<" "<<pstress_new[idx](2,2)<<endl;
 
       // Compute the strain energy for all the particles
       Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
@@ -563,11 +577,12 @@ SoilFoam::addComputesAndRequires(Task* task,
 }
 
 double SoilFoam::computeRhoMicroCM(double pressure,
-                                    const double /*p_ref*/,
+                                    const double p_ref,
                                     const MPMMaterial* matl,
                                     const double maxvolstrain)
 {
-  if(pressure<d_initialData.pc) pressure = d_initialData.pc;
+  double pres_guage = pressure - p_ref;
+  //if(pres_guage<d_initialData.pc) pres_guage = d_initialData.pc;
 
   int i1 = 0, i;
   for(i=1; i<9; i++){
@@ -576,15 +591,15 @@ double SoilFoam::computeRhoMicroCM(double pressure,
   }
   double pressmax = d_initialData.p[i1] + slope[i1]*(maxvolstrain - d_initialData.eps[i1]);
   double vol_strain;
-  if(pressure>pressmax){
+  if(pres_guage>pressmax){
      i1 = 0;
      for(i=1; i<9; i++){
        if(d_initialData.eps[i+1]<d_initialData.eps[i])
-         if(pressure>d_initialData.p[i]) i1 = i;
+         if(pres_guage>d_initialData.p[i]) i1 = i;
      }
-     vol_strain = (pressure - d_initialData.p[i1])/slope[i1] + d_initialData.eps[i1];
+     vol_strain = (pres_guage - d_initialData.p[i1])/slope[i1] + d_initialData.eps[i1];
   }else{
-     vol_strain = maxvolstrain + (pressmax - pressure)/d_initialData.bulk;
+     vol_strain = maxvolstrain + (pressmax - pres_guage)/d_initialData.bulk;
   }
   double rho_orig = matl->getInitialDensity();
   double rho_cur= rho_orig/exp(vol_strain);
@@ -593,11 +608,12 @@ double SoilFoam::computeRhoMicroCM(double pressure,
 }
 
 void SoilFoam::computePressEOSCM(double rho_cur,double& pressure,
-                                         double /*p_ref*/,
+                                         double p_ref,
                                          double& dp_drho, double& tmp,
                                          const MPMMaterial* matl,
                                          const double maxvolstrain)
 {
+  double pres_guage;
   int i1 = 0, i;
   for(i=1; i<9; i++){
     if(d_initialData.eps[i+1]<d_initialData.eps[i])
@@ -610,8 +626,8 @@ void SoilFoam::computePressEOSCM(double rho_cur,double& pressure,
 
   double slope1 = 0.0;
 
-  if(vol_strain>maxvolstrain){
-     pressure = pressmax - d_initialData.bulk*(vol_strain - maxvolstrain);
+  if(vol_strain>=maxvolstrain){
+     pres_guage = pressmax - d_initialData.bulk*(vol_strain - maxvolstrain);
      slope1 = d_initialData.bulk;
   }else{
      i1 = 0;
@@ -619,14 +635,20 @@ void SoilFoam::computePressEOSCM(double rho_cur,double& pressure,
         if(d_initialData.eps[i+1]<d_initialData.eps[i])
         if(vol_strain<d_initialData.eps[i]) i1 = i;
      }
-     pressure = d_initialData.p[i1] + slope[i1]*(vol_strain - d_initialData.eps[i1]);
+     pres_guage = d_initialData.p[i1] + slope[i1]*(vol_strain - d_initialData.eps[i1]);
      slope1 = -slope[i1];
   }
 
-  if(pressure<d_initialData.pc) pressure = d_initialData.pc;
-  dp_drho = slope1/rho_cur;
+  if(pres_guage<=d_initialData.pc){
+    pres_guage = d_initialData.pc;
+    //  dp_drho = 0.0;
+    //tmp = (4.*d_initialData.G/3.)/rho_cur;
+  }//else{
+    dp_drho = slope1/rho_cur;
+    tmp = (slope1 + 4.*d_initialData.G/3.)/rho_cur;  // speed of sound squared
+    //}
+  pressure = pres_guage + p_ref;
   //cout <<" load "<<vol_strain<<" "<<sv_min[idx]<<" "<<pres<<endl;
-  tmp = (slope1 + 4.*d_initialData.G/3.)/rho_cur;  // speed of sound squared
 }
 
 double SoilFoam::getCompressibility()
