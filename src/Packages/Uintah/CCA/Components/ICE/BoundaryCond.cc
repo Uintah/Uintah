@@ -267,7 +267,7 @@ void get_rho_micro(StaticArray<CCVariable<double> >& rho_micro,
   }
   
   Vector gravity = sharedState->getGravity(); 
-  int timestep = sharedState->getCurrentTopLevelTimeStep();
+//  int timestep = sharedState->getCurrentTopLevelTimeStep();
   int numICEMatls  = sharedState->getNumICEMatls();
     
 //  This doesn't work with AMR.  The refine/setBC_fineLevel task only refines ICE matls so we don't

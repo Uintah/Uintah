@@ -221,9 +221,6 @@ template<class T>
                              const IntVector& fh,
                              CCVariable<T>& q_FineLevel)
 {
-  Vector c_dx = coarseLevel->dCell();
-  Vector inv_c_dx = Vector(1.0)/c_dx;
-
   IntVector gridLo, gridHi;
   coarseLevel->findCellIndexRange(gridLo,gridHi);
   
