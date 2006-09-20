@@ -63,6 +63,8 @@ TARGET_LINK_LIBRARIES( Core_Events
   Core_Geometry
   Core_Containers 
   Core_Datatypes
+  Core_Algorithms_Fields
+  Core_Algorithms_Visualization
   ${THREAD_LIBRARY} 
   ${MPEG_LIBRARY} 
   ${GL_LIBRARY} 
