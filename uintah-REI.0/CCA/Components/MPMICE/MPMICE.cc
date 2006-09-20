@@ -1259,11 +1259,15 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       
       //MARTIN: allocateAndPut cv_min for all mpm_matls but initialize it to 
       //         a obnoxious number
-      if(mpm_matl->getIsSoilFoam()){  
-        new_dw->allocateAndPut(csv_min,  MIlb->csv_minLabel,   indx, patch);   
-        new_dw->get(gsv_min,   Mlb->gsv_minLabel,      indx, patch,gac, 1);
-        csv_min.initialize(d_ice->d_EVIL_NUM);
-      }
+      //        Get gsv_minLabel for all mpm_matls and do nothing with it
+      //        unless the matl is using soil and foam
+      //
+      // Why:   This "hack" simplifies the scheduling of these matls.
+      
+      new_dw->allocateAndPut(csv_min,  MIlb->csv_minLabel,   indx, patch);
+      csv_min.initialize(d_ice->d_EVIL_NUM); 
+      new_dw->get(gsv_min,   Mlb->gsv_minLabel,      indx, patch,gac, 1);
+      
       double very_small_mass = d_TINY_RHO * cell_vol;
       cmass.initialize(very_small_mass);
 

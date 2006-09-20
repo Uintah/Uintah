@@ -1611,11 +1611,12 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
                              dwi,patch);
       new_dw->allocateAndPut(gnumnearparticles,lb->gNumNearParticlesLabel,
                              dwi,patch);
-      
-      if(mpm_matl->getIsSoilFoam()){
-        new_dw->allocateAndPut(gsv_min,        lb->gsv_minLabel,       dwi,patch);
-        gsv_min.initialize(d_SMALL_NUM_MPM);
-      }
+      // Martin:
+      // Compute gsv_min for *all* mpm_matls even though we only care about the mpm_matl that
+      // uses the soil and foam CM.  
+      // Why:  This simplifies the sheduling of this variable. 
+      new_dw->allocateAndPut(gsv_min,        lb->gsv_minLabel,       dwi,patch);
+      gsv_min.initialize(d_SMALL_NUM_MPM);
       
       gmass.initialize(d_SMALL_NUM_MPM);
       gvolume.initialize(d_SMALL_NUM_MPM);
