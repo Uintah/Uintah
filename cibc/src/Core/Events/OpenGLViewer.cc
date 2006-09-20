@@ -31,7 +31,6 @@
 
 #include <sci_gl.h>
 #include <sci_glu.h>
-#include <sci_glx.h>
 #include <sci_values.h>
 
 #include <sci_defs/bits_defs.h>
@@ -47,7 +46,6 @@
 #include <Core/Events/Tools/FrameBufferPickTool.h>
 #include <Core/Geom/Pbuffer.h>
 #include <Core/Containers/StringUtil.h>
-#include <Dataflow/GuiInterface/TCLTask.h>
 #include <Core/Util/Environment.h>
 #include <Core/Geom/GeomObj.h>
 #include <Core/Geom/Material.h>

@@ -29,7 +29,10 @@
 //    Author : McKay Davis
 //    Date   : May 30 2006
 
+#if defined(__linux)
+
 #include <Core/Geom/X11OpenGLContext.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Geom/X11Lock.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Datatypes/Color.h>
@@ -39,6 +42,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/Assert.h>
+#include <Core/Util/Environment.h>
 #include <sci_glx.h>
 #include <iostream>
 #include <set>
@@ -77,7 +81,8 @@ X11OpenGLContext::create_context(int visual, int x, int y,
                                  bool border)
 {
   X11Lock::lock();
-  display_ = XOpenDisplay((char *)0);
+
+  display_ = XOpenDisplay(sci_getenv("DISPLAY"));
   XSync(display_, False);
 
   screen_ = DefaultScreen(display_);
@@ -126,11 +131,9 @@ X11OpenGLContext::create_context(int visual, int x, int y,
     X11Lock::unlock();
   }
 
-  if (first_context_) {
-    XMapRaised(display_, window_);
-    XMoveResizeWindow(display_, window_, x, y, width, height);
-    XSync(display_, False);
-  }
+  XMapRaised(display_, window_);
+  XMoveResizeWindow(display_, window_, x, y, width, height);
+  XSync(display_, False);
 
   context_ = glXCreateContext(display_, vi_, first_context_, 1);
   if (!context_) {
@@ -142,12 +145,15 @@ X11OpenGLContext::create_context(int visual, int x, int y,
 
   X11Lock::unlock();
 
-  if (!first_context_)
+  if (!first_context_) {
     first_context_ = context_;
+    make_current();
+    ShaderProgramARB::init_shaders_supported();
+    release();
+  }
 
   width_ = width;
   height_ = height;
-
 }
 
 
@@ -346,3 +352,4 @@ X11OpenGLContext::listvisuals()
   }
 }
 
+#endif

@@ -59,6 +59,7 @@ SET(Core_Geom_SRCS
   NrrdTextureObj.cc	    		
   OpenGLViewport.cc	    		
   OpenGLContext.cc	    		
+  OSXOpenGLContext.cc
   Pbuffer.cc		    		
   PointLight.cc		    		
   SpotLight.cc		    		
@@ -70,7 +71,7 @@ SET(Core_Geom_SRCS
   TimeGrid.cc		    		
   View.cc		    		
   X11Lock.cc		    		
-  X11OpenGLContext.cc		        
+  X11OpenGLContext.cc
   tGrid.cc		    		
   templates.cc
 )
@@ -100,3 +101,4 @@ TARGET_LINK_LIBRARIES( Core_Geom
 IF(NOT BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Core_Geom)
 ENDIF(NOT BUILD_SHARED_LIBS)
+

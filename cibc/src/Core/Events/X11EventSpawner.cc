@@ -29,6 +29,11 @@
 //    Author : McKay Davis
 //    Date   : Thu Jun  1 19:28 MDT 2006
 
+
+#include <sci_defs/x11_defs.h>
+
+#if defined(HAVE_X11)
+
 #include <Core/Geom/X11Lock.h>
 #include <Core/Events/X11EventSpawner.h>
 #include <Core/Events/EventManager.h>
@@ -42,7 +47,6 @@
 #include <iostream>
 
 #include <X11/keysym.h>
-
 
 namespace SCIRun {
 
@@ -319,3 +323,5 @@ namespace SCIRun {
     return true;
   }
 }
+
+#endif

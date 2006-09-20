@@ -36,23 +36,25 @@
 #include <Core/Util/ThrottledRunnable.h>
 #include <Core/Util/Assert.h>
 #include <Core/Containers/StringUtil.h>
-#include <Core/Geom/X11Lock.h>
-#ifdef _WIN32
-#include <Core/Geom/Win32OpenGLContext.h>
-#include <Core/Events/Win32EventSpawner.h>
-#else
-#include <Core/Geom/X11OpenGLContext.h>
-#include <Core/Events/X11EventSpawner.h>
-#endif
-#include <Core/Util/Environment.h>
-#include <Core/Geom/ShaderProgramARB.h>
-#include <Core/Events/BaseEvent.h>
-#include <sci_gl.h>
-#include <sci_glu.h>
-#include <sci_glx.h>
-#include <iostream>
-
 #include <Core/Thread/Semaphore.h>
+#include <Core/Geom/X11Lock.h>
+#include <Core/Util/Environment.h>
+#include <Core/Events/BaseEvent.h>
+#include <iostream>
+#include <sci_gl.h>
+
+
+#if defined(_WIN32)
+#  include <Core/Geom/Win32OpenGLContext.h>
+#  include <Core/Events/Win32EventSpawner.h>
+#elif defined(__linux)
+#  include <Core/Geom/X11OpenGLContext.h>
+#  include <Core/Events/X11EventSpawner.h>
+#elif defined(__APPLE__)
+#  include <Core/Geom/OSXOpenGLContext.h>
+#  include <Core/Events/OSXEventSpawner.h>
+#endif
+
 
 namespace SCIRun {
   namespace Skinner {
@@ -64,7 +66,11 @@ namespace SCIRun {
       posx_(0),
       posy_(0),
       border_(true),
-      context_(0)
+      context_(0),
+      spawner_runnable_(0),
+      spawner_thread_(0),
+      draw_runnable_(0),
+      draw_thread_(0)
     {
       variables->maybe_get_int("width", width_);
       variables->maybe_get_int("height", height_);
@@ -72,37 +78,42 @@ namespace SCIRun {
       variables->maybe_get_int("posy", posy_);
       variables->maybe_get_bool("border", border_);
 
-
-      ShaderProgramARB::init_shaders_supported();
-      string tname = get_id()+" Event Spawner";
-#ifdef _WIN32
+#if defined(_WIN32)
         
       Win32GLContextRunnable* cr = 
         scinew Win32GLContextRunnable(get_id(), 0, posx_, posy_,
-                               (unsigned)width_,(unsigned)height_,
-                                border_);
+                                      (unsigned)width_,(unsigned)height_,
+                                      border_);
       spawner_runnable_ = cr;
-      spawner_thread_ = new Thread(spawner_runnable_, tname.c_str());
 
       // this waits for the context to be created...
-      Win32OpenGLContext* cxt = cr->getContext();
-      context_ = cxt;
-      width_ = cxt->width_;
-      height_ = cxt->height_;
-         
-
-#else
-      X11OpenGLContext* x11_context;
-      x11_context = 
+      context_ = cr->getContext();;
+      width_ = context_->width();
+      height_ = context_->height();         
+#elif defined(__linux)
+      X11OpenGLContext* context =
         new X11OpenGLContext(0, posx_, posy_, 
                              (unsigned)width_,(unsigned)height_,
                              border_);
-      spawner_runnable_ = new X11EventSpawner(get_id(), 
-                                              x11_context->display_,
-                                              x11_context->window_);
-      context_ = x11_context;
-      spawner_thread_ = new Thread(spawner_runnable_, tname.c_str());
+      ASSERT(context);
+      spawner_runnable_ = 
+        new X11EventSpawner(get_id(), context->display_, context->window_);
+      context_ = context;
+#elif defined(__APPLE__)
+      OSXOpenGLContext *context =  
+        new OSXOpenGLContext(posx_, posy_, 
+                             (unsigned)width_,(unsigned)height_,
+                             border_);
+      ASSERT(context);
+      spawner_runnable_ = new OSXEventSpawner(get_id(), context->window_);
+      context_ = context;
 #endif
+
+      string tname = get_id()+" Event Spawner";
+      if (spawner_runnable_) {
+        spawner_thread_ = new Thread(spawner_runnable_, tname.c_str());
+      }
+
       tname = get_id()+" Redraw";
       draw_runnable_ = new ThrottledRedraw(this, 120.0);
       draw_thread_ = new Thread(draw_runnable_, tname.c_str());
@@ -113,10 +124,10 @@ namespace SCIRun {
 
     GLWindow::~GLWindow() 
     {
-      spawner_runnable_->quit();
-      spawner_thread_->join();
-      draw_runnable_->quit();
-      draw_thread_->join();
+      if (spawner_runnable_) spawner_runnable_->quit();
+      if (spawner_thread_) spawner_thread_->join();
+      if (draw_runnable_) draw_runnable_->quit();
+      if (draw_thread_) draw_thread_->join();
       // context must be deleted after event spawer is done
       delete context_;
       context_ = 0;
@@ -140,7 +151,8 @@ namespace SCIRun {
 
       PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
       if (pointer) {
-# ifndef _WIN32
+
+#if defined(__linux)
         if ((pointer->get_pointer_state() & PointerEvent::MOTION_E) &&
             sci_getenv_p("SCIRUN_TRAIL_PLAYBACK")) {
           const char *trailmode = sci_getenv("SCIRUN_TRAIL_MODE");
@@ -160,9 +172,9 @@ namespace SCIRun {
                          pointer->get_x(), pointer->get_y());
           }
         }
-#endif
-          
         pointer->set_y(context_->height() - 1 - pointer->get_y());
+#endif
+        
       }
 
 

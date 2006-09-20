@@ -50,11 +50,12 @@
 #include <Core/Math/MiscMath.h>
 #include <iostream>
 
-#ifndef _WIN32
-#include <X11/X.h>
-#include <X11/Xlib.h>
-#else
-#include <windows.h>
+#include <sci_defs/x11_defs.h>
+#if defined(HAVE_X11)
+#  include <X11/X.h>
+#  include <X11/Xlib.h>
+#elif defined(_WIN32)
+#  include <windows.h>
 #endif
 
 
@@ -390,7 +391,7 @@ DrawInfoOpenGL::init_view( double /*znear*/, double /*zfar*/,
 bool
 DrawInfoOpenGL::init_font(int a)
 {
-#ifndef _WIN32
+#if defined(HAVE_X11)
   if (a > GEOM_FONT_COUNT || a < 0) { return false; }
 
   if ( fontstatus_[a] == 0 )
@@ -434,7 +435,7 @@ DrawInfoOpenGL::init_font(int a)
   }
   return false;
 
-#else // WIN32
+#elif defined(_WIN32)
   if (a > GEOM_FONT_COUNT || a < 0) { return false; }
 
   if ( fontstatus_[a] == 0 )
@@ -466,8 +467,8 @@ DrawInfoOpenGL::init_font(int a)
   {
     return true;
   }
-  return false;
 #endif
+  return false;
 }
 
 }

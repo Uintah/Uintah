@@ -3,7 +3,7 @@
 //  
 //  The MIT License
 //  
-//  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+//  Copyright (c) 2006 Scientific Computing and Imaging Institute,
 //  University of Utah.
 //  
 //  License for the specific language governing rights and limitations under
@@ -25,74 +25,50 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : X11OpenGLContext.h
+//    File   : OSXOpenGLContext.h
 //    Author : McKay Davis
-//    Date   : May 30 2006
+//    Date   : Thu Sep  7 09:04:39 2006
 
-#if defined(__linux)
+#ifndef CORE_OSXOPENGLCONTEXT_H
+#define CORE_OSXOPENGLCONTEXT_H
 
-#ifndef CORE_X11OPENGLCONTEXT_H
-#define CORE_X11OPENGLCONTEXT_H
+#if defined(__APPLE__)
 
-#include <sci_glx.h>
-
-#ifdef __sgi
-#  include <X11/extensions/SGIStereo.h>
-#endif
-
-#include <Core/Thread/Mutex.h>
 #include <Core/Geom/OpenGLContext.h>
+#include <Core/Thread/Mutex.h>
 
-// X11 includes
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xmu/StdCmap.h>
-
+#include <Carbon/Carbon.h>
+#include <AGL/agl.h>
 
 namespace SCIRun {
 
-class SCISHARE X11OpenGLContext : public OpenGLContext 
+class SCISHARE OSXOpenGLContext : public OpenGLContext 
 {
 public:
-  X11OpenGLContext(int visualid=0, 
-                   int x = 0,
+  OSXOpenGLContext(int x = 0,
                    int y = 0,
                    unsigned int width = 640, 
                    unsigned int height = 480,
                    bool border = true);
 
-  virtual ~X11OpenGLContext();
-private:  
-  void                  create_context(int id, int w, int h, 
-                                       unsigned int width, 
-                                       unsigned int height,
-                                       bool border);
+  virtual ~OSXOpenGLContext();
 
-  static void		listvisuals();
-
-public:
   virtual bool		make_current();
   virtual void		release();
   virtual int		width();
   virtual int		height();
   virtual void		swap();
 
-private:
-  static vector<int>	valid_visuals_;  
-  static GLXContext     first_context_;
-
-public:
-  Display *		display_; /* X's token for the window's display. */
-  int                   screen_;
-  Window		window_;
-private:
-  Window		root_window_;
-  int                   visualid_;
-
-  GLXContext		context_;
-  XVisualInfo*		vi_;
-  Colormap		colormap_;
-  XSetWindowAttributes  attributes_;
+  WindowPtr             window_;
+private:  
+  void                  create_context(int w, int h, 
+                                       unsigned int width, 
+                                       unsigned int height,
+                                       bool border);
+  
+  AGLContext            context_;
+  static AGLContext     first_context_;
+  
   Mutex                 mutex_;
   int                   width_;
   int                   height_;
@@ -100,6 +76,6 @@ private:
 
 } // End namespace SCIRun
 
-#endif // SCIRun_Core_2d_OpenGLContext_h
-
 #endif
+
+#endif // SCIRun_Core_2d_OpenGLContext_h

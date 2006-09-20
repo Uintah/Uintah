@@ -26,23 +26,11 @@
    DEALINGS IN THE SOFTWARE.
 */
 
-#if !defined(SCI_GLX_H)
-#define SCI_GLX_H
 
-#include <sci_defs/ogl_defs.h>
-#include <sci_defs/x11_defs.h>
+#ifndef SCI_X11_DEFS_H
+#define SCI_X11_DEFS_H
 
-#if defined(HAVE_X11)
-#  if defined(HAVE_GLEW)
-#    include <GL/glxew.h>
-#  else /* !HAVE_GLEW */
-#    include <GL/glx.h>
-#  endif
-#elif defined (_WIN32)
-#  if defined(HAVE_GLEW)
-#    include <windows.h>
-#    include <GL/glew.h>
-#    include <GL/wglew.h>
-#  endif
+@DEF_X11@
+
 #endif
-#endif  /* #define SCI_GLX_H */
+

@@ -381,7 +381,7 @@ namespace SCIRun {
 
 struct PbufferImpl
 {
-#ifndef _WIN32
+#if defined(HAVE_X11)
   PbufferImpl () : display_(0), pbuffer_(0), context_(0) {}
   Display* display_;
   GLXPbuffer pbuffer_;
@@ -390,7 +390,7 @@ struct PbufferImpl
   Display* saved_display_;
   GLXDrawable saved_drawable_;
   GLXContext saved_context_;
-#else // _WIN32
+#elif defined (_WIN32)
   PbufferImpl() : pbuffer_(0), dc_(0), rc_(0) {}
   HPBUFFERARB pbuffer_;
   HDC   dc_;
@@ -740,7 +740,7 @@ Pbuffer::create ()
   }
   return true;
 
-#else // GLX
+#elif defined(HAVE_X11)
   if (!mInit)
   {
     /* query GLX version */
@@ -1037,7 +1037,7 @@ Pbuffer::create ()
 void
 Pbuffer::destroy ()
 {
-#ifndef _WIN32
+#if defined(HAVE_X11)
   if (separate_ && impl_->context_ != 0)
   {
     //glXMakeCurrent(impl_->display_, impl_->pbuffer_, 0);
@@ -1051,7 +1051,7 @@ Pbuffer::destroy ()
   {
     mShader->destroy();
   }
-#else // WIN32
+#elif defined(_WIN32)
   if (/*separate_ && */impl_->rc_ != 0)
   {
     wglDeleteContext(impl_->rc_);
@@ -1071,9 +1071,9 @@ Pbuffer::destroy ()
 void
 Pbuffer::makeCurrent ()
 {
-#ifndef _WIN32
+#if defined(HAVE_X11)
   glXMakeCurrent(impl_->display_, impl_->pbuffer_, impl_->context_);
-#else
+#elif defined(_WIN32)
   wglMakeCurrent(impl_->dc_, impl_->rc_);
 #endif
 }
@@ -1081,9 +1081,9 @@ Pbuffer::makeCurrent ()
 bool
 Pbuffer::is_current ()
 {
-#ifndef _WIN32
+#if defined(HAVE_X11)
   return (impl_->context_ == glXGetCurrentContext());
-#else // WIN32
+#elif defined(_WIN32)
   return (impl_->rc_ == wglGetCurrentContext());
 #endif
 }
@@ -1102,9 +1102,9 @@ Pbuffer::swapBuffers ()
   }
   if (double_buffer_)
   {
-#ifndef _WIN32
+#if defined(HAVE_X11)
     glXSwapBuffers(impl_->display_, impl_->pbuffer_);
-#else
+#elif defined(_WIN32)
     wglSwapLayerBuffers(impl_->dc_, WGL_SWAP_MAIN_PLANE);
 #endif
   }
@@ -1124,11 +1124,11 @@ Pbuffer::bind (unsigned int buffer)
     glBindTexture(tex_target_, tex_);
     if (mATI_render_texture)
     {
-#ifndef _WIN32
+#if defined(HAVE_X11)
       glXBindTexImageATI(impl_->display_, impl_->pbuffer_,
                          buffer == GL_FRONT ?
                          GLX_FRONT_LEFT_ATI : GLX_BACK_LEFT_ATI);
-#else
+#elif defined(_WIN32)
       wglBindTexImageARB(impl_->pbuffer_,
                          buffer == GL_FRONT ? WGL_FRONT_LEFT_ARB : WGL_BACK_LEFT_ARB);
 #endif
@@ -1159,11 +1159,10 @@ Pbuffer::release (unsigned int buffer)
   {
     if (mATI_render_texture)
     {
-#ifndef _WIN32
-
+#if defined(HAVE_X11)
       glXReleaseTexImageATI(impl_->display_, impl_->pbuffer_,
                             buffer == GL_FRONT ? GLX_FRONT_LEFT_ATI : GLX_BACK_LEFT_ATI);
-#else
+#elif defined(_WIN32)
       wglReleaseTexImageARB(impl_->pbuffer_,
                             buffer == GL_FRONT ? WGL_FRONT_LEFT_ARB : WGL_BACK_LEFT_ARB);
 
@@ -1191,14 +1190,14 @@ Pbuffer::release (unsigned int buffer)
 void
 Pbuffer::activate ()
 {
-#ifndef _WIN32
+#if defined(HAVE_X11)
   // save context state
   impl_->saved_display_ = glXGetCurrentDisplay();
   impl_->saved_drawable_ = glXGetCurrentDrawable();
   impl_->saved_context_ = glXGetCurrentContext();
   // set read/write context to pbuffer
   glXMakeCurrent(impl_->display_, impl_->pbuffer_, impl_->context_);
-#else
+#elif defined(_WIN32)
   impl_->saved_dc_ = wglGetCurrentDC();
   impl_->saved_rc_ = wglGetCurrentContext();
   wglMakeCurrent(impl_->dc_, impl_->rc_);
@@ -1209,10 +1208,10 @@ Pbuffer::activate ()
 void
 Pbuffer::deactivate ()
 {
-#ifndef _WIN32
+#if defined(HAVE_X11)
   glXMakeCurrent(impl_->saved_display_, impl_->saved_drawable_,
                  impl_->saved_context_);
-#else
+#elif defined(_WIN32)
   wglMakeCurrent(impl_->saved_dc_, impl_->saved_rc_);
 #endif
 }

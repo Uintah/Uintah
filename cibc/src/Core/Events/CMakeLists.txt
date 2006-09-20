@@ -2,7 +2,8 @@
 SET(Core_Events_SRCS 
   BaseEvent.cc		
   EventManager.cc	
-  OpenGLViewer.cc	
+  OpenGLViewer.cc
+  OSXEventSpawner.cc
   SceneGraphEvent.cc
   SelectionTargetEvent.cc
   X11EventSpawner.cc	
@@ -36,6 +37,7 @@ TARGET_LINK_LIBRARIES( Core_Events
   ${THREAD_LIBRARY} 
   ${MPEG_LIBRARY} 
   ${GL_LIBRARY} 
+  ${GLEW_LIBRARY} 
   ${PNG_LIBRARY} 
 )
 

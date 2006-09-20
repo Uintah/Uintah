@@ -30,16 +30,9 @@
 //    Date   : Wed Jul  7 23:21:33 2004
 
 #include <sci_gl.h>
-#include <sci_glu.h>
-#include <sci_glx.h>
 
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Thread/Mutex.h>
-#ifdef _WIN32
-#include <Core/Geom/Win32OpenGLContext.h>
-#else
-#include <Core/Geom/X11OpenGLContext.h>
-#endif
 #include <Core/Util/Assert.h>
 #include <Core/Util/Environment.h>
 
@@ -60,7 +53,7 @@ static Mutex ShaderProgramARB_init_Mutex("ShaderProgramARB Init Lock");
 
 
 // GLEW SUPPORTED, we can check for shader support sanely.
-#if HAVE_GLEW
+#ifdef HAVE_GLEW
 
 
 ShaderProgramARB::ShaderProgramARB(const string& program)
@@ -92,17 +85,6 @@ ShaderProgramARB::init_shaders_supported()
       }
       else
       {
-	// Create a test context.
-	OpenGLContext *context =
-#ifdef _WIN32
-          new Win32OpenGLContext(0,0,0,100, 100);
-#else
-          new X11OpenGLContext(0,0,100, 100);
-#endif
-        //	  new TkOpenGLContext(".testforshadersupport", 0, 0,0);
-
-	context->make_current();
-
         glewInit();
 
 	GLenum err = glGetError();
@@ -165,11 +147,6 @@ ShaderProgramARB::init_shaders_supported()
         non_2_textures_ = GLEW_ARB_texture_non_power_of_two;
 
 	supported_ = GLEW_ARB_vertex_program && GLEW_ARB_fragment_program;
-
-        context->release();
-#ifdef _WIN32
-        delete context;
-#endif
       }
       init_ = true;
     }

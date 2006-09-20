@@ -24,6 +24,7 @@ TARGET_LINK_LIBRARIES( Core_Volume
   Core_Thread
   Core_Util
   ${GL_LIBRARY}
+  ${GLEW_LIBRARY}
   ${M_LIBRARY}
   ${TEEM_LIBRARY}
 )

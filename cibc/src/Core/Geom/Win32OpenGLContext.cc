@@ -162,6 +162,13 @@ Win32OpenGLContext::create_context(int visual, int x, int y,
     if ((first_context_ = wglCreateContext(hDC_)) == NULL) {
         PrintErr("wglCreateContext (first)");
     }
+
+    make_current();
+    ShaderProgramARB::init_shaders_supported();
+    release();
+  }
+
+
   }
   if (wglShareLists(first_context_,context_) == FALSE) {
     PrintErr("wglShareLists");
