@@ -1579,7 +1579,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pTemperature,   lb->pTemperatureLabel,   pset);
       old_dw->get(psize,          lb->pSizeLabel,          pset);
       old_dw->get(pErosion,       lb->pErosionLabel,       pset);
-      if(flags->d_usingSoilFoam_CM){
+      if(mpm_matl->getIsSoilFoam()){
         old_dw->get(sv_min,       lb->sv_minLabel,         pset);
       }
       new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
@@ -1612,7 +1612,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocateAndPut(gnumnearparticles,lb->gNumNearParticlesLabel,
                              dwi,patch);
       
-      if(flags->d_usingSoilFoam_CM){
+      if(mpm_matl->getIsSoilFoam()){
         new_dw->allocateAndPut(gsv_min,        lb->gsv_minLabel,       dwi,patch);
         gsv_min.initialize(d_SMALL_NUM_MPM);
       }
