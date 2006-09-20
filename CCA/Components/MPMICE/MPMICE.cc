@@ -1259,7 +1259,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       
       //MARTIN: allocateAndPut cv_min for all mpm_matls but initialize it to 
       //         a obnoxious number
-      if(d_mpm->flags->d_usingSoilFoam_CM){  
+      if(mpm_matl->getIsSoilFoam()){  
         new_dw->allocateAndPut(csv_min,  MIlb->csv_minLabel,   indx, patch);   
         new_dw->get(gsv_min,   Mlb->gsv_minLabel,      indx, patch,gac, 1);
         csv_min.initialize(d_ice->d_EVIL_NUM);
@@ -1343,9 +1343,9 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         if(mpm_matl->getIsSoilFoam()){
           csv_min[c]  =(1.0-one_or_zero)*0.0  + one_or_zero*sv_min_CC_mpm;
         }
-	//if(c.x()==9&&c.y()==0&&c.z()==9){
-	//cout <<" one_or_zero "<<one_or_zero<<" sv_min_CC_mpm "<<sv_min_CC_mpm<<endl;
-	//}
+	if(c.x()==9&&c.y()==0&&c.z()==9){
+	  //cout <<" one_or_zero "<<one_or_zero<<" sv_min_CC_mpm "<<sv_min_CC_mpm<<endl;
+	}
       }
 
       //  Set BC's
@@ -1928,10 +1928,10 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
               computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
                                 dp_drho[m], c_2,mpm_matl[m],maxvolstrain);
 	    // MKD
-	    //	    if(c.x()==9&&c.y()==0&&c.z()==9){
+	    //if(c.x()==9&&c.y()==0&&c.z()==9){
 	    //Point pt = level->getCellPosition(c);
 	    //std::cout<<"position "<<pt.asVector().x()<<" "<<pt.asVector().y()<<" "<<pt.asVector().z()<<std::endl;
-	    // double rho_orig = mpm_matl[m]->getInitialDensity();
+	    //double rho_orig = mpm_matl[m]->getInitialDensity();
 	    //double vol_strain = log(rho_orig/rho_micro[m][c]);
 	    //std::cout<<"m "<<m<<" rho_micro "<<rho_micro[m][c]<<" press_eos "<<press_eos[m]<<" maxvolstrain "<<maxvolstrain<<" dp_drho "<<dp_drho[m]<<" vol_strain "<<vol_strain<<std::endl;
 	    //}
@@ -1976,7 +1976,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                                           press_new[c],press_ref,mpm_matl[m],maxvolstrain);
 	    // MKD
             //if(c.x()==9&&c.y()==0&&c.z()==9){
-	   // std::cout<<"m "<<m<<" rho_micro "<<rho_micro[m][c]<<" press_new "<<press_new[c]<<" maxvolstrain "<<maxvolstrain<<" rho_CC_new "<<rho_CC_new[m][c]<<" delPress "<<delPress<<" vol_frac "<<vol_frac[m][c]<<std::endl;
+	   //std::cout<<"m "<<m<<" rho_micro "<<rho_micro[m][c]<<" press_new "<<press_new[c]<<" maxvolstrain "<<maxvolstrain<<" rho_CC_new "<<rho_CC_new[m][c]<<" delPress "<<delPress<<" vol_frac "<<vol_frac[m][c]<<std::endl;
 	   //}
          }
          vol_frac[m][c]   = rho_CC_new[m][c]/rho_micro[m][c];
