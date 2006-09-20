@@ -207,7 +207,7 @@ TextRenderer::layout_text(const string &text,
   BBox bbox;
   bool disable_cursor_flag = true;
   bool do_cursor_layout = false;
-  Point cursor_ll;
+  Point cursor_ll(0,0,0);
   
   for (unsigned int pass = 0; pass < passes; ++pass) {
     Point position = (pass * delta_position).asPoint();
