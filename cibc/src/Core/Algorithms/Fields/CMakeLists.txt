@@ -76,7 +76,6 @@ TARGET_LINK_LIBRARIES(Core_Algorithms_Fields
   Core_Containers 
   Core_Exceptions 
   Core_Thread 
-  Dataflow_GuiInterface 
   Core_Geom 
   Core_Geometry 
   Core_Algorithms_Converter 
