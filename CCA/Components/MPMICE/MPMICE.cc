@@ -1862,7 +1862,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         } else if(mpm_matl[m]){                //  M P M
           
           if(mpm_matl[m]->getIsSoilFoam()) {    // only if mpm matl is using soil and foam
-            maxvolstrain = sv_min_CC[m][c]*0.15;
+            maxvolstrain = sv_min_CC[m][c];
           }else {
             maxvolstrain = 0.0;
           }
@@ -1920,7 +1920,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                                                    dp_drho[m],dp_de[m]);
           } else if(mpm_matl[m]){    // MPM
             if(mpm_matl[m]->getIsSoilFoam()) {      // only if mpm matl is using soil and foam
-              maxvolstrain = sv_min_CC[m][c]*0.15;
+              maxvolstrain = sv_min_CC[m][c];
             }else {
               maxvolstrain = 0.0;
             }
