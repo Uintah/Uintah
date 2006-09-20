@@ -2029,10 +2029,13 @@ else
     AC_MSG_WARN("$X_LIB_DIR_FLAG")
   fi
 
+  DEF_X11="#define HAVE_X11 1"
 fi # end "$IS_WIN" = "yes"
 
 AC_SUBST(X_LIB_FLAG)
 AC_SUBST(X_LIB_DIR_FLAG)
+AC_SUBST(DEF_X11)
+sci_defs_files="$sci_defs_files include/sci_defs/x11_testdefs.h"
 
 ##  --  check for the required thread library  ---------------------------
 
