@@ -110,7 +110,7 @@ namespace Uintah {
 
     // calls space-filling curve on level, and stores results in pre-allocated output
     void useSFC(const LevelP& level, unsigned* output);
-    bool thresholdExceeded(const std::vector<float>& patch_costs);
+    bool thresholdExceeded(const std::vector<double>& patch_costs);
 
     std::vector<int> d_processorAssignment; ///< stores which proc each patch is on
     std::vector<int> d_oldAssignment; ///< stores which proc each patch used to be on
