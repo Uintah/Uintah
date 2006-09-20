@@ -15,6 +15,8 @@
 #include <sstream>
 
 #include <Packages/Uintah/Core/Grid/share.h>
+
+#define is_rightFace(face) ( (face == "xminus" || face == "xplus") ?1:0  )
 namespace Uintah {
 
 /*___________________________________________________________________
@@ -343,6 +345,198 @@ template<class T>
    
   } 
 }
+
+
+/*___________________________________________________________________
+ Function~  QuadraticInterpolation_CFI--
+ 
+ X-Y PLANE
+                   x
+           |     |     |
+  |  |  |  |  |  |  |  |  |
+__|__|__|__|__|__|__|__|__|
+  |  |  |  |  |  |  |  |  |
+__|__o__|__|__|__o__|__|__|     (o)       
+  |  |  |  |  |  |  |  |  |               
+__|__|__|__|__|__|__|__|__|
+  |  |  |  |  |  |  |  |  |
+__|__|__|__|__|__|__|__|__|____________
+  |  |  |  |  |  |  |  |  |
+__|__|__|__|__|__|__|__|__|
+  |  |  |  |  |(i,j)|  |  |
+__|__o__|__|__|__o__|__|__|  ---(o)         Q_1 = (w0_y)Q(j-1)  + (w1_y)Q(j) + (w2_y)Q(j+1)
+  |  |  |  |  |  |  |  |  |   |             (z)
+__|__|__|__|__|__|__|__|__|   |  
+  |  |  |  |  |  | *| *| x|  ---(#)   Q_(#) 
+__|__|__|__|__|__|__|__|__|____________
+  |  |  |  |  |  |  |  |  |
+__|__|__|__|__|__|__|__|__|
+           |           |
+           |           |
+     o     |     o     |        (o)         
+           |           |                    
+           |           |
+___________|___________|_______________
+
+o    Coarse level cell centers
+*    Fine level cell centers
+(o)  Cells used for coarse level interpolation -> (#)
+(#)  Interpolated coarse level value
++ CFI fine cell center that you want to interpolate to
+
+
+Step 1)  Using the coarse level cell center data in the (o) plane interpolate to (#)
+         Do 3 line interpolations at z+1, z-1, and z to (#,i,k+1),(#,i,k),(#,i,k-1)
+Step 2)  Using the fine level cell centered data at * and (#) interpolate to x. 
+
+Coarse Level Interpolation
+Interpolation in Y direction
+(Plane: z-1)      Q_0 = (w0_y)Q(i,j-1,k-1)  + (w1_y)Q(i,j,k-1) + (w2_y)Q(i,j+1,k-1)
+(Plane: z  )      Q_1 = (w0_y)Q(i,j-1,k)    + (w1_y)Q(i,j,k)   + (w2_y)Q(i,j+1,k)
+(Plane: z+1)      Q_2 = (w0_y)Q(i,j-1,k+1)  + (w1_y)Q(i,j,k+1) + (w2_y)Q(i,j+1,k+1)
+
+With Q_0, Q_1 and Q_2 interpolate to (#)
+Q_Coarse_interpolate = (w0_z) * Q_0 + (w1_z) Q_1  + (w2_z) Q_2
+
+
+
+
+Reference:  Dan Martin's Dissertation  "An Adaptive Cell-Centered 
+Projection Method for Incompressible Euler Equations"
+_____________________________________________________________________*/
+template<class T>
+  void quadraticInterpolation_CFI(constCCVariable<T>& q_CL,// course level
+                             const Patch* finePatch,
+                             Patch::FaceType patchFace,
+                             const Level* coarseLevel,
+                             const Level* fineLevel,
+                             const IntVector& refineRatio,
+                             const IntVector& fl,
+                             const IntVector& fh,
+                             CCVariable<T>& q_FineLevel)
+{
+  Vector c_dx = coarseLevel->dCell();
+  Vector inv_c_dx = Vector(1.0)/c_dx;
+
+  IntVector gridLo, gridHi;
+  coarseLevel->findCellIndexRange(gridLo,gridHi);
+  
+  IntVector dir = finePatch->faceAxes(patchFace);        // face axes
+  int p_dir = dir[0];                                    // normal direction 
+  int y = dir[1];             // Orthogonal to the patch face
+  int z = dir[2];
+  
+  IntVector faceShift = finePatch->faceDirection(patchFace);
+  string name = finePatch->getFaceName(patchFace);
+
+  
+   // compute the normalized distance between the fine and coarse cell centers
+  vector<double> norm_dist_y(refineRatio[y]);
+  vector<double> norm_dist_z(refineRatio[z]);
+  
+  normalizedDistance_CC(refineRatio[y],norm_dist_y);
+  normalizedDistance_CC(refineRatio[z],norm_dist_z); 
+  
+      cout<< " face " << name << " refineRatio "<< refineRatio
+        << " FineLevel iterator" << fl << " " << fh
+        << " coarseLevel " << fineLevel->mapCellToCoarser(fl) << " " << fineLevel->mapCellToCoarser(fh)
+        << " faceShift " << faceShift << endl;
+      
+  
+  
+  for(CellIterator iter(fl,fh); !iter.done(); iter++){
+    IntVector f_cell = *iter;
+    IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
+    IntVector baseCell = c_cell;
+        
+    //__________________________________
+    // At the edge of the computational Domain
+    // shift base/origin coarse cell inward one cell
+    IntVector shift(0,0,0);
+    for (int d =0; d<3; d++){
+      if( (c_cell[d] - gridLo[d]) == 0 ) {  // (x,y,z)minus
+        shift[d] = 1;
+      } 
+      if( (gridHi[d]-c_cell[d] ) == 0) {    // (x,y,z)plus
+        shift[d] = -1;
+      }
+    }      
+        
+    baseCell = c_cell + shift + faceShift;
+
+    //__________________________________ 
+    // compute the index of the fine cell, relative to the
+    // coarse cell center.  Find the distance the normalized distance between
+    // the coarse and fine cell-centers
+    IntVector relativeIndx = f_cell - (baseCell * refineRatio);
+    
+    Vector dist(-9);
+    dist.y(norm_dist_y[relativeIndx[y]]);
+    dist.z(norm_dist_z[relativeIndx[z]]);
+
+    //__________________________________
+    //  Find the weights 
+    double dy = dist.y();
+    double dz = dist.z();
+    
+    double w0_y =  0.5 * dy  * (dy - 1.0);
+    double w1_y = -(dy + 1.0)* (dy - 1.0);
+    double w2_y =  0.5 * dy  * (dy + 1.0);
+    
+    double w0_z =  0.5 * dz  * (dz - 1.0);
+    double w1_z = -(dz + 1.0)* (dz - 1.0);
+    double w2_z =  0.5 * dz  * (dz + 1.0);
+    
+    FastMatrix w(3, 3);
+    //  Q_CL(i,-1,-1)      Q_CL(i,0,-1)          Q_CL(i,1,-1)
+    w(0,0) = w0_y * w0_z; w(1,0) = w1_y * w0_z; w(2,0) = w2_y * w0_z;
+    w(0,1) = w0_y * w1_z; w(1,1) = w1_y * w1_z; w(2,1) = w2_y * w1_z;
+    w(0,2) = w0_y * w2_z; w(1,2) = w1_y * w2_z; w(2,2) = w2_y * w2_z;  
+    //  Q_CL(i,-1,1)      Q_CL(i,0,1)          Q_CL(i,1,1)      
+        
+    T q_CL_Interpolated;
+    cout << "working on coarseCell " << baseCell << " fineCell " << f_cell << " shift " << shift << " faceShift " << faceShift << endl;
+    q_CL_Interpolated
+        = w(0,0) * q_CL[baseCell + IntVector( 0, -1, -1)]   
+        + w(1,0) * q_CL[baseCell + IntVector( 0,  0, -1)]           
+        + w(2,0) * q_CL[baseCell + IntVector( 0,  1, -1)]           
+        + w(0,1) * q_CL[baseCell + IntVector( 0, -1,  0)]            
+        + w(1,1) * q_CL[baseCell + IntVector( 0,  0,  0)]    
+        + w(2,1) * q_CL[baseCell + IntVector( 0,  1,  0)]     // this works for x+ x- faces need to do something cleaver for the y & z faces
+        + w(0,2) * q_CL[baseCell + IntVector( 0, -1,  1)]   
+        + w(1,2) * q_CL[baseCell + IntVector( 0,  0,  1)]     
+        + w(2,2) * q_CL[baseCell + IntVector( 0,  1,  1)];   
+
+    //__________________________________
+    //  debugging
+#if 1
+
+    IntVector half  = (fh - fl )/IntVector(2,2,2) + fl;
+    half = fineLevel->mapCellToCoarser(half);
+    if( (baseCell[y] == half[y] && baseCell[z] == half[z]) &&is_rightFace(name)){
+     cout.setf(ios::scientific,ios::floatfield);
+     cout.precision(5);
+     cout << "relativeIndex " << relativeIndx << " dist " << dist << endl;
+     std::cout << name << " baseCell " << baseCell << " f_cell " << f_cell << " dy " << dy << " dz " << dz << "\n";
+     std::cout << " q_CL[baseCell + IntVector( 0, -1, -1)] " << q_CL[baseCell + IntVector( 0, -1, -1)]<< " w(0,0) " << w(0,0) << "\n";
+     std::cout << " q_CL[baseCell + IntVector( 0,  0, -1)] " << q_CL[baseCell + IntVector( 0,  0, -1)]<< " w(1,0) " << w(1,0) << "\n";
+     std::cout << " q_CL[baseCell + IntVector( 0,  1, -1)] " << q_CL[baseCell + IntVector( 0,  1, -1)]<< " w(2,0) " << w(2,0) << "\n";
+     std::cout << " q_CL[baseCell + IntVector( 0, -1,  0)] " << q_CL[baseCell + IntVector( 0, -1,  0)]<< " w(0,1) " << w(0,1) << "\n";
+     std::cout << " q_CL[baseCell + IntVector( 0,  0,  0)] " << q_CL[baseCell + IntVector( 0,  0,  0)]<< " w(1,1) " << w(1,1) << "\n";
+     std::cout << " q_CL[baseCell + IntVector( 0,  1,  0)] " << q_CL[baseCell + IntVector( 0,  1,  0)]<< " w(2,1) " << w(2,1) << "\n";
+     std::cout << " q_CL[baseCell + IntVector( 0, -1,  1)] " << q_CL[baseCell + IntVector( 0, -1,  1)]<< " w(0,2) " << w(0,2) << "\n";
+     std::cout << " q_CL[baseCell + IntVector( 0,  0,  1)] " << q_CL[baseCell + IntVector( 0,  0,  1)]<< " w(1,2) " << w(1,2) << "\n";
+     std::cout << " q_CL[baseCell + IntVector( 0,  1,  1)] " << q_CL[baseCell + IntVector( 0,  1,  1)]<< " w(2,2) " << w(2,2) << "\n";
+     std::cout << " q_CL_Interpolated " << q_CL_Interpolated << "\n";  
+          
+     std::cout  << " w0_y " << w0_y << " w1_y " << w1_y << " w2_y "<< w2_y << "\n";
+     std::cout  << " w0_z " << w0_z << " w1_z " << w1_z << " w2_z "<< w2_z << "\n";
+   }
+#endif   
+   
+  } 
+}
+
 /*___________________________________________________________________
  Function~  selectInterpolator--
 _____________________________________________________________________*/
