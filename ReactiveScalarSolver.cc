@@ -377,7 +377,7 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // inputs : scalarSP, reactscalCoefSBLM
     // outputs: reactscalCoefSBLM
     if (d_boundaryCondition->anyArchesPhysicalBC())
-    d_boundaryCondition->scalarBC(pc, patch,  index, cellinfo, 
+    d_boundaryCondition->scalarBC(pc, patch, 
 				  &reactscalarVars, &constReactscalarVars);
   // apply multimaterial intrusion wallbc
     if (d_MAlab)

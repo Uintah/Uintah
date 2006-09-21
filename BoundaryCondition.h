@@ -282,18 +282,8 @@ public:
       // Actually compute scalar BC terms
       void scalarBC(const ProcessorGroup* pc,
 		    const Patch* patch,
-		    int index,
-		    CellInformation* cellinfo,
 		    ArchesVariables* vars,
 		    ArchesConstVariables* constvars);
-
-      ////////////////////////////////////////////////////////////////////////
-      // Actually compute enthalpy BC terms
-      void enthalpyBC(const ProcessorGroup* pc,
-		      const Patch* patch,
-		      CellInformation* cellinfo,
-		      ArchesVariables* vars,
-		      ArchesConstVariables* constvars);
 
       ////////////////////////////////////////////////////////////////////////
       // Initialize multi-material wall celltyping and void fraction 
