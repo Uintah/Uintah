@@ -1,5 +1,6 @@
 #include <Packages/Uintah/CCA/Components/ICE/EOS/EquationOfStateFactory.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/IdealGas.h>
+#include <Packages/Uintah/CCA/Components/ICE/EOS/TSTGas.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/JWL.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/JWLC.h>
 #include <Packages/Uintah/CCA/Components/ICE/EOS/Murnahan.h>
@@ -33,6 +34,8 @@ EquationOfState* EquationOfStateFactory::create(ProblemSpecP& ps)
     
     if (mat_type == "ideal_gas") 
       return(scinew IdealGas(child));
+    if (mat_type == "TST_gas") 
+      return(scinew TSTGas(child));
     else if (mat_type == "JWL") 
       return(scinew JWL(child));
     else if (mat_type == "JWLC") 
