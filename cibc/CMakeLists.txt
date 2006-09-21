@@ -440,8 +440,8 @@ FIND_LIBRARY(GLEW_LIBRARY
              /usr/lib
              /lib
              NO_DEFAULT_PATH)
-FIND_PATH(GLEW_INCLUDE glew.h
-           ${SCIRUN_THIRDPARTY_PATH}/include/GL
+FIND_PATH(GLEW_INCLUDE GL/glew.h
+           ${SCIRUN_THIRDPARTY_PATH}/include
            /usr/local/include
            /usr/include
            /include
