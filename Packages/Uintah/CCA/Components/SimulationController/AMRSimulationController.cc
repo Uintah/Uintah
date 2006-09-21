@@ -43,7 +43,7 @@ using std::cout;
 using namespace SCIRun;
 using namespace Uintah;
 
-static DebugStream amrout("AMR", false);
+DebugStream amrout("AMR", false);
 static DebugStream dbg("AMRSimulationController", false);
 
 AMRSimulationController::AMRSimulationController(const ProcessorGroup* myworld,
