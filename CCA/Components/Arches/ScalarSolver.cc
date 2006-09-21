@@ -445,7 +445,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     
     
     if (d_boundaryCondition->anyArchesPhysicalBC()) {
-      d_boundaryCondition->scalarBC(pc, patch,  index, cellinfo, 
+      d_boundaryCondition->scalarBC(pc, patch,
 				    &scalarVars, &constScalarVars);
       if (d_boundaryCondition->getIntrusionBC())
         d_boundaryCondition->intrusionScalarBC(pc, patch, cellinfo,

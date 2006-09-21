@@ -79,7 +79,6 @@ LIBS := $(LIBS) $(XML2_LIBRARY) $(F_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/areain_fort.h
-$(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/bcenthalpy_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/inlpresbcinout_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/bcpress_fort.h
 $(SRCDIR)/BoundaryCondition.$(OBJEXT): $(SRCDIR)/fortran/bcscalar_fort.h
