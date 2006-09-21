@@ -64,12 +64,20 @@ Level* Grid::addLevel(const Point& anchor, const Vector& dcell, int id)
 
   IntVector ratio;
   if (d_levels.size() > 0) {
-    Vector r = d_levels[d_levels.size()-1]->dCell() / dcell;
+    Vector r = (d_levels[d_levels.size()-1]->dCell() / dcell) + Vector(1e-6, 1e-6, 1e-6);
     ratio = IntVector((int)r.x(), (int)r.y(), (int)r.z());
+    Vector diff = r - ratio.asVector();
+    if (diff.x() > 1e-5 || diff.y() > 1e-5 || diff.z() > 1e-5) {
+      // non-integral refinement ratio
+      ostringstream out;
+      out << "Non-integral refinement ratio: " << r;
+      throw InvalidGrid(out.str().c_str(), __FILE__, __LINE__);
+    }
   }
   else
     ratio = IntVector(1,1,1);
-  
+
+
   Level* level = scinew Level(this, anchor, dcell, (int)d_levels.size(), ratio, id);  
 
   d_levels.push_back( level );

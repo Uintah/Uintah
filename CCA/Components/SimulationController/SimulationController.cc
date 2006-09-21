@@ -40,6 +40,7 @@ using namespace std;
 static DebugStream dbg("SimulationStats", true);
 static DebugStream dbgTime("SimulationTimeStats", false);
 static DebugStream simdbg("SimulationController", false);
+extern DebugStream amrout;
 
 namespace Uintah {
 
@@ -191,10 +192,11 @@ namespace Uintah {
     }
     
     // Print out meta data
-    if (d_myworld->myrank() == 0)
+    if (d_myworld->myrank() == 0){
       grid->printStatistics();
     
-    //cout << *grid.get_rep() << endl;
+      amrout << "Restart grid\n" << *grid.get_rep() << endl;
+    }
     return grid;
   }
 
