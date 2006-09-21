@@ -28,5 +28,5 @@
 
 # CMakeLists.txt for Packages/CardiacVis/Core
 
-SUBDIRS(Datatypes Algorithms)
+SUBDIRS(Algorithms)
 

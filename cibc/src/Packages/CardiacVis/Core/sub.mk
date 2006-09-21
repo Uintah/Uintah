@@ -3,7 +3,6 @@ include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 SRCDIR := Packages/CardiacVis/Core
 
 SUBDIRS := \
-        $(SRCDIR)/Datatypes \
         $(SRCDIR)/Algorithms \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
