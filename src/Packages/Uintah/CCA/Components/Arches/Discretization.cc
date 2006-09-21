@@ -29,8 +29,7 @@ using namespace std;
 using namespace Uintah;
 using namespace SCIRun;
 
-#include <Packages/Uintah/CCA/Components/Arches/fortran/apcal_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/apcal_vel_fort.h>
+#include <Packages/Uintah/CCA/Components/Arches/fortran/apcal_all_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mm_modify_prescoef_fort.h>
 #ifdef divergenceconstraint
 #include <Packages/Uintah/CCA/Components/Arches/fortran/prescoef_var_fort.h>
@@ -373,18 +372,14 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 {
   
   // Get the patch and variable indices
-  IntVector domLo;
-  IntVector domHi;
   IntVector idxLo;
   IntVector idxHi;
   switch(index) {
   case Arches::XDIR:
-    domLo = coeff_vars->uVelLinearSrc.getFortLowIndex();
-    domHi = coeff_vars->uVelLinearSrc.getFortHighIndex();
     idxLo = patch->getSFCXFORTLowIndex();
     idxHi = patch->getSFCXFORTHighIndex();
 
-    fort_apcalvel(idxLo, idxHi, coeff_vars->uVelocityCoeff[Arches::AP],
+    fort_apcal_all(idxLo, idxHi, coeff_vars->uVelocityCoeff[Arches::AP],
 		  coeff_vars->uVelocityCoeff[Arches::AE],
 		  coeff_vars->uVelocityCoeff[Arches::AW],
 		  coeff_vars->uVelocityCoeff[Arches::AN],
@@ -395,12 +390,10 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 
     break;
   case Arches::YDIR:
-    domLo = coeff_vars->vVelLinearSrc.getFortLowIndex();
-    domHi = coeff_vars->vVelLinearSrc.getFortHighIndex();
     idxLo = patch->getSFCYFORTLowIndex();
     idxHi = patch->getSFCYFORTHighIndex();
 
-    fort_apcalvel(idxLo, idxHi, coeff_vars->vVelocityCoeff[Arches::AP],
+    fort_apcal_all(idxLo, idxHi, coeff_vars->vVelocityCoeff[Arches::AP],
 		  coeff_vars->vVelocityCoeff[Arches::AE],
 		  coeff_vars->vVelocityCoeff[Arches::AW],
 		  coeff_vars->vVelocityCoeff[Arches::AN],
@@ -411,12 +404,10 @@ Discretization::calculateVelDiagonal(const ProcessorGroup*,
 
     break;
   case Arches::ZDIR:
-    domLo = coeff_vars->wVelLinearSrc.getFortLowIndex();
-    domHi = coeff_vars->wVelLinearSrc.getFortHighIndex();
     idxLo = patch->getSFCZFORTLowIndex();
     idxHi = patch->getSFCZFORTHighIndex();
 
-    fort_apcalvel(idxLo, idxHi, coeff_vars->wVelocityCoeff[Arches::AP],
+    fort_apcal_all(idxLo, idxHi, coeff_vars->wVelocityCoeff[Arches::AP],
 		  coeff_vars->wVelocityCoeff[Arches::AE],
 		  coeff_vars->wVelocityCoeff[Arches::AW],
 		  coeff_vars->wVelocityCoeff[Arches::AN],
@@ -448,7 +439,7 @@ Discretization::calculatePressDiagonal(const ProcessorGroup*,
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   // Calculate the diagonal terms (AP)
-  fort_apcal(idxLo, idxHi, coeff_vars->pressCoeff[Arches::AP],
+  fort_apcal_all(idxLo, idxHi, coeff_vars->pressCoeff[Arches::AP],
 	     coeff_vars->pressCoeff[Arches::AE],
 	     coeff_vars->pressCoeff[Arches::AW],
 	     coeff_vars->pressCoeff[Arches::AN],
@@ -472,7 +463,7 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
-  fort_apcal(idxLo, idxHi, coeff_vars->scalarCoeff[Arches::AP],
+  fort_apcal_all(idxLo, idxHi, coeff_vars->scalarCoeff[Arches::AP],
 	     coeff_vars->scalarCoeff[Arches::AE],
 	     coeff_vars->scalarCoeff[Arches::AW],
 	     coeff_vars->scalarCoeff[Arches::AN],
@@ -482,7 +473,7 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 	     coeff_vars->scalarLinearSrc);
   coeff_vars->scalarLinearSrc.initialize(0.0);
   // for computing divergence constraint
-  fort_apcal(idxLo, idxHi, coeff_vars->scalarDiffusionCoeff[Arches::AP],
+  fort_apcal_all(idxLo, idxHi, coeff_vars->scalarDiffusionCoeff[Arches::AP],
 	     coeff_vars->scalarDiffusionCoeff[Arches::AE],
 	     coeff_vars->scalarDiffusionCoeff[Arches::AW],
 	     coeff_vars->scalarDiffusionCoeff[Arches::AN],

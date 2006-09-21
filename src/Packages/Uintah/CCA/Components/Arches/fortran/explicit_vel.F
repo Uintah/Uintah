@@ -5,31 +5,12 @@ c*********************************************************************
 
 #include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_vel_fort.h>
 C-----------------------------------------------------------------------
-*
-*     This routine is a relaxation operation on x, given the linear
-*     system Ax=b, where A and b are given and the initial guess for
-*     x is given. 
-*     Passed Variables:
-*
 *	PHI	Variable for which equation is being solved (i/p) 
-*               (o/p)(=x in the previous discussion).  PHI on input
-*               is the initial guess for PHI, and is overwritten by its
-*               new value on exit.
 *	AE,AW,AN,AS,AT,AB,AP
 *		Coefficients of the seven-diagonal finite difference
 *		equation (i/p) (=A in the previous discussion).
 *	SU	Source term for the PHI-equation (i/p) (=b in the previous
 *               discussion).
-*	THETA 	Stone implicit acceleration factor (i/p). (zero to one)
-*	LSWPWE,LSWPSN,LSWPBT
-*		Logicals to determine whether sweeps in linegs should
-*		be done in the x-, y-, and z-directions respectively
-*		(i/p).
-*     
-*	IST,JST,KST
-*		Starting indices for the calculation (i/p)
-*	IEND,JEND,KEND
-*		Ending indices for calculation (i/p)
 C-----------------------------------------------------------------------
 
 c*********************************************************************
