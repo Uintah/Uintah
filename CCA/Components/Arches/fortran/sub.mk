@@ -7,8 +7,7 @@ SRCDIR   := Packages/Uintah/CCA/Components/Arches/fortran
 SRCS += \
 	$(SRCDIR)/add_hydrostatic_term_topressure.F \
 	$(SRCDIR)/add_mm_enth_src.F \
-	$(SRCDIR)/apcal.F \
-	$(SRCDIR)/apcal_vel.F \
+	$(SRCDIR)/apcal_all.F \
 	$(SRCDIR)/areain.F \
 	$(SRCDIR)/arrass.F \
 	$(SRCDIR)/bcenthalpy.F \
@@ -83,8 +82,7 @@ include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
 $(SRCDIR)/add_hydrostatic_term_topressure.$(OBJEXT): $(SRCDIR)/add_hydrostatic_term_topressure_fort.h
 $(SRCDIR)/add_mm_enth_src.$(OBJEXT): $(SRCDIR)/add_mm_enth_src_fort.h
-$(SRCDIR)/apcal.$(OBJEXT): $(SRCDIR)/apcal_fort.h
-$(SRCDIR)/apcal_vel.$(OBJEXT): $(SRCDIR)/apcal_vel_fort.h
+$(SRCDIR)/apcal_all.$(OBJEXT): $(SRCDIR)/apcal_all_fort.h
 $(SRCDIR)/areain.$(OBJEXT): $(SRCDIR)/areain_fort.h
 $(SRCDIR)/arrass.$(OBJEXT): $(SRCDIR)/arrass_fort.h
 $(SRCDIR)/bcenthalpy.$(OBJEXT): $(SRCDIR)/bcenthalpy_fort.h
