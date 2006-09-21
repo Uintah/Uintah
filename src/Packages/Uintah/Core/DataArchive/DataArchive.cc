@@ -254,6 +254,8 @@ DataArchive::queryGrid( double time, const ProblemSpec* ups)
                             __FILE__, __LINE__);
     } else if(n->getNodeName() == "time_refinement_ratio") {
       // this one's obsolete,  but keep it for some old udas...
+    } else if(n->getNodeName() == "lockstep") {
+      // this one's referenced above, but we don't want a warning...
     } else if(n->getNodeName() == "Level"){
       Point anchor;
       if(!n->get("anchor", anchor))
