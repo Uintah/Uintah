@@ -61,7 +61,6 @@ using namespace SCIRun;
 #include <Packages/Uintah/CCA/Components/Arches/fortran/bcwvel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/bcpress_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/profv_fort.h>
-#include <Packages/Uintah/CCA/Components/Arches/fortran/bcenthalpy_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/intrusion_computevel_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcenthalpy_energyex_fort.h>
 #include <Packages/Uintah/CCA/Components/Arches/fortran/mmbcvelocity_momex_fort.h>
@@ -1234,27 +1233,16 @@ BoundaryCondition::pressureBC(const ProcessorGroup*,
 void 
 BoundaryCondition::scalarBC(const ProcessorGroup*,
 			    const Patch* patch,
-			    int /*index*/,
-			    CellInformation* cellinfo,
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars)
 {
   // Get the low and high index for the patch
-  IntVector domLo = constvars->density.getFortLowIndex();
-  IntVector domHi = constvars->density.getFortHighIndex();
   IntVector idxLo = patch->getCellFORTLowIndex();
   IntVector idxHi = patch->getCellFORTHighIndex();
 
   // Get the wall boundary and flow field codes
   int wall_celltypeval = wallCellType();
-  int pressure_celltypeval = pressureCellType();
-  int outlet_celltypeval = outletCellType();
-  // ** WARNING ** Symmetry/sfield/outletfield/ffield hardcoded to -3,-4,-5, -6
-  //               Fmixin hardcoded to 0
-  int symmetry_celltypeval = -3;
-  int sfield = -4;
-  int ffield = -1;
-  double fmixin = 0.0;
+
   bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
   bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
   bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
@@ -1263,78 +1251,33 @@ BoundaryCondition::scalarBC(const ProcessorGroup*,
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
   //fortran call
-  fort_bcscalar(domLo, domHi, idxLo, idxHi, constvars->scalar,
-		vars->scalarCoeff[Arches::AE], vars->scalarCoeff[Arches::AW],
-		vars->scalarCoeff[Arches::AN], vars->scalarCoeff[Arches::AS],
-		vars->scalarCoeff[Arches::AT], vars->scalarCoeff[Arches::AB],
+  fort_bcscalar(idxLo, idxHi,
+		vars->scalarCoeff[Arches::AE],
+                vars->scalarCoeff[Arches::AW],
+		vars->scalarCoeff[Arches::AN],
+                vars->scalarCoeff[Arches::AS],
+		vars->scalarCoeff[Arches::AT],
+                vars->scalarCoeff[Arches::AB],
+		vars->scalarNonlinearSrc, vars->scalarLinearSrc,
+		vars->scalarConvectCoeff[Arches::AE],
+		vars->scalarConvectCoeff[Arches::AW],
+		vars->scalarConvectCoeff[Arches::AN],
+		vars->scalarConvectCoeff[Arches::AS],
+		vars->scalarConvectCoeff[Arches::AT],
+		vars->scalarConvectCoeff[Arches::AB],
 		vars->scalarDiffusionCoeff[Arches::AE],
 		vars->scalarDiffusionCoeff[Arches::AW],
 		vars->scalarDiffusionCoeff[Arches::AN], 
 		vars->scalarDiffusionCoeff[Arches::AS],
 		vars->scalarDiffusionCoeff[Arches::AT],
 		vars->scalarDiffusionCoeff[Arches::AB],
-		vars->scalarNonlinearSrc, vars->scalarLinearSrc,
-		constvars->density, fmixin, constvars->uVelocity,
-		constvars->vVelocity, constvars->wVelocity,cellinfo->sew,
-		cellinfo->sns, cellinfo->stb, constvars->cellType,
-		wall_celltypeval, symmetry_celltypeval,
-		d_flowInlets[0]->d_cellTypeID, pressure_celltypeval, ffield,
-		sfield, outlet_celltypeval,
+		constvars->cellType, wall_celltypeval,
 		xminus, xplus, yminus, yplus, zminus, zplus);
 }
 
 
-
 //****************************************************************************
-// Actually compute the scalar bcs
-//****************************************************************************
-void 
-BoundaryCondition::enthalpyBC(const ProcessorGroup*,
-			    const Patch* patch,
-			    CellInformation* cellinfo,
-			    ArchesVariables* vars,
-			    ArchesConstVariables* constvars)
-{
-  // Get the low and high index for the patch
-  IntVector domLo = constvars->density.getFortLowIndex();
-  IntVector domHi = constvars->density.getFortHighIndex();
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
 
-  // Get the wall boundary and flow field codes
-  int wall_celltypeval = wallCellType();
-  int pressure_celltypeval = pressureCellType();
-  int outlet_celltypeval = outletCellType();
-  // ** WARNING ** Symmetry/sfield/outletfield/ffield hardcoded to -3,-4,-5, -6
-  //               Fmixin hardcoded to 0
-  int symmetry_celltypeval = -3;
-  int sfield = -4;
-  int ffield = -1;
-  bool xminus = patch->getBCType(Patch::xminus) != Patch::Neighbor;
-  bool xplus =  patch->getBCType(Patch::xplus) != Patch::Neighbor;
-  bool yminus = patch->getBCType(Patch::yminus) != Patch::Neighbor;
-  bool yplus =  patch->getBCType(Patch::yplus) != Patch::Neighbor;
-  bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
-  bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
-
-  //fortran call
-  fort_bcenthalpy(domLo, domHi, idxLo, idxHi, constvars->enthalpy,
-		  vars->scalarCoeff[Arches::AE],
-		  vars->scalarCoeff[Arches::AW],
-		  vars->scalarCoeff[Arches::AN],
-		  vars->scalarCoeff[Arches::AS],
-		  vars->scalarCoeff[Arches::AT],
-		  vars->scalarCoeff[Arches::AB],
-		  vars->scalarNonlinearSrc, vars->scalarLinearSrc,
-		  constvars->density, constvars->uVelocity,
-		  constvars->vVelocity,
-		  constvars->wVelocity, cellinfo->sew, cellinfo->sns,
-		  cellinfo->stb, constvars->cellType, wall_celltypeval,
-		  symmetry_celltypeval, d_flowInlets[0]->d_cellTypeID,
-		  pressure_celltypeval, ffield, sfield, outlet_celltypeval,
-		  xminus, xplus, yminus, yplus, zminus, zplus);
-
-}
 
 
 void
