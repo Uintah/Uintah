@@ -63,11 +63,17 @@ namespace SCIRun {
     {
       NrrdDataHandle nin = new NrrdData();
       string fullfile = filename;
-      const char *skinner_dir = sci_getenv("SKINNER_DIR");
-      if (!validFile(fullfile) && skinner_dir)
-        fullfile = string(skinner_dir)+"/"+fullfile;
-      if (!validFile(fullfile))
+
+      // Search SKINNER_PATH for filename
+      const char *skinner_path = sci_getenv("SKINNER_PATH");
+      if (!validFile(fullfile) && skinner_path) {
+        fullfile = findFileInPath(filename, skinner_path)+filename;
+      }
+
+      if (!validFile(fullfile)) {
         throw "Texture Invalid filename: "+fullfile;
+      }
+
       if (nrrdLoad(nin->nrrd_, fullfile.c_str(), 0)) {
         char *err = biffGetDone(NRRD);
         string str(err);
