@@ -6,10 +6,6 @@ c*********************************************************************
 #include <Packages/Uintah/CCA/Components/Arches/fortran/explicit_scalar_fort.h>
 C-----------------------------------------------------------------------
 *
-*     This routine is a relaxation operation on x, given the linear
-*     system Ax=b, where A and b are given and the initial guess for
-*     x is given. 
-*     Passed Variables:
 *
 *	PHI	Variable for which equation is being solved (i/p) 
 *               (o/p)(=x in the previous discussion).  PHI on input
@@ -20,16 +16,6 @@ C-----------------------------------------------------------------------
 *		equation (i/p) (=A in the previous discussion).
 *	SU	Source term for the PHI-equation (i/p) (=b in the previous
 *               discussion).
-*	THETA 	Stone implicit acceleration factor (i/p). (zero to one)
-*	LSWPWE,LSWPSN,LSWPBT
-*		Logicals to determine whether sweeps in linegs should
-*		be done in the x-, y-, and z-directions respectively
-*		(i/p).
-*     
-*	IST,JST,KST
-*		Starting indices for the calculation (i/p)
-*	IEND,JEND,KEND
-*		Ending indices for calculation (i/p)
 C-----------------------------------------------------------------------
 
 c*********************************************************************
@@ -64,23 +50,3 @@ c     /(0.133D0*1.184344D0+phi(i,j,k)*(0.133D0-1.184344D0))
       return
       end
 
-c*********************************************************************
-c
-c Revision 1.2  2000/10/09 17:06:30  rawat
-c modified momentum solver for multi-patch
-c
-c Revision 1.1  2000/08/15 00:23:38  rawat
-c added explicit solve for momentum and scalar eqns
-c
-c Revision 1.2  2000/08/11 21:26:41  rawat
-c added linear solver for pressure eqn
-c
-c Revision 1.2  2000/08/01 23:28:46  skumar
-c Added residual calculation procedure and modified templates in linear
-c solver.  Added template for order-of-magnitude term calculation.
-c
-c Revision 1.1  2000/04/12 20:31:50  rawat
-c modified PressureSolver and added fortran subroutines
-c
-c
-c*********************************************************************
