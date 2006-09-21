@@ -443,6 +443,22 @@ template<class T>
         << " faceShift " << faceShift << endl;
       
   
+    // define the offsets for the CC data 
+    vector<IntVector> offset(9);
+    int counter = 0;
+    
+    for(int j = -1; j <=1; j++){
+      for(int k = -1; k <=1; k++){
+        IntVector tmp(0,0,0);
+        tmp[p_dir] = 0;
+        tmp[y]     = j;     // -1, 0, 1
+        tmp[z]     = k;     // -1, 0, 1
+        offset[counter] = tmp; 
+        cout << " offset["<<counter<<"]: " << offset[counter] << endl;
+        counter += 1;
+      }
+    }   
+  
   
   for(CellIterator iter(fl,fh); !iter.done(); iter++){
     IntVector f_cell = *iter;
@@ -494,8 +510,13 @@ template<class T>
     w(0,2) = w0_y * w2_z; w(1,2) = w1_y * w2_z; w(2,2) = w2_y * w2_z;  
     //  Q_CL(i,-1,1)      Q_CL(i,0,1)          Q_CL(i,1,1)      
         
+    //
+    
+    
+   
+#if 0        
     T q_CL_Interpolated;
-    cout << "working on coarseCell " << baseCell << " fineCell " << f_cell << " shift " << shift << " faceShift " << faceShift << endl;
+    
     q_CL_Interpolated
         = w(0,0) * q_CL[baseCell + IntVector( 0, -1, -1)]   
         + w(1,0) * q_CL[baseCell + IntVector( 0,  0, -1)]           
@@ -506,6 +527,19 @@ template<class T>
         + w(0,2) * q_CL[baseCell + IntVector( 0, -1,  1)]   
         + w(1,2) * q_CL[baseCell + IntVector( 0,  0,  1)]     
         + w(2,2) * q_CL[baseCell + IntVector( 0,  1,  1)];   
+#endif        
+    cout << "working on coarseCell " << baseCell << " fineCell " << f_cell << " shift " << shift << " faceShift " << faceShift << endl;    
+    T q_CL_Interpolated;
+    q_CL_Interpolated
+        = w(0,0) * q_CL[baseCell + offset[0]]   
+        + w(1,0) * q_CL[baseCell + offset[1]]           
+        + w(2,0) * q_CL[baseCell + offset[2]]           
+        + w(0,1) * q_CL[baseCell + offset[3]]            
+        + w(1,1) * q_CL[baseCell + offset[4]]    
+        + w(2,1) * q_CL[baseCell + offset[5]]     // this works for x+ x- faces need to do something cleaver for the y & z faces
+        + w(0,2) * q_CL[baseCell + offset[6]]   
+        + w(1,2) * q_CL[baseCell + offset[7]]     
+        + w(2,2) * q_CL[baseCell + offset[8]];  
 
     //__________________________________
     //  debugging
@@ -518,15 +552,15 @@ template<class T>
      cout.precision(5);
      cout << "relativeIndex " << relativeIndx << " dist " << dist << endl;
      std::cout << name << " baseCell " << baseCell << " f_cell " << f_cell << " dy " << dy << " dz " << dz << "\n";
-     std::cout << " q_CL[baseCell + IntVector( 0, -1, -1)] " << q_CL[baseCell + IntVector( 0, -1, -1)]<< " w(0,0) " << w(0,0) << "\n";
-     std::cout << " q_CL[baseCell + IntVector( 0,  0, -1)] " << q_CL[baseCell + IntVector( 0,  0, -1)]<< " w(1,0) " << w(1,0) << "\n";
-     std::cout << " q_CL[baseCell + IntVector( 0,  1, -1)] " << q_CL[baseCell + IntVector( 0,  1, -1)]<< " w(2,0) " << w(2,0) << "\n";
-     std::cout << " q_CL[baseCell + IntVector( 0, -1,  0)] " << q_CL[baseCell + IntVector( 0, -1,  0)]<< " w(0,1) " << w(0,1) << "\n";
-     std::cout << " q_CL[baseCell + IntVector( 0,  0,  0)] " << q_CL[baseCell + IntVector( 0,  0,  0)]<< " w(1,1) " << w(1,1) << "\n";
-     std::cout << " q_CL[baseCell + IntVector( 0,  1,  0)] " << q_CL[baseCell + IntVector( 0,  1,  0)]<< " w(2,1) " << w(2,1) << "\n";
-     std::cout << " q_CL[baseCell + IntVector( 0, -1,  1)] " << q_CL[baseCell + IntVector( 0, -1,  1)]<< " w(0,2) " << w(0,2) << "\n";
-     std::cout << " q_CL[baseCell + IntVector( 0,  0,  1)] " << q_CL[baseCell + IntVector( 0,  0,  1)]<< " w(1,2) " << w(1,2) << "\n";
-     std::cout << " q_CL[baseCell + IntVector( 0,  1,  1)] " << q_CL[baseCell + IntVector( 0,  1,  1)]<< " w(2,2) " << w(2,2) << "\n";
+     std::cout << " q_CL[baseCell + " << offset[0] << "] " << q_CL[baseCell +  offset[0]]<< " w(0,0) " << w(0,0) << "\n";
+     std::cout << " q_CL[baseCell + " << offset[1] << "] " << q_CL[baseCell +  offset[1]]<< " w(1,0) " << w(1,0) << "\n";
+     std::cout << " q_CL[baseCell + " << offset[2] << "] " << q_CL[baseCell +  offset[2]]<< " w(2,0) " << w(2,0) << "\n";
+     std::cout << " q_CL[baseCell + " << offset[3] << "] " << q_CL[baseCell +  offset[3]]<< " w(0,1) " << w(0,1) << "\n";
+     std::cout << " q_CL[baseCell + " << offset[4] << "] " << q_CL[baseCell +  offset[4]]<< " w(1,1) " << w(1,1) << "\n";
+     std::cout << " q_CL[baseCell + " << offset[5] << "] " << q_CL[baseCell +  offset[5]]<< " w(2,1) " << w(2,1) << "\n";
+     std::cout << " q_CL[baseCell + " << offset[6] << "] " << q_CL[baseCell +  offset[6]]<< " w(0,2) " << w(0,2) << "\n";
+     std::cout << " q_CL[baseCell + " << offset[7] << "] " << q_CL[baseCell +  offset[7]]<< " w(1,2) " << w(1,2) << "\n";
+     std::cout << " q_CL[baseCell + " << offset[8] << "] " << q_CL[baseCell +  offset[8]]<< " w(2,2) " << w(2,2) << "\n";
      std::cout << " q_CL_Interpolated " << q_CL_Interpolated << "\n";  
           
      std::cout  << " w0_y " << w0_y << " w1_y " << w1_y << " w2_y "<< w2_y << "\n";
