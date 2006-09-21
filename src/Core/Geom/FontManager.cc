@@ -84,21 +84,31 @@ FontManager::load_face(const string &filename) {
   FreeTypeFace *face = 0;
   if (freetype_lib_) {
 
-    string font_dir;
-    const char *dir = sci_getenv("SCIRUN_FONT_PATH");
-    if (dir) 
-      font_dir = dir;
-    if (!validDir(font_dir))
-      font_dir = string(sci_getenv("SCIRUN_SRCDIR"))+"/pixmaps";
+    const char *path_ptr = sci_getenv("SCIRUN_FONT_PATH");
+    string path = (path_ptr ? string(path_ptr) : "");
+    
+    // Always search SCIRUN_SRCDIR/pixmaps for the font
+    path = path + ":" + sci_getenv("SCIRUN_SRCDIR") + "/pixmaps";
+
+    // Search for the font 'filename' in the font 'path'
+    string font_dir = findFileInPath(filename, path);
+
+    // If is not found in the path, print error and return
+    if (font_dir.empty()) {
+      cerr << "FontManager::load_face(" << filename << ") Error\n";
+      cerr << "SCIRUN_FONT_PATH=" << path << std::endl;
+      cerr << "Does not contain a file named " << filename << std::endl;
+      return 0;
+    }
+
     string fontfile = font_dir+"/"+filename;
     
     try {
       face = freetype_lib_->load_face(fontfile);
     } catch (...) {
       face = 0;
-      cerr << "FontManager::FontManager Error loading font file: " 
-           << fontfile << std::endl;
-      cerr << "Please set SCIRUN_FONT_PATH to a directory with scirun.ttf";
+      cerr << "FontManager::load_face(" << filename << ") Error\n";
+      cerr << "Problem loading font file: " << fontfile << std::endl;
     }
   }
   return face;

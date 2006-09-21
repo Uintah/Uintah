@@ -108,6 +108,7 @@ namespace SCIRun {
     BaseTool::propagation_state_e
     Text::redraw(event_handle_t)
     {
+      if (!renderer_) return CONTINUE_E;
       const RectRegion &region = get_region();
       string text = "";
       get_vars()->maybe_get_string("text", text);

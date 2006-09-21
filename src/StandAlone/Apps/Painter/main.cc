@@ -32,6 +32,7 @@
 #include <Core/Events/EventManager.h>
 #include <Core/Skinner/XMLIO.h>
 #include <Core/Util/Environment.h>
+#include <Core/Util/FileUtils.h>
 #include <StandAlone/Apps/Painter/Painter.h>
 
 #include <sgi_stl_warnings_off.h>
@@ -95,37 +96,36 @@ start_trail_file() {
 }  
   
 
-string
-get_skin_filename() {
-  if (sci_getenv("SKINNER_SKIN")) {
-    return sci_getenv("SKINNER_SKIN");
-  } 
-  const char *srcdir = sci_getenv("SCIRUN_SRCDIR");
-  if (srcdir) {
-    return string(srcdir) + "/StandAlone/Apps/Painter/Painter.skin";
-  } 
-  return "";
-}
-
 int
 main(int argc, char *argv[], char **environment) {
   create_sci_environment(environment, argv[0]);  
   
-  if (!sci_getenv("SKINNER_DIR")) {
-    sci_putenv("SKINNER_DIR",
-               string(sci_getenv("SCIRUN_SRCDIR"))+"/Core/Skinner/Data");
+  string default_skin = sci_getenv("SCIRUN_OBJDIR")+string("data");
+  string skinner_path = default_skin;
+  const char *path_ptr = sci_getenv("SKINNER_PATH");
+  if (path_ptr) {
+    skinner_path = string(path_ptr) + ":" + default_skin;
   }
-  
-  sci_putenv("SCIRUN_FONT_PATH",string(sci_getenv("SKINNER_DIR"))+"/Fonts");
+  sci_putenv("SKINNER_PATH", skinner_path);
+  sci_putenv("SCIRUN_FONT_PATH",skinner_path);
+  string filename = "main.skin";
+  string path = findFileInPath(filename, skinner_path);
+  if (path.empty()) {
+    std::cerr << "Cannot find main.skin in SKINNER_PATH.\n";
+    std::cerr << "SKINNER_PATH=" << skinner_path << std::endl;;
+    return 0;
+  }
 
   Skinner::XMLIO::register_maker<Painter>();
-  Skinner::load_skin(get_skin_filename());
+  Skinner::load_skin(path+filename);
+
   EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
   EventManager *em = new EventManager();
   Thread *em_thread = new Thread(em, "Event Manager");
   start_trail_file();
 
 #if defined(__APPLE__) && !defined(HAVE_X11)
+  // Apples version of event management
   Carbon::RunApplicationEventLoop();
 #endif
 
