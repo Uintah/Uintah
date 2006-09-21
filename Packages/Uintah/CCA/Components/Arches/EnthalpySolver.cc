@@ -789,7 +789,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     // inputs : enthalpySP, scalCoefSBLM
     // outputs: scalCoefSBLM
     if (d_boundaryCondition->anyArchesPhysicalBC()) {
-      d_boundaryCondition->enthalpyBC(pc, patch,  cellinfo, 
+      d_boundaryCondition->scalarBC(pc, patch, 
 				      &enthalpyVars, &constEnthalpyVars);
 
       if (d_boundaryCondition->getIntrusionBC()) {
