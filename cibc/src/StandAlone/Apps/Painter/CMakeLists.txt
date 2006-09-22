@@ -99,15 +99,15 @@ ADD_EXECUTABLE(painter MACOSX_BUNDLE ${PAINTER_SRCS})
 
 IF(APPLE)
   SET_TARGET_PROPERTIES(painter PROPERTIES LINK_FLAGS "-framework Carbon")
-#  FIND_PROGRAM(APPLE_RESOURCE Rez /Developer/Tools)
-#  IF(APPLE_RESOURCE)
-#    ADD_CUSTOM_COMMAND(SOURCE painter
-#                       COMMAND ${APPLE_RESOURCE}
-#                       ARGS Carbon.r -o 
-#                       ${EXECUTABLE_OUTPUT_PATH}/painter
-#                       TARGET painter)
-#  ENDIF(APPLE_RESOURCE)
 ENDIF(APPLE)
+
+
+ADD_CUSTOM_COMMAND(TARGET painter
+                   POST_BUILD
+                   COMMAND ${CMAKE_COMMAND}
+                   ARGS  -E copy_directory
+                   ${Painter_SOURCE_DIR}/data
+                   ${EXECUTABLE_OUTPUT_PATH}/data)
                 
 TARGET_LINK_LIBRARIES(painter 
   Core_Algorithms_Visualization 
