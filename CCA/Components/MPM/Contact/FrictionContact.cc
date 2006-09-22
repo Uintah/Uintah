@@ -106,35 +106,16 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
     vector<IntVector> ni(interpolator->size());
     vector<double> S(interpolator->size());
 
-    Vector surnor(0.0,0.0,0.0);
+    IntVector low(patch->getInteriorNodeLowIndex());
+    IntVector high(patch->getInteriorNodeHighIndex());
 
-    // First, calculate the gradient of the mass everywhere
-    // normalize it, and stick it in surfNorm
-    for(int m=0;m<matls->size();m++){
-      if(!d_matls.requested(m)) continue;
-      
-      int dwi = matls->get(m);
+    int ILOW=0,IHIGH=0,JLOW=0,JHIGH=0,KLOW=0,KHIGH=0;
+    // First, figure out some ranges for for loops
+    for(Patch::FaceType face = Patch::startFace;
+        face <= Patch::endFace; face=Patch::nextFace(face)){
+      Patch::BCType bc_type = patch->getBCType(face);
 
-      new_dw->get(gmass[m],           lb->gMassLabel,  dwi, patch, gan,   1);
-      new_dw->get(gvolume[m],         lb->gVolumeLabel,dwi, patch, gnone, 0);
-      new_dw->get(numnearparticles[m],lb->gNumNearParticlesLabel, 
-                  dwi, patch, gnone, 0);
-      new_dw->getModifiable(gvelocity[m],  lb->gVelocityLabel,  dwi, patch);
-      new_dw->allocateAndPut(gsurfnorm[m], lb->gSurfNormLabel,  dwi, patch);
-      new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel,dwi,
-                            patch);
-      gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
-
-      IntVector low(patch->getInteriorNodeLowIndex());
-      IntVector high(patch->getInteriorNodeHighIndex());
-
-      int ILOW=0,IHIGH=0,JLOW=0,JHIGH=0,KLOW=0,KHIGH=0;
-      // First, figure out some ranges for for loops
-      for(Patch::FaceType face = Patch::startFace;
-          face <= Patch::endFace; face=Patch::nextFace(face)){
-        Patch::BCType bc_type = patch->getBCType(face);
-
-        switch(face) {
+      switch(face) {
         case Patch::xminus:
           if(bc_type == Patch::Neighbor) { ILOW = low.x(); }
           else if(bc_type == Patch::None){ ILOW = low.x()+1; }
@@ -161,8 +142,28 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
           break;
         default:
           break;
-        }
       }
+    }
+
+    // First, calculate the gradient of the mass everywhere
+    // normalize it, and stick it in surfNorm
+    Vector surnor(0.0,0.0,0.0);
+    for(int m=0;m<matls->size();m++){
+      int dwi = matls->get(m);
+
+      new_dw->get(gmass[m],           lb->gMassLabel,  dwi, patch, gan,   1);
+      new_dw->get(gvolume[m],         lb->gVolumeLabel,dwi, patch, gnone, 0);
+      new_dw->get(numnearparticles[m],lb->gNumNearParticlesLabel, 
+                  dwi, patch, gnone, 0);
+      new_dw->getModifiable(gvelocity[m],  lb->gVelocityLabel,       dwi,patch);
+      new_dw->allocateAndPut(gsurfnorm[m], lb->gSurfNormLabel,       dwi,patch);
+      new_dw->getModifiable(frictionWork[m],lb->frictionalWorkLabel, dwi,patch);
+      new_dw->allocateAndPut(gstress[m],      lb->gStressLabel,      dwi,patch);
+      new_dw->allocateAndPut(gnormtraction[m],lb->gNormTractionLabel,dwi,patch);
+      gstress[m].initialize(Matrix3(0.0));
+      gsurfnorm[m].initialize(Vector(0.0,0.0,0.0));
+
+      if(!d_matls.requested(m)) continue;
 
       // Compute the normals for all of the interior nodes
       gm = gmass[m];
@@ -319,7 +320,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
               }
             }
           } // if zsomething
-        } // else if (bc_type == Patch::None) {
+        } // else if (bc_type == Patch::None)
       }
 
       // Create arrays for the particle stress and grid stress
@@ -330,10 +331,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       constParticleVariable<Point> px;
       old_dw->get(pstress, lb->pStressLabel, pset);
       old_dw->get(px,      lb->pXLabel,      pset);
-      new_dw->allocateAndPut(gstress[m],      lb->gStressLabel,      dwi,patch);
-      new_dw->allocateAndPut(gnormtraction[m],lb->gNormTractionLabel,dwi,patch);
-      gstress[m].initialize(Matrix3(0.0));
-      
+
       // Next, interpolate the stress to the grid
       constParticleVariable<Vector> psize;
       old_dw->get(psize, lb->pSizeLabel, pset);
@@ -358,7 +356,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
         Vector norm = gsurfnorm[m][c];
         gnormtraction[m][c]= Dot((norm*gstress[m][c]),norm);
       }
-    }
+    }  // loop over matls
 
     for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
       IntVector c = *iter;
@@ -369,6 +367,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
       double totalNodalVol=0.0; 
       double totalNearParticles=0.0; 
       for(int n = 0; n < numMatls; n++){
+        if(!d_matls.requested(n)) continue;
         double mass = gmass[n][c];
         centerOfMassMom+=gvelocity[n][c] * mass;
         centerOfMassMass+= mass; 
@@ -410,16 +409,18 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
 
           //      if(scale_factor > 0.0){
           //        scale_factor=Min(1.0,scale_factor);
+	  //      }
 
           // Loop over velocity fields.  Only proceed if velocity field mass
           // is nonzero (not numerical noise) and the difference from
           // the centerOfMassVelocity is nonzero (More than one velocity
           // field is contributing to grid vertex).
           for(int n = 0; n < numMatls; n++){
+            if(!d_matls.requested(n)) continue;
             Vector deltaVelocity=gvelocity[n][c]-centerOfMassVelocity;
             double mass = gmass[n][c];
             if(!compare(mass/centerOfMassMass,0.0)
-               && !compare(mass-centerOfMassMass,0.0)){
+            && !compare(mass-centerOfMassMass,0.0)){
 
               // Apply frictional contact IF the surface is in compression
               // OR the surface is stress free and approaching.
@@ -429,8 +430,7 @@ void FrictionContact::exMomInterpolated(const ProcessorGroup*,
               Vector Dv(0.,0.,0.);
               double Tn = gnormtraction[n][c];
               if((Tn <  0.0) || 
-                 (compare(fabs(Tn),0.0) &&
-                  normalDeltaVel> 0.0)){
+                 (compare(fabs(Tn),0.0) && normalDeltaVel> 0.0)){
 
                 // Simplify algorithm in case where approach velocity
                 // is in direction of surface normal (no slip).
@@ -563,6 +563,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
       double totalNodalVol=0.0; 
       double totalNearParticles=0.0; 
       for(int  n = 0; n < numMatls; n++){
+        if(!d_matls.requested(n)) continue;
         double mass = gmass[n][c];
         centerOfMassMom+=gvelocity_star[n][c] * mass;
         centerOfMassMass+= mass; 
@@ -604,16 +605,18 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
 
           //      if(scale_factor > 0.0){
           //        scale_factor=Min(1.0,scale_factor);
+	  //      }
 
           // Loop over velocity fields.  Only proceed if velocity field mass
           // is nonzero (not numerical noise) and the difference from
           // the centerOfMassVelocity is nonzero (More than one velocity
           // field is contributing to grid vertex).
           for(int n = 0; n < numMatls; n++){
+            if(!d_matls.requested(n)) continue;
             Vector deltaVelocity=gvelocity_star[n][c]-centerOfMassVelocity;
             double mass = gmass[n][c];
             if(!compare(mass/centerOfMassMass,0.0)
-               && !compare(mass-centerOfMassMass,0.0)){
+            && !compare(mass-centerOfMassMass,0.0)){
 
               // Apply frictional contact IF the surface is in compression
               // OR the surface is stress free and approaching.
@@ -624,8 +627,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
               Vector Dv(0.,0.,0.);
               double Tn = normtraction[n][c];
               if((Tn < 0.0) || 
-                 (compare(fabs(Tn),0.0) && 
-                  normalDeltaVel>0.0)){
+                 (compare(fabs(Tn),0.0) && normalDeltaVel>0.0)){
 
                 // Simplify algorithm in case where approach velocity
                 // is in direction of surface normal (no slip).
@@ -700,7 +702,7 @@ void FrictionContact::exMomIntegrated(const ProcessorGroup*,
     // This converts frictional work into a temperature rate
     for(int m=0;m<matls->size();m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-      
+
       if(!d_matls.requested(m)) {
         for(NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
           frictionWork[m][*iter] = 0;
@@ -728,11 +730,11 @@ void FrictionContact::addComputesAndRequiresInterpolated(SchedulerP & sched,
                       this, &FrictionContact::exMomInterpolated);
   
   const MaterialSubset* mss = ms->getUnion();
-  t->requires(Task::OldDW,   lb->delTLabel);
-  t->requires(Task::OldDW,   lb->pXLabel,           Ghost::AroundNodes, NGP);
-  t->requires(Task::OldDW,   lb->pStressLabel,      Ghost::AroundNodes, NGP);
+  t->requires(Task::OldDW, lb->delTLabel);
+  t->requires(Task::OldDW, lb->pXLabel,           Ghost::AroundNodes, NGP);
+  t->requires(Task::OldDW, lb->pStressLabel,      Ghost::AroundNodes, NGP);
   t->requires(Task::OldDW, lb->pSizeLabel,        Ghost::AroundNodes, NGP);
-  t->requires(Task::NewDW, lb->gMassLabel,          Ghost::AroundNodes, 1);
+  t->requires(Task::NewDW, lb->gMassLabel,        Ghost::AroundNodes, 1);
   t->requires(Task::NewDW, lb->gVolumeLabel,           Ghost::None);
   t->requires(Task::NewDW, lb->gNumNearParticlesLabel, Ghost::None);
   t->computes(lb->gNormTractionLabel);
