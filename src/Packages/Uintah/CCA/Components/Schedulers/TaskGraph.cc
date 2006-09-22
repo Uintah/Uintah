@@ -274,146 +274,147 @@ void TaskGraph::addDependencyEdges(Task* task, GraphSortInfoMap& sortinfo,
       // If DW is finalized, we assume that we already have it,
       // or that we will get it sent to us.  Otherwise, we set
       // up an edge to connect this req to a comp
-       if (!(req->lookInOldTG && type_ == Scheduler::IntermediateTaskGraph)){
-         // Same thing goes if this is an Intermediate TG and the requested data is done from another TG,
-         // but if it is a modifies, we need to add the computes below
-         pair<CompMap::iterator,CompMap::iterator> iters 
-           = comps.equal_range(req->var);
-         int count=0;
-         for(CompMap::iterator compiter = iters.first;
-             compiter != iters.second; ++compiter){
-           
-           if(req->var->typeDescription() != compiter->first->typeDescription())
-             SCI_THROW(TypeMismatchException("Type mismatch for variable: "+req->var->getName(), __FILE__, __LINE__));
-           
-           // determine if we need to add a dependency edge
-           bool add=false;
-           if (dbg.active())
-             dbg << d_myworld->myrank() << "       Checking edge from comp: " << *compiter->second << ", task: " << *compiter->second->task << ", domain: " << compiter->second->patches_dom << '\n';
-           if(req->mapDataWarehouse() == compiter->second->mapDataWarehouse()){
-             if(task->isReductionTask()){
-               // Make sure that we get the comp from the reduction task
-               // Add if the level matches, but do not create a dependency on self
-               if(compiter->second->reductionLevel == req->reductionLevel
-                  && compiter->second->task != task)
-                 add=true;
-             } else if(req->var->typeDescription()->isReductionVariable()){
-               if(compiter->second->task->isReductionTask())
-                 add=true;
-             } else if(overlaps(compiter->second, req))
-               add=true;
-           }
-           if(!add)
-             if (dbg.active())
-               dbg << d_myworld->myrank() << "       did NOT create dependency\n";
-           if(add){
-             Task::Dependency* comp = compiter->second;
-             
-             if (modifies) {
-               // Add dependency edges to each task that requires the data
-               // before it is modified.
-               for (Task::Edge* otherEdge = comp->req_head; otherEdge != 0;
-                    otherEdge = otherEdge->reqNext) {
-                 Task::Dependency* priorReq =
-                   const_cast<Task::Dependency*>(otherEdge->req);
-                 if (priorReq != req) {
-                   ASSERT(priorReq->var->equals(req->var));
-                   if (priorReq->task != task) {		
-                     Task::Edge* edge = scinew Task::Edge(priorReq, req);
-                     edges.push_back(edge);
-                     req->addComp(edge);
-                     priorReq->addReq(edge);
-                     if(dbg.active()){
-                       dbg << d_myworld->myrank() << " Creating edge from task: " << *priorReq->task << " to task: " << *req->task << '\n';
-                       dbg << d_myworld->myrank() << " Prior Req=" << *priorReq << '\n';
-                       dbg << d_myworld->myrank() << " Modify=" << *req << '\n';
-                     }
-                   }
-                 }
-               }
-             }
-             
-             // add the edge between the require/modify and compute
-             Task::Edge* edge = scinew Task::Edge(comp, req);
-             edges.push_back(edge);
-             req->addComp(edge);
-             comp->addReq(edge);
-             
-             if (!sortinfo.find(edge->comp->task)->second.visited &&
-                 !edge->comp->task->isReductionTask()) {
-               cout << "\nWARNING: A task, '" << task->getName() << "', that ";
-               if (modifies)
-                 cout << "modifies '";
-               else
-                 cout << "requires '";
-               cout << req->var->getName() << "' was added before computing task";
-               cout << ", '" << edge->comp->task->getName() << "'\n";
-               cout << "  Required/modified by: " << *task << '\n';
-               cout << "  req: " << *req << '\n';
-               cout << "  Computed by: " << *edge->comp->task << '\n';
-               cout << "  comp: " << *comp << '\n';
-               cout << "\n";
-             }
-             count++;
-             if(dbg.active()){
-               dbg << d_myworld->myrank() << "       Creating edge from task: " << *comp->task << " to task: " << *task << '\n';
-               dbg << d_myworld->myrank() << "         Req=" << *req << '\n';
-               dbg << d_myworld->myrank() << "         Comp=" << *comp << '\n';
-             }
-           }
-         }
-         
-         // if we cannot find the required variable, throw an exception
-         if(count == 0 && (!req->matls || req->matls->size() > 0) 
-            && (!req->patches || req->patches->size() > 0)){
-           if(req->patches){
-             cout << req->patches->size() << " Patches: ";
-             for(int i=0;i<req->patches->size();i++)
-               cout << req->patches->get(i)->getID() << " ";
-             cout << '\n';
-           } else if(req->reductionLevel) {
-             cout << "On level " << req->reductionLevel->getIndex() << '\n';
-           } else if(task->getPatchSet()){
-             cout << "Patches from task: ";
-             const PatchSet* patches = task->getPatchSet();
-             for(int i=0;i<patches->size();i++){
-               const PatchSubset* pat=patches->getSubset(i);
-               for(int i=0;i<pat->size();i++)
-                 cout << pat->get(i)->getID() << " ";
-               cout << " ";
-             }
-             cout << '\n';
-           } else {
-             cout << "On global level\n";
-           }
-           if(req->matls){
-             cout << req->matls->size() << " Matls: ";
-             for(int i=0;i<req->matls->size();i++)
-               cout << req->matls->get(i) << " ";
-             cout << '\n';
-           } else if(task->getMaterialSet()){
-             cout << "Matls from task: ";
-             const MaterialSet* matls = task->getMaterialSet();
-             for(int i=0;i<matls->size();i++){
-               const MaterialSubset* mat = matls->getSubset(i);
-               for(int i=0;i<mat->size();i++)
-                 cout << mat->get(i) << " ";
-               cout << " ";
-             }
-             cout << '\n';
-           } else {
-             cout << "No matls\n";
-           }
-           SCI_THROW(InternalError("Scheduler could not find specific production for variable: "+req->var->getName()+", required for task: "+task->getName(), __FILE__, __LINE__));
-         }
-       }
-       if (modifies) {
-         // not just requires, but modifies, so the comps map must be
-         // updated so future modifies or requires will link to this one.
-         comps.insert(make_pair(req->var, req));
-         if (dbg.active())
-           dbg << d_myworld->myrank() << " Added modified comp for: " << *req << '\n';
-       }
+      pair<CompMap::iterator,CompMap::iterator> iters 
+        = comps.equal_range(req->var);
+      int count=0;
+      for(CompMap::iterator compiter = iters.first;
+          compiter != iters.second; ++compiter){
+        
+        if(req->var->typeDescription() != compiter->first->typeDescription())
+          SCI_THROW(TypeMismatchException("Type mismatch for variable: "+req->var->getName(), __FILE__, __LINE__));
+        
+        // determine if we need to add a dependency edge
+        bool add=false;
+        if (dbg.active())
+          dbg << d_myworld->myrank() << "       Checking edge from comp: " << *compiter->second << ", task: " << *compiter->second->task << ", domain: " << compiter->second->patches_dom << '\n';
+        if(req->mapDataWarehouse() == compiter->second->mapDataWarehouse()){
+          if(task->isReductionTask()){
+            // Make sure that we get the comp from the reduction task
+            // Add if the level matches, but do not create a dependency on self
+            if(compiter->second->reductionLevel == req->reductionLevel
+               && compiter->second->task != task)
+              add=true;
+          } else if(req->var->typeDescription()->isReductionVariable()){
+            if(compiter->second->task->isReductionTask()) {
+              add=true;
+            }
+          } else if(overlaps(compiter->second, req))
+            add=true;
+        }
+        
+        if(!add)
+          if (dbg.active())
+            dbg << d_myworld->myrank() << "       did NOT create dependency\n";
+        if(add){
+          Task::Dependency* comp = compiter->second;
+          
+          if (modifies) {
+            // Add dependency edges to each task that requires the data
+            // before it is modified.
+            for (Task::Edge* otherEdge = comp->req_head; otherEdge != 0;
+                 otherEdge = otherEdge->reqNext) {
+              Task::Dependency* priorReq =
+                const_cast<Task::Dependency*>(otherEdge->req);
+              if (priorReq != req) {
+                ASSERT(priorReq->var->equals(req->var));
+                if (priorReq->task != task) {		
+                  Task::Edge* edge = scinew Task::Edge(priorReq, req);
+                  edges.push_back(edge);
+                  req->addComp(edge);
+                  priorReq->addReq(edge);
+                  if(dbg.active()){
+                    dbg << d_myworld->myrank() << " Creating edge from task: " << *priorReq->task << " to task: " << *req->task << '\n';
+                    dbg << d_myworld->myrank() << " Prior Req=" << *priorReq << '\n';
+                    dbg << d_myworld->myrank() << " Modify=" << *req << '\n';
+                  }
+                }
+              }
+            }
+          }
+          
+          // add the edge between the require/modify and compute
+          Task::Edge* edge = scinew Task::Edge(comp, req);
+          edges.push_back(edge);
+          req->addComp(edge);
+          comp->addReq(edge);
+          
+          if (!sortinfo.find(edge->comp->task)->second.visited &&
+              !edge->comp->task->isReductionTask()) {
+            cout << "\nWARNING: A task, '" << task->getName() << "', that ";
+            if (modifies)
+              cout << "modifies '";
+            else
+              cout << "requires '";
+            cout << req->var->getName() << "' was added before computing task";
+            cout << ", '" << edge->comp->task->getName() << "'\n";
+            cout << "  Required/modified by: " << *task << '\n';
+            cout << "  req: " << *req << '\n';
+            cout << "  Computed by: " << *edge->comp->task << '\n';
+            cout << "  comp: " << *comp << '\n';
+            cout << "\n";
+          }
+          count++;
+          if(dbg.active()){
+            dbg << d_myworld->myrank() << "       Creating edge from task: " << *comp->task << " to task: " << *task << '\n';
+            dbg << d_myworld->myrank() << "         Req=" << *req << '\n';
+            dbg << d_myworld->myrank() << "         Comp=" << *comp << '\n';
+          }
+        }
+      }
+      
+      // if we cannot find the required variable, throw an exception
+      if(count == 0 && (!req->matls || req->matls->size() > 0) 
+         && (!req->patches || req->patches->size() > 0)
+         && !(req->lookInOldTG && type_ == Scheduler::IntermediateTaskGraph)){
+        // if this is an Intermediate TG and the requested data is done from another TG,
+        // we need to look in this TG first, but don't worry if you don't find it
+        if(req->patches){
+          cout << req->patches->size() << " Patches: ";
+          for(int i=0;i<req->patches->size();i++)
+            cout << req->patches->get(i)->getID() << " ";
+          cout << '\n';
+        } else if(req->reductionLevel) {
+          cout << "On level " << req->reductionLevel->getIndex() << '\n';
+        } else if(task->getPatchSet()){
+          cout << "Patches from task: ";
+          const PatchSet* patches = task->getPatchSet();
+          for(int i=0;i<patches->size();i++){
+            const PatchSubset* pat=patches->getSubset(i);
+            for(int i=0;i<pat->size();i++)
+              cout << pat->get(i)->getID() << " ";
+            cout << " ";
+          }
+          cout << '\n';
+        } else {
+          cout << "On global level\n";
+        }
+        if(req->matls){
+          cout << req->matls->size() << " Matls: ";
+          for(int i=0;i<req->matls->size();i++)
+            cout << req->matls->get(i) << " ";
+          cout << '\n';
+        } else if(task->getMaterialSet()){
+          cout << "Matls from task: ";
+          const MaterialSet* matls = task->getMaterialSet();
+          for(int i=0;i<matls->size();i++){
+            const MaterialSubset* mat = matls->getSubset(i);
+            for(int i=0;i<mat->size();i++)
+              cout << mat->get(i) << " ";
+            cout << " ";
+          }
+          cout << '\n';
+        } else {
+          cout << "No matls\n";
+        }
+        SCI_THROW(InternalError("Scheduler could not find specific production for variable: "+req->var->getName()+", required for task: "+task->getName(), __FILE__, __LINE__));
+      }
+      if (modifies) {
+        // not just requires, but modifies, so the comps map must be
+        // updated so future modifies or requires will link to this one.
+        comps.insert(make_pair(req->var, req));
+        if (dbg.active())
+          dbg << d_myworld->myrank() << " Added modified comp for: " << *req << '\n';
+      }
     }
   }
 }
