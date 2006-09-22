@@ -95,19 +95,28 @@ SET(PAINTER_SRCS
 )
 
 
-ADD_EXECUTABLE(painter MACOSX_BUNDLE ${PAINTER_SRCS})
+
 
 IF(APPLE)
+  ADD_EXECUTABLE(painter MACOSX_BUNDLE ${PAINTER_SRCS})
   SET_TARGET_PROPERTIES(painter PROPERTIES LINK_FLAGS "-framework Carbon")
+  ADD_CUSTOM_COMMAND(TARGET painter
+                     POST_BUILD
+                     COMMAND ${CMAKE_COMMAND}
+                     ARGS  -E copy_directory
+                     ${Painter_SOURCE_DIR}/data
+                     ${EXECUTABLE_OUTPUT_PATH}/painter.app/Contents/MacOS/data)
+ELSE(APPLE)
+  ADD_EXECUTABLE(painter ${PAINTER_SRCS})
+  ADD_CUSTOM_COMMAND(TARGET painter
+                     POST_BUILD
+                     COMMAND ${CMAKE_COMMAND}
+                     ARGS  -E copy_directory
+                     ${Painter_SOURCE_DIR}/data
+                     ${EXECUTABLE_OUTPUT_PATH}/data)
 ENDIF(APPLE)
 
 
-ADD_CUSTOM_COMMAND(TARGET painter
-                   POST_BUILD
-                   COMMAND ${CMAKE_COMMAND}
-                   ARGS  -E copy_directory
-                   ${Painter_SOURCE_DIR}/data
-                   ${EXECUTABLE_OUTPUT_PATH}/data)
                 
 TARGET_LINK_LIBRARIES(painter 
   Core_Algorithms_Visualization 
