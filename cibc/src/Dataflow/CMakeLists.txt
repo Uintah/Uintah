@@ -84,6 +84,27 @@ INCLUDE_DIRECTORIES(${TK_INCLUDE1} ${TK_INCLUDE2})
 SUBDIRS(Comm Constraints GuiInterface Modules Network TkExtensions TCLThread
 Widgets)
 
+# createTclIndex and tclIndex files
+# DV Fix for each packages, create their tclIndex file
+SET(CREATETCLINDEX ${CMAKE_BINARY_DIR}/createTclIndex CACHE INTERNAL "createTclIndex script file")
+SET(TCLSH ${SCIRUN_THIRDPARTY_PATH}/bin/tclsh${TCL_VERSION})
+SET(TCL_INIT_DIR ${SCIRUN_THIRDPARTY_PATH}/lib/tcl/)
+SET(ITCL_INIT_DIR ${SCIRUN_THIRDPARTY_PATH}/lib/itcl/)
+MESSAGE(STATUS "Creating createTclIndex")
+CONFIGURE_FILE (
+  "${SCIRUN_SOURCE_DIR}/src/scripts/cmake_createTclIndex.in"
+  "${CREATETCLINDEX}"
+)
+
+# Change permissions on createTclIndex file and generate
+# tclIndex files for Core/GUI and Dataflow/GUI
+ADD_CUSTOM_TARGET(tclIndex ALL
+  chmod a+x ${CREATETCLINDEX}
+  COMMAND ${CREATETCLINDEX} ${SCIRUN_SOURCE_DIR}/src/Core/GUI 
+  COMMAND ${CREATETCLINDEX} ${SCIRUN_SOURCE_DIR}/src/Dataflow/GUI
+)
+
+# scirun executable
 ADD_EXECUTABLE(scirun
 /home/darbyb/projects/Experimental/SCIRun/src/main/main.cc)
 
