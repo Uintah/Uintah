@@ -291,6 +291,7 @@ SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${XML2_INCLUDE})
 #-----------------------------------------------------------------------------
 # Tcl/Tk
 SET(TK_VERSION 8.3)
+SET(TCL_VERSION 8.3)
 
 #-----------------------------------------------------------------------------
 # ITK library
