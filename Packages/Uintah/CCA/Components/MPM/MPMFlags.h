@@ -71,6 +71,7 @@ namespace Uintah {
     double      d_min_part_mass; // Minimum particle mass before deletion  
     double      d_max_vel;       // Maxmimum particle velocity before  deletion
 
+    bool        d_with_ice;
 
     ParticleInterpolator* d_interpolator;
 
