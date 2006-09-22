@@ -207,7 +207,7 @@ void RigidMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->computes(lb->pDampingCoeffLabel);
   }
 
-  if(d_with_ice){
+  if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
   }
 
@@ -346,7 +346,7 @@ void RigidMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(gTemperature,    lb->gTemperatureLabel,    dwi,patch,gac,NGP);
       new_dw->get(gTemperatureNoBC,lb->gTemperatureNoBCLabel,dwi,patch,gac,NGP);
       new_dw->get(gacceleration,   lb->gAccelerationLabel,   dwi,patch,gac,NGP);
-      if(d_with_ice){
+      if(flags->d_with_ice){
         new_dw->get(dTdt,          lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
       }
       else{
