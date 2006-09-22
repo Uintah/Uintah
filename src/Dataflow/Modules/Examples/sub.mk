@@ -16,6 +16,7 @@ SRCS     += \
 	$(SRCDIR)/BasicInput.cc\
 	$(SRCDIR)/BasicOutput.cc\
 	$(SRCDIR)/ChangeTetVolScalars.cc\
+	$(SRCDIR)/ChangeScalars.cc\
 	$(SRCDIR)/HelloWorld.cc\
 	$(SRCDIR)/ZeroTetVolScalars.cc\
 #[INSERT NEW CODE FILE HERE]

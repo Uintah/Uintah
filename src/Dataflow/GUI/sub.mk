@@ -73,6 +73,7 @@ SRCS := \
         $(SRCDIR)/ChangeFieldDataType.tcl \
         $(SRCDIR)/ChangeFieldBounds.tcl \
         $(SRCDIR)/ChangeTetVolScalars.tcl \
+        $(SRCDIR)/ChangeScalars.tcl \
         $(SRCDIR)/ChooseModule.tcl \
         $(SRCDIR)/ChooseColorMap.tcl \
         $(SRCDIR)/ChooseField.tcl \

@@ -25,7 +25,7 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : ChangeTetVolScalars.cc
+//    File   : ChangeScalars.cc
 //    Author : Martin Cole
 //    Date   : Mon Sep 11 11:22:14 2006
 
@@ -38,7 +38,7 @@
 #include <Core/Basis/TetLinearLgn.h>
 #include <Core/Datatypes/TetVolMesh.h>
 #include <Core/Datatypes/GenericField.h>
-
+#include <Dataflow/Modules/Examples/ChangeScalars.h>
 #include <Dataflow/GuiInterface/GuiVar.h>
 
 #include <iostream>
@@ -47,11 +47,11 @@ namespace SCIRun {
 using namespace std;
 using namespace SCIRun;
 
-class ChangeTetVolScalars : public Module 
+class ChangeScalars : public Module 
 {
 public:
-  ChangeTetVolScalars(GuiContext*);
-  virtual ~ChangeTetVolScalars();
+  ChangeScalars(GuiContext*);
+  virtual ~ChangeScalars();
 
   virtual void execute();
   virtual void tcl_command(GuiArgs&, void*);
@@ -60,66 +60,75 @@ private:
 };
 
 
-DECLARE_MAKER(ChangeTetVolScalars)
-ChangeTetVolScalars::ChangeTetVolScalars(GuiContext* ctx) : 
-  Module("ChangeTetVolScalars", ctx, Source, "Examples", "SCIRun"),
+DECLARE_MAKER(ChangeScalars)
+ChangeScalars::ChangeScalars(GuiContext* ctx) : 
+  Module("ChangeScalars", ctx, Source, "Examples", "SCIRun"),
   newval_(get_ctx()->subVar("newval"), 1.0)
 {
 }
 
-ChangeTetVolScalars::~ChangeTetVolScalars()
+ChangeScalars::~ChangeScalars()
 {
 }
 
 void
-ChangeTetVolScalars::execute()
+ChangeScalars::execute()
 {
-  typedef TetVolMesh<TetLinearLgn<Point> >    TVMesh;
-  typedef TetLinearLgn<double>                DataBasis;
-  typedef GenericField<TVMesh, DataBasis, vector<double> > TVField;  
 
   FieldHandle field_handle;
   if (! get_input_handle("InField", field_handle, true)) {
-    error("ChangeTetVolScalars must have a SCIRun::Field as input to continue.");
+    error("ChangeScalars must have a SCIRun::Field as input to continue.");
     return;
   }
 
-  // Must detach since we will be altering the input field.
-  field_handle.detach();
+ 
 
-  TVField *in = dynamic_cast<TVField*>(field_handle.get_rep());
+  // Check for scalar field type.
 
-  if (in == 0) {
-    error("This Module only accepts Linear TetVol Fields with double data.");
-    return;
-  }
+//   if (in == 0) {
+//     error("This Module only accepts Linear TetVol Fields with double data.");
+//     return;
+//   }
     
   newval_.reset();
 
-  TVField::mesh_handle_type mh = in->get_typed_mesh();
-  TVMesh::Node::iterator iter;
-  TVMesh::Node::iterator end;
-  mh->begin(iter);
-  mh->end(end);
+  const TypeDescription *ftd = field_handle->get_type_description();
+  CompileInfoHandle ci = ChangeScalarsAlgoBase::get_compile_info(ftd);
+  Handle<ChangeScalarsAlgoBase> algo;
+  if (!DynamicCompilation::compile(ci, algo, this)) return;
 
-  while (iter != end) {
-    TVMesh::Node::index_type ni = *iter;
-    Point node;
-    mh->get_center(node, ni);
-    TVField::value_type val;
-    in->value(val, ni);
-    cerr << "at point: " << node << " the input value is: " << val << endl;
+  FieldHandle out_field_handle(algo->execute(this, field_handle, newval_.get()));
 
-    // Set the value to be the value from the gui;
-    in->set_value(newval_.get(), ni);
-    ++iter;
-  }
+  // Create the algorithm for module and call it.
 
-  send_output_handle("OutField", field_handle);
+  send_output_handle("OutField", out_field_handle);
 }
 
+
+CompileInfoHandle
+ChangeScalarsAlgoBase::get_compile_info(const TypeDescription *td) 
+{
+
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("ChangeScalarsT");
+  static const string base_class_name("ChangeScalarsAlgoBase");
+
+
+  CompileInfo *rval = scinew CompileInfo(template_class_name + "." +
+					 td->get_filename() + ".",
+					 base_class_name, 
+					 template_class_name, 
+					 td->get_name());
+  rval->add_include(include_path);
+  td->fill_compile_info(rval);
+  return rval;
+}
+
+
+
 void
-ChangeTetVolScalars::tcl_command(GuiArgs& args, void* userdata)
+ChangeScalars::tcl_command(GuiArgs& args, void* userdata)
 {
   Module::tcl_command(args, userdata);
 }
