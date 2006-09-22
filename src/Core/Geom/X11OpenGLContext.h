@@ -29,7 +29,9 @@
 //    Author : McKay Davis
 //    Date   : May 30 2006
 
-#if defined(__linux)
+#include <sci_defs/x11_defs.h>
+
+#if defined(HAVE_X11)
 
 #ifndef CORE_X11OPENGLCONTEXT_H
 #define CORE_X11OPENGLCONTEXT_H
@@ -59,14 +61,16 @@ public:
                    int y = 0,
                    unsigned int width = 640, 
                    unsigned int height = 480,
-                   bool border = true);
+                   bool border = true,
+                   bool show = true);
 
   virtual ~X11OpenGLContext();
 private:  
-  void                  create_context(int id, int w, int h, 
+  void                  create_context(int id, int x, int y, 
                                        unsigned int width, 
                                        unsigned int height,
-                                       bool border);
+                                       bool border,
+                                       bool show);
 
   static void		listvisuals();
 
@@ -102,4 +106,4 @@ private:
 
 #endif // SCIRun_Core_2d_OpenGLContext_h
 
-#endif
+#endif // HAVE_X11

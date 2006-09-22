@@ -38,6 +38,8 @@
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/NetworkIO.h>
 #include <main/sci_version.h>
+#include <Core/Geom/X11OpenGLContext.h>
+
 #include <tcl.h>
 #include <tk.h>
 #include <itk.h>
@@ -488,6 +490,12 @@ TCLThread::startNetworkEditor()
   gui->eval("activate_file_submenus");
 
   // Test for shaders.
+#if defined(HAVE_X11)
+  X11OpenGLContext *context = 
+    new X11OpenGLContext(0, 0, 0, 10, 10, 0, false);
+  delete context;
+#endif
+
   ShaderProgramARB::init_shaders_supported();
 
   Tcl_CreateCommand(the_interp, "exit", exitproc, 0, 0);

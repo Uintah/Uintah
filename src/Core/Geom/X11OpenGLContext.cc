@@ -29,7 +29,9 @@
 //    Author : McKay Davis
 //    Date   : May 30 2006
 
-#if defined(__linux)
+#include <sci_defs/x11_defs.h>
+
+#if defined(HAVE_X11)
 
 #include <Core/Geom/X11OpenGLContext.h>
 #include <Core/Geom/ShaderProgramARB.h>
@@ -64,21 +66,25 @@ X11OpenGLContext::X11OpenGLContext(int visual,
                                    int y,
                                    unsigned int width, 
                                    unsigned int height,
-                                   bool border) : 
+                                   bool border,
+                                   bool show) : 
   OpenGLContext(),
   mutex_("GL lock")
 {
   // Sepeate functions so we can set gdb breakpoints in constructor
-  create_context(visual, x, y, width, height, border);
+  create_context(visual, x, y, width, height, border, show);
 }
 
 
 
 void
-X11OpenGLContext::create_context(int visual, int x, int y,
+X11OpenGLContext::create_context(int visual, 
+                                 int x, 
+                                 int y,
                                  unsigned int width, 
                                  unsigned int height,
-                                 bool border)
+                                 bool border,
+                                 bool show)
 {
   X11Lock::lock();
 
@@ -126,20 +132,22 @@ X11OpenGLContext::create_context(int visual, int x, int y,
                           &attributes_);
   
   if (!window_) {
+    X11Lock::unlock();
     throw ("Cannot create X11 Window " + 
            string(__FILE__)+to_string(__LINE__));
-    X11Lock::unlock();
   }
 
-  XMapRaised(display_, window_);
-  XMoveResizeWindow(display_, window_, x, y, width, height);
+  if (show) {
+    XMapRaised(display_, window_);
+    XMoveResizeWindow(display_, window_, x, y, width, height);
+  }
   XSync(display_, False);
 
   context_ = glXCreateContext(display_, vi_, first_context_, 1);
   if (!context_) {
+    X11Lock::unlock();
     throw ("Cannot create GLX Context" + 
            string(__FILE__)+to_string(__LINE__));
-    X11Lock::unlock();
   }
 
 
