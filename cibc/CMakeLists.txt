@@ -532,10 +532,10 @@ SET(scirun_src_dir "${CMAKE_SOURCE_DIR}/src" CACHE INTERNAL "Path to SCIRun's sr
 SET(scirun_obj_dir ${CMAKE_BINARY_DIR} CACHE INTERNAL "Path to SCIRun's binary directory")
 
 SET(ITCL_WIDGETS ${SCIRUN_THIRDPARTY_PATH}/iwidgets/scripts CACHE INTERNAL "Path to iwidgets scripts")
+SET(ITCL_LIB_DIR ${SCIRUN_THIRDPARTY_PATH}/lib)
 
 # DV maybe this shouldn't be alterable?
 MARK_AS_ADVANCED(LOAD_PACKAGE)
-SET(LIB_DIR_ITCL ${SCIRUN_THIRDPARTY_PATH})
 
 # sci_defs/error_defs.h
 SET(THROW_LEVEL 0 CACHE STRING "Set throw level N(0-3)")
