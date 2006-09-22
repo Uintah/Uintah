@@ -92,7 +92,6 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
 
   d_nextOutputTime=0.;
   d_SMALL_NUM_MPM=1e-200;
-  d_with_ice    = false;
   contactModel        = 0;
   thermalContactModel = 0;
   heatConductionModel = 0;
@@ -810,7 +809,7 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
     
   t->requires(Task::NewDW, lb->pErosionLabel_preReloc,    gan, NGP);
 
-  if(d_with_ice){
+  if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->pPressureLabel,          gan,NGP);
   }
 
@@ -1143,7 +1142,7 @@ void SerialMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->computes(lb->pDampingCoeffLabel);
   }
 
-  if(d_with_ice){
+  if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
     t->requires(Task::NewDW, lb->massBurnFractionLabel,gac,NGN);
   }
@@ -2087,7 +2086,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       new_dw->allocateAndPut(gstress,      lb->gStressForSavingLabel,dwi,patch);
       new_dw->allocateAndPut(internalforce,lb->gInternalForceLabel,  dwi,patch);
 
-      if(d_with_ice){
+      if(flags->d_with_ice){
         new_dw->get(p_pressure,lb->pPressureLabel, pset);
       }
       else {
@@ -3065,7 +3064,7 @@ void SerialMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(gTemperature,    lb->gTemperatureLabel,    dwi,patch,gac,NGP);
       new_dw->get(gTemperatureNoBC,lb->gTemperatureNoBCLabel,dwi,patch,gac,NGP);
       new_dw->get(frictionTempRate,lb->frictionalWorkLabel,  dwi,patch,gac,NGP);
-      if(d_with_ice){
+      if(flags->d_with_ice){
         new_dw->get(dTdt,          lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
         new_dw->get(massBurnFrac,  lb->massBurnFractionLabel,dwi,patch,gac,NGP);
 //        NCVariable<double> massBurnFrac_create;

@@ -122,7 +122,7 @@ public:
 
   void setWithICE()
   {
-	d_with_ice = true;
+	flags->d_with_ice = true;
   };
 
   enum bctype { NONE=0,
@@ -513,7 +513,6 @@ protected:
   list<Patch::FaceType>  d_bndy_traction_faces; // list of xminus, xplus, yminus, ...
   vector<MPMPhysicalBC*> d_physicalBCs;
   bool             d_fracture;
-  bool             d_with_ice;
   bool             d_recompile;
   IntegratorType d_integrator;
 

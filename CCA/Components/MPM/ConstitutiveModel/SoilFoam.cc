@@ -296,7 +296,13 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
 
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
-    //double dx_ave = (dx.x() + dx.y() + dx.z())/3.0;
+
+    if(flag->d_with_ice){
+      // do this
+    }
+    else{
+      // do that
+    }
 
     int dwi = matl->getDWIndex();
     // Create array for the particle position

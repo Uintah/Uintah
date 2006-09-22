@@ -626,7 +626,7 @@ void FractureMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->requires(Task::NewDW,lb->GMassLabel, gnone); 
   t->computes(lb->GInternalForceLabel);
 
-  if(d_with_ice){
+  if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->pPressureLabel,          gan,NGP);
   }
 
@@ -678,11 +678,6 @@ void FractureMPM::scheduleSolveEquationsMotion(SchedulerP& sched,
   t->requires(Task::NewDW, lb->gExternalForceLabel, Ghost::None);
   //Uncomment  the next line to use damping
   //t->requires(Task::NewDW, lb->gVelocityLabel,      Ghost::None);     
-#if 0
-  if(d_with_ice){
-    t->requires(Task::NewDW, lb->gradPAccNCLabel,   Ghost::None);
-  }
-#endif
   t->computes(lb->gAccelerationLabel);
   
   // for FractureMPM
@@ -934,7 +929,7 @@ void FractureMPM::scheduleInterpolateToParticlesAndUpdate(SchedulerP& sched,
     t->computes(lb->pDampingCoeffLabel);
   }
 
-  if(d_with_ice){
+  if(flags->d_with_ice){
     t->requires(Task::NewDW, lb->dTdt_NCLabel,         gac,NGN);
     t->requires(Task::NewDW, lb->massBurnFractionLabel,gac,NGN);
   }
@@ -1871,7 +1866,7 @@ void FractureMPM::computeInternalForce(const ProcessorGroup*,
       NCVariable<Vector> Ginternalforce;
       new_dw->allocateAndPut(Ginternalforce,lb->GInternalForceLabel, dwi,patch);
 
-      if(d_with_ice){
+      if(flags->d_with_ice){
         new_dw->get(p_pressure,lb->pPressureLabel, pset);
       }
       else {
@@ -2055,17 +2050,6 @@ void FractureMPM::solveEquationsMotion(const ProcessorGroup*,
       new_dw->get(internalforce, lb->gInternalForceLabel, dwi, patch, gnone, 0);
       new_dw->get(externalforce, lb->gExternalForceLabel, dwi, patch, gnone, 0);
       new_dw->get(mass,          lb->gMassLabel,          dwi, patch, gnone, 0);
-#if 0      
-      if(d_with_ice){
-         new_dw->get(gradPAccNC, lb->gradPAccNCLabel,     dwi, patch, gnone, 0);
-      }
-      else{
-  	 NCVariable<Vector> gradPAccNC_create;
-	 new_dw->allocateTemporary(gradPAccNC_create,  patch);
-	 gradPAccNC_create.initialize(Vector(0.,0.,0.));
-	 gradPAccNC = gradPAccNC_create; // reference created data
-      }
-#endif
       //Uncomment to use damping
       //constNCVariable<Vector> velocity;
       //new_dw->get(velocity,      lb->gVelocityLabel,      dwi, patch, gnone, 0);
@@ -2951,7 +2935,7 @@ void FractureMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
       new_dw->get(GTemperature,     lb->GTemperatureLabel,    dwi,patch,gac,NGP);
       new_dw->get(GTemperatureNoBC, lb->GTemperatureNoBCLabel,dwi,patch,gac,NGP);
 
-      if(d_with_ice){
+      if(flags->d_with_ice){
 	new_dw->get(dTdt,            lb->dTdt_NCLabel,         dwi,patch,gac,NGP);
 	new_dw->get(massBurnFrac,    lb->massBurnFractionLabel,dwi,patch,gac,NGP);
       }
