@@ -436,6 +436,32 @@ LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY) $(F_LIBRARY)
 include $(SCIRUN_SCRIPTS)/program.mk
 
 ###############################################
+# pfs 2 - Steve Maas' version
+
+SRCS := $(SRCDIR)/pfs2.cc
+PROGRAM := Packages/Uintah/StandAlone/pfs2
+
+ifeq ($(LARGESOS),yes)
+  PSELIBS := Datflow Packages/Uintah
+else
+  PSELIBS := \
+     Packages/Uintah/Core/Grid \
+     Packages/Uintah/Core/Util \
+     Packages/Uintah/Core/Parallel \
+     Packages/Uintah/Core/Exceptions \
+     Packages/Uintah/Core/Math \
+     Packages/Uintah/Core/ProblemSpec \
+     Packages/Uintah/CCA/Ports \
+     Packages/Uintah/CCA/Components/ProblemSpecification \
+     Core/Exceptions \
+     Core/Geometry
+endif
+
+LIBS    := $(XML2_LIBRARY) $(MPI_LIBRARY) $(M_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/program.mk
+
+###############################################
 
 link_inputs:
 	@( if ! test -L Packages/Uintah/StandAlone/inputs; then \
@@ -485,6 +511,8 @@ gambitFileReader: prereqs Packages/Uintah/StandAlone/gambitFileReader
 slb: prereqs Packages/Uintah/StandAlone/slb
 
 pfs: prereqs Packages/Uintah/StandAlone/pfs
+
+pfs2: prereqs Packages/Uintah/StandAlone/pfs2
 
 timeextract: Packages/Uintah/StandAlone/timeextract
 
