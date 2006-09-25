@@ -71,55 +71,41 @@ ChangeScalarsT<Fld>::execute(ProgressReporter *reporter,
 			     double newval)
 {
 
+  //Must detach since we will be altering the input field.
+  ifh.detach();
+  
+  Fld* in = dynamic_cast<Fld*>(ifh.get_rep());
+  if (! in) {
+    cerr << "Input field type does not match algorithm paramter type." 
+	 << endl;
+    return 0;
+  }
 
-  cerr << "in the dynamically compiled code" << endl;
+  typedef typename Fld::mesh_type Msh;
+
+  typename Fld::mesh_handle_type mh = in->get_typed_mesh();
+  typename Msh::Node::iterator iter;
+  typename Msh::Node::iterator end;
+
+  mh->synchronize(Mesh::NODES_E);
+
+  mh->begin(iter);
+  mh->end(end);
+  while (iter != end) {
+    typename Msh::Node::index_type ni = *iter;
+    Point node;
+    mh->get_center(node, ni);
+    typename Fld::value_type val;
+    in->value(val, ni);
+    cerr << "at point: " << node << " the input value is: " << val << endl;
+
+    // Set the value to be the value from the gui;
+    in->set_value(newval, ni);
+    ++iter;
+  }
+
   return ifh;
 
-
- // Must detach since we will be altering the input field.
- //field_handle.detach();
-//   typedef TetVolMesh<TetLinearLgn<Point> >    TVMesh;
-//   typedef TetLinearLgn<double>                DataBasis;
-//   typedef GenericField<TVMesh, DataBasis, vector<double> > TVField;  
-
-//   FieldHandle field_handle;
-//   if (! get_input_handle("InField", field_handle, true)) {
-//     error("ChangeTetVolScalars must have a SCIRun::Field as input to continue.");
-//     return;
-//   }
-
-//   // Must detach since we will be altering the input field.
-//   field_handle.detach();
-
-//   TVField *in = dynamic_cast<TVField*>(field_handle.get_rep());
-
-//   if (in == 0) {
-//     error("This Module only accepts Linear TetVol Fields with double data.");
-//     return;
-//   }
-    
-//   newval_.reset();
-
-//   TVField::mesh_handle_type mh = in->get_typed_mesh();
-//   TVMesh::Node::iterator iter;
-//   TVMesh::Node::iterator end;
-//   mh->begin(iter);
-//   mh->end(end);
-
-//   while (iter != end) {
-//     TVMesh::Node::index_type ni = *iter;
-//     Point node;
-//     mh->get_center(node, ni);
-//     TVField::value_type val;
-//     in->value(val, ni);
-//     cerr << "at point: " << node << " the input value is: " << val << endl;
-
-//     // Set the value to be the value from the gui;
-//     in->set_value(newval_.get(), ni);
-//     ++iter;
-//   }
-
-//   send_output_handle("OutField", field_handle);
 }
 
 } // End namespace SCIRun
