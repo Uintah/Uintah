@@ -85,11 +85,17 @@ ChangeScalars::execute()
 
   // Check for scalar field type.
 
-//   if (in == 0) {
-//     error("This Module only accepts Linear TetVol Fields with double data.");
-//     return;
-//   }
-    
+  if (! field_handle->query_scalar_interface().get_rep()) {
+    error("This module can only handle scalar data.");
+    return;
+  }
+
+  // Check for at least linear basis.
+  if (field_handle->basis_order() < 1) {
+    error("This module must have a linear or better basis.");
+    return;
+  }  
+  
   newval_.reset();
 
   const TypeDescription *ftd = field_handle->get_type_description();
