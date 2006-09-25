@@ -222,6 +222,13 @@ TMNotifyEvent::TMNotifyEvent(const string &id,
 {
 }
 
+TMNotifyEvent::TMNotifyEvent(const TMNotifyEvent &rhs) :
+  BaseEvent(rhs),
+  tool_id_(rhs.tool_id_),
+  tool_mode_(rhs.tool_mode_),
+  notify_state_(rhs.notify_state_)
+{}
+
 TMNotifyEvent::~TMNotifyEvent()
 {
 }

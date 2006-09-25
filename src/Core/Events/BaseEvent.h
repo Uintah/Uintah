@@ -260,6 +260,8 @@ public:
 
   TMNotifyEvent(const string &id = "", unsigned int s = START_E, 
 		const string &target = "", unsigned long time = 0);
+  TMNotifyEvent(const TMNotifyEvent&);
+
   virtual ~TMNotifyEvent();
 
   virtual void          io(Piostream&);

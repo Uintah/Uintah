@@ -626,6 +626,7 @@
 			  <property name="focus_on_click">True</property>
 			  <property name="active">False</property>
 			  <property name="inconsistent">False</property>
+			  <signal name="toggled" handler="on_select_nodes_toggled" last_modification_time="Mon, 18 Sep 2006 19:23:05 GMT"/>
 			</widget>
 		      </child>
 		    </widget>

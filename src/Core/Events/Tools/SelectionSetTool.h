@@ -44,6 +44,8 @@ namespace SCIRun {
 using std::vector;
 using std::set;
 
+class RenderParams;
+
 class SSTInterface
 {
 public:
@@ -81,12 +83,14 @@ public:
   }
   
   void set_selection_mode(selection_mode_e m) { mode_ = m; }
+  selection_mode_e get_selection_mode() { return mode_; }
 
 private:
   selection_mode_e        mode_;
   FieldHandle             sel_fld_;
   unsigned int            sel_fld_id_;
   SSTInterface           *ssti_;
+  RenderParams           *params_;
 };
 
 } // namespace SCIRun

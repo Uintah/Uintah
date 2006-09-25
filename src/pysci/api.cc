@@ -106,12 +106,12 @@ bool
 tetgen_2surf(string f1, string f2, string outfile)
 {
   unsigned int f1_id = dm->load_field(f1);
-  if (f1_id == -1) {
+  if (f1_id == 0) {
     cerr << "Error opening file: "<< f1 << endl;
     return false;
   }
   unsigned int f2_id = dm->load_field(f2);
-  if (f2_id == -1) {
+  if (f2_id == 0) {
     cerr << "Error opening file: "<< f2 << endl;
     return false;
   }
@@ -199,6 +199,8 @@ void add_tm_notify_event(TMNotifyEvent *te)
   TMNotifyEvent *t = new TMNotifyEvent();
   t->ref_cnt = 1; // workaround for assert in Datatype operator ==
   *t = *te;
+  cerr << "--------" << t->get_tool_mode() << endl;
+
   event_handle_t event = t;
   EventManager::add_event(event);
 }

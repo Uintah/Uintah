@@ -253,14 +253,12 @@ public:
   ToolManip(OpenGLViewer *oglv) :
     TMNotificationTool("OpenGLViewer:ToolManager:ToolManip"),
     oglv_(oglv),
-    mode_(""),
     fbpt_(0)
   {}
 
   virtual propagation_state_e start_tool(string id, unsigned int time, 
 					 string mode)
   {
-    mode_ = mode;
     const string fbpick_name("FBPickTool");
     const string rmfaces_name("RMFacesTool");
     if (id == fbpick_name) {
@@ -277,7 +275,7 @@ public:
 	tm.add_tool(fbpt_, OpenGLViewer::SELECTION_TOOL_E);
       }
 
-      if (mode_ == "nodes") {
+      if (mode == "nodes") {
 	oglv_->set_selection_mode(SelectionSetTool::NODES_E);
       } else {
 	oglv_->set_selection_mode(SelectionSetTool::FACES_E);
@@ -305,11 +303,13 @@ public:
     return STOP_E;
   }
 
-  virtual propagation_state_e resume_tool(string id, unsigned int time)
+  virtual propagation_state_e resume_tool(string id, unsigned int time,
+					  string mode)
   {
     ToolManager &tm = oglv_->get_tm();
+    cerr << "resume_tool(...)" << id << ", " << mode << endl;
     if (! fbpt_) { 
-      start_tool(id, time, mode_); 
+      start_tool(id, time, mode); 
     } else if (tm.query_tool_id(OpenGLViewer::SELECTION_TOOL_E) == 
 	       "suspend selection") 
     {
@@ -320,7 +320,6 @@ public:
 
 private:
   OpenGLViewer                    *oglv_;
-  string                           mode_;
   FrameBufferPickTool             *fbpt_;
 };
 
@@ -1243,6 +1242,7 @@ OpenGLViewer::redraw_frame()
 	fbpick_image_.resize(xres_ * yres_ * 4);
 	glReadPixels(0, 0, xres_, yres_, GL_RGBA, GL_UNSIGNED_BYTE,
 		     &fbpick_image_[0]);
+
 	fbpick_ = false;  // just do the draw once.
 	return;
       }
@@ -1282,9 +1282,9 @@ OpenGLViewer::redraw_frame()
       glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
       
       if (!(pbuffer_ && dump_frame))
-        {
-          gl_context_->swap();
-        }
+      {
+	gl_context_->swap();
+      }
     }
   }
   if (gl_context_) {
@@ -1722,6 +1722,7 @@ OpenGLViewer::draw_visible_scene_graph()
     // make sure the selection_geom_ is up to date.
     SelectionSetTool *sst = 
       (SelectionSetTool*)(selection_set_tool_.get_rep());
+
     if (!sst) {
       cerr << "null selection set tool" << endl;
       return;
@@ -1951,10 +1952,28 @@ OpenGLViewer::redraw_obj(MaterialHandle def, GeomHandle obj)
   }
   if (do_fbpick_p()) {
     // for now only draw faces
-    if (name.find("Face") != string::npos) {
-      cerr << "fbpick draw for : " << name << endl;
+    SelectionSetTool *sst = 
+      dynamic_cast<SelectionSetTool*>(selection_set_tool_.get_rep());
+    if (! sst) return;
+    SelectionSetTool::selection_mode_e mode;
+    mode = sst->get_selection_mode();
+    bool do_draw = false;
+
+    if (mode == SelectionSetTool::NODES_E) {
+      if (name.find("Node") != string::npos) {
+	cerr << "fbpick draw for : " << name << endl;
+	do_draw = true;
+      }
+    } else if (mode == SelectionSetTool::FACES_E) {
+      if (name.find("Face") != string::npos) {
+	do_draw = true;
+      }
+    }
+
+    if (do_draw) {
       obj->fbpick_draw(drawinfo_, def.get_rep(), current_time_);
     }
+
   } else {
     obj->draw(drawinfo_, def.get_rep(), current_time_);
   }

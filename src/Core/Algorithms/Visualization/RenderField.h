@@ -3672,7 +3672,10 @@ struct RenderParams
     do_faces_ = false;
     do_text_ = false;
     color_map_ = 0;
-    def_material_ = new Material(Color(0.3, 0.7, 0.3)); 
+    // don't reset the color if it has been set.
+    if (def_material_ == 0) {
+      def_material_ = new Material(Color(0.3, 0.7, 0.3)); 
+    }
     def_material_->transparency = .93;
     ndt_ = "Spheres";
     edt_ = "Lines";
@@ -3691,7 +3694,10 @@ struct RenderParams
     faces_usedefcolor_ = true;
     approx_div_ = 1;
     faces_usetexture_ = false;
-    text_material_ = new Material(Color(0.25, 0.25, 0.45));
+    // don't reset the color if it has been set.
+    if (text_material_ == 0) {
+      text_material_ = new Material(Color(0.25, 0.25, 0.45));
+    }
     text_use_default_color_ = true;
     text_backface_cull_ = false;
     text_fontsize_ = 1;
