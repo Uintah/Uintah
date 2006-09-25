@@ -146,7 +146,7 @@ void MPMICE::problemSetup(const ProblemSpecP& prob_spec,
     NGN=2;
   }
   
-  cout << "MPMICE:Using soil and foam CM:"<< d_mpm->flags->d_usingSoilFoam_CM << endl;
+  cout << "MPMICE:Using soil and foam CM:"<< d_mpm->d_SF_vars->usingSoilFoam_CM << endl;
   
 
   d_switchCriteria = dynamic_cast<SwitchingCriteria*>
@@ -359,7 +359,7 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
   d_mpm->scheduleSetBCsInterpolated(          sched, mpm_patches, mpm_matls);
   d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
   
-  if(d_mpm->flags->d_usingSoilFoam_CM){
+  if(d_mpm->d_SF_vars->usingSoilFoam_CM){
     cout << "using soil and foam MPMICE"<<endl;
   // 1.  MARTIN:  if(d_cm==SoilFoam) push max vol. strain from particles to nodes
   //     see MPM::interpolateParticlesToGrid
@@ -741,9 +741,10 @@ void MPMICE::scheduleInterpolateNCToCC_0(SchedulerP& sched,
     t->computes(Ilb->sp_vol_CCLabel, mss);
     t->computes(Ilb->rho_CCLabel, mss); 
     // MARTIN
-    if(d_mpm->flags->d_usingSoilFoam_CM){
-       t->requires(Task::NewDW, Mlb->gsv_minLabel, Ghost::AroundCells, 1);
-       t->computes(MIlb->csv_minLabel);
+    if(d_mpm->d_SF_vars->usingSoilFoam_CM){
+       t->requires(Task::NewDW, Mlb->gsv_minLabel, 
+                   d_mpm->d_SF_vars->matl_sub, Ghost::AroundCells, 1);
+       t->computes(MIlb->csv_minLabel, d_mpm->d_SF_vars->matl_sub);
     }
    
     sched->addTask(t, patches, mpm_matls);
@@ -965,9 +966,9 @@ void MPMICE::scheduleComputePressure(SchedulerP& sched,
   t->requires(Task::NewDW,Ilb->sp_vol_CCLabel,     mpm_matls, gn);  
   t->requires(Task::NewDW,MIlb->cMassLabel,        mpm_matls, gn);  
   t->requires(Task::OldDW, MIlb->NC_CCweightLabel, press_matl,gac,1);
-  //MARTIN:  3.  Require max vol strain from CC
-  if(d_mpm->flags->d_usingSoilFoam_CM){
-    t->requires(Task::NewDW,MIlb->csv_minLabel,    mpm_matls, gn);
+  //MARTIN:  3.  Require max vol strain for the soil and foam matl.
+  if(d_mpm->d_SF_vars->usingSoilFoam_CM){
+    t->requires(Task::NewDW,MIlb->csv_minLabel,    d_mpm->d_SF_vars->matl_sub, gn);
   }
  
   t->requires(Task::OldDW,Ilb->press_CCLabel,      press_matl, gn);
@@ -1257,17 +1258,12 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       new_dw->allocateAndPut(sp_vol_CC, Ilb->sp_vol_CCLabel, indx, patch); 
       new_dw->allocateAndPut(rho_CC,    Ilb->rho_CCLabel,    indx, patch);
       
-      //MARTIN: allocateAndPut cv_min for all mpm_matls but initialize it to 
-      //         a obnoxious number
-      //        Get gsv_minLabel for all mpm_matls and do nothing with it
-      //        unless the matl is using soil and foam
-      //
-      // Why:   This "hack" simplifies the scheduling of these matls.
-      
-      new_dw->allocateAndPut(csv_min,  MIlb->csv_minLabel,   indx, patch);
-      csv_min.initialize(d_ice->d_EVIL_NUM); 
-      new_dw->get(gsv_min,   Mlb->gsv_minLabel,      indx, patch,gac, 1);
-      
+      //MARTIN: 
+      if(mpm_matl->getIsSoilFoam()){
+        new_dw->allocateAndPut(csv_min,  MIlb->csv_minLabel,   indx, patch);
+        csv_min.initialize(d_ice->d_EVIL_NUM); 
+        new_dw->get(gsv_min,   Mlb->gsv_minLabel,      indx, patch,gac, 1);
+      }
       double very_small_mass = d_TINY_RHO * cell_vol;
       cmass.initialize(very_small_mass);
 
@@ -1789,8 +1785,8 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
     StaticArray<constCCVariable<double> > rho_CC_old(numALLMatls);
     StaticArray<constCCVariable<double> > mass_CC(numALLMatls);
     StaticArray<constCCVariable<Vector> > vel_CC(numALLMatls);
-    // MARTIN 4.  Declare MaxVolStrainCC as above
-    StaticArray<constCCVariable<double> > sv_min_CC(numALLMatls);
+    // MARTIN 4.  Declare MaxVolStrainCC 
+    constCCVariable<double>  sv_min_CC;
 
     constCCVariable<double> press;    
     CCVariable<double> press_new, delPress_tmp,sumKappa, TMV_CC;
@@ -1836,9 +1832,9 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         new_dw->get(sp_vol_CC[m],Ilb->sp_vol_CCLabel,indx,patch,gn,0); 
         new_dw->get(rho_CC_old[m],Ilb->rho_CCLabel,  indx,patch,gn,0);
         new_dw->allocateTemporary(rho_CC_new[m],  patch);
-        // MARTIN 5.  Get MaxVolStrainCC as above
-        if(d_mpm->flags->d_usingSoilFoam_CM){
-          new_dw->get(sv_min_CC[m],  MIlb->csv_minLabel,indx,patch,gn,0);
+        // MARTIN 5.  MaxVolStrainCC
+        if(mpm_matl[m]->getIsSoilFoam()){
+          new_dw->get(sv_min_CC,  MIlb->csv_minLabel,indx,patch,gn,0);
         }
       }
       new_dw->allocateTemporary(rho_micro[m],  patch);
@@ -1866,7 +1862,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
         } else if(mpm_matl[m]){                //  M P M
           
           if(mpm_matl[m]->getIsSoilFoam()) {    // only if mpm matl is using soil and foam
-            maxvolstrain = sv_min_CC[m][c];
+            maxvolstrain = sv_min_CC[c];
           }else {
             maxvolstrain = 0.0;
           }
@@ -1924,7 +1920,7 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
                                                    dp_drho[m],dp_de[m]);
           } else if(mpm_matl[m]){    // MPM
             if(mpm_matl[m]->getIsSoilFoam()) {      // only if mpm matl is using soil and foam
-              maxvolstrain = sv_min_CC[m][c];
+              maxvolstrain = sv_min_CC[c];
             }else {
               maxvolstrain = 0.0;
             }

@@ -99,6 +99,7 @@ SerialMPM::SerialMPM(const ProcessorGroup* myworld) :
   NGN     = 1;
   d_recompile = false;
   dataArchiver = 0;
+  d_SF_vars = scinew SoilFoam_vars();
 }
 
 SerialMPM::~SerialMPM()
@@ -109,6 +110,7 @@ SerialMPM::~SerialMPM()
   delete thermalContactModel;
   delete heatConductionModel;
   MPMPhysicalBCFactory::clean();
+  delete d_SF_vars;
 
 }
 
@@ -139,7 +141,7 @@ void SerialMPM::problemSetup(const ProblemSpecP& prob_spec,
     cm_ps->getAttribute("type", mat_type);
 
     if (mat_type ==  "soil_foam" ){
-      flags->d_usingSoilFoam_CM = true;
+      d_SF_vars->usingSoilFoam_CM = true;
     }
   }
 
@@ -299,9 +301,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     t->computes(lb->pDampingCoeffLabel); 
   }
   
-  if(flags->d_usingSoilFoam_CM) {
-    t->computes(lb->sv_minLabel);
-  }
+
   
   int numMPM = d_sharedState->getNumMPMMatls();
   const PatchSet* patches = level->eachPatch();
@@ -310,6 +310,28 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     ConstitutiveModel* cm = mpm_matl->getConstitutiveModel();
     cm->addInitialComputesAndRequires(t, mpm_matl, patches);
   }
+  
+ //__________________________________
+ //  Determine the materialSet and materialSubse for the material
+ // that is using soil and foam CM 
+ for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    if(mpm_matl->getIsSoilFoam()){
+      vector<int> m(1);
+      m[0] = mpm_matl->getDWIndex();
+      d_SF_vars->matl = new MaterialSet();
+      d_SF_vars->matl->addAll(m);
+      d_SF_vars->matl->addReference();
+      d_SF_vars->matl_sub = new MaterialSubset();
+      d_SF_vars->matl_sub->add(m[0]);
+      d_SF_vars->matl_sub->addReference();
+    }
+  }
+  
+ if(d_SF_vars->usingSoilFoam_CM) {
+  t->computes(lb->sv_minLabel, d_SF_vars->matl_sub);  
+ }
+  
 
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
@@ -359,8 +381,8 @@ void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
   if(!flags->d_doGridReset){
     t->computes(lb->gDisplacementLabel);
   }
-  if(flags->d_usingSoilFoam_CM){
-    t->computes(lb->sv_minLabel,           add_matl);
+  if(d_SF_vars->usingSoilFoam_CM){
+    t->computes(lb->sv_minLabel,  d_SF_vars->matl_sub);
   }
 
   if (flags->d_accStrainEnergy) {
@@ -536,8 +558,8 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pSizeLabel,             gan,NGP);
     
   //t->requires(Task::OldDW, lb->pExternalHeatRateLabel, gan,NGP);
-  if(flags->d_usingSoilFoam_CM){
-    t->requires(Task::OldDW,lb->sv_minLabel,           gan,NGP);
+  if(d_SF_vars->usingSoilFoam_CM){
+    t->requires(Task::OldDW,lb->sv_minLabel, d_SF_vars->matl_sub, gan,NGP);
   }
   
   t->computes(lb->gMassLabel);
@@ -560,8 +582,8 @@ void SerialMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gNumNearParticlesLabel);
   t->computes(lb->TotalMassLabel);
   
-  if(flags->d_usingSoilFoam_CM){
-     t->computes(lb->gsv_minLabel);
+  if(d_SF_vars->usingSoilFoam_CM){
+     t->computes(lb->gsv_minLabel, d_SF_vars->matl_sub);
   }
   
   sched->addTask(t, patches, matls);
@@ -1557,7 +1579,7 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       
-      cout << " SerialMPM:InterpolateParticlesToGrid:  d_usingSoilFoam_CM:  " << flags->d_usingSoilFoam_CM << endl;
+      cout << " SerialMPM:InterpolateParticlesToGrid:  d_usingSoilFoam_CM:  " << d_SF_vars->usingSoilFoam_CM << endl;
       cout << "                                        getIsSoilFoam()   :  " << mpm_matl->getIsSoilFoam() << endl;
 
 
@@ -1611,11 +1633,11 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocateAndPut(gnumnearparticles,lb->gNumNearParticlesLabel,
                              dwi,patch);
       // Martin:
-      // Compute gsv_min for *all* mpm_matls even though we only care about the mpm_matl that
-      // uses the soil and foam CM.  
-      // Why:  This simplifies the sheduling of this variable. 
-      new_dw->allocateAndPut(gsv_min,        lb->gsv_minLabel,       dwi,patch);
-      gsv_min.initialize(d_SMALL_NUM_MPM);
+      // Compute gsv_min if material is soil and foam
+      if(mpm_matl->getIsSoilFoam()){
+        new_dw->allocateAndPut(gsv_min, lb->gsv_minLabel,       dwi,patch);
+        gsv_min.initialize(d_SMALL_NUM_MPM);
+      }
       
       gmass.initialize(d_SMALL_NUM_MPM);
       gvolume.initialize(d_SMALL_NUM_MPM);
