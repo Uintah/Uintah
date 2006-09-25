@@ -124,6 +124,15 @@ public:
   {
 	flags->d_with_ice = true;
   };
+  
+  // special variables for soil and foam
+  struct SoilFoam_vars{
+     bool usingSoilFoam_CM;
+     MaterialSet* matl;
+     MaterialSubset* matl_sub;
+   };
+   SoilFoam_vars* d_SF_vars;
+  
 
   enum bctype { NONE=0,
                 FIXED,

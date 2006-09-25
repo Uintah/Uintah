@@ -51,7 +51,6 @@ MPMFlags::MPMFlags()
   d_doGridReset = true;
   d_min_part_mass = 3.e-15;
   d_max_vel = 3.e105;
-  d_usingSoilFoam_CM = false;
   d_with_ice = false;
 }
 

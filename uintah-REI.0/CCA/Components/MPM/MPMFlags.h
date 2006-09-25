@@ -3,6 +3,7 @@
 
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
 #include <Packages/Uintah/Core/Grid/ParticleInterpolator.h>
+#include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <sgi_stl_warnings_on.h>
@@ -70,7 +71,7 @@ namespace Uintah {
     bool        d_doGridReset;   // Default is true, standard MPM
     double      d_min_part_mass; // Minimum particle mass before deletion  
     double      d_max_vel;       // Maxmimum particle velocity before  deletion
-    bool        d_usingSoilFoam_CM;   // if using soil and foam CM
+    
     bool        d_with_ice;
 
 
