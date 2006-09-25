@@ -3489,19 +3489,32 @@ GeomSpheres::fbpick_draw(DrawInfoOpenGL* di, Material* matl, double)
 
   di->polycount_ += 2 * (nu_-1) * (nv_-1) * centers_.size();
 
-
+  glDisable(GL_LIGHTING);
   glDisable(GL_TEXTURE_1D);
   glDisable(GL_TEXTURE_2D);
   glMatrixMode(GL_MODELVIEW);
-  for (unsigned int i=0; i < centers_.size(); i++)
+
+  unsigned char cols[4];
+  for (unsigned int i = 0; i < centers_.size(); i++)
   {
     unsigned char r, g, b, a;
     idx2rgba(item_idx_[i], r, g, b, a);
-    //cerr << "r,g,b,a: " << r << "," << g << "," << b << "," << a << endl;
-    glColor4ub(r, g, b, a);
+//     cerr << "idx: " << item_idx_[i] << endl;
+//     cerr << "r,g,b,a: " << int(r) << "," << int(g) << "," 
+// 	 << int(b) << "," << int(a) << endl;
+
+    cols[0] = r;
+    cols[1] = g;
+    cols[2] = b;
+    cols[3] = a;
+
+    glColor3ubv(&(cols[0]));
+
     glPushMatrix();
+
     glTranslated(centers_[i].x(), centers_[i].y(), centers_[i].z());
     gluSphere(di->qobj_, ulr?radii_[i]:global_radius_, nu_, nv_);
+
     glPopMatrix();
   }
 

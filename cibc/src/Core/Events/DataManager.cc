@@ -176,10 +176,10 @@ DataManager::show_field(unsigned int fld_id)
   static RenderParams p;
   p.defaults();
   p.faces_transparency_ = true;
-  p.do_nodes_ = false;
+  p.do_nodes_ = true;
   p.do_faces_ = true;
   p.do_edges_ = true;
-  p.do_text_ = true;
+  p.do_text_ = false;
   
   if (! render_field(fld_handle, p)) {
     cerr << "Error: render_field failed." << endl;

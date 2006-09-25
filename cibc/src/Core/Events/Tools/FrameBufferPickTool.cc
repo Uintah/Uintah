@@ -106,8 +106,12 @@ FrameBufferPickTool::get_index_at_selection(int x, int y, unsigned int &idx)
   //  cerr << "rgba at x=" << x << " y=" << y << " :" 
   //     << (int)r << "," << (int)g << "," << (int)b << "," << (int)a << endl; 
 
-  rgba2idx(idx, r, g, b, a);
-  //cerr << "idx at x=" << x << " y=" << y << " :" << idx << endl;
+  rgba2idx(idx, r, g, b, a); // the index is drawn + 1 so that we can 
+                             // distinguish the element 0 from and empty pick.
+
+//   if (idx == 0) return false;
+//   idx--;
+  cerr << "idx at x=" << x << " y=" << y << " :" << idx << endl;
   return true;
 }
 
@@ -123,7 +127,6 @@ FrameBufferPickTool::add_pick_to_selection(int x, int y)
 void
 FrameBufferPickTool::remove_pick_from_selection(int x, int y)
 {
-  cerr << "FrameBufferPickTool::remove_pick_from_selection" << endl;
   unsigned int idx;
   if (get_index_at_selection(x, y, idx)) {
     fbi_->remove_selection(idx);

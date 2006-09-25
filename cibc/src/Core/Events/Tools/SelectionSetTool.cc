@@ -45,8 +45,13 @@ SelectionSetTool::SelectionSetTool(string name, SSTInterface *ssti) :
   mode_(FACES_E),
   sel_fld_(0),
   sel_fld_id_(0),
-  ssti_(ssti)
-{}
+  ssti_(ssti),
+  params_(new RenderParams())
+{
+  params_->defaults();
+  params_->def_material_ = new Material(Color(0.9, 0.1, 0.1));
+  params_->text_material_ = new Material(Color(0.9, 0.1, 0.1));
+}
 
 SelectionSetTool::~SelectionSetTool() 
 {}
@@ -59,7 +64,6 @@ SelectionSetTool::process_event(event_handle_t e)
   if (st) {
     sel_fld_ = st->get_selection_target();
     sel_fld_id_ = st->get_selection_id();
-    ssti_->set_selection_set_visible(true);
     return STOP_E;
   }
   return CONTINUE_E;
@@ -116,24 +120,28 @@ SelectionSetTool::render_selection_set()
 {
   //create a new field with the selection items in it;
   if (! sel_fld_.get_rep()) { return; }
-  static RenderParams p;
-  p.defaults();
-  p.def_material_ = new Material(Color(0.9, 0.1, 0.1)); 
-      
+  if (! ssti_->get_selection_set().size()) { 
+    ssti_->set_selection_geom(GeomHandle(0));   
+    return; 
+  }
+
+  params_->defaults(); // won't reset the colors we already set
 
   FieldHandle sel_vis;
   switch (mode_) {
 
   case NODES_E:
-    p.do_nodes_ = true;
+    params_->do_nodes_ = true;
+    params_->do_text_ = true;
+    params_->ns_ = 1.0;
     sel_vis = clip_nodes(sel_fld_, ssti_->get_selection_set());
     break;
   case EDGES_E:
-    p.do_edges_ = true;
+    params_->do_edges_ = true;
     break;
   default:
   case FACES_E:
-    p.do_faces_ = true;
+    params_->do_faces_ = true;
     sel_vis = clip_faces(sel_fld_, ssti_->get_selection_set());
     break;
   case CELLS_E:
@@ -142,7 +150,7 @@ SelectionSetTool::render_selection_set()
   };
       
 
-  if (!sel_vis.get_rep() || !render_field(sel_vis, p)) {
+  if (!sel_vis.get_rep() || !render_field(sel_vis, *params_)) {
     cerr << "Error: render_field failed." << endl;
     return;
   }
@@ -154,30 +162,34 @@ SelectionSetTool::render_selection_set()
 
   case NODES_E:
     {
-      gmat = scinew GeomMaterial(p.renderer_->node_switch_, 
-				 p.def_material_);
+      gmat = scinew GeomMaterial(params_->renderer_->node_switch_, 
+				 params_->def_material_);
       geom = scinew GeomSwitch(scinew GeomColorMap(gmat, 
-						   p.color_map_));
-      name = p.nodes_transparency_ ? "Transparent Nodes" : "Nodes";
+						   params_->color_map_));
+      name = params_->nodes_transparency_ ? "Transparent Nodes" : "Nodes";
+
+//       gmat = scinew GeomMaterial(params_->text_geometry_, params_->text_material_);
+//       geom = scinew GeomSwitch(new GeomColorMap(gmat, params_->color_map_));
+//       name = params_->text_backface_cull_ ? "Culled Text Data":"Text Data";
     }
     break;
   case EDGES_E:
     {
-      gmat = scinew GeomMaterial(p.renderer_->edge_switch_, 
-				 p.def_material_);
+      gmat = scinew GeomMaterial(params_->renderer_->edge_switch_, 
+				 params_->def_material_);
       geom = scinew GeomSwitch(scinew GeomColorMap(gmat, 
-						   p.color_map_));
-      name = p.edges_transparency_ ? "Transparent Edges" : "Edges";
+						   params_->color_map_));
+      name = params_->edges_transparency_ ? "Transparent Edges" : "Edges";
     }
     break;
   default:
   case FACES_E:
     {
-      gmat = scinew GeomMaterial(p.renderer_->face_switch_, 
-				 p.def_material_);
+      gmat = scinew GeomMaterial(params_->renderer_->face_switch_, 
+				 params_->def_material_);
       geom = scinew GeomSwitch(scinew GeomColorMap(gmat, 
-						   p.color_map_));
-      name = p.faces_transparency_ ? "Transparent Faces" : "Faces";
+						   params_->color_map_));
+      name = params_->faces_transparency_ ? "Transparent Faces" : "Faces";
     }
     break;
   };

@@ -208,7 +208,8 @@ public:
     return CONTINUE_E;
   }
 
-  virtual propagation_state_e resume_tool(string id, unsigned int time)
+  virtual propagation_state_e resume_tool(string id, unsigned int time,
+					  string mode)
   {
     return CONTINUE_E;
   }

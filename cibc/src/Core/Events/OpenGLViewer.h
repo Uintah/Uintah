@@ -172,9 +172,11 @@ public:
   void                delete_selected_faces();
   void                add_selection(unsigned int idx) {
     selection_set_.insert(idx);
+    selection_set_visible_ = true;
   }
   void                remove_selection(unsigned int idx) {
     selection_set_.erase(idx);
+    if (selection_set_.size() == 0) selection_set_visible_ = false;
   }
 
   void                set_selection_geom(GeomHandle geom) {
