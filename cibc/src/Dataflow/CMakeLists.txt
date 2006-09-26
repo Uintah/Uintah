@@ -63,6 +63,23 @@ ELSE(SCIRUN_FOUND)
   MESSAGE(FATAL_ERROR "Cannot build SCIRun Dataflow without SCIRUN Core. Please set SCIRUN_DIR.")
 ENDIF(SCIRUN_FOUND)
 
+# TCL include directories
+SET(TCL_SRC_PATH ${SCIRUN_THIRDPARTY_PATH}/src/tcl CACHE PATH "Path to tcl source")
+SET(TCL_INCLUDE1 ${TCL_SRC_PATH}/generic)
+IF(CMAKE_SYSTEM_NAME MATCHES Darwin)
+  SET(TCL_INCLUDE2 ${TCL_SRC_PATH}/mac)
+ELSE(CMAKE_SYSTEM_NAME MATCHES Darwin)
+  SET(TCL_INCLUDE2 ${TCL_SRC_PATH}/unix)
+ENDIF(CMAKE_SYSTEM_NAME MATCHES Darwin)
+
+FIND_PATH(TCL_INCLUDE tcl.h
+           ${SCIRUN_THIRDPARTY_PATH}/include
+           /usr/local/include
+           /usr/include
+           /include)
+
+INCLUDE_DIRECTORIES(${TCL_INCLUDE1} ${TCL_INCLUDE2})
+
 # TK include directories
 SET(TK_SRC_PATH ${SCIRUN_THIRDPARTY_PATH}/src/tk CACHE PATH "Path to tk source")
 SET(TK_INCLUDE1 ${TK_SRC_PATH}/generic)
