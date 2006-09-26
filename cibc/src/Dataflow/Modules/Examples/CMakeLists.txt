@@ -31,6 +31,7 @@
 SET(Dataflow_Modules_Examples_SRCS
   BasicInput.cc
   BasicOutput.cc
+  ChangeScalars.cc
   ChangeTetVolScalars.cc
   HelloWorld.cc
   ZeroTetVolScalars.cc
