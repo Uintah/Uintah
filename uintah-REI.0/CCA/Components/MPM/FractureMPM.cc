@@ -114,7 +114,7 @@ FractureMPM::materialProblemSetup(const ProblemSpecP& prob_spec,
        ps = ps->findNextBlock("material") ) {
 
     //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps, sharedState);
+    MPMMaterial *mat = scinew MPMMaterial(ps, sharedState, flags);
     sharedState->registerMPMMaterial(mat);
 
     // If new particles are to be created, create a copy of each material
@@ -2050,6 +2050,7 @@ void FractureMPM::solveEquationsMotion(const ProcessorGroup*,
       new_dw->get(internalforce, lb->gInternalForceLabel, dwi, patch, gnone, 0);
       new_dw->get(externalforce, lb->gExternalForceLabel, dwi, patch, gnone, 0);
       new_dw->get(mass,          lb->gMassLabel,          dwi, patch, gnone, 0);
+
       //Uncomment to use damping
       //constNCVariable<Vector> velocity;
       //new_dw->get(velocity,      lb->gVelocityLabel,      dwi, patch, gnone, 0);

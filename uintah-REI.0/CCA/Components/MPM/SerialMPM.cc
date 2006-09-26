@@ -216,7 +216,7 @@ void SerialMPM::addMaterial(const ProblemSpecP& prob_spec,GridP&,
   for (ProblemSpecP ps = mpm_mat_ps->findBlock("material"); ps != 0;
        ps = ps->findNextBlock("material") ) {
     //Create and register as an MPM material
-    MPMMaterial *mat = scinew MPMMaterial(ps, d_sharedState);
+    MPMMaterial *mat = scinew MPMMaterial(ps, d_sharedState, flags);
     sharedState->registerMPMMaterial(mat);
   }
 }
@@ -300,9 +300,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     t->computes(lb->pDampingRateLabel); 
     t->computes(lb->pDampingCoeffLabel); 
   }
-  
 
-  
   int numMPM = d_sharedState->getNumMPMMatls();
   const PatchSet* patches = level->eachPatch();
   for(int m = 0; m < numMPM; m++){

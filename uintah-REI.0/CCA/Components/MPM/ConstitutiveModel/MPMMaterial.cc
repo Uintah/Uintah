@@ -33,24 +33,22 @@ using namespace Uintah;
 using namespace SCIRun;
 
 // Standard Constructor
-MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss)
+MPMMaterial::MPMMaterial(ProblemSpecP& ps, SimulationStateP& ss,MPMFlags* flags)
   : Material(ps), d_cm(0),  d_particle_creator(0)
 {
   d_lb = scinew MPMLabel();
-  d_flag = scinew MPMFlags();
-  d_flag->readMPMFlags(ps);
   // The standard set of initializations needed
-  standardInitialization(ps);
+  standardInitialization(ps,flags);
   
   d_cm->setSharedState(ss.get_rep());
   // Check to see which ParticleCreator object we need
 
-  d_particle_creator = ParticleCreatorFactory::create(ps,this,d_flag);
+  d_particle_creator = ParticleCreatorFactory::create(ps,this,flags);
 
 }
 
 void
-MPMMaterial::standardInitialization(ProblemSpecP& ps)
+MPMMaterial::standardInitialization(ProblemSpecP& ps, MPMFlags* flags)
 
 {
   // Follow the layout of the input file
@@ -65,7 +63,7 @@ MPMMaterial::standardInitialization(ProblemSpecP& ps)
   // 5.  Assign the velocity field.
 
   // Step 1 -- create the constitutive gmodel.
-  d_cm = ConstitutiveModelFactory::create(ps,d_flag);
+  d_cm = ConstitutiveModelFactory::create(ps,flags);
   if(!d_cm){
     ostringstream desc;
     desc << "An error occured in the ConstitutiveModelFactory that has \n" 
@@ -147,7 +145,6 @@ MPMMaterial::MPMMaterial() : d_cm(0), d_particle_creator(0)
 MPMMaterial::~MPMMaterial()
 {
   delete d_lb;
-  delete d_flag;
   delete d_cm;
   delete d_particle_creator;
 
@@ -187,7 +184,6 @@ void
 MPMMaterial::copyWithoutGeom(ProblemSpecP& ps,const MPMMaterial* mat, 
                              MPMFlags* flags)
 {
-  d_flag = flags;
   d_cm = mat->d_cm->clone();
   d_density = mat->d_density;
   d_thermalConductivity = mat->d_thermalConductivity;
@@ -199,9 +195,7 @@ MPMMaterial::copyWithoutGeom(ProblemSpecP& ps,const MPMMaterial* mat,
   d_is_rigid = mat->d_is_rigid;
 
   // Check to see which ParticleCreator object we need
-
   d_particle_creator = ParticleCreatorFactory::create(ps,this,flags);
-
 }
 
 ConstitutiveModel* MPMMaterial::getConstitutiveModel() const
