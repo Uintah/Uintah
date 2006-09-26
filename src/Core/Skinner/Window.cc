@@ -42,7 +42,7 @@
 #include <Core/Events/BaseEvent.h>
 #include <iostream>
 #include <sci_gl.h>
-
+#include <sci_glu.h>
 
 #if defined(_WIN32)
 #  include <Core/Geom/Win32OpenGLContext.h>
