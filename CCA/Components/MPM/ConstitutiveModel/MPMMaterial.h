@@ -71,7 +71,7 @@ WARNING
    MPMMaterial();
 
    // Standard MPM Material Constructor
-   MPMMaterial(ProblemSpecP&, SimulationStateP& ss);
+   MPMMaterial(ProblemSpecP&, SimulationStateP& ss, MPMFlags* flags);
          
    ~MPMMaterial();
 
@@ -133,7 +133,6 @@ WARNING
  private:
 
    MPMLabel* d_lb;
-   MPMFlags* d_flag;
    ConstitutiveModel* d_cm;
    ParticleCreator* d_particle_creator;
 
@@ -163,7 +162,7 @@ WARNING
    //
    // The standard set of initialization actions except particlecreator
    //
-   void standardInitialization(ProblemSpecP& ps);
+   void standardInitialization(ProblemSpecP& ps, MPMFlags* flags);
  };
 
 } // End namespace Uintah
