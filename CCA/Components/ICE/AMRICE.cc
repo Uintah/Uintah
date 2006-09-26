@@ -296,29 +296,29 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
                                        DataWarehouse* fine_new_dw)
 {
   double subCycleProgress = getSubCycleProgress(fine_new_dw);
-  const Level* level = getLevel(patches);
-  if(level->getIndex() > 0){     
+  const Level* fineLevel = getLevel(patches);
+  if(fineLevel->getIndex() > 0){     
     cout_doing << d_myworld->myrank() 
                << " Doing refineCoarseFineInterface"<< "\t\t\t AMRICE L-" 
-               << level->getIndex() << " Patches: " << *patches << " progressVar " << subCycleProgress
+               << fineLevel->getIndex() << " Patches: " << *patches << " progressVar " << subCycleProgress
                << endl;
     int  numMatls = d_sharedState->getNumMatls();
     bool dbg_onOff = cout_dbg.active();      // is cout_dbg switch on or off
       
     for(int p=0;p<patches->size();p++){
-      const Patch* patch = patches->get(p);
+      const Patch* finePatch = patches->get(p);
 
       //__________________________________
       //pressure
       CCVariable<double> press_CC;
-      fine_new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,   patch);
+      fine_new_dw->getModifiable(press_CC, lb->press_CCLabel,  0,   finePatch);
       if(switchDebug_AMR_refineInterface){
         ostringstream desc;
         desc << "TOP_refineInterface_patch_"
-               << patch->getID()<< " step " << subCycleProgress;
-        printData(0, patch,   1, desc.str(), "press_CC",    press_CC);
+               << finePatch->getID()<< " step " << subCycleProgress;
+        printData(0, finePatch,   1, desc.str(), "press_CC",    press_CC);
       }
-      refineCoarseFineBoundaries(patch, press_CC, fine_new_dw,
+      refineCoarseFineBoundaries(finePatch, press_CC, fine_new_dw,
                                  lb->press_CCLabel,  0,   subCycleProgress);
 
       for (int m = 0; m < numMatls; m++) {
@@ -330,37 +330,37 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
         CCVariable<Vector> vel_CC;
 
         if(ice_matl){
-          fine_new_dw->getModifiable(rho_CC,   lb->rho_CCLabel,    indx,patch);
-          fine_new_dw->getModifiable(vel_CC,   lb->vel_CCLabel,    indx,patch);
+          fine_new_dw->getModifiable(rho_CC,   lb->rho_CCLabel,    indx,finePatch);
+          fine_new_dw->getModifiable(vel_CC,   lb->vel_CCLabel,    indx,finePatch);
         }
-        fine_new_dw->getModifiable(temp_CC,  lb->temp_CCLabel,   indx,patch);
-        fine_new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel, indx,patch);
+        fine_new_dw->getModifiable(temp_CC,  lb->temp_CCLabel,   indx,finePatch);
+        fine_new_dw->getModifiable(sp_vol_CC,lb->sp_vol_CCLabel, indx,finePatch);
 
         //__________________________________
         //  Print Data 
         if(switchDebug_AMR_refineInterface){
           ostringstream desc;     
           desc << "TOP_refineInterface_Mat_" << indx << "_patch_"
-               << patch->getID()<< " step " << subCycleProgress;
+               << finePatch->getID()<< " step " << subCycleProgress;
 
           if(ice_matl){
-            printVector(indx, patch, 1, desc.str(), "vel_CC", 0,   vel_CC);
-            printData(indx, patch,   1, desc.str(), "rho_CC",      rho_CC);
+            printVector(indx, finePatch, 1, desc.str(), "vel_CC", 0,   vel_CC);
+            printData(indx, finePatch,   1, desc.str(), "rho_CC",      rho_CC);
           }
-          printData(indx, patch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
-          printData(indx, patch,   1, desc.str(), "Temp_CC",     temp_CC);
+          printData(indx, finePatch,   1, desc.str(), "sp_vol_CC",   sp_vol_CC);
+          printData(indx, finePatch,   1, desc.str(), "Temp_CC",     temp_CC);
         }
 
-        refineCoarseFineBoundaries(patch, sp_vol_CC,fine_new_dw,
+        refineCoarseFineBoundaries(finePatch, sp_vol_CC,fine_new_dw,
                                    lb->sp_vol_CCLabel, indx,subCycleProgress);
 
-        refineCoarseFineBoundaries(patch, temp_CC,  fine_new_dw,
+        refineCoarseFineBoundaries(finePatch, temp_CC,  fine_new_dw,
                                    lb->temp_CCLabel,   indx,subCycleProgress);
         if(ice_matl){
-          refineCoarseFineBoundaries(patch, rho_CC,   fine_new_dw, 
+          refineCoarseFineBoundaries(finePatch, rho_CC,   fine_new_dw, 
                                      lb->rho_CCLabel,    indx,subCycleProgress);
 
-          refineCoarseFineBoundaries(patch, vel_CC,   fine_new_dw,
+          refineCoarseFineBoundaries(finePatch, vel_CC,   fine_new_dw,
                                      lb->vel_CCLabel,    indx,subCycleProgress);
           //__________________________________
           //    Model Variables                     
@@ -373,37 +373,47 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
               if(tvar->matls->contains(indx)){
                 string Labelname = tvar->var->getName();
                 CCVariable<double> q_CC;
-                fine_new_dw->getModifiable(q_CC, tvar->var, indx, patch);
+                fine_new_dw->getModifiable(q_CC, tvar->var, indx, finePatch);
 
                 if(switchDebug_AMR_refineInterface){ 
                   string name = tvar->var->getName();
-                  printData(indx,patch,1,"TOP_refineInterface",Labelname,q_CC);
+                  printData(indx,finePatch,1,"TOP_refineInterface",Labelname,q_CC);
                 }
 
-                refineCoarseFineBoundaries(patch, q_CC, fine_new_dw,
+                refineCoarseFineBoundaries(finePatch, q_CC, fine_new_dw,
                                            tvar->var,    indx,subCycleProgress);
 
                 if(switchDebug_AMR_refineInterface){ 
                   string name = tvar->var->getName();
-                  printData(indx, patch,1,"BOT_refineInterface",Labelname,q_CC);
+                  printData(indx, finePatch,1,"BOT_refineInterface",Labelname,q_CC);
                 }
               } // if
             }  // for
           }   // if models
         }   // ice_matl
+        //__________________________________
+        // Interpolator test
+        const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
+        vector<Patch::FaceType>::const_iterator iter;  
+        for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
+             iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
+          Patch::FaceType face = *iter;
+          testInterpolators<double>(fine_new_dw,d_orderOfInterpolation,coarseLevel,fineLevel,
+                              finePatch, face, "CFI");
+        }
 
         //__________________________________
         //  Print Data 
         if(switchDebug_AMR_refineInterface){
           ostringstream desc;    
           desc << "BOT_refineInterface_Mat_" << indx << "_patch_"
-               << patch->getID()<< " step " << subCycleProgress;
+               << finePatch->getID()<< " step " << subCycleProgress;
           if(ice_matl){
-            printData(  indx, patch, 1, desc.str(), "rho_CC",    rho_CC);
-            printVector(indx, patch, 1, desc.str(), "vel_CC", 0, vel_CC);
+            printData(  indx, finePatch, 1, desc.str(), "rho_CC",    rho_CC);
+            printVector(indx, finePatch, 1, desc.str(), "vel_CC", 0, vel_CC);
           }
-          printData(indx, patch,   1, desc.str(), "sp_vol_CC", sp_vol_CC);
-          printData(indx, patch,   1, desc.str(), "Temp_CC",   temp_CC);
+          printData(indx, finePatch,   1, desc.str(), "sp_vol_CC", sp_vol_CC);
+          printData(indx, finePatch,   1, desc.str(), "Temp_CC",   temp_CC);
         } // dbg
       }  // matls
     }   // patches
@@ -415,19 +425,19 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
 /*___________________________________________________________________
  Function~  AMRICE::refineCoarseFineBoundaries--    D O U B L E  
 _____________________________________________________________________*/
-void AMRICE::refineCoarseFineBoundaries(const Patch* patch,
+void AMRICE::refineCoarseFineBoundaries(const Patch* finePatch,
                                         CCVariable<double>& val,
                                         DataWarehouse* fine_new_dw,
                                         const VarLabel* label,
                                         int matl,
                                         double subCycleProgress_var)
 {
-  const Level* level = patch->getLevel();
-  const Level* coarseLevel = level->getCoarserLevel().get_rep();
+  const Level* fineLevel   = finePatch->getLevel();
+  const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
 
   cout_dbg << "\t refineCoarseFineBoundaries ("<<label->getName() << ") \t" 
            << " subCycleProgress_var " << subCycleProgress_var
-           << " Level-" << level->getIndex()<< '\n';
+           << " Level-" << fineLevel->getIndex()<< '\n';
   DataWarehouse* coarse_old_dw = 0;
   DataWarehouse* coarse_new_dw = 0;
   
@@ -439,25 +449,25 @@ void AMRICE::refineCoarseFineBoundaries(const Patch* patch,
   }
   
   refine_CF_interfaceOperator<double>
-    (patch, level, coarseLevel, val, label, subCycleProgress_var, matl,
+    (finePatch, fineLevel, coarseLevel, val, label, subCycleProgress_var, matl,
      fine_new_dw, coarse_old_dw, coarse_new_dw);
 }
 /*___________________________________________________________________
  Function~  AMRICE::refineCoarseFineBoundaries--    V E C T O R 
 _____________________________________________________________________*/
-void AMRICE::refineCoarseFineBoundaries(const Patch* patch,
+void AMRICE::refineCoarseFineBoundaries(const Patch* finePatch,
                                         CCVariable<Vector>& val,
                                         DataWarehouse* fine_new_dw,
                                         const VarLabel* label,
                                         int matl,
                                         double subCycleProgress_var)
 {
-  const Level* level = patch->getLevel();
-  const Level* coarseLevel = level->getCoarserLevel().get_rep();
+  const Level* fineLevel = finePatch->getLevel();
+  const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
 
   cout_dbg << "\t refineCoarseFineBoundaries ("<<label->getName() << ") \t" 
            << " subCycleProgress_var " << subCycleProgress_var
-           << " Level-" << level->getIndex()<< '\n';
+           << " Level-" << fineLevel->getIndex()<< '\n';
   DataWarehouse* coarse_old_dw = 0;
   DataWarehouse* coarse_new_dw = 0;
   
@@ -469,7 +479,7 @@ void AMRICE::refineCoarseFineBoundaries(const Patch* patch,
   }
 
   refine_CF_interfaceOperator<Vector>
-    (patch, level, coarseLevel, val, label, subCycleProgress_var, matl,
+    (finePatch, fineLevel, coarseLevel, val, label, subCycleProgress_var, matl,
      fine_new_dw, coarse_old_dw, coarse_new_dw);
 }
 
@@ -785,7 +795,9 @@ void AMRICE::refine(const ProcessorGroup*,
     // bullet proofing
     iteratorTest(finePatch, fineLevel, coarseLevel, new_dw);
 
-    //testInterpolators<double>(new_dw,d_orderOfInterpolation,coarseLevel,fineLevel,finePatch);
+    // Patch::FaceType notUsed
+    //testInterpolators<double>(new_dw,d_orderOfInterpolation,coarseLevel,fineLevel,
+    //                            finePatch, notUsed, "wholeDomain");
 
    
     // refine pressure
