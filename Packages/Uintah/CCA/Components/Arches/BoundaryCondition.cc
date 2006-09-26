@@ -998,11 +998,9 @@ BoundaryCondition::uVelocityBC(const Patch* patch,
 		               ArchesConstVariables* constvars)
 {
   int wall_celltypeval = wallCellType();
-  int pressure_celltypeval = pressureCellType();
-  int outlet_celltypeval = outletCellType();
   // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getSFCXFORTLowIndex();
+  IntVector idxHi = patch->getSFCXFORTHighIndex();
 
   // computes momentum source term due to wall
   // uses total viscosity for wall source, not just molecular viscosity
@@ -1014,7 +1012,7 @@ BoundaryCondition::uVelocityBC(const Patch* patch,
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
-  fort_bcuvel(constvars->uVelocity, vars->uVelocityCoeff[Arches::AP],
+  fort_bcuvel(idxLo, idxHi,
 	      vars->uVelocityCoeff[Arches::AE],
 	      vars->uVelocityCoeff[Arches::AW], 
 	      vars->uVelocityCoeff[Arches::AN], 
@@ -1028,11 +1026,9 @@ BoundaryCondition::uVelocityBC(const Patch* patch,
 	      vars->uVelocityConvectCoeff[Arches::AS],
 	      vars->uVelocityConvectCoeff[Arches::AT],
 	      vars->uVelocityConvectCoeff[Arches::AB],
-	      constvars->vVelocity, constvars->wVelocity,
-	      idxLo, idxHi, constvars->cellType,
-	      wall_celltypeval, outlet_celltypeval, pressure_celltypeval,
-	      constvars->viscosity,
+	      constvars->cellType, wall_celltypeval, 
 	      cellinfo->sewu, cellinfo->sns, cellinfo->stb,
+	      constvars->viscosity,
 	      cellinfo->yy, cellinfo->yv, cellinfo->zz, cellinfo->zw,
 	      xminus, xplus, yminus, yplus, zminus, zplus);
 
@@ -1048,11 +1044,9 @@ BoundaryCondition::vVelocityBC(const Patch* patch,
 		               ArchesConstVariables* constvars)
 {
   int wall_celltypeval = wallCellType();
-  int pressure_celltypeval = pressureCellType();
-  int outlet_celltypeval = outletCellType();
   // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getSFCYFORTLowIndex();
+  IntVector idxHi = patch->getSFCYFORTHighIndex();
 
   // computes momentum source term due to wall
   // uses total viscosity for wall source, not just molecular viscosity
@@ -1064,7 +1058,7 @@ BoundaryCondition::vVelocityBC(const Patch* patch,
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
-  fort_bcvvel(constvars->vVelocity, vars->vVelocityCoeff[Arches::AP],
+  fort_bcvvel(idxLo, idxHi,
 	      vars->vVelocityCoeff[Arches::AE],
 	      vars->vVelocityCoeff[Arches::AW], 
 	      vars->vVelocityCoeff[Arches::AN], 
@@ -1078,11 +1072,9 @@ BoundaryCondition::vVelocityBC(const Patch* patch,
 	      vars->vVelocityConvectCoeff[Arches::AS],
 	      vars->vVelocityConvectCoeff[Arches::AT],
 	      vars->vVelocityConvectCoeff[Arches::AB],
-	      constvars->uVelocity, constvars->wVelocity,
-	      idxLo, idxHi, constvars->cellType,
-	      wall_celltypeval, outlet_celltypeval, pressure_celltypeval,
-	      constvars->viscosity,
+	      constvars->cellType, wall_celltypeval,
 	      cellinfo->sew, cellinfo->snsv, cellinfo->stb,
+	      constvars->viscosity,
 	      cellinfo->xx, cellinfo->xu, cellinfo->zz, cellinfo->zw,
 	      xminus, xplus, yminus, yplus, zminus, zplus);
 
@@ -1098,11 +1090,9 @@ BoundaryCondition::wVelocityBC(const Patch* patch,
 		               ArchesConstVariables* constvars)
 {
   int wall_celltypeval = wallCellType();
-  int pressure_celltypeval = pressureCellType();
-  int outlet_celltypeval = outletCellType();
   // Get the low and high index for the patch and the variables
-  IntVector idxLo = patch->getCellFORTLowIndex();
-  IntVector idxHi = patch->getCellFORTHighIndex();
+  IntVector idxLo = patch->getSFCZFORTLowIndex();
+  IntVector idxHi = patch->getSFCZFORTHighIndex();
 
   // computes momentum source term due to wall
   // uses total viscosity for wall source, not just molecular viscosity
@@ -1114,7 +1104,7 @@ BoundaryCondition::wVelocityBC(const Patch* patch,
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
-  fort_bcwvel(constvars->wVelocity, vars->wVelocityCoeff[Arches::AP],
+  fort_bcwvel(idxLo, idxHi,
 	      vars->wVelocityCoeff[Arches::AE],
 	      vars->wVelocityCoeff[Arches::AW], 
 	      vars->wVelocityCoeff[Arches::AN], 
@@ -1128,11 +1118,9 @@ BoundaryCondition::wVelocityBC(const Patch* patch,
 	      vars->wVelocityConvectCoeff[Arches::AS],
 	      vars->wVelocityConvectCoeff[Arches::AT],
 	      vars->wVelocityConvectCoeff[Arches::AB],
-	      constvars->uVelocity, constvars->vVelocity,
-	      idxLo, idxHi, constvars->cellType,
-	      wall_celltypeval, outlet_celltypeval, pressure_celltypeval,
-	      constvars->viscosity,
+	      constvars->cellType, wall_celltypeval,
 	      cellinfo->sew, cellinfo->sns, cellinfo->stbw,
+	      constvars->viscosity,
 	      cellinfo->xx, cellinfo->xu, cellinfo->yy, cellinfo->yv,
 	      xminus, xplus, yminus, yplus, zminus, zplus);
 
