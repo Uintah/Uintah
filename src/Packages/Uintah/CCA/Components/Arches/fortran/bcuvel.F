@@ -13,12 +13,11 @@ C---------------------------------------------------------------------
 c*********************************************************************
 c     Local Variables :
 c*********************************************************************
-      double precision const
       integer IST, JST, KST, IEND, JEND, KEND
       integer i, j, k
 
 
-c*******************u*************************************************
+c*********************************************************************
 c     Start :
 c*********************************************************************
       IST = idxLo(1)
@@ -30,15 +29,18 @@ c*********************************************************************
 c------------------------------------------------------------------ 
 c     interior intrusions
 c------------------------------------------------------------------ 
-      const = ONE
       do 820 k=kst, kend
          do 810 j=jst, jend
             do 800 i=ist, iend
 
-               if (pcell(i-1,j,k).eq.wall.or. pcell(i,j,k).eq.wall)
-     $              call fixval(zero,ae(i,j,k),aw(i,j,k),an(i,j,k),
-     $                          as(i,j,k),at(i,j,k),ab(i,j,k),
-     $                          su(i,j,k),sp(i,j,k),const)
+               if (pcell(i,j,k).eq.wall.or. pcell(i-1,j,k).eq.wall) then
+                call fixval(zero,ae(i,j,k),aw(i,j,k),an(i,j,k),
+     &                          as(i,j,k),at(i,j,k),ab(i,j,k),
+     &                          su(i,j,k),sp(i,j,k),one)
+                call fixval(zero,cesav(i,j,k),cwsav(i,j,k),cnsav(i,j,k),
+     &                 cssav(i,j,k),ctsav(i,j,k),cbsav(i,j,k),su(i,j,k),
+     &                 sp(i,j,k),one)
+               end if
 
  800        continue
  810     continue
@@ -49,17 +51,24 @@ c*********************************************************************
 c     Go thru all the cells
 c*********************************************************************
       if (xminus) then
+         I = ist - 2
          DO 120 K = kst, kend
             DO 110 J = jst, jend
-               I = ist -1
-               if (pcell(I,J,K).eq.wall) then
 C--------------------------------------------------------------------
 C             East FACE OF INTRUSION\WALL
 C--------------------------------------------------------------------
-                  IF (PCELL(I+1, J, K).NE.WALL) THEN
+               if ((pcell(I,J,K).eq.wall).and.
+     &             (PCELL(I+1, J, K).NE.WALL).and.
+     &             (PCELL(I+2, J, K).NE.WALL)) then
+                call fixval(zero,ae(i+1,j,k),aw(i+1,j,k),an(i+1,j,k),
+     &                          as(i+1,j,k),at(i+1,j,k),ab(i+1,j,k),
+     &                          su(i+1,j,k),sp(i+1,j,k),one)
+                call fixval(zero,cesav(i+1,j,k),cwsav(i+1,j,k),
+     &                      cnsav(i+1,j,k), cssav(i+1,j,k),
+     &                      ctsav(i+1,j,k), cbsav(i+1,j,k),su(i+1,j,k),
+     &                      sp(i+1,j,k),one)
                      AW(I+2,J,K) = 0.0D0
                      cwsav(i+2,j,k) = 0.0D0
-                  end if
                end if
  110        CONTINUE
  120     CONTINUE
