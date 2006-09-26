@@ -26,4 +26,29 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-SUBDIRS( Converter DataIO Fields Geometry Util )
+# CMakeLists.txt for Core/Algorithms/Geometry
+
+SET(Core_Algorithms_Geometry_SRCS
+  CoregPts.cc
+  SurfaceLaplacian.cc
+)
+
+ADD_LIBRARY(Core_Algorithms_Geometry ${Core_Algorithms_Geometry_SRCS})
+
+TARGET_LINK_LIBRARIES(Core_Algorithms_Geometry
+  Core_Basis
+  Core_Containers
+  Core_Datatypes
+  Core_Exceptions
+  Core_Geometry
+  Core_Math
+  Core_Thread
+  Core_Util
+  ${TK_LIBRARY}
+  ${GL_LIBRARY}
+  ${M_LIBRARY}
+)
+
+IF(NOT BUILD_SHARED_LIBS)
+  ADD_DEFINITIONS(-DBUILD_Core_Algorithms_Geometry)
+ENDIF(NOT BUILD_SHARED_LIBS)
