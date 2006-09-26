@@ -45,6 +45,7 @@ ifeq ($(IS_WIN),yes)
   SRCS +=$(SRCDIR)/Win32EventSpawner.cc
 else
   SRCS +=$(SRCDIR)/X11EventSpawner.cc	
+  SRCS +=$(SRCDIR)/OSXEventSpawner.cc	
 endif
 
 
