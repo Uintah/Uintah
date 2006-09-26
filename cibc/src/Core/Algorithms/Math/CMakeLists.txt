@@ -26,4 +26,32 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-SUBDIRS( Converter DataIO Fields Geometry Math Util Visualization )
+# CMakeLists.txt for Core/Algorithms/Math
+
+SET(Core_Algorithms_Math_SRCS
+  MathAlgo.cc
+  BasicIntegrators.cc
+  BuildFEMatrix.cc
+  CreateFEDirichletBC.cc
+)
+
+ADD_LIBRARY(Core_Algorithms_Math ${Core_Algorithms_Math_SRCS})
+
+TARGET_LINK_LIBRARIES(Core_Algorithms_Math
+  Core_Datatypes
+  Core_Util
+  Core_Containers
+  Core_Exceptions
+  Core_Thread
+  Core_Geom
+  Core_Geometry
+  Core_Algorithms_Util
+  Core_Persistent
+  Core_Basis
+  Core_Bundle
+  ${TEEM_LIBRARY}
+)
+
+IF(NOT BUILD_SHARED_LIBS)
+  ADD_DEFINITIONS(-DBUILD_Core_Algorithms_Math)
+ENDIF(NOT BUILD_SHARED_LIBS)

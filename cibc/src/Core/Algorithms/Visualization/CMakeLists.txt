@@ -26,35 +26,35 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-# Sources of Core/Algorithms/Visualization classes
+# CMakeLists.txt for Core/Algorithms/Visualization
 
 SET(Core_Algorithms_Visualization_SRCS
-  EdgeMC.cc             
-  HexMC.cc		
-  MarchingCubes.cc	
-  mcube2.cc		
+  EdgeMC.cc
+  HexMC.cc
+  MarchingCubes.cc
+  mcube2.cc
   Noise.cc
-  NrrdTextureBuilderAlgo.cc	
-  PrismMC.cc		
-  QuadMC.cc		
-  RenderField.cc	
-  Sage.cc		
-  TetMC.cc		
-  TextureBuilderAlgo.cc	
-  TriMC.cc		
-  UHexMC.cc		
+  NrrdTextureBuilderAlgo.cc
+  PrismMC.cc
+  QuadMC.cc
+  RenderField.cc
+  Sage.cc
+  TetMC.cc
+  TextureBuilderAlgo.cc
+  TriMC.cc
+  UHexMC.cc
 )
 
 ADD_LIBRARY(Core_Algorithms_Visualization ${Core_Algorithms_Visualization_SRCS})
 
-TARGET_LINK_LIBRARIES(Core_Algorithms_Visualization 
+TARGET_LINK_LIBRARIES(Core_Algorithms_Visualization
   Core_Basis
-  Core_Containers 
+  Core_Containers
   Core_Datatypes
   Core_Exceptions
   Core_Geom
   Core_Geometry
-  Core_Persistent 
+  Core_Persistent
   Core_Thread
   Core_Util
   Core_Volume
@@ -68,4 +68,3 @@ TARGET_LINK_LIBRARIES(Core_Algorithms_Visualization
 IF(NOT BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Core_Algorithms_Visualization)
 ENDIF(NOT BUILD_SHARED_LIBS)
-
