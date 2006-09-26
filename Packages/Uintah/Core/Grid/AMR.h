@@ -16,7 +16,7 @@
 
 #include <Packages/Uintah/Core/Grid/share.h>
 
-#define is_rightFace(face) ( (face == "xminus" || face == "xplus") ?1:0  )
+#define is_rightFace(face) ( (face == "xminus" || face == "xplus" || face == "yminus" || face == "yplus"|| face == "zminus" || face == "zplus") ?1:0  )
 namespace Uintah {
 
 /*___________________________________________________________________
@@ -436,28 +436,28 @@ template<class T>
   
   normalizedDistance_CC(refineRatio[y],norm_dist_y);
   normalizedDistance_CC(refineRatio[z],norm_dist_z); 
+#if 0  
+  cout<< " face " << name << " refineRatio "<< refineRatio
+      << " FineLevel iterator" << fl << " " << fh
+      << " coarseLevel " << fineLevel->mapCellToCoarser(fl) << " " << fineLevel->mapCellToCoarser(fh)
+      << " faceShift " << faceShift << endl;    
+#endif      
   
-      cout<< " face " << name << " refineRatio "<< refineRatio
-        << " FineLevel iterator" << fl << " " << fh
-        << " coarseLevel " << fineLevel->mapCellToCoarser(fl) << " " << fineLevel->mapCellToCoarser(fh)
-        << " faceShift " << faceShift << endl;
-      
-  
-    // define the offsets for the CC data 
-    vector<IntVector> offset(9);
-    int counter = 0;
+  // define the offsets for the CC data 
+  vector<IntVector> offset(9);
+  int counter = 0;
     
-    for(int j = -1; j <=1; j++){
-      for(int k = -1; k <=1; k++){
-        IntVector tmp(0,0,0);
-        tmp[p_dir] = 0;
-        tmp[y]     = j;     // -1, 0, 1
-        tmp[z]     = k;     // -1, 0, 1
-        offset[counter] = tmp; 
-        cout << " offset["<<counter<<"]: " << offset[counter] << endl;
-        counter += 1;
-      }
-    }   
+  for(int j = -1; j <=1; j++){
+    for(int k = -1; k <=1; k++){
+      IntVector tmp(0,0,0);
+      tmp[p_dir] = 0;
+      tmp[y]     = j;     // -1, 0, 1
+      tmp[z]     = k;     // -1, 0, 1
+      offset[counter] = tmp; 
+//      cout << " offset["<<counter<<"]: " << offset[counter] << endl;
+      counter += 1;
+    }
+  }    
   
   
   for(CellIterator iter(fl,fh); !iter.done(); iter++){
@@ -509,26 +509,11 @@ template<class T>
     w(0,1) = w0_y * w1_z; w(1,1) = w1_y * w1_z; w(2,1) = w2_y * w1_z;
     w(0,2) = w0_y * w2_z; w(1,2) = w1_y * w2_z; w(2,2) = w2_y * w2_z;  
     //  Q_CL(i,-1,1)      Q_CL(i,0,1)          Q_CL(i,1,1)      
-        
-    //
-    
-    
-   
-#if 0        
-    T q_CL_Interpolated;
-    
-    q_CL_Interpolated
-        = w(0,0) * q_CL[baseCell + IntVector( 0, -1, -1)]   
-        + w(1,0) * q_CL[baseCell + IntVector( 0,  0, -1)]           
-        + w(2,0) * q_CL[baseCell + IntVector( 0,  1, -1)]           
-        + w(0,1) * q_CL[baseCell + IntVector( 0, -1,  0)]            
-        + w(1,1) * q_CL[baseCell + IntVector( 0,  0,  0)]    
-        + w(2,1) * q_CL[baseCell + IntVector( 0,  1,  0)]     // this works for x+ x- faces need to do something cleaver for the y & z faces
-        + w(0,2) * q_CL[baseCell + IntVector( 0, -1,  1)]   
-        + w(1,2) * q_CL[baseCell + IntVector( 0,  0,  1)]     
-        + w(2,2) * q_CL[baseCell + IntVector( 0,  1,  1)];   
-#endif        
-    cout << "working on coarseCell " << baseCell << " fineCell " << f_cell << " shift " << shift << " faceShift " << faceShift << endl;    
+           
+            
+    //__________________________________
+    // step 1     
+    // cout << "working on coarseCell " << baseCell << " fineCell " << f_cell << " shift " << shift << " faceShift " << faceShift << endl;    
     T q_CL_Interpolated;
     q_CL_Interpolated
         = w(0,0) * q_CL[baseCell + offset[0]]   
@@ -541,10 +526,35 @@ template<class T>
         + w(1,2) * q_CL[baseCell + offset[7]]     
         + w(2,2) * q_CL[baseCell + offset[8]];  
 
+
+    //__________________________________
+    //  step 2  1-D interpolation using coarse and fine level data
+    //    |       |       |       .
+    //    |  (x)  |  (x)  |   o   .               x   <-- q_CL_Interpolated
+    //    |       |       |       .
+    //       -1       0       1     (normalized distance)
+    //                |------------d_CL-----------|
+    //
+    //  x2 = (refine_ratio.x + 1)/2
+    //  See notes dated 09/16/06 for derivation
+    IntVector dir = finePatch->faceDirection(patchFace);
+    IntVector x0 = f_cell;
+    IntVector x1 = f_cell;
+    x0[p_dir] -=   dir[p_dir];
+    x1[p_dir] -= 2*dir[p_dir];
+    
+    double d_CL = 0.5 * (refineRatio[p_dir] + 1.0);
+    //double d_CL = (refineRatio[p_dir] + 1.0);
+    double w0_x = (1.0 - d_CL)/(d_CL + 1);
+    double w1_x = -2.0 * (1.0 - d_CL)/d_CL;
+    double w2_x = 2.0/((d_CL + 1) * d_CL);
+    q_FineLevel[f_cell] = w0_x * q_FineLevel[x0] + w1_x * q_FineLevel[x1] + w2_x * q_CL_Interpolated;
+    
+    
+    
     //__________________________________
     //  debugging
 #if 1
-
     IntVector half  = (fh - fl )/IntVector(2,2,2) + fl;
     half = fineLevel->mapCellToCoarser(half);
     if( (baseCell[y] == half[y] && baseCell[z] == half[z]) &&is_rightFace(name)){
@@ -565,6 +575,11 @@ template<class T>
           
      std::cout  << " w0_y " << w0_y << " w1_y " << w1_y << " w2_y "<< w2_y << "\n";
      std::cout  << " w0_z " << w0_z << " w1_z " << w1_z << " w2_z "<< w2_z << "\n";
+     cout <<"--------------------------------" << endl;
+     cout << " f_cell " << f_cell << " x0 " << x0 << " x1 " << x1 << " dir " << dir << endl;
+     cout << " w0_x " << w0_x << " w1_x " << w1_x << " w2_x " << w2_x << " x2 " << d_CL << endl;
+     cout << " q_FineLevel " << q_FineLevel[f_cell] << endl;
+     
    }
 #endif   
    
@@ -657,6 +672,7 @@ template<class T>
     }else{
       T diff(q_FineLevel[c] - exact);
       error = error + diff * diff;
+      cout << c << " q_FineLevel[c] " <<  q_FineLevel[c] << " exact " << exact << " diff " << diff << endl;
       ncell += 1; 
     }
   } 
@@ -673,11 +689,11 @@ template<class T>
                          const int orderOfInterpolation,
                          const Level* coarseLevel,
                          const Level* fineLevel,
-                         const Patch* finePatch)
+                         const Patch* finePatch,
+                         Patch::FaceType patchFace,
+                         const string& testDomain)
 {
-
-  IntVector fl = finePatch->getCellLowIndex();
-  IntVector fh = finePatch->getCellHighIndex();
+  ASSERT( testDomain == "wholeDomain" || testDomain == "CFI");
   
 #if 0
   if (orderOfInterpolation == 2){  // keep away from the edge of the domain
@@ -713,32 +729,63 @@ template<class T>
 
     constCCVariable<T> q_CL_const(q_CoarseLevel);
     
-    switch(orderOfInterpolation){
-    case 0:
-      piecewiseConstantInterpolation(q_CL_const, fineLevel,fl, fh, q_FineLevel);
-      break;
-    case 1:
-      linearInterpolation<T>(q_CL_const, coarseLevel, fineLevel,
-                            refineRatio, fl,fh, q_FineLevel); 
-      break;
-    case 2:                             
-      quadraticInterpolation<T>(q_CL_const, coarseLevel, fineLevel,
-                                refineRatio, fl,fh, q_FineLevel);
-      break;
-    default:
-      throw InternalError("ERROR:AMR: You're trying to use an interpolator"
-                          " that doesn't exist.  <orderOfInterpolation> must be 1 or 2",__FILE__,__LINE__);
-    break;
-    }
     //__________________________________
-    //  compute the interpolation error
-    interpolationTest_helper( q_FineLevel,q_CoarseLevel, 
+    //  whole domain tests
+    if(testDomain == "wholeDomain"){    
+      IntVector fl = finePatch->getCellLowIndex();
+      IntVector fh = finePatch->getCellHighIndex();
+    
+      switch(orderOfInterpolation){
+      case 0:
+        piecewiseConstantInterpolation(q_CL_const, fineLevel,fl, fh, q_FineLevel);
+        break;
+      case 1:
+        linearInterpolation<T>(q_CL_const, coarseLevel, fineLevel,
+                              refineRatio, fl,fh, q_FineLevel); 
+        break;
+      case 2:                             
+        quadraticInterpolation<T>(q_CL_const, coarseLevel, fineLevel,
+                                  refineRatio, fl,fh, q_FineLevel);
+        break;
+      default:
+        throw InternalError("ERROR:AMR: You're trying to use an interpolator"
+                            " that doesn't exist.  <orderOfInterpolation> must be 1 or 2",__FILE__,__LINE__);
+      break;
+      }
+      interpolationTest_helper( q_FineLevel,q_CoarseLevel, 
+                                "checkError", t, fineLevel,fl,fh);
+    }
+    
+    
+    //__________________________________
+    //  CFI test
+    if(testDomain == "CFI" ){
+                              
+      cout << "------------------------------------" << endl;
+      cout << "Colella's quadratic Interpolation at CFI:" << finePatch->getFaceName(patchFace)<< endl; 
+      
+      // initialize the fineLevel in addition to the coarse level
+      IntVector fl = finePatch->getCellLowIndex();
+      IntVector fh = finePatch->getCellHighIndex();
+      interpolationTest_helper( q_FineLevel, q_FineLevel, 
+                                "initialize", t, fineLevel,fl,fh);
+
+      CellIterator iter_tmp = finePatch->getFaceCellIterator(patchFace, "minusEdgeCells");
+      fl = iter_tmp.begin();
+      fh = iter_tmp.end();
+                                                        
+      quadraticInterpolation_CFI<T>(q_CL_const, finePatch, patchFace,
+                                    coarseLevel, fineLevel, refineRatio, fl, fh,q_FineLevel);
+                                    
+      interpolationTest_helper( q_FineLevel,q_CoarseLevel, 
                               "checkError", t, fineLevel,fl,fh);
+      cout << "------------------------------------" << endl;
+    }              
   }
 }
 
 
-
+//______________________________________________________________________
 // find the range of values to get from the finePatch that coincides with coarsePatch
 // (we need the finePatch, as the fine level might not entirely overlap the coarse)
 // also get the coarse range to iterate over
