@@ -106,7 +106,7 @@ ADD_CUSTOM_TARGET(tclIndex ALL
 
 # scirun executable
 ADD_EXECUTABLE(scirun
-/home/darbyb/projects/Experimental/SCIRun/src/main/main.cc)
+${SCIRUN_SOURCE_DIR}/src/main/main.cc)
 
 TARGET_LINK_LIBRARIES(scirun 
   Core_Basis         
