@@ -297,6 +297,8 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
+
+    cout << " SoilFoam  d_with_ice " << flag->d_with_ice<< endl;
     if(flag->d_with_ice){
       // do this
     }

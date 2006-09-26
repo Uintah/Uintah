@@ -65,6 +65,12 @@ MPMFlags::readMPMFlags(ProblemSpecP& ps)
   ProblemSpecP root = ps->getRootNode();
   ProblemSpecP mpm_flag_ps = root->findBlock("MPM");
 
+  ProblemSpecP ice_flag_ps = root->findBlock("CFD");
+
+  if(ice_flag_ps){
+    d_with_ice = true;
+  }
+
   if (!mpm_flag_ps)
     return;
 
