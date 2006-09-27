@@ -4341,10 +4341,14 @@ if test "$sci_required_glut" = "yes"; then
      fi
    else
      if test "$with_opengl"; then
-       _sci_lib="$sci_thirdparty_lib $with_opengl/lib"
+       _sci_lib="$with_opengl"
+       BASE_LIB_PATH(_sci_lib,$_sci_lib)
+       _sci_lib="$sci_thirdparty_lib $_sci_lib"
        _sci_inc="$sci_thirdparty_include $with_opengl/include"
      else
-       _sci_lib="$sci_thirdparty_lib /usr/X11R6/lib"
+       _sci_lib="/usr/X11R6"
+       BASE_LIB_PATH(_sci_lib,$_sci_lib)
+       _sci_lib="$sci_thirdparty_lib $_sci_lib"
        _sci_inc="$sci_thirdparty_include /usr/X11R6/include"
      fi
    fi
@@ -4390,10 +4394,14 @@ if test "$sci_required_glui" = "yes"; then
      fi
    else
      if test "$with_opengl"; then
-       _sci_lib="$sci_thirdparty_lib $with_opengl/lib"
+       _sci_lib="$with_opengl"
+       BASE_LIB_PATH(_sci_lib,$_sci_lib)
+       _sci_lib="$sci_thirdparty_lib $_sci_lib"
        _sci_inc="$sci_thirdparty_include $with_opengl/include"
      else
-       _sci_lib="$sci_thirdparty_lib /usr/X11R6/lib"
+       _sci_lib="/usr/X11R6"
+       BASE_LIB_PATH(_sci_lib,$_sci_lib)
+       _sci_lib="$sci_thirdparty_lib $_sci_lib"
        _sci_inc="$sci_thirdparty_include /usr/X11R6/include"
      fi
    fi
@@ -4492,7 +4500,9 @@ if test "$with_opengl"; then
   _sci_lib="$_sci_lib $with_opengl/lib"
   _sci_inc="$_sci_inc $with_opengl/include"
 else
-  _sci_lib="$_sci_lib /usr/X11R6/lib"
+  _sci_lib_t="usr/X11R6"
+  BASE_LIB_PATH(_sci_lib_t,$_sci_lib_t)
+  _sci_lib="$_sci_lib $_sci_lib_t"
   _sci_inc="$_sci_inc /usr/X11R6/include"
 fi
 
