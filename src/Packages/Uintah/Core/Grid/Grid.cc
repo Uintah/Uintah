@@ -454,7 +454,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       }
   
       if(pg->myrank() == 0) {
-        cout << "Using patch layout: (" << patches.x() << ","
+        cout << "Patch layout: \t\t(" << patches.x() << ","
              << patches.y() << "," << patches.z() << ")\n";
       }
       

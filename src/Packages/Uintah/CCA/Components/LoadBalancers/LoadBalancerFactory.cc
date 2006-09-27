@@ -38,7 +38,7 @@ LoadBalancerCommon* LoadBalancerFactory::create(ProblemSpecP& ps,
 
 
   if (world->myrank() == 0)
-    cout << "Using Load Balancer " << loadbalancer << endl;
+    cout << "Load Balancer: \t\t" << loadbalancer << endl;
 
   if(loadbalancer == "SingleProcessorLoadBalancer"){
     bal = scinew SingleProcessorLoadBalancer(world);
