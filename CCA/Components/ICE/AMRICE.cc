@@ -1819,7 +1819,7 @@ ______________________________________________________________________*/
 void AMRICE::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                           SchedulerP& sched)
 {
-//  scheduleErrorEstimate(coarseLevel, sched);
+  scheduleErrorEstimate(coarseLevel, sched);
 }
 
 /*_____________________________________________________________________
