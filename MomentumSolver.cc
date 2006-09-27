@@ -313,11 +313,11 @@ MomentumSolver::buildLinearMatrix(const ProcessorGroup* pc,
 						   &constVelocityVars);
     }
     if ((d_boundaryCondition->getOutletBC())||(d_boundaryCondition->getPressureBC()))
-    d_boundaryCondition->addPresGradVelocityOutletBC(pc, patch, index, cellinfo,
+    d_boundaryCondition->addPresGradVelocityOutletPressureBC(pc, patch, index, cellinfo,
 						     delta_t, &velocityVars,
 						     &constVelocityVars);
     if ((d_boundaryCondition->getOutletBC())||(d_boundaryCondition->getPressureBC()))
-    d_boundaryCondition->velocityPressureBC(pc, patch, index,
+    d_boundaryCondition->velocityOutletPressureTangentBC(pc, patch, index,
 					    &velocityVars, &constVelocityVars);
 
   }
@@ -997,11 +997,9 @@ MomentumSolver::buildLinearMatrixVelHat(const ProcessorGroup* pc,
 					  &velocityVars, &constVelocityVars,
 					  time_shift);
     }
-    if (d_boundaryCondition->getPressureBC())
-    d_boundaryCondition->velRhoHatPressureBC(pc, patch,
-					     &velocityVars, &constVelocityVars);
-    if (d_boundaryCondition->getOutletBC())
-    d_boundaryCondition->velRhoHatOutletBC(pc, patch,
+    if ((d_boundaryCondition->getOutletBC())||
+        (d_boundaryCondition->getPressureBC()))
+      d_boundaryCondition->velRhoHatOutletPressureBC(pc, patch,
 					   &velocityVars, &constVelocityVars);
     /*
   if (d_pressure_correction) {
@@ -1346,6 +1344,8 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
   bool zminus = patch->getBCType(Patch::zminus) != Patch::Neighbor;
   bool zplus =  patch->getBCType(Patch::zplus) != Patch::Neighbor;
 
+  int sign = 0;
+
   if (xminus) {
     int colX = idxLo.x();
     for (int colZ = idxLo.z(); colZ <= idxHi.z(); colZ ++) {
@@ -1354,27 +1354,26 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
         IntVector xminusCell(colX-1, colY, colZ);
         IntVector xplusCell(colX+1, colY, colZ);
 
- 	if (cellType[xminusCell] == pressure_celltypeval) {
+	if ((cellType[xminusCell] == outlet_celltypeval)||
+            (cellType[xminusCell] == pressure_celltypeval)) {
           if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
               ||(yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y())))
 	    new_uvel[currCell] = 0.0;
 	  else {
-	  if (old_uvel[currCell] > 1.0e-10)
+          if (cellType[xminusCell] == outlet_celltypeval)
+            sign = 1;
+          else
+            sign = -1;
+	  if (sign * old_uvel[currCell] < -1.0e-10)
             new_uvel[currCell] = new_uvel[xplusCell];
 	  else
 	    new_uvel[currCell] = 0.0;
 	  }
-	}
-	else if (cellType[xminusCell] == outlet_celltypeval) {
-          if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
-              ||(yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y())))
-	    new_uvel[currCell] = 0.0;
-	  else {
-	  if (old_uvel[currCell] < -1.0e-10)
-            new_uvel[currCell] = new_uvel[xplusCell];
-	  else
-	    new_uvel[currCell] = 0.0;
-	  }
+          new_uvel[xminusCell] = new_uvel[currCell];
+          /*if (!(yminus && (colY == idxLo.y())))
+	    new_vvel[xminusCell] = new_vvel[currCell];
+          if (!(zminus && (colZ == idxLo.z())))
+	    new_wvel[xminusCell] = new_wvel[currCell];*/
 	}
 	else
 	   new_uvel[currCell] = (factor_old*old_uvel[currCell]*
@@ -1382,15 +1381,6 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 		factor_new*new_uvel[currCell]*
 		(temp_density[currCell]+temp_density[xminusCell]))/
 		(factor_divide*(new_density[currCell]+new_density[xminusCell]));
-
- 	if ((cellType[xminusCell] == outlet_celltypeval)||
-	    (cellType[xminusCell] == pressure_celltypeval)) {
-          new_uvel[xminusCell] = new_uvel[currCell];
-          /*if (!(yminus && (colY == idxLo.y())))
-	    new_vvel[xminusCell] = new_vvel[currCell];
-          if (!(zminus && (colZ == idxLo.z())))
-	    new_wvel[xminusCell] = new_wvel[currCell];*/
-	}
       }
     }
   }
@@ -1402,27 +1392,26 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
         IntVector xplusCell(colX+1, colY, colZ);
         IntVector xplusplusCell(colX+2, colY, colZ);
 
- 	if (cellType[xplusCell] == pressure_celltypeval) {
+	if ((cellType[xplusCell] == outlet_celltypeval)||
+            (cellType[xplusCell] == pressure_celltypeval)) {
           if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
               ||(yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y())))
 	    new_uvel[xplusCell] = 0.0;
 	  else {
-	  if (old_uvel[xplusCell] < -1.0e-10)
+          if (cellType[xplusCell] == outlet_celltypeval)
+            sign = 1;
+          else
+            sign = -1;
+	  if (sign * old_uvel[xplusCell] > 1.0e-10)
             new_uvel[xplusCell] = new_uvel[currCell];
 	  else
 	    new_uvel[xplusCell] = 0.0;
 	  }
-	}
-	else if (cellType[xplusCell] == outlet_celltypeval) {
-          if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
-              ||(yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y())))
-	    new_uvel[xplusCell] = 0.0;
-	  else {
-	  if (old_uvel[xplusCell] > 1.0e-10)
-            new_uvel[xplusCell] = new_uvel[currCell];
-	  else
-	    new_uvel[xplusCell] = 0.0;
-	  }
+          new_uvel[xplusplusCell] = new_uvel[xplusCell];
+        /*  if (!(yminus && (colY == idxLo.y())))
+	    new_vvel[xplusCell] = new_vvel[currCell];
+          if (!(zminus && (colZ == idxLo.z())))
+	    new_wvel[xplusCell] = new_wvel[currCell];*/
 	}
 	else
 	   new_uvel[xplusCell] = (factor_old*old_uvel[xplusCell]*
@@ -1430,15 +1419,6 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 		factor_new*new_uvel[xplusCell]*
 		(temp_density[xplusCell]+temp_density[currCell]))/
 		(factor_divide*(new_density[xplusCell]+new_density[currCell]));
-
- 	if ((cellType[xplusCell] == outlet_celltypeval)||
-	    (cellType[xplusCell] == pressure_celltypeval)) {
-          new_uvel[xplusplusCell] = new_uvel[xplusCell];
-        /*  if (!(yminus && (colY == idxLo.y())))
-	    new_vvel[xplusCell] = new_vvel[currCell];
-          if (!(zminus && (colZ == idxLo.z())))
-	    new_wvel[xplusCell] = new_wvel[currCell];*/
-	}
       }
     }
   }
@@ -1450,27 +1430,26 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	IntVector yminusCell(colX, colY-1, colZ);
 	IntVector yplusCell(colX, colY+1, colZ);
 
- 	if (cellType[yminusCell] == pressure_celltypeval) {
+	if ((cellType[yminusCell] == outlet_celltypeval)||
+            (cellType[yminusCell] == pressure_celltypeval)) {
           if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
               ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
 	    new_vvel[currCell] = 0.0;
 	  else {
-	  if (old_vvel[currCell] > 1.0e-10)
+          if (cellType[yminusCell] == outlet_celltypeval)
+            sign = 1;
+          else
+            sign = -1;
+	  if (sign * old_vvel[currCell] < -1.0e-10)
             new_vvel[currCell] = new_vvel[yplusCell];
 	  else
 	    new_vvel[currCell] = 0.0;
 	  }
-	}
-	else if (cellType[yminusCell] == outlet_celltypeval) {
-          if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
-              ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-	    new_vvel[currCell] = 0.0;
-	  else {
-	  if (old_vvel[currCell] < -1.0e-10)
-            new_vvel[currCell] = new_vvel[yplusCell];
-	  else
-	    new_vvel[currCell] = 0.0;
-	  }
+          new_vvel[yminusCell] = new_vvel[currCell];
+        /*  if (!(xminus && (colX == idxLo.x())))
+	    new_uvel[yminusCell] = new_uvel[currCell];
+          if (!(zminus && (colZ == idxLo.z())))
+	    new_wvel[yminusCell] = new_wvel[currCell];*/
 	}
 	else
 	   new_vvel[currCell] = (factor_old*old_vvel[currCell]*
@@ -1478,15 +1457,6 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 		factor_new*new_vvel[currCell]*
 		(temp_density[currCell]+temp_density[yminusCell]))/
 		(factor_divide*(new_density[currCell]+new_density[yminusCell]));
-
- 	if ((cellType[yminusCell] == outlet_celltypeval)||
-	    (cellType[yminusCell] == pressure_celltypeval)) {
-          new_vvel[yminusCell] = new_vvel[currCell];
-        /*  if (!(xminus && (colX == idxLo.x())))
-	    new_uvel[yminusCell] = new_uvel[currCell];
-          if (!(zminus && (colZ == idxLo.z())))
-	    new_wvel[yminusCell] = new_wvel[currCell];*/
-	}
       }
     }
   }
@@ -1498,27 +1468,26 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
         IntVector yplusCell(colX, colY+1, colZ);
         IntVector yplusplusCell(colX, colY+2, colZ);
 
- 	if (cellType[yplusCell] == pressure_celltypeval) {
+	if ((cellType[yplusCell] == outlet_celltypeval)||
+            (cellType[yplusCell] == pressure_celltypeval)) {
           if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
               ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
 	    new_vvel[yplusCell] = 0.0;
 	  else {
-	  if (old_vvel[yplusCell] < -1.0e-10)
+          if (cellType[yplusCell] == outlet_celltypeval)
+            sign = 1;
+          else
+            sign = -1;
+	  if (sign * old_vvel[yplusCell] > 1.0e-10)
             new_vvel[yplusCell] = new_vvel[currCell];
 	  else
 	    new_vvel[yplusCell] = 0.0;
 	  }
-	}
-	else if (cellType[yplusCell] == outlet_celltypeval) {
-          if ((zminus && (colZ == idxLo.z()))||(zplus && (colZ == idxHi.z()))
-              ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-	    new_vvel[yplusCell] = 0.0;
-	  else {
-	  if (old_vvel[yplusCell] > 1.0e-10)
-            new_vvel[yplusCell] = new_vvel[currCell];
-	  else
-	    new_vvel[yplusCell] = 0.0;
-	  }
+          new_vvel[yplusplusCell] = new_vvel[yplusCell];
+         /* if (!(xminus && (colX == idxLo.x())))
+	    new_uvel[yplusCell] = new_uvel[currCell];
+          if (!(zminus && (colZ == idxLo.z())))
+	    new_wvel[yplusCell] = new_wvel[currCell];*/
 	}
 	else
 	   new_vvel[yplusCell] = (factor_old*old_vvel[yplusCell]*
@@ -1526,15 +1495,6 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 		factor_new*new_vvel[yplusCell]*
 		(temp_density[yplusCell]+temp_density[currCell]))/
 		(factor_divide*(new_density[yplusCell]+new_density[currCell]));
-
- 	if ((cellType[yplusCell] == outlet_celltypeval)||
-	    (cellType[yplusCell] == pressure_celltypeval)) {
-          new_vvel[yplusplusCell] = new_vvel[yplusCell];
-         /* if (!(xminus && (colX == idxLo.x())))
-	    new_uvel[yplusCell] = new_uvel[currCell];
-          if (!(zminus && (colZ == idxLo.z())))
-	    new_wvel[yplusCell] = new_wvel[currCell];*/
-	}
       }
     }
   }
@@ -1546,27 +1506,26 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 	IntVector zminusCell(colX, colY, colZ-1);
 	IntVector zplusCell(colX, colY, colZ+1);
 
- 	if (cellType[zminusCell] == pressure_celltypeval) {
+	if ((cellType[zminusCell] == outlet_celltypeval)||
+            (cellType[zminusCell] == pressure_celltypeval)) {
           if ((yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y()))
               ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
 	    new_wvel[currCell] = 0.0;
 	  else {
-	  if (old_wvel[currCell] > 1.0e-10)
+          if (cellType[zminusCell] == outlet_celltypeval)
+            sign = 1;
+          else
+            sign = -1;
+	  if (sign * old_wvel[currCell] < -1.0e-10)
             new_wvel[currCell] = new_wvel[zplusCell];
 	  else
 	    new_wvel[currCell] = 0.0;
 	  }
-	}
-	else if (cellType[zminusCell] == outlet_celltypeval) {
-          if ((yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y()))
-              ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-	    new_wvel[currCell] = 0.0;
-	  else {
-	  if (old_wvel[currCell] < -1.0e-10)
-            new_wvel[currCell] = new_wvel[zplusCell];
-	  else
-	    new_wvel[currCell] = 0.0;
-	  }
+          new_wvel[zminusCell] = new_wvel[currCell];
+        /*  if (!(xminus && (colX == idxLo.x())))
+	    new_uvel[zminusCell] = new_uvel[currCell];
+          if (!(yminus && (colY == idxLo.y())))
+	    new_vvel[zminusCell] = new_vvel[currCell];*/
 	}
 	else
 	   new_wvel[currCell] = (factor_old*old_wvel[currCell]*
@@ -1575,15 +1534,6 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 		(temp_density[currCell]+temp_density[zminusCell]))/
 		(factor_divide*
 		(new_density[currCell]+new_density[zminusCell]));
-
- 	if ((cellType[zminusCell] == outlet_celltypeval)||
-	    (cellType[zminusCell] == pressure_celltypeval)) {
-          new_wvel[zminusCell] = new_wvel[currCell];
-        /*  if (!(xminus && (colX == idxLo.x())))
-	    new_uvel[zminusCell] = new_uvel[currCell];
-          if (!(yminus && (colY == idxLo.y())))
-	    new_vvel[zminusCell] = new_vvel[currCell];*/
-	}
       }
     }
   }
@@ -1595,27 +1545,26 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
         IntVector zplusCell(colX, colY, colZ+1);
         IntVector zplusplusCell(colX, colY, colZ+2);
 
- 	if (cellType[zplusCell] == pressure_celltypeval) {
+	if ((cellType[zplusCell] == outlet_celltypeval)||
+            (cellType[zplusCell] == pressure_celltypeval)) {
           if ((yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y()))
               ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
 	    new_wvel[zplusCell] = 0.0;
 	  else {
-	  if (old_wvel[zplusCell] < -1.0e-10)
+          if (cellType[zplusCell] == outlet_celltypeval)
+            sign = 1;
+          else
+            sign = -1;
+	  if (sign * old_wvel[zplusCell] > 1.0e-10)
             new_wvel[zplusCell] = new_wvel[currCell];
 	  else
 	    new_wvel[zplusCell] = 0.0;
 	  }
-	}
-	else if (cellType[zplusCell] == outlet_celltypeval) {
-          if ((yminus && (colY == idxLo.y()))||(yplus && (colY == idxHi.y()))
-              ||(xminus && (colX == idxLo.x()))||(xplus && (colX == idxHi.x())))
-	    new_wvel[zplusCell] = 0.0;
-	  else {
-	  if (old_wvel[zplusCell] > 1.0e-10)
-            new_wvel[zplusCell] = new_wvel[currCell];
-	  else
-	    new_wvel[zplusCell] = 0.0;
-	  }
+          new_wvel[zplusplusCell] = new_wvel[zplusCell];
+        /*  if (!(xminus && (colX == idxLo.x())))
+	    new_uvel[zplusCell] = new_uvel[currCell];
+          if (!(yminus && (colY == idxLo.y())))
+	    new_vvel[zplusCell] = new_vvel[currCell];*/
 	}
 	else
 	   new_wvel[zplusCell] = (factor_old*old_wvel[zplusCell]*
@@ -1623,15 +1572,6 @@ MomentumSolver::averageRKHatVelocities(const ProcessorGroup*,
 		factor_new*new_wvel[zplusCell]*
 		(temp_density[zplusCell]+temp_density[currCell]))/
 		(factor_divide*(new_density[zplusCell]+new_density[currCell]));
-
- 	if ((cellType[zplusCell] == outlet_celltypeval)||
-	    (cellType[zplusCell] == pressure_celltypeval)) {
-          new_wvel[zplusplusCell] = new_wvel[zplusCell];
-        /*  if (!(xminus && (colX == idxLo.x())))
-	    new_uvel[zplusCell] = new_uvel[currCell];
-          if (!(yminus && (colY == idxLo.y())))
-	    new_vvel[zplusCell] = new_vvel[currCell];*/
-	}
       }
     }
   }
