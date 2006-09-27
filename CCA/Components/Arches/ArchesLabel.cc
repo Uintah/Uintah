@@ -445,13 +445,6 @@ ArchesLabel::ArchesLabel()
 				       sum_vartype::getTypeDescription() );
   d_negativeDensityGuessInterm_label = VarLabel::create("negativeDensityGuessInterm",
 				       sum_vartype::getTypeDescription() );
-// filtered convection terms in momentum eqn
-  d_filteredRhoUjULabel = VarLabel::create("filteredRhoUjU",
-				   SFCXVariable<double>::getTypeDescription() );
-  d_filteredRhoUjVLabel = VarLabel::create("filteredRhoUjV",
-				   SFCYVariable<double>::getTypeDescription() );
-  d_filteredRhoUjWLabel = VarLabel::create("filteredRhoUjW",
-				   SFCZVariable<double>::getTypeDescription() );
 // kinetic energy
   d_kineticEnergyLabel = VarLabel::create("kineticEnergy", 
 				   CCVariable<double>::getTypeDescription() );
@@ -719,10 +712,6 @@ ArchesLabel::~ArchesLabel()
   VarLabel::destroy(d_negativeDensityGuess_label);
   VarLabel::destroy(d_negativeDensityGuessPred_label);
   VarLabel::destroy(d_negativeDensityGuessInterm_label);
-// filtered convection terms in momentum eqn
-  VarLabel::destroy(d_filteredRhoUjULabel);
-  VarLabel::destroy(d_filteredRhoUjVLabel);
-  VarLabel::destroy(d_filteredRhoUjWLabel);
 // kinetic energy
   VarLabel::destroy(d_kineticEnergyLabel); 
   VarLabel::destroy(d_totalKineticEnergyLabel); 

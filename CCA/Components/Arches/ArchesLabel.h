@@ -332,10 +332,6 @@ namespace Uintah {
       const VarLabel* d_negativeDensityGuess_label;
       const VarLabel* d_negativeDensityGuessPred_label;
       const VarLabel* d_negativeDensityGuessInterm_label;
-// filtered convection terms in momentum eqn
-      const VarLabel* d_filteredRhoUjULabel;
-      const VarLabel* d_filteredRhoUjVLabel;
-      const VarLabel* d_filteredRhoUjWLabel;
 // kinetic energy
       const VarLabel* d_kineticEnergyLabel;
       const VarLabel* d_totalKineticEnergyLabel;
