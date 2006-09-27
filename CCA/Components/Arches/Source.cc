@@ -223,7 +223,6 @@ void
 Source::calculateScalarSource(const ProcessorGroup*,
 			      const Patch* patch,
 			      double delta_t,
-			      int, 
 			      CellInformation* cellinfo,
 			      ArchesVariables* vars,
 			      ArchesConstVariables* constvars) 
@@ -251,7 +250,6 @@ void
 Source::addReactiveScalarSource(const ProcessorGroup*,
 				const Patch* patch,
 				double,
-				int, 
 				CellInformation* cellinfo,
 				ArchesVariables* vars,
 				ArchesConstVariables* constvars) 
@@ -409,7 +407,7 @@ void
 Source::modifyScalarMassSource(const ProcessorGroup* ,
 			       const Patch* patch,
 			       double,
-			       int, ArchesVariables* vars,
+			       ArchesVariables* vars,
 			       ArchesConstVariables* constvars,
 			       int conv_scheme)
 {
@@ -536,45 +534,6 @@ Source::addMMEnthalpySource(const ProcessorGroup* ,
 		       valid_lo,
 		       valid_hi);
 
-  //#define enthalpySolve_debug
-#ifdef enthalpySolve_debug
-
-    IntVector indexLow = patch->getCellLowIndex();
-    IntVector indexHigh = patch->getCellHighIndex();
-
-    int ibot = 0;
-    int itop = 0;
-    int jbot = 8;
-    int jtop = 8;
-    int kbot = 8;
-    int ktop = 8;
-
-    // values above can be changed for each case as desired
-
-    bool printvalues = true;
-    int idloX = Max(indexLow.x(),ibot);
-    int idhiX = Min(indexHigh.x()-1,itop);
-    int idloY = Max(indexLow.y(),jbot);
-    int idhiY = Min(indexHigh.y()-1,jtop);
-    int idloZ = Max(indexLow.z(),kbot);
-    int idhiZ = Min(indexHigh.z()-1,ktop);
-    if ((idloX > idhiX) || (idloY > idhiY) || (idloZ > idhiZ))
-      printvalues = false;
-    printvalues = false;
-
-    if (printvalues) {
-      for (int ii = idloX; ii <= idhiX; ii++) {
-	for (int jj = idloY; jj <= idhiY; jj++) {
-	  for (int kk = idloZ; kk <= idhiZ; kk++) {
-	    cerr.width(14);
-	    cerr << " point coordinates "<< ii << " " << jj << " " << kk << endl;
-	    cerr << "Before Radiation Solve" << endl;
-	    cerr << "Nonlinear source     = " << vars->scalarNonlinearSrc[IntVector(ii,jj,kk)] << endl; 
-	  }
-	}
-      }
-    }
-#endif
 
 }
 
@@ -664,7 +623,6 @@ void
 Source::calculateScalarMMSource(const ProcessorGroup*,
 			      const Patch* patch,
 			      double delta_t,
-			      int, 
 			      CellInformation* cellinfo,
 			      ArchesVariables* vars,
 			      ArchesConstVariables* constvars) 

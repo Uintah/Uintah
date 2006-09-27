@@ -118,7 +118,6 @@ public:
       void calculateScalarCoeff(const ProcessorGroup*,
 				const Patch* patch,
 				double delta_t,
-				int Index,
 				CellInformation* cellinfo,
 				ArchesVariables* vars,
 				ArchesConstVariables* constvars,
@@ -142,12 +141,11 @@ public:
       // Documentation here
       void calculateScalarDiagonal(const ProcessorGroup*,
 				   const Patch* patch,
-				   int Index, ArchesVariables* vars);
+				   ArchesVariables* vars);
       ////////////////////////////////////////////////////////////////////////
       // Documentation here
       void calculateScalarFluxLimitedConvection(const ProcessorGroup*,
 				   const Patch* patch,
-				   int Index,
 				   CellInformation* cellinfo,
 				   ArchesVariables* vars,
 				   ArchesConstVariables* constvars,
