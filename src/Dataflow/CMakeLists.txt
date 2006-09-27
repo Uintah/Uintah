@@ -64,6 +64,12 @@ ELSE(SCIRUN_FOUND)
   MESSAGE(FATAL_ERROR "Cannot build SCIRun Dataflow without SCIRUN Core. Please set SCIRUN_DIR.")
 ENDIF(SCIRUN_FOUND)
 
+# Create on-the-fly-libs stuff
+CONFIGURE_FILE (
+  "${SCIRUN_SOURCE_DIR}/src/Makefile.in"
+  "${PROJECT_BINARY_DIR}/on-the-fly-libs/Makefile"
+)
+
 # TCL include directories
 SET(TCL_SRC_PATH ${SCIRUN_THIRDPARTY_PATH}/src/tcl CACHE PATH "Path to tcl source")
 SET(TCL_INCLUDE1 ${TCL_SRC_PATH}/generic)
