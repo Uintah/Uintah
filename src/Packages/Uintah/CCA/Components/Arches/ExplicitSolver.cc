@@ -257,14 +257,13 @@ int ExplicitSolver::nonlinearSolve(const LevelP& level,
 			   	      d_timeIntegratorLabels[curr_level]);
 
     d_scalarSolver->solve(sched, patches, matls, 
-		          d_timeIntegratorLabels[curr_level], 0);
+		          d_timeIntegratorLabels[curr_level]);
 
     if (d_reactingScalarSolve) {
-      int index = 0;
       // in this case we're only solving for one scalar...but
       // the same subroutine can be used to solve multiple scalars
       d_reactingScalarSolver->solve(sched, patches, matls,
-				    d_timeIntegratorLabels[curr_level], index);
+				    d_timeIntegratorLabels[curr_level]);
     }
 
     if (d_enthalpySolve)

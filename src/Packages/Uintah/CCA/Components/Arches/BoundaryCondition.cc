@@ -2431,7 +2431,6 @@ BoundaryCondition::enthalpyLisolve_mm(const ProcessorGroup*,
 void 
 BoundaryCondition::scalarPressureBC(const ProcessorGroup*,
 			    const Patch* patch,
-			    int /*index*/,
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars)
 {
@@ -2613,7 +2612,6 @@ BoundaryCondition::enthalpyPressureBC(const ProcessorGroup*,
 void 
 BoundaryCondition::scalarOutletBC(const ProcessorGroup*,
 			    const Patch* patch,
-			    int /*index*/,
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars)
 {

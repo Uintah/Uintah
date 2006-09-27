@@ -104,7 +104,6 @@ public:
       void calculateScalarSource(const ProcessorGroup* pc,
 				 const Patch* patch,
 				 double delta_t, 
-				 int index,
 				 CellInformation* cellinfo,
 				 ArchesVariables* vars,
 				 ArchesConstVariables* constvars);
@@ -112,7 +111,6 @@ public:
       void addReactiveScalarSource(const ProcessorGroup*,
 				   const Patch* patch,
 				   double delta_t,
-				   int, 
 				   CellInformation* cellinfo,
 				   ArchesVariables* vars,
 				   ArchesConstVariables* constvars);
@@ -146,7 +144,7 @@ public:
       void modifyScalarMassSource(const ProcessorGroup* pc,
 				  const Patch* patch,
 				  double delta_t, 
-				  int index, ArchesVariables* vars,
+				  ArchesVariables* vars,
 				  ArchesConstVariables* constvars,
 				  int conv_scheme);
 
@@ -184,7 +182,6 @@ public:
       void calculateScalarMMSource(const ProcessorGroup* pc,
 				 const Patch* patch,
 				 double delta_t, 
-				 int index,
 				 CellInformation* cellinfo,
 				 ArchesVariables* vars,
 				 ArchesConstVariables* constvars);
