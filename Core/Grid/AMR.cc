@@ -148,14 +148,14 @@ void normalizedDistance_CC(const int refineRatio,
     // only compute the distance for 1/2 of the cells
     int count = refineRatio - 1;   // 7, 5, 3...
     for (int i = 0; i< half_refineRatio; i++){
-      norm_dist[i] = count * half_normalized_dx_fineCell;
+      norm_dist[i] = -count * half_normalized_dx_fineCell;
       count -= 2;
     }
 
     // make a mirror copy of the data
     count = half_refineRatio - 1;
     for (int i = half_refineRatio; i< refineRatio; i++){
-      norm_dist[i] = norm_dist[count];
+      norm_dist[i] = fabs(norm_dist[count]);
       count -=1;
     }
   }
