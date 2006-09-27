@@ -45,25 +45,23 @@ itcl_class SCIRun_FieldsData_ChangeFieldDataType {
         toplevel $w
 	wm maxsize $w 397 187 
 
-	iwidgets::Labeledframe $w.att -labelpos nw \
-		               -labeltext "Input Field Type" 
+	iwidgets::Labeledframe $w.att -labelpos nw -labeltext "Input Field" 
 			       
 	pack $w.att 
 	set att [$w.att childsite]
 	
-	labelpair $att.l1 "Name" $this-fldname
-	labelpair $att.l2 "Typename" $this-inputdatatype
+	labelpair $att.l1 "Name" $this-field_name
+	labelpair $att.l2 "Datatype" $this-input_datatype
 	pack $att.l1 $att.l2 -side top 
 
-	iwidgets::Labeledframe $w.edit -labelpos nw \
-		               -labeltext "Output Field Type" 
+	iwidgets::Labeledframe $w.edit -labelpos nw -labeltext "Output Field" 
 			       
 	pack $w.edit 
 	set edit [$w.edit childsite]
-	labelcombo $edit.l1 "Data Type" \
+	labelcombo $edit.l1 "Datatype" \
 		{"unsigned char" "unsigned short" "unsigned int" \
 		char short int float double Vector Tensor} \
-		   $this-outputdatatype
+		   $this-output_datatype
 	pack $edit.l1 -side top 
 
 	makeSciButtonPanel $w $w $this

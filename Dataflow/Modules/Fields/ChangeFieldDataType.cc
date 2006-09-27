@@ -47,22 +47,24 @@
 
 namespace SCIRun {
 
-using std::endl;
-using std::pair;
-
 class ChangeFieldDataType : public Module {
+
 public:
   ChangeFieldDataType(GuiContext* ctx);
   virtual ~ChangeFieldDataType();
+  virtual void execute();
 
-  bool			types_equal_p(FieldHandle);
-  virtual void		execute();
+private:
 
-  GuiString		outputdatatype_;   // the out field type
-  GuiString		inputdatatype_;    // the input field type
-  GuiString		fldname_;          // the input field name
-  int			generation_;
+  FieldHandle  field_output_handle_;
+
+
+  GuiString		gui_field_name_;        // the input field name
+  GuiString		gui_input_datatype_;    // the input field type
+  GuiString		gui_output_datatype_;   // the output field type
+
   string                last_data_str_;
+
   FieldHandle           outputfield_;
 };
 
@@ -70,122 +72,113 @@ DECLARE_MAKER(ChangeFieldDataType)
 
 ChangeFieldDataType::ChangeFieldDataType(GuiContext* ctx)
   : Module("ChangeFieldDataType", ctx, Filter, "FieldsData", "SCIRun"),
-    outputdatatype_(get_ctx()->subVar("outputdatatype"), "double"),
-    inputdatatype_(get_ctx()->subVar("inputdatatype", false), "---"),
-    fldname_(get_ctx()->subVar("fldname", false), "---"),
-    generation_(-1),
-    outputfield_(0)
+
+    field_output_handle_(0),
+
+    gui_field_name_(get_ctx()->subVar("field_name", false), "---"),
+
+    gui_input_datatype_(get_ctx()->subVar("input_datatype", false), "---"),
+
+    gui_output_datatype_(get_ctx()->subVar("output_datatype"), "double")
 {
 }
+
 
 ChangeFieldDataType::~ChangeFieldDataType()
 {
-  fldname_.set("---");
-  inputdatatype_.set("---");
-}
-
-
-
-bool ChangeFieldDataType::types_equal_p(FieldHandle f)
-{
-  const string &iname = f->get_type_description()->get_name();
-  const string &oname = outputdatatype_.get();
-  return iname == oname;
 }
 
 
 void
 ChangeFieldDataType::execute()
 {
-  // The input port (with data) is required.
-  FieldHandle fh;
-  if (!get_input_handle("Input Field", fh))
-  {
-    fldname_.set("---");
-    inputdatatype_.set("---");
+  FieldHandle field_input_handle;
+  if( !get_input_handle( "Input Field", field_input_handle, true ) ) {
+    gui_field_name_.set("---");
+    gui_input_datatype_.set("---");
     return;
   }
 
-  const string old_data_str = fh->get_type_description(Field::MESH_TD_E)->get_name();
-  const string new_data_str = outputdatatype_.get();
+  string old_datatype_str =
+    field_input_handle->get_type_description(Field::FDATA_TD_E)->get_name();
 
-  if (generation_ != fh.get_rep()->generation) 
-  {
-    generation_ = fh.get_rep()->generation;
-    const string &tname = fh->get_type_description()->get_name();
-    inputdatatype_.set(tname);
+  std::string::size_type pos = old_datatype_str.find( "<" );
 
+  if( pos != string::npos )
+    old_datatype_str.erase(0, pos+1 );
+  
+  pos = old_datatype_str.find(",");
+  if( pos != std::string::npos )
+    old_datatype_str.erase( pos, old_datatype_str.length()-pos );
+
+  // Check to see if the input field has changed.
+  if( inputs_changed_ ) {
     string fldname;
-    if (fh->get_property("name",fldname))
-    {
-      fldname_.set(fldname);
-    }
+    if (field_input_handle->get_property("name",fldname))
+      gui_field_name_.set(fldname);
     else
-    {
-      fldname_.set("--- No Name ---");
-    }
-  }
-  else if (new_data_str == last_data_str_ && oport_cached("Output Field"))
-  {
-    send_output_handle("Output Field", outputfield_, true);
-    return;
-  }
-  last_data_str_ = new_data_str;
+      gui_field_name_.set("--- No Name ---");
 
-  if (old_data_str == new_data_str)
-  {
-    // No changes, just send the original through.
-    outputfield_ = fh;
-    remark("Passing field from input port to output port unchanged.");
-    send_output_handle("Output Field", outputfield_, true);
-    return;
+    gui_input_datatype_.set(old_datatype_str);
   }
 
-  // Create a field identical to the input, except for the edits.
-  const TypeDescription *fsrc_td = fh->get_type_description();
-    const string oftn = 
-      fh->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
-      fh->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
-      fh->get_type_description(Field::BASIS_TD_E)->get_similar_name(new_data_str,
-							 0, "<", " >, ") +
-      fh->get_type_description(Field::FDATA_TD_E)->get_similar_name(new_data_str,
+  if( gui_output_datatype_.changed( true ) ||
+      !field_output_handle_.get_rep() ||
+      inputs_changed_ ) {
+
+    update_state(Executing);
+
+    const string new_datatype_str = gui_output_datatype_.get();
+
+    if (new_datatype_str == old_datatype_str) {
+      // No changes, just send the original field through.
+      field_output_handle_ = field_input_handle;
+      remark("Passing field from input port to output port unchanged.");
+
+    } else {
+      // Create a field identical to the input, except for the datatype.
+      const TypeDescription *fsrc_td = field_input_handle->get_type_description();
+      const string oftn = 
+	field_input_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
+	field_input_handle->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
+	field_input_handle->get_type_description(Field::BASIS_TD_E)->get_similar_name(new_datatype_str,
+										      0, "<", " >, ") +
+	field_input_handle->get_type_description(Field::FDATA_TD_E)->get_similar_name(new_datatype_str,
 							 0, "<", " >") + " >";
+      
+      CompileInfoHandle create_ci =
+	ChangeFieldDataTypeAlgoCreate::get_compile_info(fsrc_td, oftn);
+      Handle<ChangeFieldDataTypeAlgoCreate> create_algo;
+      if (!DynamicCompilation::compile(create_ci, create_algo, this)) {
+	error("Unable to compile creation algorithm.");
+	return;
+      }
 
-  CompileInfoHandle create_ci =
-    ChangeFieldDataTypeAlgoCreate::get_compile_info(fsrc_td, oftn);
-  Handle<ChangeFieldDataTypeAlgoCreate> create_algo;
-  if (!DynamicCompilation::compile(create_ci, create_algo, this))
-  {
-    error("Unable to compile creation algorithm.");
-    return;
-  }
-  update_state(Executing);
-  outputfield_ = create_algo->execute(fh);
+      field_output_handle_ = create_algo->execute(field_input_handle);
 
-  if (fh->basis_order() != -1)
-  {
-    const TypeDescription *fdst_td = outputfield_->get_type_description();
-    CompileInfoHandle copy_ci =
-      ChangeFieldDataTypeAlgoCopy::get_compile_info(fsrc_td, fdst_td);
-    Handle<ChangeFieldDataTypeAlgoCopy> copy_algo;
-    
-    if (new_data_str == "Vector" && 
-	fh->query_scalar_interface(this).get_rep() ||
-	!DynamicCompilation::compile(copy_ci, copy_algo, true, this))
-    {
-      warning("Unable to convert the old data from " + old_data_str +
-	      " to " + new_data_str + ", no data transfered.");
-    }
-    else
-    {
-      remark("Copying " + old_data_str + " data into " + new_data_str +
-	     " may result in a loss of precision.");
-      update_state(Executing);
-      copy_algo->execute(fh, outputfield_);
+      if (field_input_handle->basis_order() != -1) {
+	const TypeDescription *fdst_td = field_output_handle_->get_type_description();
+	CompileInfoHandle copy_ci =
+	  ChangeFieldDataTypeAlgoCopy::get_compile_info(fsrc_td, fdst_td);
+	Handle<ChangeFieldDataTypeAlgoCopy> copy_algo;
+	
+	if (new_datatype_str == "Vector" && 
+	field_input_handle->query_scalar_interface(this).get_rep() ||
+	    !DynamicCompilation::compile(copy_ci, copy_algo, true, this)) {
+	  warning("Unable to convert the old data from " + old_datatype_str +
+		  " to " + new_datatype_str + ", no data transfered.");
+	} else {
+	  remark("Copying " + old_datatype_str + " data into " + new_datatype_str +
+		 " may result in a loss of precision.");
+	  update_state(Executing);
+	  copy_algo->execute(field_input_handle, field_output_handle_);
+	}
+      }
     }
   }
     
-  send_output_handle("Output Field", outputfield_, true);
+  // Send the new field downstream
+  send_output_handle("Output Field", field_output_handle_, true);
 }
 
     
