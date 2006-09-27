@@ -569,12 +569,9 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
     new_dw->put(max_vartype(reactscalar_clipped), d_lab->d_ReactScalarClippedLabel);
 
 // Outlet bc is done here not to change old scalar
-    if (d_boundaryCondition->getOutletBC())
-    d_boundaryCondition->scalarOutletBC(pc, patch,
-				       &reactscalarVars, &constReactscalarVars);
-
-    if (d_boundaryCondition->getPressureBC())
-    d_boundaryCondition->scalarPressureBC(pc, patch,
+    if ((d_boundaryCondition->getOutletBC())||
+        (d_boundaryCondition->getPressureBC()))
+    d_boundaryCondition->scalarOutletPressureBC(pc, patch,
 				       &reactscalarVars, &constReactscalarVars);
 
   }
