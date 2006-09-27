@@ -133,12 +133,17 @@ public:
 }; // end class Point
 
 
-// Actual declarations of these functions (as 'friend' above doesn't
+// Actual declarations of these functions as 'friend' above doesn't
 // (depending on the compiler) actually declare them.
+SCISHARE Point Interpolate(const Point&, const Point&, double);
 SCISHARE Point AffineCombination(const Point&, double, const Point&, double,
                                  const Point&, double, const Point&, double);
 SCISHARE Point AffineCombination(const Point&, double, const Point&, double, const Point&, double);
 SCISHARE Point AffineCombination(const Point&, double, const Point&, double);
+SCISHARE void Pio( Piostream&, Point& );
+
+SCISHARE std::ostream& operator<<(std::ostream& os, const Point& p);
+SCISHARE std::istream& operator>>(std::istream& os, Point& p);
 
 inline 
 Point operator*(double d, const Point &p) {
@@ -148,9 +153,6 @@ inline
 Point operator+(const Vector &v, const Point &p) {
   return p+v;
 }
-
-SCISHARE std::ostream& operator<<(std::ostream& os, const Point& p);
-SCISHARE std::istream& operator>>(std::istream& os, Point& p);
 
 } // End namespace SCIRun
 

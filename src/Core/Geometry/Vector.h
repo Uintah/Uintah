@@ -205,6 +205,12 @@ public:
 
 }; // end class Vector
 
+// Actual declarations of these functions as 'friend' above doesn't
+// (depending on the compiler) actually declare them.
+SCISHARE void Pio( Piostream&, Vector& );
+SCISHARE std::ostream& operator<<(std::ostream& os, const Vector& p);
+SCISHARE std::istream& operator>>(std::istream& os, Vector& p);
+  
 } // End namespace SCIRun
 
 // This cannot be above due to circular dependencies
