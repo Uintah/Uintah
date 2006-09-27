@@ -311,17 +311,29 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
       // second pass - set up patches and cells
       for(ProblemSpecP box_ps = level_ps->findBlock("Box");
          box_ps != 0; box_ps = box_ps->findNextBlock("Box")){
-        Point lower;
+        Point lower, upper;
         box_ps->require("lower", lower);
-        Point upper;
         box_ps->require("upper", upper);
         
-        IntVector lowCell = level->getCellIndex(lower+Vector(1.e-14,1.e-14,1.e-14));
+        //__________________________________
+        // bullet proofing inputs
+        for(int dir = 0; dir<3; dir++){
+          if (lower(dir) >= upper(dir)){
+            ostringstream msg;
+            msg<< "\nComputational Domain Input Error: Level("<< levelIndex << ")"
+               << " \n The lower corner " << lower 
+               << " must be larger than the upper corner " << upper << endl; 
+            throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+          }
+        }
+        
+        IntVector lowCell  = level->getCellIndex(lower+Vector(1.e-14,1.e-14,1.e-14));
         IntVector highCell = level->getCellIndex(upper+Vector(1.e-14,1.e-14,1.e-14));
         Point lower2 = level->getNodePosition(lowCell);
         Point upper2 = level->getNodePosition(highCell);
         double diff_lower = (lower2-lower).length();
         double diff_upper = (upper2-upper).length();
+        
         if(diff_lower > 1.e-14) {
           cerr << "lower=" << lower << '\n';
           cerr << "lowCell =" << lowCell << '\n';
