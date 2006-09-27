@@ -133,10 +133,6 @@ namespace Uintah {
       CCVariable<double> mmEnthSu;
       CCVariable<double> mmEnthSp;
       CCVariable<double> denRefArray;
-// variables for filtered convection fluxes
-    StencilMatrix<SFCXVariable<double> > filteredRhoUjU; //SFCX 3 element vector
-    StencilMatrix<SFCYVariable<double> > filteredRhoUjV; //SFCY 3 element vector
-    StencilMatrix<SFCZVariable<double> > filteredRhoUjW; //SFCZ 3 element vector
 
     }; // End class ArchesVariables
    
