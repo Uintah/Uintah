@@ -423,22 +423,7 @@ public:
 			      ArchesConstVariables* constvars,
 			      CellInformation* cellinfo);
 // New boundary conditions
-      void scalarPressureBC(const ProcessorGroup* pc,
-		    const Patch* patch,
-		    ArchesVariables* vars,
-		    ArchesConstVariables* constvars);
-
-      void enthalpyPressureBC(const ProcessorGroup* pc,
-		    const Patch* patch,
-		    ArchesVariables* vars,
-		    ArchesConstVariables* constvars);
-
-      void scalarOutletBC(const ProcessorGroup* pc,
-			    const Patch* patch,
-			    ArchesVariables* vars,
-			    ArchesConstVariables* constvars);
-
-      void enthalpyOutletBC(const ProcessorGroup* pc,
+      void scalarOutletPressureBC(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars);
