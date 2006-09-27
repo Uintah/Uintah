@@ -522,14 +522,6 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
       d_momSolver->solve(subsched, local_patches, local_matls,
 			 d_timeIntegratorLabels[curr_level], index, false);
     }
-   /* if ((d_boundaryCondition->getOutletBC())||
-        (d_boundaryCondition->getPressureBC())) {
-      sched_saveVelocityCopies(subsched, local_patches, local_matls,
-			       d_timeIntegratorLabels[curr_level]);
-      d_boundaryCondition->sched_setVelocityTangentialBC(subsched,
-		                            local_patches, local_matls,
-					    d_timeIntegratorLabels[curr_level]);
-    }*/
     if (d_pressure_correction)
     sched_updatePressure(subsched, local_patches, local_matls,
 				 d_timeIntegratorLabels[curr_level]);
@@ -2882,70 +2874,5 @@ PicardNonlinearSolver::saveFECopies(const ProcessorGroup*,
     new_dw->copyOut(temp_enthalpy, d_lab->d_enthalpySPLabel,
 		     matlIndex, patch);
     }
-  }
-}
-//****************************************************************************
-// Schedule saving of velocity copies
-//****************************************************************************
-void 
-PicardNonlinearSolver::sched_saveVelocityCopies(SchedulerP& sched, const PatchSet* patches,
-				  const MaterialSet* matls,
-			   	  const TimeIntegratorLabel* timelabels)
-{
-  string taskname =  "PicardNonlinearSolver::saveVelocityCopies" +
-		     timelabels->integrator_step_name;
-  Task* tsk = scinew Task(taskname, this,
-			  &PicardNonlinearSolver::saveVelocityCopies,
-			  timelabels);
-
-  tsk->requires(Task::NewDW, d_lab->d_uVelocitySPBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_vVelocitySPBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-  tsk->requires(Task::NewDW, d_lab->d_wVelocitySPBCLabel,
-		Ghost::None, Arches::ZEROGHOSTCELLS);
-
-  tsk->modifies(d_lab->d_uVelRhoHatLabel);
-  tsk->modifies(d_lab->d_vVelRhoHatLabel);
-  tsk->modifies(d_lab->d_wVelRhoHatLabel);
-
-  sched->addTask(tsk, patches, matls);
-}
-//****************************************************************************
-// Actually save temp copies here
-//****************************************************************************
-void 
-PicardNonlinearSolver::saveVelocityCopies(const ProcessorGroup*,
-			   const PatchSubset* patches,
-			   const MaterialSubset*,
-			   DataWarehouse*,
-			   DataWarehouse* new_dw,
-			   const TimeIntegratorLabel*)
-{
-  for (int p = 0; p < patches->size(); p++) {
-
-    const Patch* patch = patches->get(p);
-    int archIndex = 0; // only one arches material
-    int matlIndex = d_lab->d_sharedState->
-		     getArchesMaterial(archIndex)->getDWIndex(); 
-
-    SFCXVariable<double> uVelocity;
-    SFCYVariable<double> vVelocity;
-    SFCZVariable<double> wVelocity;
-
-    new_dw->getModifiable(uVelocity, d_lab->d_uVelRhoHatLabel,
-		          matlIndex, patch);
-    new_dw->getModifiable(vVelocity, d_lab->d_vVelRhoHatLabel,
-		          matlIndex, patch);
-    new_dw->getModifiable(wVelocity, d_lab->d_wVelRhoHatLabel,
-		          matlIndex, patch);
-
-    new_dw->copyOut(uVelocity, d_lab->d_uVelocitySPBCLabel, 
-		    matlIndex, patch);
-    new_dw->copyOut(vVelocity, d_lab->d_vVelocitySPBCLabel, 
-		    matlIndex, patch);
-    new_dw->copyOut(wVelocity, d_lab->d_wVelocitySPBCLabel, 
-		    matlIndex, patch);
-
   }
 }

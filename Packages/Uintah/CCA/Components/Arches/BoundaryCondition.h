@@ -404,11 +404,6 @@ public:
 				    ArchesVariables* vars,
 				    ArchesConstVariables* constvars);
 
-      void setFluxBC(const ProcessorGroup* pc,
-		      const Patch* patch,
-		      int index,
-		      ArchesVariables* vars);
-			
       void scalarLisolve_mm(const ProcessorGroup*,
 			    const Patch*,
 			    double delta_t,
@@ -461,11 +456,6 @@ public:
       void sched_correctVelocityOutletBC(SchedulerP& sched,
 			   		 const PatchSet* patches,
 			   		 const MaterialSet* matls,
-			                 const TimeIntegratorLabel* timelabels);
-
-      void sched_setVelocityTangentialBC(SchedulerP& sched,
-			                 const PatchSet* patches,
-			                 const MaterialSet* matls,
 			                 const TimeIntegratorLabel* timelabels);
 
       void sched_getScalarFlowRate(SchedulerP& sched,
@@ -597,13 +587,6 @@ private:
 			      DataWarehouse* old_dw,
 			      DataWarehouse* new_dw,
 			      const TimeIntegratorLabel* timelabels);
-
-      void setVelocityTangentialBC(const ProcessorGroup* pc,
-			           const PatchSubset* patches,
-			           const MaterialSubset* matls,
-			           DataWarehouse* old_dw,
-			           DataWarehouse* new_dw,
-			           const TimeIntegratorLabel* timelabels);
 
       void getScalarFlowRate(const ProcessorGroup* pc,
 			     const PatchSubset* patches,
