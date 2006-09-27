@@ -91,22 +91,19 @@ public:
       void solve(SchedulerP& sched,
 		 const PatchSet* patches,
 		 const MaterialSet* matls,
-		 const TimeIntegratorLabel* timelabels,
-		 int index);
+		 const TimeIntegratorLabel* timelabels);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule Build of linearized matrix
       void sched_buildLinearMatrix(SchedulerP&, const PatchSet* patches,
 				   const MaterialSet* matls,
-				   const TimeIntegratorLabel* timelabels,
-				   int index);
+				   const TimeIntegratorLabel* timelabels);
 
       ///////////////////////////////////////////////////////////////////////
-      // Schedule Linear Solve for Scalar[index]
+      // Schedule Linear Solve for Scalar
       void sched_scalarLinearSolve(SchedulerP&, const PatchSet* patches,
 				   const MaterialSet* matls,
-				   const TimeIntegratorLabel* timelabels,
-				   int index);
+				   const TimeIntegratorLabel* timelabels);
 
       inline void setMMS(bool doMMS) {
         d_doMMS=doMMS;
@@ -130,11 +127,10 @@ private:
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
-			     const TimeIntegratorLabel* timelabels,
-			     int index);
+			     const TimeIntegratorLabel* timelabels);
 
       ///////////////////////////////////////////////////////////////////////
-      // Actually Solver the Linear System for Scalar[index]
+      // Actually Solver the Linear System for Scalar
       //    [in] 
       //        add documentation here
       void scalarLinearSolve(const ProcessorGroup* pc,
@@ -142,8 +138,7 @@ private:
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
-			     const TimeIntegratorLabel* timelabels,
-			     int index);
+			     const TimeIntegratorLabel* timelabels);
 
 
 private:

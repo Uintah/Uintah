@@ -127,17 +127,16 @@ void
 ReactiveScalarSolver::solve(SchedulerP& sched,
 			    const PatchSet* patches,
 			    const MaterialSet* matls,
-			    const TimeIntegratorLabel* timelabels,
-			    int index)
+			    const TimeIntegratorLabel* timelabels)
 {
   //computes stencil coefficients and source terms
   // requires : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN
   // computes : reactscalCoefSBLM, scalLinSrcSBLM, scalNonLinSrcSBLM
-  sched_buildLinearMatrix(sched, patches, matls, timelabels, index);
+  sched_buildLinearMatrix(sched, patches, matls, timelabels);
   
   // Schedule the scalar solve
   // require : scalarIN, reactscalCoefSBLM, scalNonLinSrcSBLM
-  sched_reactscalarLinearSolve(sched, patches, matls, timelabels, index);
+  sched_reactscalarLinearSolve(sched, patches, matls, timelabels);
 }
 
 //****************************************************************************
@@ -147,14 +146,13 @@ void
 ReactiveScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 					      const PatchSet* patches,
 					      const MaterialSet* matls,
-				      	  const TimeIntegratorLabel* timelabels,
-					      int index)
+				      	  const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "ReactiveScalarSolver::BuildCoeff" +
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
 			  &ReactiveScalarSolver::buildLinearMatrix,
-			  timelabels, index);
+			  timelabels);
 
 
   Task::WhichDW parent_old_dw;
@@ -231,8 +229,7 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 					     const MaterialSubset*,
 					     DataWarehouse* old_dw,
 					     DataWarehouse* new_dw,
-					  const TimeIntegratorLabel* timelabels,
-					     int index)
+					  const TimeIntegratorLabel* timelabels)
 {
 
   DataWarehouse* parent_old_dw;
@@ -262,7 +259,7 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    // from old_dw get PCELL, DENO, FO(index)
+    // from old_dw get PCELL, DENO, FO
     new_dw->get(constReactscalarVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
@@ -275,7 +272,7 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     old_values_dw->get(constReactscalarVars.old_density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    // from new_dw get DEN, VIS, F(index), U, V, W
+    // from new_dw get DEN, VIS, F, U, V, W
     new_dw->get(constReactscalarVars.density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 
@@ -349,7 +346,7 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
   // inputs : reactscalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
   // outputs: reactscalCoefSBLM
     d_discretize->calculateScalarCoeff(pc, patch,
-				       delta_t, index, cellinfo, 
+				       delta_t, cellinfo, 
 				       &reactscalarVars, &constReactscalarVars,
 				       d_conv_scheme);
 
@@ -357,15 +354,15 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // inputs : [u,v,w]VelocityMS, reactscalarSP, densityCP, viscosityCTS
     // outputs: scalLinSrcSBLM, scalNonLinSrcSBLM
     d_source->calculateScalarSource(pc, patch,
-				    delta_t, index, cellinfo, 
+				    delta_t, cellinfo, 
 				    &reactscalarVars, &constReactscalarVars);
     d_source->addReactiveScalarSource(pc, patch,
-				    delta_t, index, cellinfo, 
+				    delta_t, cellinfo, 
 				    &reactscalarVars, &constReactscalarVars);
     if (d_conv_scheme > 0) {
       int wall_celltypeval = d_boundaryCondition->wallCellType();
       d_discretize->calculateScalarFluxLimitedConvection
-		                                  (pc, patch,  index, cellinfo,
+		                                  (pc, patch,  cellinfo,
 				  	          &reactscalarVars,
 						  &constReactscalarVars,
 					          wall_celltypeval, 
@@ -387,14 +384,14 @@ void ReactiveScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // similar to mascal
     // inputs :
     // outputs:
-    d_source->modifyScalarMassSource(pc, patch, delta_t, index,
+    d_source->modifyScalarMassSource(pc, patch, delta_t,
 				     &reactscalarVars, &constReactscalarVars,
 				     d_conv_scheme);
     
     // Calculate the reactscalar diagonal terms
     // inputs : reactscalCoefSBLM, scalLinSrcSBLM
     // outputs: reactscalCoefSBLM
-    d_discretize->calculateScalarDiagonal(pc, patch, index, &reactscalarVars);
+    d_discretize->calculateScalarDiagonal(pc, patch, &reactscalarVars);
 
   }
 }
@@ -407,14 +404,13 @@ void
 ReactiveScalarSolver::sched_reactscalarLinearSolve(SchedulerP& sched,
 						   const PatchSet* patches,
 						   const MaterialSet* matls,
-					const TimeIntegratorLabel* timelabels,
-						   int index)
+					const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "ReactiveScalarSolver::ScalarLinearSolve" + 
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
 			  &ReactiveScalarSolver::reactscalarLinearSolve,
-			  timelabels, index);
+			  timelabels);
   
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion) parent_old_dw = Task::ParentOldDW;
@@ -473,8 +469,7 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
 					     const MaterialSubset*,
 					     DataWarehouse* old_dw,
 					     DataWarehouse* new_dw,
-					  const TimeIntegratorLabel* timelabels,
-					     int index)
+					  const TimeIntegratorLabel* timelabels)
 {
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -545,7 +540,7 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
     // make it a separate task later
-    d_rhsSolver->scalarLisolve(pc, patch, index, delta_t, 
+    d_rhsSolver->scalarLisolve(pc, patch, delta_t, 
                                   &reactscalarVars, &constReactscalarVars,
 				  cellinfo);
 
@@ -575,11 +570,11 @@ ReactiveScalarSolver::reactscalarLinearSolve(const ProcessorGroup* pc,
 
 // Outlet bc is done here not to change old scalar
     if (d_boundaryCondition->getOutletBC())
-    d_boundaryCondition->scalarOutletBC(pc, patch,  index, 
+    d_boundaryCondition->scalarOutletBC(pc, patch,
 				       &reactscalarVars, &constReactscalarVars);
 
     if (d_boundaryCondition->getPressureBC())
-    d_boundaryCondition->scalarPressureBC(pc, patch,  index,
+    d_boundaryCondition->scalarPressureBC(pc, patch,
 				       &reactscalarVars, &constReactscalarVars);
 
   }

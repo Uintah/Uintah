@@ -425,7 +425,6 @@ public:
 // New boundary conditions
       void scalarPressureBC(const ProcessorGroup* pc,
 		    const Patch* patch,
-		    int index,
 		    ArchesVariables* vars,
 		    ArchesConstVariables* constvars);
 
@@ -436,7 +435,6 @@ public:
 
       void scalarOutletBC(const ProcessorGroup* pc,
 			    const Patch* patch,
-			    int index,
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars);
 

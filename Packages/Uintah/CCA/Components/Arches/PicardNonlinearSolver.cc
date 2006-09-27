@@ -457,12 +457,11 @@ PicardNonlinearSolver::recursiveSolver(const ProcessorGroup* pg,
 
   
   d_scalarSolver->solve(subsched, local_patches, local_matls, 
-			d_timeIntegratorLabels[curr_level], 0);
+			d_timeIntegratorLabels[curr_level]);
 
     if (d_reactingScalarSolve) {
-      int index = 0;
       d_reactingScalarSolver->solve(subsched, local_patches, local_matls,
-				    d_timeIntegratorLabels[curr_level], index);
+				    d_timeIntegratorLabels[curr_level]);
     }
 
     if (d_enthalpySolve)

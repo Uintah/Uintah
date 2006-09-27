@@ -430,7 +430,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    // from old_dw get PCELL, DENO, FO(index)
+    // from old_dw get PCELL, DENO, FO
     new_dw->get(constEnthalpyVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
@@ -443,7 +443,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     old_values_dw->get(constEnthalpyVars.old_density, d_lab->d_densityCPLabel, 
 		  matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
 
-    // from new_dw get DEN, VIS, F(index), U, V, W
+    // from new_dw get DEN, VIS, F, U, V, W
     new_dw->get(constEnthalpyVars.density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 
@@ -641,9 +641,8 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     // compute ith component of enthalpy stencil coefficients
     // inputs : enthalpySP, [u,v,w]VelocityMS, densityCP, viscosityCTS
     // outputs: scalCoefSBLM
-    int index = 0;
     d_discretize->calculateScalarCoeff(pc, patch,
-				       delta_t, index, cellinfo, 
+				       delta_t, cellinfo, 
 				       &enthalpyVars, &constEnthalpyVars,
 				       d_conv_scheme);
 
@@ -664,7 +663,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     if (d_conv_scheme > 0) {
       int wall_celltypeval = d_boundaryCondition->wallCellType();
       d_discretize->calculateScalarFluxLimitedConvection
-		                                  (pc, patch,  index, cellinfo,
+		                                  (pc, patch, cellinfo,
 				  	          &enthalpyVars,
 						  &constEnthalpyVars,
 					          wall_celltypeval, 
@@ -815,7 +814,7 @@ void EnthalpySolver::buildLinearMatrix(const ProcessorGroup* pc,
     // Calculate the enthalpy diagonal terms
     // inputs : scalCoefSBLM, scalLinSrcSBLM
     // outputs: scalCoefSBLM
-    d_discretize->calculateScalarDiagonal(pc, patch, index, &enthalpyVars);
+    d_discretize->calculateScalarDiagonal(pc, patch, &enthalpyVars);
 
   }
 }

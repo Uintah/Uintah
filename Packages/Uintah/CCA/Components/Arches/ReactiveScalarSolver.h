@@ -91,22 +91,19 @@ public:
       void solve(SchedulerP& sched,
 		 const PatchSet* patches,
 		 const MaterialSet* matls,
-		 const TimeIntegratorLabel* timelabels,
-		 int index);
+		 const TimeIntegratorLabel* timelabels);
    
       ///////////////////////////////////////////////////////////////////////
       // Schedule Build of linearized matrix
       void sched_buildLinearMatrix(SchedulerP&, const PatchSet* patches,
 				   const MaterialSet* matls,
-				   const TimeIntegratorLabel* timelabels,
-				   int index);
+				   const TimeIntegratorLabel* timelabels);
 
       ///////////////////////////////////////////////////////////////////////
-      // Schedule Linear Solve for ReactiveScalar[index]
+      // Schedule Linear Solve for ReactiveScalar
       void sched_reactscalarLinearSolve(SchedulerP&, const PatchSet* patches,
 				        const MaterialSet* matls,
-				        const TimeIntegratorLabel* timelabels,
-				        int index);
+				        const TimeIntegratorLabel* timelabels);
       
       inline void setMMS(bool doMMS) {
         d_doMMS=doMMS;
@@ -132,11 +129,10 @@ private:
 			     const MaterialSubset* /*matls*/,
 			     DataWarehouse* old_dw,
 			     DataWarehouse* new_dw,
-			     const TimeIntegratorLabel* timelabels,
-			     int index);
+			     const TimeIntegratorLabel* timelabels);
 
       ///////////////////////////////////////////////////////////////////////
-      // Actually Solve the Linear System for ReactiveScalar[index]
+      // Actually Solve the Linear System for ReactiveScalar
       //    [in] 
       //        add documentation here
       void reactscalarLinearSolve(const ProcessorGroup* pc,
@@ -144,8 +140,7 @@ private:
 				  const MaterialSubset* /*matls*/,
 				  DataWarehouse* old_dw,
 				  DataWarehouse* new_dw,
-				  const TimeIntegratorLabel* timelabels,
-				  int index);
+				  const TimeIntegratorLabel* timelabels);
 
 
 private:

@@ -83,7 +83,7 @@ public:
       // Scalar Solve
       void scalarLisolve(const ProcessorGroup* pc,
 			 const Patch* patch,
-			 int index, double delta_t,
+			 double delta_t,
 			 ArchesVariables* vars,
 			 ArchesConstVariables* constvars,
 			 CellInformation* cellinfo);

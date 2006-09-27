@@ -193,7 +193,7 @@ RHSSolver::calculateVelocity(const ProcessorGroup* ,
 void 
 RHSSolver::scalarLisolve(const ProcessorGroup*,
 			  const Patch* patch,
-			  int, double delta_t,
+			  double delta_t,
 			  ArchesVariables* vars,
 			  ArchesConstVariables* constvars,
 			  CellInformation* cellinfo)
