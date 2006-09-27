@@ -449,23 +449,18 @@ public:
 			    ArchesConstVariables* constvars,
 			    double time_shift);
 
-      void velRhoHatPressureBC(const ProcessorGroup* pc,
+      void velRhoHatOutletPressureBC(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars);
 
-      void velRhoHatOutletBC(const ProcessorGroup* pc,
-			    const Patch* patch,
-			    ArchesVariables* vars,
-			    ArchesConstVariables* constvars);
-
-      void velocityPressureBC(const ProcessorGroup* pc,
+      void velocityOutletPressureTangentBC(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    const int index,
 			    ArchesVariables* vars,
 			    ArchesConstVariables* constvars);
 
-      void addPresGradVelocityOutletBC(const ProcessorGroup* pc,
+      void addPresGradVelocityOutletPressureBC(const ProcessorGroup* pc,
 			    const Patch* patch,
 			    const int index,
 			    CellInformation* cellinfo,
