@@ -26,6 +26,12 @@ struct VG {
   void setmax();
 };
 
+  // Forward declarations of template specialization
+  template<> void VG<unsigned short, unsigned short>::setmin();
+  template<> void VG<unsigned short, unsigned short>::setmax();
+  template<> void VG<unsigned char, unsigned char>::setmin();
+  template<> void VG<unsigned char, unsigned char>::setmax();
+
 template<class V, class G> inline VG<V,G> Min(VG<V,G> v1, VG<V,G> v2)
 {
   return VG<V,G>(Min(v1.v, v2.v), Min(v1.g, v2.g));
