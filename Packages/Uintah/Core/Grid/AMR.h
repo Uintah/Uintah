@@ -16,7 +16,8 @@
 
 #include <Packages/Uintah/Core/Grid/share.h>
 
-#define is_rightFace(face) ( (face == "xminus" || face == "xplus" || face == "yminus" || face == "yplus"|| face == "zminus" || face == "zplus") ?1:0  )
+//#define is_rightFace(face) ( (face == "xminus" || face == "xplus" || face == "yminus" || face == "yplus"|| face == "zminus" || face == "zplus") ?1:0  )
+#define is_rightFace(face) ( (face == "xminus" || face == "yminus" ||  face == "zminus" ) ?1:0  )
 namespace Uintah {
 
 /*___________________________________________________________________
@@ -415,9 +416,6 @@ template<class T>
                              const IntVector& fh,
                              CCVariable<T>& q_FineLevel)
 {
-  Vector c_dx = coarseLevel->dCell();
-  Vector inv_c_dx = Vector(1.0)/c_dx;
-
   IntVector gridLo, gridHi;
   coarseLevel->findCellIndexRange(gridLo,gridHi);
   
@@ -425,12 +423,11 @@ template<class T>
   int p_dir = dir[0];                                    // normal direction 
   int y = dir[1];             // Orthogonal to the patch face
   int z = dir[2];
-  
-  IntVector faceShift = finePatch->faceDirection(patchFace);
   string name = finePatch->getFaceName(patchFace);
 
   
-   // compute the normalized distance between the fine and coarse cell centers
+  //__________________________________
+  // compute the normalized distance between the fine and coarse cell centers
   vector<double> norm_dist_y(refineRatio[y]);
   vector<double> norm_dist_z(refineRatio[z]);
   
@@ -439,11 +436,11 @@ template<class T>
 #if 0  
   cout<< " face " << name << " refineRatio "<< refineRatio
       << " FineLevel iterator" << fl << " " << fh
-      << " coarseLevel " << fineLevel->mapCellToCoarser(fl) << " " << fineLevel->mapCellToCoarser(fh)
-      << " faceShift " << faceShift << endl;    
+      << " coarseLevel " << fineLevel->mapCellToCoarser(fl) << " " << fineLevel->mapCellToCoarser(fh)<< endl;    
 #endif      
   
-  // define the offsets for the CC data 
+  //__________________________________
+  // define the offsets for the CC data on the coarse Level
   vector<IntVector> offset(9);
   int counter = 0;
     
@@ -454,11 +451,16 @@ template<class T>
       tmp[y]     = j;     // -1, 0, 1
       tmp[z]     = k;     // -1, 0, 1
       offset[counter] = tmp; 
-//      cout << " offset["<<counter<<"]: " << offset[counter] << endl;
       counter += 1;
     }
-  }    
+  }
   
+  //__________________________________
+  //  Find the interpolation weights for step 2
+  double d_CL = 0.5 * (refineRatio[p_dir] + 1.0);
+  double w0_x = (1.0 - d_CL)/(d_CL + 1);
+  double w1_x = -2.0 * (1.0 - d_CL)/d_CL;
+  double w2_x = 2.0/((d_CL + 1) * d_CL);
   
   for(CellIterator iter(fl,fh); !iter.done(); iter++){
     IntVector f_cell = *iter;
@@ -478,7 +480,7 @@ template<class T>
       }
     }      
         
-    baseCell = c_cell + shift + faceShift;
+    baseCell = c_cell + shift;
 
     //__________________________________ 
     // compute the index of the fine cell, relative to the
@@ -517,13 +519,13 @@ template<class T>
     T q_CL_Interpolated;
     q_CL_Interpolated
         = w(0,0) * q_CL[baseCell + offset[0]]   
-        + w(1,0) * q_CL[baseCell + offset[1]]           
-        + w(2,0) * q_CL[baseCell + offset[2]]           
-        + w(0,1) * q_CL[baseCell + offset[3]]            
+        + w(0,1) * q_CL[baseCell + offset[1]]           
+        + w(0,2) * q_CL[baseCell + offset[2]]           
+        + w(1,0) * q_CL[baseCell + offset[3]]            
         + w(1,1) * q_CL[baseCell + offset[4]]    
-        + w(2,1) * q_CL[baseCell + offset[5]]     // this works for x+ x- faces need to do something cleaver for the y & z faces
-        + w(0,2) * q_CL[baseCell + offset[6]]   
-        + w(1,2) * q_CL[baseCell + offset[7]]     
+        + w(1,2) * q_CL[baseCell + offset[5]] 
+        + w(2,0) * q_CL[baseCell + offset[6]]   
+        + w(2,1) * q_CL[baseCell + offset[7]]     
         + w(2,2) * q_CL[baseCell + offset[8]];  
 
 
@@ -535,19 +537,14 @@ template<class T>
     //       -1       0       1     (normalized distance)
     //                |------------d_CL-----------|
     //
-    //  x2 = (refine_ratio.x + 1)/2
+    //  x2=d_CL = (refine_ratio.x + 1)/2
     //  See notes dated 09/16/06 for derivation
     IntVector dir = finePatch->faceDirection(patchFace);
     IntVector x0 = f_cell;
     IntVector x1 = f_cell;
-    x0[p_dir] -=   dir[p_dir];
-    x1[p_dir] -= 2*dir[p_dir];
+    x0[p_dir] -= 2*dir[p_dir];
+    x1[p_dir] -=   dir[p_dir];
     
-    double d_CL = 0.5 * (refineRatio[p_dir] + 1.0);
-    //double d_CL = (refineRatio[p_dir] + 1.0);
-    double w0_x = (1.0 - d_CL)/(d_CL + 1);
-    double w1_x = -2.0 * (1.0 - d_CL)/d_CL;
-    double w2_x = 2.0/((d_CL + 1) * d_CL);
     q_FineLevel[f_cell] = w0_x * q_FineLevel[x0] + w1_x * q_FineLevel[x1] + w2_x * q_CL_Interpolated;
     
     
@@ -563,22 +560,22 @@ template<class T>
      cout << "relativeIndex " << relativeIndx << " dist " << dist << endl;
      std::cout << name << " baseCell " << baseCell << " f_cell " << f_cell << " dy " << dy << " dz " << dz << "\n";
      std::cout << " q_CL[baseCell + " << offset[0] << "] " << q_CL[baseCell +  offset[0]]<< " w(0,0) " << w(0,0) << "\n";
-     std::cout << " q_CL[baseCell + " << offset[1] << "] " << q_CL[baseCell +  offset[1]]<< " w(1,0) " << w(1,0) << "\n";
-     std::cout << " q_CL[baseCell + " << offset[2] << "] " << q_CL[baseCell +  offset[2]]<< " w(2,0) " << w(2,0) << "\n";
-     std::cout << " q_CL[baseCell + " << offset[3] << "] " << q_CL[baseCell +  offset[3]]<< " w(0,1) " << w(0,1) << "\n";
+     std::cout << " q_CL[baseCell + " << offset[1] << "] " << q_CL[baseCell +  offset[1]]<< " w(0,1) " << w(0,1) << "\n";
+     std::cout << " q_CL[baseCell + " << offset[2] << "] " << q_CL[baseCell +  offset[2]]<< " w(0,2) " << w(0,2) << "\n";
+     std::cout << " q_CL[baseCell + " << offset[3] << "] " << q_CL[baseCell +  offset[3]]<< " w(1,0) " << w(1,0) << "\n";
      std::cout << " q_CL[baseCell + " << offset[4] << "] " << q_CL[baseCell +  offset[4]]<< " w(1,1) " << w(1,1) << "\n";
-     std::cout << " q_CL[baseCell + " << offset[5] << "] " << q_CL[baseCell +  offset[5]]<< " w(2,1) " << w(2,1) << "\n";
-     std::cout << " q_CL[baseCell + " << offset[6] << "] " << q_CL[baseCell +  offset[6]]<< " w(0,2) " << w(0,2) << "\n";
-     std::cout << " q_CL[baseCell + " << offset[7] << "] " << q_CL[baseCell +  offset[7]]<< " w(1,2) " << w(1,2) << "\n";
+     std::cout << " q_CL[baseCell + " << offset[5] << "] " << q_CL[baseCell +  offset[5]]<< " w(1,2) " << w(1,2) << "\n";
+     std::cout << " q_CL[baseCell + " << offset[6] << "] " << q_CL[baseCell +  offset[6]]<< " w(2,0) " << w(2,0) << "\n";
+     std::cout << " q_CL[baseCell + " << offset[7] << "] " << q_CL[baseCell +  offset[7]]<< " w(2,1) " << w(2,1) << "\n";
      std::cout << " q_CL[baseCell + " << offset[8] << "] " << q_CL[baseCell +  offset[8]]<< " w(2,2) " << w(2,2) << "\n";
      std::cout << " q_CL_Interpolated " << q_CL_Interpolated << "\n";  
           
-     std::cout  << " w0_y " << w0_y << " w1_y " << w1_y << " w2_y "<< w2_y << "\n";
-     std::cout  << " w0_z " << w0_z << " w1_z " << w1_z << " w2_z "<< w2_z << "\n";
+     std::cout  << " w0_y " << w0_y << " w1_y " << w1_y << " w2_y "<< w2_y << " sum (w_y): " << w0_y + w1_y + w2_y<<"\n";
+     std::cout  << " w0_z " << w0_z << " w1_z " << w1_z << " w2_z "<< w2_z << " sum (w_z): " << w0_z + w1_z + w2_z<<"\n";
      cout <<"--------------------------------" << endl;
      cout << " f_cell " << f_cell << " x0 " << x0 << " x1 " << x1 << " dir " << dir << endl;
-     cout << " w0_x " << w0_x << " w1_x " << w1_x << " w2_x " << w2_x << " x2 " << d_CL << endl;
-     cout << " q_FineLevel " << q_FineLevel[f_cell] << endl;
+     cout << " w0_x " << w0_x << " w1_x " << w1_x << " w2_x " << w2_x << " sum(weights) " << w0_x+w1_x+w2_x<< " x2 " << d_CL << endl;
+     cout << " q_FineLevel[x0] " << q_FineLevel[x0] << " q_FineLevel[x1] " << q_FineLevel[x1] << " q_FineLevel " << q_FineLevel[f_cell] << endl;
      
    }
 #endif   
@@ -672,7 +669,9 @@ template<class T>
     }else{
       T diff(q_FineLevel[c] - exact);
       error = error + diff * diff;
-      cout << c << " q_FineLevel[c] " <<  q_FineLevel[c] << " exact " << exact << " diff " << diff << endl;
+      if (diff > 1e-8){
+        cout << c << " q_FineLevel[c] " <<  q_FineLevel[c] << " exact " << exact << " diff " << diff << endl;
+      }
       ncell += 1; 
     }
   } 
