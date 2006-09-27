@@ -130,17 +130,16 @@ void
 ScalarSolver::solve(SchedulerP& sched,
 		    const PatchSet* patches,
 		    const MaterialSet* matls,
-		    const TimeIntegratorLabel* timelabels,
-		    int index)
+		    const TimeIntegratorLabel* timelabels)
 {
   //computes stencil coefficients and source terms
   // requires : scalarIN, [u,v,w]VelocitySPBC, densityIN, viscosityIN
   // computes : scalCoefSBLM, scalLinSrcSBLM, scalNonLinSrcSBLM
-  sched_buildLinearMatrix(sched, patches, matls, timelabels, index);
+  sched_buildLinearMatrix(sched, patches, matls, timelabels);
   
   // Schedule the scalar solve
   // require : scalarIN, scalCoefSBLM, scalNonLinSrcSBLM
-  sched_scalarLinearSolve(sched, patches, matls, timelabels, index);
+  sched_scalarLinearSolve(sched, patches, matls, timelabels);
 }
 
 //****************************************************************************
@@ -150,14 +149,13 @@ void
 ScalarSolver::sched_buildLinearMatrix(SchedulerP& sched,
 				      const PatchSet* patches,
 				      const MaterialSet* matls,
-				      const TimeIntegratorLabel* timelabels,
-				      int index)
+				      const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "ScalarSolver::BuildCoeff" +
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
 			  &ScalarSolver::buildLinearMatrix,
-			  timelabels, index);
+			  timelabels);
 
 
   Task::WhichDW parent_old_dw;
@@ -245,8 +243,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
 				     const MaterialSubset*,
 				     DataWarehouse* old_dw,
 				     DataWarehouse* new_dw,
-				     const TimeIntegratorLabel* timelabels,
-				     int index)
+				     const TimeIntegratorLabel* timelabels)
 {
 
   DataWarehouse* parent_old_dw;
@@ -276,7 +273,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     }
     CellInformation* cellinfo = cellInfoP.get().get_rep();
 
-    // from old_dw get PCELL, DENO, FO(index)
+    // from old_dw get PCELL, DENO, FO
     new_dw->get(constScalarVars.cellType, d_lab->d_cellTypeLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::ONEGHOSTCELL);
 
@@ -289,7 +286,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     old_values_dw->get(constScalarVars.old_density, d_lab->d_densityCPLabel, 
 		       matlIndex, patch, Ghost::None, Arches::ZEROGHOSTCELLS);
   
-    // from new_dw get DEN, VIS, F(index), U, V, W
+    // from new_dw get DEN, VIS, F, U, V, W
     new_dw->get(constScalarVars.density, d_lab->d_densityCPLabel, 
 		matlIndex, patch, Ghost::AroundCells, Arches::TWOGHOSTCELLS);
 
@@ -358,7 +355,7 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
   // inputs : scalarSP, [u,v,w]VelocityMS, densityCP, viscosityCTS
   // outputs: scalCoefSBLM
     d_discretize->calculateScalarCoeff(pc, patch,
-				       delta_t, index, cellinfo, 
+				       delta_t, cellinfo, 
 				       &scalarVars, &constScalarVars,
 				       d_conv_scheme);
 
@@ -366,16 +363,16 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // inputs : [u,v,w]VelocityMS, scalarSP, densityCP, viscosityCTS
     // outputs: scalLinSrcSBLM, scalNonLinSrcSBLM
     d_source->calculateScalarSource(pc, patch,
-				    delta_t, index, cellinfo, 
+				    delta_t, cellinfo, 
 				    &scalarVars, &constScalarVars);
     if (d_doMMS)
     d_source->calculateScalarMMSource(pc, patch,
-				    delta_t, index, cellinfo, 
+				    delta_t, cellinfo, 
 				    &scalarVars, &constScalarVars);
     if (d_conv_scheme > 0) {
       int wall_celltypeval = d_boundaryCondition->wallCellType();
       d_discretize->calculateScalarFluxLimitedConvection
-		                                  (pc, patch,  index, cellinfo,
+		                                  (pc, patch,  cellinfo,
 				  	          &scalarVars, &constScalarVars,
 					          wall_celltypeval, 
 						  d_limiter_type,
@@ -459,14 +456,14 @@ void ScalarSolver::buildLinearMatrix(const ProcessorGroup* pc,
     // similar to mascal
     // inputs :
     // outputs:
-    d_source->modifyScalarMassSource(pc, patch, delta_t, index,
+    d_source->modifyScalarMassSource(pc, patch, delta_t,
 				     &scalarVars, &constScalarVars,
 				     d_conv_scheme);
     
     // Calculate the scalar diagonal terms
     // inputs : scalCoefSBLM, scalLinSrcSBLM
     // outputs: scalCoefSBLM
-    d_discretize->calculateScalarDiagonal(pc, patch, index, &scalarVars);
+    d_discretize->calculateScalarDiagonal(pc, patch, &scalarVars);
 
 
   }
@@ -480,14 +477,13 @@ void
 ScalarSolver::sched_scalarLinearSolve(SchedulerP& sched,
 				      const PatchSet* patches,
 				      const MaterialSet* matls,
-				      const TimeIntegratorLabel* timelabels,
-				      int index)
+				      const TimeIntegratorLabel* timelabels)
 {
   string taskname =  "ScalarSolver::ScalarLinearSolve" + 
 		     timelabels->integrator_step_name;
   Task* tsk = scinew Task(taskname, this,
 			  &ScalarSolver::scalarLinearSolve,
-			  timelabels, index);
+			  timelabels);
   
   Task::WhichDW parent_old_dw;
   if (timelabels->recursion) parent_old_dw = Task::ParentOldDW;
@@ -552,8 +548,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 				const MaterialSubset*,
 				DataWarehouse* old_dw,
 				DataWarehouse* new_dw,
-				const TimeIntegratorLabel* timelabels,
-				int index)
+				const TimeIntegratorLabel* timelabels)
 {
   DataWarehouse* parent_old_dw;
   if (timelabels->recursion) parent_old_dw = new_dw->getOtherDataWarehouse(Task::ParentOldDW);
@@ -636,7 +631,7 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 					    &scalarVars, &constScalarVars,
 					    cellinfo);
     else
-      d_rhsSolver->scalarLisolve(pc, patch, index, delta_t, 
+      d_rhsSolver->scalarLisolve(pc, patch, delta_t, 
 				    &scalarVars, &constScalarVars,
 				    cellinfo);
 
@@ -672,11 +667,11 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
 
 // Outlet bc is done here not to change old scalar
     if (d_boundaryCondition->getOutletBC())
-    d_boundaryCondition->scalarOutletBC(pc, patch,  index, 
+    d_boundaryCondition->scalarOutletBC(pc, patch,
 				        &scalarVars, &constScalarVars);
     
     if (d_boundaryCondition->getPressureBC())
-    d_boundaryCondition->scalarPressureBC(pc, patch,  index, 
+    d_boundaryCondition->scalarPressureBC(pc, patch, 
 				  	  &scalarVars, &constScalarVars);
 
   }

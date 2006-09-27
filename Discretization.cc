@@ -318,7 +318,6 @@ void
 Discretization::calculateScalarCoeff(const ProcessorGroup*,
 				     const Patch* patch,
 				     double,
-				     int, 
 				     CellInformation* cellinfo,
 				     ArchesVariables* coeff_vars,
 				     ArchesConstVariables* constcoeff_vars,
@@ -455,7 +454,6 @@ Discretization::calculatePressDiagonal(const ProcessorGroup*,
 void 
 Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 					const Patch* patch,
-					int,
 					ArchesVariables* coeff_vars)
 {
   
@@ -490,7 +488,6 @@ Discretization::calculateScalarDiagonal(const ProcessorGroup*,
 void 
 Discretization::calculateScalarFluxLimitedConvection(const ProcessorGroup*,
 					const Patch* patch,
-					int,
 					CellInformation* cellinfo,
 					ArchesVariables*  scal_vars,
 					ArchesConstVariables*  constscal_vars,
