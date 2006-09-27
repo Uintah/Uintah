@@ -393,6 +393,7 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
         }   // ice_matl
         //__________________________________
         // Interpolator test
+#if 0
         const Level* coarseLevel = fineLevel->getCoarserLevel().get_rep();
         vector<Patch::FaceType>::const_iterator iter;  
         for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
@@ -401,7 +402,7 @@ void AMRICE::refineCoarseFineInterface(const ProcessorGroup*,
           testInterpolators<double>(fine_new_dw,d_orderOfInterpolation,coarseLevel,fineLevel,
                               finePatch, face, "CFI");
         }
-
+#endif
         //__________________________________
         //  Print Data 
         if(switchDebug_AMR_refineInterface){
@@ -795,9 +796,13 @@ void AMRICE::refine(const ProcessorGroup*,
     // bullet proofing
     iteratorTest(finePatch, fineLevel, coarseLevel, new_dw);
 
-    // Patch::FaceType notUsed
-    //testInterpolators<double>(new_dw,d_orderOfInterpolation,coarseLevel,fineLevel,
-    //                            finePatch, notUsed, "wholeDomain");
+/*`==========TESTING==========*/
+#if 0
+    Patch::FaceType notUsed;
+    testInterpolators<double>(new_dw,d_orderOfInterpolation,coarseLevel,fineLevel,
+                                finePatch, notUsed, "wholeDomain"); 
+#endif
+/*===========TESTING==========`*/
 
    
     // refine pressure
@@ -1814,7 +1819,7 @@ ______________________________________________________________________*/
 void AMRICE::scheduleInitialErrorEstimate(const LevelP& coarseLevel,
                                           SchedulerP& sched)
 {
-  scheduleErrorEstimate(coarseLevel, sched);
+//  scheduleErrorEstimate(coarseLevel, sched);
 }
 
 /*_____________________________________________________________________
