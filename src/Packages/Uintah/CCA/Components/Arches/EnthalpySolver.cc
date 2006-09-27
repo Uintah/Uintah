@@ -957,6 +957,8 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
     // for explicit calculation
     new_dw->getModifiable(enthalpyVars.enthalpy, d_lab->d_enthalpySPLabel, 
                 matlIndex, patch);
+    new_dw->getModifiable(enthalpyVars.scalar, d_lab->d_enthalpySPLabel, 
+                matlIndex, patch);
     
     for (int ii = 0; ii < d_lab->d_stencilMatl->size(); ii++)
       new_dw->get(constEnthalpyVars.scalarCoeff[ii],
@@ -985,13 +987,10 @@ EnthalpySolver::enthalpyLinearSolve(const ProcessorGroup* pc,
 
 
 // Outlet bc is done here not to change old enthalpy
-    if (d_boundaryCondition->getOutletBC())
-    d_boundaryCondition->enthalpyOutletBC(pc, patch,
+    if ((d_boundaryCondition->getOutletBC())||
+        (d_boundaryCondition->getPressureBC()))
+    d_boundaryCondition->scalarOutletPressureBC(pc, patch,
 					  &enthalpyVars, &constEnthalpyVars);
-
-    if (d_boundaryCondition->getPressureBC())
-    d_boundaryCondition->enthalpyPressureBC(pc, patch,
-				  	    &enthalpyVars, &constEnthalpyVars);
 
   }
 }

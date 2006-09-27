@@ -666,13 +666,10 @@ ScalarSolver::scalarLinearSolve(const ProcessorGroup* pc,
     new_dw->put(max_vartype(scalar_clipped), d_lab->d_ScalarClippedLabel);
 
 // Outlet bc is done here not to change old scalar
-    if (d_boundaryCondition->getOutletBC())
-    d_boundaryCondition->scalarOutletBC(pc, patch,
+    if ((d_boundaryCondition->getOutletBC())||
+        (d_boundaryCondition->getPressureBC()))
+    d_boundaryCondition->scalarOutletPressureBC(pc, patch,
 				        &scalarVars, &constScalarVars);
-    
-    if (d_boundaryCondition->getPressureBC())
-    d_boundaryCondition->scalarPressureBC(pc, patch, 
-				  	  &scalarVars, &constScalarVars);
 
   }
 }
