@@ -33,36 +33,39 @@
 # This file is configured by SCIRUN and used by the UseSCIRUN.cmake module
 # to load SCIRUN's settings for an external project.
 
-# The SCIRUN source tree.
-SET(SCIRUN_SOURCE_DIR "@PROJECT_SOURCE_DIR@")
-
-# The SCIRUN include file directories.
-SET(SCIRUN_INCLUDE_DIRS "@SCIRUN_INCLUDE_DIRS_CONFIG@")
-
-# The SCIRUN library directories.
-SET(SCIRUN_LIBRARY_DIRS "@SCIRUN_LIBRARY_DIRS_CONFIG@")
-
-# Additional Thirdparty Libraries/directories
-SET(GLEW_LIBRARY "@GLEW_LIBRARY@")
-SET(GL_LIBRARY "@GL_LIBRARY@")
-SET(TEEM_LIBRARY "@TEEM_LIBRARY@")
-SET(X_LIBRARY "@X_LIBRARY@")
-SET(TK_LIBRARY "@TK_LIBRARY@")
-SET(TCL_LIBRARY "@TCL_LIBRARY@")
-SET(ITCL_LIBRARY "@ITCL_LIBRARY@")
-SET(ITK_LIBRARY "@ITK_LIBRARY@")
-SET(BLT_LIBRARY "@BLT_LIBRARY@")
-SET(XML2_LIBRARY "@XML2_LIBRARY@")
-
-SET(TCL_VERSION "@TCL_VERSION@")
-SET(TK_VERSION "@TK_VERSION@")
-
-SET(SCIRUN_ITK_DIR "@ITK_DIR@")
-
+#----------------------------
+# SCIRun variables
+#----------------------------
 # The SCIRUN version number
 SET(SCIRUN_VERSION_MAJOR "@SCIRUN_VERSION_MAJOR@")
 SET(SCIRUN_VERSION_MINOR "@SCIRUN_VERSION_MINOR@")
 SET(SCIRUN_VERSION_PATCH "@SCIRUN_VERSION_PATCH@")
+
+# The SCIRUN source tree.
+SET(SCIRUN_SOURCE_DIR "@PROJECT_SOURCE_DIR@")
+SET(scirun_src_dir "@scirun_src_dir@")
+
+# The SCIRun binary tree.
+SET(scirun_obj_dir "@scirun_obj_dir@")
+
+# The SCIRUN include file directories.
+SET(SCIRUN_INCLUDE_DIRS "@SCIRUN_INCLUDE_DIRS_CONFIG@")
+
+# on-the-fly-libs/Makefile vars
+# DV Fix shouldn't be from 3p for sure
+SET(INC_SCI_THIRDPARTY_H "$(SCIRUN_THIRDPARTY_DIR)/include")
+SET(INC_TCL_H "$(SCIRUN_THIRDPARTY_DIR)/include")
+IF(CMAKE_SYSTEM_NAME MATCHES Darwin)
+  SET(INC_TK_H "$(SCIRUN_THIRDPARTY_DIR)/src/tk/generic $(SCIRUN_THIRDPARTY_DIR)/src/tk/mac")
+ELSE(CMAKE_SYSTEM_NAME MATCHES Darwin)
+  SET(INC_TK_H "$(SCIRUN_THIRDPARTY_DIR)/src/tk/generic $(SCIRUN_THIRDPARTY_DIR)/src/tk/unix")
+ENDIF(CMAKE_SYSTEM_NAME MATCHES Darwin)
+SET(INC_ITCL_H "$(SCIRUN_THIRDPARTY_DIR)/include")
+SET(INC_BLT_H "$(SCIRUN_THIRDPARTY_DIR)/include")
+SET(INC_XML2_H "$(SCIRUN_THIRDPARTY_DIR)/include/libxml2")
+
+# The SCIRUN library directories.
+SET(SCIRUN_LIBRARY_DIRS "@SCIRUN_LIBRARY_DIRS_CONFIG@")
 
 # The location of the UseSCIRUN.cmake file.
 SET(SCIRUN_USE_FILE "@SCIRUN_USE_FILE@")
@@ -108,3 +111,29 @@ IF(NOT SCIRUN_NO_LIBRARY_DEPENDS AND
 ENDIF(NOT SCIRUN_NO_LIBRARY_DEPENDS AND
   EXISTS "@SCIRUN_LIBRARY_DEPENDS_FILE@")
 
+#----------------------------
+# SCIRun Thirdparty 
+#----------------------------
+# Additional Thirdparty Libraries/directories
+SET(GLEW_LIBRARY "@GLEW_LIBRARY@")
+SET(GL_LIBRARY "@GL_LIBRARY@")
+SET(GL_INCLUDE "@GL_INCLUDE@")
+SET(TEEM_LIBRARY "@TEEM_LIBRARY@")
+SET(TEEM_INCLUDE "@TEEM_INCLUDE@")
+SET(TK_LIBRARY "@TK_LIBRARY@")
+SET(TCL_LIBRARY "@TCL_LIBRARY@")
+SET(ITCL_LIBRARY "@ITCL_LIBRARY@")
+SET(ITK_LIBRARY "@ITK_LIBRARY@")
+SET(BLT_LIBRARY "@BLT_LIBRARY@")
+SET(XML2_LIBRARY "@XML2_LIBRARY@")
+
+# Versions
+SET(TCL_VERSION "@TCL_VERSION@")
+SET(TK_VERSION "@TK_VERSION@")
+
+#-----------------------------
+# Additional libraries/software
+#-----------------------------
+SET(X_LIBRARY "@X_LIBRARY@")
+SET(SCIRUN_ITK_DIR "@ITK_DIR@")
+SET(INSIGHT_INCLUDE "@ITK_INCLUDE_DIRS@")

@@ -66,7 +66,7 @@ ENDIF(SCIRUN_FOUND)
 
 # Create on-the-fly-libs stuff
 CONFIGURE_FILE (
-  "${SCIRUN_SOURCE_DIR}/src/Makefile.in"
+  "${SCIRUN_SOURCE_DIR}/src/on-the-fly-libs/Makefile.in"
   "${PROJECT_BINARY_DIR}/on-the-fly-libs/Makefile"
 )
 
