@@ -150,6 +150,18 @@ void HierarchicalRegridder::problemSetup_BulletProofing(const int k)
 {
   RegridderCommon::problemSetup_BulletProofing(k);
 
+
+  for(int dir = 0; dir <3; dir++){
+   if(d_latticeRefinementRatio[k][dir] < 1 || d_cellRefinementRatio[k][dir] < 1){
+       ostringstream msg;
+       msg << "Problem Setup: Regridder:"
+       << " The lattice refinement ratio AND the cell refinement ration must be at least 1 in any direction. \n"
+       << " lattice refinement ratio: " << d_latticeRefinementRatio[k] 
+       << " cell refinement ratio: " << d_cellRefinementRatio[k] << endl;
+      throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+    }
+  }
+
   // For 2D problems the lattice refinement ratio 
   // and the cell refinement ratio must be 1 in that plane
   for(int dir = 0; dir <3; dir++){
