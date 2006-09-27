@@ -299,7 +299,18 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
               have_patchspacing=true;
            }
         }
-      }
+        
+        // bulletproofing
+        for(int dir = 0; dir<3; dir++){
+          if (spacing[dir] > upper(dir) || spacing[dir] < 0){
+            ostringstream msg;
+            msg<< "\nComputational Domain Input Error: Level("<< levelIndex << ")"
+               << " \n The spacing " << spacing 
+               << " must be less than the upper corner and positive " << upper << endl; 
+            throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
+          }
+        }
+      }  // boxes loop
         
       if(!have_levelspacing && !have_patchspacing)
         throw ProblemSetupException("Box resolution is not specified", __FILE__, __LINE__);
