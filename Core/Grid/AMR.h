@@ -69,6 +69,8 @@ ___________|___________|_______________
 * coarse cell centers                   
 o cells used for interpolation          
 + fine cell cell center
+(x, y) = Normalized distance between coarse cell centers
+
 
  Q_fc_plane_1 = (1-y)Q_x1 + (y)*Q_x2
               = (1-y)(1-x)Q + (1-y)(x)Q(i+1) + (1-x)(y)Q(j-1) + (x)(y)Q(i+1)(j-1)
@@ -87,9 +89,6 @@ template<class T>
                            const IntVector& fh,
                            CCVariable<T>& q_FineLevel)
 {
-  //int ncell = 0;  // needed by interpolation test
-  //T error(0);
-  
   // compute the normalized distance between the fine and coarse cell centers
   vector<double> norm_dist_x(refineRatio.x());
   vector<double> norm_dist_y(refineRatio.y());
@@ -103,12 +102,10 @@ template<class T>
     IntVector c_cell = fineLevel->mapCellToCoarser(f_cell);
     //__________________________________ 
     // compute the index of the fine cell, relative to the
-    // coarse cell center.  Find the distance the normalized distance between
-    // the coarse and fine cell-centers
-    
+    // coarse cell center.
     IntVector relativeIndx = f_cell - (c_cell * refineRatio);
     
-    Vector dist;
+    Vector dist;  // normalized distance
     dist.x(norm_dist_x[relativeIndx.x()]);
     dist.y(norm_dist_y[relativeIndx.y()]);
     dist.z(norm_dist_z[relativeIndx.z()]);
@@ -116,27 +113,24 @@ template<class T>
     //__________________________________
     // Offset for coarse level surrounding cells:
     // determine the direction to the surrounding interpolation cells
-    Point coarse_cell_pos = coarseLevel->getCellPosition(c_cell);
-    Point fine_cell_pos   = fineLevel->getCellPosition(f_cell);
-    Vector dir = (fine_cell_pos.asVector() - coarse_cell_pos.asVector()); 
-    int i = SCIRun::Sign(dir.x());
-    int j = SCIRun::Sign(dir.y());
-    int k = SCIRun::Sign(dir.z());
-    
-    i *= SCIRun::RoundUp(dist.x());  // if dist.x,y,z() = 0 then set (i,j,k) = 0
-    j *= SCIRun::RoundUp(dist.y());  // Only need surrounding coarse cell data if dist != 0
-    k *= SCIRun::RoundUp(dist.z());  // This is especially true for 1D and 2D problems
+    int i = SCIRun::Sign(dist.x());   // returns +/- 1.0
+    int j = SCIRun::Sign(dist.y());
+    int k = SCIRun::Sign(dist.z());
+
+    i *= SCIRun::RoundUp(fabs(dist.x()));  // if dist.x,y,z() = 0 then set (i,j,k) = 0
+    j *= SCIRun::RoundUp(fabs(dist.y()));  // Only need surrounding coarse cell data if dist != 0
+    k *= SCIRun::RoundUp(fabs(dist.z()));  // This is especially true for 1D and 2D problems
 
     //__________________________________
     //  Find the weights
-    double one_minus_dx = 1.0 - dist.x();
-    double one_minus_dy = 1.0 - dist.y();
-    double one_minus_dz = 1.0 - dist.z();
+    double x = fabs(dist.x());  // The normalized distance is always +
+    double y = fabs(dist.y());
+    double z = fabs(dist.z());
        
-    double w0 = one_minus_dx * one_minus_dy;
-    double w1 = dist.x() * one_minus_dy;
-    double w2 = dist.y() * one_minus_dx;
-    double w3 = dist.x() * dist.y();
+    double w0 = (1.0 - x) * (1.0 - y);
+    double w1 = x * (1.0 - y);
+    double w2 = y * (1.0 - x);
+    double w3 = x * y;
       
     T q_XY_Plane_1   // X-Y plane closest to the fine level cell 
         = w0 * q_CL[c_cell] 
@@ -151,27 +145,31 @@ template<class T>
         + w3 * q_CL[c_cell + IntVector( i, j, k)]; 
 
     // interpolate the two X-Y planes in the k direction
-    q_FineLevel[f_cell] = one_minus_dz * q_XY_Plane_1 
-                        + dist.z() * q_XY_Plane_2; 
+    q_FineLevel[f_cell] = (1.0 - z) * q_XY_Plane_1 + z * q_XY_Plane_2; 
                          
     //__________________________________
     //  Debugging                        
 #if 0
-//    if (dist.x() != 0.25 || dist.y() != 0.25){
-      if (f_cell == IntVector(15,32,1) || f_cell == IntVector(15,33,1)){
+      IntVector half  = (fh - fl )/IntVector(2,2,2) + fl;
+      if ((f_cell.y() == half.y() && f_cell.z() == half.z())){
        cout.setf(ios::scientific,ios::floatfield);
-       cout.precision(16);
+       cout.precision(5);
        cout << " f_cell " << f_cell << " c_cell "<< c_cell << " offset ["<<i<<","<<j<<","<<k<<"]  " << endl;
        cout << " relative indx " << relativeIndx  << endl;
-       cout << "                w0 " << w0 << " w1 " << w1 << " w2 " << w2 << " w3 " << w3<< endl;
-       cout << "                dist "<< dist << " dir " << dir <<  endl;
-       cout << "                f_pos " <<   fine_cell_pos.asVector() << " c_pos " <<   coarse_cell_pos.asVector() << endl;
+       cout << "dist "<< dist << " dir " << dir <<  endl;
+       cout << " q_CL[c_cell]                       "                           << q_CL[c_cell]                       << " w0 " << w0 << endl;
+       cout << " q_CL[c_cell + IntVector( " << i << ", 0, 0)] "                 << q_CL[c_cell + IntVector( i, 0, 0)] << " w1 " << w1 << endl;
+       cout << " q_CL[c_cell + IntVector( 0, " << j << ", 0)] "                 << q_CL[c_cell + IntVector( 0, j, 0)] << " w2 " << w2 << endl;
+       cout << " q_CL[c_cell + IntVector( "<< i << ", " << j << ", 0)] "        << q_CL[c_cell + IntVector( i, j, 0)] << " w3 " << w3 << endl;
+       cout << " q_CL[c_cell + IntVector( 0, 0, "<<k<<")] "                     << q_CL[c_cell + IntVector( 0, 0, k)] << " w0 " << w0 << endl;
+       cout << " q_CL[c_cell + IntVector( "<< i << ", 0, "<<k<<")] "            << q_CL[c_cell + IntVector( i, 0, k)] << " w1 " << w1 << endl;
+       cout << " q_CL[c_cell + IntVector( 0, "<< j <<", "<<k<<")] "             << q_CL[c_cell + IntVector( 0, j, k)] << " w2 " << w2 << endl;
+       cout << " q_CL[c_cell + IntVector( "<< i << ", " << j << ", "<< k <<")] " << q_CL[c_cell + IntVector( i, j, k)] << " w3 " << w3 <<endl;
+       cout << " q_XY_Plane_1 " << q_XY_Plane_1 << " q_XY_Plane_2 " << q_XY_Plane_2 << " q_FineLevel[f_cell] "<< q_FineLevel[f_cell] << endl;
     }
 #endif                      
   }
 }
-
-
 
 
 /*___________________________________________________________________
