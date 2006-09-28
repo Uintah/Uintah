@@ -640,12 +640,12 @@ template<class T>
   // colella's quadratic
   if(orderOfInterpolation == 2){
   
-#if 1
-    cout << " colella's quadratic interpolator" << endl;
+#if 0
+//    cout << " colella's quadratic interpolator" << endl;
     quadraticInterpolation_CFI<T>(q_CL, finePatch, patchFace,coarseLevel, 
                                   fineLevel, refineRatio, fl, fh,q_FineLevel);
 #else
-    cout << " standard quadratic Interpolator" << endl;
+//    cout << " standard quadratic Interpolator" << endl;
     quadraticInterpolation<T>(q_CL, coarseLevel, fineLevel,
                               refineRatio, fl,fh, q_FineLevel);
 #endif
