@@ -209,7 +209,8 @@ namespace Uintah {
     vector<thresholdVar> d_thresholdVars;
     
     bool d_regridderTest;
-    int d_orderOfInterpolation;    
+    int d_orderOfInterpolation;         // Order of interpolation for interior fine patch
+    int d_orderOf_CFI_Interpolation;    // order of interpolation at CFI.
   };
 
 static DebugStream cout_dbg("AMRICE_DBG", false);
@@ -360,7 +361,7 @@ void ICE::refluxOperator_applyCorrectionFluxes(
  Function~  AMRICE::refine_CF_interfaceOperator-- 
 _____________________________________________________________________*/
 template<class varType>
-void AMRICE::refine_CF_interfaceOperator(const Patch* patch, 
+void AMRICE::refine_CF_interfaceOperator(const Patch* finePatch, 
                                          const Level* fineLevel,
                                          const Level* coarseLevel,
                                          CCVariable<varType>& Q, 
@@ -371,14 +372,14 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
                                          DataWarehouse* coarse_old_dw,
                                          DataWarehouse* coarse_new_dw)
 {
-  cout_dbg << *patch << " ";
-  patch->printPatchBCs(cout_dbg);
+  cout_dbg << *finePatch << " ";
+  finePatch->printPatchBCs(cout_dbg);
   IntVector refineRatio = fineLevel->getRefinementRatio();
   //__________________________________
   // Iterate over coarsefine interface faces
   vector<Patch::FaceType>::const_iterator iter;  
-  for (iter  = patch->getCoarseFineInterfaceFaces()->begin(); 
-       iter != patch->getCoarseFineInterfaceFaces()->end(); ++iter){
+  for (iter  = finePatch->getCoarseFineInterfaceFaces()->begin(); 
+       iter != finePatch->getCoarseFineInterfaceFaces()->end(); ++iter){
     Patch::FaceType face = *iter;
 
     //__________________________________
@@ -386,10 +387,10 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
     // coarselevel hi and low index
 
     IntVector cl, ch, fl, fh;
-    getCoarseFineFaceRange(patch, coarseLevel, face, d_orderOfInterpolation, cl, ch, fl, fh);
+    getCoarseFineFaceRange(finePatch, coarseLevel, face, d_orderOf_CFI_Interpolation, cl, ch, fl, fh);
 
     cout_dbg<< " face " << face << " refineRatio "<< refineRatio
-            << " BC type " << patch->getBCType(face)
+            << " BC type " << finePatch->getBCType(face)
             << " FineLevel iterator" << fl << " " << fh 
             << " \t coarseLevel iterator " << cl << " " << ch <<endl;
 
@@ -400,8 +401,9 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
      constCCVariable<varType> q_NewDW;
      coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel,
                            cl, ch);
-     selectInterpolator(q_NewDW, d_orderOfInterpolation, coarseLevel, 
-                        fineLevel, refineRatio, fl,fh, Q);
+     select_CFI_Interpolator(q_NewDW, d_orderOf_CFI_Interpolation, coarseLevel, 
+                             fineLevel, refineRatio, fl,fh, finePatch, face, Q);
+                        
     } else {    
 
     //__________________________________
@@ -412,17 +414,22 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
       coarse_new_dw->getRegion(q_NewDW, label, matl, coarseLevel, cl, ch);
 
       CCVariable<varType> Q_old, Q_new;
-      fine_new_dw->allocateTemporary(Q_old, patch);
-      fine_new_dw->allocateTemporary(Q_new, patch);
+      fine_new_dw->allocateTemporary(Q_old, finePatch);
+      fine_new_dw->allocateTemporary(Q_new, finePatch);
+      
+      if(d_orderOf_CFI_Interpolation != 2){
+        Q_old.initialize(varType(d_EVIL_NUM));
+        Q_new.initialize(varType(d_EVIL_NUM));
+      } else {               // colella's quadradic interpolator requires  
+        Q_old.copyData(Q);   // that data exists on the fine level.
+        Q_new.copyData(Q);
+      }
 
-      Q_old.initialize(varType(d_EVIL_NUM));
-      Q_new.initialize(varType(d_EVIL_NUM));
+      select_CFI_Interpolator(q_OldDW, d_orderOf_CFI_Interpolation, coarseLevel, 
+                        fineLevel,refineRatio, fl,fh, finePatch, face, Q_old);
 
-      selectInterpolator(q_OldDW, d_orderOfInterpolation, coarseLevel, 
-                        fineLevel,refineRatio, fl,fh, Q_old);
-
-      selectInterpolator(q_NewDW, d_orderOfInterpolation, coarseLevel, 
-                        fineLevel,refineRatio, fl,fh, Q_new);
+      select_CFI_Interpolator(q_NewDW, d_orderOf_CFI_Interpolation, coarseLevel, 
+                        fineLevel,refineRatio, fl,fh, finePatch, face, Q_new);
 
       // Linear interpolation in time
       for(CellIterator iter(fl,fh); !iter.done(); iter++){
@@ -439,14 +446,14 @@ void AMRICE::refine_CF_interfaceOperator(const Patch* patch,
   
   if(subCycleProgress_var > 1-1.e-10 ){  
     IntVector badCell;
-    CellIterator iter = patch->getExtraCellIterator();
+    CellIterator iter = finePatch->getExtraCellIterator();
     if( isEqual<varType>(varType(d_EVIL_NUM),iter,Q, badCell) ){
       ostringstream warn;
       warn <<"ERROR AMRICE::refine_CF_interfaceOperator "
            << "detected an uninitialized variable: "
            << label->getName() << ", cell " << badCell
            << " Q_CC " << Q[badCell] 
-           << " Patch " << patch->getID() << " Level idx "
+           << " Patch " << finePatch->getID() << " Level idx "
            <<fineLevel->getIndex()<<"\n ";
       throw InvalidValue(warn.str(), __FILE__, __LINE__);
     }
