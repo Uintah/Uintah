@@ -75,7 +75,7 @@ CONFIGURE_FILE (
 )
 
 CONFIGURE_FILE (
-  "${PROJECT_SOURCE_DIR}/src/include/sci_defs/environment_testdefs.h.in"
+  "${PROJECT_SOURCE_DIR}/src/include/sci_defs/cmake_environment_testdefs.h.in"
   "${PROJECT_BINARY_DIR}/include/sci_defs/environment_defs.h"
 )
 
