@@ -155,7 +155,9 @@ GeometryPieceFactory::create( const ProblemSpecP& ps,
       newGeomPiece = scinew NullGeometryPiece(child);
     }
     else if (go_type == "res" || go_type == "velocity" || 
-             go_type == "temperature" || go_type == "#comment")  {
+             go_type == "temperature" || go_type == "#comment" ||
+             go_type == "density" || go_type == "pressure" ||
+             go_type == "scalar")  {
       // Ignoring. 
       continue;    // restart loop to avoid accessing name of empty object
       
