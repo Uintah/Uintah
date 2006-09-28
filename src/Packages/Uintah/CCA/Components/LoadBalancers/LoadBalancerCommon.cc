@@ -272,11 +272,10 @@ LoadBalancerCommon::createNeighborhood(const GridP& grid, const GridP& oldGrid)
           n.push_back(&coarse);
         }
         if (l < grid->numLevels()-1 && (proc == me || (oldproc == me && !d_sharedState->isCopyDataTimestep()))) {
-          // we don't use ghost cells from fine patches
-          IntVector ghost(1,1,1);
+          IntVector ghost(2,2,2); // need two to compensate for extra cells
           const LevelP& fineLevel = level->getFinerLevel();
-          fineLevel->selectPatches(level->mapCellToFiner(low)-ghost, 
-                                   level->mapCellToFiner(high)+ghost, fine);
+          fineLevel->selectPatches(level->mapCellToFiner(low-ghost), 
+                                   level->mapCellToFiner(high+ghost), fine);
           n.push_back(&fine);
           
         }
