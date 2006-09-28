@@ -70,5 +70,10 @@ endif
 
 LIBS := $(THREAD_LIBRARY) $(MPEG_LIBRARY) $(GL_LIBRARY) $(GL_LIBRARY) $(PNG_LIBRARY) 
 
+ifeq ($(IS_OSX),yes)
+  LIBS += -framework AGL -framework Carbon
+endif
+
+
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
