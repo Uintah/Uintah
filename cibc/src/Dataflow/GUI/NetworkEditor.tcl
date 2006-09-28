@@ -710,6 +710,64 @@ proc addModuleAtPosition {package category module { xpos 10 } { ypos 10 } { abso
     return $modid
 }
 
+
+proc addModuleAtAbsolutePosition {package category module { xpos 10 } { ypos 10 } { modid "" } } {
+    # Look up the real category for a module.  This allows networks to
+    # be read in if the modules change categories.
+    findMovedModulePath package category module
+    set category [netedit getCategoryName $package $category $module]
+
+    # fix for bug #2052, allows addmodule to call undefined procs without error
+    set unknown_body [info body unknown]
+    proc unknown { args } {}
+    
+    # default argument is empty, but if C already created the module, 
+    # it will pass the id in.
+    if { $modid == "" } {
+	# Tell the C++ network to create the requested module
+	set modid [netedit addmodule "$package" "$category" "$module"]
+    }
+    # Reset the unknown proc to default behavior
+    proc unknown { args } $unknown_body
+
+    # netedit addmodule returns an empty string if the module wasnt created
+    if { ![string length $modid] } {
+	tk_messageBox -type ok -parent . -icon warning -message \
+	    "Cannot find the ${package}::${category}::${module} module."
+	return
+    }    
+
+    networkHasChanged
+    global inserting Subnet
+    set canvas $Subnet(Subnet$Subnet(Loading)_canvas)
+    set Subnet($modid) $Subnet(Loading)
+    set Subnet(${modid}_connections) ""
+    lappend Subnet(Subnet$Subnet(Loading)_Modules) $modid
+
+    set className [join "${package}_${category}_${module}" ""]
+    # Create the itcl object
+    if {[catch "$className $modid" exception]} {
+	# Use generic module
+	if {$exception != "invalid command name \"$className\""} {
+	    bgerror "Error instantiating iTcl class for module:\n$exception";
+	}
+	Module $modid -name "$module"
+    }
+
+    # compute position if we're inserting the net to the right    
+    if { $inserting } {
+	global insertOffset
+	set xpos [expr $xpos+[lindex $insertOffset 0]]
+	set ypos [expr $ypos+[lindex $insertOffset 1]]
+    } else { ;# create the module relative to current screen position
+    }
+    $modid make_icon $xpos $ypos 1
+    update idletasks
+    return $modid
+}
+
+
+
 # addModule2 creates a SCIRun module to be used in the SCIRun2 framework
 # as an instance of the SCIRunComponentModel.
 proc addModule2 {package category module modid} {  
@@ -777,16 +835,19 @@ proc popupSaveAsMenu {} {
     # determine initialdir based on current $netedit_savefile
     set dirs [file split "$netedit_savefile"]
     set initialdir [pwd]
+	set initialfile ""
+
     if {[llength $dirs] > 1} {
 	set initialdir ""
 	set size [expr [llength $dirs] - 1]
 	for {set i 0} {$i<$size} {incr i} {
 	    set initialdir [file join $initialdir [lindex $dirs $i]]
 	}
+	set initialfile [lindex $dirs $size]
     }
 
     set netedit_savefile \
-	[tk_getSaveFile -defaultextension {.srn} -filetypes $types -initialdir $initialdir]
+	[tk_getSaveFile -defaultextension {.srn} -filetypes $types -initialdir $initialdir -initialfile $initialfile]
     if { $netedit_savefile != "" } {
 	# make sure we only save .srn files
 	set netedit_savefile [append_srn_filename $netedit_savefile]
@@ -807,11 +868,11 @@ proc popupInsertMenu { {subnet 0} } {
     } 
     set netedit_loadnet [tk_getOpenFile -filetypes $types ]
     if { [check_filename $netedit_loadnet] == "invalid" } {
-	set netedit_loadnet ""
-	return
+		set netedit_loadnet ""
+		return
     }
-    if { $netedit_loadnet == "" || ![file exists $netedit_loadnet]} { 
-	return
+    if { ![file exists $netedit_loadnet]} { 
+		return
     }
     
     set canvas $Subnet(Subnet${subnet}_canvas)    
@@ -933,15 +994,18 @@ proc compute_bbox { canvas { items "" } { cheat 0 } } {
 
 proc check_filename {name} {
 
+	if {$name == ""} {
+		return "invalid"
+	}
     set ext_ind [expr [string length $name] - 4]
     set ext [string range $name $ext_ind end]
     
     if { $ext != ".net" && $ext != ".srn"} {
-	set name [string range $name 0 $ext_ind]srn
-	set msg "Valid net files end with .srn (or .net prior to v1.25.2)"
-	createSciDialog -warning -title "Save Warning" -button1 "Ok"\
-	    -message $msg
-	return "invalid"
+		set name [string range $name 0 $ext_ind]srn
+		set msg "Valid net files end with .srn (or .net prior to v1.25.2)"
+		createSciDialog -warning -title "Save Warning" -button1 "Ok"\
+			-message $msg
+		return "invalid"
     } 
     return "valid"
 }
@@ -963,19 +1027,20 @@ proc popupLoadMenu {} {
     
     set netedit_loadnet [tk_getOpenFile -filetypes $types ]
     if { [check_filename $netedit_loadnet] == "invalid" } {
-	set netedit_loadnet ""
-	return
+		set netedit_loadnet ""
+		return
     }
 
-    if { $netedit_loadnet == ""} return
+    if { ![file exists $netedit_loadnet]} { return }
+
     #dont ask user before clearing canvas
     ClearCanvas 0
     set inserting 0
     if {[string match *.srn $netedit_loadnet]} {
         # compensate for spaces in the filename (windows)
-	after 500 uplevel \#0 netedit load_srn \{\{$netedit_loadnet\}\}
+		after 500 uplevel \#0 netedit load_srn \{\{$netedit_loadnet\}\}
     } else {
-	loadnet $netedit_loadnet 
+		loadnet $netedit_loadnet 
     }
 }
 
