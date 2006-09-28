@@ -415,6 +415,7 @@ template<class T>
 {
   IntVector gridLo, gridHi;
   coarseLevel->findCellIndexRange(gridLo,gridHi);
+  gridHi -= IntVector(1,1,1);  // we need the inclusive gridHi
   
   IntVector dir = finePatch->faceAxes(patchFace);        // face axes
   int p_dir = dir[0];                                    // normal direction 
@@ -609,6 +610,52 @@ template<class T>
   break;
   }
 }
+
+/*___________________________________________________________________
+ Function~  select_CFI_Interpolator--
+_____________________________________________________________________*/
+template<class T>
+  void select_CFI_Interpolator(constCCVariable<T>& q_CL,
+                          const int orderOfInterpolation,
+                          const Level* coarseLevel,
+                          const Level* fineLevel,
+                          const IntVector& refineRatio,
+                          const IntVector& fl,
+                          const IntVector& fh,
+                          const Patch* finePatch,
+                          Patch::FaceType patchFace,
+                          CCVariable<T>& q_FineLevel)
+{
+  // piecewise constant
+  if(orderOfInterpolation == 0){
+    cout << " pieceWise constant Interpolator " << endl;
+    piecewiseConstantInterpolation(q_CL, fineLevel,fl, fh, q_FineLevel);
+  }
+  // linear
+  if(orderOfInterpolation == 1){
+    cout << " Linear Interpolator " << endl;
+    linearInterpolation<T>(q_CL, coarseLevel, fineLevel,
+                          refineRatio, fl,fh, q_FineLevel); 
+  }
+  // colella's quadratic
+  if(orderOfInterpolation == 2){
+  
+#if 1
+    cout << " colella's quadratic interpolator" << endl;
+    quadraticInterpolation_CFI<T>(q_CL, finePatch, patchFace,coarseLevel, 
+                                  fineLevel, refineRatio, fl, fh,q_FineLevel);
+#else
+    cout << " standard quadratic Interpolator" << endl;
+    quadraticInterpolation<T>(q_CL, coarseLevel, fineLevel,
+                              refineRatio, fl,fh, q_FineLevel);
+#endif
+  }
+  // bulletproofing
+  if(orderOfInterpolation > 2 || orderOfInterpolation < 0){
+    throw InternalError("ERROR:AMR: You're trying to use an interpolator"
+                        " that doesn't exist.  <orderOfInterpolation> must be 1 or 2",__FILE__,__LINE__);
+  }
+}
 /*___________________________________________________________________
  Function~  interpolationTest_helper--
 _____________________________________________________________________*/
@@ -787,7 +834,7 @@ SCISHARE void getCoarseLevelRange(const Patch* finePatch, const Level* coarseLev
 
 // find the range of a coarse-fine interface along a certain face
 SCISHARE void getCoarseFineFaceRange(const Patch* finePatch, const Level* coarseLevel, Patch::FaceType face,
-                                  int interOrder, IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh);
+                                  const int interOrder, IntVector& cl, IntVector& ch, IntVector& fl, IntVector& fh);
                                   
 SCISHARE void coarseLevel_CFI_Iterator(Patch::FaceType patchFace,
                                        const Patch* coarsePatch,  
