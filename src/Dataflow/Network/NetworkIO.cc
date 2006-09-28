@@ -134,8 +134,8 @@ NetworkIO::gui_add_module_at_position(const string &mod_id,
   // Now tell tcl about the module.
   GuiInterface *gui = GuiInterface::getSingleton();
 
-  string cmmd = "addModuleAtPosition " + package + " " + 
-    category + " " + module + " " + x + " " + y + " 1 " + mod->get_id();
+  string cmmd = "addModuleAtAbsolutePosition " + package + " " + 
+    category + " " + module + " " + x + " " + y + " " + mod->get_id();
   string mid = gui->eval(cmmd);
   id_map_t &mmap = netid_to_modid_.top();
   mmap[mod_id] = mid;
