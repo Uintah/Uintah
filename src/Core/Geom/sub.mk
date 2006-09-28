@@ -120,6 +120,10 @@ PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
 
 LIBS := $(FTGL_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(FREETYPE_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY)
 
+ifeq ($(IS_OSX),yes)
+  LIBS += -framework AGL -framework Carbon
+endif
+
 INCLUDES += $(FTGL_INCLUDE) $(FREETYPE_INCLUDE) $(TEEM_INCLUDE)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
