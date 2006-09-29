@@ -64,6 +64,8 @@ Simple_Burn::~Simple_Burn()
   
   VarLabel::destroy(surfaceTempLabel);
   VarLabel::destroy(onSurfaceLabel);
+  VarLabel::destroy(totalMassBurnedLabel);
+  VarLabel::destroy(totalHeatReleasedLabel);
   
   if(mymatls && mymatls->removeReference())
     delete mymatls;
