@@ -133,6 +133,8 @@ WARNING
 
       GeometryPieceP piece;
       double initialScalar;
+      bool  sinusoidalIntialize;
+      IntVector freq;
     };
 
     class Scalar {
