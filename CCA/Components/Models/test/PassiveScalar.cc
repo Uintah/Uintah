@@ -75,6 +75,8 @@ PassiveScalar::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
   : piece(piece)
 {
   ps->require("scalar", initialScalar);
+  ps->getWithDefault("sinusoidalIntialize", sinusoidalIntialize, false);
+  ps->getWithDefault("freq",freq,IntVector(0,0,0));
 }
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
@@ -136,7 +138,7 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
    }
 
    child->getWithDefault("test_conservation", d_test_conservation, false);
-
+cout << " d_test_conservation " << d_test_conservation << endl;
    ProblemSpecP const_ps = child->findBlock("constants");
    if(!const_ps) {
      throw ProblemSetupException("PassiveScalar: Couldn't find constants tag", __FILE__, __LINE__);
@@ -195,7 +197,8 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
     }
   } 
 }
-
+//__________________________________
+//
 void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
 {
   ProblemSpecP model_ps = ps->appendChild("Model");
@@ -213,17 +216,18 @@ void PassiveScalar::outputProblemSpec(ProblemSpecP& ps)
   const_ps->appendElement("diffusivity",d_scalar->diff_coeff);
   const_ps->appendElement("AMR_Refinement_Criteria",d_scalar->refineCriteria);
 
-  for (vector<Region*>::const_iterator it = d_scalar->regions.begin();
-       it != d_scalar->regions.end(); it++) {
+  vector<Region*>::const_iterator iter;
+  for ( iter = d_scalar->regions.begin(); iter != d_scalar->regions.end(); iter++) {
     ProblemSpecP geom_ps = scalar_ps->appendChild("geom_object");
-    (*it)->piece->outputProblemSpec(geom_ps);
-    geom_ps->appendElement("scalar",(*it)->initialScalar);
+    (*iter)->piece->outputProblemSpec(geom_ps);
+    geom_ps->appendElement("scalar",(*iter)->initialScalar);
   }
 
   if (d_usingProbePts) {
     throw ProblemSetupException("Can't output tag",__FILE__,__LINE__);
     ProblemSpecP probe_ps = scalar_ps->appendChild("probePoints");
     probe_ps->appendElement("probeSamplingFreq",d_probeFreq);
+    
     for (unsigned int i = 0; i < d_probePts.size(); i++) {
       probe_ps->appendElement("location",d_probePts[i]);
       probe_ps->setAttribute("name",d_probePtsNames[i]);
@@ -270,14 +274,43 @@ void PassiveScalar::initialize(const ProcessorGroup*,
     for(vector<Region*>::iterator iter = d_scalar->regions.begin();
                                   iter != d_scalar->regions.end(); iter++){
       Region* region = *iter;
-      for(CellIterator iter = patch->getExtraCellIterator();
-          !iter.done(); iter++){
-        IntVector c = *iter;
-        Point p = patch->cellPosition(c);            
-        if(region->piece->inside(p)) {
-          f[c] = region->initialScalar;
+      
+      if(!region->sinusoidalIntialize){
+      
+        for(CellIterator iter = patch->getExtraCellIterator();
+            !iter.done(); iter++){
+          IntVector c = *iter;
+          Point p = patch->cellPosition(c);            
+          if(region->piece->inside(p)) {
+            f[c] = region->initialScalar;
+          }
+        } // Over cells
+      }
+      //__________________________________
+      // Sinusoidal initialization
+      if(region->sinusoidalIntialize){
+        IntVector freq = region->freq;
+        // bulletproofing
+        if(freq.x()==0 && freq.y()==0 && freq.z()==0){
+          throw ProblemSetupException("PassiveScalar: you need to specify a freq whenever you use sinusoidalInitialize", __FILE__, __LINE__);
         }
-      } // Over cells
+
+        Point lo = region->piece->getBoundingBox().lower();
+        Point hi = region->piece->getBoundingBox().upper();
+        Vector dist = hi.asVector() - lo.asVector();
+        
+        for(CellIterator iter = patch->getExtraCellIterator();
+            !iter.done(); iter++){
+          IntVector c = *iter;
+          Point p = patch->cellPosition(c);            
+          if(region->piece->inside(p)) {
+            // normalized distance
+            Vector d = (p.asVector() - lo.asVector() )/dist;
+            
+            f[c] = sin( 2.0 * freq.x() * d.x() * M_PI) + sin( 2.0 * freq.y() * d.y() * M_PI)  + sin( 2.0 * freq.z() * d.z() * M_PI);
+          }
+        }
+      }  
     } // regions
     setBC(f,"scalar-f", patch, d_sharedState,indx, new_dw);
      
@@ -515,7 +548,7 @@ void PassiveScalar::testConservation(const ProcessorGroup*,
     double sum_mass_f;
     conservationTest<double>(patch, delT, q_CC, uvel_FC, vvel_FC, wvel_FC, 
                              sum_mass_f);
-    
+
     new_dw->put(sum_vartype(sum_mass_f), Slb->sum_scalar_fLabel);
   }
 }
