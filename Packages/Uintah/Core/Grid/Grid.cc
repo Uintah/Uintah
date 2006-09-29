@@ -302,11 +302,11 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
         
         // bulletproofing
         for(int dir = 0; dir<3; dir++){
-          if (spacing[dir] > upper(dir) || spacing[dir] < 0){
+          if (spacing[dir] > (upper(dir)-lower(dir)) || spacing[dir] < 0){
             ostringstream msg;
             msg<< "\nComputational Domain Input Error: Level("<< levelIndex << ")"
                << " \n The spacing " << spacing 
-               << " must be less than the upper corner and positive " << upper << endl; 
+               << " must be less than the upper - lower corner and positive " << upper << endl; 
             throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
           }
         }
@@ -333,7 +333,7 @@ Grid::problemSetup(const ProblemSpecP& params, const ProcessorGroup *pg, bool do
             ostringstream msg;
             msg<< "\nComputational Domain Input Error: Level("<< levelIndex << ")"
                << " \n The lower corner " << lower 
-               << " must be larger than the upper corner " << upper << endl; 
+               << " must be smaller than the upper corner " << upper << endl; 
             throw ProblemSetupException(msg.str(), __FILE__, __LINE__);
           }
         }
