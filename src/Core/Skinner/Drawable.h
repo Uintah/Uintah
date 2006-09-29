@@ -35,6 +35,7 @@
 #include <Core/Skinner/Signals.h>
 #include <Core/Events/Tools/BaseTool.h>
 #include <Core/Skinner/RectRegion.h>
+#include <Core/Skinner/Variables.h>
 
 #include <vector>
 #include <string>
@@ -56,10 +57,7 @@ using std::string;
 namespace SCIRun {
   namespace Skinner {
     class Variables;
-    class Drawable;
-
-
-    
+    class Drawable;    
     typedef pair<double, double> MinMax;
 
     class SCISHARE Drawable : public BaseTool, 
@@ -67,23 +65,23 @@ namespace SCIRun {
                      public SignalThrower {
     public:
 
-    // This is called from XMLO.cc to construct new objects that this
-    // type of drawable is capable of making
-    template <class T>
-    T * 
-    construct_child_from_maker_signal(event_handle_t event) {
-      MakerSignal *maker_signal = dynamic_cast<MakerSignal *>(event.get_rep());
-      ASSERT(maker_signal);
-      T *obj = new T(maker_signal->get_vars());
-      maker_signal->set_signal_thrower(obj);
-      maker_signal->set_signal_name(maker_signal->get_signal_name()+"_Done");
-      return obj;
-    }
-
       Drawable (Variables *);
       virtual ~Drawable();
 
-      // All Avaliable variables to this context, 
+      // This is called from XMLO.cc to construct new objects that this
+      // type of drawable is capable of making
+      template <class T>
+      T * 
+      construct_child_from_maker_signal(event_handle_t event) {
+        MakerSignal *maker_sig = dynamic_cast<MakerSignal *>(event.get_rep());
+        ASSERT(maker_sig);
+        T *obj = new T(maker_sig->get_vars());
+        maker_sig->set_signal_thrower(obj);
+        maker_sig->set_signal_name(maker_sig->get_signal_name()+"_Done");
+        return obj;
+      }
+
+      // All avaliable variables to this context, 
       Variables *                       get_vars();
 
       // Shortcut to get_vars()->get_id();
@@ -105,10 +103,8 @@ namespace SCIRun {
 
     protected:
       virtual event_handle_t            throw_signal(const string &);
-      //virtual propagation_state_e       throw_signal(const string &);
-      CatcherFunction_t                 check_visibile;
+      Var<bool>                         visible_;
     private:
-
       RectRegion                        region_;
       Variables *                       variables_;
     };

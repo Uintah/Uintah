@@ -159,7 +159,8 @@ namespace SCIRun {
           //ASSERT(callback->function_);
           signal->set_vars(callback->variables_);
           bool threaded = false;
-          callback->variables_->maybe_get_bool("threaded", threaded);
+          if (callback->variables_) 
+            threaded = Var<bool>(callback->variables_, "threaded", 0)();
           if (!threaded) {
             state = callback->doCallback(signal);
           } else {

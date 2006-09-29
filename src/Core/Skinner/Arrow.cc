@@ -40,7 +40,10 @@
 namespace SCIRun {
   namespace Skinner {
     Arrow::Arrow(Variables *vars) :
-      Drawable(vars)
+      Drawable(vars),
+      color_(vars, "color", Color(0,0,0,1)),
+      degrees_(vars, "degrees", 0.0),
+      point_angle_(vars, "point_angle", 90.0)
     {
       REGISTER_CATCHER_TARGET(Arrow::redraw);
     }
@@ -57,18 +60,9 @@ namespace SCIRun {
       double cx = region.x1() + dx;
       double cy = region.y1() + dy;
       
-      Color color(0,0,0,1);
-      get_vars()->maybe_get_color("color", color);
-
-      double degrees = 0.0;
-      get_vars()->maybe_get_double("degrees", degrees);
-
-      double point_angle = 90.0;
-      get_vars()->maybe_get_double("point_angle", point_angle);
-
-      point_angle = Clamp(Abs(point_angle), 1.0, 180.0);
-      const double ang = point_angle*2*M_PI / 360.0;
-      const double rad = degrees*2*M_PI / 360.0;
+      point_angle_ = Clamp(Abs(point_angle_()), 1.0, 180.0);
+      const double ang = point_angle_()*2*M_PI / 360.0;
+      const double rad = degrees_()*2*M_PI / 360.0;
       const double rad2 = rad+M_PI-ang;
       const double rad3 = rad+M_PI+ang;
       Point p1(cx + dx*cos(rad), cy + dy*sin(rad), 0.0);
@@ -83,7 +77,7 @@ namespace SCIRun {
       p1 = p1 + delta;
       p2 = p2 + delta;
       p3 = p3 + delta;
-      glColor4dv(&color.r);
+      glColor4dv(&color_().r);
       glBegin(GL_TRIANGLES);
       glVertex3dv(&p1(0));
       glVertex3dv(&p2(0));

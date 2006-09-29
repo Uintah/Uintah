@@ -99,12 +99,9 @@
         <var name="color2">#555555FF</var>
         <var name="invert">0</var>
 
-        <object class="Box">
-          <var name="color1">#AAAAAAFF</var>
-        </object>
-        
         <object class="Texture">
           <var name="file">cibc.png</var>
+          <var name="color">#80808080</var>
         </object>          
       </object>
 
@@ -128,10 +125,6 @@
         <var name="color2">#555555FF</var>
         <var name="invert">1</var>
 
-        <object class="Box">
-          <var name="color1">#AAAAAAFF</var>
-        </object>
-        
         <object class="Texture">
           <var name="file">ncrr_small.png</var>
           <var name="color">#80808080</var>

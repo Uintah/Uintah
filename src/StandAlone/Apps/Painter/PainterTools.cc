@@ -130,8 +130,8 @@ Painter::KeyToolSelectorTool::key_press(string, int keyval,
   case SCIRun_v:        painter_->new_current_layer(); break;
 
   case SCIRun_r:        painter_->reset_clut();
-  case SCIRun_Left:     painter_->move_layer_down();break;
-  case SCIRun_Right:    painter_->move_layer_up();break;
+  case SCIRun_Left:     painter_->move_layer_down(painter_->current_volume_);break;
+  case SCIRun_Right:    painter_->move_layer_up(painter_->current_volume_);break;
   case SCIRun_Up:       painter_->cur_layer_up();break;
   case SCIRun_Down:     painter_->cur_layer_down();break;
 
@@ -956,6 +956,7 @@ Painter::ITKThresholdTool::set_vars()
   ASSERT(filter_);
   string scope = "ITKThresholdTool::";
   Skinner::Variables *vars = painter_->get_vars();
+#if 0
   filter_->SetCurvatureScaling(vars->get_double(scope+"curvatureScaling"));
   filter_->SetPropagationScaling(vars->get_double(scope+"propagationScaling"));
   filter_->SetEdgeWeight(vars->get_double(scope+"edgeWeight"));
@@ -969,10 +970,9 @@ Painter::ITKThresholdTool::set_vars()
   filter_->SetSmoothingIterations(vars->get_int(scope+"smoothingIterations"));
   filter_->SetSmoothingTimeStep(vars->get_double(scope+"smoothingTimeStep"));
   filter_->SetSmoothingConductance(vars->get_double(scope+"smoothingConductance"));
-
   cerr << "curvature: " << filter_->GetCurvatureScaling() << std::endl;
   cerr << "propagation: " << filter_->GetPropagationScaling() << std::endl;
-  
+#endif
 }
   
 
@@ -984,11 +984,13 @@ Painter::ITKThresholdTool::finish()
 #if HAVE_INSIGHT
   NrrdDataHandle source_nrrdh = painter_->current_volume_->nrrd_handle_;
   filter_ = FilterType::New();
+
+#if 0
   painter_->get_vars()->insert("ToolDialog::text", "ITK Threshold Segmentation Level Set Running...", "string", true);  
   painter_->get_vars()->unset("ProgressBar::bar_height");
   //  painter_->get_vars()->insert("ToolDialog::button_height", "0", "string", true);
   painter_->get_vars()->insert("Painter::progress_bar_total_width","500","string", true);
-
+#endif
 
   string name = "ITK Threshold Result";
   Painter::NrrdVolume *new_layer = new NrrdVolume(seed_volume_, name, 0);
@@ -1026,8 +1028,8 @@ Painter::ITKThresholdTool::finish()
   string minmaxstr = ("Threshold min: " + to_string(min) +
                       " Threshold max: " + to_string(max));
   
-  painter_->get_vars()->insert("Painter::status_text",
-                               minmaxstr, "string", true);
+  //  painter_->get_vars()->insert("Painter::status_text",
+  //                               minmaxstr, "string", true);
 
   set_vars();
 
@@ -1136,210 +1138,6 @@ Painter::StatisticsTool::draw(SliceWindow &window)
 
 
 
-Painter::ITKConfidenceConnectedImageFilterTool::ITKConfidenceConnectedImageFilterTool(Painter *painter) :
-  BaseTool("ITK Confidence Connected\nImage Filter"),
-  PainterPointerTool(painter, "ITK Confidence Connected\nImage Filter"),
-  seed_(),
-  volume_(0)
-{
-}
-
-
-BaseTool::propagation_state_e
-Painter::ITKConfidenceConnectedImageFilterTool::pointer_down
-(int b, int x, int y, unsigned int m, int t)
-{
-  BaseTool::propagation_state_e state = pointer_motion(b,x,y,m,t);
-
-  return state;
-}
-
-BaseTool::propagation_state_e
-Painter::ITKConfidenceConnectedImageFilterTool::pointer_up
-(int b, int x, int y, unsigned int m, int t)
-{
-  return pointer_motion(b,x,y,m,t);
-}
-
-
-void
-Painter::ITKConfidenceConnectedImageFilterTool::finish() {
-  if (!volume_) 
-    return;
-
-  if (!volume_->index_valid(seed_))
-    return;
-
-#ifdef HAVE_INSIGHT    
-  painter_->get_vars()->insert("ToolDialog::text", 
-                     " ITK Confidence Connected Filter Running...",
-                     "string", true);
-
-  painter_->get_vars()->unset("ProgressBar::bar_height");
-  painter_->get_vars()->insert("ToolDialog::button_height", "0", "string", true);
-  painter_->get_vars()->insert("Painter::progress_bar_total_width","500","string", true);
-  painter_->redraw_all();
-
-
-  typedef itk::ConfidenceConnectedImageFilter
-    < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D > FilterType;
-  FilterType::Pointer filter = FilterType::New();
-  FilterType::IndexType seed_point;
-  for(unsigned int i = 0; i < seed_point.GetIndexDimension(); i++) {
-    seed_point[i] = seed_[i+1];
-  }
-  
-  string prefix = "ITKConfidenceConnectedImageFilterTool::";
-  Skinner::Variables *vars = painter_->get_vars();
-  filter->SetNumberOfIterations(vars->get_int(prefix+"numberOfIterations"));
-  filter->SetMultiplier(vars->get_double(prefix+"multiplier"));
-  filter->SetSeed(seed_point);
-  filter->SetReplaceValue(vars->get_double(prefix+"replaceValue"));
-  filter->SetInitialNeighborhoodRadius(1);
-
-  string name = "Confidence Connected";
-  NrrdVolume *temp = new NrrdVolume(volume_, name, 2);
-  painter_->volume_map_[name] = temp;
-  temp->colormap_ = 1;
-  temp->clut_min_ = temp->data_min_ = 0.5;
-  temp->clut_max_ = temp->data_max_ = 1.0;
-  painter_->current_volume_ = temp;
-
-  painter_->do_itk_filter<Painter::ITKImageFloat3D>(filter, 
-                                                    temp->nrrd_handle_);
-  painter_->show_volume(name);
-  painter_->recompute_volume_list();
-
-  painter_->set_all_slices_tex_dirty();
-  painter_->redraw_all();
-#endif
-}
-
-BaseTool::propagation_state_e
-Painter::ITKConfidenceConnectedImageFilterTool::pointer_motion
-(int b, int x, int y, unsigned int m, int t)
-{
-  if (b == 1 && !m) {
-    if (!volume_) 
-      volume_ = painter_->current_volume_;
-    if (volume_) {
-      vector<int> newseed = volume_->world_to_index(painter_->pointer_pos_);
-      if (volume_->index_valid(newseed)) 
-        seed_ = newseed;
-
-      painter_->redraw_all();
-      return STOP_E;
-    }
-  }
-  return CONTINUE_E;
-
-}
-
-
-
-BaseTool::propagation_state_e 
-Painter::ITKConfidenceConnectedImageFilterTool::process_event
-(event_handle_t event)
-{
-  RedrawSliceWindowEvent *redraw = 
-    dynamic_cast<RedrawSliceWindowEvent *>(event.get_rep());
-  if (redraw) {
-    draw_gl(redraw->get_window());
-  }
-
-  if (dynamic_cast<FinishEvent *>(event.get_rep())) {
-    finish();
-  }
-
-  if (dynamic_cast<QuitEvent *>(event.get_rep())) {
-    return QUIT_AND_STOP_E;
-  }
- 
-  return CONTINUE_E;
-}
-  
-
-
-#if 0
-  {
-  bool finish = (event.type_ == Event::KEY_PRESS_E && event.key_ == " ");
-  if (!finish && event.keys_.size()) 
-    return FALLTHROUGH_E;
-
-  if (finish ||
-      (event.type_ == Event::BUTTON_RELEASE_E && event.button(3))) {
-  }
-
-  if (event.state_ & Event::BUTTON_1_E) {
-    volume_ = painter_->current_volume_;
-    if (volume_)
-      seed_ = volume_->world_to_index(event.position_);
-    painter_->redraw_all();
-    return HANDLED_E;
-  }
-
-  return FALLTHROUGH_E;
-}
-
-#endif
-
-
-
-void
-Painter::ITKConfidenceConnectedImageFilterTool::draw_gl(Painter::SliceWindow &window)
-{
-  if (!volume_ || !volume_->index_valid(seed_)) return;
-
-  vector<double> index(seed_.size());
-  index[0] = seed_[0];
-  for (unsigned int s = 1; s < index.size(); ++s)
-    index[s] = seed_[s]+0.5;
-
-  Vector left = window.x_dir();
-  Vector up = window.y_dir();
-  Point center = volume_->index_to_point(index);
-  Point p;
-
-  //  double one = 100.0 / window.zoom_; // world space units per one pixel
-  double units = window.zoom_ / 100.0;  // Pixels per world space unit
-  double s = units/2.0;
-  double e = s+Clamp(s, 5.0, Max(units, 5.0));
-
-  for (int pass = 0; pass < 3; ++pass) {
-    glLineWidth(5 - pass*2.0);
-    if (pass == 0)
-      glColor4d(0.0, 0.0, 0.0, 1.0);
-    else if (pass == 1)
-      glColor4d(1.0, 0.0, 0.0, 1.0);
-    else
-      glColor4d(1.0, 0.7, 0.6, 1.0);
-
-    glBegin(GL_LINES);    
-    p = center + s * up;
-    glVertex3dv(&p(0));
-    p = center + e * up;
-    glVertex3dv(&p(0));
-    
-    p = center - s * up;
-    glVertex3dv(&p(0));
-    p = center - e * up;
-    glVertex3dv(&p(0));
-    
-    p = center + s * left;
-    glVertex3dv(&p(0));
-    p = center + e * left;
-    glVertex3dv(&p(0));
-    
-    p = center - s * left;
-    glVertex3dv(&p(0));
-    p = center - e * left;
-    glVertex3dv(&p(0));
-    glEnd();
-    CHECK_OPENGL_ERROR();
-  }
-
-  glLineWidth(1.0);
-}
   
 
 

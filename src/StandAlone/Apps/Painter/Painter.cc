@@ -182,9 +182,8 @@ Painter::SliceWindow::SliceWindow(Skinner::Variables *variables,
   show_guidelines_(0,1),
   cursor_pixmap_(-1)
 {
-  int axis = 2;
-  variables->maybe_get_int("axis", axis);
-  set_axis(axis);
+  Skinner::Var<int> axis(variables, "axis", 2);
+  set_axis(axis());
   //  axis_ = axis;
 }
 
@@ -443,7 +442,8 @@ Painter::Painter(Skinner::Variables *variables, VarContext* ctx) :
   Skinner::Signal *signal = new Skinner::Signal("LoadColorMap1D",
                                                 this, get_vars());
   string srcdir = sci_getenv("SCIRUN_SRCDIR")+string("/Core/Skinner/Data/");
-  get_vars()->insert("filename", srcdir+"Rainbow.cmap");
+  Skinner::Var<string> filename(get_vars(), "filename");
+  filename = srcdir+"Rainbow.cmap";
   LoadColorMap1D(signal);
 }
 
@@ -471,6 +471,12 @@ double_to_string(double val)
   char s[50];
   snprintf(s, 49, "%1.2f", val);
   return string(s);
+}
+
+int
+Painter::SliceWindow::get_signal_id(const string &signalname) const {
+  if (signalname == "SliceWindow::redraw") return 1;
+  return 0;
 }
 
 
@@ -506,11 +512,12 @@ Painter::SliceWindow::render_gl() {
     }
   }
 
-  get_vars()->change_parent("value", value, "string", true);
-  get_vars()->change_parent("clut_min_max", clut_min_max, "string", true);
-  get_vars()->change_parent("clut_ww_wl", clut_ww_wl, "string", true);
-  get_vars()->change_parent("xyz_pos", xyz_pos, "string", true);
-  get_vars()->change_parent("sca_pos", sca_pos, "string", true);
+
+  //  get_vars()->change_parent("value", value, "string", true);
+  //get_vars()->change_parent("clut_min_max", clut_min_max, "string", true);
+  //get_vars()->change_parent("clut_ww_wl", clut_ww_wl, "string", true);
+  //get_vars()->change_parent("xyz_pos", xyz_pos, "string", true);
+  //get_vars()->change_parent("sca_pos", sca_pos, "string", true);
 
     
 
@@ -566,8 +573,7 @@ Painter::redraw_all()
 
 void
 Painter::SliceWindow::redraw() {
-  EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
-  redraw_ = true;
+  throw_signal("SliceWindow::redraw");
 }
 
 void
@@ -1279,6 +1285,7 @@ Painter::SliceWindow::render_vertical_text(FreeTypeTextTexture *text,
 void
 Painter::SliceWindow::render_text()
 {
+#if 0
   const int yoff = 19;
   const int xoff = 19;
   const double vw = get_region().width();
@@ -1286,24 +1293,8 @@ Painter::SliceWindow::render_text()
 
   TextRenderer *renderer = FontManager::get_renderer(20);
   NrrdVolume *vol = painter_->current_volume_;
-  const int y_pos = renderer->height("X")+2;
-  for (unsigned int s = 0; s < slices_.size(); ++s) {
-    string str = slices_[s]->volume_->name_prefix_ + 
-      slices_[s]->volume_->name_;
-    if (slices_[s]->volume_ == vol) {
-      renderer->set_color(240/255.0, 1.0, 0.0, 1.0);
-      str = "->" + str;
-    } else {
-      renderer->set_color(1.0, 1.0, 1.0, 1.0);
-    }
-
-    renderer->render(str,
-                     vw-2-xoff, vh-2-yoff-(y_pos*(slices_.size()-1-s)),
-                     TextRenderer::NE | TextRenderer::SHADOW);
-  }
 
 
-#if 0
   font1.set_color(1.0, 1.0, 1.0, 1.0);
   const int y_pos = font1.height("X")+2;
   font1.render("Zoom: "+to_string(zoom_())+"%", xoff, yoff, 
@@ -1492,14 +1483,42 @@ Painter::SliceWindow::next_slice()
   painter_->redraw_all();
 }
 
+
 void
-Painter::move_layer_up()
+Painter::rebuild_layer_buttons()  
 {
-  if (!current_volume_) return;
+  NrrdVolumeOrder::iterator iter = volume_order_.begin();
+  NrrdVolumeOrder::iterator eiter = volume_order_.end();
+  int num = volume_order_.size();
+  num--;
+  for (int b = 0; b < layer_buttons_.size(); ++b) {
+    if (b < volume_order_.size()) {
+      NrrdVolume *volume = volume_map_[*iter];
+      layer_buttons_[num-b]->volume_ = volume;
+      layer_buttons_[num-b]->layer_name_ = volume->name_;
+      layer_buttons_[num-b]->visible_ = true;
+      if (volume == current_volume_) {
+        layer_buttons_[num-b]->background_color_ = Skinner::Color(0.6, 0.6, 1.0, 0.75);
+      } else {
+        layer_buttons_[num-b]->background_color_ = Skinner::Color(0.0, 0.0, 0.0, 0.0);
+      }
+    } else {
+      layer_buttons_[b]->visible_ = false;
+    }
+    ++iter;
+  }
+  EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
+}
+
+
+void
+Painter::move_layer_up(NrrdVolume *layer)
+{
+  if (!layer) return;
   unsigned int i = 0;
   for (i = 0; i < volumes_.size(); ++i)
-    if (volumes_[i] == current_volume_) break;
-  ASSERT(volumes_[i] == current_volume_);
+    if (volumes_[i] == layer) break;
+  ASSERT(volumes_[i] == layer);
   if (i == volumes_.size()-1) return;
 
   NrrdVolumeOrder::iterator voiter1 = std::find(volume_order_.begin(), 
@@ -1523,17 +1542,17 @@ Painter::move_layer_up()
   *voiter1 = temporder;
   
   extract_all_window_slices();
-  redraw_all();
+  rebuild_layer_buttons();
 }
 
 void
-Painter::move_layer_down()
+Painter::move_layer_down(NrrdVolume *layer)
 {
-  if (!current_volume_) return;
+  if (!layer) return;
   unsigned int i = 0;
   for (i = 0; i < volumes_.size(); ++i)
-    if (volumes_[i] == current_volume_) break;
-  ASSERT(volumes_[i] == current_volume_);
+    if (volumes_[i] == layer) break;
+  ASSERT(volumes_[i] == layer);
   if (i == 0) return;
 
 
@@ -1556,8 +1575,7 @@ Painter::move_layer_down()
   volumes_[i] = temp;
 
   extract_all_window_slices();
-
-  redraw_all();
+  rebuild_layer_buttons();
 }
 
 
@@ -1591,7 +1609,7 @@ Painter::cur_layer_down()
   for (unsigned int i = 1; i < volumes_.size(); ++i)
     if (current_volume_ == volumes_[i]) {
       current_volume_ = volumes_[i-1];
-      redraw_all();
+      rebuild_layer_buttons();
       return;
     }
 }
@@ -1605,7 +1623,7 @@ Painter::cur_layer_up()
   for (unsigned int i = 0; i < volumes_.size()-1; ++i)
     if (current_volume_ == volumes_[i]) {
       current_volume_ = volumes_[i+1];
-      redraw_all();
+      rebuild_layer_buttons();
       return;
     }
 }
@@ -1920,6 +1938,8 @@ Painter::extract_data_from_bundles(Bundles &bundles)
     }
     volume_map_[name]->keep_ = 1;
   }
+  rebuild_layer_buttons();
+  
 }
 
 
@@ -1980,6 +2000,7 @@ Painter::copy_current_layer() {
     while (volume_map_.find(name) != volume_map_.end())
       name = base + " "+to_string(++i);
     current_volume_ = copy_current_volume(name,0);
+    rebuild_layer_buttons();
   }
 }
 
@@ -1989,6 +2010,7 @@ Painter::kill_current_layer() {
   if (current_volume_) {
     current_volume_->keep_ = 0;
     recompute_volume_list();
+    rebuild_layer_buttons();
   }    
 }
 
@@ -2000,7 +2022,8 @@ Painter::new_current_layer() {
     string name = base + " "+to_string(++i);
     while (volume_map_.find(name) != volume_map_.end())
       name = base + " "+to_string(++i);
-      current_volume_ = copy_current_volume(name,1);
+    current_volume_ = copy_current_volume(name,1);
+    rebuild_layer_buttons();
   }
 }
 
@@ -2357,12 +2380,16 @@ Painter::filter_callback(itk::Object *object,
   double value = process->GetProgress();
   if (typeid(itk::ProgressEvent) == typeid(event))
   {
-    double total = get_vars()->get_double("Painter::progress_bar_total_width");
-    get_vars()->insert("Painter::progress_bar_done_width", 
-                       to_string(value * total), "string", true);
+
     
-    get_vars()->insert("Painter::progress_bar_text", 
-                       to_string(round(value * 100))+ " %  ", "string", true);
+    // progress bar is broken!
+
+//     double total = get_vars()->get_double("Painter::progress_bar_total_width");
+//     get_vars()->insert("Painter::progress_bar_done_width", 
+//                        to_string(value * total), "string", true);
+    
+//     get_vars()->insert("Painter::progress_bar_text", 
+//                        to_string(round(value * 100))+ " %  ", "string", true);
 
     if (filter_volume_ && filter_update_img_.get_rep()) {
       //      typedef Painter::ITKImageFloat3D ImageType;
@@ -2476,7 +2503,8 @@ Painter::SliceWindow::process_event(event_handle_t event) {
 int
 Painter::get_signal_id(const string &signalname) {
   if (signalname == "SliceWindow_Maker") return 1;
-  if (signalname == "Painter::start_brush_tool") return 2;
+  if (signalname == "LayerButton_Maker") return 2;
+  if (signalname == "Painter::start_brush_tool") return 3;
   return 0;
 }
 

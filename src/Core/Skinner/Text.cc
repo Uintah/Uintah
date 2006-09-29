@@ -38,56 +38,55 @@ namespace SCIRun {
   namespace Skinner {
     Text::Text(Variables *vars) :
       Drawable(vars),
-      fgcolor_(1., 1., 1., 1.),
-      bgcolor_(0., 0., 0., 1.),
+      fgcolor_(vars,"fgcolor",Color(0.0, 1.0, 0.0, 1.)),
+      bgcolor_(vars,"bgcolor"),
       flags_(0),
       renderer_(0),
-      offsetx_(0),
-      offsety_(0),
-      cursor_position_(0)
+      offsetx_(),
+      offsety_(),
+      cursor_position_(0),
+      text_(vars, "text"),
+      cursor_(vars, "cursor", false)
     {
       REGISTER_CATCHER_TARGET(Text::redraw);
 
-      vars->maybe_get_color("color", fgcolor_);
-      vars->maybe_get_color("fgcolor", fgcolor_);
-      vars->maybe_get_color("bgcolor", bgcolor_);
+      if (!bgcolor_.exists()) {
+        cerr << "bgcolor not exists: " << get_id() << std::endl;
+        Var<Color> test(vars, "breakpoint");
+        bgcolor_ = Color(1.0, 0.0, 0.0, 1.0);
+      }
+      
+      Var<double>size(vars, "size", 20.0);
+      Var<string>font(vars, "font", "scirun.ttf");
+      renderer_ = FontManager::get_renderer(size(), font());
+      
+      offsetx_ = Var<int>(vars, "offsetx");
+      offsetx_ |= Var<int>(vars, "offset");
+      offsetx_ |= 0;
 
-      double size = 20.0;
-      vars->maybe_get_double("size", size);
-      
-      string font = "scirun.ttf";
-      vars->maybe_get_string("font", font);
+      offsety_ = Var<int>(vars, "offsety");
+      offsety_ |= Var<int>(vars, "offset");
+      offsety_ |= 0;
 
-      renderer_ = FontManager::get_renderer(size, font);
-      
-      vars->maybe_get_int("offset", offsetx_);
-      vars->maybe_get_int("offsetx", offsetx_);
-
-      vars->maybe_get_int("offset", offsety_);
-      vars->maybe_get_int("offsety", offsety_);
-      
-      
-      string anchorstr = "SW";
-      vars->maybe_get_string("anchor", anchorstr);
-      anchorstr = string_toupper(anchorstr);
+      Var<string> anchorstr(vars, "anchor", "SW");
+      anchorstr = string_toupper(anchorstr());
 
       flags_ = TextRenderer::SW;
-      if      (anchorstr ==  "N") { flags_ = TextRenderer::N;  }
-      else if (anchorstr ==  "E") { flags_ = TextRenderer::E;  }
-      else if (anchorstr ==  "S") { flags_ = TextRenderer::S;  }
-      else if (anchorstr ==  "W") { flags_ = TextRenderer::W;  }
-      else if (anchorstr == "NE") { flags_ = TextRenderer::NE; }
-      else if (anchorstr == "SE") { flags_ = TextRenderer::SE; }
-      else if (anchorstr == "SW") { flags_ = TextRenderer::SW; }
-      else if (anchorstr == "NW") { flags_ = TextRenderer::NW; }
-      else if (anchorstr ==  "C") { flags_ = TextRenderer::C;  }
+      if      (anchorstr() ==  "N") { flags_ = TextRenderer::N;  }
+      else if (anchorstr() ==  "E") { flags_ = TextRenderer::E;  }
+      else if (anchorstr() ==  "S") { flags_ = TextRenderer::S;  }
+      else if (anchorstr() ==  "W") { flags_ = TextRenderer::W;  }
+      else if (anchorstr() == "NE") { flags_ = TextRenderer::NE; }
+      else if (anchorstr() == "SE") { flags_ = TextRenderer::SE; }
+      else if (anchorstr() == "SW") { flags_ = TextRenderer::SW; }
+      else if (anchorstr() == "NW") { flags_ = TextRenderer::NW; }
+      else if (anchorstr() ==  "C") { flags_ = TextRenderer::C;  }
       else { cerr << vars->get_id() << " anchor invalid: " 
-                  << anchorstr << "\n"; }
-      flags_ |= vars->get_bool("vertical") ? TextRenderer::VERTICAL : 0;
-      flags_ |= vars->get_bool("shadow")   ? TextRenderer::SHADOW   : 0;
-      flags_ |= vars->get_bool("extruded") ? TextRenderer::EXTRUDED : 0;
-      flags_ |= vars->get_bool("reverse")  ? TextRenderer::REVERSE  : 0;
-      flags_ |= vars->get_bool("cursor") ? TextRenderer::CURSOR : 0;
+                  << anchorstr() << "\n"; }
+      flags_ |= Var<bool>(vars,"vertical",0)() ? TextRenderer::VERTICAL : 0;
+      flags_ |= Var<bool>(vars,"shadow",0)()   ? TextRenderer::SHADOW   : 0;
+      flags_ |= Var<bool>(vars,"extruded",0)() ? TextRenderer::EXTRUDED : 0;
+      flags_ |= Var<bool>(vars,"reverse",0)()  ? TextRenderer::REVERSE  : 0;
       
       //      REGISTER_CATCHER_TARGET(Text::redraw);
     }
@@ -110,15 +109,13 @@ namespace SCIRun {
     {
       if (!renderer_) return CONTINUE_E;
       const RectRegion &region = get_region();
-      string text = "";
-      get_vars()->maybe_get_string("text", text);
-      
-      if (region.height() < 1 || renderer_->height(text) > region.height()) {
+      if (!text_.exists()) text_ = "ABC123";
+      if (region.height() < 1 || renderer_->height(text_()) > region.height()) {
         return STOP_E;
       }
       
       int newflags = flags_;
-      if (get_vars()->get_bool("cursor")) {
+      if (cursor_()) {
         newflags |= TextRenderer::CURSOR;
       } else {
         newflags &= ~TextRenderer::CURSOR;
@@ -126,9 +123,9 @@ namespace SCIRun {
 
       flags_ = newflags;
 
-      renderer_->set_shadow_offset(offsetx_, offsety_);
-      renderer_->set_color(fgcolor_.r, fgcolor_.g, fgcolor_.b, fgcolor_.a);
-      renderer_->set_shadow_color(bgcolor_.r, bgcolor_.g, bgcolor_.b, bgcolor_.a);
+      renderer_->set_shadow_offset(offsetx_(), offsety_());
+      renderer_->set_color(fgcolor_().r, fgcolor_().g, fgcolor_().b, fgcolor_().a);
+      renderer_->set_shadow_color(bgcolor_().r, bgcolor_().g, bgcolor_().b, bgcolor_().a);
       
       float mx = (region.x2() + region.x1())/2.0;
       float my = (region.y2() + region.y1())/2.0;
@@ -150,7 +147,7 @@ namespace SCIRun {
         
       case TextRenderer::C:  x = mx; y = my; break;
       }
-      renderer_->render(text, x, y, flags_);
+      renderer_->render(text_(), x, y, flags_);
       
       return CONTINUE_E;
     }

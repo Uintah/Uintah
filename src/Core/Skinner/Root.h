@@ -61,6 +61,7 @@ namespace SCIRun {
       CatcherFunction_t Arc_Maker;
       CatcherFunction_t Quit;
       CatcherFunction_t Redraw;
+      CatcherFunction_t Stop;
       typedef vector<GLWindow *> GLWindows_t;
       GLWindows_t windows_;
     };

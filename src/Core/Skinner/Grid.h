@@ -33,28 +33,36 @@
 #define SKINNER_GRID_H
 
 #include <Core/Skinner/Parent.h>
+#include <Core/Skinner/Variables.h>
 
 namespace SCIRun {
   namespace Skinner {
     class Grid : public Parent {
     public:
-      Grid (Variables *, int, int);
+      Grid (Variables *);
       virtual ~Grid();
 
       virtual propagation_state_e       process_event(event_handle_t);
       static string                     class_name() { return "Grid"; }
       static DrawableMakerFunc_t        maker;
 
-      void                              set_cell(int, int, Drawable *, 
-                                                 double, double);
       virtual void                      set_children(const Drawables_t &);
 
     private:
       CatcherFunction_t                 ReLayoutCells;
 
-      vector<vector<Drawable *> >       cells_;
-      vector<double>                    col_width_;
-      vector<double>                    row_height_;
+      struct CellInfo_t{
+        Var<int>        row_;
+        Var<int>        col_;
+        Var<double>     width_;
+        Var<double>     height_;
+      };
+
+      Var<int>                          rows_;
+      Var<int>                          cols_;
+      vector<CellInfo_t>                cell_info_;
+      vector<double>                    cell_width_;
+      vector<double>                    cell_height_;
     };
   }
 }

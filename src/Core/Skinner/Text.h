@@ -34,6 +34,7 @@
 
 #include <Core/Skinner/Drawable.h>
 #include <Core/Skinner/Color.h>
+#include <Core/Skinner/Variables.h>
 
 namespace SCIRun {
   class TextRenderer;
@@ -47,13 +48,15 @@ namespace SCIRun {
       CatcherFunction_t                 redraw;
     protected:
 
-      Color                             fgcolor_;
-      Color                             bgcolor_;
+      Var<Color>                        fgcolor_;
+      Var<Color>                        bgcolor_;
       unsigned int                      flags_;
       TextRenderer *                    renderer_;
-      int                               offsetx_;
-      int                               offsety_;
+      Var<int>                          offsetx_;
+      Var<int>                          offsety_;
       unsigned int                      cursor_position_;
+      Var<string>                       text_;
+      Var<bool>                         cursor_;
     };
   }
 }

@@ -51,7 +51,8 @@ namespace SCIRun {
   namespace Skinner{
     Graph2D::Graph2D(Variables *variables) 
       : Parent(variables),
-        data_(0)
+        data_(0),
+        font_size_(variables,"font_size", 35.0)
     {
       for (int n = 0; n < 20; ++n) {
 
@@ -141,7 +142,7 @@ namespace SCIRun {
           data_x_range_.first = Min(data_x_range_.first, x);
           data_x_range_.second = Max(data_x_range_.second, x);
           
-          const double y = data_[n]->get(r,1);
+         const double y = data_[n]->get(r,1);
           data_y_range_.first = Min(data_y_range_.first, y);
           data_y_range_.second = Max(data_y_range_.second, y);
         }
@@ -179,18 +180,18 @@ namespace SCIRun {
       const int y = Floor(region.y1());
       const int x2 = Floor(region.x2());
       const int y2 = Floor(region.y2());
-      const double font_size = get_vars()->get_double("font_size");
+      const double font_size = font_size_();
 
       gapx_ = font_size*3+5;
       gapy_ = font_size+25;
 
       TextRenderer *renderer = FontManager::get_renderer(font_size);
 
-      Color grid_line_color = get_vars()->get_color("grid_line_color");
+      Color grid_line_color = Var<Color>(get_vars(),"grid_line_color")();
+      double grid_line_width = Var<double>(get_vars(), "grid_line_width")();
+      glLineWidth(grid_line_width);
 
-      glLineWidth(get_vars()->get_double("grid_line_width"));
-
-      int divx = get_vars()->get_int("grid_divisions_x");
+      int divx = Var<int>(get_vars(),"grid_divisions_x")();
       for (int i = 0 ; i < divx; ++i) {
         double px = gapx_ + i * (x2 - x - gapx_)/double(divx);
 
@@ -207,7 +208,7 @@ namespace SCIRun {
       }
       CHECK_OPENGL_ERROR();
 
-      int divy = get_vars()->get_int("grid_divisions_y");
+      int divy = Var<int>(get_vars(),"grid_divisions_y")();
 
       double yww = window_y_range_.second - window_y_range_.first;
       double ywl = window_y_range_.first + yww/2.0;
@@ -231,10 +232,10 @@ namespace SCIRun {
       CHECK_OPENGL_ERROR();
 
 
-
-      Color axis_line_color = get_vars()->get_color("axis_line_color");
+      Color axis_line_color = Var<Color>(get_vars(),"axis_line_color")();
+      double axis_line_width = Var<double>(get_vars(), "axis_line_width")();
       glColor4dv(&axis_line_color.r);
-      glLineWidth(get_vars()->get_double("axis_line_width"));
+      glLineWidth(axis_line_width);
       glBegin(GL_LINES);
       glVertex2d(x+gapx_, gapy_);
       glVertex2d(x2, gapy_);
@@ -243,7 +244,7 @@ namespace SCIRun {
       glEnd();
       CHECK_OPENGL_ERROR();
 
-      glPointSize(get_vars()->get_double("axis_line_width"));
+      glPointSize(axis_line_width);
       glBegin(GL_POINTS);
       glVertex2d(gapx_, gapy_);
       glEnd();
@@ -300,9 +301,10 @@ namespace SCIRun {
                    -window_y_range_.first,
                    0.0);
 
-  
-      glLineWidth(get_vars()->get_double("data_line_width"));
-      glPointSize(get_vars()->get_double("data_point_size"));
+      Var<double> data_line_width(get_vars(), "data_line_width");
+      Var<double> data_point_size(get_vars(), "data_point_size");
+      glLineWidth(data_line_width());
+      glPointSize(data_point_size());
 
       for (unsigned int n = 0; n < data_.size(); ++n) {
         set_color(n);
@@ -348,7 +350,7 @@ namespace SCIRun {
       int minr = -1;
       double mindist = AIR_POS_INF;
 
-      double font_size = get_vars()->get_double("font_size");
+      double font_size = font_size_();
       
             
       Point p = screen_to_world(mx_, my_);
@@ -377,7 +379,8 @@ namespace SCIRun {
         double dx = tp.x() - mx_ + gapx_;
         double dy = tp.y() - my_ + gapy_;
         
-        double ps = get_vars()->get_double("data_point_size");
+        
+        double ps = Var<double>(get_vars(), "data_point_size")();
 
         if (sqrt(dx*dx+dy*dy) > (25.0 + ps)) {
           return;
@@ -434,7 +437,7 @@ namespace SCIRun {
             
         renderer->render(str, tp.x(), tp.y(), anchor);
         
-        glPointSize(get_vars()->get_double("data_point_size")*3);
+        glPointSize(ps*3);
       }
     }
                                        

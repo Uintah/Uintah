@@ -40,8 +40,8 @@
  */
 
 
-#ifndef SCIRun_Dataflow_Modules_Render_Painter_h
-#define SCIRun_Dataflow_Modules_Render_Painter_h
+#ifndef StandAlone_Apps_Painter_Painter_h
+#define StandAlone_Apps_Painter_Painter_h
 
 #include <sci_comp_warn_fixes.h>
 #include <stdlib.h>
@@ -200,8 +200,8 @@ public:
     SliceWindow(Skinner::Variables *, Painter *painter);
     virtual ~SliceWindow() {}
     
-    static string                       class_name() { return "SliceWindow"; }
     propagation_state_e                 process_event(event_handle_t event);
+    virtual int                         get_signal_id(const string &signalname) const;
 
     void                render_gl();
     void                setup_gl_view();
@@ -259,6 +259,28 @@ public:
     GLdouble		gl_projection_matrix_[16];
     GLint		gl_viewport_[4];
   };
+
+
+  class LayerButton : public Skinner::Parent {
+  public:
+    LayerButton(Skinner::Variables *, Painter *painter);
+    virtual ~LayerButton();
+    
+    //    virtual int         get_signal_id(const string &signalname) const;
+  private:
+    friend class Painter;
+    Painter *                   painter_;
+    Skinner::Var<string>        layer_name_;
+    Skinner::Var<int>           num_;
+    Skinner::Var<Skinner::Color>background_color_;
+    
+    NrrdVolume *                volume_;
+    CatcherFunction_t           up;
+    CatcherFunction_t           down;
+    CatcherFunction_t           kill;
+    CatcherFunction_t           select;
+  };
+
 private:
   friend struct SliceWindow;
 
@@ -459,13 +481,13 @@ private:
     void                draw_gl(SliceWindow &);
     void                line(Nrrd *, double, int, int, int, int, bool);
     void                splat(Nrrd *, double,int,int);
-
+    
     Painter *           painter_;
     SliceWindow *       window_;
     NrrdSlice *         slice_;
     float               value_;
     vector<int>         last_index_;
-    double              radius_;
+    Skinner::Var<double>radius_;
     bool                draw_cursor_;
   };
 
@@ -519,6 +541,11 @@ private:
     void                finish();
     vector<int>         seed_;
     NrrdVolume *        volume_;
+    string              prefix_;
+    Skinner::Var<int>            numberOfIterations_;
+    Skinner::Var<double>         multiplier_;
+    Skinner::Var<double>         replaceValue_;
+    Skinner::Var<int>            initialNeighborhoodRadius_;
   };
  
 
@@ -642,6 +669,7 @@ private:
   Bundles               bundles_;
 
   TextureHandle         volume_texture_;
+  vector<LayerButton *> layer_buttons_;
   // Methods for drawing to the GL window
   void			redraw_all();
 
@@ -668,8 +696,9 @@ private:
   void                  receive_normal_bundles(Bundles &);
   void                  extract_data_from_bundles(Bundles &);
 
-  void                  move_layer_up();
-  void                  move_layer_down();
+  void                  rebuild_layer_buttons();
+  void                  move_layer_up(NrrdVolume *);
+  void                  move_layer_down(NrrdVolume *);
   void                  cur_layer_up();
   void                  cur_layer_down();
 
@@ -706,6 +735,7 @@ private:
   //  propagation_state_e   start_brush_tool(event_handle_t);
   CatcherFunction_t     InitializeSignalCatcherTargets;
   CatcherFunction_t     SliceWindow_Maker;
+  CatcherFunction_t     LayerButton_Maker;
 
   CatcherFunction_t     StartBrushTool;
   CatcherFunction_t     StartCropTool;

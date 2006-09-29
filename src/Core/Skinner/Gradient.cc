@@ -50,44 +50,48 @@ Skinner::Gradient::maker(Variables *vars)
 
 Skinner::Gradient::Gradient(Variables *vars)
   : Skinner::Drawable(vars),
-    backslash_(false),
+    backslash_(vars,"backslash"),
     anchor_(-1)
 {
-  vars->maybe_get_bool("backslash", backslash_);
-  string anchor = "";
-  if (vars->maybe_get_string("anchor", anchor)) {
-    if (string_toupper(anchor) == "SW") 
+  Var<string> anchor(vars,"anchor");
+  if (anchor.exists()) {
+    anchor = string_toupper(anchor());
+    if (anchor() == "SW") 
       anchor_ = SW;
-    else if (string_toupper(anchor) == "SE") 
+    else if (anchor() == "SE") 
       anchor_ = SE;
-    else if (string_toupper(anchor) == "NE") 
+    else if (anchor() == "NE") 
       anchor_ = NE;
-    else if (string_toupper(anchor) == "NW") 
+    else if (anchor() == "NW") 
       anchor_ = NW;
     else
       throw "invalid anchor specifier";
   }
 
-  colors_[SW] = Color(1.0, 0.0, 0.0, 1.0); // sw
-  colors_[SE] = Color(0.0, 1.0, 0.0, .0); //se;
-  colors_[NE] = Color(0.0, 1.0, 0.0, 1.0); // ne
-  colors_[NW] = Color(0.0, 0.0, 1.0, 1.0); // nw
+  if (!backslash_.exists()) {
+    backslash_ = false;
+  }
 
-  vars->maybe_get_color("bottom-color",colors_[SW]);
-  vars->maybe_get_color("left-color",colors_[SW]);
-  vars->maybe_get_color("sw-color",colors_[SW]);
+  colors_[SW] = Var<Color>(vars, "sw-color");
+  colors_[SW] |= Var<Color>(vars, "left-color");
+  colors_[SW] |= Var<Color>(vars, "bottom-color");
+  colors_[SW] |= Color(1.0, 0.0, 0.0, 1.0);
 
-  vars->maybe_get_color("bottom-color", colors_[SE]);
-  vars->maybe_get_color("right-color",colors_[SE]);
-  vars->maybe_get_color("se-color",colors_[SE]);
+  colors_[SE] = Var<Color>(vars, "se-color");
+  colors_[SE] |= Var<Color>(vars, "right-color");
+  colors_[SE] |= Var<Color>(vars, "bottom-color");
+  colors_[SE] |= Color(0.0, 1.0, 0.0, 1.0);
 
-  vars->maybe_get_color("top-color", colors_[NE]);
-  vars->maybe_get_color("right-color", colors_[NE]);
-  vars->maybe_get_color("ne-color", colors_[NE]);
+  colors_[NE] = Var<Color>(vars, "ne-color");  
+  colors_[NE] |= Var<Color>(vars, "right-color");
+  colors_[NE] |= Var<Color>(vars, "top-color");
+  colors_[NE] |= Color(0.0, 1.0, 1.0, 1.0);
 
-  vars->maybe_get_color("top-color", colors_[NW]);
-  vars->maybe_get_color("left-color", colors_[NW]);
-  vars->maybe_get_color("nw-color", colors_[NW]);
+  colors_[NW] = Var<Color>(vars, "nw-color") ; 
+  colors_[NW] |= Var<Color>(vars, "left-color");
+  colors_[NW] |= Var<Color>(vars, "top-color");
+  colors_[NW] |= Color(0.0, 0.0, 1.0, 1.0);
+
 }
 
 
@@ -101,38 +105,39 @@ Skinner::Gradient::render_gl()
   const double x2 = region.x2();
   const double y2 = region.y2();
 
+  glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
   glShadeModel(GL_SMOOTH);
   glBegin(GL_TRIANGLES);
 
-  if (backslash_) {
-    glColor4dv(&colors_[SW].r);
+  if (backslash_()) {
+    glColor4dv(&colors_[SW]().r);
     glVertex3d(x,y,0);
-    glColor4dv(&colors_[SE].r);
+    glColor4dv(&colors_[SE]().r);
     glVertex3d(x2,y,0);
-    glColor4dv(&colors_[NW].r);
+    glColor4dv(&colors_[NW]().r);
     glVertex3d(x,y2,0);
 
 
-    glColor4dv(&colors_[SE].r);
+    glColor4dv(&colors_[SE]().r);
     glVertex3d(x2,y,0);
-    glColor4dv(&colors_[NE].r);
+    glColor4dv(&colors_[NE]().r);
     glVertex3d(x2,y2,0);
-    glColor4dv(&colors_[NW].r);
+    glColor4dv(&colors_[NW]().r);
     glVertex3d(x,y2,0);
   } else {
 
-    glColor4dv(&colors_[SW].r);
+    glColor4dv(&colors_[SW]().r);
     glVertex3d(x,y,0);
-    glColor4dv(&colors_[NE].r);
+    glColor4dv(&colors_[NE]().r);
     glVertex3d(x2,y2,0);
-    glColor4dv(&colors_[NW].r);
+    glColor4dv(&colors_[NW]().r);
     glVertex3d(x,y2,0);
 
-    glColor4dv(&colors_[SW].r);
+    glColor4dv(&colors_[SW]().r);
     glVertex3d(x,y,0);
-    glColor4dv(&colors_[SE].r);
+    glColor4dv(&colors_[SE]().r);
     glVertex3d(x2,y,0);
-    glColor4dv(&colors_[NE].r);
+    glColor4dv(&colors_[NE]().r);
     glVertex3d(x2,y2,0);
   }
 
@@ -187,10 +192,11 @@ Skinner::Gradient::render_radial_gl()
   }
 
   glShadeModel(GL_SMOOTH);
+
   glBegin(GL_TRIANGLE_FAN);
 
   // Anchor point for tri-fan
-  glColor4dv(&colors_[anchor_].r);
+  glColor4dv(&colors_[anchor_]().r);
   glVertex3d(x,y,0);
 
   // Need at least 2 radial points to produce tri-fan
@@ -199,7 +205,7 @@ Skinner::Gradient::render_radial_gl()
   double rad = start;
   for (int i = 0; i < divisions; ++i) {
 
-    glColor4dv(&colors_[(anchor_+1)%4].r);
+    glColor4dv(&colors_[(anchor_+1)%4]().r);
 
     glVertex3d(x + cos(rad) * width,
                y + sin(rad) * height, 0);    
@@ -215,22 +221,6 @@ BaseTool::propagation_state_e
 Skinner::Gradient::process_event(event_handle_t event) {
   WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
   if (window && window->get_window_state() == WindowEvent::REDRAW_E) {
-  get_vars()->maybe_get_color("bottom-color",colors_[SW]);
-  get_vars()->maybe_get_color("left-color",colors_[SW]);
-  get_vars()->maybe_get_color("sw-color",colors_[SW]);
-
-  get_vars()->maybe_get_color("bottom-color", colors_[SE]);
-  get_vars()->maybe_get_color("right-color",colors_[SE]);
-  get_vars()->maybe_get_color("se-color",colors_[SE]);
-
-  get_vars()->maybe_get_color("top-color", colors_[NE]);
-  get_vars()->maybe_get_color("right-color", colors_[NE]);
-  get_vars()->maybe_get_color("ne-color", colors_[NE]);
-
-  get_vars()->maybe_get_color("top-color", colors_[NW]);
-  get_vars()->maybe_get_color("left-color", colors_[NW]);
-  get_vars()->maybe_get_color("nw-color", colors_[NW]);
-
     if (anchor_ == -1)
       render_gl();
     else 

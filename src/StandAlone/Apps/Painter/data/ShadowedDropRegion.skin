@@ -13,6 +13,12 @@
     <var name="ShadowedDropRegion::border-size3" propagate="yes" overwrite="no">20</var>
     <var name="ShadowedDropRegion::border-size4" propagate="yes" overwrite="no">20</var>
 
+    <var name="ShadowedDropRegion::border-size1" propagate="yes" overwrite="yes">50</var>
+    <var name="ShadowedDropRegion::border-size2" propagate="yes" overwrite="yes">50</var>
+
+    <var name="ShadowedDropRegion::border-size3" propagate="yes" overwrite="yes">50</var>
+    <var name="ShadowedDropRegion::border-size4" propagate="yes" overwrite="yes">50</var>
+
     <object class="Grid">
       <var name="rows">3</var>
       <var name="cols">3</var>
@@ -22,7 +28,7 @@
         <var name="col">1</var>
         <var name="cell-height">$ShadowedDropRegion::border-size2</var>
         <var name="cell-width">$ShadowedDropRegion::border-size2</var>
-        
+<!--        
         <object class="Root::Arc">
           <var name="anchor">SE</var>
           <var name="ne-color">$ShadowedDropRegion::outside</var>
@@ -30,6 +36,7 @@
           <var name="nw-color">$ShadowedDropRegion::outside</var>
           <var name="sw-color">$ShadowedDropRegion::outside</var>
         </object>
+-->
 
         <object class="Root::Arc">
           <var name="anchor">SE</var>

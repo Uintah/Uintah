@@ -1,0 +1,88 @@
+<definition class="Layers" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <object class="Frame">
+    <var name="width">10</var>
+    <var name="height">10</var>
+    <var name="invert">1</var>
+    <object class="Root::FocusRegion">
+      <var name="invert">1</var>
+      <xi:include href="LayerButton.skin" parse="xml"/>      
+      <object class="Box">
+        <var name="color">#EEEEEEFF</var>
+        <object class="Grid">
+          <var name="rows">15</var>
+          <var name="cols">1</var>
+          <var name="text_bgcolor" propagate="yes">#FFFFFFFF</var>
+          <var name="text_fgcolor" propagate="yes">#000000FF</var>
+          
+          <var name="buttonheight" propagate="yes">55</var>
+          
+          <object class="LayerButton">
+            <var name="LayerButton::num">1</var>
+          </object>
+          
+          <object class="LayerButton">
+            <var name="LayerButton::num">2</var>
+          </object>
+          
+          <object class="LayerButton">
+            <var name="LayerButton::num">3</var>
+          </object>
+          
+          <object class="LayerButton">
+            <var name="LayerButton::num">4</var>
+          </object>
+          
+          <object class="LayerButton">
+            <var name="LayerButton::num">5</var>
+          </object>
+          
+          <object class="LayerButton">
+            <var name="LayerButton::num">6</var>
+          </object>
+
+          <object class="LayerButton">
+            <var name="LayerButton::num">6</var>
+          </object>
+
+          <object class="LayerButton">
+            <var name="LayerButton::num">7</var>
+          </object>
+
+          <object class="LayerButton">
+            <var name="LayerButton::num">8</var>
+          </object>
+
+          <object class="LayerButton">
+            <var name="LayerButton::num">9</var>
+          </object>
+
+          <object class="LayerButton">
+            <var name="LayerButton::num">10</var>
+          </object>
+
+          <object class="LayerButton">
+            <var name="LayerButton::num">11</var>
+          </object>
+
+          <object class="LayerButton">
+            <var name="LayerButton::num">12</var>
+          </object>
+
+          <object class="LayerButton">
+            <var name="LayerButton::num">13</var>
+          </object>
+
+          <object class="LayerButton">
+            <var name="LayerButton::num">14</var>
+          </object>
+
+          <object class="LayerButton">
+            <var name="LayerButton::num">15</var>
+          </object>
+
+
+        </object>
+      </object>
+    </object>
+  </object>
+</definition>

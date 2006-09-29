@@ -42,25 +42,11 @@
 namespace SCIRun {
   namespace Skinner {
     Color::Color() :
-      r(0.0),
+      r(1.0),
       g(0.0),
       b(0.0),
-      a(0.0)
+      a(1.0)
     {
-      // Generates a bright random color
-      while (fabs(r - g) + 
-	     fabs(r - b) + 
-	     fabs(g - b) < 1.0)
-	{
-	r = 1.0 - sqrt(1.0 - drand48());
-	g = 1.0 - sqrt(1.0 - drand48());
-	b = 1.0 - sqrt(1.0 - drand48());
-      }
-      a = 1.0;
-      //      std::cerr << "R: " << r
-      //		<< "G: " << g
-      //		<< "B: " << b
-      //		<< "A: " << a << std::endl;
     }
 
     Color::Color(double R, double G, double B, double A) :
@@ -78,5 +64,25 @@ namespace SCIRun {
                 << " Blue: " << b 
                 << " Alpha: " << a << std::endl; 
     }
+    
+    bool
+    Color::operator==(const Color &rhs) {
+      return this->r == rhs.r && this->g == rhs.g && this->b == rhs.b && this->a == rhs.a;
+    }
+
+    void 
+    Color::random() {
+      // Generates a bright random color
+      while (fabs(r - g) + 
+	     fabs(r - b) + 
+	     fabs(g - b) < 1.0)
+	{
+	r = 1.0 - sqrt(1.0 - drand48());
+	g = 1.0 - sqrt(1.0 - drand48());
+	b = 1.0 - sqrt(1.0 - drand48());
+      }
+      a = 1.0;
+    }
+
   }
 }

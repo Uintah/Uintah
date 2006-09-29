@@ -40,13 +40,7 @@ namespace SCIRun {
   namespace Skinner {  
     class Frame : public Parent {
     public:
-      Frame(Variables *variables,
-            double wid, 
-            double hei, 
-            const Color &top,
-            const Color &bot,
-            const Color &left,
-            const Color &right);
+      Frame(Variables *variables);
 
       ~Frame();
 
@@ -56,12 +50,12 @@ namespace SCIRun {
 
     private:
       void                              render_gl();
-      Skinner::Color                    top_;
-      Skinner::Color                    bot_;
-      Skinner::Color                    left_;
-      Skinner::Color                    right_;
-      double                            border_wid_;
-      double                            border_hei_;
+      Var<Color>                        top_;
+      Var<Color>                        bot_;
+      Var<Color>                        left_;
+      Var<Color>                        right_;
+      Var<double>                       border_wid_;
+      Var<double>                       border_hei_;
     };
   }
 } // End namespace SCIRun

@@ -43,62 +43,55 @@ namespace SCIRun {
 
 Skinner::Arc::Arc(Variables *vars)
   : Skinner::Drawable(vars),
-    anchor_(-1),
-    reverse_(false)
+    reverse_(vars, "reverse"),
+    anchor_(-1)
 {
   REGISTER_CATCHER_TARGET(Arc::redraw);
-  REGISTER_CATCHER_TARGET(Arc::reset_variables);
-  
-  colors_[SW] = Color(1.0, 0.0, 0.0, 1.0); // sw
-  colors_[SE] = Color(0.0, 1.0, 0.0, .0); //se;
-  colors_[NE] = Color(0.0, 1.0, 0.0, 1.0); // ne
-  colors_[NW] = Color(0.0, 0.0, 1.0, 1.0); // nw
 
-  reset_variables(0);
-}
-
-BaseTool::propagation_state_e
-Skinner::Arc::reset_variables(event_handle_t)
-{
-  get_vars()->maybe_get_bool("reverse",reverse_);
-
-  string anchor = "";
-  if (get_vars()->maybe_get_string("anchor", anchor)) {
-    if (string_toupper(anchor) == "SW") 
+  Var<string> anchor(vars,"anchor");
+  if (anchor.exists()) {
+    anchor = string_toupper(anchor());
+    if (anchor() == "SW") 
       anchor_ = SW;
-    else if (string_toupper(anchor) == "SE") 
+    else if (anchor() == "SE") 
       anchor_ = SE;
-    else if (string_toupper(anchor) == "NE") 
+    else if (anchor() == "NE") 
       anchor_ = NE;
-    else if (string_toupper(anchor) == "NW") 
+    else if (anchor() == "NW") 
       anchor_ = NW;
     else
       throw "invalid anchor specifier";
   }
 
-  get_vars()->maybe_get_color("bottom-color",colors_[SW]);
-  get_vars()->maybe_get_color("left-color",colors_[SW]);
-  get_vars()->maybe_get_color("sw-color",colors_[SW]);
+  if (!reverse_.exists()) {
+    reverse_ = false;
+  }
 
-  get_vars()->maybe_get_color("bottom-color", colors_[SE]);
-  get_vars()->maybe_get_color("right-color",colors_[SE]);
-  get_vars()->maybe_get_color("se-color",colors_[SE]);
+  colors_[SW] = Var<Color>(vars, "sw-color");
+  colors_[SW] |= Var<Color>(vars, "left-color");
+  colors_[SW] |= Var<Color>(vars,"bottom-color");
+  colors_[SW] |= Color(1.0, 0.0, 0.0, 1.0);
 
-  get_vars()->maybe_get_color("top-color", colors_[NE]);
-  get_vars()->maybe_get_color("right-color", colors_[NE]);
-  get_vars()->maybe_get_color("ne-color", colors_[NE]);
+  colors_[SE] = Var<Color>(vars, "se-color");
+  colors_[SE] |= Var<Color>(vars, "right-color");
+  colors_[SE] |= Var<Color>(vars, "bottom-color");
+  colors_[SE] |= Color(0.0, 1.0, 0.0, 1.0);
 
-  get_vars()->maybe_get_color("top-color", colors_[NW]);
-  get_vars()->maybe_get_color("left-color", colors_[NW]);
-  get_vars()->maybe_get_color("nw-color", colors_[NW]);
-  return CONTINUE_E;
+  colors_[NE] = Var<Color>(vars, "ne-color");  
+  colors_[NE] |= Var<Color>(vars, "right-color");
+  colors_[NE] |= Var<Color>(vars, "top-color");
+  colors_[NE] |= Color(0.0, 1.0, 1.0, 1.0);
+
+  colors_[NW] = Var<Color>(vars, "nw-color");
+  colors_[NW] |= Var<Color>(vars, "left-color");  
+  colors_[NW] |= Var<Color>(vars, "top-color");
+  colors_[NW] |= Color(0.0, 0.0, 1.0, 1.0);
+
 }
-
 
 BaseTool::propagation_state_e
 Skinner::Arc::redraw(event_handle_t)
 {
-  reset_variables(0);
   const RectRegion &region = get_region();
   const double width = region.width();
   const double height = region.height();
@@ -147,9 +140,9 @@ Skinner::Arc::redraw(event_handle_t)
   glBegin(GL_TRIANGLE_FAN);
 
   // Anchor point for tri-fan
-  glColor4dv(&colors_[anchor_].r);
+  glColor4dv(&colors_[anchor_]().r);
 
-  if (!reverse_) {
+  if (!reverse_()) {
     glVertex3d(x,y,0);
   } else {
     switch (anchor_) {
@@ -167,7 +160,7 @@ Skinner::Arc::redraw(event_handle_t)
   double rad = start;
   for (int i = 0; i < divisions; ++i) {
 
-    glColor4dv(&colors_[(anchor_+1)%4].r);
+    glColor4dv(&colors_[(anchor_+1)%4]().r);
 
     glVertex3d(x + cos(rad) * width,
                y + sin(rad) * height, 0);    

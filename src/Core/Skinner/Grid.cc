@@ -41,11 +41,14 @@
 namespace SCIRun {
   namespace Skinner {
     
-    Grid::Grid(Variables *variables, int rows, int cols) :
+    Grid::Grid(Variables *variables) :
       Parent(variables),
-      cells_(rows, vector<Drawable *>(cols)),
-      col_width_(cols+1, AIR_NEG_INF),
-      row_height_(rows+1, AIR_NEG_INF)    
+      rows_(variables,"rows"),
+      cols_(variables,"cols"),
+      cell_info_(),
+      cell_width_(cols_(), AIR_NEG_INF),
+      cell_height_(rows_(), AIR_NEG_INF)
+
     {
       REGISTER_CATCHER_TARGET(Grid::ReLayoutCells);
     }
@@ -57,23 +60,23 @@ namespace SCIRun {
     BaseTool::propagation_state_e
     Grid::process_event(event_handle_t event)
     {
-      WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
-      if (window && window->get_window_state() & WindowEvent::REDRAW_E) {
-        ReLayoutCells(event);
-      }
+      ReLayoutCells(event);
+
       const RectRegion &region = get_region();
-      unsigned int rows = cells_.size();
+      int rows = rows_();
+      int cols = cols_();
+
       double usedy = 0.0;
       double unusedy = 0.0;
       for (unsigned int r = 0; r < rows; ++r)
-        if (row_height_[r] < 0.0)
+        if (cell_height_[r] < 0.0)
           unusedy += 1.0;
-        else if (row_height_[r] > 1.0)
-          usedy += row_height_[r];
+        else if (cell_height_[r] > 1.0)
+          usedy += cell_height_[r];
 
       vector<double> posy(rows+1, 0);      
       for (unsigned int r = 1; r <= rows; ++r) {
-        double dy = row_height_[r-1];
+        double dy = cell_height_[r-1];
         if (dy < 0.0)
           dy = (region.height()-usedy)/unusedy;
         else if (dy < 1.0)
@@ -81,19 +84,18 @@ namespace SCIRun {
         posy[r] = Clamp(posy[r-1] + dy, 0.0, region.height());
       }
 
-      unsigned int cols = cells_[0].size();
       double usedx = 0.0;
       double unusedx = 0.0;
       for (unsigned int c = 0; c < cols; ++c)
-        if (col_width_[c] < 0.0)
+        if (cell_width_[c] < 0.0)
           unusedx += 1.0;
-        else if (col_width_[c] > 1.0)
-          usedx += col_width_[c];
+        else if (cell_width_[c] > 1.0)
+          usedx += cell_width_[c];
 
       vector<double> posx(cols+1, 0);
 
       for (unsigned int c = 1; c <= cols; ++c) {
-        double dx = col_width_[c-1];
+        double dx = cell_width_[c-1];
         if (dx < 0.0)
           dx = (region.width() - usedx)/unusedx;
         else if (dx < 1.0)
@@ -102,15 +104,15 @@ namespace SCIRun {
         posx[c] = Clamp(posx[c-1] + dx, 0.0, region.width());
       }
 
-      for (unsigned int r = 0; r < rows; ++r) {
-        for (unsigned int c = 0; c < cols; ++c) {
-          if (!cells_[r][c]) continue;
-          cells_[r][c]->set_region(RectRegion(region.x1() + posx[c], 
-                                              region.y2() - posy[r + 1], 
-                                              region.x1() + posx[c + 1], 
-                                              region.y2() - posy[r]));
-          cells_[r][c]->process_event(event);
-        }
+      for (int i = 0; i < cell_info_.size(); ++i) {
+        CellInfo_t &cell = cell_info_[i];
+        int r = cell.row_()-1;
+        int c = cell.col_()-1;
+        children_[i]->set_region(RectRegion(region.x1() + posx[c], 
+                                            region.y2() - posy[r + 1], 
+                                            region.x1() + posx[c + 1], 
+                                            region.y2() - posy[r]));
+        children_[i]->process_event(event);
       }
 
       return CONTINUE_E;
@@ -121,96 +123,46 @@ namespace SCIRun {
     void
     Grid::set_children(const Drawables_t &children) {
       children_ = children;
-      for (Drawables_t::const_iterator iter = children.begin(); 
-           iter != children.end(); ++iter) {
-        Variables *cvars = (*iter)->get_vars();
-        ASSERT(cvars);
-        int row = 1;
-        cvars->maybe_get_int("row", row);
-        
-        int col = 1;
-        cvars->maybe_get_int("col", col);
-        
-        double width = AIR_NEG_INF;
-        cvars->maybe_get_double("cell-width", width);
-        
-        double height = AIR_NEG_INF;
-        cvars->maybe_get_double("cell-height", height);
-        
-        
-        set_cell(row, col, *iter, width, height);
+      cell_info_.resize(children_.size());
+      for (int i = 0; i < children_.size(); ++i) {        
+        Variables *cvars = children_[i]->get_vars();
+        CellInfo_t &cell = cell_info_[i];
+        cell.row_ = Var<int>(cvars, "row");
+        cell.col_ = Var<int>(cvars, "col");
+        cell.width_ = Var<double>(cvars, "cell-width");
+        cell.height_ = Var<double>(cvars, "cell-height");
       }
-    }
-
-
-
-    void
-    Grid::set_cell(int row, int col, Drawable *obj, 
-                   double width, double height) 
-    {
-      //      const unsigned int rows = cells_.size();
-      //      const unsigned int cols = cells_[0].size();
-      //      row = cells_.size() - row;
-      row--;
-      col--;//cells_[row].size() - col;
-
-      if (cells_[row][col]) {
-        throw (get_id() + "Row: " + to_string(row) + 
-               " Col: " + to_string(col) + " already occupied by: " +
-               cells_[row][col]->get_id());
-      }
-
-      cells_[row][col] = obj;
-
-      col_width_[col] = Max(col_width_[col], width);
-      row_height_[row] = Max(row_height_[row], height);
-
-
+      
     }
 
 
     BaseTool::propagation_state_e
     Grid::ReLayoutCells(event_handle_t) {
-#if 1
-      col_width_ = vector<double>(col_width_.size(), AIR_NEG_INF);
-      row_height_ = vector<double>(row_height_.size(), AIR_NEG_INF);
-      for (Drawables_t::const_iterator iter = children_.begin(); 
-           iter != children_.end(); ++iter) {
-        Variables *cvars = (*iter)->get_vars();
-        ASSERT(cvars);
-        int row = 1;
-        cvars->maybe_get_int("row", row);
-        
-        int col = 1;
-        cvars->maybe_get_int("col", col);
-        
-        double width = AIR_NEG_INF;
-        cvars->maybe_get_double("cell-width", width);
-        
-        double height = AIR_NEG_INF;
-        cvars->maybe_get_double("cell-height", height);
+      cell_width_ = vector<double>(cell_width_.size(), AIR_NEG_INF);
+      cell_height_ = vector<double>(cell_height_.size(), AIR_NEG_INF);
 
-        row--;
-        col--;
-        col_width_[col] = Max(col_width_[col], width);
-        row_height_[row] = Max(row_height_[row], height);
+      for (int i = 0; i < cell_info_.size(); ++i) {
+        CellInfo_t &cell = cell_info_[i];
+        int row = cell.row_()-1;
+        int col = cell.col_()-1;
+        ASSERT(row < rows_());
+        ASSERT(col < cols_());
+        
+        if (cell.width_.exists()) {
+          cell_width_[col] = Max(cell_width_[col], cell.width_());
+        }
+        
+        if (cell.height_.exists()) {
+          cell_height_[row] = Max(cell_height_[row], cell.height_());
+        }
       }
-#endif
       return STOP_E;
     }
       
-
-
     Drawable *
     Grid::maker(Variables *vars) 
     {
-      int rows = 1;
-      vars->maybe_get_int("rows", rows);
-
-      int cols = 1;
-      vars->maybe_get_int("cols", cols);
-
-      return new Grid(vars, rows, cols);      
+      return new Grid(vars);
     }
   }
 }

@@ -17,11 +17,12 @@
       <var name="text_bgcolor" propagate="yes">#FFFFFFFF</var>
       <var name="text_fgcolor" propagate="yes">#000000FF</var>
 
-      <var name="cell-height" propagate="yes">33</var>
+      <var name="buttonheight" propagate="yes">35</var>
 
       <object class="Button">
         <var name="row">1</var>
         <var name="col">1</var>
+        <var name="cell-height">$buttonheight</var>
         <var name="Button::Text::text" propagate="yes">Load Layer</var>
         <var name="text_color" propagate="yes">#FFFFFFFF</var>
         <signal name="Button::clicked" 
@@ -33,6 +34,7 @@
       <object class="Button">
         <var name="row">2</var>
         <var name="col">1</var>
+        <var name="cell-height">$buttonheight</var>
         <var name="Button::Text::text" propagate="yes">Save Layer</var>
         <signal name="Button::clicked" 
                 target="Animation::AnimateVariableAscending">
@@ -43,6 +45,7 @@
       <object class="Button">
         <var name="row">3</var>
         <var name="col">1</var>
+        <var name="cell-height">$buttonheight</var>
         <var name="Button::Text::text" propagate="yes">Autoview</var>
         <signal name="Button::clicked" 
                 target="Painter::Autoview"/>
@@ -52,6 +55,7 @@
       <object class="Button">
         <var name="row">4</var>
         <var name="col">1</var>
+        <var name="cell-height">$buttonheight</var>
         <var name="Button::Text::text" propagate="yes">Copy Layer</var>
         <signal name="Button::clicked" 
                 target="Painter::CopyLayer"/>
@@ -60,6 +64,7 @@
       <object class="Button">
         <var name="row">5</var>
         <var name="col">1</var>
+        <var name="cell-height">$buttonheight</var>
         <var name="Button::Text::text" propagate="yes">New Layer</var>
         <signal name="Button::clicked" 
                 target="Painter::NewLayer"/>
@@ -69,6 +74,7 @@
       <object class="Button">
         <var name="row">6</var>
         <var name="col">1</var>
+        <var name="cell-height">$buttonheight</var>
         <var name="Button::Text::text" propagate="yes">Delete Layer</var>
         <signal name="Button::clicked" 
                 target="Painter::DeleteLayer"/>
@@ -78,6 +84,7 @@
       <object class="Button">
         <var name="row">7</var>
         <var name="col">1</var>
+        <var name="cell-height">$buttonheight</var>
         <var name="Button::Text::text" propagate="yes">Merge Layer</var>
         <signal name="Button::clicked" 
                 target="Painter::MergeLayer"/>
@@ -87,6 +94,7 @@
       <object class="Button">
         <var name="row">8</var>
         <var name="col">1</var>
+        <var name="cell-height">$buttonheight</var>
         <var name="Button::Text::text" propagate="yes">Brush Tool</var>
         <var name="text_color" propagate="yes">#FFFFFFFF</var>
         <signal name="Button::clicked" 
@@ -100,6 +108,7 @@
       <object class="Button">
         <var name="row">9</var>
         <var name="col">1</var>
+        <var name="cell-height">$buttonheight</var>
         <var name="Button::Text::text" propagate="yes">Crop Tool</var>
         <var name="text_color" propagate="yes">#FFFFFFFF</var>
         <signal name="Button::clicked" 
@@ -115,6 +124,7 @@
       <object class="Button">
         <var name="row">10</var>
         <var name="col">1</var>
+        <var name="cell-height">$buttonheight</var>
         <var name="Button::Text::text" propagate="yes">ITK Gradient Magnitude</var>
         <var name="text_color" propagate="yes">#FFFFFFFF</var>
         <signal name="Button::clicked"
@@ -135,6 +145,7 @@
       <object class="Button">
         <var name="row">11</var>
         <var name="col">1</var>
+        <var name="cell-height">$buttonheight</var>
         <var name="Button::Text::text" propagate="yes">ITK Confidence Connected</var>
         <signal name="Button::clicked"
                 target="Painter::ITKConfidenceConnected"/>
@@ -149,6 +160,7 @@
       <object class="Button">
         <var name="row">12</var>
         <var name="col">1</var>
+        <var name="cell-height">$buttonheight</var>
         <var name="Button::Text::text" propagate="yes">ITK Threshold Levelset</var>
         <var name="text_color" propagate="yes">#FFFFFFFF</var>
         
@@ -167,6 +179,7 @@
       <object class="Button">
         <var name="row">13</var>
         <var name="col">1</var>
+        <var name="cell-height">$buttonheight</var>
         <var name="Button::Text::text" propagate="yes">ITK Anisotropic Diffusion</var>
         
         <signal name="Button::clicked"
@@ -178,6 +191,7 @@
       <object class="Button">
         <var name="row">14</var>
         <var name="col">1</var>
+        <var name="cell-height">$buttonheight</var>
         <var name="Button::Text::text" propagate="yes">ITK Hole Fill</var>
         <var name="text_color" propagate="yes">#FFFFFFFF</var>
         <signal name="Button::clicked"
@@ -197,6 +211,7 @@
       <object class="Button">
         <var name="row">15</var>
         <var name="col">1</var>
+        <var name="cell-height">$buttonheight</var>
         <var name="Button::Text::text" propagate="yes">Flood Fill</var>
         <var name="text_color" propagate="yes">#FFFFFFFF</var>
         <signal name="Button::clicked" 
@@ -207,6 +222,7 @@
       <object class="Button">
         <var name="row">16</var>
         <var name="col">1</var>
+        <var name="cell-height">$buttonheight</var>
         <var name="Button::Text::text" propagate="yes">Volume Rendering</var>
         <var name="text_color" propagate="yes">#FFFFFFFF</var>
         <signal name="Button::clicked" 
@@ -218,6 +234,7 @@
       <object class="Button">
         <var name="row">17</var>
         <var name="col">1</var>
+        <var name="cell-height">$buttonheight</var>
         <var name="Button::Text::text" propagate="yes">Resample</var>
         <var name="text_color" propagate="yes">#FFFFFFFF</var>
         <signal name="Button::clicked"
@@ -229,6 +246,7 @@
       <object class="Button">
         <var name="row">18</var>
         <var name="col">1</var>
+        <var name="cell-height">$buttonheight</var>
         <var name="Button::Text::text" propagate="yes">Quit</var>
         <var name="text_color" propagate="yes">#FFFFFFFF</var>
         <signal name="Button::clicked" 
@@ -238,7 +256,7 @@
       
       
       
-      <object class="Grid">
+      <object class="Grid" id="info">
         <var name="row">20</var>
         <var name="col">1</var> 
         
@@ -257,7 +275,7 @@
           <var name="rows">5</var>
           <var name="cols">1</var>
           
-          <object class="Root::Text">
+          <object class="Root::Text" id="wwwl">
             <var name="row">1</var>
             <var name="col">1</var>
             <var name="text">$clut_ww_wl</var>

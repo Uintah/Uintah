@@ -330,7 +330,16 @@ namespace SCIRun {
       SignalThrower::SignalToAllCatchers_t allcatchers = 
         SignalThrower::collapse_tree(catcher_tree);
 
-      // Now we have Variables, Create the Object!
+      // Set the class variable before constructing the class
+      string unscoped_classname = classname;
+      string::size_type pos = classname.find_last_of(":");
+      if (pos != string::npos) {
+        ++pos;
+        unscoped_classname = classname.substr(pos,classname.length()-pos);
+      }
+      variables->insert("class", unscoped_classname, "string", false);
+
+      // Now we have Variables setup, Create the Object!
       Drawable * object = 0;
 
       if (root_node) {
@@ -371,13 +380,6 @@ namespace SCIRun {
         return 0;
       }
 
-      string unscoped_classname = classname;
-      string::size_type pos = classname.find_last_of(":");
-      if (pos != string::npos) {
-        ++pos;
-        unscoped_classname = classname.substr(pos,classname.length()-pos);
-      }
-      variables->insert("class", unscoped_classname, "string", true);
 
       catcher_tree.push_back(object->get_all_targets());
 
@@ -508,8 +510,9 @@ namespace SCIRun {
 
       string str = "";
       bool overwrite = true;
-      if (XMLUtil::maybe_get_att_as_string(node,"overwrite",str) && 
-          str == "no")
+      XMLUtil::maybe_get_att_as_string(node,"overwrite",str);
+
+      if (str == "no")
         overwrite = false;
 
       if (!overwrite && variables->exists(varname)) {
@@ -528,7 +531,7 @@ namespace SCIRun {
       }
       const string value = contents ? contents : "";
 
-      string typestr = "string";
+      string typestr = "unknown";
       XMLUtil::maybe_get_att_as_string(node, "type", typestr);
 
       variables->insert(varname, value, typestr, propagate);
@@ -550,7 +553,7 @@ namespace SCIRun {
       SignalThrower::SignalToAllCatchers_t::iterator cpos = 
         allcatchers.find(signaltarget);
       if (cpos == allcatchers.end()) {
-        if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
+        if (sci_getenv_p("SKINNER_XMLIO_DEBUG") || sci_getenv_p("SKINNER_SIGNAL_DEBUG")) {
           cerr << "Signal " << signalname 
                << " cannot find target " << signaltarget << std::endl;
         }
@@ -563,42 +566,54 @@ namespace SCIRun {
       SignalThrower::AllSignalCatchers_t &catchers = cpos->second;
       SignalThrower::AllSignalCatchers_t::iterator citer = catchers.begin();
       SignalThrower::AllSignalCatchers_t::iterator cend = catchers.end();
-      
-      for (;citer != cend; ++citer) {
-        SignalCatcher::CatcherTargetInfoBase* callback = *citer;
 
+#if 0
+      Variables *vars = new Variables(signalname, object->get_vars());
+      for (xmlNode *cnode = node->children; cnode; cnode = cnode->next) {
+        if (XMLUtil::node_is_element(cnode, "var")) {
+          eval_var_node(cnode, vars, true);
+        }
+      }
+#endif     
+ 
+      for (;citer != cend; ++citer) {
+        SignalCatcher::CatcherTargetInfoBase* callback = (*citer)->clone();
+#if 1
         if (!callback->variables_) {
           callback->variables_ = new Variables(signalname, object->get_vars());
-        } else {
-          callback->variables_ = new Variables(signalname, callback->variables_);}
-
+          //        } else {
+          //          callback->variables_ = new Variables(signalname, callback->variables_);
+        }
 
         for (xmlNode *cnode = node->children; cnode; cnode = cnode->next) {
           if (XMLUtil::node_is_element(cnode, "var")) {
-            eval_var_node(cnode, callback->variables_, true);
+            eval_var_node(cnode, callback->variables_, false);
           }
         }
+
+#endif
        
         if (object->get_signal_id(signalname)) {
-          if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
+          if (sci_getenv_p("SKINNER_XMLIO_DEBUG") || sci_getenv_p("SKINNER_SIGNAL_DEBUG")) {
             cerr << " signalname: " << signalname 
                  << " connecting to " << signaltarget << std::endl;
           }
-          
+
           object->all_catchers_[signalname].push_back(callback);
           
         } else {
-          if (sci_getenv_p("SKINNER_XMLIO_DEBUG")) {
+          if (sci_getenv_p("SKINNER_XMLIO_DEBUG") || sci_getenv_p("SKINNER_SIGNAL_DEBUG")) {
             cerr << object->get_id() << " aliasing: " << signalname 
                  << " to " << signaltarget << " of " 
                  << callback->getDrawable()->get_id() << std::endl;
           }
 
           // TODO - who owns this memory????
-          SignalCatcher::CatcherTargetInfoBase* newcallback = callback->clone();
-          newcallback->targetname_ = signalname;
-          catcher_tree.back().push_back(newcallback);
-          allcatchers[signalname].push_back(newcallback);
+          //          SignalCatcher::CatcherTargetInfoBase* newcallback = callback->clone();
+          //          newcallback->variables_ = new Variables(signalname, callback->variables_);
+          callback->targetname_ = signalname;
+          catcher_tree.back().push_back(callback);
+          allcatchers[signalname].push_back(callback);
         }
       }
     }

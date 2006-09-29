@@ -73,6 +73,7 @@ SRCS := $(SRCDIR)/Painter.cc \
         $(SRCDIR)/PainterTools.cc \
         $(SRCDIR)/PainterBrushTool.cc \
         $(SRCDIR)/PainterSignalTargets.cc \
+        $(SRCDIR)/ITKConfidenceConnectedImageFilterTool.cc \
         $(SRCDIR)/main.cc \
 
 include $(SCIRUN_SCRIPTS)/program.mk

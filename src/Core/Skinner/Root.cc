@@ -66,6 +66,7 @@ namespace SCIRun {
       REGISTER_CATCHER_TARGET(Root::MenuManager_Maker);
       REGISTER_CATCHER_TARGET(Root::Text_Maker);
       REGISTER_CATCHER_TARGET(Root::ViewSubRegion_Maker);
+      REGISTER_CATCHER_TARGET(Root::Stop);
       REGISTER_CATCHER_TARGET_BY_NAME(Quit, Root::Quit);
     }
 
@@ -128,6 +129,12 @@ namespace SCIRun {
       EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
       return CONTINUE_E;
     }
+
+    BaseTool::propagation_state_e 
+    Root::Stop(event_handle_t) {
+      return STOP_E;
+    }
+
     
 
     void

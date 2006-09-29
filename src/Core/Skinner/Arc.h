@@ -51,10 +51,9 @@ namespace SCIRun {
         NW = 3
       };
 
-      Skinner::Color               colors_[4];
+      Var<Color>                   colors_[4];
+      Var<bool>                    reverse_;
       int                          anchor_;
-      bool                         reverse_;
-
     };
   }
 } // End namespace SCIRun

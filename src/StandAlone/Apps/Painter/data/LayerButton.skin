@@ -1,0 +1,110 @@
+<definition class="LayerButton" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <object class="Painter::LayerButton">
+    <var name="visible">0</var>
+    <var name="LayerButton::num" type="int" overwrite="no">1</var>
+    <var name="LayerButton::background_color" propagate="yes">#00000000</var>
+    <var name="row">$LayerButton::num</var>
+    <var name="col">1</var>
+    <var name="cell-height">$buttonheight</var>
+
+    <var name="LayerButton::name" propagate="yes">Layer</var>
+    
+    <object class="Box" id="background">
+      <var name="color">$LayerButton::background_color</var>
+      <signal name="button_1_clicked" target="LayerButton::select"/>
+      <signal name="button_1_clicked" target="GLWindow::redraw"/>
+
+      <object class="Grid">
+        <var name="rows">3</var>
+        <var name="cols">2</var>
+        
+        <object class="Collection">
+          <var name="row">1</var>
+          <var name="col">1</var>
+          <var name="cell-height">3</var>
+        </object>
+
+        <object class="Collection">
+          <var name="row">3</var>
+          <var name="col">1</var>
+          <var name="cell-height">3</var>
+        </object>
+        
+
+
+        <object class="ShadowedBox">
+          <var name="row">2</var>
+          <var name="col">2</var>
+          <var name="cell-width">$buttonheight</var>
+
+          <definition class="ShadowedBox::child">
+            <object class="Box">
+              <var name="color">#FFFFFFFF</var>
+            </object>
+          </definition>
+        </object>
+
+        <object class="Grid">
+          <var name="row">2</var>
+          <var name="col">1</var>
+
+          <var name="rows">2</var>
+          <var name="cols">6</var>
+
+          <xi:include href="ArrowButton.skin" parse="xml"/>
+
+          <object class="Root::Text">
+            <var name="row">1</var>
+            <var name="col">1</var>
+            <var name="size">30</var>
+            <var name="text">$LayerButton::name</var>
+            <var name="fgcolor">#000000FF</var>
+            <var name="bgcolor">#FFFFFFFF</var>
+            <var name="shadow">1</var>
+            <var name="offsetx">-1</var>
+            <var name="offsety">1</var>
+            <var name="anchor">W</var>
+          </object>
+
+
+          <object class="ArrowButton">
+            <var name="row">2</var>
+            <var name="col">1</var>
+            <var name="ArrowButton::degrees" propagate="yes">90</var>
+
+            <signal name="Button::clicked" 
+                    target="LayerButton::up">
+            </signal>
+
+            <signal name="Button::clicked" 
+                    target="GLWindow::redraw"/>
+
+            <signal name="Button::clicked" 
+                    target="Root::Stop"/>
+            
+          </object>
+
+
+          <object class="ArrowButton">
+            <var name="row">2</var>
+            <var name="col">2</var>
+            <var name="ArrowButton::degrees" propagate="yes">270</var>
+
+            <signal name="Button::clicked" 
+                    target="LayerButton::down">
+            </signal>
+            <signal name="Button::clicked" 
+                    target="GLWindow::redraw"/>
+
+            <signal name="Button::clicked" 
+                    target="Root::Stop"/>
+
+            
+          </object>
+        </object>
+      </object>
+    </object>
+  </object>
+
+
+</definition>

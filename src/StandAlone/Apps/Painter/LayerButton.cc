@@ -25,41 +25,68 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : Gradient.h
+//    File   : LayerButton.cc
 //    Author : McKay Davis
-//    Date   : Tue Jun 27 13:04:46 2006
+//    Date   : Tue Sep 26 21:56:14 2006
 
-#ifndef SKINNER_GRADIENT_H
-#define SKINNER_GRADIENT_H
 
-#include <Core/Skinner/Drawable.h>
-#include <Core/Skinner/Variables.h>
+#include <StandAlone/Apps/Painter/Painter.h>
 
 namespace SCIRun {
-  namespace Skinner {  
-    class Gradient : public Drawable {
-    public:
-      Gradient(Variables *variables);
 
-      static DrawableMakerFunc_t   maker;
-      static  string               class_name() {return "Gradient";}
-      propagation_state_e          process_event(event_handle_t event);
+Painter::LayerButton::LayerButton(Skinner::Variables *vars, Painter *painter) :
+  Parent(vars),
+  painter_(painter),
+  layer_name_(vars, "LayerButton::name"),
+  num_(vars, "LayerButton::num"),
+  background_color_(vars, "LayerButton::background_color"),
+  volume_(0)
+  
+{
+  REGISTER_CATCHER_TARGET(LayerButton::up);
+  REGISTER_CATCHER_TARGET(LayerButton::down);
+  REGISTER_CATCHER_TARGET(LayerButton::kill);
+  REGISTER_CATCHER_TARGET(LayerButton::select);
+}
 
-    private:
-      enum {
-        SW = 0,
-        SE = 1,
-        NE = 2,
-        NW = 3
-      };
+Painter::LayerButton::~LayerButton() 
+{}
 
-      void                         render_gl();
-      void                         render_radial_gl();
-      Var<Color>                   colors_[4];
-      Var<bool>                    backslash_;
-      int                          anchor_;
-    };
-  }
-} // End namespace SCIRun
 
-#endif
+//
+//int
+//LayerButton::get_signal_id(const string &signalname) const
+//{
+  //  if (signalname == class_()+"::clicked") return 1;
+//  return 0;
+//}
+
+BaseTool::propagation_state_e
+Painter::LayerButton::down(event_handle_t signalh) {
+  if (volume_)
+    painter_->move_layer_down(volume_);
+  return CONTINUE_E;
+}
+
+BaseTool::propagation_state_e
+Painter::LayerButton::up(event_handle_t signalh) {
+  if (volume_)
+    painter_->move_layer_up(volume_);
+  return CONTINUE_E;
+}
+
+
+BaseTool::propagation_state_e
+Painter::LayerButton::kill(event_handle_t signalh) {
+  return CONTINUE_E;
+}
+
+BaseTool::propagation_state_e
+Painter::LayerButton::select(event_handle_t signalh) {
+  painter_->current_volume_ = volume_;
+  painter_->rebuild_layer_buttons();
+  return CONTINUE_E;
+}
+
+
+}

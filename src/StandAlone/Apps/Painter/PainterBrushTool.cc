@@ -86,7 +86,7 @@ Painter::BrushTool::BrushTool(Painter *painter) :
   slice_(0),
   value_(airNaN()),
   last_index_(),
-  radius_(5.0),
+  radius_(painter->get_vars(), "Painter::brush_radius"),
   draw_cursor_(0)
 {
   painter_->create_undo_volume();
@@ -132,7 +132,6 @@ Painter::BrushTool::pointer_down(int b, int x, int y, unsigned int m, int t)
   }
 
   if (b == 1) {
-    radius_ = painter_->get_vars()->get_double("Painter::brush_radius");
     window_ = painter_->cur_window_;
     slice_ = window_->slice_map_[vol];
     if (!slice_) {
@@ -142,12 +141,12 @@ Painter::BrushTool::pointer_down(int b, int x, int y, unsigned int m, int t)
     last_index_ = vol->world_to_index(painter_->pointer_pos_);
     last_index_.erase(last_index_.begin()+slice_->axis());
 
-    splat(slice_->texture_->nrrd_handle_->nrrd_, radius_, 
+    splat(slice_->texture_->nrrd_handle_->nrrd_, radius_(), 
           last_index_[1], last_index_[2]);
     
     slice_->texture_->apply_colormap(last_index_[1], last_index_[2],
                                      last_index_[1]+1, last_index_[2]+1,
-                                     Ceil(radius_));
+                                     Ceil(radius_()));
     
     painter_->redraw_all();    
     return STOP_E;
@@ -160,17 +159,12 @@ Painter::BrushTool::pointer_down(int b, int x, int y, unsigned int m, int t)
     painter_->redraw_all();    
     return STOP_E;
   } else if (b == 4) {
-    radius_ = painter_->get_vars()->get_double("Painter::brush_radius");
-    radius_ *= 1.1;
-    painter_->get_vars()->insert("Painter::brush_radius", to_string(radius_), "string", true);
+    radius_ = radius_() * 1.1;
     draw_cursor_ = true;
     painter_->redraw_all();    
     return STOP_E;
   } else if (b == 5) {
-    radius_ = painter_->get_vars()->get_double("Painter::brush_radius");
-    radius_ /= 1.1;
-    painter_->get_vars()->insert("Painter::brush_radius", to_string(radius_), "string", true);
-
+    radius_ = radius_() / 1.1;
     draw_cursor_ = true;
     painter_->redraw_all();
     return STOP_E;
@@ -244,12 +238,12 @@ Painter::BrushTool::pointer_motion(int b, int x, int y, unsigned int m, int t)
   if (b == 1) {
     //    vector<int> index = = vol->world_to_index(event.position_);
     index.erase(index.begin()+slice_->axis());
-    line(slice_->texture_->nrrd_handle_->nrrd_, radius_, 
+    line(slice_->texture_->nrrd_handle_->nrrd_, radius_(), 
          last_index_[1], last_index_[2],
          index[1], index[2], true);
     slice_->texture_->apply_colormap(last_index_[1], last_index_[2], 
                                      index[1], index[2],
-                                     Ceil(radius_));
+                                     Ceil(radius_()));
     last_index_ = index;
     painter_->redraw_all();
     return STOP_E;
@@ -292,8 +286,8 @@ Painter::BrushTool::draw_gl(SliceWindow &window)
 
   Point center = vol->index_to_world(vol->world_to_index(painter_->pointer_pos_));
 
-  double rsquared = radius_*radius_;
-  const int wid = Round(radius_);
+  double rsquared = radius_()*radius_();
+  const int wid = Round(radius_());
   for (int y = -wid; y <= wid; ++y)
     for (int x = -wid; x <= wid; ++x) {
       float dist = x*x+y*y;
