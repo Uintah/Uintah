@@ -61,8 +61,7 @@ bool RegridderCommon::needsToReGrid()
   bool retval = false;
   if (!d_isAdaptive) {
     retval = false;
-  } else if (d_lastRegridTimestep + d_maxTimestepsBetweenRegrids 
-      <= d_sharedState->getCurrentTopLevelTimeStep()) {
+  } else if ( d_sharedState->getCurrentTopLevelTimeStep() % d_maxTimestepsBetweenRegrids == 0) {
     d_lastRegridTimestep = d_sharedState->getCurrentTopLevelTimeStep();
     retval = true;
   }
