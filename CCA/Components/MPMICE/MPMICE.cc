@@ -1619,10 +1619,10 @@ void MPMICE::computeCCVelAndTempRates(const ProcessorGroup*,
       for(CellIterator iter =patch->getExtraCellIterator();!iter.done();iter++){
          IntVector c = *iter;
          if(!d_rigidMPM){
-	   if(m!=0){
+	   //if(m!=0){
            dVdt_CC[c] = (mom_L_ME_CC[c] - (old_mom_L_CC[c]-mom_source[c]))
                                                       /(mass_L_CC[c]*delT);
-           }
+           //}
          }
          dTdt_CC[c]   = (eng_L_ME_CC[c] - (old_int_eng_L_CC[c]-int_eng_src[c]))
                            /(mass_L_CC[c] * cv * delT);
