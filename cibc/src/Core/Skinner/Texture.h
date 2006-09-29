@@ -42,16 +42,7 @@ namespace SCIRun {
     typedef pair<GLenum, GLenum> blendfunc_t;
     class Texture : public Drawable {
     public:
-      Texture (Variables *variables,
-               const string &filename,
-               const blendfunc_t &blendfunc,
-               const Color &color,
-               unsigned int anchor,
-               bool flipx,
-               bool flipy, 
-               bool repeatx,
-               bool repeaty,
-               double degrees);
+      Texture (Variables *);
       virtual ~Texture();
 
       virtual propagation_state_e       process_event(event_handle_t);
@@ -60,8 +51,9 @@ namespace SCIRun {
     private:
       virtual void                      draw_gl();
       TextureObj *                      tex_;
+      string                            filename_;
       blendfunc_t                       blendfunc_;
-      Color                             color_;
+      Var<Color>                        color_;
       unsigned int                      anchor_;
       bool                              flipx_;
       bool                              flipy_;

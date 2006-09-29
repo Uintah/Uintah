@@ -77,8 +77,6 @@ namespace SCIRun {
 
     BaseTool::propagation_state_e
     FocusRegion::do_KeyEvent(event_handle_t event) {
-      //      cerr << get_id() << " focus: " << focus_ 
-      //           << " focused: " << get_vars()->get_string("FocusRegion::focused") << std::endl;
       if (!focus_) return STOP_E;
 
       KeySignal *signal = dynamic_cast<KeySignal *>(event.get_rep());
@@ -96,8 +94,9 @@ namespace SCIRun {
           if (focus_regions_[i]->focus_ && 
               focus_regions_[i]->focus_regions_.empty()) 
           {
-            if (!backward && 
-                focus_regions_[i]->get_vars()->get_bool("ignore_tab")) {
+            Var<bool> notab(focus_regions_[i]->get_vars(), "ignore_tab",0);
+
+            if (!backward && notab()) {
               break;
             }
             focus_regions_[i]->set_focus(false);
@@ -126,7 +125,6 @@ namespace SCIRun {
           
         }
         focus_ = focus;
-        get_vars()->insert("FocusRegion::focused", focus ? "1" : "0", "string", true);
       }      
     }
     

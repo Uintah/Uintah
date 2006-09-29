@@ -47,7 +47,7 @@ namespace SCIRun {
       Text(variables),
       str_(),
       inside_(false),
-      numeric_(variables->get_bool("numeric"))
+      numeric_(variables, "numeric", false)
     { 
       REGISTER_CATCHER_TARGET_BY_NAME(TextEntry::redraw, Text::redraw);
       flags_ &= ~TextRenderer::CURSOR;      
@@ -160,7 +160,7 @@ namespace SCIRun {
         if (character.length()) {
           string temp = str_;
           temp.insert(cursor_position_, character);
-          if (numeric_) {
+          if (numeric_()) {
             string temp = str_;
             temp.insert(cursor_position_, character);
             double val;
@@ -173,14 +173,13 @@ namespace SCIRun {
             cursor_position_++;
           }
         }
-        renderer_->set_cursor_position(cursor_position_);                
+        renderer_->set_cursor_position(cursor_position_);
+        text_ = str_;
         EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
-        
-        get_vars()->change_parent(get_vars()->get_string("variable"), str_, "string", true);
-        get_vars()->insert("text", str_, "string", false);
+
       } else {
-        get_vars()->maybe_get_string(get_vars()->get_string("variable"), str_);
-        get_vars()->insert("text", str_, "string", false);
+        //        get_vars()->maybe_get_string(get_vars()->get_string("variable"), str_);
+        //        get_vars()->insert("text", str_, "string", false);
       }
         
 

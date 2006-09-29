@@ -92,6 +92,7 @@ namespace SCIRun {
 BaseTool::propagation_state_e 
 Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::SliceWindow_Maker);
+  REGISTER_CATCHER_TARGET(Painter::LayerButton_Maker);
 
   REGISTER_CATCHER_TARGET(Painter::StartBrushTool);
   REGISTER_CATCHER_TARGET(Painter::StartCropTool);
@@ -133,7 +134,6 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
 
 BaseTool::propagation_state_e 
 Painter::SliceWindow_Maker(event_handle_t event) {
-  //  event.detach();
   Skinner::MakerSignal *maker_signal = 
     dynamic_cast<Skinner::MakerSignal *>(event.get_rep());
   ASSERT(maker_signal);
@@ -141,6 +141,21 @@ Painter::SliceWindow_Maker(event_handle_t event) {
   SliceWindow *window = new SliceWindow(maker_signal->get_vars(), this);
   windows_.push_back(window);
   maker_signal->set_signal_thrower(window);
+  maker_signal->set_signal_name(maker_signal->get_signal_name()+"_Done");
+  return MODIFIED_E;
+}
+
+
+
+BaseTool::propagation_state_e 
+Painter::LayerButton_Maker(event_handle_t event) {
+  Skinner::MakerSignal *maker_signal = 
+    dynamic_cast<Skinner::MakerSignal *>(event.get_rep());
+  ASSERT(maker_signal);
+
+  LayerButton *lb = new LayerButton(maker_signal->get_vars(), this);
+  layer_buttons_.push_back(lb);
+  maker_signal->set_signal_thrower(lb);
   maker_signal->set_signal_name(maker_signal->get_signal_name()+"_Done");
   return MODIFIED_E;
 }
@@ -156,12 +171,14 @@ Painter::StartBrushTool(event_handle_t event) {
 
 BaseTool::propagation_state_e 
 Painter::StartCropTool(event_handle_t event) {
+#if 0
   get_vars()->insert("ToolDialog::text", " Crop Volume...",
                      "string", true);
   get_vars()->insert("Painter::progress_bar_text", "", "string", true);
   get_vars()->insert("ProgressBar::bar_height","0","string",true);
   get_vars()->insert("Painter::progress_bar_total_width","0","string", true);
   get_vars()->unset("ToolDialog::button_height"); 
+#endif
   redraw_all();
 
   tm_.add_tool(new CropTool(this),25);
@@ -511,6 +528,7 @@ Painter::ITKBinaryDilateErode(event_handle_t event) {
   show_volume(name);
   recompute_volume_list();
 
+#if 0
   get_vars()->insert("ToolDialog::text", 
                      " ITK Binary Dilate Filter...",
                      "string", true);
@@ -518,10 +536,13 @@ Painter::ITKBinaryDilateErode(event_handle_t event) {
   get_vars()->unset("ProgressBar::bar_height");
   get_vars()->insert("Painter::progress_bar_total_width","500","string", true);
   get_vars()->insert("ToolDialog::button_height", "0", "string", true); 
+#endif
+
   redraw_all();
 
   do_itk_filter<Painter::ITKImageFloat3D>(filter, vol->nrrd_handle_);
 
+#if 0
   get_vars()->insert("ToolDialog::text", 
                      " ITK Binary Erode Filter...",
                      "string", true);
@@ -529,6 +550,8 @@ Painter::ITKBinaryDilateErode(event_handle_t event) {
   get_vars()->unset("ProgressBar::bar_height");
   get_vars()->insert("Painter::progress_bar_total_width","500","string", true);
   get_vars()->insert("ToolDialog::button_height", "0", "string", true); 
+#endif
+
   redraw_all();
 
   do_itk_filter<Painter::ITKImageFloat3D>(filter2, vol->nrrd_handle_);
@@ -546,6 +569,7 @@ Painter::ITKBinaryDilateErode(event_handle_t event) {
 BaseTool::propagation_state_e 
 Painter::ITKGradientMagnitude(event_handle_t) {
 #ifdef HAVE_INSIGHT
+#if 0
   get_vars()->insert("ToolDialog::text", 
                      " ITK Gradient Magnigude Filter:",
                      "string", true);
@@ -553,6 +577,7 @@ Painter::ITKGradientMagnitude(event_handle_t) {
   get_vars()->insert("Painter::progress_bar_text", "", "string", true);
   get_vars()->unset("ProgressBar::bar_height");
   get_vars()->insert("Painter::progress_bar_total_width","500","string", true);
+#endif
   redraw_all();
 
   string name = "ITKGradientMagnitude";
@@ -584,6 +609,8 @@ Painter::ITKGradientMagnitude(event_handle_t) {
 BaseTool::propagation_state_e 
 Painter::ITKCurvatureAnisotropic(event_handle_t event) {
 #ifdef HAVE_INSIGHT
+
+#if 0
   get_vars()->insert("ToolDialog::text", 
                      " ITK Curvature Anisotropic Diffusion Filter:",
                      "string", true);
@@ -591,6 +618,8 @@ Painter::ITKCurvatureAnisotropic(event_handle_t event) {
   get_vars()->unset("ProgressBar::bar_height");
   get_vars()->insert("Painter::progress_bar_total_width","500","string", true);
   get_vars()->insert("ToolDialog::button_height", "0", "string", true);
+#endif
+
   redraw_all();
 
   typedef itk::CurvatureAnisotropicDiffusionImageFilter
@@ -625,12 +654,16 @@ Painter::ITKCurvatureAnisotropic(event_handle_t event) {
 
 BaseTool::propagation_state_e 
 Painter::ITKConfidenceConnected(event_handle_t event) {
+
+#if 0
   get_vars()->insert("ToolDialog::text", 
                      " ITK Confidence Connected Filter: Place Seed Point",
                      "string", true);
   get_vars()->insert("ProgressBar::bar_height","0","string",true);
   get_vars()->unset("ToolDialog::button_height");
   get_vars()->insert("Painter::progress_bar_text", "", "string", true);
+#endif
+
   redraw_all();
 
 #ifdef HAVE_INSIGHT
@@ -643,6 +676,8 @@ Painter::ITKConfidenceConnected(event_handle_t event) {
 BaseTool::propagation_state_e 
 Painter::ITKThresholdLevelSet(event_handle_t event) {
 #ifdef HAVE_INSIGHT
+
+#if 0
   get_vars()->insert
     ("ToolDialog::text", 
      " ITK Threshold Segmentation Level Set Filter: Choose seed layer...",
@@ -651,6 +686,8 @@ Painter::ITKThresholdLevelSet(event_handle_t event) {
   get_vars()->insert("ProgressBar::bar_height","0","string", true);
   get_vars()->insert("Painter::progress_bar_total_width","0","string", true);
   get_vars()->unset("ToolDialog::button_height");
+#endif
+
   redraw_all();
 
   tm_.add_tool(new BrushTool(this), 25);

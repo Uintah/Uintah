@@ -74,21 +74,19 @@ namespace SCIRun {
     Drawable *
     load_skin(const string &filename) {
       Root *root = 0;
-      try {
+      //      try {
         init_skinner();  
         root = Skinner::XMLIO::load(filename);
         ASSERT(root);
         root->spawn_redraw_threads();
-      } catch (const string &error) {
-        cerr << "Skinner Error: " << error << std::endl;
-        throw;
-      } catch (const char *&error) {
-        cerr << "Skinner Error: " << error << std::endl;
-        throw;
-      } catch (...) {
-        cerr << "Skinner Exception" << std::endl;
-        throw;
-      }
+        //      } catch (const string &error) {
+        //        cerr << "Skinner Error: " << error << std::endl;
+        //        throw;
+        //      } catch (const char *&error) {
+        //        cerr << "Skinner Error: " << error << std::endl;
+        //        throw;
+        //      }
+
       return root;
     }
 

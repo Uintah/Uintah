@@ -128,6 +128,7 @@ namespace SCIRun {
 
     BaseTool::propagation_state_e
     Animation::process_event(event_handle_t e) {
+#if 0
       if (timer_->current_state() == Timer::Running) {
         double time = timer_->time();
         double dt = (time - start_time_) / (stop_time_ - start_time_);
@@ -152,7 +153,7 @@ namespace SCIRun {
           timer_->stop();
         }
       }
-      
+#endif 
       return Parent::process_event(e);
     }
 
@@ -175,29 +176,23 @@ namespace SCIRun {
     Animation::AnimateVariable(event_handle_t e) {
       Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(e.get_rep());
       ASSERT(signal);
-      string varnum = signal->get_vars()->get_string("varnum");
-      curvar_ = 0;
-      if (!string_to_int(varnum, curvar_) || !curvar_) {
-        return STOP_E;
-      }
+      Var<int> varnum(signal->get_vars(), "varnum");
+      curvar_ = varnum();
 
       const string prefix = "variable-"+to_string(curvar_)+"-";
 
       bool stopped = timer_->current_state() == Timer::Stopped;
-      double seconds = 0.0;
-      if (!get_vars()->maybe_get_double(prefix+"seconds", seconds)) {
-        cerr << "Animation::AnimateHeight, seconds invalid" << std::endl;
-      }
+      Var<double> seconds(get_vars(), prefix+"seconds");
       
       if (stopped) {
         timer_->start();
       }      
 
       start_time_ = timer_->time();
-      stop_time_ = start_time_ + seconds;
+      stop_time_ = start_time_ + seconds();
 
-      get_vars()->maybe_get_double(prefix+"begin", variable_begin_);
-      get_vars()->maybe_get_double(prefix+"end", variable_end_);
+      variable_begin_ = Var<double>(get_vars(), prefix+"begin")();
+      variable_end_ = Var<double>(get_vars(), prefix+"end")();
 
 
       while (timer_->current_state() == Timer::Running) 
@@ -216,8 +211,9 @@ namespace SCIRun {
                        Max(variable_begin_, variable_end_));
 
         //        height = newval;
-        string varname =  "Animation::variable-"+to_string(curvar_);
-        get_vars()->insert(varname, to_string(newval), "string", true);
+        Var<double>variable(get_vars(), 
+                            "Animation::variable-"+to_string(curvar_));
+        variable = newval;
 
         EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
         timer_->wait_for_time(time+1/60.0);

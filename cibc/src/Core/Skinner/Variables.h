@@ -33,87 +33,267 @@
 #define Skinner_Variables_H
 
 #include <Core/Skinner/Color.h>
+#include <Core/Util/Assert.h>
 
 #include <string>
 #include <map>
 #include <set>
 #include <vector>
-
+#include <iostream>
+#include <functional>
 using std::string;
 using std::map;
 using std::vector;
-using std::set;
-
-
-#include <Core/Skinner/share.h>
+using std::pair;
 
 namespace SCIRun {
   namespace Skinner {
-    class SCISHARE Variables {
 
+   template<class _A, class _R>
+   struct unary_function
+   {
+     typedef _A argument_type;
+     typedef _R result_type;
+   };
+		
+    class Variables;
+
+    template <class T>
+
+    class Var {
+    private:
+      friend class Variables;
+      Variables *       scope_;
+      int *             scope_index_;
     public:
-      //      Variables         (const string &id);
+      Var(Variables *vars, const string &name);
+      Var(Variables *vars, const string &name, const T &);
+      Var() : scope_(0), scope_index_(0) {}
+      Var(const Var<T> &copy) : 
+        scope_(copy.scope_), 
+        scope_index_(copy.scope_index_)
+      {
+      }
+      bool exists() { return scope_index_ && (*scope_index_ >= 0); }
+      Var<T> & operator= (const T& rhs);
+      Var<T> & operator= (const Var<T>& rhs);
+      Var<T> & operator|=(const T& rhs);
+      Var<T> & operator|=(const Var<T>& rhs);
+      T operator()();
+    };
+    
+    class Variables : 
+      public std::unary_function<pair<Variables *, int>, const string &>
+    {
+    public:
       Variables         (const string &id, Variables *parent=0);
       Variables         (const Variables &copy);
       virtual           ~Variables();
+     
+      void              unset(const string &) { std::cerr << "Unset depreciated\n";}
 
-      //      Variables *       spawn(const string &id);
-      Variables *       parent();
+      // depreciated
       void              insert(const string &name,
                                const string &value, 
                                const string &type_str = "string",
                                bool propagate = false);
-
-      void              unset(const string &);
-      // dangerous, breaks closures
+      void              copy_var(const string &from, const string &to);
+      // dangerous, breaks closures, depreciated
       void              change_parent(const string &name,
                                       const string &value, 
                                       const string &type_str = "string",
                                       bool propagate = false);
 
 
-      bool              exists(const string &varname) const;
-      string            dereference(const string &value) const;
+      bool              exists(const string &varname);
 
-      string            get_id() const;
+      string            get_id();
       int               get_int(const string &);
       double            get_double(const string &);
-      string            get_string(const string &);
       bool              get_bool(const string &);
       Color             get_color(const string &);
+      string            get_string(const string &);
 
-      bool              maybe_get_int(const string &, int &);
-      bool              maybe_get_double(const string &, double &);
-      bool              maybe_get_string(const string &, string &) const;
-      bool              maybe_get_color(const string &, Color &);
-      bool              maybe_get_bool(const string &, bool &);
-
+      bool              maybe_get_string(const string &, string &);
     private:
+      void              breakpoint();
+      friend class Var<Color>;
+      friend class Var<int>;
+      friend class Var<bool>;
+      friend class Var<string>;
+      friend class Var<double>;
+
       enum var_type_e {
-        STRING_E,
+        UNKNOWN_E,
         INT_E,
+        BOOL_E,
         DOUBLE_E,
-        BOOL_E
+        STRING_E,
+        COLOR_E
       };
+
       
       struct value_t {
-        value_t(string, var_type_e, bool);
-
-        string            value;
-        var_type_e        var_type;
-        bool              propagate;
+        value_t(string, string, var_type_e);
+        bool              update_cache_from_string(Variables *);
+        void              update_string_from_cache(Variables *);
+        string            name_;
+        string            string_value_;
+        var_type_e        var_type_;
+        int               cache_index_;
+        bool              cache_current_;
       };
 
+
       typedef map<string, value_t> name_value_map_t;
-      typedef name_value_map_t::value_type entry_t;
-      typedef set<Variables *> children_t;
+      typedef std::set<Variables *> children_t;
+      typedef pair<Variables *, value_t *> var_value_t;
 
-      name_value_map_t  variables_;
-      Variables *       parent_;
-      children_t        children_;
+      var_value_t               insert_variable(const string &,
+                                                var_type_e,
+                                                bool);
+
+      var_value_t               find_value_ptr(const string &);
+
       
+      template<class T> 
+      int                       set_typed_cache_value(vector<T> &, int &, 
+                                                      const T &);
 
+      static var_type_e         string_to_type(const std::string &);
+      static std::string        type_to_string(var_type_e);
+      var_type_e                type_to_enum(int) { return INT_E; }
+      var_type_e                type_to_enum(bool){ return BOOL_E; }
+      var_type_e                type_to_enum(double){ return DOUBLE_E; }
+      var_type_e                type_to_enum(string){ return STRING_E; }
+      var_type_e                type_to_enum(Color){ return COLOR_E; }
+
+      void                      set_by_idx(int &, const int &);
+      void                      set_by_idx(int &, const bool &);
+      void                      set_by_idx(int &, const double &);
+      void                      set_by_idx(int &, const std::string &);
+      void                      set_by_idx(int &, const Skinner::Color &);
+
+      void                      get_by_idx(int &, int &);
+      void                      get_by_idx(int &, bool &);
+      void                      get_by_idx(int &, double &);
+      void                      get_by_idx(int &, std::string &);
+      void                      get_by_idx(int &, Skinner::Color &);
+
+      name_value_map_t          variables_;
+      Variables *               parent_;
+      children_t                children_;
+      std::set<string>          propagate_;
+      map<string, string>       alias_;
+      
+      vector<int>               cached_ints_;
+      vector<bool>              cached_bools_;
+      vector<double>            cached_doubles_;
+      vector<std::string>       cached_strings_;
+      vector<Skinner::Color>    cached_colors_;
     };
+
+    template <class T>
+    Var<T> & 
+    Var<T>::operator= (const T& rhs) {
+      ASSERT(this->scope_);
+      ASSERT(this->scope_index_ && *this->scope_index_ >= -1);
+      this->scope_->set_by_idx(*this->scope_index_, rhs);
+    }
+
+    template <class T>
+    Var<T> & 
+    Var<T>::operator= (const Var<T>& rhs) {
+      this->scope_ = rhs.scope_;
+      this->scope_index_ = rhs.scope_index_;
+    }
+
+    template <class T>
+    Var<T> & 
+    Var<T>::operator|= (const Var<T>& rhs) {
+      if (this->scope_index_ && 
+          (*this->scope_index_ == -1) && 
+          (*rhs.scope_index_ != -1)) {
+        operator=(rhs);
+      }
+    }
+
+    template <class T>
+    Var<T> & 
+    Var<T>::operator|= (const T& rhs) {
+      ASSERT(this->scope_);
+      if (this->scope_index_ && (*this->scope_index_ == -1)) {
+        this->scope_->set_by_idx(*this->scope_index_, rhs);
+      }
+      ASSERT(this->scope_index_  && (*this->scope_index_ >= 0));
+    }
+
+    template <class T>
+    T 
+    Var<T>::operator()() {
+      T temp;
+      ASSERT(this->scope_index_  && (*this->scope_index_ >= 0));
+      this->scope_->get_by_idx(*this->scope_index_, temp);
+      return temp;
+    }
+
+    template<class T>
+    int
+    Variables::set_typed_cache_value(vector<T> &cache_vector, 
+                                     int &index,
+                                     const T &typed_value)
+    {
+      int size = int(cache_vector.size());
+      ASSERT(index < size);
+      if (index >= 0) {
+        cache_vector[index] = typed_value;
+      } else {
+        index = size;
+        cache_vector.push_back(typed_value);
+      }      
+      return index;
+    }
+
+
+    template <class T>
+    Var<T>::Var(Variables *vars, const string &name, const T &init)
+    {
+      (*this) = Var<T>(vars,name);
+      if (!exists()) (*this) = init;
+    }
+
+
+    template <class T>
+    Var<T>::Var(Variables *vars, const string &inname) :
+      scope_(vars), scope_index_(0)
+    {
+      string name = inname;
+      if (vars->alias_.find(name) != vars->alias_.end()) {
+        name = vars->alias_[name];
+      }
+      Variables::var_value_t varval = vars->find_value_ptr(name);
+
+      Variables::var_type_e var_type = vars->type_to_enum(T());
+
+      if (varval.second) {
+        Variables::value_t *value_ptr = varval.second;
+        if (value_ptr->var_type_ == Variables::UNKNOWN_E || 
+            value_ptr->var_type_ == Variables::STRING_E ) {
+          value_ptr->var_type_ = var_type;
+        } else if (value_ptr->var_type_ != var_type) {
+          throw "invalid type change";        
+        }
+
+        if (value_ptr->cache_index_ == -1) {
+          value_ptr->update_cache_from_string(varval.first);
+        }
+      } else {
+        varval = vars->insert_variable(name,var_type,false);
+      }
+      scope_ = varval.first;
+      scope_index_ = &varval.second->cache_index_;
+    }    
+
   } // end namespace Skinner
 } // end namespace SCIRun
 

@@ -35,8 +35,6 @@
 
 #include <Core/Skinner/Parent.h>
 
-
-
 namespace SCIRun {
   namespace Skinner {
     class Animation : public Parent {

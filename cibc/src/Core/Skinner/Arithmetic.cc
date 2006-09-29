@@ -55,13 +55,10 @@ namespace SCIRun {
       Skinner::Signal *signal = 
         dynamic_cast<Skinner::Signal *>(event.get_rep());
       ASSERT(signal);
-      const string &varname = signal->get_vars()->get_string("variable");
-      double val = 0.0;
-      if (signal->get_vars()->maybe_get_double(varname, val)) {
-        val += 1.0;
-        signal->get_vars()->change_parent(varname, 
-                                          to_string(val), "string", true);
-      }
+      Var<string> varname(signal->get_vars(),"variable");
+      Var<double> val(signal->get_vars(), varname(), 0.0);     
+      val = val() + 1.0;
+
       return BaseTool::CONTINUE_E;
     }
 
@@ -70,13 +67,11 @@ namespace SCIRun {
       Skinner::Signal *signal = 
         dynamic_cast<Skinner::Signal *>(event.get_rep());
       ASSERT(signal);
-      const string &varname = signal->get_vars()->get_string("variable");
-      double val = 0.0;
-      if (signal->get_vars()->maybe_get_double(varname, val)) {
-        val -= 1.0;
-        signal->get_vars()->change_parent(varname, 
-                                          to_string(val), "string", true);
-      }
+
+      Var<string> varname(signal->get_vars(),"variable");
+      Var<double> val(signal->get_vars(), varname(), 0.0);     
+      val = val() - 1.0;
+
       return BaseTool::CONTINUE_E;
     }
 
@@ -85,9 +80,7 @@ namespace SCIRun {
       Skinner::Signal *signal = 
         dynamic_cast<Skinner::Signal *>(event.get_rep());
       ASSERT(signal);
-      const string &varname = signal->get_vars()->get_string("variable");
-      const string &value = signal->get_vars()->get_string("value");
-      get_vars()->insert(varname, value, "string", true);
+      signal->get_vars()->copy_var("value", "variable");
       return BaseTool::CONTINUE_E;
     }
 

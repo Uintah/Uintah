@@ -60,6 +60,7 @@ namespace SCIRun {
 
       vector<MatrixHandle>              data_;
       typedef pair<double, double>      range_t;
+      Var<double>                       font_size_;
       range_t                           window_x_range_;
       range_t                           window_y_range_;
       range_t                           data_x_range_;

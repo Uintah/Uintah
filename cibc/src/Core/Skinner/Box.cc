@@ -37,19 +37,20 @@
 
 namespace SCIRun {
   namespace Skinner {
-    Box::Box(Variables *variables, const Color &color) :
+
+    Drawable *
+    Box::maker(Variables *vars) 
+    {
+      return new Box(vars);
+    }
+
+    Box::Box(Variables *variables) :
       Parent(variables),
-      color_(color),
-      focus_mode_(false),
+      color_(variables, "color", Color(1.0, 0.0, 0.0, 1.0)),
       focus_(true)
     {
       REGISTER_CATCHER_TARGET(Box::redraw);
-      REGISTER_CATCHER_TARGET(Box::make_red);
-      REGISTER_CATCHER_TARGET(Box::make_blue);
-      REGISTER_CATCHER_TARGET(Box::make_green);
-
-      variables->maybe_get_bool("focus_mode", focus_mode_);
-
+      REGISTER_CATCHER_TARGET(Box::do_PointerEvent);
     }
 
     Box::~Box()
@@ -65,8 +66,7 @@ namespace SCIRun {
     BaseTool::propagation_state_e
     Box::redraw(event_handle_t)
     {
-      get_vars()->maybe_get_color("color", color_);
-      glColor4dv(&color_.r);
+      glColor4dv(&color_().r);
       glBegin(GL_QUADS);
 
       const double *coords = get_region().coords2D();
@@ -80,55 +80,27 @@ namespace SCIRun {
 
     
     BaseTool::propagation_state_e
-    Box::process_event(event_handle_t event)
+    Box::do_PointerEvent(event_handle_t event)
     {
-      //      Drawable::process_event(event);
-
-      WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
-      bool draw = window && window->get_window_state() == WindowEvent::REDRAW_E;
-      PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
-      KeyEvent *key = dynamic_cast<KeyEvent *>(event.get_rep());
-
-      if (pointer) {
-        focus_ = get_region().inside(pointer->get_x(), pointer->get_y());
-      }
-
-        
-      if (pointer && get_region().inside(pointer->get_x(), pointer->get_y()) &&
+      PointerSignal *ps = dynamic_cast<PointerSignal *>(event.get_rep());
+      PointerEvent *pointer = ps->get_pointer_event();
+      Signal *signal = 0;
+      ASSERT(pointer);
+      if (get_region().inside(pointer->get_x(), pointer->get_y()) &&
           (pointer->get_pointer_state() & PointerEvent::BUTTON_PRESS_E) &&
           (pointer->get_pointer_state() & PointerEvent::BUTTON_1_E)) 
-      {
-        throw_signal("button_1_clicked");
-      } 
-
-      if (pointer && 
-          (pointer->get_pointer_state() & PointerEvent::BUTTON_RELEASE_E) &&
-          (pointer->get_pointer_state() & PointerEvent::BUTTON_1_E)) {
-        throw_signal("button_1_released");
-      }
-
-
-      bool propagate = false;
-      if (!pointer && !key) {
-        propagate = true;
-      }
-      
-      propagate = (propagate || !focus_mode_ || draw || focus_) ;
+        {
+          signal = 
+            dynamic_cast<Signal *>(throw_signal("button_1_clicked").get_rep());
+        } 
         
-      if (1 || propagate) {
-        return Parent::process_event(event);
-      } 
+      if ((pointer->get_pointer_state() & PointerEvent::BUTTON_RELEASE_E) &&
+          (pointer->get_pointer_state() & PointerEvent::BUTTON_1_E)) {
+        signal = 
+          dynamic_cast<Signal *>(throw_signal("button_1_released").get_rep());
+      }
 
-      return STOP_E;
-    }
-
-
-    Drawable *
-    Box::maker(Variables *vars) 
-    {
-      Color color(0,0,0,0);
-      vars->maybe_get_color("color", color);
-      return new Box(vars, color);
+      return signal ? signal->get_signal_result() : CONTINUE_E;
     }
 
     int
@@ -136,38 +108,6 @@ namespace SCIRun {
       if (signalname == "button_1_clicked") return 1;
       if (signalname == "button_1_released") return 2;
       return 0;
-    }
-
-    BaseTool::propagation_state_e
-    Box::make_red(event_handle_t event) {
-      color_.r = 1.0;
-      color_.g = 0.0;
-      color_.b = 0.0;
-      color_.a = 1.0;
-      EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
-      cerr << "Box::make_red\n";
-      return BaseTool::CONTINUE_E;
-    }
-
-    BaseTool::propagation_state_e
-    Box::make_blue(event_handle_t event) {
-      color_.r = 0.0;
-      color_.g = 0.0;
-      color_.b = 1.0;
-      color_.a = 1.0;
-      EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
-      return BaseTool::CONTINUE_E;
-    }
-
-
-    BaseTool::propagation_state_e
-    Box::make_green(event_handle_t event) {
-      color_.r = 0.0;
-      color_.g = 1.0;
-      color_.b = 0.0;
-      color_.a = 1.0;
-      EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
-      return BaseTool::CONTINUE_E;
     }
   }
 

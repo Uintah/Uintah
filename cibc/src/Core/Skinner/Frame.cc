@@ -39,21 +39,45 @@
 
 namespace SCIRun {
 
-Skinner::Frame::Frame(Variables *variables,
-                      double wid, 
-                      double hei,
-                      const Color &top,
-                      const Color &bot,
-                      const Color &left,
-                      const Color &right) 
-  : Skinner::Parent(variables),
-    top_(top),
-    bot_(bot),
-    left_(left),
-    right_(right),
-    border_wid_(wid),
-    border_hei_(hei)
+
+Skinner::Drawable *
+Skinner::Frame::maker(Variables *vars) 
 {
+  return new Frame(vars);
+}
+
+
+
+Skinner::Frame::Frame(Variables *vars) 
+  : Skinner::Parent(vars),
+    top_(),
+    bot_(),
+    left_(),
+    right_(),
+    border_wid_(vars, "width", 5),
+    border_hei_(vars, "height", 5)
+{
+  top_  = Var<Color>(vars, "top-color");
+  top_ |= Var<Color>(vars, "color2");
+  top_ |= Color(0.5, 0.5, 0.5, 1.0);
+
+  bot_  = Var<Color>(vars, "bottom-color");
+  bot_ |= Var<Color>(vars, "color1");
+  bot_ |= Color(0.75, 0.75, 0.75, 1.0);
+
+  left_  = Var<Color>(vars, "left-color");
+  left_ |= Var<Color>(vars, "color2");
+  left_ |= Color(0.5, 0.5, 0.5, 1.0);
+
+  right_  = Var<Color>(vars, "right-color");
+  right_ |= Var<Color>(vars, "color1");
+  right_ |= Color(0.75, 0.75, 0.75, 1.0);
+
+  if (Var<bool>(vars,"invert",0)()) {
+    SWAP (top_, bot_);
+    SWAP (left_, right_);
+  }
+
 }
 
 
@@ -69,30 +93,33 @@ Skinner::Frame::render_gl()
   const double x2 = region.x2();
   const double y2 = region.y2();
 
+  double hei = border_hei_();
+  double wid = border_wid_();
+  
   glBegin(GL_QUADS);
-  glColor4dv(&bot_.r);
+  glColor4dv(&bot_().r);
   glVertex3d(x,y,0);
   glVertex3d(x2,y,0);
-  glVertex3d(x2,y+border_hei_,0);
-  glVertex3d(x,y+border_hei_,0);
+  glVertex3d(x2,y+hei,0);
+  glVertex3d(x,y+hei,0);
 
-  glColor4dv(&right_.r);
-  glVertex3d(x2-border_wid_,y+border_hei_,0);
-  glVertex3d(x2,y+border_hei_,0);
+  glColor4dv(&right_().r);
+  glVertex3d(x2-wid,y+hei,0);
+  glVertex3d(x2,y+hei,0);
   glVertex3d(x2,y2,0);
-  glVertex3d(x2-border_wid_,y2,0);
+  glVertex3d(x2-wid,y2,0);
 
-  glColor4dv(&top_.r);
+  glColor4dv(&top_().r);
   glVertex3d(x,y2,0);
   glVertex3d(x2,y2,0);
-  glVertex3d(x2-border_wid_,y2-border_hei_,0);
-  glVertex3d(x,y2-border_hei_,0);
+  glVertex3d(x2-wid,y2-hei,0);
+  glVertex3d(x,y2-hei,0);
 
-  glColor4dv(&left_.r);
+  glColor4dv(&left_().r);
   glVertex3d(x,y,0);
-  glVertex3d(x+border_wid_,y+border_hei_,0);
-  glVertex3d(x+border_wid_,y2-border_hei_,0);
-  glVertex3d(x,y2-border_hei_,0);
+  glVertex3d(x+wid,y+hei,0);
+  glVertex3d(x+wid,y2-hei,0);
+  glVertex3d(x,y2-hei,0);
 
   glEnd();
   CHECK_OPENGL_ERROR();
@@ -107,56 +134,22 @@ Skinner::Frame::process_event(event_handle_t event) {
 
   if (window && window->get_window_state() == WindowEvent::REDRAW_E)
   {
-    if ((border_hei_*2) > get_region().height() ||
-        (border_wid_*2) > get_region().width()) return CONTINUE_E;
+    if ((border_hei_()*2) > get_region().height() ||
+        (border_wid_()*2) > get_region().width()) return CONTINUE_E;
     render_gl();
   }
 
   const RectRegion &region = get_region();
-  const RectRegion subregion(region.x1()+border_wid_,
-                             region.y1()+border_hei_,
-                             region.x2()-border_wid_,
-                             region.y2()-border_hei_);
+  const RectRegion subregion(region.x1()+border_wid_(),
+                             region.y1()+border_hei_(),
+                             region.x2()-border_wid_(),
+                             region.y2()-border_hei_());
   for (Drawables_t::iterator child = children_.begin(); 
        child != children_.end(); ++child) {
     (*child)->set_region(subregion);
     (*child)->process_event(event);
   }
   return CONTINUE_E;
-}
-
-
-Skinner::Drawable *
-Skinner::Frame::maker(Variables *vars) 
-{
-  Color bottom(0.75, 0.75, 0.75, 1.0);
-  vars->maybe_get_color("color1", bottom);
-  vars->maybe_get_color("bottom-color", bottom);
-
-  Color right(0.75, 0.75, 0.75, 1.0);
-  vars->maybe_get_color("color1", right);
-  vars->maybe_get_color("right-color", right);
-
-  Color top(0.5, 0.5, 0.5, 1.0);
-  vars->maybe_get_color("color2", top);
-  vars->maybe_get_color("top-color", top);
-
-  Color left(0.5, 0.5, 0.5, 1.0);
-  vars->maybe_get_color("color2", left);
-  vars->maybe_get_color("left-color", left);
-
-  double width = 5;
-  vars->maybe_get_double("width", width);
-
-  double height = 5;
-  vars->maybe_get_double("height", height);
-
-  if (vars->get_bool("invert")) {
-    SWAP (top, bottom);
-    SWAP (left, right);
-  }
-
-  return new Frame(vars, width, height, top, bottom, left, right);
 }
 
 

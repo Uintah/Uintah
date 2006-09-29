@@ -40,38 +40,42 @@
 
 namespace SCIRun {
   namespace Skinner {
-    Texture::Texture(Variables *variables,
-                     const string &filename,
-                     const blendfunc_t &blendfunc,
-                     const Color &color,
-                     unsigned int anchor,
-                     bool flipx,
-                     bool flipy,
-                     bool repeatx,
-                     bool repeaty,
-                     double degrees) :
-      Drawable(variables),
-      tex_(0),//filename
-      blendfunc_(blendfunc),
-      color_(color),
-      anchor_(anchor),
-      flipx_(flipx),
-      flipy_(flipy),
-      repeatx_(repeatx),
-      repeaty_(repeaty),
-      degrees_(degrees)
+    Drawable *
+    Texture::maker(Variables *vars)
+    {
+      return new Texture(vars);
+    }
+
+    Texture::Texture(Variables *vars) :
+      Drawable(vars),
+      tex_(0),
+      filename_(Var<string>(vars,"file","")()),
+      blendfunc_(make_pair(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)),
+      color_(vars,"color",Color(1., 1., 1., 1.)),
+      anchor_(Var<int>(vars,"anchor",0)()),
+      flipx_(Var<bool>(vars,"flipx",false)()),
+      flipy_(Var<bool>(vars,"flipy",false)()),
+      repeatx_(Var<bool>(vars,"repeatx",false)()),
+      repeaty_(Var<bool>(vars,"repeaty",false)()),
+      degrees_(Var<double>(vars,"rotate",0.0)())
     {
       NrrdDataHandle nin = new NrrdData();
-      string fullfile = filename;
+      string fullfile = filename_;
 
       // Search SKINNER_PATH for filename
       const char *skinner_path = sci_getenv("SKINNER_PATH");
       if (!validFile(fullfile) && skinner_path) {
-        fullfile = findFileInPath(filename, skinner_path)+filename;
+        fullfile = findFileInPath(filename_, skinner_path)+filename_;
+      if (!validFile(fullfile)) {
+        filename_="Help.png";
+        fullfile = findFileInPath(filename_, skinner_path)+filename_;
+      }
+
       }
 
       if (!validFile(fullfile)) {
-        throw "Texture Invalid filename: "+fullfile;
+        fullfile = skinner_path+string("Help.png");
+        //        throw "Texture Invalid filename: "+fullfile;
       }
 
       if (nrrdLoad(nin->nrrd_, fullfile.c_str(), 0)) {
@@ -81,7 +85,7 @@ namespace SCIRun {
         throw "Texture error loading: "+fullfile+"\n"+str;
       }
       tex_ = new TextureObj(nin);
-      tex_->set_color(color_.r, color_.g, color_.b, color_.a);
+
     }
 
     Texture::~Texture() 
@@ -90,6 +94,10 @@ namespace SCIRun {
 
     void Texture::draw_gl() {
       ASSERT(tex_);
+      
+      Color color = color_();
+      //      color.random();
+      tex_->set_color(color.r, color.g, color.b, color.a);
 
       glMatrixMode(GL_TEXTURE);
       glPushMatrix();
@@ -166,30 +174,5 @@ namespace SCIRun {
       return CONTINUE_E;
     }
 
-    Drawable *
-    Texture::maker(Variables *vars)
-    {
-      const string filename = vars->get_string("file");
-
-      const blendfunc_t blendfunc = 
-        make_pair(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-      Color color(1., 1., 1., 1.);
-      vars->maybe_get_color("color", color);
-
-      int anchor = 0;
-      vars->maybe_get_int("anchor", anchor);
-      
-      const bool flipx = vars->get_bool("flipx");
-      const bool flipy = vars->get_bool("flipy");
-      const bool repeatx = vars->get_bool("repeatx");
-      const bool repeaty = vars->get_bool("repeaty");
-      
-      double rotate = 0.0;
-      vars->maybe_get_double("rotate", rotate);
-
-      return new Texture(vars, filename, blendfunc, color, anchor,
-                         flipx, flipy, repeatx, repeaty, rotate);
-    }
   }
 }

@@ -91,6 +91,8 @@ SET(PAINTER_SRCS
   PainterTools.cc 
   PainterBrushTool.cc 
   PainterSignalTargets.cc 
+  ITKConfidenceConnectedImageFilterTool.cc
+  LayerButton.cc
   main.cc 
 )
 

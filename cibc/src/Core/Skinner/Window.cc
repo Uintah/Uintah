@@ -59,25 +59,20 @@
 namespace SCIRun {
   namespace Skinner {
     
-   GLWindow::GLWindow(Variables *variables) :
-      Parent(variables),
-      width_(640),
-      height_(640),
-      posx_(0),
-      posy_(0),
-      border_(true),
+   GLWindow::GLWindow(Variables *vars) :
+      Parent(vars),
+      width_(Var<int>(vars,"width",640)()),
+      height_(Var<int>(vars,"height",480)()),
+      posx_(Var<int>(vars,"posx",50)()),
+      posy_(Var<int>(vars,"posy",50)()),
+      border_(Var<bool>(vars,"border",true)()),
       context_(0),
       spawner_runnable_(0),
       spawner_thread_(0),
       draw_runnable_(0),
-      draw_thread_(0)
+      draw_thread_(0),
+      redrawables_()
     {
-      variables->maybe_get_int("width", width_);
-      variables->maybe_get_int("height", height_);
-      variables->maybe_get_int("posx", posx_);
-      variables->maybe_get_int("posy", posy_);
-      variables->maybe_get_bool("border", border_);
-
 #if defined(_WIN32)
         
       Win32GLContextRunnable* cr = 
@@ -120,6 +115,8 @@ namespace SCIRun {
 
 
       REGISTER_CATCHER_TARGET(GLWindow::close);
+      REGISTER_CATCHER_TARGET(GLWindow::redraw);
+      REGISTER_CATCHER_TARGET(GLWindow::redraw_drawable);
     }
 
     GLWindow::~GLWindow() 
@@ -181,7 +178,7 @@ namespace SCIRun {
       WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
       bool redraw = (window && 
                      window->get_window_state() & WindowEvent::REDRAW_E);
-      
+      bool subdraw = redraw && redrawables_.size();
       if (redraw) {
         ASSERT(context_);
         if (!context_->make_current()) {
@@ -210,17 +207,27 @@ namespace SCIRun {
         glEnable(GL_BLEND);
         glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
         glDrawBuffer(GL_BACK);
-        
         glClearColor(0,0,0,0);
-        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+        if (!subdraw) {
+          glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+        }
         
         CHECK_OPENGL_ERROR();
       }
 
-      for (Drawables_t::iterator child = children_.begin(); 
-           child != children_.end(); ++child) {
-        (*child)->set_region(get_region());
-        (*child)->process_event(event);
+      if (subdraw) {
+        // todo: thread unsafe, needs lock
+        for (int c = 0; c < redrawables_.size(); ++c) {
+          redrawables_[c]->process_event(event);
+        }
+        redrawables_.clear();
+      } else {
+        for (Drawables_t::iterator child = children_.begin(); 
+             child != children_.end(); ++child) {
+          (*child)->set_region(get_region());
+          (*child)->process_event(event);
+        }
       }
       
       if (redraw){ 
@@ -243,6 +250,25 @@ namespace SCIRun {
       EventManager::add_event(qe);
       return STOP_E;
     }
+
+    BaseTool::propagation_state_e
+    GLWindow::redraw(event_handle_t) {
+      EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E, get_id()));
+      return CONTINUE_E;
+    }
+
+    BaseTool::propagation_state_e
+    GLWindow::redraw_drawable(event_handle_t signalh) {
+      Signal *signal = dynamic_cast<Signal *>(signalh.get_rep());
+      Drawable *drawable = 
+        dynamic_cast<Drawable *>(signal->get_signal_thrower());
+      ASSERT(drawable);
+      redrawables_.push_back(drawable);
+
+      return redraw(signalh);
+    }
+      
+
 
   }
 }

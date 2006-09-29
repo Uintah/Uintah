@@ -1,6 +1,9 @@
 <definition class="ArrowButton" state="normal">
   <object class="Box">
-    <var name="color">$Button::color</var>
+    <var name="color">#FF0000FF</var>
+    <var name="Button::Text::size" propagate="yes" overwrite="no">20</var>
+    <var name="Button::Text::fgcolor" propagate="yes" overwrite="no">#FFFFFFFF</var>
+    <var name="Button::Text::bgcolor" propagate="yes" overwrite="no">#000000FF</var>
     <signal name="button_1_clicked" target="Button::clicked"/>
     <signal name="button_1_released" target="Button::released"></signal>
     
@@ -31,20 +34,6 @@
           <var name="degrees">$ArrowButton::degrees</var>
           <var name="point_angle">30</var>
         </object>
-      </object>
-    
-      <object class="Root::Text"> 
-        <var name="text">$Button::Text::text</var>
-        <var name="row">1</var>
-        <var name="col">1</var>
-        <var name="cell-height">30</var>
-        <var name="size">$Button::Text::size</var>
-        <var name="fgcolor">$Button::Text::fgcolor</var>
-        <var name="bgcolor">$Button::Text::bgcolor</var>
-        <var name="shadow">1</var>
-        <var name="offsetx">-1</var>
-        <var name="offsety">1</var>
-        <var name="anchor">C</var>
       </object>
     </object>
   </object>

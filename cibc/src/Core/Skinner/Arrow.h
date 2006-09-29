@@ -34,6 +34,7 @@
 #define SKINNER_ARROW_H
 
 #include <Core/Skinner/Drawable.h>
+#include <Core/Skinner/Variables.h>
 
 namespace SCIRun {
   namespace Skinner {
@@ -43,6 +44,9 @@ namespace SCIRun {
       virtual ~Arrow();
     protected:
       CatcherFunction_t                 redraw;
+      Var<Color>                        color_;
+      Var<double>                       degrees_;
+      Var<double>                       point_angle_;
     };
   }
 }

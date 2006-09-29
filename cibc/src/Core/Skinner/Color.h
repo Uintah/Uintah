@@ -41,6 +41,8 @@ namespace SCIRun {
     public:
       Color();
       Color(double R, double G, double B, double A=1.0);
+      void                      random();
+      bool operator==(const Color &rhs);
       double			r;
       double			g;
       double			b;

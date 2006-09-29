@@ -53,7 +53,7 @@
         <var name="rows" type="int">3</var>
         <var name="cols" type="int">3</var>
         <object class="Box">
-          <var name="visible" type="int">1</var>
+          <var name="visible" type="bool">1</var>
           <var name="row" type="int">1</var>
           <var name="col" type="int">1</var>
           <var name="color" type="int">#FF0000FF</var>

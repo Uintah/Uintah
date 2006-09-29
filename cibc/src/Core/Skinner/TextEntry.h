@@ -51,7 +51,7 @@ namespace SCIRun {
       void                              autocomplete();
       string                            str_;
       bool                              inside_;
-      bool                              numeric_;
+      Var<bool>                         numeric_;
     };
   }
 }

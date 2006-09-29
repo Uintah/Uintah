@@ -38,7 +38,7 @@ namespace SCIRun {
       BaseTool(variables ? variables->get_id() : ""),
       SignalCatcher(),
       SignalThrower(),
-
+      visible_(variables, "visible"),
       region_(),
       variables_(variables)
     {
@@ -59,9 +59,7 @@ namespace SCIRun {
     BaseTool::propagation_state_e
     Drawable::process_event(event_handle_t event)
     {
-      bool visible = true;
-      get_vars()->maybe_get_bool("visible", visible);
-      if (!visible) {
+      if (visible_.exists() && !visible_()) {
         return STOP_E;
       } 
       string signalname = "";

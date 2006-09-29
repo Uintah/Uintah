@@ -72,28 +72,23 @@ namespace SCIRun {
       string              get_signal_name() { return signal_name_; }
       void                set_signal_name(const string &n) { signal_name_=n; }
 
-      //      const string &      get_signal_data() { return signal_data_; }
-      //      void                set_signal_data(const string &d) { signal_data_=d; }
-
       Variables *         get_vars() { return variables_; }
       void                set_vars(Variables *vars) { variables_ = vars;}
-
 
       SignalThrower *     get_signal_thrower() { return thrower_; }
       void                set_signal_thrower(SignalThrower *t) { thrower_=t; }
 
-      BaseTool::propagation_state_e get_signal_result() { return result_; }
+      BaseTool::propagation_state_e     get_signal_result() { return result_; }
       void  set_signal_result(BaseTool::propagation_state_e r) { result_ = r; }
       
-      virtual Signal *    clone() { return new Signal(*this); }
-      virtual void        io(Piostream&);
-      static PersistentTypeID type_id;
+      virtual Signal *                  clone() { return new Signal(*this); }
+      virtual void                      io(Piostream&);
+      static PersistentTypeID           type_id;
     private:
-      string              signal_name_;
-      Variables *         variables_; 
-      //      string              signal_data_;
-      SignalThrower *     thrower_;
-      BaseTool::propagation_state_e result_;
+      string                            signal_name_;
+      Variables *                       variables_; 
+      SignalThrower *                   thrower_;
+      BaseTool::propagation_state_e     result_;
     };
     
     class SCISHARE SignalCatcher {
@@ -108,7 +103,8 @@ namespace SCIRun {
       struct SCISHARE CatcherTargetInfoBase {
         virtual ~CatcherTargetInfoBase();
         CatcherTargetInfoBase() {}
-        CatcherTargetInfoBase(string target, Variables* vars) : targetname_(target), variables_(vars) {}
+        CatcherTargetInfoBase(string target, Variables* vars) : 
+          targetname_(target), variables_(vars) {}
         string targetname_;
         Variables* variables_;
         virtual BaseTool::propagation_state_e doCallback(event_handle_t signal) = 0;
@@ -208,22 +204,15 @@ namespace SCIRun {
 
       static event_handle_t             throw_signal(SignalToAllCatchers_t &,
                                                      event_handle_t &signal);
-
-
       
       void                              register_default_thrower(SignalCatcher::CatcherTargetInfoBase*);
 
       static SignalToAllCatchers_t      collapse_tree(SignalCatcher::TreeOfCatchers_t &);
-
                                    
-      virtual int     get_signal_id(const string &) const = 0;
+      virtual int                       get_signal_id(const string &) const = 0;
 
-#if 0
-      bool            hookup_signal_to_catcher_target(const string &,
-                                                      const string &,
-                                                      SignalCatcher *,
-                                                      SignalCatcher::CatcherFunctionPtr);
-#endif
+      bool                              expose_catcher(const string &);
+
       // Should be private
       SignalToAllCatchers_t all_catchers_;
     };
@@ -249,6 +238,7 @@ namespace SCIRun {
       {}
 
       PointerEvent *get_pointer_event() { return pointer_; }
+      void      set_pointer_event(PointerEvent *p) { pointer_ = p; }
     };
 
     class SCISHARE KeySignal : public Signal
@@ -261,6 +251,7 @@ namespace SCIRun {
       {}
 
       KeyEvent *get_key_event() { return key_; }
+      void      set_key_event(KeyEvent *k) { key_ = k; }
     };
 
   }

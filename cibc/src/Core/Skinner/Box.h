@@ -35,29 +35,25 @@
 
 #include <Core/Skinner/Parent.h>
 #include <Core/Skinner/Color.h>
+#include <Core/Skinner/Variables.h>
 
 namespace SCIRun {
   namespace Skinner {
     class Box : public Parent {
     public:
-      Box(Variables *, const Color &);
+      Box(Variables *);
       virtual ~Box();
-      virtual propagation_state_e       process_event(event_handle_t);
       virtual MinMax                    minmax(unsigned int);
-
       static string                     class_name() { return "Box"; }
       static DrawableMakerFunc_t        maker;
       virtual int                       get_signal_id(const string &) const;
 
     private:
+      CatcherFunction_t                 do_PointerEvent;
       CatcherFunction_t                 redraw;
-      CatcherFunction_t                 make_red;
-      CatcherFunction_t                 make_blue;
-      CatcherFunction_t                 make_green;      
       
-
-      Color                             color_;
-      bool                              focus_mode_;
+      Var<Color>                        color_;
+      Var<bool>                         focus_mode_;
       bool                              focus_;
     };
   }
