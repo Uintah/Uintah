@@ -60,6 +60,9 @@ Steady_Burn::~Steady_Burn(){
   delete d_saveConservedVars;
   
   VarLabel::destroy(BurningCellLabel);
+  VarLabel::destroy(totalMassBurnedLabel);
+  VarLabel::destroy(totalHeatReleasedLabel);
+  
   if(mymatls && mymatls->removeReference())
     delete mymatls;
 }
