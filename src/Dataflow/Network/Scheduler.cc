@@ -221,6 +221,8 @@ Scheduler::do_scheduling_real(Module* exclude)
     return;
   }
 
+  report_execution_started();
+
   // For all of the modules that need executing, execute the
   // downstream modules and arrange for the data to be sent to them
   // mm - this doesn't really execute them. It just adds modules to
@@ -319,8 +321,8 @@ Scheduler::do_scheduling_real(Module* exclude)
     }
     else if (module->need_execute_)
     {
-      module->mailbox_.send(scinew Scheduler_Module_Message(serial_base + i));
       module->need_execute_ = false;
+      module->mailbox_.send(scinew Scheduler_Module_Message(serial_base + i));
     }
     else
     {
@@ -346,6 +348,35 @@ void
 Scheduler::report_execution_finished(unsigned int serial)
 {
   mailbox.send(scinew Module_Scheduler_Message(serial));
+}
+
+
+void
+Scheduler::report_execution_started()
+{
+  // Execution started.  Call the execution started callbacks
+  // here.  The callbacks are called in priority order until one
+  // returns false.  Then all other callbacks with the same priority
+  // are called and we're done.  The priority level is finished off
+  // because this results in a deterministic result for the order in
+  // which callbacks are added to the queue.
+  bool done = false;
+  int priority = 0;
+  callback_lock_.lock();
+  for (unsigned int i = 0; i < start_callbacks_.size(); i++)
+  {
+    if (done && start_callbacks_[i].priority != priority)
+    {
+      break;
+    }
+
+    if (!start_callbacks_[i].callback(start_callbacks_[i].data))
+    {
+      priority = start_callbacks_[i].priority;
+      done = true;
+    }
+  }
+  callback_lock_.unlock();
 }
 
 
@@ -434,6 +465,44 @@ Scheduler::remove_callback(SchedulerCallback cb, void *data)
   callback_lock_.lock();
   callbacks_.erase(std::remove_if(callbacks_.begin(), callbacks_.end(), sc),
 		   callbacks_.end());
+  callback_lock_.unlock();
+}
+
+void
+Scheduler::add_start_callback(SchedulerCallback cb, void *data, int priority)
+{
+  SCData sc;
+  sc.callback = cb;
+  sc.data = data;
+  sc.priority = priority;
+
+  // Insert the callback.  Preserve insertion order if priorities are
+  // the same.
+  callback_lock_.lock();
+  start_callbacks_.push_back(sc);
+  for (size_t i = start_callbacks_.size()-1; i > 0; i--)
+  {
+    if (start_callbacks_[i-1].priority < start_callbacks_[i].priority)
+    {
+      const SCData tmp = start_callbacks_[i-1];
+      start_callbacks_[i-1] = start_callbacks_[i];
+      start_callbacks_[i] = tmp;
+    }
+  }
+  callback_lock_.unlock();
+}
+
+
+void
+Scheduler::remove_start_callback(SchedulerCallback cb, void *data)
+{
+  SCData sc;
+  sc.callback = cb;
+  sc.data = data;
+  callback_lock_.lock();
+  start_callbacks_.erase(std::remove_if(start_callbacks_.begin(), 
+					start_callbacks_.end(), sc),
+			 start_callbacks_.end());
   callback_lock_.unlock();
 }
 

@@ -72,6 +72,54 @@ set netedit_savefile ""
 set NetworkChanged 0
 set CurrentlySelectedModules ""
 
+set network_executing "0"
+trace variable network_executing w handle_network_executing
+
+
+
+proc handle_network_executing { var op1 op2} {
+    global network_executing
+
+    # unbind/rebind the keystroke commands that can change network state.
+    if { $network_executing == "1" } {
+	bind . <Control-d> ""
+	bind . <Control-l> ""
+	bind . <Control-z> ""
+	bind . <Control-e> ""
+	bind . <Control-y> ""
+	bind . <Control-o> ""
+	bind . <Control-s> ""
+	bind all <Control-q> ""
+	.main_menu.file.menu entryconfig  0 -state disabled
+	.main_menu.file.menu entryconfig  1 -state disabled
+	.main_menu.file.menu entryconfig  2 -state disabled
+	.main_menu.file.menu entryconfig  3 -state disabled
+	.main_menu.file.menu entryconfig  5 -state disabled
+	.main_menu.file.menu entryconfig  6 -state disabled
+	.main_menu.file.menu entryconfig  7 -state disabled
+	.main_menu.file.menu entryconfig  9 -state disabled
+	.main_menu.file.menu entryconfig 11 -state disabled
+
+    } else {
+	bind . <Control-d> "moduleDestroySelected"
+	bind . <Control-l> "ClearCanvas"
+	bind . <Control-z> "undo"
+	bind . <Control-e> "netedit scheduleall"
+	bind . <Control-y> "redo"
+	bind . <Control-o> "popupLoadMenu"
+	bind . <Control-s> "popupSaveMenu"
+	bind all <Control-q> "NiceQuit"
+	.main_menu.file.menu entryconfig  0 -state active
+	.main_menu.file.menu entryconfig  1 -state active
+	.main_menu.file.menu entryconfig  2 -state active
+	.main_menu.file.menu entryconfig  3 -state active
+	.main_menu.file.menu entryconfig  5 -state active
+	.main_menu.file.menu entryconfig  6 -state active
+	.main_menu.file.menu entryconfig  7 -state active
+	.main_menu.file.menu entryconfig  9 -state active
+	.main_menu.file.menu entryconfig 11 -state active
+    }
+}
 
 proc setIcons { { w . } { size small } } {
     global firstIcon tcl_platform

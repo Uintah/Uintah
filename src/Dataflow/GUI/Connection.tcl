@@ -40,6 +40,8 @@ proc connectionMenu {x y conn cx cy} {
 }
 
 proc regenConnectionMenu { menu_id conn } {
+    global network_executing
+
     # create menu if it doesnt exist
     if ![winfo exists $menu_id] {
 	menu $menu_id -tearoff 0 -disabledforeground white
@@ -51,15 +53,16 @@ proc regenConnectionMenu { menu_id conn } {
     global Subnet Disabled ConnectionRoutes
     $menu_id add command -label "Connection" -state disabled
     $menu_id add separator
-    $menu_id add command -label "Delete" -command "destroyConnection {$conn} 1"
-    if { [insertModuleOnConnectionMenu $conn $menu_id.insertModule] } {
-	$menu_id add cascade -label "Insert Module" -menu $menu_id.insertModule
-    }
     set connid [makeConnID $conn]
-    setIfExists disabled Disabled($connid) 0
-    set label [expr $disabled?"Enable":"Disable"]
-    $menu_id add command -command "connection$label {$conn}" -label $label
-
+    if {$network_executing == "0"} {
+	$menu_id add command -label "Delete" -command "destroyConnection {$conn} 1"
+	if { [insertModuleOnConnectionMenu $conn $menu_id.insertModule] } {
+	    $menu_id add cascade -label "Insert Module" -menu $menu_id.insertModule
+	}
+	setIfExists disabled Disabled($connid) 0
+	set label [expr $disabled?"Enable":"Disable"]
+	$menu_id add command -command "connection$label {$conn}" -label $label
+    }
     $menu_id add command -label "Notes" -command "notesWindow $connid"
     if {  [array exists ConnectionRoutes] && \
 	      [array names ConnectionRoutes $connid] != "" } {

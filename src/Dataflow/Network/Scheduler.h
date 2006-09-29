@@ -103,7 +103,8 @@ class SCISHARE Scheduler : public Runnable
     }
   };
 
-  std::vector<SCData> callbacks_;
+  std::vector<SCData> callbacks_; // end of execution
+  std::vector<SCData> start_callbacks_; // prior to execution of any module
   Mutex callback_lock_;
 
   virtual void run();
@@ -111,6 +112,7 @@ class SCISHARE Scheduler : public Runnable
   void multisend_real(OPort*);
   void do_scheduling_real(Module*);
   void report_execution_finished_real(unsigned int serial);
+  void report_execution_started();
 
   Mailbox<MessageBase*> mailbox;
 
@@ -135,6 +137,11 @@ public:
   // with lower priority will not be called.
   void add_callback(SchedulerCallback cv, void *data, int priority = 0);
   void remove_callback(SchedulerCallback cv, void *data);
+
+  // These get called prior to execution of any module with the same priority
+  // scheme as for end execution callbacks.
+  void add_start_callback(SchedulerCallback cv, void *data, int priority = 0);
+  void remove_start_callback(SchedulerCallback cv, void *data);
 };
 
 

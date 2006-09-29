@@ -360,7 +360,6 @@ protected:
   bool                   abort_flag_;
   CPUTimer               timer_;
   ostringstream          msg_stream_;
-  bool                   need_execute_;
   SchedClass             sched_class_;
 
   //! Used by the execute module;
@@ -374,6 +373,8 @@ private:
   void remove_iport(int);
   void add_iport(IPort*);
   void add_oport(OPort*);
+
+  bool                   need_execute_;
 
   GuiContext*            ctx_;
   State                  state_;
