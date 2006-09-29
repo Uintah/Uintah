@@ -195,7 +195,7 @@ EditPath::EditPath(GuiContext* ctx)
   init_tcl_update();
     
   is_init=false;
-  need_execute_=1;
+  want_to_execute();
   
   sem.up();
 }

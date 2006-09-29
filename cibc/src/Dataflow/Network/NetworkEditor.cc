@@ -57,6 +57,7 @@
 #include <Dataflow/Network/NetworkIO.h>
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/Ports/Port.h>
+#include <Dataflow/Network/Scheduler.h>
 #include <Dataflow/Network/ComponentNode.h>
 #include <Dataflow/Network/GenFiles.h>
 #include <Core/XMLUtil/XMLUtil.h>
@@ -78,6 +79,22 @@ using namespace std;
   
 namespace SCIRun {
 
+static bool
+scheduling_starting_callback(void *data)
+{
+  GuiInterface* gui = (GuiInterface*)data;
+  gui->set("network_executing", "1");
+  return true;
+}
+
+static bool
+scheduling_done_callback(void *data)
+{
+  GuiInterface* gui = (GuiInterface*)data;
+  gui->set("network_executing", "0");
+  return true;
+}
+
 // init the static pointer. 
 Network* NetworkEditor::net_ = 0;
 
@@ -85,6 +102,9 @@ NetworkEditor::NetworkEditor(Network* net, GuiInterface* gui) :
   gui_(gui)
 {
   net_ = net;
+  net->get_scheduler()->add_start_callback(scheduling_starting_callback, gui);
+  net->get_scheduler()->add_callback(scheduling_done_callback, gui);
+
   // Create User interface...
   gui_->add_command("netedit", this, 0);
   ASSERT(sci_getenv("SCIRUN_SRCDIR"));

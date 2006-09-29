@@ -433,12 +433,16 @@ proc findModulesToInsertOnPort { port } {
 
 
 proc insertModuleOnPortMenu { port menu } {
+    global network_executing
+
     # Return if this menu already exists
     if { [winfo exists $menu] } { return 1 }
 
     # Return if there is no modules that would insert on this port
     set moduleList [findModulesToInsertOnPort $port]
     if { ![llength $moduleList] } { return 0 }
+
+    if {$network_executing == "1"} { return 0 }
 
     # create a new menu
     menu $menu -tearoff false -disabledforeground black

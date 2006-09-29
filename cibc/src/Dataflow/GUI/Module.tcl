@@ -1088,6 +1088,7 @@ proc selection_handler { args } {
 }
 
 proc regenModuleMenu { modid menu_id } {
+    global network_executing
     # Wipe the menu clean...
     set num_entries [$menu_id index end]
     if { $num_entries == "none" } { 
@@ -1103,8 +1104,9 @@ proc regenModuleMenu { modid menu_id } {
     $menu_id add separator
 
     # 'Execute Menu Option
-    $menu_id add command -label "Execute" -command "$modid execute"
-    
+    if {$network_executing == "0"} {
+	$menu_id add command -label "Execute" -command "$modid execute"
+    }
     # 'Help' Menu Option
     if { ![$modid is_subnet] } {
 	$menu_id add command -label "Help" -command "moduleHelp $modid"
@@ -1115,17 +1117,22 @@ proc regenModuleMenu { modid menu_id } {
 	-command "notesWindow $modid notesDoneModule"
 
     # 'Destroy' module Menu Option
-    $menu_id add command -label "Destroy" \
-	-command "moduleDestroySelected $modid"
-
+    if {$network_executing == "0"} {
+	$menu_id add command -label "Destroy" \
+	    -command "moduleDestroySelected $modid"
+    }
     # 'Duplicate' module Menu Option
-    if { ![$modid is_subnet] } {
-	$menu_id add command -label "Duplicate" -command "moduleDuplicate $modid"
+    if {$network_executing == "0"} {
+	if { ![$modid is_subnet] } {
+	    $menu_id add command -label "Duplicate" -command "moduleDuplicate $modid"
+	}
     }
 
     # 'Replace' module Menu Option
-    if { ![$modid is_subnet] && [moduleReplaceMenu $modid $menu_id.replace] } {
-	$menu_id add cascade -label "Replace With" -menu $menu_id.replace
+    if {$network_executing == "0"} {
+	if { ![$modid is_subnet] && [moduleReplaceMenu $modid $menu_id.replace] } {
+	    $menu_id add cascade -label "Replace With" -menu $menu_id.replace
+	}
     }
     
     # 'Show Log' module Menu Option
@@ -1134,25 +1141,30 @@ proc regenModuleMenu { modid menu_id } {
     }
     
     # 'Make Sub-Network' Menu Option
-    set mods [expr [$modid is_selected]?"$CurrentlySelectedModules":"$modid"]
-    $menu_id add command -label "Make Sub-Network" \
-	-command "createSubnetFromModules $mods"
-    
+    if {$network_executing == "0"} {
+	set mods [expr [$modid is_selected]?"$CurrentlySelectedModules":"$modid"]
+	$menu_id add command -label "Make Sub-Network" \
+	    -command "createSubnetFromModules $mods"
+    }
     # 'Expand Sub-Network' Menu Option
-    if { [$modid is_subnet] } {
-	$menu_id add command -label "Expand Sub-Network" \
-	    -command "expandSubnet $modid"
+    if {$network_executing == "0"} {
+	if { [$modid is_subnet] } {
+	    $menu_id add command -label "Expand Sub-Network" \
+		-command "expandSubnet $modid"
+	}
     }
 
     # 'Enable/Disable' Menu Option
-    if {[llength $Subnet(${modid}_connections)]} {
-	setIfExists disabled Disabled($modid) 0
-	if $disabled {
-	    $menu_id add command -label "Enable" \
-		-command "disableModule $modid 0"
-	} else {
-	    $menu_id add command -label "Disable" \
-		-command "disableModule $modid 1"
+    if {$network_executing == "0"} {
+	if {[llength $Subnet(${modid}_connections)]} {
+	    setIfExists disabled Disabled($modid) 0
+	    if $disabled {
+		$menu_id add command -label "Enable" \
+		    -command "disableModule $modid 0"
+	    } else {
+		$menu_id add command -label "Disable" \
+		    -command "disableModule $modid 1"
+	    }
 	}
     }
 
