@@ -12,11 +12,11 @@
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHook.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/CompNeoHookPlas.h>
+#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElastic.h>
 /*
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScram.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoScramImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ViscoSCRAMHotSpot.h>
-#include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/HypoElasticImplicit.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MWViscoElastic.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/Membrane.h>
@@ -138,6 +138,13 @@ ConstitutiveModel* ConstitutiveModelFactory::create(ProblemSpecP& ps,
       return(scinew CompNeoHook(child,flags));
     else if (flags->d_integrator_type == "implicit")
       return(scinew CompNeoHookImplicit(child,flags));
+  }
+  else if (mat_type ==  "hypo_elastic") {
+    //if (flags->d_integrator_type == "explicit" || 
+    //  flags->d_integrator_type == "fracture")
+      return(scinew HypoElastic(child,flags));
+      //else if (flags->d_integrator_type == "implicit")
+      //return(scinew HypoElasticImplicit(child,flags));
   }
   else 
     throw ProblemSetupException("Unknown Material Type R ("+mat_type+")", __FILE__, __LINE__);

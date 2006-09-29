@@ -133,6 +133,7 @@ WARNING
 
     const VarLabel *sv_minLabel,          *p_sv_minLabel;
     const VarLabel *sv_minLabel_preReloc, *p_sv_minLabel_preReloc;
+    const VarLabel* csv_minLabel; // used with MPMICE
   };
 } // End namespace Uintah
 

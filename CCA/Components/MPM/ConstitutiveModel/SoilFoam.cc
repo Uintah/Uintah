@@ -75,6 +75,8 @@ SoilFoam::SoilFoam(ProblemSpecP& ps, MPMFlags* Mflag)
                 ParticleVariable<double>::getTypeDescription());
   p_sv_minLabel_preReloc = VarLabel::create("p.p_sv_minLabel+",
                 ParticleVariable<double>::getTypeDescription());
+  csv_minLabel         = VarLabel::create( "c.sv_min",
+                     CCVariable<double>::getTypeDescription() );
 }
 
 SoilFoam::SoilFoam(const SoilFoam* cm)
@@ -101,6 +103,8 @@ SoilFoam::SoilFoam(const SoilFoam* cm)
                 ParticleVariable<double>::getTypeDescription());
   p_sv_minLabel_preReloc = VarLabel::create("p.p_sv_minLabel+",
                 ParticleVariable<double>::getTypeDescription());
+  csv_minLabel         = VarLabel::create( "c.sv_min",
+                     CCVariable<double>::getTypeDescription() );
 }
 
 void SoilFoam::addParticleState(std::vector<const VarLabel*>& from,
@@ -120,6 +124,7 @@ SoilFoam::~SoilFoam()
   VarLabel::destroy(sv_minLabel_preReloc);
   VarLabel::destroy(p_sv_minLabel);
   VarLabel::destroy(p_sv_minLabel_preReloc);
+  VarLabel::destroy(csv_minLabel);
 }
 
 void SoilFoam::outputProblemSpec(ProblemSpecP& ps,bool output_cm_tag)
@@ -297,15 +302,6 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     Vector dx = patch->dCell();
     double oodx[3] = {1./dx.x(), 1./dx.y(), 1./dx.z()};
 
-
-    cout << " SoilFoam  d_with_ice " << flag->d_with_ice<< endl;
-    if(flag->d_with_ice){
-      // do this
-    }
-    else{
-      // do that
-    }
-
     int dwi = matl->getDWIndex();
     // Create array for the particle position
     ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
@@ -317,11 +313,13 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     ParticleVariable<double> pvolume_deformed, sv_min_new, p_sv_min_new;
     constParticleVariable<Vector> pvelocity, psize;
     constNCVariable<Vector> gvelocity;
+    constCCVariable<double> csv_min;
     delt_vartype delT;
     // for thermal stress
     constParticleVariable<double> pTempPrevious, pTempCurrent; 
 
     Ghost::GhostType  gac   = Ghost::AroundCells;
+    Ghost::GhostType  gn = Ghost::None;
 
     old_dw->get(psize,             lb->pSizeLabel,               pset);
     
@@ -336,6 +334,8 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     old_dw->get(deformationGradient, lb->pDeformationMeasureLabel, pset);
 
     new_dw->get(gvelocity,lb->gVelocityLabel, dwi,patch, gac, NGN);
+    if(flag->d_with_ice)
+      new_dw->get(csv_min,  csv_minLabel,       dwi,patch,gn, 0);
 
     old_dw->get(delT, lb->delTLabel, getLevel(patches));
 
@@ -362,14 +362,9 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
     double G    = d_initialData.G;
     double bulk = d_initialData.bulk;
 
-    int cnt=0;
     for(ParticleSubset::iterator iter = pset->begin();
                                         iter != pset->end(); iter++){
-      cnt++;
       particleIndex idx = *iter;
-      //if(px[idx].x()>0.40&&px[idx].x()<0.55
-      //&&px[idx].y()>0.00&&px[idx].y()<0.10
-      //&&px[idx].z()>0.50&&px[idx].z()<0.55) cout<<px[idx].x()<<" "<<px[idx].y()<<" "<<px[idx].z()<<endl;
 
       // Assign zero internal heating by default - modify if necessary.
       pdTdt[idx] = 0.0;
@@ -407,19 +402,32 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
       // get the volumetric part of the deformation
       double J = deformationGradient[idx].Determinant();
       pvolume_deformed[idx]=Jinc*pvolume[idx];
-      double vol_strain = log(pvolume_deformed[idx]/(pmass[idx]/rho_orig));
+      double vol_strain = log(J);//log(pvolume_deformed[idx]/(pmass[idx]/rho_orig));
       double pres_guage;
       double rho_cur = rho_orig/J;
 
+      double maxvolstrain;
+      if(flag->d_with_ice){
+	IntVector c1(-1,-1,-1), c2(0,0,0);
+        Point pt1 = getLevel(patches)->getCellPosition(c1), pt2 = getLevel(patches)->getCellPosition(c2);
+	Vector x0 = 0.5*(pt1.asVector() + pt2.asVector());
+	int i,j,k;
+	i = int((px[idx].x() - x0.x())/dx.x());
+	j = int((px[idx].y() - x0.y())/dx.y());
+	k = int((px[idx].z() - x0.z())/dx.z());
+        IntVector c3(i,j,k);
+        maxvolstrain = csv_min[c3];
+      }
+      else{
+	maxvolstrain = sv_min[idx];
+      }
+
       // Traditional method for mat5
-      if(vol_strain>sv_min[idx]){
-         pres_guage = p_sv_min[idx] - bulk*(vol_strain - sv_min[idx]);
+      if(vol_strain>maxvolstrain){//sv_min[idx]){
+	pres_guage = p_sv_min[idx] - bulk*(vol_strain - maxvolstrain);//sv_min[idx]);
          if(pres_guage<d_initialData.pc) pres_guage = d_initialData.pc;
          p_sv_min_new[idx] = p_sv_min[idx];
-         sv_min_new[idx] = sv_min[idx];
-	 //if(px[idx].x()>0.40&&px[idx].x()<0.55
-	 //&&px[idx].y()>0.00&&px[idx].y()<0.10
-	 //&&px[idx].z()>0.50&&px[idx].z()<0.55) cout <<" unload "<<vol_strain<<" "<<sv_min[idx]<<" "<<pres_guage<<endl;
+         sv_min_new[idx] = maxvolstrain;//sv_min[idx];
 
          // Compute the local sound speed
          c_dil = sqrt((bulk + 4.*G/3.)/rho_cur);
@@ -431,9 +439,6 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
          }
          pres_guage = d_initialData.p[i1] + slope[i1]*(vol_strain - d_initialData.eps[i1]);
          if(pres_guage<d_initialData.pc) pres_guage = d_initialData.pc;
-	 //if(px[idx].x()>0.40&&px[idx].x()<0.55
-	 //&&px[idx].y()>0.00&&px[idx].y()<0.10
-	 //&&px[idx].z()>0.50&&px[idx].z()<0.55) cout <<" load "<<vol_strain<<" "<<sv_min[idx]<<" "<<pres_guage<<endl;
          p_sv_min_new[idx] = pres_guage;
          sv_min_new[idx] = vol_strain;
          // Compute the local sound speed
@@ -443,8 +448,16 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
       // This is the (updated) Cauchy stress
     //pstress_new[idx] = pstress[idx] + 
                        //(DPrime*2.*G + Identity*bulk*D.Trace())*delT;
-      pstress_new[idx] = pstress[idx] - Identity*onethird*pstress[idx].Trace() + 
-                         (DPrime*2.*G)*delT;
+      pstress_new[idx] = pstress[idx] - Identity*onethird*pstress[idx].Trace();
+      pstress_new[idx](0,0) += (DPrime(0,0)*2.*G)*delT;
+      pstress_new[idx](0,1) += (DPrime(0,1)*G)*delT;
+      pstress_new[idx](0,2) += (DPrime(0,2)*G)*delT;
+      pstress_new[idx](1,0) += (DPrime(1,0)*G)*delT;
+      pstress_new[idx](1,1) += (DPrime(1,1)*2.*G)*delT;
+      pstress_new[idx](1,2) += (DPrime(1,2)*G)*delT;
+      pstress_new[idx](2,0) += (DPrime(2,0)*G)*delT;
+      pstress_new[idx](2,1) += (DPrime(2,1)*G)*delT;
+      pstress_new[idx](2,2) += (DPrime(2,2)*2.*G)*delT;
 
       // compute second invariant of deviatoric stress
       double aj2 = 0.5*(pstress_new[idx](0,0)*pstress_new[idx](0,0) +
@@ -463,11 +476,6 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
       //cout<<" aj2 "<<aj2<<" g0 "<<g0<<" ratio "<<ratio<<" pres_guage "<<pres_guage<<endl;
 
       pstress_new[idx] = pstress_new[idx]*ratio - Identity*pres_guage;
-
-      //if(px[idx].x()>0.40&&px[idx].x()<0.55
-      //&&px[idx].y()>0.00&&px[idx].y()<0.10
-      //&&px[idx].z()>0.50&&px[idx].z()<0.55) cout<<"stress "<<pstress_new[idx](0,0)<<" "<<pstress_new[idx](0,1)<<" "<<pstress_new[idx](0,2)
-      //		<<" "<<pstress_new[idx](1,1)<<" "<<pstress_new[idx](1,2)<<" "<<pstress_new[idx](2,2)<<endl;
 
       // Compute the strain energy for all the particles
       Matrix3 AvgStress = (pstress_new[idx] + pstress[idx])*.5;
@@ -557,6 +565,8 @@ void SoilFoam::addComputesAndRequires(Task* task,
   // Other constitutive model and input dependent computes and requires
   task->requires(Task::OldDW, sv_minLabel,         matlset, gnone);
   task->requires(Task::OldDW, p_sv_minLabel,       matlset, gnone);
+  if(flag->d_with_ice)
+    task->requires(Task::NewDW, csv_minLabel,        matlset, gnone);
 
   task->computes(sv_minLabel_preReloc,       matlset);
   task->computes(p_sv_minLabel_preReloc,     matlset);
@@ -579,6 +589,8 @@ SoilFoam::addComputesAndRequires(Task* task,
 
   task->requires(Task::OldDW, sv_minLabel,       matlset,gnone);
   task->requires(Task::OldDW, p_sv_minLabel,     matlset,gnone);
+  if(flag->d_with_ice)
+    task->requires(Task::NewDW, csv_minLabel,      matlset,gnone);
 
   task->computes(sv_minLabel_preReloc,       matlset);
   task->computes(p_sv_minLabel_preReloc,     matlset);

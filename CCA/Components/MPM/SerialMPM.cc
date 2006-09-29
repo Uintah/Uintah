@@ -1577,8 +1577,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       
-      cout << " SerialMPM:InterpolateParticlesToGrid:  d_usingSoilFoam_CM:  " << d_SF_vars->usingSoilFoam_CM << endl;
-      cout << "                                        getIsSoilFoam()   :  " << mpm_matl->getIsSoilFoam() << endl;
+      //cout << " SerialMPM:InterpolateParticlesToGrid:  d_usingSoilFoam_CM:  " << d_SF_vars->usingSoilFoam_CM << endl;
+      //cout << "                                        getIsSoilFoam()   :  " << mpm_matl->getIsSoilFoam() << endl;
 
 
       // Create arrays for the particle data
