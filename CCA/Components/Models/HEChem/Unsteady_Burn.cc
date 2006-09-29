@@ -67,6 +67,8 @@ Unsteady_Burn::~Unsteady_Burn(){
   VarLabel::destroy(BetaLabel);
   VarLabel::destroy(PartBetaLabel);
   VarLabel::destroy(PartTsLabel);
+  VarLabel::destroy(totalMassBurnedLabel);
+  VarLabel::destroy(totalHeatReleasedLabel);
 
   if(mymatls && mymatls->removeReference())
     delete mymatls;
