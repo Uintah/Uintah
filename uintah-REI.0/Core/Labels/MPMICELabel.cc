@@ -83,4 +83,5 @@ MPMICELabel::~MPMICELabel()
   //  WSB1 burn model
   VarLabel::destroy(TempGradLabel);
   VarLabel::destroy(aveSurfTempLabel);
+  VarLabel::destroy(csv_minLabel);
 }

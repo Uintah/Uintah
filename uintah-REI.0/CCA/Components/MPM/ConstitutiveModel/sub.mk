@@ -13,6 +13,7 @@ SRCS     += \
 	$(SRCDIR)/CompNeoHookPlas.cc            \
 	$(SRCDIR)/CompNeoHook.cc                \
 	$(SRCDIR)/CompNeoHookImplicit.cc        \
+	$(SRCDIR)/HypoElastic.cc                \
 	$(SRCDIR)/SoilFoam.cc
 
 SUBDIRS := $(SRCDIR)/PlasticityModels

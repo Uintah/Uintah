@@ -818,7 +818,8 @@ HypoElastic::addComputesAndRequires(Task*,const MPMMaterial*, const PatchSet*,
 
 double HypoElastic::computeRhoMicroCM(double pressure,
                                       const double p_ref,
-                                      const MPMMaterial* matl)
+                                      const MPMMaterial* matl,
+				      const double maxvolstrain)
 {
   double rho_orig = matl->getInitialDensity();
   //double p_ref=101325.0;
@@ -840,7 +841,8 @@ double HypoElastic::computeRhoMicroCM(double pressure,
 void HypoElastic::computePressEOSCM(double rho_cur, double& pressure,
                                     double p_ref,
                                     double& dp_drho,      double& tmp,
-                                    const MPMMaterial* matl)
+                                    const MPMMaterial* matl,
+				    const double maxvolstrain)
 {
 
   //double G = d_initialData.G;

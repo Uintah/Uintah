@@ -357,20 +357,23 @@ MPMICE::scheduleTimeAdvance(const LevelP& inlevel, SchedulerP& sched)
 
   d_mpm->scheduleExMomInterpolated(           sched, mpm_patches, mpm_matls);
   d_mpm->scheduleSetBCsInterpolated(          sched, mpm_patches, mpm_matls);
+  if(!d_mpm->d_SF_vars->usingSoilFoam_CM)
   d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
   
-  if(d_mpm->d_SF_vars->usingSoilFoam_CM){
+  /*if(d_mpm->d_SF_vars->usingSoilFoam_CM){
     cout << "using soil and foam MPMICE"<<endl;
   // 1.  MARTIN:  if(d_cm==SoilFoam) push max vol. strain from particles to nodes
   //     see MPM::interpolateParticlesToGrid
   //     
   // 2.  MARTIN:  push max vol. strain from nodes to CC
   //     see MPMICE::interpolateNCToCC_0
-  }
+  }*/
 
   // schedule the interpolation of mass and volume to the cell centers
   scheduleInterpolateNCToCC_0(                sched, mpm_patches, one_matl, 
                                                                   mpm_matls);
+  if(d_mpm->d_SF_vars->usingSoilFoam_CM)
+  d_mpm->scheduleComputeStressTensor(         sched, mpm_patches, mpm_matls);
 
   // do coarsens in reverse order, and before the other tasks
   if(do_mlmpmice){
@@ -1311,11 +1314,7 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
           if(mpm_matl->getIsSoilFoam()){
             sv_min_CC_mpm += gsv_min[nodeIdx[in]]  * NC_CCw_mass;
           }
-	  //IntVector c1 = nodeIdx[in];
-	  //if(mpm_matl->getIsSoilFoam()) if(c.x()==9&&c.y()==0&&c.z()==9) cout <<" "<<gsv_min[c1];
         }
-	//if(mpm_matl->getIsSoilFoam()) if(c.x()==9&&c.y()==0&&c.z()==9) cout << endl;
-	//if(c.x()==9&&c.y()==0&&c.z()==9) cout<<"USING SOIL FOAM "<<d_mpm->flags->d_usingSoilFoam_CM<<endl;
         double inv_cmass = 1.0/cmass[c];
         vel_CC_mpm  *= inv_cmass;    
         Temp_CC_mpm *= inv_cmass;
@@ -1343,9 +1342,6 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
         if(mpm_matl->getIsSoilFoam()){
           csv_min[c]  =(1.0-one_or_zero)*0.0  + one_or_zero*sv_min_CC_mpm;
         }
-	if(c.x()==9&&c.y()==0&&c.z()==9){
-	  //cout <<" one_or_zero "<<one_or_zero<<" sv_min_CC_mpm "<<sv_min_CC_mpm<<endl;
-	}
       }
 
       //  Set BC's
@@ -1927,14 +1923,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
             mpm_matl[m]->getConstitutiveModel()->
               computePressEOSCM(rho_micro[m][c],press_eos[m],press_ref,
                                 dp_drho[m], c_2,mpm_matl[m],maxvolstrain);
-	    // MKD
-	    //if(c.x()==9&&c.y()==0&&c.z()==9){
-	    //Point pt = level->getCellPosition(c);
-	    //std::cout<<"position "<<pt.asVector().x()<<" "<<pt.asVector().y()<<" "<<pt.asVector().z()<<std::endl;
-	    //double rho_orig = mpm_matl[m]->getInitialDensity();
-	    //double vol_strain = log(rho_orig/rho_micro[m][c]);
-	    //std::cout<<"m "<<m<<" rho_micro "<<rho_micro[m][c]<<" press_eos "<<press_eos[m]<<" maxvolstrain "<<maxvolstrain<<" dp_drho "<<dp_drho[m]<<" vol_strain "<<vol_strain<<std::endl;
-	    //}
           }
         }
 
@@ -1974,10 +1962,6 @@ void MPMICE::computeEquilibrationPressure(const ProcessorGroup*,
            rho_micro[m][c] =  
              mpm_matl[m]->getConstitutiveModel()->computeRhoMicroCM(
                                           press_new[c],press_ref,mpm_matl[m],maxvolstrain);
-	    // MKD
-            //if(c.x()==9&&c.y()==0&&c.z()==9){
-	   //std::cout<<"m "<<m<<" rho_micro "<<rho_micro[m][c]<<" press_new "<<press_new[c]<<" maxvolstrain "<<maxvolstrain<<" rho_CC_new "<<rho_CC_new[m][c]<<" delPress "<<delPress<<" vol_frac "<<vol_frac[m][c]<<std::endl;
-	   //}
          }
          vol_frac[m][c]   = rho_CC_new[m][c]/rho_micro[m][c];
          sum += vol_frac[m][c];
