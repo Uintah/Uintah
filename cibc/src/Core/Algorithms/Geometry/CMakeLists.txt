@@ -44,7 +44,6 @@ TARGET_LINK_LIBRARIES(Core_Algorithms_Geometry
   Core_Math
   Core_Thread
   Core_Util
-  ${TK_LIBRARY}
   ${GL_LIBRARY}
   ${M_LIBRARY}
 )
