@@ -85,11 +85,11 @@ WARNING
       // Get the applied heatflux at time t
       inline double heatflux(double t) const {return d_loadCurve->getLoad(t);}
 
-      // Get the force per particle at time t
-      double forcePerParticle(double time) const;
+      // Get the flux per particle at time t
+      double fluxPerParticle(double time) const;
 
-      // Get the force vector to be applied at a point 
-      Vector getForceVector(const Point& px, double forcePerParticle) const;
+      // Get the flux vector to be applied at a point 
+      double getFlux(const Point& px, double forcePerParticle) const;
 
    private:
 
