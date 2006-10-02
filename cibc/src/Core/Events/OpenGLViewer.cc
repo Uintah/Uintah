@@ -33,11 +33,16 @@
 #include <sci_glu.h>
 #include <sci_values.h>
 
+
 #include <sci_defs/bits_defs.h>
 #include <sci_defs/image_defs.h>
 
-#include <Core/Events/SceneGraphEvent.h>
+#if defined(HAVE_PNG) && HAVE_PNG
+#  include <png.h>
+#endif
+
 #include <Core/Events/OpenGLViewer.h>
+#include <Core/Events/SceneGraphEvent.h>
 #include <Core/Events/Tools/BaseTool.h>
 #include <Core/Events/Tools/ViewRotateTool.h>
 #include <Core/Events/Tools/ViewScaleTool.h>
@@ -64,10 +69,6 @@
 #include <Core/Geom/HeadLight.h>
 #include <Core/Geom/DirectionalLight.h>
 
-
-#if defined(HAVE_PNG) && HAVE_PNG
-#  include <png.h>
-#endif
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
