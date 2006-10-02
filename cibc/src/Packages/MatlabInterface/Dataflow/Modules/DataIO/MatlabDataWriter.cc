@@ -101,7 +101,7 @@ class MatlabDataWriter : public Module
     enum { NUMPORTS = 9};
     
     // GUI variables
-    GuiString				guifilename_;		// .mat filename (import from GUI)
+    GuiFilename 		guifilename_;		// .mat filename (import from GUI)
     GuiString       guifilenameset_;
     GuiString				guimatrixname_;   	// A list of the matrix names
     GuiString				guidataformat_;		// A list of the dataformat for each matrix (int, double etc.)
@@ -141,20 +141,14 @@ void MatlabDataWriter::execute()
 {
   matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter*>(this));
 
-  StringIPort *filenameport;
-  if ((filenameport = static_cast<StringIPort *>(get_input_port("filename"))))
-  {
-    StringHandle stringH;
-    if (filenameport->get(stringH))
-    {
-      if (stringH.get_rep())
-      {
-        std::string filename = stringH->get();
-        guifilename_.set(filename);
-        get_ctx()->reset();
-      }
-    }
-  }
+	StringHandle stringH;
+	get_input_handle("Filename",stringH,false);
+	if (stringH.get_rep())
+	{
+		std::string filename = stringH->get();
+		guifilename_.set(filename);
+		get_ctx()->reset();
+	}
 
   bool porthasdata[NUMPORTS];
   SCIRun::FieldHandle fieldhandle[3];
@@ -166,64 +160,18 @@ void MatlabDataWriter::execute()
   
   for (int p=0; p<3; p++)
   {
-    SCIRun::FieldIPort *iport;
-    iport = static_cast<SCIRun::FieldIPort *>(get_input_port(p));
-    if (!iport) 
-    {
-      error("MatlabDataWriter: Unable to initialize field input port");
-      return;
-    }
-    
-    if (!iport->get(fieldhandle[p]) || !fieldhandle[p].get_rep())
-    {
-      porthasdata[p] = false;
-    }
-    else
-    {
-      porthasdata[p] = true;
-    }
+    porthasdata[p] = get_input_handle(p,fieldhandle[p],false);
   }
   
   for (int p=0; p<3; p++)
   {
-    SCIRun::MatrixIPort *iport;
-    iport = static_cast<SCIRun::MatrixIPort *>(get_input_port(p+3));
-    if (!iport) 
-    {
-      error("MatlabDataWriter: Unable to initialize field input port");
-      return;
-    }
-    
-    if (!iport->get(matrixhandle[p]) || !matrixhandle[p].get_rep())
-    {
-      porthasdata[p+3] = false;
-    }
-    else
-    {
-      porthasdata[p+3] = true;
-    }
+    porthasdata[p+3] = get_input_handle(p+3,matrixhandle[p],false);
   }
-	
-  
+	  
   for (int p=0; p<3; p++)
   {
-    SCIRun::NrrdIPort *iport;
-    iport = static_cast<SCIRun::NrrdIPort *>(get_input_port(p+6));
-    if (!iport) 
-    {
-      error("MatlabDataWriter: Unable to initialize field input port");
-      return;
-    }
-    
-    if (!iport->get(nrrdhandle[p]) || !nrrdhandle[p].get_rep())
-    {
-      porthasdata[p+6] = false;
-    }
-    else
-    {
-      porthasdata[p+6] = true;
-    }
-  }
+    porthasdata[p+6] = get_input_handle(p+6,nrrdhandle[p],false);
+	}
   
   // Reorder the TCL input and put them
   // in orderly STL style vectors.

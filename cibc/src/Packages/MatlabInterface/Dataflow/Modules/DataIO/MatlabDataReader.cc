@@ -118,16 +118,12 @@ class MatlabDataReader : public Module
     enum { NUMPORTS = 9};
     
     // GUI variables
-    GuiString				guifilename_;		// .mat filename (import from GUI)
+    GuiFilename 		guifilename_;		// .mat filename (import from GUI)
     GuiString       guifilenameset_;
     GuiString				guimatrixinfotextslist_;   	// A list of matrix-information strings of the contents of a .mat-file
     GuiString				guimatrixnameslist_;	// A list of matrix-names of the contents of a .mat-file 
     GuiString				guimatrixname_;		// the name of the matrix that has been selected
 
-    // Ports (We only use one output port)
-    SCIRun::FieldOPort*			ofield_[3];
-    SCIRun::MatrixOPort*			omatrix_[3];
-    SCIRun::NrrdOPort*			onrrd_[3];
 };
 
 DECLARE_MAKER(MatlabDataReader)
@@ -160,20 +156,14 @@ MatlabDataReader::~MatlabDataReader()
 // Inner workings of this module
 void MatlabDataReader::execute()
 {
-  StringIPort *filenameport;
-  if ((filenameport = static_cast<StringIPort *>(get_input_port("Filename"))))
-  {
-    StringHandle stringH;
-    if (filenameport->get(stringH))
-    {
-      if (stringH.get_rep())
-      {
-        std::string filename = stringH->get();
-        guifilename_.set(filename);
-        get_ctx()->reset();
-      }
-    }
-  }
+	StringHandle stringH;
+	get_input_handle("Filename",stringH,false);
+	if (stringH.get_rep())
+	{
+		std::string filename = stringH->get();
+		guifilename_.set(filename);
+		get_ctx()->reset();
+	}
 
   // Get the filename from TCL.
   std::string filename = guifilename_.get();
@@ -189,16 +179,6 @@ void MatlabDataReader::execute()
   {
     for (int p=0;p<3;p++)
     {
-
-      // Find the output port the scheduler has created 
-      ofield_[p] = static_cast<SCIRun::FieldOPort *>(get_oport(static_cast<int>(p)));
-
-      if(!ofield_[p]) 
-      {
-        error("MatlabDataReader: Unable to initialize output field port");
-        return;
-      }
-
       matlabarray ma = readmatlabarray(p);
       if (ma.isempty())
       {
@@ -209,21 +189,11 @@ void MatlabDataReader::execute()
 
       matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter*>(this));
       translate.mlArrayTOsciField(ma,mh);
-      ofield_[p]->send(mh);
+			send_output_handle(p,mh,true);
     }
 
     for (int p=0;p<3;p++)
     {
-
-      // Find the output port the scheduler has created 
-      omatrix_[p] = static_cast<SCIRun::MatrixOPort *>(get_oport(static_cast<int>(p)+3));
-
-      if(!omatrix_[p]) 
-      {
-        error("MatlabDataReader: Unable to initialize output matrix port");
-        return;
-      }
-
       matlabarray ma = readmatlabarray(p+3);
       if (ma.isempty())
       {
@@ -233,21 +203,12 @@ void MatlabDataReader::execute()
       SCIRun::MatrixHandle mh;
       matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter*>(this));
       translate.mlArrayTOsciMatrix(ma,mh);
-      omatrix_[p]->send(mh);
+			
+			send_output_handle(p+3,mh,true);
     }
 
     for (int p=0;p<3;p++)
     {
-
-      // Find the output port the scheduler has created 
-      onrrd_[p] = static_cast<SCIRun::NrrdOPort *>(get_oport(static_cast<int>(p)+6));
-
-      if(!onrrd_[p]) 
-      {
-        error("MatlabDataReader: Unable to initialize output nrrd port");
-        return;
-      }
-
       matlabarray ma = readmatlabarray(p+6);
       if (ma.isempty())
       {
@@ -257,7 +218,8 @@ void MatlabDataReader::execute()
       SCIRun::NrrdDataHandle mh;
       matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter*>(this));
       translate.mlArrayTOsciNrrdData(ma,mh);
-      onrrd_[p]->send(mh);
+		
+			send_output_handle(p+6,mh,true);
     }
     
     SCIRun::StringHandle filenameH = scinew String(filename);

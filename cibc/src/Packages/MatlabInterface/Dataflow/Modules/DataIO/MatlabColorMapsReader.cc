@@ -108,15 +108,12 @@ class MatlabColorMapsReader : public Module
     enum { NUMPORTS = 6};
     
     // GUI variables
-    GuiString				guifilename_;		// .mat filename (import from GUI)
+    GuiFilename  		guifilename_;		// .mat filename (import from GUI)
     GuiString       guifilenameset_;
     GuiString				guicolormapinfotexts_;   	// A list of colormap-information strings of the contents of a .mat-file
     GuiString				guicolormapnames_;	// A list of colormap-names of the contents of a .mat-file 
     GuiString				guicolormapname_;		// the name of the colormap that has been selected
     GuiInt  				guidisabletranspose_; // Do not convert from Fortran ordering to C++ ordering
-    
-    // Ports (We only use one output port)
-    ColorMapOPort*			ocolormap_[NUMPORTS];
     
 };
 
@@ -152,21 +149,14 @@ MatlabColorMapsReader::~MatlabColorMapsReader()
 void MatlabColorMapsReader::execute()
 {
 
-  StringIPort *filenameport;
-  if ((filenameport = static_cast<StringIPort *>(get_input_port("Filename"))))
-  {
-    StringHandle stringH;
-    if (filenameport->get(stringH))
-    {
-      if (stringH.get_rep())
-      {
-        std::string filename = stringH->get();
-        guifilename_.set(filename);
-        get_ctx()->reset();
-      }
-    }
-  }
-
+	StringHandle stringH;
+	get_input_handle("Filename",stringH,false);
+	if (stringH.get_rep())
+	{
+		std::string filename = stringH->get();
+		guifilename_.set(filename);
+		get_ctx()->reset();
+	}
 
   // Get the filename from TCL.
   std::string filename = guifilename_.get();
@@ -185,16 +175,6 @@ void MatlabColorMapsReader::execute()
   {
     for (int p=0;p<NUMPORTS;p++)
     {
-
-      // Find the output port the scheduler has created 
-      ocolormap_[p] = static_cast<ColorMapOPort *>(get_oport(static_cast<int>(p)));
-
-      if(!ocolormap_[p]) 
-      {
-        error("MatlabColorMapsReader: Unable to initialize output port");
-        return;
-      }
-
       // Now read the colormap from file
       // The next function will open, read, and close the file
       // Any error will be exported as an exception.
@@ -221,7 +201,7 @@ void MatlabColorMapsReader::execute()
       translate.mlArrayTOsciColorMap(ma,mh);
       
       // Put the SCIRun colormap in the hands of the scheduler
-      ocolormap_[p]->send(mh);
+      send_output_handle(p,mh,true);
     }
 
     SCIRun::StringHandle filenameH = scinew String(filename);

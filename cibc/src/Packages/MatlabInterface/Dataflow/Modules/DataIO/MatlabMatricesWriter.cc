@@ -139,20 +139,14 @@ void MatlabMatricesWriter::execute()
 {
   matlabconverter translate(dynamic_cast<SCIRun::ProgressReporter*>(this));
 
-  StringIPort *filenameport;
-  if ((filenameport = static_cast<StringIPort *>(get_input_port("filename"))))
-  {
-    StringHandle stringH;
-    if (filenameport->get(stringH))
-    {
-      if (stringH.get_rep())
-      {
-        std::string filename = stringH->get();
-        guifilename_.set(filename);
-        get_ctx()->reset();
-      }
-    }
-  }
+	StringHandle stringH;
+	get_input_handle("Filename",stringH,false);
+	if (stringH.get_rep())
+	{
+		std::string filename = stringH->get();
+		guifilename_.set(filename);
+		get_ctx()->reset();
+	}
 
   bool porthasdata[NUMPORTS];
   SCIRun::MatrixHandle matrixhandle[NUMPORTS];
@@ -162,21 +156,7 @@ void MatlabMatricesWriter::execute()
   SCIRun::MatrixIPort *iport;	
   for (int p=0; p<NUMPORTS; p++)
   {
-    iport = static_cast<SCIRun::MatrixIPort *>(get_input_port(p));
-    if (!iport) 
-    {
-      error("MatlabMatricesWriter: Unable to initialize iport");
-      return;
-    }
-    
-    if (!iport->get(matrixhandle[p]) || !matrixhandle[p].get_rep())
-    {
-      porthasdata[p] = false;
-    }
-    else
-    {
-      porthasdata[p] = true;
-    }
+		porthasdata[p] = get_input_handle(p,matrixhandle[p],false);
   }
 
   // Reorder the TCL input and put them
