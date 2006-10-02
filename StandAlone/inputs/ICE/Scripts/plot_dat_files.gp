@@ -26,7 +26,7 @@ set pointsize 1
 
 set autoscale
 set terminal x11 1
-#set terminal postscript "Times-Roman" 9
+#set terminal enhanced postscript "Times-Roman" 9
 #set output "datPlots.ps"
 
 #set xrange[0:0.02]
