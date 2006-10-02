@@ -326,11 +326,6 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     }
   }
   
- if(d_SF_vars->usingSoilFoam_CM) {
-  t->computes(lb->sv_minLabel, d_SF_vars->matl_sub);  
- }
-  
-
   sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
 
   schedulePrintParticleCount(level, sched);
