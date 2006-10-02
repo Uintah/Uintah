@@ -48,6 +48,10 @@
 #include <sci_defs/bits_defs.h>
 #include <sci_defs/image_defs.h>
 
+#if defined(HAVE_PNG) && HAVE_PNG
+#  include <png.h>
+#endif
+
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Core/Geom/Pbuffer.h>
 #include <Core/Containers/StringUtil.h>
@@ -55,9 +59,6 @@
 #include <Core/Util/Environment.h>
 #include <Core/Geom/GeomViewerItem.h>
 
-#if defined(HAVE_PNG) && HAVE_PNG
-#  include <png.h>
-#endif
 
 #include <sgi_stl_warnings_off.h>
 #include <iostream>
