@@ -206,6 +206,7 @@ Painter::Autoview(event_handle_t) {
       (*window)->autoview(current_volume_);
     }
   }
+  cerr << "autoview\n";
 
   return CONTINUE_E;
 }

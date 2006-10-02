@@ -64,7 +64,7 @@
           </signal>
 
           <signal name="Button::clicked" 
-                  target="GLWindow::redraw"/>
+                  target="GLWindow::mark_redraw"/>
 
 
         </object>
@@ -89,7 +89,7 @@
           </signal>
 
           <signal name="Button::clicked" 
-                  target="GLWindow::redraw"/>
+                  target="GLWindow::mark_redraw"/>
 
         </object>
 

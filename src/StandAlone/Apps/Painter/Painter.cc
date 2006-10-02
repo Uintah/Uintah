@@ -478,7 +478,7 @@ double_to_string(double val)
 
 int
 Painter::SliceWindow::get_signal_id(const string &signalname) const {
-  if (signalname == "SliceWindow::redraw") return 1;
+  if (signalname == "SliceWindow::mark_redraw") return 1;
   return 0;
 }
 
@@ -576,7 +576,7 @@ Painter::redraw_all()
 
 void
 Painter::SliceWindow::redraw() {
-  throw_signal("SliceWindow::redraw");
+  throw_signal("SliceWindow::mark_redraw");
 }
 
 void

@@ -109,6 +109,8 @@ namespace SCIRun {
       variable_begin_ = Var<double>(get_vars(), prefix+"begin")();
       variable_end_ = Var<double>(get_vars(), prefix+"end")();
 
+      Var<double>variable(get_vars(), 
+                          "Animation::variable-"+to_string(curvar_));
 
       while (timer_->current_state() == Timer::Running) 
       {
@@ -126,18 +128,18 @@ namespace SCIRun {
                        Max(variable_begin_, variable_end_));
 
         //        height = newval;
-        Var<double>variable(get_vars(), 
-                            "Animation::variable-"+to_string(curvar_));
         variable = newval;
 
-        EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
+
         timer_->wait_for_time(time+1/60.0);
         if (time > stop_time_) {
           at_start_ = !at_start_;
           timer_->stop();
+          variable = ascending_ ? variable_end_ : variable_begin_;
+          
         }
+        EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
       }
-      EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
       
       return CONTINUE_E;
     }

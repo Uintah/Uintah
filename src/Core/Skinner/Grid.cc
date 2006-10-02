@@ -64,7 +64,6 @@ namespace SCIRun {
       WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
       if (window && window->get_window_state() == WindowEvent::REDRAW_E) {
         ReLayoutCells(event);
-      }
 
       const RectRegion &region = get_region();
       int rows = rows_();
@@ -116,6 +115,10 @@ namespace SCIRun {
                                             region.y2() - posy[r + 1], 
                                             region.x1() + posx[c + 1], 
                                             region.y2() - posy[r]));
+      }
+    }
+
+      for (unsigned int i = 0; i < cell_info_.size(); ++i) {
         children_[i]->process_event(event);
       }
 
