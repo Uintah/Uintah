@@ -58,8 +58,8 @@ Datatype::compute_new_generation()
     if(!current_generation)
     {
       current_generation = new AtomicCounter("Datatype generation counter", 1);
-      init_lock.unlock();
     }
+	init_lock.unlock();
   }
   return (*current_generation)++;
 }
