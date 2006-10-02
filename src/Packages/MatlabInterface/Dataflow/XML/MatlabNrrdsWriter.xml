@@ -113,7 +113,7 @@ package="MatlabInterface" name="MatlabNrrdsReader" />
 	<datatype>SCIRun::Nrrd</datatype>
       </port>
       <port>
-        <name>filename</name>
+        <name>Filename</name>
         <datatype>SCIRun::String</datatype>
       </port>            
     </inputs>

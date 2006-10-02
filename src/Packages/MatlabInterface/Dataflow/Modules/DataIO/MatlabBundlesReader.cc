@@ -108,8 +108,8 @@ private:
   enum { NUMPORTS = 6};
   
   // GUI variables
-  GuiString				guifilename_;		// .mat filename (import from GUI)
-  GuiString                             guifilenameset_;
+  GuiFilename			guifilename_;		// .mat filename (import from GUI)
+  GuiString       guifilenameset_;
   GuiString				guimatrixinfotexts_;   	// A list of matrix-information strings of the contents of a .mat-file
   GuiString				guimatrixnames_;	// A list of matrix-names of the contents of a .mat-file 
   GuiString				guimatrixname_;		// the name of the matrix that has been selected
@@ -117,11 +117,6 @@ private:
   GuiString				guipnrrd_;	
   GuiString				guipbundles_;	
   GuiString				guipbundle_;	
-
-
-  // Ports (We only use one output port)
-  SCIRun::BundleOPort*			omatrix_[NUMPORTS];
-  
 };
 
 DECLARE_MAKER(MatlabBundlesReader)
@@ -158,21 +153,15 @@ MatlabBundlesReader::~MatlabBundlesReader()
 // Inner workings of this module
 void MatlabBundlesReader::execute()
 {
+	StringHandle stringH;
+	get_input_handle("Filename",stringH,false);
+	if (stringH.get_rep())
+	{
+		std::string filename = stringH->get();
+		guifilename_.set(filename);
+		get_ctx()->reset();
+	}
 
-  StringIPort *filenameport;
-  if ((filenameport = static_cast<StringIPort *>(get_input_port("Filename"))))
-  {
-    StringHandle stringH;
-    if (filenameport->get(stringH))
-    {
-      if (stringH.get_rep())
-      {
-        std::string filename = stringH->get();
-        guifilename_.set(filename);
-        get_ctx()->reset();
-      }
-    }
-  }
 
   // Get the filename from TCL.
   std::string filename = guifilename_.get();
@@ -188,16 +177,6 @@ void MatlabBundlesReader::execute()
   {
     for (int p=0;p<NUMPORTS;p++)
     {
-
-      // Find the output port the scheduler has created 
-      omatrix_[p] = static_cast<SCIRun::BundleOPort *>(get_oport(static_cast<int>(p)));
-
-      if(!omatrix_[p]) 
-      {
-        error("MatlabBundlesReader: Unable to initialize output port");
-        return;
-      }
-
       // Now read the matrix from file
       // The next function will open, read, and close the file
       // Any error will be exported as an exception.
@@ -246,7 +225,7 @@ void MatlabBundlesReader::execute()
       translate.mlArrayTOsciBundle(ma,mh);
       
       // Put the SCIRun matrix in the hands of the scheduler
-      omatrix_[p]->send(mh);
+      send_output_handle(p,mh,true);
     }
     
     SCIRun::StringHandle filenameH = scinew String(filename);

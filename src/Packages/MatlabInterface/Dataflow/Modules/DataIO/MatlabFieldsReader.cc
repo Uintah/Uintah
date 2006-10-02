@@ -119,8 +119,6 @@ class MatlabFieldsReader : public Module
     GuiString				guimatrixnames_;	// A list of matrix-names of the contents of a .mat-file 
     GuiString				guimatrixname_;		// the name of the matrix that has been selected
 
-    // Ports (We only use one output port)
-    FieldOPort*			ofield_[NUMPORTS];
 };
 
 DECLARE_MAKER(MatlabFieldsReader)
@@ -153,20 +151,14 @@ MatlabFieldsReader::~MatlabFieldsReader()
 // Inner workings of this module
 void MatlabFieldsReader::execute()
 {
-  StringIPort *filenameport;
-  if ((filenameport = static_cast<StringIPort *>(get_input_port("Filename"))))
-  {
-    StringHandle stringH;
-    if (filenameport->get(stringH))
-    {
-      if (stringH.get_rep())
-      {
-        std::string filename = stringH->get();
-        guifilename_.set(filename);
-        get_ctx()->reset();
-      }
-    }
-  }
+	StringHandle stringH;
+	get_input_handle("Filename",stringH,false);
+	if (stringH.get_rep())
+	{
+		std::string filename = stringH->get();
+		guifilename_.set(filename);
+		get_ctx()->reset();
+	}
 
   // Get the filename from TCL.
   std::string filename = guifilename_.get();
@@ -182,16 +174,6 @@ void MatlabFieldsReader::execute()
   {
     for (int p=0;p<NUMPORTS;p++)
     {
-
-      // Find the output port the scheduler has created 
-      ofield_[p] = static_cast<FieldOPort *>(get_oport(static_cast<int>(p)));
-
-      if(!ofield_[p]) 
-      {
-        error("MatlabFieldsReader: Unable to initialize output port");
-        return;
-      }
-
       // Now read the matrix from file
       // The next function will open, read, and close the file
       // Any error will be exported as an exception.
@@ -219,7 +201,7 @@ void MatlabFieldsReader::execute()
       translate.mlArrayTOsciField(ma,mh);
       
       // Put the SCIRun matrix in the hands of the scheduler
-      ofield_[p]->send(mh);
+			send_output_handle(p,mh,true);
     }
     
     SCIRun::StringHandle filenameH = scinew String(filename);
