@@ -81,7 +81,7 @@ HeatFluxBC::flagMaterialPoint(const Point& p,
 
   } else if (d_surfaceType == "cylinder") {
     // Create a cylindrical annulus with radius-|dxpp|, radius+|dxpp|
-    double tol = dxpp.length();
+    double tol = dxpp.length()/2.;
     CylinderGeometryPiece* cgp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
     GeometryPiece* outer = new CylinderGeometryPiece(cgp->top(), 
                                                      cgp->bottom(), 
@@ -137,44 +137,47 @@ HeatFluxBC::getSurfaceArea() const
 
 // Calculate the force per particle at a certain time
 double 
-HeatFluxBC::forcePerParticle(double time) const
+HeatFluxBC::fluxPerParticle(double time) const
 {
+  cout << "d_numMaterialPoints = " << d_numMaterialPoints << endl;
   if (d_numMaterialPoints < 1) return 0.0;
 
   // Get the area of the surface on which the heatflux BC is applied
   double area = getSurfaceArea();
+  //double area = 1;
 
   // Get the initial heatflux that is applied ( t = 0.0 )
   double heatflx = heatflux(time);
+  cout << "heatflx = " << heatflx << endl;
 
   // Calculate the heatflux per particle
   return (heatflx*area)/static_cast<double>(d_numMaterialPoints);
 }
 
-// Calculate the force vector to be applied to a particular
+// Calculate the flux vector to be applied to a particular
 // material point location
-Vector
-HeatFluxBC::getForceVector(const Point& px, double forcePerParticle) const
+double
+HeatFluxBC::getFlux(const Point& px, double fluxPerParticle) const
 {
-  Vector force(0.0,0.0,0.0);
+  double flux(0.0);
   if (d_surfaceType == "box") {
     BoxGeometryPiece* gp = dynamic_cast<BoxGeometryPiece*>(d_surface);
     Vector normal(0.0, 0.0, 0.0);
     normal[gp->thicknessDirection()] = 1.0;
-    force = normal*forcePerParticle;
+    flux = fluxPerParticle;
   } else if (d_surfaceType == "cylinder") {
     CylinderGeometryPiece* gp = dynamic_cast<CylinderGeometryPiece*>(d_surface);
     Vector normal = gp->radialDirection(px);
-    force = normal*forcePerParticle;
+    flux = fluxPerParticle;
   } else if (d_surfaceType == "sphere") {
     SphereGeometryPiece* gp = dynamic_cast<SphereGeometryPiece*>(d_surface);
     Vector normal = gp->radialDirection(px);
-    force = normal*forcePerParticle;
+    flux = fluxPerParticle;
   } else {
     throw ParameterNotFound("** ERROR ** Unknown surface specified for heatflux BC",
                             __FILE__, __LINE__);
   }
-  return force;
+  return flux;
 }
 
 namespace Uintah {
@@ -204,7 +207,8 @@ ostream& operator<<(ostream& out, const HeatFluxBC& bc)
    int numPts = lc->numberOfPointsOnLoadCurve();
    for (int ii = 0; ii < numPts; ++ii) {
      out << "        time = " << lc->getTime(ii) 
-         << " heatflux = " << lc->getLoad(ii) << endl;
+       //         << " heatflux = " << lc->getLoad(ii) << endl;
+         << " heatflux = " << bc.heatflux(ii) << endl;
    }
    out << "End MPM HeatFlux BC # = " << bc.loadCurveID() << endl;
    return out;
