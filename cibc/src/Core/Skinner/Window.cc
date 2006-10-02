@@ -71,7 +71,8 @@ namespace SCIRun {
       spawner_thread_(0),
       draw_runnable_(0),
       draw_thread_(0),
-      redrawables_()
+      redrawables_(),
+      force_redraw_(false)
     {
 #if defined(_WIN32)
         
@@ -115,7 +116,7 @@ namespace SCIRun {
 
 
       REGISTER_CATCHER_TARGET(GLWindow::close);
-      REGISTER_CATCHER_TARGET(GLWindow::redraw);
+      REGISTER_CATCHER_TARGET(GLWindow::mark_redraw);
       REGISTER_CATCHER_TARGET(GLWindow::redraw_drawable);
     }
 
@@ -178,7 +179,7 @@ namespace SCIRun {
       WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
       bool redraw = (window && 
                      window->get_window_state() & WindowEvent::REDRAW_E);
-      bool subdraw = redraw && redrawables_.size();
+      bool subdraw = redraw && redrawables_.size() && !force_redraw_;
       if (redraw) {
         ASSERT(context_);
         if (!context_->make_current()) {
@@ -223,6 +224,10 @@ namespace SCIRun {
         }
         redrawables_.clear();
       } else {
+        if (redraw && force_redraw_) {
+          redrawables_.clear();
+          force_redraw_ = false;
+        }
         for (Drawables_t::iterator child = children_.begin(); 
              child != children_.end(); ++child) {
           (*child)->set_region(get_region());
@@ -252,7 +257,8 @@ namespace SCIRun {
     }
 
     BaseTool::propagation_state_e
-    GLWindow::redraw(event_handle_t) {
+    GLWindow::mark_redraw(event_handle_t) {
+      force_redraw_ = true;
       EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E, get_id()));
       return CONTINUE_E;
     }
@@ -264,8 +270,8 @@ namespace SCIRun {
         dynamic_cast<Drawable *>(signal->get_signal_thrower());
       ASSERT(drawable);
       redrawables_.push_back(drawable);
-
-      return redraw(signalh);
+      EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E, get_id()));
+      return CONTINUE_E;
     }
       
 

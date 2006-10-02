@@ -48,7 +48,7 @@ namespace SCIRun {
       virtual int                       get_signal_id(const string &) const;
     private:
       CatcherFunction_t                 close;
-      CatcherFunction_t                 redraw;
+      CatcherFunction_t                 mark_redraw;
       CatcherFunction_t                 redraw_drawable;
       int                               width_;
       int                               height_;
@@ -61,6 +61,7 @@ namespace SCIRun {
       ThrottledRunnable *               draw_runnable_;
       Thread *                          draw_thread_;
       Drawables_t                       redrawables_;
+      bool                              force_redraw_;
     };
 
   }

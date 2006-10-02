@@ -136,7 +136,7 @@
       <definition class="LabeledGradientBackground::child">                
         <object class="Root::FocusRegion">
           <object class="Painter::SliceWindow">
-            <signal name="SliceWindow::redraw" target="GLWindow::redraw"/>
+            <signal name="SliceWindow::mark_redraw" target="GLWindow::mark_redraw"/>
             <object class="Grid">                
               <var name="cols">2</var>
               <var name="rows">1</var>     
@@ -360,6 +360,10 @@
                       target="Animation::AnimateVariableDescending">
                 <var name="varnum">1</var>
               </signal>
+              <signal name="FileLoadBox::CancelButtonPress" 
+                      target="GLWindow::mark_redraw"></signal>
+
+
               <signal name="FileLoadBox::OKButtonPress" 
                       target="Painter::ITKImageFileRead"></signal>
               <!--
@@ -373,6 +377,9 @@
               
               <signal name="FileLoadBox::OKButtonPress" 
                       target="Painter::Autoview" ></signal>
+
+              <signal name="FileLoadBox::OKButtonPress" 
+                      target="GLWindow::mark_redraw" ></signal>
               
               
             </object>

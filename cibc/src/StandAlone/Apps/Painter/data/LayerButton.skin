@@ -77,7 +77,7 @@
             </signal>
 
             <signal name="Button::clicked" 
-                    target="GLWindow::redraw"/>
+                    target="GLWindow::mark_redraw"/>
 
             <signal name="Button::clicked" 
                     target="Root::Stop"/>
@@ -94,7 +94,7 @@
                     target="LayerButton::down">
             </signal>
             <signal name="Button::clicked" 
-                    target="GLWindow::redraw"/>
+                    target="GLWindow::mark_redraw"/>
 
             <signal name="Button::clicked" 
                     target="Root::Stop"/>
