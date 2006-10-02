@@ -70,6 +70,7 @@ endif
 PROGRAM := $(SRCDIR)/painter
 
 SRCS := $(SRCDIR)/Painter.cc \
+        $(SRCDIR)/LayerButton.cc \
         $(SRCDIR)/PainterTools.cc \
         $(SRCDIR)/PainterBrushTool.cc \
         $(SRCDIR)/PainterSignalTargets.cc \
