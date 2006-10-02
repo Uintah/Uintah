@@ -58,15 +58,6 @@ namespace SCIRun {
       }
     }
 
-
-    Variables::Variables(const Variables &copy) 
-      : variables_(copy.variables_),
-        parent_(copy.parent_),
-        children_(copy.children_),
-        propagate_(copy.propagate_)
-    {
-    }
-
     Variables::~Variables() 
     {
       children_t::iterator citer = children_.begin();
@@ -100,25 +91,17 @@ namespace SCIRun {
     }
 
     Variables::var_type_e
-    Variables::string_to_type(const std::string &type_str)
+    Variables::string_to_type(string type_str)
     {
-      if (string_tolower(type_str) == "unknown") {
-        return UNKNOWN_E;
-      } if (string_tolower(type_str) == "int") {
-        return INT_E;
-      } else if (string_tolower(type_str) == "bool") {
-        return BOOL_E;
-      } else if (string_tolower(type_str) == "float") {
-        return DOUBLE_E;
-      } else if (string_tolower(type_str) == "double") {
-        return DOUBLE_E;
-      } else if (string_tolower(type_str) == "string") {
-        return STRING_E;
-      } else if (string_tolower(type_str) == "color") {
-        return COLOR_E;
-      } else {
-        throw "Invalid variable type string: "+type_str;
-      }
+      type_str = string_tolower(type_str);
+      if (type_str == "unknown") return UNKNOWN_E;
+      if (type_str == "int")     return INT_E;
+      if (type_str == "bool")    return BOOL_E;
+      if (type_str == "float")   return DOUBLE_E;
+      if (type_str == "double")  return DOUBLE_E;
+      if (type_str == "string")  return STRING_E;
+      if (type_str == "color")   return COLOR_E;      
+      throw "Invalid variable type string: "+type_str;
       return UNKNOWN_E; // shouldn't reach here
     }
     
@@ -132,7 +115,7 @@ namespace SCIRun {
       while (vars_ptr && !found) {
         bool propagate = this == vars_ptr || vars_ptr->propagate_.count(name);
         if (propagate) {
-          if (vars_ptr->alias_.find(name) != vars_ptr->alias_.end())
+          while (vars_ptr->alias_.find(name) != vars_ptr->alias_.end())
             name = vars_ptr->alias_[name];
           iter = vars_ptr->variables_.find(name);
           found = iter != vars_ptr->variables_.end();
@@ -320,38 +303,6 @@ namespace SCIRun {
       cache_current_ = false;
     }
     
-    
-
-    void
-    Variables::change_parent(const string &name, 
-                             const string &value,
-                             const string &,
-                             bool)
-    {
-      //      Var<string> val(var<string>(name));
-      //      val = value;
-      //      cerr << "change_parent depreciated\n";
-    }
-        
-
-    bool
-    Variables::maybe_get_string(const string &name, 
-                                string &val)
-    {
-      pair<Variables *, value_t *> value_ptr = find_value_ptr(name);
-      if (value_ptr.second) {
-        if (value_ptr.first &&
-            value_ptr.second->cache_index_ &&
-            value_ptr.second->cache_index_ != -1) {
-          val = value_ptr.first->cached_strings_[value_ptr.second->cache_index_];
-        } else {
-          val = value_ptr.second->string_value_;
-        }
-        return true;
-      } else {
-        return false;
-      }
-    }
 
     int 
     Variables::get_int(const string &name) {
@@ -373,12 +324,22 @@ namespace SCIRun {
     string
     Variables::get_string(const string &name) {
       string val;
-      if (!maybe_get_string(name, val)) {
-        maybe_get_string(name, val);
+
+      pair<Variables *, value_t *> value_ptr = find_value_ptr(name);
+
+      if (!value_ptr.second) {
         throw "get_string failed: "+name;
       }
+
+      if (value_ptr.first &&
+          value_ptr.second->var_type_ == STRING_E &&
+          value_ptr.second->cache_index_ != -1) {
+        val = value_ptr.first->cached_strings_[value_ptr.second->cache_index_];
+      } else {
+        value_ptr.second->update_string_from_cache(value_ptr.first);
+        val = value_ptr.second->string_value_;
+      }
       return val;
-      //      return Var<string>(var<string>(name))();
     }    
 
     Color
@@ -388,10 +349,7 @@ namespace SCIRun {
 
     string
     Variables::get_id() {
-      //      return Var<string>(var<string>("id"))();
-      string id = "UNKNOWN";
-      maybe_get_string("id",id);
-      return id;
+      return get_string("id");
     }
 
 
@@ -495,9 +453,5 @@ namespace SCIRun {
       default: throw "unknown type in copy_var"; break;
       }
     }
-
-
-
-
   }
 }

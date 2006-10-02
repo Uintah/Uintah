@@ -25,63 +25,54 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : Arithmetic.cc
+//    File   : Trail.cc
 //    Author : McKay Davis
-//    Date   : Tue Aug  8 20:02:54 2006
+//    Date   : Sun Oct  1 19:54:39 2006
 
-#include <Core/Skinner/Variables.h>
-#include <Core/Skinner/Arithmetic.h>
 #include <Core/Events/EventManager.h>
-#include <Core/Containers/StringUtil.h>
-
+#include <Core/Util/FileUtils.h>
+#include <Core/Util/Environment.h>
 
 namespace SCIRun {
-  namespace Skinner {
 
-    Arithmetic::Arithmetic(Variables *variables) :
-      Parent(variables)
-    {
-      REGISTER_CATCHER_TARGET(Arithmetic::increment);
-      REGISTER_CATCHER_TARGET(Arithmetic::decrement);
-      REGISTER_CATCHER_TARGET(Arithmetic::set_value);
-    }
 
-    Arithmetic::~Arithmetic()
-    {
-    }
+void
+start_trail_file() {
+  string default_trailfile(string("/tmp/")+
+                           sci_getenv("EXECUTABLE_NAME")+".trail");
+  string default_trailmode("R");
 
-    BaseTool::propagation_state_e
-    Arithmetic::increment(event_handle_t event) {
-      Skinner::Signal *signal = 
-        dynamic_cast<Skinner::Signal *>(event.get_rep());
-      ASSERT(signal);
-      Var<double> val(signal->get_vars(), "variable", 0.0);     
-      val = val() + 1.0;
+  const char *trailfile = sci_getenv("SCIRUN_TRAIL_FILE");
+  const char *trailmode = sci_getenv("SCIRUN_TRAIL_MODE");
 
-      return BaseTool::CONTINUE_E;
-    }
-
-    BaseTool::propagation_state_e
-    Arithmetic::decrement(event_handle_t event) {
-      Skinner::Signal *signal = 
-        dynamic_cast<Skinner::Signal *>(event.get_rep());
-      ASSERT(signal);
-
-      Var<double> val(signal->get_vars(), "variable", 0.0);     
-      val = val() - 1.0;
-
-      return BaseTool::CONTINUE_E;
-    }
-
-    BaseTool::propagation_state_e
-    Arithmetic::set_value(event_handle_t event) {
-      Skinner::Signal *signal = 
-        dynamic_cast<Skinner::Signal *>(event.get_rep());
-      ASSERT(signal);
-      signal->get_vars()->copy_var("value", "variable");
-      return BaseTool::CONTINUE_E;
-    }
-
+  if (!trailfile) {
+    trailfile = default_trailfile.c_str();
   }
+
+  if (!trailmode) {
+    trailmode = default_trailmode.c_str();
+  }
+
+  if (trailmode && trailfile) {
+    if (trailmode[0] == 'R') {
+      if (EventManager::record_trail_file(trailfile)) {
+        cerr << "Recording trail file: ";
+      } else {
+        cerr << "ERROR recording trail file ";
+      } 
+      cerr << trailfile << std::endl;
+    }
+
+    if (trailmode[0] == 'P') {
+      if (EventManager::play_trail_file(trailfile)) {
+        cerr << "Playing trail file: " << trailfile << std::endl;
+        EventManager::play_trail();
+        cerr << "Trail file completed.\n";
+      } else {
+        cerr << "ERROR playing trail file " << trailfile << std::endl;
+      } 
+    }
+  }
+}  
 
 }

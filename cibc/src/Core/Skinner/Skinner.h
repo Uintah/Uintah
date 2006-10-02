@@ -51,8 +51,10 @@ namespace SCIRun {
   namespace Skinner {
     class Drawable;
 
-    SCISHARE Drawable * load_skin(const string&filename);
+    SCISHARE Drawable *         load_skin(const string&filename);
+    SCISHARE bool               load_default_skin();
   
+
     class ThrottledRunnableToolManager : public ThrottledRunnable{
     public:
       ThrottledRunnableToolManager(const string &name,

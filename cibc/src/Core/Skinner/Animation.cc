@@ -52,11 +52,6 @@ namespace SCIRun {
       ascending_(true),
       timer_(new TimeThrottle())
     {
-      //      REGISTER_CATCHER_TARGET(Animation::AnimateHeight);
-      //      register_default_thrower
-      // (this->register_target("blah",
-      //                       static_cast<SCIRun::Skinner::SignalCatcher::CatcherFunctionPtr> (&Animation::AnimateVariableAscending)));
-
       REGISTER_CATCHER_TARGET(Animation::AnimateVariableAscending);
       REGISTER_CATCHER_TARGET(Animation::AnimateVariableDescending);
     }
@@ -78,86 +73,6 @@ namespace SCIRun {
       return new Animation(variables);
     }
     
-    /*
-     *
-     BaseTool::propagation_state_e
-     Animation::process_event(event_handle_t e) {
-     const RectRegion &region = get_region();
-     
-     double height = region.height();
-     if (timer_->current_state() == Timer::Running) {
-     double time = timer_->time();
-     double dt = (time - start_time_) / (stop_time_ - start_time_);
-     height = stop_height_ + (height - stop_height_) * (1.0 - dt);
-     height = Clamp(height, height, stop_height_);
-     EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
-     if (time > stop_time_) {
-     timer_->stop();
-     }
-     }
-     
-     set_region(RectRegion(region.x1(), region.y2() - height, 
-     region.x2(), region.y2()));
-     
-     
-     return Parent::process_event(e);
-     }
-     
-     
-     BaseTool::propagation_state_e
-     Animation::AnimateHeight(event_handle_t e) {
-     bool stopped = timer_->current_state() == Timer::Stopped;
-     double seconds = 0.0;
-     if (!get_vars()->maybe_get_double("seconds", seconds)) {
-     cerr << "Animation::AnimateHeight, seconds invalid" << std::endl;
-     }
-     
-     
-     if (stopped) {
-     timer_->start();
-     }
-     
-     EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
-     start_time_ = timer_->time();
-     stop_time_ = start_time_ + seconds;
-     get_vars()->maybe_get_double("end_height", stop_height_);
-     return STOP_E;
-     }
-
-    */
-
-    BaseTool::propagation_state_e
-    Animation::process_event(event_handle_t e) {
-#if 0
-      if (timer_->current_state() == Timer::Running) {
-        double time = timer_->time();
-        double dt = (time - start_time_) / (stop_time_ - start_time_);
-
-        if (!ascending_) {
-          dt = 1.0 - dt;
-        }
-
-        double newval = variable_begin_ + (variable_end_-variable_begin_) * dt;
-
-        newval = Clamp(newval, 
-                       Min(variable_begin_, variable_end_),
-                       Max(variable_begin_, variable_end_));
-
-        //        height = newval;
-        string varname =  "Animation::variable-"+to_string(curvar_);
-        get_vars()->insert(varname, to_string(newval), "string", true);
-        
-        EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
-        if (time > stop_time_) {
-          at_start_ = !at_start_;
-          timer_->stop();
-        }
-      }
-#endif 
-      return Parent::process_event(e);
-    }
-
-
     BaseTool::propagation_state_e
     Animation::AnimateVariableAscending(event_handle_t e) {
       if (!at_start_) return STOP_E;
@@ -222,7 +137,7 @@ namespace SCIRun {
           timer_->stop();
         }
       }
-
+      EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
       
       return CONTINUE_E;
     }

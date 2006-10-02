@@ -48,18 +48,8 @@ using std::pair;
 
 namespace SCIRun {
   namespace Skinner {
-
-   template<class _A, class _R>
-   struct unary_function
-   {
-     typedef _A argument_type;
-     typedef _R result_type;
-   };
-		
     class Variables;
-
     template <class T>
-
     class Var {
     private:
       friend class Variables;
@@ -82,28 +72,17 @@ namespace SCIRun {
       T operator()();
     };
     
-    class Variables : 
-      public std::unary_function<pair<Variables *, int>, const string &>
+    class Variables 
     {
     public:
       Variables         (const string &id, Variables *parent=0);
-      Variables         (const Variables &copy);
       virtual           ~Variables();
      
-      void              unset(const string &) { std::cerr << "Unset depreciated\n";}
-
-      // depreciated
       void              insert(const string &name,
                                const string &value, 
                                const string &type_str = "string",
                                bool propagate = false);
       void              copy_var(const string &from, const string &to);
-      // dangerous, breaks closures, depreciated
-      void              change_parent(const string &name,
-                                      const string &value, 
-                                      const string &type_str = "string",
-                                      bool propagate = false);
-
 
       bool              exists(const string &varname);
 
@@ -113,9 +92,10 @@ namespace SCIRun {
       bool              get_bool(const string &);
       Color             get_color(const string &);
       string            get_string(const string &);
-
-      bool              maybe_get_string(const string &, string &);
     private:
+      // Disable Copy Constructor
+      Variables         (const Variables &copy) { ASSERT(0); }
+
       void              breakpoint();
       friend class Var<Color>;
       friend class Var<int>;
@@ -160,7 +140,7 @@ namespace SCIRun {
       int                       set_typed_cache_value(vector<T> &, int &, 
                                                       const T &);
 
-      static var_type_e         string_to_type(const std::string &);
+      static var_type_e         string_to_type(string);
       static std::string        type_to_string(var_type_e);
       var_type_e                type_to_enum(int) { return INT_E; }
       var_type_e                type_to_enum(bool){ return BOOL_E; }
@@ -226,6 +206,7 @@ namespace SCIRun {
         this->scope_->set_by_idx(*this->scope_index_, rhs);
       }
       ASSERT(this->scope_index_  && (*this->scope_index_ >= 0));
+      return *this;
     }
 
     template <class T>

@@ -38,7 +38,7 @@ namespace SCIRun {
       BaseTool(variables ? variables->get_id() : ""),
       SignalCatcher(),
       SignalThrower(),
-      visible_(variables, "visible"),
+      visible_(variables, "visible",1),
       region_(),
       variables_(variables)
     {

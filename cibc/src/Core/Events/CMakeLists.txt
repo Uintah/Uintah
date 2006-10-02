@@ -36,6 +36,7 @@ SET(Core_Events_SRCS
   SceneGraphEvent.cc
   SelectionTargetEvent.cc
   X11EventSpawner.cc	
+  Trail.cc	
   Tools/AutoviewTool.cc	
   Tools/Ball.cc		
   Tools/BallAux.cc		

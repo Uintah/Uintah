@@ -1,0 +1,102 @@
+<definition class="ThreeView">
+  <object class="Grid">
+    <var name="rows">3</var>
+    <var name="cols">1</var>
+    
+    <var name="window-gap" propagate="yes">2</var>
+
+    <var name="bgcolor" propagate="yes">#00000000</var>
+
+
+    <object class="ShadowedBox">
+      <var name="row">1</var>
+      <var name="col">1</var>
+      <var name="GradientBackground::bottom-color" 
+           type="color" propagate="yes">#999999EE</var>
+      <var name="LabeledGradientBackground::text" 
+           propagate="yes">3D Viewer</var>
+      
+      <var name="size" propagate="yes">50</var>
+      <var name="shadow" propagate="yes">1</var>
+      <var name="offsetx" propagate="yes">-5</var>
+      <var name="offsety" propagate="yes">5</var>
+      <var name="bgcolor" propagate="yes">#00000060</var>
+      
+      
+      <definition class="LabeledGradientBackground::child">
+        <object class="SceneGraph"/>
+      </definition>
+      
+      <definition class="ShadowedBox::child">
+        <object class="LabeledGradientBackground"/>
+      </definition>                
+    </object>              
+
+    <object class="Collection">
+      <var name="row">2</var>
+      <var name="col">1</var>
+      <var name="cell-height">$window-gap</var>
+    </object>
+
+    <object class="Grid">
+      <var name="rows">1</var>
+      <var name="cols">7</var>
+
+      <var name="row">3</var>
+      <var name="col">1</var>
+
+      <object class="Collection">
+        <var name="row">1</var>
+        <var name="col">1</var>
+        <var name="cell-width">$window-gap</var>
+      </object>
+
+      <object class="Collection">
+        <var name="row">1</var>
+        <var name="col">3</var>
+        <var name="cell-width">$window-gap</var>
+      </object>
+
+      <object class="Collection">
+        <var name="row">1</var>
+        <var name="col">5</var>
+        <var name="cell-width">$window-gap</var>
+      </object>
+
+      <object class="Collection">
+        <var name="row">1</var>
+        <var name="col">7</var>
+        <var name="cell-width">$window-gap</var>
+      </object>
+
+      <object class="ShadowedPainterWindow">
+        <var name="row">1</var>
+        <var name="col">2</var>
+        <var name="axis" propagate="yes">0</var>
+        <var name="GradientBackground::bottom-color"
+             type="color" propagate="yes">$light_red</var>
+        <var name="NicePainterWindow::name" 
+             propagate="yes">Sagittal</var>
+      </object>
+
+      <object class="ShadowedPainterWindow">
+        <var name="row">1</var>
+        <var name="col">4</var>
+        <var name="axis" propagate="yes">2</var>
+        <var name="GradientBackground::bottom-color" 
+             type="color" propagate="yes">$light_green</var>
+        <var name="NicePainterWindow::name" propagate="yes">Coronal</var>
+      </object>
+
+      <object class="ShadowedPainterWindow">
+        <var name="row">1</var>
+        <var name="col">6</var>
+        <var name="axis" propagate="yes">1</var>
+        <var name="GradientBackground::bottom-color" 
+             type="color" propagate="yes">$light_blue</var>
+        <var name="NicePainterWindow::name" propagate="yes">Axial</var>
+      </object>
+    </object>
+  </object>
+</definition>
+

@@ -3,13 +3,16 @@
 
 <skinner version="1.0" xmlns:xi="http://www.w3.org/2001/XInclude">
 
-  <var name="program_name" propagate="yes">leXov</var>
+  <var name="program_name" propagate="yes">LeXoV</var>
   <var name="full_program_name" propagate="yes">version 1.0b</var>
 
   <var name="Painter::brush_radius" type="double" propagate="yes">5.0</var>
   <var name="Painter::brush_softness" type="double"  propagate="yes">0.0</var>
   <var name="Painter::brush_value" type="double" propagate="yes">256.0</var>
 
+
+  <var name="FourView::visible" type="bool" propagate="yes">0</var>
+  <var name="ThreeView::visible" type="bool" propagate="yes">1</var>
 
   <var name="ITKCurvatureAnisotropicDiffusionImageFilterTool::numberOfIterations" propagate="yes">5</var>
   <var name="ITKCurvatureAnisotropicDiffusionImageFilterTool::timeStep" propagate="yes">0.0625</var>
@@ -56,9 +59,21 @@
        propagate="yes">0</var>
 
 
-  <var name="Resample::x" propagate="yes">x1</var>
-  <var name="Resample::y" propagate="yes">x1</var>
-  <var name="Resample::z" propagate="yes">x1</var>
+  <var name="Painter::crop::min::x" type="double" propagate="yes">0</var>
+  <var name="Painter::crop::min::y" type="double" propagate="yes">0</var>
+  <var name="Painter::crop::min::z" type="double" propagate="yes">0</var>
+  <var name="Painter::crop::max::x" type="double" propagate="yes">0</var>
+  <var name="Painter::crop::max::y" type="double" propagate="yes">0</var>
+  <var name="Painter::crop::max::z" type="double" propagate="yes">0</var>
+
+
+  <var name="Resample::x" type="double" propagate="yes">100</var>
+  <var name="Resample::y" type="double" propagate="yes">100</var>
+  <var name="Resample::z" type="double" propagate="yes">100</var>
+
+  <var name="Resample::percent_x" type="double" propagate="yes">100</var>
+  <var name="Resample::precent_y" type="double" propagate="yes">100</var>
+  <var name="Resample::percent_z" type="double" propagate="yes">100</var>
 
 
   <var name="ITKBinaryDilateErode::dilateValue" propagate="yes">1</var>
@@ -90,11 +105,16 @@
   <xi:include href="Button2.skin" parse="xml"/>
   <xi:include href="ImageButton.skin" parse="xml"/>
   <xi:include href="SliceFrame.skin" parse="xml"/>
+  <xi:include href="FrameButton.skin" parse="xml"/>
+  <xi:include href="FourView.skin" parse="xml"/>
+  <xi:include href="ThreeView.skin" parse="xml"/>
   <xi:include href="ToolDialog.skin" parse="xml"/>
+  <xi:include href="MenuButton.skin" parse="xml"/>
   <xi:include href="HelpButton.skin" parse="xml"/>  
   <xi:include href="FileLoadBox.skin" parse="xml"/>
   <xi:include href="SpinnerBox.skin" parse="xml"/>
   <xi:include href="LabeledSpinnerBox.skin" parse="xml"/>
+  <xi:include href="MainToolbar.skin" parse="xml"/>
   <xi:include href="GradientBackground.skin" parse="xml"/>
   <xi:include href="VCRControls.skin" parse="xml"/>
   <xi:include href="ITKThresholdDialog.skin" parse="xml"/>
@@ -107,7 +127,7 @@
   <xi:include href="CropToolDialog.skin" parse="xml"/>
   <xi:include href="ITKCurvatureAnisotropicDiffusionImageFilterToolDialog.skin" parse="xml"/>
   <xi:include href="ITKConfidenceConnectedImageFilterToolDialog.skin" parse="xml"/>
-       
+  
   
   <definition class="NicePainterWindow">
     <object class="Collection">
@@ -116,8 +136,46 @@
       <definition class="LabeledGradientBackground::child">                
         <object class="Root::FocusRegion">
           <object class="Painter::SliceWindow">
-            <var name="breakpoint"></var>
             <signal name="SliceWindow::redraw" target="GLWindow::redraw"/>
+            <object class="Grid">                
+              <var name="cols">2</var>
+              <var name="rows">1</var>     
+              <object class="Grid">
+                <var name="col">2</var>
+                <var name="row">1</var>
+                <var name="cell-width">25</var>
+                
+                <var name="cols">1</var>
+                <var name="rows">10</var>
+                <object class="FrameButton">
+                  <var name="col">1</var>
+                  <var name="row">10</var>
+                  <var name="cell-height">25</var>
+                  <var name="Button::Text::text" propagate="yes">A</var>
+                  <signal name="Button::clicked" 
+                          target="SliceWindow::Autoview"/>
+
+                </object>
+                <object class="FrameButton">
+                  <var name="col">1</var>
+                  <var name="row">9</var>
+                  <var name="cell-height">25</var>
+                  <var name="Button::Text::text" propagate="yes">+</var>
+                  <signal name="Button::clicked" 
+                          target="SliceWindow::zoom_in"/>
+                </object>
+
+                <object class="FrameButton">
+                  <var name="col">1</var>
+                  <var name="row">8</var>
+                  <var name="cell-height">25</var>
+                  <var name="Button::Text::text" propagate="yes">-</var>
+                  <signal name="Button::clicked" 
+                          target="SliceWindow::zoom_out"/>
+                </object>
+
+              </object>
+            </object>
           </object>
         </object>
       </definition>
@@ -125,6 +183,20 @@
       <object class="LabeledGradientBackground"/>
     </object>
   </definition>
+
+
+
+  <definition class="ShadowedPainterWindow">
+    <object class="ShadowedBox">
+      <definition class="ShadowedBox::child">
+        <object class="NicePainterWindow"/>
+      </definition>
+    </object>
+  </definition>
+
+
+  <!--
+  -->
 
 
 
@@ -238,47 +310,49 @@
 
 
         <object class="Root::GLWindow" id="SCI-RENDER">
-          
-          <!--
-          -->
-
           <var name="id">$program_name</var>
           <var name="width" type="int">1100</var>
           <var name="height" type="int">800</var>
           <var name="posx" type="int">220</var>
           <var name="posy" type="int">20</var>
           <var name="border" type="bool">$Window::borders</var>
-
-
-
+          
 
           <object class="Box">
-            <var name="color">#FFFFFF</var>
+            <var name="color">#AAAAAAFF</var>
           </object>
-
+            
+          <!--              
           <object class="Texture">
-            <var name="file">BackgroundTile04.png</var>
-            <var name="color">#DDDDE0FF</var>
-            <var name="repeatx">1</var>
-            <var name="repeaty">1</var>
-          </object>
-
-          <object class="Texture">
-            <var name="file">BackgroundTile04.png</var>
-            <var name="color">#000000</var>
+            <var name="file">BackgroundTile03.png</var>
+            <var name="color">#FFFFFFFF</var>
             <var name="repeatx">1</var>
             <var name="repeaty">1</var>
           </object>
 
 
+              <object class="Texture">
+              <var name="file">BackgroundTile04.png</var>
+              <var name="color">#000000FF</var>
+              <var name="repeatx">1</var>
+              <var name="repeaty">1</var>
+              </object>
+          -->
+          
 
           <object class="Grid" id="MainGrid">
             <var name="rows">11</var>
             <var name="cols">1</var>
 
 
-            <object class="FileLoadBox">
+            <object class="MainToolbar">
               <var name="row">1</var>
+              <var name="col">1</var>
+              <var name="cell-height">35</var>
+            </object>
+
+            <object class="FileLoadBox">
+              <var name="row">2</var>
               <var name="col">1</var>
               <var name="FileLoadBox::text" propagate="yes"> Volume File to Load: </var>
               <var name="cell-height">$Animation::variable-1</var>
@@ -303,18 +377,16 @@
               
             </object>
 
-
-
             <object class="FileLoadBox">
-              <var name="row">2</var>
+              <var name="row">3</var>
               <var name="col">1</var>
               <var name="color">#ff0000ff</var>
               <var name="FileLoadBox::text" propagate="yes"> Volume File to Save: </var>
-
+              
               <var name="cell-height">$Animation::variable-2</var>
-
+              
               <signal name="FileLoadBox::CancelButtonPress" 
-                      target="Animation::AnimateVariableDescending">
+target="Animation::AnimateVariableDescending">
                 <var name="varnum">2</var>
               </signal>
               
@@ -327,9 +399,22 @@
               </signal>                                    
             </object>
 
+            <object class="FourView">
+              <var name="row">4</var>
+              <var name="col">1</var>
+              <var name="visible">$FourView::visible</var>
+            </object>
+
+            <object class="ThreeView">
+              <var name="row">4</var>
+              <var name="col">1</var>
+              <var name="visible">$ThreeView::visible</var>
+            </object>
+
+
 
             <object class="ToolDialog">
-              <var name="row">4</var>
+              <var name="row">5</var>
               <var name="col">1</var>
               <var name="cell-height">$Animation::variable-3</var>
 
@@ -397,19 +482,10 @@
               <var name="col">1</var>
 
               <var name="rows">1</var>
-              <var name="cols">2</var>
-
+              <var name="cols">1</var>
+              
               <var name="cell-height">35</var>
               
-              
-              <object class="Collection">
-                <var name="row">1</var>
-                <var name="col">2</var>
-                <var name="cell-width">50</var>
-                <object class="HelpButton"/>
-              </object>
-
-
               <object class="Frame">
                 <var name="row">1</var>
                 <var name="col">1</var>
@@ -441,111 +517,6 @@
                     </object>
                   </object>
                 </object>
-              </object>
-            </object>
-
-
-            <object class="Collection">
-              <var name="row">3</var>
-              <var name="col">1</var>
-              
-              <object class="Grid">
-                <var name="width">5</var>
-                <var name="height">5</var>
-                
-                <var name="rows">5</var>
-                <var name="cols">5</var>
-                
-
-                <var name="window-gap" propagate="yes">2</var>
-
-                <var name="bgcolor" propagate="yes">#00000000</var>
-
-                <object class="Collection">
-                  <var name="row">1</var>
-                  <var name="col">1</var>
-                  <var name="cell-width">$window-gap</var>
-                  <var name="cell-height">$window-gap</var>
-                </object>
-
-                <object class="Collection">
-                  <var name="row">1</var>
-                  <var name="col">3</var>
-                  <var name="cell-width">$window-gap</var>
-                </object>
-
-                <object class="Collection">
-                  <var name="row">1</var>
-                  <var name="col">5</var>
-                  <var name="cell-width">$window-gap</var>
-                </object>
-
-                <object class="Collection">
-                  <var name="row">3</var>
-                  <var name="col">1</var>
-                  <var name="cell-height">$window-gap</var>
-                </object>
-
-                <object class="Collection">
-                  <var name="row">5</var>
-                  <var name="col">1</var>
-                  <var name="cell-height">$window-gap</var>
-                </object>
-
-
-                <object class="ShadowedPainterWindow">
-                  <var name="row">2</var>
-                  <var name="col">4</var>
-                  <var name="axis" propagate="yes">0</var>
-                  <var name="GradientBackground::bottom-color"
-                       type="color" propagate="yes">$light_red</var>
-                  <var name="NicePainterWindow::name" 
-                       propagate="yes">Sagittal</var>
-                </object>
-
-                <object class="ShadowedPainterWindow">
-                  <var name="row">4</var>
-                  <var name="col">2</var>
-                  <var name="axis" propagate="yes">2</var>
-                  <var name="GradientBackground::bottom-color" 
-                       type="color" propagate="yes">$light_green</var>
-                  <var name="NicePainterWindow::name" propagate="yes">Coronal</var>
-                </object>
-
-
-                <object class="ShadowedPainterWindow">
-                  <var name="row">2</var>
-                  <var name="col">2</var>
-                  <var name="axis" propagate="yes">1</var>
-                  <var name="GradientBackground::bottom-color" 
-                       type="color" propagate="yes">$light_blue</var>
-                  <var name="NicePainterWindow::name" propagate="yes">Axial</var>
-                </object>
-
-
-                <object class="ShadowedBox">
-                  <var name="row">4</var>
-                  <var name="col">4</var>
-                  <var name="GradientBackground::bottom-color" 
-                       type="color" propagate="yes">#999999EE</var>
-                  <var name="LabeledGradientBackground::text" 
-                       propagate="yes">3D Viewer</var>
-
-                  <var name="size" propagate="yes">50</var>
-                  <var name="shadow" propagate="yes">1</var>
-                  <var name="offsetx" propagate="yes">-5</var>
-                  <var name="offsety" propagate="yes">5</var>
-                  <var name="bgcolor" propagate="yes">#00000060</var>
-
-
-                  <definition class="LabeledGradientBackground::child">
-                    <object class="SceneGraph"/>
-                  </definition>
-
-                  <definition class="ShadowedBox::child">
-                    <object class="LabeledGradientBackground"/>
-                  </definition>                
-                </object>              
               </object>
             </object>
           </object>
@@ -591,7 +562,6 @@
       </object>
     </object>
   </object>
-
 </skinner>
 
 

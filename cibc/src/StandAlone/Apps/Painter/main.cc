@@ -29,97 +29,35 @@
 //    Author : McKay Davis
 //    Date   : Tue May 30 21:38:23 MDT 2006
 
-#include <Core/Events/EventManager.h>
+
 #include <Core/Skinner/XMLIO.h>
-#include <Core/Util/Environment.h>
-#include <Core/Util/FileUtils.h>
 #include <StandAlone/Apps/Painter/Painter.h>
+#include <Core/Events/EventManager.h>
+#include <Core/Events/Trail.h>
 
 #include <sgi_stl_warnings_off.h>
 #include <string>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
+
 #include <sci_defs/x11_defs.h>
-
 #if defined(__APPLE__) && !defined(HAVE_X11)
-  namespace Carbon {
+namespace Carbon {
 #  include <Carbon/Carbon.h>
-  }
+}
 #endif
 
-using std::cout;
 using namespace SCIRun;
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma set woff 1424
-#pragma set woff 1209 
-#endif
-
-
-void
-start_trail_file() {
-  string default_trailfile(string("/tmp/")+
-                           sci_getenv("EXECUTABLE_NAME")+".trail");
-  string default_trailmode("R");
-
-  const char *trailfile = sci_getenv("SCIRUN_TRAIL_FILE");
-  const char *trailmode = sci_getenv("SCIRUN_TRAIL_MODE");
-
-  if (!trailfile) {
-    trailfile = default_trailfile.c_str();
-  }
-
-  if (!trailmode) {
-    trailmode = default_trailmode.c_str();
-  }
-
-  if (trailmode && trailfile) {
-    if (trailmode[0] == 'R') {
-      if (EventManager::record_trail_file(trailfile)) {
-        cerr << "Recording trail file: ";
-      } else {
-        cerr << "ERROR recording trail file ";
-      } 
-      cerr << trailfile << std::endl;
-    }
-
-    if (trailmode[0] == 'P') {
-      if (EventManager::play_trail_file(trailfile)) {
-        cerr << "Playing trail file: " << trailfile << std::endl;
-        EventManager::play_trail();
-        cerr << "Trail file completed.\n";
-      } else {
-        cerr << "ERROR playing trail file " << trailfile << std::endl;
-      } 
-    }
-  }
-}  
-  
 
 int
 main(int argc, char *argv[], char **environment) {
   create_sci_environment(environment, argv[0]);  
   
-  string default_skin = sci_getenv("SCIRUN_OBJDIR")+string("data");
-  string skinner_path = default_skin;
-  const char *path_ptr = sci_getenv("SKINNER_PATH");
-  if (path_ptr) {
-    skinner_path = string(path_ptr) + ":" + default_skin;
-  }
-  sci_putenv("SKINNER_PATH", skinner_path);
-  sci_putenv("SCIRUN_FONT_PATH",skinner_path);
-  string filename = "main.skin";
-  string path = findFileInPath(filename, skinner_path);
-  if (path.empty()) {
-    std::cerr << "Cannot find main.skin in SKINNER_PATH.\n";
-    std::cerr << "SKINNER_PATH=" << skinner_path << std::endl;;
-    return 0;
-  }
-
   Skinner::XMLIO::register_maker<Painter>();
-  Skinner::load_skin(path+filename);
+  if (!Skinner::load_default_skin()) {
+    cerr << "Errors encounted loading default skin.  Continuing anyways...\n";
+  }
 
-  EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
   EventManager *em = new EventManager();
   Thread *em_thread = new Thread(em, "Event Manager");
   start_trail_file();

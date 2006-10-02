@@ -60,7 +60,7 @@ namespace SCIRun {
     }
 
     Root *
-    XMLIO::load(const string &filename)
+    XMLIO::load(const string &filename, Root *inroot)
     {
       /*
        * this initialize the library and check potential ABI mismatches
@@ -103,7 +103,6 @@ namespace SCIRun {
         cerr << "XInclude processing failed\n";
         return 0;
         }
-      cerr << "Xinc: " << inc << std::endl;
 
       int flags = XML_PARSE_DTDATTR | XML_PARSE_DTDVALID | XML_PARSE_PEDANTIC;
       xmlCtxtUseOptions(ctxt, flags);
@@ -152,13 +151,13 @@ namespace SCIRun {
 
 
       // parse the doc at network node.
-      Root *root;
+      Root *root = inroot;
       for (xmlNode *cnode=doc->children; cnode!=0; cnode=cnode->next) {
         if (XMLUtil::node_is_dtd(cnode, "skinner")) 
           continue;
         if (XMLUtil::node_is_element(cnode, "skinner")) {
           
-          root = eval_skinner_node(cnode, filename);
+          root = eval_skinner_node(cnode, filename, inroot);
         } 
         else if (!XMLUtil::node_is_comment(cnode))
           throw "Unknown node type";
@@ -225,27 +224,26 @@ namespace SCIRun {
     XMLIO::eval_object_node(const xmlNodePtr node, 
                             Variables *variables,
                             definition_nodes_t &definitions,
-                            //TargetSignalMap_t &signals,
-                            //                            SignalThrower::SignalCatchers_t &catchers) 
-                            SignalCatcher::TreeOfCatchers_t &catcher_tree)
+                            SignalCatcher::TreeOfCatchers_t &catcher_tree,
+                            Root *root_node)
     {
-      const bool root_node = XMLUtil::node_is_element(node, "skinner");
-      ASSERT(root_node || XMLUtil::node_is_element(node, "object"));
+      //      ASSERT(XMLUtil::node_is_element(node, "object"));
       
       // classname is exact class type for this skinner drawable
       string classname = "Skinner::Root";
       bool foundclassname = 
         XMLUtil::maybe_get_att_as_string(node, "class", classname);
       
-      if (!root_node && !foundclassname) { // redundant, as dtd should fail
-        cerr << "Object does not have classname\n";
-        return 0;
-      }
+      //      if (!root_node && !foundclassname) { // redundant, as dtd should fail
+      //        cerr << "Object does not have classname\n";
+      //        return 0;
+      //      }
       
       const bool printdebug = sci_getenv_p("SKINNER_XMLIO_DEBUG");
     
       // If the string in the xml file is proceeded with a $, then
       // its a variable dereference
+#if 0
       while (classname[0] == '$' &&
              variables->maybe_get_string
              (classname.substr(1,classname.length()-1), classname)) 
@@ -255,6 +253,7 @@ namespace SCIRun {
                  << classname << "\n";
         }
       }
+#endif
 
       
       // Object id is not required, create unique one if not found
@@ -300,6 +299,7 @@ namespace SCIRun {
                << classname << "\n";
         }
 
+#if 0
         // If the string in the xml file is proceeded with a $, then
         // its a variable dereference
         while (classname[0] == '$' &&
@@ -311,6 +311,7 @@ namespace SCIRun {
                  << classname << "\n";
           }
         }
+#endif
 
         // Iteratre to the next nested definition, if there is one...
         dnode = find_definition(definitions, classname);
@@ -342,8 +343,12 @@ namespace SCIRun {
       // Now we have Variables setup, Create the Object!
       Drawable * object = 0;
 
+      if (!root_node && !foundclassname) {
+        root_node = new Root(variables);
+      }
+
       if (root_node) {
-        object = new Root(variables);
+        object = root_node;
       } else {
      
         // First, see if the current catchers can create and throw back 
@@ -431,7 +436,7 @@ namespace SCIRun {
           if (XMLUtil::node_is_element(cnode, "object")) {
             if (parent) { 
               Drawable *child = 
-                eval_object_node(cnode, variables, definitions, catcher_tree);
+                eval_object_node(cnode, variables, definitions, catcher_tree,0);
               if (child) {
                 children.push_back(child);
               }
@@ -469,14 +474,14 @@ namespace SCIRun {
 
 
     Root *
-    XMLIO::eval_skinner_node(const xmlNodePtr node, const string &id)
+    XMLIO::eval_skinner_node(const xmlNodePtr node, const string &id, Root *inroot)
     {
       ASSERT(XMLUtil::node_is_element(node, "skinner"));
       definition_nodes_t definitions;
       //      SignalThrower::SignalCatchers_t catchers;
       SignalCatcher::TreeOfCatchers_t catchers;
       
-      Drawable * object = eval_object_node(node, 0, definitions, catchers);
+      Drawable * object = eval_object_node(node, 0, definitions, catchers, inroot);
       Skinner::Root *root = dynamic_cast<Skinner::Root*>(object);
       ASSERT(root);
       return root;

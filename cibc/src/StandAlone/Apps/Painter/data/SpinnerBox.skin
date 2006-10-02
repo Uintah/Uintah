@@ -4,7 +4,7 @@
     <var name="ShadowedBox::inside" propagate="yes" overwrite="no">#333333FF</var>
     <var name="SpinnerBox::value" propagate="yes" overwrite="no">20</var>
     <var name="SpinnerBox::text_size" propagate="yes" overwrite="no">20</var>
-    <var name="SpinnerBox::variable" propagate="yes" overwrite="no">SpinnerBox::value</var>
+    <var name="SpinnerBox::text" propagate="yes" overwrite="no">123</var>
     
     <definition class="ShadowedBox::child">
       <object class="Root::Arithmetic">
@@ -91,8 +91,9 @@
             
             <var name="color">#FFFFFFFF</var>
             <object class="TextEntry">
-              <var name="cursor">$FocusRegion::focused</var>
               <var name="variable">$SpinnerBox::variable</var>
+              <var name="text">$SpinnerBox::text</var>
+              <var name="cursor">$FocusRegion::focused</var>
               <var name="size">$SpinnerBox::text_size</var>
               <var name="anchor">E</var>
               <var name="numeric">1</var>

@@ -32,6 +32,7 @@
 #include <Core/Skinner/Variables.h>
 #include <Core/Skinner/Box.h>
 #include <Core/Events/EventManager.h>
+#include <Core/Containers/StringUtil.h>
 #include <sci_gl.h>
 
 
@@ -93,6 +94,18 @@ namespace SCIRun {
           signal = 
             dynamic_cast<Signal *>(throw_signal("button_1_clicked").get_rep());
         } 
+
+
+      if (get_region().inside(pointer->get_x(), pointer->get_y()) &&
+          (pointer->get_pointer_state() & PointerEvent::BUTTON_PRESS_E) &&
+          (pointer->get_pointer_state() & PointerEvent::BUTTON_3_E)) 
+        {
+          get_vars()->insert("mousex", to_string(pointer->get_x()), "int", 1);
+          get_vars()->insert("mousey", to_string(pointer->get_y()), "int", 1);
+
+          signal = 
+            dynamic_cast<Signal *>(throw_signal("button_2_clicked").get_rep());
+        } 
         
       if ((pointer->get_pointer_state() & PointerEvent::BUTTON_RELEASE_E) &&
           (pointer->get_pointer_state() & PointerEvent::BUTTON_1_E)) {
@@ -107,6 +120,7 @@ namespace SCIRun {
     Box::get_signal_id(const string &signalname) const {
       if (signalname == "button_1_clicked") return 1;
       if (signalname == "button_1_released") return 2;
+      if (signalname == "button_2_clicked") return 2;
       return 0;
     }
   }

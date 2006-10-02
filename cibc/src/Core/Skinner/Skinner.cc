@@ -47,13 +47,19 @@
 #include <Core/Skinner/Root.h>
 #include <Core/Skinner/Layout.h>
 #include <Core/Events/Tools/FilterRedrawEventsTool.h>
+#include <Core/Util/Environment.h>
+#include <Core/Util/FileUtils.h>
 #include <iostream>
 
 using std::cerr;
 using std::endl;
 
+#define DEBUG 1
+
 namespace SCIRun {
   namespace Skinner {
+    static Root *skinner_root_ = 0;
+    
     bool
     init_skinner() {
       XMLIO::register_maker<Animation>();
@@ -73,22 +79,54 @@ namespace SCIRun {
 
     Drawable *
     load_skin(const string &filename) {
-      Root *root = 0;
-      //      try {
+#if !defined(DEBUG)
+      try {
+#endif
         init_skinner();  
-        root = Skinner::XMLIO::load(filename);
-        ASSERT(root);
+        Root *root = Skinner::XMLIO::load(filename, skinner_root_);
+        if (root) { 
+          skinner_root_ = root;
+        }
+        EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
         root->spawn_redraw_threads();
-        //      } catch (const string &error) {
-        //        cerr << "Skinner Error: " << error << std::endl;
-        //        throw;
-        //      } catch (const char *&error) {
-        //        cerr << "Skinner Error: " << error << std::endl;
-        //        throw;
-        //      }
+#if !defined(DEBUG)
+      } catch (const string &error) {
+        cerr << "Skinner Error: " << error << std::endl;
+        return 0;
+      } catch (const char *&error) {
+        cerr << "Skinner Error: " << error << std::endl;
+        return 0;
+      } catch (...) {
+        cerr << "UNKNOWN Skinner Error" << std::endl;
+        return 0;
+      }
+#endif
 
-      return root;
+      return skinner_root_;
     }
+
+
+    bool
+    load_default_skin() {
+      string default_skin = sci_getenv("SCIRUN_OBJDIR")+string("data");
+      string skinner_path = default_skin;
+      const char *path_ptr = sci_getenv("SKINNER_PATH");
+      if (path_ptr) {
+        skinner_path = string(path_ptr) + ":" + default_skin;
+      }
+      sci_putenv("SKINNER_PATH", skinner_path);
+      sci_putenv("SCIRUN_FONT_PATH",skinner_path);
+      string filename = "main.skin";
+      string path = findFileInPath(filename, skinner_path);
+      if (path.empty()) {
+        std::cerr << "Cannot find main.skin in SKINNER_PATH.\n";
+        std::cerr << "SKINNER_PATH=" << skinner_path << std::endl;;
+        return 0;
+      }
+
+      return Skinner::load_skin(path+filename) ? true : false;
+    }
+
 
 
     ThrottledRunnableToolManager::ThrottledRunnableToolManager

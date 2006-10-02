@@ -1,0 +1,100 @@
+<definition class="MainToolbar" xmlns:xi="http://www.w3.org/2001/XInclude">
+  <object class="Frame">
+    <var name="invert">1</var>
+    <var name="width">2</var>
+    <var name="height">2</var>
+
+    <object class="Root::Arithmetic">
+    <object class="Root::FocusRegion">      
+      <xi:include href="MenuButton.skin" parse="xml"/>  
+
+      <object class="Box">
+        <var name="color">#AAAAAAFF</var>
+      </object>
+      
+      <object class="Grid">
+        <var name="rows">1</var>
+        <var name="cols">10</var>
+        <var name="text_bgcolor" propagate="yes">#FFFFFFFF</var>
+        <var name="text_fgcolor" propagate="yes">#000000FF</var>
+        
+        <var name="cell-height">35</var>
+        <var name="buttonwidth">35</var>
+        
+        <object class="MenuButton">
+          <var name="row">1</var>
+          <var name="col">1</var>
+          <var name="cell-width">$buttonheight</var>
+          <var name="Button::Text::text" propagate="yes">Load...</var>
+          <var name="text_color" propagate="yes">$text_fgcolor</var>
+          <signal name="Button::clicked" 
+                  target="Animation::AnimateVariableAscending">
+            <var name="varnum">1</var>
+          </signal>
+        </object>
+
+        <object class="MenuButton">
+          <var name="row">1</var>
+          <var name="col">2</var>
+          <var name="cell-width">$buttonheight</var>
+          <var name="Button::Text::text" propagate="yes">Save...</var>
+          <var name="text_color" propagate="yes">$text_fgcolor</var>
+          <signal name="Button::clicked" 
+                  target="Animation::AnimateVariableAscending">
+            <var name="varnum">2</var>
+          </signal>
+        </object>
+
+        <object class="MenuButton">
+          <var name="row">1</var>
+          <var name="col">3</var>
+          <var name="cell-width">$buttonheight</var>
+          <var name="Button::Text::text" propagate="yes">ThreeView</var>
+          <var name="text_color" propagate="yes">$text_fgcolor</var>
+          <signal name="Button::clicked" 
+                  target="Arithmetic::set_value">
+            <var name="variable">$FourView::visible</var>
+            <var name="value">0</var>
+          </signal>
+
+          <signal name="Button::clicked" 
+                  target="Arithmetic::set_value">
+            <var name="variable">$ThreeView::visible</var>
+            <var name="value">1</var>
+          </signal>
+
+          <signal name="Button::clicked" 
+                  target="GLWindow::redraw"/>
+
+
+        </object>
+
+
+        <object class="MenuButton">
+          <var name="row">1</var>
+          <var name="col">4</var>
+          <var name="cell-width">$buttonheight</var>
+          <var name="Button::Text::text" propagate="yes">FourView</var>
+          <var name="text_color" propagate="yes">$text_fgcolor</var>
+          <signal name="Button::clicked" 
+                  target="Arithmetic::set_value">
+            <var name="variable">$FourView::visible</var>
+            <var name="value" type="bool">1</var>
+          </signal>
+
+          <signal name="Button::clicked" 
+                  target="Arithmetic::set_value">
+            <var name="variable">$ThreeView::visible</var>
+            <var name="value" type="bool">0</var>
+          </signal>
+
+          <signal name="Button::clicked" 
+                  target="GLWindow::redraw"/>
+
+        </object>
+
+      </object>
+      </object>
+    </object>
+  </object>
+</definition>

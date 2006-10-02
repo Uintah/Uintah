@@ -93,6 +93,7 @@ SET(PAINTER_SRCS
   PainterSignalTargets.cc 
   ITKConfidenceConnectedImageFilterTool.cc
   LayerButton.cc
+  CropTool.cc
   main.cc 
 )
 

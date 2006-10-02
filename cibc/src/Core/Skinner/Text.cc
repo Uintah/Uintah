@@ -46,6 +46,7 @@ namespace SCIRun {
       offsety_(),
       cursor_position_(0),
       text_(vars, "text"),
+      var_exists_(get_vars()->exists("variable")),
       cursor_(vars, "cursor", false)
     {
       REGISTER_CATCHER_TARGET(Text::redraw);
@@ -92,23 +93,16 @@ namespace SCIRun {
     }
 
     Text::~Text() {}
-#if 0
-    BaseTool::propagation_state_e
-    Text::process_event(event_handle_t event)
-    {
-      WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
-      if (window && window->get_window_state() == WindowEvent::REDRAW_E) {
-        redraw(0);
-      }
-      return CONTINUE_E;
-    }
-#endif
 
     BaseTool::propagation_state_e
     Text::redraw(event_handle_t)
     {
       if (!renderer_) return CONTINUE_E;
       const RectRegion &region = get_region();
+
+      if (var_exists_) 
+        text_ = get_vars()->get_string("variable");
+      
       if (!text_.exists()) text_ = "ABC123";
       if (region.height() < 1 || renderer_->height(text_()) > region.height()) {
         return STOP_E;
@@ -124,8 +118,10 @@ namespace SCIRun {
       flags_ = newflags;
 
       renderer_->set_shadow_offset(offsetx_(), offsety_());
-      renderer_->set_color(fgcolor_().r, fgcolor_().g, fgcolor_().b, fgcolor_().a);
-      renderer_->set_shadow_color(bgcolor_().r, bgcolor_().g, bgcolor_().b, bgcolor_().a);
+      Color fg = fgcolor_();
+      Color bg = bgcolor_();
+      renderer_->set_color(fg.r, fg.g, fg.b, fg.a);
+      renderer_->set_shadow_color(bg.r, bg.g, bg.b, bg.a);
       
       float mx = (region.x2() + region.x1())/2.0;
       float my = (region.y2() + region.y1())/2.0;

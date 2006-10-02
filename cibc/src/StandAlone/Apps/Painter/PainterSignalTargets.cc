@@ -122,6 +122,7 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::ITKConfidenceConnected);
   REGISTER_CATCHER_TARGET(Painter::ITKThresholdLevelSet);
 
+  REGISTER_CATCHER_TARGET(Painter::Autoview_SliceWindow);
   REGISTER_CATCHER_TARGET(Painter::ShowVolumeRendering);
 
   REGISTER_CATCHER_TARGET(Painter::AbortFilterOn);
@@ -936,6 +937,15 @@ Painter::ResampleVolume(event_handle_t event) {
 BaseTool::propagation_state_e 
 Painter::AbortFilterOn(event_handle_t event) {
   abort_filter_ = true;
+  return CONTINUE_E;
+}
+
+
+
+BaseTool::propagation_state_e 
+Painter::Autoview_SliceWindow(event_handle_t event) {
+  Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
+  cerr << signal->get_vars()->get_id() << std::endl;
   return CONTINUE_E;
 }
 

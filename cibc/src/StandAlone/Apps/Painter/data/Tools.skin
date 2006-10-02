@@ -20,29 +20,6 @@
       <var name="buttonheight" propagate="yes">35</var>
 
       <object class="Button">
-        <var name="row">1</var>
-        <var name="col">1</var>
-        <var name="cell-height">$buttonheight</var>
-        <var name="Button::Text::text" propagate="yes">Load Layer</var>
-        <var name="text_color" propagate="yes">#FFFFFFFF</var>
-        <signal name="Button::clicked" 
-                target="Animation::AnimateVariableAscending">
-          <var name="varnum">1</var>
-        </signal>
-      </object>
-      
-      <object class="Button">
-        <var name="row">2</var>
-        <var name="col">1</var>
-        <var name="cell-height">$buttonheight</var>
-        <var name="Button::Text::text" propagate="yes">Save Layer</var>
-        <signal name="Button::clicked" 
-                target="Animation::AnimateVariableAscending">
-          <var name="varnum">2</var>
-        </signal>
-      </object>
-
-      <object class="Button">
         <var name="row">3</var>
         <var name="col">1</var>
         <var name="cell-height">$buttonheight</var>
@@ -245,6 +222,17 @@
 
       <object class="Button">
         <var name="row">18</var>
+        <var name="col">1</var>
+        <var name="cell-height">$buttonheight</var>
+        <var name="Button::Text::text" propagate="yes">Reload Skin</var>
+        <var name="text_color" propagate="yes">#FFFFFFFF</var>
+        <signal name="Button::clicked" 
+                target="Root::Reload_Default_Skin"/>
+        
+      </object>
+
+      <object class="Button">
+        <var name="row">19</var>
         <var name="col">1</var>
         <var name="cell-height">$buttonheight</var>
         <var name="Button::Text::text" propagate="yes">Quit</var>

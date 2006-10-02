@@ -195,7 +195,7 @@ private:
 
     
 public:
-  class SliceWindow : public Skinner::Drawable {
+  class SliceWindow : public Skinner::Parent {
   public:
     SliceWindow(Skinner::Variables *, Painter *painter);
     virtual ~SliceWindow() {}
@@ -203,14 +203,17 @@ public:
     propagation_state_e                 process_event(event_handle_t event);
     virtual int                         get_signal_id(const string &signalname) const;
 
+    CatcherFunction_t   Autoview;
+    CatcherFunction_t   zoom_in;
+    CatcherFunction_t   zoom_out;
+
     void                render_gl();
     void                setup_gl_view();
     void                push_gl_2d_view();
     void                pop_gl_2d_view();
     void		next_slice();
     void		prev_slice();
-    void		zoom_in();
-    void		zoom_out();
+
     Point		world_to_screen(const Point &);
     Point		screen_to_world(unsigned int x, unsigned int y);
     Vector		x_dir();
@@ -452,6 +455,7 @@ private:
     Painter *           painter_;
     int                 pick_;
     vector<int>         minmax_[2];
+    vector<Skinner::Var<double> >         gui_minmax_[2];
     vector<int>         pick_minmax_[2];
     vector<double>	pick_index_;
     double              pick_dist_[2][3];
@@ -764,6 +768,7 @@ private:
   CatcherFunction_t     ITKCurvatureAnisotropic;
   CatcherFunction_t     ITKConfidenceConnected;
   CatcherFunction_t     ITKThresholdLevelSet;
+  CatcherFunction_t     Autoview_SliceWindow;
 
   CatcherFunction_t     ShowVolumeRendering;
   CatcherFunction_t     AbortFilterOn;
