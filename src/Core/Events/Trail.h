@@ -25,44 +25,17 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : Animation.h
+//    File   : Trail.h
 //    Author : McKay Davis
-//    Date   : Tue Jul  4 17:47:07 2006
+//    Date   : Sun Oct  1 20:33:00 2006
 
-
-#ifndef SKINNER_ANIMATION_H
-#define SKINNER_ANIMATION_H
-
-#include <Core/Skinner/Parent.h>
+#ifndef SCIRUN_CORE_EVENTS_TRAIL_H
+#define SCIRUN_CORE_EVENTS_TRAIL_H
 
 namespace SCIRun {
-  namespace Skinner {
-    class Animation : public Parent {
-    public:
-      Animation (Variables *);
-      virtual ~Animation();
-      virtual MinMax                    get_minmax(unsigned int);
-      static string                     class_name() { return "Animation"; }
-      static DrawableMakerFunc_t        maker;
-      
-    private:
-      CatcherFunction_t                 AnimateHeight;
-      CatcherFunction_t                 AnimateVariableDescending;
-      CatcherFunction_t                 AnimateVariable;
-      CatcherFunction_t                 AnimateVariableAscending;
-      double                            variable_begin_;
-      double                            variable_end_;
-      int                               curvar_;
 
-      double                            start_time_;
-      double                            stop_time_;
+void start_trail_file();
 
-      bool                              at_start_;
-      bool                              ascending_;
-
-      TimeThrottle *                    timer_;
-    };
-  }
 }
-
 #endif
+

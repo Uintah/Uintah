@@ -56,10 +56,17 @@ namespace SCIRun {
 
       VisibleMenuLists_t::iterator viter = visible_.begin();
       for(;viter != visible_.end(); ++viter) {
+
         Drawable *obj = viter->second;
-        obj->get_vars()->insert("visible", "1", "string", true);
+        Var<bool> visible(obj->get_vars(), "visible");
+        visible = true;
+        Var<int> x(obj->get_vars(), "x",0);
+        Var<int> y(obj->get_vars(), "y",0);
+        Var<int> width(obj->get_vars(), "width",100);
+        Var<int> height(obj->get_vars(), "height",100);
+        obj->set_region(RectRegion(x(),y()-height(),x()+width(), y()));
         obj->process_event(event);
-        obj->get_vars()->insert("visible", "0", "string", true);
+        visible = false;
       }
 
       return CONTINUE_E;
@@ -70,7 +77,8 @@ namespace SCIRun {
     {
       MenuList *menu_list = 
         construct_child_from_maker_signal<MenuList>(maker_signal);
-      menu_list->get_vars()->insert("visible", "0", "string", true);
+      Var<bool> visible(menu_list->get_vars(), "visible");
+      visible = false;
       menu_lists_.push_back(menu_list);
       return CONTINUE_E;
     }
@@ -80,12 +88,19 @@ namespace SCIRun {
     MenuManager::show_MenuList(event_handle_t event) {
       
       Signal *signal = dynamic_cast<Signal *>(event.get_rep());
-      const string id = signal->get_vars()->get_id();
-      
+      Variables *vars = signal->get_vars();
+      const string id = vars->get_id();
+            
       MenuLists_t::iterator citer = menu_lists_.begin();
       for (; citer != menu_lists_.end(); ++citer) {
         string full_id = (*citer)->get_id();
         if (full_id.find_last_of(id) != string::npos) {
+          Var<int> x((*citer)->get_vars(), "x");
+          x = vars->get_int("x");
+
+          Var<int> y((*citer)->get_vars(), "y");
+          y = vars->get_int("y");
+
           visible_.insert(make_pair(id,*citer));
           EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
           return CONTINUE_E;

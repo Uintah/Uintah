@@ -56,6 +56,7 @@ namespace SCIRun {
       Var<int>                          offsety_;
       unsigned int                      cursor_position_;
       Var<string>                       text_;
+      bool                              var_exists_;
       Var<bool>                         cursor_;
     };
   }

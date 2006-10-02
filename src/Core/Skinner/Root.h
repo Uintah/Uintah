@@ -62,8 +62,11 @@ namespace SCIRun {
       CatcherFunction_t Quit;
       CatcherFunction_t Redraw;
       CatcherFunction_t Stop;
+      CatcherFunction_t Reload_Default_Skin;
       typedef vector<GLWindow *> GLWindows_t;
-      GLWindows_t windows_;
+      GLWindows_t       windows_;
+      set<string>       window_ids_;
+      int               running_windows_;
     };
 
     template <class T>

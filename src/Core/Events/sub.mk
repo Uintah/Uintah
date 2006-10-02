@@ -39,6 +39,7 @@ SRCS     += \
 	$(SRCDIR)/EventManager.cc	        \
 	$(SRCDIR)/OpenGLViewer.cc	        \
 	$(SRCDIR)/SceneGraphEvent.cc            \
+	$(SRCDIR)/Trail.cc	        \
 	$(SRCDIR)/SelectionTargetEvent.cc	
 
 ifeq ($(IS_WIN),yes)

@@ -69,12 +69,13 @@ endif
 
 PROGRAM := $(SRCDIR)/painter
 
-SRCS := $(SRCDIR)/Painter.cc \
-        $(SRCDIR)/LayerButton.cc \
+SRCS := $(SRCDIR)/CropTool.cc \
+        $(SRCDIR)/ITKConfidenceConnectedImageFilterTool.cc \
+	$(SRCDIR)/LayerButton.cc \
+	$(SRCDIR)/Painter.cc \
         $(SRCDIR)/PainterTools.cc \
         $(SRCDIR)/PainterBrushTool.cc \
         $(SRCDIR)/PainterSignalTargets.cc \
-        $(SRCDIR)/ITKConfidenceConnectedImageFilterTool.cc \
         $(SRCDIR)/main.cc \
 
 include $(SCIRUN_SCRIPTS)/program.mk

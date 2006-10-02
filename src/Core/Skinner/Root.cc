@@ -41,6 +41,8 @@
 #include <Core/Skinner/MenuManager.h>
 #include <Core/Skinner/ViewSubRegion.h>
 #include <Core/Events/Tools/FilterRedrawEventsTool.h>
+#include <Core/Util/FileUtils.h>
+#include <Core/Containers/StringUtil.h>
 #include <iostream>
 
 #include <algorithm>
@@ -52,7 +54,9 @@ namespace SCIRun {
   namespace Skinner {
     Root::Root(Variables *variables) : 
       Parent(variables),
-      windows_()
+      windows_(),
+      window_ids_(),
+      running_windows_(0)
     {
       REGISTER_CATCHER_TARGET(Root::Redraw);
       REGISTER_CATCHER_TARGET(Root::Arc_Maker);
@@ -67,6 +71,7 @@ namespace SCIRun {
       REGISTER_CATCHER_TARGET(Root::Text_Maker);
       REGISTER_CATCHER_TARGET(Root::ViewSubRegion_Maker);
       REGISTER_CATCHER_TARGET(Root::Stop);
+      REGISTER_CATCHER_TARGET(Root::Reload_Default_Skin);
       REGISTER_CATCHER_TARGET_BY_NAME(Quit, Root::Quit);
     }
 
@@ -86,8 +91,22 @@ namespace SCIRun {
 
     BaseTool::propagation_state_e
     Root::GLWindow_Maker(event_handle_t event) {
+      Variables *vars = 
+        dynamic_cast<MakerSignal *>(event.get_rep())->get_vars();
+
+      string id = vars->get_id();
+      int num = 1;
+      while (window_ids_.find(id) != window_ids_.end()) {          
+        id = vars->get_id() + "-" + to_string(num++);
+      }
+      window_ids_.insert(id);
+      Var<string> win_id(vars,"id");
+      win_id = id;
+      
+
       GLWindow *window = dynamic_cast<GLWindow *>
         (construct_class_from_maker_signal<GLWindow>(event));
+      
       ASSERT(window);
       windows_.push_back(window);
       return STOP_E;
@@ -135,25 +154,16 @@ namespace SCIRun {
       return STOP_E;
     }
 
-    
-
+    BaseTool::propagation_state_e 
+    Root::Reload_Default_Skin(event_handle_t) {
+      load_default_skin();
+      return CONTINUE_E;
+    }
+  
     void
     Root::spawn_redraw_threads() {
       BaseTool *event_tool = new FilterRedrawEventsTool("Redraw Filter", 1);
-#if 0
-      string id = get_id();
-      ThrottledRunnableToolManager *runner = 
-        new ThrottledRunnableToolManager(id, 120.0);
-
-      runner->add_tool(event_tool,1);
-      runner->add_tool(this, 2);
-      
-      id = id + " Throttled Tool Manager";
-      Thread *thread = new Thread(runner, id.c_str());
-      thread->detach();
-#else 
-
-      for (unsigned int w = 0; w < windows_.size(); ++w) {
+      for (unsigned int w = running_windows_; w < windows_.size(); ++w) {
         GLWindow *window = windows_[w];
         string id = window->get_id();
         ThrottledRunnableToolManager *runner = 
@@ -164,7 +174,7 @@ namespace SCIRun {
         Thread *thread = new Thread(runner, id.c_str());
         thread->detach();
       }
-#endif
+      running_windows_ = windows_.size();
     }
   }
 }

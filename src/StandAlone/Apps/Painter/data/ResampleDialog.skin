@@ -31,21 +31,21 @@
               <var name="row">2</var>
               <var name="col">3</var>
               <var name="LabeledSpinnerBox::text" propagate="yes">X: </var>
-              <var name="LabeledSpinnerBox::variable" propagate="yes">Resample::x</var>
+              <var name="LabeledSpinnerBox::variable" propagate="yes">$Resample::x</var>
             </object>
             
             <object class="LabeledSpinnerBox">
               <var name="row">3</var>
               <var name="col">3</var>
               <var name="LabeledSpinnerBox::text" propagate="yes">Y: </var>
-              <var name="LabeledSpinnerBox::variable" propagate="yes">Resample::y</var>
+              <var name="LabeledSpinnerBox::variable" propagate="yes">$Resample::y</var>
             </object>
             
             <object class="LabeledSpinnerBox">
               <var name="row">4</var>
               <var name="col">3</var>
               <var name="LabeledSpinnerBox::text" propagate="yes">Z: </var>
-              <var name="LabeledSpinnerBox::variable" propagate="yes">Resample::z</var>
+              <var name="LabeledSpinnerBox::variable" propagate="yes">$Resample::z</var>
             </object>
             
             <object class="Root::Text">

@@ -1,0 +1,65 @@
+<definition class="MenuButton" state="normal">
+  <object class="Root::Arithmetic">
+  <object class="Root::FocusRegion">
+    <var name="Frame::size" type="double" propagate="yes">0</var>
+
+    <signal name="FocusRegion::focus" target="Arithmetic::set_value">
+      <var name="variable">$Frame::size</var>
+      <var name="value">2</var>
+    </signal>
+
+    <signal name="FocusRegion::focus"
+            target="GLWindow::redraw_drawable"/>
+
+    <signal name="FocusRegion::unfocus" target="Arithmetic::set_value">
+      <var name="variable">$Frame::size</var>
+      <var name="value">0</var>
+    </signal>
+
+    <signal name="FocusRegion::unfocus"
+            target="GLWindow::redraw_drawable"/>
+
+
+    <var name="color">$Button::color</var>
+    <signal name="button_1_clicked" target="Button::clicked"/>
+    <signal name="button_1_released" target="Button::released"></signal>
+    
+    <object class="Frame">
+      <var name="width">$Frame::size</var>
+      <var name="height">$Frame::size</var>
+      <var name="Button::color" propagate="yes" overwrite="no">#AAAAAAFF</var>
+      <var name="Button::color1" propagate="yes" overwrite="no">#EEEEEEFF</var>
+      <var name="Button::color2" propagate="yes" overwrite="no">#777777FF</var>
+      <var name="Button::Text::fgcolor" propagate="yes" overwrite="no">#000000FF</var>
+      <var name="Button::Text::bgcolor" propagate="yes" overwrite="no">#FFFFFFFF</var>
+      
+      <var name="width" overwrite="no">4</var>
+      <var name="height" overwrite="no">4</var>
+      <var name="color1">$Button::color1</var>
+      <var name="color2">$Button::color2</var>
+      <var name="invert">1</var>
+
+      <object class="Box">
+        <var name="color">$Button::color</var>
+        <signal name="button_1_clicked" target="Button::clicked"/>
+        <signal name="button_1_released" target="Button::released"></signal>
+
+      </object>
+    
+      <object class="Root::Text"> 
+        <var name="text">$Button::Text::text</var>
+        <var name="row">1</var>
+        <var name="col">1</var>
+        <var name="cell-height">30</var>
+        <var name="size">$Button::Text::size</var>
+        <var name="fgcolor">$Button::Text::fgcolor</var>
+        <var name="bgcolor">$Button::Text::bgcolor</var>
+        <var name="shadow">1</var>
+        <var name="offsetx">0</var>
+        <var name="offsety">1</var>
+        <var name="anchor">C</var>
+      </object>
+    </object>
+  </object>
+  </object>
+</definition>

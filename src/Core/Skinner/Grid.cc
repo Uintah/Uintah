@@ -60,7 +60,11 @@ namespace SCIRun {
     BaseTool::propagation_state_e
     Grid::process_event(event_handle_t event)
     {
-      ReLayoutCells(event);
+      if (!visible_()) return STOP_E;
+      WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
+      if (window && window->get_window_state() == WindowEvent::REDRAW_E) {
+        ReLayoutCells(event);
+      }
 
       const RectRegion &region = get_region();
       int rows = rows_();
@@ -68,14 +72,14 @@ namespace SCIRun {
 
       double usedy = 0.0;
       double unusedy = 0.0;
-      for (unsigned int r = 0; r < rows; ++r)
+      for (int r = 0; r < rows; ++r)
         if (cell_height_[r] < 0.0)
           unusedy += 1.0;
         else if (cell_height_[r] > 1.0)
           usedy += cell_height_[r];
 
       vector<double> posy(rows+1, 0);      
-      for (unsigned int r = 1; r <= rows; ++r) {
+      for (int r = 1; r <= rows; ++r) {
         double dy = cell_height_[r-1];
         if (dy < 0.0)
           dy = (region.height()-usedy)/unusedy;
@@ -86,7 +90,7 @@ namespace SCIRun {
 
       double usedx = 0.0;
       double unusedx = 0.0;
-      for (unsigned int c = 0; c < cols; ++c)
+      for (int c = 0; c < cols; ++c)
         if (cell_width_[c] < 0.0)
           unusedx += 1.0;
         else if (cell_width_[c] > 1.0)
@@ -94,7 +98,7 @@ namespace SCIRun {
 
       vector<double> posx(cols+1, 0);
 
-      for (unsigned int c = 1; c <= cols; ++c) {
+      for (int c = 1; c <= cols; ++c) {
         double dx = cell_width_[c-1];
         if (dx < 0.0)
           dx = (region.width() - usedx)/unusedx;
@@ -104,7 +108,7 @@ namespace SCIRun {
         posx[c] = Clamp(posx[c-1] + dx, 0.0, region.width());
       }
 
-      for (int i = 0; i < cell_info_.size(); ++i) {
+      for (unsigned int i = 0; i < cell_info_.size(); ++i) {
         CellInfo_t &cell = cell_info_[i];
         int r = cell.row_()-1;
         int c = cell.col_()-1;
@@ -124,7 +128,7 @@ namespace SCIRun {
     Grid::set_children(const Drawables_t &children) {
       children_ = children;
       cell_info_.resize(children_.size());
-      for (int i = 0; i < children_.size(); ++i) {        
+      for (unsigned int i = 0; i < children_.size(); ++i) {        
         Variables *cvars = children_[i]->get_vars();
         CellInfo_t &cell = cell_info_[i];
         cell.row_ = Var<int>(cvars, "row");
@@ -141,7 +145,7 @@ namespace SCIRun {
       cell_width_ = vector<double>(cell_width_.size(), AIR_NEG_INF);
       cell_height_ = vector<double>(cell_height_.size(), AIR_NEG_INF);
 
-      for (int i = 0; i < cell_info_.size(); ++i) {
+      for (unsigned int i = 0; i < cell_info_.size(); ++i) {
         CellInfo_t &cell = cell_info_[i];
         int row = cell.row_()-1;
         int col = cell.col_()-1;

@@ -1,6 +1,7 @@
 <definition class="CropToolDialog">
-  <object class="Root::FocusRegion">
+  <object class="Root::FocusRegion" id="CropFocus">
     <object class="ShadowedBox">
+      <var name="blah" propagate="yes">555</var>
       <var name="ToolDialog::button_height" 
            propagate="yes"
            overwrite="no">40</var>
@@ -53,13 +54,13 @@
               <object class="LabeledSpinnerBox">
                 <var name="row">1</var>
                 <var name="col">1</var>
+                <var name="bla" propagate="yes">666</var>
                 
                 <var name="LabeledSpinnerBox::text"
                      propagate="yes"
                      overwrite="no">Min X:</var>
                 <var name="LabeledSpinnerBox::variable"
-                     propagate="yes"
-                     overwrite="no">Painter::crop::min::x</var>
+                     propagate="yes" overwrite="no">$Painter::crop::min::x</var>
               </object>
 
               <object class="LabeledSpinnerBox">
@@ -70,8 +71,7 @@
                      propagate="yes"
                      overwrite="no">Max X:</var>
                 <var name="LabeledSpinnerBox::variable"
-                     propagate="yes"
-                     overwrite="no">Painter::crop::max::x</var>
+                     propagate="yes" overwrite="no">$Painter::crop::max::x</var>
               </object>
             </object>
 
@@ -92,7 +92,7 @@
                      overwrite="no">Min Y:</var>
                 <var name="LabeledSpinnerBox::variable"
                      propagate="yes"
-                     overwrite="no">Painter::crop::min::y</var>
+                     overwrite="no">$Painter::crop::min::y</var>
               </object>
 
               <object class="LabeledSpinnerBox">
@@ -104,7 +104,7 @@
                      overwrite="no">Max Y:</var>
                 <var name="LabeledSpinnerBox::variable"
                      propagate="yes"
-                     overwrite="no">Painter::crop::max::y</var>
+                     overwrite="no">$Painter::crop::max::y</var>
               </object>
             </object>
 
@@ -124,7 +124,7 @@
                      overwrite="no">Min Z:</var>
                 <var name="LabeledSpinnerBox::variable"
                      propagate="yes"
-                     overwrite="no">Painter::crop::min::z</var>
+                     overwrite="no">$Painter::crop::min::z</var>
               </object>
 
               <object class="LabeledSpinnerBox">
@@ -136,7 +136,7 @@
                      overwrite="no">Max Z:</var>
                 <var name="LabeledSpinnerBox::variable"
                      propagate="yes"
-                     overwrite="no">Painter::crop::max::z</var>
+                     overwrite="no">$Painter::crop::max::z</var>
               </object>
             </object>
 

@@ -56,7 +56,7 @@ namespace SCIRun {
 
     class XMLIO {
     public:
-      static Root *             load(const string &filename);
+      static Root *             load(const string &filename, Root *inroot = 0);
       template<class T>
       static void               register_maker() 
       {
@@ -86,34 +86,26 @@ namespace SCIRun {
                                  
 
 
-      //      typedef pair<string, SignalThrower *> TossedSignal_t;
-      //      typedef map<string, TossedSignal_t> TargetSignalMap_t;
-
-
-      
-
       
       SCISHARE static void        register_maker(const string &,
                                         DrawableMakerFunc_t *);
       static Root *      eval_skinner_node(const xmlNodePtr,
-                                           const string &id);
+                                           const string &id,
+                                           Root *root);
       static void        eval_definition_node(const xmlNodePtr,
                                               string_node_map_t &);
       
       static Drawable *  eval_object_node(const xmlNodePtr,
                                           Variables *variables,
                                           definition_nodes_t &,
-                                          SignalCatcher::TreeOfCatchers_t &);
-      //                                          SignalThrower::SignalCatchers_t &);
-
+                                          SignalCatcher::TreeOfCatchers_t &,
+                                          Root *);
 
       static void        eval_signal_node(const xmlNodePtr,
                                           Drawable *,
                                           SignalThrower::SignalToAllCatchers_t &,
                                           SignalCatcher::TreeOfCatchers_t &);
                                           
-
-      //                                          SignalThrower::SignalCatchers_t &);
 
       static void        eval_var_node(const xmlNodePtr,
                                        Variables *,

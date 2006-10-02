@@ -162,7 +162,7 @@ Painter::NrrdSlice::NrrdSlice(Painter *painter,
 
 Painter::SliceWindow::SliceWindow(Skinner::Variables *variables,
                                   Painter *painter) :  
-  Skinner::Drawable(variables), 
+  Skinner::Parent(variables), 
   painter_(painter),
   name_(variables->get_id()),
   viewport_(0),
@@ -185,6 +185,9 @@ Painter::SliceWindow::SliceWindow(Skinner::Variables *variables,
   Skinner::Var<int> axis(variables, "axis", 2);
   set_axis(axis());
   //  axis_ = axis;
+  REGISTER_CATCHER_TARGET(SliceWindow::Autoview);
+  REGISTER_CATCHER_TARGET(SliceWindow::zoom_in);
+  REGISTER_CATCHER_TARGET(SliceWindow::zoom_out);
 }
 
 
@@ -1643,15 +1646,16 @@ Painter::reset_clut()
 
 
 
-void
-Painter::SliceWindow::zoom_in()
+BaseTool::propagation_state_e
+Painter::SliceWindow::zoom_in(event_handle_t)
 {
   zoom_ *= 1.1;
   redraw();
 }
 
-void
-Painter::SliceWindow::zoom_out()
+
+BaseTool::propagation_state_e
+Painter::SliceWindow::zoom_out(event_handle_t)
 {
   zoom_ /= 1.1;
   redraw();
@@ -2032,6 +2036,14 @@ Painter::new_current_layer() {
 void
 Painter::Event::update_state(Painter &painter) {
   ASSERT(0);
+}
+
+BaseTool::propagation_state_e
+Painter::SliceWindow::Autoview(event_handle_t) {
+  if (painter_->current_volume_) {
+    autoview(painter_->current_volume_, 0);
+  }
+  return CONTINUE_E;
 }
 
 
@@ -2497,7 +2509,10 @@ Painter::SliceWindow::process_event(event_handle_t event) {
     
   }
   
-  return BaseTool::CONTINUE_E;
+  
+  return Parent::process_event(event);
+
+  //  return BaseTool::CONTINUE_E;
 }
 
 int
