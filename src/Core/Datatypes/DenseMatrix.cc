@@ -348,10 +348,9 @@ DenseMatrix::solve(const ColumnMatrix& rhs, ColumnMatrix& lhs, int overwrite)
   lhs=rhs;
 
   double **A;
-  DenseMatrix *cpy = NULL;
-  if (!overwrite) {cpy=clone(); A=cpy->data;}
-  else A=data;
-
+  double **cpy;
+	if (!overwrite) { cpy = scinew double*[nrows_]; for (int j=0; j < nrows_; j++) cpy[j] = data[j]; A = cpy; } else { A = data; }
+	
   // Gauss-Jordan with partial pivoting
   int i;
   for (i=0; i<nrows_; i++)
@@ -459,9 +458,8 @@ DenseMatrix::solve(const vector<double>& rhs, vector<double>& lhs,
   lhs=rhs;
 
   double **A;
-  DenseMatrix *cpy = NULL;
-  if (!overwrite) {cpy=clone(); A=cpy->data;}
-  else A=data;
+  double **cpy;
+	if (!overwrite) { cpy = scinew double*[nrows_]; for (int j=0; j < nrows_; j++) cpy[j] = data[j]; A = cpy; } else { A = data; }
 
   // Gauss-Jordan with partial pivoting
   int i;
