@@ -41,7 +41,7 @@ set title "Shock Tube with 2 Levels"
 #__________________________________
 set autoscale
 set terminal x11 1
-#set terminal postscript color solid "Times-Roman" 9
+#set terminal enhanced postscript color solid "Times-Roman" 9
 #set output "goodness.ps"
 set multiplot
 set size 0.51,0.51  

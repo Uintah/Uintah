@@ -23,7 +23,7 @@ set title "Test 2, ICE, Second Order 200 cells"
 #__________________________________
 set autoscale
 set terminal x11 2
-#set terminal postscript "Times-Roman" 9
+#set terminal enhanced postscript "Times-Roman" 9
 #set output "test2Comparison.ps"
 set multiplot
 set size 0.51,0.51  

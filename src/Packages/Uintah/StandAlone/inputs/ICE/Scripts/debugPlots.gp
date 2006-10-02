@@ -53,7 +53,7 @@ set pointsize 1
 #__________________________________
 set autoscale
 #set terminal x11 2
-set terminal postscript "Times-Roman" 9
+set terminal enhanced postscript "Times-Roman" 9
 set output "primative.ps"
 set multiplot
 set size 0.51,0.51  
