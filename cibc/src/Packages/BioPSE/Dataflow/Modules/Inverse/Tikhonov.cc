@@ -69,13 +69,7 @@ class Tikhonov : public Module
 public:
   //! Constructor
   Tikhonov(GuiContext *context);
-
-  //! Destructor
-  virtual ~Tikhonov();
-
   virtual void execute();
-
-  DenseMatrix *mat_trans_mult_mat(const DenseMatrix &A);
 
   double FindCorner(const vector<double> &rho, const vector<double> &eta,
                     const vector<double> &lambdaArray,
@@ -99,49 +93,6 @@ Tikhonov::Tikhonov(GuiContext *context) :
   tex_var_(context->subVar("tex_var"))
 {
 }
-
-
-//! Destructor
-Tikhonov::~Tikhonov()
-{
-}
-
-
-//! This function computes A^T * A for a DenseMatrix
-// This is probably just an inefficient implementation of Mult_trans_X
-// from DenseMatrix.h.  No regression test available though.
-DenseMatrix *
-Tikhonov::mat_trans_mult_mat(const DenseMatrix &A)
-{
-  const int nRows = A.nrows();
-  const int nCols = A.ncols();
-  int i, j; // i: column index, j: row index
-  int flops, memrefs;
-
-  DenseMatrix *B = scinew DenseMatrix(nCols, nCols);
-  ColumnMatrix Ai(nRows);
-  ColumnMatrix Bi(nCols);
-
-  // For each column (i) of A, first create a column vector Ai = A[:][i]
-  // Bi is then the i'th column of AtA, Bi = At * Ai
-
-  for (i=0; i<nCols; i++)
-  {
-    // build copy of this column
-    for (j=0; j<nRows; j++)
-    {
-      Ai[j] = A[j][i];
-    }
-    A.mult_transpose(Ai, Bi, flops, memrefs);
-    for (j=0; j<nCols; j++)
-    {
-      (*B)[j][i] = Bi[j];
-    }
-  }
- 
-  return B;
-}
-
 
 //! Find Corner
 double
@@ -200,12 +151,12 @@ Tikhonov::FindCorner(const vector<double> &rho, const vector<double> &eta,
 void
 Tikhonov::execute()
 {
-  MatrixIPort *iportRegMat = (MatrixIPort *)get_iport("RegularizationMat");
-
   // DEFINE MATRIX HANDLES FOR INPUT/OUTPUT PORTS
   MatrixHandle forward_matrix_h, hMatrixRegMat, hMatrixMeasDat;
+  
   if (!get_input_handle("ForwardMat", forward_matrix_h, true)) return;
   if (!get_input_handle("MeasuredPots", hMatrixMeasDat, true)) return;
+  get_input_handle("RegularizationMat",hMatrixRegMat,false);
 
   // TYPE CHECK
   MatrixHandle matrixForMat_handle = forward_matrix_h->dense();
@@ -235,21 +186,23 @@ Tikhonov::execute()
   // calculate R^T * R
   MatrixHandle mat_RtrR_handle;
   MatrixHandle matrixRegMat_handle;
-  if (!iportRegMat->get(hMatrixRegMat) && !hMatrixRegMat.get_rep())
+  if (!hMatrixRegMat.get_rep())
   {
     matrixRegMat_handle = DenseMatrix::identity(N);
     mat_RtrR_handle = DenseMatrix::identity(N);
   }
   else
   {
-    matrixRegMat_handle = hMatrixRegMat->dense();
-    if (N != matrixRegMat_handle->ncols())
+    if (N != hMatrixRegMat->ncols())
     {
       error("The dimension of RegularizationMat is not compatible with ForwardMat.");
       return;
     }
-    mat_RtrR_handle = mat_trans_mult_mat(*(matrixRegMat_handle->as_dense()));
+	matrixRegMat_handle =  hMatrixRegMat;
+	MatrixHandle matrixRegMat_transpose_handle = matrixRegMat_handle->transpose();
+	mat_RtrR_handle = (matrixRegMat_transpose_handle*matrixRegMat_handle)->dense();
   }
+  
   DenseMatrix &mat_RtrR = *(mat_RtrR_handle->as_dense());
   DenseMatrix &matrixRegMatD = *(matrixRegMat_handle->as_dense());
 
@@ -277,19 +230,19 @@ Tikhonov::execute()
     {
       // Use single fixed lambda value, entered in UI
       lambda = lambda_fix_.get();
-      msg_stream_ << "  method = " << reg_method_.get() << "\n";//DISCARD
+      // msg_stream_ << "  method = " << reg_method_.get() << "\n";//DISCARD
     }
     else if (reg_method_.get() == "slider")
     {
       // Use single fixed lambda value, select via slider
       lambda = tex_var_.get(); //lambda_sld_.get();
-      msg_stream_ << "  method = " << reg_method_.get() << "\n";//DISCARD
+     // msg_stream_ << "  method = " << reg_method_.get() << "\n";//DISCARD
     }
   }
   else if (reg_method_.get() == "lcurve")
   {
     // Use L-curve, lambda from corner of the L-curve
-    msg_stream_ << "method = " << reg_method_.get() << "\n";//DISCARD
+    // msg_stream_ << "method = " << reg_method_.get() << "\n";//DISCARD
 
     int i, j, k, l;
     const int nLambda = lambda_num_.get();
@@ -304,6 +257,13 @@ Tikhonov::execute()
     const double lam_step =
       pow(10.0, log10(lambda_max_.get() / lambda_min_.get()) / (nLambda-1));
 
+
+    double* AtrA = mat_AtrA.get_data_pointer();
+    double* RtrR = mat_RtrR.get_data_pointer();
+    double* rm   = regForMatrix.get_data_pointer();
+
+		int s= N*N;
+						  
     for (j=0; j<nLambda; j++)
     {
       if (j)
@@ -316,39 +276,33 @@ Tikhonov::execute()
       ///////////////////////////////////////
       ////Calculating the solution directly
       ///////////////////////////////////////
-      for (i=0; i<N; i++)
-      {
-        for (l=0; l<N; l++)
-        {
-          regForMatrix[i][l] = mat_AtrA[i][l] + lambda2 * mat_RtrR[i][l];
-        }
-      }
+	  
 
-      for (k=0; k<N; k++)
+      for (i=0; i<s; i++)
       {
-        solution[k] = mat_AtrY[k];
+				rm[i] = AtrA[i] + lambda2 * RtrR[i];
       }
 
       //Before, solution will be equal to (A^T * y)
       //After, solution will be equal to x_reg
 
-      regForMatrix.solve(solution);
+      regForMatrix.solve(mat_AtrY,solution);
       ////////////////////////////////
       matrixForMatD.mult(solution, Ax, flops, memrefs);
       matrixRegMatD.mult(solution, Rx, flops, memrefs);
-      rho[j] = 0.0;
-      eta[j] = 0.0;
 
       // Calculate the norm of Ax-b and Rx
 
       for (k=0; k<M; k++)
       {
-        Ax[k] -= matrixMeasDatD[k];
-        rho[j] += Ax[k] * Ax[k];
+				double T = Ax[k] - matrixMeasDatD[k];
+				rho[j] += T*T;
       }
-      for (k=0; k<N; k++)
+			
+			for (k=0; k<N; k++)
       {
-        eta[j] += Rx[k] * Rx[k];
+				double T = Rx[k];
+        eta[j] += T*T;
       }
       rho[j] = sqrt(rho[j]);
       eta[j] = sqrt(eta[j]);
