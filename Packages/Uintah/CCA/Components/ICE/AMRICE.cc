@@ -1607,8 +1607,8 @@ void AMRICE::reflux_applyCorrectionFluxes(const ProcessorGroup*,
                 refluxOperator_applyCorrectionFluxes<double>(q_CC_adv, var_name, indx, 
                               coarsePatch, finePatch, coarseLevel, fineLevel,new_dw,
                               one_zero);
-
-                if(switchDebug_AMR_refine){
+                              
+                if(switchDebug_AMR_reflux){
                   printData(indx, coarsePatch, 1, "coarsen_models", var_name, q_CC_adv);
                 }
               }
