@@ -51,7 +51,8 @@ int
 main(int argc, char **argv)
 {
   int nrrdSkip = 0;
-  int dim, i;
+  int dim=-1;
+  int i;
   int size[3];
   char *in = argv[1];
   ifstream vffFileStream(in, ios::binary);
@@ -89,6 +90,12 @@ main(int argc, char **argv)
       foundFormFeed = 1;
     }
 	  
+    if (strncmp(temp,"rank=",5) == 0)
+    {
+      istringstream rankLine(&temp[5]);
+      rankLine >> dim;
+    }
+	  
     if (strncmp(temp,"size=",5) == 0)
     {
       istringstream sizeLine(&temp[5]);
@@ -96,11 +103,6 @@ main(int argc, char **argv)
     }
   }
   
-  for (dim = 0; dim < 3; dim++)
-  {
-    if (size[dim] <= 0) break;
-  }
-
   vffFileStream.close();
 
   nrrdHeader << "NRRD0001" << endl
