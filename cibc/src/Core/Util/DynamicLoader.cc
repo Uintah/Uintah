@@ -419,7 +419,6 @@ DynamicAlgoBase::to_filename(const string s)
 
 
 DynamicLoader::DynamicLoader() :
-  map_crowd_("DynamicLoader: One compilation at a time."),
   compilation_cond_("DynamicLoader: waits for compilation to finish."),
   map_lock_("DynamicLoader: controls mutable access to the map.")
 {
@@ -464,55 +463,6 @@ DynamicLoader::scirun_loader()
 }
 
 
-//! DynamicLoader::entry_exists
-//!
-//! Convenience function to query the map, but thread safe.
-bool
-DynamicLoader::entry_exists(const string &entry)
-{
-  map_lock_.lock();
-  bool rval = algo_map_.find(entry) != algo_map_.end();
-  map_lock_.unlock();
-  return rval;
-}
-
-
-//! DynamicLoader::entry_is_null
-//!
-//! Convenience function to query the value in the map, but thread safe.
-bool
-DynamicLoader::entry_is_null(const string &entry)
-{
-  map_lock_.lock();
-  bool rval =  (algo_map_.find(entry) != algo_map_.end() &&
-		algo_map_[entry] == 0);
-  map_lock_.unlock();
-  return rval;
-}
-
-
-//! DynamicLoader::wait_for_current_compile
-//!
-//! Block if the lib associated with entry is compiling now.
-//! The only way false is returned, is for the compile to fail.
-bool
-DynamicLoader::wait_for_current_compile(const string &entry)
-{
-  while (entry_is_null(entry))
-  {
-    // another thread is compiling this lib, so wait.
-    map_lock_.lock();
-    compilation_cond_.wait(map_lock_);
-    map_lock_.unlock();
-  }
-  // if the map entry no longer exists, compilation failed.
-  if (! entry_exists(entry)) return false;
-  // The maker fun has been stored by another thread.
-  ASSERT(! entry_is_null(entry));
-  return true;
-}
-
-
 //! DynamicLoader::compile_and_store
 //!
 //! Compile and store the maker function mapped to the lib name.
@@ -524,23 +474,33 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
 				 ProgressReporter *pr)
 {
   bool do_compile = false;
+  bool did_compile = false;
 
-  if (! entry_exists(info.filename_))
+  map_lock_.lock();
+
+  if (algo_map_.find(info.filename_) == algo_map_.end())
   {
-    // first attempt at creation of this lib
-    map_crowd_.writeLock();
-    if (! entry_exists(info.filename_))
-    {
-      // create an empty entry, to catch threads chasing this one.
-      map_lock_.lock();
-      algo_map_[info.filename_] = 0;
-      map_lock_.unlock();
-      do_compile = true; // this thread is compiling.
-    }
-    map_crowd_.writeUnlock();
+    algo_map_[info.filename_] = 0;
+    do_compile = true; // this thread is compiling  
   }
+  else
+	{
+		while (algo_map_.find(info.filename_) != algo_map_.end() && algo_map_[info.filename_] == 0)
+		{
+			// The next one will release, wait and obtain the lock
+			compilation_cond_.wait(map_lock_);
+		}
+	}
+	
+  // we are still locked
+  // test whether the file got compiled
+  if (algo_map_.find(info.filename_) != algo_map_.end() && algo_map_[info.filename_]) did_compile = true;
 
-  if (!do_compile && !wait_for_current_compile(info.filename_)) return false;
+  // Or the file did not compile or we have a good version.
+  // rval has the result
+  map_lock_.unlock();
+
+  if (do_compile == false && did_compile == false) return (false);
 
   // Try to load a dynamic library that is already compiled
   string full_so = otf_dir() + string("/") + info.filename_ + ext;
@@ -552,17 +512,22 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
     so = GetLibraryHandle(full_so.c_str());
     if (so == 0)
     {
-      const string errmsg = "DYNAMIC LIB ERROR: " + full_so +
-        " does not load!";
+      const string errmsg = "DYNAMIC LIB ERROR: " + full_so + " does not load!";
       pr->error(errmsg);
-      pr->msg_stream() << SOError() << endl;
+      const char *soerr = SOError();
+      if (soerr)
+      {
+        pr->add_raw_message(soerr + string("\n"));
+      }
       // Remove the null ref for this lib from the map.
+      
       map_lock_.lock();
       algo_map_.erase(info.filename_);
-      map_lock_.unlock();
-      // wake up all sleepers.
       compilation_cond_.conditionBroadcast();
-      return false;
+      map_lock_.unlock();
+      
+      // wake up all sleepers.
+      return (false);
     }
   }
   else
@@ -582,8 +547,7 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
 
     if (so == 0)
     { // does not compile
-      const string errmsg = "DYNAMIC COMPILATION ERROR: " + full_so +
-        " does not compile!!";
+      const string errmsg = "DYNAMIC COMPILATION ERROR: " + full_so + " does not compile!!";
       if (maybe_compile_p)
       {
         pr->remark(errmsg);
@@ -597,14 +561,15 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
       {
         pr->add_raw_message(soerr + string("\n"));
       }
-      // Remove the null ref for this lib from the map.
+     
+       // Remove the null ref for this lib from the map.
       map_lock_.lock();
       algo_map_.erase(info.filename_);
 
       compilation_cond_.conditionBroadcast();
       map_lock_.unlock();
       // wake up all sleepers.
-      return false;
+      return (false);
     }
   }
 
@@ -621,6 +586,7 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
       pr->add_raw_message(soerr + string("\n"));
     }
     // Remove the null ref for this lib from the map.
+    
     map_lock_.lock();
     algo_map_.erase(info.filename_);
     compilation_cond_.conditionBroadcast();
@@ -628,11 +594,14 @@ DynamicLoader::compile_and_store(const CompileInfo &info, bool maybe_compile_p,
     // wake up all sleepers.
     return false;
   }
+
   // store this so that we can get at it again.
-  store(info.filename_, maker);
-  // wake up all sleepers.
+  map_lock_.lock();
+  algo_map_[info.filename_] = maker;
   compilation_cond_.conditionBroadcast();
-  return true;
+  map_lock_.unlock();
+
+  return (true);
 }
 
 
@@ -823,34 +792,38 @@ DynamicLoader::create_cc(const CompileInfo &info, bool empty,
 }
 
 
-void
-DynamicLoader::store(const string &name, maker_fun m)
-{
-  map_lock_.lock();
-  algo_map_[name] = m;
-  map_lock_.unlock();
-}
-
-
 bool
 DynamicLoader::fetch(const CompileInfo &ci, DynamicAlgoHandle &algo)
 {
+  
   bool rval = false;
-  // block in case we get here while it is compiling.
-  if (! wait_for_current_compile(ci.filename_)) return false;
 
-  map_crowd_.readLock();
+  // checking needs to be atomic
   map_lock_.lock();
-  map_type::iterator loc = algo_map_.find(ci.filename_);
-  if (loc != algo_map_.end())
+  while (algo_map_.find(ci.filename_) != algo_map_.end() && algo_map_[ci.filename_] == 0)
   {
-    maker_fun m = loc->second;
-    algo = DynamicAlgoHandle(m());
-    rval = true;
+    // The next one will release, wait and obtain the lock
+    compilation_cond_.wait(map_lock_);
   }
+
+  // we are still locked
+  // test whether the file got compiled
+  if (algo_map_.find(ci.filename_) != algo_map_.end() && algo_map_[ci.filename_])
+  {
+    map_type::iterator loc = algo_map_.find(ci.filename_);
+    if (loc != algo_map_.end())
+    {
+      maker_fun m = loc->second;
+      algo = DynamicAlgoHandle(m());
+      rval = true; 
+    }  
+  }
+  
+  // Or the file did not compile or we have a good version.
+  // rval has the result
   map_lock_.unlock();
-  map_crowd_.readUnlock();
-  return rval;
+  
+  return (rval);
 }
 
 
