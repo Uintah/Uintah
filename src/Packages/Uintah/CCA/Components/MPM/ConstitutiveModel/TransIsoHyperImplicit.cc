@@ -359,46 +359,7 @@ TransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         // Get the node indices that surround the cell
         interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
         int dof[24];
-        int l2g_node_num;
-        for(int k = 0; k < 8; k++) {
-          // Need to loop over the neighboring patches l2g to get the right
-          // dof number.
-          l2g_node_num = l2g[ni[k]];
-          dof[3*k]  =l2g_node_num;
-          dof[3*k+1]=l2g_node_num+1;
-          dof[3*k+2]=l2g_node_num+2;
-
-          B[0][3*k] = d_S[k][0]*oodx[0];
-          B[3][3*k] = d_S[k][1]*oodx[1];
-          B[5][3*k] = d_S[k][2]*oodx[2];
-          B[1][3*k] = 0.;
-          B[2][3*k] = 0.;
-          B[4][3*k] = 0.;
-
-          B[1][3*k+1] = d_S[k][1]*oodx[1];
-          B[3][3*k+1] = d_S[k][0]*oodx[0];
-          B[4][3*k+1] = d_S[k][2]*oodx[2];
-          B[0][3*k+1] = 0.;
-          B[2][3*k+1] = 0.;
-          B[5][3*k+1] = 0.;
-
-          B[2][3*k+2] = d_S[k][2]*oodx[2];
-          B[4][3*k+2] = d_S[k][1]*oodx[1];
-          B[5][3*k+2] = d_S[k][0]*oodx[0];
-          B[0][3*k+2] = 0.;
-          B[1][3*k+2] = 0.;
-          B[3][3*k+2] = 0.;
-
-          Bnl[0][3*k] = d_S[k][0]*oodx[0];
-          Bnl[1][3*k] = 0.;
-          Bnl[2][3*k] = 0.;
-          Bnl[0][3*k+1] = 0.;
-          Bnl[1][3*k+1] = d_S[k][1]*oodx[1];
-          Bnl[2][3*k+1] = 0.;
-          Bnl[0][3*k+2] = 0.;
-          Bnl[1][3*k+2] = 0.;
-          Bnl[2][3*k+2] = d_S[k][2]*oodx[2];
-        }
+        loadBMats(l2g,dof,B,Bnl,d_S,ni,oodx);
 
         // get the volumetric part of the deformation
         double J = deformationGradient_new[idx].Determinant();
