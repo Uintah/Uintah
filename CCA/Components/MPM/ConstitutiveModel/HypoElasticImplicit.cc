@@ -226,55 +226,8 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
 
         interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
         int dof[24];
-        int l2g_node_num;
-        for(int k = 0; k < 8; k++) {
-          // Need to loop over the neighboring patches l2g to get the right
-          // dof number.
-          l2g_node_num = l2g[ni[k]];
-          dof[3*k]  =l2g_node_num;
-          dof[3*k+1]=l2g_node_num+1;
-          dof[3*k+2]=l2g_node_num+2;
+        loadBMats(l2g,dof,B,Bnl,d_S,ni,oodx);
 
-          const Vector& disp = dispNew[ni[k]];
-	
-       	  for (int j = 0; j<3; j++){
-            for (int i = 0; i<3; i++) {
-              dispGrad(i,j) += disp[i] * d_S[k][j]* oodx[j];
-            }
-          }
-
-          B[0][3*k] = d_S[k][0]*oodx[0];
-          B[3][3*k] = d_S[k][1]*oodx[1];
-          B[5][3*k] = d_S[k][2]*oodx[2];
-          B[1][3*k] = 0.;
-          B[2][3*k] = 0.;
-          B[4][3*k] = 0.;
-
-          B[1][3*k+1] = d_S[k][1]*oodx[1];
-          B[3][3*k+1] = d_S[k][0]*oodx[0];
-          B[4][3*k+1] = d_S[k][2]*oodx[2];
-          B[0][3*k+1] = 0.;
-          B[2][3*k+1] = 0.;
-          B[5][3*k+1] = 0.;
-
-          B[2][3*k+2] = d_S[k][2]*oodx[2];
-          B[4][3*k+2] = d_S[k][1]*oodx[1];
-          B[5][3*k+2] = d_S[k][0]*oodx[0];
-          B[0][3*k+2] = 0.;
-          B[1][3*k+2] = 0.;
-          B[3][3*k+2] = 0.;
-
-          Bnl[0][3*k] = d_S[k][0]*oodx[0];
-          Bnl[1][3*k] = 0.;
-          Bnl[2][3*k] = 0.;
-          Bnl[0][3*k+1] = 0.;
-          Bnl[1][3*k+1] = d_S[k][1]*oodx[1];
-          Bnl[2][3*k+1] = 0.;
-          Bnl[0][3*k+2] = 0.;
-          Bnl[1][3*k+2] = 0.;
-          Bnl[2][3*k+2] = d_S[k][2]*oodx[2];
-        }
-      
         // Calculate the strain (here called D), and deviatoric rate DPrime
         Matrix3 e = (dispGrad + dispGrad.Transpose())*.5;
         Matrix3 ePrime = e - Identity*onethird*e.Trace();
@@ -282,8 +235,6 @@ HypoElasticImplicit::computeStressTensor(const PatchSubset* patches,
         // This is the (updated) Cauchy stress
 
         pstress_new[idx] = pstress[idx] + (ePrime*2.*G+Identity*K*e.Trace());
-
-//        cout << pstress_new[idx] << endl;
 
         // Compute the deformation gradient increment using the dispGrad
       
