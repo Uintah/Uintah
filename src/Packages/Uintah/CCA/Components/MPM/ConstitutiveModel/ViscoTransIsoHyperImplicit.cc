@@ -24,6 +24,8 @@
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
+#undef CONSIDER_FAILURE
+
 using std::cerr;
 using namespace Uintah;
 using namespace SCIRun;
@@ -456,7 +458,9 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
     double lambda_star = d_initialData.lambda_star;
     double c6 = c3*(exp(c4*(lambda_star-1.))-1.)-c5*lambda_star;//c6 = y-intercept
     double rho_orig = matl->getInitialDensity();
+#ifdef CONSIDER_FAILURE
     double failure = d_initialData.failure;
+#endif
     double y1 = d_initialData.y1;// visco
     double y2 = d_initialData.y2;
     double y3 = d_initialData.y3;
@@ -506,46 +510,8 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         // Get the node indices that surround the cell
         interpolator->findCellAndShapeDerivatives(px[idx], ni, d_S);
         int dof[24];
-        int l2g_node_num;
-        for(int k = 0; k < 8; k++) {
-          // Need to loop over the neighboring patches l2g to get the right
-          // dof number.
-          l2g_node_num = l2g[ni[k]];
-          dof[3*k]  =l2g_node_num;
-          dof[3*k+1]=l2g_node_num+1;
-          dof[3*k+2]=l2g_node_num+2;
+        loadBMats(l2g,dof,B,Bnl,d_S,ni,oodx);
 
-          B[0][3*k] = d_S[k][0]*oodx[0];
-          B[3][3*k] = d_S[k][1]*oodx[1];
-          B[5][3*k] = d_S[k][2]*oodx[2];
-          B[1][3*k] = 0.;
-          B[2][3*k] = 0.;
-          B[4][3*k] = 0.;
-
-          B[1][3*k+1] = d_S[k][1]*oodx[1];
-          B[3][3*k+1] = d_S[k][0]*oodx[0];
-          B[4][3*k+1] = d_S[k][2]*oodx[2];
-          B[0][3*k+1] = 0.;
-          B[2][3*k+1] = 0.;
-          B[5][3*k+1] = 0.;
-
-          B[2][3*k+2] = d_S[k][2]*oodx[2];
-          B[4][3*k+2] = d_S[k][1]*oodx[1];
-          B[5][3*k+2] = d_S[k][0]*oodx[0];
-          B[0][3*k+2] = 0.;
-          B[1][3*k+2] = 0.;
-          B[3][3*k+2] = 0.;
-
-          Bnl[0][3*k] = d_S[k][0]*oodx[0];
-          Bnl[1][3*k] = 0.;
-          Bnl[2][3*k] = 0.;
-          Bnl[0][3*k+1] = 0.;
-          Bnl[1][3*k+1] = d_S[k][1]*oodx[1];
-          Bnl[2][3*k+1] = 0.;
-          Bnl[0][3*k+2] = 0.;
-          Bnl[1][3*k+2] = 0.;
-          Bnl[2][3*k+2] = d_S[k][2]*oodx[2];
-        }
         // get the volumetric part of the deformation
         J = deformationGradient_new[idx].Determinant();
         deformed_fiber_vector =pfiberdir[idx]; // not actually deformed yet
@@ -613,8 +579,8 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
 
         //________________________________Failure+Stress+Stiffness
         fail[idx] = 0.;
+#ifdef CONSIDER_FAILURE
         if (failure == 1){
-#if 0
         double crit_shear = d_initialData.crit_shear;
         double crit_stretch = d_initialData.crit_stretch;
         double matrix_failed,fiber_failed;
@@ -819,9 +785,9 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
             D[i][j]=(cvol[i][j]+cMR[i][j]+cFC[i][j])*fac;
           }
          }
-#endif
       }
       else {
+#endif
         deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
              - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
              - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
@@ -835,70 +801,70 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         ElasticStress[idx] = pressure + deviatoric_stress + fiber_stress;
 
 	//_________________________________viscoelastic terms
-        double fac1,fac2,fac3,fac4,fac5,fac6,fac;
-        double exp1,exp2,exp3,exp4,exp5,exp6;
+        double fac1=0.,fac2=0.,fac3=0.,fac4=0.,fac5=0.,fac6=0.,fac=1.;
+        double exp1=0.,exp2=0.,exp3=0.,exp4=0.,exp5=0.,exp6=0.;
         if (t1 > 0.){
-         exp1 = exp(-delT/t1);
-         fac1 = (1. - exp1)*t1/delT;
-         history1[idx] = history1_old[idx]*exp1+
+          exp1 = exp(-delT/t1);
+          fac1 = (1. - exp1)*t1/delT;
+          history1[idx] = history1_old[idx]*exp1+
         	         (ElasticStress[idx]-ElasticStress_old[idx])*fac1;
+          if (t2 > 0.){
+           exp2 = exp(-delT/t2);
+           fac2 = (1. - exp2)*t2/delT;
+           history2[idx] = history2_old[idx]*exp2+
+          		(ElasticStress[idx]-ElasticStress_old[idx])*fac2;
+          }
+          else{
+           history2[idx]= Zero;
+          }
+          if (t3 > 0.){
+           exp3 = exp(-delT/t3);
+           fac3 = (1. - exp3)*t3/delT;
+           history3[idx] = history3_old[idx]*exp3+
+         		(ElasticStress[idx]-ElasticStress_old[idx])*fac3;
+          }
+          else{
+           history3[idx]= Zero;
+          }
+          if (t4 > 0.){
+           exp4 = exp(-delT/t4);
+           fac4 = (1. - exp4)*t4/delT;
+           history4[idx] = history4_old[idx]*exp4+
+          		(ElasticStress[idx]-ElasticStress_old[idx])*fac4;
+          }
+          else{
+           history4[idx]= Zero;
+          }
+          if (t5 > 0.){
+           exp5 = exp(-delT/t5);
+           fac5 = (1. - exp5)*t5/delT;
+           history5[idx] = history5_old[idx]*exp5+
+          		(ElasticStress[idx]-ElasticStress_old[idx])*fac5;
+          }
+          else{
+           history5[idx]= Zero;
+          }
+          if (t6 > 0.){
+           exp6 = exp(-delT/t6);
+           fac6 = (1. - exp6)*t6/delT;
+           history6[idx] = history6_old[idx]*exp6+
+          		(ElasticStress[idx]-ElasticStress_old[idx])*fac6;
         }
         else{
-         exp1 = 0.; fac1 = 0.;
-         history1[idx]= Zero;
-        }
-        if (t2 > 0.){
-         exp2 = exp(-delT/t2);
-         fac2 = (1. - exp2)*t2/delT;
-         history2[idx] = history2_old[idx]*exp2+
-        		(ElasticStress[idx]-ElasticStress_old[idx])*fac2;
-        }
-        else{
-         exp2 = 0.; fac2 = 0.;
-         history2[idx]= Zero;
-        }
-        if (t3 > 0.){
-         exp3 = exp(-delT/t3);
-         fac3 = (1. - exp3)*t3/delT;
-         history3[idx] = history3_old[idx]*exp3+
-       		(ElasticStress[idx]-ElasticStress_old[idx])*fac3;
-        }
-        else{
-         exp3 = 0.; fac3 = 0.;
-         history3[idx]= Zero;
-        }
-        if (t4 > 0.){
-         exp4 = exp(-delT/t4);
-         fac4 = (1. - exp4)*t4/delT;
-         history4[idx] = history4_old[idx]*exp4+
-        		(ElasticStress[idx]-ElasticStress_old[idx])*fac4;
-        }
-        else{
-         exp4 = 0.; fac4 = 0.;
-         history4[idx]= Zero;
-        }
-        if (t5 > 0.){
-         exp5 = exp(-delT/t5);
-         fac5 = (1. - exp5)*t5/delT;
-         history5[idx] = history5_old[idx]*exp5+
-        		(ElasticStress[idx]-ElasticStress_old[idx])*fac5;
-        }
-        else{
-         exp5 = 0.; fac5 = 0.;
-         history5[idx]= Zero;
-        }
-        if (t6 > 0.){
-         exp6 = exp(-delT/t6);
-         fac6 = (1. - exp6)*t6/delT;
-         history6[idx] = history6_old[idx]*exp6+
-        		(ElasticStress[idx]-ElasticStress_old[idx])*fac6;
-        }
-        else{
-         exp6 = 0.; fac6 = 0.;
          history6[idx]= Zero;
         }
 
         fac = fac1*y1 + fac2*y2 + fac3*y3 + fac4*y4 + fac5*y5 + fac6*y6 + 1.;
+
+        }
+        else{
+         history1[idx]= Zero;
+         history2[idx]= Zero;
+         history3[idx]= Zero;
+         history4[idx]= Zero;
+         history5[idx]= Zero;
+         history6[idx]= Zero;
+        }
 
         pstress[idx] = history1[idx]*y1+history2[idx]*y2+history3[idx]*y3
                      + history4[idx]*y4+history5[idx]*y5+history6[idx]*y6
@@ -1045,7 +1011,9 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
             D[i][j]=(cvol[i][j]+cMR[i][j]+cFC[i][j])*fac;
           }
          }
+#ifdef CONSIDER_FAILURE
 	}
+#endif
 
         // kmat = B.transpose()*D*B*volold
         double kmat[24][24];
@@ -1172,7 +1140,9 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
      double c5 = d_initialData.c5;
      double lambda_star = d_initialData.lambda_star;
      double c6 = c3*(exp(c4*(lambda_star-1.))-1.)-c5*lambda_star;
+#ifdef CONSIDER_FAILURE
      double failure = d_initialData.failure;
+#endif
      double y1 = d_initialData.y1;// visco
      double y2 = d_initialData.y2;
      double y3 = d_initialData.y3;
@@ -1258,8 +1228,8 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
         }
       //________________________________Failure and stress terms
       fail[idx] = 0.;
+#ifdef CONSIDER_FAILURE
       if (failure == 1){
-#if 0
         double crit_shear = d_initialData.crit_shear;
         double crit_stretch = d_initialData.crit_stretch;
         double matrix_failed = 0.;
@@ -1332,9 +1302,9 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
           }
         //_______________________________Cauchy stress
         ElasticStress[idx] = pressure + deviatoric_stress + fiber_stress;
-#endif
       }
       else {
+#endif
           deviatoric_stress = (leftCauchyGreentilde_new*(c1+c2*I1tilde)
                - leftCauchyGreentilde_new*leftCauchyGreentilde_new*c2
                - Identity*(1./3.)*(c1*I1tilde+2.*c2*I2tilde))*2./J;
@@ -1346,69 +1316,70 @@ ViscoTransIsoHyperImplicit::computeStressTensor(const PatchSubset* patches,
           pressure = Identity*p;
           //Cauchy stress
           ElasticStress[idx] = pressure + deviatoric_stress + fiber_stress;
+#ifdef CONSIDER_FAILURE
         }
+#endif
 
         //_________________________________viscoelastic terms
-        double fac1,fac2,fac3,fac4,fac5,fac6;
-        double exp1,exp2,exp3,exp4,exp5,exp6;
-        if (t1 > 0.){
-         exp1 = exp(-delT/t1);
-         fac1 = (1. - exp1)*t1/delT;
-         history1[idx] = history1_old[idx]*exp1+
-        	         (ElasticStress[idx]-ElasticStress_old[idx])*fac1;
+        double fac1=0.,fac2=0.,fac3=0.,fac4=0.,fac5=0.,fac6=0.;
+        double exp1=0.,exp2=0.,exp3=0.,exp4=0.,exp5=0.,exp6=0.;
+        if (t1 > 0.){  // if t1 is zero, assume t2-t5 are zero also.
+          exp1 = exp(-delT/t1);
+          fac1 = (1. - exp1)*t1/delT;
+          history1[idx] = history1_old[idx]*exp1+
+       	                (ElasticStress[idx]-ElasticStress_old[idx])*fac1;
+          if (t2 > 0.){
+           exp2 = exp(-delT/t2);
+           fac2 = (1. - exp2)*t2/delT;
+           history2[idx] = history2_old[idx]*exp2+
+          		(ElasticStress[idx]-ElasticStress_old[idx])*fac2;
+          }
+          else{
+           history2[idx]= Zero;
+          }
+          if (t3 > 0.){
+           exp3 = exp(-delT/t3);
+           fac3 = (1. - exp3)*t3/delT;
+           history3[idx] = history3_old[idx]*exp3+
+         		(ElasticStress[idx]-ElasticStress_old[idx])*fac3;
+          }
+          else{
+           history3[idx]= Zero;
+          }
+          if (t4 > 0.){
+           exp4 = exp(-delT/t4);
+           fac4 = (1. - exp4)*t4/delT;
+           history4[idx] = history4_old[idx]*exp4+
+          		(ElasticStress[idx]-ElasticStress_old[idx])*fac4;
+          }
+          else{
+           history4[idx]= Zero;
+          }
+          if (t5 > 0.){
+           exp5 = exp(-delT/t5);
+           fac5 = (1. - exp5)*t5/delT;
+           history5[idx] = history5_old[idx]*exp5+
+          		(ElasticStress[idx]-ElasticStress_old[idx])*fac5;
+          }
+          else{
+           history5[idx]= Zero;
+          }
+          if (t6 > 0.){
+           exp6 = exp(-delT/t6);
+           fac6 = (1. - exp6)*t6/delT;
+           history6[idx] = history6_old[idx]*exp6+
+          		(ElasticStress[idx]-ElasticStress_old[idx])*fac6;
+          }
+          else{
+           history6[idx]= Zero;
+          }
         }
         else{
-         exp1 = 0.; fac1 = 0.;
          history1[idx]= Zero;
-        }
-        if (t2 > 0.){
-         exp2 = exp(-delT/t2);
-         fac2 = (1. - exp2)*t2/delT;
-         history2[idx] = history2_old[idx]*exp2+
-        		(ElasticStress[idx]-ElasticStress_old[idx])*fac2;
-        }
-        else{
-         exp2 = 0.; fac2 = 0.;
          history2[idx]= Zero;
-        }
-        if (t3 > 0.){
-         exp3 = exp(-delT/t3);
-         fac3 = (1. - exp3)*t3/delT;
-         history3[idx] = history3_old[idx]*exp3+
-       		(ElasticStress[idx]-ElasticStress_old[idx])*fac3;
-        }
-        else{
-         exp3 = 0.; fac3 = 0.;
          history3[idx]= Zero;
-        }
-        if (t4 > 0.){
-         exp4 = exp(-delT/t4);
-         fac4 = (1. - exp4)*t4/delT;
-         history4[idx] = history4_old[idx]*exp4+
-        		(ElasticStress[idx]-ElasticStress_old[idx])*fac4;
-        }
-        else{
-         exp4 = 0.; fac4 = 0.;
          history4[idx]= Zero;
-        }
-        if (t5 > 0.){
-         exp5 = exp(-delT/t5);
-         fac5 = (1. - exp5)*t5/delT;
-         history5[idx] = history5_old[idx]*exp5+
-        		(ElasticStress[idx]-ElasticStress_old[idx])*fac5;
-        }
-        else{
-         exp5 = 0.; fac5 = 0.;
          history5[idx]= Zero;
-        }
-        if (t6 > 0.){
-         exp6 = exp(-delT/t6);
-         fac6 = (1. - exp6)*t6/delT;
-         history6[idx] = history6_old[idx]*exp6+
-        		(ElasticStress[idx]-ElasticStress_old[idx])*fac6;
-        }
-        else{
-         exp6 = 0.; fac6 = 0.;
          history6[idx]= Zero;
         }
 
