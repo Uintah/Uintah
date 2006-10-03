@@ -136,16 +136,11 @@ public:
 private:
   bool create_cc(const CompileInfo &info, bool empty, ProgressReporter *pr);
   bool compile_so(const CompileInfo &info, ProgressReporter *pr);
-  void store( const string &, maker_fun);
-  bool entry_exists(const string &entry);
-  bool entry_is_null(const string &entry);
-  bool wait_for_current_compile(const string &entry);
   
   typedef map<string, maker_fun> map_type;
   map_type              algo_map_;
   
   //! Thread Safety. 
-  CrowdMonitor          map_crowd_;
   ConditionVariable     compilation_cond_;
   Mutex                 map_lock_;
   static string		otf_dir();
