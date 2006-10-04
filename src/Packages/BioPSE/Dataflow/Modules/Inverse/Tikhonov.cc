@@ -288,8 +288,8 @@ Tikhonov::execute()
 
       regForMatrix.solve(mat_AtrY,solution);
       ////////////////////////////////
-      matrixForMatD.mult(solution, Ax, flops, memrefs);
-      matrixRegMatD.mult(solution, Rx, flops, memrefs);
+      matrixForMatD.multiply(solution, Ax);
+      matrixRegMatD.multiply(solution, Rx);
 
       // Calculate the norm of Ax-b and Rx
 
