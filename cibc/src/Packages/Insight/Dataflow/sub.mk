@@ -34,7 +34,7 @@ SRCDIR := Packages/Insight/Dataflow
 SUBDIRS := \
         $(SRCDIR)/GUI \
         $(SRCDIR)/Modules \
-	$(SRCDIR)/Ports \
+				$(SRCDIR)/Ports \
 
 include $(SCIRUN_SCRIPTS)/recurse.mk
 
