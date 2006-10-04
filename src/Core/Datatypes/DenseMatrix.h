@@ -100,11 +100,13 @@ public:
   virtual void scalar_multiply(double s);
   virtual MatrixHandle submatrix(int r1, int c1, int r2, int c2);
 
+	void multiply(ColumnMatrix& x, ColumnMatrix& b) const;
+
   double  sumOfCol(int);
   double  sumOfRow(int);
   
   int     solve(ColumnMatrix&, int overwrite=0);
-  int     solve(const ColumnMatrix& rhs, ColumnMatrix& lhs,
+  int     solve(ColumnMatrix& rhs, ColumnMatrix& lhs,
 		int overwrite=0);
   int     solve(vector<double>& sol, int overwrite=0);
   int     solve(const vector<double>& rhs, vector<double>& lhs,

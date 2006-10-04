@@ -49,7 +49,7 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/PropertyManager.cc	    	\
 	$(SRCDIR)/SearchGrid.cc           	\
 	$(SRCDIR)/SparseRowMatrix.cc	    	\
-        $(SRCDIR)/String.cc                     \
+	$(SRCDIR)/String.cc                     \
 	$(SRCDIR)/TypeName.cc		    	\
 	$(SRCDIR)/cd_templates.cc	    	\
 	$(SRCDIR)/cd_templates_fields_0.cc    	\
@@ -58,7 +58,7 @@ SRCS +=	$(SRCDIR)/Clipper.cc		    	\
 	$(SRCDIR)/cd_templates_fields_3.cc    	\
 	$(SRCDIR)/cd_templates_fields_4.cc    	\
 	$(SRCDIR)/cd_templates_fields_5.cc	\
-	$(SRCDIR)/cd_templates_fields_6.cc	\
+	$(SRCDIR)/cd_templates_fields_6.cc
 
 
 PSELIBS := \
@@ -74,8 +74,9 @@ PSELIBS := \
 LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) \
 	$(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY)
 
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
 INCLUDES += $(TEEM_INCLUDE)
 INCLUDES += $(BLAS_INCLUDE)
+
+include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
 
