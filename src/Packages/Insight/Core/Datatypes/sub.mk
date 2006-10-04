@@ -44,19 +44,25 @@ SRCDIR   := Core/Datatypes
 SRCS     += $(SRCDIR)/ITKDatatype.cc \
 	$(SRCDIR)/ITKLatVolField.h \
 	$(SRCDIR)/ITKImageField.h \
-	$(SRCDIR)/cd_templates.cc \
-	$(SRCDIR)/cd_templates_fields_0.cc \
-	$(SRCDIR)/cd_templates_fields_1.cc 
+	$(SRCDIR)/cd_templates_itk.cc \
+	$(SRCDIR)/cd_templates_fields_0_itk.cc \
+	$(SRCDIR)/cd_templates_fields_1_itk.cc \
 
 #[INSERT NEW CODE FILE HERE]
 
-PSELIBS := Core/Persistent Core/Exceptions Core/Containers \
-	Core/Thread Core/Geometry Dataflow/GuiInterface \
-	Core/Math Core/Geom Core/Util Core/Datatypes \
-  Core/Basis
+PSELIBS := \
+	Core/Basis        \
+	Core/Containers   \
+	Core/Exceptions   \
+	Core/Geometry     \
+	Core/Math         \
+	Core/Persistent   \
+	Core/Thread       \
+	Core/Util         
+  
 
-LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(INSIGHT_LIBRARY)
-
+LIBS := $(GL_LIBRARY) $(M_LIBRARY) $(BLAS_LIBRARY) $(F_LIBRARY) \
+	$(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(INSIGHT_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
