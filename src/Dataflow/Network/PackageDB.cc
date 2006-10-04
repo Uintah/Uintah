@@ -495,11 +495,16 @@ PackageDB::categoryNames(const string& packageName) const
     vector<string> result(0);
     return result;
   }
-  vector<string> result(package->size());
+  vector<string> result;
   PackageIter iter(package);
-  int i=0;
-  for(iter.first();iter.ok();++iter) result[i++]=iter.get_key();
-  return result;
+  
+  for(iter.first();iter.ok();++iter)
+	{
+		// Do not list catagory if it does not contain any modules
+		vector<string> test = moduleNames(packageName,iter.get_key());
+		if (test.size()) result.push_back(iter.get_key());
+  }
+	return result;
 }
 
 
@@ -554,12 +559,19 @@ PackageDB::moduleNames(const string& packageName,
     vector<string> result(0);
     return result;
   }
-  vector<string> result(category->size());
+  
+	vector<string> result;
   CategoryIter iter(category);
   int i=0;
-  for(iter.first();iter.ok();++iter) 
-    result[i++]=iter.get_key();
-  return result;
+  
+	for(iter.first();iter.ok();++iter) 
+	{
+		if (iter.get_data()->hide_ == false)
+		{
+			result.push_back(iter.get_key());
+		}
+	}
+	return result;
 }
 
 void

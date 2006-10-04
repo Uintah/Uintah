@@ -59,6 +59,7 @@ struct ModuleInfo
   string                       category_name_;
   string                       module_name_;
   bool                         optional_;
+	bool												 hide_;
   vector<string>               authors_;
   string                       help_description_;
   string                       summary_;
