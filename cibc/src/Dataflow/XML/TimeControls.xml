@@ -29,7 +29,7 @@
    DEALINGS IN THE SOFTWARE.
 -->
 
-<component name="TimeControls" category="Time">
+<component name="TimeControls" category="Time" hide="true">
   <overview>
     <authors>
       <author>Martin Cole</author>

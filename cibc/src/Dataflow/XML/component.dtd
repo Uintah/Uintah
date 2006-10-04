@@ -68,7 +68,8 @@
 <!ATTLIST component 
         name CDATA #REQUIRED
         category CDATA #REQUIRED
-        optional (true | false) "false">
+        optional (true | false) "false"
+				hide (true | false) "false">
 
 <!--  Overview of component's purpose  -->
 <!ELEMENT overview (authors, summary, description, examplesr?)>
