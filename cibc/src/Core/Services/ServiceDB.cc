@@ -342,7 +342,6 @@ ServiceDB::parse_and_find_service_rcfile(ServiceInfo *new_service,string xmldir)
   
   // 1. check the user's SCIRUN_DIR/services directory
   std::string objdir = sci_getenv("SCIRUN_OBJDIR");
-	std::cout << "objdir="<<objdir<<"\n";
 	
   if( objdir != "") 
 	{
