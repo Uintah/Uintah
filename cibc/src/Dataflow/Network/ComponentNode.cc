@@ -40,6 +40,7 @@
 #include <Dataflow/GuiInterface/GuiInterface.h>
 #include <Core/XMLUtil/XMLUtil.h>
 #include <libxml/xmlreader.h>
+#include <Core/Util/Environment.h>
 #include <Core/Util/RWS.h>
 #include <Core/Malloc/Allocator.h>
 
@@ -339,12 +340,27 @@ read_component_file(ModuleInfo &mi, const char* filename)
       mi.category_name_ = string(to_char_ptr(cat_att->children->content));
       xmlAttrPtr opt_att = get_attribute_by_name(node, "optional");
       mi.optional_ = false;
-      if (opt_att != 0) {
-	if (string(to_char_ptr(opt_att->children->content)) == 
-	    string("true")) {
-	  mi.optional_ = true;
-	}
-      } 
+			if (opt_att != 0) 
+			{
+				if (string(to_char_ptr(opt_att->children->content)) == string("true")) 
+				{
+					mi.optional_ = true;
+				}
+			}
+			
+			if (!sci_getenv_p("SCIRUN_SHOW_HIDDEN_MODULES"))
+			{
+				opt_att = get_attribute_by_name(node, "hide");			
+				mi.hide_ = false;
+				if (opt_att != 0) 
+				{
+					if (string(to_char_ptr(opt_att->children->content)) == string("true")) 
+					{
+						mi.hide_ = true;
+					}
+				}
+			}
+			
       //set the description string.
       set_description(mi, node);
       set_port_info(mi, node);
