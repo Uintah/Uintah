@@ -335,92 +335,75 @@ ServiceDB::parse_and_find_service_rcfile(ServiceInfo *new_service,string xmldir)
   string rcname = new_service->parameters["rcfile"];
   if (rcname == "") return;
 	
-  // First check whether the SCIRun/services directory exists in the HOME directory
+  // First check whether the SCIRUN_DIR/services directory exists 
 
   string filename;
   bool foundrc = false;
   
-  // 1. check the user's home/SCIRun/services directory
-  char *HOME;
-  if( (HOME = getenv("HOME")) != NULL ) 
-    {
-      filename = HOME+string("/SCIRun/services/") + rcname;
-      foundrc = parse_service_rcfile(new_service,filename);
-      if (foundrc) return;
-      filename = HOME+string("/SCIRun/") + rcname;
-      foundrc = parse_service_rcfile(new_service,filename);
-      if (foundrc) return;
-      filename = HOME+string("/") + rcname;
-      foundrc = parse_service_rcfile(new_service,filename);
-      if (foundrc) return;
-    }
-  
+  // 1. check the user's SCIRUN_DIR/services directory
+  std::string objdir = sci_getenv("SCIRUN_OBJDIR");
+	std::cout << "objdir="<<objdir<<"\n";
+	
+  if( objdir != "") 
+	{
+		filename = objdir+std::string("/services/") + rcname;
+		foundrc = parse_service_rcfile(new_service,filename);
+		if (foundrc) return;
+		filename = objdir+std::string("/") + rcname;
+		foundrc = parse_service_rcfile(new_service,filename);
+		if (foundrc) return;
+	}
+
   // 2. check sourcedir where xml file was located as well
 
-  filename = xmldir + string("/") + rcname;
+  filename = xmldir + std::string("/") + rcname;
   foundrc = parse_service_rcfile(new_service,filename);
   if (!foundrc) 
-    {
-      cerr << "Could not locate the configuration file '" << rcname 
-           << "' for service " << new_service->servicename << "\n";
-      return;
-    }
+	{
+		std::cerr << "Could not locate the configuration file '" << rcname 
+				 << "' for service " << new_service->servicename << "\n";
+		return;
+	}
 	
   // If this one is a success 
   // try to copy this rc file to the SCIRun directory in the
   // users home directory
 	
-  if( (HOME = getenv("HOME")) != NULL )
-    {
-      string dirname = HOME+string("/SCIRun/services");
-      struct stat buf;
-      if(LSTAT(dirname.c_str(),&buf) < 0)
-        {
-          // The target directory does not exist
-			
-          // Test whether SCIRun directory exists
-          // if not create it
+  if( objdir != "" )
+	{
+		
 
-          dirname = HOME+string("/SCIRun");
-          if (LSTAT(dirname.c_str(),&buf) < 0)
-            {
-              string cmd = string("mkdir ") + string(HOME) + string("/SCIRun");
-              sci_system(cmd.c_str());
-              if(LSTAT(dirname.c_str(),&buf) < 0) return;  // Try to get information once more
-            }
-          if (!S_ISDIR(buf.st_mode))
-            {
-              cerr << "Could not create " << dirname << " directory\n";
-              return;
-            }
-		
-          // SCIRun directory must exist now
-		
-          dirname = HOME+string("/SCIRun/services");
-          if (LSTAT(dirname.c_str(),&buf) < 0)
-            {
-              string cmd = string("mkdir ") + string(HOME) + string("/SCIRun/services");
-              sci_system(cmd.c_str());
-              if(LSTAT(dirname.c_str(),&buf) < 0) return;  // Try to get information once more
-            }
-          if (!S_ISDIR(buf.st_mode))
-            { 
-              cerr << "Could not create " << dirname << " directory\n"; 
-              return;
-            }
-        }
-		
-      if (!S_ISDIR(buf.st_mode))
-        {
-          cerr << "Could not create " << dirname << " directory\n";
-          return;
-        }
+		string dirname = objdir+std::string("/services");
+		struct stat buf;
+		if(LSTAT(dirname.c_str(),&buf) < 0)
+		{
+			// The target directory does not exist
+	
+			// Test whether services directory exists
+			// if not create it
 
-      cout << "Copying " << rcname << " to local /SCIRun/services directory\n";
-      string cmd = string("cp -f ") + filename + " " + string(HOME) + string("/SCIRun/services/") + rcname;
-      sci_system(cmd.c_str());
-		
-    }
+			dirname = objdir+string("/services");
+			if (LSTAT(dirname.c_str(),&buf) < 0)
+			{
+				std::string cmd = string("mkdir ") + objdir + string("/services");
+				sci_system(cmd.c_str());
+				if(LSTAT(dirname.c_str(),&buf) < 0) return;  // Try to get information once more
+			}
+			if (!S_ISDIR(buf.st_mode))
+			{
+				std::cerr << "Could not create " << dirname << " directory\n";
+				return;
+			}
+		}
+	
+		std::cout << "Copying " << rcname << " to local "<< std::string(objdir) << std::string("/services/") << " directory\n";
+		std::string cmd = std::string("cp -f ") + filename + " " + std::string(objdir) + std::string("/services/") + rcname;
+		sci_system(cmd.c_str());
+
+		filename = objdir+string("/services/") + rcname;
+		foundrc = parse_service_rcfile(new_service,filename);
+		if (foundrc) return;
+	}
 
   return;
 }
