@@ -341,7 +341,7 @@ DenseMatrix::solve(ColumnMatrix& sol, int overwrite)
 
 
 int
-DenseMatrix::solve(const ColumnMatrix& rhs, ColumnMatrix& lhs, int overwrite)
+DenseMatrix::solve(ColumnMatrix& rhs, ColumnMatrix& lhs, int overwrite)
 {
   ASSERT(nrows_ == ncols_);
   ASSERT(rhs.nrows() == ncols_);
@@ -349,6 +349,9 @@ DenseMatrix::solve(const ColumnMatrix& rhs, ColumnMatrix& lhs, int overwrite)
 
   double **A;
   double **cpy;
+	double *lhsp = lhs.get_data_pointer();
+	double *rhsp = rhs.get_data_pointer();
+	
 	if (!overwrite) { cpy = scinew double*[nrows_]; for (int j=0; j < nrows_; j++) cpy[j] = data[j]; A = cpy; } else { A = data; }
 	
   // Gauss-Jordan with partial pivoting
@@ -379,20 +382,20 @@ DenseMatrix::solve(const ColumnMatrix& rhs, ColumnMatrix& lhs, int overwrite)
       double* tmp=A[i];
       A[i]=A[row];
       A[row]=tmp;
-      double dtmp=lhs[i];
-      lhs[i]=lhs[row];
-      lhs[row]=dtmp;
+      double dtmp=lhsp[i];
+      lhsp[i]=lhsp[row];
+      lhsp[row]=dtmp;
     }
     double denom=1./A[i][i];
     double* r1=A[i];
-    double s1=lhs[i];
+    double s1=lhsp[i];
     for (j=i+1; j<nrows_; j++)
     {
       double factor=A[j][i]*denom;
       double* r2=A[j];
       for (int k=i; k<nrows_; k++)
         r2[k]-=factor*r1[k];
-      lhs[j]-=factor*s1;
+      lhsp[j]-=factor*s1;
     }
   }
 
@@ -409,14 +412,14 @@ DenseMatrix::solve(const ColumnMatrix& rhs, ColumnMatrix& lhs, int overwrite)
     }
     double denom=1./A[i][i];
     double* r1=A[i];
-    double s1=lhs[i];
+    double s1=lhsp[i];
     for (int j=0;j<i;j++)
     {
       double factor=A[j][i]*denom;
       double* r2=A[j];
       for (int k=i; k<nrows_; k++)
         r2[k] -= factor*r1[k];
-      lhs[j] -= factor*s1;
+      lhsp[j] -= factor*s1;
     }
   }
 
@@ -434,7 +437,7 @@ DenseMatrix::solve(const ColumnMatrix& rhs, ColumnMatrix& lhs, int overwrite)
     double factor=1./A[i][i];
     for (int j=0; j<nrows_; j++)
       A[i][j] *= factor;
-    lhs[i] *= factor;
+    lhsp[i] *= factor;
   }
   if (!overwrite) delete cpy;
   return 1;
@@ -586,6 +589,25 @@ DenseMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
   }
   flops += (end-beg) * ncols_ * 2;
   memrefs += (end-beg) * ncols_ * 2 *sizeof(double)+(end-beg)*sizeof(double);
+}
+
+void
+DenseMatrix::multiply(ColumnMatrix& x, ColumnMatrix& b) const
+{
+  // Compute A*x=b
+
+  int i, j;
+	double *xx = x.get_data_pointer();
+	for (i=0; i<nrows_; i++)
+	{
+		double sum=0;
+		double* row=data[i];
+		for (j=0; j<ncols_; j++)
+		{
+			sum+=row[j]*xx[j];
+		}
+		b[i]=sum;
+	}
 }
 
 

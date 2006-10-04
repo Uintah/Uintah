@@ -38,7 +38,7 @@ cc-1468 CC: REMARK File = ../src/Core/Datatypes/cd_templates_fields_0.cc, Line =
 #pragma set woff 1468
 #endif
 
-using namespace SCIRun;
+namespace SCIRun {
 
 typedef ImageMesh<QuadBilinearLgn<Point> > IMesh;
 
@@ -104,7 +104,7 @@ const TypeDescription* get_type_description(ITKImageField<unsigned short> *);
 const TypeDescription* get_type_description(ITKImageField<unsigned char> *);
 const TypeDescription* get_type_description(ITKImageField<unsigned long> *);
 
-namespace SCIRun {
+
 
   const TypeDescription*
   get_type_description(SCIRun::ITKFData2d<SCIRun::Tensor>*) {
