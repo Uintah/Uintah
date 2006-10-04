@@ -45,6 +45,7 @@
 #define CCA_PIDL_XceptionRelay_h
 
 #include <Core/CCA/PIDL/ProxyBase.h>
+#include <Core/CCA/PIDL/Warehouse.h>
 #include <Core/CCA/PIDL/Intra/IntraComm.h>
 #include <Core/CCA/PIDL/Message.h>
 #include <map>
@@ -52,6 +53,9 @@
 #define MAX_X_MSG_LENGTH 300
 
 namespace SCIRun {
+  class ProxyBase;
+  class Warehouse;
+
 /**************************************
  
 CLASS
