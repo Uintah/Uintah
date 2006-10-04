@@ -407,7 +407,7 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
       double rho_cur = rho_orig/J;
 
       double maxvolstrain;
-      if(flag->d_with_ice){
+      /*if(flag->d_with_ice){
 	IntVector c1(-1,-1,-1), c2(0,0,0);
         Point pt1 = getLevel(patches)->getCellPosition(c1), pt2 = getLevel(patches)->getCellPosition(c2);
 	Vector x0 = 0.5*(pt1.asVector() + pt2.asVector());
@@ -418,9 +418,9 @@ void SoilFoam::computeStressTensor(const PatchSubset* patches,
         IntVector c3(i,j,k);
         maxvolstrain = csv_min[c3];
       }
-      else{
+      else{*/
 	maxvolstrain = sv_min[idx];
-      }
+	//}
 
       // Traditional method for mat5
       if(vol_strain>maxvolstrain){//sv_min[idx]){
