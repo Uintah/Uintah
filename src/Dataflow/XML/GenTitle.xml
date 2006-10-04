@@ -33,7 +33,7 @@
 
 
 
-<component name="GenTitle" category="Visualization">
+<component name="GenTitle" category="Visualization" hide="true">
   <overview>
     <authors>
       <author>Allen R. Sanderson</author>

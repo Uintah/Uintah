@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "component.dtd">
-<component name="BasicOutput" category="Examples" optional="false">
+<component name="BasicOutput" category="Examples" optional="false" hide="true">
   <overview>
     <authors>
       <author>Martin Cole</author>
