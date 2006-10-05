@@ -3,7 +3,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 2006 Scientific Computing and Imaging Institute,
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
 #  University of Utah.
 #
 #  License for the specific language governing rights and limitations under
@@ -39,28 +39,23 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Kepler/Core/Comm
+SRCDIR   := Packages/Kepler/Dataflow/Modules/Workflow
 
 SRCS     += \
-            $(SRCDIR)/KeplerServer.cc \
-            $(SRCDIR)/NetworkHelper.cc
-
+            $(SRCDIR)/ClientInfo.cc\
 #[INSERT NEW CODE FILE HERE]
 
-ifeq ($(LARGESOS),yes)
-    PSELIBS := Dataflow Core
-else
-    PSELIBS := \
-               Core/Containers Core/Thread Core/Exceptions Core/Util \
-               Core/Comm Core/Malloc Core/Services Core/XMLUtil Core/SystemCall \
-               Core/GuiInterface Core/TkExtensions \
-               Dataflow/Network Dataflow/Modules/Render \
-               Packages/Kepler/Core/Exceptions
-endif
+PSELIBS  := \
+            Core/Containers Core/Datatypes Core/Exceptions Core/GuiInterface \
+            Core/Persistent Core/Thread Core/TkExtensions Core/Util \
+            Dataflow/Network
 
-LIBS :=  $(LIBS) $(XML_LIBRARY) $(THREAD_LIBRARY) $(SEMAPHORE_LIBRARY) $(SOCKET_LIBRARY)
-
-#SOFLAGS := -shared -L$(LIBDIR) $(CFLAGS)
+LIBS     := $(TK_LIBRARY) $(GL_LIBRARY)
+#$(M_LIBRARY) $(THREAD_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+
+ifeq ($(LARGESOS),no)
+SCIRUN_MODULES := $(SCIRUN_MODULES) $(LIBNAME)
+endif
 

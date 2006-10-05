@@ -39,28 +39,20 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Kepler/Core/Comm
+SRCDIR   := Packages/Kepler/Core/Exceptions
 
 SRCS     += \
-            $(SRCDIR)/KeplerServer.cc \
-            $(SRCDIR)/NetworkHelper.cc
+            $(SRCDIR)/ServerError.cc \
 
 #[INSERT NEW CODE FILE HERE]
 
 ifeq ($(LARGESOS),yes)
-    PSELIBS := Dataflow Core
+    PSELIBS := Core
 else
-    PSELIBS := \
-               Core/Containers Core/Thread Core/Exceptions Core/Util \
-               Core/Comm Core/Malloc Core/Services Core/XMLUtil Core/SystemCall \
-               Core/GuiInterface Core/TkExtensions \
-               Dataflow/Network Dataflow/Modules/Render \
-               Packages/Kepler/Core/Exceptions
+    PSELIBS := Core/Exceptions
 endif
 
-LIBS :=  $(LIBS) $(XML_LIBRARY) $(THREAD_LIBRARY) $(SEMAPHORE_LIBRARY) $(SOCKET_LIBRARY)
-
-#SOFLAGS := -shared -L$(LIBDIR) $(CFLAGS)
+# LIBS :=  $(LIBS) $(TRACEBACK_LIB)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 

@@ -3,7 +3,7 @@
 #
 #  The MIT License
 #
-#  Copyright (c) 2006 Scientific Computing and Imaging Institute,
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
 #  University of Utah.
 #
 #  License for the specific language governing rights and limitations under
@@ -27,40 +27,37 @@
 #
 
 
+# Makefile fragment for this subdirectory
+
 # *** NOTE ***
-#
 # Do not remove or modify the comment line:
-#
 # #[INSERT NEW ?????? HERE]
-#
-# It is required by the Component Wizard to properly edit this file.
-# if you want to edit this file by hand, see the "Create A New Component"
+# It is required by the module maker to properly edit this file.
+# if you want to edit this file by hand, see the "Create A New Module"
 # documentation on how to do it correctly.
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+include $(SCIRUN_SCRIPTS)/largeso_prologue.mk
 
-SRCDIR   := Packages/Kepler/Core/Comm
+SRCDIR := Packages/Kepler/Dataflow
 
-SRCS     += \
-            $(SRCDIR)/KeplerServer.cc \
-            $(SRCDIR)/NetworkHelper.cc
+SUBDIRS := \
+           $(SRCDIR)/Modules \
+#[INSERT NEW CATEGORY DIR HERE]
 
-#[INSERT NEW CODE FILE HERE]
+include $(SCIRUN_SCRIPTS)/recurse.mk
+
+PSELIBS := Core
+LIBS := $(TCL_LIBRARY) $(XML_LIBRARY) $(GL_LIBRARY) $(TK_LIBRARY) $(M_LIBRARY)
+
+include $(SCIRUN_SCRIPTS)/largeso_epilogue.mk
 
 ifeq ($(LARGESOS),yes)
-    PSELIBS := Dataflow Core
-else
-    PSELIBS := \
-               Core/Containers Core/Thread Core/Exceptions Core/Util \
-               Core/Comm Core/Malloc Core/Services Core/XMLUtil Core/SystemCall \
-               Core/GuiInterface Core/TkExtensions \
-               Dataflow/Network Dataflow/Modules/Render \
-               Packages/Kepler/Core/Exceptions
+SCIRUN_MODULES := $(SCIRUN_MODULES) $(LIBNAME)
 endif
 
-LIBS :=  $(LIBS) $(XML_LIBRARY) $(THREAD_LIBRARY) $(SEMAPHORE_LIBRARY) $(SOCKET_LIBRARY)
-
-#SOFLAGS := -shared -L$(LIBDIR) $(CFLAGS)
-
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
-
+##
+## This is a target which will only build the libraries that are
+## necessary for rtrt SCIRun interaction.  RTRT_SCIRUN should have
+## a list of the libraries that are needed.
+#rtrtmodules: prereqs $(RTRT_SCIRUN)
+#scimodules: prereqs $(SCIRUN_MODULES)

@@ -3,7 +3,7 @@
 
   The MIT License
 
-  Copyright (c) 2004 Scientific Computing and Imaging Institute,
+  Copyright (c) 2006 Scientific Computing and Imaging Institute,
   University of Utah.
 
   License for the specific language governing rights and limitations under
@@ -26,41 +26,9 @@
   DEALINGS IN THE SOFTWARE.
 */
 
-//this file will include some helper functions that will enable us to
-//process the strings that are sent to the SCIRun server by the
-//SPA workflow.
-//by oscar barney
+#ifndef Kepler_Core_Comm_NetInfo_h
+#define Kepler_Core_Comm_NetInfo_h
 
+#define SERV_PORT 9877    /* TCP and UDP client-servers */
 
-#include <Core/Containers/StringUtil.h>
-
-/**
- * Turns input characters into a vector of strings
- * and returns the vector. sets size to be the number
- * of things that are in the vector.
- *
- * Vector must be empty.
- */
-bool processCString(const char* input, std::vector<std::string>& v, int& size)
-{
-  if (! v.empty()) {
-    return false;
-  }
-  // empty input is not an error
-  if (input == 0) {
-    size = 0;
-    return true;
-  }
-
-  // change the input into a string then vector
-  std::string temp(input);
-  v = SCIRun::split_string(temp,';');
-  if (temp == "\n") {
-    size = 0;  //case where we do not do anything
-  } else {
-    size = (int) v.size();
-    // cut \n off the end of the last string
-    v[size - 1] = v[size - 1].substr(0, v[size - 1].size() - 1);
-  }
-  return true;
-}
+#endif

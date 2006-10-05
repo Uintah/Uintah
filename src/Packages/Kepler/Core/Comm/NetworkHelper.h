@@ -16,11 +16,12 @@
 #include  <string.h>
 #include  <unistd.h>
 
+#include <Packages/Kepler/Core/Comm/NetInfo.h>
+
 //#include  <sys/uio.h>   /* for iovec{} and readv/writev */
 //#include  <sys/un.h>    /* for Unix domain sockets */
 
 #define LISTENQ 1024        /* 2nd argument to listen() */
-#define SERV_PORT 9877    /* TCP and UDP client-servers */
 #define MAXLINE 4096      /* max text line length */
 /* Following shortens all the type casts of pointer arguments */
 #define SA  struct sockaddr
