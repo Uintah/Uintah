@@ -775,8 +775,7 @@ void SerialMPM::scheduleComputeInternalForce(SchedulerP& sched,
   t->requires(Task::NewDW,lb->pStressLabel_preReloc,      gan,NGP);
   t->requires(Task::NewDW,lb->pVolumeDeformedLabel,       gan,NGP);
   t->requires(Task::OldDW,lb->pXLabel,                    gan,NGP);
-  t->requires(Task::OldDW,lb->pMassLabel,                 gan,NGP);
-  t->requires(Task::OldDW, lb->pSizeLabel,              gan,NGP);
+  t->requires(Task::OldDW,lb->pSizeLabel,                 gan,NGP);
     
   t->requires(Task::NewDW, lb->pErosionLabel_preReloc,    gan, NGP);
 
@@ -2010,7 +2009,7 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
       // Create arrays for the particle position, volume
       // and the constitutive model
       constParticleVariable<Point>   px;
-      constParticleVariable<double>  pvol, pmass;
+      constParticleVariable<double>  pvol;
       constParticleVariable<double>  p_pressure;
       constParticleVariable<double>  p_q;
       constParticleVariable<Matrix3> pstress;
@@ -2025,12 +2024,12 @@ void SerialMPM::computeInternalForce(const ProcessorGroup*,
                                                        lb->pXLabel);
 
       old_dw->get(px,      lb->pXLabel,                      pset);
-      old_dw->get(pmass,   lb->pMassLabel,                   pset);
       new_dw->get(pvol,    lb->pVolumeDeformedLabel,         pset);
       new_dw->get(pstress, lb->pStressLabel_preReloc,        pset);
       old_dw->get(psize,   lb->pSizeLabel,                   pset);
-      new_dw->get(gvolume,   lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
       new_dw->get(pErosion,lb->pErosionLabel_preReloc,       pset);
+
+      new_dw->get(gvolume, lb->gVolumeLabel, dwi, patch, Ghost::None, 0);
 
       new_dw->allocateAndPut(gstress,      lb->gStressForSavingLabel,dwi,patch);
       new_dw->allocateAndPut(internalforce,lb->gInternalForceLabel,  dwi,patch);
