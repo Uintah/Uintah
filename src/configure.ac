@@ -1872,7 +1872,7 @@ if test -z "$thirdparty"; then
     if test -e $_sci_tp_path; then
       sci_thirdparty_dir="$_sci_tp_path"
     else
-      AC_MSG_ERROR(Thidparty installation does not exist in $_sci_tmp_tp_path or in $_sci_tp_path. Please specify the installation like this --with-thirdparty=DIR)
+      AC_MSG_ERROR(Thirdparty installation does not exist in $_sci_tmp_tp_path or in $_sci_tp_path. Please specify the installation like this --with-thirdparty=DIR)
     fi
   fi
 
@@ -2728,7 +2728,8 @@ if test "$with_png" = "yes"; then
 else 
   if test "$with_png"; then
     # If --with-png has a parameter, then use it
-    _sci_lib="$with_png/lib"
+    #   The BASE_LIB_PATH below will add /lib or /lib{64,32} to the sci_lib
+    _sci_lib="$with_png" 
     _sci_inc="$with_png/include"
     BASE_LIB_PATH(_sci_lib,$_sci_lib)
     _sci_optional=specific
@@ -4480,7 +4481,7 @@ AC_SUBST(OOGL_LIB_FLAG)
 AC_SUBST(OOGL_LIB_DIR_FLAG)
 
 ##  --  search for glew  -----------------------------------------------
-_sci_optional=optional
+_sci_optional=required
 _sci_lib="$sci_thirdparty_lib"
 _sci_inc="$sci_thirdparty_include"
 
