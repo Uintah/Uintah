@@ -123,9 +123,9 @@ PackageDB::findMaker(ModuleInfo* moduleInfo)
   // or UnuA-M, UnuN-Z
   string cat_name = moduleInfo->category_name_;
   if((cat_name.substr(0, 6) == "Fields")&&(moduleInfo->package_name_ == "SCIRun"))
-    { cat_name = "Fields"; }
+  { cat_name = "Fields"; }
   else if((cat_name.substr(0, 13) == "Conglomerate_"))
-    { cat_name = "Conglomerate"; moduleInfo->category_name_.erase(0,13); }
+  { cat_name = "Conglomerate"; moduleInfo->category_name_.erase(0,13); }
   else if (cat_name.substr(0, 7) == "UnuAtoM") { cat_name = "Unu"; }
   else if (cat_name.substr(0, 7) == "UnuNtoZ") { cat_name = "Unu"; }
 
@@ -254,7 +254,7 @@ PackageDB::loadPackage(bool resolve)
     } else {
       xmldir = pathElt+"/"+packageElt+"/Dataflow/XML";
       gui_exec(string("lappend auto_path ")+pathElt+"/"+packageElt+
-		 "/Dataflow/GUI");
+	       "/Dataflow/GUI");
     }
     std::map<int,char*>* files;
     files = GetFilenamesEndingWith((char*)xmldir.c_str(),".xml");
@@ -289,7 +289,7 @@ PackageDB::loadPackage(bool resolve)
 
       string cat_name = new_module->category_name_;
       if((cat_name.substr(0, 13) == "Conglomerate_"))
-	{ cat_name.erase(0,13); }
+      { cat_name.erase(0,13); }
 
       ci = new_package->categories.find(cat_name);
       if (ci==new_package->categories.end()) 
@@ -354,7 +354,7 @@ PackageDB::loadPackage(bool resolve)
     }
     
     if (numreg) {
-	gui_exec("createPackageMenu " + to_string(index++));
+      gui_exec("createPackageMenu " + to_string(index++));
     } else {
       printMessage("Unable to load package " + pname + ":\n"
 		   " - could not find any valid modules.");
@@ -369,14 +369,14 @@ PackageDB::registerModule(ModuleInfo* info)
 {
   Package* package;
   if(!db_->lookup(info->package_name_,package))
-    {
-      db_->insert(info->package_name_,package=new Package);
-      packageList_.push_back( info->package_name_ );
-    }
+  {
+    db_->insert(info->package_name_,package=new Package);
+    packageList_.push_back( info->package_name_ );
+  }
   
   string cat_name = info->category_name_;
   if((cat_name.substr(0, 13) == "Conglomerate_"))
-    { cat_name.erase(0,13); }
+  { cat_name.erase(0,13); }
 
   Category* category;
   if(!package->lookup(cat_name,category))
@@ -490,8 +490,9 @@ vector<string>
 PackageDB::categoryNames(const string& packageName) const
 {
   Package* package;
-  if(!db_->lookup(packageName, package)){
-    cerr << "WARNING: Unknown package " << packageName << "\n";
+  if(!db_->lookup(packageName, package))
+  {
+    cerr << "WARNING: Unknown package " << packageName << endl;
     vector<string> result(0);
     return result;
   }
@@ -499,12 +500,12 @@ PackageDB::categoryNames(const string& packageName) const
   PackageIter iter(package);
   
   for(iter.first();iter.ok();++iter)
-	{
-		// Do not list catagory if it does not contain any modules
-		vector<string> test = moduleNames(packageName,iter.get_key());
-		if (test.size()) result.push_back(iter.get_key());
+  {
+    // Do not list category if it does not contain any modules
+    vector<string> test = moduleNames(packageName,iter.get_key());
+    if (test.size()) result.push_back(iter.get_key());
   }
-	return result;
+  return result;
 }
 
 
@@ -560,18 +561,18 @@ PackageDB::moduleNames(const string& packageName,
     return result;
   }
   
-	vector<string> result;
+  vector<string> result;
   CategoryIter iter(category);
   int i=0;
   
-	for(iter.first();iter.ok();++iter) 
-	{
-		if (iter.get_data()->hide_ == false)
-		{
-			result.push_back(iter.get_key());
-		}
-	}
-	return result;
+  for(iter.first();iter.ok();++iter) 
+  {
+    if (iter.get_data()->hide_ == false)
+    {
+      result.push_back(iter.get_key());
+    }
+  }
+  return result;
 }
 
 void
