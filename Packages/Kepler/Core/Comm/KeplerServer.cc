@@ -44,8 +44,10 @@
 
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/NetworkEditor.h>
-#include <Dataflow/Modules/Render/Viewer.h>
+#include <Dataflow/Network/NetworkIO.h>
 #include <Dataflow/Network/Scheduler.h>
+
+#include <Dataflow/Modules/Render/Viewer.h>
 
 #include <sstream>
 
@@ -72,7 +74,7 @@ private:
 void ServerTime::run()
 {
   throttle.start();
-  Thread::yield();
+  //Thread::yield();
   while (true) {
     std::cerr << "ServerTime::run()" << std::endl;
     throttle.wait_for_time(maxTime_);
@@ -88,7 +90,7 @@ std::cerr << "ServerTime::run(): wait done, throttle state=" << state << std::en
   }
 }
 
-KeplerServer::KeplerServer(Network *n) : net(n)
+KeplerServer::KeplerServer(Network *n) : net(n), MAX_TIME_SECONDS(60.0), THREAD_STACK_SIZE(1024*2)
 {
   {
     Mutex m("lock workerCount init");
@@ -159,7 +161,7 @@ void KeplerServer::run()
 
     ProcessRequest *proc_req = new ProcessRequest(net, connfd, idleTime);
     Thread *pr = new Thread(proc_req, "process client request", 0, Thread::NotActivated);
-    pr->setDaemon();
+    //pr->setDaemon();
     pr->setStackSize(1024*512);
     pr->activate(false);
     pr->detach();
@@ -259,9 +261,9 @@ std::string ProcessRequest::Iterate(std::vector<std::string> doOnce, int size1, 
 
   //get a pointer to the viewer if we need it and check to see if its valid
   Viewer* viewer;
-  if(! picPath.empty()){
+  if (! picPath.empty()){
     viewer = (Viewer*) net->get_module_by_id("SCIRun_Render_Viewer_0");
-    if(viewer == 0) {
+    if (viewer == 0) {
       //returnValue = "no viewer present";
       return "no viewer present";
     }
@@ -352,7 +354,7 @@ void ProcessRequest::processItrRequest(int sockfd)
   char *retVal;   //value we will return to client
   std::string rv("none");    //return value for a run
 
-  std::string net, picPath, picFormat, temp; //path were pictures will be saved
+  std::string netFile, picPath, picFormat, temp; //path were pictures will be saved
   int size1, size2, numParams;   //size of each input, number of iterations
   std::vector<std::string> input1;
   std::vector<std::string> input2;
@@ -363,14 +365,14 @@ void ProcessRequest::processItrRequest(int sockfd)
     print_error("connection closed by peer");
   }
   //now put all the stuff in array
-  input1 = processCString(line, size1);
+  processCString(line, input1, size1);
 
   //read in string that has values to iterate over
   if ( (n = Readline(sockfd, line, MAXLINE)) == 0) {
     print_error("connection closed by peer");
   }
   //now put all stuff in array
-  input2 = processCString(line, size2);
+  processCString(line, input2, size2);
 
   //read in the number of parameters
   if ( (n = Readline(sockfd, line, MAXLINE)) == 0) {
@@ -382,19 +384,26 @@ void ProcessRequest::processItrRequest(int sockfd)
   if ( (n = Readline(sockfd, line, MAXLINE)) == 0) {
     print_error("connection closed by peer");
   }
-  net = std::string(line);
-  net = net.substr(0,net.size() - 1);
+  netFile = std::string(line);
+  netFile = netFile.substr(0,netFile.size() - 1);
   ASSERT(gui);
 
   // TODO: doesn't work!!!
-  if (KeplerServer::loadedNet != net) {
+  if (KeplerServer::loadedNet != netFile) {
     temp = gui->eval("ClearCanvas 0");  //clear the net
     //temp seems to be 0 always
     //TODO this yield is probably due to scirun error that needs to be fixed
     Thread::yield();  //necessary to avoid a "Error: bad window path name"
-    std::cout << "loaded net " << KeplerServer::loadedNet << "!" << net << std::endl;
-    temp = gui->eval("source " + net);
-    KeplerServer::loadedNet = net;
+    std::cout << "loaded net " << KeplerServer::loadedNet << "!" << netFile << std::endl;
+    if (ends_with(netFile, ".net")) {
+      temp = gui->eval("source " + netFile);
+    } else {
+      // attempt to load the file and let NetworkIO handle the consequences
+      NetworkIO::load_net(netFile);
+      NetworkIO ln;
+      ln.load_network();
+    }
+    KeplerServer::loadedNet = netFile;
   }
 
   //read in picPath
@@ -416,7 +425,6 @@ void ProcessRequest::processItrRequest(int sockfd)
 
   retVal = ccast_unsafe(rv);
   Written(sockfd, retVal, rv.size());
-
 }
 
 void ProcessRequest::quit(int sockfd)
@@ -425,11 +433,6 @@ void ProcessRequest::quit(int sockfd)
   Written(sockfd, message, 9);
   ASSERT(gui);
 
-// #ifndef EXPERIMENTAL_TCL_THREAD
-//     TCLTask::unlock();
-// #endif
-//   // same exit as NetworkEditor
-//   Thread::exitAll(0);
   gui->eval("exit");
 }
 

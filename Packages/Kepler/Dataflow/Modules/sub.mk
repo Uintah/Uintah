@@ -1,11 +1,11 @@
 #
 #  For more information, please see: http://software.sci.utah.edu
-#
+# 
 #  The MIT License
-#
-#  Copyright (c) 2006 Scientific Computing and Imaging Institute,
+# 
+#  Copyright (c) 2004 Scientific Computing and Imaging Institute,
 #  University of Utah.
-#
+# 
 #  License for the specific language governing rights and limitations under
 #  Permission is hereby granted, free of charge, to any person obtaining a
 #  copy of this software and associated documentation files (the "Software"),
@@ -13,10 +13,10 @@
 #  the rights to use, copy, modify, merge, publish, distribute, sublicense,
 #  and/or sell copies of the Software, and to permit persons to whom the
 #  Software is furnished to do so, subject to the following conditions:
-#
+# 
 #  The above copyright notice and this permission notice shall be included
 #  in all copies or substantial portions of the Software.
-#
+# 
 #  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
 #  OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 #  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
@@ -27,40 +27,20 @@
 #
 
 
+# Makefile fragment for this subdirectory
+
 # *** NOTE ***
-#
 # Do not remove or modify the comment line:
-#
 # #[INSERT NEW ?????? HERE]
-#
-# It is required by the Component Wizard to properly edit this file.
-# if you want to edit this file by hand, see the "Create A New Component"
+# It is required by the module maker to properly edit this file.
+# if you want to edit this file by hand, see the "Create A New Module"
 # documentation on how to do it correctly.
 
-include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
+SRCDIR := Packages/Kepler/Dataflow/Modules
 
-SRCDIR   := Packages/Kepler/Core/Comm
+SUBDIRS := \
+           $(SRCDIR)/Workflow \
+#[INSERT NEW CATEGORY DIR HERE]
 
-SRCS     += \
-            $(SRCDIR)/KeplerServer.cc \
-            $(SRCDIR)/NetworkHelper.cc
-
-#[INSERT NEW CODE FILE HERE]
-
-ifeq ($(LARGESOS),yes)
-    PSELIBS := Dataflow Core
-else
-    PSELIBS := \
-               Core/Containers Core/Thread Core/Exceptions Core/Util \
-               Core/Comm Core/Malloc Core/Services Core/XMLUtil Core/SystemCall \
-               Core/GuiInterface Core/TkExtensions \
-               Dataflow/Network Dataflow/Modules/Render \
-               Packages/Kepler/Core/Exceptions
-endif
-
-LIBS :=  $(LIBS) $(XML_LIBRARY) $(THREAD_LIBRARY) $(SEMAPHORE_LIBRARY) $(SOCKET_LIBRARY)
-
-#SOFLAGS := -shared -L$(LIBDIR) $(CFLAGS)
-
-include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
+include $(SCIRUN_SCRIPTS)/recurse.mk
 

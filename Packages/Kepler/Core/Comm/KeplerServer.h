@@ -63,6 +63,9 @@ public:
   static int nextTag; // this does what???
   static AtomicCounter* workerCount;
 
+  const double MAX_TIME_SECONDS;
+  const int THREAD_STACK_SIZE;
+
   //std::map<int, string> saved_results; //TODO make static?
   //store stuff in it etc.... stoped this thought here.
   //so detach just stops the timer right now
@@ -70,9 +73,6 @@ public:
 private:
   Network *net;
   int listenfd;
-
-  static const double MAX_TIME_SECONDS = 60.0;
-  static const int THREAD_STACK_SIZE = 1024*2;
 };
 
 std::string KeplerServer::loadedNet;
