@@ -37,7 +37,7 @@ SRCS     +=      $(SRCDIR)/CrvLinearLgn.cc             \
                  $(SRCDIR)/TriLinearLgn.cc             \
                  $(SRCDIR)/TriQuadraticLgn.cc          \
                  $(SRCDIR)/TriCubicHmt.cc          \
-
+		 $(SRCDIR)/NoData.cc \
 
 PSELIBS :=
 LIBS :=
