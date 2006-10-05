@@ -153,12 +153,14 @@ public:
 
 class SGTool : public BaseTool
 {
+  vector<event_handle_t> scene_events_;
 public:
   SGTool(string name, GeomIndexedGroup *sg, map<string, bool> &v) :
     BaseTool(name),
     ids_(0),
     sg_(sg),
-    visible_(v)
+    visible_(v),
+    scene_events_()
   {}
 
   virtual 
@@ -167,24 +169,35 @@ public:
     SceneGraphEvent *ev = 0;
     if ((ev = dynamic_cast<SceneGraphEvent*>(event.get_rep()))) 
     {
-      map<string, int>::iterator iter;
-      iter = obj_ids_.find(ev->get_geom_obj_name());
-      if (iter != obj_ids_.end()) {
-	//already showing this geometry.  Delete it first
-	int id = (*iter).second;
-	visible_[ev->get_geom_obj_name()] = false;
-	sg_->delObj(id);
-	obj_ids_.erase(ev->get_geom_obj_name());
-      }
-      GeomViewerItem* si = scinew GeomViewerItem(ev->get_geom_obj(), 
-						 ev->get_geom_obj_name(), 
-						 0);     
+      scene_events_.push_back(ev);
+    }
 
-      visible_[ev->get_geom_obj_name()] = true;
-      obj_ids_[ev->get_geom_obj_name()] = ids_;
-      sg_->addObj(si, ids_++);
-      return STOP_E;
-    } 
+    WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
+    if (window && window->get_window_state() == WindowEvent::REDRAW_E) {
+      for (unsigned int e = 0; e < scene_events_.size(); ++e) {
+        SceneGraphEvent *ev =
+          dynamic_cast<SceneGraphEvent*>(scene_events_[e].get_rep());
+        ASSERT(ev);
+        map<string, int>::iterator iter;
+        iter = obj_ids_.find(ev->get_geom_obj_name());
+        if (iter != obj_ids_.end()) {
+          //already showing this geometry.  Delete it first
+          int id = (*iter).second;
+          visible_[ev->get_geom_obj_name()] = false;
+          sg_->delObj(id);
+          
+          obj_ids_.erase(ev->get_geom_obj_name());
+        }
+        GeomViewerItem* si = scinew GeomViewerItem(ev->get_geom_obj(), 
+                                                   ev->get_geom_obj_name(), 
+                                                   0);     
+        
+        visible_[ev->get_geom_obj_name()] = true;
+        obj_ids_[ev->get_geom_obj_name()] = ids_;
+        sg_->addObj(si, ids_++);
+      }
+      scene_events_.clear();
+    }
     return CONTINUE_E;
   }
 private:
