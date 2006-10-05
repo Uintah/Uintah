@@ -33,6 +33,7 @@ SET(Core_Basis_SRCS
   CrvQuadraticLgn.cc
   HexTrilinearLgn.cc
   HexTriquadraticLgn.cc
+	NoData.cc
   Locate.cc
   PrismLinearLgn.cc
   PrismQuadraticLgn.cc

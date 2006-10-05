@@ -33,35 +33,7 @@
 
 namespace SCIRun {
 
-using std::vector;
-using std::string;
+double NoDataUnitElement::unit_vertices[1][1] = { {0} };
+int NoDataUnitElement::unit_edges[1][1] = { {0} };
 
-
-NoDataBasis::NoDataBasis() 
-{
-}
-
-NoDataBasis::~NoDataBasis() 
-{
-}
-  
-
-const string
-NoDataBasis::type_name(int n)
-{
-  static const string nm("NoDataBasis");
-  return nm;
-}
-
-const int NO_DATA_BASIS_VERSION = 1;
-
-void 
-NoDataBasis::io (Piostream& str)
-{
-  stream.begin_class(get_type_description(this)->get_name(),
-                     NO_DATA_BASIS_VERSION);
-  stream.end_class();
-};
-
-
-#endif // NoData_h
+} // end namespace
