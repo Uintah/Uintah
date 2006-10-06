@@ -329,17 +329,17 @@ OpenGL::redraw_loop()
         }
         else if (r == DO_GETDATA)
         {
-          GetReq req(get_mailbox_.receive());
-          real_getData(req.datamask, req.result);
+	  get_req_handle_t req = get_mailbox_.receive();
+          real_getData(req->datamask, req->result);
         }
         else if (r == DO_IMAGE)
         {
-          ImgReq req(img_mailbox_.receive());
-          do_hi_res_ = true;
-          fname = req.name;
-          ftype = req.type;
-          resx = req.resx;
-          resy = req.resy;
+	  img_req_handle_t req = img_mailbox_.receive();
+	  do_hi_res_ = true;
+          fname = req->name;
+          ftype = req->type;
+          resx = req->resx;
+          resy = req->resy;
         }
         else if (r == DO_SYNC_FRAME)
         {
@@ -440,17 +440,17 @@ OpenGL::redraw_loop()
         }
         else if (r == DO_GETDATA)
         {
-          GetReq req(get_mailbox_.receive());
-          real_getData(req.datamask, req.result);
+	  get_req_handle_t req = get_mailbox_.receive();
+          real_getData(req->datamask, req->result);
         }
         else if (r == DO_IMAGE)
         {
-          ImgReq req(img_mailbox_.receive());
+	  img_req_handle_t req = img_mailbox_.receive();
           do_hi_res_ = true;
-          fname = req.name;
-          ftype = req.type;
-          resx = req.resx;
-          resy = req.resy;
+          fname = req->name;
+          ftype = req->type;
+          resx = req->resx;
+          resy = req->resy;
         }
         else if (r == DO_SYNC_FRAME)
         {
@@ -1857,7 +1857,7 @@ OpenGL::saveImage(const string& fname,
                   int x, int y)
 {
   send_mailbox_.send(DO_IMAGE);
-  img_mailbox_.send(ImgReq(fname,type,x,y));
+  img_mailbox_.send(img_req_handle_t(new ImgReq(fname,type,x,y)));
 }
 
 void
@@ -1870,7 +1870,7 @@ void
 OpenGL::getData(int datamask, FutureValue<GeometryData*>* result)
 {
   send_mailbox_.send(DO_GETDATA);
-  get_mailbox_.send(GetReq(datamask, result));
+  get_mailbox_.send(get_req_handle_t(new GetReq(datamask, result)));
 }
 
 

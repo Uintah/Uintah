@@ -153,9 +153,10 @@ public:
 
 class SGTool : public BaseTool
 {
-  vector<event_handle_t> scene_events_;
 public:
-  SGTool(string name, GeomIndexedGroup *sg, map<string, bool> &v) :
+  SGTool(string name, 
+	 GeomIndexedGroup *sg, 
+	 map<string, bool> &v) :
     BaseTool(name),
     ids_(0),
     sg_(sg),
@@ -169,42 +170,49 @@ public:
     SceneGraphEvent *ev = 0;
     if ((ev = dynamic_cast<SceneGraphEvent*>(event.get_rep()))) 
     {
+      // cache for current context.
       scene_events_.push_back(ev);
+      return STOP_E;
     }
 
-    WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
-    if (window && window->get_window_state() == WindowEvent::REDRAW_E) {
-      for (unsigned int e = 0; e < scene_events_.size(); ++e) {
-        SceneGraphEvent *ev =
-          dynamic_cast<SceneGraphEvent*>(scene_events_[e].get_rep());
-        ASSERT(ev);
-        map<string, int>::iterator iter;
-        iter = obj_ids_.find(ev->get_geom_obj_name());
-        if (iter != obj_ids_.end()) {
-          //already showing this geometry.  Delete it first
-          int id = (*iter).second;
-          visible_[ev->get_geom_obj_name()] = false;
-          sg_->delObj(id);
-          
-          obj_ids_.erase(ev->get_geom_obj_name());
-        }
-        GeomViewerItem* si = scinew GeomViewerItem(ev->get_geom_obj(), 
-                                                   ev->get_geom_obj_name(), 
-                                                   0);     
-        
-        visible_[ev->get_geom_obj_name()] = true;
-        obj_ids_[ev->get_geom_obj_name()] = ids_;
-        sg_->addObj(si, ids_++);
-      }
-      scene_events_.clear();
-    }
     return CONTINUE_E;
   }
+
+
+  //! Call when context is current!
+  void handle_waiting_events() 
+  {
+    for (unsigned int e = 0; e < scene_events_.size(); ++e) 
+    {
+      SceneGraphEvent *ev =
+	dynamic_cast<SceneGraphEvent*>(scene_events_[e].get_rep());
+      ASSERT(ev);
+      map<string, int>::iterator iter;
+      iter = obj_ids_.find(ev->get_geom_obj_name());
+      if (iter != obj_ids_.end()) {
+	//already showing this geometry.  Delete it first
+	int id = (*iter).second;
+	visible_[ev->get_geom_obj_name()] = false;
+	sg_->delObj(id);
+	obj_ids_.erase(ev->get_geom_obj_name());
+      }
+      GeomViewerItem* si = scinew GeomViewerItem(ev->get_geom_obj(), 
+						 ev->get_geom_obj_name(), 
+						 0);     
+    
+      visible_[ev->get_geom_obj_name()] = true;
+      obj_ids_[ev->get_geom_obj_name()] = ids_;
+      sg_->addObj(si, ids_++);
+    }
+    scene_events_.clear();
+  }
+
 private:
-  int                    ids_;
-  GeomIndexedGroup      *sg_;
-  map<string, bool>	&visible_;
-  map<string, int>       obj_ids_;
+  int                     ids_;
+  GeomIndexedGroup       *sg_;
+  map<string, bool>	 &visible_;
+  map<string, int>        obj_ids_;
+  vector<event_handle_t>  scene_events_;
 };
 
 
@@ -401,7 +409,8 @@ OpenGLViewer::OpenGLViewer(OpenGLContext *oglc) :
   selection_set_(),
   selection_set_visible_(false),
   selection_geom_(0),
-  selection_set_tool_(0)
+  selection_set_tool_(0),
+  scene_graph_tool_(0)
 {
   if (gl_context_) {
     events_ = EventManager::register_event_messages("OpenGLViewer");
@@ -503,10 +512,9 @@ OpenGLViewer::init_tool_manager()
 
   // data tools (always on the queue)
   unsigned int data_pri = DATA_TOOLS_E;
-  SGTool *sgt = new SGTool("OpenGLViewer Scene Graph Tool", 
-			   scene_graph_, visible_);
-  tool_handle_t sgtool(sgt);
-  tm_.add_tool(sgtool, data_pri++);
+  scene_graph_tool_ = new SGTool("OpenGLViewer Scene Graph Tool", 
+			    scene_graph_, visible_);
+  tm_.add_tool(scene_graph_tool_, data_pri++);
 
   selection_set_tool_ = new SelectionSetTool("OpenGLViewer SelectionSet Tool",
 					     ti);
@@ -955,7 +963,14 @@ OpenGLViewer::redraw_frame()
     glClearColor(bgcolor().r(), bgcolor().g(), bgcolor().b(), 0);
   }
 
-  
+  // Some GeomObj's can only be deleted while the context is current,
+  // so processing the scene graph events here assures this.
+  // These sort of delete issues should be managed by the context obj.
+  if (scene_graph_tool_.get_rep()) {
+    SGTool *sgt = dynamic_cast<SGTool*>(scene_graph_tool_.get_rep());
+    sgt->handle_waiting_events();
+  }
+
   GLint data[1];
   glGetIntegerv(GL_MAX_LIGHTS, data);
   max_gl_lights_=data[0];
@@ -1741,6 +1756,7 @@ OpenGLViewer::draw_visible_scene_graph()
       cerr << "null selection set tool" << endl;
       return;
     }
+
     sst->render_selection_set();
     if (selection_geom_.get_rep()) {
       redraw_obj(default_material_, selection_geom_.get_rep());
