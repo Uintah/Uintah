@@ -1417,10 +1417,6 @@ OnDemandDataWarehouse::getRegionGridVar(GridVariable& var,
   }
 
   ASSERT(diff.x()*diff.y()*diff.z() <= totalCells);
-  if (diff.x()*diff.y()*diff.z() != totalCells) {
-    static ProgressiveWarning warn("GetRegion Warning", 100);
-    warn.invoke();
-  }
 
   d_lock.readUnlock();
  

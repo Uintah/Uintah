@@ -126,7 +126,7 @@ namespace Uintah {
     ProblemSpecP d_pspec;
     
     enum {
-      idle = 0, postLoadBalance, checkLoadBalance, restartLoadBalance
+      idle = 0, postLoadBalance, checkLoadBalance, restartRegridLoadBalance
     };
     
     double d_lbThreshold; //< gain threshold to exceed to require lb'ing

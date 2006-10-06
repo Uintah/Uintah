@@ -157,30 +157,30 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
 
   // we need these for AMRICE::refine
-  sched->scheduleDataCopyVar("specific_heat");
-  sched->scheduleDataCopyVar("gamma");
-  sched->scheduleDataCopyVar("vol_frac_CC");
-  sched->scheduleDataCopyVar("sp_vol_CC");
-  sched->scheduleDataCopyVar("temp_CC");
+  sched->overrideVariableBehavior("specific_heat", true, true, false);
+  sched->overrideVariableBehavior("gamma", true, true, false);
+  sched->overrideVariableBehavior("vol_frac_CC", true, true, false);
+  sched->overrideVariableBehavior("sp_vol_CC", false, true, false);
+  sched->overrideVariableBehavior("temp_CC", false, true, false);
 
   //We need these variables from OldDW to use between tasks, but do not
   // schedule datacopy
   
-  sched->scheduleNoScrubVar("mass_X_FC_flux");
-  sched->scheduleNoScrubVar("mass_Y_FC_flux");
-  sched->scheduleNoScrubVar("mass_Z_FC_flux");
-  sched->scheduleNoScrubVar("mom_X_FC_flux");
-  sched->scheduleNoScrubVar("mom_Y_FC_flux");
-  sched->scheduleNoScrubVar("mom_Z_FC_flux");
-  sched->scheduleNoScrubVar("sp_vol_X_FC_flux");
-  sched->scheduleNoScrubVar("sp_vol_Y_FC_flux");
-  sched->scheduleNoScrubVar("sp_vol_Z_FC_flux");
-  sched->scheduleNoScrubVar("int_eng_X_FC_flux");
-  sched->scheduleNoScrubVar("int_eng_Y_FC_flux");
-  sched->scheduleNoScrubVar("int_eng_Z_FC_flux");
-  sched->scheduleNoScrubVar("vol_frac_X_FC_flux");
-  sched->scheduleNoScrubVar("vol_frac_Y_FC_flux");
-  sched->scheduleNoScrubVar("vol_frac_Z_FC_flux");
+  sched->overrideVariableBehavior("mass_X_FC_flux", false, false, true);
+  sched->overrideVariableBehavior("mass_Y_FC_flux", false, false, true);
+  sched->overrideVariableBehavior("mass_Z_FC_flux", false, false, true);
+  sched->overrideVariableBehavior("mom_X_FC_flux", false, false, true);
+  sched->overrideVariableBehavior("mom_Y_FC_flux", false, false, true);
+  sched->overrideVariableBehavior("mom_Z_FC_flux", false, false, true);
+  sched->overrideVariableBehavior("sp_vol_X_FC_flux", false, false, true);
+  sched->overrideVariableBehavior("sp_vol_Y_FC_flux", false, false, true);
+  sched->overrideVariableBehavior("sp_vol_Z_FC_flux", false, false, true);
+  sched->overrideVariableBehavior("int_eng_X_FC_flux", false, false, true);
+  sched->overrideVariableBehavior("int_eng_Y_FC_flux", false, false, true);
+  sched->overrideVariableBehavior("int_eng_Z_FC_flux", false, false, true);
+  sched->overrideVariableBehavior("vol_frac_X_FC_flux", false, false, true);
+  sched->overrideVariableBehavior("vol_frac_Y_FC_flux", false, false, true);
+  sched->overrideVariableBehavior("vol_frac_Z_FC_flux", false, false, true);
   
   //__________________________________
   // MODELS
@@ -191,9 +191,9 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
     string varLabelX = rvar->var_X_FC_flux->getName();
     string varLabelY = rvar->var_Y_FC_flux->getName();
     string varLabelZ = rvar->var_Z_FC_flux->getName();
-    sched->scheduleNoScrubVar(varLabelX);
-    sched->scheduleNoScrubVar(varLabelY);
-    sched->scheduleNoScrubVar(varLabelZ);
+    sched->overrideVariableBehavior(varLabelX, false, false, true);
+    sched->overrideVariableBehavior(varLabelY, false, false, true);
+    sched->overrideVariableBehavior(varLabelZ, false, false, true);
   } 
 }
 //___________________________________________________________________              

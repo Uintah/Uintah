@@ -144,11 +144,9 @@ WARNING
 
     virtual void scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* sim);
 
-    //! override default behavior of DataCopy by copying additional variables
-    virtual void scheduleDataCopyVar(string var);
-
-    //! override default behavior of DataCopy by not scrubbing certain variables
-    virtual void scheduleNoScrubVar(string var);
+    //! override default behavior of copying, scrubbing, and such
+    virtual void overrideVariableBehavior(string var, bool treatAsOld, 
+                                          bool copyData, bool noScrub);
 
     const set<string>& getNoScrubVars() { return noScrubVars_;}
     const set<string>& getCopyDataVars() { return copyDataVars_;}
@@ -203,6 +201,9 @@ WARNING
     // vars manually set not to scrub (normally when needed between a normal taskgraph
     // and the regridding phase)
     set<string> noScrubVars_;
+
+    // treat variable as an "old" var - will be checkpointed, copied, and only scrubbed from an OldDW
+    set<string> treatAsOldVars_;
   private:
 
     SchedulerCommon(const SchedulerCommon&);
