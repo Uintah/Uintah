@@ -196,7 +196,7 @@ void RegridderCommon::problemSetup(const ProblemSpecP& params,
 
   Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
   // we need these so they don't get scrubbed
-  sched->scheduleDataCopyVar("DilatedCellsCreation");
+  sched->overrideVariableBehavior("DilatedCellsCreation", true, false, false);
 
 
   rdbg << "RegridderCommon::problemSetup() END" << endl;

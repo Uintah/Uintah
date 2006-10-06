@@ -486,9 +486,12 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
   graphs[graphs.size()-1]->addTask(task, patches, matls);
   numTasks_++;
 
-  for (Task::Dependency* dep = task->getRequires(); dep != 0;
-       dep = dep->next) {
-    if(isOldDW(dep->mapDataWarehouse())) {
+  // add to init-requires.  These are the vars which require from the OldDW that we'll
+  // need for checkpointing, switching, and the like.
+  // In the case of treatAsOld Vars, we handle them because something external to the taskgraph
+  // needs it that way (i.e., Regridding on a restart requires checkpointed refineFlags).
+  for (Task::Dependency* dep = task->getRequires(); dep != 0; dep = dep->next) {
+    if(isOldDW(dep->mapDataWarehouse()) || treatAsOldVars_.find(dep->var->getName()) != treatAsOldVars_.end()) {
       d_initRequires.push_back(dep);
       d_initRequiredVars.insert(dep->var);
     }
@@ -499,6 +502,16 @@ SchedulerCommon::addTask(Task* task, const PatchSet* patches,
       constHandle<MaterialSubset> dep_matls = dep->getMaterialsUnderDomain(matls->getUnion());
       m_ghostOffsetVarMap.includeOffsets(dep->var, dep_matls.get_rep(), dep_patches.get_rep(),
 					 dep->gtype, dep->numGhostCells);
+    }
+  }
+
+  // for the treat-as-old vars, go through the computes and add them.
+  // we can (probably) safely assume that we'll avoid duplicates, since if they were inserted 
+  // in the above, they wouldn't need to be marked as such
+  for (Task::Dependency* dep = task->getComputes(); dep != 0; dep = dep->next) {
+    if(treatAsOldVars_.find(dep->var->getName()) != treatAsOldVars_.end()) {
+      d_initRequires.push_back(dep);
+      d_initRequiredVars.insert(dep->var);
     }
   }
 }
@@ -1194,14 +1207,19 @@ SchedulerCommon::copyDataToNewGrid(const ProcessorGroup*, const PatchSubset* pat
   dbg << "SchedulerCommon::copyDataToNewGrid() END" << endl;
 }
 
-void SchedulerCommon::scheduleDataCopyVar(string var)
-{
-  copyDataVars_.insert(var);
-  noScrubVars_.insert(var);
-}
 
-void SchedulerCommon::scheduleNoScrubVar(string var)
+void SchedulerCommon::overrideVariableBehavior(string var, bool treatAsOld, 
+                                               bool copyData, bool noScrub)
 {
-  noScrubVars_.insert(var);
+  if (treatAsOld) {
+    treatAsOldVars_.insert(var);
+  }
+  if (copyData) {
+    copyDataVars_.insert(var);
+    noScrubVars_.insert(var);
+  }
+  if (noScrub) {
+    noScrubVars_.insert(var);
+  }
 }
 

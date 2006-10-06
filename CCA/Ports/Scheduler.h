@@ -95,7 +95,8 @@ WARNING
     virtual void addTask(Task* t, const PatchSet*, const MaterialSet*) = 0;
     
     virtual const vector<const Task::Dependency*>& getInitialRequires() = 0;
-    
+    virtual const set<const VarLabel*, VarLabel::Compare>& getInitialRequiredVars() const = 0;
+
     virtual LoadBalancer* getLoadBalancer() = 0;
     virtual void releaseLoadBalancer() = 0;
 
@@ -131,11 +132,8 @@ WARNING
                                        SimulationInterface* sim) = 0;
 
 
-    //! override default behavior of DataCopy by copying additional variables
-    virtual void scheduleDataCopyVar(string var) = 0;
-    
-    //! override default behavior of DataCopy by not scrubbing certain variables
-    virtual void scheduleNoScrubVar(string var) = 0;
+    virtual void overrideVariableBehavior(string var, bool treatAsOld, 
+                                          bool copyData, bool noScrub) = 0;
 
     // Get the SuperPatch (set of connected patches making a larger rectangle)
     // for the given label and patch and find the largest extents encompassing
