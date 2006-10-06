@@ -509,7 +509,7 @@ IF(WIN32 AND NOT CYGWIN)
 ENDIF(WIN32 AND NOT CYGWIN)
 
 #-----------------------------------------------------------------------------
-# SCIRun Packages to enable (just SCIRun for now)
+# SCIRun Packages to enable (must enable packages when building core for now)
 SET(LOAD_PACKAGE "SCIRun" CACHE STRING "Just loading SCIRun")
 
 # DV fix enabling more packages

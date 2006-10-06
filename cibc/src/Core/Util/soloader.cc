@@ -103,7 +103,7 @@ LIBRARY_HANDLE
 findLib(string lib)
 {
   LIBRARY_HANDLE handle=0;
-  const char *env = SCIRun::sci_getenv("PACKAGE_LIB_PATH");
+  const char *env = SCIRun::sci_getenv("SCIRUN_PACKAGE_LIB_PATH");
   string tempPaths(env?env:"");
   // try to find the library in the specified path
   while (tempPaths!="") {
