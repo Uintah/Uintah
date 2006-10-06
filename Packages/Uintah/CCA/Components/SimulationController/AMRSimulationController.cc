@@ -128,6 +128,17 @@ void AMRSimulationController::run()
        }
      }
    }
+   else if (d_regridder && d_restarting && d_regridder->isAdaptive()) {
+     // On restart:
+     //   we must set up the tasks (but not compile) so we can have the
+     //   initial OldDW Requirements in order to regrid straightaway
+     if (d_sim->useLockstepTimeAdvance()) {
+       d_sim->scheduleLockstepTimeAdvance(currentGrid, d_scheduler);
+     }
+     for(int i=currentGrid->numLevels()-1; i >= 0; i--) {
+       d_sim->scheduleTimeAdvance(currentGrid->getLevel(i), d_scheduler);
+     }
+   }
 
 
    ////////////////////////////////////////////////////////////////////////////
@@ -145,7 +156,7 @@ void AMRSimulationController::run()
    }
    while( t < d_timeinfo->maxTime && iterations < max_iterations && 
           (d_timeinfo->max_wall_time==0 || getWallTime()<d_timeinfo->max_wall_time)  ) {
-     if (d_regridder && d_regridder->needsToReGrid() && !first) {
+     if (d_regridder && d_regridder->needsToReGrid() && (!first || (d_restarting))) {
        doRegridding(currentGrid);
      }
 

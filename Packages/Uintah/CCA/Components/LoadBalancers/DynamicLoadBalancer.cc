@@ -671,6 +671,7 @@ DynamicLoadBalancer::getOldProcessorAssignment(const VarLabel* var,
 						const Patch* patch, 
                                                 const int /*matl*/)
 {
+
   if (var && var->typeDescription()->isReductionVariable()) {
     return d_myworld->myrank();
   }
@@ -701,6 +702,8 @@ DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
   // << time << d_lbTimestepInterval << ' ' << ' ' << d_lastLbTimestep
   //   << timestep << ' ' << d_lbInterval << ' ' << ' ' << d_lastLbTime << endl;
 
+  int old_state = d_state;
+
   if (d_lbTimestepInterval != 0 && timestep >= d_lastLbTimestep + d_lbTimestepInterval) {
     d_lastLbTimestep = timestep;
     d_state = checkLoadBalance;
@@ -714,18 +717,20 @@ DynamicLoadBalancer::needRecompile(double /*time*/, double /*delt*/,
     // so we can compensate for new particles
     d_state = checkLoadBalance;
   }
-  
-  // if we check for lb every timestep, but don't, we still need to recompile
-  // if we load balanced on the last timestep
-  if (possiblyDynamicallyReallocate(grid, false)) {
+
+  // if it determines we need to re-load-balance, recompile
+  // ( treat the restartRegrid as a force
+  bool retval;
+  if (possiblyDynamicallyReallocate(grid, old_state == restartRegridLoadBalance)) {
     doing << d_myworld->myrank() << " PLB - scheduling recompile " <<endl;
-    return true;
+    retval = true;
   }
   else {
     doing << d_myworld->myrank() << " PLB - NOT scheduling recompile " <<endl;
-    return false;
+    retval = false;
   }
-    } 
+  return retval;
+} 
 
 void
 DynamicLoadBalancer::restartInitialize(ProblemSpecP& pspec, string tsurl, const GridP& grid)
@@ -873,12 +878,21 @@ bool DynamicLoadBalancer::possiblyDynamicallyReallocate(const GridP& grid, bool 
           }
         }
         
-        d_oldAssignment = d_processorAssignment;
-
         if (d_dynamicAlgorithm != static_lb)
           d_state = checkLoadBalance;  // l.b. on next timestep
         else
           d_state = postLoadBalance;
+
+        if (d_oldAssignment.size() == 0) {
+          // if oldAssignment size is already assigned (and dw == 0), that means we've restarted AND trying to regrid
+          // before the first real timestep.  In that case, don't overwrite oldAssignment (but do schedule another LB - 
+          // as particles are in the new DW on a restart and that would confuse things...
+          d_oldAssignment = d_processorAssignment;
+        }
+        else {
+          d_state = restartRegridLoadBalance;
+        }
+
       }
       else {
         //d_oldAssignment = d_processorAssignment;

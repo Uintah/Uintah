@@ -283,17 +283,10 @@ void Switcher::scheduleCarryOverVars(const LevelP& level, SchedulerP& sched)
     for (unsigned i = 0; i < d_carryOverVarLabels.size(); i++) {
       if (!d_carryOverVarLabels[i])
         continue;
-      bool found = false;
 
       // if it's required by the old dw in this tg, then it should also be computed
-      const vector<const Task::Dependency*>& deps = sched->getInitialRequires();
-      for (unsigned j = 0; j < deps.size(); j++) {
-        if (deps[j]->var == d_carryOverVarLabels[i]) {
-          found = true;
-          break;
-        }
-      }
-      if (found) {
+      const set<const VarLabel*, VarLabel::Compare>& vars = sched->getInitialRequiredVars();
+      if (vars.find(d_carryOverVarLabels[i]) != vars.end()) {
         //cout << "  Not carrying over " << *d_carryOverVarLabels[i] << endl;
         continue;
       }

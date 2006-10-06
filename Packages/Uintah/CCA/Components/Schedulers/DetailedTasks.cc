@@ -131,28 +131,6 @@ DetailedTasks::add(DetailedTask* task)
   tasks_.push_back(task);
 }
 
-#if 0
-vector<DetailedReq*>&
-DetailedTasks::getInitialRequires()
-{
-#if 0
-  for(DetailedReq* req = task->getRequires();
-      req != 0; req = req->next){
-    if(req->req->dw == Task::OldDW)
-      initreqs_.push_back(req);
-  }
-#else
-  if( mixedDebug.active() ) {
-    cerrLock.lock();
-    NOT_FINISHED("DetailedTasks::add");
-    cerrLock.unlock();
-  }
-#endif
-  cerr << initreqs_.size() << " initreqs_\n";
-  return initreqs_;
-}
-#endif
-
 void
 DetailedTasks::computeLocalTasks(int me)
 {
