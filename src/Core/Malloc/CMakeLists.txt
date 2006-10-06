@@ -40,3 +40,8 @@ ADD_LIBRARY(Core_Malloc ${Core_Malloc_SRCS})
 TARGET_LINK_LIBRARIES(Core_Malloc 
   Core_Thread       
 )
+
+IF(NOT BUILD_SHARED_LIBS)
+  ADD_DEFINITIONS(-DBUILD_Core_Malloc)
+ENDIF(NOT BUILD_SHARED_LIBS)
+

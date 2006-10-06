@@ -500,10 +500,6 @@ IF (TEEM_LIBRARY)
   ENDIF(TEEM_INCLUDE_DIR)
 ENDIF(TEEM_LIBRARY)
 
-# DV Fix hard coding of HAVE_GDCM
-SET(DEF_GDCM "#define HAVE_GDCM 0")
-
-
 # sci_defs/compile_defs.h
 # DV Not needed eventually?
 IF(WIN32 AND NOT CYGWIN)
