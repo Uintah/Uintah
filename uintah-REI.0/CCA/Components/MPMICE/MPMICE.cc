@@ -1262,6 +1262,8 @@ void MPMICE::interpolateNCToCC_0(const ProcessorGroup*,
       new_dw->allocateAndPut(rho_CC,    Ilb->rho_CCLabel,    indx, patch);
       
       //MARTIN: 
+      cout_doing << "MPMICE::interpolateNCToCC_0:  matl:" << indx 
+                 << " is soil & foam " <<  mpm_matl->getIsSoilFoam() << endl;
       if(mpm_matl->getIsSoilFoam()){
         new_dw->allocateAndPut(csv_min,  MIlb->csv_minLabel,   indx, patch);
         csv_min.initialize(d_ice->d_EVIL_NUM); 

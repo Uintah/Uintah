@@ -84,6 +84,7 @@ public:
 
   virtual void scheduleInitializeAddedMaterial(const LevelP& level,
                                                SchedulerP&);
+  virtual void restartInitialize();
 
   void schedulePrintParticleCount(const LevelP& level, 
                                   SchedulerP& sched);

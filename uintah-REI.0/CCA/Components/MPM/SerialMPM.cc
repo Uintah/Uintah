@@ -323,6 +323,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
       d_SF_vars->matl_sub = new MaterialSubset();
       d_SF_vars->matl_sub->add(m[0]);
       d_SF_vars->matl_sub->addReference();
+      cout << "SerialMPM:scheduleInitialize  determined S&F material set/subset" << endl;
     }
   }
   
@@ -339,6 +340,36 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
     scheduleInitializePressureBCs(level, sched);
   }
 }
+
+
+/* _____________________________________________________________________
+ Function~  SerialMPM::restartInitialize--
+ Purpose:   Set variables that are normally set during the initialization
+            phase, but get wiped clean when you restart
+_____________________________________________________________________*/
+void SerialMPM::restartInitialize()
+{
+  cout_doing << d_myworld->myrank() << " Doing restartInitialize "<< "\t\t\t MPM" << endl;
+ //__________________________________
+ //  Determine the materialSet and materialSubse for the material
+ // that is using soil and foam CM 
+ int numMPM = d_sharedState->getNumMPMMatls();
+ for(int m = 0; m < numMPM; m++){
+    MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+    if(mpm_matl->getIsSoilFoam()){
+      vector<int> m(1);
+      m[0] = mpm_matl->getDWIndex();
+      d_SF_vars->matl = new MaterialSet();
+      d_SF_vars->matl->addAll(m);
+      d_SF_vars->matl->addReference();
+      d_SF_vars->matl_sub = new MaterialSubset();
+      d_SF_vars->matl_sub->add(m[0]);
+      d_SF_vars->matl_sub->addReference();
+      cout << "SerialMPM:scheduleInitialize  determined S&F material set/subset" << endl;
+    }
+  }
+}
+
 
 void SerialMPM::scheduleInitializeAddedMaterial(const LevelP& level,
                                                 SchedulerP& sched)
@@ -1572,8 +1603,8 @@ void SerialMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       
-      //cout << " SerialMPM:InterpolateParticlesToGrid:  d_usingSoilFoam_CM:  " << d_SF_vars->usingSoilFoam_CM << endl;
-      //cout << "                                        getIsSoilFoam()   :  " << mpm_matl->getIsSoilFoam() << endl;
+      cout_doing << " SerialMPM:InterpolateParticlesToGrid:  d_usingSoilFoam_CM:  " << d_SF_vars->usingSoilFoam_CM << endl;
+      cout_doing << "                                        getIsSoilFoam()   :  " << mpm_matl->getIsSoilFoam() << endl;
 
 
       // Create arrays for the particle data
