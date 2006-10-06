@@ -321,6 +321,7 @@ protected:
   bool                   selection_set_visible_;
   GeomHandle             selection_geom_;
   tool_handle_t          selection_set_tool_;
+  tool_handle_t          scene_graph_tool_;
 };
 
 } // End namespace SCIRun

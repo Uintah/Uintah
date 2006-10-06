@@ -286,6 +286,7 @@ Mailbox<Item>::receive()
         recv_wait_--;
     }
     Item val=ring_buffer_[head_];
+    ring_buffer_[head_] = 0; //if it is a handle clear it.
     head_=ringNext(1);
     len_--;
     if(send_wait_)

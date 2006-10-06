@@ -99,14 +99,26 @@ class OpenGLHelper;
 class GuiArgs;
 class Pbuffer;
 
-struct GetReq {
+struct ReqBase {
+  ReqBase() :
+    ref_cnt(0),
+    lock("ReqBase lock for handles")
+  {}
+
+  int ref_cnt;
+  Mutex lock;
+};
+
+struct GetReq : public ReqBase {
   int datamask;
   FutureValue<GeometryData*>* result;
   GetReq(int, FutureValue<GeometryData*>* result);
   GetReq();
 };
 
-struct ImgReq {
+typedef LockingHandle<GetReq> get_req_handle_t;
+
+struct ImgReq : public ReqBase {
   ImgReq(const string& n, const string& t, int rx, int ry);
   ImgReq();
   string name;
@@ -114,6 +126,8 @@ struct ImgReq {
   int resx;
   int resy;
 };
+
+typedef LockingHandle<ImgReq> img_req_handle_t;
 
 struct Frustum {
   double znear;
@@ -249,10 +263,10 @@ private:
   GeomPickHandle        ret_pick_pick_;
 
   // Thread Communication Mailboxes
-  Mailbox<int>          send_mailbox_;
-  Mailbox<int>          recv_mailbox_;
-  Mailbox<GetReq>       get_mailbox_;
-  Mailbox<ImgReq>       img_mailbox_;
+  Mailbox<int>                    send_mailbox_;
+  Mailbox<int>                    recv_mailbox_;
+  Mailbox<get_req_handle_t>       get_mailbox_;
+  Mailbox<img_req_handle_t>       img_mailbox_;
 
 #ifdef HAVE_MPEG
   FILE *                mpeg_file_;
