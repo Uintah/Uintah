@@ -56,4 +56,8 @@ ifeq ($(HAVE_MPI),yes)
              $(SRCDIR)/testDT
 endif
 
+#ifneq ($(IS_OSX),yes)
+#  SUBDIRS += $(SRCDIR)/cppunit
+#endif
+
 include $(SCIRUN_SCRIPTS)/recurse.mk

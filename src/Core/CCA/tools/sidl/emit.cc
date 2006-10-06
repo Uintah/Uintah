@@ -859,8 +859,9 @@ void Method::emit_handler(EmitState& e, CI* emit_class) const
 
   if (isCollective) {
     e.out << leader2 << "//Unmarshal distribution flag\n";
-    e.out << leader2 << "::SCIRun::callType _flag;\n";
-    e.out << leader2 << "message->unmarshalInt((int*)&_flag);\n";
+    e.out << leader2 << "int f;\n";
+    e.out << leader2 << "message->unmarshalInt(&f);\n";
+    e.out << leader2 << "::SCIRun::callType _flag = (::SCIRun::callType) f;\n";
     //#ifdef HAVE_MPI
     e.out << leader2 << "//Unmarshal sessionID and number of calls\n";
     //    e.out << leader2 << "std::string _sessionID(36, ' ');\n";
@@ -1699,7 +1700,8 @@ void Method::emit_proxy(EmitState& e, const std::string& fn,
     e.out << leader2 << "//Marshal flag which informs handler that\n";
     e.out << leader2 << "// this message is NOCALLRET:\n";
     e.out << leader2 << "_flag = ::SCIRun::NOCALLRET;\n";
-    e.out << leader2 << "message->marshalInt((int*)&_flag);\n";
+    e.out << leader2 << "int f = (int) _flag;\n";
+    e.out << leader2 << "message->marshalInt(&f);\n";
     //#ifdef HAVE_MPI
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
     //    e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
@@ -1778,7 +1780,8 @@ void Method::emit_proxy(EmitState& e, const std::string& fn,
     e.out << leader2 << "//Marshal flag which informs handler that\n";
     e.out << leader2 << "// this message is CALLNORET\n";
     e.out << leader2 << "_flag = ::SCIRun::CALLNORET;\n";
-    e.out << leader2 << "message->marshalInt((int*)&_flag);\n";
+    e.out << leader2 << "int f = (int) _flag;\n";
+    e.out << leader2 << "message->marshalInt(&f);\n";
     //#ifdef HAVE_MPI
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
     //    e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
@@ -1844,7 +1847,8 @@ void Method::emit_proxy(EmitState& e, const std::string& fn,
     e.out << leader2 << "//Marshal flag which informs handler that\n";
     e.out << leader2 << "// this message is CALLONLY:\n";
     e.out << leader2 << "_flag = ::SCIRun::CALLONLY;\n";
-    e.out << leader2 << "message->marshalInt((int*)&_flag);\n";
+    e.out << leader2 << "int f = (int) _flag;\n";
+    e.out << leader2 << "message->marshalInt(&f);\n";
     //#ifdef HAVE_MPI
     e.out << leader2 << "//Marshal the sessionID and number of actual calls from this proxy\n";
     //    e.out << leader2 << "message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
@@ -2697,7 +2701,8 @@ void NamedType::emit_unmarshal(EmitState& e, const std::string& arg,
         e.out << leader2 << "  message->createMessage();\n";
         e.out << leader2 << "  //Marshal the redistribution call flag\n";
         e.out << leader2 << "  ::SCIRun::callType _r_flag = ::SCIRun::REDIS;\n";
-        e.out << leader2 << "  message->marshalInt((int*)&_r_flag);\n";
+        e.out << leader2 << "  int r = (int) _r_flag;\n";
+        e.out << leader2 << "  message->marshalInt(&r);\n";
         //#ifdef HAVE_MPI
         e.out << leader2 << "  //Marshal the sessionID and number of actual calls from this proxy\n";
         //  e.out << leader2 << "  message->marshalChar(const_cast<char*>(_sessionID.c_str()), 36);\n";
@@ -3075,7 +3080,8 @@ void NamedType::emit_marshal(EmitState& e, const std::string& arg,
     } else {
       if ((ctx == ArgOut)&&(bufferStore != doRetrieve)) {
 	// *********** OUT arg -- No Special Redis ******************************
-	e.out << leader2 << "_sc->d_sched->setArray(\"" <<  distarr->getName() << "\",_sessionID, _callID, (void**)(&" << arg << "_ptr));\n";
+	e.out << leader2 << "void* " << arg << "VoidPtr = (void*) " << arg << "_ptr;\n";
+	e.out << leader2 << "_sc->d_sched->setArray(\"" <<  distarr->getName() << "\",_sessionID, _callID, (void**)(&" << arg << "VoidPtr));\n";
 	e.out << leader2 << "_sc->d_sched->waitCompleteOutArray(\"" << distarr->getName() << "\",_sessionID, _callID);\n";
 	// *********** OUT arg -- No Special Redis ******************************
       }

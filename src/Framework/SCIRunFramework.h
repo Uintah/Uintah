@@ -188,7 +188,7 @@ public:
 
   /** ? */
   std::string
-  SCIRunFramework::getUniqueName(const std::string& name);
+  getUniqueName(const std::string& name);
 
   /** Adds a description of a component instance (class ComponentInstance) to
       the list of active components.  The component instance description
