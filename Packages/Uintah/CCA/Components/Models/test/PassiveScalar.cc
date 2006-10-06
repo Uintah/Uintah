@@ -76,7 +76,19 @@ PassiveScalar::Region::Region(GeometryPieceP piece, ProblemSpecP& ps)
 {
   ps->require("scalar", initialScalar);
   ps->getWithDefault("sinusoidalIntialize", sinusoidalIntialize, false);
-  ps->getWithDefault("freq",freq,IntVector(0,0,0));
+  if(sinusoidalIntialize){
+    ps->getWithDefault("freq",freq,IntVector(0,0,0));
+  }
+  
+  ps->getWithDefault("linearInitialize", linearInitialize, false);
+  if(linearInitialize){
+    ps->getWithDefault("slope",slope,Vector(0,0,0));
+  }
+  
+  uniformInitialize = true;
+  if(sinusoidalIntialize || linearInitialize){
+    uniformInitialize = false;
+  }
 }
 //______________________________________________________________________
 //     P R O B L E M   S E T U P
@@ -138,7 +150,7 @@ void PassiveScalar::problemSetup(GridP&, SimulationStateP& in_state,
    }
 
    child->getWithDefault("test_conservation", d_test_conservation, false);
-cout << " d_test_conservation " << d_test_conservation << endl;
+
    ProblemSpecP const_ps = child->findBlock("constants");
    if(!const_ps) {
      throw ProblemSetupException("PassiveScalar: Couldn't find constants tag", __FILE__, __LINE__);
@@ -269,13 +281,14 @@ void PassiveScalar::initialize(const ProcessorGroup*,
     new_dw->allocateAndPut(f, d_scalar->scalar_CCLabel, indx, patch);
 
     f.initialize(0);
+    
     //__________________________________
-    //  initialize the scalar field in a region
+    //  Uniform initialization scalar field in a region
     for(vector<Region*>::iterator iter = d_scalar->regions.begin();
                                   iter != d_scalar->regions.end(); iter++){
       Region* region = *iter;
       
-      if(!region->sinusoidalIntialize){
+      if(region->uniformInitialize){
       
         for(CellIterator iter = patch->getExtraCellIterator();
             !iter.done(); iter++){
@@ -286,13 +299,33 @@ void PassiveScalar::initialize(const ProcessorGroup*,
           }
         } // Over cells
       }
+      
+      if(region->linearInitialize){
+      
+        for(CellIterator iter = patch->getExtraCellIterator();
+            !iter.done(); iter++){
+          IntVector c = *iter;
+          Point p = patch->cellPosition(c);            
+          if(region->piece->inside(p)) {
+            f[c] = region->initialScalar;
+          }
+        } // Over cells
+      }
+
+      
       //__________________________________
-      // Sinusoidal initialization
-      if(region->sinusoidalIntialize){
+      // Sinusoidal & linear initialization
+      if(!region->uniformInitialize){
         IntVector freq = region->freq;
         // bulletproofing
-        if(freq.x()==0 && freq.y()==0 && freq.z()==0){
-          throw ProblemSetupException("PassiveScalar: you need to specify a freq whenever you use sinusoidalInitialize", __FILE__, __LINE__);
+        if(region->sinusoidalIntialize && freq.x()==0 && freq.y()==0 && freq.z()==0){
+          throw ProblemSetupException("PassiveScalar: you need to specify a <freq> whenever you use sinusoidalInitialize", __FILE__, __LINE__);
+        }
+        
+        Vector slope = region->slope;
+        cout << "slope " << slope  << endl;
+        if(region->linearInitialize && slope.x()==0 && slope.y()==0 && slope.z()==0){
+          throw ProblemSetupException("PassiveScalar: you need to specify a <slope> whenever you use linearInitialize", __FILE__, __LINE__);
         }
 
         Point lo = region->piece->getBoundingBox().lower();
@@ -307,10 +340,15 @@ void PassiveScalar::initialize(const ProcessorGroup*,
             // normalized distance
             Vector d = (p.asVector() - lo.asVector() )/dist;
             
-            f[c] = sin( 2.0 * freq.x() * d.x() * M_PI) + sin( 2.0 * freq.y() * d.y() * M_PI)  + sin( 2.0 * freq.z() * d.z() * M_PI);
+            if(region->sinusoidalIntialize){
+              f[c] = sin( 2.0 * freq.x() * d.x() * M_PI) + sin( 2.0 * freq.y() * d.y() * M_PI)  + sin( 2.0 * freq.z() * d.z() * M_PI);
+            }
+            if(region->linearInitialize){
+              f[c] = slope.x() * d.x() + slope.y() * d.y() + slope.z() * d.z(); 
+            }
           }
         }
-      }  
+      }  // sinusoidal Initialize  
     } // regions
     setBC(f,"scalar-f", patch, d_sharedState,indx, new_dw);
      

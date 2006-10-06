@@ -135,6 +135,9 @@ WARNING
       double initialScalar;
       bool  sinusoidalIntialize;
       IntVector freq;
+      bool  linearInitialize;
+      Vector slope;
+      bool  uniformInitialize;
     };
 
     class Scalar {
