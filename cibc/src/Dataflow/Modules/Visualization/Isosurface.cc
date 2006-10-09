@@ -31,7 +31,7 @@
 //    Date   : Fri Jun 15 16:38:02 2001
 
 
-#include <Dataflow/Modules/Visualization/Isosurface.h>
+#include <Core/Algorithms/Visualization/Isosurface.h>
 
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/Material.h>
@@ -56,6 +56,51 @@
 #endif
 
 namespace SCIRun {
+
+class Isosurface : public Module {
+
+public:
+  Isosurface(GuiContext* ctx);
+  virtual ~Isosurface();
+  virtual void execute();
+
+private:
+  FieldHandle  field_output_handle_;
+  MatrixHandle matrix_output_handle_;
+  GeomHandle   geometry_output_handle_;
+
+  //! GUI variables
+  GuiDouble  gui_iso_value_min_;
+  GuiDouble  gui_iso_value_max_;
+  GuiDouble  gui_iso_value_;
+  GuiDouble  gui_iso_value_typed_;
+  GuiInt     gui_iso_value_quantity_;
+  GuiString  gui_iso_quantity_range_;
+  GuiString  gui_iso_quantity_clusive_;
+  GuiDouble  gui_iso_quantity_min_;
+  GuiDouble  gui_iso_quantity_max_;
+  GuiString  gui_iso_quantity_list_;
+  GuiString  gui_iso_value_list_;
+  GuiString  gui_iso_matrix_list_;
+  GuiInt     gui_extract_from_new_field_;
+  GuiInt     gui_use_algorithm_;
+  GuiInt     gui_build_field_;
+  GuiInt     gui_build_geom_;
+  GuiInt     gui_np_;          
+  GuiString  gui_active_isoval_selection_tab_;
+  GuiString  gui_active_tab_; 
+  //gui_update_type_ must be declared after gui_iso_value_max_ which is
+  //traced in the tcl code. If gui_update_type_ is set to Auto having it
+  //last will prevent the net from executing when it is instantiated.
+  GuiString  gui_update_type_;
+
+  GuiDouble  gui_color_r_;
+  GuiDouble  gui_color_g_;
+  GuiDouble  gui_color_b_;
+
+  //! status variables
+  vector< double > isovals_;
+};
 
 DECLARE_MAKER(Isosurface)
 
@@ -526,24 +571,4 @@ Isosurface::execute()
   send_output_handle( "Mapping", matrix_output_handle_, true );
 }
 
-CompileInfoHandle
-IsosurfaceAlgo::get_compile_info(const TypeDescription *ftd)
-{
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("IsosurfaceAlgoT");
-  static const string base_class_name("IsosurfaceAlgo");
-
-  CompileInfo *rval = 
-    scinew CompileInfo(template_class_name + "." +
-		       ftd->get_filename() + ".",
-                       base_class_name, 
-                       template_class_name, 
-                       ftd->get_name());
-
-  // Add in the include path to compile this obj
-  rval->add_include(include_path);
-  ftd->fill_compile_info(rval);
-  return rval;
-}
 } // End namespace SCIRun
