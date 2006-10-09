@@ -42,6 +42,7 @@ SET(Core_Geom_SRCS
   GeomBillboard.cc	                
   GeomBox.cc		                
   GeomColorMap.cc	                
+  GeomColorMappedNrrdTextureObj.cc
   GeomCone.cc		                
   GeomContainer.cc	                
   GeomCull.cc	                

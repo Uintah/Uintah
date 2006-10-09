@@ -30,21 +30,21 @@
             <var name="row">2</var>
               <var name="col">3</var>
               <var name="LabeledSpinnerBox::text" propagate="yes">Iterations: </var>
-              <var name="LabeledSpinnerBox::variable" propagate="yes">ITKConfidenceConnectedImageFilterTool::numberOfIterations</var>
+              <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKConfidenceConnectedImageFilterTool::numberOfIterations</var>
           </object>
 
           <object class="LabeledSpinnerBox">
             <var name="row">3</var>
               <var name="col">3</var>
               <var name="LabeledSpinnerBox::text" propagate="yes">Multiplier: </var>
-              <var name="LabeledSpinnerBox::variable" propagate="yes">ITKConfidenceConnectedImageFilterTool::multiplier</var>
+              <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKConfidenceConnectedImageFilterTool::multiplier</var>
           </object>
 
           <object class="LabeledSpinnerBox">
             <var name="row">4</var>
               <var name="col">3</var>
               <var name="LabeledSpinnerBox::text" propagate="yes">Replace Value: </var>
-              <var name="LabeledSpinnerBox::variable" propagate="yes">ITKConfidenceConnectedImageFilterTool::replaceValue</var>
+              <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKConfidenceConnectedImageFilterTool::replaceValue</var>
           </object>
         
           <object class="Root::Text">

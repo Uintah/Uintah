@@ -3,98 +3,80 @@
     <var name="invert">1</var>
     <var name="width">2</var>
     <var name="height">2</var>
+    
+    <object class="Root::FocusRegion">
+      <object class="Box">        
+        <var name="color">$main_color</var>
+        <object class="Grid">
+          <var name="rows">1</var>
+          <var name="cols">15</var>
+          <var name="text_bgcolor" propagate="yes">#FFFFFFFF</var>
+          <var name="text_fgcolor" propagate="yes">#000000FF</var>
+          
+          <var name="buttonwidth" propagate="yes">35</var>
+          
+          <object class="FrameButton">
+            <var name="col">12</var>
+            <var name="row">1</var>
+            <var name="cell-height">$buttonwidth</var>
+            <var name="cell-width">$buttonwidth</var>
+            <var name="Button::Text::text" propagate="yes">A</var>
+            <var name="Button::color" propagate="yes">$main_color</var>
+            <signal name="Button::clicked" 
+                    target="Painter::Autoview"/>
+          </object>
 
-    <object class="Root::Arithmetic">
-    <object class="Root::FocusRegion">      
-      <xi:include href="MenuButton.skin" parse="xml"/>  
+          <object class="FrameButton">
+            <var name="col">13</var>
+            <var name="row">1</var>
+            <var name="cell-height">$buttonwidth</var>
+            <var name="cell-width">$buttonwidth</var>
+            <var name="Button::Text::text" propagate="yes">B</var>
+            <var name="Button::color" propagate="yes">$main_color</var>
+            <signal name="Button::clicked" 
+                    target="Painter::StartBrushTool"/>
+            <signal name="Button::clicked" 
+                    target="VisibilityGroup::show_VisibleItem">
+              <var name="id">BrushTool</var>
+              <var name="group">ToolsVisibleGroup</var>
+            </signal>
+          </object>
 
-      <object class="Box">
-        <var name="color">#AAAAAAFF</var>
+
+          <object class="FrameButton">
+            <var name="col">14</var>
+            <var name="row">1</var>
+            <var name="cell-height">$buttonwidth</var>
+            <var name="cell-width">$buttonwidth</var>
+            <var name="Button::Text::text" propagate="yes">C</var>
+            <var name="Button::color" propagate="yes">$main_color</var>
+            <signal name="Button::clicked" 
+                    target="Painter::StartCropTool"/>
+            <signal name="Button::clicked" 
+                    target="VisibilityGroup::show_VisibleItem">
+              <var name="id">CropTool</var>
+              <var name="group">ToolsVisibleGroup</var>
+            </signal>
+          </object>
+
+
+          <object class="FrameButton">
+            <var name="col">15</var>
+            <var name="row">1</var>
+            <var name="cell-height">$buttonwidth</var>
+            <var name="cell-width">$buttonwidth</var>
+            <var name="Button::Text::text" propagate="yes">R</var>
+            <var name="Button::color" propagate="yes">$main_color</var>
+            <signal name="Button::clicked" 
+                    target="VisibilityGroup::show_VisibleItem">
+              <var name="id">ResampleTool</var>
+              <var name="group">ToolsVisibleGroup</var>
+            </signal>
+          </object>
+
+
+        </object>
       </object>
-      
-      <object class="Grid">
-        <var name="rows">1</var>
-        <var name="cols">10</var>
-        <var name="text_bgcolor" propagate="yes">#FFFFFFFF</var>
-        <var name="text_fgcolor" propagate="yes">#000000FF</var>
-        
-        <var name="cell-height">35</var>
-        <var name="buttonwidth">35</var>
-        
-        <object class="MenuButton">
-          <var name="row">1</var>
-          <var name="col">1</var>
-          <var name="cell-width">$buttonheight</var>
-          <var name="Button::Text::text" propagate="yes">Load...</var>
-          <var name="text_color" propagate="yes">$text_fgcolor</var>
-          <signal name="Button::clicked" 
-                  target="Animation::AnimateVariableAscending">
-            <var name="varnum">1</var>
-          </signal>
-        </object>
-
-        <object class="MenuButton">
-          <var name="row">1</var>
-          <var name="col">2</var>
-          <var name="cell-width">$buttonheight</var>
-          <var name="Button::Text::text" propagate="yes">Save...</var>
-          <var name="text_color" propagate="yes">$text_fgcolor</var>
-          <signal name="Button::clicked" 
-                  target="Animation::AnimateVariableAscending">
-            <var name="varnum">2</var>
-          </signal>
-        </object>
-
-        <object class="MenuButton">
-          <var name="row">1</var>
-          <var name="col">3</var>
-          <var name="cell-width">$buttonheight</var>
-          <var name="Button::Text::text" propagate="yes">ThreeView</var>
-          <var name="text_color" propagate="yes">$text_fgcolor</var>
-          <signal name="Button::clicked" 
-                  target="Arithmetic::set_value">
-            <var name="variable">$FourView::visible</var>
-            <var name="value">0</var>
-          </signal>
-
-          <signal name="Button::clicked" 
-                  target="Arithmetic::set_value">
-            <var name="variable">$ThreeView::visible</var>
-            <var name="value">1</var>
-          </signal>
-
-          <signal name="Button::clicked" 
-                  target="GLWindow::mark_redraw"/>
-
-
-        </object>
-
-
-        <object class="MenuButton">
-          <var name="row">1</var>
-          <var name="col">4</var>
-          <var name="cell-width">$buttonheight</var>
-          <var name="Button::Text::text" propagate="yes">FourView</var>
-          <var name="text_color" propagate="yes">$text_fgcolor</var>
-          <signal name="Button::clicked" 
-                  target="Arithmetic::set_value">
-            <var name="variable">$FourView::visible</var>
-            <var name="value" type="bool">1</var>
-          </signal>
-
-          <signal name="Button::clicked" 
-                  target="Arithmetic::set_value">
-            <var name="variable">$ThreeView::visible</var>
-            <var name="value" type="bool">0</var>
-          </signal>
-
-          <signal name="Button::clicked" 
-                  target="GLWindow::mark_redraw"/>
-
-        </object>
-
-      </object>
-      </object>
-    </object>
+    </object>      
   </object>
 </definition>

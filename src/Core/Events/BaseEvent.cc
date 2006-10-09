@@ -193,6 +193,25 @@ RedrawEvent::io(Piostream &stream) {
   stream.end_class();
 }
 
+
+
+AutoviewEvent::AutoviewEvent()
+{
+
+}
+
+AutoviewEvent::~AutoviewEvent()
+{
+
+}
+void
+AutoviewEvent::io(Piostream &stream) {
+  stream.begin_class(type_id.type, 1);
+  BaseEvent::io(stream);
+  stream.end_class();
+}
+
+
 QuitEvent::QuitEvent()
 {
 

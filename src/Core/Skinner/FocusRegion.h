@@ -50,7 +50,7 @@ namespace SCIRun {
       CatcherFunction_t                 do_KeyEvent;
       typedef vector<FocusRegion *>     FocusRegions_t;
       FocusRegions_t                    focus_regions_;
-      bool                              focus_;
+      Var<bool>                         focus_;
     };
 
 

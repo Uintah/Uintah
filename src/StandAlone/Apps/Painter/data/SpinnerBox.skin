@@ -1,36 +1,35 @@
 <definition class="SpinnerBox" xmlns:xi="http://www.w3.org/2001/XInclude">
-<object class="Root::Arithmetic">
   <object class="ShadowedBox">
     <var name="ShadowedBox::inside" propagate="yes" overwrite="no">#333333FF</var>
+    <var name="SpinnerBox::outside" propagate="yes" overwrite="no">#00000000</var>
+    <var name="ShadowedBox::outside" propagate="yes">$SpinnerBox::outside</var>
     <var name="SpinnerBox::value" propagate="yes" overwrite="no">20</var>
     <var name="SpinnerBox::text_size" propagate="yes" overwrite="no">20</var>
     <var name="SpinnerBox::text" propagate="yes" overwrite="no">123</var>
     
     <definition class="ShadowedBox::child">
-      <object class="Root::Arithmetic">
-        <object class="Root::FocusRegion">
-          <var name="FocusRegion::focused" propagate="yes">0</var>
-          <signal name="FocusRegion::focus"
-                  target="Arithmetic::set_value">
-            <var name="variable">ShadowedBox::outside</var>
-            <var name="value">#DDDD88FF</var>
-          </signal>
+      <object class="Root::FocusRegion">
 
-          <signal name="FocusRegion::focus"
-                  target="Root::Redraw"/>
+        <signal name="FocusRegion::focus"
+                target="Arithmetic::set_value">
+          <var name="variable">$SpinnerBox::outside</var>
+          <var name="value">$hilite_shadow</var>
+        </signal>
+
+        <signal name="FocusRegion::focus"
+                target="GLWindow::mark_redraw"/>
 
 
-          <signal name="FocusRegion::unfocus"
-                  target="Arithmetic::set_value">
-            <var name="variable">ShadowedBox::outside</var>
-            <var name="value">#333333FF</var>
-            <var name="value">#00000000</var>
-          </signal>
+        <signal name="FocusRegion::unfocus"
+                target="Arithmetic::set_value">
+          <var name="variable">$SpinnerBox::outside</var>
+          <var name="value">#00000000</var>
+        </signal>
 
-          <signal name="FocusRegion::unfocus"
-                  target="Root::Redraw"/>
+        <signal name="FocusRegion::unfocus"
+                target="GLWindow::mark_redraw"/>
 
-          
+        
 
         <object class="Grid">
           <var name="rows">1</var>
@@ -43,7 +42,7 @@
             <var name="row">1</var>
             <var name="col">2</var>        
             
-            <var name="cell-width">20</var>
+            <var name="cell-width">15</var>
             
             <var name="width" propagate="yes">2</var>
             <var name="height" propagate="yes">2</var>
@@ -90,22 +89,22 @@
             <var name="col">1</var>        
             
             <var name="color">#FFFFFFFF</var>
-            <object class="TextEntry">
-              <var name="variable">$SpinnerBox::variable</var>
-              <var name="text">$SpinnerBox::text</var>
-              <var name="cursor">$FocusRegion::focused</var>
-              <var name="size">$SpinnerBox::text_size</var>
-              <var name="anchor">E</var>
-              <var name="numeric">1</var>
-              <var name="fgcolor">#000000FF</var>
-              <var name="bgcolor">#00000080</var>
-              <var name="shadow">0</var>
+            <object class="Root::ViewSubRegion">
+              <object class="TextEntry">
+                <var name="variable">$SpinnerBox::variable</var>
+                <var name="text">$SpinnerBox::text</var>
+                <var name="cursor">$FocusRegion::focused</var>
+                <var name="size">$SpinnerBox::text_size</var>
+                <var name="anchor">E</var>
+                <var name="numeric">1</var>
+                <var name="fgcolor">#000000FF</var>
+                <var name="bgcolor">#00000080</var>
+                <var name="shadow">0</var>
+              </object>
             </object>
           </object>
         </object>
       </object>
-      </object>
     </definition>
-  </object>
   </object>
 </definition>

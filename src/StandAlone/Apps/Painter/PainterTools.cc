@@ -287,7 +287,7 @@ Painter::CLUTLevelsTool::pointer_down(int b, int x, int y,
     return CONTINUE_E;
   }
 
-  ww_ = vol->clut_max_() - vol->clut_min_();
+  ww_ = vol->clut_max_ - vol->clut_min_;
   wl_ = vol->clut_min_ + ww_ / 2.0;
   x_ = x;
   y_ = y;

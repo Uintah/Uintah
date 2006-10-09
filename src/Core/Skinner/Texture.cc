@@ -86,14 +86,16 @@ namespace SCIRun {
       }
       tex_ = new TextureObj(nin);
 
+      REGISTER_CATCHER_TARGET(Texture::redraw);
     }
 
     Texture::~Texture() 
     {
     }
 
-    void Texture::draw_gl() {
-      ASSERT(tex_);
+    BaseTool::propagation_state_e
+    Texture::redraw(event_handle_t) {
+      if (!tex_) return STOP_E;
       
       Color color = color_();
       //      color.random();
@@ -160,19 +162,7 @@ namespace SCIRun {
       tex_->draw(4, coords, tex_coords);
       glMatrixMode(GL_TEXTURE);
       glPopMatrix();
-    }
-
-
-    BaseTool::propagation_state_e
-    Texture::process_event(event_handle_t event) {
-      WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
-      if (tex_ && window && 
-          window->get_window_state() == WindowEvent::REDRAW_E) {
-        draw_gl();
-      }
-
       return CONTINUE_E;
     }
-
   }
 }

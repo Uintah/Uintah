@@ -14,7 +14,28 @@
           <var name="text_bgcolor" propagate="yes">#FFFFFFFF</var>
           <var name="text_fgcolor" propagate="yes">#000000FF</var>
           
-          <var name="buttonheight" propagate="yes">55</var>
+          <var name="buttonheight" propagate="yes">35</var>
+
+          <object class="Button">
+            <var name="row">15</var>
+            <var name="col">1</var>
+            <var name="cell-height">$buttonheight</var>
+            <var name="Button::Text::text" propagate="yes">New Layer</var>
+            <signal name="Button::clicked" 
+                    target="Painter::NewLayer"/>
+          </object>
+
+
+          <object class="Button">
+            <var name="row">14</var>
+            <var name="col">1</var>
+            <var name="cell-height">$buttonheight</var>
+            <var name="Button::Text::text" propagate="yes">Merge Layer Down</var>
+            <signal name="Button::clicked" 
+                    target="Painter::MergeLayer"/>
+            
+          </object>
+
           
           <object class="LayerButton">
             <var name="LayerButton::num">1</var>
@@ -71,16 +92,6 @@
           <object class="LayerButton">
             <var name="LayerButton::num">13</var>
           </object>
-
-          <object class="LayerButton">
-            <var name="LayerButton::num">14</var>
-          </object>
-
-          <object class="LayerButton">
-            <var name="LayerButton::num">15</var>
-          </object>
-
-
         </object>
       </object>
     </object>

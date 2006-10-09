@@ -33,6 +33,7 @@
 #define SKINNER_MENUMANAGER_H
 
 #include <Core/Skinner/Parent.h>
+#include <Core/Thread/Mutex.h>
 #include <map>
 #include <set>
 #include <vector>
@@ -40,6 +41,7 @@
 namespace SCIRun {
   class MenuManager;
   class MenuList;
+  class MenuButton;
 
   namespace Skinner {
     class MenuManager : public Parent {
@@ -48,14 +50,20 @@ namespace SCIRun {
       virtual ~MenuManager();
       virtual propagation_state_e       process_event(event_handle_t);
     protected:
+      Mutex                             mutex_;
       CatcherFunction_t                 MenuList_Maker;
+      CatcherFunction_t                 MenuButton_Maker;
       CatcherFunction_t                 show_MenuList;
       CatcherFunction_t                 hide_MenuList;
-      CatcherFunction_t                 redraw;
       typedef vector<MenuList *>        MenuLists_t;
       MenuLists_t                       menu_lists_;
+
+      typedef vector<MenuButton *>        MenuButtons_t;
+      MenuButtons_t                       menu_buttons_;
+
+
       typedef map<string, MenuList *>   VisibleMenuLists_t;
-      VisibleMenuLists_t                visible_;
+      VisibleMenuLists_t                visible_menulists_;
 
     };
   }

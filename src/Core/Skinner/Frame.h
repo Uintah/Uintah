@@ -49,11 +49,12 @@ namespace SCIRun {
       propagation_state_e               process_event(event_handle_t event);
 
     private:
-      void                              render_gl();
+      CatcherFunction_t                 redraw;
       Var<Color>                        top_;
       Var<Color>                        bot_;
       Var<Color>                        left_;
       Var<Color>                        right_;
+      Var<bool>                         invert_;
       Var<double>                       border_wid_;
       Var<double>                       border_hei_;
     };

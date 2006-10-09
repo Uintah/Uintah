@@ -219,10 +219,11 @@ namespace SCIRun {
 
       if (subdraw) {
         // todo: thread unsafe, needs lock
-        for (int c = 0; c < redrawables_.size(); ++c) {
+        for (int c = redrawables_.size()-1; c >=0 ; --c) {
           redrawables_[c]->process_event(event);
         }
         redrawables_.clear();
+
       } else {
         if (redraw && force_redraw_) {
           redrawables_.clear();
@@ -269,8 +270,11 @@ namespace SCIRun {
       Drawable *drawable = 
         dynamic_cast<Drawable *>(signal->get_signal_thrower());
       ASSERT(drawable);
-      redrawables_.push_back(drawable);
-      EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E, get_id()));
+      Var<bool> visible(signal->get_vars(), "visible",true);
+      if (visible()) {
+        redrawables_.push_back(drawable);
+        EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E, get_id()));
+      }
       return CONTINUE_E;
     }
       

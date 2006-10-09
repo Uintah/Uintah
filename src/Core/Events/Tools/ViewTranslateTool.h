@@ -60,10 +60,11 @@ public:
 
 private:
   ViewToolInterface                 *scene_interface_;
-  int                                last_x_;
-  int                                last_y_;
-  double                             total_x_;
-  double                             total_y_;
+  int                                start_x_;
+  int                                start_y_;
+  Vector                             u_;
+  Vector                             v_;
+  View                               start_view_;
 };
 
 } // namespace SCIRun

@@ -6,7 +6,7 @@
   <var name="text2" propagate="yes">text2</var>
   <var name="text3" propagate="yes">text3</var>
 
-  <xi:include href="ShadowedBox2.skin" parse="xml"/>  
+  <xi:include href="ShadowedBox.skin" parse="xml"/>  
   <xi:include href="SpinnerBox.skin" parse="xml"/>  
 
   <object class="Root::GLWindow">

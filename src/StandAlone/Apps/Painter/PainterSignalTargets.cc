@@ -122,7 +122,6 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::ITKConfidenceConnected);
   REGISTER_CATCHER_TARGET(Painter::ITKThresholdLevelSet);
 
-  REGISTER_CATCHER_TARGET(Painter::Autoview_SliceWindow);
   REGISTER_CATCHER_TARGET(Painter::ShowVolumeRendering);
 
   REGISTER_CATCHER_TARGET(Painter::AbortFilterOn);
@@ -206,8 +205,8 @@ Painter::Autoview(event_handle_t) {
       (*window)->autoview(current_volume_);
     }
   }
-  cerr << "autoview\n";
-
+  AutoviewEvent *autoview_event = new AutoviewEvent();
+  EventManager::add_event(autoview_event);
   return CONTINUE_E;
 }
 
@@ -747,14 +746,17 @@ Painter::ShowVolumeRendering(event_handle_t event)
                                        nrrd_handle, 0, 255,
                                        0, 0, 255, card_mem);
 
+  Skinner::Var<string> filename(get_vars(), "cmap2_filename", "default.cmap2");
     
-  const char *colormap = sci_getenv("PAINTER_CMAP2");
-  if (!colormap) {
+  string path = 
+    findFileInPath(filename(),sci_getenv("SKINNER_PATH"));
+  if (path.empty()) {
     cerr << "no colormap file specified1\n";
     return STOP_E;
   }
 
-  string fn = string(colormap);
+  string fn = path + filename();
+
   Piostream *stream = auto_istream(fn, 0);
   if (!stream) {
     cerr << "Error reading file '" + fn + "'." << std::endl;
@@ -782,16 +784,18 @@ Painter::ShowVolumeRendering(event_handle_t event)
                                            *cmap2v, 
                                            *planes,
                                            Round(card_mem*1024*1024*0.8));
+  vol->set_mode(TextureRenderer::MODE_OVER);
   vol->set_shading(true);
-  vol->set_slice_alpha(-0.5);
-  vol->set_slice_alpha(0.1);
-  vol->set_interactive_rate(4.0);
-  vol->set_sampling_rate(3.5);
+  vol->set_sw_raster(true);
+  //  vol->set_slice_alpha(-0.5);
+  vol->set_slice_alpha(1.1);
+  vol->set_interactive_rate(1.0);
+  vol->set_sampling_rate(1.5);
   vol->set_material(0.322, 0.868, 1.0, 18);
   vol->set_interp(0);
   scene_event = new SceneGraphEvent(vol, "FOO");
-  //EventManager::add_event(scene_event);
-  process_event(scene_event);
+  EventManager::add_event(scene_event);
+  //process_event(scene_event);
   return CONTINUE_E;
 }
 
@@ -938,15 +942,6 @@ Painter::ResampleVolume(event_handle_t event) {
 BaseTool::propagation_state_e 
 Painter::AbortFilterOn(event_handle_t event) {
   abort_filter_ = true;
-  return CONTINUE_E;
-}
-
-
-
-BaseTool::propagation_state_e 
-Painter::Autoview_SliceWindow(event_handle_t event) {
-  Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
-  cerr << signal->get_vars()->get_id() << std::endl;
   return CONTINUE_E;
 }
 

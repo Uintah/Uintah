@@ -32,6 +32,7 @@
 #include <Core/Skinner/Root.h>
 #include <Core/Skinner/Variables.h>
 #include <Core/Skinner/Window.h>
+#include <Core/Skinner/FocusGrab.h>
 #include <Core/Skinner/FocusRegion.h>
 #include <Core/Skinner/Arrow.h>
 #include <Core/Skinner/Arc.h>
@@ -40,6 +41,7 @@
 #include <Core/Skinner/Arithmetic.h>
 #include <Core/Skinner/MenuManager.h>
 #include <Core/Skinner/ViewSubRegion.h>
+#include <Core/Skinner/VisibilityGroup.h>
 #include <Core/Events/Tools/FilterRedrawEventsTool.h>
 #include <Core/Util/FileUtils.h>
 #include <Core/Containers/StringUtil.h>
@@ -64,12 +66,14 @@ namespace SCIRun {
       REGISTER_CATCHER_TARGET(Root::Arithmetic_Maker);
       REGISTER_CATCHER_TARGET(Root::GLWindow_Maker);
       REGISTER_CATCHER_TARGET(Root::GLWindow_Destructor);
+      REGISTER_CATCHER_TARGET(Root::FocusGrab_Maker);
       REGISTER_CATCHER_TARGET(Root::FocusRegion_Maker);
       REGISTER_CATCHER_TARGET(Root::Graph2D_Maker);
       //      REGISTER_CATCHER_TARGET(Root::ColorMap2D_Maker);
       REGISTER_CATCHER_TARGET(Root::MenuManager_Maker);
       REGISTER_CATCHER_TARGET(Root::Text_Maker);
       REGISTER_CATCHER_TARGET(Root::ViewSubRegion_Maker);
+      REGISTER_CATCHER_TARGET(Root::VisibilityGroup_Maker);
       REGISTER_CATCHER_TARGET(Root::Stop);
       REGISTER_CATCHER_TARGET(Root::Reload_Default_Skin);
       REGISTER_CATCHER_TARGET_BY_NAME(Quit, Root::Quit);
@@ -86,7 +90,9 @@ namespace SCIRun {
     DECLARE_SKINNER_MAKER(Root, Graph2D);
     DECLARE_SKINNER_MAKER(Root, ViewSubRegion);
     DECLARE_SKINNER_MAKER(Root, MenuManager);
+    DECLARE_SKINNER_MAKER(Root, FocusGrab);
     DECLARE_SKINNER_MAKER(Root, FocusRegion);
+    DECLARE_SKINNER_MAKER(Root, VisibilityGroup);
     //    DECLARE_SKINNER_MAKER(Root, ColorMap2D);
 
     BaseTool::propagation_state_e

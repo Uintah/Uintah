@@ -50,7 +50,8 @@
 #include <Core/Geometry/Point.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/BBox.h>
-
+#include <Core/Containers/LockingHandle.h>
+#include <Core/Thread/Mutex.h>
 #include <Core/Geom/share.h>
 namespace SCIRun {
 
@@ -88,6 +89,9 @@ private:
 
 class SCISHARE ColorMappedNrrdTextureObj {
 public:
+  Mutex &lock;
+  int ref_cnt;
+
   ColorMappedNrrdTextureObj(NrrdDataHandle &nrrd_handle, 
                             int axis, 
                             int min_slice, int max_slice,
@@ -98,8 +102,9 @@ public:
   void                  set_colormap(ColorMapHandle &cmap);
   void                  set_clut_minmax(float min, float max);
   void                  set_dirty() { nrrd_dirty_ = true; }
-  void			draw_quad(Point &min, Vector &xdir, Vector &ydir);
+  void			draw_quad(Point *min=0, Vector *xdir=0, Vector *ydir=0);
   bool                  dirty_p() { return nrrd_dirty_; }
+  void                  get_bounds(BBox&);
 
   void                  apply_colormap(int, int, int, int, int border=0);
   ColorMapHandle        colormap_;
@@ -129,7 +134,16 @@ private:
   float                 clut_max_;
   float *               data_;
   bool                  own_data_;
+
+  Point                 min_;
+  Vector                xdir_;
+  Vector                ydir_;
+
 };
+
+
+  typedef LockingHandle<ColorMappedNrrdTextureObj> ColorMappedNrrdTextureObjHandle;
+
 
 
 }

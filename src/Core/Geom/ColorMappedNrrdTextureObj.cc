@@ -51,6 +51,8 @@
 #include <teem/air.h>
 #include <limits.h>
 
+#include <Core/Thread/MutexPool.h>
+
 namespace SCIRun {
 
 #define NRRD_EXEC(__nrrd_command__) \
@@ -65,10 +67,22 @@ namespace SCIRun {
   }
 
 
+#define NRRDTEX_LOCK_POOL_SIZE 20
+MutexPool nrrdtex_lock_pool("NrrdtexObj pool", NRRDTEX_LOCK_POOL_SIZE);
+
+static int nrrdtex_lock_pool_hash(ColorMappedNrrdTextureObj *ptr)
+{
+  long k = ((long)ptr) >> 2; // Disgard unused bits, word aligned pointers.
+  return (int)((k^(3*NRRDTEX_LOCK_POOL_SIZE+1))%NRRDTEX_LOCK_POOL_SIZE);
+}   
+
+
 ColorMappedNrrdTextureObj::ColorMappedNrrdTextureObj(NrrdDataHandle &nin_handle, 
                                int axis, 
                                int min_slice, int max_slice,
                                int time) :
+  lock(*(nrrdtex_lock_pool.getMutex(nrrdtex_lock_pool_hash(this)))),
+  ref_cnt(0),
   colormap_(0),
   nrrd_handle_(0),
   nrrd_dirty_(true),
@@ -184,6 +198,7 @@ ColorMappedNrrdTextureObj::apply_colormap(int x1, int y1, int x2, int y2,
     for (int c = 0; c < 256*4; ++c) 
       nrgba[c] = (c % 4 == 3) ? 1.0 : (c/4)/255.0;
     nrgba[3] = 0.0;
+    //    nrgba[7] = 0.0;
     clut_min -= (clut_max_ - clut_min_)/255.0;
     rgba = nrgba;
   } else {
@@ -407,12 +422,26 @@ ColorMappedNrrdTextureObj::bind(int x, int y)
   return true;
 }
 
+void
+ColorMappedNrrdTextureObj::get_bounds(BBox &bbox) {
+  bbox.extend(min_);
+  bbox.extend(min_+xdir_);
+  bbox.extend(min_+ydir_);
+}
+
+
+
   
 void
 //ColorMappedNrrdTextureObj::draw_quad(float coords[]) 
-ColorMappedNrrdTextureObj::draw_quad(Point &min, Vector &xdir, Vector &ydir) 
+ColorMappedNrrdTextureObj::draw_quad(Point *min, Vector *xdir, Vector *ydir) 
 {
   glEnable(GL_TEXTURE_2D);
+  
+  if (min)  min_ = *min;
+  if (xdir) xdir_ = *xdir;
+  if (ydir) ydir_ = *ydir;
+
 
   unsigned int yoff = 0;
 
@@ -443,25 +472,28 @@ ColorMappedNrrdTextureObj::draw_quad(Point &min, Vector &xdir, Vector &ydir)
 //            << " tx: " << tx
 //            << " ty: " << ty << std::endl;
 
+
       glBegin(GL_QUADS);
       
       glTexCoord2d(tx, ty); 
-      Point p = min + x1*xdir + y1*ydir;
+      Point p = min_ + x1*xdir_ + y1*ydir_;
       glVertex3f(p.x(), p.y(), p.z());
       
       glTexCoord2d(1.0, ty);
-      p = min + x2*xdir + y1*ydir;
+      p = min_ + x2*xdir_ + y1*ydir_;
       glVertex3f(p.x(), p.y(), p.z());
       
       glTexCoord2d(1.0, 1.0);
-      p = min + x2*xdir + y2*ydir;
+      p = min_ + x2*xdir_ + y2*ydir_;
       glVertex3f(p.x(), p.y(), p.z());
       
       glTexCoord2d(tx, 1.0);
-      p = min + x1*xdir + y2*ydir;
+      p = min_ + x1*xdir_ + y2*ydir_;
       glVertex3f(p.x(), p.y(), p.z());
       glEnd();
       
+
+
       CHECK_OPENGL_ERROR(); 
     }
     yoff = ydiv_[y].second;

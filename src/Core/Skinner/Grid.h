@@ -56,6 +56,10 @@ namespace SCIRun {
         Var<int>        col_;
         Var<double>     width_;
         Var<double>     height_;
+        Var<int>        row_begin_;
+        Var<int>        row_end_;
+        Var<int>        col_begin_;
+        Var<int>        col_end_;
       };
 
       Var<int>                          rows_;

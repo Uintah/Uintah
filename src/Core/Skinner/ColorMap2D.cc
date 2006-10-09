@@ -35,6 +35,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Geom/ColorMap.h>
+
 #include <sci_gl.h>
 
 #include <stack>
@@ -54,8 +55,8 @@ namespace SCIRun {
   namespace Skinner {
     ColorMap2D::ColorMap2D(Variables *variables)
       : Parent(variables),        
+        button_(0),
         widgets_(),
-        undo_stack_(),
         shader_factory_(0),
         colormap_texture_(256, 512, 4),
         histo_(0), 
@@ -100,14 +101,6 @@ namespace SCIRun {
 
       pan_x_.set(pan_x_.get() + xmtn / scale_.get());
       pan_y_.set(pan_y_.get() + ymtn / scale_.get());
-
-      redraw();
-    }
-
-    void
-    ColorMap2D::translate_end(int x, int y)
-    {
-      redraw();
     }
 
     void
@@ -124,14 +117,6 @@ namespace SCIRun {
       scale_.set(scale_.get() + -ymtn);
 
       if (scale_.get() < 0.0) scale_.set(0.0);
-
-      redraw();
-    }
-
-    void
-    ColorMap2D::scale_end(int x, int y)
-    {
-      redraw();
     }
 
     int
@@ -165,71 +150,44 @@ namespace SCIRun {
       return make_pair(xx, yy);
     }
 
-
-
     void
-    ColorMap2D::faux_changed()
+    ColorMap2D::add_widget(CM2WidgetHandle &widget)
     {
-      gui_faux_.reset();
-      const bool faux = gui_faux_.get();
-      for (unsigned int w = 0; w < widgets_.size(); ++w)
-        if (widgets_[w]->get_faux() != faux) {
-          widgets_[w]->set_faux(faux);
-          cmap_dirty_ = true;
-        }
-    }
-
-
-    void
-    ColorMap2D::add_triangle_widget()
-    {
-      widgets_.push_back(scinew TriangleCM2Widget());
-      widgets_.back()->set_faux(gui_faux_.get());
+      widgets_.push_back(widget);
+      widgets_.back()->set_faux(false);
       widgets_.back()->set_value_range(value_range_);
-      undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
-      update_to_gui();
       select_widget(widgets_.size()-1, 1);
-      redraw(true);
-      force_execute();
     }
 
-
-    void
-    ColorMap2D::add_rectangle_widget()
+    BaseTool::propagation_state_e
+    ColorMap2D::add_triangle_widget(event_handle_t) 
     {
-      widgets_.push_back(scinew RectangleCM2Widget());
-      widgets_.back()->set_faux(gui_faux_.get());
-      widgets_.back()->set_value_range(value_range_);
-      undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
-      update_to_gui();
-      select_widget(widgets_.size()-1, 1);
-      redraw(true);
-      force_execute();
+      add_widget(new TriangleCM2Widget());
+      return CONTINUE_E;
     }
 
-
-    void
-    ColorMap2D::add_paint_widget()
+    BaseTool::propagation_state_e
+    ColorMap2D::add_rectangle_widget(event_handle_t) 
     {
-      widgets_.push_back(scinew PaintCM2Widget());
-      widgets_.back()->set_faux(gui_faux_.get());
-      widgets_.back()->set_value_range(value_range_);
-      undo_stack_.push(UndoItem(UndoItem::UNDO_ADD, widgets_.size()-1, NULL));
-      update_to_gui();
-      select_widget(widgets_.size()-1, 1);
-      force_execute();
+      add_widget(new RectangleCM2Widget());
+      return CONTINUE_E;
     }
 
+    BaseTool::propagation_state_e
+    ColorMap2D::add_paint_widget(event_handle_t) 
+    {
+      add_widget(new TriangleCM2Widget());
+      return CONTINUE_E;
+    }
 
-    void
-    ColorMap2D::delete_selected_widget()
+    BaseTool::propagation_state_e
+    ColorMap2D::delete_selected_widget(event_handle_t) 
     {
       gui_selected_widget_.reset();
       const int widget = gui_selected_widget_.get();
   
       if (widget < 0 || widget >= (int)widgets_.size()) return;
       // Delete widget.
-      undo_stack_.push(UndoItem(UndoItem::UNDO_DELETE, widget, widgets_[widget]));
       widgets_.erase(widgets_.begin() + widget);
 
       update_to_gui();
@@ -245,6 +203,7 @@ namespace SCIRun {
     void
     ColorMap2D::save_file(bool save_ppm)
     {
+#if 0
       filename_.reset();
       const string filename = filename_.get();
       if (filename == "") {
@@ -264,12 +223,14 @@ namespace SCIRun {
         delete stream;
         remark ("Saved ColorMap2 to file: "+filename);
       }
+#endif
     }
 
 
     void
     ColorMap2D::load_file()
     {
+#if 0
       // The implementation of this was taken almost directly from
       // NrrdReader Module.  
       filename_.reset();
@@ -315,207 +276,8 @@ namespace SCIRun {
       redraw(true);
       colormap_widgets_.clear();
       force_execute();
+#endif
     }
-
-
-    void
-    ColorMap2D::presave()
-    {
-      unsigned int i;
-
-      resize_gui();
-      update_to_gui(false);
-
-      // Pickle up the tcl states.
-      for (i = 0; i < widgets_.size(); i++)
-      {
-        gui_wstate_[i]->set(widgets_[i]->tcl_pickle());
-      }
-
-      const unsigned int ws = widgets_.size();
-      if (ws < gui_name_.size())
-      {
-        // Delete all of the unused variables.
-        for (i = ws; i < gui_name_.size(); i++)
-        {
-          delete gui_name_[i];
-          delete gui_color_r_[i];
-          delete gui_color_g_[i];
-          delete gui_color_b_[i];
-          delete gui_color_a_[i];
-          delete gui_wstate_[i];
-          delete gui_sstate_[i];
-          delete gui_onstate_[i];
-        }
-
-        gui_name_.erase(gui_name_.begin() + ws, gui_name_.end());
-        gui_color_r_.erase(gui_color_r_.begin() + ws, gui_color_r_.end());
-        gui_color_g_.erase(gui_color_g_.begin() + ws, gui_color_g_.end());
-        gui_color_b_.erase(gui_color_b_.begin() + ws, gui_color_b_.end());
-        gui_color_a_.erase(gui_color_a_.begin() + ws, gui_color_a_.end());
-        gui_wstate_.erase(gui_wstate_.begin() + ws, gui_wstate_.end());
-        gui_sstate_.erase(gui_sstate_.begin() + ws, gui_sstate_.end());
-        gui_onstate_.erase(gui_onstate_.begin() + ws, gui_onstate_.end());
-      }
-    }
-
-
-    void
-    ColorMap2D::undo()
-    {
-      if (!undo_stack_.empty())
-      {
-        const UndoItem &item = undo_stack_.top();
-    
-        switch (item.action_)
-        {
-        case UndoItem::UNDO_CHANGE:
-          widgets_[item.selected_] = item.widget_;
-          select_widget(item.selected_, 1);
-          break;
-
-        case UndoItem::UNDO_ADD:
-          widgets_.erase(widgets_.begin() + item.selected_);
-          resize_gui();
-          break;
-   
-        case UndoItem::UNDO_DELETE:
-          widgets_.insert(widgets_.begin() + item.selected_, item.widget_);
-          select_widget(item.selected_, 1);
-          break;
-        }
-        undo_stack_.pop();
-        select_widget();
-        redraw(true);
-        update_to_gui();
-        force_execute();
-      }
-    }
-
-
-    void
-    ColorMap2D::resize_gui(int n)
-    {
-      gui_num_entries_.reset();
-      if (gui_num_entries_.get() == (int)widgets_.size()) return;  
-      gui_num_entries_.set(n==-1?widgets_.size():n);
-      unsigned int i = 0;
-      // Expand the gui elements.
-      for (i = gui_name_.size(); i < (unsigned int)gui_num_entries_.get(); i++)
-      {
-        const string num = to_string(i);
-        gui_name_.push_back(new GuiString(get_ctx()->subVar("name-" + num)));
-        gui_color_r_.push_back(new GuiDouble(get_ctx()->subVar(num +"-color-r")));
-        gui_color_g_.push_back(new GuiDouble(get_ctx()->subVar(num +"-color-g")));
-        gui_color_b_.push_back(new GuiDouble(get_ctx()->subVar(num +"-color-b")));
-        gui_color_a_.push_back(new GuiDouble(get_ctx()->subVar(num +"-color-a")));
-        gui_wstate_.push_back(new GuiString(get_ctx()->subVar("state-" + num)));
-        gui_sstate_.push_back(new GuiInt(get_ctx()->subVar("shadeType-" + num)));
-        gui_onstate_.push_back(new GuiInt(get_ctx()->subVar("on-" + num)));
-
-      }
-      // This marker stuff is for TCL, its the last variable created, so
-      // its also the last variable written out to the .net script
-      // look @ the TCL array ModuleSavedVars(ColorMap2D_0)
-      // First: Delete the old variable that marked the end of the variables
-    }
-
-
-    void
-    ColorMap2D::update_to_gui(bool forward)
-    {
-      // Update GUI
-      resize_gui();
-      for (unsigned int i = 0; i < widgets_.size(); i++)
-      {
-        gui_name_[i]->set(widgets_[i]->get_name());
-        Color c(widgets_[i]->get_color());
-        gui_color_r_[i]->set(c.r());
-        gui_color_g_[i]->set(c.g());
-        gui_color_b_[i]->set(c.b());
-        gui_color_a_[i]->set(widgets_[i]->get_alpha());
-        gui_sstate_[i]->set(widgets_[i]->get_shadeType());
-        gui_onstate_[i]->set(widgets_[i]->get_onState());
-      }
-      gui_selected_widget_.reset();
-      int selected = gui_selected_widget_.get();
-      if (selected < 0 || selected >= int(widgets_.size()))
-        gui_selected_widget_.set(widgets_.size()-1);
-      if (forward) { 
-        get_gui()->execute(get_id() + " create_entries"); 
-      }
-    }
-
-
-    void
-    ColorMap2D::update_from_gui()
-    {
-      get_ctx()->reset();   // Reset GUI vars cache
-      resize_gui();   // Make sure we have enough GUI vars to read through
-      for (unsigned int i = 0; i < widgets_.size(); i++)
-      {
-        if (widgets_[i]->get_name() != gui_name_[i]->get()) {
-          widgets_[i]->set_name(gui_name_[i]->get());
-          cmap_dirty_ = true;
-        }
-        Color new_color(gui_color_r_[i]->get(),
-                        gui_color_g_[i]->get(),
-                        gui_color_b_[i]->get());
-        if (widgets_[i]->get_color() != new_color) {
-          widgets_[i]->set_color(new_color);
-          cmap_dirty_ = true;
-        }
-    
-        if (fabs(widgets_[i]->get_alpha() - gui_color_a_[i]->get()) > 0.001) {
-          widgets_[i]->set_alpha(gui_color_a_[i]->get());
-          cmap_dirty_ = true;
-        }
-
-        if (widgets_[i]->get_shadeType() != gui_sstate_[i]->get()) {
-          widgets_[i]->set_shadeType(gui_sstate_[i]->get());
-          cmap_dirty_ = true;
-        }
-    
-        if (widgets_[i]->get_onState() != gui_onstate_[i]->get()) {
-          widgets_[i]->set_onState(gui_onstate_[i]->get());
-          cmap_dirty_ = true;
-        }
-      }
-    }
-
-
-    void
-    ColorMap2D::tcl_unpickle()
-    {
-      widgets_.clear();
-
-      gui_num_entries_.reset();
-      resize_gui(gui_num_entries_.get());
-      for (int i=0; i < gui_num_entries_.get(); i++)
-      {
-        gui_wstate_[i]->reset();
-        if (gui_wstate_[i]->get()[0] == 't')
-        {
-          widgets_.push_back(scinew TriangleCM2Widget());
-          widgets_[widgets_.size()-1]->tcl_unpickle(gui_wstate_[i]->get());
-        }
-        else if (gui_wstate_[i]->get()[0] == 'r')
-        {
-          widgets_.push_back(scinew RectangleCM2Widget());
-          widgets_[widgets_.size()-1]->tcl_unpickle(gui_wstate_[i]->get());
-        }
-        else if (gui_wstate_[i]->get()[0] == 'i') {
-          widgets_.push_back(scinew ImageCM2Widget());
-          widgets_[widgets_.size()-1]->tcl_unpickle(gui_wstate_[i]->get());
-        }
-      }
-
-      // Grab colors
-      resize_gui();
-      update_from_gui();
-      redraw();
-    }
-
 
     bool
     ColorMap2D::select_widget(int widget, int object)
@@ -590,22 +352,6 @@ namespace SCIRun {
 
 
     void
-    ColorMap2D::set_window_cursor(int x, int y)
-    {
-      const int old_mouse_wid = mouse_widget_;
-      const int old_mouse_obj = mouse_object_;
-      mouse_pick(x,y,0);
-      if (old_mouse_wid != mouse_widget_ || old_mouse_obj != mouse_object_) {
-        string cstr("crosshair");
-        if (mouse_widget_ != -1) 
-          cstr = widgets_[mouse_widget_]->tk_cursorname(mouse_object_);
-        Tk_DefineCursor(ctx_->tkwin_, Tk_GetCursor
-                        (the_interp, ctx_->tkwin_, ccast_unsafe(cstr)));
-      }
-    }
-
-
-    void
     ColorMap2D::motion(int x, int y)
     {
       if (button_ == 0) {
@@ -653,189 +399,6 @@ namespace SCIRun {
       }
       paint_widget_ = 0;
     }
-
-
-    void
-    ColorMap2D::get_1D_colormaps()
-    {
-      port_range_type range = get_iports("Colormap");
-      set<ColorMapIPort *> valid;
-      if (range.first != range.second) {
-        port_map_type::iterator pi = range.first;
-        while (pi != range.second) {
-          ColorMapIPort *iport = (ColorMapIPort *)get_iport(pi++->second);
-          ColormapPortWidgetMap::iterator pos = colormap_widgets_.find(iport);
-          ColorMapHandle cmap = 0;
-          if (iport)
-            iport->get(cmap);
-
-          if (cmap.get_rep()) {
-            valid.insert(iport);
-            if  (pos == colormap_widgets_.end()) {
-              colormap_widgets_[iport] = scinew ColorMapCM2Widget();
-              widgets_.push_back(colormap_widgets_[iport]);
-              widgets_.back()->set_faux(gui_faux_.get());
-              widgets_.back()->set_value_range(value_range_);
-              if (force_execute_) 
-                widgets_.back()->set_onState(0);
-              update_to_gui();
-            }
-            if (colormap_widgets_[iport]->generation != cmap->generation) 
-              cmap_dirty_ = true;
-            colormap_widgets_[iport]->set_colormap(cmap);
-          }
-        }
-      }
-
-      if (valid.size() != colormap_widgets_.size()) {
-        cmap_dirty_ = true;
-        ColormapPortWidgetMap newmap;
-        ColormapPortWidgetMap::iterator pos = colormap_widgets_.begin();
-        ColormapPortWidgetMap::iterator last = colormap_widgets_.end();
-        while (pos != last) {
-          if (valid.find(pos->first) == valid.end()) {
-            for (unsigned int w = 0; w < widgets_.size(); ++w)
-              if (widgets_[w].get_rep() == pos->second) {
-                widgets_.erase(widgets_.begin()+w);
-                break;
-              }
-            delete pos->second;
-            update_to_gui();
-          } else {
-            newmap[pos->first] = pos->second;
-          }
-          pos++;
-        }
-        colormap_widgets_ = newmap;
-      }
-    }
-
-    
-
-    void
-    ColorMap2D::execute()
-    {
-      update_from_gui();
-
-      ColorMap2Handle icmap = 0;
-      NrrdDataHandle h = 0;
-
-      cmap_iport_->get(icmap);
-      hist_iport_->get(h);
-
-      get_1D_colormaps();
-
-      if ((!icmap.get_rep() || icmap->generation == icmap_generation_) &&
-          (!h.get_rep() || h->generation == hist_generation_) &&
-          !gui_faux_.changed() && !gui_histo_.changed() &&
-          !just_resend_selection_ && !force_execute_ &&
-          !cmap_dirty_ && !histo_dirty_ && cmap_oport_->have_data())
-        return;
-      force_execute_ = false;
-
-      if (icmap.get_rep() && icmap->generation > icmap_generation_) {
-        widgets_ = icmap->widgets();
-        icmap_generation_ = icmap->generation;
-        cmap_dirty_ = true;
-        if (!just_resend_selection_ && icmap->selected() != -1) 
-          gui_selected_widget_.set(icmap->selected());
-        update_to_gui();
-      }
-
-      if (h.get_rep() && h->generation != hist_generation_) {
-        hist_generation_ = h->generation;
-        if(h->nrrd_->dim != 2 && h->nrrd_->dim != 3) {
-          error("Invalid input histogram dimension.");
-          return;
-        }
-        histo_ = h->nrrd_;
-        histo_dirty_ = true;
-
-        if (histo_ && histo_->kvp) {
-          const char *min = nrrdKeyValueGet(histo_, "jhisto_nrrd0_min");
-          const char *max = nrrdKeyValueGet(histo_, "jhisto_nrrd0_max");
-          double dmin, dmax;
-          if (min && max &&
-              string_to_double(min, dmin) && string_to_double(max, dmax))
-          {
-            value_range_ = make_pair(float(dmin), float(dmax));
-            cmap_dirty_ = true;
-          }
-        }
-
-
-      } else if (!h.get_rep()) {
-        if (histo_ != 0)
-          histo_dirty_ = true;
-        histo_ = 0;
-      }
-
-      faux_changed();
-      redraw();
-
-      if (!just_resend_selection_ || sent_cmap2_.get_rep() == 0)
-        sent_cmap2_ = scinew ColorMap2(widgets_, updating_, 
-                                       gui_selected_widget_.get(),
-                                       value_range_);
-      sent_cmap2_->selected() = gui_selected_widget_.get();
-      just_resend_selection_ = false;
-      icmap_generation_ = sent_cmap2_->generation;
-      if (execute_count_ > 0) execute_count_--;
-      cmap_oport_->send(sent_cmap2_);
-    }
-
-
-    void
-    ColorMap2D::save_ppm_file(string filename, int sx, int sy, int bpp,
-                                  const unsigned char * buf)
-    {
-      int R = 3;
-      int G = 2;
-      int B = 1;
-
-      if (isBigEndian()){
-        R = 0;
-        G = 1;
-        B = 2;
-      }
-  
-      //  int A = 0;
-      ofstream output(filename.c_str(), ios::out);
-      if (!output) {
-        error("ERROR: can't open file "+string(filename));
-        return;
-      }
-  
-      if ( bpp == 1 || bpp == 2 )
-        output << "P2 \n# CREATOR: " << "\n"; // endl;
-      else if ( bpp == 3 || bpp == 4 )
-        output << "P6\n# CREATOR: " << "\n\n"; // endl;
-      else {
-        error("Error: unknown number of bytes per pixel " + to_string(bpp));
-        return;
-      }
-  
-      output << sx/4 << " " << sy/4 << "\n"; // endl;
-      output << 255 << "\n"; // endl;
-  
-      for (int row = sy - 1; row >= 0; row-=4) {
-        for (int col = 0; col < sx; col+=4) {
-          int p = bpp * ( row * sx + col );
-          switch (bpp) {
-          case 2:
-          case 1:
-            output << (int) buf[p] << " \n"; // endl;
-            break;
-          default:
-            output <<buf[p + R]<<buf[p + G]
-                   <<buf[p + B];
-            break;
-          }
-        }
-      }
-      if (output) output.close();
-    }
-
 
     void
     ColorMap2D::init_shader_factory() 
@@ -1017,8 +580,8 @@ namespace SCIRun {
     }
 
 
-    void
-    ColorMap2D::redraw(bool force_cmap_dirty, bool save_ppm)
+    BaseTool::propagation_state_e
+    ColorMap2D::redraw(event_handle_t)
     {
       if (!ctx_) return;
       get_gui()->lock();
@@ -1111,144 +674,8 @@ namespace SCIRun {
       get_gui()->unlock();
     }
 
-
-    void
-    ColorMap2D::gui_color_change(GuiArgs &args)
-    {
-      int n = args.get_int(2);
-      resize_gui();
-      if (n < 0 || n >= gui_num_entries_.get()) return;
-  
-      gui_color_r_[n]->reset();
-      gui_color_g_[n]->reset();
-      gui_color_b_[n]->reset();
-      gui_color_a_[n]->reset();
-      const double a = gui_color_a_[n]->get();
-      Color new_color
-        (gui_color_r_[n]->get(), gui_color_g_[n]->get(),  gui_color_b_[n]->get());
-      if (new_color != widgets_[n]->get_color() || a != widgets_[n]->get_alpha())
-      {
-        undo_stack_.push(UndoItem(UndoItem::UNDO_CHANGE, n,
-                                  widgets_[n]->clone()));
-        widgets_[n]->set_color(new_color);
-        widgets_[n]->set_alpha(a);
-        just_resend_selection_ = false;
-        redraw(true);
-        force_execute();
-      }
-    }
-
-
-    void
-    ColorMap2D::gui_shade_change(GuiArgs &args)
-    {
-      int n = args.get_int(2);
-      resize_gui();  // make sure the guivar vector exists
-      if (n < 0 || n >= gui_num_entries_.get()) return;
-      // Toggle the shading type from flat to normal and vice-versa
-      gui_sstate_[n]->reset();
-      widgets_[n]->set_shadeType(gui_sstate_[n]->get());
-      just_resend_selection_ = false;
-      redraw(true);
-      force_execute();
-    }
-
-
-    void
-    ColorMap2D::gui_toggle_change(GuiArgs &args)
-    {
-      int n = args.get_int(2);
-      resize_gui();  // make sure the guivar vector exists
-      if (n < 0 || n >= gui_num_entries_.get()) return;
-      gui_onstate_[n]->reset();
-      widgets_[n]->set_onState(gui_onstate_[n]->get());  // toggle on/off state.
-      just_resend_selection_ = false;
-      redraw(true);
-      force_execute();
-    }
-
-
-
-
   }
 } // end namespace SCIRun
 
 
 
-#if 0
-    void
-    ColorMap2D::tcl_command(GuiArgs& args, void* userdata)
-    {
-      if (args.count() < 2) {
-        args.error("No command for EditTransferFunc");
-        return;
-      }
-
-      if (args[1] == "addtriangle") add_triangle_widget();
-      else if (args[1] == "addrectangle") add_rectangle_widget();
-      else if (args[1] == "addpaint") add_paint_widget();
-      else if (args[1] == "deletewidget") delete_selected_widget();
-      else if (args[1] == "undowidget") undo();
-      else if (args[1] == "unpickle") tcl_unpickle();
-      else if (args[1] == "load") load_file();
-      else if (args[1] == "save") save_file((args.count() > 2));
-      else if (args[1] == "shade") gui_shade_change(args);
-      else if (args[1] == "toggle") gui_toggle_change(args);
-      else if (args[1] == "color") gui_color_change(args);
-      else if (args[1] == "select_widget") {
-        just_resend_selection_ = true;
-        select_widget();
-        want_to_execute();
-      } else if (args[1] == "mouse") {
-        int X = args.get_int(3), Y = args.get_int(4); // unscaled/untranslated
-        int x = X, y = Y;
-        screen_val(x,y); // x, y are scaled/translated coordinates
-
-        if (args[2] == "motion") motion(x, y);
-
-        // arg 5 is the button pushed - don't do above - tcl 8.4 doesn't generate 
-        // button for motion
-        else if (args[2] == "push") push(x, y, args.get_int(5)); 
-        else if (args[2] == "release") release(x, y);
-        else if (args[2] == "x_late_start") translate_start(X, Y);
-        else if (args[2] == "x_late_motion") translate_motion(X, Y);
-        else if (args[2] == "x_late_end") translate_end(X, Y);
-        else if (args[2] == "scale_start") scale_start(X, Y);
-        else if (args[2] == "scale_motion") scale_motion(X, Y);
-        else if (args[2] == "scale_end") scale_end(X, Y);
-        else if (args[2] == "reset") {
-          pan_x_.set(0.0);
-          pan_y_.set(0.0);
-          scale_.set(1.0);
-          redraw();
-        }
-      } else if (args[1] == "redraw") {
-        histo_dirty_ |= gui_histo_.changed();
-        redraw(args.count() >= 3 && args.get_int(2));
-      } else if (args[1] == "redraw-histo") {
-        if (crash_workaround_for_first_time_redraw_)
-        {
-          histo_dirty_ |= gui_histo_.changed();
-          redraw(args.count() >= 3 && args.get_int(2));
-        }
-        crash_workaround_for_first_time_redraw_ = true;
-      } else if (args[1] == "destroygl") {
-        if (ctx_) {
-          delete ctx_;
-          ctx_ = 0;
-        }
-      } else if (args[1] == "setgl") {
-        ASSERT(args.count() == 3);
-        if (ctx_) {
-          delete ctx_;
-        }
-        ctx_ = scinew TkOpenGLContext(args[2], 0, 512, 256);
-        width_ = ctx_->width();
-        height_ = ctx_->height();
-        width_ = 512;
-        height_ = 256;
-      } 
-      else Module::tcl_command(args, userdata);
-    }
-
-#endif  

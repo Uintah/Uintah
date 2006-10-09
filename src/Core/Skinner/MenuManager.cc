@@ -30,6 +30,7 @@
 //    Date   : Fri Aug 11 20:45:24 2006
 
 #include <Core/Skinner/MenuList.h>
+#include <Core/Skinner/MenuButton.h>
 #include <Core/Skinner/MenuManager.h>
 #include <Core/Skinner/Variables.h>
 #include <Core/Events/EventManager.h>
@@ -39,9 +40,14 @@
 namespace SCIRun {
   namespace Skinner {
     MenuManager::MenuManager(Variables *vars) :
-      Parent(vars)
+      Parent(vars),
+      mutex_("MenuManager"),
+      menu_lists_(),
+      menu_buttons_(),
+      visible_menulists_()
     {
       REGISTER_CATCHER_TARGET(MenuManager::MenuList_Maker);
+      REGISTER_CATCHER_TARGET(MenuManager::MenuButton_Maker);
       REGISTER_CATCHER_TARGET(MenuManager::show_MenuList);
       REGISTER_CATCHER_TARGET(MenuManager::hide_MenuList);
     }
@@ -52,22 +58,48 @@ namespace SCIRun {
     BaseTool::propagation_state_e
     MenuManager::process_event(event_handle_t event)
     {
-      Parent::process_event(event);
+      WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
+      bool redraw = window && window->get_window_state() == WindowEvent::REDRAW_E;
 
-      VisibleMenuLists_t::iterator viter = visible_.begin();
-      for(;viter != visible_.end(); ++viter) {
+      PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
+      bool click = pointer && (pointer->get_pointer_state() & PointerEvent::BUTTON_PRESS_E) ;
+
+      if (redraw) {
+        Parent::process_event(event);
+      }
+
+      VisibleMenuLists_t::iterator viter = visible_menulists_.begin();
+      VisibleMenuLists_t::iterator vend = visible_menulists_.end();
+      for(;viter != vend; ++viter) {          
 
         Drawable *obj = viter->second;
         Var<bool> visible(obj->get_vars(), "visible");
         visible = true;
-        Var<int> x(obj->get_vars(), "x",0);
-        Var<int> y(obj->get_vars(), "y",0);
-        Var<int> width(obj->get_vars(), "width",100);
-        Var<int> height(obj->get_vars(), "height",100);
-        obj->set_region(RectRegion(x(),y()-height(),x()+width(), y()));
+        if (redraw) {
+          Var<double> x1(obj->get_vars(), "x1",0);
+          Var<double> y1(obj->get_vars(), "y1",0);
+          Var<double> x2(obj->get_vars(), "x2",0);
+          Var<double> y2(obj->get_vars(), "y2",0);
+          obj->set_region(RectRegion(x1(),y1(),x2(), y2()));
+        }
+        
         obj->process_event(event);
         visible = false;
+        if (vend != visible_menulists_.end()) break;
+        if (visible_menulists_.find(viter->first) != viter) break;
       }
+
+
+      if (!redraw) {
+        Parent::process_event(event);
+      }
+
+#if 0
+      if (click && visible_menulists_.size()) {
+        visible_menulists_.clear();
+      }
+#endif
+
 
       return CONTINUE_E;
     }
@@ -80,7 +112,16 @@ namespace SCIRun {
       Var<bool> visible(menu_list->get_vars(), "visible");
       visible = false;
       menu_lists_.push_back(menu_list);
-      return CONTINUE_E;
+      return STOP_E;
+    }
+
+    BaseTool::propagation_state_e
+    MenuManager::MenuButton_Maker(event_handle_t maker_signal)
+    {
+      MenuButton *menu_button = 
+        construct_child_from_maker_signal<MenuButton>(maker_signal);
+      menu_buttons_.push_back(menu_button);
+      return STOP_E;
     }
 
 
@@ -94,14 +135,29 @@ namespace SCIRun {
       MenuLists_t::iterator citer = menu_lists_.begin();
       for (; citer != menu_lists_.end(); ++citer) {
         string full_id = (*citer)->get_id();
-        if (full_id.find_last_of(id) != string::npos) {
-          Var<int> x((*citer)->get_vars(), "x");
-          x = vars->get_int("x");
+        if (ends_with(full_id,id)) {
+          if (vars->exists("MenuButton::x1")) {
+            Var<int> width((*citer)->get_vars(), "width",100);
+            Var<int> height((*citer)->get_vars(), "height",100);
 
-          Var<int> y((*citer)->get_vars(), "y");
-          y = vars->get_int("y");
+            Var<double> x1((*citer)->get_vars(), "x1");
+            x1 = vars->get_double("MenuButton::x1");
 
-          visible_.insert(make_pair(id,*citer));
+            Var<double> y1((*citer)->get_vars(), "y1");
+            y1 = vars->get_double("MenuButton::y1") - height();
+
+            Var<double> x2((*citer)->get_vars(), "x2");
+            x2 = x1() + width();
+
+            Var<double> y2((*citer)->get_vars(), "y2");
+            y2 = vars->get_double("MenuButton::y1");
+
+            (*citer)->set_region(RectRegion(x1(),y1(),x2(), y2()));
+          }
+            
+          mutex_.lock();
+          visible_menulists_.insert(make_pair(full_id,*citer));
+          mutex_.unlock();
           EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
           return CONTINUE_E;
         }
@@ -114,9 +170,12 @@ namespace SCIRun {
     MenuManager::hide_MenuList(event_handle_t event) {
       Signal *signal = dynamic_cast<Signal *>(event.get_rep());
       const string id = signal->get_vars()->get_id();
-      if (visible_.find(id) != visible_.end()) {
-        visible_.erase(id);
+      mutex_.lock();
+      
+      if (visible_menulists_.find(id) != visible_menulists_.end()) {
+        visible_menulists_.erase(id);
       }
+      mutex_.unlock();
 
       EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
       return CONTINUE_E;

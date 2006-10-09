@@ -105,10 +105,16 @@ void View::get_viewplane(double aspect, double zdist,
     Vector x(Cross(z, up()));
     x.normalize();
     Vector y(Cross(x, z));
-    double xviewsize=zdist*Tan(DtoR(fov()/2.))*2.;
-    double yviewsize=xviewsize/aspect;
-    x*=xviewsize;
-    y*=yviewsize;
+    double scale = zdist*Tan(DtoR(fov()/2.))*2.;
+    if (aspect < 1) {
+      x*=scale;
+      y*=scale/aspect;
+    } else {
+      y*=scale;
+      x*=scale*aspect;
+    }
+
+      
     u=x;
     v=y;
 }

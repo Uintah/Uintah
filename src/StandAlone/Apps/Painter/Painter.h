@@ -66,6 +66,7 @@
 #include <Core/Geom/GeomSwitch.h>
 #include <Core/Geom/GeomCull.h>
 #include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/IndexedGroup.h>
 #include <Core/Geom/TexSquare.h>
 #include <Core/Geom/OpenGLViewport.h>
 #include <Core/Geom/FreeType.h>
@@ -163,7 +164,8 @@ private:
   class NrrdVolume;
 
   struct NrrdSlice { //: public Skinner::Drawable {
-    NrrdSlice(Painter *, NrrdVolume *, Point &p, Vector &normal);
+    NrrdSlice(Painter *, NrrdVolume *, SliceWindow * window,
+              Point &p, Vector &normal);
 
     //    propagation_state_e process_event(event_handle_t);
     
@@ -174,6 +176,7 @@ private:
     void                set_tex_dirty();
     Painter *           painter_;
     NrrdVolume *	volume_;
+    SliceWindow *	window_;
 
     bool		nrrd_dirty_;
     bool		tex_dirty_;
@@ -185,7 +188,7 @@ private:
     //    int                 axis_;
     Plane               plane_;
 
-    ColorMappedNrrdTextureObj *    texture_;
+    ColorMappedNrrdTextureObjHandle     texture_;
   };
   typedef vector<NrrdSlice *>		NrrdSlices;
   typedef vector<NrrdSlices>		NrrdVolumeSlices;
@@ -202,12 +205,12 @@ public:
     
     propagation_state_e                 process_event(event_handle_t event);
     virtual int                         get_signal_id(const string &signalname) const;
-
     CatcherFunction_t   Autoview;
     CatcherFunction_t   zoom_in;
     CatcherFunction_t   zoom_out;
+    CatcherFunction_t   redraw;
 
-    void                render_gl();
+    //    void                render_gl();
     void                setup_gl_view();
     void                push_gl_2d_view();
     void                pop_gl_2d_view();
@@ -235,6 +238,7 @@ public:
     void                redraw();
     void                autoview(NrrdVolume *, double offset=10.0);
     void                set_axis(unsigned int);
+    GeomIndexedGroup*   get_geom_group();
 
     Painter *           painter_;
     string		name_;
@@ -261,6 +265,11 @@ public:
     GLdouble		gl_modelview_matrix_[16];
     GLdouble		gl_projection_matrix_[16];
     GLint		gl_viewport_[4];
+
+    Skinner::Var<bool>  show_grid_;
+    Skinner::Var<bool>  show_slices_;
+    GeomHandle          geom_switch_;
+    GeomIndexedGroup *  geom_group_;
   };
 
 
@@ -489,7 +498,7 @@ private:
     Painter *           painter_;
     SliceWindow *       window_;
     NrrdSlice *         slice_;
-    float               value_;
+    Skinner::Var<double>value_;
     vector<int>         last_index_;
     Skinner::Var<double>radius_;
     bool                draw_cursor_;
@@ -580,7 +589,7 @@ private:
   class NrrdVolume { 
   public:
     // Constructor
-    NrrdVolume		(VarContext *ctx, 
+    NrrdVolume		(Painter *painter, 
                          const string &name,
                          NrrdDataHandle &);
     // Copy Constructor
@@ -615,14 +624,14 @@ private:
     int                 max_index(unsigned int axis);
 
     bool                inside_p(const Point &p);
+    Painter *           painter_;
     NrrdDataHandle	nrrd_handle_;
-    VarContext *        gui_context_;
-    //    GuiString           name_;
+
     string              name_;
     string              name_prefix_;
-    UIdouble		opacity_;
-    UIdouble            clut_min_;
-    UIdouble            clut_max_;
+    double		opacity_;
+    double              clut_min_;
+    double              clut_max_;
     Mutex               mutex_;
     float               data_min_;
     float               data_max_;
@@ -630,6 +639,7 @@ private:
     vector<int>         stub_axes_;
     DenseMatrix         transform_;
     bool                keep_;
+    Skinner::Var<bool>  visible_;
   };
 
 
@@ -768,7 +778,6 @@ private:
   CatcherFunction_t     ITKCurvatureAnisotropic;
   CatcherFunction_t     ITKConfidenceConnected;
   CatcherFunction_t     ITKThresholdLevelSet;
-  CatcherFunction_t     Autoview_SliceWindow;
 
   CatcherFunction_t     ShowVolumeRendering;
   CatcherFunction_t     AbortFilterOn;

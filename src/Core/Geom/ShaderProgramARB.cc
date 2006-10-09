@@ -34,6 +34,7 @@
 #include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/Assert.h>
+#include <Core/Math/MiscMath.h>
 #include <Core/Util/Environment.h>
 
 #include <iostream>
@@ -195,10 +196,10 @@ ShaderProgramARB::create()
     {
       int position;
       glGetIntegerv(GL_PROGRAM_ERROR_POSITION_ARB, (GLint*)&position);
-      int start = position;
+      int start = Abs(position);
       for (; start > 0 && program_[start] != '\n'; start--);
       if (program_[start] == '\n') start++;
-      uint end = position;
+      int end = position;
       for (; end < program_.length()-1 && program_[end] != '\n'; end++);
       if (program_[end] == '\n') end--;
       int ss = start;

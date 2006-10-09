@@ -44,12 +44,10 @@ namespace SCIRun {
     public:
       Texture (Variables *);
       virtual ~Texture();
-
-      virtual propagation_state_e       process_event(event_handle_t);
       static string                     class_name() { return "Texture"; }
       static DrawableMakerFunc_t        maker;
     private:
-      virtual void                      draw_gl();
+      CatcherFunction_t                 redraw;
       TextureObj *                      tex_;
       string                            filename_;
       blendfunc_t                       blendfunc_;

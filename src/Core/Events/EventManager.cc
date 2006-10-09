@@ -38,7 +38,7 @@ namespace SCIRun {
 
 EventManager::id_tm_map_t EventManager::mboxes_;
 Mutex EventManager::mboxes_lock_("EventManager mboxes_ lock");
-Mailbox<event_handle_t> EventManager::mailbox_("EventManager", 8024);
+Mailbox<event_handle_t> EventManager::mailbox_("EventManager", 512);
 Piostream * EventManager::stream_ = 0;
 
 EventManager::EventManager() :
