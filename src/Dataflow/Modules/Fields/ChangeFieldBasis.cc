@@ -36,7 +36,7 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Modules/Fields/ChangeFieldBasis.h>
-#include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
+#include <Core/Algorithms/Fields/ApplyMappingMatrix.h>
 #include <Core/Containers/StringUtil.h>
 #include <map>
 #include <iostream>
