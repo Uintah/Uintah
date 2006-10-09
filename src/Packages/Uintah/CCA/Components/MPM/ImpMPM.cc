@@ -1627,8 +1627,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     if (d_temp_solve == false) {
       for(NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
         IntVector c = *iter;
-        //   gTemperature[c] /= ((GMASS[c]/GVOLUME[c])*gSpecificHeat[c]);
-        gTemperature[c] /= GMASS[c];
+        gTemperature[c] /= gmassglobal[c];
       }
     }
 
