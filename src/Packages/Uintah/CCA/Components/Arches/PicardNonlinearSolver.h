@@ -348,6 +348,7 @@ private:
       double d_H_air;
       bool d_doMMS;
       bool d_extraProjection;
+      bool d_KE_fromFC;
 
 }; // End class PicardNonlinearSolver
 } // End namespace Uintah

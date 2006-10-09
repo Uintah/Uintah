@@ -326,8 +326,6 @@ private:
       bool d_enthalpySolve;
       bool d_calcVariance;
       vector<IntVector> d_probePoints;
-      // nonlinear residual tolerance
-      double d_resTol;
       // Pressure Eqn Solver
       PressureSolver* d_pressSolver;
       // Momentum Eqn Solver 
@@ -353,6 +351,7 @@ private:
     bool d_doMMS;
     bool d_restart_on_negative_density_guess;
     bool d_extraProjection;
+    bool d_KE_fromFC;
     
 
 }; // End class ExplicitSolver
