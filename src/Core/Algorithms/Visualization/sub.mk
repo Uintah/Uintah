@@ -36,6 +36,7 @@ SRCDIR   := Core/Algorithms/Visualization
 SRCS     += \
 	$(SRCDIR)/EdgeMC.cc             \
         $(SRCDIR)/HexMC.cc		\
+	$(SRCDIR)/Isosurface.cc		\
 	$(SRCDIR)/MarchingCubes.cc	\
 	$(SRCDIR)/mcube2.cc		\
 	$(SRCDIR)/Noise.cc		\

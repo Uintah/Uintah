@@ -41,7 +41,7 @@
 #include <Core/Algorithms/Fields/ApplyMappingMatrix.h>
 #include <Core/Algorithms/Fields/ClipByFunction.h>
 #include <Core/Algorithms/Fields/TransformData.h>
-#include <Dataflow/Modules/Visualization/Isosurface.h>
+#include <Core/Algorithms/Visualization/Isosurface.h>
 
 #include <Core/Algorithms/Visualization/MarchingCubes.h>
 #include <Core/Algorithms/Visualization/TetMC.h>
