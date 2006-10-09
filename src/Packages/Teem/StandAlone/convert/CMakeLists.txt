@@ -35,15 +35,12 @@ SET(Packages_Teem_StandAlone_convert_SRCS
 ADD_LIBRARY(Packages_Teem_StandAlone_convert ${Packages_Teem_StandAlone_convert_SRCS})
 
 TARGET_LINK_LIBRARIES(Packages_Teem_StandAlone_convert
-  Core
-  Packages_Teem_Core  Core_Datatypes
   Core_Containers
   Core_Persistent
   Core_Exceptions
   Core_Math
   Core_Thread
   Core_Geometry
-  Core_Math
   Core_Util
   ${TEEM_LIBRARY}
   ${LAPACK_LIBRARY}

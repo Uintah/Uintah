@@ -510,6 +510,7 @@ ENDIF(WIN32 AND NOT CYGWIN)
 
 #-----------------------------------------------------------------------------
 # SCIRun Packages to enable (must enable packages when building core for now)
+# DV Fix need error checking to make sure SCIRun gets included
 SET(LOAD_PACKAGE "SCIRun" CACHE STRING "Just loading SCIRun")
 
 # DV fix enabling more packages
@@ -536,7 +537,7 @@ SET(ITCL_WIDGETS ${SCIRUN_THIRDPARTY_PATH}/iwidgets/scripts CACHE INTERNAL "Path
 SET(ITCL_LIB_DIR ${SCIRUN_THIRDPARTY_PATH}/lib)
 
 # DV maybe this shouldn't be alterable?
-MARK_AS_ADVANCED(LOAD_PACKAGE)
+#MARK_AS_ADVANCED(LOAD_PACKAGE)
 
 # sci_defs/error_defs.h
 SET(THROW_LEVEL 0 CACHE STRING "Set throw level N(0-3)")

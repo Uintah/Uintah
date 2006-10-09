@@ -35,7 +35,7 @@ SET(Packages_BioPSE_StandAlone_convert_SRCS
 ADD_LIBRARY(Packages_BioPSE_StandAlone_convert ${Packages_BioPSE_StandAlone_convert_SRCS})
 
 TARGET_LINK_LIBRARIES(Packages_BioPSE_StandAlone_convert
-  Core  Core_Datatypes
+  Core_Datatypes
   Core_Containers
   Core_Persistent
   Core_Exceptions

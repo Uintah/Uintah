@@ -51,7 +51,6 @@ SET (LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib CACHE INTERNAL "Single output d
 SET (EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin CACHE INTERNAL "Single output directory for building all executables.")
 #output directory for installing all include files.")
 MARK_AS_ADVANCED(LIBRARY_OUTPUT_PATH EXECUTABLE_OUTPUT_PATH)
-SET(ENV{SCIRUN_OBJDIR} "${PROJECT_BINARY_DIR}")
 
 
 # DV Find SCIRun Core stuff
@@ -122,11 +121,37 @@ CONFIGURE_FILE (
 
 # Change permissions on createTclIndex file and generate
 # tclIndex files for Core/GUI and Dataflow/GUI
-ADD_CUSTOM_TARGET(tclIndex ALL
+ADD_CUSTOM_TARGET(create_tclIndex_SCIRun ALL
   chmod a+x ${CREATETCLINDEX}
   COMMAND ${CREATETCLINDEX} ${SCIRUN_SOURCE_DIR}/src/Core/GUI 
   COMMAND ${CREATETCLINDEX} ${SCIRUN_SOURCE_DIR}/src/Dataflow/GUI
 )
+
+# Packages enabled when building core
+
+# Replace comma's from LoadPackage to be semi-colons to make a list
+STRING(REGEX REPLACE "[,]" ";" PACKAGE_LIST ${LOAD_PACKAGE})
+SET(INCLUDED_PACKAGE_INCLUDES FALSE)
+
+FOREACH( pkg ${PACKAGE_LIST})
+  # only do anything for packages other than SCIRun
+  IF(NOT ${pkg} MATCHES "SCIRun")
+    # add SCIRun/src/Packages to the include line once
+    IF(NOT ${INCLUDED_PACKAGE_INCLUDES})
+      INCLUDE_DIRECTORIES(${SCIRUN_SOURCE_DIR}/src/Packages)
+      SET(INCLUDED_PACKAGE_INCLUDES TRUE)
+    ENDIF(NOT ${INCLUDED_PACKAGE_INCLUDES})
+
+    # Add the package subdirectory in CMake
+    SUBDIRS(${SCIRUN_SOURCE_DIR}/src/Packages/${pkg})
+
+    # Create the tclIndex file
+    ADD_CUSTOM_TARGET(create_tclIndex_${pkg} ALL
+      chmod a+x ${CREATETCLINDEX}
+      COMMAND ${CREATETCLINDEX} ${SCIRUN_SOURCE_DIR}/src/Packages/${pkg}/Dataflow/GUI 
+    )
+  ENDIF(NOT ${pkg} MATCHES "SCIRun")
+ENDFOREACH( pkg )
 
 # scirun executable
 ADD_EXECUTABLE(scirun
