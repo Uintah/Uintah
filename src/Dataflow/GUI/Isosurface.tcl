@@ -30,8 +30,6 @@
 
 catch {rename Isosurface ""}
 
-package require Iwidgets 3.0   
-
 itcl_class SCIRun_Visualization_Isosurface {
     inherit Module
     
