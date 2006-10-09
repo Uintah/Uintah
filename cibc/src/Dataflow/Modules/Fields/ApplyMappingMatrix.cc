@@ -44,7 +44,7 @@
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Datatypes/MatrixOperations.h>
-#include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
+#include <Core/Algorithms/Fields/ApplyMappingMatrix.h>
 #include <Dataflow/GuiInterface/GuiVar.h>
 #include <Core/Containers/Handle.h>
 #include <iostream>
@@ -82,12 +82,12 @@ void
 ApplyMappingMatrix::execute()
 {
   // Get source field.
-  FieldHandle field_src_handle;
-  if( !get_input_handle( "Source", field_src_handle, true ) ) return;
+  FieldHandle src_fh;
+  if( !get_input_handle( "Source", src_fh, true ) ) return;
 
   // Get destination field.
-  FieldHandle field_dst_handle;
-  if( !get_input_handle( "Destination", field_dst_handle, true ) ) return;
+  FieldHandle dst_fh;
+  if( !get_input_handle( "Destination", dst_fh, true ) ) return;
 
   // Get the mapping matrix.
   MatrixHandle matrix_input_handle;
@@ -98,79 +98,51 @@ ApplyMappingMatrix::execute()
       !field_output_handle_.get_rep() )
   {
     TypeDescription::td_vec *tdv = 
-      field_src_handle->get_type_description(Field::FDATA_TD_E)->get_sub_type();
+      src_fh->get_type_description(Field::FDATA_TD_E)->get_sub_type();
     string accumtype = (*tdv)[0]->get_name();
-    if (field_src_handle->query_scalar_interface(this) != NULL) { accumtype = "double"; }
-    const string oftn = 
-      field_dst_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() + "<" +
-      field_dst_handle->get_type_description(Field::MESH_TD_E)->get_name() + ", " +
-      field_dst_handle->get_type_description(Field::BASIS_TD_E)->get_similar_name(accumtype,
-                                                        0, "<", " >, ") +
-      field_dst_handle->get_type_description(Field::FDATA_TD_E)->get_similar_name(accumtype,
-                                                        0, "<", " >") + " >";
+    if (src_fh->query_scalar_interface(this) != NULL) { accumtype = "double"; }
 
+    const TypeDescription* fno = 
+      dst_fh->get_type_description(Field::FIELD_NAME_ONLY_E);
+    const TypeDescription* fm = dst_fh->get_type_description(Field::MESH_TD_E);
+    const TypeDescription* fb = 
+      dst_fh->get_type_description(Field::BASIS_TD_E);
+    const TypeDescription* fd = 
+      dst_fh->get_type_description(Field::FDATA_TD_E);
+
+    const string oftn = 
+      fno->get_name() + "<" + fm->get_name() + ", " +
+      fb->get_similar_name(accumtype, 0, "<", " >, ") +
+      fd->get_similar_name(accumtype, 0, "<", " >") + " >";
+    
     CompileInfoHandle ci =
-      ApplyMappingMatrixAlgo::get_compile_info(field_src_handle->get_type_description(),
-					    field_src_handle->order_type_description(),
-					    field_dst_handle->get_type_description(),
-                                            oftn,
-					    field_dst_handle->order_type_description(),
-					    field_src_handle->get_type_description(Field::FDATA_TD_E),
-					    accumtype);
+      ApplyMappingMatrixAlgo::get_compile_info(src_fh->get_type_description(),
+			       src_fh->order_type_description(),
+			       dst_fh->get_type_description(),
+			       oftn,
+			       dst_fh->order_type_description(),
+			       src_fh->get_type_description(Field::FDATA_TD_E),
+			       accumtype);
     Handle<ApplyMappingMatrixAlgo> algo;
     if (!module_dynamic_compile(ci, algo)) return;
 
     field_output_handle_ =
       algo->execute(this,
-		    field_src_handle,
-		    field_dst_handle->mesh(),
+		    src_fh,
+		    dst_fh->mesh(),
 		    matrix_input_handle);
 
 
     // Copy the properties from source field.
     if (field_output_handle_.get_rep())
-      field_output_handle_->copy_properties(field_src_handle.get_rep());
+      field_output_handle_->copy_properties(src_fh.get_rep());
   }
 
   send_output_handle( "Output",  field_output_handle_, true );
 }
 
 
-CompileInfoHandle
-ApplyMappingMatrixAlgo::get_compile_info(const TypeDescription *fsrc,
-					 const TypeDescription *lsrc,
-					 const TypeDescription *fdst,
-					 const string &fdststr,
-					 const TypeDescription *ldst,
-					 const TypeDescription *dsrc,
-					 const string &accum)
-{
-  // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  static const string template_class_name("ApplyMappingMatrixAlgoT");
-  static const string base_class_name("ApplyMappingMatrixAlgo");
 
-  CompileInfo *rval = 
-    scinew CompileInfo(template_class_name + "." +
-		       fsrc->get_filename() + "." +
-		       lsrc->get_filename() + "." +
-		       to_filename(fdststr) + "." +
-		       ldst->get_filename() + "." +
-		       to_filename(accum) + ".",
-                       base_class_name, 
-                       template_class_name, 
-                       fsrc->get_name() + ", " +
-                       lsrc->get_name() + ", " +
-                       fdststr + ", " +
-                       ldst->get_name() + ", " +
-                       accum);
-
-  // Add in the include path to compile this obj
-  rval->add_include(include_path);
-  fsrc->fill_compile_info(rval);
-  fdst->fill_compile_info(rval);
-  return rval;
-}
 
 
 

@@ -32,64 +32,41 @@ namespace SCIRunAlgo {
 
 using namespace SCIRun;
 
-bool ApplyMappingMatrixAlgo::ApplyMappingMatrix(ProgressReporter *pr, FieldHandle fsrc, FieldHandle fdst, FieldHandle& output,MatrixHandle mapping)
+CompileInfoHandle
+ApplyMappingMatrixAlgo::get_compile_info(const TypeDescription *fsrc,
+					 const TypeDescription *lsrc,
+					 const TypeDescription *fdst,
+					 const string &fdststr,
+					 const TypeDescription *ldst,
+					 const TypeDescription *dsrc,
+					 const string &accum)
 {
-  if (fsrc.get_rep() == 0)
-  {
-    pr->error("ApplyMappingMatrix: No input source field");
-    return (false);
-  }
+  // Use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("ApplyMappingMatrixAlgoT");
+  static const string base_class_name("ApplyMappingMatrixAlgo");
 
-  if (fdst.get_rep() == 0)
-  {
-    pr->error("ApplyMappingMatrix: No input destination field");
-    return (false);
-  }
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       fsrc->get_filename() + "." +
+		       lsrc->get_filename() + "." +
+		       to_filename(fdststr) + "." +
+		       ldst->get_filename() + "." +
+		       to_filename(accum) + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       fsrc->get_name() + ", " +
+                       lsrc->get_name() + ", " +
+                       fdststr + ", " +
+                       ldst->get_name() + ", " +
+                       accum);
 
-
-  // no precompiled version available, so compile one
-
-  FieldInformation fi_src(fsrc);
-  FieldInformation fi_dst(fdst);
-  FieldInformation fi_out(fdst);
-  
-  if ((fi_src.is_nonlinear())||(fi_dst.is_nonlinear()))
-  {
-    pr->error("ApplyMappingMatrix: This function has not yet been defined for non-linear elements");
-    return (false);
-  }
-
-  fi_out.set_data_type(fi_src.get_data_type());
-
-  // Setup dynamic files
-
-  SCIRun::CompileInfoHandle ci = scinew CompileInfo(
-    "ALGOApplyMappingMatrix."+fi_src.get_field_filename()+"."+fi_dst.get_field_filename()+"."+fi_out.get_field_filename()+".",
-    "ApplyMappingMatrixAlgo","ApplyMappingMatrixAlgoT",
-    fi_src.get_field_name() + "," + fi_dst.get_field_name() + "," + fi_out.get_field_name());
-
-  ci->add_include(TypeDescription::cc_to_h(__FILE__));
-  ci->add_namespace("SCIRunAlgo");
-  ci->add_namespace("SCIRun");
-  
-  fi_src.fill_compile_info(ci);
-  fi_dst.fill_compile_info(ci);
-  fi_out.fill_compile_info(ci);
-  
-  if (dynamic_cast<RegressionReporter *>(pr)) ci->keep_library_ = false;
-  // Handle dynamic compilation
-  
-  SCIRun::Handle<ApplyMappingMatrixAlgo> algo;
-  if(!(SCIRun::DynamicCompilation::compile(ci,algo,pr)))
-  {
-    pr->compile_error(ci->filename_);
-    SCIRun::DynamicLoader::scirun_loader().cleanup_failed_compile(ci);  
-    return(false);
-  }
-
-  return(algo->ApplyMappingMatrix(pr,fsrc,fdst,output,mapping)); 
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  fsrc->fill_compile_info(rval);
+  fdst->fill_compile_info(rval);
+  return rval;
 }
-
 
 } // End namespace SCIRunAlgo
 

@@ -86,12 +86,6 @@ bool FieldsAlgo::ChangeFieldBasis(FieldHandle input,FieldHandle& output, MatrixH
 }
 
 
-bool FieldsAlgo::ApplyMappingMatrix(FieldHandle fsrc,  FieldHandle fdst, FieldHandle& output, MatrixHandle mapping)
-{
-  ApplyMappingMatrixAlgo algo;
-  return(algo.ApplyMappingMatrix(pr_,fsrc,fdst,output,mapping));
-}
-
 bool FieldsAlgo::GetBoundingBox(FieldHandle input,  FieldHandle& output)
 {
   GetBoundingBoxAlgo algo;

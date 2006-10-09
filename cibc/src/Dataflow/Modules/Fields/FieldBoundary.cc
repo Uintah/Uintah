@@ -42,7 +42,7 @@
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Dataflow/Network/Ports/MatrixPort.h>
 #include <Dataflow/Modules/Fields/FieldBoundary.h>
-#include <Dataflow/Modules/Fields/ApplyMappingMatrix.h>
+#include <Core/Algorithms/Fields/ApplyMappingMatrix.h>
 
 #include <iostream>
 
