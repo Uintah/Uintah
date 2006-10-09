@@ -68,7 +68,19 @@ void AMRICE::problemSetup(const ProblemSpecP& params,
   ice_ps->getWithDefault( "useLockStep",   d_useLockStep,       false);
   ice_ps->getWithDefault( "orderOf_CFI_Interpolation",   
                            d_orderOf_CFI_Interpolation, d_orderOfInterpolation);
-  
+
+  //__________________________________
+  // bulletproofing.  Refluxing and first order advection
+  ProblemSpecP cfd_ps = params->findBlock("CFD");
+  ProblemSpecP iceps = cfd_ps->findBlock("ICE");
+  ProblemSpecP advect_ps = iceps->findBlock("advection"); 
+  map<string,string> advect_options;
+  advect_ps->getAttributes(advect_options);
+  if (advect_options["type"] == "FirstOrder" && d_doRefluxing){
+    throw ProblemSetupException("\n ICE: You cannot use AMR refluxing and the first order advection operator together."
+                                "  The results are significantly worse.", __FILE__, __LINE__);
+  }
+ 
   //__________________________________
   // Pull out the refinement threshold criteria 
   for (ProblemSpecP var_ps = refine_ps->findBlock("Variable");var_ps != 0; 
