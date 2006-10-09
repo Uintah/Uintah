@@ -1,3 +1,4 @@
+
 /*
    For more information, please see: http://software.sci.utah.edu
 
@@ -83,6 +84,7 @@ namespace SCIRun {
       Dir& operator=(const Dir&);
 
       static Dir create(const std::string& name);
+			static Dir current_directory();
       
       void remove(bool throwOnError = true);
     
