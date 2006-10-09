@@ -48,7 +48,12 @@
 
 using namespace SCIRun;
 using namespace std;
-  
+
+HINSTANCE dllHINSTANCE=0;
+
+void initGLextensions();
+
+
 vector<int> Win32OpenGLContext::valid_visuals_ = vector<int>();
 HGLRC Win32OpenGLContext::first_context_ = NULL;
 
@@ -59,7 +64,29 @@ extern HINSTANCE dllHINSTANCE;
 LRESULT CALLBACK WindowEventProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam);
 void initGLextensions();
 
-void PrintErr(char* func_name);
+void
+PrintErr(char* func_name)
+{
+  LPVOID lpMsgBuf;
+  DWORD dw = GetLastError(); 
+  
+  if (dw) {
+    FormatMessage(
+		  FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+		  FORMAT_MESSAGE_FROM_SYSTEM,
+		  NULL,
+		  dw,
+		  MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+		  (LPTSTR) &lpMsgBuf,
+		  0, NULL );
+    
+    fprintf(stderr, 
+	    "%s failed with error %ld: %s", 
+	    func_name, dw, (char*)lpMsgBuf); 
+    LocalFree(lpMsgBuf);
+  }
+  SetLastError(0);
+}
 
 Win32OpenGLContext::Win32OpenGLContext(int visual, 
                                    int x, 
@@ -70,7 +97,10 @@ Win32OpenGLContext::Win32OpenGLContext(int visual,
   OpenGLContext(),
   mutex_("GL lock")
 {
-  // Sepeate functions so we can set gdb breakpoints in constructor
+  width_ = width;
+  height_ = height;
+  // Seperate functions so we can set gdb breakpoints in constructor
+  // callback to WindowEventProc will override width and height
   create_context(visual, x, y, width, height, border);
 }
 
@@ -87,7 +117,7 @@ Win32OpenGLContext::create_context(int visual, int x, int y,
     GlClassInitialized = true;
     GlClass.style = CS_HREDRAW | CS_VREDRAW | CS_OWNDC;
     GlClass.cbClsExtra = 0;
-    GlClass.cbWndExtra = 0;
+    GlClass.cbWndExtra = sizeof(long); // to save context pointer
     GlClass.hInstance = dllHINSTANCE;
     GlClass.hbrBackground = NULL;
     GlClass.lpszMenuName = NULL;
@@ -115,6 +145,9 @@ Win32OpenGLContext::create_context(int visual, int x, int y,
 
   if (!window_)
     PrintErr("CreateWindow");
+
+  SetWindowLong(window_, 0, (LONG) this);
+
   // create context
   DWORD dwFlags = PFD_DRAW_TO_WINDOW | PFD_SUPPORT_OPENGL | PFD_DOUBLEBUFFER | PFD_GENERIC_ACCELERATED;
 
@@ -178,9 +211,6 @@ Win32OpenGLContext::create_context(int visual, int x, int y,
   UpdateWindow(window_);
 
   initGLextensions();
-
-  width_ = width;
-  height_ = height;
 }
 
 
@@ -382,6 +412,54 @@ Win32OpenGLContext::listvisuals()
 LRESULT CALLBACK 
 WindowEventProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-  LONG result = DefWindowProc(hwnd, msg, wParam, lParam);
+  LONG result;
+  Win32OpenGLContext *cxt = (Win32OpenGLContext*) GetWindowLong(hwnd, 0);
+  switch (msg) {
+  case WM_SIZE:
+    {
+      cxt->width_ = LOWORD(lParam);
+      cxt->height_ = HIWORD(lParam);
+      break;
+    }
+  case WM_MOVE: break;
+  default: result = DefWindowProc(hwnd, msg, wParam, lParam);
+  }
+  
   return result;
+}
+
+// initialize > gl 1.1 stuff here
+__declspec(dllexport) PFNGLACTIVETEXTUREPROC glActiveTexture = 0;
+__declspec(dllexport) PFNGLBLENDEQUATIONPROC glBlendEquation = 0;
+__declspec(dllexport) PFNGLTEXIMAGE3DPROC glTexImage3D = 0;
+__declspec(dllexport) PFNGLTEXSUBIMAGE3DPROC glTexSubImage3D = 0;
+__declspec(dllexport) PFNGLMULTITEXCOORD1FPROC glMultiTexCoord1f;
+__declspec(dllexport) PFNGLMULTITEXCOORD2FVPROC glMultiTexCoord2fv = 0;
+__declspec(dllexport) PFNGLMULTITEXCOORD3FPROC glMultiTexCoord3f = 0;
+__declspec(dllexport) PFNGLCOLORTABLEPROC glColorTable = 0;
+
+void initGLextensions()
+{
+  static bool initialized = false;
+  if (!initialized) {
+    initialized = true;
+    glActiveTexture = (PFNGLACTIVETEXTUREPROC)wglGetProcAddress("glActiveTexture");
+    glBlendEquation = (PFNGLBLENDEQUATIONPROC)wglGetProcAddress("glBlendEquation");
+    glTexImage3D = (PFNGLTEXIMAGE3DPROC)wglGetProcAddress("glTexImage3D");
+    glTexSubImage3D = (PFNGLTEXSUBIMAGE3DPROC)wglGetProcAddress("glTexSubImage3D");
+    glMultiTexCoord1f = (PFNGLMULTITEXCOORD1FPROC)wglGetProcAddress("glMultiTexCoord1fARB");
+    glMultiTexCoord2fv = (PFNGLMULTITEXCOORD2FVPROC)wglGetProcAddress("glMultiTexCoord2fv");
+    glMultiTexCoord3f = (PFNGLMULTITEXCOORD3FPROC)wglGetProcAddress("glMultiTexCoord3f");
+    glColorTable = (PFNGLCOLORTABLEPROC)wglGetProcAddress("glColorTable");
+  }
+}
+
+BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)
+{
+  switch (reason) {
+  case DLL_PROCESS_ATTACH:
+    dllHINSTANCE = hinstance; break;
+  default: break;
+  }
+  return TRUE;
 }
