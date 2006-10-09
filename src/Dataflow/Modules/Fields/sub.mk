@@ -62,6 +62,7 @@ SRCS     += \
 	$(SRCDIR)/CubitInterface.cc\
 	$(SRCDIR)/DirectMapping.cc\
 	$(SRCDIR)/ExtractHexSheet.cc\
+	$(SRCDIR)/FieldArbitrarySlicer.cc\
 	$(SRCDIR)/FieldBoundary.cc\
 	$(SRCDIR)/FieldCage.cc\
 	$(SRCDIR)/FieldFrenet.cc\
@@ -117,6 +118,7 @@ PSELIBS := \
 	Dataflow/Network         \
 	Dataflow/Widgets         \
 	Core/Algorithms/Fields   \
+	Core/Algorithms/Visualization   \
 	Core/Algorithms/Geometry \
 	Core/Basis               \
 	Core/Datatypes           \
