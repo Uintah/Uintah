@@ -71,14 +71,14 @@ public:
   virtual void		swap();
 
   HWND                  window_;
+  int                   width_;
+  int                   height_;
 private:
   static vector<int>	valid_visuals_;  
   static HGLRC          first_context_;
   HGLRC                 context_;
   HDC                   hDC_;
   Mutex                 mutex_;
-  int                   width_;
-  int                   height_;
 };
 
 } // End namespace SCIRun

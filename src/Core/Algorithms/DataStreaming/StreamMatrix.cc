@@ -634,130 +634,66 @@ bool StreamMatrixAlgo::getcolmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandl
       fn = datafilename_;    
     }
     
-    #if (!defined(HAVE_UNISTD_H) || HAVE_UNISTD_H == 0) && !defined(_WIN32)
-      FILE* datafile;
+    int   datafile_uni;
+    // Use Unix system for files larger than 2Gb
     
-      // Use normal C functions (for files upto 2Gb)
-      datafile = ::fopen(fn.c_str(),"rb");
-      if (datafile == 0)
-      {
-        pr_->error("StreamMatrixAlgo: Could not find/open datafile");
-        return (false);
-      }
-      
-      if (lineskip_ > 0)
-      {
-         char cbuffer;
-         int ln = lineskip_;
-         while (ln)
-         {
-            if(::fread(&cbuffer,1,1,datafile) != 1)
-            {
-              ::fclose(datafile);
-              pr_->error("StreamMatrixAlgo: Could not read header of datafile"); 
-              return (false);
-            }
-            if (cbuffer == '\n') ln--;
-         }
-      }
-      
-      if (byteskip_ >= 0)
-      {
-        if (::fseek(datafile,byteskip_,SEEK_CUR)!=0)
+    datafile_uni = ::open(fn.c_str(),O_RDONLY|O_LARGEFILE,0);
+    if (datafile_uni < 0)
+    {
+      pr_->error("StreamMatrixAlgo: Could not find/open datafile");
+      return (false);
+    }
+    if (lineskip_ > 0)
+    {
+        char cbuffer;
+        int ln = lineskip_;
+        while (ln)
         {
-          ::fclose(datafile);
-          pr_->error("StreamMatrixAlgo: Could not read datafile"); 
-          return (false);
+          if(::read(datafile_uni,&cbuffer,1) != 1)
+          {
+            ::close(datafile_uni);
+            pr_->error("StreamMatrixAlgo: Could not read header of datafile");
+            return (false); 
+          }
+          if (cbuffer == '\n') ln--;
         }
-      }
-      else
-      {
-        if (::fseek(datafile,sizes_[0]*sizes_[1]*elemsize_,SEEK_END)!=0)
-        {
-          ::fclose(datafile);
-          pr_->error("StreamMatrixAlgo: Could not read datafile"); 
-          return (false);
-        }
-      }
-        
-      if (::fseek(datafile,elemsize_*sizes_[0]*coffset,SEEK_CUR)!=0)
-      {
-        ::fclose(datafile);
-        pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
-        return (false);
-      }    
-
-      if (sizes_[0] != ::fread((void *)buffer,elemsize_,sizes_[0],datafile))
-      {
-        ::fclose(datafile);
-        pr_->error("StreamMatrixAlgo: Error reading datafile");
-        return (false);
-      }
-       
-      ::fclose(datafile);
-      }
-    #else
-      int   datafile_uni;
-      // Use Unix system for files larger than 2Gb
-      
-      datafile_uni = ::open(fn.c_str(),O_RDONLY|O_LARGEFILE,0);
-      if (datafile_uni < 0)
-      {
-        pr_->error("StreamMatrixAlgo: Could not find/open datafile");
-        return (false);
-      }
-      if (lineskip_ > 0)
-      {
-         char cbuffer;
-         int ln = lineskip_;
-         while (ln)
-         {
-            if(::read(datafile_uni,&cbuffer,1) != 1)
-            {
-              ::close(datafile_uni);
-              pr_->error("StreamMatrixAlgo: Could not read header of datafile");
-              return (false); 
-            }
-            if (cbuffer == '\n') ln--;
-         }
-      }
-    
-      if (byteskip_ >= 0)
-      {
-        if (::lseek(datafile_uni,static_cast<off_t>(byteskip_),SEEK_CUR)<0)
-        {
-          ::close(datafile_uni);
-          pr_->error("StreamMatrixAlgo: Could not read datafile");
-          return (false);
-        }
-      }
-      else
-      {
-        if (::lseek(datafile_uni,static_cast<off_t>(sizes_[1])*static_cast<off_t>(sizes_[0])*static_cast<off_t>(elemsize_),SEEK_END)<0)
-        {
-          ::close(datafile_uni);
-          pr_->error("StreamMatrixAlgo: Could not read datafile");
-          return (false);
-        }
-      }
-      
-      if (::lseek(datafile_uni,static_cast<off_t>(elemsize_)*static_cast<off_t>(sizes_[0])*static_cast<off_t>(coffset),SEEK_CUR)<0)
+    }
+  
+    if (byteskip_ >= 0)
+    {
+      if (::lseek(datafile_uni,static_cast<off_t>(byteskip_),SEEK_CUR)<0)
       {
         ::close(datafile_uni);
-        pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
-        return (false);
-      }    
-
-      ssize_t ret = ::read(datafile_uni,reinterpret_cast<void*>(buffer),static_cast<size_t>(elemsize_*sizes_[0]));
-      if (static_cast<ssize_t>(elemsize_*sizes_[0]) != ret)
-      {
-        ::close(datafile_uni);
-        pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
+        pr_->error("StreamMatrixAlgo: Could not read datafile");
         return (false);
       }
-     
+    }
+    else
+    {
+      if (::lseek(datafile_uni,static_cast<off_t>(sizes_[1])*static_cast<off_t>(sizes_[0])*static_cast<off_t>(elemsize_),SEEK_END)<0)
+      {
+        ::close(datafile_uni);
+        pr_->error("StreamMatrixAlgo: Could not read datafile");
+        return (false);
+      }
+    }
+    
+    if (::lseek(datafile_uni,static_cast<off_t>(elemsize_)*static_cast<off_t>(sizes_[0])*static_cast<off_t>(coffset),SEEK_CUR)<0)
+    {
       ::close(datafile_uni);
-    #endif
+      pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
+      return (false);
+    }    
+
+    ssize_t ret = ::read(datafile_uni,reinterpret_cast<void*>(buffer),static_cast<size_t>(elemsize_*sizes_[0]));
+    if (static_cast<ssize_t>(elemsize_*sizes_[0]) != ret)
+    {
+      ::close(datafile_uni);
+      pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
+      return (false);
+    }
+    
+    ::close(datafile_uni);
   
     // Move pointer to next column to be read
     buffer += (sizes_[0]*elemsize_);
@@ -870,130 +806,66 @@ bool StreamMatrixAlgo::getcolmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::Mat
       fn = datafilename_;    
     }
     
-    #ifndef HAVE_UNISTD_H 
-      FILE* datafile;
+    int   datafile_uni;
+    // Use Unix system for files larger than 2Gb
     
-      // Use normal C functions (for files upto 2Gb)
-      datafile = ::fopen(fn.c_str(),"rb");
-      if (datafile == 0)
-      {
-        pr_->error("StreamMatrixAlgo: Could not find/open datafile");
-        return (false);
-      }
-      
-      if (lineskip_ > 0)
-      {
-         char cbuffer;
-         int ln = lineskip_;
-         while (ln)
-         {
-            if(::fread(&cbuffer,1,1,datafile) != 1)
-            {
-              ::fclose(datafile);
-              pr_->error("StreamMatrixAlgo: Could not read header of datafile"); 
-              return (false);
-            }
-            if (cbuffer == '\n') ln--;
-         }
-      }
-      
-      if (byteskip_ >= 0)
-      {
-        if (::fseek(datafile,byteskip_,SEEK_CUR)!=0)
+    datafile_uni = ::open(fn.c_str(),O_RDONLY|O_LARGEFILE,0);
+    if (datafile_uni < 0)
+    {
+      pr_->error("StreamMatrixAlgo: Could not find/open datafile");
+      return (false);
+    }
+    if (lineskip_ > 0)
+    {
+        char cbuffer;
+        int ln = lineskip_;
+        while (ln)
         {
-          ::fclose(datafile);
-          pr_->error("StreamMatrixAlgo: Could not read datafile"); 
-          return (false);
+          if(::read(datafile_uni,&cbuffer,1) != 1)
+          {
+            ::close(datafile_uni);
+            pr_->error("StreamMatrixAlgo: Could not read header of datafile");
+            return (false); 
+          }
+          if (cbuffer == '\n') ln--;
         }
-      }
-      else
-      {
-        if (::fseek(datafile,sizes_[0]*sizes_[1]*elemsize_,SEEK_END)!=0)
-        {
-          ::fclose(datafile);
-          pr_->error("StreamMatrixAlgo: Could not read datafile"); 
-          return (false);
-        }
-      }
-        
-      if (::fseek(datafile,elemsize_*sizes_[0]*coffset,SEEK_CUR)!=0)
-      {
-        ::fclose(datafile);
-        pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
-        return (false);
-      }    
-
-      if (sizes_[0] != ::fread((void *)buffer,elemsize_,sizes_[0],datafile))
-      {
-        ::fclose(datafile);
-        pr_->error("StreamMatrixAlgo: Error reading datafile");
-        return (false);
-      }
-       
-      ::fclose(datafile);
-      }
-    #else
-      int   datafile_uni;
-      // Use Unix system for files larger than 2Gb
-      
-      datafile_uni = ::open(fn.c_str(),O_RDONLY|O_LARGEFILE,0);
-      if (datafile_uni < 0)
-      {
-        pr_->error("StreamMatrixAlgo: Could not find/open datafile");
-        return (false);
-      }
-      if (lineskip_ > 0)
-      {
-         char cbuffer;
-         int ln = lineskip_;
-         while (ln)
-         {
-            if(::read(datafile_uni,&cbuffer,1) != 1)
-            {
-              ::close(datafile_uni);
-              pr_->error("StreamMatrixAlgo: Could not read header of datafile");
-              return (false); 
-            }
-            if (cbuffer == '\n') ln--;
-         }
-      }
-    
-      if (byteskip_ >= 0)
-      {
-        if (::lseek(datafile_uni,static_cast<off_t>(byteskip_),SEEK_CUR)<0)
-        {
-          ::close(datafile_uni);
-          pr_->error("StreamMatrixAlgo: Could not read datafile");
-          return (false);
-        }
-      }
-      else
-      {
-        if (::lseek(datafile_uni,static_cast<off_t>(sizes_[1])*static_cast<off_t>(sizes_[0])*static_cast<off_t>(elemsize_),SEEK_END)<0)
-        {
-          ::close(datafile_uni);
-          pr_->error("StreamMatrixAlgo: Could not read datafile");
-          return (false);
-        }
-      }
-      
-      if (::lseek(datafile_uni,static_cast<off_t>(elemsize_)*static_cast<off_t>(sizes_[0])*static_cast<off_t>(coffset),SEEK_CUR)<0)
+    }
+  
+    if (byteskip_ >= 0)
+    {
+      if (::lseek(datafile_uni,static_cast<off_t>(byteskip_),SEEK_CUR)<0)
       {
         ::close(datafile_uni);
-        pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
-        return (false);
-      }    
-
-      ssize_t ret = ::read(datafile_uni,reinterpret_cast<void*>(buffer),static_cast<size_t>(elemsize_*sizes_[0]));
-      if (static_cast<ssize_t>(elemsize_*sizes_[0]) != ret)
-      {
-        ::close(datafile_uni);
-        pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
+        pr_->error("StreamMatrixAlgo: Could not read datafile");
         return (false);
       }
-     
+    }
+    else
+    {
+      if (::lseek(datafile_uni,static_cast<off_t>(sizes_[1])*static_cast<off_t>(sizes_[0])*static_cast<off_t>(elemsize_),SEEK_END)<0)
+      {
+        ::close(datafile_uni);
+        pr_->error("StreamMatrixAlgo: Could not read datafile");
+        return (false);
+      }
+    }
+    
+    if (::lseek(datafile_uni,static_cast<off_t>(elemsize_)*static_cast<off_t>(sizes_[0])*static_cast<off_t>(coffset),SEEK_CUR)<0)
+    {
       ::close(datafile_uni);
-    #endif
+      pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
+      return (false);
+    }    
+
+    ssize_t ret = ::read(datafile_uni,reinterpret_cast<void*>(buffer),static_cast<size_t>(elemsize_*sizes_[0]));
+    if (static_cast<ssize_t>(elemsize_*sizes_[0]) != ret)
+    {
+      ::close(datafile_uni);
+      pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
+      return (false);
+    }
+    
+    ::close(datafile_uni);
   
     // Move pointer to next column to be read
     buffer += (sizes_[0]*elemsize_);
@@ -1107,85 +979,6 @@ bool StreamMatrixAlgo::getrowmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandl
     }
 
 
-  #ifndef HAVE_UNISTD_H
-    FILE* datafile;
-    datafile = ::fopen(fn.c_str(),"rb");
-    if (datafile == 0) 
-    {
-      pr_->error("StreamMatrixAlgo: Could not find/open datafile");
-      return (false);
-    }
-    
-    // Skip a number of lines at the start of the file
-    if (lineskip_ > 0)
-    {
-       char cbuffer;
-       int ln = lineskip_;
-       while (ln)
-       {
-          if(::fread(&cbuffer,1,1,datafile) != 1)
-          {
-            ::fclose(datafile);
-            pr_->error("StreamMatrixAlgo: Could not read header of datafile"); 
-            return (false);
-          }
-          if (cbuffer == '\n') ln--;
-       }
-    }
-    
-    // skip a number of bytes at the start
-    if (byteskip_ >= 0)
-    {
-      if (::fseek(datafile,byteskip_,SEEK_CUR)!=0)
-      {
-        ::fclose(datafile);
-        pr_->error("StreamMatrixAlgo: Could not read datafile");
-        return (false);
-      }
-    }
-    else
-    {
-      if (::fseek(datafile,sizes_[0]*sizes_[1]*elemsize_,SEEK_END)!=0)
-      {
-        fclose(datafile);
-        pr_->error("StreamMatrixAlgo: Could not read datafile");
-        return (false);
-      }
-    }
-
-    int oldidx = 0;
-
-    for (int j=cstart;j<cend;j++)
-    {
-      for (int p=0;p<idx.size();p++)
-      {
-        if (::feesk(datafile,elemsize_*(idx[p]-oldidx),SEEK_CUR)!=0)
-        {
-          ::fclose(datafile);
-          pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");      
-          return (false);
-        }
-        oldidx = idx[p]+1;
-        
-        if (::fread(buffer+(elemsize_*(j+p*sizes_[1])),elemsize_,1,datafile) != 1)
-        {
-          ::fclose(datafile);
-          pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
-          return (false);
-        }        
-      }
-
-      if (::fseek(datafile,elemsize_*(sizes_[0]),SEEK_CUR)!=0)
-      {
-        ::fclose(datafile);
-        pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
-        return (false);
-      }    
-    }
-    
-    ::fclose(datafile);
-
-  #else
     int datafile_uni;
 
     datafile_uni = ::open(fn.c_str(),O_RDONLY|O_LARGEFILE,0);
@@ -1261,7 +1054,6 @@ bool StreamMatrixAlgo::getrowmatrix(SCIRun::MatrixHandle& mh,SCIRun::MatrixHandl
     }
     
     ::close(datafile_uni);
-  #endif
   }
     
   if (swapbytes_) doswapbytes(buffer,elemsize_,idx.size()*sizes_[1]);
@@ -1378,85 +1170,6 @@ bool StreamMatrixAlgo::getrowmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::Mat
     }
 
 
-  #ifndef HAVE_UNISTD_H
-    FILE* datafile;
-    datafile = ::fopen(fn.c_str(),"rb");
-    if (datafile == 0) 
-    {
-      pr_->error("StreamMatrixAlgo: Could not find/open datafile");
-      return (false);
-    }
-    
-    // Skip a number of lines at the start of the file
-    if (lineskip_ > 0)
-    {
-       char cbuffer;
-       int ln = lineskip_;
-       while (ln)
-       {
-          if(::fread(&cbuffer,1,1,datafile) != 1)
-          {
-            ::fclose(datafile);
-            pr_->error("StreamMatrixAlgo: Could not read header of datafile"); 
-            return (false);
-          }
-          if (cbuffer == '\n') ln--;
-       }
-    }
-    
-    // skip a number of bytes at the start
-    if (byteskip_ >= 0)
-    {
-      if (::fseek(datafile,byteskip_,SEEK_CUR)!=0)
-      {
-        ::fclose(datafile);
-        pr_->error("StreamMatrixAlgo: Could not read datafile");
-        return (false);
-      }
-    }
-    else
-    {
-      if (::fseek(datafile,sizes_[0]*sizes_[1]*elemsize_,SEEK_END)!=0)
-      {
-        fclose(datafile);
-        pr_->error("StreamMatrixAlgo: Could not read datafile");
-        return (false);
-      }
-    }
-
-    int oldidx = 0;
-
-    for (int j=cstart;j<cend;j++)
-    {
-      for (int p=0;p<nnz;p++)
-      {
-        if (::feesk(datafile,elemsize_*(cols[p]-oldidx),SEEK_CUR)!=0)
-        {
-          ::fclose(datafile);
-          pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");      
-          return (false);
-        }
-        oldidx = cols[p]+1;
-        
-        if (::fread(buffer+(elemsize_*(j+p*sizes_[1])),elemsize_,1,datafile) != 1)
-        {
-          ::fclose(datafile);
-          pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
-          return (false);
-        }        
-      }
-
-      if (::fseek(datafile,elemsize_*(sizes_[0]),SEEK_CUR)!=0)
-      {
-        ::fclose(datafile);
-        pr_->error("StreamMatrixAlgo: Improper data file, check number of columns and rows in header file");
-        return (false);
-      }    
-    }
-    
-    ::fclose(datafile);
-
-  #else
     int datafile_uni;
     datafile_uni = ::open(fn.c_str(),O_RDONLY|O_LARGEFILE,0);
     if (datafile_uni < 0) 
@@ -1531,7 +1244,6 @@ bool StreamMatrixAlgo::getrowmatrix_weights(SCIRun::MatrixHandle& mh,SCIRun::Mat
     }
     
     ::close(datafile_uni);
-  #endif
   }
     
   if (swapbytes_) doswapbytes(buffer,elemsize_,nnz*sizes_[1]);

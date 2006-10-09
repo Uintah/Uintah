@@ -77,7 +77,7 @@ Win32GLContextRunnable::win_KeyEvent(MSG winevent, bool pressed)
   MSG keymsg;
   unsigned long keyval = 0;
 
-  switch (winevent.wParam) {
+switch (winevent.wParam) {
     // non ASCII keys
   case VK_CLEAR:   keyval = SCIRun_Clear; break;
   case VK_LEFT:    keyval = SCIRun_Left; break;
@@ -100,11 +100,16 @@ Win32GLContextRunnable::win_KeyEvent(MSG winevent, bool pressed)
   case VK_HELP:    keyval = SCIRun_Help; break;
   case VK_NUMLOCK: keyval = SCIRun_Num_Lock; break;
   case VK_SCROLL:  keyval = SCIRun_Scroll_Lock; break;
+  case VK_BACK:    keyval = SCIRun_BackSpace; break;
+  case VK_RETURN:  keyval = SCIRun_Return; break;
+  case VK_ESCAPE:  keyval = SCIRun_Escape; break;
   default:
     if (winevent.wParam >= VK_F1 && winevent.wParam <= VK_F24) {
       keyval = SCIRun_F1 + (winevent.wParam-VK_F1); break;
     }
-    if ( TranslateMessage(&winevent) && PeekMessage(&keymsg, context_->window_, 0, WM_USER, PM_NOREMOVE) && (keymsg.message == WM_CHAR) ) {
+    //keyval = winevent.wParam;
+    //break;
+    if ( TranslateMessage(&winevent)&& PeekMessage(&keymsg, context_->window_, 0, WM_USER, PM_NOREMOVE) && keymsg.message == WM_CHAR) {
       GetMessage(&keymsg, context_->window_, 0, WM_USER);
       keyval = keymsg.wParam;
       break;
@@ -112,7 +117,15 @@ Win32GLContextRunnable::win_KeyEvent(MSG winevent, bool pressed)
   }
   if (keyval != 0) {
     KeyEvent *sci_event = new KeyEvent();
-    
+
+    // TranslateEvent converts shift-keys, but SCIRun events (see TextEntry.cc) want un-shifted
+    if (keyval >= 'A' && keyval <= 'Z')
+      keyval += 32;
+    else if (keyval >= '!' && keyval <= '(')
+      keyval += 16;
+    else if (keyval == ')')
+      keyval = '0';
+
     if (pressed)
       sci_event->set_key_state(KeyEvent::KEY_PRESS_E);
     else
@@ -122,9 +135,9 @@ Win32GLContextRunnable::win_KeyEvent(MSG winevent, bool pressed)
     sci_event->set_modifiers(state);
     sci_event->set_time(winevent.time);
     sci_event->set_keyval(keyval);
-    if (sci_getenv_p("SCI_DEBUG")) {
+    //if (sci_getenv_p("SCI_DEBUG")) {
       cerr << "Keyval: " << sci_event->get_keyval() << std::endl;
-    }
+    //}
     return sci_event;
   }
   return 0;
@@ -285,9 +298,12 @@ bool Win32GLContextRunnable::iterate()
 {
   MSG msg;
   while (PeekMessage(&msg, context_->window_, 0, WM_USER, PM_NOREMOVE)) {
-    GetMessage(&msg, context_->window_, 0, WM_MOUSELAST);
+    GetMessage(&msg, context_->window_, 0, WM_MOUSELEAVE);
     event_handle_t event = 0;
     switch (msg.message) {
+    case WM_MOVE: break;
+    case WM_SIZE: 
+      context_->width_ = LOWORD(msg.lParam); context_->height_ = HIWORD(msg.lParam); break;
     case WM_KEYDOWN:
       event = win_KeyEvent(msg, true); break;
     case WM_KEYUP:
@@ -310,6 +326,10 @@ bool Win32GLContextRunnable::iterate()
       if (!mouse_in_window) {
         mouse_in_window = true;
         event_handle_t subevent = win_Enter(msg); 
+        if (subevent.get_rep()) {
+          subevent->set_target(target_);
+          EventManager::add_event(subevent);
+        }
 	TRACKMOUSEEVENT tme;
 	tme.cbSize = sizeof(TRACKMOUSEEVENT);
 	tme.dwFlags = TME_LEAVE;
@@ -317,7 +337,8 @@ bool Win32GLContextRunnable::iterate()
 	TrackMouseEvent(&tme);
       }
       event = win_PointerMotion(msg); break;
-    case WM_MOUSELEAVE:       event = win_Leave(msg); break;
+    //case WM_NCMOUSELEAVE:
+    case WM_MOUSELEAVE:       event = win_Leave(msg); mouse_in_window = false; break;
 
     case WM_PAINT:  
     {
