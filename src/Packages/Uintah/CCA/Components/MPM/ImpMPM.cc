@@ -247,6 +247,7 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
    d_subsched = sched->createSubScheduler();
    d_subsched->initialize(3,1);
+   d_subsched->setRestartable(true);
    d_subsched->clearMappings();
    d_subsched->mapDataWarehouse(Task::ParentOldDW, 0);
    d_subsched->mapDataWarehouse(Task::ParentNewDW, 1);
@@ -1156,7 +1157,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
 #  define isnan  __isnand
 #endif
     if ((isnan(dispIncQNorm/dispIncQNorm0)||isnan(dispIncNorm/dispIncNormMax))
-        && isnan(dispIncQNorm0)){
+        && dispIncQNorm0!=0.){
       restart_nan=true;
       cerr << "Restarting due to a nan residual" << endl;
     }
@@ -2278,7 +2279,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
     int numMatls = d_sharedState->getNumMPMMatls();
     for(int m = 0; m < numMatls; m++){
      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
-     if(!mpm_matl->getIsRigid() && firstTimeThrough){ 
+     if(!mpm_matl->getIsRigid() && firstTimeThrough){
       firstTimeThrough=false;
       int dwi = mpm_matl->getDWIndex();
 
@@ -2303,6 +2304,8 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
 
       double fodts = 4./(dt*dt);
       double fodt = 4./dt;
+
+      double Q=0.;
 
       for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
         IntVector n = *iter;
@@ -2329,8 +2332,15 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
         d_solver->fillVector(dof[0],double(v[0]));
         d_solver->fillVector(dof[1],double(v[1]));
         d_solver->fillVector(dof[2],double(v[2]));
+        Q += v[0]*v[0] + v[1]*v[1] + v[2]*v[2];
       }
       d_solver->assembleVector();
+      if(isnan(Q)){
+        cout << "RHS contains a nan, restarting timestep" << endl;
+        new_dw->abortTimestep();
+        new_dw->restartTimestep();
+        return;
+      }
      } // first time through non-rigid
     }  // matls
   }    // patches
@@ -2340,7 +2350,7 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
                           const PatchSubset* patches,
                           const MaterialSubset* ,
                           DataWarehouse*,
-                          DataWarehouse* /*new_dw*/)
+                          DataWarehouse* new_dw)
 
 {
   int num_nodes = 0;
@@ -2355,8 +2365,15 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
     num_nodes += (nodes.x()-2)*(nodes.y()-2)*(nodes.z()-2)*3;
   }
 
-  d_solver->removeFixedDOF(num_nodes);
-  d_solver->solve();   
+  bool tsr = new_dw->timestepRestarted();
+
+  if(!tsr){  // if a tsr has already been called for don't do the solve
+    d_solver->removeFixedDOF(num_nodes);
+    d_solver->solve();   
+  }
+  else{
+    cout << "skipping solve, timestep has already called for a restart" << endl;
+  }
 }
 
 void ImpMPM::getDisplacementIncrement(const ProcessorGroup* /*pg*/,
