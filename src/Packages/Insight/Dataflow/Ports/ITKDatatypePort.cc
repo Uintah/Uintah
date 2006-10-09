@@ -42,23 +42,28 @@
 #include <Packages/Insight/Dataflow/Ports/ITKDatatypePort.h>
 #include <Core/Malloc/Allocator.h>
 
-#include <Packages/Insight/Dataflow/Ports/share.h>
-namespace Insight {
+#undef SCISHARE
+#ifdef _WIN32
+#define SCISHARE __declspec(dllexport)
+#else
+#define SCISHARE
+#endif
 
-using namespace SCIRun;
+namespace SCIRun {
 
 extern "C" {
   SCISHARE IPort* make_ITKDatatypeIPort(Module* module, const string& name) {
-    return scinew SimpleIPort<ITKDatatypeHandle>(module,name);
+    return scinew SimpleIPort<SCIRun::ITKDatatypeHandle>(module,name);
 }
   SCISHARE OPort* make_ITKDatatypeOPort(Module* module, const string& name) {
-    return scinew SimpleOPort<ITKDatatypeHandle>(module,name);
+    return scinew SimpleOPort<SCIRun::ITKDatatypeHandle>(module,name);
 }
 }
-} // End namespace Insight
 
-namespace SCIRun {
 template<> string SimpleIPort<SCIRun::ITKDatatypeHandle>::port_type_("ITKDatatype");
 template<> string SimpleIPort<SCIRun::ITKDatatypeHandle>::port_color_("pink");
+
+static test_class test_me;
+
 } // End namespace SCIRun
 

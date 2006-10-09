@@ -31,15 +31,28 @@
 
 include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
-SRCDIR   := Packages/Insight/Dataflow/Ports
+INCLUDES += $(INSIGHT_INCLUDE)
 
-SRCS     += $(SRCDIR)/ITKDatatypePort.cc \
+SRCDIR   := Dataflow/Network
 
+SRCS     += $(SRCDIR)/Ports/ITKDatatypePort.cc \
 
-PSELIBS := Dataflow/Network Dataflow/Comm Core/Containers \
-	Core/Thread Core/Geom Core/Exceptions \
-	Core/Persistent Core/Datatypes Core/Util
-LIBS := 
+PSELIBS := \
+        Dataflow/Comm      \
+        Core/Datatypes     \
+        Core/Exceptions    \
+        Core/Containers    \
+        Core/Geom          \
+        Core/GeomInterface \
+        Core/Geometry      \
+        Dataflow/GuiInterface  \
+        Core/Util          \
+        Core/Thread        \
+        Core/Volume        \
+        Core/XMLUtil  		 \
+				Core/OS
+
+LIBS := $(TCL_LIBRARY) $(XML2_LIBRARY)
 
 include $(SCIRUN_SCRIPTS)/smallso_epilogue.mk
 
