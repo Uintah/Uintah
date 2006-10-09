@@ -32,7 +32,7 @@
 -->
 
 
-<component name="FieldArbitrarySlicer" category="Conglomerate_FieldsCreate">
+<component name="FieldArbitrarySlicer" category="FieldsCreate">
   <overview>
     <authors>
       <author>ARSanderson</author>

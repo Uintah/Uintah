@@ -40,7 +40,6 @@ SRCDIR := Dataflow/Modules
 
 SUBDIRS := \
 	$(SRCDIR)/Bundle\
-	$(SRCDIR)/Conglomerate\
 	$(SRCDIR)/DataIO\
 	$(SRCDIR)/Fields\
 	$(SRCDIR)/Math\
