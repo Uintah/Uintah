@@ -51,6 +51,9 @@ SET(scirun_obj_dir "@scirun_obj_dir@")
 # The SCIRUN include file directories.
 SET(SCIRUN_INCLUDE_DIRS "@SCIRUN_INCLUDE_DIRS_CONFIG@")
 
+# Package info
+SET(LOAD_PACKAGE "@LOAD_PACKAGE@")
+
 # on-the-fly-libs/Makefile vars
 # DV Fix shouldn't be from 3p for sure
 SET(INC_SCI_THIRDPARTY_H "$(SCIRUN_THIRDPARTY_DIR)/include")
