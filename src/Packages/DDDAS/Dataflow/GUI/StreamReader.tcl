@@ -27,10 +27,6 @@ itcl_class DDDAS_DataIO_StreamReader {
 	global $this-brokerport
 	global $this-groupname
 	global $this-listenport
-	set $this-brokerip "localhost"
-	set $this-brokerport 8831
-	set $this-groupname "wildfire"
-	set $this-listenport "8832"
     }
 
     method ui {} {
