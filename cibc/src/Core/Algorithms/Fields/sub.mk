@@ -16,6 +16,7 @@ SRCDIR   := Core/Algorithms/Fields
 SRCS     += $(SRCDIR)/ApplyMappingMatrix.cc\
             $(SRCDIR)/GetBoundingBox.cc\
             $(SRCDIR)/ClearAndChangeFieldBasis.cc\
+            $(SRCDIR)/ClipByFunction.cc\
             $(SRCDIR)/ConvertToTetVol.cc\
             $(SRCDIR)/ConvertToTriSurf.cc\
             $(SRCDIR)/DomainBoundary.cc\
@@ -48,6 +49,7 @@ SRCS     += $(SRCDIR)/ApplyMappingMatrix.cc\
             $(SRCDIR)/MappingMatrixToField.cc\
             $(SRCDIR)/Mapping.cc\
             $(SRCDIR)/CurrentDensityMapping.cc\
+            $(SRCDIR)/TransformData.cc\
             $(SRCDIR)/TransformField.cc\
             $(SRCDIR)/ToPointCloud.cc\
             $(SRCDIR)/Unstructure.cc\
