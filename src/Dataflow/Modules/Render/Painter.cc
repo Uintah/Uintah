@@ -1323,7 +1323,7 @@ Painter::NrrdSlice::draw()
 
   bind();
   if (texture_)
-    texture_->draw_quad(pos_, xdir_, ydir_);
+    texture_->draw_quad(&pos_, &xdir_, &ydir_);
 }
 
 #if 0
