@@ -37,13 +37,17 @@ SET(Core_Skinner_SRCS
   Collection.cc
   Color.cc
   ColorMap1D.cc
+#  ColorMap2D.cc
   Drawable.cc
+  FocusGrab.cc
   FocusRegion.cc
   Frame.cc
   Gradient.cc
   Graph2D.cc
+  GeomSkinnerVarSwitch.cc
   Grid.cc
   Layout.cc
+  MenuButton.cc
   MenuManager.cc
   MenuList.cc
   Parent.cc
@@ -57,6 +61,7 @@ SET(Core_Skinner_SRCS
   Texture.cc
   Window.cc
   Variables.cc
+  VisibilityGroup.cc
   ViewSubRegion.cc
   XMLIO.cc    
 )

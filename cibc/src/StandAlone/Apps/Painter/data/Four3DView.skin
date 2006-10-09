@@ -1,0 +1,69 @@
+<definition class="Four3DView">
+  <object class="Grid">
+    <var name="width">5</var>
+    <var name="height">5</var>
+    
+    <var name="rows">5</var>
+    <var name="cols">5</var>
+    
+
+    <var name="window-gap" propagate="yes">2</var>
+
+    <var name="bgcolor" propagate="yes">#00000000</var>
+
+    <object class="Collection">
+      <var name="row">1</var>
+      <var name="col">1</var>
+      <var name="cell-width">$window-gap</var>
+      <var name="cell-height">$window-gap</var>
+    </object>
+
+    <object class="Collection">
+      <var name="row">1</var>
+      <var name="col">3</var>
+      <var name="cell-width">$window-gap</var>
+    </object>
+
+    <object class="Collection">
+      <var name="row">1</var>
+      <var name="col">5</var>
+      <var name="cell-width">$window-gap</var>
+    </object>
+
+    <object class="Collection">
+      <var name="row">3</var>
+      <var name="col">1</var>
+      <var name="cell-height">$window-gap</var>
+    </object>
+
+    <object class="Collection">
+      <var name="row">5</var>
+      <var name="col">1</var>
+      <var name="cell-height">$window-gap</var>
+    </object>
+
+    <object class="Shadowed3DViewer">
+      <var name="row">2</var>
+      <var name="col">2</var>
+    </object>
+
+    <object class="Shadowed3DViewer">
+      <var name="row">2</var>
+      <var name="col">4</var>
+    </object>
+
+    <object class="Shadowed3DViewer">
+      <var name="row">4</var>
+      <var name="col">2</var>
+    </object>
+
+    <object class="Shadowed3DViewer">
+      <var name="row">4</var>
+      <var name="col">4</var>
+    </object>
+
+      
+
+  </object>
+</definition>
+

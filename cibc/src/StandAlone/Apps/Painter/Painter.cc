@@ -57,6 +57,7 @@
 #include <Core/Geom/Material.h>
 #include <Core/Geom/ColorMappedNrrdTextureObj.h>
 #include <Core/Geom/GeomSwitch.h>
+#include <Core/Skinner/GeomSkinnerVarSwitch.h>
 #include <Core/Geom/GeomCull.h>
 #include <Core/Geom/GeomGroup.h>
 #include <Core/Geom/TexSquare.h>
@@ -72,9 +73,11 @@
 #include <Core/Volume/CM2Widget.h>
 #include <Core/Geom/TextRenderer.h>
 #include <Core/Geom/FontManager.h>
+#include <Core/Geom/GeomColorMappedNrrdTextureObj.h>
 #include <Core/Util/SimpleProfiler.h>
 #include <Core/Skinner/Variables.h>
 #include <Core/Events/EventManager.h>
+#include <Core/Events/SceneGraphEvent.h>
 #include <Core/Util/FileUtils.h>
 #include <Core/Algorithms/Visualization/NrrdTextureBuilderAlgo.h>
 
@@ -145,9 +148,11 @@ namespace SCIRun {
 
 Painter::NrrdSlice::NrrdSlice(Painter *painter,
                               NrrdVolume *volume, 
+                              SliceWindow *window,
                               Point &p, Vector &n) :
   painter_(painter),
   volume_(volume),
+  window_(window),
   nrrd_dirty_(true),
   tex_dirty_(false),
   geom_dirty_(false),
@@ -180,11 +185,17 @@ Painter::SliceWindow::SliceWindow(Skinner::Variables *variables,
   autoview_(true),
   mode_(0,0),
   show_guidelines_(0,1),
-  cursor_pixmap_(-1)
+  cursor_pixmap_(-1),
+  show_grid_(variables, "SliceWindow::GridVisible",1),
+  show_slices_(variables, "SliceWindow::SlicesVisible",1),
+  geom_switch_(0),
+  geom_group_(0)
+
 {
   Skinner::Var<int> axis(variables, "axis", 2);
   set_axis(axis());
   //  axis_ = axis;
+  REGISTER_CATCHER_TARGET(SliceWindow::redraw);
   REGISTER_CATCHER_TARGET(SliceWindow::Autoview);
   REGISTER_CATCHER_TARGET(SliceWindow::zoom_in);
   REGISTER_CATCHER_TARGET(SliceWindow::zoom_out);
@@ -192,22 +203,24 @@ Painter::SliceWindow::SliceWindow(Skinner::Variables *variables,
 
 
 
-Painter::NrrdVolume::NrrdVolume(VarContext *ctx,
+Painter::NrrdVolume::NrrdVolume(Painter *painter,
                                 const string &name,
                                 NrrdDataHandle &nrrd) :
+  painter_(painter),
   nrrd_handle_(0),
   name_(name),
   name_prefix_(""),
-  opacity_(0, 1.0),
-  clut_min_(0, 0.0),
-  clut_max_(0, 1.0),
+  opacity_(1.0),
+  clut_min_(0.0),
+  clut_max_(1.0),
   mutex_(0),
   data_min_(0),
   data_max_(1.0),
   colormap_(0),
   stub_axes_(),
   transform_(),
-  keep_(true)
+  keep_(true),
+  visible_(painter_->get_vars(),"volume_visible",1)
 {
   set_nrrd(nrrd);
 }
@@ -217,7 +230,6 @@ Painter::NrrdVolume::NrrdVolume(VarContext *ctx,
 Painter::NrrdVolume::~NrrdVolume() {
   mutex_.lock();
   nrrd_handle_ = 0;
-  //  delete gui_context_;
   mutex_.unlock();
 
 }
@@ -258,19 +270,21 @@ nrrd_data_size(Nrrd *nrrd)
 Painter::NrrdVolume::NrrdVolume(NrrdVolume *copy, 
                                 const string &name,
                                 int clear) :
+  painter_(copy->painter_),
   nrrd_handle_(0),
   name_(name),
   name_prefix_(copy->name_prefix_),
-  opacity_(0, copy->opacity_.get()),
-  clut_min_(0, copy->clut_min_.get()),
-  clut_max_(0, copy->clut_max_.get()),
+  opacity_(copy->opacity_),
+  clut_min_(copy->clut_min_),
+  clut_max_(copy->clut_max_),
   mutex_(name.c_str()),
   data_min_(copy->data_min_),
   data_max_(copy->data_max_),
   colormap_(copy->colormap_),
   stub_axes_(copy->stub_axes_),
   transform_(),
-  keep_(copy->keep_)
+  keep_(copy->keep_),
+  visible_(painter_->get_vars(),"volume_visible")
 {
   copy->mutex_.lock();
   mutex_.lock();
@@ -444,10 +458,12 @@ Painter::Painter(Skinner::Variables *variables, VarContext* ctx) :
   InitializeSignalCatcherTargets(0);
   Skinner::Signal *signal = new Skinner::Signal("LoadColorMap1D",
                                                 this, get_vars());
-  string srcdir = sci_getenv("SCIRUN_SRCDIR")+string("/Core/Skinner/Data/");
-  Skinner::Var<string> filename(get_vars(), "filename");
-  filename = srcdir+"Rainbow.cmap";
-  LoadColorMap1D(signal);
+  string path = findFileInPath("Rainbow.cmap", sci_getenv("SKINNER_PATH"));
+  if (!path.empty()) {
+    Skinner::Var<string> filename(get_vars(), "filename");
+    filename = path + "Rainbow.cmap";
+    LoadColorMap1D(signal);
+  }
 }
 
 Painter::~Painter()
@@ -483,8 +499,19 @@ Painter::SliceWindow::get_signal_id(const string &signalname) const {
 }
 
 
-void
-Painter::SliceWindow::render_gl() {
+BaseTool::propagation_state_e
+Painter::SliceWindow::redraw(event_handle_t) {
+  const Skinner::RectRegion &region = get_region();
+  if (region.width() <= 0 || region.height() <= 0) return CONTINUE_E;
+  glMatrixMode(GL_MODELVIEW);
+  glPushMatrix();
+  glMatrixMode(GL_PROJECTION);
+  glPushMatrix();
+  GLint viewport[4];
+  glGetIntegerv(GL_VIEWPORT, viewport);    
+  glViewport(Floor(region.x1()), Floor(region.y1()), 
+             Ceil(region.width()), Ceil(region.height()));
+
   painter_->volume_lock_.lock();
 
   NrrdVolume *vol = painter_->current_volume_;
@@ -539,7 +566,7 @@ Painter::SliceWindow::render_gl() {
       slices_[s]->draw();
   }
 
-  if (painter_->show_grid_()) 
+  if (show_grid_()) 
     render_grid();
 
   painter_->draw_slice_lines(*this);
@@ -562,6 +589,13 @@ Painter::SliceWindow::render_gl() {
 
   CHECK_OPENGL_ERROR();
   painter_->volume_lock_.unlock();
+  glViewport(viewport[0],viewport[1],viewport[2],viewport[3]);
+  glMatrixMode(GL_MODELVIEW);
+  glPopMatrix();
+  glMatrixMode(GL_PROJECTION);
+  glPopMatrix();
+  CHECK_OPENGL_ERROR();
+
 }
 
 
@@ -1124,13 +1158,12 @@ Painter::NrrdSlice::axis() {
 void
 Painter::NrrdSlice::bind()
 {
-  if (texture_ && tex_dirty_) { 
-    delete texture_; 
+  if (tex_dirty_) { 
     texture_ = 0; 
   }
 
 
-  if (!texture_) {
+  if (!texture_.get_rep()) {
     vector<int> index = volume_->world_to_index(plane_.project(Point(0,0,0)));
     unsigned int ax = axis();
     unsigned int slice = index[ax];
@@ -1146,10 +1179,15 @@ Painter::NrrdSlice::bind()
   }
 
 
-  if (texture_ && tex_dirty_) {
+  if (texture_.get_rep() && tex_dirty_) {
     texture_->set_clut_minmax(volume_->clut_min_, volume_->clut_max_);
     ColorMapHandle cmap = painter_->get_colormap(volume_->colormap_);
     texture_->set_colormap(cmap);
+    GeomColorMappedNrrdTextureObj *slice = 
+      new GeomColorMappedNrrdTextureObj(texture_);
+    GeomSkinnerVarSwitch *gswitch = 
+      new GeomSkinnerVarSwitch(slice, volume_->visible_);
+    window_->get_geom_group()->addObj(gswitch, axis());
   }
 
 
@@ -1263,8 +1301,8 @@ Painter::NrrdSlice::draw()
   CHECK_OPENGL_ERROR();  
 
   bind();
-  if (texture_)
-    texture_->draw_quad(pos_, xdir_, ydir_);
+  if (texture_.get_rep())
+    texture_->draw_quad(&pos_, &xdir_, &ydir_);
 }
 
 #if 0
@@ -1381,17 +1419,19 @@ void
 Painter::NrrdSlice::set_coords() {  
   vector<int> sindex = volume_->world_to_index(plane_.project(Point(0,0,0)));
   unsigned int ax = axis();
+
+  Point origin = volume_->min(ax, 0);
   pos_ = volume_->min(ax, sindex[ax]);
   vector<int> index(volume_->nrrd_handle_->nrrd_->dim,0);
 
   int primary = (ax == 1) ? 2 : 1;
   index[primary] = volume_->nrrd_handle_->nrrd_->axis[primary].size;
-  xdir_ = volume_->index_to_world(index) - pos_;
+  xdir_ = volume_->index_to_world(index) - origin;
   index[primary] = 0;
 
   int secondary = (ax == 3) ? 2 : 3;
   index[secondary] = volume_->nrrd_handle_->nrrd_->axis[secondary].size;
-  ydir_ = volume_->index_to_world(index) - pos_;
+  ydir_ = volume_->index_to_world(index) - origin;
 }
 
 void
@@ -1417,7 +1457,7 @@ Painter::SliceWindow::extract_slices() {
     if (volumes[s] == painter_->current_volume_) {
       center_ = painter_->current_volume_->center();
     }
-    slices_.push_back(scinew NrrdSlice(painter_, volumes[s], center_, normal_));
+    slices_.push_back(scinew NrrdSlice(painter_, volumes[s], this, center_, normal_));
   }
 
   slice_map_.clear();
@@ -1934,7 +1974,7 @@ Painter::extract_data_from_bundles(Bundles &bundles)
     viter = volume_map_.find(name);
     if (viter == vend || viter->second == 0) {
       volume_map_[name] = 
-        new NrrdVolume(0, name, nrrds[n]);
+        new NrrdVolume(this, name, nrrds[n]);
       show_volume(name);
     } else {
       if (nrrds[n]->generation > viter->second->nrrd_handle_->generation)
@@ -2041,7 +2081,7 @@ Painter::Event::update_state(Painter &painter) {
 BaseTool::propagation_state_e
 Painter::SliceWindow::Autoview(event_handle_t) {
   if (painter_->current_volume_) {
-    autoview(painter_->current_volume_, 0);
+    autoview(painter_->current_volume_);
   }
   return CONTINUE_E;
 }
@@ -2053,17 +2093,6 @@ Painter::SliceWindow::autoview(NrrdVolume *volume, double offset) {
   double wid = get_region().width() -  2*offset;
   double hei = get_region().height() - 2*offset;
 
-  
-//   FreeTypeFace *font = fonts_["orientation"];
-//   if (font)
-//   {
-//     FreeTypeText dummy("X", font);
-//     BBox bbox;
-//     dummy.get_bounds(bbox);
-//     wid -= 2*Ceil(bbox.max().x() - bbox.min().x())+4;
-//     hei -= 2*Ceil(bbox.max().y() - bbox.min().y())+4;
-//   }
-  
   int xax = x_axis();
   int yax = y_axis();
 
@@ -2490,24 +2519,14 @@ Painter::SliceWindow::process_event(event_handle_t event) {
     painter_->tm_.propagate_event(event);
   }
 
+#if 0
   WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
   if (window && window->get_window_state() == WindowEvent::REDRAW_E) {
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    GLint viewport[4];
-    glGetIntegerv(GL_VIEWPORT, viewport);    
-    glViewport(Floor(region.x1()), Floor(region.y1()), 
-	       Ceil(region.width()), Ceil(region.height()));
     render_gl();
-    glViewport(viewport[0],viewport[1],viewport[2],viewport[3]);
-    glMatrixMode(GL_MODELVIEW);
-    glPopMatrix();
-    glMatrixMode(GL_PROJECTION);
-    glPopMatrix();
+
     
   }
+#endif
   
   
   return Parent::process_event(event);
@@ -2529,6 +2548,19 @@ Skinner::Drawable *
 Painter::maker(Skinner::Variables *vars) 
 {
   return new Painter(vars, 0);
+}
+
+
+GeomIndexedGroup *
+Painter::SliceWindow::get_geom_group() {
+  if (!geom_group_) {
+    geom_group_ = new GeomIndexedGroup();
+    geom_switch_ = new GeomSkinnerVarSwitch(geom_group_, show_slices_);
+    event_handle_t add_geom_switch_event = 
+      new SceneGraphEvent(geom_switch_, get_id());
+    EventManager::add_event(add_geom_switch_event);
+  }
+  return geom_group_;
 }
 
 

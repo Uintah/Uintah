@@ -84,7 +84,7 @@ Painter::BrushTool::BrushTool(Painter *painter) :
   painter_(painter),
   window_(0),
   slice_(0),
-  value_(airNaN()),
+  value_(painter->get_vars(), "Painter::brush_value", 256.0),
   last_index_(),
   radius_(painter->get_vars(), "Painter::brush_radius"),
   draw_cursor_(0)
@@ -92,7 +92,6 @@ Painter::BrushTool::BrushTool(Painter *painter) :
   painter_->create_undo_volume();
   if (painter_->current_volume_) {
     value_ = painter_->current_volume_->clut_max_;
-    painter_->get_vars()->insert("Painter::brush_value", to_string(value_), "string", true);
   }
 }
 
@@ -153,8 +152,9 @@ Painter::BrushTool::pointer_down(int b, int x, int y, unsigned int m, int t)
   } else if (b == 2) {
     vector<int> index = vol->world_to_index(painter_->pointer_pos_);
     if (vol->index_valid(index)) {
-      vol->get_value(index, value_);
-      painter_->get_vars()->insert("Painter::brush_value", to_string(value_), "string", true);
+      double tmpval;
+      vol->get_value(index, tmpval);
+      value_ = tmpval;
     }
     painter_->redraw_all();    
     return STOP_E;
@@ -348,7 +348,7 @@ Painter::BrushTool::splat(Nrrd *nrrd, double radius, int x0, int y0)
             //            dist += painter_->current_volume_->clut_min_;
             //            float val;
             //            nrrd_get_value(nrrd, index, val);
-            nrrd_set_value(nrrd, index, value_);//nrrd_get_value(nrrd,index);
+            nrrd_set_value(nrrd, index, value_());//nrrd_get_value(nrrd,index);
           }
         }
 }

@@ -52,12 +52,14 @@ namespace SCIRun {
       CatcherFunction_t Arrow_Maker;
       //      CatcherFunction_t ColorMap2D_Maker;
       CatcherFunction_t FocusRegion_Maker;
+      CatcherFunction_t FocusGrab_Maker;
       CatcherFunction_t GLWindow_Maker;
       CatcherFunction_t GLWindow_Destructor;
       CatcherFunction_t Graph2D_Maker;
       CatcherFunction_t MenuManager_Maker;
       CatcherFunction_t Text_Maker;
       CatcherFunction_t ViewSubRegion_Maker;
+      CatcherFunction_t VisibilityGroup_Maker;
       CatcherFunction_t Arc_Maker;
       CatcherFunction_t Quit;
       CatcherFunction_t Redraw;

@@ -4,15 +4,11 @@
 <skinner version="1.0" xmlns:xi="http://www.w3.org/2001/XInclude">
 
   <var name="program_name" propagate="yes">LeXoV</var>
-  <var name="full_program_name" propagate="yes">version 1.0b</var>
+  <var name="full_program_name" propagate="yes">Beta version 0.9</var>
 
   <var name="Painter::brush_radius" type="double" propagate="yes">5.0</var>
   <var name="Painter::brush_softness" type="double"  propagate="yes">0.0</var>
   <var name="Painter::brush_value" type="double" propagate="yes">256.0</var>
-
-
-  <var name="FourView::visible" type="bool" propagate="yes">0</var>
-  <var name="ThreeView::visible" type="bool" propagate="yes">1</var>
 
   <var name="ITKCurvatureAnisotropicDiffusionImageFilterTool::numberOfIterations" propagate="yes">5</var>
   <var name="ITKCurvatureAnisotropicDiffusionImageFilterTool::timeStep" propagate="yes">0.0625</var>
@@ -59,6 +55,8 @@
        propagate="yes">0</var>
 
 
+  <var name="volume_visible" propagate="yes">1</var>
+
   <var name="Painter::crop::min::x" type="double" propagate="yes">0</var>
   <var name="Painter::crop::min::y" type="double" propagate="yes">0</var>
   <var name="Painter::crop::min::z" type="double" propagate="yes">0</var>
@@ -79,14 +77,17 @@
   <var name="ITKBinaryDilateErode::dilateValue" propagate="yes">1</var>
   <var name="ITKBinaryDilateErode::erodeValue" propagate="yes">1</var>
 
-
+  <var name="main_color" propagate="yes">#AAAAB0FF</var>
+  <var name="main_color_dark" propagate="yes">#AAAAB080</var>
+  <var name="hilite_shadow" propagate="yes">#AAAAB080</var>
+  <var name="hilite_shadow" propagate="yes">#FFFF90FF</var>
   <var name="grey" propagate="yes">#444444FF</var>
   <var name="grey2" propagate="yes">#777777FF</var>
   <var name="grey3" propagate="yes">#AAAAAAFF</var>
-  <var name="light_red" propagate="yes">#996666DD</var>
-  <var name="light_green" propagate="yes">#446644DD</var>
+  <var name="light_red" propagate="yes">#882222BB</var>
+  <var name="light_green" propagate="yes">#33993388</var>
+  <var name="light_blue" propagate="yes">#33339988</var>
   <var name="dark_blue" propagate="yes">#444466FF</var>
-  <var name="light_blue" propagate="yes">#AAAAE0DD</var>
 
   <var name="button_color" propagate="yes">#BBBBFFFF</var>
   <var name="button_color" propagate="yes">#FFFFFFFF</var>
@@ -100,19 +101,40 @@
   <var name="black50" propagate="yes">#00000080</var>
   <var name="black90" propagate="yes">#000000BB</var>
   <var name="Window::borders" propagate="yes">1</var>
+  <var name="FileDialog::visible" propagate="yes">0</var>
+  <var name="QuitDialog::visible" propagate="yes">0</var>
 
-  <xi:include href="ShadowedBox2.skin" parse="xml"/>  
+  <xi:include href="ShadowedBox.skin" parse="xml"/>  
   <xi:include href="Button2.skin" parse="xml"/>
   <xi:include href="ImageButton.skin" parse="xml"/>
+  <xi:include href="ImageFrameButton.skin" parse="xml"/>
+  <xi:include href="TextCheckButton.skin" parse="xml"/>
   <xi:include href="SliceFrame.skin" parse="xml"/>
   <xi:include href="FrameButton.skin" parse="xml"/>
+
+  <xi:include href="Shadowed3DViewer.skin" parse="xml"/>
+
+
+  <xi:include href="ShadowedFocusBox.skin" parse="xml"/>
+  <xi:include href="NicePainterWindow.skin" parse="xml"/>
+  <xi:include href="ShadowedPainterWindow.skin" parse="xml"/>
+
   <xi:include href="FourView.skin" parse="xml"/>
+  <xi:include href="16View.skin" parse="xml"/>
+  <xi:include href="3DView.skin" parse="xml"/>
+  <xi:include href="Four3DView.skin" parse="xml"/>
+  <xi:include href="4X4CenterView.skin" parse="xml"/>
+
+  <xi:include href="MainWindow.skin" parse="xml"/>
+
   <xi:include href="ThreeView.skin" parse="xml"/>
   <xi:include href="ToolDialog.skin" parse="xml"/>
   <xi:include href="MenuButton.skin" parse="xml"/>
   <xi:include href="HelpButton.skin" parse="xml"/>  
   <xi:include href="FileLoadBox.skin" parse="xml"/>
+  <xi:include href="QuitDialog.skin" parse="xml"/>
   <xi:include href="SpinnerBox.skin" parse="xml"/>
+
   <xi:include href="LabeledSpinnerBox.skin" parse="xml"/>
   <xi:include href="MainToolbar.skin" parse="xml"/>
   <xi:include href="GradientBackground.skin" parse="xml"/>
@@ -129,446 +151,161 @@
   <xi:include href="ITKConfidenceConnectedImageFilterToolDialog.skin" parse="xml"/>
   
   
-  <definition class="NicePainterWindow">
-    <object class="Collection">
-      <var name="LabeledGradientBackground::text" propagate="yes">$NicePainterWindow::name</var>
-
-      <definition class="LabeledGradientBackground::child">                
-        <object class="Root::FocusRegion">
-          <object class="Painter::SliceWindow">
-            <signal name="SliceWindow::mark_redraw" target="GLWindow::mark_redraw"/>
-            <object class="Grid">                
-              <var name="cols">2</var>
-              <var name="rows">1</var>     
-              <object class="Grid">
-                <var name="col">2</var>
-                <var name="row">1</var>
-                <var name="cell-width">25</var>
-                
-                <var name="cols">1</var>
-                <var name="rows">10</var>
-                <object class="FrameButton">
-                  <var name="col">1</var>
-                  <var name="row">10</var>
-                  <var name="cell-height">25</var>
-                  <var name="Button::Text::text" propagate="yes">A</var>
-                  <signal name="Button::clicked" 
-                          target="SliceWindow::Autoview"/>
-
-                </object>
-                <object class="FrameButton">
-                  <var name="col">1</var>
-                  <var name="row">9</var>
-                  <var name="cell-height">25</var>
-                  <var name="Button::Text::text" propagate="yes">+</var>
-                  <signal name="Button::clicked" 
-                          target="SliceWindow::zoom_in"/>
-                </object>
-
-                <object class="FrameButton">
-                  <var name="col">1</var>
-                  <var name="row">8</var>
-                  <var name="cell-height">25</var>
-                  <var name="Button::Text::text" propagate="yes">-</var>
-                  <signal name="Button::clicked" 
-                          target="SliceWindow::zoom_out"/>
-                </object>
-
-              </object>
-            </object>
-          </object>
-        </object>
-      </definition>
-
-      <object class="LabeledGradientBackground"/>
-    </object>
-  </definition>
-
-
-
-  <definition class="ShadowedPainterWindow">
-    <object class="ShadowedBox">
-      <definition class="ShadowedBox::child">
-        <object class="NicePainterWindow"/>
-      </definition>
-    </object>
-  </definition>
-
-
-  <!--
-  -->
-
-
-
-  <definition class="ShadowedPainterWindow">
-    <object class="ShadowedBox">
-      <definition class="ShadowedBox::child">
-        <object class="NicePainterWindow"/>
-      </definition>
-    </object>
-  </definition>
 
   
   <!--
       ***** Definitions Over
       ***** Objects Begin
   -->
+  <object class="Root::Arithmetic">
+    <object class="Animation">
+      <var name="variable-1-seconds">0.25</var>
+      <var name="variable-1-begin">0</var>
+      <var name="variable-1-end">250</var>
+      <var name="Animation::variable-1" type="double" propagate="yes">0</var>
+      
+      <var name="variable-2-seconds">0.25</var>
+      <var name="variable-2-begin">0</var>
+      <var name="variable-2-end">150</var>      
+      <var name="Animation::variable-2" propagate="yes">0</var>
+      
+      <var name="variable-3-seconds">0.25</var>
+      <var name="variable-3-begin">0</var>
+      <var name="variable-3-end">150</var>      
+      <var name="Animation::variable-3" propagate="yes">0</var>
 
-  <object class="Animation">
-    <var name="variable-1-seconds">0.25</var>
-    <var name="variable-1-begin">0</var>
-    <var name="variable-1-end">150</var>
-    <var name="Animation::variable-1" type="double" propagate="yes">0</var>
-    
-    <var name="variable-2-seconds">0.25</var>
-    <var name="variable-2-begin">0</var>
-    <var name="variable-2-end">150</var>      
-    <var name="Animation::variable-2" propagate="yes">0</var>
-    
-    <var name="variable-3-seconds">0.25</var>
-    <var name="variable-3-begin">0</var>
-    <var name="variable-3-end">150</var>      
-    <var name="Animation::variable-3" propagate="yes">0</var>
+      <var name="variable-4-seconds">0.25</var>
+      <var name="variable-4-begin">0</var>
+      <var name="variable-4-end">225</var>      
+      <var name="Animation::variable-4" propagate="yes">0</var>
 
-    <var name="variable-4-seconds">0.25</var>
-    <var name="variable-4-begin">0</var>
-    <var name="variable-4-end">225</var>      
-    <var name="Animation::variable-4" propagate="yes">0</var>
+      <var name="variable-5-seconds">0.25</var>
+      <var name="variable-5-begin">0</var>
+      <var name="variable-5-end">225</var>      
+      <var name="Animation::variable-5" propagate="yes">0</var>
 
-    <var name="variable-5-seconds">0.25</var>
-    <var name="variable-5-begin">0</var>
-    <var name="variable-5-end">225</var>      
-    <var name="Animation::variable-5" propagate="yes">0</var>
+      <var name="variable-6-seconds">0.25</var>
+      <var name="variable-6-begin">0</var>
+      <var name="variable-6-end">225</var>      
+      <var name="Animation::variable-6" propagate="yes">0</var>
 
-    <var name="variable-6-seconds">0.25</var>
-    <var name="variable-6-begin">0</var>
-    <var name="variable-6-end">225</var>      
-    <var name="Animation::variable-6" propagate="yes">0</var>
+      <var name="variable-7-seconds">0.25</var>
+      <var name="variable-7-begin">0</var>
+      <var name="variable-7-end">225</var>      
+      <var name="Animation::variable-7" propagate="yes">0</var>
 
-    <var name="variable-7-seconds">0.25</var>
-    <var name="variable-7-begin">0</var>
-    <var name="variable-7-end">225</var>      
-    <var name="Animation::variable-7" propagate="yes">0</var>
+      <var name="variable-8-seconds">0.25</var>
+      <var name="variable-8-begin">0</var>
+      <var name="variable-8-end">225</var>      
+      <var name="Animation::variable-8" propagate="yes">0</var>
 
-    <var name="variable-8-seconds">0.25</var>
-    <var name="variable-8-begin">0</var>
-    <var name="variable-8-end">225</var>      
-    <var name="Animation::variable-8" propagate="yes">0</var>
+      <var name="variable-9-seconds">0.25</var>
+      <var name="variable-9-begin">0</var>
+      <var name="variable-9-end">225</var>      
+      <var name="Animation::variable-9" propagate="yes">0</var>
 
-    <var name="variable-9-seconds">0.25</var>
-    <var name="variable-9-begin">0</var>
-    <var name="variable-9-end">225</var>      
-    <var name="Animation::variable-9" propagate="yes">0</var>
+      <var name="variable-10-seconds">0.25</var>
+      <var name="variable-10-begin">0</var>
+      <var name="variable-10-end">225</var>      
+      <var name="Animation::variable-10" propagate="yes">0</var>
+      
 
-    <var name="variable-10-seconds">0.25</var>
-    <var name="variable-10-begin">0</var>
-    <var name="variable-10-end">225</var>      
-    <var name="Animation::variable-10" propagate="yes">0</var>
-    
-
-    <object class="Painter">
-      <object class="Root::FocusRegion">
-        <var name="Painter::status_text" propagate="yes"> </var>
-        <var name="Painter::progress_bar_text"
-             propagate="yes"></var>
-        <var name="Painter::progress_bar_total_width"
-             propagate="yes">500</var>
-        <var name="Painter::progress_bar_done_width"
-             propagate="yes">0</var>
-
-        <var name="ToolDialog::text" 
-             propagate="yes" 
-             overwrite="no"></var>
-        
-        <var name="ToolDialog::button_height" 
-             propagate="yes"
-             overwrite="no">40</var>
-
-        <var name="value" 
-             propagate="yes"
-             overwrite="no"></var>
-
-
-        <var name="clut_min_max" 
-             propagate="yes"
-             overwrite="no"></var>
-
-        <var name="clut_ww_wl" 
-             propagate="yes"
-             overwrite="no"></var>
-
-        <var name="xyz_pos" 
-             propagate="yes"
-             overwrite="no"></var>
-
-
-        <var name="sca_pos" 
-             propagate="yes"
-             overwrite="no"></var>
-
-
-
-
-        <object class="Root::GLWindow" id="SCI-RENDER">
-          <var name="id">$program_name</var>
-          <var name="width" type="int">1100</var>
-          <var name="height" type="int">800</var>
-          <var name="posx" type="int">220</var>
-          <var name="posy" type="int">20</var>
-          <var name="border" type="bool">$Window::borders</var>
-          
-
-          <object class="Box">
-            <var name="color">#AAAAAAFF</var>
-          </object>
+      <object class="Painter">
+        <object class="Root::FocusRegion">
+          <object class="Root::VisibilityGroup">
+            <var name="Painter::status_text" propagate="yes"> </var>
             
-          <!--              
-          <object class="Texture">
-            <var name="file">BackgroundTile03.png</var>
-            <var name="color">#FFFFFFFF</var>
-            <var name="repeatx">1</var>
-            <var name="repeaty">1</var>
-          </object>
-
-
-              <object class="Texture">
-              <var name="file">BackgroundTile04.png</var>
-              <var name="color">#000000FF</var>
-              <var name="repeatx">1</var>
-              <var name="repeaty">1</var>
-              </object>
-          -->
-          
-
-          <object class="Grid" id="MainGrid">
-            <var name="rows">11</var>
-            <var name="cols">1</var>
-
-
-            <object class="MainToolbar">
-              <var name="row">1</var>
-              <var name="col">1</var>
-              <var name="cell-height">35</var>
-            </object>
-
-            <object class="FileLoadBox">
-              <var name="row">2</var>
-              <var name="col">1</var>
-              <var name="FileLoadBox::text" propagate="yes"> Volume File to Load: </var>
-              <var name="cell-height">$Animation::variable-1</var>
-              <signal name="FileLoadBox::CancelButtonPress" 
-                      target="Animation::AnimateVariableDescending">
-                <var name="varnum">1</var>
-              </signal>
-              <signal name="FileLoadBox::CancelButtonPress" 
-                      target="GLWindow::mark_redraw"></signal>
-
-
-              <signal name="FileLoadBox::OKButtonPress" 
-                      target="Painter::ITKImageFileRead"></signal>
-              <!--
-                  <signal name="FileLoadBox::OKButtonPress" 
-                  target="Painter::NrrdFileRead"></signal>
-              -->
-              <signal name="FileLoadBox::OKButtonPress" 
-                      target="Animation::AnimateVariableDescending" >
-                <var name="varnum">1</var>
-              </signal>
-              
-              <signal name="FileLoadBox::OKButtonPress" 
-                      target="Painter::Autoview" ></signal>
-
-              <signal name="FileLoadBox::OKButtonPress" 
-                      target="GLWindow::mark_redraw" ></signal>
-              
-              
-            </object>
-
-            <object class="FileLoadBox">
-              <var name="row">3</var>
-              <var name="col">1</var>
-              <var name="color">#ff0000ff</var>
-              <var name="FileLoadBox::text" propagate="yes"> Volume File to Save: </var>
-              
-              <var name="cell-height">$Animation::variable-2</var>
-              
-              <signal name="FileLoadBox::CancelButtonPress" 
-target="Animation::AnimateVariableDescending">
-                <var name="varnum">2</var>
-              </signal>
-              
-              <signal name="FileLoadBox::OKButtonPress" 
-                      target="Painter::ITKImageFileWrite"></signal>
-              
-              <signal name="FileLoadBox::OKButtonPress" 
-                      target="Animation::AnimateVariableDescending">
-                <var name="varnum">2</var>
-              </signal>                                    
-            </object>
-
-            <object class="FourView">
-              <var name="row">4</var>
-              <var name="col">1</var>
-              <var name="visible">$FourView::visible</var>
-            </object>
-
-            <object class="ThreeView">
-              <var name="row">4</var>
-              <var name="col">1</var>
-              <var name="visible">$ThreeView::visible</var>
-            </object>
-
-
-
-            <object class="ToolDialog">
-              <var name="row">5</var>
-              <var name="col">1</var>
-              <var name="cell-height">$Animation::variable-3</var>
-
-              <signal name="ToolDialog::Cancel" 
-                      target="Painter::CancelTool"></signal>
-
-              <signal name="ToolDialog::Cancel" 
-                      target="Animation::AnimateVariableDescending">
-                <var name="varnum">3</var>
-              </signal>
-
-              <signal name="ToolDialog::Execute" 
-                      target="Painter::FinishTool"></signal>
-
-              <signal name="ToolDialog::Execute" 
-                      target="Animation::AnimateVariableDescending" >
-                <var name="varnum">3</var>
-              </signal>
-              
-            </object>
+            <var name="Painter::progress_bar_text"
+                 propagate="yes"></var>
+            <var name="Painter::progress_bar_total_width"
+                 propagate="yes">500</var>
+            <var name="Painter::progress_bar_done_width"
+                 propagate="yes">0</var>
             
-
-            <object class="ITKThresholdDialog">
-              <var name="row">5</var>
-              <var name="col">1</var>
-              <var name="cell-height">$Animation::variable-4</var>
-
-            </object>
-
+            <var name="ToolDialog::text" 
+                 propagate="yes" 
+                 overwrite="no"></var>
             
-            <object class="ResampleDialog">
-              <var name="row">6</var>
-              <var name="col">1</var>
-              <var name="cell-height">$Animation::variable-5</var>
-            </object>
+            <var name="ToolDialog::button_height" 
+                 propagate="yes"
+                 overwrite="no">40</var>
             
-            <object class="ITKCurvatureAnisotropicDiffusionImageFilterToolDialog">
-              <var name="row">7</var>
-              <var name="col">1</var>
-              <var name="cell-height">$Animation::variable-6</var>
-            </object>
-
-            <object class="ITKConfidenceConnectedImageFilterToolDialog">
-              <var name="row">8</var>
-              <var name="col">1</var>
-              <var name="cell-height">$Animation::variable-7</var>
-            </object>
-
-            <object class="BrushToolDialog">
-              <var name="row">9</var>
-              <var name="col">1</var>
-              <var name="cell-height">$Animation::variable-9</var>
-            </object>
-
-            <object class="CropToolDialog">
-              <var name="row">10</var>
-              <var name="col">1</var>
-              <var name="cell-height">$Animation::variable-10</var>
+            <var name="value" 
+                 propagate="yes"
+                 overwrite="no"></var>
+            
+            
+            <var name="clut_min_max" 
+                 propagate="yes"
+                 overwrite="no"></var>
+            
+            <var name="clut_ww_wl" 
+                 propagate="yes"
+                 overwrite="no"></var>
+            
+            <var name="xyz_pos" 
+                 propagate="yes"
+                 overwrite="no"></var>
+            
+            
+            <var name="sca_pos" 
+                 propagate="yes"
+                 overwrite="no"></var>
+            
+            
+            <object class="Root::GLWindow">
+              <var name="id">$program_name</var>
+              <var name="width" type="int">800</var>
+              <var name="height" type="int">800</var>
+              <var name="posx" type="int">120</var>
+              <var name="posy" type="int">0</var>
+              <var name="border" type="bool">$Window::borders</var>
+              <object class="MainWindow"/>
             </object>
             
             
-
-            <object class="Grid">
-              <var name="row">11</var>
-              <var name="col">1</var>
-
-              <var name="rows">1</var>
-              <var name="cols">1</var>
+            
+            <object class="Root::GLWindow" id="Tools">
+              <var name="id">Tools</var>
+              <var name="width" type="int">255</var>
+              <var name="height" type="int">800</var>
+              <var name="posx" type="int">920</var>
+              <var name="posy" type="int">0</var>
+              <var name="border" type="bool">$Window::borders</var>
               
-              <var name="cell-height">35</var>
+              <object class="Tools"/>
+            </object>
+            
+            <object class="Root::GLWindow" id="Layers">
+              <var name="id">Layers</var>
+              <var name="width" type="int">275</var>
+              <var name="height" type="int">800</var>
+              <var name="posx" type="int">1350</var>
+              <var name="posy" type="int">0</var>
+              <var name="border" type="bool">$Window::borders</var>
+              <object class="Layers"/>
+            </object>
+            
+            
+            <object class="Root::GLWindow" id="Splash">
+              <var name="id">Splash</var>
+              <var name="width" type="int">800</var>
+              <var name="height" type="int">200</var>
+              <var name="posx" type="int">300</var>
+              <var name="posy" type="int">300</var>
+              <var name="border" type="bool">1</var>
               
-              <object class="Frame">
-                <var name="row">1</var>
-                <var name="col">1</var>
-                
-                <var name="width">2</var>
-                <var name="height">2</var>   
-                <var name="invert">true</var>
-                
-                <object class="Frame">
-                  <var name="invert">0</var>
-                  <var name="width">2</var>
-                  <var name="height">2</var>   
-                  
-                  <object class="Collection">
-                    <object class="Box">
-                      <var name="color">#808080A0</var>
-                    </object>
-                    <object class="Root::Text">
-                      <var name="row">1</var>
-                      <var name="col">3</var>
-                      <var name="text">$Painter::status_text</var>
-                      <var name="fgcolor">#FFFFFFFF</var>
-                      <var name="bgcolor">#000000FF</var>
-                      <var name="size">30</var>
-                      <var name="anchor">W</var>
-                      <var name="shadow">1</var>
-                      <var name="offsetx">-2</var>
-                      <var name="offsety">2</var>
-                    </object>
-                  </object>
-                </object>
-              </object>
+              <signal name="GLWindow::Destructor"
+                      target="Root::GLWindow_Destructor"/>
+              
+              <object class="Splash"/>
             </object>
           </object>
-        </object>
-
-
-
-        <object class="Root::GLWindow" id="Tools">
-          <var name="id">Tools</var>
-          <var name="width" type="int">275</var>
-          <var name="height" type="int">800</var>
-          <var name="posx" type="int">1150</var>
-          <var name="posy" type="int">0</var>
-          <var name="border" type="bool">$Window::borders</var>
-
-          <object class="Tools"/>
-        </object>
-
-        <object class="Root::GLWindow" id="Layers">
-          <var name="id">Layers</var>
-          <var name="width" type="int">275</var>
-          <var name="height" type="int">800</var>
-          <var name="posx" type="int">1350</var>
-          <var name="posy" type="int">0</var>
-          <var name="border" type="bool">$Window::borders</var>
-          <object class="Layers"/>
-        </object>
-        
-
-        <object class="Root::GLWindow" id="Splash">
-          <var name="id">Splash</var>
-          <var name="width" type="int">800</var>
-          <var name="height" type="int">200</var>
-          <var name="posx" type="int">300</var>
-          <var name="posy" type="int">300</var>
-          <var name="border" type="bool">1</var>
-
-          <signal name="GLWindow::Destructor"
-                  target="Root::GLWindow_Destructor"/>
-
-          <object class="Splash"/>
         </object>
       </object>
     </object>
   </object>
+
 </skinner>
 
 

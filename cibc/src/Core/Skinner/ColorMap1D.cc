@@ -44,7 +44,7 @@ namespace SCIRun {
       tex_(0)
     {
       Nrrd *nrrd = nrrd_handle_->nrrd_;
-      if (nrrdAlloc_va(nrrd, nrrdTypeFloat, 4, 1, 1, 256, 1)) {
+      if (nrrdAlloc_va(nrrd, nrrdTypeFloat, 4, 1, 256,1, 1)) {
         char *err = biffGetDone(NRRD);
         string errstr = (err ? err : "");
         free(err);
@@ -78,7 +78,7 @@ namespace SCIRun {
       Vector xdir(region.width(), 0, 0);      
       Vector ydir(0,region.height(), 0);
 
-      tex_->draw_quad(min, xdir, ydir);
+      tex_->draw_quad(&min, &xdir, &ydir);
     }
 
 

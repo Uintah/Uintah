@@ -951,6 +951,8 @@ OpenGLViewer::redraw_frame()
 {
   if (dead_) return;
 
+  const bool do_initial_autoview = (!xres_ && !yres_);
+
   // Get the window size
   xres_ = width();
   yres_ = height();
@@ -970,6 +972,11 @@ OpenGLViewer::redraw_frame()
     SGTool *sgt = dynamic_cast<SGTool*>(scene_graph_tool_.get_rep());
     sgt->handle_waiting_events();
   }
+
+  if (do_initial_autoview) {
+    tm_.propagate_event(new AutoviewEvent());
+  }
+  
 
   GLint data[1];
   glGetIntegerv(GL_MAX_LIGHTS, data);

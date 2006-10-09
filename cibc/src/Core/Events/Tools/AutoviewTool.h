@@ -67,6 +67,10 @@ public:
   {
     return CONTINUE_E;
   }
+
+  virtual propagation_state_e process_event(event_handle_t event);
+    
+
 protected:
   bool                         calc_view();
 

@@ -116,7 +116,9 @@ namespace SCIRun {
       }
       sci_putenv("SKINNER_PATH", skinner_path);
       sci_putenv("SCIRUN_FONT_PATH",skinner_path);
-      string filename = "main.skin";
+      const char *fn = sci_getenv("SKINNER_FILE");
+      string filename = (fn ? fn : "main.skin");
+      
       string path = findFileInPath(filename, skinner_path);
       if (path.empty()) {
         std::cerr << "Cannot find main.skin in SKINNER_PATH.\n";

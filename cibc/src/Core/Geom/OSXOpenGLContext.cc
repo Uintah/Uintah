@@ -40,6 +40,10 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Thread/Thread.h>
 #include <Core/Util/Assert.h>
+
+// General gui lock, not really x11 specific
+#include <Core/Geom/X11Lock.h>
+
 #include <iostream>
 #include <set>
 
@@ -133,8 +137,9 @@ OSXOpenGLContext::create_context(int x,
 OSXOpenGLContext::~OSXOpenGLContext()
 {
   release();
-
+  X11Lock::lock();
   aglDestroyContext(context_);
+  X11Lock::unlock();
 }
 
 
@@ -160,9 +165,9 @@ OSXOpenGLContext::make_current()
 void
 OSXOpenGLContext::release()
 {
-  //  OSXLock::lock();
+  //  X11Lock::lock();
   //  glXMakeCurrent(display_, None, NULL);
-  //  OSXLock::unlock();
+  //  X11Lock::unlock();
 }
 
 
@@ -193,11 +198,11 @@ OSXOpenGLContext::height()
 void
 OSXOpenGLContext::swap()
 {  
-  //  OSXLock::lock();
+  X11Lock::lock();
   aglSwapBuffers(context_);
-  aglUpdateContext(context_);
+  //  aglUpdateContext(context_);
   DrawGrowIcon(window_);
-  //  OSXLock::unlock();
+  X11Lock::unlock();
 }
 
 

@@ -51,15 +51,26 @@ namespace SCIRun {
     BaseTool::propagation_state_e
     Parent::process_event(event_handle_t e) {
       BaseTool::propagation_state_e state = Drawable::process_event(e);
+
+      WindowEvent *window = dynamic_cast<WindowEvent *>(e.get_rep());
+      bool redraw = window && window->get_window_state() == WindowEvent::REDRAW_E;
+      bool stop = false;
       if (state != STOP_E) {
         for (Drawables_t::iterator citer = children_.begin(); 
              citer != children_.end(); ++citer)
         {
           (*citer)->set_region(get_region());
-          (*citer)->process_event(e);
+          state = (*citer)->process_event(e);
+          //          if (state == STOP_E) {
+          //            stop = true;
+            //            state = (*citer)->process_event(e);
+            //            cerr << get_id() << " STOP_E\n";
+            //break;
+          //          }
         }
       }
-      return state;
+      
+      return stop ? STOP_E : state;
     }
 
     int

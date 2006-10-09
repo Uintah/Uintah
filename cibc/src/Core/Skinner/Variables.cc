@@ -353,6 +353,13 @@ namespace SCIRun {
     }
 
 
+    Variables::var_type_e
+    Variables::get_type_e(const string &name) {
+      var_value_t ptr = find_value_ptr(name);
+      if (ptr.second) return ptr.second->var_type_;
+      return UNKNOWN_E;
+    }
+
     Variables::value_t::value_t(string name,
                                 string string_value,
                                 var_type_e var_type) :

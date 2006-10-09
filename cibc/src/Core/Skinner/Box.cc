@@ -87,17 +87,30 @@ namespace SCIRun {
       PointerEvent *pointer = ps->get_pointer_event();
       Signal *signal = 0;
       ASSERT(pointer);
-      if (get_region().inside(pointer->get_x(), pointer->get_y()) &&
-          (pointer->get_pointer_state() & PointerEvent::BUTTON_PRESS_E) &&
+
+      bool inside = get_region().inside(pointer->get_x(), pointer->get_y());
+      bool pressed = 
+        pointer->get_pointer_state() & PointerEvent::BUTTON_PRESS_E;
+      
+
+      if (inside && pressed &&
           (pointer->get_pointer_state() & PointerEvent::BUTTON_1_E)) 
         {
+          get_vars()->insert("mousex", to_string(pointer->get_x()), "int", 1);
+          get_vars()->insert("mousey", to_string(pointer->get_y()), "int", 1);
+
           signal = 
             dynamic_cast<Signal *>(throw_signal("button_1_clicked").get_rep());
-        } 
+        }
+      
+//       if (!inside && pressed) {
+//         cerr << "Button clicked outside box\n";
+//         signal = dynamic_cast<Signal *>
+//           (throw_signal("button_clicked_outside_box").get_rep());
+//       }
 
 
-      if (get_region().inside(pointer->get_x(), pointer->get_y()) &&
-          (pointer->get_pointer_state() & PointerEvent::BUTTON_PRESS_E) &&
+      if (inside && pressed &&
           (pointer->get_pointer_state() & PointerEvent::BUTTON_3_E)) 
         {
           get_vars()->insert("mousex", to_string(pointer->get_x()), "int", 1);
@@ -120,7 +133,8 @@ namespace SCIRun {
     Box::get_signal_id(const string &signalname) const {
       if (signalname == "button_1_clicked") return 1;
       if (signalname == "button_1_released") return 2;
-      if (signalname == "button_2_clicked") return 2;
+      if (signalname == "button_2_clicked") return 3;
+      //      if (signalname == "button_clicked_outside_box") return 4;
       return 0;
     }
   }

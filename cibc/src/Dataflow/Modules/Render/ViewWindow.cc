@@ -77,6 +77,7 @@
 #include <Core/Thread/CrowdMonitor.h>
 #include <Core/Thread/FutureValue.h>
 #include <Core/Thread/Time.h>
+#include <Core/Geometry/Plane.h>
 #include <iostream>
 #include <string>
 #include <sstream>
@@ -1701,6 +1702,10 @@ ViewWindow::autoview(const BBox& bbox)
     double length = w*scale;
     cv.fov(myfov);
     cv.eyep(cv.lookat() - lookdir * length);
+
+    Plane upplane(cv.eyep(), lookdir);
+    cv.up(upplane.project(cv.up()));
+
     animate_to_view(cv, 2.0);
   }
 }

@@ -33,11 +33,11 @@
 #define SKINNER_SCENEGRAPH_H
 
 #include <Core/Events/OpenGLViewer.h>
-#include <Core/Skinner/Drawable.h>
+#include <Core/Skinner/Parent.h>
 
 namespace SCIRun {
   namespace Skinner {  
-    class SceneGraph : public SCIRun::OpenGLViewer, public Skinner::Drawable {
+    class SceneGraph : public SCIRun::OpenGLViewer, public Skinner::Parent {
     public:
       SceneGraph(Variables *);
       virtual ~SceneGraph();
@@ -50,6 +50,8 @@ namespace SCIRun {
       virtual int                  width() const;
       virtual int                  height() const;
       virtual void                 need_redraw();
+    private:
+      CatcherFunction_t            Autoview;
     };
   }
 } // End namespace SCIRun

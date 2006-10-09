@@ -32,6 +32,7 @@
 #include <Core/Events/Tools/AutoviewTool.h>
 #include <Core/Events/keysyms.h>
 #include <Core/Math/Trig.h>
+#include <Core/Geometry/Plane.h>
 
 namespace SCIRun {
 
@@ -68,6 +69,17 @@ AutoviewTool::key_press(string key, int keyval, unsigned int modifiers,
   return CONTINUE_E;
 }
 
+BaseTool::propagation_state_e 
+AutoviewTool::process_event(event_handle_t event) 
+{
+  if (dynamic_cast<AutoviewEvent *>(event.get_rep())) {
+    calc_view();
+    return STOP_E;
+  }
+  return CONTINUE_E;
+}
+
+
 bool
 AutoviewTool::calc_view()
 {
@@ -75,9 +87,9 @@ AutoviewTool::calc_view()
   if (interface_->get_bounds(bbox))
   {
     View cv(interface_->view_);
-    // Animate lookat point to center of BBox...
     cv.lookat(bbox.center());
     interface_->view_ = cv;
+
     // Move forward/backwards until entire view is in scene.
     // change this a little, make it so that the FOV must be 20 deg.
     double myfov = 20.0;
@@ -99,6 +111,10 @@ AutoviewTool::calc_view()
     double length = w * scale;
     cv.fov(myfov);
     cv.eyep(cv.lookat() - lookdir * length);
+
+    Plane upplane(cv.eyep(), lookdir);
+    cv.up(upplane.project(cv.up()));
+
     interface_->view_ = cv;
     return true;
   }

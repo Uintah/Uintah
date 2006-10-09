@@ -249,6 +249,16 @@ public:
   virtual RedrawEvent * clone() { return new RedrawEvent(*this); }
 };
 
+class SCISHARE AutoviewEvent : public BaseEvent {
+public:
+  AutoviewEvent();
+  virtual ~AutoviewEvent();
+  virtual void          io(Piostream&);
+  virtual AutoviewEvent * clone() { return new AutoviewEvent(*this); }
+};
+
+
+
 class SCISHARE TMNotifyEvent : public BaseEvent {
 public:
   enum {

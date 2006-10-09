@@ -54,6 +54,7 @@ Skinner::Frame::Frame(Variables *vars)
     bot_(),
     left_(),
     right_(),
+    invert_(vars,"invert",0),
     border_wid_(vars, "width", 5),
     border_hei_(vars, "height", 5)
 {
@@ -72,20 +73,14 @@ Skinner::Frame::Frame(Variables *vars)
   right_  = Var<Color>(vars, "right-color");
   right_ |= Var<Color>(vars, "color1");
   right_ |= Color(0.75, 0.75, 0.75, 1.0);
-
-  if (Var<bool>(vars,"invert",0)()) {
-    SWAP (top_, bot_);
-    SWAP (left_, right_);
-  }
-
 }
 
 
 Skinner::Frame::~Frame() {
 }
 
-void
-Skinner::Frame::render_gl()
+BaseTool::propagation_state_e
+Skinner::Frame::redraw(event_handle_t e)
 {
   const RectRegion &region = get_region();
   const double x = region.x1();
@@ -95,27 +90,34 @@ Skinner::Frame::render_gl()
 
   double hei = border_hei_();
   double wid = border_wid_();
+  bool invert = invert_();
+  Color bot = invert ? top_() : bot_();
+  Color top = invert ? bot_() : top_();
+
+  Color left = invert ? right_() : left_();
+  Color right = invert ? left_() : right_();
+
   
   glBegin(GL_QUADS);
-  glColor4dv(&bot_().r);
+  glColor4dv(&bot.r);
   glVertex3d(x,y,0);
   glVertex3d(x2,y,0);
   glVertex3d(x2,y+hei,0);
   glVertex3d(x,y+hei,0);
 
-  glColor4dv(&right_().r);
+  glColor4dv(&right.r);
   glVertex3d(x2-wid,y+hei,0);
   glVertex3d(x2,y+hei,0);
   glVertex3d(x2,y2,0);
   glVertex3d(x2-wid,y2,0);
 
-  glColor4dv(&top_().r);
+  glColor4dv(&top.r);
   glVertex3d(x,y2,0);
   glVertex3d(x2,y2,0);
   glVertex3d(x2-wid,y2-hei,0);
   glVertex3d(x,y2-hei,0);
 
-  glColor4dv(&left_().r);
+  glColor4dv(&left.r);
   glVertex3d(x,y,0);
   glVertex3d(x+wid,y+hei,0);
   glVertex3d(x+wid,y2-hei,0);
@@ -136,7 +138,7 @@ Skinner::Frame::process_event(event_handle_t event) {
   {
     if ((border_hei_()*2) > get_region().height() ||
         (border_wid_()*2) > get_region().width()) return CONTINUE_E;
-    render_gl();
+    redraw(0);
   }
 
   const RectRegion &region = get_region();

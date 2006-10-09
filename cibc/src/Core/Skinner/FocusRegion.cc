@@ -42,7 +42,7 @@ namespace SCIRun {
 
     FocusRegion::FocusRegion(Variables *vars) :
       Parent(vars),
-      focus_(false)
+      focus_(vars,"focus",false)
     {
       REGISTER_CATCHER_TARGET(FocusRegion::do_PointerEvent);
       REGISTER_CATCHER_TARGET(FocusRegion::do_KeyEvent);
@@ -77,7 +77,7 @@ namespace SCIRun {
 
     BaseTool::propagation_state_e
     FocusRegion::do_KeyEvent(event_handle_t event) {
-      if (!focus_) return STOP_E;
+      if (!focus_()) return STOP_E;
 
       KeySignal *signal = dynamic_cast<KeySignal *>(event.get_rep());
       ASSERT(signal);
@@ -91,7 +91,7 @@ namespace SCIRun {
         FocusRegions_t subregions;
         FocusRegions_t::size_type num = focus_regions_.size();
         for (unsigned int i = 0; i < num; ++i) {
-          if (focus_regions_[i]->focus_ && 
+          if (focus_regions_[i]->focus_() && 
               focus_regions_[i]->focus_regions_.empty()) 
           {
             Var<bool> notab(focus_regions_[i]->get_vars(), "ignore_tab",0);
@@ -100,8 +100,12 @@ namespace SCIRun {
               break;
             }
             focus_regions_[i]->set_focus(false);
-            int next = (int(i) + (backward ? ( int(num) - 1) : 1)) % num;
+            int next = 0;
+            do {
+              next = (int(i) + (backward ? ( int(num) - 1) : 1)) % num;
+            } while (!focus_regions_[next]->get_vars()->get_bool("visible"));
             focus_regions_[next]->set_focus(true);
+            cerr << "Focus: " << focus_regions_[next]->get_id() << std::endl;
             break;
           }
         }
@@ -111,9 +115,10 @@ namespace SCIRun {
     
     void
     FocusRegion::set_focus(bool focus) {
-      if (focus_ != focus) {
+      if (focus_() != focus) {
         if (focus) {
           throw_signal("FocusRegion::focus");
+          //          cerr << get_id() << " XXX" << std::endl;
         }
         else {
           FocusRegions_t::size_type num = focus_regions_.size();
@@ -122,7 +127,7 @@ namespace SCIRun {
           }
 
           throw_signal("FocusRegion::unfocus");
-          
+          //          cerr << get_id() << " ..." << std::endl;
         }
         focus_ = focus;
       }      
@@ -131,7 +136,11 @@ namespace SCIRun {
     BaseTool::propagation_state_e
     FocusRegion::process_event(event_handle_t event)
     {
-      return Parent::process_event(event);
+      //      Var<bool>exclusive(get_vars(), "exclusive", false);
+      propagation_state_e state = Parent::process_event(event);
+      //      if (exclusive())
+        //        return STOP_E;
+      return state;
     }
 
     int

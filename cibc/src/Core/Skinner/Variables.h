@@ -65,6 +65,7 @@ namespace SCIRun {
       {
       }
       bool exists() { return scope_index_ && (*scope_index_ >= 0); }
+      operator T();
       Var<T> & operator= (const T& rhs);
       Var<T> & operator= (const Var<T>& rhs);
       Var<T> & operator|=(const T& rhs);
@@ -75,6 +76,7 @@ namespace SCIRun {
     class Variables 
     {
     public:
+
       Variables         (const string &id, Variables *parent=0);
       virtual           ~Variables();
      
@@ -85,13 +87,24 @@ namespace SCIRun {
       void              copy_var(const string &from, const string &to);
 
       bool              exists(const string &varname);
-
+      
       string            get_id();
       int               get_int(const string &);
       double            get_double(const string &);
       bool              get_bool(const string &);
       Color             get_color(const string &);
       string            get_string(const string &);
+
+      enum var_type_e {
+        UNKNOWN_E,
+        INT_E,
+        BOOL_E,
+        DOUBLE_E,
+        STRING_E,
+        COLOR_E
+      };
+      var_type_e        get_type_e(const string &);
+
     private:
       // Disable Copy Constructor
       Variables         (const Variables &copy) { ASSERT(0); }
@@ -103,14 +116,6 @@ namespace SCIRun {
       friend class Var<string>;
       friend class Var<double>;
 
-      enum var_type_e {
-        UNKNOWN_E,
-        INT_E,
-        BOOL_E,
-        DOUBLE_E,
-        STRING_E,
-        COLOR_E
-      };
 
       
       struct value_t {
@@ -172,6 +177,14 @@ namespace SCIRun {
       vector<std::string>       cached_strings_;
       vector<Skinner::Color>    cached_colors_;
     };
+
+    template <class T>
+    Var<T>::operator T() {
+      T temp;
+      ASSERT(this->scope_index_  && (*this->scope_index_ >= 0));
+      this->scope_->get_by_idx(*this->scope_index_, temp);
+      return temp;
+    }
 
     template <class T>
     Var<T> & 

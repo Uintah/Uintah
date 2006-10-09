@@ -37,8 +37,9 @@ namespace SCIRun {
 
 Skinner::SceneGraph::SceneGraph(Variables *variables) :
   OpenGLViewer(0), 
-  Skinner::Drawable(variables)
+  Skinner::Parent(variables)
 {
+  REGISTER_CATCHER_TARGET(SceneGraph::Autoview);
 }
 
 Skinner::SceneGraph::~SceneGraph() 
@@ -63,13 +64,22 @@ Skinner::SceneGraph::height() const {
 }
 
 
+BaseTool::propagation_state_e
+Skinner::SceneGraph::Autoview(event_handle_t) {
+  tm_.propagate_event(new AutoviewEvent());
+  return CONTINUE_E;
+}
+
 
 BaseTool::propagation_state_e
 Skinner::SceneGraph::process_event(event_handle_t event) {
-  event.detach();
+  //  event.detach();
+  event_handle_t cached_event = event;
   const RectRegion &region = get_region();
   PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
   if (pointer) {
+    pointer = pointer->clone();
+    event = pointer;
     if (!region.inside(pointer->get_x(), pointer->get_y())) {
       return CONTINUE_E;
     }
@@ -77,7 +87,15 @@ Skinner::SceneGraph::process_event(event_handle_t event) {
     pointer->set_y(Ceil(region.y2()) - pointer->get_y());
   }
 
-  tm_.propagate_event(event);
+  AutoviewEvent *autoview = dynamic_cast<AutoviewEvent *>(event.get_rep());
+  if (autoview && !region.valid()) {
+    RectRegion old = region;
+    set_region(RectRegion(0,0, 100, 100));
+    tm_.propagate_event(event);
+    set_region(old);
+  } else {
+    tm_.propagate_event(event);
+  }
 
   WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
   if (window && window->get_window_state() == WindowEvent::REDRAW_E) {
@@ -107,8 +125,8 @@ Skinner::SceneGraph::process_event(event_handle_t event) {
      glMatrixMode(GL_PROJECTION);
      glPopMatrix();    
   }
-  
-  return CONTINUE_E;
+
+  return Parent::process_event(cached_event);
 }
 
 

@@ -38,10 +38,10 @@ namespace SCIRun {
 ViewTranslateTool::ViewTranslateTool(string name, ViewToolInterface* i) :
   PointerTool(name),
   scene_interface_(i),
-  last_x_(0),
-  last_y_(0),
-  total_x_(0.0),
-  total_y_(0.0)
+  start_x_(0),
+  start_y_(0),
+  u_(0.,0.,0.),
+  v_(0.,0.,0.)
 {
 }
 
@@ -54,10 +54,20 @@ ViewTranslateTool::pointer_down(int which, int x, int y,
                                 unsigned int, int time)
 {
   if (which != 1) return CONTINUE_E;
-  last_x_ = x;
-  last_y_ = y;
-  total_x_ = 0;
-  total_y_ = 0;
+  start_x_ = x;
+  start_y_ = y;
+  start_view_ = scene_interface_->view_;
+
+  double znear, zfar;
+  if(!scene_interface_->compute_depth(start_view_, znear, zfar))
+    return STOP_E; // No objects...
+
+  double aspect = (double(scene_interface_->width()) / 
+                   double(scene_interface_->height()));
+
+  double zmid = (znear + zfar) / 2.;
+  start_view_.get_viewplane(aspect, zmid, u_, v_);
+
   scene_interface_->update_mode_string("translate: ");
   return STOP_E;
 }
@@ -67,41 +77,18 @@ ViewTranslateTool::pointer_motion(int which, int x, int y,
                                   unsigned int, int time)
 {
   if (which != 1) return CONTINUE_E;
-  int xres = scene_interface_->width();
-  int yres = scene_interface_->height();
-  double xmtn = double(last_x_ - x) / double(xres);
-  double ymtn =- double(last_y_ - y) / double(yres);
-  last_x_ = x;
-  last_y_ = y;
-  // Get rid of roundoff error for the display...
-  if (Abs(total_x_) < .001) total_x_ = 0;
-  if (Abs(total_y_) < .001) total_y_ = 0;
 
-  View tmpview(scene_interface_->view_);
-  double aspect = double(xres) / double(yres);
-  double znear, zfar;
-  if(!scene_interface_->compute_depth(tmpview, znear, zfar))
-    return STOP_E; // No objects...
-  double zmid = (znear + zfar) / 2.;
-  Vector u, v;
-  tmpview.get_viewplane(aspect, zmid, u, v);
-  double ul = u.length();
-  double vl = v.length();
-  Vector trans(u * xmtn + v * ymtn);
+  const double dx = double(start_x_-x) / double(scene_interface_->width());
+  const double dy = double(y-start_y_) / double(scene_interface_->height());
 
-  total_x_ += ul * xmtn;
-  total_y_ += vl * ymtn;
+  Vector delta = dx * u_ + dy * v_;
 
-  // Translate the view...
-  tmpview.eyep(tmpview.eyep() + trans);
-  tmpview.lookat(tmpview.lookat() + trans);
-
-  // Put the view back...
-  scene_interface_->view_ = tmpview;
+  scene_interface_->view_.eyep(start_view_.eyep() + delta);
+  scene_interface_->view_.lookat(start_view_.lookat() + delta);
 
   scene_interface_->need_redraw();
   ostringstream str;
-  str << "translate: " << total_x_ << ", " << total_y_;
+  str << "translate: " << dx << ", " << dy;
   scene_interface_->update_mode_string(str.str());
   return STOP_E;
 }
@@ -111,8 +98,10 @@ ViewTranslateTool::pointer_up(int which, int x, int y,
                               unsigned int, int time)
 {
   if (which != 1) return CONTINUE_E;
+  u_ = Vector(0.0,0.0,0.0);
+  v_ = Vector(0.0,0.0,0.0);
   scene_interface_->update_mode_string("");
-  scene_interface_->need_redraw();
+  //  scene_interface_->need_redraw();
   return STOP_E;
 }
 

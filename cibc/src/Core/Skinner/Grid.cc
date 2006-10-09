@@ -50,7 +50,7 @@ namespace SCIRun {
       cell_height_(rows_(), AIR_NEG_INF)
 
     {
-      REGISTER_CATCHER_TARGET(Grid::ReLayoutCells);
+      //      REGISTER_CATCHER_TARGET(Grid::ReLayoutCells);
     }
 
     Grid::~Grid() {
@@ -109,12 +109,22 @@ namespace SCIRun {
 
       for (unsigned int i = 0; i < cell_info_.size(); ++i) {
         CellInfo_t &cell = cell_info_[i];
-        int r = cell.row_()-1;
-        int c = cell.col_()-1;
-        children_[i]->set_region(RectRegion(region.x1() + posx[c], 
-                                            region.y2() - posy[r + 1], 
-                                            region.x1() + posx[c + 1], 
-                                            region.y2() - posy[r]));
+        if (cell.row_begin_.exists() && cell.row_end_.exists() &&
+            cell.col_begin_.exists() && cell.col_end_.exists()) {
+          children_[i]->set_region
+            (RectRegion(region.x1() + posx[cell.col_begin_()-1], 
+                        region.y2() - posy[cell.row_end_()], 
+                        region.x1() + posx[cell.col_end_()], 
+                        region.y2() - posy[cell.row_begin_()-1]));
+        } else {
+          int r = cell.row_()-1;
+          int c = cell.col_()-1;
+
+          children_[i]->set_region(RectRegion(region.x1() + posx[c], 
+                                              region.y2() - posy[r + 1], 
+                                              region.x1() + posx[c + 1], 
+                                              region.y2() - posy[r]));
+        }
       }
     }
 
@@ -134,10 +144,14 @@ namespace SCIRun {
       for (unsigned int i = 0; i < children_.size(); ++i) {        
         Variables *cvars = children_[i]->get_vars();
         CellInfo_t &cell = cell_info_[i];
-        cell.row_ = Var<int>(cvars, "row");
-        cell.col_ = Var<int>(cvars, "col");
+        cell.row_ = Var<int>(cvars, "row",1);
+        cell.col_ = Var<int>(cvars, "col",1);
         cell.width_ = Var<double>(cvars, "cell-width");
         cell.height_ = Var<double>(cvars, "cell-height");
+        cell.col_begin_ = Var<int>(cvars, "col-begin");
+        cell.col_end_ = Var<int>(cvars, "col-end");
+        cell.row_begin_ = Var<int>(cvars, "row-begin");
+        cell.row_end_ = Var<int>(cvars, "row-end");
       }
       
     }
@@ -145,8 +159,8 @@ namespace SCIRun {
 
     BaseTool::propagation_state_e
     Grid::ReLayoutCells(event_handle_t) {
-      cell_width_ = vector<double>(cell_width_.size(), AIR_NEG_INF);
-      cell_height_ = vector<double>(cell_height_.size(), AIR_NEG_INF);
+      vector<double>cell_width (cell_width_.size(), AIR_NEG_INF);
+      vector<double>cell_height (cell_height_.size(), AIR_NEG_INF);
 
       for (unsigned int i = 0; i < cell_info_.size(); ++i) {
         CellInfo_t &cell = cell_info_[i];
@@ -156,13 +170,17 @@ namespace SCIRun {
         ASSERT(col < cols_());
         
         if (cell.width_.exists()) {
-          cell_width_[col] = Max(cell_width_[col], cell.width_());
+          cell_width[col] = Max(cell_width[col], cell.width_());
         }
         
         if (cell.height_.exists()) {
-          cell_height_[row] = Max(cell_height_[row], cell.height_());
+          cell_height[row] = Max(cell_height[row], cell.height_());
         }
       }
+
+      cell_width_ = cell_width;
+      cell_height_ = cell_height;
+      
       return STOP_E;
     }
       

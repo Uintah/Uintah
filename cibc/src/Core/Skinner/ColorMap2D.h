@@ -56,41 +56,16 @@ namespace SCIRun {
     public:
       ColorMap2D(Variables *variables);
       virtual ~ColorMap2D();      
-      CatcherFunction_t                 process_event;
     private:
       CatcherFunction_t                 redraw;
-
-      void				add_triangle_widget();
-      void				add_rectangle_widget();
-      void				add_paint_widget();
-      void				delete_selected_widget();
-      struct UndoItem
-      {
-        enum Action { UNDO_CHANGE, UNDO_ADD, UNDO_DELETE };
-        int				action_;
-        int				selected_;
-        CM2WidgetHandle		widget_;
-        UndoItem(int a, int s, CM2WidgetHandle w)
-          : action_(a), selected_(s), widget_(w) {}
-      };
-      
-
-      void				get_1D_colormaps();
-
-
-      void				resize_gui(int n = -1);
-      void				update_from_gui();
-      void				update_to_gui(bool forward = true);
-      void				undo();
-      void				save_file(bool save_ppm=false);
-      void				load_file();
+      CatcherFunction_t                 add_triangle_widget;
+      CatcherFunction_t                 add_rectangle_widget;
+      CatcherFunction_t                 add_paint_widget;
+      CatcherFunction_t                 delete_selected_widget;
       void				init_shader_factory();
       void				build_colormap_texture();
       void				build_histogram_texture();
       void				draw_texture(GLuint &);
-      void				redraw(bool force_cmap_dirty = false,
-                                               bool save_ppm = false);
-      void				faux_changed();
 
       void				push(int x, int y, int button);
       void				motion(int x, int y);
@@ -103,21 +78,14 @@ namespace SCIRun {
       //! functions for panning.
       void				translate_start(int x, int y);
       void				translate_motion(int x, int y);
-      void				translate_end(int x, int y);
+
       //! functions for zooming.
       void				scale_start(int x, int y);
       void				scale_motion(int x, int y);
       void				scale_end(int x, int y);
-      // functions for changing state via GUI
-#if 0
-      void				gui_color_change(GuiArgs &args);
-      void				gui_shade_change(GuiArgs &args);
-      void				gui_toggle_change(GuiArgs &args);
-#endif
       
       int				button_;
       std::vector<CM2WidgetHandle>      widgets_;
-      std::stack<UndoItem>              undo_stack_;
       CM2ShaderFactory*                 shader_factory_;
       Array3<float>			colormap_texture_;
       bool				use_back_buffer_;

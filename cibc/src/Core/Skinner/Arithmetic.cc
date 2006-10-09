@@ -43,7 +43,8 @@ namespace SCIRun {
     {
       REGISTER_CATCHER_TARGET(Arithmetic::increment);
       REGISTER_CATCHER_TARGET(Arithmetic::decrement);
-      REGISTER_CATCHER_TARGET(Arithmetic::set_value);
+      REGISTER_CATCHER_TARGET(Arithmetic::set_value);      
+      REGISTER_CATCHER_TARGET(Arithmetic::invert_bool);
     }
 
     Arithmetic::~Arithmetic()
@@ -55,8 +56,17 @@ namespace SCIRun {
       Skinner::Signal *signal = 
         dynamic_cast<Skinner::Signal *>(event.get_rep());
       ASSERT(signal);
-      Var<double> val(signal->get_vars(), "variable", 0.0);     
-      val = val() + 1.0;
+      switch (signal->get_vars()->get_type_e("variable")) {
+      case Variables::INT_E: {
+        Var<int> val(signal->get_vars(), "variable", 0);
+        val = val() + 1;
+      } break;
+
+      case Variables::DOUBLE_E: {
+        Var<double> val(signal->get_vars(), "variable", 0.0);
+        val = val() + 1.0;
+      } break;
+      }
 
       return BaseTool::CONTINUE_E;
     }
@@ -67,8 +77,17 @@ namespace SCIRun {
         dynamic_cast<Skinner::Signal *>(event.get_rep());
       ASSERT(signal);
 
-      Var<double> val(signal->get_vars(), "variable", 0.0);     
-      val = val() - 1.0;
+      switch (signal->get_vars()->get_type_e("variable")) {
+      case Variables::INT_E: {
+        Var<int> val(signal->get_vars(), "variable", 0);
+        val = val() - 1;
+      } break;
+
+      case Variables::DOUBLE_E: {
+        Var<double> val(signal->get_vars(), "variable", 0.0);
+        val = val() - 1.0;
+      } break;
+      }
 
       return BaseTool::CONTINUE_E;
     }
@@ -79,6 +98,16 @@ namespace SCIRun {
         dynamic_cast<Skinner::Signal *>(event.get_rep());
       ASSERT(signal);
       signal->get_vars()->copy_var("value", "variable");
+      return BaseTool::CONTINUE_E;
+    }
+
+    BaseTool::propagation_state_e
+    Arithmetic::invert_bool(event_handle_t event) {
+      Skinner::Signal *signal = 
+        dynamic_cast<Skinner::Signal *>(event.get_rep());
+      ASSERT(signal);
+      Var<bool> var(signal->get_vars(), "variable");
+      var = !var();
       return BaseTool::CONTINUE_E;
     }
 

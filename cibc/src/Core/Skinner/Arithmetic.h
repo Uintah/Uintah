@@ -45,6 +45,7 @@ namespace SCIRun {
       CatcherFunction_t                 set_value;
       CatcherFunction_t                 increment;
       CatcherFunction_t                 decrement;
+      CatcherFunction_t                 invert_bool;
     };
   }
 }

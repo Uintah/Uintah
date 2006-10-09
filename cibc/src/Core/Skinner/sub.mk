@@ -45,12 +45,15 @@ SRCS     += \
 	$(SRCDIR)/Drawable.cc    	\
 	$(SRCDIR)/Frame.cc	    	\
 	$(SRCDIR)/FocusRegion.cc    	\
+	$(SRCDIR)/FocusGrab.cc    	\
 	$(SRCDIR)/Gradient.cc	    	\
+	$(SRCDIR)/GeomSkinnerVarSwitch.cc	    	\
 	$(SRCDIR)/Graph2D.cc	    	\
 	$(SRCDIR)/Grid.cc	    	\
 	$(SRCDIR)/Layout.cc	    	\
 	$(SRCDIR)/MenuList.cc	    	\
 	$(SRCDIR)/MenuManager.cc	\
+	$(SRCDIR)/MenuButton.cc	\
 	$(SRCDIR)/Parent.cc	    	\
 	$(SRCDIR)/RectRegion.cc    	\
 	$(SRCDIR)/Root.cc        	\
