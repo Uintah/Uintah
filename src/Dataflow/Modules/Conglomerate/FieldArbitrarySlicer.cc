@@ -40,7 +40,7 @@
 
 #include <Core/Algorithms/Fields/ApplyMappingMatrix.h>
 #include <Core/Algorithms/Fields/ClipByFunction.h>
-#include <Dataflow/Modules/Fields/TransformData.h>
+#include <Core/Algorithms/Fields/TransformData.h>
 #include <Dataflow/Modules/Visualization/Isosurface.h>
 
 #include <Core/Algorithms/Visualization/MarchingCubes.h>

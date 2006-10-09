@@ -42,7 +42,7 @@
 #include <Dataflow/Network/Module.h>
 #include <Dataflow/Network/Ports/FieldPort.h>
 #include <Core/Containers/StringUtil.h>
-#include <Dataflow/Modules/Fields/TransformData.h>
+#include <Core/Algorithms/Fields/TransformData.h>
 #include <Core/Util/DynamicCompilation.h>
 #include <Core/Containers/HashTable.h>
 #include <iostream>
@@ -156,58 +156,5 @@ TransformData::presave()
 {
   get_gui()->execute(get_id() + " update_text"); // update gFunction_ before saving.
 }
-
-
-CompileInfoHandle
-TransformDataAlgo::get_compile_info(const TypeDescription *field_td,
-				    string ofieldtypename,
-				    const TypeDescription *loc_td,
-				    string function,
-				    int hashoffset)
-
-{
-  unsigned int hashval = Hash(function, 0x7fffffff) + hashoffset;
-
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  const string template_name("TransformDataInstance" + to_string(hashval));
-  static const string base_class_name("TransformDataAlgo");
-
-  CompileInfo *rval = 
-    scinew CompileInfo(template_name + "." +
-		       field_td->get_filename() + "." +
-		       to_filename(ofieldtypename) + "." +
-		       loc_td->get_filename() + ".",
-                       base_class_name, 
-                       template_name, 
-                       field_td->get_name() + ", " +
-		       ofieldtypename + ", " +
-		       loc_td->get_name());
-
-  // Code for the function.
-  string class_declaration =
-    string("template <class IFIELD, class OFIELD, class LOC>\n") +
-    "class " + template_name + " : public TransformDataAlgoT<IFIELD, OFIELD, LOC>\n" +
-    "{\n" +
-    "  virtual void function(typename OFIELD::value_type &result,\n" +
-    "                        double x, double y, double z,\n" +
-    "                        const typename IFIELD::value_type &v)\n" +
-    "  {\n" +
-    "    " + function + "\n" +
-    "  }\n" +
-    "\n" +
-    "  virtual string identify()\n" +
-    "  { return string(\"" + string_Cify(function) + "\"); }\n" +
-    "};\n";
-
-  // Add in the include path to compile this obj
-  rval->add_include(include_path);
-  rval->add_post_include(class_declaration);
-  field_td->fill_compile_info(rval);
-  rval->add_data_include("../src/Core/Geometry/Vector.h");
-  rval->add_data_include("../src/Core/Geometry/Tensor.h");
-  return rval;
-}
-
 
 } // End namespace SCIRun

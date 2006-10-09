@@ -38,8 +38,9 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Geometry/Vector.h>
 #include <Core/Geometry/Tensor.h>
+#include <Core/Datatypes/Field.h>
 
-#include <Dataflow/Modules/Fields/share.h>
+#include <Core/Algorithms/Fields/share.h>
 
 namespace SCIRun {
 
