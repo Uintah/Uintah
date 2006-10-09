@@ -54,6 +54,14 @@ Dir Dir::create(const string& name)
    return Dir(name);
 }
 
+Dir Dir::current_directory()
+{
+	char *dirname = ::getcwd(0,0);
+	std::string name = dirname;
+	free(dirname);
+	return Dir(name);
+}
+
 Dir::Dir()
 {
 }
