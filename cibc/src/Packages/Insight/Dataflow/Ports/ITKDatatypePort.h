@@ -45,11 +45,16 @@
 #include <Dataflow/Network/Ports/SimplePort.h>
 #include <Core/Datatypes/ITKDatatype.h>
 
-namespace Insight {
+namespace SCIRun {
 
 typedef SCIRun::SimpleIPort<SCIRun::ITKDatatypeHandle> ITKDatatypeIPort;
 typedef SCIRun::SimpleOPort<SCIRun::ITKDatatypeHandle> ITKDatatypeOPort;
 
-} // End namespace Insight
+class test_class {
+public:
+test_class() { std::cout << "Loading lib";}
+}; 
+
+} // End namespace SCIRun
 
 #endif
