@@ -90,6 +90,7 @@
 
 	    <ExplicitSolver>
 		<timeIntegratorType>RK2SSP</timeIntegratorType>
+		<kineticEnergy_fromFC>true</kineticEnergy_fromFC>
 		<probe_data>false</probe_data>
 
 		<PressureSolver>
@@ -99,7 +100,7 @@
 		        <res_tol>1.0e-10</res_tol>
                         <ksptype>cg</ksptype>
 			<pctype>pfmg</pctype>
-			<max_iter>75</max_iter>
+			<max_iter>750</max_iter>
 		    </LinearSolver>
 		</PressureSolver>
 

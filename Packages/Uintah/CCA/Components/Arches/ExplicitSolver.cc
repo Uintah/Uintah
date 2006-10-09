@@ -196,6 +196,7 @@ ExplicitSolver::problemSetup(const ProblemSpecP& params)
   db->getWithDefault("turbModelCalcForAllRKSteps",d_turbModelRKsteps,true);
   db->getWithDefault("restartOnNegativeDensityGuess",
 		     d_restart_on_negative_density_guess,false);
+  db->getWithDefault("kineticEnergy_fromFC",d_KE_fromFC,false);
 
 #ifdef PetscFilter
     d_props->setFilter(d_turbModel->getFilter());
@@ -1052,7 +1053,12 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  newCCVVel[idx] = new_v;
 	  newCCWVel[idx] = new_w;
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
-          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          if (!d_KE_fromFC)
+            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          else
+            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
+                                  newVVel[idx]*newVVel[idx]+
+                                  newWVel[idx]*newWVel[idx])/2.0;
 	  total_kin_energy += kineticEnergy[idx];
 	}
       }
@@ -1079,7 +1085,12 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  newCCVVel[idx] = new_v;
 	  newCCWVel[idx] = new_w;
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
-          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          if (!d_KE_fromFC)
+            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          else
+            kineticEnergy[idx] = (newUVel[idxU]*newUVel[idxU]+
+                                  newVVel[idx]*newVVel[idx]+
+                                  newWVel[idx]*newWVel[idx])/2.0;
 	  total_kin_energy += kineticEnergy[idx];
 	}
       }
@@ -1105,7 +1116,12 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  newCCVVel[idx] = new_v;
 	  newCCWVel[idx] = new_w;
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
-          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          if (!d_KE_fromFC)
+            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          else
+            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
+                                  newVVel[idx]*newVVel[idx]+
+                                  newWVel[idx]*newWVel[idx])/2.0;
 	  total_kin_energy += kineticEnergy[idx];
 	}
       }
@@ -1131,7 +1147,12 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  newCCVVel[idx] = new_v;
 	  newCCWVel[idx] = new_w;
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
-          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          if (!d_KE_fromFC)
+            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          else
+            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
+                                  newVVel[idxV]*newVVel[idxV]+
+                                  newWVel[idx]*newWVel[idx])/2.0;
 	  total_kin_energy += kineticEnergy[idx];
 	}
       }
@@ -1157,7 +1178,12 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  newCCVVel[idx] = new_v;
 	  newCCWVel[idx] = new_w;
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
-          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          if (!d_KE_fromFC)
+            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          else
+            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
+                                  newVVel[idx]*newVVel[idx]+
+                                  newWVel[idx]*newWVel[idx])/2.0;
 	  total_kin_energy += kineticEnergy[idx];
 	}
       }
@@ -1183,7 +1209,12 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  newCCVVel[idx] = new_v;
 	  newCCWVel[idx] = new_w;
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
-          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          if (!d_KE_fromFC)
+            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          else
+            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
+                                  newVVel[idx]*newVVel[idx]+
+                                  newWVel[idxW]*newWVel[idxW])/2.0;
 	  total_kin_energy += kineticEnergy[idx];
 	}
       }
@@ -1209,14 +1240,21 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  newCCVVel[idx] = new_v;
 	  newCCWVel[idx] = new_w;
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
-          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          if (!d_KE_fromFC)
+            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          else
+            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
+                                  newVVel[idx]*newVVel[idx]+
+                                  newWVel[idxW]*newWVel[idxW])/2.0;
 	  total_kin_energy += kineticEnergy[idx];
 	}
       }
     }
+
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
 	for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
+
 	  IntVector idx(ii,jj,kk);
 	  IntVector idxU(ii+1,jj,kk);
 	  IntVector idxV(ii,jj+1,kk);
@@ -1229,6 +1267,7 @@ ExplicitSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  divergence[idx] = (newUVel[idxU]-newUVel[idx])/cellinfo->sew[ii]+
 		            (newVVel[idxV]-newVVel[idx])/cellinfo->sns[jj]+
 			    (newWVel[idxW]-newWVel[idx])/cellinfo->stb[kk];
+
 	  div_residual[idx] = divergence[idx]-div_constraint[idx]/vol;
 
 	  residual[idx] = (0.5*(density[idxU]+density[idx])*newUVel[idxU]-
@@ -2193,7 +2232,10 @@ ExplicitSolver::getDensityGuess(const ProcessorGroup*,
 	    ((density[currCell]+density[zplusCell])*wVelocity[zplusCell] -
 	     (density[currCell]+density[zminusCell])*wVelocity[currCell]) /
 	    cellinfo->stb[colZ]);
-	    if (densityGuess[currCell] < 0.0) negativeDensityGuess = 1.0;
+	    if (densityGuess[currCell] < 0.0) {
+              cout << "got negative density guess at " << currCell << " , density guess value was " << densityGuess[currCell] << endl;
+              negativeDensityGuess = 1.0;
+            }
           }
         }
       } 
