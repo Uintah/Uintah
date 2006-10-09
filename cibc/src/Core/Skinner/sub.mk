@@ -67,6 +67,7 @@ SRCS     += \
 	$(SRCDIR)/Variables.cc      	\
 	$(SRCDIR)/XMLIO.cc              \
 	$(SRCDIR)/ViewSubRegion.cc    	\
+	$(SRCDIR)/VisibilityGroup.cc    \
 #	$(SRCDIR)/Colormap2D.cc	    	\
 
 

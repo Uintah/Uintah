@@ -46,6 +46,7 @@ SRCS +=	$(SRCDIR)/BBoxCache.cc		                \
 	$(SRCDIR)/GeomBillboard.cc	                \
 	$(SRCDIR)/GeomBox.cc		                \
 	$(SRCDIR)/GeomColorMap.cc	                \
+	$(SRCDIR)/GeomColorMappedNrrdTextureObj.cc      \
 	$(SRCDIR)/GeomCone.cc		                \
 	$(SRCDIR)/GeomContainer.cc	                \
 	$(SRCDIR)/GeomCull.cc	                \
