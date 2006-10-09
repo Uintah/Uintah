@@ -42,7 +42,7 @@
 #include <sci_hash_map.h>
 #include <algorithm>
 
-#include <Dataflow/Modules/Fields/share.h>
+#include <Core/Algorithms/Fields/share.h>
 
 namespace SCIRun {
 
