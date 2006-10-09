@@ -33,6 +33,7 @@
 #include <Core/Util/Socket.h>
 #include <string>
 #include <errno.h>
+#include <ifaddrs.h>
 
 #ifndef _WIN32
 #  include <fcntl.h>
@@ -265,6 +266,46 @@ Socket::set_blocking(const bool b)
     perror("ERROR in set_non_blocking() set");
   }
 #endif
+}
+
+//! get the local IPv4 address of the local host.
+string 
+Socket::get_local_ip()
+{
+  string rval;
+  struct ifaddrs *ifa = NULL;
+
+  if (getifaddrs (&ifa) < 0)
+  {
+    perror ("getifaddrs");
+    return rval;
+  }
+
+  for (; ifa; ifa = ifa->ifa_next)
+  {
+    char ip[200];
+    socklen_t salen;
+    
+    if (ifa->ifa_addr->sa_family == AF_INET)
+      salen = sizeof (struct sockaddr_in);
+    //     else if (ifa->ifa_addr->sa_family == AF_INET6)
+    //       salen = sizeof (struct sockaddr_in6);
+    else
+      continue;
+    
+    if (getnameinfo(ifa->ifa_addr, salen, ip, sizeof(ip), 
+		    NULL, 0, NI_NUMERICHOST) < 0)
+    {
+      perror ("getnameinfo");
+      continue;
+    }
+    string tst(ip);
+    if (tst == "127.0.0.1") continue;    
+    rval = tst;
+  }
+
+  freeifaddrs (ifa);
+  return rval;
 }
 
 } //namespace SCIRun

@@ -46,9 +46,12 @@
 #  include <unistd.h>
 #  include <arpa/inet.h>
 #endif
+
 #include <string>
 
 namespace SCIRun {
+
+using std::string;
 
 class Socket
 {
@@ -91,6 +94,9 @@ class Socket
 
   //! Test for valid socket descriptor.
   bool is_valid() const { return sock_ != -1; }
+
+  //! get the local IPv4 address of the local host.
+  static string get_local_ip();
 
  private:
   char            *buf_;

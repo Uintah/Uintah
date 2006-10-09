@@ -96,7 +96,7 @@ public:
   virtual void execute();
   void new_data_notify(const string fname, void *buf, size_t bytes);
 private:
-  void register_with_broker();
+  bool register_with_broker();
 
   //! GUI variables
   GuiString     brokerip_;
@@ -106,6 +106,7 @@ private:
 
   Listener     *listener_;
   Thread       *listener_thread_;
+  bool          registered_;
 };
 
 class DataHandler: public Runnable
@@ -190,6 +191,7 @@ Listener::run()
       t->detach();
     } else {
       dead_ = true;
+      cerr << "Listener thread exiting." << endl;
     }
   }
 }
@@ -207,7 +209,8 @@ StreamReader::StreamReader(GuiContext* ctx) :
   groupname_(get_ctx()->subVar("groupname"), "wildfire"),   
   listenport_(get_ctx()->subVar("listenport"), 8835),
   listener_(0),
-  listener_thread_(0)
+  listener_thread_(0),
+  registered_(false)
 {  
   cout << "(StreamReader::StreamReader) Inside" << endl;  
 
@@ -218,7 +221,7 @@ StreamReader::StreamReader(GuiContext* ctx) :
     listener_thread_->detach();
   }
   
-  register_with_broker();
+  //registered_ = register_with_broker();
 }
 
 
@@ -229,7 +232,7 @@ StreamReader::~StreamReader()
 
 //! Blocks this thread until such time as accept returns the listener 
 //! socket from the broker.
-void
+bool
 StreamReader::register_with_broker() 
 {
   Socket sock;
@@ -237,36 +240,48 @@ StreamReader::register_with_broker()
 
   if (! sock.connect(brokerip_.get(), brokerport_.get())) {
     error("connect failed");
+    return false;
   }
 
   ostringstream reg;
-  reg << "register 127.0.0.1" << ":" << listenport_.get() << "\n";
+  reg << "register " << Socket::get_local_ip() << ":" 
+      << listenport_.get() << "\n";
   cerr << reg.str().c_str() << "............" << endl;
   if (! sock.write(reg.str().c_str())) {
-    cerr << "error sending register" << endl;
+    error("error sending register");
+    return false;
   }
 
   ostringstream pass;
   pass << "password" << ": " << groupname_.get() << "\n";
   cerr << pass.str().c_str() << "............" << endl;
   if (! sock.write(pass.str().c_str())) {
-    cerr << "error sending password" << endl;
+    error("error sending password");
+    return false;
   }
 
-  cerr << "sent registration and password" << endl;
+  remark("sent registration and password, waiting for answer.");
   
-  cerr << "waiting for answer" << endl;
   string answer;
   sock.read(answer);
   cerr << "answer: " << answer << endl;
-  if (answer != "SUCCEEDED") {
+  if (answer != "SUCCEEDED\n") {
     error("registration with broker failed.");
+    return false;
   }
+  return true;
 }
 
 void 
 StreamReader::execute()
 {
+  if (! registered_) {
+    registered_ = register_with_broker();
+    if (! registered_) {
+      error("Registration with broker failed. returning...");
+      return;
+    }
+  }
   cout << "(StreamReader::execute) Inside" << endl;
 }
 
@@ -276,6 +291,13 @@ StreamReader::new_data_notify(const string fname, void *buf, size_t bytes)
 {
   cerr << "got data, named: " << fname  << ", " << bytes 
        << " bytes long." << endl;
+
+  char *c = (char*)buf;
+  for (unsigned int i = 0; i < bytes; i++) {
+    cerr << c;
+  }
+  cerr << endl << "done with output" << endl;
+
 }
 
 } // End namespace DDDAS
