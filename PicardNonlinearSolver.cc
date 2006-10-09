@@ -170,6 +170,7 @@ PicardNonlinearSolver::problemSetup(const ProblemSpecP& params)
   d_timeIntegratorLabels[0]->factor_new = d_underrelax;
   d_timeIntegratorLabels[0]->factor_old = 1.0 - d_underrelax;
 
+  db->getWithDefault("kineticEnergy_fromFC",d_KE_fromFC,false);
 #ifdef PetscFilter
     d_props->setFilter(d_turbModel->getFilter());
 //#ifdef divergenceconstraint
@@ -1469,7 +1470,12 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  newCCVVel[idx] = new_v;
 	  newCCWVel[idx] = new_w;
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
-          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          if (!d_KE_fromFC)
+            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          else
+            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
+                                  newVVel[idx]*newVVel[idx]+
+                                  newWVel[idx]*newWVel[idx])/2.0;
 	  total_kin_energy += kineticEnergy[idx];
 	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
 	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
@@ -1500,7 +1506,12 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  newCCVVel[idx] = new_v;
 	  newCCWVel[idx] = new_w;
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
-          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          if (!d_KE_fromFC)
+            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          else
+            kineticEnergy[idx] = (newUVel[idxU]*newUVel[idxU]+
+                                  newVVel[idx]*newVVel[idx]+
+                                  newWVel[idx]*newWVel[idx])/2.0;
 	  total_kin_energy += kineticEnergy[idx];
 	}
       }
@@ -1526,7 +1537,12 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  newCCVVel[idx] = new_v;
 	  newCCWVel[idx] = new_w;
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
-          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          if (!d_KE_fromFC)
+            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          else
+            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
+                                  newVVel[idx]*newVVel[idx]+
+                                  newWVel[idx]*newWVel[idx])/2.0;
 	  total_kin_energy += kineticEnergy[idx];
 	  u_norm += (newUVel[idx]-oldUVel[idx])*(newUVel[idx]-oldUVel[idx]);
 	}
@@ -1553,7 +1569,12 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  newCCVVel[idx] = new_v;
 	  newCCWVel[idx] = new_w;
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
-          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          if (!d_KE_fromFC)
+            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          else
+            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
+                                  newVVel[idxV]*newVVel[idxV]+
+                                  newWVel[idx]*newWVel[idx])/2.0;
 	  total_kin_energy += kineticEnergy[idx];
 	}
       }
@@ -1579,7 +1600,12 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  newCCVVel[idx] = new_v;
 	  newCCWVel[idx] = new_w;
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
-          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          if (!d_KE_fromFC)
+            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          else
+            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
+                                  newVVel[idx]*newVVel[idx]+
+                                  newWVel[idx]*newWVel[idx])/2.0;
 	  total_kin_energy += kineticEnergy[idx];
 	  v_norm += (newVVel[idx]-oldVVel[idx])*(newVVel[idx]-oldVVel[idx]);
 	}
@@ -1606,7 +1632,12 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  newCCVVel[idx] = new_v;
 	  newCCWVel[idx] = new_w;
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
-          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          if (!d_KE_fromFC)
+            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          else
+            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
+                                  newVVel[idx]*newVVel[idx]+
+                                  newWVel[idxW]*newWVel[idxW])/2.0;
 	  total_kin_energy += kineticEnergy[idx];
 	}
       }
@@ -1632,7 +1663,12 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
 	  newCCVVel[idx] = new_v;
 	  newCCWVel[idx] = new_w;
           newCCVelMag[idx] = sqrt(new_u*new_u+new_v*new_v+new_w*new_w);
-          kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          if (!d_KE_fromFC)
+            kineticEnergy[idx] = (new_u*new_u+new_v*new_v+new_w*new_w)/2.0;
+          else
+            kineticEnergy[idx] = (newUVel[idx]*newUVel[idx]+
+                                  newVVel[idx]*newVVel[idx]+
+                                  newWVel[idxW]*newWVel[idxW])/2.0;
 	  total_kin_energy += kineticEnergy[idx];
 	  w_norm += (newWVel[idx]-oldWVel[idx])*(newWVel[idx]-oldWVel[idx]);
 	}
@@ -1642,7 +1678,7 @@ PicardNonlinearSolver::interpolateFromFCToCC(const ProcessorGroup* ,
     for (int kk = idxLo.z(); kk <= idxHi.z(); ++kk) {
       for (int jj = idxLo.y(); jj <= idxHi.y(); ++jj) {
 	for (int ii = idxLo.x(); ii <= idxHi.x(); ++ii) {
-	  
+
 	  IntVector idx(ii,jj,kk);
 	  IntVector idxU(ii+1,jj,kk);
 	  IntVector idxV(ii,jj+1,kk);
@@ -2480,7 +2516,10 @@ PicardNonlinearSolver::getDensityGuess(const ProcessorGroup*,
 	    ((density[currCell]+density[zplusCell])*wVelocity[zplusCell] -
 	     (density[currCell]+density[zminusCell])*wVelocity[currCell]) /
 	    cellinfo->stb[colZ]);
-	    if (densityGuess[currCell] < 0.0) negativeDensityGuess = 1.0;
+	    if (densityGuess[currCell] < 0.0) {
+              cout << "got negative density guess at " << currCell << " , density guess value was " << densityGuess[currCell] << endl;
+              negativeDensityGuess = 1.0;
+            }
           }
         }
       } 
