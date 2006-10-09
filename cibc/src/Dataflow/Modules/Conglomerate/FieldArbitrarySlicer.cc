@@ -39,7 +39,7 @@
 #include <Dataflow/Modules/Conglomerate/FieldArbitrarySlicer.h>
 
 #include <Core/Algorithms/Fields/ApplyMappingMatrix.h>
-#include <Dataflow/Modules/Fields/ClipByFunction.h>
+#include <Core/Algorithms/Fields/ClipByFunction.h>
 #include <Dataflow/Modules/Fields/TransformData.h>
 #include <Dataflow/Modules/Visualization/Isosurface.h>
 

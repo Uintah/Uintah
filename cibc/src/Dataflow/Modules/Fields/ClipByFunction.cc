@@ -49,7 +49,7 @@
 #include <Dataflow/Widgets/BoxWidget.h>
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/FieldInterface.h>
-#include <Dataflow/Modules/Fields/ClipByFunction.h>
+#include <Core/Algorithms/Fields/ClipByFunction.h>
 #include <Core/Containers/StringUtil.h>
 #include <Core/Containers/HashTable.h>
 #include <iostream>
@@ -207,56 +207,6 @@ ClipByFunction::execute()
   send_output_handle( "Mapping", matrix_output_handle_, true );
   send_output_handle( "MaskVector", nrrd_output_handle_, true );
 }
-
-
-CompileInfoHandle
-ClipByFunctionAlgo::get_compile_info(const TypeDescription *fsrc,
-				     string clipFunction,
-				     int hashoffset)
-{
-  unsigned int hashval = Hash(clipFunction, 0x7fffffff) + hashoffset;
-
-  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
-  static const string include_path(TypeDescription::cc_to_h(__FILE__));
-  const string template_name("ClipByFunctionInstance" + to_string(hashval));
-  static const string base_class_name("ClipByFunctionAlgo");
-
-  CompileInfo *rval = 
-    scinew CompileInfo(template_name + "." +
-		       fsrc->get_filename() + ".",
-                       base_class_name, 
-                       template_name, 
-                       fsrc->get_name());
-
-  // Add in the include path to compile this obj
-  string class_declaration =
-    string("template <class FIELD>\n") +
-    "class " + template_name + " : public ClipByFunctionAlgoT<FIELD>\n" +
-    "{\n" +
-    "  using ClipByFunctionAlgoT<FIELD>::u0;\n" +
-    "  using ClipByFunctionAlgoT<FIELD>::u1;\n" +
-    "  using ClipByFunctionAlgoT<FIELD>::u2;\n" +
-    "  using ClipByFunctionAlgoT<FIELD>::u3;\n" +
-    "  using ClipByFunctionAlgoT<FIELD>::u4;\n" +
-    "  using ClipByFunctionAlgoT<FIELD>::u5;\n" +
-    "\n" +
-    "  virtual bool vinside_p(double x, double y, double z,\n" +
-    "                         typename FIELD::value_type v)\n" +
-    "  {\n" +
-    "    return " + clipFunction + ";\n" +
-    "  }\n" +
-    "\n" +
-    "  virtual string identify()\n" +
-    "  { return string(\"" + string_Cify(clipFunction) + "\"); }\n" +
-    "};\n";
-
-  rval->add_include(include_path);
-  rval->add_post_include(class_declaration);
-  fsrc->fill_compile_info(rval);
-
-  return rval;
-}
-
 
 } // End namespace SCIRun
 
