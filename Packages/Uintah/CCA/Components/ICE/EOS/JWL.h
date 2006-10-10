@@ -80,6 +80,21 @@ WARNING
         double   R2;
         double   om;
         double   rho0;  // kg/m^3
+	
+	/* The following used only in JWL::computeRhoMicro 
+
+	   Modified by:
+	   Changwei Xiong
+	   Department of Chemistry 
+	   University of Utah
+	*/
+	double   Pressure;
+	double   Temperature;
+	double   SpecificHeat;
+	double   IL, IR;
+	double func(double rhoM);
+	double deri(double rhoM);
+	void   setInterval(double f, double rhoM);
       };
 } // End namespace Uintah
       
