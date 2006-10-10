@@ -65,36 +65,32 @@ int eorder[12][4] = {
   {1, 1, 0, 2}, // 11 11 01
 };
 
-//int edge_tab[12][2] = {{0,1}, {1,2}, {3,2}, {0,3},
-//		       {4,5}, {5,6}, {7,6}, {4,7},
-//		       {0,4}, {1,5}, {3,7}, {2,6}};
-
-
-static inline double
-lookup(Nrrd *nrrd, size_t a, size_t b, size_t c)
-{
-  return *(((double *)(nrrd->data)) + a + b * nrrd->axis[0].size +
-           c * nrrd->axis[0].size * nrrd->axis[1].size);
-}
-
 
 GeomHandle
 fast_lat_mc(Nrrd *nrrd, double ival)
 {
+  const size_t isize = nrrd->axis[0].size;
+  const size_t jsize = nrrd->axis[1].size;
+  const size_t ksize = nrrd->axis[2].size;
+
+  const size_t ijsize = isize * jsize;
+  const double *data = (double *)(nrrd->data);
+
   GeomFastTriangles *triangles = scinew GeomFastTriangles;
 
-  for (unsigned int k = 0; k < nrrd->axis[2].size-1; k++)
+  for (unsigned int k = 0; k < ksize-1; k++)
   {
-    for (unsigned int j = 0; j < nrrd->axis[1].size-1; j++)
+    for (unsigned int j = 0; j < jsize-1; j++)
     {
-      for (unsigned int i = 0; i < nrrd->axis[0].size-1; i++)
+      for (unsigned int i = 0; i < isize-1; i++)
       {
         int code = 0;
         double value[8];
         for (int a = 7; a >= 0 ; a--)
         {
-          value[a] = lookup(nrrd,
-                            i+norder[a][0], j+norder[a][1], k+norder[a][2]);
+          value[a] = (double)data[(i+norder[a][0]) +
+                                  (j+norder[a][1]) * isize +
+                                  (k+norder[a][2]) * ijsize];
           code = code * 2 + (value[a] < ival);
         }
 
