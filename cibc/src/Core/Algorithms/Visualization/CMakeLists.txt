@@ -30,6 +30,7 @@
 
 SET(Core_Algorithms_Visualization_SRCS
   EdgeMC.cc
+  FastLatMC.cc
   HexMC.cc
   MarchingCubes.cc
   mcube2.cc
