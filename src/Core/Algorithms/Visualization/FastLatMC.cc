@@ -70,7 +70,7 @@ int eorder[12][4] = {
 //		       {0,4}, {1,5}, {3,7}, {2,6}};
 
 
-double
+static inline double
 lookup(Nrrd *nrrd, size_t a, size_t b, size_t c)
 {
   return *(((double *)(nrrd->data)) + a + b * nrrd->axis[0].size +
@@ -98,8 +98,6 @@ fast_lat_mc(Nrrd *nrrd, double ival)
           code = code * 2 + (value[a] < ival);
         }
 
-        //if (code == 0 || code == 255) continue;
-
         TRIANGLE_CASES *tcase = &triCases[code];
         int *vertex = tcase->edges;
         
@@ -118,7 +116,6 @@ fast_lat_mc(Nrrd *nrrd, double ival)
             const double d = (value[v1] - ival) / (value[v1] - value[v2]);
             p[a](eorder[va][3]) += d;
           }
-          cout << "adding " << p[0] << "  " << p[1] << "  " << p[2] << "\n";
           triangles->add(p[0], p[1], p[2]);
         }
       }
