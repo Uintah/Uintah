@@ -320,7 +320,8 @@ HexMC<Field>::extract_c( const cell_index_type& cell, double iso )
 
 
 template<class Field>
-void HexMC<Field>::extract_n( const cell_index_type& cell, double iso )
+void
+HexMC<Field>::extract_n( const cell_index_type& cell, double iso )
 {
   node_array_type node(8);
   Point p[8];
