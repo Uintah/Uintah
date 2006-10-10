@@ -50,6 +50,7 @@ SET(Dataflow_Modules_Fields_SRCS
   CubitInterface.cc
   DirectMapping.cc
   ExtractHexSheet.cc
+  FieldArbitrarySlicer.cc
   FieldBoundary.cc
   FieldCage.cc
   FieldFrenet.cc
@@ -106,6 +107,7 @@ TARGET_LINK_LIBRARIES(Dataflow_Modules_Fields
   Dataflow_Network
   Dataflow_Widgets
   Core_Algorithms_Fields
+  Core_Algorithms_Visualization
   Core_Algorithms_Geometry
   Core_Basis
   Core_Datatypes

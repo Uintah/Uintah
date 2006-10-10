@@ -28,9 +28,7 @@
 
 #include <Core/Algorithms/Fields/ApplyMappingMatrix.h>
 
-namespace SCIRunAlgo {
-
-using namespace SCIRun;
+namespace SCIRun {
 
 CompileInfoHandle
 ApplyMappingMatrixAlgo::get_compile_info(const TypeDescription *fsrc,

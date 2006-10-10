@@ -27,5 +27,5 @@
 #
 
 
-SUBDIRS(Bundle Conglomerate DataIO Fields Math Render Time Visualization
+SUBDIRS(Bundle DataIO Fields Math Render Time Visualization
         String Examples)
