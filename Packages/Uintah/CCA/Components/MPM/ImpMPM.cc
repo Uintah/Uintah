@@ -2366,7 +2366,8 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
     num_nodes += (nodes.x()-2)*(nodes.y()-2)*(nodes.z()-2)*3;
   }
 
-  bool tsr = new_dw->timestepRestarted();
+  DataWarehouse* parent_new_dw=new_dw->getOtherDataWarehouse(Task::ParentNewDW);
+  bool tsr = parent_new_dw->timestepRestarted();
 
   if(!tsr){  // if a tsr has already been called for don't do the solve
     d_solver->removeFixedDOF(num_nodes);
