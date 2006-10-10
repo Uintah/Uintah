@@ -633,7 +633,6 @@ template<class T>
   }
   // linear
   if(orderOfInterpolation == 1){
-    cout << " Linear Interpolator " << endl;
     linearInterpolation<T>(q_CL, coarseLevel, fineLevel,
                           refineRatio, fl,fh, q_FineLevel); 
   }
