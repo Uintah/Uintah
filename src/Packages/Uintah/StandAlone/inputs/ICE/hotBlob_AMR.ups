@@ -206,34 +206,20 @@
           <Variable name = "press_CC" value = "1e6" matl = "0" />
         </Refinement_Criteria_Thresholds>
       </ICE>
-<!--1D
-      <Regridder>
-        <max_levels>2</max_levels>
-        <cell_refinement_ratio>    [[2,1,1]]  </cell_refinement_ratio>
-        <lattice_refinement_ratio> [[5,1,1][2,1,1]]  </lattice_refinement_ratio>
-        <cell_creation_dilation>   [2,0,0]   </cell_creation_dilation>   
-        <cell_deletion_dilation>   [1,0,0]   </cell_deletion_dilation>   
-        <min_boundary_cells>       [1,0,0]   </min_boundary_cells>
-      </Regridder>
--->
 
       <Regridder>
         <max_levels>2</max_levels>
         <cell_refinement_ratio>    [[2,2,1]]  </cell_refinement_ratio>
-        <cell_creation_dilation>   [2,2,0]   </cell_creation_dilation>   
-        <cell_deletion_dilation>   [1,1,0]   </cell_deletion_dilation>   
-        <min_boundary_cells>       [1,1,0]   </min_boundary_cells>
+        <cell_creation_dilation>   [2,2,0]    </cell_creation_dilation>   
+        <cell_deletion_dilation>   [1,1,0]    </cell_deletion_dilation>   
+        <min_boundary_cells>       [1,1,0]    </min_boundary_cells>
+ 
 
-<!-- Hierarchical-specific -->
-        <lattice_refinement_ratio> [[5,5,1]]  </lattice_refinement_ratio>
-<!--
         <type>BNR</type>
--->
-<!-- BNR-specific - to toggle, uncomment or comment the <type>BNR</type> as
-     Hierarchical is the default (and will ignore these) -->
+        
         <min_patch_size>           [10,10,1] </min_patch_size>
-        <patch_split_tolerance>    1        </patch_split_tolerance>
-        <patch_combine_tolerance>  1        </patch_combine_tolerance>
+        <patch_split_tolerance>     1        </patch_split_tolerance>
+        <patch_combine_tolerance>   1        </patch_combine_tolerance>
         <patches_per_level_per_proc> 8       </patches_per_level_per_proc>
       </Regridder>
     </AMR>
