@@ -109,13 +109,18 @@ ICE::scheduleLockstepTimeAdvance( const GridP& grid, SchedulerP& sched)
                                                           "computes");    
     }
     
-    // correct the rhs at the coarse fine interfaces
+    // correct the rhs at the coarse fine interfaces not when using first order
     // compute maxRHS
+    bool doRefluxing = true;
+    if(d_OrderOfAdvection == 1){
+      doRefluxing = false;
+    }
+    
     for(int L = 0; L<maxLevel; L++){
       LevelP level = grid->getLevel(L);
       scheduleAddReflux_RHS(     sched,         level,     one_matl,
                                                            all_matls,
-                                                           true);
+                                                           doRefluxing);
                                                            
       scheduleCompute_maxRHS(    sched,         level,     one_matl,
                                                            all_matls);
@@ -491,11 +496,17 @@ void ICE::multiLevelPressureSolve(const ProcessorGroup* pg,
                                 recursion,
                                 "computes");
       }
+      
+      bool doRefluxing = true;
+      if(d_OrderOfAdvection == 1){  // no refluxing when using first order advection
+        doRefluxing = false;
+      }
+      
       for(int L = 0; L<maxLevel; L++){
         LevelP level = grid->getLevel(L);
         scheduleAddReflux_RHS(  d_subsched,         level,      one_matl,
                                 all_matls,
-                                true);
+                                doRefluxing);
         scheduleCompute_maxRHS(  d_subsched,        level,      one_matl,
                                  all_matls);
       }

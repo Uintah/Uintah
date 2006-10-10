@@ -13,7 +13,8 @@ using namespace std;
 using namespace Uintah;
 
 Advector* AdvectionFactory::create(ProblemSpecP& ps,
-                                   bool& d_useCompatibleFluxes)
+                                   bool& d_useCompatibleFluxes,
+                                   int& d_OrderOfAdvection)
 {
   ProblemSpecP advect_ps = ps->findBlock("advection");
   if(!advect_ps){
@@ -53,9 +54,11 @@ Advector* AdvectionFactory::create(ProblemSpecP& ps,
   //__________________________________
   // Find the advection operator type
   if (advect_options["type"] == "FirstOrder"){
+    d_OrderOfAdvection = 1;
     return(scinew FirstOrderAdvector());
   } 
   else if (advect_options["type"] == "SecondOrder"){
+    d_OrderOfAdvection = 2;
     return(scinew SecondOrderAdvector());
   }
   else {

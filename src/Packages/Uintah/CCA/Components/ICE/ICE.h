@@ -988,6 +988,7 @@ namespace Uintah {
       customInitialize_basket* d_customInitialize_basket;
       
       Advector* d_advector;
+      int  d_OrderOfAdvection;
       bool d_useCompatibleFluxes;
       bool d_clampSpecificVolume;
       Turbulence* d_turbulence;
