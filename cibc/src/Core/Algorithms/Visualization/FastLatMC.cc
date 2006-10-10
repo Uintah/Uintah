@@ -66,15 +66,15 @@ int eorder[12][4] = {
 };
 
 
+template <class T>
 GeomHandle
-fast_lat_mc(Nrrd *nrrd, double ival)
+fast_lat_mc_real(Nrrd *nrrd, T *data, double ival)
 {
   const size_t isize = nrrd->axis[0].size;
   const size_t jsize = nrrd->axis[1].size;
   const size_t ksize = nrrd->axis[2].size;
 
   const size_t ijsize = isize * jsize;
-  const double *data = (double *)(nrrd->data);
 
   GeomFastTriangles *triangles = scinew GeomFastTriangles;
 
@@ -121,5 +121,35 @@ fast_lat_mc(Nrrd *nrrd, double ival)
   return triangles;
 }
 
+
+GeomHandle
+fast_lat_mc(Nrrd *nrrd, double ival)
+{
+  switch (nrrd->type)
+  {
+  case nrrdTypeChar:
+    return fast_lat_mc_real(nrrd, (char *)nrrd->data, ival);
+  case nrrdTypeUChar:
+    return fast_lat_mc_real(nrrd, (unsigned char *)nrrd->data, ival);
+  case nrrdTypeShort:
+    return fast_lat_mc_real(nrrd, (short *)nrrd->data, ival);
+  case nrrdTypeUShort:
+    return fast_lat_mc_real(nrrd, (unsigned short *)nrrd->data, ival);
+  case nrrdTypeInt:
+    return fast_lat_mc_real(nrrd, (int *)nrrd->data, ival);
+  case nrrdTypeUInt:
+    return fast_lat_mc_real(nrrd, (unsigned int *)nrrd->data, ival);
+  case nrrdTypeLLong:
+    return fast_lat_mc_real(nrrd, (long long *)nrrd->data, ival);
+  case nrrdTypeULLong:
+    return fast_lat_mc_real(nrrd, (unsigned long long *)nrrd->data, ival);
+  case nrrdTypeFloat:
+    return fast_lat_mc_real(nrrd, (float *)nrrd->data, ival);
+  case nrrdTypeDouble:
+    return fast_lat_mc_real(nrrd, (double *)nrrd->data, ival);
+  default:
+    throw "Unknown nrrd type, cannot isosurface.";
+  }
+}
 
 } // end namespace SCIRun
