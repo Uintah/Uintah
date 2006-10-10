@@ -245,9 +245,10 @@ void ImpMPM::problemSetup(const ProblemSpecP& prob_spec,
 
    // setup sub scheduler
    Scheduler* sched = dynamic_cast<Scheduler*>(getPort("scheduler"));
+   sched->setRestartable(true);
+
    d_subsched = sched->createSubScheduler();
    d_subsched->initialize(3,1);
-   d_subsched->setRestartable(true);
    d_subsched->clearMappings();
    d_subsched->mapDataWarehouse(Task::ParentOldDW, 0);
    d_subsched->mapDataWarehouse(Task::ParentNewDW, 1);
@@ -2337,8 +2338,8 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
       d_solver->assembleVector();
       if(isnan(Q)){
         cout << "RHS contains a nan, restarting timestep" << endl;
-        new_dw->abortTimestep();
-        new_dw->restartTimestep();
+        parent_new_dw->abortTimestep();
+        parent_new_dw->restartTimestep();
         return;
       }
      } // first time through non-rigid
