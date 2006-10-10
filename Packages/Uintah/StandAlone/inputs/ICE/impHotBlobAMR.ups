@@ -246,9 +246,9 @@
                 
     <AMR>
       <ICE>
-        <orderOfInterpolation>1  </orderOfInterpolation>
-        <useLockStep>       true </useLockStep>
-        <do_Refluxing>      true </do_Refluxing>
+        <orderOfInterpolation>1   </orderOfInterpolation>
+        <useLockStep>       true  </useLockStep>
+        <do_Refluxing>      false </do_Refluxing>
         <Refinement_Criteria_Thresholds>
           <Variable name = "press_CC"  value = "1e3" matl = "0" />
         </Refinement_Criteria_Thresholds>
