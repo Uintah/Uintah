@@ -866,56 +866,62 @@ itcl_class Module {
     # up that we will append our commands to 
     # 'prefix' is a prefix written for all for the variables
     # 'tab' is the indent string to make it look pretty
-    method writeStateToScript { scriptVar prefix { tab "" }} {
-	if [isaSubnetIcon [modname]] return
+    method writeStateToScript { scriptVar prefix { tab "" } } {
+			if [isaSubnetIcon [modname]] return
 
 	
-	if { [winfo exists .ui[modname]] } {
-	    setGlobal [modname]-ui_geometry [winfo geometry .ui[modname]]
-	}
-
-	upvar 1 $scriptVar script
-	set module [modname]
-	set write_vars ""
-	set modstr [join [modulePath $module] ->]
-
-	global ModuleSavedVars ModuleSubstitutedVars
-	if { [info exists ModuleSavedVars($module)] } {
-	    set classname [join [modulePath $module] _]
-	    foreach var $ModuleSavedVars($module) {
-		if { ![isaDefaultValue $module $var $classname] } {
-		    lappend write_vars $var
-		}
-	    }
-	}
-
-	if { [llength $write_vars] } {
-
-	    foreach var $write_vars {
-		upvar \#0 $module-$var val
-		set varname "${var}"
-		if { [llength $varname] > 1 } {
-		    set varname \"${varname}\"
-		}
-
-		if { [info exists ModuleSubstitutedVars($module)] && \
-			 [lsearch $ModuleSubstitutedVars($module) $var]!=-1} {
-		    set newval [subDATADIRandDATASET $val]
-		    netedit add-mod-var $prefix $varname \{$newval\}
-		} else {
-		    if { ![string is integer $val] && [string is double $val]} {
-			set failed [catch "set num [format %.[string length $val]e $val]"]
-			if { !$failed } {
-			    set failed [catch "set num [expr $num]"]
+			if { [winfo exists .ui[modname]] } {
+					setGlobal [modname]-ui_geometry [winfo geometry .ui[modname]]
 			}
-			if { !$failed } {
-			    netedit add-mod-var $prefix $varname \{$num\}
-			    continue
-			}
-		    }
 
-		    netedit add-mod-var $prefix $varname \{${val}\}
-		}
+			upvar 1 $scriptVar script
+			set module [modname]
+			set write_vars ""
+			set modstr [join [modulePath $module] ->]
+
+			global ModuleSavedVars ModuleSubstitutedVars ModuleIsFilenameVars
+			if { [info exists ModuleSavedVars($module)] } {
+					set classname [join [modulePath $module] _]
+					foreach var $ModuleSavedVars($module) {
+						if { ![isaDefaultValue $module $var $classname] } {
+								lappend write_vars $var
+						}
+					}
+			}
+
+			if { [llength $write_vars] } {
+
+					foreach var $write_vars {
+						upvar \#0 $module-$var val
+						set varname "${var}"
+						if { [llength $varname] > 1 } {
+								set varname \"${varname}\"
+						}
+
+						if { [info exists ModuleIsFilenameVars($module)] && \
+							 [lsearch $ModuleIsFilenameVars($module) $var]!=-1} {
+								global UseRelativeFilenames
+								set newval [subDATADIRandDATASET $val]	
+								netedit add-mod-filevar $prefix $varname \{$newval\} $UseRelativeFilenames
+						} else {
+							if { [info exists ModuleSubstitutedVars($module)] && \
+							  [lsearch $ModuleSubstitutedVars($module) $var]!=-1} {
+								set newval [subDATADIRandDATASET $val]
+								netedit add-mod-substvar $prefix $varname \{$newval\}
+							} else {
+								if { ![string is integer $val] && [string is double $val]} {
+									set failed [catch "set num [format %.[string length $val]e $val]"]
+									if { !$failed } {
+										set failed [catch "set num [expr $num]"]
+									}
+									if { !$failed } {
+										netedit add-mod-var $prefix $varname \{$num\}
+										continue
+									}
+								}
+							netedit add-mod-var $prefix $varname \{${val}\}
+						}
+					}
 	    }
 	}
 	

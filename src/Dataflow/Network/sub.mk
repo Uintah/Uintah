@@ -44,7 +44,7 @@ SRCS     += \
         $(SRCDIR)/NetworkIO.cc     \
         $(SRCDIR)/PackageDB.cc     \
         $(SRCDIR)/SkeletonFiles.cc \
-        $(SRCDIR)/Scheduler.cc
+        $(SRCDIR)/Scheduler.cc		
 
 SUBDIRS := $(SRCDIR)/Ports
 include $(SCIRUN_SCRIPTS)/recurse.mk
@@ -61,7 +61,8 @@ PSELIBS := \
         Core/Util          \
         Core/Thread        \
         Core/Volume        \
-        Core/XMLUtil
+        Core/XMLUtil  		 \
+				Core/OS
 
 LIBS := $(TCL_LIBRARY) $(XML2_LIBRARY)
 

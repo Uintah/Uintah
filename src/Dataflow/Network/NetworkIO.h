@@ -79,7 +79,7 @@ public:
   void add_module_note_position(const string &id, const string &pos); 
   void add_module_note_color(const string &id, const string &col); 
   void add_module_variable(const string &id, const string &var, 
-			   const string &val);
+			   const string &val, bool filename = false, bool substitute = false, bool userelfilenames = false);
   void set_module_gui_visible(const string &id);
   void add_module_gui_callback(const string &id, const string &call);
 
@@ -102,8 +102,12 @@ private:
   void process_modules_pass2(const xmlNodePtr enode);
   void process_connections(const xmlNodePtr enode);
   void process_network_node(const xmlNodePtr nnode);
-  string substitute_env(const string &src) const;
-
+ 
+	string process_filename(const string &src);
+  string process_substitute(const string &src);
+	string make_absolute_filename(string name);
+	string make_relative_filename(string name,string path);
+	
   inline
   string get_mod_id(const string &id); 
 

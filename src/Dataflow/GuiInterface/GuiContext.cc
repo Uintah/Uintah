@@ -389,7 +389,9 @@ GuiInterface* GuiContext::getInterface()
 void GuiContext::tcl_setVarStates() {
   const string save_flag = (context_state_ & SAVE_E)?"1":"0";
   const string sub_flag = (context_state_ & SUBSTITUTE_DATADIR_E)?" 1":" 0";
-  gui_->execute("setVarStates \""+name_+"\" "+save_flag+sub_flag);
+  const string filename_flag = (context_state_ & IS_FILENAME_E)?" 1":" 0";
+
+  gui_->execute("setVarStates \""+name_+"\" "+save_flag+sub_flag+filename_flag);
 }
 
 void
@@ -424,3 +426,22 @@ GuiContext::doSubstituteDatadir()
   context_state_ |= SUBSTITUTE_DATADIR_E;
   tcl_setVarStates();
 }
+
+
+void
+GuiContext::unsetIsFilename()
+{
+  if ((context_state_ & IS_FILENAME_E) == 0) return;
+  context_state_ &= ~IS_FILENAME_E;
+  tcl_setVarStates();
+}
+
+void
+GuiContext::setIsFilename()
+{
+  if ((context_state_ & IS_FILENAME_E) == IS_FILENAME_E) return;
+  context_state_ |= IS_FILENAME_E;
+  tcl_setVarStates();
+}
+
+

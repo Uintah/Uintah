@@ -393,7 +393,12 @@ NetworkEditor::tcl_command(GuiArgs& args, void*)
   } else if (args[1] == "set-modgui-visible") {
     netio->set_module_gui_visible(args[2]);
   } else if (args[1] == "add-mod-var") {
-    netio->add_module_variable(args[2], args[3], args[4]);
+    netio->add_module_variable(args[2], args[3], args[4],false,false);
+  } else if (args[1] == "add-mod-substvar") {
+    netio->add_module_variable(args[2], args[3], args[4],false,true);
+  } else if (args[1] == "add-mod-filevar") {
+		if (args[5] == "1" || args[5] == "true" || args[5] == "yes" || args[5] == "on") netio->add_module_variable(args[2], args[3], args[4],true,true,true);
+		else netio->add_module_variable(args[2], args[3], args[4],true,true,false);
   } else if (args[1] == "add-modgui-callback") {
     netio->add_module_gui_callback(args[2], args[3]);
   } else if (args[1] == "subnet-start") {

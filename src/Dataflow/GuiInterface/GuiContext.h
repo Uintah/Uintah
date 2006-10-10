@@ -85,6 +85,9 @@ public:
   void			dontSubstituteDatadir();
   void			doSubstituteDatadir();
 
+  void			setIsFilename();
+  void			unsetIsFilename();
+
   void			dontSave();
   void			doSave();
   
@@ -93,7 +96,7 @@ public:
   void			reset(); // resets the cache
 private:  
   void			tcl_setVarStates();  
-  
+
   string		getMapKeyFromString(const string &); 
   string		getMapNameFromString(const string &str);
   
@@ -109,8 +112,9 @@ private:
   enum  {
     SAVE_E			= 1 << 0,
     CACHE_E			= 1 << 1,
-    CACHED_E			= 1 << 2,
-    SUBSTITUTE_DATADIR_E	= 1 << 3//,
+    CACHED_E	    = 1 << 2,
+    SUBSTITUTE_DATADIR_E	= 1 << 3,
+	IS_FILENAME_E     = 1 << 4//,
     //      TCL_VARIABLE_E		= 1 << 4,
     //      TCL_LIST_ELEMENT_E	= 1 << 5,
     //TCL_ARRAY_ELEMENT_E	= 1 << 6,
