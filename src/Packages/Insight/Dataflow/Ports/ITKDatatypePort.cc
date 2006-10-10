@@ -63,7 +63,5 @@ extern "C" {
 template<> string SimpleIPort<SCIRun::ITKDatatypeHandle>::port_type_("ITKDatatype");
 template<> string SimpleIPort<SCIRun::ITKDatatypeHandle>::port_color_("pink");
 
-static test_class test_me;
-
 } // End namespace SCIRun
 
