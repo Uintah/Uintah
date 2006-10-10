@@ -46,10 +46,16 @@
      the specified environment variable -->
 <!ELEMENT environment (var+)>
 
+<!-- in the first version of the srn file it was not saved 
+     whether a variable was did contain a substitution,
+		 conversion was applied on every variable. Hence the default
+		 is yes, whereas it actually should be no. jeroen -->
 <!ELEMENT var EMPTY>
 <!ATTLIST var
           name CDATA #REQUIRED
-          val CDATA #REQUIRED>
+          val CDATA #REQUIRED
+					filename (yes | no) "no"
+					substitute (yes | no) "yes" >
 
 <!-- note to describe the network and its usage, typically entered 
      from the SCIRun GUI (optional)-->
