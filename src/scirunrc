@@ -123,6 +123,12 @@ SCIRUN_RCFILE_VERSION = 1.25.3.0
 # SCIRUN_LOAD_PACKAGE = BioPSE,Uintah,Teem
 
 
+### SCIRUN_SHOW_HIDDEN_MODULES = [boolean]
+#   Show modules that have been set to be hidden. These hidden modules include
+#   obsolete or unfinished modules. Use extra care when using these modules
+#   as they may be deleted in a future version or may cause scirun to crash
+# SCIRUN_SHOW_HIDDEN_MODULES = true
+
 ### SCIRUN_DATA = [path]
 #   Directory location that 'Reader' modules will default to.
 # SCIRUN_DATA = /usr/sci/data/SCIRunData/$(SCIRUN_VERISON)
@@ -137,6 +143,11 @@ SCIRUN_RCFILE_VERSION = 1.25.3.0
 #   If true, module filename variables will be automatically substituted for
 #   'SCIRUN_DATADIR' and 'SCIRUN_DATASET' in saved .net files.
 # SCIRUN_NET_SUBSTITUTE_DATADIR = false
+
+### SCIRUN_NET_RELATIVE_FILENAMES = [boolean]
+#   If true, SCIRun will save all filenames relative to the location of the 
+#   network file in the .srn files.
+# SCIRUN_NET_RELATIVE_FILENAMES = true
 
 
 ### SCIRUN_MYDATA_DIR = [path]
