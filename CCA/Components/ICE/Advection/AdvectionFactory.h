@@ -14,7 +14,8 @@ namespace Uintah {
   {
   public: 
     static Advector* create(ProblemSpecP& ps,
-                            bool& d_useCompatibleFluxes);
+                            bool& d_useCompatibleFluxes,
+                            int& d_OrderOfAdvection);
   };
 
 } // End namespace Uintah
