@@ -282,7 +282,7 @@ proc makeNetworkEditor {} {
     .main_menu.file.menu add separator
 
     # This was added by Mohamed Dekhil to add some infor to the net
-    .main_menu.file.menu add command -label "Add Info..." -underline 0 \
+    .main_menu.file.menu add command -label "Network Properties" -underline 0 \
 	-command "popupInfoMenu"
 
     .main_menu.file.menu add separator
@@ -1178,6 +1178,10 @@ proc initInfo { {subnet_number 0} } {
     if { ![info exists Subnet(Subnet${subnet_number}_notes)] } { 
 	set Subnet(Subnet${subnet_number}_notes) "" 
     }
+		
+		if { ![info exists Subnet(Subnet${subnet_number}_relfilenames)]} {
+			set Subnet(Subnet${subnet_number}_relfilenames) 0
+		}
 }
 
 proc updateRunDateAndTime { subnet_number } {
@@ -1209,74 +1213,87 @@ proc popupInfoMenu { {subnet_num 0 } } {
 	$Subnet(Subnet${subnet_num}_creationDate) \
 	$Subnet(Subnet${subnet_num}_creationTime) \
 	$Subnet(Subnet${subnet_num}_notes) \
-	
+	$Subnet(Subnet${subnet_num}_relfilenames) \
 
     set w .netedit_info$subnet_num
         
     if {[winfo exists $w]} {
-	raise $w
-	return
+			raise $w
+			return
     }
 
     toplevel $w
-    wm title $w "$Subnet(Subnet${subnet_num}_Name) Information"
+    wm title $w "$Subnet(Subnet${subnet_num}_Name) Properties"
 
-    frame $w.fname
-    label $w.fname.lname -text "User: " -padx 3 -pady 3
-    entry $w.fname.ename -width 50 -relief sunken -bd 2 \
+		iwidgets::tabnotebook $w.tab -tabpos n  -width 600 -height 600
+		
+		pack $w.tab -fill both -expand yes
+		set infoframe [$w.tab add -label "Information" ]
+		# set saveframe [$w.tab add -label "Save Options" ] 
+		
+		$w.tab select 0
+
+		# disable for now until we resolve problems with srn files
+		# frame $saveframe.fname
+		# checkbutton $saveframe.fname.relativefiles -variable Subnet(Subnet${subnet_num}_relfilenames) -text "Save all filenames relative to the network location"
+		
+		pack $saveframe.fname -side top -padx 1 -pady 1 -ipadx 2 -ipady 2 -fill x
+		pack $saveframe.fname.relativefiles -side left
+
+    frame $infoframe.fname
+    label $infoframe.fname.lname -text "User: " -padx 3 -pady 3
+    entry $infoframe.fname.ename -width 50 -relief sunken -bd 2 \
 	-textvariable Subnet(Subnet${subnet_num}_userName)
-    pack $w.fname.lname $w.fname.ename -side left
+    pack $infoframe.fname.lname $infoframe.fname.ename -side left
 
     set pre [expr $subnet_num?"Sub-":""]
-    frame $w.cdt
-    label $w.cdt.label -text "${pre}Network Created:"
-    label $w.cdt.ldate -text "   Date: " -padx 3 -pady 3 
-    entry $w.cdt.edate -width 20 -relief sunken -bd 2 \
+    frame $infoframe.cdt
+    label $infoframe.cdt.label -text "${pre}Network Created:"
+    label $infoframe.cdt.ldate -text "   Date: " -padx 3 -pady 3 
+    entry $infoframe.cdt.edate -width 20 -relief sunken -bd 2 \
 	-textvariable Subnet(Subnet${subnet_num}_creationDate)
 
-    label $w.cdt.ltime -text "   Time: " -padx 5 -pady 3 
-    entry $w.cdt.etime -width 10 -relief sunken -bd 2 \
+    label $infoframe.cdt.ltime -text "   Time: " -padx 5 -pady 3 
+    entry $infoframe.cdt.etime -width 10 -relief sunken -bd 2 \
 	-textvariable Subnet(Subnet${subnet_num}_creationTime)
 
-    button $w.cdt.reset -text "Reset" \
+    button $infoframe.cdt.reset -text "Reset" \
 	-command "updateCreationDateAndTime $subnet_num"
-#    pack $w.cdt.label $w.cdt.ldate $w.cdt.edate $w.cdt.ltime $w.cdt.etime -side left -fill x
-#    pack $w.cdt.reset -side right
-    pack $w.cdt.label  -side left -fill x
-    pack $w.cdt.reset $w.cdt.etime $w.cdt.ltime $w.cdt.edate $w.cdt.ldate   -side right -padx 5
+    pack $infoframe.cdt.label  -side left -fill x
+    pack $infoframe.cdt.reset $infoframe.cdt.etime $infoframe.cdt.ltime $infoframe.cdt.edate $infoframe.cdt.ldate   -side right -padx 5
 
 
-    frame $w.fdt
-    label $w.fdt.label -text "${pre}Network Executed:"
-    label $w.fdt.ldate -text "   Date: " -padx 3 -pady 3 
-    entry $w.fdt.edate -width 20 -relief sunken -bd 2 \
+    frame $infoframe.fdt
+    label $infoframe.fdt.label -text "${pre}Network Executed:"
+    label $infoframe.fdt.ldate -text "   Date: " -padx 3 -pady 3 
+    entry $infoframe.fdt.edate -width 20 -relief sunken -bd 2 \
 	-textvariable Subnet(Subnet${subnet_num}_runDate)
 
-    label $w.fdt.ltime -text "   Time: " -padx 5 -pady 3 
-    entry $w.fdt.etime -width 10 -relief sunken -bd 2 \
+    label $infoframe.fdt.ltime -text "   Time: " -padx 5 -pady 3 
+    entry $infoframe.fdt.etime -width 10 -relief sunken -bd 2 \
 	-textvariable Subnet(Subnet${subnet_num}_runTime)
 
-    button $w.fdt.reset -text "Reset" \
+    button $infoframe.fdt.reset -text "Reset" \
 	-command "updateRunDateAndTime $subnet_num"
 
-    pack $w.fdt.label  -side left -fill x
-    pack $w.fdt.reset $w.fdt.etime $w.fdt.ltime $w.fdt.edate $w.fdt.ldate   -side right -padx 5
+    pack $infoframe.fdt.label  -side left -fill x
+    pack $infoframe.fdt.reset $infoframe.fdt.etime $infoframe.fdt.ltime $infoframe.fdt.edate $infoframe.fdt.ldate   -side right -padx 5
 
 
-    frame $w.fnotes -relief groove
-    frame $w.fnotes.top
-    frame $w.fnotes.bot
-    label $w.fnotes.top.lnotes -text "Notes:" -padx 2 -pady 5 
-    text $w.fnotes.bot.tnotes -relief sunken -bd 2 \
-	-yscrollcommand "$w.fnotes.bot.scroll set"
-    scrollbar $w.fnotes.bot.scroll -command "$w.fnotes.bot tnotes yview"
-    $w.fnotes.bot.tnotes insert 1.0 $Subnet(Subnet${subnet_num}_notes)
+    frame $infoframe.fnotes -relief groove
+    frame $infoframe.fnotes.top
+    frame $infoframe.fnotes.bot
+    label $infoframe.fnotes.top.lnotes -text "Notes:" -padx 2 -pady 5 
+    text $infoframe.fnotes.bot.tnotes -relief sunken -bd 2 \
+	-yscrollcommand "$infoframe.fnotes.bot.scroll set"
+    scrollbar $infoframe.fnotes.bot.scroll -command "$infoframe.fnotes.bot tnotes yview"
+    $infoframe.fnotes.bot.tnotes insert 1.0 $Subnet(Subnet${subnet_num}_notes)
 
-    pack $w.fnotes.top $w.fnotes.bot -expand 0 -fill x -side top
-    pack $w.fnotes.top.lnotes -side left
-    pack $w.fnotes.bot -expand 1 -fill both -side top
-    pack $w.fnotes.bot.tnotes  -expand 1 -side left -fill both
-    pack $w.fnotes.bot.scroll -expand 0 -side left -fill y
+    pack $infoframe.fnotes.top $infoframe.fnotes.bot -expand 0 -fill x -side top
+    pack $infoframe.fnotes.top.lnotes -side left
+    pack $infoframe.fnotes.bot -expand 1 -fill both -side top
+    pack $infoframe.fnotes.bot.tnotes  -expand 1 -side left -fill both
+    pack $infoframe.fnotes.bot.scroll -expand 0 -side left -fill y
 
 
     frame $w.fbuttons 
@@ -1286,11 +1303,10 @@ proc popupInfoMenu { {subnet_num 0 } } {
     button $w.fbuttons.cancel -text "Cancel" \
 	-command "infoCancel $w $subnet_num $backupDateTimeNotes"
 
-    pack $w.fname $w.cdt $w.fdt -side top -padx 1 -pady 1 -ipadx 2 -ipady 2 -fill x
-    pack $w.fnotes -expand 1 -fill both
-    pack $w.fbuttons -side top -padx 1 -pady 1 -ipadx 2 -ipady 2 -fill x
- 
+    pack $infoframe.fname $infoframe.cdt $infoframe.fdt -side top -padx 1 -pady 1 -ipadx 2 -ipady 2 -fill x
+    pack $infoframe.fnotes -expand 1 -fill both
 
+    pack $w.fbuttons -side top -padx 1 -pady 1 -ipadx 2 -ipady 2 -fill x
     pack $w.fbuttons.ok $w.fbuttons.clear $w.fbuttons.cancel -side right -padx 5 -pady 5 -ipadx 3 -ipady 3
 }
 
@@ -1302,12 +1318,16 @@ proc infoClear {w subnet_num} {
     set Subnet(Subnet${subnet_num}_creationDate) ""
     set Subnet(Subnet${subnet_num}_creationTime) ""
     set Subnet(Subnet${subnet_num}_notes) ""
-    $w.fnotes.bot.tnotes delete 1.0 end
+		set Subnet(Subnet${subnet_num}_relfilenames) ""
+		
+		set infoframe [$w.tab childsite 0]		
+    $infoframe.fnotes.bot.tnotes delete 1.0 end
 }
 
 proc infoOk {w subnet_num} {
     global Subnet
-    set Subnet(Subnet${subnet_num}_notes) [$w.fnotes.bot.tnotes get 1.0 end]
+		set infoframe [$w.tab childsite 0]
+    set Subnet(Subnet${subnet_num}_notes) [$infoframe.fnotes.bot.tnotes get 1.0 end]
     networkHasChanged
     destroy $w
 }
@@ -1319,7 +1339,8 @@ proc infoCancel {w subnet_num args } {
     set Subnet(Subnet${subnet_num}_runTime) [lindex $args 2]
     set Subnet(Subnet${subnet_num}_creationDate) [lindex $args 3]
     set Subnet(Subnet${subnet_num}_creationTime) [lindex $args 4]
-    set Subnet(Subnet${subnet_num}_Notes) [lindex $args 5]
+    set Subnet(Subnet${subnet_num}_notes) [lindex $args 5]
+		set Subnet(Subnet${subnet_num}_relfilenames) [lindex $args 6]
 
     destroy $w
 } 
@@ -2013,9 +2034,9 @@ proc initVarStates { var save substitute } {
     }
 }
 
-proc setVarStates { var save substitute } {
+proc setVarStates { var save substitute isfilename} {
 
-    global ModuleSavedVars ModuleSubstitutedVars
+    global ModuleSavedVars ModuleSubstitutedVars ModuleIsFilenameVars
     set var [string trimleft $var :]
     if { [string first msg_stream $var] != -1 } return
     set ids [split $var -]
@@ -2024,29 +2045,41 @@ proc setVarStates { var save substitute } {
     if { ![string length $varname] || ![string length $module] } return
 
     if { ![info exists ModuleSavedVars($module)] } {
-	set saved 0
+			set saved 0
     } else {
-	set saved [expr [lsearch $ModuleSavedVars($module) $varname] != -1]
+			set saved [expr [lsearch $ModuleSavedVars($module) $varname] != -1]
     }
 
     if { $save && !$saved} {
-	lappend ModuleSavedVars($module) $varname
-	uplevel \#0 trace variable \"$var\" w networkHasChanged
+			lappend ModuleSavedVars($module) $varname
+			uplevel \#0 trace variable \"$var\" w networkHasChanged
     } elseif { !$save && $saved } {
-	listFindAndRemove ModuleSavedVars($module) $varname
-	uplevel \#0 trace vdelete \"$var\" w networkHasChanged
+			listFindAndRemove ModuleSavedVars($module) $varname
+			uplevel \#0 trace vdelete \"$var\" w networkHasChanged
     }
 	
     if { ![info exists ModuleSubstitutedVars($module)] } {
-	set substituted 0
+			set substituted 0
     } else {
-	set substituted [expr [lsearch $ModuleSubstitutedVars($module) $varname] != -1]
+			set substituted [expr [lsearch $ModuleSubstitutedVars($module) $varname] != -1]
     }
 
     if { $substitute && !$substituted } {
-	lappend ModuleSubstitutedVars($module) $varname
+			lappend ModuleSubstitutedVars($module) $varname
     } elseif { !$substitute && $substituted } {
-	listFindAndRemove ModuleSubstitutedVars($module) $varname
+			listFindAndRemove ModuleSubstitutedVars($module) $varname
+    }
+
+    if { ![info exists ModuleIsFilenameVars($module)] } {
+			set filename 0
+    } else {
+			set filename [expr [lsearch $ModuleIsFilenameVars($module) $varname] != -1]
+    }
+
+    if { $isfilename && !$filename } {
+			lappend ModuleIsFilenameVars($module) $varname
+    } elseif { !$isfilename && $filename } {
+			listFindAndRemove ModuleIsFilenameVars($module) $varname
     }
 }
 

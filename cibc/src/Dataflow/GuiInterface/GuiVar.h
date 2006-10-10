@@ -195,11 +195,13 @@ public:
   GuiFilename(GuiContext* ctx) : GuiString(ctx)
   {
     ctx->doSubstituteDatadir();
+		ctx->setIsFilename();
   }
 
   GuiFilename(GuiContext* ctx, const string &val) : GuiString(ctx, val)
   {
     ctx->doSubstituteDatadir();
+		ctx->setIsFilename();
   }
 
   virtual ~GuiFilename() {}

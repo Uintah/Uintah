@@ -329,7 +329,7 @@ proc makeSubnetEditorWindow { from_subnet x y { bbox "0 0 0 0" } } {
 	-underline 0 -command "saveSubnet ${subnet_id} 1"
     $w.main_menu.file.menu add command -label "Save Template..." \
 	-underline 0 -command "saveSubnet ${subnet_id} 0"
-    $w.main_menu.file.menu add command -label "Network Info..." \
+    $w.main_menu.file.menu add command -label "Network Properties" \
 	-underline 0 -command "popupInfoMenu ${subnet_id}"
     pack $w.main_menu.file -side left
 
@@ -1108,7 +1108,7 @@ proc subDATADIRandDATASET { val } {
 proc genSubnetScript { subnet { tab "__auto__" }  } {
     netedit presave
 
-    global Subnet Disabled Notes ConnectionRoutes
+    global Subnet Disabled Notes ConnectionRoutes 
     set connections ""
     set modVar(Subnet${subnet}) "Subnet"
 
@@ -1120,8 +1120,8 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
     netedit network-variable bbox \{[subnet_bbox $subnet]\}
     netedit network-variable creationDate \{$Subnet(Subnet${subnet}_creationDate)\}
     netedit network-variable creationTime \{$Subnet(Subnet${subnet}_creationTime)\}
-    netedit network-note \{$Subnet(Subnet${subnet}_notes)\}
-
+		netedit network-note \{$Subnet(Subnet${subnet}_notes)\}
+		
     if { $subnet } {
 	netedit network-variable geometry \{[wm geometry .subnet$subnet]\}
     } else {
@@ -1235,10 +1235,13 @@ proc genSubnetScript { subnet { tab "__auto__" }  } {
 
     set i $num_subnets
     foreach module $Subnet(Subnet${subnet}_Modules) {
-	if { ! [isaSubnetIcon $module] } {
-	    incr i
-	    $module writeStateToScript script "m$i" $tab
-	}
+			if { ! [isaSubnetIcon $module] } {
+				incr i
+				global UseRelativeFilenames
+#				set UseRelativeFilenames $Subnet(Subnet${subnet}_relfilenames)
+				set UseRelativeFilenames [netedit getenv SCIRUN_NET_RELATIVE_FILENAMES]
+				$module writeStateToScript script "m$i" $tab 
+			}
     }
 
     return $script
