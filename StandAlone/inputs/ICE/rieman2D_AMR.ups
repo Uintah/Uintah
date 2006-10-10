@@ -165,7 +165,7 @@
     <AMR>
       <ICE>
         <orderOfInterpolation>1  </orderOfInterpolation>
-        <do_Refluxing>  true     </do_Refluxing>
+        <do_Refluxing>  false    </do_Refluxing>
         <Refinement_Criteria_Thresholds>
           <Variable name = "rho_CC"    value = "20" matl = "0" />
           <Variable name = "temp_CC"   value = "15" matl = "0" />

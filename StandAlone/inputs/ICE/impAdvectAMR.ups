@@ -253,9 +253,9 @@
     <!--A M R -->
     <AMR>
       <ICE>
-        <orderOfInterpolation>1  </orderOfInterpolation>
-        <useLockStep>       true </useLockStep>
-        <do_Refluxing>      true </do_Refluxing>
+        <orderOfInterpolation>1   </orderOfInterpolation>
+        <useLockStep>       true  </useLockStep>
+        <do_Refluxing>      false </do_Refluxing>
         <Refinement_Criteria_Thresholds>
         </Refinement_Criteria_Thresholds>
       </ICE>
