@@ -224,7 +224,8 @@ void ICE::problemSetup(const ProblemSpecP& prob_spec,
   cfd_ice_ps->get("max_iteration_equilibration",d_max_iter_equilibration);
   cfd_ice_ps->get("ClampSpecificVolume",d_clampSpecificVolume);
   
-  d_advector = AdvectionFactory::create(cfd_ice_ps, d_useCompatibleFluxes);
+  d_advector = AdvectionFactory::create(cfd_ice_ps, d_useCompatibleFluxes,
+                                        d_OrderOfAdvection);
   cout_norm << " d_use_compatibleFluxes:  " << d_useCompatibleFluxes<<endl;   
   cout_norm << "cfl = " << d_CFL << endl;
   cout_norm << "max_iteration_equilibration "<<d_max_iter_equilibration<<endl;
@@ -5225,7 +5226,8 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
             constCCVariable<double> q_adv;
             new_dw->allocateAndPut(q_CC, tvar->var,     indx, patch);
             new_dw->get(q_adv,           tvar->var_adv, indx, patch, gn,0);
-             
+            q_CC.initialize(0.0);
+            
             for(CellIterator iter = patch->getCellIterator(); !iter.done(); iter++) {
               IntVector c = *iter;
               q_CC[c] = q_adv[c]/mass_adv[c];
@@ -5235,7 +5237,7 @@ void ICE::conservedtoPrimitive_Vars(const ProcessorGroup* /*pg*/,
             setBC(q_CC, Labelname,  patch, d_sharedState, indx, new_dw);  
             
             //---- P R I N T   D A T A ------   
-            if (switchDebug_advance_advect ) {
+            if (switchDebug_conserved_primitive ) {
               ostringstream desc;
               desc <<"BOT_convertConservedtoPrimitive_Vars_Mat_" <<indx<<"_patch_"
                    <<patch->getID();
