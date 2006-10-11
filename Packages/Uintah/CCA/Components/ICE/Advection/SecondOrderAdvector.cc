@@ -10,6 +10,10 @@
 #include <Core/Util/Endian.h>
 #include <iostream>
 
+//#define REFLUX_DBG
+#undef REFLUX_DBG
+#define is_rightFace_variable(face,var) ( ((face == "xminus" || face == "xplus") && var == "scalar-f") ?1:0  )
+
 using namespace Uintah;
 using namespace std;
 
@@ -235,6 +239,7 @@ void SecondOrderAdvector::advectMass( const CCVariable<double>& mass,
   new_dw->allocateTemporary(mass_grad_z, patch,gac,1);
   new_dw->allocateTemporary(q_vertex,   patch,gac,1);
   bool compatible = false;
+  d_smokeOnOff = false;
   
   // compute the limited gradients of mass 
   gradQ<double>(mass, patch, mass_grad_x, mass_grad_y, mass_grad_z);
@@ -468,60 +473,12 @@ SecondOrderAdvector::qAverageFlux( const bool useCompatibleFluxes,
                                    const CCVariable<T>& grad_z)
   
 {
-  const Level* level=patch->getLevel();
-
+  const Level* level=patch->getLevel();   
   //__________________________________
-  // on Boundary faces set q_OAFS
-  // compatiblefluxes q_oafs = q_CC * mass_CC
-  // non-compatible   q_oafs = q_CC
-  vector<Patch::FaceType>::const_iterator itr; 
-  
-  for (itr  = patch->getBoundaryFaces()->begin(); 
-       itr != patch->getBoundaryFaces()->end(); ++itr){
-    Patch::FaceType face = *itr;
-    
-    for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                                    !iter.done(); iter++) {
-      const IntVector& c = *iter;
-      T Q_CC = q_CC[c];
-      if (useCompatibleFluxes){         //  PULL THIS OUT AND MAKE SEPARATE LOOPS
-        Q_CC *= mass_CC[c];
-      }
-
-      facedata<T>& oafs = q_OAFS[c];
-      for (int face = TOP; face <= BACK; face ++){
-        oafs.d_data[face] = Q_CC ;
-      }
-    }
-  }
-  //__________________________________
-  // On Fine level patches set q_OAFS = q_CC in the 
-  // extra cells of that patch
-  // IS THIS THE RIGHT THING TO DO????
-  if (level->getIndex() > 0 ) {
-    for(Patch::FaceType face = Patch::startFace;
-      face <= Patch::endFace; face=Patch::nextFace(face)){
-      
-      for(CellIterator iter = patch->getFaceCellIterator(face); 
-                                                    !iter.done(); iter++) {
-        const IntVector& c = *iter; 
-        T Q_CC = q_CC[c];
-        if (useCompatibleFluxes){
-          Q_CC *= mass_CC[c];
-        }
-      
-        facedata<T>& oafs = q_OAFS[c];
-        for (int face = TOP; face <= BACK; face ++){
-          oafs.d_data[face] = Q_CC;
-        }
-      }
-    }
-  }
-   
-  //__________________________________
-  //  At patch boundaries you need to extend
+  // At inner patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells
-  CellIterator iter = patch->getCellIterator();
+  // This operates over the extra cells
+  CellIterator iter = patch->getExtraCellIterator();
   CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
   
   if (!useCompatibleFluxes) {  // non-compatible advection 
@@ -592,7 +549,7 @@ void SecondOrderAdvector::q_FC_operator(CellIterator iter,
     double influxVol  = d_OFS[L].d_fflux[IF_slab[face]];
                        
     double q_faceFlux = q_OAFS[L].d_data[IF_slab[face]] * influxVol 
-                 - q_OAFS[R].d_data[face] * outfluxVol;
+                      - q_OAFS[R].d_data[face] * outfluxVol;
                       
     double faceVol = outfluxVol + influxVol;
     
@@ -748,36 +705,42 @@ void SecondOrderAdvector::q_FC_fluxes(const CCVariable<T>& /*q_CC*/,
     q_FC_flux_operator<SFCZVariable<T>, T>(ZFC_iter, adj_offset[2],BACK,
                                            q_OAFS,q_Z_FC_flux);
                                            
- /*`==========TESTING==========*/ 
-#ifdef SPEW                
-    cout << "AMR_subCycleProgressVar " << AMR_subCycleProgressVar << " Level " << patch->getLevel()->getID() <<endl;                        
+ /*`==========TESTING==========*/    
+#ifdef REFLUX_DBG                
+                        
     vector<Patch::FaceType>::const_iterator itr;  
     for (itr  = patch->getCoarseFineInterfaceFaces()->begin(); 
          itr != patch->getCoarseFineInterfaceFaces()->end(); ++itr){
       Patch::FaceType patchFace = *itr;
       string name = patch->getFaceName(patchFace);
 
-      cout << "Patch " << patch->getID()<<" patchFace " << name << " " ;
-      
-      IntVector shift = patch->faceDirection(patchFace);
-      shift = SCIRun::Max(IntVector(0,0,0), shift);  // set -1 values to 0
-      
-      CellIterator iter =patch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
-      IntVector begin = iter.begin() + shift;
-      IntVector end   = iter.end() + shift;
- 
-      IntVector half  = (end - begin)/IntVector(2,2,2) + begin;
-      if(patchFace == Patch::xminus || patchFace == Patch::xplus){
-        cout << half << " \t sum_q_flux " << q_X_FC_flux[half] <<  endl; 
-      } 
-      if(patchFace == Patch::yminus || patchFace == Patch::yplus){
-        cout << half << " \t sum_q_flux " << q_Y_FC_flux[half] <<  endl;
-      }
-      if(patchFace == Patch::zminus || patchFace == Patch::zplus){
-        cout << half << " \t sum_q_flux " << q_Z_FC_flux[half] <<  endl;
+
+      if(is_rightFace_variable(name,desc)){
+        cout << " ------------ SecondOrderAdvector::q_FC_fluxes " << desc<< endl;
+        cout << "AMR_subCycleProgressVar " << AMR_subCycleProgressVar << " Level " << patch->getLevel()->getIndex()
+              << " Patch " << patch->getGridIndex()<< endl;
+        cout <<" patchFace " << name << " " ;
+
+        IntVector shift = patch->faceDirection(patchFace);
+        shift = SCIRun::Max(IntVector(0,0,0), shift);  // set -1 values to 0
+
+        CellIterator iter =patch->getFaceCellIterator(patchFace, "alongInteriorFaceCells");
+        IntVector begin = iter.begin() + shift;
+        IntVector end   = iter.end() + shift;
+
+        IntVector half  = (end - begin)/IntVector(2,2,2) + begin;
+        if(patchFace == Patch::xminus || patchFace == Patch::xplus){
+          cout << half << " \t sum_q_flux " << q_X_FC_flux[half] <<  endl; 
+        } 
+        if(patchFace == Patch::yminus || patchFace == Patch::yplus){
+          cout << half << " \t sum_q_flux " << q_Y_FC_flux[half] <<  endl;
+        }
+        if(patchFace == Patch::zminus || patchFace == Patch::zplus){
+          cout << half << " \t sum_q_flux " << q_Z_FC_flux[half] <<  endl;
+        }
       } 
     } 
-#endif 
-  /*===========TESTING==========`*/ 
+#endif
+  /*===========TESTING==========`*/
   }   
 }

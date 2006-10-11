@@ -67,6 +67,8 @@ public:
                        
   CCVariable<fflux>  r_out_x, r_out_y, r_out_z;
   CCVariable<vertex<double> > d_mass_massVertex;
+  
+  bool d_smokeOnOff; 
 };
 
 /*_____________________________________________________________________
@@ -81,6 +83,11 @@ SecondOrderBase::gradQ( const CCVariable<T>& q_CC,
 			   CCVariable<T>& q_grad_y,
 			   CCVariable<T>& q_grad_z)
 {
+  T zero(0.0);
+  q_grad_x.initialize(zero);
+  q_grad_y.initialize(zero);
+  q_grad_z.initialize(zero);
+
   Vector dx = patch->dCell();
   Vector inv_2del;
   inv_2del.x(1.0/(2.0 * dx.x()) );
@@ -107,6 +114,76 @@ SecondOrderBase::gradQ( const CCVariable<T>& q_CC,
     q_grad_y[c] = (q_CC[t] - q_CC[b]) * inv_2del.y();
     q_grad_z[c] = (q_CC[f] - q_CC[bk])* inv_2del.z();
   }
+  
+  //__________________________________
+  // Iterate over coarsefine interface faces
+  // *AND* all boundary faces
+  // use one-sided first order differencing
+ vector<Patch::FaceType>  faces;
+ faces.insert(faces.end(), patch->getBoundaryFaces()->begin(),
+                           patch->getBoundaryFaces()->end());
+ faces.insert(faces.end(), patch->getCoarseFineInterfaceFaces()->begin(),
+                           patch->getCoarseFineInterfaceFaces()->end());                           
+ 
+ vector<Patch::FaceType>::const_iterator f_iter;   
+ 
+  for (f_iter  = faces.begin(); f_iter != faces.end(); ++f_iter){
+    Patch::FaceType face = *f_iter;
+    IntVector axes = patch->faceAxes(face);
+    int P_dir = axes[0]; // find the principal dir
+    IntVector offset(0,0,0);
+    offset[P_dir] = 1;
+    
+    for (CellIterator itr=patch->getFaceCellIterator(face, "plusEdgeCells"); !itr.done(); itr++) {
+      IntVector c = *itr;
+      q_grad_x[c] = 0.0;
+      q_grad_y[c] = 0.0;
+      q_grad_z[c] = 0.0;
+    }
+    
+    switch (face) {
+    case Patch::xplus:
+      for (CellIterator itr=patch->getFaceCellIterator(face, "plusEdgeCells"); !itr.done(); itr++) {
+        IntVector c = *itr;
+        q_grad_x[c] = (q_CC[c] - q_CC[c - offset])/dx.x();
+      }
+      break;
+    case Patch::xminus:
+      for (CellIterator itr=patch->getFaceCellIterator(face, "plusEdgeCells"); !itr.done(); itr++) {  
+        IntVector c = *itr;
+        q_grad_x[c] = (q_CC[c + offset] - q_CC[c])/dx.x();
+      }
+      break;
+    case Patch::yplus:
+      for (CellIterator itr=patch->getFaceCellIterator(face, "plusEdgeCells"); !itr.done(); itr++) { 
+        IntVector c = *itr;
+        q_grad_y[c] = (q_CC[c] - q_CC[c - offset])/dx.y();
+      }
+      break;
+    case Patch::yminus:
+      for (CellIterator itr=patch->getFaceCellIterator(face, "plusEdgeCells"); !itr.done(); itr++) {
+        IntVector c = *itr;
+        q_grad_y[c] = (q_CC[c + offset] - q_CC[c])/dx.y();
+      }
+      break;
+    case Patch::zplus:
+      for (CellIterator itr=patch->getFaceCellIterator(face, "plusEdgeCells"); !itr.done(); itr++) {
+        IntVector c = *itr;
+        q_grad_z[c] = (q_CC[c] - q_CC[c - offset])/dx.z();
+      }
+      break;
+    case Patch::zminus:
+      for (CellIterator itr=patch->getFaceCellIterator(face, "plusEdgeCells"); !itr.done(); itr++) {
+        IntVector c = *itr;
+        q_grad_z[c] = (q_CC[c + offset] - q_CC[c])/dx.z();
+      }
+      break;
+    case Patch::numFaces:
+      break;
+    case Patch::invalidFace:
+      break; 
+    }
+  }  
 }
 /*_____________________________________________________________________
 Function~  q_CCMaxMin
