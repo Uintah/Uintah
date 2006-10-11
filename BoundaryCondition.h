@@ -630,6 +630,7 @@ private:
 	double flowRate;           
 	double inletVel;           
 	double fcr;
+        bool d_ramping_inlet_flowrate;
         InletStream streamMixturefraction;
 	// calculated values
 	Stream calcStream;
@@ -738,7 +739,6 @@ private:
       bool d_intrusionBoundary;
       IntrusionBdry* d_intrusionBC;
 
-      bool d_ramping_inlet_flowrate;
       bool d_carbon_balance;
 
 }; // End of class BoundaryCondition

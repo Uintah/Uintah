@@ -122,8 +122,6 @@ BoundaryCondition::problemSetup(const ProblemSpecP& params)
   d_numInlets = 0;
   int total_cellTypes = 0;
   
-// flow ramping is on or off, it is the same for all inlets  
-  db->getWithDefault("ramping_inlet_flowrate", d_ramping_inlet_flowrate, false);
   db->getWithDefault("carbon_balance", d_carbon_balance, false);
   if (ProblemSpecP inlet_db = db->findBlock("FlowInlet")) {
     d_inletBoundary = true;
@@ -890,7 +888,7 @@ BoundaryCondition::setFlatProfile(const ProcessorGroup* /*pc*/,
 		   cellType, area, fi->d_cellTypeID, fi->flowRate, fi->inletVel,
 		   fi->calcStream.d_density,
 		   xminus, xplus, yminus, yplus, zminus, zplus, time,
-		   d_ramping_inlet_flowrate, actual_flow_rate);
+		   fi->d_ramping_inlet_flowrate, actual_flow_rate);
 
 	d_flowInlets[indx]->flowRate = actual_flow_rate;
 	new_dw->put(delt_vartype(actual_flow_rate),
@@ -1862,6 +1860,7 @@ BoundaryCondition::FlowInlet::FlowInlet(int cellID):
   flowRate = 0.0;
   inletVel = 0.0;
   fcr = 0.0;
+  d_ramping_inlet_flowrate = false;
   // add cellId to distinguish different inlets
   d_area_label = VarLabel::create("flowarea"+cellID,
    ReductionVariable<double, Reductions::Sum<double> >::getTypeDescription()); 
@@ -1875,6 +1874,7 @@ BoundaryCondition::FlowInlet::FlowInlet():
   flowRate = 0.0;
   inletVel = 0.0;
   fcr = 0.0;
+  d_ramping_inlet_flowrate = false;
 }
 
 BoundaryCondition::FlowInlet::FlowInlet( const FlowInlet& copy ) :
@@ -1882,6 +1882,7 @@ BoundaryCondition::FlowInlet::FlowInlet( const FlowInlet& copy ) :
   flowRate(copy.flowRate),
   inletVel(copy.inletVel),
   fcr(copy.fcr),
+  d_ramping_inlet_flowrate(copy.d_ramping_inlet_flowrate),
   streamMixturefraction(copy.streamMixturefraction),
   calcStream(copy.calcStream),
   d_area_label(copy.d_area_label),
@@ -1909,6 +1910,7 @@ BoundaryCondition::FlowInlet& BoundaryCondition::FlowInlet::operator=(const Flow
   flowRate = copy.flowRate;
   inletVel = copy.inletVel;
   fcr = copy.fcr;
+  d_ramping_inlet_flowrate = copy.d_ramping_inlet_flowrate;
   streamMixturefraction = copy.streamMixturefraction;
   calcStream = copy.calcStream;
   d_geomPiece = copy.d_geomPiece;
@@ -1931,6 +1933,9 @@ BoundaryCondition::FlowInlet::problemSetup(ProblemSpecP& params)
 {
   params->getWithDefault("Flow_rate", flowRate,0.0);
   params->getWithDefault("InletVelocity", inletVel,0.0);
+// ramping function is the same for all inlets where ramping is on  
+  params->getWithDefault("ramping_inlet_flowrate",
+                         d_ramping_inlet_flowrate, false);
   // This parameter only needs to be set for fuel inlets for which
   // mixture fraction > 0, if there is an air inlet, and air has some CO2,
   // this air CO2 will be counted in the balance automatically
@@ -2465,7 +2470,7 @@ BoundaryCondition::velRhoHatInletBC(const ProcessorGroup* ,
       	  idxLo, idxHi, constvars->new_density, constvars->cellType, 
       	  fi->d_cellTypeID, current_time,
       	  xminus, xplus, yminus, yplus, zminus, zplus,
-	  d_ramping_inlet_flowrate);
+	  fi->d_ramping_inlet_flowrate);
     
   }
 }
@@ -3690,7 +3695,7 @@ BoundaryCondition::initInletBC(const ProcessorGroup* /*pc*/,
       	                 idxLo, idxHi, density, cellType, 
       	                 fi->d_cellTypeID, current_time,
       	                 xminus, xplus, yminus, yplus, zminus, zplus,
-	                 d_ramping_inlet_flowrate);
+	                 fi->d_ramping_inlet_flowrate);
       }
     }  
     
