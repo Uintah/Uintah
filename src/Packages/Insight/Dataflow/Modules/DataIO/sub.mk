@@ -56,7 +56,7 @@ SRCS     += \
 
 
 PSELIBS := Core/Datatypes Dataflow/Network \
-	Packages/Insight/Dataflow/Ports Core/Algorithms/DataIO \
+        Core/Algorithms/DataIO \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Dataflow/GuiInterface \
         Core/Geom Core/Datatypes Core/Geometry \

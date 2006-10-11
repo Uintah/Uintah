@@ -59,8 +59,7 @@ PSELIBS := Core/Datatypes \
         Core/Persistent Core/Containers Core/Util \
         Core/Exceptions Core/Thread Dataflow/GuiInterface \
         Core/GeomInterface Core/Geom Core/Datatypes Core/Geometry \
-        Dataflow/TkExtensions Core/Basis \
-				Packages/Insight/Dataflow/Ports
+        Dataflow/TkExtensions Core/Basis 
 				
 LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(INSIGHT_LIBRARY) $(GDCM_LIBRARY) $(TEEM_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) 
 
