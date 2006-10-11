@@ -392,6 +392,11 @@ public:
 			      double isoval, bool lte,
 			      MatrixHandle &interpolant);
 
+  IsoRefineAlgoHex<FIELD>() 
+  {
+    coords.resize(3);
+  };
+
 
   struct edgepair_t
   {
@@ -468,7 +473,6 @@ public:
             const typename FIELD::mesh_type::Elem::index_type &elem,
             const Point &coordsp)
   {
-    vector<double> coords(3);
     coords[0] = coordsp.x();
     coords[1] = coordsp.y();
     coords[2] = coordsp.z();
@@ -477,6 +481,7 @@ public:
     return refined->add_point(inbetween);
   }
 
+  vector<double> coords;
 
   HVMesh::Node::index_type
   add_point(typename FIELD::mesh_type *mesh,
@@ -486,7 +491,7 @@ public:
   {
     const Point coordsp =
       Interpolate(hcoords[reorder[a]], hcoords[reorder[b]], 1.0/3.0);
-    vector<double> coords(3);
+ 
     coords[0] = coordsp.x();
     coords[1] = coordsp.y();
     coords[2] = coordsp.z();
@@ -627,8 +632,17 @@ IsoRefineAlgoHex<FIELD>::execute(ProgressReporter *reporter,
 
   typename FIELD::mesh_type::Elem::iterator bi, ei;
   mesh->begin(bi); mesh->end(ei);
+  
+  unsigned int cnt = 0;
+  unsigned int loopcnt = 0;
+  typename FIELD::mesh_type::Elem::size_type sz;
+  mesh->size(sz);
+  unsigned int looptotal = static_cast<unsigned int>(sz);
+  
   while (bi != ei)
   {
+    cnt++; if (cnt == 100) { loopcnt +=cnt; cnt = 0; reporter->update_progress(loopcnt,sz);  }
+  
     mesh->get_nodes(onodes, *bi);
     
     // Get the values and compute an inside/outside mask.
@@ -1509,12 +1523,8 @@ public:
                                  unsigned int c, unsigned int d,
                                  int pattern, int reorder)
   {
-//    set_table_once(iedge(a, b), pattern, reorder);
     set_table_once(iedge(a, c), pattern, reorder);
-//    set_table_once(iedge(a, d), pattern, reorder);
-//    set_table_once(iedge(b, c), pattern, reorder);
     set_table_once(iedge(b, d), pattern, reorder);
-//    set_table_once(iedge(c, d), pattern, reorder);
     set_table(iface(b, b, c, d), pattern, reorder);
     set_table(iface(a, c, c, d), pattern, reorder);
     set_table(iface(a, b, d, d), pattern, reorder);
