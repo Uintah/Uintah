@@ -713,83 +713,54 @@ HDF5DataReader::parseAnimateDatasets( vector<string>& pathList,
 				      vector< vector<string> >& frame_paths,
 				      vector< vector<string> >& frame_datasets )
 {
-  cerr << "parseAnimateDatasets" << endl;
-
   frame_paths.clear();
   frame_datasets.clear();
-
-  unsigned int i, j;
 
   if( pathList.size() == 1 ) {
     frame_paths.push_back( pathList );
     frame_datasets.push_back( datasetList );
+
+    remark( "Found 1 time step with 1 dataset." );
+
     return 1;
   }
 
-  string comp = pathList[0];
+  vector<string> times;
+  std::string::size_type d0, d1;
 
-  for( i=1; i<pathList.size(); i++ ) {
+  vector<string>* baseList;
 
-    cerr << "pathList[" << i << "] " << pathList[i] << endl;
+  string root = getTimeRoot( pathList, times, d0, d1 );
 
-    unsigned int len = pathList[i].length();
+  if( root.length() ) {
+    baseList = &pathList;
 
-    // Reduce the size of the comparison to the smallest string.
-    if( comp.length() > len )
-      comp.replace( len, comp.length()- len, "" );    
-    
-    // Mark the characters that are different.
-    for( unsigned int c=0; c<comp.length(); c++ ) {
-      if( comp[c] != pathList[i][c] )
-	comp[c] = '?';
-    }
+  } else {
+    baseList = &datasetList;
+
+    root = getTimeRoot( datasetList, times, d0, d1 );
   }
 
-  unsigned int d1, d2;
-
-  for( d1=0; d1<comp.length(); d1++ )
-    if( comp[d1] == '?' )
-      break;
-
-  for( d2=d1; d2<comp.length(); d2++ )
-    if( comp[d2] != '?' )
-      break;
-
-  string root = pathList[0].substr( 0, d1 );
-
-  cerr << "root " << root << endl;
-
-  vector <string> times;
-
-  // Get all of the times.
-  for( i=0; i<pathList.size(); i++ ) {
-    string time = pathList[i].substr( d1, d2-d1 );
-
-    for( j=0; j<times.size(); j++ ) {
-      if( time == times[j] )
-	break;
-    }
-
-    cerr << "time " << i << "  " << time << endl;
-
-    if( j==times.size() )
-      times.push_back( time );
+  // If this happens both the path and datasets have the same names.
+  if( root.length() == 0 ) {
+    ostringstream str;
+    str << "Can not determine the time stepping. ";
+    str << "The path and datasets appear to have the same name.";
+    error( str.str() );
+    
+    return 0;
   }
 
-  std::sort( times.begin(), times.end() );
-
-  bool warn = 0;
-    
   // Sort the datasets by time.
-  for( j=0; j<times.size(); j++ ) {
+  for( unsigned int j=0; j<times.size(); j++ ) {
 
     string base = root + times[j];
 
     vector< string > path_list;
     vector< string > dataset_list;
 
-    for( i=0; i<pathList.size(); i++ ) {
-      if( pathList[i].find( base ) != string::npos ) {
+    for( unsigned int i=0; i<pathList.size(); i++ ) {
+      if( (*baseList)[i].find( base ) != string::npos ) {
 
 	path_list.push_back( pathList[i] );
 	dataset_list.push_back( datasetList[i] );
@@ -800,38 +771,116 @@ HDF5DataReader::parseAnimateDatasets( vector<string>& pathList,
     frame_datasets.push_back( dataset_list );
 
     // Make sure the paths are the same.
-    if( j>0 ) {
+    if( j > 0 ) {
 
+      // The same number of datasets should be found for each time step.
       if( frame_paths[0].size()    != frame_paths[j].size() ||
 	  frame_datasets[0].size() != frame_datasets[j].size() ) {
-	warning( "Animation path and or dataset size mismatch" );
-	warn = 1;
+
+	ostringstream str;
+	str << "The number of datasets in each time step is not the same.\n";
+
+	str << "Expected " << frame_paths[0].size();
+	str << " paths, got " << frame_paths[j].size();
+	str << " for time step " << times[j] << endl;
+
+	str << "Expected " << frame_datasets[0].size();
+	str << " datasets, got " << frame_datasets[j].size();
+	str << " for time step " << times[j] << endl;
+
+	error( str.str() );
+
+	return 0;
+
       } else {
 
-	for( i=0; i<frame_paths[0].size(); i++ ) {
+	// Make sure the all paths and datasets are the same except for time.
+	for( unsigned int i=0; i<frame_paths[0].size(); i++ ) {
 
-	  if( frame_paths[0][i].substr(d2, frame_paths[0][i].length()-d2) !=
-	      frame_paths[j][i].substr(d2, frame_paths[0][i].length()-d2) ||
-	      frame_datasets[0][i] != frame_datasets[j][i] ) {
-	    warning( "Animation path and or dataset mismatch" );
-	    warning( frame_paths[0][i] + " " + frame_datasets[0][i] );
-	    warning( frame_paths[j][i] + " " + frame_datasets[j][i] );
-	    warn = 1;
-	    break;
+	  if( // The time step is in the path so the last of each path
+	     // must be the same along with the dataset names.
+	     (baseList == &pathList &&
+	      (frame_paths[0][i].substr(d1, frame_paths[0][i].length()-d1) !=
+	       frame_paths[j][i].substr(d1, frame_paths[0][i].length()-d1) ||
+	       
+	       frame_datasets[0][i] != frame_datasets[j][i] ) ) ||
+
+	     // The time step is in the dataset so the last of each
+	     // dataset name must be the same along with the paths.
+	     (baseList == &datasetList &&
+	      (frame_datasets[0][i].substr(d1, frame_datasets[0][i].length()-d1) !=
+	       frame_datasets[j][i].substr(d1, frame_datasets[0][i].length()-d1) ||
+	       
+	       frame_paths[0][i] != frame_paths[j][i] ) ) ) {
+
+	    error( "Animation path and/or dataset mismatch" );
+	    error( frame_paths[0][i] + " " + frame_datasets[0][i] );
+	    error( frame_paths[j][i] + " " + frame_datasets[j][i] );
+
+	    return 0;
 	  }
 	}
       }
     }
   }
 
-  if( warn ) {
-    ostringstream str;
-    str << times.size() << " frames found ";
-    str << " but there was a mismatch.";
-    warning( str.str() );
-  }
+  ostringstream str;
+  str << "Found " << times.size() << " time steps. ";
+  str << "Each time step contains " << frame_paths[0].size() << " datasets.";
+  remark( str.str() );
 
   return times.size();
+}
+
+
+string HDF5DataReader::getTimeRoot( vector<string>& nameList, 
+				    vector<string>& times,
+				    std::string::size_type& d0,
+				    std::string::size_type& d1 ) {
+  string comp = nameList[0];
+
+  for( unsigned int i=1; i<nameList.size(); i++ ) {
+
+    unsigned int len = nameList[i].length();
+
+    // Reduce the size of the comparison to the smallest string.
+    if( comp.length() > len )
+      comp.replace( len, comp.length() - len, "" );    
+    
+    // Mark the characters that are different.
+    for( unsigned int c=0; c<comp.length(); c++ ) {
+      if( comp[c] != nameList[i][c] )
+	comp[c] = '?';
+    }
+  }
+
+  // Find the first difference.
+  d0 = comp.find_first_of("?");
+
+  if( d0 == string::npos )
+    return string( "" );
+
+  // Find the last difference.
+  d1 = comp.find_last_of("?") + 1;
+
+  // Get all of the times.
+  for( unsigned int i=0; i<nameList.size(); i++ ) {
+    string time = nameList[i].substr( d0, d1-d0 );
+
+    unsigned int j;
+
+    for( j=0; j<times.size(); j++ ) {
+      if( time == times[j] )
+	break;
+    }
+
+    if( j == times.size() )
+      times.push_back( time );
+  }
+
+  std::sort( times.begin(), times.end() );
+
+  return nameList[0].substr( 0, d0 );
 }
 
 
