@@ -64,7 +64,46 @@
 
 namespace SCIRun {
 
-SCISHARE MatrixHandle append_sparse_matrices(vector<MatrixHandle> &matrices);
+SCISHARE MatrixHandle append_sparse_matrices(vector<MatrixHandle> &matrices)
+{
+  unsigned int i;
+  int j;
+
+  int ncols = matrices[0]->ncols();
+  int nrows = 0;
+  int nnz = 0;
+  for (i = 0; i < matrices.size(); i++) {
+    SparseRowMatrix *sparse = matrices[i]->sparse();
+    nrows += sparse->nrows();
+    nnz += sparse->nnz;
+  }
+
+  int *rr = scinew int[nrows+1];
+  int *cc = scinew int[nnz];
+  double *dd = scinew double[nnz];
+
+  int offset = 0;
+  int nnzcounter = 0;
+  int rowcounter = 0;
+  for (i = 0; i < matrices.size(); i++) {
+    SparseRowMatrix *sparse = matrices[i]->sparse();
+    for (j = 0; j < sparse->nnz; j++) {
+      cc[nnzcounter] = sparse->columns[j];
+      dd[nnzcounter] = sparse->a[j];
+      nnzcounter++;
+    }
+    const int snrows = sparse->nrows();
+    for (j = 0; j <= snrows; j++) {
+      rr[rowcounter] = sparse->rows[j] + offset;
+      rowcounter++;
+    }
+    rowcounter--;
+    offset += sparse->rows[snrows];
+  }
+
+  return scinew SparseRowMatrix(nrows, ncols, rr, cc, nnz, dd);
+}
+
 
 class FieldArbitrarySlicer : public Module {
 public:
