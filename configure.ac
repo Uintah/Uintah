@@ -4481,7 +4481,12 @@ AC_SUBST(OOGL_LIB_FLAG)
 AC_SUBST(OOGL_LIB_DIR_FLAG)
 
 ##  --  search for glew  -----------------------------------------------
-_sci_optional=required
+if test "$sci_required_scirun" = "no"; then
+  _sci_optional=optional
+else
+  _sci_optional=required
+fi
+
 _sci_lib="$sci_thirdparty_lib"
 _sci_inc="$sci_thirdparty_include"
 
