@@ -53,15 +53,21 @@ public:
   virtual void execute();
 
 private:
-  GuiString filename_;
-  
+  GuiString gui_filename_;
+  GuiString gui_filebase_;
+  GuiInt gui_delay_;
+
+  StringHandle string_output_handle_;
 };
 
 
 DECLARE_MAKER(GetFileName)
 GetFileName::GetFileName(GuiContext* ctx)
   : Module("GetFileName", ctx, Source, "String", "SCIRun"),
-    filename_(get_ctx()->subVar("filename"), "")
+    gui_filename_(get_ctx()->subVar("filename"), ""),
+    gui_filebase_(get_ctx()->subVar("filebase"), ""),
+    gui_delay_(get_ctx()->subVar("delay"), 500),
+    string_output_handle_(0)
 {
 }
 
@@ -69,19 +75,15 @@ GetFileName::~GetFileName(){
 }
 
 void
- GetFileName::execute()
+GetFileName::execute()
 {
-  StringOPort* oport = dynamic_cast<StringOPort *>(get_oport(0));
-  if (!oport)
-  {
-    error("Could not allocate output port");
-    return;
+  if( gui_filename_.changed() ||
+      !string_output_handle_.get_rep() ) {
+
+    string_output_handle_ = StringHandle(scinew String(gui_filename_.get()));
   }
-  
-  StringHandle handle(scinew String(filename_.get()));
-  oport->send_and_dereference(handle);
+
+  send_output_handle( "Full filename", string_output_handle_, true );
 }
 
 } // End namespace SCIRun
-
-
