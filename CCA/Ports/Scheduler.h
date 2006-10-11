@@ -119,6 +119,8 @@ WARNING
 
     //////////
     // Insert Documentation Here:
+    virtual void setPositionVar(const VarLabel* posLabel) = 0;
+    
     virtual void scheduleParticleRelocation(const LevelP& level,
 					    const VarLabel* posLabel,
 					    const vector<vector<const VarLabel*> >& labels,

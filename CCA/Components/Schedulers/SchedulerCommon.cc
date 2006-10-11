@@ -103,7 +103,7 @@ SchedulerCommon::makeTaskGraphDoc(const DetailedTasks*/* dt*/, int rank)
   if (!emit_taskgraph)
     return;
 
-  if (!m_outPort->wasOutputTimestep())
+  if (!m_outPort->isOutputTimestep())
     return;
   
   // make sure to release this DOMDocument after finishing emitting the nodes
@@ -167,7 +167,7 @@ SchedulerCommon::finalizeNodes(int process /* = 0*/)
     if (m_graphDoc == 0)
         return;
 
-    if (m_outPort->wasOutputTimestep()) {
+    if (m_outPort->isOutputTimestep()) {
       string timestep_dir(m_outPort->getLastTimestepOutputLocation());
       
       ostringstream fname;

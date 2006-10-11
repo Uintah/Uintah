@@ -150,9 +150,13 @@ using std::pair;
       //! Get the timestep the next checkpoint will occur
       virtual int getNextCheckpointTimestep(){return d_nextCheckpointTimestep;}
 
-      //! Returns true if the last timestep was one in which data was output.
-      virtual bool wasOutputTimestep()
-      { return d_wasOutputTimestep; }
+      //! Returns true if data will be output this timestep
+      virtual bool isOutputTimestep()
+      { return d_isOutputTimestep; }
+
+      //! Returns true if data will be checkpointed this timestep
+      virtual bool isCheckpointTimestep()
+      { return d_isCheckpointTimestep; }
 
       //! Get the directory of the current time step for outputting info.
       virtual const string& getLastTimestepOutputLocation() const
@@ -267,8 +271,8 @@ using std::pair;
 
       //! last timestep dir (filebase.000/t#)
       string d_lastTimestepLocation;
-      bool d_wasOutputTimestep; //!< set if this is an output timestep
-      bool d_wasCheckpointTimestep; //!< set if a checkpoint timestep
+      bool d_isOutputTimestep; //!< set if this is an output timestep
+      bool d_isCheckpointTimestep; //!< set if a checkpoint timestep
 
       //! Whether or not particle vars are saved
       //! Requires p.x to be set

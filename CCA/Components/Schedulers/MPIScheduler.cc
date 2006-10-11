@@ -7,6 +7,7 @@
 #include <Packages/Uintah/CCA/Components/Schedulers/DetailedTasks.h>
 #include <Packages/Uintah/CCA/Components/Schedulers/TaskGraph.h>
 #include <Packages/Uintah/CCA/Ports/LoadBalancer.h>
+#include <Packages/Uintah/CCA/Ports/Output.h>
 #include <Packages/Uintah/Core/Parallel/ProcessorGroup.h>
 #include <Packages/Uintah/Core/Grid/Variables/ParticleSubset.h>
 #include <Packages/Uintah/Core/Grid/Variables/ComputeSet.h>
@@ -72,7 +73,7 @@ MPIScheduler::MPIScheduler( const ProcessorGroup * myworld,
 			          Output         * oport,
 			          MPIScheduler   * parentScheduler) :
   SchedulerCommon( myworld, oport ),
-  log( myworld, oport ), parentScheduler( parentScheduler )
+  log( myworld, oport ), parentScheduler( parentScheduler ), oport_(oport)
 {
   d_lasttime=Time::currentSeconds();
   ss_ = 0;
@@ -348,6 +349,12 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
         dbg << d_myworld->myrank() << "   Ignoring conditional send for " << *req << endl;
         continue;
       }
+      // if we send/recv to an output task, don't send/recv if not an output timestep
+      if (req->toTasks.front()->getTask()->getType() == Task::Output && 
+          !oport_->isOutputTimestep() && !oport_->isCheckpointTimestep()) {
+        dbg << d_myworld->myrank() << "   Ignoring non-output-timestep send for " << *req << endl;
+        continue;
+      }
       OnDemandDataWarehouse* dw = dws[req->req->mapDataWarehouse()].get_rep();
 
       //dbg.setActive(req->req->lookInOldTG);
@@ -361,7 +368,11 @@ MPIScheduler::postMPISends( DetailedTask         * task, int iteration )
 	posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
 	posLabel = parentScheduler->reloc_new_posLabel_;
       } else {
-	posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
+        // on an output task (and only on one) we require particle variables from the NewDW
+        if (req->toTasks.front()->getTask()->getType() == Task::Output)
+          posDW = dws[req->req->task->mapDataWarehouse(Task::NewDW)].get_rep();
+        else
+          posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
 	posLabel = reloc_new_posLabel_;
       }
       MPIScheduler* top = this;
@@ -498,6 +509,11 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
         dbg << d_myworld->myrank() << "   Ignoring conditional receive for " << *req << endl;
         continue;
       }
+      // if we send/recv to an output task, don't send/recv if not an output timestep
+      if (req->toTasks.front()->getTask()->getType() == Task::Output && !oport_->isOutputTimestep() && !oport_->isCheckpointTimestep()) {
+        dbg << d_myworld->myrank() << "   Ignoring non-output-timestep receive for " << *req << endl;
+        continue;
+      }
       if (dbg.active()) {
         ostr << *req << ' ';
         dbg << d_myworld->myrank() << " <-- receiving " << *req << ", ghost: " << req->req->gtype << ", " << req->req->numGhostCells << " into dw " << dw->getID() << '\n';
@@ -507,7 +523,11 @@ MPIScheduler::postMPIRecvs( DetailedTask * task, CommRecMPI& recvs,
       if(!reloc_new_posLabel_ && parentScheduler){
 	posDW = dws[req->req->task->mapDataWarehouse(Task::ParentOldDW)].get_rep();
       } else {
-	posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
+        // on an output task (and only on one) we require particle variables from the NewDW
+        if (req->toTasks.front()->getTask()->getType() == Task::Output)
+          posDW = dws[req->req->task->mapDataWarehouse(Task::NewDW)].get_rep();
+        else
+          posDW = dws[req->req->task->mapDataWarehouse(Task::OldDW)].get_rep();
       }
 
       MPIScheduler* top = this;

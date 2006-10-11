@@ -316,6 +316,8 @@ void ImpMPM::outputProblemSpec(ProblemSpecP& root_ps)
 void ImpMPM::scheduleInitialize(const LevelP& level,
                                    SchedulerP& sched)
 {
+
+  sched->setPositionVar(lb->pXLabel);
   Task* t = scinew Task("ImpMPM::actuallyInitialize",
                         this, &ImpMPM::actuallyInitialize);
   t->computes(lb->partCountLabel);

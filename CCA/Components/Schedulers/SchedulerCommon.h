@@ -142,6 +142,8 @@ WARNING
 			   DataWarehouse* old_dw,
 			   DataWarehouse* new_dw);
 
+    virtual void setPositionVar(const VarLabel* posLabel) { reloc_new_posLabel_ = posLabel; }
+
     virtual void scheduleAndDoDataCopy(const GridP& grid, SimulationInterface* sim);
 
     //! override default behavior of copying, scrubbing, and such
