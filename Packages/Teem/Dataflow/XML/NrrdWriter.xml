@@ -55,6 +55,10 @@ package="Teem" name="UnuSave"/>.</p>
         <name>Input Data</name>
 	<datatype>SCIRun::Nrrd</datatype>
       </port>
+      <port>
+        <name>Current Index</name>
+	<datatype>SCIRun::Matrix</datatype>
+      </port>
     </inputs>
     <outputs>
     </outputs>
