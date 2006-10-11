@@ -125,6 +125,10 @@ If it is not selected data will be assumed to be
   <io>
     <inputs lastportdynamic="no">
       <port>
+        <name>Full filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>
+      <port>
         <name>Current Index</name>
 	<datatype>SCIRun::Matrix</datatype>
       </port>

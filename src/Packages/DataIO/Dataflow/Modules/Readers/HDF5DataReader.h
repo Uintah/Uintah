@@ -81,6 +81,11 @@ public:
 				     vector< vector<string> >& frame_paths,
 				     vector< vector<string> >& frame_datasets );
 
+  string getTimeRoot( vector<string>& nameList, 
+		      vector<string>& times,
+		      std::string::size_type& d0,
+		      std::string::size_type& d1 );
+
   vector<int> getDatasetDims( string filename, string group, string dataset );
 
   //  float* readGrid( string filename );

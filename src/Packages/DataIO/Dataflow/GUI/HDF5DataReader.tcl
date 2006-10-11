@@ -717,9 +717,18 @@ itcl_class DataIO_Readers_HDF5DataReader {
 
 	    close $fileId
 
-	    $treeview entry configure "attribute" -foreground green4
-	    $treeview entry configure "dataset"   -foreground cyan4
-	    
+	    global $this-have_groups
+	    global $this-have_attributes
+	    global $this-have_datasets
+
+	    if { [set $this-have_attributes] == 1 } {
+		$treeview entry configure "attribute" -foreground green4
+	    }
+
+	    if { [set $this-have_datasets] == 1 } {
+		$treeview entry configure "dataset" -foreground cyan4
+	    }
+
 	    set ids [$treeview entry children root]
 	    foreach id $ids {
 		$treeview open $id
