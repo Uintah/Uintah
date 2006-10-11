@@ -827,6 +827,8 @@ proc biopseFDialog_Config {w type argList} {
             {-title "" "" ""}
             {-command "" "" ""}
             {-filevar "" "" ""}
+            {-filebasevar "" "" ""}
+	    {-delayvar "" "" ""}
             {-cancel "" "" ""}
             {-setcmd "" "" ""}
             {-defaultextension "" "" ""}
@@ -846,6 +848,8 @@ proc biopseFDialog_Config {w type argList} {
             {-title "" "" ""}
             {-command "" "" ""}
             {-filevar "" "" ""}
+            {-filebasevar "" "" ""}
+	    {-delayvar "" "" ""}
             {-cancel "" "" ""}
             {-setcmd "" "" ""}
             {-formatvar "" "" ""}
@@ -854,8 +858,8 @@ proc biopseFDialog_Config {w type argList} {
             {-imgwidth "" "" ""}
             {-imgheight "" "" ""}
             {-confirmvar "" "" ""}
-                {-incrementvar "" "" ""}
-                {-currentvar "" "" ""}
+            {-incrementvar "" "" ""}
+            {-currentvar "" "" ""}
             {-selectedfiletype "" "" ""}
             {-allowMultipleFiles "" "" ""}
 	    {-commandname "" "" ""}
@@ -891,6 +895,28 @@ proc biopseFDialog_Config {w type argList} {
             # does not exist.)
             set data(-initialdir) [file dirname $tmp]
             set data(-initialfile) [file tail $tmp]
+        }
+    }
+    
+    # 4.a: setting initial filebase to the filebasevar contents,
+    # if it is specified
+    if { [info exists $data(-filebasevar)]} {
+
+        set tmp [set $data(-filebasevar)]
+        if { $tmp != "" } {
+            # If the filebasevar is set to anything, use it...
+	    # (even if the file does not exist.)
+            set data(mf_base) $tmp
+        }
+    }
+    
+    # 4.a: setting initial file to the delayvar contents, if it is specified
+    if { [info exists $data(-delayvar)]} {
+
+        set tmp [set $data(-delayvar)]
+        if { $tmp != "" } {
+            # If the delay is set to anything, use it... 
+            set data(mf_delay) $tmp
         }
     }
     
@@ -969,42 +995,62 @@ proc biopseFDialog_Create {w} {
         -command   "biopseFDialog_SetCmd $w"]
 
     if { $data(-allowMultipleFiles) != "" } {
-        iwidgets::tabnotebook $w.tabs -raiseselect true -tabpos n -backdrop gray
-        # sd = Single Data, md = Multiple Data
-        set sd_tab [$w.tabs add -label "Single File"]
-        set md_tab [$w.tabs add -label "Time Series"]
+        iwidgets::tabnotebook $w.tabs \
+	    -raiseselect true -tabpos n -backdrop gray
+
+        # sf = Single File, mf = Multiple Files
+        set sf_tab [$w.tabs add -label "Single File"]
+        set mf_tab [$w.tabs add -label "Time Series"]
         
         $w.tabs view 0
 
-        # sd_tab: the tab with the "file name" lab/entry.
-        label $sd_tab.lab -text "File name:" -anchor e -width 14 -under 5 -pady 0
-        set data(ent) [entry $sd_tab.ent]
+        # sf_tab: the tab for inputing a single file
 
-        # md_tab: the tab for inputing multiple files
+        ## Frame for the file name.
+        frame $sf_tab.f1
+
+        label $sf_tab.f1.lab -text "File name:" \
+	    -anchor e -width 14 -under 5 -pady 0
+        set data(ent) [entry $sf_tab.f1.ent]
+
+
+        # mf_tab: the tab for inputing multiple files
 
         ## Frame for VCR Buttons
-        frame $md_tab.vcr -relief groove -borderwidth 2
+        frame $mf_tab.vcr -relief groove -borderwidth 2
         ## Frame for file base, and delay
-        frame $md_tab.f1
+        frame $mf_tab.f1
         ## Frame for current file.
-        frame $md_tab.f2
+        frame $mf_tab.f2
 
-        label $md_tab.f1.lab -text "File base:" -anchor e -width 10 -pady 0
-        set data(md_ent) [entry $md_tab.f1.ent]
-        label $md_tab.f1.delay_lab -text "Delay:" -anchor e -width 8 -pady 0
-        set data(md_delay) [entry $md_tab.f1.delay_ent]
 
+	label $mf_tab.f1.lab -text "File base:" -anchor e -width 10 -pady 0
+        if { [info exists $data(-filebasevar)]} {
+            entry $mf_tab.f1.file_base_ent -textvariable $data(-filebasevar)
+        } else {
+	    set data(mf_base) [entry $mf_tab.f1.file_base_ent]
+	}
+
+        label $mf_tab.f1.delay_lab -text "Delay:" -anchor e -width 8 -pady 0
+        if { [info exists $data(-delayvar)]} {
+            entry $mf_tab.f1.delay_ent -textvariable $data(-delayvar)
+        } else {
+	    set data(mf_delay) [entry $mf_tab.f1.delay_ent]
+	}
+
+	label $mf_tab.f2.current_file_lab -text "Current File:" \
+	    -anchor e -width 10 -pady 0
         if { [info exists $data(-filevar)]} {
-            label $md_tab.f2.current_file_lab -text "Current File:" -anchor e -width 10 -pady 0
-            entry $md_tab.f2.current_file_ent -textvariable  $data(-filevar)
-        }
+            entry $mf_tab.f2.current_file_ent -textvariable $data(-filevar)
+        } else {
+	    set data(mf_current_file_ent) [entry $mf_tab.f2.current_file_ent]
+	}
 
-        TooltipMultiWidget "$md_tab.f1.ent $md_tab.f1.lab" "Select first file in series."
-        TooltipMultiWidget "$md_tab.f1.delay_ent $md_tab.f1.delay_lab" "Milliseconds between each file being read in."
+        TooltipMultiWidget "$mf_tab.f1.file_base_ent $mf_tab.f1.lab" "Select first file in series."
+        TooltipMultiWidget "$mf_tab.f1.delay_ent $mf_tab.f1.delay_lab" "Milliseconds between each file being read in."
     
         set data(mf_event_id) -1
         set data(mf_play_mode) "stop"
-        set data(mf_delay) 500
         set data(mf_file_list) ""
         set data(mf_file_number) 0
         
@@ -1018,41 +1064,47 @@ proc biopseFDialog_Create {w} {
         set fforward [image create photo -file ${image_dir}/fast-forward-icon.ppm]
 
         # Create and pack the VCR buttons frame
-        button $md_tab.vcr.rewind -image $rewind \
+        button $mf_tab.vcr.rewind -image $rewind \
             -command "setMultipleFilePlayMode $w rewind;\
                       handleMultipleFiles $w"
-        button $md_tab.vcr.stepb -image $stepb \
+        button $mf_tab.vcr.stepb -image $stepb \
             -command "setMultipleFilePlayMode $w stepb;\
                       handleMultipleFiles $w"
-        button $md_tab.vcr.pause -image $pause \
+        button $mf_tab.vcr.pause -image $pause \
             -command "setMultipleFilePlayMode $w stop;\
                       handleMultipleFiles $w"
-        button $md_tab.vcr.play  -image $play  \
+        button $mf_tab.vcr.play  -image $play  \
             -command "setMultipleFilePlayMode $w play;\
                       handleMultipleFiles $w"
-        button $md_tab.vcr.stepf -image $stepf \
+        button $mf_tab.vcr.stepf -image $stepf \
             -command "setMultipleFilePlayMode $w step;\
                       handleMultipleFiles $w"
-        button $md_tab.vcr.fforward -image $fforward \
+        button $mf_tab.vcr.fforward -image $fforward \
             -command "setMultipleFilePlayMode $w fforward;\
                       handleMultipleFiles $w"
 
         global ToolTipText
-        Tooltip $md_tab.vcr.rewind $ToolTipText(VCRrewind)
-        Tooltip $md_tab.vcr.stepb $ToolTipText(VCRstepback)
-        Tooltip $md_tab.vcr.pause $ToolTipText(VCRpause)
-        Tooltip $md_tab.vcr.play $ToolTipText(VCRplay)
-        Tooltip $md_tab.vcr.stepf $ToolTipText(VCRstepforward)
-        Tooltip $md_tab.vcr.fforward $ToolTipText(VCRfastforward)
+        Tooltip $mf_tab.vcr.rewind $ToolTipText(VCRrewind)
+        Tooltip $mf_tab.vcr.stepb $ToolTipText(VCRstepback)
+        Tooltip $mf_tab.vcr.pause $ToolTipText(VCRpause)
+        Tooltip $mf_tab.vcr.play $ToolTipText(VCRplay)
+        Tooltip $mf_tab.vcr.stepf $ToolTipText(VCRstepforward)
+        Tooltip $mf_tab.vcr.fforward $ToolTipText(VCRfastforward)
 
-        pack $md_tab.vcr.rewind $md_tab.vcr.stepb $md_tab.vcr.pause \
-            $md_tab.vcr.play $md_tab.vcr.stepf $md_tab.vcr.fforward -side left -fill both -expand 1
+        pack $mf_tab.vcr.rewind $mf_tab.vcr.stepb $mf_tab.vcr.pause \
+            $mf_tab.vcr.play $mf_tab.vcr.stepf $mf_tab.vcr.fforward -side left -fill both -expand 1
 
     } else {
-       # sd_tab, in the case of single file reading only, is actually a frame.
-       set sd_tab [frame $w.f2 -bd 0]
-       label $sd_tab.lab -text "File name:" -anchor e -width 14 -under 5 -pady 0
-       set data(ent) [entry $sd_tab.ent]
+       # sf_tab, in the case of single file reading only, is actually a frame.
+       set sf_tab [frame $w.f2 -bd 0]
+       
+       # sf_tab: the "tab" for inputing a single file
+
+       ## Frame for the file name.
+       frame $sf_tab.f1
+       label $sf_tab.f1.lab -text "File name:" \
+	   -anchor e -width 14 -under 5 -pady 0
+       set data(ent) [entry $sf_tab.f1.ent]
     }
 
     # The font to use for the icons. The default Canvas font on Unix
@@ -1075,11 +1127,11 @@ proc biopseFDialog_Create {w} {
 
     set data(typeMenuLab) [button $f3.lab -text "Files of type:" \
         -anchor e -width 14 -under 9 \
-        -bd [$sd_tab.lab cget -bd] \
-        -highlightthickness [$sd_tab.lab cget -highlightthickness] \
-        -relief [$sd_tab.lab cget -relief] \
-        -padx [$sd_tab.lab cget -padx] \
-        -pady [$sd_tab.lab cget -pady]]
+        -bd [$sf_tab.f1.lab cget -bd] \
+        -highlightthickness [$sf_tab.f1.lab cget -highlightthickness] \
+        -relief [$sf_tab.f1.lab cget -relief] \
+        -padx [$sf_tab.f1.lab cget -padx] \
+        -pady [$sf_tab.f1.lab cget -pady]]
     bindtags $data(typeMenuLab) [list $data(typeMenuLab) Label \
             [winfo toplevel $data(typeMenuLab)] all]
 
@@ -1148,11 +1200,11 @@ proc biopseFDialog_Create {w} {
     if {![string compare $data(type) save]} {
         set data(formatMenuLab) [button $f4.lab -text "Format:" \
                 -anchor e -width 14 -under 9 \
-                -bd [$sd_tab.lab cget -bd] \
-                -highlightthickness [$sd_tab.lab cget -highlightthickness] \
-                -relief [$sd_tab.lab cget -relief] \
-                -padx [$sd_tab.lab cget -padx] \
-                -pady [$sd_tab.lab cget -pady]]
+                -bd [$sf_tab.f1.lab cget -bd] \
+                -highlightthickness [$sf_tab.lab cget -highlightthickness] \
+                -relief [$sf_tab.f1.lab cget -relief] \
+                -padx [$sf_tab.f1.lab cget -padx] \
+                -pady [$sf_tab.f1.lab cget -pady]]
 
         set data(formatMenuBtn) [menubutton $f4.menu -indicatoron 1 -menu $f4.menu.m]
         set data(formatMenu) [menu $data(formatMenuBtn).m -tearoff 0]
@@ -1250,28 +1302,31 @@ proc biopseFDialog_Create {w} {
         pack $data(formatMenuBtn) -expand yes -fill x -side right
     }
 
-    # pack the widgets in sd_tab and md_tab
-    pack $sd_tab.lab -side left -padx 4
-    pack $sd_tab.ent -expand yes -fill x -padx 2 -pady 0
+    # pack the widgets in sf_tab and mf_tab
+    pack $sf_tab.f1.lab -side left -padx 4
+    pack $sf_tab.f1.ent -expand yes -fill x -padx 2 -pady 0
+    pack $sf_tab.f1 -fill x -expand y
     
     if { $data(-allowMultipleFiles) != "" } {
-        pack $md_tab.vcr -fill x -padx 8 -pady 4
-        pack $md_tab.f1 -fill x -expand y
-        pack $md_tab.f2 -fill x -expand y
-        pack $md_tab.f1.lab $md_tab.f1.ent -side left -fill x -padx 4 -pady 0
-        pack $md_tab.f1.delay_lab $md_tab.f1.delay_ent -side left -fill x -padx 4 -pady 0
+        pack $mf_tab.vcr -fill x -padx 8 -pady 4
+        pack $mf_tab.f1 -fill x -expand y
+        pack $mf_tab.f2 -fill x -expand y
+        pack $mf_tab.f1.lab $mf_tab.f1.file_base_ent \
+	    -side left -fill x -padx 4 -pady 0
+        pack $mf_tab.f1.delay_lab $mf_tab.f1.delay_ent \
+	    -side left -fill x -padx 4 -pady 0
         if { [info exists $data(-filevar)]} {
             # Back both the label and entry on the same line...
-            pack $md_tab.f2.current_file_lab $md_tab.f2.current_file_ent -side left -fill x -padx 4 -pady 0
+            pack $mf_tab.f2.current_file_lab $mf_tab.f2.current_file_ent \
+		-side left -fill x -padx 4 -pady 0
             # ... but allow the entry to expand
-            pack $md_tab.f2.current_file_ent -expand y
+            pack $mf_tab.f2.current_file_ent -expand y
         }
     }
 
     pack $data(typeMenuLab) -side left -padx 4
     pack $data(typeMenuBtn) -expand yes -fill x -side right
 
-    
     # Pack all the frames together. We are done with widget construction.
     pack $f1 -side top -fill x -pady 4
     pack $f4 -side bottom -fill x -pady 2
@@ -1279,7 +1334,7 @@ proc biopseFDialog_Create {w} {
     if { $data(-allowMultipleFiles) != "" } {
        pack $w.tabs -side bottom -fill x
     } else {
-       pack $sd_tab -side bottom -fill x
+       pack $sf_tab -side bottom -fill x
     }
     pack $data(icons) -expand yes -fill both -padx 4 -pady 1
 
@@ -1888,8 +1943,12 @@ proc biopseFDialog_ListBrowse {w text} {
         $data(ent) insert 0 $text
 
         if { $data(-allowMultipleFiles) != "" } {
-           $data(md_ent) delete 0 end
-           $data(md_ent) insert 0 $text
+
+	    if { [info exists $data(-filebasevar)]} {
+		set $data(-filebasevar) $text
+	    } else {
+		set $data(mf_base) $text
+	    }
         }
 
         if {![string compare $data(type) open]} {
@@ -1986,7 +2045,7 @@ proc biopseFDialog_Done {w {selectFilePath ""} {whichBtn execute}} {
 	    set tmp_idx [string last $justname $selectFilePath]
 	    #puts $tmp_idx
 	    set base [string range $selectFilePath 0 [expr $tmp_idx - 1]]
-      append base [lindex $parts 0]
+	    append base [lindex $parts 0]
             set ext [lindex $parts end]
 
             #puts "working with $base ... $ext"
@@ -2004,10 +2063,10 @@ proc biopseFDialog_Done {w {selectFilePath ""} {whichBtn execute}} {
                 #puts "USING this list: $fileList"
             }
 
-            set delay [$data(md_delay) get]
+            set delay $data(mf_delay)
             #puts "delay is $delay"
 
-            # Should get delay from this var: $md_tab.delay_ent
+            # Should get delay from this var: $mf_tab.delay_ent
 	    setMultipleFilePlayMode $w "play"
             handleMultipleFiles $w "$fileList" $delay
 
@@ -2045,14 +2104,14 @@ proc handleMultipleFiles { w { filesList "" } { delay -1 } } {
     
     if { $delay > 0 } {
 	if { $delay < 1 } {
-	    puts "WARNING: casting decimal input from seconds to milliseconds!"
 	    # User probably put in .X seconds... translating
+	    tk_messageBox -type ok -icon warning \
+		-message "Casting decimal input from seconds to milliseconds."
 	    set data(mf_delay) [expr int ($delay * 1000)]
 	} else {
 	    # Delays can only be integers...
 	    set data(mf_delay) [expr int ($delay)]
 	}
-	#puts "delaying for $data(mf_delay)"
     }
     
     if { $filesList != "" } {
@@ -2062,19 +2121,29 @@ proc handleMultipleFiles { w { filesList "" } { delay -1 } } {
     }
     
     set num_files [llength $data(mf_file_list)]
-    #puts "num files: $num_files"
     
     if { $num_files == 0 } {
-	puts "error, no files specified..."
-	return
-    }
 
-    
+	if { [info exists $data(-filebasevar)]} {
+	    set tmp [set $data(-filebasevar)]
+	} else {
+	    set tmp $data(mf_base)
+	}
+
+	if { $tmp == "" } {
+	    tk_messageBox -type ok -icon error \
+		-message "No base file specified."
+	    return
+	} else {
+	    biopseFDialog_ActivateEnt $w execute
+	    return
+	    
+	}
+    }
 
     #puts "mode: $data(mf_play_mode)"
     
     if { $data(mf_play_mode) == "stop" } {
-	puts "play mode was stop, returning"
 	return
     }
     
@@ -2104,7 +2173,6 @@ proc handleMultipleFiles { w { filesList "" } { delay -1 } } {
 	set data(mf_file_number) 0
     }    
 
-    
     set mfthis $data(-allowMultipleFiles)
     set $mfthis-filename $currentFile
     $mfthis-c needexecute
@@ -2118,7 +2186,7 @@ proc handleMultipleFiles { w { filesList "" } { delay -1 } } {
 	}
 	# If in play mode, then keep the sequence going...
 	set data(mf_event_id) [after $data(mf_delay) "handleMultipleFiles $w"]
-	#puts "event_id: $data(mf_event_id)"
+#	puts "event_id: $data(mf_event_id)"
     }
 }
     
