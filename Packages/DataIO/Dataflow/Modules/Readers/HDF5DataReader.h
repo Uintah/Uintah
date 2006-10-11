@@ -41,8 +41,8 @@
 #include <Core/Util/DynamicLoader.h>
 
 #include <Dataflow/Network/Ports/NrrdPort.h>
-
 #include <Dataflow/Network/Ports/MatrixPort.h>
+#include <Dataflow/Network/Ports/StringPort.h>
 
 #include <Core/GuiInterface/GuiVar.h>
 

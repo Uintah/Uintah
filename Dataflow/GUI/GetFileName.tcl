@@ -8,6 +8,8 @@ itcl_class SCIRun_String_GetFileName {
     method ui {} {
 
         global $this-filename
+        global $this-filebase
+        global $this-delay
         
         set w .ui[modname]
         if {[winfo exists $w]} {
@@ -36,6 +38,8 @@ itcl_class SCIRun_String_GetFileName {
         makeOpenFilebox \
             -parent $w \
             -filevar $this-filename \
+            -filebasevar $this-filebase \
+            -delayvar $this-delay \
             -command "$this-c needexecute; wm withdraw $w" \
             -commandname "Execute" \
             -cancel "wm withdraw $w" \

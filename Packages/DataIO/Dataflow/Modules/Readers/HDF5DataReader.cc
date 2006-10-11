@@ -196,6 +196,16 @@ HDF5DataReader::is_mergeable(NrrdDataHandle h1, NrrdDataHandle h2)
 
 void HDF5DataReader::execute() {
 
+  // In the case of a time series the datasets may be separate so
+  // allow for a file reader. This only updates the filename - nothing
+  // else like the dumpfile or the treeview.
+  StringHandle sHandle;
+
+  if (get_input_handle( "Full filename", sHandle, false )) {
+    gui_filename_.set( sHandle->get() );
+    gui_filename_.reset();
+  }
+
 #ifdef HAVE_HDF5
   string filename(gui_filename_.get());
   string datasets(gui_datasets_.get());
@@ -295,15 +305,9 @@ void HDF5DataReader::execute() {
     
 
     // If there is a current index matrix, use it.
-    MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Current Index");
-
-    if (!imatrix_port) {
-      error("Unable to initialize iport 'Current Index'.");
-      return;
-    }
-
     MatrixHandle mHandle;
-    if (imatrix_port->get(mHandle) && mHandle.get_rep()) {
+
+    if (get_input_handle( "Current Index", mHandle, false )) {
       int which = (int) (mHandle->get(0, 0));
 
       if( 0 <= which && which <= (int) frame_paths.size() ) {
@@ -347,7 +351,6 @@ void HDF5DataReader::execute() {
 
   } else
     resend = true;
-
 
   if( resend ) {
     for( unsigned int ic=0; ic<MAX_PORTS; ic++ ) {
@@ -710,7 +713,7 @@ HDF5DataReader::parseAnimateDatasets( vector<string>& pathList,
 				      vector< vector<string> >& frame_paths,
 				      vector< vector<string> >& frame_datasets )
 {
-  //  cerr << "parseAnimateDatasets" << endl;
+  cerr << "parseAnimateDatasets" << endl;
 
   frame_paths.clear();
   frame_datasets.clear();
@@ -727,7 +730,7 @@ HDF5DataReader::parseAnimateDatasets( vector<string>& pathList,
 
   for( i=1; i<pathList.size(); i++ ) {
 
-    //    cerr << "pathList[" << i << "] " << pathList[i] << endl;
+    cerr << "pathList[" << i << "] " << pathList[i] << endl;
 
     unsigned int len = pathList[i].length();
 
@@ -754,7 +757,7 @@ HDF5DataReader::parseAnimateDatasets( vector<string>& pathList,
 
   string root = pathList[0].substr( 0, d1 );
 
-  //  cerr << "root " << root << endl;
+  cerr << "root " << root << endl;
 
   vector <string> times;
 
@@ -767,7 +770,7 @@ HDF5DataReader::parseAnimateDatasets( vector<string>& pathList,
 	break;
     }
 
-    //cerr << "time " << i << "  " << time << endl;
+    cerr << "time " << i << "  " << time << endl;
 
     if( j==times.size() )
       times.push_back( time );
@@ -1329,7 +1332,7 @@ NrrdDataHandle HDF5DataReader::readDataset( string filename,
   size_t sz[NRRD_DIM_MAX];
   unsigned int centers[NRRD_DIM_MAX];
 
-  for( unsigned int i=0; i<ndims; i++ ) {
+  for( int i=0; i<ndims; i++ ) {
     sz[i] = count[i];
     centers[i] = nrrdCenterNode;
   }
@@ -1615,22 +1618,15 @@ void HDF5DataReader::tcl_command(GuiArgs& args, void* userdata)
       // Check to see if the dimensions have changed.
       if( set ) {
 
-	string dimstr( "{ " );
-
-	for( unsigned int ic=0; ic<ndims && ic<MAX_DIMS; ic++ ) {
-	  char dim[8];
-
-	  sprintf( dim, " %d ", dims_[ic] );
-
-	  dimstr += dim;
-	}
-
-	dimstr += " }";
-
-	// Update the dims in the GUI.
+	// Update the dims in the GUI.    
 	ostringstream str;
-	str << get_id() << " set_size " << ndims << " " << dimstr;
-    
+	str << get_id() << " set_size " << ndims << " { ";
+
+	for( unsigned int ic=0; ic<ndims && ic<MAX_DIMS; ic++ )
+	  str << string(" ") << to_string( dims_[ic] ) << string(" ");
+
+	str << " }";
+
 	get_gui()->execute(str.str().c_str());
       }
     }
