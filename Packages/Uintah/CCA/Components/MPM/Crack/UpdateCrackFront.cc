@@ -349,7 +349,7 @@ void Crack::RecollectCrackFrontSegments(const ProcessorGroup*,
 void Crack::OutputCrackGeometry(const int& m, const int& timestep)
 {
   if(ce[m].size()>0) { // for the materials with cracks
-    bool timeToDump = dataArchiver->wasOutputTimestep();
+    bool timeToDump = dataArchiver->isOutputTimestep();
     if(timeToDump) {
       // Create output files in format:
       // ce.matXXX.timestepYYYYY (crack elems)

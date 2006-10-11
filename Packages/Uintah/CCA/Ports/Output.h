@@ -115,10 +115,11 @@ class SimulationState;
     // Get the timestep the next checkpoint will occur
     virtual int getNextCheckpointTimestep() = 0;
       
-    //////////
-    // Returns true if the last timestep was one
-    // in which data was output.
-    virtual bool wasOutputTimestep() = 0;
+    // Returns true if data will be output this timestep
+    virtual bool isOutputTimestep() = 0;
+
+    // Returns true if data will be checkpointed this timestep
+    virtual bool isCheckpointTimestep() = 0;
 
     //////////
     // Get the directory of the current time step for outputting info.

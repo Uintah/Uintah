@@ -76,8 +76,8 @@ DataArchiver::DataArchiver(const ProcessorGroup* myworld, int udaSuffix)
     d_udaSuffix(udaSuffix),
     d_outputLock("DataArchiver output lock")
 {
-  d_wasOutputTimestep = false;
-  d_wasCheckpointTimestep = false;
+  d_isOutputTimestep = false;
+  d_isCheckpointTimestep = false;
   d_saveParticleVariables = false;
   d_saveP_x = false;
   //d_currentTime=-1;
@@ -256,7 +256,7 @@ DataArchiver::problemSetup(const ProblemSpecP& params,
    }
   
    d_lastTimestepLocation = "invalid";
-   d_wasOutputTimestep = false;
+   d_isOutputTimestep = false;
 
    // set up the next output and checkpoint time
    d_nextOutputTime=0.0;
@@ -895,23 +895,23 @@ DataArchiver::beginOutputTimestep( double time, double delt,
   if (d_outputInterval != 0.0 && (delt != 0 || d_outputInitTimestep)) {
     if(time+delt >= d_nextOutputTime) {
       // output timestep
-      d_wasOutputTimestep = true;
+      d_isOutputTimestep = true;
       outputTimestep(d_dir, d_saveLabels, time, delt, grid,
                      &d_lastTimestepLocation);
     }
     else {
-      d_wasOutputTimestep = false;
+      d_isOutputTimestep = false;
     }
   }
   else if (d_outputTimestepInterval != 0 && (delt != 0 || d_outputInitTimestep)) {
     if(timestep >= d_nextOutputTimestep) {
       // output timestep
-      d_wasOutputTimestep = true;
+      d_isOutputTimestep = true;
       outputTimestep(d_dir, d_saveLabels, time, delt, grid,
                      &d_lastTimestepLocation);
     }
     else {
-      d_wasOutputTimestep = false;
+      d_isOutputTimestep = false;
     }
   }
   
@@ -925,7 +925,7 @@ DataArchiver::beginOutputTimestep( double time, double delt,
        timestep >= d_nextCheckpointTimestep) ||
       (d_checkpointWalltimeInterval != 0 &&
        currsecs >= d_nextCheckpointWalltime)) {
-    d_wasCheckpointTimestep=true;
+    d_isCheckpointTimestep=true;
     string timestepDir;
     outputTimestep(d_checkpointsDir, d_checkpointLabels, time, delt,
                    grid, &timestepDir,
@@ -963,7 +963,7 @@ DataArchiver::beginOutputTimestep( double time, double delt,
     if (d_writeMeta)
       index->releaseDocument();
   } else {
-    d_wasCheckpointTimestep=false;
+    d_isCheckpointTimestep=false;
   }
   dbg << "end beginOutputTimestep()\n";
 } // end beginOutputTimestep
@@ -1023,13 +1023,13 @@ DataArchiver::reEvaluateOutputTimestep(double /*orig_delt*/, double new_delt)
   // this is set in finalizeTimestep to time+delt
   d_tempElapsedTime = d_sharedState->getElapsedTime() + new_delt;
 
-  if (d_wasOutputTimestep && d_outputInterval != 0.0 ) {
+  if (d_isOutputTimestep && d_outputInterval != 0.0 ) {
     if (d_tempElapsedTime < d_nextOutputTime)
-      d_wasOutputTimestep = false;
+      d_isOutputTimestep = false;
   }
-  if (d_wasCheckpointTimestep && d_checkpointInterval != 0.0) {
+  if (d_isCheckpointTimestep && d_checkpointInterval != 0.0) {
     if (d_tempElapsedTime < d_nextCheckpointTime) {
-      d_wasCheckpointTimestep = false;    
+      d_isCheckpointTimestep = false;    
       d_checkpointTimestepDirs.pop_back();
     }
   }
@@ -1053,7 +1053,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
 
   // don't do this in beginOutputTimestep because the timestep might restart
   // and we need to have the output happen exactly when we need it.
-  if (d_wasOutputTimestep) {
+  if (d_isOutputTimestep) {
     if (d_outputInterval != 0.0) {
       // output timestep
       while (d_tempElapsedTime >= d_nextOutputTime)
@@ -1069,7 +1069,7 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
   // to check for output nth proc
   LoadBalancer* lb = dynamic_cast<LoadBalancer*>(getPort("load balancer")); 
 
-  if (d_wasCheckpointTimestep) {
+  if (d_isCheckpointTimestep) {
     if (d_checkpointInterval != 0.0) {
       while (d_tempElapsedTime >= d_nextCheckpointTime)
         d_nextCheckpointTime += d_checkpointInterval;
@@ -1087,9 +1087,9 @@ DataArchiver::executedTimestep(double delt, const GridP& grid)
 
   // start dumping files to disk
   vector<Dir*> baseDirs;
-  if (d_wasOutputTimestep)
+  if (d_isOutputTimestep)
     baseDirs.push_back(&d_dir);
-  if (d_wasCheckpointTimestep)
+  if (d_isCheckpointTimestep)
     baseDirs.push_back(&d_checkpointsDir);
 
   ostringstream tname;
@@ -1463,8 +1463,8 @@ DataArchiver::output(const ProcessorGroup*,
   //   parallel file systems)
 
   // return if not an outpoint/checkpoint timestep
-  if ((!d_wasOutputTimestep && type == OUTPUT) || 
-      (!d_wasCheckpointTimestep && type != OUTPUT)) {
+  if ((!d_isOutputTimestep && type == OUTPUT) || 
+      (!d_isCheckpointTimestep && type != OUTPUT)) {
     return;
   }
 

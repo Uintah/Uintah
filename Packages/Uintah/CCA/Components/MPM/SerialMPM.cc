@@ -232,6 +232,7 @@ void SerialMPM::scheduleInitialize(const LevelP& level,
   Task* t = scinew Task("MPM::actuallyInitialize",
                         this, &SerialMPM::actuallyInitialize);
 
+  sched->setPositionVar(lb->pXLabel);
   MaterialSubset* zeroth_matl = scinew MaterialSubset();
   zeroth_matl->add(0);
   zeroth_matl->addReference();

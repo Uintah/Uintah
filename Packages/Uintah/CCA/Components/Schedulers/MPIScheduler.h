@@ -127,6 +127,7 @@ WARNING
     virtual void verifyChecksum();
 
     MPIScheduler* parentScheduler;
+    Output*       oport_;
     mpi_timing_info_s     mpi_info_;
     CommRecMPI            sends_;
     SendState*            ss_;
