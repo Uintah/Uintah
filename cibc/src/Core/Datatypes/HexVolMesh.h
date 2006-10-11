@@ -498,7 +498,12 @@ public:
                   const Point &p,
                   typename Cell::index_type idx)
   {
-    synchronize(Mesh::FACES_E | Mesh::EDGES_E);
+    // This synchronize is only needed for non linear elements
+    // It involves locking and unlock every time this function
+    // is called. The underlying get_edges is protected with an
+    // assert. Algorithms should decide when and whether to 
+    // synchronize this one. 
+    // synchronize(Mesh::FACES_E | Mesh::EDGES_E);
     ElemData ed(*this, idx);
     return basis_.get_coords(coords, p, ed);
   }
@@ -506,7 +511,12 @@ public:
   void interpolate(Point &pt, const vector<double> &coords,
                    typename Cell::index_type idx)
   {
-    synchronize(Mesh::FACES_E | Mesh::EDGES_E);
+    // This synchronize is only needed for non linear elements
+    // It involves locking and unlock every time this function
+    // is called. The underlying get_edges is protected with an
+    // assert. Algorithms should decide when and whether to 
+    // synchronize this one. 
+    // synchronize(Mesh::FACES_E | Mesh::EDGES_E);
     ElemData ed(*this, idx);
     pt = basis_.interpolate(coords, ed);
   }
@@ -1478,10 +1488,8 @@ void
 HexVolMesh<Basis>::get_edges(typename Edge::array_type &array,
                              typename Face::index_type idx) const
 {
-  ASSERTMSG(synchronized_ & FACES_E,
-            "Must call synchronize FACES_E on HexVolMesh first");
-  ASSERTMSG(synchronized_ & EDGES_E,
-            "Must call synchronize EDGES_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & (FACES_E|EDGES_E),
+            "Must call synchronize FACES_E and EDGES_E on HexVolMesh first");
 
   array.clear();
   array.reserve(4);
@@ -1515,13 +1523,13 @@ void
 HexVolMesh<Basis>::get_edges(typename Edge::array_type &array,
                              typename Cell::index_type idx) const
 {
+  ASSERTMSG(synchronized_ & EDGES_E,
+            "Must call synchronize EDGES_E on HexVolMesh first");
+
   array.clear();
   array.reserve(12);
   const int off = idx * 8;
   typename Node::index_type n1,n2;
-
-  ASSERTMSG(synchronized_ & EDGES_E,
-            "Must call synchronize EDGES_E on HexVolMesh first");
   
   n1 = cells_[off   ]; n2 = cells_[off + 1];
   if (n1 != n2) { PEdge e(n1,n2); array.push_back((*(edge_table_.find(e))).second); }
@@ -2303,10 +2311,8 @@ void
 HexVolMesh<Basis>::get_elems(typename Elem::array_type &cells,
                              typename Node::index_type node) const
 {
-  ASSERTMSG(synchronized_ & NODE_NEIGHBORS_E,
-            "Must call synchronize NODE_NEIGHBORS_E on HexVolMesh first");
-  ASSERTMSG(synchronized_ & EDGES_E,
-            "Must call synchronize EDGES_E on HexVolMesh first");
+  ASSERTMSG(synchronized_ & (NODE_NEIGHBORS_E|EDGES_E),
+            "Must call synchronize NODE_NEIGHBORS_E and EDGES_E on HexVolMesh first");
 
   vector<typename Node::index_type> neighbors;
   set<typename Cell::index_type> unique_cells;
