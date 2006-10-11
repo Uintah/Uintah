@@ -46,6 +46,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-tensors-on
 	global $this-scalars-on
 	global $this-text-on
+        global $this-contours-on
+        global $this-n-contours
 	global $this-use-normals
 	global $this-edges-transparency
 	global $this-scalars-transparency
@@ -77,6 +79,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-has_vector_data
 	global $this-has_tensor_data
 	global $this-has_scalar_data
+	global $this-has_contour_data        
 	global $this-interactive_mode
 	global $this-bidirectional
 	global $this-nodes-usedefcolor
@@ -85,6 +88,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	global $this-scalars-usedefcolor
 	global $this-vectors-usedefcolor
 	global $this-tensors-usedefcolor
+        global $this-contours-usedefcolor
 	global $this-text-use-default-color
 	global $this-text-color-r
 	global $this-text-color-g
@@ -131,6 +135,8 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-vectors-on 0
 	set $this-tensors-on 0
 	set $this-scalars-on 0
+        set $this-contours-on 0
+        set $this-n-contours 1
 	set $this-normalize_vectors 0
 	set $this-node-resolution 6
 	set $this-edge-resolution 6
@@ -138,6 +144,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-has_vector_data 0
 	set $this-has_tensor_data 0
 	set $this-has_scalar_data 0
+	set $this-has_contour_data 0
 	set $this-active_tab "Nodes"
 	set $this-use-normals 0
 	set $this-edges-transparency 0
@@ -151,6 +158,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	set $this-scalars-usedefcolor 0
 	set $this-vectors-usedefcolor 0
 	set $this-tensors-usedefcolor 0
+        set $this-contours-usedefcolor 0
 	set $this-text-use-default-color 1
 	set $this-faces-usetexture  0
 	set $this-text-color-r 1.0
@@ -181,6 +189,7 @@ itcl_class SCIRun_Visualization_ShowField {
 	trace variable $this-has_vector_data w "$this vector_tab_changed"
 	trace variable $this-has_tensor_data w "$this tensor_tab_changed"
 	trace variable $this-has_scalar_data w "$this scalar_tab_changed"
+	trace variable $this-has_contour_data w "$this contour_tab_changed"
 	trace variable $this-nodes-as-disks w "$this disk_render_status_changed"
 	# no C side component for these variables
 	global $this-ns_slider
@@ -608,6 +617,35 @@ itcl_class SCIRun_Visualization_ShowField {
 	pack $res.scale -side top -fill both -expand 1
     }
 
+    # Contour Tab
+    method add_contour_tab {dof} {
+
+	set contour [$dof.tabs add -label "Contours" \
+		-command "$this set_active_tab \"Contours\""]
+	checkbutton $contour.show_contours \
+		-text "Show Contours" \
+		-command "$this-c toggle_display_contours" \
+		-variable $this-contours-on
+
+	checkbutton $contour.usedefcol \
+		-text "Use Default Color" \
+		-command "$this-c contour_defcolors" \
+		-variable $this-contours-usedefcolor
+
+	pack $contour.show_contours $contour.usedefcol \
+	    -side top -fill y -anchor w
+
+	global $this-nc_slider
+	scale $contour.slide -label "Number of Contours" \
+            -orient horizontal -from 1 -to 100 \
+            -variable $this-n-contours \
+
+        pack $contour.slide -side top -fill x -anchor w
+	set $this-nc_slider $contour.slide
+	bind $contour.slide <ButtonRelease> "$this-c n_contours"
+    }
+
+
     # Text Tab
     method add_text_tab {dof} {
 	set text [$dof.tabs add -label "Text" \
@@ -738,12 +776,29 @@ itcl_class SCIRun_Visualization_ShowField {
 	}
     }
 
+    method contour_tab_changed {name1 name2 op} {
+	global $this-has_contour_data
+
+	set window .ui[modname]
+	if {[winfo exists $window]} {
+	    set dof [$window.options.disp.frame_title childsite]	
+	    if {[set $name1] == 1} { 
+		add_contour_tab $dof
+		$dof.tabs view [set $this-active_tab]
+	    } else {
+		$dof.tabs delete "Contours"
+	    }
+	}
+    }
+
+
     method ui {} {
 	set window .ui[modname]
 	if {[winfo exists $window]} {
 	    return
 	}
 	toplevel $window
+        wm geometry $window ""
 	#wm minsize $window 380 548
 
 	#frame for all options to live
@@ -752,14 +807,15 @@ itcl_class SCIRun_Visualization_ShowField {
 	# node frame holds ui related to vert display (left side)
 	frame $window.options.disp -borderwidth 2
 	pack $window.options.disp -padx 2 -pady 2 -side left \
-		-fill both -expand 1
+		-fill both -expand yes
 
 	# Display Options
 	iwidgets::labeledframe $window.options.disp.frame_title \
 		-labelpos nw -labeltext "Display Options"
 	set dof [$window.options.disp.frame_title childsite]
 
-	iwidgets::tabnotebook  $dof.tabs -height 380 -width 330 \
+
+	iwidgets::tabnotebook  $dof.tabs -height 380 -width 420 \
 	    -raiseselect true 
 	#label $window.options.disp.frame_title -text "Display Options"
 
@@ -776,6 +832,9 @@ itcl_class SCIRun_Visualization_ShowField {
 	if {[set $this-has_scalar_data] == 1} {
 	    add_scalar_tab $dof
 	}
+	if {[set $this-has_contour_data] == 1} {
+	    add_contour_tab $dof
+	}
 
 	global $this-active_tab
 	global $this-interactive_mode
@@ -785,11 +844,11 @@ itcl_class SCIRun_Visualization_ShowField {
 	}
 	$dof.tabs configure -tabpos "n"
 
-	pack $dof.tabs -side top -fill x -expand yes -padx 2 -pady 2
-
+	pack $dof.tabs -side top -fill x -anchor w -expand yes -fill both
 	#pack notebook frame
-	pack $window.options.disp.frame_title -side top -expand yes -fill x
-	
+	pack $window.options.disp.frame_title -side top \
+            -fill both -anchor w -expand yes
+
 	#add bottom frame for execute and dismiss buttons
 	frame $window.control -relief groove -borderwidth 2 -width 500
 	frame $window.def
@@ -854,7 +913,9 @@ itcl_class SCIRun_Visualization_ShowField {
 
 	#pack $res.scale -side top -fill both -expand 1
 
-	pack $window.options -padx 2 -pady 2 -side top -fill x -expand 1
+	pack $window.options -padx 2 -pady 2 -side top -anchor w \
+            -fill both -expand yes
+
 	#pack $window.resolution -padx 2 -pady 2 -side top -fill x -expand 1
 	pack $window.def $window.control \
 	    -padx 2 -pady 2 -side top

@@ -84,6 +84,7 @@ class ShowField : public Module
   int                      face_id_;
   int                      data_id_;
   int                      text_id_;
+  int                      contour_id_;
 
   //! top level nodes for switching on and off..
   //! Options for rendering nodes.
@@ -126,6 +127,12 @@ class ShowField : public Module
   GuiInt                   scalars_usedefcolor_;
   GuiInt                   has_scalar_data_;
 
+  GuiInt                   contours_on_;
+  GuiInt                   contours_usedefcolor_;
+  GuiInt                   has_contour_data_;
+  GuiInt                   n_contours_;
+  bool                     contours_dirty_;
+  
   //! Options for rendering text.
   GuiInt                   text_on_;
   GuiInt                   text_use_default_color_;
@@ -190,6 +197,7 @@ class ShowField : public Module
 
   GeomHandle text_geometry_;
   GeomHandle data_geometry_;
+  GeomHandle contour_geometry_;
   
   // variables related to default scale factor usage.
   GuiInt                  gui_use_defaults_;
@@ -201,6 +209,7 @@ class ShowField : public Module
     FACE,
     DATA,
     TEXT,
+    CONTOUR,
     DATA_AT
   };
   vector<bool>               render_state_;
@@ -231,6 +240,7 @@ ShowField::ShowField(GuiContext* ctx) :
   face_id_(0),
   data_id_(0),
   text_id_(0),
+  contour_id_(0),
   nodes_on_(get_ctx()->subVar("nodes-on")),
   nodes_transparency_(get_ctx()->subVar("nodes-transparency")),
   nodes_as_disks_(get_ctx()->subVar("nodes-as-disks")),
@@ -261,6 +271,11 @@ ShowField::ShowField(GuiContext* ctx) :
   scalars_transparency_(get_ctx()->subVar("scalars-transparency")),
   scalars_usedefcolor_(get_ctx()->subVar("scalars-usedefcolor")),
   has_scalar_data_(get_ctx()->subVar("has_scalar_data")),
+  contours_on_(get_ctx()->subVar("contours-on")),
+  contours_usedefcolor_(get_ctx()->subVar("contours-usedefcolor")),
+  has_contour_data_(get_ctx()->subVar("has_contour_data")),
+  n_contours_(get_ctx()->subVar("n-contours")),
+  contours_dirty_(true),
   text_on_(get_ctx()->subVar("text-on")),
   text_use_default_color_(get_ctx()->subVar("text-use-default-color")),
   text_color_r_(get_ctx()->subVar("text-color-r")),
@@ -317,6 +332,7 @@ ShowField::ShowField(GuiContext* ctx) :
   data_tensor_renderer_(0),
   text_geometry_(0),
   data_geometry_(0),
+  contour_geometry_(0),
   gui_use_defaults_(get_ctx()->subVar("use-defaults"), 0),
   cur_mesh_scale_factor_(1.0),
   render_state_(5)
@@ -335,6 +351,8 @@ ShowField::ShowField(GuiContext* ctx) :
     vectors_on_.get() || tensors_on_.get() || scalars_on_.get();
   text_on_.reset();
   render_state_[TEXT] = text_on_.get();
+  contours_on_.reset();
+  render_state_[CONTOUR] = contours_on_.get();
 }
 
 
@@ -350,6 +368,7 @@ ShowField::check_for_svt_data(FieldHandle fld_handle)
   if (fld_handle.get_rep() == 0) { return false; }
 
   bool hsd = false;
+  bool hcd = false;
   bool hvd = false;
   bool htd = false;
   nodes_as_disks_.reset();
@@ -359,6 +378,14 @@ ShowField::check_for_svt_data(FieldHandle fld_handle)
   {
     hsd = true;
     result = true;
+    
+    // Check for Contour data.  Only available if we have scalar
+    // data that is also image data.
+    const TypeDescription *td = 
+      fld_handle->get_type_description(Field::MESH_TD_E);
+    if ((td->get_name().find("ImageMesh") != string::npos)) {
+      hcd = true;
+    }
   }
   else if (fld_handle->query_vector_interface(this).get_rep() != 0)
   {
@@ -380,9 +407,9 @@ ShowField::check_for_svt_data(FieldHandle fld_handle)
   }
 
   has_scalar_data_.set(hsd);
+  has_contour_data_.set(hcd);
   has_vector_data_.set(hvd);
   has_tensor_data_.set(htd);
-
   return result;
 }
 
@@ -520,6 +547,7 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     faces_dirty_ = true;
     data_dirty_ = true;
     text_dirty_ = true;
+    contours_dirty_ = true;
 
     // Set default color here.  Probably bogus.
     def_material_->diffuse =
@@ -537,6 +565,8 @@ ShowField::determine_dirty(FieldHandle fld_handle, FieldHandle vfld_handle)
     data_id_ = 0;
     if (text_id_) ogeom_->delObj(text_id_);
     text_id_ = 0;
+    if (contour_id_) ogeom_->delObj( contour_id_);
+    contour_id_ = 0;
 
     // set new scale defaults based on input.
     Vector diag = fld_handle->mesh()->get_bounding_box().diagonal();
@@ -680,6 +710,7 @@ ShowField::execute()
       faces_dirty_ = true;
       data_dirty_ = true;
       text_dirty_ = true;
+      contours_dirty_ = true;
     }
   }
   last_field_name_ = gui_field_name_.get();
@@ -710,7 +741,7 @@ ShowField::execute()
   if ((!nodes_dirty_) && (!edges_dirty_) &&
       (!faces_dirty_) && (!data_dirty_) &&
       (!text_dirty_) && (!color_map_changed) &&
-      (!error_))
+      (!contours_dirty_) && (!error_))
   {
     return;
   }
@@ -748,6 +779,7 @@ ShowField::execute()
   vectors_on_.reset();
   tensors_on_.reset();
   scalars_on_.reset();
+  contours_on_.reset();
   text_on_.reset();
   const int dim = fld_handle->mesh()->dimensionality();
   bool nodes_on = nodes_on_.get();
@@ -770,7 +802,7 @@ ShowField::execute()
 
   bool do_data  = (vectors_on_.get() || tensors_on_.get() || scalars_on_.get()) && data_dirty_;
   bool do_text  = text_on_.get() && text_dirty_;
-
+  bool do_contours = contours_on_.get() && contours_dirty_;
   if (render_state_[NODE] != nodes_on) {
     if (node_id_) ogeom_->delObj(node_id_);
     node_id_ = 0;
@@ -799,6 +831,11 @@ ShowField::execute()
     if (text_id_) ogeom_->delObj(text_id_);
     text_id_ = 0;
     render_state_[TEXT] = text_on_.get();
+  }
+  if(render_state_[CONTOUR] != contours_on_.get()){
+    if( contour_id_) ogeom_->delObj(text_id_);
+    contour_id_ = 0;
+    render_state_[CONTOUR] =  contours_on_.get();
   }
 
   string fname = clean_fieldname(gui_field_name_.get());
@@ -974,8 +1011,40 @@ ShowField::execute()
 	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
       text_id_ = ogeom_->addObj(geom, fname + name);
     }
+   
   }
+  if( do_contours || color_map_changed){
+    contours_dirty_ = false;
+    if (renderer_.get_rep() && contours_on_.get()) {
+      if (contour_id_) ogeom_->delObj(contour_id_);
 
+//       contour_material_->diffuse =
+// 	Color(contour_color_r_.get(),
+//               contour_color_g_.get(), 
+//               contour_color_b_.get());
+      if (do_contours)
+      {
+	contour_geometry_ =
+	  renderer_->render_contours(fld_handle, 
+                                     color_map_,
+                                     def_material_,
+                                     contours_usedefcolor_.get(),
+                                     n_contours_.get());
+      }
+
+      const char *name = "Contour Data";
+//       GeomHandle gmat =
+// 	scinew GeomMaterial(contour_geometry_, contour_material_);
+//       GeomHandle geom =
+// 	scinew GeomSwitch(scinew GeomColorMap(gmat, color_map_));
+      if( contour_geometry_ != 0 ){
+        GeomHandle geom =
+          scinew GeomSwitch(scinew GeomColorMap(contour_geometry_, color_map_));
+
+        contour_id_ = ogeom_->addObj(geom, fname + name);
+      }
+    }
+  }
   ogeom_->flushViews();
 }
 
@@ -1014,6 +1083,9 @@ ShowField::maybe_execute(toggle_type_e dis_type)
     case TEXT :
       do_execute = text_on_.get();
 	break;
+    case CONTOUR :
+      do_execute = contours_on_.get();
+        break;
     case DATA_AT :
       do_execute = true;
 	break;
@@ -1218,6 +1290,28 @@ ShowField::tcl_command(GuiArgs& args, void* userdata) {
       if (ogeom_) ogeom_->flushViews();
       data_id_ = 0;
     }
+  } else if (args[1] == "toggle_display_contours"){
+    // Toggle the GeomSwitch.
+    contours_on_.reset();
+    if ((contours_on_.get()) && (contour_id_ == 0))
+    {
+      contours_dirty_ = true;
+      maybe_execute(CONTOUR);
+    }
+    else if (!contours_on_.get() && contour_id_)
+    {
+      if(ogeom_) {
+        ogeom_->delObj(contour_id_);
+        ogeom_->flushViews();
+      }
+      contour_id_ = 0;
+    }
+  } else if (args[1] == "n_contours") {
+    contours_dirty_ = true;
+    maybe_execute(CONTOUR);
+  } else if (args[1] == "contour_defcolors"){
+    contours_dirty_ = true;
+    maybe_execute(CONTOUR);
   } else if (args[1] == "toggle_display_text"){
     // Toggle the GeomSwitch.
     text_on_.reset();

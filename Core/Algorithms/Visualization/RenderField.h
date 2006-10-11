@@ -142,6 +142,12 @@ public:
 				 bool render_faces,
 				 bool render_cells) = 0;
 
+  virtual GeomHandle render_contours(FieldHandle fh,
+                                     ColorMapHandle color_handle,
+                                     MaterialHandle def_mat,
+                                     bool use_def_color,
+                                     int n_contours) = 0;
+
   RenderFieldBase();
   virtual ~RenderFieldBase();
 
@@ -196,6 +202,12 @@ public:
 				 bool render_edges,
 				 bool render_faces,
 				 bool render_cells);
+
+  virtual GeomHandle render_contours(FieldHandle fh,
+                                     ColorMapHandle color_handle,
+                                     MaterialHandle def_mat,
+                                     bool use_def_color,
+                                     int n_contours);
 
 protected:
   GeomHandle render_nodes(Fld *fld, 
@@ -1822,6 +1834,16 @@ RenderField<Fld, Loc>::render_faces_linear(Fld *sfld,
   return face_switch;
 }
 
+template <class Fld, class Loc>
+GeomHandle 
+RenderField<Fld, Loc>::render_contours(FieldHandle fh,
+                                       ColorMapHandle cmaph,
+                                       MaterialHandle def_mat,
+                                       bool use_def_color,
+                                       int n_contours)
+{
+  return 0;
+}
 
 template <class Fld, class Loc>
 GeomHandle 
@@ -2475,6 +2497,11 @@ protected:
                                          bool force_def_color,
                                          bool use_normals,
                                          bool use_transparency);
+  virtual GeomHandle render_contours(FieldHandle fh,
+                                     ColorMapHandle cmaph,
+                                     MaterialHandle def_mat,
+                                     bool use_def_color,
+                                     int n_contours);
 };
 
 
@@ -2643,6 +2670,165 @@ RenderFieldImage<Fld, Loc>::render_texture_face(Fld *sfld,
   return texture_face;
 }
 
+
+template <class Fld, class Loc>
+GeomHandle 
+RenderFieldImage<Fld, Loc>::render_contours(FieldHandle fh,
+                                       ColorMapHandle cmaph,
+                                       MaterialHandle def_mat,
+                                       bool use_def_color,
+                                       int n_contours)
+{
+
+  typename Fld::field_type *fld = (typename Fld::field_type*)(fh.get_rep());
+
+  // render_contours should never be called if field is not an image type.
+  // but lets check anyhow...
+  const TypeDescription  *mtd = 
+    fld->get_type_description(Field::MESH_TD_E);
+  if((mtd->get_name().find("ImageMesh") == string::npos)){
+    // error ...
+    cerr<<"Ruh Roh, called with the wrong field type.\n";
+    return 0;
+  }
+
+  // if we made it this far we know we have an image mesh, so just
+  // cast it.
+  IMesh *im = (IMesh *)(fld->get_typed_mesh().get_rep());
+
+  ScalarFieldInterfaceHandle sfi(fld->query_scalar_interface());
+  if(!sfi.get_rep()){
+    return 0;
+  }
+
+  int cmap_min, cmap_max;
+  if(!use_def_color){
+    cmap_min = (int) cmaph->getMin();
+    cmap_max = (int) cmaph->getMax();
+  }
+
+  double minval, maxval;
+  sfi->compute_min_max(minval, maxval);
+
+  int contours = n_contours;
+  if (contours >= 1)
+  {
+    GeomGroup *cs = new GeomGroup;
+    Array1<GeomLines *> col_group( contours);
+    Array1<GeomMaterial *> colrs( contours);
+    Array1<double> values( contours);
+    
+    // get the "contour" number of values from 
+    // the field, find corresponding colors,  
+    // and add a Material and it's group to the tree
+    for (int i = 0; i < contours; i++)
+      {
+        values[i]=((double)(i+1)/(contours + 1)) * (maxval - minval) + minval;
+        MaterialHandle matl;
+        if( !use_def_color ) {
+          matl = cmaph->lookup( values[i] );
+        } else {
+          matl = def_mat;
+        }
+        col_group[i] = new GeomLines;
+        colrs[i] = new GeomMaterial( col_group[i], matl );
+        cs->add( colrs[i] );
+      } 
+    
+    for(unsigned int j = 0; j < im->get_nj() - 2; j++){
+      for(unsigned int i = 0; i< im->get_ni() - 2; i++){
+
+        Point pll, plr, pul, pur; // Node or Face Points
+        double vll, vlr, vul, vur; // Node or Face Values
+
+        if ( fld->basis_order() == 1){
+          //***************************************************
+          // Find the corners of the cell in space
+          // use the node indices to grab the corner points
+          typename Fld::mesh_type::Node::index_type ll(im, i, j);
+          typename Fld::mesh_type::Node::index_type lr(im, i + 1, j);
+          typename Fld::mesh_type::Node::index_type ul(im, i, j + 1);
+          typename Fld::mesh_type::Node::index_type ur(im, i + 1, j + 1);
+
+          //**************************************************
+          // Get the values of the cell corners
+          vll = double(fld->value(ll));
+          vlr = double(fld->value(lr));
+          vul = double(fld->value(ul));
+          vur = double(fld->value(ur));
+      
+          // Get the Points in space at each corner
+          im->get_point(pll, ll);
+          im->get_point(plr, lr);
+          im->get_point(pul, ul);
+          im->get_point(pur, ur);
+        } else if(fld->basis_order() == 0){
+          //***************************************************
+          // Find the corners of the cell in space
+          // use the node indices to grab the corner points
+          typename Fld::mesh_type::Face::index_type ll(im, i, j);
+          typename Fld::mesh_type::Face::index_type lr(im, i + 1, j);
+          typename Fld::mesh_type::Face::index_type ul(im, i, j + 1);
+          typename Fld::mesh_type::Face::index_type ur(im, i + 1, j + 1);
+
+          //**************************************************
+          // Get the values of the cell corners
+          vll = double(fld->value(ll));
+          vlr = double(fld->value(lr));
+          vul = double(fld->value(ul));
+          vur = double(fld->value(ur));
+      
+          // Get the Points in space at each corner
+          im->get_center(pll, ll);
+          im->get_center(plr, lr);
+          im->get_center(pul, ul);
+          im->get_center(pur, ur);
+        } else {
+          cerr<<"Error of some sort\n";
+          return 0;
+        }
+        for(int k = 0; k < contours; k++){
+          int found = 0;
+          Point p1, p2;
+          if ((vll <= values[k] && values[k] < vlr) ||
+              (vlr < values[k] && values[k] <= vll))
+          {
+            p1 = Interpolate( pll, plr, (values[k]-vll)/(vlr-vll));
+            ++found;
+          }
+          if ((vlr <= values[k] && values[k] < vur) ||
+              (vur < values[k] && values[k] <= vlr))
+          {
+            p2 = Interpolate( plr, pur, (values[k]-vlr)/(vur-vlr));
+            if (!found)
+              p1 = p2;
+            ++found;
+          }
+          if (((vur <= values[k] && values[k] < vul) ||
+               (vul < values[k] && values[k] <= vur)) && found < 2)
+          {
+            p2 = Interpolate( pur, pul, (values[k]-vur)/(vul-vur));
+            if (!found)
+              p1 = p2;
+            ++found;
+          }
+          if (((vll < values[k] && values[k] <= vul) ||
+               (vul <= values[k] && values[k] < vll)) && found < 2)
+          {
+            p2 = Interpolate( pll, pul, (values[k]-vll)/(vul-vll));
+            ++found;
+          }
+          // did we find two points to draw a line with?
+          if (found == 2)
+            col_group[k]->add(p1, p2);
+        }
+      }
+    }
+    return cs;
+  } else {
+    return 0;
+  }
+}
 
 
 //! RenderVectorFieldBase supports the dynamically loadable algorithm concept.
