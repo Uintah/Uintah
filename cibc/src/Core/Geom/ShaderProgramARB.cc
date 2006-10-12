@@ -200,14 +200,14 @@ ShaderProgramARB::create()
       for (; start > 0 && program_[start] != '\n'; start--);
       if (program_[start] == '\n') start++;
       int end = position;
-      for (; end < program_.length()-1 && program_[end] != '\n'; end++);
+      for (; end < ((int)program_.length())-1 && program_[end] != '\n'; end++);
       if (program_[end] == '\n') end--;
       int ss = start;
       int l = 1;
       for (; ss >= 0; ss--) { if (program_[ss] == '\n') l++; }
       string line((char*)(program_.c_str()+start), end-start+1);
       string underline = line;
-      for (uint i=0; i<end-start+1; i++) underline[i] = '-';
+      for (int i=0; i<end-start+1; i++) underline[i] = '-';
       underline[position-start] = '#';
       glBindProgramARB(type_, 0);
       switch(type_) {

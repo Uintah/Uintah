@@ -290,8 +290,11 @@ namespace SCIRun {
         Color typed_value;
         vars->get_by_idx(cache_index_, typed_value);
         char temp[128];
-        sprintf(temp, "#%02X%02X%02X%02X", typed_value.r, typed_value.g,
-                typed_value.b, typed_value.a);
+        sprintf(temp, "#%02X%02X%02X%02X",
+                (unsigned char)(typed_value.r * 255.0 + 0.5),
+                (unsigned char)(typed_value.g * 255.0 + 0.5),
+                (unsigned char)(typed_value.b * 255.0 + 0.5),
+                (unsigned char)(typed_value.a * 255.0 + 0.5));
         string_value_ = temp;
       } break;
 
@@ -404,35 +407,35 @@ namespace SCIRun {
 
     void
     Variables::get_by_idx(int & idx, int &value) {
-      ASSERT(idx < cached_ints_.size());
+      ASSERT(idx < (int)cached_ints_.size());
       if (idx < 0) throw "get_by_idx failed on uninitialized value";
       value = cached_ints_[idx];
     }
 
     void
     Variables::get_by_idx(int & idx, double &value) {
-      ASSERT(idx < cached_doubles_.size());
+      ASSERT(idx < (int)cached_doubles_.size());
       if (idx < 0) throw "get_by_idx failed on uninitialized value";
       value = cached_doubles_[idx];
     }
 
     void
     Variables::get_by_idx(int & idx, bool &value) {
-      ASSERT(idx < cached_bools_.size());
+      ASSERT(idx < (int)cached_bools_.size());
       if (idx < 0) throw "get_by_idx failed on uninitialized value";
       value = cached_bools_[idx];
     }
 
     void
     Variables::get_by_idx(int & idx, string &value) {
-      ASSERT(idx < cached_strings_.size());
+      ASSERT(idx < (int)cached_strings_.size());
       if (idx < 0) throw "get_by_idx failed on uninitialized value";
       value = cached_strings_[idx];
     }
 
     void
     Variables::get_by_idx(int & idx, Color &value) {
-      ASSERT(idx < cached_colors_.size());
+      ASSERT(idx < (int)cached_colors_.size());
       if (idx < 0) throw "get_by_idx failed on uninitialized value";
       value = cached_colors_[idx];
     }     

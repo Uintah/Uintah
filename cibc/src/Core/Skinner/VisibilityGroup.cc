@@ -70,7 +70,7 @@ namespace SCIRun {
       Signal *signal = dynamic_cast<Signal *>(event.get_rep());
       string id = "/"+signal->get_vars()->get_string("id");
       string group = signal->get_vars()->get_string("group");
-      for (int i = 0; i < visible_items_.size(); ++i) {
+      for (unsigned int i = 0; i < visible_items_.size(); ++i) {
         if (group == visible_items_[i]->get_vars()->get_string("group")) {
           bool wasvisible = visible_items_[i]->visible_();
           bool isvisible = ends_with(visible_items_[i]->get_id(), id);
