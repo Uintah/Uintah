@@ -244,7 +244,7 @@ Tikhonov::execute()
     // Use L-curve, lambda from corner of the L-curve
     // msg_stream_ << "method = " << reg_method_.get() << "\n";//DISCARD
 
-    int i, j, k, l;
+    int i, j, k;
     const int nLambda = lambda_num_.get();
 
     ColumnMatrix *kapa = scinew ColumnMatrix(nLambda);
