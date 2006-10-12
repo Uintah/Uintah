@@ -563,7 +563,7 @@ PackageDB::moduleNames(const string& packageName,
   
   vector<string> result;
   CategoryIter iter(category);
-  int i=0;
+  //int i=0;
   
   for(iter.first();iter.ok();++iter) 
   {
