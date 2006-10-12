@@ -1534,7 +1534,7 @@ Painter::rebuild_layer_buttons()
   NrrdVolumeOrder::iterator eiter = volume_order_.end();
   int num = volume_order_.size();
   num--;
-  for (int b = 0; b < layer_buttons_.size(); ++b) {
+  for (unsigned int b = 0; b < layer_buttons_.size(); ++b) {
     if (b < volume_order_.size()) {
       NrrdVolume *volume = volume_map_[*iter];
       layer_buttons_[num-b]->volume_ = volume;
