@@ -52,8 +52,8 @@ namespace SCIRun {
     Parent::process_event(event_handle_t e) {
       BaseTool::propagation_state_e state = Drawable::process_event(e);
 
-      WindowEvent *window = dynamic_cast<WindowEvent *>(e.get_rep());
-      bool redraw = window && window->get_window_state() == WindowEvent::REDRAW_E;
+      //WindowEvent *window = dynamic_cast<WindowEvent *>(e.get_rep());
+      //bool redraw = window && window->get_window_state() == WindowEvent::REDRAW_E;
       bool stop = false;
       if (state != STOP_E) {
         for (Drawables_t::iterator citer = children_.begin(); 

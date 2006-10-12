@@ -126,6 +126,7 @@ Skinner::Frame::redraw(event_handle_t e)
   glEnd();
   CHECK_OPENGL_ERROR();
 
+  return CONTINUE_E;
 }
 
 

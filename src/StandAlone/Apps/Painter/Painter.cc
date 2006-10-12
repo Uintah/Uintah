@@ -596,6 +596,7 @@ Painter::SliceWindow::redraw(event_handle_t) {
   glPopMatrix();
   CHECK_OPENGL_ERROR();
 
+  return CONTINUE_E;
 }
 
 
@@ -1691,6 +1692,7 @@ Painter::SliceWindow::zoom_in(event_handle_t)
 {
   zoom_ *= 1.1;
   redraw();
+  return CONTINUE_E;
 }
 
 
@@ -1699,6 +1701,7 @@ Painter::SliceWindow::zoom_out(event_handle_t)
 {
   zoom_ /= 1.1;
   redraw();
+  return CONTINUE_E;
 }
   
 Point

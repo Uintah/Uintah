@@ -61,8 +61,8 @@ namespace SCIRun {
       WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
       bool redraw = window && window->get_window_state() == WindowEvent::REDRAW_E;
 
-      PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
-      bool click = pointer && (pointer->get_pointer_state() & PointerEvent::BUTTON_PRESS_E) ;
+      //      PointerEvent *pointer = dynamic_cast<PointerEvent *>(event.get_rep());
+      //      bool click = pointer && (pointer->get_pointer_state() & PointerEvent::BUTTON_PRESS_E) ;
 
       if (redraw) {
         Parent::process_event(event);

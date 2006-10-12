@@ -66,6 +66,10 @@ namespace SCIRun {
         Var<double> val(signal->get_vars(), "variable", 0.0);
         val = val() + 1.0;
       } break;
+
+      default:
+        throw "Bad type";
+        break;
       }
 
       return BaseTool::CONTINUE_E;
@@ -87,6 +91,10 @@ namespace SCIRun {
         Var<double> val(signal->get_vars(), "variable", 0.0);
         val = val() - 1.0;
       } break;
+
+      default:
+        throw "Bad type";
+        break;
       }
 
       return BaseTool::CONTINUE_E;
