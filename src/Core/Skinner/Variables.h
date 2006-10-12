@@ -192,6 +192,7 @@ namespace SCIRun {
       ASSERT(this->scope_);
       ASSERT(this->scope_index_ && *this->scope_index_ >= -1);
       this->scope_->set_by_idx(*this->scope_index_, rhs);
+      return *this;
     }
 
     template <class T>
@@ -199,6 +200,7 @@ namespace SCIRun {
     Var<T>::operator= (const Var<T>& rhs) {
       this->scope_ = rhs.scope_;
       this->scope_index_ = rhs.scope_index_;
+      return *this;
     }
 
     template <class T>
@@ -209,6 +211,7 @@ namespace SCIRun {
           (*rhs.scope_index_ != -1)) {
         operator=(rhs);
       }
+      return *this;
     }
 
     template <class T>
