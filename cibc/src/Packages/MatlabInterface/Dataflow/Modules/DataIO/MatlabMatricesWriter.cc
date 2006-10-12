@@ -153,10 +153,9 @@ void MatlabMatricesWriter::execute()
 
   // find and evaluate which ports have been used
 
-  SCIRun::MatrixIPort *iport;	
   for (int p=0; p<NUMPORTS; p++)
   {
-		porthasdata[p] = get_input_handle(p,matrixhandle[p],false);
+    porthasdata[p] = get_input_handle(p, matrixhandle[p], false);
   }
 
   // Reorder the TCL input and put them
