@@ -349,10 +349,9 @@ DenseMatrix::solve(ColumnMatrix& rhs, ColumnMatrix& lhs, int overwrite)
 
   double **A;
   double **cpy;
-	double *lhsp = lhs.get_data_pointer();
-	double *rhsp = rhs.get_data_pointer();
+  double *lhsp = lhs.get_data_pointer();
 	
-	if (!overwrite) { cpy = scinew double*[nrows_]; for (int j=0; j < nrows_; j++) cpy[j] = data[j]; A = cpy; } else { A = data; }
+  if (!overwrite) { cpy = scinew double*[nrows_]; for (int j=0; j < nrows_; j++) cpy[j] = data[j]; A = cpy; } else { A = data; }
 	
   // Gauss-Jordan with partial pivoting
   int i;
