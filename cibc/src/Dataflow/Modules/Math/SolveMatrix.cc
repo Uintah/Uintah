@@ -153,7 +153,6 @@ struct CGData {
 };
 
 class SolveMatrix : public Module {
-  MatrixOPort* solport;
   MatrixHandle solution;
 
 #ifdef PETSC_UNI
@@ -275,8 +274,6 @@ SolveMatrix::set_compute_time_stats(PStats *stats, double time, int nprocs)
 void
 SolveMatrix::execute()
 {
-  solport = (MatrixOPort *)get_oport("Solution");
-
   MatrixHandle matrix;
   if (!get_input_handle("Matrix", matrix)) return;
 
@@ -693,7 +690,10 @@ SolveMatrix::jacobi_sci(Matrix* matrix, ColumnMatrix& lhs, ColumnMatrix& rhs)
       update_progress(progress);
 
       if (ep && niter%epcount == 0)
-        solport->send_intermediate(rhs.clone());
+      {
+        MatrixHandle rhsH(rhs.clone());
+        send_output_handle("Solution", rhsH, false, true);
+      }
     }
   }
   iteration.set(niter);
@@ -972,7 +972,10 @@ SolveMatrix::parallel_conjugate_gradient(int processor)
 	}
 
 	if (ep && data.niter%epcount == 0)
-	  solport->send_intermediate(lhs.clone());
+        {
+          MatrixHandle lhsH(lhs.clone());
+          send_output_handle("Solution", lhsH, false, true);
+        }
       }
     }
   }
@@ -1260,12 +1263,6 @@ SolveMatrix::parallel_bi_conjugate_gradient(int processor)
 	    update_progress(progress);
 	  }
 	}
-#ifdef yarden
-	if (data.niter%60 == 0)
-        {
-	  solport->send(lhs.clone(), true);
-        }
-#endif
       }
     }
   }

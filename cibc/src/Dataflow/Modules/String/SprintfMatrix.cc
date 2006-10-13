@@ -78,13 +78,11 @@ SprintfMatrix::~SprintfMatrix()
 {
 }
 
-void SprintfMatrix::execute()
+void
+SprintfMatrix::execute()
 {
-  StringOPort*  oport;
-  StringIPort*  format_iport;
   MatrixIPort*  matrix_iport;
   std::string   format, output;
-  StringHandle  stringH;
   
   MatrixHandle currentmatrix = 0;
   int inputport = 1;
@@ -97,21 +95,10 @@ void SprintfMatrix::execute()
   
   std::vector<char> buffer(256);  
   
-  if(!(oport = dynamic_cast<StringOPort *>(get_oport(0))))
-  {
-    error("Could not find string output port");
-    return;
-  }
-
-  if(!(format_iport = dynamic_cast<StringIPort *>(get_iport(0))))
-  {
-    error("Could not find format string input port");
-    return;
-  }
-
   format = formatstring_.get();
-  format_iport->get(stringH);
-  if (stringH.get_rep())
+
+  StringHandle  stringH;
+  if (get_input_handle("Format", stringH, false))
   {
     format = stringH->get();
   }
@@ -269,7 +256,7 @@ void SprintfMatrix::execute()
   }
 
   StringHandle handle(scinew String(output));
-  oport->send_and_dereference(handle); 
+  send_output_handle("Output", handle);
 }
 
 } // End namespace SCIRun

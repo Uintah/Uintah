@@ -65,21 +65,16 @@ GetFileName::GetFileName(GuiContext* ctx)
 {
 }
 
-GetFileName::~GetFileName(){
+
+GetFileName::~GetFileName()
+{
 }
 
 void
- GetFileName::execute()
+GetFileName::execute()
 {
-  StringOPort* oport = dynamic_cast<StringOPort *>(get_oport(0));
-  if (!oport)
-  {
-    error("Could not allocate output port");
-    return;
-  }
-  
   StringHandle handle(scinew String(filename_.get()));
-  oport->send_and_dereference(handle);
+  send_output_handle("Full Filename", handle);
 }
 
 } // End namespace SCIRun

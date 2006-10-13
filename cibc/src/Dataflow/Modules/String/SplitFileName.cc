@@ -60,53 +60,21 @@ SplitFileName::SplitFileName(GuiContext* ctx)
 {
 }
 
-SplitFileName::~SplitFileName(){
+
+SplitFileName::~SplitFileName()
+{
 }
 
 void
- SplitFileName::execute()
+SplitFileName::execute()
 {
-  StringIPort *iport;
-  StringOPort *pn_oport, *fn_oport, *ext_oport, *fnext_oport;
-  
-  if(!(iport = dynamic_cast<StringIPort*>(get_iport(0))))
-  {
-    error("Could not find input port");
-    return;
-  }
-  if(!(pn_oport = dynamic_cast<StringOPort*>(get_oport(0))))
-  {
-    error("Could not find pathname output port");
-    return;
-  }
-  if(!(fn_oport = dynamic_cast<StringOPort*>(get_oport(1))))
-  {
-    error("Could not find filename base output port");
-    return;
-  }
-  if(!(ext_oport = dynamic_cast<StringOPort*>(get_oport(2))))
-  {
-    error("Could not find extension output port");
-    return;
-  }
-  if(!(fnext_oport = dynamic_cast<StringOPort*>(get_oport(3))))
-  {
-    error("Could not find filename output port");
-    return;
-  }
-  
   StringHandle filenameH;
-  std::string filename, fn, pn, ext, fnext;
-  iport->get(filenameH);
-  
-  if (filenameH.get_rep() == 0)
-  {
-    error("No input string was given at input port");
-    return;
-  }
+  if (!get_input_handle("Filename", filenameH)) return;
 
-  char sep = '/';
-  char dot = '.';
+  std::string filename, fn, pn, ext, fnext;
+
+  const char sep = '/';
+  const char dot = '.';
   
   filename = filenameH->get();
   
@@ -140,14 +108,16 @@ void
   fnext = fn+ext;
 
   StringHandle pnH(scinew String(pn));
-  StringHandle fnH(scinew String(fn));
-  StringHandle extH(scinew String(ext));
-  StringHandle fnextH(scinew String(fnext));
+  send_output_handle("Pathname", pnH);
 
-  pn_oport->send_and_dereference(pnH);
-  fn_oport->send_and_dereference(fnH);
-  ext_oport->send_and_dereference(extH);
-  fnext_oport->send_and_dereference(extH);
+  StringHandle fnH(scinew String(fn));
+  send_output_handle("Filename Base", fnH);
+
+  StringHandle extH(scinew String(ext));
+  send_output_handle("Extension", extH);
+
+  StringHandle fnextH(scinew String(fnext));
+  send_output_handle("Filename", fnextH);
 }
 
 } // End namespace SCIRun

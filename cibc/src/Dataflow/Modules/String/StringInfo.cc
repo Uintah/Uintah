@@ -59,20 +59,11 @@ StringInfo::~StringInfo()
 {
 }
 
-void StringInfo::execute()
+void
+StringInfo::execute()
 {
-
- StringIPort* iport;
- if (!(iport = dynamic_cast<StringIPort *>(get_iport(0))))
-  {
-    error("could not find input port");
-    return;
-  }
-  
   StringHandle handle;
-  iport->get(handle);
-  
-  if (handle.get_rep() == 0)
+  if (!get_input_handle("Input", handle, false))
   {
     inputstring_.set("<empty string>");
     return;
