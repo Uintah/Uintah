@@ -247,7 +247,7 @@ void SecondOrderAdvector::advectMass( const CCVariable<double>& mass,
   Q_vertex<double>(compatible, mass, q_vertex, patch,
                     mass_grad_x, mass_grad_y,  mass_grad_z);
   
-  limitedGradient<double>(mass, patch, q_vertex, 
+  limitedGradient<double>(mass, patch, new_dw, q_vertex, 
                           mass_grad_x, mass_grad_y, mass_grad_z);
                           
   // compute the value of q at the slab d_mass_slabs 
@@ -278,6 +278,7 @@ void SecondOrderAdvector::advectQ( const CCVariable<double>& A_CC,
   DataWarehouse* new_dw = varBasket->new_dw;
   bool useCompatibleFluxes = varBasket->useCompatibleFluxes;
   bool is_Q_massSpecific = varBasket ->is_Q_massSpecific;
+  d_smokeOnOff = false;
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   CCVariable<facedata<double> > q_OAFS;
@@ -303,7 +304,7 @@ void SecondOrderAdvector::advectQ( const CCVariable<double>& A_CC,
                     q_grad_x, q_grad_y,  q_grad_z); 
  
 
-  limitedGradient<double>(q_CC, patch, q_vertex, 
+  limitedGradient<double>(q_CC, patch, new_dw, q_vertex, 
                           q_grad_x, q_grad_y,  q_grad_z);
                             
   // compute the value of q at the slab q_OAFS
@@ -332,6 +333,7 @@ void SecondOrderAdvector::advectQ( const CCVariable<double>& q_CC,
   CCVariable<facedata<double> > q_OAFS;
   CCVariable<vertex<double> > q_vertex;
   CCVariable<double> q_grad_x, q_grad_y, q_grad_z;
+  d_smokeOnOff = false;
 
   new_dw->allocateTemporary(q_OAFS,   patch,gac,1);
   new_dw->allocateTemporary(q_grad_x, patch,gac,1);
@@ -347,7 +349,7 @@ void SecondOrderAdvector::advectQ( const CCVariable<double>& q_CC,
   Q_vertex<double>(compatible, q_CC, q_vertex, patch,
                     q_grad_x, q_grad_y,  q_grad_z); 
                    
-  limitedGradient<double>(q_CC,patch,q_vertex,
+  limitedGradient<double>(q_CC,patch, new_dw, q_vertex,
                           q_grad_x,q_grad_y, q_grad_z);
 
   // compute the value of q_CC at the slab q_OAFS 
@@ -375,6 +377,7 @@ void SecondOrderAdvector::advectQ(const CCVariable<Vector>& A_CC,
   DataWarehouse* new_dw = varBasket->new_dw;
   bool useCompatibleFluxes = varBasket->useCompatibleFluxes;
   bool is_Q_massSpecific = varBasket->is_Q_massSpecific;
+  d_smokeOnOff = false;
 
   Ghost::GhostType  gac = Ghost::AroundCells;
   CCVariable<facedata<Vector> > q_OAFS;
@@ -399,7 +402,7 @@ void SecondOrderAdvector::advectQ(const CCVariable<Vector>& A_CC,
   Q_vertex<Vector>(compatible, q_CC, q_vertex, patch,
                     q_grad_x, q_grad_y,  q_grad_z); 
              
-  limitedGradient<Vector>(q_CC,patch,q_vertex,
+  limitedGradient<Vector>(q_CC,patch, new_dw, q_vertex,
                           q_grad_x,q_grad_y,q_grad_z);
 
   // compute the value of q_CC at the slab q_OAFS 
@@ -473,7 +476,6 @@ SecondOrderAdvector::qAverageFlux( const bool useCompatibleFluxes,
                                    const CCVariable<T>& grad_z)
   
 {
-  const Level* level=patch->getLevel();   
   //__________________________________
   // At inner patch boundaries you need to extend
   // the computational footprint by one cell in ghostCells
