@@ -64,11 +64,8 @@ public:
 private:
   TextureHandle tex_;
 
-  ColorMapIPort* icmap1_;
-  ColorMap2IPort* icmap2_;
-  TextureIPort* intexture_;
   GeometryOPort* ogeom_;
-  ColorMapOPort* ocmap_;
+
   int cmap1_prevgen_;
   int cmap2_prevgen_;
   int card_mem_;
@@ -162,22 +159,14 @@ VolumeSlicer::~VolumeSlicer()
 void
 VolumeSlicer::execute()
 {
-  intexture_ = (TextureIPort*)get_iport("Texture");
-  icmap1_ = (ColorMapIPort*)get_iport("ColorMap");
-  icmap2_ = (ColorMap2IPort*)get_iport("ColorMap2");
   ogeom_ = (GeometryOPort*)get_oport("Geometry");
-  ocmap_ = (ColorMapOPort*)get_oport("ColorMap");
   
-  if (!(intexture_->get(tex_) && tex_.get_rep()))
-  {
-    warning("Required Texture input not found.");
-    return;
-  }
+  if (!get_input_handle("Texture", tex_)) return;
   
   ColorMapHandle cmap1(0);
   ColorMap2Handle cmap2(0);
-  bool c1 = icmap1_->get(cmap1);
-  bool c2 = icmap2_->get(cmap2);
+  bool c1 = get_input_handle("ColorMap", cmap1, false);
+  bool c2 = get_input_handle("ColorMap2", cmap2, false);
 
   if (c2)
   {
@@ -374,13 +363,14 @@ VolumeSlicer::execute()
   
   ogeom_->flushViews();		  
   
-  if(ocmap_ && cmap1.get_rep()) {
+  if(cmap1.get_rep())
+  {
     ColorMapHandle outcmap;
     outcmap = new ColorMap(*cmap1.get_rep()); 
     double vmin = tex_->vmin();
     double vmax = tex_->vmax();
     outcmap->Scale(vmin, vmax);
-    ocmap_->send_and_dereference(outcmap);
+    send_output_handle("Texture", outcmap);
   }
 }
 
