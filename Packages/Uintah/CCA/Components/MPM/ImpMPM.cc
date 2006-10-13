@@ -416,7 +416,6 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
     }
   }
   new_dw->put(sumlong_vartype(totalParticles), lb->partCountLabel);
-
 }
 
 void ImpMPM::scheduleComputeStableTimestep(const LevelP& lev, SchedulerP& sched)
@@ -1060,16 +1059,16 @@ void ImpMPM::iterate(const ProcessorGroup*,
     scheduleDestroyMatrix(           d_subsched,level->eachPatch(),matls,true);
     
     if (d_doMechanics) {
-      scheduleComputeStressTensor(     d_subsched,level->eachPatch(),matls,true);
-      scheduleFormStiffnessMatrix(     d_subsched,level->eachPatch(),matls);
-      scheduleComputeInternalForce(    d_subsched,level->eachPatch(),matls);
-      scheduleFormQ(                   d_subsched,level->eachPatch(),matls);
-      scheduleSolveForDuCG(            d_subsched,d_perproc_patches, matls);
+      scheduleComputeStressTensor(   d_subsched,level->eachPatch(),matls,true);
+      scheduleFormStiffnessMatrix(   d_subsched,level->eachPatch(),matls);
+      scheduleComputeInternalForce(  d_subsched,level->eachPatch(),matls);
+      scheduleFormQ(                 d_subsched,level->eachPatch(),matls);
+      scheduleSolveForDuCG(          d_subsched,d_perproc_patches, matls);
     }
     
-    scheduleGetDisplacementIncrement(d_subsched,level->eachPatch(),matls);
-    scheduleUpdateGridKinematics(    d_subsched,level->eachPatch(),matls);
-    scheduleCheckConvergence(d_subsched,level,  level->eachPatch(),matls);
+    scheduleGetDisplacementIncrement(d_subsched,      level->eachPatch(),matls);
+    scheduleUpdateGridKinematics(    d_subsched,      level->eachPatch(),matls);
+    scheduleCheckConvergence(        d_subsched,level,level->eachPatch(),matls);
     
     d_subsched->compile();
     d_recompileSubsched = false;  
@@ -1128,6 +1127,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
   d_subsched->get_dw(3)->finalize();
   d_subsched->advanceDataWarehouse(grid);
 
+  d_numIterations = 0;
   while(!(dispInc && dispIncQ)) {
     if(d_myworld->myrank() == 0){
      cerr << "Beginning Iteration = " << count << "\n";
@@ -1487,7 +1487,6 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     StaticArray<NCVariable<Vector> > gvel_old(numMatls),gacc(numMatls);
     StaticArray<NCVariable<Vector> > dispNew(numMatls),gvelocity(numMatls);
     StaticArray<NCVariable<Vector> > gextforce(numMatls),gintforce(numMatls);
-    StaticArray<NCVariable<Vector> > dispInc(numMatls);
 
     NCVariable<double> GMASS, GVOLUME;
     NCVariable<Vector> GVEL_OLD, GACC, GEXTFORCE;
@@ -2310,7 +2309,7 @@ void ImpMPM::formQ(const ProcessorGroup*, const PatchSubset* patches,
 
       double Q=0.;
 
-      for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++) {
+      for (NodeIterator iter = patch->getNodeIterator(); !iter.done(); iter++){
         IntVector n = *iter;
         int dof[3];
         int l2g_node_num = l2g[n];
