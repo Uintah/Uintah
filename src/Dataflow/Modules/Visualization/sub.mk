@@ -50,6 +50,7 @@ SRCS     += \
 	$(SRCDIR)/GenStandardColorMaps.cc\
 	$(SRCDIR)/GenTitle.cc\
 	$(SRCDIR)/Isosurface.cc\
+	$(SRCDIR)/NrrdIsosurface.cc\
 	$(SRCDIR)/NrrdTextureBuilder.cc\
 	$(SRCDIR)/RescaleColorMap.cc\
 	$(SRCDIR)/ShowColorMap.cc\

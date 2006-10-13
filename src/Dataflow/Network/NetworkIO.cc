@@ -586,9 +586,9 @@ NetworkIO::process_filename(const string &orig)
   }
 
 #ifdef _WIN32
-  for (size_t p =0 ; p<filename.size(); p++) if (filename[p] == '/') filename[p] == '\\';
+  for (size_t p =0 ; p<filename.size(); p++) if (filename[p] == '/') filename[p] = '\\';
 #else
-  for (size_t p =0 ; p<filename.size(); p++) if (filename[p] == '\\') filename[p] == '/';
+  for (size_t p =0 ; p<filename.size(); p++) if (filename[p] == '\\') filename[p] = '/';
 #endif
 	
   return (std::string("{")+filename+std::string("}"));
