@@ -308,7 +308,7 @@ protected:
   //! Get the handle for a single port.
   template<class DH>
   bool get_input_handle(std::string name, DH& handle, bool required = true);
-  //template<class DH>
+  template<class DH>
   bool get_input_handle(int num, DH& handle, bool required = true);
 
 
