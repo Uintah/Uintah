@@ -22,39 +22,40 @@ public:
   template<class T> 
   void limitedGradient(const CCVariable<T>& q_CC,
                        const Patch* patch,
+                       DataWarehouse* new_dw,
                        const CCVariable<vertex<T> >& q_vertex, 
-			  CCVariable<T>& q_grad_x,
-			  CCVariable<T>& q_grad_y,
-			  CCVariable<T>& q_grad_z);
+                          CCVariable<T>& q_grad_x,
+                          CCVariable<T>& q_grad_y,
+                          CCVariable<T>& q_grad_z);
                        
   template<class T> 
   void Q_vertex( const bool useCompatibleFluxes,
                  const CCVariable<T>& q_CC,
                  CCVariable<vertex<T> >& q_vertex,
                  const Patch* patch,
-	          const CCVariable<T>& q_grad_x,
-	          const CCVariable<T>& q_grad_y,
-	          const CCVariable<T>& q_grad_z);
+                  const CCVariable<T>& q_grad_x,
+                  const CCVariable<T>& q_grad_y,
+                  const CCVariable<T>& q_grad_z);
   
                                  
   template<class T> 
     inline void q_CCMaxMin(const CCVariable<T>& q_CC,
-                           const IntVector& c,
-			      T& q_CC_max, 
-			      T& q_CC_min);
+                           const Patch* patch,
+                              CCVariable<T>& q_CC_max, 
+                              CCVariable<T>& q_CC_min);
                            
   template<class T>                                    
   void gradQ( const CCVariable<T>& q_CC,
               const Patch* patch,
-	       CCVariable<T>& q_grad_x,
-	       CCVariable<T>& q_grad_y,
-	       CCVariable<T>& q_grad_z);
+               CCVariable<T>& q_grad_x,
+               CCVariable<T>& q_grad_y,
+               CCVariable<T>& q_grad_z);
  
   void mass_massVertex_ratio( const CCVariable<double>& mass_CC,
                             const Patch* patch,
-			       const CCVariable<double>& q_grad_x,
-			       const CCVariable<double>& q_grad_y,
-			       const CCVariable<double>& q_grad_z);
+                               const CCVariable<double>& q_grad_x,
+                               const CCVariable<double>& q_grad_y,
+                               const CCVariable<double>& q_grad_z);
 
   template <class T>
   bool 
@@ -79,9 +80,9 @@ template <class T>
 inline void
 SecondOrderBase::gradQ( const CCVariable<T>& q_CC,
                         const Patch* patch,
-			   CCVariable<T>& q_grad_x,
-			   CCVariable<T>& q_grad_y,
-			   CCVariable<T>& q_grad_z)
+                           CCVariable<T>& q_grad_x,
+                           CCVariable<T>& q_grad_y,
+                           CCVariable<T>& q_grad_z)
 {
   T zero(0.0);
   q_grad_x.initialize(zero);
@@ -114,14 +115,11 @@ SecondOrderBase::gradQ( const CCVariable<T>& q_CC,
     q_grad_y[c] = (q_CC[t] - q_CC[b]) * inv_2del.y();
     q_grad_z[c] = (q_CC[f] - q_CC[bk])* inv_2del.z();
   }
-  
+
   //__________________________________
-  // Iterate over coarsefine interface faces
-  // *AND* all boundary faces
-  // use one-sided first order differencing
+  // Iterate over the coarsefine interface faces
+  // use one-sided first order differencing to compute the gradient
  vector<Patch::FaceType>  faces;
- faces.insert(faces.end(), patch->getBoundaryFaces()->begin(),
-                           patch->getBoundaryFaces()->end());
  faces.insert(faces.end(), patch->getCoarseFineInterfaceFaces()->begin(),
                            patch->getCoarseFineInterfaceFaces()->end());                           
  
@@ -134,8 +132,10 @@ SecondOrderBase::gradQ( const CCVariable<T>& q_CC,
     IntVector offset(0,0,0);
     offset[P_dir] = 1;
     
-    for (CellIterator itr=patch->getFaceCellIterator(face, "plusEdgeCells"); !itr.done(); itr++) {
-      IntVector c = *itr;
+    
+    CellIterator faceCells =patch->getFaceCellIterator(face, "plusEdgeCells");
+    for (CellIterator itr=faceCells; !itr.done(); itr++) {
+      const IntVector& c = *itr;
       q_grad_x[c] = 0.0;
       q_grad_y[c] = 0.0;
       q_grad_z[c] = 0.0;
@@ -143,38 +143,38 @@ SecondOrderBase::gradQ( const CCVariable<T>& q_CC,
     
     switch (face) {
     case Patch::xplus:
-      for (CellIterator itr=patch->getFaceCellIterator(face, "plusEdgeCells"); !itr.done(); itr++) {
-        IntVector c = *itr;
+      for (CellIterator itr=faceCells; !itr.done(); itr++) {
+        const IntVector& c = *itr;
         q_grad_x[c] = (q_CC[c] - q_CC[c - offset])/dx.x();
       }
       break;
     case Patch::xminus:
-      for (CellIterator itr=patch->getFaceCellIterator(face, "plusEdgeCells"); !itr.done(); itr++) {  
-        IntVector c = *itr;
+      for (CellIterator itr=faceCells; !itr.done(); itr++) {  
+        const IntVector& c = *itr;
         q_grad_x[c] = (q_CC[c + offset] - q_CC[c])/dx.x();
       }
       break;
     case Patch::yplus:
-      for (CellIterator itr=patch->getFaceCellIterator(face, "plusEdgeCells"); !itr.done(); itr++) { 
-        IntVector c = *itr;
+      for (CellIterator itr=faceCells; !itr.done(); itr++) { 
+        const IntVector& c = *itr;
         q_grad_y[c] = (q_CC[c] - q_CC[c - offset])/dx.y();
       }
       break;
     case Patch::yminus:
-      for (CellIterator itr=patch->getFaceCellIterator(face, "plusEdgeCells"); !itr.done(); itr++) {
-        IntVector c = *itr;
+      for (CellIterator itr=faceCells; !itr.done(); itr++) {
+        const IntVector& c = *itr;
         q_grad_y[c] = (q_CC[c + offset] - q_CC[c])/dx.y();
       }
       break;
     case Patch::zplus:
-      for (CellIterator itr=patch->getFaceCellIterator(face, "plusEdgeCells"); !itr.done(); itr++) {
-        IntVector c = *itr;
+      for (CellIterator itr=faceCells; !itr.done(); itr++) {
+        const IntVector& c = *itr;
         q_grad_z[c] = (q_CC[c] - q_CC[c - offset])/dx.z();
       }
       break;
     case Patch::zminus:
-      for (CellIterator itr=patch->getFaceCellIterator(face, "plusEdgeCells"); !itr.done(); itr++) {
-        IntVector c = *itr;
+      for (CellIterator itr=faceCells; !itr.done(); itr++) {
+        const IntVector& c = *itr;
         q_grad_z[c] = (q_CC[c + offset] - q_CC[c])/dx.z();
       }
       break;
@@ -183,7 +183,7 @@ SecondOrderBase::gradQ( const CCVariable<T>& q_CC,
     case Patch::invalidFace:
       break; 
     }
-  }  
+  }
 }
 /*_____________________________________________________________________
 Function~  q_CCMaxMin
@@ -193,35 +193,78 @@ _____________________________________________________________________*/
 template <class T>
 inline void
 SecondOrderBase::q_CCMaxMin(const CCVariable<T>& q_CC,
-                            const IntVector& c,
-			       T& q_CC_max, 
-			       T& q_CC_min)
+                            const Patch* patch,
+                               CCVariable<T>& q_CC_max, 
+                               CCVariable<T>& q_CC_min)
 {  
-  T max_tmp, min_tmp;     
-  IntVector r = c + IntVector( 1, 0, 0);
-  IntVector l = c + IntVector(-1, 0, 0);
-  IntVector t = c + IntVector( 0, 1, 0);
-  IntVector b = c + IntVector( 0,-1, 0);
-  IntVector f = c + IntVector( 0, 0, 1);    
-  IntVector bk= c + IntVector( 0, 0,-1); 
+  CellIterator iter = patch->getCellIterator();
+  CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
+  for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {
+    const IntVector& c = *iter;
+       
+    IntVector r = c + IntVector( 1, 0, 0);
+    IntVector l = c + IntVector(-1, 0, 0);
+    IntVector t = c + IntVector( 0, 1, 0);
+    IntVector b = c + IntVector( 0,-1, 0);
+    IntVector f = c + IntVector( 0, 0, 1);    
+    IntVector bk= c + IntVector( 0, 0,-1); 
 
-  max_tmp = SCIRun::Max(q_CC[r], q_CC[l]);
-  min_tmp = SCIRun::Min(q_CC[r], q_CC[l]);
+    T max_tmp, min_tmp;
+    max_tmp = SCIRun::Max(q_CC[r], q_CC[l]);
+    min_tmp = SCIRun::Min(q_CC[r], q_CC[l]);
 
-  max_tmp = SCIRun::Max(max_tmp, q_CC[t]);
-  min_tmp = SCIRun::Min(min_tmp, q_CC[t]);
+    max_tmp = SCIRun::Max(max_tmp, q_CC[t]);
+    min_tmp = SCIRun::Min(min_tmp, q_CC[t]);
 
-  max_tmp = SCIRun::Max(max_tmp, q_CC[b]);
-  min_tmp = SCIRun::Min(min_tmp, q_CC[b]);
+    max_tmp = SCIRun::Max(max_tmp, q_CC[b]);
+    min_tmp = SCIRun::Min(min_tmp, q_CC[b]);
 
-  max_tmp = SCIRun::Max(max_tmp, q_CC[f]);
-  min_tmp = SCIRun::Min(min_tmp, q_CC[f]);
+    max_tmp = SCIRun::Max(max_tmp, q_CC[f]);
+    min_tmp = SCIRun::Min(min_tmp, q_CC[f]);
 
-  max_tmp = SCIRun::Max(max_tmp, q_CC[bk]);
-  min_tmp = SCIRun::Min(min_tmp, q_CC[bk]);
+    max_tmp = SCIRun::Max(max_tmp, q_CC[bk]);
+    min_tmp = SCIRun::Min(min_tmp, q_CC[bk]);
 
-  q_CC_max = max_tmp;
-  q_CC_min = min_tmp;
+    q_CC_max[c] = max_tmp;
+    q_CC_min[c] = min_tmp;
+  }
+
+  //__________________________________
+  //Coarse fine interface faces
+  vector<Patch::FaceType>  faces;
+  faces.insert(faces.end(), patch->getCoarseFineInterfaceFaces()->begin(),
+                            patch->getCoarseFineInterfaceFaces()->end());                           
+  IntVector cl = patch->getCellLowIndex();
+  IntVector ch = patch->getCellHighIndex() - IntVector(1,1,1);
+  
+  vector<Patch::FaceType>::const_iterator f_iter;   
+  for (f_iter  = faces.begin(); f_iter != faces.end(); ++f_iter){
+    Patch::FaceType face = *f_iter; 
+  
+    for (CellIterator iter=patch->getFaceCellIterator(face, "minusEdgeCells"); !iter.done(); iter++) {
+      const IntVector& c = *iter;
+      T max_tmp, min_tmp;
+      
+      max_tmp = T(-DBL_MAX);
+      min_tmp = T(DBL_MAX);
+
+      for (int dir=0; dir<3; dir++ ) {
+        IntVector R = c;
+        IntVector L = c;
+        R[dir] += 1;
+        L[dir] -= 1;
+        
+        // intersection with the patch boundary
+        L[dir] = SCIRun::Max(cl[dir], L[dir]);
+        R[dir] = SCIRun::Min(ch[dir], R[dir]);
+         
+        max_tmp = SCIRun::Max(max_tmp, q_CC[R]);
+        min_tmp = SCIRun::Min(min_tmp, q_CC[L]);
+      }
+      q_CC_max[c] = max_tmp;
+      q_CC_min[c] = min_tmp;
+    }
+  }  //face loop
 }                                                   
 
 /*_____________________________________________________________________
@@ -237,9 +280,9 @@ SecondOrderBase::Q_vertex( const bool usingCompatibleFluxes,
                            const CCVariable<T>& q_CC,
                            CCVariable<vertex<T> >& q_vertex,
                            const Patch* patch,
-			      const CCVariable<T>& q_grad_x,
-			      const CCVariable<T>& q_grad_y,
-			      const CCVariable<T>& q_grad_z)
+                              const CCVariable<T>& q_grad_x,
+                              const CCVariable<T>& q_grad_y,
+                              const CCVariable<T>& q_grad_z)
 {
   CellIterator iter = patch->getCellIterator();
   CellIterator iterPlusGhost = patch->addGhostCell_Iter(iter,1);
@@ -333,15 +376,23 @@ _____________________________________________________________________*/
 template <class T>
 void SecondOrderBase::limitedGradient(const CCVariable<T>& q_CC,
                                       const Patch* patch,
+                                      DataWarehouse* new_dw,
                                       const CCVariable<vertex<T> >& q_vertex,
-				          CCVariable<T>& q_grad_x,
-				          CCVariable<T>& q_grad_y,
-				          CCVariable<T>& q_grad_z)
+                                          CCVariable<T>& q_grad_x,
+                                          CCVariable<T>& q_grad_y,
+                                          CCVariable<T>& q_grad_z)
 {
   T  frac,temp, zero(0.);
   T  gradLim_max, gradLim_min;
   T unit = T(1.0);
   T SN = T(d_SMALL_NUM);
+    
+  CCVariable<T> q_CC_max, q_CC_min;
+  Ghost::GhostType  gac = Ghost::AroundCells;
+  new_dw->allocateTemporary(q_CC_max, patch,gac,1);
+  new_dw->allocateTemporary(q_CC_min, patch,gac,1);
+   
+  q_CCMaxMin( q_CC, patch, q_CC_max, q_CC_min); 
     
   //__________________________________
   //  At patch boundaries you need to extend
@@ -352,13 +403,11 @@ void SecondOrderBase::limitedGradient(const CCVariable<T>& q_CC,
   for(CellIterator iter = iterPlusGhost; !iter.done(); iter++) {  
     const IntVector& c = *iter;
 
-    T q_vrtx_max, q_vrtx_min, q_CC_max, q_CC_min;
+    T q_vrtx_max, q_vrtx_min;
     T Q_CC = q_CC[c];
     
     //__________________________________
-    // q_vertex & q_CC (max/min)
-    q_CCMaxMin( q_CC, c, q_CC_max, q_CC_min);
-    
+    // q_vertex (max/min)   
     q_vrtx_max = q_vertex[c].d_vrtx[0];
     q_vrtx_min = q_vertex[c].d_vrtx[0];
     
@@ -369,10 +418,10 @@ void SecondOrderBase::limitedGradient(const CCVariable<T>& q_CC,
     
     //__________________________________
     // gradient limiter
-    frac = (q_CC_max - Q_CC + SN)/(q_vrtx_max - Q_CC + SN);
+    frac = (q_CC_max[c] - Q_CC + SN)/(q_vrtx_max - Q_CC + SN);
     gradLim_max = SCIRun::Max(zero, frac);
 
-    frac = (q_CC_min - Q_CC + SN)/(q_vrtx_min - Q_CC + SN);
+    frac = (q_CC_min[c] - Q_CC + SN)/(q_vrtx_min - Q_CC + SN);
     gradLim_min = SCIRun::Max(zero, frac);
 
     temp = SCIRun::Min(unit, gradLim_max);
