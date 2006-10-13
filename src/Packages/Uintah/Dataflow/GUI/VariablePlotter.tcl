@@ -63,7 +63,8 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	#var graphing stuff
 	global $this-curr_var
 	set var_list ""
-
+        global $this-archive_name
+        set archive_name ""
 	# selection stuff
 	set num_m_type [llength $matrix_types]
 	set num_v_type [llength $vector_types]
@@ -635,7 +636,11 @@ itcl_class Uintah_Visualization_VariablePlotter {
 	button $w.close -text "Close" -command "destroy $w"
 	pack $w.close -side bottom -anchor s -expand yes -fill x
 	
-	blt::graph $w.graph -title "Plot of $var at $pointname" \
+        set archive [split [set $this-archive_name] / ]
+        set a_name_length [llength $archive]
+        set base [lindex $archive  [expr $a_name_length - 1] ]
+
+	blt::graph $w.graph -title "$base:  Plot of $var at $pointname" \
 		-height 250 -plotbackground gray99
 
 	set max 1e-10
@@ -712,7 +717,13 @@ itcl_class Uintah_Visualization_VariablePlotter {
 
 	button $w.close -text "Close" -command "destroy $w"
 	pack $w.close -side bottom -anchor s -fill x
-	
+
+	#name the window
+        set archive [split [set $this-archive_name] / ]
+        set a_name_length [llength $archive]
+        set base [lindex $archive  [expr $a_name_length - 1] ]
+
+
 	#seperate the materials from the types
 	set args_mat {}
 	set args_type {}
@@ -724,7 +735,7 @@ itcl_class Uintah_Visualization_VariablePlotter {
 
 	# create the scrolled frame
 	iwidgets::scrolledframe $w.sf -width 300 -height 300 \
-		-labeltext "Data for $var at $pointname" \
+		-labeltext "$base:  Data for $var at $pointname" \
 		-vscrollmode dynamic -hscrollmode dynamic \
 		-sbwidth 10
 

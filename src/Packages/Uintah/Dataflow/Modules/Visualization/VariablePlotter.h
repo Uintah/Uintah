@@ -54,7 +54,8 @@ protected:
   GuiInt index_z_; // z index for the variable
   GuiInt index_l_; // index of the level for the variable
   GuiString curr_var_;
-  
+  GuiString archive_name_;
+
   Index_ID currentNode_;
   vector< string > names_;
   vector< double > times_;
