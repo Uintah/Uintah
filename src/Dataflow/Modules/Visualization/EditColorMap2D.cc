@@ -141,7 +141,6 @@ private:
   
   // Input/Output Ports
   ColorMap2IPort*		cmap_iport_;
-  ColorMap2OPort*		cmap_oport_;
   NrrdIPort*			hist_iport_;
   ColorMap2Handle		sent_cmap2_;
 
@@ -220,7 +219,6 @@ DECLARE_MAKER(EditColorMap2D)
 EditColorMap2D::EditColorMap2D(GuiContext* ctx)
   : Module("EditColorMap2D", ctx, Filter, "Visualization", "SCIRun"),
     cmap_iport_((ColorMap2IPort*)get_iport("Input Colormap")),
-    cmap_oport_((ColorMap2OPort*)get_oport("Output Colormap")),
     hist_iport_((NrrdIPort*)get_iport("Histogram")),
     sent_cmap2_(0),
     just_resend_selection_(0),
@@ -1025,8 +1023,11 @@ EditColorMap2D::execute()
       (!h.get_rep() || h->generation == hist_generation_) &&
       !gui_faux_.changed() && !gui_histo_.changed() &&
       !just_resend_selection_ && !force_execute_ &&
-      !cmap_dirty_ && !histo_dirty_ && cmap_oport_->have_data())
+      !cmap_dirty_ && !histo_dirty_ && oport_cached("Output Colormap"))
+  {
     return;
+  }
+
   force_execute_ = false;
 
   if (icmap.get_rep() && icmap->generation > icmap_generation_) {
@@ -1077,7 +1078,7 @@ EditColorMap2D::execute()
   just_resend_selection_ = false;
   icmap_generation_ = sent_cmap2_->generation;
   if (execute_count_ > 0) execute_count_--;
-  cmap_oport_->send(sent_cmap2_);
+  send_output_handle("Output Colormap", sent_cmap2_, true);
 }
 
 

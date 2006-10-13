@@ -73,10 +73,8 @@ public:
 private:
   TextureHandle texture_;
 
-  TextureIPort* texture_iport_;
-  ColorMapIPort* cmap1_iport_;
   GeometryOPort* geom_oport_;
-  ColorMapOPort* cmap_oport_;
+
   int cmap1_prevgen_;
   vector<int> cmap2_prevgen_;
   vector<ColorMap2Handle> cmap2_;
@@ -125,10 +123,7 @@ DECLARE_MAKER(VolumeVisualizer)
 VolumeVisualizer::VolumeVisualizer(GuiContext* ctx)
   : Module("VolumeVisualizer", ctx, Source, "Visualization", "SCIRun"),
     texture_(0),
-    texture_iport_((TextureIPort*)get_iport("Texture")),
-    cmap1_iport_((ColorMapIPort*)get_iport("ColorMap")),
     geom_oport_((GeometryOPort*)get_oport("Geometry")),
-    cmap_oport_((ColorMapOPort*)get_oport("ColorMap")),
     cmap1_prevgen_(0),
     cmap2_prevgen_(0),
     cmap2_(0),
@@ -195,14 +190,7 @@ VolumeVisualizer::execute()
   static int oldni = 0, oldnj = 0, oldnk = 0;
   static GeomID geomID  = 0;
   
-  if (!texture_iport_->get(texture_)) {
-    warning("No texture, nothing done.");
-    return;
-  }
-  else if (!texture_.get_rep()) {
-    warning("No texture, nothing done.");
-    return;
-  }
+  if (!get_input_handle("Texture", texture_)) return;
 
   bool shading_state = false;
   if (ShaderProgramARB::shaders_supported())
@@ -214,7 +202,7 @@ VolumeVisualizer::execute()
   
   ColorMapHandle cmap1;
   
-  bool c1 = (cmap1_iport_->get(cmap1) && cmap1.get_rep());
+  const bool c1 = get_input_handle("ColorMap", cmap1, false);
   vector<Plane *> cm2_planes(0);
   vector<int> cmap2_generation;
   port_range_type range = get_iports("ColorMap2");
@@ -480,12 +468,12 @@ VolumeVisualizer::execute()
   
   geom_oport_->flushViews();				  
 
-  if(c1)
+  if (c1)
   {
     ColorMapHandle outcmap;
     outcmap = new ColorMap(*cmap1.get_rep()); 
     outcmap->Scale(texture_->vmin(), texture_->vmax());
-    cmap_oport_->send_and_dereference(outcmap);
+    send_output_handle("ColorMap", outcmap);
   }
 }
 
