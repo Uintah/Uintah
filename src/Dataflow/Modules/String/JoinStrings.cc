@@ -51,10 +51,14 @@ JoinStrings::JoinStrings(GuiContext* ctx)
 {
 }
 
-JoinStrings::~JoinStrings(){
+
+JoinStrings::~JoinStrings()
+{
 }
 
-void  JoinStrings::execute()
+
+void
+JoinStrings::execute()
 {
   StringHandle input;
   
@@ -64,7 +68,6 @@ void  JoinStrings::execute()
   StringIPort *iport;
   while(p < num_input_ports())
   {
-  
       iport = dynamic_cast<StringIPort *>(get_iport(p));
       if (iport)
       {
@@ -82,17 +85,8 @@ void  JoinStrings::execute()
       p++;
   }
   
-  StringOPort *oport;
-  
-  oport = dynamic_cast<StringOPort *>(get_oport(0));
-  if (oport == 0)
-  {
-    error("Could not locate output port");
-    return;
-  }
-  
   StringHandle output(scinew String(str));
-  oport->send_and_dereference(output);
+  send_output_handle("Output", output);
 }
 
 } // End namespace SCIRun

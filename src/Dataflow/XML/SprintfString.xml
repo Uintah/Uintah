@@ -47,17 +47,17 @@ string. If not enough string are supplied an empty string is used.</p>
   <io>
     <inputs lastportdynamic="yes">
       <port>
-        <name>format string</name>
+        <name>Format</name>
         <datatype>SCIRun::String</datatype>
       </port>
       <port>
-        <name>input string</name>
+        <name>Input</name>
         <datatype>SCIRun::String</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>output</name>
+        <name>Output</name>
         <datatype>SCIRun::String</datatype>
       </port>
     </outputs>

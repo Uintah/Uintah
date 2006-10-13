@@ -367,13 +367,14 @@ MatrixSelectVector::execute()
   const int send_amount = Max(1, Min(maxsize, send_amount_.get()));
 
   // If there is a current index matrix, use it.
-  MatrixIPort *icur = (MatrixIPort *)get_iport("Current Index");
   MatrixHandle currentH;
-  if (icur->get(currentH) && currentH.get_rep()) {
+  if (get_input_handle("Current Index", currentH, false))
+  {
     which = (int)(currentH->get(0, 0));
     send_selection(mh, which, send_amount, true);
-  } else {
-
+  }
+  else
+  {
     // Cache var
     bool cache = (playmode_.get() != "inc_w_exec");
 

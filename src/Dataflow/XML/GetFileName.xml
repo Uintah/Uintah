@@ -46,7 +46,7 @@
     </inputs>
     <outputs>
       <port>
-        <name>Full filename</name>
+        <name>Full Filename</name>
         <datatype>SCIRun::String</datatype>
       </port>
     </outputs>

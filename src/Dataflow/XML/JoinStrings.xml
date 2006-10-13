@@ -54,7 +54,7 @@ in the merged data).</p>
     </inputs>
     <outputs>
       <port>
-        <name>output</name>
+        <name>Output</name>
         <datatype>SCIRun::String</datatype>
       </port>
     </outputs>

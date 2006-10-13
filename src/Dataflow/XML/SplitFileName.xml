@@ -57,7 +57,7 @@ resulting strings together.</p>
         <datatype>SCIRun::String</datatype>
       </port>
       <port>
-        <name>Filename base</name>
+        <name>Filename Base</name>
         <datatype>SCIRun::String</datatype>
       </port>
       <port>

@@ -59,24 +59,19 @@ CreateString::~CreateString()
 {
 }
 
-void CreateString::execute()
+void
+CreateString::execute()
 {
   get_gui()->lock();
   get_gui()->execute( get_id()+" update_text");
   get_gui()->unlock();
 
-  StringOPort* oport;
-  if (!(oport = dynamic_cast<StringOPort *>(get_oport(0))))
-  {
-    error("could not find output port");
-    return;
-  }
-  
   // TCL HAS A TENDENCY TO ADD A LINEFEED AT THE END
   std::string str = inputstring_.get();
   if((str.size() > 0)&&(str[str.size()-1] == '\n')) str = str.substr(0,str.size()-1); 
   StringHandle handle(scinew String(str));
-  oport->send_and_dereference(handle);
+
+  send_output_handle("Output", handle);
 }
 
 } // End namespace SCIRun

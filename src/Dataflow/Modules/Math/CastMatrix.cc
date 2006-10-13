@@ -52,9 +52,6 @@
 namespace SCIRun {
 
 class CastMatrix : public Module {
-  MatrixIPort* imat_;
-  MatrixOPort* omat_;
-
   GuiString oldtype_;
   GuiString newtype_;
   GuiString nrow_;

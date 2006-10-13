@@ -63,17 +63,17 @@ use SprintfString instead.</p>
   <io>
     <inputs lastportdynamic="yes">
       <port>
-        <name>format string</name>
+        <name>Format</name>
         <datatype>SCIRun::String</datatype>
       </port>
       <port>
-        <name>input matrix</name>
+        <name>Input</name>
         <datatype>SCIRun::Matrix</datatype>
       </port>
     </inputs>
     <outputs>
       <port>
-        <name>output</name>
+        <name>Output</name>
         <datatype>SCIRun::String</datatype>
       </port>
     </outputs>
