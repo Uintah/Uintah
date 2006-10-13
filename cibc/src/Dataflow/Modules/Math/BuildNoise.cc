@@ -77,16 +77,10 @@ BuildNoise::~BuildNoise()
 void
 BuildNoise::execute()
 {
-  MatrixIPort *isignal = (MatrixIPort *)get_iport("Signal");
-
   update_state(NeedData);
+
   MatrixHandle matH;
-  if (!isignal->get(matH))
-    return;
-  if (!matH.get_rep()) {
-    warning("Empty input matrix.");
-    return;
-  }
+  if (!get_input_handle("Signal", matH)) return;
 
   // gotta make sure we have a Dense or Column matrix...
   // ...if it's Sparse, change it to Dense

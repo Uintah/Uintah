@@ -82,10 +82,6 @@ MoveElemToNode::execute()
   FieldHandle ifield;
   if (!get_input_handle("Elem Field", ifield)) return;
 
-  // Get the output port now, because we may be able to pass the field
-  // directly through if it is already cell centered.
-  FieldOPort *ofp = (FieldOPort *)get_oport("Node Field");
-
   string ext = "";
   const TypeDescription *mtd = ifield->mesh()->get_type_description();
   if (mtd->get_name().find("LatVolMesh") != string::npos)
@@ -122,7 +118,7 @@ MoveElemToNode::execute()
     return;
   }
 
-  if (ifield_generation_ != ifield->generation || !ofp->have_data())
+  if (ifield_generation_ != ifield->generation || !oport_cached("Node Field"))
   {
     const TypeDescription *ftd = ifield->get_type_description();
     TypeDescription::td_vec *tdv = 

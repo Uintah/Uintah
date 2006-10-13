@@ -159,7 +159,8 @@ VolumeSlicer::VolumeSlicer(GuiContext* ctx)
 VolumeSlicer::~VolumeSlicer()
 {}
 
-void VolumeSlicer::execute()
+void
+VolumeSlicer::execute()
 {
   intexture_ = (TextureIPort*)get_iport("Texture");
   icmap1_ = (ColorMapIPort*)get_iport("ColorMap");

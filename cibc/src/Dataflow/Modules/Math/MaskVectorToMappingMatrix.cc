@@ -73,13 +73,10 @@ void
 MaskVectorToMappingMatrix::execute()
 {
   update_state(Module::JustStarted);
-  NrrdIPort * nrrd_iport_ = (NrrdIPort *)get_iport("MaskVector");
   update_state(Module::NeedData);
   
   NrrdDataHandle nrrdH;
-  nrrd_iport_->get(nrrdH);
-  if (!nrrdH.get_rep())
-    throw "No input MaskVector";
+  if (!get_input_handle("MaskVector", nrrdH)) return;
 
   Nrrd *nrrd = nrrdH->nrrd_;
   if (!nrrd)

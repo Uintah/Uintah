@@ -364,10 +364,7 @@ SolveMatrix::execute()
     return;
   }
 
-  if ( intermediate )
-    solport->send_intermediate(solution);
-  else
-    solport->send(solution);
+  send_output_handle("Solution", solution, false, intermediate);
 
   if (delete_rhsp) { delete rhsp; }
 }

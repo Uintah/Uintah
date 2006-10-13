@@ -119,15 +119,8 @@ NrrdTextureBuilder::execute()
   NrrdDataHandle vHandle;
   NrrdDataHandle gHandle;
   NrrdDataHandle mHandle;
-
-  // Get a handle to the input nrrd port.
-  NrrdIPort* vnrrd_port = (NrrdIPort *) get_iport("Scalar Nrrd");
-
-  // The scalar nrrd input is required.
-  if (!vnrrd_port->get(vHandle) || !(vHandle.get_rep())) {
-    error( "No scalar nrrd handle or representation" );
-    return;
-  }
+  
+  if (!get_input_handle("Scalar Nrrd", vHandle)) return;
 
   Nrrd* nv_nrrd = vHandle->nrrd_;
 
@@ -171,12 +164,9 @@ NrrdTextureBuilder::execute()
     update = true;
   }
 
-  // Get a handle to the input gradient port.
-  NrrdIPort* gnrrd_port = (NrrdIPort *) get_iport("Gradient Nrrd");
-  
   // The gradient nrrd input is optional.
-  if (gnrrd_port->get(gHandle) && gHandle.get_rep()) {
-    
+  if (get_input_handle("Gradient Nrrd", gHandle, false))
+  {
     if (!ShaderProgramARB::shaders_supported()) {
       // TODO: Runtime check, change message to reflect that.
       warning("This machine does not support advanced volume rendering. The gradient nrrd will be ignored.");
@@ -235,12 +225,9 @@ NrrdTextureBuilder::execute()
     gnrrd_last_generation_ = -1;
   }
 
-  // Get a handle to the input mask port.
-  NrrdIPort* mnrrd_port = (NrrdIPort *) get_iport("Mask Nrrd");
-
   // The mask nrrd input is optional.
-  if (mnrrd_port->get(mHandle) && mHandle.get_rep()) {
-    
+  if (get_input_handle("Mask Nrrd", mHandle, false))
+  {
     if (!ShaderProgramARB::shaders_supported()) {
       // TODO: Runtime check, change message to reflect that.
       warning("This machine does not support advanced volume rendering. The mask nrrd will be ignored.");
@@ -324,17 +311,7 @@ NrrdTextureBuilder::execute()
 		gui_uchar_.get());
   }
 
-  // Get a handle to the output texture port.
-  if( tHandle_.get_rep() ) {
-    TextureOPort* otexture_port = (TextureOPort *)get_oport("Texture");
-
-    if (!otexture_port) {
-      error("Unable to initialize oport 'Texture'.");
-      return;
-    }
-
-    otexture_port->send(tHandle_);
-  }
+  send_output_handle("Texture", tHandle_, true);
 }
 
 } // namespace SCIRun

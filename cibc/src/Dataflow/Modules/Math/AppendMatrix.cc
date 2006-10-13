@@ -51,9 +51,6 @@
 namespace SCIRun {
 
 class AppendMatrix : public Module {
-  MatrixIPort* imatA_;
-  MatrixIPort* imatB_;
-  MatrixOPort* omat_;
   MatrixHandle matrixH_;
 
   GuiInt append_;   // append or replace
@@ -83,7 +80,6 @@ AppendMatrix::~AppendMatrix()
 
 void
 AppendMatrix::concat_cols(MatrixHandle m1H, MatrixHandle m2H, DenseMatrix *out) {
-
     int r, c;
     for (r = 0; r <= m1H->nrows()-1; r++)
     {
@@ -100,7 +96,6 @@ AppendMatrix::concat_cols(MatrixHandle m1H, MatrixHandle m2H, DenseMatrix *out) 
         out->put(r, c, m2H->get(r,c - m1H->ncols()));
       }
     }
-
 }
 
 
@@ -122,28 +117,17 @@ AppendMatrix::concat_rows(MatrixHandle m1H, MatrixHandle m2H, DenseMatrix *out) 
         out->put(r, c, m2H->get(r - m1H->nrows(), c));
       }
     }
-
 }
 
 
 void
 AppendMatrix::execute()
 {
-  imatA_ = (MatrixIPort *)get_iport("Optional BaseMatrix");
-  imatB_ = (MatrixIPort *)get_iport("SubMatrix");
-  omat_ = (MatrixOPort *)get_oport("CompositeMatrix");
-
   update_state(NeedData);
-  MatrixHandle aH, bH;
-  if (!imatA_->get(aH)) {
-    if (!imatB_->get(bH))
-      return;
-  } else imatB_->get(bH);
 
-  if (!bH.get_rep()) {
-    warning("Empty input matrix Submatrix.");
-    return;
-  }
+  MatrixHandle aH, bH;
+  get_input_handle("Optional BaseMatrix", aH, false);
+  if (!get_input_handle("SubMatrix", bH)) return;
 
   DenseMatrix *omatrix = 0;
 
@@ -151,9 +135,21 @@ AppendMatrix::execute()
   bool row = row_.get();
   bool front = front_.get();
 
-  if (!append) { matrixH_=bH; omat_->send(matrixH_); } // Replace -- just send B matrix
-  else if (!aH.get_rep()) { // No A matrix
-    if (!matrixH_.get_rep()) { matrixH_=bH; omat_->send(matrixH_); }// No previous CompositeMatrix, so send B
+  if (!append)               // Replace -- just send B matrix
+  {
+    matrixH_ = bH;
+    send_output_handle("CompositeMatrix", matrixH_, true);
+    return;
+  } 
+  else if (!aH.get_rep())    // No A matrix
+  { 
+    if (!matrixH_.get_rep())
+    {
+      matrixH_ = bH;
+      send_output_handle("CompositeMatrix", matrixH_, true);
+      return;
+    }
+    // No previous CompositeMatrix, so send B
     else {   // Previous CompositeMatrix exists, concatenate with B
       //DenseMatrix *oldmatrix=matrixH_->dense();
       if (row) {
@@ -201,7 +197,7 @@ AppendMatrix::execute()
   if (omatrix)
   {
     matrixH_ = omatrix;
-    omat_->send(matrixH_);
+    send_output_handle("CompositeMatrix", matrixH_, true);
   }
 }
 

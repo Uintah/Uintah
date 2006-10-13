@@ -72,15 +72,10 @@ MappingMatrixToMaskVector::~MappingMatrixToMaskVector()
 void
 MappingMatrixToMaskVector::execute()
 {
-  update_state(Module::JustStarted);
-  MatrixIPort * matrix_iport_ = (MatrixIPort *)get_iport("MappingMatrix");
-
   update_state(Module::NeedData);
   
   MatrixHandle matrixH;
-  matrix_iport_->get(matrixH);
-  if (!matrixH.get_rep())
-    throw "No input MappingMatrixr";
+  if (!get_input_handle("MappingMatrix", matrixH)) return;
 
   SparseRowMatrix *matrix = dynamic_cast<SparseRowMatrix *>(matrixH.get_rep());
   if (!matrix)

@@ -202,12 +202,10 @@ SampleStructHex::~SampleStructHex()
 void
 SampleStructHex::execute()
 {
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-
   Point minb, maxb;
   DataTypeEnum datatype;
-  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
+  if (!get_input_handle("Input Field", ifieldhandle, false))
   {
     datatype = SCALAR;
     minb = Point(-1.0, -1.0, -1.0);

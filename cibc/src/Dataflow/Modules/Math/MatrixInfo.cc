@@ -166,9 +166,8 @@ void
 MatrixInfo::execute()
 {
   // The input port (with data) is required.
-  MatrixIPort *iport = (MatrixIPort*)get_iport("Input");
   MatrixHandle mh;
-  if (!iport->get(mh) || !mh.get_rep())
+  if (!get_input_handle("Input", mh, false))
   {
     clear_vals();
     generation_ = -1;

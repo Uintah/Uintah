@@ -89,12 +89,9 @@ ScaleFieldData::execute()
     error("This module only supports fields containing data.");
     return;
   }
-  MatrixIPort *imatrix_port = (MatrixIPort *)get_iport("Input Matrix");
+
   MatrixHandle imatrix;
-  if (!imatrix_port->get(imatrix))
-  {
-    return;
-  }
+  if (!get_input_handle("Input Matrix", imatrix)) return;
 
   const TypeDescription *ftd = ifieldhandle->get_type_description();
   const TypeDescription *ltd = ifieldhandle->order_type_description();

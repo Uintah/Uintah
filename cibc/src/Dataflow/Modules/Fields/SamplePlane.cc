@@ -163,18 +163,18 @@ SamplePlane::execute()
     trans.pre_translate(origin - fakex * 0.5 - fakey * 0.5);
   }
 
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
   DataTypeEnum datatype;
   unsigned int sizex, sizey, sizez;
-
-  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
+  if (!get_input_handle("Input Field", ifieldhandle, false))
   {
     datatype = SCALAR;  
     // Create blank mesh.
     sizex = Max(2, size_x_.get());
     sizey = Max(2, size_y_.get());
-  } else {
+  }
+  else
+  {
     datatype = SCALAR;
     if (ifieldhandle->query_vector_interface(this).get_rep())
     {
@@ -185,9 +185,8 @@ SamplePlane::execute()
       datatype = VECTOR;
     }
   
-
     int basis_order = 1;
-    if( auto_size_.get() ){   // Guess at the size of the sample plane.
+    if( auto_size_.get() ) {   // Guess at the size of the sample plane.
       // Currently we have only a simple algorithm for LatVolFields.
       typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
       const TypeDescription *mtd = 

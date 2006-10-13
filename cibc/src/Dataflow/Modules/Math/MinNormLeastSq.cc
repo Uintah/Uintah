@@ -61,11 +61,6 @@
 namespace SCIRun {
 
 class MinNormLeastSq : public Module {
-  MatrixIPort* A0_imat_;
-  MatrixIPort* A1_imat_;
-  MatrixIPort* A2_imat_;
-  MatrixIPort* b_imat_;
-
 public:
   MinNormLeastSq(GuiContext* ctx);
   virtual ~MinNormLeastSq();
@@ -85,29 +80,13 @@ MinNormLeastSq::~MinNormLeastSq()
 void
 MinNormLeastSq::execute()
 {
-  A0_imat_ = (MatrixIPort *)get_iport("BasisVec1(Col)");
-  A1_imat_ = (MatrixIPort *)get_iport("BasisVec2(Col)");
-  A2_imat_ = (MatrixIPort *)get_iport("BasisVec3(Col)");
-  b_imat_  = (MatrixIPort *)get_iport("TargetVec(Col)");
-
   int i;
   vector<MatrixHandle> in(4);
-  if (!A0_imat_->get(in[0]) || !in[0].get_rep()) { 
-    error("No data in BasisVec1"); 
-    return;
-  }
-  if (!A1_imat_->get(in[1]) || !in[1].get_rep()) {
-    error("No data in BasisVec2");
-    return;
-  }
-  if (!A2_imat_->get(in[2]) || !in[2].get_rep()) {
-    error("No data in BasisVec3");
-    return;
-  }
-  if (!b_imat_->get(in[3]) || !in[3].get_rep()) {
-    error("No data in TargetVec");
-    return;
-  }
+  if (!get_input_handle("BasisVec1(Col)", in[0])) return;
+  if (!get_input_handle("BasisVec2(Col)", in[1])) return;
+  if (!get_input_handle("BasisVec3(Col)", in[2])) return;
+  if (!get_input_handle("TargetVec(Col)", in[3])) return;
+
   vector<ColumnMatrix *> Ac(4);
   for (i = 0; i < 4; i++) {
     Ac[i] = in[i]->column();

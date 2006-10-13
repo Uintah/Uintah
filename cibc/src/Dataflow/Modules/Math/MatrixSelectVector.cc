@@ -119,9 +119,6 @@ void
 MatrixSelectVector::send_selection(MatrixHandle mh, int which,
 				   int ncopy, bool cache)
 {
-  MatrixOPort *ovec = (MatrixOPort *)get_oport("Vector");
-  MatrixOPort *osel = (MatrixOPort *)get_oport("Selected Index");
-
   MatrixHandle matrix(0);
   if (use_row_) {
     if (ncopy == 1) {
@@ -157,14 +154,14 @@ MatrixSelectVector::send_selection(MatrixHandle mh, int which,
     }
   }	    
 
-  ovec->set_cache( cache );
-  ovec->send_and_dereference(matrix);
+  //ovec->set_cache( cache );
+  send_output_handle("Vector", matrix);
 
   ColumnMatrix *selected = scinew ColumnMatrix(1);
   selected->put(0, 0, (double)which);
 
   MatrixHandle stmp(selected);
-  osel->send_and_dereference(stmp);
+  send_output_handle("Selected Index", stmp);
 }
 
 
@@ -224,17 +221,14 @@ MatrixSelectVector::execute()
 {
   update_state(NeedData);
 
-  MatrixIPort *imat = (MatrixIPort *)get_iport("Matrix");
   MatrixHandle mh;
-  if (!(imat->get(mh) && mh.get_rep()))
-  {
-    error("Empty input matrix.");
-    return;
-  }
+  if (!get_input_handle("Matrix", mh)) return;
+
   update_state(JustStarted);
   if (playmode_.get() == "autoplay") {
     data_series_done_.reset();
-    while (last_gen_ == mh->generation && data_series_done_.get()) {
+    while (last_gen_ == mh->generation && data_series_done_.get())
+    {
       //cerr << "waiting" << std::endl;
       //want_to_execute();
       return;
@@ -332,11 +326,9 @@ MatrixSelectVector::execute()
 
   // Specialized matrix multiply, with Weight Vector given as a sparse
   // matrix.  It's not clear what this has to do with MatrixSelectVector.
-  MatrixIPort *ivec = (MatrixIPort *)get_iport("Weight Vector");
   MatrixHandle weightsH;
-  if (ivec->get(weightsH) && weightsH.get_rep()) {
-    MatrixOPort *ovec = (MatrixOPort *)get_oport("Vector");
-
+  if (get_input_handle("Weight Vector", weightsH, false))
+  {
     ColumnMatrix *w = dynamic_cast<ColumnMatrix*>(weightsH.get_rep());
     if (w == 0)  {
       error("Weight Vector must be a column matrix.");
@@ -366,7 +358,8 @@ MatrixSelectVector::execute()
 	  data[j]+=mh->get(j, idx)*wt;
       }
     }
-    ovec->send(MatrixHandle(cm));
+    MatrixHandle cmtmp(cm);
+    send_output_handle("Vector", cmtmp);
     return;
   }
 

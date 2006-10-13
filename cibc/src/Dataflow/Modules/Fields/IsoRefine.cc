@@ -128,9 +128,8 @@ IsoRefine::execute()
   FieldHandle ifieldhandle;
   if (!get_input_handle("Input", ifieldhandle)) return;
   
-  MatrixIPort *imp = (MatrixIPort *)get_iport("Optional Isovalue");
   MatrixHandle isomat;
-  if (imp->get(isomat) && isomat.get_rep() &&
+  if (get_input_handle("Optional Isovalue", isomat, false) &&
       isomat->nrows() > 0 && isomat->ncols() > 0 &&
       isomat->generation != last_matrix_generation_)
   {
@@ -217,12 +216,9 @@ IsoRefine::execute()
   FieldHandle ofield = algo->execute(this, ifieldhandle,
 				     isoval, gui_lte_.get(),
 				     interp);
-  
-  FieldOPort *ofield_port = (FieldOPort *)get_oport("Refined");
-  ofield_port->send_and_dereference(ofield);
 
-  MatrixOPort *omatrix_port = (MatrixOPort *)get_oport("Mapping");
-  omatrix_port->send_and_dereference(interp);
+  send_output_handle("Refined", ofield);
+  send_output_handle("Mapping", interp);
 }
 
 

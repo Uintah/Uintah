@@ -71,15 +71,8 @@ SetProperty::~SetProperty()
 void
 SetProperty::execute()
 {
-  FieldIPort *ifield = (FieldIPort *)get_iport("Input");
-
   FieldHandle fldH;
-  if (!ifield->get(fldH))
-    return;
-  if (!fldH.get_rep()) {
-    warning("Empty input field.");
-    return;
-  }
+  if (!get_input_handle("Input", fldH)) return;
 
   fldH->generation = fldH->compute_new_generation();
 
@@ -96,4 +89,5 @@ SetProperty::execute()
   
   send_output_handle("Output", fldH);
 }
+
 } // End namespace SCIRun
