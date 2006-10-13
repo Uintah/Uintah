@@ -110,6 +110,7 @@ NetworkIO::gui_add_subnet_at_position(const string &mod_id,
 
 }
 
+
 void 
 NetworkIO::gui_add_module_at_position(const string &mod_id, 
 				      const string &package, 
@@ -142,12 +143,13 @@ NetworkIO::gui_add_module_at_position(const string &mod_id,
   mmap[mod_id] = mid;
 }
 
+
 void 
 NetworkIO::gui_add_connection(const string &con_id,
-			  const string &from_id, 
-			  const string &from_port,
-			  const string &to_id, 
-			  const string &to_port)
+                              const string &from_id, 
+                              const string &from_port,
+                              const string &to_id, 
+                              const string &to_port)
 {
   string from = get_mod_id(from_id);
   string to = get_mod_id(to_id);
@@ -185,6 +187,7 @@ NetworkIO::gui_add_connection(const string &con_id,
   cmap[con_id] = cid;
 }
 
+
 void 
 NetworkIO::gui_set_connection_disabled(const string &con_id)
 { 
@@ -196,9 +199,10 @@ NetworkIO::gui_set_connection_disabled(const string &con_id)
   gui->eval(cmmd);
 }
 
+
 void 
 NetworkIO::gui_set_module_port_caching(const string &mid, const string &pid,
-				   const string &val)
+                                       const string &val)
 {
   GuiInterface *gui = GuiInterface::getSingleton();
   
@@ -206,6 +210,7 @@ NetworkIO::gui_set_module_port_caching(const string &mid, const string &pid,
   string cmmd = "setPortCaching " + modid + " " + pid + " " + val;
   gui->eval(cmmd);
 }
+
 
 void 
 NetworkIO::gui_call_module_callback(const string &id, const string &call)
@@ -217,9 +222,10 @@ NetworkIO::gui_call_module_callback(const string &id, const string &call)
   gui->eval(cmmd);
 }
 
+
 void 
 NetworkIO::gui_set_modgui_variable(const string &mod_id, const string &var, 
-			      const string &val)
+                                   const string &val)
 {  
   GuiInterface *gui = GuiInterface::getSingleton();
   string cmmd;
@@ -238,6 +244,7 @@ NetworkIO::gui_set_modgui_variable(const string &mod_id, const string &var,
   gui->eval(cmmd);
 }
 
+
 void 
 NetworkIO::gui_set_connection_route(const string &con_id, const string &route)
 {  
@@ -249,9 +256,10 @@ NetworkIO::gui_set_connection_route(const string &con_id, const string &route)
   gui->eval(cmmd);
 }
 
+
 void 
 NetworkIO::gui_set_module_note(const string &mod_id, const string &pos, 
-			   const string &col, const string &note)
+                               const string &col, const string &note)
 {  
   GuiInterface *gui = GuiInterface::getSingleton();
   
@@ -264,9 +272,10 @@ NetworkIO::gui_set_module_note(const string &mod_id, const string &pos,
   gui->eval(cmmd);
 }
 
+
 void 
 NetworkIO::gui_set_connection_note(const string &con_id, const string &pos, 
-			       const string &col, const string &note)
+                                   const string &col, const string &note)
 { 
   GuiInterface *gui = GuiInterface::getSingleton();
   
@@ -280,6 +289,7 @@ NetworkIO::gui_set_connection_note(const string &con_id, const string &pos,
   gui->eval(cmmd);
 }
 
+
 void 
 NetworkIO::gui_set_variable(const string &var, const string &val)
 {  
@@ -288,6 +298,7 @@ NetworkIO::gui_set_variable(const string &var, const string &val)
   string cmmd = "set " + var +  " " + val;
   gui->eval(cmmd);
 }
+
 
 void 
 NetworkIO::gui_open_module_gui(const string &mod_id)
@@ -298,6 +309,7 @@ NetworkIO::gui_open_module_gui(const string &mod_id)
   string cmmd = mod + " initialize_ui";
   gui->eval(cmmd);
 }
+
 
 void 
 NetworkIO::process_environment(const xmlNodePtr enode)
@@ -350,9 +362,9 @@ NetworkIO::process_modules_pass1(const xmlNodePtr enode)
 	    gui_pop_subnet_ctx(old_ctx);
 	  } else {
 	    gui_add_module_at_position(mid,
-			  string(to_char_ptr(package_att->children->content)),
-			  string(to_char_ptr(category_att->children->content)),
-			  mname, x, y);
+                                       string(to_char_ptr(package_att->children->content)),
+                                       string(to_char_ptr(category_att->children->content)),
+                                       mname, x, y);
 	  }
 	}
 	else if (string(to_char_ptr(pnode->name)) == string("network")) 
@@ -381,8 +393,8 @@ NetworkIO::process_modules_pass1(const xmlNodePtr enode)
 	      xmlAttrPtr pid_att = get_attribute_by_name(pc_node, "id");
 	      xmlAttrPtr val_att = get_attribute_by_name(pc_node, "val");
 	      gui_set_module_port_caching(mid, 
-			      string(to_char_ptr(pid_att->children->content)),
-			      string(to_char_ptr(val_att->children->content)));
+                                          string(to_char_ptr(pid_att->children->content)),
+                                          string(to_char_ptr(val_att->children->content)));
 				   
 	    }
 	  }
@@ -392,70 +404,72 @@ NetworkIO::process_modules_pass1(const xmlNodePtr enode)
   }
 }
 
+
 void 
 NetworkIO::process_modules_pass2(const xmlNodePtr enode)
 {
   xmlNodePtr node = enode->children;
   for (; node != 0; node = node->next) 
-	{
+  {
     if (string(to_char_ptr(node->name)) == string("module")) 
-		{
+    {
       string x,y;
       xmlAttrPtr id_att = get_attribute_by_name(node, "id");
       xmlAttrPtr visible_att = get_attribute_by_name(node, "gui_visible");
 
       xmlNodePtr pnode = node->children;
       for (; pnode != 0; pnode = pnode->next) 
-			{	
-				if (string(to_char_ptr(pnode->name)) == string("gui_callback")) 
-				{
-					xmlNodePtr gc_node = pnode->children;
-					for (; gc_node != 0; gc_node = gc_node->next) {
-						if (string(to_char_ptr(gc_node->name)) == string("callback")) 
-						{
-							string call = string(to_char_ptr(gc_node->children->content));
-							gui_call_module_callback(
-									string(to_char_ptr(id_att->children->content)),
-									call);
+      {	
+        if (string(to_char_ptr(pnode->name)) == string("gui_callback")) 
+        {
+          xmlNodePtr gc_node = pnode->children;
+          for (; gc_node != 0; gc_node = gc_node->next) {
+            if (string(to_char_ptr(gc_node->name)) == string("callback")) 
+            {
+              string call = string(to_char_ptr(gc_node->children->content));
+              gui_call_module_callback(
+                                       string(to_char_ptr(id_att->children->content)),
+                                       call);
 								 
-						}
-					}
-				}
-				else if (string(to_char_ptr(pnode->name)) == string("var")) 
-				{
-					xmlAttrPtr name_att = get_attribute_by_name(pnode, "name");
-					xmlAttrPtr val_att = get_attribute_by_name(pnode, "val");
-					xmlAttrPtr filename_att = get_attribute_by_name(pnode,"filename");
-					xmlAttrPtr substitute_att = get_attribute_by_name(pnode,"substitute");
+            }
+          }
+        }
+        else if (string(to_char_ptr(pnode->name)) == string("var")) 
+        {
+          xmlAttrPtr name_att = get_attribute_by_name(pnode, "name");
+          xmlAttrPtr val_att = get_attribute_by_name(pnode, "val");
+          xmlAttrPtr filename_att = get_attribute_by_name(pnode,"filename");
+          xmlAttrPtr substitute_att = get_attribute_by_name(pnode,"substitute");
 
-					string val = string(to_char_ptr(val_att->children->content));
+          string val = string(to_char_ptr(val_att->children->content));
 					
-					string filename = "no";
-					if (filename_att != 0) filename = string(to_char_ptr(filename_att->children->content));
-					if (filename == "yes") 
-					{
-						val = process_filename(val); 
-					}
-					else
-					{
-						string substitute = "yes";
-						if (substitute_att != 0) substitute = string(to_char_ptr(substitute_att->children->content));
-					  if (substitute == "yes") val = process_substitute(val);
-					}
+          string filename = "no";
+          if (filename_att != 0) filename = string(to_char_ptr(filename_att->children->content));
+          if (filename == "yes") 
+          {
+            val = process_filename(val); 
+          }
+          else
+          {
+            string substitute = "yes";
+            if (substitute_att != 0) substitute = string(to_char_ptr(substitute_att->children->content));
+            if (substitute == "yes") val = process_substitute(val);
+          }
 					
-					gui_set_modgui_variable(
-									string(to_char_ptr(id_att->children->content)),
-									string(to_char_ptr(name_att->children->content)),
-									val);
-				}
+          gui_set_modgui_variable(
+                                  string(to_char_ptr(id_att->children->content)),
+                                  string(to_char_ptr(name_att->children->content)),
+                                  val);
+        }
       }
       if (visible_att && string(to_char_ptr(visible_att->children->content)) == "yes")
       {
-				gui_open_module_gui(string(to_char_ptr(id_att->children->content)));
+        gui_open_module_gui(string(to_char_ptr(id_att->children->content)));
       }
     }
   }
 }
+
 
 void 
 NetworkIO::process_connections(const xmlNodePtr enode)
@@ -473,10 +487,10 @@ NetworkIO::process_connections(const xmlNodePtr enode)
       string id = string(to_char_ptr(id_att->children->content));
 
       gui_add_connection(id,
-		     string(to_char_ptr(from_att->children->content)),
-		     string(to_char_ptr(fromport_att->children->content)),
-		     string(to_char_ptr(to_att->children->content)),
-		     string(to_char_ptr(toport_att->children->content)));
+                         string(to_char_ptr(from_att->children->content)),
+                         string(to_char_ptr(fromport_att->children->content)),
+                         string(to_char_ptr(to_att->children->content)),
+                         string(to_char_ptr(toport_att->children->content)));
 
       if (dis_att && 
 	  string(to_char_ptr(dis_att->children->content)) == "yes") 
@@ -490,7 +504,7 @@ NetworkIO::process_connections(const xmlNodePtr enode)
 	if (string(to_char_ptr(cnode->name)) == string("route")) 
 	{
 	  gui_set_connection_route(id, 
-			       string(to_char_ptr(cnode->children->content)));
+                                   string(to_char_ptr(cnode->children->content)));
 	} 
 	else if (string(to_char_ptr(cnode->name)) == string("note")) 
 	{
@@ -510,44 +524,45 @@ NetworkIO::process_connections(const xmlNodePtr enode)
   }
 }
 
+
 string
 NetworkIO::process_filename(const string &orig)
 {
   // This function reinterprets a filename
 	
-	// Copy the string and remove TCL brackets
-	std::string filename = orig.substr(1,orig.size()-2);
+  // Copy the string and remove TCL brackets
+  std::string filename = orig.substr(1,orig.size()-2);
 	
-	// Remove blanks and tabs from the input (Some could have editted the XML file manually and may have left spaces)
-	while (filename.size() > 0 && ((filename[0] == ' ')||(filename[0] == '\t'))) filename = filename.substr(1);
-	while (filename.size() > 0 && ((filename[filename.size()-1] == ' ')||(filename[filename.size()-1] == '\t'))) filename = filename.substr(1,filename.size()-1);
+  // Remove blanks and tabs from the input (Some could have editted
+  // the XML file manually and may have left spaces)
+  while (filename.size() > 0 && ((filename[0] == ' ')||(filename[0] == '\t'))) filename = filename.substr(1);
+  while (filename.size() > 0 && ((filename[filename.size()-1] == ' ')||(filename[filename.size()-1] == '\t'))) filename = filename.substr(1,filename.size()-1);
 	
-	// Check whether filename is absolute:
+  // Check whether filename is absolute:
+  if ( filename.size() > 0 && filename[0] == '/') return (std::string("{")+filename+std::string("}")); // Unix absolute path
+  if ( filename.size() > 1 && filename[1] == ':') return (std::string("{")+filename+std::string("}")); // Windows absolute path
 	
-	if ( filename.size() > 0 && filename[0] == '/') return (std::string("{")+filename+std::string("}")); // Unix absolute path
-	if ( filename.size() > 1 && filename[1] == ':') return (std::string("{")+filename+std::string("}")); // Windows absolute path
-	
-	// If not substitute: 
+  // If not substitute: 
 
-	// Create a dynamic substitute called NETWORKDIR for relative path names
-	std::string net_file = make_absolute_filename(net_file_);
-	std::string::size_type backslashpos = net_file.find_last_of("\\");	
-	std::string::size_type slashpos = net_file.find_last_of("/");	
+  // Create a dynamic substitute called NETWORKDIR for relative path names
+  std::string net_file = make_absolute_filename(net_file_);
+  std::string::size_type backslashpos = net_file.find_last_of("\\");	
+  std::string::size_type slashpos = net_file.find_last_of("/");	
   if (slashpos != std::string::npos && backslashpos != std::string::npos)
-	{
-		std::cerr << "Path to network file seems to contain both '\\' and '/' \n";
-	}
-	else
-	{
-	  std::string net_path = "";
-		if (slashpos != std::string::npos) { net_path = net_file.substr(0,slashpos); }
-		if (backslashpos != std::string::npos) { net_path = net_file.substr(0,backslashpos); }
-		env_subs_[std::string("scisub_networkdir")] = std::string("SCIRUN_NETWORKDIR");
-		sci_putenv("SCIRUN_NETWORKDIR",net_path);
-	}
+  {
+    std::cerr << "Path to network file seems to contain both '\\' and '/' \n";
+  }
+  else
+  {
+    std::string net_path = "";
+    if (slashpos != std::string::npos) { net_path = net_file.substr(0,slashpos); }
+    if (backslashpos != std::string::npos) { net_path = net_file.substr(0,backslashpos); }
+    env_subs_[std::string("scisub_networkdir")] = std::string("SCIRUN_NETWORKDIR");
+    sci_putenv("SCIRUN_NETWORKDIR",net_path);
+  }
 	
-	map<string, string>::const_iterator iter = env_subs_.begin();
-	while (iter != env_subs_.end()) 
+  map<string, string>::const_iterator iter = env_subs_.begin();
+  while (iter != env_subs_.end()) 
   {
     const pair<const string, string> &kv = *iter++;
     const string &key = kv.first;
@@ -561,19 +576,19 @@ NetworkIO::process_filename(const string &orig)
       
       if (env_var == string("SCIRUN_DATASET") && subst.size() == 0)
       {
-				subst = string("sphere");
+        subst = string("sphere");
       }
       while (idx != string::npos) {
-				filename = filename.replace(idx, key.size(), subst);
-				idx = filename.find(key);
+        filename = filename.replace(idx, key.size(), subst);
+        idx = filename.find(key);
       }
     }
   }
 
 #ifdef _WIN32
-	for (size_t p =0 ; p<filename.size(); p++) if (filename[p] == '/') filename[p] == '\\';
+  for (size_t p =0 ; p<filename.size(); p++) if (filename[p] == '/') filename[p] == '\\';
 #else
-	for (size_t p =0 ; p<filename.size(); p++) if (filename[p] == '\\') filename[p] == '/';
+  for (size_t p =0 ; p<filename.size(); p++) if (filename[p] == '\\') filename[p] == '/';
 #endif
 	
   return (std::string("{")+filename+std::string("}"));
@@ -583,9 +598,9 @@ NetworkIO::process_filename(const string &orig)
 string
 NetworkIO::process_substitute(const string &orig)
 {
-	string src = orig;
-	map<string, string>::const_iterator iter = env_subs_.begin();
-	while (iter != env_subs_.end()) 
+  string src = orig;
+  map<string, string>::const_iterator iter = env_subs_.begin();
+  while (iter != env_subs_.end()) 
   {
     const pair<const string, string> &kv = *iter++;
     const string &key = kv.first;
@@ -599,11 +614,11 @@ NetworkIO::process_substitute(const string &orig)
       
       if (env_var == string("SCIRUN_DATASET") && subst.size() == 0)
       {
-				subst = string("sphere");
+        subst = string("sphere");
       }
       while (idx != string::npos) {
-				src = src.replace(idx, key.size(), subst);
-				idx = src.find(key);
+        src = src.replace(idx, key.size(), subst);
+        idx = src.find(key);
       }
     }
   }
@@ -692,6 +707,7 @@ NetworkIO::process_network_node(xmlNode* network_node)
     }
   }
 }
+
 
 bool
 NetworkIO::load_network()
@@ -805,11 +821,13 @@ NetworkIO::push_subnet_scope(const string &id, const string &name)
   subnets_.push(sn_node);
 }
 
+
 void 
 NetworkIO::pop_subnet_scope()
 {
   subnets_.pop();
 }
+
 
 void 
 NetworkIO::start_net_doc(const string &fname, const string &vers)
@@ -844,6 +862,7 @@ NetworkIO::start_net_doc(const string &fname, const string &vers)
   xmlNewProp(root_node, BAD_CAST "version", BAD_CAST vers.c_str());
 }
 
+
 void
 NetworkIO::write_net_doc()
 {
@@ -856,6 +875,7 @@ NetworkIO::write_net_doc()
   out_fname_ = "";
   done_writing_ = true;
 }
+
 
 void 
 NetworkIO::add_net_var(const string &var, const string &val)
@@ -876,6 +896,7 @@ NetworkIO::add_net_var(const string &var, const string &val)
   }
   xmlNewProp(node, BAD_CAST var.c_str(), BAD_CAST val.c_str());
 }
+
 
 void 
 NetworkIO::add_environment_sub(const string &var, const string &val)
@@ -910,6 +931,7 @@ NetworkIO::add_environment_sub(const string &var, const string &val)
   xmlNewProp(tmp, BAD_CAST "name", BAD_CAST var.c_str());
   xmlNewProp(tmp, BAD_CAST "val", BAD_CAST val.c_str());
 }
+
 
 void 
 NetworkIO::add_net_note(const string &val)
@@ -971,6 +993,7 @@ NetworkIO::add_module_node(const string &id, const string &pack,
   xmlNewProp(tmp, BAD_CAST "name", BAD_CAST mod.c_str());
 }
 
+
 xmlNode*
 NetworkIO::get_module_node(const string &id)
 {  
@@ -1007,9 +1030,11 @@ NetworkIO::get_module_node(const string &id)
   return mid_node;
 }
 
+
 void 
 NetworkIO::add_module_variable(const string &id, const string &var, 
-			       const string &val, bool filename, bool substitute, bool userelfilenames)
+			       const string &val, bool filename,
+                               bool substitute, bool userelfilenames)
 {
   xmlNode* node = get_module_node(id);
 
@@ -1020,25 +1045,26 @@ NetworkIO::add_module_variable(const string &id, const string &var,
   xmlNodePtr tmp = xmlNewChild(node, 0, BAD_CAST "var", 0);
   xmlNewProp(tmp, BAD_CAST "name", BAD_CAST var.c_str());
 	
-	string nval = val;
-	if (filename && userelfilenames)
-	{
-		if ((nval.size() >0) &&  (nval[0] == '{'))
-		{
-			nval = string("{") + make_relative_filename(nval.substr(1,nval.size()-2),out_fname_) + string("}");
-		}
-		else
-		{
-			nval = make_relative_filename(nval,out_fname_);		
-		}
-	}
+  string nval = val;
+  if (filename && userelfilenames)
+  {
+    if ((nval.size() >0) &&  (nval[0] == '{'))
+    {
+      nval = string("{") + make_relative_filename(nval.substr(1,nval.size()-2),out_fname_) + string("}");
+    }
+    else
+    {
+      nval = make_relative_filename(nval,out_fname_);		
+    }
+  }
 	
   xmlNewProp(tmp, BAD_CAST "val", BAD_CAST nval.c_str());
-	if (filename) xmlNewProp(tmp, BAD_CAST "filename", BAD_CAST "yes"); 
+  if (filename) xmlNewProp(tmp, BAD_CAST "filename", BAD_CAST "yes"); 
 
-	if (substitute) xmlNewProp(tmp, BAD_CAST "substitute", BAD_CAST "yes"); 
-	else xmlNewProp(tmp, BAD_CAST "substitute", BAD_CAST "no");
+  if (substitute) xmlNewProp(tmp, BAD_CAST "substitute", BAD_CAST "yes"); 
+  else xmlNewProp(tmp, BAD_CAST "substitute", BAD_CAST "no");
 }
+
 
 void 
 NetworkIO::set_module_gui_visible(const string &id)
@@ -1051,6 +1077,7 @@ NetworkIO::set_module_gui_visible(const string &id)
   }
   xmlNewProp(node, BAD_CAST "gui_visible", BAD_CAST "yes");
 }
+
 
 void 
 NetworkIO::add_module_gui_callback(const string &id, const string &call)
@@ -1077,6 +1104,7 @@ NetworkIO::add_module_gui_callback(const string &id, const string &call)
   xmlNewTextChild(gc_node, 0, BAD_CAST "callback", BAD_CAST call.c_str());
 }
 
+
 void 
 NetworkIO::add_module_position(const string &id, const string &x, 
 			       const string &y)
@@ -1093,6 +1121,7 @@ NetworkIO::add_module_position(const string &id, const string &x,
 
 }
 
+
 void 
 NetworkIO::add_module_note(const string &id, const string &note)
 {
@@ -1104,6 +1133,7 @@ NetworkIO::add_module_note(const string &id, const string &note)
   }
   xmlNewTextChild(mnode, 0, BAD_CAST "note", BAD_CAST note.c_str());
 }
+
  
 void 
 NetworkIO::add_module_note_position(const string &id, const string &pos)
@@ -1130,6 +1160,7 @@ NetworkIO::add_module_note_position(const string &id, const string &pos)
   }
   xmlNewProp(node, BAD_CAST "position", BAD_CAST pos.c_str());
 }
+
  
 void 
 NetworkIO::add_module_note_color(const string &id, const string &col)
@@ -1156,6 +1187,7 @@ NetworkIO::add_module_note_color(const string &id, const string &col)
   }
   xmlNewProp(node, BAD_CAST "color", BAD_CAST col.c_str());
 }
+
  
 void 
 NetworkIO::add_connection_node(const string &id, const string &fmod, 
@@ -1230,6 +1262,7 @@ NetworkIO::get_connection_node(const string &id)
   return cid_node;
 }
 
+
 void 
 NetworkIO::set_disabled_connection(const string &id)
 {
@@ -1242,6 +1275,7 @@ NetworkIO::set_disabled_connection(const string &id)
   xmlNewProp(cid_node, BAD_CAST "disabled", BAD_CAST "yes");
 }
  
+
 void 
 NetworkIO::add_connection_route(const string &id, const string &route)
 {
@@ -1255,6 +1289,7 @@ NetworkIO::add_connection_route(const string &id, const string &route)
   xmlNewTextChild(cid_node, 0, BAD_CAST "route", BAD_CAST route.c_str());
 }
  
+
 void 
 NetworkIO::add_connection_note(const string &id, const string &note)
 {
@@ -1268,6 +1303,7 @@ NetworkIO::add_connection_note(const string &id, const string &note)
   xmlNewTextChild(cid_node, 0, BAD_CAST "note", BAD_CAST note.c_str());
 }
  
+
 void 
 NetworkIO::add_connection_note_position(const string &id, const string &pos)
 {
@@ -1295,6 +1331,7 @@ NetworkIO::add_connection_note_position(const string &id, const string &pos)
   xmlNewProp(node, BAD_CAST "position", BAD_CAST pos.c_str());
 }
  
+
 void 
 NetworkIO::add_connection_note_color(const string &id, const string &col)
 {
@@ -1358,294 +1395,294 @@ NetworkIO::set_port_caching(const string &id, const string &port,
 string
 NetworkIO::make_absolute_filename(string name)
 {
-	// Remove blanks and tabs from the input (Some could have editted the XML file manually and may have left spaces)
-	while (name.size() > 0 && ((name[0] == ' ')||(name[0] == '\t'))) name = name.substr(1);
-	while (name.size() > 0 && ((name[name.size()-1] == ' ')||(name[name.size()-1] == '\t'))) name = name.substr(1,name.size()-1);
+  // Remove blanks and tabs from the input (Some could have editted the XML file manually and may have left spaces)
+  while (name.size() > 0 && ((name[0] == ' ')||(name[0] == '\t'))) name = name.substr(1);
+  while (name.size() > 0 && ((name[name.size()-1] == ' ')||(name[name.size()-1] == '\t'))) name = name.substr(1,name.size()-1);
 	
-	// Check whether filename is absolute:
+  // Check whether filename is absolute:
 	
-	if ( name.size() > 0 && name[0] == '/') return (name); // Unix absolute path
-	if ( name.size() > 2 && name[1] == ':' && name[2] == '\\') return (name); // Windows absolute path
+  if ( name.size() > 0 && name[0] == '/') return (name); // Unix absolute path
+  if ( name.size() > 2 && name[1] == ':' && name[2] == '\\') return (name); // Windows absolute path
 	
-	Dir CWD = Dir::current_directory();
-	string cwd = CWD.getName();
+  Dir CWD = Dir::current_directory();
+  string cwd = CWD.getName();
 
-	if (cwd.size() > 0)
-	{
-		if(cwd[0] == '/')
-		{
-			if (cwd[cwd.size()-1]!='/') cwd +='/';
+  if (cwd.size() > 0)
+  {
+    if(cwd[0] == '/')
+    {
+      if (cwd[cwd.size()-1]!='/') cwd +='/';
 			
-			name = cwd+name;
+      name = cwd+name;
 			
-					// collapse name further
+      // collapse name further
 			
-			std::string::size_type ddpos = name.find("../");
+      std::string::size_type ddpos = name.find("../");
 
-			while (ddpos != std::string::npos)
-			{
-				if (ddpos > 1 && name[ddpos-1] == '/')
-				{
-					std::string::size_type slashpos = name.find_last_of("/",ddpos-2);
-					if (slashpos == std::string::npos)
-					{
-						if ((name.substr(0,ddpos-1) != "..")&&(name.substr(0,ddpos-1) != "."))
-						{
-							name = name.substr(ddpos+3); 
-							ddpos = name.find("../");
-						}
-						else 
-						{
-							ddpos = name.find("../",ddpos+3);
-						}
-					}
-					else
-					{
-						if ((name.substr(slashpos+1,ddpos-1)!="..")&&(name.substr(slashpos+1,ddpos-1)!=".")) 
-						{
-							name = name.substr(0,slashpos+1)+name.substr(ddpos+3);
-							ddpos = name.find("../");
-						}
-						else
-						{
-							ddpos = name.find("../",ddpos+3);
-						}
-					}
+      while (ddpos != std::string::npos)
+      {
+        if (ddpos > 1 && name[ddpos-1] == '/')
+        {
+          std::string::size_type slashpos = name.find_last_of("/",ddpos-2);
+          if (slashpos == std::string::npos)
+          {
+            if ((name.substr(0,ddpos-1) != "..")&&(name.substr(0,ddpos-1) != "."))
+            {
+              name = name.substr(ddpos+3); 
+              ddpos = name.find("../");
+            }
+            else 
+            {
+              ddpos = name.find("../",ddpos+3);
+            }
+          }
+          else
+          {
+            if ((name.substr(slashpos+1,ddpos-1)!="..")&&(name.substr(slashpos+1,ddpos-1)!=".")) 
+            {
+              name = name.substr(0,slashpos+1)+name.substr(ddpos+3);
+              ddpos = name.find("../");
+            }
+            else
+            {
+              ddpos = name.find("../",ddpos+3);
+            }
+          }
 					
-				}
-				else
-				{
-					ddpos = name.find("../",ddpos+3);
-				}
-			}
-		}
-		else
-		{
-			if (cwd[cwd.size()-1]!='\\') cwd +='\\';
+        }
+        else
+        {
+          ddpos = name.find("../",ddpos+3);
+        }
+      }
+    }
+    else
+    {
+      if (cwd[cwd.size()-1]!='\\') cwd +='\\';
 			
-			name = cwd+name;
+      name = cwd+name;
 			
-					// collapse name further
+      // collapse name further
 			
-			std::string::size_type ddpos = name.find("..\\");
+      std::string::size_type ddpos = name.find("..\\");
 
-			while (ddpos != std::string::npos)
-			{
-				if (ddpos > 1 && name[ddpos-1] == '\\')
-				{
-					std::string::size_type slashpos = name.find_last_of("\\",ddpos-2);
-					if (slashpos == std::string::npos)
-					{
-						if ((name.substr(0,ddpos-1) != "..")&&(name.substr(0,ddpos-1) != "."))
-						{
-							name = name.substr(ddpos+3); 
-							ddpos = name.find("..\\");
-						}
-						else 
-						{
-							ddpos = name.find("..\\",ddpos+3);
-						}
-					}
-					else
-					{
-						if ((name.substr(slashpos+1,ddpos-1)!="..")&&(name.substr(slashpos+1,ddpos-1)!=".")) 
-						{
-							name = name.substr(0,slashpos+1)+name.substr(ddpos+3);
-							ddpos = name.find("..\\");
-						}
-						else
-						{
-							ddpos = name.find("..\\",ddpos+3);
-						}
-					}
+      while (ddpos != std::string::npos)
+      {
+        if (ddpos > 1 && name[ddpos-1] == '\\')
+        {
+          std::string::size_type slashpos = name.find_last_of("\\",ddpos-2);
+          if (slashpos == std::string::npos)
+          {
+            if ((name.substr(0,ddpos-1) != "..")&&(name.substr(0,ddpos-1) != "."))
+            {
+              name = name.substr(ddpos+3); 
+              ddpos = name.find("..\\");
+            }
+            else 
+            {
+              ddpos = name.find("..\\",ddpos+3);
+            }
+          }
+          else
+          {
+            if ((name.substr(slashpos+1,ddpos-1)!="..")&&(name.substr(slashpos+1,ddpos-1)!=".")) 
+            {
+              name = name.substr(0,slashpos+1)+name.substr(ddpos+3);
+              ddpos = name.find("..\\");
+            }
+            else
+            {
+              ddpos = name.find("..\\",ddpos+3);
+            }
+          }
 					
-				}
-				else
-				{
-					ddpos = name.find("..\\",ddpos+3);
-				}
-			}
+        }
+        else
+        {
+          ddpos = name.find("..\\",ddpos+3);
+        }
+      }
 			
 			
-		}
-	}
+    }
+  }
 	
-	return (name);
+  return (name);
 }
 
 
 string
 NetworkIO::make_relative_filename(string name, string path)
 {
-	std::cout << "path="<<path<<"\n";
-	// if it is not absolute assume it is relative to current directory
-	path = make_absolute_filename(path);
+  std::cout << "path="<<path<<"\n";
+  // if it is not absolute assume it is relative to current directory
+  path = make_absolute_filename(path);
 
-	// Remove blanks and tabs from the input (Some could have editted the XML file manually and may have left spaces)
-	while (name.size() > 0 && ((name[0] == ' ')||(name[0] == '\t'))) name = name.substr(1);
-	while (name.size() > 0 && ((name[name.size()-1] == ' ')||(name[name.size()-1] == '\t'))) name = name.substr(1,name.size()-1);
+  // Remove blanks and tabs from the input (Some could have editted the XML file manually and may have left spaces)
+  while (name.size() > 0 && ((name[0] == ' ')||(name[0] == '\t'))) name = name.substr(1);
+  while (name.size() > 0 && ((name[name.size()-1] == ' ')||(name[name.size()-1] == '\t'))) name = name.substr(1,name.size()-1);
 
-	// Check whether filename is absolute:
+  // Check whether filename is absolute:
 	
-	bool abspath = false;
-	if ( name.size() > 0 && name[0] == '/') abspath = true; // Unix absolute path
-	if ( name.size() > 2 && name[1] == ':' && name[2] == '\\') abspath = true; // Windows absolute path
+  bool abspath = false;
+  if ( name.size() > 0 && name[0] == '/') abspath = true; // Unix absolute path
+  if ( name.size() > 2 && name[1] == ':' && name[2] == '\\') abspath = true; // Windows absolute path
 
-	if (abspath == false) return (name); // We could not make it relative as it is already relative
+  if (abspath == false) return (name); // We could not make it relative as it is already relative
 
-	if ( name.size() > 0 && name[0] == '/')
-	{
-		string npath = path;
-	  string nname = name;
-		string::size_type slashpos = path.find("/");
-		bool backtrack = false;
-		while(slashpos != string::npos)
-		{
-			if (npath.substr(0,slashpos) == nname.substr(0,slashpos) && backtrack == false)
-			{
-				npath = npath.substr(slashpos+1);
-				nname = nname.substr(slashpos+1);
-			}
-			else
-			{
-				backtrack = true;
-				npath = npath.substr(slashpos+1);
-				nname = "../" + nname;
-			}
-			slashpos = npath.find("/");
-		}
-		std::cout << "name="<<name<<"\n";
-		std::cout << "path="<<path<<"\n";
-		std::cout << "nname="<<nname<<"\n";
+  if ( name.size() > 0 && name[0] == '/')
+  {
+    string npath = path;
+    string nname = name;
+    string::size_type slashpos = path.find("/");
+    bool backtrack = false;
+    while(slashpos != string::npos)
+    {
+      if (npath.substr(0,slashpos) == nname.substr(0,slashpos) && backtrack == false)
+      {
+        npath = npath.substr(slashpos+1);
+        nname = nname.substr(slashpos+1);
+      }
+      else
+      {
+        backtrack = true;
+        npath = npath.substr(slashpos+1);
+        nname = "../" + nname;
+      }
+      slashpos = npath.find("/");
+    }
+    std::cout << "name="<<name<<"\n";
+    std::cout << "path="<<path<<"\n";
+    std::cout << "nname="<<nname<<"\n";
 		
-		// collapse name further
+    // collapse name further
 		
-		std::string::size_type ddpos = nname.find("../");
+    std::string::size_type ddpos = nname.find("../");
 
-		while (ddpos != std::string::npos)
-		{
-			if (ddpos > 1 && nname[ddpos-1] == '/')
-			{
-				std::string::size_type slashpos = nname.find_last_of("/",ddpos-2);
-				if (slashpos == std::string::npos)
-				{
-					if ((nname.substr(0,ddpos-1) != "..")&&(nname.substr(0,ddpos-1) != "."))
-					{
-						nname = nname.substr(ddpos+3); 
-						ddpos = nname.find("../");
-					}
-					else 
-					{
-						ddpos = nname.find("../",ddpos+3);
-					}
-				}
-				else
-				{
-					if ((nname.substr(slashpos+1,ddpos-1)!="..")&&(nname.substr(slashpos+1,ddpos-1)!=".")) 
-					{
-						nname = nname.substr(0,slashpos+1)+nname.substr(ddpos+3);
-						ddpos = nname.find("../");
-					}
-					else
-					{
-						ddpos = nname.find("../",ddpos+3);
-					}
-				}
+    while (ddpos != std::string::npos)
+    {
+      if (ddpos > 1 && nname[ddpos-1] == '/')
+      {
+        std::string::size_type slashpos = nname.find_last_of("/",ddpos-2);
+        if (slashpos == std::string::npos)
+        {
+          if ((nname.substr(0,ddpos-1) != "..")&&(nname.substr(0,ddpos-1) != "."))
+          {
+            nname = nname.substr(ddpos+3); 
+            ddpos = nname.find("../");
+          }
+          else 
+          {
+            ddpos = nname.find("../",ddpos+3);
+          }
+        }
+        else
+        {
+          if ((nname.substr(slashpos+1,ddpos-1)!="..")&&(nname.substr(slashpos+1,ddpos-1)!=".")) 
+          {
+            nname = nname.substr(0,slashpos+1)+nname.substr(ddpos+3);
+            ddpos = nname.find("../");
+          }
+          else
+          {
+            ddpos = nname.find("../",ddpos+3);
+          }
+        }
 				
-			}
-			else
-			{
-				ddpos = nname.find("../",ddpos+3);
-			}
-		}
+      }
+      else
+      {
+        ddpos = nname.find("../",ddpos+3);
+      }
+    }
 
-		nname = "scisub_networkdir/"+nname;		
-		return (nname);
-	}
-	else if ( name.size() > 2 && name[1] == ':' && name[2] == '\\')
-	{
-		if (path.size() > 2)
-		{
-			if (path.substr(0,3) != name.substr(0,3))
-			{
-				std::cerr << "WARNING: Could not make pathname relative as it is on another drive\n";
-				return (name);
-			}
-		}
-		else
-		{
-			std::cerr << "WARNING: Failed to convert network pathname to an absolute path name\n";
-			return (name);
-		}
+    nname = "scisub_networkdir/"+nname;		
+    return (nname);
+  }
+  else if ( name.size() > 2 && name[1] == ':' && name[2] == '\\')
+  {
+    if (path.size() > 2)
+    {
+      if (path.substr(0,3) != name.substr(0,3))
+      {
+        std::cerr << "WARNING: Could not make pathname relative as it is on another drive\n";
+        return (name);
+      }
+    }
+    else
+    {
+      std::cerr << "WARNING: Failed to convert network pathname to an absolute path name\n";
+      return (name);
+    }
 	
-		string npath = path;
-	  string nname = name;
-		string::size_type slashpos = path.find("\\");
-		bool backtrack = false;
-		while(slashpos != string::npos)
-		{
-			if (npath.substr(0,slashpos) == nname.substr(0,slashpos) && backtrack == false)
-			{
-				npath = npath.substr(slashpos+1);
-				nname = nname.substr(slashpos+1);
-			}
-			else
-			{
-				backtrack = true;
-				npath = npath.substr(slashpos+1);
-				nname = "..\\" + nname;
-			}
-			slashpos = npath.find("\\");
-		}
+    string npath = path;
+    string nname = name;
+    string::size_type slashpos = path.find("\\");
+    bool backtrack = false;
+    while(slashpos != string::npos)
+    {
+      if (npath.substr(0,slashpos) == nname.substr(0,slashpos) && backtrack == false)
+      {
+        npath = npath.substr(slashpos+1);
+        nname = nname.substr(slashpos+1);
+      }
+      else
+      {
+        backtrack = true;
+        npath = npath.substr(slashpos+1);
+        nname = "..\\" + nname;
+      }
+      slashpos = npath.find("\\");
+    }
 
-		// collapse name further
+    // collapse name further
 		
-		std::string::size_type ddpos = nname.find("..\\");
+    std::string::size_type ddpos = nname.find("..\\");
 
-		while (ddpos != std::string::npos)
-		{
-			if (ddpos > 1 && nname[ddpos-1] == '\\')
-			{
-				std::string::size_type slashpos = nname.find_last_of("\\",ddpos-2);
-				if (slashpos == std::string::npos)
-				{
-					if ((nname.substr(0,ddpos-1) != "..")&&(nname.substr(0,ddpos-1) != "."))
-					{
-						nname = nname.substr(ddpos+3); 
-						ddpos = nname.find("..\\");
-					}
-					else 
-					{
-						ddpos = nname.find("..\\",ddpos+3);
-					}
-				}
-				else
-				{
-					if ((nname.substr(slashpos+1,ddpos-1)!="..")&&(nname.substr(slashpos+1,ddpos-1)!=".")) 
-					{
-						nname = nname.substr(0,slashpos+1)+nname.substr(ddpos+3);
-						ddpos = nname.find("..\\");
-					}
-					else
-					{
-						ddpos = nname.find("..\\",ddpos+3);
-					}
-				}
+    while (ddpos != std::string::npos)
+    {
+      if (ddpos > 1 && nname[ddpos-1] == '\\')
+      {
+        std::string::size_type slashpos = nname.find_last_of("\\",ddpos-2);
+        if (slashpos == std::string::npos)
+        {
+          if ((nname.substr(0,ddpos-1) != "..")&&(nname.substr(0,ddpos-1) != "."))
+          {
+            nname = nname.substr(ddpos+3); 
+            ddpos = nname.find("..\\");
+          }
+          else 
+          {
+            ddpos = nname.find("..\\",ddpos+3);
+          }
+        }
+        else
+        {
+          if ((nname.substr(slashpos+1,ddpos-1)!="..")&&(nname.substr(slashpos+1,ddpos-1)!=".")) 
+          {
+            nname = nname.substr(0,slashpos+1)+nname.substr(ddpos+3);
+            ddpos = nname.find("..\\");
+          }
+          else
+          {
+            ddpos = nname.find("..\\",ddpos+3);
+          }
+        }
 				
-			}
-			else
-			{
-				ddpos = nname.find("..\\",ddpos+3);
-			}
-		}
+      }
+      else
+      {
+        ddpos = nname.find("..\\",ddpos+3);
+      }
+    }
 		
 		
-		nname = "scisub_networkdir\\"+nname;
-		return (nname);
-	}
+    nname = "scisub_networkdir\\"+nname;
+    return (nname);
+  }
 	
-	std::cerr << "WARNING: Could not convert filename into a relative filename\n";
-	return (name);
+  std::cerr << "WARNING: Could not convert filename into a relative filename\n";
+  return (name);
 }
 
 } // end namespace SCIRun
