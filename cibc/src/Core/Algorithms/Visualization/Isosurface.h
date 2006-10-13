@@ -39,8 +39,6 @@
  *  Copyright (C) 2001 SCI Institute
  */
 
-#include <Dataflow/Network/Module.h>
-
 #include <Core/Datatypes/Field.h>
 #include <Core/Datatypes/Matrix.h>
 
