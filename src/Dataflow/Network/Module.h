@@ -309,7 +309,7 @@ protected:
   template<class DH>
   bool get_input_handle(std::string name, DH& handle, bool required = true);
   //template<class DH>
-  //  bool get_input_handle(int num, DH& handle, bool required = true);
+  bool get_input_handle(int num, DH& handle, bool required = true);
 
 
   //! Get the handles for dynamic ports.
@@ -445,7 +445,6 @@ Module::get_input_handle(std::string name,
 }
 
 
-#if 0
 //! Used to get handles with error checking.
 template<class DH>
 bool
@@ -493,7 +492,7 @@ Module::get_input_handle(int num,
 
   return return_state;
 }
-#endif
+
 
 
 
