@@ -1201,7 +1201,7 @@ proc biopseFDialog_Create {w} {
         set data(formatMenuLab) [button $f4.lab -text "Format:" \
                 -anchor e -width 14 -under 9 \
                 -bd [$sf_tab.f1.lab cget -bd] \
-                -highlightthickness [$sf_tab.lab cget -highlightthickness] \
+                -highlightthickness [$sf_tab.f1.lab cget -highlightthickness] \
                 -relief [$sf_tab.f1.lab cget -relief] \
                 -padx [$sf_tab.f1.lab cget -padx] \
                 -pady [$sf_tab.f1.lab cget -pady]]
