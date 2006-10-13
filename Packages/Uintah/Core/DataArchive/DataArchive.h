@@ -209,6 +209,8 @@ public:
   //////////
   // Destructor
   virtual ~DataArchive();
+
+  std::string name(){ return d_filebase;}
   
   //! Set up data arachive for restarting a Uintah simulation   
   void restartInitialize(int& timestep, const GridP& grid, DataWarehouse* dw,
