@@ -125,9 +125,8 @@ IsoClip::execute()
   FieldHandle ifieldhandle;
   if (!get_input_handle("Input", ifieldhandle)) return;
 
-  MatrixIPort *imp = (MatrixIPort *)get_iport("Optional Isovalue");
   MatrixHandle isomat;
-  if (imp->get(isomat) && isomat.get_rep() &&
+  if (get_input_handle("Optional Isovalue", isomat, false) &&
       isomat->nrows() > 0 && isomat->ncols() > 0 &&
       isomat->generation != last_matrix_generation_)
   {

@@ -54,9 +54,6 @@
 namespace SCIRun {
 
 class LinAlgBinary : public Module {
-  MatrixIPort* imatA_;
-  MatrixIPort* imatB_;
-
   GuiString op_;
   GuiString function_;
 public:
@@ -77,35 +74,19 @@ LinAlgBinary::~LinAlgBinary()
 {
 }
 
-void LinAlgBinary::execute() {
-  imatA_ = (MatrixIPort *)get_iport("A");
-  imatB_ = (MatrixIPort *)get_iport("B");
-  
-  update_state(NeedData);
-  MatrixHandle aH, bH;
-  if (!imatA_->get(aH)) {
-    if (!imatB_->get(bH))
-      error( "No handle or representation" );
-      return;
-  } else imatB_->get(bH);
-      
-  if (!aH.get_rep()) {
-    warning("Empty input matrix A.");
-  }
-  if (!bH.get_rep()) {
-    warning("Empty input matrix B.");
-  }
 
-  string op = op_.get();
-  if (op == "Add") {
-    if (!aH.get_rep()) {
-      error("Empty A matrix for Add");
-      return;
-    }
-    if (!bH.get_rep()) {
-      error("Empty B matrix for Add");
-      return;
-    }
+void
+LinAlgBinary::execute()
+{
+  update_state(NeedData);
+
+  MatrixHandle aH, bH;
+  if (!get_input_handle("A", aH)) return;
+  if (!get_input_handle("B", bH)) return;
+
+  const string op = op_.get();
+  if (op == "Add")
+  {
     if (aH->ncols() != bH->ncols() || aH->nrows() != bH->nrows())
     {
       error("Addition requires A and B must be the same size.");
@@ -114,15 +95,9 @@ void LinAlgBinary::execute() {
     MatrixHandle mtmp(aH + bH);
     send_output_handle("Output", mtmp);
     return;
-  } else if (op == "Mult") {
-    if (!aH.get_rep()) {
-      error("Empty A matrix for Mult");
-      return;
-    }
-    if (!bH.get_rep()) {
-      error("Empty B matrix for Mult");
-      return;
-    }
+  }
+  else if (op == "Mult")
+  {
     if (aH->ncols() != bH->nrows())
     {
       error("Matrix multiply requires the number of columns in A to be the same as the number of rows in B.");
@@ -133,7 +108,9 @@ void LinAlgBinary::execute() {
     MatrixHandle mtmp(aH * bH);
     send_output_handle("Output", mtmp);
     return;
-  } else if (op == "Function") {
+  }
+  else if (op == "Function")
+  {
     if (aH->nrows()*aH->ncols() != bH->nrows()*bH->ncols()) {
       error("Function only works if input matrices have the same number of elements.");
       return;
@@ -192,11 +169,9 @@ void LinAlgBinary::execute() {
     }
     send_output_handle("Output", m);
     return;
-  } else if (op == "SelectColumns") {
-    if (!aH.get_rep() || !bH.get_rep()) {
-      error("Can't have an empty input matrix for SelectColumns.");
-      return;
-    }
+  }
+  else if (op == "SelectColumns")
+  {
     ColumnMatrix *bc = dynamic_cast<ColumnMatrix *>(bH.get_rep());
     if (!bc) {
       error("Second input to SelectColumns must be a ColumnMatrix.");
@@ -230,11 +205,9 @@ void LinAlgBinary::execute() {
       send_output_handle("Output", mtmp);
     }
     return;
-  } else if (op == "SelectRows") {
-    if (!aH.get_rep() || !bH.get_rep()) {
-      error("Can't have an empty input matrix for SelectRows.");
-      return;
-    }
+  }
+  else if (op == "SelectRows")
+  {
     ColumnMatrix *bc = dynamic_cast<ColumnMatrix *>(bH.get_rep());
     if (!bc) {
       error("Second input must be a ColumnMatrix for SelectRows.");
@@ -268,12 +241,9 @@ void LinAlgBinary::execute() {
       send_output_handle("Output", mtmp);
     }
     return;
-  } else if (op == "NormalizeAtoB") {
-    if (!aH.get_rep() || !bH.get_rep()) {
-      error("Can't have an empty input matrix for NormalizeAtoB.");
-      return;
-    }
-
+  }
+  else if (op == "NormalizeAtoB")
+  {
     if (aH->is_sparse() || bH->is_sparse())
     {
       error("NormalizeAtoB does not currently support SparseRowMatrices.");
@@ -309,8 +279,10 @@ void LinAlgBinary::execute() {
     for (i=0; i<na; i++)
       anew[i] = (a[i]-amin)*scale+bmin;
     send_output_handle("Output", anewH);
-  } else {
-    warning("Don't know operation "+op);
+  }
+  else
+  {
+    error("Don't know operation " + op);
     return;
   }
 }

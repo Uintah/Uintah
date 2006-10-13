@@ -204,7 +204,8 @@ EditPath::~EditPath()
 {
 }
 
-void EditPath::execute()
+void
+EditPath::execute()
 {
   ipath = (PathIPort *)get_iport("Path");
   opath = (PathOPort *)get_oport("Path");

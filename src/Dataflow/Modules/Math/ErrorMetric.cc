@@ -107,9 +107,6 @@ public:
 
 private:
 
-  MatrixIPort* ivec1P_;
-  MatrixIPort* ivec2P_;
-  MatrixOPort* errorP_;
   GuiInt       have_ui_;
   GuiString    methodTCL_;
   GuiString    pTCL_;
@@ -134,18 +131,15 @@ ErrorMetric::~ErrorMetric()
 void
 ErrorMetric::execute()
 {
-     ivec1P_ = (MatrixIPort *)get_iport("Vec1");
-     ivec2P_ = (MatrixIPort *)get_iport("Vec2");
-
      MatrixHandle ivec1H;
+     if (!get_input_handle("Vec1", ivec1H)) return;
      ColumnMatrix* ivec1;
-     if (!ivec1P_->get(ivec1H)) return;
-     ivec1=ivec1H->column();
+     ivec1 = ivec1H->column();
 
      MatrixHandle ivec2H;
+     if (!get_input_handle("Vec2", ivec2H)) return;
      ColumnMatrix *ivec2;
-     if (!ivec2P_->get(ivec2H)) return;
-     ivec2=ivec2H->column();
+     ivec2 = ivec2H->column();
      
      if (ivec1->nrows() != ivec2->nrows()) {
          error("Can't compute error on vectors of different lengths!");

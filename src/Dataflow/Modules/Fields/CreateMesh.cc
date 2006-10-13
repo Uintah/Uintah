@@ -94,9 +94,8 @@ CreateMesh::execute()
   MatrixHandle positionshandle;
   if (!get_input_handle("Mesh Positions", positionshandle)) return;
 
-  MatrixIPort *normals_port = (MatrixIPort *)get_iport("Mesh Normals");
   MatrixHandle normalshandle;
-  if (!(normals_port->get(normalshandle) && normalshandle.get_rep()))
+  if (!get_input_handle("Mesh Normals", normalshandle, false))
   {
     remark("No input normals connected, not used.");
   }

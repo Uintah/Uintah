@@ -91,15 +91,8 @@ TextureBuilder::execute()
   FieldHandle vHandle;
   FieldHandle gHandle;
 
-  // Get a handle to the input field port.
-  FieldIPort* vfield_port = (FieldIPort *) get_iport("Scalar Field");
+  if (!get_input_handle("Scalar Field", vHandle)) return;
 
-  // The scalar field input is required.
-  if (!vfield_port->get(vHandle) || !(vHandle.get_rep()) ||
-      !(vHandle->mesh().get_rep())) {
-    error( "No scalar field handle or representation" );
-    return;
-  }
   string mesh_name = vHandle->get_type_description(Field::MESH_TD_E)->get_name();
   if( mesh_name.find("LatVolMesh", 0) == string::npos &&
       vHandle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name() != "MultiLevelField" &&
@@ -235,12 +228,9 @@ TextureBuilder::execute()
     update = true;
   }
 
-  // Get a handle to the input gradient port.
-  FieldIPort* gfield_port = (FieldIPort *) get_iport("Gradient Field");
-
   // The gradient field input is optional.
-  if (gfield_port->get(gHandle) && gHandle.get_rep()) {
-    
+  if (get_input_handle("Gradient Field", gHandle, false))
+  {
     if (!ShaderProgramARB::shaders_supported()) {
       // TODO: Runtime check, change message to reflect that.
       warning("This machine does not support advanced volume rendering. The gradient field will be ignored.");
@@ -334,17 +324,7 @@ TextureBuilder::execute()
 		gui_card_mem_.get());
   }
 
-  // Get a handle to the output texture port.
-  if( tHandle_.get_rep() ) {
-    TextureOPort* otexture_port = (TextureOPort *)get_oport("Texture");
-
-    if (!otexture_port) {
-      error("Unable to initialize oport 'Texture'.");
-      return;
-    }
-
-    otexture_port->send(tHandle_);
-  }
+  send_output_handle("Texture", tHandle_, true);
 }
 
 } // end namespace SCIRun

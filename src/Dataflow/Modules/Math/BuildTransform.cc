@@ -58,8 +58,6 @@
 namespace SCIRun {
 
 class BuildTransform : public Module {
-  MatrixIPort* imatrix_;
-  MatrixOPort* omatrix_;
   GeometryOPort* ogeom_;
 
   GuiDouble rotate_x_gui_, rotate_y_gui_, rotate_z_gui_, rotate_theta_gui_;
@@ -100,8 +98,6 @@ static string widget_name("TransformWidget");
 
 BuildTransform::BuildTransform(GuiContext* ctx) : 
   Module("BuildTransform", ctx, Filter, "Math", "SCIRun"),
-  imatrix_(0),
-  omatrix_(0),
   ogeom_(0),
   rotate_x_gui_(get_ctx()->subVar("rotate_x")),
   rotate_y_gui_(get_ctx()->subVar("rotate_y")),
@@ -146,9 +142,8 @@ BuildTransform::~BuildTransform()
 void
 BuildTransform::execute()
 {
-  imatrix_ = (MatrixIPort *)get_iport("Matrix");
   ogeom_ = (GeometryOPort *)get_oport("Geometry");
-  string which_transform=which_transform_gui_.get();
+  const string which_transform = which_transform_gui_.get();
 
   // Create the widget.
   if (!have_been_initialized_)
@@ -171,7 +166,8 @@ BuildTransform::execute()
   // get the input matrix if there is one
   MatrixHandle input_matrix_H;
   Transform input_transform;
-  if (imatrix_->get(input_matrix_H) && input_matrix_H.get_rep()) {
+  if (!get_input_handle("Matrix", input_matrix_H, false))
+  {
     input_transform = input_matrix_H->toTransform();
   }
   
@@ -239,7 +235,7 @@ BuildTransform::execute()
     widget_pose_inv_trans_.invert();
   }
   DenseMatrix *matrix_transform=scinew DenseMatrix(4,4);
-  omatrixH_=matrix_transform;
+  omatrixH_ = matrix_transform;
   
   // now either pre- or post-multiply the transforms and store in matrix
   if (pre_transform_gui_.get()) {

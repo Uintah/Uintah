@@ -65,7 +65,6 @@ typedef LatVolMesh<HexTrilinearLgn<Point> > LVMesh;
 typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
 
 private:
-  MatrixOPort *		oport_;
   UIdouble		epsilon_;
   int			pcf_generation_;
   int			lvf_generation_;
@@ -97,8 +96,6 @@ PointLatticeMap::~PointLatticeMap()
 void
 PointLatticeMap::execute()
 {
-  oport_ = (MatrixOPort *)get_oport("MappingMatrix");
-
   // Get the PointCloudField from the first port
   FieldHandle pcf;
   if (!get_input_handle("PointCloudField", pcf)) return;
@@ -123,7 +120,10 @@ PointLatticeMap::execute()
   if (pcf->generation == pcf_generation_ &&
       lvf->generation == lvf_generation_ &&
       epsilon_() == epsilon_cache_ &&
-      oport_->have_data()) return;
+      oport_cached("MappingMatrix"))
+  {
+    return;
+  }
 
   pcf_generation_ = pcf->generation;
   lvf_generation_ = lvf->generation;

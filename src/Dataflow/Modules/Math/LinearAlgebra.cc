@@ -90,36 +90,23 @@ LinearAlgebra::execute()
   }
 
   // Get input matrices.
-  MatrixIPort *ifp0 = (MatrixIPort *)get_iport("i1");
-  if (!(ifp0->get(imh[0]) && imh[0].get_rep()))
+  if (!get_input_handle("i1", imh[0], false))
   {
     remark("i1 is empty.");
   }
-
-  // Get input matrices.
-  MatrixIPort *ifp1 = (MatrixIPort *)get_iport("i2");
-  if (!(ifp1->get(imh[1]) && imh[1].get_rep()))
+  if (!get_input_handle("i2", imh[1], false))
   {
     remark("i2 is empty.");
   }
-
-  // Get input matrices.
-  MatrixIPort *ifp2 = (MatrixIPort *)get_iport("i3");
-  if (!(ifp2->get(imh[2]) && imh[2].get_rep()))
+  if (!get_input_handle("i3", imh[2], false))
   {
     remark("i3 is empty.");
   }
-
-  // Get input matrices.
-  MatrixIPort *ifp3 = (MatrixIPort *)get_iport("i4");
-  if (!(ifp3->get(imh[3]) && imh[3].get_rep()))
+  if (!get_input_handle("i4", imh[3], false))
   {
     remark("i4 is empty.");
   }
-
-  // Get input matrices.
-  MatrixIPort *ifp4 = (MatrixIPort *)get_iport("i5");
-  if (!(ifp4->get(imh[4]) && imh[4].get_rep()))
+  if (!get_input_handle("i5", imh[4], false))
   {
     remark("i5 is empty.");
   }

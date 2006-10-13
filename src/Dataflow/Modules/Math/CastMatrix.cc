@@ -84,16 +84,11 @@ CastMatrix::~CastMatrix()
 void
 CastMatrix::execute()
 {
-  imat_ = (MatrixIPort *)get_iport("Input");
-  
   update_state(NeedData);
+
   MatrixHandle imH;
-  if (!imat_->get(imH))
-    return;
-  if (!imH.get_rep()) {
-    warning("Empty input matrix.");
-    return;
-  }
+  if (!get_input_handle("Input", imH)) return;
+
   nrow_.set(to_string(imH->nrows()));
   ncol_.set(to_string(imH->ncols()));
 

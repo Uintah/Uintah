@@ -60,12 +60,6 @@ private:
   //! Input should be a volume field.
   int                      infield_gen_;
 
-  //! BoundaryField field output.
-  FieldOPort*              osurf_;
-  
-  //! BoundaryField interpolant field output.
-  MatrixOPort*              ointerp_;
-  
   //! Handle on the generated surface.
   FieldHandle              tri_fh_;
 
@@ -90,14 +84,11 @@ FieldBoundary::~FieldBoundary()
 void 
 FieldBoundary::execute()
 {
-  osurf_ = (FieldOPort *)get_oport("BoundaryField");
-  ointerp_ = (MatrixOPort *)get_oport("Mapping");
-
   FieldHandle input;
   if (!get_input_handle("Field", input)) return;
   
   if (infield_gen_ != input->generation ||
-      !osurf_->have_data() || !ointerp_->have_data())
+      !oport_cached("BoundaryField") || !oport_cached("Mapping"))
   {
     infield_gen_ = input->generation;
     MeshHandle mesh = input->mesh();

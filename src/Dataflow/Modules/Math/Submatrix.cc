@@ -85,19 +85,15 @@ Submatrix::~Submatrix()
 void
 Submatrix::execute()
 {
-  MatrixIPort *imp = (MatrixIPort *)get_iport("Input Matrix");
   MatrixHandle imatrix;
-  if (!(imp && imp->get(imatrix) && imatrix.get_rep()))
-  {
-    return;
-  }
+  if (!get_input_handle("Input Matrix", imatrix))
+
   nrow_.set(to_string(imatrix->nrows()));
   ncol_.set(to_string(imatrix->ncols()));
   
-  MatrixIPort *cmp = (MatrixIPort *)get_iport("Optional Range Bounds");
   MatrixHandle cmatrix;
   int mincol, maxcol, minrow, maxrow;
-  if (cmp && cmp->get(cmatrix) && cmatrix.get_rep())
+  if (get_input_handle("Optional Range Bounds", cmatrix, false))
   {
     // Grab the bounds from the clip matrix, check them, and update the gui.
     if (cmatrix->nrows() > 1)

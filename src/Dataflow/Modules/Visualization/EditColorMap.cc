@@ -1009,11 +1009,8 @@ EditColorMap::DoRelease(int x, int y, int button)
 void
 EditColorMap::execute()
 {
-  ColorMapIPort *inport = (ColorMapIPort *)get_iport("ColorMap");
-  ColorMapOPort *outport = (ColorMapOPort *)get_oport("ColorMap");
-
   ColorMapHandle newcmap;
-  if (inport->get(newcmap) && newcmap.get_rep() &&
+  if (get_input_handle("ColorMap", newcmap, false) &&
       newcmap->generation != cmap_generation)
   {
     cmap_generation = newcmap->generation;
@@ -1028,7 +1025,7 @@ EditColorMap::execute()
   }
   DrawGraphs(0);
 
-  outport->send(cmap);
+  send_output_handle("ColorMap", cmap);
 }
 
 

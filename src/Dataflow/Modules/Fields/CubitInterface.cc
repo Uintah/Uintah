@@ -73,10 +73,7 @@ typedef TriSurfMesh<TriLinearLgn<Point> > TSMesh;
 typedef TetVolMesh<TetLinearLgn<Point> > TVMesh;
 
 private:
-  FieldIPort *		iport2_;
-  FieldOPort *		oport_;
   int			field1_generation_;
-  int			pcf_generation_;
   GuiString		cubitdir_;
   GuiString		ncdump_;
   string		base_;
@@ -98,7 +95,6 @@ DECLARE_MAKER(CubitInterface)
 CubitInterface::CubitInterface(GuiContext* ctx)
   : Module("CubitInterface", ctx, Filter, "FieldsCreate", "SCIRun"),
     field1_generation_(-1),
-    pcf_generation_(-1),
     cubitdir_(get_ctx()->subVar("cubitdir"), "."),
     ncdump_(get_ctx()->subVar("ncdump"), "ncdump")
 {
@@ -344,8 +340,6 @@ CubitInterface::read_netcdf_file(string filename, TVMesh::handle_type &mesh)
 void
 CubitInterface::execute()
 {
-  iport2_ = (FieldIPort *)get_iport("PointCloudField");
-
   FieldHandle field1;
   if (!get_input_handle("Field", field1)) return;
 
@@ -355,12 +349,14 @@ CubitInterface::execute()
   }
 
   // Get the PointCloudField from the second port.
+  // TODO:  Why is this here?  It's not used.
   FieldHandle pcf;
-  iport2_->get(pcf);
+  if (!get_input_handle("PointCloudField", pcf)) return;
 
   // Make sure the second input field is of type PointCloudField
   if (pcf.get_rep() && 
-      pcf->get_type_description()->get_name().find("PointCloudField")) {
+      pcf->get_type_description()->get_name().find("PointCloudField"))
+  {
     error("Field connected to port 1 must be PointCloudField.");
     return;
   }

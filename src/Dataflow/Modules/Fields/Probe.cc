@@ -175,14 +175,9 @@ void
 Probe::execute()
 {
   // Get input field.
-  FieldIPort *ifp = (FieldIPort *)get_iport("Input Field");
   FieldHandle ifieldhandle;
-
-  bool input_field_p = true;
-  if (!(ifp->get(ifieldhandle) && ifieldhandle.get_rep()))
-  {
-    input_field_p = false;
-  }
+  const bool input_field_p =
+    get_input_handle("Input Field", ifieldhandle, false);
 
   // Maybe update the widget.
   BBox bbox;
