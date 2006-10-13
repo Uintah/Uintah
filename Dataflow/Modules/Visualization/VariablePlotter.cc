@@ -58,6 +58,7 @@ VariablePlotter::VariablePlotter(const string& name, GuiContext* ctx) :
   index_z_(get_ctx()->subVar("index_z")),
   index_l_(get_ctx()->subVar("index_l")),
   curr_var_(get_ctx()->subVar("curr_var")),
+  archive_name_(get_ctx()->subVar("archive_name")),
   old_generation_(-1), old_timestep_(0), grid_(NULL)
 {
 }
@@ -71,6 +72,7 @@ VariablePlotter::VariablePlotter(GuiContext* ctx) :
   index_z_(get_ctx()->subVar("index_z")),
   index_l_(get_ctx()->subVar("index_l")),
   curr_var_(get_ctx()->subVar("curr_var")),
+  archive_name_(get_ctx()->subVar("archive_name")),
   old_generation_(-1), old_timestep_(0), grid_(NULL)
 {
 }
@@ -99,6 +101,7 @@ VariablePlotter::getGrid()
   bool archive_dirty =  new_generation != old_generation_;
   int timestep = handle->timestep();
   if (archive_dirty) {
+    archive_name_.set(archive_->name());
     old_generation_ = new_generation;
     vector< int > indices;
     times_.clear();
