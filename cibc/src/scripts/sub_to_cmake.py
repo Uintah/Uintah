@@ -76,7 +76,7 @@ def gen_cmake(filename):
     print '#  Copyright (c) 2004 Scientific Computing and Imaging Institute,'
     print '#  University of Utah.'
     print '# '
-    print '#  License for the specific language governing rights and limitations under'
+    print '#  '
     print '#  Permission is hereby granted, free of charge, to any person obtaining a'
     print '#  copy of this software and associated documentation files (the "Software"),'
     print '#  to deal in the Software without restriction, including without limitation'

@@ -6,7 +6,7 @@ C       The MIT License
 C       Copyright (c) 2004 Scientific Computing and Imaging Institute,
 C       University of Utah.
 
-C       License for the specific language governing rights and limitations under
+C       
 C       Permission is hereby granted, free of charge, to any person obtaining a
 C       copy of this software and associated documentation files (the "Software"),
 C       to deal in the Software without restriction, including without limitation
