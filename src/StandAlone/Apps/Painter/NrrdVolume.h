@@ -188,7 +188,8 @@ template <class T>
 static void
 nrrd_set_value(Nrrd *nrrd, 
                const vector<int> &index, 
-               T val)
+               T val, 
+               unsigned int label_mask = 0)
 {
   ASSERT((unsigned int)(index.size()) == nrrd->dim);
   int position = index[0];
@@ -209,6 +210,7 @@ nrrd_set_value(Nrrd *nrrd,
     } break;
   case nrrdTypeShort: {
     short *slicedata = (short *)nrrd->data;
+
     slicedata[position] = (short)val;
     } break;
   case nrrdTypeUShort: {
@@ -221,7 +223,11 @@ nrrd_set_value(Nrrd *nrrd,
     } break;
   case nrrdTypeUInt: {
     unsigned int *slicedata = (unsigned int *)nrrd->data;
-    slicedata[position] = (unsigned int)val;
+    //    if (!label_mask)
+    //      slicedata[position] = (unsigned int)val;
+      //    else 
+    if ((label_mask & slicedata[position]) == label_mask) 
+      slicedata[position] |= (unsigned int)val;
     } break;
   case nrrdTypeLLong: {
     signed long long *slicedata = (signed long long *)nrrd->data;

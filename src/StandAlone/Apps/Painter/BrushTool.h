@@ -74,6 +74,7 @@ private:
   vector<int>           last_index_;
   Skinner::Var<double>  radius_;
   bool                  draw_cursor_;
+  unsigned int          label_mask_;
 };
   
 }
