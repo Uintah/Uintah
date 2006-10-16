@@ -135,10 +135,10 @@ NrrdVolume::NrrdVolume(NrrdVolume *copy,
   painter_(copy->painter_),
   nrrd_handle_(0),
   name_(name),
+  mutex_(new Mutex(name.c_str())),
   opacity_(copy->opacity_),
   clut_min_(copy->clut_min_),
   clut_max_(copy->clut_max_),
-  mutex_(new Mutex(name.c_str())),
   data_min_(copy->data_min_),
   data_max_(copy->data_max_),
   colormap_(copy->colormap_),
@@ -542,7 +542,7 @@ NrrdVolume::compute_label_mask(unsigned int label)
 {
   ASSERT((label & label_) == 0);
   label |= label_;
-  for (int i = 0; i < children_.size(); ++i) {
+  for (unsigned int i = 0; i < children_.size(); ++i) {
     label |= children_[i]->compute_label_mask(label);
   }
   return label;

@@ -44,8 +44,8 @@ namespace SCIRun {
       bgcolor_(vars,"bgcolor",Color(1.0, 0.0, 0.0, 1.0)),
       offsetx_(vars,"offsetx"),
       offsety_(vars,"offsety"),
-      cursor_position_(0),
-      cursor_(vars, "cursor", false)
+      cursor_(vars, "cursor", false),
+      cursor_position_(0)
     {
       REGISTER_CATCHER_TARGET(Text::redraw);
 

@@ -168,7 +168,7 @@ Painter::get_colormap(int id)
 {
   if (!id) return 0;
   id = Clamp(id-1, 0, colormaps_.size());
-  if (id < colormaps_.size())
+  if (id < (int)colormaps_.size())
     return colormaps_[id];
   return 0;
 }
