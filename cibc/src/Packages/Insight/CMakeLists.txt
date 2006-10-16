@@ -28,5 +28,5 @@
 
 # CMakeLists.txt for Packages/Insight
 
-SUBDIRS(Core Dataflow)
+SUBDIRS(Dataflow)
 

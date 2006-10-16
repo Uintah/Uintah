@@ -63,6 +63,19 @@ ELSE(SCIRUN_FOUND)
   MESSAGE(FATAL_ERROR "Cannot build SCIRun Dataflow without SCIRUN Core. Please set SCIRUN_DIR.")
 ENDIF(SCIRUN_FOUND)
 
+IF(WITH_ITK)
+  IF(NOT ITK_DIR)
+    SET(ITK_DIR ${SCIRUN_ITK_DIR})
+  ENDIF(NOT ITK_DIR)
+
+  FIND_PACKAGE( ITK )
+  IF(ITK_FOUND)
+    INCLUDE(${ITK_USE_FILE})
+  ELSE(ITK_FOUND)
+    MESSAGE(FATAL_ERROR "SCIRun Core build with the Insight Toolkit. Please set ITK_DIR.")
+  ENDIF(ITK_FOUND)
+ENDIF(WITH_ITK)
+
 # Create on-the-fly-libs stuff
 CONFIGURE_FILE (
   "${SCIRUN_SOURCE_DIR}/src/on-the-fly-libs/Makefile.in"
