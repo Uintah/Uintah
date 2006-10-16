@@ -67,14 +67,6 @@ typedef ConstantBasis<int>                                 TVIBasis;
 typedef GenericField<TVMesh, TVIBasis,    vector<int> >    TVFieldI;   
 
 class ConductivitySearch : public Module {    
-  FieldIPort     *mesh_iport_;
-  MatrixIPort    *cond_params_iport_;
-  MatrixIPort    *misfit_iport_;
-
-  FieldOPort     *mesh_oport_;
-  MatrixOPort    *cond_vector_oport_;
-  MatrixOPort    *fem_mat_oport_;
-
   FieldHandle mesh_in_;
   FieldHandle mesh_out_;
   MatrixHandle cond_params_;
@@ -263,17 +255,15 @@ ConductivitySearch::send_and_get_data(int which_conductivity)
   fem_mat_ = build_composite_matrix(which_conductivity);
   
   // send out data
-  mesh_oport_->send_intermediate(mesh_out_);
-  cond_vector_oport_->send_intermediate(cond_vector_);
-  fem_mat_oport_->send_intermediate(fem_mat_);
+  send_output_handle("FiniteElementMesh", mesh_out_, true, true);
+  send_output_handle("OldAndNewConductivities", cond_vector_, true, true);
+  send_output_handle("FiniteElementMatrix", fem_mat_, true, true);
   last_intermediate_=1;
 
   // read back data, and set the caches and search matrix
   MatrixHandle mH;
-  if (!misfit_iport_->get(mH) || !(mH.get_rep())) {
-    error("ConductivitySearch::failed to read back error");
-    return;
-  }
+  if (!get_input_handle("TestMisfit", mH)) return;
+
   misfit_[which_conductivity] = mH->get(0, 0);
 }  
 
@@ -451,7 +441,7 @@ ConductivitySearch::read_mesh_and_cond_param_ports(int &valid_data,
   valid_data=1;
   new_data=0;
   TVFieldI *meshTV = 0;
-  if (mesh_iport_->get(mesh) && mesh.get_rep() &&
+  if (get_input_handle("FiniteElementMesh", mesh, false) &&
       (meshTV = dynamic_cast<TVFieldI *>(mesh.get_rep())))
   {
     if (!mesh_in_.get_rep() || (mesh_in_->generation != mesh->generation)) {
@@ -475,10 +465,12 @@ ConductivitySearch::read_mesh_and_cond_param_ports(int &valid_data,
   NCONDUCTIVITIES_ = minmax.second+3;
 
   MatrixHandle cond_params;
-  if (cond_params_iport_->get(cond_params) && cond_params.get_rep() &&
-      (cond_params->nrows() == NDIM_) && (cond_params->ncols() == 4)) {
+  if (get_input_handle("ConductivityParameters", cond_params, false) &&
+      (cond_params->nrows() == NDIM_) && (cond_params->ncols() == 4))
+  {
     if (!cond_params_.get_rep() || 
-	(cond_params_->generation != cond_params->generation)) {
+	(cond_params_->generation != cond_params->generation))
+    {
       new_data = 1;
       cond_params_=cond_params;
     } else {
@@ -499,13 +491,6 @@ void
 ConductivitySearch::execute()
 {
   int valid_data, new_data;
-  mesh_iport_ = (FieldIPort *)get_iport("FiniteElementMesh");
-  cond_params_iport_ = (MatrixIPort *)get_iport("ConductivityParameters");
-  misfit_iport_ = (MatrixIPort *)get_iport("TestMisfit");
-
-  mesh_oport_ = (FieldOPort *)get_oport("FiniteElementMesh");
-  cond_vector_oport_ = (MatrixOPort *)get_oport("OldAndNewConductivities");
-  fem_mat_oport_ = (MatrixOPort *)get_oport("FiniteElementMatrix");
 
   read_mesh_and_cond_param_ports(valid_data, new_data);
   if (!valid_data) return;
@@ -513,11 +498,11 @@ ConductivitySearch::execute()
     if (mesh_out_.get_rep()) { // if we have valid old data
       // send old data and clear ports
       remark("Sending old data.");
-      mesh_oport_->send(mesh_out_);
-      cond_vector_oport_->send(cond_vector_);
-      fem_mat_oport_->send(fem_mat_);
+      send_output_handle("FiniteElementMesh", mesh_out_, true);
+      send_output_handle("OldAndNewConductivities", cond_vector_, true);
+      send_output_handle("FiniteElementMatrix", fem_mat_, true);
       MatrixHandle dummy_mat;
-      misfit_iport_->get(dummy_mat);
+      get_input_handle("TestMisfit", dummy_mat, false);
       return;
     } else {
       return;
@@ -537,12 +522,12 @@ ConductivitySearch::execute()
     if (stop_search_ || state_ == "DONE") break;
   }
   if (last_intermediate_) { // last sends were send_intermediates
-    // gotta do final sends and clear the ports
-    mesh_oport_->send(mesh_out_);
-    cond_vector_oport_->send(cond_vector_);
-    fem_mat_oport_->send(fem_mat_);
+    // Gotta do final sends and clear the ports.
+    send_output_handle("FiniteElementMesh", mesh_out_, true);
+    send_output_handle("OldAndNewConductivities", cond_vector_, true);
+    send_output_handle("FiniteElementMatrix", fem_mat_, true);
     MatrixHandle dummy_mat;
-    misfit_iport_->get(dummy_mat);
+    get_input_handle("TestMisfit", dummy_mat, false);
   }
   state_ = "SEEDING";
   stop_search_=0;

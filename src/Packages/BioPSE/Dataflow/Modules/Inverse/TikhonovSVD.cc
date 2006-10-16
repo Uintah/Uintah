@@ -81,8 +81,6 @@ public:
   double Inner_Product(DenseMatrix& A, int col_num, ColumnMatrix& w);
   void	tikhonov_fun(ColumnMatrix& X_reg, DenseMatrix& InvMat, DenseMatrix& U, ColumnMatrix& Uy,DenseMatrix& S, DenseMatrix& V, DenseMatrix& X, double lam);
   void	prep_lcurve_data(double *rho, double *eta, ColumnMatrix& Uy, DenseMatrix& U, DenseMatrix& S, DenseMatrix& V, DenseMatrix& X, ColumnMatrix& y, double lam);
-  DenseMatrix *make_dense(MatrixHandle A);
-  ColumnMatrix *make_column(MatrixHandle A);
   double FindCorner(Array1<double>  &rho, Array1<double>  &eta, Array1<double>  &lambdaArray, 
                     ColumnMatrix *kapa, int *lambda_index, int nLambda);
 
@@ -322,60 +320,6 @@ TikhonovSVD::prep_lcurve_data(double *rho, double *eta, ColumnMatrix& Uy,
 }
 
 
-/////////////////////////////////////////////////////////////	
-// THIS FUNCTION MAKES SURE THAT THE MATRIX IS A DENSE MATRIX
-/////////////////////////////////////////////////////////////
-DenseMatrix *
-TikhonovSVD::make_dense(MatrixHandle A) 
-{
-  DenseMatrix *Adense = dynamic_cast<DenseMatrix *>(A.get_rep());
-  if (Adense) 
-    return Adense;
-  SparseRowMatrix *Asparse = dynamic_cast<SparseRowMatrix *>(A.get_rep());
-  if (!Asparse) 
-  {
-    ColumnMatrix *Acol = dynamic_cast<ColumnMatrix *>(A.get_rep());
-    if (!Acol) 
-    {
-      warning("Bad input types.");
-      return Adense;
-    }
-    return Acol->dense();
-  } 
-  else 
-  {
-    return Asparse->dense();
-  }
-}
-
-
-////////////////////////////////////////////////////////////////
-// THIS FUNCTION MAKES SURE THAT THE MATRIX IS A COLUMN MATRIX
-////////////////////////////////////////////////////////////////
-ColumnMatrix *
-TikhonovSVD::make_column(MatrixHandle A) 
-{
-  ColumnMatrix *Acol = dynamic_cast<ColumnMatrix *>(A.get_rep());
-  if (Acol) 
-    return Acol;
-  SparseRowMatrix *Asparse = dynamic_cast<SparseRowMatrix *>(A.get_rep());
-  if (!Asparse) 
-  {
-    DenseMatrix *Adense = dynamic_cast<DenseMatrix *>(A.get_rep());
-    if (!Adense) 
-    {
-      warning("Bad input types.");
-      return Acol;
-    }
-    return Adense->column();
-  }
-  else 
-  {
-    return Asparse->column();
-  }
-}
-
-
 ////////////////////////////////////////////
 // FIND CORNER
 ////////////////////////////////////////////
@@ -439,37 +383,20 @@ TikhonovSVD::FindCorner(Array1<double> &rho, Array1<double> &eta,
 void
 TikhonovSVD::execute()
 {
-  MatrixIPort *iportMeasDat = (MatrixIPort *)get_iport("MeasuredPots");
-	
-  MatrixIPort *iportU = (MatrixIPort *)get_iport("U");
-  MatrixIPort *iportS = (MatrixIPort *)get_iport("S");
-  MatrixIPort *iportV = (MatrixIPort *)get_iport("V");
-  MatrixIPort *iportX = (MatrixIPort *)get_iport("X");
-
-  MatrixOPort *oportInvSol = (MatrixOPort *)get_oport("InverseSoln");
-  MatrixOPort *oportRegParam = (MatrixOPort *)get_oport("RegParam");
-  MatrixOPort *oportRegInvMat = (MatrixOPort *)get_oport("RegInverseMat");
   // DEFINE MATRIX HANDLES FOR INPUT/OUTPUT PORTS
   MatrixHandle hMatrixMeasDat, hMatrixU, hMatrixS, hMatrixV ,hMatrixX;
     	    
-    	
-  if( (!iportU->get(hMatrixU)) || (!iportS->get(hMatrixS)) || (!iportV->get(hMatrixV)) )
-  {
-    error("Couldn't get handle to the U, S or V Matrices.");
-    return;	
-  }
-			
-  if(!iportMeasDat->get(hMatrixMeasDat)) 
-  { 
-    error("Couldn't get handle to the measured data.");
-    return;
-  }
+  if (!get_input_handle("U", hMatrixU)) return;
+  if (!get_input_handle("S", hMatrixS)) return;
+  if (!get_input_handle("V", hMatrixV)) return;
+
+  if (!get_input_handle("MeasuredPots", hMatrixMeasDat)) return;
 
   // TYPE CHECK
-  ColumnMatrix *matrixMeasDatD = make_column(hMatrixMeasDat);
-  DenseMatrix *matrixU = make_dense(hMatrixU);
-  DenseMatrix *matrixS = make_dense(hMatrixS);	
-  DenseMatrix *matrixV = make_dense(hMatrixV);
+  ColumnMatrix *matrixMeasDatD = hMatrixMeasDat->column();
+  DenseMatrix *matrixU = hMatrixU->dense();
+  DenseMatrix *matrixS = hMatrixS->dense();	
+  DenseMatrix *matrixV = hMatrixV->dense();
   DenseMatrix *matrixX;
 	
   int	Method;
@@ -484,14 +411,8 @@ TikhonovSVD::execute()
     {
       Method=GSVD_method;
 		
-      if(!iportX->get(hMatrixX)) 
-      { 
-        error("Couldn't get handle X input.");
-        return;
-      }
-
-      matrixX = make_dense(hMatrixX);
-
+      if (!get_input_handle("X", hMatrixX)) return;
+      matrixX = hMatrixX->dense();
     }
     else
     {
@@ -612,11 +533,13 @@ TikhonovSVD::execute()
   //...........................................................
   // SEND RESULTS TO THE OUTPUT PORTS
   MatrixHandle solution_handle(solution);
-  oportInvSol->send_and_dereference(solution_handle);
+  send_output_handle("InverseSoln", solution_handle);
+
   MatrixHandle RegParameterHandle(RegParameter);
-  oportRegParam->send_and_dereference(RegParameterHandle);
+  send_output_handle("RegParam", RegParameterHandle);
+
   MatrixHandle InverseMatHandle(InverseMat);
-  oportRegInvMat->send_and_dereference(InverseMatHandle);
+  send_output_handle("RegInverseMat", InverseMatHandle);
 }
   
 } // End namespace BioPSE

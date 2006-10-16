@@ -71,15 +71,6 @@ class DipoleSearch : public Module {
   typedef SCIRun::GenericField<PCMesh, PCDBasis, vector<double> > PCFieldD;
   typedef TetVolMesh<TetLinearLgn<Point> >                        TVMesh;
 
-  FieldIPort     *seeds_iport_;
-  FieldIPort     *mesh_iport_;
-  MatrixIPort    *misfit_iport_;
-  MatrixIPort    *dir_iport_;
-
-  MatrixOPort    *leadfield_select_oport_;
-  FieldOPort     *simplex_oport_;
-  FieldOPort     *dipole_oport_;
-
   FieldHandle seedsH_;
   FieldHandle meshH_;
   TVMesh::handle_type vol_mesh_;
@@ -236,22 +227,24 @@ DipoleSearch::send_and_get_data(int which_dipole, TVMesh::Cell::index_type ci)
 
   // send out data
   leadfield_selectH_ = leadfield_select_out;
-  leadfield_select_oport_->send_intermediate(leadfield_selectH_);
   simplexH_ = pcv;
-  simplex_oport_->send_intermediate(simplexH_);
   dipoleH_ = pcd;
-  dipole_oport_->send_intermediate(dipoleH_);
-  last_intermediate_=1;
+  send_output_handle("LeadFieldSelectionMatrix",
+                     leadfield_selectH_, true, true);
+  send_output_handle("DipoleSimplex", simplexH_, true, true);
+  send_output_handle("TestDipole", dipoleH_, true, true);
+  last_intermediate_ = 1;
 
   // read back data, and set the caches and search matrix
   MatrixHandle mH;
-  if (!misfit_iport_->get(mH) || !(mH.get_rep())) {
-    error("DipoleSearch::failed to read back error");
-    return;
-  }
+  if (!get_input_handle("TestMisfit", mH)) return;
+
   cell_err_[ci] = misfit_[which_dipole] = mH->get(0, 0);
-  if (!dir_iport_->get(mH) || !(mH.get_rep()) || mH->nrows() < 3) {
-    error("DipoleSearch::failed to read back orientation");
+
+  if (!get_input_handle("TestDirection", mH)) return;
+  if (mH->nrows() < 3)
+  {
+    error("TestDirection had wrong size (not 3 rows).");
     return;
   }
   cell_dir_[ci] = Vector(mH->get(0, 0), mH->get(1, 0), mH->get(2, 0));
@@ -522,7 +515,7 @@ DipoleSearch::read_field_ports(int &valid_data, int &new_data)
   valid_data = 1;
   new_data = 0;
   FieldHandle mesh(0);
-  if (mesh_iport_->get(mesh) && mesh.get_rep())
+  if (get_input_handle("TetMesh", mesh, false))
   {
     const string &mtdn = mesh->mesh()->get_type_description()->get_name();
     if (mtdn == get_type_description((TVMesh*)0)->get_name())
@@ -553,14 +546,9 @@ DipoleSearch::read_field_ports(int &valid_data, int &new_data)
   }
   
   FieldHandle seeds;
-  if (!seeds_iport_->get(seeds))
+  if (!get_input_handle("DipoleSeeds", seeds, false))
   {
     warning("No input seeds.");
-    valid_data = 0;
-  }
-  else if (!seeds.get_rep())
-  {
-    warning("Empty seeds handle.");
     valid_data = 0;
   }
   else
@@ -637,23 +625,6 @@ void
 DipoleSearch::execute()
 {
   int valid_data, new_data;
-  // point cloud of vectors -- the seed positions/orientations for our search
-  seeds_iport_ = (FieldIPort *)get_iport("DipoleSeeds");
-  // domain of search -- used for constraining and for caching misfits
-  mesh_iport_ = (FieldIPort *)get_iport("TetMesh");
-  // the computed misfit for the latest test dipole
-  misfit_iport_ = (MatrixIPort *)get_iport("TestMisfit");
-  // optimal orientation for the test dipole
-  dir_iport_ = (MatrixIPort *)get_iport("TestDirection");
-
-  // matrix of selection columns (for MatrixSelectVector) to pull out the
-  //    appropriate x/y/z columns from the leadfield matrix
-  leadfield_select_oport_ =
-    (MatrixOPort *)get_oport("LeadFieldSelectionMatrix");
-  // point cloud of vectors -- the latest simplex (for vis)
-  simplex_oport_ = (FieldOPort *)get_oport("DipoleSimplex");
-  // point cloud of one vector, just the test dipole (for vis)
-  dipole_oport_ = (FieldOPort *)get_oport("TestDipole");
 
   read_field_ports(valid_data, new_data);
   if (!valid_data) return;
@@ -662,12 +633,13 @@ DipoleSearch::execute()
     if (simplexH_.get_rep())
     { // if we have valid old data
       // send old data and clear ports
-      leadfield_select_oport_->send(leadfield_selectH_);
-      simplex_oport_->send(simplexH_);
-      dipole_oport_->send(dipoleH_);
+      send_output_handle("LeadFieldSelectionMatrix", leadfield_selectH_, true);
+      send_output_handle("DipoleSimplex", simplexH_, true);
+      send_output_handle("TestDipole", dipoleH_, true);
+
       MatrixHandle dummy_mat;
-      misfit_iport_->get(dummy_mat);
-      dir_iport_->get(dummy_mat);
+      get_input_handle("TestMisfit", dummy_mat, false);
+      get_input_handle("TestDirection", dummy_mat, false);
       return;
     }
     else
@@ -696,13 +668,13 @@ DipoleSearch::execute()
   { // last sends were send_intermediates
     // gotta do final sends and clear the ports
     organize_last_send();
-    leadfield_select_oport_->send(leadfield_selectH_);
-    simplex_oport_->send(simplexH_);
-    dipole_oport_->send(dipoleH_);
+    send_output_handle("LeadFieldSelectionMatrix", leadfield_selectH_, true);
+    send_output_handle("DipoleSimplex", simplexH_, true);
+    send_output_handle("TestDipole", dipoleH_, true);
 
     MatrixHandle dummy_mat;
-    misfit_iport_->get(dummy_mat);
-    dir_iport_->get(dummy_mat);
+    get_input_handle("TestMisfit", dummy_mat, false);
+    get_input_handle("TestDirection", dummy_mat, false);
   }
   state_ = "SEEDING";
   stop_search_=0;
