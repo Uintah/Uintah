@@ -172,19 +172,8 @@ TetMesher::execute()
 bool
 TetMesher::read_tri_file(int &npoints, double *&points, int &ntris, int *&tris)
 {
-  FieldIPort *trisurf = (FieldIPort *) get_iport("TriSurf");
-  if (!trisurf) {
-    error("Unable to initialize iport TriSurf.");
-    return false;
-  }
   FieldHandle trisurfH;
-  trisurf->get(trisurfH);
-  
-  if (trisurfH.get_rep() == 0)
-  {
-    error("No field on input");
-    return (false);
-  }
+  if (!get_input_handle("TriSurf", trisurfH)) return false;
   
   TriSurfMesh<TriLinearLgn<Point> > *tsm = dynamic_cast<TriSurfMesh<TriLinearLgn<Point> >* >(trisurfH->mesh().get_rep());
   if (!tsm)
