@@ -38,8 +38,11 @@
 #include <Dataflow/Network/PackageDB.h>
 #include <Dataflow/Network/NetworkIO.h>
 #include <main/sci_version.h>
+#ifdef _WIN32
+#include <Core/Geom/Win32OpenGLContext.h>
+#else
 #include <Core/Geom/X11OpenGLContext.h>
-
+#endif
 #include <tcl.h>
 #include <tk.h>
 #include <itk.h>
@@ -494,10 +497,11 @@ TCLThread::startNetworkEditor()
   X11OpenGLContext *context = 
     new X11OpenGLContext(0, 0, 0, 10, 10, 0, false);
   delete context;
+#elif defined(_WIN32)
+  Win32OpenGLContext *context = 
+    new Win32OpenGLContext(0, 0, 0, 10, 10, false, false);
+  delete context;
 #endif
-
-  ShaderProgramARB::init_shaders_supported();
-
   Tcl_CreateCommand(the_interp, "exit", exitproc, 0, 0);
 
   // TCL Socket

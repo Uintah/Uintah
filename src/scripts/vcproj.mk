@@ -113,7 +113,7 @@ $(FILENAME):
 				Name=\"VCCLCompilerTool\" \
 				Optimization=\"$(CONF_OPT)\" \
 				AdditionalIncludeDirectories=\"$(VC_INC_PATH)\" \
-				PreprocessorDefinitions=\"_WIN32;_WIN32_WINNT=0x0500;_CONSOLE;_USE_MATH_DEFINES;CRT_SECURE_NO_DEPRECATE;BUILD_$($@_LIBNAME)\" \
+				PreprocessorDefinitions=\"_WIN32;_WIN32_WINNT=0x0500;_CONSOLE;_USE_MATH_DEFINES;_CRT_SECURE_NO_DEPRECATE;BUILD_$($@_LIBNAME)\" \
 				MinimalRebuild=\"$(CONF_MIN_REB)\" \
 				BasicRuntimeChecks=\"$(CONF_RTC)\" \
 				RuntimeLibrary=\"$(CONF_RTL)\" \

@@ -35,6 +35,13 @@
 #include <Core/Datatypes/NrrdData.h>
 #include <Core/Geom/GeomTriangles.h>
 
+#ifdef _WIN32
+#undef SCISHARE
+#define SCISHARE __declspec(dllexport)
+#else
+#define SCISHARE
+#endif
+
 namespace SCIRun {
 
 
@@ -122,7 +129,7 @@ fast_lat_mc_real(Nrrd *nrrd, T *data, double ival)
 }
 
 
-GeomHandle
+SCISHARE GeomHandle
 fast_lat_mc(Nrrd *nrrd, double ival)
 {
   switch (nrrd->type)

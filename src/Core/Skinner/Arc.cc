@@ -140,7 +140,7 @@ Skinner::Arc::redraw(event_handle_t)
   glBegin(GL_TRIANGLE_FAN);
 
   // Anchor point for tri-fan
-  glColor4dv(&colors_[anchor_]().r);
+  glColor4dv(&(colors_[anchor_]().r));
 
   if (!reverse_()) {
     glVertex3d(x,y,0);
@@ -160,7 +160,7 @@ Skinner::Arc::redraw(event_handle_t)
   double rad = start;
   for (int i = 0; i < divisions; ++i) {
 
-    glColor4dv(&colors_[(anchor_+1)%4]().r);
+    glColor4dv(&(colors_[(anchor_+1)%4]().r));
 
     glVertex3d(x + cos(rad) * width,
                y + sin(rad) * height, 0);    

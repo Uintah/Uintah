@@ -34,10 +34,12 @@
 #include <string>
 using std::string;
 
+#include <Core/Skinner/share.h>
+
 namespace SCIRun {
   namespace Skinner {
 
-    class Color {
+    class SCISHARE Color {
     public:
       Color();
       Color(double R, double G, double B, double A=1.0);

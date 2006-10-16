@@ -110,34 +110,34 @@ Skinner::Gradient::render_gl()
   glBegin(GL_TRIANGLES);
 
   if (backslash_()) {
-    glColor4dv(&colors_[SW]().r);
+    glColor4dv(&(colors_[SW]().r));
     glVertex3d(x,y,0);
-    glColor4dv(&colors_[SE]().r);
+    glColor4dv(&(colors_[SE]().r));
     glVertex3d(x2,y,0);
-    glColor4dv(&colors_[NW]().r);
+    glColor4dv(&(colors_[NW]().r));
     glVertex3d(x,y2,0);
 
 
-    glColor4dv(&colors_[SE]().r);
+    glColor4dv(&(colors_[SE]().r));
     glVertex3d(x2,y,0);
-    glColor4dv(&colors_[NE]().r);
+    glColor4dv(&(colors_[NE]().r));
     glVertex3d(x2,y2,0);
-    glColor4dv(&colors_[NW]().r);
+    glColor4dv(&(colors_[NW]().r));
     glVertex3d(x,y2,0);
   } else {
 
-    glColor4dv(&colors_[SW]().r);
+    glColor4dv(&(colors_[SW]().r));
     glVertex3d(x,y,0);
-    glColor4dv(&colors_[NE]().r);
+    glColor4dv(&(colors_[NE]().r));
     glVertex3d(x2,y2,0);
-    glColor4dv(&colors_[NW]().r);
+    glColor4dv(&(colors_[NW]().r));
     glVertex3d(x,y2,0);
 
-    glColor4dv(&colors_[SW]().r);
+    glColor4dv(&(colors_[SW]().r));
     glVertex3d(x,y,0);
-    glColor4dv(&colors_[SE]().r);
+    glColor4dv(&(colors_[SE]().r));
     glVertex3d(x2,y,0);
-    glColor4dv(&colors_[NE]().r);
+    glColor4dv(&(colors_[NE]().r));
     glVertex3d(x2,y2,0);
   }
 
@@ -196,7 +196,7 @@ Skinner::Gradient::render_radial_gl()
   glBegin(GL_TRIANGLE_FAN);
 
   // Anchor point for tri-fan
-  glColor4dv(&colors_[anchor_]().r);
+  glColor4dv(&(colors_[anchor_]().r));
   glVertex3d(x,y,0);
 
   // Need at least 2 radial points to produce tri-fan
@@ -205,7 +205,7 @@ Skinner::Gradient::render_radial_gl()
   double rad = start;
   for (int i = 0; i < divisions; ++i) {
 
-    glColor4dv(&colors_[(anchor_+1)%4]().r);
+    glColor4dv(&(colors_[(anchor_+1)%4]().r));
 
     glVertex3d(x + cos(rad) * width,
                y + sin(rad) * height, 0);    

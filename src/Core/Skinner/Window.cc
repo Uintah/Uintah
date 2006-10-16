@@ -81,11 +81,6 @@ namespace SCIRun {
                                       (unsigned)width_,(unsigned)height_,
                                       border_);
       spawner_runnable_ = cr;
-
-      // this waits for the context to be created...
-      context_ = cr->getContext();;
-      width_ = context_->width();
-      height_ = context_->height();         
 #elif defined(__linux)
       X11OpenGLContext* context =
         new X11OpenGLContext(0, posx_, posy_, 
@@ -109,6 +104,13 @@ namespace SCIRun {
       if (spawner_runnable_) {
         spawner_thread_ = new Thread(spawner_runnable_, tname.c_str());
       }
+
+#ifdef _WIN32
+      // this waits for the context to be created, and needs to happen after the thread spawns
+      context_ = cr->getContext();;
+      width_ = context_->width();
+      height_ = context_->height();         
+#endif
 
       tname = get_id()+" Redraw";
       draw_runnable_ = new ThrottledRedraw(this, 120.0);

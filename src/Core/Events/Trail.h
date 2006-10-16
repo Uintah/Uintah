@@ -32,9 +32,10 @@
 #ifndef SCIRUN_CORE_EVENTS_TRAIL_H
 #define SCIRUN_CORE_EVENTS_TRAIL_H
 
+#include <Core/Events/share.h>
 namespace SCIRun {
 
-void start_trail_file();
+SCISHARE void start_trail_file();
 
 }
 #endif

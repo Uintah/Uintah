@@ -66,5 +66,5 @@ ApplyMappingMatrixAlgo::get_compile_info(const TypeDescription *fsrc,
   return rval;
 }
 
-} // End namespace SCIRunAlgo
+} // End namespace SCIRun
 

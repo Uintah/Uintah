@@ -6,7 +6,7 @@
 //  Copyright (c) 2004 Scientific Computing and Imaging Institute,
 //  University of Utah.
 //  
-//  
+//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -30,6 +30,7 @@
 //    Date   : May 30 2006
 
 #include <Core/Geom/Win32OpenGLContext.h>
+#include <Core/Geom/ShaderProgramARB.h>
 #include <Core/Geom/X11Lock.h>
 #include <Core/Events/keysyms.h>
 #include <Core/Containers/StringUtil.h>
@@ -93,7 +94,7 @@ Win32OpenGLContext::Win32OpenGLContext(int visual,
                                    int y,
                                    unsigned int width, 
                                    unsigned int height,
-                                   bool border) : 
+                                   bool border, bool show) : 
   OpenGLContext(),
   mutex_("GL lock")
 {
@@ -101,7 +102,7 @@ Win32OpenGLContext::Win32OpenGLContext(int visual,
   height_ = height;
   // Seperate functions so we can set gdb breakpoints in constructor
   // callback to WindowEventProc will override width and height
-  create_context(visual, x, y, width, height, border);
+  create_context(visual, x, y, width, height, border, show);
 }
 
 
@@ -110,7 +111,7 @@ void
 Win32OpenGLContext::create_context(int visual, int x, int y,
                                  unsigned int width, 
                                  unsigned int height,
-                                 bool border)
+                                 bool border, bool show)
 {
   // register class
   if (!GlClassInitialized) {
@@ -201,16 +202,17 @@ Win32OpenGLContext::create_context(int visual, int x, int y,
     release();
   }
 
-
-  }
   if (wglShareLists(first_context_,context_) == FALSE) {
     PrintErr("wglShareLists");
   }
 
-  ShowWindow(window_, SW_SHOW);
+  if (show)
+    ShowWindow(window_, SW_SHOW);
   UpdateWindow(window_);
 
+#ifndef HAVE_GLEW
   initGLextensions();
+#endif
 }
 
 
@@ -428,6 +430,7 @@ WindowEventProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
   return result;
 }
 
+#ifndef HAVE_GLEW
 // initialize > gl 1.1 stuff here
 __declspec(dllexport) PFNGLACTIVETEXTUREPROC glActiveTexture = 0;
 __declspec(dllexport) PFNGLBLENDEQUATIONPROC glBlendEquation = 0;
@@ -453,7 +456,7 @@ void initGLextensions()
     glColorTable = (PFNGLCOLORTABLEPROC)wglGetProcAddress("glColorTable");
   }
 }
-
+#endif
 BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)
 {
   switch (reason) {

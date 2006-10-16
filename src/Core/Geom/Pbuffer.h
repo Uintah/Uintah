@@ -37,7 +37,6 @@
 #define HAVE_PBUFFER
 #endif
 
-#define GLEW_STATIC 1
 #include <sci_gl.h>
 
 #include <Core/Geom/share.h>

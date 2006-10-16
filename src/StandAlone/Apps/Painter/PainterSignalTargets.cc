@@ -73,6 +73,8 @@
 
 #ifndef _WIN32
 #include <sys/mman.h>
+#else
+#include <io.h>
 #endif
 
 #ifdef HAVE_INSIGHT
@@ -750,7 +752,15 @@ Painter::ReloadVolumeTexture(event_handle_t event) {
 }
 #endif
 
-extern GeomHandle fast_lat_mc(Nrrd *nrrd, double isoval);
+#ifdef _WIN32
+#undef SCISHARE
+#define SCISHARE __declspec(dllimport)
+#else
+#define SCISHARE
+#endif
+
+
+extern SCISHARE GeomHandle fast_lat_mc(Nrrd *nrrd, double isoval);
 
 BaseTool::propagation_state_e 
 Painter::ShowIsosurface(event_handle_t event)

@@ -6,7 +6,7 @@
 //  Copyright (c) 2004 Scientific Computing and Imaging Institute,
 //  University of Utah.
 //  
-//  
+//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -52,14 +52,14 @@ public:
                    int y = 0,
                    unsigned int width = 640, 
                    unsigned int height = 480,
-                   bool border = true);
+                   bool border = true, bool show = true);
 
   virtual ~Win32OpenGLContext();
 private:  
   void                  create_context(int id, int w, int h, 
                                        unsigned int width, 
                                        unsigned int height,
-                                       bool border);
+                                       bool border, bool show);
 
   static void		listvisuals();
 
