@@ -463,5 +463,43 @@ namespace SCIRun {
       default: throw "unknown type in copy_var"; break;
       }
     }
+
+    bool
+    Variables::set_by_string(const string &var, const string &val) {
+      if (!exists(var)) return false;
+      switch (get_type_e(var)) {
+      case INT_E: { 
+        int temp = 0;
+        if (!string_to_int(val, temp)) return false;
+        Var<int>(this, var) = temp;
+        return true;
+      } break;
+
+      case DOUBLE_E: { 
+        double temp = 0;
+        if (!string_to_double(val, temp)) return false;
+        Var<double>(this, var) = temp;
+        return true;
+      } break;
+
+      case STRING_E: { 
+        Var<string>(this, var) = val;
+        return true;
+      } break;
+
+      case UNKNOWN_E: { 
+        var_value_t ptr = find_value_ptr(var);
+        ASSERT(ptr.second);
+        ptr.second->string_value_ = val;
+        return true;
+      } break;
+
+      }
+      return false;
+    }
+        
+      
+      
+
   }
 }

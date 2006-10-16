@@ -99,6 +99,7 @@ public:
 
   ~ColorMappedNrrdTextureObj();
 
+  void                  set_label(unsigned int);
   void                  set_colormap(ColorMapHandle &cmap);
   void                  set_clut_minmax(float min, float max);
   void                  set_dirty() { nrrd_dirty_ = true; }
@@ -124,6 +125,29 @@ private:
                                                    const float *rgba,
                                                    int ncolors,
                                                    float scale, float bias);
+  template <class T> 
+  void			apply_colormap_to_label_data(float *dst,
+                                                     T *src,
+                                                     int row_width,
+                                                     int region_start,
+                                                     int region_width,
+                                                     int region_height,
+                                                     const float *rgba,
+                                                     unsigned char *,
+                                                     unsigned char);
+
+
+  template <class T> 
+  void			apply_colormap_to_label_bit(float *dst,
+                                                    T *src,
+                                                    int row_width,
+                                                    int region_start,
+                                                    int region_width,
+                                                    int region_height,
+                                                    const float *rgba,
+                                                    unsigned char bit);
+
+
   bool  		nrrd_dirty_;
   vector<bool>		dirty_;
   BBoxSet               dirty_region_;
@@ -134,7 +158,7 @@ private:
   float                 clut_max_;
   float *               data_;
   bool                  own_data_;
-
+  unsigned int          label_;
   Point                 min_;
   Vector                xdir_;
   Vector                ydir_;

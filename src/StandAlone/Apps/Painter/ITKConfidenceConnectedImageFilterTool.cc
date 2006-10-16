@@ -30,41 +30,8 @@
 //    Date   : Tue Sep 26 18:44:34 2006
 
 #include <StandAlone/Apps/Painter/Painter.h>
-#include <sci_comp_warn_fixes.h>
-#include <stdlib.h>
-#include <math.h>
-#include <map>
-#include <typeinfo>
-#include <iostream>
+#include <StandAlone/Apps/Painter/ITKConfidenceConnectedImageFilterTool.h>
 #include <sci_gl.h>
-#include <Core/Bundle/Bundle.h>
-#include <Core/Containers/Array3.h>
-#include <Core/Datatypes/Field.h> 
-#include <Core/Exceptions/GuiException.h>
-#include <Core/Geom/Material.h>
-#include <Core/Geom/FreeTypeTextTexture.h>
-#include <Core/Geom/GeomSwitch.h>
-#include <Core/Geom/GeomCull.h>
-#include <Core/Geom/GeomGroup.h>
-#include <Core/Geom/TexSquare.h>
-#include <Core/Geom/OpenGLViewport.h>
-#include <Core/Geom/FreeType.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Thread/Runnable.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Semaphore.h>
-#include <Core/Util/Timer.h>
-#include <Core/Util/Environment.h>
-#include <Core/Volume/CM2Widget.h>
-#include <Core/Events/keysyms.h>
-
-#ifdef HAVE_INSIGHT
-#  include <itkConfidenceConnectedImageFilter.h>
-#  include <itkThresholdSegmentationLevelSetImageFilter.h>
-#endif
-
 
 #ifdef _WIN32
 #  define SCISHARE __declspec(dllimport)
@@ -72,11 +39,18 @@
 #  define SCISHARE
 #endif
 
+
+#ifdef HAVE_INSIGHT
+#  include <itkConfidenceConnectedImageFilter.h>
+
+
+
 namespace SCIRun {
 
-Painter::ITKConfidenceConnectedImageFilterTool::ITKConfidenceConnectedImageFilterTool(Painter *painter) :
+ITKConfidenceConnectedImageFilterTool::ITKConfidenceConnectedImageFilterTool(Painter *painter) :
   BaseTool("ITK Confidence Connected\nImage Filter"),
-  PainterPointerTool(painter, "ITK Confidence Connected\nImage Filter"),
+  PointerTool("ITK Confidence Connected\nImage Filter"),
+  painter_(painter),
   seed_(),
   volume_(0),
   prefix_("ITKConfidenceConnectedImageFilterTool::"),
@@ -90,7 +64,7 @@ Painter::ITKConfidenceConnectedImageFilterTool::ITKConfidenceConnectedImageFilte
 
 
 BaseTool::propagation_state_e
-Painter::ITKConfidenceConnectedImageFilterTool::pointer_down
+ITKConfidenceConnectedImageFilterTool::pointer_down
 (int b, int x, int y, unsigned int m, int t)
 {
   BaseTool::propagation_state_e state = pointer_motion(b,x,y,m,t);
@@ -99,7 +73,7 @@ Painter::ITKConfidenceConnectedImageFilterTool::pointer_down
 }
 
 BaseTool::propagation_state_e
-Painter::ITKConfidenceConnectedImageFilterTool::pointer_up
+ITKConfidenceConnectedImageFilterTool::pointer_up
 (int b, int x, int y, unsigned int m, int t)
 {
   return pointer_motion(b,x,y,m,t);
@@ -107,14 +81,12 @@ Painter::ITKConfidenceConnectedImageFilterTool::pointer_up
 
 
 void
-Painter::ITKConfidenceConnectedImageFilterTool::finish() {
+ITKConfidenceConnectedImageFilterTool::finish() {
   if (!volume_) 
     return;
 
   if (!volume_->index_valid(seed_))
     return;
-
-#ifdef HAVE_INSIGHT 
 
 #if 0
   painter_->get_vars()->insert("ToolDialog::text", 
@@ -125,7 +97,7 @@ Painter::ITKConfidenceConnectedImageFilterTool::finish() {
 #endif
   
   typedef itk::ConfidenceConnectedImageFilter
-    < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D > FilterType;
+    < ITKImageFloat3D, ITKImageFloat3D > FilterType;
   FilterType::Pointer filter = FilterType::New();
   FilterType::IndexType seed_point;
   for(unsigned int i = 0; i < seed_point.GetIndexDimension(); i++) {
@@ -139,25 +111,20 @@ Painter::ITKConfidenceConnectedImageFilterTool::finish() {
   filter->SetInitialNeighborhoodRadius(initialNeighborhoodRadius_());
 
   string name = "Confidence Connected";
-  NrrdVolume *temp = new NrrdVolume(volume_, name, 2);
-  painter_->volume_map_[name] = temp;
-  temp->colormap_ = 1;
-  temp->clut_min_ = temp->data_min_ = 0.5;
-  temp->clut_max_ = temp->data_max_ = 1.0;
-  painter_->current_volume_ = temp;
+  NrrdVolume *vol = new NrrdVolume(volume_, name, 2);
+  painter_->volumes_.push_back(vol);
+  vol->colormap_ = 1;
+  vol->clut_min_ = vol->data_min_ = 0.5;
+  vol->clut_max_ = vol->data_max_ = 1.0;
+  painter_->current_volume_ = vol;
 
-  painter_->do_itk_filter<Painter::ITKImageFloat3D>(filter, 
-                                                    temp->nrrd_handle_);
-  painter_->show_volume(name);
-  painter_->recompute_volume_list();
-
+  painter_->do_itk_filter<ITKImageFloat3D>(filter, vol->nrrd_handle_);
   painter_->set_all_slices_tex_dirty();
   painter_->redraw_all();
-#endif
 }
 
 BaseTool::propagation_state_e
-Painter::ITKConfidenceConnectedImageFilterTool::pointer_motion
+ITKConfidenceConnectedImageFilterTool::pointer_motion
 (int b, int x, int y, unsigned int m, int t)
 {
   if (b == 1 && !m) {
@@ -179,7 +146,7 @@ Painter::ITKConfidenceConnectedImageFilterTool::pointer_motion
 
 
 BaseTool::propagation_state_e 
-Painter::ITKConfidenceConnectedImageFilterTool::process_event
+ITKConfidenceConnectedImageFilterTool::process_event
 (event_handle_t event)
 {
   RedrawSliceWindowEvent *redraw = 
@@ -201,7 +168,7 @@ Painter::ITKConfidenceConnectedImageFilterTool::process_event
   
 
 void
-Painter::ITKConfidenceConnectedImageFilterTool::draw_gl(Painter::SliceWindow &window)
+ITKConfidenceConnectedImageFilterTool::draw_gl(SliceWindow &window)
 {
   if (!volume_ || !volume_->index_valid(seed_)) return;
 
@@ -256,4 +223,7 @@ Painter::ITKConfidenceConnectedImageFilterTool::draw_gl(Painter::SliceWindow &wi
   glLineWidth(1.0);
 }
 
+
 }
+
+#endif

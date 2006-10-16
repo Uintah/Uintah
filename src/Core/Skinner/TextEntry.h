@@ -48,9 +48,6 @@ namespace SCIRun {
       static string                     class_name() { return "TextEntry"; }
       static DrawableMakerFunc_t        maker;
     private:
-      void                              autocomplete();
-      string                            str_;
-      bool                              inside_;
       Var<bool>                         numeric_;
     };
   }

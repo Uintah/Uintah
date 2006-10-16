@@ -76,6 +76,8 @@ SCISHARE std::string findFileInPath(const std::string &filename,
 SCISHARE bool validFile(std::string filename);
 SCISHARE bool validDir(std::string filename);
 
+SCISHARE string autocomplete(const string &);
+
 } // End namespace SCIRun
 
 #endif

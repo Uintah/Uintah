@@ -104,6 +104,7 @@ namespace SCIRun {
         COLOR_E
       };
       var_type_e        get_type_e(const string &);
+      bool              set_by_string(const string &, const string &);
 
     private:
       // Disable Copy Constructor

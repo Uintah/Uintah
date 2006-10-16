@@ -281,6 +281,41 @@ findFileInPath(const std::string &file, const std::string &path)
   return "";
 }
     
+
+
+
+string
+autocomplete(const string &instr) {
+  string str = instr;
+  std::pair<string, string> dirfile = split_filename(str);
+  if (!validDir(dirfile.first)) return str;
+  
+  vector<string> files = 
+    GetFilenamesStartingWith(dirfile.first, dirfile.second);
+  
+  if (files.empty()) {
+    return str;
+  } if (files.size() == 1) {
+    str = dirfile.first + files[0];
+    if (validDir(str)) {
+      str = str + "/";
+    }
+  } else {
+    unsigned int j0 = dirfile.second.size();
+    unsigned int j = j0;
+    do {
+      for (unsigned int i = 1; i < files.size(); ++i) {
+        if ((j == files[i].size()) || (files[i][j] != files[i-1][j])) {
+          str = str + files[i].substr(j0, j-j0);
+          return str;
+        }
+      }
+      ++j;
+    } while (1);
+  }
+  return str;
+}
+
     
     
 

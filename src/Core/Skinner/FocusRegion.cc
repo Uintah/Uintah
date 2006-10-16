@@ -91,7 +91,7 @@ namespace SCIRun {
         FocusRegions_t subregions;
         FocusRegions_t::size_type num = focus_regions_.size();
         for (unsigned int i = 0; i < num; ++i) {
-          if (focus_regions_[i]->focus_() && 
+          if (focus_regions_[i]->focus_ && 
               focus_regions_[i]->focus_regions_.empty()) 
           {
             Var<bool> notab(focus_regions_[i]->get_vars(), "ignore_tab",0);
@@ -115,7 +115,7 @@ namespace SCIRun {
     
     void
     FocusRegion::set_focus(bool focus) {
-      if (focus_() != focus) {
+      if (focus_ != focus) {
         if (focus) {
           throw_signal("FocusRegion::focus");
           //          cerr << get_id() << " XXX" << std::endl;

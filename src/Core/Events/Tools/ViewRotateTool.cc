@@ -43,6 +43,7 @@ ViewToolInterface::~ViewToolInterface()
 }
 
 ViewRotateTool::ViewRotateTool(string name, ViewToolInterface* i) :
+  BaseTool(name),
   PointerTool(name),
   scene_interface_(i),
   ball_(new BallData()),

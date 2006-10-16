@@ -19,7 +19,7 @@
           <var name="row">1</var>
           <var name="col">1</var>
           <var name="cell-height">35</var>
-          <var name="text">Paint Brush Tool:</var>
+          <var name="text">Paint Brush</var>
           <var name="size">30</var>
           <var name="fgcolor">#000000FF</var>
           <var name="bgcolor">#FFFFFF80</var>
@@ -41,20 +41,9 @@
                overwrite="no">$Painter::brush_radius</var>
         </object>
         
-        <object class="LabeledSpinnerBox">
-          <var name="row">4</var>
-          <var name="col">1</var>
-          <var name="cell-height">35</var>
-          <var name="LabeledSpinnerBox::text"
-               propagate="yes"
-               overwrite="no">Softness:</var>
-          <var name="LabeledSpinnerBox::variable"
-               propagate="yes"
-               overwrite="no">$Painter::brush_softness</var>
-        </object>
         
         <object class="LabeledSpinnerBox">
-          <var name="row">5</var>
+          <var name="row">4</var>
           <var name="col">1</var>
           <var name="cell-height">35</var>
           <var name="LabeledSpinnerBox::text"
@@ -64,6 +53,20 @@
                propagate="yes"
                overwrite="no">$Painter::brush_value</var>
         </object>
+
+<!--
+        <object class="LabeledSpinnerBox">
+          <var name="row">5</var>
+          <var name="col">1</var>
+          <var name="cell-height">35</var>
+          <var name="LabeledSpinnerBox::text"
+               propagate="yes"
+               overwrite="no">Softness:</var>
+          <var name="LabeledSpinnerBox::variable"
+               propagate="yes"
+               overwrite="no">$Painter::brush_softness</var>
+        </object>
+-->
         
 
         <object class="Button">

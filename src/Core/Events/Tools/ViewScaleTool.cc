@@ -36,6 +36,7 @@
 namespace SCIRun {
 
 ViewScaleTool::ViewScaleTool(string name, ViewToolInterface* i) :
+  BaseTool(name),
   PointerTool(name),
   scene_interface_(i),
   last_x_(0),

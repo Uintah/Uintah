@@ -134,6 +134,7 @@
   <xi:include href="FileLoadBox.skin" parse="xml"/>
   <xi:include href="QuitDialog.skin" parse="xml"/>
   <xi:include href="SpinnerBox.skin" parse="xml"/>
+  <xi:include href="ExpandButton.skin" parse="xml"/>
 
   <xi:include href="LabeledSpinnerBox.skin" parse="xml"/>
   <xi:include href="MainToolbar.skin" parse="xml"/>
@@ -143,6 +144,7 @@
   <xi:include href="LabeledGradientBackground.skin" parse="xml"/>
   <xi:include href="BrushToolDialog.skin" parse="xml"/>
   <xi:include href="Tools.skin" parse="xml"/>
+  <xi:include href="ToolButtons.skin" parse="xml"/>
   <xi:include href="Layers.skin" parse="xml"/>
   <xi:include href="Splash.skin" parse="xml"/>
   <xi:include href="ResampleDialog.skin" parse="xml"/>
@@ -211,10 +213,12 @@
       
 
       <object class="Painter">
+        <var name="clut_ww_wl" propagate="yes"/>
+        <var name="Painter::status" propagate="yes"/>
+        <var name="cursor_value" propagate="yes" type="double">0.0</var>            
+
         <object class="Root::FocusRegion">
           <object class="Root::VisibilityGroup">
-            <var name="Painter::status_text" propagate="yes"> </var>
-            
             <var name="Painter::progress_bar_text"
                  propagate="yes"></var>
             <var name="Painter::progress_bar_total_width"
@@ -238,10 +242,8 @@
             <var name="clut_min_max" 
                  propagate="yes"
                  overwrite="no"></var>
-            
-            <var name="clut_ww_wl" 
-                 propagate="yes"
-                 overwrite="no"></var>
+
+
             
             <var name="xyz_pos" 
                  propagate="yes"
@@ -268,14 +270,25 @@
             <object class="Root::GLWindow" id="Tools">
               <var name="id">Tools</var>
               <var name="width" type="int">255</var>
-              <var name="height" type="int">800</var>
+              <var name="height" type="int">400</var>
               <var name="posx" type="int">920</var>
               <var name="posy" type="int">0</var>
               <var name="border" type="bool">$Window::borders</var>
               
               <object class="Tools"/>
             </object>
-            
+
+            <object class="Root::GLWindow" id="Buttons">
+              <var name="id">Buttons</var>
+              <var name="width" type="int">255</var>
+              <var name="height" type="int">400</var>
+              <var name="posx" type="int">920</var>
+              <var name="posy" type="int">450</var>
+              <var name="border" type="bool">$Window::borders</var>
+              
+              <object class="ToolButtons"/>
+            </object> 
+           
             <object class="Root::GLWindow" id="Layers">
               <var name="id">Layers</var>
               <var name="width" type="int">275</var>

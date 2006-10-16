@@ -59,7 +59,7 @@
       <var name="axis" propagate="yes">2</var>
       <var name="GradientBackground::bottom-color" 
            type="color" propagate="yes">$light_green</var>
-      <var name="NicePainterWindow::name" propagate="yes">Coronal</var>
+      <var name="NicePainterWindow::name" propagate="yes">Axial</var>
     </object>
 
 
@@ -69,7 +69,7 @@
       <var name="axis" propagate="yes">1</var>
       <var name="GradientBackground::bottom-color" 
            type="color" propagate="yes">$light_blue</var>
-      <var name="NicePainterWindow::name" propagate="yes">Axial</var>
+      <var name="NicePainterWindow::name" propagate="yes">Coronal</var>
     </object>
 
 

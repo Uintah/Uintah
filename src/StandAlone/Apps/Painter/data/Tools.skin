@@ -10,300 +10,93 @@
         <var name="repeaty">1</var>
       </object>
 
-
-      <object class="Grid">
-        <var name="rows">2</var>
-        <var name="cols">1</var>
-
-        <xi:include href="ShadowedFocusBox.skin" parse="xml"/>
-        <object class="ShadowedFocusBox">
-          <var name="row">1</var>
-          <var name="col">1</var>
-          <definition class="ShadowedFocusBox::child">
-            <object class="Collection">
-              
-              <object class="VisibilityGroup::VisibleItem" id="Nothing">
-                <var name="group">ToolsVisibleGroup</var>
-                <var name="visible">1</var>
-
-                <object class="Box">
-                  <var name="color">#AAAAAAAA</var>
-                </object>
-              </object>
-
-              <object class="VisibilityGroup::VisibleItem" id="CropTool">
-                <var name="group">ToolsVisibleGroup</var>
-                <var name="visible">0</var>
-                
-                <xi:include href="CropToolDialog.skin" parse="xml"/>
-                
-                <signal name="VisibleItem::made_visible" 
-                        target="GLWindow::mark_redraw"/>
-                
-                <object class="CropToolDialog">
-                  <signal name="ToolDialog::Cancel" 
-                          target="VisibilityGroup::show_VisibleItem">
-                    <var name="id">Nothing</var>
-                    <var name="group">ToolsVisibleGroup</var>
-                  </signal>
-                  <signal name="ToolDialog::Done" 
-                          target="VisibilityGroup::show_VisibleItem">
-                    <var name="id">Nothing</var>
-                    <var name="group">ToolsVisibleGroup</var>
-                  </signal>
-                </object>
-              </object>
-              
-              <object class="VisibilityGroup::VisibleItem" id="ResampleTool">
-                <var name="group">ToolsVisibleGroup</var>
-                <var name="visible">0</var>
-                
-                <xi:include href="ResampleDialog.skin" parse="xml"/>
-                
-                <signal name="VisibleItem::made_visible" 
-                        target="GLWindow::mark_redraw"/>
-                
-                <object class="ResampleDialog">
-                  <signal name="ToolDialog::Cancel" 
-                          target="VisibilityGroup::show_VisibleItem">
-                    <var name="id">Nothing</var>
-                    <var name="group">ToolsVisibleGroup</var>
-                  </signal>
-                  <signal name="ToolDialog::Done" 
-                          target="VisibilityGroup::show_VisibleItem">
-                    <var name="id">Nothing</var>
-                    <var name="group">ToolsVisibleGroup</var>
-                  </signal>
-                </object>
-              </object>
-
-              <object class="VisibilityGroup::VisibleItem" id="BrushTool">
-                <var name="group">ToolsVisibleGroup</var>
-                <var name="visible">0</var>
-                
-                <xi:include href="BrushToolDialog.skin" parse="xml"/>
-                
-                <object class="BrushToolDialog">
-                  <signal name="ToolDialog::Cancel" 
-                          target="VisibilityGroup::show_VisibleItem">
-                    <var name="id">Nothing</var>
-                    <var name="group">ToolsVisibleGroup</var>
-                  </signal>
-                  <signal name="ToolDialog::Done" 
-                          target="VisibilityGroup::show_VisibleItem">
-                    <var name="id">Nothing</var>
-                    <var name="group">ToolsVisibleGroup</var>
-                  </signal>
-                </object>
-              </object>
-
-            </object>
-
-
-
-          </definition>
-        </object>
-
-        
-        <object class="Grid">
-          <var name="rows">20</var>
-          <var name="cols">1</var>
-
-          <var name="row">2</var>
-          <var name="col">1</var>
-
-          <var name="text_bgcolor" propagate="yes">#FFFFFFFF</var>
-          <var name="text_fgcolor" propagate="yes">#000000FF</var>
-
-          <var name="buttonheight" propagate="yes">25</var>
-
-
-          <object class="Button">
-            <var name="row">3</var>
-            <var name="col">1</var>
-            <var name="cell-height">$buttonheight</var>
-            <var name="Button::Text::text" propagate="yes">ITK Gradient Magnitude</var>
-            <var name="text_color" propagate="yes">#FFFFFFFF</var>
-            <signal name="Button::clicked"
-                    target="Animation::AnimateVariableAscending">
-              <var name="varnum">3</var>
-            </signal>
-            <signal name="Button::clicked" 
-                    target="Painter::ITKGradientMagnitude"/>
-            <signal name="Button::clicked"
-                    target="Animation::AnimateVariableDescending">
-              <var name="varnum">3</var>
-            </signal>
+      <xi:include href="ShadowedFocusBox.skin" parse="xml"/>
+      <object class="ShadowedFocusBox">
+        <var name="row">1</var>
+        <var name="col">1</var>
+        <definition class="ShadowedFocusBox::child">
+          <object class="Collection">
             
-            
-          </object>
+            <object class="VisibilityGroup::VisibleItem" id="Nothing">
+              <var name="group">ToolsVisibleGroup</var>
+              <var name="visible">1</var>
 
-          
-          <object class="Button">
-            <var name="row">4</var>
-            <var name="col">1</var>
-            <var name="cell-height">$buttonheight</var>
-            <var name="Button::Text::text" propagate="yes">ITK Confidence Connected</var>
-            <signal name="Button::clicked"
-                    target="Painter::ITKConfidenceConnected"/>
-            
-            <signal name="Button::clicked"
-                    target="Animation::AnimateVariableAscending">
-              <var name="varnum">7</var>
-            </signal>
-            
-          </object>
-          
-          <object class="Button">
-            <var name="row">5</var>
-            <var name="col">1</var>
-            <var name="cell-height">$buttonheight</var>
-            <var name="Button::Text::text" propagate="yes">ITK Threshold Levelset</var>
-            <var name="text_color" propagate="yes">#FFFFFFFF</var>
-            
-            <signal name="Button::clicked"
-                    target="Painter::ITKThresholdLevelSet"/>
-            
-            <signal name="Button::clicked"
-                    target="Animation::AnimateVariableAscending">
-              <var name="varnum">4</var>
-            </signal>
-            
-          </object>
-          
-          
-          
-          <object class="Button">
-            <var name="row">6</var>
-            <var name="col">1</var>
-            <var name="cell-height">$buttonheight</var>
-            <var name="Button::Text::text" propagate="yes">ITK Anisotropic Diffusion</var>
-            
-            <signal name="Button::clicked"
-                    target="Animation::AnimateVariableAscending">
-              <var name="varnum">6</var>
-            </signal>        
-          </object>
-          
-          <object class="Button">
-            <var name="row">7</var>
-            <var name="col">1</var>
-            <var name="cell-height">$buttonheight</var>
-            <var name="Button::Text::text" propagate="yes">ITK Hole Fill</var>
-            <var name="text_color" propagate="yes">#FFFFFFFF</var>
-            <signal name="Button::clicked"
-                    target="Animation::AnimateVariableAscending">
-              <var name="varnum">3</var>
-            </signal>
-            <signal name="Button::clicked" 
-                    target="Painter::ITKBinaryDilateErode"/>
-            <signal name="Button::clicked"
-                    target="Animation::AnimateVariableDescending">
-              <var name="varnum">3</var>
-            </signal>
-            
-            
-          </object>
-
-          <object class="Button">
-            <var name="row">8</var>
-            <var name="col">1</var>
-            <var name="cell-height">$buttonheight</var>
-            <var name="Button::Text::text" propagate="yes">Flood Fill</var>
-            <var name="text_color" propagate="yes">#FFFFFFFF</var>
-          <signal name="Button::clicked" 
-                  target="Animation::AnimateVariableAscending">
-            <var name="varnum">1</var>
-          </signal>                   
-          </object>               
-
-          <object class="Button">
-            <var name="row">9</var>
-            <var name="col">1</var>
-            <var name="cell-height">$buttonheight</var>
-            <var name="Button::Text::text" propagate="yes">Volume Rendering</var>
-            <var name="text_color" propagate="yes">#FFFFFFFF</var>
-            <var name="Button::color" propagate="yes">#FF0000FF</var>
-            <signal name="Button::clicked" 
-                    target="Painter::ShowVolumeRendering"/>
-            
-          </object>
-          
-          <object class="Button">
-            <var name="row">10</var>
-            <var name="col">1</var>
-            <var name="cell-height">$buttonheight</var>
-            <var name="Button::Text::text" propagate="yes">Reload Skin</var>
-            <var name="text_color" propagate="yes">#FFFFFFFF</var>
-            <signal name="Button::clicked" 
-                    target="Root::Reload_Default_Skin"/>
-            
-          </object>
-
-          
-          
-          
-          <object class="Grid" id="info">
-            <var name="row">20</var>
-            <var name="col">1</var> 
-            
-            <var name="cell-height">200</var>
-            
-            <var name="rows">2</var>
-            <var name="cols">2</var>      
-            <var name="shadow" propagate="yes">1</var>
-            <var name="offsetx" propagate="yes">2</var>
-            <var name="offsety" propagate="yes">-2</var>
-            <var name="bgcolor" propagate="yes">#000000FF</var>
-            <var name="fgcolor" propagate="yes">#FFFFFFFF</var>
-            <object class="Grid">
-              <var name="row">2</var>
-              <var name="col">1</var>
-              <var name="rows">5</var>
-              <var name="cols">1</var>
-              
-              <object class="Root::Text" id="wwwl">
-                <var name="row">1</var>
-                <var name="col">1</var>
-                <var name="text">$clut_ww_wl</var>
-                <var name="shadow">1</var>
-                <var name="size">20</var>
-              </object>
-              
-              <object class="Root::Text">
-                <var name="row">2</var>
-                <var name="col">1</var>
-                <var name="text">$clut_min_max</var>
-                <var name="shadow">1</var>
-                <var name="size">20</var>
-              </object>
-              
-              <object class="Root::Text">
-                <var name="row">3</var>
-                <var name="col">1</var>
-                <var name="text">$value</var>
-                <var name="shadow">1</var>
-                <var name="size">20</var>
-              </object>
-              
-              <object class="Root::Text">
-                <var name="row">4</var>
-                <var name="col">1</var>
-                <var name="text">$sca_pos</var>
-                <var name="shadow">1</var>
-                <var name="size">20</var>
-              </object>
-              
-              <object class="Root::Text">
-                <var name="row">5</var>
-                <var name="col">1</var>
-                <var name="text">$xyz_pos</var>
-                <var name="shadow">1</var>
-                <var name="size">20</var>
+              <object class="Box">
+                <var name="color">#AAAAAAAA</var>
               </object>
             </object>
+
+            <object class="VisibilityGroup::VisibleItem" id="CropTool">
+              <var name="group">ToolsVisibleGroup</var>
+              <var name="visible">0</var>
+              
+              <xi:include href="CropToolDialog.skin" parse="xml"/>
+              
+              <signal name="VisibleItem::made_visible" 
+                      target="GLWindow::mark_redraw"/>
+              
+              <object class="CropToolDialog">
+                <signal name="ToolDialog::Cancel" 
+                        target="VisibilityGroup::show_VisibleItem">
+                  <var name="id">Nothing</var>
+                  <var name="group">ToolsVisibleGroup</var>
+                </signal>
+                <signal name="ToolDialog::Done" 
+                        target="VisibilityGroup::show_VisibleItem">
+                  <var name="id">Nothing</var>
+                  <var name="group">ToolsVisibleGroup</var>
+                </signal>
+              </object>
+            </object>
+            
+            <object class="VisibilityGroup::VisibleItem" id="ResampleTool">
+              <var name="group">ToolsVisibleGroup</var>
+              <var name="visible">0</var>
+              
+              <xi:include href="ResampleDialog.skin" parse="xml"/>
+              
+              <signal name="VisibleItem::made_visible" 
+                      target="GLWindow::mark_redraw"/>
+              
+              <object class="ResampleDialog">
+                <signal name="ToolDialog::Cancel" 
+                        target="VisibilityGroup::show_VisibleItem">
+                  <var name="id">Nothing</var>
+                  <var name="group">ToolsVisibleGroup</var>
+                </signal>
+                <signal name="ToolDialog::Done" 
+                        target="VisibilityGroup::show_VisibleItem">
+                  <var name="id">Nothing</var>
+                  <var name="group">ToolsVisibleGroup</var>
+                </signal>
+              </object>
+            </object>
+
+            <object class="VisibilityGroup::VisibleItem" id="BrushTool">
+              <var name="group">ToolsVisibleGroup</var>
+              <var name="visible">0</var>
+              
+              <xi:include href="BrushToolDialog.skin" parse="xml"/>
+              
+              <object class="BrushToolDialog">
+                <signal name="ToolDialog::Cancel" 
+                        target="VisibilityGroup::show_VisibleItem">
+                  <var name="id">Nothing</var>
+                  <var name="group">ToolsVisibleGroup</var>
+                </signal>
+                <signal name="ToolDialog::Done" 
+                        target="VisibilityGroup::show_VisibleItem">
+                  <var name="id">Nothing</var>
+                  <var name="group">ToolsVisibleGroup</var>
+                </signal>
+              </object>
+            </object>
+
           </object>
-        </object>
+
+
+
+        </definition>
       </object>
     </object>
   </object>
