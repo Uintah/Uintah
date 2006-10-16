@@ -597,23 +597,18 @@ ShowField::execute()
 
   // tell module downstream to delete everything we have sent it before.
   // This is typically viewer, it owns the scene graph memory we create here.
-  ColorMapIPort *color_iport = (ColorMapIPort *)get_iport("ColorMap");
   ogeom_ = (GeometryOPort *)get_oport("Scene Graph");
 
-  FieldIPort *field_iport = (FieldIPort *)get_iport("Field");
   FieldHandle fld_handle;
-
-  if (!(field_iport->get(fld_handle) && fld_handle.get_rep()))
+  if (!get_input_handle("Field", fld_handle, false))
   {
     if( !in_power_app() )
       error("Input field is empty.");
     return;
   }
 
-  FieldIPort *vfield_iport = (FieldIPort *)get_iport("Orientation Field");
   FieldHandle vfld_handle;
-
-  if (vfield_iport->get(vfld_handle) && vfld_handle.get_rep())
+  if (get_input_handle("Orientation Field", vfld_handle, false))
   {
     if (vfld_handle->basis_order() != fld_handle->basis_order()) {
       error("The Color and Orientation Fields must share the same data location.");
@@ -669,7 +664,7 @@ ShowField::execute()
   // Simply update the colormap handle.  If the colormap gets connected
   // or disconnected then we may have to do a redraw.
   const bool was_color_map = color_map_.get_rep();
-  if (!color_iport->get(color_map_)) color_map_ = 0;
+  get_input_handle("ColorMap", color_map_, false);
 
   bool color_map_changed = false;
   if (((bool)(color_map_.get_rep())) != was_color_map ||

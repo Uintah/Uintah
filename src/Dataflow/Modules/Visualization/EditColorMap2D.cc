@@ -140,8 +140,6 @@ private:
   void				gui_toggle_change(GuiArgs &args);
   
   // Input/Output Ports
-  ColorMap2IPort*		cmap_iport_;
-  NrrdIPort*			hist_iport_;
   ColorMap2Handle		sent_cmap2_;
 
   bool				just_resend_selection_;
@@ -218,8 +216,6 @@ DECLARE_MAKER(EditColorMap2D)
 
 EditColorMap2D::EditColorMap2D(GuiContext* ctx)
   : Module("EditColorMap2D", ctx, Filter, "Visualization", "SCIRun"),
-    cmap_iport_((ColorMap2IPort*)get_iport("Input Colormap")),
-    hist_iport_((NrrdIPort*)get_iport("Histogram")),
     sent_cmap2_(0),
     just_resend_selection_(0),
     force_execute_(false),
@@ -1014,8 +1010,8 @@ EditColorMap2D::execute()
   ColorMap2Handle icmap = 0;
   NrrdDataHandle h = 0;
 
-  cmap_iport_->get(icmap);
-  hist_iport_->get(h);
+  get_input_handle("Input Colormap", icmap, false);
+  get_input_handle("Histogram", h, false);
 
   get_1D_colormaps();
 
