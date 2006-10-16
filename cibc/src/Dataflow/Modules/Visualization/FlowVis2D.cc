@@ -91,29 +91,10 @@ void
 FlowVis2D::execute()
 {
   static GeomID geomID  = 0;
-//   static unsigned old_i = 0, old_j = 0;
-
-//   if (card_mem_ != 0 && gui_card_mem_auto_.get())
-//   {
-//     gui_card_mem_.set(card_mem_);
-//   }
-//   else if (card_mem_ == 0)
-//   {
-//     gui_card_mem_auto_.set(0);
-//   }
-
-  FieldIPort* ivfield = (FieldIPort *)get_iport("Vector Slice");
-  ColorMapIPort* icmap = (ColorMapIPort*)get_iport("ColorMap");
   GeometryOPort* ogeom = (GeometryOPort *)get_oport("Geometry");
-  ColorMapOPort* ocmap = (ColorMapOPort*)get_oport("ColorMap");
 
   FieldHandle vfield;
-  ivfield->get(vfield);
-  if (!vfield.get_rep())
-  {
-    error("Field has no representation.");
-    return;
-  }
+  if (!get_input_handle("Vector Slice", vfield)) return;
 
   bool field_dirty = false;
   ImageMeshHandle imh(0);
@@ -146,9 +127,8 @@ FlowVis2D::execute()
     return;
   }
 
-
   ColorMapHandle cmap;
-  bool have_cmap = (icmap->get(cmap) && cmap.get_rep());
+  const bool have_cmap = get_input_handle("ColorMap", cmap, false);
 
   bool cmap_dirty = false;
   if( have_cmap && (cmap->generation != cmap_prev_generation_))
