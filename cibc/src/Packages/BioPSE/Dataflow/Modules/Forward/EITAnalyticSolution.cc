@@ -184,16 +184,9 @@ EITAnalyticSolution::pot2DTwoConcentric(int L, float r, float theta,
 void
 EITAnalyticSolution::execute()
 {
-  //! Input ports
-  MatrixIPort*  iportCurrentPatternIndex_;
-  MatrixIPort*  iportElectrodeParams_;
-
   // This module is currently able to process only TetVols and
   // TriSurfs - the following flag used is to indicate which
   bool tet;
-
-  iportCurrentPatternIndex_ = (MatrixIPort *)get_iport("CurrentPatternIndex");
-  iportElectrodeParams_ = (MatrixIPort *)get_iport("Electrode Parameters");
 
   //! Obtaining handles to computation objects
   FieldHandle hField;
@@ -229,7 +222,7 @@ EITAnalyticSolution::execute()
   int           k = 0;
 
   // -- copy the input current index into local variable, k 
-  if (iportCurrentPatternIndex_->get(hCurrentPatternIndex) && 
+  if (get_input_handle("CurrentPatternIndex", hCurrentPatternIndex, false) && 
       (currPatIdx=dynamic_cast<ColumnMatrix*>(hCurrentPatternIndex.get_rep())) && 
       (currPatIdx->nrows() == 1))
   {
@@ -246,12 +239,7 @@ EITAnalyticSolution::execute()
   // Get the electrode parameters input vector
   // -----------------------------------------
   MatrixHandle  hElectrodeParams;
-
-  if (!iportElectrodeParams_->get(hElectrodeParams) || !hElectrodeParams.get_rep()) 
-  {
-      error("Can't get handle to electrode parameters matrix.");
-      return;
-  }
+  if (!get_input_handle("Electrode Parameters", hElectrodeParams)) return;
 
   ColumnMatrix* electrodeParams = scinew ColumnMatrix(numParams);
   electrodeParams=dynamic_cast<ColumnMatrix*>(hElectrodeParams.get_rep());

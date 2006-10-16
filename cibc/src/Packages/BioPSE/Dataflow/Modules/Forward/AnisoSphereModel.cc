@@ -65,15 +65,7 @@ class AnisoSphereModel : public Module {
   typedef GenericField<PCMesh, DatBasisi, vector<int> > PCFieldi;  
   typedef GenericField<PCMesh, DatBasisd, vector<double> > PCFieldd;  
 
-  // ports
-  FieldIPort  *hInElectrodes;
-  MatrixIPort *hInConductivities;
-
-  FieldOPort  *hOutElectrodes;
-  MatrixOPort *hOutConductivities;
-  MatrixOPort *hOutRadii;
-
-  // gui data
+  // Gui data
   GuiDouble r_scalp;
   GuiDouble r_skull;
   GuiDouble r_cbsf;
@@ -87,8 +79,6 @@ class AnisoSphereModel : public Module {
   GuiDouble tc_skull;
   GuiDouble tc_cbsf;
   GuiDouble tc_brain;
-
-  bool condMatrix;
 
 public:
   
@@ -127,42 +117,26 @@ AnisoSphereModel::~AnisoSphereModel()
 void
 AnisoSphereModel::execute()
 {
-  condMatrix = false;
-  
-  // get input ports
-  hInElectrodes = (FieldIPort*)get_iport("ElectrodePositions");
-  hInConductivities = (MatrixIPort *)get_iport("AnisoConductivities");
-
-  // get output ports
-  hOutElectrodes = (FieldOPort*)get_oport("ElectrodePositions");
-
-  hOutRadii = (MatrixOPort*)get_oport("SphereRadii");
-  hOutConductivities = (MatrixOPort*)get_oport("AnisoConductivities");
-
-  // get electrode handle
+  // Get electrode handle.
   FieldHandle hElectrodes;
-  hInElectrodes->get(hElectrodes);
+  if (!get_input_handle("ElectrodePositions", hElectrodes)) return;
 
   const TypeDescription *mtd = 
     hElectrodes->get_type_description(Field::MESH_TD_E);
   const TypeDescription *dtd = 
     hElectrodes->get_type_description(Field::FDATA_TD_E);
 
-  if(!hElectrodes.get_rep() ||
-     !(mtd->get_name().find("PointCloudMesh") != string::npos) ||
+  if(!(mtd->get_name().find("PointCloudMesh") != string::npos) ||
      !(dtd->get_name().find("double") != string::npos))
   {
-    error("input electrode field is not of type 'PointCloudField<double>'");
+    error("Input electrode field is not of type 'PointCloudField<double>'");
     return;
   }
   
   // if possible, get matrix handle for conductivities
   MatrixHandle hConductivities;
-  if(!hInConductivities->get(hConductivities) || !hConductivities.get_rep())
-    condMatrix = false;
-  else
-    condMatrix = true;
-
+  const bool condMatrix = 
+    get_input_handle("AnisoConductivities", hConductivities, false);
 
   // get electrode positions from input port
   PCFieldd *pElectrodes = dynamic_cast<PCFieldd* >(hElectrodes.get_rep());
@@ -245,13 +219,13 @@ AnisoSphereModel::execute()
 
   // send out results
   FieldHandle epfield(newElectrodePositions);
-  hOutElectrodes->send_and_dereference(epfield);
+  send_output_handle("ElectrodePositions", epfield);
   
   MatrixHandle cmatrix(cond);
-  hOutConductivities->send_and_dereference(cmatrix);
+  send_output_handle("AnisoConductivities", cmatrix);
 
   MatrixHandle rmatrix(radii);
-  hOutRadii->send(rmatrix);
+  send_output_handle("SphereRadii", rmatrix);
 }
 
 

@@ -107,8 +107,7 @@ ApplyFEMVoltageSource::execute()
   ColumnMatrix* rhsIn = NULL;
   
   // -- if the user passed in a vector the right size, copy it into ours 
-  MatrixIPort *iportRhs_ = (MatrixIPort *)get_iport("RHS");
-  if (iportRhs_->get(hRhsIn) && 
+  if (get_input_handle("RHS", hRhsIn, false) && 
       (rhsIn=dynamic_cast<ColumnMatrix*>(hRhsIn.get_rep())) && 
       ((unsigned int)(rhsIn->nrows()) == nsize))
   {

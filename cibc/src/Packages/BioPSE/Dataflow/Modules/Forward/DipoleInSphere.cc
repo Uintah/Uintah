@@ -109,8 +109,6 @@ DipoleInSphere::execute()
 {
   update_state(NeedData);
   
-  FieldIPort *iportDip_ = (FieldIPort *)get_iport("Dipole Sources");
-
   FieldHandle field_handle;
   if (!get_input_handle("Sphere", field_handle)) return;
  
@@ -127,8 +125,7 @@ DipoleInSphere::execute()
     const TypeDescription *dtd = dip_handle->get_type_description();
     
     const string &dtdn = dtd->get_name();
-    if (iportDip_->get(dip_handle) 
-	&& dip_handle.get_rep() &&
+    if (get_input_handle("Dipole Sources", dip_handle, false) &&
 	dtdn == ((PCField*)0)->get_type_description()->get_name()) 
     {  
       PCField* pDips = dynamic_cast<PCField*>(dip_handle.get_rep());

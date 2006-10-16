@@ -134,9 +134,8 @@ ApplyFEMElectrodeSource::execute()
 
   // If the user passed in a vector the right size, copy it into ours.
   ColumnMatrix* rhs = 0;
-  MatrixIPort *iportRhs = (MatrixIPort *)get_iport("Input RHS");
   MatrixHandle  hRhsIn;
-  if (iportRhs->get(hRhsIn) && hRhsIn.get_rep())
+  if (get_input_handle("Input RHS", hRhsIn, false))
   {
     if (hRhsIn->ncols() == 1 && hRhsIn->nrows() == nsize)
     {
@@ -187,32 +186,15 @@ void
 ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
 						 TSMesh::handle_type hTriMesh )
 {
-  MatrixIPort *iportMapping = (MatrixIPort *)get_iport("Mapping");
-  MatrixIPort *iportCurrentPattern =
-    (MatrixIPort *)get_iport("Current Pattern");
-  MatrixIPort *iportCurrentPatternIndex =
-    (MatrixIPort *)get_iport("CurrentPatternIndex");
-  MatrixIPort *iportElectrodeParams =
-    (MatrixIPort *)get_iport("Electrode Parameters");
-  FieldIPort *iportFieldBoundary = (FieldIPort *)get_iport("Boundary");
-  MatrixIPort *iportBoundaryToMesh =
-    (MatrixIPort *)get_iport("Boundary Transfer Matrix");
-
   int numParams=4;
 
   // Get the electrode parameters input vector
   // -----------------------------------------
   MatrixHandle  hElectrodeParams;
-
-  if (!iportElectrodeParams->get(hElectrodeParams) ||
-      !hElectrodeParams.get_rep())
-  {
-    error("Can't get handle to electrode parameters matrix.");
-    return;
-  }
+  if (!get_input_handle("Electrode Parameters", hElectrodeParams)) return;
 
   ColumnMatrix* electrodeParams = scinew ColumnMatrix(numParams);
-  electrodeParams=dynamic_cast<ColumnMatrix*>(hElectrodeParams.get_rep());
+  electrodeParams = dynamic_cast<ColumnMatrix*>(hElectrodeParams.get_rep());
 
   unsigned int electrodeModel = (unsigned int)((*electrodeParams)[0]);
   int numElectrodes           = (int) ( (*electrodeParams)[1]);
@@ -229,8 +211,8 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
   // for models other than the continuum model
 
   MatrixHandle  hCurrentPattern;
-  if ((!iportCurrentPattern->get(hCurrentPattern) ||
-       !hCurrentPattern.get_rep()) && (electrodeModel != CONTINUUM_MODEL))
+  if (!get_input_handle("Current Pattern", hCurrentPattern, false) &&
+      (electrodeModel != CONTINUUM_MODEL))
   {
     error("Can't get handle to current pattern matrix.");
     return;
@@ -246,7 +228,7 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
 
   // Copy the input current index into local variable, k
   // ---------------------------------------------------
-  if (iportCurrentPatternIndex->get(hCurrentPatternIndex) &&
+  if (get_input_handle("CurrentPattternIndex", hCurrentPatternIndex, false) &&
       (currPatIdx=dynamic_cast<ColumnMatrix*>(hCurrentPatternIndex.get_rep())) &&
       (currPatIdx->nrows() == 1))
   {
@@ -263,28 +245,25 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
   CMesh::handle_type  hBoundaryMesh;
   LockingHandle<CField > hCurveBoundary;
   bool boundary = false;
-  if ( iportFieldBoundary->get(hFieldBoundary) )
+  if (get_input_handle("Boundary", hFieldBoundary, false))
   {
-    if (hFieldBoundary.get_rep())
+    // Check field type - this only works for CurveFields<double>
+    // extracted from a TriSurf
+    const TypeDescription *mtd = 
+      hFieldBoundary->get_type_description(Field::MESH_TD_E);
+    const TypeDescription *dtd = 
+      hFieldBoundary->get_type_description(Field::FDATA_TD_E);
+    if (mtd->get_name().find("CurveMesh") != string::npos &&
+        dtd->get_name().find("double") != string::npos)
     {
-      // Check field type - this only works for CurveFields<double>
-      // extracted from a TriSurf
-      const TypeDescription *mtd = 
-	hFieldBoundary->get_type_description(Field::MESH_TD_E);
-      const TypeDescription *dtd = 
-	hFieldBoundary->get_type_description(Field::FDATA_TD_E);
-      if (mtd->get_name().find("CurveMesh") != string::npos &&
-	  dtd->get_name().find("double") != string::npos)
-      {
-        remark("Field boundary input is a CField");
-        hCurveBoundary = dynamic_cast<CField*> ( hFieldBoundary.get_rep() );
-        hBoundaryMesh = hCurveBoundary->get_typed_mesh();
-        boundary = true;
-      }
-      else
-      {
-        remark("Supplied boundary field is not of type CurveField<double>");
-      }
+      remark("Field boundary input is a CField");
+      hCurveBoundary = dynamic_cast<CField*> ( hFieldBoundary.get_rep() );
+      hBoundaryMesh = hCurveBoundary->get_typed_mesh();
+      boundary = true;
+    }
+    else
+    {
+      remark("Supplied boundary field is not of type CurveField<double>");
     }
   }
   else
@@ -298,10 +277,9 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
 
   if (boundary)
   {
-    if ( !(iportBoundaryToMesh->get(hBoundaryToMesh) &&
-           hBoundaryToMesh.get_rep()) )
+    if (!get_input_handle("Boundary Transfer Matrix", hBoundaryToMesh, false))
     {
-      // disable susequent boundary-related code if we had a problem here
+      // Disable susequent boundary-related code if we had a problem here.
       boundary = false;
     }
   }
@@ -313,7 +291,7 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
   // specify electrode locations manually rather than use an automatic
   // placement scheme selected through the electrode manager.
   MatrixHandle hMapping;
-  if ( iportMapping->get(hMapping) && hMapping.get_rep())
+  if (get_input_handle("Mapping", hMapping, false))
   {
     // Unimplemented
   }
@@ -784,9 +762,8 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
   } // end if GAP model
 
   //! Send the meshToElectrodeMap
-  MatrixOPort *oportMeshToElectrodeMap =
-    (MatrixOPort *)get_oport("Mesh to Electrode Map");
-  oportMeshToElectrodeMap->send(MatrixHandle(meshToElectrodeMap));
+  MatrixHandle outmat(meshToElectrodeMap);
+  send_output_handle("Mesh to Electrode Map", outmat);
 }
 
 
@@ -804,7 +781,7 @@ ApplyFEMElectrodeSource::ProcessTriElectrodeSet( ColumnMatrix* rhs,
 
 double
 ApplyFEMElectrodeSource::CalcContinuumTrigCurrent(Point p, int k,
-                                                int numBoundaryNodes)
+                                                  int numBoundaryNodes)
 {
   double current;
 
