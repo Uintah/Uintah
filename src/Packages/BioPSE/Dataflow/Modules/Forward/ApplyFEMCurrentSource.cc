@@ -94,19 +94,13 @@ ApplyFEMCurrentSource::execute()
   if (!get_input_handle("Mesh", hField)) return;
 
   // Get the input dipoles.
-  FieldIPort *iportSource = (FieldIPort *)get_iport("Sources");
   FieldHandle hSource;
-//  if (!iportSource->get(hSource) || !hSource.get_rep()) {
-//    error("Can't get handle to Source field.");
-//    return;
-//  } 
-  iportSource->get(hSource);
+  get_input_handle("Sources", hSource, false);
 	
   // If the user passed in a vector the right size, copy it into ours.
-  MatrixIPort *iportRhs = (MatrixIPort *)get_iport("Input RHS");
   ColumnMatrix* rhs = 0;
   MatrixHandle  hRhsIn;
-  if (iportRhs->get(hRhsIn) && hRhsIn.get_rep())
+  if (get_input_handle("Input RHS", hRhsIn, false))
   {
     rhs = scinew ColumnMatrix(hRhsIn->nrows());
     string units;
@@ -118,8 +112,7 @@ ApplyFEMCurrentSource::execute()
 
   MatrixHandle hMapping;
   if (!dipole) {
-    MatrixIPort *iportMapping =  (MatrixIPort *)get_iport("Mapping");
-    iportMapping->get(hMapping);
+    get_input_handle("Mapping", hMapping, false);
   }  
 
   const TypeDescription *ftd = hField->get_type_description(Field::FIELD_NAME_ONLY_E);
@@ -135,7 +128,9 @@ ApplyFEMCurrentSource::execute()
 
   ColumnMatrix *w=NULL;
   
-  algo->execute((ProgressReporter *)this, hField, hSource, hMapping, dipole, Max(sourceNodeTCL_.get(),0), Max(sinkNodeTCL_.get(),0), &rhs, &w);
+  algo->execute(this, hField, hSource, hMapping, dipole,
+                Max(sourceNodeTCL_.get(),0), Max(sinkNodeTCL_.get(),0),
+                &rhs, &w);
 
   //! Sending result
   MatrixHandle rhs_tmp(rhs);

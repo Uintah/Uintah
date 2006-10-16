@@ -69,16 +69,8 @@ class DipoleInAnisoSpheres : public Module {
 			       vector<double> >         PCFieldD;
   typedef SCIRun::GenericField<PCMesh, FDCintBasis,
 			       vector<int> >            PCFieldI;
-  // input
-  FieldIPort  *hInSource;          // dipole
-  FieldIPort  *hInElectrodes;      // electrode positions 
-  MatrixIPort *hInConductivities; // conductivity information 
-  MatrixIPort *hInRadii;  // radii
 
-  // output
-  FieldOPort  *hOutPotentials;  // potential on outer sphere surface at the electrode positions
-
-  // some field handles
+  // Some field handles
   FieldHandle hSource; 
   FieldHandle hElectrodes; 
   MatrixHandle hConductivities;
@@ -118,23 +110,11 @@ DipoleInAnisoSpheres::~DipoleInAnisoSpheres()
 void
 DipoleInAnisoSpheres::execute()
 {
-  // get input ports
-  hInSource = (FieldIPort*)get_iport("Dipole Sources");
-  hInElectrodes = (FieldIPort*)get_iport("Electrodes");
-  hInConductivities = (MatrixIPort*)get_iport("AnisoConductivities");
-  hInRadii = (MatrixIPort*)get_iport("Radii");
-
-  // get output ports
-  hOutPotentials = (FieldOPort*)get_oport("ElectrodePotentials");
-
   update_state(NeedData);
 
   // get dipole handle
-  hInSource->get(hSource);
-  if(!hSource.get_rep()) {
-    error("No input dipole field.");
-    return;
-  }
+  if (!get_input_handle("Dipole Sources", hSource)) return;
+
   const TypeDescription *hstd = hSource->get_type_description();
   const string &hstdn = hstd->get_name();
 
@@ -145,11 +125,7 @@ DipoleInAnisoSpheres::execute()
   }  
 
   // get electrode handle
-  hInElectrodes->get(hElectrodes);
-  if(!hElectrodes.get_rep()) {
-    error("No input electrode field.");
-    return;
-  }
+  if (!get_input_handle("Electrodes", hElectrodes)) return;
 
   const TypeDescription *hetd = hSource->get_type_description();
   const string &hetdn = hetd->get_name();
@@ -161,17 +137,10 @@ DipoleInAnisoSpheres::execute()
   }
 
   // get conductivity handle
-  if(!hInConductivities->get(hConductivities) || (!hConductivities.get_rep())) 
-  {
-    error("No input conductivity matrix.");
-    return;
-  }
+  if (!get_input_handle("AnisoConductivities", hConductivities)) return;
 
   // get radii handle
-  if(!hInRadii->get(hRadii) || (!hRadii.get_rep())) {
-    error("No input radii matrix.");
-    return;
-  }
+  if (!get_input_handle("Radii", hRadii)) return;
   
   // get dipole info from input port
   PCFieldV *pDipoles  = dynamic_cast<PCFieldV*>(hSource.get_rep());
@@ -262,7 +231,7 @@ DipoleInAnisoSpheres::execute()
 
   // send result to output port
   FieldHandle ftmp(nElectrodes);
-  hOutPotentials->send_and_dereference(ftmp);
+  send_output_handle("ElectrodePotentials", ftmp);
 }
 
 
