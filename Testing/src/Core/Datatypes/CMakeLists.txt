@@ -29,7 +29,7 @@
 # Tests to exercise the classes in Core/Datatypes
 ##################################################################
 
-IF(HAVE_INSIGHT) 
+IF(ITK_FOUND)
   # ITKDatatype
   ADD_EXECUTABLE(testITKDatatype ${CMAKE_SOURCE_DIR}/Testing/src/Core/Datatypes/testITKDatatype.cc)
 
@@ -57,5 +57,5 @@ IF(HAVE_INSIGHT)
 
   ADD_TEST(Core_Datatypes_ITKLatVolField_Test
     ${EXECUTABLE_OUTPUT_PATH}/testITKLatVolField)
-ENDIF(HAVE_INSIGHT) 
+ENDIF(ITK_FOUND)
 

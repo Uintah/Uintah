@@ -52,11 +52,11 @@ TARGET_LINK_LIBRARIES(Packages_Insight_Dataflow_Modules_DataIO
   Core_Thread
   Dataflow_GuiInterface
   Core_Geom
-  Core_Datatypes
   Core_Geometry
   Dataflow_TkExtensions
   Core_GeomInterface
-  ${INSIGHT_LIBRARY}
+  ITKCommon
+  ITKIO
   ${GDCM_LIBRARY}
   ${TK_LIBRARY}
   ${GL_LIBRARY}

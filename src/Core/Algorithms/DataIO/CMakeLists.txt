@@ -32,10 +32,10 @@ SET(Core_Algorithms_DataIO_SRCS
   DataIOAlgo.cc
 )
 
-IF(HAVE_INSIGHT)
+IF(ITK_FOUND)
   SET(Core_Algorithms_DataIO_SRCS ${Core_Algorithms_DatIO_SRCS}
       AnalyzeImage.cc AnalyzeReader.cc AnalyzeSliceImageIO.cc)
-ENDIF(HAVE_INSIGHT)
+ENDIF(ITK_FOUND)
 
 ADD_LIBRARY(Core_Algorithms_DataIO ${Core_Algorithms_DataIO_SRCS})
 
@@ -57,12 +57,13 @@ TARGET_LINK_LIBRARIES(Core_Algorithms_DataIO
   ${M_LIBRARY}
 )
 
-IF(HAVE_INSIGHT)
+IF(ITK_FOUND)
   TARGET_LINK_LIBRARIES(Core_Algorithms_DataIO
-    ${INSIGHT_LIBRARY}
+    ITKCommon
+    ITKIO
     ${GDCM_LIBRARY}
     ${GL_LIBRARY})
-ENDIF(HAVE_INSIGHT)
+ENDIF(ITK_FOUND)
 
 IF(NOT BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Core_Algorithms_DataIO)

@@ -57,13 +57,13 @@ SET(Core_Datatypes_SRCS
 	cd_templates_fields_6.cc	
 )
 
-IF(HAVE_INSIGHT)
+IF(ITK_FOUND)
   SET(Core_Datatypes_SRCS ${Core_Datatypes_SRCS} 
     ITKDatatype.cc
     cd_templates_itk.cc
     cd_templates_fields_0_itk.cc
     cd_templates_fields_1_itk.cc)
-ENDIF(HAVE_INSIGHT)
+ENDIF(ITK_FOUND)
 
 ADD_LIBRARY(Core_Datatypes ${Core_Datatypes_SRCS})
 
@@ -85,10 +85,10 @@ TARGET_LINK_LIBRARIES(Core_Datatypes
   ${Z_LIBRARY}
 )
 
-IF(HAVE_INSIGHT)
+IF(ITK_FOUND)
   TARGET_LINK_LIBRARIES(Core_Datatypes
     ITKCommon)
-ENDIF(HAVE_INSIGHT)
+ENDIF(ITK_FOUND)
 
 IF(NOT BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Core_Datatypes)

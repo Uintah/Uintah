@@ -29,40 +29,39 @@
 # CMakeLists.txt for Packages/Insight/Dataflow/Modules/Filters
 
 SET(Packages_Insight_Dataflow_Modules_Filters_SRCS
-  ${SRCDIR}/BinaryDilateImageFilter.cc
-  ${SRCDIR}/BinaryErodeImageFilter.cc
-  ${SRCDIR}/BinaryThresholdImageFilter.cc
-  ${SRCDIR}/CannySegmentationLevelSetImageFilter.cc
-  ${SRCDIR}/ConfidenceConnectedImageFilter.cc
-  ${SRCDIR}/ConnectedThresholdImageFilter.cc
-  ${SRCDIR}/CurvatureAnisotropicDiffusionImageFilter.cc
-  ${SRCDIR}/CurvatureFlowImageFilter.cc
-  ${SRCDIR}/DiscreteGaussianImageFilter.cc
-  ${SRCDIR}/ExtractImageFilter.cc
-  ${SRCDIR}/GeodesicActiveContourLevelSetImageFilter.cc
-  ${SRCDIR}/GradientAnisotropicDiffusionImageFilter.cc
-  ${SRCDIR}/GradientMagnitudeImageFilter.cc
-  ${SRCDIR}/GradientRecursiveGaussianImageFilter.cc
-  ${SRCDIR}/GrayscaleDilateImageFilter.cc
-  ${SRCDIR}/GrayscaleErodeImageFilter.cc
-  ${SRCDIR}/IsolatedConnectedImageFilter.cc
-  ${SRCDIR}/MeanImageFilter.cc
-  ${SRCDIR}/NeighborhoodConnectedImageFilter.cc
-  ${SRCDIR}/ReflectImageFilter.cc
-  ${SRCDIR}/RescaleIntensityImageFilter.cc
-  ${SRCDIR}/ThresholdSegmentationLevelSetImageFilter.cc
-  ${SRCDIR}/UnaryFunctorImageFilter.cc
-  ${SRCDIR}/VectorConfidenceConnectedImageFilter.cc
-  ${SRCDIR}/VectorCurvatureAnisotropicDiffusionImageFilter.cc
-  ${SRCDIR}/VectorGradientAnisotropicDiffusionImageFilter.cc
-  ${SRCDIR}/VectorIndexSelectionCastImageFilter.cc
-  ${SRCDIR}/WatershedImageFilter.cc
+  BinaryDilateImageFilter.cc
+  BinaryErodeImageFilter.cc
+  BinaryThresholdImageFilter.cc
+  CannySegmentationLevelSetImageFilter.cc
+  ConfidenceConnectedImageFilter.cc
+  ConnectedThresholdImageFilter.cc
+  CurvatureAnisotropicDiffusionImageFilter.cc
+  CurvatureFlowImageFilter.cc
+  DiscreteGaussianImageFilter.cc
+  ExtractImageFilter.cc
+  GeodesicActiveContourLevelSetImageFilter.cc
+  GradientAnisotropicDiffusionImageFilter.cc
+  GradientMagnitudeImageFilter.cc
+  GradientRecursiveGaussianImageFilter.cc
+  GrayscaleDilateImageFilter.cc
+  GrayscaleErodeImageFilter.cc
+  IsolatedConnectedImageFilter.cc
+  MeanImageFilter.cc
+  NeighborhoodConnectedImageFilter.cc
+  ReflectImageFilter.cc
+  RescaleIntensityImageFilter.cc
+  ThresholdSegmentationLevelSetImageFilter.cc
+  UnaryFunctorImageFilter.cc
+  VectorConfidenceConnectedImageFilter.cc
+  VectorCurvatureAnisotropicDiffusionImageFilter.cc
+  VectorGradientAnisotropicDiffusionImageFilter.cc
+  VectorIndexSelectionCastImageFilter.cc
+  WatershedImageFilter.cc
 )
 
 ADD_LIBRARY(Packages_Insight_Dataflow_Modules_Filters ${Packages_Insight_Dataflow_Modules_Filters_SRCS})
 
 TARGET_LINK_LIBRARIES(Packages_Insight_Dataflow_Modules_Filters
-  Core_Datatypes
   Core_Datatypes
   Dataflow_Network
   Core_Persistent
@@ -72,13 +71,15 @@ TARGET_LINK_LIBRARIES(Packages_Insight_Dataflow_Modules_Filters
   Core_Thread
   Dataflow_GuiInterface
   Core_Geom
-  Core_Datatypes
   Core_Geometry
   Core_GeomInterface
+  ITKCommon
+  ITKIO
+  ITKBasicFilters
+  ITKAlgorithms
   ${TK_LIBRARY}
   ${GL_LIBRARY}
   ${M_LIBRARY}
-  ${INSIGHT_LIBRARY}
   ${BLAS_LIBRARY}
 )
 

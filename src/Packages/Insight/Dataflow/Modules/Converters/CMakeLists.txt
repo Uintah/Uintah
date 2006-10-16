@@ -44,7 +44,6 @@ ADD_LIBRARY(Packages_Insight_Dataflow_Modules_Converters ${Packages_Insight_Data
 
 TARGET_LINK_LIBRARIES(Packages_Insight_Dataflow_Modules_Converters
   Core_Datatypes
-  Core_Datatypes
   Dataflow_Network
   Core_Persistent
   Core_Containers
@@ -58,10 +57,10 @@ TARGET_LINK_LIBRARIES(Packages_Insight_Dataflow_Modules_Converters
   Core_Geometry
   Dataflow_TkExtensions
   Core_Basis
+  ITKCommon
   ${TK_LIBRARY}
   ${GL_LIBRARY}
   ${M_LIBRARY}
-  ${INSIGHT_LIBRARY}
   ${GDCM_LIBRARY}
   ${TEEM_LIBRARY}
   ${PNG_LIBRARY}
