@@ -246,11 +246,10 @@ ModifyConductivities::execute()
   vector<pair<string, Tensor> > field_tensors;
   bool created_p = false;
 
-  MatrixIPort *imp = (MatrixIPort *)get_iport("Tensor Matrix");
   MatrixHandle imatrix;
   vector<string> tensor_names;
 
-  if (imp->get(imatrix) && imatrix.get_rep())
+  if (get_input_handle("Tensor Matrix", imatrix, false))
   {
     imatrix->get_property("tensor-names", tensor_names);
     ScalarFieldInterfaceHandle sfi = field->query_scalar_interface(this);

@@ -106,9 +106,6 @@ BuildElemLeadField::~BuildElemLeadField()
 void
 BuildElemLeadField::execute()
 {
-  MatrixIPort *sol_iport = (MatrixIPort *)get_iport("Solution Vectors");
-  MatrixOPort *rhs_oport = (MatrixOPort *)get_oport("RHS Vector");
-
   int nnodes;
   int nelems;
   FieldHandle mesh_in;
@@ -132,7 +129,7 @@ BuildElemLeadField::execute()
 
   while (counter<(nelecs-1)) {
     update_progress(counter*1./(nelecs-1));
-    ColumnMatrix* rhs=new ColumnMatrix(nnodes);
+    ColumnMatrix* rhs = new ColumnMatrix(nnodes);
     int i;
     for (i=0; i<nnodes; i++) (*rhs)[i]=0;
 
@@ -155,23 +152,20 @@ BuildElemLeadField::execute()
       (*rhs)[idx?idx[i*idxstride]:i]-=val[i*idxstride];
     }
 
-    if (counter<(nelecs-2)) {
-      rhs_oport->send_intermediate(rhs);
-    } else {
-      rhs_oport->send(rhs);
-    }
+    MatrixHandle rhstmp(rhs);
+    send_output_handle("RHS Vector", rhstmp, true, counter < (nelecs-2));
+
     // read sol'n
     MatrixHandle sol_in;
-    if (!sol_iport->get(sol_in)) {
-      error("Couldn't get solution vector.");
-      return;
-    }
+    if (!get_input_handle("Solution Vectors", sol_in)) return;
+
     for (i=0; i<nelems; i++)
       for (int j=0; j<3; j++) {
 	(*leadfield_mat)[counter+1][i*3+j] =- sol_in->get(i, j);
       }
     counter++;
   }
+
   leadfield_ = leadfield_mat;
 
   send_output_handle("Leadfield (nelecs x nelemsx3)", leadfield_, true);

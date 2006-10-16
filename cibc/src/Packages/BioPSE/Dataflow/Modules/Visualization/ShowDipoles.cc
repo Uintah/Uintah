@@ -176,8 +176,6 @@ ShowDipoles::maybe_resize_widget(void *ptr)
 void
 ShowDipoles::execute()
 {
-  FieldIPort *ifield = (FieldIPort *)get_iport("dipoleFld");
-  FieldOPort *ofield = (FieldOPort *)get_oport("dipoleFld");
   GeometryOPort *ogeom = (GeometryOPort *)get_oport("Geometry");
   
   // if this is the first execution then try loading all the values
@@ -187,10 +185,10 @@ ShowDipoles::execute()
     been_executed_ = true;
   }
   FieldHandle fieldH;
+  if (!get_input_handle("dipoleFld", fieldH)) return;
   PCField *field_pcv;
-  if (!ifield->get(fieldH) || 
-      !(field_pcv=dynamic_cast<PCField*>(fieldH.get_rep()))) {
-    error("No vald input in ShowDipoles Field port.");
+  if (!(field_pcv=dynamic_cast<PCField*>(fieldH.get_rep()))) {
+    error("Input field was not a valid point cloud.");
     return;
   }
   PCMesh::handle_type field_mesh = field_pcv->get_typed_mesh();
@@ -217,7 +215,7 @@ ShowDipoles::execute()
   draw_lines();
   generate_output_field();
   ogeom->flushViews();
-  ofield->send(dipoleFldH_);
+  send_output_handle("dipoleFld", dipoleFldH_, true);
 }
 
 void 

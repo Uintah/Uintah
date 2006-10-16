@@ -62,7 +62,6 @@ private:
   GuiDouble start_;
   GuiDouble end_;
   vector<string> potfiles_;
-  MatrixOPort *oport_;
   string       old_filename_;
   time_t       old_filemodification_;
   MatrixHandle handle_;
@@ -78,7 +77,6 @@ RawToDenseMatrix::RawToDenseMatrix(GuiContext *context) :
   filename_(context->subVar("filename")),
   start_(context->subVar("min")),
   end_(context->subVar("max")),
-  oport_(0),
   old_filename_("bogus"),
   old_filemodification_(0),
   handle_(0)
@@ -93,7 +91,6 @@ RawToDenseMatrix::~RawToDenseMatrix()
 void
 RawToDenseMatrix::execute()
 {
-  oport_ = (MatrixOPort *)get_oport("DenseMatrix");
   filename_.reset();
 
   struct stat buf;
@@ -167,7 +164,7 @@ RawToDenseMatrix::execute()
   handle_->set_property("time-start", start_.get(), true);
   handle_->set_property("time-end", end_.get(), true);
 
-  oport_->send_and_dereference(handle_, true);
+  send_output_handle("DenseMatrix", handle_, true);
 }
 
 
