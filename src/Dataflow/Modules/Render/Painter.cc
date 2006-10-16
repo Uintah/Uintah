@@ -467,7 +467,6 @@ Painter::Painter(GuiContext* ctx) :
   font_g_(ctx->subVar("color_font_g"), 1.0),
   font_b_(ctx->subVar("color_font_b"), 1.0),
   font_a_(ctx->subVar("color_font_a"), 1.0),
-  bundle_oport_((BundleOPort *)get_oport("Paint Data")),
   freetype_lib_(0),
   fonts_(),
   font_size_(ctx->subVar("font_size"),17.0),
@@ -1876,40 +1875,29 @@ Painter::send_data()
       bundle->setNrrd(viter->first, nrrd);
     }
 
-  
-//   for (unsigned int v = 0; v < volumes_.size(); ++v) {
-//     string name = volumes_[v]->name_.get();
-//     NrrdDataHandle nrrd = volumes_[v]->get_nrrd();
-//     bundle->setNrrd(name, nrrd);
-//   }
-
-  BundleOPort *oport = (BundleOPort *)get_oport("Paint Data");
-  ASSERT(oport);
-  oport->send(bundle);  
+  send_output_handle("Paint Data", bundle);
 }
 
 
 
 void
 Painter::receive_filter_bundles(Bundles &bundles)
-{   
-  BundleIPort *filter_port = (BundleIPort *)get_iport("Filter Data");
-  ASSERT(filter_port);
-  BundleHandle bundle = 0;
-  filter_port->get(bundle);
-  if (bundle.get_rep()) 
+{
+  BundleHandle bundle;
+  if (get_input_handle("Filter Data", bundle, false))
+  {
     bundles.push_back(bundle);
+  }
 }
 
 void
 Painter::receive_normal_bundles(Bundles &bundles)
 {
-  BundleIPort *filter_port = (BundleIPort *)get_iport("Paint Data");
-  ASSERT(filter_port);
-  BundleHandle bundle = 0;
-  filter_port->get(bundle);
-  if (bundle.get_rep()) 
+  BundleHandle bundle;
+  if (get_input_handle("Paint Data", bundle, false))
+  {
     bundles.push_back(bundle);
+  }
 }
   
 void
