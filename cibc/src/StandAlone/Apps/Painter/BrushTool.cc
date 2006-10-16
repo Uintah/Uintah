@@ -137,7 +137,19 @@ BrushTool::pointer_down(int b, int x, int y, unsigned int m, int t)
     if (!slice_) {
       return CONTINUE_E;
     }
-    if (vol->label_) value_ = vol->label_;
+    if (vol->label_) {
+      label_mask_ = 0;
+      NrrdVolume *parent = vol;
+      while (parent->parent_) {
+        parent = parent->parent_;
+        if (parent)
+          label_mask_ |= parent->label_;
+      }
+      value_ = vol->label_ | label_mask_;
+    } else {
+      label_mask_ = 0;
+    }
+        
     last_index_ = vol->world_to_index(painter_->pointer_pos_);
     last_index_.erase(last_index_.begin()+slice_->axis());
 
@@ -147,6 +159,7 @@ BrushTool::pointer_down(int b, int x, int y, unsigned int m, int t)
     slice_->texture_->apply_colormap(last_index_[1], last_index_[2],
                                      last_index_[1]+1, last_index_[2]+1,
                                      Ceil(radius_()));
+
     
     painter_->redraw_all();    
     return STOP_E;
@@ -346,7 +359,7 @@ BrushTool::splat(Nrrd *nrrd, double radius, int x0, int y0)
             //            dist += painter_->current_volume_->clut_min_;
             //            float val;
             //            nrrd_get_value(nrrd, index, val);
-            nrrd_set_value(nrrd, index, value_);//nrrd_get_value(nrrd,index);
+            nrrd_set_value(nrrd, index, value_, label_mask_);//nrrd_get_value(nrrd,index);
           }
         }
 }
