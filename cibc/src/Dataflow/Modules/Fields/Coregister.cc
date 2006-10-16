@@ -98,10 +98,6 @@ Coregister::~Coregister()
 void
 Coregister::execute()
 {
-  FieldIPort *fixed = (FieldIPort *) get_iport("Fixed PointCloudField");
-  FieldIPort *mobile = (FieldIPort *) get_iport("Mobile PointCloudField");
-  FieldIPort *dfield = (FieldIPort *) get_iport("DistanceField From Fixed");
-
   typedef ConstantBasis<double>                FDCdoubleBasis;
   typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
   typedef GenericField<PCMesh, FDCdoubleBasis, vector<double> >PCField;
@@ -111,13 +107,13 @@ Coregister::execute()
   PCMesh::handle_type fixedM, mobileM;
   PCMesh::Node::size_type nnodes;
   
-  if (!fixed->get(fixedH)) return;
+  if (!get_input_handle("Fixed PointCloudField", fixedH)) return;
   fixedPC = dynamic_cast<PCField *>(fixedH.get_rep());
   if (!fixedPC) return;
 
   fixedM = fixedPC->get_typed_mesh();
 
-  if (!mobile->get(mobileH)) return;
+  if (!get_input_handle("Mobile PointCloudField", mobileH)) return;
   mobilePC = dynamic_cast<PCField *>(mobileH.get_rep());
   if (!mobilePC) return;
 
@@ -164,7 +160,8 @@ Coregister::execute()
     coreg = scinew CoregPtsProcrustes(allowScale, allowRotate, allowTranslate);
   } else { // method == "Simplex"
     FieldHandle dfieldH;
-    if (!dfield->get(dfieldH)) {
+    if (!get_input_handle("DistanceField From Fixed", dfieldH))
+    {
       error("Simplex needs a distance field.");
       return;
     }
