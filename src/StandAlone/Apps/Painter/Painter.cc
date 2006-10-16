@@ -254,7 +254,7 @@ void
 Painter::build_volume_list(NrrdVolumes &volumes, NrrdVolume *volume)
 {
   NrrdVolumes &children = volume ? volume->children_ : volumes_;
-  for (int i = 0; i < children.size(); ++i) {
+  for (unsigned int i = 0; i < children.size(); ++i) {
     volumes.push_back(children[i]);
     build_volume_list(volumes, children[i]);
   }
@@ -380,7 +380,7 @@ Painter::set_all_slices_tex_dirty() {
 
 NrrdVolume *
 Painter::find_volume_by_name(const string &name) {
-  for (int i = 0; i < volumes_.size(); ++i)
+  for (unsigned int i = 0; i < volumes_.size(); ++i)
     if (volumes_[i]->name_ == name) 
       return volumes_[i];
   return 0;
