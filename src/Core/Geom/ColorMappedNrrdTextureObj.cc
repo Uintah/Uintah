@@ -233,7 +233,7 @@ ColorMappedNrrdTextureObj::apply_colormap_to_label_bit(float *dst,
     int start_pos = region_start + row*row_width;
     int end_pos = start_pos + region_width;
     for (int pos = start_pos; pos < end_pos; ++pos) {
-      const T &val = src[pos];
+      //const T &val = src[pos];
       if (src[pos] & mask) {
         memcpy(dst + pos * 4, rgba + bit * 4, sizeof4floats);
       } else {

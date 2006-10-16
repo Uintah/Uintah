@@ -240,7 +240,7 @@ Painter::DeleteLayer(event_handle_t event) {
 
   NrrdVolumes newvolumes(volumes_.size()-1, 0);
   int j = 0;
-  int newcur = 0;
+  unsigned int newcur = 0;
   for (unsigned int i = 0; i < volumes_.size(); ++i) {
     if (volumes_[i] != layer)
       newvolumes[j++] = volumes_[i];
