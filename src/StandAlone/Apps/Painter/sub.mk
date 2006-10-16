@@ -69,13 +69,26 @@ endif
 
 PROGRAM := $(SRCDIR)/painter
 
-SRCS := $(SRCDIR)/CropTool.cc \
+SRCS := $(SRCDIR)/AutoviewTool.cc \
+	$(SRCDIR)/BrushTool.cc \
+	$(SRCDIR)/CLUTLevelsTool.cc \
+	$(SRCDIR)/CropTool.cc \
+	$(SRCDIR)/FloodfillTool.cc \
         $(SRCDIR)/ITKConfidenceConnectedImageFilterTool.cc \
+	$(SRCDIR)/ITKThresholdSegmentationLevelSetImageFilterTool.cc \
+	$(SRCDIR)/KeyToolSelectorTool.cc \
 	$(SRCDIR)/LayerButton.cc \
+	$(SRCDIR)/LayerMergeTool.cc \
+	$(SRCDIR)/NrrdVolume.cc \
 	$(SRCDIR)/Painter.cc \
-        $(SRCDIR)/PainterTools.cc \
-        $(SRCDIR)/PainterBrushTool.cc \
         $(SRCDIR)/PainterSignalTargets.cc \
+	$(SRCDIR)/PanTool.cc \
+	$(SRCDIR)/ProbeTool.cc \
+	$(SRCDIR)/PointerToolSelectorTool.cc \
+	$(SRCDIR)/StatisticsTool.cc \
+	$(SRCDIR)/SliceWindow.cc \
+	$(SRCDIR)/VolumeSlice.cc \
+	$(SRCDIR)/ZoomTool.cc \
         $(SRCDIR)/main.cc \
 
 include $(SCIRUN_SCRIPTS)/program.mk
