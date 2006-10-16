@@ -259,16 +259,18 @@ findFileInPath(const std::string &file, const std::string &path)
   string::size_type end = 0;
 
   while (beg < path.length()) {
-
+#ifdef _WIN32
+    end = path.find(":",beg+2);
+#else
     end = path.find(":",beg);
+#endif
     if (end == string::npos) end = path.size();
 
     string dir(path, beg, end-beg);
     ASSERT(!dir.empty());
     // Append a slash if there isn't one
-    // TODO: fix for Windows
-    if (dir[dir.length()-1] != '/') dir = dir + "/";
     if (validDir(dir)) {
+      if (dir[dir.length()-1] != '/') dir = dir + "/";
       string filename = dir + file;
       if (validFile(filename)) {
         // see comments at function start

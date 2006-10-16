@@ -46,7 +46,7 @@
 #include <Core/Geom/GeomContainer.h>
 #include <Core/Skinner/Variables.h>
 
-#include <Core/Geom/share.h>
+#include <Core/Skinner/share.h>
 
 namespace SCIRun {
 

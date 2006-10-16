@@ -33,10 +33,10 @@
 #include <Core/Util/Socket.h>
 #include <string>
 #include <errno.h>
-#include <ifaddrs.h>
 
 #ifndef _WIN32
 #  include <fcntl.h>
+#  include <ifaddrs.h>
 #else
 #  define socklen_t int
 #  define close closesocket
@@ -226,6 +226,7 @@ Socket::connect(const std::string host, const int port)
   addr_.sin_port = htons(port);
 
   struct hostent* hostentry;
+
   hostentry = gethostbyname(host.c_str());
   if (hostentry == 0) {
     perror("ERROR in connect()");
@@ -273,6 +274,7 @@ string
 Socket::get_local_ip()
 {
   string rval;
+#ifndef _WIN32
   struct ifaddrs *ifa = NULL;
 
   if (getifaddrs (&ifa) < 0)
@@ -305,6 +307,9 @@ Socket::get_local_ip()
   }
 
   freeifaddrs (ifa);
+#else
+  rval = "0.0.0.0";
+#endif
   return rval;
 }
 

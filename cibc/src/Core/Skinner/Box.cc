@@ -67,7 +67,7 @@ namespace SCIRun {
     BaseTool::propagation_state_e
     Box::redraw(event_handle_t)
     {
-      glColor4dv(&color_().r);
+      glColor4dv(&(color_().r));
       glBegin(GL_QUADS);
 
       const double *coords = get_region().coords2D();

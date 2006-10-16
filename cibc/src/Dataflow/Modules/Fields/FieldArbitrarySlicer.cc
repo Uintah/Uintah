@@ -57,7 +57,7 @@
 #include <Core/Basis/HexTrilinearLgn.h>
 
 #ifdef _WIN32
-#define SCISHARE __declspec(dllimport)
+#define SCISHARE __declspec(dllexport)
 #else
 #define SCISHARE
 #endif

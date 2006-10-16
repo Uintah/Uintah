@@ -220,7 +220,7 @@ SCIRun::create_sci_environment(char **env, char *execname)
       sci_putenv("SCIRUN_OBJDIR", objdir);
     else {
       string objdir(execname);
-      if (execname[0] != '/') {
+      if (execname[0] != '/' && execname[1] != ':') { // unix and windows compatible
         if (string(execname).find("/") == string::npos) {
           objdir = findFileInPath(execname, sci_getenv("PATH"));
           ASSERT(objdir.length());
@@ -232,6 +232,8 @@ SCIRun::create_sci_environment(char **env, char *execname)
       }
 
       string::size_type pos = objdir.find_last_of('/');
+      if (pos == string::npos)
+        pos = objdir.find_last_of('\\');
 
       executable_name = objdir.substr(pos+1, objdir.size()-pos-1);;
       objdir.erase(objdir.begin()+pos+1, objdir.end());

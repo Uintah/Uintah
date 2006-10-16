@@ -29,6 +29,7 @@
 //    Author : McKay Davis
 //    Date   : Sun Oct  1 19:54:39 2006
 
+#include <Core/Events/Trail.h>
 #include <Core/Events/EventManager.h>
 #include <Core/Util/FileUtils.h>
 #include <Core/Util/Environment.h>

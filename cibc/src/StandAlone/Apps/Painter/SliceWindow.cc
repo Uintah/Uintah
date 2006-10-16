@@ -69,6 +69,9 @@
 #include <Core/Util/FileUtils.h>
 #include <Core/Algorithms/Visualization/NrrdTextureBuilderAlgo.h>
 
+#ifdef _WIN32
+#define snprintf _snprintf
+#endif
 
 namespace SCIRun {
 

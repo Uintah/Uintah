@@ -83,7 +83,9 @@ static HGLRC first_context = NULL;
 #ifdef _WIN32
 HINSTANCE dllHINSTANCE=0;
 
+#ifndef HAVE_GLEW
 void initGLextensions();
+#endif
 
 void
 PrintErr(char* func_name)
@@ -342,7 +344,9 @@ TkGLMakeWindow(Tk_Window tkwin, Window parent, ClientData data)
 #endif
 
   tkCxt->make_current();
+#ifndef HAVE_GLEW
   initGLextensions();
+#endif
   tkCxt->ReportCapabilities();
 
   if (!tkCxt->context_) throw scinew InternalError("Cannot create WGL Context", __FILE__, __LINE__);
@@ -998,7 +1002,7 @@ TkOpenGLContext::listvisuals()
 }
 
 #ifdef _WIN32
-
+#ifndef HAVE_GLEW
 // initialize > gl 1.1 stuff here
 __declspec(dllexport) PFNGLACTIVETEXTUREPROC glActiveTexture = 0;
 __declspec(dllexport) PFNGLBLENDEQUATIONPROC glBlendEquation = 0;
@@ -1024,7 +1028,7 @@ void initGLextensions()
     glColorTable = (PFNGLCOLORTABLEPROC)wglGetProcAddress("glColorTable");
   }
 }
-
+#endif
 BOOL WINAPI DllMain(HINSTANCE hinstance, DWORD reason, LPVOID reserved)
 {
   switch (reason) {

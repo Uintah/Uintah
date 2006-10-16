@@ -77,7 +77,7 @@ namespace SCIRun {
       p1 = p1 + delta;
       p2 = p2 + delta;
       p3 = p3 + delta;
-      glColor4dv(&color_().r);
+      glColor4dv(&(color_().r));
       glBegin(GL_TRIANGLES);
       glVertex3dv(&p1(0));
       glVertex3dv(&p2(0));

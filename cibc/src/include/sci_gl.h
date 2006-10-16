@@ -115,7 +115,7 @@ typedef unsigned short wchar_t;
 #endif // _WIN32
 
 #if defined(HAVE_GLEW)
-
+#define GLEW_STATIC 1
 #include <GL/glew.h>
 
 #ifdef __cplusplus
@@ -144,6 +144,7 @@ extern SCISHARE int sci_glew_init();
 
   typedef unsigned int uint;
 
+#  ifndef HAVE_GLEW
   __declspec(dllimport) PFNGLACTIVETEXTUREPROC glActiveTexture;
   __declspec(dllimport) PFNGLBLENDEQUATIONPROC glBlendEquation;
   __declspec(dllimport) PFNGLTEXIMAGE3DPROC glTexImage3D;
@@ -152,7 +153,7 @@ extern SCISHARE int sci_glew_init();
   __declspec(dllimport) PFNGLMULTITEXCOORD2FVPROC glMultiTexCoord2fv;
   __declspec(dllimport) PFNGLMULTITEXCOORD3FPROC glMultiTexCoord3f;
   __declspec(dllimport) PFNGLCOLORTABLEPROC glColorTable;
-
+#  endif
 #endif
 
 #endif  /* #define SCI_GL_H */

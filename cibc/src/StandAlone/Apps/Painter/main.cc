@@ -61,7 +61,9 @@ main(int argc, char *argv[], char **environment) {
 
   EventManager *em = new EventManager();
   Thread *em_thread = new Thread(em, "Event Manager");
+#ifndef _WIN32
   start_trail_file();
+#endif
 
 #if defined(__APPLE__) && !defined(HAVE_X11)
   // Apple's version of event management

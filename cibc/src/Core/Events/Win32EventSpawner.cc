@@ -160,7 +160,7 @@ Win32GLContextRunnable::win_ButtonPressEvent(MSG winevent, int button)
 
   sci_event->set_pointer_state(state);
   sci_event->set_x(MOUSE_X(winevent.lParam));
-  sci_event->set_y(MOUSE_Y(winevent.lParam));
+  sci_event->set_y(context_->height_ - 1 - MOUSE_Y(winevent.lParam));
   sci_event->set_time(winevent.time);
   return sci_event;
 }
@@ -181,7 +181,7 @@ Win32GLContextRunnable::win_ButtonReleaseEvent(MSG winevent, int button)
 
   sci_event->set_pointer_state(state);
   sci_event->set_x(MOUSE_X(winevent.lParam));
-  sci_event->set_y(MOUSE_Y(winevent.lParam));
+  sci_event->set_y(context_->height_ - 1 - MOUSE_Y(winevent.lParam));
   sci_event->set_time(winevent.time);
   return sci_event;
 }
@@ -203,7 +203,7 @@ Win32GLContextRunnable::win_PointerMotion(MSG winevent)
   
   sci_event->set_pointer_state(state);
   sci_event->set_x(MOUSE_X(winevent.lParam));
-  sci_event->set_y(MOUSE_Y(winevent.lParam));
+  sci_event->set_y(context_->height_ - 1 - MOUSE_Y(winevent.lParam));
   sci_event->set_time(winevent.time);
   return sci_event;
 }

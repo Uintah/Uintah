@@ -46,6 +46,8 @@ using std::map;
 using std::vector;
 using std::pair;
 
+#include <Core/Skinner/share.h>
+
 namespace SCIRun {
   namespace Skinner {
     class Variables;
@@ -73,7 +75,7 @@ namespace SCIRun {
       T operator()();
     };
     
-    class Variables 
+    class SCISHARE Variables 
     {
     public:
 
@@ -119,7 +121,7 @@ namespace SCIRun {
 
 
       
-      struct value_t {
+      struct SCISHARE value_t {
         value_t(string, string, var_type_e);
         bool              update_cache_from_string(Variables *);
         void              update_string_from_cache(Variables *);
@@ -210,7 +212,7 @@ namespace SCIRun {
       if (this->scope_index_ && 
           (*this->scope_index_ == -1) && 
           (*rhs.scope_index_ != -1)) {
-        operator=(rhs);
+        return operator=(rhs);
       }
       return *this;
     }
