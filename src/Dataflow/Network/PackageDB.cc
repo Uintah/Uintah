@@ -122,10 +122,9 @@ PackageDB::findMaker(ModuleInfo* moduleInfo)
   // If package is FieldsChoose, FieldsCreate, FieldsHandle Fields Packages,
   // or UnuA-M, UnuN-Z
   string cat_name = moduleInfo->category_name_;
-  if((cat_name.substr(0, 6) == "Fields")&&(moduleInfo->package_name_ == "SCIRun"))
+  if(cat_name.find("Fields") != string::npos &&
+     moduleInfo->package_name_ == "SCIRun")
   { cat_name = "Fields"; }
-  else if((cat_name.substr(0, 13) == "Conglomerate_"))
-  { cat_name = "Conglomerate"; moduleInfo->category_name_.erase(0,13); }
   else if (cat_name.substr(0, 7) == "UnuAtoM") { cat_name = "Unu"; }
   else if (cat_name.substr(0, 7) == "UnuNtoZ") { cat_name = "Unu"; }
 
