@@ -46,17 +46,14 @@ namespace SCIRun {
       virtual ~Text();
       CatcherFunction_t                 redraw;
     protected:
-
+      TextRenderer *                    renderer_;
+      unsigned int                      flags_;
       Var<Color>                        fgcolor_;
       Var<Color>                        bgcolor_;
-      unsigned int                      flags_;
-      TextRenderer *                    renderer_;
       Var<int>                          offsetx_;
       Var<int>                          offsety_;
-      unsigned int                      cursor_position_;
-      Var<string>                       text_;
-      bool                              var_exists_;
       Var<bool>                         cursor_;
+      unsigned int                      cursor_position_;
     };
   }
 }

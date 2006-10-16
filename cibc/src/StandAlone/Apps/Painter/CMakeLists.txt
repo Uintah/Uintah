@@ -29,7 +29,7 @@
 # This is the root ITK CMakeLists file.  
 CMAKE_MINIMUM_REQUIRED(VERSION 2.0)
 
-PROJECT(Painter)
+PROJECT(LeXoV)
 
 #-----------------------------------------------------------------------------
 # Test for some required system information.
@@ -60,7 +60,7 @@ IF(SCIRUN_FOUND)
   INCLUDE(${SCIRUN_USE_FILE})
   SET(SCIRUN_DIR . CACHE PATH "Path to SCIRun Core")
 ELSE(SCIRUN_FOUND)
-  MESSAGE(FATAL_ERROR "Cannot build Painter without SCIRUN Core. Please set SCIRUN_DIR.")
+  MESSAGE(FATAL_ERROR "Cannot build LeXoV without SCIRUN Core. Please set SCIRUN_DIR.")
 ENDIF(SCIRUN_FOUND)
 
 IF(NOT ITK_DIR)
@@ -71,7 +71,7 @@ FIND_PACKAGE( ITK )
 IF(ITK_FOUND)
   INCLUDE(${ITK_USE_FILE})
 ELSE(ITK_FOUND)
-  MESSAGE(FATAL_ERROR "Cannot build Painter without ITK. Please set ITK_DIR.")
+  MESSAGE(FATAL_ERROR "Cannot build LeXoV without ITK. Please set ITK_DIR.")
 ENDIF(ITK_FOUND)
 
 
@@ -86,14 +86,27 @@ FIND_PATH(GLEW_INCLUDE glew.h
            /usr/include
            /include)
 
-SET(PAINTER_SRCS 
-  Painter.cc 
-  PainterTools.cc 
-  PainterBrushTool.cc 
-  PainterSignalTargets.cc 
-  ITKConfidenceConnectedImageFilterTool.cc
-  LayerButton.cc
+SET(LEXOV_SRCS 
+  AutoviewTool.cc 
+  BrushTool.cc 
+  CLUTLevelsTool.cc
   CropTool.cc
+  FloodfillTool.cc
+  ITKConfidenceConnectedImageFilterTool.cc
+  ITKThresholdSegmentationLevelSetImageFilterTool.cc
+  KeyToolSelectorTool.cc
+  LayerButton.cc
+  LayerMergeTool.cc
+  NrrdVolume.cc
+  Painter.cc 
+  PainterSignalTargets.cc 
+  PanTool.cc 
+  ProbeTool.cc 
+  PointerToolSelectorTool.cc
+  StatisticsTool.cc
+  SliceWindow.cc
+  VolumeSlice.cc
+  ZoomTool.cc
   main.cc 
 )
 
@@ -101,27 +114,27 @@ SET(PAINTER_SRCS
 
 
 IF(APPLE)
-  ADD_EXECUTABLE(painter MACOSX_BUNDLE ${PAINTER_SRCS})
-  SET_TARGET_PROPERTIES(painter PROPERTIES LINK_FLAGS "-framework Carbon")
-  ADD_CUSTOM_COMMAND(TARGET painter
+  ADD_EXECUTABLE(LeXoV MACOSX_BUNDLE ${LEXOV_SRCS})
+  SET_TARGET_PROPERTIES(LeXoV PROPERTIES LINK_FLAGS "-framework Carbon")
+  ADD_CUSTOM_COMMAND(TARGET LeXoV
                      POST_BUILD
                      COMMAND ${CMAKE_COMMAND}
                      ARGS  -E copy_directory
                      ${Painter_SOURCE_DIR}/data
-                     ${EXECUTABLE_OUTPUT_PATH}/painter.app/Contents/MacOS/data)
+                     ${EXECUTABLE_OUTPUT_PATH}/LeXoV.app/Contents/MacOS/data)
 ELSE(APPLE)
-  ADD_EXECUTABLE(painter ${PAINTER_SRCS})
-  ADD_CUSTOM_COMMAND(TARGET painter
+  ADD_EXECUTABLE(LeXoV ${LEXOV_SRCS})
+  ADD_CUSTOM_COMMAND(TARGET LeXoV
                      POST_BUILD
                      COMMAND ${CMAKE_COMMAND}
                      ARGS  -E copy_directory
-                     ${Painter_SOURCE_DIR}/data
+                     ${LeXoV_SOURCE_DIR}/data
                      ${EXECUTABLE_OUTPUT_PATH}/data)
 ENDIF(APPLE)
 
 
                 
-TARGET_LINK_LIBRARIES(painter 
+TARGET_LINK_LIBRARIES(LeXoV 
   Core_Algorithms_Visualization 
   Core_Basis 
   Core_Bundle 
@@ -148,7 +161,7 @@ TARGET_LINK_LIBRARIES(painter
 )
 
 IF(ITK_FOUND)   
-  TARGET_LINK_LIBRARIES(painter 
+  TARGET_LINK_LIBRARIES(LeXoV 
     ITKCommon
     ITKBasicFilters
     ITKIO)

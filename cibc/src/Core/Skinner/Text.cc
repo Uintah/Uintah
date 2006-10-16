@@ -38,39 +38,29 @@ namespace SCIRun {
   namespace Skinner {
     Text::Text(Variables *vars) :
       Drawable(vars),
-      fgcolor_(vars,"fgcolor",Color(0.0, 1.0, 0.0, 1.)),
-      bgcolor_(vars,"bgcolor"),
-      flags_(0),
       renderer_(0),
-      offsetx_(),
-      offsety_(),
+      flags_(0),
+      fgcolor_(vars,"fgcolor",Color(0.0, 1.0, 0.0, 1.0)),
+      bgcolor_(vars,"bgcolor",Color(1.0, 0.0, 0.0, 1.0)),
+      offsetx_(vars,"offsetx"),
+      offsety_(vars,"offsety"),
       cursor_position_(0),
-      text_(vars, "text"),
-      var_exists_(get_vars()->exists("variable")),
       cursor_(vars, "cursor", false)
     {
       REGISTER_CATCHER_TARGET(Text::redraw);
 
-      if (!bgcolor_.exists()) {
-        cerr << "bgcolor not exists: " << get_id() << std::endl;
-        Var<Color> test(vars, "breakpoint");
-        bgcolor_ = Color(1.0, 0.0, 0.0, 1.0);
-      }
+      Var<double> size(vars, "size", 20.0);
+      Var<string> font(vars, "font", "scirun.ttf");
+      renderer_ = FontManager::get_renderer(size, font);
       
-      Var<double>size(vars, "size", 20.0);
-      Var<string>font(vars, "font", "scirun.ttf");
-      renderer_ = FontManager::get_renderer(size(), font());
-      
-      offsetx_ = Var<int>(vars, "offsetx");
       offsetx_ |= Var<int>(vars, "offset");
       offsetx_ |= 0;
 
-      offsety_ = Var<int>(vars, "offsety");
       offsety_ |= Var<int>(vars, "offset");
       offsety_ |= 0;
-
+     
       Var<string> anchorstr(vars, "anchor", "SW");
-      anchorstr = string_toupper(anchorstr());
+      anchorstr = string_toupper(anchorstr);
 
       flags_ = TextRenderer::SW;
       if      (anchorstr() ==  "N") { flags_ = TextRenderer::N;  }
@@ -84,12 +74,11 @@ namespace SCIRun {
       else if (anchorstr() ==  "C") { flags_ = TextRenderer::C;  }
       else { cerr << vars->get_id() << " anchor invalid: " 
                   << anchorstr() << "\n"; }
+
       flags_ |= Var<bool>(vars,"vertical",0)() ? TextRenderer::VERTICAL : 0;
       flags_ |= Var<bool>(vars,"shadow",0)()   ? TextRenderer::SHADOW   : 0;
       flags_ |= Var<bool>(vars,"extruded",0)() ? TextRenderer::EXTRUDED : 0;
       flags_ |= Var<bool>(vars,"reverse",0)()  ? TextRenderer::REVERSE  : 0;
-      
-      //      REGISTER_CATCHER_TARGET(Text::redraw);
     }
 
     Text::~Text() {}
@@ -100,11 +89,9 @@ namespace SCIRun {
       if (!renderer_) return CONTINUE_E;
       const RectRegion &region = get_region();
 
-      if (var_exists_) 
-        text_ = get_vars()->get_string("variable");
-      
-      if (!text_.exists()) text_ = "ABC123";
-      if (region.height() < 1 || renderer_->height(text_()) > region.height()) {
+      string text = get_vars()->get_string("text");
+
+      if (region.height() < 1 || renderer_->height(text) > region.height()) {
         return STOP_E;
       }
       
@@ -143,7 +130,8 @@ namespace SCIRun {
         
       case TextRenderer::C:  x = mx; y = my; break;
       }
-      renderer_->render(text_(), x, y, flags_);
+
+      renderer_->render(text, x, y, flags_);
       
       return CONTINUE_E;
     }

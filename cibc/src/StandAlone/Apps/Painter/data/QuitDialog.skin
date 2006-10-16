@@ -8,9 +8,11 @@
 
     <signal name="FocusRegion::focus" 
             target="FocusGrab::Grab"/>
+    <signal name="FocusRegion::focus" 
+            target="GLWindow::mark_redraw"/>
 
     <object class="Box">
-      <var name="color">#33333388</var>
+      <var name="color">#000000AA</var>
       <object class="Grid">
         <var name="rows">3</var>
         <var name="cols">3</var>
@@ -24,7 +26,7 @@
             <object class="Frame" id="QuitDialog">
               <object class="Box" id="QuitDialog">
                 <var name="color">$main_color</var>
-            
+                
                 <object class="Texture">
                   <var name="file">BackgroundTile04.png</var>
                   <var name="color">#AAAAAAFF</var>
@@ -94,7 +96,7 @@
                 </object>
               </object>
             </object>
-        </definition>
+          </definition>
         </object>
       </object>
     </object>

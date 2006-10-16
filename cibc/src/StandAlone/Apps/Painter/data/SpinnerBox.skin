@@ -9,6 +9,8 @@
     
     <definition class="ShadowedBox::child">
       <object class="Root::FocusRegion">
+        <var name="FocusRegion::focused" propagate="yes">0</var>
+        <var name="focus">$FocusRegion::focused</var>
 
         <signal name="FocusRegion::focus"
                 target="Arithmetic::set_value">
@@ -92,7 +94,7 @@
             <object class="Root::ViewSubRegion">
               <object class="TextEntry">
                 <var name="variable">$SpinnerBox::variable</var>
-                <var name="text">$SpinnerBox::text</var>
+                <var name="text">$SpinnerBox::variable</var>
                 <var name="cursor">$FocusRegion::focused</var>
                 <var name="size">$SpinnerBox::text_size</var>
                 <var name="anchor">E</var>

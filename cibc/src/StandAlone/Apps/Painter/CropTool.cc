@@ -32,35 +32,8 @@
 
 
 #include <StandAlone/Apps/Painter/Painter.h>
-#include <sci_comp_warn_fixes.h>
-#include <stdlib.h>
-#include <math.h>
-#include <map>
-#include <typeinfo>
-#include <iostream>
+#include <StandAlone/Apps/Painter/CropTool.h>
 #include <sci_gl.h>
-#include <Core/Bundle/Bundle.h>
-#include <Core/Containers/Array3.h>
-#include <Core/Datatypes/Field.h> 
-#include <Core/Exceptions/GuiException.h>
-#include <Core/Geom/Material.h>
-#include <Core/Geom/FreeTypeTextTexture.h>
-#include <Core/Geom/GeomSwitch.h>
-#include <Core/Geom/GeomCull.h>
-#include <Core/Geom/GeomGroup.h>
-#include <Core/Geom/TexSquare.h>
-#include <Core/Geom/OpenGLViewport.h>
-#include <Core/Geom/FreeType.h>
-#include <Core/Malloc/Allocator.h>
-#include <Core/Math/MiscMath.h>
-#include <Core/Math/MinMax.h>
-#include <Core/Thread/Runnable.h>
-#include <Core/Thread/Mutex.h>
-#include <Core/Thread/Semaphore.h>
-#include <Core/Util/Timer.h>
-#include <Core/Util/Environment.h>
-#include <Core/Volume/CM2Widget.h>
-#include <Core/Events/keysyms.h>
 
 #ifdef _WIN32
 #  define SCISHARE __declspec(dllimport)
@@ -71,7 +44,7 @@
 namespace SCIRun {
 
 
-Painter::CropTool::CropTool(Painter *painter) : 
+CropTool::CropTool(Painter *painter) : 
   BaseTool("Crop"),
   PointerTool("Crop"),
   painter_(painter),
@@ -98,10 +71,10 @@ Painter::CropTool::CropTool(Painter *painter) :
 
 }
 
-Painter::CropTool::~CropTool() {}
+CropTool::~CropTool() {}
 
 BaseTool::propagation_state_e
-Painter::CropTool::pointer_motion
+CropTool::pointer_motion
 (int b, int x, int y, unsigned int m, int t) 
 {
   if (!pick_) {
@@ -142,7 +115,7 @@ Painter::CropTool::pointer_motion
 }
 
 BaseTool::propagation_state_e
-Painter::CropTool::pointer_down
+CropTool::pointer_down
 (int b, int x, int y, unsigned int m, int t) 
 {
   if (b == 1 && !m) {
@@ -174,7 +147,7 @@ Painter::CropTool::pointer_down
 
 
 BaseTool::propagation_state_e
-Painter::CropTool::pointer_up
+CropTool::pointer_up
 (int b, int x, int y, unsigned int m, int t) 
 {
   if (pick_) {
@@ -191,7 +164,7 @@ Painter::CropTool::pointer_up
 
 
 BaseTool::propagation_state_e 
-Painter::CropTool::process_event(event_handle_t event)
+CropTool::process_event(event_handle_t event)
 {
   RedrawSliceWindowEvent *redraw = 
     dynamic_cast<RedrawSliceWindowEvent *>(event.get_rep());
@@ -212,7 +185,7 @@ Painter::CropTool::process_event(event_handle_t event)
 
 
 void
-Painter::CropTool::update_to_gui()
+CropTool::update_to_gui()
 {
   for (int i = 0; i < 2; ++i)
     for (int j = 1; j < 4; ++j)
@@ -220,7 +193,7 @@ Painter::CropTool::update_to_gui()
 }
 
 void
-Painter::CropTool::update_from_gui()
+CropTool::update_from_gui()
 {
   for (int i = 0; i < 2; ++i)
     for (int j = 1; j < 4; ++j)
@@ -229,7 +202,7 @@ Painter::CropTool::update_from_gui()
 
 
 int
-Painter::CropTool::draw_gl(SliceWindow &window) {
+CropTool::draw_gl(SliceWindow &window) {
   update_from_gui();
   glEnable(GL_BLEND);
   glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -304,7 +277,7 @@ Painter::CropTool::draw_gl(SliceWindow &window) {
 }
 
 void
-Painter::CropTool::finish()
+CropTool::finish()
 {
   size_t *minmax[2] = { new size_t[minmax_[0].size()], 
                         new size_t[minmax_[1].size()] };
@@ -337,10 +310,11 @@ Painter::CropTool::finish()
 }
 
 void
-Painter::CropTool::set_window_cursor(SliceWindow &window, int cursor) 
+CropTool::set_window_cursor(SliceWindow &window, int cursor) 
 {
-  if (painter_->event_.window_ != &window || 
-      window.cursor_pixmap_ == cursor) return;
+  return;
+  //  if (painter_->event_.window_ != &window || 
+  //      window.cursor_pixmap_ == cursor) return;
   window.cursor_pixmap_ = cursor;
   string cursor_name;
   switch (cursor) {

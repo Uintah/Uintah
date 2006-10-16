@@ -4,6 +4,7 @@
     <var name="LayerButton::num" type="int" overwrite="no">1</var>
     <var name="LayerButton::background_color" propagate="yes">#00000000</var>
     <var name="LayerButton::LayerVisible" propagate="yes">$volume_visible</var>
+    <var name="LayerButton::indent" propagate="yes">10</var>
     <var name="row">$LayerButton::num</var>
     <var name="col">1</var>
     <var name="thumbnail_height" propagate="yes">60</var>
@@ -20,12 +21,29 @@
 
       <object class="Grid">
         <var name="rows">3</var>
-        <var name="cols">2</var>
+        <var name="cols">4</var>
         
         <object class="Collection">
           <var name="row">1</var>
           <var name="col">1</var>
           <var name="cell-height">3</var>
+          <var name="cell-width">$LayerButton::indent</var>
+        </object>
+
+        <object class="Collection">
+          <var name="row">2</var>
+          <var name="col">2</var>
+          <var name="cell-width">35</var>
+          <object class="Grid">
+            <var name="rows">3</var>
+            <var name="cols">3</var>
+            <object class="ExpandButton">
+              <var name="row">2</var>
+              <var name="col">2</var>
+              <var name="cell-width">25</var>
+              <var name="cell-height">25</var>
+            </object>
+          </object>              
         </object>
 
         <object class="Collection">
@@ -35,10 +53,16 @@
         </object>
         
 
+        <object class="Collection">
+          <var name="row">2</var>
+          <var name="col">4</var>
+          <var name="cell-width">0</var>
+        </object>
 
+<!--
         <object class="ShadowedBox">
           <var name="row">2</var>
-          <var name="col">2</var>
+          <var name="col">4</var>
           <var name="cell-width">$thumbnail_height</var>
 
           <definition class="ShadowedBox::child">
@@ -47,10 +71,11 @@
             </object>
           </definition>
         </object>
+-->
 
         <object class="Grid">
           <var name="row">2</var>
-          <var name="col">1</var>
+          <var name="col">3</var>
 
           <var name="rows">2</var>
           <var name="cols">15</var>
@@ -60,7 +85,7 @@
           <object class="Root::Text">
             <var name="row">1</var>
             <var name="col">1</var>
-            <var name="size">30</var>
+            <var name="size">20</var>
             <var name="text">$LayerButton::name</var>
             <var name="fgcolor">#000000FF</var>
             <var name="bgcolor">#FFFFFFFF</var>
@@ -79,7 +104,7 @@
             <var name="Button::Text::text" propagate="yes">C</var>
 
             <signal name="Button::clicked" 
-                    target="Painter::CopyLayer">
+                    target="Painter::CreateLabelVolume">
             </signal>
 
             <signal name="Button::clicked" 
@@ -100,6 +125,7 @@
 
             <signal name="Button::clicked" 
                     target="Painter::DeleteLayer">
+              <var name="name">$LayerButton::name</var>            
             </signal>
 
             <signal name="Button::clicked" 
@@ -107,6 +133,22 @@
 
             <signal name="Button::clicked" 
                     target="Root::Stop"/>
+            
+          </object>
+
+          <object class="FrameButton">
+            <var name="row">2</var>
+            <var name="col">6</var>            
+            <var name="cell-width">$button_width</var>
+            <var name="cell-height">$button_height</var>
+            <var name="Button::Text::text" propagate="yes">N</var>
+
+            <signal name="Button::clicked" 
+                    target="Painter::CreateLabelChild">
+            </signal>
+
+            <signal name="Button::clicked" 
+                    target="GLWindow::mark_redraw"/>
             
           </object>
 

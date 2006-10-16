@@ -31,18 +31,21 @@
 
 
 #include <StandAlone/Apps/Painter/Painter.h>
+#include <StandAlone/Apps/Painter/CropTool.h>
+#include <StandAlone/Apps/Painter/BrushTool.h>
+#include <StandAlone/Apps/Painter/ITKThresholdSegmentationLevelSetImageFilterTool.h>
+#include <StandAlone/Apps/Painter/ITKConfidenceConnectedImageFilterTool.h>
+#include <StandAlone/Apps/Painter/FloodfillTool.h>
 #include <sci_comp_warn_fixes.h>
 #include <iostream>
 #include <sci_gl.h>
-#include <Core/Bundle/Bundle.h>
-#include <Core/Containers/Array3.h>
 #include <Core/Datatypes/Field.h> 
-#include <Core/Exceptions/GuiException.h>
 #include <Core/Geom/Material.h>
 #include <Core/Geom/ColorMappedNrrdTextureObj.h>
 #include <Core/Geom/GeomSwitch.h>
 #include <Core/Geom/GeomCull.h>
 #include <Core/Geom/GeomGroup.h>
+#include <Core/Geom/GeomTransform.h>
 #include <Core/Geom/TexSquare.h>
 #include <Core/Geom/OpenGLViewport.h>
 #include <Core/Geom/FreeType.h>
@@ -123,10 +126,14 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::ITKThresholdLevelSet);
 
   REGISTER_CATCHER_TARGET(Painter::ShowVolumeRendering);
+  REGISTER_CATCHER_TARGET(Painter::ShowIsosurface);
 
   REGISTER_CATCHER_TARGET(Painter::AbortFilterOn);
 
   REGISTER_CATCHER_TARGET(Painter::ResampleVolume);
+
+  REGISTER_CATCHER_TARGET(Painter::CreateLabelVolume);  
+  REGISTER_CATCHER_TARGET(Painter::CreateLabelChild);
    
   return STOP_E;
 }
@@ -220,8 +227,37 @@ Painter::CopyLayer(event_handle_t) {
 }
 
 BaseTool::propagation_state_e 
-Painter::DeleteLayer(event_handle_t) {
-  kill_current_layer();
+Painter::DeleteLayer(event_handle_t event) {
+  NrrdVolume *layer = current_volume_;
+  if (event.get_rep()) {
+    Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
+    ASSERT(signal);
+    Skinner::Variables *vars = signal->get_vars();
+    layer = find_volume_by_name(vars->get_string("LayerButton::name"));
+  }
+
+  if (!layer) return STOP_E;
+
+  NrrdVolumes newvolumes(volumes_.size()-1, 0);
+  int j = 0;
+  int newcur = 0;
+  for (unsigned int i = 0; i < volumes_.size(); ++i) {
+    if (volumes_[i] != layer)
+      newvolumes[j++] = volumes_[i];
+    else 
+      newcur = i;
+  }
+  volumes_ = newvolumes;
+  delete layer;
+  if (newcur < volumes_.size()) {
+    current_volume_ = volumes_[newcur];
+  } else {
+    current_volume_ = 0;
+  }
+  rebuild_layer_buttons();
+  extract_all_window_slices();
+  redraw_all();
+
   return CONTINUE_E;
 }
 
@@ -235,6 +271,7 @@ Painter::NewLayer(event_handle_t) {
 
 BaseTool::propagation_state_e 
 Painter::MergeLayer(event_handle_t event) {
+#if 0
   NrrdVolumeOrder::iterator volname = 
     std::find(volume_order_.begin(), 
               volume_order_.end(), 
@@ -268,8 +305,8 @@ Painter::MergeLayer(event_handle_t event) {
   vol1->nrrd_handle_->nrrd_ = nout->nrrd_;
   vol2->keep_ = 0;
   
-  recompute_volume_list();
   current_volume_ = vol1;
+#endif
   return CONTINUE_E;
 }
   
@@ -295,12 +332,13 @@ Painter::NrrdFileRead(event_handle_t event) {
   } 
   
   pair<string, string> dirfile = split_filename(filename);
-  BundleHandle bundle = new Bundle();
-  bundle->setNrrd(dirfile.second, nrrd_handle);
-  add_bundle(bundle); 
-  get_vars()->insert("Painter::status_text",
-                     "Successfully Loaded Nrrd: "+filename,
-                     "string", true);
+  volumes_.push_back(new NrrdVolume(this, dirfile.second, nrrd_handle));
+  current_volume_ = volumes_.back();
+  extract_all_window_slices();
+  rebuild_layer_buttons();
+  redraw_all();
+
+  status_ =  "Successfully Loaded Nrrd: "+filename;
 
   return CONTINUE_E;  
 }
@@ -347,12 +385,8 @@ Painter::MemMapFileRead(event_handle_t event) {
   nrrd->data = mmap(0, buf.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
 #endif
   pair<string, string> dirfile = split_filename(filename);
-  BundleHandle bundle = new Bundle();
-  bundle->setNrrd(dirfile.second, nrrd_handle);
-  add_bundle(bundle); 
-  get_vars()->insert("Painter::status_text",
-                     "Successfully Loaded Nrrd: "+filename,
-                     "string", true);
+  volumes_.push_back(new NrrdVolume(this, filename, nrrd_handle));
+  status_ =  "Successfully Loaded Nrrd: "+filename;
 
   return CONTINUE_E;  
 }
@@ -370,7 +404,7 @@ Painter::ITKBinaryDilate(event_handle_t event) {
   string name = "ITKBinaryDilate";
   typedef itk::BinaryBallStructuringElement< float, 3> StructuringElementType;
   typedef itk::BinaryDilateImageFilter
-    < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D, StructuringElementType > FilterType;
+    < ITKImageFloat3D, ITKImageFloat3D, StructuringElementType > FilterType;
   FilterType::Pointer filter = FilterType::New();
 
   StructuringElementType structuringElement;
@@ -383,12 +417,11 @@ Painter::ITKBinaryDilate(event_handle_t event) {
     (get_vars()->get_double(name+"::dilateValue"));
 
   NrrdVolume *vol = current_volume_;
-  do_itk_filter<Painter::ITKImageFloat3D>(filter, vol->nrrd_handle_);
+  do_itk_filter<ITKImageFloat3D>(filter, vol->nrrd_handle_);
   redraw_all();
 #endif
   return CONTINUE_E;
 }
-
 
 
 
@@ -413,7 +446,7 @@ Painter::ITKImageFileRead(event_handle_t event) {
   FileReaderType::Pointer reader = FileReaderType::New();
   
   // set reader
-  reader->SetFileName( filename.c_str() );
+  reader->SetFileName(filename.c_str());
   
   try {
     reader->Update();  
@@ -437,13 +470,14 @@ Painter::ITKImageFileRead(event_handle_t event) {
   pair<string, string> dirfile = split_filename(filename);
 
   if (nrrd_handle->nrrd_) {
-    BundleHandle bundle = new Bundle(); 
-    bundle->setNrrd(dirfile.second, nrrd_handle);
-    add_bundle(bundle); 
+    volumes_.push_back(new NrrdVolume(this, dirfile.second, nrrd_handle));
+    current_volume_ = volumes_.back();
+    extract_all_window_slices();
+    rebuild_layer_buttons();
+    redraw_all();
+    status_ =  "Successfully Loaded File: "+filename;
   }
 
-  // ITKDataTypeSignal *return_event = new ITKDataTypeSignal(img);
-  //  event = return_event;
   return CONTINUE_E;
 #endif
 }
@@ -482,9 +516,6 @@ Painter::ITKImageFileWrite(event_handle_t event) {
     cerr << (err.GetDescription());
   }
   
-
-  // ITKDataTypeSignal *return_event = new ITKDataTypeSignal(img);
-  //  event = return_event;
 #endif
   return MODIFIED_E;
 }
@@ -500,8 +531,8 @@ Painter::ITKBinaryDilateErode(event_handle_t event) {
   string name = "ITKBinaryDilateErode";
   typedef itk::BinaryBallStructuringElement< float, 3> StructuringElementType;
   typedef itk::BinaryDilateImageFilter
-    < Painter::ITKImageFloat3D, 
-    Painter::ITKImageFloat3D,
+    < ITKImageFloat3D, 
+    ITKImageFloat3D,
     StructuringElementType > FilterType;
   FilterType::Pointer filter = FilterType::New();
 
@@ -515,8 +546,8 @@ Painter::ITKBinaryDilateErode(event_handle_t event) {
     (get_vars()->get_double(name+"::dilateValue"));
 
   typedef itk::BinaryErodeImageFilter
-    < Painter::ITKImageFloat3D, 
-    Painter::ITKImageFloat3D, 
+    < ITKImageFloat3D, 
+    ITKImageFloat3D, 
     StructuringElementType > FilterType2;
   FilterType2::Pointer filter2 = FilterType2::New();
 
@@ -525,9 +556,7 @@ Painter::ITKBinaryDilateErode(event_handle_t event) {
     (get_vars()->get_double(name+"::erodeValue"));
 
   NrrdVolume *vol = new NrrdVolume(current_volume_, name, 2);
-  volume_map_[name] = vol;
-  show_volume(name);
-  recompute_volume_list();
+  volumes_.push_back(vol);
 
 #if 0
   get_vars()->insert("ToolDialog::text", 
@@ -541,7 +570,7 @@ Painter::ITKBinaryDilateErode(event_handle_t event) {
 
   redraw_all();
 
-  do_itk_filter<Painter::ITKImageFloat3D>(filter, vol->nrrd_handle_);
+  do_itk_filter<ITKImageFloat3D>(filter, vol->nrrd_handle_);
 
 #if 0
   get_vars()->insert("ToolDialog::text", 
@@ -555,7 +584,7 @@ Painter::ITKBinaryDilateErode(event_handle_t event) {
 
   redraw_all();
 
-  do_itk_filter<Painter::ITKImageFloat3D>(filter2, vol->nrrd_handle_);
+  do_itk_filter<ITKImageFloat3D>(filter2, vol->nrrd_handle_);
 
   set_all_slices_tex_dirty();
   redraw_all();
@@ -583,15 +612,13 @@ Painter::ITKGradientMagnitude(event_handle_t) {
 
   string name = "ITKGradientMagnitude";
   typedef itk::GradientMagnitudeImageFilter
-    < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D > FilterType;
+    < ITKImageFloat3D, ITKImageFloat3D > FilterType;
   FilterType::Pointer filter = FilterType::New();
 
   NrrdVolume *vol = new NrrdVolume(current_volume_, name, 2);
-  volume_map_[name] = vol;
-  show_volume(name);
-  recompute_volume_list();
+  volumes_.push_back(vol);
 
-  do_itk_filter<Painter::ITKImageFloat3D>(filter, vol->nrrd_handle_);
+  do_itk_filter<ITKImageFloat3D>(filter, vol->nrrd_handle_);
   vol->reset_data_range();
  
   current_volume_ = vol;
@@ -624,7 +651,7 @@ Painter::ITKCurvatureAnisotropic(event_handle_t event) {
   redraw_all();
 
   typedef itk::CurvatureAnisotropicDiffusionImageFilter
-    < Painter::ITKImageFloat3D, Painter::ITKImageFloat3D > FilterType;
+    < ITKImageFloat3D, ITKImageFloat3D > FilterType;
   FilterType::Pointer filter = FilterType::New();  
 
   string name = "ITKCurvatureAnisotropic";
@@ -639,11 +666,9 @@ Painter::ITKCurvatureAnisotropic(event_handle_t event) {
   cerr << "iterations: " << filter->GetNumberOfIterations() << std::endl;
 
   NrrdVolume *vol = new NrrdVolume(current_volume_, name, 2);
-  volume_map_[name] = vol;
-  show_volume(name);
-  recompute_volume_list();
+  volumes_.push_back(vol);
   
-  do_itk_filter<Painter::ITKImageFloat3D>(filter, vol->nrrd_handle_);
+  do_itk_filter<ITKImageFloat3D>(filter, vol->nrrd_handle_);
   
   current_volume_ = vol;
   set_all_slices_tex_dirty();
@@ -725,6 +750,35 @@ Painter::ReloadVolumeTexture(event_handle_t event) {
 }
 #endif
 
+extern GeomHandle fast_lat_mc(Nrrd *nrrd, double isoval);
+
+BaseTool::propagation_state_e 
+Painter::ShowIsosurface(event_handle_t event)
+{
+  static int count = 0;
+  if (!current_volume_) return STOP_E;
+  //  event_handle_t scene_event = = ;
+  MaterialHandle material = new Material();
+  material->ambient = Color(1.0, 1.0, 1.0);
+  material->diffuse = Color(1.0, 0.0, 0.0);
+  material->specular = Color(1.0, 1.0, 1.0);
+  material->shininess = 5.0;
+
+  Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
+  ASSERT(signal);
+  Skinner::Var<double> isoval(signal->get_vars(), "isoval", 100.0);
+
+  Matrix &tmat = current_volume_->transform_;
+  Transform transform(Point(0,0,0), 
+                      Vector(tmat.get(1,1), 0, 0),
+                      Vector(0, tmat.get(2,2), 0),
+                      Vector(0, 0, tmat.get(3,3)));
+                      
+  EventManager::add_event(new SceneGraphEvent(new GeomTransform(new GeomMaterial(fast_lat_mc(current_volume_->nrrd_handle_->nrrd_, isoval), material), transform), "IsoSurface"+to_string(count++)));
+
+  return CONTINUE_E;
+}
+  
 
 BaseTool::propagation_state_e 
 Painter::ShowVolumeRendering(event_handle_t event)
@@ -825,9 +879,7 @@ Painter::LoadColorMap1D(event_handle_t event) {
   }
   delete stream;
 
-  Bundle *bundle = new Bundle();
-  bundle->setColorMap(fn, cmaph);
-  add_bundle(bundle);
+  colormaps_.push_back(cmaph);
   return CONTINUE_E;
 }
 
@@ -926,12 +978,7 @@ Painter::ResampleVolume(event_handle_t event) {
   //  NrrdDataHandle nrrd_handle = scinew NrrdData;
   string newname = current_volume_->name_+" - Resampled";
   NrrdVolume *vol = new NrrdVolume(0, newname, nrrd_handle);
-  volume_map_[newname] = vol;
-  show_volume(newname);
-  recompute_volume_list();
-
-  //  recompute_volume_list();
-
+  volumes_.push_back(vol);
   return CONTINUE_E;
 
 }
@@ -942,6 +989,31 @@ Painter::ResampleVolume(event_handle_t event) {
 BaseTool::propagation_state_e 
 Painter::AbortFilterOn(event_handle_t event) {
   abort_filter_ = true;
+  return CONTINUE_E;
+}
+
+
+BaseTool::propagation_state_e 
+Painter::CreateLabelVolume(event_handle_t event) {
+  if (!current_volume_) return STOP_E;
+  current_volume_ = current_volume_->create_label_volume();
+  volumes_.push_back(current_volume_);
+  extract_all_window_slices();
+  rebuild_layer_buttons();
+  redraw_all();
+  return CONTINUE_E;
+}
+
+
+BaseTool::propagation_state_e 
+Painter::CreateLabelChild(event_handle_t event) {
+  if (!current_volume_) return STOP_E;
+  current_volume_ = current_volume_->create_child_label_volume();
+  //  volumes_.push_back();
+  //  current_volume_ = volumes_.back();
+  extract_all_window_slices();
+  rebuild_layer_buttons();
+  redraw_all();
   return CONTINUE_E;
 }
 

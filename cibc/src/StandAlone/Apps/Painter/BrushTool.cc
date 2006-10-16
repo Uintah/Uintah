@@ -41,6 +41,7 @@
 
 
 #include <StandAlone/Apps/Painter/Painter.h>
+#include <StandAlone/Apps/Painter/BrushTool.h>
 #include <sci_comp_warn_fixes.h>
 #include <stdlib.h>
 #include <math.h>
@@ -78,7 +79,7 @@
 namespace SCIRun {
 
 
-Painter::BrushTool::BrushTool(Painter *painter) :
+BrushTool::BrushTool(Painter *painter) :
   BaseTool("Paint Brush"),
   PointerTool("Paint Brush"),
   painter_(painter),
@@ -96,13 +97,13 @@ Painter::BrushTool::BrushTool(Painter *painter) :
 }
 
 
-Painter::BrushTool::~BrushTool()
+BrushTool::~BrushTool()
 {
 }
 
 
 BaseTool::propagation_state_e
-Painter::BrushTool::process_event(event_handle_t event)
+BrushTool::process_event(event_handle_t event)
 {
 
   RedrawSliceWindowEvent *redraw = 
@@ -119,7 +120,7 @@ Painter::BrushTool::process_event(event_handle_t event)
 }
 
 BaseTool::propagation_state_e
-Painter::BrushTool::pointer_down(int b, int x, int y, unsigned int m, int t)
+BrushTool::pointer_down(int b, int x, int y, unsigned int m, int t)
 {
   NrrdVolume *vol = painter_->current_volume_;
   if (!vol || !painter_->cur_window_) {
@@ -136,11 +137,11 @@ Painter::BrushTool::pointer_down(int b, int x, int y, unsigned int m, int t)
     if (!slice_) {
       return CONTINUE_E;
     }
-
+    if (vol->label_) value_ = vol->label_;
     last_index_ = vol->world_to_index(painter_->pointer_pos_);
     last_index_.erase(last_index_.begin()+slice_->axis());
 
-    splat(slice_->texture_->nrrd_handle_->nrrd_, radius_(), 
+    splat(slice_->texture_->nrrd_handle_->nrrd_, radius_, 
           last_index_[1], last_index_[2]);
     
     slice_->texture_->apply_colormap(last_index_[1], last_index_[2],
@@ -174,7 +175,7 @@ Painter::BrushTool::pointer_down(int b, int x, int y, unsigned int m, int t)
 }
 
 BaseTool::propagation_state_e
-Painter::BrushTool::pointer_up(int b, int x, int y, unsigned int m, int t)
+BrushTool::pointer_up(int b, int x, int y, unsigned int m, int t)
 {  
   if (!window_ || !slice_) {
     return CONTINUE_E;
@@ -185,17 +186,15 @@ Painter::BrushTool::pointer_up(int b, int x, int y, unsigned int m, int t)
     ASSERT(vol);
     vector<int> window_center = vol->world_to_index(window_->center_);
     int axis = slice_->axis();
-    vol->mutex_.lock();
+    vol->mutex_->lock();
 
-    //    nrrdSave("/tmp/vol.nrrd", vol->nrrd_handle_->nrrd_, 0);
-    //    nrrdSave("/tmp/slice.nrrd", slice_->texture_->nrrd_handle_->nrrd_, 0);
     if (vol->nrrd_handle_->nrrd_->content)
       vol->nrrd_handle_->nrrd_->content[0] = 0;
     if (nrrdSplice(vol->nrrd_handle_->nrrd_,
                    vol->nrrd_handle_->nrrd_,
                    slice_->texture_->nrrd_handle_->nrrd_,
                    axis, window_center[axis])) {
-      vol->mutex_.unlock();
+      vol->mutex_->unlock();
       char *err = biffGetDone(NRRD);
 
       cerr << string("Error on line #") 
@@ -209,7 +208,7 @@ Painter::BrushTool::pointer_up(int b, int x, int y, unsigned int m, int t)
       return QUIT_AND_STOP_E;
     }
     //    painter_->current_volume_->nrrd_ = nout;
-    vol->mutex_.unlock();
+    vol->mutex_->unlock();
                
     painter_->set_all_slices_tex_dirty();
     painter_->redraw_all();
@@ -221,7 +220,7 @@ Painter::BrushTool::pointer_up(int b, int x, int y, unsigned int m, int t)
 }
 
 BaseTool::propagation_state_e
-Painter::BrushTool::pointer_motion(int b, int x, int y, unsigned int m, int t)
+BrushTool::pointer_motion(int b, int x, int y, unsigned int m, int t)
 {
   if (!window_ || !slice_) {
     return CONTINUE_E;
@@ -236,14 +235,13 @@ Painter::BrushTool::pointer_motion(int b, int x, int y, unsigned int m, int t)
     return CONTINUE_E;
   }
   if (b == 1) {
-    //    vector<int> index = = vol->world_to_index(event.position_);
     index.erase(index.begin()+slice_->axis());
-    line(slice_->texture_->nrrd_handle_->nrrd_, radius_(), 
+    line(slice_->texture_->nrrd_handle_->nrrd_, radius_, 
          last_index_[1], last_index_[2],
          index[1], index[2], true);
     slice_->texture_->apply_colormap(last_index_[1], last_index_[2], 
                                      index[1], index[2],
-                                     Ceil(radius_()));
+                                     Ceil(radius_));
     last_index_ = index;
     painter_->redraw_all();
     return STOP_E;
@@ -254,7 +252,7 @@ Painter::BrushTool::pointer_motion(int b, int x, int y, unsigned int m, int t)
 
 
 void
-Painter::BrushTool::draw_gl(SliceWindow &window)
+BrushTool::draw_gl(SliceWindow &window)
 {
   if (!draw_cursor_) return;
   if (&window != painter_->cur_window_) return;
@@ -330,7 +328,7 @@ Painter::BrushTool::draw_gl(SliceWindow &window)
 
 
 void
-Painter::BrushTool::splat(Nrrd *nrrd, double radius, int x0, int y0)
+BrushTool::splat(Nrrd *nrrd, double radius, int x0, int y0)
 {
   vector<int> index(3,0);
   const unsigned int wid = Round(radius);
@@ -348,13 +346,13 @@ Painter::BrushTool::splat(Nrrd *nrrd, double radius, int x0, int y0)
             //            dist += painter_->current_volume_->clut_min_;
             //            float val;
             //            nrrd_get_value(nrrd, index, val);
-            nrrd_set_value(nrrd, index, value_());//nrrd_get_value(nrrd,index);
+            nrrd_set_value(nrrd, index, value_);//nrrd_get_value(nrrd,index);
           }
         }
 }
 
 void 
-Painter::BrushTool::line(Nrrd *nrrd, double radius,
+BrushTool::line(Nrrd *nrrd, double radius,
                           int x0, int y0, int x1, int y1, bool first)
 {
   if (x0 < 0 || x0 >= (int) nrrd->axis[1].size || 

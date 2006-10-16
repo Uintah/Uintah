@@ -128,8 +128,8 @@ FontManager::get_renderer(double points, string name) {
 
   if (!freetype_lib_) {
     cerr << "Cannot Initialize FreeType Library in FontManager constructor.";
-    cerr << "Did you configure with --with-freetype= ?";
-    cerr << "SCIRun will not render text correctly.";
+    cerr << "Did you cmake with FREETYPE_DIR=?";
+    cerr << "Text will not render.";
   }
 
 
@@ -151,7 +151,9 @@ FontManager::get_renderer(double points, string name) {
       return 0;
     }
     named_renderers[tenths] = renderer;
+    named_renderers[tenths]->width("ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789");
     face_[renderer] = face;
+    
   }
   return named_renderers[tenths];
 }

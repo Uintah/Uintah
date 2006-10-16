@@ -30,17 +30,18 @@
 //    Date   : Tue May 30 21:38:23 MDT 2006
 
 
+#include <Core/Util/Environment.h>
 #include <Core/Skinner/XMLIO.h>
 #include <StandAlone/Apps/Painter/Painter.h>
 #include <Core/Events/EventManager.h>
 #include <Core/Events/Trail.h>
 
 #include <sgi_stl_warnings_off.h>
-#include <string>
 #include <iostream>
 #include <sgi_stl_warnings_on.h>
 
 #include <sci_defs/x11_defs.h>
+
 #if defined(__APPLE__) && !defined(HAVE_X11)
 namespace Carbon {
 #  include <Carbon/Carbon.h>
@@ -63,7 +64,7 @@ main(int argc, char *argv[], char **environment) {
   start_trail_file();
 
 #if defined(__APPLE__) && !defined(HAVE_X11)
-  // Apples version of event management
+  // Apple's version of event management
   Carbon::RunApplicationEventLoop();
 #endif
 
@@ -72,10 +73,3 @@ main(int argc, char *argv[], char **environment) {
 
   return 0;
 }
-
-
-#if defined(__sgi) && !defined(__GNUC__) && (_MIPS_SIM != _MIPS_SIM_ABI32)
-#pragma reset woff 1424
-#pragma reset woff 1209 
-#endif
-

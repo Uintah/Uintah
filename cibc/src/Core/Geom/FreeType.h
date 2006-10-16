@@ -99,7 +99,7 @@ public:
 #ifdef HAVE_FREETYPE
   FT_Face		ft_face_;
 #endif
-private:
+  //private:
   double		points_;
   unsigned int		x_dpi_;
   unsigned int		y_dpi_;

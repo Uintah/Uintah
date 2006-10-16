@@ -2,14 +2,21 @@
   <object class="Collection">
     <var name="LabeledGradientBackground::text" propagate="yes">$NicePainterWindow::name</var>
     <var name="PainterWindow::show_tools" propagate="yes" overwrite="no">0</var>
-    
     <definition class="LabeledGradientBackground::child">                
-      <object class="Root::FocusRegion">
-        
         <object class="Painter::SliceWindow">
           <var name="SliceWindow::GridVisible" propagate="yes" overwrite="no" type="bool">1</var>
           <var name="SliceWindow::SlicesVisible" propagate="yes" type="bool">1</var>
           <signal name="SliceWindow::mark_redraw" target="GLWindow::mark_redraw"/>
+
+
+<!--
+          <object class="Root::Text">
+            <var name="visible">$PainterWindow::show_tools</var>
+            <var name="text">$cursor_value</var>
+            <var name="anchor">SW</var>
+          </object>
+-->
+
           <object class="Grid">                
             <var name="cols">2</var>
             <var name="rows">1</var>
@@ -23,7 +30,7 @@
 
               <signal name="FocusRegion::unfocus"
                       target="FocusGrab::Ungrab"/>
-              
+
               
             <object class="Grid">
               <var name="visible">$PainterWindow::show_tools</var>
@@ -80,7 +87,6 @@
           </object>
           </object>
         </object>
-      </object>
     </definition>
     <object class="LabeledGradientBackground"/>
   </object>

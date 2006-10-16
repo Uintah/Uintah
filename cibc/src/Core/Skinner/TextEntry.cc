@@ -45,8 +45,6 @@ namespace SCIRun {
   namespace Skinner {
     TextEntry::TextEntry(Variables *variables) :
       Text(variables),
-      str_(),
-      inside_(false),
       numeric_(variables, "numeric", false)
     { 
       REGISTER_CATCHER_TARGET_BY_NAME(TextEntry::redraw, Text::redraw);
@@ -69,45 +67,13 @@ namespace SCIRun {
       return 0;
     }
 
-    void
-    TextEntry::autocomplete() {
-
-      pair<string, string> dirfile = split_filename(str_);
-      if (!validDir(dirfile.first)) return;
-
-      vector<string> files = 
-        GetFilenamesStartingWith(dirfile.first, dirfile.second);
-
-      if (files.empty()) {
-        return;
-      } if (files.size() == 1) {
-        str_ = dirfile.first + files[0];
-        if (validDir(str_)) {
-          str_ = str_ + "/";
-        }
-      } else {
-        unsigned int j0 = dirfile.second.size();
-        unsigned int j = j0;
-        do {
-          for (unsigned int i = 1; i < files.size(); ++i) {
-            if ((j == files[i].size()) || (files[i][j] != files[i-1][j])) {
-              str_ = str_ + files[i].substr(j0, j-j0);
-              cursor_position_ = str_.length();
-              return;
-            }
-          }
-          ++j;
-        } while (1);
-      }
-      cursor_position_ = str_.length();
-    }
-
 
     BaseTool::propagation_state_e
     TextEntry::process_event(event_handle_t event)
     {
       KeyEvent *key = dynamic_cast<KeyEvent *>(event.get_rep());
       if (key && (key->get_key_state() & KeyEvent::KEY_PRESS_E)) {
+        string str = get_vars()->get_string("text");
         int code = key->get_keyval();
         bool shift = (key->get_modifiers() & EventModifiers::SHIFT_E);
         string character = "";
@@ -143,46 +109,41 @@ namespace SCIRun {
         } else if (code == SCIRun_space) {
           character = string(" ");
         } else if (code == SCIRun_Tab) {
-          autocomplete();
+          str = autocomplete(str);
+          cursor_position_ = str.length();
         } else if (code == SCIRun_BackSpace) {
           if (cursor_position_) {
             cursor_position_--;
-            str_.erase(cursor_position_, 1);
+            str.erase(cursor_position_, 1);
           }
         } else if (code == SCIRun_Left) {
           cursor_position_ = Max(int(cursor_position_-1), 0);
         } else if (code == SCIRun_Right) {
-          cursor_position_ = Min(int(cursor_position_+1),int(str_.length()));
+          cursor_position_ = Min(int(cursor_position_+1),int(str.length()));
         } else {
-          //          cerr << get_id() << " cannot handle keycode: " << code << std::endl;
+          // cerr << get_id() << " cannot handle keycode: " << code << std::endl;
         }
         
         if (character.length()) {
-          string temp = str_;
+          string temp = str;
           temp.insert(cursor_position_, character);
-          if (numeric_()) {
-            string temp = str_;
+          if (numeric_) {
+            string temp = str;
             temp.insert(cursor_position_, character);
             double val;
             if (string_to_double(temp, val)) {
-              str_ = temp;
+              str = temp;
               cursor_position_++;
             }
           } else {            
-            str_.insert(cursor_position_, character);
+            str.insert(cursor_position_, character);
             cursor_position_++;
           }
         }
         renderer_->set_cursor_position(cursor_position_);
-        text_ = str_;
+        get_vars()->set_by_string("text", str);
         EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
-
-      } else {
-        //        get_vars()->maybe_get_string(get_vars()->get_string("variable"), str_);
-        //        get_vars()->insert("text", str_, "string", false);
-      }
-        
-
+      }        
       return Text::process_event(event);
     }
 

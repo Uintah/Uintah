@@ -36,6 +36,7 @@
 namespace SCIRun {
 
 ViewTranslateTool::ViewTranslateTool(string name, ViewToolInterface* i) :
+  BaseTool(name),
   PointerTool(name),
   scene_interface_(i),
   start_x_(0),

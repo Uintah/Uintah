@@ -287,7 +287,11 @@ EventManager::run()
 #endif
 
 
-    if (stream_ && stream_->writing()) {
+    if (stream_ && stream_->writing() &&
+        (event->is_pointer_event() || 
+         event->is_key_event() || 
+         event->is_window_event()))
+    {
       Pio(*stream_, event);
     }
 

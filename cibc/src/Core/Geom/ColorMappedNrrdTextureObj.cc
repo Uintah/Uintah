@@ -78,9 +78,9 @@ static int nrrdtex_lock_pool_hash(ColorMappedNrrdTextureObj *ptr)
 
 
 ColorMappedNrrdTextureObj::ColorMappedNrrdTextureObj(NrrdDataHandle &nin_handle, 
-                               int axis, 
-                               int min_slice, int max_slice,
-                               int time) :
+                                                     int axis, 
+                                                     int min_slice, int max_slice,
+                                                     int time) :
   lock(*(nrrdtex_lock_pool.getMutex(nrrdtex_lock_pool_hash(this)))),
   ref_cnt(0),
   colormap_(0),
@@ -94,7 +94,8 @@ ColorMappedNrrdTextureObj::ColorMappedNrrdTextureObj(NrrdDataHandle &nin_handle,
   clut_min_(0.0), 
   clut_max_(1.0),
   data_(0),
-  own_data_(false)
+  own_data_(false),
+  label_(0)
 {
   if (!nin_handle.get_rep() ||
       !nin_handle->nrrd_)
@@ -149,6 +150,13 @@ ColorMappedNrrdTextureObj::set_colormap(ColorMapHandle &cmap)
 }
 
 
+void
+ColorMappedNrrdTextureObj::set_label(unsigned int label)
+{
+  label_ = label;
+  nrrd_dirty_ = true;
+}
+
 template <class T>
 void
 ColorMappedNrrdTextureObj::apply_colormap_to_raw_data(float *dst, 
@@ -176,6 +184,66 @@ ColorMappedNrrdTextureObj::apply_colormap_to_raw_data(float *dst,
 }
 
 
+template <class T>
+void
+ColorMappedNrrdTextureObj::apply_colormap_to_label_data(float *dst, 
+                                                        T *src, 
+                                                        int row_width,
+                                                        int region_start,
+                                                        int region_width,
+                                                        int region_height,
+                                                        const float *rgba,
+                                                        unsigned char *bit_priority,
+                                                        unsigned char num_bit_priority)
+{
+  const int sizeof4floats = 4*sizeof(float);
+  for (int row = 0; row < region_height; ++row) {
+    int start_pos = region_start + row*row_width;
+    int end_pos = start_pos + region_width;
+    for (int pos = start_pos; pos < end_pos; ++pos) {
+      const T &val = src[pos];
+      int color = 0;
+      while (color < num_bit_priority && !(val & (1 << bit_priority[color]))) color++;
+      if (val & (1 << bit_priority[color])) {
+        color++;
+      } else {
+        color = 0;
+      }
+      memcpy(dst + pos * 4, rgba + color * 4, sizeof4floats);
+    }
+  }
+}
+
+
+template <class T>
+void
+ColorMappedNrrdTextureObj::apply_colormap_to_label_bit(float *dst, 
+                                                       T *src, 
+                                                       int row_width,
+                                                       int region_start,
+                                                       int region_width,
+                                                       int region_height,
+                                                       const float *rgba,
+                                                       unsigned char bit)
+{
+  const int sizeof4floats = 4*sizeof(float);
+  const unsigned int mask = 1 << bit;
+  ++bit;
+  for (int row = 0; row < region_height; ++row) {
+    int start_pos = region_start + row*row_width;
+    int end_pos = start_pos + region_width;
+    for (int pos = start_pos; pos < end_pos; ++pos) {
+      const T &val = src[pos];
+      if (src[pos] & mask) {
+        memcpy(dst + pos * 4, rgba + bit * 4, sizeof4floats);
+      } else {
+        memcpy(dst + pos * 4, rgba, sizeof4floats);
+      }              
+    }
+  }
+}
+
+
 
 void
 ColorMappedNrrdTextureObj::apply_colormap(int x1, int y1, int x2, int y2,
@@ -193,14 +261,30 @@ ColorMappedNrrdTextureObj::apply_colormap(int x1, int y1, int x2, int y2,
   int ncolors;  
   const float *rgba;
   if (!colormap_.get_rep()) {
-    ncolors = 256;
-    float *nrgba = new float[256*4];
-    for (int c = 0; c < 256*4; ++c) 
-      nrgba[c] = (c % 4 == 3) ? 1.0 : (c/4)/255.0;
-    nrgba[3] = 0.0;
-    //    nrgba[7] = 0.0;
-    clut_min -= (clut_max_ - clut_min_)/255.0;
-    rgba = nrgba;
+    if (nrrd_handle_->nrrd_->type == nrrdTypeUInt && label_) {
+      ncolors = sizeof(unsigned int)*8;
+      float *nrgba = new float[ncolors*4];
+      for (int c = 0; c < ncolors*4; ++c) {
+        switch (c%4) {
+        case 0: /* Red   */ nrgba[c] = (c*199 % 11)  / 10.0; break;
+        case 1: /* Green */ nrgba[c] = (c*199 % 7)   / 6.0; break;
+        case 2: /* Blue  */ nrgba[c] = (c*199 % 17)  / 16.0; break;
+        default:
+        case 3: /* Alpha */ nrgba[c] = 1.0; break;
+        }
+      }
+      nrgba[3] = 0.0;
+      rgba = nrgba;
+    } else {
+      ncolors = 256;
+      float *nrgba = new float[ncolors*4];
+      for (int c = 0; c < ncolors*4; ++c) {
+        nrgba[c] = (c % 4 == 3) ? 1.0 : (c/4)/(ncolors - 1.0);
+      }
+      nrgba[3] = 0.0;
+      clut_min -= (clut_max_ - clut_min_) / (ncolors - 1.0);
+      rgba = nrgba;
+    }
   } else {
     ncolors = colormap_->resolution();
     rgba = colormap_->get_rgba();
@@ -224,7 +308,8 @@ ColorMappedNrrdTextureObj::apply_colormap(int x1, int y1, int x2, int y2,
                                rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeUChar: {
-    apply_colormap_to_raw_data(data_, (unsigned char *)nrrd_handle_->nrrd_->data,
+    apply_colormap_to_raw_data(data_, 
+                               (unsigned char *)nrrd_handle_->nrrd_->data,
                                row_width, region_start, region_wid, region_hei,
                                rgba, ncolors, scale, bias);
   } break;
@@ -244,17 +329,31 @@ ColorMappedNrrdTextureObj::apply_colormap(int x1, int y1, int x2, int y2,
                                rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeUInt: {
-    apply_colormap_to_raw_data(data_, (unsigned int *)nrrd_handle_->nrrd_->data,
-                               row_width, region_start, region_wid, region_hei,
-                               rgba, ncolors, scale, bias);
-  } break;
+    if (label_) {
+      unsigned char bit = 0;
+      while (!(label_ & (1 << bit))) ++bit;
+      apply_colormap_to_label_bit(data_, 
+                                  (unsigned int *)nrrd_handle_->nrrd_->data,
+                                  row_width, region_start, 
+                                  region_wid, region_hei,
+                                  rgba, bit);
+    } else {
+      apply_colormap_to_raw_data(data_, (unsigned int *)nrrd_handle_->nrrd_->data,
+                                 row_width, region_start, region_wid, region_hei,
+                                 rgba, ncolors, scale, bias);
+    }
+      
+ 
+    } break;
   case nrrdTypeLLong: {
-    apply_colormap_to_raw_data(data_, (signed long long *)nrrd_handle_->nrrd_->data,
+    apply_colormap_to_raw_data(data_, 
+                               (signed long long *)nrrd_handle_->nrrd_->data,
                                row_width, region_start, region_wid, region_hei,
                                rgba, ncolors, scale, bias);
   } break;
   case nrrdTypeULLong: {
-    apply_colormap_to_raw_data(data_, (unsigned long long *)nrrd_handle_->nrrd_->data,
+    apply_colormap_to_raw_data(data_, 
+                               (unsigned long long *)nrrd_handle_->nrrd_->data,
                                row_width, region_start, region_wid, region_hei,
                                rgba, ncolors, scale, bias);
   } break;
@@ -268,7 +367,8 @@ ColorMappedNrrdTextureObj::apply_colormap(int x1, int y1, int x2, int y2,
                                row_width, region_start, region_wid, region_hei,
                                rgba, ncolors, scale, bias);
   } break;
-  default: throw "Unsupported data type: "+to_string(nrrd_handle_->nrrd_->type);
+  default: throw "Unsupported data type: " + 
+             to_string(nrrd_handle_->nrrd_->type);
   }
 
   if (!colormap_.get_rep())

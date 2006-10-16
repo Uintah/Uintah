@@ -225,7 +225,6 @@ ToolManager::propagate_event(event_handle_t event)
     if (s.empty()) continue;
     tool_handle_t t = s.top();
     BaseTool::propagation_state_e rstate = BaseTool::CONTINUE_E;
-
     if (event->is_pointer_event() && 
         dynamic_cast<PointerTool*>(t.get_rep())) {
       rstate = send_pointer_event(t, event);

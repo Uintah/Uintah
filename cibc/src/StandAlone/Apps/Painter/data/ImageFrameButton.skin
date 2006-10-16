@@ -1,6 +1,6 @@
 <definition class="ImageFrameButton" state="normal">
   <object class="Box">
-    <var name="Button::color" propagate="yes" overwrite="no">#FF0000FF</var>
+    <var name="Button::color" propagate="yes" overwrite="no">#00000000</var>
     <var name="ImageFrameButton::on_filename" propagate="yes" overwrite="no">eye.png</var>
     <var name="ImageFrameButton::off_filename" propagate="yes" overwrite="no">closedeye.png</var>
     <var name="CheckButton::state" propagate="yes" overwrite="no">0</var>

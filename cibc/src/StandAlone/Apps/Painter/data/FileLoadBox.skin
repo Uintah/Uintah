@@ -50,7 +50,7 @@
             <object class="ShadowedBox">
               <var name="row">2</var>
               <var name="col">2</var>        
-              <var name="cell-height">40</var>
+              <var name="cell-height">35</var>
               <var name="cell-width">600</var>
               
               
@@ -88,7 +88,7 @@
                     <object class="Root::ViewSubRegion">
                       <object class="TextEntry" id="entry">
                         <var name="text">$FileLoadBox::filename</var>
-                        <var name="size">28</var>
+                        <var name="size">20</var>
                         <var name="anchor">W</var>
                         <var name="fgcolor">#000000FF</var>
                         <var name="bgcolor">#FFFFFFFF</var>

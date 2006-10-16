@@ -47,6 +47,7 @@ AutoviewToolInterface::~AutoviewToolInterface()
 
 
 AutoviewTool::AutoviewTool(string name, AutoviewToolInterface* i) :
+  BaseTool(name),
   KeyTool(name),
   interface_(i)
 {

@@ -235,18 +235,19 @@ target="GLWindow::mark_redraw" ></signal>
                 <object class="Collection">
                   <object class="Box">
                     <var name="color">#808080A0</var>
-                  </object>
-                  <object class="Root::Text">
-                    <var name="row">1</var>
-                    <var name="col">3</var>
-                    <var name="text">$Painter::status_text</var>
-                    <var name="fgcolor">#FFFFFFFF</var>
-                    <var name="bgcolor">#000000FF</var>
-                    <var name="size">30</var>
-                    <var name="anchor">W</var>
-                    <var name="shadow">1</var>
-                    <var name="offsetx">-2</var>
-                    <var name="offsety">2</var>
+                    <object class="Root::Text">
+                      <var name="row">1</var>
+                      <var name="col">3</var>
+                      <!--                    <var name="text">$Painter::status_text</var>-->
+                      <var name="text">$Painter::status</var>
+                      <var name="fgcolor">#FFFFFFFF</var>
+                      <var name="bgcolor">#000000FF</var>
+                      <var name="size">25</var>
+                      <var name="anchor">W</var>
+                      <var name="shadow">1</var>
+                      <var name="offsetx">-2</var>
+                      <var name="offsety">2</var>
+                    </object>
                   </object>
                 </object>
               </object>
@@ -282,7 +283,7 @@ target="GLWindow::mark_redraw" ></signal>
             <var name="row">1</var>
             <var name="col">2</var>
             <var name="cell-width">500</var>
-            <var name="FileLoadBox::text" propagate="yes"> Volume File to Load: </var>
+            <var name="FileLoadBox::text" propagate="yes"> Load Volume </var>
             <var name="cell-height">$Animation::variable-1</var>
             <signal name="FileLoadBox::CancelButtonPress" 
                     target="Animation::AnimateVariableDescending">

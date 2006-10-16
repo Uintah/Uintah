@@ -34,11 +34,12 @@
 
 namespace SCIRun {
 
-Painter::LayerButton::LayerButton(Skinner::Variables *vars, Painter *painter) :
+LayerButton::LayerButton(Skinner::Variables *vars, Painter *painter) :
   Parent(vars),
   painter_(painter),
   layer_name_(vars, "LayerButton::name"),
   num_(vars, "LayerButton::num"),
+  indent_(vars, "LayerButton::indent",0),
   background_color_(vars, "LayerButton::background_color"),
   volume_(0)
   
@@ -49,27 +50,19 @@ Painter::LayerButton::LayerButton(Skinner::Variables *vars, Painter *painter) :
   REGISTER_CATCHER_TARGET(LayerButton::select);
 }
 
-Painter::LayerButton::~LayerButton() 
+LayerButton::~LayerButton() 
 {}
 
 
-//
-//int
-//LayerButton::get_signal_id(const string &signalname) const
-//{
-  //  if (signalname == class_()+"::clicked") return 1;
-//  return 0;
-//}
-
 BaseTool::propagation_state_e
-Painter::LayerButton::down(event_handle_t signalh) {
+LayerButton::down(event_handle_t signalh) {
   if (volume_)
     painter_->move_layer_down(volume_);
   return CONTINUE_E;
 }
 
 BaseTool::propagation_state_e
-Painter::LayerButton::up(event_handle_t signalh) {
+LayerButton::up(event_handle_t signalh) {
   if (volume_)
     painter_->move_layer_up(volume_);
   return CONTINUE_E;
@@ -77,12 +70,12 @@ Painter::LayerButton::up(event_handle_t signalh) {
 
 
 BaseTool::propagation_state_e
-Painter::LayerButton::kill(event_handle_t signalh) {
+LayerButton::kill(event_handle_t signalh) {
   return CONTINUE_E;
 }
 
 BaseTool::propagation_state_e
-Painter::LayerButton::select(event_handle_t signalh) {
+LayerButton::select(event_handle_t signalh) {
   painter_->current_volume_ = volume_;
   painter_->rebuild_layer_buttons();
   return CONTINUE_E;
