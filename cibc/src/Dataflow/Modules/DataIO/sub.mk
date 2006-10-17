@@ -41,18 +41,18 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/DataIO
 
 SRCS     += \
-        $(SRCDIR)/BundleReader.cc\
-        $(SRCDIR)/BundleWriter.cc\
-	$(SRCDIR)/ColorMap2Reader.cc\
-	$(SRCDIR)/ColorMap2Writer.cc\
-	$(SRCDIR)/ColorMapReader.cc\
-	$(SRCDIR)/ColorMapWriter.cc\
-	$(SRCDIR)/FieldReader.cc\
-	$(SRCDIR)/FieldWriter.cc\
-	$(SRCDIR)/MatrixReader.cc\
-	$(SRCDIR)/MatrixWriter.cc\
-	$(SRCDIR)/PathReader.cc\
-	$(SRCDIR)/PathWriter.cc\
+        $(SRCDIR)/ReadBundle.cc\
+        $(SRCDIR)/WriteBundle.cc\
+	$(SRCDIR)/ReadColorMap2.cc\
+	$(SRCDIR)/WriteColorMap2.cc\
+	$(SRCDIR)/ReadColorMap.cc\
+	$(SRCDIR)/WriteColorMap.cc\
+	$(SRCDIR)/ReadField.cc\
+	$(SRCDIR)/WriteField.cc\
+	$(SRCDIR)/ReadMatrix.cc\
+	$(SRCDIR)/WriteMatrix.cc\
+	$(SRCDIR)/ReadPath.cc\
+	$(SRCDIR)/WritePath.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \

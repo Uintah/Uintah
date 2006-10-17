@@ -29,24 +29,24 @@
 # CMakeLists.txt for Dataflow/Modules/Bundle
 
 SET(Dataflow_Modules_Bundle_SRCS
-  BundleSetBundle.cc
-  BundleSetField.cc
-  BundleSetMatrix.cc
-  BundleSetNrrd.cc
-  BundleSetColorMap.cc
-  BundleSetColorMap2.cc
-  BundleSetPath.cc
-  BundleSetString.cc
-  BundleInfo.cc
-  BundleGetBundle.cc
-  BundleGetField.cc
-  BundleGetMatrix.cc
-  BundleGetNrrd.cc
-  BundleGetColorMap.cc
-  BundleGetColorMap2.cc
-  BundleGetPath.cc
-  BundleGetString.cc
-  BundleMerge.cc
+  InsertBundlesIntoBundle.cc
+  InsertFieldsIntoBundle.cc
+  InsertMatricesIntoBundle.cc
+  InsertNrrdsIntoBundle.cc
+  InsertColorMapsIntoBundle.cc
+  InsertColorMap2sIntoBundle.cc
+  InsertPathsIntoBundle.cc
+  InsertStringsIntoBundle.cc
+  ReportBundleInfo.cc
+  GetBundlesFromBundle.cc
+  GetFieldsFromBundle.cc
+  GetMatricesFromBundle.cc
+  GetNrrdsFromBundle.cc
+  GetColorMapsFromBundle.cc
+  GetColorMap2sFromBundle.cc
+  GetPathsFromBundle.cc
+  GetStringsFromBundle.cc
+  JoinBundles.cc
 )
 
 ADD_LIBRARY(Dataflow_Modules_Bundle ${Dataflow_Modules_Bundle_SRCS})

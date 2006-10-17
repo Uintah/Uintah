@@ -42,75 +42,71 @@ SRCDIR   := Dataflow/Modules/Fields
 
 SRCS     += \
 	$(SRCDIR)/ApplyMappingMatrix.cc\
-	$(SRCDIR)/AttractNormals.cc\
+	$(SRCDIR)/CalculateNodeNormals.cc\
 	$(SRCDIR)/BuildMappingMatrix.cc\
-	$(SRCDIR)/BuildSurfNormals.cc\
-	$(SRCDIR)/CastMLVtoHV.cc\
-	$(SRCDIR)/CastTVtoMLV.cc\
-	$(SRCDIR)/Centroids.cc\
-	$(SRCDIR)/ChangeCoordinates.cc\
-	$(SRCDIR)/ChangeFieldBasis.cc\
-	$(SRCDIR)/ChangeFieldDataType.cc\
-	$(SRCDIR)/ChangeFieldBounds.cc\
+	$(SRCDIR)/BuildMatrixOfSurfaceNormals.cc\
+	$(SRCDIR)/ConvertMLVtoHV.cc\
+	$(SRCDIR)/ConvertTVtoMLV.cc\
+	$(SRCDIR)/GetCentroidsFromMesh.cc\
+	$(SRCDIR)/ConvertMeshCoordinateSystem.cc\
+	$(SRCDIR)/ConvertFieldBasis.cc\
+	$(SRCDIR)/ConvertFieldDataType.cc\
+	$(SRCDIR)/EditMeshBoundingBox.cc\
 	$(SRCDIR)/ChooseField.cc\
-	$(SRCDIR)/ClipByFunction.cc\
-	$(SRCDIR)/ClipField.cc\
-	$(SRCDIR)/ClipLattice.cc\
+	$(SRCDIR)/ClipFieldByFunction.cc\
+	$(SRCDIR)/ClipFieldToFieldOrWidget.cc\
+	$(SRCDIR)/ClipLatVolByIndicesOrWidget.cc\
 	$(SRCDIR)/ConvertTet.cc\
-	$(SRCDIR)/Coregister.cc\
-	$(SRCDIR)/CreateMesh.cc\
-	$(SRCDIR)/CubitInterface.cc\
-	$(SRCDIR)/DirectMapping.cc\
-	$(SRCDIR)/ExtractHexSheet.cc\
-	$(SRCDIR)/FieldArbitrarySlicer.cc\
-	$(SRCDIR)/FieldBoundary.cc\
-	$(SRCDIR)/FieldCage.cc\
-	$(SRCDIR)/FieldFrenet.cc\
-	$(SRCDIR)/FieldInfo.cc\
-	$(SRCDIR)/FieldMeasures.cc\
-	$(SRCDIR)/FieldSetProperty.cc\
-	$(SRCDIR)/FieldSlicer.cc\
-	$(SRCDIR)/FieldSubSample.cc\
-	$(SRCDIR)/GatherFields.cc\
-	$(SRCDIR)/Gradient.cc\
-	$(SRCDIR)/HexToTet.cc\
-	$(SRCDIR)/InsertField.cc\
-	$(SRCDIR)/InsertHexSheet.cc\
-	$(SRCDIR)/IntersectTri.cc\
-	$(SRCDIR)/IsoClip.cc\
-	$(SRCDIR)/IsoRefine.cc\
-	$(SRCDIR)/ManageFieldData.cc\
-	$(SRCDIR)/ManageFieldMesh.cc\
-	$(SRCDIR)/MapDataToMeshCoord.cc\
-	$(SRCDIR)/MaskLattice.cc\
+	$(SRCDIR)/CoregisterPointClouds.cc\
+	$(SRCDIR)/ConvertMatricesToMesh.cc\
+	$(SRCDIR)/InterfaceWithCubit.cc\
+	$(SRCDIR)/MapFieldDataFromSourceToDestination.cc\
+	$(SRCDIR)/GetHexVolSheetBasedOnEdgeIndices.cc\
+	$(SRCDIR)/ExtractPlanarSliceFromField.cc\
+	$(SRCDIR)/GetFieldBoundary.cc\
+	$(SRCDIR)/ReportFieldInfo.cc\
+	$(SRCDIR)/ReportFieldGeometryMeasures.cc\
+	$(SRCDIR)/SetFieldProperty.cc\
+	$(SRCDIR)/GetSliceFromLatVol.cc\
+	$(SRCDIR)/ClipRasterFieldByIndices.cc\
+	$(SRCDIR)/JoinFields.cc\
+	$(SRCDIR)/CalculateGradients.cc\
+	$(SRCDIR)/ConvertHexVolToTetVol.cc\
+	$(SRCDIR)/MergeFields.cc\
+	$(SRCDIR)/InsertHexVolSheetFromTriSurf.cc\
+	$(SRCDIR)/MergeTriSurfs.cc\
+	$(SRCDIR)/ClipVolumeByIsovalue.cc\
+	$(SRCDIR)/ClipVolumeByIsovalueWithRefinement.cc\
+	$(SRCDIR)/SwapFieldDataWithMatrixEntries.cc\
+	$(SRCDIR)/SwapNodeLocationsWithMatrixEntries.cc\
+	$(SRCDIR)/MapFieldDataToNodeCoordinate.cc\
+	$(SRCDIR)/MaskLatVol.cc\
 	$(SRCDIR)/MaskLatVolWithTriSurf.cc\
-	$(SRCDIR)/MoveElemToNode.cc\
-	$(SRCDIR)/MoveNodeToElem.cc\
-	$(SRCDIR)/NodeGradient.cc\
-	$(SRCDIR)/QuadToTri.cc\
-	$(SRCDIR)/PlanarTransformField.cc\
-	$(SRCDIR)/PointLatticeMap.cc\
-	$(SRCDIR)/Probe.cc\
-	$(SRCDIR)/ReplaceScalarDataValue.cc\
-	$(SRCDIR)/SampleField.cc\
-	$(SRCDIR)/SampleLattice.cc\
-	$(SRCDIR)/SamplePlane.cc\
-	$(SRCDIR)/SampleStructHex.cc\
-	$(SRCDIR)/ScalarFieldStats.cc\
-	$(SRCDIR)/ScaleFieldData.cc\
-	$(SRCDIR)/SearchGridInfo.cc\
-	$(SRCDIR)/SeedPoints.cc\
-	$(SRCDIR)/SelectField.cc\
-	$(SRCDIR)/SetProperty.cc\
-	$(SRCDIR)/ToPointCloud.cc\
-	$(SRCDIR)/ToStructured.cc\
-	$(SRCDIR)/TransformField.cc\
-	$(SRCDIR)/TransformData.cc\
-	$(SRCDIR)/TransformData2.cc\
-	$(SRCDIR)/TransformData3.cc\
-	$(SRCDIR)/TransformMesh.cc\
-	$(SRCDIR)/Unstructure.cc\
-	$(SRCDIR)/VectorMagnitude.cc\
+	$(SRCDIR)/ConvertLatVolDataFromElemToNode.cc\
+	$(SRCDIR)/ConvertLatVolDataFromNodeToElem.cc\
+	$(SRCDIR)/CalculateLatVolGradientsAtNodes.cc\
+	$(SRCDIR)/ConvertQuadSurfToTriSurf.cc\
+	$(SRCDIR)/TransformPlanarMesh.cc\
+	$(SRCDIR)/BuildPointCloudToLatVolMappingMatrix.cc\
+	$(SRCDIR)/GenerateSinglePointProbeFromField.cc\
+	$(SRCDIR)/GeneratePointSamplesFromFieldOrWidget.cc\
+	$(SRCDIR)/CreateLatVol.cc\
+	$(SRCDIR)/CreateImage.cc\
+	$(SRCDIR)/CreateStructHex.cc\
+	$(SRCDIR)/ReportScalarFieldStats.cc\
+	$(SRCDIR)/ReportSearchGridInfo.cc\
+	$(SRCDIR)/GeneratePointSamplesFromField.cc\
+	$(SRCDIR)/SelectFieldROIWithBoxWidget.cc\
+	$(SRCDIR)/SetFieldOrMeshStringProperty.cc\
+	$(SRCDIR)/ConvertMeshToPointCloud.cc\
+	$(SRCDIR)/ConvertRasterMeshToStructuredMesh.cc\
+	$(SRCDIR)/CalculateFieldData.cc\
+	$(SRCDIR)/CalculateFieldData2.cc\
+	$(SRCDIR)/CalculateFieldData3.cc\
+	$(SRCDIR)/TransformMeshWithFunction.cc\
+	$(SRCDIR)/TransformMeshWithTransform.cc\
+	$(SRCDIR)/ConvertMeshToUnstructuredMesh.cc\
+	$(SRCDIR)/CalculateVectorMagnitudes.cc\
 #[INSERT NEW CODE FILE HERE]
 
 
@@ -140,25 +136,25 @@ LIBS := $(TK_LIBRARY) $(GL_LIBRARY) $(LEX_LIBRARY) $(M_LIBRARY) $(THREAD_LIBRARY
 
 # Sandia Meshing Library
 ifeq ($(HAVE_CAMAL),yes)
-   SRCS += $(SRCDIR)/TetMesher.cc
+   SRCS += $(SRCDIR)/InterfaceWithCamal.cc
    LIBS := $(LIBS) $(CAMAL_LIBRARY) $(F_LIBRARY)
 endif
 
-# TetGen http://tetgen.berlios.de
+# InterfaceWithTetGen http://tetgen.berlios.de
 ifeq ($(HAVE_TETGEN),yes)
-  SRCS += $(SRCDIR)/TetGen.cc
+  SRCS += $(SRCDIR)/InterfaceWithTetGen.cc
   LIBS := $(LIBS) $(TETGEN_LIBRARY)
 endif
 
 # VERDICT Mesh Quality Library
 ifeq ($(HAVE_VERDICT),yes)
-   SRCS += $(SRCDIR)/MeshQuality.cc
+   SRCS += $(SRCDIR)/ReportMeshQualityMeasures.cc
    LIBS := $(LIBS) $(VERDICT_LIBRARY)
 endif
 
 # MESQUITE Mesh Optimization Library
 ifeq ($(HAVE_MESQUITE),yes)
-   SRCS += $(SRCDIR)/MeshSmoother.cc\
+   SRCS += $(SRCDIR)/SmoothMesh.cc\
 	$(SRCDIR)/MesquiteDomain.cc
    LIBS := $(LIBS) $(MESQUITE_LIBRARY)
 endif

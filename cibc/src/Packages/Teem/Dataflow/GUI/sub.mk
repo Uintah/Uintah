@@ -37,21 +37,21 @@
 SRCDIR := Packages/Teem/Dataflow/GUI
 
 SRCS := \
-	$(SRCDIR)/AnalyzeNrrdReader.tcl\
+	$(SRCDIR)/ImportNrrdFromAnalyze.tcl\
 	$(SRCDIR)/axis_info_sel_box.tcl\
 	$(SRCDIR)/ChooseNrrd.tcl\
-	$(SRCDIR)/DicomNrrdReader.tcl\
-	$(SRCDIR)/FieldToNrrd.tcl\
-	$(SRCDIR)/ImageImporter.tcl\
-	$(SRCDIR)/ImageExporter.tcl\
-	$(SRCDIR)/MRITissueClassifier.tcl\
-	$(SRCDIR)/NrrdInfo.tcl\
-	$(SRCDIR)/NrrdSetProperty.tcl\
-	$(SRCDIR)/NrrdSetupTexture.tcl\
-	$(SRCDIR)/NrrdReader.tcl\
-	$(SRCDIR)/NrrdSelectTime.tcl\
-	$(SRCDIR)/NrrdToField.tcl\
-	$(SRCDIR)/NrrdWriter.tcl\
+	$(SRCDIR)/ImportNrrdFromDicom.tcl\
+	$(SRCDIR)/ConvertRasterFieldToNrrd.tcl\
+	$(SRCDIR)/ImportImage.tcl\
+	$(SRCDIR)/ExportImage.tcl\
+	$(SRCDIR)/ClassifyHeadTissuesFromMultiMRI.tcl\
+	$(SRCDIR)/ReportNrrdInfo.tcl\
+	$(SRCDIR)/SetNrrdProperty.tcl\
+	$(SRCDIR)/BuildTextureWithGradientsFromNrrds.tcl\
+	$(SRCDIR)/ReadNrrd.tcl\
+	$(SRCDIR)/SelectTimeStepFromNrrd.tcl\
+	$(SRCDIR)/ConvertNrrdToRasterField.tcl\
+	$(SRCDIR)/WriteNrrd.tcl\
 	$(SRCDIR)/TendAnscale.tcl\
 	$(SRCDIR)/TendAnvol.tcl\
 	$(SRCDIR)/TendBmat.tcl\
@@ -106,7 +106,7 @@ SRCS := \
 	$(SRCDIR)/UnuSplice.tcl\
 	$(SRCDIR)/UnuShuffle.tcl\
 	$(SRCDIR)/UnuSwap.tcl\
-	$(SRCDIR)/NrrdToMatrix.tcl\
+	$(SRCDIR)/ConvertNrrdToMatrix.tcl\
 	$(SRCDIR)/UnuUnquantize.tcl\
 	$(SRCDIR)/TendSim.tcl\
 	$(SRCDIR)/TendSten.tcl\
@@ -115,7 +115,7 @@ SRCS := \
 	$(SRCDIR)/TendSlice.tcl\
 	$(SRCDIR)/TendEvalAdd.tcl\
 	$(SRCDIR)/TendEvq.tcl\
-	$(SRCDIR)/GageProbe.tcl\
+	$(SRCDIR)/BuildDerivedNrrdWithGage.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

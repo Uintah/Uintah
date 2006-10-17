@@ -29,12 +29,12 @@
 # CMakeLists.txt for Packages/Teem/Dataflow/Modules/DataIO
 
 SET(Packages_Teem_Dataflow_Modules_DataIO_SRCS
-  AnalyzeNrrdReader.cc
-  DicomNrrdReader.cc
-  ImageExporter.cc
-  ImageImporter.cc
-  NrrdReader.cc
-  NrrdWriter.cc
+  ImportNrrdFromAnalyze.cc
+  ImportNrrdFromDicom.cc
+  ExportImage.cc
+  ImportImage.cc
+  ReadNrrd.cc
+  WriteNrrd.cc
 )
 
 ADD_LIBRARY(Packages_Teem_Dataflow_Modules_DataIO ${Packages_Teem_Dataflow_Modules_DataIO_SRCS})

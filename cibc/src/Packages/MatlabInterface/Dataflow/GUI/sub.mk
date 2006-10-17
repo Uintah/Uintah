@@ -37,19 +37,17 @@
 SRCDIR := Packages/MatlabInterface/Dataflow/GUI
 
 SRCS := \
-	$(SRCDIR)/Matlab.tcl\
-	$(SRCDIR)/MatlabBundle.tcl\
-	$(SRCDIR)/MatlabColorMapsReader.tcl\
-	$(SRCDIR)/MatlabDataReader.tcl\
-	$(SRCDIR)/MatlabDataWriter.tcl\
-	$(SRCDIR)/MatlabFieldsReader.tcl\
-	$(SRCDIR)/MatlabFieldsWriter.tcl\
-	$(SRCDIR)/MatlabMatricesReader.tcl\
-	$(SRCDIR)/MatlabNrrdsReader.tcl\
-	$(SRCDIR)/MatlabNrrdsWriter.tcl\
-	$(SRCDIR)/MatlabMatricesWriter.tcl\
-	$(SRCDIR)/MatlabBundlesWriter.tcl\
-	$(SRCDIR)/MatlabBundlesReader.tcl\
+	$(SRCDIR)/InterfaceWithMatlab.tcl\
+	$(SRCDIR)/InterfaceWithMatlabViaBundles.tcl\
+	$(SRCDIR)/ImportColorMapsFromMatlab.tcl\
+	$(SRCDIR)/ImportDatatypesFromMatlab.tcl\
+	$(SRCDIR)/ExportDatatypesToMatlab.tcl\
+	$(SRCDIR)/ImportFieldsFromMatlab.tcl\
+	$(SRCDIR)/ExportFieldsToMatlab.tcl\
+	$(SRCDIR)/ImportMatricesFromMatlab.tcl\
+	$(SRCDIR)/ImportNrrdsFromMatlab.tcl\
+	$(SRCDIR)/ExportNrrdsToMatlab.tcl\
+	$(SRCDIR)/ExportMatricesToMatlab.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

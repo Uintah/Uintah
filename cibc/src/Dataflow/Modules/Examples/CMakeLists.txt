@@ -29,12 +29,12 @@
 # CMakeLists.txt for Dataflow/Modules/Examples
 
 SET(Dataflow_Modules_Examples_SRCS
-  BasicInput.cc
-  BasicOutput.cc
-  ChangeScalars.cc
-  ChangeTetVolScalars.cc
-  HelloWorld.cc
-  ZeroTetVolScalars.cc
+  GetInputField.cc
+  GetInputFieldAndSendAsOutput.cc
+  SetFieldDataValues.cc
+  SetTetVolFieldDataValues.cc
+  PrintHelloWorldToScreen.cc
+  SetTetVolFieldDataValuesToZero.cc
 )
 
 ADD_LIBRARY(Dataflow_Modules_Examples ${Dataflow_Modules_Examples_SRCS})

@@ -33,7 +33,7 @@
 
 
 
-<component name="ChooseField" category="FieldsOther">
+<component name="ChooseField" category="MiscField">
   <overview>
     <authors>
       <author>David Weinstein</author>

@@ -1,9 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
-<network version="v1.25.2" name="{Main}" bbox="{116 46 300 428}" creationDate="{Thu Mar 16 2006}" creationTime="{10:32:15}" geometry="{800x800+0+0}">
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{116 46 300 428}" creationDate="{Thu Mar 16 2006}" creationTime="{10:32:15}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
   <note>{}</note>
   <modules>
-    <module id="m1" package="SCIRun" category="FieldsCreate" name="SampleLattice" gui_visible="yes">
+    <module category="NewField" gui_visible="yes" id="m1" name="CreateLatVol" package="SCIRun">
       <position x="135" y="46"/>
       <var name="sizex" val="{8}"/>
       <var name="sizey" val="{8}"/>
@@ -12,13 +14,16 @@
       <var name="data-at" val="{Nodes}"/>
       <var name="ui_geometry" val="{314x263+59+54}"/>
     </module>
-    <module id="m2" package="SCIRun" category="FieldsData" name="TransformData" gui_visible="yes">
+    <module category="ChangeFieldData" gui_visible="yes" id="m2" name="CalculateFieldData" package="SCIRun">
       <position x="127" y="155"/>
-      <var name="function" val="{result = Vector((x+1)*0.5, (y+1)*0.5, (z+1)*0.5);&#10;&#10;&#10;}"/>
+      <var name="function" val="{result = Vector((x+1)*0.5, (y+1)*0.5, (z+1)*0.5);
+
+
+}"/>
       <var name="outputdatatype" val="{Vector}"/>
       <var name="ui_geometry" val="{433x169+56+36}"/>
     </module>
-    <module id="m3" package="SCIRun" category="Render" name="Viewer">
+    <module category="Render" id="m3" name="ViewScene" package="SCIRun">
       <position x="128" y="384"/>
       <gui_callback>
         <callback>addViewer</callback>
@@ -115,7 +120,7 @@
       <var name="ViewWindow_0-global-dl" val="{0}"/>
       <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
     </module>
-    <module id="m4" package="SCIRun" category="Visualization" name="ShowField">
+    <module category="Visualization" id="m4" name="ShowField" package="SCIRun">
       <position x="116" y="272"/>
       <var name="nodes-as-disks" val="{1}"/>
       <var name="edges-on" val="{0}"/>
@@ -135,8 +140,8 @@
     </module>
   </modules>
   <connections>
-    <connection id="c1" from="m1" fromport="0" to="m2" toport="0"/>
-    <connection id="c2" from="m2" fromport="0" to="m4" toport="0"/>
-    <connection id="c3" from="m4" fromport="0" to="m3" toport="0"/>
+    <connection from="m1" fromport="0" id="c1" to="m2" toport="0"/>
+    <connection from="m2" fromport="0" id="c2" to="m4" toport="0"/>
+    <connection from="m4" fromport="0" id="c3" to="m3" toport="0"/>
   </connections>
 </network>

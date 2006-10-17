@@ -14,10 +14,10 @@ SRCDIR   := Dataflow/Modules/String
 
 SRCS     += \
 	$(SRCDIR)/CreateString.cc\
-	$(SRCDIR)/StringInfo.cc\
+	$(SRCDIR)/ReportStringInfo.cc\
 	$(SRCDIR)/JoinStrings.cc\
-	$(SRCDIR)/SprintfString.cc\
-	$(SRCDIR)/SprintfMatrix.cc\
+	$(SRCDIR)/PrintMatrixIntoString.cc\
+	$(SRCDIR)/PrintStringIntoString.cc\
 	$(SRCDIR)/GetFileName.cc\
 	$(SRCDIR)/SplitFileName.cc\
 #[INSERT NEW CODE FILE HERE]

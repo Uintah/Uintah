@@ -41,7 +41,7 @@
 #include <sci_defs/collab_vis_defs.h>
 #include <sci_defs/chromium_defs.h>
 
-#include <Dataflow/Modules/Render/Viewer.h>
+#include <Dataflow/Modules/Render/ViewScene.h>
 #include <Dataflow/Modules/Render/ViewWindow.h>
 #include <Dataflow/Modules/Render/OpenGL.h>
 #include <Dataflow/Modules/Render/Ball.h>
@@ -101,7 +101,7 @@ namespace SCIRun {
 // gather the buffer's z-values
 extern int CAPTURE_Z_DATA_HACK;
 
-ViewWindow::ViewWindow(Viewer* viewer, GuiInterface* gui, GuiContext* ctx)
+ViewWindow::ViewWindow(ViewScene* viewer, GuiInterface* gui, GuiContext* ctx)
   : id_(ctx->getfullname()),
     ball_(scinew BallData()),
     angular_v_(0.0),
@@ -1350,8 +1350,8 @@ check_for_redraw_msg(MessageBase *const& a, MessageBase *const& b)
   if (a->type == MessageTypes::ViewWindowRedraw &&
       b->type == MessageTypes::ViewWindowRedraw)
   {
-    ViewerMessage *av = (ViewerMessage *)a;
-    ViewerMessage *bv = (ViewerMessage *)b;
+    ViewSceneMessage *av = (ViewSceneMessage *)a;
+    ViewSceneMessage *bv = (ViewSceneMessage *)b;
     if (av->rid == bv->rid)
     {
       return false;
@@ -1382,7 +1382,7 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
     // We need to dispatch this one to the remote thread.  We use an ID string
     // instead of a pointer in case this viewwindow gets killed by the time the
     // redraw message gets dispatched.
-    ViewerMessage *msg = scinew ViewerMessage
+    ViewSceneMessage *msg = scinew ViewSceneMessage
       (MessageTypes::ViewWindowDumpImage,id_,args[2], args[3],args[4],args[5]);
     viewer_->mailbox_.send(msg);
   } else if (args[1] == "startup") {
@@ -1404,7 +1404,7 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
     // We need to dispatch this one to the  remote thread We use an ID string
     // instead of a pointer in case this viewwindow gets killed by the time the
     // redraw message gets dispatched.
-    ViewerMessage *tmp = scinew ViewerMessage(id_);
+    ViewSceneMessage *tmp = scinew ViewSceneMessage(id_);
     if (!viewer_->mailbox_.sendIfNotSentLast(tmp, check_for_redraw_msg))
     {
       // Message wasn't needed, delete it.
@@ -1438,7 +1438,7 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
       args.error("Can't figure out framerate");
       return;
     }
-    ViewerMessage *msg = scinew ViewerMessage(id_, tbeg, tend, num, framerate);
+    ViewSceneMessage *msg = scinew ViewSceneMessage(id_, tbeg, tend, num, framerate);
     if(!viewer_->mailbox_.trySend(msg))
        cerr << "Redraw event dropped, mailbox full!\n";
   } else if(args[1] == "mtranslate") {
@@ -1460,7 +1460,7 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
   } else if(args[1] == "gohome") {
     gui_inertia_mode_.set(0);
     gui_view_.set(homeview_);
-    viewer_->mailbox_.send(scinew ViewerMessage(id_)); // Redraw
+    viewer_->mailbox_.send(scinew ViewSceneMessage(id_)); // Redraw
   } else if(args[1] == "autoview") {
     BBox bbox;
     gui_inertia_mode_.set(0);
@@ -1534,7 +1534,7 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
     sscanf(args[5].c_str(), "%f%f%f", &r, &g, &b);
 
     viewer_->
-      mailbox_.send(scinew ViewerMessage(MessageTypes::ViewWindowEditLight,
+      mailbox_.send(scinew ViewSceneMessage(MessageTypes::ViewWindowEditLight,
 					 id_, lightNo, on, Vector(x,y,z),
 					 Color(r,g,b)));
     
@@ -1546,7 +1546,7 @@ ViewWindow::tcl_command(GuiArgs& args, void*)
     // We need to dispatch this one to the remote thread We use an ID string
     // instead of a pointer in case this viewwindow gets killed by the time the
     // redraw message gets dispatched.
-    ViewerMessage *msg = scinew ViewerMessage
+    ViewSceneMessage *msg = scinew ViewSceneMessage
       (MessageTypes::ViewWindowDumpObjects,id_,args[2],args[3],args[4],args[5]);
     viewer_->mailbox_.send(msg);
   } else if(args[1] == "listvisuals") {
@@ -1775,7 +1775,7 @@ void
 ViewWindow::animate_to_view(const View& v, double /*time*/)
 {
   gui_view_.set(v);
-  viewer_->mailbox_.send(scinew ViewerMessage(id_));
+  viewer_->mailbox_.send(scinew ViewSceneMessage(id_));
 }
 
 void
@@ -1879,7 +1879,7 @@ ViewWindow::getData(int datamask, FutureValue<GeometryData*>* result)
 void
 ViewWindow::setView(View newView) {
   gui_view_.set(newView);
-  viewer_->mailbox_.send(scinew ViewerMessage(id_)); // Redraw
+  viewer_->mailbox_.send(scinew ViewSceneMessage(id_)); // Redraw
 }
 
 GeomHandle

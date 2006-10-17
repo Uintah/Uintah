@@ -1,9 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
-<network version="v1.25.2" name="{Main}" bbox="{45 21 274 472}" creationDate="{Fri Apr 14 2006}" creationTime="{18:51:53}" geometry="{800x800+0+0}">
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{45 21 274 472}" creationDate="{Fri Apr 14 2006}" creationTime="{18:51:53}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
   <note>{}</note>
   <modules>
-    <module id="m1" package="SCIRun" category="FieldsCreate" name="SamplePlane">
+    <module category="NewField" id="m1" name="CreateImage" package="SCIRun">
       <position x="109" y="21"/>
       <var name="sizex" val="{2}"/>
       <var name="sizey" val="{2}"/>
@@ -23,7 +25,7 @@
       <var name="cnormal-z" val="{1.0}"/>
       <var name="ui_geometry" val="{314x406+56+266}"/>
     </module>
-    <module id="m2" package="SCIRun" category="FieldsCreate" name="SampleField">
+    <module category="NewField" id="m2" name="GeneratePointSamplesFromFieldOrWidget" package="SCIRun">
       <position x="82" y="211"/>
       <var name="wtype" val="{rake}"/>
       <var name="endpoints" val="{1}"/>
@@ -44,7 +46,7 @@
       <var name="whichtab" val="{Random}"/>
       <var name="ui_geometry" val="{350x266+62+353}"/>
     </module>
-    <module id="m3" package="SCIRun" category="Visualization" name="ShowField">
+    <module category="Visualization" id="m3" name="ShowField" package="SCIRun">
       <position x="45" y="311"/>
       <var name="nodes-transparency" val="{1}"/>
       <var name="edges-on" val="{0}"/>
@@ -56,7 +58,7 @@
       <var name="scalars_scale" val="{0.3}"/>
       <var name="ui_geometry" val="{370x666+31+338}"/>
     </module>
-    <module id="m4" package="SCIRun" category="Render" name="Viewer">
+    <module category="Render" id="m4" name="ViewScene" package="SCIRun">
       <position x="87" y="428"/>
       <gui_callback>
         <callback>addViewer</callback>
@@ -118,14 +120,14 @@
       <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
       <var name="&quot;ViewWindow_0-Transparent Nodes (1)&quot;" val="{1}"/>
     </module>
-    <module id="m5" package="SCIRun" category="FieldsGeometry" name="QuadToTri">
+    <module category="ChangeMesh" id="m5" name="ConvertQuadSurfToTriSurf" package="SCIRun">
       <position x="127" y="111"/>
     </module>
   </modules>
   <connections>
-    <connection id="c1" from="m2" fromport="0" to="m3" toport="0"/>
-    <connection id="c2" from="m1" fromport="0" to="m5" toport="0"/>
-    <connection id="c3" from="m5" fromport="0" to="m2" toport="0"/>
-    <connection id="c4" from="m3" fromport="0" to="m4" toport="0"/>
+    <connection from="m2" fromport="0" id="c1" to="m3" toport="0"/>
+    <connection from="m1" fromport="0" id="c2" to="m5" toport="0"/>
+    <connection from="m5" fromport="0" id="c3" to="m2" toport="0"/>
+    <connection from="m3" fromport="0" id="c4" to="m4" toport="0"/>
   </connections>
 </network>

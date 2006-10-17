@@ -42,21 +42,21 @@ SRCDIR   := Dataflow/Modules/Math
 
 SRCS     += \
 	$(SRCDIR)/AppendMatrix.cc\
-	$(SRCDIR)/BuildNoise.cc\
-	$(SRCDIR)/BuildTransform.cc\
-	$(SRCDIR)/CastMatrix.cc\
+	$(SRCDIR)/BuildNoiseColumnMatrix.cc\
+	$(SRCDIR)/CreateGeometricTransform.cc\
+	$(SRCDIR)/ConvertMatrixType.cc\
 	$(SRCDIR)/ChooseMatrix.cc\
-	$(SRCDIR)/ErrorMetric.cc\
-	$(SRCDIR)/LinAlgBinary.cc\
-	$(SRCDIR)/LinAlgUnary.cc\
-	$(SRCDIR)/LinearAlgebra.cc\
-        $(SRCDIR)/MatrixInfo.cc\
-        $(SRCDIR)/MatrixSelectVector.cc\
-        $(SRCDIR)/MinNormLeastSq.cc\
-	$(SRCDIR)/SolveMatrix.cc\
-	$(SRCDIR)/Submatrix.cc\
-	$(SRCDIR)/MaskVectorToMappingMatrix.cc\
-	$(SRCDIR)/MappingMatrixToMaskVector.cc\
+	$(SRCDIR)/ReportColumnMatrixMisfit.cc\
+	$(SRCDIR)/EvaluateLinAlgBinary.cc\
+	$(SRCDIR)/EvaluateLinAlgUnary.cc\
+	$(SRCDIR)/EvaluateLinAlgGeneral.cc\
+        $(SRCDIR)/ReportMatrixInfo.cc\
+        $(SRCDIR)/GetColumnMatrixFromMatrix.cc\
+        $(SRCDIR)/SolveMinNormLeastSqSystem.cc\
+	$(SRCDIR)/SolveLinearSystem.cc\
+	$(SRCDIR)/GetSubmatrix.cc\
+	$(SRCDIR)/ConvertMaskVectorToMappingMatrix.cc\
+	$(SRCDIR)/ConvertMappingMatrixToMaskVector.cc\
 	$(SRCDIR)/CreateMatrix.cc\
 #[INSERT NEW CODE FILE HERE]
 

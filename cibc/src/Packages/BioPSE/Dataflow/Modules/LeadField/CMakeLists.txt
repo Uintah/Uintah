@@ -29,9 +29,9 @@
 # CMakeLists.txt for Packages/BioPSE/Dataflow/Modules/LeadField
 
 SET(Packages_BioPSE_Dataflow_Modules_LeadField_SRCS
-  AssignLeadFieldSources.cc
+  BuildLeadFieldSourcesFromElectricCurrentMatrix.cc
   BuildElemLeadField.cc
-  BuildMisfitField.cc
+  CalculateMisfitField.cc
 )
 
 ADD_LIBRARY(Packages_BioPSE_Dataflow_Modules_LeadField ${Packages_BioPSE_Dataflow_Modules_LeadField_SRCS})

@@ -29,31 +29,31 @@
 # CMakeLists.txt for Packages/BioPSE/Dataflow/Modules/Forward
 
 SET(Packages_BioPSE_Dataflow_Modules_Forward_SRCS
-  AnisoSphereModel.cc
+  CreateAnisoSphereParameters.cc
   ApplyFEMCurrentSource.cc
   ApplyFEMElectrodeSource.cc
   ApplyFEMVoltageSource.cc
-  BEMTransferSrcToInf.cc
-  ComputeCurrent.cc
-  ConfigureElectrode.cc
-  ConfigureWireElectrode.cc
-  CreateDisAnisoSpheres.cc
-  DipoleInSphere.cc
-  DipoleInAnisoSpheres.cc
-  ForwardMagneticField.cc
+  BuildBEMSrcToInfTransferMatrix.cc
+  CalculateCurrentDensity.cc
+  SetWireElectrodePotential.cc
+  SetWireElectrodeProperties.cc
+  CreateDiscreteAnisoSpheres.cc
+  SimulateDipoleInSphereAnalytically.cc
+  SimulateDipoleInAnisoSpheresAnalytically.cc
+  SimulateForwardMagneticField.cc
   GetActivationTimes.cc
-  IndicesToTensors.cc
+  ConvertFieldDataFromIndicesToTensors.cc
   InsertElectrodes.cc
   InsertVoltageSource.cc
   IntegrateCurrent.cc
-  SetupBEMatrix.cc
-  SetupFEMatrix.cc
-  TensorsToIndices.cc
-  ElectrodeManager.cc
-  EITAnalyticSolution.cc
+  BuildBEMatrix.cc
+  BuildFEMatrix.cc
+  ConvertFieldDataFromTensorsToIndices.cc
+  CreateElectrodeParameterMatrices.cc
+  SimulateEITAnalytically.cc
   SetEITGround.cc
-  TrigCurrentPattern.cc
-  SetupEITMatrix.cc
+  CreateTrigCurrentPattern.cc
+  BuildEITMatrix.cc
 )
 
 ADD_LIBRARY(Packages_BioPSE_Dataflow_Modules_Forward ${Packages_BioPSE_Dataflow_Modules_Forward_SRCS})

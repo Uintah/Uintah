@@ -33,7 +33,7 @@
 
 
 
-<component name="BuildMappingMatrix" category="FieldsData">
+<component name="BuildMappingMatrix" category="MiscField">
   <overview>
     <authors>
       <author>Peter-Pike Sloan</author>
@@ -113,7 +113,7 @@ name="DirectMappingMatrix"/>, <modref package="SCIRun"
 name="ApplyMappingMatrix"/>.</p>
 
       <p>This network can be found at
-src/nets/Modules/FieldsData/BuildMappingMatrix.net.</p>
+src/nets/Modules/MiscField/BuildMappingMatrix.net.</p>
 
     </net>
   </nets>

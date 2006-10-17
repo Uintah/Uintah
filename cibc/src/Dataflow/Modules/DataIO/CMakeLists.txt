@@ -29,18 +29,18 @@
 # CMakeLists.txt for Dataflow/Modules/DataIO
 
 SET(Dataflow_Modules_DataIO_SRCS
-  BundleReader.cc
-  BundleWriter.cc
-  ColorMap2Reader.cc
-  ColorMap2Writer.cc
-  ColorMapReader.cc
-  ColorMapWriter.cc
-  FieldReader.cc
-  FieldWriter.cc
-  MatrixReader.cc
-  MatrixWriter.cc
-  PathReader.cc
-  PathWriter.cc
+  ReadBundle.cc
+  WriteBundle.cc
+  ReadColorMap2.cc
+  WriteColorMap2.cc
+  ReadColorMap.cc
+  WriteColorMap.cc
+  ReadField.cc
+  WriteField.cc
+  ReadMatrix.cc
+  WriteMatrix.cc
+  ReadPath.cc
+  WritePath.cc
 )
 
 ADD_LIBRARY(Dataflow_Modules_DataIO ${Dataflow_Modules_DataIO_SRCS})

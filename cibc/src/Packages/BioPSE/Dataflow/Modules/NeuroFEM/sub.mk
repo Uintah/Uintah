@@ -39,8 +39,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/NeuroFEM
 
 
-SRCS     += $(SRCDIR)/ForwardIPM.cc\
-            $(SRCDIR)/InverseIPM.cc\
+SRCS     += $(SRCDIR)/InterfaceWithNeuroFEMForward.cc\
+            $(SRCDIR)/InterfaceWithNeuroFEMInverse.cc\
 #[INSERT NEW CODE FILE HERE]    
 
 

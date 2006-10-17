@@ -29,14 +29,14 @@
 # CMakeLists.txt for Packages/Teem/Dataflow/Modules/Converters
 
 SET(Packages_Teem_Dataflow_Modules_Converters_SRCS
-  ColorMap2ToNrrd.cc
-  ColorMapToNrrd.cc
+  ConvertColorMap2ToNrrd.cc
+  ConvertColorMapToNrrd.cc
   ConvertToNrrd.cc
-  FieldToNrrd.cc
-  NrrdToColorMap2.cc
-  NrrdToField.cc
-  NrrdToMatrix.cc
-  MatrixToNrrd.cc
+  ConvertRasterFieldToNrrd.cc
+  ConvertNrrdToColorMap2.cc
+  ConvertNrrdToRasterField.cc
+  ConvertNrrdToMatrix.cc
+  ConvertMatrixToNrrd.cc
 )
 
 ADD_LIBRARY(Packages_Teem_Dataflow_Modules_Converters ${Packages_Teem_Dataflow_Modules_Converters_SRCS})

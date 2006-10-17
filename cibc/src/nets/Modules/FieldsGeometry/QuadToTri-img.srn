@@ -1,12 +1,14 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
-<network version="v1.25.2" name="{Main}" bbox="{26 13 421 427}" creationDate="{Thu Mar 16 2006}" creationTime="{10:34:28}" geometry="{800x800+0+0}">
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{26 13 421 427}" creationDate="{Thu Mar 16 2006}" creationTime="{10:34:28}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
   <note>{}</note>
   <modules>
-    <module id="m1" package="SCIRun" category="FieldsGeometry" name="QuadToTri">
+    <module category="ChangeMesh" id="m1" name="ConvertQuadSurfToTriSurf" package="SCIRun">
       <position x="285" y="190"/>
     </module>
-    <module id="m2" package="SCIRun" category="FieldsCreate" name="SamplePlane">
+    <module category="NewField" id="m2" name="CreateImage" package="SCIRun">
       <position x="70" y="13"/>
       <var name="sizex" val="{20}"/>
       <var name="sizey" val="{20}"/>
@@ -25,7 +27,7 @@
       <var name="cnormal-y" val="{1.0}"/>
       <var name="cnormal-z" val="{1.0}"/>
     </module>
-    <module id="m3" package="SCIRun" category="Visualization" name="ShowField">
+    <module category="Visualization" id="m3" name="ShowField" package="SCIRun">
       <position x="26" y="202"/>
       <var name="nodes-on" val="{0}"/>
       <var name="faces-on" val="{0}"/>
@@ -42,7 +44,7 @@
       <var name="edge_scale" val="{0.005}"/>
       <var name="show_progress" val="{}"/>
     </module>
-    <module id="m4" package="SCIRun" category="Visualization" name="ShowField">
+    <module category="Visualization" id="m4" name="ShowField" package="SCIRun">
       <position x="220" y="278"/>
       <var name="nodes-on" val="{0}"/>
       <var name="faces-on" val="{0}"/>
@@ -54,7 +56,7 @@
       <var name="edge_scale" val="{0.015}"/>
       <var name="show_progress" val="{}"/>
     </module>
-    <module id="m5" package="SCIRun" category="Render" name="Viewer">
+    <module category="Render" id="m5" name="ViewScene" package="SCIRun">
       <position x="102" y="383"/>
       <gui_callback>
         <callback>addViewer</callback>
@@ -153,10 +155,10 @@
     </module>
   </modules>
   <connections>
-    <connection id="c1" from="m2" fromport="0" to="m1" toport="0"/>
-    <connection id="c2" from="m2" fromport="0" to="m3" toport="0"/>
-    <connection id="c3" from="m1" fromport="0" to="m4" toport="0"/>
-    <connection id="c4" from="m3" fromport="0" to="m5" toport="0"/>
-    <connection id="c5" from="m4" fromport="0" to="m5" toport="1"/>
+    <connection from="m2" fromport="0" id="c1" to="m1" toport="0"/>
+    <connection from="m2" fromport="0" id="c2" to="m3" toport="0"/>
+    <connection from="m1" fromport="0" id="c3" to="m4" toport="0"/>
+    <connection from="m3" fromport="0" id="c4" to="m5" toport="0"/>
+    <connection from="m4" fromport="0" id="c5" to="m5" toport="1"/>
   </connections>
 </network>

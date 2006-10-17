@@ -29,12 +29,12 @@
 # CMakeLists.txt for Packages/BioPSE/Dataflow/Modules/Modeling
 
 SET(Packages_BioPSE_Dataflow_Modules_Modeling_SRCS
-  ExtractSepSurfs.cc
-  ExtractSingleSurface.cc
-  ModifyConductivities.cc
-  SegFieldOps.cc
-  SegFieldToLatVol.cc
-  SepSurfToQuadSurf.cc
+  ConvertSegFieldToSepSurfs.cc
+  GetSingleSurfaceFromSepSurfs.cc
+  SetConductivities.cc
+  AbsorbSegFieldIslands.cc
+  ConvertSegFieldToLatVol.cc
+  ConvertSepSurfToQuadSurf.cc
 )
 
 ADD_LIBRARY(Packages_BioPSE_Dataflow_Modules_Modeling ${Packages_BioPSE_Dataflow_Modules_Modeling_SRCS})

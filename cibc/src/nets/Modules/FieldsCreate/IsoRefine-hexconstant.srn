@@ -1,21 +1,28 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
-<network version="v1.25.3" name="{Main}" bbox="{17 9 568 518}" creationDate="{Mon Jul 10 2006}" creationTime="{15:44:49}" geometry="{800x800+0+0}">
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{17 9 568 518}" creationDate="{Mon Jul 10 2006}" creationTime="{15:44:49}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.3">
   <note>{}</note>
   <modules>
-    <module id="m1" package="SCIRun" category="FieldsData" name="TransformData" gui_visible="yes">
+    <module category="ChangeFieldData" gui_visible="yes" id="m1" name="CalculateFieldData" package="SCIRun">
       <position x="83" y="84"/>
-      <var name="function" val="{result = sqrt(x*x + y*y);&#10;&#10;&#10;&#10;&#10;}"/>
+      <var name="function" val="{result = sqrt(x*x + y*y);
+
+
+
+
+}"/>
       <var name="outputdatatype" val="{input}"/>
       <var name="ui_geometry" val="{433x166+733+832}"/>
     </module>
-    <module id="m2" package="SCIRun" category="FieldsCreate" name="IsoRefine">
+    <module category="NewField" id="m2" name="ClipVolumeByIsovalueWithRefinement" package="SCIRun">
       <position x="375" y="264"/>
       <var name="isoval" val="{0.5}"/>
       <var name="lte" val="{1}"/>
       <var name="ui_geometry" val="{314x126+328+492}"/>
     </module>
-    <module id="m3" package="SCIRun" category="Visualization" name="ShowField">
+    <module category="Visualization" id="m3" name="ShowField" package="SCIRun">
       <position x="403" y="355"/>
       <var name="nodes-on" val="{0}"/>
       <var name="faces-on" val="{0}"/>
@@ -24,7 +31,7 @@
       <var name="use-defaults" val="{0}"/>
       <var name="ui_geometry" val="{370x655+360+323}"/>
     </module>
-    <module id="m4" package="SCIRun" category="Visualization" name="ShowField">
+    <module category="Visualization" id="m4" name="ShowField" package="SCIRun">
       <position x="17" y="351"/>
       <var name="nodes-on" val="{0}"/>
       <var name="faces-on" val="{0}"/>
@@ -35,7 +42,7 @@
       <var name="use-defaults" val="{0}"/>
       <var name="ui_geometry" val="{370x655+27+323}"/>
     </module>
-    <module id="m5" package="SCIRun" category="Render" name="Viewer">
+    <module category="Render" id="m5" name="ViewScene" package="SCIRun">
       <position x="82" y="474"/>
       <gui_callback>
         <callback>addViewer</callback>
@@ -99,7 +106,7 @@
       <var name="&quot;ViewWindow_0-Edges (1)&quot;" val="{0}"/>
       <var name="&quot;ViewWindow_0-Edges (2)&quot;" val="{1}"/>
     </module>
-    <module id="m6" package="SCIRun" category="FieldsCreate" name="SampleLattice">
+    <module category="NewField" id="m6" name="CreateLatVol" package="SCIRun">
       <position x="83" y="9"/>
       <var name="sizex" val="{8}"/>
       <var name="sizey" val="{8}"/>
@@ -110,11 +117,11 @@
     </module>
   </modules>
   <connections>
-    <connection id="c1" from="m2" fromport="0" to="m3" toport="0"/>
-    <connection id="c2" from="m6" fromport="0" to="m1" toport="0"/>
-    <connection id="c3" from="m1" fromport="0" to="m2" toport="0"/>
-    <connection id="c4" from="m1" fromport="0" to="m4" toport="0"/>
-    <connection id="c5" from="m4" fromport="0" to="m5" toport="0"/>
-    <connection id="c6" from="m3" fromport="0" to="m5" toport="1"/>
+    <connection from="m2" fromport="0" id="c1" to="m3" toport="0"/>
+    <connection from="m6" fromport="0" id="c2" to="m1" toport="0"/>
+    <connection from="m1" fromport="0" id="c3" to="m2" toport="0"/>
+    <connection from="m1" fromport="0" id="c4" to="m4" toport="0"/>
+    <connection from="m4" fromport="0" id="c5" to="m5" toport="0"/>
+    <connection from="m3" fromport="0" id="c6" to="m5" toport="1"/>
   </connections>
 </network>

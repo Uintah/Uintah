@@ -1,6 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
-<network version="v1.25.2" name="{Main}" bbox="{34 21 256 494}" creationDate="{Thu Mar 16 2006}" creationTime="{10:31:12}" geometry="{800x800+0+0}">
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{34 21 256 494}" creationDate="{Thu Mar 16 2006}" creationTime="{10:31:12}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
   <environment>
     <var name="scisub_datadir" val="SCIRUN_DATA"/>
     <var name="scisub_datafile" val="SCIRUN_DATAFILE"/>
@@ -8,12 +10,12 @@
   </environment>
   <note>{}</note>
   <modules>
-    <module id="m1" package="SCIRun" category="DataIO" name="FieldReader">
+    <module category="DataIO" id="m1" name="ReadField" package="SCIRun">
       <position x="34" y="21"/>
       <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-voltage.tvd.fld"/>
       <var name="filetype" val="{SCIRun Field File (*.fld)}"/>
     </module>
-    <module id="m2" package="SCIRun" category="FieldsCreate" name="SampleLattice">
+    <module category="NewField" id="m2" name="CreateLatVol" package="SCIRun">
       <position x="91" y="95"/>
       <var name="sizex" val="{16}"/>
       <var name="sizey" val="{16}"/>
@@ -21,7 +23,7 @@
       <var name="padpercent" val="{0.0}"/>
       <var name="data-at" val="{Nodes}"/>
     </module>
-    <module id="m3" package="SCIRun" category="FieldsData" name="DirectMapping">
+    <module category="ChangeFieldData" id="m3" name="MapFieldDataFromSourceToDestination" package="SCIRun">
       <position x="43" y="170"/>
       <var name="interpolation_basis" val="{linear}"/>
       <var name="map_source_to_single_dest" val="{0}"/>
@@ -29,7 +31,7 @@
       <var name="exhaustive_search_max_dist" val="{-1.0}"/>
       <var name="np" val="{1}"/>
     </module>
-    <module id="m4" package="SCIRun" category="Render" name="Viewer">
+    <module category="Render" id="m4" name="ViewScene" package="SCIRun">
       <position x="59" y="450"/>
       <gui_callback>
         <callback>addViewer</callback>
@@ -89,7 +91,7 @@
       <var name="ViewWindow_0-global-dl" val="{0}"/>
       <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
     </module>
-    <module id="m5" package="SCIRun" category="Visualization" name="ShowField">
+    <module category="Visualization" id="m5" name="ShowField" package="SCIRun">
       <position x="50" y="359"/>
       <var name="nodes-on" val="{0}"/>
       <var name="nodes-as-disks" val="{1}"/>
@@ -102,16 +104,16 @@
       <var name="active_tab" val="{Vectors}"/>
       <var name="vectors_scale" val="{0.096}"/>
     </module>
-    <module id="m6" package="SCIRun" category="FieldsData" name="NodeGradient">
+    <module category="ChangeFieldData" id="m6" name="CalculateLatVolGradientsAtNodes" package="SCIRun">
       <position x="46" y="267"/>
     </module>
   </modules>
   <connections>
-    <connection id="c1" from="m1" fromport="0" to="m2" toport="0"/>
-    <connection id="c2" from="m1" fromport="0" to="m3" toport="0"/>
-    <connection id="c3" from="m3" fromport="0" to="m6" toport="0"/>
-    <connection id="c4" from="m6" fromport="0" to="m5" toport="0"/>
-    <connection id="c5" from="m5" fromport="0" to="m4" toport="0"/>
-    <connection id="c6" from="m2" fromport="0" to="m3" toport="1"/>
+    <connection from="m1" fromport="0" id="c1" to="m2" toport="0"/>
+    <connection from="m1" fromport="0" id="c2" to="m3" toport="0"/>
+    <connection from="m3" fromport="0" id="c3" to="m6" toport="0"/>
+    <connection from="m6" fromport="0" id="c4" to="m5" toport="0"/>
+    <connection from="m5" fromport="0" id="c5" to="m4" toport="0"/>
+    <connection from="m2" fromport="0" id="c6" to="m3" toport="1"/>
   </connections>
 </network>

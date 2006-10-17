@@ -41,7 +41,7 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/DataIO
 
 SRCS     += \
-        $(SRCDIR)/RawToDenseMatrix.cc\
+        $(SRCDIR)/ImportDenseMatrixFromRaw.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \

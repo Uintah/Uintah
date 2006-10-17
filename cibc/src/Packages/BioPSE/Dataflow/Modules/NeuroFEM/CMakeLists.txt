@@ -29,8 +29,8 @@
 # CMakeLists.txt for Packages/BioPSE/Dataflow/Modules/NeuroFEM
 
 SET(Packages_BioPSE_Dataflow_Modules_NeuroFEM_SRCS
-  ForwardIPM.cc
-  InverseIPM.cc
+  InterfaceWithNeuroFEMForward.cc
+  InterfaceWithNeuroFEMInverse.cc
 )
 
 ADD_LIBRARY(Packages_BioPSE_Dataflow_Modules_NeuroFEM ${Packages_BioPSE_Dataflow_Modules_NeuroFEM_SRCS})

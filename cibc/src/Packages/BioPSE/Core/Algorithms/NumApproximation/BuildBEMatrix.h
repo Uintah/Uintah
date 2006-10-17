@@ -57,7 +57,7 @@ namespace BioPSE {
 
 using namespace SCIRun;
 
-class SCISHARE BuildBEMatrix
+class SCISHARE BuildBEMatrixBase
 {
   typedef SCIRun::TriSurfMesh<TriLinearLgn<Point> > TSMesh;
   typedef LockingHandle<DenseMatrix>     DenseMatrixHandle;

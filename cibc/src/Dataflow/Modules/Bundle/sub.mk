@@ -12,24 +12,24 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 
 SRCDIR   := Dataflow/Modules/Bundle
 
-SRCS += $(SRCDIR)/BundleSetBundle.cc\
-        $(SRCDIR)/BundleSetField.cc\
-        $(SRCDIR)/BundleSetMatrix.cc\
-        $(SRCDIR)/BundleSetNrrd.cc\
-        $(SRCDIR)/BundleSetColorMap.cc\
-        $(SRCDIR)/BundleSetColorMap2.cc\
-        $(SRCDIR)/BundleSetPath.cc\
-        $(SRCDIR)/BundleSetString.cc\
-        $(SRCDIR)/BundleInfo.cc\
-        $(SRCDIR)/BundleGetBundle.cc\
-        $(SRCDIR)/BundleGetField.cc\
-        $(SRCDIR)/BundleGetMatrix.cc\
-        $(SRCDIR)/BundleGetNrrd.cc\
-        $(SRCDIR)/BundleGetColorMap.cc\
-        $(SRCDIR)/BundleGetColorMap2.cc\
-        $(SRCDIR)/BundleGetPath.cc\
-        $(SRCDIR)/BundleGetString.cc\
-        $(SRCDIR)/BundleMerge.cc\
+SRCS += $(SRCDIR)/InsertBundlesIntoBundle.cc\
+        $(SRCDIR)/InsertFieldsIntoBundle.cc\
+        $(SRCDIR)/InsertMatricesIntoBundle.cc\
+        $(SRCDIR)/InsertNrrdsIntoBundle.cc\
+        $(SRCDIR)/InsertColorMapsIntoBundle.cc\
+        $(SRCDIR)/InsertColorMap2sIntoBundle.cc\
+        $(SRCDIR)/InsertPathsIntoBundle.cc\
+        $(SRCDIR)/InsertStringsIntoBundle.cc\
+        $(SRCDIR)/ReportBundleInfo.cc\
+        $(SRCDIR)/GetBundlesFromBundle.cc\
+        $(SRCDIR)/GetFieldsFromBundle.cc\
+        $(SRCDIR)/GetMatricesFromBundle.cc\
+        $(SRCDIR)/GetNrrdsFromBundle.cc\
+        $(SRCDIR)/GetColorMapsFromBundle.cc\
+        $(SRCDIR)/GetColorMap2sFromBundle.cc\
+        $(SRCDIR)/GetPathsFromBundle.cc\
+        $(SRCDIR)/GetStringsFromBundle.cc\
+        $(SRCDIR)/JoinBundles.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \

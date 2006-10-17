@@ -13,12 +13,12 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/Examples
 
 SRCS     += \
-	$(SRCDIR)/BasicInput.cc\
-	$(SRCDIR)/BasicOutput.cc\
-	$(SRCDIR)/ChangeTetVolScalars.cc\
-	$(SRCDIR)/ChangeScalars.cc\
-	$(SRCDIR)/HelloWorld.cc\
-	$(SRCDIR)/ZeroTetVolScalars.cc\
+	$(SRCDIR)/GetInputField.cc\
+	$(SRCDIR)/GetInputFieldAndSendAsOutput.cc\
+	$(SRCDIR)/SetTetVolFieldDataValues.cc\
+	$(SRCDIR)/SetFieldDataValues.cc\
+	$(SRCDIR)/PrintHelloWorldToScreen.cc\
+	$(SRCDIR)/SetTetVolFieldDataValuesToZero.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Datatypes Dataflow/Network \

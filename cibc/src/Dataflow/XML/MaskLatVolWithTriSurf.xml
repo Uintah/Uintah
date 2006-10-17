@@ -33,7 +33,7 @@
 
 
 
-<component name="MaskLatVolWithTriSurf" category="FieldsData">
+<component name="MaskLatVolWithTriSurf" category="ChangeFieldData">
   <overview>
     <authors>
       <author>?</author>

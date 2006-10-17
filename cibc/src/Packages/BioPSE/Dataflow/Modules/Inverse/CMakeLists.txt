@@ -29,12 +29,12 @@
 # CMakeLists.txt for Packages/BioPSE/Dataflow/Modules/Inverse
 
 SET(Packages_BioPSE_Dataflow_Modules_Inverse_SRCS
-  AttributeTrf.cc
-  ConductivitySearch.cc
-  DipoleSearch.cc
-  TSVD.cc
-  Tikhonov.cc
-  TikhonovSVD.cc
+  BuildSurfaceLaplacianMatrix.cc
+  OptimizeConductivities.cc
+  OptimizeDipole.cc
+  SolveInverseProblemWithTSVD.cc
+  SolveInverseProblemWithTikhonov.cc
+  SolveInverseProblemWithSolveInverseProblemWithTikhonovSVD.cc
 )
 
 ADD_LIBRARY(Packages_BioPSE_Dataflow_Modules_Inverse ${Packages_BioPSE_Dataflow_Modules_Inverse_SRCS})

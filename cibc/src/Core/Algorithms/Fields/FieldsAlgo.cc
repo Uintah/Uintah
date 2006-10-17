@@ -61,7 +61,7 @@
 #include <Core/Algorithms/Fields/SetFieldData.h>
 #include <Core/Algorithms/Fields/SplitFieldByDomain.h>
 #include <Core/Algorithms/Fields/SplitByConnectedRegion.h>
-#include <Core/Algorithms/Fields/TransformField.h>
+#include <Core/Algorithms/Fields/TransformMeshWithTransform.h>
 #include <Core/Algorithms/Fields/ToPointCloud.h>
 #include <Core/Algorithms/Fields/Unstructure.h>
 
@@ -416,8 +416,9 @@ bool FieldsAlgo::ToPointCloud(FieldHandle input,FieldHandle& output)
 
 bool FieldsAlgo::TransformField(FieldHandle input,FieldHandle& output,Transform& transform,bool rotatedata)
 {
-  TransformFieldAlgo algo;
-  return(algo.TransformField(pr_,input,output,transform,rotatedata));
+  TransformMeshWithTransformAlgo algo;
+  return(algo.TransformMeshWithTransform(pr_,
+					 input,output,transform,rotatedata));
 }
 
 

@@ -39,12 +39,12 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/Modeling
 
 SRCS     += \
-        $(SRCDIR)/ExtractSepSurfs.cc\
-        $(SRCDIR)/ExtractSingleSurface.cc\
-        $(SRCDIR)/ModifyConductivities.cc\
-        $(SRCDIR)/SegFieldOps.cc\
-        $(SRCDIR)/SegFieldToLatVol.cc\
-        $(SRCDIR)/SepSurfToQuadSurf.cc\
+        $(SRCDIR)/ConvertSegFieldToSepSurfs.cc\
+        $(SRCDIR)/GetSingleSurfaceFromSepSurfs.cc\
+        $(SRCDIR)/SetConductivities.cc\
+        $(SRCDIR)/AbsorbSegFieldIslands.cc\
+        $(SRCDIR)/ConvertSegFieldToLatVol.cc\
+        $(SRCDIR)/ConvertSepSurfToQuadSurf.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \

@@ -44,14 +44,14 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/Converters
 
 
 SRCS     += \
-        $(SRCDIR)/ColorMap2ToNrrd.cc\
-        $(SRCDIR)/ColorMapToNrrd.cc\
+        $(SRCDIR)/ConvertColorMap2ToNrrd.cc\
+        $(SRCDIR)/ConvertColorMapToNrrd.cc\
         $(SRCDIR)/ConvertToNrrd.cc\
-        $(SRCDIR)/FieldToNrrd.cc\
-        $(SRCDIR)/NrrdToColorMap2.cc\
-        $(SRCDIR)/NrrdToField.cc\
-        $(SRCDIR)/NrrdToMatrix.cc\
-        $(SRCDIR)/MatrixToNrrd.cc\
+        $(SRCDIR)/ConvertRasterFieldToNrrd.cc\
+        $(SRCDIR)/ConvertNrrdToColorMap2.cc\
+        $(SRCDIR)/ConvertNrrdToRasterField.cc\
+        $(SRCDIR)/ConvertNrrdToMatrix.cc\
+        $(SRCDIR)/ConvertMatrixToNrrd.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \

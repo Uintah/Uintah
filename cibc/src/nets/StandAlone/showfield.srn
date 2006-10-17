@@ -1,5 +1,7 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
-<network version="v1.25.2" name="{Main}" bbox="{0 0 0 0}" creationDate="{Thu Mar 16 2006}" creationTime="{10:37:51}" geometry="{800x800+0+0}">
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{0 0 0 0}" creationDate="{Thu Mar 16 2006}" creationTime="{10:37:51}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
   <note>{}</note>
 </network>

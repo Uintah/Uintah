@@ -38,168 +38,165 @@
 SRCDIR := Dataflow/GUI
 
 SRCS := \
-        $(SRCDIR)/AddLight.tcl \
+        $(SRCDIR)/CreateLightForViewer.tcl \
         $(SRCDIR)/AppendMatrix.tcl \
         $(SRCDIR)/ArrowWidget.tcl \
         $(SRCDIR)/BaseWidget.tcl \
         $(SRCDIR)/BoxWidget.tcl \
         $(SRCDIR)/BuildMappingMatrix.tcl \
-        $(SRCDIR)/BuildNoise.tcl \
-        $(SRCDIR)/BuildTransform.tcl \
-        $(SRCDIR)/BundleSetBundle.tcl \
-        $(SRCDIR)/BundleSetColorMap.tcl \
-        $(SRCDIR)/BundleSetColorMap2.tcl \
-        $(SRCDIR)/BundleSetField.tcl \
-        $(SRCDIR)/BundleSetMatrix.tcl \
-        $(SRCDIR)/BundleSetNrrd.tcl \
-        $(SRCDIR)/BundleSetPath.tcl \
-        $(SRCDIR)/BundleSetString.tcl \
-        $(SRCDIR)/BundleInfo.tcl \
-        $(SRCDIR)/BundleGetBundle.tcl \
-        $(SRCDIR)/BundleGetColorMap.tcl \
-        $(SRCDIR)/BundleGetColorMap2.tcl \
-        $(SRCDIR)/BundleGetField.tcl \
-        $(SRCDIR)/BundleGetMatrix.tcl \
-        $(SRCDIR)/BundleGetNrrd.tcl \
-        $(SRCDIR)/BundleGetPath.tcl \
-        $(SRCDIR)/BundleGetString.tcl \
-        $(SRCDIR)/BundleReader.tcl \
-        $(SRCDIR)/BundleWriter.tcl \
-        $(SRCDIR)/Camera.tcl \
-        $(SRCDIR)/CastTVtoMLV.tcl \
-        $(SRCDIR)/CastMatrix.tcl \
-        $(SRCDIR)/ChangeCoordinates.tcl \
-        $(SRCDIR)/ChangeFieldBasis.tcl \
-        $(SRCDIR)/ChangeFieldDataType.tcl \
-        $(SRCDIR)/ChangeFieldBounds.tcl \
-        $(SRCDIR)/ChangeTetVolScalars.tcl \
-        $(SRCDIR)/ChangeScalars.tcl \
+        $(SRCDIR)/BuildNoiseColumnMatrix.tcl \
+        $(SRCDIR)/CreateGeometricTransform.tcl \
+        $(SRCDIR)/InsertBundlesIntoBundle.tcl \
+        $(SRCDIR)/InsertColorMapsIntoBundle.tcl \
+        $(SRCDIR)/InsertColorMap2sIntoBundle.tcl \
+        $(SRCDIR)/InsertFieldsIntoBundle.tcl \
+        $(SRCDIR)/InsertMatricesIntoBundle.tcl \
+        $(SRCDIR)/InsertNrrdsIntoBundle.tcl \
+        $(SRCDIR)/InsertPathsIntoBundle.tcl \
+        $(SRCDIR)/InsertStringsIntoBundle.tcl \
+        $(SRCDIR)/ReportBundleInfo.tcl \
+        $(SRCDIR)/GetBundlesFromBundle.tcl \
+        $(SRCDIR)/GetColorMapsFromBundle.tcl \
+        $(SRCDIR)/GetColorMap2sFromBundle.tcl \
+        $(SRCDIR)/GetFieldsFromBundle.tcl \
+        $(SRCDIR)/GetMatricesFromBundle.tcl \
+        $(SRCDIR)/GetNrrdsFromBundle.tcl \
+        $(SRCDIR)/GetPathsFromBundle.tcl \
+        $(SRCDIR)/GetStringsFromBundle.tcl \
+        $(SRCDIR)/ReadBundle.tcl \
+        $(SRCDIR)/WriteBundle.tcl \
+        $(SRCDIR)/ShowAndEditCameraWidget.tcl \
+        $(SRCDIR)/ConvertTVtoMLV.tcl \
+        $(SRCDIR)/ConvertMatrixType.tcl \
+        $(SRCDIR)/ConvertMeshCoordinateSystem.tcl \
+        $(SRCDIR)/ConvertFieldBasis.tcl \
+        $(SRCDIR)/ConvertFieldDataType.tcl \
+        $(SRCDIR)/EditMeshBoundingBox.tcl \
+        $(SRCDIR)/SetTetVolFieldDataValues.tcl \
+        $(SRCDIR)/SetFieldDataValues.tcl \
         $(SRCDIR)/ChooseModule.tcl \
         $(SRCDIR)/ChooseColorMap.tcl \
         $(SRCDIR)/ChooseField.tcl \
         $(SRCDIR)/ChooseMatrix.tcl \
-        $(SRCDIR)/ClipByFunction.tcl \
-        $(SRCDIR)/ClipField.tcl \
-        $(SRCDIR)/ClipLattice.tcl \
-        $(SRCDIR)/ColorMap2Reader.tcl \
-        $(SRCDIR)/ColorMap2Writer.tcl \
-        $(SRCDIR)/ColorMapReader.tcl \
-        $(SRCDIR)/ColorMapWriter.tcl \
+        $(SRCDIR)/ClipFieldByFunction.tcl \
+        $(SRCDIR)/ClipFieldToFieldOrWidget.tcl \
+        $(SRCDIR)/ClipLatVolByIndicesOrWidget.tcl \
+        $(SRCDIR)/ReadColorMap2.tcl \
+        $(SRCDIR)/WriteColorMap2.tcl \
+        $(SRCDIR)/ReadColorMap.tcl \
+        $(SRCDIR)/WriteColorMap.tcl \
         $(SRCDIR)/ComboListbox.tcl \
         $(SRCDIR)/ComponentWizard.tcl \
         $(SRCDIR)/Connection.tcl \
-        $(SRCDIR)/Coregister.tcl \
-        $(SRCDIR)/CreateMesh.tcl \
+        $(SRCDIR)/CoregisterPointClouds.tcl \
+        $(SRCDIR)/ConvertMatricesToMesh.tcl \
         $(SRCDIR)/CriticalPointWidget.tcl \
         $(SRCDIR)/CrosshairWidget.tcl \
-        $(SRCDIR)/CubitInterface.tcl \
-        $(SRCDIR)/DirectMapping.tcl \
-        $(SRCDIR)/EditColorMap.tcl \
-        $(SRCDIR)/EditPath.tcl \
-        $(SRCDIR)/EditColorMap2D.tcl \
-        $(SRCDIR)/ErrorMetric.tcl \
-	$(SRCDIR)/ExtractHexSheet.tcl \
-        $(SRCDIR)/FieldArbitrarySlicer.tcl\
-        $(SRCDIR)/FieldCage.tcl\
-        $(SRCDIR)/FieldFrenet.tcl\
-        $(SRCDIR)/FieldInfo.tcl\
-        $(SRCDIR)/FieldMeasures.tcl \
-        $(SRCDIR)/FieldReader.tcl \
-	$(SRCDIR)/FieldSetProperty.tcl\
-        $(SRCDIR)/FieldSlicer.tcl\
-        $(SRCDIR)/FieldSubSample.tcl\
-        $(SRCDIR)/FieldWriter.tcl \
+        $(SRCDIR)/InterfaceWithCubit.tcl \
+        $(SRCDIR)/MapFieldDataFromSourceToDestination.tcl \
+        $(SRCDIR)/CreateAndEditColorMap.tcl \
+        $(SRCDIR)/CreateAndEditCameraPath.tcl \
+        $(SRCDIR)/CreateAndEditColorMap2D.tcl \
+        $(SRCDIR)/ReportColumnMatrixMisfit.tcl \
+	$(SRCDIR)/GetHexVolSheetBasedOnEdgeIndices.tcl \
+        $(SRCDIR)/ExtractPlanarSliceFromField.tcl\
+        $(SRCDIR)/ShowMeshBoundingBox.tcl\
+        $(SRCDIR)/ReportFieldInfo.tcl\
+        $(SRCDIR)/ReportFieldGeometryMeasures.tcl \
+        $(SRCDIR)/ReadField.tcl \
+	$(SRCDIR)/SetFieldProperty.tcl\
+        $(SRCDIR)/GetSliceFromLatVol.tcl\
+        $(SRCDIR)/ClipRasterFieldByIndices.tcl\
+        $(SRCDIR)/WriteField.tcl \
         $(SRCDIR)/FrameWidget.tcl \
-        $(SRCDIR)/GatherFields.tcl \
+        $(SRCDIR)/JoinFields.tcl \
         $(SRCDIR)/GaugeWidget.tcl \
-        $(SRCDIR)/GenAxes.tcl \
-        $(SRCDIR)/GenClock.tcl \
-        $(SRCDIR)/GenStandardColorMaps.tcl \
-        $(SRCDIR)/GenTitle.tcl \
-        $(SRCDIR)/Graph.tcl \
+        $(SRCDIR)/CreateViewerAxes.tcl \
+        $(SRCDIR)/CreateViewerClockIcon.tcl \
+        $(SRCDIR)/CreateStandardColorMaps.tcl \
+        $(SRCDIR)/CreateViewerCaption.tcl \
+        $(SRCDIR)/ViewGraph.tcl \
         $(SRCDIR)/ToolTipText.tcl \
-	$(SRCDIR)/InsertHexSheet.tcl \
-        $(SRCDIR)/Isosurface.tcl \
-        $(SRCDIR)/IsoClip.tcl \
-        $(SRCDIR)/IsoRefine.tcl \
+	$(SRCDIR)/InsertHexVolSheetFromTriSurf.tcl \
+        $(SRCDIR)/ExtractIsosurface.tcl \
+        $(SRCDIR)/ClipVolumeByIsovalue.tcl \
+        $(SRCDIR)/ClipVolumeByIsovalueWithRefinement.tcl \
         $(SRCDIR)/LightWidget.tcl \
-        $(SRCDIR)/LinAlgBinary.tcl \
-        $(SRCDIR)/LinAlgUnary.tcl \
-        $(SRCDIR)/LinearAlgebra.tcl \
+        $(SRCDIR)/EvaluateLinAlgBinary.tcl \
+        $(SRCDIR)/EvaluateLinAlgUnary.tcl \
+        $(SRCDIR)/EvaluateLinAlgGeneral.tcl \
         $(SRCDIR)/Linkedpane.tcl \
-        $(SRCDIR)/ManageFieldData.tcl \
-        $(SRCDIR)/MapDataToMeshCoord.tcl \
-        $(SRCDIR)/MaskLattice.tcl \
-        $(SRCDIR)/MatrixInfo.tcl \
-        $(SRCDIR)/MatrixReader.tcl \
-        $(SRCDIR)/MatrixSelectVector.tcl \
-        $(SRCDIR)/MatrixWriter.tcl \
+        $(SRCDIR)/SwapFieldDataWithMatrixEntries.tcl \
+        $(SRCDIR)/MapFieldDataToNodeCoordinate.tcl \
+        $(SRCDIR)/MaskLatVol.tcl \
+        $(SRCDIR)/ReportMatrixInfo.tcl \
+        $(SRCDIR)/ReadMatrix.tcl \
+        $(SRCDIR)/GetColumnMatrixFromMatrix.tcl \
+        $(SRCDIR)/WriteMatrix.tcl \
         $(SRCDIR)/Module.tcl \
         $(SRCDIR)/NetworkEditor.tcl \
-        $(SRCDIR)/NrrdTextureBuilder.tcl \
-        $(SRCDIR)/PathReader.tcl \
+        $(SRCDIR)/ConvertNrrdsToTexture.tcl \
+        $(SRCDIR)/ReadPath.tcl \
         $(SRCDIR)/PathWidget.tcl \
-        $(SRCDIR)/PathWriter.tcl \
-        $(SRCDIR)/Painter.tcl \
-        $(SRCDIR)/PlanarTransformField.tcl \
-        $(SRCDIR)/PointLatticeMap.tcl \
+        $(SRCDIR)/WritePath.tcl \
+        $(SRCDIR)/ViewAndEditSlices.tcl \
+        $(SRCDIR)/TransformPlanarMesh.tcl \
+        $(SRCDIR)/BuildPointCloudToLatVolMappingMatrix.tcl \
         $(SRCDIR)/PointWidget.tcl \
         $(SRCDIR)/Port.tcl \
-        $(SRCDIR)/Probe.tcl \
+        $(SRCDIR)/GenerateSinglePointProbeFromField.tcl \
         $(SRCDIR)/PromptedEntry.tcl \
         $(SRCDIR)/PromptedText.tcl \
         $(SRCDIR)/RefineTetVol.tcl \
-        $(SRCDIR)/ReplaceScalarDataValue.tcl \
         $(SRCDIR)/RescaleColorMap.tcl \
         $(SRCDIR)/RingWidget.tcl \
-        $(SRCDIR)/SampleField.tcl \
-        $(SRCDIR)/SampleLattice.tcl \
-        $(SRCDIR)/SamplePlane.tcl \
-        $(SRCDIR)/SampleStructHex.tcl \
-        $(SRCDIR)/ScalarFieldStats.tcl \
+        $(SRCDIR)/GeneratePointSamplesFromFieldOrWidget.tcl \
+        $(SRCDIR)/CreateLatVol.tcl \
+        $(SRCDIR)/CreateImage.tcl \
+        $(SRCDIR)/CreateStructHex.tcl \
+        $(SRCDIR)/ReportScalarFieldStats.tcl \
         $(SRCDIR)/SciDialog.tcl \
         $(SRCDIR)/SciButtonPanel.tcl \
         $(SRCDIR)/SciMoveToCursor.tcl \
-	$(SRCDIR)/SeedPoints.tcl \
-        $(SRCDIR)/SelectField.tcl \
-        $(SRCDIR)/SetProperty.tcl \
-        $(SRCDIR)/SetPropertyModule.tcl \
+	$(SRCDIR)/GeneratePointSamplesFromField.tcl \
+        $(SRCDIR)/SelectFieldROIWithBoxWidget.tcl \
+        $(SRCDIR)/SetFieldOrMeshStringProperty.tcl \
         $(SRCDIR)/ShowColorMap.tcl \
         $(SRCDIR)/ShowField.tcl \
         $(SRCDIR)/ShowMatrix.tcl \
-        $(SRCDIR)/SolveMatrix.tcl \
+        $(SRCDIR)/SolveLinearSystem.tcl \
         $(SRCDIR)/StickyLocator.tcl \
-        $(SRCDIR)/StreamLines.tcl \
-        $(SRCDIR)/Submatrix.tcl \
+        $(SRCDIR)/GenerateStreamLines.tcl \
+        $(SRCDIR)/GetSubmatrix.tcl \
         $(SRCDIR)/Subnet.tcl \
         $(SRCDIR)/SynchronizeGeometry.tcl \
-        $(SRCDIR)/TextureBuilder.tcl \
-        $(SRCDIR)/TetGen.tcl \
+        $(SRCDIR)/ConvertFieldsToTexture.tcl \
+        $(SRCDIR)/InterfaceWithTetGen.tcl \
         $(SRCDIR)/TimeControls.tcl \
         $(SRCDIR)/Tooltips.tcl \
-        $(SRCDIR)/TransformData.tcl \
-        $(SRCDIR)/TransformData2.tcl \
-        $(SRCDIR)/TransformData3.tcl \
-        $(SRCDIR)/TransformMesh.tcl \
+        $(SRCDIR)/CalculateFieldData.tcl \
+        $(SRCDIR)/CalculateFieldData2.tcl \
+        $(SRCDIR)/CalculateFieldData3.tcl \
+        $(SRCDIR)/TransformMeshWithFunction.tcl \
         $(SRCDIR)/UIvar.tcl \
-        $(SRCDIR)/Viewer.tcl \
+        $(SRCDIR)/ViewScene.tcl \
         $(SRCDIR)/ViewSlices.tcl \
         $(SRCDIR)/ViewWidget.tcl \
-        $(SRCDIR)/VolumeSlicer.tcl \
-        $(SRCDIR)/VolumeVisualizer.tcl \
+        $(SRCDIR)/ShowTextureSlices.tcl \
+        $(SRCDIR)/ShowTextureVolume.tcl \
 	$(SRCDIR)/CreateString.tcl\
-	$(SRCDIR)/StringInfo.tcl\
-	$(SRCDIR)/SprintfString.tcl\
-	$(SRCDIR)/SprintfMatrix.tcl\
+	$(SRCDIR)/ReportStringInfo.tcl\
+	$(SRCDIR)/PrintMatrixIntoString.tcl\
+	$(SRCDIR)/PrintStringIntoString.tcl\
 	$(SRCDIR)/ShowString.tcl\
 	$(SRCDIR)/CreateMatrix.tcl\
 	$(SRCDIR)/GetFileName.tcl\
-	$(SRCDIR)/HeuristicStreamLines.tcl\
+	$(SRCDIR)/GenerateStreamLinesWithPlacementHeuristic.tcl\
 #[INSERT NEW TCL FILE HERE]
 
 # MESQUITE Mesh Optimization Library
 ifeq ($(HAVE_MESQUITE),yes)
-   SRCS += $(SRCDIR)/MeshSmoother.tcl
+   SRCS += $(SRCDIR)/SmoothMesh.tcl
 endif
 
 include $(SCIRUN_SCRIPTS)/tclIndex.mk

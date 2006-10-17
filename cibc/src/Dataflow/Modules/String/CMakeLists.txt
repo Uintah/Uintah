@@ -30,10 +30,10 @@
 
 SET(Dataflow_Modules_String_SRCS
   CreateString.cc
-  StringInfo.cc
+  ReportStringInfo.cc
   JoinStrings.cc
-  SprintfString.cc
-  SprintfMatrix.cc
+  PrintMatrixIntoString.cc
+  PrintStringIntoString.cc
   GetFileName.cc
   SplitFileName.cc
 )

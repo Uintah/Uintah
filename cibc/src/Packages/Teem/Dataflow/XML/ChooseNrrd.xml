@@ -33,7 +33,7 @@
 
 
 
-<component name="ChooseNrrd" category="NrrdData">
+<component name="ChooseNrrd" category="Misc">
   <overview>
     <authors>
       <author>David Weinstein</author>

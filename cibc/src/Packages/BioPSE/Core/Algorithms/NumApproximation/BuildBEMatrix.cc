@@ -44,7 +44,7 @@ namespace BioPSE {
 using namespace SCIRun;
 
 
-inline void  BuildBEMatrix::getOmega(
+inline void  BuildBEMatrixBase::getOmega(
 				     const Vector& y1,
 				     const Vector& y2,
 				     const Vector& y3,
@@ -125,7 +125,7 @@ inline void  BuildBEMatrix::getOmega(
 }
 
 
-inline void  BuildBEMatrix::get_cruse_weights(
+inline void  BuildBEMatrixBase::get_cruse_weights(
 					const Vector& p1,
 					const Vector& p2,
 					const Vector& p3,
@@ -222,7 +222,7 @@ inline void  BuildBEMatrix::get_cruse_weights(
 }
 
 
-inline void  BuildBEMatrix::get_g_coef(
+inline void  BuildBEMatrixBase::get_g_coef(
 					const Vector& p1,
 					const Vector& p2,
 					const Vector& p3,
@@ -260,7 +260,7 @@ inline void  BuildBEMatrix::get_g_coef(
 }
 
 
-inline void  BuildBEMatrix::get_auto_g(
+inline void  BuildBEMatrixBase::get_auto_g(
 					const Vector& p1,
 					const Vector& p2,
 					const Vector& p3,
@@ -320,7 +320,7 @@ inline void  BuildBEMatrix::get_auto_g(
    }
 
 
-inline double  BuildBEMatrix::get_new_auto_g(
+inline double  BuildBEMatrixBase::get_new_auto_g(
 					const Vector& op,
 					const Vector& p2,
 					const Vector& p3)
@@ -374,7 +374,7 @@ inline double  BuildBEMatrix::get_new_auto_g(
 }
 
 
-inline double  BuildBEMatrix::do_radon_g(
+inline double  BuildBEMatrixBase::do_radon_g(
 					const Vector& p1,
 					const Vector& p2,
 					const Vector& p3,
@@ -401,7 +401,7 @@ inline double  BuildBEMatrix::do_radon_g(
 }
 
 
-void BuildBEMatrix::make_auto_G(TSMesh::handle_type hsurf, DenseMatrixHandle &h_GG_,
+void BuildBEMatrixBase::make_auto_G(TSMesh::handle_type hsurf, DenseMatrixHandle &h_GG_,
                                  double in_cond, double out_cond, double op_cond, vector<double> avInn_)
 {
   TSMesh::Node::size_type nsize; hsurf->size(nsize);
@@ -477,7 +477,7 @@ void BuildBEMatrix::make_auto_G(TSMesh::handle_type hsurf, DenseMatrixHandle &h_
 }
 
 
-void BuildBEMatrix::make_cross_G(TSMesh::handle_type hsurf1, TSMesh::handle_type hsurf2, DenseMatrixHandle &h_GG_,
+void BuildBEMatrixBase::make_cross_G(TSMesh::handle_type hsurf1, TSMesh::handle_type hsurf2, DenseMatrixHandle &h_GG_,
                                  double in_cond, double out_cond, double op_cond, vector<double> avInn_)
 {
   TSMesh::Node::size_type nsize1; hsurf1->size(nsize1);
@@ -548,7 +548,7 @@ void BuildBEMatrix::make_cross_G(TSMesh::handle_type hsurf1, TSMesh::handle_type
 }
 
 
-void BuildBEMatrix::make_cross_P(TSMesh::handle_type hsurf1, TSMesh::handle_type hsurf2, DenseMatrixHandle &h_PP_,
+void BuildBEMatrixBase::make_cross_P(TSMesh::handle_type hsurf1, TSMesh::handle_type hsurf2, DenseMatrixHandle &h_PP_,
                                  double in_cond, double out_cond, double op_cond)
 {
 
@@ -591,7 +591,7 @@ void BuildBEMatrix::make_cross_P(TSMesh::handle_type hsurf1, TSMesh::handle_type
 }
 
 
-void BuildBEMatrix::make_auto_P(TSMesh::handle_type hsurf, DenseMatrixHandle &h_PP_,
+void BuildBEMatrixBase::make_auto_P(TSMesh::handle_type hsurf, DenseMatrixHandle &h_PP_,
                                  double in_cond, double out_cond, double op_cond)
 {
 
@@ -644,7 +644,7 @@ void BuildBEMatrix::make_auto_P(TSMesh::handle_type hsurf, DenseMatrixHandle &h_
 
 
 // precalculate triangles area
-void BuildBEMatrix::pre_calc_tri_areas(TSMesh::handle_type hsurf, vector<double>& areaV){
+void BuildBEMatrixBase::pre_calc_tri_areas(TSMesh::handle_type hsurf, vector<double>& areaV){
 
   TSMesh::Face::iterator  fi, fie;
   TSMesh::Node::array_type     nodes;

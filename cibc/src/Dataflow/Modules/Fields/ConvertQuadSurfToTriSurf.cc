@@ -1,0 +1,201 @@
+/*
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+*/
+
+
+/*
+ *  ConvertQuadSurfToTriSurf.cc:  Convert a Quad field into a Tri field using 1-5 split
+ *
+ *  Written by:
+ *   David Weinstein
+ *   University of Utah
+ *   December 2002
+ *
+ *  Copyright (C) 1994, 2001 SCI Group
+ */
+
+#include <Dataflow/Network/Ports/FieldPort.h>
+#include <Core/Basis/TriLinearLgn.h>
+#include <Core/Datatypes/QuadSurfMesh.h>
+#include <Core/Datatypes/TriSurfMesh.h>
+#include <Dataflow/Modules/Fields/ConvertQuadSurfToTriSurf.h>
+#include <Dataflow/Network/Module.h>
+#include <Core/Malloc/Allocator.h>
+
+#include <iostream>
+#include <vector>
+#include <algorithm>
+
+
+namespace SCIRun {
+
+class ConvertQuadSurfToTriSurf : public Module {
+private:
+  int last_generation_;
+  FieldHandle ofieldhandle_;
+
+public:
+
+  //! Constructor/Destructor
+  ConvertQuadSurfToTriSurf(GuiContext *context);
+  virtual ~ConvertQuadSurfToTriSurf();
+
+  //! Public methods
+  virtual void execute();
+};
+
+
+DECLARE_MAKER(ConvertQuadSurfToTriSurf)
+
+
+ConvertQuadSurfToTriSurf::ConvertQuadSurfToTriSurf(GuiContext *context) : 
+  Module("ConvertQuadSurfToTriSurf", context, Filter, "ChangeMesh", "SCIRun"),
+  last_generation_(0)
+{
+}
+
+ConvertQuadSurfToTriSurf::~ConvertQuadSurfToTriSurf()
+{
+}
+
+void
+ConvertQuadSurfToTriSurf::execute()
+{
+  FieldHandle ifieldhandle;
+  if (!get_input_handle("QuadSurf", ifieldhandle)) return;
+
+  // Cache generation.
+  if (ofieldhandle_.get_rep() &&
+      ifieldhandle->generation == last_generation_)
+  {
+    send_output_handle("TriSurf", ofieldhandle_, true);
+    return;
+  }
+  last_generation_ = ifieldhandle->generation;
+  
+  const TypeDescription *src_td = ifieldhandle->get_type_description();
+
+  const string iname =
+    ifieldhandle->mesh()->get_type_description()->get_name();
+  if (iname.find("ImageMesh") != string::npos || 
+      iname.find("StructQuadSurfMesh") != string::npos)
+  {
+    CompileInfoHandle ici = ImgToTriAlgo::get_compile_info(src_td);
+    Handle<ImgToTriAlgo> ialgo;
+    if (DynamicCompilation::compile(ici, ialgo, true, this))
+    {
+      if (!ialgo->execute(this, ifieldhandle, ofieldhandle_))
+      {
+	warning("ImgToTri conversion failed to copy data.");
+	return;
+      }
+    }
+    else
+    {
+      error("ConvertQuadSurfToTriSurf only supports Quad field types.");
+      return;
+    }
+  }
+  else
+  {
+    CompileInfoHandle qci = ConvertQuadSurfToTriSurfAlgo::get_compile_info(src_td);
+    Handle<ConvertQuadSurfToTriSurfAlgo> qalgo;
+    if (DynamicCompilation::compile(qci, qalgo, true, this))
+    {
+      if (!qalgo->execute(this, ifieldhandle, ofieldhandle_))
+      {
+	warning("ConvertQuadSurfToTriSurf conversion failed to copy data.");
+	return;
+      }
+    }
+    else
+    {
+      error("ConvertQuadSurfToTriSurf only supports Quad field types.");
+      return;
+    }
+  }
+
+  send_output_handle("TriSurf", ofieldhandle_, true);
+}
+
+CompileInfoHandle
+ConvertQuadSurfToTriSurfAlgo::get_compile_info(const TypeDescription *src_td)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("ConvertQuadSurfToTriSurfAlgoT");
+  static const string base_class_name("ConvertQuadSurfToTriSurfAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       src_td->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       src_td->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  rval->add_basis_include("../src/Core/Basis/NoData.h");
+  rval->add_basis_include("../src/Core/Basis/Constant.h");
+  rval->add_basis_include("../src/Core/Basis/QuadBilinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/TriLinearLgn.h");
+  rval->add_mesh_include("../src/Core/Datatypes/TriSurfMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/QuadSurfMesh.h");
+  src_td->fill_compile_info(rval);
+  return rval;
+}
+
+
+CompileInfoHandle
+ImgToTriAlgo::get_compile_info(const TypeDescription *src_td)
+{
+  // use cc_to_h if this is in the .cc file, otherwise just __FILE__
+  static const string include_path(TypeDescription::cc_to_h(__FILE__));
+  static const string template_class_name("ImgToTriAlgoT");
+  static const string base_class_name("ImgToTriAlgo");
+
+  CompileInfo *rval = 
+    scinew CompileInfo(template_class_name + "." +
+		       src_td->get_filename() + ".",
+                       base_class_name, 
+                       template_class_name, 
+                       src_td->get_name());
+
+  // Add in the include path to compile this obj
+  rval->add_include(include_path);
+  rval->add_basis_include("../src/Core/Basis/NoData.h");
+  rval->add_basis_include("../src/Core/Basis/Constant.h");
+  rval->add_basis_include("../src/Core/Basis/QuadBilinearLgn.h");
+  rval->add_basis_include("../src/Core/Basis/TriLinearLgn.h");
+  rval->add_mesh_include("../src/Core/Datatypes/TriSurfMesh.h");
+  rval->add_mesh_include("../src/Core/Datatypes/QuadSurfMesh.h");
+  src_td->fill_compile_info(rval);
+  return rval;
+}
+
+
+} // End namespace SCIRun

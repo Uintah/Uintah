@@ -36,35 +36,35 @@
 SRCDIR := Packages/BioPSE/Dataflow/GUI
 
 SRCS := \
-	$(SRCDIR)/AnisoSphereModel.tcl\
+	$(SRCDIR)/CreateAnisoSphereParameters.tcl\
 	$(SRCDIR)/ApplyFEMCurrentSource.tcl\
 	$(SRCDIR)/ApplyFEMVoltageSource.tcl\
-	$(SRCDIR)/BuildMisfitField.tcl\
-	$(SRCDIR)/ConductivitySearch.tcl\
-	$(SRCDIR)/ConfigureElectrode.tcl\
-	$(SRCDIR)/ConfigureWireElectrode.tcl\
-	$(SRCDIR)/DipoleInAnisoSpheres.tcl\
-	$(SRCDIR)/DipoleSearch.tcl\
-	$(SRCDIR)/ExtractSingleSurface.tcl\
+	$(SRCDIR)/CalculateMisfitField.tcl\
+	$(SRCDIR)/OptimizeConductivities.tcl\
+	$(SRCDIR)/SetWireElectrodePotential.tcl\
+	$(SRCDIR)/SetWireElectrodeProperties.tcl\
+	$(SRCDIR)/SimulateDipoleInAnisoSpheresAnalytically.tcl\
+	$(SRCDIR)/OptimizeDipole.tcl\
+	$(SRCDIR)/GetSingleSurfaceFromSepSurfs.tcl\
 	$(SRCDIR)/InsertVoltageSource.tcl\
 	$(SRCDIR)/IntegrateCurrent.tcl\
-	$(SRCDIR)/ModifyConductivities.tcl\
-	$(SRCDIR)/RawToDenseMatrix.tcl\
-	$(SRCDIR)/SegFieldOps.tcl \
-	$(SRCDIR)/SegFieldToLatVol.tcl \
-	$(SRCDIR)/SepSurfToQuadSurf.tcl \
-	$(SRCDIR)/SetupFEMatrix.tcl\
-	$(SRCDIR)/ShowDipoles.tcl\
-	$(SRCDIR)/ShowLeads.tcl\
-	$(SRCDIR)/TSVD.tcl\
-	$(SRCDIR)/Tikhonov.tcl\
-	$(SRCDIR)/TikhonovSVD.tcl\
-        $(SRCDIR)/ElectrodeManager.tcl\
-        $(SRCDIR)/EITAnalyticSolution.tcl\
+	$(SRCDIR)/SetConductivities.tcl\
+	$(SRCDIR)/ImportDenseMatrixFromRaw.tcl\
+	$(SRCDIR)/AbsorbSegFieldIslands.tcl \
+	$(SRCDIR)/ConvertSegFieldToLatVol.tcl \
+	$(SRCDIR)/ConvertSepSurfToQuadSurf.tcl \
+	$(SRCDIR)/BuildFEMatrix.tcl\
+	$(SRCDIR)/ShowAndEditDipoles.tcl\
+	$(SRCDIR)/ViewLeadSignals.tcl\
+	$(SRCDIR)/SolveInverseProblemWithTSVD.tcl\
+	$(SRCDIR)/SolveInverseProblemWithTikhonov.tcl\
+	$(SRCDIR)/SolveInverseProblemWithTikhonovSVD.tcl\
+        $(SRCDIR)/CreateElectrodeParameterMatrices.tcl\
+        $(SRCDIR)/SimulateEITAnalytically.tcl\
         $(SRCDIR)/SetEITGround.tcl\
-        $(SRCDIR)/TrigCurrentPattern.tcl\
-	$(SRCDIR)/ForwardIPM.tcl\
-	$(SRCDIR)/InverseIPM.tcl\
+        $(SRCDIR)/CreateTrigCurrentPattern.tcl\
+	$(SRCDIR)/InterfaceWithNeuroFEMForward.tcl\
+	$(SRCDIR)/InterfaceWithNeuroFEMInverse.tcl\
 #[INSERT NEW TCL FILE HERE]
 include $(SCIRUN_SCRIPTS)/tclIndex.mk
 
