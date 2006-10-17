@@ -2,6 +2,7 @@
   <object class="Painter::LayerButton">
     <var name="visible">0</var>
     <var name="LayerButton::num" type="int" overwrite="no">1</var>
+    <var name="LayerButton::expand" type="bool" overwrite="no" propagate="yes">1</var>
     <var name="LayerButton::background_color" propagate="yes">#00000000</var>
     <var name="LayerButton::LayerVisible" propagate="yes">$volume_visible</var>
     <var name="LayerButton::indent" propagate="yes">10</var>
@@ -38,6 +39,8 @@
             <var name="rows">3</var>
             <var name="cols">3</var>
             <object class="ExpandButton">
+              <var name="CheckButton::state" propagate="yes">$LayerButton::expand</var>
+
               <var name="row">2</var>
               <var name="col">2</var>
               <var name="cell-width">25</var>
