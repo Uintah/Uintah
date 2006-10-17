@@ -35,7 +35,6 @@ SET(Core_Algorithms_Fields_SRCS
   ConvertToTriSurf.cc
   DomainBoundary.cc
   ClipAtIndeces.cc
-  ClipByFunction.cc
   ClipBySelectionMask.cc
   IndicesToData.cc
   DistanceField.cc
@@ -61,11 +60,11 @@ SET(Core_Algorithms_Fields_SRCS
   SplitByConnectedRegion.cc
   SplitFieldByDomain.cc
   SetFieldData.cc
-  TransformData.cc
   MappingMatrixToField.cc
   Mapping.cc
   CurrentDensityMapping.cc
-  TransformField.cc
+  CalculateFieldData.cc
+  TransformMeshWithTransform.cc
   ToPointCloud.cc
   Unstructure.cc
 )
