@@ -1,6 +1,6 @@
-<definition class="MainFileMenu">
+<definition class="LayerMenu">
   <object class="MenuList">
-    <var name="width">150</var>
+    <var name="width">175</var>
     <var name="height">111</var>
     <definition class="MenuList::child">
       <object class="Grid">
@@ -9,7 +9,8 @@
         <object class="MenuButton">
           <var name="row">1</var>
           <var name="col">1</var>
-          <var name="Button::Text::text" propagate="yes">Load File...</var>
+          <var name="Button::Text::text"
+               propagate="yes">Load Layer...</var>
           
           <signal name="Button::clicked" 
                   target="Arithmetic::set_value">
@@ -17,17 +18,17 @@
             <var name="value">1</var>
           </signal>                   
           
-          
           <signal name="Button::clicked" 
                   target="Animation::AnimateVariableAscending">
             <var name="varnum">1</var>
-          </signal>                                       
+          </signal>                   
         </object>
         
         <object class="MenuButton">
           <var name="row">2</var>
           <var name="col">1</var>
-          <var name="Button::Text::text" propagate="yes">Save File...</var>
+          <var name="Button::Text::text" 
+               propagate="yes">Save Layer...</var>
           <signal name="Button::clicked" 
                   target="Animation::AnimateVariableAscending">
             <var name="varnum">2</var>
@@ -37,12 +38,11 @@
         <object class="MenuButton">
           <var name="row">3</var>
           <var name="col">1</var>
-          <var name="Button::Text::text" propagate="yes">Quit</var>
-          
+          <var name="Button::Text::text" 
+               propagate="yes">Create Label Layer</var>
           <signal name="Button::clicked" 
-                  target="Arithmetic::set_value">
-            <var name="variable">$QuitDialog::visible</var>
-            <var name="value">1</var>            
+                  target="Painter::CreateLabelVolume">
+            
           </signal>
         </object>
       </object>

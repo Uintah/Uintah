@@ -112,6 +112,9 @@
   <xi:include href="SliceFrame.skin" parse="xml"/>
   <xi:include href="FrameButton.skin" parse="xml"/>
 
+  <xi:include href="StatusBar.skin" parse="xml"/>
+  <xi:include href="MenuList.skin" parse="xml"/>
+
   <xi:include href="Shadowed3DViewer.skin" parse="xml"/>
 
 

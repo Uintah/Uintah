@@ -42,8 +42,24 @@
             </object>
           </object>
             
+        </object>
+      </object>
+
+      <object class="Frame">
+        <var name="visible">$CheckButton::state</var>
+        <var name="width" overwrite="no">2</var>
+        <var name="height" overwrite="no">2</var>
+        <var name="color1">$Button::color1</var>
+        <var name="color2">$Button::color2</var>
+        <var name="invert">0</var>
+        
+        <object class="Frame">
+          <var name="width" overwrite="no">1</var>
+          <var name="height" overwrite="no">1</var>
+          <var name="color1">#00000000</var>
+          <var name="color2">#00000000</var>
+       
           <object class="Box">
-            <var name="visible">$CheckButton::state</var>
             <var name="color">$Button::color</var>
             <object class="Root::Arrow">            
               <var name="color">#000000FF</var>
