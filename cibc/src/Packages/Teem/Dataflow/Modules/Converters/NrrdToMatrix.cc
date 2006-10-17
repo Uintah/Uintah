@@ -55,10 +55,6 @@ using namespace SCIRun;
 
 class NrrdToMatrix : public Module {
 public:
-  NrrdIPort*   ndata_;
-  NrrdIPort*   nrows_;
-  NrrdIPort*   ncols_;
-  MatrixOPort* omat_;
   int data_generation_;
   int rows_generation_;
   int cols_generation_;
@@ -95,7 +91,6 @@ public:
 DECLARE_MAKER(NrrdToMatrix)
 NrrdToMatrix::NrrdToMatrix(GuiContext* ctx)
   : Module("NrrdToMatrix", ctx, Source, "Converters", "Teem"),
-    ndata_(0), nrows_(0), ncols_(0), omat_(0),
     data_generation_(-1), rows_generation_(-1), 
     cols_generation_(-1), has_error_(false),
     last_matrix_(0), cols_(get_ctx()->subVar("cols")),
@@ -112,19 +107,14 @@ NrrdToMatrix::~NrrdToMatrix()
 void
 NrrdToMatrix::execute()
 {
-  // Get ports
-  ndata_ = (NrrdIPort *)get_iport("Data");
-  nrows_ = (NrrdIPort *)get_iport("Rows");
-  ncols_ = (NrrdIPort *)get_iport("Columns");
-  omat_ = (MatrixOPort *)get_oport("Matrix");
-
   NrrdDataHandle dataH;
   NrrdDataHandle rowsH;
   NrrdDataHandle colsH;
 
   bool do_execute = false;
-  // Determine if we have data, points, connections, etc.
-  if (!ndata_->get(dataH)) {
+
+  if (!get_input_handle("Data", dataH, false))
+  {
     dataH = 0;
     if (data_generation_ != -1) {
       data_generation_ = -1;
@@ -132,7 +122,8 @@ NrrdToMatrix::execute()
     }
   }
 
-  if (!nrows_->get(rowsH)){
+  if (!get_input_handle("Rows", rowsH, false))
+  {
     rowsH = 0;
     if (rows_generation_ != -1) {
       rows_generation_ = -1;
@@ -140,7 +131,8 @@ NrrdToMatrix::execute()
     }
   }
 
-  if (!ncols_->get(colsH)) {
+  if (!get_input_handle("Columns", colsH, false))
+  {
     colsH = 0;
     if (cols_generation_ != -1) {
       cols_generation_ = -1;
@@ -178,7 +170,7 @@ NrrdToMatrix::execute()
 
   if (last_matrix_ != 0) {
     has_error_ = false;
-    omat_->send_and_dereference(last_matrix_, true);
+    send_output_handle("Matrix", last_matrix_, true);
   }
 }
 

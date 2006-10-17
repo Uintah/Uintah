@@ -274,8 +274,7 @@ NrrdReader::execute()
   }
 
   // Send the data downstream.
-  NrrdOPort *outport = (NrrdOPort *)get_oport("Output Data");
-  outport->send_and_dereference(read_handle_, true);
+  send_output_handle("Output Data", read_handle_, true);
 
   update_state(Completed);
 }

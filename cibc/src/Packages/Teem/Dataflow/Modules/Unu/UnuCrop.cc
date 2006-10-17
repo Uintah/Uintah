@@ -131,7 +131,6 @@ UnuCrop::execute()
   reset_vars();
 
   MatrixHandle matrixH;
-  MatrixIPort* imatrix = (MatrixIPort *)get_iport("Current Index");
 
   num_axes_.reset();
 
@@ -260,8 +259,8 @@ UnuCrop::execute()
   }
 
   // If a matrix present use those values.
-  if (imatrix->get(matrixH) && matrixH.get_rep()) {
-
+  if (get_input_handle("Current Index", matrixH, false))
+  {
     if( num_axes_.get() != matrixH.get_rep()->nrows() ||
 	matrixH.get_rep()->ncols() != 2 ) {
       error("Input matrix size does not match nrrd dimensions." );

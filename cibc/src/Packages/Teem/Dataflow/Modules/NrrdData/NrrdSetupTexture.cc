@@ -495,8 +495,7 @@ NrrdSetupTexture::execute()
   {
     last_nvnrrd_->generation = last_nvnrrd_->compute_new_generation();
 
-    NrrdOPort *onvnrrd = (NrrdOPort *)get_oport("Normal/Value");
-    onvnrrd->send(last_nvnrrd_);
+    send_output_handle("Normal/Value", last_nvnrrd_, true);
   }
   else
   {

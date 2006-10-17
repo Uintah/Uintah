@@ -123,10 +123,6 @@ private:
   vector< GuiFilename* > entry_files_;
   double z_spacing_;
 
-
-  //! Ports
-  NrrdOPort*      onrrd_;
-
   //! Set of Dicom series' 
   vector<struct series> all_series_;
 
@@ -217,8 +213,7 @@ void DicomNrrdReader::execute()
 
   // Send nrrd data downstream.
   NrrdDataHandle sciNrrdHandle(sciNrrd);
-  onrrd_ = (NrrdOPort *)get_oport("Nrrd");
-  onrrd_->send_and_dereference(sciNrrdHandle);
+  send_output_handle("Nrrd", sciNrrdHandle);
 
   /*
   Since, in this case, nrrd didn't allocate the data, you might call

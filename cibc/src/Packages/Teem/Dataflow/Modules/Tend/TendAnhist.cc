@@ -76,14 +76,9 @@ TendAnhist::execute()
   NrrdDataHandle nrrd_handle;
   if (!get_input_handle("InputNrrd", nrrd_handle)) return;
 
-  NrrdIPort *iweight = (NrrdIPort *)get_iport("WeightNrrd");
-
   // weights nrrd optional
   NrrdDataHandle weight_handle;
-  if (iweight->get(weight_handle) && !weight_handle.get_rep()) {
-    error("Empty input WeightNrrd.");
-    return;
-  }
+  if (!get_input_handle("WeightNrrd", weight_handle)) return;
 
   Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();

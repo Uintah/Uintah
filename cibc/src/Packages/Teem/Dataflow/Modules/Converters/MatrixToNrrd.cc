@@ -53,10 +53,6 @@ using namespace SCIRun;
 
 class MatrixToNrrd : public Module {
 public:
-
-  NrrdOPort*   ndata_;
-  NrrdOPort*   nrows_;
-  NrrdOPort*   ncols_;
   int          matrix_generation_;
 
   MatrixToNrrd(GuiContext*);
@@ -75,7 +71,6 @@ public:
 DECLARE_MAKER(MatrixToNrrd)
 MatrixToNrrd::MatrixToNrrd(GuiContext* ctx)
   : Module("MatrixToNrrd", ctx, Source, "Converters", "Teem"),
-    ndata_(0), nrows_(0), ncols_(0),
     matrix_generation_(-1)
 {
 }
@@ -89,18 +84,13 @@ MatrixToNrrd::~MatrixToNrrd()
 void
 MatrixToNrrd::execute()
 {
-  // Get ports
-  ndata_ = (NrrdOPort *)get_oport("Data");
-  nrows_ = (NrrdOPort *)get_oport("Rows");
-  ncols_ = (NrrdOPort *)get_oport("Columns");
-
   MatrixHandle matH;
   if (!get_input_handle("Matrix", matH)) return;
 
   if (matrix_generation_ != matH->generation ||
-      !ndata_->have_data() &&
-      !nrows_->have_data() &&
-      !ncols_->have_data())
+      !oport_cached("Data") &&
+      !oport_cached("Rows") &&
+      !oport_cached("Columns"))
   {
     matrix_generation_ = matH->generation;
     Matrix* matrix = matH.get_rep();
@@ -140,7 +130,7 @@ MatrixToNrrd::create_and_send_column_matrix_nrrd(MatrixHandle matH)
 
   // Send the data nrrd.
   NrrdDataHandle dataH(nd);
-  ndata_->send_and_dereference(dataH);  
+  send_output_handle("Data", dataH);
 }
 
 
@@ -176,7 +166,7 @@ MatrixToNrrd::create_and_send_dense_matrix_nrrd(MatrixHandle matH)
   }
   // send the data nrrd
   NrrdDataHandle dataH(nd);
-  ndata_->send_and_dereference(dataH);  
+  send_output_handle("Data", dataH);
 }
 
 
@@ -234,9 +224,9 @@ MatrixToNrrd::create_and_send_sparse_matrix_nrrd(MatrixHandle matH)
   NrrdDataHandle rowsH(rows_n);
   NrrdDataHandle colsH(cols_n);
   
-  ndata_->send_and_dereference(dataH);
-  nrows_->send_and_dereference(rowsH);
-  ncols_->send_and_dereference(colsH);
+  send_output_handle("Data", dataH);
+  send_output_handle("Rows", rowsH);
+  send_output_handle("Columns", colsH);
 }
 
 
