@@ -127,12 +127,11 @@ TendEpireg::execute()
 
   Nrrd *nin = nrrd_handle->nrrd_;
 
-  NrrdIPort *igrad = (NrrdIPort *)get_iport("ngrad");
   NrrdDataHandle grad_handle;
   Nrrd *ngrad;
   bool we_own_the_data;
   vector<double> *mat = 0;
-  if (igrad->get(grad_handle) && grad_handle.get_rep())
+  if (get_input_handle("ngrad", grad_handle, false))
   {
     we_own_the_data = false;
     ngrad = grad_handle->nrrd_;

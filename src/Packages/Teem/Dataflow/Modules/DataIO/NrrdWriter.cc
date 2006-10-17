@@ -81,19 +81,12 @@ NrrdWriter::~NrrdWriter()
 {
 }
 
-void NrrdWriter::execute()
+void
+NrrdWriter::execute()
 {
-  //  static int counter = 1;
   // Read data from the input port
   NrrdDataHandle handle;
-  inport_ = (NrrdIPort *)get_iport("Input Data");
-  if(!inport_->get(handle))
-    return;
-  
-  if (!handle.get_rep()) {
-    error("Null input");
-    return;
-  }
+  if (!get_input_handle("Input Data", handle)) return;
 
   // If no name is provided, return
   string fn(filename_.get());

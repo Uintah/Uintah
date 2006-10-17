@@ -37,9 +37,6 @@ public:
   virtual void execute();
 
 private:
-  NrrdIPort* inrrd_;
-  NrrdOPort* onrrd_;
-  
   void setGageKind(gageKind *& kind, gageKind *newkind);
   
   GuiString field_kind_;
@@ -99,19 +96,11 @@ GageProbe::~GageProbe()
 void
 GageProbe::execute()
 {
-  NrrdDataHandle nrrd_handle;
   update_state(NeedData);
-  inrrd_ = (NrrdIPort *)get_iport("nin");
-  onrrd_ = (NrrdOPort *)get_oport("nout");
-  
-  if (!inrrd_->get(nrrd_handle))
-    return;
-  
-  if (!nrrd_handle.get_rep()) {
-    error("Empty input Nrrd.");
-    return;
-  }
-  
+
+  NrrdDataHandle nrrd_handle;
+  if (!get_input_handle("nin", nrrd_handle)) return;
+
   Nrrd *nin = nrrd_handle->nrrd_;
   Nrrd *nout = nrrdNew();
   
@@ -362,7 +351,7 @@ GageProbe::execute()
   
   //send the nrrd to the output
   NrrdDataHandle ntmp(scinew NrrdData(nout));
-  onrrd_->send_and_dereference(ntmp);
+  send_output_handle("nout", ntmp);
 }
 
 

@@ -83,33 +83,14 @@ TendEstim::~TendEstim()
 void 
 TendEstim::execute()
 {
-  NrrdDataHandle bmat_handle;
-  NrrdDataHandle dwi_handle;
   update_state(NeedData);
-  inbmat_ = (NrrdIPort *)get_iport("Bmat");
-  indwi_ = (NrrdIPort *)get_iport("DWI");
-  //  oerr_ = (NrrdOPort *)get_oport("Error");
 
-  //Nrrd *sliced_bmat = 0;
-  if (inbmat_->get(bmat_handle)){
-    if (!bmat_handle.get_rep()) {
-      error("Empty input Bmat Nrrd.");
-      return;
-    }
-  }
-  if (!indwi_->get(dwi_handle))
-    return;
+  NrrdDataHandle bmat_handle;
+  if (!get_input_handle("Bmat", bmat_handle)) return;
 
-  if (!bmat_handle.get_rep()) {
-    error("Empty input Bmat Nrrd.");
-    return;
-  }
-  if (!dwi_handle.get_rep()) {
-    error("Empty input DWI Nrrd.");
-    return;
-  }
+  NrrdDataHandle dwi_handle;
+  if (!get_input_handle("DWI", dwi_handle)) return;
 
- 
   Nrrd *nout = nrrdNew();
   float threshold;
   if (use_default_threshold_.get()) threshold = AIR_NAN;

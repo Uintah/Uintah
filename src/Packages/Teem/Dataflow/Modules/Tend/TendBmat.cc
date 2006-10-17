@@ -104,11 +104,10 @@ TendBmat::execute()
   update_state(NeedData);
 
   NrrdDataHandle nrrd_handle;
-  NrrdIPort *inrrd = (NrrdIPort *)get_iport("nin");
   bool we_own_the_data;
   vector<double> *mat=0;
   Nrrd *nin;
-  if (inrrd->get(nrrd_handle) && nrrd_handle.get_rep())
+  if (get_input_handle("nin", nrrd_handle))
   {
     we_own_the_data = false;
     nin = nrrd_handle->nrrd_;

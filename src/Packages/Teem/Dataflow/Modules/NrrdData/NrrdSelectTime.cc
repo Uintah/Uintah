@@ -162,7 +162,6 @@ NrrdSelectTime::send_selection(NrrdDataHandle in,
   ColumnMatrix *selected = scinew ColumnMatrix(1);
   selected->put(0, 0, (double)which);
   MatrixHandle stmp(selected);
-  
   send_output_handle("Selected Index", stmp);
 }
 
@@ -214,13 +213,8 @@ NrrdSelectTime::execute()
 {
   update_state(NeedData);
 
-  NrrdIPort *inrrd = (NrrdIPort *)get_iport("Time Axis nrrd");
   NrrdDataHandle nrrd_handle;
-  if (!(inrrd->get(nrrd_handle) && nrrd_handle.get_rep()))
-  {
-    error("Empty input NrrdData.");
-    return;
-  }
+  if (!get_input_handle("Time Axis nrrd", nrrd_handle)) return;
 
   update_state(JustStarted);
 
@@ -257,14 +251,14 @@ NrrdSelectTime::execute()
   reset_vars();
 
   // If there is a current index matrix, use it.
-  MatrixIPort *icur = (MatrixIPort *)get_iport("Current Index");
   MatrixHandle currentH;
-  if (icur->get(currentH) && currentH.get_rep()) {
+  if (get_input_handle("Current Index", currentH, false))
+  {
     which = (int) (currentH->get(0, 0));
     send_selection(nrrd_handle, which, time_axis, true);
-
-  } else {
-
+  }
+  else
+  {
     // Cache var
     bool cache = (playmode_.get() != "inc_w_exec");
 

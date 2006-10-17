@@ -63,10 +63,6 @@ public:
   virtual ~FieldToNrrd();
   virtual void execute();
 private:
-  NrrdOPort   *opoints_;
-  NrrdOPort   *oconnect_;
-  NrrdOPort   *odata_;
-  
   GuiString    label_;
   int          ifield_generation_;
   NrrdDataHandle points_handle_, connect_handle_, data_handle_;
@@ -95,10 +91,6 @@ FieldToNrrd::~FieldToNrrd()
 void
 FieldToNrrd::execute()
 {
-  opoints_ = (NrrdOPort *)get_oport("Points");
-  oconnect_ = (NrrdOPort *)get_oport("Connections");
-  odata_ = (NrrdOPort *)get_oport("Data");
-  
   FieldHandle field_handle; 
   if (!get_input_handle("Field", field_handle)) return;
 
@@ -109,14 +101,7 @@ FieldToNrrd::execute()
 
   if (!field_handle->mesh()->is_editable())
   {
-    if (oconnect_->nconnections())
-    {
-      warning("Not computing connections for non-editable mesh type.");
-    }
-    else
-    {
-      remark("Not computing connections for non-editable mesh type.");
-    }
+    remark("Not computing connections for non-editable mesh type.");
     compute_connects_p = false;
   }
   
@@ -124,27 +109,13 @@ FieldToNrrd::execute()
     field_handle->get_type_description(Field::FIELD_NAME_ONLY_E)->get_name().substr(0, 6);
   if (!(field_handle->mesh()->is_editable() || meshstr == "Struct"))
   {
-    if (opoints_->nconnections())
-    {
-      warning("Not computing points for strict lattice.");
-    }
-    else
-    {
-      remark("Not computing points for strict lattice.");
-    }
+    remark("Not computing points for strict lattice.");
     compute_points_p = false;
   }
   
   if (field_handle->basis_order() == -1)
   {
-    if (odata_->nconnections())
-    {
-      warning("No data in input field.");
-    }
-    else
-    {
-      remark("No data in input field.");
-    }
+    remark("No data in input field.");
     compute_data_p = false;
   }
 
@@ -175,15 +146,15 @@ FieldToNrrd::execute()
     nrrd_name = property;
   if (points_handle_.get_rep()) {
     points_handle_->set_property("Name", nrrd_name + "-Points", false);
-    opoints_->send_and_dereference(points_handle_, true);
+    send_output_handle("Points", points_handle_, true);
   }
   if (connect_handle_.get_rep()) {
     connect_handle_->set_property("Name", nrrd_name + "-Connectivity", false);
-    oconnect_->send_and_dereference(connect_handle_, true);
+    send_output_handle("Connections", connect_handle_, true);
   }
   if (data_handle_.get_rep()) {
     data_handle_->set_property("Name", nrrd_name + "-Data", false);
-    odata_->send_and_dereference(data_handle_, true);
+    send_output_handle("Data", data_handle_, true);
   }
 }
 

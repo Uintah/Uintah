@@ -103,12 +103,6 @@ class NrrdToField : public Module {
 public:
   enum {UNKNOWN=0,UNSTRUCTURED=1,STRUCTURED=2,IRREGULAR=4,REGULAR=8};
 
-  NrrdIPort*  ndata_;
-  NrrdIPort*  npoints_;
-  NrrdIPort*  nconnect_;
-  FieldIPort* ifield_;
-  FieldOPort* ofield_;
-
   GuiInt      gPermute_;
   GuiInt      gBuildEigens_;
   GuiString   gQuadOrTet_;
@@ -198,13 +192,6 @@ NrrdToField::~NrrdToField()
 void
 NrrdToField::execute()
 {
-  // Get ports
-  ndata_ = (NrrdIPort *)get_iport("Data");
-  npoints_ = (NrrdIPort *)get_iport("Points");
-  nconnect_ = (NrrdIPort *)get_iport("Connections");
-  ifield_ = (FieldIPort *)get_iport("OriginalField");
-  ofield_ = (FieldOPort *)get_oport("OutputField");
-
   NrrdDataHandle dataH;
   NrrdDataHandle pointsH;
   NrrdDataHandle connectH;
@@ -212,7 +199,7 @@ NrrdToField::execute()
   
   bool do_execute = false;
   // Determine if we have data, points, connections, etc.
-  if (!ndata_->get(dataH)) {
+  if (!get_input_handle("Data", dataH, false)) {
     dataH = 0;
     if (data_generation_ != -1) {
       data_generation_ = -1;
@@ -222,7 +209,7 @@ NrrdToField::execute()
     error("No data in the Data nrrd.");
   } 
   
-  if (!npoints_->get(pointsH)) {
+  if (!get_input_handle("Points", pointsH, false)) {
     pointsH = 0;
     if (points_generation_ != -1) {
       points_generation_ = -1;
@@ -232,7 +219,7 @@ NrrdToField::execute()
     error("No data in the Points nrrd.");
   } 
   
-  if (!nconnect_->get(connectH)) {
+  if (!get_input_handle("Connections", connectH, false)) {
     connectH = 0;
     if (connect_generation_ != -1) {
       connect_generation_ = -1;
@@ -242,7 +229,7 @@ NrrdToField::execute()
     error("No data in the Connections nrrd.");
   } 
   
-  if (!ifield_->get(origfieldH)) {
+  if (!get_input_handle("OriginalField", origfieldH, false)) {
     origfieldH = 0;
     if (origfield_generation_ != -1) {
       origfield_generation_ = -1;
@@ -369,7 +356,7 @@ NrrdToField::execute()
       field_name = "Unknown";
     }
     last_field_->set_property("name", field_name, false);
-    ofield_->send_and_dereference(last_field_, true);
+    send_output_handle("OutputField", last_field_, true);
   }
 }
 

@@ -123,15 +123,7 @@ ColorMap2ToNrrd::execute()
       }
     }
 
-
-    NrrdOPort* nrrd_port = (NrrdOPort*)get_oport("Output Image");
-    if (!nrrd_port)
-    {
-      error("Could not open output port 'Output Image'.");
-      return;
-    }
     NrrdDataHandle nrrd_h(nd);
-
     send_output_handle("Output Image", nrrd_h);
   }
 }

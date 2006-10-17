@@ -82,18 +82,7 @@ ImageExporter::execute()
 {
   // Read data from the input port
   NrrdDataHandle handle;
-  NrrdIPort* inport = (NrrdIPort *)get_iport("Input Data");
-
-  if(!inport->get(handle))
-  {
-    return;
-  }
-  
-  if (!handle.get_rep())
-  {
-    error("Null input");
-    return;
-  }
+  if (!get_input_handle("Input Data", handle)) return;
   
 #if defined HAVE_PNG && HAVE_PNG
 

@@ -102,9 +102,6 @@ private:
   GuiInt    num_files_;
   vector< GuiString* > filenames_;
 
-  //! Ports
-  NrrdOPort*      onrrd_;
-
   //! Set of Analyze files 
   vector<string> all_files_;
 
@@ -193,8 +190,7 @@ void AnalyzeNrrdReader::execute(){
   NrrdDataHandle sciNrrdHandle(sciNrrd);
 
   // Send nrrd data downstream
-  onrrd_ = (NrrdOPort *)get_oport("Nrrd");
-  onrrd_->send_and_dereference(sciNrrdHandle);
+  send_output_handle("Nrrd", sciNrrdHandle);
 
   /*
   Since, in this case, nrrd didn't allocate the data, you might call
