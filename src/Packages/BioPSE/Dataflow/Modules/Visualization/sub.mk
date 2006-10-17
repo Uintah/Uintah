@@ -42,8 +42,8 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/Visualization
 
 SRCS     += \
-        $(SRCDIR)/ShowDipoles.cc\
-        $(SRCDIR)/ShowLeads.cc\
+        $(SRCDIR)/ShowAndEditDipoles.cc\
+        $(SRCDIR)/ViewLeadSignals.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \

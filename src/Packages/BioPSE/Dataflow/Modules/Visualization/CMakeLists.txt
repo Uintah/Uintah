@@ -29,8 +29,8 @@
 # CMakeLists.txt for Packages/BioPSE/Dataflow/Modules/Visualization
 
 SET(Packages_BioPSE_Dataflow_Modules_Visualization_SRCS
-  ShowDipoles.cc
-  ShowLeads.cc
+  ShowAndEditDipoles.cc
+  ViewLeadSignals.cc
 )
 
 ADD_LIBRARY(Packages_BioPSE_Dataflow_Modules_Visualization ${Packages_BioPSE_Dataflow_Modules_Visualization_SRCS})

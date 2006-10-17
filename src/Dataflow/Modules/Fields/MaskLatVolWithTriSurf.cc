@@ -70,7 +70,7 @@ public:
 DECLARE_MAKER(MaskLatVolWithTriSurf)
 
 MaskLatVolWithTriSurf::MaskLatVolWithTriSurf(GuiContext* ctx)
-  : Module("MaskLatVolWithTriSurf", ctx, Filter, "FieldsData", "SCIRun")
+  : Module("MaskLatVolWithTriSurf", ctx, Filter, "ChangeFieldData", "SCIRun")
 {
 }
 

@@ -26,27 +26,27 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-# CMakeLists.txt for Packages/MatlabInterface/Dataflow/Modules/DataIO
+# CMakeLists.txt for Packages/InterfaceWithMatlabInterface/Dataflow/Modules/DataIO
 
-SET(Packages_MatlabInterface_Dataflow_Modules_DataIO_SRCS
-  Matlab.cc
-  MatlabBundle.cc
-  MatlabColorMapsReader.cc
-  MatlabDataReader.cc
-  MatlabDataWriter.cc
-  MatlabFieldsReader.cc
-  MatlabFieldsWriter.cc
-  MatlabMatricesReader.cc
-  MatlabMatricesWriter.cc
-  MatlabNrrdsReader.cc
-  MatlabNrrdsWriter.cc
-  MatlabBundlesReader.cc
-  MatlabBundlesWriter.cc
+SET(Packages_InterfaceWithMatlabInterface_Dataflow_Modules_DataIO_SRCS
+  InterfaceWithMatlab.cc
+  InterfaceWithInterfaceWithMatlabViaBundles.cc
+  InterfaceWithImportColorMapsFromMatlab.cc
+  InterfaceWithImportDatatypesFromMatlab.cc
+  InterfaceWithExportDatatypesToMatlab.cc
+  InterfaceWithImportFieldsFromMatlab.cc
+  InterfaceWithExportFieldsToMatlab.cc
+  InterfaceWithImportMatricesFromMatlab.cc
+  InterfaceWithExportMatricesToMatlab.cc
+  InterfaceWithImportNrrdsFromMatlab.cc
+  InterfaceWithExportNrrdsToMatlab.cc
+  InterfaceWithInterfaceWithMatlabViaBundlessReader.cc
+  InterfaceWithInterfaceWithMatlabViaBundlessWriter.cc
 )
 
-ADD_LIBRARY(Packages_MatlabInterface_Dataflow_Modules_DataIO ${Packages_MatlabInterface_Dataflow_Modules_DataIO_SRCS})
+ADD_LIBRARY(Packages_InterfaceWithMatlabInterface_Dataflow_Modules_DataIO ${Packages_InterfaceWithMatlabInterface_Dataflow_Modules_DataIO_SRCS})
 
-TARGET_LINK_LIBRARIES(Packages_MatlabInterface_Dataflow_Modules_DataIO
+TARGET_LINK_LIBRARIES(Packages_InterfaceWithMatlabInterface_Dataflow_Modules_DataIO
   Core_Persistent
   Core_Containers
   Core_Util
@@ -60,7 +60,7 @@ TARGET_LINK_LIBRARIES(Packages_MatlabInterface_Dataflow_Modules_DataIO
   Dataflow_TkExtensions
   Dataflow_Network
   Core_XMLUtil
-  Packages_MatlabInterface_Core_Datatypes
+  Packages_InterfaceWithMatlabInterface_Core_Datatypes
   Core_Services
   Core_ICom
   Core_SystemCall
@@ -72,5 +72,5 @@ TARGET_LINK_LIBRARIES(Packages_MatlabInterface_Dataflow_Modules_DataIO
 )
 
 IF(NOT BUILD_SHARED_LIBS)
-  ADD_DEFINITIONS(-DBUILD_Packages_MatlabInterface_Dataflow_Modules_DataIO)
+  ADD_DEFINITIONS(-DBUILD_Packages_InterfaceWithMatlabInterface_Dataflow_Modules_DataIO)
 ENDIF(NOT BUILD_SHARED_LIBS)

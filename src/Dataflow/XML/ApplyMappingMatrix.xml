@@ -33,7 +33,7 @@
 
 
 
-<component name="ApplyMappingMatrix" category="FieldsData">
+<component name="ApplyMappingMatrix" category="ChangeFieldData">
   <overview>
     <authors>
       <author>Michael Callahan</author>

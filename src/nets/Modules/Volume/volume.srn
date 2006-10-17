@@ -1,6 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
-<network version="v1.25.2" name="{Main}" bbox="{10 9 406 368}" creationDate="{Thu Mar 16 2006}" creationTime="{10:35:18}" geometry="{800x800+0+0}">
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{10 9 406 368}" creationDate="{Thu Mar 16 2006}" creationTime="{10:35:18}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
   <environment>
     <var name="scisub_datadir" val="SCIRUN_DATA"/>
     <var name="scisub_datafile" val="SCIRUN_DATAFILE"/>
@@ -8,11 +10,11 @@
   </environment>
   <note>{}</note>
   <modules>
-    <module id="m1" package="SCIRun" category="DataIO" name="FieldReader">
+    <module category="DataIO" id="m1" name="ReadField" package="SCIRun">
       <position x="10" y="10"/>
       <var name="filename" val="scisub_datadir/aneurysm/aneurysm-mra.lvs.fld"/>
     </module>
-    <module id="m2" package="SCIRun" category="Visualization" name="TextureBuilder">
+    <module category="Visualization" id="m2" name="ConvertFieldsToTexture" package="SCIRun">
       <position x="10" y="88"/>
       <var name="vmin" val="{0.0}"/>
       <var name="vmax" val="{251.0}"/>
@@ -22,7 +24,7 @@
       <var name="card_mem" val="{256}"/>
       <var name="card_mem_auto" val="{1}"/>
     </module>
-    <module id="m3" package="SCIRun" category="Visualization" name="VolumeVisualizer">
+    <module category="Visualization" id="m3" name="ShowTextureVolume" package="SCIRun">
       <position x="79" y="234"/>
       <var name="sampling_rate_hi" val="{4.0}"/>
       <var name="sampling_rate_lo" val="{1.0}"/>
@@ -49,14 +51,14 @@
       <var name="level_on" val="{}"/>
       <var name="level_vals" val="{}"/>
     </module>
-    <module id="m4" package="SCIRun" category="Visualization" name="GenStandardColorMaps">
+    <module category="Visualization" id="m4" name="CreateStandardColorMaps" package="SCIRun">
       <position x="211" y="9"/>
       <var name="positionList" val="{{0 40} {13 40} {19 21} {120 24} {173 5} {294 0}}"/>
       <var name="nodeList" val="{257 258 259 791 2246 1057}"/>
       <var name="width" val="{295}"/>
       <var name="height" val="{40}"/>
     </module>
-    <module id="m5" package="SCIRun" category="Render" name="Viewer">
+    <module category="Render" id="m5" name="ViewScene" package="SCIRun">
       <position x="47" y="324"/>
       <gui_callback>
         <callback>addViewer</callback>
@@ -155,9 +157,9 @@
     </module>
   </modules>
   <connections>
-    <connection id="c1" from="m1" fromport="0" to="m2" toport="0"/>
-    <connection id="c2" from="m2" fromport="0" to="m3" toport="0"/>
-    <connection id="c3" from="m3" fromport="0" to="m5" toport="0"/>
-    <connection id="c4" from="m4" fromport="0" to="m3" toport="1"/>
+    <connection from="m1" fromport="0" id="c1" to="m2" toport="0"/>
+    <connection from="m2" fromport="0" id="c2" to="m3" toport="0"/>
+    <connection from="m3" fromport="0" id="c3" to="m5" toport="0"/>
+    <connection from="m4" fromport="0" id="c4" to="m3" toport="1"/>
   </connections>
 </network>

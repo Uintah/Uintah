@@ -41,25 +41,26 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Dataflow/Modules/Visualization
 
 SRCS     += \
-	$(SRCDIR)/AddLight.cc\
+	$(SRCDIR)/CreateLightForViewer.cc\
 	$(SRCDIR)/ChooseColorMap.cc\
-	$(SRCDIR)/EditColorMap.cc\
-	$(SRCDIR)/EditColorMap2D.cc\
-	$(SRCDIR)/GenAxes.cc\
-	$(SRCDIR)/GenClock.cc\
-	$(SRCDIR)/GenStandardColorMaps.cc\
-	$(SRCDIR)/GenTitle.cc\
-	$(SRCDIR)/Isosurface.cc\
-	$(SRCDIR)/NrrdTextureBuilder.cc\
+	$(SRCDIR)/CreateAndEditColorMap.cc\
+	$(SRCDIR)/CreateAndEditColorMap2D.cc\
+	$(SRCDIR)/CreateViewerAxes.cc\
+	$(SRCDIR)/CreateViewerClockIcon.cc\
+	$(SRCDIR)/CreateStandardColorMaps.cc\
+	$(SRCDIR)/CreateViewerCaption.cc\
+	$(SRCDIR)/ExtractIsosurface.cc\
+	$(SRCDIR)/ConvertNrrdsToTexture.cc\
 	$(SRCDIR)/RescaleColorMap.cc\
 	$(SRCDIR)/ShowColorMap.cc\
 	$(SRCDIR)/ShowField.cc\
 	$(SRCDIR)/ShowMatrix.cc\
-	$(SRCDIR)/StreamLines.cc\
-	$(SRCDIR)/HeuristicStreamLines.cc\
-	$(SRCDIR)/TextureBuilder.cc\
-	$(SRCDIR)/VolumeSlicer.cc\
-	$(SRCDIR)/VolumeVisualizer.cc\
+	$(SRCDIR)/ShowMeshBoundingBox.cc\
+	$(SRCDIR)/GenerateStreamLines.cc\
+	$(SRCDIR)/GenerateStreamLinesWithPlacementHeuristic.cc\
+	$(SRCDIR)/ConvertFieldsToTexture.cc\
+	$(SRCDIR)/ShowTextureSlices.cc\
+	$(SRCDIR)/ShowTextureVolume.cc\
 	$(SRCDIR)/ShowString.cc\
 #[INSERT NEW CODE FILE HERE]
 

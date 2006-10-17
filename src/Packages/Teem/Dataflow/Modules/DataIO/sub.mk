@@ -44,12 +44,12 @@ SRCDIR   := Packages/Teem/Dataflow/Modules/DataIO
 
 
 SRCS     += \
-        $(SRCDIR)/AnalyzeNrrdReader.cc\
-        $(SRCDIR)/DicomNrrdReader.cc\
-        $(SRCDIR)/ImageExporter.cc\
-        $(SRCDIR)/ImageImporter.cc\
-        $(SRCDIR)/NrrdReader.cc\
-        $(SRCDIR)/NrrdWriter.cc\
+        $(SRCDIR)/ImportNrrdFromAnalyze.cc\
+        $(SRCDIR)/ImportNrrdFromDicom.cc\
+        $(SRCDIR)/ExportImage.cc\
+        $(SRCDIR)/ImportImage.cc\
+        $(SRCDIR)/ReadNrrd.cc\
+        $(SRCDIR)/WriteNrrd.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \

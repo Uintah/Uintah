@@ -1,9 +1,11 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
-<network version="v1.25.3" name="{Main}" bbox="{42 10 549 526}" creationDate="{Thu Jul 20 2006}" creationTime="{16:00:02}" geometry="{800x800+0+0}">
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{42 10 549 526}" creationDate="{Thu Jul 20 2006}" creationTime="{16:00:02}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.3">
   <note>{}</note>
   <modules>
-    <module id="m1" package="SCIRun" category="FieldsCreate" name="SampleLattice">
+    <module category="NewField" id="m1" name="CreateLatVol" package="SCIRun">
       <position x="98" y="10"/>
       <var name="sizex" val="{16}"/>
       <var name="sizey" val="{16}"/>
@@ -11,7 +13,7 @@
       <var name="padpercent" val="{0.0}"/>
       <var name="data-at" val="{Nodes}"/>
     </module>
-    <module id="m2" package="SCIRun" category="Render" name="Viewer">
+    <module category="Render" id="m2" name="ViewScene" package="SCIRun">
       <position x="140" y="482"/>
       <gui_callback>
         <callback>addViewer</callback>
@@ -110,7 +112,7 @@
       <var name="ViewWindow_0-global-type" val="{Gouraud}"/>
       <var name="&quot;ViewWindow_0-VolumeRenderer Transparent (1)&quot;" val="{1}"/>
     </module>
-    <module id="m3" package="SCIRun" category="Visualization" name="GenStandardColorMaps">
+    <module category="Visualization" id="m3" name="CreateStandardColorMaps" package="SCIRun">
       <position x="354" y="278"/>
       <var name="mapName" val="{Rainbow}"/>
       <var name="gamma" val="{0.0}"/>
@@ -122,13 +124,16 @@
       <var name="width" val="{335}"/>
       <var name="height" val="{40}"/>
     </module>
-    <module id="m4" package="SCIRun" category="FieldsData" name="TransformData" gui_visible="yes">
+    <module category="ChangeFieldData" gui_visible="yes" id="m4" name="CalculateFieldData" package="SCIRun">
       <position x="42" y="85"/>
-      <var name="function" val="{result = sqrt(x*x + y*y + z*z);&#10;&#10;&#10;}"/>
+      <var name="function" val="{result = sqrt(x*x + y*y + z*z);
+
+
+}"/>
       <var name="outputdatatype" val="{input}"/>
       <var name="ui_geometry" val="{433x169+770+832}"/>
     </module>
-    <module id="m5" package="SCIRun" category="Visualization" name="TextureBuilder">
+    <module category="Visualization" id="m5" name="ConvertFieldsToTexture" package="SCIRun">
       <position x="59" y="307"/>
       <var name="vmin" val="{0.115470053838}"/>
       <var name="vmax" val="{1.73205080757}"/>
@@ -138,7 +143,7 @@
       <var name="card_mem" val="{256}"/>
       <var name="card_mem_auto" val="{1}"/>
     </module>
-    <module id="m6" package="SCIRun" category="Visualization" name="VolumeVisualizer">
+    <module category="Visualization" id="m6" name="ShowTextureVolume" package="SCIRun">
       <position x="77" y="405"/>
       <var name="sampling_rate_hi" val="{4.0}"/>
       <var name="sampling_rate_lo" val="{1.0}"/>
@@ -168,10 +173,10 @@
     </module>
   </modules>
   <connections>
-    <connection id="c1" from="m1" fromport="0" to="m4" toport="0"/>
-    <connection id="c2" from="m4" fromport="0" to="m5" toport="0"/>
-    <connection id="c3" from="m5" fromport="0" to="m6" toport="0"/>
-    <connection id="c4" from="m6" fromport="0" to="m2" toport="0"/>
-    <connection id="c5" from="m3" fromport="0" to="m6" toport="1"/>
+    <connection from="m1" fromport="0" id="c1" to="m4" toport="0"/>
+    <connection from="m4" fromport="0" id="c2" to="m5" toport="0"/>
+    <connection from="m5" fromport="0" id="c3" to="m6" toport="0"/>
+    <connection from="m6" fromport="0" id="c4" to="m2" toport="0"/>
+    <connection from="m3" fromport="0" id="c5" to="m6" toport="1"/>
   </connections>
 </network>

@@ -32,17 +32,17 @@ SET(Dataflow_Modules_Render_SRCS
   Ball.cc
   BallAux.cc
   BallMath.cc
-  Camera.cc
-  EditPath.cc
-  Graph.cc
+  ShowAndEditCameraWidget.cc
+  CreateAndEditCameraPath.cc
+  ViewGraph.cc
   OpenGL.cc
   SynchronizeGeometry.cc
   ViewWindow.cc
   ViewSlices.cc
-  Painter.cc
-  PainterTools.cc
-  PainterBrushTool.cc
-  Viewer.cc
+  ViewAndEditSlices.cc
+  ViewAndEditSlicesTools.cc
+  ViewAndEditSlicesBrushTool.cc
+  ViewScene.cc
   glMath.cc
 )
 

@@ -27,7 +27,7 @@
 #
 
 
-itcl_class Teem_NrrdData_ChooseNrrd {
+itcl_class Teem_Misc_ChooseNrrd {
     inherit ChooseModule
     
     constructor {config} {

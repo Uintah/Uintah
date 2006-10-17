@@ -39,31 +39,31 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/Forward
 
 
-SRCS     += $(SRCDIR)/AnisoSphereModel.cc\
+SRCS     += $(SRCDIR)/CreateAnisoSphereParameters.cc\
             $(SRCDIR)/ApplyFEMCurrentSource.cc\
             $(SRCDIR)/ApplyFEMElectrodeSource.cc\
             $(SRCDIR)/ApplyFEMVoltageSource.cc\
-            $(SRCDIR)/BEMTransferSrcToInf.cc\
-            $(SRCDIR)/ComputeCurrent.cc\
-            $(SRCDIR)/ConfigureElectrode.cc\
-            $(SRCDIR)/ConfigureWireElectrode.cc\
-            $(SRCDIR)/CreateDisAnisoSpheres.cc\
-            $(SRCDIR)/DipoleInSphere.cc\
-            $(SRCDIR)/DipoleInAnisoSpheres.cc\
-            $(SRCDIR)/ForwardMagneticField.cc\
+            $(SRCDIR)/BuildBEMSrcToInfTransferMatrix.cc\
+            $(SRCDIR)/CalculateCurrentDensity.cc\
+            $(SRCDIR)/SetWireElectrodePotential.cc\
+            $(SRCDIR)/SetWireElectrodeProperties.cc\
+            $(SRCDIR)/CreateDiscreteAnisoSpheres.cc\
+            $(SRCDIR)/SimulateDipoleInSphereAnalytically.cc\
+            $(SRCDIR)/SimulateDipoleInAnisoSpheresAnalytically.cc\
+            $(SRCDIR)/SimulateForwardMagneticField.cc\
             $(SRCDIR)/GetActivationTimes.cc\
-            $(SRCDIR)/IndicesToTensors.cc\
+            $(SRCDIR)/ConvertFieldDataFromIndicesToTensors.cc\
             $(SRCDIR)/InsertElectrodes.cc\
             $(SRCDIR)/InsertVoltageSource.cc\
             $(SRCDIR)/IntegrateCurrent.cc\
-            $(SRCDIR)/SetupBEMatrix.cc\
-            $(SRCDIR)/SetupFEMatrix.cc\
-            $(SRCDIR)/TensorsToIndices.cc\
-            $(SRCDIR)/ElectrodeManager.cc\
-            $(SRCDIR)/EITAnalyticSolution.cc\
+            $(SRCDIR)/BuildBEMatrix.cc\
+            $(SRCDIR)/BuildFEMatrix.cc\
+            $(SRCDIR)/ConvertFieldDataFromTensorsToIndices.cc\
+            $(SRCDIR)/CreateElectrodeParameterMatrices.cc\
+            $(SRCDIR)/SimulateEITAnalytically.cc\
             $(SRCDIR)/SetEITGround.cc\
-            $(SRCDIR)/TrigCurrentPattern.cc\
-            $(SRCDIR)/SetupEITMatrix.cc\
+            $(SRCDIR)/CreateTrigCurrentPattern.cc\
+            $(SRCDIR)/BuildEITMatrix.cc\
 #[INSERT NEW CODE FILE HERE]	
 
 

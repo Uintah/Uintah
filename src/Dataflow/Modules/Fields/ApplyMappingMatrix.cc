@@ -68,7 +68,7 @@ public:
 DECLARE_MAKER(ApplyMappingMatrix)
 
 ApplyMappingMatrix::ApplyMappingMatrix(GuiContext* ctx)
-  : Module("ApplyMappingMatrix", ctx, Filter, "FieldsData", "SCIRun")
+  : Module("ApplyMappingMatrix", ctx, Filter, "ChangeFieldData", "SCIRun")
 {
 }
 

@@ -55,7 +55,7 @@
 
 #include <Core/Malloc/Allocator.h>
 #include <Dataflow/Modules/Render/ViewWindow.h>
-#include <Dataflow/Modules/Render/Viewer.h>
+#include <Dataflow/Modules/Render/ViewScene.h>
 #include <Dataflow/Modules/Render/Ball.h>
 #include <Dataflow/Network/Ports/GeometryPort.h>
 #include <Core/Datatypes/Image.h>
@@ -151,7 +151,7 @@ struct HiRes {
 
 class OpenGL {
 public:
-  OpenGL(GuiInterface* gui, Viewer *, ViewWindow *);
+  OpenGL(GuiInterface* gui, ViewScene *, ViewWindow *);
   ~OpenGL();
   void                  kill_helper();
   void                  start_helper();
@@ -206,8 +206,8 @@ private:
   void                  redraw_frame();
   void                  setFrustumToWindowPortion();
   void                  deriveFrustum();
-  void                  redraw_obj(Viewer*, ViewWindow*, GeomHandle obj);
-  void                  pick_draw_obj(Viewer* , ViewWindow*, GeomHandle obj);
+  void                  redraw_obj(ViewScene*, ViewWindow*, GeomHandle obj);
+  void                  pick_draw_obj(ViewScene*, ViewWindow*, GeomHandle obj);
   void                  dump_image(const string&, const string& type = "raw");
   void                  put_scanline(int, int, Color* scanline, int repeat=1);
   void                  StartMpeg(const string& fname);
@@ -230,7 +230,7 @@ private:
   Thread *              helper_thread_;
 
 
-  Viewer*               viewer_;
+  ViewScene*               viewer_;
   ViewWindow*           view_window_;
   DrawInfoOpenGL*       drawinfo_;
   WallClockTimer        fps_timer_;

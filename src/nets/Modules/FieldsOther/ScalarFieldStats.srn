@@ -1,6 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
-<network version="v1.25.2" name="{Main}" bbox="{65 28 245 195}" creationDate="{Thu Mar 16 2006}" creationTime="{10:35:22}" geometry="{800x800+0+0}">
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{65 28 245 195}" creationDate="{Thu Mar 16 2006}" creationTime="{10:35:22}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
   <environment>
     <var name="scisub_datadir" val="SCIRUN_DATA"/>
     <var name="scisub_datafile" val="SCIRUN_DATAFILE"/>
@@ -8,7 +10,7 @@
   </environment>
   <note>{}</note>
   <modules>
-    <module id="m1" package="SCIRun" category="FieldsOther" name="ScalarFieldStats" gui_visible="yes">
+    <module category="MiscField" gui_visible="yes" id="m1" name="ReportScalarFieldStats" package="SCIRun">
       <position x="80" y="138"/>
       <var name="min" val="{-5.25315}"/>
       <var name="max" val="{4.31926}"/>
@@ -17,12 +19,12 @@
       <var name="sigma" val="{1.14433536611}"/>
       <var name="ui_geometry" val="{468x387+53+18}"/>
     </module>
-    <module id="m2" package="SCIRun" category="DataIO" name="FieldReader">
+    <module category="DataIO" id="m2" name="ReadField" package="SCIRun">
       <position x="65" y="28"/>
       <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-voltage.tvd.fld"/>
     </module>
   </modules>
   <connections>
-    <connection id="c1" from="m2" fromport="0" to="m1" toport="0"/>
+    <connection from="m2" fromport="0" id="c1" to="m1" toport="0"/>
   </connections>
 </network>

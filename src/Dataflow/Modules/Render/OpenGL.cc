@@ -95,7 +95,7 @@ static const int pick_buffer_size = 512;
 static const double pick_window = 10.0;
 
 
-OpenGL::OpenGL(GuiInterface* gui, Viewer *viewer, ViewWindow *vw) :
+OpenGL::OpenGL(GuiInterface* gui, ViewScene *viewer, ViewWindow *vw) :
   xres_(0),
   yres_(0),
   doing_image_p_(false),
@@ -1759,7 +1759,7 @@ OpenGL::put_scanline(int y, int width, Color* scanline, int repeat)
 
 
 void
-OpenGL::pick_draw_obj(Viewer* viewer, ViewWindow*, GeomHandle obj)
+OpenGL::pick_draw_obj(ViewScene* viewer, ViewWindow*, GeomHandle obj)
 {
 #ifdef SCI_64BITS
   unsigned long o = (unsigned long)(obj.get_rep());
@@ -1782,7 +1782,7 @@ OpenGL::pick_draw_obj(Viewer* viewer, ViewWindow*, GeomHandle obj)
 
 
 void
-OpenGL::redraw_obj(Viewer* viewer, ViewWindow* viewwindow, GeomHandle obj)
+OpenGL::redraw_obj(ViewScene* viewer, ViewWindow* viewwindow, GeomHandle obj)
 {
   GeomViewerItem *gvi  = dynamic_cast<GeomViewerItem *>(obj.get_rep());
   ASSERT(gvi)

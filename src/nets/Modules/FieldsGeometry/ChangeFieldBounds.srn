@@ -1,6 +1,8 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
-<network version="v1.25.2" name="{Main}" bbox="{45 69 521 447}" creationDate="{Thu Mar 16 2006}" creationTime="{10:34:18}" geometry="{800x800+0+0}">
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{45 69 521 447}" creationDate="{Thu Mar 16 2006}" creationTime="{10:34:18}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
   <environment>
     <var name="scisub_datadir" val="SCIRUN_DATA"/>
     <var name="scisub_datafile" val="SCIRUN_DATAFILE"/>
@@ -8,11 +10,11 @@
   </environment>
   <note>{}</note>
   <modules>
-    <module id="m1" package="SCIRun" category="DataIO" name="FieldReader">
+    <module category="DataIO" id="m1" name="ReadField" package="SCIRun">
       <position x="140" y="69"/>
       <var name="filename" val="scisub_datadir/scisub_dataset/scisub_dataset-voltage.tvd.fld"/>
     </module>
-    <module id="m2" package="SCIRun" category="FieldsGeometry" name="ChangeFieldBounds" gui_visible="yes">
+    <module category="ChangeMesh" gui_visible="yes" id="m2" name="EditMeshBoundingBox" package="SCIRun">
       <position x="282" y="159"/>
       <var name="outputcenterx" val="{0.865548823299}"/>
       <var name="outputcentery" val="{-0.130380377858}"/>
@@ -37,7 +39,7 @@
       <var name="box-in-z" val="{0.52227004259}"/>
       <var name="ui_geometry" val="{438x197+56+36}"/>
     </module>
-    <module id="m3" package="SCIRun" category="Visualization" name="ShowField">
+    <module category="Visualization" id="m3" name="ShowField" package="SCIRun">
       <position x="45" y="226"/>
       <var name="nodes-on" val="{0}"/>
       <var name="edges-transparency" val="{1}"/>
@@ -55,7 +57,7 @@
       <var name="show_progress" val="{}"/>
       <var name="field-name" val="{Original Field}"/>
     </module>
-    <module id="m4" package="SCIRun" category="Visualization" name="ShowField">
+    <module category="Visualization" id="m4" name="ShowField" package="SCIRun">
       <position x="356" y="281"/>
       <var name="nodes-on" val="{0}"/>
       <var name="edges-on" val="{0}"/>
@@ -68,7 +70,7 @@
       <var name="show_progress" val="{}"/>
       <var name="field-name" val="{Transformed Field}"/>
     </module>
-    <module id="m5" package="SCIRun" category="Render" name="Viewer">
+    <module category="Render" id="m5" name="ViewScene" package="SCIRun">
       <position x="153" y="403"/>
       <gui_callback>
         <callback>addViewer</callback>
@@ -167,11 +169,11 @@
     </module>
   </modules>
   <connections>
-    <connection id="c1" from="m1" fromport="0" to="m2" toport="0"/>
-    <connection id="c2" from="m1" fromport="0" to="m3" toport="0"/>
-    <connection id="c3" from="m2" fromport="0" to="m4" toport="0"/>
-    <connection id="c4" from="m3" fromport="0" to="m5" toport="0"/>
-    <connection id="c5" from="m4" fromport="0" to="m5" toport="1"/>
-    <connection id="c6" from="m2" fromport="1" to="m5" toport="2"/>
+    <connection from="m1" fromport="0" id="c1" to="m2" toport="0"/>
+    <connection from="m1" fromport="0" id="c2" to="m3" toport="0"/>
+    <connection from="m2" fromport="0" id="c3" to="m4" toport="0"/>
+    <connection from="m3" fromport="0" id="c4" to="m5" toport="0"/>
+    <connection from="m4" fromport="0" id="c5" to="m5" toport="1"/>
+    <connection from="m2" fromport="1" id="c6" to="m5" toport="2"/>
   </connections>
 </network>

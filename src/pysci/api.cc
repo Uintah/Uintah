@@ -52,7 +52,7 @@
 #include <Core/Datatypes/TriSurfMesh.h>
 #include <Core/Datatypes/GenericField.h>
 #include <main/sci_version.h>
-#include <Dataflow/Modules/Fields/TetGen.h>
+#include <Dataflow/Modules/Fields/InterfaceWithTetGen.h>
 #include <Core/Algorithms/Visualization/RenderField.h>
 #include <iostream>
 #include <sstream>

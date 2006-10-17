@@ -39,12 +39,12 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/Inverse
 
 SRCS     += \
-        $(SRCDIR)/AttributeTrf.cc\
-        $(SRCDIR)/ConductivitySearch.cc\
-        $(SRCDIR)/DipoleSearch.cc\
-        $(SRCDIR)/TSVD.cc\
-        $(SRCDIR)/Tikhonov.cc\
-        $(SRCDIR)/TikhonovSVD.cc\
+        $(SRCDIR)/BuildSurfaceLaplacianMatrix.cc\
+        $(SRCDIR)/OptimizeConductivities.cc\
+        $(SRCDIR)/OptimizeDipole.cc\
+        $(SRCDIR)/SolveInverseProblemWithTSVD.cc\
+        $(SRCDIR)/SolveInverseProblemWithTikhonov.cc\
+        $(SRCDIR)/SolveInverseProblemWithTikhonovSVD.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \

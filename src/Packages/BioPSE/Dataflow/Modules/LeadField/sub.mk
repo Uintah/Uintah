@@ -39,9 +39,9 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/BioPSE/Dataflow/Modules/LeadField
 
 SRCS     += \
-	$(SRCDIR)/AssignLeadFieldSources.cc\
+	$(SRCDIR)/BuildLeadFieldSourcesFromElectricCurrentMatrix.cc\
 	$(SRCDIR)/BuildElemLeadField.cc\
-	$(SRCDIR)/BuildMisfitField.cc\
+	$(SRCDIR)/CalculateMisfitField.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := \

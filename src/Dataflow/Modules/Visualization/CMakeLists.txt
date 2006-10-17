@@ -29,25 +29,25 @@
 # CMakeLists.txt for Dataflow/Modules/Visualization
 
 SET(Dataflow_Modules_Visualization_SRCS
-  AddLight.cc
+  CreateLightForViewer.cc
   ChooseColorMap.cc
-  EditColorMap.cc
-  EditColorMap2D.cc
-  GenAxes.cc
-  GenClock.cc
-  GenStandardColorMaps.cc
-  GenTitle.cc
-  Isosurface.cc
-  NrrdTextureBuilder.cc
+  CreateAndEditColorMap.cc
+  CreateAndCreateAndEditColorMap2D.cc
+  CreateViewerAxes.cc
+  CreateViewerClockIcon.cc
+  CreateStandardColorMaps.cc
+  CreateViewerCaption.cc
+  ExtractIsosurface.cc
+  ConvertNrrdsToTexture.cc
   RescaleColorMap.cc
   ShowColorMap.cc
   ShowField.cc
   ShowMatrix.cc
-  StreamLines.cc
-  HeuristicStreamLines.cc
-  TextureBuilder.cc
-  VolumeSlicer.cc
-  VolumeVisualizer.cc
+  GenerateStreamLines.cc
+  GenerateGenerateStreamLinesWithPlacementHeuristic.cc
+  ConvertFieldsToTexture.cc
+  ShowTextureSlices.cc
+  ShowTextureVolume.cc
   ShowString.cc
 )
 

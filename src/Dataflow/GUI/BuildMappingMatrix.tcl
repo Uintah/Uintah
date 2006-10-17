@@ -27,7 +27,7 @@
 #
 
 
-itcl_class SCIRun_FieldsData_BuildMappingMatrix {
+itcl_class SCIRun_MiscField_BuildMappingMatrix {
     inherit Module
 
     constructor {config} {

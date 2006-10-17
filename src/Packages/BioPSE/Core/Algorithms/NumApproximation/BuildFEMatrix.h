@@ -70,7 +70,7 @@ namespace BioPSE {
 using namespace SCIRun;
 
 template<class Field>
-class BuildFEMatrix {
+class BuildFEMatrixAlg {
 public:
 
   static bool build_FEMatrix(FieldHandle hField,
@@ -111,7 +111,7 @@ private:
   int global_dimension_derivatives_;
   int global_dimension_;
 
-  BuildFEMatrix(FieldHandle hField,
+  BuildFEMatrixAlg(FieldHandle hField,
                 vector<pair<string, Tensor> >& tens,
                 MatrixHandle& hA,
                 double unitsScale,
@@ -121,7 +121,7 @@ private:
     np_(np),
     rows_(NULL),
     allCols_(NULL),
-    barrier_("BuildFEMatrix barrier"),
+    barrier_("BuildFEMatrixAlg barrier"),
     colIdx_(np+1),
     tens_(tens),
     unitsScale_(unitsScale)
@@ -130,7 +130,7 @@ private:
     hMesh_ = pField_->get_typed_mesh();
   }
 
-  virtual ~BuildFEMatrix() {}
+  virtual ~BuildFEMatrixAlg() {}
 
 
   //!< p is the gaussian points
@@ -173,7 +173,7 @@ private:
 
 template <class Field>
 bool
-BuildFEMatrix<Field>::build_FEMatrix(FieldHandle hField,
+BuildFEMatrixAlg<Field>::build_FEMatrix(FieldHandle hField,
                                      vector<pair<string, Tensor> >& tens,
                                      MatrixHandle& hA, double unitsScale,
                                      int num_procs)
@@ -191,9 +191,9 @@ BuildFEMatrix<Field>::build_FEMatrix(FieldHandle hField,
 
   hA = 0;
 
-  BuildFEMatrix hMaker(hField, tens, hA, unitsScale, np);
+  BuildFEMatrixAlg hMaker(hField, tens, hA, unitsScale, np);
 
-  Thread::parallel(&hMaker, &BuildFEMatrix::parallel, np);
+  Thread::parallel(&hMaker, &BuildFEMatrixAlg::parallel, np);
 
   return hA.get_rep() != 0;
 }
@@ -201,7 +201,7 @@ BuildFEMatrix<Field>::build_FEMatrix(FieldHandle hField,
 
 template <class Field>
 void
-BuildFEMatrix<Field>::create_numerical_integration(vector<vector<double> > &p,
+BuildFEMatrixAlg<Field>::create_numerical_integration(vector<vector<double> > &p,
                                                    vector<double> &w,
                                                    vector<vector<double> > &d)
 {
@@ -226,7 +226,7 @@ BuildFEMatrix<Field>::create_numerical_integration(vector<vector<double> > &p,
 //! build line of the local stiffness matrix
 template <class Field>
 void
-BuildFEMatrix<Field>::build_local_matrix(typename BuildFEMatrix::Mesh::Elem::index_type c_ind,
+BuildFEMatrixAlg<Field>::build_local_matrix(typename BuildFEMatrixAlg::Mesh::Elem::index_type c_ind,
                                          int row, vector<double> &l_stiff,
                                          vector<vector<double> > &p,
                                          vector<double> &w,
@@ -335,7 +335,7 @@ BuildFEMatrix<Field>::build_local_matrix(typename BuildFEMatrix::Mesh::Elem::ind
 
 template <class Field>
 void
-BuildFEMatrix<Field>::setup()
+BuildFEMatrixAlg<Field>::setup()
 {
   domain_dimension_ = mb_.domain_dimension();
   ASSERT(domain_dimension_ > 0);
@@ -379,10 +379,10 @@ BuildFEMatrix<Field>::setup()
 // -- Callback routine to execute in parallel.
 template <class Field>
 void
-BuildFEMatrix<Field>::parallel(int proc)
+BuildFEMatrixAlg<Field>::parallel(int proc)
 {
 #ifdef BUILDFEM_DEBUG
-  cerr << "BuildFEMatrix::parallel " << proc << endl;
+  cerr << "BuildFEMatrixAlg::parallel " << proc << endl;
 #endif
 
   if (proc == 0)

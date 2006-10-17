@@ -67,7 +67,7 @@ class GeomViewerPort: public GeomIndexedGroup {
   int portno;
     
 public:
-  friend class Viewer;
+  friend class ViewScene;
   GeomViewerPort(int num) : msg_head(0), msg_tail(0), portno(num){}
   virtual ~GeomViewerPort() {}
 

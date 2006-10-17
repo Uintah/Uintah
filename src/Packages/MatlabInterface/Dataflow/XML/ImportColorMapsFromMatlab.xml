@@ -1,0 +1,171 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE component SYSTEM "../../../../Dataflow/XML/component.dtd">
+<?xml-stylesheet href="../../../../Dataflow/XML/package-component.xsl" type="text/xsl"?>
+<?cocoon-process type="xslt"?>
+
+<!--
+   For more information, please see: http://software.sci.utah.edu
+
+   The MIT License
+
+   Copyright (c) 2004 Scientific Computing and Imaging Institute,
+   University of Utah.
+
+   
+   Permission is hereby granted, free of charge, to any person obtaining a
+   copy of this software and associated documentation files (the "Software"),
+   to deal in the Software without restriction, including without limitation
+   the rights to use, copy, modify, merge, publish, distribute, sublicense,
+   and/or sell copies of the Software, and to permit persons to whom the
+   Software is furnished to do so, subject to the following conditions:
+
+   The above copyright notice and this permission notice shall be included
+   in all copies or substantial portions of the Software.
+
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS
+   OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+   FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL
+   THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+   LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
+   FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
+   DEALINGS IN THE SOFTWARE.
+-->
+
+<component name="ImportColorMapsFromMatlab" category="DataIO">
+  <overview>
+    <authors>
+      <author>Jeroen Stinstra</author>
+    </authors>
+	
+    <summary> The ImportColorMapsFromMatlab module reads a matrix from a
+MATLAB file
+	</summary>
+	
+    <description>
+	
+      <section>
+	<title>Module description</title>
+
+      </section>
+	
+      <section>
+	<title>See Also </title>
+	<p>
+	<modref package="MatlabInterface" name="Matlab" />, <modref
+package="MatlabInterface" name="MatlabBundelsReader" />, <modref
+package="MatlabInterface" name="MatlabBundlesWriter" />, <modref
+package="MatlabInterface" name="MatlabDataReader" />, <modref
+package="MatlabInterface" name="MatlabDataWriter" />, <modref
+package="MatlabInterface" name="MatlabFieldsReader" />, <modref
+package="MatlabInterface" name="MatlabFieldsWriter" />, <modref
+package="MatlabInterface" name="ImportColorMapsFromMatlab" />, <modref
+package="MatlabInterface" name="ImportColorMapsFromMatlab" />, <modref
+package="MatlabInterface" name="MatlabNrrdsWriter" />, <modref
+package="MatlabInterface" name="MatlabNrrdsReader" />	
+	</p>
+      </section>
+	
+    </description>   
+  </overview>
+  <io>
+    <inputs lastportdynamic="no">
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>         
+    </inputs>
+    <outputs>
+      <port>
+        <name>ColorMap1</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+      <port>
+        <name>ColorMap2</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+      <port>
+        <name>ColorMap3</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+      <port>
+        <name>ColorMap4</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+      <port>
+        <name>ColorMap5</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+      <port>
+        <name>ColorMap6</name>
+	<datatype>SCIRun::ColorMap</datatype>
+      </port>
+      <port>
+        <name>Filename</name>
+        <datatype>SCIRun::String</datatype>
+      </port>            
+    </outputs>
+  </io>
+ 
+  <gui>
+
+    <parameter>
+      <widget> Entry </widget>
+      <label> .mat file </label>
+      <description>
+	<p> The name of the MATLAB file </p>
+      </description>
+    </parameter>
+
+    <parameter>
+      <widget> Button </widget>
+      <label> Open </label>
+      <description>
+	<p>Opens the file specified in the MATLAB file entrybox </p>
+      </description>
+    </parameter>
+
+    <parameter>
+      <widget> Button </widget>
+      <label> Browse </label>
+      <description>
+	<p>Open a filesectionbox and choose a MATLAB file </p>
+      </description>
+    </parameter>
+
+    <parameter>
+      <widget> Listbox </widget>
+      <label> matlab matrix selector </label>
+      <description>
+	<p>Displays the matrices that are stored in the MATLAB file
+and an information string describing the data in the matrix</p>
+      </description>
+    </parameter>
+
+    <parameter>
+      <widget> Button </widget>
+      <label> Port N </label>
+      <description>
+	<p>Button for selecting which output port is used to export
+the data. The button highlighted white is currently selected one.
+Selecting a matrix from the list below will put that matrix on the
+port whose label is highlighted in white. </p>
+      </description>
+    </parameter>
+	
+    <parameter>
+      <widget>  Checkbox </widget>
+      <label> Disable Matlab to C++ conversion (data will be
+transposed) </label>
+      <description>
+	<p>Large dataset are often ordered such that the first
+dimension is the one that is accessed most. For example the dimension
+time is often the last one. Because Matlab and C++ use different
+ordering, a favorable ordering may get lost by importing a matrix
+directly. By switching on this option the matrix is transposed, but
+the ordering in memory stays the same. This often saves a lot of
+swapping to virtual memory for large datasets.</p>
+ 
+      </description>
+    </parameter>
+  </gui>
+</component>

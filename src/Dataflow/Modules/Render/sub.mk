@@ -44,17 +44,17 @@ SRCS     += \
 	$(SRCDIR)/Ball.cc\
 	$(SRCDIR)/BallAux.cc\
 	$(SRCDIR)/BallMath.cc\
-	$(SRCDIR)/Camera.cc\
-	$(SRCDIR)/EditPath.cc\
-	$(SRCDIR)/Graph.cc\
+	$(SRCDIR)/ShowAndEditCameraWidget.cc\
+	$(SRCDIR)/CreateAndEditCameraPath.cc\
+	$(SRCDIR)/ViewGraph.cc\
 	$(SRCDIR)/OpenGL.cc\
 	$(SRCDIR)/SynchronizeGeometry.cc\
 	$(SRCDIR)/ViewWindow.cc\
 	$(SRCDIR)/ViewSlices.cc\
-	$(SRCDIR)/Painter.cc\
-	$(SRCDIR)/PainterTools.cc\
-	$(SRCDIR)/PainterBrushTool.cc\
-	$(SRCDIR)/Viewer.cc\
+	$(SRCDIR)/ViewAndEditSlices.cc\
+	$(SRCDIR)/ViewAndEditSlicesTools.cc\
+	$(SRCDIR)/ViewAndEditSlicesBrushTool.cc\
+	$(SRCDIR)/ViewScene.cc\
 	$(SRCDIR)/glMath.cc\
 #[INSERT NEW CODE FILE HERE]
 

@@ -37,7 +37,7 @@ SRCS     += \
 	$(SRCDIR)/EdgeMC.cc             \
 	$(SRCDIR)/FastLatMC.cc          \
         $(SRCDIR)/HexMC.cc		\
-	$(SRCDIR)/Isosurface.cc		\
+	$(SRCDIR)/ExtractIsosurface.cc		\
 	$(SRCDIR)/MarchingCubes.cc	\
 	$(SRCDIR)/mcube2.cc		\
 	$(SRCDIR)/Noise.cc		\

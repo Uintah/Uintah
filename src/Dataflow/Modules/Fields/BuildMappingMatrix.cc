@@ -74,7 +74,7 @@ public:
 
 DECLARE_MAKER(BuildMappingMatrix)
 BuildMappingMatrix::BuildMappingMatrix(GuiContext* ctx) : 
-  Module("BuildMappingMatrix", ctx, Filter, "FieldsData", "SCIRun"),
+  Module("BuildMappingMatrix", ctx, Filter, "MiscField", "SCIRun"),
   interpolation_basis_(get_ctx()->subVar("interpolation_basis"), "linear"),
   map_source_to_single_dest_(get_ctx()->subVar("map_source_to_single_dest"), 0),
   exhaustive_search_(get_ctx()->subVar("exhaustive_search"), 0),

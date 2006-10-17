@@ -86,7 +86,7 @@ class Light;
 class Vector;
 class Transform;
 class OpenGL;
-class Viewer;
+class ViewScene;
 class GeomViewerItem;
 class BallData;
 class OpenGL;
@@ -94,12 +94,12 @@ class ViewWindow;
 
 typedef void (ViewWindow::*MouseHandler)(int, int x, int y, 
 				  int state, int btn, int time);
-typedef void (OpenGL::*ViewWindowVisPMF)(Viewer*, ViewWindow*, GeomHandle);
+typedef void (OpenGL::*ViewWindowVisPMF)(ViewScene*, ViewWindow*, GeomHandle);
 
 class ViewWindow : public GuiCallback {
-  friend class Viewer;
+  friend class ViewScene;
 public:
-  ViewWindow(Viewer *s, GuiInterface* gui, GuiContext* ctx);
+  ViewWindow(ViewScene *s, GuiInterface* gui, GuiContext* ctx);
   ~ViewWindow();
 
   void			itemAdded(GeomViewerItem*);
@@ -210,7 +210,7 @@ private:
 			       int nframes, double framerate);
 
   // Private Member variables
-  Viewer*		viewer_;
+  ViewScene*		viewer_;
   OpenGL*		renderer_;
   GuiInterface*		gui_;
   GuiContext*		ctx_;

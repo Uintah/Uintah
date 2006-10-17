@@ -30,21 +30,21 @@
 
 SET(Dataflow_Modules_Math_SRCS
   AppendMatrix.cc
-  BuildNoise.cc
-  BuildTransform.cc
-  CastMatrix.cc
+  BuildNoiseColumnMatrix.cc
+  CreateGeometricTransform.cc
+  ConvertMatrixType.cc
   ChooseMatrix.cc
-  ErrorMetric.cc
-  LinAlgBinary.cc
-  LinAlgUnary.cc
-  LinearAlgebra.cc
-  MatrixInfo.cc
-  MatrixSelectVector.cc
-  MinNormLeastSq.cc
-  SolveMatrix.cc
-  Submatrix.cc
-  MaskVectorToMappingMatrix.cc
-  MappingMatrixToMaskVector.cc
+  ReportColumnMatrixMisfit.cc
+  EvaluateLinAlgBinary.cc
+  EvaluateLinAlgUnary.cc
+  EvaluateLinAlgGeneral.cc
+  ReportMatrixInfo.cc
+  GetColumnMatrixFromMatrix.cc
+  SolveMinNormLeastSqSystem.cc
+  SolveLinearSystem.cc
+  GetSubmatrix.cc
+  ConvertMaskVectorToMappingMatrix.cc
+  ConvertMappingMatrixToMaskVector.cc
   CreateMatrix.cc
 )
 

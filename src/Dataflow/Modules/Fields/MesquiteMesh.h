@@ -6,7 +6,7 @@
 #include <Core/Util/DynamicLoader.h>
 #include <Core/Datatypes/HexVolMesh.h>
 #include <Core/Datatypes/TetVolMesh.h>
-#include <Dataflow/Modules/Fields/FieldBoundary.h>
+#include <Dataflow/Modules/Fields/GetFieldBoundary.h>
 #include <MeshInterface.hpp>
 #include <MsqError.hpp>
 
@@ -368,8 +368,8 @@ MesquiteMesh<FIELD>::MesquiteMesh( FIELD* field, ProgressReporter* mod )
   }
 
   const TypeDescription *mtd = mOwner->mesh()->get_type_description();
-  CompileInfoHandle ci_boundary = FieldBoundaryAlgo::get_compile_info( mtd );
-  Handle<FieldBoundaryAlgo> boundary_algo;
+  CompileInfoHandle ci_boundary = GetFieldBoundaryAlgo::get_compile_info( mtd );
+  Handle<GetFieldBoundaryAlgo> boundary_algo;
   FieldHandle boundary_field_h;
   if( !DynamicCompilation::compile( ci_boundary, boundary_algo, false, mod ) ) return;
   

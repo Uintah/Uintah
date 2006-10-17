@@ -29,7 +29,7 @@
 # CMakeLists.txt for Packages/BioPSE/Dataflow/Modules/DataIO
 
 SET(Packages_BioPSE_Dataflow_Modules_DataIO_SRCS
-  RawToDenseMatrix.cc
+  ImportDenseMatrixFromRaw.cc
 )
 
 ADD_LIBRARY(Packages_BioPSE_Dataflow_Modules_DataIO ${Packages_BioPSE_Dataflow_Modules_DataIO_SRCS})

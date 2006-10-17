@@ -42,19 +42,17 @@ include $(SCIRUN_SCRIPTS)/smallso_prologue.mk
 SRCDIR   := Packages/MatlabInterface/Dataflow/Modules/DataIO
 
 SRCS     += \
-	$(SRCDIR)/Matlab.cc\
-	$(SRCDIR)/MatlabBundle.cc\
-	$(SRCDIR)/MatlabColorMapsReader.cc\
-	$(SRCDIR)/MatlabDataReader.cc\
-	$(SRCDIR)/MatlabDataWriter.cc\
-	$(SRCDIR)/MatlabFieldsReader.cc \
-	$(SRCDIR)/MatlabFieldsWriter.cc \
-	$(SRCDIR)/MatlabMatricesReader.cc\
-	$(SRCDIR)/MatlabMatricesWriter.cc \
-	$(SRCDIR)/MatlabNrrdsReader.cc \
-	$(SRCDIR)/MatlabNrrdsWriter.cc \
-	$(SRCDIR)/MatlabBundlesReader.cc \
-	$(SRCDIR)/MatlabBundlesWriter.cc \
+	$(SRCDIR)/ExportBundlesToMatlab.cc\
+	$(SRCDIR)/ExportDatatypesToMatlab.cc\
+	$(SRCDIR)/ExportFieldsToMatlab.cc\
+	$(SRCDIR)/ExportMatricesToMatlab.cc\
+	$(SRCDIR)/ExportNrrdsToMatlab.cc\
+	$(SRCDIR)/ImportBundlesFromMatlab.cc\
+	$(SRCDIR)/ImportColorMapsFromMatlab.cc\
+	$(SRCDIR)/ImportDatatypesFromMatlab.cc\
+	$(SRCDIR)/ImportFieldsFromMatlab.cc\
+	$(SRCDIR)/ImportMatricesFromMatlab.cc\
+	$(SRCDIR)/ImportNrrdsFromMatlab.cc\
 #[INSERT NEW CODE FILE HERE]
 
 PSELIBS := Core/Persistent Core/Containers Core/Util \
