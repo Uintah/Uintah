@@ -858,13 +858,13 @@ int MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
       
     // TEST: The dimensions of the x, y, and z ,atrix should be equal
 
-    int size = mlx.getnumdims();
-    if (mly.getnumdims() != size) 
+    size_t size = (size_t)mlx.getnumdims();
+    if (mly.getnumdims() != (int)size) 
     {
       if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and y matrix do not match)"));
       return(0);
     }
-    if (mlz.getnumdims() != size) 
+    if (mlz.getnumdims() != (int)size) 
     {
       if (postremark) remark(std::string("Matrix '" + mlarray.getname() + "' cannot be translated into a SCIRun Field (the dimensions of the x and z matrix do not match)"));
       return(0);
@@ -875,7 +875,7 @@ int MatlabToFieldAlgo::mlanalyze(matlabarray mlarray, bool postremark)
     std::vector<int> dimsz = mlz.getdims();
                 
     // Check dimension by dimension for any problems
-    for (int p=0 ; p < size ; p++)
+    for (size_t p=0 ; p < size ; p++)
     {
       if(dimsx[p] != dimsy[p]) 
       {
