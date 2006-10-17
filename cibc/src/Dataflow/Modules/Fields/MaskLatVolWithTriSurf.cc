@@ -132,7 +132,7 @@ MaskLatVolWithTriSurf::execute()
   while (niter != niter_end) {
     Point p;
     latvolM->get_center(p, *niter);
-    if (!surfBBox.inside(p)) { mask->set_value(0, *niter); ++niter; continue; }
+    if (!surfBBox.inside(p)) { mask->set_value(static_cast<LVField::value_type>(0), *niter); ++niter; continue; }
     int ncrossings=0;
     trisurfM->begin(fiter);
     while (fiter != fiter_end) {
@@ -169,8 +169,8 @@ MaskLatVolWithTriSurf::execute()
       }
       ++fiter;
     }
-    if (ncrossings % 2) mask->set_value(1, *niter);
-    else mask->set_value(0, *niter);
+    if (ncrossings % 2) mask->set_value(static_cast<LVField::value_type>(1), *niter);
+    else mask->set_value(static_cast<LVField::value_type>(0), *niter);
     ++niter;
   }
 
