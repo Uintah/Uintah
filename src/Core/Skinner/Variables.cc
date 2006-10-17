@@ -493,7 +493,9 @@ namespace SCIRun {
         ptr.second->string_value_ = val;
         return true;
       } break;
-
+      
+      default:  // TODO: BOOL_E and COLOR_E
+        break;
       }
       return false;
     }
