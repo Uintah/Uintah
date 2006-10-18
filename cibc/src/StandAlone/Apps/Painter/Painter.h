@@ -179,6 +179,8 @@ private:
   pair<double, double>  compute_mean_and_deviation(Nrrd *, Nrrd *);
   NrrdVolume *          copy_current_volume(const string &, int mode=0);
 
+  void                  isosurface_label_volumes(NrrdVolumes &, GeomGroup *);
+
 #ifdef HAVE_INSIGHT
   ITKDatatypeHandle     nrrd_to_itk_image(NrrdDataHandle &nrrd);
   NrrdDataHandle        itk_image_to_nrrd(ITKDatatypeHandle &);

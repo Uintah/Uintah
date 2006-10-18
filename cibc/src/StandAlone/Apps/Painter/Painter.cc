@@ -226,7 +226,13 @@ Painter::build_layer_button(unsigned int &bpos, NrrdVolume *volume)
     level++;
     parent = parent->parent_;
   }
-  button->indent_ = 20*level;
+  button->indent_ = 20*level+5;
+  if (volume->children_.empty()) {
+    button->expand_width_ = 0;
+  } else {
+    button->expand_width_ = 20;
+  }
+    
 
   if (volume == current_volume_) {
     button->background_color_ = Skinner::Color(0.6, 0.6, 1.0, 0.75);
@@ -414,7 +420,6 @@ Painter::new_current_layer() {
     rebuild_layer_buttons();
     extract_all_window_slices();
     redraw_all();
-
   }
 }
 

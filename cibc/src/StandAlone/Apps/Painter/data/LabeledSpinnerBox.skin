@@ -31,6 +31,7 @@
     </object>
 
     <object class="SpinnerBox">
+      <var name="SpinnerBox::text_size" propagate="yes">$LabeledSpinnerBox::text_size</var>
       <var name="row">1</var>
       <var name="col">2</var>        
     </object>

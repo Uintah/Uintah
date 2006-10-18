@@ -49,6 +49,13 @@
               
               <signal name="VisibleItem::made_visible" 
                       target="GLWindow::mark_redraw"/>
+              <signal name="VisibleItem::made_invisible" 
+                      target="GLWindow::mark_redraw"/>
+              <signal name="VisibleItem::made_invisible" 
+                      target="FocusGrab::Ungrab"/>
+
+
+
               
               <object class="CropToolDialog">
                 <signal name="ToolDialog::Cancel" 
@@ -61,6 +68,7 @@
                   <var name="id">Nothing</var>
                   <var name="group">ToolsVisibleGroup</var>
                 </signal>
+
               </object>
             </object>
             
@@ -72,6 +80,12 @@
               
               <signal name="VisibleItem::made_visible" 
                       target="GLWindow::mark_redraw"/>
+              <signal name="VisibleItem::made_invisible" 
+                      target="GLWindow::mark_redraw"/>
+              <signal name="VisibleItem::made_invisible" 
+                      target="FocusGrab::Ungrab"/>
+
+
               
               <object class="ResampleDialog">
                 <signal name="ToolDialog::Cancel" 
@@ -84,6 +98,7 @@
                   <var name="id">Nothing</var>
                   <var name="group">ToolsVisibleGroup</var>
                 </signal>
+
               </object>
             </object>
 
@@ -93,6 +108,15 @@
               
               <xi:include href="BrushToolDialog.skin" parse="xml"/>
               
+              <signal name="VisibleItem::made_visible" 
+                      target="GLWindow::mark_redraw"/>
+              <signal name="VisibleItem::made_invisible" 
+                      target="GLWindow::mark_redraw"/>
+              <signal name="VisibleItem::made_invisible" 
+                      target="FocusGrab::Ungrab"/>
+
+
+
               <object class="BrushToolDialog">
                 <signal name="ToolDialog::Cancel" 
                         target="VisibilityGroup::show_VisibleItem">

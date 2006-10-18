@@ -70,8 +70,8 @@ ZoomTool::pointer_motion(int button, int x, int y,
     return QUIT_AND_STOP_E;
   }
 
-  const int delta = x + y - x_ - y_;
-  window_->zoom_ = Max(0.00001, zoom_ * Pow(1.002,delta));
+  const int delta = x + y_ - x_ - y;
+  window_->zoom_ = Max(0.00001, zoom_ * Pow(1.008,delta));
   window_->redraw();
   return STOP_E;
 }    

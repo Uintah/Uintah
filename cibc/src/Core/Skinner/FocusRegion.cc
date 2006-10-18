@@ -105,7 +105,7 @@ namespace SCIRun {
               next = (int(i) + (backward ? ( int(num) - 1) : 1)) % num;
             } while (!focus_regions_[next]->get_vars()->get_bool("visible"));
             focus_regions_[next]->set_focus(true);
-            cerr << "Focus: " << focus_regions_[next]->get_id() << std::endl;
+            //            cerr << "Focus: " << focus_regions_[next]->get_id() << std::endl;
             break;
           }
         }
