@@ -41,7 +41,7 @@ void
 start_trail_file() {
   string default_trailfile(string("/tmp/")+
                            sci_getenv("EXECUTABLE_NAME")+".trail");
-  string default_trailmode("R");
+  string default_trailmode("");
 
   const char *trailfile = sci_getenv("SCIRUN_TRAIL_FILE");
   const char *trailmode = sci_getenv("SCIRUN_TRAIL_MODE");
