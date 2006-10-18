@@ -293,7 +293,7 @@ void
 NrrdToImage::copy_kvp_to_dictionary(Nrrd *n, itk::Object *obj) {
   // handle any key/value pairs
   itk::MetaDataDictionary &dic = obj->GetMetaDataDictionary();
-  for (int i=0; i< nrrdKeyValueSize(n); i++) {
+  for (unsigned int i=0; i< nrrdKeyValueSize(n); i++) {
     char *key, *val;
     nrrdKeyValueIndex(n, &key, &val, i);
     if (key && val) { // add the key/value pair to the dictionary

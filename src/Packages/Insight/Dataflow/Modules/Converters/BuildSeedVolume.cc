@@ -209,7 +209,7 @@ BuildSeedVolume::execute()
     y_rad = rad / spacing_y;
 
     // fill in that pixel
-    int radsq = x_rad * y_rad;
+    int radsq = (int)(x_rad * y_rad);
     for(int r=y-static_cast<int>(y_rad); r <=(y+static_cast<int>(y_rad)); r++) {
       for(int c=x-static_cast<int>(x_rad); c <= (x+static_cast<int>(x_rad)); c++) {
 	// check if point is within volume and

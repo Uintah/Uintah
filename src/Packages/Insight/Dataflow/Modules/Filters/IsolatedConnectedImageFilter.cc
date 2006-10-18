@@ -152,7 +152,7 @@ IsolatedConnectedImageFilter::run( itk::Object *obj_InputImage)
   // clear defined object guis if things aren't in sync
   
   
-  if(seed_point_1.GetIndexDimension() != gui_dimension_.get()) { 
+  if((int)seed_point_1.GetIndexDimension() != gui_dimension_.get()) { 
     gui_dimension_.set(seed_point_1.GetIndexDimension());    
   
     // for each defined object, clear gui
@@ -182,7 +182,7 @@ IsolatedConnectedImageFilter::run( itk::Object *obj_InputImage)
   }
 
   // set seed_point_1 values
-  for(int i=0; i<seed_point_1.GetIndexDimension(); i++) {
+  for(unsigned int i=0; i<seed_point_1.GetIndexDimension(); i++) {
     seed_point_1[i] = gui_seed_point_1_[i]->get();
   }
 
@@ -205,7 +205,7 @@ IsolatedConnectedImageFilter::run( itk::Object *obj_InputImage)
   }
 
   // set seed_point_2 values
-  for(int i=0; i<seed_point_2.GetIndexDimension(); i++) {
+  for(unsigned int i=0; i<seed_point_2.GetIndexDimension(); i++) {
     seed_point_2[i] = gui_seed_point_2_[i]->get();
   }
 

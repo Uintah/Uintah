@@ -135,6 +135,8 @@ VectorConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetInput( data_InputImage );
        
   }
+  FilterType *filter = dynamic_cast<FilterType *>(filter_.GetPointer());
+  ASSERT(filter);
 
   // reset progress bar
   update_progress(0.0);
@@ -149,7 +151,7 @@ VectorConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
   // clear defined object guis if things aren't in sync
   
   
-  if(seed_point.GetIndexDimension() != gui_dimension_.get()) { 
+  if((int)seed_point.GetIndexDimension() != gui_dimension_.get()) { 
     gui_dimension_.set(seed_point.GetIndexDimension());    
   
     // for each defined object, clear gui
@@ -160,9 +162,9 @@ VectorConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
     execute_ = false;
   }
   
-  dynamic_cast<FilterType* >(filter_.GetPointer())->SetNumberOfIterations( gui_number_of_iterations_.get() ); 
+  filter->SetNumberOfIterations( gui_number_of_iterations_.get() ); 
   
-  dynamic_cast<FilterType* >(filter_.GetPointer())->SetMultiplier( gui_multiplier_.get() ); 
+  filter->SetMultiplier( gui_multiplier_.get() ); 
   
   // register GuiVars
   // avoid pushing onto vector each time if not needed
@@ -180,16 +182,15 @@ VectorConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
   }
 
   // set seed_point values
-  for(int i=0; i<seed_point.GetIndexDimension(); i++) {
+  for(unsigned int i=0; i<seed_point.GetIndexDimension(); i++) {
     seed_point[i] = gui_seed_point_[i]->get();
   }
 
-  dynamic_cast<FilterType* >(filter_.GetPointer())->SetSeed( seed_point );
+  filter->SetSeed( seed_point );
 
+  filter->SetReplaceValue( (typename OutputImageType::PixelType)gui_replace_value_.get() ); 
   
-  dynamic_cast<FilterType* >(filter_.GetPointer())->SetReplaceValue( gui_replace_value_.get() ); 
-  
-  dynamic_cast<FilterType* >(filter_.GetPointer())->SetInitialNeighborhoodRadius( gui_initial_radius_.get() ); 
+  filter->SetInitialNeighborhoodRadius( gui_initial_radius_.get() ); 
   
 
   // execute the filter
@@ -198,7 +199,7 @@ VectorConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
   
   try {
 
-    dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
+    filter->Update();
 
   } catch ( itk::ExceptionObject & err ) {
      error("ExceptionObject caught!");
@@ -206,7 +207,6 @@ VectorConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
   }
 
   // get filter output
-  
   
   ITKDatatype* out_OutputImge_ = scinew ITKDatatype; 
   
@@ -216,7 +216,6 @@ VectorConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
   outport_OutputImge_->send(outhandle_OutputImge_);
   
   }
-  
 
   return true;
 }

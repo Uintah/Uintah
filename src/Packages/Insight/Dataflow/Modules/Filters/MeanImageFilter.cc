@@ -145,7 +145,7 @@ MeanImageFilter::run( itk::Object *obj_InputImage)
   // clear defined object guis if things aren't in sync
   
   
-  if(radius.GetSizeDimension() != gui_dimension_.get()) { 
+  if((int)radius.GetSizeDimension() != gui_dimension_.get()) { 
     gui_dimension_.set(radius.GetSizeDimension());    
   
     // for each defined object, clear gui
@@ -172,7 +172,7 @@ MeanImageFilter::run( itk::Object *obj_InputImage)
   }
 
   // set radius values
-  for(int i=0; i<radius.GetSizeDimension(); i++) {
+  for(unsigned int i=0; i<radius.GetSizeDimension(); i++) {
     radius[i] = gui_radius_[i]->get();
   }
 

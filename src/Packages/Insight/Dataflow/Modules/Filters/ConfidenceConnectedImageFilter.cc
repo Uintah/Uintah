@@ -175,7 +175,7 @@ ConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
   // clear defined object guis if things aren't in sync
   
   
-  if(seed_point.GetIndexDimension() != gui_dimension_.get()) { 
+  if((int)seed_point.GetIndexDimension() != gui_dimension_.get()) { 
     gui_dimension_.set(seed_point.GetIndexDimension());    
   
     // for each defined object, clear gui
@@ -209,7 +209,7 @@ ConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
   set_image_variables(obj_InputImage);
 
   // set seed_point values
-  for(int i=0; i<seed_point.GetIndexDimension(); i++) {
+  for(unsigned int i=0; i<seed_point.GetIndexDimension(); i++) {
     seed_point[i] = gui_seed_point_[i]->get();
   }
 
