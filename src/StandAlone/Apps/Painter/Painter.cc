@@ -185,40 +185,32 @@ Painter::extract_all_window_slices() {
 
 
 void
+Painter::get_data_from_layer_buttons()  
+{
+  for (int i = 0; i < layer_buttons_.size(); ++i) {
+    LayerButton *button = layer_buttons_[i];
+    NrrdVolume *volume = button->volume_;
+    if (!volume) continue;
+    volume->name_ = button->layer_name_;
+    volume->visible_ = button->layer_visible_;
+    volume->expand_ = button->expand_;
+  }
+}
+
+void
 Painter::rebuild_layer_buttons()  
 {
+  get_data_from_layer_buttons();
   unsigned int bpos = 0;  
   for (int i = volumes_.size()-1; i >= 0 ; --i) {
     build_layer_button(bpos, volumes_[i]);
   }
   for (; bpos < layer_buttons_.size(); ++bpos) {
     layer_buttons_[bpos]->visible_ = false;
+    layer_buttons_[bpos]->volume_ = 0;
   }
   EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
 }
-
-#if 0
-  unsigned int num = volumes_.size();
-  for (unsigned int i = 0; i < layer_buttons_.size(); ++i) {
-    if (i < num) {
-      unsigned int pos = num-i-1;
-      layer_buttons_[pos]->volume_ = volumes_[i];
-      layer_buttons_[pos]->layer_name_ = volumes_[i]->name_;
-      layer_buttons_[pos]->visible_ = true;
-      if (volumes_[i] == current_volume_) {
-        layer_buttons_[pos]->background_color_ = Skinner::Color(0.6, 0.6, 1.0, 0.75);
-      } else {
-        layer_buttons_[pos]->background_color_ = Skinner::Color(0.0, 0.0, 0.0, 0.0);
-      }
-
-    } else {
-      layer_buttons_[i]->visible_ = false;
-    }
-  }
-  EventManager::add_event(new WindowEvent(WindowEvent::REDRAW_E));
-}
-#endif
-
 
 void
 Painter::build_layer_button(unsigned int &bpos, NrrdVolume *volume)  
@@ -243,8 +235,10 @@ Painter::build_layer_button(unsigned int &bpos, NrrdVolume *volume)
   }
 
   bpos++;  
-  for (int i = volume->children_.size()-1; i >= 0 ; --i) {
-    build_layer_button(bpos, volume->children_[i]);
+  if (volume->expand_) {
+    for (int i = volume->children_.size()-1; i >= 0 ; --i) {
+      build_layer_button(bpos, volume->children_[i]);
+    }
   }
 }
 
@@ -264,14 +258,15 @@ void
 Painter::move_layer_up(NrrdVolume *layer)
 {
   if (!layer) return;
+  NrrdVolumes &volumes = layer->parent_ ? layer->parent_->children_ : volumes_;
   unsigned int i = 0;
-  while (i < volumes_.size() && volumes_[i] != layer) ++i;
-  ASSERT(volumes_[i] == layer);
-  if (i == volumes_.size()-1) return;
+  while (i < volumes.size() && volumes[i] != layer) ++i;
+  ASSERT(volumes[i] == layer);
+  if (i == volumes.size()-1) return;
 
-  NrrdVolume *temp = volumes_[i+1];
-  volumes_[i+1] = volumes_[i];
-  volumes_[i] = temp;
+  NrrdVolume *temp = volumes[i+1];
+  volumes[i+1] = volumes[i];
+  volumes[i] = temp;
   
   extract_all_window_slices();
   rebuild_layer_buttons();
@@ -280,15 +275,16 @@ Painter::move_layer_up(NrrdVolume *layer)
 void
 Painter::move_layer_down(NrrdVolume *layer)
 {
-  if (!layer) return;
+  if (!layer) return;  
+  NrrdVolumes &volumes = layer->parent_ ? layer->parent_->children_ : volumes_;
   unsigned int i = 0;
-  while (i < volumes_.size() && volumes_[i] != layer) ++i;
-  ASSERT(volumes_[i] == layer);
+  while (i < volumes.size() && volumes[i] != layer) ++i;
+  ASSERT(volumes[i] == layer);
   if (i == 0) return;
 
-  NrrdVolume *temp = volumes_[i-1];
-  volumes_[i-1] = volumes_[i];
-  volumes_[i] = temp;
+  NrrdVolume *temp = volumes[i-1];
+  volumes[i-1] = volumes[i];
+  volumes[i] = temp;
   
   extract_all_window_slices();
   rebuild_layer_buttons();

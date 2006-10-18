@@ -149,6 +149,7 @@ VolumeSlice::bind()
 void
 VolumeSlice::draw()
 {
+  if (!volume_->visible_) return;
   if (nrrd_dirty_) {
     set_coords();
     nrrd_dirty_ = false;

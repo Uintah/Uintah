@@ -105,6 +105,7 @@ SET(LEXOV_SRCS
   PointerToolSelectorTool.cc
   StatisticsTool.cc
   SessionReader.cc
+  SessionWriter.cc
   SliceWindow.cc
   VolumeSlice.cc
   ZoomTool.cc

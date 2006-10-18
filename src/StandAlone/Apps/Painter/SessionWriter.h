@@ -6,7 +6,7 @@
 //  Copyright (c) 2006 Scientific Computing and Imaging Institute,
 //  University of Utah.
 //  
-//  
+//  License for the specific language governing rights and limitations under
 //  Permission is hereby granted, free of charge, to any person obtaining a
 //  copy of this software and associated documentation files (the "Software"),
 //  to deal in the Software without restriction, including without limitation
@@ -25,63 +25,29 @@
 //  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER
 //  DEALINGS IN THE SOFTWARE.
 //  
-//    File   : LayerButton.cc
+//    File   : SessionWriter.h
 //    Author : McKay Davis
-//    Date   : Tue Sep 26 21:56:14 2006
+//    Date   : Tue Oct 17 21:25:45 2006
 
+#ifndef LEXOV_SessionWriter_h
+#define LEXOV_SessionWriter_h
 
-#include <StandAlone/Apps/Painter/Painter.h>
+#include <StandAlone/Apps/Painter/NrrdVolume.h>
+#include <libxml/xmlreader.h>
+#include <string>
 
 namespace SCIRun {
-
-LayerButton::LayerButton(Skinner::Variables *vars, Painter *painter) :
-  Parent(vars),
-  painter_(painter),
-  layer_name_(vars, "LayerButton::name"),
-  num_(vars, "LayerButton::num"),
-  indent_(vars, "LayerButton::indent",0),
-  background_color_(vars, "LayerButton::background_color"),
-  layer_visible_(vars, "LayerButton::visible"),
-  expand_(vars, "LayerButton::expand"),
-  volume_(0)
-  
-{
-  REGISTER_CATCHER_TARGET(LayerButton::up);
-  REGISTER_CATCHER_TARGET(LayerButton::down);
-  REGISTER_CATCHER_TARGET(LayerButton::kill);
-  REGISTER_CATCHER_TARGET(LayerButton::select);
-}
-
-LayerButton::~LayerButton() 
-{}
+using std::string;
+class SessionWriter {
+public:
+  static bool   write_session(const string &filename, NrrdVolumes &);
+private:
+  static void   add_volume_nodes(xmlNodePtr node, NrrdVolumes &volumes);
+  static void   add_var_node(xmlNodePtr node, const string &, const string &);
+};
 
 
-BaseTool::propagation_state_e
-LayerButton::down(event_handle_t signalh) {
-  if (volume_)
-    painter_->move_layer_down(volume_);
-  return CONTINUE_E;
-}
-
-BaseTool::propagation_state_e
-LayerButton::up(event_handle_t signalh) {
-  if (volume_)
-    painter_->move_layer_up(volume_);
-  return CONTINUE_E;
-}
+#endif
 
 
-BaseTool::propagation_state_e
-LayerButton::kill(event_handle_t signalh) {
-  return CONTINUE_E;
-}
-
-BaseTool::propagation_state_e
-LayerButton::select(event_handle_t signalh) {
-  painter_->current_volume_ = volume_;
-  painter_->rebuild_layer_buttons();
-  return CONTINUE_E;
-}
-
-
-}
+} // end namespace SCIRun
