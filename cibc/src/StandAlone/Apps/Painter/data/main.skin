@@ -222,7 +222,7 @@
       <object class="Painter">
         <var name="clut_ww_wl" propagate="yes"/>
         <var name="Painter::status" propagate="yes"/>
-        <var name="cursor_value" propagate="yes" type="double">0.0</var>            
+        <var name="cursor_value" propagate="yes" type="double">0.0</var>
 
         <object class="Root::FocusRegion">
           <object class="Root::VisibilityGroup">

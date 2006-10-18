@@ -1,8 +1,8 @@
 <definition class="MainToolbar" xmlns:xi="http://www.w3.org/2001/XInclude">
   <object class="Frame">
     <var name="invert">1</var>
-    <var name="width">2</var>
-    <var name="height">2</var>
+    <var name="width">0</var>
+    <var name="height">0</var>
     
     <object class="Root::FocusRegion">
       <object class="Box">        
@@ -16,7 +16,7 @@
           <var name="buttonwidth" propagate="yes">35</var>
           
           <object class="FrameButton">
-            <var name="col">12</var>
+            <var name="col">1</var>
             <var name="row">1</var>
             <var name="cell-height">$buttonwidth</var>
             <var name="cell-width">$buttonwidth</var>
@@ -24,10 +24,32 @@
             <var name="Button::color" propagate="yes">$main_color</var>
             <signal name="Button::clicked" 
                     target="Painter::Autoview"/>
+
+            <signal name="Button::focus" 
+                    target="Arithmetic::set_value">
+              <var name="variable">$Painter::status</var>
+              <var name="value">Autoview All Windows</var>
+            </signal>
+
+            <signal name="Button::focus"
+                    target="GLWindow::mark_redraw"/>
+
+
+            <signal name="Button::unfocus" 
+                    target="Arithmetic::set_value">
+              <var name="variable">$Painter::status</var>
+              <var name="value"></var>
+            </signal>
+
+            <signal name="Button::unfocus"
+                    target="GLWindow::mark_redraw"/>
+
+              
+
           </object>
 
           <object class="FrameButton">
-            <var name="col">13</var>
+            <var name="col">2</var>
             <var name="row">1</var>
             <var name="cell-height">$buttonwidth</var>
             <var name="cell-width">$buttonwidth</var>
@@ -40,11 +62,34 @@
               <var name="id">BrushTool</var>
               <var name="group">ToolsVisibleGroup</var>
             </signal>
+
+            <signal name="Button::focus" 
+                    target="Arithmetic::set_value">
+              <var name="variable">$Painter::status</var>
+              <var name="value">Start Brush Tool</var>
+            </signal>
+
+            <signal name="Button::focus"
+                    target="GLWindow::mark_redraw"/>
+
+
+            <signal name="Button::unfocus" 
+                    target="Arithmetic::set_value">
+              <var name="variable">$Painter::status</var>
+              <var name="value"></var>
+            </signal>
+
+            <signal name="Button::unfocus"
+                    target="GLWindow::mark_redraw"/>
+
+              
+
+
           </object>
 
 
           <object class="FrameButton">
-            <var name="col">14</var>
+            <var name="col">3</var>
             <var name="row">1</var>
             <var name="cell-height">$buttonwidth</var>
             <var name="cell-width">$buttonwidth</var>
@@ -57,11 +102,31 @@
               <var name="id">CropTool</var>
               <var name="group">ToolsVisibleGroup</var>
             </signal>
+
+            <signal name="Button::focus" 
+                    target="Arithmetic::set_value">
+              <var name="variable">$Painter::status</var>
+              <var name="value">Start Crop Tool</var>
+            </signal>
+
+            <signal name="Button::focus"
+                    target="GLWindow::mark_redraw"/>
+
+
+            <signal name="Button::unfocus" 
+                    target="Arithmetic::set_value">
+              <var name="variable">$Painter::status</var>
+              <var name="value"></var>
+            </signal>
+
+            <signal name="Button::unfocus"
+                    target="GLWindow::mark_redraw"/>
+
           </object>
 
 
           <object class="FrameButton">
-            <var name="col">15</var>
+            <var name="col">4</var>
             <var name="row">1</var>
             <var name="cell-height">$buttonwidth</var>
             <var name="cell-width">$buttonwidth</var>
@@ -72,6 +137,27 @@
               <var name="id">ResampleTool</var>
               <var name="group">ToolsVisibleGroup</var>
             </signal>
+
+            <signal name="Button::focus" 
+                    target="Arithmetic::set_value">
+              <var name="variable">$Painter::status</var>
+              <var name="value">Start Resample Tool</var>
+            </signal>
+
+            <signal name="Button::focus"
+                    target="GLWindow::mark_redraw"/>
+
+
+            <signal name="Button::unfocus" 
+                    target="Arithmetic::set_value">
+              <var name="variable">$Painter::status</var>
+              <var name="value"></var>
+            </signal>
+
+            <signal name="Button::unfocus"
+                    target="GLWindow::mark_redraw"/>
+
+
           </object>
 
 

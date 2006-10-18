@@ -23,6 +23,7 @@
           </signal>
         </object>
         
+<!--
         <object class="MenuButton">
           <var name="row">1</var>
           <var name="col">2</var>
@@ -32,6 +33,7 @@
             <var name="id">ViewMenu1</var>
           </signal>
         </object>
+-->
         
         <object class="MenuButton">
           <var name="row">1</var>
