@@ -87,7 +87,6 @@ public:
   bool run( itk::Object*   );
 
   // progress bar
-
   void ProcessEvent(itk::Object * caller, const itk::EventObject & event );
   void ConstProcessEvent(const itk::Object * caller, const itk::EventObject & event );
   void Observe( itk::Object *caller );
@@ -173,8 +172,6 @@ VectorGradientAnisotropicDiffusionImageFilter::VectorGradientAnisotropicDiffusio
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &VectorGradientAnisotropicDiffusionImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &VectorGradientAnisotropicDiffusionImageFilter::ConstProcessEvent );
-
-  update_progress(0.0);
 }
 
 

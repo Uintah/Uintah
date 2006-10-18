@@ -167,8 +167,6 @@ UnaryFunctorImageFilter::UnaryFunctorImageFilter(GuiContext* ctx)
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &UnaryFunctorImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &UnaryFunctorImageFilter::ConstProcessEvent );
-
-  update_progress(0.0);
 }
 
 

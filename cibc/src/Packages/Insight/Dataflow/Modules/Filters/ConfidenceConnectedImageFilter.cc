@@ -94,17 +94,16 @@ public:
   bool run( itk::Object*   );
 
   // progress bar
-
   void ProcessEvent(itk::Object * caller, const itk::EventObject & event );
   void ConstProcessEvent(const itk::Object * caller, const itk::EventObject & event );
   void Observe( itk::Object *caller );
   RedrawCommandType::Pointer m_RedrawCommand;
-
 };
 
 
 void
-ConfidenceConnectedImageFilter::set_image_variables(itk::Object *obj) {
+ConfidenceConnectedImageFilter::set_image_variables(itk::Object *obj)
+{
   // Use parameters encapsulated in the MetaDataDictionary.
   // Build a list of key/value pairs and send it to
   // tcl to set any corresponding guivars.

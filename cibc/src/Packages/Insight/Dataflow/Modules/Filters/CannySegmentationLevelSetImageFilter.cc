@@ -106,7 +106,6 @@ public:
   bool run( itk::Object*  , itk::Object*   );
 
   // progress bar
-
   void update_after_iteration();
 
   void ProcessEvent(itk::Object * caller, const itk::EventObject & event );
@@ -247,8 +246,6 @@ CannySegmentationLevelSetImageFilter::CannySegmentationLevelSetImageFilter(GuiCo
   m_RedrawCommand->SetCallbackFunction( this, &CannySegmentationLevelSetImageFilter::ConstProcessEvent );
 
   iterationCounter_OutputImage = 0;
-
-  update_progress(0.0);
 }
 
 

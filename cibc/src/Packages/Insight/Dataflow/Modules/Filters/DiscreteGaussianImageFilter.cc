@@ -63,7 +63,6 @@ public:
   
   bool execute_;
   
-
   // Declare Ports
   ITKDatatypeIPort* inport_InputImage_;
   ITKDatatypeHandle inhandle_InputImage_;
@@ -86,12 +85,10 @@ public:
   bool run( itk::Object*   );
 
   // progress bar
-
   void ProcessEvent(itk::Object * caller, const itk::EventObject & event );
   void ConstProcessEvent(const itk::Object * caller, const itk::EventObject & event );
   void Observe( itk::Object *caller );
   RedrawCommandType::Pointer m_RedrawCommand;
-
 };
 
 
@@ -111,8 +108,7 @@ DiscreteGaussianImageFilter::run( itk::Object *obj_InputImage)
   // or the input data has changed. If
   // this is the case, set the inputs.
 
-  if(!filter_  || 
-     inhandle_InputImage_->generation != last_InputImage_)
+  if(!filter_ || inhandle_InputImage_->generation != last_InputImage_)
   {
      last_InputImage_ = inhandle_InputImage_->generation;
 
@@ -169,8 +165,6 @@ DiscreteGaussianImageFilter::DiscreteGaussianImageFilter(GuiContext* ctx)
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &DiscreteGaussianImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &DiscreteGaussianImageFilter::ConstProcessEvent );
-
-  update_progress(0.0);
 }
 
 

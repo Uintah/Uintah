@@ -87,7 +87,6 @@ public:
   bool run( itk::Object*   );
 
   // progress bar
-
   void ProcessEvent(itk::Object * caller, const itk::EventObject & event );
   void ConstProcessEvent(const itk::Object * caller, const itk::EventObject & event );
   void Observe( itk::Object *caller );
@@ -125,7 +124,6 @@ VectorCurvatureAnisotropicDiffusionImageFilter::run( itk::Object *obj_InputImage
      // set inputs 
      
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetInput( data_InputImage );
-       
   }
 
   // reset progress bar
@@ -175,8 +173,6 @@ VectorCurvatureAnisotropicDiffusionImageFilter::VectorCurvatureAnisotropicDiffus
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &VectorCurvatureAnisotropicDiffusionImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &VectorCurvatureAnisotropicDiffusionImageFilter::ConstProcessEvent );
-
-  update_progress(0.0);
 }
 
 

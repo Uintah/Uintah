@@ -168,8 +168,6 @@ WatershedImageFilter::WatershedImageFilter(GuiContext* ctx)
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &WatershedImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &WatershedImageFilter::ConstProcessEvent );
-
-  update_progress(0.0);
 }
 
 

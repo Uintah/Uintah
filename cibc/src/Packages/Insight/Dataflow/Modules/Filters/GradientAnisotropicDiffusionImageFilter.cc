@@ -172,8 +172,6 @@ GradientAnisotropicDiffusionImageFilter::GradientAnisotropicDiffusionImageFilter
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &GradientAnisotropicDiffusionImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &GradientAnisotropicDiffusionImageFilter::ConstProcessEvent );
-
-  update_progress(0.0);
 }
 
 
