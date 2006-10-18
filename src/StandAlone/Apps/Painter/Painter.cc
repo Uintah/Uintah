@@ -226,7 +226,7 @@ Painter::build_layer_button(unsigned int &bpos, NrrdVolume *volume)
     level++;
     parent = parent->parent_;
   }
-  button->indent_ = 30*level;
+  button->indent_ = 20*level;
 
   if (volume == current_volume_) {
     button->background_color_ = Skinner::Color(0.6, 0.6, 1.0, 0.75);

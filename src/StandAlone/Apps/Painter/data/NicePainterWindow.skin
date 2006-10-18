@@ -1,94 +1,102 @@
 <definition class="NicePainterWindow">
-  <object class="Collection">
+  <object class="LabeledGradientBackground">
     <var name="LabeledGradientBackground::text" propagate="yes">$NicePainterWindow::name</var>
     <var name="PainterWindow::show_tools" propagate="yes" overwrite="no">0</var>
+    
     <definition class="LabeledGradientBackground::child">                
-        <object class="Painter::SliceWindow">
-          <var name="SliceWindow::GridVisible" propagate="yes" overwrite="no" type="bool">1</var>
-          <var name="SliceWindow::SlicesVisible" propagate="yes" type="bool">1</var>
-          <signal name="SliceWindow::mark_redraw" target="GLWindow::mark_redraw"/>
+      <object class="Painter::SliceWindow">
+        <var name="SliceWindow::GridVisible" propagate="yes" overwrite="no" type="bool">1</var>
+        <var name="SliceWindow::SlicesVisible" propagate="yes" type="bool">1</var>
+        <signal name="SliceWindow::mark_redraw" target="GLWindow::mark_redraw"/>
 
 
-<!--
-          <object class="Root::Text">
+        <!--
+            <object class="Root::Text">
             <var name="visible">$PainterWindow::show_tools</var>
             <var name="text">$cursor_value</var>
             <var name="anchor">SW</var>
-          </object>
--->
+            </object>
+        -->
 
-          <object class="Grid">                
-            <var name="cols">2</var>
-            <var name="rows">1</var>
-            <object class="Root::FocusRegion">
-              <var name="col">2</var>
-              <var name="row">1</var>
-              <var name="cell-width">25</var>
+        <object class="Grid">                
+          <var name="cols">2</var>
+          <var name="rows">1</var>
+          
+          <object class="Grid">
+            <var name="col">2</var>
+            <var name="row">1</var>
+            <var name="cell-width">25</var>
 
-              <signal name="FocusRegion::focus"
-                      target="FocusGrab::Grab"/>
+            <var name="visible">$PainterWindow::show_tools</var>
+            
+            <var name="cols">1</var>
+            <var name="rows">10</var>
 
-              <signal name="FocusRegion::unfocus"
-                      target="FocusGrab::Ungrab"/>
+            <object class="GrabFocusRegion">
+              <var name="col">1</var>
+              <var name="row">10</var>
+              <var name="cell-height">25</var>
 
-              
-            <object class="Grid">
-              <var name="visible">$PainterWindow::show_tools</var>
-              
-              <var name="cols">1</var>
-              <var name="rows">10</var>
               <object class="FrameButton">
-                <var name="col">1</var>
-                <var name="row">10</var>
-                <var name="cell-height">25</var>
                 <var name="Button::Text::text" propagate="yes">A</var>
                 <signal name="Button::clicked" 
                         target="SliceWindow::Autoview"/>
                 
               </object>
+            </object>
+            <object class="GrabFocusRegion">
+              <var name="col">1</var>
+              <var name="row">9</var>
+              <var name="cell-height">25</var>
+
               <object class="FrameButton">
-                <var name="col">1</var>
-                <var name="row">9</var>
-                <var name="cell-height">25</var>
                 <var name="Button::Text::text" propagate="yes">+</var>
                 <signal name="Button::clicked" 
                         target="SliceWindow::zoom_in"/>
               </object>
+            </object>
+
+            <object class="GrabFocusRegion">
+              <var name="col">1</var>
+              <var name="row">8</var>
+              <var name="cell-height">25</var>
               
               <object class="FrameButton">
-                <var name="col">1</var>
-                <var name="row">8</var>
-                <var name="cell-height">25</var>
                 <var name="Button::Text::text" propagate="yes">-</var>
                 <signal name="Button::clicked" 
                         target="SliceWindow::zoom_out"/>
               </object> 
+            </object> 
+
+            <object class="GrabFocusRegion">
+              <var name="col">1</var>
+              <var name="row">7</var>
+              <var name="cell-height">25</var>
 
               <object class="ImageFrameButton">
-                <var name="col">1</var>
-                <var name="row">7</var>
-                <var name="cell-height">25</var>
                 <var name="CheckButton::state" propagate="yes">$SliceWindow::SlicesVisible</var>
                 <signal name="Button::clicked" 
                         target="GLWindow::mark_redraw"/>
               </object> 
+            </object> 
+
+            <object class="GrabFocusRegion">
+              <var name="col">1</var>
+              <var name="row">6</var>
+              <var name="cell-height">25</var>
 
               <object class="TextCheckButton">
-                <var name="col">1</var>
-                <var name="row">6</var>
-                <var name="cell-height">25</var>
                 <var name="CheckButton::state" propagate="yes">$SliceWindow::GridVisible</var>
                 <var name="CheckButton::text" propagate="yes">G</var>
                 <signal name="Button::clicked" 
                         target="GLWindow::mark_redraw"/>
               </object> 
-             
-            </object>
-          </object>
+            </object> 
+            
           </object>
         </object>
+      </object>
     </definition>
-    <object class="LabeledGradientBackground"/>
   </object>
 </definition>
 
