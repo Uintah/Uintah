@@ -87,6 +87,7 @@ SRCS := $(SRCDIR)/AutoviewTool.cc \
 	$(SRCDIR)/PointerToolSelectorTool.cc \
 	$(SRCDIR)/StatisticsTool.cc \
 	$(SRCDIR)/SliceWindow.cc \
+	$(SRCDIR)/SessionLoader.cc \
 	$(SRCDIR)/VolumeSlice.cc \
 	$(SRCDIR)/ZoomTool.cc \
         $(SRCDIR)/main.cc \
