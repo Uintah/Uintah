@@ -162,6 +162,41 @@
 -->
 
 
+          <object class="FrameButton">
+            <var name="col">4</var>
+            <var name="row">1</var>
+            <var name="cell-height">$buttonwidth</var>
+            <var name="cell-width">$buttonwidth</var>
+            <var name="Button::Text::text" propagate="yes">I</var>
+            <var name="Button::color" propagate="yes">$main_color</var>
+
+            <signal name="Button::clicked" 
+                    target="Painter::ShowIsosurface">
+              <var name="threaded">1</var>
+            </signal>
+
+            <signal name="Button::focus" 
+                    target="Arithmetic::set_value">
+              <var name="variable">$Painter::status</var>
+              <var name="value">Show Isosurface</var>
+            </signal>
+
+            <signal name="Button::focus"
+                    target="GLWindow::mark_redraw"/>
+
+
+            <signal name="Button::unfocus" 
+                    target="Arithmetic::set_value">
+              <var name="variable">$Painter::status</var>
+              <var name="value"></var>
+            </signal>
+
+            <signal name="Button::unfocus"
+                    target="GLWindow::mark_redraw"/>
+
+
+          </object>
+
         </object>
       </object>
     </object>      

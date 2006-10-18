@@ -73,6 +73,7 @@
 #include <Core/Volume/VolumeRenderer.h>
 #include <Core/Util/DynamicCompilation.h>
 #include <Core/Algorithms/Visualization/NrrdTextureBuilderAlgo.h>
+#include <Core/Skinner/GeomSkinnerVarSwitch.h>
 
 #ifndef _WIN32
 #include <sys/mman.h>
@@ -252,19 +253,24 @@ Painter::DeleteLayer(event_handle_t event) {
 
   if (!layer) return STOP_E;
 
-  NrrdVolumes newvolumes(volumes_.size()-1, 0);
+  NrrdVolume *parent = layer->parent_;
+  NrrdVolumes &volumes =  parent ? parent->children_ : volumes_;
+
+  NrrdVolumes newvolumes(volumes.size()-1, 0);
   int j = 0;
   unsigned int newcur = 0;
-  for (unsigned int i = 0; i < volumes_.size(); ++i) {
+  for (unsigned int i = 0; i < volumes.size(); ++i) {
     if (volumes_[i] != layer)
-      newvolumes[j++] = volumes_[i];
+      newvolumes[j++] = volumes[i];
     else 
       newcur = i;
   }
-  volumes_ = newvolumes;
+  volumes = newvolumes;
   delete layer;
-  if (newcur < volumes_.size()) {
-    current_volume_ = volumes_[newcur];
+  if (newcur < volumes.size()) {
+    current_volume_ = volumes[newcur];
+  } else if (parent) {
+    current_volume_ = parent;
   } else {
     current_volume_ = 0;
   }
@@ -276,7 +282,12 @@ Painter::DeleteLayer(event_handle_t event) {
 }
 
 BaseTool::propagation_state_e 
-Painter::NewLayer(event_handle_t) {
+Painter::NewLayer(event_handle_t event) {
+  if (!current_volume_) return STOP_E;
+  if (current_volume_->label_) {
+    return CreateLabelChild(event);
+  }
+  
   new_current_layer();
   return CONTINUE_E;
 }
@@ -703,7 +714,41 @@ Painter::ReloadVolumeTexture(event_handle_t event) {
 #endif
 
 
-extern SCISHARE GeomHandle fast_lat_mc(Nrrd *nrrd, double isoval);
+extern SCISHARE GeomHandle fast_lat_mc(Nrrd *nrrd, 
+                                       double isoval, 
+                                       unsigned int mask);
+
+
+void
+Painter::isosurface_label_volumes(NrrdVolumes &volumes, GeomGroup *group)
+{
+  for (unsigned int i = 0; i < volumes.size(); ++i) {
+    NrrdVolume *volume = volumes[i]; 
+    if (volume->label_) {
+      MaterialHandle material = new Material();
+      material->ambient = Color(1.0, 1.0, 1.0);
+      material->diffuse = Color(drand48(), drand48(), drand48());
+      material->specular = Color(1.0, 1.0, 1.0);
+      material->shininess = 5.0;
+      material->transparency = 0.8;
+      
+      GeomHandle isosurface = fast_lat_mc(volume->nrrd_handle_->nrrd_, 
+                                          volume->label_/2.0,
+                                          volume->label_);
+
+      GeomMaterial *colored_isosurface =
+        new GeomMaterial(isosurface, material);
+      GeomSkinnerVarSwitch *volume_isosurface = 
+        new GeomSkinnerVarSwitch(colored_isosurface, volume->visible_);
+
+      group->add(volume_isosurface);
+    }
+    isosurface_label_volumes(volume->children_, group);
+  }
+}
+
+
+
 
 BaseTool::propagation_state_e 
 Painter::ShowIsosurface(event_handle_t event)
@@ -711,23 +756,20 @@ Painter::ShowIsosurface(event_handle_t event)
   static int count = 0;
   if (!current_volume_) return STOP_E;
   //  event_handle_t scene_event = = ;
-  MaterialHandle material = new Material();
-  material->ambient = Color(1.0, 1.0, 1.0);
-  material->diffuse = Color(1.0, 0.0, 0.0);
-  material->specular = Color(1.0, 1.0, 1.0);
-  material->shininess = 5.0;
 
   Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
   ASSERT(signal);
-  Skinner::Var<double> isoval(signal->get_vars(), "isoval", 100.0);
-
+                
   Matrix &tmat = current_volume_->transform_;
   Transform transform(Point(0,0,0), 
                       Vector(tmat.get(1,1), 0, 0),
                       Vector(0, tmat.get(2,2), 0),
                       Vector(0, 0, tmat.get(3,3)));
                       
-  EventManager::add_event(new SceneGraphEvent(new GeomTransform(new GeomMaterial(fast_lat_mc(current_volume_->nrrd_handle_->nrrd_, isoval), material), transform), "IsoSurface"+to_string(count++)));
+  GeomGroup *group = new GeomGroup();
+  isosurface_label_volumes(volumes_, group);
+  GeomTransform *everything = new GeomTransform(group, transform);
+  EventManager::add_event(new SceneGraphEvent(everything, "Transparent IsoSurface"));
 
   return CONTINUE_E;
 }

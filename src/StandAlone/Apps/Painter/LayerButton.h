@@ -54,6 +54,7 @@ private:
   Skinner::Var<Skinner::Color>background_color_;
   Skinner::Var<bool>          layer_visible_;
   Skinner::Var<bool>          expand_;
+  Skinner::Var<double>        expand_width_;
   
   NrrdVolume *                volume_;
   CatcherFunction_t           up;

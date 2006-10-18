@@ -75,15 +75,15 @@ int eorder[12][4] = {
 
 template <class T>
 GeomHandle
-fast_lat_mc_real(Nrrd *nrrd, T *data, double ival)
+fast_lat_mc_real(Nrrd *nrrd, T *data, double ival, unsigned int mask)
 {
-  const size_t isize = nrrd->axis[0].size;
-  const size_t jsize = nrrd->axis[1].size;
-  const size_t ksize = nrrd->axis[2].size;
+  const size_t isize = nrrd->axis[1].size;
+  const size_t jsize = nrrd->axis[2].size;
+  const size_t ksize = nrrd->axis[3].size;
 
   const size_t ijsize = isize * jsize;
 
-  GeomFastTriangles *triangles = scinew GeomFastTriangles;
+  GeomFastTriangles *triangles = scinew GeomTranspTriangles;
 
   for (unsigned int k = 0; k < ksize-1; k++)
   {
@@ -95,9 +95,9 @@ fast_lat_mc_real(Nrrd *nrrd, T *data, double ival)
         double value[8];
         for (int a = 7; a >= 0 ; a--)
         {
-          value[a] = (double)data[(i+norder[a][0]) +
-                                  (j+norder[a][1]) * isize +
-                                  (k+norder[a][2]) * ijsize];
+          value[a] = (double)(data[(i+norder[a][0]) +
+                                   (j+norder[a][1]) * isize +
+                                   (k+norder[a][2]) * ijsize] & mask);
           code = code * 2 + (value[a] < ival);
         }
 
@@ -130,10 +130,11 @@ fast_lat_mc_real(Nrrd *nrrd, T *data, double ival)
 
 
 SCISHARE GeomHandle
-fast_lat_mc(Nrrd *nrrd, double ival)
+fast_lat_mc(Nrrd *nrrd, double ival, unsigned int mask)
 {
   switch (nrrd->type)
   {
+#if 0
   case nrrdTypeChar:
     return fast_lat_mc_real(nrrd, (char *)nrrd->data, ival);
   case nrrdTypeUChar:
@@ -144,8 +145,10 @@ fast_lat_mc(Nrrd *nrrd, double ival)
     return fast_lat_mc_real(nrrd, (unsigned short *)nrrd->data, ival);
   case nrrdTypeInt:
     return fast_lat_mc_real(nrrd, (int *)nrrd->data, ival);
+#endif
   case nrrdTypeUInt:
-    return fast_lat_mc_real(nrrd, (unsigned int *)nrrd->data, ival);
+    return fast_lat_mc_real(nrrd, (unsigned int *)nrrd->data, ival, mask);
+#if 0
   case nrrdTypeLLong:
     return fast_lat_mc_real(nrrd, (long long *)nrrd->data, ival);
   case nrrdTypeULLong:
@@ -154,6 +157,7 @@ fast_lat_mc(Nrrd *nrrd, double ival)
     return fast_lat_mc_real(nrrd, (float *)nrrd->data, ival);
   case nrrdTypeDouble:
     return fast_lat_mc_real(nrrd, (double *)nrrd->data, ival);
+#endif
   default:
     throw "Unknown nrrd type, cannot isosurface.";
   }

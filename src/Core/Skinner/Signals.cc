@@ -106,7 +106,7 @@ namespace SCIRun {
     class ThreadedCallback : public Runnable {
     public:     
       ThreadedCallback() : callback_(0), signal_(0), state_(BaseTool::STOP_E){}
-      virtual ~ThreadedCallback() { cerr << "Threadedcallback done\n";  }
+      virtual ~ThreadedCallback() { }
       
       void      set_callback(SignalCatcher::CatcherTargetInfoBase *callback) {
         callback_ = callback;
@@ -167,7 +167,7 @@ namespace SCIRun {
             ThreadedCallback *threaded_callback = new ThreadedCallback();
             threaded_callback->set_callback(callback);
             threaded_callback->set_signal(signal);
-            cerr << "Threading " << callback->targetname_ << std::endl;
+            //            cerr << "Threading " << callback->targetname_ << std::endl;
             (new Thread(threaded_callback, signalname.c_str()))->detach();
           }
           if (state == BaseTool::STOP_E) break;

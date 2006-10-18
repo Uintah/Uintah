@@ -6,6 +6,7 @@
     <var name="LayerButton::background_color" propagate="yes">#00000000</var>
     <var name="LayerButton::visible" propagate="yes">1</var>
     <var name="LayerButton::indent" propagate="yes">10</var>
+    <var name="LayerButton::expand_width" propagate="yes">10</var>
     <var name="row">$LayerButton::num</var>
     <var name="col">1</var>
     <var name="thumbnail_height" propagate="yes">45</var>
@@ -22,36 +23,13 @@
 
       <object class="Grid">
         <var name="rows">3</var>
-        <var name="cols">4</var>
+        <var name="cols">3</var>
         
         <object class="Collection">
           <var name="row">1</var>
           <var name="col">1</var>
           <var name="cell-height">3</var>
           <var name="cell-width">$LayerButton::indent</var>
-        </object>
-
-        <object class="Collection">
-          <var name="row">2</var>
-          <var name="col">2</var>
-          <var name="cell-width">$button_width</var>
-          <object class="Grid">
-            <var name="rows">3</var>
-            <var name="cols">1</var>
-            <object class="ExpandButton">
-              <var name="CheckButton::state" 
-                   propagate="yes">$LayerButton::expand</var>
-
-              <var name="row">2</var>
-              <var name="col">1</var>
-              <var name="cell-width">$button_width</var>
-              <var name="cell-height">$button_height</var>
-              <signal name="Button::clicked"
-                      target="Painter::RebuildLayers"/>
-              <signal name="Button::clicked"
-                      target="GLWindow::mark_redraw"/>
-            </object>
-          </object>              
         </object>
 
         <object class="Collection">
@@ -63,7 +41,7 @@
 
         <object class="Collection">
           <var name="row">2</var>
-          <var name="col">4</var>
+          <var name="col">3</var>
           <var name="cell-width">0</var>
         </object>
 
@@ -83,7 +61,7 @@
 
         <object class="Grid">
           <var name="row">2</var>
-          <var name="col">3</var>
+          <var name="col">2</var>
 
           <var name="rows">2</var>
           <var name="cols">15</var>
@@ -113,10 +91,24 @@
             </object>
           </object>
 
+          <object class="ExpandButton">
+            <var name="CheckButton::state" 
+                 propagate="yes">$LayerButton::expand</var>
+            
+            <var name="row">2</var>
+            <var name="col">1</var>
+            <var name="cell-width">$LayerButton::expand_width</var>
+            <var name="cell-height">$button_height</var>
+            <signal name="Button::clicked"
+                    target="Painter::RebuildLayers"/>
+            <signal name="Button::clicked"
+                    target="GLWindow::mark_redraw"/>
+          </object>
+
 
           <object class="FrameButton">
             <var name="row">2</var>
-            <var name="col">3</var>            
+            <var name="col">4</var>            
             <var name="cell-width">$button_width</var>
             <var name="cell-height">$button_height</var>
             <var name="Button::Text::text" propagate="yes">C</var>
@@ -136,7 +128,7 @@
 
           <object class="FrameButton">
             <var name="row">2</var>
-            <var name="col">4</var>            
+            <var name="col">5</var>            
             <var name="cell-width">$button_width</var>
             <var name="cell-height">$button_height</var>
             <var name="Button::Text::text" propagate="yes">D</var>
@@ -156,13 +148,13 @@
 
           <object class="FrameButton">
             <var name="row">2</var>
-            <var name="col">5</var>            
+            <var name="col">6</var>            
             <var name="cell-width">$button_width</var>
             <var name="cell-height">$button_height</var>
             <var name="Button::Text::text" propagate="yes">N</var>
 
             <signal name="Button::clicked" 
-                    target="Painter::CreateLabelChild">
+                    target="Painter::NewLayer">
             </signal>
 
             <signal name="Button::clicked" 
@@ -173,7 +165,7 @@
 
           <object class="ImageFrameButton">
             <var name="row">2</var>
-            <var name="col">1</var>            
+            <var name="col">2</var>            
             <var name="cell-width">$button_width</var>
             <var name="cell-height">$button_height</var>
             
@@ -189,7 +181,7 @@
 
           <object class="Grid">
             <var name="row">2</var>
-            <var name="col">2</var>            
+            <var name="col">3</var>            
 
             <var name="cell-width">$button_width</var>
             <var name="cell-height">$button_height</var>

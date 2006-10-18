@@ -134,6 +134,8 @@ NrrdVolume::NrrdVolume(NrrdVolume *copy,
                        const string &name,
                        int clear) :
   painter_(copy->painter_),
+  parent_(0),
+  children_(0),
   nrrd_handle_(0),
   name_(name),
   mutex_(new Mutex(name.c_str())),
