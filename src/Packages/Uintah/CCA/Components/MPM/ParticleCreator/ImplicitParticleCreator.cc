@@ -16,6 +16,9 @@ using namespace Uintah;
 using std::vector;
 using std::find;
 
+#define HEAT
+//#undef HEAT
+
 ImplicitParticleCreator::ImplicitParticleCreator(MPMMaterial* matl,
                                                  MPMFlags* flags)
   :  ParticleCreator(matl,flags)
@@ -39,6 +42,9 @@ ImplicitParticleCreator::initializeParticle(const Patch* patch,
   ParticleCreator::initializeParticle(patch,obj,matl,p,cell_idx,i,cellNAPI);
 
   pacceleration[i] = Vector(0.,0.,0.);
+#ifdef HEAT
+  pExternalHeatFlux[i] = 0.;
+#endif
 }
 
 
@@ -53,6 +59,10 @@ ImplicitParticleCreator::allocateVariables(particleIndex numParticles,
                                                               new_dw);
 
   new_dw->allocateAndPut(pacceleration, d_lb->pAccelerationLabel, subset);
+#ifdef HEAT
+  new_dw->allocateAndPut(pExternalHeatFlux, d_lb->pExternalHeatFluxLabel, 
+                         subset);
+#endif
 
   return subset;
 
@@ -65,6 +75,12 @@ ImplicitParticleCreator::registerPermanentParticleState(MPMMaterial* /*matl*/)
   particle_state.push_back(d_lb->pAccelerationLabel);
   particle_state_preReloc.push_back(d_lb->pAccelerationLabel_preReloc);
 
+#ifdef HEAT
+  particle_state.push_back(d_lb->pExternalHeatFluxLabel);
+  particle_state_preReloc.push_back(d_lb->pExternalHeatFluxLabel_preReloc);
+#endif
+
+#if 0
   vector<const VarLabel*>::iterator r3,r4;
 
   if(d_useLoadCurves){
@@ -76,4 +92,5 @@ ImplicitParticleCreator::registerPermanentParticleState(MPMMaterial* /*matl*/)
               d_lb->pLoadCurveIDLabel_preReloc);
     particle_state_preReloc.erase(r4);
   }
+#endif
 }
