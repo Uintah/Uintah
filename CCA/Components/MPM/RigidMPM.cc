@@ -64,7 +64,7 @@ void RigidMPM::problemSetup(const ProblemSpecP& prob_spec,
 
   SerialMPM::problemSetup(prob_spec, materials_ps,grid, sharedState);
   ProblemSpecP cfd_ps = prob_spec->findBlock("CFD");
-  if(cfd_ps && d_myworld->myrank() == 0){
+  if(cfd_ps && UintahParallelComponent::d_myworld->myrank() == 0){
     cout << "\n__________________________________"<< endl;
     cout << "  W A R N I N G :  " << endl;
     cout << "  You must use stiff MPM material properties" << endl;
@@ -74,10 +74,10 @@ void RigidMPM::problemSetup(const ProblemSpecP& prob_spec,
 }
 
 void RigidMPM::computeStressTensor(const ProcessorGroup*,
-				    const PatchSubset* patches,
-				    const MaterialSubset* ,
-				    DataWarehouse* old_dw,
-				    DataWarehouse* new_dw)
+                                   const PatchSubset* patches,
+                                   const MaterialSubset* ,
+                                   DataWarehouse* old_dw,
+                                   DataWarehouse* new_dw)
 {
   if (cout_doing.active())
     cout_doing <<"Doing computeStressTensor " <<"\t\t\t\t RigidMPM"<< endl;

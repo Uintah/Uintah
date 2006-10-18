@@ -31,7 +31,7 @@ namespace Uintah {
                                             const PatchSubset* patches,
                                             const int DOFsPerNode) = 0;
 
-    virtual void solve() = 0;
+    virtual void solve(vector<double>& guess) = 0;
 
     virtual void createMatrix(const ProcessorGroup* pg, 
 			      const map<int,int>& diag) = 0;
@@ -43,6 +43,8 @@ namespace Uintah {
     virtual void fillVector(int, double,bool add = false) = 0;
 
     virtual void fillTemporaryVector(int, double) = 0;
+
+    virtual void fillFluxVector(int, double) = 0;
     
     virtual void copyL2G(Array3<int>& l2g, const Patch* patch) = 0;
 
@@ -64,7 +66,7 @@ namespace Uintah {
 
     virtual void applyBCSToRHS() = 0;
 
-    set<int> d_DOF;
+    set<int> d_DOF,d_DOFFlux,d_DOFZero;
     map<int,vector<int> > d_DOFNeighbors;
   };
 

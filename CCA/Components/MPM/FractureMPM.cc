@@ -1600,7 +1600,7 @@ void FractureMPM::computeStressTensor(const ProcessorGroup*,
     if (cout_dbg.active())
       cout_dbg << " CM = " << cm;
 
-    cm->setWorld(d_myworld);
+    cm->setWorld(UintahParallelComponent::d_myworld);
     cm->computeStressTensor(patches, mpm_matl, old_dw, new_dw);
 
     if (cout_dbg.active())

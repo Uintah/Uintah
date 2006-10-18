@@ -71,6 +71,12 @@ void MPMPetscSolver::fillTemporaryVector(int i,double v)
  throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::fillTemporaryVector()!", __FILE__, __LINE__ );
 }
 
+void MPMPetscSolver::fillFluxVector(int i,double v)
+{
+ throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::fillFluxVector()!", __FILE__, __LINE__ );
+}
+
+
 
 void MPMPetscSolver::assembleVector()
 {

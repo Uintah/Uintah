@@ -69,9 +69,6 @@
 #define isnan _isnan
 #endif
 
-#define TEMP_SOLVE
-#undef TEMP_SOLVE
-
 using namespace Uintah;
 using namespace SCIRun;
 using namespace std;
@@ -80,7 +77,7 @@ static DebugStream cout_doing("IMPM", false);
 
 
 ImpMPM::ImpMPM(const ProcessorGroup* myworld) :
-  MPMCommon(), UintahParallelComponent(myworld)
+  MPMCommon(myworld), UintahParallelComponent(myworld)
 {
   lb = scinew MPMLabel();
   flags = scinew MPMFlags();
@@ -337,6 +334,8 @@ void ImpMPM::scheduleInitialize(const LevelP& level,
   t->computes(lb->pErosionLabel);  //  only used for imp -> exp transition
   t->computes(d_sharedState->get_delt_label());
 
+  t->computes(lb->pExternalHeatFluxLabel);
+
   t->computes(lb->heatRate_CCLabel);
   if(!flags->d_doGridReset){
     t->computes(lb->gDisplacementLabel);
@@ -344,6 +343,11 @@ void ImpMPM::scheduleInitialize(const LevelP& level,
 
   if (d_switchCriteria) {
     d_switchCriteria->scheduleInitialize(level,sched);
+  }
+
+  if (flags->d_useLoadCurves) {
+    // Computes the load curve ID associated with each particle
+    t->computes(lb->pLoadCurveIDLabel);
   }
 
   t->computes(lb->NC_CCweightLabel, one_matl);
@@ -358,6 +362,116 @@ void ImpMPM::scheduleInitialize(const LevelP& level,
                   this, &ImpMPM::printParticleCount);
   t->requires(Task::NewDW, lb->partCountLabel);
   sched->addTask(t, d_perproc_patches, d_sharedState->allMPMMaterials());
+
+#if 1
+  if (flags->d_useLoadCurves) {
+    // Schedule the initialization of HeatFlux BCs per particle
+    scheduleInitializeHeatFluxBCs(level, sched);
+  }
+#endif
+  
+}
+
+
+void ImpMPM::countMaterialPointsPerLoadCurve(const ProcessorGroup*,
+                                                const PatchSubset* patches,
+                                                const MaterialSubset*,
+                                                DataWarehouse* ,
+                                                DataWarehouse* new_dw)
+{
+  // Find the number of pressure BCs in the problem
+  int nofHeatFluxBCs = 0;
+  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
+    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+    if (bcs_type == "HeatFlux") {
+      nofHeatFluxBCs++;
+
+      // Loop through the patches and count
+      for(int p=0;p<patches->size();p++){
+        const Patch* patch = patches->get(p);
+        int numMPMMatls=d_sharedState->getNumMPMMatls();
+        int numPts = 0;
+        for(int m = 0; m < numMPMMatls; m++){
+          MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+          int dwi = mpm_matl->getDWIndex();
+
+          ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
+          constParticleVariable<int> pLoadCurveID;
+          new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
+
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            if (pLoadCurveID[idx] == (nofHeatFluxBCs)) 
+              ++numPts;
+          }
+        } // matl loop
+        cout << "numPts = " << numPts << endl;
+        new_dw->put(sumlong_vartype(numPts), 
+                    lb->materialPointsPerLoadCurveLabel, 0, nofHeatFluxBCs-1);
+      }  // patch loop
+    }
+  }
+}
+
+// Calculate the number of material points per load curve
+void ImpMPM::initializeHeatFluxBC(const ProcessorGroup*,
+                                     const PatchSubset* patches,
+                                     const MaterialSubset*,
+                                     DataWarehouse* ,
+                                     DataWarehouse* new_dw)
+{
+  // Get the current time
+  double time = 0.0;
+
+  // Calculate the heat flux at each particle
+  int nofHeatFluxBCs = 0;
+  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++) {
+    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+    if (bcs_type == "HeatFlux") {
+
+      // Get the material points per load curve
+      sumlong_vartype numPart = 0;
+      new_dw->get(numPart, lb->materialPointsPerLoadCurveLabel,
+                  0, nofHeatFluxBCs++);
+
+      // Save the material points per load curve in the HeatFluxBC object
+      HeatFluxBC* pbc =
+        dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      pbc->numMaterialPoints(numPart);
+
+      // Calculate the force per particle at t = 0.0
+      double fluxPerPart = pbc->fluxPerParticle(time);
+
+      // Loop through the patches and calculate the force vector
+      // at each particle
+      for(int p=0;p<patches->size();p++){
+        const Patch* patch = patches->get(p);
+        int numMPMMatls=d_sharedState->getNumMPMMatls();
+        for(int m = 0; m < numMPMMatls; m++){
+          MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
+          int dwi = mpm_matl->getDWIndex();
+
+          ParticleSubset* pset = new_dw->getParticleSubset(dwi, patch);
+          constParticleVariable<Point>  px;
+          new_dw->get(px, lb->pXLabel,             pset);
+          constParticleVariable<int> pLoadCurveID;
+          new_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
+          ParticleVariable<double> pExternalHeatFlux;
+          new_dw->getModifiable(pExternalHeatFlux, lb->pExternalHeatFluxLabel, 
+                                pset);
+
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            if (pLoadCurveID[idx] == nofHeatFluxBCs) {
+              pExternalHeatFlux[idx] = pbc->getFlux(px[idx], fluxPerPart);
+            }
+          }
+        } // matl loop
+      }  // patch loop
+    }
+  }
 }
 
 void ImpMPM::actuallyInitialize(const ProcessorGroup*,
@@ -369,10 +483,7 @@ void ImpMPM::actuallyInitialize(const ProcessorGroup*,
   particleIndex totalParticles=0;
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing <<"Doing actuallyInitialize on patch " << patch->getID()
-		 <<"\t\t\t IMPM"<< "\n" << "\n";
-    }
+    printTask(patches, patch,cout_doing,"Doing actuallyInitialize\t\t\t");
 
     CCVariable<short int> cellNAPID;
     new_dw->allocateAndPut(cellNAPID, lb->pCellNAPIDLabel, 0, patch);
@@ -493,9 +604,15 @@ void ImpMPM::scheduleApplyExternalLoads(SchedulerP& sched,
                     this, &ImpMPM::applyExternalLoads);
                                                                                 
   t->requires(Task::OldDW, lb->pExternalForceLabel,    Ghost::None);
+  t->requires(Task::OldDW, lb->pExternalHeatFluxLabel,    Ghost::None);
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::None);
   t->computes(             lb->pExtForceLabel_preReloc);
   t->computes(             lb->pExternalHeatRateLabel);
+  t->computes(             lb->pExternalHeatFluxLabel_preReloc);
+  if (flags->d_useLoadCurves) {
+    t->requires(Task::OldDW, lb->pLoadCurveIDLabel,    Ghost::None);
+    t->computes(             lb->pLoadCurveIDLabel_preReloc);
+  }
 
   sched->addTask(t, patches, matls);
                                                                                 
@@ -515,6 +632,8 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->requires(Task::OldDW, lb->pXLabel,                Ghost::AroundNodes,1);
   t->requires(Task::NewDW, lb->pExtForceLabel_preReloc,Ghost::AroundNodes,1);
   t->requires(Task::NewDW, lb->pExternalHeatRateLabel, Ghost::AroundNodes,1);
+  t->requires(Task::NewDW, lb->pExternalHeatFluxLabel_preReloc, 
+              Ghost::AroundNodes,1);
   if(!flags->d_doGridReset){
     t->requires(Task::OldDW,lb->gDisplacementLabel,    Ghost::None);
     t->computes(lb->gDisplacementLabel);
@@ -538,6 +657,7 @@ void ImpMPM::scheduleInterpolateParticlesToGrid(SchedulerP& sched,
   t->computes(lb->gTemperatureLabel,one_matl);
   t->computes(lb->gTemperatureNoBCLabel);
   t->computes(lb->gExternalHeatRateLabel);
+  t->computes(lb->gExternalHeatFluxLabel);
 
   sched->addTask(t, patches, matls);
 }
@@ -1012,9 +1132,6 @@ void ImpMPM::scheduleInterpolateStressToGrid(SchedulerP& sched,
                                  Task::OutOfDomain, Ghost::None);
 
   t->computes(lb->gStressForSavingLabel);
-  t->computes(lb->gStressForSavingLabel, d_sharedState->getAllInOneMatl(),
-              Task::OutOfDomain);
-
   if (!d_bndy_traction_faces.empty()) {
                                                                                 
     for(std::list<Patch::FaceType>::const_iterator ftit(d_bndy_traction_faces.begin());
@@ -1129,7 +1246,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
 
   d_numIterations = 0;
   while(!(dispInc && dispIncQ)) {
-    if(d_myworld->myrank() == 0){
+    if(UintahParallelComponent::d_myworld->myrank() == 0){
      cerr << "Beginning Iteration = " << count << "\n";
     }
     count++;
@@ -1141,7 +1258,7 @@ void ImpMPM::iterate(const ProcessorGroup*,
     d_subsched->get_dw(3)->get(dispIncNormMax,lb->dispIncNormMax);
     d_subsched->get_dw(3)->get(dispIncQNorm0, lb->dispIncQNorm0);
 
-    if(d_myworld->myrank() == 0){
+    if(UintahParallelComponent::d_myworld->myrank() == 0){
       cerr << "dispIncNorm/dispIncNormMax = "
            << dispIncNorm/(dispIncNormMax + 1.e-100) << "\n";
       cerr << "dispIncQNorm/dispIncQNorm0 = "
@@ -1258,10 +1375,16 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
       if (bcs_type == "HeatFlux") {
         HeatFluxBC* hfbc =
          dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+        cout << *hfbc << endl;
+        cout << "hfbc type = " << hfbc->getType() << endl;
+        cout << "surface area = " << hfbc->getSurfaceArea() << endl;
+        cout << "heat flux = " << hfbc->heatflux(time) << endl;
+        cout << "flux per particle = " << hfbc->fluxPerParticle(time) << endl;
         hfbcP.push_back(hfbc);
 
         // Calculate the force per particle at current time
-        heatFluxMagPerPart.push_back(hfbc->heatflux(time));
+
+        heatFluxMagPerPart.push_back(hfbc->fluxPerParticle(time));
       }
     }
   }
@@ -1269,69 +1392,102 @@ void ImpMPM::applyExternalLoads(const ProcessorGroup* ,
   // Loop thru patches to update external force vector
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing <<"Doing applyExternalLoads on patch "
-               << patch->getID() << "\t MPM"<< endl;
-    }
-
+    printTask(patches, patch,cout_doing,"Doing applyExternalLoads\t\t\t\t");
+    
     // Place for user defined loading scenarios to be defined,
     // otherwise pExternalForce is just carried forward.
-                                                                                
+    
     int numMPMMatls=d_sharedState->getNumMPMMatls();
-                                                                                
+    
     for(int m = 0; m < numMPMMatls; m++){
       MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial( m );
       int dwi = mpm_matl->getDWIndex();
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch);
                                                                                 
-      if (flags->d_useLoadCurves) {
-        // Get the external force data and allocate new space for
-        // external force
-        constParticleVariable<Vector> pExternalForce;
-        ParticleVariable<Vector> pExternalForce_new;
-        old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
-        new_dw->allocateAndPut(pExternalForce_new,
-                               lb->pExtForceLabel_preReloc,  pset);
+      constParticleVariable<Vector> pExternalForce;
+      ParticleVariable<Vector> pExternalForce_new;
+      old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
+      new_dw->allocateAndPut(pExternalForce_new,
+                             lb->pExtForceLabel_preReloc,  pset);
+      
+      constParticleVariable<double> pExternalHeatFlux;
+      ParticleVariable<double> pExternalHeatFlux_new;
+      old_dw->get(pExternalHeatFlux, lb->pExternalHeatFluxLabel, pset);
+      new_dw->allocateAndPut(pExternalHeatFlux_new,
+                             lb->pExternalHeatFluxLabel_preReloc,pset);
 
-        double mag = forceMagPerPart[0];
-        // Iterate over the particles
-        ParticleSubset::iterator iter = pset->begin();
-        for(;iter != pset->end(); iter++){
-          particleIndex idx = *iter;
-          // For particles with an existing external force, apply the
-          // new magnitude to the same direction.
-          if(pExternalForce[idx].length() > 1.e-7){
-            pExternalForce_new[idx] = mag*
-                       (pExternalForce[idx]/pExternalForce[idx].length());
-          } else{
-            pExternalForce_new[idx] = Vector(0.,0.,0.);
+      for (ParticleSubset::iterator iter = pset->begin();iter != pset->end(); 
+           iter++){
+        particleIndex idx = *iter;
+        pExternalHeatFlux_new[idx] = 0.;
+      }
+
+      if (flags->d_useLoadCurves) {
+        // Get the load curve data
+        constParticleVariable<int> pLoadCurveID;
+        old_dw->get(pLoadCurveID, lb->pLoadCurveIDLabel, pset);
+      
+        if (!forceMagPerPart.empty()) {
+          double mag = forceMagPerPart[0];
+          cout << "force mag = " << mag << endl;
+          // Iterate over the particles
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            // For particles with an existing external force, apply the
+            // new magnitude to the same direction.
+            if(pExternalForce[idx].length() > 1.e-7){
+              pExternalForce_new[idx] = mag*
+                (pExternalForce[idx]/pExternalForce[idx].length());
+            } else{
+              pExternalForce_new[idx] = Vector(0.,0.,0.);
+            }
+          }
+        } else {
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            pExternalForce_new[idx] = pExternalForce[idx]
+              *flags->d_forceIncrementFactor;
           }
         }
+        if (!heatFluxMagPerPart.empty()) {
+          double mag = heatFluxMagPerPart[0];
+          cout << "heat flux mag = " << mag << endl;
+          ParticleSubset::iterator iter = pset->begin();
+          for(;iter != pset->end(); iter++){
+            particleIndex idx = *iter;
+            int loadCurveID = pLoadCurveID[idx]-1;
+            if (loadCurveID < 0) {
+              pExternalHeatFlux_new[idx] = 0.;
+            } else {
+              pExternalHeatFlux_new[idx] = mag;
+            }
+          }
+        }
+        // Recycle the loadCurveIDs
+        ParticleVariable<int> pLoadCurveID_new;
+        new_dw->allocateAndPut(pLoadCurveID_new, 
+                               lb->pLoadCurveIDLabel_preReloc, pset);
+        pLoadCurveID_new.copyData(pLoadCurveID);
       } else {
-                                                                                
-        // Get the external force data and allocate new space for
-        // external force and copy the data
-        constParticleVariable<Vector> pExternalForce;
-        ParticleVariable<Vector> pExternalForce_new;
-        constParticleVariable<Point> px;
-        old_dw->get(pExternalForce, lb->pExternalForceLabel, pset);
-        new_dw->allocateAndPut(pExternalForce_new,
-                               lb->pExtForceLabel_preReloc,  pset);
-        old_dw->get(px,        lb->pXLabel,                  pset);
-                                                                                
+                                                                               
         // Iterate over the particles
         ParticleSubset::iterator iter = pset->begin();
         for(;iter != pset->end(); iter++){
           particleIndex idx = *iter;
           pExternalForce_new[idx] = pExternalForce[idx]
-                                       *flags->d_forceIncrementFactor;
+            *flags->d_forceIncrementFactor;
+          pExternalHeatFlux_new[idx] = pExternalHeatFlux[idx];
         }
       }
 
       // Prescribe an external heat rate to some particles
       ParticleVariable<double> pExtHeatRate;
       new_dw->allocateAndPut(pExtHeatRate, lb->pExternalHeatRateLabel,  pset);
-
+      constParticleVariable<Point> px;
+      old_dw->get(px,lb->pXLabel,pset);
+      
       ParticleSubset::iterator iter = pset->begin();
       for(;iter != pset->end(); iter++){
         particleIndex idx = *iter;
@@ -1357,10 +1513,8 @@ void ImpMPM::projectCCHeatSourceToNodes(const ProcessorGroup*,
 {
   for(int p=0;p<patches->size();p++){
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing <<"Doing projectCCHeatSourceToNodes on patch "
-                 << patch->getID() <<"\t\t IMPM"<< "\n" << "\n";
-    }
+    printTask(patches,patch,cout_doing,
+              "Doing projectCCHeatSourceToNodes on patch\t\t");
       
     Ghost::GhostType  gac = Ghost::AroundCells;
 
@@ -1482,13 +1636,13 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
     // Create arrays for the grid data
     NCVariable<double> gTemperature;
     StaticArray<NCVariable<double> > gmass(numMatls),gvolume(numMatls),
-      gExternalHeatRate(numMatls),
+      gExternalHeatRate(numMatls),gExternalHeatFlux(numMatls),
       gTemperatureNoBC(numMatls),gmassall(numMatls);
     StaticArray<NCVariable<Vector> > gvel_old(numMatls),gacc(numMatls);
     StaticArray<NCVariable<Vector> > dispNew(numMatls),gvelocity(numMatls);
     StaticArray<NCVariable<Vector> > gextforce(numMatls),gintforce(numMatls);
 
-    NCVariable<double> GMASS, GVOLUME;
+    NCVariable<double> GMASS,GVOLUME;
     NCVariable<Vector> GVEL_OLD, GACC, GEXTFORCE;
     new_dw->allocateTemporary(GMASS,     patch,Ghost::None,0);
     new_dw->allocateTemporary(GVOLUME,   patch,Ghost::None,0);
@@ -1514,7 +1668,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       // Create arrays for the particle data
       constParticleVariable<Point>  px;
       constParticleVariable<double> pmass, pvolume, pTemperature;
-      constParticleVariable<double> pextheatrate;
+      constParticleVariable<double> pextheatrate,pextheatflux;
       constParticleVariable<Vector> pvelocity, pacceleration, pexternalforce;
 
       ParticleSubset* pset = old_dw->getParticleSubset(matl, patch,
@@ -1529,6 +1683,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       old_dw->get(pacceleration,  lb->pAccelerationLabel,      pset);
       new_dw->get(pexternalforce, lb->pExtForceLabel_preReloc, pset);
       new_dw->get(pextheatrate,   lb->pExternalHeatRateLabel,  pset);
+      new_dw->get(pextheatflux,   lb->pExternalHeatFluxLabel_preReloc,  pset);
 
       new_dw->allocateAndPut(gmass[m],      lb->gMassLabel,         matl,patch);
       new_dw->allocateAndPut(gmassall[m],   lb->gMassAllLabel,      matl,patch);
@@ -1543,7 +1698,9 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
       new_dw->allocateAndPut(gextforce[m],  lb->gExternalForceLabel,matl,patch);
       new_dw->allocateAndPut(gintforce[m],  lb->gInternalForceLabel,matl,patch);
       new_dw->allocateAndPut(gExternalHeatRate[m],lb->gExternalHeatRateLabel,
-                                                                    matl,patch);
+                             matl,patch);
+      new_dw->allocateAndPut(gExternalHeatFlux[m],lb->gExternalHeatFluxLabel,
+                             matl,patch);
 
       if(!flags->d_doGridReset){
         constNCVariable<Vector> TDisp;
@@ -1565,6 +1722,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
 
       gTemperatureNoBC[m].initialize(0.0);
       gExternalHeatRate[m].initialize(0.0);
+      gExternalHeatFlux[m].initialize(0.0);
 
       double totalmass = 0;
       Vector pmom, pmassacc;
@@ -1598,6 +1756,7 @@ void ImpMPM::interpolateParticlesToGrid(const ProcessorGroup*,
             gvel_old[m][ni[k]]       += pmom                * S[k];
             gacc[m][ni[k]]           += pmassacc            * S[k];
             gExternalHeatRate[m][ni[k]] += pextheatrate[idx]* S[k];
+            gExternalHeatFlux[m][ni[k]] += pextheatflux[idx]* S[k];
           }
         }
       }
@@ -1782,7 +1941,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
 		 << "\t\t\t\t IMPM"    << "\n" << "\n";
     }
 
-    d_solver->createLocalToGlobalMapping(d_myworld,d_perproc_patches,patches,3);
+    d_solver->createLocalToGlobalMapping(UintahParallelComponent::d_myworld,d_perproc_patches,patches,3);
     
     IntVector lowIndex = patch->getInteriorNodeLowIndex();
     IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
@@ -1833,7 +1992,7 @@ void ImpMPM::createMatrix(const ProcessorGroup*,
        }
      } 
   }
-  d_solver->createMatrix(d_myworld,dof_diag);
+  d_solver->createMatrix(UintahParallelComponent::d_myworld,dof_diag);
 }
 
 void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
@@ -1844,10 +2003,10 @@ void ImpMPM::applyBoundaryConditions(const ProcessorGroup*,
 {
   for (int p = 0; p < patches->size(); p++) {
     const Patch* patch = patches->get(p);
-    if (cout_doing.active()) {
-      cout_doing <<"Doing applyBoundaryConditions " <<"\t\t\t\t IMPM"
-		 << "\n" << "\n";
-    }
+
+    printTask(patches,patch,cout_doing,
+              "Doing applyBoundaryConditions\t\t\t\t");
+
     IntVector lowIndex = patch->getInteriorNodeLowIndex();
     IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
     Array3<int> l2g(lowIndex,highIndex);
@@ -2372,7 +2531,8 @@ void ImpMPM::solveForDuCG(const ProcessorGroup* /*pg*/,
 
   if(!tsr){  // if a tsr has already been called for don't do the solve
     d_solver->removeFixedDOF(num_nodes);
-    d_solver->solve();   
+    vector<double> guess;
+    d_solver->solve(guess);   
   }
   else{
     cout << "skipping solve, timestep has already called for a restart" << endl;
@@ -2724,6 +2884,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     Vector CMV(0.0,0.0,0.0);
     double ke=0;
     double thermal_energy = 0.0;
+    double thermal_energy2 = 0.0;
     int numMPMMatls=d_sharedState->getNumMPMMatls();
 
     double move_particles=1.;
@@ -2798,6 +2959,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
 
       old_dw->get(delT, d_sharedState->get_delt_label(), getLevel(patches) );
       double Cp=mpm_matl->getSpecificHeat();
+      double K  = mpm_matl->getThermalConductivity();
 
       for(ParticleSubset::iterator iter = pset->begin();
           iter != pset->end(); iter++){
@@ -2809,6 +2971,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
         disp = Vector(0.0,0.0,0.0);
         acc = Vector(0.0,0.0,0.0);
         double tempRate = 0.;
+        double potential_energy = 0.;
         //double ptemp = 0.;
         
         // Accumulate the contribution from each surrounding vertex
@@ -2818,6 +2981,8 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           tempRate += (gTemperatureRate[ni[k]] + dTdt[ni[k]])* S[k];
           //tempRate +=  dTdt[ni[k]]* S[k];
           //ptemp += gTemperature[ni[k]] * S[k];
+          for (int dir=0;dir<3;dir++)
+            potential_energy += d_S[k][dir]*d_S[k][dir]*K;
         }
 
         // Update the particle's position and velocity
@@ -2842,7 +3007,10 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
           pxnew[idx] = px[idx];
         }
 
-        thermal_energy += pTemp[idx] * pmass[idx] * Cp;
+        // thermal_energy += pTemp[idx] * pmass[idx] * Cp;
+        thermal_energy += tempRate * pmass[idx] * Cp;
+        // Thermal energy due to temperature flux (spatially varying part).
+        thermal_energy2 += potential_energy* pvolume[idx];
         ke += .5*pmass[idx]*pvelnew[idx].length2();
         CMX = CMX + (pxnew[idx]*pmass[idx]).asVector();
         CMV += pvelnew[idx]*pmass[idx];
@@ -2873,7 +3041,7 @@ void ImpMPM::interpolateToParticlesAndUpdate(const ProcessorGroup*,
     new_dw->put(sum_vartype(ke),     lb->KineticEnergyLabel);
     new_dw->put(sumvec_vartype(CMX), lb->CenterOfMassPositionLabel);
     new_dw->put(sumvec_vartype(CMV), lb->CenterOfMassVelocityLabel);
-    new_dw->put(sum_vartype(thermal_energy), lb->ThermalEnergyLabel);
+    new_dw->put(sum_vartype(thermal_energy+thermal_energy2), lb->ThermalEnergyLabel);
 
     delete interpolator;
   }
@@ -2911,11 +3079,15 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
                 d_sharedState->getAllInOneMatl()->get(0), patch, Ghost::None,0);
 
     NCVariable<Matrix3>       GSTRESS;
-    new_dw->allocateAndPut(GSTRESS, lb->gStressForSavingLabel,
-                           d_sharedState->getAllInOneMatl()->get(0), patch);
+    new_dw->allocateTemporary(GSTRESS, patch, Ghost::None,0);
 
     GSTRESS.initialize(Matrix3(0.));
     StaticArray<NCVariable<Matrix3> >         gstress(numMatls);
+
+#if 0
+    StaticArray<constNCVariable<double> >     gmass(numMatls);
+#endif
+
     StaticArray<constNCVariable<double> >     gvolume(numMatls);
     StaticArray<constNCVariable<Vector> >     gintforce(numMatls);
 
@@ -2931,7 +3103,6 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
 
       ParticleSubset* pset = old_dw->getParticleSubset(dwi, patch,
                                               Ghost::AroundNodes,1,lb->pXLabel);
-
       old_dw->get(px,          lb->pXLabel,               pset);
       new_dw->get(pvol,        lb->pVolumeDeformedLabel,  pset);
       new_dw->get(pstress,     lb->pStressLabel_preReloc, pset);
@@ -2981,7 +3152,6 @@ void ImpMPM::interpolateStressToGrid(const ProcessorGroup*,
       IntVector c = *iter;
       GSTRESS[c] /= (GVOLUME[c]+1.e-200);
     }
-
 
     // save boundary forces before apply symmetry boundary condition.
     bool did_it_already=false;
@@ -3055,6 +3225,39 @@ void ImpMPM::printParticleCount(const ProcessorGroup* pg,
     }
   }
 }
+
+void ImpMPM::scheduleInitializeHeatFluxBCs(const LevelP& level,
+                                              SchedulerP& sched)
+{
+  MaterialSubset* loadCurveIndex = scinew MaterialSubset();
+  int nofHeatFluxBCs = 0;
+  for (int ii = 0; ii<(int)MPMPhysicalBCFactory::mpmPhysicalBCs.size(); ii++){
+    string bcs_type = MPMPhysicalBCFactory::mpmPhysicalBCs[ii]->getType();
+    if (bcs_type == "HeatFlux") loadCurveIndex->add(nofHeatFluxBCs++);
+  }
+  if (nofHeatFluxBCs > 0) {
+
+    // Create a task that calculates the total number of particles
+    // associated with each load curve.  
+    Task* t = scinew Task("ImpMPM::countMaterialPointsPerLoadCurve",
+                          this, &ImpMPM::countMaterialPointsPerLoadCurve);
+    t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
+    t->computes(lb->materialPointsPerLoadCurveLabel, loadCurveIndex,
+                Task::OutOfDomain);
+    sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
+
+    // Create a task that calculates the heatflux to be associated with
+    // each particle based on the HeatFluxBCs
+    t = scinew Task("ImpMPM::initializeHeatFluxBC",
+                    this, &ImpMPM::initializeHeatFluxBC);
+    t->requires(Task::NewDW, lb->pXLabel, Ghost::None);
+    t->requires(Task::NewDW, lb->pLoadCurveIDLabel, Ghost::None);
+    t->requires(Task::NewDW, lb->materialPointsPerLoadCurveLabel, loadCurveIndex, Task::OutOfDomain, Ghost::None);
+    t->modifies(lb->pExternalHeatFluxLabel);
+    sched->addTask(t, level->eachPatch(), d_sharedState->allMPMMaterials());
+  }
+}
+
 
 void ImpMPM::actuallyComputeStableTimestep(const ProcessorGroup*,
                                            const PatchSubset* patches,

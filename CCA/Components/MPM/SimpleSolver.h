@@ -33,7 +33,7 @@ namespace Uintah {
                                     const PatchSubset* patches,
                                     const int DOFsPerNode);
 
-    void solve();
+    void solve(vector<double>& guess);
 
     void createMatrix(const ProcessorGroup* pg, const map<int,int>& diag);
 
@@ -44,6 +44,8 @@ namespace Uintah {
     void fillVector(int, double,bool add = false);
 
     void fillTemporaryVector(int, double);
+
+    void fillFluxVector(int, double);
     
     void copyL2G(Array3<int>& l2g, const Patch* patch);
 
@@ -83,7 +85,7 @@ namespace Uintah {
     SparseMatrix<double,int> KK;
     valarray<double> Q;
     valarray<double> d_x;
-    valarray<double> d_t;
+    valarray<double> d_t,d_flux;
 
     inline bool compare(double num1, double num2)
       {

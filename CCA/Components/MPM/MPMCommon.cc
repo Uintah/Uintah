@@ -1,10 +1,17 @@
 #include <Packages/Uintah/CCA/Components/MPM/MPMCommon.h> 
+#include <Packages/Uintah/Core/Grid/Patch.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/Core/ProblemSpec/ProblemSpec.h>
+#include <Packages/Uintah/Core/Grid/Level.h>
+
 
 using namespace Uintah;
 
-MPMCommon::MPMCommon()
+
+
+
+MPMCommon::MPMCommon(const ProcessorGroup* myworld)
+  : d_myworld(myworld)
 {
 }
 
@@ -54,3 +61,38 @@ void MPMCommon::materialProblemSetup(const ProblemSpecP& prob_spec,
   }
 }
 
+
+void MPMCommon::printSchedule(const PatchSet* patches,
+                              DebugStream& dbg,
+                              const string& where)
+{
+  if (dbg.active()){
+    dbg << d_myworld->myrank() << " " 
+        << where << "L-"
+        << getLevel(patches)->getIndex()<< endl;
+  }  
+}
+
+void MPMCommon::printSchedule(const LevelP& level,
+                              DebugStream& dbg,
+                              const string& where)
+{
+  if (dbg.active()){
+    dbg << d_myworld->myrank() << " " 
+        << where << "L-"
+        << level->getIndex()<< endl;
+  }  
+}
+
+void MPMCommon::printTask(const PatchSubset* patches,
+                          const Patch* patch,
+                          DebugStream& dbg,
+                          const string& where)
+{
+  if (dbg.active()){
+    dbg << d_myworld->myrank() << " " 
+        << where << " MPM \tL-"
+        << getLevel(patches)->getIndex()
+        << " patch " << patch->getGridIndex()<< endl;
+  }  
+}
