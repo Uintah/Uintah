@@ -96,8 +96,8 @@ namespace SCIRun {
       if (inside && pressed &&
           (pointer->get_pointer_state() & PointerEvent::BUTTON_1_E)) 
         {
-          get_vars()->insert("mousex", to_string(pointer->get_x()), "int", 1);
-          get_vars()->insert("mousey", to_string(pointer->get_y()), "int", 1);
+          //          get_vars()->insert("mousex", to_string(pointer->get_x()), "int", 1);
+          //          get_vars()->insert("mousey", to_string(pointer->get_y()), "int", 1);
 
           signal = 
             dynamic_cast<Signal *>(throw_signal("button_1_clicked").get_rep());
@@ -113,8 +113,8 @@ namespace SCIRun {
       if (inside && pressed &&
           (pointer->get_pointer_state() & PointerEvent::BUTTON_3_E)) 
         {
-          get_vars()->insert("mousex", to_string(pointer->get_x()), "int", 1);
-          get_vars()->insert("mousey", to_string(pointer->get_y()), "int", 1);
+          //          get_vars()->insert("mousex", to_string(pointer->get_x()), "int", 1);
+          //          get_vars()->insert("mousey", to_string(pointer->get_y()), "int", 1);
 
           signal = 
             dynamic_cast<Signal *>(throw_signal("button_2_clicked").get_rep());

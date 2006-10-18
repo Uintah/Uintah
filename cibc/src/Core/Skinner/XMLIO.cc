@@ -505,9 +505,7 @@ namespace SCIRun {
     }
 
     void
-    XMLIO::eval_var_node(const xmlNodePtr node,
-                         Variables *variables,
-                         bool override_propagate) 
+    XMLIO::eval_var_node(const xmlNodePtr node, Variables *variables)
     {
       ASSERT(XMLUtil::node_is_element(node, "var"));
       ASSERT(variables);
@@ -526,9 +524,6 @@ namespace SCIRun {
 
       bool propagate =
         XMLUtil::maybe_get_att_as_string(node,"propagate",str) && str == "yes";
-      if (override_propagate)
-        propagate = true;
-                 
 
       const char *contents = 0;
       if (node->children) { 
@@ -572,18 +567,9 @@ namespace SCIRun {
       SignalThrower::AllSignalCatchers_t::iterator citer = catchers.begin();
       SignalThrower::AllSignalCatchers_t::iterator cend = catchers.end();
 
-#if 0
-      Variables *vars = new Variables(signalname, object->get_vars());
-      for (xmlNode *cnode = node->children; cnode; cnode = cnode->next) {
-        if (XMLUtil::node_is_element(cnode, "var")) {
-          eval_var_node(cnode, vars, true);
-        }
-      }
-#endif     
- 
       for (;citer != cend; ++citer) {
         SignalCatcher::CatcherTargetInfoBase* callback = (*citer)->clone();
-#if 1
+
         if (!callback->variables_) {
           callback->variables_ = new Variables(signalname, object->get_vars());
           //        } else {
@@ -592,11 +578,10 @@ namespace SCIRun {
 
         for (xmlNode *cnode = node->children; cnode; cnode = cnode->next) {
           if (XMLUtil::node_is_element(cnode, "var")) {
-            eval_var_node(cnode, callback->variables_, false);
+            eval_var_node(cnode, callback->variables_);
           }
         }
 
-#endif
        
         if (object->get_signal_id(signalname)) {
           if (sci_getenv_p("SKINNER_XMLIO_DEBUG") || sci_getenv_p("SKINNER_SIGNAL_DEBUG")) {

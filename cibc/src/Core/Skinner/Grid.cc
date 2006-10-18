@@ -84,7 +84,7 @@ namespace SCIRun {
           dy = (region.height()-usedy)/unusedy;
         else if (dy < 1.0)
           dy = region.height()*dy;
-        posy[r] = Clamp(posy[r-1] + dy, 0.0, region.height());
+        posy[r] = Round(Clamp(posy[r-1] + dy, 0.0, region.height()));
       }
 
       double usedx = 0.0;
@@ -104,7 +104,7 @@ namespace SCIRun {
         else if (dx < 1.0)
           dx = region.width()*dx;
 
-        posx[c] = Clamp(posx[c-1] + dx, 0.0, region.width());
+        posx[c] = Round(Clamp(posx[c-1] + dx, 0.0, region.width()));
       }
 
       for (unsigned int i = 0; i < cell_info_.size(); ++i) {

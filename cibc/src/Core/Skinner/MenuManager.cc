@@ -169,6 +169,8 @@ namespace SCIRun {
     BaseTool::propagation_state_e
     MenuManager::hide_MenuList(event_handle_t event) {
       Signal *signal = dynamic_cast<Signal *>(event.get_rep());
+      if (!signal->get_vars()->exists("id")) 
+        return CONTINUE_E;
       const string id = signal->get_vars()->get_id();
       mutex_.lock();
       

@@ -133,6 +133,7 @@ Skinner::Frame::redraw(event_handle_t e)
 
 BaseTool::propagation_state_e
 Skinner::Frame::process_event(event_handle_t event) {
+  if (!visible_) return STOP_E;
   WindowEvent *window = dynamic_cast<WindowEvent *>(event.get_rep());
 
   if (window && window->get_window_state() == WindowEvent::REDRAW_E)
