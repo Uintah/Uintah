@@ -63,7 +63,7 @@ namespace SCIRun {
         register_maker(T::class_name(), &T::maker);
       }
 
-      
+      static void               eval_var_node(const xmlNodePtr, Variables *);
     private:
       // purely static class, dont allow creation
       XMLIO();
@@ -107,9 +107,7 @@ namespace SCIRun {
                                           SignalCatcher::TreeOfCatchers_t &);
                                           
 
-      static void        eval_var_node(const xmlNodePtr,
-                                       Variables *,
-                                       bool override_propagate=false);
+
 
       static DrawableMakerMap_t makers_;
     
