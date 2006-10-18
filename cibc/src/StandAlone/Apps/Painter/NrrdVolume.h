@@ -63,7 +63,7 @@ public:
   void                set_nrrd(NrrdDataHandle &);
   NrrdDataHandle      get_nrrd();
   NrrdVolume *        create_label_volume();
-  NrrdVolume *        create_child_label_volume();
+  NrrdVolume *        create_child_label_volume(unsigned int label=0);
   unsigned int        compute_label_mask(unsigned int label = 0);
 
 
