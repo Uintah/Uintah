@@ -120,7 +120,6 @@ typedef ImageMesh<QuadBilinearLgn<Point> >          IMesh;
 public:
   ITKDatatypeHandle inhandle1_;
   
-  FieldOPort* ofield_;
   FieldHandle ofield_handle_;
   
   GuiInt gui_copy_;
@@ -661,7 +660,8 @@ ImageToField::run( itk::Object* obj1)
     error("Cannot convert data that is not 2D or 3D to a SCIRun Field.");
     return false;
   }
-  ofield_->send(ofield_handle_);
+
+  send_output_handle("OutputImage", ofield_handle_, true);
   return true;
 }
 
@@ -683,8 +683,8 @@ ImageToField::run2( itk::Object* obj1)
       error("Cannot convert data that is not 2D or 3D to a SCIRun Vector field.");
       return false;
     }
-    
-    ofield_->send(ofield_handle_);
+
+    send_output_handle("OutputImage", ofield_handle_, true);
     return true;
   }
   else {
@@ -711,7 +711,7 @@ ImageToField::run3( itk::Object* obj1)
       return false;
     }
     
-    ofield_->send(ofield_handle_);
+    send_output_handle("OutputImage", ofield_handle_, true);
     return true;
   }
   else {
@@ -724,12 +724,6 @@ void
 ImageToField::execute()
 {
   if (!get_input_handle("InputImage", inhandle1_)) return;
-
-  ofield_ = (FieldOPort *)get_oport("OutputImage");
-  if (!ofield_) {
-    error("Unable to initialize oport 'OutputImage'.");
-    return;
-  }
 
   // get input
   itk::Object *n = inhandle1_.get_rep()->data_.GetPointer();

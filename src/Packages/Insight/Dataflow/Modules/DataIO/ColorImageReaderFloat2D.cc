@@ -53,7 +53,6 @@ public:
   //! GUI variables
   GuiString gui_FileName_;
 
-  ITKDatatypeOPort* outport_;
   ITKDatatypeHandle handle_;
 
   string prevFile;
@@ -83,13 +82,6 @@ ColorImageReaderFloat2D::~ColorImageReaderFloat2D()
 void
 ColorImageReaderFloat2D::execute()
 {
-  // check ports
-  outport_ = (ITKDatatypeOPort *)get_oport("Image");
-  if(!outport_) {
-    error("Unable to initialize oport 'Image'.");
-    return;
-  }
-
   typedef itk::ImageFileReader<itk::Image<itk::Vector<float>, 2> > FileReaderType;
   
   // create a new reader
@@ -116,7 +108,7 @@ ColorImageReaderFloat2D::execute()
   }
   
   // Send the data downstream
-  outport_->send(handle_);
+  send_output_handle("Image", handle_, true);
 }
 
 } // End namespace Insight

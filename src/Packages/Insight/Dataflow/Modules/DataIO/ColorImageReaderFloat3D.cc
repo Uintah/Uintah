@@ -53,7 +53,6 @@ public:
   //! GUI variables
   GuiString gui_FileName_;
 
-  ITKDatatypeOPort* outport_;
   ITKDatatypeHandle handle_;
 
   string prevFile;
@@ -83,13 +82,6 @@ ColorImageReaderFloat3D::~ColorImageReaderFloat3D()
 void
 ColorImageReaderFloat3D::execute()
 {
-  // check ports
-  outport_ = (ITKDatatypeOPort *)get_oport("Image");
-  if(!outport_) {
-    error("Unable to initialize oport 'Image'.");
-    return;
-  }
-
   typedef itk::ImageFileReader<itk::Image<itk::Vector<float>, 3> > FileReaderType;
   
   // create a new reader
@@ -116,7 +108,7 @@ ColorImageReaderFloat3D::execute()
   }
   
   // Send the data downstream
-  outport_->send(handle_);
+  send_output_handle("Image", handle_, true);
 }
 
 

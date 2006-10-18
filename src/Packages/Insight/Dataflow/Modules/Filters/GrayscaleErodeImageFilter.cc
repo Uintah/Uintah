@@ -57,21 +57,17 @@ public:
   // Filter Declaration
   itk::Object::Pointer filter_;
 
-
- // Declare GuiVars
+  // Declare GuiVars
   GuiInt gui_radius_;
 
   bool execute_;
-  
 
   // Declare Ports
   ITKDatatypeHandle inhandle_InputImage_;
   int last_InputImage_;
 
-  ITKDatatypeOPort* outport_OutputImage_;
   ITKDatatypeHandle outhandle_OutputImage_;
 
-  
   GrayscaleErodeImageFilter(GuiContext*);
 
   virtual ~GrayscaleErodeImageFilter();
@@ -138,26 +134,24 @@ GrayscaleErodeImageFilter::run( itk::Object *obj_InputImage)
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetKernel( structuringElement );
   
   // execute the filter
-  if (execute_) {
+  if (execute_)
+  {
+    try {
+
+      dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
+
+    } catch ( itk::ExceptionObject & err ) {
+      error("ExceptionObject caught!");
+      error(err.GetDescription());
+    }
+
+    // get filter output
+    ITKDatatype* out_OutputImage_ = scinew ITKDatatype;
   
-  try {
+    out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
 
-    dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
-
-  } catch ( itk::ExceptionObject & err ) {
-     error("ExceptionObject caught!");
-     error(err.GetDescription());
-  }
-
-  // get filter output
-  ITKDatatype* out_OutputImage_ = scinew ITKDatatype;
-  
-  out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
-
-  outhandle_OutputImage_ = out_OutputImage_;
-
-  outport_OutputImage_->send(outhandle_OutputImage_);
-  
+    outhandle_OutputImage_ = out_OutputImage_;
+    send_output_handle("OutputImage", outhandle_OutputImage_, true);
   }
 
   return true;
@@ -189,13 +183,6 @@ GrayscaleErodeImageFilter::execute()
 {
   // check input ports
   if (!get_input_handle("InputImage", inhandle_InputImage_)) return;
-
-  // check output ports
-  outport_OutputImage_ = (ITKDatatypeOPort *)get_oport("OutputImage");
-  if(!outport_OutputImage_) {
-    error("Unable to initialize oport");
-    return;
-  }
 
   // get input
   itk::Object* data_InputImage = inhandle_InputImage_.get_rep()->data_.GetPointer();
