@@ -215,10 +215,6 @@ PROGRAM := $(SRCDIR)/PictToNrrd
 SRCS := $(SRCDIR)/PictToNrrd.cc
 include $(SCIRUN_SCRIPTS)/program.mk
 
-PROGRAM := $(SRCDIR)/GeoProbeToNhdr
-SRCS := $(SRCDIR)/GeoProbeToNhdr.cc
-include $(SCIRUN_SCRIPTS)/program.mk
-
 PROGRAM := $(SRCDIR)/UCSDToHexVol
 SRCS := $(SRCDIR)/UCSDToHexVol.cc
 include $(SCIRUN_SCRIPTS)/program.mk
