@@ -187,7 +187,7 @@ Painter::extract_all_window_slices() {
 void
 Painter::get_data_from_layer_buttons()  
 {
-  for (int i = 0; i < layer_buttons_.size(); ++i) {
+  for (unsigned int i = 0; i < layer_buttons_.size(); ++i) {
     LayerButton *button = layer_buttons_[i];
     NrrdVolume *volume = button->volume_;
     if (!volume) continue;

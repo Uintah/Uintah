@@ -102,8 +102,8 @@ ITKThresholdTool::set_vars()
 {
   ASSERT(filter_);
   string scope = "ITKThresholdTool::";
-  Skinner::Variables *vars = painter_->get_vars();
 #if 0
+  Skinner::Variables *vars = painter_->get_vars();
   filter_->SetCurvatureScaling(vars->get_double(scope+"curvatureScaling"));
   filter_->SetPropagationScaling(vars->get_double(scope+"propagationScaling"));
   filter_->SetEdgeWeight(vars->get_double(scope+"edgeWeight"));
