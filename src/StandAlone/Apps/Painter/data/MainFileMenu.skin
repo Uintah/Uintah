@@ -9,15 +9,14 @@
         <object class="MenuButton">
           <var name="row">1</var>
           <var name="col">1</var>
-          <var name="Button::Text::text" propagate="yes">Load File...</var>
+          <var name="Button::Text::text" propagate="yes">Load Session...</var>
           
           <signal name="Button::clicked" 
                   target="Arithmetic::set_value">
-            <var name="variable">$FileDialog::visible</var>
+            <var name="variable">$SessionLoadDialog::visible</var>
             <var name="value">1</var>
           </signal>                   
-          
-          
+                    
           <signal name="Button::clicked" 
                   target="Animation::AnimateVariableAscending">
             <var name="varnum">1</var>
@@ -27,10 +26,17 @@
         <object class="MenuButton">
           <var name="row">2</var>
           <var name="col">1</var>
-          <var name="Button::Text::text" propagate="yes">Save File...</var>
+          <var name="Button::Text::text" propagate="yes">Save Session...</var>
+
+          <signal name="Button::clicked" 
+                  target="Arithmetic::set_value">
+            <var name="variable">$SessionSaveDialog::visible</var>
+            <var name="value">1</var>
+          </signal>                   
+
           <signal name="Button::clicked" 
                   target="Animation::AnimateVariableAscending">
-            <var name="varnum">2</var>
+            <var name="varnum">1</var>
           </signal>
         </object>
         

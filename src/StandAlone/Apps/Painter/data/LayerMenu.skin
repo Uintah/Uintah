@@ -14,7 +14,7 @@
           
           <signal name="Button::clicked" 
                   target="Arithmetic::set_value">
-            <var name="variable">$FileDialog::visible</var>
+            <var name="variable">$LayerLoadDialog::visible</var>
             <var name="value">1</var>
           </signal>                   
           
@@ -29,10 +29,12 @@
           <var name="col">1</var>
           <var name="Button::Text::text" 
                propagate="yes">Save Layer...</var>
+
           <signal name="Button::clicked" 
-                  target="Animation::AnimateVariableAscending">
-            <var name="varnum">2</var>
-          </signal>
+                  target="Arithmetic::set_value">
+            <var name="variable">$LayerLoadDialog::visible</var>
+            <var name="value">1</var>
+          </signal>                   
         </object>
         
         <object class="MenuButton">
