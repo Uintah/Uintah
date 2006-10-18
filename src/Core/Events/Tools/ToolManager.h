@@ -62,6 +62,10 @@ public:
       return "";
     }
     const ts_stack_t &s = (*iter).second;
+    if (s.empty()) {
+      return "";
+    }
+      
     return s.top()->get_name(); 
   }
 
