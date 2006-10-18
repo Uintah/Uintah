@@ -57,7 +57,6 @@ public:
   //! GUI variables
   GuiString gui_FileName_;
 
-  ITKDatatypeIPort* inport_;
   ITKDatatypeHandle inhandle_;
 
   ImageFileWriter(GuiContext*);
@@ -69,8 +68,10 @@ public:
   template<class T1> bool run(itk::Object* );
 };
 
+
 template<class T1>
-bool ImageFileWriter::run( itk::Object *obj )
+bool
+ImageFileWriter::run( itk::Object *obj )
 {
   T1 *data1 = dynamic_cast<T1 * >(obj);
 
@@ -117,15 +118,7 @@ void
 ImageFileWriter::execute()
 {
   // check ports
-  inport_ = (ITKDatatypeIPort *)get_iport("Image");
-  if(!inport_) {
-    error("Unable to initialize iport 'Image'");
-  }
-
-  inport_->get(inhandle_);
-  if(!inhandle_.get_rep()) {
-    return;
-  }
+  if (!get_input_handle("Image", inhandle_)) return;
 
   // get input
   itk::Object* data = inhandle_.get_rep()->data_.GetPointer();

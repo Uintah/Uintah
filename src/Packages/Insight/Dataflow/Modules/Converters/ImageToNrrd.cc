@@ -53,7 +53,6 @@ using namespace SCIRun;
 
 class ImageToNrrd : public Module {
 public:
-  ITKDatatypeIPort* inport1_;
   ITKDatatypeHandle inhandle1_;
 
   NrrdOPort* onrrd_;
@@ -316,22 +315,13 @@ ImageToNrrd::run2( itk::Object* obj1)
 void
 ImageToNrrd::execute()
 {
-  inport1_ = (ITKDatatypeIPort *)get_iport("InputImage");
+  if (!get_input_handle("InputImage", inhandle1_)) return;
+
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");  
-  
-  if (!inport1_) {
-    error("Unable to initialize iport 'InputImage'.");
-    return;
-  }
   if (!onrrd_) {
     error("Unable to initialize oport 'OutputNrrd'.");
     return;
   }
-
-  inport1_->get(inhandle1_);
-  
-  if(!inhandle1_.get_rep())
-    return;
   
   // get input
   itk::Object *n = inhandle1_.get_rep()->data_.GetPointer();

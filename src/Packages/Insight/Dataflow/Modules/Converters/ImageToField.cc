@@ -118,7 +118,6 @@ typedef LatVolMesh<HexTrilinearLgn<Point> >         LVMesh;
 typedef ImageMesh<QuadBilinearLgn<Point> >          IMesh;
 
 public:
-  ITKDatatypeIPort* inport1_;
   ITKDatatypeHandle inhandle1_;
   
   FieldOPort* ofield_;
@@ -724,23 +723,14 @@ ImageToField::run3( itk::Object* obj1)
 void
 ImageToField::execute()
 {
-  inport1_ = (ITKDatatypeIPort *)get_iport("InputImage");
+  if (!get_input_handle("InputImage", inhandle1_)) return;
+
   ofield_ = (FieldOPort *)get_oport("OutputImage");
-  
-  if (!inport1_) {
-    error("Unable to initialize iport 'InputImage'.");
-    return;
-  }
   if (!ofield_) {
     error("Unable to initialize oport 'OutputImage'.");
     return;
   }
 
-  inport1_->get(inhandle1_);
-  
-  if(!inhandle1_.get_rep())
-    return;
-  
   // get input
   itk::Object *n = inhandle1_.get_rep()->data_.GetPointer();
   
