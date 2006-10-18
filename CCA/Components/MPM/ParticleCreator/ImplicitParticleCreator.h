@@ -29,6 +29,7 @@ namespace Uintah {
   protected:
     ParticleVariable<Vector> pacceleration;
     ParticleVariable<double> pvolumeold;
+    ParticleVariable<double> pExternalHeatFlux;
     
 
  
