@@ -56,8 +56,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   void load_gui();
 
   // Run function will dynamically cast data to determine which
@@ -94,10 +92,15 @@ ExtractImageFilter::ExtractImageFilter(GuiContext* ctx)
   load_gui();
 }
 
-ExtractImageFilter::~ExtractImageFilter(){
+
+ExtractImageFilter::~ExtractImageFilter()
+{
 }
 
-void ExtractImageFilter::load_gui() {
+
+void
+ExtractImageFilter::load_gui()
+{
   num_dims_.reset();
   if (num_dims_.get() == 0) { return; }
 
@@ -105,8 +108,10 @@ void ExtractImageFilter::load_gui() {
   lastmin_.resize(num_dims_.get(), -1);
   lastmax_.resize(num_dims_.get(), -1);  
 
-  if ((int)mins_.size() != num_dims_.get()) {
-    for (int a = 0; a < num_dims_.get(); a++) {
+  if ((int)mins_.size() != num_dims_.get())
+  {
+    for (int a = 0; a < num_dims_.get(); a++)
+    {
       ostringstream str;
       str << "minDim" << a;
       mins_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
@@ -120,8 +125,10 @@ void ExtractImageFilter::load_gui() {
   }
 }
 
-void ExtractImageFilter::execute(){
-  
+
+void
+ExtractImageFilter::execute()
+{
   update_state(NeedData);
   iimg_ = (ITKDatatypeIPort *)get_iport("InputImage");
   oimg_ = (ITKDatatypeOPort *)get_oport("OutputImage");
@@ -170,7 +177,8 @@ void ExtractImageFilter::execute(){
 
 
 template<class InputImageType, class OutputImageType>
-bool ExtractImageFilter::run( itk::Object *obj_InputImage) 
+bool
+ExtractImageFilter::run( itk::Object *obj_InputImage) 
 {
   InputImageType *n = dynamic_cast<  InputImageType * >(obj_InputImage);
   
@@ -199,9 +207,8 @@ bool ExtractImageFilter::run( itk::Object *obj_InputImage)
       do_clear = true;
     }
     
-    
-    if (do_clear) {
-      
+    if (do_clear)
+    {
       lastmin_.clear();
       lastmax_.clear();
       vector<GuiInt*>::iterator iter = mins_.begin();
@@ -243,7 +250,6 @@ bool ExtractImageFilter::run( itk::Object *obj_InputImage)
       
       str << get_id().c_str() << " set_max_vals" << endl; 
       get_gui()->execute(str.str());
-      
     }
   }
   
@@ -254,8 +260,6 @@ bool ExtractImageFilter::run( itk::Object *obj_InputImage)
     maxs_[a]->reset();
     absmaxs_[a]->reset();
   }
-  
-  
   
   if (last_generation_ == imgH->generation && last_imgH_.get_rep()) {
     bool same = true;
@@ -275,7 +279,6 @@ bool ExtractImageFilter::run( itk::Object *obj_InputImage)
     }
   }
   last_generation_ = imgH->generation;
-  
   
   typedef itk::ExtractImageFilter<InputImageType, OutputImageType> FilterType;
   
@@ -311,11 +314,6 @@ bool ExtractImageFilter::run( itk::Object *obj_InputImage)
     error(err.GetDescription());
   }
   
-  // set new start index to what input image was
-  //region.SetIndex( input_start );
-  //filter->GetOutput()->SetRegions( region );
-  
-  
   ITKDatatype *nrrd = scinew ITKDatatype;
   nrrd->data_ = filter->GetOutput();
   last_imgH_ = nrrd;
@@ -323,10 +321,6 @@ bool ExtractImageFilter::run( itk::Object *obj_InputImage)
   return true;
 }
 
-void ExtractImageFilter::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace Insight
 

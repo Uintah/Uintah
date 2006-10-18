@@ -62,12 +62,11 @@ public:
   virtual ~ImageReaderFloat2D();
 
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
 DECLARE_MAKER(ImageReaderFloat2D)
+
 ImageReaderFloat2D::ImageReaderFloat2D(GuiContext* ctx)
   : Module("ImageReaderFloat2D", ctx, Source, "DataIO", "Insight"),
     gui_filename_(get_ctx()->subVar("filename"))
@@ -75,10 +74,15 @@ ImageReaderFloat2D::ImageReaderFloat2D(GuiContext* ctx)
   prevFile = "";
 }
 
-ImageReaderFloat2D::~ImageReaderFloat2D(){
+
+ImageReaderFloat2D::~ImageReaderFloat2D()
+{
 }
 
-void ImageReaderFloat2D::execute(){
+
+void
+ImageReaderFloat2D::execute()
+{
   // check ports
   outport_ = (ITKDatatypeOPort *)get_oport("Image1");
   if(!outport_) {
@@ -115,10 +119,6 @@ void ImageReaderFloat2D::execute(){
   outport_->send(handle_);
 }
 
-void ImageReaderFloat2D::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace Insight
 

@@ -81,8 +81,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -95,7 +93,6 @@ public:
   void ConstProcessEvent(const itk::Object * caller, const itk::EventObject & event );
   void Observe( itk::Object *caller );
   RedrawCommandType::Pointer m_RedrawCommand;
-
 };
 
 
@@ -129,7 +126,6 @@ BinaryThresholdImageFilter::run( itk::Object *obj_InputImage)
      // set inputs 
      
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetInput( data_InputImage );
-       
   }
 
   // reset progress bar
@@ -146,9 +142,7 @@ BinaryThresholdImageFilter::run( itk::Object *obj_InputImage)
   
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetOutsideValue( gui_outside_value_.get() ); 
   
-
   // execute the filter
-  
   try {
 
     dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
@@ -159,8 +153,6 @@ BinaryThresholdImageFilter::run( itk::Object *obj_InputImage)
   }
 
   // get filter output
-  
-  
   ITKDatatype* out_OutputImage_ = scinew ITKDatatype; 
   
   out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
@@ -168,7 +160,6 @@ BinaryThresholdImageFilter::run( itk::Object *obj_InputImage)
   outhandle_OutputImage_ = out_OutputImage_; 
   outport_OutputImage_->send(outhandle_OutputImage_);
   
-
   return true;
 }
 
@@ -185,18 +176,18 @@ BinaryThresholdImageFilter::BinaryThresholdImageFilter(GuiContext* ctx)
 {
   filter_ = 0;
 
-
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &BinaryThresholdImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &BinaryThresholdImageFilter::ConstProcessEvent );
 
   update_progress(0.0);
-
 }
+
 
 BinaryThresholdImageFilter::~BinaryThresholdImageFilter() 
 {
 }
+
 
 void 
 BinaryThresholdImageFilter::execute() 
@@ -213,7 +204,6 @@ BinaryThresholdImageFilter::execute()
   if(!inhandle_InputImage_.get_rep()) {
     return;
   }
-
 
   // check output ports
   outport_OutputImage_ = (ITKDatatypeOPort *)get_oport("OutputImage");
@@ -234,7 +224,6 @@ BinaryThresholdImageFilter::execute()
     error("Incorrect input type");
     return;
   }
-
 }
 
 
@@ -249,8 +238,7 @@ BinaryThresholdImageFilter::ProcessEvent( itk::Object * caller, const itk::Event
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -265,8 +253,7 @@ BinaryThresholdImageFilter::ConstProcessEvent(const itk::Object * caller, const 
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -276,13 +263,6 @@ BinaryThresholdImageFilter::Observe( itk::Object *caller )
 {
   caller->AddObserver(  itk::ProgressEvent(), m_RedrawCommand.GetPointer() );
   caller->AddObserver(  itk::IterationEvent(), m_RedrawCommand.GetPointer() );
-}
-
-void 
-BinaryThresholdImageFilter::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-
 }
 
 

@@ -80,8 +80,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -94,7 +92,6 @@ public:
   void ConstProcessEvent(const itk::Object * caller, const itk::EventObject & event );
   void Observe( itk::Object *caller );
   RedrawCommandType::Pointer m_RedrawCommand;
-
 };
 
 
@@ -128,24 +125,19 @@ VectorGradientAnisotropicDiffusionImageFilter::run( itk::Object *obj_InputImage)
      // set inputs 
      
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetInput( data_InputImage );
-       
   }
 
   // reset progress bar
   update_progress(0.0);
 
   // set filter parameters
-   
-  
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetTimeStep( gui_time_step_.get() ); 
   
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetNumberOfIterations( gui_iterations_.get() ); 
   
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetConductanceParameter( gui_conductance_parameter_.get() ); 
   
-
   // execute the filter
-  
   try {
 
     dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
@@ -156,8 +148,6 @@ VectorGradientAnisotropicDiffusionImageFilter::run( itk::Object *obj_InputImage)
   }
 
   // get filter output
-  
-  
   ITKDatatype* out_OutputImage_ = scinew ITKDatatype; 
   
   out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
@@ -165,7 +155,6 @@ VectorGradientAnisotropicDiffusionImageFilter::run( itk::Object *obj_InputImage)
   outhandle_OutputImage_ = out_OutputImage_; 
   outport_OutputImage_->send(outhandle_OutputImage_);
   
-
   return true;
 }
 
@@ -181,18 +170,18 @@ VectorGradientAnisotropicDiffusionImageFilter::VectorGradientAnisotropicDiffusio
 {
   filter_ = 0;
 
-
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &VectorGradientAnisotropicDiffusionImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &VectorGradientAnisotropicDiffusionImageFilter::ConstProcessEvent );
 
   update_progress(0.0);
-
 }
+
 
 VectorGradientAnisotropicDiffusionImageFilter::~VectorGradientAnisotropicDiffusionImageFilter() 
 {
 }
+
 
 void 
 VectorGradientAnisotropicDiffusionImageFilter::execute() 
@@ -209,7 +198,6 @@ VectorGradientAnisotropicDiffusionImageFilter::execute()
   if(!inhandle_InputImage_.get_rep()) {
     return;
   }
-
 
   // check output ports
   outport_OutputImage_ = (ITKDatatypeOPort *)get_oport("OutputImage");
@@ -230,7 +218,6 @@ VectorGradientAnisotropicDiffusionImageFilter::execute()
     error("Incorrect input type");
     return;
   }
-
 }
 
 
@@ -245,8 +232,7 @@ VectorGradientAnisotropicDiffusionImageFilter::ProcessEvent( itk::Object * calle
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -261,8 +247,7 @@ VectorGradientAnisotropicDiffusionImageFilter::ConstProcessEvent(const itk::Obje
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -272,13 +257,6 @@ VectorGradientAnisotropicDiffusionImageFilter::Observe( itk::Object *caller )
 {
   caller->AddObserver(  itk::ProgressEvent(), m_RedrawCommand.GetPointer() );
   caller->AddObserver(  itk::IterationEvent(), m_RedrawCommand.GetPointer() );
-}
-
-void 
-VectorGradientAnisotropicDiffusionImageFilter::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-
 }
 
 

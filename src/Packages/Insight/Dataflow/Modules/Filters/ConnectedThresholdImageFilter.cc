@@ -82,8 +82,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -119,8 +117,8 @@ ConnectedThresholdImageFilter::run( itk::Object *obj_InputImage)
   // this is the case, set the inputs.
 
   if(!filter_  || 
-     inhandle_InputImage_->generation != last_InputImage_) {
-     
+     inhandle_InputImage_->generation != last_InputImage_)
+  {
      last_InputImage_ = inhandle_InputImage_->generation;
 
      // create a new one
@@ -132,22 +130,18 @@ ConnectedThresholdImageFilter::run( itk::Object *obj_InputImage)
      // set inputs 
      
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetInput( data_InputImage );
-       
   }
 
   // reset progress bar
   update_progress(0.0);
 
   // set filter parameters
-   
   
   // instantiate any defined objects
   
   typename FilterType::IndexType seed_point;
   
   // clear defined object guis if things aren't in sync
-  
-  
   if((int)seed_point.GetIndexDimension() != gui_dimension_.get()) { 
     gui_dimension_.set(seed_point.GetIndexDimension());    
   
@@ -190,30 +184,25 @@ ConnectedThresholdImageFilter::run( itk::Object *obj_InputImage)
   
 
   // execute the filter
-  
-  if (execute_) {
-  
-  try {
+  if (execute_)
+  {
+    try {
 
-    dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
+      dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
 
-  } catch ( itk::ExceptionObject & err ) {
-     error("ExceptionObject caught!");
-     error(err.GetDescription());
+    } catch ( itk::ExceptionObject & err ) {
+      error("ExceptionObject caught!");
+      error(err.GetDescription());
+    }
+
+    // get filter output
+    ITKDatatype* out_OutputImge_ = scinew ITKDatatype; 
+  
+    out_OutputImge_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
+  
+    outhandle_OutputImge_ = out_OutputImge_; 
+    outport_OutputImge_->send(outhandle_OutputImge_);
   }
-
-  // get filter output
-  
-  
-  ITKDatatype* out_OutputImge_ = scinew ITKDatatype; 
-  
-  out_OutputImge_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
-  
-  outhandle_OutputImge_ = out_OutputImge_; 
-  outport_OutputImge_->send(outhandle_OutputImge_);
-  
-  }
-  
 
   return true;
 }
@@ -238,9 +227,11 @@ ConnectedThresholdImageFilter::ConnectedThresholdImageFilter(GuiContext* ctx)
   m_RedrawCommand->SetCallbackFunction( this, &ConnectedThresholdImageFilter::ConstProcessEvent );
 }
 
+
 ConnectedThresholdImageFilter::~ConnectedThresholdImageFilter() 
 {
 }
+
 
 void 
 ConnectedThresholdImageFilter::execute() 
@@ -257,7 +248,6 @@ ConnectedThresholdImageFilter::execute()
   if(!inhandle_InputImage_.get_rep()) {
     return;
   }
-
 
   // check output ports
   outport_OutputImge_ = (ITKDatatypeOPort *)get_oport("OutputImge");
@@ -278,7 +268,6 @@ ConnectedThresholdImageFilter::execute()
     error("Incorrect input type");
     return;
   }
-
 }
 
 
@@ -293,8 +282,7 @@ ConnectedThresholdImageFilter::ProcessEvent( itk::Object * caller, const itk::Ev
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -309,8 +297,7 @@ ConnectedThresholdImageFilter::ConstProcessEvent(const itk::Object * caller, con
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -320,13 +307,6 @@ ConnectedThresholdImageFilter::Observe( itk::Object *caller )
 {
   caller->AddObserver(  itk::ProgressEvent(), m_RedrawCommand.GetPointer() );
   caller->AddObserver(  itk::IterationEvent(), m_RedrawCommand.GetPointer() );
-}
-
-void 
-ConnectedThresholdImageFilter::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-
 }
 
 

@@ -66,8 +66,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   template<class T1> bool run(itk::Object* );
 };
 
@@ -100,6 +98,7 @@ bool ImageFileWriter::run( itk::Object *obj )
   return true;
 }
 
+
 DECLARE_MAKER(ImageFileWriter)
 
 ImageFileWriter::ImageFileWriter(GuiContext* ctx)
@@ -108,10 +107,15 @@ ImageFileWriter::ImageFileWriter(GuiContext* ctx)
 {
 }
 
-ImageFileWriter::~ImageFileWriter(){
+
+ImageFileWriter::~ImageFileWriter()
+{
 }
 
-void ImageFileWriter::execute(){
+
+void
+ImageFileWriter::execute()
+{
   // check ports
   inport_ = (ITKDatatypeIPort *)get_iport("Image");
   if(!inport_) {
@@ -122,7 +126,6 @@ void ImageFileWriter::execute(){
   if(!inhandle_.get_rep()) {
     return;
   }
-
 
   // get input
   itk::Object* data = inhandle_.get_rep()->data_.GetPointer();
@@ -156,11 +159,6 @@ void ImageFileWriter::execute(){
   }
 }
 
-void
- ImageFileWriter::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace Insight
 

@@ -71,14 +71,11 @@ public:
   ITKDatatypeOPort* outport_OutputImage_;
   ITKDatatypeHandle outhandle_OutputImage_;
 
-  
   ReflectImageFilter(GuiContext*);
 
   virtual ~ReflectImageFilter();
 
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
@@ -92,7 +89,6 @@ public:
   void ConstProcessEvent(const itk::Object * caller, const itk::EventObject & event );
   void Observe( itk::Object *caller );
   RedrawCommandType::Pointer m_RedrawCommand;
-
 };
 
 
@@ -113,8 +109,8 @@ ReflectImageFilter::run( itk::Object *obj_InputImage)
   // this is the case, set the inputs.
 
   if(!filter_  || 
-     inhandle_InputImage_->generation != last_InputImage_) {
-     
+     inhandle_InputImage_->generation != last_InputImage_)
+  {
      last_InputImage_ = inhandle_InputImage_->generation;
 
      // create a new one
@@ -126,20 +122,16 @@ ReflectImageFilter::run( itk::Object *obj_InputImage)
      // set inputs 
      
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetInput( data_InputImage );
-       
   }
 
   // reset progress bar
   update_progress(0.0);
 
   // set filter parameters
-   
-  
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetDirection( gui_direction_.get() ); 
   
 
   // execute the filter
-  
   try {
 
     dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
@@ -150,8 +142,6 @@ ReflectImageFilter::run( itk::Object *obj_InputImage)
   }
 
   // get filter output
-  
-  
   ITKDatatype* out_OutputImage_ = scinew ITKDatatype; 
   
   out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
@@ -159,7 +149,6 @@ ReflectImageFilter::run( itk::Object *obj_InputImage)
   outhandle_OutputImage_ = out_OutputImage_; 
   outport_OutputImage_->send(outhandle_OutputImage_);
   
-
   return true;
 }
 
@@ -173,7 +162,6 @@ ReflectImageFilter::ReflectImageFilter(GuiContext* ctx)
 {
   filter_ = 0;
 
-
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &ReflectImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &ReflectImageFilter::ConstProcessEvent );
@@ -182,9 +170,11 @@ ReflectImageFilter::ReflectImageFilter(GuiContext* ctx)
 
 }
 
+
 ReflectImageFilter::~ReflectImageFilter() 
 {
 }
+
 
 void 
 ReflectImageFilter::execute() 
@@ -201,7 +191,6 @@ ReflectImageFilter::execute()
   if(!inhandle_InputImage_.get_rep()) {
     return;
   }
-
 
   // check output ports
   outport_OutputImage_ = (ITKDatatypeOPort *)get_oport("OutputImage");
@@ -222,7 +211,6 @@ ReflectImageFilter::execute()
     error("Incorrect input type");
     return;
   }
-
 }
 
 
@@ -237,8 +225,7 @@ ReflectImageFilter::ProcessEvent( itk::Object * caller, const itk::EventObject &
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -253,8 +240,7 @@ ReflectImageFilter::ConstProcessEvent(const itk::Object * caller, const itk::Eve
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -264,13 +250,6 @@ ReflectImageFilter::Observe( itk::Object *caller )
 {
   caller->AddObserver(  itk::ProgressEvent(), m_RedrawCommand.GetPointer() );
   caller->AddObserver(  itk::IterationEvent(), m_RedrawCommand.GetPointer() );
-}
-
-void 
-ReflectImageFilter::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-
 }
 
 

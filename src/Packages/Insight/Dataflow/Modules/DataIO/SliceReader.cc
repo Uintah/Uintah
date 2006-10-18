@@ -67,7 +67,6 @@ public:
   SliceReader(SCIRun::GuiContext* ctx);
   virtual ~SliceReader();
   virtual void execute();
-  virtual void tcl_command(GuiArgs& args, void* userdata);
 private:
   GuiString       p_type_;
   GuiInt          size_0_;
@@ -118,6 +117,7 @@ SliceReader::SliceReader(SCIRun::GuiContext* ctx) :
   pixel_size_(0)
 {
 }
+
 
 SliceReader::~SliceReader()
 {
@@ -322,25 +322,16 @@ SliceReader::execute()
   update_state(Completed);
 }
 
+
 //SliceReader::create_slice(NrrdData* nd)
 template<class data>
 bool
 SliceReader::create_slice(ITKDatatype* nd)
 {
-
   io_->CloseImageFile(fp_);
   fp_ = io_->OpenImageFile(io_->GetImageFile(old_filename_));
   
-  // set spacing, min and max
-//   nd->nrrd->axis[0].spacing = io_->GetSpacing(0);
-//   nd->nrrd->axis[1].spacing = io_->GetSpacing(1);
-//   nd->nrrd->axis[0].min = io_->GetOrigin(0);
-//   nd->nrrd->axis[1].min = io_->GetOrigin(1);
-//   nrrdAxisInfoMinMaxSet(nd->nrrd, 0, nrrdCenterNode); 
-//   nrrdAxisInfoMinMaxSet(nd->nrrd, 1, nrrdCenterNode); 
-  
-  if (!fp_) 
-    return false;
+  if (!fp_) return false;
 
   // create the image, set the origin and spacing
   typedef typename itk::Image<data,2> ImageType;
@@ -402,13 +393,3 @@ SliceReader::create_slice(ITKDatatype* nd)
 }
 
 
-void 
-SliceReader::tcl_command(GuiArgs& args, void* userdata)
-{
-  if(args.count() < 2)
-  {
-    args.error("SliceReader needs a minor command");
-    return;
-  }
-  Module::tcl_command(args, userdata);
-}

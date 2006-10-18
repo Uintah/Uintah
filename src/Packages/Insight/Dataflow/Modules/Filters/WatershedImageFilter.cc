@@ -79,8 +79,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -88,12 +86,10 @@ public:
   bool run( itk::Object*   );
 
   // progress bar
-
   void ProcessEvent(itk::Object * caller, const itk::EventObject & event );
   void ConstProcessEvent(const itk::Object * caller, const itk::EventObject & event );
   void Observe( itk::Object *caller );
   RedrawCommandType::Pointer m_RedrawCommand;
-
 };
 
 
@@ -114,8 +110,8 @@ WatershedImageFilter::run( itk::Object *obj_InputImage)
   // this is the case, set the inputs.
 
   if(!filter_  || 
-     inhandle_InputImage_->generation != last_InputImage_) {
-     
+     inhandle_InputImage_->generation != last_InputImage_)
+  {
      last_InputImage_ = inhandle_InputImage_->generation;
 
      // create a new one
@@ -127,22 +123,17 @@ WatershedImageFilter::run( itk::Object *obj_InputImage)
      // set inputs 
      
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetInput( data_InputImage );
-       
   }
 
   // reset progress bar
   update_progress(0.0);
 
   // set filter parameters
-   
-  
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetThreshold( gui_threshold_.get() ); 
   
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetLevel( gui_level_.get() ); 
-  
 
   // execute the filter
-  
   try {
 
     dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
@@ -153,15 +144,12 @@ WatershedImageFilter::run( itk::Object *obj_InputImage)
   }
 
   // get filter output
-  
-  
   ITKDatatype* out_OutputImage_ = scinew ITKDatatype; 
   
   out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
   
   outhandle_OutputImage_ = out_OutputImage_; 
   outport_OutputImage_->send(outhandle_OutputImage_);
-  
 
   return true;
 }
@@ -177,18 +165,18 @@ WatershedImageFilter::WatershedImageFilter(GuiContext* ctx)
 {
   filter_ = 0;
 
-
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &WatershedImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &WatershedImageFilter::ConstProcessEvent );
 
   update_progress(0.0);
-
 }
+
 
 WatershedImageFilter::~WatershedImageFilter() 
 {
 }
+
 
 void 
 WatershedImageFilter::execute() 
@@ -205,7 +193,6 @@ WatershedImageFilter::execute()
   if(!inhandle_InputImage_.get_rep()) {
     return;
   }
-
 
   // check output ports
   outport_OutputImage_ = (ITKDatatypeOPort *)get_oport("OutputImage");
@@ -226,7 +213,6 @@ WatershedImageFilter::execute()
     error("Incorrect input type");
     return;
   }
-
 }
 
 
@@ -241,8 +227,7 @@ WatershedImageFilter::ProcessEvent( itk::Object * caller, const itk::EventObject
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -257,8 +242,7 @@ WatershedImageFilter::ConstProcessEvent(const itk::Object * caller, const itk::E
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -268,13 +252,6 @@ WatershedImageFilter::Observe( itk::Object *caller )
 {
   caller->AddObserver(  itk::ProgressEvent(), m_RedrawCommand.GetPointer() );
   caller->AddObserver(  itk::IterationEvent(), m_RedrawCommand.GetPointer() );
-}
-
-void 
-WatershedImageFilter::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-
 }
 
 

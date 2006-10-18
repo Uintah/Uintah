@@ -62,12 +62,11 @@ public:
   virtual ~ImageReaderFloat3D();
 
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
 DECLARE_MAKER(ImageReaderFloat3D)
+
 ImageReaderFloat3D::ImageReaderFloat3D(GuiContext* ctx)
   : Module("ImageReaderFloat3D", ctx, Source, "DataIO", "Insight"),
     gui_filename_(get_ctx()->subVar("filename"))
@@ -75,11 +74,15 @@ ImageReaderFloat3D::ImageReaderFloat3D(GuiContext* ctx)
   prevFile = "";
 }
 
-ImageReaderFloat3D::~ImageReaderFloat3D(){
+
+ImageReaderFloat3D::~ImageReaderFloat3D()
+{
 }
 
+
 void
- ImageReaderFloat3D::execute(){
+ImageReaderFloat3D::execute()
+{
   // check ports
   outport_ = (ITKDatatypeOPort *)get_oport("Image1");
   if(!outport_) {
@@ -116,11 +119,6 @@ void
   outport_->send(handle_);
 }
 
-void
- ImageReaderFloat3D::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace Insight
 
