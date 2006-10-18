@@ -52,11 +52,12 @@ PSELIBS := Core/Algorithms/Fields \
            Core/Skinner \
            Core/Thread \
 	   Core/Util \
-           Core/Volume
+           Core/Volume \
+           Core/XMLUtil
 endif
 
 LIBS := $(LAPACK_LIBRARY) \
-        $(XML_LIBRARY) \
+        $(XML2_LIBRARY) \
         $(M_LIBRARY) \
         $(GL_LIBRARY) \
         $(TEEM_LIBRARY) \
