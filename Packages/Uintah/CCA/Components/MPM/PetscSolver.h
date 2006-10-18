@@ -45,7 +45,7 @@ namespace Uintah {
                                     const PatchSubset* patches,
                                     const int DOFsPerNode);
     
-    void solve();
+    void solve(vector<double>& guess);
 
     void createMatrix(const ProcessorGroup* pg, const map<int,int>& dof_diag);
 
@@ -56,6 +56,8 @@ namespace Uintah {
     void fillVector(int, double,bool add = false);
 
     void fillTemporaryVector(int, double);
+
+    void fillFluxVector(int, double);
 
     void copyL2G(Array3<int>& l2g, const Patch* patch);
 
@@ -79,6 +81,8 @@ namespace Uintah {
 
   private:
 
+    void assembleFluxVector();
+
     // Needed for the local to global mappings
     map<const Patch*, int> d_petscGlobalStart;
     map<const Patch*, Array3<int> > d_petscLocalToGlobal;
@@ -92,7 +96,7 @@ namespace Uintah {
     Vec d_B;
     Vec d_diagonal;
     Vec d_x;
-    Vec d_t;
+    Vec d_t,d_flux;
 #endif
 
     inline bool compare(double num1, double num2)

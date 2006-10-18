@@ -115,6 +115,7 @@ void ImplicitHeatConduction::scheduleApplyHCBoundaryConditions(SchedulerP& schd,
                         &ImplicitHeatConduction::applyHCBoundaryConditions);
                                                                                 
   t->computes(lb->gTemperatureStarLabel,one_matl);
+  t->requires(Task::NewDW, lb->gExternalHeatFluxLabel, Ghost::None, 0);
                                                                                 
   schd->addTask(t, patches, matls);
  }
@@ -129,7 +130,8 @@ void ImplicitHeatConduction::scheduleFindFixedHCDOF(SchedulerP& sched,
                         &ImplicitHeatConduction::findFixedHCDOF);
                                                                                 
   t->requires(Task::NewDW, lb->gMassLabel, Ghost::None, 0);
-                                                                                
+
+
   sched->addTask(t, patches, matls);
  }
 }
@@ -191,7 +193,10 @@ void ImplicitHeatConduction::scheduleSolveForTemp(SchedulerP& sched,
  if(do_IHC){
   Task* t = scinew Task("ImpMPM::solveForTemp", this,
                         &ImplicitHeatConduction::solveForTemp);
-                                                                                
+  
+  Ghost::GhostType  gnone = Ghost::None;
+  t->requires(Task::NewDW, lb->gTemperatureLabel,one_matl,gnone,0); 
+
   sched->addTask(t, patches, matls);
  }
 }
@@ -390,7 +395,6 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
                 findNeighbors(n,neigh,l2g);
                 d_HC_solver->d_DOFNeighbors[dof] = neigh;
                 d_HC_solver->d_DOF.insert(dof);
-                //cout << "inserting " << dof << endl;
               }
             }
             delete temp_bcs;
@@ -399,6 +403,28 @@ void ImplicitHeatConduction::applyHCBoundaryConditions(const ProcessorGroup*,
       } else
         continue;
     }  // faces
+
+    for (int m = 0; m < d_sharedState->getNumMPMMatls();m++) {
+      MPMMaterial* mpm_matl = d_sharedState->getMPMMaterial(m);
+      int matlindex = mpm_matl->getDWIndex();
+      
+      constNCVariable<double> gheatflux;
+      new_dw->get(gheatflux, lb->gExternalHeatFluxLabel,matlindex,patch,
+                  Ghost::None,0);
+      
+      for (NodeIterator iter = patch->getNodeIterator(); !iter.done();iter++){
+        IntVector n = *iter;
+        int dof = l2g[n];
+        if (!compare(gheatflux[n],0.)) {
+          d_HC_solver->d_DOFFlux.insert(dof);
+          d_HC_solver->fillFluxVector(dof,gheatflux[n]);
+          
+        }
+      }  
+
+    }
+
+
   }      // patches
 }
 
@@ -441,10 +467,12 @@ void ImplicitHeatConduction::findFixedHCDOF(const ProcessorGroup*,
       IntVector n = *iter;
       int dof = l2g[n];
       if (compare(GMASS[n],0.)){
+#if 0
         vector<int> neigh;
         findNeighbors(n,neigh,l2g);
         d_HC_solver->d_DOFNeighbors[dof] = neigh;
-        d_HC_solver->d_DOF.insert(dof);
+#endif
+        d_HC_solver->d_DOFZero.insert(dof);
       }
     }  // node iterator
   }      // patches
@@ -690,14 +718,32 @@ void ImplicitHeatConduction::solveForTemp(const ProcessorGroup*,
                                           DataWarehouse* old_dw,
                                           DataWarehouse* new_dw)
 {
+  vector<double> guess;
   for(int p = 0; p<patches->size();p++) {
     const Patch* patch = patches->get(p);
     if (cout_doing.active()) {
       cout_doing <<"Doing solveForTemp on patch " << patch->getID()
                  <<"\t\t\t\t IMPM"<< "\n" << "\n";
     }
+
+#if 0
+    IntVector lowIndex = patch->getInteriorNodeLowIndex();
+    IntVector highIndex = patch->getInteriorNodeHighIndex()+IntVector(1,1,1);
+    Array3<int> l2g(lowIndex,highIndex);
+
+    constNCVariable<double> temperature;
+    int dwi = 0;
+    new_dw->get(temperature,lb->gTemperatureLabel,dwi,patch,Ghost::None,0);
+
+    for (NodeIterator iter = patch->getNodeIterator();!iter.done();iter++){
+      guess.push_back(temperature[*iter]);
+    }
+#endif
+    
   }
-  d_HC_solver->solve();
+
+
+  d_HC_solver->solve(guess);
 
 
 }

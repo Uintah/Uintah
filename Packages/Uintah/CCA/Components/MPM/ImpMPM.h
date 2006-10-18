@@ -143,6 +143,21 @@ private:
                                        DataWarehouse* old_dw,
                                        DataWarehouse* new_dw);
 
+  void scheduleInitializeHeatFluxBCs(const LevelP& level,
+				     SchedulerP&);
+	 
+  void countMaterialPointsPerLoadCurve(const ProcessorGroup*,
+				       const PatchSubset* patches,
+				       const MaterialSubset* matls,
+				       DataWarehouse* old_dw,
+				       DataWarehouse* new_dw);
+
+  void initializeHeatFluxBC(const ProcessorGroup*,
+			    const PatchSubset* patches,
+			    const MaterialSubset* matls,
+			    DataWarehouse* old_dw,
+			    DataWarehouse* new_dw);
+
   //////////
   // Insert Documentation Here:
   void actuallyComputeStableTimestep(  const ProcessorGroup*,

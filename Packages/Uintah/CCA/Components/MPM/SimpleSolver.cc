@@ -104,7 +104,7 @@ void SimpleSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
 
 }
 
-void SimpleSolver::solve()
+void SimpleSolver::solve(vector<double>& guess)
 {
 #if 0
   printMatrix();
@@ -143,13 +143,17 @@ void SimpleSolver::createMatrix(const ProcessorGroup* d_myworld,
   KK.setSize(globalrows,globalcolumns);
   Q.resize(globalrows);
   d_t.resize(globalrows);
+  d_flux.resize(globalrows);
 }
 
 void SimpleSolver::destroyMatrix(bool recursion)
 {
   KK.clear();
-  if (recursion == false)
+  if (recursion == false) {
     d_DOF.clear();
+    d_DOFFlux.clear();
+    d_DOFZero.clear();
+  }
 }
 
 void SimpleSolver::fillMatrix(int numi,int i[],int numj,
@@ -186,6 +190,11 @@ void SimpleSolver::assembleVector()
 void SimpleSolver::fillTemporaryVector(int i,double v)
 {
   d_t[i] = v;
+}
+
+void SimpleSolver::fillFluxVector(int i,double v)
+{
+  d_flux[i] = v;
 }
                                                                                 
 void SimpleSolver::assembleTemporaryVector()
@@ -240,11 +249,11 @@ void SimpleSolver::removeFixedDOFHeat(int num_nodes)
   // Make sure the nodes that are outside of the material have values 
   // assigned and solved for.  The solutions will be 0.
   
-  for (int j = 0; j < num_nodes; j++) {
-    if (compare(KK[j][j],0.)) {
-      KKK[j][j] = 1.;
-      Q[j] = 0.;
-    }
+  for (set<int>::iterator iter = d_DOFZero.begin(); iter != d_DOFZero.end();
+       iter++) {
+    int j = *iter;
+    KKK[j][j] = 1.;
+    Q[j] = 0.;
   }
   KK.clear();
   KK = KKK;
@@ -254,6 +263,13 @@ void SimpleSolver::removeFixedDOFHeat(int num_nodes)
        iter++) {
     // Take care of the right hand side
     Q[*iter] = -d_t[*iter];
+  }    
+
+
+  for (set<int>::iterator iter = d_DOFFlux.begin(); iter != d_DOFFlux.end(); 
+       iter++) {
+    // Take care of the right hand side
+    Q[*iter] += d_flux[*iter];
   }    
 
 
@@ -333,21 +349,14 @@ int SimpleSolver::getRHS(vector<double>& QSimple)
 
 void SimpleSolver::printMatrix()
 {
-  cout << "KK" << endl;
   for (int i = 0; i < d_totalNodes; i++) {
-    for (int j = 0; j < 7; j++) {
-      cout << " " << KK[i][j];
+    cout << "row " << i << ":";
+    for (int j = 0; j < d_totalNodes; j++) {
+      if (KK[i][j] != 0.)
+        cout << " (" << j << ", " << KK[i][j] << ") ";
     }
     cout << endl;
   }
-  cout << endl;
-  for (int i = 0; i < d_totalNodes; i++) {
-    for (int j = 7; j < d_totalNodes; j++) {
-      cout << " " << KK[i][j];
-    }
-    cout << endl;
-  }
-  cout << endl;
 
 }
 
@@ -355,5 +364,5 @@ void SimpleSolver::printMatrix()
 void SimpleSolver::printRHS()
 {
   for (int i = 0; i < (int)Q.size(); i++)
-    cout << "Q[" << i << "]=" << Q[i] << endl;;
+    cout << Q[i] << endl;;
 }
