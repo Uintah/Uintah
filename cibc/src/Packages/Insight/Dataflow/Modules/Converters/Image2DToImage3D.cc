@@ -51,7 +51,6 @@ using namespace SCIRun;
 class Image2DToImage3D : public Module {
 public:
   // Declare Ports
-  ITKDatatypeIPort* inport_InputImage_;
   ITKDatatypeHandle inhandle_InputImage_;
 
   ITKDatatypeOPort* outport_OutputImage_;

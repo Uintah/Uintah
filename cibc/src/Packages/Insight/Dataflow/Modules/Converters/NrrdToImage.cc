@@ -53,7 +53,6 @@ using namespace SCIRun;
 
 class NrrdToImage : public Module {
 public:
-  NrrdIPort *inrrd_;
   NrrdDataHandle inrrd_handle_;
 
   ITKDatatypeOPort *oimg_;
@@ -99,23 +98,11 @@ NrrdToImage::~NrrdToImage()
 void
 NrrdToImage::execute()
 {
-  inrrd_ = (NrrdIPort*)get_iport("InputNrrd");
-  if(!inrrd_) {
-    error("Unable to initialize iport 'InputNrrd'.");
-    return;
-  }
+  if (!get_input_handle("InputNrrd", inrrd_handle_)) return;
 
   oimg_ = (ITKDatatypeOPort*)get_oport("OutputImage");
   if(!oimg_) {
     error("Unable to initialize oport 'OututImage'.");
-    return;
-  }
-
-  if(!inrrd_->get(inrrd_handle_))
-    return;
-
-  if (!inrrd_handle_.get_rep()) {
-    warning ("Input Nrrd == 0");
     return;
   }
 
