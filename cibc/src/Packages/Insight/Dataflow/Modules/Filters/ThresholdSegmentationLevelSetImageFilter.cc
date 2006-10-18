@@ -152,7 +152,6 @@ ThresholdSegmentationLevelSetImageFilter::set_image_variables(itk::Object *obj) 
 }
 
 
-
 template<class ImageType, class FeatureImageType>
 bool 
 ThresholdSegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::Object *obj_FeatureImage) 
@@ -177,8 +176,8 @@ ThresholdSegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::
 
   if(gui_reset_filter_.get() == 1 || !filter_ || 
      inhandle_SeedImage_->generation != last_SeedImage_ || 
-     inhandle_FeatureImage_->generation != last_FeatureImage_) {
-
+     inhandle_FeatureImage_->generation != last_FeatureImage_)
+  {
      gui_reset_filter_.set(0);
      
      last_SeedImage_ = inhandle_SeedImage_->generation;
@@ -233,9 +232,7 @@ ThresholdSegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::
   
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetSmoothingConductance( gui_smoothing_conductance_.get() );
 
-  
   // execute the filter
-  
   try {
 
     dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
@@ -246,8 +243,6 @@ ThresholdSegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::
   }
 
   // get filter output
-  
-  
   ITKDatatype* out_OutputImage_ = scinew ITKDatatype; 
   
   out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
@@ -265,7 +260,6 @@ ThresholdSegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::
   outhandle_SpeedImage_ = out_SpeedImage_; 
   outport_SpeedImage_->send(outhandle_SpeedImage_);
   
-
   return true;
 }
 
@@ -302,9 +296,11 @@ ThresholdSegmentationLevelSetImageFilter::ThresholdSegmentationLevelSetImageFilt
   iterationCounter_OutputImage = 0;
 }
 
+
 ThresholdSegmentationLevelSetImageFilter::~ThresholdSegmentationLevelSetImageFilter() 
 {
 }
+
 
 bool
 ThresholdSegmentationLevelSetImageFilter::check_for_input() {
@@ -356,7 +352,6 @@ ThresholdSegmentationLevelSetImageFilter::check_for_waiting_input() {
 void 
 ThresholdSegmentationLevelSetImageFilter::execute() 
 {
-
   if (!check_for_input()) return;
 
   // check output ports
@@ -388,7 +383,6 @@ ThresholdSegmentationLevelSetImageFilter::execute()
     error("Incorrect input type");
     return;
   }
-
 }
 
 
@@ -403,8 +397,7 @@ ThresholdSegmentationLevelSetImageFilter::ProcessEvent( itk::Object * caller, co
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
   else if ( typeid( itk::IterationEvent ) == typeid( event ) )
   {
     ::itk::ProcessObject::Pointer  process = 
@@ -412,7 +405,6 @@ ThresholdSegmentationLevelSetImageFilter::ProcessEvent( itk::Object * caller, co
     
     update_after_iteration();
   }
-
 }
 
 
@@ -427,8 +419,7 @@ ThresholdSegmentationLevelSetImageFilter::ConstProcessEvent(const itk::Object * 
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
   else if ( typeid( itk::IterationEvent ) == typeid( event ) )
   {
     ::itk::ProcessObject::ConstPointer  process = 
@@ -436,15 +427,14 @@ ThresholdSegmentationLevelSetImageFilter::ConstProcessEvent(const itk::Object * 
     
     update_after_iteration();
   }
-
 }
 
 
 void 
 ThresholdSegmentationLevelSetImageFilter::update_after_iteration()
 {
-  if(gui_update_OutputImage_.get() && iterationCounter_OutputImage%gui_update_iters_OutputImage_.get() == 0 && iterationCounter_OutputImage > 0) {
-
+  if(gui_update_OutputImage_.get() && iterationCounter_OutputImage%gui_update_iters_OutputImage_.get() == 0 && iterationCounter_OutputImage > 0)
+  {
     // determine type and call do it
     if(0) { } 
    
@@ -474,7 +464,6 @@ ThresholdSegmentationLevelSetImageFilter::do_it_OutputImage()
   if(!dynamic_cast<FilterType*>(filter_.GetPointer())) {
     return false;
   }
- 
   
   typename FeatureImageType::Pointer tmp = FeatureImageType::New();
   tmp->SetRequestedRegion( dynamic_cast<FilterType*>(filter_.GetPointer())->GetOutput()->GetRequestedRegion() );
@@ -482,7 +471,6 @@ ThresholdSegmentationLevelSetImageFilter::do_it_OutputImage()
   tmp->SetLargestPossibleRegion( dynamic_cast<FilterType*>(filter_.GetPointer())->GetOutput()->GetLargestPossibleRegion() );
   tmp->SetPixelContainer( dynamic_cast<FilterType*>(filter_.GetPointer())->GetOutput()->GetPixelContainer() );
   tmp->CopyInformation( dynamic_cast<FilterType*>(filter_.GetPointer())->GetOutput() );
-  
   
   // send segmentation down
   ITKDatatype* out_OutputImage_ = scinew ITKDatatype; 
@@ -493,6 +481,7 @@ ThresholdSegmentationLevelSetImageFilter::do_it_OutputImage()
   return true;
 }
 
+
 // Manage a Progress event 
 void 
 ThresholdSegmentationLevelSetImageFilter::Observe( itk::Object *caller )
@@ -500,6 +489,7 @@ ThresholdSegmentationLevelSetImageFilter::Observe( itk::Object *caller )
   caller->AddObserver(  itk::ProgressEvent(), m_RedrawCommand.GetPointer() );
   caller->AddObserver(  itk::IterationEvent(), m_RedrawCommand.GetPointer() );
 }
+
 
 void 
 ThresholdSegmentationLevelSetImageFilter::tcl_command(GuiArgs& args, void* userdata)

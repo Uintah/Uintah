@@ -79,8 +79,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -114,8 +112,8 @@ GradientRecursiveGaussianImageFilter::run( itk::Object *obj_InputImage)
   // this is the case, set the inputs.
 
   if(!filter_  || 
-     inhandle_InputImage_->generation != last_InputImage_) {
-     
+     inhandle_InputImage_->generation != last_InputImage_)
+  {
      last_InputImage_ = inhandle_InputImage_->generation;
 
      // create a new one
@@ -127,22 +125,18 @@ GradientRecursiveGaussianImageFilter::run( itk::Object *obj_InputImage)
      // set inputs 
      
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetInput( data_InputImage );
-       
   }
 
   // reset progress bar
   update_progress(0.0);
 
   // set filter parameters
-   
-  
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetSigma( gui_sigma_.get() ); 
   
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetNormalizeAcrossScale( gui_normalize_across_scale_.get() ); 
   
 
   // execute the filter
-  
   try {
 
     dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
@@ -153,8 +147,6 @@ GradientRecursiveGaussianImageFilter::run( itk::Object *obj_InputImage)
   }
 
   // get filter output
-  
-  
   ITKDatatype* out_VectorImage_ = scinew ITKDatatype; 
   
   out_VectorImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
@@ -162,7 +154,6 @@ GradientRecursiveGaussianImageFilter::run( itk::Object *obj_InputImage)
   outhandle_VectorImage_ = out_VectorImage_; 
   outport_VectorImage_->send(outhandle_VectorImage_);
   
-
   return true;
 }
 
@@ -177,14 +168,13 @@ GradientRecursiveGaussianImageFilter::GradientRecursiveGaussianImageFilter(GuiCo
 {
   filter_ = 0;
 
-
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &GradientRecursiveGaussianImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &GradientRecursiveGaussianImageFilter::ConstProcessEvent );
 
   update_progress(0.0);
-
 }
+
 
 GradientRecursiveGaussianImageFilter::~GradientRecursiveGaussianImageFilter() 
 {
@@ -206,7 +196,6 @@ GradientRecursiveGaussianImageFilter::execute()
     return;
   }
 
-
   // check output ports
   outport_VectorImage_ = (ITKDatatypeOPort *)get_oport("VectorImage");
   if(!outport_VectorImage_) {
@@ -226,7 +215,6 @@ GradientRecursiveGaussianImageFilter::execute()
     error("Incorrect input type");
     return;
   }
-
 }
 
 
@@ -241,8 +229,7 @@ GradientRecursiveGaussianImageFilter::ProcessEvent( itk::Object * caller, const 
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -257,8 +244,7 @@ GradientRecursiveGaussianImageFilter::ConstProcessEvent(const itk::Object * call
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -268,13 +254,6 @@ GradientRecursiveGaussianImageFilter::Observe( itk::Object *caller )
 {
   caller->AddObserver(  itk::ProgressEvent(), m_RedrawCommand.GetPointer() );
   caller->AddObserver(  itk::IterationEvent(), m_RedrawCommand.GetPointer() );
-}
-
-void 
-GradientRecursiveGaussianImageFilter::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-
 }
 
 

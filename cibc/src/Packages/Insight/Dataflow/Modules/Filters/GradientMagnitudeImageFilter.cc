@@ -77,8 +77,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -112,8 +110,8 @@ GradientMagnitudeImageFilter::run( itk::Object *obj_InputImage)
   // this is the case, set the inputs.
 
   if(!filter_  || 
-     inhandle_InputImage_->generation != last_InputImage_) {
-     
+     inhandle_InputImage_->generation != last_InputImage_)
+  {
      last_InputImage_ = inhandle_InputImage_->generation;
 
      // create a new one
@@ -125,18 +123,14 @@ GradientMagnitudeImageFilter::run( itk::Object *obj_InputImage)
      // set inputs 
      
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetInput( data_InputImage );
-       
   }
 
   // reset progress bar
   update_progress(0.0);
 
   // set filter parameters
-   
-  
 
   // execute the filter
-  
   try {
 
     dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
@@ -147,8 +141,6 @@ GradientMagnitudeImageFilter::run( itk::Object *obj_InputImage)
   }
 
   // get filter output
-  
-  
   ITKDatatype* out_OutputImage_ = scinew ITKDatatype; 
   
   out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
@@ -156,7 +148,6 @@ GradientMagnitudeImageFilter::run( itk::Object *obj_InputImage)
   outhandle_OutputImage_ = out_OutputImage_; 
   outport_OutputImage_->send(outhandle_OutputImage_);
   
-
   return true;
 }
 
@@ -176,9 +167,11 @@ GradientMagnitudeImageFilter::GradientMagnitudeImageFilter(GuiContext* ctx)
 
 }
 
+
 GradientMagnitudeImageFilter::~GradientMagnitudeImageFilter() 
 {
 }
+
 
 void 
 GradientMagnitudeImageFilter::execute() 
@@ -195,7 +188,6 @@ GradientMagnitudeImageFilter::execute()
   if(!inhandle_InputImage_.get_rep()) {
     return;
   }
-
 
   // check output ports
   outport_OutputImage_ = (ITKDatatypeOPort *)get_oport("OutputImage");
@@ -216,7 +208,6 @@ GradientMagnitudeImageFilter::execute()
     error("Incorrect input type");
     return;
   }
-
 }
 
 
@@ -231,8 +222,7 @@ GradientMagnitudeImageFilter::ProcessEvent( itk::Object * caller, const itk::Eve
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -247,8 +237,7 @@ GradientMagnitudeImageFilter::ConstProcessEvent(const itk::Object * caller, cons
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -258,13 +247,6 @@ GradientMagnitudeImageFilter::Observe( itk::Object *caller )
 {
   caller->AddObserver(  itk::ProgressEvent(), m_RedrawCommand.GetPointer() );
   caller->AddObserver(  itk::IterationEvent(), m_RedrawCommand.GetPointer() );
-}
-
-void 
-GradientMagnitudeImageFilter::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-
 }
 
 

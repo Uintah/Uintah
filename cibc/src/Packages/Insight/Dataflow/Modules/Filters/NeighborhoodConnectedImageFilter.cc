@@ -83,8 +83,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -97,7 +95,6 @@ public:
   void ConstProcessEvent(const itk::Object * caller, const itk::EventObject & event );
   void Observe( itk::Object *caller );
   RedrawCommandType::Pointer m_RedrawCommand;
-
 };
 
 
@@ -120,9 +117,9 @@ NeighborhoodConnectedImageFilter::run( itk::Object *obj_InputImage)
   // this is the case, set the inputs.
 
   if(!filter_  || 
-     inhandle_InputImage_->generation != last_InputImage_) {
-     
-     last_InputImage_ = inhandle_InputImage_->generation;
+     inhandle_InputImage_->generation != last_InputImage_)
+  {
+    last_InputImage_ = inhandle_InputImage_->generation;
 
      // create a new one
      filter_ = FilterType::New();
@@ -133,14 +130,12 @@ NeighborhoodConnectedImageFilter::run( itk::Object *obj_InputImage)
      // set inputs 
      
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetInput( data_InputImage );
-       
   }
 
   // reset progress bar
   update_progress(0.0);
 
   // set filter parameters
-   
   
   // instantiate any defined objects
   
@@ -149,8 +144,6 @@ NeighborhoodConnectedImageFilter::run( itk::Object *obj_InputImage)
   typename FilterType::IndexType seed_point;
   
   // clear defined object guis if things aren't in sync
-  
-  
   if((int)radius.GetSizeDimension() != gui_dimension_.get()) { 
     gui_dimension_.set(radius.GetSizeDimension());    
   
@@ -187,7 +180,6 @@ NeighborhoodConnectedImageFilter::run( itk::Object *obj_InputImage)
 
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetRadius( radius );
 
-  
   // register GuiVars
   // avoid pushing onto vector each time if not needed
   int start_seed_point = 0;
@@ -219,30 +211,25 @@ NeighborhoodConnectedImageFilter::run( itk::Object *obj_InputImage)
   
 
   // execute the filter
-  
-  if (execute_) {
-  
-  try {
+  if (execute_)
+  {
+    try {
 
-    dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
+      dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
 
-  } catch ( itk::ExceptionObject & err ) {
-     error("ExceptionObject caught!");
-     error(err.GetDescription());
+    } catch ( itk::ExceptionObject & err ) {
+      error("ExceptionObject caught!");
+      error(err.GetDescription());
+    }
+
+    // get filter output
+    ITKDatatype* out_OutputImge_ = scinew ITKDatatype; 
+  
+    out_OutputImge_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
+  
+    outhandle_OutputImge_ = out_OutputImge_; 
+    outport_OutputImge_->send(outhandle_OutputImge_);
   }
-
-  // get filter output
-  
-  
-  ITKDatatype* out_OutputImge_ = scinew ITKDatatype; 
-  
-  out_OutputImge_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
-  
-  outhandle_OutputImge_ = out_OutputImge_; 
-  outport_OutputImge_->send(outhandle_OutputImge_);
-  
-  }
-  
 
   return true;
 }
@@ -267,12 +254,13 @@ NeighborhoodConnectedImageFilter::NeighborhoodConnectedImageFilter(GuiContext* c
   m_RedrawCommand->SetCallbackFunction( this, &NeighborhoodConnectedImageFilter::ConstProcessEvent );
 
   update_progress(0.0);
-
 }
+
 
 NeighborhoodConnectedImageFilter::~NeighborhoodConnectedImageFilter() 
 {
 }
+
 
 void 
 NeighborhoodConnectedImageFilter::execute() 
@@ -289,7 +277,6 @@ NeighborhoodConnectedImageFilter::execute()
   if(!inhandle_InputImage_.get_rep()) {
     return;
   }
-
 
   // check output ports
   outport_OutputImge_ = (ITKDatatypeOPort *)get_oport("OutputImge");
@@ -310,7 +297,6 @@ NeighborhoodConnectedImageFilter::execute()
     error("Incorrect input type");
     return;
   }
-
 }
 
 
@@ -325,8 +311,7 @@ NeighborhoodConnectedImageFilter::ProcessEvent( itk::Object * caller, const itk:
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -341,8 +326,7 @@ NeighborhoodConnectedImageFilter::ConstProcessEvent(const itk::Object * caller, 
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -352,13 +336,6 @@ NeighborhoodConnectedImageFilter::Observe( itk::Object *caller )
 {
   caller->AddObserver(  itk::ProgressEvent(), m_RedrawCommand.GetPointer() );
   caller->AddObserver(  itk::IterationEvent(), m_RedrawCommand.GetPointer() );
-}
-
-void 
-NeighborhoodConnectedImageFilter::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-
 }
 
 

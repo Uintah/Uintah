@@ -144,8 +144,8 @@ CannySegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::Obje
 
   if(gui_reset_filter_.get() == 1 | !filter_  || 
      inhandle_SeedImage_->generation != last_SeedImage_ || 
-     inhandle_FeatureImage_->generation != last_FeatureImage_) {
-
+     inhandle_FeatureImage_->generation != last_FeatureImage_)
+  {
      gui_reset_filter_.set(0);
      
      last_SeedImage_ = inhandle_SeedImage_->generation;
@@ -158,19 +158,15 @@ CannySegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::Obje
      Observe( filter_.GetPointer() );
 
      // set inputs 
-     
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetInput( data_SeedImage );
   
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetFeatureImage( data_FeatureImage );
-       
   }
 
   // reset progress bar
   update_progress(0.0);
 
   // set filter parameters
-   
-  
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetNumberOfIterations( gui_iterations_.get() ); 
   
   if( gui_reverse_expansion_direction_.get() ) {
@@ -196,7 +192,6 @@ CannySegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::Obje
   
 
   // execute the filter
-  
   try {
 
     dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
@@ -207,8 +202,6 @@ CannySegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::Obje
   }
 
   // get filter output
-  
-  
   ITKDatatype* out_OutputImage_ = scinew ITKDatatype; 
   
   out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
@@ -223,7 +216,6 @@ CannySegmentationLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::Obje
   
   outhandle_SpeedImage_ = out_SpeedImage_; 
   outport_SpeedImage_->send(outhandle_SpeedImage_);
-  
 
   return true;
 }
@@ -250,7 +242,6 @@ CannySegmentationLevelSetImageFilter::CannySegmentationLevelSetImageFilter(GuiCo
 {
   filter_ = 0;
 
-
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &CannySegmentationLevelSetImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &CannySegmentationLevelSetImageFilter::ConstProcessEvent );
@@ -258,12 +249,13 @@ CannySegmentationLevelSetImageFilter::CannySegmentationLevelSetImageFilter(GuiCo
   iterationCounter_OutputImage = 0;
 
   update_progress(0.0);
-
 }
+
 
 CannySegmentationLevelSetImageFilter::~CannySegmentationLevelSetImageFilter() 
 {
 }
+
 
 void 
 CannySegmentationLevelSetImageFilter::execute() 
@@ -292,7 +284,6 @@ CannySegmentationLevelSetImageFilter::execute()
   if(!inhandle_FeatureImage_.get_rep()) {
     return;
   }
-
 
   // check output ports
   outport_OutputImage_ = (ITKDatatypeOPort *)get_oport("OutputImage");
@@ -323,7 +314,6 @@ CannySegmentationLevelSetImageFilter::execute()
     error("Incorrect input type");
     return;
   }
-
 }
 
 
@@ -338,8 +328,7 @@ CannySegmentationLevelSetImageFilter::ProcessEvent( itk::Object * caller, const 
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
   else if ( typeid( itk::IterationEvent ) == typeid( event ) )
   {
     ::itk::ProcessObject::Pointer  process = 
@@ -347,7 +336,6 @@ CannySegmentationLevelSetImageFilter::ProcessEvent( itk::Object * caller, const 
     
     update_after_iteration();
   }
-
 }
 
 
@@ -362,8 +350,7 @@ CannySegmentationLevelSetImageFilter::ConstProcessEvent(const itk::Object * call
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
   else if ( typeid( itk::IterationEvent ) == typeid( event ) )
   {
     ::itk::ProcessObject::ConstPointer  process = 
@@ -371,7 +358,6 @@ CannySegmentationLevelSetImageFilter::ConstProcessEvent(const itk::Object * call
     
     update_after_iteration();
   }
-
 }
 
 
@@ -393,7 +379,6 @@ CannySegmentationLevelSetImageFilter::update_after_iteration()
     }
   }
   iterationCounter_OutputImage++;
-
 }
 
 
@@ -410,7 +395,6 @@ CannySegmentationLevelSetImageFilter::do_it_OutputImage()
   if(!dynamic_cast<FilterType*>(filter_.GetPointer())) {
     return false;
   }
- 
   
   typename FeatureImageType::Pointer tmp = FeatureImageType::New();
   tmp->SetRequestedRegion( dynamic_cast<FilterType*>(filter_.GetPointer())->GetOutput()->GetRequestedRegion() );
@@ -418,7 +402,6 @@ CannySegmentationLevelSetImageFilter::do_it_OutputImage()
   tmp->SetLargestPossibleRegion( dynamic_cast<FilterType*>(filter_.GetPointer())->GetOutput()->GetLargestPossibleRegion() );
   tmp->SetPixelContainer( dynamic_cast<FilterType*>(filter_.GetPointer())->GetOutput()->GetPixelContainer() );
   tmp->CopyInformation( dynamic_cast<FilterType*>(filter_.GetPointer())->GetOutput() );
-  
   
   // send segmentation down
   ITKDatatype* out_OutputImage_ = scinew ITKDatatype; 
@@ -428,6 +411,7 @@ CannySegmentationLevelSetImageFilter::do_it_OutputImage()
   return true;
 }
 
+
 // Manage a Progress event 
 void 
 CannySegmentationLevelSetImageFilter::Observe( itk::Object *caller )
@@ -435,6 +419,7 @@ CannySegmentationLevelSetImageFilter::Observe( itk::Object *caller )
   caller->AddObserver(  itk::ProgressEvent(), m_RedrawCommand.GetPointer() );
   caller->AddObserver(  itk::IterationEvent(), m_RedrawCommand.GetPointer() );
 }
+
 
 void 
 CannySegmentationLevelSetImageFilter::tcl_command(GuiArgs& args, void* userdata)
@@ -457,7 +442,6 @@ CannySegmentationLevelSetImageFilter::tcl_command(GuiArgs& args, void* userdata)
   } else {
     Module::tcl_command(args, userdata);
   }
-
 }
 
 

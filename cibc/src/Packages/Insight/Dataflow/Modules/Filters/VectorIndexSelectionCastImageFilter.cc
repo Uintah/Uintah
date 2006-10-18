@@ -78,8 +78,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -87,12 +85,10 @@ public:
   bool run( itk::Object*   );
 
   // progress bar
-
   void ProcessEvent(itk::Object * caller, const itk::EventObject & event );
   void ConstProcessEvent(const itk::Object * caller, const itk::EventObject & event );
   void Observe( itk::Object *caller );
   RedrawCommandType::Pointer m_RedrawCommand;
-
 };
 
 
@@ -113,8 +109,8 @@ VectorIndexSelectionCastImageFilter::run( itk::Object *obj_InputImage)
   // this is the case, set the inputs.
 
   if(!filter_  || 
-     inhandle_InputImage_->generation != last_InputImage_) {
-     
+     inhandle_InputImage_->generation != last_InputImage_)
+  {
      last_InputImage_ = inhandle_InputImage_->generation;
 
      // create a new one
@@ -126,7 +122,6 @@ VectorIndexSelectionCastImageFilter::run( itk::Object *obj_InputImage)
      // set inputs 
      
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetInput( data_InputImage );
-       
   }
 
   // reset progress bar
@@ -136,10 +131,8 @@ VectorIndexSelectionCastImageFilter::run( itk::Object *obj_InputImage)
    
   
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetIndex( gui_index_.get() ); 
-  
 
   // execute the filter
-  
   try {
 
     dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
@@ -150,8 +143,6 @@ VectorIndexSelectionCastImageFilter::run( itk::Object *obj_InputImage)
   }
 
   // get filter output
-  
-  
   ITKDatatype* out_OutputImage_ = scinew ITKDatatype; 
   
   out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
@@ -159,7 +150,6 @@ VectorIndexSelectionCastImageFilter::run( itk::Object *obj_InputImage)
   outhandle_OutputImage_ = out_OutputImage_; 
   outport_OutputImage_->send(outhandle_OutputImage_);
   
-
   return true;
 }
 
@@ -173,18 +163,18 @@ VectorIndexSelectionCastImageFilter::VectorIndexSelectionCastImageFilter(GuiCont
 {
   filter_ = 0;
 
-
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &VectorIndexSelectionCastImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &VectorIndexSelectionCastImageFilter::ConstProcessEvent );
 
   update_progress(0.0);
-
 }
+
 
 VectorIndexSelectionCastImageFilter::~VectorIndexSelectionCastImageFilter() 
 {
 }
+
 
 void 
 VectorIndexSelectionCastImageFilter::execute() 
@@ -201,7 +191,6 @@ VectorIndexSelectionCastImageFilter::execute()
   if(!inhandle_InputImage_.get_rep()) {
     return;
   }
-
 
   // check output ports
   outport_OutputImage_ = (ITKDatatypeOPort *)get_oport("OutputImage");
@@ -222,7 +211,6 @@ VectorIndexSelectionCastImageFilter::execute()
     error("Incorrect input type");
     return;
   }
-
 }
 
 
@@ -237,8 +225,7 @@ VectorIndexSelectionCastImageFilter::ProcessEvent( itk::Object * caller, const i
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -253,8 +240,7 @@ VectorIndexSelectionCastImageFilter::ConstProcessEvent(const itk::Object * calle
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -264,13 +250,6 @@ VectorIndexSelectionCastImageFilter::Observe( itk::Object *caller )
 {
   caller->AddObserver(  itk::ProgressEvent(), m_RedrawCommand.GetPointer() );
   caller->AddObserver(  itk::IterationEvent(), m_RedrawCommand.GetPointer() );
-}
-
-void 
-VectorIndexSelectionCastImageFilter::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-
 }
 
 

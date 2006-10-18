@@ -87,8 +87,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -103,6 +101,7 @@ public:
   RedrawCommandType::Pointer m_RedrawCommand;
 
 };
+
 
 void
 ConfidenceConnectedImageFilter::set_image_variables(itk::Object *obj) {
@@ -144,9 +143,9 @@ ConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
   // this is the case, set the inputs.
 
   if(!filter_  || 
-     inhandle_InputImage_->generation != last_InputImage_) {
-     
-     last_InputImage_ = inhandle_InputImage_->generation;
+     inhandle_InputImage_->generation != last_InputImage_)
+  {
+    last_InputImage_ = inhandle_InputImage_->generation;
 
      // create a new one
      filter_ = FilterType::New();
@@ -157,24 +156,18 @@ ConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
      // set inputs 
      
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetInput( data_InputImage );
-       
   }
-
-
 
   // reset progress bar
   update_progress(0.0);
 
   // set filter parameters
-   
   
   // instantiate any defined objects
   
   typename FilterType::IndexType seed_point;
   
   // clear defined object guis if things aren't in sync
-  
-  
   if((int)seed_point.GetIndexDimension() != gui_dimension_.get()) { 
     gui_dimension_.set(seed_point.GetIndexDimension());    
   
@@ -205,7 +198,6 @@ ConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
 
   }
 
-
   set_image_variables(obj_InputImage);
 
   // set seed_point values
@@ -223,29 +215,25 @@ ConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
 
   // execute the filter
   
-  if (execute_) {
+  if (execute_)
+  {
+    try {
+
+      dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
+
+    } catch ( itk::ExceptionObject & err ) {
+      error("ExceptionObject caught!");
+      error(err.GetDescription());
+    }
+
+    // get filter output
+    ITKDatatype* out_OutputImage_ = scinew ITKDatatype; 
   
-  try {
-
-    dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
-
-  } catch ( itk::ExceptionObject & err ) {
-     error("ExceptionObject caught!");
-     error(err.GetDescription());
+    out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
+  
+    outhandle_OutputImage_ = out_OutputImage_; 
+    outport_OutputImage_->send(outhandle_OutputImage_);
   }
-
-  // get filter output
-  
-  
-  ITKDatatype* out_OutputImage_ = scinew ITKDatatype; 
-  
-  out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
-  
-  outhandle_OutputImage_ = out_OutputImage_; 
-  outport_OutputImage_->send(outhandle_OutputImage_);
-  
-  }
-  
 
   return true;
 }
@@ -269,12 +257,13 @@ ConfidenceConnectedImageFilter::ConfidenceConnectedImageFilter(GuiContext* ctx)
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &ConfidenceConnectedImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &ConfidenceConnectedImageFilter::ConstProcessEvent );
-
 }
+
 
 ConfidenceConnectedImageFilter::~ConfidenceConnectedImageFilter() 
 {
 }
+
 
 void 
 ConfidenceConnectedImageFilter::execute() 
@@ -291,7 +280,6 @@ ConfidenceConnectedImageFilter::execute()
   if(!inhandle_InputImage_.get_rep()) {
     return;
   }
-
 
   // check output ports
   outport_OutputImage_ = (ITKDatatypeOPort *)get_oport("OutputImage");
@@ -312,7 +300,6 @@ ConfidenceConnectedImageFilter::execute()
     error("Incorrect input type");
     return;
   }
-
 }
 
 
@@ -327,8 +314,7 @@ ConfidenceConnectedImageFilter::ProcessEvent( itk::Object * caller, const itk::E
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -343,8 +329,7 @@ ConfidenceConnectedImageFilter::ConstProcessEvent(const itk::Object * caller, co
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -354,13 +339,6 @@ ConfidenceConnectedImageFilter::Observe( itk::Object *caller )
 {
   caller->AddObserver(  itk::ProgressEvent(), m_RedrawCommand.GetPointer() );
   caller->AddObserver(  itk::IterationEvent(), m_RedrawCommand.GetPointer() );
-}
-
-void 
-ConfidenceConnectedImageFilter::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-
 }
 
 

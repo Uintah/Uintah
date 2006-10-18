@@ -64,7 +64,6 @@ public:
 
   bool execute_;
   
-
   // Declare Ports
   ITKDatatypeIPort* inport_InputImage_;
   ITKDatatypeHandle inhandle_InputImage_;
@@ -80,8 +79,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -94,7 +91,6 @@ public:
   void ConstProcessEvent(const itk::Object * caller, const itk::EventObject & event );
   void Observe( itk::Object *caller );
   RedrawCommandType::Pointer m_RedrawCommand;
-
 };
 
 
@@ -132,7 +128,6 @@ BinaryDilateImageFilter::run( itk::Object *obj_InputImage)
      // set inputs
      
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetInput( data_InputImage );
-       
   }
 
   // reset progress bar
@@ -150,28 +145,23 @@ BinaryDilateImageFilter::run( itk::Object *obj_InputImage)
   // execute the filter
   
   if (execute_) {
+    try {
+
+      dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
+
+    } catch ( itk::ExceptionObject & err ) {
+      error("ExceptionObject caught!");
+      error(err.GetDescription());
+    }
+
+    // get filter output
+    ITKDatatype* out_OutputImage_ = scinew ITKDatatype;
   
-  try {
-
-    dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
-
-  } catch ( itk::ExceptionObject & err ) {
-     error("ExceptionObject caught!");
-     error(err.GetDescription());
+    out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
+  
+    outhandle_OutputImage_ = out_OutputImage_;
+    outport_OutputImage_->send(outhandle_OutputImage_);
   }
-
-  // get filter output
-  
-  
-  ITKDatatype* out_OutputImage_ = scinew ITKDatatype;
-  
-  out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
-  
-  outhandle_OutputImage_ = out_OutputImage_;
-  outport_OutputImage_->send(outhandle_OutputImage_);
-  
-  }
-  
 
   return true;
 }
@@ -192,9 +182,11 @@ BinaryDilateImageFilter::BinaryDilateImageFilter(GuiContext* ctx)
   m_RedrawCommand->SetCallbackFunction( this, &BinaryDilateImageFilter::ConstProcessEvent );
 }
 
+
 BinaryDilateImageFilter::~BinaryDilateImageFilter()
 {
 }
+
 
 void
 BinaryDilateImageFilter::execute()
@@ -247,8 +239,7 @@ BinaryDilateImageFilter::ProcessEvent( itk::Object * caller, const itk::EventObj
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -263,8 +254,7 @@ BinaryDilateImageFilter::ConstProcessEvent(const itk::Object * caller, const itk
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -276,11 +266,5 @@ BinaryDilateImageFilter::Observe( itk::Object *caller )
   caller->AddObserver( itk::IterationEvent(), m_RedrawCommand.GetPointer() );
 }
 
-void
-BinaryDilateImageFilter::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-
-}
 
 } // end of namespace Insight

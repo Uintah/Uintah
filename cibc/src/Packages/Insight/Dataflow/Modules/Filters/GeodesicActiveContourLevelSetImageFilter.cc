@@ -57,8 +57,7 @@ public:
   // Filter Declaration
   itk::Object::Pointer filter_;
 
-
- // Declare GuiVars
+  // Declare GuiVars
   GuiDouble gui_dervSigma_;
   GuiDouble gui_curvature_scaling_;
   GuiDouble gui_propagation_scaling_;
@@ -74,8 +73,7 @@ public:
 
   bool execute_;
   
-
- // Declare Ports
+  // Declare Ports
   ITKDatatypeIPort* inport_SeedImage_;
   ITKDatatypeHandle inhandle_SeedImage_;
   int last_SeedImage_;
@@ -90,7 +88,6 @@ public:
   ITKDatatypeOPort* outport_SpeedImage_;
   ITKDatatypeHandle outhandle_SpeedImage_;
 
-  
   GeodesicActiveContourLevelSetImageFilter(GuiContext*);
 
   virtual ~GeodesicActiveContourLevelSetImageFilter();
@@ -120,6 +117,7 @@ public:
 
 };
 
+
 template<class InputImageType, class FeatureImageType>
 bool
 GeodesicActiveContourLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::Object *obj_FeatureImage)
@@ -142,10 +140,10 @@ GeodesicActiveContourLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::
   // this is the case, set the inputs.
 
 
-  if(gui_reset_filter_.get() == 1 || !filter_ ||
-     inhandle_SeedImage_->generation != last_SeedImage_ ||
-     inhandle_FeatureImage_->generation != last_FeatureImage_) {
-
+  if (gui_reset_filter_.get() == 1 || !filter_ ||
+      inhandle_SeedImage_->generation != last_SeedImage_ ||
+      inhandle_FeatureImage_->generation != last_FeatureImage_)
+  {
      gui_reset_filter_.set(0);
      
      last_SeedImage_ = inhandle_SeedImage_->generation;
@@ -162,14 +160,12 @@ GeodesicActiveContourLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetInput( data_SeedImage );
   
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetFeatureImage( data_FeatureImage );
-       
   }
 
   // reset progress bar
   update_progress(0.0);
 
   // set filter parameters
-   
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetDerivativeSigma( gui_dervSigma_.get() );
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetCurvatureScaling( gui_curvature_scaling_.get() );
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetPropagationScaling( gui_propagation_scaling_.get() );
@@ -186,16 +182,6 @@ GeodesicActiveContourLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::
   
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetIsoSurfaceValue( gui_isovalue_.get() );
 
-// cerr << "DervSigma " << gui_dervSigma_.get() << endl;
-// cerr << "Curv " << gui_curvature_scaling_.get() << endl;
-// cerr << "Prop " << gui_propagation_scaling_.get() << endl;
-// cerr << "Advec " << gui_advection_scaling_.get() << endl;
-// cerr << "Iter " << gui_max_iterations_.get() << endl;
-// cerr << "RMS " << gui_max_rms_change_.get() << endl;
-// cerr << "RevExpan " << gui_reverse_expansion_direction_.get() << endl;
-// cerr << "IsoVal " << gui_isovalue_.get() << endl;
-  
-  
   // execute the filter
   
   try {
@@ -225,7 +211,6 @@ GeodesicActiveContourLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::
   outhandle_SpeedImage_ = out_SpeedImage_;
   outport_SpeedImage_->send(outhandle_SpeedImage_);
   
-
   return true;
 }
 
@@ -257,12 +242,13 @@ GeodesicActiveContourLevelSetImageFilter::GeodesicActiveContourLevelSetImageFilt
   iterationCounter_OutputImage = 0;
 
   update_progress(0.0);
-
 }
+
 
 GeodesicActiveContourLevelSetImageFilter::~GeodesicActiveContourLevelSetImageFilter()
 {
 }
+
 
 void
 GeodesicActiveContourLevelSetImageFilter::execute()
@@ -324,8 +310,8 @@ GeodesicActiveContourLevelSetImageFilter::execute()
     error("Incorrect input type");
     return;
   }
-
 }
+
 
 // Manage a Progress event
 void
@@ -347,7 +333,6 @@ dynamic_cast< itk::ProcessObject *>( caller );
     
     update_after_iteration();
   }
-
 }
 
 
@@ -367,11 +352,10 @@ GeodesicActiveContourLevelSetImageFilter::ConstProcessEvent(const itk::Object * 
   else if ( typeid( itk::IterationEvent ) == typeid( event ) )
   {
     ::itk::ProcessObject::ConstPointer process =
-dynamic_cast< const itk::ProcessObject *>( caller );
+        dynamic_cast< const itk::ProcessObject *>( caller );
     
     update_after_iteration();
   }
-
 }
 
 
@@ -393,7 +377,6 @@ GeodesicActiveContourLevelSetImageFilter::update_after_iteration()
     }
   }
   iterationCounter_OutputImage++;
-
 }
 
 
@@ -411,7 +394,6 @@ GeodesicActiveContourLevelSetImageFilter::do_it_OutputImage()
     return false;
   }
  
-  
   typename itk::Image<float,::itk::GetImageDimension<InputImageType>::ImageDimension>::Pointer tmp = itk::Image<float,::itk::GetImageDimension<InputImageType>::ImageDimension>::New();
 
   tmp->SetRequestedRegion( dynamic_cast<FilterType*>(filter_.GetPointer())->GetOutput()->GetRequestedRegion() );
@@ -419,7 +401,6 @@ GeodesicActiveContourLevelSetImageFilter::do_it_OutputImage()
   tmp->SetLargestPossibleRegion( dynamic_cast<FilterType*>(filter_.GetPointer())->GetOutput()->GetLargestPossibleRegion() );
   tmp->SetPixelContainer( dynamic_cast<FilterType*>(filter_.GetPointer())->GetOutput()->GetPixelContainer() );
   tmp->CopyInformation( dynamic_cast<FilterType*>(filter_.GetPointer())->GetOutput() );
-  
   
   // send segmentation down
   ITKDatatype* out_OutputImage_ = scinew ITKDatatype;
@@ -429,6 +410,7 @@ GeodesicActiveContourLevelSetImageFilter::do_it_OutputImage()
   return true;
 }
 
+
 // Manage a Progress event
 void
 GeodesicActiveContourLevelSetImageFilter::Observe( itk::Object *caller )
@@ -436,6 +418,7 @@ GeodesicActiveContourLevelSetImageFilter::Observe( itk::Object *caller )
   caller->AddObserver( itk::ProgressEvent(), m_RedrawCommand.GetPointer() );
   caller->AddObserver( itk::IterationEvent(), m_RedrawCommand.GetPointer() );
 }
+
 
 void
 GeodesicActiveContourLevelSetImageFilter::tcl_command(GuiArgs& args, void* userdata)
@@ -458,6 +441,7 @@ GeodesicActiveContourLevelSetImageFilter::tcl_command(GuiArgs& args, void* userd
   } else {
     Module::tcl_command(args, userdata);
   }
-
 }
+
+
 } // End of namespace Insight

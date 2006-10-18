@@ -79,8 +79,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -93,7 +91,6 @@ public:
   void ConstProcessEvent(const itk::Object * caller, const itk::EventObject & event );
   void Observe( itk::Object *caller );
   RedrawCommandType::Pointer m_RedrawCommand;
-
 };
 
 
@@ -118,8 +115,8 @@ GrayscaleDilateImageFilter::run( itk::Object *obj_InputImage)
   // this is the case, set the inputs.
 
   if(!filter_ ||
-     inhandle_InputImage_->generation != last_InputImage_) {
-     
+     inhandle_InputImage_->generation != last_InputImage_)
+  {
      last_InputImage_ = inhandle_InputImage_->generation;
 
      // create a new one
@@ -131,7 +128,6 @@ GrayscaleDilateImageFilter::run( itk::Object *obj_InputImage)
      // set inputs
      
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetInput( data_InputImage );
-       
   }
 
   // reset progress bar
@@ -143,33 +139,28 @@ GrayscaleDilateImageFilter::run( itk::Object *obj_InputImage)
   structuringElement.SetRadius( gui_radius_.get() );
   structuringElement.CreateStructuringElement();
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetKernel( structuringElement );
-
  
   // execute the filter
   
-  if (execute_) {
+  if (execute_)
+  {
+    try {
+
+      dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
+
+    } catch ( itk::ExceptionObject & err ) {
+      error("ExceptionObject caught!");
+      error(err.GetDescription());
+    }
+
+    // get filter output
+    ITKDatatype* out_OutputImage_ = scinew ITKDatatype;
   
-  try {
-
-    dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
-
-  } catch ( itk::ExceptionObject & err ) {
-     error("ExceptionObject caught!");
-     error(err.GetDescription());
+    out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
+  
+    outhandle_OutputImage_ = out_OutputImage_;
+    outport_OutputImage_->send(outhandle_OutputImage_);
   }
-
-  // get filter output
-  
-  
-  ITKDatatype* out_OutputImage_ = scinew ITKDatatype;
-  
-  out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
-  
-  outhandle_OutputImage_ = out_OutputImage_;
-  outport_OutputImage_->send(outhandle_OutputImage_);
-  
-  }
-  
 
   return true;
 }
@@ -189,9 +180,11 @@ GrayscaleDilateImageFilter::GrayscaleDilateImageFilter(GuiContext* ctx)
   m_RedrawCommand->SetCallbackFunction( this, &GrayscaleDilateImageFilter::ConstProcessEvent );
 }
 
+
 GrayscaleDilateImageFilter::~GrayscaleDilateImageFilter()
 {
 }
+
 
 void
 GrayscaleDilateImageFilter::execute()
@@ -208,7 +201,6 @@ GrayscaleDilateImageFilter::execute()
   if(!inhandle_InputImage_.get_rep()) {
     return;
   }
-
 
   // check output ports
   outport_OutputImage_ = (ITKDatatypeOPort *)get_oport("OutputImage");
@@ -229,7 +221,6 @@ GrayscaleDilateImageFilter::execute()
     error("Incorrect input type");
     return;
   }
-
 }
 
 
@@ -244,8 +235,7 @@ GrayscaleDilateImageFilter::ProcessEvent( itk::Object * caller, const itk::Event
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -260,8 +250,7 @@ GrayscaleDilateImageFilter::ConstProcessEvent(const itk::Object * caller, const 
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -273,11 +262,5 @@ GrayscaleDilateImageFilter::Observe( itk::Object *caller )
   caller->AddObserver( itk::IterationEvent(), m_RedrawCommand.GetPointer() );
 }
 
-void
-GrayscaleDilateImageFilter::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-
-}
 
 } // end of namespace Insight

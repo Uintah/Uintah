@@ -83,8 +83,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -97,7 +95,6 @@ public:
   void ConstProcessEvent(const itk::Object * caller, const itk::EventObject & event );
   void Observe( itk::Object *caller );
   RedrawCommandType::Pointer m_RedrawCommand;
-
 };
 
 
@@ -120,8 +117,8 @@ VectorConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
   // this is the case, set the inputs.
 
   if(!filter_  || 
-     inhandle_InputImage_->generation != last_InputImage_) {
-     
+     inhandle_InputImage_->generation != last_InputImage_)
+  {
      last_InputImage_ = inhandle_InputImage_->generation;
 
      // create a new one
@@ -133,7 +130,6 @@ VectorConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
      // set inputs 
      
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetInput( data_InputImage );
-       
   }
   FilterType *filter = dynamic_cast<FilterType *>(filter_.GetPointer());
   ASSERT(filter);
@@ -143,15 +139,13 @@ VectorConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
 
   // set filter parameters
    
-  
   // instantiate any defined objects
   
   typename FilterType::IndexType seed_point;
   
   // clear defined object guis if things aren't in sync
-  
-  
-  if((int)seed_point.GetIndexDimension() != gui_dimension_.get()) { 
+  if((int)seed_point.GetIndexDimension() != gui_dimension_.get())
+  {
     gui_dimension_.set(seed_point.GetIndexDimension());    
   
     // for each defined object, clear gui
@@ -178,7 +172,6 @@ VectorConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
     str << "seed_point" << i;
     
     gui_seed_point_.push_back(new GuiInt(get_ctx()->subVar(str.str())));
-
   }
 
   // set seed_point values
@@ -192,29 +185,26 @@ VectorConfidenceConnectedImageFilter::run( itk::Object *obj_InputImage)
   
   filter->SetInitialNeighborhoodRadius( gui_initial_radius_.get() ); 
   
-
   // execute the filter
   
-  if (execute_) {
-  
-  try {
+  if (execute_)
+  {
+    try {
 
-    filter->Update();
+      filter->Update();
 
-  } catch ( itk::ExceptionObject & err ) {
-     error("ExceptionObject caught!");
-     error(err.GetDescription());
-  }
+    } catch ( itk::ExceptionObject & err ) {
+      error("ExceptionObject caught!");
+      error(err.GetDescription());
+    }
 
-  // get filter output
+    // get filter output
+    ITKDatatype* out_OutputImge_ = scinew ITKDatatype; 
   
-  ITKDatatype* out_OutputImge_ = scinew ITKDatatype; 
+    out_OutputImge_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
   
-  out_OutputImge_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
-  
-  outhandle_OutputImge_ = out_OutputImge_; 
-  outport_OutputImge_->send(outhandle_OutputImge_);
-  
+    outhandle_OutputImge_ = out_OutputImge_; 
+    outport_OutputImge_->send(outhandle_OutputImge_);
   }
 
   return true;
@@ -241,12 +231,13 @@ VectorConfidenceConnectedImageFilter::VectorConfidenceConnectedImageFilter(GuiCo
   m_RedrawCommand->SetCallbackFunction( this, &VectorConfidenceConnectedImageFilter::ConstProcessEvent );
 
   update_progress(0.0);
-
 }
+
 
 VectorConfidenceConnectedImageFilter::~VectorConfidenceConnectedImageFilter() 
 {
 }
+
 
 void 
 VectorConfidenceConnectedImageFilter::execute() 
@@ -263,7 +254,6 @@ VectorConfidenceConnectedImageFilter::execute()
   if(!inhandle_InputImage_.get_rep()) {
     return;
   }
-
 
   // check output ports
   outport_OutputImge_ = (ITKDatatypeOPort *)get_oport("OutputImge");
@@ -284,7 +274,6 @@ VectorConfidenceConnectedImageFilter::execute()
     error("Incorrect input type");
     return;
   }
-
 }
 
 
@@ -299,8 +288,7 @@ VectorConfidenceConnectedImageFilter::ProcessEvent( itk::Object * caller, const 
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -315,8 +303,7 @@ VectorConfidenceConnectedImageFilter::ConstProcessEvent(const itk::Object * call
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -326,13 +313,6 @@ VectorConfidenceConnectedImageFilter::Observe( itk::Object *caller )
 {
   caller->AddObserver(  itk::ProgressEvent(), m_RedrawCommand.GetPointer() );
   caller->AddObserver(  itk::IterationEvent(), m_RedrawCommand.GetPointer() );
-}
-
-void 
-VectorConfidenceConnectedImageFilter::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-
 }
 
 

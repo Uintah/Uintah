@@ -63,8 +63,6 @@ public:
   virtual ~ColorImageReaderFloat3D();
 
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
@@ -76,11 +74,15 @@ ColorImageReaderFloat3D::ColorImageReaderFloat3D(GuiContext* ctx)
   prevFile = "";
 }
 
-ColorImageReaderFloat3D::~ColorImageReaderFloat3D(){
+
+ColorImageReaderFloat3D::~ColorImageReaderFloat3D()
+{
 }
 
+
 void
- ColorImageReaderFloat3D::execute(){
+ColorImageReaderFloat3D::execute()
+{
   // check ports
   outport_ = (ITKDatatypeOPort *)get_oport("Image");
   if(!outport_) {
@@ -115,14 +117,8 @@ void
   
   // Send the data downstream
   outport_->send(handle_);
-    
 }
 
-void
- ColorImageReaderFloat3D::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace Insight
 

@@ -57,8 +57,6 @@ public:
   virtual ~ChooseImage();
 
   virtual void execute();
-
-  virtual void tcl_command(GuiArgs&, void*);
 };
 
 
@@ -70,10 +68,14 @@ ChooseImage::ChooseImage(GuiContext* ctx)
 {
 }
 
-ChooseImage::~ChooseImage(){
+ChooseImage::~ChooseImage()
+{
 }
 
-void ChooseImage::execute(){
+
+void
+ChooseImage::execute()
+{
   ITKDatatypeOPort *oimg = (ITKDatatypeOPort *)get_oport("OutputImage");
   if (!oimg) {
     error("Unable to initialize oport 'OututImage'.");
@@ -130,11 +132,6 @@ void ChooseImage::execute(){
   }
   
   oimg->send(field);
-}
-
-void ChooseImage::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace Insight

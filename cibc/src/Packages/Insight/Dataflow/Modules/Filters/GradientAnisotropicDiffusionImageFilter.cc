@@ -64,7 +64,6 @@ public:
   
   bool execute_;
   
-
   // Declare Ports
   ITKDatatypeIPort* inport_InputImage_;
   ITKDatatypeHandle inhandle_InputImage_;
@@ -80,8 +79,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -89,12 +86,10 @@ public:
   bool run( itk::Object*   );
 
   // progress bar
-
   void ProcessEvent(itk::Object * caller, const itk::EventObject & event );
   void ConstProcessEvent(const itk::Object * caller, const itk::EventObject & event );
   void Observe( itk::Object *caller );
   RedrawCommandType::Pointer m_RedrawCommand;
-
 };
 
 
@@ -115,8 +110,8 @@ GradientAnisotropicDiffusionImageFilter::run( itk::Object *obj_InputImage)
   // this is the case, set the inputs.
 
   if(!filter_  || 
-     inhandle_InputImage_->generation != last_InputImage_) {
-     
+     inhandle_InputImage_->generation != last_InputImage_)
+  {
      last_InputImage_ = inhandle_InputImage_->generation;
 
      // create a new one
@@ -128,24 +123,19 @@ GradientAnisotropicDiffusionImageFilter::run( itk::Object *obj_InputImage)
      // set inputs 
      
      dynamic_cast<FilterType* >(filter_.GetPointer())->SetInput( data_InputImage );
-       
   }
 
   // reset progress bar
   update_progress(0.0);
 
   // set filter parameters
-   
-  
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetTimeStep( gui_time_step_.get() ); 
   
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetNumberOfIterations( gui_iterations_.get() ); 
   
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetConductanceParameter( gui_conductance_parameter_.get() ); 
-  
 
   // execute the filter
-  
   try {
 
     dynamic_cast<FilterType* >(filter_.GetPointer())->Update();
@@ -156,8 +146,6 @@ GradientAnisotropicDiffusionImageFilter::run( itk::Object *obj_InputImage)
   }
 
   // get filter output
-  
-  
   ITKDatatype* out_OutputImage_ = scinew ITKDatatype; 
   
   out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
@@ -165,7 +153,6 @@ GradientAnisotropicDiffusionImageFilter::run( itk::Object *obj_InputImage)
   outhandle_OutputImage_ = out_OutputImage_; 
   outport_OutputImage_->send(outhandle_OutputImage_);
   
-
   return true;
 }
 
@@ -187,12 +174,13 @@ GradientAnisotropicDiffusionImageFilter::GradientAnisotropicDiffusionImageFilter
   m_RedrawCommand->SetCallbackFunction( this, &GradientAnisotropicDiffusionImageFilter::ConstProcessEvent );
 
   update_progress(0.0);
-
 }
+
 
 GradientAnisotropicDiffusionImageFilter::~GradientAnisotropicDiffusionImageFilter() 
 {
 }
+
 
 void 
 GradientAnisotropicDiffusionImageFilter::execute() 
@@ -209,7 +197,6 @@ GradientAnisotropicDiffusionImageFilter::execute()
   if(!inhandle_InputImage_.get_rep()) {
     return;
   }
-
 
   // check output ports
   outport_OutputImage_ = (ITKDatatypeOPort *)get_oport("OutputImage");
@@ -230,7 +217,6 @@ GradientAnisotropicDiffusionImageFilter::execute()
     error("Incorrect input type");
     return;
   }
-
 }
 
 
@@ -245,8 +231,7 @@ GradientAnisotropicDiffusionImageFilter::ProcessEvent( itk::Object * caller, con
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -261,8 +246,7 @@ GradientAnisotropicDiffusionImageFilter::ConstProcessEvent(const itk::Object * c
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
 }
 
 
@@ -272,13 +256,6 @@ GradientAnisotropicDiffusionImageFilter::Observe( itk::Object *caller )
 {
   caller->AddObserver(  itk::ProgressEvent(), m_RedrawCommand.GetPointer() );
   caller->AddObserver(  itk::IterationEvent(), m_RedrawCommand.GetPointer() );
-}
-
-void 
-GradientAnisotropicDiffusionImageFilter::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-
 }
 
 
