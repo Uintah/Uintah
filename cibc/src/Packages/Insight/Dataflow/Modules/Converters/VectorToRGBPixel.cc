@@ -65,8 +65,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -81,18 +79,21 @@ VectorToRGBPixel::VectorToRGBPixel(GuiContext* ctx)
 {
 }
 
-VectorToRGBPixel::~VectorToRGBPixel(){
+
+VectorToRGBPixel::~VectorToRGBPixel()
+{
 }
 
+
 template<class InputImageType, class OutputImageType>
-bool VectorToRGBPixel::run( itk::Object *obj_InputImage) 
+bool
+VectorToRGBPixel::run( itk::Object *obj_InputImage) 
 {
   InputImageType *data_InputImage = dynamic_cast<  InputImageType * >(obj_InputImage);
   
   if( !data_InputImage ) {
     return false;
   }
-
 
   typedef typename itk::VectorCastImageFilter< InputImageType, OutputImageType > CasterType;
 
@@ -112,8 +113,6 @@ bool VectorToRGBPixel::run( itk::Object *obj_InputImage)
   }
 
   // get filter output
-  
-  
   ITKDatatype* out_OutputImage_ = scinew ITKDatatype; 
   
   out_OutputImage_->data_ = caster->GetOutput();
@@ -124,7 +123,10 @@ bool VectorToRGBPixel::run( itk::Object *obj_InputImage)
   return true;
 }
 
-void VectorToRGBPixel::execute(){
+
+void
+VectorToRGBPixel::execute()
+{
   // check input ports
   inport_InputImage_ = (ITKDatatypeIPort *)get_iport("InputImage");
   if(!inport_InputImage_) {
@@ -160,10 +162,6 @@ void VectorToRGBPixel::execute(){
   } 
 }
 
-void VectorToRGBPixel::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace Insight
 

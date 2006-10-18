@@ -63,8 +63,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -82,18 +80,20 @@ Image2DToImage3D::Image2DToImage3D(GuiContext* ctx)
 {
 }
 
-Image2DToImage3D::~Image2DToImage3D(){
+
+Image2DToImage3D::~Image2DToImage3D()
+{
 }
 
 template<class InputImageType, class OutputImageType>
-bool Image2DToImage3D::run( itk::Object *obj_InputImage) 
+bool
+Image2DToImage3D::run( itk::Object *obj_InputImage) 
 {
   InputImageType *data_InputImage = dynamic_cast<  InputImageType * >(obj_InputImage);
   
   if( !data_InputImage ) {
     return false;
   }
-
 
   typedef typename itk::CastImageFilter< InputImageType, OutputImageType > CasterType;
 
@@ -120,21 +120,21 @@ bool Image2DToImage3D::run( itk::Object *obj_InputImage)
   out_OutputImage_->data_ = caster->GetOutput();
   
   outhandle_OutputImage_ = out_OutputImage_; 
-  outport_OutputImage_->send(outhandle_OutputImage_);
+  send_output_handle("OutputImage", outhandle_OutputImage_, true);
   
   return true;
 }
 
 
 template<class InputImageType, class OutputImageType>
-bool Image2DToImage3D::run2( itk::Object *obj_InputImage) 
+bool
+Image2DToImage3D::run2( itk::Object *obj_InputImage) 
 {
   InputImageType *data_InputImage = dynamic_cast<  InputImageType * >(obj_InputImage);
   
   if( !data_InputImage ) {
     return false;
   }
-
 
   typedef typename itk::VectorCastImageFilter< InputImageType, OutputImageType > CasterType;
 
@@ -161,25 +161,17 @@ bool Image2DToImage3D::run2( itk::Object *obj_InputImage)
   out_OutputImage_->data_ = caster->GetOutput();
   
   outhandle_OutputImage_ = out_OutputImage_; 
+  send_output_handle("OutputImage", outhandle_OutputImage_, true);
   outport_OutputImage_->send(outhandle_OutputImage_);
   
   return true;
 }
 
-void Image2DToImage3D::execute(){
-  // check input ports
-  inport_InputImage_ = (ITKDatatypeIPort *)get_iport("InputImage");
-  if(!inport_InputImage_) {
-    error("Unable to initialize iport");
-    return;
-  }
 
-  inport_InputImage_->get(inhandle_InputImage_);
-
-  if(!inhandle_InputImage_.get_rep()) {
-    return;
-  }
-
+void
+Image2DToImage3D::execute()
+{
+  if (!get_input_handle("InputImage", inhandle_InputImage_)) return;
 
   // check output ports
   outport_OutputImage_ = (ITKDatatypeOPort *)get_oport("OutputImage");
@@ -202,10 +194,6 @@ void Image2DToImage3D::execute(){
   }
 }
 
-void Image2DToImage3D::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace Insight
 

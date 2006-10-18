@@ -66,10 +66,8 @@ typedef LatVolMesh<HexTrilinearLgn<Point> >         LVMesh;
 typedef ImageMesh<QuadBilinearLgn<Point> >          IMesh;
 
 public:
-  FieldIPort* infield_;
   FieldHandle infield_handle_;
 
-  ITKDatatypeOPort* outimage_;
   ITKDatatypeHandle outimage_handle_;
   ITKDatatype* img_;
   GuiInt       copy_;
@@ -81,8 +79,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -90,7 +86,6 @@ public:
   bool run( const FieldHandle &fh );
 
   bool run_vector( const FieldHandle &fh );
-
 };
 
 
@@ -102,12 +97,15 @@ FieldToImage::FieldToImage(GuiContext* ctx)
   img_ = scinew ITKDatatype;
 }
 
-FieldToImage::~FieldToImage(){
+
+FieldToImage::~FieldToImage()
+{
 }
 
 
 template<class data >
-bool FieldToImage::run( const FieldHandle &fh) 
+bool
+FieldToImage::run( const FieldHandle &fh) 
 {
   FieldType current_type;
 
@@ -466,24 +464,11 @@ bool FieldToImage::run_vector( const FieldHandle &fh)
   return true;
 }
 
-void FieldToImage::execute(){
 
-  infield_ = (FieldIPort *)get_iport("InputField");
-  outimage_ = (ITKDatatypeOPort *)get_oport("OutputImage");
-
-  if(!infield_) {
-    error("Unable to initialize iport 'InputField'.");
-    return;
-  }
-  if(!outimage_) {
-    error("Unable to initialize oport 'OutputImage'.");
-    return;
-  }
-
-  if(!infield_->get(infield_handle_)) {
-    error("No data in InputField port");
-    return;
-  }
+void
+FieldToImage::execute()
+{
+  if (!get_input_handle("InputField", infield_handle_)) return;
 
   // Determine which type of field we are convertion from.
   // Our only options are ImageField, ITKImageField,
@@ -498,13 +483,10 @@ void FieldToImage::execute(){
     error("Unknown type");
     return;
   }
-  outimage_->send(outimage_handle_);  
+
+  send_output_handle("OutputImage", outimage_handle_, true);
 }
 
-void FieldToImage::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace Insight
 
