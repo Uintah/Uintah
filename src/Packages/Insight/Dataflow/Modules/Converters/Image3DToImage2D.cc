@@ -63,9 +63,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
-
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -82,18 +79,20 @@ Image3DToImage2D::Image3DToImage2D(GuiContext* ctx)
 {
 }
 
-Image3DToImage2D::~Image3DToImage2D(){
+
+Image3DToImage2D::~Image3DToImage2D()
+{
 }
 
 template<class InputImageType, class OutputImageType>
-bool Image3DToImage2D::run( itk::Object *obj_InputImage) 
+bool
+Image3DToImage2D::run( itk::Object *obj_InputImage) 
 {
   InputImageType *data_InputImage = dynamic_cast<  InputImageType * >(obj_InputImage);
   
   if( !data_InputImage ) {
     return false;
   }
-
 
   typedef typename itk::CastImageFilter< InputImageType, OutputImageType > CasterType;
 
@@ -103,7 +102,6 @@ bool Image3DToImage2D::run( itk::Object *obj_InputImage)
   // set inputs 
   caster->SetInput(dynamic_cast<InputImageType* >(inhandle_InputImage_.get_rep()->data_.GetPointer()));   
   
-
   // execute the filter
   try {
    caster->Update();
@@ -113,8 +111,6 @@ bool Image3DToImage2D::run( itk::Object *obj_InputImage)
   }
 
   // get filter output
-  
-  
   ITKDatatype* out_OutputImage_ = scinew ITKDatatype; 
   
   out_OutputImage_->data_ = caster->GetOutput();
@@ -125,15 +121,16 @@ bool Image3DToImage2D::run( itk::Object *obj_InputImage)
   return true;
 }
 
+
 template<class InputImageType, class OutputImageType>
-bool Image3DToImage2D::run2( itk::Object *obj_InputImage) 
+bool
+Image3DToImage2D::run2( itk::Object *obj_InputImage) 
 {
   InputImageType *data_InputImage = dynamic_cast<  InputImageType * >(obj_InputImage);
   
   if( !data_InputImage ) {
     return false;
   }
-
 
   typedef typename itk::VectorCastImageFilter< InputImageType, OutputImageType > CasterType;
 
@@ -143,7 +140,6 @@ bool Image3DToImage2D::run2( itk::Object *obj_InputImage)
   // set inputs 
   caster->SetInput(dynamic_cast<InputImageType* >(inhandle_InputImage_.get_rep()->data_.GetPointer()));   
   
-
   // execute the filter
   try {
    caster->Update();
@@ -153,8 +149,6 @@ bool Image3DToImage2D::run2( itk::Object *obj_InputImage)
   }
 
   // get filter output
-  
-  
   ITKDatatype* out_OutputImage_ = scinew ITKDatatype; 
   
   out_OutputImage_->data_ = caster->GetOutput();
@@ -165,7 +159,10 @@ bool Image3DToImage2D::run2( itk::Object *obj_InputImage)
   return true;
 }
 
-void Image3DToImage2D::execute(){
+
+void
+Image3DToImage2D::execute()
+{
   // check input ports
   inport_InputImage_ = (ITKDatatypeIPort *)get_iport("InputImage");
   if(!inport_InputImage_) {
@@ -178,7 +175,6 @@ void Image3DToImage2D::execute(){
   if(!inhandle_InputImage_.get_rep()) {
     return;
   }
-
 
   // check output ports
   outport_OutputImage_ = (ITKDatatypeOPort *)get_oport("OutputImage");
@@ -201,10 +197,6 @@ void Image3DToImage2D::execute(){
   }
 }
 
-void Image3DToImage2D::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace Insight
 

@@ -57,13 +57,10 @@ public:
   GuiDouble  gui_outside_value_;
   int        generation_;
 
-  FieldIPort* ifield_;
   FieldHandle ifieldH_;
 
-  ITKDatatypeIPort* iimg_;
   ITKDatatypeHandle iimgH_;
 
-  NrrdOPort* onrrd_;
   NrrdDataHandle onrrdH_;
   
 public:
@@ -85,48 +82,20 @@ BuildSeedVolume::BuildSeedVolume(GuiContext* ctx)
 {
 }
   
-BuildSeedVolume::~BuildSeedVolume(){
+
+BuildSeedVolume::~BuildSeedVolume()
+{
 }
+
   
 void
 BuildSeedVolume::execute()
 {
   // check input ports
-  ifield_ = (FieldIPort *)get_iport("InputField");
+  if (!get_input_handle("InputField", ifieldH_)) return;
 
-  if (!ifield_)
-  {
-    error( "Unable to initialize iport 'InputField'.");
-    return;
-  }
-
-  if (!(ifield_->get(ifieldH_) && ifieldH_.get_rep()))
-  {
-    error( "No handle or representation in input field." );
-    return;
-  }
-
-  iimg_ = (ITKDatatypeIPort *)get_iport("InputImage");
-
-  if (!iimg_)
-  {
-    error( "Unable to initialize iport 'InputImage'.");
-    return;
-  }
-
-  if (!(iimg_->get(iimgH_) && iimgH_.get_rep()))
-  {
-    error( "No handle or representation in input image." );
-    return;
-  }
+  if (!get_input_handle("InputImage", iimgH_)) return;
   
-  // check output ports
-  onrrd_ = (NrrdOPort *)get_oport("OutputImage");
-  if(!onrrd_) {
-    error("Unable to initialize oport");
-    return;
-  }
-
   // input is a PointCloudField<double>
   //typedef PointCloudField<double> FieldType;
   typedef PointCloudMesh<ConstantBasis<Point> > PCMesh;
@@ -139,7 +108,6 @@ BuildSeedVolume::execute()
   }
   
   PCField *f = dynamic_cast<PCField*>(ifieldH_.get_rep());
-
 
   // input image must be of dimension 2
   //FIX ME: make it work for various image type
@@ -226,7 +194,7 @@ BuildSeedVolume::execute()
   // send output image
 
   onrrdH_ = n;
-  onrrd_->send(onrrdH_);
+  send_output_handle("OutputImage", onrrdH_, true);
 }
 
   

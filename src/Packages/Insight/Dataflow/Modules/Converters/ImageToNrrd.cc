@@ -65,8 +65,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -90,14 +88,17 @@ ImageToNrrd::ImageToNrrd(GuiContext* ctx)
 {
 }
 
-ImageToNrrd::~ImageToNrrd(){
+
+ImageToNrrd::~ImageToNrrd()
+{
 }
 
+
 template<class InputImageType, unsigned  nrrdtype>
-void ImageToNrrd::create_nrrd(ITKDatatypeHandle &img) {
+void
+ImageToNrrd::create_nrrd(ITKDatatypeHandle &img)
+{
   // check if Teem exists
-
-
   InputImageType *im = dynamic_cast< InputImageType * >( img.get_rep()->data_.GetPointer() );
   typedef typename itk::ImageRegionIterator<InputImageType> IteratorType;
 
@@ -178,13 +179,14 @@ void ImageToNrrd::create_nrrd(ITKDatatypeHandle &img) {
   }
 
   onrrd_handle_ = nout;
-  
 }
 
-template<class InputImageType, unsigned  nrrdtype>
-void ImageToNrrd::create_nrrd2(ITKDatatypeHandle &img) {
-  // check if Teem exists
 
+template<class InputImageType, unsigned  nrrdtype>
+void
+ImageToNrrd::create_nrrd2(ITKDatatypeHandle &img)
+{
+  // check if Teem exists
   InputImageType *im = dynamic_cast< InputImageType * >( img.get_rep()->data_.GetPointer() );
   typedef typename itk::ImageRegionIterator<InputImageType> IteratorType;
 
@@ -234,7 +236,6 @@ void ImageToNrrd::create_nrrd2(ITKDatatypeHandle &img) {
     break;
   }
 
-
   // set spacing, and min and max
   // Set the spacing, and origin
   nr->axis[0].spacing = AIR_NAN;
@@ -275,8 +276,10 @@ void ImageToNrrd::create_nrrd2(ITKDatatypeHandle &img) {
   onrrd_handle_ = nout;
 }
 
+
 template<class InputImageType, unsigned nrrdtype>
-bool ImageToNrrd::run( itk::Object* obj1) 
+bool
+ImageToNrrd::run( itk::Object* obj1) 
 {
   InputImageType* n = dynamic_cast< InputImageType * >(obj1);
   if( !n ) {
@@ -291,8 +294,10 @@ bool ImageToNrrd::run( itk::Object* obj1)
   return true;
 }
 
+
 template<class InputImageType, unsigned nrrdtype>
-bool ImageToNrrd::run2( itk::Object* obj1) 
+bool
+ImageToNrrd::run2( itk::Object* obj1) 
 {
   InputImageType* n = dynamic_cast< InputImageType * >(obj1);
   if( !n ) {
@@ -307,7 +312,10 @@ bool ImageToNrrd::run2( itk::Object* obj1)
   return true;
 }
 
-void ImageToNrrd::execute() {
+
+void
+ImageToNrrd::execute()
+{
   inport1_ = (ITKDatatypeIPort *)get_iport("InputImage");
   onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");  
   
@@ -362,10 +370,6 @@ void ImageToNrrd::execute() {
   }
 }
 
-void ImageToNrrd::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
 
 } // End namespace Insight
 

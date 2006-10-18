@@ -65,8 +65,6 @@ public:
 
   virtual void execute();
 
-  virtual void tcl_command(GuiArgs&, void*);
-
   // determine the nrrd pixel type and call create_image
   template<unsigned int dim>
   void determine_nrrd_type();
@@ -92,11 +90,15 @@ NrrdToImage::NrrdToImage(GuiContext* ctx)
 {
 }
 
-NrrdToImage::~NrrdToImage(){
+
+NrrdToImage::~NrrdToImage()
+{
 }
 
-void NrrdToImage::execute(){
 
+void
+NrrdToImage::execute()
+{
   inrrd_ = (NrrdIPort*)get_iport("InputNrrd");
   if(!inrrd_) {
     error("Unable to initialize iport 'InputNrrd'.");
@@ -117,9 +119,6 @@ void NrrdToImage::execute(){
     return;
   }
 
-
-  //  cerr << get_id() << " nrrd: " << (unsigned int)inrrd_handle_->nrrd;
-
   Nrrd *n = inrrd_handle_->nrrd_;
   int dim = n->dim;
 
@@ -129,7 +128,6 @@ void NrrdToImage::execute(){
     vector_data_ = true;
   }
   
-
   switch(dim) {
   case 1:
     if (vector_data_) 
@@ -164,9 +162,11 @@ void NrrdToImage::execute(){
   return;
 }
 
-template<unsigned int dim>
-void NrrdToImage::determine_nrrd_type() {
 
+template<unsigned int dim>
+void
+NrrdToImage::determine_nrrd_type()
+{
   Nrrd* n = inrrd_handle_->nrrd_;
 
   // determine pixel type
@@ -222,9 +222,11 @@ void NrrdToImage::determine_nrrd_type() {
   }
 }
 
-template<class type, unsigned int dim>
-void NrrdToImage::create_image() {
 
+template<class type, unsigned int dim>
+void
+NrrdToImage::create_image()
+{
   Nrrd* n = inrrd_handle_->nrrd_;
   typedef typename itk::Image<type,dim> ImageType;
   typedef typename itk::ImageRegionIterator< ImageType > IteratorType;
@@ -290,7 +292,8 @@ void NrrdToImage::create_image() {
 
 
 void
-NrrdToImage::copy_kvp_to_dictionary(Nrrd *n, itk::Object *obj) {
+NrrdToImage::copy_kvp_to_dictionary(Nrrd *n, itk::Object *obj)
+{
   // handle any key/value pairs
   itk::MetaDataDictionary &dic = obj->GetMetaDataDictionary();
   for (unsigned int i=0; i< nrrdKeyValueSize(n); i++) {
@@ -303,12 +306,11 @@ NrrdToImage::copy_kvp_to_dictionary(Nrrd *n, itk::Object *obj) {
   }
 }
 
-  
-
 
 template<class type, unsigned int dim>
-void NrrdToImage::create_image2() {
-
+void
+NrrdToImage::create_image2()
+{
   Nrrd* n = inrrd_handle_->nrrd_;
   typedef typename itk::Image<itk::Vector<type>,dim> ImageType;
   typedef typename itk::ImageRegionIterator< ImageType > IteratorType;
@@ -382,11 +384,6 @@ void NrrdToImage::create_image2() {
   result->data_ = img;
   oimg_handle_ = result;
 
-}
-
-void NrrdToImage::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
 }
 
 } // End namespace Insight

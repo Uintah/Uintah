@@ -133,8 +133,6 @@ public:
   
   virtual void execute();
   
-  virtual void tcl_command(GuiArgs&, void*);
-  
   // Run function will dynamically cast data to determine which
   // instantiation we are working with. The last template type
   // refers to the last template type of the filter intstantiation.
@@ -174,11 +172,16 @@ ImageToField::ImageToField(GuiContext* ctx)
 {
 }
   
-ImageToField::~ImageToField(){
+
+ImageToField::~ImageToField()
+{
 }
+
   
 template<class InputImageType>
-FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &img) {
+FieldHandle
+ImageToField::create_image_field(ITKDatatypeHandle &img)
+{
   InputImageType *n = dynamic_cast< InputImageType * >( img.get_rep()->data_.GetPointer() );
   typedef typename InputImageType::PixelType pType;
   typedef ITKImageField<pType> ITKIF;
@@ -245,10 +248,12 @@ FieldHandle ImageToField::create_image_field(ITKDatatypeHandle &img) {
   }
   return fh;
 }
+
   
 template<class InputImageType>
-FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &img) {
-  
+FieldHandle
+ImageToField::create_latvol_field(ITKDatatypeHandle &img)
+{
   typedef typename InputImageType::PixelType pType;
   typedef ITKLatVolField<pType> ITKLVF;
   typedef GenericField<LVMesh, HexTrilinearLgn<pType>, FData3d<pType, LVMesh> > LVF;
@@ -327,15 +332,15 @@ FieldHandle ImageToField::create_latvol_field(ITKDatatypeHandle &img) {
 }
 
 
-
 template<class Type, unsigned int length>
-FieldHandle ImageToField::create_image_vector_field1(ITKDatatypeHandle &img){
+FieldHandle
+ImageToField::create_image_vector_field1(ITKDatatypeHandle &img)
+{
   typedef GenericField<IMesh, QuadBilinearLgn<Vector>, FData2d<Vector, IMesh> > IF;
   typedef itk::Image<itk::Vector<Type, length>,2> InputImageType;
   
   InputImageType *n = dynamic_cast<InputImageType *>( img.get_rep()->data_.GetPointer());
 
-  
   double origin_x = n->GetOrigin()[0];
   double origin_y = n->GetOrigin()[1];
   
@@ -399,9 +404,10 @@ FieldHandle ImageToField::create_image_vector_field1(ITKDatatypeHandle &img){
 }
 
 
-
 template<class Type, unsigned int length>
-FieldHandle ImageToField::create_latvol_vector_field1(ITKDatatypeHandle &img){
+FieldHandle
+ImageToField::create_latvol_vector_field1(ITKDatatypeHandle &img)
+{
   typedef GenericField<LVMesh, HexTrilinearLgn<Vector>, FData3d<Vector, LVMesh> > LVF;
   typedef itk::Image<itk::Vector<Type, length>,3> InputImageType;
   
@@ -482,11 +488,10 @@ FieldHandle ImageToField::create_latvol_vector_field1(ITKDatatypeHandle &img){
 }
 
 
-
-
 template<class Type>
-FieldHandle ImageToField::create_image_vector_field2(ITKDatatypeHandle &img){
-
+FieldHandle
+ImageToField::create_image_vector_field2(ITKDatatypeHandle &img)
+{
   typedef GenericField<IMesh, QuadBilinearLgn<Vector>, FData2d<Vector, IMesh> > IF;
   typedef itk::Image<itk::RGBPixel<Type>,2> InputImageType;
   
@@ -555,7 +560,9 @@ FieldHandle ImageToField::create_image_vector_field2(ITKDatatypeHandle &img){
 
 
 template<class Type>
-FieldHandle ImageToField::create_latvol_vector_field2(ITKDatatypeHandle &img){
+FieldHandle
+ImageToField::create_latvol_vector_field2(ITKDatatypeHandle &img)
+{
   typedef GenericField<LVMesh, HexTrilinearLgn<Vector>, FData3d<Vector, LVMesh> > LVF;
   typedef itk::Image<itk::RGBPixel<Type>,3> InputImageType;
   
@@ -630,11 +637,10 @@ FieldHandle ImageToField::create_latvol_vector_field2(ITKDatatypeHandle &img){
 }
   
   
-  
-  
 
 template<class InputImageType >
-bool ImageToField::run( itk::Object* obj1) 
+bool
+ImageToField::run( itk::Object* obj1) 
 {
   InputImageType* n = dynamic_cast< InputImageType * >(obj1);
   if( !n ) {
@@ -660,8 +666,10 @@ bool ImageToField::run( itk::Object* obj1)
   return true;
 }
 
+
 template< class Type, unsigned int length, unsigned int dimension > 
-bool ImageToField::run2( itk::Object* obj1)
+bool
+ImageToField::run2( itk::Object* obj1)
 {
   if(dynamic_cast<itk::Image< itk::Vector<Type,length> ,dimension>* >(obj1)) {
     switch(dimension) {
@@ -683,11 +691,12 @@ bool ImageToField::run2( itk::Object* obj1)
   else {
     return false;
   }
-
 }
 
+
 template< class Type,  unsigned int dimension > 
-bool ImageToField::run3( itk::Object* obj1)
+bool
+ImageToField::run3( itk::Object* obj1)
 {
   if(dynamic_cast<itk::Image< itk::RGBPixel<Type> ,dimension>* >(obj1)) {
     switch(dimension) {
@@ -709,11 +718,12 @@ bool ImageToField::run3( itk::Object* obj1)
   else {
     return false;
   }
-
 }
 
   
-void ImageToField::execute(){
+void
+ImageToField::execute()
+{
   inport1_ = (ITKDatatypeIPort *)get_iport("InputImage");
   ofield_ = (FieldOPort *)get_oport("OutputImage");
   
@@ -790,12 +800,6 @@ void ImageToField::execute(){
     return;
   }
 }
-
-void ImageToField::tcl_command(GuiArgs& args, void* userdata)
-{
-  Module::tcl_command(args, userdata);
-}
-
 
 
 } // End namespace Insight
