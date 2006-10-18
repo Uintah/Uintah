@@ -33,7 +33,24 @@
         <object class="MainFileMenu" id="MainFileMenu"/>
 
 
+        <object class="Grid">
+          <var name="rows">1</var>
+          <var name="cols">5</var>
+
+          <object class="Layers">
+            <var name="col-begin" type="int">5</var>
+            <var name="col-end" type="int">5</var>
+            <var name="row-begin" type="int">1</var>
+            <var name="row-end" type="int">1</var>
+          </object>
+
+
         <object class="Grid" id="MainGrid">
+          <var name="col-begin" type="int">1</var>
+          <var name="col-end" type="int">4</var>
+          <var name="row-begin" type="int">1</var>
+          <var name="row-end" type="int">1</var>
+
           <var name="rows">11</var>
           <var name="cols">1</var>
 
@@ -162,6 +179,7 @@
             <var name="col">1</var>
             <var name="cell-height">35</var>
             <var name="StatusBar::text" propagate="yes">$Painter::status</var>
+          </object>
           </object>
         </object>
       </object>

@@ -268,28 +268,7 @@
               <var name="posx" type="int">120</var>
               <var name="posy" type="int">0</var>
               <var name="border" type="bool">$Window::borders</var>
-<!--
               <object class="MainWindow"/>
--->
-
-              <object class="Grid">
-                <var name="rows">1</var>
-                <var name="cols">4</var>
-                <object class="MainWindow">
-                  <var name="col-begin" type="int">1</var>
-                  <var name="col-end" type="int">3</var>
-                  <var name="row-begin" type="int">1</var>
-                  <var name="row-end" type="int">1</var>
-                </object>
-
-                <object class="Layers">
-                  <var name="col-begin" type="int">4</var>
-                  <var name="col-end" type="int">4</var>
-                  <var name="row-begin" type="int">1</var>
-                  <var name="row-end" type="int">1</var>
-                </object>
-              </object>
-
             </object>
             
             
@@ -305,6 +284,7 @@
               <object class="Tools"/>
             </object>
 
+<!--
             <object class="Root::GLWindow" id="Buttons">
               <var name="id">Buttons</var>
               <var name="width" type="int">255</var>
@@ -315,7 +295,9 @@
               
               <object class="ToolButtons"/>
             </object> 
+-->
            
+<!--
             <object class="Root::GLWindow" id="Layers">
               <var name="id">Layers</var>
               <var name="width" type="int">275</var>
@@ -325,7 +307,7 @@
               <var name="border" type="bool">$Window::borders</var>
               <object class="Layers"/>
             </object>
-            
+    -->        
             
             <object class="Root::GLWindow" id="Splash">
               <var name="id">Splash</var>
