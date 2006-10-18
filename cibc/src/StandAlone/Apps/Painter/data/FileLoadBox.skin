@@ -1,9 +1,6 @@
 <definition class="FileLoadBox">
-  <object class="Root::FocusRegion">
-    
-    <var name="ignore_tab">1</var>
-    <var name="FileLoadBox::filename" propagate="yes"></var>
-    <object class="ShadowedBox">
+  <object class="ShadowedBox">
+    <var name="FileLoadBox::filename" overwrite="no" propagate="yes"></var>
       <definition class="ShadowedBox::child">
         <object class="Box" id="filebox">
           <var name="visible" type="bool">1</var>
@@ -26,10 +23,26 @@
           <object class="Grid" id="filegrid1">
             <var name="rows">3</var>
             <var name="cols">3</var>
+
+            <object class="Collection">
+              <var name="row">1</var>
+              <var name="col">1</var>
+              <var name="cell-width">25</var>
+              <var name="cell-height">50</var>
+            </object>
+
+            <object class="Collection">
+              <var name="row">1</var>
+              <var name="col">3</var>
+              <var name="cell-width">25</var>
+              <var name="cell-height">50</var>
+            </object>
+
+              
             
             <object class="Root::Text" id="title">
               <var name="row">1</var>
-              <var name="col">1</var>
+              <var name="col">2</var>
               <var name="text">$FileLoadBox::text</var>
               <var name="size">30</var>
               <var name="fgcolor">#000000FF</var>
@@ -38,30 +51,21 @@
               <var name="offsetx">-2</var>
               <var name="offsety">2</var>
               <var name="shadow">1</var>
-              <var name="cell-width">50</var>
-            </object>
-            
-            <object class="Collection">
-              <var name="row">2</var>
-              <var name="col">1</var>        
-              <var name="cell-width">50</var>
+              <var name="cell-height">50</var>
             </object>
             
             <object class="ShadowedBox">
               <var name="row">2</var>
               <var name="col">2</var>        
               <var name="cell-height">35</var>
-              <var name="cell-width">600</var>
-              
-              
-              <var name="TextEntry::shadow_outside" propagate="yes">#00000000</var>
-              <var name="ShadowedBox::outside" propagate="yes">$TextEntry::shadow_outside</var>
+                            
+              <var name="TextEntry::shadow_outside" 
+                   propagate="yes">#00000000</var>
+              <var name="ShadowedBox::outside" 
+                   propagate="yes">$TextEntry::shadow_outside</var>
               <definition class="ShadowedBox::child">
-                <object class="Collection">
-                  
-                  <object class="Box">
-                    <var name="color">#FFFFFFFF</var>
-                  </object>
+                <object class="Box">
+                  <var name="color">#FFFFFFFF</var>
                   
                   <object class="Root::FocusRegion">
                     <var name="ignore_tab">1</var>
@@ -119,6 +123,7 @@
                 <signal name="Button::clicked" 
                         target="FileLoadBox::CancelButtonPress"/>
               </object>
+
               <object class="Button">
                 <var name="row">1</var>
                 <var name="col">3</var>
@@ -126,7 +131,7 @@
                 <var name="Button::Text::text" propagate="yes">OK</var>
                 <signal name="Button::clicked" 
                         target="FileLoadBox::OKButtonPress">
-                  <var name="filename">$FileLoadBox::filename</var>
+                  <var name="filename" propagate="yes">$FileLoadBox::filename</var>
                 </signal>
               </object>
             </object>
@@ -134,5 +139,4 @@
         </object>
       </definition>
     </object>
-  </object>
 </definition>

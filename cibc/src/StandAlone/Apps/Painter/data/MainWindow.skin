@@ -1,8 +1,15 @@
 <definition class="MainWindow" xmlns:xi="http://www.w3.org/2001/XInclude">
   <object class="Root::FocusGrab">
+
+    <xi:include href="MainMenuBar.skin" parse="xml"/>  
+    <xi:include href="MainToolbar.skin" parse="xml"/>  
+    <xi:include href="ViewMenu.skin" parse="xml"/>  
+    <xi:include href="MainFileMenu.skin" parse="xml"/>  
+    
     <object class="Box">
       <var name="color">#AAAAAAFF</var>
       
+
       <!--
           <object class="Texture">
           <var name="file">BackgroundTile03.png</var>
@@ -19,20 +26,15 @@
           <var name="repeaty">1</var>
           </object>
       -->
-      
-      <xi:include href="MainMenuBar.skin" parse="xml"/>  
-      <xi:include href="MainToolbar.skin" parse="xml"/>  
+
       
       <object class="Root::MenuManager">
-        <xi:include href="ViewMenu.skin" parse="xml"/>  
-        <xi:include href="MainFileMenu.skin" parse="xml"/>  
-        
         <object class="ViewMenu" id="ViewMenu1"/>
         <object class="MainFileMenu" id="MainFileMenu"/>
 
 
         <object class="Grid" id="MainGrid">
-          <var name="rows">12</var>
+          <var name="rows">11</var>
           <var name="cols">1</var>
 
 
@@ -54,66 +56,9 @@
             <var name="cell-height">0</var>
           </object>
 
-          <!--
-              <object class="FileLoadBox">
-              <var name="row">3</var>
-              <var name="col">1</var>
-              <var name="FileLoadBox::text" propagate="yes"> Volume File to Load: </var>
-              <var name="cell-height">$Animation::variable-1</var>
-              <signal name="FileLoadBox::CancelButtonPress" 
-              target="Animation::AnimateVariableDescending">
-              <var name="varnum">1</var>
-              </signal>
-              <signal name="FileLoadBox::CancelButtonPress" 
-              target="GLWindow::mark_redraw"></signal>
-
-
-<signal name="FileLoadBox::OKButtonPress" 
-target="Painter::ITKImageFileRead"></signal>
-<signal name="FileLoadBox::OKButtonPress" 
-target="Painter::NrrdFileRead"></signal>
-<signal name="FileLoadBox::OKButtonPress" 
-target="Animation::AnimateVariableDescending" >
-<var name="varnum">1</var>
-</signal>
-
-<signal name="FileLoadBox::OKButtonPress" 
-target="Painter::Autoview" ></signal>
-
-<signal name="FileLoadBox::OKButtonPress" 
-target="::Autoview" ></signal>
-
-<signal name="FileLoadBox::OKButtonPress" 
-target="GLWindow::mark_redraw" ></signal>
-
-
-</object>
-          -->
-
-          <object class="FileLoadBox">
-            <var name="row">4</var>
-            <var name="col">1</var>
-            <var name="color">#ff0000ff</var>
-            <var name="FileLoadBox::text" propagate="yes"> Volume File to Save: </var>
-            
-            <var name="cell-height">$Animation::variable-2</var>
-            
-            <signal name="FileLoadBox::CancelButtonPress" 
-                    target="Animation::AnimateVariableDescending">
-              <var name="varnum">2</var>
-            </signal>
-            
-            <signal name="FileLoadBox::OKButtonPress" 
-                    target="Painter::ITKImageFileWrite"></signal>
-            
-            <signal name="FileLoadBox::OKButtonPress" 
-                    target="Animation::AnimateVariableDescending">
-              <var name="varnum">2</var>
-            </signal>                                    
-          </object>
 
           <object class="Collection">
-            <var name="row">5</var>
+            <var name="row">4</var>
             <var name="col">1</var>
 
             <object class="VisibilityGroup::VisibleItem" id="FourView">
@@ -155,7 +100,7 @@ target="GLWindow::mark_redraw" ></signal>
           </object>
 
           <object class="ToolDialog">
-            <var name="row">6</var>
+            <var name="row">5</var>
             <var name="col">1</var>
             <var name="cell-height">$Animation::variable-3</var>
 
@@ -179,7 +124,7 @@ target="GLWindow::mark_redraw" ></signal>
           
 
           <object class="ITKThresholdDialog">
-            <var name="row">7</var>
+            <var name="row">6</var>
             <var name="col">1</var>
             <var name="cell-height">$Animation::variable-4</var>
 
@@ -187,169 +132,83 @@ target="GLWindow::mark_redraw" ></signal>
 
           
           <object class="ResampleDialog">
-            <var name="row">8</var>
+            <var name="row">7</var>
             <var name="col">1</var>
             <var name="cell-height">$Animation::variable-5</var>
           </object>
           
           <object class="ITKCurvatureAnisotropicDiffusionImageFilterToolDialog">
-            <var name="row">9</var>
+            <var name="row">8</var>
             <var name="col">1</var>
             <var name="cell-height">$Animation::variable-6</var>
           </object>
 
           <object class="ITKConfidenceConnectedImageFilterToolDialog">
-            <var name="row">10</var>
+            <var name="row">9</var>
             <var name="col">1</var>
             <var name="cell-height">$Animation::variable-7</var>
           </object>
 
           <object class="BrushToolDialog">
-            <var name="row">11</var>
+            <var name="row">10</var>
             <var name="col">1</var>
             <var name="cell-height">$Animation::variable-9</var>
           </object>
 
-          <object class="Grid">
-            <var name="row">12</var>
-            <var name="col">1</var>
 
-            <var name="rows">1</var>
-            <var name="cols">1</var>
-            
+
+          <object class="StatusBar">
+            <var name="row">11</var>
+            <var name="col">1</var>
             <var name="cell-height">35</var>
-            
-            <object class="Frame">
-              <var name="row">1</var>
-              <var name="col">1</var>
-              
-              <var name="width">2</var>
-              <var name="height">2</var>   
-              <var name="invert">true</var>
-              
-              <object class="Frame">
-                <var name="invert">0</var>
-                <var name="width">2</var>
-                <var name="height">2</var>   
-                
-                <object class="Collection">
-                  <object class="Box">
-                    <var name="color">#808080A0</var>
-                    <object class="Root::Text">
-                      <var name="row">1</var>
-                      <var name="col">3</var>
-                      <!--                    <var name="text">$Painter::status_text</var>-->
-                      <var name="text">$Painter::status</var>
-                      <var name="fgcolor">#FFFFFFFF</var>
-                      <var name="bgcolor">#000000FF</var>
-                      <var name="size">25</var>
-                      <var name="anchor">W</var>
-                      <var name="shadow">1</var>
-                      <var name="offsetx">-2</var>
-                      <var name="offsety">2</var>
-                    </object>
-                  </object>
-                </object>
-              </object>
-            </object>
+            <var name="StatusBar::text" propagate="yes">$Painter::status</var>
           </object>
         </object>
       </object>
     </object>
-
-
+    
     <object class="QuitDialog">
       <var name="visible">$QuitDialog::visible</var>
-      <var name="visible">1</var>
     </object>
-
-
-    <object class="Box">
-      <var name="visible">$FileDialog::visible</var>
-      <var name="color">#00000066</var>
-      <object class="Root::FocusRegion">
-        <var name="FileDialog::focus" propagate="yes">0</var>
-        <var name="focus">$FileDialog::focus</var>
-        <signal name="FocusRegion::focus"
-                target="FocusGrab::Grab"/>
-
-        <object class="Grid" id="MainGrid">
-          <var name="visible">$FileDialog::visible</var>
-          <var name="rows">2</var>
-          <var name="cols">3</var>
-          
-          <object class="FileLoadBox">
-            <var name="visible">$FileDialog::visible</var>
-            <var name="row">1</var>
-            <var name="col">2</var>
-            <var name="cell-width">500</var>
-            <var name="FileLoadBox::text" propagate="yes"> Load Volume </var>
-            <var name="cell-height">$Animation::variable-1</var>
-            <signal name="FileLoadBox::CancelButtonPress" 
-                    target="Animation::AnimateVariableDescending">
-              <var name="varnum">1</var>
-            </signal>
-            
-            <signal name="FileLoadBox::CancelButtonPress" 
-                      target="Arithmetic::set_value">
-              <var name="variable">$FileDialog::visible</var>
-              <var name="value">0</var>
-            </signal>                   
-
-            <signal name="FileLoadBox::CancelButtonPress" 
-                      target="Arithmetic::set_value">
-              <var name="variable">$FileDialog::focus</var>
-              <var name="value">0</var>
-            </signal>                   
-
-            
-            <signal name="FileLoadBox::CancelButtonPress" 
-                    target="FocusGrab::Ungrab"/>
-            
-            <signal name="FileLoadBox::CancelButtonPress" 
-                    target="GLWindow::mark_redraw"></signal>
-              
-            
-            <signal name="FileLoadBox::OKButtonPress" 
-                    target="Painter::ITKImageFileRead"></signal>
-            <!--
-                <signal name="FileLoadBox::OKButtonPress" 
-                target="Painter::NrrdFileRead"></signal>
-            -->
-            <signal name="FileLoadBox::OKButtonPress" 
-                    target="Animation::AnimateVariableDescending" >
-              <var name="varnum">1</var>
-            </signal>
-            
-            <signal name="FileLoadBox::OKButtonPress" 
-                      target="Arithmetic::set_value">
-              <var name="variable">$FileDialog::visible</var>
-              <var name="value">0</var>
-            </signal>                   
-
-            <signal name="FileLoadBox::OKButtonPress" 
-                      target="Arithmetic::set_value">
-              <var name="variable">$FileDialog::focus</var>
-              <var name="value">0</var>
-            </signal>                   
-            
-            <signal name="FileLoadBox::OKButtonPress" 
-                    target="Painter::Autoview" ></signal>
-            <signal name="FileLoadBox::OKButtonPress" 
-                    target="GLWindow::mark_redraw" ></signal>
-            <signal name="FileLoadBox::OKButtonPress" 
-                    target="FocusGrab::Ungrab"/>
-            <signal name="FileLoadBox::OKButtonPress" 
-                    target="Painter::Autoview" ></signal>
-            <signal name="FileLoadBox::OKButtonPress" 
-                    target="GLWindow::mark_redraw" ></signal>
-
-
-            
-            
-          </object>
-        </object>          
-      </object>
+    
+    
+    <object class="FileDialog">
+      <var name="FileDialog::visible"
+           propagate="yes">$SessionLoadDialog::visible</var>
+      <var name="FileDialog::text" propagate="yes"> Load Session </var>
+      <var name="FileLoadBox::filename" propagate="yes"></var>
+      <signal name="FileDialog::OK" target="Painter::LoadSession"/>
+      <signal name="FileDialog::Done" target="Painter::Autoview"/>
+      <signal name="FileDialog::Done" target="GLWindow::mark_redraw"/>
     </object>
+    
+    
+    
+    <object class="FileDialog">
+      <var name="FileDialog::visible"
+           propagate="yes">$SessionSaveDialog::visible</var>
+      <var name="FileDialog::text" propagate="yes"> Save Session </var>
+      <var name="FileLoadBox::filename" propagate="yes"></var>
+      <signal name="FileDialog::OK" target="Painter::SaveSession"/>
+    </object>
+    
+    
+    <object class="FileDialog">
+      <var name="FileDialog::visible"
+           propagate="yes">$LayerLoadDialog::visible</var>
+      <var name="FileDialog::text" propagate="yes"> Load Layer </var>
+      <var name="FileLoadBox::filename" propagate="yes"></var>
+      <signal name="FileDialog::OK" target="Painter::LoadVolume"/>
+      <signal name="FileDialog::Done" target="Painter::Autoview"/>
+      <signal name="FileDialog::Done" target="GLWindow::mark_redraw"/>
+    </object>
+    
+    <object class="FileDialog">
+      <var name="FileDialog::visible"
+           propagate="yes">$LayerSaveDialog::visible</var>
+      <var name="FileDialog::text" propagate="yes"> Save Layer </var>
+      <var name="FileLoadBox::filename" propagate="yes"></var>
+      <signal name="FileDialog::OK" target="Painter::SaveVolume"/>
+    </object>         
   </object>
 </definition>
