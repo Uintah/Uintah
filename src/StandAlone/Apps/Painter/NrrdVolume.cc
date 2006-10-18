@@ -55,8 +55,8 @@ namespace SCIRun {
 
 
 NrrdVolume::NrrdVolume(Painter *painter,
-                                const string &name,
-                                NrrdDataHandle &nrrd) :
+                       const string &name,
+                       NrrdDataHandle &nrrd) :
   painter_(painter),
   parent_(0),
   children_(0),
@@ -550,8 +550,42 @@ NrrdVolume::compute_label_mask(unsigned int label)
 
 
 NrrdVolume *
-NrrdVolume::create_child_label_volume()
+NrrdVolume::create_child_label_volume(unsigned int label)
 {
+  NrrdVolume *anchor_volume = this;
+  while (anchor_volume->parent_) anchor_volume = anchor_volume->parent_;
+
+  if (!label) {
+    const unsigned char max_bit = sizeof(unsigned int)*8;
+    unsigned char bit = 0;
+    unsigned int used_labels = anchor_volume->compute_label_mask();
+    while (bit < max_bit && (used_labels & (1 << bit))) ++bit;
+    if (bit == max_bit) {
+      cerr << "Cannot create child label volume!\n";
+      return 0;
+    }
+    label = 1 << bit;
+  }
+
+  NrrdVolume *vol = 
+    new NrrdVolume(painter_, 
+                   anchor_volume->name_+" "+to_string(label), 
+                   nrrd_handle_);
+  delete vol->mutex_;
+  vol->mutex_ = mutex_;
+  vol->label_ = label;
+  vol->parent_ = this;
+  children_.push_back(vol);
+  return vol;
+}
+
+
+
+#if 0
+NrrdHandle
+NrrdVolume::create_float_nrrd_from_label()
+{
+
   NrrdVolume *anchor_volume = this;
   while (anchor_volume->parent_) anchor_volume = anchor_volume->parent_;
 
@@ -578,5 +612,6 @@ NrrdVolume::create_child_label_volume()
   return vol;
 }
 
+#endif
 
 }

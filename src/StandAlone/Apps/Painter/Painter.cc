@@ -85,8 +85,8 @@
 
 
 #ifdef HAVE_INSIGHT
+#  include <itkImageFileReader.h>
 #  include <itkImportImageFilter.h>
-#include <itkThresholdSegmentationLevelSetImageFilter.h>
 #endif
 
 #ifdef _WIN32
@@ -739,6 +739,54 @@ Painter::maker(Skinner::Variables *vars)
 {
   return new Painter(vars, 0);
 }
+
+
+
+
+NrrdVolume *
+Painter::load_volume(const string &filename) {
+  if (!validFile(filename)) {
+    return 0;
+  }
+
+#ifndef HAVE_INSIGHT
+  NrrdDataHandle nrrd_handle = new NrrdData();
+  if (nrrdLoad(nrrd_handle->nrrd_, filename.c_str(), 0)) {
+    return 0;    
+  } 
+#else
+  // create a new reader
+  typedef itk::ImageFileReader<itk::Image<float, 3> > FileReaderType;
+  FileReaderType::Pointer reader = FileReaderType::New();
+  
+  reader->SetFileName(filename.c_str());
+  
+  try {
+    reader->Update();  
+  } catch  ( itk::ExceptionObject & err ) {
+    cerr << "Painter::read_volume - ITK ExceptionObject caught!" << std::endl;
+    cerr << err.GetDescription() << std::endl;
+    return 0;
+  }
+  
+  SCIRun::ITKDatatype *img = new SCIRun::ITKDatatype();
+  img->data_ = reader->GetOutput();
+
+  if (!img->data_) { 
+    cerr << "no itk image\n";
+    return 0;
+  }
+
+  ITKDatatypeHandle img_handle = img;
+  NrrdDataHandle nrrd_handle = itk_image_to_nrrd(img_handle);
+#endif
+
+  if (!nrrd_handle->nrrd_) return 0;
+
+  pair<string, string> dirfile = split_filename(filename);
+  return new NrrdVolume(this, dirfile.second, nrrd_handle);
+}
+
 
 
 

@@ -140,6 +140,7 @@ private:
   friend class ITKThresholdTool;
   friend class StatisticsTool;
   friend class ITKConfidenceConnectedImageFilterTool;
+  friend class SessionReader;
 
   enum DisplayMode_e {
     normal_e,
@@ -153,6 +154,8 @@ private:
   void			draw_slice_lines(SliceWindow &);  
   void			extract_all_window_slices();
   void                  set_probe();
+
+  NrrdVolume *          load_volume(const string &);            
   void                  copy_current_layer();
   void                  new_current_layer();
   void                  set_all_slices_tex_dirty();
@@ -201,7 +204,6 @@ private:
   CatcherFunction_t     MergeLayer;
 
   CatcherFunction_t     MemMapFileRead;
-  CatcherFunction_t     NrrdFileRead;
   CatcherFunction_t     NrrdFileWrite;
 
   CatcherFunction_t     FinishTool;
@@ -210,7 +212,7 @@ private:
   CatcherFunction_t     LoadColorMap1D;
 
   CatcherFunction_t     ITKBinaryDilate;
-  CatcherFunction_t     ITKImageFileRead;
+
   CatcherFunction_t     ITKImageFileWrite;
   CatcherFunction_t     ITKGradientMagnitude;
   CatcherFunction_t     ITKBinaryDilateErode;
@@ -222,9 +224,12 @@ private:
   CatcherFunction_t     ShowIsosurface;
   CatcherFunction_t     AbortFilterOn;
 
+  CatcherFunction_t     LoadVolume;
   CatcherFunction_t     ResampleVolume;
   CatcherFunction_t     CreateLabelVolume;
   CatcherFunction_t     CreateLabelChild;
+
+  CatcherFunction_t     LoadSession;
 
 
   typedef vector<ColorMapHandle> ColorMaps_t;

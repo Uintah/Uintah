@@ -36,6 +36,8 @@
 #include <StandAlone/Apps/Painter/ITKThresholdSegmentationLevelSetImageFilterTool.h>
 #include <StandAlone/Apps/Painter/ITKConfidenceConnectedImageFilterTool.h>
 #include <StandAlone/Apps/Painter/FloodfillTool.h>
+#include <StandAlone/Apps/Painter/SessionReader.h>
+
 #include <sci_comp_warn_fixes.h>
 #include <iostream>
 #include <sci_gl.h>
@@ -110,7 +112,6 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::MergeLayer);
 
   REGISTER_CATCHER_TARGET(Painter::MemMapFileRead);
-  REGISTER_CATCHER_TARGET(Painter::NrrdFileRead);
   REGISTER_CATCHER_TARGET(Painter::NrrdFileWrite);
 
   REGISTER_CATCHER_TARGET(Painter::CancelTool);  
@@ -119,7 +120,6 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::LoadColorMap1D);
 
   REGISTER_CATCHER_TARGET(Painter::ITKBinaryDilate);  
-  REGISTER_CATCHER_TARGET(Painter::ITKImageFileRead);
   REGISTER_CATCHER_TARGET(Painter::ITKImageFileWrite);
   REGISTER_CATCHER_TARGET(Painter::ITKGradientMagnitude);
   REGISTER_CATCHER_TARGET(Painter::ITKBinaryDilateErode);
@@ -132,6 +132,8 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
 
   REGISTER_CATCHER_TARGET(Painter::AbortFilterOn);
 
+  REGISTER_CATCHER_TARGET(Painter::LoadSession);
+  REGISTER_CATCHER_TARGET(Painter::LoadVolume);
   REGISTER_CATCHER_TARGET(Painter::ResampleVolume);
 
   REGISTER_CATCHER_TARGET(Painter::CreateLabelVolume);  
@@ -313,38 +315,6 @@ Painter::MergeLayer(event_handle_t event) {
 }
   
 
-BaseTool::propagation_state_e 
-Painter::NrrdFileRead(event_handle_t event) {
-  Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
-  ASSERT(signal);
-  const string &filename = signal->get_vars()->get_string("filename");
-  if (!validFile(filename)) {
-    return STOP_E;
-  }
-
-  NrrdDataHandle nrrd_handle = new NrrdData();
-  Nrrd *nrrd = nrrd_handle->nrrd_;
-
-  if (nrrdLoad(nrrd, filename.c_str(), 0)) {
-    get_vars()->insert("Painter::status_text",
-                       "Cannot Load Nrrd: "+filename, 
-                       "string", true);
-    return STOP_E;
-    
-  } 
-  
-  pair<string, string> dirfile = split_filename(filename);
-  volumes_.push_back(new NrrdVolume(this, dirfile.second, nrrd_handle));
-  current_volume_ = volumes_.back();
-  extract_all_window_slices();
-  rebuild_layer_buttons();
-  redraw_all();
-
-  status_ =  "Successfully Loaded Nrrd: "+filename;
-
-  return CONTINUE_E;  
-}
-
 
 BaseTool::propagation_state_e 
 Painter::MemMapFileRead(event_handle_t event) {
@@ -428,60 +398,23 @@ Painter::ITKBinaryDilate(event_handle_t event) {
 
 
 BaseTool::propagation_state_e 
-Painter::ITKImageFileRead(event_handle_t event) {
-
-#ifndef HAVE_INSIGHT
-  return NrrdFileRead(event);
-#else
-
+Painter::LoadVolume(event_handle_t event) {
   Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
   ASSERT(signal);
-
-  const string &filename = signal->get_vars()->get_string("filename");
-  if (!validFile(filename)) {
+  string filename = signal->get_vars()->get_string("filename");
+  NrrdVolume *volume = load_volume(filename);
+  if (!volume) {
     return STOP_E;
   }
 
-  typedef itk::ImageFileReader<itk::Image<float, 3> > FileReaderType;
-  
-  // create a new reader
-  FileReaderType::Pointer reader = FileReaderType::New();
-  
-  // set reader
-  reader->SetFileName(filename.c_str());
-  
-  try {
-    reader->Update();  
-  } catch  ( itk::ExceptionObject & err ) {
-    cerr << ("ExceptionObject caught!");
-    cerr << (err.GetDescription());
-  }
-  
-
-  SCIRun::ITKDatatype *img = new SCIRun::ITKDatatype();
-  img->data_ = reader->GetOutput();
-
-  if (!img->data_) { 
-    cerr << "no itk image\n";
-    return STOP_E;
-  }
-
-  ITKDatatypeHandle img_handle = img;
-  NrrdDataHandle nrrd_handle = itk_image_to_nrrd(img_handle);
-
-  pair<string, string> dirfile = split_filename(filename);
-
-  if (nrrd_handle->nrrd_) {
-    volumes_.push_back(new NrrdVolume(this, dirfile.second, nrrd_handle));
-    current_volume_ = volumes_.back();
-    extract_all_window_slices();
-    rebuild_layer_buttons();
-    redraw_all();
-    status_ =  "Successfully Loaded File: "+filename;
-  }
+  volumes_.push_back(volume);
+  current_volume_ = volume;
+  extract_all_window_slices();
+  rebuild_layer_buttons();
+  redraw_all();
+  status_ =  "Successfully Loaded File: "+filename;
 
   return CONTINUE_E;
-#endif
 }
 
 
@@ -1026,6 +959,25 @@ Painter::CreateLabelChild(event_handle_t event) {
   redraw_all();
   return CONTINUE_E;
 }
+
+BaseTool::propagation_state_e 
+Painter::LoadSession(event_handle_t event) {
+  Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
+  ASSERT(signal);
+  string filename = signal->get_vars()->get_string("filename");
+  
+  SessionReader reader(this);
+  if (reader.load_session(filename)) {
+    status_ =  "Successfully Loaded sesion: "+filename;
+  } else {
+    status_ =  "Error loading session "+filename;
+  }
+
+  return CONTINUE_E;
+}
+  
+
+
 
   
 } // end namespace SCIRun
