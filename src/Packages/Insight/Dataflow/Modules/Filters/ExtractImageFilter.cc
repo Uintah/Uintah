@@ -103,7 +103,6 @@ ExtractImageFilter::load_gui()
 {
   num_dims_.reset();
   if (num_dims_.get() == 0) { return; }
-
  
   lastmin_.resize(num_dims_.get(), -1);
   lastmax_.resize(num_dims_.get(), -1);  

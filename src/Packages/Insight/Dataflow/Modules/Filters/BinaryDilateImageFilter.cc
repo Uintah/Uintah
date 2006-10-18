@@ -114,9 +114,8 @@ BinaryDilateImageFilter::run( itk::Object *obj_InputImage)
   // or the input data has changed. If
   // this is the case, set the inputs.
 
-  if(!filter_ ||
-     inhandle_InputImage_->generation != last_InputImage_) {
-     
+  if(!filter_ || inhandle_InputImage_->generation != last_InputImage_)
+  {
      last_InputImage_ = inhandle_InputImage_->generation;
 
      // create a new one

@@ -86,12 +86,10 @@ public:
   bool run( itk::Object*   );
 
   // progress bar
-
   void ProcessEvent(itk::Object * caller, const itk::EventObject & event );
   void ConstProcessEvent(const itk::Object * caller, const itk::EventObject & event );
   void Observe( itk::Object *caller );
   RedrawCommandType::Pointer m_RedrawCommand;
-
 };
 
 
@@ -213,8 +211,6 @@ MeanImageFilter::MeanImageFilter(GuiContext* ctx)
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &MeanImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &MeanImageFilter::ConstProcessEvent );
-
-  update_progress(0.0);
 }
 
 

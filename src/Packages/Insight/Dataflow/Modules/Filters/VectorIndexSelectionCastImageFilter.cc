@@ -166,8 +166,6 @@ VectorIndexSelectionCastImageFilter::VectorIndexSelectionCastImageFilter(GuiCont
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &VectorIndexSelectionCastImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &VectorIndexSelectionCastImageFilter::ConstProcessEvent );
-
-  update_progress(0.0);
 }
 
 

@@ -88,7 +88,6 @@ public:
   bool run( itk::Object*   );
 
   // progress bar
-
   void ProcessEvent(itk::Object * caller, const itk::EventObject & event );
   void ConstProcessEvent(const itk::Object * caller, const itk::EventObject & event );
   void Observe( itk::Object *caller );
@@ -112,9 +111,8 @@ BinaryThresholdImageFilter::run( itk::Object *obj_InputImage)
   // or the input data has changed. If
   // this is the case, set the inputs.
 
-  if(!filter_  || 
-     inhandle_InputImage_->generation != last_InputImage_) {
-     
+  if(!filter_ || inhandle_InputImage_->generation != last_InputImage_)
+  {
      last_InputImage_ = inhandle_InputImage_->generation;
 
      // create a new one
@@ -132,8 +130,6 @@ BinaryThresholdImageFilter::run( itk::Object *obj_InputImage)
   update_progress(0.0);
 
   // set filter parameters
-   
-  
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetLowerThreshold( gui_lower_threshold_.get() ); 
   
   dynamic_cast<FilterType* >(filter_.GetPointer())->SetUpperThreshold( gui_upper_threshold_.get() ); 
@@ -179,8 +175,6 @@ BinaryThresholdImageFilter::BinaryThresholdImageFilter(GuiContext* ctx)
   m_RedrawCommand = RedrawCommandType::New();
   m_RedrawCommand->SetCallbackFunction( this, &BinaryThresholdImageFilter::ProcessEvent );
   m_RedrawCommand->SetCallbackFunction( this, &BinaryThresholdImageFilter::ConstProcessEvent );
-
-  update_progress(0.0);
 }
 
 

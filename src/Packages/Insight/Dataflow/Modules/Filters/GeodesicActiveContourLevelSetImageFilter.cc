@@ -103,7 +103,6 @@ public:
   bool run( itk::Object* , itk::Object* );
 
   // progress bar
-
   void update_after_iteration();
 
   void ProcessEvent(itk::Object * caller, const itk::EventObject & event );
@@ -240,8 +239,6 @@ GeodesicActiveContourLevelSetImageFilter::GeodesicActiveContourLevelSetImageFilt
   m_RedrawCommand->SetCallbackFunction( this, &GeodesicActiveContourLevelSetImageFilter::ConstProcessEvent );
 
   iterationCounter_OutputImage = 0;
-
-  update_progress(0.0);
 }
 
 
@@ -324,8 +321,7 @@ GeodesicActiveContourLevelSetImageFilter::ProcessEvent( itk::Object * caller, co
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
   else if ( typeid( itk::IterationEvent ) == typeid( event ) )
   {
     ::itk::ProcessObject::Pointer process =
@@ -347,8 +343,7 @@ GeodesicActiveContourLevelSetImageFilter::ConstProcessEvent(const itk::Object * 
 
     const double value = static_cast<double>(process->GetProgress() );
     update_progress( value );
-    }
-
+  }
   else if ( typeid( itk::IterationEvent ) == typeid( event ) )
   {
     ::itk::ProcessObject::ConstPointer process =
