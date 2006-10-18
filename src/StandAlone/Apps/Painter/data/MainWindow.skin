@@ -2,32 +2,11 @@
   <object class="Root::FocusGrab">
 
     <xi:include href="MainMenuBar.skin" parse="xml"/>  
-    <xi:include href="MainToolbar.skin" parse="xml"/>  
     <xi:include href="ViewMenu.skin" parse="xml"/>  
     <xi:include href="MainFileMenu.skin" parse="xml"/>  
     
     <object class="Box">
-      <var name="color">#AAAAAAFF</var>
-      
-
-      <!--
-          <object class="Texture">
-          <var name="file">BackgroundTile03.png</var>
-          <var name="color">#FFFFFFFF</var>
-          <var name="repeatx">1</var>
-          <var name="repeaty">1</var>
-          </object>
-          
-          
-          <object class="Texture">
-          <var name="file">BackgroundTile04.png</var>
-          <var name="color">#000000FF</var>
-          <var name="repeatx">1</var>
-          <var name="repeaty">1</var>
-          </object>
-      -->
-
-      
+      <var name="color">#AAAAAAFF</var>           
       <object class="Root::MenuManager">
         <object class="ViewMenu" id="ViewMenu1"/>
         <object class="MainFileMenu" id="MainFileMenu"/>
@@ -72,132 +51,64 @@
 
 
 
-        <object class="Grid" id="MainGrid">
-          <var name="col-begin" type="int">1</var>
-          <var name="col-end" type="int">4</var>
-          <var name="row-begin" type="int">1</var>
-          <var name="row-end" type="int">1</var>
+          <object class="Grid" id="MainGrid">
+            <var name="col-begin" type="int">1</var>
+            <var name="col-end" type="int">4</var>
+            <var name="row-begin" type="int">1</var>
+            <var name="row-end" type="int">1</var>
 
-          <var name="rows">10</var>
-          <var name="cols">1</var>
-
-
-          <object class="MainMenuBar">
-            <var name="row">1</var>
-            <var name="col">1</var>
-            <var name="cell-height">35</var>
-          </object>
-
-          <object class="MainToolbar">
-            <var name="row">2</var>
-            <var name="col">1</var>
-            <var name="cell-height">35</var>
-          </object>
-
-          <object class="Collection">
-            <var name="row">3</var>
-            <var name="col">1</var>
-            <var name="cell-height">0</var>
-          </object>
+            <var name="rows">2</var>
+            <var name="cols">1</var>
 
 
-          <object class="Collection">
-            <var name="row">4</var>
-            <var name="col">1</var>
-
-            <object class="VisibilityGroup::VisibleItem" id="FourView">
-              <var name="visible">1</var>
-              <var name="group">MainLayout</var>
-              <object class="FourView"/>
+            <object class="MainMenuBar">
+              <var name="row">1</var>
+              <var name="col">1</var>
+              <var name="cell-height">35</var>
             </object>
 
-            <object class="VisibilityGroup::VisibleItem" id="Four3DView">
-              <var name="visible">0</var>
-              <var name="group">MainLayout</var>
-              <object class="Four3DView"/>
+
+            <object class="Collection">
+              <var name="row">2</var>
+              <var name="col">1</var>
+
+              <object class="VisibilityGroup::VisibleItem" id="FourView">
+                <var name="visible">1</var>
+                <var name="group">MainLayout</var>
+                <object class="FourView"/>
+              </object>
+
+              <object class="VisibilityGroup::VisibleItem" id="Four3DView">
+                <var name="visible">0</var>
+                <var name="group">MainLayout</var>
+                <object class="Four3DView"/>
+              </object>
+
+              <object class="VisibilityGroup::VisibleItem" id="ThreeView">
+                <var name="visible">0</var>
+                <var name="group">MainLayout</var>
+                <object class="ThreeView"/>
+              </object>
+
+              <object class="VisibilityGroup::VisibleItem" id="3DView">
+                <var name="visible">0</var>
+                <var name="group">MainLayout</var>
+                <object class="Shadowed3DViewer"/>
+              </object>
+
+              <object class="VisibilityGroup::VisibleItem" id="16View">
+                <var name="visible">0</var>
+                <var name="group">MainLayout</var>
+                <object class="16View"/>
+              </object>
+
+              <object class="VisibilityGroup::VisibleItem" id="4X4CenterView">
+                <var name="visible">0</var>
+                <var name="group">MainLayout</var>
+                <object class="4X4CenterView"/>
+              </object>
+
             </object>
-
-            <object class="VisibilityGroup::VisibleItem" id="ThreeView">
-              <var name="visible">0</var>
-              <var name="group">MainLayout</var>
-              <object class="ThreeView"/>
-            </object>
-
-            <object class="VisibilityGroup::VisibleItem" id="3DView">
-              <var name="visible">0</var>
-              <var name="group">MainLayout</var>
-              <object class="Shadowed3DViewer"/>
-            </object>
-
-            <object class="VisibilityGroup::VisibleItem" id="16View">
-              <var name="visible">0</var>
-              <var name="group">MainLayout</var>
-              <object class="16View"/>
-            </object>
-
-            <object class="VisibilityGroup::VisibleItem" id="4X4CenterView">
-              <var name="visible">0</var>
-              <var name="group">MainLayout</var>
-              <object class="4X4CenterView"/>
-            </object>
-
-          </object>
-
-          <object class="ToolDialog">
-            <var name="row">5</var>
-            <var name="col">1</var>
-            <var name="cell-height">$Animation::variable-3</var>
-
-            <signal name="ToolDialog::Cancel" 
-                    target="Painter::CancelTool"></signal>
-
-            <signal name="ToolDialog::Cancel" 
-                    target="Animation::AnimateVariableDescending">
-              <var name="varnum">3</var>
-            </signal>
-
-            <signal name="ToolDialog::Execute" 
-                    target="Painter::FinishTool"></signal>
-
-            <signal name="ToolDialog::Execute" 
-                    target="Animation::AnimateVariableDescending" >
-              <var name="varnum">3</var>
-            </signal>
-            
-          </object>
-          
-
-          <object class="ITKThresholdDialog">
-            <var name="row">6</var>
-            <var name="col">1</var>
-            <var name="cell-height">$Animation::variable-4</var>
-
-          </object>
-
-          
-          <object class="ResampleDialog">
-            <var name="row">7</var>
-            <var name="col">1</var>
-            <var name="cell-height">$Animation::variable-5</var>
-          </object>
-          
-          <object class="ITKCurvatureAnisotropicDiffusionImageFilterToolDialog">
-            <var name="row">8</var>
-            <var name="col">1</var>
-            <var name="cell-height">$Animation::variable-6</var>
-          </object>
-
-          <object class="ITKConfidenceConnectedImageFilterToolDialog">
-            <var name="row">9</var>
-            <var name="col">1</var>
-            <var name="cell-height">$Animation::variable-7</var>
-          </object>
-
-          <object class="BrushToolDialog">
-            <var name="row">10</var>
-            <var name="col">1</var>
-            <var name="cell-height">$Animation::variable-9</var>
-          </object>
           </object>
 
         </object>

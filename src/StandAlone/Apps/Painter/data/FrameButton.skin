@@ -31,6 +31,9 @@
       </signal>
 
       <signal name="FocusRegion::focus"
+              target="Button::focus"/>
+
+      <signal name="FocusRegion::focus"
               target="GLWindow::redraw_drawable"/>
 
 
@@ -48,14 +51,17 @@
       </signal>
 
       <signal name="FocusRegion::unfocus"
-              target="GLWindow::redraw_drawable"/>
-
+              target="Button::unfocus"/>
 
       <signal name="FocusRegion::unfocus"
               target="Arithmetic::set_value">
         <var name="variable">$FrameButton::shadowcolor</var>
         <var name="value">#FFFFFFFF</var>
       </signal>
+
+      <signal name="FocusRegion::unfocus"
+              target="GLWindow::redraw_drawable"/>
+
 
 
       <object class="Frame">

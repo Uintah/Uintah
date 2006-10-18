@@ -1,46 +1,41 @@
 <definition class="Layers" xmlns:xi="http://www.w3.org/2001/XInclude">
-  <object class="Root::MenuManager">
-    <var name="Layers::status" propagate="yes"/>
+  <object class="Collection">
     <xi:include href="LayerMenu.skin" parse="xml"/>
+    <xi:include href="LayerButton.skin" parse="xml"/>      
+    <xi:include href="LayerMenuBar.skin" parse="xml"/>
+
     <object class="LayerMenu" id="LayerMenu"/>
+
     <object class="Grid">
       <var name="rows">2</var>
       <var name="cols">1</var>
-      
-      <xi:include href="LayerMenuBar.skin" parse="xml"/>
-      
+            
       <object class="LayerMenuBar">
         <var name="row">1</var>
         <var name="col">1</var>
         <var name="cell-height">35</var>
       </object>
 
-<!--
-      <object class="StatusBar">
-        <var name="row">3</var>
-        <var name="col">1</var>
-        <var name="cell-height">35</var>
-        <var name="StatusBar::text" propagate="yes">$Layers::status</var>
-      </object>
--->
-      
-      
-      <object class="Frame">
+      <object class="ShadowedFocusBox">      
         <var name="row">2</var>
         <var name="col">1</var>
-        
-        <var name="width">4</var>
-        <var name="height">4</var>
-        <var name="invert">1</var>
+        <var name="background" propagate="yes">#FFFFFFA0</var>
+        <signal name="ShadowedFocusBox::focus"
+                target="Arithmetic::set_value">
+          <var name="variable">$background</var>
+          <var name="value">#FFFFFFFF</var>
+        </signal>
 
-
-        <object class="Root::FocusRegion">
-          <var name="invert">1</var>
-          <xi:include href="LayerButton.skin" parse="xml"/>      
+        <signal name="ShadowedFocusBox::unfocus"
+                target="Arithmetic::set_value">
+          <var name="variable">$background</var>
+          <var name="value">#FFFFFFA0</var>
+        </signal>
           
+                
+        <definition class="ShadowedFocusBox::child">
           <object class="Box">
-
-            <var name="color">#EEEEEEFF</var>
+            <var name="color">$background</var>
             <object class="Grid">
               <var name="rows">17</var>
               <var name="cols">1</var>
@@ -131,7 +126,7 @@
 
             </object>
           </object>
-        </object>
+        </definition>
       </object>
     </object>
   </object>
