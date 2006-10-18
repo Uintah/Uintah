@@ -103,7 +103,7 @@ LocallyComputedPatchVarMap::addComputedPatchSet(const PatchSubset* patches)
   }
 #endif
 
-  if (sets_.size() <= level->getIndex())
+  if ((int) sets_.size() <= level->getIndex())
     sets_.resize(level->getIndex()+1);
 
   LocallyComputedPatchSet* lcpatches = sets_[level->getIndex()];
