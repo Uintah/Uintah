@@ -182,6 +182,9 @@ Painter::LayerButton_Maker(event_handle_t event) {
 
 BaseTool::propagation_state_e 
 Painter::StartBrushTool(event_handle_t event) {
+  if (tm_.query_tool_id(25) != "") {
+    return STOP_E;
+  }
   tm_.add_tool(new BrushTool(this),25); 
   return CONTINUE_E;
 }
@@ -197,10 +200,10 @@ Painter::StartCropTool(event_handle_t event) {
   get_vars()->insert("Painter::progress_bar_total_width","0","string", true);
   get_vars()->unset("ToolDialog::button_height"); 
 #endif
-  redraw_all();
-
+  if (tm_.query_tool_id(25) != "") {
+    return STOP_E;
+  }
   tm_.add_tool(new CropTool(this),25);
-  redraw_all();
   return CONTINUE_E;
 }
 
