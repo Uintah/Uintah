@@ -53,7 +53,6 @@ public:
   // Declare Ports
   ITKDatatypeHandle inhandle_InputImage_;
 
-  ITKDatatypeOPort* outport_OutputImage_;
   ITKDatatypeHandle outhandle_OutputImage_;
 
   Image2DToImage3D(GuiContext*);
@@ -161,7 +160,6 @@ Image2DToImage3D::run2( itk::Object *obj_InputImage)
   
   outhandle_OutputImage_ = out_OutputImage_; 
   send_output_handle("OutputImage", outhandle_OutputImage_, true);
-  outport_OutputImage_->send(outhandle_OutputImage_);
   
   return true;
 }
@@ -171,13 +169,6 @@ void
 Image2DToImage3D::execute()
 {
   if (!get_input_handle("InputImage", inhandle_InputImage_)) return;
-
-  // check output ports
-  outport_OutputImage_ = (ITKDatatypeOPort *)get_oport("OutputImage");
-  if(!outport_OutputImage_) {
-    error("Unable to initialize oport");
-    return;
-  }
 
   // get input
   itk::Object* data_InputImage = inhandle_InputImage_.get_rep()->data_.GetPointer();

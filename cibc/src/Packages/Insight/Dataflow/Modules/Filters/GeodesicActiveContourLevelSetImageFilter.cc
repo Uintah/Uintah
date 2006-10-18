@@ -80,10 +80,7 @@ public:
   ITKDatatypeHandle inhandle_FeatureImage_;
   int last_FeatureImage_;
 
-  ITKDatatypeOPort* outport_OutputImage_;
   ITKDatatypeHandle outhandle_OutputImage_;
-
-  ITKDatatypeOPort* outport_SpeedImage_;
   ITKDatatypeHandle outhandle_SpeedImage_;
 
   GeodesicActiveContourLevelSetImageFilter(GuiContext*);
@@ -198,15 +195,14 @@ GeodesicActiveContourLevelSetImageFilter::run( itk::Object *obj_SeedImage, itk::
   out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
   
   outhandle_OutputImage_ = out_OutputImage_;
-  outport_OutputImage_->send(outhandle_OutputImage_);
-  
+  send_output_handle("OutputImage", outhandle_OutputImage_, true);
   
   ITKDatatype* out_SpeedImage_ = scinew ITKDatatype;
   
    out_SpeedImage_->data_ = const_cast<itk::Image<float,::itk::GetImageDimension<InputImageType>::ImageDimension>* >(dynamic_cast<FilterType* >(filter_.GetPointer())->GetSpeedImage());
   
   outhandle_SpeedImage_ = out_SpeedImage_;
-  outport_SpeedImage_->send(outhandle_SpeedImage_);
+  send_output_handle("SpeedImage", outhandle_SpeedImage_, true);
   
   return true;
 }
@@ -251,18 +247,6 @@ GeodesicActiveContourLevelSetImageFilter::execute()
   // check input ports
   if (!get_input_handle("SeedImage", inhandle_SeedImage_)) return;
   if (!get_input_handle("FeatureImage", inhandle_FeatureImage_)) return;
-
-  // check output ports
-  outport_OutputImage_ = (ITKDatatypeOPort *)get_oport("OutputImage");
-  if(!outport_OutputImage_) {
-    error("Unable to initialize oport");
-    return;
-  }
-  outport_SpeedImage_ = (ITKDatatypeOPort *)get_oport("SpeedImage");
-  if(!outport_SpeedImage_) {
-    error("Unable to initialize oport");
-    return;
-  }
 
   iterationCounter_OutputImage = 0;
   gui_update_OutputImage_.reset();
@@ -377,7 +361,7 @@ GeodesicActiveContourLevelSetImageFilter::do_it_OutputImage()
   ITKDatatype* out_OutputImage_ = scinew ITKDatatype;
   out_OutputImage_->data_ = tmp;
   outhandle_OutputImage_ = out_OutputImage_;
-  outport_OutputImage_->send_intermediate(outhandle_OutputImage_);
+  send_output_handle("OutputImage", outhandle_OutputImage_, true, true);
   return true;
 }
 

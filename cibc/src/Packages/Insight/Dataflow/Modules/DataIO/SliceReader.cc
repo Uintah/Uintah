@@ -315,9 +315,7 @@ SliceReader::execute()
   }
 
   // Send the data downstream.
-  //NrrdDataOPort *outport = (NrrdDataOPort *)get_oport("OutputSlice");
-  ITKDatatypeOPort *outport = (ITKDatatypeOPort *)get_oport("OutputSlice");
-  outport->send(read_handle_);
+  send_output_handle("OutputSlice", read_handle_, true);
 
   update_state(Completed);
 }

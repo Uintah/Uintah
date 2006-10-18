@@ -55,7 +55,6 @@ class ImageToNrrd : public Module {
 public:
   ITKDatatypeHandle inhandle1_;
 
-  NrrdOPort* onrrd_;
   NrrdDataHandle onrrd_handle_;
 
   ImageToNrrd(GuiContext*);
@@ -287,9 +286,7 @@ ImageToNrrd::run( itk::Object* obj1)
   
   create_nrrd<InputImageType,nrrdtype>(inhandle1_);
 
-  if(onrrd_handle_.get_rep()) {
-    onrrd_->send(onrrd_handle_);
-  }
+  send_output_handle("OutputNrrd", onrrd_handle_, true);
   return true;
 }
 
@@ -305,9 +302,7 @@ ImageToNrrd::run2( itk::Object* obj1)
   
   create_nrrd2<InputImageType,nrrdtype>(inhandle1_);
 
-  if(onrrd_handle_.get_rep()) {
-    onrrd_->send(onrrd_handle_);
-  }
+  send_output_handle("OutputNrrd", onrrd_handle_, true);
   return true;
 }
 
@@ -317,12 +312,6 @@ ImageToNrrd::execute()
 {
   if (!get_input_handle("InputImage", inhandle1_)) return;
 
-  onrrd_ = (NrrdOPort *)get_oport("OutputNrrd");  
-  if (!onrrd_) {
-    error("Unable to initialize oport 'OutputNrrd'.");
-    return;
-  }
-  
   // get input
   itk::Object *n = inhandle1_.get_rep()->data_.GetPointer();
   // can we operate on it?

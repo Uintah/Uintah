@@ -55,7 +55,6 @@ class NrrdToImage : public Module {
 public:
   NrrdDataHandle inrrd_handle_;
 
-  ITKDatatypeOPort *oimg_;
   ITKDatatypeHandle oimg_handle_;
 
   NrrdToImage(GuiContext*);
@@ -100,12 +99,6 @@ NrrdToImage::execute()
 {
   if (!get_input_handle("InputNrrd", inrrd_handle_)) return;
 
-  oimg_ = (ITKDatatypeOPort*)get_oport("OutputImage");
-  if(!oimg_) {
-    error("Unable to initialize oport 'OututImage'.");
-    return;
-  }
-
   Nrrd *n = inrrd_handle_->nrrd_;
   int dim = n->dim;
 
@@ -144,7 +137,8 @@ NrrdToImage::execute()
     error("Cannot convert > 3 dimensional data to an ITK Image");
     return;
   }
-  oimg_->send(oimg_handle_);
+
+  send_output_handle("OutputImage", oimg_handle_, true);
   
   return;
 }

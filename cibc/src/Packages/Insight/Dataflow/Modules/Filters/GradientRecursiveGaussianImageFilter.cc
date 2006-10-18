@@ -62,15 +62,12 @@ public:
   GuiInt  gui_normalize_across_scale_;
   
   bool execute_;
-  
 
   // Declare Ports
   ITKDatatypeHandle inhandle_InputImage_;
   int last_InputImage_;
 
-  ITKDatatypeOPort* outport_VectorImage_;
   ITKDatatypeHandle outhandle_VectorImage_;
-
   
   GradientRecursiveGaussianImageFilter(GuiContext*);
 
@@ -149,8 +146,8 @@ GradientRecursiveGaussianImageFilter::run( itk::Object *obj_InputImage)
   out_VectorImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
   
   outhandle_VectorImage_ = out_VectorImage_; 
-  outport_VectorImage_->send(outhandle_VectorImage_);
-  
+  send_output_handle("VectorImage", outhandle_VectorImage_, true);
+
   return true;
 }
 
@@ -180,13 +177,6 @@ GradientRecursiveGaussianImageFilter::execute()
 {
   // check input ports
   if (!get_input_handle("InputImage", inhandle_InputImage_)) return;
-
-  // check output ports
-  outport_VectorImage_ = (ITKDatatypeOPort *)get_oport("VectorImage");
-  if(!outport_VectorImage_) {
-    error("Unable to initialize oport");
-    return;
-  }
 
   // get input
   itk::Object* data_InputImage = inhandle_InputImage_.get_rep()->data_.GetPointer();

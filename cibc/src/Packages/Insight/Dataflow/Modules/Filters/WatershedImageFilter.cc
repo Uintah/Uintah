@@ -63,15 +63,12 @@ public:
   
   bool execute_;
   
-
   // Declare Ports
   ITKDatatypeHandle inhandle_InputImage_;
   int last_InputImage_;
 
-  ITKDatatypeOPort* outport_OutputImage_;
   ITKDatatypeHandle outhandle_OutputImage_;
 
-  
   WatershedImageFilter(GuiContext*);
 
   virtual ~WatershedImageFilter();
@@ -148,7 +145,7 @@ WatershedImageFilter::run( itk::Object *obj_InputImage)
   out_OutputImage_->data_ = dynamic_cast<FilterType* >(filter_.GetPointer())->GetOutput();
   
   outhandle_OutputImage_ = out_OutputImage_; 
-  outport_OutputImage_->send(outhandle_OutputImage_);
+  send_output_handle("OutputImage", outhandle_OutputImage_, true);
 
   return true;
 }
@@ -180,13 +177,6 @@ WatershedImageFilter::execute()
 {
   // check input ports
   if (!get_input_handle("InputImage", inhandle_InputImage_)) return;
-
-  // check output ports
-  outport_OutputImage_ = (ITKDatatypeOPort *)get_oport("OutputImage");
-  if(!outport_OutputImage_) {
-    error("Unable to initialize oport");
-    return;
-  }
 
   // get input
   itk::Object* data_InputImage = inhandle_InputImage_.get_rep()->data_.GetPointer();

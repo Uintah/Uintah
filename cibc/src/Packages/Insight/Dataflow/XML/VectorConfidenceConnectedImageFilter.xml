@@ -62,7 +62,7 @@ NOTE: the lower and upper threshold are restricted to lie within the valid numer
     </inputs>
     <outputs>  
       <port>
-        <name>OutputImge</name>
+        <name>OutputImage</name>
         <datatype>SCIRun::ITKDatatype</datatype>
       </port>
     </outputs>

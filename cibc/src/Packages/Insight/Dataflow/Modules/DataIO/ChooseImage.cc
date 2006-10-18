@@ -76,12 +76,6 @@ ChooseImage::~ChooseImage()
 void
 ChooseImage::execute()
 {
-  ITKDatatypeOPort *oimg = (ITKDatatypeOPort *)get_oport("OutputImage");
-  if (!oimg) {
-    error("Unable to initialize oport 'OututImage'.");
-    return;
-  }
-
   update_state(NeedData);
 
   port_range_type range = get_iports("InputImage");
@@ -131,7 +125,7 @@ ChooseImage::execute()
     ifield->get(field);
   }
   
-  oimg->send(field);
+  send_output_handle("OutputImage", field);
 }
 
 } // End namespace Insight
