@@ -107,6 +107,7 @@
                               target="GLWindow::mark_redraw"/>
                       
                     </object>
+<!--
                     <object class="FrameButton">
                       <var name="col">1</var>
                       <var name="row">9</var>
@@ -124,6 +125,7 @@
                       <signal name="Button::clicked" 
                               target="SliceWindow::zoom_out"/>
                     </object>                     
+-->
                   </object>
                 </object>  
                 </object>            

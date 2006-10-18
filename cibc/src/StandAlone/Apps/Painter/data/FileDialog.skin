@@ -5,10 +5,11 @@
     <var name="visible">$FileDialog::visible</var>
     <var name="color">#00000066</var>
 
-    <object class="Root::FocusRegion">
+    <object class="GrabFocusRegion">
       <var name="focus">$FileDialog::focus</var>
+<!--
       <signal name="FocusRegion::focus"
-              target="FocusGrab::Grab"/>
+              target="FocusGrab::Grab"/>-->
       
       <object class="Grid" id="FileDialogGrid">
         <var name="visible">$FileDialog::visible</var>

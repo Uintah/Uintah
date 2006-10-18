@@ -4,7 +4,7 @@
     <xi:include href="LayerMenu.skin" parse="xml"/>
     <object class="LayerMenu" id="LayerMenu"/>
     <object class="Grid">
-      <var name="rows">3</var>
+      <var name="rows">2</var>
       <var name="cols">1</var>
       
       <xi:include href="LayerMenuBar.skin" parse="xml"/>
@@ -15,12 +15,14 @@
         <var name="cell-height">35</var>
       </object>
 
+<!--
       <object class="StatusBar">
         <var name="row">3</var>
         <var name="col">1</var>
         <var name="cell-height">35</var>
         <var name="StatusBar::text" propagate="yes">$Layers::status</var>
       </object>
+-->
       
       
       <object class="Frame">

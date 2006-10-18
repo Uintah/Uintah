@@ -8,9 +8,9 @@
     <var name="LayerButton::indent" propagate="yes">10</var>
     <var name="row">$LayerButton::num</var>
     <var name="col">1</var>
-    <var name="thumbnail_height" propagate="yes">60</var>
-    <var name="button_width" propagate="yes">25</var>
-    <var name="button_height" propagate="yes">25</var>
+    <var name="thumbnail_height" propagate="yes">45</var>
+    <var name="button_width" propagate="yes">20</var>
+    <var name="button_height" propagate="yes">20</var>
     <var name="cell-height">$thumbnail_height</var>
 
     <var name="LayerButton::name" propagate="yes">Layer</var>
@@ -34,18 +34,18 @@
         <object class="Collection">
           <var name="row">2</var>
           <var name="col">2</var>
-          <var name="cell-width">25</var>
+          <var name="cell-width">$button_width</var>
           <object class="Grid">
             <var name="rows">3</var>
-            <var name="cols">3</var>
+            <var name="cols">1</var>
             <object class="ExpandButton">
               <var name="CheckButton::state" 
                    propagate="yes">$LayerButton::expand</var>
 
               <var name="row">2</var>
-              <var name="col">2</var>
-              <var name="cell-width">20</var>
-              <var name="cell-height">20</var>
+              <var name="col">1</var>
+              <var name="cell-width">$button_width</var>
+              <var name="cell-height">$button_height</var>
               <signal name="Button::clicked"
                       target="Painter::RebuildLayers"/>
               <signal name="Button::clicked"

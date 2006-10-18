@@ -34,15 +34,42 @@
 
 
         <object class="Grid">
-          <var name="rows">1</var>
+          <var name="rows">2</var>
           <var name="cols">5</var>
 
-          <object class="Layers">
+          <object class="StatusBar">
+            <var name="row-begin">2</var>
+            <var name="row-end">2</var>
+            <var name="col-begin">1</var>
+            <var name="col-end">5</var>
+            <var name="row">2</var>
+            <var name="col">1</var>
+
+            <var name="cell-height">35</var>
+            <var name="StatusBar::text" propagate="yes">$Painter::status</var>
+          </object>
+
+
+          <object class="Grid">
             <var name="col-begin" type="int">5</var>
             <var name="col-end" type="int">5</var>
             <var name="row-begin" type="int">1</var>
             <var name="row-end" type="int">1</var>
+
+            <var name="rows" type="int">2</var>
+            <var name="cols" type="int">1</var>
+
+            <object class="Layers">            
+              <var name="row" type="int">1</var>
+              <var name="col" type="int">1</var>
+            </object>
+
+            <object class="Tools">
+              <var name="row" type="int">2</var>
+              <var name="col" type="int">1</var>
+            </object>
           </object>
+
 
 
         <object class="Grid" id="MainGrid">
@@ -51,7 +78,7 @@
           <var name="row-begin" type="int">1</var>
           <var name="row-end" type="int">1</var>
 
-          <var name="rows">11</var>
+          <var name="rows">10</var>
           <var name="cols">1</var>
 
 
@@ -171,16 +198,8 @@
             <var name="col">1</var>
             <var name="cell-height">$Animation::variable-9</var>
           </object>
-
-
-
-          <object class="StatusBar">
-            <var name="row">11</var>
-            <var name="col">1</var>
-            <var name="cell-height">35</var>
-            <var name="StatusBar::text" propagate="yes">$Painter::status</var>
           </object>
-          </object>
+
         </object>
       </object>
     </object>
