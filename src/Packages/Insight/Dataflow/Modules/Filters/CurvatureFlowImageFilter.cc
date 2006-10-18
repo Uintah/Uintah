@@ -64,7 +64,6 @@ public:
   bool execute_;
   
   // Declare Ports
-  ITKDatatypeIPort* inport_InputImage_;
   ITKDatatypeHandle inhandle_InputImage_;
   int last_InputImage_;
 
@@ -179,17 +178,7 @@ void
 CurvatureFlowImageFilter::execute() 
 {
   // check input ports
-  inport_InputImage_ = (ITKDatatypeIPort *)get_iport("InputImage");
-  if(!inport_InputImage_) {
-    error("Unable to initialize iport");
-    return;
-  }
-
-  inport_InputImage_->get(inhandle_InputImage_);
-
-  if(!inhandle_InputImage_.get_rep()) {
-    return;
-  }
+  if (!get_input_handle("InputImage", inhandle_InputImage_)) return;
 
   // check output ports
   outport_OutputImage_ = (ITKDatatypeOPort *)get_oport("OutputImage");

@@ -65,7 +65,6 @@ public:
   bool run( itk::Object*   );
 
 private:
-  ITKDatatypeIPort*      iimg_;
   ITKDatatypeOPort*      oimg_;
   vector<GuiInt*> mins_;
   vector<GuiInt*> maxs_;
@@ -129,21 +128,12 @@ void
 ExtractImageFilter::execute()
 {
   update_state(NeedData);
-  iimg_ = (ITKDatatypeIPort *)get_iport("InputImage");
-  oimg_ = (ITKDatatypeOPort *)get_oport("OutputImage");
   
-  if (!iimg_) {
-    error("Unable to initialize iport 'InputImage'.");
-    return;
-  }
+  if (!get_input_handle("InputImage", imgH)) return;
+
+  oimg_ = (ITKDatatypeOPort *)get_oport("OutputImage");
   if (!oimg_) {
     error("Unable to initialize oport 'OutputImage'.");
-    return;
-  }
-  if (!iimg_->get(imgH))
-    return;
-  if (!imgH.get_rep()) {
-    error("Empty input Image.");
     return;
   }
   
