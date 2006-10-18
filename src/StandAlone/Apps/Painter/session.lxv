@@ -1,0 +1,23 @@
+<lexov version="1.0">
+  <volume>
+   <var name="name">CTHead.nhdr</var>
+   <var name="filename">/SCIRun/Data/volume/CThead.nhdr</var>
+   <var name="label">0</var>
+   <var name="visible">1</var>
+   <var name="colormap">0</var>
+   <var name="opacity">1.0</var>
+   <var name="clut_min">0.0</var>
+   <var name="clut_max">2500.0</var>
+  </volume>
+
+  <volume>
+    <var name="name">ba03.hdr</var>
+    <var name="filename">/SCIRun/Data/UCLA/ba03.nhdr</var>
+    <var name="label">0</var>
+    <var name="visible">1</var>
+    <var name="colormap">0</var>
+    <var name="opacity">1.0</var>
+    <var name="clut_min">0.0</var>
+    <var name="clut_max">2500.0</var>
+  </volume>
+</lexov>
