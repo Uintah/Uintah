@@ -76,11 +76,9 @@ public:
   
 
   // Declare Ports
-  ITKDatatypeIPort* inport_SeedImage_;
   ITKDatatypeHandle inhandle_SeedImage_;
   int last_SeedImage_;
 
-  ITKDatatypeIPort* inport_FeatureImage_;
   ITKDatatypeHandle inhandle_FeatureImage_;
   int last_FeatureImage_;
 
@@ -258,29 +256,8 @@ void
 CannySegmentationLevelSetImageFilter::execute() 
 {
   // check input ports
-  inport_SeedImage_ = (ITKDatatypeIPort *)get_iport("SeedImage");
-  if(!inport_SeedImage_) {
-    error("Unable to initialize iport");
-    return;
-  }
-
-  inport_SeedImage_->get(inhandle_SeedImage_);
-
-  if(!inhandle_SeedImage_.get_rep()) {
-    return;
-  }
-
-  inport_FeatureImage_ = (ITKDatatypeIPort *)get_iport("FeatureImage");
-  if(!inport_FeatureImage_) {
-    error("Unable to initialize iport");
-    return;
-  }
-
-  inport_FeatureImage_->get(inhandle_FeatureImage_);
-
-  if(!inhandle_FeatureImage_.get_rep()) {
-    return;
-  }
+  if (!get_input_handle("SeedImage", inhandle_SeedImage_)) return;
+  if (!get_input_handle("FeatureImage", inhandle_FeatureImage_)) return;
 
   // check output ports
   outport_OutputImage_ = (ITKDatatypeOPort *)get_oport("OutputImage");
