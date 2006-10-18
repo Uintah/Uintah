@@ -14,6 +14,7 @@
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/MPMPhysicalBCFactory.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/ForceBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/PressureBC.h>
+#include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/HeatFluxBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/PhysicalBC/CrackBC.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/MPMMaterial.h>
 #include <Packages/Uintah/CCA/Components/MPM/ConstitutiveModel/ConstitutiveModel.h>
@@ -188,6 +189,13 @@ int ParticleCreator::getLoadCurveID(const Point& pp, const Vector& dxpp)
         return pbc->loadCurveID(); 
       }
     }
+    else if (bcs_type == "HeatFlux") {      
+      HeatFluxBC* hfbc = 
+        dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      if (hfbc->flagMaterialPoint(pp, dxpp)) {
+        return hfbc->loadCurveID(); 
+      }
+    }
   }
   return 0;
 }
@@ -201,6 +209,11 @@ void ParticleCreator::printPhysicalBCs()
       PressureBC* pbc = 
         dynamic_cast<PressureBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
       cerr << *pbc << endl;
+    }
+    if (bcs_type == "HeatFlux") {
+      HeatFluxBC* hfbc = 
+        dynamic_cast<HeatFluxBC*>(MPMPhysicalBCFactory::mpmPhysicalBCs[ii]);
+      cerr << *hfbc << endl;
     }
   }
 }
