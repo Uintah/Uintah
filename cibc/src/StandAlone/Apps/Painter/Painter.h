@@ -161,6 +161,8 @@ private:
   void                  set_all_slices_tex_dirty();
   ColorMapHandle        get_colormap(int);
   void                  rebuild_layer_buttons();
+  void                  get_data_from_layer_buttons();
+
   void                  build_layer_button(unsigned int &, NrrdVolume *);
   void                  build_volume_list(NrrdVolumes &,NrrdVolume *vol=0);
 
@@ -230,6 +232,9 @@ private:
   CatcherFunction_t     CreateLabelChild;
 
   CatcherFunction_t     LoadSession;
+  CatcherFunction_t     SaveSession;
+
+  CatcherFunction_t     RebuildLayers;
 
 
   typedef vector<ColorMapHandle> ColorMaps_t;

@@ -73,7 +73,8 @@ NrrdVolume::NrrdVolume(Painter *painter,
   stub_axes_(),
   transform_(),
   keep_(true),
-  visible_(painter_->get_vars(),"volume_visible",1)
+  visible_(painter->get_vars(), "FOO", true),
+  expand_(true)
 {
   set_nrrd(nrrd);
 }
@@ -145,8 +146,10 @@ NrrdVolume::NrrdVolume(NrrdVolume *copy,
   stub_axes_(copy->stub_axes_),
   transform_(),
   keep_(copy->keep_),
-  visible_(painter_->get_vars(),"volume_visible")
+  visible_(),
+  expand_(copy->expand_)
 {
+  visible_ = copy->visible_;
   copy->mutex_->lock();
   mutex_->lock();
 

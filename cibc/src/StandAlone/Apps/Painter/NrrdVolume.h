@@ -101,6 +101,7 @@ public:
   string              name_;
   Mutex *             mutex_;
 
+
   double	      opacity_;
   double              clut_min_;
   double              clut_max_;
@@ -113,6 +114,7 @@ public:
   DenseMatrix         transform_;
   bool                keep_;
   Skinner::Var<bool>  visible_;
+  bool                expand_;
 };
 
 typedef vector<NrrdVolume *>		NrrdVolumes;

@@ -37,6 +37,7 @@
 #include <StandAlone/Apps/Painter/ITKConfidenceConnectedImageFilterTool.h>
 #include <StandAlone/Apps/Painter/FloodfillTool.h>
 #include <StandAlone/Apps/Painter/SessionReader.h>
+#include <StandAlone/Apps/Painter/SessionWriter.h>
 
 #include <sci_comp_warn_fixes.h>
 #include <iostream>
@@ -133,11 +134,17 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::AbortFilterOn);
 
   REGISTER_CATCHER_TARGET(Painter::LoadSession);
+  REGISTER_CATCHER_TARGET(Painter::SaveSession);
+
   REGISTER_CATCHER_TARGET(Painter::LoadVolume);
+
+
   REGISTER_CATCHER_TARGET(Painter::ResampleVolume);
 
   REGISTER_CATCHER_TARGET(Painter::CreateLabelVolume);  
   REGISTER_CATCHER_TARGET(Painter::CreateLabelChild);
+
+  REGISTER_CATCHER_TARGET(Painter::RebuildLayers);
    
   return STOP_E;
 }
@@ -978,6 +985,28 @@ Painter::LoadSession(event_handle_t event) {
   
 
 
+BaseTool::propagation_state_e 
+Painter::SaveSession(event_handle_t event) {
+  Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
+  ASSERT(signal);
+  string filename = signal->get_vars()->get_string("filename");
+  
+  if ( SessionWriter::write_session(filename, volumes_)) {
+    status_ =  "Successfully Loaded sesion: "+filename;
+  } else {
+    status_ =  "Error loading session "+filename;
+  }
+
+  return CONTINUE_E;
+}
+  
+
+
+BaseTool::propagation_state_e 
+Painter::RebuildLayers(event_handle_t) {
+  rebuild_layer_buttons();
+  return CONTINUE_E;
+}
 
   
 } // end namespace SCIRun
