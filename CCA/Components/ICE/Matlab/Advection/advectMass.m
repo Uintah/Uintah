@@ -1,27 +1,27 @@
 %_____________________________________________________________
-% Function:   advectRho
-% computes the advection of rho using vanLeer Limiter
-function[q_advected,gradLim,grad_x, rho_slab, rho_vrtx_1, rho_vrtx_2] = advectRho( rho,ofs, rx,xvel_FC, delX, nCells)
+% Function:   advectMass
+% computes the advection of mass using vanLeer Limiter
+function[q_advected,gradLim,grad_x, mass_slab, mass_vrtx_1, mass_vrtx_2] = advectMass( mass,ofs, rx,xvel_FC, dx, nCells)
   
-  [gradLim, grad_x, rho_vrtx_1, rho_vrtx_2] = gradientLimiter_Rho(rho, delX, nCells);
-  [rho_slab, gradLim, grad_x]  = qAverageFluxRho(rho, rx, grad_x, gradLim, nCells);
-  q_advected = advectSlabs(xvel_FC, rho_slab, ofs, nCells);
+  [gradLim, grad_x, mass_vrtx_1, mass_vrtx_2] = gradientLimiter_Mass(mass, dx, nCells);
+  [mass_slab, gradLim, grad_x]                = qAverageFluxMass(mass, rx, grad_x, gradLim, nCells);
+  q_advected                                  = advectSlabs(xvel_FC, mass_slab, ofs, nCells);
 
 end
 
 %_____________________________________________________________
-% Function gradientLimiter_Rho
+% Function gradientLimiter_Mass
 % Computes standard the gradient, the vanLeer limiter 
-% and vertex values of rho (q_vertex1, q_vrtx2).  The vertex values
+% and vertex values of mass (q_vertex1, q_vrtx2).  The vertex values
 % are needed to compute the compatible flux limiter.
-function[gradLim, grad_x, q_vrtx_1, q_vrtx_2] = gradientLimiter_Rho(q,delX, nCells)
-  fprintf('gradientLimiter_ Rho\n');
+function[gradLim, grad_x, q_vrtx_1, q_vrtx_2] = gradientLimiter_Mass(q,dx, nCells)
+  fprintf('gradientLimiter_Mass\n');
   for( j =2:nCells-1)
-    grad_x(j) = (q(j+1) - q(j-1))./(2.0*delX);
+    grad_x(j) = (q(j+1) - q(j-1))./(2.0*dx);
 
     %-----------q vertex min/max
-    q_vrtx_1_tmp = q(j) + grad_x(j) * delX/2.0;
-    q_vrtx_2_tmp = q(j) - grad_x(j) * delX/2.0;
+    q_vrtx_1_tmp = q(j) + grad_x(j) * dx/2.0;
+    q_vrtx_2_tmp = q(j) - grad_x(j) * dx/2.0;
 
     q_vrtx_max = max(q_vrtx_1_tmp, q_vrtx_2_tmp);
     q_vrtx_min = min(q_vrtx_1_tmp, q_vrtx_2_tmp);
@@ -39,8 +39,8 @@ function[gradLim, grad_x, q_vrtx_1, q_vrtx_2] = gradientLimiter_Rho(q,delX, nCel
     tmp        = min(1,alphaMax);
     gradLim(j) = min(tmp, alphaMin);
         
-    q_vrtx_1(j) = q(j) + (grad_x(j) * gradLim(j) * delX/2.0);
-    q_vrtx_2(j) = q(j) - (grad_x(j) * gradLim(j) * delX/2.0);
+    q_vrtx_1(j) = q(j) + (grad_x(j) * gradLim(j) * dx/2.0);
+    q_vrtx_2(j) = q(j) - (grad_x(j) * gradLim(j) * dx/2.0);
       
 %     if (q_vrtx_max > q_max) | (q_vrtx_min < q_min)
 %       fprintf(' j %i grad_x %e gradLim %e alphaMax %e alphaMin %e\n',j, grad_x(j), gradLim(j), alphaMax, alphaMin);
@@ -53,9 +53,9 @@ end
   
   
 %_____________________________________________________________
-% Function:  qAverageFluxRho
+% Function:  qAverageFluxMass
 % computes Q in the slab according to the reference. 
-function[q_slab, gradLim, grad_x] = qAverageFluxRho(q, rx, grad_x, gradLim, nCells)
+function[q_slab, gradLim, grad_x] = qAverageFluxMass(q, rx, grad_x, gradLim, nCells)
   clear j;
   fprintf( 'inside qAverageFluxRho \n');
   for( j =1:nCells-1)
