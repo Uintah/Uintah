@@ -53,9 +53,13 @@ IF(CMAKE_USE_PTHREADS)
   SET(Core_Thread_SRCS ${Core_Thread_SRCS} Thread_pthreads.cc Time_unix.cc)
 ENDIF(CMAKE_USE_PTHREADS)
 
-IF(NOT BUILD_SHARED_LIBS)
+IF(WIN32)
+  SET(Core_Thread_SRCS ${Core_Thread_SRCS} Thread_win32.cc Time_win32.cc)
+ENDIF(WIN32)
+
+IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Core_Thread)
-ENDIF(NOT BUILD_SHARED_LIBS)
+ENDIF(BUILD_SHARED_LIBS)
 
 ADD_LIBRARY(Core_Thread ${Core_Thread_SRCS})
 

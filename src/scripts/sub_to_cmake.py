@@ -109,9 +109,9 @@ def gen_cmake(filename):
         print libs
         print ')'
         print ''
-        print 'IF(NOT BUILD_SHARED_LIBS)'
+        print 'IF(BUILD_SHARED_LIBS)'
         print '  ADD_DEFINITIONS(-DBUILD_%s)' % srcdir_
-        print 'ENDIF(NOT BUILD_SHARED_LIBS)'
+        print 'ENDIF(BUILD_SHARED_LIBS)'
     if dirs != '':
         print 'SUBDIRS(%s)' % dirs
         print ''

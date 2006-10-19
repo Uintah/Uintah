@@ -39,9 +39,9 @@
 #include <Dataflow/Network/NetworkIO.h>
 #include <main/sci_version.h>
 #ifdef _WIN32
-#include <Core/Geom/Win32OpenGLContext.h>
+#  include <Core/Geom/Win32OpenGLContext.h>
 #else
-#include <Core/Geom/X11OpenGLContext.h>
+#  include <Core/Geom/X11OpenGLContext.h>
 #endif
 #include <tcl.h>
 #include <tk.h>
@@ -62,7 +62,11 @@ using namespace SCIRun;
 
 #ifdef _WIN32
 #  define EXPERIMENTAL_TCL_THREAD
-#  define SCISHARE __declspec(dllimport)
+#  ifndef BUILD_STATIC
+#    define SCISHARE __declspec(dllimport)
+#  else
+#    define SCISHARE
+#  endif
 #else
 #  define SCISHARE
 #endif // _WIN32

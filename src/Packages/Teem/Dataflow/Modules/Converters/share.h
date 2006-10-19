@@ -1,6 +1,6 @@
 #undef SCISHARE
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(BUILD_STATIC)
 #ifdef BUILD_Packages_Teem_Dataflow_Modules_Converters
 #define SCISHARE __declspec(dllexport)
 #else

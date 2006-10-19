@@ -53,8 +53,8 @@
 using namespace std;
 
 #ifdef _WIN32
-#include <windows.h>
-#ifdef _MSC_VER
+#  include <windows.h>
+#  ifdef _MSC_VER
 
 string vstext;
 void set_vc_dirs()
@@ -73,12 +73,16 @@ void set_vc_dirs()
   vstext+= "@SET LIB=" + path_to_vc + "\\lib;" + path_to_psdk + "\\Lib";
 }
 
-#endif
-#undef SCISHARE
-#define SCISHARE __declspec(dllexport)
+#  endif
+#  undef SCISHARE
+#  ifndef BUILD_STATIC
+#    define SCISHARE __declspec(dllexport)
+#  else
+#    define SCISHARE
+#  endif
 #else
-#include <unistd.h>
-#define SCISHARE
+#  include <unistd.h>
+#  define SCISHARE
 #endif
 
 namespace SCIRun {

@@ -53,7 +53,7 @@ using namespace std;
 namespace SCIRun {
 
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(BUILD_STATIC)
 #define SCISHARE __declspec(dllimport)
 #else
 #define SCISHARE

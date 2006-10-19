@@ -44,12 +44,6 @@
 #include <fstream>
 #include <string>
 
-#ifdef _WIN32
-#define SCISHARE __declspec(dllimport)
-#else // _WIN32
-#define SCISHARE
-#endif
-
 namespace SCIRun {
   namespace Skinner {
     class ColorMap2D : public Parent {

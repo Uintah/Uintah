@@ -82,7 +82,11 @@
 #  undef far
 #  undef min
 #  undef max
-#  define SCISHARE __declspec(dllimport)
+#  if !defined(BUILD_STATIC)
+#    define SCISHARE __declspec(dllimport)
+#  else
+#    define SCISHARE
+#  endif
 #else
 #  define SCISHARE
 #  include <sys/time.h>

@@ -1,6 +1,6 @@
 #undef SCISHARE
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(BUILD_STATIC)
 #ifdef BUILD_Dataflow_TCLThread
 #define SCISHARE __declspec(dllexport)
 #else

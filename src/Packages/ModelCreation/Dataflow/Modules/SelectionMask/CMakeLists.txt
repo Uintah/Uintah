@@ -59,6 +59,6 @@ TARGET_LINK_LIBRARIES(Packages_ModelCreation_Dataflow_Modules_SelectionMask
   ${M_LIBRARY}
 )
 
-IF(NOT BUILD_SHARED_LIBS)
+IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Packages_ModelCreation_Dataflow_Modules_SelectionMask)
-ENDIF(NOT BUILD_SHARED_LIBS)
+ENDIF(BUILD_SHARED_LIBS)

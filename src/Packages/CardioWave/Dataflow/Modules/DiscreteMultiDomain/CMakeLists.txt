@@ -68,6 +68,6 @@ TARGET_LINK_LIBRARIES(Packages_CardioWave_Dataflow_Modules_DiscreteMultiDomain
   ${M_LIBRARY}
 )
 
-IF(NOT BUILD_SHARED_LIBS)
+IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Packages_CardioWave_Dataflow_Modules_DiscreteMultiDomain)
-ENDIF(NOT BUILD_SHARED_LIBS)
+ENDIF(BUILD_SHARED_LIBS)

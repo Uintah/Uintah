@@ -45,7 +45,7 @@
 #include <fstream>
 #include <string>
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(BUILD_STATIC)
 #define SCISHARE __declspec(dllimport)
 #else // _WIN32
 #define SCISHARE

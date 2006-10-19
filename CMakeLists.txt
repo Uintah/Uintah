@@ -73,6 +73,9 @@ IF(WIN32)
   IF(NOT BUILD_SHARED_LIBS)
     ADD_DEFINITIONS(-DBUILD_STATIC)
   ENDIF(NOT BUILD_SHARED_LIBS)
+#  This defines M_PI for windows
+  ADD_DEFINITIONS(-D_USE_MATH_DEFINES)
+  ADD_DEFINITIONS(-D_WIN32_WINNT=0x0500)
 ENDIF(WIN32)
 
 #-----------------------------------------------------------------------------
@@ -160,6 +163,7 @@ ENDIF(CMAKE_USE_PTHREADS)
 # DV Not sure if socket library needs to be defined for cygwin
 IF(WIN32 AND NOT CYGWIN)
   SET(SOCKET_LIBRARY ws2_32 CACHE INTERNAL "Socket library ws2_32")
+  SET(THREAD_LIBRARY winmm CACHE INTERNAL "Time functionality library winmm")
 ENDIF(WIN32 AND NOT CYGWIN)
 
 #-----------------------------------------------------------------------------
@@ -403,11 +407,10 @@ ENDIF(WIN32)
 # OpenGL library
 FIND_PACKAGE( OpenGL )
 IF(OPENGL_LIBRARIES AND OPENGL_INCLUDE_DIR)
-  SET(GL_LIBRARY ${OPENGL_gl_LIBRARY})
+  SET(GL_LIBRARY ${OPENGL_gl_LIBRARY} ${OPENGL_glu_LIBRARY} CACHE INTERNAL "OpenGL Libs")
   SET(GL_INCLUDE ${OPENGL_INCLUDE_DIR})
   SET(SCIRUN_INCLUDE_ADDITIONAL ${SCIRUN_INCLUDE_ADDITIONAL} ${GL_INCLUDE})
 ENDIF(OPENGL_LIBRARIES AND OPENGL_INCLUDE_DIR)
-
 #-----------------------------------------------------------------------------
 # Freetype
 FIND_LIBRARY(FREETYPE_LIBRARY 
