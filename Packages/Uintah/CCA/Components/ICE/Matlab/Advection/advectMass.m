@@ -17,11 +17,17 @@ end
 function[gradLim, grad_x, q_vrtx_1, q_vrtx_2] = gradientLimiter_Mass(q,dx, nCells)
   fprintf('gradientLimiter_Mass\n');
   for( j =2:nCells-1)
-    grad_x(j) = (q(j+1) - q(j-1))./(2.0*dx);
+  
+    alpha = dx(j+1)./dx(j-1);
+    numerator   = q(j+1) + (alpha^2 - 1.0)* q(j) - alpha^2 * q(j-1);
+    denominator = alpha * (alpha + 1.0) * dx(j-1);
+    grad_x(j) = numerator./denominator;
+  
+    %grad_x(j) = (q(j+1) - q(j-1))./(2.0*dx(j));
 
     %-----------q vertex min/max
-    q_vrtx_1_tmp = q(j) + grad_x(j) * dx/2.0;
-    q_vrtx_2_tmp = q(j) - grad_x(j) * dx/2.0;
+    q_vrtx_1_tmp = q(j) + grad_x(j) * dx(j)/2.0;
+    q_vrtx_2_tmp = q(j) - grad_x(j) * dx(j)/2.0;
 
     q_vrtx_max = max(q_vrtx_1_tmp, q_vrtx_2_tmp);
     q_vrtx_min = min(q_vrtx_1_tmp, q_vrtx_2_tmp);
@@ -39,8 +45,8 @@ function[gradLim, grad_x, q_vrtx_1, q_vrtx_2] = gradientLimiter_Mass(q,dx, nCell
     tmp        = min(1,alphaMax);
     gradLim(j) = min(tmp, alphaMin);
         
-    q_vrtx_1(j) = q(j) + (grad_x(j) * gradLim(j) * dx/2.0);
-    q_vrtx_2(j) = q(j) - (grad_x(j) * gradLim(j) * dx/2.0);
+    q_vrtx_1(j) = q(j) + (grad_x(j) * gradLim(j) * dx(j)/2.0);
+    q_vrtx_2(j) = q(j) - (grad_x(j) * gradLim(j) * dx(j)/2.0);
       
 %     if (q_vrtx_max > q_max) | (q_vrtx_min < q_min)
 %       fprintf(' j %i grad_x %e gradLim %e alphaMax %e alphaMin %e\n',j, grad_x(j), gradLim(j), alphaMax, alphaMin);
