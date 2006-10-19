@@ -9,9 +9,7 @@ Oren 18-JUL-2005
 
 Description of current directories:
 
-ICETodd - Todd's original (~2004) matlab simulation of ICE for
-          the one-dimensional shocktube problem,
-          mid-2004.
+Advection - 1D compatible flux advection operator test. 
 
 Regrider - AMR patch generation algorithm (clustering from refinement
           flags) in matlab. Both Berger-Rigotsous (BR directory) for
