@@ -47,6 +47,7 @@
 #include <iostream>
 
 #include <X11/keysym.h>
+#include <Core/Events/keysyms.h>
 
 namespace SCIRun {
 
@@ -97,14 +98,35 @@ namespace SCIRun {
       sci_event->set_key_state(KeyEvent::KEY_RELEASE_E);
 
     unsigned int state = 0;
-    if (xeventp->state & ShiftMask)    state |= KeyEvent::SHIFT_E;
-    if (xeventp->state & LockMask)      state |= KeyEvent::CAPS_LOCK_E;
+    bool shift = xeventp->state & ShiftMask;
+    bool lock  = xeventp->state & LockMask;
+    if (shift)                          state |= KeyEvent::SHIFT_E;
+    if (lock)                           state |= KeyEvent::CAPS_LOCK_E;
     if (xeventp->state & ControlMask)   state |= KeyEvent::CONTROL_E;
     if (xeventp->state & Mod1Mask)      state |= KeyEvent::ALT_E;
 
+    int keyval = XLookupKeysym(xeventp,0);
+
+    if ((shift || lock) && (keyval >= SCIRun_a) && (keyval <= SCIRun_z)) {
+      keyval -= SCIRun_a - SCIRun_A;
+    } else if (shift && keyval == SCIRun_minus) {
+      keyval = SCIRun_underscore;
+    } else if (shift && keyval == SCIRun_equal) {
+      keyval = SCIRun_plus;
+    } else if (shift && keyval == SCIRun_quoteleft) {
+      keyval = SCIRun_asciitilde;
+    } else if (keyval == SCIRun_Shift_L ||
+               keyval == SCIRun_Shift_R ||
+               keyval == SCIRun_Control_L ||
+               keyval == SCIRun_Control_R ||
+               keyval == SCIRun_Caps_Lock) {
+      return 0;
+    }
+              
+
     sci_event->set_modifiers(state);
     sci_event->set_time(xeventp->time);
-    sci_event->set_keyval(XLookupKeysym(xeventp,0));
+    sci_event->set_keyval(keyval);
     if (sci_getenv_p("SCI_DEBUG")) {
       cerr << "Keyval: " << sci_event->get_keyval() << std::endl;
     }

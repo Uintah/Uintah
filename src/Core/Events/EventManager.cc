@@ -34,6 +34,15 @@
 #include <Core/Util/Timer.h>
 #include <iostream>
 
+#include <sci_defs/x11_defs.h>
+
+#if defined(__APPLE__) && !defined(HAVE_X11)
+namespace Carbon {
+#  include <Carbon/Carbon.h>
+}
+#endif
+
+
 namespace SCIRun {
 
 EventManager::id_tm_map_t EventManager::mboxes_;
@@ -88,6 +97,8 @@ EventManager::~EventManager()
   if (sci_getenv_p("SCI_DEBUG")) {
     cerr << "EventManager has been destroyed." << endl;
   }
+
+
 }
 
 
@@ -339,6 +350,10 @@ EventManager::run()
     }
     mboxes_lock_.unlock();
   } while (!done);
+#if defined(__APPLE__) && !defined(HAVE_X11)
+  Carbon::QuitApplicationEventLoop();
+#endif
+
 }
 
 } // namespace SCIRun

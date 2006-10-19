@@ -745,7 +745,8 @@ Painter::maker(Skinner::Variables *vars)
 
 
 NrrdVolume *
-Painter::load_volume(const string &filename) {
+Painter::load_volume(string filename) {
+  filename = substituteTilde(filename);
   if (!validFile(filename)) {
     return 0;
   }

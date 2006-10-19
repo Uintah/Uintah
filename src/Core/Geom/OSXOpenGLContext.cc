@@ -95,7 +95,7 @@ OSXOpenGLContext::create_context(int x,
   win_flags &= GetAvailableWindowAttributes(kDocumentWindowClass);
 
   CreateNewWindow(kDocumentWindowClass, win_flags, &win_rect, &window_);
-  SetWindowTitleWithCFString(window_, CFSTR("Painter"));
+  SetWindowTitleWithCFString(window_, CFSTR("LeXoV"));
 
   ProcessSerialNumber id;
   GetCurrentProcess(&id);
@@ -139,6 +139,7 @@ OSXOpenGLContext::~OSXOpenGLContext()
   release();
   X11Lock::lock();
   aglDestroyContext(context_);
+  DisposeWindow(window_);
   X11Lock::unlock();
 }
 

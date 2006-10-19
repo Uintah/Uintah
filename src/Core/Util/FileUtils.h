@@ -77,6 +77,8 @@ SCISHARE bool validFile(std::string filename);
 SCISHARE bool validDir(std::string filename);
 
 SCISHARE string autocomplete(const string &);
+SCISHARE string substituteTilde(const string &dirstr);
+
 
 } // End namespace SCIRun
 

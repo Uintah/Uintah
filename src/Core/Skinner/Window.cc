@@ -96,7 +96,8 @@ namespace SCIRun {
                              (unsigned)width_,(unsigned)height_,
                              border_);
       ASSERT(context);
-      spawner_runnable_ = new OSXEventSpawner(get_id(), context->window_);
+      //      spawner_runnable_ =
+      new OSXEventSpawner(get_id(), context->window_);
       context_ = context;
 #endif
 

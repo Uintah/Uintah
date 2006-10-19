@@ -43,6 +43,7 @@
 #include <iostream>
 
 #include <Carbon/Carbon.h>
+#include <Core/Events/keysyms.h>
 
 namespace SCIRun {
 
@@ -72,6 +73,34 @@ window_event_callback(EventHandlerCallRef nextHandler,
 
 
 static pascal OSStatus
+window_close_event_callback(EventHandlerCallRef nextHandler,
+                            EventRef theEvent,
+                            void *userData)
+{
+  ASSERT (GetEventClass(theEvent) == kEventClassWindow);
+  QuitEvent *event = new QuitEvent();
+  event->set_target(*((string *)userData));
+  EventManager::add_event(event);
+  
+  return (CallNextEventHandler(nextHandler, theEvent));
+}
+
+
+
+static pascal OSStatus
+quit_event_callback(EventHandlerCallRef nextHandler,
+                    EventRef theEvent,
+                    void *userData)
+{
+  cerr << "quit\n";
+  QuitEvent *event = new QuitEvent();
+  EventManager::add_event(event);
+  
+  return (CallNextEventHandler(nextHandler, theEvent));
+}
+
+
+static pascal OSStatus
 mouse_event_callback(EventHandlerCallRef nextHandler,
                      EventRef theEvent,
                      void *userData)
@@ -83,6 +112,33 @@ mouse_event_callback(EventHandlerCallRef nextHandler,
   case kEventMouseUp      : state = PointerEvent::BUTTON_RELEASE_E; break;
   case kEventMouseDragged : state = PointerEvent::MOTION_E; break;
   case kEventMouseMoved   : state = PointerEvent::MOTION_E; break;
+  case kEventMouseWheelMoved: {
+    EventMouseWheelAxis axis;
+    GetEventParameter(theEvent, kEventParamMouseWheelAxis, typeMouseWheelAxis,
+                      NULL, sizeof(axis), NULL, &axis);
+    // We only handle the Y for now
+    if (axis != 1) {
+      return (CallNextEventHandler(nextHandler, theEvent));
+    }
+
+    static bool down = true;
+    // For some reason, kEventMouseWheelMoved events come in pairs, so we'll
+    // just assume one is for button down, and the next is for button up
+    state = (down ? PointerEvent::BUTTON_PRESS_E : 
+             PointerEvent::BUTTON_RELEASE_E);
+    down = !down;
+    
+    SInt32 delta;
+    GetEventParameter(theEvent, kEventParamMouseWheelDelta, typeSInt32,
+                      NULL, sizeof(delta), NULL, &delta);
+
+    if (delta > 0) {
+      state |= PointerEvent::BUTTON_4_E;
+    } else if (delta < 0) {
+      state |= PointerEvent::BUTTON_5_E;
+    }
+  } break;
+    
   default: break;
   }
 
@@ -95,8 +151,9 @@ mouse_event_callback(EventHandlerCallRef nextHandler,
 
   switch (button) {
   case 1: state |= PointerEvent::BUTTON_1_E; break;
-  case 2: state |= PointerEvent::BUTTON_2_E; break;
-  case 3: state |= PointerEvent::BUTTON_3_E; break;
+    // Swap buttons 2 and 3 for mac
+  case 3: state |= PointerEvent::BUTTON_2_E; break;
+  case 2: state |= PointerEvent::BUTTON_3_E; break;
   case 4: state |= PointerEvent::BUTTON_4_E; break;
   case 5: state |= PointerEvent::BUTTON_5_E; break;
   default: break;
@@ -153,9 +210,22 @@ key_event_callback(EventHandlerCallRef nextHandler,
   GetEventParameter(theEvent, kEventParamKeyMacCharCodes, typeChar,
                     NULL, sizeof(keychar), NULL, &keychar);
 
-  sci_event->set_keyval(keychar);
-  cerr << "keycode: " << keycode << std::endl;
-  cerr << "keychar: " << int(keychar) << std::endl;
+
+  int keyval = keychar;
+  switch (keychar) {
+  case 0x0D: keyval = SCIRun_Return; break;
+  case 0x09: keyval = SCIRun_Tab; break;
+  case 0x08: keyval = SCIRun_BackSpace; break;
+  case 0x1C: keyval = SCIRun_Left; break;
+  case 0x1D: keyval = SCIRun_Right; break;
+  case 0x1E: keyval = SCIRun_Up; break;
+  case 0x1F: keyval = SCIRun_Down; break;
+
+  default: break;
+  }
+
+  sci_event->set_keyval(keyval);
+
   // Send it to our own event manager
   sci_event->set_target(*((string *)userData));
   EventManager::add_event(sci_event);
@@ -265,7 +335,8 @@ OSXEventSpawner::OSXEventSpawner(const string &target,
     { kEventClassMouse, kEventMouseDown },
     { kEventClassMouse, kEventMouseUp },
     { kEventClassMouse, kEventMouseMoved },
-    { kEventClassMouse, kEventMouseDragged } 
+    { kEventClassMouse, kEventMouseDragged },
+    { kEventClassMouse, kEventMouseWheelMoved } 
   };
 
   
@@ -279,7 +350,7 @@ OSXEventSpawner::OSXEventSpawner(const string &target,
   
   static EventTypeSpec key_flags[] = {
     { kEventClassKeyboard, kEventRawKeyDown },
-    { kEventClassKeyboard, kEventRawKeyUp },
+    { kEventClassKeyboard, kEventRawKeyUp }
   };
   
   EventHandlerUPP key_callback = NewEventHandlerUPP(key_event_callback);
@@ -289,6 +360,41 @@ OSXEventSpawner::OSXEventSpawner(const string &target,
                             key_flags, 
                             &target_, 0L);
   DisposeEventHandlerUPP(key_callback);
+
+
+  static EventTypeSpec close_flags[] = {
+    { kEventClassWindow, kEventWindowClose }
+  };
+  
+  EventHandlerUPP window_close_callback = 
+    NewEventHandlerUPP(window_close_event_callback);
+  InstallWindowEventHandler(window, 
+                            window_close_callback, 
+                            GetEventTypeCount(close_flags),
+                            close_flags, 
+                            &target_, 0L);
+  DisposeEventHandlerUPP(window_close_callback);
+
+
+  // OSX sucks, it quits the applicaiton event loop before sending 
+  // these quit events!  ARGH!
+#if 0
+  static EventTypeSpec quit_flags[] = {
+    { kEventClassApplication, kEventAppQuit },
+    { kEventClassCommand, kHICommandQuit }
+  };
+  
+  EventHandlerUPP quit_callback = 
+    NewEventHandlerUPP(quit_event_callback);
+  InstallWindowEventHandler(window, 
+                            quit_callback, 
+                            GetEventTypeCount(quit_flags),
+                            quit_flags, 
+                            &target_, 0L);
+  DisposeEventHandlerUPP(quit_callback);
+#endif
+
+
   
   X11Lock::unlock();
 }
@@ -302,14 +408,11 @@ OSXEventSpawner::iterate()
 {
   EventRef theEvent;
   EventTargetRef theTarget = GetEventDispatcherTarget();
-  cerr << "Iterating\n";
   while (ReceiveNextEvent(0,NULL,kEventDurationForever, 
                           true, &theEvent) == noErr) {
     SendEventToEventTarget(theEvent,theTarget);
     ReleaseEvent(theEvent);
-    cerr << "Iterate\n";
   }
-  //    RunApplicationEventLoop();
   
   return true;
 }

@@ -68,6 +68,7 @@ main(int argc, char *argv[], char **environment) {
 #if defined(__APPLE__) && !defined(HAVE_X11)
   // Apple's version of event management
   Carbon::RunApplicationEventLoop();
+  EventManager::add_event(new QuitEvent());
 #endif
 
   em_thread->join();

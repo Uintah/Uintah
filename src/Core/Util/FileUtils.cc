@@ -44,6 +44,7 @@ typedef unsigned short mode_t;
 #include <Core/Util/FileUtils.h>
 #include <Core/OS/Dir.h>
 #include <Core/Util/Assert.h>
+#include <Core/Util/Environment.h>
 
 #include <iostream>
 
@@ -169,13 +170,23 @@ std::map<int,char*>* GetFilenamesEndingWith(char* d, char* ext)
   return newmap;
 }
 
+string 
+substituteTilde(const string &dirstr) {
+  string realdirstr = dirstr;
+  string::size_type pos = realdirstr.find("~");
+  if (pos != string::npos) {
+    realdirstr = dirstr.substr(0, pos) + "/" + sci_getenv("HOME") + "/" + 
+      dirstr.substr(pos+1, dirstr.size()-pos-1);
+  }
+  return realdirstr;
+}
 
 vector<string>
 GetFilenamesStartingWith(const string &dirstr,
                          const string &prefix)
 {
   vector<string> files(0);
-  DIR* dir = opendir(dirstr.c_str());
+  DIR* dir = opendir(substituteTilde(dirstr).c_str());
   if (!dir) {
     return files;
   }
@@ -219,6 +230,7 @@ bool
 validFile(std::string filename) 
 {
   struct stat buf;
+  filename = substituteTilde(filename);
   if (stat(filename.c_str(), &buf) == 0)
   {
     mode_t &m = buf.st_mode;
@@ -233,6 +245,7 @@ bool
 validDir(std::string dirname) 
 {
   struct stat buf;
+  dirname = substituteTilde(dirname);
   if (stat(dirname.c_str(), &buf) == 0)
   {
     mode_t &m = buf.st_mode;
