@@ -77,37 +77,9 @@ namespace SCIRun {
         int code = key->get_keyval();
         bool shift = (key->get_modifiers() & EventModifiers::SHIFT_E);
         string character = "";
+
         if (code == SCIRun_Return) {
           throw_signal("TextEntry::enter");
-        } else  if ((code >= SCIRun_a) && (code <= SCIRun_z)) {
-          code -= SCIRun_a; 
-          
-          if (shift) {
-            code += char_traits<wchar_t>::to_int_type('A');
-          } else {
-            code += char_traits<wchar_t>::to_int_type('a');
-          }
-          character = string(1, char_traits<wchar_t>::to_char_type(code));
-        } else if ((code >= SCIRun_0) && (code <= SCIRun_9)) {
-          code -= SCIRun_0; 
-
-          if (key->get_modifiers() & EventModifiers::SHIFT_E) {
-            // insert special chars here
-            code += char_traits<wchar_t>::to_int_type('0');
-          } else {
-            code += char_traits<wchar_t>::to_int_type('0');
-          }
-          character = string(1, char_traits<wchar_t>::to_char_type(code));
-        } else if (code == SCIRun_slash) {
-          character = string("/");
-        } else if (code == SCIRun_period) {
-          character = string(".");
-        } else if (code == SCIRun_minus && !shift) {
-          character = string("-");
-        } else if (code == SCIRun_minus && shift) {
-          character = string("_");
-        } else if (code == SCIRun_space) {
-          character = string(" ");
         } else if (code == SCIRun_Tab) {
           str = autocomplete(str);
           cursor_position_ = str.length();
@@ -121,7 +93,7 @@ namespace SCIRun {
         } else if (code == SCIRun_Right) {
           cursor_position_ = Min(int(cursor_position_+1),int(str.length()));
         } else {
-          // cerr << get_id() << " cannot handle keycode: " << code << std::endl;
+          character = string(1, char_traits<wchar_t>::to_char_type(code));
         }
         
         if (character.length()) {

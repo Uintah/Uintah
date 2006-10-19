@@ -51,6 +51,7 @@
 #include <Core/Util/FileUtils.h>
 #include <iostream>
 
+
 using std::cerr;
 using std::endl;
 
@@ -146,6 +147,7 @@ namespace SCIRun {
       delete tool_manager_;
       delete tm_lock_;
       SCIRun::EventManager::unregister_mailbox(mailbox_);
+
     }
 
 

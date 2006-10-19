@@ -155,7 +155,7 @@ private:
   void			extract_all_window_slices();
   void                  set_probe();
 
-  NrrdVolume *          load_volume(const string &);            
+  NrrdVolume *          load_volume(string);            
   void                  copy_current_layer();
   void                  new_current_layer();
   void                  set_all_slices_tex_dirty();

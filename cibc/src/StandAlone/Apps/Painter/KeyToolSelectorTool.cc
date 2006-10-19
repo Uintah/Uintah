@@ -71,10 +71,10 @@ KeyToolSelectorTool::key_press(string, int keyval,
   case SCIRun_comma:    window.prev_slice(); break;
   case SCIRun_period:   window.next_slice(); break;
     //  case SCIRun_u:        painter_->undo_volume();
-  case SCIRun_a:        tm_.add_tool(new CropTool(painter_),100); break;
-  case SCIRun_f:        tm_.add_tool(new FloodfillTool(painter_),100); break;
-  case SCIRun_b:        tm_.add_tool(new BrushTool(painter_),25); break;
-  case SCIRun_l:        tm_.add_tool(new StatisticsTool(painter_),100); break;
+    //  case SCIRun_a:        tm_.add_tool(new CropTool(painter_),100); break;
+    //  case SCIRun_f:        tm_.add_tool(new FloodfillTool(painter_),100); break;
+    //  case SCIRun_b:        tm_.add_tool(new BrushTool(painter_),25); break;
+    //  case SCIRun_l:        tm_.add_tool(new StatisticsTool(painter_),100); break;
 
   case SCIRun_c:        painter_->copy_current_layer(); break;
   case SCIRun_x:        painter_->DeleteLayer(0); break;
