@@ -89,7 +89,7 @@ itcl_class SCIRun_Render_ViewScene {
     
     method ui {} {
 	if { [llength $openViewScenesList] == 0 } {;# If there are no open viewers
-	    $this addViewScene ;# then create one
+	    $this addViewer ;# then create one
 	} else { ;# else, raise them all.
 	    foreach rid $openViewScenesList {
 		SciRaise .ui[$rid modname]
@@ -123,7 +123,7 @@ itcl_class SCIRun_Render_ViewScene {
 	foreach w [winfo children .] {
 	    if { [string first .ui$module $w] == 0 && \
 		     [winfo exists $w.bsframe] } {
-		netedit add-modgui-callback $prefix addViewScene
+		netedit add-modgui-callback $prefix addViewer
 
 		# since the viewer always initially comes up without
 		# the extended controls, save the geometry to only
@@ -572,7 +572,7 @@ itcl_class ViewWindow {
 
 	# New ViewWindow button
 	button $w.menu.newviewer -text "NewWindow" \
-	    -command "$viewer addViewScene [modname]" -borderwidth 0
+	    -command "$viewer addViewer [modname]" -borderwidth 0
 	
 	pack $w.menu.file -side left
 	pack $w.menu.edit -side left
