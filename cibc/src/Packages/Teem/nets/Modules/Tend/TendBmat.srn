@@ -1,19 +1,30 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE network PUBLIC "-//SCIRun/Network DTD" "network.dtd">
-<network version="v1.25.2" name="{Main}" bbox="{10 10 361 254}" creationDate="{Thu Mar 16 2006}" creationTime="{10:40:05}" geometry="{800x800+0+0}">
+<?xml version="1.0" ?>
+<!DOCTYPE network
+  PUBLIC '-//SCIRun/Network DTD'
+  'network.dtd'>
+<network bbox="{10 10 361 254}" creationDate="{Thu Mar 16 2006}" creationTime="{10:40:05}" geometry="{800x800+0+0}" name="{Main}" version="v1.25.2">
   <note>{}</note>
   <modules>
-    <module id="m1" package="Teem" category="Tend" name="TendBmat" gui_visible="yes">
+    <module category="Tend" gui_visible="yes" id="m1" name="TendBmat" package="Teem">
       <position x="10" y="10"/>
-      <var name="gradient_list" val="{0.56656 0.453453 0.3453453&#10;0.453453 0.3443 0.8656&#10;0.22344 0.435346 0.445457&#10;0.2343 0.242 0.25235&#10;0.234 0.345 0.456&#10;0.234 0.3453 0.4547&#10;0.123 0.234 0.3465&#10;&#10;&#10;}"/>
+      <var name="gradient_list" val="{0.56656 0.453453 0.3453453
+0.453453 0.3443 0.8656
+0.22344 0.435346 0.445457
+0.2343 0.242 0.25235
+0.234 0.345 0.456
+0.234 0.3453 0.4547
+0.123 0.234 0.3465
+
+
+}"/>
       <var name="ui_geometry" val="{570x415+56+36}"/>
     </module>
-    <module id="m2" package="Teem" category="NrrdData" name="NrrdInfo" gui_visible="yes">
+    <module category="Misc" gui_visible="yes" id="m2" name="ReportNrrdInfo" package="Teem">
       <position x="196" y="197"/>
       <var name="ui_geometry" val="{451x513+53+18}"/>
     </module>
   </modules>
   <connections>
-    <connection id="c1" from="m1" fromport="0" to="m2" toport="0"/>
+    <connection from="m1" fromport="0" id="c1" to="m2" toport="0"/>
   </connections>
 </network>
