@@ -76,8 +76,6 @@
                   target="FileDialog::Done"></signal>
           
           <signal name="FileLoadBox::OKButtonPress" 
-                  target="Painter::Autoview" ></signal>
-          <signal name="FileLoadBox::OKButtonPress" 
                   target="GLWindow::mark_redraw" ></signal>
           
         </object>

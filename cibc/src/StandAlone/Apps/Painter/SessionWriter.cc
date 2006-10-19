@@ -34,6 +34,7 @@
 #include <Core/Containers/StringUtil.h>
 #include <Core/Util/Environment.h>
 #include <Core/Util/Assert.h>
+#include <Core/Util/FileUtils.h>
 #include <Core/Skinner/XMLIO.h>
 #include <Core/Skinner/Variables.h>
 #include <libxml/xmlreader.h>
@@ -53,6 +54,11 @@ SessionWriter::write_session(const string &filename, NrrdVolumes &volumes) {
    * between the version it was compiled for and the actual shared
    * library used.
    */
+
+  pair<string, string> dir_file = split_filename(filename);
+  if (!write_volumes(volumes, dir_file.first)) {
+    return false;
+  }
   
   LIBXML_TEST_VERSION;
   
@@ -75,20 +81,49 @@ SessionWriter::write_session(const string &filename, NrrdVolumes &volumes) {
   xmlSaveFormatFileEnc(filename.c_str(), doc, "UTF-8", 1);
 
   xmlFreeDoc(doc);
+
+
   return true;
 }
 
 
+bool
+SessionWriter::write_volumes(NrrdVolumes &volumes, const string &dir) {
+  //  NrrdVolumes::reverse_iterator iter = volumes.rbegin();  
+  //  NrrdVolumes::reverse_iterator end = volumes.rend();
+  NrrdVolumes::iterator iter = volumes.begin();  
+  NrrdVolumes::iterator end = volumes.end();
+
+  for (; iter != end; ++iter) {
+    NrrdVolume *volume = *iter;
+    pair<string, string> dir_file = split_filename(volume->filename_);
+
+    if (!ends_with(string_tolower(dir_file.second), ".hdr")) {
+      dir_file.second = dir_file.second + ".hdr";
+    }
+
+    volume->filename_ = dir_file.second;
+    if (!volume->write(dir + "/" + volume->filename_)) return false;
+  }
+  return true;
+}
+    
 
 void
 SessionWriter::add_volume_nodes(xmlNodePtr node, NrrdVolumes &volumes) {
-  NrrdVolumes::reverse_iterator iter = volumes.rbegin();  
-  NrrdVolumes::reverse_iterator end = volumes.rend();
+  //  NrrdVolumes::reverse_iterator iter = volumes.rbegin();  
+  //  NrrdVolumes::reverse_iterator end = volumes.rend();
+  //  NrrdVolumes::reverse_iterator iter = volumes.rbegin();  
+  //  NrrdVolumes::reverse_iterator end = volumes.rend();
+  NrrdVolumes::iterator iter = volumes.begin();  
+  NrrdVolumes::iterator end = volumes.end();
+
   for (; iter != end; ++iter) {
     NrrdVolume *volume = *iter;
     xmlNodePtr cnode = xmlNewChild(node, 0, to_xml_ch_ptr("volume"),0);
     add_var_node(cnode, "name", volume->name_);
-    add_var_node(cnode, "filename", volume->name_);
+    if (!volume->parent_)
+      add_var_node(cnode, "filename", volume->filename_);
     add_var_node(cnode, "label", to_string(volume->label_));
     add_var_node(cnode, "visible", to_string(volume->visible_ ? 1 : 0));
     add_var_node(cnode, "opacity", to_string(volume->opacity_));

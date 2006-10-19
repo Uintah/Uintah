@@ -47,7 +47,8 @@
 namespace SCIRun {
 
 SessionReader::SessionReader(Painter *painter) :
-  painter_(painter)
+  painter_(painter),
+  dir_()
 {
 }
 
@@ -57,13 +58,15 @@ SessionReader::~SessionReader()
 
 
 bool
-SessionReader::load_session(const string &filename) {
+SessionReader::load_session(string filename) {
   /*
    * this initialize the library and check potential ABI mismatches
    * between the version it was compiled for and the actual shared
    * library used.
    */
-  
+  filename = substituteTilde(filename);
+  pair<string, string> dir_file = split_filename(filename);
+  dir_ = dir_file.first;
   LIBXML_TEST_VERSION;
   
   /* the parser context */
@@ -136,24 +139,38 @@ SessionReader::eval_volume_node(const xmlNodePtr node, NrrdVolume *parent)
     } 
   }
   NrrdVolume *volume = 0;
+
+
+  unsigned int label = 0;
+  if (vars->exists("label")) {
+    label = vars->get_int("label");
+  }
+
   if (!parent) {
-    string filename = vars->get_string("filename");
-    volume = painter_->load_volume(filename);
+    string filename = vars->get_string("filename");  
+    pair<string, string> dir_file = split_filename(filename);
+    if (dir_file.first.empty()) dir_file.first = dir_;
+    if (!label) {
+      volume = painter_->load_volume<float>(dir_file.first+filename);
+    } else {
+      volume = painter_->load_volume<unsigned int>(dir_file.first+filename);
+    }
+      
     if (!volume) {
       cerr << "Error loading : " << filename << std::endl;
       return 0;
     }
+    volume->filename_ = filename;
   } else {
     volume = parent->create_child_label_volume(vars->get_int("label"));
   }
 
 
+  volume->label_ = label;
+
+
   if (vars->exists("name")) {
     volume->name_ = vars->get_string("name");
-  }
-
-  if (vars->exists("label")) {
-    volume->label_ = vars->get_int("label");
   }
 
   if (vars->exists("opacity")) {

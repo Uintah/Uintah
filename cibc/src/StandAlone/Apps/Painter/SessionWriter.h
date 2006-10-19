@@ -44,6 +44,7 @@ public:
 private:
   static void   add_volume_nodes(xmlNodePtr node, NrrdVolumes &volumes);
   static void   add_var_node(xmlNodePtr node, const string &, const string &);
+  static bool   write_volumes(NrrdVolumes &volumes, const string &dir);
 };
 
 

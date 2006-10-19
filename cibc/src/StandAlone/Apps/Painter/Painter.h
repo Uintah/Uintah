@@ -79,6 +79,7 @@
 #include <Core/Thread/Mutex.h>
 #include <Core/Util/Timer.h>
 #include <Core/Util/Environment.h>
+#include <Core/Util/FileUtils.h>
 #include <Core/Volume/CM2Widget.h>
 #include <Core/Skinner/Parent.h>
 #include <Core/Skinner/Color.h>
@@ -92,6 +93,9 @@
 #ifdef HAVE_INSIGHT
 #  include <Core/Datatypes/ITKDatatype.h>
 #  include <itkImageToImageFilter.h>
+#  include <itkImageFileReader.h>
+#  include <itkImportImageFilter.h>
+#  include <itkImageIOBase.h>
 #  include <itkCommand.h>
 #  include <itkThresholdSegmentationLevelSetImageFilter.h>
 #endif
@@ -155,7 +159,11 @@ private:
   void			extract_all_window_slices();
   void                  set_probe();
 
-  NrrdVolume *          load_volume(string);            
+  // these should probably be moved to NrrdVolume class
+  template <class T>
+  NrrdVolume *          load_volume(string);
+  bool                  save_volume(string filename, NrrdVolume *);
+  
   void                  copy_current_layer();
   void                  new_current_layer();
   void                  set_all_slices_tex_dirty();
@@ -182,8 +190,9 @@ private:
   void                  isosurface_label_volumes(NrrdVolumes &, GeomGroup *);
 
 #ifdef HAVE_INSIGHT
-  ITKDatatypeHandle     nrrd_to_itk_image(NrrdDataHandle &nrrd);
-  NrrdDataHandle        itk_image_to_nrrd(ITKDatatypeHandle &);
+  static ITKDatatypeHandle      nrrd_to_itk_image(NrrdDataHandle &nrrd);
+  template <class T>
+  static NrrdDataHandle         itk_image_to_nrrd(ITKDatatypeHandle &);
   template <class ImageT>
   bool                  do_itk_filter(itk::ImageToImageFilter<ImageT,ImageT> *,
                                       NrrdDataHandle &nrrd);
@@ -229,6 +238,8 @@ private:
   CatcherFunction_t     AbortFilterOn;
 
   CatcherFunction_t     LoadVolume;
+  CatcherFunction_t     SaveVolume;
+
   CatcherFunction_t     ResampleVolume;
   CatcherFunction_t     CreateLabelVolume;
   CatcherFunction_t     CreateLabelChild;
@@ -357,7 +368,7 @@ Painter::do_itk_filter(itk::ImageToImageFilter<ImageType, ImageType> *filter,
   SCIRun::ITKDatatypeHandle output_img = new SCIRun::ITKDatatype();
   output_img->data_ = filter->GetOutput();
 
-  nrrd_handle = itk_image_to_nrrd(output_img);
+  nrrd_handle = itk_image_to_nrrd<typename ImageType::PixelType>(output_img);
 
 #if 0
   get_vars()->insert("ProgressBar::bar_height","0","string", true);
@@ -371,6 +382,103 @@ Painter::do_itk_filter(itk::ImageToImageFilter<ImageType, ImageType> *filter,
   return true;
 }
 #endif
+
+template <class T>
+NrrdVolume *
+Painter::load_volume(string filename) {
+  filename = substituteTilde(filename);
+  if (!validFile(filename)) {
+    return 0;
+  }
+
+#ifndef HAVE_INSIGHT
+  NrrdDataHandle nrrd_handle = new NrrdData();
+  if (nrrdLoad(nrrd_handle->nrrd_, filename.c_str(), 0)) {
+    return 0;    
+  } 
+#else
+  // create a new reader
+  typedef itk::ImageFileReader <itk::Image<T, 3> > FileReaderType;
+  typename FileReaderType::Pointer reader = FileReaderType::New();
+  
+  reader->SetFileName(filename.c_str());
+
+  try {
+    reader->Update();  
+  } catch  ( itk::ExceptionObject & err ) {
+    cerr << "Painter::read_volume - ITK ExceptionObject caught!" << std::endl;
+    cerr << err.GetDescription() << std::endl;
+    return 0;
+  }
+  
+  SCIRun::ITKDatatype *img = new SCIRun::ITKDatatype();
+  img->data_ = reader->GetOutput();
+
+  if (!img->data_) { 
+    cerr << "no itk image\n";
+    return 0;
+  }
+
+  ITKDatatypeHandle img_handle = img;
+  NrrdDataHandle nrrd_handle = itk_image_to_nrrd<T>(img_handle);
+#endif
+
+  if (!nrrd_handle->nrrd_) return 0;
+
+  pair<string, string> dir_file = split_filename(filename);
+  NrrdVolume *vol = new NrrdVolume(this, dir_file.second, nrrd_handle);
+  vol->filename_ = dir_file.second;
+  return vol;
+}
+
+
+template <class PixType>
+NrrdDataHandle
+Painter::itk_image_to_nrrd(ITKDatatypeHandle &img_handle) {
+  const unsigned int Dim = 3;
+  typedef itk::Image<PixType, Dim> ImageType;
+
+  ImageType *img = dynamic_cast<ImageType *>(img_handle->data_.GetPointer());
+  if (img == 0) {
+    return 0;
+  }
+
+  NrrdData *nrrd_data = new NrrdData(img_handle.get_rep());
+  Nrrd *nrrd = nrrd_data->nrrd_;
+
+  size_t size[NRRD_DIM_MAX];
+  size[0] = 1;
+  size[1] = img->GetRequestedRegion().GetSize()[0];
+  size[2] = img->GetRequestedRegion().GetSize()[1];
+  size[3] = img->GetRequestedRegion().GetSize()[2];
+
+  unsigned int centers[NRRD_DIM_MAX];
+  centers[0] = nrrdCenterNode; 
+  centers[1] = nrrdCenterNode;
+  centers[2] = nrrdCenterNode; 
+  centers[3] = nrrdCenterNode;
+
+  nrrdWrap_nva(nrrd, (void *)img->GetBufferPointer(), 
+               get_nrrd_type<PixType>(), 4, size);
+
+  nrrdAxisInfoSet_nva(nrrd, nrrdAxisInfoCenter, centers);
+
+  nrrd->axis[0].spacing = AIR_NAN;
+  nrrd->axis[0].min = 0;
+  nrrd->axis[0].max = 1;
+  nrrd->axis[0].kind = nrrdKindStub;
+
+  for(unsigned int i = 0; i < Dim; i++) {
+    nrrd->axis[i+1].spacing = img->GetSpacing()[i];
+
+    nrrd->axis[i+1].min = img->GetOrigin()[i];
+    nrrd->axis[i+1].max = ceil(img->GetOrigin()[i] + 
+      ((nrrd->axis[i+1].size-1) * nrrd->axis[i+1].spacing));
+    nrrd->axis[i+1].kind = nrrdKindDomain;
+  }
+  
+  return nrrd_data;
+}
 
 }
 #endif
