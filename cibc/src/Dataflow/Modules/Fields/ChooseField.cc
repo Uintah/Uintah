@@ -52,7 +52,7 @@ public:
 DECLARE_MAKER(ChooseField)
 ChooseField::ChooseField(GuiContext* ctx)
   : ChooseModule< FieldHandle >("ChooseField", ctx, Filter,
-				"FieldsOther", "SCIRun", "Field")
+				"MiscField", "SCIRun", "Field")
 {
 }
 
