@@ -114,7 +114,6 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::MergeLayer);
 
   REGISTER_CATCHER_TARGET(Painter::MemMapFileRead);
-  REGISTER_CATCHER_TARGET(Painter::NrrdFileWrite);
 
   REGISTER_CATCHER_TARGET(Painter::CancelTool);  
   REGISTER_CATCHER_TARGET(Painter::FinishTool);
@@ -122,7 +121,6 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::LoadColorMap1D);
 
   REGISTER_CATCHER_TARGET(Painter::ITKBinaryDilate);  
-  REGISTER_CATCHER_TARGET(Painter::ITKImageFileWrite);
   REGISTER_CATCHER_TARGET(Painter::ITKGradientMagnitude);
   REGISTER_CATCHER_TARGET(Painter::ITKBinaryDilateErode);
   REGISTER_CATCHER_TARGET(Painter::ITKCurvatureAnisotropic);
@@ -138,7 +136,7 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::SaveSession);
 
   REGISTER_CATCHER_TARGET(Painter::LoadVolume);
-
+  REGISTER_CATCHER_TARGET(Painter::SaveVolume);
 
   REGISTER_CATCHER_TARGET(Painter::ResampleVolume);
 
@@ -384,11 +382,6 @@ Painter::MemMapFileRead(event_handle_t event) {
   return CONTINUE_E;  
 }
 
-BaseTool::propagation_state_e 
-Painter::NrrdFileWrite(event_handle_t event) {
-  ASSERTMSG(0, "Not implemented");
-  return STOP_E;  
-}
 
 
 BaseTool::propagation_state_e 
@@ -423,7 +416,7 @@ Painter::LoadVolume(event_handle_t event) {
   Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
   ASSERT(signal);
   string filename = signal->get_vars()->get_string("filename");
-  NrrdVolume *volume = load_volume(filename);
+  NrrdVolume *volume = load_volume<float>(filename);
   if (!volume) {
     return STOP_E;
   }
@@ -437,46 +430,6 @@ Painter::LoadVolume(event_handle_t event) {
 
   return CONTINUE_E;
 }
-
-
-
-BaseTool::propagation_state_e 
-Painter::ITKImageFileWrite(event_handle_t event) {
-#ifndef HAVE_INSIGHT
-  return NrrdFileWrite(event);
-#else
-  Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
-  ASSERT(signal);
-
-  const string &filename = signal->get_vars()->get_string("filename");
-
-  typedef itk::ImageFileWriter<itk::Image<float, 3> > FileWriterType;
-  
-  // create a new writer
-  FileWriterType::Pointer writer = FileWriterType::New();
-  
-  ITKDatatypeHandle itk_image_h = nrrd_to_itk_image(current_volume_->nrrd_handle_);
-  typedef FileWriterType::InputImageType ImageType;
-  ImageType *img = dynamic_cast<ImageType *>(itk_image_h->data_.GetPointer());
-  ASSERT(img);
-
-  // set writer
-  writer->SetFileName( filename.c_str() );
-  writer->SetInput(img);
-  
-  try {
-    writer->Update();  
-    cerr << "ITKImageFileWrite success";
-  } catch  ( itk::ExceptionObject & err ) {
-    cerr << ("ExceptionObject caught!");
-    cerr << (err.GetDescription());
-  }
-  
-#endif
-  return MODIFIED_E;
-}
-
-
 
 
 
@@ -1020,7 +973,7 @@ Painter::LoadSession(event_handle_t event) {
   
   SessionReader reader(this);
   if (reader.load_session(filename)) {
-    status_ =  "Successfully Loaded sesion: "+filename;
+    status_ =  "Successfully loaded sesion: "+filename;
   } else {
     status_ =  "Error loading session "+filename;
   }
@@ -1037,7 +990,7 @@ Painter::SaveSession(event_handle_t event) {
   string filename = signal->get_vars()->get_string("filename");
   
   if ( SessionWriter::write_session(filename, volumes_)) {
-    status_ =  "Successfully Loaded sesion: "+filename;
+    status_ =  "Successfully saved sesion: "+filename;
   } else {
     status_ =  "Error loading session "+filename;
   }
@@ -1045,6 +998,30 @@ Painter::SaveSession(event_handle_t event) {
   return CONTINUE_E;
 }
   
+
+
+BaseTool::propagation_state_e 
+Painter::SaveVolume(event_handle_t event) {
+  if (!current_volume_) {
+    status_ = "No Layer Selected";
+    return STOP_E;
+  }
+
+  NrrdVolume *parent = current_volume_;
+  while (parent->parent_) parent = parent->parent_;
+  Skinner::Signal *signal = dynamic_cast<Skinner::Signal *>(event.get_rep());
+  ASSERT(signal);
+  string filename = signal->get_vars()->get_string("filename");
+  if (parent->write(filename)) {
+    status_ = "Successfully saved layer: " + filename;
+  } else {
+    status_ = "Error saving layer: " + filename;
+  }
+  
+  return CONTINUE_E;
+}
+
+
 
 
 BaseTool::propagation_state_e 

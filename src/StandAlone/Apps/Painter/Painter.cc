@@ -79,22 +79,6 @@
 #include <Core/Util/FileUtils.h>
 #include <Core/Algorithms/Visualization/NrrdTextureBuilderAlgo.h>
 
-#ifdef _WIN32
-#  define round(x) ((int) x+.5)
-#endif
-
-
-#ifdef HAVE_INSIGHT
-#  include <itkImageFileReader.h>
-#  include <itkImportImageFilter.h>
-#endif
-
-#ifdef _WIN32
-#  define snprintf _snprintf
-#  define SCISHARE __declspec(dllimport)
-#else
-#  define SCISHARE
-#endif
 
 namespace SCIRun {
 
@@ -508,56 +492,43 @@ Painter::copy_current_volume(const string &name, int mode) {
   
 
 
+
+
 #ifdef HAVE_INSIGHT
-//ITKDatatypeHandle
-//itk::Object::Pointer
-ITKDatatypeHandle
-Painter::nrrd_to_itk_image(NrrdDataHandle &nrrd) {
-  Nrrd *n = nrrd->nrrd_;
-  const unsigned int Dim = 3;
-  typedef float PixType;
-  ASSERT(n->dim == Dim+1);
 
-  if (n->type != nrrdTypeFloat) {
-    NrrdDataHandle nrrd2 = new NrrdData();
-    if (nrrdConvert(nrrd2->nrrd_, n, nrrdTypeFloat)) {
-      char *err = biffGetDone(NRRD);
-      string errstr = (err ? err : "");
-      free(err);
-      throw errstr;
-    }
-    nrrd = nrrd2;
-    n = nrrd->nrrd_;
-  }
+template <class PixType>
+itk::Object::Pointer
+cast_nrrd_to_itk(Nrrd *n) 
+{
+  const unsigned int dimension = 3;
 
-  ASSERT(n->type == nrrdTypeFloat);
-  //  typedef typename itk::Image<float, 3> ImageType;
-  //  typedef typename itk::ImageRegionIterator<ImageType> IteratorType;
-  
-  typedef itk::ImportImageFilter< PixType, Dim > ImportFilterType;
-  ImportFilterType::Pointer importFilter = ImportFilterType::New();        
-  ImportFilterType::SizeType size;
+  typedef itk::ImportImageFilter < PixType , 3 > ImportFilterType;
 
-  double origin[Dim];
-  double spacing[Dim];
+  typename ImportFilterType::Pointer importFilter = ImportFilterType::New();
+  typename ImportFilterType::SizeType size;
+
+  double origin[dimension];
+  double spacing[dimension];
   unsigned int count = 1;
   for(unsigned int i=0; i < n->dim-1; i++) {
     count *= n->axis[i+1].size;
     size[i] = n->axis[i+1].size;
 
-    if (!AIR_EXISTS(n->axis[i+1].min))
+    if (!AIR_EXISTS(n->axis[i+1].min)) {
       origin[i] = 0;
-    else
-    origin[i] = n->axis[i+1].min;
+    } else {
+      origin[i] = n->axis[i+1].min;
+    }
 
-    if (!AIR_EXISTS(n->axis[i+1].spacing))
+    if (!AIR_EXISTS(n->axis[i+1].spacing)) {
       spacing[i] = 1.0;
-    else
+    } else {
       spacing[i] = n->axis[i+1].spacing;
+    }
   }
-  ImportFilterType::IndexType start;
+  typename ImportFilterType::IndexType start;
   start.Fill(0);
-  ImportFilterType::RegionType region;
+  typename ImportFilterType::RegionType region;
   region.SetIndex(start);
   region.SetSize(size);
   importFilter->SetRegion(region);
@@ -566,77 +537,35 @@ Painter::nrrd_to_itk_image(NrrdDataHandle &nrrd) {
   importFilter->SetImportPointer((PixType *)n->data, count, false);
   importFilter->Update();
 
-  SCIRun::ITKDatatype* result = new SCIRun::ITKDatatype();  
-  result->data_ = importFilter->GetOutput();
+  return importFilter->GetOutput();
+}
+
+ITKDatatypeHandle
+Painter::nrrd_to_itk_image(NrrdDataHandle &nrrd) {
+  Nrrd *n = nrrd->nrrd_;
+  itk::Object::Pointer data = 0;
+  switch (n->type) {
+  case nrrdTypeChar: data = cast_nrrd_to_itk<signed char>(n); break;
+  case nrrdTypeUChar: data = cast_nrrd_to_itk<unsigned char>(n); break;
+  case nrrdTypeShort: data = cast_nrrd_to_itk<signed short>(n); break;
+  case nrrdTypeUShort: data = cast_nrrd_to_itk<unsigned short>(n); break;
+  case nrrdTypeInt: data = cast_nrrd_to_itk<signed int>(n); break;
+  case nrrdTypeUInt: data = cast_nrrd_to_itk<unsigned int>(n); break;
+  case nrrdTypeLLong: data = cast_nrrd_to_itk<signed long long>(n); break;
+  case nrrdTypeULLong: data =cast_nrrd_to_itk<unsigned long long>(n); break;
+  case nrrdTypeFloat: data = cast_nrrd_to_itk<float>(n); break;
+  case nrrdTypeDouble: data = cast_nrrd_to_itk<double>(n); break;
+  default: throw "nrrd_to_itk_image, cannot convert type" + to_string(n->type);
+  }
+
+  SCIRun::ITKDatatype *result = new SCIRun::ITKDatatype();
+  result->data_ = data;
   return result;
-  //  return importFilter->GetOutput();
-
-  // SCIRun::ITKDatatype* result = new SCIRun::ITKDatatype();  
-  //  result->data_ = importFilter->GetOutput();
-  //  return result;
 }
 
 
 
 
-NrrdDataHandle
-Painter::itk_image_to_nrrd(ITKDatatypeHandle &img_handle) {
-  const unsigned int Dim = 3;
-  typedef float PixType;
-  typedef itk::Image<PixType, Dim> ImageType;
-
-  ImageType *img = dynamic_cast<ImageType *>(img_handle->data_.GetPointer());
-  if (img == 0) {
-    return 0;
-  }
-
-  //  SCIRun::ITKDatatype* result = new SCIRun::ITKDatatype();  
-  //  result->data_ = img;//importFilter->GetOutput();
-  
-  //  LockingHandle<SCIRun::Datatype> *blah = dynamic_cast<LockingHandle<SCIRun::Datatype> *> (&img_handle);
-
-  NrrdData *nrrd_data = new NrrdData(img_handle.get_rep());
-  //  nrrd_data->nrrd_ = nrrd;
-
-  Nrrd *nrrd = nrrd_data->nrrd_;///nrrdNew();
-  size_t size[NRRD_DIM_MAX];
-  size[0] = 1;
-  size[1] = img->GetRequestedRegion().GetSize()[0];
-  size[2] = img->GetRequestedRegion().GetSize()[1];
-  size[3] = img->GetRequestedRegion().GetSize()[2];
-
-  unsigned int centers[NRRD_DIM_MAX];
-  centers[0] = nrrdCenterNode; 
-  centers[1] = nrrdCenterNode;
-  centers[2] = nrrdCenterNode; 
-  centers[3] = nrrdCenterNode;
-
-  //  nrrdAlloc_nva(nrrd, nrrdTypeFloat, 4, size);
-  nrrdWrap_nva(nrrd, (void *)img->GetBufferPointer(), nrrdTypeFloat, 4, size);
-  nrrdAxisInfoSet_nva(nrrd, nrrdAxisInfoCenter, centers);
-
-  nrrd->axis[0].spacing = AIR_NAN;
-  nrrd->axis[0].min = 0;
-  nrrd->axis[0].max = 1;
-  nrrd->axis[0].kind = nrrdKindStub;
-
-  for(unsigned int i = 0; i < Dim; i++) {
-    nrrd->axis[i+1].spacing = img->GetSpacing()[i];
-
-    nrrd->axis[i+1].min = img->GetOrigin()[i];
-    nrrd->axis[i+1].max = ceil(img->GetOrigin()[i] + 
-      ((nrrd->axis[i+1].size-1) * nrrd->axis[i+1].spacing));
-    nrrd->axis[i+1].kind = nrrdKindDomain;
-  }
-
-
-  //  nrrd->data = ;
-  //  nrrd->ptr = img;
-  //  img->Register();
-  //  return result;
-  
-  return nrrd_data;
-}
 
 
 void
@@ -672,7 +601,7 @@ Painter::filter_callback(itk::Object *object,
       volume_lock_.lock();
       filter_update_img_->data_ = filter->GetOutput();
       //filter_update_img_->data_ = filter->GetFeatureImage();
-      filter_volume_->nrrd_handle_ = itk_image_to_nrrd(filter_update_img_);
+      filter_volume_->nrrd_handle_ = itk_image_to_nrrd<float>(filter_update_img_);
       volume_lock_.unlock();
       if (volume_texture_.get_rep()) {
         NrrdTextureBuilderAlgo::build_static(volume_texture_,
@@ -744,52 +673,7 @@ Painter::maker(Skinner::Variables *vars)
 
 
 
-NrrdVolume *
-Painter::load_volume(string filename) {
-  filename = substituteTilde(filename);
-  if (!validFile(filename)) {
-    return 0;
-  }
-
-#ifndef HAVE_INSIGHT
-  NrrdDataHandle nrrd_handle = new NrrdData();
-  if (nrrdLoad(nrrd_handle->nrrd_, filename.c_str(), 0)) {
-    return 0;    
-  } 
-#else
-  // create a new reader
-  typedef itk::ImageFileReader<itk::Image<float, 3> > FileReaderType;
-  FileReaderType::Pointer reader = FileReaderType::New();
   
-  reader->SetFileName(filename.c_str());
-  
-  try {
-    reader->Update();  
-  } catch  ( itk::ExceptionObject & err ) {
-    cerr << "Painter::read_volume - ITK ExceptionObject caught!" << std::endl;
-    cerr << err.GetDescription() << std::endl;
-    return 0;
-  }
-  
-  SCIRun::ITKDatatype *img = new SCIRun::ITKDatatype();
-  img->data_ = reader->GetOutput();
-
-  if (!img->data_) { 
-    cerr << "no itk image\n";
-    return 0;
-  }
-
-  ITKDatatypeHandle img_handle = img;
-  NrrdDataHandle nrrd_handle = itk_image_to_nrrd(img_handle);
-#endif
-
-  if (!nrrd_handle->nrrd_) return 0;
-
-  pair<string, string> dirfile = split_filename(filename);
-  return new NrrdVolume(this, dirfile.second, nrrd_handle);
-}
-
-
 
 
 #if 0

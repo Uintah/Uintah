@@ -41,7 +41,6 @@
 #include <Core/Datatypes/NrrdData.h>
 #include <Core/Skinner/Variables.h>
 
-
 using std::vector;
 
 
@@ -60,6 +59,9 @@ public:
                        const string &name, 
                        int mode = 0); // if 1, clears out volume
   ~NrrdVolume();
+
+  bool                write(string filename);
+
   void                set_nrrd(NrrdDataHandle &);
   NrrdDataHandle      get_nrrd();
   NrrdVolume *        create_label_volume();
@@ -99,6 +101,7 @@ public:
   NrrdDataHandle      nrrd_handle_;
 
   string              name_;
+  string              filename_;
   Mutex *             mutex_;
 
 
@@ -268,6 +271,8 @@ NrrdVolume::set_value(const vector<int> &index, T value) {
   ASSERT(index_valid(index));
   nrrd_set_value(nrrd_handle_->nrrd_, index, value);
 }
+
+
 
 }
 
