@@ -1,7 +1,7 @@
 %____________________________________________________________
 % Function:  AdvectQ
 % Computes the advection of q
-function[q_advected,gradLim,grad_x] = advectQ(q,mass,mass_slab,mass_vrtx_1, mass_vrtx_2, ofs, rx, xvel_FC, delX, nCells)
+function[q_advected,gradLim,grad_x] = advectQ(q,mass,mass_slab,mass_vrtx_1, mass_vrtx_2, ofs, rx, xvel_FC, dx, nCells)
   
   %convert
   for( j =2:nCells-1)
@@ -9,20 +9,28 @@ function[q_advected,gradLim,grad_x] = advectQ(q,mass,mass_slab,mass_vrtx_1, mass
   end
   
   q_slab =[0:nCells+1];
-  [gradLim, grad_x]        = gradientLimiter(q, mass, mass_vrtx_1, mass_vrtx_2, delX, nCells);
-  [q_slab,gradLim, grad_x] = qAverageFlux(q, mass, mass_slab, rx, grad_x, gradLim, delX, nCells);
+  [gradLim, grad_x]        = gradientLimiter(q, mass, mass_vrtx_1, mass_vrtx_2, dx, nCells);
+  [q_slab,gradLim, grad_x] = qAverageFlux(q, mass, mass_slab, rx, grad_x, gradLim, dx, nCells);
   q_advected = advectSlabs(xvel_FC, q_slab, ofs, nCells);
   clear q_slab;
 end
 
 %_____________________________________________________________
 % Function gradientLimiter  -- compatible flux Gradient limiter
-function[gradLim, grad_x] = gradientLimiter(q,mass, mass_vrtx_1, mass_vrtx_2, delX, nCells)
+function[gradLim, grad_x] = gradientLimiter(q,mass, mass_vrtx_1, mass_vrtx_2, dx, nCells)
   fprintf('gradientLimiter\n');
   
   for( j =2:nCells-1)
     
-    grad_x(j) = (q(j+1) - q(j-1))/(2.0*delX);
+      
+    alpha = dx(j+1)./dx(j-1);
+    numerator   = q(j+1) + (alpha^2 - 1.0)* q(j) - alpha^2 * q(j-1);
+    denominator = alpha * (alpha + 1.0) * dx(j-1);
+    grad_x(j) = numerator./denominator;
+      
+      
+    %grad_x(j) = (q(j+1) - q(j-1))./(2.0*dx(j));
+    
     %-----------q vertex min/max
     d1 = mass(j)/(mass_vrtx_1(j) + 1e-100);
     d2 = mass(j)/(mass_vrtx_2(j) + 1e-100);
@@ -30,8 +38,8 @@ function[gradLim, grad_x] = gradientLimiter(q,mass, mass_vrtx_1, mass_vrtx_2, de
     %d1 = 1.0; VanLeer limiter
     %d2 = 1.0;
     
-    q_vrtx_1 = q(j) + (grad_x(j) * delX/2.0) * d1;
-    q_vrtx_2 = q(j) - (grad_x(j) * delX/2.0) * d2;
+    q_vrtx_1 = q(j) + (grad_x(j) * dx(j)/2.0) * d1;
+    q_vrtx_2 = q(j) - (grad_x(j) * dx(j)/2.0) * d2;
 
     q_vrtx_max = max(q_vrtx_1, q_vrtx_2);
     q_vrtx_min = min(q_vrtx_1, q_vrtx_2);
@@ -64,7 +72,7 @@ end
 %_____________________________________________________________
 % Function:  qAverageFlux
 % Computes the value of q at each slab volume.
-function[q_slab, gradLim, grad_x] = qAverageFlux(q, mass, mass_slab, rx, grad_x, gradLim, delX, nCells)
+function[q_slab, gradLim, grad_x] = qAverageFlux(q, mass, mass_slab, rx, grad_x, gradLim, dx, nCells)
   clear j;
   fprintf( 'inside qAverageFlux \n');
   for( j =1:nCells-1)

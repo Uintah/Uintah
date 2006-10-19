@@ -16,12 +16,11 @@ set(0,'DefaultFigurePosition',[0,0,1024,768]);
 %______________________________________________________________________
 %     Problem Setup
 nCells   = 100;             % number of cells
-dx       = 1.0;             % cell length
 CFL      = 0.999;         
 velocity = 1.0;             % uniform velocity
-delT     = CFL * dx/velocity;
-
-
+delT     = 1000;
+dx_initial  = 1.0;
+dx          = [1:nCells];   % cell length
 gradLim     =[1:nCells];    %gradient Limiter 
 grad_x      =[1:nCells];    %gradient
 
@@ -39,6 +38,7 @@ mass_vrtx_2 =[0:nCells+1];  % --------//-------
 %__________________________________
 %     Initialization    
 for(j = 1:nCells+1 )
+  dx(j)    = dx_initial;
   xvel_FC(j) = velocity;
   mass(j)  = 0.5;
   temp(j)  = 0.0;
@@ -46,6 +46,9 @@ for(j = 1:nCells+1 )
     mass(j)  = 0.001;
     temp(j)  = 1.0;
   end
+end
+for(j = 1:nCells+1 )
+    delT = min(delT,(CFL* dx(j)/velocity));
 end
 %______________________________________________________________________
 %     Time integration loop
@@ -76,12 +79,12 @@ for( t = 1:50)
   end
   
   % plot results
-  subplot(4,1,1), plot(mass, '-r')
+  subplot(4,1,1), plot(mass, '-+r')
   xlim([0 100]);
   legend('mass');
   grid on;
   
-  subplot(4,1,2), plot(gradLim, '-r')
+  subplot(4,1,2), plot(gradLim, '-+r')
   xlim([0 100]);
   legend('gradient Limiter mass')
   grid on;
@@ -96,11 +99,11 @@ for( t = 1:50)
   end
   
   % plot results
-  subplot(4,1,3), plot(temp)
+  subplot(4,1,3), plot(temp,'-+b')
   xlim([0 100]);
   legend('Temperature');
   
-  subplot(4,1,4), plot(gradLim)
+  subplot(4,1,4), plot(gradLim,'-+b')
   xlim([0 100]);
   legend('gradient Limiter Temperature');
   grid on;
