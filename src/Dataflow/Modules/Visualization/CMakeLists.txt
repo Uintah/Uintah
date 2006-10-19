@@ -32,7 +32,7 @@ SET(Dataflow_Modules_Visualization_SRCS
   CreateLightForViewer.cc
   ChooseColorMap.cc
   CreateAndEditColorMap.cc
-  CreateAndCreateAndEditColorMap2D.cc
+  CreateAndEditColorMap2D.cc
   CreateViewerAxes.cc
   CreateViewerClockIcon.cc
   CreateStandardColorMaps.cc
@@ -43,8 +43,9 @@ SET(Dataflow_Modules_Visualization_SRCS
   ShowColorMap.cc
   ShowField.cc
   ShowMatrix.cc
+  ShowMeshBoundingBox.cc
   GenerateStreamLines.cc
-  GenerateGenerateStreamLinesWithPlacementHeuristic.cc
+  GenerateStreamLinesWithPlacementHeuristic.cc
   ConvertFieldsToTexture.cc
   ShowTextureSlices.cc
   ShowTextureVolume.cc
