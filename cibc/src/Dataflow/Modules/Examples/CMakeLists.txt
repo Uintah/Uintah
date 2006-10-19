@@ -31,8 +31,8 @@
 SET(Dataflow_Modules_Examples_SRCS
   GetInputField.cc
   GetInputFieldAndSendAsOutput.cc
-  SetFieldDataValues.cc
   SetTetVolFieldDataValues.cc
+  SetFieldDataValues.cc
   PrintHelloWorldToScreen.cc
   SetTetVolFieldDataValuesToZero.cc
 )
@@ -53,6 +53,7 @@ TARGET_LINK_LIBRARIES(Dataflow_Modules_Examples
   Core_Geometry
   Core_GeomInterface
   Dataflow_TkExtensions
+  Core_Basis
   ${TK_LIBRARY}
   ${GL_LIBRARY}
   ${M_LIBRARY}

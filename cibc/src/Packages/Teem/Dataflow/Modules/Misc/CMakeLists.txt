@@ -26,43 +26,40 @@
 #  DEALINGS IN THE SOFTWARE.
 #
 
-# CMakeLists.txt for Packages/BioPSE/Dataflow/Modules/Inverse
+# CMakeLists.txt for Packages/Teem/Dataflow/Modules/Misc
 
-SET(Packages_BioPSE_Dataflow_Modules_Inverse_SRCS
-  BuildSurfaceLaplacianMatrix.cc
-  OptimizeConductivities.cc
-  OptimizeDipole.cc
-  SolveInverseProblemWithTSVD.cc
-  SolveInverseProblemWithTikhonov.cc
-  SolveInverseProblemWithTikhonovSVD.cc
+SET(Packages_Teem_Dataflow_Modules_Misc_SRCS
+  BuildDerivedNrrdWithGage.cc
+  BuildNrrdGradients.cc
+  BuildTextureWithGradientsFromNrrds.cc
+  ClassifyHeadTissuesFromMultiMRI.cc
+  ChooseNrrd.cc
+  ReportNrrdInfo.cc
+  SelectTimeStepFromNrrd.cc
+  SetNrrdProperty.cc
 )
 
-ADD_LIBRARY(Packages_BioPSE_Dataflow_Modules_Inverse ${Packages_BioPSE_Dataflow_Modules_Inverse_SRCS})
+ADD_LIBRARY(Packages_Teem_Dataflow_Modules_Misc ${Packages_Teem_Dataflow_Modules_Misc_SRCS})
 
-TARGET_LINK_LIBRARIES(Packages_BioPSE_Dataflow_Modules_Inverse
-  Packages_BioPSE_Core_Algorithms_Forward
-  Packages_BioPSE_Core_Algorithms_NumApproximation
-  Packages_BioPSE_Core_Datatypes
-  Core_Algorithms_Geometry
-  Core_Basis
+TARGET_LINK_LIBRARIES(Packages_Teem_Dataflow_Modules_Misc
   Core_Containers
   Core_Datatypes
   Core_Exceptions
   Core_Geom
-  Core_Geometry
   Core_GeomInterface
+  Core_Geometry
   Dataflow_GuiInterface
-  Core_Math
   Core_Persistent
   Core_Thread
-  Dataflow_TkExtensions
   Core_Util
+  Dataflow_TkExtensions
   Dataflow_Network
+  ${TEEM_LIBRARY}
   ${TK_LIBRARY}
   ${GL_LIBRARY}
   ${M_LIBRARY}
 )
 
-IF(BUILD_SHARED_LIBS)
-  ADD_DEFINITIONS(-DBUILD_Packages_BioPSE_Dataflow_Modules_Inverse)
-ENDIF(BUILD_SHARED_LIBS)
+IF(NOT BUILD_SHARED_LIBS)
+  ADD_DEFINITIONS(-DBUILD_Packages_Teem_Dataflow_Modules_Misc)
+ENDIF(NOT BUILD_SHARED_LIBS)

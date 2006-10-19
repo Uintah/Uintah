@@ -28,5 +28,5 @@
 
 # CMakeLists.txt for Packages/Teem/Dataflow/Modules
 
-SUBDIRS(Converters DataIO NrrdData Segmentation Tend Unu Gage)
+SUBDIRS(Converters DataIO Misc Tend Unu)
 

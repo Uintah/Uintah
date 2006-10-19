@@ -52,8 +52,6 @@ SET(Dataflow_Modules_Fields_SRCS
   GetHexVolSheetBasedOnEdgeIndices.cc
   ExtractPlanarSliceFromField.cc
   GetFieldBoundary.cc
-  ShowMeshBoundingBox.cc
-  FieldFrenet.cc
   ReportFieldInfo.cc
   ReportFieldGeometryMeasures.cc
   SetFieldProperty.cc
@@ -74,29 +72,27 @@ SET(Dataflow_Modules_Fields_SRCS
   MaskLatVolWithTriSurf.cc
   ConvertLatVolDataFromElemToNode.cc
   ConvertLatVolDataFromNodeToElem.cc
-  NodeCalculateGradients.cc
+  CalculateLatVolGradientsAtNodes.cc
   ConvertQuadSurfToTriSurf.cc
   TransformPlanarMesh.cc
   BuildPointCloudToLatVolMappingMatrix.cc
   GenerateSinglePointProbeFromField.cc
-  ReplaceScalarDataValue.cc
   GeneratePointSamplesFromFieldOrWidget.cc
   CreateLatVol.cc
   CreateImage.cc
   CreateStructHex.cc
   ReportScalarFieldStats.cc
-  ScaleFieldData.cc
   ReportSearchGridInfo.cc
   GeneratePointSamplesFromField.cc
   SelectFieldROIWithBoxWidget.cc
   SetFieldOrMeshStringProperty.cc
   ConvertMeshToPointCloud.cc
   ConvertRasterMeshToStructuredMesh.cc
-  TransformMeshWithFunctionWithTransform.cc
   CalculateFieldData.cc
   CalculateFieldData2.cc
   CalculateFieldData3.cc
   TransformMeshWithFunction.cc
+  TransformMeshWithTransform.cc
   ConvertMeshToUnstructuredMesh.cc
   CalculateVectorMagnitudes.cc
 )
