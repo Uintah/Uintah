@@ -278,9 +278,9 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
 #endif
 
 
-    MatType type;
-    MatGetType(d_A, &type);
-    cout << "MatType = " << type << endl;
+//    MatType type;
+//    MatGetType(d_A, &type);
+//    cout << "MatType = " << type << endl;
 
     if(d_DOFsPerNode>=1){
       MatSetOption(d_A, MAT_USE_INODES);
