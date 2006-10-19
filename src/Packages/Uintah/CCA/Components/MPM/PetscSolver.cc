@@ -20,6 +20,9 @@ using namespace std;
 #undef LOG
 #undef DEBUG_PETSC
 
+//#define USE_SPOOLES
+#undef  USE_SPOOLES
+
 MPMPetscSolver::MPMPetscSolver()
 {
   d_A = 0;
@@ -32,6 +35,7 @@ MPMPetscSolver::MPMPetscSolver()
 
 MPMPetscSolver::~MPMPetscSolver()
 {
+    PetscFinalize();
 }
 
 
@@ -68,6 +72,13 @@ void MPMPetscSolver::initialize()
     }
   }
   PetscInitialize(&argc,&argv, PETSC_NULL, PETSC_NULL);
+//  PetscOptionsSetValue("-mat_spooles_ordering","BestOfNDandMS");
+//  PetscOptionsSetValue("-options_table", PETSC_NULL);
+//  PetscOptionsSetValue("-log_summary", PETSC_NULL);
+//  PetscOptionsSetValue("-log_info", PETSC_NULL);
+//  PetscOptionsSetValue("-trmalloc", PETSC_NULL);
+//  PetscOptionsSetValue("-trmalloc_log", PETSC_NULL);
+//  PetscOptionsSetValue("-trdump", PETSC_NULL);
 }
 
 void 
@@ -157,18 +168,23 @@ void MPMPetscSolver::solve(vector<double>& guess)
     MatView(d_A,PETSC_VIEWER_STDOUT_WORLD);
   }
 #endif
+
   KSPCreate(PETSC_COMM_WORLD,&solver);
   KSPSetOperators(solver,d_A,d_A,DIFFERENT_NONZERO_PATTERN);
   KSPGetPC(solver,&precond);
+
+#ifdef USE_SPOOLES
+  KSPSetType(solver,KSPPREONLY);
+  KSPSetFromOptions(solver);
+  PCSetType(precond,PCLU);
+#else
   KSPSetType(solver,KSPCG);
   PCSetType(precond,PCJACOBI);
-  KSPSetTolerances(solver,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT,PETSC_DEFAULT);
-  
-
-#if 0
-  MatView(d_A,PETSC_VIEWER_STDOUT_WORLD);
-  VecView(d_B,PETSC_VIEWER_STDOUT_WORLD);
 #endif
+
+  KSPSetTolerances(solver,PETSC_DEFAULT,PETSC_DEFAULT,
+                          PETSC_DEFAULT,PETSC_DEFAULT);
+
   if (!guess.empty()) {
     KSPSetInitialGuessNonzero(solver,PETSC_TRUE);
     for (int i = 0; i < (int) guess.size(); i++) {
@@ -177,9 +193,6 @@ void MPMPetscSolver::solve(vector<double>& guess)
 
   }
   KSPSolve(solver,d_B,d_x);
-  int its;
-  KSPGetIterationNumber(solver,&its);
-  PetscPrintf(PETSC_COMM_WORLD,"Iterations %d\n",its);
 #ifdef LOG
   KSPView(solver,PETSC_VIEWER_STDOUT_WORLD);
   int its;
@@ -229,7 +242,7 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
                     globalcolumns, PETSC_DEFAULT, diag, 
                     PETSC_DEFAULT,PETSC_NULL, &d_A);
 #endif
-#if 1
+
     // This one is much faster
     int ONNZ_MAX=57;
     int DIAG_MAX=81;
@@ -252,21 +265,39 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
       diag[i]=min(diag[i],DIAG_MAX);
     }
 
+#ifdef USE_SPOOLES
+    PetscErrorCode ierr;
+    ierr = MatCreate(PETSC_COMM_WORLD, &d_A);
+    ierr = MatSetSizes(d_A,numlrows,numlcolumns,globalrows,globalcolumns);
+    ierr = MatSetType(d_A,MATAIJSPOOLES);
+    ierr = MatMPIAIJSetPreallocation(d_A,PETSC_DEFAULT,diag,PETSC_DEFAULT,onnz);
+#else
     MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
                     globalcolumns, PETSC_DEFAULT, diag, 
                     PETSC_DEFAULT, onnz, &d_A);
+#endif
+
+
+    MatType type;
+    MatGetType(d_A, &type);
+    cout << "MatType = " << type << endl;
 
     if(d_DOFsPerNode>=1){
       MatSetOption(d_A, MAT_USE_INODES);
     }
-#endif
+
     MatSetOption(d_A, MAT_KEEP_ZEROED_ROWS);
     MatSetOption(d_A,MAT_IGNORE_ZERO_ENTRIES);
 
     // Create vectors.  Note that we form 1 vector from scratch and
     // then duplicate as needed.
-
+#ifdef USE_SPOOLES
+    VecCreate(PETSC_COMM_WORLD,&d_B);
+    VecSetSizes(d_B,numlrows,globalrows);
+    ierr = VecSetFromOptions(d_B);
+#else
     VecCreateMPI(PETSC_COMM_WORLD,numlrows, globalrows,&d_B);
+#endif
     VecDuplicate(d_B,&d_diagonal);
     VecDuplicate(d_B,&d_x);
     VecDuplicate(d_B,&d_t);
@@ -346,6 +377,8 @@ void MPMPetscSolver::assembleVector()
 {
   VecAssemblyBegin(d_B);
   VecAssemblyEnd(d_B);
+  VecAssemblyBegin(d_x);
+  VecAssemblyEnd(d_x);
 }
 
 void MPMPetscSolver::assembleTemporaryVector()
