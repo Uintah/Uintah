@@ -53,6 +53,9 @@ window_event_callback(EventHandlerCallRef nextHandler,
                void *userData)
 {
   ASSERT (GetEventClass(theEvent) == kEventClassWindow);
+
+  // Being lazy here, redraw handles everything, but this could
+  // be optimized for performance.
   WindowEvent *event = new WindowEvent(WindowEvent::REDRAW_E);
   event->set_target(*((string *)userData));
   EventManager::add_event(event);
@@ -86,7 +89,7 @@ window_close_event_callback(EventHandlerCallRef nextHandler,
 }
 
 
-
+#if 0 // See below, but OSX sucks and we never get this callback
 static pascal OSStatus
 quit_event_callback(EventHandlerCallRef nextHandler,
                     EventRef theEvent,
@@ -98,6 +101,8 @@ quit_event_callback(EventHandlerCallRef nextHandler,
   
   return (CallNextEventHandler(nextHandler, theEvent));
 }
+#endif
+
 
 
 static pascal OSStatus
@@ -143,6 +148,7 @@ mouse_event_callback(EventHandlerCallRef nextHandler,
   }
 
 
+
   // Get Buttons
   // TODO, change to mouse chord for multiple buttons
   EventMouseButton button;
@@ -159,7 +165,7 @@ mouse_event_callback(EventHandlerCallRef nextHandler,
   default: break;
   }
 
-
+  
   // Get mouse cursor location
   Point	point;
   GetEventParameter(theEvent, kEventParamMouseLocation, typeQDPoint,
@@ -181,13 +187,26 @@ mouse_event_callback(EventHandlerCallRef nextHandler,
   sci_event->set_pointer_state(state);
   sci_event->set_x(point.h - rect.left);
   sci_event->set_y(rect.bottom - point.v);
-  
+
+
+  UInt32 carbon_modifiers = GetCurrentEventKeyModifiers();
+  unsigned int modifiers = 0;
+  if (carbon_modifiers & 0x0100) modifiers |= EventModifiers::ALT_E;
+  if (carbon_modifiers & 0x0200) modifiers |= EventModifiers::SHIFT_E;
+  if (carbon_modifiers & 0x0800) modifiers |= EventModifiers::M1_E;//Option key
+  if (carbon_modifiers & 0x1000) modifiers |= EventModifiers::CONTROL_E; 
+
+  sci_event->set_modifiers(modifiers);
+
   // Send it to our own event manager
   sci_event->set_target(*((string *)userData));
   EventManager::add_event(sci_event);
 
   return (CallNextEventHandler(nextHandler, theEvent));
 }
+
+
+
 
 static pascal OSStatus
 key_event_callback(EventHandlerCallRef nextHandler,
@@ -226,79 +245,21 @@ key_event_callback(EventHandlerCallRef nextHandler,
 
   sci_event->set_keyval(keyval);
 
+  UInt32 carbon_modifiers = GetCurrentEventKeyModifiers();
+  unsigned int modifiers = 0;
+  if (carbon_modifiers & 0x0100) modifiers |= EventModifiers::ALT_E;
+  if (carbon_modifiers & 0x0200) modifiers |= EventModifiers::SHIFT_E;
+  if (carbon_modifiers & 0x0800) modifiers |= EventModifiers::M1_E;//Option key
+  if (carbon_modifiers & 0x1000) modifiers |= EventModifiers::CONTROL_E;
+  cerr << "mod: " << carbon_modifiers << std::endl;
+  sci_event->set_modifiers(modifiers);
+
   // Send it to our own event manager
   sci_event->set_target(*((string *)userData));
   EventManager::add_event(sci_event);
   
   return (CallNextEventHandler(nextHandler, theEvent));
 }
-
-#if 0
-
-    unsigned int state = 0;
-    if (xeventp->state & ShiftMask)    state |= KeyEvent::SHIFT_E;
-    if (xeventp->state & LockMask)      state |= KeyEvent::CAPS_LOCK_E;
-    if (xeventp->state & ControlMask)   state |= KeyEvent::CONTROL_E;
-    if (xeventp->state & Mod1Mask)      state |= KeyEvent::ALT_E;
-
-    sci_event->set_modifiers(state);
-    sci_event->set_time(xeventp->time);
-    sci_event->set_keyval(XLookupKeysym(xeventp,0));
-    if (sci_getenv_p("SCI_DEBUG")) {
-      cerr << "Keyval: " << sci_event->get_keyval() << std::endl;
-    }
-
-    return sci_event;
-  // Type of mouse event
-  unsigned int state = 0;
-  switch (GetEventKind(theEvent)) {
-  case kEventMouseDown    : state = PointerEvent::BUTTON_PRESS_E; break;
-  case kEventMouseUp      : state = PointerEvent::BUTTON_RELEASE_E; break;
-  case kEventMouseDragged : state = PointerEvent::MOTION_E; break;
-  case kEventMouseMoved   : state = PointerEvent::MOTION_E; break;
-  default: break;
-  }
-
-
-  // Get Buttons
-  EventMouseButton button;
-  // TODO, change to mouse chord for multiple buttons
-  GetEventParameter(theEvent, kEventParamMouseButton, typeMouseButton,
-                    NULL, sizeof(EventMouseButton), NULL, &button);
-
-  switch (button) {
-  case 1: state |= PointerEvent::BUTTON_1_E; break;
-  case 2: state |= PointerEvent::BUTTON_2_E; break;
-  case 3: state |= PointerEvent::BUTTON_3_E; break;
-  case 4: state |= PointerEvent::BUTTON_4_E; break;
-  case 5: state |= PointerEvent::BUTTON_5_E; break;
-  default: break;
-  }
-
-
-  // Get mouse cursor location
-  Point	point;
-
-  WindowPtr window;  
-  GetEventParameter(theEvent, kEventParamWindowRef, typeWindowRef,
-                    NULL, sizeof(Point), NULL, &window);
-  
-  
-  RgnHandle win_reg = NewRgn();
-  GetWindowRegion(window, kWindowGlobalPortRgn, win_reg);
-  Rect rect;
-  GetRegionBounds(win_reg, &rect);
-  DisposeRgn(win_reg);
-
-  //Create the event
-  PointerEvent *sci_event = new PointerEvent();  
-  sci_event->set_pointer_state(state);
-  sci_event->set_x(point.h - rect.left);
-  sci_event->set_y(rect.bottom - point.v);
-  
-}
-#endif
-
 
 OSXEventSpawner::OSXEventSpawner(const string &target, 
                                  WindowPtr window) :
