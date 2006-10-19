@@ -45,6 +45,7 @@ SCIRun::FieldsCreate::FieldBoundary		SCIRun::NewField::GetFieldBoundary
 SCIRun::FieldsCreate::FieldSlicer		SCIRun::NewField::GetSliceFromLatVol
 SCIRun::FieldsCreate::FieldArbitrarySlicer	SCIRun::NewField::ExtractPlanarSliceFromField
 SCIRun::FieldsCreate::FieldSubSample	SCIRun::NewField::ClipRasterFieldByIndices
+SCIRun::FieldsCreate::GatherPoints		SCIRun::NewField::JoinFields
 SCIRun::FieldsCreate::GatherFields		SCIRun::NewField::JoinFields
 SCIRun::FieldsCreate::InsertField		SCIRun::NewField::MergeFields
 SCIRun::FieldsCreate::InsertHexSheet	SCIRun::NewField::InsertHexVolSheetFromTriSurf
@@ -63,6 +64,7 @@ SCIRun::FieldsData::AttractNormals		SCIRun::ChangeFieldData::CalculateNodeNormal
 SCIRun::FieldsData::BuildMappingMatrix	SCIRun::MiscField::BuildMappingMatrix
 SCIRun::FieldsData::ChangeFieldBasis	SCIRun::ChangeFieldData::ConvertFieldBasis
 SCIRun::FieldsData::ChangeFieldDataType	SCIRun::ChangeFieldData::ConvertFieldDataType
+SCIRun::FieldsData::DirectInterpolate		SCIRun::ChangeFieldData::MapFieldDataFromSourceToDestination
 SCIRun::FieldsData::DirectMapping		SCIRun::ChangeFieldData::MapFieldDataFromSourceToDestination
 SCIRun::FieldsData::Gradient		SCIRun::ChangeFieldData::CalculateGradients
 SCIRun::FieldsData::ManageFieldData		SCIRun::ChangeFieldData::SwapFieldDataWithMatrixEntries
@@ -216,9 +218,11 @@ MatlabInterface::DataIO::MatlabNrrdsReader		MatlabInterface::DataIO::ImportNrrds
 MatlabInterface::DataIO::MatlabNrrdsWriter		MatlabInterface::DataIO::ExportNrrdsToMatlab
 Teem::Converters::ColorMap2ToNrrd		Teem::Converters::ConvertColorMap2ToNrrd
 Teem::Converters::ColorMapToNrrd		Teem::Converters::ConvertColorMapToNrrd
+Teem::DataIO::FieldToNrrd		Teem::Converters::ConvertRasterFieldToNrrd
 Teem::Converters::FieldToNrrd		Teem::Converters::ConvertRasterFieldToNrrd
 Teem::Converters::MatrixToNrrd		Teem::Converters::ConvertMatrixToNrrd
 Teem::Converters::NrrdToColorMap2		Teem::Converters::ConvertNrrdToColorMap2
+Teem::DataIO::NrrdToField		Teem::Converters::ConvertNrrdToRasterField
 Teem::Converters::NrrdToField		Teem::Converters::ConvertNrrdToRasterField
 Teem::Converters::NrrdToMatrix		Teem::Converters::ConvertNrrdToMatrix
 Teem::DataIO::AnalyzeNrrdReader		Teem::DataIO::ImportNrrdFromAnalyze

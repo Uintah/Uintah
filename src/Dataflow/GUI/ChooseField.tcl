@@ -27,7 +27,7 @@
 #
 
 
-itcl_class SCIRun_FieldsOther_ChooseField {
+itcl_class SCIRun_MiscField_ChooseField {
     inherit ChooseModule
     
     constructor {config} {
