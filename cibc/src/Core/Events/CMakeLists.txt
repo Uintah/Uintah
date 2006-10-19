@@ -35,7 +35,6 @@ SET(Core_Events_SRCS
   OSXEventSpawner.cc
   SceneGraphEvent.cc
   SelectionTargetEvent.cc
-  X11EventSpawner.cc	
   Trail.cc	
   Tools/AutoviewTool.cc	
   Tools/Ball.cc		
@@ -49,6 +48,12 @@ SET(Core_Events_SRCS
   Tools/ViewScaleTool.cc	
   Tools/ViewTranslateTool.cc	
 )
+
+IF(WIN32)
+  SET(Core_Events_SRCS ${Core_Events_SRCS} Win32EventSpawner.cc)
+ELSE(WIN32)
+  SET(Core_Events_SRCS ${Core_Events_SRCS} X11EventSpawner.cc)
+ENDIF(WIN32)
 
 # DV Fix should do subdirectory tools instead of adding tools files above
 #SUBDIRS(Tools)
@@ -80,7 +85,7 @@ IF(WIN32)
   TARGET_LINK_LIBRARIES( Core_Events Core_OS)
 ENDIF(WIN32)
 
-IF(NOT BUILD_SHARED_LIBS)
+IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Core_Events)
-ENDIF(NOT BUILD_SHARED_LIBS)
+ENDIF(BUILD_SHARED_LIBS)
 

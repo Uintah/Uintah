@@ -108,19 +108,6 @@ namespace SCIRun {
       var_type_e        get_type_e(const string &);
       bool              set_by_string(const string &, const string &);
 
-    private:
-      // Disable Copy Constructor
-      Variables         (const Variables &copy) { ASSERT(0); }
-
-      void              breakpoint();
-      friend class Var<Color>;
-      friend class Var<int>;
-      friend class Var<bool>;
-      friend class Var<string>;
-      friend class Var<double>;
-
-
-      
       struct SCISHARE value_t {
         value_t(string, string, var_type_e);
         bool              update_cache_from_string(Variables *);
@@ -132,6 +119,16 @@ namespace SCIRun {
         bool              cache_current_;
       };
 
+    private:
+      // Disable Copy Constructor
+      Variables         (const Variables &copy) { ASSERT(0); }
+
+      void              breakpoint();
+      friend class Var<Color>;
+      friend class Var<int>;
+      friend class Var<bool>;
+      friend class Var<string>;
+      friend class Var<double>;
 
       typedef map<string, value_t> name_value_map_t;
       typedef std::set<Variables *> children_t;

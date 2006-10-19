@@ -45,10 +45,14 @@
 #endif
 
 #ifdef _WIN32
-#include <windows.h>
-#define SCISHARE __declspec(dllexport)
+#  include <windows.h>
+#  ifndef BUILD_STATIC
+#    define SCISHARE __declspec(dllimport)
+#  else
+#    define SCISHARE
+#  endif
 #else
-#define SCISHARE
+#  define SCISHARE
 #endif
 
 #ifdef HAVE_GLEW

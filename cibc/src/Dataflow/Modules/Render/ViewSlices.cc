@@ -89,11 +89,15 @@
 #include <map>
 
 #ifdef _WIN32
-#undef min
-#undef max
-#define SCISHARE __declspec(dllimport)
+#  undef min
+#  undef max
+#  ifndef BUILD_STATIC
+#    define SCISHARE __declspec(dllimport)
+#  else
+#    define SCISHARE
+#  endif
 #else
-#define SCISHARE
+#  define SCISHARE
 #endif
 
 extern "C" SCISHARE Tcl_Interp* the_interp;

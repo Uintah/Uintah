@@ -101,10 +101,15 @@ SET(Core_Geom_SRCS
   TimeGrid.cc		    		
   View.cc		    		
   X11Lock.cc		    		
-  X11OpenGLContext.cc
   tGrid.cc		    		
   templates.cc
 )
+
+IF(WIN32)
+  SET(Core_Geom_SRCS ${Core_Geom_SRCS} Win32OpenGLContext.cc)
+ELSE(WIN32)
+  SET(Core_Geom_SRCS ${Core_Geom_SRCS} X11OpenGLContext.cc)
+ENDIF(WIN32)
 
 ADD_LIBRARY(Core_Geom ${Core_Geom_SRCS})
 
@@ -128,7 +133,7 @@ TARGET_LINK_LIBRARIES( Core_Geom
 #  ${DEFAULT_LIBRARY}
 
 
-IF(NOT BUILD_SHARED_LIBS)
+IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Core_Geom)
-ENDIF(NOT BUILD_SHARED_LIBS)
+ENDIF(BUILD_SHARED_LIBS)
 

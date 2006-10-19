@@ -35,7 +35,7 @@
 #define TCLCONST
 #endif
 
-#ifdef _WIN32
+#if defined(_WIN32) && !defined(BUILD_STATIC)
 #define SCISHARE __declspec(dllexport)
 #else
 #define SCISHARE

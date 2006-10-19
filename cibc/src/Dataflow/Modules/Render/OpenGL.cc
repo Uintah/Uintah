@@ -70,7 +70,11 @@
 #  undef far
 #  undef min
 #  undef max
-#  define SCISHARE __declspec(dllimport)
+#  ifndef BUILD_STATIC
+#    define SCISHARE __declspec(dllimport)
+#  else
+#    define SCISHARE
+#  endif
 #else
 #  define SCISHARE
 #endif

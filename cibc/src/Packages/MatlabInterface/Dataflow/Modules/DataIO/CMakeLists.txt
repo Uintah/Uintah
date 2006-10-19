@@ -71,6 +71,6 @@ TARGET_LINK_LIBRARIES(Packages_InterfaceWithMatlabInterface_Dataflow_Modules_Dat
   ${GL_LIBRARY}
 )
 
-IF(NOT BUILD_SHARED_LIBS)
+IF(BUILD_SHARED_LIBS)
   ADD_DEFINITIONS(-DBUILD_Packages_InterfaceWithMatlabInterface_Dataflow_Modules_DataIO)
-ENDIF(NOT BUILD_SHARED_LIBS)
+ENDIF(BUILD_SHARED_LIBS)
