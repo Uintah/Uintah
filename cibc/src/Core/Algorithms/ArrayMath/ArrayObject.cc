@@ -63,13 +63,13 @@ bool ArrayObject::create_inputdata(SCIRun::FieldHandle field, std::string name)
   SCIRun::CompileInfoHandle ci = ArrayObjectFieldDataAlgo::get_compile_info(field);
   if (!SCIRun::DynamicCompilation::compile(ci,fielddataalgo_,false,pr_))
   {
-    error("Dynamic compilation failed");
+    pr_->error("Dynamic compilation failed");
     return(false);
   }
   
   if(!(fielddataalgo_->setfield(field)))
   {
-    error("Could not initiate dynamic algorithm");
+    pr_->error("Could not initiate dynamic algorithm");
     return(false);
   }
   
@@ -137,13 +137,13 @@ bool ArrayObject::create_inputlocation(SCIRun::FieldHandle field, std::string lo
   SCIRun::CompileInfoHandle ci = ArrayObjectFieldLocationAlgo::get_compile_info(field);
   if (!SCIRun::DynamicCompilation::compile(ci,fieldlocationalgo_,false,pr_))
   {
-    error("Dynamic compilation failed");
+    pr_->error("Dynamic compilation failed");
     return(false);
   }
   
   if(!(fieldlocationalgo_->setfield(field)))
   {
-    error("Could not initiate dynamic algorithm");
+    pr_->error("Could not initiate dynamic algorithm");
     return(false);
   }
 
@@ -163,13 +163,13 @@ bool ArrayObject::create_inputelement(SCIRun::FieldHandle field, std::string nam
   SCIRun::CompileInfoHandle ci = ArrayObjectFieldElemAlgo::get_compile_info(field);
   if (!SCIRun::DynamicCompilation::compile(ci,fieldelementalgo_,false,pr_))
   {
-    error("Dynamic compilation failed");
+    pr_->error("Dynamic compilation failed");
     return(false);
   }  
 
   if(!(fieldelementalgo_->setfield(field)))
   {
-    error("Could not initiate dynamic algorithm");
+    pr_->error("Could not initiate dynamic algorithm");
     return(false);
   }
 
@@ -185,7 +185,7 @@ bool ArrayObject::create_outputdata(SCIRun::FieldHandle& field, std::string data
   
   if (field.get_rep() == 0) 
   {
-    error("No input data field");
+    pr_->error("No input data field");
     return(false);
   }
   name_ = name;
@@ -193,26 +193,26 @@ bool ArrayObject::create_outputdata(SCIRun::FieldHandle& field, std::string data
   SCIRun::CompileInfoHandle ci = ArrayObjectFieldCreateAlgo::get_compile_info(field,datatype);
   if (!SCIRun::DynamicCompilation::compile(ci,fieldcreatealgo_,false,pr_))
   {
-    error("Dynamic compilation failed");
+    pr_->error("Dynamic compilation failed (ArrayObjectFieldCreateAlgo)");
     return(false);
   }  
 
   if(!(fieldcreatealgo_->createfield(field,field_)))
   {
-    error("Could not create output field");
+    pr_->error("Could not create output field");
     return(false);
   }
 
   SCIRun::CompileInfoHandle ci2 = ArrayObjectFieldDataAlgo::get_compile_info(field_);
   if (!SCIRun::DynamicCompilation::compile(ci2,fielddataalgo_,false,pr_))
   {
-    error("Dynamic compilation failed");
+    pr_->error("Dynamic compilation failed (ArrayObjectFieldDataAlgo)");
     return(false);
   }  
   
   if (!(fielddataalgo_->setfield(field_)))
   {
-    error("Could not link field with dynamic algorithm");
+    pr_->error("Could not link field with dynamic algorithm");
     return(false);  
   }
   
@@ -225,7 +225,7 @@ bool ArrayObject::create_outputdata(SCIRun::FieldHandle& field, std::string data
   
   if (type_ == INVALID)
    {
-    error("Could not link field with dynamic algorithm");
+    pr_->error("Could not link field with dynamic algorithm");
     return(false);  
   }
    
@@ -234,15 +234,13 @@ bool ArrayObject::create_outputdata(SCIRun::FieldHandle& field, std::string data
 }
 
 
-
-
 bool ArrayObject::create_outputlocation(SCIRun::FieldHandle& field,  std::string name, SCIRun::FieldHandle& ofield)
 {
   clear();
   
   if (field.get_rep() == 0) 
   {
-    error("No input data field");
+    pr_->error("No input data field");
     return(false);
   }
   name_ = name;
@@ -253,13 +251,13 @@ bool ArrayObject::create_outputlocation(SCIRun::FieldHandle& field,  std::string
   SCIRun::CompileInfoHandle ci2 = ArrayObjectFieldLocationAlgo::get_compile_info(field_);
   if (!SCIRun::DynamicCompilation::compile(ci2,fieldlocationalgo_,false,pr_))
   {
-    error("Dynamic compilation failed");
+    pr_->error("Dynamic compilation failed");
     return(false);
   }  
   
   if (!(fieldlocationalgo_->setfield(field_)))
   {
-    error("Could not link field with dynamic algorithm");
+    pr_->error("Could not link field with dynamic algorithm");
     return(false);  
   }
   
@@ -279,7 +277,7 @@ bool ArrayObject::create_outputdata(SCIRun::FieldHandle& field, std::string data
   
   if (field.get_rep() == 0) 
   {
-    error("No input data field");
+    pr_->error("No input data field");
     return(false);
   }
   name_ = name;
@@ -287,26 +285,26 @@ bool ArrayObject::create_outputdata(SCIRun::FieldHandle& field, std::string data
   SCIRun::CompileInfoHandle ci = ArrayObjectFieldCreateAlgo::get_compile_info(field,datatype,basistype);
   if (!SCIRun::DynamicCompilation::compile(ci,fieldcreatealgo_,false,pr_))
   {
-    error("Dynamic compilation failed");
+    pr_->error("Dynamic compilation failed");
     return(false);
   }  
 
   if(!(fieldcreatealgo_->createfield(field,field_)))
   {
-    error("Could not create output field");
+    pr_->error("Could not create output field");
     return(false);
   }
 
   SCIRun::CompileInfoHandle ci2 = ArrayObjectFieldDataAlgo::get_compile_info(field_);
   if (!SCIRun::DynamicCompilation::compile(ci2,fielddataalgo_,false,pr_))
   {
-    error("Dynamic compilation failed");
+    pr_->error("Dynamic compilation failed");
     return(false);
   }  
   
   if (!(fielddataalgo_->setfield(field_)))
   {
-    error("Could not link field with dynamic algorithm");
+    pr_->error("Could not link field with dynamic algorithm");
     return(false);  
   }
   
@@ -319,7 +317,7 @@ bool ArrayObject::create_outputdata(SCIRun::FieldHandle& field, std::string data
   
   if (type_ == INVALID)
    {
-    error("Could not link field with dynamic algorithm");
+    pr_->error("Could not link field with dynamic algorithm");
     return(false);  
   }
    
@@ -335,7 +333,7 @@ bool ArrayObject::create_outputdata(int size, std::string datatype, std::string 
   
   if (size == 0)
   {
-    error("Output matrix size is 0");
+    pr_->error("Output matrix size is 0");
     return(false);
   }
   
@@ -352,7 +350,7 @@ bool ArrayObject::create_outputdata(int size, std::string datatype, std::string 
   matrix_ = dynamic_cast<SCIRun::Matrix *>(scinew SCIRun::DenseMatrix(size_,ncols_));
   if (matrix_.get_rep() == 0)
   {
-    error("Could not allocate matrix");
+    pr_->error("Could not allocate matrix");
     return(false);
   }
   

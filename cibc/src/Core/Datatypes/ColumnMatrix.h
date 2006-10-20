@@ -70,8 +70,8 @@ public:
   virtual ColumnMatrix *column();
   virtual DenseColMajMatrix *dense_col_maj();
 
-  virtual double *get_data_pointer();
-  virtual size_t get_data_size();
+  virtual double *get_data_pointer() const;
+  virtual size_t get_data_size() const;
 
   inline double& operator[](int r) const
   {

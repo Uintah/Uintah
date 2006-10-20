@@ -65,6 +65,7 @@ class SCISHARE ArrayObject {
     bool create_outputdata(SCIRun::FieldHandle& field, std::string datatype, std::string basistype, std::string name,SCIRun::FieldHandle& ofield);
     bool create_outputdata(int size, std::string datatype, std::string name,SCIRun::MatrixHandle& omatrix);    
     bool create_outputlocation(SCIRun::FieldHandle& field, std::string locname,SCIRun::FieldHandle& ofield);
+
     
     // This inline code should almost give direct data access and should 
     // reduce the function call overhead. For the field data, we still have
@@ -165,9 +166,6 @@ class SCISHARE ArrayObject {
     std::string yname_;
     std::string zname_;
     
-    inline void error(std::string error);
-    inline void warning(std::string warning);
-
     void clear();
     
 };
@@ -457,31 +455,6 @@ inline void ArrayObject::getelement(TensorVectorMath::Element& elem)
 {
   elem = TensorVectorMath::Element(fieldelementalgo_);
 }
-
-inline void ArrayObject::error(std::string error)
-{
-  if (pr_) 
-  {
-    pr_->error(error);
-  }
-  else
-  {
-    std::cerr << "ERROR: " << error << std::endl;
-  }
-}
-
-inline void ArrayObject::warning(std::string warning)
-{
-  if(pr_) 
-  {
-    pr_->warning(warning);
-  }
-  else
-  {
-    std::cerr << "WARNING: " << warning << std::endl;
-  }
-}
-
 
 } // end namespace
 

@@ -172,14 +172,14 @@ DenseColMajMatrix::dense_col_maj()
 
 
 double *
-DenseColMajMatrix::get_data_pointer()
+DenseColMajMatrix::get_data_pointer() const
 {
   return dataptr_;
 }
 
 
 size_t
-DenseColMajMatrix::get_data_size()
+DenseColMajMatrix::get_data_size() const
 {
   return nrows() * ncols();
 }

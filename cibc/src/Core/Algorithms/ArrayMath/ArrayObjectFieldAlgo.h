@@ -105,6 +105,7 @@ class SCISHARE ArrayObjectFieldDataAlgo : public SCIRun::DynamicAlgoBase {
 
     virtual bool setfield(SCIRun::FieldHandle handle);
     virtual void reset();
+    virtual void reset(unsigned int offset);
     
     static  SCIRun::CompileInfoHandle get_compile_info(SCIRun::FieldHandle& field);
 };
@@ -121,6 +122,7 @@ class SCISHARE ArrayObjectFieldDataScalarAlgoT : public ArrayObjectFieldDataAlgo
 
     virtual bool  setfield(SCIRun::FieldHandle handle);    
     virtual void  reset();
+    virtual void reset(unsigned int offset);
     
   private:
     typename LOC::iterator it_;
@@ -134,6 +136,16 @@ void ArrayObjectFieldDataScalarAlgoT<FIELD,LOC>::reset()
   typename FIELD::mesh_type* mesh = dynamic_cast<typename FIELD::mesh_type *>(field_->mesh().get_rep()); 
   mesh->begin(it_);
 }
+
+template<class FIELD, class LOC>
+void ArrayObjectFieldDataScalarAlgoT<FIELD,LOC>::reset(unsigned int offset)
+{
+  typename FIELD::mesh_type* mesh = dynamic_cast<typename FIELD::mesh_type *>(field_->mesh().get_rep()); 
+  mesh->begin(it_);
+  for (unsigned int p=0;p<offset;p++) ++it_;
+}
+
+
 
 template<class FIELD, class LOC>
 bool ArrayObjectFieldDataScalarAlgoT<FIELD,LOC>::setfield(SCIRun::FieldHandle handle)
@@ -195,6 +207,7 @@ class SCISHARE ArrayObjectFieldDataVectorAlgoT : public ArrayObjectFieldDataAlgo
 
     virtual bool setfield(SCIRun::FieldHandle handle);    
     virtual void reset();
+    virtual void reset(unsigned int offset);
     
   private:
     typename LOC::iterator it_;
@@ -208,6 +221,15 @@ void ArrayObjectFieldDataVectorAlgoT<FIELD,LOC>::reset()
   typename FIELD::mesh_type* mesh = dynamic_cast<typename FIELD::mesh_type *>(field_->mesh().get_rep()); 
   mesh->begin(it_);
 }
+
+template<class FIELD, class LOC>
+void ArrayObjectFieldDataVectorAlgoT<FIELD,LOC>::reset(unsigned int offset)
+{
+  typename FIELD::mesh_type* mesh = dynamic_cast<typename FIELD::mesh_type *>(field_->mesh().get_rep()); 
+  mesh->begin(it_);
+  for (unsigned int p=0;p<offset;p++) ++it_;
+}
+
 
 template<class FIELD, class LOC>
 bool ArrayObjectFieldDataVectorAlgoT<FIELD,LOC>::setfield(SCIRun::FieldHandle handle)
@@ -267,8 +289,9 @@ class SCISHARE ArrayObjectFieldDataTensorAlgoT : public ArrayObjectFieldDataAlgo
     virtual bool istensor();
     virtual int  size();
 
-    virtual bool  setfield(SCIRun::FieldHandle handle);    
-    virtual void  reset();
+    virtual bool setfield(SCIRun::FieldHandle handle);    
+    virtual void reset();
+    virtual void reset(unsigned int);
     
   private:
     typename LOC::iterator it_;
@@ -280,7 +303,16 @@ template<class FIELD, class LOC>
 void ArrayObjectFieldDataTensorAlgoT<FIELD,LOC>::reset()
 {
   typename FIELD::mesh_type* mesh = dynamic_cast<typename FIELD::mesh_type *>(field_->mesh().get_rep()); 
-  mesh->begin(it_);}
+  mesh->begin(it_);
+}
+
+template<class FIELD, class LOC>
+void ArrayObjectFieldDataTensorAlgoT<FIELD,LOC>::reset(unsigned int offset)
+{
+  typename FIELD::mesh_type* mesh = dynamic_cast<typename FIELD::mesh_type *>(field_->mesh().get_rep()); 
+  mesh->begin(it_);
+  for (int p=0; p< offset; p++) ++it_;
+}
 
 template<class FIELD, class LOC>
 bool ArrayObjectFieldDataTensorAlgoT<FIELD,LOC>::setfield(SCIRun::FieldHandle handle)
@@ -345,6 +377,7 @@ class SCISHARE ArrayObjectFieldLocationAlgo : public SCIRun::DynamicAlgoBase {
     virtual int  size() = 0;
     virtual bool setfield(SCIRun::FieldHandle handle) = 0;
     virtual void reset() = 0;
+    virtual void reset(unsigned int offset) = 0;
     
     static  SCIRun::CompileInfoHandle get_compile_info(SCIRun::FieldHandle& field);
 };
@@ -357,6 +390,7 @@ class SCISHARE ArrayObjectSetFieldLocationAlgo : public SCIRun::DynamicAlgoBase 
     virtual int  size() = 0;
     virtual bool setfield(SCIRun::FieldHandle handle) = 0;
     virtual void reset() = 0;
+    virtual void reset(unsigned int offset) = 0;
     
     static  SCIRun::CompileInfoHandle get_compile_info(SCIRun::FieldHandle& field);
 };
@@ -373,6 +407,7 @@ class SCISHARE ArrayObjectFieldLocationAlgoT : public ArrayObjectFieldLocationAl
     virtual int  size();
     virtual bool setfield(SCIRun::FieldHandle handle);    
     virtual void reset();
+    virtual void reset(unsigned int offset);
     
   private:
     typename FIELD::mesh_type::Node::iterator it_;
@@ -387,6 +422,14 @@ void ArrayObjectFieldLocationAlgoT<FIELD>::reset()
 {
   mesh_->begin(it_);
 }
+
+template<class FIELD>
+void ArrayObjectFieldLocationAlgoT<FIELD>::reset(unsigned int offset)
+{
+  mesh_->begin(it_);
+  for (unsigned int p=0;p<offset;p++) ++it_;
+}
+
 
 template<class FIELD>
 bool ArrayObjectFieldLocationAlgoT<FIELD>::setfield(SCIRun::FieldHandle handle)
@@ -437,6 +480,7 @@ class SCISHARE ArrayObjectFieldLocationNodeAlgoT : public ArrayObjectFieldLocati
     virtual int  size();
     virtual bool setfield(SCIRun::FieldHandle handle);    
     virtual void reset();
+    virtual void reset(unsigned int offset);
     
   private:
     typename FIELD::mesh_type::Node::iterator it_;
@@ -450,6 +494,13 @@ template<class FIELD>
 void ArrayObjectFieldLocationNodeAlgoT<FIELD>::reset()
 {
   mesh_->begin(it_);
+}
+
+template<class FIELD>
+void ArrayObjectFieldLocationNodeAlgoT<FIELD>::reset(unsigned int offset)
+{
+  mesh_->begin(it_);
+  for (unsigned int p=0; p< offset;p++) ++it_;
 }
 
 template<class FIELD>
@@ -497,6 +548,7 @@ class SCISHARE ArrayObjectFieldLocationElemAlgoT : public ArrayObjectFieldLocati
     virtual int  size();
     virtual bool setfield(SCIRun::FieldHandle handle);    
     virtual void reset();
+    virtual void reset(unsigned int offset);
     
   private:
     typename FIELD::mesh_type::Elem::iterator it_;
@@ -510,6 +562,14 @@ void ArrayObjectFieldLocationElemAlgoT<FIELD>::reset()
 {
   mesh_->begin(it_);
 }
+
+template<class FIELD>
+void ArrayObjectFieldLocationElemAlgoT<FIELD>::reset(unsigned int offset)
+{
+  mesh_->begin(it_);
+  for (unsigned int p=0; p<offset; p++) ++it_;
+}
+
 
 template<class FIELD>
 bool ArrayObjectFieldLocationElemAlgoT<FIELD>::setfield(SCIRun::FieldHandle handle)
@@ -593,6 +653,7 @@ class SCISHARE ArrayObjectFieldElemAlgo : public SCIRun::DynamicAlgoBase {
 
     virtual bool setfield(SCIRun::FieldHandle handle);
     virtual void reset();
+    virtual void reset(unsigned int offset);
     virtual void next();
     virtual int  size();    
     
@@ -620,6 +681,8 @@ class SCISHARE ArrayObjectFieldElemPointAlgoT : public ArrayObjectFieldElemAlgo 
 
     virtual bool setfield(SCIRun::FieldHandle handle);
     virtual void reset();
+    virtual void reset(unsigned int offset);
+
     virtual void next(); 
     virtual int  size();       
   
@@ -660,6 +723,13 @@ void ArrayObjectFieldElemPointAlgoT<FIELD,LOC>::reset()
 }
 
 template<class FIELD, class LOC>
+void ArrayObjectFieldElemPointAlgoT<FIELD,LOC>::reset(unsigned int offset)
+{
+  mesh_->begin(it_);
+  for (unsigned int p=0;p<offset;p++) ++it_;
+}
+
+template<class FIELD, class LOC>
 void ArrayObjectFieldElemPointAlgoT<FIELD,LOC>::next()
 {
   ++it_;
@@ -691,6 +761,7 @@ class SCISHARE ArrayObjectFieldElemLineAlgoT : public ArrayObjectFieldElemAlgo {
 
     virtual bool setfield(SCIRun::FieldHandle handle);
     virtual void reset();
+    virtual void reset(unsigned int offset);
     virtual void next(); 
     virtual int  size();       
   
@@ -728,6 +799,14 @@ void ArrayObjectFieldElemLineAlgoT<FIELD,LOC>::reset()
 {
   mesh_->begin(it_);
 }
+
+template<class FIELD, class LOC>
+void ArrayObjectFieldElemLineAlgoT<FIELD,LOC>::reset(unsigned int offset)
+{
+  mesh_->begin(it_);
+  for (unsigned int p = 0; p<offset; p++) ++it_;
+}
+
 
 template<class FIELD, class LOC>
 void ArrayObjectFieldElemLineAlgoT<FIELD,LOC>::next()
@@ -775,6 +854,7 @@ class SCISHARE ArrayObjectFieldElemSurfAlgoT : public ArrayObjectFieldElemAlgo {
 
     virtual bool setfield(SCIRun::FieldHandle handle);
     virtual void reset();
+    virtual void reset(unsigned int offset);
     virtual void next();    
     virtual int  size();    
   
@@ -811,6 +891,13 @@ template<class FIELD, class LOC>
 void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::reset()
 {
   mesh_->begin(it_);
+}
+
+template<class FIELD, class LOC>
+void ArrayObjectFieldElemSurfAlgoT<FIELD,LOC>::reset(unsigned int offset)
+{
+  mesh_->begin(it_);
+  for (unsigned int p = 0; p < offset; p++) ++it_;
 }
 
 template<class FIELD, class LOC>
@@ -880,6 +967,7 @@ class SCISHARE ArrayObjectFieldElemVolumeAlgoT : public ArrayObjectFieldElemAlgo
 
     virtual bool setfield(SCIRun::FieldHandle handle);
     virtual void reset();
+    virtual void reset(unsigned int offset);
     virtual void next();    
     virtual int  size();
   
@@ -916,6 +1004,13 @@ template<class FIELD, class LOC>
 void ArrayObjectFieldElemVolumeAlgoT<FIELD,LOC>::reset()
 {
   mesh_->begin(it_);
+}
+
+template<class FIELD, class LOC>
+void ArrayObjectFieldElemVolumeAlgoT<FIELD,LOC>::reset(unsigned int offset)
+{
+  mesh_->begin(it_);
+  for (unsigned p = 0; p < offset; p++) ++it_;
 }
 
 template<class FIELD, class LOC>
