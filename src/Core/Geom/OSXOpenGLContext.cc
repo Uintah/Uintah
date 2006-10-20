@@ -201,7 +201,7 @@ OSXOpenGLContext::swap()
 {  
   X11Lock::lock();
   aglSwapBuffers(context_);
-  //  aglUpdateContext(context_);
+  aglUpdateContext(context_);
   DrawGrowIcon(window_);
   X11Lock::unlock();
 }
