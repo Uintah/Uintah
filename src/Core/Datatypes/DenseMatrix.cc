@@ -568,22 +568,19 @@ DenseMatrix::mult(ColumnMatrix& x, ColumnMatrix& b) const
               x.get_data_pointer(), x.ncols(), BETA,
               b.get_data_pointer(), b.ncols());
 #else
-  int nr = out.nrows();
-  int nc = out.ncols();
-  int ndot=m1.ncols();
-  for (int i=0;i<nr;i++)
+  int i, j;
+  
+  for (i=0; i<nrows_; i++)
   {
-    const double* row = m1[i];
-    for (int j=0;j<nc;j++)
+    double sum=0;
+    double* row=data[i];
+    for (j=0; j<ncols_; j++)
     {
-      double d = 0.0;
-      for (int k=0;k<ndot;k++)
-      {
-        d += row[k] * m2[k][j];
-      }
-      out[i][j] = d;
+      sum+=row[j]*x[j];
     }
+    b[i]=sum;
   }
+}
 #endif
 }
 
