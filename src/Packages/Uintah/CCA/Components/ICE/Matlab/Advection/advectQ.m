@@ -3,15 +3,15 @@
 % Computes the advection of q
 function[q_advected,gradLim,grad_x] = advectQ(q,mass,mass_slab,mass_vrtx_1, mass_vrtx_2, ofs, rx, xvel_FC, dx, nCells)
   
-  %convert
-  for( j =2:nCells-1)
+  %convert to primitive variables
+  for( j =1:nCells)
       q(j) = q(j)/mass(j);
   end
   
   q_slab =[0:nCells+1];
   [gradLim, grad_x]        = gradientLimiter(q, mass, mass_vrtx_1, mass_vrtx_2, dx, nCells);
   [q_slab,gradLim, grad_x] = qAverageFlux(q, mass, mass_slab, rx, grad_x, gradLim, dx, nCells);
-  q_advected = advectSlabs(xvel_FC, q_slab, ofs, nCells);
+  q_advected = advectSlabs(xvel_FC, q_slab, ofs, nCells,dx);
   clear q_slab;
 end
 
@@ -20,20 +20,21 @@ end
 function[gradLim, grad_x] = gradientLimiter(q,mass, mass_vrtx_1, mass_vrtx_2, dx, nCells)
   fprintf('gradientLimiter\n');
   
-  for( j =2:nCells-1)
-    
+  for( j =2:nCells)
       
+    %central difference non-uniform spacing  
     alpha = dx(j+1)./dx(j-1);
     numerator   = q(j+1) + (alpha^2 - 1.0)* q(j) - alpha^2 * q(j-1);
     denominator = alpha * (alpha + 1.0) * dx(j-1);
-    grad_x(j) = numerator./denominator;
+    grad_x(j) = numerator/denominator;
       
-      
-    %grad_x(j) = (q(j+1) - q(j-1))./(2.0*dx(j));
+    % central difference uniform spacine  
+    %grad_x(j) = (q(j+1) - q(j-1))/(2.0*dx(j));
     
+    smallNum = 1e-100;
     %-----------q vertex min/max
-    d1 = mass(j)/(mass_vrtx_1(j) + 1e-100);
-    d2 = mass(j)/(mass_vrtx_2(j) + 1e-100);
+    d1 = mass(j)/(mass_vrtx_1(j) + smallNum);
+    d2 = mass(j)/(mass_vrtx_2(j) + smallNum);
     
     %d1 = 1.0; VanLeer limiter
     %d2 = 1.0;
@@ -49,13 +50,14 @@ function[gradLim, grad_x] = gradientLimiter(q,mass, mass_vrtx_1, mass_vrtx_2, dx
     q_min = min(q(j+1), q(j-1));
 
     %----------gradient limiter
-    frac = (q_max - q(j))/(max( (q_vrtx_max - q(j)), 1e-100) );
-    alphaMax = max(0,frac);
-    frac = (q(j) - q_min)/(max( (q(j) - q_vrtx_min), 1e-100) );
-    alphaMin = max(0,frac);
-
+    frac1    = (q_max - q(j) + smallNum)/(q_vrtx_max - q(j) + smallNum );
+    alphaMax = max(0,frac1);
+    frac2    = (q(j) - q_min + smallNum)/(q(j) - q_vrtx_min + smallNum );
+    alphaMin = max(0,frac2);
+    
     tmp        = min(1,alphaMax);
     gradLim(j) = min(tmp, alphaMin);
+    
     
 %     if (q_vrtx_max > q_max) | (q_vrtx_min < q_min)
 %       fprintf(' j %i q_vrtx_max %e q_max %e q_vrtx_min %e q_min %e \n',j, q_vrtx_max, q_max, q_vrtx_min, q_min);
@@ -75,7 +77,7 @@ end
 function[q_slab, gradLim, grad_x] = qAverageFlux(q, mass, mass_slab, rx, grad_x, gradLim, dx, nCells)
   clear j;
   fprintf( 'inside qAverageFlux \n');
-  for( j =1:nCells-1)
+  for( j =1:nCells)
     % compatible flux fomulation
     q_slab(j) = q(j) * mass_slab(j) + mass(j) * grad_x(j) * gradLim(j) * rx(j);
     % van Leer limiter
