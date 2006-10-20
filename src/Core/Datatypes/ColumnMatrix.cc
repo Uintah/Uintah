@@ -141,14 +141,14 @@ ColumnMatrix::sparse()
 
 
 double *
-ColumnMatrix::get_data_pointer()
+ColumnMatrix::get_data_pointer() const
 {
   return data;
 }
 
 
 size_t
-ColumnMatrix::get_data_size()
+ColumnMatrix::get_data_size() const
 {
   return nrows();
 }

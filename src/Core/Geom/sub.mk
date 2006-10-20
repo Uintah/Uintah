@@ -116,8 +116,8 @@ else
 endif
 
 PSELIBS := Core/Persistent Core/Geometry Core/Exceptions \
-	Core/Datatypes Core/Math Core/Containers Core/Thread \
-	Core/Util 
+	Core/Math Core/Containers Core/Thread \
+	Core/Util Core/Datatypes
 
 LIBS := $(FTGL_LIBRARY) $(GL_LIBRARY) $(M_LIBRARY) $(FREETYPE_LIBRARY) $(PNG_LIBRARY) $(Z_LIBRARY) $(TEEM_LIBRARY)
 

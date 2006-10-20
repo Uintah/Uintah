@@ -234,14 +234,14 @@ SparseRowMatrix::column()
 
 
 double *
-SparseRowMatrix::get_data_pointer()
+SparseRowMatrix::get_data_pointer() const
 {
   return a;
 }
 
 
 size_t
-SparseRowMatrix::get_data_size()
+SparseRowMatrix::get_data_size() const
 {
   return nnz;
 }

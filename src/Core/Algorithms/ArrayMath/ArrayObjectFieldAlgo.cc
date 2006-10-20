@@ -63,6 +63,10 @@ void ArrayObjectFieldDataAlgo::reset()
 {
 }
 
+void ArrayObjectFieldDataAlgo::reset(unsigned int idx)
+{
+}
+
 int ArrayObjectFieldDataAlgo::size()
 {
   return(0);
@@ -313,6 +317,10 @@ bool ArrayObjectFieldElemAlgo::setfield(SCIRun::FieldHandle handle)
 }
 
 void ArrayObjectFieldElemAlgo::reset()
+{
+}
+
+void ArrayObjectFieldElemAlgo::reset(unsigned int idx)
 {
 }
  

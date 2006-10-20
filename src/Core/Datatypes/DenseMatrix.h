@@ -78,8 +78,8 @@ public:
   virtual ColumnMatrix *column();
   virtual DenseColMajMatrix *dense_col_maj();
 
-  virtual double *get_data_pointer();
-  virtual size_t get_data_size();
+  virtual double *get_data_pointer() const;
+  virtual size_t get_data_size() const;
 
   //! slow setters/getter for polymorphic operations
   virtual void    zero();
@@ -94,6 +94,7 @@ public:
   virtual void    mult(const ColumnMatrix& x, ColumnMatrix& b,
 		       int& flops, int& memrefs, int beg=-1, int end=-1, 
 		       int spVec=0) const;
+  virtual void    mult(ColumnMatrix& x, ColumnMatrix& b) const;
   virtual void    mult_transpose(const ColumnMatrix& x, ColumnMatrix& b,
 				 int& flops, int& memrefs,
 				 int beg=-1, int end=-1, int spVec=0) const;

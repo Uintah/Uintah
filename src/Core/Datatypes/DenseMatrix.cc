@@ -212,14 +212,14 @@ DenseMatrix::sparse()
 
 
 double *
-DenseMatrix::get_data_pointer()
+DenseMatrix::get_data_pointer() const
 {
   return dataptr_;
 }
 
 
 size_t
-DenseMatrix::get_data_size()
+DenseMatrix::get_data_size() const
 {
   return nrows() * ncols();
 }
@@ -555,15 +555,62 @@ DenseMatrix::solve(const vector<double>& rhs, vector<double>& lhs,
 
 
 void
+DenseMatrix::mult(ColumnMatrix& x, ColumnMatrix& b) const
+{
+  ASSERTEQ(x.nrows(), ncols_);
+  ASSERTEQ(b.nrows(), nrows_);
+
+#if defined(HAVE_CBLAS)
+  double ALPHA = 1.0;
+  double BETA = 0.0;
+  cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, nrows_,
+              x.ncols(), ncols_, ALPHA, dataptr_, ncols_,
+              x.get_data_pointer(), x.ncols(), BETA,
+              b.get_data_pointer(), b.ncols());
+#else
+  int nr = out.nrows();
+  int nc = out.ncols();
+  int ndot=m1.ncols();
+  for (int i=0;i<nr;i++)
+  {
+    const double* row = m1[i];
+    for (int j=0;j<nc;j++)
+    {
+      double d = 0.0;
+      for (int k=0;k<ndot;k++)
+      {
+        d += row[k] * m2[k][j];
+      }
+      out[i][j] = d;
+    }
+  }
+#endif
+}
+
+
+void
 DenseMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
                   int& flops, int& memrefs, int beg, int end,
                   int spVec) const
 {
-  // Compute A*x=b
   ASSERTEQ(x.nrows(), ncols_);
   ASSERTEQ(b.nrows(), nrows_);
+
   if (beg == -1) beg = 0;
   if (end == -1) end = nrows_;
+  
+#if defined(HAVE_CBLAS)
+  double ALPHA = 1.0;
+  double BETA = 0.0;
+  cblas_dgemm(CblasRowMajor, CblasNoTrans, CblasNoTrans, (end-beg),
+              1, ncols_, ALPHA, dataptr_+(beg*ncols_), ncols_,
+              x.get_data_pointer(), 1, BETA,
+              b.get_data_pointer()+beg, 1);
+  flops += (end-beg) * ncols_ * 2;
+  memrefs += (end-beg) * ncols_ * 2 *sizeof(double)+(end-beg)*sizeof(double);
+
+#else
+
   int i, j;
   if(!spVec)
   {
@@ -588,6 +635,7 @@ DenseMatrix::mult(const ColumnMatrix& x, ColumnMatrix& b,
   }
   flops += (end-beg) * ncols_ * 2;
   memrefs += (end-beg) * ncols_ * 2 *sizeof(double)+(end-beg)*sizeof(double);
+#endif
 }
 
 void

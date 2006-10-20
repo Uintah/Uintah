@@ -139,6 +139,7 @@ bool elem_locate(typename Msh::Elem::index_type &elem,
   return false;
 }
 
+/*
 template <class Msh>
 void get_faces( Msh *mesh, typename Msh::Face::array_type &faces, typename Msh::Edge::index_type edge)
 {
@@ -170,7 +171,7 @@ void get_faces( Msh *mesh, typename Msh::Face::array_type &faces, typename Msh::
   faces.resize(unique.size());
   copy(unique.begin(), unique.end(), faces.begin());
 }
-
+*/
 
 } // end namespace SCIRun
 
