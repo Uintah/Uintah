@@ -36,7 +36,7 @@ MPMPetscSolver::createLocalToGlobalMapping(const ProcessorGroup* d_myworld,
   throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::createLocalToGlobalMapping()!", __FILE__, __LINE__ );
 }
 
-void MPMPetscSolver::solve(vector<double>& guess))
+void MPMPetscSolver::solve(vector<double>& guess)
 {
   throw InternalError( "Don't have PETSc so shouldn't be calling MPMPetscSolver::solve()!", __FILE__, __LINE__ );
 }
