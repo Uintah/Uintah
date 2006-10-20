@@ -120,15 +120,14 @@ namespace SCIRun {
       };
 
     private:
+      // let Var access private data
+      template <class T>
+      friend class Var;
+
       // Disable Copy Constructor
       Variables         (const Variables &copy) { ASSERT(0); }
 
       void              breakpoint();
-      friend class Var<Color>;
-      friend class Var<int>;
-      friend class Var<bool>;
-      friend class Var<string>;
-      friend class Var<double>;
 
       typedef map<string, value_t> name_value_map_t;
       typedef std::set<Variables *> children_t;
