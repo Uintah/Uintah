@@ -272,7 +272,6 @@
         <cell_deletion_dilation>   [1,1,0]   </cell_deletion_dilation>   
         <min_boundary_cells>       [1,1,0]   </min_boundary_cells>
       </Regridder>
-      <time_refinement_ratio> 1 </time_refinement_ratio> 
     </AMR>
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->

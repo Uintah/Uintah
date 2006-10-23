@@ -293,7 +293,6 @@
           <!-- none defined. see Models -->
         </Refinement_Criteria_Thresholds>
       </ICE>
-      <time_refinement_ratio> 1 </time_refinement_ratio>
 
       <Regridder>
         <max_levels>2</max_levels>
