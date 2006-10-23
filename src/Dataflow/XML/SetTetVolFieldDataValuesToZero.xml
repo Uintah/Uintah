@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE component SYSTEM "component.dtd">
-<component name="SetTetVolFieldDataValuesToZero" category="Examples" optional="false" hide="true">
+<component name="SetTetVolFieldDataValuesToZero" category="Examples" optional="false">
   <overview>
     <authors>
       <author>Martin Cole</author>
