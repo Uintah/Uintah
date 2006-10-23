@@ -403,6 +403,7 @@ uintah: sus \
         extractV \
         extractF \
         extractS \
+        pfs \
         gambitFileReader \
         lineextract \
         timeextract \
