@@ -157,7 +157,7 @@
     <!--    I  C  E     P  A  R  A  M  E  T  E  R  S                        -->
     <!--____________________________________________________________________-->
     <CFD>
-         <cfl>0.5</cfl>
+         <cfl>0.45</cfl>
        <ICE>
         <advection type = "FirstOrder"/>
       </ICE>        
