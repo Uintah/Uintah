@@ -1,88 +1,76 @@
 <definition class="ITKCurvatureAnisotropicDiffusionImageFilterToolDialog">
-  <object class="ShadowedBox">
-    <definition class="ShadowedBox::child">
-      <object class="Box">
-        <var name="focus_mode">1</var>
-        <var name="color">#AAAAAAAA</var>
-        
-        <object class="Texture">
-          <var name="file">BackgroundTile04.png</var>
-          <var name="color">#AAAAAAFF</var>
-          <var name="repeatx">1</var>
-          <var name="repeaty">1</var>
-        </object>
-        
-        <object class="Texture">
-          <var name="file">BackgroundTile04.png</var>
-          <var name="color">#000000</var>
-          <var name="repeatx">1</var>
-          <var name="repeaty">1</var>
-        </object>
-        
+  <object class="Frame">
+    <var name="LabeledSpinnerBox::text_size" propagate="yes">15</var>
+    <var name="invert">1</var>
+    <object class="Texture">
+      <var name="file">BackgroundTile04.png</var>
+      <var name="color">#AAAAAAFF</var>
+      <var name="repeatx">1</var>
+      <var name="repeaty">1</var>
+    </object>
 
+    <object class="Grid">
+      <var name="rows">7</var>
+      <var name="cols">1</var>
 
-        <object class="Grid">
-          <var name="rows">5</var>
-          <var name="cols">5</var>
-
+      <object class="Root::Text">
+        <var name="row">1</var>
+        <var name="col">1</var>
+        <var name="text">ITK Curvature Anisotropic
+Diffusion Image Filter</var>
+        <var name="size">15</var>
+        <var name="fgcolor">#000000FF</var>
+        <var name="bgcolor">#FFFFFF80</var>
+        <var name="anchor">W</var>
+        <var name="offsetx">-2</var>
+        <var name="offsety">2</var>
+        <var name="shadow">1</var>
+      </object>
           
-          <object class="LabeledSpinnerBox">
-            <var name="row">2</var>
-              <var name="col">3</var>
-              <var name="LabeledSpinnerBox::text" propagate="yes">Iterations: </var>
-              <var name="LabeledSpinnerBox::variable" propagate="yes">ITKCurvatureAnisotropicDiffusionImageFilterTool::numberOfIterations</var>
-          </object>
+      <object class="LabeledSpinnerBox">
+        <var name="row">2</var>
+        <var name="col">1</var>
+        <var name="LabeledSpinnerBox::text" propagate="yes">Iterations: </var>
+        <var name="LabeledSpinnerBox::variable"
+             propagate="yes" overwrite="no">$ITKCurvatureAnisotropicDiffusionImageFilterTool::numberOfIterations</var>
+      </object>
 
-          <object class="LabeledSpinnerBox">
-            <var name="row">3</var>
-              <var name="col">3</var>
-              <var name="LabeledSpinnerBox::text" propagate="yes">Time Step: </var>
-              <var name="LabeledSpinnerBox::variable" propagate="yes">ITKCurvatureAnisotropicDiffusionImageFilterTool::timeStep</var>
-          </object>
+      <object class="LabeledSpinnerBox">
+        <var name="row">3</var>
+        <var name="col">1</var>
+        <var name="LabeledSpinnerBox::text" propagate="yes">Time Step: </var>
+        <var name="LabeledSpinnerBox::variable" 
+             propagate="yes">$ITKCurvatureAnisotropicDiffusionImageFilterTool::timeStep</var>
+      </object>
+      
+      <object class="LabeledSpinnerBox">
+        <var name="row">4</var>
+        <var name="col">1</var>
+        <var name="LabeledSpinnerBox::text" propagate="yes">Conductance: </var>
+        <var name="LabeledSpinnerBox::variable" propagate="yes">$ITKCurvatureAnisotropicDiffusionImageFilterTool::conductanceParameter</var>
+      </object>
+      
 
-          <object class="LabeledSpinnerBox">
-            <var name="row">4</var>
-              <var name="col">3</var>
-              <var name="LabeledSpinnerBox::text" propagate="yes">Conductance: </var>
-              <var name="LabeledSpinnerBox::variable" propagate="yes">ITKCurvatureAnisotropicDiffusionImageFilterTool::conductanceParameter</var>
-          </object>
+      <object class="Button">
+        <var name="row">6</var>
+        <var name="col">1</var>
         
-          <object class="Root::Text">
-            <var name="row">1</var>
-            <var name="col">1</var>
-            <var name="text">ITK Curvature Anisotropic Diffusion Image Filter</var>
-            <var name="size">30</var>
-            <var name="fgcolor">#000000FF</var>
-            <var name="bgcolor">#FFFFFF80</var>
-            <var name="anchor">W</var>
-            <var name="offsetx">-2</var>
-            <var name="offsety">2</var>
-            <var name="shadow">1</var>
-          </object>
-          
-          
-          <object class="Button">
-            <var name="row">5</var>
-            <var name="col">2</var>
-            
-            <var name="Button::color" propagate="yes">#FFEEEEFF</var>
-            <var name="Button::Text::text" propagate="yes">Cancel</var>
-            
-            <signal name="Button::clicked" 
-                    target="Animation::AnimateVariableDescending">
-              <var name="varnum">6</var>
-            </signal>
-
-            
-          </object>
-          
-          <object class="Button">
-            <var name="row">5</var>
-            <var name="col">4</var>
-            
-            <var name="cell-height">40</var>
-            
-            <var name="Button::color" propagate="yes">#EEFFEEFF</var>
+        <var name="Button::color" propagate="yes">#FFEEEEFF</var>
+        <var name="Button::Text::text" propagate="yes">Cancel</var>
+        
+        <signal name="Button::clicked" 
+                target="ToolDialog::Cancel">
+          <var name="varnum">6</var>
+        </signal>        
+      </object>
+      
+      <object class="Button">
+        <var name="row">7</var>
+        <var name="col">1</var>
+        
+        <var name="cell-height">40</var>
+        
+        <var name="Button::color" propagate="yes">#EEFFEEFF</var>
             <var name="Button::Text::text" propagate="yes">Execute</var>
             
             <signal name="Button::clicked" 
@@ -90,13 +78,9 @@
               <var name="threaded">1</var>
             </signal>
             <signal name="Button::clicked"
-                    target="Animation::AnimateVariableDescending">
-              <var name="varnum">6</var>
-            </signal>
-          </object>
-        </object>
+                    target="ToolDialog::Done"/>
       </object>
-    </definition>
+    </object>
   </object>
 </definition>
 

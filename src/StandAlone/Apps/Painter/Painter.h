@@ -57,6 +57,7 @@
 #include <StandAlone/Apps/Painter/SliceWindow.h>
 #include <StandAlone/Apps/Painter/LayerButton.h>
 #include <StandAlone/Apps/Painter/UIvar.h>
+#include <StandAlone/Apps/Painter/NrrdToITK.h>
 
 #include <Core/Algorithms/Visualization/RenderField.h>
 #include <Core/Containers/Array3.h>
@@ -141,7 +142,7 @@ private:
   friend class CropTool;
   friend class BrushTool;
   friend class FloodfillTool;
-  friend class ITKThresholdTool;
+  friend class ITKThresholdSegmentationLevelSetImageFilterTool;
   friend class StatisticsTool;
   friend class ITKConfidenceConnectedImageFilterTool;
   friend class SessionReader;
@@ -190,9 +191,6 @@ private:
   void                  isosurface_label_volumes(NrrdVolumes &, GeomGroup *);
 
 #ifdef HAVE_INSIGHT
-  static ITKDatatypeHandle      nrrd_to_itk_image(NrrdDataHandle &nrrd);
-  template <class T>
-  static NrrdDataHandle         itk_image_to_nrrd(ITKDatatypeHandle &);
   template <class ImageT>
   bool                  do_itk_filter(itk::ImageToImageFilter<ImageT,ImageT> *,
                                       NrrdDataHandle &nrrd);
@@ -232,6 +230,7 @@ private:
   CatcherFunction_t     ITKCurvatureAnisotropic;
   CatcherFunction_t     ITKConfidenceConnected;
   CatcherFunction_t     ITKThresholdLevelSet;
+  CatcherFunction_t     start_ITKThresholdSegmentationLevelSetImageFilterTool;
 
   CatcherFunction_t     ShowVolumeRendering;
   CatcherFunction_t     ShowIsosurface;
@@ -370,15 +369,6 @@ Painter::do_itk_filter(itk::ImageToImageFilter<ImageType, ImageType> *filter,
 
   nrrd_handle = itk_image_to_nrrd<typename ImageType::PixelType>(output_img);
 
-#if 0
-  get_vars()->insert("ProgressBar::bar_height","0","string", true);
-  get_vars()->insert("Painter::progress_bar_total_width","0","string", true);
-  get_vars()->insert("Painter::progress_bar_text","F","string", true);
-  get_vars()->insert("Painter::progress_bar_done_width","0","string", true);
-  get_vars()->insert("ToolDialog::button_height","0","string", true);
-  get_vars()->insert("ToolDialog::text","","string", true);
-#endif
-
   return true;
 }
 #endif
@@ -431,54 +421,6 @@ Painter::load_volume(string filename) {
   return vol;
 }
 
-
-template <class PixType>
-NrrdDataHandle
-Painter::itk_image_to_nrrd(ITKDatatypeHandle &img_handle) {
-  const unsigned int Dim = 3;
-  typedef itk::Image<PixType, Dim> ImageType;
-
-  ImageType *img = dynamic_cast<ImageType *>(img_handle->data_.GetPointer());
-  if (img == 0) {
-    return 0;
-  }
-
-  NrrdData *nrrd_data = new NrrdData(img_handle.get_rep());
-  Nrrd *nrrd = nrrd_data->nrrd_;
-
-  size_t size[NRRD_DIM_MAX];
-  size[0] = 1;
-  size[1] = img->GetRequestedRegion().GetSize()[0];
-  size[2] = img->GetRequestedRegion().GetSize()[1];
-  size[3] = img->GetRequestedRegion().GetSize()[2];
-
-  unsigned int centers[NRRD_DIM_MAX];
-  centers[0] = nrrdCenterNode; 
-  centers[1] = nrrdCenterNode;
-  centers[2] = nrrdCenterNode; 
-  centers[3] = nrrdCenterNode;
-
-  nrrdWrap_nva(nrrd, (void *)img->GetBufferPointer(), 
-               get_nrrd_type<PixType>(), 4, size);
-
-  nrrdAxisInfoSet_nva(nrrd, nrrdAxisInfoCenter, centers);
-
-  nrrd->axis[0].spacing = AIR_NAN;
-  nrrd->axis[0].min = 0;
-  nrrd->axis[0].max = 1;
-  nrrd->axis[0].kind = nrrdKindStub;
-
-  for(unsigned int i = 0; i < Dim; i++) {
-    nrrd->axis[i+1].spacing = img->GetSpacing()[i];
-
-    nrrd->axis[i+1].min = img->GetOrigin()[i];
-    nrrd->axis[i+1].max = ceil(img->GetOrigin()[i] + 
-      ((nrrd->axis[i+1].size-1) * nrrd->axis[i+1].spacing));
-    nrrd->axis[i+1].kind = nrrdKindDomain;
-  }
-  
-  return nrrd_data;
-}
 
 }
 #endif

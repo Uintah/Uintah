@@ -591,7 +591,7 @@ NrrdVolume::create_child_label_volume(unsigned int label)
 #ifdef HAVE_INSIGHT
 template <class T>
 bool
-write_itk_image(ITKDatatypeHandle itk_image_h, const string &filename)
+write_itk_image(ITKDatatypeHandle &itk_image_h, const string &filename)
 {
   // create a new writer
   typedef itk::Image < T, 3 > ImageType;
@@ -624,7 +624,7 @@ NrrdVolume::write(string fname) {
 #else
   fname = substituteTilde(fname);
   
-  ITKDatatypeHandle img = painter_->nrrd_to_itk_image(nrrd_handle_);
+  ITKDatatypeHandle img = get_itk_image();
   
   switch (nrrd_handle_->nrrd_->type) {
   case nrrdTypeUInt: return write_itk_image<unsigned int>(img, fname); break;

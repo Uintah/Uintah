@@ -10,9 +10,9 @@
   <var name="Painter::brush_softness" type="double"  propagate="yes">0.0</var>
   <var name="Painter::brush_value" type="double" propagate="yes">256.0</var>
 
-  <var name="ITKCurvatureAnisotropicDiffusionImageFilterTool::numberOfIterations" propagate="yes">5</var>
-  <var name="ITKCurvatureAnisotropicDiffusionImageFilterTool::timeStep" propagate="yes">0.0625</var>
-  <var name="ITKCurvatureAnisotropicDiffusionImageFilterTool::conductanceParameter" propagate="yes">5.0</var>
+  <var name="ITKCurvatureAnisotropicDiffusionImageFilterTool::numberOfIterations" type="int" propagate="yes">5</var>
+  <var name="ITKCurvatureAnisotropicDiffusionImageFilterTool::timeStep" type="double" propagate="yes">0.0625</var>
+  <var name="ITKCurvatureAnisotropicDiffusionImageFilterTool::conductanceParameter" type="double" propagate="yes">5.0</var>
 
 
   <var name="ITKConfidenceConnectedImageFilterTool::numberOfIterations" type="int" propagate="yes">3</var>
@@ -24,35 +24,35 @@
   <var name="ITKBinaryDilateErode::dilateValue" propagate="yes">1</var>
   <var name="ITKBinaryDilateErode::erodeValue" propagate="yes">1</var>
 
-  <var name="ITKThresholdTool::curvatureScaling" 
-       propagate="yes">1.1</var>
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::curvatureScaling"
+       type="double" propagate="yes">1.1</var>
 
-  <var name="ITKThresholdTool::propagationScaling" 
-       propagate="yes">1</var>
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::propagationScaling"
+       type="double" propagate="yes">1.0</var>
 
-  <var name="ITKThresholdTool::edgeWeight" 
-       propagate="yes">0</var>
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::edgeWeight" 
+       type="double" propagate="yes">0.0</var>
 
-  <var name="ITKThresholdTool::numberOfIterations" 
-       propagate="yes">5000</var>
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::numberOfIterations" 
+       type="int" propagate="yes">5000</var>
 
-  <var name="ITKThresholdTool::maximumRMSError" 
-       propagate="yes">0</var>
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::maximumRMSError" 
+       type="double" propagate="yes">0</var>
 
-  <var name="ITKThresholdTool::reverseExpansionDirection" 
-       propagate="yes">1</var>
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::reverseExpansionDirection" 
+       type="bool" propagate="yes">1</var>
 
-  <var name="ITKThresholdTool::isoSurfaceValue" 
-       propagate="yes">0.5</var>
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::isoSurfaceValue" 
+       type="double" propagate="yes">0.5</var>
 
-  <var name="ITKThresholdTool::smoothingIterations" 
-       propagate="yes">0</var>
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::smoothingIterations" 
+       type="int" propagate="yes">0.0</var>
 
-  <var name="ITKThresholdTool::smoothingTimeStep" 
-       propagate="yes">0</var>
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::smoothingTimeStep" 
+       type="double" propagate="yes">0.0</var>
 
-  <var name="ITKThresholdTool::smoothingConductance" 
-       propagate="yes">0</var>
+  <var name="ITKThresholdSegmentationLevelSetImageFilterTool::smoothingConductance" 
+       type="double" propagate="yes">0.0</var>
 
 
   <var name="volume_visible" propagate="yes">1</var>

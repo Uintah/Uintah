@@ -5,9 +5,15 @@
     
     <definition class="LabeledGradientBackground::child">                
       <object class="Painter::SliceWindow">
-        <var name="SliceWindow::GridVisible" propagate="yes" overwrite="no" type="bool">1</var>
-        <var name="SliceWindow::SlicesVisible" propagate="yes" type="bool">1</var>
-        <signal name="SliceWindow::mark_redraw" target="GLWindow::mark_redraw"/>
+        <var name="SliceWindow::GridVisible" 
+             propagate="yes" overwrite="no" type="bool">1</var>
+        <var name="SliceWindow::SlicesVisible" 
+             propagate="yes" type="bool">1</var>
+        <var name="SliceWindow::color">$GradientBackground::bottom-color</var>
+        <signal name="SliceWindow::mark_redraw" 
+                target="GLWindow::mark_redraw"/>
+
+
 
 
         <!--

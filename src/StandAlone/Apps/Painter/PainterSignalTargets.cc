@@ -125,7 +125,7 @@ Painter::InitializeSignalCatcherTargets(event_handle_t) {
   REGISTER_CATCHER_TARGET(Painter::ITKBinaryDilateErode);
   REGISTER_CATCHER_TARGET(Painter::ITKCurvatureAnisotropic);
   REGISTER_CATCHER_TARGET(Painter::ITKConfidenceConnected);
-  REGISTER_CATCHER_TARGET(Painter::ITKThresholdLevelSet);
+  REGISTER_CATCHER_TARGET(Painter::start_ITKThresholdSegmentationLevelSetImageFilterTool);
 
   REGISTER_CATCHER_TARGET(Painter::ShowVolumeRendering);
   REGISTER_CATCHER_TARGET(Painter::ShowIsosurface);
@@ -191,14 +191,6 @@ Painter::StartBrushTool(event_handle_t event) {
 
 BaseTool::propagation_state_e 
 Painter::StartCropTool(event_handle_t event) {
-#if 0
-  get_vars()->insert("ToolDialog::text", " Crop Volume...",
-                     "string", true);
-  get_vars()->insert("Painter::progress_bar_text", "", "string", true);
-  get_vars()->insert("ProgressBar::bar_height","0","string",true);
-  get_vars()->insert("Painter::progress_bar_total_width","0","string", true);
-  get_vars()->unset("ToolDialog::button_height"); 
-#endif
   if (tm_.query_tool_id(25) != "") {
     return STOP_E;
   }
@@ -394,13 +386,11 @@ Painter::ITKBinaryDilate(event_handle_t event) {
   FilterType::Pointer filter = FilterType::New();
 
   StructuringElementType structuringElement;
-  structuringElement.SetRadius
-    (get_vars()->get_int(name+"::radius"));
+  structuringElement.SetRadius(get_vars()->get_int(name+"::radius"));
   structuringElement.CreateStructuringElement();
   
   filter->SetKernel(structuringElement);
-  filter->SetDilateValue
-    (get_vars()->get_double(name+"::dilateValue"));
+  filter->SetDilateValue(get_vars()->get_double(name+"::dilateValue"));
 
   NrrdVolume *vol = current_volume_;
   do_itk_filter<ITKImageFloat3D>(filter, vol->nrrd_handle_);
@@ -435,8 +425,10 @@ Painter::LoadVolume(event_handle_t event) {
 
 BaseTool::propagation_state_e 
 Painter::ITKBinaryDilateErode(event_handle_t event) {
-#ifdef HAVE_INSIGHT
-
+#ifndef HAVE_INSIGHT
+  cerr << "Insight not compiled\n";
+  return STOP_E;
+#else
   string name = "ITKBinaryDilateErode";
   typedef itk::BinaryBallStructuringElement< float, 3> StructuringElementType;
   typedef itk::BinaryDilateImageFilter
@@ -467,39 +459,14 @@ Painter::ITKBinaryDilateErode(event_handle_t event) {
   NrrdVolume *vol = new NrrdVolume(current_volume_, name, 2);
   volumes_.push_back(vol);
 
-#if 0
-  get_vars()->insert("ToolDialog::text", 
-                     " ITK Binary Dilate Filter...",
-                     "string", true);
-  get_vars()->insert("Painter::progress_bar_text", "", "string", true);
-  get_vars()->unset("ProgressBar::bar_height");
-  get_vars()->insert("Painter::progress_bar_total_width","500","string", true);
-  get_vars()->insert("ToolDialog::button_height", "0", "string", true); 
-#endif
-
-  redraw_all();
-
   do_itk_filter<ITKImageFloat3D>(filter, vol->nrrd_handle_);
-
-#if 0
-  get_vars()->insert("ToolDialog::text", 
-                     " ITK Binary Erode Filter...",
-                     "string", true);
-  get_vars()->insert("Painter::progress_bar_text", "", "string", true);
-  get_vars()->unset("ProgressBar::bar_height");
-  get_vars()->insert("Painter::progress_bar_total_width","500","string", true);
-  get_vars()->insert("ToolDialog::button_height", "0", "string", true); 
-#endif
-
-  redraw_all();
-
   do_itk_filter<ITKImageFloat3D>(filter2, vol->nrrd_handle_);
 
   set_all_slices_tex_dirty();
   redraw_all();
-  current_volume_ = vol;  
-#endif
+  current_volume_ = vol;
   return CONTINUE_E;
+#endif
 }
 
 
@@ -507,16 +474,10 @@ Painter::ITKBinaryDilateErode(event_handle_t event) {
 
 BaseTool::propagation_state_e 
 Painter::ITKGradientMagnitude(event_handle_t) {
-#ifdef HAVE_INSIGHT
-#if 0
-  get_vars()->insert("ToolDialog::text", 
-                     " ITK Gradient Magnigude Filter:",
-                     "string", true);
-  get_vars()->insert("ToolDialog::button_height", "0", "string", true);
-  get_vars()->insert("Painter::progress_bar_text", "", "string", true);
-  get_vars()->unset("ProgressBar::bar_height");
-  get_vars()->insert("Painter::progress_bar_total_width","500","string", true);
-#endif
+#ifndef HAVE_INSIGHT
+  cerr << "Insight not compiled\n";
+  return STOP_E;
+#else
   redraw_all();
 
   string name = "ITKGradientMagnitude";
@@ -545,20 +506,10 @@ Painter::ITKGradientMagnitude(event_handle_t) {
 
 BaseTool::propagation_state_e 
 Painter::ITKCurvatureAnisotropic(event_handle_t event) {
-#ifdef HAVE_INSIGHT
-
-#if 0
-  get_vars()->insert("ToolDialog::text", 
-                     " ITK Curvature Anisotropic Diffusion Filter:",
-                     "string", true);
-  get_vars()->insert("Painter::progress_bar_text", "", "string", true);
-  get_vars()->unset("ProgressBar::bar_height");
-  get_vars()->insert("Painter::progress_bar_total_width","500","string", true);
-  get_vars()->insert("ToolDialog::button_height", "0", "string", true);
-#endif
-
-  redraw_all();
-
+#ifndef HAVE_INSIGHT
+  cerr << "Insight not compiled\n";
+  return STOP_E;
+#else
   typedef itk::CurvatureAnisotropicDiffusionImageFilter
     < ITKImageFloat3D, ITKImageFloat3D > FilterType;
   FilterType::Pointer filter = FilterType::New();  
@@ -571,8 +522,6 @@ Painter::ITKCurvatureAnisotropic(event_handle_t event) {
     (get_vars()->get_double(prefix+"timeStep"));
   filter->SetConductanceParameter
     (get_vars()->get_double(prefix+"conductanceParameter"));
-  
-  cerr << "iterations: " << filter->GetNumberOfIterations() << std::endl;
 
   NrrdVolume *vol = new NrrdVolume(current_volume_, name, 2);
   volumes_.push_back(vol);
@@ -582,53 +531,35 @@ Painter::ITKCurvatureAnisotropic(event_handle_t event) {
   current_volume_ = vol;
   set_all_slices_tex_dirty();
   redraw_all();
-#endif
   return CONTINUE_E;
+#endif
 }
 
 
 BaseTool::propagation_state_e 
 Painter::ITKConfidenceConnected(event_handle_t event) {
-
-#if 0
-  get_vars()->insert("ToolDialog::text", 
-                     " ITK Confidence Connected Filter: Place Seed Point",
-                     "string", true);
-  get_vars()->insert("ProgressBar::bar_height","0","string",true);
-  get_vars()->unset("ToolDialog::button_height");
-  get_vars()->insert("Painter::progress_bar_text", "", "string", true);
-#endif
-
-  redraw_all();
-
-#ifdef HAVE_INSIGHT
+#ifndef HAVE_INSIGHT
+  cerr << "Insight not compiled\n";
+  return STOP_E;
+#else
   tm_.add_tool(new ITKConfidenceConnectedImageFilterTool(this),25); 
-#endif
   return CONTINUE_E;
+#endif
+  
 }
 
 
 BaseTool::propagation_state_e 
-Painter::ITKThresholdLevelSet(event_handle_t event) {
-#ifdef HAVE_INSIGHT
-
-#if 0
-  get_vars()->insert
-    ("ToolDialog::text", 
-     " ITK Threshold Segmentation Level Set Filter: Choose seed layer...",
-     "string", true);
-  get_vars()->insert("Painter::progress_bar_text", "", "string", true);
-  get_vars()->insert("ProgressBar::bar_height","0","string", true);
-  get_vars()->insert("Painter::progress_bar_total_width","0","string", true);
-  get_vars()->unset("ToolDialog::button_height");
-#endif
-
-  redraw_all();
-
+Painter::start_ITKThresholdSegmentationLevelSetImageFilterTool
+(event_handle_t event) {
+#ifndef HAVE_INSIGHT
+   cerr << "Insight not compiled\n";
+  return STOP_E;
+#else
   tm_.add_tool(new BrushTool(this), 25);
-  tm_.add_tool(new ITKThresholdTool(this), 26);
-#endif
+  tm_.add_tool(new ITKThresholdSegmentationLevelSetImageFilterTool(this), 26);
   return CONTINUE_E;
+#endif
 }
 
 
