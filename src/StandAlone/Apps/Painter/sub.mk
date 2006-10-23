@@ -80,6 +80,7 @@ SRCS := $(SRCDIR)/AutoviewTool.cc \
 	$(SRCDIR)/KeyToolSelectorTool.cc \
 	$(SRCDIR)/LayerButton.cc \
 	$(SRCDIR)/LayerMergeTool.cc \
+	$(SRCDIR)/NrrdToITK.cc \
 	$(SRCDIR)/NrrdVolume.cc \
 	$(SRCDIR)/Painter.cc \
         $(SRCDIR)/PainterSignalTargets.cc \
