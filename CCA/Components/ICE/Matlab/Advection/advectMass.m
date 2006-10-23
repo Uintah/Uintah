@@ -26,6 +26,17 @@ function[gradLim, grad_x, q_vrtx_1, q_vrtx_2] = gradientLimiter_Mass(q,dx, nCell
   
     %central difference uniform spacing 
     %grad_x(j) = (q(j+1) - q(j-1))/(2.0*dx(j));
+    
+    
+    % Test of backward differencing at the CFI
+    if(dx(j+1) > dx(j))  % Right CFI 
+      fprintf('right interface j: %i \n',j);
+      grad_x(j) = ( q(j) - q(j-1) )/dx(j); 
+    end
+    if(dx(j+1) < dx(j))  % Left CFI 
+      fprintf('left interface j: %i \n',j);
+      grad_x(j) = ( q(j+1) - q(j) )/dx(j);
+    end
 
     %-----------q vertex min/max
     q_vrtx_1_tmp = q(j) + grad_x(j) * dx(j)/2.0;
@@ -45,8 +56,20 @@ function[gradLim, grad_x, q_vrtx_1, q_vrtx_2] = gradientLimiter_Mass(q,dx, nCell
     frac2    = (q(j) - q_min + smallNum)/(q(j) - q_vrtx_min + smallNum );
     alphaMin = max(0,frac2);
 
+    %----------CFDLib gradient limiter
+    %frac = (q_max - q(j))/(max( (q_vrtx_max - q(j)), 1e-100) );
+    %alphaMax = max(0,frac);
+    %frac = (q(j) - q_min)/(max( (q(j) - q_vrtx_min), 1e-100) );
+    %alphaMin = max(0,frac) 
+
     tmp        = min(1,alphaMax);
     gradLim(j) = min(tmp, alphaMin);
+    
+    %----------test of clamping the limiter at the CFI  
+    if( (dx(j+1)/dx(j)) ~= 1)
+      fprintf(' j %i alpha: %e \n',j, alpha);
+      gradLim(j) = 0.0;
+    end  
        
     %-----------mass vertex (limited)
     q_vrtx_1(j) = q(j) + (grad_x(j) * gradLim(j) * dx(j)/2.0);
