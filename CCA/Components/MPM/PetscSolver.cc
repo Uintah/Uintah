@@ -11,6 +11,8 @@
 
 #include <vector>
 #include <iostream>
+#undef CHKERRQ
+#define CHKERRQ(x) if(x) throw PetscError(x, __FILE__, __FILE__, __LINE__);
 
 using namespace Uintah;
 using namespace SCIRun;
@@ -22,6 +24,9 @@ using namespace std;
 
 //#define USE_SPOOLES
 #undef  USE_SPOOLES
+
+//#define USE_SUPERLU
+#undef  USE_SUPERLU
 
 MPMPetscSolver::MPMPetscSolver()
 {
@@ -72,8 +77,11 @@ void MPMPetscSolver::initialize()
     }
   }
   PetscInitialize(&argc,&argv, PETSC_NULL, PETSC_NULL);
-//  PetscOptionsSetValue("-mat_spooles_ordering","BestOfNDandMS");
-//  PetscOptionsSetValue("-options_table", PETSC_NULL);
+#ifdef USE_SPOOLES
+  PetscOptionsSetValue("-mat_spooles_ordering","BestOfNDandMS");
+  PetscOptionsSetValue("-mat_spooles_symmetryflag","0");
+#endif
+  PetscOptionsSetValue("-options_table", PETSC_NULL);
 //  PetscOptionsSetValue("-log_summary", PETSC_NULL);
 //  PetscOptionsSetValue("-log_info", PETSC_NULL);
 //  PetscOptionsSetValue("-trmalloc", PETSC_NULL);
@@ -173,7 +181,7 @@ void MPMPetscSolver::solve(vector<double>& guess)
   KSPSetOperators(solver,d_A,d_A,DIFFERENT_NONZERO_PATTERN);
   KSPGetPC(solver,&precond);
 
-#ifdef USE_SPOOLES
+#if defined(USE_SPOOLES) || defined(USE_SUPERLU)
   KSPSetType(solver,KSPPREONLY);
   KSPSetFromOptions(solver);
   PCSetType(precond,PCLU);
@@ -265,18 +273,21 @@ void MPMPetscSolver::createMatrix(const ProcessorGroup* d_myworld,
       diag[i]=min(diag[i],DIAG_MAX);
     }
 
-#ifdef USE_SPOOLES
+#if defined(USE_SPOOLES) || defined(USE_SUPERLU)
     PetscErrorCode ierr;
-    ierr = MatCreate(PETSC_COMM_WORLD, &d_A);
+    ierr = MatCreate(PETSC_COMM_WORLD, &d_A);CHKERRQ(ierr);
     ierr = MatSetSizes(d_A,numlrows,numlcolumns,globalrows,globalcolumns);
+#ifdef USE_SPOOLES
     ierr = MatSetType(d_A,MATAIJSPOOLES);
+#else
+    ierr = MatSetType(d_A,MATSUPERLU_DIST);CHKERRQ(ierr);
+#endif
     ierr = MatMPIAIJSetPreallocation(d_A,PETSC_DEFAULT,diag,PETSC_DEFAULT,onnz);
 #else
     MatCreateMPIAIJ(PETSC_COMM_WORLD, numlrows, numlcolumns, globalrows,
                     globalcolumns, PETSC_DEFAULT, diag, 
                     PETSC_DEFAULT, onnz, &d_A);
 #endif
-
 
 //    MatType type;
 //    MatGetType(d_A, &type);
@@ -480,7 +491,7 @@ void MPMPetscSolver::removeFixedDOFHeat(int num_nodes)
        iter++) {
     int j = *iter;
 
-    PetscScalar v_zero = 0.,v_one = 1.;
+    PetscScalar v_zero = 0.;
     //    VecSetValues(d_diagonal,1,&j,&v_one,INSERT_VALUES);
     MatSetValue(d_A,j,j,1.,INSERT_VALUES);
     VecSetValues(d_B,1,&j,&v_zero,INSERT_VALUES);
