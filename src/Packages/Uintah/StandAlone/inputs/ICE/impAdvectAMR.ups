@@ -258,8 +258,7 @@
         <do_Refluxing>      false </do_Refluxing>
         <Refinement_Criteria_Thresholds>
         </Refinement_Criteria_Thresholds>
-      </ICE>
-      <time_refinement_ratio>    1 </time_refinement_ratio>       
+      </ICE>      
     </AMR>
     <!--____________________________________________________________________-->
     <!--     P  H  Y  S  I  C  A  L     C  O  N  S  T  A  N  T  S           -->
